@@ -132,6 +132,7 @@ void
 WebrtcGlobalInformation::GetAllStats(
   const GlobalObject& aGlobal,
   WebrtcGlobalStatisticsCallback& aStatsCallback,
+  const Optional<nsAString>& pcIdFilter,
   ErrorResult& aRv)
 {
   if (!NS_IsMainThread()) {
@@ -164,10 +165,13 @@ WebrtcGlobalInformation::GetAllStats(
          ++p) {
       MOZ_ASSERT(p->second);
 
-      if (p->second->HasMedia()) {
-        queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
-        p->second->BuildStatsQuery_m(nullptr, // all tracks
-                                     queries->back());
+      if (!pcIdFilter.WasPassed() ||
+          pcIdFilter.Value().EqualsASCII(p->second->GetIdAsAscii().c_str())) {
+        if (p->second->HasMedia()) {
+          queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
+          p->second->BuildStatsQuery_m(nullptr, // all tracks
+                                       queries->back());
+        }
       }
     }
   }

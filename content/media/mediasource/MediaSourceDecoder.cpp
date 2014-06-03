@@ -130,6 +130,11 @@ public:
 
   void InitializePendingDecoders();
 
+  bool IsShutdown() {
+    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
+    return mDecoder->IsShutdown();
+  }
+
 private:
   bool MaybeSwitchVideoReaders(int64_t aTimeThreshold) {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
@@ -383,25 +388,60 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
   return decoder.forget();
 }
 
+namespace {
+class ChangeToHaveMetadata : public nsRunnable {
+public:
+  ChangeToHaveMetadata(AbstractMediaDecoder* aDecoder) :
+    mDecoder(aDecoder)
+  {
+  }
+
+  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+    auto owner = mDecoder->GetOwner();
+    if (owner) {
+      owner->UpdateReadyStateForData(MediaDecoderOwner::NEXT_FRAME_WAIT_FOR_MSE_DATA);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<AbstractMediaDecoder> mDecoder;
+};
+}
+
 nsresult
 MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                         int64_t aCurrentTime)
 {
-  ResetDecode();
+  if (!mMediaSource->ActiveSourceBuffers()->AllContainsTime (aTime / USECS_PER_S)) {
+    NS_DispatchToMainThread(new ChangeToHaveMetadata(mDecoder));
+  }
 
-  dom::SourceBufferList* sbl = mMediaSource->ActiveSourceBuffers();
-  if (sbl->AllContainsTime (aTime / USECS_PER_S)) {
-    if (GetAudioReader()) {
-      nsresult rv = GetAudioReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+  // Loop until we have the requested time range in the source buffers.
+  // This is a workaround for our lack of async functionality in the
+  // MediaDecoderStateMachine. Bug 979104 implements what we need and
+  // we'll remove this for an async approach based on that in bug XXXXXXX.
+  while (!mMediaSource->ActiveSourceBuffers()->AllContainsTime (aTime / USECS_PER_S)
+         && !IsShutdown()) {
+    mMediaSource->WaitForData();
+    MaybeSwitchVideoReaders(aTime);
+  }
+
+  if (IsShutdown()) {
+    return NS_OK;
+  }
+
+  ResetDecode();
+  if (GetAudioReader()) {
+    nsresult rv = GetAudioReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
-    if (GetVideoReader()) {
-      nsresult rv = GetVideoReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
+  }
+  if (GetVideoReader()) {
+    nsresult rv = GetVideoReader()->Seek(aTime, aStartTime, aEndTime, aCurrentTime);
+     if (NS_FAILED(rv)) {
+      return rv;
     }
   }
   return NS_OK;
