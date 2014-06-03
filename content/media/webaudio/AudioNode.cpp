@@ -9,6 +9,7 @@
 #include "AudioNodeStream.h"
 #include "AudioNodeEngine.h"
 #include "mozilla/dom/AudioParam.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 namespace dom {
