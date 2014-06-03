@@ -224,6 +224,17 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * number, we stop the fling.
  * Units: screen pixels per millisecond
  *
+ * "apz.overscroll.clamping"
+ * The maximum proportion of the composition bounds which can become blank
+ * as a result of overscroll, along the axis of overscroll.
+ *
+ * "apz.overscroll.z_effect"
+ * The fraction of "apz.overscroll.clamping" which can become blank as a result
+ * of overscroll, along the axis opposite to the axis of overscroll. Called
+ * "z_effect" because the shrinking that brings about the blank space on the
+ * opposite axis creates the effect of the page moving away from you along a
+ * "z" axis.
+ *
  * "apz.overscroll.snap_back_accel"
  * Amount of acceleration applied during the snap-back animation.
  *
@@ -1837,15 +1848,11 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 
 void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) const {
   // The overscroll effect applied here is a combination of a translation in
-  // the direction of overscroll, and shrinking in both directions. For
-  // example, when overscrolling past the top of the page, the rectangle of
-  // content that filled the composition bounds will now fill a smaller
-  // rectangle at the bottom of the composition bounds, centred horizontally.
-  // The magnitude of the translation and the shrinking depends on the amount
-  // of the overscroll.
+  // the direction of overscroll, and shrinking in both directions.
   // With the effect applied, we can think of the composited region as being
   // made up of the following subregions.
-  //  (1) The shrunk content that used to fill the composited region.
+  //  (1) The shrunk content (or a portion of it) that used to fill the
+  //      composited region.
   //  (2) The space created along the axis that has overscroll. This space is
   //      blank, filled by the background color of the overscrolled content.
   //      TODO(botond): Implement handling of background color.
@@ -1862,61 +1869,71 @@ void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) co
 
   // The maximum proportion of the composition length which can become blank
   // space along an axis as we overscroll along that axis.
-  const float CLAMPING = 0.5;
+  const float kClamping = gfxPrefs::APZOverscrollClamping();
 
   // The proportion of the composition length which will become blank space
   // along each axis as a result of overscroll along that axis. Since
   // Axis::ApplyResistance() keeps the magnitude of the overscroll in the range
   // [0, GetCompositionLength()], these scale factors should be in the range
-  // [0, CLAMPING].
-  float spacePropX = CLAMPING * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
-  float spacePropY = CLAMPING * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+  // [0, kClamping].
+  float spacePropX = kClamping * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
+  float spacePropY = kClamping * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+
+  // The fraction of the proportions above which will become blank space along
+  // the _opposite_ axis as we zoom out as a result of overscroll along an axis.
+  // This creates a 3D effect, as in the layer were moving backward along a "z"
+  // axis.
+  const float kZEffect = gfxPrefs::APZOverscrollZEffect();
 
   // The translation to apply for overscroll along the x axis.
   CSSPoint translationX;
-  if (mX.GetOverscroll() < 0) {
-    // Overscroll on left.
-    // Keep content at the midpoint of the screen's right edge fixed.
-    translationX.x = spacePropX * mX.GetCompositionLength();
-    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
-  } else if (mX.GetOverscroll() > 0) {
-    // Overscroll on right.
-    // Keep content at the midpoint of the screen's left edge fixed.
-    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
+  if (mX.IsOverscrolled()) {
+    // Keep the content centred vertically as we zoom out.
+    translationX.y = (spacePropX * kZEffect * mY.GetCompositionLength()) / 2;
+
+    if (mX.GetOverscroll() < 0) {
+      // Overscroll on left.
+      translationX.x = spacePropX * mX.GetCompositionLength();
+    } else {
+      // Overscroll on right.
+      // Note that zooming out already moves the content at the right edge
+      // of the composition bounds to the left, but since the zooming is
+      // dampened by kZEffect, it doesn't take us as far as we want to go.
+      translationX.x = - (spacePropX * (1 - kZEffect) * mX.GetCompositionLength());
+    }
   }
 
   // The translation to apply for overscroll along the y axis.
   CSSPoint translationY;
-  if (mY.GetOverscroll() < 0) {
-    // Overscroll at top.
-    // Keep content at the midpoint of the screen's bottom edge fixed.
-    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
-    translationY.y = spacePropY * mY.GetCompositionLength();
-  } else if (mY.GetOverscroll() > 0) {
-    // Overscroll at bottom.
-    // Keep content at the midpoint of the screen's top edge fixed.
-    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
+  if (mY.IsOverscrolled()) {
+    // Keep the content centred horizontally as we zoom out.
+    translationY.x = (spacePropY * kZEffect * mX.GetCompositionLength()) / 2;
+
+    if (mY.GetOverscroll() < 0) {
+      // Overscroll at top.
+      translationY.y = spacePropY * mY.GetCompositionLength();
+    } else {
+      // Overscroll at bottom.
+      // Note that zooming out already moves the content at the bottom edge
+      // of the composition bounds up, but since the zooming is
+      // dampened by kZEffect, it doesn't take us as far as we want to go.
+      translationY.y = - (spacePropY * (1 - kZEffect) * mY.GetCompositionLength());
+    }
   }
 
   // Combine the transformations along the two axes.
-  // TODO(botond): This method of combination is imperfect, and results in a
-  // funny-looking snap-back animation when we have overscroll along both axes.
-  // We should fine-tune this.
-  float spaceProp = std::max(spacePropX, spacePropY);
-  CSSPoint translation(std::max(translationX.x, translationY.x),
-                       std::max(translationX.y, translationY.y));
+  float spaceProp = sqrtf(spacePropX * spacePropX + spacePropY * spacePropY);
+  CSSPoint translation = translationX + translationY;
 
-  // The prpoportion of the composition length which will be taken up by the
-  // original content; this is the scale we will apply to the content.
-  float contentProp = 1 - spaceProp;
+  float scale = 1 - (kZEffect * spaceProp);
 
   // In a ViewTransform, the translation is applied before the scale. We want
   // to apply our translation after our scale, so we compensate for that here.
-  translation.x /= contentProp;
-  translation.y /= contentProp;
+  translation.x /= scale;
+  translation.y /= scale;
 
   // Finally, apply the transformations.
-  aTransform->mScale.scale *= contentProp;
+  aTransform->mScale.scale *= scale;
   aTransform->mTranslation += translation * mFrameMetrics.LayersPixelsPerCSSPixel();
 }
 
