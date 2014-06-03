@@ -32,6 +32,9 @@ var ContextMenus = {
     document.getElementById("contextmenu-enable").addEventListener("click", ContextMenus.enable.bind(this), false);
     document.getElementById("contextmenu-disable").addEventListener("click", ContextMenus.disable.bind(this), false);
     document.getElementById("contextmenu-uninstall").addEventListener("click", ContextMenus.uninstall.bind(this), false);
+
+    // XXX - Hack to fix bug 985867 for now
+    document.addEventListener("touchstart", function() { });
   },
 
   handleEvent: function(event) {
