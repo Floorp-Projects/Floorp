@@ -146,8 +146,8 @@ Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
 {
   NS_ASSERTION(aOwner, "Null owner!");
 
-  nsCOMPtr<nsITelephonyProvider> ril =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
+  nsCOMPtr<nsITelephonyService> ril =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
   if (!ril) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -204,9 +204,9 @@ Telephony::IsValidServiceId(uint32_t aServiceId)
 // static
 bool
 Telephony::IsActiveState(uint16_t aCallState) {
-  return aCallState == nsITelephonyProvider::CALL_STATE_DIALING ||
-      aCallState == nsITelephonyProvider::CALL_STATE_ALERTING ||
-      aCallState == nsITelephonyProvider::CALL_STATE_CONNECTED;
+  return aCallState == nsITelephonyService::CALL_STATE_DIALING ||
+      aCallState == nsITelephonyService::CALL_STATE_ALERTING ||
+      aCallState == nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
 uint32_t
@@ -226,8 +226,8 @@ Telephony::HasDialingCall()
 {
   for (uint32_t i = 0; i < mCalls.Length(); i++) {
     const nsRefPtr<TelephonyCall>& call = mCalls[i];
-    if (call->CallState() > nsITelephonyProvider::CALL_STATE_UNKNOWN &&
-        call->CallState() < nsITelephonyProvider::CALL_STATE_CONNECTED) {
+    if (call->CallState() > nsITelephonyService::CALL_STATE_UNKNOWN &&
+        call->CallState() < nsITelephonyService::CALL_STATE_CONNECTED) {
       return true;
     }
   }
@@ -282,7 +282,7 @@ Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber,
 {
   nsRefPtr<TelephonyCall> call =
     TelephonyCall::Create(this, aServiceId, aNumber,
-                          nsITelephonyProvider::CALL_STATE_DIALING, aCallIndex);
+                          nsITelephonyService::CALL_STATE_DIALING, aCallIndex);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
@@ -449,7 +449,7 @@ Telephony::GetActive(Nullable<OwningTelephonyCallOrTelephonyCallGroup>& aValue)
 {
   if (mActiveCall) {
     aValue.SetValue().SetAsTelephonyCall() = mActiveCall;
-  } else if (mGroup->CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED) {
+  } else if (mGroup->CallState() == nsITelephonyService::CALL_STATE_CONNECTED) {
     aValue.SetValue().SetAsTelephonyCallGroup() = mGroup;
   } else {
     aValue.SetNull();
@@ -530,7 +530,7 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
 
   // Do nothing since we didn't know anything about it before now and it's
   // ended already.
-  if (aCallState == nsITelephonyProvider::CALL_STATE_DISCONNECTED) {
+  if (aCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
     return NS_OK;
   }
 
@@ -545,7 +545,7 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
                                mCalls.Contains(call),
                "Should have auto-added new call!");
 
-  if (aCallState == nsITelephonyProvider::CALL_STATE_INCOMING) {
+  if (aCallState == nsITelephonyService::CALL_STATE_INCOMING) {
     nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("incoming"), call);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -620,10 +620,10 @@ Telephony::SupplementaryServiceNotification(uint32_t aServiceId,
 
   nsresult rv;
   switch (aNotification) {
-    case nsITelephonyProvider::NOTIFICATION_REMOTE_HELD:
+    case nsITelephonyService::NOTIFICATION_REMOTE_HELD:
       rv = DispatchCallEvent(NS_LITERAL_STRING("remoteheld"), associatedCall);
       break;
-    case nsITelephonyProvider::NOTIFICATION_REMOTE_RESUMED:
+    case nsITelephonyService::NOTIFICATION_REMOTE_RESUMED:
       rv = DispatchCallEvent(NS_LITERAL_STRING("remoteresumed"), associatedCall);
       break;
     default:

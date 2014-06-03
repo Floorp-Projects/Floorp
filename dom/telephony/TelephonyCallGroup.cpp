@@ -17,7 +17,7 @@ using mozilla::ErrorResult;
 
 TelephonyCallGroup::TelephonyCallGroup(nsPIDOMWindow* aOwner)
   : DOMEventTargetHelper(aOwner)
-  , mCallState(nsITelephonyProvider::CALL_STATE_UNKNOWN)
+  , mCallState(nsITelephonyService::CALL_STATE_UNKNOWN)
 {
 }
 
@@ -88,18 +88,18 @@ TelephonyCallGroup::ChangeState(uint16_t aCallState)
 
   nsString stateString;
   switch (aCallState) {
-    case nsITelephonyProvider::CALL_STATE_UNKNOWN:
+    case nsITelephonyService::CALL_STATE_UNKNOWN:
       break;
-    case nsITelephonyProvider::CALL_STATE_CONNECTED:
+    case nsITelephonyService::CALL_STATE_CONNECTED:
       stateString.AssignLiteral("connected");
       break;
-    case nsITelephonyProvider::CALL_STATE_HOLDING:
+    case nsITelephonyService::CALL_STATE_HOLDING:
       stateString.AssignLiteral("holding");
       break;
-    case nsITelephonyProvider::CALL_STATE_HELD:
+    case nsITelephonyService::CALL_STATE_HELD:
       stateString.AssignLiteral("held");
       break;
-    case nsITelephonyProvider::CALL_STATE_RESUMING:
+    case nsITelephonyService::CALL_STATE_RESUMING:
       stateString.AssignLiteral("resuming");
       break;
     default:
@@ -157,13 +157,13 @@ TelephonyCallGroup::CanConference(const TelephonyCall& aCall,
   if (!aSecondCall) {
     MOZ_ASSERT(!mCalls.IsEmpty());
 
-    return (mCallState == nsITelephonyProvider::CALL_STATE_CONNECTED &&
-            aCall.CallState() == nsITelephonyProvider::CALL_STATE_HELD) ||
-           (mCallState == nsITelephonyProvider::CALL_STATE_HELD &&
-            aCall.CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED);
+    return (mCallState == nsITelephonyService::CALL_STATE_CONNECTED &&
+            aCall.CallState() == nsITelephonyService::CALL_STATE_HELD) ||
+           (mCallState == nsITelephonyService::CALL_STATE_HELD &&
+            aCall.CallState() == nsITelephonyService::CALL_STATE_CONNECTED);
   }
 
-  MOZ_ASSERT(mCallState == nsITelephonyProvider::CALL_STATE_UNKNOWN);
+  MOZ_ASSERT(mCallState == nsITelephonyService::CALL_STATE_UNKNOWN);
 
   if (aCall.ServiceId() != aSecondCall->ServiceId()) {
     return false;
@@ -173,10 +173,10 @@ TelephonyCallGroup::CanConference(const TelephonyCall& aCall,
     return false;
   }
 
-  return (aCall.CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED &&
-          aSecondCall->CallState() == nsITelephonyProvider::CALL_STATE_HELD) ||
-         (aCall.CallState() == nsITelephonyProvider::CALL_STATE_HELD &&
-          aSecondCall->CallState() == nsITelephonyProvider::CALL_STATE_CONNECTED);
+  return (aCall.CallState() == nsITelephonyService::CALL_STATE_CONNECTED &&
+          aSecondCall->CallState() == nsITelephonyService::CALL_STATE_HELD) ||
+         (aCall.CallState() == nsITelephonyService::CALL_STATE_HELD &&
+          aSecondCall->CallState() == nsITelephonyService::CALL_STATE_CONNECTED);
 }
 
 already_AddRefed<TelephonyCall>
@@ -254,7 +254,7 @@ TelephonyCallGroup::Add(TelephonyCall& aCall,
 void
 TelephonyCallGroup::Remove(TelephonyCall& aCall, ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_CONNECTED) {
+  if (mCallState != nsITelephonyService::CALL_STATE_CONNECTED) {
     NS_WARNING("Remove call from a non-connected call group. Ignore!");
     return;
   }
@@ -275,7 +275,7 @@ TelephonyCallGroup::Remove(TelephonyCall& aCall, ErrorResult& aRv)
 void
 TelephonyCallGroup::Hold(ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_CONNECTED) {
+  if (mCallState != nsITelephonyService::CALL_STATE_CONNECTED) {
     NS_WARNING("Hold non-connected call ignored!");
     return;
   }
@@ -288,13 +288,13 @@ TelephonyCallGroup::Hold(ErrorResult& aRv)
     return;
   }
 
-  ChangeState(nsITelephonyProvider::CALL_STATE_HOLDING);
+  ChangeState(nsITelephonyService::CALL_STATE_HOLDING);
 }
 
 void
 TelephonyCallGroup::Resume(ErrorResult& aRv)
 {
-  if (mCallState != nsITelephonyProvider::CALL_STATE_HELD) {
+  if (mCallState != nsITelephonyService::CALL_STATE_HELD) {
     NS_WARNING("Resume non-held call ignored!");
     return;
   }
@@ -307,5 +307,5 @@ TelephonyCallGroup::Resume(ErrorResult& aRv)
     return;
   }
 
-  ChangeState(nsITelephonyProvider::CALL_STATE_RESUMING);
+  ChangeState(nsITelephonyService::CALL_STATE_RESUMING);
 }

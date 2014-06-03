@@ -211,9 +211,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "gSystemWorkerManager",
                                    "@mozilla.org/telephony/system-worker-manager;1",
                                    "nsISystemWorkerManager");
 
-XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyProvider",
-                                   "@mozilla.org/telephony/telephonyprovider;1",
-                                   "nsIGonkTelephonyProvider");
+XPCOMUtils.defineLazyServiceGetter(this, "gTelephonyService",
+                                   "@mozilla.org/telephony/telephonyservice;1",
+                                   "nsIGonkTelephonyService");
 
 XPCOMUtils.defineLazyGetter(this, "WAP", function() {
   let wap = {};
@@ -2063,22 +2063,22 @@ RadioInterface.prototype = {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
     switch (message.rilMessageType) {
       case "callRing":
-        gTelephonyProvider.notifyCallRing();
+        gTelephonyService.notifyCallRing();
         break;
       case "callStateChange":
-        gTelephonyProvider.notifyCallStateChanged(this.clientId, message.call);
+        gTelephonyService.notifyCallStateChanged(this.clientId, message.call);
         break;
       case "callDisconnected":
-        gTelephonyProvider.notifyCallDisconnected(this.clientId, message.call);
+        gTelephonyService.notifyCallDisconnected(this.clientId, message.call);
         break;
       case "conferenceCallStateChanged":
-        gTelephonyProvider.notifyConferenceCallStateChanged(message.state);
+        gTelephonyService.notifyConferenceCallStateChanged(message.state);
         break;
       case "cdmaCallWaiting":
-        gTelephonyProvider.notifyCdmaCallWaiting(this.clientId, message.number);
+        gTelephonyService.notifyCdmaCallWaiting(this.clientId, message.number);
         break;
       case "suppSvcNotification":
-        gTelephonyProvider.notifySupplementaryService(this.clientId,
+        gTelephonyService.notifySupplementaryService(this.clientId,
                                                       message.callIndex,
                                                       message.notification);
         break;
