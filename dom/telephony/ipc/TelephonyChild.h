@@ -18,7 +18,7 @@ class TelephonyIPCService;
 class TelephonyChild : public PTelephonyChild
 {
 public:
-  TelephonyChild(TelephonyIPCService* aProvider);
+  TelephonyChild(TelephonyIPCService* aService);
 
 protected:
   virtual ~TelephonyChild();
@@ -57,7 +57,7 @@ protected:
                                  const uint16_t& aNotification) MOZ_OVERRIDE;
 
 private:
-  nsRefPtr<TelephonyIPCService> mProvider;
+  nsRefPtr<TelephonyIPCService> mService;
 };
 
 class TelephonyRequestChild : public PTelephonyRequestChild

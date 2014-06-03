@@ -283,15 +283,15 @@ TelephonyListener::NotifyCdmaCallWaiting(uint32_t aServiceId,
 bool
 TelephonyListener::Listen(bool aStart)
 {
-  nsCOMPtr<nsITelephonyService> provider =
+  nsCOMPtr<nsITelephonyService> service =
     do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE(provider, false);
+  NS_ENSURE_TRUE(service, false);
 
   nsresult rv;
   if (aStart) {
-    rv = provider->RegisterListener(this);
+    rv = service->RegisterListener(this);
   } else {
-    rv = provider->UnregisterListener(this);
+    rv = service->UnregisterListener(this);
   }
 
   return NS_SUCCEEDED(rv);
@@ -394,14 +394,14 @@ BluetoothRilListener::ServiceChanged(uint32_t aClientId, bool aRegistered)
 void
 BluetoothRilListener::EnumerateCalls()
 {
-  nsCOMPtr<nsITelephonyService> provider =
+  nsCOMPtr<nsITelephonyService> service =
     do_GetService(TELEPHONY_SERVICE_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(provider);
+  NS_ENSURE_TRUE_VOID(service);
 
   nsCOMPtr<nsITelephonyListener> listener(
     do_QueryObject(mTelephonyListener));
 
-  provider->EnumerateCalls(listener);
+  service->EnumerateCalls(listener);
 }
 
 bool
