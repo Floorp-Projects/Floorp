@@ -86,8 +86,10 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // GC, so just paper over the necessary dataflow inversion.
     JS::AutoSuppressGCAnalysis nogc;
     if (mIsMainThread) {
-      // Now get the global and JSContext for this callback.
-      nsGlobalWindow* win = xpc::WindowGlobalOrNull(realCallback);
+      // Now get the global and JSContext for this callback.  Note that for the
+      // case of JS-implemented WebIDL we never have a window here.
+      nsGlobalWindow* win =
+        aIsJSImplementedWebIDL ? nullptr : xpc::WindowGlobalOrNull(realCallback);
       if (win) {
         // Make sure that if this is a window it's the current inner, since the
         // nsIScriptContext and hence JSContext are associated with the outer
@@ -151,7 +153,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     mRootedCallable.construct(cx, aCallback->Callback());
   }
 
-  if (mIsMainThread) {
+  // JS-implemented WebIDL is always OK to run, since it runs with Chrome
+  // privileges anyway.
+  if (mIsMainThread && !aIsJSImplementedWebIDL) {
     // Check that it's ok to run this callback at all.
     // Make sure to use realCallback to get the global of the callback object,
     // not the wrapper.
