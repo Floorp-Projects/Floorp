@@ -6019,7 +6019,7 @@ LoadJSContextFromActivation(MacroAssembler &masm, Register activation, Register 
 static void
 AssertStackAlignment(MacroAssembler &masm)
 {
-    JS_ASSERT((AlignmentAtPrologue + masm.framePushed()) % StackAlignment == 0);
+    JS_ASSERT((AlignmentAtAsmJSPrologue + masm.framePushed()) % StackAlignment == 0);
 #ifdef DEBUG
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
@@ -6044,7 +6044,7 @@ StackDecrementForCall(MacroAssembler &masm, unsigned bytesToPush)
 {
     // Include extra padding so that, after pushing the bytesToPush,
     // the stack is aligned for a call instruction.
-    unsigned alreadyPushed = AlignmentAtPrologue + masm.framePushed();
+    unsigned alreadyPushed = AlignmentAtAsmJSPrologue + masm.framePushed();
     return AlignBytes(alreadyPushed + bytesToPush, StackAlignment) - alreadyPushed;
 }
 
@@ -6360,7 +6360,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     masm.reserveStack(stackDec);
 
     // Fill the argument array.
-    unsigned offsetToCallerStackArgs = AlignmentAtPrologue + masm.framePushed();
+    unsigned offsetToCallerStackArgs = AlignmentAtAsmJSPrologue + masm.framePushed();
     unsigned offsetToArgv = StackArgBytes(invokeArgTypes) + MaybeRetAddr;
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
