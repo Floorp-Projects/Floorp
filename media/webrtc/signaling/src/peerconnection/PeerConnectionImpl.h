@@ -406,6 +406,17 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   const PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
   nsresult SetPeerIdentity(const nsAString& peerIdentity);
+
+  const std::string& GetIdAsAscii() const
+  {
+    return mName;
+  }
+
+  nsresult GetId(nsAString& id)
+  {
+    id = NS_ConvertASCIItoUTF16(mName.c_str());
+    return NS_OK;
+  }
 #endif
 
   // this method checks to see if we've made a promise to protect media.

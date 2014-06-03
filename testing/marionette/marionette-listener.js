@@ -1560,11 +1560,6 @@ function sendKeysToElement(msg) {
 
   let el = elementManager.getKnownElement(msg.json.id, curFrame);
   if (checkVisible(el)) {
-    if (el.mozIsTextField && el.mozIsTextField(false)) {
-      var currentTextLength = el.value ? el.value.length : 0;
-      el.selectionStart = currentTextLength;
-      el.selectionEnd = currentTextLength;
-    }
     el.focus();
     var value = msg.json.value.join("");
     let hasShift = null;

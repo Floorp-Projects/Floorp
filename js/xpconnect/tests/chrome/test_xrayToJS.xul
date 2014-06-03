@@ -157,11 +157,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   function testDate() {
     // toGMTString is handled oddly in the engine. We don't bother to support
     // it over Xrays.
-    //
-    // We don't yet support self-hosted functions on Xrays. See bug 972987.
-    let propsToSkip = ['toGMTString', 'toLocaleString',
-                       'toLocaleDateString', 'toLocaleTimeString'];
+    let propsToSkip = ['toGMTString'];
+
     testXray('Date', new iwin.Date(), new iwin.Date(), propsToSkip);
+
+    // Test the self-hosted toLocaleString.
+    var d = new iwin.Date();
+    isnot(d.toLocaleString, Cu.unwaiveXrays(d.wrappedJSObject.toLocaleString), "Different function identities");
+    is(Cu.getGlobalForObject(d.toLocaleString), window, "Xray global is correct");
+    is(Cu.getGlobalForObject(d.wrappedJSObject.toLocaleString), iwin, "Underlying global is correct");
+    is(d.toLocaleString('de-DE'), d.wrappedJSObject.toLocaleString('de-DE'), "Results match");
   }
 
   ]]>

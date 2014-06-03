@@ -202,9 +202,6 @@ public:
                     int32_t x, int32_t y, int32_t w, int32_t h)
                     { return NS_ERROR_NOT_IMPLEMENTED; }
 
-    bool LoseContext();
-    bool RestoreContext();
-
     void SynthesizeGLError(GLenum err);
     void SynthesizeGLError(GLenum err, const char *fmt, ...);
 
@@ -261,10 +258,13 @@ public:
 
     bool MinCapabilityMode() const { return mMinCapability; }
 
-    void RobustnessTimerCallback(nsITimer* timer);
-    static void RobustnessTimerCallbackStatic(nsITimer* timer, void *thisPointer);
-    void SetupContextLossTimer();
+    void UpdateContextLossStatus();
+    void EnqueueUpdateContextLossStatus();
+    static void ContextLossCallbackStatic(nsITimer* timer, void* thisPointer);
+    void RunContextLossTimer();
     void TerminateContextLossTimer();
+
+    bool TryToRestoreContext();
 
     void AssertCachedBindings();
     void AssertCachedState();
@@ -666,8 +666,12 @@ public:
     bool ValidateSamplerUniformSetter(const char* info,
                                     WebGLUniformLocation *location,
                                     GLint value);
-
     void Viewport(GLint x, GLint y, GLsizei width, GLsizei height);
+// -----------------------------------------------------------------------------
+// WEBGL_lose_context
+public:
+    void LoseContext();
+    void RestoreContext();
 
 // -----------------------------------------------------------------------------
 // Asynchronous Queries (WebGLContextAsyncQueries.cpp)
@@ -869,7 +873,6 @@ protected:
     bool mOptionsFrozen;
     bool mMinCapability;
     bool mDisableExtensions;
-    bool mHasRobustness;
     bool mIsMesa;
     bool mLoseContextOnHeapMinimize;
     bool mCanLoseContextInForeground;
@@ -1116,7 +1119,6 @@ protected:
                              GLenum type,
                              const GLvoid *data);
 
-    void MaybeRestoreContext();
     void ForceLoseContext();
     void ForceRestoreContext();
 
@@ -1178,7 +1180,7 @@ protected:
 
     GLint mStencilRefFront, mStencilRefBack;
     GLuint mStencilValueMaskFront, mStencilValueMaskBack,
-              mStencilWriteMaskFront, mStencilWriteMaskBack;
+           mStencilWriteMaskFront, mStencilWriteMaskBack;
     realGLboolean mColorWriteMask[4];
     realGLboolean mDepthWriteMask;
     GLfloat mColorClearValue[4];
@@ -1192,9 +1194,10 @@ protected:
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
     nsCOMPtr<nsITimer> mContextRestorer;
-    bool mAllowRestore;
+    bool mAllowContextRestore;
+    bool mLastLossWasSimulated;
     bool mContextLossTimerRunning;
-    bool mDrawSinceContextLossTimerSet;
+    bool mRunContextLossTimerAgain;
     ContextStatus mContextStatus;
     bool mContextLostErrorSet;
 

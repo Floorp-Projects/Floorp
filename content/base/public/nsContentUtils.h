@@ -188,7 +188,7 @@ public:
 
   static bool     IsCallerChrome();
   static bool     ThreadsafeIsCallerChrome();
-  static bool     IsCallerXBL();
+  static bool     IsCallerContentXBL();
 
   static bool     IsImageSrcSetDisabled();
 

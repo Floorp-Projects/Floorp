@@ -25,18 +25,14 @@ class TestCapabilities(MarionetteTestCase):
                          self.appinfo["platformVersion"])
 
     def test_supported_features(self):
-        self.assertIn("cssSelectorsEnabled", self.caps)
         self.assertIn("handlesAlerts", self.caps)
-        self.assertIn("javascriptEnabled", self.caps)
         self.assertIn("nativeEvents", self.caps)
         self.assertIn("rotatable", self.caps)
         self.assertIn("secureSsl", self.caps)
         self.assertIn("takesElementScreenshot", self.caps)
         self.assertIn("takesScreenshot", self.caps)
 
-        self.assertTrue(self.caps["cssSelectorsEnabled"])
         self.assertFalse(self.caps["handlesAlerts"])
-        self.assertTrue(self.caps["javascriptEnabled"])
         self.assertFalse(self.caps["nativeEvents"])
         self.assertEqual(self.caps["rotatable"], self.appinfo["name"] == "B2G")
         self.assertFalse(self.caps["secureSsl"])
