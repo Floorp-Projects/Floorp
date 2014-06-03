@@ -439,3 +439,5 @@ MSG_DEF(JSMSG_TERMINATED,               384, 1, JSEXN_ERR, "Script terminated by
 MSG_DEF(JSMSG_NO_SUCH_SELF_HOSTED_PROP, 385, 1, JSEXN_ERR, "No such property on self-hosted object: {0}")
 MSG_DEF(JSMSG_PROXY_EXTENSIBILITY,      386, 0, JSEXN_TYPEERR, "proxy must report same extensiblitity as target")
 MSG_DEF(JSMSG_PROXY_CONSTRUCT_OBJECT,   387, 0, JSEXN_TYPEERR, "proxy [[Construct]] must return an object")
+MSG_DEF(JSMSG_PROXY_GETOWN_OBJORUNDEF,  388, 0, JSEXN_TYPEERR, "proxy [[GetOwnProperty]] must return an object or undefined")
+MSG_DEF(JSMSG_CANT_REPORT_C_AS_NC,      389, 0, JSEXN_TYPEERR, "proxy can't report existing configurable property as non-configurable")
