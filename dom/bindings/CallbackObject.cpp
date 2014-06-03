@@ -220,24 +220,24 @@ CallbackObject::CallSetup::~CallSetup()
   // Now, if we have a JSContext, report any pending errors on it, unless we
   // were told to re-throw them.
   if (mCx) {
-    bool dealtWithPendingException = false;
+    bool needToDealWithException = JS_IsExceptionPending(mCx);
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
       // Restore the old context options
       JS::ContextOptionsRef(mCx) = mSavedJSContextOptions;
       mErrorResult.MightThrowJSException();
-      if (JS_IsExceptionPending(mCx)) {
+      if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
         if (JS_GetPendingException(mCx, &exn) &&
             ShouldRethrowException(exn)) {
           mErrorResult.ThrowJSException(mCx, exn);
           JS_ClearPendingException(mCx);
-          dealtWithPendingException = true;
+          needToDealWithException = false;
         }
       }
     }
 
-    if (!dealtWithPendingException) {
+    if (needToDealWithException) {
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to JS_GetPendingException.  Either way,
       // just report the pending exception, if any.
