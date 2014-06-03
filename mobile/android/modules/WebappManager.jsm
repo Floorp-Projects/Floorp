@@ -103,7 +103,13 @@ this.WebappManager = {
     sendMessageToJava({
       type: "Webapps:InstallApk",
       filePath: filePath,
-      data: JSON.stringify(aMessage),
+      data: aMessage,
+    }, (data, error) => {
+      if (!!error) {
+        aMessage.error = error;
+        aMessageManager.sendAsyncMessage("Webapps:Install:Return:KO", aMessage);
+        debug("error downloading APK: " + error);
+      }
     });
   }).bind(this)); },
 
@@ -493,7 +499,7 @@ this.WebappManager = {
         sendMessageToJava({
           type: "Webapps:InstallApk",
           filePath: apk.filePath,
-          data: JSON.stringify(msg),
+          data: msg,
         });
       }
     } else {
