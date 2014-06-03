@@ -5378,44 +5378,30 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         return false;
     size_t n = ids.length();
 
-    AutoPropDescVector unwrappedDescs(cx);
     for (size_t i = 0; i < n; i++) {
-        if (!unwrappedDescs.append(PropDesc()))
+        if (!dbg->unwrapPropDescInto(cx, obj, descs[i], descs[i]))
             return false;
-        if (!dbg->unwrapPropDescInto(cx, obj, descs[i], unwrappedDescs[i]))
-            return false;
-        if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
+        if (!descs[i].checkGetter(cx) || !descs[i].checkSetter(cx))
             return false;
     }
 
     {
-        AutoIdVector rewrappedIds(cx);
-        AutoPropDescVector rewrappedDescs(cx);
-
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
         for (size_t i = 0; i < n; i++) {
-            if (!rewrappedIds.append(ids[i]) || !rewrappedDescs.append(unwrappedDescs[i]))
+            if (!cx->compartment()->wrapId(cx, ids[i].address()))
                 return false;
-            if (!cx->compartment()->wrapId(cx, rewrappedIds[i].address()))
+            if (!cx->compartment()->wrap(cx, descs[i]))
                 return false;
-            if (!cx->compartment()->wrap(cx, rewrappedDescs[i]))
+            if (descs[i].descriptorValue().isUndefined() && !descs[i].makeObject(cx))
                 return false;
-            if (rewrappedDescs[i].descriptorValue().isUndefined() &&
-                !rewrappedDescs[i].makeObject(cx))
-            {
-                return false;
-            }
         }
 
         ErrorCopier ec(ac, dbg->toJSObject());
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, rewrappedIds[i],
-                                rewrappedDescs[i], true, &dummy))
-            {
+            if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
                 return false;
-            }
         }
     }
 
