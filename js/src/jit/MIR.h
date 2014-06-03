@@ -8668,6 +8668,9 @@ class MGetDOMProperty
         MOZ_ASSERT(info_->isAlwaysInSlot || info_->isLazilyCachedInSlot);
         return info_->slotIndex;
     }
+    bool valueMayBeInSlot() const {
+        return info_->isLazilyCachedInSlot;
+    }
     MDefinition *object() {
         return getOperand(0);
     }
