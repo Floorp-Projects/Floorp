@@ -19,24 +19,24 @@
 
 namespace js {
 
-template <AllowGC allowGC>
+template <AllowGC allowGC, typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString *
-AllocateFatInlineString(ThreadSafeContext *cx, size_t len, jschar **chars)
+AllocateFatInlineString(ThreadSafeContext *cx, size_t len, CharT **chars)
 {
-    MOZ_ASSERT(JSFatInlineString::twoByteLengthFits(len));
+    MOZ_ASSERT(JSFatInlineString::lengthFits<CharT>(len));
 
-    if (JSInlineString::twoByteLengthFits(len)) {
+    if (JSInlineString::lengthFits<CharT>(len)) {
         JSInlineString *str = JSInlineString::new_<allowGC>(cx);
         if (!str)
             return nullptr;
-        *chars = str->initTwoByte(len);
+        *chars = str->init<CharT>(len);
         return str;
     }
 
     JSFatInlineString *str = JSFatInlineString::new_<allowGC>(cx);
     if (!str)
         return nullptr;
-    *chars = str->initTwoByte(len);
+    *chars = str->init<CharT>(len);
     return str;
 }
 
@@ -75,6 +75,23 @@ NewFatInlineString(ExclusiveContext *cx, JS::TwoByteChars chars)
     mozilla::PodCopy(storage, chars.start().get(), len);
     storage[len] = 0;
     return str;
+}
+
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSInlineString *
+NewFatInlineString(ExclusiveContext *cx, Handle<JSLinearString*> base, size_t start, size_t length)
+{
+    MOZ_ASSERT(JSFatInlineString::lengthFits<CharT>(length));
+
+    CharT *chars;
+    JSInlineString *s = AllocateFatInlineString<CanGC>(cx, length, &chars);
+    if (!s)
+        return nullptr;
+
+    AutoCheckCannotGC nogc;
+    mozilla::PodCopy(chars, base->chars<CharT>(nogc) + start, length);
+    chars[length] = 0;
+    return s;
 }
 
 static inline void
@@ -143,9 +160,14 @@ JSDependentString::init(js::ThreadSafeContext *cx, JSLinearString *base, size_t 
     MOZ_ASSERT(!js::IsPoisonedPtr(base));
     MOZ_ASSERT(start + length <= base->length());
     d.u1.length = length;
-    d.u1.flags = DEPENDENT_FLAGS;
     JS::AutoCheckCannotGC nogc;
-    d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
+    if (base->hasLatin1Chars()) {
+        d.u1.flags = DEPENDENT_FLAGS | LATIN1_CHARS_BIT;
+        d.s.u2.nonInlineCharsLatin1 = base->latin1Chars(nogc) + start;
+    } else {
+        d.u1.flags = DEPENDENT_FLAGS;
+        d.s.u2.nonInlineCharsTwoByte = base->twoByteChars(nogc) + start;
+    }
     d.s.u3.base = base;
     js::StringWriteBarrierPost(cx, reinterpret_cast<JSString **>(&d.s.u3.base));
 }
@@ -168,17 +190,14 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
      * both to avoid the awkward moving-GC hazard this introduces and because it
      * is more efficient to immediately undepend here.
      */
-    if (JSFatInlineString::twoByteLengthFits(length)) {
+    bool useFatInline = baseArg->hasTwoByteChars()
+                        ? JSFatInlineString::twoByteLengthFits(length)
+                        : JSFatInlineString::latin1LengthFits(length);
+    if (useFatInline) {
         JS::Rooted<JSLinearString*> base(cx, baseArg);
-        jschar *chars;
-        JSInlineString *s = js::AllocateFatInlineString<js::CanGC>(cx, length, &chars);
-        if (!s)
-            return nullptr;
-
-        JS::AutoCheckCannotGC nogc;
-        mozilla::PodCopy(chars, base->twoByteChars(nogc) + start, length);
-        chars[length] = 0;
-        return s;
+        if (baseArg->hasLatin1Chars())
+            return js::NewFatInlineString<JS::Latin1Char>(cx, base, start, length);
+        return js::NewFatInlineString<jschar>(cx, base, start, length);
     }
 
     JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
@@ -282,6 +301,34 @@ JSFatInlineString::initLatin1(size_t length)
     d.u1.length = length;
     d.u1.flags = INIT_FAT_INLINE_FLAGS | LATIN1_CHARS_BIT;
     return d.inlineStorageLatin1;
+}
+
+template<>
+MOZ_ALWAYS_INLINE JS::Latin1Char *
+JSInlineString::init<JS::Latin1Char>(size_t length)
+{
+    return initLatin1(length);
+}
+
+template<>
+MOZ_ALWAYS_INLINE jschar *
+JSInlineString::init<jschar>(size_t length)
+{
+    return initTwoByte(length);
+}
+
+template<>
+MOZ_ALWAYS_INLINE JS::Latin1Char *
+JSFatInlineString::init<JS::Latin1Char>(size_t length)
+{
+    return initLatin1(length);
+}
+
+template<>
+MOZ_ALWAYS_INLINE jschar *
+JSFatInlineString::init<jschar>(size_t length)
+{
+    return initTwoByte(length);
 }
 
 template <js::AllowGC allowGC>
