@@ -380,15 +380,6 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 }
 
 void
-AutoPropDescRooter::trace(JSTracer *trc)
-{
-    gc::MarkValueRoot(trc, &propDesc.pd_, "AutoPropDescRooter pd");
-    gc::MarkValueRoot(trc, &propDesc.value_, "AutoPropDescRooter value");
-    gc::MarkValueRoot(trc, &propDesc.get_, "AutoPropDescRooter get");
-    gc::MarkValueRoot(trc, &propDesc.set_, "AutoPropDescRooter set");
-}
-
-void
 PropDesc::trace(JSTracer *trc)
 {
     gc::MarkValueRoot(trc, &pd_, "PropDesc pd");
