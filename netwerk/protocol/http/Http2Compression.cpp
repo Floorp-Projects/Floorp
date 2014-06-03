@@ -1470,10 +1470,17 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
     return;
   }
 
+  // Need to ensure we have room for a new static entry before emitting
+  // anything, see bug 1019577
+  bool isStatic = (matchedIndex >= mHeaderTable.VariableLength());
+  if (isStatic) {
+    MakeRoom(newSize);
+  }
+
   // emit an index to add to reference set
   DoOutput(kToggleOn, &inputPair, matchedIndex);
-  if (matchedIndex >= mHeaderTable.VariableLength()) {
-    MakeRoom(newSize);
+
+  if (isStatic) {
     mHeaderTable.AddElement(inputPair.mName, inputPair.mValue);
     IncrementReferenceSetIndices();
     mAlternateReferenceSet.AppendElement(0);
