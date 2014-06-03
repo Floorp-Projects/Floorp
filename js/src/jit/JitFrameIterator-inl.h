@@ -18,22 +18,6 @@
 namespace js {
 namespace jit {
 
-template <AllowGC allowGC>
-inline
-InlineFrameIteratorMaybeGC<allowGC>::InlineFrameIteratorMaybeGC(ThreadSafeContext *cx,
-                                                                const IonBailoutIterator *iter)
-  : frame_(iter),
-    framesRead_(0),
-    frameCount_(UINT32_MAX),
-    callee_(cx),
-    script_(cx)
-{
-    if (iter) {
-        start_ = SnapshotIterator(*iter);
-        findNextFrame();
-    }
-}
-
 inline BaselineFrame *
 JitFrameIterator::baselineFrame() const
 {
