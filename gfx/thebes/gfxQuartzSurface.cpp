@@ -89,8 +89,9 @@ gfxQuartzSurface::gfxQuartzSurface(CGContextRef context,
 }
 
 gfxQuartzSurface::gfxQuartzSurface(cairo_surface_t *csurf,
+                                   const gfxIntSize& aSize,
                                    bool aForPrinting) :
-    mSize(-1.0, -1.0), mForPrinting(aForPrinting)
+    mSize(aSize), mForPrinting(aForPrinting)
 {
     mCGContext = cairo_quartz_surface_get_cg_context (csurf);
     CGContextRetain (mCGContext);
@@ -161,7 +162,7 @@ gfxQuartzSurface::CreateSimilarSurface(gfxContentType aType,
         return nullptr;
     }
 
-    nsRefPtr<gfxASurface> result = Wrap(surface);
+    nsRefPtr<gfxASurface> result = Wrap(surface, aSize);
     cairo_surface_destroy(surface);
     return result.forget();
 }
