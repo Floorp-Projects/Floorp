@@ -106,7 +106,7 @@ class JS_PUBLIC_API(AutoGCRooter) {
         PARSER =       -3, /* js::frontend::Parser */
         SHAPEVECTOR =  -4, /* js::AutoShapeVector */
         IDARRAY =      -6, /* js::AutoIdArray */
-        DESCRIPTORS =  -7, /* js::AutoPropDescArrayRooter */
+        DESCVECTOR =   -7, /* js::AutoPropDescVector */
         VALVECTOR =   -10, /* js::AutoValueVector */
         IDVECTOR =    -13, /* js::AutoIdVector */
         OBJVECTOR =   -14, /* js::AutoObjectVector */
