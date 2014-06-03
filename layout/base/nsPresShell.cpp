@@ -701,6 +701,18 @@ nsIPresShell::FrameSelection()
 static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 static bool sPointerEventEnabled = true;
+static bool sTouchCaretEnabled = false;
+
+/* static */ bool
+PresShell::TouchCaretPrefEnabled()
+{
+  static bool initialized = false;
+  if (!initialized) {
+    Preferences::AddBoolVarCache(&sTouchCaretEnabled, "touchcaret.enabled");
+    initialized = true;
+  }
+  return sTouchCaretEnabled;
+}
 
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
@@ -2470,6 +2482,19 @@ PresShell::GetPageSequenceFrame() const
 {
   nsIFrame* frame = mFrameConstructor->GetPageSequenceFrame();
   return do_QueryFrame(frame);
+}
+
+nsCanvasFrame*
+PresShell::GetCanvasFrame() const
+{
+  nsIFrame* frame = mFrameConstructor->GetDocElementContainingBlock();
+  return do_QueryFrame(frame);
+}
+
+Element*
+PresShell::GetTouchCaretElement() const
+{
+  return GetCanvasFrame() ? GetCanvasFrame()->GetTouchCaretElement() : nullptr;
 }
 
 void

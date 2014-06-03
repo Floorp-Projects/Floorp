@@ -67,6 +67,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // Touch caret preference
+  static bool TouchCaretPrefEnabled();
+
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
             nsViewManager* aViewManager, nsStyleSet* aStyleSet,
             nsCompatibility aCompatMode);
@@ -90,6 +93,7 @@ public:
   virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight) MOZ_OVERRIDE;
   virtual nsresult ResizeReflowOverride(nscoord aWidth, nscoord aHeight) MOZ_OVERRIDE;
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const MOZ_OVERRIDE;
+  virtual nsCanvasFrame* GetCanvasFrame() const MOZ_OVERRIDE;
   virtual nsIFrame* GetRealPrimaryFrameFor(nsIContent* aContent) const MOZ_OVERRIDE;
 
   virtual nsIFrame* GetPlaceholderFrameFor(nsIFrame* aFrame) const MOZ_OVERRIDE;
@@ -207,6 +211,8 @@ public:
   virtual void ClearMouseCaptureOnView(nsView* aView) MOZ_OVERRIDE;
   virtual bool IsVisible() MOZ_OVERRIDE;
 
+  // touch caret
+  virtual mozilla::dom::Element* GetTouchCaretElement() const MOZ_OVERRIDE;
   // caret handling
   virtual already_AddRefed<nsCaret> GetCaret() const MOZ_OVERRIDE;
   virtual void MaybeInvalidateCaretPosition() MOZ_OVERRIDE;
