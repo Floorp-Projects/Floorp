@@ -2166,8 +2166,12 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
     nsISelection* domSelection = docFrameSelection->
       GetSelection(nsISelectionController::SELECTION_NORMAL);
     if (domSelection) {
+      nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
+      if (!selCon) {
+        return NS_ERROR_FAILURE;
+      }
       // First, hide the caret to prevent attempting to show it in SetCaretDOMSelection
-      caret->SetCaretVisible(false);
+      selCon->SetCaretEnabled(false);
 
       // Caret must blink on non-editable elements
       caret->SetIgnoreUserModify(true);
@@ -2178,13 +2182,8 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
       // fields, which have a different frame selection from the document.
       // They will take care of making the caret visible themselves.
 
-      nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
-      if (!selCon)
-        return NS_ERROR_FAILURE;
-
       selCon->SetCaretReadOnly(false);
       selCon->SetCaretEnabled(aVisible);
-      caret->SetCaretVisible(aVisible);
     }
   }
 

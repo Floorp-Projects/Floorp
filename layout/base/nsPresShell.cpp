@@ -75,6 +75,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPageSequenceFrame.h"
 #include "nsCaret.h"
+#include "TouchCaret.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
@@ -863,6 +864,11 @@ PresShell::Init(nsIDocument* aDocument,
   // before creating any frames.
   SetPreferenceStyleRules(false);
 
+  if (TouchCaretPrefEnabled()) {
+    // Create touch caret handle
+    mTouchCaret = new TouchCaret(this);
+  }
+
   NS_ADDREF(mSelection = new nsFrameSelection());
 
   mSelection->Init(this, nullptr);
@@ -1117,6 +1123,11 @@ PresShell::Destroy()
 
   if (mSelection) {
     mSelection->DisconnectFromPresShell();
+  }
+
+  if (mTouchCaret) {
+    mTouchCaret->Terminate();
+    mTouchCaret = nullptr;
   }
 
   // release our pref style sheet, if we have one still
@@ -2146,6 +2157,13 @@ already_AddRefed<nsCaret> PresShell::GetCaret() const
   return caret.forget();
 }
 
+// TouchCaret
+already_AddRefed<TouchCaret> PresShell::GetTouchCaret() const
+{
+  nsRefPtr<TouchCaret> touchCaret = mTouchCaret;
+  return touchCaret.forget();
+}
+
 void PresShell::MaybeInvalidateCaretPosition()
 {
   if (mCaret) {
@@ -2169,14 +2187,21 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(bool aInEnable)
 
   mCaretEnabled = aInEnable;
 
-  if (mCaret && (mCaretEnabled != oldEnabled))
+  if (mCaretEnabled != oldEnabled)
   {
 /*  Don't change the caret's selection here! This was an evil side-effect of SetCaretEnabled()
     nsCOMPtr<nsIDOMSelection> domSel;
     if (NS_SUCCEEDED(GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(domSel))) && domSel)
       mCaret->SetCaretDOMSelection(domSel);
 */
-    mCaret->SetCaretVisible(mCaretEnabled);
+
+    MOZ_ASSERT(mCaret || mTouchCaret);
+    if (mCaret) {
+      mCaret->SetCaretVisible(mCaretEnabled);
+    }
+    if (mTouchCaret) {
+      mTouchCaret->UpdateTouchCaret(mCaretEnabled);
+    }
   }
 
   return NS_OK;
@@ -2495,6 +2520,52 @@ Element*
 PresShell::GetTouchCaretElement() const
 {
   return GetCanvasFrame() ? GetCanvasFrame()->GetTouchCaretElement() : nullptr;
+}
+
+void
+PresShell::SetMayHaveTouchCaret(bool aSet)
+{
+  if (!mPresContext) {
+    return;
+  }
+
+  if (!mPresContext->IsRoot()) {
+    nsIPresShell* rootPresShell = GetRootPresShell();
+    if (rootPresShell) {
+      rootPresShell->SetMayHaveTouchCaret(aSet);
+    }
+    return;
+  }
+
+  nsIDocument* document = GetDocument();
+  if (document) {
+    nsPIDOMWindow* innerWin = document->GetInnerWindow();
+    if (innerWin) {
+      innerWin->SetMayHaveTouchCaret(aSet);
+    }
+  }
+}
+
+bool
+PresShell::MayHaveTouchCaret()
+{
+  if (!mPresContext) {
+    return false;
+  }
+
+  if (!mPresContext->IsRoot()) {
+    nsIPresShell* rootPresShell = GetRootPresShell();
+    return rootPresShell ? rootPresShell->MayHaveTouchCaret() : false;
+  }
+
+  nsIDocument* document = GetDocument();
+  if (document) {
+    nsPIDOMWindow* innerWin = document->GetInnerWindow();
+    if (innerWin) {
+      return innerWin->MayHaveTouchCaret();
+    }
+  }
+  return false;
 }
 
 void
@@ -6561,6 +6632,29 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   }
 
   RecordMouseLocation(aEvent);
+
+  // Determine whether event need to be consumed by touch caret or not.
+  if (TouchCaretPrefEnabled()) {
+    // We have to target the focus window because regardless of where the
+    // touch goes, we want to access the touch caret when user is typing on an
+    // editable element.
+    nsCOMPtr<nsPIDOMWindow> window = GetFocusedDOMWindowInOurWindow();
+    nsCOMPtr<nsIDocument> retargetEventDoc = window ? window->GetExtantDoc() : nullptr;
+    nsCOMPtr<nsIPresShell> presShell = retargetEventDoc ?
+                                       retargetEventDoc->GetShell() :
+                                       nullptr;
+    nsRefPtr<TouchCaret> touchCaret = presShell ? presShell->GetTouchCaret() : nullptr;
+    if (touchCaret) {
+      *aEventStatus = touchCaret->HandleEvent(aEvent);
+      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+        // If the event is consumed by the touch caret, cancel APZC panning by
+        // setting mMultipleActionsPrevented.
+        aEvent->mFlags.mMultipleActionsPrevented = true;
+        return NS_OK;
+      }
+    }
+  }
+
   if (sPointerEventEnabled) {
     UpdateActivePointerState(aEvent);
   }
@@ -8135,7 +8229,7 @@ PresShell::Freeze()
   mDocument->EnumerateFreezableElements(FreezeElement, nullptr);
 
   if (mCaret) {
-    mCaret->SetCaretVisible(false);
+    SetCaretEnabled(false);
   }
 
   mPaintingSuppressed = true;
