@@ -2891,6 +2891,7 @@ class PropertyDescriptorOperations
     bool isEnumerable() const { return desc()->attrs & JSPROP_ENUMERATE; }
     bool isReadonly() const { return desc()->attrs & JSPROP_READONLY; }
     bool isPermanent() const { return desc()->attrs & JSPROP_PERMANENT; }
+    bool isConfigurable() const { return !isPermanent(); }
     bool hasNativeAccessors() const { return desc()->attrs & JSPROP_NATIVE_ACCESSORS; }
     bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
     bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
