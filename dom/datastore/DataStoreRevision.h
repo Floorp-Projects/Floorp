@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_DataStoreRevision_h
 #define mozilla_dom_DataStoreRevision_h
 
-#include "nsIDOMEventListener.h"
-#include "nsAutoPtr.h"
-#include "nsString.h"
 #include "jsapi.h"
+#include "nsAutoPtr.h"
+#include "nsIDOMEventListener.h"
+#include "nsString.h"
 
 namespace mozilla {
 namespace dom {

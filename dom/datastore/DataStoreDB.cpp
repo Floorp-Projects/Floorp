@@ -144,7 +144,7 @@ DataStoreDB::UpgradeSchema()
   }
 
   {
-    IDBObjectStoreParameters params;
+    RootedDictionary<IDBObjectStoreParameters> params(cx);
     params.Init(NS_LITERAL_STRING("{ \"autoIncrement\": true }"));
     nsRefPtr<IDBObjectStore> store =
       database->CreateObjectStore(cx, NS_LITERAL_STRING(DATASTOREDB_NAME),
@@ -157,7 +157,7 @@ DataStoreDB::UpgradeSchema()
   nsRefPtr<IDBObjectStore> store;
 
   {
-    IDBObjectStoreParameters params;
+    RootedDictionary<IDBObjectStoreParameters> params(cx);
     params.Init(NS_LITERAL_STRING("{ \"autoIncrement\": true, \"keyPath\": \"internalRevisionId\" }"));
 
     store =
@@ -169,7 +169,7 @@ DataStoreDB::UpgradeSchema()
   }
 
   {
-    IDBIndexParameters params;
+    RootedDictionary<IDBIndexParameters> params(cx);
     params.Init(NS_LITERAL_STRING("{ \"unique\": true }"));
     nsRefPtr<IDBIndex> index =
       store->CreateIndex(cx, NS_LITERAL_STRING(DATASTOREDB_REVISION_INDEX),

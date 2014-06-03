@@ -7,11 +7,13 @@
 #ifndef mozilla_dom_DataStoreService_h
 #define mozilla_dom_DataStoreService_h
 
+#include "mozilla/dom/PContent.h"
 #include "nsClassHashtable.h"
 #include "nsIDataStoreService.h"
 #include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"
 
+class nsIPrincipal;
 class nsIUUIDGenerator;
 class nsPIDOMWindow;
 
@@ -28,6 +30,7 @@ class RevisionAddedEnableStoreCallback;
 class DataStoreService MOZ_FINAL : public nsIDataStoreService
                                  , public nsIObserver
 {
+  friend class ContentChild;
   friend class FirstRevisionIdCallback;
   friend class RetrieveRevisionsCounter;
   friend class RevisionAddedEnableStoreCallback;
@@ -46,6 +49,10 @@ public:
   static void Shutdown();
 
   nsresult GenerateUUID(nsAString& aID);
+
+  nsresult GetDataStoresFromIPC(const nsAString& aName,
+                                nsIPrincipal* aPrincipal,
+                                nsTArray<DataStoreSetting>* aValue);
 
 private:
   DataStoreService();
