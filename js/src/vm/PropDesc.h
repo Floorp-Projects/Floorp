@@ -12,6 +12,8 @@
 
 namespace js {
 
+class Debugger;
+
 static inline JSPropertyOp
 CastAsPropertyOp(JSObject *object)
 {
@@ -34,7 +36,7 @@ struct PropDesc {
      * Original object from which this descriptor derives, passed through for
      * the benefit of proxies.
      */
-    JSObject *descObj_;
+    Value pd_;
 
     Value value_, get_, set_;
 
@@ -53,7 +55,7 @@ struct PropDesc {
     bool isUndefined_ : 1;
 
     explicit PropDesc(const Value &v)
-      : descObj_(nullptr),
+      : pd_(UndefinedValue()),
         value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
         attrs(0),
@@ -64,6 +66,7 @@ struct PropDesc {
     }
 
   public:
+    friend void JS::AutoGCRooter::trace(JSTracer *trc);
     friend struct GCMethods<PropDesc>;
 
     void trace(JSTracer *trc);
@@ -79,7 +82,7 @@ struct PropDesc {
 
     PropDesc(const Value &v, Writability writable,
              Enumerability enumerable, Configurability configurable)
-      : descObj_(nullptr),
+      : pd_(UndefinedValue()),
         value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
         attrs((writable ? 0 : JSPROP_READONLY) |
@@ -126,8 +129,8 @@ struct PropDesc {
     void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> desc);
     bool makeObject(JSContext *cx);
 
-    /* Reset the descriptor entirely. */
-    void setUndefined();
+    void setUndefined() { isUndefined_ = true; }
+
     bool isUndefined() const { return isUndefined_; }
 
     bool hasGet() const { MOZ_ASSERT(!isUndefined()); return hasGet_; }
@@ -137,12 +140,8 @@ struct PropDesc {
     bool hasEnumerable() const { MOZ_ASSERT(!isUndefined()); return hasEnumerable_; }
     bool hasConfigurable() const { MOZ_ASSERT(!isUndefined()); return hasConfigurable_; }
 
-    Value descriptorValue() const {
-        MOZ_ASSERT(!isUndefined());
-        return descObj_ ? ObjectValue(*descObj_) : UndefinedValue();
-    }
-    void setDescriptorObject(JSObject *obj) { descObj_ = obj; }
-    void clearDescriptorObject() { setDescriptorObject(nullptr); }
+    Value pd() const { MOZ_ASSERT(!isUndefined()); return pd_; }
+    void clearPd() { pd_ = UndefinedValue(); }
 
     uint8_t attributes() const { MOZ_ASSERT(!isUndefined()); return attrs; }
 
@@ -183,11 +182,6 @@ struct PropDesc {
         MOZ_ASSERT(hasValue());
         return HandleValue::fromMarkedLocation(&value_);
     }
-    void setValue(const Value &value) {
-        MOZ_ASSERT(!isUndefined());
-        value_ = value;
-        hasValue_ = true;
-    }
 
     JSObject * getterObject() const {
         MOZ_ASSERT(!isUndefined());
@@ -211,17 +205,6 @@ struct PropDesc {
         return HandleValue::fromMarkedLocation(&set_);
     }
 
-    void setGetter(const Value &getter) {
-        MOZ_ASSERT(!isUndefined());
-        get_ = getter;
-        hasGet_ = true;
-    }
-    void setSetter(const Value &setter) {
-        MOZ_ASSERT(!isUndefined());
-        set_ = setter;
-        hasSet_ = true;
-    }
-
     /*
      * Unfortunately the values produced by these methods are used such that
      * we can't assert anything here.  :-(
@@ -240,6 +223,12 @@ struct PropDesc {
      */
     bool checkGetter(JSContext *cx);
     bool checkSetter(JSContext *cx);
+
+    bool unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
+                                   PropDesc *unwrapped) const;
+
+    bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
+                  PropDesc *wrappedDesc) const;
 };
 
 } /* namespace js */
@@ -261,7 +250,7 @@ class PropDescOperations
     bool hasEnumerable() const { return desc()->hasEnumerable(); }
     bool hasConfigurable() const { return desc()->hasConfigurable(); }
 
-    Value descriptorValue() const { return desc()->descriptorValue(); }
+    Value pd() const { return desc()->pd(); }
 
     uint8_t attributes() const { return desc()->attributes(); }
 
@@ -280,6 +269,10 @@ class PropDescOperations
 
     JSPropertyOp getter() const { return desc()->getter(); }
     JSStrictPropertyOp setter() const { return desc()->setter(); }
+
+    // We choose not to expose the debugger-specific parts of PropDesc, both
+    // because they are not really general use, but also because they are a
+    // pain to expose.
 };
 
 template <typename Outer>
@@ -306,20 +299,8 @@ class MutablePropDescOperations : public PropDescOperations<Outer>
         return desc()->makeObject(cx);
     }
 
-    void setValue(const Value &value) {
-        desc()->setValue(value);
-    }
-    void setGetter(const Value &getter) {
-        desc()->setGetter(getter);
-    }
-    void setSetter(const Value &setter) {
-        desc()->setSetter(setter);
-    }
-
     void setUndefined() { desc()->setUndefined(); }
-
-    void setDescriptorObject(JSObject *obj) { desc()->setDescriptorObject(obj); }
-    void clearDescriptorObject() { desc()->clearDescriptorObject(); }
+    void clearPd() { desc()->clearPd(); }
 };
 
 } /* namespace JS */
@@ -331,7 +312,8 @@ struct GCMethods<PropDesc> {
     static PropDesc initial() { return PropDesc(); }
     static ThingRootKind kind() { return THING_ROOT_PROP_DESC; }
     static bool poisoned(const PropDesc &desc) {
-        return JS::IsPoisonedPtr(desc.descObj_) ||
+        return (desc.pd_.isGCThing() &&
+                JS::IsPoisonedPtr(desc.pd_.toGCThing())) ||
                (desc.value_.isGCThing() &&
                 JS::IsPoisonedPtr(desc.value_.toGCThing())) ||
                (desc.get_.isGCThing() &&
