@@ -5317,7 +5317,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     Rooted<PropDesc> desc(cx);
     if (!desc.initialize(cx, args[1], false))
         return false;
-    desc.clearPd();
+    desc.clearDescriptorObject();
 
     if (!dbg->unwrapPropDescInto(cx, obj, desc, &desc))
         return false;
