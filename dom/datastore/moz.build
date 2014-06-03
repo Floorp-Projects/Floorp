@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
+    'nsIDataStore.idl',
     'nsIDataStoreService.idl',
 ]
 
@@ -26,6 +27,7 @@ LOCAL_INCLUDES += [
 
 EXTRA_COMPONENTS += [
     'DataStore.manifest',
+    'DataStoreImpl.js',
     'DataStoreService.js',
 ]
 
@@ -33,7 +35,6 @@ EXTRA_JS_MODULES += [
     'DataStoreChangeNotifier.jsm',
     'DataStoreCursorImpl.jsm',
     'DataStoreDB.jsm',
-    'DataStoreImpl.jsm',
     'DataStoreServiceInternal.jsm',
 ]
 
