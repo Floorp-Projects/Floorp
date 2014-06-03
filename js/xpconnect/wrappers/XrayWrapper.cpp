@@ -1775,7 +1775,7 @@ DEBUG_CheckXBLCallable(JSContext *cx, JSObject *obj)
     // has been adopted into another compartment, those prototypes will now point
     // to a different XBL scope (which is ok).
     MOZ_ASSERT_IF(js::IsCrossCompartmentWrapper(obj),
-                  xpc::IsXBLScope(js::GetObjectCompartment(js::UncheckedUnwrap(obj))));
+                  xpc::IsContentXBLScope(js::GetObjectCompartment(js::UncheckedUnwrap(obj))));
     MOZ_ASSERT(JS_ObjectIsCallable(cx, obj));
 }
 
@@ -1930,7 +1930,7 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
     // Make sure to assert this.
     nsCOMPtr<nsIContent> content;
     if (!desc.object() &&
-        EnsureCompartmentPrivate(wrapper)->scope->IsXBLScope() &&
+        EnsureCompartmentPrivate(wrapper)->scope->IsContentXBLScope() &&
         (content = do_QueryInterfaceNative(cx, wrapper)))
     {
         if (!nsContentUtils::LookupBindingMember(cx, content, id, desc))
