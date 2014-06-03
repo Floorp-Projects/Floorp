@@ -384,7 +384,7 @@ struct ComponentsInterfaceShimEntry {
  *   WebIDL interface non-scriptable.
  * * When should I remove an entry from this list?
  *   If you are completely removing an XPIDL interface from the code base.  If
- *   you forget to do so, the compiler will remain you.
+ *   you forget to do so, the compiler will remind you.
  * * How should I add an entry to the list here?
  *   First, make sure that the XPIDL interface in question is non-scriptable
  *   and also has a corresponding WebIDL interface.  Then, add two include
