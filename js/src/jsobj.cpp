@@ -277,6 +277,9 @@ PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
 {
     MOZ_ASSERT(isUndefined());
 
+    if (!desc.object())
+        return;
+
     isUndefined_ = false;
     descObj_ = nullptr;
     attrs = uint8_t(desc.attributes());
@@ -304,6 +307,21 @@ PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
     }
     hasEnumerable_ = true;
     hasConfigurable_ = true;
+}
+
+void
+PropDesc::populatePropertyDescriptor(HandleObject obj, MutableHandle<PropertyDescriptor> desc) const
+{
+    if (isUndefined()) {
+        desc.object().set(nullptr);
+        return;
+    }
+
+    desc.value().set(hasValue() ? value() : UndefinedValue());
+    desc.setGetter(getter());
+    desc.setSetter(setter());
+    desc.setAttributes(attributes());
+    desc.object().set(obj);
 }
 
 bool
