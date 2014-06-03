@@ -68,6 +68,10 @@ struct PropDesc {
   public:
     friend class AutoPropDescRooter;
     friend void JS::AutoGCRooter::trace(JSTracer *trc);
+    friend struct GCMethods<PropDesc>;
+
+    void trace(JSTracer *trc);
+    static ThingRootKind rootKind() { return THING_ROOT_PROP_DESC; }
 
     enum Enumerability { Enumerable = true, NonEnumerable = false };
     enum Configurability { Configurable = true, NonConfigurable = false };
@@ -285,6 +289,136 @@ class AutoPropDescRooter : private JS::CustomAutoRooter
 
     PropDesc propDesc;
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+} /* namespace js */
+
+namespace JS {
+
+template <typename Outer>
+class PropDescOperations
+{
+    const js::PropDesc * desc() const { return static_cast<const Outer*>(this)->extract(); }
+
+  public:
+    bool isUndefined() const { return desc()->isUndefined(); }
+
+    bool hasGet() const { return desc()->hasGet(); }
+    bool hasSet() const { return desc()->hasSet(); }
+    bool hasValue() const { return desc()->hasValue(); }
+    bool hasWritable() const { return desc()->hasWritable(); }
+    bool hasEnumerable() const { return desc()->hasEnumerable(); }
+    bool hasConfigurable() const { return desc()->hasConfigurable(); }
+
+    Value pd() const { return desc()->pd(); }
+
+    uint8_t attributes() const { return desc()->attributes(); }
+
+    bool isAccessorDescriptor() const { return desc()->isAccessorDescriptor(); }
+    bool isDataDescriptor() const { return desc()->isDataDescriptor(); }
+    bool isGenericDescriptor() const { return desc()->isGenericDescriptor(); }
+    bool configurable() const { return desc()->configurable(); }
+    bool enumerable() const { return desc()->enumerable(); }
+    bool writable() const { return desc()->writable(); }
+
+    HandleValue value() const { return desc()->value(); }
+    JSObject *getterObject() const { return desc()->getterObject(); }
+    JSObject *setterObject() const { return desc()->setterObject(); }
+    HandleValue getterValue() const { return desc()->getterValue(); }
+    HandleValue setterValue() const { return desc()->setterValue(); }
+
+    JSPropertyOp getter() const { return desc()->getter(); }
+    JSStrictPropertyOp setter() const { return desc()->setter(); }
+
+    // We choose not to expose the debugger-specific parts of PropDesc, both
+    // because they are not really general use, but also because they are a
+    // pain to expose.
+};
+
+template <typename Outer>
+class MutablePropDescOperations : public PropDescOperations<Outer>
+{
+    js::PropDesc * desc() { return static_cast<Outer*>(this)->extractMutable(); }
+
+  public:
+
+    bool initialize(JSContext *cx, const Value &v, bool checkAccessors = true) {
+        return desc()->initialize(cx, v, checkAccessors);
+    }
+    void complete() {
+        desc()->complete();
+    }
+
+    bool checkGetter(JSContext *cx) { return desc()->checkGetter(cx); }
+    bool checkSetter(JSContext *cx) { return desc()->checkSetter(cx); }
+
+    void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> descriptor) {
+        desc()->initFromPropertyDescriptor(descriptor);
+    }
+    bool makeObject(JSContext *cx) {
+        return desc()->makeObject(cx);
+    }
+
+    void setUndefined() { desc()->setUndefined(); }
+    void clearPd() { desc()->clearPd(); }
+};
+
+} /* namespace JS */
+
+namespace js {
+
+template <>
+struct GCMethods<PropDesc> {
+    static PropDesc initial() { return PropDesc(); }
+    static ThingRootKind kind() { return THING_ROOT_PROP_DESC; }
+    static bool poisoned(const PropDesc &desc) {
+        return (desc.pd_.isGCThing() &&
+                JS::IsPoisonedPtr(desc.pd_.toGCThing())) ||
+               (desc.value_.isGCThing() &&
+                JS::IsPoisonedPtr(desc.value_.toGCThing())) ||
+               (desc.get_.isGCThing() &&
+                JS::IsPoisonedPtr(desc.get_.toGCThing())) ||
+               (desc.set_.isGCThing() &&
+                JS::IsPoisonedPtr(desc.set_.toGCThing()));
+    }
+};
+
+template <>
+class RootedBase<PropDesc>
+  : public JS::MutablePropDescOperations<JS::Rooted<PropDesc> >
+{
+    friend class JS::PropDescOperations<JS::Rooted<PropDesc> >;
+    friend class JS::MutablePropDescOperations<JS::Rooted<PropDesc> >;
+    const PropDesc *extract() const {
+        return static_cast<const JS::Rooted<PropDesc>*>(this)->address();
+    }
+    PropDesc *extractMutable() {
+        return static_cast<JS::Rooted<PropDesc>*>(this)->address();
+    }
+};
+
+template <>
+class HandleBase<PropDesc>
+  : public JS::PropDescOperations<JS::Handle<PropDesc> >
+{
+    friend class JS::PropDescOperations<JS::Handle<PropDesc> >;
+    const PropDesc *extract() const {
+        return static_cast<const JS::Handle<PropDesc>*>(this)->address();
+    }
+};
+
+template <>
+class MutableHandleBase<PropDesc>
+  : public JS::MutablePropDescOperations<JS::MutableHandle<PropDesc> >
+{
+    friend class JS::PropDescOperations<JS::MutableHandle<PropDesc> >;
+    friend class JS::MutablePropDescOperations<JS::MutableHandle<PropDesc> >;
+    const PropDesc *extract() const {
+        return static_cast<const JS::MutableHandle<PropDesc>*>(this)->address();
+    }
+    PropDesc *extractMutable() {
+        return static_cast<JS::MutableHandle<PropDesc>*>(this)->address();
+    }
 };
 
 } /* namespace js */
