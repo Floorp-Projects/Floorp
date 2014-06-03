@@ -7483,7 +7483,8 @@ class CGMemberJITInfo(CGThing):
         return ""
 
     def defineJitInfo(self, infoName, opName, opType, infallible, movable,
-                      aliasSet, hasSlot, slotIndex, returnTypes, args):
+                      aliasSet, alwaysInSlot, lazilyInSlot, slotIndex,
+                      returnTypes, args):
         """
         aliasSet is a JSJitInfo::AliasSet value, without the "JSJitInfo::" bit.
 
@@ -7492,7 +7493,7 @@ class CGMemberJITInfo(CGThing):
         otherwise an iterable of the arguments for this method.
         """
         assert(not movable or aliasSet != "AliasEverything")  # Can't move write-aliasing things
-        assert(not hasSlot or movable)  # Things with slots had better be movable
+        assert(not alwaysInSlot or movable)  # Things always in slots had better be movable
 
         def jitInfoInitializer(isTypedMethod):
             initializer = fill(
@@ -7506,7 +7507,8 @@ class CGMemberJITInfo(CGThing):
                   ${returnType},  /* returnType.  Not relevant for setters. */
                   ${isInfallible},  /* isInfallible. False in setters. */
                   ${isMovable},  /* isMovable.  Not relevant for setters. */
-                  ${isInSlot},  /* isInSlot.  Only relevant for getters. */
+                  ${isAlwaysInSlot}, /* isAlwaysInSlot.  Only relevant for getters. */
+                  ${isLazilyCachedInSlot}, /* isLazilyCachedInSlot.  Only relevant for getters. */
                   ${isTypedMethod},  /* isTypedMethod.  Only relevant for methods. */
                   ${slotIndex}   /* Reserved slot index, if we're stored in a slot, else 0. */
                 }
@@ -7519,7 +7521,8 @@ class CGMemberJITInfo(CGThing):
                                   ""),
                 isInfallible=toStringBool(infallible),
                 isMovable=toStringBool(movable),
-                isInSlot=toStringBool(hasSlot),
+                isAlwaysInSlot=toStringBool(alwaysInSlot),
+                isLazilyCachedInSlot=toStringBool(lazilyInSlot),
                 isTypedMethod=toStringBool(isTypedMethod),
                 slotIndex=slotIndex)
             return initializer.rstrip()
@@ -7568,17 +7571,22 @@ class CGMemberJITInfo(CGThing):
             movable = getterpure and getterinfal
 
             getterinfal = getterinfal and infallibleForMember(self.member, self.member.type, self.descriptor)
-            isInSlot = self.member.getExtendedAttribute("StoreInSlot")
-            if isInSlot:
+            isAlwaysInSlot = self.member.getExtendedAttribute("StoreInSlot")
+            if self.member.slotIndex is not None:
+                assert isAlwaysInSlot or self.member.getExtendedAttribute("Cached")
+                isLazilyCachedInSlot = not isAlwaysInSlot
                 slotIndex = memberReservedSlot(self.member)
                 # We'll statically assert that this is not too big in
-                # CGUpdateMemberSlotsMethod
+                # CGUpdateMemberSlotsMethod, in the case when
+                # isAlwaysInSlot is true.
             else:
+                isLazilyCachedInSlot = False
                 slotIndex = "0"
 
             result = self.defineJitInfo(getterinfo, getter, "Getter",
                                         getterinfal, movable, aliasSet,
-                                        isInSlot, slotIndex,
+                                        isAlwaysInSlot, isLazilyCachedInSlot,
+                                        slotIndex,
                                         [self.member.type], None)
             if (not self.member.readonly or
                 self.member.getExtendedAttribute("PutForwards") is not None or
@@ -7590,7 +7598,7 @@ class CGMemberJITInfo(CGThing):
                 # Setters are always fallible, since they have to do a typed unwrap.
                 result += self.defineJitInfo(setterinfo, setter, "Setter",
                                              False, False, "AliasEverything",
-                                             False, "0",
+                                             False, False, "0",
                                              [BuiltinTypes[IDLBuiltinType.Types.void]],
                                              None)
             return result
@@ -7641,7 +7649,8 @@ class CGMemberJITInfo(CGThing):
             else:
                 aliasSet = "AliasEverything"
             result = self.defineJitInfo(methodinfo, method, "Method",
-                                        methodInfal, movable, aliasSet, False, "0",
+                                        methodInfal, movable, aliasSet,
+                                        False, False, "0",
                                         [s[0] for s in sigs], args)
             return result
         raise TypeError("Illegal member type to CGPropertyJITInfo")
