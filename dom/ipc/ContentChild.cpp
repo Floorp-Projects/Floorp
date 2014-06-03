@@ -1465,7 +1465,7 @@ ContentChild::RecvSystemMemoryAvailable(const uint64_t& aGetterId,
     nsRefPtr<Promise> p = dont_AddRef(reinterpret_cast<Promise*>(aGetterId));
 
     if (!aMemoryAvailable) {
-        p->MaybeReject(NS_LITERAL_STRING("Abnormal"));
+        p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
         return true;
     }
 
