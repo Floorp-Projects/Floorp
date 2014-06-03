@@ -74,7 +74,7 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator *gen, LIRGraph *graph, Mac
         bool forceAlign = false;
 #endif
         if (gen->needsInitialStackAlignment() || forceAlign) {
-            unsigned alignmentAtCall = AlignmentAtPrologue + frameDepth_;
+            unsigned alignmentAtCall = AlignmentAtAsmJSPrologue + frameDepth_;
             if (unsigned rem = alignmentAtCall % StackAlignment) {
                 frameInitialAdjustment_ = StackAlignment - rem;
                 frameDepth_ += frameInitialAdjustment_;
