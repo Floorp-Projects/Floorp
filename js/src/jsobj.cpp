@@ -1090,7 +1090,7 @@ js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
 
 bool
 js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
-                            AutoIdVector *ids, AutoPropDescArrayRooter *descs)
+                            AutoIdVector *ids, AutoPropDescVector *descs)
 {
     if (!GetPropertyNames(cx, props, JSITER_OWNONLY, ids))
         return false;
@@ -1098,11 +1098,11 @@ js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccesso
     RootedId id(cx);
     for (size_t i = 0, len = ids->length(); i < len; i++) {
         id = (*ids)[i];
-        PropDesc* desc = descs->append();
+        Rooted<PropDesc> desc(cx);
         RootedValue v(cx);
-        if (!desc ||
-            !JSObject::getGeneric(cx, props, props, id, &v) ||
-            !desc->initialize(cx, v, checkAccessors))
+        if (!JSObject::getGeneric(cx, props, props, id, &v) ||
+            !desc.initialize(cx, v, checkAccessors) ||
+            !descs->append(desc))
         {
             return false;
         }
@@ -1114,7 +1114,7 @@ bool
 js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 {
     AutoIdVector ids(cx);
-    AutoPropDescArrayRooter descs(cx);
+    AutoPropDescVector descs(cx);
     if (!ReadPropertyDescriptors(cx, props, true, &ids, &descs))
         return false;
 
