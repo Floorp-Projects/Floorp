@@ -56,6 +56,9 @@ class nsIPageSequenceFrame;
 class nsCanvasFrame;
 class nsAString;
 class nsCaret;
+namespace mozilla {
+class TouchCaret;
+} // namespace mozilla
 class nsFrameSelection;
 class nsFrameManager;
 class nsILayoutHistoryState;
@@ -133,10 +136,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-//61e60df7-128a-4cdd-a684-5f0bd2ceb61f
+//a4e5ff3a-dc5c-4b3a-a625-d164a9e50619
 #define NS_IPRESSHELL_IID \
-{ 0x61e60df7, 0x128a, 0x4cdd, \
-  {0xa6, 0x84, 0x5f, 0x0b, 0xd2, 0xce, 0xb6, 0x1f}}
+{ 0xa4e5ff3a, 0xdc5c, 0x4b3a, \
+  {0xa6, 0x25, 0xd1, 0x64, 0xa9, 0xe5, 0x06, 0x19}}
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -743,9 +746,25 @@ public:
   virtual void NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
 
   /**
+   * Get the touch caret, if it exists. AddRefs it.
+   */
+  virtual already_AddRefed<mozilla::TouchCaret> GetTouchCaret() const = 0;
+
+  /**
    * Returns the touch caret element of the presshell.
    */
   virtual mozilla::dom::Element* GetTouchCaretElement() const = 0;
+
+  /**
+   * Will be called when touch caret visibility has changed.
+   * Set the mMayHaveTouchCaret flag to aSet.
+   */
+  virtual void SetMayHaveTouchCaret(bool aSet) = 0;
+
+  /**
+   * Get the mMayHaveTouchCaret flag.
+   */
+  virtual bool MayHaveTouchCaret() = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
