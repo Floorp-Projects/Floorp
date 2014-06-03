@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - bug 1008044</title>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+function is(a, b, msg) {
+  alert((a == b ? 'OK' : 'KO') + ' ' + msg)
+}
+
+function cbError() {
+  alert('KO error');
+}
+
+function finish() {
+  alert('DONE');
+}
+
+navigator.getDataStores('foo').then(function(stores) {
+  is (stores.length, 1, "Correct number of Stores");
+  is (stores[0].name, 'foo', "Correct name is received!");
+  stores[0].get(42).then(function(something) {
+    is (something, null, "Correct value");
+    finish();
+  }, cbError);
+}, cbError);
+
+  </script>
+</body>
+</html>

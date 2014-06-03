@@ -1798,22 +1798,9 @@ static void AdjustViews(nsIFrame* aFrame)
 }
 
 static bool
-CanScrollWithBlitting(nsIFrame* aFrame)
+NeedToInvalidateOnScroll(nsIFrame* aFrame)
 {
-  if (aFrame->GetStateBits() & NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL)
-    return false;
-
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
-    if (nsSVGIntegrationUtils::UsingEffectsForFrame(f) ||
-        f->IsFrameOfType(nsIFrame::eSVG) ||
-        f->GetStateBits() & NS_FRAME_NO_COMPONENT_ALPHA) {
-      return false;
-    }
-    if (nsLayoutUtils::IsPopup(f))
-      break;
-  }
-  return true;
+  return (aFrame->GetStateBits() & NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL) != 0;
 }
 
 bool ScrollFrameHelper::IsIgnoringViewportClipping() const
@@ -1900,14 +1887,12 @@ void ScrollFrameHelper::ScrollVisual(nsPoint aOldScrolledFramePos)
   AdjustViews(mScrolledFrame);
   // We need to call this after fixing up the view positions
   // to be consistent with the frame hierarchy.
-  bool canScrollWithBlitting = CanScrollWithBlitting(mOuter);
+  bool needToInvalidateOnScroll = NeedToInvalidateOnScroll(mOuter);
   mOuter->RemoveStateBits(NS_SCROLLFRAME_INVALIDATE_CONTENTS_ON_SCROLL);
-  if (IsScrollingActive()) {
-    if (!canScrollWithBlitting) {
-      MarkInactive();
-    }
+  if (IsScrollingActive() && needToInvalidateOnScroll) {
+    MarkInactive();
   }
-  if (canScrollWithBlitting) {
+  if (!needToInvalidateOnScroll) {
     MarkActive();
   }
 
@@ -2196,9 +2181,8 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     scrollParts.AppendElement(kid);
   }
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId = aCreateLayer
-    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId =
+    nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
 
   scrollParts.Sort(HoveredStateComparator());
 
@@ -2216,11 +2200,16 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
       flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
     }
 
+    // Always create layers for overlay scrollbars so that we don't create a
+    // giant layer covering the whole scrollport if both scrollbars are visible.
+    bool isOverlayScrollbar = (flags != 0) && overlayScrollbars;
+    bool createLayer = aCreateLayer || isOverlayScrollbar;
+
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
     // partList.PositionedDescendants().
     ::AppendToTop(aBuilder, aLists,
                   partList.PositionedDescendants(), scrollParts[i],
-                  aCreateLayer, flags, scrollTargetId, aPositioned);
+                  createLayer, flags, scrollTargetId, aPositioned);
   }
 }
 
@@ -2418,7 +2407,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->IsPaintingToWindow()) {
     mScrollPosAtLastPaint = GetScrollPosition();
-    if (IsScrollingActive() && !CanScrollWithBlitting(mOuter)) {
+    if (IsScrollingActive() && NeedToInvalidateOnScroll(mOuter)) {
       MarkInactive();
     }
     if (IsScrollingActive()) {
@@ -2469,7 +2458,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (addScrollBars) {
       // Add overlay scrollbars.
-      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, true, true);
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
+                          createLayersForScrollbars, true);
     }
 
     return;
@@ -2661,9 +2651,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     scrolledContent.BorderBackground()->AppendNewToBottom(layerItem);
   }
   // Now display overlay scrollbars and the resizer, if we have one.
-  // Always create layers for these, so that we don't create a giant layer
-  // covering the whole scrollport if both scrollbars are visible.
-  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent, true, true);
+  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent,
+                      createLayersForScrollbars, true);
   scrolledContent.MoveTo(aLists);
 }
 
