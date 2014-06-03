@@ -154,8 +154,15 @@ public class Telemetry {
         }
     }
 
+    /**
+     * @param method A non-null method (if null is desired, consider using Method.NONE)
+     */
     private static void sendUIEvent(final String eventName, final Method method,
             final long timestamp, final String extras) {
+        if (method == null) {
+            throw new IllegalArgumentException("Expected non-null method - use Method.NONE?");
+        }
+
         Log.d(LOGTAG, "SendUIEvent: event = " + eventName + " method = " + method +
                 " timestamp = " + timestamp + " extras = " + extras);
         final GeckoEvent geckoEvent = GeckoEvent.createTelemetryUIEvent(
