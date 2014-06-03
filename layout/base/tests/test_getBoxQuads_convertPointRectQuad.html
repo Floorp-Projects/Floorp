@@ -16,9 +16,9 @@ var suppressedText2;
 var comment;
 var fragment;
 var openedWindow;
-var zeroPoint = new DOMPoint(0,0);
-var zeroRect = new DOMRect(0,0,0,0);
-var zeroQuad = new DOMQuad(zeroRect);
+var zeroPoint;
+var zeroRect;
+var zeroQuad;
 var notInDocument = document.createElement('div');
 
 function isEval(expr, b) {
@@ -355,10 +355,40 @@ function startTest() {
   SpecialPowers.pushPrefEnv({"set": [["layout.css.DOMPoint.enabled", true],
                                      ["layout.css.DOMQuad.enabled", true],
                                      ["layout.css.getBoxQuads.enabled", true],
-                                     ["layout.css.convertFromNode.enabled", true]]}, runTest);
+                                     ["layout.css.convertFromNode.enabled", true]]}, grabFeatures);
+}
+
+// This is a bit of a hack but it works. Our Window object was set up while
+// the prefs might have been false so it may not have the features we're
+// testing. Create an <iframe> whose Window is initialized while the prefs are
+// true, and we can steal the features from that Window.
+// When these prefs are enabled on all builds by default, we can skip this step.
+function grabFeatures() {
+  var x = document.createElement('iframe');
+  x.src = "about:blank";
+  document.body.appendChild(x);
+  function setupFeatures(w) {
+    for (var name of ["getBoxQuads", "convertQuadFromNode", "convertRectFromNode", "convertPointFromNode"]) {
+      w.Text.prototype[name] = x.contentWindow.Text.prototype[name];
+      w.Element.prototype[name] = x.contentWindow.Element.prototype[name];
+      w.Document.prototype[name] = x.contentWindow.Document.prototype[name];
+    }
+    for (var name of ["DOMPoint", "DOMQuad"]) {
+      w[name] = x.contentWindow[name];
+    }
+  }
+  x.onload = function() {
+    setupFeatures(window);
+    setupFeatures(f1.contentWindow);
+    runTest();
+  };
 }
 
 function runTest() {
+  zeroPoint = new DOMPoint(0,0);
+  zeroRect = new DOMRect(0,0,0,0);
+  zeroQuad = new DOMQuad(zeroRect);
+
   // Setup globals
   f1d = f1.contentWindow.f1d;
   text = textContainer.firstChild;
