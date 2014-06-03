@@ -51,7 +51,10 @@ registerCleanupFunction(function() {
 
 // Import the GCLI test helper
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
+testDir = testDir.replace(/\/\//g, '/');
+testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
+let helpersjs = testDir + "/../../commandline/test/helpers.js";
+Services.scriptloader.loadSubScript(helpersjs, this);
 
 // Redeclare dbg_assert with a fatal behavior.
 function dbg_assert(cond, e) {

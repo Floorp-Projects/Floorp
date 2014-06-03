@@ -251,7 +251,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    // asm.js compilation handles its own IonContet-pushing
+    // asm.js compilation handles its own IonContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
       : enoughMemory_(true),

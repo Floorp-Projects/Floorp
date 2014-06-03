@@ -1674,6 +1674,10 @@ ContainerState::FindOpaqueBackgroundColorFor(int32_t aThebesLayerIndex)
           break;
       }
 
+      if (item->IsInvisibleInRect(appUnitRect)) {
+        continue;
+      }
+
       nscolor color;
       if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
         return color;
