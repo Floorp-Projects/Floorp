@@ -582,9 +582,7 @@ BoxModelHighlighter.prototype = {
 
     options.region = options.region || "content";
 
-    // TODO: Remove this polyfill
-    this.rect =
-      this.layoutHelpers.getAdjustedQuadsPolyfill(this.currentNode, "margin");
+    this.rect = this.layoutHelpers.getAdjustedQuads(this.currentNode, "margin");
 
     if (!this.rect) {
       return null;
@@ -592,9 +590,8 @@ BoxModelHighlighter.prototype = {
 
     if (this.rect.bounds.width > 0 && this.rect.bounds.height > 0) {
       for (let boxType in this._boxModelNodes) {
-        // TODO: Remove this polyfill
         let {p1, p2, p3, p4} = boxType === "margin" ? this.rect :
-          this.layoutHelpers.getAdjustedQuadsPolyfill(this.currentNode, boxType);
+          this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
 
         let boxNode = this._boxModelNodes[boxType];
         boxNode.setAttribute("points",
