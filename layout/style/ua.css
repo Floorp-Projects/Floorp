@@ -283,3 +283,41 @@ parsererror|sourcetext {
   font-weight: bold;
   font-size: 12pt;
 }
+
+div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+  background-image: url("resource://gre/res/text_selection_handle.png");
+  position: absolute;
+  width: 19px;
+  height: 24px;
+  margin-left: -10px;
+  background-position: center center;
+  z-index: 2147483647;
+}
+
+@media (min-resolution: 1.5dppx) {
+  div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+    background-image: url("resource://gre/res/text_selection_handle@1.5.png");
+    position: absolute;
+    width: 29px;
+    height: 36px;
+    margin-left: -15px;
+    background-position: center center;
+    z-index: 2147483647;
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+    background-image: url("resource://gre/res/text_selection_handle@2.png");
+    position: absolute;
+    width: 38px;
+    height: 48px;
+    margin-left: -19px;
+    background-position: center center;
+    z-index: 2147483647;
+  }
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret.hidden {
+  visibility: hidden;
+}

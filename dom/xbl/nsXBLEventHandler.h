@@ -86,9 +86,9 @@ public:
     mIsBoundToChrome = aIsBoundToChrome;
   }
 
-  void SetUsingXBLScope(bool aUsingXBLScope)
+  void SetUsingContentXBLScope(bool aUsingContentXBLScope)
   {
-    mUsingXBLScope = aUsingXBLScope;
+    mUsingContentXBLScope = aUsingContentXBLScope;
   }
 
 private:
@@ -101,7 +101,7 @@ private:
   uint8_t mPhase;
   uint8_t mType;
   bool mIsBoundToChrome;
-  bool mUsingXBLScope;
+  bool mUsingContentXBLScope;
 };
 
 nsresult

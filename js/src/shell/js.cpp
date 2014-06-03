@@ -51,7 +51,6 @@
 #ifdef XP_WIN
 # include "jswin.h"
 #endif
-#include "jsworkers.h"
 #include "jswrapper.h"
 #include "prmjtime.h"
 
@@ -65,6 +64,7 @@
 #include "shell/jsheaptools.h"
 #include "shell/jsoptparse.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/TypedArrayObject.h"
@@ -6020,12 +6020,6 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
         jsCacheAsmJSPath = JS_smprintf("%s/asmjs.cache", jsCacheDir);
     }
 
-#ifdef JS_THREADSAFE
-    int32_t threadCount = op.getIntOption("thread-count");
-    if (threadCount >= 0)
-        SetFakeCPUCount(threadCount);
-#endif /* JS_THREADSAFE */
-
 #ifdef DEBUG
     dumpEntrainedVariables = op.getBoolOption("dump-entrained-variables");
 #endif
@@ -6276,6 +6270,14 @@ main(int argc, char **argv, char **envp)
 #endif
 
 #endif // DEBUG
+
+#ifdef JS_THREADSAFE
+    // The fake thread count must be set before initializing the Runtime,
+    // which spins up the thread pool.
+    int32_t threadCount = op.getIntOption("thread-count");
+    if (threadCount >= 0)
+        SetFakeCPUCount(threadCount);
+#endif /* JS_THREADSAFE */
 
     // Start the engine.
     if (!JS_Init())

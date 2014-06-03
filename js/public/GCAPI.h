@@ -374,6 +374,7 @@ ShrinkGCBuffers(JSRuntime *rt);
  */
 class JS_PUBLIC_API(AutoAssertOnGC)
 {
+#ifdef DEBUG
     JSRuntime *runtime;
     size_t gcNumber;
 
@@ -383,6 +384,14 @@ class JS_PUBLIC_API(AutoAssertOnGC)
     ~AutoAssertOnGC();
 
     static void VerifyIsSafeToGC(JSRuntime *rt);
+#else
+  public:
+    AutoAssertOnGC() {}
+    explicit AutoAssertOnGC(JSRuntime *rt) {}
+    ~AutoAssertOnGC() {}
+
+    static void VerifyIsSafeToGC(JSRuntime *rt) {}
+#endif
 };
 
 /*

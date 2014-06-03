@@ -41,7 +41,7 @@ Adts::ConvertEsdsToAdts(uint16_t aChannelCount, int8_t aFrequencyIndex,
   size_t newSize = aSample->size + kADTSHeaderSize;
 
   // ADTS header uses 13 bits for packet size.
-  if (newSize >= (1 << 13) || aChannelCount < 0 || aChannelCount > 15 ||
+  if (newSize >= (1 << 13) || aChannelCount > 15 ||
       aFrequencyIndex < 0 || aProfile < 1 || aProfile > 4)
     return false;
 

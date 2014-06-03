@@ -29,6 +29,7 @@
 #include "nsTableCellFrame.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsHTMLParts.h"
+#include "nsPresShell.h"
 #include "nsIPresShell.h"
 #include "nsUnicharUtils.h"
 #include "nsStyleSet.h"
@@ -2597,6 +2598,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   SetInitialSingleChild(mDocElementContainingBlock, newFrame);
 
+  // Create touch caret frame if there is a canvas frame
+  if (mDocElementContainingBlock->GetType() == nsGkAtoms::canvasFrame) {
+    ConstructAnonymousContentForCanvas(state, mDocElementContainingBlock,
+                                       aDocElement);
+  }
+
   return newFrame;
 }
 
@@ -2850,6 +2857,29 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     nsFrameList newFrameList(newFrame, newFrame);
     viewportFrame->AppendFrames(kPrincipalList, newFrameList);
   }
+}
+
+void
+nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
+                                                          nsIFrame* aFrame,
+                                                          nsIContent* aDocElement)
+{
+  NS_ASSERTION(aFrame->GetType() == nsGkAtoms::canvasFrame, "aFrame should be canvas frame!");
+
+  nsAutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
+  GetAnonymousContent(aDocElement, aFrame, anonymousItems);
+  if (anonymousItems.IsEmpty()) {
+    // Touch caret is not enabled.
+    return;
+  }
+
+  FrameConstructionItemList itemsToConstruct;
+  nsContainerFrame* frameAsContainer = do_QueryFrame(aFrame);
+  AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems, itemsToConstruct);
+
+  nsFrameItems frameItems;
+  ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer, frameItems);
+  frameAsContainer->AppendFrames(kPrincipalList, frameItems);
 }
 
 nsContainerFrame*
