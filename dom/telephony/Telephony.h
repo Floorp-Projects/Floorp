@@ -41,7 +41,7 @@ class Telephony MOZ_FINAL : public DOMEventTargetHelper
   class EnumerationAck;
   friend class EnumerationAck;
 
-  nsCOMPtr<nsITelephonyService> mProvider;
+  nsCOMPtr<nsITelephonyService> mService;
   nsRefPtr<Listener> mListener;
 
   TelephonyCall* mActiveCall;
@@ -131,9 +131,9 @@ public:
   }
 
   nsITelephonyService*
-  Provider() const
+  Service() const
   {
-    return mProvider;
+    return mService;
   }
 
   const nsTArray<nsRefPtr<TelephonyCall> >&

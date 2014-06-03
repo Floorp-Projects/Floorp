@@ -32,7 +32,7 @@ const nsITelephonyService = Ci.nsITelephonyService;
 
 const CALL_WAKELOCK_TIMEOUT = 5000;
 
-// Index of the CDMA second call which isn't held in RIL but only in TelephoyProvider.
+// Index of the CDMA second call which isn't held in RIL but only in TelephoyService.
 const CDMA_SECOND_CALL_INDEX = 2;
 
 const DIAL_ERROR_INVALID_STATE_ERROR = "InvalidStateError";

@@ -125,9 +125,9 @@ Telephony::Shutdown()
   if (mListener) {
     mListener->Disconnect();
 
-    if (mProvider) {
-      mProvider->UnregisterListener(mListener);
-      mProvider = nullptr;
+    if (mService) {
+      mService->UnregisterListener(mListener);
+      mService = nullptr;
     }
 
     mListener = nullptr;
@@ -167,7 +167,7 @@ Telephony::Create(nsPIDOMWindow* aOwner, ErrorResult& aRv)
 
   nsRefPtr<Telephony> telephony = new Telephony(aOwner);
 
-  telephony->mProvider = ril;
+  telephony->mService = ril;
   telephony->mListener = new Listener(telephony);
   telephony->mCallsList = new CallsList(telephony);
   telephony->mGroup = TelephonyCallGroup::Create(telephony);
@@ -216,7 +216,7 @@ Telephony::ProvidedOrDefaultServiceId(const Optional<uint32_t>& aServiceId)
     return aServiceId.Value();
   } else {
     uint32_t serviceId = 0;
-    mProvider->GetDefaultServiceId(&serviceId);
+    mService->GetDefaultServiceId(&serviceId);
     return serviceId;
   }
 }
@@ -267,7 +267,7 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
 
   nsCOMPtr<nsITelephonyCallback> callback =
     new Callback(this, promise, aServiceId, aNumber);
-  nsresult rv = mProvider->Dial(aServiceId, aNumber, aIsEmergency, callback);
+  nsresult rv = mService->Dial(aServiceId, aNumber, aIsEmergency, callback);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_LITERAL_STRING("InvalidStateError"));
     return promise.forget();
@@ -398,7 +398,7 @@ Telephony::StartTone(const nsAString& aDTMFChar,
     return;
   }
 
-  aRv = mProvider->StartTone(serviceId, aDTMFChar);
+  aRv = mService->StartTone(serviceId, aDTMFChar);
 }
 
 void
@@ -411,14 +411,14 @@ Telephony::StopTone(const Optional<uint32_t>& aServiceId, ErrorResult& aRv)
     return;
   }
 
-  aRv = mProvider->StopTone(serviceId);
+  aRv = mService->StopTone(serviceId);
 }
 
 bool
 Telephony::GetMuted(ErrorResult& aRv) const
 {
   bool muted = false;
-  aRv = mProvider->GetMicrophoneMuted(&muted);
+  aRv = mService->GetMicrophoneMuted(&muted);
 
   return muted;
 }
@@ -426,14 +426,14 @@ Telephony::GetMuted(ErrorResult& aRv) const
 void
 Telephony::SetMuted(bool aMuted, ErrorResult& aRv)
 {
-  aRv = mProvider->SetMicrophoneMuted(aMuted);
+  aRv = mService->SetMicrophoneMuted(aMuted);
 }
 
 bool
 Telephony::GetSpeakerEnabled(ErrorResult& aRv) const
 {
   bool enabled = false;
-  aRv = mProvider->GetSpeakerEnabled(&enabled);
+  aRv = mService->GetSpeakerEnabled(&enabled);
 
   return enabled;
 }
@@ -441,7 +441,7 @@ Telephony::GetSpeakerEnabled(ErrorResult& aRv) const
 void
 Telephony::SetSpeakerEnabled(bool aEnabled, ErrorResult& aRv)
 {
-  aRv = mProvider->SetSpeakerEnabled(aEnabled);
+  aRv = mService->SetSpeakerEnabled(aEnabled);
 }
 
 void
@@ -571,7 +571,7 @@ Telephony::EnumerateCallStateComplete()
     NS_WARNING("Failed to notify calls changed!");
   }
 
-  if (NS_FAILED(mProvider->RegisterListener(mListener))) {
+  if (NS_FAILED(mService->RegisterListener(mListener))) {
     NS_WARNING("Failed to register listener!");
   }
   return NS_OK;
