@@ -41,6 +41,7 @@
 #include "ScopedNSSTypes.h"
 #include "nsProxyRelease.h"
 #include "mozilla/Base64.h"
+#include "NSSCertDBTrustDomain.h"
 
 #include "nspr.h"
 #include "certdb.h"
@@ -524,32 +525,39 @@ nsNSSCertificate::GetDbKey(char** aDbKey)
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetWindowTitle(char** aWindowTitle)
+nsNSSCertificate::GetWindowTitle(nsAString& aWindowTitle)
 {
   nsNSSShutDownPreventionLock locker;
-  if (isAlreadyShutDown())
+  if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
-
-  NS_ENSURE_ARG(aWindowTitle);
-  if (mCert) {
-    if (mCert->nickname) {
-      *aWindowTitle = PL_strdup(mCert->nickname);
-    } else {
-      *aWindowTitle = CERT_GetCommonName(&mCert->subject);
-      if (!*aWindowTitle) {
-        if (mCert->subjectName) {
-          *aWindowTitle = PL_strdup(mCert->subjectName);
-        } else if (mCert->emailAddr) {
-          *aWindowTitle = PL_strdup(mCert->emailAddr);
-        } else {
-          *aWindowTitle = PL_strdup("");
-        }
-      }
-    }
-  } else {
-    NS_ERROR("Somehow got nullptr for mCertificate in nsNSSCertificate.");
-    *aWindowTitle = nullptr;
   }
+
+  aWindowTitle.Truncate();
+
+  if (!mCert) {
+    NS_ERROR("Somehow got nullptr for mCert in nsNSSCertificate.");
+    return NS_ERROR_FAILURE;
+  }
+
+  mozilla::pkix::ScopedPtr<char, mozilla::psm::PORT_Free_string>
+    commonName(CERT_GetCommonName(&mCert->subject));
+
+  const char* titleOptions[] = {
+    mCert->nickname,
+    commonName.get(),
+    mCert->subjectName,
+    mCert->emailAddr
+  };
+
+  nsAutoCString titleOption;
+  for (size_t i = 0; i < ArrayLength(titleOptions); i++) {
+    titleOption = titleOptions[i];
+    if (titleOption.Length() > 0 && IsUTF8(titleOption)) {
+      CopyUTF8toUTF16(titleOption, aWindowTitle);
+      return NS_OK;
+    }
+  }
+
   return NS_OK;
 }
 

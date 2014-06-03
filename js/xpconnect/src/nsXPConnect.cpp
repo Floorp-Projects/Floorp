@@ -1577,9 +1577,9 @@ IsChromeOrXBL(JSContext* cx, JSObject* /* unused */)
     // compat and not security for remote XUL, we just always claim to be XBL.
     //
     // Note that, for performance, we don't check AllowXULXBLForPrincipal here,
-    // and instead rely on the fact that AllowXBLScope() only returns false in
+    // and instead rely on the fact that AllowContentXBLScope() only returns false in
     // remote XUL situations.
-    return AccessCheck::isChrome(c) || IsXBLScope(c) || !AllowXBLScope(c);
+    return AccessCheck::isChrome(c) || IsContentXBLScope(c) || !AllowContentXBLScope(c);
 }
 
 } // namespace dom

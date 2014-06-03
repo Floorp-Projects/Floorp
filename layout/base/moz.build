@@ -91,6 +91,7 @@ UNIFIED_SOURCES += [
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
     'StackArena.cpp',
+    'TouchCaret.cpp',
 ]
 
 # nsDocumentViewer.cpp and nsPresShell.cpp need to be built separately

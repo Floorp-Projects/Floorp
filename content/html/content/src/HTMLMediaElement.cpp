@@ -3064,6 +3064,14 @@ void HTMLMediaElement::UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatu
     return;
   }
 
+  // Section 2.4.3.1 of the Media Source Extensions spec requires
+  // changing to HAVE_METADATA when seeking into an unbuffered
+  // range.
+  if (aNextFrame == MediaDecoderOwner::NEXT_FRAME_WAIT_FOR_MSE_DATA) {
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
+    return;
+  }
+
   if (mReadyState > nsIDOMHTMLMediaElement::HAVE_METADATA &&
       mDownloadSuspendedByCache &&
       mDecoder &&

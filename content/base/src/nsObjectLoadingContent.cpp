@@ -2650,7 +2650,7 @@ nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
   MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContext(),
                 aCx == nsContentUtils::GetCurrentJSContext());
   bool callerIsContentJS = (!nsContentUtils::IsCallerChrome() &&
-                            !nsContentUtils::IsCallerXBL() &&
+                            !nsContentUtils::IsCallerContentXBL() &&
                             js::IsContextRunningJS(aCx));
 
   nsCOMPtr<nsIContent> thisContent =

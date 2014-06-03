@@ -638,6 +638,7 @@ class JSLinearString : public JSString
         return JS::TwoByteChars(chars(), length());
     }
 
+    MOZ_ALWAYS_INLINE
     jschar latin1OrTwoByteChar(size_t index) const {
         MOZ_ASSERT(JSString::isLinear());
         MOZ_ASSERT(index < length());

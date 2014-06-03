@@ -13,7 +13,7 @@ interface nsIASN1Object;
 /**
  * This represents a X.509 certificate.
  */
-[scriptable, uuid(900d6442-d8bc-11e3-aa51-0800273c564f)]
+[scriptable, uuid(891d2009-b9ba-4a0d-bebe-6b3a30e33191)]
 interface nsIX509Cert : nsISupports {
 
   /**
@@ -128,7 +128,7 @@ interface nsIX509Cert : nsISupports {
   /**
    *  A human readable identifier to label this certificate.
    */
-  readonly attribute string windowTitle;
+  readonly attribute AString windowTitle;
 
   /**
    *  Constants to classify the type of a certificate.
