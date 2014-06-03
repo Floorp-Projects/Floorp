@@ -2196,9 +2196,8 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     scrollParts.AppendElement(kid);
   }
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId = aCreateLayer
-    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
-    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId =
+    nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
 
   scrollParts.Sort(HoveredStateComparator());
 
@@ -2216,11 +2215,16 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
       flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
     }
 
+    // Always create layers for overlay scrollbars so that we don't create a
+    // giant layer covering the whole scrollport if both scrollbars are visible.
+    bool isOverlayScrollbar = (flags != 0) && overlayScrollbars;
+    bool createLayer = aCreateLayer || isOverlayScrollbar;
+
     // DISPLAY_CHILD_FORCE_STACKING_CONTEXT put everything into
     // partList.PositionedDescendants().
     ::AppendToTop(aBuilder, aLists,
                   partList.PositionedDescendants(), scrollParts[i],
-                  aCreateLayer, flags, scrollTargetId, aPositioned);
+                  createLayer, flags, scrollTargetId, aPositioned);
   }
 }
 
@@ -2469,7 +2473,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
     if (addScrollBars) {
       // Add overlay scrollbars.
-      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists, true, true);
+      AppendScrollPartsTo(aBuilder, aDirtyRect, aLists,
+                          createLayersForScrollbars, true);
     }
 
     return;
@@ -2661,9 +2666,8 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     scrolledContent.BorderBackground()->AppendNewToBottom(layerItem);
   }
   // Now display overlay scrollbars and the resizer, if we have one.
-  // Always create layers for these, so that we don't create a giant layer
-  // covering the whole scrollport if both scrollbars are visible.
-  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent, true, true);
+  AppendScrollPartsTo(aBuilder, aDirtyRect, scrolledContent,
+                      createLayersForScrollbars, true);
   scrolledContent.MoveTo(aLists);
 }
 
