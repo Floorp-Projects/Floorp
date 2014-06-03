@@ -809,6 +809,63 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     return true;
 }
 
+/*
+ * Convert Debugger.Objects in desc to debuggee values.
+ * Reject non-callable getters and setters.
+ */
+static bool
+CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
+                    const char *methodname, const char *propname)
+{
+    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
+                             methodname, propname);
+        return false;
+    }
+    return true;
+}
+
+bool
+Debugger::unwrapPropDescInto(JSContext *cx, HandleObject obj, Handle<PropDesc> wrapped,
+                             MutableHandle<PropDesc> unwrapped)
+{
+    MOZ_ASSERT(!wrapped.isUndefined());
+
+    unwrapped.set(wrapped);
+
+    if (unwrapped.hasValue()) {
+        RootedValue value(cx, unwrapped.value());
+        if (!unwrapDebuggeeValue(cx, &value) ||
+            !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
+        {
+            return false;
+        }
+        unwrapped.setValue(value);
+    }
+
+    if (unwrapped.hasGet()) {
+        RootedValue get(cx, unwrapped.getterValue());
+        if (!unwrapDebuggeeValue(cx, &get) ||
+            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
+        {
+            return false;
+        }
+        unwrapped.setGetter(get);
+    }
+
+    if (unwrapped.hasSet()) {
+        RootedValue set(cx, unwrapped.setterValue());
+        if (!unwrapDebuggeeValue(cx, &set) ||
+            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
+        {
+            return false;
+        }
+        unwrapped.setSetter(set);
+    }
+
+    return true;
+}
+
 JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
                                         MutableHandleValue *vp, bool callHook)
@@ -5279,7 +5336,7 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
         return false;
     desc.clearPd();
 
-    if (!desc.get().unwrapDebuggerObjectsInto(cx, dbg, obj, desc.address()))
+    if (!dbg->unwrapPropDescInto(cx, obj, desc, &desc))
         return false;
     if (!desc.checkGetter(cx) || !desc.checkSetter(cx))
         return false;
@@ -5323,7 +5380,10 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
     for (size_t i = 0; i < n; i++) {
         if (!unwrappedDescs.append())
             return false;
-        if (!descs[i].unwrapDebuggerObjectsInto(cx, dbg, obj, &unwrappedDescs[i]))
+        Handle<PropDesc> wrapped = Handle<PropDesc>::fromMarkedLocation(&descs[i]);
+        MutableHandle<PropDesc> unwrapped =
+            MutableHandle<PropDesc>::fromMarkedLocation(&unwrappedDescs[i]);
+        if (!dbg->unwrapPropDescInto(cx, obj, wrapped, unwrapped))
             return false;
         if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
             return false;
