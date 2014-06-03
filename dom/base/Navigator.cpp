@@ -1497,7 +1497,7 @@ Navigator::GetFeature(const nsAString& aName)
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
       uint32_t memLevel = mozilla::hal::GetTotalSystemMemoryLevel();
       if (memLevel == 0) {
-        p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+        p->MaybeReject(NS_LITERAL_STRING("Abnormal"));
         return p.forget();
       }
       p->MaybeResolve((int)memLevel);
