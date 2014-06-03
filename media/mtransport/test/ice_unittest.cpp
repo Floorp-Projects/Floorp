@@ -69,10 +69,26 @@ namespace {
 
 enum TrickleMode { TRICKLE_NONE, TRICKLE_SIMULATE, TRICKLE_REAL };
 
-typedef bool (*CandidateFilter)(const std::string& candidate);
+typedef std::string (*CandidateFilter)(const std::string& candidate);
 
-static bool IsRelayCandidate(const std::string& candidate) {
-  return candidate.find("typ relay") != std::string::npos;
+static std::string IsRelayCandidate(const std::string& candidate) {
+  if (candidate.find("typ relay") != std::string::npos) {
+    return candidate;
+  }
+  return std::string();
+}
+
+static std::string SabotageHostCandidateAndDropReflexive(
+    const std::string& candidate) {
+  if (candidate.find("typ srflx") != std::string::npos) {
+    return std::string();
+  }
+
+  if (candidate.find("typ host") != std::string::npos) {
+    return kBogusIceCandidate;
+  }
+
+  return candidate;
 }
 
 bool ContainsSucceededPair(const std::vector<NrIceCandidatePair>& pairs) {
@@ -253,6 +269,13 @@ class IceTestPeer : public sigslot::has_slots<> {
     return v;
   }
 
+  std::string FilterCandidate(const std::string& candidate) {
+    if (candidate_filter_) {
+      return candidate_filter_(candidate);
+    }
+    return candidate;
+  }
+
   std::vector<std::string> GetCandidates_s(size_t stream) {
     std::vector<std::string> candidates;
 
@@ -264,9 +287,10 @@ class IceTestPeer : public sigslot::has_slots<> {
 
 
     for (size_t i=0; i < candidates_in.size(); i++) {
-      if ((!candidate_filter_) || candidate_filter_(candidates_in[i])) {
-        std::cerr << "Returning candidate: " << candidates_in[i] << std::endl;
-        candidates.push_back(candidates_in[i]);
+      std::string candidate(FilterCandidate(candidates_in[i]));
+      if (!candidate.empty()) {
+        std::cerr << "Returning candidate: " << candidate << std::endl;
+        candidates.push_back(candidate);
       }
     }
 
@@ -471,7 +495,11 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   }
 
-  void CandidateInitialized(NrIceMediaStream *stream, const std::string &candidate) {
+  void CandidateInitialized(NrIceMediaStream *stream, const std::string &raw_candidate) {
+    std::string candidate(FilterCandidate(raw_candidate));
+    if (candidate.empty()) {
+      return;
+    }
     std::cerr << "Candidate initialized: " << candidate << std::endl;
     candidates_[stream->name()].push_back(candidate);
 
@@ -1228,6 +1256,22 @@ TEST_F(IceConnectTest, TestConnectTurn) {
                 g_turn_user, g_turn_password);
   ASSERT_TRUE(Gather(true));
   Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectTurnWithDelay) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  SetCandidateFilter(SabotageHostCandidateAndDropReflexive);
+  p1_->Gather();
+  PR_Sleep(500);
+  p2_->Gather();
+  ConnectTrickle(TRICKLE_REAL);
+  WaitForGather();
+  WaitForComplete();
 }
 
 TEST_F(IceConnectTest, TestConnectTurnTcp) {
