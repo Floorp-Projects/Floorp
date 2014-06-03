@@ -1111,7 +1111,7 @@ FromGenericPropertyDescriptor(JSContext *cx, MutableHandle<PropDesc> desc, Mutab
     // steps 3-9
     if (!desc.makeObject(cx))
         return false;
-    rval.set(desc.pd());
+    rval.set(desc.descriptorValue());
     return true;
 }
 
