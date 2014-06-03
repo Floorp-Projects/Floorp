@@ -696,7 +696,8 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
     }
     // Otherwise, we ignore 'none' and report a warning
     else {
-      const char16_t* params[] = { NS_ConvertUTF8toUTF16(CSP_EnumToKeyword(CSP_NONE)).get() };
+      NS_ConvertUTF8toUTF16 unicodeNone(CSP_EnumToKeyword(CSP_NONE));
+      const char16_t* params[] = { unicodeNone.get() };
       logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringUnknownOption",
                                params, ArrayLength(params));
     }
@@ -887,7 +888,8 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
       nsAutoCString prePath;
       nsresult rv = aSelfURI->GetPrePath(prePath);
       NS_ENSURE_SUCCESS(rv, policy);
-      const char16_t* params[] = { NS_ConvertUTF8toUTF16(prePath).get() };
+      NS_ConvertUTF8toUTF16 unicodePrePath(prePath);
+      const char16_t* params[] = { unicodePrePath.get() };
       parser.logWarningErrorToConsole(nsIScriptError::warningFlag, "reportURInotInReportOnlyHeader",
                                       params, ArrayLength(params));
     }

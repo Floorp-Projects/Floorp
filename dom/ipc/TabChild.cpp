@@ -2009,7 +2009,8 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   nsCOMPtr<nsPIDOMWindow> outerWindow = do_GetInterface(WebNavigation());
   nsCOMPtr<nsPIDOMWindow> innerWindow = outerWindow->GetCurrentInnerWindow();
 
-  if (!innerWindow || !innerWindow->HasTouchEventListeners()) {
+  if (!innerWindow || (!innerWindow->HasTouchEventListeners() &&
+                       !innerWindow->MayHaveTouchCaret())) {
     SendContentReceivedTouch(aGuid, false);
     return true;
   }

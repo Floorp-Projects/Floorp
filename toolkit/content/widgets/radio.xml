@@ -376,22 +376,26 @@
       <handler event="keypress" keycode="VK_UP" phase="target">
         this.checkAdjacentElement(false);
         event.stopPropagation();
+        event.preventDefault();
       </handler>
       <handler event="keypress" keycode="VK_LEFT" phase="target">
         // left arrow goes back when we are ltr, forward when we are rtl
         this.checkAdjacentElement(document.defaultView.getComputedStyle(
                                     this, "").direction == "rtl");
         event.stopPropagation();
+        event.preventDefault();
       </handler>
       <handler event="keypress" keycode="VK_DOWN" phase="target">
         this.checkAdjacentElement(true);
         event.stopPropagation();
+        event.preventDefault();
       </handler>
       <handler event="keypress" keycode="VK_RIGHT" phase="target">
         // right arrow goes forward when we are ltr, back when we are rtl
         this.checkAdjacentElement(document.defaultView.getComputedStyle(
                                     this, "").direction == "ltr");
         event.stopPropagation();
+        event.preventDefault();
       </handler>
 
       <!-- set a focused attribute on the selected item when the group

@@ -19,6 +19,7 @@ const PC_SESSION_CONTRACT = "@mozilla.org/dom/rtcsessiondescription;1";
 const PC_MANAGER_CONTRACT = "@mozilla.org/dom/peerconnectionmanager;1";
 const PC_STATS_CONTRACT = "@mozilla.org/dom/rtcstatsreport;1";
 const PC_IDENTITY_CONTRACT = "@mozilla.org/dom/rtcidentityassertion;1";
+const PC_STATIC_CONTRACT = "@mozilla.org/dom/peerconnectionstatic;1";
 
 const PC_CID = Components.ID("{00e0e20d-1494-4776-8e0e-0f0acbea3c79}");
 const PC_OBS_CID = Components.ID("{d1748d4c-7f6a-4dc5-add6-d55b7678537e}");
@@ -27,12 +28,14 @@ const PC_SESSION_CID = Components.ID("{1775081b-b62d-4954-8ffe-a067bbf508a7}");
 const PC_MANAGER_CID = Components.ID("{7293e901-2be3-4c02-b4bd-cbef6fc24f78}");
 const PC_STATS_CID = Components.ID("{7fe6e18b-0da3-4056-bf3b-440ef3809e06}");
 const PC_IDENTITY_CID = Components.ID("{1abc7499-3c54-43e0-bd60-686e2703f072}");
+const PC_STATIC_CID = Components.ID("{0fb47c47-a205-4583-a9fc-cbadf8c95880}");
 
 // Global list of PeerConnection objects, so they can be cleaned up when
 // a page is torn down. (Maps inner window ID to an array of PC objects).
 function GlobalPCList() {
   this._list = {};
   this._networkdown = false; // XXX Need to query current state somehow
+  this._lifecycleobservers = {};
   Services.obs.addObserver(this, "inner-window-destroyed", true);
   Services.obs.addObserver(this, "profile-change-net-teardown", true);
   Services.obs.addObserver(this, "network:offline-about-to-go-offline", true);
@@ -49,6 +52,12 @@ GlobalPCList.prototype = {
         throw Cr.NS_ERROR_NO_AGGREGATION;
       }
       return _globalPCList.QueryInterface(iid);
+    }
+  },
+
+  notifyLifecycleObservers: function(pc, type) {
+    for (var key of Object.keys(this._lifecycleobservers)) {
+      this._lifecycleobservers[key](pc, pc._winID, type);
     }
   },
 
@@ -97,7 +106,12 @@ GlobalPCList.prototype = {
     };
 
     if (topic == "inner-window-destroyed") {
-      cleanupWinId(this._list, subject.QueryInterface(Ci.nsISupportsPRUint64).data);
+      let winID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      cleanupWinId(this._list, winID);
+
+      if (this._lifecycleobservers.hasOwnProperty(winID)) {
+        delete this._lifecycleobservers[winID];
+      }
     } else if (topic == "profile-change-net-teardown" ||
                topic == "network:offline-about-to-go-offline") {
       // Delete all peerconnections on shutdown - mostly synchronously (we
@@ -121,6 +135,9 @@ GlobalPCList.prototype = {
     }
   },
 
+  _registerPeerConnectionLifecycleCallback: function(winID, cb) {
+    this._lifecycleobservers[winID] = cb;
+  },
 };
 let _globalPCList = new GlobalPCList();
 
@@ -335,6 +352,7 @@ RTCPeerConnection.prototype = {
     this._impl.initialize(this._observer, this._win, rtcConfig,
                           Services.tm.currentThread);
     this._initIdp();
+    _globalPCList.notifyLifecycleObservers(this, "initialized");
   },
 
   get _impl() {
@@ -877,6 +895,7 @@ RTCPeerConnection.prototype = {
   },
 
   get peerIdentity() { return this._peerIdentity; },
+  get id() { return this._impl.id; },
   get iceGatheringState()  { return this._iceGatheringState; },
   get iceConnectionState() { return this._iceConnectionState; },
 
@@ -899,10 +918,12 @@ RTCPeerConnection.prototype = {
 
   changeIceGatheringState: function(state) {
     this._iceGatheringState = state;
+    _globalPCList.notifyLifecycleObservers(this, "icegatheringstatechange");
   },
 
   changeIceConnectionState: function(state) {
     this._iceConnectionState = state;
+    _globalPCList.notifyLifecycleObservers(this, "iceconnectionstatechange");
     this.dispatchEvent(new this._win.Event("iceconnectionstatechange"));
   },
 
@@ -1284,11 +1305,32 @@ PeerConnectionObserver.prototype = {
   },
 };
 
+function RTCPeerConnectionStatic() {
+}
+RTCPeerConnectionStatic.prototype = {
+  classDescription: "mozRTCPeerConnectionStatic",
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
+                                         Ci.nsIDOMGlobalPropertyInitializer]),
+
+  classID: PC_STATIC_CID,
+  contractID: PC_STATIC_CONTRACT,
+
+  init: function(win) {
+    this._winID = win.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
+  },
+
+  registerPeerConnectionLifecycleCallback: function(cb) {
+    _globalPCList._registerPeerConnectionLifecycleCallback(this._winID, cb);
+  },
+};
+
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(
   [GlobalPCList,
    RTCIceCandidate,
    RTCSessionDescription,
    RTCPeerConnection,
+   RTCPeerConnectionStatic,
    RTCStatsReport,
    RTCIdentityAssertion,
    PeerConnectionObserver]
