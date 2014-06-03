@@ -16,7 +16,6 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
-#include "mozilla/dom/ProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -1344,14 +1343,13 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   nsCOMPtr<nsIDOMEvent> event;
   if (mProgressEvent) {
-    ProgressEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    init.mLengthComputable = mLengthComputable;
-    init.mLoaded = mLoaded;
-    init.mTotal = mTotal;
+    NS_NewDOMProgressEvent(getter_AddRefs(event), target, nullptr, nullptr);
+    nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
 
-    event = ProgressEvent::Constructor(target, mType, init);
+    if (progress) {
+      progress->InitProgressEvent(mType, false, false, mLengthComputable,
+                                  mLoaded, mTotal);
+    }
   }
   else {
     NS_NewDOMEvent(getter_AddRefs(event), target, nullptr, nullptr);
@@ -1741,20 +1739,23 @@ XMLHttpRequest::DispatchPrematureAbortEvent(EventTarget* aTarget,
     }
   }
   else {
-    ProgressEventInit init;
-    init.mBubbles = false;
-    init.mCancelable = false;
-    if (aUploadTarget) {
-      init.mLengthComputable = mProxy->mLastUploadLengthComputable;
-      init.mLoaded = mProxy->mLastUploadLoaded;
-      init.mTotal = mProxy->mLastUploadTotal;
+    NS_NewDOMProgressEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
+
+    nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+    if (progress) {
+      if (aUploadTarget) {
+        progress->InitProgressEvent(aEventType, false, false,
+                                    mProxy->mLastUploadLengthComputable,
+                                    mProxy->mLastUploadLoaded,
+                                    mProxy->mLastUploadTotal);
+      }
+      else {
+        progress->InitProgressEvent(aEventType, false, false,
+                                    mProxy->mLastLengthComputable,
+                                    mProxy->mLastLoaded,
+                                    mProxy->mLastTotal);
+      }
     }
-    else {
-      init.mLengthComputable = mProxy->mLastLengthComputable;
-      init.mLoaded = mProxy->mLastLoaded;
-      init.mTotal = mProxy->mLastTotal;
-    }
-    event = ProgressEvent::Constructor(aTarget, aEventType, init);
   }
 
   if (!event) {
