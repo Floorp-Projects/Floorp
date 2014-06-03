@@ -1561,6 +1561,39 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+EqualCharsLatin1TwoByte(const Latin1Char *s1, const jschar *s2, size_t len)
+{
+    for (const Latin1Char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
+        if (jschar(*s1) != *s2)
+            return false;
+    }
+    return true;
+}
+
+static bool
+HasSubstringAt(JSLinearString *text, JSLinearString *pat, size_t start)
+{
+    MOZ_ASSERT(start + pat->length() <= text->length());
+
+    size_t patLen = pat->length();
+
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char *textChars = text->latin1Chars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            return PodEqual(textChars, pat->latin1Chars(nogc), patLen);
+
+        return EqualCharsLatin1TwoByte(textChars, pat->twoByteChars(nogc), patLen);
+    }
+
+    const jschar *textChars = text->twoByteChars(nogc) + start;
+    if (pat->hasTwoByteChars())
+        return PodEqual(textChars, pat->twoByteChars(nogc), patLen);
+
+    return EqualCharsLatin1TwoByte(pat->latin1Chars(nogc), textChars, patLen);
+}
+
 /* ES6 20131108 draft 21.1.3.18. */
 static bool
 str_startsWith(JSContext *cx, unsigned argc, Value *vp)
@@ -1600,16 +1633,12 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 9
     uint32_t textLen = str->length();
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
 
     // Step 10
     uint32_t start = Min(Max(pos, 0U), textLen);
 
     // Step 11
     uint32_t searchLen = searchStr->length();
-    const jschar *searchChars = searchStr->chars();
 
     // Step 12
     if (searchLen + start < searchLen || searchLen + start > textLen) {
@@ -1618,7 +1647,11 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Steps 13 and 14
-    args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
+    JSLinearString *text = str->ensureLinear(cx);
+    if (!text)
+        return false;
+
+    args.rval().setBoolean(HasSubstringAt(text, searchStr, start));
     return true;
 }
 
@@ -1647,9 +1680,6 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 7
     uint32_t textLen = str->length();
-    const jschar *textChars = str->getChars(cx);
-    if (!textChars)
-        return false;
 
     // Steps 8 and 9
     uint32_t pos = textLen;
@@ -1670,7 +1700,6 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 11
     uint32_t searchLen = searchStr->length();
-    const jschar *searchChars = searchStr->chars();
 
     // Step 13 (reordered)
     if (searchLen > end) {
@@ -1682,7 +1711,11 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     uint32_t start = end - searchLen;
 
     // Steps 14 and 15
-    args.rval().setBoolean(PodEqual(textChars + start, searchChars, searchLen));
+    JSLinearString *text = str->ensureLinear(cx);
+    if (!text)
+        return false;
+
+    args.rval().setBoolean(HasSubstringAt(text, searchStr, start));
     return true;
 }
 
@@ -4243,16 +4276,6 @@ JSString *
 js::StringToSource(JSContext *cx, JSString *str)
 {
     return js_QuoteString(cx, str, '"');
-}
-
-static bool
-EqualCharsLatin1TwoByte(const Latin1Char *s1, const jschar *s2, size_t len)
-{
-    for (const Latin1Char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
-        if (jschar(*s1) != *s2)
-            return false;
-    }
-    return true;
 }
 
 static bool

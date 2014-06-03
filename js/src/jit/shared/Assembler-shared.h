@@ -11,12 +11,11 @@
 
 #include <limits.h>
 
-#include "jsworkers.h"
-
 #include "jit/IonAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
+#include "vm/HelperThreads.h"
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
 // JS_SMALL_BRANCH means the range on a branch instruction
