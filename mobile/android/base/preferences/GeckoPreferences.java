@@ -26,6 +26,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
@@ -854,9 +855,9 @@ OnSharedPreferenceChangeListener
                     if (null == localeManager.setSelectedLocale(context, newValue)) {
                         localeManager.updateConfiguration(context, Locale.getDefault());
                     }
-                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, null,
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, Method.NONE,
                                           currentLocale == null ? "unknown" : currentLocale);
-                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, null, newValue);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, Method.NONE, newValue);
                 }
 
                 ThreadUtils.postToUiThread(new Runnable() {
