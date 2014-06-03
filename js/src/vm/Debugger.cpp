@@ -5274,34 +5274,27 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &id))
         return false;
 
-    AutoPropDescArrayRooter descs(cx);
-    if (!descs.reserve(3)) // desc, unwrappedDesc, rewrappedDesc
+    Rooted<PropDesc> desc(cx);
+    if (!desc.initialize(cx, args[1], false))
         return false;
-    PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, args[1], false))
-        return false;
-    desc->clearPd();
+    desc.clearPd();
 
-    PropDesc *unwrappedDesc = descs.append();
-    if (!unwrappedDesc || !desc->unwrapDebuggerObjectsInto(cx, dbg, obj, unwrappedDesc))
+    if (!desc.get().unwrapDebuggerObjectsInto(cx, dbg, obj, desc.address()))
         return false;
-    if (!unwrappedDesc->checkGetter(cx) || !unwrappedDesc->checkSetter(cx))
+    if (!desc.checkGetter(cx) || !desc.checkSetter(cx))
         return false;
 
     {
-        PropDesc *rewrappedDesc = descs.append();
-        if (!rewrappedDesc)
-            return false;
         RootedId wrappedId(cx);
 
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
-        if (!unwrappedDesc->wrapInto(cx, obj, id, wrappedId.address(), rewrappedDesc))
+        if (!desc.get().wrapInto(cx, obj, id, wrappedId.address(), desc.address()))
             return false;
 
         ErrorCopier ec(ac, dbg->toJSObject());
         bool dummy;
-        if (!DefineProperty(cx, obj, wrappedId, *rewrappedDesc, true, &dummy))
+        if (!DefineProperty(cx, obj, wrappedId, desc, true, &dummy))
             return false;
     }
 
