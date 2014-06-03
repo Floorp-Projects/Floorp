@@ -19,6 +19,11 @@
 #endif
 #include "gc/Tracer.h"
 
+/* Perform validation of incremental marking in debug builds but not on B2G. */
+#if defined(DEBUG) && !defined(MOZ_B2G)
+#define JS_GC_MARKING_VALIDATION
+#endif
+
 namespace js {
 
 struct ScriptAndCounts
@@ -410,7 +415,7 @@ class GCRuntime
      */
     js::gc::ArenaHeader   *arenasAllocatedDuringSweep;
 
-#ifdef DEBUG
+#ifdef JS_GC_MARKING_VALIDATION
     js::gc::MarkingValidator *markingValidator;
 #endif
 
