@@ -1134,6 +1134,10 @@ public:
     void addPtr(ImmPtr imm, const Register dest) {
         addPtr(ImmWord(uintptr_t(imm.value)), dest);
     }
+    void mulBy3(const Register &src, const Register &dest) {
+        as_addu(dest, src, src);
+        as_addu(dest, dest, src);
+    }
 
     void breakpoint();
 
