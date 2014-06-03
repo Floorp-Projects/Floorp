@@ -24,11 +24,8 @@ Cu.import("resource://gre/modules/systemlibs.js");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "RIL", function () {
-  let obj = {};
-  Cu.import("resource://gre/modules/ril_consts.js", obj);
-  return obj;
-});
+var RIL = {};
+Cu.import("resource://gre/modules/ril_consts.js", RIL);
 
 // Ril quirk to attach data registration on demand.
 let RILQUIRKS_DATA_REGISTRATION_ON_DEMAND =
