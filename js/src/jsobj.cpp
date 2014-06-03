@@ -1049,10 +1049,6 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
     }
 
     if (obj->getOps()->lookupGeneric) {
-        /*
-         * FIXME: Once ScriptedIndirectProxies are removed, this code should call
-         * TrapDefineOwnProperty directly
-         */
         if (obj->is<ProxyObject>()) {
             RootedValue pd(cx, desc.descriptorValue());
             return Proxy::defineProperty(cx, obj, id, pd);
@@ -1135,10 +1131,6 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
     }
 
     if (obj->getOps()->lookupGeneric) {
-        /*
-         * FIXME: Once ScriptedIndirectProxies are removed, this code should call
-         * TrapDefineOwnProperty directly
-         */
         if (obj->is<ProxyObject>()) {
             for (size_t i = 0, len = ids.length(); i < len; i++) {
                 RootedValue pd(cx, descs[i].descriptorValue());
