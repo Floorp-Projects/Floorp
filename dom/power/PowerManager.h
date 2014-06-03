@@ -53,6 +53,8 @@ public:
                         ErrorResult& aRv);
   bool ScreenEnabled();
   void SetScreenEnabled(bool aEnabled);
+  bool KeyLightEnabled();
+  void SetKeyLightEnabled(bool aEnabled);
   double ScreenBrightness();
   void SetScreenBrightness(double aBrightness, ErrorResult& aRv);
   bool CpuSleepAllowed();

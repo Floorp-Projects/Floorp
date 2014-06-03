@@ -17,10 +17,10 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="dd9e74d196675b0b05170f0ab94a80a36697a551"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="1d4f6f7312882e78b57971152de75d1281a26187"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="531cf670e485649c69746e46d567929fcd54cbc5"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="ce95d372e6d285725b96490afdaaf489ad8f9ca9"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="600ef6ddc915ceffc1a89d51b7be8453fe709992"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="994fa9a1f7ce0e63c880a48d571c3ab3e01884a3"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -119,7 +119,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="95423152b66d4a41032414fc3fb8c3d9a0636c7d"/>
-  <project name="kernel/msm" path="kernel" revision="228d59147ff524e90774c566eef03260cc6857b8"/>
+  <project name="kernel/msm" path="kernel" revision="e3895712aa9ddb955f0fdac880aa553556e64c41"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
