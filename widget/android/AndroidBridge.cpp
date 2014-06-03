@@ -1832,38 +1832,30 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     bool is24bit = (GetScreenDepth() == 24);
     uint32_t stride = bufW * (is24bit ? 4 : 2);
 
-    void* data = env->GetDirectBufferAddress(buffer);
+    uint8_t* data = static_cast<uint8_t*>(env->GetDirectBufferAddress(buffer));
     if (!data)
         return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxImageSurface> surf =
-        new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride,
-                            is24bit ? gfxImageFormat::RGB24 :
-                                      gfxImageFormat::RGB16_565);
-    if (surf->CairoStatus() != 0) {
-        ALOG_BRIDGE("Error creating gfxImageSurface");
+    MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
+               "Need BackendType::CAIRO support");
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                         data,
+                                         IntSize(bufW, bufH),
+                                         stride,
+                                         is24bit ? SurfaceFormat::B8G8R8X8 :
+                                                   SurfaceFormat::R5G6B5);
+    if (!dt) {
+        ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-
-    nsRefPtr<gfxContext> context;
-    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO)) {
-        RefPtr<DrawTarget> dt =
-            gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, IntSize(bufW, bufH));
-
-        if (!dt) {
-            ALOG_BRIDGE("Error creating DrawTarget");
-            return NS_ERROR_FAILURE;
-        }
-        context = new gfxContext(dt);
-    } else {
-        context = new gfxContext(surf);
-    }
+    nsRefPtr<gfxContext> context = new gfxContext(dt);
     gfxPoint pt(0, 0);
     context->Translate(pt);
     context->Scale(scale * bufW / srcW, scale * bufH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     if (is24bit) {
-        gfxUtils::ConvertBGRAtoRGBA(surf);
+        gfxUtils::ConvertBGRAtoRGBA(data, stride * bufH);
     }
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
