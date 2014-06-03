@@ -2017,15 +2017,18 @@ nsNSSCertificate::CreateASN1Struct(nsIASN1Object** aRetVal)
 
   nsCOMPtr<nsIMutableArray> asn1Objects;
   sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-  nsXPIDLCString title;
-  GetWindowTitle(getter_Copies(title));
-  
-  sequence->SetDisplayName(NS_ConvertUTF8toUTF16(title));
+
+  nsAutoString title;
+  nsresult rv = GetWindowTitle(title);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  sequence->SetDisplayName(title);
   sequence.forget(aRetVal);
 
   // This sequence will be contain the tbsCertificate, signatureAlgorithm,
   // and signatureValue.
-  nsresult rv;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
   if (NS_FAILED(rv))
     return rv;

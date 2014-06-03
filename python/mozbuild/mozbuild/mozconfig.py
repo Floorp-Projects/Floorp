@@ -191,7 +191,7 @@ class MozconfigLoader(ProcessExecutionMixin):
 
         result = {
             'path': path,
-            'topobjdir': os.environ.get('MOZ_OBJDIR'),
+            'topobjdir': None,
             'configure_args': None,
             'make_flags': None,
             'make_extra': None,
