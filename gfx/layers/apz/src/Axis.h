@@ -99,11 +99,6 @@ public:
   float GetOverscroll() const;
 
   /**
-   * Start a snap-back animation to relieve overscroll.
-   */
-  void StartSnapBack();
-
-  /**
    * Sample the snap-back animation to relieve overscroll.
    * |aDelta| is the time since the last sample.
    */
