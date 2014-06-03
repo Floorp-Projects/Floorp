@@ -8665,7 +8665,7 @@ class MGetDOMProperty
         return info_->aliasSet();
     }
     size_t domMemberSlotIndex() const {
-        MOZ_ASSERT(info_->isInSlot);
+        MOZ_ASSERT(info_->isAlwaysInSlot || info_->isLazilyCachedInSlot);
         return info_->slotIndex;
     }
     MDefinition *object() {
