@@ -1199,22 +1199,20 @@ IsAccessorDescriptor(const PropertyDescriptor &desc)
     return desc.obj && desc.attrs & (JSPROP_GETTER | JSPROP_SETTER);
 }
 
-// Aux.5 ValidateProperty(O, P, Desc)
+// ES6 (5 April 2014) ValidateAndApplyPropertyDescriptor(O, P, Extensible, Desc, Current)
+// Since we are actually performing 9.1.6.2 IsCompatiblePropertyDescriptor(Extensible, Desc,
+// Current), some parameters are omitted.
 static bool
-ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> desc, bool *bp)
+ValidatePropertyDescriptor(JSContext *cx, Handle<PropDesc> desc, Handle<PropertyDescriptor> current,
+                           bool *bp)
 {
-    // step 1
-    Rooted<PropertyDescriptor> current(cx);
-    if (!GetOwnPropertyDescriptor(cx, obj, id, &current))
-        return false;
-
     /*
-     * steps 2-4 are redundant since ValidateProperty is never called unless
+     * step 2 is redundant since ValidatePropertyDescriptor is never called unless
      * target.[[HasOwn]](P) is true
      */
     JS_ASSERT(current.object());
 
-    // step 5
+    // step 3
     if (!desc.hasValue() && !desc.hasWritable() && !desc.hasGet() && !desc.hasSet() &&
         !desc.hasEnumerable() && !desc.hasConfigurable())
     {
@@ -1222,7 +1220,7 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> 
         return true;
     }
 
-    // step 6
+    // step 4
     if ((!desc.hasWritable() || desc.writable() == !current.isReadonly()) &&
         (!desc.hasGet() || desc.getter() == current.getter()) &&
         (!desc.hasSet() || desc.setter() == current.setter()) &&
@@ -1242,7 +1240,7 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> 
         }
     }
 
-    // step 7
+    // step 5
     if (current.isPermanent()) {
         if (desc.hasConfigurable() && desc.configurable()) {
             *bp = false;
@@ -1257,21 +1255,21 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> 
         }
     }
 
-    // step 8
+    // step 6
     if (desc.isGenericDescriptor()) {
         *bp = true;
         return true;
     }
 
-    // step 9
+    // step 7a
     if (IsDataDescriptor(current) != desc.isDataDescriptor()) {
         *bp = !current.isPermanent();
         return true;
     }
 
-    // step 10
+    // step 8
     if (IsDataDescriptor(current)) {
-        JS_ASSERT(desc.isDataDescriptor()); // by step 9
+        JS_ASSERT(desc.isDataDescriptor()); // by step 7a
         if (current.isPermanent() && current.isReadonly()) {
             if (desc.hasWritable() && desc.writable()) {
                 *bp = false;
@@ -1293,14 +1291,26 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> 
         return true;
     }
 
-    // steps 11-12
-    JS_ASSERT(IsAccessorDescriptor(current)); // by step 10
-    JS_ASSERT(desc.isAccessorDescriptor()); // by step 9
+    // step 9
+    JS_ASSERT(IsAccessorDescriptor(current)); // by step 8
+    JS_ASSERT(desc.isAccessorDescriptor()); // by step 7a
     *bp = (!current.isPermanent() ||
            ((!desc.hasSet() || desc.setter() == current.setter()) &&
             (!desc.hasGet() || desc.getter() == current.getter())));
     return true;
 }
+
+static bool
+ValidatePropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> desc, bool *bp)
+{
+    // step 1
+    Rooted<PropertyDescriptor> current(cx);
+    if (!GetOwnPropertyDescriptor(cx, obj, id, &current))
+        return false;
+
+    return ValidatePropertyDescriptor(cx, desc, current, bp);
+}
+
 
 // Aux.6 IsSealed(O, P)
 static bool
@@ -1434,7 +1444,7 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
     /* step 10 */
     if (isFixed) {
         bool valid;
-        if (!ValidateProperty(cx, target, id, desc, &valid))
+        if (!ValidatePropertyDescriptor(cx, target, id, desc, &valid))
             return false;
 
         if (!valid) {
@@ -1451,91 +1461,6 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
 
     // step 12
     rval.set(trapResult);
-    return true;
-}
-
-// TrapDefineOwnProperty(O, P, DescObj, Throw)
-static bool
-TrapDefineOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-{
-    // step 1
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-
-    // step 2
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-
-    // step 3
-    RootedValue trap(cx);
-    if (!JSObject::getProperty(cx, handler, handler, cx->names().defineProperty, &trap))
-        return false;
-
-    // step 4
-    if (trap.isUndefined()) {
-        Rooted<PropertyDescriptor> desc(cx);
-        if (!ParsePropertyDescriptorObject(cx, proxy, vp, &desc))
-            return false;
-        return JS_DefinePropertyById(cx, target, id, desc.value(), desc.attributes(),
-                                     desc.getter(), desc.setter());
-    }
-
-    // step 5
-    RootedValue normalizedDesc(cx, vp);
-    if (!NormalizePropertyDescriptor(cx, &normalizedDesc))
-        return false;
-
-    // step 6
-    RootedValue value(cx);
-    if (!IdToExposableValue(cx, id, &value))
-        return false;
-    Value argv[] = {
-        ObjectValue(*target),
-        value,
-        normalizedDesc
-    };
-    RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
-
-    // steps 7-8
-    if (ToBoolean(trapResult)) {
-        bool isFixed;
-        if (!HasOwn(cx, target, id, &isFixed))
-            return false;
-
-        bool extensible;
-        if (!JSObject::isExtensible(cx, target, &extensible))
-            return false;
-        if (!extensible && !isFixed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
-            return false;
-        }
-
-        Rooted<PropDesc> desc(cx);
-        if (!desc.initialize(cx, normalizedDesc))
-            return false;
-
-        if (isFixed) {
-            bool valid;
-            if (!ValidateProperty(cx, target, id, desc, &valid))
-                return false;
-            if (!valid) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
-                return false;
-            }
-        }
-
-        if (!desc.configurable() && !isFixed) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
-            return false;
-        }
-
-        vp.set(BooleanValue(true));
-        return true;
-    }
-
-    // step 9
-    // FIXME: API does not include a Throw parameter
-    vp.set(BooleanValue(false));
     return true;
 }
 
@@ -1744,19 +1669,90 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
     return ParsePropertyDescriptorObject(cx, proxy, v, desc, true);
 }
 
+// ES6 (5 April 2014) Proxy.[[DefineOwnProperty]](O,P)
 bool
 ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                            MutableHandle<PropertyDescriptor> desc)
 {
-    // step 1
-    Rooted<PropDesc> d(cx);
-    d.initFromPropertyDescriptor(desc);
-    RootedValue v(cx);
-    if (!FromGenericPropertyDescriptor(cx, &d, &v))
+    // step 2
+    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
+
+    // TODO: step 3: Implement revocation semantics. See bug 978279.
+
+    // step 4
+    RootedObject target(cx, proxy->as<ProxyObject>().target());
+
+    // step 5-6
+    RootedValue trap(cx);
+    if (!JSObject::getProperty(cx, handler, handler, cx->names().defineProperty, &trap))
+         return false;
+
+    // step 7
+    if (trap.isUndefined())
+        return DirectProxyHandler::defineProperty(cx, proxy, id, desc);
+
+    // step 8-9, with 9 blatantly defied.
+    // FIXME: This is incorrect with respect to [[Origin]]. See bug 601379.
+    RootedValue descObj(cx);
+    if (!NewPropertyDescriptorObject(cx, desc, &descObj))
         return false;
 
-    // step 2
-    return TrapDefineOwnProperty(cx, proxy, id, &v);
+    // step 10, 12
+    RootedValue propKey(cx);
+    if (!IdToExposableValue(cx, id, &propKey))
+        return false;
+
+    Value argv[] = {
+        ObjectValue(*target),
+        propKey,
+        descObj
+    };
+    RootedValue trapResult(cx);
+    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
+        return false;
+
+    // step 11, 13
+    if (ToBoolean(trapResult)) {
+        // step 14-15
+        Rooted<PropertyDescriptor> targetDesc(cx);
+        if (!GetOwnPropertyDescriptor(cx, target, id, &targetDesc))
+            return false;
+
+        // step 16-17
+        bool extensibleTarget;
+        if (!JSObject::isExtensible(cx, target, &extensibleTarget))
+            return false;
+
+        // step 18-19
+        bool settingConfigFalse = desc.isPermanent();
+        if (!targetDesc.object()) {
+            // step 20a
+            if (!extensibleTarget) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NEW);
+                return false;
+            }
+            // step 20b
+            if (settingConfigFalse) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
+                return false;
+            }
+        } else {
+            // step 21
+            bool valid;
+            Rooted<PropDesc> pd(cx);
+            pd.initFromPropertyDescriptor(desc);
+            if (!ValidatePropertyDescriptor(cx, pd, targetDesc, &valid))
+                return false;
+            if (!valid || (settingConfigFalse && !targetDesc.isPermanent())) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_INVALID);
+                return false;
+            }
+        }
+    }
+
+    // [[DefineProperty]] should return a boolean value, which is used to do things like
+    // strict-mode throwing. At present, the engine is not prepared to do that. See bug 826587.
+    return true;
 }
 
 bool
