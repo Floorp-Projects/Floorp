@@ -5,106 +5,71 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let doc;
-let h1;
+let div;
+let rotated;
 let inspector;
+let contentViewer;
 
 function createDocument() {
-  let div = doc.createElement("div");
-  h1 = doc.createElement("h1");
-  let p1 = doc.createElement("p");
-  let p2 = doc.createElement("p");
-  let div2 = doc.createElement("div");
-  let p3 = doc.createElement("p");
-  doc.title = "Inspector Highlighter Meatballs";
-  h1.textContent = "Inspector Tree Selection Test";
-  p1.textContent = "This is some example text";
-  p2.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  p3.textContent = "Lorem ipsum dolor sit amet, consectetur adipisicing " +
-    "elit, sed do eiusmod tempor incididunt ut labore et dolore magna " +
-    "aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco " +
-    "laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure " +
-    "dolor in reprehenderit in voluptate velit esse cillum dolore eu " +
-    "fugiat nulla pariatur. Excepteur sint occaecat cupidatat non " +
-    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
-  let div3 = doc.createElement("div");
-  div3.id = "checkOutThisWickedSpread";
-  div3.setAttribute("style", "position: absolute; top: 20px; right: 20px; height: 20px; width: 20px; background-color: yellow; border: 1px dashed black;");
-  let p4 = doc.createElement("p");
-  p4.setAttribute("style", "font-weight: 200; font-size: 8px; text-align: center;");
-  p4.textContent = "Smörgåsbord!";
-  div.appendChild(h1);
-  div.appendChild(p1);
-  div.appendChild(p2);
-  div2.appendChild(p3);
-  div3.appendChild(p4);
+  div = doc.createElement("div");
+  div.setAttribute("style",
+                   "padding:5px; border:7px solid red; margin: 9px; " +
+                   "position:absolute; top:30px; left:150px;");
+  let textNode = doc.createTextNode("Gort! Klaatu barada nikto!");
+  rotated = doc.createElement("div");
+  rotated.setAttribute("style",
+                       "padding:5px; border:7px solid red; margin: 9px; " +
+                       "transform:rotate(45deg); " +
+                       "position:absolute; top:30px; left:80px;");
+  div.appendChild(textNode);
   doc.body.appendChild(div);
-  doc.body.appendChild(div2);
-  doc.body.appendChild(div3);
+  doc.body.appendChild(rotated);
 
   openInspector(aInspector => {
     inspector = aInspector;
     inspector.selection.setNode(div, null);
-    inspector.once("inspector-updated", () => {
-      inspector.toolbox.highlighterUtils.startPicker().then(testMouseOverH1Highlights);
-    });
+    inspector.once("inspector-updated", testMouseOverDivHighlights);
   });
 }
 
-function testMouseOverH1Highlights() {
+function testMouseOverDivHighlights() {
+  ok(isHighlighting(), "Highlighter is shown");
+  is(getHighlitNode(), div, "Highlighter's outline correspond to the non-rotated div");
+  testNonTransformedBoxModelDimensionsNoZoom();
+}
+
+function testNonTransformedBoxModelDimensionsNoZoom() {
+  info("Highlighted the non-rotated div");
+  isNodeCorrectlyHighlighted(div, "non-zoomed");
+
+  inspector.toolbox.once("highlighter-ready", testNonTransformedBoxModelDimensionsZoomed);
+  contentViewer = gBrowser.selectedBrowser.docShell.contentViewer
+                          .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  contentViewer.fullZoom = 2;
+}
+
+function testNonTransformedBoxModelDimensionsZoomed() {
+  info("Highlighted the zoomed, non-rotated div");
+  isNodeCorrectlyHighlighted(div, "zoomed");
+
+  inspector.toolbox.once("highlighter-ready", testMouseOverRotatedHighlights);
+  contentViewer.fullZoom = 1;
+}
+
+function testMouseOverRotatedHighlights() {
   inspector.toolbox.once("highlighter-ready", () => {
     ok(isHighlighting(), "Highlighter is shown");
-    is(getHighlitNode(), h1, "Highlighter's outline correspond to the selected node");
-    testBoxModelDimensions();
+    info("Highlighted the rotated div");
+    isNodeCorrectlyHighlighted(rotated, "rotated");
+
+    executeSoon(finishUp);
   });
-
-  EventUtils.synthesizeMouse(h1, 2, 2, {type: "mousemove"}, content);
-}
-
-function testBoxModelDimensions() {
-  let h1Dims = h1.getBoundingClientRect();
-  let h1Width = Math.ceil(h1Dims.width);
-  let h1Height = Math.ceil(h1Dims.height);
-
-  let outlineDims = getSimpleBorderRect();
-  let outlineWidth = Math.ceil(outlineDims.width);
-  let outlineHeight = Math.ceil(outlineDims.height);
-
-  // Disabled due to bug 716245
-  is(outlineWidth, h1Width, "outline width matches dimensions of element (no zoom)");
-  is(outlineHeight, h1Height, "outline height matches dimensions of element (no zoom)");
-
-  // zoom the page by a factor of 2
-  let contentViewer = gBrowser.selectedBrowser.docShell.contentViewer
-                             .QueryInterface(Ci.nsIMarkupDocumentViewer);
-  contentViewer.fullZoom = 2;
-
-  // simulate the zoomed dimensions of the div element
-  let h1Dims = h1.getBoundingClientRect();
-  // There seems to be some very minor differences in the floats, so let's
-  // floor the values
-  let h1Width = Math.floor(h1Dims.width * contentViewer.fullZoom);
-  let h1Height = Math.floor(h1Dims.height * contentViewer.fullZoom);
-
-  let outlineDims = getSimpleBorderRect();
-  let outlineWidth = Math.floor(outlineDims.width);
-  let outlineHeight = Math.floor(outlineDims.height);
-
-  is(outlineWidth, h1Width, "outline width matches dimensions of element (zoomed)");
-
-  is(outlineHeight, h1Height, "outline height matches dimensions of element (zoomed)");
-
-  executeSoon(finishUp);
+  inspector.selection.setNode(rotated);
 }
 
 function finishUp() {
   inspector.toolbox.highlighterUtils.stopPicker().then(() => {
-    doc = h1 = inspector = null;
+    doc = div = rotated = inspector = contentViewer = null;
     let target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.closeToolbox(target);
     gBrowser.removeCurrentTab();
