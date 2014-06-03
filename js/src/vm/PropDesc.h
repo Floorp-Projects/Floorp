@@ -142,7 +142,8 @@ struct PropDesc {
         MOZ_ASSERT(!isUndefined());
         return descObj_ ? ObjectValue(*descObj_) : UndefinedValue();
     }
-    void clearDescriptorObject() { descObj_ = nullptr; }
+    void setDescriptorObject(JSObject *obj) { descObj_ = obj; }
+    void clearDescriptorObject() { setDescriptorObject(nullptr); }
 
     uint8_t attributes() const { MOZ_ASSERT(!isUndefined()); return attrs; }
 
@@ -240,9 +241,6 @@ struct PropDesc {
      */
     bool checkGetter(JSContext *cx);
     bool checkSetter(JSContext *cx);
-
-    bool wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
-                  PropDesc *wrappedDesc) const;
 };
 
 } /* namespace js */
@@ -283,10 +281,6 @@ class PropDescOperations
 
     JSPropertyOp getter() const { return desc()->getter(); }
     JSStrictPropertyOp setter() const { return desc()->setter(); }
-
-    // We choose not to expose the debugger-specific parts of PropDesc, both
-    // because they are not really general use, but also because they are a
-    // pain to expose.
 };
 
 template <typename Outer>
@@ -324,6 +318,8 @@ class MutablePropDescOperations : public PropDescOperations<Outer>
     }
 
     void setUndefined() { desc()->setUndefined(); }
+
+    void setDescriptorObject(JSObject *obj) { desc()->setDescriptorObject(obj); }
     void clearDescriptorObject() { desc()->clearDescriptorObject(); }
 };
 

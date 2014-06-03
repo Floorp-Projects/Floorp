@@ -5342,16 +5342,18 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     {
-        RootedId wrappedId(cx);
-
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
-        if (!desc.get().wrapInto(cx, obj, id, wrappedId.address(), desc.address()))
+        if (!cx->compartment()->wrapId(cx, id.address()))
+            return false;
+        if (!cx->compartment()->wrap(cx, &desc))
+            return false;
+        if (!desc.makeObject(cx))
             return false;
 
         ErrorCopier ec(ac, dbg->toJSObject());
         bool dummy;
-        if (!DefineProperty(cx, obj, wrappedId, desc, true, &dummy))
+        if (!DefineProperty(cx, obj, id, desc, true, &dummy))
             return false;
     }
 
@@ -5393,10 +5395,14 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
         for (size_t i = 0; i < n; i++) {
-            if (!rewrappedIds.append(JSID_VOID) || !rewrappedDescs.append(PropDesc()))
+            if (!rewrappedIds.append(ids[i]) || !rewrappedDescs.append(unwrappedDescs[i]))
                 return false;
-            if (!unwrappedDescs[i].get().wrapInto(cx, obj, ids[i], rewrappedIds[i].address(),
-                                                  rewrappedDescs[i].address()))
+            if (!cx->compartment()->wrapId(cx, rewrappedIds[i].address()))
+                return false;
+            if (!cx->compartment()->wrap(cx, rewrappedDescs[i]))
+                return false;
+            if (rewrappedDescs[i].descriptorValue().isUndefined() &&
+                !rewrappedDescs[i].makeObject(cx))
             {
                 return false;
             }
