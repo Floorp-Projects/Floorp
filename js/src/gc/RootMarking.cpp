@@ -26,6 +26,7 @@
 #endif
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
+#include "vm/PropDesc.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -53,6 +54,12 @@ MarkBindingsRoot(JSTracer *trc, Bindings *bindings, const char *name)
 
 void
 MarkPropertyDescriptorRoot(JSTracer *trc, JSPropertyDescriptor *pd, const char *name)
+{
+    pd->trace(trc);
+}
+
+void
+MarkPropDescRoot(JSTracer *trc, PropDesc *pd, const char *name)
 {
     pd->trace(trc);
 }
@@ -116,6 +123,7 @@ MarkExactStackRoots(JSTracer *trc)
     MarkExactStackRootsForType<types::Type, MarkTypeRoot>(trc, "exact-type");
     MarkExactStackRootsForType<Bindings, MarkBindingsRoot>(trc);
     MarkExactStackRootsForType<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(trc);
+    MarkExactStackRootsForType<PropDesc, MarkPropDescRoot>(trc);
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
 
