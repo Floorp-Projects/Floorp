@@ -20,6 +20,7 @@ extern "C" {
 }
 
 #include "mtransport_test_utils.h"
+#include "gtest_ringbuffer_dumper.h"
 
 #include "nr_socket_prsock.h"
 
@@ -390,6 +391,11 @@ TEST_F(MultiTcpSocketTest, TestBigData) {
 int main(int argc, char **argv)
 {
   test_utils = new MtransportTestUtils();
+
+  ::testing::TestEventListeners& listeners =
+        ::testing::UnitTest::GetInstance()->listeners();
+  // Adds a listener to the end.  Google Test takes the ownership.
+  listeners.Append(new test::RingbufferDumper(test_utils));
 
   // Start the tests
   ::testing::InitGoogleTest(&argc, argv);

@@ -94,6 +94,7 @@ static int nr_tcp_socket_ctx_create(nr_socket *nrsock, int is_framed,
     _status=0;
 abort:
     if (_status) {
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s failed with error %d",__FILE__,__LINE__,__FUNCTION__,_status);
       nr_tcp_socket_ctx_destroy(&sock);
     }
     return(_status);
@@ -113,6 +114,8 @@ static int nr_tcp_socket_ctx_initialize(nr_tcp_socket_ctx *tcpsock,
 
     _status=0;
   abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
     return(_status);
   }
 
@@ -178,14 +181,18 @@ static int nr_socket_multi_tcp_create_stun_server_socket(
 
       nr_transport_addr_copy(&stun_server_addr, &stun_server->u.addr);
       r=nr_socket_connect(tcp_socket_ctx->inner, &stun_server_addr);
-      if (!r && r!=R_WOULDBLOCK)
+      if (r && r!=R_WOULDBLOCK) {
+        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s connect to STUN server(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,stun_server_addr.as_string,_status);
         ABORT(r);
+      }
 
       if ((r=nr_tcp_socket_ctx_initialize(tcp_socket_ctx, &stun_server_addr, sock)))
         ABORT(r);
     }
     _status=0;
   abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
     return(_status);
   }
 
@@ -252,6 +259,7 @@ int nr_socket_multi_tcp_create(struct nr_ice_ctx_ *ctx,
     _status=0;
   abort:
     if (_status) {
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
       nr_socket_multi_tcp_destroy((void**)&sock);
     }
     return(_status);
@@ -349,9 +357,14 @@ static int nr_socket_multi_tcp_get_sock_connected_to(nr_socket_multi_tcp *sock,
 
     _status=0;
   abort:
-    if (_status && tcp_sock_ctx) {
-      TAILQ_REMOVE(&sock->sockets, tcp_sock_ctx, entry);
-      nr_tcp_socket_ctx_destroy(&tcp_sock_ctx);
+    if (_status) {
+      if (tcp_sock_ctx) {
+        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s failed with error %d, tcp_sock_ctx remote_addr: %s",__FILE__,__LINE__,__FUNCTION__,_status, tcp_sock_ctx->remote_addr.as_string);
+        TAILQ_REMOVE(&sock->sockets, tcp_sock_ctx, entry);
+        nr_tcp_socket_ctx_destroy(&tcp_sock_ctx);
+      } else {
+        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s failed with error %d, tcp_sock_ctx=NULL",__FILE__,__LINE__,__FUNCTION__,_status);
+      }
     }
 
     return(_status);
@@ -373,6 +386,8 @@ int nr_socket_multi_tcp_stun_server_connect(nr_socket *sock,
 
     _status=0;
   abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
     return(_status);
   }
 
@@ -427,6 +442,8 @@ static int nr_socket_multi_tcp_sendto(void *obj,const void *msg, size_t len,
 
     _status=0;
   abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(to:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,to->as_string,_status);
 
     return(_status);
 }
@@ -455,6 +472,7 @@ static int nr_socket_multi_tcp_recvfrom(void *obj,void * restrict buf,
 
         TAILQ_REMOVE(&sock->sockets, tcpsock, entry);
         nr_tcp_socket_ctx_destroy(&tcpsock);
+        r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(from:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,from->as_string,_status);
         ABORT(r);
       }
     }
@@ -508,6 +526,8 @@ static int nr_socket_multi_tcp_connect(void *obj, nr_transport_addr *addr)
 
     _status=0;
 abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s(addr:%s) failed with error %d",__FILE__,__LINE__,__FUNCTION__,addr->as_string,_status);
 
     return(_status);
   }
@@ -560,6 +580,8 @@ static int nr_socket_multi_tcp_listen(void *obj, int backlog)
 
     _status=0;
   abort:
+    if (_status)
+      r_log(LOG_ICE,LOG_DEBUG,"%s:%d function %s failed with error %d",__FILE__,__LINE__,__FUNCTION__,_status);
 
     return(_status);
   }
