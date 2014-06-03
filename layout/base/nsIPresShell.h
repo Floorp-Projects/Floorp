@@ -53,6 +53,7 @@ class nsViewManager;
 class nsView;
 class nsRenderingContext;
 class nsIPageSequenceFrame;
+class nsCanvasFrame;
 class nsAString;
 class nsCaret;
 class nsFrameSelection;
@@ -468,6 +469,12 @@ public:
   virtual nsIPageSequenceFrame* GetPageSequenceFrame() const = 0;
 
   /**
+  * Returns the canvas frame associated with the frame hierarchy.
+  * Returns nullptr if is XUL document.
+  */
+  virtual nsCanvasFrame* GetCanvasFrame() const = 0;
+
+  /**
    * Gets the real primary frame associated with the content object.
    *
    * In the case of absolutely positioned elements and floated elements,
@@ -734,6 +741,11 @@ public:
    * This allows any outstanding references to the frame to be cleaned up
    */
   virtual void NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+
+  /**
+   * Returns the touch caret element of the presshell.
+   */
+  virtual mozilla::dom::Element* GetTouchCaretElement() const = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.

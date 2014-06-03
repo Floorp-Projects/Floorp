@@ -39,4 +39,7 @@ RESOURCE_FILES += [
     'res/table-remove-row-active.gif',
     'res/table-remove-row-hover.gif',
     'res/table-remove-row.gif',
+    'res/text_selection_handle.png',
+    'res/text_selection_handle@1.5.png',
+    'res/text_selection_handle@2.png',
 ]
