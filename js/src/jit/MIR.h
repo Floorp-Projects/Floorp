@@ -4549,6 +4549,11 @@ class MMod : public MBinaryArithInstruction
         return unsigned_;
     }
 
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
+
     bool fallible() const;
 
     void computeRange(TempAllocator &alloc);
