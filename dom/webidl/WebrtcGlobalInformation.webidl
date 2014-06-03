@@ -15,7 +15,8 @@ callback WebrtcGlobalLoggingCallback = void (sequence<DOMString> logMessages);
 interface WebrtcGlobalInformation {
 
   [Throws]
-  static void getAllStats(WebrtcGlobalStatisticsCallback callback);
+  static void getAllStats(WebrtcGlobalStatisticsCallback callback,
+                          optional DOMString pcIdFilter);
 
   [Throws]
   static void getLogging(DOMString pattern,

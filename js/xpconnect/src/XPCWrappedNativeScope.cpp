@@ -73,7 +73,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
         mComponents(nullptr),
         mNext(nullptr),
         mGlobalJSObject(aGlobal),
-        mIsXBLScope(false)
+        mIsContentXBLScope(false)
 {
     // add ourselves to the scopes list
     {
@@ -101,18 +101,18 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext *cx,
     // In addition to being pref-controlled, we also disable XBL scopes for
     // remote XUL domains, _except_ if we have an additional pref override set.
     nsIPrincipal *principal = GetPrincipal();
-    mAllowXBLScope = !RemoteXULForbidsXBLScope(principal, aGlobal);
+    mAllowContentXBLScope = !RemoteXULForbidsXBLScope(principal, aGlobal);
 
     // Determine whether to use an XBL scope.
-    mUseXBLScope = mAllowXBLScope;
-    if (mUseXBLScope) {
+    mUseContentXBLScope = mAllowContentXBLScope;
+    if (mUseContentXBLScope) {
       const js::Class *clasp = js::GetObjectClass(mGlobalJSObject);
-      mUseXBLScope = !strcmp(clasp->name, "Window") ||
-                     !strcmp(clasp->name, "ChromeWindow") ||
-                     !strcmp(clasp->name, "ModalContentWindow");
+      mUseContentXBLScope = !strcmp(clasp->name, "Window") ||
+                            !strcmp(clasp->name, "ChromeWindow") ||
+                            !strcmp(clasp->name, "ModalContentWindow");
     }
-    if (mUseXBLScope) {
-      mUseXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
+    if (mUseContentXBLScope) {
+      mUseContentXBLScope = principal && !nsContentUtils::IsSystemPrincipal(principal);
     }
 }
 
@@ -186,20 +186,20 @@ XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx)
 }
 
 JSObject*
-XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
+XPCWrappedNativeScope::EnsureContentXBLScope(JSContext *cx)
 {
     JS::RootedObject global(cx, GetGlobalJSObject());
     MOZ_ASSERT(js::IsObjectInContextCompartment(global, cx));
-    MOZ_ASSERT(!mIsXBLScope);
+    MOZ_ASSERT(!mIsContentXBLScope);
     MOZ_ASSERT(strcmp(js::GetObjectClass(global)->name,
                       "nsXBLPrototypeScript compilation scope"));
 
     // If we already have a special XBL scope object, we know what to use.
-    if (mXBLScope)
-        return mXBLScope;
+    if (mContentXBLScope)
+        return mContentXBLScope;
 
     // If this scope doesn't need an XBL scope, just return the global.
-    if (!mUseXBLScope)
+    if (!mUseContentXBLScope)
         return global;
 
     // Set up the sandbox options. Note that we use the DOM global as the
@@ -228,22 +228,22 @@ XPCWrappedNativeScope::EnsureXBLScope(JSContext *cx)
     RootedValue v(cx);
     nsresult rv = CreateSandboxObject(cx, &v, ep, options);
     NS_ENSURE_SUCCESS(rv, nullptr);
-    mXBLScope = &v.toObject();
+    mContentXBLScope = &v.toObject();
 
     // Tag it.
-    EnsureCompartmentPrivate(js::UncheckedUnwrap(mXBLScope))->scope->mIsXBLScope = true;
+    EnsureCompartmentPrivate(js::UncheckedUnwrap(mContentXBLScope))->scope->mIsContentXBLScope = true;
 
     // Good to go!
-    return mXBLScope;
+    return mContentXBLScope;
 }
 
 bool
-XPCWrappedNativeScope::AllowXBLScope()
+XPCWrappedNativeScope::AllowContentXBLScope()
 {
     // We only disallow XBL scopes in remote XUL situations.
-    MOZ_ASSERT_IF(!mAllowXBLScope,
+    MOZ_ASSERT_IF(!mAllowContentXBLScope,
                   nsContentUtils::AllowXULXBLForPrincipal(GetPrincipal()));
-    return mAllowXBLScope;
+    return mAllowContentXBLScope;
 }
 
 namespace xpc {
@@ -251,23 +251,25 @@ JSObject *GetXBLScope(JSContext *cx, JSObject *contentScopeArg)
 {
     JS::RootedObject contentScope(cx, contentScopeArg);
     JSAutoCompartment ac(cx, contentScope);
-    JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureXBLScope(cx);
+    JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureContentXBLScope(cx);
     NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
     scope = js::UncheckedUnwrap(scope);
     JS::ExposeObjectToActiveJS(scope);
     return scope;
 }
 
-bool AllowXBLScope(JSCompartment *c)
+bool
+AllowContentXBLScope(JSCompartment *c)
 {
   XPCWrappedNativeScope *scope = EnsureCompartmentPrivate(c)->scope;
-  return scope && scope->AllowXBLScope();
+  return scope && scope->AllowContentXBLScope();
 }
 
-bool UseXBLScope(JSCompartment *c)
+bool
+UseContentXBLScope(JSCompartment *c)
 {
   XPCWrappedNativeScope *scope = EnsureCompartmentPrivate(c)->scope;
-  return scope && scope->UseXBLScope();
+  return scope && scope->UseContentXBLScope();
 }
 
 } /* namespace xpc */
@@ -301,7 +303,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
         mXrayExpandos.destroy();
 
     JSRuntime *rt = XPCJSRuntime::Get()->Runtime();
-    mXBLScope.finalize(rt);
+    mContentXBLScope.finalize(rt);
     mGlobalJSObject.finalize(rt);
 }
 

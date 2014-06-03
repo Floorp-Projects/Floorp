@@ -83,47 +83,12 @@ ClientTiledThebesLayer::BeginPaint()
   mPaintData.mCompositionBounds.SetEmpty();
   mPaintData.mCriticalDisplayPort.SetEmpty();
 
-  if (!GetBaseTransform().Is2DIntegerTranslation()) {
-    // Give up if the layer is transformed. The code below assumes that there
-    // is no transform set, and not making that assumption would cause huge
-    // complication to handle a quite rare case.
-    //
-    // FIXME The intention is to bail out of this function when there's a CSS
-    //       transform set on the layer, but unfortunately there's no way to
-    //       distinguish transforms due to scrolling from transforms due to
-    //       CSS transforms.
-    //
-    //       Because of this, there may be unintended behaviour when setting
-    //       2d CSS translations on the children of scrollable displayport
-    //       layers.
+  if (!GetBaseTransform().Is2D()) {
+    // Give up if there is a complex CSS transform on the layer. We might
+    // eventually support these but for now it's too complicated to handle
+    // given that it's a pretty rare scenario.
     return;
   }
-
-#ifdef MOZ_WIDGET_ANDROID
-  // Subframes on Fennec are not async scrollable because they have no displayport.
-  // However, the code in RenderLayer() picks up a displayport from the nearest
-  // scrollable ancestor container layer anyway, which is incorrect for Fennec. This
-  // behaviour results in the subframe getting clipped improperly and perma-blank areas
-  // while scrolling the subframe. To work around this, we detect if this layer is
-  // the primary scrollable layer and disable the tiling behaviour if it is not.
-  bool isPrimaryScrollableThebesLayer = false;
-  if (Layer* scrollable = ClientManager()->GetPrimaryScrollableLayer()) {
-    if (GetParent() == scrollable) {
-      for (Layer* child = scrollable->GetFirstChild(); child; child = child->GetNextSibling()) {
-        if (child->GetType() == Layer::TYPE_THEBES) {
-          if (child == this) {
-            // |this| is the first thebes layer child of the GetPrimaryScrollableLayer()
-            isPrimaryScrollableThebesLayer = true;
-          }
-          break;
-        }
-      }
-    }
-  }
-  if (!isPrimaryScrollableThebesLayer) {
-    return;
-  }
-#endif
 
   // Get the metrics of the nearest scrollable layer and the nearest layer
   // with a displayport.

@@ -1,7 +1,6 @@
 # nsDOMIdentity.js
 component {210853d9-2c97-4669-9761-b1ab9cbf57ef} nsDOMIdentity.js
-contract @mozilla.org/dom/identity;1 {210853d9-2c97-4669-9761-b1ab9cbf57ef}
-category JavaScript-navigator-property mozId @mozilla.org/dom/identity;1
+contract @mozilla.org/identity/manager;1 {210853d9-2c97-4669-9761-b1ab9cbf57ef}
 
 # nsIDService.js (initialization on startup)
 component {4e0a0e98-b1d3-4745-a1eb-f815199dd06b} nsIDService.js

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="templates.js"></script>
+  <script type="application/javascript" src="turnConfig.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "796895",
+    title: "Basic data channel audio connection"
+  });
+
+  var test;
+  runTest(function () {
+    test = new DataChannelTest();
+    var sld = test.chain.remove("PC_REMOTE_SET_LOCAL_DESCRIPTION");
+    test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", sld);
+    test.setMediaConstraints([{audio: true}], [{audio: true}]);
+    test.run();
+  }, true);
+
+</script>
+</pre>
+</body>
+</html>

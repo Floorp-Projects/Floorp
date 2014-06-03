@@ -8,9 +8,8 @@
 
 #include "jit/IonSpewer.h"
 
-#include "jsworkers.h"
-
 #include "jit/Ion.h"
+#include "vm/HelperThreads.h"
 
 #ifndef ION_SPEW_DIR
 # if defined(_WIN32)
