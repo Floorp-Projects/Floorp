@@ -67,14 +67,15 @@ def main():
                       action='store',
                       type='string',
                       dest='testfile',
-                      default='../../services/sync/tests/tps/all_tests.json',
+                      default='all_tests.json',
                       help='path to the test file to run [default: %default]')
     (options, args) = parser.parse_args()
 
     configfile = options.configfile
     if configfile is None:
-        if os.environ.get('VIRTUAL_ENV'):
-            configfile = os.path.join(os.path.dirname(__file__), 'config.json')
+        virtual_env = os.environ.get('VIRTUAL_ENV')
+        if virtual_env:
+            configfile = os.path.join(virtual_env, 'config.json')
         if configfile is None or not os.access(configfile, os.F_OK):
             raise Exception('Unable to find config.json in a VIRTUAL_ENV; you must '
                             'specify a config file using the --configfile option')
@@ -84,6 +85,7 @@ def main():
     configcontent = f.read()
     f.close()
     config = json.loads(configcontent)
+    testfile = os.path.join(config.get('testdir', ''), options.testfile)
 
     rlock = RLock()
 
@@ -110,7 +112,7 @@ def main():
                         mobile=options.mobile,
                         resultfile=options.resultfile,
                         rlock=rlock,
-                        testfile=options.testfile,
+                        testfile=testfile,
                       )
     TPS.run_tests()
 
