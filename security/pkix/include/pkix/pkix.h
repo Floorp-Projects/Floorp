@@ -20,6 +20,7 @@
 
 #include "pkixtypes.h"
 #include "prtime.h"
+#include <stdint.h>
 
 namespace mozilla { namespace pkix {
 
@@ -114,6 +115,7 @@ SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                     const CERTCertificate* cert,
                                     CERTCertificate* issuerCert,
                                     PRTime time,
+                                    uint16_t maxLifetimeInDays,
                                     const SECItem* encodedResponse,
                  /* optional out */ PRTime* thisUpdate,
                  /* optional out */ PRTime* validThrough);
