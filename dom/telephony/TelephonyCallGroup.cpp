@@ -235,7 +235,7 @@ TelephonyCallGroup::Add(TelephonyCall& aCall,
     return;
   }
 
-  aRv = mTelephony->Provider()->ConferenceCall(aCall.ServiceId());
+  aRv = mTelephony->Service()->ConferenceCall(aCall.ServiceId());
 }
 
 void
@@ -248,7 +248,7 @@ TelephonyCallGroup::Add(TelephonyCall& aCall,
     return;
   }
 
-  aRv = mTelephony->Provider()->ConferenceCall(aCall.ServiceId());
+  aRv = mTelephony->Service()->ConferenceCall(aCall.ServiceId());
 }
 
 void
@@ -266,7 +266,7 @@ TelephonyCallGroup::Remove(TelephonyCall& aCall, ErrorResult& aRv)
 
   call = GetCall(serviceId, callIndex);
   if (call) {
-    aRv = mTelephony->Provider()->SeparateCall(serviceId, callIndex);
+    aRv = mTelephony->Service()->SeparateCall(serviceId, callIndex);
   } else {
     NS_WARNING("Didn't have this call. Ignore!");
   }
@@ -282,7 +282,7 @@ TelephonyCallGroup::Hold(ErrorResult& aRv)
 
   MOZ_ASSERT(!mCalls.IsEmpty());
 
-  nsresult rv = mTelephony->Provider()->HoldConference(mCalls[0]->ServiceId());
+  nsresult rv = mTelephony->Service()->HoldConference(mCalls[0]->ServiceId());
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -301,7 +301,7 @@ TelephonyCallGroup::Resume(ErrorResult& aRv)
 
   MOZ_ASSERT(!mCalls.IsEmpty());
 
-  nsresult rv = mTelephony->Provider()->ResumeConference(mCalls[0]->ServiceId());
+  nsresult rv = mTelephony->Service()->ResumeConference(mCalls[0]->ServiceId());
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

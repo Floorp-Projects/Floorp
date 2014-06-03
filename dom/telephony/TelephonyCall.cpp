@@ -214,7 +214,7 @@ TelephonyCall::Answer(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->AnswerCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->AnswerCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -233,8 +233,8 @@ TelephonyCall::HangUp(ErrorResult& aRv)
   }
 
   nsresult rv = mCallState == nsITelephonyService::CALL_STATE_INCOMING ?
-                mTelephony->Provider()->RejectCall(mServiceId, mCallIndex) :
-                mTelephony->Provider()->HangUp(mServiceId, mCallIndex);
+                mTelephony->Service()->RejectCall(mServiceId, mCallIndex) :
+                mTelephony->Service()->HangUp(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -261,7 +261,7 @@ TelephonyCall::Hold(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->HoldCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->HoldCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;
@@ -295,7 +295,7 @@ TelephonyCall::Resume(ErrorResult& aRv)
     return;
   }
 
-  nsresult rv = mTelephony->Provider()->ResumeCall(mServiceId, mCallIndex);
+  nsresult rv = mTelephony->Service()->ResumeCall(mServiceId, mCallIndex);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
     return;

@@ -16,15 +16,15 @@ USING_TELEPHONY_NAMESPACE
 /* static */ already_AddRefed<nsITelephonyService>
 TelephonyFactory::CreateTelephonyService()
 {
-  nsCOMPtr<nsITelephonyService> provider;
+  nsCOMPtr<nsITelephonyService> service;
 
   if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    provider = new TelephonyIPCService();
+    service = new TelephonyIPCService();
 #if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_RIL)
   } else {
-    provider = do_CreateInstance(GONK_TELEPHONY_SERVICE_CONTRACTID);
+    service = do_CreateInstance(GONK_TELEPHONY_SERVICE_CONTRACTID);
 #endif
   }
 
-  return provider.forget();
+  return service.forget();
 }
