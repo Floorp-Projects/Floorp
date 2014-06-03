@@ -155,7 +155,7 @@ gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf)
 }
 
 already_AddRefed<gfxASurface>
-gfxASurface::Wrap (cairo_surface_t *csurf)
+gfxASurface::Wrap (cairo_surface_t *csurf, const gfxIntSize& aSize)
 {
     nsRefPtr<gfxASurface> result;
 
@@ -190,7 +190,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
-        result = new gfxQuartzSurface(csurf);
+        result = new gfxQuartzSurface(csurf, aSize);
     }
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
         result = new gfxQuartzImageSurface(csurf);
@@ -202,7 +202,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
     }
 #endif
     else {
-        result = new gfxUnknownSurface(csurf);
+        result = new gfxUnknownSurface(csurf, aSize);
     }
 
     // fprintf(stderr, "New wrapper for %p -> %p\n", csurf, result);
@@ -337,7 +337,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
         return nullptr;
     }
 
-    nsRefPtr<gfxASurface> result = Wrap(surface);
+    nsRefPtr<gfxASurface> result = Wrap(surface, aSize);
     cairo_surface_destroy(surface);
     return result.forget();
 }
