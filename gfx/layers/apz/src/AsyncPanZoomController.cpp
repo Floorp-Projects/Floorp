@@ -488,8 +488,10 @@ public:
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) MOZ_OVERRIDE
   {
-    return mApzc.mX.SampleSnapBack(aDelta)
-        || mApzc.mY.SampleSnapBack(aDelta);
+    // Can't inline these variables due to short-circuit evaluation.
+    bool continueX = mApzc.mX.SampleSnapBack(aDelta);
+    bool continueY = mApzc.mY.SampleSnapBack(aDelta);
+    return continueX || continueY;
   }
 
 private:
