@@ -18,20 +18,28 @@ using namespace js;
 using JS::GenericNaN;
 
 PropDesc::PropDesc()
-  : pd_(UndefinedValue()),
-    value_(UndefinedValue()),
-    get_(UndefinedValue()),
-    set_(UndefinedValue()),
-    attrs(0),
-    hasGet_(false),
-    hasSet_(false),
-    hasValue_(false),
-    hasWritable_(false),
-    hasEnumerable_(false),
-    hasConfigurable_(false),
-    isUndefined_(true)
 {
+    setUndefined();
 }
+
+void
+PropDesc::setUndefined()
+{
+    pd_ = UndefinedValue();
+    value_ = UndefinedValue();
+    get_ = UndefinedValue();
+    set_ = UndefinedValue();
+    attrs = 0;
+    hasGet_ = false;
+    hasSet_ = false;
+    hasValue_ = false;
+    hasWritable_ = false;
+    hasEnumerable_ = false;
+    hasConfigurable_ = false;
+
+    isUndefined_ = true;
+}
+
 
 bool
 PropDesc::checkGetter(JSContext *cx)
