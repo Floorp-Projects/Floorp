@@ -2087,7 +2087,7 @@ pref("svg.svg-iframe.enabled", false);
 pref("svg.svg-iframe.enabled", false);
 #endif
 
-// Is support for the new getBBox method from SVG 2 enabled?  
+// Is support for the new getBBox method from SVG 2 enabled?
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
 #ifdef RELEASE_BUILD
 pref("svg.new-getBBox.enabled", false);
@@ -4147,6 +4147,9 @@ pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simpl
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
+
+// Turn off touch caret by default.
+pref("touchcaret.enabled", false);
 
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
