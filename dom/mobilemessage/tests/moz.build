@@ -6,3 +6,6 @@
 
 MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
 
+if CONFIG['ENABLE_TESTS']:
+        XPCSHELL_TESTS_MANIFESTS += ['xpcshell/xpcshell.ini']
+
