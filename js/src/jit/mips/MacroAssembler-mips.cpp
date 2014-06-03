@@ -1675,6 +1675,12 @@ MacroAssemblerMIPSCompat::not32(Register reg)
 
 // Logical operations
 void
+MacroAssemblerMIPSCompat::and32(Register src, Register dest)
+{
+    ma_and(dest, dest, src);
+}
+
+void
 MacroAssemblerMIPSCompat::and32(Imm32 imm, Register dest)
 {
     ma_and(dest, imm);
@@ -1686,6 +1692,13 @@ MacroAssemblerMIPSCompat::and32(Imm32 imm, const Address &dest)
     load32(dest, SecondScratchReg);
     ma_and(SecondScratchReg, imm);
     store32(SecondScratchReg, dest);
+}
+
+void
+MacroAssemblerMIPSCompat::and32(const Address &src, Register dest)
+{
+    load32(src, SecondScratchReg);
+    ma_and(dest, SecondScratchReg);
 }
 
 void
@@ -2025,6 +2038,12 @@ MacroAssemblerMIPSCompat::storePtr(Register src, const Address &address)
 }
 
 void
+MacroAssemblerMIPSCompat::storePtr(Register src, const BaseIndex &address)
+{
+    ma_store(src, address, SizeWord);
+}
+
+void
 MacroAssemblerMIPSCompat::storePtr(Register src, AbsoluteAddress dest)
 {
     ma_li(ScratchRegister, Imm32((uint32_t)dest.addr));
@@ -2080,6 +2099,13 @@ void
 MacroAssemblerMIPSCompat::subPtr(Imm32 imm, const Register dest)
 {
     ma_subu(dest, dest, imm);
+}
+
+void
+MacroAssemblerMIPSCompat::subPtr(const Address &addr, const Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
 }
 
 void
