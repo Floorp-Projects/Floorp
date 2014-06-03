@@ -825,8 +825,12 @@ public:
     aError = GetScriptableTop(getter_AddRefs(top));
     return top.forget();
   }
-  nsIDOMWindow* GetOpener(mozilla::ErrorResult& aError);
-  void SetOpener(nsIDOMWindow* aOpener, mozilla::ErrorResult& aError);
+protected:
+  nsIDOMWindow* GetOpenerWindow(mozilla::ErrorResult& aError);
+public:
+  JS::Value GetOpener(JSContext* aCx, mozilla::ErrorResult& aError);
+  void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
+                 mozilla::ErrorResult& aError);
   using nsIDOMWindow::GetParent;
   already_AddRefed<nsIDOMWindow> GetParent(mozilla::ErrorResult& aError);
   mozilla::dom::Element* GetFrameElement(mozilla::ErrorResult& aError);
