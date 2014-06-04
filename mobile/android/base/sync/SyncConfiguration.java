@@ -258,6 +258,7 @@ public class SyncConfiguration {
   public static final String PREF_ACCOUNT_GUID = "account.guid";
   public static final String PREF_CLIENT_NAME = "account.clientName";
   public static final String PREF_NUM_CLIENTS = "account.numClients";
+  public static final String PREF_CLIENT_DATA_TIMESTAMP = "account.clientDataTimestamp";
 
   private static final String API_VERSION = "1.5";
 
