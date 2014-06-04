@@ -14,7 +14,6 @@ using namespace mozilla::gfx;
 
 SurfaceFactory_ANGLEShareHandle*
 SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl,
-                                        ID3D10Device1* d3d,
                                         const SurfaceCaps& caps)
 {
     GLLibraryEGL* egl = &sEGLLibrary;
@@ -27,7 +26,7 @@ SurfaceFactory_ANGLEShareHandle::Create(GLContext* gl,
         return nullptr;
     }
 
-    return new SurfaceFactory_ANGLEShareHandle(gl, egl, d3d, caps);
+    return new SurfaceFactory_ANGLEShareHandle(gl, egl, caps);
 }
 
 EGLDisplay
@@ -171,12 +170,12 @@ ChooseConfig(GLContext* gl,
     return config;
 }
 
-
 // Returns EGL_NO_SURFACE on error.
-static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl,
-                                       EGLDisplay display,
-                                       EGLConfig config,
-                                       const gfx::IntSize& size)
+static EGLSurface
+CreatePBufferSurface(GLLibraryEGL* egl,
+                     EGLDisplay display,
+                     EGLConfig config,
+                     const gfx::IntSize& size)
 {
     EGLint attribs[] = {
         LOCAL_EGL_WIDTH, size.width,
@@ -190,7 +189,7 @@ static EGLSurface CreatePBufferSurface(GLLibraryEGL* egl,
 }
 
 SharedSurface_ANGLEShareHandle*
-SharedSurface_ANGLEShareHandle::Create(GLContext* gl, ID3D10Device1* d3d,
+SharedSurface_ANGLEShareHandle::Create(GLContext* gl,
                                        EGLContext context, EGLConfig config,
                                        const gfx::IntSize& size, bool hasAlpha)
 {
@@ -207,49 +206,13 @@ SharedSurface_ANGLEShareHandle::Create(GLContext* gl, ID3D10Device1* d3d,
     if (!pbuffer)
         return nullptr;
 
-
     // Declare everything before 'goto's.
     HANDLE shareHandle = nullptr;
-    nsRefPtr<ID3D10Texture2D> texture;
-    nsRefPtr<ID3D10ShaderResourceView> srv;
-
-    // On failure, goto CleanUpIfFailed.
-    // If |failed|, CleanUpIfFailed will clean up and return null.
-    bool failed = true;
-    HRESULT hr;
-
-    // Off to the races!
-    if (!egl->fQuerySurfacePointerANGLE(
-            display,
-            pbuffer,
-            LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE,
-            &shareHandle))
-    {
-        NS_ERROR("Failed to grab ShareHandle for PBuffer!");
-        goto CleanUpIfFailed;
-    }
-
-    // Ok, we have a valid PBuffer with ShareHandle.
-    // Let's attach it to D3D.
-    hr = d3d->OpenSharedResource(shareHandle,
-                                 __uuidof(ID3D10Texture2D),
-                                 getter_AddRefs(texture));
-    if (FAILED(hr)) {
-        NS_ERROR("Failed to open shared resource!");
-        goto CleanUpIfFailed;
-    }
-
-    hr = d3d->CreateShaderResourceView(texture, nullptr, getter_AddRefs(srv));
-    if (FAILED(hr)) {
-        NS_ERROR("Failed to create SRV!");
-        goto CleanUpIfFailed;
-    }
-
-    failed = false;
-
-CleanUpIfFailed:
-    if (failed) {
-        NS_WARNING("CleanUpIfFailed");
+    bool ok = egl->fQuerySurfacePointerANGLE(display,
+                                             pbuffer,
+                                             LOCAL_EGL_D3D_TEXTURE_2D_SHARE_HANDLE_ANGLE,
+                                             &shareHandle);
+    if (!ok) {
         egl->fDestroySurface(egl->Display(), pbuffer);
         return nullptr;
     }
@@ -257,18 +220,16 @@ CleanUpIfFailed:
     return new SharedSurface_ANGLEShareHandle(gl, egl,
                                               size, hasAlpha,
                                               context, pbuffer,
-                                              texture, srv);
+                                              shareHandle);
 }
 
 
 SurfaceFactory_ANGLEShareHandle::SurfaceFactory_ANGLEShareHandle(GLContext* gl,
                                                                  GLLibraryEGL* egl,
-                                                                 ID3D10Device1* d3d,
                                                                  const SurfaceCaps& caps)
     : SurfaceFactory_GL(gl, SharedSurfaceType::EGLSurfaceANGLE, caps)
     , mProdGL(gl)
     , mEGL(egl)
-    , mConsD3D(d3d)
 {
     mConfig = ChooseConfig(mProdGL, mEGL, mReadCaps);
     mContext = GLContextEGL::Cast(mProdGL)->GetEGLContext();
