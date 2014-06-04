@@ -2004,9 +2004,15 @@ RangeAnalysis::analyze()
 
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
+        JS_ASSERT(!block->unreachable());
 
-        if (block->unreachable())
+        // If the block's immediate dominator is unreachable, the block is
+        // unreachable. Iterating in RPO, we'll always see the immediate
+        // dominator before the block.
+        if (block->immediateDominator()->unreachable()) {
+            block->setUnreachable();
             continue;
+        }
 
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition *def = *iter;
@@ -2015,6 +2021,11 @@ RangeAnalysis::analyze()
             IonSpew(IonSpew_Range, "computing range on %d", def->id());
             SpewRange(def);
         }
+
+        // Beta node range analysis may have marked this block unreachable. If
+        // so, it's no longer interesting to continue processing it.
+        if (block->unreachable())
+            continue;
 
         if (block->isLoopHeader()) {
             if (!analyzeLoop(block))
