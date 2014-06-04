@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+ <meta charset="utf-8">
+ <title>Bug 1019470</title>
+ <style>
+  body {
+    font-family:monospace;
+    font-size:24px;
+  }
+  span {
+    display:inline-block;
+  }
+  .L {
+    width:40px;
+    text-align:right;
+  }
+  .R {
+    width:40px;
+    text-align:left;
+  }
+  .spacer {
+    width:0.5em;
+  }
+ </style>
+</head>
+
+<body>
+
+<div>
+ <span class="L"><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC"></span><span class="spacer"></span></span>foo
+</div>
+
+<div dir="rtl">
+ <span class="R"><span><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC"></span><span class="spacer"></span></span>bar
+</div>
+
+</body>
+
+</html>
