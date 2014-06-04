@@ -50,6 +50,7 @@ USING_BLUETOOTH_NAMESPACE
 static nsString sAdapterBdAddress;
 static nsString sAdapterBdName;
 static InfallibleTArray<nsString> sAdapterBondedAddressArray;
+static nsTArray<nsRefPtr<BluetoothReplyRunnable> > sChangeAdapterStateRunnableArray;
 
 // Static variables below should only be used on *main thread*
 static const bt_interface_t* sBtInterface;
@@ -151,6 +152,29 @@ public:
   Run()
   {
     MOZ_ASSERT(NS_IsMainThread());
+
+    /*
+     * Cleanup static adapter properties and notify adapter to clean them
+     *
+     * TODO: clean up and notify Discovering also
+     */
+    sAdapterBdAddress.Truncate();
+    sAdapterBdName.Truncate();
+    sAdapterDiscoverable = false;
+
+    InfallibleTArray<BluetoothNamedValue> props;
+    BT_APPEND_NAMED_VALUE(props, "Name", sAdapterBdName);
+    BT_APPEND_NAMED_VALUE(props, "Address", sAdapterBdAddress);
+    BT_APPEND_NAMED_VALUE(props, "Discoverable",
+                          BluetoothValue(sAdapterDiscoverable));
+    BluetoothValue value(props);
+    BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                           NS_LITERAL_STRING(KEY_ADAPTER), value);
+
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
+
+    bs->DistributeSignal(signal);
 
     // Cleanup bluetooth interfaces after BT state becomes BT_STATE_OFF.
     BluetoothHfpManager::DeinitHfpInterface();
@@ -307,6 +331,14 @@ AdapterStateChangeCallback(bt_state_t aStatus)
       NS_FAILED(NS_DispatchToMainThread(new SetupAfterEnabledTask()))) {
     BT_WARNING("Failed to dispatch to main thread!");
     return;
+  }
+
+  // Resolve promise if existed
+  if(!sChangeAdapterStateRunnableArray.IsEmpty()) {
+    DispatchBluetoothReply(sChangeAdapterStateRunnableArray[0],
+                           BluetoothValue(true),
+                           EmptyString());
+    sChangeAdapterStateRunnableArray.RemoveElementAt(0);
   }
 }
 
@@ -862,9 +894,14 @@ BluetoothServiceBluedroid::~BluetoothServiceBluedroid()
 }
 
 nsresult
-BluetoothServiceBluedroid::StartInternal()
+BluetoothServiceBluedroid::StartInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // aRunnable will be a nullptr while startup
+  if(aRunnable) {
+    sChangeAdapterStateRunnableArray.AppendElement(aRunnable);
+  }
 
   nsresult ret = StartStopGonkBluetooth(true);
   if (NS_FAILED(ret)) {
@@ -880,9 +917,14 @@ BluetoothServiceBluedroid::StartInternal()
 }
 
 nsresult
-BluetoothServiceBluedroid::StopInternal()
+BluetoothServiceBluedroid::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  // aRunnable will be a nullptr during starup and shutdown
+  if(aRunnable) {
+    sChangeAdapterStateRunnableArray.AppendElement(aRunnable);
+  }
 
   nsresult ret = StartStopGonkBluetooth(false);
   if (NS_FAILED(ret)) {
