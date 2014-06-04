@@ -87,8 +87,11 @@ MOZ_BEGIN_ENUM_CLASS(TextureFlags, uint32_t)
   // We've previously tried a texture and it didn't work for some reason. If there
   // is a fallback available, try that.
   ALLOC_FALLBACK     = 1 << 17,
+  // Data in this texture has not been alpha-premultiplied.
+  NON_PREMULTIPLIED  = 1 << 18,
+
   // OR union of all valid bits
-  ALL_BITS           = (1 << 18) - 1,
+  ALL_BITS           = (1 << 19) - 1,
   // the default flags
   DEFAULT = FRONT
 MOZ_END_ENUM_CLASS(TextureFlags)
