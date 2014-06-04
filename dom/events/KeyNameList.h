@@ -118,6 +118,48 @@ DEFINE_KEYNAME_WITH_SAME_NAME(PrintScreen)
 // DEFINE_KEYNAME_WITH_SAME_NAME(Standby)
 // DEFINE_KEYNAME_WITH_SAME_NAME(WakeUp)
 
+/******************************************************************************
+ * IME and Composition Keys
+ *****************************************************************************/
+DEFINE_KEYNAME_WITH_SAME_NAME(AllCandidates)
+DEFINE_KEYNAME_WITH_SAME_NAME(Alphanumeric)
+DEFINE_KEYNAME_WITH_SAME_NAME(CodeInput)
+DEFINE_KEYNAME_WITH_SAME_NAME(Compose)
+DEFINE_KEYNAME_WITH_SAME_NAME(Convert)
+// DEFINE_KEYNAME_WITH_SAME_NAME(Dead)
+DEFINE_KEYNAME_WITH_SAME_NAME(FinalMode)
+// DEFINE_KEYNAME_WITH_SAME_NAME(GroupFirst)
+// DEFINE_KEYNAME_WITH_SAME_NAME(GroupLast)
+// DEFINE_KEYNAME_WITH_SAME_NAME(GroupNext)
+// DEFINE_KEYNAME_WITH_SAME_NAME(GroupPrevious)
+DEFINE_KEYNAME_WITH_SAME_NAME(ModeChange)
+// DEFINE_KEYNAME_WITH_SAME_NAME(NextCandidate)
+DEFINE_KEYNAME_WITH_SAME_NAME(Nonconvert) // Rename to NonConvert
+DEFINE_KEYNAME_WITH_SAME_NAME(PreviousCandidate)
+// DEFINE_KEYNAME_WITH_SAME_NAME(Process)
+// DEFINE_KEYNAME_WITH_SAME_NAME(SingleCandidate)
+
+/******************************************************************************
+ * Keys specific to Korean keyboards
+ *****************************************************************************/
+DEFINE_KEYNAME_WITH_SAME_NAME(HangulMode)
+DEFINE_KEYNAME_WITH_SAME_NAME(HanjaMode)
+DEFINE_KEYNAME_WITH_SAME_NAME(JunjaMode)
+
+/******************************************************************************
+ * Keys specific to Japanese keyboards
+ *****************************************************************************/
+// DEFINE_KEYNAME_WITH_SAME_NAME(Eisu)
+DEFINE_KEYNAME_WITH_SAME_NAME(HalfWidth) // Rename to Hankaku
+DEFINE_KEYNAME_WITH_SAME_NAME(Hiragana)
+// DEFINE_KEYNAME_WITH_SAME_NAME(HiraganaKatakana)
+DEFINE_KEYNAME_WITH_SAME_NAME(KanaMode)
+DEFINE_KEYNAME_WITH_SAME_NAME(KanjiMode)
+DEFINE_KEYNAME_WITH_SAME_NAME(Katakana)
+DEFINE_KEYNAME_WITH_SAME_NAME(RomanCharacters) // Rename to Romaji
+DEFINE_KEYNAME_WITH_SAME_NAME(FullWidth) // Rename to Zenkaku
+// DEFINE_KEYNAME_WITH_SAME_NAME(ZenkakuHankaku)
+
 DEFINE_KEYNAME_WITH_SAME_NAME(Apps)
 DEFINE_KEYNAME_WITH_SAME_NAME(F1)
 DEFINE_KEYNAME_WITH_SAME_NAME(F2)
@@ -208,27 +250,6 @@ DEFINE_KEYNAME_WITH_SAME_NAME(DeadOgonek)
 DEFINE_KEYNAME_WITH_SAME_NAME(DeadIota)
 DEFINE_KEYNAME_WITH_SAME_NAME(DeadVoicedSound)
 DEFINE_KEYNAME_WITH_SAME_NAME(DeadSemivoicedSound)
-DEFINE_KEYNAME_WITH_SAME_NAME(Alphanumeric)
-DEFINE_KEYNAME_WITH_SAME_NAME(Process)
-DEFINE_KEYNAME_WITH_SAME_NAME(Compose)
-DEFINE_KEYNAME_WITH_SAME_NAME(AllCandidates)
-DEFINE_KEYNAME_WITH_SAME_NAME(NextCandidate)
-DEFINE_KEYNAME_WITH_SAME_NAME(PreviousCandidate)
-DEFINE_KEYNAME_WITH_SAME_NAME(CodeInput)
-DEFINE_KEYNAME_WITH_SAME_NAME(Convert)
-DEFINE_KEYNAME_WITH_SAME_NAME(Nonconvert)
-DEFINE_KEYNAME_WITH_SAME_NAME(FinalMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(FullWidth)
-DEFINE_KEYNAME_WITH_SAME_NAME(HalfWidth)
-DEFINE_KEYNAME_WITH_SAME_NAME(ModeChange)
-DEFINE_KEYNAME_WITH_SAME_NAME(RomanCharacters)
-DEFINE_KEYNAME_WITH_SAME_NAME(HangulMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(HanjaMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(JunjaMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(Hiragana)
-DEFINE_KEYNAME_WITH_SAME_NAME(KanaMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(KanjiMode)
-DEFINE_KEYNAME_WITH_SAME_NAME(Katakana)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioFaderFront)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioFaderRear)
 DEFINE_KEYNAME_WITH_SAME_NAME(AudioBalanceLeft)
