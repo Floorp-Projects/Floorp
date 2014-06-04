@@ -76,6 +76,7 @@
 #include "nsIPageSequenceFrame.h"
 #include "nsCaret.h"
 #include "TouchCaret.h"
+#include "SelectionCarets.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
@@ -703,6 +704,7 @@ static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 static bool sPointerEventEnabled = true;
 static bool sTouchCaretEnabled = false;
+static bool sSelectionCaretEnabled = false;
 
 /* static */ bool
 PresShell::TouchCaretPrefEnabled()
@@ -713,6 +715,17 @@ PresShell::TouchCaretPrefEnabled()
     initialized = true;
   }
   return sTouchCaretEnabled;
+}
+
+/* static */ bool
+PresShell::SelectionCaretPrefEnabled()
+{
+  static bool initialized = false;
+  if (!initialized) {
+    Preferences::AddBoolVarCache(&sSelectionCaretEnabled, "selectioncaret.enabled");
+    initialized = true;
+  }
+  return sSelectionCaretEnabled;
 }
 
 PresShell::PresShell()
@@ -868,6 +881,12 @@ PresShell::Init(nsIDocument* aDocument,
     // Create touch caret handle
     mTouchCaret = new TouchCaret(this);
   }
+
+  if (SelectionCaretPrefEnabled()) {
+    // Create selection caret handle
+    mSelectionCarets = new SelectionCarets(this);
+  }
+
 
   NS_ADDREF(mSelection = new nsFrameSelection());
 
@@ -1128,6 +1147,11 @@ PresShell::Destroy()
   if (mTouchCaret) {
     mTouchCaret->Terminate();
     mTouchCaret = nullptr;
+  }
+
+  if (mSelectionCarets) {
+    mSelectionCarets->Terminate();
+    mSelectionCarets = nullptr;
   }
 
   // release our pref style sheet, if we have one still
@@ -2164,6 +2188,12 @@ already_AddRefed<TouchCaret> PresShell::GetTouchCaret() const
   return touchCaret.forget();
 }
 
+already_AddRefed<SelectionCarets> PresShell::GetSelectionCarets() const
+{
+  nsRefPtr<SelectionCarets> selectionCaret = mSelectionCarets;
+  return selectionCaret.forget();
+}
+
 void PresShell::MaybeInvalidateCaretPosition()
 {
   if (mCaret) {
@@ -2566,6 +2596,18 @@ PresShell::MayHaveTouchCaret()
     }
   }
   return false;
+}
+
+Element*
+PresShell::GetSelectionCaretsStartElement() const
+{
+  return GetCanvasFrame() ? GetCanvasFrame()->GetSelectionCaretsStartElement() : nullptr;
+}
+
+Element*
+PresShell::GetSelectionCaretsEndElement() const
+{
+  return GetCanvasFrame() ? GetCanvasFrame()->GetSelectionCaretsEndElement() : nullptr;
 }
 
 void
@@ -6634,7 +6676,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
   RecordMouseLocation(aEvent);
 
   // Determine whether event need to be consumed by touch caret or not.
-  if (TouchCaretPrefEnabled()) {
+  if (TouchCaretPrefEnabled() || SelectionCaretPrefEnabled()) {
     // We have to target the focus window because regardless of where the
     // touch goes, we want to access the touch caret when user is typing on an
     // editable element.
@@ -6643,6 +6685,20 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     nsCOMPtr<nsIPresShell> presShell = retargetEventDoc ?
                                        retargetEventDoc->GetShell() :
                                        nullptr;
+
+    nsRefPtr<SelectionCarets> selectionCaret = presShell ?
+                                               presShell->GetSelectionCarets() :
+                                               nullptr;
+    if (selectionCaret) {
+      *aEventStatus = selectionCaret->HandleEvent(aEvent);
+      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+        // If the event is consumed by the touch caret, Cancel APZC panning by
+        // setting mMultipleActionsPrevented.
+        aEvent->mFlags.mMultipleActionsPrevented = true;
+        return NS_OK;
+      }
+    }
+
     nsRefPtr<TouchCaret> touchCaret = presShell ? presShell->GetTouchCaret() : nullptr;
     if (touchCaret) {
       *aEventStatus = touchCaret->HandleEvent(aEvent);

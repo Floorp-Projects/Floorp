@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIPresShell.h"
 #include "nsCaret.h"
 #include "TouchCaret.h"
+#include "SelectionCarets.h"
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -716,6 +717,15 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
       mDomSelections[index]->AddSelectionListener(touchCaret);
     }
   }
+
+  // Set selection caret as selection listener
+  nsRefPtr<SelectionCarets> selectionCarets = mShell->GetSelectionCarets();
+  if (selectionCarets) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    if (mDomSelections[index]) {
+      mDomSelections[index]->AddSelectionListener(selectionCarets);
+    }
+  }
 }
 
 nsresult
@@ -1230,7 +1240,7 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
 
   const nsRange* anchorFocusRange =
     mDomSelections[index]->GetAnchorFocusRange();
-  if (anchorFocusRange) {
+  if (anchorFocusRange && aAmount != eSelectNoAmount) {
     mMaintainRange = anchorFocusRange->CloneRange();
     return NS_OK;
   }
@@ -3040,6 +3050,13 @@ nsFrameSelection::DisconnectFromPresShell()
     int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     mDomSelections[index]->RemoveSelectionListener(touchCaret);
   }
+
+  nsRefPtr<SelectionCarets> selectionCarets = mShell->GetSelectionCarets();
+  if (selectionCarets) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    mDomSelections[index]->RemoveSelectionListener(selectionCarets);
+  }
+
   StopAutoScrollTimer();
   for (int32_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; i++) {
     mDomSelections[i]->Clear(nullptr);
