@@ -44,9 +44,10 @@ void Fake_SourceMediaStream::Periodic() {
   // and we are not asked by the signaling agent to stop
   //pulling data.
   if (mPullEnabled && !mStop) {
+    // 100 ms matches timer interval and AUDIO_BUFFER_SIZE @ 16000 Hz
+    mDesiredTime += 100;
     for (std::set<Fake_MediaStreamListener *>::iterator it =
              mListeners.begin(); it != mListeners.end(); ++it) {
-      mDesiredTime += 10;
       (*it)->NotifyPull(nullptr, mozilla::MillisecondsToMediaTime(mDesiredTime));
     }
   }
