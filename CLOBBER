@@ -22,5 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 934423 hit yet another instance of bug 1019955.
-
+Preemptive clobber for a vm/Xdr.h change to evade bug 1019955 (should it have otherwise arisen, which is unclear).
