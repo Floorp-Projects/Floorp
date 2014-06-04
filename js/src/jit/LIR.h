@@ -729,40 +729,32 @@ class LMoveGroup;
 class LBlock : public TempObject
 {
     MBasicBlock *block_;
-    Vector<LPhi *, 4, IonAllocPolicy> phis_;
+    FixedList<LPhi *> phis_;
     InlineList<LInstruction> instructions_;
     LMoveGroup *entryMoveGroup_;
     LMoveGroup *exitMoveGroup_;
     Label label_;
 
-    LBlock(TempAllocator &alloc, MBasicBlock *block)
+    explicit LBlock(MBasicBlock *block)
       : block_(block),
-        phis_(alloc),
+        phis_(),
         entryMoveGroup_(nullptr),
         exitMoveGroup_(nullptr)
     { }
 
   public:
-    static LBlock *New(TempAllocator &alloc, MBasicBlock *from) {
-        return new(alloc) LBlock(alloc, from);
-    }
+    static LBlock *New(TempAllocator &alloc, MBasicBlock *from);
     void add(LInstruction *ins) {
         instructions_.pushBack(ins);
     }
-    bool addPhi(LPhi *phi) {
-        return phis_.append(phi);
+    void setPhi(size_t index, LPhi *phi) {
+        phis_[index] = phi;
     }
     size_t numPhis() const {
         return phis_.length();
     }
     LPhi *getPhi(size_t index) const {
         return phis_[index];
-    }
-    void removePhi(size_t index) {
-        phis_.erase(&phis_[index]);
-    }
-    void clearPhis() {
-        phis_.clear();
     }
     MBasicBlock *mir() const {
         return block_;
@@ -1482,8 +1474,7 @@ class LIRGraph
         }
     };
 
-
-    Vector<LBlock *, 16, IonAllocPolicy> blocks_;
+    FixedList<LBlock *> blocks_;
     Vector<Value, 0, IonAllocPolicy> constantPool_;
     typedef HashMap<Value, uint32_t, ValueHasher, IonAllocPolicy> ConstantPoolMap;
     ConstantPoolMap constantPoolMap_;
@@ -1509,7 +1500,7 @@ class LIRGraph
     explicit LIRGraph(MIRGraph *mir);
 
     bool init() {
-        return constantPoolMap_.init();
+        return constantPoolMap_.init() && blocks_.init(mir_.alloc(), mir_.numBlocks());
     }
     MIRGraph &mir() const {
         return mir_;
@@ -1523,8 +1514,8 @@ class LIRGraph
     uint32_t numBlockIds() const {
         return mir_.numBlockIds();
     }
-    bool addBlock(LBlock *block) {
-        return blocks_.append(block);
+    void setBlock(size_t index, LBlock *block) {
+        blocks_[index] = block;
     }
     uint32_t getVirtualRegister() {
         numVirtualRegisters_ += VREG_INCREMENT;
@@ -1609,7 +1600,6 @@ class LIRGraph
     LInstruction *getSafepoint(size_t i) const {
         return safepoints_[i];
     }
-    void removeBlock(size_t i);
 
     void dump(FILE *fp) const;
     void dump() const;

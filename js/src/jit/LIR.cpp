@@ -18,7 +18,7 @@ using namespace js;
 using namespace js::jit;
 
 LIRGraph::LIRGraph(MIRGraph *mir)
-  : blocks_(mir->alloc()),
+  : blocks_(),
     constantPool_(mir->alloc()),
     constantPoolMap_(mir->alloc()),
     safepoints_(mir->alloc()),
@@ -58,12 +58,6 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 }
 
 void
-LIRGraph::removeBlock(size_t i)
-{
-    blocks_.erase(blocks_.begin() + i);
-}
-
-void
 LIRGraph::dump(FILE *fp) const
 {
     for (size_t i = 0; i < numBlocks(); i++) {
@@ -76,6 +70,24 @@ void
 LIRGraph::dump() const
 {
     dump(stderr);
+}
+
+LBlock *
+LBlock::New(TempAllocator &alloc, MBasicBlock *from)
+{
+    LBlock *block = new(alloc) LBlock(from);
+    if (!block)
+        return nullptr;
+
+    // Count the number of LPhis we'll need.
+    size_t numLPhis = 0;
+    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+        MPhi *phi = *i;
+        numLPhis += (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
+    }
+
+    // Allocate space for the LPhis.
+    return block->phis_.init(alloc, numLPhis) ? block : nullptr;
 }
 
 uint32_t
