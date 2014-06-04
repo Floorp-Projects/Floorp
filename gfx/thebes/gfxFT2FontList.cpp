@@ -6,31 +6,17 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 
-#if (MOZ_WIDGET_GTK == 2)
-#include "gfxPlatformGtk.h"
-#define gfxToolkitPlatform gfxPlatformGtk
-#elif defined(MOZ_WIDGET_QT)
-#include <qfontinfo.h>
-#include "gfxQtPlatform.h"
-#define gfxToolkitPlatform gfxQtPlatform
-#elif defined(XP_WIN)
-#include "gfxWindowsPlatform.h"
-#define gfxToolkitPlatform gfxWindowsPlatform
-#elif defined(ANDROID)
 #include "mozilla/dom/ContentChild.h"
 #include "gfxAndroidPlatform.h"
 #include "mozilla/Omnijar.h"
 #include "nsIInputStream.h"
 #include "nsNetUtil.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
-#endif
 
-#ifdef ANDROID
 #include "nsXULAppAPI.h"
 #include <dirent.h>
 #include <android/log.h>
 #define ALOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gecko" , ## args)
-#endif
 
 #include "ft2build.h"
 #include FT_FREETYPE_H
@@ -58,11 +44,6 @@
 #include "mozilla/scache/StartupCache.h"
 #include <sys/stat.h>
 
-#ifdef XP_WIN
-#include "nsIWindowsRegKey.h"
-#include <windows.h>
-#endif
-
 using namespace mozilla;
 
 #ifdef PR_LOGGING
@@ -85,10 +66,6 @@ static cairo_user_data_key_t sFTUserFontDataKey;
 static __inline void
 BuildKeyNameFromFontName(nsAString &aName)
 {
-#ifdef XP_WIN
-    if (aName.Length() >= LF_FACESIZE)
-        aName.Truncate(LF_FACESIZE - 1);
-#endif
     ToLowerCase(aName);
 }
 
@@ -963,11 +940,7 @@ gfxFT2FontList::AppendFacesFromFontFile(const nsCString& aFileName,
         return;
     }
 
-#ifdef XP_WIN
-    FT_Library ftLibrary = gfxWindowsPlatform::GetPlatform()->GetFTLibrary();
-#elif defined(ANDROID)
     FT_Library ftLibrary = gfxAndroidPlatform::GetPlatform()->GetFTLibrary();
-#endif
     FT_Face dummy;
     if (FT_Err_Ok == FT_New_Face(ftLibrary, aFileName.get(), -1, &dummy)) {
         LOG(("reading font info via FreeType for %s", aFileName.get()));
@@ -1170,50 +1143,6 @@ FinalizeFamilyMemberList(nsStringHashKey::KeyType aKey,
 void
 gfxFT2FontList::FindFonts()
 {
-#ifdef XP_WIN
-    nsTArray<nsString> searchPaths(3);
-    nsTArray<nsString> fontPatterns(3);
-    fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttf"));
-    fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.ttc"));
-    fontPatterns.AppendElement(NS_LITERAL_STRING("\\*.otf"));
-    wchar_t pathBuf[256];
-    SHGetSpecialFolderPathW(0, pathBuf, CSIDL_WINDOWS, 0);
-    searchPaths.AppendElement(pathBuf);
-    SHGetSpecialFolderPathW(0, pathBuf, CSIDL_FONTS, 0);
-    searchPaths.AppendElement(pathBuf);
-    nsCOMPtr<nsIFile> resDir;
-    NS_GetSpecialDirectory(NS_APP_RES_DIR, getter_AddRefs(resDir));
-    if (resDir) {
-        resDir->Append(NS_LITERAL_STRING("fonts"));
-        nsAutoString resPath;
-        resDir->GetPath(resPath);
-        searchPaths.AppendElement(resPath);
-    }
-    WIN32_FIND_DATAW results;
-    for (uint32_t i = 0;  i < searchPaths.Length(); i++) {
-        const nsString& path(searchPaths[i]);
-        for (uint32_t j = 0; j < fontPatterns.Length(); j++) { 
-            nsAutoString pattern(path);
-            pattern.Append(fontPatterns[j]);
-            HANDLE handle = FindFirstFileExW(pattern.get(),
-                                             FindExInfoStandard,
-                                             &results,
-                                             FindExSearchNameMatch,
-                                             nullptr,
-                                             0);
-            bool moreFiles = handle != INVALID_HANDLE_VALUE;
-            while (moreFiles) {
-                nsAutoString filePath(path);
-                filePath.Append('\\');
-                filePath.Append(results.cFileName);
-                AppendFacesFromFontFile(NS_ConvertUTF16toUTF8(filePath));
-                moreFiles = FindNextFile(handle, &results);
-            }
-            if (handle != INVALID_HANDLE_VALUE)
-                FindClose(handle);
-        }
-    }
-#elif defined(ANDROID)
     gfxFontCache *fc = gfxFontCache::GetCache();
     if (fc)
         fc->AgeAllGenerations();
@@ -1259,7 +1188,6 @@ gfxFT2FontList::FindFonts()
         // if we can't find/read the font directory, we are doomed!
         NS_RUNTIMEABORT("Could not read the system fonts directory");
     }
-#endif // XP_WIN && ANDROID
 
     // Look for fonts stored in omnijar, unless we're on a low-memory
     // device where we don't want to spend the RAM to decompress them.
@@ -1291,7 +1219,6 @@ gfxFT2FontList::FindFonts()
     mFontFamilies.Enumerate(FinalizeFamilyMemberList, this);
 }
 
-#ifdef ANDROID
 void
 gfxFT2FontList::FindFontsInDir(const nsCString& aDir, FontNameCache *aFNC)
 {
@@ -1348,7 +1275,6 @@ gfxFT2FontList::FindFontsInDir(const nsCString& aDir, FontNameCache *aFNC)
 
     closedir(d);
 }
-#endif
 
 void
 gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
@@ -1506,16 +1432,7 @@ gfxFT2FontList::LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
 gfxFontFamily*
 gfxFT2FontList::GetDefaultFont(const gfxFontStyle* aStyle)
 {
-#ifdef XP_WIN
-    HGDIOBJ hGDI = ::GetStockObject(SYSTEM_FONT);
-    LOGFONTW logFont;
-    if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
-        nsAutoString resolvedName;
-        if (ResolveFontName(nsDependentString(logFont.lfFaceName), resolvedName)) {
-            return FindFamily(resolvedName);
-        }
-    }
-#elif defined(MOZ_WIDGET_GONK)
+#ifdef MOZ_WIDGET_GONK
     nsAutoString resolvedName;
     if (ResolveFontName(NS_LITERAL_STRING("Fira Sans OT"), resolvedName)) {
         return FindFamily(resolvedName);
