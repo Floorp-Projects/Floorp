@@ -317,7 +317,8 @@ public:
       mStrength = SECKEY_PublicKeyStrength(mPubKey);
 
       // Verify that the data input is not too big
-      // (as required by PKCS#1 / RFC 3447)
+      // (as required by PKCS#1 / RFC 3447, Section 7.2)
+      // http://tools.ietf.org/html/rfc3447#section-7.2
       if (mData.Length() > mStrength - 11) {
         mEarlyRv = NS_ERROR_DOM_DATA_ERR;
         return;
@@ -448,10 +449,12 @@ private:
       // Compare the MAC to the provided signature
       // No truncation allowed
       bool equal = (mResult.Length() == mSignature.Length());
-      int cmp = NSS_SecureMemcmp(mSignature.Elements(),
-                                 mResult.Elements(),
-                                 mSignature.Length());
-      equal = equal && (cmp == 0);
+      if (equal) {
+        int cmp = NSS_SecureMemcmp(mSignature.Elements(),
+                                   mResult.Elements(),
+                                   mSignature.Length());
+        equal = (cmp == 0);
+      }
       mResultPromise->MaybeResolve(equal);
     }
   }
@@ -535,9 +538,13 @@ private:
       rv = MapSECStatus(SGN_End(ctx, signature));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
-      mSignature.Assign(signature);
+      ATTEMPT_BUFFER_ASSIGN(mSignature, signature);
     } else {
       ScopedSECItem signature(mSignature.ToSECItem());
+      if (!signature) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      }
+
       ScopedVFYContext ctx(VFY_CreateContext(mPubKey, signature,
                                              mOidTag, nullptr));
       if (!ctx) {
