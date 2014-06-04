@@ -20,8 +20,6 @@
 #define KEY_MAP_WIN_JPN(aCPPKeyName, aNativeKey)
 #define KEY_MAP_WIN_KOR(aCPPKeyName, aNativeKey)
 #define KEY_MAP_WIN_OTH(aCPPKeyName, aNativeKey)
-// OS/2
-#define KEY_MAP_OS2(aCPPKeyName, aNativeKey)
 // Mac OS X
 #define KEY_MAP_COCOA(aCPPKeyName, aNativeKey)
 // GTK
@@ -71,6 +69,107 @@
 #define KEY_MAP_ANDROID(aCPPKeyName, aNativeKey) \
   NS_NATIVE_KEY_TO_DOM_KEY_NAME_INDEX(aNativeKey, KEY_NAME_INDEX_##aCPPKeyName)
 #endif
+
+/******************************************************************************
+ * Modifier Keys
+ ******************************************************************************/
+// Alt
+KEY_MAP_WIN     (Alt, VK_MENU)
+KEY_MAP_WIN     (Alt, VK_LMENU)
+KEY_MAP_WIN     (Alt, VK_RMENU)
+KEY_MAP_COCOA   (Alt, kVK_Option)
+KEY_MAP_COCOA   (Alt, kVK_RightOption)
+KEY_MAP_GTK     (Alt, GDK_Alt_L)
+KEY_MAP_GTK     (Alt, GDK_Alt_R)
+KEY_MAP_QT      (Alt, Qt::Key_Alt)
+KEY_MAP_ANDROID (Alt, AKEYCODE_ALT_LEFT)
+KEY_MAP_ANDROID (Alt, AKEYCODE_ALT_RIGHT)
+
+// AltGraph
+KEY_MAP_GTK     (AltGraph, GDK_Mode_switch /* same as GDK_kana_switch,
+                                              GDK_ISO_Group_Shift and
+                                              GDK_script_switch */)
+// Let's treat both Level 3 shift and Level 5 shift as AltGr.
+// And also, let's treat Latch key and Lock key as AltGr key too like
+// GDK_Shift_Lock.
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Shift)
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Latch)
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Lock)
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Shift)
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Latch)
+KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Lock)
+KEY_MAP_QT      (AltGraph, Qt::Key_AltGr)
+KEY_MAP_QT      (AltGraph, Qt::Key_Mode_switch)
+
+// CapsLock
+KEY_MAP_WIN     (CapsLock, VK_CAPITAL)
+KEY_MAP_COCOA   (CapsLock, kVK_CapsLock)
+KEY_MAP_GTK     (CapsLock, GDK_Caps_Lock)
+KEY_MAP_QT      (CapsLock, Qt::Key_CapsLock)
+KEY_MAP_ANDROID (CapsLock, AKEYCODE_CAPS_LOCK)
+
+// Control
+KEY_MAP_WIN     (Control, VK_CONTROL)
+KEY_MAP_WIN     (Control, VK_LCONTROL)
+KEY_MAP_WIN     (Control, VK_RCONTROL)
+KEY_MAP_COCOA   (Control, kVK_Control)
+KEY_MAP_COCOA   (Control, kVK_RightControl)
+KEY_MAP_GTK     (Control, GDK_Control_L)
+KEY_MAP_GTK     (Control, GDK_Control_R)
+KEY_MAP_QT      (Control, Qt::Key_Control)
+KEY_MAP_ANDROID (Control, AKEYCODE_CTRL_LEFT)
+KEY_MAP_ANDROID (Control, AKEYCODE_CTRL_RIGHT)
+
+// Fn
+KEY_MAP_COCOA   (Fn, kVK_Function)
+KEY_MAP_ANDROID (Fn, AKEYCODE_FUNCTION)
+
+// Meta
+KEY_MAP_COCOA   (Meta, kVK_Command)
+KEY_MAP_COCOA   (Meta, kVK_RightCommand)
+KEY_MAP_GTK     (Meta, GDK_Meta_L)
+KEY_MAP_GTK     (Meta, GDK_Meta_R)
+KEY_MAP_QT      (Meta, Qt::Key_Meta)
+KEY_MAP_ANDROID (Meta, AKEYCODE_META_LEFT)
+KEY_MAP_ANDROID (Meta, AKEYCODE_META_RIGHT)
+
+// NumLock
+KEY_MAP_WIN     (NumLock, VK_NUMLOCK)
+KEY_MAP_GTK     (NumLock, GDK_Num_Lock)
+KEY_MAP_QT      (NumLock, Qt::Key_NumLock)
+KEY_MAP_ANDROID (NumLock, AKEYCODE_NUM_LOCK)
+
+// OS
+KEY_MAP_WIN     (OS, VK_LWIN)
+KEY_MAP_WIN     (OS, VK_RWIN)
+KEY_MAP_GTK     (OS, GDK_Super_L)
+KEY_MAP_GTK     (OS, GDK_Super_R)
+KEY_MAP_GTK     (OS, GDK_Hyper_L)
+KEY_MAP_GTK     (OS, GDK_Hyper_R)
+KEY_MAP_QT      (OS, Qt::Key_Super_L)
+KEY_MAP_QT      (OS, Qt::Key_Super_R)
+KEY_MAP_QT      (OS, Qt::Key_Hyper_L)
+KEY_MAP_QT      (OS, Qt::Key_Hyper_R)
+
+// ScrollLock
+KEY_MAP_WIN     (ScrollLock, VK_SCROLL)
+KEY_MAP_GTK     (ScrollLock, GDK_Scroll_Lock)
+KEY_MAP_QT      (ScrollLock, Qt::Key_ScrollLock)
+KEY_MAP_ANDROID (ScrollLock, AKEYCODE_SCROLL_LOCK)
+
+// Shift
+KEY_MAP_WIN     (Shift, VK_SHIFT)
+KEY_MAP_WIN     (Shift, VK_LSHIFT)
+KEY_MAP_WIN     (Shift, VK_RSHIFT)
+KEY_MAP_COCOA   (Shift, kVK_Shift)
+KEY_MAP_COCOA   (Shift, kVK_RightShift)
+KEY_MAP_GTK     (Shift, GDK_Shift_L)
+KEY_MAP_GTK     (Shift, GDK_Shift_R)
+KEY_MAP_GTK     (Shift, GDK_Shift_Lock) // Let's treat as Shift key (bug 769159)
+KEY_MAP_QT      (Shift, Qt::Key_Shift)
+KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_LEFT)
+KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_RIGHT)
+
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
@@ -430,12 +529,6 @@ KEY_MAP_WIN     (Play, VK_PLAY)
 KEY_MAP_GTK     (Play, GDK_3270_Play) // legacy IBM keyboard layout
 KEY_MAP_QT      (Play, Qt::Key_Play)
 
-// ScrollLock
-KEY_MAP_WIN     (ScrollLock, VK_SCROLL)
-KEY_MAP_GTK     (ScrollLock, GDK_Scroll_Lock)
-KEY_MAP_QT      (ScrollLock, Qt::Key_ScrollLock)
-KEY_MAP_ANDROID (ScrollLock, AKEYCODE_SCROLL_LOCK)
-
 // Execute
 KEY_MAP_WIN     (Execute, VK_EXECUTE)
 KEY_MAP_GTK     (Execute, GDK_Execute)
@@ -735,102 +828,7 @@ KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_toggle)
 KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_Shift)
 KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_toggle)
 
-// Alt
-KEY_MAP_WIN     (Alt, VK_MENU)
-KEY_MAP_WIN     (Alt, VK_LMENU)
-KEY_MAP_WIN     (Alt, VK_RMENU)
-KEY_MAP_COCOA   (Alt, kVK_Option)
-KEY_MAP_COCOA   (Alt, kVK_RightOption)
-KEY_MAP_GTK     (Alt, GDK_Alt_L)
-KEY_MAP_GTK     (Alt, GDK_Alt_R)
-KEY_MAP_QT      (Alt, Qt::Key_Alt)
-KEY_MAP_ANDROID (Alt, AKEYCODE_ALT_LEFT)
-KEY_MAP_ANDROID (Alt, AKEYCODE_ALT_RIGHT)
-
-// AltGraph
-KEY_MAP_GTK     (AltGraph, GDK_Mode_switch /* same as GDK_kana_switch,
-                                              GDK_ISO_Group_Shift and
-                                              GDK_script_switch */)
-// Let's treat both Level 3 shift and Level 5 shift as AltGr.
-// And also, let's treat Latch key and Lock key as AltGr key too like
-// GDK_Shift_Lock.
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Shift)
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Latch)
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level3_Lock)
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Shift)
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Latch)
-KEY_MAP_GTK     (AltGraph, GDK_ISO_Level5_Lock)
-KEY_MAP_QT      (AltGraph, Qt::Key_AltGr)
-KEY_MAP_QT      (AltGraph, Qt::Key_Mode_switch)
-
-// CapsLock
-KEY_MAP_WIN     (CapsLock, VK_CAPITAL)
-KEY_MAP_COCOA   (CapsLock, kVK_CapsLock)
-KEY_MAP_GTK     (CapsLock, GDK_Caps_Lock)
-KEY_MAP_QT      (CapsLock, Qt::Key_CapsLock)
-KEY_MAP_ANDROID (CapsLock, AKEYCODE_CAPS_LOCK)
-
-// Control
-KEY_MAP_WIN     (Control, VK_CONTROL)
-KEY_MAP_WIN     (Control, VK_LCONTROL)
-KEY_MAP_WIN     (Control, VK_RCONTROL)
-KEY_MAP_COCOA   (Control, kVK_Control)
-KEY_MAP_COCOA   (Control, kVK_RightControl)
-KEY_MAP_GTK     (Control, GDK_Control_L)
-KEY_MAP_GTK     (Control, GDK_Control_R)
-KEY_MAP_QT      (Control, Qt::Key_Control)
-KEY_MAP_ANDROID (Control, AKEYCODE_CTRL_LEFT)
-KEY_MAP_ANDROID (Control, AKEYCODE_CTRL_RIGHT)
-
-// Fn
-KEY_MAP_COCOA   (Fn, kVK_Function)
-KEY_MAP_ANDROID (Fn, AKEYCODE_FUNCTION)
-
-// FnLock
-
-// Meta
-KEY_MAP_COCOA   (Meta, kVK_Command)
-KEY_MAP_COCOA   (Meta, kVK_RightCommand)
-KEY_MAP_GTK     (Meta, GDK_Meta_L)
-KEY_MAP_GTK     (Meta, GDK_Meta_R)
-KEY_MAP_QT      (Meta, Qt::Key_Meta)
-KEY_MAP_ANDROID (Meta, AKEYCODE_META_LEFT)
-KEY_MAP_ANDROID (Meta, AKEYCODE_META_RIGHT)
-
 // Process
-
-// NumLock
-KEY_MAP_WIN     (NumLock, VK_NUMLOCK)
-KEY_MAP_GTK     (NumLock, GDK_Num_Lock)
-KEY_MAP_QT      (NumLock, Qt::Key_NumLock)
-KEY_MAP_ANDROID (NumLock, AKEYCODE_NUM_LOCK)
-
-// Shift
-KEY_MAP_WIN     (Shift, VK_SHIFT)
-KEY_MAP_WIN     (Shift, VK_LSHIFT)
-KEY_MAP_WIN     (Shift, VK_RSHIFT)
-KEY_MAP_COCOA   (Shift, kVK_Shift)
-KEY_MAP_COCOA   (Shift, kVK_RightShift)
-KEY_MAP_GTK     (Shift, GDK_Shift_L)
-KEY_MAP_GTK     (Shift, GDK_Shift_R)
-KEY_MAP_GTK     (Shift, GDK_Shift_Lock) // Let's treat as Shift key (bug 769159)
-KEY_MAP_QT      (Shift, Qt::Key_Shift)
-KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_LEFT)
-KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_RIGHT)
-
-// SymbolLock
-
-// OS
-KEY_MAP_WIN     (OS, VK_LWIN)
-KEY_MAP_WIN     (OS, VK_RWIN)
-KEY_MAP_GTK     (OS, GDK_Super_L)
-KEY_MAP_GTK     (OS, GDK_Super_R)
-KEY_MAP_GTK     (OS, GDK_Hyper_L)
-KEY_MAP_GTK     (OS, GDK_Hyper_R)
-KEY_MAP_QT      (OS, Qt::Key_Super_L)
-KEY_MAP_QT      (OS, Qt::Key_Super_R)
-KEY_MAP_QT      (OS, Qt::Key_Hyper_L)
-KEY_MAP_QT      (OS, Qt::Key_Hyper_R)
 
 // Compose
 KEY_MAP_GTK     (Compose, GDK_Multi_key) // "Multi Key" is "Compose key" on X
@@ -1145,7 +1143,6 @@ KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
 #undef KEY_MAP_WIN_JPN
 #undef KEY_MAP_WIN_KOR
 #undef KEY_MAP_WIN_OTH
-#undef KEY_MAP_OS2
 #undef KEY_MAP_COCOA
 #undef KEY_MAP_GTK
 #undef KEY_MAP_QT
