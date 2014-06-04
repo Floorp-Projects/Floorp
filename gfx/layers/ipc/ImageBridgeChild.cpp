@@ -399,14 +399,14 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
       nsRefPtr<ImageContainer> >(&UpdateImageClientNow, aClient, aContainer));
 }
 
-static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront, AsyncTransactionTracker* aStatus)
+static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront, AsyncTransactionTracker* aTracker)
 {
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
   if (aContainer && !aExceptFront) {
     aContainer->ClearCurrentImage();
   }
-  aClient->FlushAllImages(aExceptFront, aStatus);
+  aClient->FlushAllImages(aExceptFront, aTracker);
   aClient->OnTransaction();
   sImageBridgeChildSingleton->EndTransaction();
 }
@@ -425,13 +425,17 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient, ImageContainer* aCon
      return;
    }
 
-  RefPtr<AsyncTransactionTracker> status = aClient->PrepareFlushAllImages();
-
+  RefPtr<AsyncTransactionTracker> tracker;
+#ifdef MOZ_WIDGET_GONK
+  tracker = aClient->PrepareFlushAllImages();
+#endif
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, status));
+    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, tracker));
 
-  status->WaitComplete();
+  if (tracker) {
+    tracker->WaitComplete();
+  }
 }
 
 void
