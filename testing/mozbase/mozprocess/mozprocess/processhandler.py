@@ -908,23 +908,13 @@ class StoreOutput(object):
 
 class StreamOutput(object):
     """pass output to a stream and flush"""
-    encodings = ['utf-8', 'iso8859-1']
 
     def __init__(self, stream):
         self.stream = stream
 
     def __call__(self, line):
-        self.stream.write(self.decode(line) + '\n')
+        self.stream.write(line + '\n')
         self.stream.flush()
-
-    def decode(self, line):
-        exc_info = None
-        for encoding in self.encodings:
-            try:
-                return line.decode(encoding, 'replace')
-            except UnicodeDecodeError:
-                exc_info = sys.exc_info()
-        raise exc_info[0], exc_info[1], exc_info[2]
 
 class LogOutput(StreamOutput):
     """pass output to a file"""
