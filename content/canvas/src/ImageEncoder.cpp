@@ -3,13 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxImageSurface.h"
 #include "ImageEncoder.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/DataSurfaceHelpers.h"
-#include "mozilla/RefPtr.h"
-
-using namespace mozilla::gfx;
 
 namespace mozilla {
 namespace dom {
@@ -286,28 +282,19 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     // note that if we didn't have a current context, the spec says we're
     // supposed to just return transparent black pixels of the canvas
     // dimensions.
-    RefPtr<DataSourceSurface> emptyCanvas =
-      Factory::CreateDataSourceSurfaceWithStride(IntSize(aSize.width, aSize.height),
-                                                 SurfaceFormat::B8G8R8A8,
-                                                 4 * aSize.width);
-
-    if (!emptyCanvas) {
-      NS_ERROR("Failded to create DataSourceSurface");
+    nsRefPtr<gfxImageSurface> emptyCanvas =
+      new gfxImageSurface(gfxIntSize(aSize.width, aSize.height),
+                          gfxImageFormat::ARGB32);
+    if (emptyCanvas->CairoStatus()) {
       return NS_ERROR_INVALID_ARG;
     }
-    ClearDataSourceSurface(emptyCanvas);
-    DataSourceSurface::MappedSurface map;
-    if (!emptyCanvas->Map(DataSourceSurface::MapType::WRITE, &map)) {
-      return NS_ERROR_INVALID_ARG;
-    }
-    rv = aEncoder->InitFromData(map.mData,
+    rv = aEncoder->InitFromData(emptyCanvas->Data(),
                                 aSize.width * aSize.height * 4,
                                 aSize.width,
                                 aSize.height,
                                 aSize.width * 4,
                                 imgIEncoder::INPUT_FORMAT_HOSTARGB,
                                 aOptions);
-    emptyCanvas->Unmap();
     if (NS_SUCCEEDED(rv)) {
       imgStream = do_QueryInterface(aEncoder);
     }
