@@ -28,8 +28,6 @@ public:
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
-  nsresult Init();
-
   DocumentFragment* Content()
   {
     return mContent;

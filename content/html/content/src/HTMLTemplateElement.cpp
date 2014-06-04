@@ -11,21 +11,7 @@
 #include "nsIAtom.h"
 #include "nsRuleData.h"
 
-using namespace mozilla::dom;
-
-nsGenericHTMLElement*
-NS_NewHTMLTemplateElement(already_AddRefed<nsINodeInfo>&& aNodeInfo,
-                          FromParser aFromParser)
-{
-  HTMLTemplateElement* it = new HTMLTemplateElement(aNodeInfo);
-  nsresult rv = it->Init();
-  if (NS_FAILED(rv)) {
-    delete it;
-    return nullptr;
-  }
-
-  return it;
-}
+NS_IMPL_NS_NEW_HTML_ELEMENT(Template)
 
 namespace mozilla {
 namespace dom {
@@ -34,18 +20,14 @@ HTMLTemplateElement::HTMLTemplateElement(already_AddRefed<nsINodeInfo>& aNodeInf
   : nsGenericHTMLElement(aNodeInfo)
 {
   SetHasWeirdParserInsertionMode();
-}
 
-nsresult
-HTMLTemplateElement::Init()
-{
   nsIDocument* contentsOwner = OwnerDoc()->GetTemplateContentsOwner();
-  NS_ENSURE_TRUE(contentsOwner, NS_ERROR_UNEXPECTED);
+  if (!contentsOwner) {
+    MOZ_CRASH("There should always be a template contents owner.");
+  }
 
   mContent = contentsOwner->CreateDocumentFragment();
   mContent->SetHost(this);
-
-  return NS_OK;
 }
 
 HTMLTemplateElement::~HTMLTemplateElement()
@@ -77,7 +59,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(HTMLTemplateElement)
 NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
 
-NS_IMPL_ELEMENT_CLONE_WITH_INIT(HTMLTemplateElement)
+NS_IMPL_ELEMENT_CLONE(HTMLTemplateElement)
 
 JSObject*
 HTMLTemplateElement::WrapNode(JSContext *aCx)
