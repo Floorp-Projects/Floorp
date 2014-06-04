@@ -989,6 +989,7 @@ var BrowserApp = {
           icon: "drawable://undo_button_icon",
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
           callback: function() {
+            UITelemetry.addEvent("undo.1", "toast", null, "closetab");
             let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
             ss.undoCloseTab(window, 0);
           }
