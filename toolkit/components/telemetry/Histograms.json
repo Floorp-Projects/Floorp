@@ -50,6 +50,20 @@
     "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
+  "AUDIOSTREAM_FIRST_OPEN_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "description": "The length of time (in milliseconds) for the first open of AudioStream."
+  },
+  "AUDIOSTREAM_LATER_OPEN_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "description": "The length of time (in milliseconds) for the subsequent opens of AudioStream."
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "expires_in_version": "never",
     "kind": "enumerated",
