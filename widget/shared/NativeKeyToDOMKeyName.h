@@ -858,26 +858,25 @@ KEY_MAP_QT      (LaunchApplication17, Qt::Key_LaunchG)
 // LaunchApplication18
 KEY_MAP_QT      (LaunchApplication18, Qt::Key_LaunchH)
 
-
-// Apps
-KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
-
-// List
-
-// Info
-KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
-
-// Exit
-KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
-
-// Zoom
-KEY_MAP_WIN     (Zoom, VK_ZOOM)
-KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
+/******************************************************************************
+ * Browser Keys
+ ******************************************************************************/
+// BrowserBack
+KEY_MAP_WIN     (BrowserBack, VK_BROWSER_BACK)
+KEY_MAP_GTK     (BrowserBack, GDK_Back)
+KEY_MAP_QT      (BrowserBack, Qt::Key_Back)
+KEY_MAP_ANDROID (BrowserBack, AKEYCODE_BACK)
 
 // BrowserFavorites
 KEY_MAP_WIN     (BrowserFavorites, VK_BROWSER_FAVORITES)
 KEY_MAP_QT      (BrowserFavorites, Qt::Key_Favorites)
 KEY_MAP_ANDROID (BrowserFavorites, AKEYCODE_BOOKMARK)
+
+// BrowserForward
+KEY_MAP_WIN     (BrowserForward, VK_BROWSER_FORWARD)
+KEY_MAP_GTK     (BrowserForward, GDK_Forward)
+KEY_MAP_QT      (BrowserForward, Qt::Key_Forward)
+KEY_MAP_ANDROID (BrowserForward, AKEYCODE_FORWARD)
 
 // BrowserHome
 KEY_MAP_WIN     (BrowserHome, VK_BROWSER_HOME)
@@ -902,17 +901,21 @@ KEY_MAP_WIN     (BrowserStop, VK_BROWSER_STOP)
 KEY_MAP_GTK     (BrowserStop, GDK_Stop)
 KEY_MAP_QT      (BrowserStop, Qt::Key_Stop)
 
-// BrowserBack
-KEY_MAP_WIN     (BrowserBack, VK_BROWSER_BACK)
-KEY_MAP_GTK     (BrowserBack, GDK_Back)
-KEY_MAP_QT      (BrowserBack, Qt::Key_Back)
-KEY_MAP_ANDROID (BrowserBack, AKEYCODE_BACK)
 
-// BrowserForward
-KEY_MAP_WIN     (BrowserForward, VK_BROWSER_FORWARD)
-KEY_MAP_GTK     (BrowserForward, GDK_Forward)
-KEY_MAP_QT      (BrowserForward, Qt::Key_Forward)
-KEY_MAP_ANDROID (BrowserForward, AKEYCODE_FORWARD)
+// Apps
+KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
+
+// List
+
+// Info
+KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
+
+// Exit
+KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
+
+// Zoom
+KEY_MAP_WIN     (Zoom, VK_ZOOM)
+KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
 
 // UpLeft
 
