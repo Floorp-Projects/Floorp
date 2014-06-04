@@ -398,6 +398,9 @@ BoxModelHighlighter.prototype = {
     let pseudoClassesBox = this.chromeDoc.createElementNS(XHTML_NS, "span");
     pseudoClassesBox.className = "highlighter-nodeinfobar-pseudo-classes";
 
+    let dimensionBox = this.chromeDoc.createElementNS(XHTML_NS, "span");
+    dimensionBox.className = "highlighter-nodeinfobar-dimensions";
+
     // Add some content to force a better boundingClientRect
     pseudoClassesBox.textContent = "&nbsp;";
 
@@ -411,6 +414,7 @@ BoxModelHighlighter.prototype = {
     texthbox.appendChild(idLabel);
     texthbox.appendChild(classesBox);
     texthbox.appendChild(pseudoClassesBox);
+    texthbox.appendChild(dimensionBox);
 
     nodeInfobar.appendChild(texthbox);
 
@@ -427,6 +431,7 @@ BoxModelHighlighter.prototype = {
       idLabel: idLabel,
       classesBox: classesBox,
       pseudoClassesBox: pseudoClassesBox,
+      dimensionBox: dimensionBox,
       positioner: infobarPositioner,
       barHeight: barHeight,
     };
@@ -702,29 +707,36 @@ BoxModelHighlighter.prototype = {
    * Update node information (tagName#id.class)
    */
   _updateInfobar: function() {
-    if (this.currentNode) {
-      // Tag name
-      this.nodeInfo.tagNameLabel.textContent = this.currentNode.tagName;
-
-      // ID
-      this.nodeInfo.idLabel.textContent = this.currentNode.id ? "#" + this.currentNode.id : "";
-
-      // Classes
-      let classes = this.nodeInfo.classesBox;
-
-      classes.textContent = this.currentNode.classList.length ?
-                              "." + Array.join(this.currentNode.classList, ".") : "";
-
-      // Pseudo-classes
-      let pseudos = PSEUDO_CLASSES.filter(pseudo => {
-        return DOMUtils.hasPseudoClassLock(this.currentNode, pseudo);
-      }, this);
-
-      let pseudoBox = this.nodeInfo.pseudoClassesBox;
-      pseudoBox.textContent = pseudos.join("");
-
-      this._moveInfobar();
+    if (!this.currentNode) {
+      return;
     }
+
+    // Tag name
+    this.nodeInfo.tagNameLabel.textContent = this.currentNode.tagName;
+
+    // ID
+    this.nodeInfo.idLabel.textContent = this.currentNode.id ? "#" + this.currentNode.id : "";
+
+    // Classes
+    let classes = this.nodeInfo.classesBox;
+
+    classes.textContent = this.currentNode.classList.length ?
+                            "." + Array.join(this.currentNode.classList, ".") : "";
+
+    // Pseudo-classes
+    let pseudos = PSEUDO_CLASSES.filter(pseudo => {
+      return DOMUtils.hasPseudoClassLock(this.currentNode, pseudo);
+    }, this);
+
+    let pseudoBox = this.nodeInfo.pseudoClassesBox;
+    pseudoBox.textContent = pseudos.join("");
+
+    // Dimensions
+    let dimensionBox = this.nodeInfo.dimensionBox;
+    let rect = this.currentNode.getBoundingClientRect();
+    dimensionBox.textContent = Math.ceil(rect.width) + " x " +
+                               Math.ceil(rect.height);
+    this._moveInfobar();
   },
 
   /**

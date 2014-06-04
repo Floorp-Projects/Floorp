@@ -45,6 +45,7 @@ svg|line.box-model-guide-bottom[hidden] {
 html|*.highlighter-nodeinfobar-id,
 html|*.highlighter-nodeinfobar-classes,
 html|*.highlighter-nodeinfobar-pseudo-classes,
+html|*.highlighter-nodeinfobar-dimensions,
 html|*.highlighter-nodeinfobar-tagname {
   -moz-user-select: text;
   -moz-user-focus: normal;
