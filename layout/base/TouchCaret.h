@@ -235,6 +235,10 @@ protected:
   // Preference
   static int32_t sTouchCaretMaxDistance;
   static int32_t sTouchCaretExpirationTime;
+
+  // The auto scroll timer's interval in miliseconds.
+  friend class SelectionCarets;
+  static const int32_t sAutoScrollTimerDelay = 30;
 };
 } //namespace mozilla
 #endif //mozilla_TouchCaret_h__
