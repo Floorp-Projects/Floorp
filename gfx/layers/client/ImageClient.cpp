@@ -83,8 +83,8 @@ ImageClient::RemoveTextureWithTracker(TextureClient* aTexture,
 #ifdef MOZ_WIDGET_GONK
   // AsyncTransactionTracker is supported only on ImageBridge.
   // Use AsyncTransactionTracker only when TextureClient is recyeled.
-  if (GetForwarder()->IsImageBridgeChild() &&
-      aTexture->HasRecycleCallback()) {
+  if (aAsyncTransactionTracker ||
+      (GetForwarder()->IsImageBridgeChild() && aTexture->HasRecycleCallback())) {
     RefPtr<AsyncTransactionTracker> request = aAsyncTransactionTracker;
     if (!request) {
       // Create AsyncTransactionTracker if it is not provided as argument.
