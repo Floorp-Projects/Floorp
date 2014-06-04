@@ -192,6 +192,17 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 
 @end
 
+@interface EventThreadRunner : NSObject
+{
+  NSThread* mThread;
+}
+- (id)init;
+
++ (void)start;
++ (void)stop;
+
+@end
+
 @interface NSView(NSThemeFrameCornerRadius)
 - (float)roundedCornerRadius;
 @end
@@ -5066,6 +5077,10 @@ static int32_t RoundUp(double aDouble)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type
+{
+}
+
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -6498,6 +6513,106 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
 }
 
 #pragma mark -
+
+@interface EventThreadRunner(Private)
+- (void)runEventThread;
+- (void)shutdownAndReleaseCalledOnEventThread;
+- (void)shutdownAndReleaseCalledOnAnyThread;
+- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type;
+@end
+
+static EventThreadRunner* sEventThreadRunner = nil;
+
+@implementation EventThreadRunner
+
++ (void)start
+{
+  sEventThreadRunner = [[EventThreadRunner alloc] init];
+}
+
++ (void)stop
+{
+  if (sEventThreadRunner) {
+    [sEventThreadRunner shutdownAndReleaseCalledOnAnyThread];
+    sEventThreadRunner = nil;
+  }
+}
+
+- (id)init
+{
+  if ((self = [super init])) {
+    mThread = nil;
+    [NSThread detachNewThreadSelector:@selector(runEventThread)
+                             toTarget:self
+                           withObject:nil];
+  }
+  return self;
+}
+
+static CGEventRef
+HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
+            CGEventRef aEvent, void* aClosure)
+{
+  [(EventThreadRunner*)aClosure handleEvent:aEvent type:aType];
+  return aEvent;
+}
+
+- (void)runEventThread
+{
+  char aLocal;
+  profiler_register_thread("APZC Event Thread", &aLocal);
+  PR_SetCurrentThreadName("APZC Event Thread");
+
+  mThread = [NSThread currentThread];
+  ProcessSerialNumber currentProcess;
+  GetCurrentProcess(&currentProcess);
+  CFMachPortRef eventPort =
+    CGEventTapCreateForPSN(&currentProcess,
+                           kCGHeadInsertEventTap,
+                           kCGEventTapOptionListenOnly,
+                           kCGEventMaskForAllEvents,
+                           HandleEvent,
+                           self);
+  CFRunLoopSourceRef eventPortSource =
+    CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, eventPort, 0);
+  CFRunLoopAddSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
+  CFRunLoopRun();
+  CFRunLoopRemoveSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
+  CFRelease(eventPortSource);
+  CFRelease(eventPort);
+  [self release];
+}
+
+- (void)shutdownAndReleaseCalledOnEventThread
+{
+  CFRunLoopStop(CFRunLoopGetCurrent());
+}
+
+- (void)shutdownAndReleaseCalledOnAnyThread
+{
+  [self performSelector:@selector(shutdownAndReleaseCalledOnEventThread) onThread:mThread withObject:nil waitUntilDone:NO];
+}
+
+static const CGEventField kCGWindowNumberField = 51;
+
+// Called on scroll thread
+- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type
+{
+  if (type != kCGEventScrollWheel) {
+    return;
+  }
+
+  int windowNumber = CGEventGetIntegerValueField(cgEvent, kCGWindowNumberField);
+  NSWindow* window = [NSApp windowWithWindowNumber:windowNumber];
+  if (!window || ![window isKindOfClass:[BaseWindow class]]) {
+    return;
+  }
+
+  ChildView* childView = [(BaseWindow*)window mainChildView];
+  [childView handleAsyncScrollEvent:cgEvent ofType:type];
+}
+
+@end
 
 @interface NSView (MethodSwizzling)
 - (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;
