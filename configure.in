@@ -6323,17 +6323,13 @@ if test "$MOZ_WEBAPP_RUNTIME"; then
     AC_DEFINE(MOZ_WEBAPP_RUNTIME)
 fi
 
-AC_MSG_CHECKING([for tar archiver])
 AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
 if test -z "$TAR"; then
     AC_MSG_ERROR([no tar archiver found in \$PATH])
 fi
-AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
 
-AC_MSG_CHECKING([for wget])
 AC_CHECK_PROGS(WGET, wget, "")
-AC_MSG_RESULT([$WGET])
 AC_SUBST(WGET)
 
 dnl ========================================================
