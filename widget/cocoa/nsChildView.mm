@@ -67,6 +67,7 @@
 #include "HeapCopyOfStackArray.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
@@ -88,6 +89,7 @@
 #include "GeckoProfiler.h"
 
 #include "nsIDOMWheelEvent.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -374,6 +376,69 @@ protected:
   nsAutoPtr<mozilla::layers::ShaderProgramOGL> mRGBARectProgram;
   gfx::Matrix4x4 mProjMatrix;
   GLuint mQuadVBO;
+};
+
+class APZCTMController : public mozilla::layers::GeckoContentController
+{
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+
+  class RequestContentRepaintEvent : public nsRunnable
+  {
+  public:
+    RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
+      : mFrameMetrics(aFrameMetrics)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(mFrameMetrics.GetScrollId());
+      if (targetContent) {
+        APZCCallbackHelper::UpdateSubFrame(targetContent, mFrameMetrics);
+      }
+
+      return NS_OK;
+    }
+  protected:
+    FrameMetrics mFrameMetrics;
+  };
+
+public:
+  // GeckoContentController interface
+  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics)
+  {
+    nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics);
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(r1);
+    } else {
+      r1->Run();
+    }
+  }
+
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
+  {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+  }
+
+  virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
+  {
+    APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+  }
+
+  virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
+                                       const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
 };
 
 } // unnamed namespace
