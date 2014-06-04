@@ -47,11 +47,9 @@ class ProfileEntry
     int32_t volatile lineOrPc;
 
     // General purpose storage describing this frame.
-    uint32_t volatile flags;
+    uint32_t volatile flags_;
 
   public:
-    ProfileEntry(void) : flags(0) {}
-
     // These traits are bit masks. Make sure they're powers of 2.
     enum Flags {
         // Indicate whether a profile entry represents a CPP frame. If not set,
@@ -93,26 +91,29 @@ class ProfileEntry
     const char *label() const volatile { return string; }
 
     void setJsFrame(JSScript *aScript, jsbytecode *aPc) volatile {
-        flags &= ~IS_CPP_ENTRY;
+        flags_ = 0;
         spOrScript = aScript;
         setPC(aPc);
     }
     void setCppFrame(void *aSp, uint32_t aLine) volatile {
-        flags |= IS_CPP_ENTRY;
+        flags_ = IS_CPP_ENTRY;
         spOrScript = aSp;
         lineOrPc = static_cast<int32_t>(aLine);
     }
 
     void setFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags |= flag;
+        flags_ |= flag;
     }
     void unsetFlag(uint32_t flag) volatile {
         MOZ_ASSERT(flag != IS_CPP_ENTRY);
-        flags &= ~flag;
+        flags_ &= ~flag;
     }
     bool hasFlag(uint32_t flag) const volatile {
-        return bool(flags & uint32_t(flag));
+        return bool(flags_ & flag);
+    }
+    uint32_t flags() const volatile {
+        return flags_;
     }
 
     void *stackAddress() const volatile {
@@ -140,7 +141,7 @@ class ProfileEntry
     static size_t offsetOfLabel() { return offsetof(ProfileEntry, string); }
     static size_t offsetOfSpOrScript() { return offsetof(ProfileEntry, spOrScript); }
     static size_t offsetOfLineOrPc() { return offsetof(ProfileEntry, lineOrPc); }
-    static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags); }
+    static size_t offsetOfFlags() { return offsetof(ProfileEntry, flags_); }
 };
 
 JS_FRIEND_API(void)
