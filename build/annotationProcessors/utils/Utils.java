@@ -137,7 +137,7 @@ public class Utils {
      * @param type Class to determine the corresponding JNI type for.
      * @return true if the type an object type, false otherwise.
      */
-    public static String getCParameterType(Class<?> type) {
+    public static String getCParameterType(Class<?> type, boolean aNarrowChars) {
         String name = type.getCanonicalName();
         if (sBasicCTypes.containsKey(name)) {
             return sBasicCTypes.get(name);
@@ -161,6 +161,9 @@ public class Utils {
 
         // Check for CharSequences (Strings and things that are string-like)
         if (isCharSequence(type)) {
+	    if (aNarrowChars) {
+		return "const nsACString&";
+	    }
             return "const nsAString&";
         }
 
@@ -181,12 +184,12 @@ public class Utils {
      * @param type The Java return type.
      * @return A string representation of the C++ return type.
      */
-    public static String getCReturnType(Class<?> type) {
+     public static String getCReturnType(Class<?> type, boolean aNarrowChars) {
         if (type.getCanonicalName().equals("java.lang.Void")) {
             return "void";
         }
-        String cParameterType = getCParameterType(type);
-        if (cParameterType.equals("const nsAString&")) {
+        String cParameterType = getCParameterType(type, aNarrowChars);
+        if (cParameterType.equals("const nsAString&") || cParameterType.equals("const nsACString&")) {
             return "jstring";
         } else {
             return cParameterType;
@@ -381,10 +384,10 @@ public class Utils {
      * @param aCClassName Name of the C++ class into which the method is declared.
      * @return The C++ method implementation signature for the method described.
      */
-    public static String getCImplementationMethodSignature(Class<?>[] aArgumentTypes, Class<?> aReturnType, String aCMethodName, String aCClassName) {
+    public static String getCImplementationMethodSignature(Class<?>[] aArgumentTypes, Class<?> aReturnType, String aCMethodName, String aCClassName, boolean aNarrowChars) {
         StringBuilder retBuffer = new StringBuilder();
 
-        retBuffer.append(getCReturnType(aReturnType));
+        retBuffer.append(getCReturnType(aReturnType, aNarrowChars));
         retBuffer.append(' ');
         retBuffer.append(aCClassName);
         retBuffer.append("::");
@@ -393,7 +396,7 @@ public class Utils {
 
         // Write argument types...
         for (int aT = 0; aT < aArgumentTypes.length; aT++) {
-            retBuffer.append(getCParameterType(aArgumentTypes[aT]));
+            retBuffer.append(getCParameterType(aArgumentTypes[aT], aNarrowChars));
             retBuffer.append(" a");
             // We, imaginatively, call our arguments a1, a2, a3...
             // The only way to preserve the names from Java would be to parse the
@@ -420,7 +423,7 @@ public class Utils {
      * @param aIsStaticStub true if the generated C++ method should be static, false otherwise.
      * @return The generated C++ header method signature for the method described.
      */
-    public static String getCHeaderMethodSignature(Class<?>[] aArgumentTypes, Annotation[][] aArgumentAnnotations, Class<?> aReturnType, String aCMethodName, String aCClassName, boolean aIsStaticStub) {
+    public static String getCHeaderMethodSignature(Class<?>[] aArgumentTypes, Annotation[][] aArgumentAnnotations, Class<?> aReturnType, String aCMethodName, String aCClassName, boolean aIsStaticStub, boolean aNarrowChars) {
         StringBuilder retBuffer = new StringBuilder();
 
         // Add the static keyword, if applicable.
@@ -429,14 +432,14 @@ public class Utils {
         }
 
         // Write return type..
-        retBuffer.append(getCReturnType(aReturnType));
+        retBuffer.append(getCReturnType(aReturnType, aNarrowChars));
         retBuffer.append(' ');
         retBuffer.append(aCMethodName);
         retBuffer.append('(');
 
         // Write argument types...
         for (int aT = 0; aT < aArgumentTypes.length; aT++) {
-            retBuffer.append(getCParameterType(aArgumentTypes[aT]));
+            retBuffer.append(getCParameterType(aArgumentTypes[aT], aNarrowChars));
             retBuffer.append(" a");
             // We, imaginatively, call our arguments a1, a2, a3...
             // The only way to preserve the names from Java would be to parse the

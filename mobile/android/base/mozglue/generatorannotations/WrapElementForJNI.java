@@ -44,4 +44,6 @@ public @interface WrapElementForJNI {
      * Any exception must be handled or cleared by the code calling the stub.
      */
     boolean noThrow() default false;
+
+    boolean narrowChars() default false;
 }
