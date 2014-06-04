@@ -110,6 +110,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     SimpleTest.finish();
   }
 
+  // Maintain a static list of the properties that are available on each standard
+  // prototype, so that we make sure to audit any new ones to make sure they're
+  // Xray-safe.
+  //
+  // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
+  var gPrototypeProperties = {};
+  gPrototypeProperties['Date'] =
+    ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
+    "getMonth", "getUTCMonth", "getDate", "getUTCDate", "getDay", "getUTCDay",
+    "getHours", "getUTCHours", "getMinutes", "getUTCMinutes", "getSeconds",
+    "getUTCSeconds", "getMilliseconds", "getUTCMilliseconds", "setTime",
+    "setYear", "setFullYear", "setUTCFullYear", "setMonth", "setUTCMonth",
+    "setDate", "setUTCDate", "setHours", "setUTCHours", "setMinutes",
+    "setUTCMinutes", "setSeconds", "setUTCSeconds", "setMilliseconds",
+    "setUTCMilliseconds", "toUTCString", "toLocaleFormat", "toLocaleString",
+    "toLocaleDateString", "toLocaleTimeString", "toDateString", "toTimeString",
+    "toISOString", "toJSON", "toSource", "toString", "valueOf", "constructor",
+    "toGMTString"];
+
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
   }
@@ -118,6 +137,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     propsToSkip = propsToSkip || [];
     let xrayProto = Object.getPrototypeOf(xray);
     let localProto = window[classname].prototype;
+    is(Object.getOwnPropertyNames(localProto).sort().toSource(),
+       gPrototypeProperties[classname].sort().toSource(),
+       "A new property on the " + classname +
+       " prototype has been added! You need a security audit from an XPConnect peer");
+
     let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
     let protoMethods = protoProps.filter(name => typeof localProto[name] == 'function' &&
                                          name != 'constructor');
