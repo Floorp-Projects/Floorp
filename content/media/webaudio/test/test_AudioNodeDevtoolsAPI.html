@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test the devtool AudioNode API</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  Components.utils.import('resource://gre/modules/Services.jsm');
+
+  SimpleTest.waitForExplicitFinish();
+
+  var ac = new AudioContext();
+  var ids;
+  var weak;
+  (function() {
+    var src1 = ac.createBufferSource();
+    var src2 = ac.createBufferSource();
+    ok(src2.id > src1.id, "The ID should be monotonic");
+    ok(src1.id > ac.destination.id, "The ID of the destination node should be the lowest");
+    ids = [src1.id, src2.id];
+    weak = Components.utils.getWeakReference(src1);
+    is(weak.get(), src1, "The node should support a weak reference");
+  })();
+  function observer(subject, topic, data) {
+    var id = parseInt(data);
+    var index = ids.indexOf(id);
+    if (index != -1) {
+      info("Dropping id " + id + " at index " + index);
+      ids.splice(index, 1);
+      if (ids.length == 0) {
+        SimpleTest.executeSoon(function() {
+          is(weak.get(), null, "The weak reference must be dropped now");
+          Services.obs.removeObserver(observer, "webaudio-node-demise");
+          SimpleTest.finish();
+        });
+      }
+    }
+  }
+  Services.obs.addObserver(observer, "webaudio-node-demise", false);
+
+  forceCC();
+  forceCC();
+
+  function forceCC() {
+    SpecialPowers.DOMWindowUtils.cycleCollect();
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+    SpecialPowers.DOMWindowUtils.garbageCollect();
+  }
+
+</script>
+</pre>
+</body>
+</html>
