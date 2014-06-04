@@ -260,6 +260,14 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
       ++charCounter;
     }
     if (accept(SLASH)) {
+      // do not accept double slashes
+      // see http://tools.ietf.org/html/rfc3986#section-3.3
+      if (accept(SLASH)) {
+        const char16_t* params[] = { mCurToken.get() };
+        logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                                 params, ArrayLength(params));
+        return false;
+      }
       aCspHost->appendPath(mCurValue);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
@@ -289,12 +297,18 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
   resetCurValue();
 
   if (!accept(SLASH)) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   if (atEnd()) {
     return true;
   }
   if (!hostChar()) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   return subPath(aCspHost);
@@ -464,7 +478,11 @@ nsCSPParser::hostSource()
   // occurs, path() reports the error; handing cspHost as an argument
   // which simplifies parsing of several paths.
   if (!path(cspHost)) {
-    return cspHost;
+    // If the host [port] is followed by a path, it has to be a valid path,
+    // otherwise we pass the nullptr, indicating an error, up the callstack.
+    // see also http://www.w3.org/TR/CSP11/#source-list
+    delete cspHost;
+    return nullptr;
   }
 
   // Calling fileAndArguments to see if there are any files to parse;
