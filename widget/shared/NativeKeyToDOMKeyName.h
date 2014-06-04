@@ -322,10 +322,68 @@ KEY_MAP_QT      (Paste, Qt::Key_Paste)
 // Undo
 KEY_MAP_GTK     (Undo, GDK_Undo)
 
+/******************************************************************************
+ * UI Keys
+ ******************************************************************************/
+// Accept
+KEY_MAP_WIN     (Accept, VK_ACCEPT)
+KEY_MAP_ANDROID (Accept, AKEYCODE_DPAD_CENTER)
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
 KEY_MAP_GTK     (Attn, GDK_3270_Attn) // legacy IBM keyboard layout
+
+// Cancel
+KEY_MAP_WIN     (Cancel, VK_CANCEL)
+KEY_MAP_GTK     (Cancel, GDK_Cancel)
+KEY_MAP_QT      (Cancel, Qt::Key_Cancel)
+
+// Menu
+KEY_MAP_WIN     (Menu, VK_APPS)
+KEY_MAP_COCOA   (Menu, kVK_PC_ContextMenu)
+KEY_MAP_GTK     (Menu, GDK_Menu)
+KEY_MAP_QT      (Menu, Qt::Key_Menu)
+KEY_MAP_ANDROID (Menu, AKEYCODE_MENU)
+
+// Esc
+KEY_MAP_WIN     (Esc, VK_ESCAPE)
+KEY_MAP_COCOA   (Esc, kVK_Escape)
+KEY_MAP_GTK     (Esc, GDK_Escape)
+KEY_MAP_QT      (Esc, Qt::Key_Escape)
+KEY_MAP_ANDROID (Esc, AKEYCODE_ESCAPE)
+
+// Execute
+KEY_MAP_WIN     (Execute, VK_EXECUTE)
+KEY_MAP_GTK     (Execute, GDK_Execute)
+KEY_MAP_QT      (Execute, Qt::Key_Execute)
+
+// Find
+KEY_MAP_GTK     (Find, GDK_Find)
+
+// Help
+KEY_MAP_WIN     (Help, VK_HELP)
+KEY_MAP_COCOA   (Help, kVK_Help)
+KEY_MAP_GTK     (Help, GDK_Help)
+KEY_MAP_QT      (Help, Qt::Key_Help)
+KEY_MAP_ANDROID (Help, AKEYCODE_ASSIST)
+
+// Pause
+KEY_MAP_WIN     (Pause, VK_PAUSE)
+KEY_MAP_GTK     (Pause, GDK_Pause)
+// Break is typically mapped to Alt+Pause or Ctrl+Pause on GTK.
+KEY_MAP_GTK     (Pause, GDK_Break)
+KEY_MAP_QT      (Pause, Qt::Key_Pause)
+KEY_MAP_ANDROID (Pause, AKEYCODE_BREAK)
+
+// Play
+KEY_MAP_WIN     (Play, VK_PLAY)
+KEY_MAP_GTK     (Play, GDK_3270_Play) // legacy IBM keyboard layout
+KEY_MAP_QT      (Play, Qt::Key_Play)
+
+// Select
+KEY_MAP_WIN     (Select, VK_SELECT)
+KEY_MAP_GTK     (Select, GDK_Select)
+
 
 // Apps
 KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
@@ -610,8 +668,6 @@ KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
 // List
 
-// Props
-
 // Soft1
 
 // Soft2
@@ -620,61 +676,8 @@ KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
 // Soft4
 
-// Accept
-KEY_MAP_WIN     (Accept, VK_ACCEPT)
-KEY_MAP_ANDROID (Accept, AKEYCODE_DPAD_CENTER)
-
-// Again
-
-// Find
-KEY_MAP_GTK     (Find, GDK_Find)
-
-// Help
-KEY_MAP_WIN     (Help, VK_HELP)
-KEY_MAP_COCOA   (Help, kVK_Help)
-KEY_MAP_GTK     (Help, GDK_Help)
-KEY_MAP_QT      (Help, Qt::Key_Help)
-KEY_MAP_ANDROID (Help, AKEYCODE_ASSIST)
-
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
-
-// Menu
-KEY_MAP_WIN     (Menu, VK_APPS)
-KEY_MAP_COCOA   (Menu, kVK_PC_ContextMenu)
-KEY_MAP_GTK     (Menu, GDK_Menu)
-KEY_MAP_QT      (Menu, Qt::Key_Menu)
-KEY_MAP_ANDROID (Menu, AKEYCODE_MENU)
-
-// Pause
-KEY_MAP_WIN     (Pause, VK_PAUSE)
-KEY_MAP_GTK     (Pause, GDK_Pause)
-// Break is typically mapped to Alt+Pause or Ctrl+Pause on GTK.
-KEY_MAP_GTK     (Pause, GDK_Break)
-KEY_MAP_QT      (Pause, Qt::Key_Pause)
-KEY_MAP_ANDROID (Pause, AKEYCODE_BREAK)
-
-// Play
-KEY_MAP_WIN     (Play, VK_PLAY)
-KEY_MAP_GTK     (Play, GDK_3270_Play) // legacy IBM keyboard layout
-KEY_MAP_QT      (Play, Qt::Key_Play)
-
-// Execute
-KEY_MAP_WIN     (Execute, VK_EXECUTE)
-KEY_MAP_GTK     (Execute, GDK_Execute)
-KEY_MAP_QT      (Execute, Qt::Key_Execute)
-
-// Cancel
-KEY_MAP_WIN     (Cancel, VK_CANCEL)
-KEY_MAP_GTK     (Cancel, GDK_Cancel)
-KEY_MAP_QT      (Cancel, Qt::Key_Cancel)
-
-// Esc
-KEY_MAP_WIN     (Esc, VK_ESCAPE)
-KEY_MAP_COCOA   (Esc, kVK_Escape)
-KEY_MAP_GTK     (Esc, GDK_Escape)
-KEY_MAP_QT      (Esc, Qt::Key_Escape)
-KEY_MAP_ANDROID (Esc, AKEYCODE_ESCAPE)
 
 // Exit
 KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
@@ -761,10 +764,6 @@ KEY_MAP_ANDROID (BrowserForward, AKEYCODE_FORWARD)
 // DownLeft
 
 // DownRight
-
-// Select
-KEY_MAP_WIN     (Select, VK_SELECT)
-KEY_MAP_GTK     (Select, GDK_Select)
 
 // DeadGrave
 KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
