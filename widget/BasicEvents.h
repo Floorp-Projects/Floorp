@@ -136,6 +136,7 @@ enum nsEventStructType
 #define NS_MOUSE_MOZHITTEST             (NS_MOUSE_MESSAGE_START + 33)
 #define NS_MOUSEENTER                   (NS_MOUSE_MESSAGE_START + 34)
 #define NS_MOUSELEAVE                   (NS_MOUSE_MESSAGE_START + 35)
+#define NS_MOUSE_MOZLONGTAP             (NS_MOUSE_MESSAGE_START + 36)
 
 // Pointer spec events
 #define NS_POINTER_EVENT_START          4400
