@@ -479,7 +479,7 @@ TabChildBase::DispatchSynthesizedMouseEvent(uint32_t aMsg, uint64_t aTime,
                                             nsIWidget* aWidget)
 {
   MOZ_ASSERT(aMsg == NS_MOUSE_MOVE || aMsg == NS_MOUSE_BUTTON_DOWN ||
-             aMsg == NS_MOUSE_BUTTON_UP);
+             aMsg == NS_MOUSE_BUTTON_UP || aMsg == NS_MOUSE_MOZLONGTAP);
 
   WidgetMouseEvent event(true, aMsg, nullptr,
                          WidgetMouseEvent::eReal, WidgetMouseEvent::eNormal);
@@ -691,6 +691,7 @@ TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t 
   , mOrientation(eScreenOrientation_PortraitPrimary)
   , mUpdateHitRegion(false)
   , mContextMenuHandled(false)
+  , mLongTapEventHandled(false)
   , mWaitingTouchListeners(false)
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
@@ -1739,7 +1740,17 @@ TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const ScrollableLayerGuid& a
                          2, 1, 0, false,
                          nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
 
-  SendContentReceivedTouch(aGuid, mContextMenuHandled);
+  // If no one handle context menu, fire MOZLONGTAP event
+  if (!mContextMenuHandled) {
+    LayoutDevicePoint currentPoint =
+      APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid) * mWidget->GetDefaultScale();
+    int time = 0;
+    nsEventStatus status =
+      DispatchSynthesizedMouseEvent(NS_MOUSE_MOZLONGTAP, time, currentPoint, mWidget);
+    mLongTapEventHandled = (status == nsEventStatus_eConsumeNoDefault);
+  }
+
+  SendContentReceivedTouch(aGuid, mContextMenuHandled || mLongTapEventHandled);
 
   return true;
 }
@@ -1749,6 +1760,11 @@ TabChild::RecvHandleLongTapUp(const CSSPoint& aPoint, const ScrollableLayerGuid&
 {
   if (mContextMenuHandled) {
     mContextMenuHandled = false;
+    return true;
+  }
+
+  if (mLongTapEventHandled) {
+    mLongTapEventHandled = false;
     return true;
   }
 
