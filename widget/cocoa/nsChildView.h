@@ -383,6 +383,7 @@ enum {
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
 
 - (void)scrollWheel:(NSEvent *)anEvent;
+- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type;
 
 // Helper function for Lion smart magnify events
 + (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
