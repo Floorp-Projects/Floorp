@@ -842,6 +842,10 @@ public:
         context->MarkContextClean();
 
         context->UpdateLastUseIndex();
+
+        if (context->GL()->Screen()->HasDelayedFrame()) {
+            context->Invalidate();
+        }
     }
 
 private:
