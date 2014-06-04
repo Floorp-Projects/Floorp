@@ -34,6 +34,32 @@ using namespace mozilla::layers;
 
 namespace android {
 
+bool
+OMXCodecReservation::ReserveOMXCodec()
+{
+  if (!mManagerService.get()) {
+    sp<MediaResourceManagerClient::EventListener> listener = this;
+    mClient = new MediaResourceManagerClient(listener);
+
+    mManagerService = mClient->getMediaResourceManagerService();
+    if (!mManagerService.get()) {
+      mClient = nullptr;
+      return true; // not really in use, but not usable
+    }
+  }
+  return (mManagerService->requestMediaResource(mClient, mType, false) == OK); // don't wait
+}
+
+void
+OMXCodecReservation::ReleaseOMXCodec()
+{
+  if (!mManagerService.get() || !mClient.get()) {
+    return;
+  }
+
+  mManagerService->cancelClient(mClient, mType);
+}
+
 OMXAudioEncoder*
 OMXCodecWrapper::CreateAACEncoder()
 {
