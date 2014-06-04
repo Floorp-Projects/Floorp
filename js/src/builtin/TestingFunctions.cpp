@@ -1077,8 +1077,10 @@ EnableSPSProfilingWithSlowAssertions(JSContext *cx, unsigned argc, jsval *vp)
 static bool
 DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     if (cx->runtime()->spsProfiler.installed())
         cx->runtime()->spsProfiler.enable(false);
+    args.rval().setUndefined();
     return true;
 }
 
