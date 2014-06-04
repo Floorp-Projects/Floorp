@@ -1371,7 +1371,7 @@ WebGLContext::GetSurfaceSnapshot(bool* aPremultAlpha)
         if (aPremultAlpha) {
             *aPremultAlpha = false;
         } else {
-            gfxUtils::PremultiplyDataSurface(surf);
+            gfxUtils::PremultiplyDataSurface(surf, surf);
         }
     }
 
