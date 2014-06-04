@@ -1327,24 +1327,24 @@ pref("network.dir.format", 2);
 pref("network.prefetch-next", true);
 
 // enables the predictive service
-pref("network.seer.enabled", false);
-pref("network.seer.enable-hover-on-ssl", false);
-pref("network.seer.page-degradation.day", 0);
-pref("network.seer.page-degradation.week", 5);
-pref("network.seer.page-degradation.month", 10);
-pref("network.seer.page-degradation.year", 25);
-pref("network.seer.page-degradation.max", 50);
-pref("network.seer.subresource-degradation.day", 1);
-pref("network.seer.subresource-degradation.week", 10);
-pref("network.seer.subresource-degradation.month", 25);
-pref("network.seer.subresource-degradation.year", 50);
-pref("network.seer.subresource-degradation.max", 100);
-pref("network.seer.preconnect-min-confidence", 90);
-pref("network.seer.preresolve-min-confidence", 60);
-pref("network.seer.redirect-likely-confidence", 75);
-pref("network.seer.max-queue-size", 50);
-pref("network.seer.max-db-size", 157286400); // bytes
-pref("network.seer.preserve", 80); // percentage of seer data to keep when cleaning up
+pref("network.predictor.enabled", false);
+pref("network.predictor.enable-hover-on-ssl", false);
+pref("network.predictor.page-degradation.day", 0);
+pref("network.predictor.page-degradation.week", 5);
+pref("network.predictor.page-degradation.month", 10);
+pref("network.predictor.page-degradation.year", 25);
+pref("network.predictor.page-degradation.max", 50);
+pref("network.predictor.subresource-degradation.day", 1);
+pref("network.predictor.subresource-degradation.week", 10);
+pref("network.predictor.subresource-degradation.month", 25);
+pref("network.predictor.subresource-degradation.year", 50);
+pref("network.predictor.subresource-degradation.max", 100);
+pref("network.predictor.preconnect-min-confidence", 90);
+pref("network.predictor.preresolve-min-confidence", 60);
+pref("network.predictor.redirect-likely-confidence", 75);
+pref("network.predictor.max-queue-size", 50);
+pref("network.predictor.max-db-size", 157286400); // bytes
+pref("network.predictor.preserve", 80); // percentage of predictor data to keep when cleaning up
 
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),

@@ -4,7 +4,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Constructor(DOMString type, optional ProgressEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h"]
+[Constructor(DOMString type, optional ProgressEventInit eventInitDict)]
 interface ProgressEvent : Event
 {
   readonly attribute boolean lengthComputable;

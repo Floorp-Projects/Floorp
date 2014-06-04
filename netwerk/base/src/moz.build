@@ -70,9 +70,9 @@ UNIFIED_SOURCES += [
     'nsURIChecker.cpp',
     'nsURLHelper.cpp',
     'nsURLParsers.cpp',
+    'Predictor.cpp',
     'ProxyAutoConfig.cpp',
     'RedirectChannelRegistrar.cpp',
-    'Seer.cpp',
     'StreamingProtocolService.cpp',
     'Tickler.cpp',
 ]
@@ -132,4 +132,4 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
     ]
 
 if CONFIG['ENABLE_TESTS']:
-    DEFINES['SEER_TESTS'] = True
+    DEFINES['PREDICTOR_TESTS'] = True

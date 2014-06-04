@@ -115,10 +115,10 @@ public:
 private:
   SECStatus GetCertTrust(EndEntityOrCA,
                          const CertPolicyId&,
-                         const CERTCertificate* candidateCert,
+                         const SECItem& candidateCert,
                          /*out*/ TrustLevel* trustLevel)
   {
-    if (candidateCert == certChainTail[0].get()) {
+    if (SECITEM_ItemsAreEqual(&candidateCert, &certChainTail[0]->derCert)) {
       *trustLevel = TrustLevel::TrustAnchor;
     } else {
       *trustLevel = TrustLevel::InheritsTrust;
