@@ -143,10 +143,6 @@ public:
   // references to it.
   Result GetConstrainedNames(/*out*/ const CERTGeneralName** result);
 
-  // This is the only place where we should be dealing with non-const
-  // CERTCertificates.
-  Result PrependNSSCertToList(CERTCertList* results);
-
   PLArenaPool* GetArena();
 
 private:

@@ -231,38 +231,30 @@ BuildForward(TrustDomain& trustDomain,
   }
 
   if (trustLevel == TrustLevel::TrustAnchor) {
-    ScopedCERTCertList certChain(CERT_NewCertList());
-    if (!certChain) {
-      PR_SetError(SEC_ERROR_NO_MEMORY, 0);
+    // End of the recursion.
+
+    // Construct the results cert chain.
+    results = CERT_NewCertList();
+    if (!results) {
       return MapSECStatus(SECFailure);
     }
-
-    rv = subject.PrependNSSCertToList(certChain.get());
-    if (rv != Success) {
-      return rv;
-    }
-    BackCert* child = subject.childCert;
-    while (child) {
-      rv = child->PrependNSSCertToList(certChain.get());
-      if (rv != Success) {
-        return rv;
+    for (BackCert* cert = &subject; cert; cert = cert->childCert) {
+      CERTCertificate* dup = CERT_DupCertificate(cert->GetNSSCert());
+      if (CERT_AddCertToListHead(results.get(), dup) != SECSuccess) {
+        CERT_DestroyCertificate(dup);
+        return MapSECStatus(SECFailure);
       }
-      child = child->childCert;
+      // dup is now owned by results.
     }
 
-    SECStatus srv = trustDomain.IsChainValid(certChain.get());
+    // This must be done here, after the chain is built but before any
+    // revocation checks have been done.
+    SECStatus srv = trustDomain.IsChainValid(results.get());
     if (srv != SECSuccess) {
       return MapSECStatus(srv);
     }
 
-    // End of the recursion. Create the result list and add the trust anchor to
-    // it.
-    results = CERT_NewCertList();
-    if (!results) {
-      return FatalError;
-    }
-    rv = subject.PrependNSSCertToList(results.get());
-    return rv;
+    return Success;
   }
 
   if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
@@ -311,7 +303,8 @@ BuildForward(TrustDomain& trustDomain,
       }
 
       // We found a trusted issuer. At this point, we know the cert is valid
-      return subject.PrependNSSCertToList(results.get());
+      // and results contains the complete cert chain.
+      return Success;
     }
     if (rv != RecoverableError) {
       return rv;
@@ -391,20 +384,6 @@ BackCert::GetArena()
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   }
   return arena.get();
-}
-
-Result
-BackCert::PrependNSSCertToList(CERTCertList* results)
-{
-  PORT_Assert(results);
-
-  CERTCertificate* dup = CERT_DupCertificate(nssCert.get());
-  if (CERT_AddCertToListHead(results, dup) != SECSuccess) { // takes ownership
-    CERT_DestroyCertificate(dup);
-    return FatalError;
-  }
-
-  return Success;
 }
 
 } } // namespace mozilla::pkix
