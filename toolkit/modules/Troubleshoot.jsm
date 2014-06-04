@@ -214,6 +214,27 @@ let dataProviders = {
     }, {}));
   },
 
+  lockedPreferences: function lockedPreferences(done) {
+    function getPref(name) {
+      let table = {};
+      table[Ci.nsIPrefBranch.PREF_STRING] = "getCharPref";
+      table[Ci.nsIPrefBranch.PREF_INT] = "getIntPref";
+      table[Ci.nsIPrefBranch.PREF_BOOL] = "getBoolPref";
+      let type = Services.prefs.getPrefType(name);
+      if (!(type in table))
+        throw new Error("Unknown preference type " + type + " for " + name);
+      return Services.prefs[table[type]](name);
+    }
+    done(PREFS_WHITELIST.reduce(function (prefs, branch) {
+      Services.prefs.getChildList(branch).forEach(function (name) {
+        if (Services.prefs.prefIsLocked(name) &&
+            !PREFS_BLACKLIST.some(function (re) re.test(name)))
+          prefs[name] = getPref(name);
+      });
+      return prefs;
+    }, {}));
+  },
+
   graphics: function graphics(done) {
     function statusMsgForFeature(feature) {
       // We return an array because in the tryNewerDriver case we need to
