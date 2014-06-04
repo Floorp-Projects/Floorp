@@ -3753,9 +3753,6 @@ LIRGenerator::generate()
             return false;
     }
 
-    if (graph.osrBlock())
-        lirGraph_.setOsrBlock(graph.osrBlock()->lir());
-
     lirGraph_.setArgumentSlotCount(maxargslots_);
     return true;
 }
