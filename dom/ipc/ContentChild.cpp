@@ -548,6 +548,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
 
     GetCPOWManager();
 
+    SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
     InitProcessAttributes();
 
     return true;
@@ -556,8 +557,6 @@ ContentChild::Init(MessageLoop* aIOLoop,
 void
 ContentChild::InitProcessAttributes()
 {
-    SendGetProcessAttributes(&mID, &mIsForApp, &mIsForBrowser);
-
 #ifdef MOZ_NUWA_PROCESS
     if (IsNuwaProcess()) {
         SetProcessName(NS_LITERAL_STRING("(Nuwa)"), false);
@@ -925,7 +924,10 @@ ContentChild::DeallocPJavaScriptChild(PJavaScriptChild *child)
 
 PBrowserChild*
 ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
-                                 const uint32_t& aChromeFlags)
+                                 const uint32_t& aChromeFlags,
+                                 const uint64_t& aId,
+                                 const bool& aIsForApp,
+                                 const bool& aIsForBrowser)
 {
     // We'll happily accept any kind of IPCTabContext here; we don't need to
     // check that it's of a certain type for security purposes, because we
@@ -946,9 +948,12 @@ ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
 }
 
 bool
-ContentChild::RecvPBrowserConstructor(PBrowserChild* actor,
-                                      const IPCTabContext& context,
-                                      const uint32_t& chromeFlags)
+ContentChild::RecvPBrowserConstructor(PBrowserChild* aActor,
+                                      const IPCTabContext& aContext,
+                                      const uint32_t& aChromeFlags,
+                                      const uint64_t& aID,
+                                      const bool& aIsForApp,
+                                      const bool& aIsForBrowser)
 {
     // This runs after AllocPBrowserChild() returns and the IPC machinery for this
     // PBrowserChild has been set up.
@@ -956,7 +961,7 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* actor,
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
         nsITabChild* tc =
-            static_cast<nsITabChild*>(static_cast<TabChild*>(actor));
+            static_cast<nsITabChild*>(static_cast<TabChild*>(aActor));
         os->NotifyObservers(tc, "tab-child-created", nullptr);
     }
 
@@ -970,6 +975,9 @@ ContentChild::RecvPBrowserConstructor(PBrowserChild* actor,
 
         // Redo InitProcessAttributes() when the app or browser is really
         // launching so the attributes will be correct.
+        mID = aID;
+        mIsForApp = aIsForApp;
+        mIsForBrowser = aIsForBrowser;
         InitProcessAttributes();
     }
 

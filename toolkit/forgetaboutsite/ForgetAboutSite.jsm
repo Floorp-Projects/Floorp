@@ -222,8 +222,8 @@ this.ForgetAboutSite = {
 
     // Predictive network data - like cache, no way to clear this per
     // domain, so just trash it all
-    let ns = Cc["@mozilla.org/network/seer;1"].
-             getService(Ci.nsINetworkSeer);
-    ns.reset();
+    let np = Cc["@mozilla.org/network/predictor;1"].
+             getService(Ci.nsINetworkPredictor);
+    np.reset();
   }
 };

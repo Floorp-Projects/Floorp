@@ -2942,6 +2942,11 @@ WebSocketChannel::OnTransportAvailable(nsISocketTransport *aTransport,
   LOG(("WebSocketChannel::OnTransportAvailable %p [%p %p %p] rcvdonstart=%d\n",
        this, aTransport, aSocketIn, aSocketOut, mGotUpgradeOK));
 
+  if (mStopped) {
+    LOG(("WebSocketChannel::OnTransportAvailable: Already stopped"));
+    return NS_OK;
+  }
+
   NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
   NS_ABORT_IF_FALSE(!mRecvdHttpUpgradeTransport, "OTA duplicated");
   NS_ABORT_IF_FALSE(aSocketIn, "OTA with invalid socketIn");

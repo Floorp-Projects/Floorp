@@ -171,9 +171,9 @@
     // Only domains that are operationally crucial to Firefox can have per-host
     // telemetry reporting (the "id") field
     { "name": "addons.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 1 },
+      "pins": "mozilla", "test_mode": false, "id": 1 },
     { "name": "addons.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 2 },
+      "pins": "mozilla", "test_mode": false, "id": 2 },
     { "name": "aus4.mozilla.org", "include_subdomains": true,
       "pins": "mozilla", "test_mode": true, "id": 3 },
     { "name": "cdn.mozilla.net", "include_subdomains": true,

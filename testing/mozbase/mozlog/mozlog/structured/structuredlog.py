@@ -167,7 +167,7 @@ class StructuredLogger(object):
                 "status": status.upper()}
         if message is not None:
             data["message"] = message
-        if expected != data["status"]:
+        if expected != data["status"] and status != "SKIP":
             data["expected"] = expected
         if extra is not None:
             data["extra"] = extra

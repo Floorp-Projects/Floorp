@@ -1476,8 +1476,8 @@ nsLineLayout::BlockDirAlignLine()
 #ifdef NOISY_BLOCKDIR_ALIGN
   printf(
     "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
-    mLineBox->mBounds.IStart(lineWM), mLineBox->mBounds.BStart(lineWM),
-    mLineBox->mBounds.ISize(lineWM), mLineBox->mBounds.BSize(lineWM),
+    mLineBox->GetBounds().IStart(lineWM), mLineBox->GetBounds().BStart(lineWM),
+    mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
     mFinalLineBSize, mLineBox->GetAscent());
 #endif
 

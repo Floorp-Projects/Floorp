@@ -6,7 +6,7 @@ var Cr = Components.results;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-var seer = null;
+var predictor = null;
 var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 var profile = null;
 
@@ -29,7 +29,7 @@ LoadContext.prototype = {
   },
 
   QueryInterface: function loadContext_QueryInterface(iid) {
-    if (iid.equals(Ci.nsINetworkSeerVerifier) ||
+    if (iid.equals(Ci.nsINetworkPredictorVerifier) ||
         iid.equals(Ci.nsILoadContext)) {
       return this;
     }
@@ -56,7 +56,7 @@ Verifier.prototype = {
   },
 
   QueryInterface: function verifier_QueryInterface(iid) {
-    if (iid.equals(Ci.nsINetworkSeerVerifier) ||
+    if (iid.equals(Ci.nsINetworkPredictorVerifier) ||
         iid.equals(Ci.nsISupports)) {
       return this;
     }
@@ -95,8 +95,8 @@ Verifier.prototype = {
   }
 };
 
-function reset_seer() {
-  seer.reset();
+function reset_predictor() {
+  predictor.reset();
 }
 
 function newURI(s) {
@@ -104,17 +104,17 @@ function newURI(s) {
 }
 
 function test_link_hover() {
-  reset_seer();
+  reset_predictor();
   var uri = newURI("http://localhost:4444/foo/bar");
   var referrer = newURI("http://localhost:4444/foo");
   var preconns = ["http://localhost:4444"];
 
   var verifier = new Verifier("hover", preconns, []);
-  seer.predict(uri, referrer, seer.PREDICT_LINK, load_context, verifier);
+  predictor.predict(uri, referrer, predictor.PREDICT_LINK, load_context, verifier);
 }
 
 function test_pageload() {
-  reset_seer();
+  reset_predictor();
   var toplevel = "http://localhost:4444/index.html";
   var subresources = [
     "http://localhost:4444/style.css",
@@ -123,20 +123,20 @@ function test_pageload() {
   ];
 
   var tluri = newURI(toplevel);
-  seer.learn(tluri, null, seer.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
   var preconns = [];
   for (var i = 0; i < subresources.length; i++) {
     var sruri = newURI(subresources[i]);
-    seer.learn(sruri, tluri, seer.LEARN_LOAD_SUBRESOURCE, load_context);
+    predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
     preconns.push(extract_origin(sruri));
   }
 
   var verifier = new Verifier("pageload", preconns, []);
-  seer.predict(tluri, null, seer.PREDICT_LOAD, load_context, verifier);
+  predictor.predict(tluri, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
 function test_redirect() {
-  reset_seer();
+  reset_predictor();
   var initial = "http://localhost:4443/redirect";
   var target = "http://localhost:4444/index.html";
   var subresources = [
@@ -147,24 +147,24 @@ function test_redirect() {
 
   var inituri = newURI(initial);
   var targeturi = newURI(target);
-  seer.learn(inituri, null, seer.LEARN_LOAD_TOPLEVEL, load_context);
-  seer.learn(targeturi, inituri, seer.LEARN_LOAD_REDIRECT, load_context);
-  seer.learn(targeturi, null, seer.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(inituri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(targeturi, inituri, predictor.LEARN_LOAD_REDIRECT, load_context);
+  predictor.learn(targeturi, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
 
   var preconns = [];
   preconns.push(extract_origin(targeturi));
   for (var i = 0; i < subresources.length; i++) {
     var sruri = newURI(subresources[i]);
-    seer.learn(sruri, targeturi, seer.LEARN_LOAD_SUBRESOURCE, load_context);
+    predictor.learn(sruri, targeturi, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
     preconns.push(extract_origin(sruri));
   }
 
   var verifier = new Verifier("redirect", preconns, []);
-  seer.predict(inituri, null, seer.PREDICT_LOAD, load_context, verifier);
+  predictor.predict(inituri, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
 function test_startup() {
-  reset_seer();
+  reset_predictor();
   var uris = [
     "http://localhost:4444/startup",
     "http://localhost:4443/startup"
@@ -172,16 +172,16 @@ function test_startup() {
   var preconns = [];
   for (var i = 0; i < uris.length; i++) {
     var uri = newURI(uris[i]);
-    seer.learn(uri, null, seer.LEARN_STARTUP, load_context);
+    predictor.learn(uri, null, predictor.LEARN_STARTUP, load_context);
     preconns.push(extract_origin(uri));
   }
 
   var verifier = new Verifier("startup", preconns, []);
-  seer.predict(null, null, seer.PREDICT_STARTUP, load_context, verifier);
+  predictor.predict(null, null, predictor.PREDICT_STARTUP, load_context, verifier);
 }
 
 // A class used to guarantee serialization of SQL queries so we can properly
-// update last hit times on subresources to ensure the seer tries to do DNS
+// update last hit times on subresources to ensure the predictor tries to do DNS
 // preresolve on them instead of preconnecting
 var DnsContinueVerifier = function _dnsContinueVerifier(subresource, tluri, preresolves) {
   this.subresource = subresource;
@@ -200,7 +200,7 @@ DnsContinueVerifier.prototype = {
 
   QueryInterface: function _dnsContinueVerifier_QueryInterface(iid) {
     if (iid.equals(Ci.nsISupports) ||
-        iid.equals(Ci.nsINetworkSeerVerifier)) {
+        iid.equals(Ci.nsINetworkPredictorVerifier)) {
       return this;
     }
 
@@ -208,7 +208,7 @@ DnsContinueVerifier.prototype = {
   },
 
   onPredictPreconnect: function _dnsContinueVerifier_onPredictPreconnect() {
-    // This means that the seer has learned and done our "checkpoint" prediction
+    // This means that the predictor has learned and done our "checkpoint" prediction
     // Now we can get on with the prediction we actually want to test
 
     // tstamp is 10 days older than now - just over 1 week, which will ensure we
@@ -216,10 +216,10 @@ DnsContinueVerifier.prototype = {
     // x1000 on the Date object value.
     var tstamp = (new Date().valueOf() * 1000) - (10 * 86400 * 1000000);
 
-    seer.prepareForDnsTest(tstamp, this.subresource);
+    predictor.prepareForDnsTest(tstamp, this.subresource);
 
     var verifier = new Verifier("dns", [], this.preresolves);
-    seer.predict(this.tluri, null, seer.PREDICT_LOAD, load_context, verifier);
+    predictor.predict(this.tluri, null, predictor.PREDICT_LOAD, load_context, verifier);
   },
 
   onPredictDNS: function _dnsContinueVerifier_onPredictDNS() {
@@ -228,24 +228,24 @@ DnsContinueVerifier.prototype = {
 };
 
 function test_dns() {
-  reset_seer();
+  reset_predictor();
   var toplevel = "http://localhost:4444/index.html";
   var subresource = "http://localhost:4443/jquery.js";
 
   var tluri = newURI(toplevel);
-  seer.learn(tluri, null, seer.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
   var sruri = newURI(subresource);
-  seer.learn(sruri, tluri, seer.LEARN_LOAD_SUBRESOURCE, load_context);
+  predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
 
   var preresolves = [extract_origin(sruri)];
   var continue_verifier = new DnsContinueVerifier(subresource, tluri, preresolves);
-  // Fire off a prediction that will do preconnects so we know when the seer
+  // Fire off a prediction that will do preconnects so we know when the predictor
   // thread has gotten to the point where we can update the database manually
-  seer.predict(tluri, null, seer.PREDICT_LOAD, load_context, continue_verifier);
+  predictor.predict(tluri, null, predictor.PREDICT_LOAD, load_context, continue_verifier);
 }
 
 function test_origin() {
-  reset_seer();
+  reset_predictor();
   var toplevel = "http://localhost:4444/index.html";
   var subresources = [
     "http://localhost:4444/style.css",
@@ -254,11 +254,11 @@ function test_origin() {
   ];
 
   var tluri = newURI(toplevel);
-  seer.learn(tluri, null, seer.LEARN_LOAD_TOPLEVEL, load_context);
+  predictor.learn(tluri, null, predictor.LEARN_LOAD_TOPLEVEL, load_context);
   var preconns = [];
   for (var i = 0; i < subresources.length; i++) {
     var sruri = newURI(subresources[i]);
-    seer.learn(sruri, tluri, seer.LEARN_LOAD_SUBRESOURCE, load_context);
+    predictor.learn(sruri, tluri, predictor.LEARN_LOAD_SUBRESOURCE, load_context);
     var origin = extract_origin(sruri);
     if (preconns.indexOf(origin) === -1) {
       preconns.push(origin);
@@ -267,15 +267,15 @@ function test_origin() {
 
   var loaduri = newURI("http://localhost:4444/anotherpage.html");
   var verifier = new Verifier("origin", preconns, []);
-  seer.predict(loaduri, null, seer.PREDICT_LOAD, load_context, verifier);
+  predictor.predict(loaduri, null, predictor.PREDICT_LOAD, load_context, verifier);
 }
 
 var prefs;
-var seer_pref;
+var predictor_pref;
 
 function cleanup() {
-  reset_seer();
-  prefs.setBoolPref("network.seer.enabled", seer_pref);
+  reset_predictor();
+  prefs.setBoolPref("network.predictor.enabled", predictor_pref);
 }
 
 var tests = [
@@ -291,9 +291,9 @@ function run_test() {
   tests.forEach(add_test);
   profile = do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-  seer_pref = prefs.getBoolPref("network.seer.enabled");
-  prefs.setBoolPref("network.seer.enabled", true);
-  seer = Cc["@mozilla.org/network/seer;1"].getService(Ci.nsINetworkSeer);
+  predictor_pref = prefs.getBoolPref("network.predictor.enabled");
+  prefs.setBoolPref("network.predictor.enabled", true);
+  predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
   do_register_cleanup(cleanup);
   run_next_test();
 }

@@ -7,7 +7,6 @@
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsIDOMProgressEvent.h"
 #include "nsIRunnable.h"
 #include "nsIVariant.h"
 #include "nsIXMLHttpRequest.h"
@@ -16,6 +15,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
+#include "mozilla/dom/ProgressEvent.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
@@ -1040,7 +1040,7 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   nsCOMPtr<nsIXMLHttpRequestUpload> uploadTarget = do_QueryInterface(target);
-  nsCOMPtr<nsIDOMProgressEvent> progressEvent = do_QueryInterface(aEvent);
+  ProgressEvent* progressEvent = aEvent->InternalDOMEvent()->AsProgressEvent();
 
   nsRefPtr<EventRunnable> runnable;
 
@@ -1053,16 +1053,10 @@ Proxy::HandleEvent(nsIDOMEvent* aEvent)
   }
 
   if (progressEvent) {
-    bool lengthComputable;
-    uint64_t loaded, total;
-    if (NS_FAILED(progressEvent->GetLengthComputable(&lengthComputable)) ||
-        NS_FAILED(progressEvent->GetLoaded(&loaded)) ||
-        NS_FAILED(progressEvent->GetTotal(&total))) {
-      NS_WARNING("Bad progress event!");
-      return NS_ERROR_FAILURE;
-    }
-    runnable = new EventRunnable(this, !!uploadTarget, type, lengthComputable,
-                                 loaded, total);
+    runnable = new EventRunnable(this, !!uploadTarget, type,
+                                 progressEvent->LengthComputable(),
+                                 progressEvent->Loaded(),
+                                 progressEvent->Total());
   }
   else {
     runnable = new EventRunnable(this, !!uploadTarget, type);
@@ -1343,13 +1337,14 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   nsCOMPtr<nsIDOMEvent> event;
   if (mProgressEvent) {
-    NS_NewDOMProgressEvent(getter_AddRefs(event), target, nullptr, nullptr);
-    nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
+    ProgressEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mLengthComputable = mLengthComputable;
+    init.mLoaded = mLoaded;
+    init.mTotal = mTotal;
 
-    if (progress) {
-      progress->InitProgressEvent(mType, false, false, mLengthComputable,
-                                  mLoaded, mTotal);
-    }
+    event = ProgressEvent::Constructor(target, mType, init);
   }
   else {
     NS_NewDOMEvent(getter_AddRefs(event), target, nullptr, nullptr);
@@ -1739,23 +1734,20 @@ XMLHttpRequest::DispatchPrematureAbortEvent(EventTarget* aTarget,
     }
   }
   else {
-    NS_NewDOMProgressEvent(getter_AddRefs(event), aTarget, nullptr, nullptr);
-
-    nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
-    if (progress) {
-      if (aUploadTarget) {
-        progress->InitProgressEvent(aEventType, false, false,
-                                    mProxy->mLastUploadLengthComputable,
-                                    mProxy->mLastUploadLoaded,
-                                    mProxy->mLastUploadTotal);
-      }
-      else {
-        progress->InitProgressEvent(aEventType, false, false,
-                                    mProxy->mLastLengthComputable,
-                                    mProxy->mLastLoaded,
-                                    mProxy->mLastTotal);
-      }
+    ProgressEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    if (aUploadTarget) {
+      init.mLengthComputable = mProxy->mLastUploadLengthComputable;
+      init.mLoaded = mProxy->mLastUploadLoaded;
+      init.mTotal = mProxy->mLastUploadTotal;
     }
+    else {
+      init.mLengthComputable = mProxy->mLastLengthComputable;
+      init.mLoaded = mProxy->mLastLoaded;
+      init.mTotal = mProxy->mLastTotal;
+    }
+    event = ProgressEvent::Constructor(aTarget, aEventType, init);
   }
 
   if (!event) {

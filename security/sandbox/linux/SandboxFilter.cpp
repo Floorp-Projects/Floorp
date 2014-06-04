@@ -152,6 +152,7 @@ SandboxFilterImpl::Build() {
   Allow(SYSCALL(getpid));
   Allow(SYSCALL(gettid));
   Allow(SYSCALL(getrusage));
+  Allow(SYSCALL(times));
   Allow(SYSCALL(madvise));
   Allow(SYSCALL(dup));
   Allow(SYSCALL(nanosleep));

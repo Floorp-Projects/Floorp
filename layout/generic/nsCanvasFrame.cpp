@@ -18,6 +18,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"
 #include "gfxPlatform.h"
+#include "nsPrintfCString.h"
 // for touchcaret
 #include "nsContentList.h"
 #include "nsContentCreatorFunctions.h"
@@ -207,6 +208,16 @@ nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     aCtx->FillRect(bgClipRect);
   }
 }
+
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplayCanvasBackgroundColor::WriteDebugInfo(nsACString& aTo)
+{
+  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)",
+          NS_GET_R(mColor), NS_GET_G(mColor),
+          NS_GET_B(mColor), NS_GET_A(mColor));
+}
+#endif
 
 static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aSource)
 {
