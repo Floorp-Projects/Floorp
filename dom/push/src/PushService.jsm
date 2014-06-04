@@ -1494,10 +1494,13 @@ this.PushService = {
         let iccInfo = icc.getIccInfo(clientId);
         if (iccInfo) {
           debug("Running on mobile data");
+          let ips = {};
+          let prefixLengths = {};
+          nm.active.getAddresses(ips, prefixLengths);
           return {
             mcc: iccInfo.mcc,
             mnc: iccInfo.mnc,
-            ip:  nm.active.ip
+            ip:  ips.value[0]
           }
         }
       }
