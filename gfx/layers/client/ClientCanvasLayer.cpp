@@ -136,7 +136,7 @@ ClientCanvasLayer::RenderLayer()
   if (GetMaskLayer()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();
   }
-  
+
   if (!mCanvasClient) {
     TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;
     if (mNeedsYFlip) {
@@ -161,7 +161,7 @@ ClientCanvasLayer::RenderLayer()
       ClientManager()->AsShadowForwarder()->Attach(mCanvasClient, this);
     }
   }
-  
+
   FirePreTransactionCallback();
   mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
 
