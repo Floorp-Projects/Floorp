@@ -15,7 +15,6 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -335,7 +334,6 @@ public class BrowserToolbar extends ThemedRelativeLayout
                     if (url == null) {
                         menu.findItem(R.id.copyurl).setVisible(false);
                         menu.findItem(R.id.add_to_launcher).setVisible(false);
-                        MenuUtils.safeSetVisible(menu, R.id.share, false);
                     }
 
                     MenuUtils.safeSetVisible(menu, R.id.subscribe, tab.hasFeeds());
@@ -344,12 +342,9 @@ public class BrowserToolbar extends ThemedRelativeLayout
                     // if there is no tab, remove anything tab dependent
                     menu.findItem(R.id.copyurl).setVisible(false);
                     menu.findItem(R.id.add_to_launcher).setVisible(false);
-                    MenuUtils.safeSetVisible(menu, R.id.share, false);
                     MenuUtils.safeSetVisible(menu, R.id.subscribe, false);
                     MenuUtils.safeSetVisible(menu, R.id.add_search_engine, false);
                 }
-
-                MenuUtils.safeSetVisible(menu, R.id.share, !GeckoProfile.get(getContext()).inGuestMode());
             }
         });
 

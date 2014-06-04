@@ -774,11 +774,6 @@ abstract public class BrowserApp extends GeckoApp
             return true;
         }
 
-        if (itemId == R.id.share) {
-            shareCurrentUrl();
-            return true;
-        }
-
         if (itemId == R.id.subscribe) {
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null && tab.hasFeeds()) {
