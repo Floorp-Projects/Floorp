@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MessageChannel.h"
+
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/MessageChannelBinding.h"
 #include "mozilla/dom/MessagePort.h"
@@ -28,16 +29,38 @@ namespace {
 
 }
 
-
 /* static */ bool
-MessageChannel::PrefEnabled()
+MessageChannel::Enabled(JSContext* aCx, JSObject* aObj)
 {
   if (!gPrefInitialized) {
     Preferences::AddBoolVarCache(&gPrefEnabled, "dom.messageChannel.enabled");
     gPrefInitialized = true;
   }
 
-  return gPrefEnabled;
+  // Enabled by pref
+  if (gPrefEnabled) {
+    return true;
+  }
+
+  // Chrome callers are allowed.
+  if (nsContentUtils::ThreadsafeIsCallerChrome()) {
+    return true;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = nsContentUtils::SubjectPrincipal();
+  MOZ_ASSERT(principal);
+
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(principal->GetURI(getter_AddRefs(uri))) || !uri) {
+    return false;
+  }
+
+  bool isResource = false;
+  if (NS_FAILED(uri->SchemeIs("resource", &isResource))) {
+    return false;
+  }
+
+  return isResource;
 }
 
 MessageChannel::MessageChannel(nsPIDOMWindow* aWindow)
