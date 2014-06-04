@@ -8817,7 +8817,7 @@ class MCeil
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>
 {
-    MCeil(MDefinition *num)
+    explicit MCeil(MDefinition *num)
       : MUnaryInstruction(num)
     {
         setResultType(MIRType_Int32);

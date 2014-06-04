@@ -468,7 +468,7 @@ class StoreOp
     MacroAssembler &masm;
 
   public:
-    StoreOp(MacroAssembler &masm)
+    explicit StoreOp(MacroAssembler &masm)
       : masm(masm)
     {}
 
