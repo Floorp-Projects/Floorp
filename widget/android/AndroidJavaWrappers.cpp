@@ -1011,3 +1011,30 @@ nsJNIString::nsJNIString(jstring jstr, JNIEnv *jenv)
     }
     jni->ReleaseStringChars(jstr, jCharPtr);
 }
+
+nsJNICString::nsJNICString(jstring jstr, JNIEnv *jenv)
+{
+    if (!jstr) {
+        SetIsVoid(true);
+        return;
+    }
+    JNIEnv *jni = jenv;
+    if (!jni) {
+        jni = AndroidBridge::GetJNIEnv();
+    }
+    const char* jCharPtr = jni->GetStringUTFChars(jstr, nullptr);
+
+    if (!jCharPtr) {
+        SetIsVoid(true);
+        return;
+    }
+
+    jsize len = jni->GetStringUTFLength(jstr);
+
+    if (len <= 0) {
+        SetIsVoid(true);
+    } else {
+        Assign(jCharPtr, len);
+    }
+    jni->ReleaseStringUTFChars(jstr, jCharPtr);
+}

@@ -76,6 +76,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     boolean isStaticStub = false;
                     boolean isMultithreadedStub = false;
                     boolean noThrow = false;
+		    boolean narrowChars = false;
                     try {
                         // Determine the explicitly-given name of the stub to generate, if any.
                         final Method stubNameMethod = annotationType.getDeclaredMethod("stubName");
@@ -96,6 +97,11 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                         final Method noThrowMethod = annotationType.getDeclaredMethod("noThrow");
                         noThrowMethod.setAccessible(true);
                         noThrow = (Boolean) noThrowMethod.invoke(annotation);
+
+                        // Determine if strings should be wide or narrow
+                        final Method narrowCharsMethod = annotationType.getDeclaredMethod("narrowChars");
+                        narrowCharsMethod.setAccessible(true);
+                        narrowChars = (Boolean) narrowCharsMethod.invoke(annotation);
 
                     } catch (NoSuchMethodException e) {
                         System.err.println("Unable to find expected field on WrapElementForJNI annotation. Did the signature change?");
@@ -118,7 +124,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
                     }
 
                     AnnotationInfo annotationInfo = new AnnotationInfo(
-                        stubName, isStaticStub, isMultithreadedStub, noThrow);
+		        stubName, isStaticStub, isMultithreadedStub, noThrow, narrowChars);
                     mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                     return;
                 }
@@ -128,7 +134,7 @@ public class GeneratableElementIterator implements Iterator<AnnotatableEntity> {
             // thanks to the "Generate everything" annotation.
             if (mIterateEveryEntry) {
                 AnnotationInfo annotationInfo = new AnnotationInfo(
-                    candidateElement.getName(), false, false, false);
+		    candidateElement.getName(), false, false, false, false);
                 mNextReturnValue = new AnnotatableEntity(candidateElement, annotationInfo);
                 return;
             }
