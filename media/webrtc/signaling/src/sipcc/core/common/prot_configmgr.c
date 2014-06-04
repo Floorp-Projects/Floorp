@@ -593,6 +593,33 @@ config_get_video_max_fr(const rtp_ptype codec)
   return 0;
 }
 
+uint16_t
+sip_config_video_add_codecs (rtp_ptype aSupportedCodecs[],
+                             uint16_t supportedCodecsLen,
+                             uint16_t codec_mask)
+{
+  uint16_t count = 0;
+
+  // All things being equal, prefer VP8 > H.264 p1 > H.264 p0 -> H.263
+  if ( codec_mask & VCM_CODEC_RESOURCE_VP8) {
+    aSupportedCodecs[count] = RTP_VP8;
+    count++;
+  }
+  if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
+    if (vcmGetVideoMaxSupportedPacketizationMode() == 1) {
+      aSupportedCodecs[count] = RTP_H264_P1;
+      count++;
+    }
+    aSupportedCodecs[count] = RTP_H264_P0;
+    count++;
+  }
+  if ( codec_mask & VCM_CODEC_RESOURCE_H263) {
+    aSupportedCodecs[count] = RTP_H263;
+    count++;
+  }
+  return count;
+}
+
 /*
  * sip_config_local_supported_codecs_get()
  *
@@ -604,6 +631,8 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
 {
     uint16_t count = 0;
     int codec_mask;
+    int hw_codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX_HW);
+    int gmp_codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX_GMP);
 
     if ( isOffer ) {
         codec_mask = vcmGetVideoCodecList(VCM_DSP_FULLDUPLEX);
@@ -613,38 +642,17 @@ sip_config_video_supported_codecs_get (rtp_ptype aSupportedCodecs[],
         //codec_mask = vcmGetVideoCodecList(DSP_ENCODEONLY);
         codec_mask = vcmGetVideoCodecList(VCM_DSP_IGNORE);
     }
-#ifdef WEBRTC_GONK
-    if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
-      if (vcmGetVideoMaxSupportedPacketizationMode() == 1) {
-        aSupportedCodecs[count] = RTP_H264_P1;
-        count++;
-      }
-      aSupportedCodecs[count] = RTP_H264_P0;
-      count++;
-    }
-    if ( codec_mask & VCM_CODEC_RESOURCE_VP8) {
-      aSupportedCodecs[count] = RTP_VP8;
-      count++;
-    }
-#else
-    // Apply video codecs with VP8 first on non gonk
-    if ( codec_mask & VCM_CODEC_RESOURCE_VP8) {
-      aSupportedCodecs[count] = RTP_VP8;
-      count++;
-    }
-    if ( codec_mask & VCM_CODEC_RESOURCE_H264) {
-      if (vcmGetVideoMaxSupportedPacketizationMode() == 1) {
-        aSupportedCodecs[count] = RTP_H264_P1;
-        count++;
-      }
-      aSupportedCodecs[count] = RTP_H264_P0;
-      count++;
-    }
-#endif
-    if ( codec_mask & VCM_CODEC_RESOURCE_H263) {
-      aSupportedCodecs[count] = RTP_H263;
-      count++;
-    }
+    // prefer HW codecs over SW
+    count = sip_config_video_add_codecs(aSupportedCodecs,
+                                        supportedCodecsLen, hw_codec_mask);
+    // Now add any codecs that weren't in the initial list
+    codec_mask &= ~hw_codec_mask;
+    count += sip_config_video_add_codecs(&aSupportedCodecs[count],
+                                         supportedCodecsLen, codec_mask);
+    // Now add any GMP codecs that aren't already in
+    gmp_codec_mask &= ~(hw_codec_mask | codec_mask);
+    count += sip_config_video_add_codecs(&aSupportedCodecs[count],
+                                         supportedCodecsLen, gmp_codec_mask);
 
     return count;
 }
