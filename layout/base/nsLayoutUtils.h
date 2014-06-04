@@ -1009,6 +1009,21 @@ public:
     virtual void AddRect(const nsRect& aRect);
   };
 
+  /**
+   * SelectionCaret draws carets base on range. The carets are at begin
+   * and end position of range's client rects. This class help us to
+   * collect first and last rect for drawing carets.
+   */
+  struct FirstAndLastRectCollector : public RectCallback {
+    nsRect mFirstRect;
+    nsRect mLastRect;
+    bool mSeenFirstRect;
+
+    FirstAndLastRectCollector();
+
+    virtual void AddRect(const nsRect& aRect);
+  };
+
   static nsIFrame* GetContainingBlockForClientRect(nsIFrame* aFrame);
 
   enum {
