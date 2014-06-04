@@ -522,12 +522,12 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
 {
   nsresult rv;
 
-  nsINode* node = aNode->GetFirstChild();
+  nsINode* node = nsNodeUtils::GetFirstChildOfTemplateOrNode(aNode);
   while (node) {
     nsINode* current = node;
     rv = SerializeNodeStart(current, 0, -1, aStr, current);
     NS_ENSURE_SUCCESS(rv, rv);
-    node = current->GetFirstChild();
+    node = nsNodeUtils::GetFirstChildOfTemplateOrNode(current);
     while (!node && current && current != aNode) {
       rv = SerializeNodeEnd(current, aStr);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -536,6 +536,17 @@ nsDocumentEncoder::SerializeToStringIterative(nsINode* aNode,
       if (!node) {
         // Perhaps parent node has siblings.
         current = current->GetParentNode();
+
+        // Handle template element. If the parent is a template's content,
+        // then adjust the parent to be the template element.
+        if (current && current != aNode &&
+            current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+          DocumentFragment* frag = static_cast<DocumentFragment*>(current);
+          nsIContent* host = frag->GetHost();
+          if (host && host->IsHTML(nsGkAtoms::_template)) {
+            current = host;
+          }
+        }
       }
     }
   }
