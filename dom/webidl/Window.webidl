@@ -285,8 +285,6 @@ partial interface Window {
   // XXX Shouldn't this be in nsIDOMChromeWindow?
   [ChromeOnly, Replaceable, Throws] readonly attribute MozControllers controllers;
 
-  [ChromeOnly, Throws] readonly attribute Element? realFrameElement;
-
   [Throws] readonly attribute float               mozInnerScreenX;
   [Throws] readonly attribute float               mozInnerScreenY;
   [Throws] readonly attribute float               devicePixelRatio;

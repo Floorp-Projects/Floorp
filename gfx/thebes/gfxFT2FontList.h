@@ -7,6 +7,11 @@
 #define GFX_FT2FONTLIST_H
 
 #include "mozilla/MemoryReporting.h"
+
+#ifdef XP_WIN
+#include "gfxWindowsPlatform.h"
+#include <windows.h>
+#endif
 #include "gfxPlatformFontList.h"
 
 namespace mozilla {
@@ -148,7 +153,9 @@ protected:
 
     void FindFontsInOmnijar(FontNameCache *aCache);
 
+#ifdef ANDROID
     void FindFontsInDir(const nsCString& aDir, FontNameCache* aFNC);
+#endif
 
     nsTHashtable<nsStringHashKey> mSkipSpaceLookupCheckFamilies;
 };
