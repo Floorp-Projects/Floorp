@@ -7,6 +7,7 @@
 #define OMXCodecWrapper_h_
 
 #include <gui/Surface.h>
+#include <utils/RefBase.h>
 #include <stagefright/foundation/ABuffer.h>
 #include <stagefright/foundation/AMessage.h>
 #include <stagefright/MediaCodec.h>
