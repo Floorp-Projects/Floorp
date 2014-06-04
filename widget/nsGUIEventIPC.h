@@ -260,7 +260,7 @@ struct ParamTraits<mozilla::WidgetTouchEvent>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    uint32_t numTouches;
+    size_t numTouches;
     if (!ReadParam(aMsg, aIter,
                    static_cast<mozilla::WidgetInputEvent*>(aResult)) ||
         !ReadParam(aMsg, aIter, &numTouches)) {
