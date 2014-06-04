@@ -225,10 +225,28 @@ var SimpleServiceDiscovery = {
     }
   },
 
-  registerTarget: function registerTarget(aTarget, aAppFactory) {
+  registerTarget: function registerTarget(aTarget) {
+    // We must have "target" and "factory" defined
+    if (!("target" in aTarget) || !("factory" in aTarget)) {
+      // Fatal for registration
+      throw "Registration requires a target and a location";
+    }
+
     // Only add if we don't already know about this target
-    if (!this._targets.has(aTarget)) {
-      this._targets.set(aTarget, { target: aTarget, factory: aAppFactory });
+    if (!this._targets.has(aTarget.target)) {
+      this._targets.set(aTarget.target, aTarget);
+    }
+  },
+
+  unregisterTarget: function unregisterTarget(aTarget) {
+    // We must have "target" and "factory" defined
+    if (!("target" in aTarget) || !("factory" in aTarget)) {
+      return;
+    }
+
+    // Only remove if we know about this target
+    if (this._targets.has(aTarget.target)) {
+      this._targets.delete(aTarget.target);
     }
   },
 
@@ -260,6 +278,29 @@ var SimpleServiceDiscovery = {
     return array;
   },
 
+  // Returns false if the service does not match the target's filters
+  _filterService: function _filterService(aService) {
+    let target = this._targets.get(aService.target);
+    if (!target) {
+      return false;
+    }
+
+    // If we have no filter, everything passes
+    if (!("filters" in target)) {
+      return true;
+    }
+
+    // If any filter fails, the service fails
+    let filters = target.filters;
+    for (let filter in filters) {
+      if (filter in aService && aService[filter] != filters[filter]) {
+        return false;
+      }
+    }
+
+    return true;
+  },
+
   _processService: function _processService(aService) {
     // Use the REST api to request more information about this service
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);
@@ -277,6 +318,11 @@ var SimpleServiceDiscovery = {
         aService.uuid = doc.querySelector("UDN").textContent;
         aService.manufacturer = doc.querySelector("manufacturer").textContent;
         aService.modelName = doc.querySelector("modelName").textContent;
+
+        // Filter out services that do not match the target filter
+        if (!this._filterService(aService)) {
+          return;
+        }
 
         // Only add and notify if we don't already know about this service
         if (!this._services.has(aService.uuid)) {
