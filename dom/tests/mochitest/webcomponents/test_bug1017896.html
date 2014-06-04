@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1017896
+-->
+<head>
+  <title>Test template element in stale document.</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1017896">Bug 1017896</a>
+<div id="container"></div>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+var frame = document.createElement("iframe");
+document.getElementById("container").appendChild(frame);
+
+var staleFrameDoc = frame.contentDocument;
+
+setTimeout(function() {
+  var v = staleFrameDoc.createElement("div");
+  v.innerHTML = "<template>Content</template>";
+  is(v.firstChild.content.childNodes.length, 1, "Template should have one child in template content.");
+  SimpleTest.finish();
+}, 0);
+
+</script>
+</body>
+</html>
