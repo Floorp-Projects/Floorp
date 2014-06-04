@@ -2179,8 +2179,9 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     scrollParts.AppendElement(kid);
   }
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId =
-    nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsScrollingActive()
+    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
   scrollParts.Sort(HoveredStateComparator());
 
