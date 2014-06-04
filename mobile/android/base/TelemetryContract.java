@@ -64,6 +64,10 @@ public interface TelemetryContract {
         // Sharing content.
         SHARE("share.1"),
 
+        // Undoing a user action.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        UNDO("undo.1"),
+
         // Unpinning an item.
         UNPIN("unpin.1"),
 
@@ -136,6 +140,10 @@ public interface TelemetryContract {
 
         // Action triggered from a suggestion provided to the user.
         SUGGESTION("suggestion"),
+
+        // Action triggered from a SuperToast.
+        // Note: Only used in JavaScript for now, but here for completeness.
+        TOAST("toast"),
 
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
         _TEST1("_test_method_1"),
