@@ -384,6 +384,40 @@ KEY_MAP_QT      (Play, Qt::Key_Play)
 KEY_MAP_WIN     (Select, VK_SELECT)
 KEY_MAP_GTK     (Select, GDK_Select)
 
+/******************************************************************************
+ * Device Keys
+ ******************************************************************************/
+// BrightnessDown
+KEY_MAP_GTK     (BrightnessDown, GDK_MonBrightnessDown)
+KEY_MAP_QT      (BrightnessDown, Qt::Key_MonBrightnessDown)
+
+// BrightnessUp
+KEY_MAP_GTK     (BrightnessUp, GDK_MonBrightnessUp)
+KEY_MAP_QT      (BrightnessUp, Qt::Key_MonBrightnessUp)
+
+// Camera
+KEY_MAP_QT      (Camera, Qt::Key_Camera)
+KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
+
+// Eject
+KEY_MAP_GTK     (Eject, GDK_Eject)
+KEY_MAP_QT      (Eject, Qt::Key_Eject)
+KEY_MAP_ANDROID (Eject, AKEYCODE_MEDIA_EJECT)
+
+// Power
+KEY_MAP_GTK     (Power, GDK_PowerOff)
+KEY_MAP_QT      (Power, Qt::Key_PowerOff)
+KEY_MAP_ANDROID (Power, AKEYCODE_POWER)
+
+// PrintScreen
+KEY_MAP_WIN     (PrintScreen, VK_SNAPSHOT)
+KEY_MAP_GTK     (PrintScreen, GDK_3270_PrintScreen)
+KEY_MAP_GTK     (PrintScreen, GDK_Print)
+KEY_MAP_GTK     (PrintScreen, GDK_Sys_Req)
+KEY_MAP_QT      (PrintScreen, Qt::Key_Print)
+KEY_MAP_QT      (PrintScreen, Qt::Key_SysReq)
+KEY_MAP_ANDROID (PrintScreen, AKEYCODE_SYSRQ)
+
 
 // Apps
 KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
@@ -685,37 +719,6 @@ KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
 // Zoom
 KEY_MAP_WIN     (Zoom, VK_ZOOM)
 KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
-
-// BrightnessDown
-KEY_MAP_GTK     (BrightnessDown, GDK_MonBrightnessDown)
-KEY_MAP_QT      (BrightnessDown, Qt::Key_MonBrightnessDown)
-
-// BrightnessUp
-KEY_MAP_GTK     (BrightnessUp, GDK_MonBrightnessUp)
-KEY_MAP_QT      (BrightnessUp, Qt::Key_MonBrightnessUp)
-
-// Camera
-KEY_MAP_QT      (Camera, Qt::Key_Camera)
-KEY_MAP_ANDROID (Camera, AKEYCODE_CAMERA)
-
-// Eject
-KEY_MAP_GTK     (Eject, GDK_Eject)
-KEY_MAP_QT      (Eject, Qt::Key_Eject)
-KEY_MAP_ANDROID (Eject, AKEYCODE_MEDIA_EJECT)
-
-// Power
-KEY_MAP_GTK     (Power, GDK_PowerOff)
-KEY_MAP_QT      (Power, Qt::Key_PowerOff)
-KEY_MAP_ANDROID (Power, AKEYCODE_POWER)
-
-// PrintScreen
-KEY_MAP_WIN     (PrintScreen, VK_SNAPSHOT)
-KEY_MAP_GTK     (PrintScreen, GDK_3270_PrintScreen)
-KEY_MAP_GTK     (PrintScreen, GDK_Print)
-KEY_MAP_GTK     (PrintScreen, GDK_Sys_Req)
-KEY_MAP_QT      (PrintScreen, Qt::Key_Print)
-KEY_MAP_QT      (PrintScreen, Qt::Key_SysReq)
-KEY_MAP_ANDROID (PrintScreen, AKEYCODE_SYSRQ)
 
 // BrowserFavorites
 KEY_MAP_WIN     (BrowserFavorites, VK_BROWSER_FAVORITES)
