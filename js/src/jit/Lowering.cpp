@@ -3729,20 +3729,6 @@ LIRGenerator::generate()
             return false;
         lirGraph_.setBlock(block->id(), current);
         block->assignLir(current);
-
-        // For each MIR phi, add LIR phis as appropriate. We'll fill in their
-        // operands on each incoming edge, and set their definitions at the
-        // start of their defining block.
-        size_t phiIndex = 0;
-        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-            int numPhis = (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
-            for (int i = 0; i < numPhis; i++) {
-                LPhi *lir = LPhi::New(gen, *phi);
-                if (!lir)
-                    return false;
-                block->lir()->setPhi(phiIndex++, lir);
-            }
-        }
     }
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {

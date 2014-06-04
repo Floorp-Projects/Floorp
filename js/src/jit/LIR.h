@@ -729,7 +729,7 @@ class LMoveGroup;
 class LBlock : public TempObject
 {
     MBasicBlock *block_;
-    FixedList<LPhi *> phis_;
+    FixedList<LPhi> phis_;
     InlineList<LInstruction> instructions_;
     LMoveGroup *entryMoveGroup_;
     LMoveGroup *exitMoveGroup_;
@@ -747,14 +747,11 @@ class LBlock : public TempObject
     void add(LInstruction *ins) {
         instructions_.pushBack(ins);
     }
-    void setPhi(size_t index, LPhi *phi) {
-        phis_[index] = phi;
-    }
     size_t numPhis() const {
         return phis_.length();
     }
-    LPhi *getPhi(size_t index) const {
-        return phis_[index];
+    LPhi *getPhi(size_t index) {
+        return &phis_[index];
     }
     MBasicBlock *mir() const {
         return block_;
