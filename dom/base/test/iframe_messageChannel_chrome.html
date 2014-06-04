@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+  <script type="application/javascript">
+
+window.addEventListener('message', receiveMessage, false);
+function receiveMessage(evt) {
+  evt.data.postMessage("Hello world");
+}
+  </script>
+</body>
