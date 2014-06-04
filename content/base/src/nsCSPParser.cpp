@@ -260,19 +260,15 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
       ++charCounter;
     }
     if (accept(SLASH)) {
-      // do not accept double slashes
-      // see http://tools.ietf.org/html/rfc3986#section-3.3
-      if (accept(SLASH)) {
-        const char16_t* params[] = { mCurToken.get() };
-        logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
-                                 params, ArrayLength(params));
-        return false;
-      }
+      ++charCounter;
       aCspHost->appendPath(mCurValue);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
       // first part is "/path1", second part "/path2"
       resetCurValue();
+    }
+    if (atEnd()) {
+      return true;
     }
     if (charCounter > kSubHostPathCharacterCutoff) {
       return false;
@@ -305,6 +301,8 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
   if (atEnd()) {
     return true;
   }
+  // path can begin with "/" but not "//"
+  // see http://tools.ietf.org/html/rfc3986#section-3.3
   if (!hostChar()) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
