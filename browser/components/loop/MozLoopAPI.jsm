@@ -98,7 +98,13 @@ function injectLoopAPI(targetWindow) {
       configurable: true,
       writable: true,
       value: function(callback) {
-        return MozLoopService.register(callback);
+        // We translate from a promise to a callback, as we can't pass promises from
+        // Promise.jsm across the priv versus unpriv boundary.
+        return MozLoopService.register().then(() => {
+          callback(null);
+        }, err => {
+          callback(err);
+        });
       }
     },
 

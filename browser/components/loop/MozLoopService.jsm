@@ -8,6 +8,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 let console = (Cu.import("resource://gre/modules/devtools/Console.jsm", {})).console;
 
 this.EXPORTED_SYMBOLS = ["MozLoopService"];
@@ -155,21 +156,22 @@ let MozLoopServiceInternal = {
   // The uri of the Loop server.
   loopServerUri: Services.prefs.getCharPref("loop.server"),
 
-  // Any callbacks needed when the registration process completes.
-  registrationCallbacks: [],
+  // The current deferred for the registration process. This is set if in progress
+  // or the registration was successful. This is null if a registration attempt was
+  // unsuccessful.
+  _registeredDeferred: null,
 
   /**
    * The initial delay for push registration. This ensures we don't start
    * kicking off straight after browser startup, just a few seconds later.
    */
   get initialRegistrationDelayMilliseconds() {
-    // Default to 5 seconds
-    let initialDelay = 5000;
     try {
       // Let a pref override this for developer & testing use.
-      initialDelay = Services.prefs.getIntPref("loop.initialDelay");
+      return Services.prefs.getIntPref("loop.initialDelay");
     } catch (x) {
-      // It is ok for the pref not to exist.
+      // Default to 5 seconds
+      return 5000;
     }
     return initialDelay;
   },
@@ -180,14 +182,12 @@ let MozLoopServiceInternal = {
    * In seconds since epoch.
    */
   get expiryTimeSeconds() {
-    let expiryTimeSeconds = 0;
     try {
-      expiryTimeSeconds = Services.prefs.getIntPref("loop.urlsExpiryTimeSeconds");
+      return Services.prefs.getIntPref("loop.urlsExpiryTimeSeconds");
     } catch (x) {
       // It is ok for the pref not to exist.
+      return 0;
     }
-
-    return expiryTimeSeconds;
   },
 
   /**
@@ -219,93 +219,26 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Starts the initialization of the service, which goes and registers
-   * with the push server and the loop server.
-   *
-   * Callback parameters:
-   * - err null on successful initialization and registration,
-   *       false if initialization is complete, but registration has not taken
-   *             place,
-   *       <other> anything else if registration has failed.
-   *
-   * @param {Function} callback Optional, called when initialization finishes.
-   */
-  initialize: function(callback) {
-    if (this.registeredPushServer || this.initalizeTimer || this.registrationInProgress) {
-      if (callback)
-        callback(this.registeredPushServer ? null : false);
-      return;
-    }
-
-    function secondsToMilli(value) {
-      return value * 1000;
-    }
-
-    // If expiresTime is in the future then kick-off registration.
-    if (secondsToMilli(this.expiryTimeSeconds) > Date.now()) {
-      // Kick off the push notification service into registering after a timeout
-      // this ensures we're not doing too much straight after the browser's finished
-      // starting up.
-      this.initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      this.initializeTimer.initWithCallback(function() {
-        this.registerWithServers(callback);
-        this.initializeTimer = null;
-      }.bind(this),
-      this.initialRegistrationDelayMilliseconds, Ci.nsITimer.TYPE_ONE_SHOT);
-    }
-    else if (callback) {
-      // Callback with false as we haven't needed to do registration.
-      callback(false);
-    }
-  },
-
-  /**
    * Starts registration of Loop with the push server, and then will register
    * with the Loop server. It will return early if already registered.
    *
-   * Callback parameters:
-   * - err null on successful registration, non-null otherwise.
-   *
-   * @param {Function} callback Called when the registration process finishes.
+   * @returns {Promise} a promise that is resolved with no params on completion, or
+   *          rejected with an error code or string.
    */
-  registerWithServers: function(callback) {
-    // If we've already registered, return straight away, but save the callback
-    // so we can let the caller know.
-    if (this.registeredLoopServer) {
-      callback(null);
-      return;
+  promiseRegisteredWithServers: function() {
+    if (this._registeredDeferred) {
+      return this._registeredDeferred.promise;
     }
 
-    // We need to register, so save the callback.
-    if (callback) {
-      this.registrationCallbacks.push(callback);
-    }
-
-    // If we're already in progress, just return straight away.
-    if (this.registrationInProgress) {
-      return;
-    }
-
-    this.registrationInProgress = true;
+    this._registeredDeferred = Promise.defer();
+    // We grab the promise early in case .initialize or its results sets
+    // it back to null on error.
+    let result = this._registeredDeferred.promise;
 
     PushHandlerHack.initialize(this.onPushRegistered.bind(this),
                                this.onHandleNotification.bind(this));
-  },
 
-  /**
-   * Handles the end of the registration process.
-   *
-   * @param {Object|null} err null on success, non-null otherwise.
-   */
-  endRegistration: function(err) {
-    // Reset the in progress flag
-    this.registrationInProgress = false;
-
-    // Call any callbacks, then release them.
-    this.registrationCallbacks.forEach(function(callback) {
-      callback(err);
-    });
-    this.registrationCallbacks.length = 0;
+    return result;
   },
 
   /**
@@ -316,7 +249,8 @@ let MozLoopServiceInternal = {
    */
   onPushRegistered: function(err, pushUrl) {
     if (err) {
-      this.endRegistration(err);
+      this._registeredDeferred.reject(err);
+      this._registeredDeferred = null;
       return;
     }
 
@@ -364,7 +298,8 @@ let MozLoopServiceInternal = {
       // XXX Bubble the precise details up to the UI somehow (bug 1013248).
       Cu.reportError("Failed to register with the loop server. Code: " +
         status + " Text: " + this.loopXhr.statusText);
-      this.endRegistration(status);
+      this._registeredDeferred.reject(status);
+      this._registeredDeferred = null;
       return;
     }
 
@@ -378,14 +313,17 @@ let MozLoopServiceInternal = {
       } else {
         // XXX Bubble the precise details up to the UI somehow (bug 1013248).
         console.warn("Loop server sent an invalid session token");
-        this.endRegistration("session-token-wrong-size");
+        this._registeredDeferred.reject("session-token-wrong-size");
+        this._registeredDeferred = null;
         return;
       }
     }
 
     // If we made it this far, we registered just fine.
     this.registeredLoopServer = true;
-    this.endRegistration(null);
+    this._registeredDeferred.resolve();
+    // No need to clear the promise here, everything was good, so we don't need
+    // to re-register.
   },
 
   /**
@@ -465,30 +403,39 @@ this.MozLoopService = {
   /**
    * Initialized the loop service, and starts registration with the
    * push and loop servers.
-   *
-   * Callback parameters:
-   * - err null on successful initialization and registration,
-   *       false if initialization is complete, but registration has not taken
-   *             place,
-   *       <other> anything else if registration has failed.
-   *
-   * @param {Function} callback Optional, called when initialization finishes.
    */
-  initialize: function(callback) {
-    MozLoopServiceInternal.initialize(callback);
+  initialize: function() {
+    // If expiresTime is in the future then kick-off registration.
+    if ((MozLoopServiceInternal.expiryTimeSeconds * 1000) > Date.now()) {
+      this._startInitializeTimer();
+    }
+  },
+
+  /**
+   * Internal function, exposed for testing purposes only. Used to start the
+   * initialize timer.
+   */
+  _startInitializeTimer: function() {
+    // Kick off the push notification service into registering after a timeout
+    // this ensures we're not doing too much straight after the browser's finished
+    // starting up.
+    this._initializeTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    this._initializeTimer.initWithCallback(function() {
+      this.register();
+      this._initializeTimer = null;
+    }.bind(this),
+    MozLoopServiceInternal.initialRegistrationDelayMilliseconds, Ci.nsITimer.TYPE_ONE_SHOT);
   },
 
   /**
    * Starts registration of Loop with the push server, and then will register
    * with the Loop server. It will return early if already registered.
    *
-   * Callback parameters:
-   * - err null on successful registration, non-null otherwise.
-   *
-   * @param {Function} callback Called when the registration process finishes.
+   * @returns {Promise} a promise that is resolved with no params on completion, or
+   *          rejected with an error code or string.
    */
-  register: function(callback) {
-    MozLoopServiceInternal.registerWithServers(callback);
+  register: function() {
+    return MozLoopServiceInternal.promiseRegisteredWithServers();
   },
 
   /**
