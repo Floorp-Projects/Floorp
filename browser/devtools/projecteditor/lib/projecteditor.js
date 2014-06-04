@@ -22,16 +22,16 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const ITCHPAD_URL = "chrome://browser/content/devtools/projecteditor.xul";
 
 // Enabled Plugins
-require("projecteditor/plugins/dirty/lib/dirty");
-require("projecteditor/plugins/delete/lib/delete");
-require("projecteditor/plugins/new/lib/new");
-require("projecteditor/plugins/save/lib/save");
-require("projecteditor/plugins/image-view/lib/plugin");
-require("projecteditor/plugins/app-manager/lib/plugin");
-require("projecteditor/plugins/status-bar/lib/plugin");
+require("projecteditor/plugins/dirty/dirty");
+require("projecteditor/plugins/delete/delete");
+require("projecteditor/plugins/new/new");
+require("projecteditor/plugins/save/save");
+require("projecteditor/plugins/image-view/plugin");
+require("projecteditor/plugins/app-manager/plugin");
+require("projecteditor/plugins/status-bar/plugin");
 
 // Uncomment to enable logging.
-// require("projecteditor/plugins/logging/lib/logging");
+// require("projecteditor/plugins/logging/logging");
 
 /**
  * This is the main class tying together an instance of the ProjectEditor.
