@@ -6,6 +6,7 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include "DataSurfaceHelpers.h"
 #include "FilterNodeSoftware.h"
 #include "2D.h"
 #include "Tools.h"
@@ -191,14 +192,6 @@ static int32_t
 NS_lround(double x)
 {
   return x >= 0.0 ? int32_t(x + 0.5) : int32_t(x - 0.5);
-}
-
-void
-ClearDataSourceSurface(DataSourceSurface *aSurface)
-{
-  size_t numBytes = aSurface->GetSize().height * aSurface->Stride();
-  uint8_t* data = aSurface->GetData();
-  PodZero(data, numBytes);
 }
 
 // This check is safe against integer overflow.
