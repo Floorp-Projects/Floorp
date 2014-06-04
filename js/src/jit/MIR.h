@@ -857,7 +857,7 @@ class MBinaryInstruction : public MAryInstruction<2>
         MDefinition *lhs = getOperand(0);
         MDefinition *rhs = getOperand(1);
 
-        return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
+        return op() + lhs->valueNumber() + rhs->valueNumber();
     }
     void swapOperands() {
         MDefinition *temp = getOperand(0);
@@ -922,7 +922,7 @@ class MTernaryInstruction : public MAryInstruction<3>
         MDefinition *second = getOperand(1);
         MDefinition *third = getOperand(2);
 
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^ third->valueNumber();
+        return op() + first->valueNumber() + second->valueNumber() + third->valueNumber();
     }
 };
 
@@ -946,8 +946,8 @@ class MQuaternaryInstruction : public MAryInstruction<4>
         MDefinition *third = getOperand(2);
         MDefinition *fourth = getOperand(3);
 
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^
-                      third->valueNumber() ^ fourth->valueNumber();
+        return op() + first->valueNumber() + second->valueNumber() +
+                      third->valueNumber() + fourth->valueNumber();
     }
 };
 
