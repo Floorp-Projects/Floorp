@@ -49,7 +49,7 @@
 #include "nsCrossSiteListenerProxy.h"
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"
-#include "nsINetworkSeer.h"
+#include "nsINetworkPredictor.h"
 #include "mozilla/dom/EncodingUtils.h"
 
 #include "mozilla/CORSMode.h"
@@ -345,8 +345,8 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
   }
 
   nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(docshell));
-  mozilla::net::SeerLearn(aRequest->mURI, mDocument->GetDocumentURI(),
-      nsINetworkSeer::LEARN_LOAD_SUBRESOURCE, loadContext);
+  mozilla::net::PredictorLearn(aRequest->mURI, mDocument->GetDocumentURI(),
+      nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE, loadContext);
 
   // Set the initiator type
   nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(httpChannel));

@@ -7,18 +7,19 @@
 
 interface nsIURI;
 interface nsILoadContext;
-interface nsINetworkSeerVerifier;
+interface nsINetworkPredictorVerifier;
 
-typedef unsigned long SeerPredictReason;
-typedef unsigned long SeerLearnReason;
+typedef unsigned long PredictorPredictReason;
+typedef unsigned long PredictorLearnReason;
 
 /**
- * nsINetworkSeer - learn about pages users visit, and allow us to take
- *                  predictive actions upon future visits.
- *                  NOTE: nsINetworkSeer should only be used on the main thread
+ * nsINetworkPredictor - learn about pages users visit, and allow us to take
+ *                       predictive actions upon future visits.
+ *                       NOTE: nsINetworkPredictor should only
+ *                       be used on the main thread.
  */
-[scriptable, uuid(25e323b6-99e0-4274-b5b3-1a9eb56e28ac)]
-interface nsINetworkSeer : nsISupports
+[scriptable, uuid(980f70bc-0487-4b22-a4c1-bf1185c8ae1f)]
+interface nsINetworkPredictor : nsISupports
 {
   /**
    * Prediction reasons
@@ -32,14 +33,14 @@ interface nsINetworkSeer : nsISupports
    * PREDICT_STARTUP - we are being asked to take predictive action
    * because the browser is starting up.
    */
-  const SeerPredictReason PREDICT_LINK = 0;
-  const SeerPredictReason PREDICT_LOAD = 1;
-  const SeerPredictReason PREDICT_STARTUP = 2;
+  const PredictorPredictReason PREDICT_LINK = 0;
+  const PredictorPredictReason PREDICT_LOAD = 1;
+  const PredictorPredictReason PREDICT_STARTUP = 2;
 
   /**
    * Start taking predictive actions
    *
-   * Calling this will cause the seer to (possibly) start
+   * Calling this will cause the predictor to (possibly) start
    * taking actions such as DNS prefetch and/or TCP preconnect based on
    * (1) the host name that we are given, and (2) the reason we are being
    * asked to take actions.
@@ -59,15 +60,15 @@ interface nsINetworkSeer : nsISupports
    *   null.
    * @param loadContext - The nsILoadContext of the page load we are predicting
    *   about.
-   * @param verifier - An nsINetworkSeerVerifier used in testing to ensure we're
-   *   predicting the way we expect to. Not necessary (or desired) for normal
-   *   operation.
+   * @param verifier - An nsINetworkPredictorVerifier used in testing to ensure
+   *   we're predicting the way we expect to. Not necessary (or desired) for
+   *   normal operation.
    */
   void predict(in nsIURI targetURI,
                in nsIURI sourceURI,
-               in SeerPredictReason reason,
+               in PredictorPredictReason reason,
                in nsILoadContext loadContext,
-               in nsINetworkSeerVerifier verifier);
+               in nsINetworkPredictorVerifier verifier);
 
 
   /*
@@ -82,10 +83,10 @@ interface nsINetworkSeer : nsISupports
    *
    * LEARN_STARTUP - we are learning about a page loaded during startup
    */
-  const SeerLearnReason LEARN_LOAD_TOPLEVEL = 0;
-  const SeerLearnReason LEARN_LOAD_SUBRESOURCE = 1;
-  const SeerLearnReason LEARN_LOAD_REDIRECT = 2;
-  const SeerLearnReason LEARN_STARTUP = 3;
+  const PredictorLearnReason LEARN_LOAD_TOPLEVEL = 0;
+  const PredictorLearnReason LEARN_LOAD_SUBRESOURCE = 1;
+  const PredictorLearnReason LEARN_LOAD_REDIRECT = 2;
+  const PredictorLearnReason LEARN_STARTUP = 3;
 
   /**
    * Add to our compendium of knowledge
@@ -111,7 +112,7 @@ interface nsINetworkSeer : nsISupports
    */
   void learn(in nsIURI targetURI,
              in nsIURI sourceURI,
-             in SeerLearnReason reason,
+             in PredictorLearnReason reason,
              in nsILoadContext loadContext);
 
   /**
@@ -130,40 +131,40 @@ interface nsINetworkSeer : nsISupports
 };
 
 %{C++
-// Wrapper functions to make use of the seer easier and less invasive
+// Wrapper functions to make use of the predictor easier and less invasive
 class nsIChannel;
 class nsIDocument;
 class nsILoadContext;
 class nsILoadGroup;
-class nsINetworkSeerVerifier;
+class nsINetworkPredictorVerifier;
 
 namespace mozilla {
 namespace net {
 
-nsresult SeerPredict(nsIURI *targetURI,
-                     nsIURI *sourceURI,
-                     SeerPredictReason reason,
-                     nsILoadContext *loadContext,
-                     nsINetworkSeerVerifier *verifier);
+nsresult PredictorPredict(nsIURI *targetURI,
+                          nsIURI *sourceURI,
+                          PredictorPredictReason reason,
+                          nsILoadContext *loadContext,
+                          nsINetworkPredictorVerifier *verifier);
 
-nsresult SeerLearn(nsIURI *targetURI,
-                   nsIURI *sourceURI,
-                   SeerLearnReason reason,
-                   nsILoadContext *loadContext);
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsILoadContext *loadContext);
 
-nsresult SeerLearn(nsIURI *targetURI,
-                   nsIURI *sourceURI,
-                   SeerLearnReason reason,
-                   nsILoadGroup *loadGroup);
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsILoadGroup *loadGroup);
 
-nsresult SeerLearn(nsIURI *targetURI,
-                   nsIURI *sourceURI,
-                   SeerLearnReason reason,
-                   nsIDocument *document);
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsIDocument *document);
 
-nsresult SeerLearnRedirect(nsIURI *targetURI,
-                           nsIChannel *channel,
-                           nsILoadContext *loadContext);
+nsresult PredictorLearnRedirect(nsIURI *targetURI,
+                                nsIChannel *channel,
+                                nsILoadContext *loadContext);
 
 } // mozilla::net
 } // mozilla
