@@ -1311,8 +1311,9 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     } else {
       nsIFrame* parent = GetParentBox(this);
       if (parent && parent->GetType() == nsGkAtoms::sliderFrame) {
-        forceLayer = true;
         aBuilder->GetScrollbarInfo(&scrollTargetId, &flags);
+        forceLayer = (scrollTargetId != layers::FrameMetrics::NULL_SCROLL_ID);
+        nsLayoutUtils::SetScrollbarThumbLayerization(this, forceLayer);
       }
     }
     // Check for frames that are marked as a part of the region used
