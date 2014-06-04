@@ -148,6 +148,17 @@ let snapshotFormatters = {
     ));
   },
 
+  lockedPreferences: function lockedPreferences(data) {
+    $.append($("locked-prefs-tbody"), sortedArrayFromObject(data).map(
+      function ([name, value]) {
+        return $.new("tr", [
+          $.new("td", name, "pref-name"),
+          $.new("td", String(value).substr(0, 120), "pref-value"),
+        ]);
+      }
+    ));
+  },
+
   graphics: function graphics(data) {
     // graphics-info-properties tbody
     if ("info" in data) {
