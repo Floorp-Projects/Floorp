@@ -1113,29 +1113,36 @@ DataChannelTest.prototype = Object.create(PeerConnectionTest.prototype, {
 
       function dataChannelConnected(channel) {
         clearTimeout(dcConnectionTimeout);
-        is(channel.readyState, "open", peer + " dataChannels[0] is in state: 'open'");
+        is(channel.readyState, "open", peer + " dataChannels[0] switched to state: 'open'");
         onSuccess();
       }
 
-      if ((peer.dataChannels.length >= 1) &&
-          (peer.dataChannels[0].readyState === "open")) {
-        is(peer.dataChannels[0].readyState, "open", peer + " dataChannels[0] is in state: 'open'");
-        onSuccess();
-        return;
+      if (peer.dataChannels.length >= 1) {
+        if (peer.dataChannels[0].readyState === "open") {
+          is(peer.dataChannels[0].readyState, "open", peer + " dataChannels[0] is already in state: 'open'");
+          onSuccess();
+          return;
+        } else {
+          is(peer.dataChannels[0].readyState, "connecting", peer + " dataChannels[0] is in state: 'connecting'");
+        }
+      } else {
+        info(peer + "'s dataChannels[] is empty");
       }
 
       // TODO: drno: convert dataChannels into an object and make
-      //             registerDataChannelOPenEvent a generic function
+      //             registerDataChannelOpenEvent a generic function
       if (peer == this.pcLocal) {
         peer.dataChannels[0].onopen = dataChannelConnected;
       } else {
         peer.registerDataChannelOpenEvents(dataChannelConnected);
       }
 
-      dcConnectionTimeout = setTimeout(function () {
-        info(peer + " timed out while waiting for dataChannels[0] to connect");
-        onFailure();
-      }, 60000);
+      if (onFailure) {
+        dcConnectionTimeout = setTimeout(function () {
+          info(peer + " timed out while waiting for dataChannels[0] to connect");
+          onFailure();
+        }, 60000);
+      }
     }
   }
 
