@@ -991,10 +991,8 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   MOZ_ASSERT(mFrameInProgress, "frame not started");
 
-  IntPoint offset = mCurrentRenderTarget->GetOrigin();
   IntRect intClipRect;
   aClipRect.ToIntRect(&intClipRect);
-  intClipRect.MoveBy(-offset.x, -offset.y);
 
   gl()->fScissor(intClipRect.x, FlipY(intClipRect.y + intClipRect.height),
                  intClipRect.width, intClipRect.height);
@@ -1068,6 +1066,7 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   program->Activate();
   program->SetProjectionMatrix(mProjMatrix);
   program->SetLayerTransform(aTransform);
+  IntPoint offset = mCurrentRenderTarget->GetOrigin();
   program->SetRenderOffset(offset.x, offset.y);
   if (aOpacity != 1.f)
     program->SetLayerOpacity(aOpacity);
