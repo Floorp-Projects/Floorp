@@ -347,10 +347,11 @@ ContentClientRemoteBuffer::SwapBuffers(const nsIntRegion& aFrontUpdatedRegion)
 void
 ContentClientDoubleBuffered::DestroyFrontBuffer()
 {
-  MOZ_ASSERT(mFrontClient);
+  if (mFrontClient) {
+    mOldTextures.AppendElement(mFrontClient);
+    mFrontClient = nullptr;
+  }
 
-  mOldTextures.AppendElement(mFrontClient);
-  mFrontClient = nullptr;
   if (mFrontClientOnWhite) {
     mOldTextures.AppendElement(mFrontClientOnWhite);
     mFrontClientOnWhite = nullptr;
