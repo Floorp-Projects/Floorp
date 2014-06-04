@@ -7,13 +7,12 @@
 #define SHARED_SURFACE_GRALLOC_H_
 
 #include "SharedSurfaceGL.h"
-#include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"
-#include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 namespace layers {
 class ISurfaceAllocator;
+class GrallocTextureClientOGL;
 }
 
 namespace gl {
@@ -40,7 +39,7 @@ protected:
     GLLibraryEGL* const mEGL;
     EGLSync mSync;
     RefPtr<layers::ISurfaceAllocator> mAllocator;
-    RefPtr<layers::TextureClient> mTextureClient;
+    RefPtr<layers::GrallocTextureClientOGL> mTextureClient;
     const GLuint mProdTex;
 
     SharedSurface_Gralloc(GLContext* prodGL,
@@ -48,19 +47,8 @@ protected:
                           bool hasAlpha,
                           GLLibraryEGL* egl,
                           layers::ISurfaceAllocator* allocator,
-                          layers::TextureClient* textureClient,
-                          GLuint prodTex)
-        : SharedSurface_GL(SharedSurfaceType::Gralloc,
-                           AttachmentType::GLTexture,
-                           prodGL,
-                           size,
-                           hasAlpha)
-        , mEGL(egl)
-        , mSync(0)
-        , mAllocator(allocator)
-        , mTextureClient(textureClient)
-        , mProdTex(prodTex)
-    {}
+                          layers::GrallocTextureClientOGL* textureClient,
+                          GLuint prodTex);
 
     static bool HasExtensions(GLLibraryEGL* egl, GLContext* gl);
 
@@ -79,7 +67,7 @@ public:
         return mProdTex;
     }
 
-    layers::TextureClient* GetTextureClient() {
+    layers::GrallocTextureClientOGL* GetTextureClient() {
         return mTextureClient;
     }
 };
