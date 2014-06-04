@@ -65,11 +65,13 @@
 #include "GLUploadHelpers.h"
 #include "ScopedGLHelpers.h"
 #include "HeapCopyOfStackArray.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
+#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
 #ifdef ACCESSIBILITY
@@ -137,6 +139,8 @@ bool gUserCancelledDrag = false;
 
 uint32_t nsChildView::sLastInputEventCount = 0;
 
+static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
+
 @interface ChildView(Private)
 
 // sets up our view, attaching it to its owning gecko view
@@ -189,6 +193,8 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 #ifdef ACCESSIBILITY
 - (id<mozAccessible>)accessible;
 #endif
+
+- (APZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
 
@@ -484,6 +490,13 @@ nsChildView::~nsChildView()
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
   DestroyCompositor();
+
+  if (mAPZCTreeManager) {
+    gNumberOfWidgetsNeedingEventThread--;
+    if (gNumberOfWidgetsNeedingEventThread == 0) {
+      [EventThreadRunner stop];
+    }
+  }
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -2096,6 +2109,27 @@ nsChildView::CreateCompositor()
   if (mCompositorChild) {
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
+}
+
+CompositorParent*
+nsChildView::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+{
+  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
+    uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
+    nsRefPtr<APZCTMController> controller = new APZCTMController();
+    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
+    mAPZCTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
+    mAPZCTreeManager->SetDPI(GetDPI());
+
+    if (gNumberOfWidgetsNeedingEventThread == 0) {
+      [EventThreadRunner start];
+    }
+    gNumberOfWidgetsNeedingEventThread++;
+  }
+
+  return compositor;
 }
 
 gfxASurface*
@@ -5770,6 +5804,11 @@ static int32_t RoundUp(double aDouble)
   if (nsIDragService::DRAGDROP_ACTION_MOVE & dragAction)
     return NSDragOperationGeneric;
   return NSDragOperationNone;
+}
+
+- (APZCTreeManager*)apzctm
+{
+  return mGeckoChild ? mGeckoChild->APZCTM() : nullptr;
 }
 
 // This is a utility function used by NSView drag event methods
