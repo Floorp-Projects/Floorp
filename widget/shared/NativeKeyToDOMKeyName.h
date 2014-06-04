@@ -524,10 +524,9 @@ KEY_MAP_WIN_JPN (FullWidth, VK_OEM_ENLW)
 KEY_MAP_GTK     (FullWidth, GDK_Zenkaku)
 KEY_MAP_QT      (FullWidth, Qt::Key_Zenkaku)
 
-
-// Apps
-KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
-
+/******************************************************************************
+ * General-Purpose Function Keys
+ ******************************************************************************/
 // F1
 KEY_MAP_WIN     (F1, VK_F1)
 KEY_MAP_COCOA   (F1, kVK_F1)
@@ -727,6 +726,10 @@ KEY_MAP_QT      (F34, Qt::Key_F34)
 KEY_MAP_GTK     (F35, GDK_F35 /* same as GDK_R15 */)
 KEY_MAP_QT      (F35, Qt::Key_F35)
 
+
+// Apps
+KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
+
 // LaunchApplication1
 KEY_MAP_WIN     (LaunchApplication1, VK_LAUNCH_APP1)
 KEY_MAP_GTK     (LaunchApplication1, GDK_Launch0)
@@ -807,14 +810,6 @@ KEY_MAP_QT      (LaunchMail, Qt::Key_LaunchMail)
 KEY_MAP_ANDROID (LaunchMail, AKEYCODE_ENVELOPE)
 
 // List
-
-// Soft1
-
-// Soft2
-
-// Soft3
-
-// Soft4
 
 // Info
 KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
