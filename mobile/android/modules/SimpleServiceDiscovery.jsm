@@ -69,38 +69,32 @@ var SimpleServiceDiscovery = {
     // Listen for responses from specific targets. There could be more than one
     // available.
     let response = aMessage.data.split("\n");
-    let location;
-    let target;
-    let valid = false;
-    response.some(function(row) {
-      let header = row.toUpperCase();
-      if (header.startsWith("LOCATION")) {
-        location = row.substr(10).trim();
-      } else if (header.startsWith("ST")) {
-        target = row.substr(4).trim();
-        if (this._targets.has(target)) {
-          valid = true;
-        }
+    let service = {};
+    response.forEach(function(row) {
+      let name = row.toUpperCase();
+      if (name.startsWith("LOCATION")) {
+        service.location = row.substr(10).trim();
+      } else if (name.startsWith("ST")) {
+        service.target = row.substr(4).trim();
+      } else if (name.startsWith("SERVER")) {
+        service.server = row.substr(8).trim();
       }
-
-      if (location && valid) {
-        location = this._forceTrailingSlash(location);
-
-        // When we find a valid response, package up the service information
-        // and pass it on.
-        let service = {
-          location: location,
-          target: target
-        };
-
-        try {
-          this._processService(service);
-        } catch (e) {}
-
-        return true;
-      }
-      return false;
     }.bind(this));
+
+    if (service.location && this._targets.has(service.target)) {
+      service.location = this._forceTrailingSlash(service.location);
+
+      // We add the server as an additional way to filter services
+      if (!("server" in service)) {
+        service.server = null;
+      }
+
+      // When we find a valid response, package up the service information
+      // and pass it on.
+      try {
+        this._processService(service);
+      } catch (e) {}
+    }
   },
 
   onStopListening: function(aSocket, aStatus) {
