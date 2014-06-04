@@ -231,8 +231,8 @@ nsCSPParser::port()
 
   // Port must start with a number
   if (!accept(isNumberToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParsePort",
                              params, ArrayLength(params));
     return false;
   }
@@ -361,8 +361,8 @@ nsCSPParser::host()
     }
     // If the token is not only the "*", a "." must follow right after
     if (!accept(DOT)) {
-      const char16_t* params[] = { mCurValue.get() };
-      logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+      const char16_t* params[] = { mCurToken.get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                                params, ArrayLength(params));
       return nullptr;
     }
@@ -370,16 +370,16 @@ nsCSPParser::host()
 
   // Expecting at least one Character
   if (!accept(isCharacterToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
 
   // There might be several sub hosts defined.
   if (!subHost()) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
@@ -388,7 +388,7 @@ nsCSPParser::host()
   if (CSP_IsQuotelessKeyword(mCurValue)) {
     nsString keyword = mCurValue;
     ToLowerCase(keyword);
-    const char16_t* params[] = { mCurValue.get(), keyword.get() };
+    const char16_t* params[] = { mCurToken.get(), keyword.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "hostNameMightBeKeyword",
                              params, ArrayLength(params));
   }
@@ -409,8 +409,8 @@ nsCSPParser::appHost()
 
   // appHosts have to end with "}", otherwise we have to report an error
   if (!accept(CLOSE_CURL)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
                              params, ArrayLength(params));
     return nullptr;
   }
