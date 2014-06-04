@@ -458,6 +458,9 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
     return;
   }
   MOZ_ASSERT(mFrontClient);
+  if (!mFrontClient) {
+    return;
+  }
 
   MOZ_LAYERS_LOG(("BasicShadowableThebes(%p): reading back <x=%d,y=%d,w=%d,h=%d>",
                   this,
