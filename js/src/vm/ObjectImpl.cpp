@@ -387,12 +387,3 @@ AutoPropDescRooter::trace(JSTracer *trc)
     gc::MarkValueRoot(trc, &propDesc.get_, "AutoPropDescRooter get");
     gc::MarkValueRoot(trc, &propDesc.set_, "AutoPropDescRooter set");
 }
-
-void
-PropDesc::trace(JSTracer *trc)
-{
-    gc::MarkValueRoot(trc, &pd_, "PropDesc pd");
-    gc::MarkValueRoot(trc, &value_, "PropDesc value");
-    gc::MarkValueRoot(trc, &get_, "PropDesc get");
-    gc::MarkValueRoot(trc, &set_, "PropDesc set");
-}
