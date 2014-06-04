@@ -59,7 +59,10 @@ class ProfileEntry
 
         // Indicate that copying the frame label is not necessary when taking a
         // sample of the pseudostack.
-        FRAME_LABEL_COPY = 0x02
+        FRAME_LABEL_COPY = 0x02,
+
+        // Mask for removing all flags except the category information.
+        CATEGORY_MASK = ~IS_CPP_ENTRY & ~FRAME_LABEL_COPY
     };
 
     MOZ_BEGIN_NESTED_ENUM_CLASS(Category, uint32_t)
@@ -112,8 +115,12 @@ class ProfileEntry
     bool hasFlag(uint32_t flag) const volatile {
         return bool(flags_ & flag);
     }
+
     uint32_t flags() const volatile {
         return flags_;
+    }
+    uint32_t category() const volatile {
+        return flags_ & CATEGORY_MASK;
     }
 
     void *stackAddress() const volatile {
