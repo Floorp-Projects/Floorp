@@ -1257,10 +1257,12 @@ TabChild::BrowserFrameProvideWindow(nsIDOMWindow* aOpener,
   context.openerChild() = this;
   context.isBrowserElement() = IsBrowserElement();
 
+  ContentChild* cc = static_cast<ContentChild*>(Manager());
   unused << Manager()->SendPBrowserConstructor(
       // We release this ref in DeallocPBrowserChild
       nsRefPtr<TabChild>(newChild).forget().take(),
-      IPCTabContext(context, mScrolling), /* chromeFlags */ 0);
+      IPCTabContext(context, mScrolling), /* chromeFlags */ 0,
+      cc->GetID(), cc->IsForApp(), cc->IsForBrowser());
 
   nsAutoCString spec;
   if (aURI) {

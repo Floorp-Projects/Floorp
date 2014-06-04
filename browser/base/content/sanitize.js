@@ -221,9 +221,9 @@ Sanitizer.prototype = {
         catch (e) { }
 
         try {
-          var seer = Components.classes["@mozilla.org/network/seer;1"]
-                               .getService(Components.interfaces.nsINetworkSeer);
-          seer.reset();
+          var predictor = Components.classes["@mozilla.org/network/predictor;1"]
+                                    .getService(Components.interfaces.nsINetworkPredictor);
+          predictor.reset();
         } catch (e) { }
       },
 

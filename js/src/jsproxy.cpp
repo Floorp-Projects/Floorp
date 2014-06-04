@@ -678,17 +678,16 @@ static bool
 ParsePropertyDescriptorObject(JSContext *cx, HandleObject obj, const Value &v,
                               MutableHandle<PropertyDescriptor> desc, bool complete = false)
 {
-    AutoPropDescArrayRooter descs(cx);
-    PropDesc *d = descs.append();
-    if (!d || !d->initialize(cx, v))
+    Rooted<PropDesc> d(cx);
+    if (!d.initialize(cx, v))
         return false;
     if (complete)
-        d->complete();
+        d.complete();
     desc.object().set(obj);
-    desc.value().set(d->hasValue() ? d->value() : UndefinedValue());
-    desc.setAttributes(d->attributes());
-    desc.setGetter(d->getter());
-    desc.setSetter(d->setter());
+    desc.value().set(d.hasValue() ? d.value() : UndefinedValue());
+    desc.setAttributes(d.attributes());
+    desc.setGetter(d.getter());
+    desc.setSetter(d.setter());
     return true;
 }
 
@@ -1101,18 +1100,18 @@ static const char sScriptedDirectProxyHandlerFamily = 0;
 
 // Aux.2 FromGenericPropertyDescriptor(Desc)
 static bool
-FromGenericPropertyDescriptor(JSContext *cx, PropDesc *desc, MutableHandleValue rval)
+FromGenericPropertyDescriptor(JSContext *cx, MutableHandle<PropDesc> desc, MutableHandleValue rval)
 {
     // Aux.2 step 1
-    if (desc->isUndefined()) {
+    if (desc.isUndefined()) {
         rval.setUndefined();
         return true;
     }
 
     // steps 3-9
-    if (!desc->makeObject(cx))
+    if (!desc.makeObject(cx))
         return false;
-    rval.set(desc->pd());
+    rval.set(desc.pd());
     return true;
 }
 
@@ -1131,12 +1130,11 @@ NormalizePropertyDescriptor(JSContext *cx, MutableHandleValue vp, bool complete 
         return true;
 
     // Aux.3 steps 1-2 / Aux.4 steps 2-3
-    AutoPropDescArrayRooter descs(cx);
-    PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, vp.get()))
+    Rooted<PropDesc> desc(cx);
+    if (!desc.initialize(cx, vp.get()))
         return false;
     if (complete)
-        desc->complete();
+        desc.complete();
     JS_ASSERT(vp.isObject()); // due to desc->initialize
     RootedObject attributes(cx, &vp.toObject());
 
@@ -1149,7 +1147,7 @@ NormalizePropertyDescriptor(JSContext *cx, MutableHandleValue vp, bool complete 
      * and is in fact used to implement the latter, so we might as well call it
      * directly.
      */
-    if (!FromGenericPropertyDescriptor(cx, desc, vp))
+    if (!FromGenericPropertyDescriptor(cx, &desc, vp))
         return false;
     if (vp.isUndefined())
         return true;
@@ -1203,7 +1201,7 @@ IsAccessorDescriptor(const PropertyDescriptor &desc)
 
 // Aux.5 ValidateProperty(O, P, Desc)
 static bool
-ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, PropDesc *desc, bool *bp)
+ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, Handle<PropDesc> desc, bool *bp)
 {
     // step 1
     Rooted<PropertyDescriptor> current(cx);
@@ -1217,26 +1215,26 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, PropDesc *desc, b
     JS_ASSERT(current.object());
 
     // step 5
-    if (!desc->hasValue() && !desc->hasWritable() && !desc->hasGet() && !desc->hasSet() &&
-        !desc->hasEnumerable() && !desc->hasConfigurable())
+    if (!desc.hasValue() && !desc.hasWritable() && !desc.hasGet() && !desc.hasSet() &&
+        !desc.hasEnumerable() && !desc.hasConfigurable())
     {
         *bp = true;
         return true;
     }
 
     // step 6
-    if ((!desc->hasWritable() || desc->writable() == !current.isReadonly()) &&
-        (!desc->hasGet() || desc->getter() == current.getter()) &&
-        (!desc->hasSet() || desc->setter() == current.setter()) &&
-        (!desc->hasEnumerable() || desc->enumerable() == current.isEnumerable()) &&
-        (!desc->hasConfigurable() || desc->configurable() == !current.isPermanent()))
+    if ((!desc.hasWritable() || desc.writable() == !current.isReadonly()) &&
+        (!desc.hasGet() || desc.getter() == current.getter()) &&
+        (!desc.hasSet() || desc.setter() == current.setter()) &&
+        (!desc.hasEnumerable() || desc.enumerable() == current.isEnumerable()) &&
+        (!desc.hasConfigurable() || desc.configurable() == !current.isPermanent()))
     {
-        if (!desc->hasValue()) {
+        if (!desc.hasValue()) {
             *bp = true;
             return true;
         }
         bool same = false;
-        if (!SameValue(cx, desc->value(), current.value(), &same))
+        if (!SameValue(cx, desc.value(), current.value(), &same))
             return false;
         if (same) {
             *bp = true;
@@ -1246,13 +1244,13 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, PropDesc *desc, b
 
     // step 7
     if (current.isPermanent()) {
-        if (desc->hasConfigurable() && desc->configurable()) {
+        if (desc.hasConfigurable() && desc.configurable()) {
             *bp = false;
             return true;
         }
 
-        if (desc->hasEnumerable() &&
-            desc->enumerable() != current.isEnumerable())
+        if (desc.hasEnumerable() &&
+            desc.enumerable() != current.isEnumerable())
         {
             *bp = false;
             return true;
@@ -1260,29 +1258,29 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, PropDesc *desc, b
     }
 
     // step 8
-    if (desc->isGenericDescriptor()) {
+    if (desc.isGenericDescriptor()) {
         *bp = true;
         return true;
     }
 
     // step 9
-    if (IsDataDescriptor(current) != desc->isDataDescriptor()) {
+    if (IsDataDescriptor(current) != desc.isDataDescriptor()) {
         *bp = !current.isPermanent();
         return true;
     }
 
     // step 10
     if (IsDataDescriptor(current)) {
-        JS_ASSERT(desc->isDataDescriptor()); // by step 9
+        JS_ASSERT(desc.isDataDescriptor()); // by step 9
         if (current.isPermanent() && current.isReadonly()) {
-            if (desc->hasWritable() && desc->writable()) {
+            if (desc.hasWritable() && desc.writable()) {
                 *bp = false;
                 return true;
             }
 
-            if (desc->hasValue()) {
+            if (desc.hasValue()) {
                 bool same;
-                if (!SameValue(cx, desc->value(), current.value(), &same))
+                if (!SameValue(cx, desc.value(), current.value(), &same))
                     return false;
                 if (!same) {
                     *bp = false;
@@ -1297,10 +1295,10 @@ ValidateProperty(JSContext *cx, HandleObject obj, HandleId id, PropDesc *desc, b
 
     // steps 11-12
     JS_ASSERT(IsAccessorDescriptor(current)); // by step 10
-    JS_ASSERT(desc->isAccessorDescriptor()); // by step 9
+    JS_ASSERT(desc.isAccessorDescriptor()); // by step 9
     *bp = (!current.isPermanent() ||
-           ((!desc->hasSet() || desc->setter() == current.setter()) &&
-            (!desc->hasGet() || desc->getter() == current.getter())));
+           ((!desc.hasSet() || desc.setter() == current.setter()) &&
+            (!desc.hasGet() || desc.getter() == current.getter())));
     return true;
 }
 
@@ -1429,9 +1427,8 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
         return false;
     }
 
-    AutoPropDescArrayRooter descs(cx);
-    PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, trapResult))
+    Rooted<PropDesc> desc(cx);
+    if (!desc.initialize(cx, trapResult))
         return false;
 
     /* step 10 */
@@ -1447,7 +1444,7 @@ TrapGetOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandle
     }
 
     // step 11
-    if (!desc->configurable() && !isFixed) {
+    if (!desc.configurable() && !isFixed) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_REPORT_NE_AS_NC);
         return false;
     }
@@ -1513,9 +1510,8 @@ TrapDefineOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHan
             return false;
         }
 
-        AutoPropDescArrayRooter descs(cx);
-        PropDesc *desc = descs.append();
-        if (!desc || !desc->initialize(cx, normalizedDesc))
+        Rooted<PropDesc> desc(cx);
+        if (!desc.initialize(cx, normalizedDesc))
             return false;
 
         if (isFixed) {
@@ -1528,7 +1524,7 @@ TrapDefineOwnProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHan
             }
         }
 
-        if (!desc->configurable() && !isFixed) {
+        if (!desc.configurable() && !isFixed) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_DEFINE_NE_AS_NC);
             return false;
         }
@@ -1753,11 +1749,10 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
                                            MutableHandle<PropertyDescriptor> desc)
 {
     // step 1
-    AutoPropDescArrayRooter descs(cx);
-    PropDesc *d = descs.append();
-    d->initFromPropertyDescriptor(desc);
+    Rooted<PropDesc> d(cx);
+    d.initFromPropertyDescriptor(desc);
     RootedValue v(cx);
-    if (!FromGenericPropertyDescriptor(cx, d, &v))
+    if (!FromGenericPropertyDescriptor(cx, &d, &v))
         return false;
 
     // step 2

@@ -18,7 +18,7 @@
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIDOMEvent.h"
-#include "nsIDOMProgressEvent.h"
+#include "mozilla/dom/ProgressEvent.h"
 #include "nsIScriptContext.h"
 #include "nsLiteralString.h"
 
@@ -135,21 +135,15 @@ FileRequest::FireProgressEvent(uint64_t aLoaded, uint64_t aTotal)
     return;
   }
 
-  nsCOMPtr<nsIDOMEvent> event;
-  nsresult rv = NS_NewDOMProgressEvent(getter_AddRefs(event), this,
-                                       nullptr, nullptr);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  ProgressEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mLengthComputable = false;
+  init.mLoaded = aLoaded;
+  init.mTotal = aTotal;
 
-  nsCOMPtr<nsIDOMProgressEvent> progress = do_QueryInterface(event);
-  MOZ_ASSERT(progress);
-  rv = progress->InitProgressEvent(NS_LITERAL_STRING("progress"), false, false,
-                                   false, aLoaded, aTotal);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
+  nsRefPtr<ProgressEvent> event =
+    ProgressEvent::Constructor(this, NS_LITERAL_STRING("progress"), init);
   DispatchTrustedEvent(event);
 }
 
