@@ -4806,7 +4806,7 @@ class LCeil : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(Ceil)
 
-    LCeil(const LAllocation &num) {
+    explicit LCeil(const LAllocation &num) {
         setOperand(0, num);
     }
 };
@@ -4817,7 +4817,7 @@ class LCeilF : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(CeilF)
 
-    LCeilF(const LAllocation &num) {
+    explicit LCeilF(const LAllocation &num) {
         setOperand(0, num);
     }
 };

@@ -1273,8 +1273,8 @@ class AutoDisableProxyCheck
     uintptr_t &count;
 
   public:
-    AutoDisableProxyCheck(JSRuntime *rt
-                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit AutoDisableProxyCheck(JSRuntime *rt
+                                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     ~AutoDisableProxyCheck() {
         count--;

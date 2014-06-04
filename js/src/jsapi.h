@@ -45,8 +45,8 @@ class JS_PUBLIC_API(AutoCheckRequestDepth)
 {
     JSContext *cx;
   public:
-    AutoCheckRequestDepth(JSContext *cx);
-    AutoCheckRequestDepth(js::ContextFriendFields *cx);
+    explicit AutoCheckRequestDepth(JSContext *cx);
+    explicit AutoCheckRequestDepth(js::ContextFriendFields *cx);
     ~AutoCheckRequestDepth();
 };
 
@@ -4284,7 +4284,7 @@ class JSAutoByteString
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    JSAutoByteString(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+    explicit JSAutoByteString(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
       : mBytes(nullptr)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
