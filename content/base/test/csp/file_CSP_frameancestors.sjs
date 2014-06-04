@@ -30,9 +30,9 @@ function handleRequest(request, response)
     response.setHeader("Content-Type", "text/html", false);
     response.write('<html><head>');
     if (query['double'])
-      response.write('<script src="file_CSP_frameancestors_spec_compliant.sjs?double=1&scriptedreport=' + query['testid'] + '"></script>');
+      response.write('<script src="file_CSP_frameancestors.sjs?double=1&scriptedreport=' + query['testid'] + '"></script>');
     else
-      response.write('<script src="file_CSP_frameancestors_spec_compliant.sjs?scriptedreport=' + query['testid'] + '"></script>');
+      response.write('<script src="file_CSP_frameancestors.sjs?scriptedreport=' + query['testid'] + '"></script>');
     response.write('</head><body>');
     response.write(unescape(query['internalframe']));
     response.write('</body></html>');
