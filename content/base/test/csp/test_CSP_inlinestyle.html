@@ -99,9 +99,9 @@ SpecialPowers.pushPrefEnv(
   function() {
     // save this for last so that our listeners are registered.
     // ... this loads the testbed of good and bad requests.
-    document.getElementById('cspframe1').src = 'file_CSP_inlinestyle_main_spec_compliant.html';
+    document.getElementById('cspframe1').src = 'file_CSP_inlinestyle_main.html';
     document.getElementById('cspframe1').addEventListener('load', checkStylesSpecCompliant, false);
-    document.getElementById('cspframe2').src = 'file_CSP_inlinestyle_main_spec_compliant_allowed.html';
+    document.getElementById('cspframe2').src = 'file_CSP_inlinestyle_main_allowed.html';
     document.getElementById('cspframe2').addEventListener('load', checkStylesSpecCompliantAllowed, false);
   }
 );
