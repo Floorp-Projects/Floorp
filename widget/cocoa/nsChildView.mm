@@ -194,6 +194,7 @@ static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 - (id<mozAccessible>)accessible;
 #endif
 
+- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
 - (APZCTreeManager*)apzctm;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
@@ -5268,10 +5269,9 @@ static int32_t RoundUp(double aDouble)
 
   // convert point to view coordinate system
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
-  NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
 
   outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
-    mGeckoChild->CocoaPointsToDevPixels(localPoint));
+    [self convertWindowCoordinates:locationInWindow]);
 
   WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
   mouseEvent->buttons = 0;
@@ -5806,6 +5806,16 @@ static int32_t RoundUp(double aDouble)
   return NSDragOperationNone;
 }
 
+- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint
+{
+  if (!mGeckoChild) {
+    return nsIntPoint(0, 0);
+  }
+
+  NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
+  return mGeckoChild->CocoaPointsToDevPixels(localPoint);
+}
+
 - (APZCTreeManager*)apzctm
 {
   return mGeckoChild ? mGeckoChild->APZCTM() : nullptr;
@@ -5877,10 +5887,9 @@ static int32_t RoundUp(double aDouble)
   // Use our own coordinates in the gecko event.
   // Convert event from gecko global coords to gecko view coords.
   NSPoint draggingLoc = [aSender draggingLocation];
-  NSPoint localPoint = [self convertPoint:draggingLoc fromView:nil];
 
   geckoEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(
-    mGeckoChild->CocoaPointsToDevPixels(localPoint));
+    [self convertWindowCoordinates:draggingLoc]);
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
