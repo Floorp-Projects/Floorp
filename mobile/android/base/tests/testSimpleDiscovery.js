@@ -12,7 +12,7 @@ Cu.import("resource://gre/modules/SimpleServiceDiscovery.jsm");
 function discovery_observer(subject, topic, data) {
   do_print("Observer: " + data);
 
-  let service = SimpleServiceDiscovery.findServiceForLocation(data);
+  let service = SimpleServiceDiscovery.findServiceForID(data);
   if (!service)
     return;
 
