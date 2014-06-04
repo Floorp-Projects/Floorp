@@ -93,7 +93,7 @@ ChromeProfileMigrator.prototype.getResources =
   function Chrome_getResources(aProfile) {
     if (this._chromeUserDataFolder) {
       let profileFolder = this._chromeUserDataFolder.clone();
-      profileFolder.append(aProfile);
+      profileFolder.append(aProfile.id);
       if (profileFolder.exists()) {
         let possibleResources = [GetBookmarksResource(profileFolder),
                                  GetHistoryResource(profileFolder),
@@ -112,7 +112,7 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
     if (!this._chromeUserDataFolder)
       return [];
 
-    let profiles;
+    let profiles = [];
     try {
       // Local State is a JSON file that contains profile info.
       let localState = this._chromeUserDataFolder.clone();
@@ -127,20 +127,30 @@ Object.defineProperty(ChromeProfileMigrator.prototype, "sourceProfiles", {
       let inputStream = NetUtil.readInputStreamToString(fstream, fstream.available(),
                                                         { charset: "UTF-8" });
       let info_cache = JSON.parse(inputStream).profile.info_cache;
-      if (info_cache)
-        profiles = Object.keys(info_cache);
+      for (let profileFolderName in info_cache) {
+        let profileFolder = this._chromeUserDataFolder.clone();
+        profileFolder.append(profileFolderName);
+        profiles.push({
+          id: profileFolderName,
+          name: info_cache[profileFolderName].name || profileFolderName,
+        });
+      }
     } catch (e) {
       Cu.reportError("Error detecting Chrome profiles: " + e);
       // If we weren't able to detect any profiles above, fallback to the Default profile.
       let defaultProfileFolder = this._chromeUserDataFolder.clone();
       defaultProfileFolder.append("Default");
-      if (defaultProfileFolder.exists())
-        profiles = ["Default"];
+      if (defaultProfileFolder.exists()) {
+        profiles = [{
+          id: "Default",
+          name: "Default",
+        }];
+      }
     }
 
     // Only list profiles from which any data can be imported
-    return this.__sourceProfiles = profiles.filter(function(profileName) {
-      let resources = this.getResources(profileName);
+    return this.__sourceProfiles = profiles.filter(function(profile) {
+      let resources = this.getResources(profile);
       return resources && resources.length > 0;
     }, this);
   }

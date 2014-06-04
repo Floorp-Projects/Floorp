@@ -845,9 +845,6 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, char16_t **value)
 
   nsresult rv;
   CERTRDN **lastRdn;
-  lastRdn = rdns;
-
-
   /* find last RDN */
   lastRdn = rdns;
   while (*lastRdn) lastRdn++;

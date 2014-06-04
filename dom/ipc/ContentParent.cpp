@@ -800,7 +800,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                 // DeallocPBrowserParent() releases this ref.
                 tp.forget().take(),
                 aContext.AsIPCTabContext(),
-                chromeFlags);
+                chromeFlags,
+                cp->ChildID(),
+                cp->IsForApp(),
+                cp->IsForBrowser());
             return static_cast<TabParent*>(browser);
         }
         return nullptr;
@@ -898,7 +901,10 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         // DeallocPBrowserParent() releases this ref.
         nsRefPtr<TabParent>(tp).forget().take(),
         aContext.AsIPCTabContext(),
-        chromeFlags);
+        chromeFlags,
+        p->ChildID(),
+        p->IsForApp(),
+        p->IsForBrowser());
 
     p->MaybeTakeCPUWakeLock(aFrameElement);
 
@@ -2416,7 +2422,10 @@ ContentParent::DeallocPJavaScriptParent(PJavaScriptParent *parent)
 
 PBrowserParent*
 ContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
-                                   const uint32_t &aChromeFlags)
+                                   const uint32_t& aChromeFlags,
+                                   const uint64_t& aId,
+                                   const bool& aIsForApp,
+                                   const bool& aIsForBrowser)
 {
     unused << aChromeFlags;
 

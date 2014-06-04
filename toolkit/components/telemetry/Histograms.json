@@ -2090,39 +2090,39 @@
     "extended_statistics_ok": true,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
-  "SEER_PREDICT_ATTEMPTS": {
+  "PREDICTOR_PREDICT_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Predict is called and attempts to predict"
+    "description": "Number of times nsINetworkPredictor::Predict is called and attempts to predict"
   },
-  "SEER_LEARN_ATTEMPTS": {
+  "PREDICTOR_LEARN_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Learn is called and attempts to learn"
+    "description": "Number of times nsINetworkPredictor::Learn is called and attempts to learn"
   },
-  "SEER_PREDICT_FULL_QUEUE": {
+  "PREDICTOR_PREDICT_FULL_QUEUE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Predict doesn't continue because the queue is full"
+    "description": "Number of times nsINetworkPredictor::Predict doesn't continue because the queue is full"
   },
-  "SEER_LEARN_FULL_QUEUE": {
+  "PREDICTOR_LEARN_FULL_QUEUE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Learn doesn't continue because the queue is full"
+    "description": "Number of times nsINetworkPredictor::Learn doesn't continue because the queue is full"
   },
-  "SEER_PREDICT_WAIT_TIME": {
+  "PREDICTOR_PREDICT_WAIT_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2130,7 +2130,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time a predict event waits in the queue (ms)"
   },
-  "SEER_PREDICT_WORK_TIME": {
+  "PREDICTOR_PREDICT_WORK_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2138,7 +2138,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time spent doing the work for predict (ms)"
   },
-  "SEER_LEARN_WAIT_TIME": {
+  "PREDICTOR_LEARN_WAIT_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2146,7 +2146,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time a learn event waits in the queue (ms)"
   },
-  "SEER_LEARN_WORK_TIME": {
+  "PREDICTOR_LEARN_WORK_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2154,7 +2154,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time spent doing the work for learn (ms)"
   },
-  "SEER_TOTAL_PREDICTIONS": {
+  "PREDICTOR_TOTAL_PREDICTIONS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2162,7 +2162,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual predictions (preresolves, preconnects, ...) happen"
   },
-  "SEER_TOTAL_PRECONNECTS": {
+  "PREDICTOR_TOTAL_PRECONNECTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2170,7 +2170,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual preconnects happen"
   },
-  "SEER_TOTAL_PRERESOLVES": {
+  "PREDICTOR_TOTAL_PRERESOLVES": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2178,7 +2178,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual preresolves happen"
   },
-  "SEER_PREDICTIONS_CALCULATED": {
+  "PREDICTOR_PREDICTIONS_CALCULATED": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2186,94 +2186,94 @@
     "extended_statistics_ok": true,
     "description": "How many prediction calculations are performed"
   },
-  "SEER_GLOBAL_DEGRADATION": {
+  "PREDICTOR_GLOBAL_DEGRADATION": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The global degradation calculated"
   },
-  "SEER_SUBRESOURCE_DEGRADATION": {
+  "PREDICTOR_SUBRESOURCE_DEGRADATION": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The degradation calculated for a subresource"
   },
-  "SEER_BASE_CONFIDENCE": {
+  "PREDICTOR_BASE_CONFIDENCE": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The base confidence calculated for a subresource"
   },
-  "SEER_CONFIDENCE": {
+  "PREDICTOR_CONFIDENCE": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The final confidence calculated for a subresource"
   },
-  "SEER_PREDICT_TIME_TO_ACTION": {
+  "PREDICTOR_PREDICT_TIME_TO_ACTION": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "description": "How long it takes from the time Predict() is called to the time we take action"
   },
-  "SEER_PREDICT_TIME_TO_INACTION": {
+  "PREDICTOR_PREDICT_TIME_TO_INACTION": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "description": "How long it takes from the time Predict() is called to the time we figure out there's nothing to do"
   },
-  "SEER_CLEANUP_DELTA": {
+  "PREDICTOR_CLEANUP_DELTA": {
       "expires_in_version": "never",
       "kind": "exponential",
       "high": "60000",
       "n_buckets": 50,
-      "description": "How long between seer db cleanups, in ms"
+      "description": "How long between predictor db cleanups, in ms"
   },
-  "SEER_CLEANUP_SUCCEEDED": {
+  "PREDICTOR_CLEANUP_SUCCEEDED": {
       "expires_in_version": "never",
       "kind": "boolean",
-      "description": "Whether or not the seer cleanup succeeded"
+      "description": "Whether or not the predictor cleanup succeeded"
   },
-  "SEER_CLEANUP_TIME": {
+  "PREDICTOR_CLEANUP_TIME": {
       "expires_in_version": "never",
       "kind": "exponential",
       "high": "5000",
       "n_buckets": 10,
-      "description": "How long it takes to run the seer cleanup"
+      "description": "How long it takes to run the predictor cleanup"
   },
-  "SEER_CLEANUP_SCHEDULED": {
+  "PREDICTOR_CLEANUP_SCHEDULED": {
       "expires_in_version": "never",
       "kind": "boolean",
       "description": "Whether or not we actually try the cleanup method when we think about it"
   },
-  "SEER_LOAD_COUNT_IS_ZERO": {
+  "PREDICTOR_LOAD_COUNT_IS_ZERO": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times load count is zero"
   },
-  "SEER_LOAD_COUNT_OVERFLOWS": {
+  "PREDICTOR_LOAD_COUNT_OVERFLOWS": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times load count overflowed"
   },
-  "SEER_STARTUP_COUNT_IS_ZERO": {
+  "PREDICTOR_STARTUP_COUNT_IS_ZERO": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times startup count is zero"
   },
-  "SEER_STARTUP_COUNT_OVERFLOWS": {
+  "PREDICTOR_STARTUP_COUNT_OVERFLOWS": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",

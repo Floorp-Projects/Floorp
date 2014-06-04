@@ -2738,7 +2738,12 @@ Http2Session::OnWriteSegment(char *buf,
       // sake of goodness and sanity. No matter what, any future calls to
       // WriteSegments need to just discard data until we reach the end of this
       // frame.
-      ChangeDownstreamState(DISCARDING_DATA_FRAME_PADDING);
+      if (mInputFrameDataSize != mInputFrameDataRead) {
+        // Only change state if we still have padding to read. If we don't do
+        // this, we can end up hanging on frames that combine real data,
+        // padding, and END_STREAM (see bug 1019921)
+        ChangeDownstreamState(DISCARDING_DATA_FRAME_PADDING);
+      }
       uint32_t paddingRead = mPaddingLength - (mInputFrameDataSize - mInputFrameDataRead);
       LOG3(("Http2Session::OnWriteSegment %p stream 0x%X len=%d read=%d "
             "crossed from HTTP data into padding (%d of %d) countWritten=%d",
