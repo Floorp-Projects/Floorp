@@ -726,6 +726,56 @@ KEY_MAP_QT      (F34, Qt::Key_F34)
 KEY_MAP_GTK     (F35, GDK_F35 /* same as GDK_R15 */)
 KEY_MAP_QT      (F35, Qt::Key_F35)
 
+/******************************************************************************
+ * Multimedia Keys
+ ******************************************************************************/
+// MediaPlayPause
+KEY_MAP_WIN     (MediaPlayPause, VK_MEDIA_PLAY_PAUSE)
+KEY_MAP_QT      (MediaPlayPause, Qt::Key_MediaTogglePlayPause)
+KEY_MAP_ANDROID (MediaPlayPause, AKEYCODE_MEDIA_PLAY_PAUSE)
+
+// SelectMedia
+KEY_MAP_WIN     (SelectMedia, VK_LAUNCH_MEDIA_SELECT)
+
+// MediaStop
+KEY_MAP_WIN     (MediaStop, VK_MEDIA_STOP)
+KEY_MAP_GTK     (MediaStop, GDK_AudioStop)
+KEY_MAP_QT      (MediaStop, Qt::Key_MediaStop)
+KEY_MAP_ANDROID (MediaStop, AKEYCODE_MEDIA_STOP)
+
+// MediaNextTrack
+KEY_MAP_WIN     (MediaNextTrack, VK_MEDIA_NEXT_TRACK)
+KEY_MAP_GTK     (MediaNextTrack, GDK_AudioNext)
+KEY_MAP_QT      (MediaNextTrack, Qt::Key_MediaNext)
+KEY_MAP_ANDROID (MediaNextTrack, AKEYCODE_MEDIA_NEXT)
+
+// MediaPreviousTrack
+KEY_MAP_WIN     (MediaPreviousTrack, VK_MEDIA_PREV_TRACK)
+KEY_MAP_GTK     (MediaPreviousTrack, GDK_AudioPrev)
+KEY_MAP_QT      (MediaPreviousTrack, Qt::Key_MediaPrevious)
+KEY_MAP_ANDROID (MediaPreviousTrack, AKEYCODE_MEDIA_PREVIOUS)
+
+// VolumeDown
+KEY_MAP_WIN     (VolumeDown, VK_VOLUME_DOWN)
+KEY_MAP_COCOA   (VolumeDown, kVK_VolumeDown)
+KEY_MAP_GTK     (VolumeDown, GDK_AudioLowerVolume)
+KEY_MAP_QT      (VolumeDown, Qt::Key_VolumeDown)
+KEY_MAP_ANDROID (VolumeDown, AKEYCODE_VOLUME_DOWN)
+
+// VolumeUp
+KEY_MAP_WIN     (VolumeUp, VK_VOLUME_UP)
+KEY_MAP_COCOA   (VolumeUp, kVK_VolumeUp)
+KEY_MAP_GTK     (VolumeUp, GDK_AudioRaiseVolume)
+KEY_MAP_QT      (VolumeUp, Qt::Key_VolumeUp)
+KEY_MAP_ANDROID (VolumeUp, AKEYCODE_VOLUME_UP)
+
+// VolumeMute
+KEY_MAP_WIN     (VolumeMute, VK_VOLUME_MUTE)
+KEY_MAP_COCOA   (VolumeMute, kVK_Mute)
+KEY_MAP_GTK     (VolumeMute, GDK_AudioMute)
+KEY_MAP_QT      (VolumeMute, Qt::Key_VolumeMute)
+KEY_MAP_ANDROID (VolumeMute, AKEYCODE_VOLUME_MUTE)
+
 
 // Apps
 KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
@@ -947,27 +997,6 @@ KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 // AudioBassBoostUp
 KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
 
-// VolumeMute
-KEY_MAP_WIN     (VolumeMute, VK_VOLUME_MUTE)
-KEY_MAP_COCOA   (VolumeMute, kVK_Mute)
-KEY_MAP_GTK     (VolumeMute, GDK_AudioMute)
-KEY_MAP_QT      (VolumeMute, Qt::Key_VolumeMute)
-KEY_MAP_ANDROID (VolumeMute, AKEYCODE_VOLUME_MUTE)
-
-// VolumeDown
-KEY_MAP_WIN     (VolumeDown, VK_VOLUME_DOWN)
-KEY_MAP_COCOA   (VolumeDown, kVK_VolumeDown)
-KEY_MAP_GTK     (VolumeDown, GDK_AudioLowerVolume)
-KEY_MAP_QT      (VolumeDown, Qt::Key_VolumeDown)
-KEY_MAP_ANDROID (VolumeDown, AKEYCODE_VOLUME_DOWN)
-
-// VolumeUp
-KEY_MAP_WIN     (VolumeUp, VK_VOLUME_UP)
-KEY_MAP_COCOA   (VolumeUp, kVK_VolumeUp)
-KEY_MAP_GTK     (VolumeUp, GDK_AudioRaiseVolume)
-KEY_MAP_QT      (VolumeUp, Qt::Key_VolumeUp)
-KEY_MAP_ANDROID (VolumeUp, AKEYCODE_VOLUME_UP)
-
 // MediaPause
 KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
 KEY_MAP_QT      (MediaPause, Qt::Key_MediaPause)
@@ -978,37 +1007,11 @@ KEY_MAP_GTK     (MediaPlay, GDK_AudioPlay)
 KEY_MAP_QT      (MediaPlay, Qt::Key_MediaPlay)
 KEY_MAP_ANDROID (MediaPlay, AKEYCODE_MEDIA_PLAY)
 
-// MediaStop
-KEY_MAP_WIN     (MediaStop, VK_MEDIA_STOP)
-KEY_MAP_GTK     (MediaStop, GDK_AudioStop)
-KEY_MAP_QT      (MediaStop, Qt::Key_MediaStop)
-KEY_MAP_ANDROID (MediaStop, AKEYCODE_MEDIA_STOP)
-
-// MediaNextTrack
-KEY_MAP_WIN     (MediaNextTrack, VK_MEDIA_NEXT_TRACK)
-KEY_MAP_GTK     (MediaNextTrack, GDK_AudioNext)
-KEY_MAP_QT      (MediaNextTrack, Qt::Key_MediaNext)
-KEY_MAP_ANDROID (MediaNextTrack, AKEYCODE_MEDIA_NEXT)
-
-// MediaPreviousTrack
-KEY_MAP_WIN     (MediaPreviousTrack, VK_MEDIA_PREV_TRACK)
-KEY_MAP_GTK     (MediaPreviousTrack, GDK_AudioPrev)
-KEY_MAP_QT      (MediaPreviousTrack, Qt::Key_MediaPrevious)
-KEY_MAP_ANDROID (MediaPreviousTrack, AKEYCODE_MEDIA_PREVIOUS)
-
-// MediaPlayPause
-KEY_MAP_WIN     (MediaPlayPause, VK_MEDIA_PLAY_PAUSE)
-KEY_MAP_QT      (MediaPlayPause, Qt::Key_MediaTogglePlayPause)
-KEY_MAP_ANDROID (MediaPlayPause, AKEYCODE_MEDIA_PLAY_PAUSE)
-
 // MediaTrackSkip
 
 // MediaTrackStart
 
 // MediaTrackEnd
-
-// SelectMedia
-KEY_MAP_WIN     (SelectMedia, VK_LAUNCH_MEDIA_SELECT)
 
 // Blue
 KEY_MAP_GTK     (Blue, GDK_Blue)
