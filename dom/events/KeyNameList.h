@@ -20,8 +20,34 @@
 #define DEFINE_KEYNAME_WITH_SAME_NAME(aName) \
   DEFINE_KEYNAME_INTERNAL(aName, #aName)
 
+/******************************************************************************
+ * Special Key Values
+ *****************************************************************************/
 DEFINE_KEYNAME_WITH_SAME_NAME(Unidentified)
+
+/******************************************************************************
+ * Our Internal Key Values (must have "Moz" prefix)
+ *****************************************************************************/
 DEFINE_KEYNAME_INTERNAL(PrintableKey, "MozPrintableKey")
+
+/******************************************************************************
+ * Modifier Keys
+ *****************************************************************************/
+DEFINE_KEYNAME_WITH_SAME_NAME(Alt)
+DEFINE_KEYNAME_WITH_SAME_NAME(AltGraph)
+DEFINE_KEYNAME_WITH_SAME_NAME(CapsLock)
+DEFINE_KEYNAME_WITH_SAME_NAME(Control)
+DEFINE_KEYNAME_WITH_SAME_NAME(Fn)
+// DEFINE_KEYNAME_WITH_SAME_NAME(FnLock)
+// DEFINE_KEYNAME_WITH_SAME_NAME(Hyper)
+DEFINE_KEYNAME_WITH_SAME_NAME(Meta)
+DEFINE_KEYNAME_WITH_SAME_NAME(NumLock)
+DEFINE_KEYNAME_WITH_SAME_NAME(OS)
+DEFINE_KEYNAME_WITH_SAME_NAME(ScrollLock)
+DEFINE_KEYNAME_WITH_SAME_NAME(Shift)
+// DEFINE_KEYNAME_WITH_SAME_NAME(Super)
+// DEFINE_KEYNAME_WITH_SAME_NAME(Symbol)
+// DEFINE_KEYNAME_WITH_SAME_NAME(SymbolLock)
 
 DEFINE_KEYNAME_WITH_SAME_NAME(Attn)
 DEFINE_KEYNAME_WITH_SAME_NAME(Apps)
@@ -96,7 +122,6 @@ DEFINE_KEYNAME_WITH_SAME_NAME(Info)
 DEFINE_KEYNAME_WITH_SAME_NAME(Menu)
 DEFINE_KEYNAME_WITH_SAME_NAME(Pause)
 DEFINE_KEYNAME_WITH_SAME_NAME(Play)
-DEFINE_KEYNAME_WITH_SAME_NAME(ScrollLock) // IE9 users "Scroll"
 DEFINE_KEYNAME_WITH_SAME_NAME(Execute)
 DEFINE_KEYNAME_WITH_SAME_NAME(Cancel)
 DEFINE_KEYNAME_WITH_SAME_NAME(Esc)
@@ -155,18 +180,7 @@ DEFINE_KEYNAME_WITH_SAME_NAME(DeadIota)
 DEFINE_KEYNAME_WITH_SAME_NAME(DeadVoicedSound)
 DEFINE_KEYNAME_WITH_SAME_NAME(DeadSemivoicedSound)
 DEFINE_KEYNAME_WITH_SAME_NAME(Alphanumeric)
-DEFINE_KEYNAME_WITH_SAME_NAME(Alt)
-DEFINE_KEYNAME_WITH_SAME_NAME(AltGraph)
-DEFINE_KEYNAME_WITH_SAME_NAME(CapsLock)
-DEFINE_KEYNAME_WITH_SAME_NAME(Control)
-DEFINE_KEYNAME_WITH_SAME_NAME(Fn)
-DEFINE_KEYNAME_WITH_SAME_NAME(FnLock)
-DEFINE_KEYNAME_WITH_SAME_NAME(Meta)
 DEFINE_KEYNAME_WITH_SAME_NAME(Process)
-DEFINE_KEYNAME_WITH_SAME_NAME(NumLock)
-DEFINE_KEYNAME_WITH_SAME_NAME(Shift)
-DEFINE_KEYNAME_WITH_SAME_NAME(SymbolLock)
-DEFINE_KEYNAME_WITH_SAME_NAME(OS) // IE9 uses "Win"
 DEFINE_KEYNAME_WITH_SAME_NAME(Compose)
 DEFINE_KEYNAME_WITH_SAME_NAME(AllCandidates)
 DEFINE_KEYNAME_WITH_SAME_NAME(NextCandidate)
