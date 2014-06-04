@@ -119,6 +119,26 @@ SharedSurface_Gralloc::Create(GLContext* prodGL,
 }
 
 
+SharedSurface_Gralloc::SharedSurface_Gralloc(GLContext* prodGL,
+                                             const gfx::IntSize& size,
+                                             bool hasAlpha,
+                                             GLLibraryEGL* egl,
+                                             layers::ISurfaceAllocator* allocator,
+                                             layers::GrallocTextureClientOGL* textureClient,
+                                             GLuint prodTex)
+    : SharedSurface_GL(SharedSurfaceType::Gralloc,
+                       AttachmentType::GLTexture,
+                       prodGL,
+                       size,
+                       hasAlpha)
+    , mEGL(egl)
+    , mAllocator(allocator)
+    , mTextureClient(textureClient)
+    , mProdTex(prodTex)
+{
+}
+
+
 bool
 SharedSurface_Gralloc::HasExtensions(GLLibraryEGL* egl, GLContext* gl)
 {
