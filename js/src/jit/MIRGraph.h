@@ -415,6 +415,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MResumePoint *entryResumePoint() const {
         return entryResumePoint_;
     }
+    void clearEntryResumePoint() {
+        entryResumePoint_ = nullptr;
+    }
     MResumePoint *callerResumePoint() {
         return entryResumePoint()->caller();
     }
