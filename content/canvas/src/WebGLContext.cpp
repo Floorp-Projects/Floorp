@@ -895,7 +895,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
     data.mGLContext = gl;
     data.mSize = nsIntSize(mWidth, mHeight);
     data.mHasAlpha = gl->Caps().alpha;
-    data.mIsGLAlphaPremult = IsPremultAlpha();
+    data.mIsGLAlphaPremult = IsPremultAlpha() || !data.mHasAlpha;
 
     canvasLayer->Initialize(data);
     uint32_t flags = gl->Caps().alpha ? 0 : Layer::CONTENT_OPAQUE;
