@@ -149,10 +149,10 @@ fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536) random-if(And
 
 # Test premult:
 # random-if(B2G) from bug 983650
-fuzzy(1,65536) random-if(gtk2Widget) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) random-if(gtk2Widget) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
+fuzzy(1,65536) random-if(gtk2Widget) random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) random-if(gtk2Widget)                fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
 # random-if(B2G) from bug 983650
-fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536)                       random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 # Check for hanging framebuffer bindings:
                                        random-if(Android&&AndroidVersion<15)  == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png
