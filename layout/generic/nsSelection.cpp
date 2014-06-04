@@ -684,6 +684,20 @@ GetCellParent(nsINode *aDomNode)
     return nullptr;
 }
 
+nsFrameSelection::HINT
+nsFrameSelection::GetHintForPosition(nsIContent* aContent, int32_t aOffset)
+{
+  HINT hint = HINTLEFT;
+  if (!aContent || aOffset < 1) {
+    return hint;
+  }
+  const nsTextFragment* text = aContent->GetText();
+  if (text && text->CharAt(aOffset - 1) == '\n') {
+    // Attach the caret to the next line if needed
+    hint = HINTRIGHT;
+  }
+  return hint;
+}
 
 void
 nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
