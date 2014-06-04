@@ -1,0 +1,90 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=870022
+-->
+<head>
+  <title>Test for dom.image.picture.enabled (Bug 870022)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=870022">Mozilla Bug 870022</a>
+
+<!-- Tests that the picture pref is off pending bug 1017875, accounting
+     for dom.images.srcset.enabled being flipped on in the mean time. -->
+
+
+<!-- these should all load red.png (naturalWidth 1) not big.png (natural
+     width 3000) regardless of dom.images.srcset.enabled being on or off -->
+<picture>
+  <source srcset="http://example.com/tests/image/test/mochitest/big.png">
+  <img id="img1" src="http://example.com/tests/image/test/mochitest/red.png">
+</picture>
+
+<picture>
+  <source srcset="http://example.com/tests/image/test/mochitest/big.png 500w"
+          sizes="500w">
+  <img id="img2"
+       src="http://example.com/tests/image/test/mochitest/red.png"
+       srcset="http://example.com/tests/image/test/mochitest/big.png 500w"
+       sizes="50px">
+</picture>
+
+<!-- Should load red.png with srcset on, otherwise nothing -->
+<img id="img-srcset-only"
+     srcset="http://example.com/tests/image/test/mochitest/big.png 500w, http://example.com/tests/image/test/mochitest/red.png 1x"
+     sizes="50px">
+
+<!-- Should not load regardless of srcset pref -->
+<img id="img-never"
+     srcset="http://example.com/tests/image/test/mochitest/big.png 500w"
+     sizes="50px">
+
+<script type="application/javascript">
+
+  const srcsetPref  = 'dom.image.srcset.enabled';
+  const picturePref = 'dom.image.picture.enabled';
+
+  SimpleTest.waitForExplicitFinish();
+
+  var srcsetEnabled = SpecialPowers.getBoolPref(srcsetPref);
+  var pictureEnabled = SpecialPowers.getBoolPref(picturePref);
+
+  is(pictureEnabled, false, "picture should be disabled pending bug 1017875");
+
+  function runTest() {
+    var img = document.querySelector("img");
+    var source = document.querySelector("source");
+
+    is(img.sizes, undefined, "sizes should not be visible on <img>");
+    is(source.sizes, undefined, "sizes should not be visible on <source>");
+    is(source.srcset, undefined, "srcset should not be visible on <source>");
+
+    var imgSizesDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "sizes");
+    var sourceSizesDesc = Object.getOwnPropertyDescriptor(HTMLSourceElement.prototype, "sizes");
+    var sourceSrcsetDesc = Object.getOwnPropertyDescriptor(HTMLSourceElement.prototype, "srcset");
+    is(imgSizesDesc, undefined, "HTMLImageElement should know nothing of sizes");
+    is(sourceSizesDesc, undefined, "HTMLSourceElement should know nothing of sizes");
+    is(sourceSrcsetDesc, undefined, "HTMLSourceElement should know nothing of srcset");
+
+    // Make sure the test images loaded red.png, which is 1x1, not big.png
+    for (var id of [ 'img1', 'img2' ]) {
+      var testImg = document.getElementById(id);
+      is(testImg.naturalWidth, 1, "Image should have loaded small source");
+    }
+
+    var srcsetOnlyImg = document.getElementById("img-srcset-only");
+    is(srcsetOnlyImg.naturalWidth, srcsetEnabled ? 1 : 0,
+       "srcset image should only load if srcset is enabled, and never the computed width candidate");
+
+    var neverImg = document.getElementById("img-never");
+    is(neverImg.naturalWidth, 0, "Image should not have loaded");
+
+    SimpleTest.finish();
+  }
+
+</script>
+
+</body>
+</html>
