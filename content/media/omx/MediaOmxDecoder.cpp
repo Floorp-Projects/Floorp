@@ -124,10 +124,13 @@ void MediaOmxDecoder::ResumeStateMachine()
 void MediaOmxDecoder::AudioOffloadTearDown()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  PlaybackPositionChanged();
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
-  {
+
+  // mAudioOffloadPlayer can be null here if ResumeStateMachine was called
+  // just before because of some other error.
+  if (mAudioOffloadPlayer) {
     // Audio offload player sent tear down event. Fallback to state machine
+    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 }
@@ -136,10 +139,10 @@ void MediaOmxDecoder::AddOutputStream(ProcessedMediaStream* aStream,
                                       bool aFinishWhenEnded)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  PlaybackPositionChanged();
 
   if (mAudioOffloadPlayer) {
     // Offload player cannot handle MediaStream. Fallback
+    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 
@@ -149,11 +152,11 @@ void MediaOmxDecoder::AddOutputStream(ProcessedMediaStream* aStream,
 void MediaOmxDecoder::SetPlaybackRate(double aPlaybackRate)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  PlaybackPositionChanged();
 
   if (mAudioOffloadPlayer &&
       ((aPlaybackRate != 0.0) || (aPlaybackRate != 1.0))) {
     // Offload player cannot handle playback rate other than 1/0. Fallback
+    PlaybackPositionChanged();
     ResumeStateMachine();
   }
 
