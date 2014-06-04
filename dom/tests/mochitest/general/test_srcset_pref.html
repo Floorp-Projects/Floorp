@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=870021
+-->
+<head>
+  <title>Test for dom.image.srcset.enabled (Bug 870021)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="runTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=870021">Mozilla Bug 870021</a>
+
+<img src="http://example.com/tests/image/test/mochitest/blue.png"
+     srcset="http://example.com/tests/image/test/mochitest/big.png">
+
+<script type="application/javascript">
+
+  const srcsetPref = 'dom.image.srcset.enabled';
+
+  SimpleTest.waitForExplicitFinish();
+
+  is(SpecialPowers.getBoolPref(srcsetPref), false, "srcset should be disabled pending bug 1018389");
+
+  function runTest() {
+    var img = document.querySelector("img");
+    is(img.currentSrc, undefined, "currentSrc should not be visible");
+    is(img.srcset, undefined, "srcset should not be visible");
+
+    var currentSrcDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "currentSrc");
+    var srcsetDesc = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, "srcset");
+    is(currentSrcDesc, undefined, "HTMLImageElement should know nothing of currentSrc");
+    is(srcsetDesc, undefined, "HTMLImageElement should know nothing of srcset");
+
+    // Make sure the test image loaded the src image, which is 1x1, not the srcset image
+    is(img.naturalWidth, 1, "Image should have loaded small source");
+    SimpleTest.finish();
+  }
+
+</script>
+
+</body>
+</html>

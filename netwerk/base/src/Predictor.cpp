@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include "Seer.h"
+#include "Predictor.h"
 
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsICancelable.h"
@@ -16,7 +16,7 @@
 #include "nsIFile.h"
 #include "nsILoadContext.h"
 #include "nsILoadGroup.h"
-#include "nsINetworkSeerVerifier.h"
+#include "nsINetworkPredictorVerifier.h"
 #include "nsIObserverService.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -58,52 +58,57 @@ namespace net {
     } \
   } while (0)
 
-const char SEER_ENABLED_PREF[] = "network.seer.enabled";
-const char SEER_SSL_HOVER_PREF[] = "network.seer.enable-hover-on-ssl";
+const char PREDICTOR_ENABLED_PREF[] = "network.predictor.enabled";
+const char PREDICTOR_SSL_HOVER_PREF[] = "network.predictor.enable-hover-on-ssl";
 
-const char SEER_PAGE_DELTA_DAY_PREF[] = "network.seer.page-degradation.day";
-const int SEER_PAGE_DELTA_DAY_DEFAULT = 0;
-const char SEER_PAGE_DELTA_WEEK_PREF[] = "network.seer.page-degradation.week";
-const int SEER_PAGE_DELTA_WEEK_DEFAULT = 5;
-const char SEER_PAGE_DELTA_MONTH_PREF[] = "network.seer.page-degradation.month";
-const int SEER_PAGE_DELTA_MONTH_DEFAULT = 10;
-const char SEER_PAGE_DELTA_YEAR_PREF[] = "network.seer.page-degradation.year";
-const int SEER_PAGE_DELTA_YEAR_DEFAULT = 25;
-const char SEER_PAGE_DELTA_MAX_PREF[] = "network.seer.page-degradation.max";
-const int SEER_PAGE_DELTA_MAX_DEFAULT = 50;
-const char SEER_SUB_DELTA_DAY_PREF[] =
-  "network.seer.subresource-degradation.day";
-const int SEER_SUB_DELTA_DAY_DEFAULT = 1;
-const char SEER_SUB_DELTA_WEEK_PREF[] =
-  "network.seer.subresource-degradation.week";
-const int SEER_SUB_DELTA_WEEK_DEFAULT = 10;
-const char SEER_SUB_DELTA_MONTH_PREF[] =
-  "network.seer.subresource-degradation.month";
-const int SEER_SUB_DELTA_MONTH_DEFAULT = 25;
-const char SEER_SUB_DELTA_YEAR_PREF[] =
-  "network.seer.subresource-degradation.year";
-const int SEER_SUB_DELTA_YEAR_DEFAULT = 50;
-const char SEER_SUB_DELTA_MAX_PREF[] =
-  "network.seer.subresource-degradation.max";
-const int SEER_SUB_DELTA_MAX_DEFAULT = 100;
+const char PREDICTOR_PAGE_DELTA_DAY_PREF[] =
+  "network.predictor.page-degradation.day";
+const int PREDICTOR_PAGE_DELTA_DAY_DEFAULT = 0;
+const char PREDICTOR_PAGE_DELTA_WEEK_PREF[] =
+  "network.predictor.page-degradation.week";
+const int PREDICTOR_PAGE_DELTA_WEEK_DEFAULT = 5;
+const char PREDICTOR_PAGE_DELTA_MONTH_PREF[] =
+  "network.predictor.page-degradation.month";
+const int PREDICTOR_PAGE_DELTA_MONTH_DEFAULT = 10;
+const char PREDICTOR_PAGE_DELTA_YEAR_PREF[] =
+  "network.predictor.page-degradation.year";
+const int PREDICTOR_PAGE_DELTA_YEAR_DEFAULT = 25;
+const char PREDICTOR_PAGE_DELTA_MAX_PREF[] =
+  "network.predictor.page-degradation.max";
+const int PREDICTOR_PAGE_DELTA_MAX_DEFAULT = 50;
+const char PREDICTOR_SUB_DELTA_DAY_PREF[] =
+  "network.predictor.subresource-degradation.day";
+const int PREDICTOR_SUB_DELTA_DAY_DEFAULT = 1;
+const char PREDICTOR_SUB_DELTA_WEEK_PREF[] =
+  "network.predictor.subresource-degradation.week";
+const int PREDICTOR_SUB_DELTA_WEEK_DEFAULT = 10;
+const char PREDICTOR_SUB_DELTA_MONTH_PREF[] =
+  "network.predictor.subresource-degradation.month";
+const int PREDICTOR_SUB_DELTA_MONTH_DEFAULT = 25;
+const char PREDICTOR_SUB_DELTA_YEAR_PREF[] =
+  "network.predictor.subresource-degradation.year";
+const int PREDICTOR_SUB_DELTA_YEAR_DEFAULT = 50;
+const char PREDICTOR_SUB_DELTA_MAX_PREF[] =
+  "network.predictor.subresource-degradation.max";
+const int PREDICTOR_SUB_DELTA_MAX_DEFAULT = 100;
 
-const char SEER_PRECONNECT_MIN_PREF[] =
-  "network.seer.preconnect-min-confidence";
+const char PREDICTOR_PRECONNECT_MIN_PREF[] =
+  "network.predictor.preconnect-min-confidence";
 const int PRECONNECT_MIN_DEFAULT = 90;
-const char SEER_PRERESOLVE_MIN_PREF[] =
-  "network.seer.preresolve-min-confidence";
+const char PREDICTOR_PRERESOLVE_MIN_PREF[] =
+  "network.predictor.preresolve-min-confidence";
 const int PRERESOLVE_MIN_DEFAULT = 60;
-const char SEER_REDIRECT_LIKELY_PREF[] =
-  "network.seer.redirect-likely-confidence";
+const char PREDICTOR_REDIRECT_LIKELY_PREF[] =
+  "network.predictor.redirect-likely-confidence";
 const int REDIRECT_LIKELY_DEFAULT = 75;
 
-const char SEER_MAX_QUEUE_SIZE_PREF[] = "network.seer.max-queue-size";
-const uint32_t SEER_MAX_QUEUE_SIZE_DEFAULT = 50;
+const char PREDICTOR_MAX_QUEUE_SIZE_PREF[] = "network.predictor.max-queue-size";
+const uint32_t PREDICTOR_MAX_QUEUE_SIZE_DEFAULT = 50;
 
-const char SEER_MAX_DB_SIZE_PREF[] = "network.seer.max-db-size";
-const int32_t SEER_MAX_DB_SIZE_DEFAULT_BYTES = 150 * 1024 * 1024;
-const char SEER_PRESERVE_PERCENTAGE_PREF[] = "network.seer.preserve";
-const int32_t SEER_PRESERVE_PERCENTAGE_DEFAULT = 80;
+const char PREDICTOR_MAX_DB_SIZE_PREF[] = "network.predictor.max-db-size";
+const int32_t PREDICTOR_MAX_DB_SIZE_DEFAULT_BYTES = 150 * 1024 * 1024;
+const char PREDICTOR_PRESERVE_PERCENTAGE_PREF[] = "network.predictor.preserve";
+const int32_t PREDICTOR_PRESERVE_PERCENTAGE_DEFAULT = 80;
 
 // All these time values are in usec
 const long long ONE_DAY = 86400LL * 1000000LL;
@@ -114,120 +119,120 @@ const long long ONE_YEAR = 365LL * ONE_DAY;
 const long STARTUP_WINDOW = 5L * 60L * 1000000L; // 5min
 
 // Version for the database schema
-static const int32_t SEER_SCHEMA_VERSION = 1;
+static const int32_t PREDICTOR_SCHEMA_VERSION = 1;
 
-struct SeerTelemetryAccumulators {
-  Telemetry::AutoCounter<Telemetry::SEER_PREDICT_ATTEMPTS> mPredictAttempts;
-  Telemetry::AutoCounter<Telemetry::SEER_LEARN_ATTEMPTS> mLearnAttempts;
-  Telemetry::AutoCounter<Telemetry::SEER_PREDICT_FULL_QUEUE> mPredictFullQueue;
-  Telemetry::AutoCounter<Telemetry::SEER_LEARN_FULL_QUEUE> mLearnFullQueue;
-  Telemetry::AutoCounter<Telemetry::SEER_TOTAL_PREDICTIONS> mTotalPredictions;
-  Telemetry::AutoCounter<Telemetry::SEER_TOTAL_PRECONNECTS> mTotalPreconnects;
-  Telemetry::AutoCounter<Telemetry::SEER_TOTAL_PRERESOLVES> mTotalPreresolves;
-  Telemetry::AutoCounter<Telemetry::SEER_PREDICTIONS_CALCULATED> mPredictionsCalculated;
-  Telemetry::AutoCounter<Telemetry::SEER_LOAD_COUNT_IS_ZERO> mLoadCountZeroes;
-  Telemetry::AutoCounter<Telemetry::SEER_LOAD_COUNT_OVERFLOWS> mLoadCountOverflows;
-  Telemetry::AutoCounter<Telemetry::SEER_STARTUP_COUNT_IS_ZERO> mStartupCountZeroes;
-  Telemetry::AutoCounter<Telemetry::SEER_STARTUP_COUNT_OVERFLOWS> mStartupCountOverflows;
+struct PredictorTelemetryAccumulators {
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_PREDICT_ATTEMPTS> mPredictAttempts;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_LEARN_ATTEMPTS> mLearnAttempts;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_PREDICT_FULL_QUEUE> mPredictFullQueue;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_LEARN_FULL_QUEUE> mLearnFullQueue;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PREDICTIONS> mTotalPredictions;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRECONNECTS> mTotalPreconnects;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_TOTAL_PRERESOLVES> mTotalPreresolves;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_PREDICTIONS_CALCULATED> mPredictionsCalculated;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_LOAD_COUNT_IS_ZERO> mLoadCountZeroes;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_LOAD_COUNT_OVERFLOWS> mLoadCountOverflows;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_STARTUP_COUNT_IS_ZERO> mStartupCountZeroes;
+  Telemetry::AutoCounter<Telemetry::PREDICTOR_STARTUP_COUNT_OVERFLOWS> mStartupCountOverflows;
 };
 
 // Listener for the speculative DNS requests we'll fire off, which just ignores
 // the result (since we're just trying to warm the cache). This also exists to
-// reduce round-trips to the main thread, by being something threadsafe the Seer
-// can use.
+// reduce round-trips to the main thread, by being something threadsafe the
+// Predictor can use.
 
-class SeerDNSListener : public nsIDNSListener
+class PredictorDNSListener : public nsIDNSListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIDNSLISTENER
 
-  SeerDNSListener()
+  PredictorDNSListener()
   { }
 
-  virtual ~SeerDNSListener()
+  virtual ~PredictorDNSListener()
   { }
 };
 
-NS_IMPL_ISUPPORTS(SeerDNSListener, nsIDNSListener);
+NS_IMPL_ISUPPORTS(PredictorDNSListener, nsIDNSListener);
 
 NS_IMETHODIMP
-SeerDNSListener::OnLookupComplete(nsICancelable *request,
-                                  nsIDNSRecord *rec,
-                                  nsresult status)
+PredictorDNSListener::OnLookupComplete(nsICancelable *request,
+                                       nsIDNSRecord *rec,
+                                       nsresult status)
 {
   return NS_OK;
 }
 
-// Are you ready for the fun part? Because here comes the fun part. The seer,
-// which will do awesome stuff as you browse to make your browsing experience
-// faster.
+// Are you ready for the fun part? Because here comes the fun part. The
+// predictor, which will do awesome stuff as you browse to make your
+// browsing experience faster.
 
-static Seer *gSeer = nullptr;
+static Predictor *gPredictor = nullptr;
 
 #if defined(PR_LOGGING)
-static PRLogModuleInfo *gSeerLog = nullptr;
-#define SEER_LOG(args) PR_LOG(gSeerLog, 4, args)
+static PRLogModuleInfo *gPredictorLog = nullptr;
+#define PREDICTOR_LOG(args) PR_LOG(gPredictorLog, 4, args)
 #else
-#define SEER_LOG(args)
+#define PREDICTOR_LOG(args)
 #endif
 
-NS_IMPL_ISUPPORTS(Seer,
-                  nsINetworkSeer,
+NS_IMPL_ISUPPORTS(Predictor,
+                  nsINetworkPredictor,
                   nsIObserver,
                   nsISpeculativeConnectionOverrider,
                   nsIInterfaceRequestor)
 
-Seer::Seer()
+Predictor::Predictor()
   :mInitialized(false)
   ,mEnabled(true)
   ,mEnableHoverOnSSL(false)
-  ,mPageDegradationDay(SEER_PAGE_DELTA_DAY_DEFAULT)
-  ,mPageDegradationWeek(SEER_PAGE_DELTA_WEEK_DEFAULT)
-  ,mPageDegradationMonth(SEER_PAGE_DELTA_MONTH_DEFAULT)
-  ,mPageDegradationYear(SEER_PAGE_DELTA_YEAR_DEFAULT)
-  ,mPageDegradationMax(SEER_PAGE_DELTA_MAX_DEFAULT)
-  ,mSubresourceDegradationDay(SEER_SUB_DELTA_DAY_DEFAULT)
-  ,mSubresourceDegradationWeek(SEER_SUB_DELTA_WEEK_DEFAULT)
-  ,mSubresourceDegradationMonth(SEER_SUB_DELTA_MONTH_DEFAULT)
-  ,mSubresourceDegradationYear(SEER_SUB_DELTA_YEAR_DEFAULT)
-  ,mSubresourceDegradationMax(SEER_SUB_DELTA_MAX_DEFAULT)
+  ,mPageDegradationDay(PREDICTOR_PAGE_DELTA_DAY_DEFAULT)
+  ,mPageDegradationWeek(PREDICTOR_PAGE_DELTA_WEEK_DEFAULT)
+  ,mPageDegradationMonth(PREDICTOR_PAGE_DELTA_MONTH_DEFAULT)
+  ,mPageDegradationYear(PREDICTOR_PAGE_DELTA_YEAR_DEFAULT)
+  ,mPageDegradationMax(PREDICTOR_PAGE_DELTA_MAX_DEFAULT)
+  ,mSubresourceDegradationDay(PREDICTOR_SUB_DELTA_DAY_DEFAULT)
+  ,mSubresourceDegradationWeek(PREDICTOR_SUB_DELTA_WEEK_DEFAULT)
+  ,mSubresourceDegradationMonth(PREDICTOR_SUB_DELTA_MONTH_DEFAULT)
+  ,mSubresourceDegradationYear(PREDICTOR_SUB_DELTA_YEAR_DEFAULT)
+  ,mSubresourceDegradationMax(PREDICTOR_SUB_DELTA_MAX_DEFAULT)
   ,mPreconnectMinConfidence(PRECONNECT_MIN_DEFAULT)
   ,mPreresolveMinConfidence(PRERESOLVE_MIN_DEFAULT)
   ,mRedirectLikelyConfidence(REDIRECT_LIKELY_DEFAULT)
-  ,mMaxQueueSize(SEER_MAX_QUEUE_SIZE_DEFAULT)
+  ,mMaxQueueSize(PREDICTOR_MAX_QUEUE_SIZE_DEFAULT)
   ,mStatements(mDB)
   ,mLastStartupTime(0)
   ,mStartupCount(0)
   ,mQueueSize(0)
-  ,mQueueSizeLock("Seer.mQueueSizeLock")
+  ,mQueueSizeLock("Predictor.mQueueSizeLock")
   ,mCleanupScheduled(false)
-  ,mMaxDBSize(SEER_MAX_DB_SIZE_DEFAULT_BYTES)
-  ,mPreservePercentage(SEER_PRESERVE_PERCENTAGE_DEFAULT)
+  ,mMaxDBSize(PREDICTOR_MAX_DB_SIZE_DEFAULT_BYTES)
+  ,mPreservePercentage(PREDICTOR_PRESERVE_PERCENTAGE_DEFAULT)
   ,mLastCleanupTime(0)
 {
 #if defined(PR_LOGGING)
-  gSeerLog = PR_NewLogModule("NetworkSeer");
+  gPredictorLog = PR_NewLogModule("NetworkPredictor");
 #endif
 
-  MOZ_ASSERT(!gSeer, "multiple Seer instances!");
-  gSeer = this;
+  MOZ_ASSERT(!gPredictor, "multiple Predictor instances!");
+  gPredictor = this;
 }
 
-Seer::~Seer()
+Predictor::~Predictor()
 {
   if (mInitialized)
     Shutdown();
 
   RemoveObserver();
 
-  gSeer = nullptr;
+  gPredictor = nullptr;
 }
 
-// Seer::nsIObserver
+// Predictor::nsIObserver
 
 nsresult
-Seer::InstallObserver()
+Predictor::InstallObserver()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Installing observer off main thread");
 
@@ -246,60 +251,65 @@ Seer::InstallObserver()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  Preferences::AddBoolVarCache(&mEnabled, SEER_ENABLED_PREF, true);
-  Preferences::AddBoolVarCache(&mEnableHoverOnSSL, SEER_SSL_HOVER_PREF, false);
-  Preferences::AddIntVarCache(&mPageDegradationDay, SEER_PAGE_DELTA_DAY_PREF,
-                              SEER_PAGE_DELTA_DAY_DEFAULT);
-  Preferences::AddIntVarCache(&mPageDegradationWeek, SEER_PAGE_DELTA_WEEK_PREF,
-                              SEER_PAGE_DELTA_WEEK_DEFAULT);
+  Preferences::AddBoolVarCache(&mEnabled, PREDICTOR_ENABLED_PREF, true);
+  Preferences::AddBoolVarCache(&mEnableHoverOnSSL,
+                               PREDICTOR_SSL_HOVER_PREF, false);
+  Preferences::AddIntVarCache(&mPageDegradationDay,
+                              PREDICTOR_PAGE_DELTA_DAY_PREF,
+                              PREDICTOR_PAGE_DELTA_DAY_DEFAULT);
+  Preferences::AddIntVarCache(&mPageDegradationWeek,
+                              PREDICTOR_PAGE_DELTA_WEEK_PREF,
+                              PREDICTOR_PAGE_DELTA_WEEK_DEFAULT);
   Preferences::AddIntVarCache(&mPageDegradationMonth,
-                              SEER_PAGE_DELTA_MONTH_PREF,
-                              SEER_PAGE_DELTA_MONTH_DEFAULT);
-  Preferences::AddIntVarCache(&mPageDegradationYear, SEER_PAGE_DELTA_YEAR_PREF,
-                              SEER_PAGE_DELTA_YEAR_DEFAULT);
-  Preferences::AddIntVarCache(&mPageDegradationMax, SEER_PAGE_DELTA_MAX_PREF,
-                              SEER_PAGE_DELTA_MAX_DEFAULT);
+                              PREDICTOR_PAGE_DELTA_MONTH_PREF,
+                              PREDICTOR_PAGE_DELTA_MONTH_DEFAULT);
+  Preferences::AddIntVarCache(&mPageDegradationYear,
+                              PREDICTOR_PAGE_DELTA_YEAR_PREF,
+                              PREDICTOR_PAGE_DELTA_YEAR_DEFAULT);
+  Preferences::AddIntVarCache(&mPageDegradationMax,
+                              PREDICTOR_PAGE_DELTA_MAX_PREF,
+                              PREDICTOR_PAGE_DELTA_MAX_DEFAULT);
 
   Preferences::AddIntVarCache(&mSubresourceDegradationDay,
-                              SEER_SUB_DELTA_DAY_PREF,
-                              SEER_SUB_DELTA_DAY_DEFAULT);
+                              PREDICTOR_SUB_DELTA_DAY_PREF,
+                              PREDICTOR_SUB_DELTA_DAY_DEFAULT);
   Preferences::AddIntVarCache(&mSubresourceDegradationWeek,
-                              SEER_SUB_DELTA_WEEK_PREF,
-                              SEER_SUB_DELTA_WEEK_DEFAULT);
+                              PREDICTOR_SUB_DELTA_WEEK_PREF,
+                              PREDICTOR_SUB_DELTA_WEEK_DEFAULT);
   Preferences::AddIntVarCache(&mSubresourceDegradationMonth,
-                              SEER_SUB_DELTA_MONTH_PREF,
-                              SEER_SUB_DELTA_MONTH_DEFAULT);
+                              PREDICTOR_SUB_DELTA_MONTH_PREF,
+                              PREDICTOR_SUB_DELTA_MONTH_DEFAULT);
   Preferences::AddIntVarCache(&mSubresourceDegradationYear,
-                              SEER_SUB_DELTA_YEAR_PREF,
-                              SEER_SUB_DELTA_YEAR_DEFAULT);
+                              PREDICTOR_SUB_DELTA_YEAR_PREF,
+                              PREDICTOR_SUB_DELTA_YEAR_DEFAULT);
   Preferences::AddIntVarCache(&mSubresourceDegradationMax,
-                              SEER_SUB_DELTA_MAX_PREF,
-                              SEER_SUB_DELTA_MAX_DEFAULT);
+                              PREDICTOR_SUB_DELTA_MAX_PREF,
+                              PREDICTOR_SUB_DELTA_MAX_DEFAULT);
 
   Preferences::AddIntVarCache(&mPreconnectMinConfidence,
-                              SEER_PRECONNECT_MIN_PREF,
+                              PREDICTOR_PRECONNECT_MIN_PREF,
                               PRECONNECT_MIN_DEFAULT);
   Preferences::AddIntVarCache(&mPreresolveMinConfidence,
-                              SEER_PRERESOLVE_MIN_PREF,
+                              PREDICTOR_PRERESOLVE_MIN_PREF,
                               PRERESOLVE_MIN_DEFAULT);
   Preferences::AddIntVarCache(&mRedirectLikelyConfidence,
-                              SEER_REDIRECT_LIKELY_PREF,
+                              PREDICTOR_REDIRECT_LIKELY_PREF,
                               REDIRECT_LIKELY_DEFAULT);
 
-  Preferences::AddIntVarCache(&mMaxQueueSize, SEER_MAX_QUEUE_SIZE_PREF,
-                              SEER_MAX_QUEUE_SIZE_DEFAULT);
+  Preferences::AddIntVarCache(&mMaxQueueSize, PREDICTOR_MAX_QUEUE_SIZE_PREF,
+                              PREDICTOR_MAX_QUEUE_SIZE_DEFAULT);
 
-  Preferences::AddIntVarCache(&mMaxDBSize, SEER_MAX_DB_SIZE_PREF,
-                              SEER_MAX_DB_SIZE_DEFAULT_BYTES);
+  Preferences::AddIntVarCache(&mMaxDBSize, PREDICTOR_MAX_DB_SIZE_PREF,
+                              PREDICTOR_MAX_DB_SIZE_DEFAULT_BYTES);
   Preferences::AddIntVarCache(&mPreservePercentage,
-                              SEER_PRESERVE_PERCENTAGE_PREF,
-                              SEER_PRESERVE_PERCENTAGE_DEFAULT);
+                              PREDICTOR_PRESERVE_PERCENTAGE_PREF,
+                              PREDICTOR_PRESERVE_PERCENTAGE_DEFAULT);
 
   return rv;
 }
 
 void
-Seer::RemoveObserver()
+Predictor::RemoveObserver()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Removing observer off main thread");
 
@@ -312,52 +322,55 @@ Seer::RemoveObserver()
 
 static const uint32_t COMMIT_TIMER_DELTA_MS = 5 * 1000;
 
-class SeerCommitTimerInitEvent : public nsRunnable
+class PredictorCommitTimerInitEvent : public nsRunnable
 {
 public:
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     nsresult rv = NS_OK;
 
-    if (!gSeer->mCommitTimer) {
-      gSeer->mCommitTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+    if (!gPredictor->mCommitTimer) {
+      gPredictor->mCommitTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
     } else {
-      gSeer->mCommitTimer->Cancel();
+      gPredictor->mCommitTimer->Cancel();
     }
     if (NS_SUCCEEDED(rv)) {
-      gSeer->mCommitTimer->Init(gSeer, COMMIT_TIMER_DELTA_MS,
-                                nsITimer::TYPE_ONE_SHOT);
+      gPredictor->mCommitTimer->Init(gPredictor, COMMIT_TIMER_DELTA_MS,
+                                     nsITimer::TYPE_ONE_SHOT);
     }
 
     return NS_OK;
   }
 };
 
-class SeerNewTransactionEvent : public nsRunnable
+class PredictorNewTransactionEvent : public nsRunnable
 {
   NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
-    gSeer->CommitTransaction();
-    gSeer->BeginTransaction();
-    gSeer->MaybeScheduleCleanup();
-    nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
+    gPredictor->CommitTransaction();
+    gPredictor->BeginTransaction();
+    gPredictor->MaybeScheduleCleanup();
+    nsRefPtr<PredictorCommitTimerInitEvent> event =
+      new PredictorCommitTimerInitEvent();
     NS_DispatchToMainThread(event);
     return NS_OK;
   }
 };
 
 NS_IMETHODIMP
-Seer::Observe(nsISupports *subject, const char *topic,
-              const char16_t *data_unicode)
+Predictor::Observe(nsISupports *subject, const char *topic,
+                   const char16_t *data_unicode)
 {
   nsresult rv = NS_OK;
-  MOZ_ASSERT(NS_IsMainThread(), "Seer observing something off main thread!");
+  MOZ_ASSERT(NS_IsMainThread(),
+             "Predictor observing something off main thread!");
 
   if (!strcmp(NS_XPCOM_SHUTDOWN_OBSERVER_ID, topic)) {
     Shutdown();
   } else if (!strcmp(NS_TIMER_CALLBACK_TOPIC, topic)) {
     if (mInitialized) { // Can't access io thread if we're not initialized!
-      nsRefPtr<SeerNewTransactionEvent> event = new SeerNewTransactionEvent();
+      nsRefPtr<PredictorNewTransactionEvent> event =
+        new PredictorNewTransactionEvent();
       mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
     }
   }
@@ -365,40 +378,40 @@ Seer::Observe(nsISupports *subject, const char *topic,
   return rv;
 }
 
-// Seer::nsISpeculativeConnectionOverrider
+// Predictor::nsISpeculativeConnectionOverrider
 
 NS_IMETHODIMP
-Seer::GetIgnoreIdle(bool *ignoreIdle)
+Predictor::GetIgnoreIdle(bool *ignoreIdle)
 {
   *ignoreIdle = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Seer::GetIgnorePossibleSpdyConnections(bool *ignorePossibleSpdyConnections)
+Predictor::GetIgnorePossibleSpdyConnections(bool *ignorePossibleSpdyConnections)
 {
   *ignorePossibleSpdyConnections = true;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Seer::GetParallelSpeculativeConnectLimit(
+Predictor::GetParallelSpeculativeConnectLimit(
     uint32_t *parallelSpeculativeConnectLimit)
 {
   *parallelSpeculativeConnectLimit = 6;
   return NS_OK;
 }
 
-// Seer::nsIInterfaceRequestor
+// Predictor::nsIInterfaceRequestor
 
 NS_IMETHODIMP
-Seer::GetInterface(const nsIID &iid, void **result)
+Predictor::GetInterface(const nsIID &iid, void **result)
 {
   return QueryInterface(iid, result);
 }
 
 #ifdef MOZ_NUWA_PROCESS
-class NuwaMarkSeerThreadRunner : public nsRunnable
+class NuwaMarkPredictorThreadRunner : public nsRunnable
 {
   NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
@@ -412,22 +425,22 @@ class NuwaMarkSeerThreadRunner : public nsRunnable
 };
 #endif
 
-// Seer::nsINetworkSeer
+// Predictor::nsINetworkPredictor
 
 nsresult
-Seer::Init()
+Predictor::Init()
 {
   if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "Seer::Init called off the main thread!");
+    MOZ_ASSERT(false, "Predictor::Init called off the main thread!");
     return NS_ERROR_UNEXPECTED;
   }
 
   nsresult rv = NS_OK;
 
 #if defined(ANDROID) && !defined(MOZ_WIDGET_GONK)
-  // This is an ugly hack to disable the seer on android < 2.3, as it doesn't
-  // play nicely with those android versions, at least on our infra. Causes
-  // timeouts in reftests. See bug 881804 comment 86.
+  // This is an ugly hack to disable the predictor on android < 2.3, as it
+  // doesn't play nicely with those android versions, at least on our infra.
+  // Causes timeouts in reftests. See bug 881804 comment 86.
   nsCOMPtr<nsIPropertyBag2> infoService =
     do_GetService("@mozilla.org/system-info;1");
   if (infoService) {
@@ -442,20 +455,20 @@ Seer::Init()
 
   mStartupTime = PR_Now();
 
-  mAccumulators = new SeerTelemetryAccumulators();
+  mAccumulators = new PredictorTelemetryAccumulators();
 
   rv = InstallObserver();
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!mDNSListener) {
-    mDNSListener = new SeerDNSListener();
+    mDNSListener = new PredictorDNSListener();
   }
 
-  rv = NS_NewNamedThread("Network Seer", getter_AddRefs(mIOThread));
+  rv = NS_NewNamedThread("Net Predictor", getter_AddRefs(mIOThread));
   NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef MOZ_NUWA_PROCESS
-  nsCOMPtr<nsIRunnable> runner = new NuwaMarkSeerThreadRunner();
+  nsCOMPtr<nsIRunnable> runner = new NuwaMarkPredictorThreadRunner();
   mIOThread->Dispatch(runner, NS_DISPATCH_NORMAL);
 #endif
 
@@ -480,7 +493,7 @@ Seer::Init()
 }
 
 void
-Seer::CheckForAndDeleteOldDBFile()
+Predictor::CheckForAndDeleteOldDBFile()
 {
   nsCOMPtr<nsIFile> oldDBFile;
   nsresult rv = mDBFile->GetParent(getter_AddRefs(oldDBFile));
@@ -503,9 +516,10 @@ Seer::CheckForAndDeleteOldDBFile()
 // all an optimization, anyway.
 
 nsresult
-Seer::EnsureInitStorage()
+Predictor::EnsureInitStorage()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "Initializing seer storage on main thread");
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "Initializing predictor storage on main thread");
 
   if (mDB) {
     return NS_OK;
@@ -533,14 +547,14 @@ Seer::EnsureInitStorage()
 
   // A table to make sure we're working with the database layout we expect
   rv = mDB->ExecuteSimpleSQL(
-      NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS moz_seer_version (\n"
+      NS_LITERAL_CSTRING("CREATE TABLE IF NOT EXISTS moz_predictor_version (\n"
                          "  version INTEGER NOT NULL\n"
                          ");\n"));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIStorageStatement> stmt;
   rv = mDB->CreateStatement(
-      NS_LITERAL_CSTRING("SELECT version FROM moz_seer_version;\n"),
+      NS_LITERAL_CSTRING("SELECT version FROM moz_predictor_version;\n"),
       getter_AddRefs(stmt));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -554,21 +568,21 @@ Seer::EnsureInitStorage()
 
     // This is what we do while we only have one schema version. Later, we'll
     // have to change this to actually upgrade things as appropriate.
-    MOZ_ASSERT(currentVersion == SEER_SCHEMA_VERSION,
-               "Invalid seer schema version!");
-    if (currentVersion != SEER_SCHEMA_VERSION) {
+    MOZ_ASSERT(currentVersion == PREDICTOR_SCHEMA_VERSION,
+               "Invalid predictor schema version!");
+    if (currentVersion != PREDICTOR_SCHEMA_VERSION) {
       return NS_ERROR_UNEXPECTED;
     }
   } else {
     stmt = nullptr;
     rv = mDB->CreateStatement(
-        NS_LITERAL_CSTRING("INSERT INTO moz_seer_version (version) VALUES "
-                           "(:seer_version);"),
+        NS_LITERAL_CSTRING("INSERT INTO moz_predictor_version (version) VALUES "
+                           "(:predictor_version);"),
         getter_AddRefs(stmt));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("seer_version"),
-                               SEER_SCHEMA_VERSION);
+    rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("predictor_version"),
+                               PREDICTOR_SCHEMA_VERSION);
     NS_ENSURE_SUCCESS(rv, rv);
 
     stmt->Execute();
@@ -660,7 +674,7 @@ Seer::EnsureInitStorage()
 
     int32_t newStartupCount = mStartupCount + 1;
     if (newStartupCount <= 0) {
-      SEER_LOG(("Seer::EnsureInitStorage startup count overflow\n"));
+      PREDICTOR_LOG(("Predictor::EnsureInitStorage startup count overflow\n"));
       newStartupCount = mStartupCount;
       ++mAccumulators->mStartupCountOverflows;
     }
@@ -787,22 +801,24 @@ Seer::EnsureInitStorage()
   CommitTransaction();
   BeginTransaction();
 
-  nsRefPtr<SeerCommitTimerInitEvent> event = new SeerCommitTimerInitEvent();
+  nsRefPtr<PredictorCommitTimerInitEvent> event =
+    new PredictorCommitTimerInitEvent();
   NS_DispatchToMainThread(event);
 
   return NS_OK;
 }
 
-class SeerThreadShutdownRunner : public nsRunnable
+class PredictorThreadShutdownRunner : public nsRunnable
 {
 public:
-  SeerThreadShutdownRunner(nsIThread *ioThread)
+  PredictorThreadShutdownRunner(nsIThread *ioThread)
     :mIOThread(ioThread)
   { }
 
   NS_IMETHODIMP Run() MOZ_OVERRIDE
   {
-    MOZ_ASSERT(NS_IsMainThread(), "Shut down seer io thread off main thread");
+    MOZ_ASSERT(NS_IsMainThread(),
+               "Shut down predictor io thread off main thread");
     mIOThread->Shutdown();
     return NS_OK;
   }
@@ -811,13 +827,13 @@ private:
   nsCOMPtr<nsIThread> mIOThread;
 };
 
-class SeerDBShutdownRunner : public nsRunnable
+class PredictorDBShutdownRunner : public nsRunnable
 {
 public:
-  SeerDBShutdownRunner(nsIThread *ioThread, nsINetworkSeer *seer)
+  PredictorDBShutdownRunner(nsIThread *ioThread, nsINetworkPredictor *predictor)
     :mIOThread(ioThread)
   {
-    mSeer = new nsMainThreadPtrHolder<nsINetworkSeer>(seer);
+    mPredictor = new nsMainThreadPtrHolder<nsINetworkPredictor>(predictor);
   }
 
   NS_IMETHODIMP Run() MOZ_OVERRIDE
@@ -825,14 +841,14 @@ public:
     MOZ_ASSERT(!NS_IsMainThread(), "Shutting down DB on main thread");
 
     // Ensure everything is written to disk before we shut down the db
-    gSeer->CommitTransaction();
+    gPredictor->CommitTransaction();
 
-    gSeer->mStatements.FinalizeStatements();
-    gSeer->mDB->Close();
-    gSeer->mDB = nullptr;
+    gPredictor->mStatements.FinalizeStatements();
+    gPredictor->mDB->Close();
+    gPredictor->mDB = nullptr;
 
-    nsRefPtr<SeerThreadShutdownRunner> runner =
-      new SeerThreadShutdownRunner(mIOThread);
+    nsRefPtr<PredictorThreadShutdownRunner> runner =
+      new PredictorThreadShutdownRunner(mIOThread);
     NS_DispatchToMainThread(runner);
 
     return NS_OK;
@@ -841,15 +857,15 @@ public:
 private:
   nsCOMPtr<nsIThread> mIOThread;
 
-  // Death grip to keep seer alive while we cleanly close its DB connection
-  nsMainThreadPtrHandle<nsINetworkSeer> mSeer;
+  // Death grip to keep predictor alive while we cleanly close its DB connection
+  nsMainThreadPtrHandle<nsINetworkPredictor> mPredictor;
 };
 
 void
-Seer::Shutdown()
+Predictor::Shutdown()
 {
   if (!NS_IsMainThread()) {
-    MOZ_ASSERT(false, "Seer::Shutdown called off the main thread!");
+    MOZ_ASSERT(false, "Predictor::Shutdown called off the main thread!");
     return;
   }
 
@@ -861,20 +877,20 @@ Seer::Shutdown()
 
   if (mIOThread) {
     if (mDB) {
-      nsRefPtr<SeerDBShutdownRunner> runner =
-        new SeerDBShutdownRunner(mIOThread, this);
+      nsRefPtr<PredictorDBShutdownRunner> runner =
+        new PredictorDBShutdownRunner(mIOThread, this);
       mIOThread->Dispatch(runner, NS_DISPATCH_NORMAL);
     } else {
-      nsRefPtr<SeerThreadShutdownRunner> runner =
-        new SeerThreadShutdownRunner(mIOThread);
+      nsRefPtr<PredictorThreadShutdownRunner> runner =
+        new PredictorThreadShutdownRunner(mIOThread);
       NS_DispatchToMainThread(runner);
     }
   }
 }
 
 nsresult
-Seer::Create(nsISupports *aOuter, const nsIID& aIID,
-             void **aResult)
+Predictor::Create(nsISupports *aOuter, const nsIID& aIID,
+                  void **aResult)
 {
   nsresult rv;
 
@@ -882,11 +898,11 @@ Seer::Create(nsISupports *aOuter, const nsIID& aIID,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  nsRefPtr<Seer> svc = new Seer();
+  nsRefPtr<Predictor> svc = new Predictor();
 
   rv = svc->Init();
   if (NS_FAILED(rv)) {
-    SEER_LOG(("Failed to initialize seer, seer will be a noop"));
+    PREDICTOR_LOG(("Failed to initialize predictor, predictor will be a noop"));
   }
 
   // We treat init failure the same as the service being disabled, since this
@@ -927,13 +943,13 @@ ExtractOrigin(nsIURI *uri, nsAutoCString &s)
 
 // An event to do the work for a prediction that needs to hit the sqlite
 // database. These events should be created on the main thread, and run on
-// the seer thread.
-class SeerPredictionEvent : public nsRunnable
+// the predictor thread.
+class PredictionEvent : public nsRunnable
 {
 public:
-  SeerPredictionEvent(nsIURI *targetURI, nsIURI *sourceURI,
-                      SeerPredictReason reason,
-                      nsINetworkSeerVerifier *verifier)
+  PredictionEvent(nsIURI *targetURI, nsIURI *sourceURI,
+                  PredictorPredictReason reason,
+                  nsINetworkPredictorVerifier *verifier)
     :mReason(reason)
   {
     MOZ_ASSERT(NS_IsMainThread(), "Creating prediction event off main thread");
@@ -941,7 +957,8 @@ public:
     mEnqueueTime = TimeStamp::Now();
 
     if (verifier) {
-      mVerifier = new nsMainThreadPtrHolder<nsINetworkSeerVerifier>(verifier);
+      mVerifier =
+        new nsMainThreadPtrHolder<nsINetworkPredictorVerifier>(verifier);
     }
     if (targetURI) {
       targetURI->GetAsciiSpec(mTargetURI.spec);
@@ -957,7 +974,7 @@ public:
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Running prediction event on main thread");
 
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_WAIT_TIME,
+    Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_PREDICT_WAIT_TIME,
                                    mEnqueueTime);
 
     TimeStamp startTime = TimeStamp::Now();
@@ -965,41 +982,41 @@ public:
     nsresult rv = NS_OK;
 
     switch (mReason) {
-      case nsINetworkSeer::PREDICT_LOAD:
-        gSeer->PredictForPageload(mTargetURI, mVerifier, 0, mEnqueueTime);
+      case nsINetworkPredictor::PREDICT_LOAD:
+        gPredictor->PredictForPageload(mTargetURI, mVerifier, 0, mEnqueueTime);
         break;
-      case nsINetworkSeer::PREDICT_STARTUP:
-        gSeer->PredictForStartup(mVerifier, mEnqueueTime);
+      case nsINetworkPredictor::PREDICT_STARTUP:
+        gPredictor->PredictForStartup(mVerifier, mEnqueueTime);
         break;
       default:
         MOZ_ASSERT(false, "Got unexpected value for predict reason");
         rv = NS_ERROR_UNEXPECTED;
     }
 
-    gSeer->FreeSpaceInQueue();
+    gPredictor->FreeSpaceInQueue();
 
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_WORK_TIME,
+    Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_PREDICT_WORK_TIME,
                                    startTime);
 
-    gSeer->MaybeScheduleCleanup();
+    gPredictor->MaybeScheduleCleanup();
 
     return rv;
   }
 
 private:
-  Seer::UriInfo mTargetURI;
-  Seer::UriInfo mSourceURI;
-  SeerPredictReason mReason;
-  SeerVerifierHandle mVerifier;
+  Predictor::UriInfo mTargetURI;
+  Predictor::UriInfo mSourceURI;
+  PredictorPredictReason mReason;
+  PredictorVerifierHandle mVerifier;
   TimeStamp mEnqueueTime;
 };
 
 // Predicting for a link is easy, and doesn't require the round-trip to the
-// seer thread and back to the main thread, since we don't have to hit the db
-// for that.
+// predictor thread and back to the main thread, since we don't have to hit the
+// db for that.
 void
-Seer::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
-                     nsINetworkSeerVerifier *verifier)
+Predictor::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
+                          nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Predicting for link off main thread");
 
@@ -1012,7 +1029,7 @@ Seer::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
     sourceURI->SchemeIs("https", &isSSL);
     if (isSSL) {
       // We don't want to predict from an HTTPS page, to avoid info leakage
-      SEER_LOG(("Not predicting for link hover - on an SSL page"));
+      PREDICTOR_LOG(("Not predicting for link hover - on an SSL page"));
       return;
     }
   }
@@ -1025,10 +1042,11 @@ Seer::PredictForLink(nsIURI *targetURI, nsIURI *sourceURI,
 
 // This runnable runs on the main thread, and is responsible for actually
 // firing off predictive actions (such as TCP/TLS preconnects and DNS lookups)
-class SeerPredictionRunner : public nsRunnable
+class PredictionRunner : public nsRunnable
 {
 public:
-  SeerPredictionRunner(SeerVerifierHandle &verifier, TimeStamp predictStartTime)
+  PredictionRunner(PredictorVerifierHandle &verifier,
+                   TimeStamp predictStartTime)
     :mVerifier(verifier)
     ,mPredictStartTime(predictStartTime)
   { }
@@ -1052,7 +1070,7 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread(), "Running prediction off main thread");
 
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_TIME_TO_ACTION,
+    Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_PREDICT_TIME_TO_ACTION,
                                    mPredictStartTime);
 
     uint32_t len, i;
@@ -1065,9 +1083,9 @@ public:
         continue;
       }
 
-      ++gSeer->mAccumulators->mTotalPredictions;
-      ++gSeer->mAccumulators->mTotalPreconnects;
-      gSeer->mSpeculativeService->SpeculativeConnect(uri, gSeer);
+      ++gPredictor->mAccumulators->mTotalPredictions;
+      ++gPredictor->mAccumulators->mTotalPreconnects;
+      gPredictor->mSpeculativeService->SpeculativeConnect(uri, gPredictor);
       if (mVerifier) {
         mVerifier->OnPredictPreconnect(uri);
       }
@@ -1082,16 +1100,16 @@ public:
         continue;
       }
 
-      ++gSeer->mAccumulators->mTotalPredictions;
-      ++gSeer->mAccumulators->mTotalPreresolves;
+      ++gPredictor->mAccumulators->mTotalPredictions;
+      ++gPredictor->mAccumulators->mTotalPreresolves;
       nsAutoCString hostname;
       uri->GetAsciiHost(hostname);
       nsCOMPtr<nsICancelable> tmpCancelable;
-      gSeer->mDnsService->AsyncResolve(hostname,
-                                       (nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
-                                        nsIDNSService::RESOLVE_SPECULATE),
-                                       gSeer->mDNSListener, nullptr,
-                                       getter_AddRefs(tmpCancelable));
+      gPredictor->mDnsService->AsyncResolve(hostname,
+                                            (nsIDNSService::RESOLVE_PRIORITY_MEDIUM |
+                                             nsIDNSService::RESOLVE_SPECULATE),
+                                            gPredictor->mDNSListener, nullptr,
+                                            getter_AddRefs(tmpCancelable));
       if (mVerifier) {
         mVerifier->OnPredictDNS(uri);
       }
@@ -1106,7 +1124,7 @@ public:
 private:
   nsTArray<nsCString> mPreconnects;
   nsTArray<nsCString> mPreresolves;
-  SeerVerifierHandle mVerifier;
+  PredictorVerifierHandle mVerifier;
   TimeStamp mPredictStartTime;
 };
 
@@ -1116,7 +1134,7 @@ private:
 // resource. This will be in addition to any reduction in confidence we have
 // associated with a particular subresource.
 int
-Seer::CalculateGlobalDegradation(PRTime now, PRTime lastLoad)
+Predictor::CalculateGlobalDegradation(PRTime now, PRTime lastLoad)
 {
   int globalDegradation;
   PRTime delta = now - lastLoad;
@@ -1132,7 +1150,8 @@ Seer::CalculateGlobalDegradation(PRTime now, PRTime lastLoad)
     globalDegradation = mPageDegradationMax;
   }
 
-  Telemetry::Accumulate(Telemetry::SEER_GLOBAL_DEGRADATION, globalDegradation);
+  Telemetry::Accumulate(Telemetry::PREDICTOR_GLOBAL_DEGRADATION,
+                        globalDegradation);
   return globalDegradation;
 }
 
@@ -1148,8 +1167,8 @@ Seer::CalculateGlobalDegradation(PRTime now, PRTime lastLoad)
 // @param globalDegradation - the degradation for this top-level load as
 //                            determined by CalculateGlobalDegradation
 int
-Seer::CalculateConfidence(int baseConfidence, PRTime lastHit,
-                          PRTime lastPossible, int globalDegradation)
+Predictor::CalculateConfidence(int baseConfidence, PRTime lastHit,
+                               PRTime lastPossible, int globalDegradation)
 {
   ++mAccumulators->mPredictionsCalculated;
 
@@ -1187,18 +1206,18 @@ Seer::CalculateConfidence(int baseConfidence, PRTime lastHit,
   confidence = std::max(confidence, 0);
   confidence = std::min(confidence, maxConfidence);
 
-  Telemetry::Accumulate(Telemetry::SEER_BASE_CONFIDENCE, baseConfidence);
-  Telemetry::Accumulate(Telemetry::SEER_SUBRESOURCE_DEGRADATION,
+  Telemetry::Accumulate(Telemetry::PREDICTOR_BASE_CONFIDENCE, baseConfidence);
+  Telemetry::Accumulate(Telemetry::PREDICTOR_SUBRESOURCE_DEGRADATION,
                         confidenceDegradation);
-  Telemetry::Accumulate(Telemetry::SEER_CONFIDENCE, confidence);
+  Telemetry::Accumulate(Telemetry::PREDICTOR_CONFIDENCE, confidence);
   return confidence;
 }
 
 // (Maybe) adds a predictive action to the prediction runner, based on our
 // calculated confidence for the subresource in question.
 void
-Seer::SetupPrediction(int confidence, const nsACString &uri,
-                      SeerPredictionRunner *runner)
+Predictor::SetupPrediction(int confidence, const nsACString &uri,
+                           PredictionRunner *runner)
 {
     if (confidence >= mPreconnectMinConfidence) {
       runner->AddPreconnect(uri);
@@ -1211,8 +1230,8 @@ Seer::SetupPrediction(int confidence, const nsACString &uri,
 // the pages table (which is specific to a particular URI), or from the hosts
 // table (which is for a particular origin).
 bool
-Seer::LookupTopLevel(QueryType queryType, const nsACString &key,
-                     TopLevelInfo &info)
+Predictor::LookupTopLevel(QueryType queryType, const nsACString &key,
+                          TopLevelInfo &info)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LookupTopLevel called on main thread.");
 
@@ -1255,7 +1274,7 @@ Seer::LookupTopLevel(QueryType queryType, const nsACString &key,
 // Insert data about either a top-level page or a top-level origin into
 // the database.
 void
-Seer::AddTopLevel(QueryType queryType, const nsACString &key, PRTime now)
+Predictor::AddTopLevel(QueryType queryType, const nsACString &key, PRTime now)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "AddTopLevel called on main thread.");
 
@@ -1274,7 +1293,7 @@ Seer::AddTopLevel(QueryType queryType, const nsACString &key, PRTime now)
   }
   mozStorageStatementScoper scope(stmt);
 
-  // Loading a page implicitly makes the seer learn about the page,
+  // Loading a page implicitly makes the predictor learn about the page,
   // so since we don't have it already, let's add it.
   nsresult rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("key"), key);
   RETURN_IF_FAILED(rv);
@@ -1288,7 +1307,8 @@ Seer::AddTopLevel(QueryType queryType, const nsACString &key, PRTime now)
 // Update data about either a top-level page or a top-level origin in the
 // database.
 void
-Seer::UpdateTopLevel(QueryType queryType, const TopLevelInfo &info, PRTime now)
+Predictor::UpdateTopLevel(QueryType queryType, const TopLevelInfo &info,
+                          PRTime now)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "UpdateTopLevel called on main thread.");
 
@@ -1309,8 +1329,8 @@ Seer::UpdateTopLevel(QueryType queryType, const TopLevelInfo &info, PRTime now)
 
   int32_t newLoadCount = info.loadCount + 1;
   if (newLoadCount <= 0) {
-    SEER_LOG(("Seer::UpdateTopLevel type %d id %d load count overflow\n",
-              queryType, info.id));
+    PREDICTOR_LOG(("Predictor::UpdateTopLevel type %d id %d load count "
+                   "overflow\n", queryType, info.id));
     newLoadCount = info.loadCount;
     ++mAccumulators->mLoadCountOverflows;
   }
@@ -1336,13 +1356,14 @@ Seer::UpdateTopLevel(QueryType queryType, const TopLevelInfo &info, PRTime now)
 // @param queryType - whether to predict based on page or origin
 // @param info - the db info about the top-level resource
 bool
-Seer::TryPredict(QueryType queryType, const TopLevelInfo &info, PRTime now,
-                 SeerVerifierHandle &verifier, TimeStamp &predictStartTime)
+Predictor::TryPredict(QueryType queryType, const TopLevelInfo &info, PRTime now,
+                      PredictorVerifierHandle &verifier,
+                      TimeStamp &predictStartTime)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "TryPredict called on main thread.");
 
   if (!info.loadCount) {
-    SEER_LOG(("Seer::TryPredict info.loadCount is zero!\n"));
+    PREDICTOR_LOG(("Predictor::TryPredict info.loadCount is zero!\n"));
     ++mAccumulators->mLoadCountZeroes;
     return false;
   }
@@ -1372,8 +1393,8 @@ Seer::TryPredict(QueryType queryType, const TopLevelInfo &info, PRTime now,
     return false;
   }
 
-  nsRefPtr<SeerPredictionRunner> runner =
-    new SeerPredictionRunner(verifier, predictStartTime);
+  nsRefPtr<PredictionRunner> runner =
+    new PredictionRunner(verifier, predictStartTime);
 
   while (hasRows) {
     int32_t hitCount;
@@ -1423,12 +1444,12 @@ nextrow:
 
 // Find out if a top-level page is likely to redirect.
 bool
-Seer::WouldRedirect(const TopLevelInfo &info, PRTime now, UriInfo &newUri)
+Predictor::WouldRedirect(const TopLevelInfo &info, PRTime now, UriInfo &newUri)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "WouldRedirect called on main thread.");
 
   if (!info.loadCount) {
-    SEER_LOG(("Seer::WouldRedirect info.loadCount is zero!\n"));
+    PREDICTOR_LOG(("Predictor::WouldRedirect info.loadCount is zero!\n"));
     ++mAccumulators->mLoadCountZeroes;
     return false;
   }
@@ -1477,7 +1498,7 @@ Seer::WouldRedirect(const TopLevelInfo &info, PRTime now, UriInfo &newUri)
 // This will add a page to our list of startup pages if it's being loaded
 // before our startup window has expired.
 void
-Seer::MaybeLearnForStartup(const UriInfo &uri, const PRTime now)
+Predictor::MaybeLearnForStartup(const UriInfo &uri, const PRTime now)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "MaybeLearnForStartup called on main thread.");
 
@@ -1490,13 +1511,14 @@ const int MAX_PAGELOAD_DEPTH = 10;
 
 // This is the driver for prediction based on a new pageload.
 void
-Seer::PredictForPageload(const UriInfo &uri, SeerVerifierHandle &verifier,
-                         int stackCount, TimeStamp &predictStartTime)
+Predictor::PredictForPageload(const UriInfo &uri,
+                              PredictorVerifierHandle &verifier,
+                              int stackCount, TimeStamp &predictStartTime)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "PredictForPageload called on main thread.");
 
   if (stackCount > MAX_PAGELOAD_DEPTH) {
-    SEER_LOG(("Too deep into pageload prediction"));
+    PREDICTOR_LOG(("Too deep into pageload prediction"));
     return;
   }
 
@@ -1527,8 +1549,8 @@ Seer::PredictForPageload(const UriInfo &uri, SeerVerifierHandle &verifier,
 
   UriInfo newUri;
   if (havePage && WouldRedirect(pageInfo, now, newUri)) {
-    nsRefPtr<SeerPredictionRunner> runner =
-      new SeerPredictionRunner(verifier, predictStartTime);
+    nsRefPtr<PredictionRunner> runner =
+      new PredictionRunner(verifier, predictStartTime);
     runner->AddPreconnect(newUri.spec);
     NS_DispatchToMainThread(runner);
     PredictForPageload(newUri, verifier, stackCount + 1, predictStartTime);
@@ -1550,21 +1572,22 @@ Seer::PredictForPageload(const UriInfo &uri, SeerVerifierHandle &verifier,
   }
 
   if (!predicted) {
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_TIME_TO_INACTION,
-                                   predictStartTime);
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::PREDICTOR_PREDICT_TIME_TO_INACTION,
+      predictStartTime);
   }
 }
 
 // This is the driver for predicting at browser startup time based on pages that
 // have previously been loaded close to startup.
 void
-Seer::PredictForStartup(SeerVerifierHandle &verifier,
-                        TimeStamp &predictStartTime)
+Predictor::PredictForStartup(PredictorVerifierHandle &verifier,
+                             TimeStamp &predictStartTime)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "PredictForStartup called on main thread");
 
   if (!mStartupCount) {
-    SEER_LOG(("Seer::PredictForStartup mStartupCount is zero!\n"));
+    PREDICTOR_LOG(("Predictor::PredictForStartup mStartupCount is zero!\n"));
     ++mAccumulators->mStartupCountZeroes;
     return;
   }
@@ -1582,8 +1605,8 @@ Seer::PredictForStartup(SeerVerifierHandle &verifier,
   nsresult rv;
   bool hasRows;
 
-  nsRefPtr<SeerPredictionRunner> runner =
-    new SeerPredictionRunner(verifier, predictStartTime);
+  nsRefPtr<PredictionRunner> runner =
+    new PredictionRunner(verifier, predictStartTime);
 
   rv = stmt->ExecuteStep(&hasRows);
   RETURN_IF_FAILED(rv);
@@ -1627,8 +1650,9 @@ nextrow:
   if (runner->HasWork()) {
     NS_DispatchToMainThread(runner);
   } else {
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_PREDICT_TIME_TO_INACTION,
-                                   predictStartTime);
+    Telemetry::AccumulateTimeDelta(
+      Telemetry::PREDICTOR_PREDICT_TIME_TO_INACTION,
+      predictStartTime);
   }
 }
 
@@ -1651,12 +1675,12 @@ IsNullOrHttp(nsIURI *uri)
 }
 
 nsresult
-Seer::ReserveSpaceInQueue()
+Predictor::ReserveSpaceInQueue()
 {
   MutexAutoLock lock(mQueueSizeLock);
 
   if (mQueueSize >= mMaxQueueSize) {
-    SEER_LOG(("Not enqueuing event - queue too large"));
+    PREDICTOR_LOG(("Not enqueuing event - queue too large"));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -1665,7 +1689,7 @@ Seer::ReserveSpaceInQueue()
 }
 
 void
-Seer::FreeSpaceInQueue()
+Predictor::FreeSpaceInQueue()
 {
   MutexAutoLock lock(mQueueSizeLock);
   MOZ_ASSERT(mQueueSize > 0, "unexpected mQueueSize");
@@ -1674,11 +1698,13 @@ Seer::FreeSpaceInQueue()
 
 // Called from the main thread to initiate predictive actions
 NS_IMETHODIMP
-Seer::Predict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
-              nsILoadContext *loadContext, nsINetworkSeerVerifier *verifier)
+Predictor::Predict(nsIURI *targetURI, nsIURI *sourceURI,
+                   PredictorPredictReason reason,
+                   nsILoadContext *loadContext,
+                   nsINetworkPredictorVerifier *verifier)
 {
   MOZ_ASSERT(NS_IsMainThread(),
-             "Seer interface methods must be called on the main thread");
+             "Predictor interface methods must be called on the main thread");
 
   if (!mInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -1701,7 +1727,7 @@ Seer::Predict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
   // Ensure we've been given the appropriate arguments for the kind of
   // prediction we're being asked to do
   switch (reason) {
-    case nsINetworkSeer::PREDICT_LINK:
+    case nsINetworkPredictor::PREDICT_LINK:
       if (!targetURI || !sourceURI) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -1709,12 +1735,12 @@ Seer::Predict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
       // db, so let's go ahead and fire off that prediction here.
       PredictForLink(targetURI, sourceURI, verifier);
       return NS_OK;
-    case nsINetworkSeer::PREDICT_LOAD:
+    case nsINetworkPredictor::PREDICT_LOAD:
       if (!targetURI || sourceURI) {
         return NS_ERROR_INVALID_ARG;
       }
       break;
-    case nsINetworkSeer::PREDICT_STARTUP:
+    case nsINetworkPredictor::PREDICT_STARTUP:
       if (targetURI || sourceURI) {
         return NS_ERROR_INVALID_ARG;
       }
@@ -1730,19 +1756,19 @@ Seer::Predict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<SeerPredictionEvent> event = new SeerPredictionEvent(targetURI,
-                                                                sourceURI,
-                                                                reason,
-                                                                verifier);
+  nsRefPtr<PredictionEvent> event = new PredictionEvent(targetURI,
+                                                        sourceURI,
+                                                        reason,
+                                                        verifier);
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 // A runnable for updating our information in the database. This must always
-// be dispatched to the seer thread.
-class SeerLearnEvent : public nsRunnable
+// be dispatched to the predictor thread.
+class LearnEvent : public nsRunnable
 {
 public:
-  SeerLearnEvent(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason)
+  LearnEvent(nsIURI *targetURI, nsIURI *sourceURI, PredictorLearnReason reason)
     :mReason(reason)
   {
     MOZ_ASSERT(NS_IsMainThread(), "Creating learn event off main thread");
@@ -1763,46 +1789,47 @@ public:
 
     nsresult rv = NS_OK;
 
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_LEARN_WAIT_TIME,
+    Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_LEARN_WAIT_TIME,
                                    mEnqueueTime);
 
     TimeStamp startTime = TimeStamp::Now();
 
     switch (mReason) {
-    case nsINetworkSeer::LEARN_LOAD_TOPLEVEL:
-      gSeer->LearnForToplevel(mTargetURI);
+    case nsINetworkPredictor::LEARN_LOAD_TOPLEVEL:
+      gPredictor->LearnForToplevel(mTargetURI);
       break;
-    case nsINetworkSeer::LEARN_LOAD_REDIRECT:
-      gSeer->LearnForRedirect(mTargetURI, mSourceURI);
+    case nsINetworkPredictor::LEARN_LOAD_REDIRECT:
+      gPredictor->LearnForRedirect(mTargetURI, mSourceURI);
       break;
-    case nsINetworkSeer::LEARN_LOAD_SUBRESOURCE:
-      gSeer->LearnForSubresource(mTargetURI, mSourceURI);
+    case nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE:
+      gPredictor->LearnForSubresource(mTargetURI, mSourceURI);
       break;
-    case nsINetworkSeer::LEARN_STARTUP:
-      gSeer->LearnForStartup(mTargetURI);
+    case nsINetworkPredictor::LEARN_STARTUP:
+      gPredictor->LearnForStartup(mTargetURI);
       break;
     default:
       MOZ_ASSERT(false, "Got unexpected value for learn reason");
       rv = NS_ERROR_UNEXPECTED;
     }
 
-    gSeer->FreeSpaceInQueue();
+    gPredictor->FreeSpaceInQueue();
 
-    Telemetry::AccumulateTimeDelta(Telemetry::SEER_LEARN_WORK_TIME, startTime);
+    Telemetry::AccumulateTimeDelta(Telemetry::PREDICTOR_LEARN_WORK_TIME,
+                                   startTime);
 
-    gSeer->MaybeScheduleCleanup();
+    gPredictor->MaybeScheduleCleanup();
 
     return rv;
   }
 private:
-  Seer::UriInfo mTargetURI;
-  Seer::UriInfo mSourceURI;
-  SeerLearnReason mReason;
+  Predictor::UriInfo mTargetURI;
+  Predictor::UriInfo mSourceURI;
+  PredictorLearnReason mReason;
   TimeStamp mEnqueueTime;
 };
 
 void
-Seer::LearnForToplevel(const UriInfo &uri)
+Predictor::LearnForToplevel(const UriInfo &uri)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LearnForToplevel called on main thread.");
 
@@ -1835,8 +1862,8 @@ Seer::LearnForToplevel(const UriInfo &uri)
 // Queries to look up information about a *specific* subresource associated
 // with a *specific* top-level load.
 bool
-Seer::LookupSubresource(QueryType queryType, const int32_t parentId,
-                        const nsACString &key, SubresourceInfo &info)
+Predictor::LookupSubresource(QueryType queryType, const int32_t parentId,
+                             const nsACString &key, SubresourceInfo &info)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LookupSubresource called on main thread.");
 
@@ -1881,8 +1908,8 @@ Seer::LookupSubresource(QueryType queryType, const int32_t parentId,
 
 // Add information about a new subresource associated with a top-level load.
 void
-Seer::AddSubresource(QueryType queryType, const int32_t parentId,
-                     const nsACString &key, const PRTime now)
+Predictor::AddSubresource(QueryType queryType, const int32_t parentId,
+                          const nsACString &key, const PRTime now)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "AddSubresource called on main thread.");
 
@@ -1919,8 +1946,8 @@ Seer::AddSubresource(QueryType queryType, const int32_t parentId,
 // Update the information about a particular subresource associated with a
 // top-level load
 void
-Seer::UpdateSubresource(QueryType queryType, const SubresourceInfo &info,
-                        const PRTime now, const int32_t parentCount)
+Predictor::UpdateSubresource(QueryType queryType, const SubresourceInfo &info,
+                             const PRTime now, const int32_t parentCount)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "UpdateSubresource called on main thread.");
 
@@ -1959,7 +1986,8 @@ Seer::UpdateSubresource(QueryType queryType, const SubresourceInfo &info,
 // Called when a subresource has been hit from a top-level load. Uses the two
 // helper functions above to update the database appropriately.
 void
-Seer::LearnForSubresource(const UriInfo &targetURI, const UriInfo &sourceURI)
+Predictor::LearnForSubresource(const UriInfo &targetURI,
+                               const UriInfo &sourceURI)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LearnForSubresource called on main thread.");
 
@@ -2009,7 +2037,7 @@ Seer::LearnForSubresource(const UriInfo &targetURI, const UriInfo &sourceURI)
 // This is called when a top-level loaded ended up redirecting to a different
 // URI so we can keep track of that fact.
 void
-Seer::LearnForRedirect(const UriInfo &targetURI, const UriInfo &sourceURI)
+Predictor::LearnForRedirect(const UriInfo &targetURI, const UriInfo &sourceURI)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LearnForRedirect called on main thread.");
 
@@ -2119,7 +2147,7 @@ Seer::LearnForRedirect(const UriInfo &targetURI, const UriInfo &sourceURI)
 
 // Add information about a top-level load to our list of startup pages
 void
-Seer::LearnForStartup(const UriInfo &uri)
+Predictor::LearnForStartup(const UriInfo &uri)
 {
   MOZ_ASSERT(!NS_IsMainThread(), "LearnForStartup called on main thread.");
 
@@ -2196,11 +2224,12 @@ Seer::LearnForStartup(const UriInfo &uri)
 
 // Called from the main thread to update the database
 NS_IMETHODIMP
-Seer::Learn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
-            nsILoadContext *loadContext)
+Predictor::Learn(nsIURI *targetURI, nsIURI *sourceURI,
+                 PredictorLearnReason reason,
+                 nsILoadContext *loadContext)
 {
   MOZ_ASSERT(NS_IsMainThread(),
-             "Seer interface methods must be called on the main thread");
+             "Predictor interface methods must be called on the main thread");
 
   if (!mInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2220,14 +2249,14 @@ Seer::Learn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
   }
 
   switch (reason) {
-  case nsINetworkSeer::LEARN_LOAD_TOPLEVEL:
-  case nsINetworkSeer::LEARN_STARTUP:
+  case nsINetworkPredictor::LEARN_LOAD_TOPLEVEL:
+  case nsINetworkPredictor::LEARN_STARTUP:
     if (!targetURI || sourceURI) {
       return NS_ERROR_INVALID_ARG;
     }
     break;
-  case nsINetworkSeer::LEARN_LOAD_REDIRECT:
-  case nsINetworkSeer::LEARN_LOAD_SUBRESOURCE:
+  case nsINetworkPredictor::LEARN_LOAD_REDIRECT:
+  case nsINetworkPredictor::LEARN_LOAD_SUBRESOURCE:
     if (!targetURI || !sourceURI) {
       return NS_ERROR_INVALID_ARG;
     }
@@ -2243,24 +2272,23 @@ Seer::Learn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<SeerLearnEvent> event = new SeerLearnEvent(targetURI, sourceURI,
-                                                      reason);
+  nsRefPtr<LearnEvent> event = new LearnEvent(targetURI, sourceURI, reason);
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
 // Runnable to clear out the database. Dispatched from the main thread to the
-// seer thread
-class SeerResetEvent : public nsRunnable
+// predictor thread
+class PredictorResetEvent : public nsRunnable
 {
 public:
-  SeerResetEvent()
+  PredictorResetEvent()
   { }
 
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Running reset on main thread");
 
-    gSeer->ResetInternal();
+    gPredictor->ResetInternal();
 
     return NS_OK;
   }
@@ -2268,7 +2296,7 @@ public:
 
 // Helper that actually does the database wipe.
 void
-Seer::ResetInternal()
+Predictor::ResetInternal()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "Resetting db on main thread");
 
@@ -2292,10 +2320,10 @@ Seer::ResetInternal()
 
 // Called on the main thread to clear out all our knowledge. Tabula Rasa FTW!
 NS_IMETHODIMP
-Seer::Reset()
+Predictor::Reset()
 {
   MOZ_ASSERT(NS_IsMainThread(),
-             "Seer interface methods must be called on the main thread");
+             "Predictor interface methods must be called on the main thread");
 
   if (!mInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -2305,30 +2333,30 @@ Seer::Reset()
     return NS_OK;
   }
 
-  nsRefPtr<SeerResetEvent> event = new SeerResetEvent();
+  nsRefPtr<PredictorResetEvent> event = new PredictorResetEvent();
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
-class SeerCleanupEvent : public nsRunnable
+class PredictorCleanupEvent : public nsRunnable
 {
 public:
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
-    gSeer->Cleanup();
-    gSeer->mCleanupScheduled = false;
+    gPredictor->Cleanup();
+    gPredictor->mCleanupScheduled = false;
     return NS_OK;
   }
 };
 
 // Returns the current size (in bytes) of the db file on disk
 int64_t
-Seer::GetDBFileSize()
+Predictor::GetDBFileSize()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "GetDBFileSize called on main thread!");
 
   nsresult rv = EnsureInitStorage();
   if (NS_FAILED(rv)) {
-    SEER_LOG(("GetDBFileSize called without db available!"));
+    PREDICTOR_LOG(("GetDBFileSize called without db available!"));
     return 0;
   }
 
@@ -2375,9 +2403,10 @@ Seer::GetDBFileSize()
 // Returns the size (in bytes) that the db file will consume on disk AFTER we
 // vacuum the db.
 int64_t
-Seer::GetDBFileSizeAfterVacuum()
+Predictor::GetDBFileSizeAfterVacuum()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "GetDBFileSizeAfterVacuum called on main thread!");
+  MOZ_ASSERT(!NS_IsMainThread(),
+             "GetDBFileSizeAfterVacuum called on main thread!");
 
   CommitTransaction();
 
@@ -2436,7 +2465,7 @@ Seer::GetDBFileSizeAfterVacuum()
 }
 
 void
-Seer::MaybeScheduleCleanup()
+Predictor::MaybeScheduleCleanup()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "MaybeScheduleCleanup called on main thread!");
 
@@ -2447,25 +2476,25 @@ Seer::MaybeScheduleCleanup()
   }
 
   if (mCleanupScheduled) {
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SCHEDULED, false);
     return;
   }
 
   int64_t dbFileSize = GetDBFileSize();
   if (dbFileSize < mMaxDBSize) {
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SCHEDULED, false);
     return;
   }
 
   mCleanupScheduled = true;
 
-  nsRefPtr<SeerCleanupEvent> event = new SeerCleanupEvent();
+  nsRefPtr<PredictorCleanupEvent> event = new PredictorCleanupEvent();
   nsresult rv = mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
   if (NS_FAILED(rv)) {
     mCleanupScheduled = false;
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, false);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SCHEDULED, false);
   } else {
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SCHEDULED, true);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SCHEDULED, true);
   }
 }
 
@@ -2476,7 +2505,7 @@ static const long long CLEANUP_CUTOFF = ONE_WEEK;
 #endif
 
 void
-Seer::CleanupOrigins(PRTime now)
+Predictor::CleanupOrigins(PRTime now)
 {
   PRTime cutoff = now - CLEANUP_CUTOFF;
 
@@ -2495,7 +2524,7 @@ Seer::CleanupOrigins(PRTime now)
 }
 
 void
-Seer::CleanupStartupPages(PRTime now)
+Predictor::CleanupStartupPages(PRTime now)
 {
   PRTime cutoff = now - ONE_WEEK;
 
@@ -2515,7 +2544,7 @@ Seer::CleanupStartupPages(PRTime now)
 }
 
 int32_t
-Seer::GetSubresourceCount()
+Predictor::GetSubresourceCount()
 {
   nsCOMPtr<mozIStorageStatement> count = mStatements.GetCachedStatement(
       NS_LITERAL_CSTRING("SELECT COUNT(id) FROM moz_subresources"));
@@ -2537,9 +2566,9 @@ Seer::GetSubresourceCount()
 }
 
 void
-Seer::Cleanup()
+Predictor::Cleanup()
 {
-  MOZ_ASSERT(!NS_IsMainThread(), "Seer::Cleanup called on main thread!");
+  MOZ_ASSERT(!NS_IsMainThread(), "Predictor::Cleanup called on main thread!");
 
   nsresult rv = EnsureInitStorage();
   if (NS_FAILED(rv)) {
@@ -2548,7 +2577,8 @@ Seer::Cleanup()
 
   int64_t dbFileSize = GetDBFileSize();
   float preservePercentage = static_cast<float>(mPreservePercentage) / 100.0;
-  int64_t evictionCutoff = static_cast<int64_t>(mMaxDBSize) * preservePercentage;
+  int64_t evictionCutoff =
+    static_cast<int64_t>(mMaxDBSize) * preservePercentage;
   if (dbFileSize < evictionCutoff) {
     return;
   }
@@ -2558,7 +2588,7 @@ Seer::Cleanup()
 
   PRTime now = PR_Now();
   if (mLastCleanupTime) {
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_DELTA,
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_DELTA,
                           (now - mLastCleanupTime) / 1000);
   }
   mLastCleanupTime = now;
@@ -2571,8 +2601,8 @@ Seer::Cleanup()
     // We've deleted enough stuff, time to free up the disk space and be on
     // our way.
     VacuumDatabase();
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, true);
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_TIME,
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SUCCEEDED, true);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_TIME,
                           (PR_Now() - mLastCleanupTime) / 1000);
     return;
   }
@@ -2642,18 +2672,18 @@ Seer::Cleanup()
   if (!canDelete || (dbFileSize >= evictionCutoff)) {
     // Last-ditch effort to free up space
     ResetInternal();
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, false);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SUCCEEDED, false);
   } else {
     // We do this to actually free up the space on disk
     VacuumDatabase();
-    Telemetry::Accumulate(Telemetry::SEER_CLEANUP_SUCCEEDED, true);
+    Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_SUCCEEDED, true);
   }
-  Telemetry::Accumulate(Telemetry::SEER_CLEANUP_TIME,
+  Telemetry::Accumulate(Telemetry::PREDICTOR_CLEANUP_TIME,
                         (PR_Now() - mLastCleanupTime) / 1000);
 }
 
 void
-Seer::VacuumDatabase()
+Predictor::VacuumDatabase()
 {
   MOZ_ASSERT(!NS_IsMainThread(), "VacuumDatabase called on main thread!");
 
@@ -2662,11 +2692,11 @@ Seer::VacuumDatabase()
   BeginTransaction();
 }
 
-#ifdef SEER_TESTS
-class SeerPrepareForDnsTestEvent : public nsRunnable
+#ifdef PREDICTOR_TESTS
+class PredictorPrepareForDnsTestEvent : public nsRunnable
 {
 public:
-  SeerPrepareForDnsTestEvent(int64_t timestamp, const char *uri)
+  PredictorPrepareForDnsTestEvent(int64_t timestamp, const char *uri)
     :mTimestamp(timestamp)
     ,mUri(uri)
   { }
@@ -2674,7 +2704,7 @@ public:
   NS_IMETHOD Run() MOZ_OVERRIDE
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Preparing for DNS Test on main thread!");
-    gSeer->PrepareForDnsTestInternal(mTimestamp, mUri);
+    gPredictor->PrepareForDnsTestInternal(mTimestamp, mUri);
     return NS_OK;
   }
 
@@ -2684,7 +2714,7 @@ private:
 };
 
 void
-Seer::PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri)
+Predictor::PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri)
 {
   nsCOMPtr<mozIStorageStatement> update = mStatements.GetCachedStatement(
       NS_LITERAL_CSTRING("UPDATE moz_subresources SET last_hit = :timestamp, "
@@ -2706,78 +2736,83 @@ Seer::PrepareForDnsTestInternal(int64_t timestamp, const nsACString &uri)
 #endif
 
 NS_IMETHODIMP
-Seer::PrepareForDnsTest(int64_t timestamp, const char *uri)
+Predictor::PrepareForDnsTest(int64_t timestamp, const char *uri)
 {
-#ifdef SEER_TESTS
+#ifdef PREDICTOR_TESTS
   MOZ_ASSERT(NS_IsMainThread(),
-             "Seer interface methods must be called on the main thread");
+             "Predictor interface methods must be called on the main thread");
 
   if (!mInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsRefPtr<SeerPrepareForDnsTestEvent> event =
-    new SeerPrepareForDnsTestEvent(timestamp, uri);
+  nsRefPtr<PredictorPrepareForDnsTestEvent> event =
+    new PredictorPrepareForDnsTestEvent(timestamp, uri);
   return mIOThread->Dispatch(event, NS_DISPATCH_NORMAL);
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif
 }
 
-// Helper functions to make using the seer easier from native code
+// Helper functions to make using the predictor easier from native code
 
 static nsresult
-EnsureGlobalSeer(nsINetworkSeer **aSeer)
+EnsureGlobalPredictor(nsINetworkPredictor **aPredictor)
 {
   nsresult rv;
-  nsCOMPtr<nsINetworkSeer> seer = do_GetService("@mozilla.org/network/seer;1",
-                                                &rv);
+  nsCOMPtr<nsINetworkPredictor> predictor =
+    do_GetService("@mozilla.org/network/predictor;1",
+                  &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_IF_ADDREF(*aSeer = seer);
+  NS_IF_ADDREF(*aPredictor = predictor);
   return NS_OK;
 }
 
 nsresult
-SeerPredict(nsIURI *targetURI, nsIURI *sourceURI, SeerPredictReason reason,
-            nsILoadContext *loadContext, nsINetworkSeerVerifier *verifier)
+PredictorPredict(nsIURI *targetURI, nsIURI *sourceURI,
+                 PredictorPredictReason reason, nsILoadContext *loadContext,
+                 nsINetworkPredictorVerifier *verifier)
 {
   if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINetworkSeer> seer;
-  nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return seer->Predict(targetURI, sourceURI, reason, loadContext, verifier);
+  return predictor->Predict(targetURI, sourceURI, reason,
+                            loadContext, verifier);
 }
 
 nsresult
-SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
-          nsILoadContext *loadContext)
+PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
+               PredictorLearnReason reason,
+               nsILoadContext *loadContext)
 {
   if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINetworkSeer> seer;
-  nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return seer->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
 }
 
 nsresult
-SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
-          nsILoadGroup *loadGroup)
+PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
+               PredictorLearnReason reason,
+               nsILoadGroup *loadGroup)
 {
   if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINetworkSeer> seer;
-  nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadContext> loadContext;
@@ -2790,19 +2825,20 @@ SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
     }
   }
 
-  return seer->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
 }
 
 nsresult
-SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
-          nsIDocument *document)
+PredictorLearn(nsIURI *targetURI, nsIURI *sourceURI,
+               PredictorLearnReason reason,
+               nsIDocument *document)
 {
   if (!IsNullOrHttp(targetURI) || !IsNullOrHttp(sourceURI)) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsINetworkSeer> seer;
-  nsresult rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  nsresult rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsILoadContext> loadContext;
@@ -2811,12 +2847,12 @@ SeerLearn(nsIURI *targetURI, nsIURI *sourceURI, SeerLearnReason reason,
     loadContext = document->GetLoadContext();
   }
 
-  return seer->Learn(targetURI, sourceURI, reason, loadContext);
+  return predictor->Learn(targetURI, sourceURI, reason, loadContext);
 }
 
 nsresult
-SeerLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
-                  nsILoadContext *loadContext)
+PredictorLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
+                       nsILoadContext *loadContext)
 {
   nsCOMPtr<nsIURI> sourceURI;
   nsresult rv = channel->GetOriginalURI(getter_AddRefs(sourceURI));
@@ -2834,12 +2870,13 @@ SeerLearnRedirect(nsIURI *targetURI, nsIChannel *channel,
     return NS_OK;
   }
 
-  nsCOMPtr<nsINetworkSeer> seer;
-  rv = EnsureGlobalSeer(getter_AddRefs(seer));
+  nsCOMPtr<nsINetworkPredictor> predictor;
+  rv = EnsureGlobalPredictor(getter_AddRefs(predictor));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return seer->Learn(targetURI, sourceURI,
-                     nsINetworkSeer::LEARN_LOAD_REDIRECT, loadContext);
+  return predictor->Learn(targetURI, sourceURI,
+                          nsINetworkPredictor::LEARN_LOAD_REDIRECT,
+                          loadContext);
 }
 
 } // ::mozilla::net

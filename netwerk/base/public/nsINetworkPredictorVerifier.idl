@@ -4,16 +4,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * nsINetworkSeerVerifier - used for testing the network seer to ensure it
- *                          does what we expect it to do.
+ * nsINetworkPredictorVerifier - used for testing the network predictor to
+ *                               ensure it does what we expect it to do.
  */
 
 #include "nsISupports.idl"
 
 interface nsIURI;
 
-[scriptable, uuid(ea273653-43a8-4632-8b30-4032e0918e8b)]
-interface nsINetworkSeerVerifier : nsISupports
+[scriptable, uuid(00360c7d-a046-4f8d-a1fc-8bdc0f0fb444)]
+interface nsINetworkPredictorVerifier : nsISupports
 {
     /**
      * Callback for when we do a predictive preconnect
