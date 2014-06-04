@@ -418,6 +418,112 @@ KEY_MAP_QT      (PrintScreen, Qt::Key_Print)
 KEY_MAP_QT      (PrintScreen, Qt::Key_SysReq)
 KEY_MAP_ANDROID (PrintScreen, AKEYCODE_SYSRQ)
 
+/******************************************************************************
+ * IME and Composition Keys
+ ******************************************************************************/
+// AllCandidates
+KEY_MAP_GTK     (AllCandidates, GDK_MultipleCandidate) // OADG 109, Zen Koho
+KEY_MAP_QT      (AllCandidates, Qt::Key_MultipleCandidate)
+
+// Alphanumeric
+KEY_MAP_WIN_JPN (Alphanumeric, VK_OEM_ATTN)
+KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_Shift)
+KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_toggle)
+KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_Shift)
+KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_toggle)
+
+// CodeInput
+KEY_MAP_GTK     (CodeInput, GDK_Codeinput) // OADG 109, Kanji Bangou
+KEY_MAP_QT      (CodeInput, Qt::Key_Codeinput)
+
+// Compose
+KEY_MAP_GTK     (Compose, GDK_Multi_key) // "Multi Key" is "Compose key" on X
+KEY_MAP_QT      (Compose, Qt::Key_Multi_key)
+
+// Convert
+KEY_MAP_WIN     (Convert, VK_CONVERT)
+KEY_MAP_GTK     (Convert, GDK_Henkan)
+KEY_MAP_QT      (Convert, Qt::Key_Henkan)
+KEY_MAP_ANDROID (Convert, AKEYCODE_HENKAN)
+
+// FinalMode
+KEY_MAP_WIN     (FinalMode, VK_FINAL)
+
+// ModeChange
+KEY_MAP_WIN     (ModeChange, VK_MODECHANGE)
+KEY_MAP_ANDROID (ModeChange, AKEYCODE_SWITCH_CHARSET)
+
+// Nonconvert
+KEY_MAP_WIN     (Nonconvert, VK_NONCONVERT)
+KEY_MAP_GTK     (Nonconvert, GDK_Muhenkan)
+KEY_MAP_QT      (Nonconvert, Qt::Key_Muhenkan)
+KEY_MAP_ANDROID (Nonconvert, AKEYCODE_MUHENKAN)
+
+// PreviousCandidate
+KEY_MAP_GTK     (PreviousCandidate, GDK_PreviousCandidate) // OADG 109, Mae Koho
+KEY_MAP_QT      (PreviousCandidate, Qt::Key_PreviousCandidate)
+
+/******************************************************************************
+ * Keys specific to Korean keyboards
+ ******************************************************************************/
+// HangulMode
+KEY_MAP_WIN_KOR (HangulMode, VK_HANGUL /* same as VK_KANA */)
+
+// HanjaMode
+KEY_MAP_WIN_KOR (HanjaMode, VK_HANJA /* same as VK_KANJI */)
+
+// JunjaMode
+KEY_MAP_WIN     (JunjaMode, VK_JUNJA)
+
+/******************************************************************************
+ * Keys specific to Japanese keyboards
+ ******************************************************************************/
+// HalfWidth
+KEY_MAP_WIN_JPN (HalfWidth, VK_OEM_AUTO)
+KEY_MAP_GTK     (HalfWidth, GDK_Hankaku)
+KEY_MAP_QT      (HalfWidth, Qt::Key_Hankaku)
+
+// Hiragana
+KEY_MAP_WIN_JPN (Hiragana, VK_OEM_COPY)
+KEY_MAP_GTK     (Hiragana, GDK_Hiragana)
+KEY_MAP_QT      (Hiragana, Qt::Key_Hiragana)
+
+// KanaMode
+// VK_KANA is never used with modern Japanese keyboard, however, IE maps it to
+// KanaMode, therefore, we should use same map for it.
+KEY_MAP_WIN_JPN (KanaMode, VK_KANA /* same as VK_HANGUL */)
+KEY_MAP_WIN_JPN (KanaMode, VK_ATTN)
+KEY_MAP_GTK     (KanaMode, GDK_Kana_Lock)
+KEY_MAP_GTK     (KanaMode, GDK_Kana_Shift)
+KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Lock)
+KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Shift)
+
+// KanjiMode
+KEY_MAP_WIN_JPN (KanjiMode, VK_KANJI /* same as VK_HANJA */)
+KEY_MAP_COCOA   (KanjiMode, kVK_JIS_Kana) // Kana key opens IME
+KEY_MAP_GTK     (KanjiMode, GDK_Kanji) // Typically, Alt + Hankaku/Zenkaku key
+KEY_MAP_QT      (KanjiMode, Qt::Key_Kanji)
+// Assuming that KANA key of Android is the Kana key on Mac keyboard.
+KEY_MAP_ANDROID (KanjiMode, AKEYCODE_KANA)
+
+// Katakana
+KEY_MAP_WIN_JPN (Katakana, VK_OEM_FINISH)
+KEY_MAP_GTK     (Katakana, GDK_Katakana)
+KEY_MAP_QT      (Katakana, Qt::Key_Katakana)
+
+// RomanCharacters
+KEY_MAP_WIN_JPN (RomanCharacters, VK_OEM_BACKTAB)
+KEY_MAP_COCOA   (RomanCharacters, kVK_JIS_Eisu)
+KEY_MAP_GTK     (RomanCharacters, GDK_Romaji)
+KEY_MAP_QT      (RomanCharacters, Qt::Key_Romaji)
+// Assuming that EISU key of Android is the Eisu key on Mac keyboard.
+KEY_MAP_ANDROID (RomanCharacters, AKEYCODE_EISU)
+
+// FullWidth
+KEY_MAP_WIN_JPN (FullWidth, VK_OEM_ENLW)
+KEY_MAP_GTK     (FullWidth, GDK_Zenkaku)
+KEY_MAP_QT      (FullWidth, Qt::Key_Zenkaku)
+
 
 // Apps
 KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
@@ -831,107 +937,6 @@ KEY_MAP_QT      (DeadVoicedSound, Qt::Key_Dead_Voiced_Sound)
 // DeadSemivoicedSound
 KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
 KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
-
-// Alphanumeric
-KEY_MAP_WIN_JPN (Alphanumeric, VK_OEM_ATTN)
-KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_Shift)
-KEY_MAP_GTK     (Alphanumeric, GDK_Eisu_toggle)
-KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_Shift)
-KEY_MAP_QT      (Alphanumeric, Qt::Key_Eisu_toggle)
-
-// Process
-
-// Compose
-KEY_MAP_GTK     (Compose, GDK_Multi_key) // "Multi Key" is "Compose key" on X
-KEY_MAP_QT      (Compose, Qt::Key_Multi_key)
-
-// AllCandidates
-KEY_MAP_GTK     (AllCandidates, GDK_MultipleCandidate) // OADG 109, Zen Koho
-KEY_MAP_QT      (AllCandidates, Qt::Key_MultipleCandidate)
-
-// NextCandidate
-
-// PreviousCandidate
-KEY_MAP_GTK     (PreviousCandidate, GDK_PreviousCandidate) // OADG 109, Mae Koho
-KEY_MAP_QT      (PreviousCandidate, Qt::Key_PreviousCandidate)
-
-// CodeInput
-KEY_MAP_GTK     (CodeInput, GDK_Codeinput) // OADG 109, Kanji Bangou
-KEY_MAP_QT      (CodeInput, Qt::Key_Codeinput)
-
-// Convert
-KEY_MAP_WIN     (Convert, VK_CONVERT)
-KEY_MAP_GTK     (Convert, GDK_Henkan)
-KEY_MAP_QT      (Convert, Qt::Key_Henkan)
-KEY_MAP_ANDROID (Convert, AKEYCODE_HENKAN)
-
-// Nonconvert
-KEY_MAP_WIN     (Nonconvert, VK_NONCONVERT)
-KEY_MAP_GTK     (Nonconvert, GDK_Muhenkan)
-KEY_MAP_QT      (Nonconvert, Qt::Key_Muhenkan)
-KEY_MAP_ANDROID (Nonconvert, AKEYCODE_MUHENKAN)
-
-// FinalMode
-KEY_MAP_WIN     (FinalMode, VK_FINAL)
-
-// FullWidth
-KEY_MAP_WIN_JPN (FullWidth, VK_OEM_ENLW)
-KEY_MAP_GTK     (FullWidth, GDK_Zenkaku)
-KEY_MAP_QT      (FullWidth, Qt::Key_Zenkaku)
-
-// HalfWidth
-KEY_MAP_WIN_JPN (HalfWidth, VK_OEM_AUTO)
-KEY_MAP_GTK     (HalfWidth, GDK_Hankaku)
-KEY_MAP_QT      (HalfWidth, Qt::Key_Hankaku)
-
-// ModeChange
-KEY_MAP_WIN     (ModeChange, VK_MODECHANGE)
-KEY_MAP_ANDROID (ModeChange, AKEYCODE_SWITCH_CHARSET)
-
-// RomanCharacters
-KEY_MAP_WIN_JPN (RomanCharacters, VK_OEM_BACKTAB)
-KEY_MAP_COCOA   (RomanCharacters, kVK_JIS_Eisu)
-KEY_MAP_GTK     (RomanCharacters, GDK_Romaji)
-KEY_MAP_QT      (RomanCharacters, Qt::Key_Romaji)
-// Assuming that EISU key of Android is the Eisu key on Mac keyboard.
-KEY_MAP_ANDROID (RomanCharacters, AKEYCODE_EISU)
-
-// HangulMode
-KEY_MAP_WIN_KOR (HangulMode, VK_HANGUL /* same as VK_KANA */)
-
-// HanjaMode
-KEY_MAP_WIN_KOR (HanjaMode, VK_HANJA /* same as VK_KANJI */)
-
-// JunjaMode
-KEY_MAP_WIN     (JunjaMode, VK_JUNJA)
-
-// Hiragana
-KEY_MAP_WIN_JPN (Hiragana, VK_OEM_COPY)
-KEY_MAP_GTK     (Hiragana, GDK_Hiragana)
-KEY_MAP_QT      (Hiragana, Qt::Key_Hiragana)
-
-// KanaMode
-// VK_KANA is never used with modern Japanese keyboard, however, IE maps it to
-// KanaMode, therefore, we should use same map for it.
-KEY_MAP_WIN_JPN (KanaMode, VK_KANA /* same as VK_HANGUL */)
-KEY_MAP_WIN_JPN (KanaMode, VK_ATTN)
-KEY_MAP_GTK     (KanaMode, GDK_Kana_Lock)
-KEY_MAP_GTK     (KanaMode, GDK_Kana_Shift)
-KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Lock)
-KEY_MAP_QT      (KanaMode, Qt::Key_Kana_Shift)
-
-// KanjiMode
-KEY_MAP_WIN_JPN (KanjiMode, VK_KANJI /* same as VK_HANJA */)
-KEY_MAP_COCOA   (KanjiMode, kVK_JIS_Kana) // Kana key opens IME
-KEY_MAP_GTK     (KanjiMode, GDK_Kanji) // Typically, Alt + Hankaku/Zenkaku key
-KEY_MAP_QT      (KanjiMode, Qt::Key_Kanji)
-// Assuming that KANA key of Android is the Kana key on Mac keyboard.
-KEY_MAP_ANDROID (KanjiMode, AKEYCODE_KANA)
-
-// Katakana
-KEY_MAP_WIN_JPN (Katakana, VK_OEM_FINISH)
-KEY_MAP_GTK     (Katakana, GDK_Katakana)
-KEY_MAP_QT      (Katakana, Qt::Key_Katakana)
 
 // AudioFaderFront
 
