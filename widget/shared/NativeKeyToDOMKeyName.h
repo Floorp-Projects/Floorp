@@ -170,6 +170,31 @@ KEY_MAP_QT      (Shift, Qt::Key_Shift)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_LEFT)
 KEY_MAP_ANDROID (Shift, AKEYCODE_SHIFT_RIGHT)
 
+/******************************************************************************
+ * Whitespace Keys
+ ******************************************************************************/
+// Enter
+KEY_MAP_WIN     (Enter, VK_RETURN)
+KEY_MAP_COCOA   (Enter, kVK_Return)
+KEY_MAP_COCOA   (Enter, kVK_ANSI_KeypadEnter)
+KEY_MAP_COCOA   (Enter, kVK_Powerbook_KeypadEnter)
+KEY_MAP_GTK     (Enter, GDK_Return)
+KEY_MAP_GTK     (Enter, GDK_KP_Enter)
+KEY_MAP_GTK     (Enter, GDK_ISO_Enter)
+KEY_MAP_GTK     (Enter, GDK_3270_Enter)
+KEY_MAP_QT      (Enter, Qt::Key_Return)
+KEY_MAP_QT      (Enter, Qt::Key_Enter)
+KEY_MAP_ANDROID (Enter, AKEYCODE_ENTER)
+KEY_MAP_ANDROID (Enter, AKEYCODE_NUMPAD_ENTER)
+
+// Tab
+KEY_MAP_WIN     (Tab, VK_TAB)
+KEY_MAP_COCOA   (Tab, kVK_Tab)
+KEY_MAP_GTK     (Tab, GDK_Tab)
+KEY_MAP_GTK     (Tab, GDK_KP_Tab)
+KEY_MAP_QT      (Tab, Qt::Key_Tab)
+KEY_MAP_ANDROID (Tab, AKEYCODE_TAB)
+
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
@@ -482,20 +507,6 @@ KEY_MAP_ANDROID (Accept, AKEYCODE_DPAD_CENTER)
 
 // Again
 
-// Enter
-KEY_MAP_WIN     (Enter, VK_RETURN)
-KEY_MAP_COCOA   (Enter, kVK_Return)
-KEY_MAP_COCOA   (Enter, kVK_ANSI_KeypadEnter)
-KEY_MAP_COCOA   (Enter, kVK_Powerbook_KeypadEnter)
-KEY_MAP_GTK     (Enter, GDK_Return)
-KEY_MAP_GTK     (Enter, GDK_KP_Enter)
-KEY_MAP_GTK     (Enter, GDK_ISO_Enter)
-KEY_MAP_GTK     (Enter, GDK_3270_Enter)
-KEY_MAP_QT      (Enter, Qt::Key_Return)
-KEY_MAP_QT      (Enter, Qt::Key_Enter)
-KEY_MAP_ANDROID (Enter, AKEYCODE_ENTER)
-KEY_MAP_ANDROID (Enter, AKEYCODE_NUMPAD_ENTER)
-
 // Find
 KEY_MAP_GTK     (Find, GDK_Find)
 
@@ -699,14 +710,6 @@ KEY_MAP_ANDROID (End, AKEYCODE_MOVE_END)
 // Select
 KEY_MAP_WIN     (Select, VK_SELECT)
 KEY_MAP_GTK     (Select, GDK_Select)
-
-// Tab
-KEY_MAP_WIN     (Tab, VK_TAB)
-KEY_MAP_COCOA   (Tab, kVK_Tab)
-KEY_MAP_GTK     (Tab, GDK_Tab)
-KEY_MAP_GTK     (Tab, GDK_KP_Tab)
-KEY_MAP_QT      (Tab, Qt::Key_Tab)
-KEY_MAP_ANDROID (Tab, AKEYCODE_TAB)
 
 // Backspace
 KEY_MAP_WIN     (Backspace, VK_BACK)
