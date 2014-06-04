@@ -997,15 +997,9 @@ KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
 KEY_MAP_WIN     (Zoom, VK_ZOOM)
 KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
 
-
-// UpLeft
-
-// UpRight
-
-// DownLeft
-
-// DownRight
-
+/******************************************************************************
+ * Deplicated
+ ******************************************************************************/
 // DeadGrave
 KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
 KEY_MAP_QT      (DeadGrave, Qt::Key_Dead_Grave)
@@ -1069,14 +1063,6 @@ KEY_MAP_QT      (DeadVoicedSound, Qt::Key_Dead_Voiced_Sound)
 // DeadSemivoicedSound
 KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
 KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
-
-// MediaTrackSkip
-
-// MediaTrackStart
-
-// MediaTrackEnd
-
-// DisplayWide
 
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN
