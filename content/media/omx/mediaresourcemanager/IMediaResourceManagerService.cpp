@@ -34,20 +34,23 @@ public:
     {
     }
 
-    virtual void requestMediaResource(const sp<IMediaResourceManagerClient>& client, int resourceType)
+    virtual status_t requestMediaResource(const sp<IMediaResourceManagerClient>& client, int resourceType, bool willWait)
     {
         Parcel data, reply;
         data.writeInterfaceToken(IMediaResourceManagerService::getInterfaceDescriptor());
         data.writeStrongBinder(client->asBinder());
         data.writeInt32(resourceType);
+        data.writeInt32(willWait ? 1 : 0);
         remote()->transact(REQUEST_MEDIA_RESOURCE, data, &reply);
+        return reply.readInt32();
     }
 
-    virtual status_t cancelClient(const sp<IMediaResourceManagerClient>& client)
+    virtual status_t cancelClient(const sp<IMediaResourceManagerClient>& client, int resourceType)
     {
         Parcel data, reply;
         data.writeInterfaceToken(IMediaResourceManagerService::getInterfaceDescriptor());
         data.writeStrongBinder(client->asBinder());
+        data.writeInt32(resourceType);
         remote()->transact(DEREGISTER_CLIENT, data, &reply);
         return reply.readInt32();
     }
@@ -66,14 +69,17 @@ status_t BnMediaResourceManagerService::onTransact(
             CHECK_INTERFACE(IMediaResourceManagerService, data, reply);
             sp<IMediaResourceManagerClient> client = interface_cast<IMediaResourceManagerClient>(data.readStrongBinder());
             int resourceType = data.readInt32();
-            requestMediaResource(client, resourceType);
+            bool willWait = (data.readInt32() == 1);
+            status_t result = requestMediaResource(client, resourceType, willWait);
+            reply->writeInt32(result);
             return NO_ERROR;
         } break;
         case DEREGISTER_CLIENT: {
             CHECK_INTERFACE(IMediaResourceManagerService, data, reply);
             sp<IMediaResourceManagerClient> client = interface_cast<IMediaResourceManagerClient>(data.readStrongBinder());
-            cancelClient(client);
-            reply->writeInt32(NO_ERROR);
+            int resourceType = data.readInt32();
+            status_t result = cancelClient(client, resourceType);
+            reply->writeInt32(result);
             return NO_ERROR;
         } break;
         default:
