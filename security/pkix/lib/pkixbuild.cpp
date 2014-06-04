@@ -167,10 +167,10 @@ BuildForwardInner(TrustDomain& trustDomain,
   bool loopDetected = false;
   for (BackCert* prev = potentialIssuer.childCert;
        !loopDetected && prev != nullptr; prev = prev->childCert) {
-    if (SECITEM_ItemsAreEqual(&potentialIssuer.GetNSSCert()->derPublicKey,
-                              &prev->GetNSSCert()->derPublicKey) &&
-        SECITEM_ItemsAreEqual(&potentialIssuer.GetNSSCert()->derSubject,
-                              &prev->GetNSSCert()->derSubject)) {
+    if (SECITEM_ItemsAreEqual(&potentialIssuer.GetSubjectPublicKeyInfo(),
+                              &prev->GetSubjectPublicKeyInfo()) &&
+        SECITEM_ItemsAreEqual(&potentialIssuer.GetSubject(),
+                              &prev->GetSubject())) {
       return Fail(RecoverableError, SEC_ERROR_UNKNOWN_ISSUER); // XXX: error code
     }
   }
