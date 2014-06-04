@@ -128,6 +128,8 @@ public:
   NS_IMETHOD VisitResponseHeaders(nsIHttpHeaderVisitor *visitor);
   NS_IMETHOD GetAllowPipelining(bool *value);
   NS_IMETHOD SetAllowPipelining(bool value);
+  NS_IMETHOD GetAllowSTS(bool *value);
+  NS_IMETHOD SetAllowSTS(bool value);
   NS_IMETHOD GetRedirectionLimit(uint32_t *value);
   NS_IMETHOD SetRedirectionLimit(uint32_t value);
   NS_IMETHOD IsNoStoreResponse(bool *value);
@@ -309,6 +311,7 @@ protected:
   uint32_t                          mRequestObserversCalled     : 1;
   uint32_t                          mResponseHeadersModified    : 1;
   uint32_t                          mAllowPipelining            : 1;
+  uint32_t                          mAllowSTS                   : 1;
   uint32_t                          mForceAllowThirdPartyCookie : 1;
   uint32_t                          mUploadStreamHasHeaders     : 1;
   uint32_t                          mInheritApplicationCache    : 1;
