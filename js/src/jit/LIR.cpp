@@ -86,14 +86,36 @@ LBlock::New(TempAllocator &alloc, MBasicBlock *from)
     }
 
     // Allocate space for the LPhis.
-    return block->phis_.init(alloc, numLPhis) ? block : nullptr;
+    if (!block->phis_.init(alloc, numLPhis))
+        return nullptr;
+
+    // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
+    // operands on each incoming edge, and set their definitions at the start of
+    // their defining block.
+    size_t phiIndex = 0;
+    size_t numPreds = from->numPredecessors();
+    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+        MPhi *phi = *i;
+        MOZ_ASSERT(phi->numOperands() == numPreds);
+
+        int numPhis = (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
+        for (int i = 0; i < numPhis; i++) {
+            void *array = alloc.allocateArray<sizeof(LAllocation)>(numPreds);
+            LAllocation *inputs = static_cast<LAllocation *>(array);
+            if (!inputs)
+                return nullptr;
+
+            new (&block->phis_[phiIndex++]) LPhi(phi, inputs);
+        }
+    }
+    return block;
 }
 
 uint32_t
 LBlock::firstId()
 {
     if (phis_.length()) {
-        return phis_[0]->id();
+        return phis_[0].id();
     } else {
         for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); i++) {
             if (i->id())
@@ -285,19 +307,6 @@ LSnapshot::rewriteRecoveredInput(LUse input)
         if (getEntry(i)->isUse() && getEntry(i)->toUse()->virtualRegister() == input.virtualRegister())
             setEntry(i, LUse(input.virtualRegister(), LUse::RECOVERED_INPUT));
     }
-}
-
-LPhi *
-LPhi::New(MIRGenerator *gen, MPhi *ins)
-{
-    LPhi *phi = new (gen->alloc()) LPhi();
-    LAllocation *inputs = gen->allocate<LAllocation>(ins->numOperands());
-    if (!inputs)
-        return nullptr;
-
-    phi->inputs_ = inputs;
-    phi->setMir(ins);
-    return phi;
 }
 
 void
