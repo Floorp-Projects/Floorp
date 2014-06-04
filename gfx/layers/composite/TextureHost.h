@@ -33,6 +33,9 @@ struct nsIntSize;
 struct nsIntRect;
 
 namespace mozilla {
+namespace gfx {
+class SurfaceStream;
+}
 namespace ipc {
 class Shmem;
 }
@@ -44,6 +47,7 @@ class CompositableHost;
 class CompositableBackendSpecificData;
 class CompositableParentManager;
 class SurfaceDescriptor;
+class SurfaceStreamDescriptor;
 class ISurfaceAllocator;
 class TextureHostOGL;
 class TextureSourceOGL;
@@ -590,6 +594,50 @@ public:
 
 protected:
   uint8_t* mBuffer;
+};
+
+/**
+ * A TextureHost for shared SurfaceStream
+ */
+class StreamTextureHost : public TextureHost
+{
+public:
+  StreamTextureHost(TextureFlags aFlags,
+                    const SurfaceStreamDescriptor& aDesc);
+
+  virtual ~StreamTextureHost();
+
+  virtual void DeallocateDeviceData() MOZ_OVERRIDE {};
+
+  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+
+  virtual bool Lock() MOZ_OVERRIDE;
+
+  virtual void Unlock() MOZ_OVERRIDE;
+
+  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+
+  virtual NewTextureSource* GetTextureSources() MOZ_OVERRIDE
+  {
+    return mTextureSource;
+  }
+
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  {
+    return nullptr; // XXX - implement this (for MOZ_DUMP_PAINTING)
+  }
+
+  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+
+#ifdef MOZ_LAYERS_HAVE_LOG
+  virtual const char* Name() { return "StreamTextureHost"; }
+#endif
+
+protected:
+  Compositor* mCompositor;
+  gfx::SurfaceStream* mStream;
+  RefPtr<NewTextureSource> mTextureSource;
+  RefPtr<DataTextureSource> mDataTextureSource;
 };
 
 class MOZ_STACK_CLASS AutoLockTextureHost
