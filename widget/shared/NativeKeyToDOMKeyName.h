@@ -901,21 +901,102 @@ KEY_MAP_WIN     (BrowserStop, VK_BROWSER_STOP)
 KEY_MAP_GTK     (BrowserStop, GDK_Stop)
 KEY_MAP_QT      (BrowserStop, Qt::Key_Stop)
 
+/******************************************************************************
+ * Media Controller Keys
+ ******************************************************************************/
+// AudioBassBoostDown
+KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
 
-// Apps
-KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
+// AudioBassBoostUp
+KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
 
-// List
+// ChannelDown
+KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
 
-// Info
-KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
+// ChannelUp
+KEY_MAP_ANDROID (ChannelUp, AKEYCODE_CHANNEL_UP)
+
+// Red
+KEY_MAP_GTK     (Red, GDK_Red)
+KEY_MAP_ANDROID (Red, AKEYCODE_PROG_RED)
+
+// Green
+KEY_MAP_GTK     (Green, GDK_Green)
+KEY_MAP_ANDROID (Green, AKEYCODE_PROG_GREEN)
+
+// Yellow
+KEY_MAP_GTK     (Yellow, GDK_Yellow)
+KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
+
+// Blue
+KEY_MAP_GTK     (Blue, GDK_Blue)
+KEY_MAP_ANDROID (Blue, AKEYCODE_PROG_BLUE)
+
+// Dimmer
+KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
+KEY_MAP_QT      (Dimmer, Qt::Key_BrightnessAdjust)
 
 // Exit
 KEY_MAP_ANDROID (Exit, AKEYCODE_HOME)
 
+// Guide
+KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
+
+// Info
+KEY_MAP_ANDROID (Info, AKEYCODE_INFO)
+
+// Live
+KEY_MAP_ANDROID (Live, AKEYCODE_TV)
+
+// Apps
+KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
+
+// FastFwd
+KEY_MAP_QT      (FastFwd, Qt::Key_AudioForward)
+KEY_MAP_ANDROID (FastFwd, AKEYCODE_MEDIA_FAST_FORWARD)
+
+// MediaLast
+KEY_MAP_QT      (MediaLast, Qt::Key_MediaLast)
+
+// MediaPause
+KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
+KEY_MAP_QT      (MediaPause, Qt::Key_MediaPause)
+KEY_MAP_ANDROID (MediaPause, AKEYCODE_MEDIA_PAUSE)
+
+// MediaPlay
+KEY_MAP_GTK     (MediaPlay, GDK_AudioPlay)
+KEY_MAP_QT      (MediaPlay, Qt::Key_MediaPlay)
+KEY_MAP_ANDROID (MediaPlay, AKEYCODE_MEDIA_PLAY)
+
+// MediaRecord
+KEY_MAP_GTK     (MediaRecord, GDK_AudioRecord)
+KEY_MAP_QT      (MediaRecord, Qt::Key_MediaRecord)
+KEY_MAP_ANDROID (MediaRecord, AKEYCODE_MEDIA_RECORD)
+
+// MediaRewind
+KEY_MAP_GTK     (MediaRewind, GDK_AudioRewind)
+KEY_MAP_QT      (MediaRewind, Qt::Key_AudioRewind)
+KEY_MAP_ANDROID (MediaRewind, AKEYCODE_MEDIA_REWIND)
+
+// PinPToggle
+KEY_MAP_ANDROID (PinPToggle, AKEYCODE_WINDOW)
+
+// RandomToggle
+KEY_MAP_GTK     (RandomToggle, GDK_AudioRandomPlay)
+KEY_MAP_QT      (RandomToggle, Qt::Key_AudioRandomPlay)
+
+// Settings
+KEY_MAP_ANDROID (Settings, AKEYCODE_SETTINGS)
+
+// Subtitle
+KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
+KEY_MAP_QT      (Subtitle, Qt::Key_Subtitle)
+KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
+
 // Zoom
 KEY_MAP_WIN     (Zoom, VK_ZOOM)
 KEY_MAP_QT      (Zoom, Qt::Key_Zoom)
+
 
 // UpLeft
 
@@ -989,175 +1070,13 @@ KEY_MAP_QT      (DeadVoicedSound, Qt::Key_Dead_Voiced_Sound)
 KEY_MAP_GTK     (DeadSemivoicedSound, GDK_dead_semivoiced_sound)
 KEY_MAP_QT      (DeadSemivoicedSound, Qt::Key_Dead_Semivoiced_Sound)
 
-// AudioFaderFront
-
-// AudioFaderRear
-
-// AudioBalanceLeft
-
-// AudioBalanceRight
-
-// AudioBassBoostDown
-KEY_MAP_QT      (AudioBassBoostDown, Qt::Key_BassDown)
-
-// AudioBassBoostUp
-KEY_MAP_QT      (AudioBassBoostUp, Qt::Key_BassUp)
-
-// MediaPause
-KEY_MAP_GTK     (MediaPause, GDK_AudioPause)
-KEY_MAP_QT      (MediaPause, Qt::Key_MediaPause)
-KEY_MAP_ANDROID (MediaPause, AKEYCODE_MEDIA_PAUSE)
-
-// MediaPlay
-KEY_MAP_GTK     (MediaPlay, GDK_AudioPlay)
-KEY_MAP_QT      (MediaPlay, Qt::Key_MediaPlay)
-KEY_MAP_ANDROID (MediaPlay, AKEYCODE_MEDIA_PLAY)
-
 // MediaTrackSkip
 
 // MediaTrackStart
 
 // MediaTrackEnd
 
-// Blue
-KEY_MAP_GTK     (Blue, GDK_Blue)
-KEY_MAP_ANDROID (Blue, AKEYCODE_PROG_BLUE)
-
-// Brown
-
-// ChannelDown
-KEY_MAP_ANDROID (ChannelDown, AKEYCODE_CHANNEL_DOWN)
-
-// ChannelUp
-KEY_MAP_ANDROID (ChannelUp, AKEYCODE_CHANNEL_UP)
-
-// ClearFavorite0
-
-// ClearFavorite1
-
-// ClearFavorite2
-
-// ClearFavorite3
-
-// Dimmer
-KEY_MAP_GTK     (Dimmer, GDK_BrightnessAdjust)
-KEY_MAP_QT      (Dimmer, Qt::Key_BrightnessAdjust)
-
-// DisplaySwap
-
-// FastFwd
-KEY_MAP_QT      (FastFwd, Qt::Key_AudioForward)
-KEY_MAP_ANDROID (FastFwd, AKEYCODE_MEDIA_FAST_FORWARD)
-
-// Green
-KEY_MAP_GTK     (Green, GDK_Green)
-KEY_MAP_ANDROID (Green, AKEYCODE_PROG_GREEN)
-
-// Grey
-
-// Guide
-KEY_MAP_ANDROID (Guide, AKEYCODE_GUIDE)
-
-// InstantReplay
-
-// MediaLast
-KEY_MAP_QT      (MediaLast, Qt::Key_MediaLast)
-
-// Link
-
-// Live
-KEY_MAP_ANDROID (Live, AKEYCODE_TV)
-
-// Lock
-
-// NextDay
-
-// NextFavoriteChannel
-
-// OnDemand
-
-// PinPDown
-
-// PinPMove
-
-// PinPToggle
-KEY_MAP_ANDROID (PinPToggle, AKEYCODE_WINDOW)
-
-// PinPUp
-
-// PlaySpeedDown
-
-// PlaySpeedReset
-
-// PlaySpeedUp
-
-// PrevDay
-
-// RandomToggle
-KEY_MAP_GTK     (RandomToggle, GDK_AudioRandomPlay)
-KEY_MAP_QT      (RandomToggle, Qt::Key_AudioRandomPlay)
-
-// RecallFavorite0
-
-// RecallFavorite1
-
-// RecallFavorite2
-
-// RecallFavorite3
-
-// MediaRecord
-KEY_MAP_GTK     (MediaRecord, GDK_AudioRecord)
-KEY_MAP_QT      (MediaRecord, Qt::Key_MediaRecord)
-KEY_MAP_ANDROID (MediaRecord, AKEYCODE_MEDIA_RECORD)
-
-// RecordSpeedNext
-
-// Red
-KEY_MAP_GTK     (Red, GDK_Red)
-KEY_MAP_ANDROID (Red, AKEYCODE_PROG_RED)
-
-// MediaRewind
-KEY_MAP_GTK     (MediaRewind, GDK_AudioRewind)
-KEY_MAP_QT      (MediaRewind, Qt::Key_AudioRewind)
-KEY_MAP_ANDROID (MediaRewind, AKEYCODE_MEDIA_REWIND)
-
-// RfBypass
-
-// ScanChannelsToggle
-
-// ScreenModeNext
-
-// Settings
-KEY_MAP_ANDROID (Settings, AKEYCODE_SETTINGS)
-
-// SplitScreenToggle
-
-// StoreFavorite0
-
-// StoreFavorite1
-
-// StoreFavorite2
-
-// StoreFavorite3
-
-// Subtitle
-KEY_MAP_GTK     (Subtitle, GDK_Subtitle)
-KEY_MAP_QT      (Subtitle, Qt::Key_Subtitle)
-KEY_MAP_ANDROID (Subtitle, AKEYCODE_CAPTIONS)
-
-// AudioSurroundModeNext
-
-// Teletext
-
-// VideoModeNext
-
 // DisplayWide
-
-// Wink
-
-// Yellow
-KEY_MAP_GTK     (Yellow, GDK_Yellow)
-KEY_MAP_ANDROID (Yellow, AKEYCODE_PROG_YELLOW)
 
 #undef KEY_MAP_WIN
 #undef KEY_MAP_WIN_JPN
