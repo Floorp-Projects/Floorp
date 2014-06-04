@@ -81,6 +81,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "__exposedProps__",     // IDX_EXPOSEDPROPS
     "eval",                 // IDX_EVAL
     "controllers",           // IDX_CONTROLLERS
+    "realFrameElement",     // IDX_REALFRAMEELEMENT
 };
 
 /***************************************************************************/
