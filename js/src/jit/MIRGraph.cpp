@@ -942,7 +942,7 @@ MBasicBlock::dominates(const MBasicBlock *other) const
 {
     uint32_t high = domIndex() + numDominated();
     uint32_t low  = domIndex();
-    return other->domIndex() >= low && other->domIndex() <= high;
+    return other->domIndex() >= low && other->domIndex() < high;
 }
 
 void

@@ -397,7 +397,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return immediatelyDominated_.end();
     }
 
+    // Return the number of blocks dominated by this block. All blocks
+    // dominate at least themselves, so this will always be non-zero.
     size_t numDominated() const {
+        JS_ASSERT(numDominated_ != 0);
         return numDominated_;
     }
 
