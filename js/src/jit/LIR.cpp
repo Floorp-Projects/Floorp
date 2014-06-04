@@ -28,7 +28,6 @@ LIRGraph::LIRGraph(MIRGraph *mir)
     localSlotCount_(0),
     argumentSlotCount_(0),
     entrySnapshot_(nullptr),
-    osrBlock_(nullptr),
     mir_(*mir)
 {
 }

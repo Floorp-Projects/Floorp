@@ -1491,9 +1491,6 @@ class LIRGraph
     // Snapshot taken before any LIR has been lowered.
     LSnapshot *entrySnapshot_;
 
-    // LBlock containing LOsrEntry, or nullptr.
-    LBlock *osrBlock_;
-
     MIRGraph &mir_;
 
   public:
@@ -1579,13 +1576,6 @@ class LIRGraph
     LSnapshot *entrySnapshot() const {
         JS_ASSERT(entrySnapshot_);
         return entrySnapshot_;
-    }
-    void setOsrBlock(LBlock *block) {
-        JS_ASSERT(!osrBlock_);
-        osrBlock_ = block;
-    }
-    LBlock *osrBlock() const {
-        return osrBlock_;
     }
     bool noteNeedsSafepoint(LInstruction *ins);
     size_t numNonCallSafepoints() const {
