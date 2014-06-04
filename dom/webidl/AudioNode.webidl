@@ -43,3 +43,9 @@ interface AudioNode : EventTarget {
 
 };
 
+// Mozilla extension
+partial interface AudioNode {
+  [ChromeOnly]
+  readonly attribute unsigned long id;
+};
+
