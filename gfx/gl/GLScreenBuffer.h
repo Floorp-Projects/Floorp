@@ -155,6 +155,10 @@ public:
                                   const gfx::IntSize& size,
                                   const SurfaceCaps& caps);
 
+    bool HasDelayedFrame() {
+      return mStream->HasDelayedFrame();
+    }
+
 protected:
     GLContext* const mGL;         // Owns us.
     SurfaceCaps mCaps;

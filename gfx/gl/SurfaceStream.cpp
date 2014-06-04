@@ -31,6 +31,16 @@ SurfaceStream::ChooseGLStreamType(SurfaceStream::OMTC omtc,
     }
 }
 
+static bool
+ShouldDelayFrame()
+{
+#ifdef MOZ_WIDGET_GONK
+  return true;
+#else
+  return false;
+#endif
+}
+
 SurfaceStream*
 SurfaceStream::CreateForType(SurfaceStreamType type, mozilla::gl::GLContext* glContext, SurfaceStream* prevStream)
 {
@@ -43,12 +53,20 @@ SurfaceStream::CreateForType(SurfaceStreamType type, mozilla::gl::GLContext* glC
         case SurfaceStreamType::TripleBuffer_Copy:
             result = new SurfaceStream_TripleBuffer_Copy(prevStream);
             break;
-        case SurfaceStreamType::TripleBuffer_Async:
-            result = new SurfaceStream_TripleBuffer_Async(prevStream);
+        case SurfaceStreamType::TripleBuffer_Async: {
+            result = new SurfaceStream_TripleBuffer_Async(ShouldDelayFrame(), prevStream);
             break;
-        case SurfaceStreamType::TripleBuffer:
-            result = new SurfaceStream_TripleBuffer(prevStream);
+        }
+        case SurfaceStreamType::TripleBuffer: {
+            bool delayFrame = false;
+#ifdef MOZ_WIDGET_GONK
+            // Give time for the frame to resolve instead of waiting for the
+            // fence right away.
+            delayFrame = true;
+#endif
+            result = new SurfaceStream_TripleBuffer(delayFrame, prevStream);
             break;
+        }
         default:
             MOZ_CRASH("Invalid Type.");
     }
@@ -391,18 +409,25 @@ void SurfaceStream_TripleBuffer::Init(SurfaceStream* prevStream)
 }
 
 
-SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream)
+SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(bool aUseSwapDelay,
+                                                       SurfaceStreamType type,
+                                                       SurfaceStream* prevStream)
     : SurfaceStream(type, prevStream)
     , mStaging(nullptr)
     , mConsumer(nullptr)
+    , mDelay(nullptr)
+    , mUseSwapDelay(aUseSwapDelay)
 {
     SurfaceStream_TripleBuffer::Init(prevStream);
 }
 
-SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(SurfaceStream* prevStream)
+SurfaceStream_TripleBuffer::SurfaceStream_TripleBuffer(bool aUseSwapDelay,
+                                                       SurfaceStream* prevStream)
     : SurfaceStream(SurfaceStreamType::TripleBuffer, prevStream)
     , mStaging(nullptr)
     , mConsumer(nullptr)
+    , mDelay(nullptr)
+    , mUseSwapDelay(aUseSwapDelay)
 {
     SurfaceStream_TripleBuffer::Init(prevStream);
 }
@@ -411,6 +436,7 @@ SurfaceStream_TripleBuffer::~SurfaceStream_TripleBuffer()
 {
     Delete(mStaging);
     Delete(mConsumer);
+    Delete(mDelay);
 }
 
 void
@@ -460,17 +486,31 @@ SharedSurface*
 SurfaceStream_TripleBuffer::SwapConsumer_NoWait()
 {
     MonitorAutoLock lock(mMonitor);
-    if (mStaging) {
+    if (mDelay) {
         Scrap(mConsumer);
-        Move(mStaging, mConsumer);
+        Move(mDelay, mConsumer);
         mMonitor.NotifyAll();
+    }
+
+    if (mStaging) {
+        if (mUseSwapDelay && mConsumer) {
+            MOZ_ASSERT(!mDelay);
+            Move(mStaging, mDelay);
+        } else {
+            Scrap(mConsumer);
+            Move(mStaging, mConsumer);
+            mMonitor.NotifyAll();
+        }
     }
 
     return mConsumer;
 }
 
-SurfaceStream_TripleBuffer_Async::SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream)
-    : SurfaceStream_TripleBuffer(SurfaceStreamType::TripleBuffer_Async, prevStream)
+SurfaceStream_TripleBuffer_Async::SurfaceStream_TripleBuffer_Async(bool aSwapDelay,
+                                                                   SurfaceStream* prevStream)
+    : SurfaceStream_TripleBuffer(aSwapDelay,
+                                 SurfaceStreamType::TripleBuffer_Async,
+                                 prevStream)
 {
 }
 
