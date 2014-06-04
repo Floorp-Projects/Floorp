@@ -72,7 +72,7 @@ struct TexturedEffect : public Effect
   gfx::Rect mTextureCoords;
   TextureSource* mTexture;
   bool mPremultiplied;
-  gfx::Filter mFilter;;
+  gfx::Filter mFilter;
 };
 
 // Support an alpha mask.
