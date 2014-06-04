@@ -967,7 +967,6 @@ public:
   void SizeToContent(mozilla::ErrorResult& aError);
   nsIDOMCrypto* GetCrypto(mozilla::ErrorResult& aError);
   nsIControllers* GetControllers(mozilla::ErrorResult& aError);
-  mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
   float GetMozInnerScreenX(mozilla::ErrorResult& aError);
   float GetMozInnerScreenY(mozilla::ErrorResult& aError);
   float GetDevicePixelRatio(mozilla::ErrorResult& aError);
@@ -1374,6 +1373,8 @@ protected:
                                 mozilla::ErrorResult& aError);
 
   nsGlobalWindow* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
+
+  mozilla::dom::Element* GetRealFrameElement(mozilla::ErrorResult& aError);
 
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
