@@ -262,6 +262,66 @@ KEY_MAP_GTK     (PageUp, GDK_KP_Page_Up /* same as GDK_KP_Prior */)
 KEY_MAP_QT      (PageUp, Qt::Key_PageUp)
 KEY_MAP_ANDROID (PageUp, AKEYCODE_PAGE_UP)
 
+/******************************************************************************
+ * Editing Keys
+ ******************************************************************************/
+// Backspace
+KEY_MAP_WIN     (Backspace, VK_BACK)
+KEY_MAP_COCOA   (Backspace, kVK_PC_Backspace)
+KEY_MAP_GTK     (Backspace, GDK_BackSpace)
+KEY_MAP_QT      (Backspace, Qt::Key_Backspace)
+KEY_MAP_ANDROID (Backspace, AKEYCODE_DEL)
+
+// Clear
+KEY_MAP_WIN     (Clear, VK_CLEAR)
+KEY_MAP_WIN     (Clear, VK_OEM_CLEAR)
+KEY_MAP_COCOA   (Clear, kVK_ANSI_KeypadClear)
+KEY_MAP_GTK     (Clear, GDK_Clear)
+KEY_MAP_QT      (Clear, Qt::Key_Clear)
+KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
+
+// Copy
+KEY_MAP_GTK     (Copy, GDK_Copy)
+KEY_MAP_QT      (Copy, Qt::Key_Copy)
+
+// Crsel
+KEY_MAP_WIN     (Crsel, VK_CRSEL)
+KEY_MAP_GTK     (Crsel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
+
+// Cut
+KEY_MAP_GTK     (Cut, GDK_Cut)
+KEY_MAP_QT      (Cut, Qt::Key_Cut)
+
+// Del
+KEY_MAP_WIN     (Del, VK_DELETE)
+KEY_MAP_COCOA   (Del, kVK_PC_Delete)
+KEY_MAP_GTK     (Del, GDK_Delete)
+KEY_MAP_GTK     (Del, GDK_KP_Delete)
+KEY_MAP_QT      (Del, Qt::Key_Delete)
+KEY_MAP_ANDROID (Del, AKEYCODE_FORWARD_DEL)
+
+// EraseEof
+KEY_MAP_WIN     (EraseEof, VK_EREOF)
+KEY_MAP_GTK     (EraseEof, GDK_3270_EraseEOF) // legacy IBM keyboard layout
+
+// Exsel
+KEY_MAP_WIN     (Exsel, VK_EXSEL)
+KEY_MAP_GTK     (Exsel, GDK_3270_ExSelect) // legacy IBM keyboard layout
+
+// Insert
+KEY_MAP_WIN     (Insert, VK_INSERT)
+KEY_MAP_GTK     (Insert, GDK_Insert)
+KEY_MAP_GTK     (Insert, GDK_KP_Insert)
+KEY_MAP_QT      (Insert, Qt::Key_Insert)
+KEY_MAP_ANDROID (Insert, AKEYCODE_INSERT)
+
+// Paste
+KEY_MAP_GTK     (Paste, GDK_Paste)
+KEY_MAP_QT      (Paste, Qt::Key_Paste)
+
+// Undo
+KEY_MAP_GTK     (Undo, GDK_Undo)
+
 
 // Attn
 KEY_MAP_WIN_OTH (Attn, VK_ATTN) // not valid with Japanese keyboard layout
@@ -269,14 +329,6 @@ KEY_MAP_GTK     (Attn, GDK_3270_Attn) // legacy IBM keyboard layout
 
 // Apps
 KEY_MAP_ANDROID (Apps, AKEYCODE_APP_SWITCH)
-
-// Crsel
-KEY_MAP_WIN     (Crsel, VK_CRSEL)
-KEY_MAP_GTK     (Crsel, GDK_3270_CursorSelect) // legacy IBM keyboard layout
-
-// Exsel
-KEY_MAP_WIN     (Exsel, VK_EXSEL)
-KEY_MAP_GTK     (Exsel, GDK_3270_ExSelect) // legacy IBM keyboard layout
 
 // F1
 KEY_MAP_WIN     (F1, VK_F1)
@@ -713,55 +765,6 @@ KEY_MAP_ANDROID (BrowserForward, AKEYCODE_FORWARD)
 // Select
 KEY_MAP_WIN     (Select, VK_SELECT)
 KEY_MAP_GTK     (Select, GDK_Select)
-
-// Backspace
-KEY_MAP_WIN     (Backspace, VK_BACK)
-KEY_MAP_COCOA   (Backspace, kVK_PC_Backspace)
-KEY_MAP_GTK     (Backspace, GDK_BackSpace)
-KEY_MAP_QT      (Backspace, Qt::Key_Backspace)
-KEY_MAP_ANDROID (Backspace, AKEYCODE_DEL)
-
-// Clear
-KEY_MAP_WIN     (Clear, VK_CLEAR)
-KEY_MAP_WIN     (Clear, VK_OEM_CLEAR)
-KEY_MAP_COCOA   (Clear, kVK_ANSI_KeypadClear)
-KEY_MAP_GTK     (Clear, GDK_Clear)
-KEY_MAP_QT      (Clear, Qt::Key_Clear)
-KEY_MAP_ANDROID (Clear, AKEYCODE_CLEAR)
-
-// Copy
-KEY_MAP_GTK     (Copy, GDK_Copy)
-KEY_MAP_QT      (Copy, Qt::Key_Copy)
-
-// Cut
-KEY_MAP_GTK     (Cut, GDK_Cut)
-KEY_MAP_QT      (Cut, Qt::Key_Cut)
-
-// Del
-KEY_MAP_WIN     (Del, VK_DELETE)
-KEY_MAP_COCOA   (Del, kVK_PC_Delete)
-KEY_MAP_GTK     (Del, GDK_Delete)
-KEY_MAP_GTK     (Del, GDK_KP_Delete)
-KEY_MAP_QT      (Del, Qt::Key_Delete)
-KEY_MAP_ANDROID (Del, AKEYCODE_FORWARD_DEL)
-
-// EraseEof
-KEY_MAP_WIN     (EraseEof, VK_EREOF)
-KEY_MAP_GTK     (EraseEof, GDK_3270_EraseEOF) // legacy IBM keyboard layout
-
-// Insert
-KEY_MAP_WIN     (Insert, VK_INSERT)
-KEY_MAP_GTK     (Insert, GDK_Insert)
-KEY_MAP_GTK     (Insert, GDK_KP_Insert)
-KEY_MAP_QT      (Insert, Qt::Key_Insert)
-KEY_MAP_ANDROID (Insert, AKEYCODE_INSERT)
-
-// Paste
-KEY_MAP_GTK     (Paste, GDK_Paste)
-KEY_MAP_QT      (Paste, Qt::Key_Paste)
-
-// Undo
-KEY_MAP_GTK     (Undo, GDK_Undo)
 
 // DeadGrave
 KEY_MAP_GTK     (DeadGrave, GDK_dead_grave)
