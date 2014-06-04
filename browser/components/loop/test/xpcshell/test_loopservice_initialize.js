@@ -8,51 +8,51 @@ var server;
 
 const kServerPushUrl = "http://localhost:3456";
 
+var startTimerCalled = false;
+
 /**
  * Tests that registration doesn't happen when the expiry time is
  * not set.
  */
-add_test(function test_initialize_no_expiry() {
-  MozLoopService.initialize(function(err) {
-    Assert.equal(err, false,
-      "should not register when no expiry time is set");
+add_task(function test_initialize_no_expiry() {
+  startTimerCalled = false;
 
-    run_next_test();
-  });
+  MozLoopService.initialize();
+
+  Assert.equal(startTimerCalled, false,
+    "should not register when no expiry time is set");
 });
 
 /**
  * Tests that registration doesn't happen when the expiry time is
  * in the past.
  */
-add_test(function test_initialize_expiry_past() {
+add_task(function test_initialize_expiry_past() {
   // Set time to be 2 seconds in the past.
   var nowSeconds = Date.now() / 1000;
   Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", nowSeconds - 2);
+  startTimerCalled = false;
 
-  MozLoopService.initialize(function(err) {
-    Assert.equal(err, false,
-      "should not register when expiry time is in past");
+  MozLoopService.initialize();
 
-    run_next_test();
-  });
+  Assert.equal(startTimerCalled, false,
+    "should not register when expiry time is in past");
 });
 
 /**
  * Tests that registration happens when the expiry time is in
  * the future.
  */
-add_test(function test_initialize_and_register() {
+add_task(function test_initialize_starts_timer() {
   // Set time to be 1 minute in the future
   var nowSeconds = Date.now() / 1000;
   Services.prefs.setIntPref("loop.urlsExpiryTimeSeconds", nowSeconds + 60);
+  startTimerCalled = false;
 
-  MozLoopService.initialize(function(err) {
-    Assert.equal(err, null,
-      "should not register when expiry time is in past");
+  MozLoopService.initialize();
 
-    run_next_test();
-  });
+  Assert.equal(startTimerCalled, true,
+    "should start the timer when expiry time is in the future");
 });
 
 function run_test()
@@ -70,8 +70,11 @@ function run_test()
   Services.prefs.setCharPref("services.push.serverURL", kServerPushUrl);
   Services.prefs.setCharPref("loop.server", "http://localhost:" + server.identity.primaryPort);
 
-  // Set the initial registration delay to a short value for fast run tests.
-  Services.prefs.setIntPref("loop.initialDelay", 10);
+  // Override MozLoopService's initializeTimer, so that we can verify the timeout is called
+  // correctly.
+  MozLoopService._startInitializeTimer = function() {
+    startTimerCalled = true;
+  };
 
   do_register_cleanup(function() {
     gMockWebSocketChannelFactory.unregister();
