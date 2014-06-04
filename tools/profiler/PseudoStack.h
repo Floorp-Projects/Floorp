@@ -362,6 +362,7 @@ public:
     // been written such that mStack is always consistent.
     entry.setLabel(aName);
     entry.setCppFrame(aStackAddress, line);
+    MOZ_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
 
     uint32_t uint_category = static_cast<uint32_t>(aCategory);
     MOZ_ASSERT(
