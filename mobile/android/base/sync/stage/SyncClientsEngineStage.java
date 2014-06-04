@@ -397,6 +397,11 @@ public class SyncClientsEngineStage extends AbstractSessionManagingSyncStage {
       return true;
     }
 
+    if (session.getClientsDelegate().getLastModifiedTimestamp() > lastUpload) {
+      // Something's changed locally since we last uploaded.
+      return true;
+    }
+
     // Note the opportunity for clock drift problems here.
     // TODO: if we track download times, we can use the timestamp of most
     // recent download response instead of the current time.

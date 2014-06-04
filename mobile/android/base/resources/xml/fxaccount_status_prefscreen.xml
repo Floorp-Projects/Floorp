@@ -66,6 +66,12 @@
             android:key="passwords"
             android:persistent="false"
             android:title="@string/fxaccount_status_passwords" />
+
+        <EditTextPreference
+            android:singleLine="true"
+            android:key="device_name"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_device_name" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="legal_category"
