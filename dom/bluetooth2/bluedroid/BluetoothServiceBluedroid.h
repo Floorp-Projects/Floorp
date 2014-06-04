@@ -22,8 +22,8 @@ public:
   BluetoothServiceBluedroid();
   ~BluetoothServiceBluedroid();
 
-  virtual nsresult StartInternal();
-  virtual nsresult StopInternal();
+  virtual nsresult StartInternal(BluetoothReplyRunnable* aRunnable);
+  virtual nsresult StopInternal(BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
   GetAdaptersInternal(BluetoothReplyRunnable* aRunnable);
