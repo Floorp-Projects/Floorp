@@ -329,6 +329,12 @@ Assembler::processCodeLabels(uint8_t *rawCode)
     }
 }
 
+int32_t
+Assembler::extractCodeLabelOffset(uint8_t *code) {
+    InstImm *inst = (InstImm *)code;
+    return Assembler::extractLuiOriValue(inst, inst->next());
+}
+
 void
 Assembler::Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address)
 {
@@ -1448,6 +1454,13 @@ Assembler::patchWrite_Imm32(CodeLocationLabel label, Imm32 imm)
     // Overwrite the 4 bytes before the return address, which will
     // end up being the call instruction.
     *(raw - 1) = imm.value;
+}
+
+void
+Assembler::patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm)
+{
+    InstImm *inst = (InstImm *)code;
+    Assembler::updateLuiOriValue(inst, inst->next(), (uint32_t)imm.value);
 }
 
 uint8_t *
