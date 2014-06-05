@@ -2113,7 +2113,7 @@ const JSPropertySpec _typedArray##Object::jsprops[] = {                         
           return obj;                                                                           \
       return nullptr;                                                                           \
   } \
-  JS_FRIEND_DATA(const js::Class* const) js::detail::Name ## ArrayClassPtr =                    \
+  const js::Class* const js::detail::Name ## ArrayClassPtr =                                    \
       &js::TypedArrayObject::classes[TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];
 
 IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Int8, int8_t)
