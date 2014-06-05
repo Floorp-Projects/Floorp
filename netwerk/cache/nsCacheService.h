@@ -228,6 +228,14 @@ public:
 
     typedef bool (*DoomCheckFn)(nsCacheEntry* entry);
 
+    // Accessors to the disabled functionality
+    nsresult CreateSessionInternal(const char *          clientID,
+                                   nsCacheStoragePolicy  storagePolicy,
+                                   bool                  streamBased,
+                                   nsICacheSession     **result);
+    nsresult VisitEntriesInternal(nsICacheVisitor *visitor);
+    nsresult EvictEntriesInternal(nsCacheStoragePolicy storagePolicy);
+
 private:
     friend class nsCacheServiceAutoLock;
     friend class nsOfflineCacheDevice;
