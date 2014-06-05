@@ -4143,6 +4143,60 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket."
   },
+  "NEWTAB_PAGE_DIRECTORY_LINK0_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #0 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK1_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #1 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK2_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #2 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK3_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #3 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK4_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #4 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK5_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #5 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK6_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #6 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK7_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #7 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK8_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #8 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
   "NEWTAB_PAGE_DIRECTORY_AFFILIATE_SHOWN": {
     "expires_in_version": "35",
     "kind": "enumerated",

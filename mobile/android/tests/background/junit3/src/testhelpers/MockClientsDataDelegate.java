@@ -10,6 +10,7 @@ public class MockClientsDataDelegate implements ClientsDataDelegate {
   private String accountGUID;
   private String clientName;
   private int clientsCount;
+  private long clientDataTimestamp = 0;
 
   @Override
   public synchronized String getAccountGUID() {
@@ -20,9 +21,20 @@ public class MockClientsDataDelegate implements ClientsDataDelegate {
   }
 
   @Override
+  public synchronized String getDefaultClientName() {
+    return "Default client";
+  }
+
+  @Override
+  public synchronized void setClientName(String clientName, long now) {
+    this.clientName = clientName;
+    this.clientDataTimestamp = now;
+  }
+
+  @Override
   public synchronized String getClientName() {
     if (clientName == null) {
-      clientName = "Default Name";
+      setClientName(getDefaultClientName(), System.currentTimeMillis());
     }
     return clientName;
   }
@@ -38,7 +50,12 @@ public class MockClientsDataDelegate implements ClientsDataDelegate {
   }
 
   @Override
-  public boolean isLocalGUID(String guid) {
+  public synchronized boolean isLocalGUID(String guid) {
     return getAccountGUID().equals(guid);
+  }
+
+  @Override
+  public synchronized long getLastModifiedTimestamp() {
+    return clientDataTimestamp;
   }
 }

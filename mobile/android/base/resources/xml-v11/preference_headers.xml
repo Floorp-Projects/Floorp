@@ -28,7 +28,8 @@
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_language">
+            android:title="@string/pref_header_language"
+            android:id="@+id/pref_header_language">
         <extra android:name="resource"
                android:value="preferences_locale" />
     </header>

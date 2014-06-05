@@ -64,7 +64,7 @@ function StyleEditorUI(debuggee, target, panelDoc) {
   this.selectedEditor = null;
   this.savedLocations = {};
 
-  this._updateContextMenu = this._updateContextMenu.bind(this);
+  this._updateOptionsMenu = this._updateOptionsMenu.bind(this);
   this._onStyleSheetCreated = this._onStyleSheetCreated.bind(this);
   this._onNewDocument = this._onNewDocument.bind(this);
   this._onMediaPrefChanged = this._onMediaPrefChanged.bind(this);
@@ -142,36 +142,26 @@ StyleEditorUI.prototype = {
       this._importFromFile(this._mockImportFile || null, this._window);
     }.bind(this));
 
-    this._contextMenu = this._panelDoc.getElementById("sidebar-context");
-    this._contextMenu.addEventListener("popupshowing",
-                                       this._updateContextMenu);
+    this._optionsMenu = this._panelDoc.getElementById("style-editor-options-popup");
+    this._optionsMenu.addEventListener("popupshowing",
+                                       this._updateOptionsMenu);
 
-    this._sourcesItem = this._panelDoc.getElementById("context-origsources");
+    this._sourcesItem = this._panelDoc.getElementById("options-origsources");
     this._sourcesItem.addEventListener("command",
                                        this._toggleOrigSources);
-    this._mediaItem = this._panelDoc.getElementById("context-show-media");
+    this._mediaItem = this._panelDoc.getElementById("options-show-media");
     this._mediaItem.addEventListener("command",
                                      this._toggleMediaSidebar);
   },
 
   /**
-   * Update text of context menu option to reflect current preference
-   * settings
+   * Update options menu items to reflect current preference settings.
    */
-  _updateContextMenu: function() {
-    let sourceString = "showOriginalSources";
-    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
-      sourceString = "showCSSSources";
-    }
-    this._sourcesItem.setAttribute("label", _(sourceString + ".label"));
-    this._sourcesItem.setAttribute("accesskey", _(sourceString + ".accesskey"));
-
-    let mediaString = "showMediaSidebar"
-    if (Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR)) {
-      mediaString = "hideMediaSidebar";
-    }
-    this._mediaItem.setAttribute("label", _(mediaString + ".label"));
-    this._mediaItem.setAttribute("accesskey", _(mediaString + ".accesskey"));
+  _updateOptionsMenu: function() {
+    this._sourcesItem.setAttribute("checked",
+      Services.prefs.getBoolPref(PREF_ORIG_SOURCES));
+    this._mediaItem.setAttribute("checked",
+      Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR));
   },
 
   /**
@@ -770,6 +760,9 @@ StyleEditorUI.prototype = {
 
   destroy: function() {
     this._clearStyleSheetEditors();
+
+    this._optionsMenu.removeEventListener("popupshowing",
+                                          this._updateOptionsMenu);
 
     this._prefObserver.off(PREF_ORIG_SOURCES, this._onNewDocument);
     this._prefObserver.off(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
