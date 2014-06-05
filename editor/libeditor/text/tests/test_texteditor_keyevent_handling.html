@@ -292,10 +292,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     reset("a");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab", true, true, false);
+    check(aDescription + "Ctrl+Tab", false, false, false);
     is(aElement.value, "a", aDescription + "Ctrl+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab)");
