@@ -679,26 +679,35 @@ str_substring(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-JSString* JS_FASTCALL
-js_toLowerCase(JSContext *cx, JSString *str)
+template <typename CharT>
+static JSString *
+ToLowerCase(JSContext *cx, JSLinearString *str)
 {
-    size_t n = str->length();
-    const jschar *s = str->getChars(cx);
-    if (!s)
+    // Unlike toUpperCase, toLowerCase has the nice invariant that if the input
+    // is a Latin1 string, the output is also a Latin1 string.
+    size_t length = str->length();
+    ScopedJSFreePtr<CharT> newChars(cx->pod_malloc<CharT>(length + 1));
+    if (!newChars)
         return nullptr;
 
-    jschar *news = cx->pod_malloc<jschar>(n + 1);
-    if (!news)
-        return nullptr;
-    for (size_t i = 0; i < n; i++)
-        news[i] = unicode::ToLowerCase(s[i]);
-    news[n] = 0;
-    str = js_NewString<CanGC>(cx, news, n);
-    if (!str) {
-        js_free(news);
-        return nullptr;
+    {
+        AutoCheckCannotGC nogc;
+        const CharT *chars = str->chars<CharT>(nogc);
+        for (size_t i = 0; i < length; i++) {
+            jschar c = unicode::ToLowerCase(chars[i]);
+            if (IsSame<CharT, Latin1Char>::value)
+                MOZ_ASSERT(c <= 0xff);
+            newChars[i] = c;
+        }
+        newChars[length] = 0;
     }
-    return str;
+
+    JSString *res = js_NewString<CanGC>(cx, newChars.get(), length);
+    if (!res)
+        return nullptr;
+
+    newChars.forget();
+    return res;
 }
 
 static inline bool
@@ -708,7 +717,14 @@ ToLowerCaseHelper(JSContext *cx, CallReceiver call)
     if (!str)
         return false;
 
-    str = js_toLowerCase(cx, str);
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return false;
+
+    if (linear->hasLatin1Chars())
+        str = ToLowerCase<Latin1Char>(cx, linear);
+    else
+        str = ToLowerCase<jschar>(cx, linear);
     if (!str)
         return false;
 
@@ -747,25 +763,31 @@ str_toLocaleLowerCase(JSContext *cx, unsigned argc, Value *vp)
     return ToLowerCaseHelper(cx, args);
 }
 
-JSString* JS_FASTCALL
-js_toUpperCase(JSContext *cx, JSString *str)
+template <typename CharT>
+static JSString *
+ToUpperCase(JSContext *cx, JSLinearString *str)
 {
-    size_t n = str->length();
-    const jschar *s = str->getChars(cx);
-    if (!s)
+    // toUpperCase on a Latin1 string can yield a non-Latin1 string. For now,
+    // we use a TwoByte string for the result.
+    size_t length = str->length();
+    ScopedJSFreePtr<jschar> newChars(cx->pod_malloc<jschar>(length + 1));
+    if (!newChars)
         return nullptr;
-    jschar *news = cx->pod_malloc<jschar>(n + 1);
-    if (!news)
-        return nullptr;
-    for (size_t i = 0; i < n; i++)
-        news[i] = unicode::ToUpperCase(s[i]);
-    news[n] = 0;
-    str = js_NewString<CanGC>(cx, news, n);
-    if (!str) {
-        js_free(news);
-        return nullptr;
+
+    {
+        AutoCheckCannotGC nogc;
+        const CharT *chars = str->chars<CharT>(nogc);
+        for (size_t i = 0; i < length; i++)
+            newChars[i] = unicode::ToUpperCase(chars[i]);
+        newChars[length] = 0;
     }
-    return str;
+
+    JSString *res = js_NewString<CanGC>(cx, newChars.get(), length);
+    if (!res)
+        return nullptr;
+
+    newChars.forget();
+    return res;
 }
 
 static bool
@@ -775,7 +797,14 @@ ToUpperCaseHelper(JSContext *cx, CallReceiver call)
     if (!str)
         return false;
 
-    str = js_toUpperCase(cx, str);
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return false;
+
+    if (linear->hasLatin1Chars())
+        str = ToUpperCase<Latin1Char>(cx, linear);
+    else
+        str = ToUpperCase<jschar>(cx, linear);
     if (!str)
         return false;
 
@@ -4064,9 +4093,9 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     return proto;
 }
 
-template <AllowGC allowGC>
+template <AllowGC allowGC, typename CharT>
 JSFlatString *
-js_NewString(ThreadSafeContext *cx, jschar *chars, size_t length)
+js_NewString(ThreadSafeContext *cx, CharT *chars, size_t length)
 {
     if (length == 1) {
         jschar c = chars[0];
