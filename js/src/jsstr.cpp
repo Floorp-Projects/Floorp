@@ -1719,20 +1719,12 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-js_TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
+template <typename CharT>
+static void
+TrimString(const CharT *chars, bool trimLeft, bool trimRight, size_t length,
+           size_t *pBegin, size_t *pEnd)
 {
-    CallReceiver call = CallReceiverFromVp(vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, call));
-    if (!str)
-        return false;
-    size_t length = str->length();
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return false;
-
-    size_t begin = 0;
-    size_t end = length;
+    size_t begin = 0, end = length;
 
     if (trimLeft) {
         while (begin < length && unicode::IsSpace(chars[begin]))
@@ -1742,6 +1734,32 @@ js_TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
     if (trimRight) {
         while (end > begin && unicode::IsSpace(chars[end - 1]))
             --end;
+    }
+
+    *pBegin = begin;
+    *pEnd = end;
+}
+
+static bool
+TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
+{
+    CallReceiver call = CallReceiverFromVp(vp);
+    RootedString str(cx, ThisToStringForStringProto(cx, call));
+    if (!str)
+        return false;
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
+        return false;
+
+    size_t length = linear->length();
+    size_t begin, end;
+    if (linear->hasLatin1Chars()) {
+        AutoCheckCannotGC nogc;
+        TrimString(linear->latin1Chars(nogc), trimLeft, trimRight, length, &begin, &end);
+    } else {
+        AutoCheckCannotGC nogc;
+        TrimString(linear->twoByteChars(nogc), trimLeft, trimRight, length, &begin, &end);
     }
 
     str = js_NewDependentString(cx, str, begin, end - begin);
@@ -1755,19 +1773,19 @@ js_TrimString(JSContext *cx, Value *vp, bool trimLeft, bool trimRight)
 static bool
 str_trim(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, true, true);
+    return TrimString(cx, vp, true, true);
 }
 
 static bool
 str_trimLeft(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, true, false);
+    return TrimString(cx, vp, true, false);
 }
 
 static bool
 str_trimRight(JSContext *cx, unsigned argc, Value *vp)
 {
-    return js_TrimString(cx, vp, false, true);
+    return TrimString(cx, vp, false, true);
 }
 
 /*
