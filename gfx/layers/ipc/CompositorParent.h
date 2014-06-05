@@ -206,15 +206,6 @@ public:
   static PCompositorParent*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
-  /**
-   * Setup external message loop and thread ID for Compositor.
-   * Should be used when CompositorParent should work in existing thread/MessageLoop,
-   * for example moving Compositor into native toolkit main thread will allow to avoid
-   * extra synchronization and call ::Composite() right from toolkit::Paint event
-   */
-  static void StartUpWithExistingThread(MessageLoop* aMsgLoop,
-                                        PlatformThreadId aThreadID);
-
   struct LayerTreeState {
     LayerTreeState();
     nsRefPtr<Layer> mRoot;
