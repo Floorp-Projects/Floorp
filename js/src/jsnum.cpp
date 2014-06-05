@@ -1000,34 +1000,6 @@ static const JSFunctionSpec number_methods[] = {
     JS_FS_END
 };
 
-
-// ES6 draft ES6 15.7.3.10
-static bool
-Number_isNaN(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1 || !args[0].isDouble()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-    args.rval().setBoolean(mozilla::IsNaN(args[0].toDouble()));
-    return true;
-}
-
-// ES6 draft ES6 15.7.3.11
-static bool
-Number_isFinite(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1 || !args[0].isNumber()) {
-        args.rval().setBoolean(false);
-        return true;
-    }
-    args.rval().setBoolean(args[0].isInt32() ||
-                           mozilla::IsFinite(args[0].toDouble()));
-    return true;
-}
-
 // ES6 draft ES6 15.7.3.12
 static bool
 Number_isInteger(JSContext *cx, unsigned argc, Value *vp)
@@ -1062,14 +1034,13 @@ Number_toInteger(JSContext *cx, unsigned argc, Value *vp)
 
 
 static const JSFunctionSpec number_static_methods[] = {
-    JS_FN("isFinite", Number_isFinite, 1, 0),
+    JS_SELF_HOSTED_FN("isFinite", "Number_isFinite", 1,0),
     JS_FN("isInteger", Number_isInteger, 1, 0),
-    JS_FN("isNaN", Number_isNaN, 1, 0),
-    JS_FN("toInteger", Number_toInteger, 1, 0),
-    /* ES6 additions. */
+    JS_SELF_HOSTED_FN("isNaN", "Number_isNaN", 1,0),
+    JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1,0),
     JS_FN("parseFloat", num_parseFloat, 1, 0),
     JS_FN("parseInt", num_parseInt, 2, 0),
-    JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1,0),
+    JS_FN("toInteger", Number_toInteger, 1, 0),
     JS_FS_END
 };
 
