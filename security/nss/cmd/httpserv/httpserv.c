@@ -1312,10 +1312,8 @@ main(int argc, char **argv)
 	      inFile = PR_Open(revoInfo->crlFilename, PR_RDONLY, 0);
 	      if (inFile) {
 		rv = SECU_ReadDERFromFile(&crlDER, inFile, PR_FALSE, PR_FALSE);
-		PR_Close(inFile);
-		inFile = NULL;
 	      }
-	      if (rv != SECSuccess) {
+	      if (!inFile || rv != SECSuccess) {
 		  fprintf(stderr, "unable to read crl file %s\n",
 			  revoInfo->crlFilename);
 		  exit(1);

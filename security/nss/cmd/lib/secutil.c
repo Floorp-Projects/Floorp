@@ -52,19 +52,6 @@ static char consoleName[] =  {
 #include "ssl.h"
 #include "sslproto.h"
 
-static PRBool utf8DisplayEnabled = PR_FALSE;
-
-void
-SECU_EnableUtf8Display(PRBool enable)
-{
-    utf8DisplayEnabled = enable;
-}
-
-PRBool
-SECU_GetUtf8DisplayEnabled(void)
-{
-    return utf8DisplayEnabled;
-}
 
 static void
 secu_ClearPassword(char *p)
@@ -622,22 +609,12 @@ secu_PrintRawStringQuotesOptional(FILE *out, SECItem *si, const char *m,
 
     for (i = 0; i < si->len; i++) {
 	unsigned char val = si->data[i];
-	unsigned char c;
 	if (SECU_GetWrapEnabled() && column > 76) {
 	    SECU_Newline(out);
 	    SECU_Indent(out, level); column = level*INDENT_MULT;
 	}
 
-	if (utf8DisplayEnabled) {
-	    if (val < 32)
-		c = '.';
-	    else
-		c = val;
-	} else {
-	    c = printable[val];
-	}
-	fprintf(out,"%c", c);
-	column++;
+	fprintf(out,"%c", printable[val]); column++;
     }
 
     if (quotes) {
@@ -2464,19 +2441,19 @@ loser:
 int
 SECU_PrintFingerprints(FILE *out, SECItem *derCert, char *m, int level)
 {
-    unsigned char fingerprint[SHA256_LENGTH];
+    unsigned char fingerprint[20];
     char *fpStr = NULL;
     int err     = PORT_GetError();
     SECStatus rv;
     SECItem fpItem;
 
-    /* Print SHA-256 fingerprint */
+    /* print MD5 fingerprint */
     memset(fingerprint, 0, sizeof fingerprint);
-    rv = PK11_HashBuf(SEC_OID_SHA256, fingerprint, derCert->data, derCert->len);
+    rv = PK11_HashBuf(SEC_OID_MD5,fingerprint, derCert->data, derCert->len);
     fpItem.data = fingerprint;
-    fpItem.len = SHA256_LENGTH;
+    fpItem.len = MD5_LENGTH;
     fpStr = CERT_Hexify(&fpItem, 1);
-    SECU_Indent(out, level);  fprintf(out, "%s (SHA-256):", m);
+    SECU_Indent(out, level);  fprintf(out, "%s (MD5):", m);
     if (SECU_GetWrapEnabled()) {
 	fprintf(out, "\n");
 	SECU_Indent(out, level+1);

@@ -22,27 +22,22 @@ extern int fprintf(FILE *, char *, ...);
 static void Usage(char *progName)
 {
     fprintf(stderr,
-	    "Usage:  %s [-t type] [-a] [-i input] [-o output] [-w] [-u]\n",
+	    "Usage:  %s -t type [-a] [-i input] [-o output] [-w]\n",
 	    progName);
-    fprintf(stderr, "Pretty prints a file containing ASN.1 data in DER or ascii format.\n");
-    fprintf(stderr, "%-14s Specify input and display type: %s (sk),\n",
+    fprintf(stderr, "%-20s Specify the input type (must be one of %s,\n",
 	    "-t type", SEC_CT_PRIVATE_KEY);
-    fprintf(stderr, "%-14s %s (pk), %s (c), %s (cr),\n", "", SEC_CT_PUBLIC_KEY,
+    fprintf(stderr, "%-20s %s, %s, %s,\n", "", SEC_CT_PUBLIC_KEY,
 	    SEC_CT_CERTIFICATE, SEC_CT_CERTIFICATE_REQUEST);
-    fprintf(stderr, "%-14s %s (ci), %s (p7), %s or %s (n).\n", "", SEC_CT_CERTIFICATE_ID,
+    fprintf(stderr, "%-20s %s, %s, %s or %s)\n", "", SEC_CT_CERTIFICATE_ID,
             SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
-    fprintf(stderr, "%-14s (Use either the long type name or the shortcut.)\n", "", SEC_CT_CERTIFICATE_ID,
-            SEC_CT_PKCS7, SEC_CT_CRL, SEC_CT_NAME);
-    fprintf(stderr, "%-14s Input is in ascii encoded form (RFC1113)\n",
+    fprintf(stderr, "%-20s Input is in ascii encoded form (RFC1113)\n",
 	    "-a");
-    fprintf(stderr, "%-14s Define an input file to use (default is stdin)\n",
+    fprintf(stderr, "%-20s Define an input file to use (default is stdin)\n",
 	    "-i input");
-    fprintf(stderr, "%-14s Define an output file to use (default is stdout)\n",
+    fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
 	    "-o output");
-    fprintf(stderr, "%-14s Don't wrap long output lines\n",
+    fprintf(stderr, "%-20s Don't wrap long output lines\n",
 	    "-w");
-    fprintf(stderr, "%-14s Use UTF-8 (default is to show non-ascii as .)\n",
-	    "-u");
     exit(-1);
 }
 
@@ -64,7 +59,7 @@ int main(int argc, char **argv)
     inFile = 0;
     outFile = 0;
     typeTag = 0;
-    optstate = PL_CreateOptState(argc, argv, "at:i:o:uw");
+    optstate = PL_CreateOptState(argc, argv, "at:i:o:w");
     while ( PL_GetNextOpt(optstate) == PL_OPT_OK ) {
 	switch (optstate->option) {
 	  case '?':
@@ -95,10 +90,6 @@ int main(int argc, char **argv)
 
 	  case 't':
 	    typeTag = strdup(optstate->value);
-	    break;
-
-	  case 'u':
-	    SECU_EnableUtf8Display(PR_TRUE);
 	    break;
 
 	  case 'w':
@@ -134,34 +125,27 @@ int main(int argc, char **argv)
     SECU_EnableWrap(wrap);
 
     /* Pretty print it */
-    if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE) == 0 ||
-        PORT_Strcmp(typeTag, "c") == 0) {
+    if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate", 0,
 			     SECU_PrintCertificate);
-    } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_ID) == 0 ||
-               PORT_Strcmp(typeTag, "ci") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_ID) == 0) {
         rv = SECU_PrintSignedContent(outFile, &data, 0, 0,
                                      SECU_PrintDumpDerIssuerAndSerial);
-    } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_REQUEST) == 0 ||
-               PORT_Strcmp(typeTag, "cr") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_CERTIFICATE_REQUEST) == 0) {
 	rv = SECU_PrintSignedData(outFile, &data, "Certificate Request", 0,
 			     SECU_PrintCertificateRequest);
-    } else if (PORT_Strcmp(typeTag, SEC_CT_CRL) == 0) {
+    } else if (PORT_Strcmp (typeTag, SEC_CT_CRL) == 0) {
 	rv = SECU_PrintSignedData (outFile, &data, "CRL", 0, SECU_PrintCrl);
 #ifdef HAVE_EPV_TEMPLATE
-    } else if (PORT_Strcmp(typeTag, SEC_CT_PRIVATE_KEY) == 0 ||
-               PORT_Strcmp(typeTag, "sk") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_PRIVATE_KEY) == 0) {
 	rv = SECU_PrintPrivateKey(outFile, &data, "Private Key", 0);
 #endif
-    } else if (PORT_Strcmp(typeTag, SEC_CT_PUBLIC_KEY) == 0 ||
-               PORT_Strcmp (typeTag, "pk") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_PUBLIC_KEY) == 0) {
 	rv = SECU_PrintSubjectPublicKeyInfo(outFile, &data, "Public Key", 0);
-    } else if (PORT_Strcmp(typeTag, SEC_CT_PKCS7) == 0 ||
-               PORT_Strcmp (typeTag, "p7") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_PKCS7) == 0) {
 	rv = SECU_PrintPKCS7ContentInfo(outFile, &data,
 					"PKCS #7 Content Info", 0);
-    } else if (PORT_Strcmp(typeTag, SEC_CT_NAME) == 0 ||
-               PORT_Strcmp (typeTag, "n") == 0) {
+    } else if (PORT_Strcmp(typeTag, SEC_CT_NAME) == 0) {
 	rv = SECU_PrintDERName(outFile, &data, "Name", 0);
     } else {
 	fprintf(stderr, "%s: don't know how to print out '%s' files\n",

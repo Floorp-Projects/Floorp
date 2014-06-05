@@ -412,9 +412,3 @@ ER3(SSL_ERROR_DIGEST_FAILURE, (SSL_ERROR_BASE + 127),
 
 ER3(SSL_ERROR_INCORRECT_SIGNATURE_ALGORITHM, (SSL_ERROR_BASE + 128),
 "Incorrect signature algorithm specified in a digitally-signed element.")
-
-ER3(SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK, (SSL_ERROR_BASE + 129),
-"The next protocol negotiation extension was enabled, but the callback was cleared prior to being needed.")
-
-ER3(SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL, (SSL_ERROR_BASE + 130),
-"The server supports no protocols that the client advertises in the ALPN extension.")

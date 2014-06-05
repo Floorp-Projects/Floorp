@@ -633,7 +633,6 @@ ssl3_CipherSuiteAllowedForVersionRange(
      *   TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA:  never implemented
      */
 	return vrange->min <= SSL_LIBRARY_VERSION_TLS_1_0;
-
     case TLS_DHE_RSA_WITH_AES_256_CBC_SHA256:
     case TLS_RSA_WITH_AES_256_CBC_SHA256:
     case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:
@@ -646,31 +645,6 @@ ssl3_CipherSuiteAllowedForVersionRange(
     case TLS_RSA_WITH_AES_128_GCM_SHA256:
     case TLS_RSA_WITH_NULL_SHA256:
 	return vrange->max >= SSL_LIBRARY_VERSION_TLS_1_2;
-
-    /* RFC 4492: ECC cipher suites need TLS extensions to negotiate curves and
-     * point formats.*/
-    case TLS_ECDH_ECDSA_WITH_NULL_SHA:
-    case TLS_ECDH_ECDSA_WITH_RC4_128_SHA:
-    case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA:
-    case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA:
-    case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA:
-    case TLS_ECDHE_ECDSA_WITH_NULL_SHA:
-    case TLS_ECDHE_ECDSA_WITH_RC4_128_SHA:
-    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
-    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
-    case TLS_ECDH_RSA_WITH_NULL_SHA:
-    case TLS_ECDH_RSA_WITH_RC4_128_SHA:
-    case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA:
-    case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA:
-    case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA:
-    case TLS_ECDHE_RSA_WITH_NULL_SHA:
-    case TLS_ECDHE_RSA_WITH_RC4_128_SHA:
-    case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
-    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
-    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
-	return vrange->max >= SSL_LIBRARY_VERSION_TLS_1_0;
-
     default:
 	return PR_TRUE;
     }
@@ -3497,14 +3471,6 @@ ssl3_HandleChangeCipherSpecs(sslSocket *ss, sslBuffer *buf)
 		SSL_GETPID(), ss->fd));
 
     if (ws != wait_change_cipher) {
-	if (IS_DTLS(ss)) {
-	    /* Ignore this because it's out of order. */
-	    SSL_TRC(3, ("%d: SSL3[%d]: discard out of order "
-			"DTLS change_cipher_spec",
-			SSL_GETPID(), ss->fd));
-	    buf->len = 0;
-	    return SECSuccess;
-	}
 	(void)SSL3_SendAlert(ss, alert_fatal, unexpected_message);
 	PORT_SetError(SSL_ERROR_RX_UNEXPECTED_CHANGE_CIPHER);
 	return SECFailure;

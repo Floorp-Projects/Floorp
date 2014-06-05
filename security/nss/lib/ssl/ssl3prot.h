@@ -106,8 +106,7 @@ typedef enum {
     certificate_unobtainable        = 111,
     unrecognized_name               = 112,
     bad_certificate_status_response = 113,
-    bad_certificate_hash_value      = 114,
-    no_application_protocol         = 120
+    bad_certificate_hash_value      = 114
 
 } SSL3AlertDescription;
 

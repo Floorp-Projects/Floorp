@@ -92,10 +92,6 @@ static void Usage(char *progName)
 	    "-i input");
     fprintf(stderr, "%-20s Define an output file to use (default is stdout)\n",
 	    "-o output");
-    fprintf(stderr, "%-20s Wrap output in BEGIN/END lines and the given suffix\n",
-	    "-w suffix");
-    fprintf(stderr, "%-20s (use \"c\" as a shortcut for suffix CERTIFICATE)\n",
-	    "");
     exit(-1);
 }
 
@@ -106,7 +102,6 @@ int main(int argc, char **argv)
     FILE *inFile, *outFile;
     PLOptState *optstate;
     PLOptStatus status;
-    char *suffix = NULL;
 
     inFile = 0;
     outFile = 0;
@@ -116,7 +111,7 @@ int main(int argc, char **argv)
     progName = progName ? progName+1 : argv[0];
 
     /* Parse command line arguments */
-    optstate = PL_CreateOptState(argc, argv, "i:o:w:");
+    optstate = PL_CreateOptState(argc, argv, "i:o:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  default:
@@ -139,13 +134,6 @@ int main(int argc, char **argv)
 			progName, optstate->value);
 		return -1;
 	    }
-	    break;
-	
-	  case 'w':
-	    if (!strcmp(optstate->value, "c"))
-		suffix = strdup("CERTIFICATE");
-	    else
-		suffix = strdup(optstate->value);
 	    break;
 	}
     }
@@ -183,17 +171,11 @@ int main(int argc, char **argv)
 #endif
     	outFile = stdout;
     }
-    if (suffix) {
-	fprintf(outFile, "-----BEGIN %s-----\n", suffix);
-    }
     rv = encode_file(outFile, inFile);
     if (rv != SECSuccess) {
 	fprintf(stderr, "%s: lossage: error=%d errno=%d\n",
 		progName, PORT_GetError(), errno);
 	return -1;
-    }
-    if (suffix) {
-	fprintf(outFile, "-----END %s-----\n", suffix);
     }
     return 0;
 }
