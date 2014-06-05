@@ -1,0 +1,51 @@
+--- config.sub.orig	2014-03-09 18:34:03 -0700
++++ config.sub	2014-03-14 19:49:48 -0700
+@@ -115,7 +115,7 @@
+ # Here we must recognize all the valid KERNEL-OS combinations.
+ maybe_os=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\2/'`
+ case $maybe_os in
+-  nto-qnx* | linux-gnu* | linux-android* | linux-dietlibc | linux-newlib* | \
++  nto-qnx* | linux-gnu* | linux-dietlibc | linux-newlib* | \
+   linux-musl* | linux-uclibc* | uclinux-uclibc* | uclinux-gnu* | kfreebsd*-gnu* | \
+   knetbsd*-gnu* | netbsd*-gnu* | \
+   kopensolaris*-gnu* | \
+@@ -123,10 +123,6 @@
+     os=-$maybe_os
+     basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`
+     ;;
+-  android-linux)
+-    os=-linux-android
+-    basic_machine=`echo $1 | sed 's/^\(.*\)-\([^-]*-[^-]*\)$/\1/'`-unknown
+-    ;;
+   *)
+     basic_machine=`echo $1 | sed 's/-[^-]*$//'`
+     if [ $basic_machine != $1 ]
+@@ -1367,7 +1363,7 @@
+ 	      | -udi* | -eabi* | -lites* | -ieee* | -go32* | -aux* \
+ 	      | -chorusos* | -chorusrdb* | -cegcc* \
+ 	      | -cygwin* | -msys* | -pe* | -psos* | -moss* | -proelf* | -rtems* \
+-	      | -mingw32* | -mingw64* | -linux-gnu* | -linux-android* \
++	      | -mingw32* | -mingw64* | -linux-gnu* \
+ 	      | -linux-newlib* | -linux-musl* | -linux-uclibc* \
+ 	      | -uxpv* | -beos* | -mpeix* | -udk* \
+ 	      | -interix* | -uwin* | -mks* | -rhapsody* | -darwin* | -opened* \
+@@ -1508,6 +1504,9 @@
+ 		;;
+ 	-nacl*)
+ 		;;
++	-android*)
++		os=-android
++		;;
+ 	-none)
+ 		;;
+ 	*)
+@@ -1777,6 +1776,9 @@
+ 			-vos*)
+ 				vendor=stratus
+ 				;;
++			*-android*|*-linuxandroid*)
++				vendor=linux-
++				;;
+ 		esac
+ 		basic_machine=`echo $basic_machine | sed "s/unknown/$vendor/"`
+ 		;;

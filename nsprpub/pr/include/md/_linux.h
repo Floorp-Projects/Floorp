@@ -80,7 +80,7 @@
 #define NO_DLOPEN_NULL
 #endif
 
-#ifdef __FreeBSD_kernel__
+#if defined(__FreeBSD_kernel__) || defined(__GNU__)
 #define _PR_HAVE_SOCKADDR_LEN
 #endif
 
@@ -134,6 +134,18 @@ extern PRInt32 _PR_ppc_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD                _PR_ppc_AtomicAdd
 extern PRInt32 _PR_ppc_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET                _PR_ppc_AtomicSet
+#endif
+
+#if defined(__powerpc64__)
+#if (__GNUC__ > 4) || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+/* Use GCC built-in functions */
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+#define _MD_ATOMIC_INCREMENT(ptr) __sync_add_and_fetch(ptr, 1)
+#define _MD_ATOMIC_DECREMENT(ptr) __sync_sub_and_fetch(ptr, 1)
+#define _MD_ATOMIC_ADD(ptr, i) __sync_add_and_fetch(ptr, i)
+#define _MD_ATOMIC_SET(ptr, nv) __sync_lock_test_and_set(ptr, nv)
+#endif
 #endif
 
 #if defined(__alpha)

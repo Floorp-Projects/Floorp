@@ -107,7 +107,7 @@ long __cdecl _InterlockedExchangeAdd(long volatile *Addend, long Value);
            ((defined(__i386__) && \
            defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) || \
            defined(__ia64__) || defined(__x86_64__) || \
-           (defined(__powerpc__) && !defined(__powerpc64__)) || \
+           defined(__powerpc__) || \
            (defined(__arm__) && \
            defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) || \
            defined(__aarch64__) || defined(__alpha))))
