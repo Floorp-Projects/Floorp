@@ -1819,26 +1819,6 @@ JSObject::nonNativeSetElement(JSContext *cx, HandleObject obj,
     return obj->getOps()->setElement(cx, obj, index, vp, strict);
 }
 
-/* static */ bool
-JSObject::deleteByValue(JSContext *cx, HandleObject obj, const Value &property, bool *succeeded)
-{
-    uint32_t index;
-    if (IsDefinitelyIndex(property, &index))
-        return deleteElement(cx, obj, index, succeeded);
-
-    RootedValue propval(cx, property);
-
-    JSAtom *name = ToAtom<CanGC>(cx, propval);
-    if (!name)
-        return false;
-
-    if (name->isIndex(&index))
-        return deleteElement(cx, obj, index, succeeded);
-
-    Rooted<PropertyName*> propname(cx, name->asPropertyName());
-    return deleteProperty(cx, obj, propname, succeeded);
-}
-
 JS_FRIEND_API(bool)
 JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
                     HandleObject obj)
@@ -2716,7 +2696,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
 bad:
     if (named) {
         bool succeeded;
-        JSObject::deleteByValue(cx, obj, StringValue(atom), &succeeded);
+        RootedId id(cx, AtomToId(atom));
+        JSObject::deleteGeneric(cx, obj, id, &succeeded);
     }
     if (cached)
         ClearClassObject(obj, key);
@@ -5310,23 +5291,6 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
         return true;
 
     return obj->removeProperty(cx, id) && js_SuppressDeletedProperty(cx, obj, id);
-}
-
-bool
-baseops::DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                        bool *succeeded)
-{
-    Rooted<jsid> id(cx, NameToId(name));
-    return baseops::DeleteGeneric(cx, obj, id, succeeded);
-}
-
-bool
-baseops::DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return baseops::DeleteGeneric(cx, obj, id, succeeded);
 }
 
 bool

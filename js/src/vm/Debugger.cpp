@@ -5417,16 +5417,18 @@ static bool
 DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    RootedValue nameArg(cx, args.get(0));
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
+        return false;
 
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment()->wrap(cx, &nameArg))
+    if (!cx->compartment()->wrapId(cx, id.address()))
         return false;
 
     bool succeeded;
     ErrorCopier ec(ac, dbg->toJSObject());
-    if (!JSObject::deleteByValue(cx, obj, nameArg, &succeeded))
+    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         return false;
     args.rval().setBoolean(succeeded);
     return true;
