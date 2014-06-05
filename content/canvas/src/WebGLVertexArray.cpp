@@ -1,11 +1,14 @@
-/* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "WebGLVertexArray.h"
+
 #include "WebGLContext.h"
 #include "WebGLBuffer.h"
-#include "WebGLVertexArray.h"
+#include "WebGLVertexArrayGL.h"
+#include "WebGLVertexArrayFake.h"
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 #include "GLContext.h"
 
@@ -22,22 +25,34 @@ WebGLVertexArray::WebGLVertexArray(WebGLContext* context)
     , mHasEverBeenBound(false)
 {
     SetIsDOMBinding();
+    context->mVertexArrays.insertBack(this);
 }
 
-void WebGLVertexArray::Delete() {
-    if (mGLName != 0) {
-        mBoundElementArrayBuffer = nullptr;
-
-        mContext->MakeContextCurrent();
-        mContext->gl->fDeleteVertexArrays(1, &mGLName);
-        LinkedListElement<WebGLVertexArray>::removeFrom(mContext->mVertexArrays);
+WebGLVertexArray*
+WebGLVertexArray::Create(WebGLContext* context)
+{
+    WebGLVertexArray* array;
+    if (context->gl->IsSupported(gl::GLFeature::vertex_array_object)) {
+        array = new WebGLVertexArrayGL(context);
+    } else {
+        array = new WebGLVertexArrayFake(context);
     }
 
-    mBoundElementArrayBuffer = nullptr;
+    return array;
+}
+
+void
+WebGLVertexArray::Delete()
+{
+    DeleteImpl();
+
+    LinkedListElement<WebGLVertexArray>::removeFrom(mContext->mVertexArrays);
+    mElementArrayBuffer = nullptr;
     mAttribs.Clear();
 }
 
-bool WebGLVertexArray::EnsureAttrib(GLuint index, const char *info)
+bool
+WebGLVertexArray::EnsureAttrib(GLuint index, const char *info)
 {
     if (index >= GLuint(mContext->mGLMaxVertexAttribs)) {
         if (index == GLuint(-1)) {
@@ -58,7 +73,7 @@ bool WebGLVertexArray::EnsureAttrib(GLuint index, const char *info)
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WebGLVertexArray,
   mAttribs,
-  mBoundElementArrayBuffer)
+  mElementArrayBuffer)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(WebGLVertexArray, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(WebGLVertexArray, Release)
