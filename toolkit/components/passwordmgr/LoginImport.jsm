@@ -165,10 +165,7 @@ this.LoginImport.prototype = {
           let id = row.getResultByName("id");
           let hostname = row.getResultByName("hostname");
 
-          this.store.data.disabledHosts.push({
-            id: this.store.data.nextId++,
-            hostname: hostname,
-          });
+          this.store.data.disabledHosts.push(hostname);
         } catch (ex) {
           Cu.reportError("Error importing disabled host: " + ex);
         }
