@@ -259,8 +259,6 @@ protected:
   void ForceComposition();
   void CancelCurrentCompositeTask();
 
-  inline static PlatformThreadId CompositorThreadID();
-
   /**
    * Creates a global map referencing each compositor by ID.
    *
