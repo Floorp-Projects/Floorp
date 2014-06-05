@@ -110,13 +110,7 @@ XPathEvaluator::CreateExpression(const nsAString & aExpression,
 {
     nsresult rv;
     if (!mRecycler) {
-        nsRefPtr<txResultRecycler> recycler = new txResultRecycler;
-        NS_ENSURE_TRUE(recycler, NS_ERROR_OUT_OF_MEMORY);
-        
-        rv = recycler->init();
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        mRecycler = recycler;
+        mRecycler = new txResultRecycler;
     }
 
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
