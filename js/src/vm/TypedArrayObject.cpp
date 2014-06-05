@@ -477,7 +477,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     DefineGetter(JSContext *cx, HandleObject proto, PropertyName *name, Native native)
     {
         RootedId id(cx, NameToId(name));
-        unsigned attrs = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+        unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
 
         Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
         JSObject *getter = NewFunction(cx, NullPtr(), native, 0,
@@ -2074,10 +2074,10 @@ bool _typedArray##_byteOffsetGetter(JSContext *cx, unsigned argc, Value *vp) {  
     return _typedArray##Object::Getter<_typedArray##Object::byteOffsetValue>(cx, argc, vp); \
 }                                                                                  \
 const JSPropertySpec _typedArray##Object::jsprops[] = {                            \
-    JS_PSG("length", _typedArray##_lengthGetter, JSPROP_PERMANENT),                \
-    JS_PSG("buffer", _typedArray##Object::BufferGetter, JSPROP_PERMANENT),         \
-    JS_PSG("byteLength", _typedArray##_byteLengthGetter, JSPROP_PERMANENT),        \
-    JS_PSG("byteOffset", _typedArray##_byteOffsetGetter, JSPROP_PERMANENT),        \
+    JS_PSG("length", _typedArray##_lengthGetter, 0),                               \
+    JS_PSG("buffer", _typedArray##Object::BufferGetter, 0),                        \
+    JS_PSG("byteLength", _typedArray##_byteLengthGetter, 0),                       \
+    JS_PSG("byteOffset", _typedArray##_byteOffsetGetter, 0),                       \
     JS_PS_END                                                                      \
 };
 
@@ -2309,7 +2309,7 @@ js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
     JSObject *getter = NewFunction(cx, NullPtr(), ArrayBufferObject::byteLengthGetter, 0,
                                    JSFunction::NATIVE_FUN, global, NullPtr());
     if (!getter)
@@ -2326,6 +2326,34 @@ js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
         return nullptr;
 
     return arrayBufferProto;
+}
+
+/* static */ bool
+TypedArrayObject::isOriginalLengthGetter(ScalarTypeDescr::Type type, Native native)
+{
+    switch (type) {
+      case ScalarTypeDescr::TYPE_INT8:
+        return native == Int8Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_UINT8:
+        return native == Uint8Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_UINT8_CLAMPED:
+        return native == Uint8ClampedArray_lengthGetter;
+      case ScalarTypeDescr::TYPE_INT16:
+        return native == Int16Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_UINT16:
+        return native == Uint16Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_INT32:
+        return native == Int32Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_UINT32:
+        return native == Uint32Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_FLOAT32:
+        return native == Float32Array_lengthGetter;
+      case ScalarTypeDescr::TYPE_FLOAT64:
+        return native == Float64Array_lengthGetter;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown TypedArray type");
+        return false;
+    }
 }
 
 const Class DataViewObject::protoClass = {
@@ -2403,7 +2431,7 @@ bool
 DataViewObject::defineGetter(JSContext *cx, PropertyName *name, HandleObject proto)
 {
     RootedId id(cx, NameToId(name));
-    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER | JSPROP_PERMANENT;
+    unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
 
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     JSObject *getter = NewFunction(cx, NullPtr(), DataViewObject::getter<ValueGetter>, 0,

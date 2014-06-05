@@ -140,6 +140,8 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     static int lengthOffset();
     static int dataOffset();
+
+    static bool isOriginalLengthGetter(ScalarTypeDescr::Type type, Native native);
 };
 
 inline bool
