@@ -239,10 +239,7 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
   textureSource->Update(data);
 
   EffectChain effectChain;
-  effectChain.mPrimaryEffect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8,
-                                                    textureSource,
-                                                    Filter::POINT,
-                                                    true);
+  effectChain.mPrimaryEffect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, textureSource, Filter::POINT);
 
   compositor->DrawQuad(graphRect,
                        clipRect,
