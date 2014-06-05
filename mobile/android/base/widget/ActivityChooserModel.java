@@ -1048,7 +1048,6 @@ public class ActivityChooserModel extends DataSetObservable {
      * Command for reading the historical records from a file off the UI thread.
      */
     private void readHistoricalDataImpl() {
-        FileInputStream fis = null;
         try {
             GeckoProfile profile = GeckoProfile.get(mContext);
             File f = profile.getFile(mHistoryFileName);
@@ -1057,26 +1056,39 @@ public class ActivityChooserModel extends DataSetObservable {
                 File oldFile = new File(mHistoryFileName);
                 oldFile.renameTo(f);
             }
-            fis = new FileInputStream(f);
+            readHistoricalDataFromStream(new FileInputStream(f));
         } catch (FileNotFoundException fnfe) {
-            try {
-                Distribution dist = new Distribution(mContext);
-                File distFile = dist.getDistributionFile("quickshare/" + mHistoryFileName);
-                if (distFile == null) {
-                    if (DEBUG) {
-                        Log.i(LOG_TAG, "Could not open historical records file: " + mHistoryFileName);
-                    }
-                    return;
-                }
-                fis = new FileInputStream(distFile);
-            } catch(Exception ex) {
-                if (DEBUG) {
-                    Log.i(LOG_TAG, "Could not open historical records file: " + mHistoryFileName);
-                }
-                return;
-            }
-        }
+            final Distribution dist = Distribution.getInstance(mContext);
+            dist.addOnDistributionReadyCallback(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(LOGTAG, "Running post-distribution task: quickshare.");
 
+                    if (!dist.exists()) {
+                        return;
+                    }
+
+                    try {
+                        File distFile = dist.getDistributionFile("quickshare/" + mHistoryFileName);
+                        if (distFile == null) {
+                            if (DEBUG) {
+                                Log.i(LOG_TAG, "Could not open historical records file: " + mHistoryFileName);
+                            }
+                            return;
+                        }
+                        readHistoricalDataFromStream(new FileInputStream(distFile));
+                    } catch (Exception ex) {
+                        if (DEBUG) {
+                            Log.i(LOG_TAG, "Could not open historical records file: " + mHistoryFileName);
+                        }
+                        return;
+                    }
+                }
+            });
+        }
+    }
+
+    private void readHistoricalDataFromStream(FileInputStream fis) {
         try {
             XmlPullParser parser = Xml.newPullParser();
             parser.setInput(fis, null);
@@ -1124,9 +1136,9 @@ public class ActivityChooserModel extends DataSetObservable {
                 Log.i(LOG_TAG, "Read " + historicalRecords.size() + " historical records.");
             }
         } catch (XmlPullParserException xppe) {
-            Log.e(LOG_TAG, "Error reading historical recrod file: " + mHistoryFileName, xppe);
+            Log.e(LOG_TAG, "Error reading historical record file: " + mHistoryFileName, xppe);
         } catch (IOException ioe) {
-            Log.e(LOG_TAG, "Error reading historical recrod file: " + mHistoryFileName, ioe);
+            Log.e(LOG_TAG, "Error reading historical record file: " + mHistoryFileName, ioe);
         } finally {
             if (fis != null) {
                 try {
@@ -1189,11 +1201,11 @@ public class ActivityChooserModel extends DataSetObservable {
                     Log.i(LOG_TAG, "Wrote " + recordCount + " historical records.");
                 }
             } catch (IllegalArgumentException iae) {
-                Log.e(LOG_TAG, "Error writing historical recrod file: " + mHistoryFileName, iae);
+                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, iae);
             } catch (IllegalStateException ise) {
-                Log.e(LOG_TAG, "Error writing historical recrod file: " + mHistoryFileName, ise);
+                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, ise);
             } catch (IOException ioe) {
-                Log.e(LOG_TAG, "Error writing historical recrod file: " + mHistoryFileName, ioe);
+                Log.e(LOG_TAG, "Error writing historical record file: " + mHistoryFileName, ioe);
             } finally {
                 mCanReadHistoricalData = true;
                 if (fos != null) {
