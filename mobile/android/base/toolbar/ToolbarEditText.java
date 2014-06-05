@@ -260,6 +260,11 @@ public class ToolbarEditText extends CustomEditText
             // replace() preserves the autocomplete spans that we set before.
             text.replace(autoCompleteStart, textLength, result, autoCompleteStart, resultLength);
 
+            // Reshow the cursor if there is no longer any autocomplete text.
+            if (autoCompleteStart == resultLength) {
+                setCursorVisible(true);
+            }
+
             endSettingAutocomplete();
 
         } else {
