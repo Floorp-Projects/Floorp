@@ -62,8 +62,6 @@ const {Unknown} = require("sdk/platform/xpcom");
 const {Class} = require("sdk/core/heritage");
 const {PageStyleActor} = require("devtools/server/actors/styles");
 const {HighlighterActor} = require("devtools/server/actors/highlighter");
-const {getLayoutChangesObserver, releaseLayoutChangesObserver} =
-  require("devtools/server/actors/layout");
 
 const FONT_FAMILY_PREVIEW_TEXT = "The quick brown fox jumps over the lazy dog";
 const FONT_FAMILY_PREVIEW_TEXT_SIZE = 20;
@@ -179,10 +177,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, null);
     this.walker = walker;
     this.rawNode = node;
-
-    // Storing the original display of the node, to track changes when reflows
-    // occur
-    this.wasDisplayed = this.isDisplayed;
   },
 
   toString: function() {
@@ -233,8 +227,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
       attrs: this.writeAttrs(),
 
       pseudoClassLocks: this.writePseudoClassLocks(),
-
-      isDisplayed: this.isDisplayed,
     };
 
     if (this.isDocumentElement()) {
@@ -253,28 +245,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
     }
 
     return form;
-  },
-
-  get computedStyle() {
-    if (Cu.isDeadWrapper(this.rawNode) ||
-        this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
-        !this.rawNode.ownerDocument) {
-      return null;
-    }
-    return this.rawNode.ownerDocument.defaultView.getComputedStyle(this.rawNode);
-  },
-
-  /**
-   * Is the node's display computed style value other than "none"
-   */
-  get isDisplayed() {
-    let style = this.computedStyle;
-    if (!style) {
-      // Consider all non-element nodes as displayed
-      return true;
-    } else {
-      return style.display !== "none";
-    }
   },
 
   writeAttrs: function() {
@@ -578,12 +548,6 @@ let NodeFront = protocol.FrontClass(NodeActor, {
     return this.pseudoClassLocks.some(locked => locked === pseudo);
   },
 
-  get isDisplayed() {
-    // The NodeActor's form contains the isDisplayed information as a boolean
-    // starting from FF32. Before that, the property is missing
-    return "isDisplayed" in this._form ? this._form.isDisplayed : true;
-  },
-
   getNodeValue: protocol.custom(function() {
     if (!this.incompleteValue) {
       return delayedResolve(new ShortLongString(this.shortValue));
@@ -872,10 +836,6 @@ var WalkerActor = protocol.ActorClass({
     },
     "highlighter-hide" : {
       type: "highlighter-hide"
-    },
-    "display-change" : {
-      type: "display-change",
-      nodes: Arg(0, "array:domnode")
     }
   },
 
@@ -915,10 +875,6 @@ var WalkerActor = protocol.ActorClass({
     // Ensure that the root document node actor is ready and
     // managed.
     this.rootNode = this.document();
-
-    this.reflowObserver = getLayoutChangesObserver(this.tabActor);
-    this._onReflows = this._onReflows.bind(this);
-    this.reflowObserver.on("reflows", this._onReflows);
   },
 
   // Returns the JSON representation of this object over the wire.
@@ -938,11 +894,6 @@ var WalkerActor = protocol.ActorClass({
     this.clearPseudoClassLocks();
     this._activePseudoClassLocks = null;
     this.rootDoc = null;
-
-    this.reflowObserver.off("reflows", this._onReflows);
-    this.reflowObserver = null;
-    releaseLayoutChangesObserver(this.tabActor);
-
     events.emit(this, "destroyed");
     protocol.Actor.prototype.destroy.call(this);
   },
@@ -953,7 +904,7 @@ var WalkerActor = protocol.ActorClass({
     if (actor instanceof NodeActor) {
       if (this._activePseudoClassLocks &&
           this._activePseudoClassLocks.has(actor)) {
-        this.clearPseudoClassLocks(actor);
+        this.clearPsuedoClassLocks(actor);
       }
       this._refMap.delete(actor.rawNode);
     }
@@ -975,24 +926,6 @@ var WalkerActor = protocol.ActorClass({
       this._watchDocument(actor);
     }
     return actor;
-  },
-
-  _onReflows: function(reflows) {
-    // Going through the nodes the walker knows about, see which ones have
-    // had their display changed and send a display-change event if any
-    let changes = [];
-    for (let [node, actor] of this._refMap) {
-      let isDisplayed = actor.isDisplayed;
-      if (isDisplayed !== actor.wasDisplayed) {
-        changes.push(actor);
-        // Updating the original value
-        actor.wasDisplayed = isDisplayed;
-      }
-    }
-
-    if (changes.length) {
-      events.emit(this, "display-change", changes);
-    }
   },
 
   /**
