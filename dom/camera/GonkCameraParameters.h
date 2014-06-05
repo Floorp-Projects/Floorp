@@ -95,8 +95,9 @@ protected:
   bool mInitialized;
 
   // Required internal properties
-  double mExposureCompensationMin;
   double mExposureCompensationStep;
+  int32_t mExposureCompensationMinIndex;
+  int32_t mExposureCompensationMaxIndex;
   nsTArray<int> mZoomRatios;
   nsTArray<nsString> mIsoModes;
 
