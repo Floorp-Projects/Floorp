@@ -1779,21 +1779,6 @@ ThreadClient.prototype = {
     telemetry: "SOURCES"
   }),
 
-  _doInterrupted: function (aAction, aError) {
-    if (this.paused) {
-      aAction();
-      return;
-    }
-    this.interrupt((aResponse) => {
-      if (aResponse) {
-        aError(aResponse);
-        return;
-      }
-      aAction();
-      this.resume();
-    });
-  },
-
   /**
    * Clear the thread's source script cache. A scriptscleared event
    * will be sent.
