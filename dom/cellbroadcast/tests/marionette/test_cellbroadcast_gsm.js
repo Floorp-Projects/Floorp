@@ -361,7 +361,7 @@ function testReceiving_GSM_Timestamp() {
   doTestHelper(pdu, testReceiving_GSM_WarningType, function(message) {
     // Cell Broadcast messages do not contain a timestamp field (however, ETWS
     // does). We only check the timestamp doesn't go too far (60 seconds) here.
-    let msMessage = message.timestamp.getTime();
+    let msMessage = message.timestamp;
     let msNow = Date.now();
     ok(Math.abs(msMessage - msNow) < (1000 * 60), "message.timestamp");
   });

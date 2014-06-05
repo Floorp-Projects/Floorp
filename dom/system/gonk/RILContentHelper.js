@@ -312,7 +312,7 @@ function CellBroadcastMessage(pdu) {
   this.language = pdu.language;
   this.body = pdu.fullBody;
   this.messageClass = pdu.messageClass;
-  this.timestamp = new Date(pdu.timestamp);
+  this.timestamp = pdu.timestamp;
 
   if (pdu.etws != null) {
     this.etws = new CellBroadcastEtwsInfo(pdu.etws);
