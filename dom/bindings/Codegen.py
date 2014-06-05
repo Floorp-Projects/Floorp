@@ -6707,6 +6707,10 @@ class CGGetterCall(CGPerSignatureCall):
                                     getter=True)
 
 
+class FakeIdentifier():
+    def __init__(self, name):
+        self.name = name
+
 class FakeArgument():
     """
     A class that quacks like an IDLArgument.  This is used to make
@@ -6726,10 +6730,7 @@ class FakeArgument():
             self.enforceRange = False
             self.clamp = False
 
-        class FakeIdentifier():
-            def __init__(self):
-                self.name = name
-        self.identifier = FakeIdentifier()
+        self.identifier = FakeIdentifier(name)
 
     def allowTreatNonCallableAsNull(self):
         return self._allowTreatNonCallableAsNull
@@ -12678,8 +12679,10 @@ class CGCallbackInterface(CGCallback):
 
 
 class FakeMember():
-    def __init__(self):
+    def __init__(self, name=None):
         self.treatNullAs = "Default"
+        if name is not None:
+            self.identifier = FakeIdentifier(name)
 
     def isStatic(self):
         return False
