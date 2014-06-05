@@ -981,8 +981,15 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
      * CERTCertificate, and finish
      */
     nssPKIObject_AddInstance(&c->object, certobj);
+    /* nssTrustDomain_AddCertsToCache may release a reference to 'c' and
+     * replace 'c' by a different value. So we add a reference to 'c' to
+     * prevent 'c' from being destroyed. */
+    nssCertificate_AddRef(c);
     nssTrustDomain_AddCertsToCache(STAN_GetDefaultTrustDomain(), &c, 1);
+    /* XXX should we pass the original value of 'c' to
+     * STAN_ForceCERTCertificateUpdate? */
     (void)STAN_ForceCERTCertificateUpdate(c);
+    nssCertificate_Destroy(c);
     SECITEM_FreeItem(keyID,PR_TRUE);
     return SECSuccess;
 loser:
