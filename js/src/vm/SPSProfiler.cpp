@@ -215,6 +215,7 @@ SPSProfiler::enterNative(const char *string, void *sp)
     if (current < max_) {
         stack[current].setLabel(string);
         stack[current].setCppFrame(sp, 0);
+        JS_ASSERT(stack[current].flags() == js::ProfileEntry::IS_CPP_ENTRY);
     }
     *size = current + 1;
 }
@@ -235,10 +236,14 @@ SPSProfiler::push(const char *string, void *sp, JSScript *script, jsbytecode *pc
         volatile ProfileEntry &entry = stack[current];
         entry.setLabel(string);
 
-        if (sp != nullptr)
+        if (sp != nullptr) {
             entry.setCppFrame(sp, 0);
-        else
+            JS_ASSERT(entry.flags() == js::ProfileEntry::IS_CPP_ENTRY);
+        }
+        else {
             entry.setJsFrame(script, pc);
+            JS_ASSERT(entry.flags() == 0);
+        }
 
         // Track if mLabel needs a copy.
         if (copy)
