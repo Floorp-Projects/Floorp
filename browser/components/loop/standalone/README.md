@@ -11,6 +11,17 @@ Installation
 
     $ make install
 
+Configuration
+-------------
+
+You will need to generate a configuration file, you can do so with:
+
+	$ make config
+
+It will read the configuration from the `LOOP_SERVER_URL` env variable and
+generate the appropriate configuration file. This setting defines the root url
+of the loop server, without trailing slash.
+
 Usage
 -----
 
