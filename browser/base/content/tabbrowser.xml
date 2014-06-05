@@ -2885,7 +2885,7 @@
                 onget="return this.mCurrentBrowser.isSyntheticDocument;"
                 readonly="true"/>
 
-      <method name="_handleKeyEvent">
+      <method name="_handleKeyDownEvent">
         <parameter name="aEvent"/>
         <body><![CDATA[
           if (!aEvent.isTrusted) {
@@ -2896,20 +2896,43 @@
           if (aEvent.altKey)
             return;
 
+          // Don't check if the event was already consumed because tab
+          // navigation should always work for better user experience.
+
           if (aEvent.ctrlKey && aEvent.shiftKey && !aEvent.metaKey) {
             switch (aEvent.keyCode) {
               case aEvent.DOM_VK_PAGE_UP:
                 this.moveTabBackward();
-                aEvent.stopPropagation();
                 aEvent.preventDefault();
                 return;
               case aEvent.DOM_VK_PAGE_DOWN:
                 this.moveTabForward();
-                aEvent.stopPropagation();
                 aEvent.preventDefault();
                 return;
             }
           }
+
+#ifndef XP_MACOSX
+          if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
+              aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
+              !this.mCurrentTab.pinned) {
+            this.removeCurrentTab({animate: true});
+            aEvent.preventDefault();
+          }
+#endif
+        ]]></body>
+      </method>
+
+      <method name="_handleKeyPressEvent">
+        <parameter name="aEvent"/>
+        <body><![CDATA[
+          if (!aEvent.isTrusted) {
+            // Don't let untrusted events mess with tabs.
+            return;
+          }
+
+          if (aEvent.altKey)
+            return;
 
           // We need to take care of FAYT-watching as long as the findbar
           // isn't initialized.  The checks on aEvent are copied from
@@ -2940,16 +2963,7 @@
               if (window.getComputedStyle(this, null).direction == "ltr")
                 offset *= -1;
               this.tabContainer.advanceSelectedTab(offset, true);
-              aEvent.stopPropagation();
               aEvent.preventDefault();
-          }
-#else
-          if (aEvent.ctrlKey && !aEvent.shiftKey && !aEvent.metaKey &&
-              aEvent.keyCode == KeyEvent.DOM_VK_F4 &&
-              !this.mCurrentTab.pinned) {
-            this.removeCurrentTab({animate: true});
-            aEvent.stopPropagation();
-            aEvent.preventDefault();
           }
 #endif
         ]]></body>
@@ -2982,8 +2996,11 @@
         <parameter name="aEvent"/>
         <body><![CDATA[
           switch (aEvent.type) {
+            case "keydown":
+              this._handleKeyDownEvent(aEvent);
+              break;
             case "keypress":
-              this._handleKeyEvent(aEvent);
+              this._handleKeyPressEvent(aEvent);
               break;
             case "sizemodechange":
               if (aEvent.target == window) {
@@ -3050,7 +3067,9 @@
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
 
           this.mCurrentTab = this.tabContainer.firstChild;
-          document.addEventListener("keypress", this, false);
+          let els = Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
+          els.addSystemEventListener(document, "keydown", this, false);
+          els.addSystemEventListener(document, "keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
 
           var uniqueId = this._generateUniquePanelID();
@@ -3128,7 +3147,9 @@
             this.mTabListeners[i].destroy();
             this.mTabListeners[i] = null;
           }
-          document.removeEventListener("keypress", this, false);
+          let els = Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
+          els.removeSystemEventListener(document, "keydown", this, false);
+          els.removeSystemEventListener(document, "keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
 
           if (gMultiProcessBrowser) {
@@ -4247,7 +4268,7 @@
         event.stopPropagation();
       ]]></handler>
 
-      <handler event="keypress"><![CDATA[
+      <handler event="keydown" group="system"><![CDATA[
         if (event.altKey || event.shiftKey ||
 #ifdef XP_MACOSX
             !event.metaKey)
@@ -4255,6 +4276,9 @@
             !event.ctrlKey || event.metaKey)
 #endif
           return;
+
+        // Don't check if the event was already consumed because tab navigation
+        // should work always for better user experience.
 
         switch (event.keyCode) {
           case KeyEvent.DOM_VK_UP:
@@ -4274,11 +4298,10 @@
             this.tabbrowser.moveTabToEnd();
             break;
           default:
-            // Stop the keypress event for the above keyboard
+            // Consume the keydown event for the above keyboard
             // shortcuts only.
             return;
         }
-        event.stopPropagation();
         event.preventDefault();
       ]]></handler>
 
