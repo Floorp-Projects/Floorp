@@ -2895,7 +2895,6 @@ class PropertyDescriptorOperations
     bool hasGetterObject() const { return desc()->attrs & JSPROP_GETTER; }
     bool hasSetterObject() const { return desc()->attrs & JSPROP_SETTER; }
     bool hasGetterOrSetterObject() const { return desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER); }
-    bool hasGetterOrSetter() const { return desc()->getter || desc()->setter; }
     bool isShared() const { return desc()->attrs & JSPROP_SHARED; }
     bool isIndex() const { return desc()->attrs & JSPROP_INDEX; }
     bool hasAttributes(unsigned attrs) const { return desc()->attrs & attrs; }
@@ -2934,14 +2933,6 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         setGetter(nullptr);
         setSetter(nullptr);
         value().setUndefined();
-    }
-
-    void assign(JSPropertyDescriptor &other) {
-        object().set(other.obj);
-        setAttributes(other.attrs);
-        setGetter(other.getter);
-        setSetter(other.setter);
-        value().set(other.value);
     }
 
     JS::MutableHandleObject object() {
