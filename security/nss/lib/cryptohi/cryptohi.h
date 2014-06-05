@@ -56,7 +56,7 @@ extern SECItem *DSAU_DecodeDerSigToLen(const SECItem *item, unsigned int len);
 
 /*
 ** Create a new signature context used for signing a data stream.
-**	"alg" the signature algorithm to use (e.g. SEC_OID_RSA_WITH_MD5)
+**      "alg" the signature algorithm to use (e.g. SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION)
 **	"privKey" the private key to use
 */
 extern SGNContext *SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *privKey);

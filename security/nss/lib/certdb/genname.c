@@ -137,6 +137,39 @@ const SEC_ASN1Template CERT_GeneralNamesTemplate[] = {
 };
 
 
+static struct {
+    CERTGeneralNameType type;
+    char *name;
+} typesArray[] = {
+    { certOtherName, "other" },
+    { certRFC822Name, "email" },
+    { certRFC822Name, "rfc822" },
+    { certDNSName, "dns" },
+    { certX400Address, "x400" },
+    { certX400Address, "x400addr" },
+    { certDirectoryName, "directory" },
+    { certDirectoryName, "dn" },
+    { certEDIPartyName, "edi" },
+    { certEDIPartyName, "ediparty" },
+    { certURI, "uri" },
+    { certIPAddress, "ip" },
+    { certIPAddress, "ipaddr" },
+    { certRegisterID, "registerid" }
+};
+
+CERTGeneralNameType
+CERT_GetGeneralNameTypeFromString(const char *string)
+{
+    int types_count = sizeof(typesArray)/sizeof(typesArray[0]);
+    int i;
+
+    for (i=0; i < types_count; i++) {
+        if (PORT_Strcasecmp(string, typesArray[i].name) == 0) {
+            return typesArray[i].type;
+        }
+    }
+    return 0;
+}
 
 CERTGeneralName *
 CERT_NewGeneralName(PLArenaPool *arena, CERTGeneralNameType type)
