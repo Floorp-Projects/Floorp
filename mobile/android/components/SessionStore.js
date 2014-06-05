@@ -818,11 +818,11 @@ SessionStore.prototype = {
     return this._windows[aWindow.__SSID].closedTabs.length;
   },
 
-  getClosedTabData: function ss_getClosedTabData(aWindow) {
+  getClosedTabs: function ss_getClosedTabs(aWindow) {
     if (!aWindow.__SSID)
       throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
 
-    return JSON.stringify(this._windows[aWindow.__SSID].closedTabs);
+    return this._windows[aWindow.__SSID].closedTabs;
   },
 
   undoCloseTab: function ss_undoCloseTab(aWindow, aIndex) {
