@@ -6945,8 +6945,57 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_function_ffsl" >&5
 $as_echo "$je_cv_function_ffsl" >&6; }
 
-if test "x${je_cv_function_ffsl}" != "xyes" ; then
-   as_fn_error $? "Cannot build without ffsl(3)" "$LINENO" 5
+if test "x${je_cv_function_ffsl}" == "xyes" ; then
+  $as_echo "#define JEMALLOC_INTERNAL_FFSL ffsl" >>confdefs.h
+
+  $as_echo "#define JEMALLOC_INTERNAL_FFS ffs" >>confdefs.h
+
+else
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether a program using __builtin_ffsl is compilable" >&5
+$as_echo_n "checking whether a program using __builtin_ffsl is compilable... " >&6; }
+if ${je_cv_gcc_builtin_ffsl+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+  #include <stdio.h>
+  #include <strings.h>
+  #include <string.h>
+
+int
+main ()
+{
+
+	{
+		int rv = __builtin_ffsl(0x08);
+		printf("%d\n", rv);
+	}
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  je_cv_gcc_builtin_ffsl=yes
+else
+  je_cv_gcc_builtin_ffsl=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_gcc_builtin_ffsl" >&5
+$as_echo "$je_cv_gcc_builtin_ffsl" >&6; }
+
+  if test "x${je_cv_gcc_builtin_ffsl}" == "xyes" ; then
+    $as_echo "#define JEMALLOC_INTERNAL_FFSL __builtin_ffsl" >>confdefs.h
+
+    $as_echo "#define JEMALLOC_INTERNAL_FFS __builtin_ffs" >>confdefs.h
+
+  else
+    as_fn_error $? "Cannot build without ffsl(3) or __builtin_ffsl()" "$LINENO" 5
+  fi
 fi
 
 
