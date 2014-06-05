@@ -8,18 +8,12 @@ var loop = loop || {};
 loop.webapp = (function($, _, OT) {
   "use strict";
 
-  /**
-   * Base Loop server URL.
-   *
-   * XXX: should be configurable, but how?
-   *
-   * @type {String}
-   */
+  loop.config = loop.config || {};
+  loop.config.serverUrl = loop.config.serverUrl || "http://localhost:5000";
+
   var sharedModels = loop.shared.models,
       sharedViews = loop.shared.views,
-      // XXX this one should be configurable
-      //     see https://bugzilla.mozilla.org/show_bug.cgi?id=987086
-      baseServerUrl = "http://localhost:5000";
+      baseServerUrl = loop.config.serverUrl;
 
   /**
    * App router.
