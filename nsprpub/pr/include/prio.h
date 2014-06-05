@@ -211,6 +211,8 @@ typedef enum PRSockOption
     PR_SockOpt_NoDelay,         /* don't delay send to coalesce packets */
     PR_SockOpt_MaxSegment,      /* maximum segment size */
     PR_SockOpt_Broadcast,       /* enable broadcast */
+    PR_SockOpt_Reuseport,       /* allow local address & port reuse on
+                                 * platforms that support it */
     PR_SockOpt_Last
 } PRSockOption;
 
@@ -234,6 +236,8 @@ typedef struct PRSocketOptionData
         PRUintn tos;                /* IP type of service and precedence */
         PRBool non_blocking;        /* Non-blocking (network) I/O */
         PRBool reuse_addr;          /* Allow local address reuse */
+        PRBool reuse_port;          /* Allow local address & port reuse on
+                                     * platforms that support it */
         PRBool keep_alive;          /* Keep connections alive */
         PRBool mcast_loopback;      /* IP multicast loopback */
         PRBool no_delay;            /* Don't delay send to coalesce packets */

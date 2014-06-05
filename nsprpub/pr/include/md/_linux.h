@@ -80,7 +80,7 @@
 #define NO_DLOPEN_NULL
 #endif
 
-#ifdef __FreeBSD_kernel__
+#if defined(__FreeBSD_kernel__) || defined(__GNU__)
 #define _PR_HAVE_SOCKADDR_LEN
 #endif
 
