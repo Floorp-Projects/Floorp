@@ -1259,11 +1259,13 @@ bool gfxPlatform::ForEachPrefFont(eFontPrefLang aLangArray[], uint32_t aLangArra
 eFontPrefLang
 gfxPlatform::GetFontPrefLangFor(const char* aLang)
 {
-    if (!aLang || !aLang[0])
+    if (!aLang || !aLang[0]) {
         return eFontPrefLang_Others;
-    for (uint32_t i = 0; i < uint32_t(eFontPrefLang_LangCount); ++i) {
-        if (!PL_strcasecmp(gPrefLangNames[i], aLang))
+    }
+    for (uint32_t i = 0; i < ArrayLength(gPrefLangNames); ++i) {
+        if (!PL_strcasecmp(gPrefLangNames[i], aLang)) {
             return eFontPrefLang(i);
+        }
     }
     return eFontPrefLang_Others;
 }
@@ -1281,8 +1283,9 @@ gfxPlatform::GetFontPrefLangFor(nsIAtom *aLang)
 const char*
 gfxPlatform::GetPrefLangName(eFontPrefLang aLang)
 {
-    if (uint32_t(aLang) < uint32_t(eFontPrefLang_AllCount))
+    if (uint32_t(aLang) < ArrayLength(gPrefLangNames)) {
         return gPrefLangNames[uint32_t(aLang)];
+    }
     return nullptr;
 }
 
