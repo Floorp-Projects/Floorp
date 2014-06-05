@@ -329,21 +329,30 @@ var gAdvancedPane = {
   updateActualAppCacheSize: function ()
   {
     var visitor = {
-      onCacheStorageInfo: function (aEntryCount, aConsumption, aCapacity, aDiskDirectory)
+      visitDevice: function (deviceID, deviceInfo)
       {
-        var actualSizeLabel = document.getElementById("actualAppCacheSize");
-        var sizeStrings = DownloadUtils.convertByteUnits(aConsumption);
-        var prefStrBundle = document.getElementById("bundlePreferences");
-        var sizeStr = prefStrBundle.getFormattedString("actualAppCacheSize", sizeStrings);
-        actualSizeLabel.value = sizeStr;
+        if (deviceID == "offline") {
+          var actualSizeLabel = document.getElementById("actualAppCacheSize");
+          var sizeStrings = DownloadUtils.convertByteUnits(deviceInfo.totalSize);
+          var prefStrBundle = document.getElementById("bundlePreferences");
+          var sizeStr = prefStrBundle.getFormattedString("actualAppCacheSize", sizeStrings);
+          actualSizeLabel.value = sizeStr;
+        }
+        // Do not enumerate entries
+        return false;
+      },
+
+      visitEntry: function (deviceID, entryInfo)
+      {
+        // Do not enumerate entries.
+        return false;
       }
     };
 
     var cacheService =
-      Components.classes["@mozilla.org/netwerk/cache-storage-service;1"]
-                .getService(Components.interfaces.nsICacheStorageService);
-    var storage = cacheService.appCacheStorage(LoadContextInfo.default, null);
-    storage.asyncVisitStorage(visitor, false);
+      Components.classes["@mozilla.org/network/cache-service;1"]
+                .getService(Components.interfaces.nsICacheService);
+    cacheService.visitEntries(visitor);
   },
 
   updateCacheSizeUI: function (smartSizeEnabled)

@@ -22,8 +22,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const kNS_OFFLINECACHEUPDATESERVICE_CONTRACTID =
   "@mozilla.org/offlinecacheupdate-service;1";
-const kNS_CACHESTORAGESERVICE_CONTRACTID =
-  "@mozilla.org/netwerk/cache-storage-service;1";
+const kNS_CACHESERVICE_CONTRACTID =
+  "@mozilla.org/network/cache-service;1";
 const kNS_APPLICATIONCACHESERVICE_CONTRACTID =
   "@mozilla.org/network/application-cache-service;1";
 
@@ -85,10 +85,9 @@ function init_http_server() {
 }
 
 function clean_app_cache() {
-  let cache_service = Cc[kNS_CACHESTORAGESERVICE_CONTRACTID].
-    getService(Ci.nsICacheStorageService);
-  let storage = cache_service.appCacheStorage(LoadContextInfo.default, null);
-  storage.asyncEvictStorage(null);
+  let cache_service = Cc[kNS_CACHESERVICE_CONTRACTID].
+    getService(Ci.nsICacheService);
+  cache_service.evictEntries(Ci.nsICache.STORE_OFFLINE);
 }
 
 function do_app_cache(manifestURL, pageURL) {

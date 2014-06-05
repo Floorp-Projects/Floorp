@@ -10,7 +10,7 @@
 
 #include "nsICacheEntryDoomCallback.h"
 
-#include "nsCacheService.h"
+#include "nsICacheService.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheService.h"
 #include "nsIURI.h"
@@ -119,7 +119,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCal
           do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
+      rv = serv->EvictEntries(nsICache::STORE_OFFLINE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -161,7 +161,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisito
 
   nsRefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
     "offline", aVisitor, aVisitEntries, LoadInfo());
-  rv = nsCacheService::GlobalInstance()->VisitEntriesInternal(cb);
+  rv = serv->VisitEntries(cb);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

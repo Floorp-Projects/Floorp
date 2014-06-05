@@ -15,6 +15,8 @@
 #include "nsIApplicationCacheChannel.h"
 #include "nsIApplicationCacheService.h"
 #include "nsICache.h"
+#include "nsICacheService.h"
+#include "nsICacheSession.h"
 #include "nsICachingChannel.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
