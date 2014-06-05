@@ -60,6 +60,36 @@ GetProcSelfStatmField(int aField, int64_t* aN)
   return NS_ERROR_FAILURE;
 }
 
+static nsresult
+GetProcSelfSmapsPrivate(int64_t* aN)
+{
+  // You might be tempted to calculate USS by subtracting the "shared"
+  // value from the "resident" value in /proc/<pid>/statm. But at least
+  // on Linux, statm's "shared" value actually counts pages backed by
+  // files, which has little to do with whether the pages are actually
+  // shared. /proc/self/smaps on the other hand appears to give us the
+  // correct information.
+
+  FILE* f = fopen("/proc/self/smaps", "r");
+  if (NS_WARN_IF(!f)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  int64_t amount = 0;
+  char line[256];
+  while (fgets(line, sizeof(line), f)) {
+    long long val = 0;
+    if (sscanf(line, "Private_Dirty: %lld kB", &val) == 1 ||
+        sscanf(line, "Private_Clean: %lld kB", &val) == 1) {
+      amount += val * 1024; // convert from kB to bytes
+    }
+  }
+
+  fclose(f);
+  *aN = amount;
+  return NS_OK;
+}
+
 #define HAVE_VSIZE_AND_RESIDENT_REPORTERS 1
 static nsresult
 VsizeDistinguishedAmount(int64_t* aN)
@@ -88,29 +118,9 @@ public:
   NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                            nsISupports* aData)
   {
-    // You might be tempted to calculate USS by subtracting the "shared"
-    // value from the "resident" value in /proc/<pid>/statm. But at least
-    // on Linux, statm's "shared" value actually counts pages backed by
-    // files, which has little to do with whether the pages are actually
-    // shared. /proc/self/smaps on the other hand appears to give us the
-    // correct information.
-
-    FILE* f = fopen("/proc/self/smaps", "r");
-    if (NS_WARN_IF(!f)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
     int64_t amount = 0;
-    char line[256];
-    while (fgets(line, sizeof(line), f)) {
-      long long val = 0;
-      if (sscanf(line, "Private_Dirty: %lld kB", &val) == 1 ||
-          sscanf(line, "Private_Clean: %lld kB", &val) == 1) {
-        amount += val * 1024; // convert from kB to bytes
-      }
-    }
-
-    fclose(f);
+    nsresult rv = GetProcSelfSmapsPrivate(&amount);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     return MOZ_COLLECT_REPORT(
       "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
@@ -1533,18 +1543,29 @@ nsMemoryReporterManager::GetResidentFast(int64_t* aAmount)
 #endif
 }
 
-/*static*/
-int64_t
+/*static*/ int64_t
 nsMemoryReporterManager::ResidentFast()
 {
 #ifdef HAVE_VSIZE_AND_RESIDENT_REPORTERS
   int64_t amount;
-  ResidentFastDistinguishedAmount(&amount);
+  nsresult rv = ResidentFastDistinguishedAmount(&amount);
+  NS_ENSURE_SUCCESS(rv, 0);
   return amount;
 #else
   return 0;
 #endif
 }
+
+#if defined(XP_LINUX)
+/*static*/ int64_t
+nsMemoryReporterManager::ResidentUnique()
+{
+  int64_t amount = 0;
+  nsresult rv = GetProcSelfSmapsPrivate(&amount);
+  NS_ENSURE_SUCCESS(rv, 0);
+  return amount;
+}
+#endif
 
 NS_IMETHODIMP
 nsMemoryReporterManager::GetHeapAllocated(int64_t* aAmount)
