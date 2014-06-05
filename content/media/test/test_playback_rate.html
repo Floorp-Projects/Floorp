@@ -10,12 +10,19 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
-SimpleTest.expectAssertions(0, 2);
-
+// In varying quantities:
+// ASSERTION: Should be on state machine or decode thread.:
+//            'OnStateMachineThread() || OnDecodeThread()',
+//            file MediaDecoderStateMachine.cpp, line 559
+// ASSERTION: Clock should go forwards if the playback rate is > 0.:
+//            'mCurrentFrameTime <= clock_time || mPlaybackRate <= 0',
+//            file MediaDecoderStateMachine.cpp, line 2379
+// This test is currently disabled on Android debug for wildly-varying numbers of the above.
+SimpleTest.expectAssertions(5, 9);
 if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
+  SimpleTest.expectAssertions(4, 5);
 } else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 2);
+  SimpleTest.expectAssertions(5, 7);
 }
 
 let manager = new MediaTestManager;
