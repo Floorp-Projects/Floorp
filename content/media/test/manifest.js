@@ -18,6 +18,18 @@ var gSmallTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+if (SpecialPowers.Services.appinfo.name != "B2G") {
+  // We only run mochitests on b2g desktop and b2g emulator. The 3gp codecs
+  // aren't present on desktop, and the emulator codecs (which are different
+  // from the real device codecs) don't pass all of our tests, so we need
+  // to disable them.
+
+  gSmallTests = gSmallTests.concat([
+    { name:"sample.3gp", type:"video/3gpp", duration:4.933 },
+    { name:"sample.3g2", type:"video/3gpp2", duration:4.933 }
+  ]);
+}
+
 // Used by test_bug654550.html, for videoStats preference
 var gVideoTests = [
   { name:"320x240.ogv", type:"video/ogg", width:320, height:240, duration:0.266 },
