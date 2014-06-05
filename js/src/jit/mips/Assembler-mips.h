@@ -153,8 +153,7 @@ static const uint32_t CodeAlignment = 4;
 static const bool StackKeptAligned = true;
 // NativeFrameSize is the size of return adress on stack in AsmJS functions.
 static const uint32_t NativeFrameSize = sizeof(void*);
-static const uint32_t AlignmentAtAsmJSPrologue = 0;
-static const uint32_t AlignmentMidPrologue = NativeFrameSize;
+static const uint32_t AlignmentAtAsmJSPrologue = sizeof(void*);
 
 static const Scale ScalePointer = TimesFour;
 

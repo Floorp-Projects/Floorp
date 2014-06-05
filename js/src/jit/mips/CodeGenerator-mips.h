@@ -33,12 +33,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
         MOZ_ASSERT(a.isMemory());
         int32_t offset = ToStackOffset(&a);
 
-        // The way the stack slots work, we assume that everything from
-        // depth == 0 downwards is writable however, since our frame is
-        // included in this, ensure that the frame gets skipped.
-        if (gen->compilingAsmJS())
-            offset -= AlignmentMidPrologue;
-
         return Address(StackPointer, offset);
     }
 
@@ -54,12 +48,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
         MOZ_ASSERT(a.isMemory());
         int32_t offset = ToStackOffset(&a);
-
-        // The way the stack slots work, we assume that everything from
-        // depth == 0 downwards is writable however, since our frame is
-        // included in this, ensure that the frame gets skipped.
-        if (gen->compilingAsmJS())
-            offset -= AlignmentMidPrologue;
 
         return Operand(StackPointer, offset);
     }
