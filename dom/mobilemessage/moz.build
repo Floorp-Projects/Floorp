@@ -7,5 +7,3 @@
 DIRS += ['interfaces', 'src']
 TEST_DIRS += ['tests']
 
-if CONFIG['ENABLE_TESTS']:
-    XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell.ini']

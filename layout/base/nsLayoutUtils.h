@@ -481,6 +481,12 @@ public:
                                            nsRect* aDisplayPort = nullptr);
 
   /**
+   * Store whether aThumbFrame wants its own layer. This sets a property on
+   * the frame.
+   */
+  static void SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize);
+
+  /**
    * Finds the nearest ancestor frame to aItem that is considered to have (or
    * will have) "animated geometry". For example the scrolled frames of
    * scrollframes which are actively being scrolled fall into this category.

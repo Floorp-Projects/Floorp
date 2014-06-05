@@ -250,7 +250,7 @@ void
 MacroAssemblerMIPS::ma_li(Register dest, ImmGCPtr ptr)
 {
     writeDataRelocation(ptr);
-    ma_liPatchable(dest, Imm32(ptr.value));
+    ma_liPatchable(dest, Imm32(uintptr_t(ptr.value)));
 }
 
 void
@@ -2493,6 +2493,12 @@ void
 MacroAssemblerMIPSCompat::unboxObject(const ValueOperand &src, Register dest)
 {
     ma_move(dest, src.payloadReg());
+}
+
+void
+MacroAssemblerMIPSCompat::unboxObject(const Address &src, Register dest)
+{
+    ma_lw(dest, Address(src.base, src.offset + PAYLOAD_OFFSET));
 }
 
 void

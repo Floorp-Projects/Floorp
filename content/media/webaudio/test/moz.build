@@ -8,3 +8,7 @@ MOCHITEST_MANIFESTS += [
     'blink/mochitest.ini',
     'mochitest.ini',
 ]
+
+MOCHITEST_CHROME_MANIFESTS += [
+    'chrome.ini'
+]

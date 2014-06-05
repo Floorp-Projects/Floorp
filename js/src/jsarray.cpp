@@ -2972,6 +2972,7 @@ static const JSFunctionSpec array_methods[] = {
     /* ES6 additions */
     JS_SELF_HOSTED_FN("find",        "ArrayFind",        1,0),
     JS_SELF_HOSTED_FN("findIndex",   "ArrayFindIndex",   1,0),
+    JS_SELF_HOSTED_FN("copyWithin",  "ArrayCopyWithin",  3,0),
 
     JS_SELF_HOSTED_FN("fill",        "ArrayFill",        3,0),
 

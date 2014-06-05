@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[scriptable, uuid(a01362a0-5c45-11e2-bcfd-0800200c9a66)]
+[scriptable, uuid(22816a32-2179-4b81-9b29-e31d6f9a36c2)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -122,6 +122,20 @@ interface nsIHttpChannel : nsIChannel
      * @throws NS_ERROR_FAILURE if set after the channel has been opened.
      */
     attribute boolean allowPipelining;
+
+    /**
+     * This attribute of the channel indicates whether or not
+     * the underlying HTTP transaction should be honor stored Strict Transport
+     * Security directives for its principal. It defaults to true. Using
+     * OCSP to bootstrap the HTTPs is the likely use case for setting it to
+     * false.
+     *
+     * This attribute may only be set before the channel is opened.
+     *
+     * @throws NS_ERROR_IN_PROGRESS or NS_ERROR_ALREADY_OPENED
+     *         if called after the channel has been opened.
+     */
+    attribute boolean allowSTS;
 
     /**
      * This attribute specifies the number of redirects this channel is allowed
