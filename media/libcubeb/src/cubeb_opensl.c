@@ -117,7 +117,8 @@ convert_stream_type_to_sl_stream(cubeb_stream_type stream_type)
       return SL_ANDROID_STREAM_VOICE;
     case CUBEB_STREAM_TYPE_RING:
       return SL_ANDROID_STREAM_RING;
-    case CUBEB_STREAM_TYPE_ENFORCED_AUDIBLE:
+    case CUBEB_STREAM_TYPE_SYSTEM_ENFORCED:
+      return SL_ANDROID_STREAM_SYSTEM_ENFORCED;
     default:
       return 0xFFFFFFFF;
   }
