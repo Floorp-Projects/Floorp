@@ -1296,21 +1296,79 @@ class StringSegmentRange
     }
 };
 
+typedef Vector<JSLinearString *, 16, SystemAllocPolicy> LinearStringVector;
+
+template <typename TextChar, typename PatChar>
+static int
+RopeMatchImpl(const AutoCheckCannotGC &nogc, LinearStringVector &strings,
+              const PatChar *pat, size_t patLen)
+{
+    /* Absolute offset from the beginning of the logical text string. */
+    int pos = 0;
+
+    for (JSLinearString **outerp = strings.begin(); outerp != strings.end(); ++outerp) {
+        /* Try to find a match within 'outer'. */
+        JSLinearString *outer = *outerp;
+        const TextChar *chars = outer->chars<TextChar>(nogc);
+        size_t len = outer->length();
+        int matchResult = StringMatch(chars, len, pat, patLen);
+        if (matchResult != -1) {
+            /* Matched! */
+            return pos + matchResult;
+        }
+
+        /* Try to find a match starting in 'outer' and running into other nodes. */
+        const TextChar *const text = chars + (patLen > len ? 0 : len - patLen + 1);
+        const TextChar *const textend = chars + len;
+        const PatChar p0 = *pat;
+        const PatChar *const p1 = pat + 1;
+        const PatChar *const patend = pat + patLen;
+        for (const TextChar *t = text; t != textend; ) {
+            if (*t++ != p0)
+                continue;
+
+            JSLinearString **innerp = outerp;
+            const TextChar *ttend = textend;
+            const TextChar *tt = t;
+            for (const PatChar *pp = p1; pp != patend; ++pp, ++tt) {
+                while (tt == ttend) {
+                    if (++innerp == strings.end())
+                        return -1;
+
+                    JSLinearString *inner = *innerp;
+                    tt = inner->chars<TextChar>(nogc);
+                    ttend = tt + inner->length();
+                }
+                if (*pp != *tt)
+                    goto break_continue;
+            }
+
+            /* Matched! */
+            return pos + (t - chars) - 1;  /* -1 because of *t++ above */
+
+          break_continue:;
+        }
+
+        pos += len;
+    }
+
+    return -1;
+}
+
 /*
  * RopeMatch takes the text to search and the pattern to search for in the text.
  * RopeMatch returns false on OOM and otherwise returns the match index through
  * the 'match' outparam (-1 for not found).
  */
 static bool
-RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patLen, int *match)
+RopeMatch(JSContext *cx, JSRope *text, JSLinearString *pat, int *match)
 {
-    JS_ASSERT(textstr->isRope());
-
+    uint32_t patLen = pat->length();
     if (patLen == 0) {
         *match = 0;
         return true;
     }
-    if (textstr->length() < patLen) {
+    if (text->length() < patLen) {
         *match = -1;
         return true;
     }
@@ -1320,26 +1378,34 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patLen, 
      * append to this list, we can still fall back to StringMatch, so use the
      * system allocator so we don't report OOM in that case.
      */
-    Vector<JSLinearString *, 16, SystemAllocPolicy> strs;
+    LinearStringVector strings;
 
     /*
      * We don't want to do rope matching if there is a poor node-to-char ratio,
      * since this means spending a lot of time in the match loop below. We also
      * need to build the list of leaf nodes. Do both here: iterate over the
      * nodes so long as there are not too many.
+     *
+     * We also don't use rope matching if the rope contains both Latin1 and
+     * TwoByte nodes, to simplify the match algorithm.
      */
     {
-        size_t textstrlen = textstr->length();
-        size_t threshold = textstrlen >> sRopeMatchThresholdRatioLog2;
+        size_t threshold = text->length() >> sRopeMatchThresholdRatioLog2;
         StringSegmentRange r(cx);
-        if (!r.init(textstr))
+        if (!r.init(text))
             return false;
+
+        bool textIsLatin1 = text->hasLatin1Chars();
         while (!r.empty()) {
-            if (threshold-- == 0 || !strs.append(r.front())) {
-                const jschar *chars = textstr->getChars(cx);
-                if (!chars)
+            if (threshold-- == 0 ||
+                r.front()->hasLatin1Chars() != textIsLatin1 ||
+                !strings.append(r.front()))
+            {
+                JSLinearString *linear = text->ensureLinear(cx);
+                if (!linear)
                     return false;
-                *match = StringMatch(chars, textstrlen, pat, patLen);
+
+                *match = StringMatch(linear, pat);
                 return true;
             }
             if (!r.popFront())
@@ -1347,57 +1413,19 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patLen, 
         }
     }
 
-    /* Absolute offset from the beginning of the logical string textstr. */
-    int pos = 0;
-
-    for (JSLinearString **outerp = strs.begin(); outerp != strs.end(); ++outerp) {
-        /* Try to find a match within 'outer'. */
-        JSLinearString *outer = *outerp;
-        const jschar *chars = outer->chars();
-        size_t len = outer->length();
-        int matchResult = StringMatch(chars, len, pat, patLen);
-        if (matchResult != -1) {
-            /* Matched! */
-            *match = pos + matchResult;
-            return true;
-        }
-
-        /* Try to find a match starting in 'outer' and running into other nodes. */
-        const jschar *const text = chars + (patLen > len ? 0 : len - patLen + 1);
-        const jschar *const textend = chars + len;
-        const jschar p0 = *pat;
-        const jschar *const p1 = pat + 1;
-        const jschar *const patend = pat + patLen;
-        for (const jschar *t = text; t != textend; ) {
-            if (*t++ != p0)
-                continue;
-            JSLinearString **innerp = outerp;
-            const jschar *ttend = textend;
-            for (const jschar *pp = p1, *tt = t; pp != patend; ++pp, ++tt) {
-                while (tt == ttend) {
-                    if (++innerp == strs.end()) {
-                        *match = -1;
-                        return true;
-                    }
-                    JSLinearString *inner = *innerp;
-                    tt = inner->chars();
-                    ttend = tt + inner->length();
-                }
-                if (*pp != *tt)
-                    goto break_continue;
-            }
-
-            /* Matched! */
-            *match = pos + (t - chars) - 1;  /* -1 because of *t++ above */
-            return true;
-
-          break_continue:;
-        }
-
-        pos += len;
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        if (pat->hasLatin1Chars())
+            *match = RopeMatchImpl<Latin1Char>(nogc, strings, pat->latin1Chars(nogc), patLen);
+        else
+            *match = RopeMatchImpl<Latin1Char>(nogc, strings, pat->twoByteChars(nogc), patLen);
+    } else {
+        if (pat->hasLatin1Chars())
+            *match = RopeMatchImpl<jschar>(nogc, strings, pat->latin1Chars(nogc), patLen);
+        else
+            *match = RopeMatchImpl<jschar>(nogc, strings, pat->twoByteChars(nogc), patLen);
     }
 
-    *match = -1;
     return true;
 }
 
@@ -2002,8 +2030,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
          * long as possible.
          */
         if (text->isRope()) {
-            const jschar *pat = fm.pat_->chars();
-            if (!RopeMatch(cx, text, pat, patLen, &fm.match_))
+            if (!RopeMatch(cx, &text->asRope(), fm.pat_, &fm.match_))
                 return nullptr;
         } else {
             fm.match_ = StringMatch(&text->asLinear(), fm.pat_, 0);
