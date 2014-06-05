@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 989276 is the latest to incur the wrath of bug 1019955.
+Bug 965870 sadly requires configure to re-run
