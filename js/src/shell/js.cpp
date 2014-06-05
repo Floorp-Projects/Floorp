@@ -3426,6 +3426,36 @@ InterruptIf(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+InvokeInterruptCallbackWrapper(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 1) {
+        JS_ReportError(cx, "Wrong number of arguments");
+        return false;
+    }
+
+    gServiceInterrupt = true;
+    JS_RequestInterruptCallback(cx->runtime());
+    bool interruptRv = CheckForInterrupt(cx);
+
+    // The interrupt handler could have set a pending exception. Since we call
+    // back into JS, don't have it see the pending exception. If we have an
+    // uncatchable exception that's not propagating a debug mode forced
+    // return, return.
+    if (!interruptRv && !cx->isExceptionPending() && !cx->isPropagatingForcedReturn())
+        return false;
+
+    JS::AutoSaveExceptionState savedExc(cx);
+    Value argv[1] = { BooleanValue(interruptRv) };
+    RootedValue rv(cx);
+    if (!Invoke(cx, UndefinedValue(), args[0], 1, argv, &rv))
+        return false;
+
+    args.rval().setUndefined();
+    return interruptRv;
+}
+
+static bool
 SetInterruptCallback(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -4727,6 +4757,13 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "interruptIf(cond)",
 "  Requests interrupt callback if cond is true. If a callback function is set via\n"
 "  |timeout| or |setInterruptCallback|, it will be called. No-op otherwise."),
+
+    JS_FN_HELP("invokeInterruptCallback", InvokeInterruptCallbackWrapper, 0, 0,
+"invokeInterruptCallback(fun)",
+"  Forcefully set the interrupt flag and invoke the interrupt handler. If a\n"
+"  callback function is set via |timeout| or |setInterruptCallback|, it will\n"
+"  be called. Before returning, fun is called with the return value of the\n"
+"  interrupt handler."),
 
     JS_FN_HELP("setInterruptCallback", SetInterruptCallback, 1, 0,
 "setInterruptCallback(func)",
