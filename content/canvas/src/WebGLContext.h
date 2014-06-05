@@ -1254,6 +1254,8 @@ public:
     friend class WebGLShader;
     friend class WebGLUniformLocation;
     friend class WebGLVertexArray;
+    friend class WebGLVertexArrayFake;
+    friend class WebGLVertexArrayGL;
 };
 
 // used by DOM bindings in conjunction with GetParentObject

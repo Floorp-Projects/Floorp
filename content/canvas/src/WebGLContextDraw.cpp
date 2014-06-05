@@ -219,12 +219,12 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
         return false;
     }
 
-    if (!mBoundVertexArray->mBoundElementArrayBuffer) {
+    if (!mBoundVertexArray->mElementArrayBuffer) {
         ErrorInvalidOperation("%s: must have element array buffer binding", info);
         return false;
     }
 
-    WebGLBuffer& elemArrayBuffer = *mBoundVertexArray->mBoundElementArrayBuffer;
+    WebGLBuffer& elemArrayBuffer = *mBoundVertexArray->mElementArrayBuffer;
 
     if (!elemArrayBuffer.ByteLength()) {
         ErrorInvalidOperation("%s: bound element array buffer doesn't have any data", info);

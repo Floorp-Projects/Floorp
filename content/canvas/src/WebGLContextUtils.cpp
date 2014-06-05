@@ -525,7 +525,7 @@ WebGLContext::AssertCachedBindings()
     AssertUintParamCorrect(gl, LOCAL_GL_ARRAY_BUFFER_BINDING, bound);
 
     MOZ_ASSERT(mBoundVertexArray);
-    WebGLBuffer* curBuff = mBoundVertexArray->mBoundElementArrayBuffer;
+    WebGLBuffer* curBuff = mBoundVertexArray->mElementArrayBuffer;
     bound = curBuff ? curBuff->GLName() : 0;
     AssertUintParamCorrect(gl, LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING, bound);
 

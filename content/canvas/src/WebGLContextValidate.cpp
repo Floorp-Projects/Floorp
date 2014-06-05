@@ -1788,7 +1788,7 @@ WebGLContext::InitAndValidateGL()
                                      false);
     }
 
-    mDefaultVertexArray = new WebGLVertexArray(this);
+    mDefaultVertexArray = WebGLVertexArray::Create(this);
     mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
 
