@@ -489,8 +489,6 @@ public:
     switch (hashAlg->Mechanism()) {
       case CKM_SHA_1:
         mOidTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION; break;
-      case CKM_SHA224:
-        mOidTag = SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION; break;
       case CKM_SHA256:
         mOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION; break;
       case CKM_SHA384:
@@ -598,8 +596,6 @@ public:
 
     if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1))   {
       mOidTag = SEC_OID_SHA1;
-    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA224)) {
-      mOidTag = SEC_OID_SHA224;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
       mOidTag = SEC_OID_SHA256;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
@@ -1046,7 +1042,6 @@ public:
         KeyAlgorithm hashAlg(global, hashName);
         switch (hashAlg.Mechanism()) {
           case CKM_SHA_1: mLength = 128; break;
-          case CKM_SHA224: mLength = 224; break;
           case CKM_SHA256: mLength = 256; break;
           case CKM_SHA384: mLength = 384; break;
           case CKM_SHA512: mLength = 512; break;

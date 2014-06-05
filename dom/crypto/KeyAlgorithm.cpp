@@ -40,8 +40,6 @@ KeyAlgorithm::KeyAlgorithm(nsIGlobalObject* aGlobal, const nsString& aName)
     mMechanism = CKM_AES_GCM;
   } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA1)) {
     mMechanism = CKM_SHA_1;
-  } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA224)) {
-    mMechanism = CKM_SHA224;
   } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
     mMechanism = CKM_SHA256;
   } else if (mName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
