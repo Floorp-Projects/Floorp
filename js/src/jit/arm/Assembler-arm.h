@@ -1798,6 +1798,11 @@ class Assembler : public AssemblerShared
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
                                         ImmPtr expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
+
+    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
+        MOZ_ASSUME_UNREACHABLE("Unused.");
+    }
+
     static uint32_t alignDoubleArg(uint32_t offset) {
         return (offset+1)&~1;
     }
@@ -1811,6 +1816,10 @@ class Assembler : public AssemblerShared
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
+    static int32_t extractCodeLabelOffset(uint8_t *code) {
+        return *(uintptr_t *)code;
+    }
+
     bool bailed() {
         return m_buffer.bail();
     }
