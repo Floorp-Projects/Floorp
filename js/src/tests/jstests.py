@@ -229,7 +229,7 @@ def load_tests(options, requested_paths, excluded_paths):
         xul_tester = manifest.XULInfoTester(xul_info, options.js_shell)
 
     test_dir = dirname(abspath(__file__))
-    test_list = manifest.load(test_dir, xul_tester)
+    test_list = manifest.load(test_dir, requested_paths, excluded_paths, xul_tester)
     skip_list = []
 
     if options.make_manifests:
@@ -256,17 +256,6 @@ def load_tests(options, requested_paths, excluded_paths):
         for test_file in options.test_file:
             paths |= set([ line.strip() for line in open(test_file).readlines()])
         test_list = [ _ for _ in test_list if _.path in paths ]
-
-    if requested_paths:
-        def p(path):
-            for arg in requested_paths:
-                if path.find(arg) != -1:
-                    return True
-            return False
-        test_list = [ _ for _ in test_list if p(_.path) ]
-
-    if options.exclude_file:
-        test_list = [_ for _ in test_list if _.path not in excluded_paths]
 
     if options.no_extensions:
         pattern = os.sep + 'extensions' + os.sep
