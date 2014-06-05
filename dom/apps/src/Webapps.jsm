@@ -664,22 +664,29 @@ this.DOMApplicationRegistry = {
     }
 
     let manifest = new ManifestHelper(aManifest, aApp.origin);
-    let launchPath = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint), null, null);
-    let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
+    let launchPathURI = Services.io.newURI(manifest.fullLaunchPath(aEntryPoint), null, null);
+    let manifestURI = Services.io.newURI(aApp.manifestURL, null, null);
     root.messages.forEach(function registerPages(aMessage) {
-      let href = launchPath;
+      let handlerPageURI = launchPathURI;
       let messageName;
       if (typeof(aMessage) === "object" && Object.keys(aMessage).length === 1) {
         messageName = Object.keys(aMessage)[0];
-        let uri;
+        let handlerPath = aMessage[messageName];
+        // Resolve the handler path from origin. If |handler_path| is absent,
+        // simply skip.
+        let fullHandlerPath;
         try {
-          uri = manifest.resolveFromOrigin(aMessage[messageName]);
+          if (handlerPath && handlerPath.trim()) {
+            fullHandlerPath = manifest.resolveFromOrigin(handlerPath);
+          } else {
+            throw new Error("Empty or blank handler path.");
+          }
         } catch(e) {
-          debug("system message url (" + aMessage[messageName] + ") is invalid, skipping. " +
-                "Error is: " + e);
+          debug("system message handler path (" + handlerPath + ") is " +
+                "invalid, skipping. Error is: " + e);
           return;
         }
-        href = Services.io.newURI(uri, null, null);
+        handlerPageURI = Services.io.newURI(fullHandlerPath, null, null);
       } else {
         messageName = aMessage;
       }
@@ -688,7 +695,7 @@ this.DOMApplicationRegistry = {
             .isSystemMessagePermittedToRegister(messageName,
                                                 aApp.origin,
                                                 aManifest)) {
-        msgmgr.registerPage(messageName, href, manifestURL);
+        msgmgr.registerPage(messageName, handlerPageURI, manifestURI);
       }
     });
   },
@@ -827,14 +834,14 @@ this.DOMApplicationRegistry = {
                                     "description": newDesc });
       }
 
-      let launchPath = Services.io.newURI(href, null, null);
-      let manifestURL = Services.io.newURI(aApp.manifestURL, null, null);
+      let launchPathURI = Services.io.newURI(href, null, null);
+      let manifestURI = Services.io.newURI(aApp.manifestURL, null, null);
 
       if (SystemMessagePermissionsChecker
             .isSystemMessagePermittedToRegister("activity",
                                                 aApp.origin,
                                                 aManifest)) {
-        msgmgr.registerPage("activity", launchPath, manifestURL);
+        msgmgr.registerPage("activity", launchPathURI, manifestURI);
       }
     }
     return activitiesToRegister;
