@@ -48,8 +48,13 @@ gPrefixedProperties = [
     "column-width"
 ]
 
+# Map of about:config prefs that need toggling, for a given test subdirectory.
+# Entries should look like:
+#  "$SUBDIR_NAME": "pref($PREF_NAME, $PREF_VALUE)"
+#
+# For example, when "@supports" was behind a pref, gDefaultPreferences had:
+#  "css3-conditional": "pref(layout.css.supports-rule.enabled,true)"
 gDefaultPreferences = {
-    "css3-conditional": "pref(layout.css.supports-rule.enabled,true)"
 }
 
 gLog = None
