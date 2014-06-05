@@ -11,7 +11,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
-#include "nsICacheService.h"
 #include "nsIChannelEventSink.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMNode.h"
