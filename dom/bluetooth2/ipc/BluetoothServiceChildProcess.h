@@ -47,6 +47,12 @@ public:
   GetAdaptersInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
+  StartInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual nsresult
+  StopInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+
+  virtual nsresult
   GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
                                     BluetoothReplyRunnable* aRunnable)
                                     MOZ_OVERRIDE;
@@ -199,14 +205,6 @@ protected:
   HandleShutdown() MOZ_OVERRIDE;
 
 private:
-  // This method should never be called.
-  virtual nsresult
-  StartInternal() MOZ_OVERRIDE;
-
-  // This method should never be called.
-  virtual nsresult
-  StopInternal() MOZ_OVERRIDE;
-
   bool
   IsSignalRegistered(const nsAString& aNodeName) {
     return !!mBluetoothSignalObserverTable.Get(aNodeName);

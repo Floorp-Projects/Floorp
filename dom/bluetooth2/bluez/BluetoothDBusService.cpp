@@ -2097,8 +2097,10 @@ public:
 };
 
 nsresult
-BluetoothDBusService::StartInternal()
+BluetoothDBusService::StartInternal(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(!aRunnable);
+
   nsRefPtr<nsRunnable> runnable = new StartBluetoothRunnable();
   nsresult rv = DispatchToBtThread(runnable);
   if (NS_FAILED(rv)) {
@@ -2225,8 +2227,10 @@ public:
 };
 
 nsresult
-BluetoothDBusService::StopInternal()
+BluetoothDBusService::StopInternal(BluetoothReplyRunnable* aRunnable)
 {
+  MOZ_ASSERT(!aRunnable);
+
   nsRefPtr<nsRunnable> runnable = new StopBluetoothRunnable();
   nsresult rv = DispatchToBtThread(runnable);
   if (NS_FAILED(rv)) {

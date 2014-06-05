@@ -74,6 +74,13 @@ html|*.highlighter-nodeinfobar-pseudo-classes {
   color: hsl(200,74%,57%);
 }
 
+html|*.highlighter-nodeinfobar-dimensions {
+  color: hsl(210,30%,85%);
+  -moz-border-start: 1px solid #5a6169;
+  -moz-margin-start: 6px;
+  -moz-padding-start: 6px;
+}
+
 /* Highlighter - Node Infobar - box & arrow */
 
 .highlighter-nodeinfobar-arrow {

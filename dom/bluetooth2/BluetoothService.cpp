@@ -163,14 +163,8 @@ BluetoothService::ToggleBtAck::Run()
   sBluetoothService->SetEnabled(mEnabled);
   sToggleInProgress = false;
 
-  nsAutoString signalName;
-  signalName = mEnabled ? NS_LITERAL_STRING("Enabled")
-                        : NS_LITERAL_STRING("Disabled");
-  BluetoothSignal signal(signalName, NS_LITERAL_STRING(KEY_MANAGER), true);
-  sBluetoothService->DistributeSignal(signal);
-
-  // Event 'AdapterAdded' has to be fired after firing 'Enabled'
   sBluetoothService->TryFiringAdapterAdded();
+  sBluetoothService->FireAdapterStateChanged(mEnabled);
 
   return NS_OK;
 }
@@ -218,19 +212,6 @@ BluetoothService::IsToggling() const
 BluetoothService::~BluetoothService()
 {
   Cleanup();
-}
-
-PLDHashOperator
-RemoveObserversExceptBluetoothManager
-  (const nsAString& key,
-   nsAutoPtr<BluetoothSignalObserverList>& value,
-   void* arg)
-{
-  if (!key.EqualsLiteral(KEY_MANAGER)) {
-    return PL_DHASH_REMOVE;
-  }
-
-  return PL_DHASH_NEXT;
 }
 
 // static
@@ -384,7 +365,8 @@ BluetoothService::DistributeSignal(const BluetoothSignal& aSignal)
 }
 
 nsresult
-BluetoothService::StartBluetooth(bool aIsStartup)
+BluetoothService::StartBluetooth(bool aIsStartup,
+                                 BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -405,7 +387,7 @@ BluetoothService::StartBluetooth(bool aIsStartup)
    */
   if (aIsStartup || !sBluetoothService->IsEnabled()) {
     // Switch Bluetooth on
-    if (NS_FAILED(sBluetoothService->StartInternal())) {
+    if (NS_FAILED(sBluetoothService->StartInternal(aRunnable))) {
       BT_WARNING("Bluetooth service failed to start!");
     }
   } else {
@@ -420,7 +402,8 @@ BluetoothService::StartBluetooth(bool aIsStartup)
 }
 
 nsresult
-BluetoothService::StopBluetooth(bool aIsStartup)
+BluetoothService::StopBluetooth(bool aIsStartup,
+                                BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -466,7 +449,7 @@ BluetoothService::StopBluetooth(bool aIsStartup)
    */
   if (aIsStartup || sBluetoothService->IsEnabled()) {
     // Switch Bluetooth off
-    if (NS_FAILED(sBluetoothService->StopInternal())) {
+    if (NS_FAILED(sBluetoothService->StopInternal(aRunnable))) {
       BT_WARNING("Bluetooth service failed to stop!");
     }
   } else {
@@ -481,13 +464,15 @@ BluetoothService::StopBluetooth(bool aIsStartup)
 }
 
 nsresult
-BluetoothService::StartStopBluetooth(bool aStart, bool aIsStartup)
+BluetoothService::StartStopBluetooth(bool aStart,
+                                     bool aIsStartup,
+                                     BluetoothReplyRunnable* aRunnable)
 {
   nsresult rv;
   if (aStart) {
-    rv = StartBluetooth(aIsStartup);
+    rv = StartBluetooth(aIsStartup, aRunnable);
   } else {
-    rv = StopBluetooth(aIsStartup);
+    rv = StopBluetooth(aIsStartup, aRunnable);
   }
   return rv;
 }
@@ -502,17 +487,6 @@ BluetoothService::SetEnabled(bool aEnabled)
 
   for (uint32_t index = 0; index < childActors.Length(); index++) {
     unused << childActors[index]->SendEnabled(aEnabled);
-  }
-
-  if (!aEnabled) {
-    /**
-     * Remove all handlers except BluetoothManager when turning off bluetooth
-     * since it is possible that the event 'onAdapterAdded' would be fired after
-     * BluetoothManagers of child process are registered. Please see Bug 827759
-     * for more details.
-     */
-    mBluetoothSignalObserverTable.Enumerate(
-      RemoveObserversExceptBluetoothManager, nullptr);
   }
 
   /**
@@ -553,7 +527,7 @@ nsresult
 BluetoothService::HandleStartupSettingsCheck(bool aEnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return StartStopBluetooth(aEnable, true);
+  return StartStopBluetooth(aEnable, true, nullptr);
 }
 
 nsresult
@@ -610,37 +584,6 @@ BluetoothService::HandleSettingsChanged(const nsAString& aData)
     }
 
     SWITCH_BT_DEBUG(value.toBoolean());
-
-    return NS_OK;
-  }
-
-  // Second, check if the string is BLUETOOTH_ENABLED_SETTING
-  if (!JS_StringEqualsAscii(cx, key.toString(), BLUETOOTH_ENABLED_SETTING, &match)) {
-    MOZ_ASSERT(!JS_IsExceptionPending(cx));
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (match) {
-    JS::Rooted<JS::Value> value(cx);
-    if (!JS_GetProperty(cx, obj, "value", &value)) {
-      MOZ_ASSERT(!JS_IsExceptionPending(cx));
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    if (!value.isBoolean()) {
-      MOZ_ASSERT(false, "Expecting a boolean for 'bluetooth.enabled'!");
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    if (sToggleInProgress || value.toBoolean() == IsEnabled()) {
-      // Nothing to do here.
-      return NS_OK;
-    }
-
-    sToggleInProgress = true;
-
-    nsresult rv = StartStopBluetooth(value.toBoolean(), false);
-    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;
@@ -704,7 +647,7 @@ BluetoothService::HandleShutdown()
     }
   }
 
-  if (IsEnabled() && NS_FAILED(StopBluetooth(false))) {
+  if (IsEnabled() && NS_FAILED(StopBluetooth(false, nullptr))) {
     MOZ_ASSERT(false, "Failed to deliver stop message!");
   }
 
@@ -783,6 +726,38 @@ BluetoothService::AdapterAddedReceived()
   MOZ_ASSERT(NS_IsMainThread());
 
   mAdapterAddedReceived = true;
+}
+
+/**
+ * Enable/Disable the local adapter.
+ *
+ * There is only one adapter on the mobile in current use cases.
+ * In addition, bluedroid couldn't enable/disable a single adapter.
+ * So currently we will turn on/off BT to enable/disable the adapter.
+ *
+ * TODO: To support enable/disable single adapter in the future,
+ *       we will need to implement EnableDisableInternal for different stacks.
+ */
+nsresult
+BluetoothService::EnableDisable(bool aEnable,
+                                BluetoothReplyRunnable* aRunnable)
+{
+  sToggleInProgress = true;
+  return StartStopBluetooth(aEnable, false, aRunnable);
+}
+
+void
+BluetoothService::FireAdapterStateChanged(bool aEnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  InfallibleTArray<BluetoothNamedValue> props;
+  BT_APPEND_NAMED_VALUE(props, "State", aEnable);
+  BluetoothValue value(props);
+
+  BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
+                         NS_LITERAL_STRING(KEY_ADAPTER), value);
+  DistributeSignal(signal);
 }
 
 void
