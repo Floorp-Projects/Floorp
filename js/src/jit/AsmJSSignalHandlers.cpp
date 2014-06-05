@@ -86,6 +86,11 @@ using JS::GenericNaN;
 # else
 #  define R15_sig(p) ((p)->uc_mcontext.gregs[REG_R15])
 # endif
+# if defined(__linux__) && defined(__mips__)
+#  define EPC_sig(p) ((p)->uc_mcontext.pc)
+#  define RSP_sig(p) ((p)->uc_mcontext.gregs[29])
+#  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
+# endif
 #elif defined(__NetBSD__)
 # define XMM_sig(p,i) (((struct fxsave64 *)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
@@ -282,6 +287,37 @@ typedef struct ucontext {
     // Other fields are not used so don't define them here.
 } ucontext_t;
 
+#  elif defined(__mips__)
+
+typedef struct {
+    uint32_t regmask;
+    uint32_t status;
+    uint64_t pc;
+    uint64_t gregs[32];
+    uint64_t fpregs[32];
+    uint32_t acx;
+    uint32_t fpc_csr;
+    uint32_t fpc_eir;
+    uint32_t used_math;
+    uint32_t dsp;
+    uint64_t mdhi;
+    uint64_t mdlo;
+    uint32_t hi1;
+    uint32_t lo1;
+    uint32_t hi2;
+    uint32_t lo2;
+    uint32_t hi3;
+    uint32_t lo3;
+} mcontext_t;
+
+typedef struct ucontext {
+    uint32_t uc_flags;
+    struct ucontext* uc_link;
+    stack_t uc_stack;
+    mcontext_t uc_mcontext;
+    // Other fields are not used so don't define them here.
+} ucontext_t;
+
 #  elif defined(__i386__)
 // x86 version for Android.
 typedef struct {
@@ -326,6 +362,8 @@ static bool IsSignalHandlingBroken() { return false; }
 # define PC_sig(p) EIP_sig(p)
 #elif defined(JS_CPU_ARM)
 # define PC_sig(p) R15_sig(p)
+#elif defined(JS_CPU_MIPS)
+# define PC_sig(p) EPC_sig(p)
 #endif
 
 static bool
@@ -355,7 +393,6 @@ HandleSimulatorInterrupt(JSRuntime *rt, AsmJSActivation *activation, void *fault
 static uint8_t **
 ContextToPC(CONTEXT *context)
 {
-    JS_STATIC_ASSERT(sizeof(PC_sig(context)) == sizeof(void*));
     return reinterpret_cast<uint8_t**>(&PC_sig(context));
 }
 

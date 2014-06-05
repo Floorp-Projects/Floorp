@@ -89,7 +89,7 @@ class ABIArgGenerator
 
     uint32_t stackBytesConsumedSoFar() const {
         if (usedArgSlots_ <= 4)
-            return 4 * sizeof(intptr_t);
+            return ShadowStackSpace;
 
         return usedArgSlots_ * sizeof(intptr_t);
     }
@@ -1033,6 +1033,9 @@ class Assembler : public AssemblerShared
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
                                         ImmPtr expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
+
+    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm);
+
     static uint32_t alignDoubleArg(uint32_t offset) {
         return (offset + 1U) &~ 1U;
     }
@@ -1046,6 +1049,7 @@ class Assembler : public AssemblerShared
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
+    static int32_t extractCodeLabelOffset(uint8_t *code);
 
     bool bailed() {
         return m_buffer.bail();
