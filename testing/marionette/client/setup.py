@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 import sys
 
-version = '0.7.8'
+version = '0.7.9'
 
 # dependencies
 with open('requirements.txt') as f:
@@ -23,7 +23,7 @@ if os.path.exists(transport_dir) and method:
         print "Error running setup.py in %s" % transport_dir
         raise
 else:
-    deps += ['marionette-transport == 0.1']
+    deps += ['marionette-transport == 0.2']
 
 setup(name='marionette_client',
       version=version,
