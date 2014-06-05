@@ -1309,18 +1309,6 @@ nsCacheService::CreateSession(const char *          clientID,
 {
     *result = nullptr;
 
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return CreateSessionInternal(clientID, storagePolicy, streamBased, result);
-}
-
-nsresult
-nsCacheService::CreateSessionInternal(const char *          clientID,
-                                      nsCacheStoragePolicy  storagePolicy,
-                                      bool                  streamBased,
-                                      nsICacheSession     **result)
-{
     if (this == nullptr)  return NS_ERROR_NOT_AVAILABLE;
 
     nsCacheSession * session = new nsCacheSession(clientID, storagePolicy, streamBased);
@@ -1473,14 +1461,6 @@ nsCacheService::IsStorageEnabledForPolicy_Locked(nsCacheStoragePolicy  storagePo
 
 NS_IMETHODIMP nsCacheService::VisitEntries(nsICacheVisitor *visitor)
 {
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return VisitEntriesInternal(visitor);
-}
-
-nsresult nsCacheService::VisitEntriesInternal(nsICacheVisitor *visitor)
-{
     NS_ENSURE_ARG_POINTER(visitor);
 
     nsCacheServiceAutoLock lock(LOCK_TELEM(NSCACHESERVICE_VISITENTRIES));
@@ -1534,14 +1514,6 @@ void nsCacheService::FireClearNetworkCacheStoredAnywhereNotification()
 }
 
 NS_IMETHODIMP nsCacheService::EvictEntries(nsCacheStoragePolicy storagePolicy)
-{
-    if (net::CacheObserver::UseNewCache())
-        return NS_ERROR_NOT_IMPLEMENTED;
-
-    return EvictEntriesInternal(storagePolicy);
-}
-
-nsresult nsCacheService::EvictEntriesInternal(nsCacheStoragePolicy storagePolicy)
 {
     if (storagePolicy == nsICache::STORE_ANYWHERE) {
         // if not called on main thread, dispatch the notification to the main thread to notify observers

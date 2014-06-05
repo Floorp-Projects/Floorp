@@ -11,6 +11,7 @@
 
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
+#include "nsICacheService.h"
 #include "nsIDOMDocument.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"

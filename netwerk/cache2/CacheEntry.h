@@ -135,7 +135,7 @@ private:
   public:
     Callback(CacheEntry* aEntry,
              nsICacheEntryOpenCallback *aCallback,
-             bool aReadOnly, bool aCheckOnAnyThread, bool aForceAsync);
+             bool aReadOnly, bool aCheckOnAnyThread);
     Callback(Callback const &aThat);
     ~Callback();
 
@@ -153,11 +153,9 @@ private:
     bool mCheckOnAnyThread : 1;
     bool mRecheckAfterWrite : 1;
     bool mNotWanted : 1;
-    bool mForceAsync : 1;
 
-    bool ForceAsync();
-    nsresult OnCheckThread(bool *aOnCheckThread);
-    nsresult OnAvailThread(bool *aOnAvailThread);
+    nsresult OnCheckThread(bool *aOnCheckThread) const;
+    nsresult OnAvailThread(bool *aOnAvailThread) const;
   };
 
   // Since OnCacheEntryAvailable must be invoked on the main thread
@@ -217,7 +215,7 @@ private:
   void InvokeCallbacks();
   bool InvokeCallbacks(bool aReadOnly);
   bool InvokeCallback(Callback & aCallback);
-  void InvokeAvailableCallback(Callback & aCallback);
+  void InvokeAvailableCallback(Callback const & aCallback);
 
   nsresult OpenOutputStreamInternal(int64_t offset, nsIOutputStream * *_retval);
 

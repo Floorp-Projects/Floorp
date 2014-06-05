@@ -13,19 +13,10 @@ interface nsICacheSession;
 interface nsICacheVisitor;
 interface nsIEventTarget;
 
-/**
- * @deprecated
- *
- * IMPORTANT NOTE: THIS INTERFACE IS NO LONGER SUPPORTED AND PLANNED TO BE
- * REMOVED SOON. WE STRONGLY ENCORAGE TO MIGRATE THE EXISTING CODE AND FOR
- * THE NEW CODE USE ONLY THE NEW HTTP CACHE API IN netwerk/cache2/.
- */
 [scriptable, uuid(14dbe1e9-f3bc-45af-92f4-2c574fcd4e39)]
 interface nsICacheService : nsISupports
 {
     /**
-     * @throws NS_ERROR_NOT_IMPLEMENTED when the cache v2 is prefered to use.
-     *
      * Create a cache session
      *
      * A cache session represents a client's access into the cache.  The cache
@@ -50,15 +41,11 @@ interface nsICacheService : nsISupports
                                   in boolean                streamBased);
 
     /**
-     * @throws NS_ERROR_NOT_IMPLEMENTED when the cache v2 is prefered to use.
-     *
      * Visit entries stored in the cache.  Used to implement about:cache.
      */
     void visitEntries(in nsICacheVisitor visitor);
 
     /**
-     * @throws NS_ERROR_NOT_IMPLEMENTED when the cache v2 is prefered to use.
-     *
      * Evicts all entries in all devices implied by the storage policy.
      *
      * @note This function may evict some items but will throw if it fails to evict
