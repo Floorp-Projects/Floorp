@@ -38,8 +38,20 @@ namespace mozilla { namespace pkix {
 // certificate decoder so that the results are cached with the certificate, so
 // that the decoding doesn't have to happen more than once per cert.
 Result
-BackCert::Init()
+BackCert::Init(const SECItem& certDER)
 {
+  // XXX: Currently-known uses of mozilla::pkix create CERTCertificate objects
+  // for all certs anyway, so the overhead of CERT_NewTempCertificate will be
+  // reduced to a lookup in NSS's SECItem* -> CERTCertificate cache and
+  // a CERT_DupCertificate. Eventually, we should parse the certificate using
+  // mozilla::pkix::der and avoid the need to create a CERTCertificate at all.
+  nssCert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                                    const_cast<SECItem*>(&certDER),
+                                    nullptr, false, true);
+  if (!nssCert) {
+    return MapSECStatus(SECFailure);
+  }
+
   const CERTCertExtension* const* exts = nssCert->extensions;
   if (!exts) {
     return Success;
@@ -109,6 +121,15 @@ BackCert::Init()
   return Success;
 }
 
+
+Result
+BackCert::VerifyOwnSignatureWithKey(TrustDomain& trustDomain,
+                                    const SECItem& subjectPublicKeyInfo) const
+{
+  return MapSECStatus(trustDomain.VerifySignedData(&nssCert->signatureWrap,
+                                                   subjectPublicKeyInfo));
+}
+
 static Result BuildForward(TrustDomain& trustDomain,
                            BackCert& subject,
                            PRTime time,
@@ -127,15 +148,12 @@ BuildForwardInner(TrustDomain& trustDomain,
                   PRTime time,
                   KeyPurposeId requiredEKUIfPresent,
                   const CertPolicyId& requiredPolicy,
-                  CERTCertificate* potentialIssuerCertToDup,
+                  const SECItem& potentialIssuerDER,
                   unsigned int subCACount,
                   ScopedCERTCertList& results)
 {
-  PORT_Assert(potentialIssuerCertToDup);
-
-  BackCert potentialIssuer(potentialIssuerCertToDup, &subject,
-                           BackCert::IncludeCN::No);
-  Result rv = potentialIssuer.Init();
+  BackCert potentialIssuer(&subject, BackCert::IncludeCN::No);
+  Result rv = potentialIssuer.Init(potentialIssuerDER);
   if (rv != Success) {
     return rv;
   }
@@ -169,12 +187,8 @@ BuildForwardInner(TrustDomain& trustDomain,
     return rv;
   }
 
-  if (trustDomain.VerifySignedData(&subject.GetNSSCert()->signatureWrap,
-                                   potentialIssuer.GetNSSCert()) != SECSuccess) {
-    return MapSECStatus(SECFailure);
-  }
-
-  return Success;
+  return subject.VerifyOwnSignatureWithKey(
+                   trustDomain, potentialIssuer.GetSubjectPublicKeyInfo());
 }
 
 // Recursively build the path from the given subject certificate to the root.
@@ -279,7 +293,8 @@ BuildForward(TrustDomain& trustDomain,
   for (CERTCertListNode* n = CERT_LIST_HEAD(candidates);
        !CERT_LIST_END(n, candidates); n = CERT_LIST_NEXT(n)) {
     rv = BuildForwardInner(trustDomain, subject, time, requiredEKUIfPresent,
-                           requiredPolicy, n->cert, subCACount, results);
+                           requiredPolicy, n->cert->derCert, subCACount,
+                           results);
     if (rv == Success) {
       // If we found a valid chain but deferred reporting an error with the
       // end-entity certificate, report it now.
@@ -329,7 +344,7 @@ BuildForward(TrustDomain& trustDomain,
 
 SECStatus
 BuildCertChain(TrustDomain& trustDomain,
-               CERTCertificate* certToDup,
+               const CERTCertificate* nssCert,
                PRTime time,
                EndEntityOrCA endEntityOrCA,
                /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
@@ -338,15 +353,11 @@ BuildCertChain(TrustDomain& trustDomain,
                /*optional*/ const SECItem* stapledOCSPResponse,
                /*out*/ ScopedCERTCertList& results)
 {
-  PORT_Assert(certToDup);
-
-  if (!certToDup) {
+  if (!nssCert) {
+    PR_NOT_REACHED("null cert passed to BuildCertChain");
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
-
-  // The only non-const operation on the cert we are allowed to do is
-  // CERT_DupCertificate.
 
   // XXX: Support the legacy use of the subject CN field for indicating the
   // domain name the certificate is valid for.
@@ -356,8 +367,8 @@ BuildCertChain(TrustDomain& trustDomain,
     ? BackCert::IncludeCN::Yes
     : BackCert::IncludeCN::No;
 
-  BackCert cert(certToDup, nullptr, includeCN);
-  Result rv = cert.Init();
+  BackCert cert(nullptr, includeCN);
+  Result rv = cert.Init(nssCert->derCert);
   if (rv != Success) {
     return SECFailure;
   }
@@ -387,7 +398,7 @@ BackCert::PrependNSSCertToList(CERTCertList* results)
 {
   PORT_Assert(results);
 
-  CERTCertificate* dup = CERT_DupCertificate(nssCert);
+  CERTCertificate* dup = CERT_DupCertificate(nssCert.get());
   if (CERT_AddCertToListHead(results, dup) != SECSuccess) { // takes ownership
     CERT_DestroyCertificate(dup);
     return FatalError;
