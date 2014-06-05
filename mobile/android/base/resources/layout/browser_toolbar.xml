@@ -97,14 +97,15 @@
 
     <!-- Note that the edit components are invisible so that the views
          depending on their location can properly layout. -->
-    <ImageView android:id="@+id/edit_cancel"
-               style="@style/UrlBar.ImageButton.Icon"
-               android:layout_alignParentRight="true"
-               android:src="@drawable/close_edit_mode"
-               android:layout_marginLeft="2dp"
-               android:layout_marginRight="2dp"
-               android:contentDescription="@string/edit_mode_cancel"
-               android:visibility="invisible"/>
+    <org.mozilla.gecko.widget.ThemedImageView
+            android:id="@+id/edit_cancel"
+            style="@style/UrlBar.ImageButton.Icon"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/close_edit_mode_selector"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:contentDescription="@string/edit_mode_cancel"
+            android:visibility="invisible"/>
 
     <!-- The left margin of the cancel button is larger than the right because
          the url bar drawable contains some whitespace, so we compensate by adding
