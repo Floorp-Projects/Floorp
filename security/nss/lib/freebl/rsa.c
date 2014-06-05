@@ -1406,17 +1406,6 @@ RSA_PrivateKeyCheck(RSAPrivateKey *key)
     CHECK_MPI_OK( mp_init(&d_q)  );
     CHECK_MPI_OK( mp_init(&qInv) );
     CHECK_MPI_OK( mp_init(&res)  );
-
-    if (!key->modulus.data || !key->prime1.data || !key->prime2.data ||
-        !key->publicExponent.data || !key->privateExponent.data ||
-        !key->exponent1.data || !key->exponent2.data ||
-        !key->coefficient.data) {
-        /*call RSA_PopulatePrivateKey first, if the application wishes to
-         * recover these parameters */
-        err = MP_BADARG;
-        goto cleanup;
-    }
-
     SECITEM_TO_MPINT(key->modulus,         &n);
     SECITEM_TO_MPINT(key->prime1,          &p);
     SECITEM_TO_MPINT(key->prime2,          &q);
@@ -1469,19 +1458,27 @@ RSA_PrivateKeyCheck(RSAPrivateKey *key)
     CHECK_MPI_OK( mp_mulmod(&d, &e, &qsub1, &res) );
     VERIFY_MPI_EQUAL_1(&res);
     /*
-     * The following errors can be recovered from. However, the purpose of this
-     * function is to check consistency, so they are not.
+     * The following errors can be recovered from.
      */
     /* d_p == d mod p-1 */
     CHECK_MPI_OK( mp_mod(&d, &psub1, &res) );
-    VERIFY_MPI_EQUAL(&res, &d_p);
+    if (mp_cmp(&d_p, &res) != 0) {
+	/* swap in the correct value */
+	CHECK_SEC_OK( swap_in_key_value(key->arena, &res, &key->exponent1) );
+    }
     /* d_q == d mod q-1 */
     CHECK_MPI_OK( mp_mod(&d, &qsub1, &res) );
-    VERIFY_MPI_EQUAL(&res, &d_q);
+    if (mp_cmp(&d_q, &res) != 0) {
+	/* swap in the correct value */
+	CHECK_SEC_OK( swap_in_key_value(key->arena, &res, &key->exponent2) );
+    }
     /* q * q**-1 == 1 mod p */
     CHECK_MPI_OK( mp_mulmod(&q, &qInv, &p, &res) );
-    VERIFY_MPI_EQUAL_1(&res);
-
+    if (mp_cmp_d(&res, 1) != 0) {
+	/* compute the correct value */
+	CHECK_MPI_OK( mp_invmod(&q, &p, &qInv) );
+	CHECK_SEC_OK( swap_in_key_value(key->arena, &qInv, &key->coefficient) );
+    }
 cleanup:
     mp_clear(&n);
     mp_clear(&p);
