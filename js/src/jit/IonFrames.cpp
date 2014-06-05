@@ -26,6 +26,7 @@
 #include "jit/Snapshots.h"
 #include "jit/VMFunctions.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Debugger.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
 
@@ -431,6 +432,24 @@ HandleExceptionIon(JSContext *cx, const InlineFrameIterator &frame, ResumeFromEx
 }
 
 static void
+ForcedReturn(JSContext *cx, const JitFrameIterator &frame, jsbytecode *pc,
+             ResumeFromException *rfe, bool *calledDebugEpilogue)
+{
+    BaselineFrame *baselineFrame = frame.baselineFrame();
+    MOZ_ASSERT(baselineFrame->hasReturnValue());
+
+    if (jit::DebugEpilogue(cx, baselineFrame, pc, true)) {
+        rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
+        rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
+        rfe->stackPointer = reinterpret_cast<uint8_t *>(baselineFrame);
+        return;
+    }
+
+    // DebugEpilogue threw an exception. Propagate to the caller frame.
+    *calledDebugEpilogue = true;
+}
+
+static void
 HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFromException *rfe,
                         jsbytecode **unwoundScopeToPc, bool *calledDebugEpilogue)
 {
@@ -440,6 +459,14 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
     RootedScript script(cx);
     jsbytecode *pc;
     frame.baselineScriptAndPc(script.address(), &pc);
+
+    // We may be propagating a forced return from the interrupt
+    // callback, which cannot easily force a return.
+    if (cx->isPropagatingForcedReturn()) {
+        cx->clearPropagatingForcedReturn();
+        ForcedReturn(cx, frame, pc, rfe, calledDebugEpilogue);
+        return;
+    }
 
     if (cx->isExceptionPending() && cx->compartment()->debugMode()) {
         BaselineFrame *baselineFrame = frame.baselineFrame();
@@ -456,16 +483,7 @@ HandleExceptionBaseline(JSContext *cx, const JitFrameIterator &frame, ResumeFrom
             break;
 
           case JSTRAP_RETURN:
-            JS_ASSERT(baselineFrame->hasReturnValue());
-            if (jit::DebugEpilogue(cx, baselineFrame, pc, true)) {
-                rfe->kind = ResumeFromException::RESUME_FORCED_RETURN;
-                rfe->framePointer = frame.fp() - BaselineFrame::FramePointerOffset;
-                rfe->stackPointer = reinterpret_cast<uint8_t *>(baselineFrame);
-                return;
-            }
-
-            // DebugEpilogue threw an exception. Propagate to the caller frame.
-            *calledDebugEpilogue = true;
+            ForcedReturn(cx, frame, pc, rfe, calledDebugEpilogue);
             return;
 
           default:
