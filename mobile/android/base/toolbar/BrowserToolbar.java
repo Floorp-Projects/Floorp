@@ -140,7 +140,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
     private MenuPopup menuPopup;
     private List<View> focusOrder;
 
-    private final ImageView editCancel;
+    private final ThemedImageView editCancel;
 
     private boolean shouldShrinkURLBar = false;
 
@@ -222,7 +222,7 @@ public class BrowserToolbar extends ThemedRelativeLayout
         actionItemBar = (LinearLayout) findViewById(R.id.menu_items);
         hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
-        editCancel = (ImageView) findViewById(R.id.edit_cancel);
+        editCancel = (ThemedImageView) findViewById(R.id.edit_cancel);
 
         // We use different layouts on phones and tablets, so adjust the focus
         // order appropriately.
@@ -1435,10 +1435,17 @@ public class BrowserToolbar extends ThemedRelativeLayout
         stateList.addState(EMPTY_STATE_SET, drawable);
 
         setBackgroundDrawable(stateList);
+
+        if (editCancel != null) {
+            editCancel.onLightweightThemeChanged();
+        }
     }
 
     @Override
     public void onLightweightThemeReset() {
         setBackgroundResource(R.drawable.url_bar_bg);
+        if (editCancel != null) {
+            editCancel.onLightweightThemeReset();
+        }
     }
 }
