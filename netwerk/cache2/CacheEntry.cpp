@@ -76,7 +76,7 @@ CacheEntryHandle::~CacheEntryHandle()
 
 CacheEntry::Callback::Callback(CacheEntry* aEntry,
                                nsICacheEntryOpenCallback *aCallback,
-                               bool aReadOnly, bool aCheckOnAnyThread)
+                               bool aReadOnly, bool aCheckOnAnyThread, bool aForceAsync)
 : mEntry(aEntry)
 , mCallback(aCallback)
 , mTargetThread(do_GetCurrentThread())
@@ -84,6 +84,7 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
 , mCheckOnAnyThread(aCheckOnAnyThread)
 , mRecheckAfterWrite(false)
 , mNotWanted(false)
+, mForceAsync(aForceAsync)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -101,6 +102,7 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 , mCheckOnAnyThread(aThat.mCheckOnAnyThread)
 , mRecheckAfterWrite(aThat.mRecheckAfterWrite)
 , mNotWanted(aThat.mNotWanted)
+, mForceAsync(aThat.mForceAsync)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -131,8 +133,31 @@ void CacheEntry::Callback::ExchangeEntry(CacheEntry* aEntry)
   mEntry = aEntry;
 }
 
-nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread) const
+bool CacheEntry::Callback::ForceAsync()
 {
+  if (!mForceAsync) {
+    return false;
+  }
+
+  // Drop the flag now.  First time we must claim we are not on the proper thread
+  // what will simply force a post.  But, the post does the check again and that
+  // time we must already tell the true we are on the proper thread otherwise we
+  // just loop indefinitely.  Also, we need to post only once the first callback
+  // of OnCheck or OnAvail.  OnAvail after OnCheck can already go directly.
+  // Note on thread safety: when called from OnCheckThread we are definitely under
+  // the lock, when called from OnAvailThread we don't anymore need to be under
+  // the lock since all concurrency risks are over by that time.
+  mForceAsync = false;
+  return true;
+}
+
+nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread)
+{
+  if (ForceAsync()) {
+    *aOnCheckThread = false;
+    return NS_OK;
+  }
+
   if (!mCheckOnAnyThread) {
     // Check we are on the target
     return mTargetThread->IsOnCurrentThread(aOnCheckThread);
@@ -143,8 +168,13 @@ nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread) const
   return NS_OK;
 }
 
-nsresult CacheEntry::Callback::OnAvailThread(bool *aOnAvailThread) const
+nsresult CacheEntry::Callback::OnAvailThread(bool *aOnAvailThread)
 {
+  if (ForceAsync()) {
+    *aOnAvailThread = false;
+    return NS_OK;
+  }
+
   return mTargetThread->IsOnCurrentThread(aOnAvailThread);
 }
 
@@ -268,11 +298,12 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
   bool truncate = aFlags & nsICacheStorage::OPEN_TRUNCATE;
   bool priority = aFlags & nsICacheStorage::OPEN_PRIORITY;
   bool multithread = aFlags & nsICacheStorage::CHECK_MULTITHREADED;
+  bool async = aFlags & nsICacheStorage::FORCE_ASYNC_CALLBACK;
 
   MOZ_ASSERT(!readonly || !truncate, "Bad flags combination");
   MOZ_ASSERT(!(truncate && mState > LOADING), "Must not call truncate on already loaded entry");
 
-  Callback callback(this, aCallback, readonly, multithread);
+  Callback callback(this, aCallback, readonly, multithread, async);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -698,7 +729,7 @@ bool CacheEntry::InvokeCallback(Callback & aCallback)
   return true;
 }
 
-void CacheEntry::InvokeAvailableCallback(Callback const & aCallback)
+void CacheEntry::InvokeAvailableCallback(Callback & aCallback)
 {
   LOG(("CacheEntry::InvokeAvailableCallback [this=%p, state=%s, cb=%p, r/o=%d, n/w=%d]",
     this, StateString(mState), aCallback.mCallback.get(), aCallback.mReadOnly, aCallback.mNotWanted));
