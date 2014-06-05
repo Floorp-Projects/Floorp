@@ -117,6 +117,8 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     mOtherDirection->mShutDown = true;
     mVideoEngine = nullptr;
   } else {
+    // mVideoCodecStat has a back-ptr to mPtrViECodec that must be released first
+    mVideoCodecStat = nullptr;
     // We can't delete the VideoEngine until all these are released!
     // And we can't use a Scoped ptr, since the order is arbitrary
     mPtrViEBase = nullptr;
@@ -568,6 +570,9 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
                 mPtrViEBase->LastError());
     return kMediaConduitUnknownError;
   }
+
+  mVideoCodecStat = new VideoCodecStatistics(mChannel, mPtrViECodec);
+
   mSendingWidth = 0;
   mSendingHeight = 0;
 
@@ -1010,6 +1015,7 @@ WebrtcVideoConduit::SendVideoFrame(unsigned char* video_frame,
     return kMediaConduitCaptureError;
   }
 
+  mVideoCodecStat->SentFrame();
   CSFLogDebug(logTag, "%s Inserted a frame", __FUNCTION__);
   return kMediaConduitNoError;
 }

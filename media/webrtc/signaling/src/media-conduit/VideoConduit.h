@@ -10,6 +10,7 @@
 
 #include "MediaConduitInterface.h"
 #include "MediaEngineWrapper.h"
+#include "CodecStatistics.h"
 
 // conflicts with #include of scoped_ptr.h
 #undef FF
@@ -344,6 +345,9 @@ private:
 
   nsAutoPtr<VideoCodecConfig> mExternalSendCodec;
   nsAutoPtr<VideoCodecConfig> mExternalRecvCodec;
+
+  // statistics object for video codec;
+  nsAutoPtr<VideoCodecStatistics> mVideoCodecStat;
 };
 
 } // end namespace
