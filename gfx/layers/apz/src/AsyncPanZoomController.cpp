@@ -216,6 +216,14 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * Pref that enables overscrolling. If this is disabled, excess scroll that
  * cannot be handed off is discarded.
  *
+ * "apz.overscroll.fling_friction"
+ * Amount of friction applied during flings when in overscroll.
+ *
+ * "apz.overscroll.fling_stopped_threshold"
+ * When flinging in an overscrolled state, if the velocity goes below this
+ * number, we stop the fling.
+ * Units: screen pixels per millisecond
+ *
  * "apz.overscroll.snap_back_accel"
  * Amount of acceleration applied during the snap-back animation.
  *
@@ -1466,8 +1474,14 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
     return true;
   }
 
-  bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta),
-       shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta);
+  bool overscrolled = mApzc.IsOverscrolled();
+  float friction = overscrolled ? gfxPrefs::APZOverscrollFlingFriction()
+                                : gfxPrefs::APZFlingFriction();
+  float threshold = overscrolled ? gfxPrefs::APZOverscrollFlingStoppedThreshold()
+                                 : gfxPrefs::APZFlingStoppedThreshold();
+
+  bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta, friction, threshold),
+       shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta, friction, threshold);
   // If we shouldn't continue the fling, let's just stop and repaint.
   if (!shouldContinueFlingX && !shouldContinueFlingY) {
     // If we are in overscroll, schedule the snap-back animation that relieves it.
