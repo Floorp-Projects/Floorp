@@ -190,8 +190,8 @@ ExplicitChildIterator::Get()
   MOZ_ASSERT(!mIsFirst);
 
   if (mIndexInInserted) {
-    XBLChildrenElement* point = static_cast<XBLChildrenElement*>(mChild);
-    return point->mInsertedChildren[mIndexInInserted - 1];
+    MatchedNodes assignedChildren = GetMatchedNodesForPoint(mChild);
+    return assignedChildren[mIndexInInserted - 1];
   } else if (mShadowIterator)  {
     return mShadowIterator->Get();
   }
