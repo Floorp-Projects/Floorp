@@ -4,18 +4,19 @@ dnl This Source Code Form is subject to the terms of the Mozilla Public
 dnl License, v. 2.0. If a copy of the MPL was not distributed with this
 dnl file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-AC_PREREQ(2.12)
-AC_INIT(config/libc_r.h)
+AC_PREREQ(2.61)
+AC_INIT
+AC_CONFIG_SRCDIR([pr/include/nspr.h])
 
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
-AC_CANONICAL_SYSTEM
+AC_CANONICAL_TARGET
 
 dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=4
+MOD_PATCH_VERSION=6
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -67,7 +68,7 @@ HOST_CFLAGS="${HOST_CFLAGS=}"
 HOST_LDFLAGS="${HOST_LDFLAGS=}"
 
 case "$target" in
-*-cygwin*|*-mingw*)
+*-cygwin*|*-mingw*|*-msys*)
     # Check to see if we are really running in a msvc environemnt
     _WIN32_MSVC=
     AC_CHECK_PROGS(CC, cl)
@@ -82,9 +83,6 @@ case "$target" in
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
-    ;;
-*-msvc*)
-    _WIN32_MSVC=1
     ;;
 *-mks*)
     _WIN32_MSVC=1
@@ -386,6 +384,8 @@ AC_ARG_ENABLE(debug-rtl,
     [  --enable-debug-rtl      Use the MSVC debug runtime library],
     [ if test "$enableval" = "yes"; then
 	    USE_DEBUG_RTL=1
+      else
+	    USE_DEBUG_RTL=0
       fi ])
 
 AC_ARG_ENABLE(n32,
@@ -556,10 +556,10 @@ if test -n "$MOZ_DEBUG"; then
     beos*)
         DEFINES="$DEFINES -DDEBUG_${USER}"
         ;;
-    msvc*|mks*|cygwin*|mingw*|wince*|winmo*|os2*)
+    mks*|cygwin*|mingw*|msys*|os2*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
-    *) 
+    *)
         DEFINES="$DEFINES -DDEBUG_`$WHOAMI`"
         ;;
     esac
@@ -572,13 +572,68 @@ if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
-
-dnl Explicitly honor $CROSS_COMPILE to allow cross-compiling
-dnl between toolkits on the same architecture, as when
-dnl targeting the iOS Simulator from OS X.
-if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
+if test "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*)
+        dnl The Darwin cross compiler doesn't necessarily point itself at a
+        dnl root that has libraries for the proper architecture, it defaults
+        dnl to the system root.  The libraries in the system root on current
+        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
+        dnl checks will fail.  Fake a working SDK in that case.
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
+        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
+        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
+        ;;
+      *:arm*-apple-darwin*)
+        dnl The arm compiler doesn't appear to know about its root by default,
+        dnl so explicitly pass it one here. Later on we'll put this in CFLAGS
+        dnl anyway.
+        _SAVE_CFLAGS=$CFLAGS
+        _SAVE_CXXFLAGS=$CXXFLAGS
+        CFLAGS="-isysroot $MACOS_SDK_DIR $CFLAGS"
+        CXXFLAGS="-isysroot $MACOS_SDK_DIR $CXXFLAGS"
+        ;;
+    esac
+
+    AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
+    unset ac_cv_prog_CC
+    dnl Now exit the conditional block to invoke AC_PROG_CC.
+fi
+
+dnl In the latest versions of autoconf, AC_PROG_CC is a one-shot macro,
+dnl declared with AC_DEFUN_ONCE. So it must not be expanded inside a
+dnl conditional block. Invoke AC_PROG_CC outside any conditional block
+dnl and before invoking AC_TRY_COMPILE (which requires AC_PROG_CC).
+AC_PROG_CC
+
+dnl Reenter the conditional blocks after invoking AC_PROG_CC.
+if test "$target" != "$host"; then
+    if test -n "$USE_CPLUS"; then
+        AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", echo)
+        unset ac_cv_prog_CXX
+        AC_PROG_CXX
+    fi
+
+    case "$build:$target" in
+      powerpc-apple-darwin8*:i?86-apple-darwin*|*:arm*-apple-darwin*)
+        dnl Revert the changes made above.  From this point on, the target
+        dnl compiler will never be used without applying the SDK to CFLAGS
+        dnl (see --with-macos-sdk below).
+        CFLAGS=$_SAVE_CFLAGS
+        CXXFLAGS=$_SAVE_CXXFLAGS
+        ;;
+    esac
+
+    AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", echo)
+    AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", echo)
+    AC_CHECK_PROGS(AS, $AS "${target_alias}-as" "${target}-as", echo)
+    AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", echo)
+    AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", echo)
+    AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", echo)
 
     _SAVE_CC="$CC"
     _SAVE_CFLAGS="$CFLAGS"
@@ -609,66 +664,14 @@ if test "$target" != "$host" -o -n "$CROSS_COMPILE"; then
     CC=$_SAVE_CC
     CFLAGS=$_SAVE_CFLAGS
     LDFLAGS=$_SAVE_LDFLAGS
-
-    case "$build:$target" in 
-      powerpc-apple-darwin8*:i?86-apple-darwin*)
-        dnl The Darwin cross compiler doesn't necessarily point itself at a
-        dnl root that has libraries for the proper architecture, it defaults
-        dnl to the system root.  The libraries in the system root on current
-        dnl versions of PPC OS X 10.4 aren't fat, so these target compiler
-        dnl checks will fail.  Fake a working SDK in that case.
-        _SAVE_CFLAGS=$CFLAGS 
-        _SAVE_CXXFLAGS=$CXXFLAGS
-        CFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CFLAGS"
-        CXXFLAGS="-isysroot /Developer/SDKs/MacOSX10.4u.sdk $CXXFLAGS"
-        ;;
-      *:arm*-apple-darwin*)
-        dnl The arm compiler doesn't appear to know about its root by default,
-        dnl so explicitly pass it one here. Later on we'll put this in CFLAGS
-        dnl anyway.
-        _SAVE_CFLAGS=$CFLAGS
-        _SAVE_CXXFLAGS=$CXXFLAGS
-        CFLAGS="-isysroot $MACOS_SDK_DIR $CFLAGS"
-        CXXFLAGS="-isysroot $MACOS_SDK_DIR $CXXFLAGS"
-        ;;
-    esac
-
-    AC_CHECK_PROGS(CC, $CC "${target_alias}-gcc" "${target}-gcc", echo)
-    unset ac_cv_prog_CC
-    AC_PROG_CC
-    if test -n "$USE_CPLUS"; then
-        AC_CHECK_PROGS(CXX, $CXX "${target_alias}-g++" "${target}-g++", echo)
-        unset ac_cv_prog_CXX
-        AC_PROG_CXX
-    fi
-
-    case "$build:$target" in
-      powerpc-apple-darwin8*:i?86-apple-darwin*|*:arm*-apple-darwin*)
-        dnl Revert the changes made above.  From this point on, the target
-        dnl compiler will never be used without applying the SDK to CFLAGS
-        dnl (see --with-macos-sdk below).
-        CFLAGS=$_SAVE_CFLAGS
-        CXXFLAGS=$_SAVE_CXXFLAGS
-        ;;
-    esac
-
-    AC_CHECK_PROGS(RANLIB, $RANLIB "${target_alias}-ranlib" "${target}-ranlib", echo)
-    AC_CHECK_PROGS(AR, $AR "${target_alias}-ar" "${target}-ar", echo)
-    AC_CHECK_PROGS(AS, $AS "${target_alias}-as" "${target}-as", echo)
-    AC_CHECK_PROGS(LD, $LD "${target_alias}-ld" "${target}-ld", echo)
-    AC_CHECK_PROGS(STRIP, $STRIP "${target_alias}-strip" "${target}-strip", echo)
-    AC_CHECK_PROGS(WINDRES, $WINDRES "${target_alias}-windres" "${target}-windres", echo)
-
 else
-    AC_PROG_CC
     if test -n "$USE_CPLUS"; then
         if test "$CC" = "cl" -a -z "$CXX"; then
             CXX=$CC
-        else        
+        else
             AC_PROG_CXX
         fi
     fi
-    AC_PROG_CPP
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
     AC_PATH_PROGS(AR, ar, echo not_ar)
@@ -682,6 +685,8 @@ else
         HOST_CFLAGS="$CFLAGS"
     fi
 fi
+
+AC_PROG_CPP
 
 if test "$GCC" = "yes"; then
     GNU_CC=1
@@ -858,9 +863,7 @@ if test -n "$CROSS_COMPILE"; then
     case "${target_os}" in
         linux*)       OS_ARCH=Linux ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
-        mingw*)       OS_ARCH=WINNT ;;
-        wince*)       OS_ARCH=WINCE ;;
-        winmo*)       OS_ARCH=WINCE ;;
+        mingw*)       OS_ARCH=WINNT CPU_ARCH=x86 ;;
         darwin*)      OS_ARCH=Darwin ;;
         riscos*)      OS_ARCH=RISCOS ;;
     esac
@@ -911,10 +914,6 @@ fi
 # to do development on a WIN95 machine, you don't need this hack.
 #
 case "$OS_ARCH" in
-WIN95)
-    OS_ARCH=WINNT
-    OS_TARGET=WIN95
-    ;;
 Windows_95)
     OS_ARCH=Windows_NT
     OS_TARGET=WIN95
@@ -938,12 +937,6 @@ esac
 #
 
 case "$OS_ARCH" in
-WINNT)
-    CPU_ARCH=`uname -p`
-    if test "$CPU_ARCH" = "I386"; then
-        CPU_ARCH=x86
-    fi
-    ;;
 Windows_NT)
 #
 # If uname -s returns "Windows_NT", we assume that we are using
@@ -967,12 +960,14 @@ Windows_NT)
         CPU_ARCH=x86
     fi
     ;;
-CYGWIN_NT*|MINGW*_NT*)
+CYGWIN_NT*|MINGW*_NT*|MSYS_NT*)
 #
 # If uname -s returns "CYGWIN_NT-4.0", we assume that we are using
 # the uname.exe in the Cygwin tools.
-# If uname -s returns MINGW32_NT-5.1, we assume that we are using
+# If uname -s returns "MINGW32_NT-5.1", we assume that we are using
 # the uname.exe in the MSYS tools.
+# If uname -s returns "MSYS_NT-6.3", we assume that we are using
+# the uname.exe in the MSYS2 tools.
 #
     OS_RELEASE=`expr $OS_ARCH : '.*NT-\(.*\)'`
     OS_ARCH=WINNT
@@ -988,7 +983,7 @@ esac
 
 if test -n "$MOZILLA_CLIENT" && test "$OS_ARCH" = "WINNT"; then
     OS_TARGET=WIN95
-    if test -n "$MOZ_DEBUG"; then
+    if test -n "$MOZ_DEBUG" -a -z "$USE_DEBUG_RTL"; then
         USE_DEBUG_RTL=1
     fi
 fi
@@ -1206,10 +1201,10 @@ dnl ========================================================
 dnl Override of system specific host options
 dnl ========================================================
 case "$host" in
-*-mingw*)
+*-mingw*|*-msys*)
     NSINSTALL=nsinstall
     ;;
-*-cygwin*|*-msvc*|*-mks*|*-wince*|*-winmo*)
+*-cygwin*|*-mks*)
     NSINSTALL='$(CYGWIN_WRAPPER) nsinstall'
     if test `echo "${PATH}" | grep -c \;` = 0; then
         CYGWIN_WRAPPER='sh $(topsrcdir)/build/cygwin-wrapper'
@@ -1395,15 +1390,12 @@ case "$target" in
         arm*)
             CPU_ARCH=arm
             ;;
-        i*86*)
+        i*86*|x86_64)
             if test -n "$USE_64"; then
                 CPU_ARCH=x86_64
             else        
                 CPU_ARCH=i386
             fi
-            ;;
-        x86_64)
-            CPU_ARCH=x86_64
             ;;
         *)
             CPU_ARCH=ppc
@@ -1906,7 +1898,7 @@ tools are selected during the Xcode/Developer Tools installation.])
     esac    
     ;;
 
-*-mingw*|*-cygwin*|*-msvc*|*-mks*)
+*-mingw*|*-msys*|*-cygwin*|*-mks*)
     AC_DEFINE(XP_PC)
     AC_DEFINE(WIN32)
     PR_MD_ARCH_DIR=windows
@@ -2011,7 +2003,7 @@ tools are selected during the Xcode/Developer Tools installation.])
             CFLAGS="$CFLAGS -Od"
         fi
 
-        if test -n "$USE_DEBUG_RTL"; then
+        if test "$USE_DEBUG_RTL" = 1; then
             CFLAGS="$CFLAGS -MDd"
         else
             CFLAGS="$CFLAGS -MD"
@@ -2067,7 +2059,7 @@ tools are selected during the Xcode/Developer Tools installation.])
         CPU_ARCH_TAG=$CPU_ARCH
     fi
 
-    if test -n "$USE_DEBUG_RTL"; then
+    if test "$USE_DEBUG_RTL" = 1; then
         OBJDIR_SUFFIX=OBJD
     fi
 
@@ -2103,36 +2095,6 @@ tools are selected during the Xcode/Developer Tools installation.])
 	    AC_DEFINE(_CPU_ARCH_NOT_DEFINED)
 	    ;;
     esac
-    ;;
-
-*-wince*|*-winmo*)
-    AC_DEFINE(XP_PC)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(WINCE)
-    AC_DEFINE(_PR_GLOBAL_THREADS_ONLY)
-
-    AR_FLAGS='-NOLOGO -OUT:"$@"'
-
-    OBJ_SUFFIX=obj
-    LIB_SUFFIX=lib
-    DLL_SUFFIX=dll
-    MKSHLIB='$(LD) -DLL $(DSO_LDOPTS) -OUT:$@'
-
-    PR_MD_ARCH_DIR=windows
-    RESOLVE_LINK_SYMBOLS=1
-
-    MDCPUCFG_H=_win95.cfg
-    LIBNSPR='$(dist_libdir)/nspr$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
-    LIBPLC='$(dist_libdir)/plc$(MOD_MAJOR_VERSION).$(LIB_SUFFIX)'
-
-    DLLFLAGS='-OUT:"$@"'
-    if test -n "$MOZ_DEBUG_SYMBOLS"; then
-        OS_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
-        OS_DLLFLAGS='-DEBUG -DEBUGTYPE:CV'
-        DSO_LDOPTS='-DEBUG -DEBUGTYPE:CV'
-    fi
-    _DEBUG_FLAGS=-Zi
-    _OPTIMIZE_FLAGS=-O2
     ;;
 
 *-netbsd*)
@@ -2568,29 +2530,6 @@ if test -z "$SKIP_LIBRARY_CHECKS"; then
 dnl ========================================================
 dnl Check for system libraries
 dnl ========================================================
-dnl AC_CHECK_LIB(C, main)
-dnl AC_CHECK_LIB(C_r, main)
-dnl AC_CHECK_LIB(c, main)
-dnl AC_CHECK_LIB(c_r, main)
-dnl AC_CHECK_LIB(dce, main)
-dnl AC_CHECK_LIB(dl, main)
-dnl AC_CHECK_LIB(dld, main)
-dnl AC_CHECK_LIB(gen, main)
-dnl AC_CHECK_LIB(ip6, main)
-dnl AC_CHECK_LIB(l, main)
-dnl AC_CHECK_LIB(m, main)
-dnl AC_CHECK_LIB(nsl, main)
-dnl AC_CHECK_LIB(posix4, main)
-dnl AC_CHECK_LIB(prstrms, main)
-dnl AC_CHECK_LIB(prstrms_shr, main)
-dnl AC_CHECK_LIB(pthread, main)
-dnl AC_CHECK_LIB(pthreads, main)
-dnl AC_CHECK_LIB(resolv, main)
-dnl AC_CHECK_LIB(rt, main)
-dnl AC_CHECK_LIB(socket, main)
-dnl AC_CHECK_LIB(svld, main)
-dnl AC_CHECK_LIB(thread, main)
-dnl AC_CHECK_LIB(vms_jackets, main)
 
 
 dnl We don't want anything to link with libdl even if it's present on OS X, 
@@ -2612,25 +2551,10 @@ esac
 dnl ========================================================
 dnl Check for system header files.
 dnl ========================================================
-dnl AC_HEADER_DIRENT
-dnl AC_HEADER_STDC
-dnl AC_HEADER_SYS_WAIT
-dnl AC_CHECK_HEADERS(fcntl.h limits.h sys/file.h sys/ioctl.h sys/time.h unistd.h)
 
 dnl ========================================================
 dnl Check for typedefs and structs
 dnl ========================================================
-dnl AC_C_CONST
-dnl AC_TYPE_UID_T
-dnl AC_TYPE_MODE_T
-dnl AC_TYPE_OFF_T
-dnl AC_TYPE_PID_T
-dnl AC_TYPE_SIZE_T
-dnl AC_STRUCT_ST_BLKSIZE
-dnl AC_STRUCT_ST_BLOCKS
-dnl AC_STRUCT_ST_RDEV
-dnl AC_HEADER_TIME
-dnl AC_STRUCT_TM
 
 dnl ========================================================
 dnl Checks for library functions.
@@ -2640,15 +2564,6 @@ _SAVE_LIBS="$LIBS"
 LIBS="$LIBS $OS_LIBS"
 AC_CHECK_FUNCS(dladdr gettid lchown setpriority strerror syscall)
 LIBS="$_SAVE_LIBS"
-
-dnl AC_FUNC_MEMCMP
-dnl AC_FUNC_MMAP
-dnl AC_FUNC_SETVBUF_REVERSED
-dnl AC_FUNC_STRCOLL
-dnl AC_FUNC_STRFTIME
-dnl AC_FUNC_UTIME_NULL
-dnl AC_FUNC_VPRINTF
-dnl AC_CHECK_FUNCS(ftime getcwd gethostname gettimeofday getwd mkdir mktime putenv rmdir select socket strdup strerror strstr strtol strtoul uname)
 
 dnl ========================================================
 dnl Check options
@@ -2763,9 +2678,6 @@ echo "
 case "$target_os" in
 darwin*)
     _HAVE_PTHREADS=1
-    ;;
-wince*)
-    _HAVE_PTHREADS=
     ;;
 *)
     MOZ_CHECK_PTHREADS(pthreads,
@@ -3011,8 +2923,8 @@ case "$target" in
         AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
     fi
     ;;
-*-mingw*|*-cygwin*|*-msvc*|*-mks*|*-wince*|*-winmo*|*-os2*|*-beos*)
-    dnl win32, wince, os2 & beos cannot use pthreads
+*-mingw*|*-msys*|*-cygwin*|*-mks*|*-os2*|*-beos*)
+    dnl win32, os2 & beos cannot use pthreads
     USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
@@ -3100,7 +3012,7 @@ dnl ========================================================
 dnl Use cygwin wrapper for win32 builds, except MSYS/MinGW
 dnl ========================================================
 case "$target_os" in
-cygwin*|msvc*|mks*)
+cygwin*|mks*)
     CC="\$(CYGWIN_WRAPPER) $CC"
     CXX="\$(CYGWIN_WRAPPER) $CXX"
     RC="\$(CYGWIN_WRAPPER) $RC"
@@ -3313,4 +3225,6 @@ fi
 
 echo $MAKEFILES > unallmakefiles
 
-AC_OUTPUT([$MAKEFILES], [chmod +x config/nspr-config])
+AC_CONFIG_FILES([$MAKEFILES])
+AC_CONFIG_COMMANDS([default], [chmod +x config/nspr-config])
+AC_OUTPUT

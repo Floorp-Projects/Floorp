@@ -159,7 +159,7 @@ $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 
 ifeq ($(OS_ARCH), WINNT)
-	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) wsock32.lib -out:$@
+	link $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) ws2_32.lib -out:$@
 else
 ifeq ($(OS_ARCH), WINCE)
 	$(LD) $(LDOPTS) $< $(LIBPLC) $(LIBPLDS) $(LIBPR) ws2.lib -out:$@

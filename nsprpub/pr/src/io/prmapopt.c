@@ -85,6 +85,7 @@ PRStatus PR_CALLBACK _PR_SocketGetSocketOption(PRFileDesc *fd, PRSocketOptionDat
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
             case PR_SockOpt_Broadcast:
+            case PR_SockOpt_Reuseport:
             {
 #ifdef WIN32 /* Winsock */
                 BOOL value;
@@ -236,6 +237,7 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
             case PR_SockOpt_Broadcast:
+            case PR_SockOpt_Reuseport:
             {
 #ifdef WIN32 /* Winsock */
                 BOOL value;
@@ -412,8 +414,12 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 #define TCP_MAXSEG          _PR_NO_SUCH_SOCKOPT
 #endif
 
-#ifndef SO_BROADCAST                 /* enable broadcast on udp sockets */
+#ifndef SO_BROADCAST                    /* enable broadcast on UDP sockets  */
 #define SO_BROADCAST        _PR_NO_SUCH_SOCKOPT
+#endif
+
+#ifndef SO_REUSEPORT                    /* allow local address & port reuse */
+#define SO_REUSEPORT        _PR_NO_SUCH_SOCKOPT
 #endif
 
 PRStatus _PR_MapOptionName(
@@ -424,14 +430,14 @@ PRStatus _PR_MapOptionName(
         0, SO_LINGER, SO_REUSEADDR, SO_KEEPALIVE, SO_RCVBUF, SO_SNDBUF,
         IP_TTL, IP_TOS, IP_ADD_MEMBERSHIP, IP_DROP_MEMBERSHIP,
         IP_MULTICAST_IF, IP_MULTICAST_TTL, IP_MULTICAST_LOOP,
-        TCP_NODELAY, TCP_MAXSEG, SO_BROADCAST
+        TCP_NODELAY, TCP_MAXSEG, SO_BROADCAST, SO_REUSEPORT
     };
     static PRInt32 socketLevels[PR_SockOpt_Last] =
     {
         0, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET, SOL_SOCKET,
         IPPROTO_IP, IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
         IPPROTO_IP, IPPROTO_IP, IPPROTO_IP,
-        IPPROTO_TCP, IPPROTO_TCP, SOL_SOCKET
+        IPPROTO_TCP, IPPROTO_TCP, SOL_SOCKET, SOL_SOCKET
     };
 
     if ((optname < PR_SockOpt_Linger)
