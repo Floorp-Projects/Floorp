@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1021258
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1021258</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for proto mutation warnings. **/
+
+  SimpleTest.waitForExplicitFinish();
+  var gLoads = 0;
+  function loaded() {
+    switch (++gLoads) {
+      case 1:
+        info("First load");
+        SimpleTest.monitorConsole(function() { window[0].location.reload(true); },
+                                  [ { message: /mutating/ } ], /* forbidUnexpectedMessages = */ true);
+        window[0].eval('var foo = {}; Object.setPrototypeOf(foo, {});' +
+                       'var bar = {}; Object.getPrototypeOf(bar, {});');
+        SimpleTest.endMonitorConsole();
+        break;
+      case 2:
+        info("Second load");
+        SimpleTest.monitorConsole(SimpleTest.finish.bind(SimpleTest),
+                                  [ { message: /mutating/ } ], /* forbidUnexpectedMessages = */ true);
+        window[0].eval('var foo = {}; foo.__proto__ = {};' +
+                       'var bar = {}; bar.__proto__ = {};');
+        SimpleTest.endMonitorConsole();
+        break;
+      case 3:
+        ok(false, "Shouldn't have 3 loads!");
+    }
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1021258">Mozilla Bug 1021258</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<iframe id="ifr" src="file_empty.html" onload="loaded();"></iframe>
+</body>
+</html>
