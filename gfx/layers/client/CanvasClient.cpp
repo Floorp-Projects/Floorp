@@ -42,7 +42,8 @@ CanvasClient::CreateCanvasClient(CanvasClientType aType,
     return new CanvasClient2D(aForwarder, aFlags);
   }
 #endif
-  if (aType == CanvasClientGLContext) {
+  if (aType == CanvasClientGLContext &&
+      aForwarder->GetCompositorBackendType() == LayersBackend::LAYERS_OPENGL) {
     aFlags |= TextureFlags::DEALLOCATE_CLIENT;
     return new CanvasClientSurfaceStream(aForwarder, aFlags);
   }
@@ -189,8 +190,8 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
 #endif
   } else {
     if (!mBuffer) {
-      StreamTextureClient* textureClient =
-        new StreamTextureClient(mTextureInfo.mTextureFlags);
+      StreamTextureClientOGL* textureClient =
+        new StreamTextureClientOGL(mTextureInfo.mTextureFlags);
       textureClient->InitWith(stream);
       mBuffer = textureClient;
       bufferCreated = true;
@@ -201,7 +202,6 @@ CanvasClientSurfaceStream::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     }
 
     if (mBuffer) {
-      GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
       GetForwarder()->UseTexture(this, mBuffer);
     }
   }
