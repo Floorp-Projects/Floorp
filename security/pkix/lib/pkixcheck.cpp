@@ -333,7 +333,7 @@ BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
     }
 
     constrainedNames =
-      CERT_GetConstrainedCertificateNames(nssCert, arena.get(),
+      CERT_GetConstrainedCertificateNames(GetNSSCert(), arena.get(),
                                           includeCN == IncludeCN::Yes);
     if (!constrainedNames) {
       return MapSECStatus(SECFailure);

@@ -149,9 +149,10 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 
 SECStatus
 NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
-                                       const CERTCertificate* cert)
+                                       const SECItem& subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedData(signedData, cert, mPinArg);
+  return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                           mPinArg);
 }
 
 static PRIntervalTime
