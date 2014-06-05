@@ -178,7 +178,16 @@ loop.shared.views = (function(_, OT, l10n) {
      */
     publish: function(event) {
       var outgoing = this.$(".outgoing").get(0);
+
       this.publisher = this.sdk.initPublisher(outgoing, this.videoStyles);
+
+      // Suppress OT GuM custom dialog, see bug 1018875
+      function preventOpeningAccessDialog(event) {
+        event.preventDefault();
+      }
+      this.publisher.on("accessDialogOpened", preventOpeningAccessDialog);
+      this.publisher.on("accessDenied", preventOpeningAccessDialog);
+
       this.model.session.publish(this.publisher);
     },
 
@@ -186,6 +195,10 @@ loop.shared.views = (function(_, OT, l10n) {
      * Unpublishes local stream.
      */
     unpublish: function() {
+      // Unregister access OT GuM custom dialog listeners, see bug 1018875
+      this.publisher.off("accessDialogOpened");
+      this.publisher.off("accessDenied");
+
       this.model.session.unpublish(this.publisher);
     },
 
