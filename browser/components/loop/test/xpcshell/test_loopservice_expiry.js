@@ -1,9 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-                                  "resource:///modules/loop/MozLoopService.jsm");
-
 function expiryTimePref() {
   return Services.prefs.getIntPref("loop.urlsExpiryTimeSeconds");
 }

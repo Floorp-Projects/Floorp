@@ -18,6 +18,15 @@ XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
 
 XPCOMUtils.defineLazyModuleGetter(this, "Chat", "resource:///modules/Chat.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+                                  "resource://services-common/utils.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
+                                  "resource://services-crypto/utils.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "HAWKAuthenticatedRESTRequest",
+                                  "resource://services-common/hawkrequest.js");
+
 /**
  * We don't have push notifications on desktop currently, so this is a
  * workaround to get them going for us.
@@ -201,6 +210,13 @@ let MozLoopServiceInternal = {
   },
 
   /**
+   * Returns true if the expiry time is in the future.
+   */
+  urlExpiryTimeIsInFuture: function() {
+    return this.expiryTimeSeconds * 1000 > Date.now();
+  },
+
+  /**
    * Retrieves MozLoopService "do not disturb" pref value.
    *
    * @return {Boolean} aFlag
@@ -242,6 +258,30 @@ let MozLoopServiceInternal = {
   },
 
   /**
+   * Derives hawk credentials for the given token and context.
+   *
+   * @param {String} tokenHex The token value in hex.
+   * @param {String} context  The context for the token.
+   */
+  deriveHawkCredentials: function(tokenHex, context) {
+    const PREFIX_NAME = "identity.mozilla.com/picl/v1/";
+
+    let token = CommonUtils.hexToBytes(tokenHex);
+    let keyWord = CommonUtils.stringToBytes(PREFIX_NAME + context);
+
+    // XXX Using 2 * 32 for now to be in sync with client.js, but we might
+    // want to make this 3 * 32 to allow for extra, if we start using the extra
+    // field.
+    let out = CryptoUtils.hkdf(token, undefined, keyWord, 2 * 32);
+
+    return {
+      algorithm: "sha256",
+      key: out.slice(32, 64),
+      id: CommonUtils.bytesAsHex(out.slice(0, 32))
+    };
+  },
+
+  /**
    * Callback from PushHandlerHack - The push server has been registered
    * and has given us a push url.
    *
@@ -254,22 +294,49 @@ let MozLoopServiceInternal = {
       return;
     }
 
-    this.loopXhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-      .createInstance(Ci.nsIXMLHttpRequest);
+    this.registerWithLoopServer(pushUrl);
+  },
 
-    this.loopXhr.open('POST', MozLoopServiceInternal.loopServerUri + "/registration",
-                          true);
-    this.loopXhr.setRequestHeader('Content-Type', 'application/json');
+  /**
+   * Registers with the Loop server.
+   *
+   * @param {String} pushUrl The push url given by the push server.
+   * @param {Boolean} noRetry Optional, don't retry if authentication fails.
+   */
+  registerWithLoopServer: function(pushUrl, noRetry) {
+    let sessionToken;
+    try {
+      sessionToken = Services.prefs.getCharPref("loop.hawk-session-token");
+    } catch (x) {
+      // It is ok for this not to exist, we'll default to sending no-creds
+    }
 
-    this.loopXhr.channel.loadFlags = Ci.nsIChannel.INHIBIT_CACHING
-      | Ci.nsIChannel.LOAD_BYPASS_CACHE
-      | Ci.nsIChannel.LOAD_EXPLICIT_CREDENTIALS;
+    let credentials;
+    if (sessionToken) {
+      credentials = this.deriveHawkCredentials(sessionToken, "sessionToken");
+    }
 
-    this.loopXhr.onreadystatechange = this.onLoopRegistered.bind(this);
+    let uri = Services.io.newURI(this.loopServerUri, null, null).resolve("/registration");
+    this.loopXhr = new HAWKAuthenticatedRESTRequest(uri, credentials);
 
-    this.loopXhr.sendAsBinary(JSON.stringify({
-      simple_push_url: pushUrl
-    }));
+    this.loopXhr.dispatch('POST', { simple_push_url: pushUrl }, (error) => {
+      if (this.loopXhr.response.status == 401) {
+        if (this.urlExpiryTimeIsInFuture()) {
+          // XXX Should this be reported to the user is a visible manner?
+          Cu.reportError("Loop session token is invalid, all previously "
+                         + "generated urls will no longer work.");
+        }
+
+        // Authorization failed, invalid token, we need to try again with a new token.
+        Services.prefs.clearUserPref("loop.hawk-session-token");
+        this.registerWithLoopServer(pushUrl, true);
+
+        return;
+      }
+
+      // No authorization issues, so complete registration.
+      this.onLoopRegistered(error);
+    });
   },
 
   /**
@@ -289,22 +356,19 @@ let MozLoopServiceInternal = {
   /**
    * Callback from the loopXhr. Checks the registration result.
    */
-  onLoopRegistered: function() {
-    if (this.loopXhr.readyState != Ci.nsIXMLHttpRequest.DONE)
-      return;
-
-    let status = this.loopXhr.status;
+  onLoopRegistered: function(error) {
+    let status = this.loopXhr.response.status;
     if (status != 200) {
       // XXX Bubble the precise details up to the UI somehow (bug 1013248).
       Cu.reportError("Failed to register with the loop server. Code: " +
-        status + " Text: " + this.loopXhr.statusText);
+        status + " Text: " + this.loopXhr.response.statusText);
       this._registeredDeferred.reject(status);
       this._registeredDeferred = null;
       return;
     }
 
-    let sessionToken = this.loopXhr.getResponseHeader("Hawk-Session-Token");
-    if (sessionToken !== null) {
+    let sessionToken = this.loopXhr.response.headers["hawk-session-token"];
+    if (sessionToken) {
 
       // XXX should do more validation here
       if (sessionToken.length === 64) {
@@ -406,7 +470,7 @@ this.MozLoopService = {
    */
   initialize: function() {
     // If expiresTime is in the future then kick-off registration.
-    if ((MozLoopServiceInternal.expiryTimeSeconds * 1000) > Date.now()) {
+    if (MozLoopServiceInternal.urlExpiryTimeIsInFuture()) {
       this._startInitializeTimer();
     }
   },

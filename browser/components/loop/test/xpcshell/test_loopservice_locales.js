@@ -1,10 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-                                  "resource:///modules/loop/MozLoopService.jsm");
-
-
 function test_locale() {
   // Set the pref to something controlled.
   Services.prefs.setCharPref("general.useragent.locale", "ab-CD");
