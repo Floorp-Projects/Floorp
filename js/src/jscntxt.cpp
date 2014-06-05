@@ -231,7 +231,10 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         MOZ_CRASH();
 #endif
 
-    cx->checkNoGCRooters();
+#if defined(JSGC_USE_EXACT_ROOTING) && defined(DEBUG)
+    for (int i = 0; i < THING_ROOT_LIMIT; ++i)
+        JS_ASSERT(cx->thingGCRooters[i] == nullptr);
+#endif
 
     if (mode != DCM_NEW_FAILED) {
         if (JSContextCallback cxCallback = rt->cxCallback) {
@@ -260,14 +263,6 @@ js::DestroyContext(JSContext *cx, DestroyContextMode mode)
         GC(rt, GC_NORMAL, JS::gcreason::DESTROY_CONTEXT);
     }
     js_delete_poison(cx);
-}
-
-void
-ContextFriendFields::checkNoGCRooters() {
-#if defined(JSGC_USE_EXACT_ROOTING) && defined(DEBUG)
-    for (int i = 0; i < THING_ROOT_LIMIT; ++i)
-        JS_ASSERT(thingGCRooters[i] == nullptr);
-#endif
 }
 
 bool

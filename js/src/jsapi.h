@@ -591,43 +591,6 @@ class JS_PUBLIC_API(CustomAutoRooter) : private AutoGCRooter
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-/*
- * RootedGeneric<T> allows a class to instantiate its own Rooted type by
- * including the method:
- *
- *    void trace(JSTracer *trc);
- *
- * The trace() method must trace all of the class's fields.
- */
-template <class T>
-class RootedGeneric : private CustomAutoRooter
-{
-  public:
-    template <typename CX>
-    explicit RootedGeneric(CX *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    template <typename CX>
-    explicit RootedGeneric(CX *cx, const T& initial MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : CustomAutoRooter(cx), value(initial)
-    {
-        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-
-    operator const T&() const { return value; }
-    T operator->() const { return value; }
-
-  private:
-    virtual void trace(JSTracer *trc) { value->trace(trc); }
-
-    T value;
-
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 /* A handle to an array of rooted values. */
 class HandleValueArray
 {
@@ -2915,8 +2878,6 @@ struct JSPropertyDescriptor {
     {}
 
     void trace(JSTracer *trc);
-
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_PROPERTY_DESCRIPTOR; }
 };
 
 namespace JS {
