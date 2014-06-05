@@ -43,6 +43,7 @@
 #include "jit/Ion.h"
 #endif
 #include "js/CharacterEncoding.h"
+#include "vm/Debugger.h"
 #include "js/OldDebugAPI.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"
@@ -1032,8 +1033,35 @@ js::InvokeInterruptCallback(JSContext *cx)
     // if it re-enters the JS engine. The embedding must ensure that the
     // callback is disconnected before attempting such re-entry.
     JSInterruptCallback cb = cx->runtime()->interruptCallback;
-    if (!cb || cb(cx))
+    if (!cb)
         return true;
+
+    if (cb(cx)) {
+        // Debugger treats invoking the interrupt callback as a "step", so
+        // invoke the onStep handler.
+        if (cx->compartment()->debugMode()) {
+            ScriptFrameIter iter(cx);
+            if (iter.script()->stepModeEnabled()) {
+                RootedValue rval(cx);
+                switch (Debugger::onSingleStep(cx, &rval)) {
+                  case JSTRAP_ERROR:
+                    return false;
+                  case JSTRAP_CONTINUE:
+                    return true;
+                  case JSTRAP_RETURN:
+                    // See note in Debugger::propagateForcedReturn.
+                    Debugger::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
+                    return false;
+                  case JSTRAP_THROW:
+                    cx->setPendingException(rval);
+                    return false;
+                  default:;
+                }
+            }
+        }
+
+        return true;
+    }
 
     // No need to set aside any pending exception here: ComputeStackString
     // already does that.
@@ -1095,6 +1123,7 @@ JSContext::JSContext(JSRuntime *rt)
     throwing(false),
     unwrappedException_(UndefinedValue()),
     options_(),
+    propagatingForcedReturn_(false),
     reportGranularity(JS_DEFAULT_JITREPORT_GRANULARITY),
     resolvingList(nullptr),
     generatingError(false),
