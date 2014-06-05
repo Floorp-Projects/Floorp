@@ -28,6 +28,8 @@ public:
     mType = eSVG;
   }
 
+  virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
+                                 bool aNotify) MOZ_OVERRIDE;
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL API
