@@ -1204,6 +1204,32 @@ StringMatch(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t
               UnrolledMatch<ManualCmp<TextChar, PatChar>>(text, textLen, pat, patLen);
 }
 
+static int32_t
+StringMatch(JSLinearString *text, JSLinearString *pat, uint32_t start = 0)
+{
+    MOZ_ASSERT(start <= text->length());
+    uint32_t textLen = text->length() - start;
+    uint32_t patLen = pat->length();
+
+    int match;
+    AutoCheckCannotGC nogc;
+    if (text->hasLatin1Chars()) {
+        const Latin1Char *textChars = text->latin1Chars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
+        else
+            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
+    } else {
+        const jschar *textChars = text->twoByteChars(nogc) + start;
+        if (pat->hasLatin1Chars())
+            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
+        else
+            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
+    }
+
+    return (match == -1) ? -1 : start + match;
+}
+
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 bool
@@ -1375,32 +1401,6 @@ RopeMatch(JSContext *cx, JSString *textstr, const jschar *pat, uint32_t patLen, 
     return true;
 }
 
-static int32_t
-IndexOfImpl(JSLinearString *text, JSLinearString *pat, uint32_t start)
-{
-    MOZ_ASSERT(start <= text->length());
-    uint32_t textLen = text->length() - start;
-    uint32_t patLen = pat->length();
-
-    int match;
-    AutoCheckCannotGC nogc;
-    if (text->hasLatin1Chars()) {
-        const Latin1Char *textChars = text->latin1Chars(nogc) + start;
-        if (pat->hasLatin1Chars())
-            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
-        else
-            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
-    } else {
-        const jschar *textChars = text->twoByteChars(nogc) + start;
-        if (pat->hasLatin1Chars())
-            match = StringMatch(textChars, textLen, pat->latin1Chars(nogc), patLen);
-        else
-            match = StringMatch(textChars, textLen, pat->twoByteChars(nogc), patLen);
-    }
-
-    return (match == -1) ? -1 : start + match;
-}
-
 /* ES6 20121026 draft 15.5.4.24. */
 static bool
 str_contains(JSContext *cx, unsigned argc, Value *vp)
@@ -1442,7 +1442,7 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
     if (!text)
         return false;
 
-    args.rval().setBoolean(IndexOfImpl(text, searchStr, start) != -1);
+    args.rval().setBoolean(StringMatch(text, searchStr, start) != -1);
     return true;
 }
 
@@ -1487,7 +1487,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!text)
         return false;
 
-    args.rval().setInt32(IndexOfImpl(text, searchStr, start));
+    args.rval().setInt32(StringMatch(text, searchStr, start));
     return true;
 }
 
@@ -1826,17 +1826,15 @@ namespace {
 /* Result of a successfully performed flat match. */
 class FlatMatch
 {
-    RootedAtom patstr;
-    const jschar *pat;
-    size_t       patLen;
-    int32_t      match_;
+    RootedAtom pat_;
+    int32_t match_;
 
     friend class StringRegExpGuard;
 
   public:
-    explicit FlatMatch(JSContext *cx) : patstr(cx) {}
-    JSLinearString *pattern() const { return patstr; }
-    size_t patternLength() const { return patLen; }
+    explicit FlatMatch(JSContext *cx) : pat_(cx) {}
+    JSLinearString *pattern() const { return pat_; }
+    size_t patternLength() const { return pat_->length(); }
 
     /*
      * Note: The match is -1 when the match is performed successfully,
@@ -1861,14 +1859,25 @@ IsRegExpMetaChar(jschar c)
     }
 }
 
+template <typename CharT>
 static inline bool
-HasRegExpMetaChars(const jschar *chars, size_t length)
+HasRegExpMetaChars(const CharT *chars, size_t length)
 {
     for (size_t i = 0; i < length; ++i) {
         if (IsRegExpMetaChar(chars[i]))
             return true;
     }
     return false;
+}
+
+static inline bool
+HasRegExpMetaChars(JSLinearString *str)
+{
+    AutoCheckCannotGC nogc;
+    if (str->hasLatin1Chars())
+        return HasRegExpMetaChars(str->latin1Chars(nogc), str->length());
+
+    return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
 }
 
 bool
@@ -1931,7 +1940,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
             return init(cx, &args[0].toObject());
 
         if (convertVoid && !args.hasDefined(0)) {
-            fm.patstr = cx->runtime()->emptyString;
+            fm.pat_ = cx->runtime()->emptyString;
             return true;
         }
 
@@ -1939,8 +1948,8 @@ class MOZ_STACK_CLASS StringRegExpGuard
         if (!arg)
             return false;
 
-        fm.patstr = AtomizeString(cx, arg);
-        if (!fm.patstr)
+        fm.pat_ = AtomizeString(cx, arg);
+        if (!fm.pat_)
             return false;
 
         return true;
@@ -1957,8 +1966,8 @@ class MOZ_STACK_CLASS StringRegExpGuard
     }
 
     bool init(JSContext *cx, HandleString pattern) {
-        fm.patstr = AtomizeString(cx, pattern);
-        if (!fm.patstr)
+        fm.pat_ = AtomizeString(cx, pattern);
+        if (!fm.pat_)
             return false;
         return true;
     }
@@ -1975,35 +1984,31 @@ class MOZ_STACK_CLASS StringRegExpGuard
      * cx->isExceptionPending().
      */
     const FlatMatch *
-    tryFlatMatch(JSContext *cx, JSString *textstr, unsigned optarg, unsigned argc,
+    tryFlatMatch(JSContext *cx, JSString *text, unsigned optarg, unsigned argc,
                  bool checkMetaChars = true)
     {
         if (re_.initialized())
             return nullptr;
 
-        fm.pat = fm.patstr->chars();
-        fm.patLen = fm.patstr->length();
-
         if (optarg < argc)
             return nullptr;
 
-        if (checkMetaChars &&
-            (fm.patLen > MAX_FLAT_PAT_LEN || HasRegExpMetaChars(fm.pat, fm.patLen))) {
+        size_t patLen = fm.pat_->length();
+        if (checkMetaChars && (patLen > MAX_FLAT_PAT_LEN || HasRegExpMetaChars(fm.pat_)))
             return nullptr;
-        }
 
         /*
-         * textstr could be a rope, so we want to avoid flattening it for as
+         * |text| could be a rope, so we want to avoid flattening it for as
          * long as possible.
          */
-        if (textstr->isRope()) {
-            if (!RopeMatch(cx, textstr, fm.pat, fm.patLen, &fm.match_))
+        if (text->isRope()) {
+            const jschar *pat = fm.pat_->chars();
+            if (!RopeMatch(cx, text, pat, patLen, &fm.match_))
                 return nullptr;
         } else {
-            const jschar *text = textstr->asLinear().chars();
-            size_t textLen = textstr->length();
-            fm.match_ = StringMatch(text, textLen, fm.pat, fm.patLen);
+            fm.match_ = StringMatch(&text->asLinear(), fm.pat_, 0);
         }
+
         return &fm;
     }
 
@@ -2023,17 +2028,17 @@ class MOZ_STACK_CLASS StringRegExpGuard
             opt = nullptr;
         }
 
-        Rooted<JSAtom *> patstr(cx);
+        Rooted<JSAtom *> pat(cx);
         if (flat) {
-            patstr = flattenPattern(cx, fm.patstr);
-            if (!patstr)
+            pat = flattenPattern(cx, fm.pat_);
+            if (!pat)
                 return false;
         } else {
-            patstr = fm.patstr;
+            pat = fm.pat_;
         }
-        JS_ASSERT(patstr);
+        JS_ASSERT(pat);
 
-        return cx->compartment()->regExps.get(cx, patstr, opt, &re_);
+        return cx->compartment()->regExps.get(cx, pat, opt, &re_);
     }
 
     bool zeroLastIndex(JSContext *cx) {
@@ -3235,7 +3240,7 @@ str_replace_flat_lambda(JSContext *cx, CallArgs outerArgs, ReplaceData &rdata, c
 
     size_t matchLimit = fm.match() + fm.patternLength();
     RootedString rightSide(cx, js_NewDependentString(cx, rdata.str, matchLimit,
-                                                        rdata.str->length() - matchLimit));
+                                                     rdata.str->length() - matchLimit));
     if (!rightSide)
         return false;
 
