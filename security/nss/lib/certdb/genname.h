@@ -26,9 +26,6 @@ cert_DecodeGeneralNames(PLArenaPool *arena, SECItem **encodedGenName);
 extern SECStatus
 cert_DestroyGeneralNames(CERTGeneralName *name);
 
-extern CERTGeneralNameType
-CERT_GetGeneralNameTypeFromString(const char *string);
-
 extern SECStatus 
 cert_EncodeNameConstraints(CERTNameConstraints *constraints, PLArenaPool *arena,
 			   SECItem *dest);
