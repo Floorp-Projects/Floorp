@@ -131,6 +131,7 @@ OnSharedPreferenceChangeListener
      * Track the last locale so we know whether to redisplay.
      */
     private Locale lastLocale = Locale.getDefault();
+    private boolean localeSwitchingIsEnabled;
 
     private void updateActionBarTitle(int title) {
         if (Build.VERSION.SDK_INT >= 14) {
@@ -268,6 +269,9 @@ OnSharedPreferenceChangeListener
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
+        // Track this so we can decide whether to show locale options.
+        localeSwitchingIsEnabled = BrowserLocaleManager.getInstance().isEnabled();
+
         // For Android v11+ where we use Fragments (v11+ only due to bug 866352),
         // check that PreferenceActivity.EXTRA_SHOW_FRAGMENT has been set
         // (or set it) before super.onCreate() is called so Android can display
@@ -397,6 +401,18 @@ OnSharedPreferenceChangeListener
     public void onBuildHeaders(List<Header> target) {
         if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
+
+            // If locale switching is disabled, remove the section
+            // entirely. This logic will need to be extended when
+            // content language selection (Bug 881510) is implemented.
+            if (!localeSwitchingIsEnabled) {
+                for (Header header : target) {
+                    if (header.id == R.id.pref_header_language) {
+                        target.remove(header);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -564,9 +580,20 @@ OnSharedPreferenceChangeListener
     private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
         for (int i = 0; i < preferences.getPreferenceCount(); i++) {
             Preference pref = preferences.getPreference(i);
+
+            // Eliminate locale switching if necessary.
+            // This logic will need to be extended when
+            // content language selection (Bug 881510) is implemented.
+            if (!localeSwitchingIsEnabled &&
+                "preferences_locale".equals(pref.getExtras().getString("resource", null))) {
+                preferences.removePreference(pref);
+                i--;
+                continue;
+            }
+
             String key = pref.getKey();
             if (pref instanceof PreferenceGroup) {
-                // If no datareporting is enabled, remove UI.
+                // If datareporting is disabled, remove UI.
                 if (PREFS_DATA_REPORTING_PREFERENCES.equals(key)) {
                     if (!AppConstants.MOZ_DATA_REPORTING) {
                         preferences.removePreference(pref);
