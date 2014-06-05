@@ -88,7 +88,7 @@ ImageClient::RemoveTextureWithTracker(TextureClient* aTexture,
     RefPtr<AsyncTransactionTracker> request = aAsyncTransactionTracker;
     if (!request) {
       // Create AsyncTransactionTracker if it is not provided as argument.
-      request = new RemoveTextureFromCompositableTracker(this);
+      request = new RemoveTextureFromCompositableTracker();
     }
     // Hold TextureClient until the transaction complete to postpone
     // the TextureClient recycle.
@@ -128,7 +128,7 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 TemporaryRef<AsyncTransactionTracker>
 ImageClientSingle::PrepareFlushAllImages()
 {
-  RefPtr<AsyncTransactionTracker> status = new RemoveTextureFromCompositableTracker(this);
+  RefPtr<AsyncTransactionTracker> status = new RemoveTextureFromCompositableTracker();
   return status;
 }
 
