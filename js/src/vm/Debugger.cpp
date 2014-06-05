@@ -3676,6 +3676,23 @@ Debugger::handleIonBailout(JSContext *cx, jit::RematerializedFrame *from, jit::B
     return replaceFrameGuts(cx, from, to, iter);
 }
 
+/* static */ void
+Debugger::propagateForcedReturn(JSContext *cx, AbstractFramePtr frame, HandleValue rval)
+{
+    // Invoking the interrupt handler is considered a step and invokes the
+    // youngest frame's onStep handler, if any. However, we cannot handle
+    // { return: ... } resumption values straightforwardly from the interrupt
+    // handler. Instead, we set the intended return value in the frame's rval
+    // slot and set the propagating-forced-return flag on the JSContext.
+    //
+    // The interrupt handler then returns false with no exception set,
+    // signaling an uncatchable exception. In the exception handlers, we then
+    // check for the special propagating-forced-return flag.
+    MOZ_ASSERT(!cx->isExceptionPending());
+    cx->setPropagatingForcedReturn();
+    frame.setReturnValue(rval);
+}
+
 static bool
 DebuggerScript_setBreakpoint(JSContext *cx, unsigned argc, Value *vp)
 {

@@ -422,6 +422,10 @@ struct JSContext : public js::ExclusiveContext,
     /* Per-context options. */
     JS::ContextOptions  options_;
 
+    // True if propagating a forced return from an interrupt handler during
+    // debug mode.
+    bool                propagatingForcedReturn_;
+
   public:
     int32_t             reportGranularity;  /* see vm/Probes.h */
 
@@ -569,6 +573,10 @@ struct JSContext : public js::ExclusiveContext,
         throwing = false;
         unwrappedException_.setUndefined();
     }
+
+    bool isPropagatingForcedReturn() const { return propagatingForcedReturn_; }
+    void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
+    void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
 
 #ifdef DEBUG
     /*
