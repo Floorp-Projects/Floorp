@@ -52,8 +52,9 @@ function testGranted() {
       if (steps.length > 0) {
         let requestedType = steps.shift();
         info('getUserMedia for ' + JSON.stringify(requestedType));
-        navigator.mozGetUserMedia(requestedType, function success() {
+        navigator.mozGetUserMedia(requestedType, function success(stream) {
           ok(true, 'expected gUM success');
+          stream.stop();
           nextStep();
         }, function failure(err) {
           ok(false, 'unexpected gUM fail: ' + err);
@@ -79,8 +80,9 @@ function testDenied() {
       if (steps.length > 0) {
         let requestedType = steps.shift();
         info('getUserMedia for ' + JSON.stringify(requestedType));
-        navigator.mozGetUserMedia(requestedType, function success() {
+        navigator.mozGetUserMedia(requestedType, function success(stream) {
           ok(false, 'unexpected gUM success');
+          stream.stop();
           nextStep();
         }, function failure(err) {
           ok(true, 'expected gUM fail: ' + err);
@@ -104,8 +106,9 @@ function testPartialDeniedAudio() {
     info('getUserMedia for video and audio');
     function nextStep() {
       navigator.mozGetUserMedia({video: {facingMode: 'environment', required: ['facingMode']},
-                                 audio: true}, function success() {
+                                 audio: true}, function success(stream) {
         ok(false, 'unexpected gUM success');
+        stream.stop();
         resolve();
       }, function failure(err) {
         ok(true, 'expected gUM fail: ' + err);
@@ -126,8 +129,9 @@ function testPartialDeniedVideo() {
     info('getUserMedia for video and audio');
     function nextStep() {
       navigator.mozGetUserMedia({video: {facingMode: 'environment', required: ['facingMode']},
-                                 audio: true}, function success() {
+                                 audio: true}, function success(stream) {
         ok(false, 'unexpected gUM success');
+        stream.stop();
         resolve();
       }, function failure(err) {
         ok(true, 'expected gUM fail: ' + err);
