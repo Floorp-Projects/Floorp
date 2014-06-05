@@ -4660,6 +4660,7 @@ class JS_PUBLIC_API(AutoSaveExceptionState)
 {
   private:
     JSContext *context;
+    bool wasPropagatingForcedReturn;
     bool wasThrowing;
     RootedValue exceptionValue;
 
@@ -4681,6 +4682,7 @@ class JS_PUBLIC_API(AutoSaveExceptionState)
      * If this is called, the destructor is a no-op.
      */
     void drop() {
+        wasPropagatingForcedReturn = false;
         wasThrowing = false;
         exceptionValue.setUndefined();
     }
