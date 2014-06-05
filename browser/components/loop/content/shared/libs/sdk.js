@@ -25,9 +25,9 @@
     // XXX: patched for loop so we use local files
     cdnURL: 'loop/otcdn',
     // The URL to use for logging
-    loggingURL: 'http://hlg.tokbox.com/prod',
+    loggingURL: 'https://hlg.tokbox.com/prod',
     // The anvil API URL
-    apiURL: 'http://anvil.opentok.com',
+    apiURL: 'https://anvil.opentok.com',
 
     // What protocol to use when connecting to the rumor web socket
     messagingProtocol: 'wss',
