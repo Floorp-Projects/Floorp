@@ -12,7 +12,7 @@
 }
 @font-face {
   font-family: "arbitrary_bad";
-  src: url('http://example.org/tests/content/base/test/xcsp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
+  src: url('http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
 }
 
 .div_arbitrary_good { font-family: "arbitrary_good"; }
