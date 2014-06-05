@@ -12,9 +12,9 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function log(msg) {
-  Services.console.logStringMessage("[SSDP] " + msg);
-}
+// Define the "log" function as a binding of the Log.d function so it specifies
+// the "debug" priority and a log tag.
+let log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.bind(null, "SSDP");
 
 XPCOMUtils.defineLazyGetter(this, "converter", function () {
   let conv = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -69,38 +69,32 @@ var SimpleServiceDiscovery = {
     // Listen for responses from specific targets. There could be more than one
     // available.
     let response = aMessage.data.split("\n");
-    let location;
-    let target;
-    let valid = false;
-    response.some(function(row) {
-      let header = row.toUpperCase();
-      if (header.startsWith("LOCATION")) {
-        location = row.substr(10).trim();
-      } else if (header.startsWith("ST")) {
-        target = row.substr(4).trim();
-        if (this._targets.has(target)) {
-          valid = true;
-        }
+    let service = {};
+    response.forEach(function(row) {
+      let name = row.toUpperCase();
+      if (name.startsWith("LOCATION")) {
+        service.location = row.substr(10).trim();
+      } else if (name.startsWith("ST")) {
+        service.target = row.substr(4).trim();
+      } else if (name.startsWith("SERVER")) {
+        service.server = row.substr(8).trim();
       }
-
-      if (location && valid) {
-        location = this._forceTrailingSlash(location);
-
-        // When we find a valid response, package up the service information
-        // and pass it on.
-        let service = {
-          location: location,
-          target: target
-        };
-
-        try {
-          this._processService(service);
-        } catch (e) {}
-
-        return true;
-      }
-      return false;
     }.bind(this));
+
+    if (service.location && this._targets.has(service.target)) {
+      service.location = this._forceTrailingSlash(service.location);
+
+      // We add the server as an additional way to filter services
+      if (!("server" in service)) {
+        service.server = null;
+      }
+
+      // When we find a valid response, package up the service information
+      // and pass it on.
+      try {
+        this._processService(service);
+      } catch (e) {}
+    }
   },
 
   onStopListening: function(aSocket, aStatus) {
@@ -218,17 +212,35 @@ var SimpleServiceDiscovery = {
       // Clean out any stale services
       for (let [key, service] of this._services) {
         if (service.lastPing != this._searchTimestamp) {
-          Services.obs.notifyObservers(null, EVENT_SERVICE_LOST, service.location);
-          this._services.delete(service.location);
+          Services.obs.notifyObservers(null, EVENT_SERVICE_LOST, service.uuid);
+          this._services.delete(service.uuid);
         }
       }
     }
   },
 
-  registerTarget: function registerTarget(aTarget, aAppFactory) {
+  registerTarget: function registerTarget(aTarget) {
+    // We must have "target" and "factory" defined
+    if (!("target" in aTarget) || !("factory" in aTarget)) {
+      // Fatal for registration
+      throw "Registration requires a target and a location";
+    }
+
     // Only add if we don't already know about this target
-    if (!this._targets.has(aTarget)) {
-      this._targets.set(aTarget, { target: aTarget, factory: aAppFactory });
+    if (!this._targets.has(aTarget.target)) {
+      this._targets.set(aTarget.target, aTarget);
+    }
+  },
+
+  unregisterTarget: function unregisterTarget(aTarget) {
+    // We must have "target" and "factory" defined
+    if (!("target" in aTarget) || !("factory" in aTarget)) {
+      return;
+    }
+
+    // Only remove if we know about this target
+    if (this._targets.has(aTarget.target)) {
+      this._targets.delete(aTarget.target);
     }
   },
 
@@ -244,9 +256,9 @@ var SimpleServiceDiscovery = {
     return null;
   },
 
-  findServiceForLocation: function findServiceForLocation(aLocation) {
-    if (this._services.has(aLocation)) {
-      return this._services.get(aLocation);
+  findServiceForID: function findServiceForID(aUUID) {
+    if (this._services.has(aUUID)) {
+      return this._services.get(aUUID);
     }
     return null;
   },
@@ -258,6 +270,29 @@ var SimpleServiceDiscovery = {
       array.push(service);
     }
     return array;
+  },
+
+  // Returns false if the service does not match the target's filters
+  _filterService: function _filterService(aService) {
+    let target = this._targets.get(aService.target);
+    if (!target) {
+      return false;
+    }
+
+    // If we have no filter, everything passes
+    if (!("filters" in target)) {
+      return true;
+    }
+
+    // If any filter fails, the service fails
+    let filters = target.filters;
+    for (let filter in filters) {
+      if (filter in aService && aService[filter] != filters[filter]) {
+        return false;
+      }
+    }
+
+    return true;
   },
 
   _processService: function _processService(aService) {
@@ -278,14 +313,19 @@ var SimpleServiceDiscovery = {
         aService.manufacturer = doc.querySelector("manufacturer").textContent;
         aService.modelName = doc.querySelector("modelName").textContent;
 
+        // Filter out services that do not match the target filter
+        if (!this._filterService(aService)) {
+          return;
+        }
+
         // Only add and notify if we don't already know about this service
-        if (!this._services.has(aService.location)) {
-          this._services.set(aService.location, aService);
-          Services.obs.notifyObservers(null, EVENT_SERVICE_FOUND, aService.location);
+        if (!this._services.has(aService.uuid)) {
+          this._services.set(aService.uuid, aService);
+          Services.obs.notifyObservers(null, EVENT_SERVICE_FOUND, aService.uuid);
         }
 
         // Make sure we remember this service is not stale
-        this._services.get(aService.location).lastPing = this._searchTimestamp;
+        this._services.get(aService.uuid).lastPing = this._searchTimestamp;
       }
     }).bind(this), false);
 

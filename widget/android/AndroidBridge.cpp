@@ -206,6 +206,16 @@ AndroidBridge::Init(JNIEnv *jEnv)
         jEGLSurfacePointerField = 0;
     }
 
+    jChannels = getClassGlobalRef("java/nio/channels/Channels");
+    jChannelCreate = jEnv->GetStaticMethodID(jChannels, "newChannel", "(Ljava/io/InputStream;)Ljava/nio/channels/ReadableByteChannel;");
+
+    jReadableByteChannel = getClassGlobalRef("java/nio/channels/ReadableByteChannel");
+    jByteBufferRead = jEnv->GetMethodID(jReadableByteChannel, "read", "(Ljava/nio/ByteBuffer;)I");
+
+    jInputStream = getClassGlobalRef("java/io/InputStream");
+    jClose = jEnv->GetMethodID(jInputStream, "close", "()V");
+    jAvailable = jEnv->GetMethodID(jInputStream, "available", "()I");
+
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -2092,4 +2102,42 @@ AndroidBridge::RunDelayedTasks()
         task->Run();
     }
     return -1;
+}
+
+jobject AndroidBridge::ChannelCreate(jobject stream) {
+    JNIEnv *env = GetJNIForThread();
+    env->PushLocalFrame(1);
+    jobject channel = env->CallStaticObjectMethod(sBridge->jReadableByteChannel, sBridge->jChannelCreate, stream);
+    return env->PopLocalFrame(channel);
+}
+
+void AndroidBridge::InputStreamClose(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    env->CallVoidMethod(obj, sBridge->jClose);
+}
+
+uint32_t AndroidBridge::InputStreamAvailable(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    return env->CallIntMethod(obj, sBridge->jAvailable);
+}
+
+nsresult AndroidBridge::InputStreamRead(jobject obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    jobject arr =  env->NewDirectByteBuffer(aBuf, aCount);
+    jint read = env->CallIntMethod(obj, sBridge->jByteBufferRead, arr);
+
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return NS_ERROR_FAILURE;
+    }
+
+    if (read <= 0) {
+        *aRead = 0;
+        return NS_OK;
+    }
+    *aRead = read;
+    return NS_OK;
 }

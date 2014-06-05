@@ -30,6 +30,12 @@
   color: #f5f7fa; /* Light foreground text */
 }
 
+/* In case a node isn't displayed in the page, we fade the syntax highlighting */
+.not-displayed .open,
+.not-displayed .close {
+  opacity: .7;
+}
+
 .tag-line {
   padding-left: 2px;
 }

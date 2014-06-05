@@ -2536,7 +2536,9 @@ this.DOMApplicationRegistry = {
     yield this._saveApps();
 
     this.broadcastMessage("Webapps:AddApp", { id: id, app: appObject });
-    if (aData.isPackage && aData.autoInstall) {
+
+    // The presence of a requestID means that we have a page to update.
+    if (aData.isPackage && aData.apkInstall && !aData.requestID) {
       // Skip directly to onInstallSuccessAck, since there isn't
       // a WebappsRegistry to receive Webapps:Install:Return:OK and respond
       // Webapps:Install:Return:Ack when an app is being auto-installed.
