@@ -41,7 +41,7 @@ describe("loop.shared.views", function() {
   });
 
   describe("ConversationView", function() {
-    var fakeSDK, fakeSessionData, fakeSession, model;
+    var fakeSDK, fakeSessionData, fakeSession, fakePublisher, model;
 
     beforeEach(function() {
       fakeSessionData = {
@@ -57,8 +57,12 @@ describe("loop.shared.views", function() {
         unpublish: sandbox.spy(),
         subscribe: sandbox.spy()
       }, Backbone.Events);
+      fakePublisher = {
+        on: sandbox.spy(),
+        off: sandbox.spy()
+      };
       fakeSDK = {
-        initPublisher: sandbox.spy(),
+        initPublisher: sandbox.stub().returns(fakePublisher),
         initSession: sandbox.stub().returns(fakeSession)
       };
       model = new sharedModels.ConversationModel(fakeSessionData, {
@@ -90,6 +94,7 @@ describe("loop.shared.views", function() {
             model: model
           });
           sandbox.stub(model, "endSession");
+          view.publish();
 
           view.hangup({preventDefault: function() {}});
 
@@ -98,30 +103,58 @@ describe("loop.shared.views", function() {
       });
 
       describe("#publish", function() {
-        it("should publish local stream", function() {
-          var view = new sharedViews.ConversationView({
+        var view;
+
+        beforeEach(function() {
+          view = new sharedViews.ConversationView({
             sdk: fakeSDK,
             model: model
           });
+        });
 
+        it("should publish local stream", function() {
           view.publish();
 
           sinon.assert.calledOnce(fakeSDK.initPublisher);
           sinon.assert.calledOnce(fakeSession.publish);
         });
+
+        it("should start listening to OT publisher accessDialogOpened and " +
+          " accessDenied events",
+          function() {
+            view.publish();
+
+            sinon.assert.calledTwice(fakePublisher.on);
+            sinon.assert.calledWith(fakePublisher.on, "accessDialogOpened");
+            sinon.assert.calledWith(fakePublisher.on, "accessDenied");
+          });
       });
 
       describe("#unpublish", function() {
-        it("should unpublish local stream", function() {
-          var view = new sharedViews.ConversationView({
+        var view;
+
+        beforeEach(function() {
+          view = new sharedViews.ConversationView({
             sdk: fakeSDK,
             model: model
           });
+          view.publish();
+        });
 
+        it("should unpublish local stream", function() {
           view.unpublish();
 
           sinon.assert.calledOnce(fakeSession.unpublish);
         });
+
+        it("should unsubscribe from accessDialogOpened and accessDenied events",
+          function() {
+            view.unpublish();
+
+            sinon.assert.calledTwice(fakePublisher.off);
+            sinon.assert.calledWith(fakePublisher.off, "accessDialogOpened");
+            sinon.assert.calledWith(fakePublisher.off, "accessDenied");
+          });
       });
 
       describe("Model events", function() {
