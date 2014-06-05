@@ -29,7 +29,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 let { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 let { Services }   = Cu.import("resource://gre/modules/Services.jsm", {});
-let { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
@@ -248,35 +247,37 @@ AppCacheUtils.prototype = {
 
     let entries = [];
 
-    let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
-    appCacheStorage.asyncVisitStorage({
-      onCacheStorageInfo: function() {},
+    Services.cache.visitEntries({
+      visitDevice: function(deviceID, deviceInfo) {
+        return true;
+      },
 
-      onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
-        let lowerKey = aURI.asciiSpec.toLowerCase();
+      visitEntry: function(deviceID, entryInfo) {
+        if (entryInfo.deviceID == "offline") {
+          let entry = {};
+          let lowerKey = entryInfo.key.toLowerCase();
 
-        if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
-          return;
+          if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
+            return true;
+          }
+
+          for (let [key, value] of Iterator(entryInfo)) {
+            if (key == "QueryInterface") {
+              continue;
+            }
+            if (key == "clientID") {
+              entry.key = entryInfo.key;
+            }
+            if (key == "expirationTime" || key == "lastFetched" || key == "lastModified") {
+              value = new Date(value * 1000);
+            }
+            entry[key] = value;
+          }
+          entries.push(entry);
         }
-
-        if (aIdEnhance) {
-          aIdEnhance += ":";
-        }
-
-        let entry = {
-          "deviceID": "offline",
-          "key": aIdEnhance + aURI.asciiSpec,
-          "fetchCount": aFetchCount,
-          "lastFetched": null,
-          "lastModified": new Date(aLastModifiedTime * 1000),
-          "expirationTime": new Date(aExpirationTime * 1000),
-          "dataSize": aDataSize
-        };
-
-        entries.push(entry);
         return true;
       }
-    }, true);
+    });
 
     if (entries.length === 0) {
       throw new Error(l10n.GetStringFromName("noResults"));
@@ -285,11 +286,31 @@ AppCacheUtils.prototype = {
   },
 
   viewEntry: function ACU_viewEntry(key) {
-    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-               .getService(Ci.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
-    win.gBrowser.selectedTab = win.gBrowser.addTab(
-      "about:cache-entry?storage=appcache&context=&eid=&uri=" + key);
+    let uri;
+
+    Services.cache.visitEntries({
+      visitDevice: function(deviceID, deviceInfo) {
+        return true;
+      },
+
+      visitEntry: function(deviceID, entryInfo) {
+        if (entryInfo.deviceID == "offline" && entryInfo.key == key) {
+          uri = "about:cache-entry?client=" + entryInfo.clientID +
+                "&sb=1&key=" + entryInfo.key;
+          return false;
+        }
+        return true;
+      }
+    });
+
+    if (uri) {
+      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+                 .getService(Ci.nsIWindowMediator);
+      let win = wm.getMostRecentWindow("navigator:browser");
+      win.gBrowser.selectedTab = win.gBrowser.addTab(uri);
+    } else {
+      return l10n.GetStringFromName("entryNotFound");
+    }
   },
 
   clearAll: function ACU_clearAll() {

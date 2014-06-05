@@ -19,6 +19,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIURI.h"
 #include "nsIContentViewer.h"
+#include "nsICacheService.h"
 #include "nsIObserverService.h"
 #include "prclist.h"
 #include "mozilla/Services.h"
@@ -189,7 +190,7 @@ nsSHistoryObserver::Observe(nsISupports *aSubject, const char *aTopic,
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsSHistory::UpdatePrefs();
     nsSHistory::GloballyEvictContentViewers();
-  } else if (!strcmp(aTopic, "cacheservice:empty-cache") ||
+  } else if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID) ||
              !strcmp(aTopic, "memory-pressure")) {
     nsSHistory::GloballyEvictAllContentViewers();
   }
@@ -369,7 +370,7 @@ nsSHistory::Startup()
       // Observe empty-cache notifications so tahat clearing the disk/memory
       // cache will also evict all content viewers.
       obsSvc->AddObserver(gObserver,
-                          "cacheservice:empty-cache", false);
+                          NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID, false);
 
       // Same for memory-pressure notifications
       obsSvc->AddObserver(gObserver, "memory-pressure", false);
@@ -390,7 +391,7 @@ nsSHistory::Shutdown()
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();
     if (obsSvc) {
-      obsSvc->RemoveObserver(gObserver, "cacheservice:empty-cache");
+      obsSvc->RemoveObserver(gObserver, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID);
       obsSvc->RemoveObserver(gObserver, "memory-pressure");
     }
     NS_RELEASE(gObserver);
