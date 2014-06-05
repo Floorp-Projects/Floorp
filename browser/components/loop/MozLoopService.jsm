@@ -350,7 +350,7 @@ let MozLoopServiceInternal = {
       return;
     }
 
-    this.openChatWindow(null, "LooP", "about:loopconversation#start/" + version);
+    this.openChatWindow(null, "LooP", "about:loopconversation#incoming/" + version);
   },
 
   /**
