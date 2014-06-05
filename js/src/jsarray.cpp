@@ -337,10 +337,10 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
         return true;
     }
 
-    if (index <= UINT32_MAX)
-        return JSObject::deleteElement(cx, obj, uint32_t(index), succeeded);
-
-    return JSObject::deleteByValue(cx, obj, DoubleValue(index), succeeded);
+    RootedId id(cx);
+    if (!ToId(cx, index, &id))
+        return false;
+    return JSObject::deleteGeneric(cx, obj, id, succeeded);
 }
 
 /* ES6 20130308 draft 9.3.5 */

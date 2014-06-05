@@ -149,12 +149,6 @@ extern bool
 SetAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned *attrsp);
 
 extern bool
-DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, bool *succeeded);
-
-extern bool
-DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded);
-
-extern bool
 DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded);
 
 extern bool
@@ -1054,13 +1048,10 @@ class JSObject : public js::ObjectImpl
     static inline bool setGenericAttributes(JSContext *cx, js::HandleObject obj,
                                             js::HandleId id, unsigned *attrsp);
 
-    static inline bool deleteProperty(JSContext *cx, js::HandleObject obj,
-                                      js::HandlePropertyName name,
-                                      bool *succeeded);
-    static inline bool deleteElement(JSContext *cx, js::HandleObject obj,
-                                     uint32_t index, bool *succeeded);
-    static bool deleteByValue(JSContext *cx, js::HandleObject obj,
-                              const js::Value &property, bool *succeeded);
+    static inline bool deleteGeneric(JSContext *cx, js::HandleObject obj, js::HandleId id,
+                                     bool *succeeded);
+    static inline bool deleteElement(JSContext *cx, js::HandleObject obj, uint32_t index,
+                                     bool *succeeded);
 
     static inline bool watch(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
                              JS::HandleObject callable);

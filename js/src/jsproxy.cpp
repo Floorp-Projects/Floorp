@@ -427,7 +427,7 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JS_DeletePropertyById2(cx, target, id, bp);
+    return JSObject::deleteGeneric(cx, target, id, bp);
 }
 
 bool
@@ -2920,30 +2920,14 @@ js::proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, uns
     return Proxy::defineProperty(cx, obj, id, &desc);
 }
 
-static bool
-proxy_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+bool
+js::proxy_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     bool deleted;
     if (!Proxy::delete_(cx, obj, id, &deleted))
         return false;
     *succeeded = deleted;
     return js_SuppressDeletedProperty(cx, obj, id);
-}
-
-bool
-js::proxy_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, bool *succeeded)
-{
-    RootedId id(cx, NameToId(name));
-    return proxy_DeleteGeneric(cx, obj, id, succeeded);
-}
-
-bool
-js::proxy_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return proxy_DeleteGeneric(cx, obj, id, succeeded);
 }
 
 void
