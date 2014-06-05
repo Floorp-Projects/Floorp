@@ -5880,7 +5880,7 @@ JS_NewRegExpObject(JSContext *cx, HandleObject obj, char *bytes, size_t length, 
 {
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
-    jschar *chars = InflateString(cx, bytes, &length);
+    ScopedJSFreePtr<jschar> chars(InflateString(cx, bytes, &length));
     if (!chars)
         return nullptr;
 
@@ -5890,7 +5890,6 @@ JS_NewRegExpObject(JSContext *cx, HandleObject obj, char *bytes, size_t length, 
 
     RegExpObject *reobj = RegExpObject::create(cx, res, chars, length,
                                                RegExpFlag(flags), nullptr, cx->tempLifoAlloc());
-    js_free(chars);
     return reobj;
 }
 
