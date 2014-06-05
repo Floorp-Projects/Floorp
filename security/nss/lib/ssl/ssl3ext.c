@@ -56,14 +56,10 @@ static SECStatus ssl3_ClientHandleAppProtoXtn(sslSocket *ss,
                         PRUint16 ex_type, SECItem *data);
 static SECStatus ssl3_ServerHandleNextProtoNegoXtn(sslSocket *ss,
                         PRUint16 ex_type, SECItem *data);
-static SECStatus ssl3_ServerHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type,
-                                              SECItem *data);
-static PRInt32 ssl3_ClientSendNextProtoNegoXtn(sslSocket *ss, PRBool append,
-                                               PRUint32 maxBytes);
 static PRInt32 ssl3_ClientSendAppProtoXtn(sslSocket *ss, PRBool append,
                                           PRUint32 maxBytes);
-static PRInt32 ssl3_ServerSendAppProtoXtn(sslSocket *ss, PRBool append,
-                                          PRUint32 maxBytes);
+static PRInt32 ssl3_ClientSendNextProtoNegoXtn(sslSocket *ss, PRBool append,
+                                               PRUint32 maxBytes);
 static PRInt32 ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append,
     PRUint32 maxBytes);
 static SECStatus ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type,
@@ -241,7 +237,6 @@ static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_session_ticket_xtn,     &ssl3_ServerHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ServerHandleNextProtoNegoXtn },
-    { ssl_app_layer_protocol_xtn, &ssl3_ServerHandleAppProtoXtn },
     { ssl_use_srtp_xtn,           &ssl3_HandleUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ServerHandleStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ServerHandleSigAlgsXtn },
@@ -564,8 +559,7 @@ ssl3_SendSessionTicketXtn(
 
 /* handle an incoming Next Protocol Negotiation extension. */
 static SECStatus
-ssl3_ServerHandleNextProtoNegoXtn(sslSocket * ss, PRUint16 ex_type,
-                                  SECItem *data)
+ssl3_ServerHandleNextProtoNegoXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
 {
     if (ss->firstHsDone || data->len != 0) {
         /* Clients MUST send an empty NPN extension, if any. */
@@ -610,93 +604,14 @@ ssl3_ValidateNextProtoNego(const unsigned char* data, unsigned int length)
     return SECSuccess;
 }
 
-/* protocol selection handler for ALPN (server side) and NPN (client side) */
 static SECStatus
-ssl3_SelectAppProtocol(sslSocket *ss, PRUint16 ex_type, SECItem *data)
+ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
+                                  SECItem *data)
 {
     SECStatus rv;
     unsigned char resultBuffer[255];
     SECItem result = { siBuffer, resultBuffer, 0 };
 
-    rv = ssl3_ValidateNextProtoNego(data->data, data->len);
-    if (rv != SECSuccess)
-        return rv;
-
-    PORT_Assert(ss->nextProtoCallback);
-    rv = ss->nextProtoCallback(ss->nextProtoArg, ss->fd, data->data, data->len,
-                               result.data, &result.len, sizeof resultBuffer);
-    if (rv != SECSuccess)
-        return rv;
-    /* If the callback wrote more than allowed to |result| it has corrupted our
-     * stack. */
-    if (result.len > sizeof resultBuffer) {
-        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
-        return SECFailure;
-    }
-
-    if (ex_type == ssl_app_layer_protocol_xtn &&
-        ss->ssl3.nextProtoState != SSL_NEXT_PROTO_NEGOTIATED) {
-        /* The callback might say OK, but then it's picked a default.
-         * That's OK for NPN, but not ALPN. */
-        SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
-        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL);
-        (void)SSL3_SendAlert(ss, alert_fatal, no_application_protocol);
-        return SECFailure;
-    }
-
-    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
-
-    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
-    return SECITEM_CopyItem(NULL, &ss->ssl3.nextProto, &result);
-}
-
-/* handle an incoming ALPN extension at the server */
-static SECStatus
-ssl3_ServerHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
-{
-    int count;
-    SECStatus rv;
-
-    /* We expressly don't want to allow ALPN on renegotiation,
-     * despite it being permitted by the spec. */
-    if (ss->firstHsDone || data->len == 0) {
-        /* Clients MUST send a non-empty ALPN extension. */
-        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
-        return SECFailure;
-    }
-
-    /* unlike NPN, ALPN has extra redundant length information so that
-     * the extension is the same in both ClientHello and ServerHello */
-    count = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (count < 0) {
-        return SECFailure; /* fatal alert was sent */
-    }
-    if (count != data->len) {
-        return ssl3_DecodeError(ss);
-    }
-
-    if (!ss->nextProtoCallback) {
-        /* we're not configured for it */
-        return SECSuccess;
-    }
-
-    rv = ssl3_SelectAppProtocol(ss, ex_type, data);
-    if (rv != SECSuccess) {
-      return rv;
-    }
-
-    /* prepare to send back a response, if we negotiated */
-    if (ss->ssl3.nextProtoState == SSL_NEXT_PROTO_NEGOTIATED) {
-        return ssl3_RegisterServerHelloExtensionSender(
-            ss, ex_type, ssl3_ServerSendAppProtoXtn);
-    }
-    return SECSuccess;
-}
-
-static SECStatus
-ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
-                                  SECItem *data)
-{
     PORT_Assert(!ss->firstHsDone);
 
     if (ssl3_ExtensionNegotiated(ss, ssl_app_layer_protocol_xtn)) {
@@ -710,16 +625,37 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
         return SECFailure;
     }
 
-    /* We should only get this call if we sent the extension, so
-     * ss->nextProtoCallback needs to be non-NULL.  However, it is possible
-     * that an application erroneously cleared the callback between the time
-     * we sent the ClientHello and now. */
+    rv = ssl3_ValidateNextProtoNego(data->data, data->len);
+    if (rv != SECSuccess)
+        return rv;
+
+    /* ss->nextProtoCallback cannot normally be NULL if we negotiated the
+     * extension. However, It is possible that an application erroneously
+     * cleared the callback between the time we sent the ClientHello and now.
+     */
+    PORT_Assert(ss->nextProtoCallback != NULL);
     if (!ss->nextProtoCallback) {
-        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK);
+        /* XXX Use a better error code. This is an application error, not an
+         * NSS bug. */
+        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
 
-    return ssl3_SelectAppProtocol(ss, ex_type, data);
+    rv = ss->nextProtoCallback(ss->nextProtoArg, ss->fd, data->data, data->len,
+                               result.data, &result.len, sizeof resultBuffer);
+    if (rv != SECSuccess)
+        return rv;
+    /* If the callback wrote more than allowed to |result| it has corrupted our
+     * stack. */
+    if (result.len > sizeof resultBuffer) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
+
+    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+    return SECITEM_CopyItem(NULL, &ss->ssl3.nextProto, &result);
 }
 
 static SECStatus
@@ -858,48 +794,6 @@ loser:
         PORT_Free(alpn_protos);
     }
     return -1;
-}
-
-static PRInt32
-ssl3_ServerSendAppProtoXtn(sslSocket * ss, PRBool append, PRUint32 maxBytes)
-{
-    PRInt32 extension_length;
-
-    /* we're in over our heads if any of these fail */
-    PORT_Assert(ss->opt.enableALPN);
-    PORT_Assert(ss->ssl3.nextProto.data);
-    PORT_Assert(ss->ssl3.nextProto.len > 0);
-    PORT_Assert(ss->ssl3.nextProtoState == SSL_NEXT_PROTO_NEGOTIATED);
-    PORT_Assert(!ss->firstHsDone);
-
-    extension_length = 2 /* extension type */ + 2 /* extension length */ +
-                       2 /* protocol name list */ + 1 /* name length */ +
-                       ss->ssl3.nextProto.len;
-
-    if (append && maxBytes >= extension_length) {
-        SECStatus rv;
-        rv = ssl3_AppendHandshakeNumber(ss, ssl_app_layer_protocol_xtn, 2);
-        if (rv != SECSuccess) {
-            return -1;
-        }
-        rv = ssl3_AppendHandshakeNumber(ss, extension_length - 4, 2);
-        if (rv != SECSuccess) {
-            return -1;
-        }
-        rv = ssl3_AppendHandshakeNumber(ss, ss->ssl3.nextProto.len + 1, 2);
-        if (rv != SECSuccess) {
-            return -1;
-        }
-        rv = ssl3_AppendHandshakeVariable(ss, ss->ssl3.nextProto.data,
-                                          ss->ssl3.nextProto.len, 1);
-        if (rv != SECSuccess) {
-            return -1;
-        }
-    } else if (maxBytes < extension_length) {
-        return 0;
-    }
-
-    return extension_length;
 }
 
 static SECStatus
