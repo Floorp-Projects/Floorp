@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.db.Tab;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.NoStoreDelegateException;
@@ -30,12 +31,10 @@ import android.net.Uri;
 import android.os.RemoteException;
 
 public class FennecTabsRepository extends Repository {
-  protected final String localClientName;
-  protected final String localClientGuid;
+  protected final ClientsDataDelegate clientsDataDelegate;
 
-  public FennecTabsRepository(final String localClientName, final String localClientGuid) {
-    this.localClientName = localClientName;
-    this.localClientGuid = localClientGuid;
+  public FennecTabsRepository(ClientsDataDelegate clientsDataDelegate) {
+    this.clientsDataDelegate = clientsDataDelegate;
   }
 
   /**
@@ -144,14 +143,17 @@ public class FennecTabsRepository extends Repository {
         public void run() {
           // We fetch all local tabs (since the record must contain them all)
           // but only process the record if the timestamp is sufficiently
-          // recent.
+          // recent, or if the client data has been modified.
           try {
             final Cursor cursor = tabsHelper.safeQuery(tabsProvider, ".fetchSince()", null,
                 localClientSelection, localClientSelectionArgs, positionAscending);
             try {
+              final String localClientGuid = clientsDataDelegate.getAccountGUID();
+              final String localClientName = clientsDataDelegate.getClientName();
               final TabsRecord tabsRecord = FennecTabsRepository.tabsRecordFromCursor(cursor, localClientGuid, localClientName);
 
-              if (tabsRecord.lastModified >= timestamp) {
+              if (tabsRecord.lastModified >= timestamp ||
+                  clientsDataDelegate.getLastModifiedTimestamp() >= timestamp) {
                 delegate.onFetchedRecord(tabsRecord);
               }
             } finally {

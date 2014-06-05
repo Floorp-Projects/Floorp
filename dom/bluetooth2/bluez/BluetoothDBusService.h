@@ -47,9 +47,9 @@ public:
 
   bool IsReady();
 
-  virtual nsresult StartInternal() MOZ_OVERRIDE;
+  virtual nsresult StartInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
-  virtual nsresult StopInternal() MOZ_OVERRIDE;
+  virtual nsresult StopInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
 
   virtual nsresult
   GetAdaptersInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;

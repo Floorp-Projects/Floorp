@@ -24,6 +24,9 @@
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 
+#define ERR_INVALID_ADAPTER_STATE "InvalidAdapterStateError"
+#define ERR_CHANGE_ADAPTER_STATE  "ChangeAdapterStateError"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -121,6 +124,7 @@ public:
     BluetoothReplyRunnable::ReleaseMembers();
     mAdapterPtr = nullptr;
   }
+
 private:
   nsRefPtr<BluetoothAdapter> mAdapterPtr;
 };
@@ -156,6 +160,38 @@ public:
   }
 };
 
+class EnableDisableAdapterTask : public BluetoothReplyRunnable
+{
+public:
+  EnableDisableAdapterTask(Promise* aPromise)
+    : BluetoothReplyRunnable(nullptr)
+    , mPromise(aPromise)
+  { }
+
+  bool
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue)
+  {
+    /*
+     * It is supposed to be Promise<void> according to BluetoothAdapter.webidl,
+     * but we have to pass "true" since it is mandatory to pass an
+     * argument while calling MaybeResolve.
+     */
+    mPromise->MaybeResolve(true);
+    aValue.setUndefined();
+    return true;
+  }
+
+  void
+  ReleaseMembers()
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mPromise = nullptr;
+  }
+
+private:
+  nsRefPtr<Promise> mPromise;
+};
+
 static int kCreatePairedDeviceTimeout = 50000; // unit: msec
 
 BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
@@ -164,12 +200,13 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   , BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
   , mJsUuids(nullptr)
   , mJsDeviceAddresses(nullptr)
+  // TODO: Change to Disabled after Bug 1006309 landed
+  , mState(BluetoothAdapterState::Enabled)
   , mDiscoverable(false)
   , mDiscovering(false)
   , mPairable(false)
   , mPowered(false)
   , mIsRooted(false)
-  , mState(BluetoothAdapterState::Disabled)
 {
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(IsDOMBinding());
@@ -231,7 +268,11 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
 {
   const nsString& name = aValue.name();
   const BluetoothValue& value = aValue.value();
-  if (name.EqualsLiteral("Name")) {
+  if (name.EqualsLiteral("State")) {
+    bool isEnabled = value.get_bool();
+    mState = isEnabled ? BluetoothAdapterState::Enabled
+                       : BluetoothAdapterState::Disabled;
+  } else if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
   } else if (name.EqualsLiteral("Address")) {
     mAddress = value.get_nsString();
@@ -669,19 +710,55 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
   return request.forget();
 }
 
-/*
- * TODO: Implement Enable/Disable functions
- */
+already_AddRefed<Promise>
+BluetoothAdapter::EnableDisable(bool aEnable)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  NS_ENSURE_TRUE(global, nullptr);
+
+  nsRefPtr<Promise> promise = new Promise(global);
+
+  // Make sure BluetoothService is available before modifying adapter state
+  BluetoothService* bs = BluetoothService::Get();
+  if (!bs) {
+    promise->MaybeReject(ERR_CHANGE_ADAPTER_STATE);
+    return promise.forget();
+  }
+
+  if (aEnable) {
+    if (mState != BluetoothAdapterState::Disabled) {
+      promise->MaybeReject(ERR_INVALID_ADAPTER_STATE);
+      return promise.forget();
+    }
+    mState = BluetoothAdapterState::Enabling;
+  } else {
+    if (mState != BluetoothAdapterState::Enabled) {
+      promise->MaybeReject(ERR_INVALID_ADAPTER_STATE);
+      return promise.forget();
+    }
+    mState = BluetoothAdapterState::Disabling;
+  }
+
+  // TODO: Fire attr changed event for this state change
+  nsRefPtr<BluetoothReplyRunnable> result = new EnableDisableAdapterTask(promise);
+
+  if(NS_FAILED(bs->EnableDisable(aEnable, result))) {
+    promise->MaybeReject(ERR_CHANGE_ADAPTER_STATE);
+  }
+
+  return promise.forget();
+}
+
 already_AddRefed<Promise>
 BluetoothAdapter::Enable()
 {
-  return nullptr;
+  return EnableDisable(true);
 }
 
 already_AddRefed<Promise>
 BluetoothAdapter::Disable()
 {
-  return nullptr;
+  return EnableDisable(false);
 }
 
 already_AddRefed<DOMRequest>

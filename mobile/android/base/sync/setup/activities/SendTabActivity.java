@@ -25,12 +25,9 @@ import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.SyncConstants;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
-import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
-import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository.FennecTabsRepositorySession;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.LocaleAware.LocaleAwareActivity;
-import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
 import org.mozilla.gecko.sync.syncadapter.SyncAdapter;
 
 import android.accounts.Account;
