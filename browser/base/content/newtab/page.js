@@ -210,7 +210,19 @@ let gPage = {
     for (let site of gGrid.sites) {
       if (site) {
         site.captureIfMissing();
-        let {type} = site.link;
+
+        // Record which tile index a directory link was shown
+        let {directoryIndex, type} = site.link;
+        if (directoryIndex !== undefined) {
+          let tileIndex = site.cell.index;
+          // For telemetry, only handle the first 9 links in the first 9 cells
+          if (directoryIndex < 9) {
+            let shownId = "NEWTAB_PAGE_DIRECTORY_LINK" + directoryIndex + "_SHOWN";
+            Services.telemetry.getHistogramById(shownId).add(Math.min(9, tileIndex));
+          }
+        }
+
+        // Aggregate tile impression counts into directory types
         if (type in directoryCount) {
           directoryCount[type]++;
         }
