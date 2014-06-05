@@ -35,7 +35,6 @@ enum certutilExtns {
     ext_inhibitAnyPolicy,
     ext_subjectKeyID,
     ext_nameConstraints,
-    ext_subjectAltName,
     ext_End
 };
 
@@ -48,11 +47,7 @@ typedef ExtensionEntry certutilExtnList[ext_End];
 
 extern SECStatus
 AddExtensions(void *extHandle, const char *emailAddrs, const char *dnsNames,
-              certutilExtnList extList, const char *extGeneric);
-
-extern SECStatus
-GetOidFromString(PLArenaPool *arena, SECItem *to,
-                 const char *from, size_t fromLen);
+              certutilExtnList extList);
 
 #endif	/* _CERTUTIL_H */
 
