@@ -374,8 +374,17 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
       lineno = entry.line();
     }
   }
+
   if (lineno != -1) {
     aProfile.addTag(ProfileEntry('n', lineno));
+  }
+
+  uint32_t category = entry.category();
+  MOZ_ASSERT(!(category & StackEntry::IS_CPP_ENTRY));
+  MOZ_ASSERT(!(category & StackEntry::FRAME_LABEL_COPY));
+
+  if (category) {
+    aProfile.addTag(ProfileEntry('y', (int)category));
   }
 }
 
