@@ -6065,18 +6065,6 @@ TryAttachLengthStub(JSContext *cx, JSScript *script, ICGetProp_Fallback *stub, H
         return true;
     }
 
-    if (obj->is<TypedArrayObject>() && res.isInt32()) {
-        IonSpew(IonSpew_BaselineIC, "  Generating GetProp(TypedArray.length) stub");
-        ICGetProp_TypedArrayLength::Compiler compiler(cx);
-        ICStub *newStub = compiler.getStub(compiler.getStubSpace(script));
-        if (!newStub)
-            return false;
-
-        *attached = true;
-        stub->addNewStub(newStub);
-        return true;
-    }
-
     if (obj->is<ArgumentsObject>() && res.isInt32()) {
         IonSpew(IonSpew_BaselineIC, "  Generating GetProp(ArgsObj.length %s) stub",
                 obj->is<StrictArgumentsObject>() ? "Strict" : "Normal");
@@ -6506,35 +6494,6 @@ ICGetProp_ArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
     masm.branchTest32(Assembler::Signed, scratch, scratch, &failure);
 
     masm.tagValue(JSVAL_TYPE_INT32, scratch, R0);
-    EmitReturnFromIC(masm);
-
-    // Failure case - jump to next stub
-    masm.bind(&failure);
-    EmitStubGuardFailure(masm);
-    return true;
-}
-
-bool
-ICGetProp_TypedArrayLength::Compiler::generateStubCode(MacroAssembler &masm)
-{
-    Label failure;
-    masm.branchTestObject(Assembler::NotEqual, R0, &failure);
-
-    Register scratch = R1.scratchReg();
-
-    // Unbox R0.
-    Register obj = masm.extractObject(R0, ExtractTemp0);
-
-    // Implement the negated version of JSObject::isTypedArray predicate.
-    masm.loadObjClass(obj, scratch);
-    masm.branchPtr(Assembler::Below, scratch, ImmPtr(&TypedArrayObject::classes[0]),
-                   &failure);
-    masm.branchPtr(Assembler::AboveOrEqual, scratch,
-                   ImmPtr(&TypedArrayObject::classes[ScalarTypeDescr::TYPE_MAX]),
-                   &failure);
-
-    // Load length from fixed slot.
-    masm.loadValue(Address(obj, TypedArrayObject::lengthOffset()), R0);
     EmitReturnFromIC(masm);
 
     // Failure case - jump to next stub

@@ -8167,13 +8167,6 @@ IonBuilder::jsop_length_fastPath()
             current->push(length);
             return true;
         }
-
-        if (objTypes && objTypes->getTypedArrayType() != ScalarTypeDescr::TYPE_MAX) {
-            current->pop();
-            MInstruction *length = addTypedArrayLength(obj);
-            current->push(length);
-            return true;
-        }
     }
 
     return false;
@@ -8890,6 +8883,19 @@ IonBuilder::getPropTryCommonGetter(bool *emitted, MDefinition *obj, PropertyName
     CallInfo callInfo(alloc(), false);
     if (!callInfo.init(current, 0))
         return false;
+
+    if (commonGetter->isNative()) {
+        InliningStatus status = inlineNativeGetter(callInfo, commonGetter);
+        switch (status) {
+          case InliningStatus_Error:
+            return false;
+          case InliningStatus_NotInlined:
+            break;
+          case InliningStatus_Inlined:
+            *emitted = true;
+            return true;
+        }
+    }
 
     // Inline if we can, otherwise, forget it and just generate a call.
     bool inlineable = false;
