@@ -736,10 +736,10 @@ CheckHashTablesAfterMovingGC(JSRuntime *rt)
 void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes)
 {
-    JS_AbortIfWrongThread(rt);
-
     if (rt->mainThread.suppressGC)
         return;
+
+    JS_AbortIfWrongThread(rt);
 
     if (!isEnabled())
         return;
