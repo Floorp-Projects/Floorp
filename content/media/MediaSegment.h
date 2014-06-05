@@ -16,12 +16,22 @@
 namespace mozilla {
 
 /**
+ * Track rate in Hz. Maximum 1 << TRACK_RATE_MAX_BITS Hz. This
+ * maximum avoids overflow in conversions between track rates and conversions
+ * from seconds.
+ */
+typedef int32_t TrackRate;
+const int64_t TRACK_RATE_MAX_BITS = 20;
+const TrackRate TRACK_RATE_MAX = 1 << TRACK_RATE_MAX_BITS;
+
+/**
  * We represent media times in 64-bit fixed point. So 1 MediaTime is
- * 1/(2^MEDIA_TIME_FRAC_BITS) seconds.
+ * 1/(2^MEDIA_TIME_FRAC_BITS) seconds.  We want to make sure that multiplying
+ * MediaTime by a TrackRate doesn't overflow, so we set its max accordingly.
  */
 typedef int64_t MediaTime;
 const int64_t MEDIA_TIME_FRAC_BITS = 20;
-const int64_t MEDIA_TIME_MAX = INT64_MAX;
+const int64_t MEDIA_TIME_MAX = INT64_MAX >> TRACK_RATE_MAX_BITS;
 
 inline MediaTime MillisecondsToMediaTime(int32_t aMS)
 {
