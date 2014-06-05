@@ -54,15 +54,25 @@ describe("loop.conversation", function() {
         sandbox.stub(router, "loadView");
       });
 
-      describe("#start", function() {
+      describe("#incoming", function() {
         it("should set the loopVersion on the conversation model", function() {
-          router.start("fakeVersion");
+          router.incoming("fakeVersion");
 
           expect(conversation.get("loopVersion")).to.equal("fakeVersion");
         });
 
+        it("should display the incoming call view", function() {
+          router.incoming("fakeVersion");
+
+          sinon.assert.calledOnce(router.loadView);
+          sinon.assert.calledWithExactly(router.loadView,
+            sinon.match.instanceOf(loop.conversation.IncomingCallView));
+        });
+      });
+
+      describe("#accept", function() {
         it("should initiate the conversation", function() {
-          router.start("fakeVersion");
+          router.accept();
 
           sinon.assert.calledOnce(conversation.initiate);
           sinon.assert.calledWithExactly(conversation.initiate, {
@@ -167,6 +177,36 @@ describe("loop.conversation", function() {
         var view = new loop.conversation.EndedCallView();
 
         view.closeWindow({preventDefault: sandbox.spy()});
+
+        sinon.assert.calledOnce(window.close);
+      });
+    });
+  });
+
+  describe("IncomingCallView", function() {
+    var conversation, view;
+
+    beforeEach(function() {
+      conversation = new loop.shared.models.ConversationModel({}, {sdk: {}});
+      view = new loop.conversation.IncomingCallView({model: conversation});
+    });
+
+    describe("#handleAccept", function() {
+      it("should trigger an 'accept' conversation model event" ,
+        function(done) {
+          conversation.once("accept", function() {
+            done();
+          });
+
+          view.handleAccept({preventDefault: sandbox.spy()});
+        });
+    });
+
+    describe("#handleDecline", function() {
+      it("should close the window", function() {
+        sandbox.stub(window, "close");
+
+        view.handleDecline({preventDefault: sandbox.spy()});
 
         sinon.assert.calledOnce(window.close);
       });

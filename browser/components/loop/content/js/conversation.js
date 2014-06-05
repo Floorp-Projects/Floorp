@@ -19,6 +19,48 @@ loop.conversation = (function(OT, mozL10n) {
   var router;
 
   /**
+   * Incoming call view.
+   * @type {loop.shared.views.BaseView}
+   */
+  var IncomingCallView = sharedViews.BaseView.extend({
+    template: _.template([
+      '<h2 data-l10n-id="incoming_call"></h2>',
+      '<p>',
+      '  <button class="btn btn-success btn-accept"',
+      '           data-l10n-id="accept_button"></button>',
+      '  <button class="btn btn-error btn-decline"',
+      '           data-l10n-id="decline_button"></button>',
+      '</p>'
+    ].join("")),
+
+    className: "incoming-call",
+
+    events: {
+      "click .btn-accept": "handleAccept",
+      "click .btn-decline": "handleDecline"
+    },
+
+    /**
+     * User clicked on the "accept" button.
+     * @param  {MouseEvent} event
+     */
+    handleAccept: function(event) {
+      event.preventDefault();
+      this.model.trigger("accept");
+    },
+
+    /**
+     * User clicked on the "decline" button.
+     * @param  {MouseEvent} event
+     */
+    handleDecline: function(event) {
+      event.preventDefault();
+      // XXX For now, we just close the window.
+      window.close();
+    }
+  });
+
+  /**
    * Call ended view.
    * @type {loop.shared.views.BaseView}
    */
@@ -53,7 +95,8 @@ loop.conversation = (function(OT, mozL10n) {
    */
   var ConversationRouter = loop.desktopRouter.DesktopConversationRouter.extend({
     routes: {
-      "start/:version": "start",
+      "incoming/:version": "incoming",
+      "call/accept": "accept",
       "call/ongoing": "conversation",
       "call/ended": "ended"
     },
@@ -73,16 +116,23 @@ loop.conversation = (function(OT, mozL10n) {
     },
 
     /**
-     * start is the initial route that does any necessary prompting and set
-     * up for the call.
+     * Incoming call route.
      *
      * @param {String} loopVersion The version from the push notification, set
      *                             by the router from the URL.
      */
-    start: function(loopVersion) {
-      // XXX For now, we just kick the conversation straight away, bug 990678
-      // will implement the follow-ups.
+    incoming: function(loopVersion) {
       this._conversation.set({loopVersion: loopVersion});
+      this._conversation.once("accept", function() {
+        this.navigate("call/accept", {trigger: true});
+      }.bind(this));
+      this.loadView(new IncomingCallView({model: this._conversation}));
+    },
+
+    /**
+     * Accepts an incoming call.
+     */
+    accept: function() {
       this._conversation.initiate({
         baseServerUrl: window.navigator.mozLoop.serverUrl,
         outgoing: false
@@ -134,6 +184,7 @@ loop.conversation = (function(OT, mozL10n) {
   return {
     ConversationRouter: ConversationRouter,
     EndedCallView: EndedCallView,
+    IncomingCallView: IncomingCallView,
     init: init
   };
 })(window.OT, document.mozL10n);

@@ -55,3 +55,19 @@
 .call-ended p {
   text-align: center;
 }
+
+/* Incoming call */
+.incoming-call {
+  text-align: center;
+  min-height: 200px;
+}
+
+.incoming-call h2 {
+  font-size: 1.5em;
+  font-weight: normal;
+  margin-top: 3em;
+}
+
+.incoming-call button {
+  margin-right: .2em;
+}
