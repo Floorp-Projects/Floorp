@@ -22,7 +22,8 @@
     websiteURL: 'http://www.tokbox.com',
 
     // The URL of the CDN
-    cdnURL: 'http://static.opentok.com',
+    // XXX: patched for loop so we use local files
+    cdnURL: 'loop/otcdn',
     // The URL to use for logging
     loggingURL: 'http://hlg.tokbox.com/prod',
     // The anvil API URL
@@ -36,7 +37,8 @@
     // If this environment supports SSL
     supportSSL: 'true',
     // The CDN to use if we're using SSL
-    cdnURLSSL: 'https://static.opentok.com',
+    // XXX: patched for loop so we use local files
+    cdnURLSSL: 'loop/otcdn',
     // The loggging URL to use if we're using SSL
     loggingURLSSL: 'https://hlg.tokbox.com/prod',
     // The anvil API URL to use if we're using SSL
