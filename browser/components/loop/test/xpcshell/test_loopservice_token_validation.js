@@ -1,9 +1,5 @@
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-  "resource:///modules/loop/MozLoopService.jsm");
-
-var server;
-
-const kServerPushUrl = "http://localhost:3456";
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // XXX should report error if Hawk-Session-Token is lexically invalid
 // (not a string of 64 hex digits) to help resist other possible injection
@@ -13,7 +9,7 @@ add_test(function test_registration_handles_bogus_hawk_token() {
   var wrongSizeToken = "jdkasjkasjdlaksj";
   Services.prefs.clearUserPref("loop.hawk-session-token");
 
-  server.registerPathHandler("/registration", (request, response) => {
+  loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
     response.setHeader("Hawk-Session-Token", wrongSizeToken, false);
     response.processAsync();
@@ -42,19 +38,14 @@ add_test(function test_registration_handles_bogus_hawk_token() {
 
 function run_test()
 {
-  server = new HttpServer();
-  server.start(-1);
+  setupFakeLoopServer();
 
   // Registrations and pref settings.
   gMockWebSocketChannelFactory.register();
-  Services.prefs.setCharPref("services.push.serverURL", kServerPushUrl);
-
-  Services.prefs.setCharPref("loop.server", "http://localhost:" + server.identity.primaryPort);
 
   do_register_cleanup(function() {
     gMockWebSocketChannelFactory.unregister();
     Services.prefs.clearUserPref("loop.hawk-session-token");
-    server.stop(function() {});
   });
 
   run_next_test();
