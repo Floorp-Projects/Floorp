@@ -11182,6 +11182,9 @@ class CGForwardDeclarations(CGWrapper):
         # We just about always need NativePropertyHooks
         builder.addInMozillaDom("NativePropertyHooks")
         builder.addInMozillaDom("ProtoAndIfaceCache")
+        # Add the atoms cache type, even if we don't need it.
+        for d in descriptors:
+            builder.add(d.nativeType + "Atoms", isStruct=True)
 
         for callback in mainCallbacks:
             forwardDeclareForType(callback)
@@ -11195,6 +11198,7 @@ class CGForwardDeclarations(CGWrapper):
 
         for d in callbackInterfaces:
             builder.add(d.nativeType)
+            builder.add(d.nativeType + "Atoms", isStruct=True)
             for t in getTypesFromDescriptor(d):
                 forwardDeclareForType(t)
 
@@ -11248,7 +11252,7 @@ class CGBindingRoot(CGThing):
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
         bindingHeaders["nsCxPusher.h"] = dictionaries
-        bindingHeaders["AtomList.h"] = any(
+        hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
                                             workers=False)
@@ -11259,6 +11263,7 @@ class CGBindingRoot(CGThing):
         jsImplemented = config.getDescriptors(webIDLFile=webIDLFile,
                                               isJSImplemented=True)
         bindingHeaders["nsPIDOMWindow.h"] = jsImplemented
+        bindingHeaders["AtomList.h"] = hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
 
         def addHeaderBasedOnTypes(header, typeChecker):
             bindingHeaders[header] = (
@@ -12534,7 +12539,7 @@ class CGCallback(CGClass):
         # cheat and have CallbackMember compute all those things for us.
         realMethods = []
         for method in methods:
-            if not method.needThisHandling:
+            if not isinstance(method, CallbackMember) or not method.needThisHandling:
                 realMethods.append(method)
             else:
                 realMethods.extend(self.getMethodImpls(method))
@@ -12674,6 +12679,12 @@ class CGCallbackInterface(CGCallback):
             if len(sigs) != 1:
                 raise TypeError("We only handle one constructor.  See bug 869268.")
             methods.append(CGJSImplInitOperation(sigs[0], descriptor))
+        if any(m.isAttr() or m.isMethod() for m in iface.members) or (iface.isJSImplemented() and iface.ctor()):
+            methods.append(initIdsClassMethod([descriptor.binaryNameFor(m.identifier.name)
+                                               for m in iface.members
+                                               if m.isAttr() or m.isMethod()] +
+                                              (["__init"] if iface.isJSImplemented() and iface.ctor() else []),
+                                              iface.identifier.name + "Atoms"))
         CGCallback.__init__(self, iface, descriptor, "CallbackInterface",
                             methods, getters=getters, setters=setters)
 
@@ -13035,12 +13046,15 @@ class CallbackOperationBase(CallbackMethod):
     def getCallableDecl(self):
         getCallableFromProp = fill(
             """
-            if (!GetCallableProperty(cx, "${methodName}", &callable)) {
+            ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
+            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+                !GetCallableProperty(cx, atomsCache->${methodAtomName}, &callable)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }
             """,
-            methodName=self.methodName,
+            methodAtomName=CGDictionary.makeIdName(self.methodName),
+            atomCacheName=self.descriptorProvider.interface.identifier.name + "Atoms",
             errorReturn=self.getDefaultRetval())
         if not self.singleOperation:
             return 'JS::Rooted<JS::Value> callable(cx);\n' + getCallableFromProp
@@ -13109,12 +13123,15 @@ class CallbackGetter(CallbackAccessor):
         return fill(
             """
             JS::Rooted<JSObject *> callback(cx, mCallback);
-            if (!JS_GetProperty(cx, callback, "${attrName}", &rval)) {
+            ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
+            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+                !JS_GetPropertyById(cx, callback, atomsCache->${attrAtomName}, &rval)) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }
             """,
-            attrName=self.descriptorProvider.binaryNameFor(self.attrName),
+            atomCacheName=self.descriptorProvider.interface.identifier.name + "Atoms",
+            attrAtomName=CGDictionary.makeIdName(self.descriptorProvider.binaryNameFor(self.attrName)),
             errorReturn=self.getDefaultRetval())
 
 
@@ -13134,12 +13151,15 @@ class CallbackSetter(CallbackAccessor):
         return fill(
             """
             MOZ_ASSERT(argv.length() == 1);
-            if (!JS_SetProperty(cx, CallbackPreserveColor(), "${attrName}", argv[0])) {
+            ${atomCacheName}* atomsCache = GetAtomCache<${atomCacheName}>(cx);
+            if ((!*reinterpret_cast<jsid**>(atomsCache) && !InitIds(cx, atomsCache)) ||
+                !JS_SetPropertyById(cx, CallbackPreserveColor(), atomsCache->${attrAtomName}, argv[0])) {
               aRv.Throw(NS_ERROR_UNEXPECTED);
               return${errorReturn};
             }
             """,
-            attrName=self.descriptorProvider.binaryNameFor(self.attrName),
+            atomCacheName=self.descriptorProvider.interface.identifier.name + "Atoms",
+            attrAtomName=CGDictionary.makeIdName(self.descriptorProvider.binaryNameFor(self.attrName)),
             errorReturn=self.getDefaultRetval())
 
     def getArgcDecl(self):
