@@ -63,5 +63,9 @@
 #define SL_ANDROID_STREAM_ALARM        ((SLint32) 0x00000004)
 /*      same as android.media.AudioManager.STREAM_NOTIFICATION */
 #define SL_ANDROID_STREAM_NOTIFICATION ((SLint32) 0x00000005)
+/*      same as android.media.AudioManager.STREAM_BLUETOOTH_SCO */
+#define SL_ANDROID_STREAM_BLUETOOTH_SCO ((SLint32) 0x00000006)
+/*      same as android.media.AudioManager.STREAM_SYSTEM_ENFORCED */
+#define SL_ANDROID_STREAM_SYSTEM_ENFORCED ((SLint32) 0x00000007)
 
 #endif /* OPENSL_ES_ANDROIDCONFIGURATION_H_ */
