@@ -95,6 +95,7 @@ class RectTextureImage;
 namespace mozilla {
 namespace layers {
 class GLManager;
+class APZCTreeManager;
 }
 }
 
@@ -383,6 +384,7 @@ enum {
 - (void)endGestureWithEvent:(NSEvent *)anEvent;
 
 - (void)scrollWheel:(NSEvent *)anEvent;
+- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type;
 
 // Helper function for Lion smart magnify events
 + (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
@@ -436,6 +438,7 @@ class nsChildView : public nsBaseWidget,
 {
 private:
   typedef nsBaseWidget Inherited;
+  typedef mozilla::layers::APZCTreeManager APZCTreeManager;
 
 public:
                           nsChildView();
@@ -571,6 +574,7 @@ public:
   already_AddRefed<mozilla::a11y::Accessible> GetDocumentAccessible();
 #endif
 
+  virtual CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight);
   virtual void CreateCompositor();
   virtual gfxASurface* GetThebesSurface();
   virtual void PrepareWindowEffects() MOZ_OVERRIDE;
@@ -625,6 +629,8 @@ public:
   mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
   void EndRemoteDrawing() MOZ_OVERRIDE;
   void CleanupRemoteDrawing() MOZ_OVERRIDE;
+
+  APZCTreeManager* APZCTM() { return mAPZCTreeManager; }
 
 protected:
 
@@ -725,6 +731,8 @@ protected:
   // Used in OMTC BasicLayers mode. Presents the BasicCompositor result
   // surface to the screen using an OpenGL context.
   nsAutoPtr<GLPresenter> mGLPresenter;
+
+  nsRefPtr<APZCTreeManager> mAPZCTreeManager;
 
   static uint32_t sLastInputEventCount;
 

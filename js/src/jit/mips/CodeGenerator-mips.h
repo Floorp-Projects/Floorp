@@ -117,6 +117,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     template <typename T>
     void branchToBlock(Register lhs, T rhs, MBasicBlock *mir, Assembler::Condition cond)
     {
+        mir = skipTrivialBlocks(mir);
+
         Label *label = mir->lir()->label();
         if (Label *oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
             // Note: the backedge is initially a jump to the next instruction.
@@ -212,6 +214,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitFloorF(LFloorF *lir);
+    virtual bool visitCeil(LCeil *lir);
+    virtual bool visitCeilF(LCeilF *lir);
     virtual bool visitRound(LRound *lir);
     virtual bool visitRoundF(LRoundF *lir);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);

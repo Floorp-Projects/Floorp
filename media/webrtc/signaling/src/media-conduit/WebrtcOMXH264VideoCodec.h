@@ -11,6 +11,9 @@
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
+#include <foundation/ABase.h>
+#include <utils/RefBase.h>
+#include "OMXCodecWrapper.h"
 
 namespace android {
   class OMXVideoEncoder;
@@ -48,6 +51,8 @@ public:
 
 private:
   RefPtr<android::OMXVideoEncoder> mOMX;
+  android::sp<android::OMXCodecReservation> mReservation;
+
   webrtc::EncodedImageCallback* mCallback;
   RefPtr<OMXOutputDrain> mOutputDrain;
   uint32_t mWidth;
@@ -85,6 +90,7 @@ public:
 private:
   webrtc::DecodedImageCallback* mCallback;
   RefPtr<WebrtcOMXDecoder> mOMX;
+  android::sp<android::OMXCodecReservation> mReservation;
 };
 
 }

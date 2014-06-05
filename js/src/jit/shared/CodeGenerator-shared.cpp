@@ -468,7 +468,7 @@ class StoreOp
     MacroAssembler &masm;
 
   public:
-    StoreOp(MacroAssembler &masm)
+    explicit StoreOp(MacroAssembler &masm)
       : masm(masm)
     {}
 
@@ -520,14 +520,6 @@ class VerifyOp
         masm.branchDouble(Assembler::DoubleNotEqual, ScratchFloatReg, reg, failure_);
     }
 };
-
-static void
-OsiPointRegisterCheckFailed()
-{
-    // Any live register captured by a safepoint (other than temp registers)
-    // must remain unchanged between the call and the OsiPoint instruction.
-    MOZ_ASSUME_UNREACHABLE("Modified registers between VM call and OsiPoint");
-}
 
 void
 CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
@@ -582,10 +574,11 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint *safepoint)
     // the profiler instrumentation of the callWithABI below to ASSERT, since
     // the script and pc are mismatched.  To avoid this, we simply omit
     // instrumentation for these callWithABIs.
+
+    // Any live register captured by a safepoint (other than temp registers)
+    // must remain unchanged between the call and the OsiPoint instruction.
     masm.bind(&failure);
-    masm.setupUnalignedABICall(0, scratch);
-    masm.callWithABINoProfiling(JS_FUNC_TO_DATA_PTR(void *, OsiPointRegisterCheckFailed));
-    masm.breakpoint();
+    masm.assumeUnreachable("Modified registers between VM call and OsiPoint");
 
     masm.bind(&done);
     masm.pop(scratch);

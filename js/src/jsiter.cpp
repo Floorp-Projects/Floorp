@@ -1350,6 +1350,14 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     return true;
 }
 
+bool
+ForOfIterator::initWithIterator(HandleValue aIterator)
+{
+    JSContext *cx = cx_;
+    RootedObject iteratorObj(cx, ToObject(cx, aIterator));
+    return iterator = iteratorObj;
+}
+
 inline bool
 ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
 {

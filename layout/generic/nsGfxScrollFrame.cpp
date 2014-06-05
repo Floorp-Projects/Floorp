@@ -2111,15 +2111,13 @@ MaxZIndexInList(nsDisplayList* aList, nsDisplayListBuilder* aBuilder)
 static void
 AppendToTop(nsDisplayListBuilder* aBuilder, const nsDisplayListSet& aLists,
             nsDisplayList* aSource, nsIFrame* aSourceFrame, bool aOwnLayer,
-            uint32_t aFlags, mozilla::layers::FrameMetrics::ViewID aScrollTargetId,
             bool aPositioned)
 {
   if (aSource->IsEmpty())
     return;
 
   nsDisplayWrapList* newItem = aOwnLayer?
-    new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource,
-                                     aFlags, aScrollTargetId) :
+    new (aBuilder) nsDisplayOwnLayer(aBuilder, aSourceFrame, aSource) :
     new (aBuilder) nsDisplayWrapList(aBuilder, aSourceFrame, aSource);
 
   if (aPositioned) {
@@ -2181,17 +2179,13 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     scrollParts.AppendElement(kid);
   }
 
-  mozilla::layers::FrameMetrics::ViewID scrollTargetId =
-    nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent());
+  mozilla::layers::FrameMetrics::ViewID scrollTargetId = IsScrollingActive()
+    ? nsLayoutUtils::FindOrCreateIDFor(mScrolledFrame->GetContent())
+    : mozilla::layers::FrameMetrics::NULL_SCROLL_ID;
 
   scrollParts.Sort(HoveredStateComparator());
 
   for (uint32_t i = 0; i < scrollParts.Length(); ++i) {
-    nsDisplayListCollection partList;
-    mOuter->BuildDisplayListForChild(
-      aBuilder, scrollParts[i], aDirtyRect, partList,
-      nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
-
     uint32_t flags = 0;
     if (scrollParts[i] == mVScrollbarBox) {
       flags |= nsDisplayOwnLayer::VERTICAL_SCROLLBAR;
@@ -2199,6 +2193,13 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     if (scrollParts[i] == mHScrollbarBox) {
       flags |= nsDisplayOwnLayer::HORIZONTAL_SCROLLBAR;
     }
+
+    nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter
+      infoSetter(aBuilder, scrollTargetId, flags);
+    nsDisplayListCollection partList;
+    mOuter->BuildDisplayListForChild(
+      aBuilder, scrollParts[i], aDirtyRect, partList,
+      nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT);
 
     // Always create layers for overlay scrollbars so that we don't create a
     // giant layer covering the whole scrollport if both scrollbars are visible.
@@ -2209,7 +2210,7 @@ ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder*   aBuilder,
     // partList.PositionedDescendants().
     ::AppendToTop(aBuilder, aLists,
                   partList.PositionedDescendants(), scrollParts[i],
-                  createLayer, flags, scrollTargetId, aPositioned);
+                  createLayer, aPositioned);
   }
 }
 

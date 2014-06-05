@@ -4628,7 +4628,6 @@ IonBuilder::inlineCalls(CallInfo &callInfo, ObjectVector &targets,
         if (status == InliningStatus_NotInlined) {
             JS_ASSERT(target->isNative());
             JS_ASSERT(current == inlineBlock);
-            inlineBlock->discardAllResumePoints();
             graph().removeBlock(inlineBlock);
             choiceSet[i] = false;
             continue;

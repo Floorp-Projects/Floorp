@@ -23,9 +23,6 @@
 == css3-namespace/syntax-013.xml css3-namespace/ref-lime-5.xml
 == css3-namespace/syntax-014.xml css3-namespace/ref-lime-3.xml
 == css3-namespace/syntax-015.xml css3-namespace/ref-lime-1.xml
-
-default-preferences pref(layout.css.supports-rule.enabled,true)
-
 == css3-conditional/at-supports-001.html css3-conditional/at-supports-001-ref.html
 == css3-conditional/at-supports-002.html css3-conditional/at-supports-001-ref.html
 == css3-conditional/at-supports-003.html css3-conditional/at-supports-001-ref.html

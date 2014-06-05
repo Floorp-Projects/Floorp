@@ -231,8 +231,8 @@ nsCSPParser::port()
 
   // Port must start with a number
   if (!accept(isNumberToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParsePort",
                              params, ArrayLength(params));
     return false;
   }
@@ -260,6 +260,14 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
       ++charCounter;
     }
     if (accept(SLASH)) {
+      // do not accept double slashes
+      // see http://tools.ietf.org/html/rfc3986#section-3.3
+      if (accept(SLASH)) {
+        const char16_t* params[] = { mCurToken.get() };
+        logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                                 params, ArrayLength(params));
+        return false;
+      }
       aCspHost->appendPath(mCurValue);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
@@ -289,12 +297,18 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
   resetCurValue();
 
   if (!accept(SLASH)) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   if (atEnd()) {
     return true;
   }
   if (!hostChar()) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   return subPath(aCspHost);
@@ -347,8 +361,8 @@ nsCSPParser::host()
     }
     // If the token is not only the "*", a "." must follow right after
     if (!accept(DOT)) {
-      const char16_t* params[] = { mCurValue.get() };
-      logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+      const char16_t* params[] = { mCurToken.get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                                params, ArrayLength(params));
       return nullptr;
     }
@@ -356,16 +370,16 @@ nsCSPParser::host()
 
   // Expecting at least one Character
   if (!accept(isCharacterToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
 
   // There might be several sub hosts defined.
   if (!subHost()) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
@@ -374,7 +388,7 @@ nsCSPParser::host()
   if (CSP_IsQuotelessKeyword(mCurValue)) {
     nsString keyword = mCurValue;
     ToLowerCase(keyword);
-    const char16_t* params[] = { mCurValue.get(), keyword.get() };
+    const char16_t* params[] = { mCurToken.get(), keyword.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "hostNameMightBeKeyword",
                              params, ArrayLength(params));
   }
@@ -395,8 +409,8 @@ nsCSPParser::appHost()
 
   // appHosts have to end with "}", otherwise we have to report an error
   if (!accept(CLOSE_CURL)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
                              params, ArrayLength(params));
     return nullptr;
   }
@@ -464,7 +478,11 @@ nsCSPParser::hostSource()
   // occurs, path() reports the error; handing cspHost as an argument
   // which simplifies parsing of several paths.
   if (!path(cspHost)) {
-    return cspHost;
+    // If the host [port] is followed by a path, it has to be a valid path,
+    // otherwise we pass the nullptr, indicating an error, up the callstack.
+    // see also http://www.w3.org/TR/CSP11/#source-list
+    delete cspHost;
+    return nullptr;
   }
 
   // Calling fileAndArguments to see if there are any files to parse;

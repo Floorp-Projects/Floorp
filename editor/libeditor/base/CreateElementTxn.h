@@ -9,12 +9,12 @@
 #include "EditTxn.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIDOMNode.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
 #include "nscore.h"
 
 class nsEditor;
-class nsINode;
 
 /**
  * A transaction that creates a new node in the content tree.
@@ -33,7 +33,7 @@ public:
     */
   NS_IMETHOD Init(nsEditor *aEditor,
                   const nsAString& aTag,
-                  nsINode *aParent,
+                  nsIDOMNode *aParent,
                   uint32_t aOffsetInParent);
 
   CreateElementTxn();
@@ -45,27 +45,27 @@ public:
 
   NS_IMETHOD RedoTransaction();
 
-  NS_IMETHOD GetNewNode(nsINode **aNewNode);
+  NS_IMETHOD GetNewNode(nsIDOMNode **aNewNode);
 
 protected:
-
+  
   /** the document into which the new node will be inserted */
   nsEditor* mEditor;
-
+  
   /** the tag (mapping to object type) for the new element */
   nsString mTag;
 
   /** the node into which the new node will be inserted */
-  nsCOMPtr<nsINode> mParent;
+  nsCOMPtr<nsIDOMNode> mParent;
 
   /** the index in mParent for the new node */
   uint32_t mOffsetInParent;
 
   /** the new node to insert */
-  nsCOMPtr<nsINode> mNewNode;
+  nsCOMPtr<nsIDOMNode> mNewNode;  
 
   /** the node we will insert mNewNode before.  We compute this ourselves. */
-  nsCOMPtr<nsINode> mRefNode;
+  nsCOMPtr<nsIDOMNode> mRefNode;
 };
 
 #endif

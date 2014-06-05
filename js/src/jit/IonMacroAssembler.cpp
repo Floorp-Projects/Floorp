@@ -1900,9 +1900,8 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
         branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::SELF_HOSTED_CTOR << 16), label);
 
 #ifdef DEBUG
-        // Function.prototype should not have the SELF_HOSTED_CTOR flag.
         branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::IS_FUN_PROTO << 16), &done);
-        breakpoint();
+        assumeUnreachable("Function.prototype should not have the SELF_HOSTED_CTOR flag");
 #endif
     }
     bind(&done);
