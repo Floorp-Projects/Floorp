@@ -921,7 +921,12 @@ var BrowserApp = {
     aParams = aParams || {};
 
     let newTab = new Tab(aURI, aParams);
-    this._tabs.push(newTab);
+
+    if (typeof aParams.tabIndex == "number") {
+      this._tabs.splice(aParams.tabIndex, 0, newTab);
+    } else {
+      this._tabs.push(newTab);
+    }
 
     let selected = "selected" in aParams ? aParams.selected : true;
     if (selected)
@@ -972,12 +977,14 @@ var BrowserApp = {
     if (aTab == this.selectedTab)
       this.selectedTab = null;
 
+    let tabIndex = this._tabs.indexOf(aTab);
+
     let evt = document.createEvent("UIEvents");
-    evt.initUIEvent("TabClose", true, false, window, null);
+    evt.initUIEvent("TabClose", true, false, window, tabIndex);
     aTab.browser.dispatchEvent(evt);
 
     aTab.destroy();
-    this._tabs.splice(this._tabs.indexOf(aTab), 1);
+    this._tabs.splice(tabIndex, 1);
 
     if (aShowUndoToast) {
       // Get a title for the undo close toast. Fall back to the URL if there is no title.
@@ -3053,6 +3060,7 @@ Tab.prototype = {
         tabID: this.id,
         uri: uri,
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+        tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
         title: title,
