@@ -764,6 +764,7 @@ SwitchState GetCurrentSwitchState(SwitchDevice aDevice)
 
 void NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState)
 {
+  AssertMainThread();
   PROXY_IF_SANDBOXED(NotifySwitchStateFromInputDevice(aDevice, aState));
 }
 

@@ -175,7 +175,6 @@ parent:
     DisableSwitchNotifications(SwitchDevice aDevice);
     sync GetCurrentSwitchState(SwitchDevice aDevice)
       returns (SwitchState aState);
-    NotifySwitchStateFromInputDevice(SwitchDevice aDevice, SwitchState aState);
 
     FactoryReset();
 
