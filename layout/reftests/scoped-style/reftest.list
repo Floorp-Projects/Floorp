@@ -51,7 +51,7 @@
 == scoped-style-document.html scoped-style-document-ref.html
 HTTP(..) == scoped-style-font-face.html scoped-style-font-face-ref.html
 == scoped-style-keyframes.html scoped-style-keyframes-ref.html
-pref(layout.css.supports-rule.enabled,true) == scoped-style-supports.html scoped-style-supports-ref.html
+== scoped-style-supports.html scoped-style-supports-ref.html
 pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-001.html scoped-style-pseudo-001-ref.html
 pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-002.html scoped-style-pseudo-002-ref.html
 pref(layout.css.scope-pseudo.enabled,true) == scoped-style-pseudo-003.html scoped-style-pseudo-003-ref.html
