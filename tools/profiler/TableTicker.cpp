@@ -672,6 +672,11 @@ void TableTicker::InplaceTick(TickSample* sample)
     currThreadProfile.addTag(ProfileEntry('R', static_cast<float>(sample->rssMemory)));
   }
 
+  // ussMemory is equal to 0 when we are not recording.
+  if (sample && sample->ussMemory != 0) {
+    currThreadProfile.addTag(ProfileEntry('U', static_cast<float>(sample->ussMemory)));
+  }
+
 #if defined(XP_WIN)
   if (powerSample) {
     currThreadProfile.addTag(ProfileEntry('p', static_cast<float>(mIntelPowerGadget->GetTotalPackagePowerInWatts())));
