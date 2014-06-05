@@ -43,8 +43,8 @@
 #include "jit/Ion.h"
 #endif
 #include "js/CharacterEncoding.h"
-#include "vm/Debugger.h"
 #include "js/OldDebugAPI.h"
+#include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Shape.h"
 
