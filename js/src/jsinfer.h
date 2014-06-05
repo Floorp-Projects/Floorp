@@ -309,8 +309,6 @@ class Type
     static inline Type ObjectType(JSObject *obj);
     static inline Type ObjectType(TypeObject *obj);
     static inline Type ObjectType(TypeObjectKey *obj);
-
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_TYPE; }
 };
 
 /* Get the type of a jsval, or zero for an unknown special value. */

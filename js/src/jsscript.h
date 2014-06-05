@@ -266,7 +266,6 @@ class Bindings
         return !callObjShape_->isEmptyShape();
     }
 
-    static js::ThingRootKind rootKind() { return js::THING_ROOT_BINDINGS; }
     void trace(JSTracer *trc);
 };
 
