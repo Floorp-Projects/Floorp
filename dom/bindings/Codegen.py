@@ -377,8 +377,7 @@ JS_NULL_OBJECT_OPS
   nullptr, /* setElement */
   nullptr, /* getGenericAttributes */
   nullptr, /* setGenericAttributes */
-  nullptr, /* deleteProperty */
-  nullptr, /* deleteElement */
+  nullptr, /* deleteGeneric */
   nullptr, /* watch */
   nullptr, /* unwatch */
   nullptr, /* slice */
