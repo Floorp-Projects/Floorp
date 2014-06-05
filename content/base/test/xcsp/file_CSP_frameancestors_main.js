@@ -4,9 +4,9 @@ function setupFrames() {
 
   var $ = function(v) { return document.getElementById(v); }
   var base = {
-        self: '/tests/content/base/test/xcsp/file_CSP_frameancestors.sjs',
-        a: 'http://mochi.test:8888/tests/content/base/test/xcsp/file_CSP_frameancestors.sjs',
-        b: 'http://example.com/tests/content/base/test/xcsp/file_CSP_frameancestors.sjs'
+        self: '/tests/content/base/test/csp/file_CSP_frameancestors.sjs',
+        a: 'http://mochi.test:8888/tests/content/base/test/csp/file_CSP_frameancestors.sjs',
+        b: 'http://example.com/tests/content/base/test/csp/file_CSP_frameancestors.sjs'
   };
 
   var host = { a: 'http://mochi.test:8888', b: 'http://example.com:80' };
