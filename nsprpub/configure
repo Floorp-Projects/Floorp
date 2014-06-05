@@ -2487,7 +2487,7 @@ test -n "$target_alias" &&
 
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=5
+MOD_PATCH_VERSION=6
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -2903,6 +2903,8 @@ fi
 if test "${enable_debug_rtl+set}" = set; then :
   enableval=$enable_debug_rtl;  if test "$enableval" = "yes"; then
 	    USE_DEBUG_RTL=1
+      else
+	    USE_DEBUG_RTL=0
       fi
 fi
 
@@ -5742,7 +5744,7 @@ esac
 
 if test -n "$MOZILLA_CLIENT" && test "$OS_ARCH" = "WINNT"; then
     OS_TARGET=WIN95
-    if test -n "$MOZ_DEBUG"; then
+    if test -n "$MOZ_DEBUG" -a -z "$USE_DEBUG_RTL"; then
         USE_DEBUG_RTL=1
     fi
 fi
@@ -7183,7 +7185,7 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
             CFLAGS="$CFLAGS -Od"
         fi
 
-        if test -n "$USE_DEBUG_RTL"; then
+        if test "$USE_DEBUG_RTL" = 1; then
             CFLAGS="$CFLAGS -MDd"
         else
             CFLAGS="$CFLAGS -MD"
@@ -7244,7 +7246,7 @@ $as_echo "$as_me: WARNING: Unknown version of the Microsoft (R) Manifest Tool." 
         CPU_ARCH_TAG=$CPU_ARCH
     fi
 
-    if test -n "$USE_DEBUG_RTL"; then
+    if test "$USE_DEBUG_RTL" = 1; then
         OBJDIR_SUFFIX=OBJD
     fi
 

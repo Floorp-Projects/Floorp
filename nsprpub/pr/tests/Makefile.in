@@ -107,6 +107,7 @@ CSRCS =             \
 	poll_nm.c		\
 	poll_to.c		\
 	pollable.c		\
+	prfdbl.c		\
 	prftest.c		\
 	prftest1.c		\
 	prftest2.c		\
