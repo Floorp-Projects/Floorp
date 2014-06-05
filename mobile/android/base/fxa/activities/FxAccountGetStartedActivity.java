@@ -6,13 +6,11 @@ package org.mozilla.gecko.fxa.activities;
 
 import java.util.Locale;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 import org.mozilla.gecko.sync.setup.activities.LocaleAware;
 

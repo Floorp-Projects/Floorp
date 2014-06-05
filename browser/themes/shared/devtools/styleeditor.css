@@ -119,6 +119,11 @@
   background-position: -24px 8px;
 }
 
+#style-editor-options {
+  width: 20px;
+  overflow: hidden;
+}
+
 /* Invert all toggle icons but the one in the active row for light theme */
 .theme-light .splitview-nav > li:not(.splitview-active) .stylesheet-enabled {
   filter: url(filters.svg#invert);

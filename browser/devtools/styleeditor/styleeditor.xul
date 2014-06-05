@@ -61,9 +61,16 @@
           key="key_gotoLine"
           command="cmd_gotoLine"/>
     </xul:menupopup>
-    <xul:menupopup id="sidebar-context">
-      <xul:menuitem id="context-origsources"/>
-      <xul:menuitem id="context-show-media"/>
+    <xul:menupopup id="style-editor-options-popup"
+                   position="before_start">
+      <xul:menuitem id="options-origsources"
+                    type="checkbox"
+                    label="&showOriginalSources.label;"
+                    accesskey="&showOriginalSources.accesskey;"/>
+      <xul:menuitem id="options-show-media"
+                    type="checkbox"
+                    label="&showMediaSidebar.label;"
+                    accesskey="&showMediaSidebar.accesskey;"/>
     </xul:menupopup>
   </xul:popupset>
 
@@ -91,6 +98,11 @@
                         accesskey="&importButton.accesskey;"
                         tooltiptext="&importButton.tooltip;"
                         label="&importButton.label;"/>
+            <xul:spacer/>
+            <xul:toolbarbutton id="style-editor-options"
+                        class="devtools-option-toolbarbutton"
+                        tooltiptext="&optionsButton.tooltip;"
+                        popup="style-editor-options-popup"/>
           </xul:toolbar>
         </xul:box>
         <xul:box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
