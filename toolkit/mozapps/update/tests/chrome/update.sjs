@@ -20,7 +20,7 @@ const URL_HTTP_UPDATE_SJS = URL_HOST + URL_PATH_UPDATE_XML;
 const REL_PATH_DATA = "chrome/toolkit/mozapps/update/tests/data/";
 const SERVICE_URL = URL_HOST + "/" + REL_PATH_DATA + FILE_SIMPLE_MAR;
 
-const SLOW_MAR_DOWNLOAD_INTERVAL = 100;
+const SLOW_MAR_DOWNLOAD_INTERVAL = 2000;
 var gTimer;
 
 function handleRequest(aRequest, aResponse) {
