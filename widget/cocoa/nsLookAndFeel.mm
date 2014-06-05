@@ -396,6 +396,9 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
     case eIntID_MacLionTheme:
       aResult = nsCocoaFeatures::OnLionOrLater();
       break;
+    case eIntID_MacYosemiteTheme:
+      aResult = nsCocoaFeatures::OnYosemiteOrLater();
+      break;
     case eIntID_AlertNotificationOrigin:
       aResult = NS_ALERT_TOP;
       break;
