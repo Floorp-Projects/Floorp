@@ -36,6 +36,7 @@ class JS_PUBLIC_API(AutoGCRooter);
 template <typename T> class AutoVectorRooter;
 template<typename K, typename V> class AutoHashMapRooter;
 template<typename T> class AutoHashSetRooter;
+template<typename T> class RootedGeneric;
 
 class MOZ_STACK_CLASS SourceBufferHolder;
 
@@ -83,6 +84,7 @@ using JS::AutoGCRooter;
 using JS::AutoHashMapRooter;
 using JS::AutoHashSetRooter;
 using JS::AutoVectorRooter;
+using JS::RootedGeneric;
 
 using JS::CallArgs;
 using JS::CallNonGenericMethod;
