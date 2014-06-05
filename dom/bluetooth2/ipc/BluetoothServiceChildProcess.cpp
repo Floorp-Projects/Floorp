@@ -104,6 +104,20 @@ BluetoothServiceChildProcess::GetAdaptersInternal(
 }
 
 nsresult
+BluetoothServiceChildProcess::StartInternal(BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, StartBluetoothRequest());
+  return NS_OK;
+}
+
+nsresult
+BluetoothServiceChildProcess::StopInternal(BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, StopBluetoothRequest());
+  return NS_OK;
+}
+
+nsresult
 BluetoothServiceChildProcess::GetConnectedDevicePropertiesInternal(
                                               uint16_t aServiceUuid,
                                               BluetoothReplyRunnable* aRunnable)
@@ -375,18 +389,6 @@ BluetoothServiceChildProcess::HandleShutdown()
     sBluetoothChild->BeginShutdown();
   }
   return NS_OK;
-}
-
-nsresult
-BluetoothServiceChildProcess::StartInternal()
-{
-  MOZ_CRASH("This should never be called!");
-}
-
-nsresult
-BluetoothServiceChildProcess::StopInternal()
-{
-  MOZ_CRASH("This should never be called!");
 }
 
 bool
