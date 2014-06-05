@@ -339,10 +339,6 @@ struct JSShellContextData {
 static JSShellContextData *
 NewContextData()
 {
-    /* Prevent creation of new contexts after we have been canceled. */
-    if (gServiceInterrupt)
-        return nullptr;
-
     JSShellContextData *data = (JSShellContextData *)
                                js_calloc(sizeof(JSShellContextData), 1);
     if (!data)
@@ -387,6 +383,10 @@ ShellInterruptCallback(JSContext *cx)
 
     if (!result && gExitCode == 0)
         gExitCode = EXITCODE_TIMEOUT;
+
+    // Reset gServiceInterrupt. CancelExecution or InterruptIf will set it to
+    // true to distinguish watchdog or user triggered interrupts.
+    gServiceInterrupt = false;
 
     return result;
 }
@@ -456,7 +456,7 @@ RunFile(JSContext *cx, Handle<JSObject*> obj, const char *filename, FILE *file, 
     #endif
     if (script && !compileOnly) {
         if (!JS_ExecuteScript(cx, obj, script)) {
-            if (!gQuitting && !gServiceInterrupt)
+            if (!gQuitting && gExitCode != EXITCODE_TIMEOUT)
                 gExitCode = EXITCODE_RUNTIME_ERROR;
         }
         int64_t t2 = PRMJ_Now() - t1;
@@ -5743,7 +5743,10 @@ NewContext(JSRuntime *rt)
 static void
 DestroyContext(JSContext *cx, bool withGC)
 {
-    JSShellContextData *data = GetContextData(cx);
+    // Don't use GetContextData as |data| could be a nullptr in the case of
+    // destroying a context precisely because we couldn't create its private
+    // data.
+    JSShellContextData *data = (JSShellContextData *) JS_GetContextPrivate(cx);
     JS_SetContextPrivate(cx, nullptr);
     free(data);
     WITH_SIGNALS_DISABLED(withGC ? JS_DestroyContext(cx) : JS_DestroyContextNoGC(cx));
