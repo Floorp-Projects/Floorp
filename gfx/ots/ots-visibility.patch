@@ -37,52 +37,22 @@ diff --git a/gfx/ots/include/opentype-sanitiser.h b/gfx/ots/include/opentype-san
  typedef unsigned short uint16_t;
  typedef int int32_t;
  typedef unsigned int uint32_t;
-@@ -182,45 +202,45 @@ class OTSStream {
- // -----------------------------------------------------------------------------
- // Process a given OpenType file and write out a sanitised version
- //   output: a pointer to an object implementing the OTSStream interface. The
- //     sanitisied output will be written to this. In the even of a failure,
- //     partial output may have been written.
- //   input: the OpenType file
- //   length: the size, in bytes, of |input|
- // -----------------------------------------------------------------------------
--bool Process(OTSStream *output, const uint8_t *input, size_t length);
-+bool OTS_API Process(OTSStream *output, const uint8_t *input, size_t length);
- 
- // Signature of the function to be provided by the client in order to report errors.
- // The return type is a boolean so that it can be used within an expression,
- // but the actual value is ignored. (Suggested convention is to always return 'false'.)
- #ifdef __GCC__
- #define MSGFUNC_FMT_ATTR __attribute__((format(printf, 2, 3)))
- #else
- #define MSGFUNC_FMT_ATTR
- #endif
- typedef bool (*MessageFunc)(void *user_data, const char *format, ...)  MSGFUNC_FMT_ATTR;
- 
- // Set a callback function that will be called when OTS is reporting an error.
--void SetMessageCallback(MessageFunc func, void *user_data);
-+void OTS_API SetMessageCallback(MessageFunc func, void *user_data);
- 
- enum TableAction {
-   TABLE_ACTION_DEFAULT,  // Use OTS's default action for that table
-   TABLE_ACTION_SANITIZE, // Sanitize the table, potentially droping it
-   TABLE_ACTION_PASSTHRU, // Serialize the table unchanged
-   TABLE_ACTION_DROP      // Drop the table
+@@ -197,17 +217,17 @@ enum TableAction {
  };
  
  // Signature of the function to be provided by the client to decide what action
  // to do for a given table.
+ //   tag: table tag as an integer in big-endian byte order, independent of platform endianness
+ //   user_data: user defined data that are passed to SetTableActionCallback()
  typedef TableAction (*TableActionFunc)(uint32_t tag, void *user_data);
  
- // Set a callback function that will be called when OTS needs to decide what to
- // do for a font table.
--void SetTableActionCallback(TableActionFunc func, void *user_data);
-+void OTS_API SetTableActionCallback(TableActionFunc func, void *user_data);
- 
- // Force to disable debug output even when the library is compiled with
- // -DOTS_DEBUG.
- void DisableDebugOutput();
- 
- // Enable WOFF2 support(experimental).
- void EnableWOFF2();
+-class OTSContext {
++class OTS_API OTSContext {
+   public:
+     OTSContext()
+         : message_func(0),
+           message_user_data(0),
+           table_action_func(0),
+           table_action_user_data(0)
+         {}
  

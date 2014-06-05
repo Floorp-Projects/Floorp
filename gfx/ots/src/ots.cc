@@ -26,12 +26,6 @@ namespace {
 bool g_debug_output = true;
 bool g_enable_woff2 = false;
 
-ots::MessageFunc  g_message_func = NULL;
-void             *g_message_user_data = NULL;
-
-ots::TableActionFunc  g_table_action_func = NULL;
-void                 *g_table_action_user_data = NULL;
-
 // Generate a message with or without a table tag, when 'header' is the OpenTypeFile pointer
 #define OTS_FAILURE_MSG_TAG(msg_,tag_) OTS_FAILURE_MSG_TAG_(header, msg_, tag_)
 #define OTS_FAILURE_MSG_HDR(msg_)      OTS_FAILURE_MSG_(header, msg_)
@@ -423,11 +417,11 @@ bool ProcessWOFF2(ots::OpenTypeFile *header,
 }
 #endif
 
-ots::TableAction GetTableAction(uint32_t tag) {
+ots::TableAction GetTableAction(ots::OpenTypeFile *header, uint32_t tag) {
   ots::TableAction action = ots::TABLE_ACTION_DEFAULT;
 
-  if (g_table_action_func != NULL) {
-    action = g_table_action_func(htonl(tag), g_table_action_user_data);
+  if (header->table_action_func != NULL) {
+    action = header->table_action_func(htonl(tag), header->table_action_user_data);
   }
 
   if (action == ots::TABLE_ACTION_DEFAULT) {
@@ -576,10 +570,10 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
   for (unsigned i = 0; ; ++i) {
     if (table_parsers[i].parse == NULL) break;
 
-    const std::map<uint32_t, OpenTypeTable>::const_iterator it
-        = table_map.find(Tag(table_parsers[i].tag));
+    uint32_t tag = Tag(table_parsers[i].tag);
+    const std::map<uint32_t, OpenTypeTable>::const_iterator it = table_map.find(tag);
 
-    ots::TableAction action = GetTableAction(Tag(table_parsers[i].tag));
+    ots::TableAction action = GetTableAction(header, tag);
     if (it == table_map.end()) {
       if (table_parsers[i].required && action == ots::TABLE_ACTION_SANITIZE) {
         return OTS_FAILURE_MSG_TAG("missing required table", table_parsers[i].tag);
@@ -632,7 +626,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
 
   for (std::map<uint32_t, OpenTypeTable>::const_iterator it = table_map.begin();
        it != table_map.end(); ++it) {
-    ots::TableAction action = GetTableAction(it->first);
+    ots::TableAction action = GetTableAction(header, it->first);
     if (action == ots::TABLE_ACTION_PASSTHRU) {
       num_output_tables++;
     }
@@ -704,7 +698,7 @@ bool ProcessGeneric(ots::OpenTypeFile *header, uint32_t signature,
 
   for (std::map<uint32_t, OpenTypeTable>::const_iterator it = table_map.begin();
        it != table_map.end(); ++it) {
-    ots::TableAction action = GetTableAction(it->first);
+    ots::TableAction action = GetTableAction(header, it->first);
     if (action == ots::TABLE_ACTION_PASSTHRU) {
       OutputTable out;
       out.tag = it->second.tag;
@@ -808,21 +802,15 @@ void EnableWOFF2() {
   g_enable_woff2 = true;
 }
 
-void SetMessageCallback(MessageFunc func, void *user_data) {
-  g_message_func = func;
-  g_message_user_data = user_data;
-}
-
-void SetTableActionCallback(TableActionFunc func, void *user_data) {
-  g_table_action_func = func;
-  g_table_action_user_data = user_data;
-}
-
-bool Process(OTSStream *output, const uint8_t *data, size_t length) {
+bool OTSContext::Process(OTSStream *output,
+                         const uint8_t *data,
+                         size_t length) {
   OpenTypeFile header;
 
-  header.message_func = g_message_func;
-  header.user_data = g_message_user_data;
+  header.message_func = message_func;
+  header.message_user_data = message_user_data;
+  header.table_action_func = table_action_func;
+  header.table_action_user_data = table_action_user_data;
 
   if (length < 4) {
     return OTS_FAILURE_MSG_(&header, "file less than 4 bytes");

@@ -52,3 +52,4 @@ void ots_vmtx_free(OpenTypeFile *file) {
 
 }  // namespace ots
 
+#undef TABLE_NAME
