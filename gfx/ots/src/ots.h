@@ -53,13 +53,13 @@ void Warning(const char *f, int l, const char *format, ...)
 // Generate a simple message
 #define OTS_FAILURE_MSG_(otf_,...) \
   ((otf_)->message_func && \
-    (*(otf_)->message_func)((otf_)->user_data, __VA_ARGS__) && \
+    (*(otf_)->message_func)((otf_)->message_user_data, __VA_ARGS__) && \
     false)
 
 // Generate a message with an associated table tag
 #define OTS_FAILURE_MSG_TAG_(otf_,msg_,tag_) \
   ((otf_)->message_func && \
-    (*(otf_)->message_func)((otf_)->user_data, "%4.4s: %s", tag_, msg_) && \
+    (*(otf_)->message_func)((otf_)->message_user_data, "%4.4s: %s", tag_, msg_) && \
     false)
 
 // Convenience macro for use in files that only handle a single table tag,
@@ -250,8 +250,11 @@ struct OpenTypeFile {
   uint16_t entry_selector;
   uint16_t range_shift;
 
-  MessageFunc message_func;
-  void        *user_data;
+  MessageFunc  message_func;
+  void        *message_user_data;
+
+  TableActionFunc  table_action_func;
+  void            *table_action_user_data;
 
 #define F(name, capname) OpenType##capname *name;
 FOR_EACH_TABLE_TYPE
