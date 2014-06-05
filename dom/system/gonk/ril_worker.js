@@ -12791,9 +12791,17 @@ SimRecordHelperObject.prototype = {
 
       let ICCUtilsHelper = this.context.ICCUtilsHelper;
       let RIL = this.context.RIL;
+      // TS 31.102, clause 4.2.18 EFAD
+      let mncLength = 0;
+      if (ad && ad[3]) {
+        mncLength = ad[3] & 0x0f;
+        if (mncLength != 0x02 && mncLength != 0x03) {
+           mncLength = 0;
+        }
+      }
       // The 4th byte of the response is the length of MNC.
       let mccMnc = ICCUtilsHelper.parseMccMncFromImsi(RIL.iccInfoPrivate.imsi,
-                                                      ad && ad[3]);
+                                                      mncLength);
       if (mccMnc) {
         RIL.iccInfo.mcc = mccMnc.mcc;
         RIL.iccInfo.mnc = mccMnc.mnc;
@@ -14130,6 +14138,7 @@ ICCUtilsHelperObject.prototype = {
    *        The imsi of icc.
    * @param mncLength [optional]
    *        The length of mnc.
+   *        Zero indicates we haven't got a valid mnc length.
    *
    * @return An object contains the parsing result of mcc and mnc.
    *         Or null if any error occurred.
