@@ -1,0 +1,5 @@
+The config.guess and config.sub scripts were downloaded from
+http://git.savannah.gnu.org/cgit/config.git/tree/config.guess?id=6947a35648e577c2e3a12d5c88d488c6ea94e1c0
+http://git.savannah.gnu.org/cgit/config.git/tree/config.sub?id=6947a35648e577c2e3a12d5c88d488c6ea94e1c0
+
+Our private patches are in the patches/ directory.

@@ -18,6 +18,10 @@
 #include "prlog.h"
 #include "prmem.h"
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 /*
 ** WARNING: This code may *NOT* call PR_LOG (because PR_LOG calls it)
 */
@@ -304,7 +308,7 @@ static int cvt_ll(SprintfState *ss, PRInt64 num, int width, int prec, int radix,
 ** Convert a double precision floating point number into its printable
 ** form.
 **
-** XXX stop using sprintf to convert floating point
+** XXX stop using snprintf to convert floating point
 */
 static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
 {
@@ -312,15 +316,14 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     char fout[300];
     int amount = fmt1 - fmt0;
 
-    PR_ASSERT((amount > 0) && (amount < sizeof(fin)));
-    if (amount >= sizeof(fin)) {
-	/* Totally bogus % command to sprintf. Just ignore it */
+    if (amount <= 0 || amount >= sizeof(fin)) {
+	/* Totally bogus % command to snprintf. Just ignore it */
 	return 0;
     }
     memcpy(fin, fmt0, amount);
     fin[amount] = 0;
 
-    /* Convert floating point using the native sprintf code */
+    /* Convert floating point using the native snprintf code */
 #ifdef DEBUG
     {
         const char *p = fin;
@@ -330,14 +333,11 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
         }
     }
 #endif
-    sprintf(fout, fin, d);
-
-    /*
-    ** This assert will catch overflow's of fout, when building with
-    ** debugging on. At least this way we can track down the evil piece
-    ** of calling code and fix it!
-    */
-    PR_ASSERT(strlen(fout) < sizeof(fout));
+    memset(fout, 0, sizeof(fout));
+    snprintf(fout, sizeof(fout), fin, d);
+    /* Explicitly null-terminate fout because on Windows snprintf doesn't
+     * append a null-terminator if the buffer is too small. */
+    fout[sizeof(fout) - 1] = '\0';
 
     return (*ss->stuff)(ss, fout, strlen(fout));
 }

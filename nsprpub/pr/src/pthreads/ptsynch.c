@@ -514,7 +514,7 @@ error2:
     pthread_mutex_destroy(&mon->lock);
 error1:
     PR_Free(mon);
-    PR_SetError(PR_OPERATION_NOT_SUPPORTED_ERROR, 0);
+    _PR_MD_MAP_DEFAULT_ERROR(rv);
     return NULL;
 }  /* PR_NewMonitor */
 

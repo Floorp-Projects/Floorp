@@ -33,6 +33,7 @@
 #if defined(DARWIN)
 #include <mach/mach_init.h>
 #include <mach/mach_host.h>
+#include <mach/mach_port.h>
 #endif
 
 #if defined(HPUX)
@@ -297,13 +298,15 @@ PR_IMPLEMENT(PRUint64) PR_GetPhysicalMemorySize(void)
 
 #elif defined(DARWIN)
 
+    mach_port_t mach_host = mach_host_self();
     struct host_basic_info hInfo;
     mach_msg_type_number_t count = HOST_BASIC_INFO_COUNT;
 
-    int result = host_info(mach_host_self(),
+    int result = host_info(mach_host,
                            HOST_BASIC_INFO,
                            (host_info_t) &hInfo,
                            &count);
+    mach_port_deallocate(mach_task_self(), mach_host);
     if (result == KERN_SUCCESS)
         bytes = hInfo.max_mem;
 
