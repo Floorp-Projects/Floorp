@@ -2,9 +2,6 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 /*global XPCOMUtils, Services, Assert */
 
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-  "resource:///modules/loop/MozLoopService.jsm");
-
 var fakePrefName = "color";
 var fakePrefValue = "green";
 

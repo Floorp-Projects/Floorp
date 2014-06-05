@@ -1,13 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService",
-                                  "resource:///modules/loop/MozLoopService.jsm");
-
-var server;
-
-const kServerPushUrl = "http://localhost:3456";
-
 var startTimerCalled = false;
 
 /**
@@ -57,9 +50,9 @@ add_task(function test_initialize_starts_timer() {
 
 function run_test()
 {
-  server = new HttpServer();
-  server.start(-1);
-  server.registerPathHandler("/registration", (request, response) => {
+  setupFakeLoopServer();
+
+  loopServer.registerPathHandler("/registration", (request, response) => {
     response.setStatusLine(null, 200, "OK");
     response.processAsync();
     response.finish();
@@ -67,8 +60,6 @@ function run_test()
 
   // Registrations and pref settings.
   gMockWebSocketChannelFactory.register();
-  Services.prefs.setCharPref("services.push.serverURL", kServerPushUrl);
-  Services.prefs.setCharPref("loop.server", "http://localhost:" + server.identity.primaryPort);
 
   // Override MozLoopService's initializeTimer, so that we can verify the timeout is called
   // correctly.
@@ -78,7 +69,6 @@ function run_test()
 
   do_register_cleanup(function() {
     gMockWebSocketChannelFactory.unregister();
-    server.stop(function() {});
   });
 
   run_next_test();
