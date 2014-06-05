@@ -279,7 +279,6 @@ enum ThingRootKind
     THING_ROOT_TYPE,
     THING_ROOT_BINDINGS,
     THING_ROOT_PROPERTY_DESCRIPTOR,
-    THING_ROOT_CUSTOM,
     THING_ROOT_LIMIT
 };
 
@@ -347,12 +346,23 @@ struct ContextFriendFields
     }
 
 #ifdef JSGC_TRACK_EXACT_ROOTS
+  private:
     /*
      * Stack allocated GC roots for stack GC heap pointers, which may be
      * overwritten if moved during a GC.
      */
     JS::Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
+
+  public:
+    template <class T>
+    inline JS::Rooted<T> *gcRooters() {
+        js::ThingRootKind kind = RootKind<T>::rootKind();
+        return reinterpret_cast<JS::Rooted<T> *>(thingGCRooters[kind]);
+    }
+
 #endif
+
+    void checkNoGCRooters();
 
     /* Stack of thread-stack-allocated GC roots. */
     JS::AutoGCRooter   *autoGCRooters;
@@ -360,6 +370,7 @@ struct ContextFriendFields
     friend JSRuntime *GetRuntime(const JSContext *cx);
     friend JSCompartment *GetContextCompartment(const JSContext *cx);
     friend JS::Zone *GetContextZone(const JSContext *cx);
+    template <typename T> friend class JS::Rooted;
 };
 
 /*
@@ -414,11 +425,19 @@ struct PerThreadDataFriendFields
     PerThreadDataFriendFields();
 
 #ifdef JSGC_TRACK_EXACT_ROOTS
+  private:
     /*
      * Stack allocated GC roots for stack GC heap pointers, which may be
      * overwritten if moved during a GC.
      */
     JS::Rooted<void*> *thingGCRooters[THING_ROOT_LIMIT];
+
+  public:
+    template <class T>
+    inline JS::Rooted<T> *gcRooters() {
+        js::ThingRootKind kind = RootKind<T>::rootKind();
+        return reinterpret_cast<JS::Rooted<T> *>(thingGCRooters[kind]);
+    }
 #endif
 
     /* Limit pointer for checking native stack consumption. */
@@ -443,6 +462,8 @@ struct PerThreadDataFriendFields
         return reinterpret_cast<const PerThreadDataFriendFields *>(
             reinterpret_cast<const char*>(rt) + RuntimeMainThreadOffset);
     }
+
+    template <typename T> friend class JS::Rooted;
 };
 
 } /* namespace js */

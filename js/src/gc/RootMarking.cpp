@@ -40,59 +40,77 @@ typedef RootedValueMap::Entry RootEntry;
 typedef RootedValueMap::Enum RootEnum;
 
 #ifdef JSGC_USE_EXACT_ROOTING
-static inline void
-MarkExactStackRoot(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
+static void
+MarkBindingsRoot(JSTracer *trc, Bindings *bindings, const char *name)
 {
-    void **addr = (void **)rooter->address();
-    if (IsNullTaggedPointer(*addr))
-        return;
+    bindings->trace(trc);
+}
 
-    if (kind == THING_ROOT_OBJECT && *addr == TaggedProto::LazyProto)
-        return;
+static void
+MarkPropertyDescriptorRoot(JSTracer *trc, JSPropertyDescriptor *pd, const char *name)
+{
+    pd->trace(trc);
+}
 
-    switch (kind) {
-      case THING_ROOT_OBJECT:      MarkObjectRoot(trc, (JSObject **)addr, "exact-object"); break;
-      case THING_ROOT_STRING:      MarkStringRoot(trc, (JSString **)addr, "exact-string"); break;
-      case THING_ROOT_SCRIPT:      MarkScriptRoot(trc, (JSScript **)addr, "exact-script"); break;
-      case THING_ROOT_LAZY_SCRIPT: MarkLazyScriptRoot(trc, (LazyScript **)addr, "exact-lazy-script"); break;
-      case THING_ROOT_SHAPE:       MarkShapeRoot(trc, (Shape **)addr, "exact-shape"); break;
-      case THING_ROOT_BASE_SHAPE:  MarkBaseShapeRoot(trc, (BaseShape **)addr, "exact-baseshape"); break;
-      case THING_ROOT_TYPE:        MarkTypeRoot(trc, (types::Type *)addr, "exact-type"); break;
-      case THING_ROOT_TYPE_OBJECT: MarkTypeObjectRoot(trc, (types::TypeObject **)addr, "exact-typeobject"); break;
-      case THING_ROOT_JIT_CODE:    MarkJitCodeRoot(trc, (jit::JitCode **)addr, "exact-jitcode"); break;
-      case THING_ROOT_VALUE:       MarkValueRoot(trc, (Value *)addr, "exact-value"); break;
-      case THING_ROOT_ID:          MarkIdRoot(trc, (jsid *)addr, "exact-id"); break;
-      case THING_ROOT_BINDINGS:    ((Bindings *)addr)->trace(trc); break;
-      case THING_ROOT_PROPERTY_DESCRIPTOR: ((JSPropertyDescriptor *)addr)->trace(trc); break;
-      case THING_ROOT_CUSTOM: {
-          // 'rooter' is a member within a class containing a vtable. Back up
-          // to the vtable and call trace() through it.
-          const size_t rooterOffset = offsetof(RootedGeneric<void*>, rooter);
-          reinterpret_cast< RootedGeneric<void*>* >(uintptr_t(rooter) - rooterOffset)->trace(trc);
-          break;
-      }
-      default: MOZ_ASSUME_UNREACHABLE("Invalid THING_ROOT kind"); break;
+template <class T>
+static inline bool
+IgnoreExactRoot(T *thingp)
+{
+    return false;
+}
+
+template <class T>
+inline bool
+IgnoreExactRoot(T **thingp)
+{
+    return IsNullTaggedPointer(*thingp);
+}
+
+template <>
+inline bool
+IgnoreExactRoot(JSObject **thingp)
+{
+    return IsNullTaggedPointer(*thingp) || *thingp == TaggedProto::LazyProto;
+}
+
+template <class T, void (MarkFunc)(JSTracer *trc, T *ref, const char *name), class Source>
+static inline void
+MarkExactStackRootList(JSTracer *trc, Source *s, const char *name)
+{
+    Rooted<T> *rooter = s->template gcRooters<T>();
+    while (rooter) {
+        T *addr = rooter->address();
+        if (!IgnoreExactRoot(addr))
+            MarkFunc(trc, addr, name);
+        rooter = rooter->previous();
     }
 }
 
+template <class T, void (MarkFunc)(JSTracer *trc, T *ref, const char *name)>
 static inline void
-MarkExactStackRootList(JSTracer *trc, Rooted<void*> *rooter, ThingRootKind kind)
+MarkExactStackRootsForType(JSTracer *trc, const char *name = nullptr)
 {
-    while (rooter) {
-        MarkExactStackRoot(trc, rooter, kind);
-        rooter = rooter->previous();
-    }
+    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
+        MarkExactStackRootList<T, MarkFunc>(trc, cx.get(), name);
+    MarkExactStackRootList<T, MarkFunc>(trc, &trc->runtime()->mainThread, name);
 }
 
 static void
 MarkExactStackRoots(JSTracer *trc)
 {
-    for (unsigned i = 0; i < THING_ROOT_LIMIT; i++) {
-        for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
-            MarkExactStackRootList(trc, cx->thingGCRooters[i], ThingRootKind(i));
-
-        MarkExactStackRootList(trc, trc->runtime()->mainThread.thingGCRooters[i], ThingRootKind(i));
-    }
+    MarkExactStackRootsForType<JSObject *, MarkObjectRoot>(trc, "exact-object");
+    MarkExactStackRootsForType<Shape *, MarkShapeRoot>(trc, "exact-shape");
+    MarkExactStackRootsForType<BaseShape *, MarkBaseShapeRoot>(trc, "exact-baseshape");
+    MarkExactStackRootsForType<types::TypeObject *, MarkTypeObjectRoot>(trc, "exact-typeobject");
+    MarkExactStackRootsForType<JSString *, MarkStringRoot>(trc, "exact-string");
+    MarkExactStackRootsForType<jit::JitCode *, MarkJitCodeRoot>(trc, "exact-jitcode");
+    MarkExactStackRootsForType<JSScript *, MarkScriptRoot>(trc, "exact-script");
+    MarkExactStackRootsForType<LazyScript *, MarkLazyScriptRoot>(trc, "exact-lazy-script");
+    MarkExactStackRootsForType<jsid, MarkIdRoot>(trc, "exact-id");
+    MarkExactStackRootsForType<Value, MarkValueRoot>(trc, "exact-value");
+    MarkExactStackRootsForType<types::Type, MarkTypeRoot>(trc, "exact-type");
+    MarkExactStackRootsForType<Bindings, MarkBindingsRoot>(trc);
+    MarkExactStackRootsForType<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(trc);
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
 
