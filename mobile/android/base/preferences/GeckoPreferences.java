@@ -270,6 +270,7 @@ OnSharedPreferenceChangeListener
         checkLocale();
 
         // Track this so we can decide whether to show locale options.
+        // See also the workaround below for Bug 1015209.
         localeSwitchingIsEnabled = BrowserLocaleManager.getInstance().isEnabled();
 
         // For Android v11+ where we use Fragments (v11+ only due to bug 866352),
@@ -287,10 +288,17 @@ OnSharedPreferenceChangeListener
                 updateTitle(getString(R.string.pref_header_customize));
             }
 
-            // So that Android doesn't put the fragment title (or nothing at
-            // all) in the action bar.
             if (onIsMultiPane()) {
+                // So that Android doesn't put the fragment title (or nothing at
+                // all) in the action bar.
                 updateActionBarTitle(R.string.settings_title);
+
+                if (Build.VERSION.SDK_INT < 13) {
+                    // Affected by Bug 1015209 -- no detach/attach.
+                    // If we try rejigging fragments, we'll crash, so don't
+                    // enable locale switching at all.
+                    localeSwitchingIsEnabled = false;
+                }
             }
         }
 
