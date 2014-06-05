@@ -2504,7 +2504,7 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
 
     io.loadTransparentEF = function fakeLoadTransparentEF(options) {
       let ad = [0x00, 0x00, 0x00];
-      if (mncLengthInEf) {
+      if (typeof mncLengthInEf === 'number') {
         ad.push(mncLengthInEf);
       }
 
@@ -2531,9 +2531,20 @@ add_test(function test_reading_ad_and_parsing_mcc_mnc() {
   }
 
   do_test(undefined, "466923202422409", "466", "92" );
+  do_test(0x00,      "466923202422409", "466", "92" );
+  do_test(0x01,      "466923202422409", "466", "92" );
+  do_test(0x02,      "466923202422409", "466", "92" );
   do_test(0x03,      "466923202422409", "466", "923");
+  do_test(0x04,      "466923202422409", "466", "92" );
+  do_test(0xff,      "466923202422409", "466", "92" );
+
   do_test(undefined, "310260542718417", "310", "260");
+  do_test(0x00,      "310260542718417", "310", "260");
+  do_test(0x01,      "310260542718417", "310", "260");
   do_test(0x02,      "310260542718417", "310", "26" );
+  do_test(0x03,      "310260542718417", "310", "260");
+  do_test(0x04,      "310260542718417", "310", "260");
+  do_test(0xff,      "310260542718417", "310", "260");
 
   run_next_test();
 });

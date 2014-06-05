@@ -58,9 +58,12 @@ namespace CSF
 
         static void setAudioCodecs(int codecMask);
         static void setVideoCodecs(int codecMask);
+        static void addVideoCodecsGmp(int codecMask);
 
         static int getAudioCodecs();
         static int getVideoCodecs();
+        static int getVideoCodecsGmp();
+        static int getVideoCodecsHw();
 
 	static void setMainThread(nsIThread *thread);
 	static nsIThread *getMainThread();
@@ -81,6 +84,7 @@ namespace CSF
         MediaProviderObserver *mediaProviderObserver;
         static int gAudioCodecMask;
         static int gVideoCodecMask;
+        static int gVideoCodecGmpMask;
 	static nsIThread *gMainThread;
 	static nsIEventTarget *gSTSThread;
         static nsCOMPtr<nsIPrefBranch> gBranch;

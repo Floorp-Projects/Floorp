@@ -4806,7 +4806,7 @@ class LCeil : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(Ceil)
 
-    LCeil(const LAllocation &num) {
+    explicit LCeil(const LAllocation &num) {
         setOperand(0, num);
     }
 };
@@ -4817,7 +4817,7 @@ class LCeilF : public LInstructionHelper<1, 1, 0>
   public:
     LIR_HEADER(CeilF)
 
-    LCeilF(const LAllocation &num) {
+    explicit LCeilF(const LAllocation &num) {
         setOperand(0, num);
     }
 };
@@ -5581,16 +5581,17 @@ class MPhi;
 // corresponding to the predecessor taken in the control flow graph.
 class LPhi MOZ_FINAL : public LInstruction
 {
-    LAllocation *inputs_;
+    LAllocation *const inputs_;
     LDefinition def_;
-
-    LPhi()
-    { }
 
   public:
     LIR_HEADER(Phi)
 
-    static LPhi *New(MIRGenerator *gen, MPhi *phi);
+    LPhi(MPhi *ins, LAllocation *inputs)
+        : inputs_(inputs)
+    {
+        setMir(ins);
+    }
 
     size_t numDefs() const {
         return 1;

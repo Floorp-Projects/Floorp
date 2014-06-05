@@ -1020,9 +1020,7 @@ MetroWidget::ShouldUseBasicManager()
 bool
 MetroWidget::ShouldUseAPZC()
 {
-  const char* kPrefName = "layers.async-pan-zoom.enabled";
-  return ShouldUseOffMainThreadCompositing() &&
-         Preferences::GetBool(kPrefName, false);
+  return gfxPrefs::AsyncPanZoomEnabled();
 }
 
 void

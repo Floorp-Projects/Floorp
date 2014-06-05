@@ -63,6 +63,8 @@
 #define VCM_DSP_ENCODEONLY  1
 #define VCM_DSP_FULLDUPLEX  2
 #define VCM_DSP_IGNORE      3
+#define VCM_DSP_FULLDUPLEX_HW 4 // HW codecs
+#define VCM_DSP_FULLDUPLEX_GMP 5 // GMP-loaded codecs
 
 #define CC_KFACTOR_STAT_LEN   (256)
 

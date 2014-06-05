@@ -7,6 +7,7 @@
 #include "mozilla/dom/Promise.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -1429,6 +1430,16 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
   mWorkerPromise = nullptr;
   mWorkerPrivate->RemoveFeature(aCx, this);
   mCleanedUp = true;
+}
+
+// Specializations of MaybeRejectBrokenly we actually support.
+template<>
+void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMError>& aArg) {
+  MaybeSomething(aArg, &Promise::MaybeReject);
+}
+template<>
+void Promise::MaybeRejectBrokenly(const nsAString& aArg) {
+  MaybeSomething(aArg, &Promise::MaybeReject);
 }
 
 } // namespace dom

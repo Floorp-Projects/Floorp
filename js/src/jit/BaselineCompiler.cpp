@@ -2377,7 +2377,7 @@ static const VMFunction SpreadInfo = FunctionInfo<SpreadFn>(js::SpreadOperation)
 bool
 BaselineCompiler::emit_JSOP_SPREAD()
 {
-    // Load index and iterable in R0 and R1, but keep values on the stack for
+    // Load index and iterator in R0 and R1, but keep values on the stack for
     // the decompiler.
     frame.syncStack(0);
     masm.loadValue(frame.addressOfStackValue(frame.peek(-2)), R0);
