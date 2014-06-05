@@ -3,6 +3,7 @@ var Cc = SpecialPowers.Cc;
 var Ci = SpecialPowers.Ci;
 var Cu = SpecialPowers.Cu;
 var LoadContextInfo = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {}).LoadContextInfo;
+var CommonUtils = Cu.import("resource://services-common/utils.js", {}).CommonUtils;
 
 const kNetBase = 2152398848; // 0x804B0000
 var NS_ERROR_CACHE_KEY_NOT_FOUND = kNetBase + 61;
@@ -22,13 +23,14 @@ QueryInterface: function(iid) {
     }
     return this;
   },
-onCacheEntryAvailable: function(desc, accessGranted, status) {
+onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+onCacheEntryAvailable: function(desc, isnew, applicationCache, status) {
     if (!desc) {
       this.fetch(this.callback);
       return;
     }
 
-    var stream = desc.QueryInterface(Ci.nsICacheEntryDescriptor).openInputStream(0);
+    var stream = desc.openInputStream(0);
     var sstream = Cc["@mozilla.org/scriptableinputstream;1"]
                  .createInstance(SpecialPowers.Ci.nsIScriptableInputStream);
     sstream.init(stream);
@@ -49,8 +51,8 @@ fetch: function(callback)
   var url = this.urls.shift();
   var self = this;
 
-  var cacheSession = OfflineTest.getActiveSession();
-  cacheSession.asyncOpenCacheEntry(url, Ci.nsICache.ACCESS_READ, this);
+  var cacheStorage = OfflineTest.getActiveStorage();
+  cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY | Ci.nsICacheStorage.FORCE_ASYNC_CALLBACK, this);
 }
 };
 
@@ -255,7 +257,8 @@ waitForAdd: function(url, onFinished) {
   var numChecks = 20;
 
   var waitForAddListener = {
-    onCacheEntryAvailable: function(entry, access, status) {
+    onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+    onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
       if (entry) {
         entry.close();
         onFinished();
@@ -272,10 +275,8 @@ waitForAdd: function(url, onFinished) {
   };
 
   var waitFunc = function() {
-    var cacheSession = OfflineTest.getActiveSession();
-    cacheSession.asyncOpenCacheEntry(url,
-                                     Ci.nsICache.ACCESS_READ,
-                                     waitForAddListener);
+    var cacheStorage = OfflineTest.getActiveStorage();
+    cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY | Ci.nsICacheStorage.FORCE_ASYNC_CALLBACK, waitForAddListener);
   }
 
   setTimeout(this.priv(waitFunc), 500);
@@ -327,18 +328,16 @@ getActiveCache: function(overload)
   return serv.getActiveCache(groupID);
 },
 
-getActiveSession: function()
+getActiveStorage: function()
 {
   var cache = this.getActiveCache();
   if (!cache) {
     return null;
   }
 
-  var cacheService = Cc["@mozilla.org/network/cache-service;1"]
-                     .getService(Ci.nsICacheService);
-  return cacheService.createSession(cache.clientID,
-                                    Ci.nsICache.STORE_OFFLINE,
-                                    true);
+  var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                     .getService(Ci.nsICacheStorageService);
+  return cacheService.appCacheStorage(LoadContextInfo.default, cache);
 },
 
 priv: function(func)
@@ -365,13 +364,13 @@ checkCacheEntries: function(entries, callback)
 
 checkCache: function(url, expectEntry, callback)
 {
-  var cacheSession = this.getActiveSession();
-  this._checkCache(cacheSession, url, expectEntry, callback);
+  var cacheStorage = this.getActiveStorage();
+  this._checkCache(cacheStorage, url, expectEntry, callback);
 },
 
-_checkCache: function(cacheSession, url, expectEntry, callback)
+_checkCache: function(cacheStorage, url, expectEntry, callback)
 {
-  if (!cacheSession) {
+  if (!cacheStorage) {
     if (expectEntry) {
       this.ok(false, url + " should exist in the offline cache (no session)");
     } else {
@@ -382,7 +381,8 @@ _checkCache: function(cacheSession, url, expectEntry, callback)
   }
 
   var _checkCacheListener = {
-    onCacheEntryAvailable: function(entry, access, status) {
+    onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+    onCacheEntryAvailable: function(entry, isnew, applicationCache, status) {
       if (entry) {
         if (expectEntry) {
           OfflineTest.ok(true, url + " should exist in the offline cache");
@@ -412,10 +412,7 @@ _checkCache: function(cacheSession, url, expectEntry, callback)
     }
   };
 
-  cacheSession.asyncOpenCacheEntry(url,
-                                   Ci.nsICache.ACCESS_READ,
-                                   _checkCacheListener,
-                                   false);
+  cacheStorage.asyncOpenURI(CommonUtils.makeURI(url), "", Ci.nsICacheStorage.OPEN_READONLY | Ci.nsICacheStorage.FORCE_ASYNC_CALLBACK, _checkCacheListener);
 },
 
 setSJSState: function(sjsPath, stateQuery)

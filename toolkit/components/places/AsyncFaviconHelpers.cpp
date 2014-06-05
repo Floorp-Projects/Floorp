@@ -6,7 +6,6 @@
 
 #include "AsyncFaviconHelpers.h"
 
-#include "nsICacheService.h"
 #include "nsICacheEntry.h"
 #include "nsICachingChannel.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
