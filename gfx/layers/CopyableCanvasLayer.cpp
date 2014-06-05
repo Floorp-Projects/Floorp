@@ -33,7 +33,6 @@ using namespace mozilla::gl;
 CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData) :
   CanvasLayer(aLayerManager, aImplData)
   , mStream(nullptr)
-  , mIsAlphaPremultiplied(true)
 {
   MOZ_COUNT_CTOR(CopyableCanvasLayer);
 }
@@ -51,7 +50,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mStream = aData.mStream;
-    mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
+    mIsGLAlphaPremult = aData.mIsGLAlphaPremult;
     mNeedsYFlip = true;
     MOZ_ASSERT(mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
 
@@ -114,7 +113,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
                             ? SurfaceFormat::B8G8R8X8
                             : SurfaceFormat::B8G8R8A8;
-    bool needsPremult = sharedSurf->HasAlpha() && !mIsAlphaPremultiplied;
+    bool needsPremult = sharedSurf->HasAlpha() && !mIsGLAlphaPremult;
 
     // Try to read back directly into aDestTarget's output buffer
     if (aDestTarget) {

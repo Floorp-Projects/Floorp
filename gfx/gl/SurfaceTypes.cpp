@@ -49,6 +49,8 @@ SurfaceCaps::Clear()
   surfaceAllocator = nullptr;
 }
 
+
+
 SurfaceCaps::~SurfaceCaps()
 {
 }

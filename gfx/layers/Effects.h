@@ -195,8 +195,7 @@ struct EffectChain
 inline TemporaryRef<TexturedEffect>
 CreateTexturedEffect(gfx::SurfaceFormat aFormat,
                      TextureSource* aSource,
-                     const gfx::Filter& aFilter,
-                     bool isAlphaPremultiplied)
+                     const gfx::Filter& aFilter)
 {
   MOZ_ASSERT(aSource);
   RefPtr<TexturedEffect> result;
@@ -206,7 +205,7 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
   case gfx::SurfaceFormat::R8G8B8X8:
   case gfx::SurfaceFormat::R5G6B5:
   case gfx::SurfaceFormat::R8G8B8A8:
-    result = new EffectRGB(aSource, isAlphaPremultiplied, aFilter);
+    result = new EffectRGB(aSource, true, aFilter);
     break;
   case gfx::SurfaceFormat::YUV:
     result = new EffectYCbCr(aSource, aFilter);
@@ -228,8 +227,7 @@ CreateTexturedEffect(gfx::SurfaceFormat aFormat,
 inline TemporaryRef<TexturedEffect>
 CreateTexturedEffect(TextureSource* aSource,
                      TextureSource* aSourceOnWhite,
-                     const gfx::Filter& aFilter,
-                     bool isAlphaPremultiplied)
+                     const gfx::Filter& aFilter)
 {
   MOZ_ASSERT(aSource);
   if (aSourceOnWhite) {
@@ -238,10 +236,7 @@ CreateTexturedEffect(TextureSource* aSource,
     return new EffectComponentAlpha(aSource, aSourceOnWhite, aFilter);
   }
 
-  return CreateTexturedEffect(aSource->GetFormat(),
-                              aSource,
-                              aFilter,
-                              isAlphaPremultiplied);
+  return CreateTexturedEffect(aSource->GetFormat(), aSource, aFilter);
 }
 
 /**
@@ -253,7 +248,7 @@ inline TemporaryRef<TexturedEffect>
 CreateTexturedEffect(TextureSource *aTexture,
                      const gfx::Filter& aFilter)
 {
-  return CreateTexturedEffect(aTexture, nullptr, aFilter, true);
+  return CreateTexturedEffect(aTexture, nullptr, aFilter);
 }
 
 
