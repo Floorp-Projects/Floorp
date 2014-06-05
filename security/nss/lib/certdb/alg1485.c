@@ -28,12 +28,12 @@ static const NameToKind name2kinds[] = {
  * (See: http://www.iana.org/assignments/ldap-parameters) 
  */
 /* RFC 3280, 4630 MUST SUPPORT */
-    { "CN",             64, SEC_OID_AVA_COMMON_NAME,    SEC_ASN1_DS},
+    { "CN",            640, SEC_OID_AVA_COMMON_NAME,    SEC_ASN1_DS},
     { "ST",            128, SEC_OID_AVA_STATE_OR_PROVINCE,
 							SEC_ASN1_DS},
-    { "O",              64, SEC_OID_AVA_ORGANIZATION_NAME,
+    { "O",             128, SEC_OID_AVA_ORGANIZATION_NAME,
 							SEC_ASN1_DS},
-    { "OU",             64, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME,
+    { "OU",            128, SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME,
                                                         SEC_ASN1_DS},
     { "dnQualifier", 32767, SEC_OID_AVA_DN_QUALIFIER, SEC_ASN1_PRINTABLE_STRING},
     { "C",               2, SEC_OID_AVA_COUNTRY_NAME, SEC_ASN1_PRINTABLE_STRING},
@@ -377,7 +377,7 @@ ParseRFC1485AVA(PLArenaPool *arena, const char **pbp, const char *endptr)
     char      sep   = 0;
 
     char tagBuf[32];
-    char valBuf[384];
+    char valBuf[1024];
 
     PORT_Assert(arena);
     if (SECSuccess != scanTag(pbp, endptr, tagBuf, sizeof tagBuf) ||
@@ -889,7 +889,7 @@ get_hex_string(SECItem *data)
 static SECStatus
 AppendAVA(stringBuf *bufp, CERTAVA *ava, CertStrictnessLevel strict)
 {
-#define TMPBUF_LEN 384
+#define TMPBUF_LEN 2048
     const NameToKind *pn2k   = name2kinds;
     SECItem     *avaValue    = NULL;
     char        *unknownTag  = NULL;
