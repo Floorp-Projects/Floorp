@@ -641,25 +641,10 @@ EventListenerManager::SetEventHandlerInternal(
 nsresult
 EventListenerManager::SetEventHandler(nsIAtom* aName,
                                       const nsAString& aBody,
-                                      uint32_t aLanguage,
                                       bool aDeferCompilation,
                                       bool aPermitUntrustedEvents,
                                       Element* aElement)
 {
-  NS_PRECONDITION(aLanguage != nsIProgrammingLanguage::UNKNOWN,
-                  "Must know the language for the script event listener");
-
-  // |aPermitUntrustedEvents| is set to False for chrome - events
-  // *generated* from an unknown source are not allowed.
-  // However, for script languages with no 'sandbox', we want to reject
-  // such scripts based on the source of their code, not just the source
-  // of the event.
-  if (aPermitUntrustedEvents && 
-      aLanguage != nsIProgrammingLanguage::JAVASCRIPT) {
-    NS_WARNING("Discarding non-JS event listener from untrusted source");
-    return NS_ERROR_FAILURE;
-  }
-
   nsCOMPtr<nsIDocument> doc;
   nsCOMPtr<nsIScriptGlobalObject> global =
     GetScriptGlobalAndDocument(getter_AddRefs(doc));
