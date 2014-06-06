@@ -201,6 +201,10 @@ class JitFrameIterator
     // Returns the IonScript associated with this JS frame.
     IonScript *ionScript() const;
 
+    // Returns the IonScript associated with this JS frame; the frame must
+    // not be invalidated.
+    IonScript *ionScriptFromCalleeToken() const;
+
     // Returns the Safepoint associated with this JS frame. Incurs a lookup
     // overhead.
     const SafepointIndex *safepoint() const;

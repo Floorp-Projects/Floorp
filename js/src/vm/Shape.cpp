@@ -22,6 +22,7 @@
 #include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
+#include "gc/ForkJoinNursery-inl.h"
 #include "vm/ObjectImpl-inl.h"
 #include "vm/Runtime-inl.h"
 
