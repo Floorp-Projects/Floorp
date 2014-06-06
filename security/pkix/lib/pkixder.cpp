@@ -23,6 +23,8 @@
  */
 
 #include "pkixder.h"
+#include "pkix/bind.h"
+#include "cert.h"
 
 namespace mozilla { namespace pkix { namespace der {
 
