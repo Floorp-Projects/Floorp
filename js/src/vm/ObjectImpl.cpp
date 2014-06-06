@@ -45,7 +45,7 @@ bool
 PropDesc::checkGetter(JSContext *cx)
 {
     if (hasGet_) {
-        if (!js_IsCallable(get_) && !get_.isUndefined()) {
+        if (!IsCallable(get_) && !get_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
@@ -58,7 +58,7 @@ bool
 PropDesc::checkSetter(JSContext *cx)
 {
     if (hasSet_) {
-        if (!js_IsCallable(set_) && !set_.isUndefined()) {
+        if (!IsCallable(set_) && !set_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;

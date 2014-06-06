@@ -206,7 +206,7 @@ public:
    */
   nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                        int32_t aWidth, int32_t aHeight,
-                       gfxImageFormat aFormat,
+                       gfx::SurfaceFormat aFormat,
                        uint8_t aPaletteDepth,
                        uint8_t** imageData,
                        uint32_t* imageLength,
@@ -220,7 +220,7 @@ public:
    */
   nsresult EnsureFrame(uint32_t aFramenum, int32_t aX, int32_t aY,
                        int32_t aWidth, int32_t aHeight,
-                       gfxImageFormat aFormat,
+                       gfx::SurfaceFormat aFormat,
                        uint8_t** imageData,
                        uint32_t* imageLength,
                        imgFrame** aFrame);
@@ -557,9 +557,8 @@ private:
                                     const nsIntRect &aSubimage,
                                     uint32_t aFlags);
 
-  nsresult CopyFrame(uint32_t aWhichFrame,
-                     uint32_t aFlags,
-                     gfxImageSurface **_retval);
+  TemporaryRef<gfx::SourceSurface> CopyFrame(uint32_t aWhichFrame,
+                                             uint32_t aFlags);
 
   /**
    * Deletes and nulls out the frame in mFrames[framenum].
@@ -587,7 +586,7 @@ private:
                                   uint32_t **paletteData, uint32_t *paletteLength,
                                   imgFrame** aRetFrame);
   nsresult InternalAddFrame(uint32_t framenum, int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
-                            gfxImageFormat aFormat, uint8_t aPaletteDepth,
+                            gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth,
                             uint8_t **imageData, uint32_t *imageLength,
                             uint32_t **paletteData, uint32_t *paletteLength,
                             imgFrame** aRetFrame);

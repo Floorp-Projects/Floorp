@@ -1537,37 +1537,6 @@ MRandom::computeRange(TempAllocator &alloc)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-RangeAnalysis::markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *backedge)
-{
-    Vector<MBasicBlock *, 16, IonAllocPolicy> worklist(alloc());
-
-    // Mark the header as being in the loop. This terminates the walk.
-    header->mark();
-
-    backedge->mark();
-    if (!worklist.append(backedge))
-        return false;
-
-    // If we haven't reached the loop header yet, walk up the predecessors
-    // we haven't seen already.
-    while (!worklist.empty()) {
-        MBasicBlock *current = worklist.popCopy();
-        for (size_t i = 0; i < current->numPredecessors(); i++) {
-            MBasicBlock *pred = current->getPredecessor(i);
-
-            if (pred->isMarked())
-                continue;
-
-            pred->mark();
-            if (!worklist.append(pred))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
 RangeAnalysis::analyzeLoop(MBasicBlock *header)
 {
     JS_ASSERT(header->hasUniqueBackedge());
@@ -1581,8 +1550,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     if (backedge == header)
         return true;
 
-    if (!markBlocksInLoopBody(header, backedge))
-        return false;
+    bool canOsr;
+    MarkLoopBlocks(graph_, header, &canOsr);
 
     LoopIterationBound *iterationBound = nullptr;
 
@@ -1609,7 +1578,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     } while (block != header);
 
     if (!iterationBound) {
-        graph_.unmarkBlocks();
+        UnmarkLoopBlocks(graph_, header);
         return true;
     }
 
@@ -1662,7 +1631,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
         }
     }
 
-    graph_.unmarkBlocks();
+    UnmarkLoopBlocks(graph_, header);
     return true;
 }
 

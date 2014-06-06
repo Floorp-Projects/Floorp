@@ -42,7 +42,7 @@ class MOZ_STACK_CLASS SourceBufferHolder;
 
 class HandleValueArray;
 
-class JS_PUBLIC_API(AutoCheckCannotGC);
+class AutoCheckCannotGC;
 
 }
 
