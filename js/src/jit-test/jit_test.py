@@ -42,8 +42,10 @@ def main(argv):
                   help='show output from js shell')
     op.add_option('-x', '--exclude', dest='exclude', action='append',
                   help='exclude given test dir or path')
+    op.add_option('--slow', dest='run_slow', action='store_true',
+                  help='also run tests marked as slow')
     op.add_option('--no-slow', dest='run_slow', action='store_false',
-                  help='do not run tests marked as slow')
+                  help='do not run tests marked as slow (the default)')
     op.add_option('-t', '--timeout', dest='timeout',  type=float, default=150.0,
                   help='set test timeout in seconds')
     op.add_option('--no-progress', dest='hide_progress', action='store_true',

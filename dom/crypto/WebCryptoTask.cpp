@@ -317,7 +317,8 @@ public:
       mStrength = SECKEY_PublicKeyStrength(mPubKey);
 
       // Verify that the data input is not too big
-      // (as required by PKCS#1 / RFC 3447)
+      // (as required by PKCS#1 / RFC 3447, Section 7.2)
+      // http://tools.ietf.org/html/rfc3447#section-7.2
       if (mData.Length() > mStrength - 11) {
         mEarlyRv = NS_ERROR_DOM_DATA_ERR;
         return;
@@ -448,10 +449,12 @@ private:
       // Compare the MAC to the provided signature
       // No truncation allowed
       bool equal = (mResult.Length() == mSignature.Length());
-      int cmp = NSS_SecureMemcmp(mSignature.Elements(),
-                                 mResult.Elements(),
-                                 mSignature.Length());
-      equal = equal && (cmp == 0);
+      if (equal) {
+        int cmp = NSS_SecureMemcmp(mSignature.Elements(),
+                                   mResult.Elements(),
+                                   mSignature.Length());
+        equal = (cmp == 0);
+      }
       mResultPromise->MaybeResolve(equal);
     }
   }
@@ -535,9 +538,13 @@ private:
       rv = MapSECStatus(SGN_End(ctx, signature));
       NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_OPERATION_ERR);
 
-      mSignature.Assign(signature);
+      ATTEMPT_BUFFER_ASSIGN(mSignature, signature);
     } else {
       ScopedSECItem signature(mSignature.ToSECItem());
+      if (!signature) {
+        return NS_ERROR_DOM_UNKNOWN_ERR;
+      }
+
       ScopedVFYContext ctx(VFY_CreateContext(mPubKey, signature,
                                              mOidTag, nullptr));
       if (!ctx) {
@@ -585,6 +592,7 @@ public:
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
     }
 
@@ -937,32 +945,31 @@ private:
       if (mResult.Length() == 0) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
+
+      return NS_OK;
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_PKCS8)) {
       if (!mPrivateKey) {
-        mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
       switch (mPrivateKey->keyType) {
         case rsaKey:
           Key::PrivateKeyToPkcs8(mPrivateKey.get(), mResult, locker);
-          mEarlyRv = NS_OK;
-          break;
+          return NS_OK;
         default:
-          mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+          return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_SPKI)) {
       if (!mPublicKey) {
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
       }
 
-      mEarlyRv = Key::PublicKeyToSpki(mPublicKey.get(), mResult, locker);
+      return Key::PublicKeyToSpki(mPublicKey.get(), mResult, locker);
     } else if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
-      mEarlyRv = NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    } else {
-      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
-    return NS_OK;
+    return NS_ERROR_DOM_SYNTAX_ERR;
   }
 };
 
@@ -988,6 +995,7 @@ public:
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
     }
 
@@ -1001,6 +1009,7 @@ public:
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv) || !params.mLength.WasPassed()) {
         mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
       }
 
       mLength = params.mLength.Value();
@@ -1026,6 +1035,7 @@ public:
         Algorithm hashAlg;
         mEarlyRv = Coerce(aCx, hashAlg, params.mHash.Value());
         if (NS_FAILED(mEarlyRv) || !hashAlg.mName.WasPassed()) {
+          mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
           return;
         }
         hashName.Assign(hashAlg.mName.Value());
@@ -1052,8 +1062,6 @@ public:
     mMechanism = algorithm->Mechanism();
     mKey->SetAlgorithm(algorithm);
     // SetSymKey done in Resolve, after we've done the keygen
-
-    return;
   }
 
 private:
@@ -1115,6 +1123,7 @@ public:
     nsString algName;
     mEarlyRv = GetAlgorithmName(aCx, aAlgorithm, algName);
     if (NS_FAILED(mEarlyRv)) {
+      mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
       return;
     }
 
@@ -1127,8 +1136,8 @@ public:
       if (NS_FAILED(mEarlyRv) || !params.mModulusLength.WasPassed() ||
           !params.mPublicExponent.WasPassed() ||
           !params.mHash.WasPassed()) {
-        // TODO fix error and handle default values
         mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
       }
 
       // Pull relevant info
@@ -1138,6 +1147,7 @@ public:
       nsString hashName;
       mEarlyRv = GetAlgorithmName(aCx, params.mHash.Value(), hashName);
       if (NS_FAILED(mEarlyRv)) {
+        mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
         return;
       }
 
@@ -1163,8 +1173,8 @@ public:
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
       if (NS_FAILED(mEarlyRv) || !params.mModulusLength.WasPassed() ||
           !params.mPublicExponent.WasPassed()) {
-        // TODO fix error and handle default values
         mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
+        return;
       }
 
       // Pull relevant info
@@ -1215,8 +1225,6 @@ public:
         return;
       }
     }
-
-    return;
   }
 
 private:

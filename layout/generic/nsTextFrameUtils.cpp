@@ -47,20 +47,27 @@ nsTextFrameUtils::TransformText(const char16_t* aText, uint32_t aLength,
   bool lastCharArabic = false;
 
   if (aCompression == COMPRESS_NONE ||
-      aCompression == DISCARD_NEWLINE) {
+      aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
       char16_t ch = *aText++;
-      if (IsDiscardable(ch, &flags) ||
-          (ch == '\n' && aCompression == DISCARD_NEWLINE)) {
+      if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
         if (ch > ' ') {
           lastCharArabic = IS_ARABIC_CHAR(ch);
-        } else if (ch == '\t') {
-          flags |= TEXT_HAS_TAB;
+        } else if (aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
+          if (ch == '\t' || ch == '\n') {
+            ch = ' ';
+            flags |= TEXT_WAS_TRANSFORMED;
+          }
+        } else {
+          // aCompression == COMPRESS_NONE
+          if (ch == '\t') {
+            flags |= TEXT_HAS_TAB;
+          }
         }
         *aOutput++ = ch;
       }
@@ -147,18 +154,25 @@ nsTextFrameUtils::TransformText(const uint8_t* aText, uint32_t aLength,
   uint8_t* outputStart = aOutput;
 
   if (aCompression == COMPRESS_NONE ||
-      aCompression == DISCARD_NEWLINE) {
+      aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
     // Skip discardables.
     uint32_t i;
     for (i = 0; i < aLength; ++i) {
       uint8_t ch = *aText++;
-      if (IsDiscardable(ch, &flags) ||
-          (ch == '\n' && aCompression == DISCARD_NEWLINE)) {
+      if (IsDiscardable(ch, &flags)) {
         aSkipChars->SkipChar();
       } else {
         aSkipChars->KeepChar();
-        if (ch == '\t') {
-          flags |= TEXT_HAS_TAB;
+        if (aCompression == COMPRESS_NONE_TRANSFORM_TO_SPACE) {
+          if (ch == '\t' || ch == '\n') {
+            ch = ' ';
+            flags |= TEXT_WAS_TRANSFORMED;
+          }
+        } else {
+          // aCompression == COMPRESS_NONE
+          if (ch == '\t') {
+            flags |= TEXT_HAS_TAB;
+          }
         }
         *aOutput++ = ch;
       }

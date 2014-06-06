@@ -18,6 +18,7 @@
  */
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 
 XPCOMUtils.defineLazyModuleGetter(this, "FormHistory",
                                   "resource://gre/modules/FormHistory.jsm");
@@ -567,10 +568,14 @@ var gAllTests = [
     pm.addFromPrincipal(principal, "offline-app", Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN);
 
     // Store something to the offline cache
-    const nsICache = Components.interfaces.nsICache;
-    var cs = Components.classes["@mozilla.org/network/cache-service;1"]
-             .getService(Components.interfaces.nsICacheService);
-    var session = cs.createSession(URL + "/manifest", nsICache.STORE_OFFLINE, nsICache.STREAM_BASED);
+    var appcacheserv = Cc["@mozilla.org/network/application-cache-service;1"]
+                       .getService(Ci.nsIApplicationCacheService);
+    var appcachegroupid = appcacheserv.buildGroupID(makeURI(URL + "/manifest"), LoadContextInfo.default);
+    var appcache = appcacheserv.createApplicationCache(appcachegroupid);
+
+    var cacheserv = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
+                    .getService(Ci.nsICacheStorageService);
+    var storage = cacheserv.appCacheStorage(LoadContextInfo.default, appcache);
 
     // Open the dialog
     let wh = new WindowHelper();
@@ -587,27 +592,19 @@ var gAllTests = [
       // Check if the cache has been deleted
       var size = -1;
       var visitor = {
-        visitDevice: function (deviceID, deviceInfo)
+        onCacheStorageInfo: function (aEntryCount, aConsumption, aCapacity, aDiskDirectory)
         {
-          if (deviceID == "offline")
-            size = deviceInfo.totalSize;
-
-          // Do not enumerate entries
-          return false;
-        },
-
-        visitEntry: function (deviceID, entryInfo)
-        {
-          // Do not enumerate entries.
-          return false;
+          size = aConsumption;
         }
       };
-      cs.visitEntries(visitor);
+      storage.asyncVisitStorage(visitor, false);
+      // Offline cache visit happens synchronously, since it's forwarded to the old code
       is(size, 0, "offline application cache entries evicted");
     };
 
     var cacheListener = {
-      onCacheEntryAvailable: function (entry, access, status) {
+      onCacheEntryCheck: function() { return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED; },
+      onCacheEntryAvailable: function (entry, isnew, appcache, status) {
         is(status, Cr.NS_OK);
         var stream = entry.openOutputStream(0);
         var content = "content";
@@ -618,7 +615,7 @@ var gAllTests = [
       }
     };
 
-    session.asyncOpenCacheEntry(URL, nsICache.ACCESS_READ_WRITE, cacheListener);
+    storage.asyncOpenURI(makeURI(URL), "", Ci.nsICacheStorage.OPEN_TRUNCATE, cacheListener);
   },
   function () {
     // Test for offline apps permission deletion

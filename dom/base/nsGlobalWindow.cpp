@@ -7905,7 +7905,7 @@ PostMessageReadTransferStructuredClone(JSContext* aCx,
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(aClosure);
   NS_ASSERTION(scInfo, "Must have scInfo!");
 
-  if (MessageChannel::PrefEnabled() && tag == SCTAG_DOM_MAP_MESSAGEPORT) {
+  if (tag == SCTAG_DOM_MAP_MESSAGEPORT) {
     MessagePort* port = static_cast<MessagePort*>(aData);
     port->BindToOwner(scInfo->window);
     scInfo->ports.Put(port, nullptr);
@@ -7934,26 +7934,24 @@ PostMessageTransferStructuredClone(JSContext* aCx,
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(aClosure);
   NS_ASSERTION(scInfo, "Must have scInfo!");
 
-  if (MessageChannel::PrefEnabled()) {
-    MessagePortBase* port = nullptr;
-    nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
-    if (NS_SUCCEEDED(rv)) {
-      nsRefPtr<MessagePortBase> newPort;
-      if (scInfo->ports.Get(port, getter_AddRefs(newPort))) {
-        // No duplicate.
-        return false;
-      }
-
-      newPort = port->Clone();
-      scInfo->ports.Put(port, newPort);
-
-      *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
-      *aOwnership = JS::SCTAG_TMO_CUSTOM;
-      *aContent = newPort;
-      *aExtraData = 0;
-
-      return true;
+  MessagePortBase* port = nullptr;
+  nsresult rv = UNWRAP_OBJECT(MessagePort, aObj, port);
+  if (NS_SUCCEEDED(rv)) {
+    nsRefPtr<MessagePortBase> newPort;
+    if (scInfo->ports.Get(port, getter_AddRefs(newPort))) {
+      // No duplicate.
+      return false;
     }
+
+    newPort = port->Clone();
+    scInfo->ports.Put(port, newPort);
+
+    *aTag = SCTAG_DOM_MAP_MESSAGEPORT;
+    *aOwnership = JS::SCTAG_TMO_CUSTOM;
+    *aContent = newPort;
+    *aExtraData = 0;
+
+    return true;
   }
 
   return false;
@@ -7966,7 +7964,7 @@ PostMessageFreeTransferStructuredClone(uint32_t aTag, JS::TransferableOwnership 
   StructuredCloneInfo* scInfo = static_cast<StructuredCloneInfo*>(aClosure);
   NS_ASSERTION(scInfo, "Must have scInfo!");
 
-  if (MessageChannel::PrefEnabled() && aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
+  if (aTag == SCTAG_DOM_MAP_MESSAGEPORT) {
     nsRefPtr<MessagePortBase> port(static_cast<MessagePort*>(aContent));
     scInfo->ports.Remove(port);
   }

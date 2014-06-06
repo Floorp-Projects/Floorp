@@ -247,6 +247,9 @@ class SamplerThread : public Thread {
       sample->rssMemory = 0;
     }
 
+    // Unique Set Size is not supported on Mac.
+    sample->ussMemory = 0;
+
     if (KERN_SUCCESS != thread_suspend(profiled_thread)) return;
 
 #if V8_HOST_ARCH_X64

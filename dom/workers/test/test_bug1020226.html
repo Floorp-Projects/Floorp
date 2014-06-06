@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1020226
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1020226</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020226">Mozilla Bug 1020226</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+<iframe id="iframe" src="bug1020226_frame.html" onload="finishTest();">
+</iframe>
+</div>
+<pre id="test">
+<script type="application/javascript">
+function finishTest() {
+  document.getElementById("iframe").onload = null;
+  window.onmessage = function(e) {
+    info("Got message");
+    document.getElementById("iframe").src = "about:blank";
+    // We aren't really interested in the test, it shouldn't crash when the
+    // worker is GCed later.
+    ok(true, "Should not crash");
+    SimpleTest.finish();
+  };
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</pre>
+</body>
+</html>

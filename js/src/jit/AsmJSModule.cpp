@@ -313,7 +313,12 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
 
     for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
         RelativeLink link = staticLinkData_.relativeLinks[i];
-        *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
+        uint8_t *patchAt = code_ + link.patchAtOffset;
+        uint8_t *target = code_ + link.targetOffset;
+        if (link.isRawPointerPatch())
+            *(uint8_t **)(patchAt) = target;
+        else
+            Assembler::patchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
     for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
@@ -1013,7 +1018,8 @@ GetCPUID(uint32_t *cpuId)
         X86 = 0x1,
         X64 = 0x2,
         ARM = 0x3,
-        ARCH_BITS = 2
+        MIPS = 0x4,
+        ARCH_BITS = 3
     };
 
 #if defined(JS_CODEGEN_X86)
@@ -1027,6 +1033,10 @@ GetCPUID(uint32_t *cpuId)
 #elif defined(JS_CODEGEN_ARM)
     JS_ASSERT(GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = ARM | (GetARMFlags() << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_MIPS)
+    JS_ASSERT(GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = MIPS | (GetMIPSFlags() << ARCH_BITS);
     return true;
 #else
     return false;
