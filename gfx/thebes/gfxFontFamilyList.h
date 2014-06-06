@@ -277,7 +277,7 @@ public:
             if (!aFamilyList.IsEmpty()) {
                 aFamilyList.Append(',');
             }
-            if (mDefaultFontType != eFamily_serif) {
+            if (mDefaultFontType == eFamily_serif) {
                 aFamilyList.AppendLiteral("serif");
             } else {
                 aFamilyList.AppendLiteral("sans-serif");
