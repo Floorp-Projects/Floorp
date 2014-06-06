@@ -7,7 +7,7 @@ function run_test() {
   let sb = new Cu.Sandbox(this);
   var called = false;
 
-  Cu.exportFunction(function(str) { do_check_true(str, "someString"); called = true; },
+  Cu.exportFunction(function(str) { do_check_true(/someString/.test(str)); called = true; },
                     sb, { defineAs: "func" });
   // Do something weird with the string to make sure that it doesn't get interned.
   Cu.evalInSandbox("var str = 'someString'; for (var i = 0; i < 10; ++i) str += i;", sb);
