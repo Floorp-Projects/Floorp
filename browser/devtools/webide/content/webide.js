@@ -616,11 +616,10 @@ let Cmds = {
         projectsNode.appendChild(panelItemNode);
         panelItemNode.setAttribute("label", project.name || AppManager.DEFAULT_PROJECT_NAME);
         panelItemNode.setAttribute("image", project.icon || AppManager.DEFAULT_PROJECT_ICON);
-        if (!project.validationStatus) {
-          // The result of the validation process (storing names, icons, …) has never been
-          // stored in the IndexedDB database. This happens when the project has been created
-          // from the old app manager. We need to run the validation again and update the name
-          // and icon of the app
+        if (!project.name || !project.icon) {
+          // The result of the validation process (storing names, icons, …) is not stored in
+          // the IndexedDB database when App Manager v1 is used.
+          // We need to run the validation again and update the name and icon of the app.
           AppManager.validateProject(project).then(() => {
             panelItemNode.setAttribute("label", project.name);
             panelItemNode.setAttribute("image", project.icon);
