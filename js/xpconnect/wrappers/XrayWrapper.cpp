@@ -347,8 +347,15 @@ public:
                                JS::MutableHandleObject protop)
     {
         RootedObject holder(cx, ensureHolder(cx, wrapper));
-        JSProtoKey key = isPrototype(holder) ? JSProto_Object
-                                             : getProtoKey(holder);
+        JSProtoKey key = getProtoKey(holder);
+        if (isPrototype(holder)) {
+            if (key == JSProto_Object) {
+                protop.set(nullptr);
+                return true;
+            }
+            key = JSProto_Object;
+        }
+
         {
             JSAutoCompartment ac(cx, target);
             if (!JS_GetClassPrototype(cx, key, protop))
