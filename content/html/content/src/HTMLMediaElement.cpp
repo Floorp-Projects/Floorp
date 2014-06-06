@@ -1982,6 +1982,7 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     mAutoplayEnabled(true),
     mPaused(true),
     mMuted(0),
+    mStatsShowing(false),
     mAudioCaptured(false),
     mPlayingBeforeSeek(false),
     mPausedForInactiveDocumentOrChannel(false),
