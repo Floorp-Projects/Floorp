@@ -177,7 +177,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<AutoRooter> autoRooter_;
     mozilla::Maybe<IonContext> ionContext_;
     mozilla::Maybe<AutoIonContextAlloc> alloc_;
-    bool enoughMemory_;
     bool embedsNurseryPointers_;
 
     // SPS instrumentation, only used for Ion caches.
@@ -201,8 +200,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // provided, but otherwise it can be safely omitted to prevent all
     // instrumentation from being emitted.
     MacroAssembler()
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
         IonContext *icx = GetIonContext();
@@ -226,8 +224,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     explicit MacroAssembler(JSContext *cx, IonScript *ion = nullptr,
                             JSScript *script = nullptr, jsbytecode *pc = nullptr)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
         constructRoot(cx);
@@ -254,8 +251,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // asm.js compilation handles its own IonContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
 #ifdef JS_CODEGEN_ARM
@@ -284,13 +280,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     size_t instructionsSize() const {
         return size();
-    }
-
-    void propagateOOM(bool success) {
-        enoughMemory_ &= success;
-    }
-    bool oom() const {
-        return !enoughMemory_ || MacroAssemblerSpecific::oom();
     }
 
     bool embedsNurseryPointers() const {
