@@ -1093,7 +1093,7 @@ class InterpreterStack
     }
 };
 
-void MarkInterpreterActivations(PerThreadData *ptd, JSTracer *trc);
+void MarkInterpreterActivations(JSRuntime *rt, JSTracer *trc);
 
 /*****************************************************************************/
 

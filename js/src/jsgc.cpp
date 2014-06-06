@@ -769,7 +769,7 @@ Chunk::init(JSRuntime *rt)
     /* Initialize the chunk info. */
     info.age = 0;
     info.trailer.storeBuffer = nullptr;
-    info.trailer.location = ChunkLocationBitTenuredHeap;
+    info.trailer.location = ChunkLocationTenuredHeap;
     info.trailer.runtime = rt;
 
     /* The rest of info fields are initialized in pickChunk. */
@@ -878,17 +878,8 @@ Chunk::allocateArena(Zone *zone, AllocKind thingKind)
     JS_ASSERT(hasAvailableArenas());
 
     JSRuntime *rt = zone->runtimeFromAnyThread();
-    if (!rt->isHeapMinorCollecting() && rt->gc.bytes >= rt->gc.maxBytes) {
-#ifdef JSGC_FJGENERATIONAL
-        // This is an approximation to the best test, which would check that
-        // this thread is currently promoting into the tenured area.  I doubt
-        // the better test would make much difference.
-        if (!rt->isFJMinorCollecting())
-            return nullptr;
-#else
+    if (!rt->isHeapMinorCollecting() && rt->gc.bytes >= rt->gc.maxBytes)
         return nullptr;
-#endif
-    }
 
     ArenaHeader *aheader = MOZ_LIKELY(info.numArenasFreeCommitted > 0)
                            ? fetchNextFreeArena(rt)
@@ -1621,7 +1612,7 @@ ArenaLists::allocateFromArenaInline(Zone *zone, AllocKind thingKind,
 
     /*
      * While we still hold the GC lock get an arena from some chunk, mark it
-     * as full as its single free span is moved to the free lists, and insert
+     * as full as its single free span is moved to the free lits, and insert
      * it to the list as a fully allocated arena.
      *
      * We add the arena before the the head, so that after the GC the most
@@ -2074,7 +2065,7 @@ GCRuntime::triggerGC(JS::gcreason::Reason reason)
 bool
 js::TriggerZoneGC(Zone *zone, JS::gcreason::Reason reason)
 {
-    return zone->runtimeFromAnyThread()->gc.triggerZoneGC(zone, reason);
+    return zone->runtimeFromAnyThread()->gc.triggerZoneGC(zone,reason);
 }
 
 bool
@@ -2294,10 +2285,6 @@ DecommitArenas(JSRuntime *rt)
 static void
 ExpireChunksAndArenas(JSRuntime *rt, bool shouldShrink)
 {
-#ifdef JSGC_FJGENERATIONAL
-    rt->threadPool.pruneChunkCache();
-#endif
-
     if (Chunk *toFree = rt->gc.chunkPool.expire(rt, shouldShrink)) {
         AutoUnlockGC unlock(rt);
         FreeChunkList(rt, toFree);
