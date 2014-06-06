@@ -698,6 +698,7 @@ class LInstructionVisitor
 
   protected:
     jsbytecode *lastPC_;
+    jsbytecode *lastNotInlinedPC_;
 
     LInstruction *instruction() {
         return ins_;
@@ -706,13 +707,17 @@ class LInstructionVisitor
   public:
     void setInstruction(LInstruction *ins) {
         ins_ = ins;
-        if (ins->mirRaw())
+        if (ins->mirRaw()) {
             lastPC_ = ins->mirRaw()->trackedPc();
+            if (ins->mirRaw()->trackedTree())
+                lastNotInlinedPC_ = ins->mirRaw()->profilerLeavePc();
+        }
     }
 
     LInstructionVisitor()
       : ins_(nullptr),
-        lastPC_(nullptr)
+        lastPC_(nullptr),
+        lastNotInlinedPC_(nullptr)
     {}
 
   public:

@@ -1050,7 +1050,7 @@ js_fun_call(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     HandleValue fval = args.thisv();
-    if (!js_IsCallable(fval)) {
+    if (!IsCallable(fval)) {
         ReportIncompatibleMethod(cx, args, &JSFunction::class_);
         return false;
     }
@@ -1075,7 +1075,7 @@ js_fun_apply(JSContext *cx, unsigned argc, Value *vp)
 
     // Step 1.
     HandleValue fval = args.thisv();
-    if (!js_IsCallable(fval)) {
+    if (!IsCallable(fval)) {
         ReportIncompatibleMethod(cx, args, &JSFunction::class_);
         return false;
     }
@@ -1429,7 +1429,7 @@ fun_bind(JSContext *cx, unsigned argc, Value *vp)
     Value thisv = args.thisv();
 
     /* Step 2. */
-    if (!js_IsCallable(thisv)) {
+    if (!IsCallable(thisv)) {
         ReportIncompatibleMethod(cx, args, &JSFunction::class_);
         return false;
     }
@@ -1941,23 +1941,6 @@ js::DefineFunction(JSContext *cx, HandleObject obj, HandleId id, Native native,
         return nullptr;
 
     return fun;
-}
-
-bool
-js::IsConstructor(const Value &v)
-{
-    // Step 2.
-    if (!v.isObject())
-        return false;
-
-    // Step 3-4, a bit complex for us, since we have several flavors of
-    // [[Construct]] internal method.
-    JSObject &obj = v.toObject();
-    if (obj.is<JSFunction>()) {
-        JSFunction &fun = obj.as<JSFunction>();
-        return fun.isNativeConstructor() || fun.isInterpretedConstructor();
-    }
-    return obj.getClass()->construct != nullptr;
 }
 
 void
