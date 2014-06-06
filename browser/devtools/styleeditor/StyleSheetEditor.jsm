@@ -96,21 +96,14 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker) {
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
 
-  this.mediaRules = [];
-  if (this.styleSheet.getMediaRules) {
-    this.styleSheet.getMediaRules().then(this._onMediaRulesChanged);
-  }
-  this.styleSheet.on("media-rules-changed", this._onMediaRulesChanged);
-
   this._focusOnSourceEditorReady = false;
-
-  let relatedSheet = this.styleSheet.relatedStyleSheet;
-  if (relatedSheet) {
-    relatedSheet.on("property-change", this._onPropertyChange);
-  }
-  this.styleSheet.on("property-change", this._onPropertyChange);
+  this.cssSheet.on("property-change", this._onPropertyChange);
   this.styleSheet.on("error", this._onError);
-
+  this.mediaRules = [];
+  if (this.cssSheet.getMediaRules) {
+    this.cssSheet.getMediaRules().then(this._onMediaRulesChanged);
+  }
+  this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
   this.savedFile = file;
   this.linkCSSFile();
 }
@@ -129,6 +122,17 @@ StyleSheetEditor.prototype = {
    */
   get isNew() {
     return this._isNew;
+  },
+
+  /**
+   * The style sheet or the generated style sheet for this source if it's an
+   * original source.
+   */
+  get cssSheet() {
+    if (this.styleSheet.isOriginalSource) {
+      return this.styleSheet.relatedStyleSheet;
+    }
+    return this.styleSheet;
   },
 
   get savedFile() {
@@ -530,7 +534,9 @@ StyleSheetEditor.prototype = {
     this._friendlyName = null;
     this.savedFile = returnFile;
 
-    this.sourceEditor.setClean();
+    if (this.sourceEditor) {
+      this.sourceEditor.setClean();
+    }
 
     this.emit("property-change");
 
@@ -628,8 +634,8 @@ StyleSheetEditor.prototype = {
     if (this.sourceEditor) {
       this.sourceEditor.destroy();
     }
-    this.styleSheet.off("media-rules-changed", this._onMediaRulesChanged);
-    this.styleSheet.off("property-change", this._onPropertyChange);
+    this.cssSheet.off("property-change", this._onPropertyChange);
+    this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
     this.styleSheet.off("error", this._onError);
   }
 }
