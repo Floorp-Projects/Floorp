@@ -7,6 +7,7 @@
 #include "nsAutoPtr.h"
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "js/OldDebugAPI.h"
 
 #include "nsJSPrincipals.h"
