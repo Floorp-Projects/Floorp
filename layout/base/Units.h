@@ -201,6 +201,9 @@ struct LayerPixel {
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
+  static ScreenIntPoint FromUntyped(const nsIntPoint& aPoint) {
+    return ScreenIntPoint(aPoint.x, aPoint.y);
+  }
 };
 
 // Operators to apply ScaleFactors directly to Points, Rects, Sizes and Margins
