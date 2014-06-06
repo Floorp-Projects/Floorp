@@ -195,7 +195,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
         if (!JSObject::getProperty(cx, obj, obj, cx->names().toJSON, &toJSON))
             return false;
 
-        if (js_IsCallable(toJSON)) {
+        if (IsCallable(toJSON)) {
             keyStr = KeyStringifier<KeyType>::toString(cx, key);
             if (!keyStr)
                 return false;
@@ -267,7 +267,7 @@ PreprocessValue(JSContext *cx, HandleObject holder, KeyType key, MutableHandleVa
 static inline bool
 IsFilteredValue(const Value &v)
 {
-    return v.isUndefined() || js_IsCallable(v);
+    return v.isUndefined() || IsCallable(v);
 }
 
 /* ES5 15.12.3 JO. */
@@ -783,7 +783,7 @@ js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
         return false;
 
     /* 15.12.2 steps 4-5. */
-    if (js_IsCallable(reviver))
+    if (IsCallable(reviver))
         return Revive(cx, reviver, vp);
     return true;
 }

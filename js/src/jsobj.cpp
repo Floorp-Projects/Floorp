@@ -3431,6 +3431,16 @@ js::FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Clas
     return true;
 }
 
+bool
+JSObject::isConstructor() const
+{
+    if (is<JSFunction>()) {
+        const JSFunction &fun = as<JSFunction>();
+        return fun.isNativeConstructor() || fun.isInterpretedConstructor();
+    }
+    return getClass()->construct != nullptr;
+}
+
 /* static */ bool
 JSObject::allocSlot(ThreadSafeContext *cx, HandleObject obj, uint32_t *slotp)
 {
@@ -5382,7 +5392,7 @@ MaybeCallMethod(JSContext *cx, HandleObject obj, HandleId id, MutableHandleValue
 {
     if (!JSObject::getGeneric(cx, obj, obj, id, vp))
         return false;
-    if (!js_IsCallable(vp)) {
+    if (!IsCallable(vp)) {
         vp.setObject(*obj);
         return true;
     }
@@ -5978,6 +5988,7 @@ js_DumpBacktrace(JSContext *cx)
     }
     fprintf(stdout, "%s", sprinter.string());
 }
+
 void
 JSObject::addSizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
