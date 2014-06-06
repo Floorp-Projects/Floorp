@@ -6764,7 +6764,7 @@ HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
     CGEventTapCreateForPSN(&currentProcess,
                            kCGHeadInsertEventTap,
                            kCGEventTapOptionListenOnly,
-                           kCGEventMaskForAllEvents,
+                           CGEventMaskBit(kCGEventScrollWheel),
                            HandleEvent,
                            self);
   CFRunLoopSourceRef eventPortSource =
