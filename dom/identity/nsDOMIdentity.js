@@ -102,6 +102,7 @@ nsDOMIdentity.prototype = {
    */
 
   watch: function nsDOMIdentity_watch(aOptions = {}) {
+    aOptions = Cu.waiveXrays(aOptions);
     if (this._rpWatcher) {
       // For the initial release of Firefox Accounts, we support callers who
       // invoke watch() either for Firefox Accounts, or Persona, but not both.
@@ -153,6 +154,7 @@ nsDOMIdentity.prototype = {
   },
 
   request: function nsDOMIdentity_request(aOptions = {}) {
+    aOptions = Cu.waiveXrays(aOptions);
     this._log("request: " + JSON.stringify(aOptions));
 
     // Has the caller called watch() before this?
