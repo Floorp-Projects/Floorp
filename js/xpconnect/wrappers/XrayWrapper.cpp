@@ -210,9 +210,9 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
-    static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                               MutableHandle<JSPropertyDescriptor> desc,
-                               Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+    bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                        MutableHandle<JSPropertyDescriptor> desc,
+                        Handle<JSPropertyDescriptor> existingDesc, bool *defined);
     virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                                 AutoIdVector &props);
     static bool call(JSContext *cx, HandleObject wrapper,
@@ -261,9 +261,9 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
-    static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                               MutableHandle<JSPropertyDescriptor> desc,
-                               Handle<JSPropertyDescriptor> existingDesc, bool *defined);
+    bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                        MutableHandle<JSPropertyDescriptor> desc,
+                        Handle<JSPropertyDescriptor> existingDesc, bool *defined);
     static bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
                     bool strict, MutableHandleValue vp);
     virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
@@ -306,14 +306,9 @@ public:
                                     HandleObject holder, HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
 
-    static bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                               MutableHandle<JSPropertyDescriptor> desc,
-                               Handle<JSPropertyDescriptor> existingDesc, bool *defined)
-    {
-        // There's no useful per-trait work to do here. Punt back up to the common code.
-        *defined = false;
-        return true;
-    }
+    bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                        MutableHandle<JSPropertyDescriptor> desc,
+                        Handle<JSPropertyDescriptor> existingDesc, bool *defined);
 
     virtual bool enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags,
                                 AutoIdVector &props);
@@ -651,6 +646,63 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                                      UndefinedHandleValue, desc.attributes(),
                                      desc.getter(), desc.setter()) &&
                JS_GetPropertyDescriptorById(cx, holder, id, desc);
+    }
+
+    return true;
+}
+
+bool
+JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                               MutableHandle<JSPropertyDescriptor> desc,
+                               Handle<JSPropertyDescriptor> existingDesc,
+                               bool *defined)
+{
+    *defined = false;
+    RootedObject holder(cx, ensureHolder(cx, wrapper));
+    if (!holder)
+        return false;
+
+
+    // Object instances are special. For that case, we forward property
+    // definitions to the underlying object if the following conditions are met:
+    // * The property being defined is a value-prop.
+    // * The property being defined is either a primitive or subsumed by the target.
+    // * As seen from the Xray, any existing property that we would overwrite is an
+    //   |own| value-prop.
+    //
+    // To avoid confusion, we disallow expandos on Object instances, and
+    // therefore raise an exception here if the above conditions aren't met.
+    bool isObjectInstance = getProtoKey(holder) == JSProto_Object && !isPrototype(holder);
+    if (isObjectInstance) {
+        RootedObject target(cx, getTargetObject(wrapper));
+        if (desc.hasGetterOrSetter()) {
+            JS_ReportError(cx, "Not allowed to define accessor property on [Object] XrayWrapper");
+            return false;
+        }
+        if (desc.value().isObject() &&
+            !AccessCheck::subsumes(target, js::UncheckedUnwrap(&desc.value().toObject())))
+        {
+            JS_ReportError(cx, "Not allowed to define cross-origin object as property on [Object] XrayWrapper");
+            return false;
+        }
+        if (existingDesc.hasGetterOrSetter()) {
+            JS_ReportError(cx, "Not allowed to overwrite accessor property on [Object] XrayWrapper");
+            return false;
+        }
+        if (existingDesc.object() && existingDesc.object() != wrapper) {
+            JS_ReportError(cx, "Not allowed to shadow non-own Xray-resolved property on [Object] XrayWrapper");
+            return false;
+        }
+
+        JSAutoCompartment ac(cx, target);
+        if (!JS_WrapPropertyDescriptor(cx, desc) ||
+            !JS_DefinePropertyById(cx, target, id, desc.value(), desc.attributes(),
+                                   JS_PropertyStub, JS_StrictPropertyStub))
+        {
+            return false;
+        }
+        *defined = true;
+        return true;
     }
 
     return true;
@@ -2232,7 +2284,7 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
         return true; // silently ignore attempt to overwrite native property
 
     bool defined = false;
-    if (!Traits::defineProperty(cx, wrapper, id, desc, existing_desc, &defined))
+    if (!Traits::singleton.defineProperty(cx, wrapper, id, desc, existing_desc, &defined))
         return false;
     if (defined)
         return true;
