@@ -42,10 +42,11 @@ interface nsIVariant;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
-
+interface nsITabParent;
+ 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(3ca96c12-b69d-4b54-83c5-25a18d32a22b)]
+[scriptable, builtinclass, uuid(9c65a466-9814-48f8-a4ca-c4600b03b15d)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -958,4 +959,20 @@ interface nsIDocShell : nsIDocShellTreeItem
    * docshell.device_size_is_page_size pref.
    */
   [infallible] attribute boolean deviceSizeIsPageSize;
+
+  /**
+   * Regarding setOpener / getOpener - We can't use XPIDL's "attribute"
+   * for notxpcom, so we're relegated to using explicit gets / sets. This
+   * should be fine, considering that these methods should only ever be
+   * called from native code.
+   */
+  [noscript,notxpcom,nostdcall] void setOpener(in nsITabParent aOpener);
+  [noscript,notxpcom,nostdcall] nsITabParent getOpener();
+
+  /**
+   * See the documentation for setOpener and getOpener about why we
+   * don't use attribute here instead.
+   */
+  [noscript,notxpcom,nostdcall] void setOpenedRemote(in nsITabParent aOpenedRemote);
+  [noscript,notxpcom,nostdcall] nsITabParent getOpenedRemote();
 };
