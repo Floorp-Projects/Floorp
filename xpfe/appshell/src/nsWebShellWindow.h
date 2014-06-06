@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsXULWindow.h"
 #include "nsIWidgetListener.h"
+#include "nsITabParent.h"
 
 /* Forward declarations.... */
 class nsIURI;
@@ -37,6 +38,7 @@ public:
                       nsIURI* aUrl,
                       int32_t aInitialWidth, int32_t aInitialHeight,
                       bool aIsHiddenWindow,
+                      nsITabParent *aOpeningTab,
                       nsWidgetInitData& widgetInitData);
 
   nsresult Toolbar();
