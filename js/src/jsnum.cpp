@@ -1732,49 +1732,49 @@ js::ToUint16Slow(JSContext *cx, const HandleValue v, uint16_t *out)
 }
 
 bool
-js_strtod(ThreadSafeContext *cx, const jschar *s, const jschar *send,
-          const jschar **ep, double *dp)
+js_strtod(ThreadSafeContext *cx, const jschar *begin, const jschar *end,
+          const jschar **dEnd, double *d)
 {
-    size_t i;
-    char cbuf[32];
-    char *cstr, *istr, *estr;
-    bool negative;
-    double d;
+    const jschar *s = SkipSpace(begin, end);
+    size_t length = end - s;
 
-    const jschar *s1 = SkipSpace(s, send);
-    size_t length = send - s1;
+    Vector<char, 32> chars(cx);
+    if (!chars.growByUninitialized(length + 1))
+        return false;
 
-    /* Use cbuf to avoid malloc */
-    if (length >= sizeof cbuf) {
-        cstr = (char *) cx->malloc_(length + 1);
-        if (!cstr)
-           return false;
-    } else {
-        cstr = cbuf;
-    }
-
-    for (i = 0; i != length; i++) {
-        if (s1[i] >> 8)
+    size_t i = 0;
+    for (; i < length; i++) {
+        if (s[i] >> 8)
             break;
-        cstr[i] = (char)s1[i];
+        chars[i] = char(s[i]);
     }
-    cstr[i] = 0;
+    chars[i] = 0;
 
-    istr = cstr;
-    if ((negative = (*istr == '-')) != 0 || *istr == '+')
-        istr++;
-    if (*istr == 'I' && !strncmp(istr, "Infinity", 8)) {
-        d = negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
-        estr = istr + 8;
-    } else {
-        int err;
-        d = js_strtod_harder(cx->dtoaState(), cstr, &estr, &err);
+    /* Try to parse +Infinity, -Infinity or Infinity. */
+    {
+        char *afterSign = chars.begin();
+        bool negative = (*afterSign == '-');
+        if (negative || *afterSign == '+')
+            afterSign++;
+
+        if (*afterSign == 'I' && !strncmp(afterSign, "Infinity", 8)) {
+            *d = negative ? NegativeInfinity<double>() : PositiveInfinity<double>();
+            *dEnd = s + (afterSign - chars.begin()) + 8;
+            return true;
+        }
     }
 
-    i = estr - cstr;
-    if (cstr != cbuf)
-        js_free(cstr);
-    *ep = i ? s1 + i : s;
-    *dp = d;
+    /* Everything else. */
+    int err;
+    char *ep;
+    *d = js_strtod_harder(cx->dtoaState(), chars.begin(), &ep, &err);
+
+    MOZ_ASSERT(ep >= chars.begin());
+
+    if (ep == chars.begin())
+        *dEnd = begin;
+    else
+        *dEnd = s + (ep - chars.begin());
+
     return true;
 }
