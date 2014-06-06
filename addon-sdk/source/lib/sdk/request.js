@@ -44,6 +44,10 @@ const { validateOptions, validateSingleOption } = new OptionsValidator({
   overrideMimeType: {
     map: function(v) v || null,
     is: ["string", "null"],
+  },
+  anonymous: {
+    map: function(v) v || false,
+    is: ["boolean", "null"],
   }
 });
 
@@ -54,7 +58,7 @@ const REUSE_ERROR = "This request object has been used already. You must " +
 // request types
 function runRequest(mode, target) {
   let source = request(target)
-  let { xhr, url, content, contentType, headers, overrideMimeType } = source;
+  let { xhr, url, content, contentType, headers, overrideMimeType, anonymous } = source;
 
   let isGetOrHead = (mode == "GET" || mode == "HEAD");
 
@@ -63,7 +67,9 @@ function runRequest(mode, target) {
   if (xhr)
     throw new Error(REUSE_ERROR);
 
-  xhr = source.xhr = new XMLHttpRequest();
+  xhr = source.xhr = new XMLHttpRequest({
+    mozAnon: anonymous
+  });
 
   // Build the data to be set. For GET or HEAD requests, we want to append that
   // to the URL before opening the request.
@@ -129,6 +135,7 @@ const Request = Class({
   set contentType(value) {
     request(this).contentType = validateSingleOption('contentType', value);
   },
+  get anonymous() { return request(this).anonymous; },
   get response() { return request(this).response; },
   delete: function() {
     runRequest('DELETE', this);
@@ -202,7 +209,8 @@ const Response = Class({
       }
     });
     return headers;
-  }
+  },
+  get anonymous() response(this).request.mozAnon
 });
 
 // apiUtils.validateOptions doesn't give the ability to easily validate single

@@ -8,6 +8,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/webconsole/test/test-console-output-03.html";
 
 let inputTests = [
+
   // 0
   {
     input: "document",
@@ -57,6 +58,7 @@ let inputTests = [
   {
     input: "window.location.href",
     output: '"' + TEST_URI + '"',
+    noClick: true,
   },
 
   // 6

@@ -1,9 +1,12 @@
 {
   "name": "toolbar-api",
-  "title": "toolbar-api",
-  "id": "toolbar-api",
+  "title": "Toolbar API",
+  "main": "./lib/main.js",
   "description": "a toolbar api example",
   "author": "",
   "license": "MPL 2.0",
-  "version": "0.1"
+  "version": "0.1",
+  "engines": {
+    "firefox": ">=27.0 <=30.0"
+  }
 }

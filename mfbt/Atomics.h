@@ -870,13 +870,13 @@ struct IntrinsicAddSub<T*> : public IntrinsicApplyHelper<T*>
   static ValueType add(ValueType& aPtr, ptrdiff_t aAmount)
   {
     return applyBinaryFunction(&Primitives::add, aPtr,
-                               (ValueType)(aAmount * sizeof(ValueType)));
+                               (ValueType)(aAmount * sizeof(T)));
   }
 
   static ValueType sub(ValueType& aPtr, ptrdiff_t aAmount)
   {
     return applyBinaryFunction(&Primitives::sub, aPtr,
-                               (ValueType)(aAmount * sizeof(ValueType)));
+                               (ValueType)(aAmount * sizeof(T)));
   }
 };
 
