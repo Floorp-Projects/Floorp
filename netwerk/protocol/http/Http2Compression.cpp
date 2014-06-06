@@ -1003,8 +1003,7 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         name.EqualsLiteral("proxy-connection") ||
         name.EqualsLiteral("te") ||
         name.EqualsLiteral("transfer-encoding") ||
-        name.EqualsLiteral("upgrade") ||
-        name.EqualsLiteral("accept-encoding")) {
+        name.EqualsLiteral("upgrade")) {
       continue;
     }
 
