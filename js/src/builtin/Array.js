@@ -660,6 +660,69 @@ function ArrayKeys() {
     return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
+/* ES6 rev 24 (2014 April 27) 22.1.2.1 */
+function ArrayFrom(arrayLike, mapfn=undefined, thisArg=undefined) {
+    // Step 1.
+    var C = this;
+
+    // Steps 2-3.
+    var items = ToObject(arrayLike);
+
+    // Steps 4-5.
+    var mapping = (mapfn !== undefined);
+    if (mapping && !IsCallable(mapfn))
+        ThrowError(JSMSG_NOT_FUNCTION, DecompileArg(1, mapfn));
+
+    // All elements defined by this algorithm have the same attrs:
+    var attrs = ATTR_CONFIGURABLE | ATTR_ENUMERABLE | ATTR_WRITABLE;
+
+    // Steps 6-8.
+    if (items["@@iterator"] !== undefined) {
+        // Steps 8.a-c.
+        var A = IsConstructor(C) ? new C() : [];
+
+        // Step 8.f.
+        var k = 0;
+
+        // Steps 8.d-e and 8.g.i-vi.
+        for (var nextValue of items) {
+            // Steps 8.g.vii-viii.
+            var mappedValue = mapping ? callFunction(mapfn, thisArg, nextValue, k) : nextValue;
+
+            // Steps 8.g.ix-xi.
+            _DefineDataProperty(A, k++, mappedValue, attrs);
+        }
+
+        // Here we're at step 8.g.iv.1. Fall through; it's implemented below.
+    } else {
+        // Step 9 is an assertion: items is not an Iterator. Testing this is
+        // literally the very last thing we did, so we don't assert here.
+
+        // Steps 10-12.
+        // FIXME: Array operations should use ToLength (bug 924058).
+        var len = ToInteger(items.length);
+
+        // Steps 13-15.
+        var A = IsConstructor(C) ? new C(len) : NewDenseArray(len);
+
+        // Steps 16-17.
+        for (var k = 0; k < len; k++) {
+            // Steps 17.a-c.
+            var kValue = items[k];
+
+            // Steps 17.d-e.
+            var mappedValue = mapping ? callFunction(mapfn, thisArg, kValue, k) : kValue;
+
+            // Steps 17.f-g.
+            _DefineDataProperty(A, k, mappedValue, attrs);
+        }
+    }
+
+    // Steps 8.g.iv.1-3 and 18-20 are the same.
+    A.length = k;
+    return A;
+}
+
 #ifdef ENABLE_PARALLEL_JS
 
 /*
