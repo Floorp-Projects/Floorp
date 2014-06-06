@@ -1529,7 +1529,7 @@ struct nsStyleText {
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_SPACE;
   }
 
   bool NewlineIsSignificant() const {
@@ -1538,15 +1538,16 @@ struct nsStyleText {
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_LINE;
   }
 
-  bool NewlineIsDiscarded() const {
-    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
-  }
-
   bool WhiteSpaceOrNewlineIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_LINE ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_SPACE;
+  }
+
+  bool TabIsSignificant() const {
+    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP;
   }
 
   bool WhiteSpaceCanWrapStyle() const {

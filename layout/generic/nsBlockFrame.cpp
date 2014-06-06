@@ -6817,15 +6817,15 @@ nsBlockFrame::ReflowBullet(nsIFrame* aBulletFrame,
   nscoord iStart = logicalFAS.IStart(wm) -
                    rs.ComputedLogicalBorderPadding().IStart(wm) -
                    bulletMargin.IEnd(wm) -
-                   aMetrics.ISize();
+                   aMetrics.ISize(wm);
 
   // Approximate the bullets position; vertical alignment will provide
   // the final vertical location. We pass our writing-mode here, because
   // it may be different from the bullet frame's mode.
   nscoord bStart = logicalFAS.BStart(wm);
   aBulletFrame->SetRect(wm, LogicalRect(wm, LogicalPoint(wm, iStart, bStart),
-                                        LogicalSize(wm, aMetrics.ISize(),
-                                                    aMetrics.BSize())),
+                                        LogicalSize(wm, aMetrics.ISize(wm),
+                                                    aMetrics.BSize(wm))),
                         containerWidth);
   aBulletFrame->DidReflow(aState.mPresContext, &aState.mReflowState,
                           nsDidReflowStatus::FINISHED);

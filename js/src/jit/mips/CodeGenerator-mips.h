@@ -33,12 +33,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
         MOZ_ASSERT(a.isMemory());
         int32_t offset = ToStackOffset(&a);
 
-        // The way the stack slots work, we assume that everything from
-        // depth == 0 downwards is writable however, since our frame is
-        // included in this, ensure that the frame gets skipped.
-        if (gen->compilingAsmJS())
-            offset -= AlignmentMidPrologue;
-
         return Address(StackPointer, offset);
     }
 
@@ -54,12 +48,6 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
         MOZ_ASSERT(a.isMemory());
         int32_t offset = ToStackOffset(&a);
-
-        // The way the stack slots work, we assume that everything from
-        // depth == 0 downwards is writable however, since our frame is
-        // included in this, ensure that the frame gets skipped.
-        if (gen->compilingAsmJS())
-            offset -= AlignmentMidPrologue;
 
         return Operand(StackPointer, offset);
     }
@@ -111,12 +99,15 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
   protected:
     bool generatePrologue();
+    bool generateAsmJSPrologue(Label *stackOverflowLabel);
     bool generateEpilogue();
     bool generateOutOfLineCode();
 
     template <typename T>
     void branchToBlock(Register lhs, T rhs, MBasicBlock *mir, Assembler::Condition cond)
     {
+        mir = skipTrivialBlocks(mir);
+
         Label *label = mir->lir()->label();
         if (Label *oolEntry = labelForBackedgeWithImplicitCheck(mir)) {
             // Note: the backedge is initially a jump to the next instruction.
@@ -212,6 +203,8 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
     virtual bool visitMathF(LMathF *math);
     virtual bool visitFloor(LFloor *lir);
     virtual bool visitFloorF(LFloorF *lir);
+    virtual bool visitCeil(LCeil *lir);
+    virtual bool visitCeilF(LCeilF *lir);
     virtual bool visitRound(LRound *lir);
     virtual bool visitRoundF(LRoundF *lir);
     virtual bool visitTruncateDToInt32(LTruncateDToInt32 *ins);

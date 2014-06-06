@@ -41,7 +41,7 @@ class ValueNumberer
     struct DominatingValue
     {
         MDefinition *def;
-        uint32_t validUntil;
+        uint32_t validEnd;
     };
 
     typedef HashMap<uint32_t,

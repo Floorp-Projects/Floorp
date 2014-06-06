@@ -285,6 +285,7 @@ browser.jar:
   skin/classic/browser/devtools/responsiveui-screenshot.png      (../shared/devtools/images/responsivemode/responsiveui-screenshot.png)
   skin/classic/browser/devtools/responsiveui-screenshot@2x.png   (../shared/devtools/images/responsivemode/responsiveui-screenshot@2x.png)
   skin/classic/browser/devtools/toggle-tools.png          (../shared/devtools/images/toggle-tools.png)
+  skin/classic/browser/devtools/toggle-tools@2x.png       (../shared/devtools/images/toggle-tools@2x.png)
   skin/classic/browser/devtools/dock-bottom@2x.png        (../shared/devtools/images/dock-bottom@2x.png)
   skin/classic/browser/devtools/dock-side@2x.png          (../shared/devtools/images/dock-side@2x.png)
   skin/classic/browser/devtools/floating-scrollbars.css   (devtools/floating-scrollbars.css)

@@ -649,6 +649,20 @@ nsViewSourceChannel::SetAllowPipelining(bool aAllowPipelining)
 }
 
 NS_IMETHODIMP
+nsViewSourceChannel::GetAllowSTS(bool *aAllowSTS)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->GetAllowSTS(aAllowSTS);
+}
+
+NS_IMETHODIMP
+nsViewSourceChannel::SetAllowSTS(bool aAllowSTS)
+{
+    return !mHttpChannel ? NS_ERROR_NULL_POINTER :
+        mHttpChannel->SetAllowSTS(aAllowSTS);
+}
+
+NS_IMETHODIMP
 nsViewSourceChannel::GetRedirectionLimit(uint32_t *aRedirectionLimit)
 {
     return !mHttpChannel ? NS_ERROR_NULL_POINTER :

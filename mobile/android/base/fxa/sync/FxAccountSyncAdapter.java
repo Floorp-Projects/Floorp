@@ -357,7 +357,11 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
         FxAccountGlobalSession globalSession = null;
         try {
-          ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
+          final ClientsDataDelegate clientsDataDelegate = new SharedPreferencesClientsDataDelegate(sharedPrefs);
+          if (FxAccountConstants.LOG_PERSONAL_INFORMATION) {
+            FxAccountConstants.pii(LOG_TAG, "Client device name is: '" + clientsDataDelegate.getClientName() + "'.");
+            FxAccountConstants.pii(LOG_TAG, "Client device data last modified: " + clientsDataDelegate.getLastModifiedTimestamp());
+          }
 
           // We compute skew over time using SkewHandler. This yields an unchanging
           // skew adjustment that the HawkAuthHeaderProvider uses to adjust its

@@ -72,6 +72,11 @@ WebGLBuffer::Validate(GLenum type, uint32_t max_allowed,
     return mCache->Validate(type, max_allowed, first, count, out_upperBound);
 }
 
+bool
+WebGLBuffer::IsElementArrayUsedWithMultipleTypes() const
+{
+    return mCache->BeenUsedWithMultipleTypes();
+}
 
 JSObject*
 WebGLBuffer::WrapObject(JSContext *cx) {

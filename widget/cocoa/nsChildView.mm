@@ -65,10 +65,13 @@
 #include "GLUploadHelpers.h"
 #include "ScopedGLHelpers.h"
 #include "HeapCopyOfStackArray.h"
+#include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
+#include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/BasicCompositor.h"
 #include "gfxUtils.h"
+#include "gfxPrefs.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/BorrowedContext.h"
 #ifdef ACCESSIBILITY
@@ -88,6 +91,7 @@
 #include "GeckoProfiler.h"
 
 #include "nsIDOMWheelEvent.h"
+#include "mozilla/layers/APZCCallbackHelper.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -134,6 +138,8 @@ static void blinkRgn(RgnHandle rgn);
 bool gUserCancelledDrag = false;
 
 uint32_t nsChildView::sLastInputEventCount = 0;
+
+static uint32_t gNumberOfWidgetsNeedingEventThread = 0;
 
 @interface ChildView(Private)
 
@@ -188,7 +194,21 @@ uint32_t nsChildView::sLastInputEventCount = 0;
 - (id<mozAccessible>)accessible;
 #endif
 
+- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint;
+- (APZCTreeManager*)apzctm;
+
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
+
+@end
+
+@interface EventThreadRunner : NSObject
+{
+  NSThread* mThread;
+}
+- (id)init;
+
++ (void)start;
++ (void)stop;
 
 @end
 
@@ -365,6 +385,69 @@ protected:
   GLuint mQuadVBO;
 };
 
+class APZCTMController : public mozilla::layers::GeckoContentController
+{
+  typedef mozilla::layers::FrameMetrics FrameMetrics;
+  typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
+
+  class RequestContentRepaintEvent : public nsRunnable
+  {
+  public:
+    RequestContentRepaintEvent(const FrameMetrics& aFrameMetrics)
+      : mFrameMetrics(aFrameMetrics)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+
+      nsCOMPtr<nsIContent> targetContent = nsLayoutUtils::FindContentFor(mFrameMetrics.GetScrollId());
+      if (targetContent) {
+        APZCCallbackHelper::UpdateSubFrame(targetContent, mFrameMetrics);
+      }
+
+      return NS_OK;
+    }
+  protected:
+    FrameMetrics mFrameMetrics;
+  };
+
+public:
+  // GeckoContentController interface
+  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics)
+  {
+    nsCOMPtr<nsIRunnable> r1 = new RequestContentRepaintEvent(aFrameMetrics);
+    if (!NS_IsMainThread()) {
+      NS_DispatchToMainThread(r1);
+    } else {
+      r1->Run();
+    }
+  }
+
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
+  {
+    MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
+  }
+
+  virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
+                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
+  {
+    APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+  }
+
+  virtual void HandleDoubleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleSingleTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void HandleLongTapUp(const CSSPoint& aPoint, int32_t aModifiers,
+                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE {}
+  virtual void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect &aContentRect,
+                                       const mozilla::CSSSize &aScrollableSize) MOZ_OVERRIDE {}
+};
+
 } // unnamed namespace
 
 #pragma mark -
@@ -408,6 +491,13 @@ nsChildView::~nsChildView()
   NS_WARN_IF_FALSE(mOnDestroyCalled, "nsChildView object destroyed without calling Destroy()");
 
   DestroyCompositor();
+
+  if (mAPZCTreeManager) {
+    gNumberOfWidgetsNeedingEventThread--;
+    if (gNumberOfWidgetsNeedingEventThread == 0) {
+      [EventThreadRunner stop];
+    }
+  }
 
   // An nsChildView object that was in use can be destroyed without Destroy()
   // ever being called on it.  So we also need to do a quick, safe cleanup
@@ -2020,6 +2110,27 @@ nsChildView::CreateCompositor()
   if (mCompositorChild) {
     [(ChildView *)mView setUsingOMTCompositor:true];
   }
+}
+
+CompositorParent*
+nsChildView::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
+{
+  CompositorParent *compositor = nsBaseWidget::NewCompositorParent(aSurfaceWidth, aSurfaceHeight);
+
+  if (gfxPrefs::AsyncPanZoomEnabled()) {
+    uint64_t rootLayerTreeId = compositor->RootLayerTreeId();
+    nsRefPtr<APZCTMController> controller = new APZCTMController();
+    CompositorParent::SetControllerForLayerTree(rootLayerTreeId, controller);
+    mAPZCTreeManager = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
+    mAPZCTreeManager->SetDPI(GetDPI());
+
+    if (gNumberOfWidgetsNeedingEventThread == 0) {
+      [EventThreadRunner start];
+    }
+    gNumberOfWidgetsNeedingEventThread++;
+  }
+
+  return compositor;
 }
 
 gfxASurface*
@@ -5066,6 +5177,10 @@ static int32_t RoundUp(double aDouble)
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+- (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type
+{
+}
+
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
@@ -5154,10 +5269,9 @@ static int32_t RoundUp(double aDouble)
 
   // convert point to view coordinate system
   NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(aMouseEvent, [self window]);
-  NSPoint localPoint = [self convertPoint:locationInWindow fromView:nil];
 
   outGeckoEvent->refPoint = LayoutDeviceIntPoint::FromUntyped(
-    mGeckoChild->CocoaPointsToDevPixels(localPoint));
+    [self convertWindowCoordinates:locationInWindow]);
 
   WidgetMouseEventBase* mouseEvent = outGeckoEvent->AsMouseEventBase();
   mouseEvent->buttons = 0;
@@ -5692,6 +5806,21 @@ static int32_t RoundUp(double aDouble)
   return NSDragOperationNone;
 }
 
+- (nsIntPoint)convertWindowCoordinates:(NSPoint)aPoint
+{
+  if (!mGeckoChild) {
+    return nsIntPoint(0, 0);
+  }
+
+  NSPoint localPoint = [self convertPoint:aPoint fromView:nil];
+  return mGeckoChild->CocoaPointsToDevPixels(localPoint);
+}
+
+- (APZCTreeManager*)apzctm
+{
+  return mGeckoChild ? mGeckoChild->APZCTM() : nullptr;
+}
+
 // This is a utility function used by NSView drag event methods
 // to send events. It contains all of the logic needed for Gecko
 // dragging to work. Returns the appropriate cocoa drag operation code.
@@ -5758,10 +5887,9 @@ static int32_t RoundUp(double aDouble)
   // Use our own coordinates in the gecko event.
   // Convert event from gecko global coords to gecko view coords.
   NSPoint draggingLoc = [aSender draggingLocation];
-  NSPoint localPoint = [self convertPoint:draggingLoc fromView:nil];
 
   geckoEvent.refPoint = LayoutDeviceIntPoint::FromUntyped(
-    mGeckoChild->CocoaPointsToDevPixels(localPoint));
+    [self convertWindowCoordinates:draggingLoc]);
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
   mGeckoChild->DispatchWindowEvent(geckoEvent);
@@ -6498,6 +6626,106 @@ ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow, NSEvent* aEvent,
 }
 
 #pragma mark -
+
+@interface EventThreadRunner(Private)
+- (void)runEventThread;
+- (void)shutdownAndReleaseCalledOnEventThread;
+- (void)shutdownAndReleaseCalledOnAnyThread;
+- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type;
+@end
+
+static EventThreadRunner* sEventThreadRunner = nil;
+
+@implementation EventThreadRunner
+
++ (void)start
+{
+  sEventThreadRunner = [[EventThreadRunner alloc] init];
+}
+
++ (void)stop
+{
+  if (sEventThreadRunner) {
+    [sEventThreadRunner shutdownAndReleaseCalledOnAnyThread];
+    sEventThreadRunner = nil;
+  }
+}
+
+- (id)init
+{
+  if ((self = [super init])) {
+    mThread = nil;
+    [NSThread detachNewThreadSelector:@selector(runEventThread)
+                             toTarget:self
+                           withObject:nil];
+  }
+  return self;
+}
+
+static CGEventRef
+HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
+            CGEventRef aEvent, void* aClosure)
+{
+  [(EventThreadRunner*)aClosure handleEvent:aEvent type:aType];
+  return aEvent;
+}
+
+- (void)runEventThread
+{
+  char aLocal;
+  profiler_register_thread("APZC Event Thread", &aLocal);
+  PR_SetCurrentThreadName("APZC Event Thread");
+
+  mThread = [NSThread currentThread];
+  ProcessSerialNumber currentProcess;
+  GetCurrentProcess(&currentProcess);
+  CFMachPortRef eventPort =
+    CGEventTapCreateForPSN(&currentProcess,
+                           kCGHeadInsertEventTap,
+                           kCGEventTapOptionListenOnly,
+                           kCGEventMaskForAllEvents,
+                           HandleEvent,
+                           self);
+  CFRunLoopSourceRef eventPortSource =
+    CFMachPortCreateRunLoopSource(kCFAllocatorSystemDefault, eventPort, 0);
+  CFRunLoopAddSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
+  CFRunLoopRun();
+  CFRunLoopRemoveSource(CFRunLoopGetCurrent(), eventPortSource, kCFRunLoopCommonModes);
+  CFRelease(eventPortSource);
+  CFRelease(eventPort);
+  [self release];
+}
+
+- (void)shutdownAndReleaseCalledOnEventThread
+{
+  CFRunLoopStop(CFRunLoopGetCurrent());
+}
+
+- (void)shutdownAndReleaseCalledOnAnyThread
+{
+  [self performSelector:@selector(shutdownAndReleaseCalledOnEventThread) onThread:mThread withObject:nil waitUntilDone:NO];
+}
+
+static const CGEventField kCGWindowNumberField = 51;
+
+// Called on scroll thread
+- (void)handleEvent:(CGEventRef)cgEvent type:(CGEventType)type
+{
+  if (type != kCGEventScrollWheel) {
+    return;
+  }
+
+  int windowNumber = CGEventGetIntegerValueField(cgEvent, kCGWindowNumberField);
+  NSWindow* window = [NSApp windowWithWindowNumber:windowNumber];
+  if (!window || ![window isKindOfClass:[BaseWindow class]]) {
+    return;
+  }
+
+  ChildView* childView = [(BaseWindow*)window mainChildView];
+  [childView handleAsyncScrollEvent:cgEvent ofType:type];
+}
+
+@end
 
 @interface NSView (MethodSwizzling)
 - (BOOL)nsChildView_NSView_mouseDownCanMoveWindow;

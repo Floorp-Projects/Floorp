@@ -3485,7 +3485,7 @@ CodeGenerator::generateBody()
                 return false;
 
 #ifdef DEBUG
-            if (!emitDebugResultChecks(*iter))
+            if (!counts && !emitDebugResultChecks(*iter))
                 return false;
 #endif
         }

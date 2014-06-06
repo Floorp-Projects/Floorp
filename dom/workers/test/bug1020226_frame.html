@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1020226
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1020226</title>
+</head>
+<body>
+
+<script type="application/javascript">
+  var worker = new Worker("bug1020226_worker.js");
+  worker.onmessage = function(e) {
+    window.parent.postMessage("loaded", "*");
+  }
+</script>
+</body>
+</html>
+

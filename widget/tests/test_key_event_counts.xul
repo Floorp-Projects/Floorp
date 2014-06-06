@@ -22,6 +22,12 @@
 
   <script type="application/javascript"><![CDATA[
     var gKeyPressEventCount = 0;
+    var gKeyDownEventCound = 0;
+
+    function onKeyDown(e)
+    {
+      gKeyDownEventCount++;
+    }
 
     function onKeyPress(e)
     {
@@ -31,23 +37,31 @@
 
     function runTest()
     {
+      window.addEventListener("keydown", onKeyDown, false);
       window.addEventListener("keypress", onKeyPress, false);
 
       // Test ctrl-tab
+      gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_Tab, {ctrlKey:1}, "\t", "\t");
-      is(gKeyPressEventCount, 1);
+      is(gKeyDownEventCount, 1);
+      is(gKeyPressEventCount, 0, "ctrl-tab should be consumed by tabbox of tabbrowser at keydown");
 
       // Test cmd+shift+a
+      gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_A, {metaKey:1, shiftKey:1}, "a", "A");
+      is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 1);
 
       // Test cmd-;
+      gKeyDownEventCount = 0;
       gKeyPressEventCount = 0;
       synthesizeNativeKey(KEYBOARD_LAYOUT_EN_US, MAC_VK_ANSI_Semicolon, {metaKey:1}, ";", ";");
+      is(gKeyDownEventCount, 1);
       is(gKeyPressEventCount, 1);
 
+      window.removeEventListener("keydown", onKeyDown, false);
       window.removeEventListener("keypress", onKeyPress, false);
     }
   ]]></script>

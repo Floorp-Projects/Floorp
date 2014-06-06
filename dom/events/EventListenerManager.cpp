@@ -7,6 +7,7 @@
 #undef CreateEvent
 
 #include "mozilla/BasicEvents.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #ifdef MOZ_B2G
@@ -1326,6 +1327,27 @@ EventListenerManager::MarkForCC()
   }
   if (mRefCnt.IsPurple()) {
     mRefCnt.RemovePurple();
+  }
+}
+
+void
+EventListenerManager::TraceListeners(JSTracer* aTrc)
+{
+  uint32_t count = mListeners.Length();
+  for (uint32_t i = 0; i < count; ++i) {
+    const Listener& listener = mListeners.ElementAt(i);
+    JSEventHandler* jsEventHandler = listener.GetJSEventHandler();
+    if (jsEventHandler) {
+      const TypedEventHandler& typedHandler =
+        jsEventHandler->GetTypedEventHandler();
+      if (typedHandler.HasEventHandler()) {
+        mozilla::TraceScriptHolder(typedHandler.Ptr(), aTrc);
+      }
+    } else if (listener.mListenerType == Listener::eWebIDLListener) {
+      mozilla::TraceScriptHolder(listener.mListener.GetWebIDLCallback(), aTrc);
+    }
+    // We might have eWrappedJSListener, but that is the legacy type for
+    // JS implemented event listeners, and trickier to handle here.
   }
 }
 
