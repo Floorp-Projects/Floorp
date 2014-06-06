@@ -132,9 +132,10 @@ ParseDecimalNumber(const JS::TwoByteChars chars);
  * If [start, end) does not begin with a number with the specified base,
  * *dp == 0 and *endp == start upon return.
  */
+template <typename CharT>
 extern bool
-GetPrefixInteger(ThreadSafeContext *cx, const jschar *start, const jschar *end, int base,
-                 const jschar **endp, double *dp);
+GetPrefixInteger(ThreadSafeContext *cx, const CharT *start, const CharT *end, int base,
+                 const CharT **endp, double *dp);
 
 /*
  * This is like GetPrefixInteger, but only deals with base 10, and doesn't have
