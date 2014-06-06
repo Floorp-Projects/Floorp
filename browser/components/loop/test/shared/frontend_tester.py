@@ -3,9 +3,11 @@ import threading
 import SimpleHTTPServer
 import SocketServer
 import BaseHTTPServer
+import socket
+import urllib
 import urlparse
+import os
 
-PORT = 2222
 DEBUG = False
 
 
@@ -36,7 +38,9 @@ class BaseTestFrontendUnits(MarionetteTestCase):
         else:
             handler = QuietHttpRequestHandler
 
-        cls.server = ThreadingSimpleServer(('', PORT), handler)
+        # Port 0 means to select an arbitrary unused port
+        cls.server = ThreadingSimpleServer(('', 0), handler)
+        cls.ip, cls.port = cls.server.server_address
 
         cls.server_thread = threading.Thread(target=cls.server.serve_forever)
         cls.server_thread.daemon = False
@@ -61,9 +65,23 @@ class BaseTestFrontendUnits(MarionetteTestCase):
         # which we have to wait for.
         self.marionette.set_search_timeout(10000)
 
-    def set_server_prefix(self, srcdir_path=None):
-        self.server_prefix = urlparse.urljoin("http://localhost:" + str(PORT),
-                                              srcdir_path)
+    # srcdir_path should be the directory relative to this file.
+    def set_server_prefix(self, srcdir_path):
+        # We may be run from a different path than topsrcdir, e.g. in the case
+        # of packaged tests. If so, then we have to work out the right directory
+        # for the local server.
+
+        # First find the top of the working directory.
+        commonPath = os.path.commonprefix([__file__, os.getcwd()])
+
+        # Now get the relative path between the two
+        relPath = os.path.relpath(os.path.dirname(__file__), commonPath)
+
+        relPath = urllib.pathname2url(os.path.join(relPath, srcdir_path))
+
+        # Finally join the relative path with the given src path
+        self.server_prefix = urlparse.urljoin("http://localhost:" + str(self.port),
+                                              relPath)
 
     def check_page(self, page):
 

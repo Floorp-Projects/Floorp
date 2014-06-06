@@ -10,7 +10,7 @@ class TestDesktopUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestDesktopUnits, self).setUp()
-        self.set_server_prefix("build/tests/marionette/tests/browser/components/loop/test/standalone/")
+        self.set_server_prefix("../standalone/")
 
     def test_units(self):
         self.check_page("index.html")
