@@ -437,13 +437,14 @@ MarkInterpreterActivation(JSTracer *trc, InterpreterActivation *act)
 }
 
 void
-js::MarkInterpreterActivations(PerThreadData *ptd, JSTracer *trc)
+js::MarkInterpreterActivations(JSRuntime *rt, JSTracer *trc)
 {
-    for (ActivationIterator iter(ptd); !iter.done(); ++iter) {
+    for (ActivationIterator iter(rt); !iter.done(); ++iter) {
         Activation *act = iter.activation();
         if (act->isInterpreter())
             MarkInterpreterActivation(trc, act->asInterpreter());
     }
+
 }
 
 /*****************************************************************************/
