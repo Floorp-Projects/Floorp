@@ -96,7 +96,7 @@ void ProfileEntry::log()
   //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack)
   //   mTagInt    (int)          n,f,y
   //   mTagChar   (char)         h
-  //   mTagFloat  (double)       r,t,p,R (resident memory)
+  //   mTagFloat  (double)       r,t,p,R (resident memory), U (unshared memory)
   switch (mTagName) {
     case 'm':
       LOGF("%c \"%s\"", mTagName, mTagMarker->GetMarkerName()); break;
@@ -108,7 +108,7 @@ void ProfileEntry::log()
       LOGF("%c %d", mTagName, mTagInt); break;
     case 'h':
       LOGF("%c \'%c\'", mTagName, mTagChar); break;
-    case 'r': case 't': case 'p': case 'R':
+    case 'r': case 't': case 'p': case 'R': case 'U':
       LOGF("%c %f", mTagName, mTagFloat); break;
     default:
       LOGF("'%c' unknown_tag", mTagName); break;
@@ -162,6 +162,7 @@ ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
   , mStackTop(aStackTop)
 #ifdef XP_LINUX
   , mRssMemory(0)
+  , mUssMemory(0)
 #endif
 {
   mEntries = new ProfileEntry[mEntrySize];
@@ -356,6 +357,13 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
             {
               if (sample) {
                 b.NameValue("rss", entry.mTagFloat);
+              }
+            }
+            break;
+          case 'U':
+            {
+              if (sample) {
+                b.NameValue("uss", entry.mTagFloat);
               }
             }
             break;

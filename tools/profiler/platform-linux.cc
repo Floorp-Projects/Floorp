@@ -227,6 +227,7 @@ static void ProfilerSignalHandler(int signal, siginfo_t* info, void* context) {
   sample->threadProfile = sCurrentThreadProfile;
   sample->timestamp = mozilla::TimeStamp::Now();
   sample->rssMemory = sample->threadProfile->mRssMemory;
+  sample->ussMemory = sample->threadProfile->mUssMemory;
 
   Sampler::GetActiveSampler()->Tick(sample);
 
@@ -239,8 +240,10 @@ static void ProfilerSignalThread(ThreadProfile *profile,
 {
   if (isFirstProfiledThread && Sampler::GetActiveSampler()->ProfileMemory()) {
     profile->mRssMemory = nsMemoryReporterManager::ResidentFast();
+    profile->mUssMemory = nsMemoryReporterManager::ResidentUnique();
   } else {
     profile->mRssMemory = 0;
+    profile->mUssMemory = 0;
   }
 }
 

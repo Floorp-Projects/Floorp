@@ -519,7 +519,7 @@ function _load_files(aFiles) {
            {_message: "TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | Source file " + element + " contains an error",
             diagnostic: _exception_message(e),
             source_file: element,
-            stack: _format_exception_stack(e.stack)});
+            stack: e.stack ? _format_exception_stack(e.stack) : null});
     }
   }
 

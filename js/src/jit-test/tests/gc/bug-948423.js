@@ -20,4 +20,5 @@ function runTests() {
     var Uint8s = uint8.array();
   })();
 }
+
 runTests();
