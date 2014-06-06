@@ -55,11 +55,23 @@ static const uint32_t BLACK = 0;
 static const uint32_t GRAY = 1;
 
 /*
- * Constants used to indicate whether a chunk is part of the tenured heap or the
- * nusery.
+ * The "location" field in the Chunk trailer is a bit vector indicting various
+ * roles of the chunk.
+ *
+ * The value 0 for the "location" field is invalid, at least one bit must be
+ * set.
+ *
+ * Some bits preclude others, for example, any "nursery" bit precludes any
+ * "tenured" or "middle generation" bit.
  */
-const uint32_t ChunkLocationNursery = 0;
-const uint32_t ChunkLocationTenuredHeap = 1;
+const uintptr_t ChunkLocationBitNursery = 1;       // Standard GGC nursery
+const uintptr_t ChunkLocationBitTenuredHeap = 2;   // Standard GGC tenured generation
+const uintptr_t ChunkLocationBitPJSNewspace = 4;   // The PJS generational GC's allocation space
+const uintptr_t ChunkLocationBitPJSFromspace = 8;  // The PJS generational GC's fromspace (during GC)
+
+const uintptr_t ChunkLocationAnyNursery = ChunkLocationBitNursery |
+                                          ChunkLocationBitPJSNewspace |
+                                          ChunkLocationBitPJSFromspace;
 
 #ifdef JS_DEBUG
 /* When downcasting, ensure we are actually the right type. */
@@ -225,9 +237,8 @@ IsInsideNursery(const js::gc::Cell *cell)
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkLocationOffset;
     uint32_t location = *reinterpret_cast<uint32_t *>(addr);
-    JS_ASSERT(location == gc::ChunkLocationNursery ||
-              location == gc::ChunkLocationTenuredHeap);
-    return location == gc::ChunkLocationNursery;
+    JS_ASSERT(location != 0);
+    return location & ChunkLocationAnyNursery;
 #else
     return false;
 #endif

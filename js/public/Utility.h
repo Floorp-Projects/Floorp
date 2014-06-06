@@ -47,6 +47,7 @@ namespace js {}
 #define JS_ALLOCATED_TENURED_PATTERN 0x4D
 #define JS_SWEPT_CODE_PATTERN 0x3b
 #define JS_SWEPT_FRAME_PATTERN 0x5b
+#define JS_POISONED_FORKJOIN_CHUNK 0xBD
 
 #define JS_ASSERT(expr)           MOZ_ASSERT(expr)
 #define JS_ASSERT_IF(cond, expr)  MOZ_ASSERT_IF(cond, expr)
