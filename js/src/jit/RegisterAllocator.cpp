@@ -431,8 +431,6 @@ AllocationIntegrityState::dump()
         }
     }
 
-    fprintf(stderr, "\nIntermediate Allocations:\n\n");
-
     // Print discovered allocations at the ends of blocks, in the order they
     // were discovered.
 
@@ -444,10 +442,14 @@ AllocationIntegrityState::dump()
         seenOrdered[item.index] = item;
     }
 
-    for (size_t i = 0; i < seenOrdered.length(); i++) {
-        IntegrityItem item = seenOrdered[i];
-        fprintf(stderr, "block %u reg v%u alloc %s\n",
-               item.block->mir()->id(), item.vreg, item.alloc.toString());
+    if (!seenOrdered.empty()) {
+        fprintf(stderr, "\nIntermediate Allocations:\n\n");
+
+        for (size_t i = 0; i < seenOrdered.length(); i++) {
+            IntegrityItem item = seenOrdered[i];
+            fprintf(stderr, "block %u reg v%u alloc %s\n",
+                   item.block->mir()->id(), item.vreg, item.alloc.toString());
+        }
     }
 
     fprintf(stderr, "\n");
