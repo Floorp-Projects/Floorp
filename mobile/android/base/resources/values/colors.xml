@@ -93,10 +93,15 @@
 
   <color name="panel_image_item_background">#D1D9E1</color>
 
-  <!-- Swipe to refresh colors -->
+  <!-- Swipe to refresh colors for dynamic panel -->
   <color name="swipe_refresh_orange">#FFFFC26C</color>
   <color name="swipe_refresh_white">#FFFFFFFF</color>
-  <color name="swipe_refresh_orange_dark">#FF9500</color>
+
+  <!-- Swipe to refresh colors for remote tabs -->
+  <color name="swipe_refresh_orange1">#EE6700</color>
+  <color name="swipe_refresh_orange2">#FF9400</color>
+  <color name="swipe_refresh_orange3">#F57900</color>
+  <color name="swipe_refresh_orange4">#FFB44C</color>
 
   <!-- Remote tabs setup -->
   <color name="remote_tabs_setup_button_background">#E66000</color>

@@ -7,10 +7,10 @@
 // Test ProjectEditor basic functionality
 let test = asyncTest(function*() {
   let projecteditor = yield addProjectEditorTabForTempDirectory();
-  let TEMP_PATH = [...projecteditor.project.allPaths()][0];
+  let TEMP_PATH = projecteditor.project.allPaths()[0];
   is (getTempFile("").path, TEMP_PATH, "Temp path is set correctly.");
 
-  is ([...projecteditor.project.allPaths()].length, 1, "1 path is set");
+  is (projecteditor.project.allPaths().length, 1, "1 path is set");
   projecteditor.project.removeAllStores();
-  is ([...projecteditor.project.allPaths()].length, 0, "No paths are remaining");
+  is (projecteditor.project.allPaths().length, 0, "No paths are remaining");
 });

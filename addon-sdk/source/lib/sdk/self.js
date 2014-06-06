@@ -8,12 +8,24 @@ module.metadata = {
 };
 
 const { CC } = require('chrome');
-const { id, name, prefixURI, rootURI, metadata,
-        version, loadReason, preferencesBranch } = require('@loader/options');
+const options = require('@loader/options');
 
+const { get } = require("./preferences/service");
 const { readURISync } = require('./net/url');
 
-const addonDataURI = prefixURI + name + '/data/';
+const id = options.id;
+
+const readPref = key => get("extensions." + id + ".sdk." + key);
+
+const name = readPref("name") || options.name;
+const version = readPref("version") || options.version;
+const loadReason = readPref("load.reason") || options.loadReason;
+const rootURI = readPref("rootURI") || options.rootURI || "";
+const baseURI = readPref("baseURI") || options.prefixURI + name + "/";
+const addonDataURI = baseURI + "data/";
+const metadata = options.metadata || {};
+const permissions = metadata.permissions || {};
+const isPacked = rootURI && rootURI.indexOf("jar:") === 0;
 
 const uri = (path="") =>
   path.contains(":") ? path : addonDataURI + path;
@@ -24,16 +36,15 @@ const uri = (path="") =>
 // associated unique URI string that can be used for that.
 exports.uri = 'addon:' + id;
 exports.id = id;
-exports.preferencesBranch = preferencesBranch || id;
+exports.preferencesBranch = options.preferencesBranch || id;
 exports.name = name;
 exports.loadReason = loadReason;
 exports.version = version;
-// If `rootURI` is jar:file://...!/ than add-on is packed.
-exports.packed = (rootURI || '').indexOf('jar:') === 0;
+exports.packed = isPacked;
 exports.data = Object.freeze({
   url: uri,
   load: function read(path) {
     return readURISync(uri(path));
   }
 });
-exports.isPrivateBrowsingSupported = ((metadata || {}).permissions || {})['private-browsing'] === true;
+exports.isPrivateBrowsingSupported = permissions['private-browsing'] === true;

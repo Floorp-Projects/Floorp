@@ -62,17 +62,15 @@ function closeWebIDE(win) {
 }
 
 function removeAllProjects() {
-  let deferred = promise.defer();
-  AppProjects.load().then(() => {
+  return Task.spawn(function* () {
+    yield AppProjects.load();
     let projects = AppProjects.store.object.projects;
     for (let i = 0; i < projects.length; i++) {
-      AppProjects.remove(projects[i].location);
+      yield AppProjects.remove(projects[i].location);
     }
-    deferred.resolve();
   });
-
-  return deferred.promise;
 }
+
 function nextTick() {
   let deferred = promise.defer();
   SimpleTest.executeSoon(() => {

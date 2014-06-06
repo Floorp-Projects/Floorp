@@ -185,18 +185,18 @@
           <spacer flex="1"/>
         </vbox>
 
-        <vbox id="noFxaAccount">
+        <vbox id="noFxaAccount" align="start">
           <label>&welcome.description;</label>
-          <label class="text-link"
-                 onclick="gSyncPane.signUp(); return false;"
-                 value="&welcome.createAccount.label;"/>
-          <label class="text-link"
-                 onclick="gSyncPane.signIn(); return false;"
-                 value="&welcome.signIn.label;"/>
-          <separator/>
-          <label class="text-link"
-                 onclick="gSyncPane.openOldSyncSupportPage(); return false;"
-                 value="&welcome.useOldSync.label;"/>
+            <label class="text-link"
+                   onclick="gSyncPane.signUp(); return false;"
+                   value="&welcome.createAccount.label;"/>
+            <label class="text-link"
+                   onclick="gSyncPane.signIn(); return false;"
+                   value="&welcome.signIn.label;"/>
+            <separator/>
+            <label class="text-link"
+                   onclick="gSyncPane.openOldSyncSupportPage(); return false;"
+                   value="&welcome.useOldSync.label;"/>
         </vbox>
 
         <vbox id="hasFxaAccount">
@@ -208,11 +208,12 @@
               <!-- logged in and verified and all is good -->
               <hbox>
                 <label id="fxaEmailAddress1"/>
-                <vbox flex="1">
+                <vbox>
                   <label class="text-link"
                          onclick="gSyncPane.manageFirefoxAccount();"
                          value="&manage.label;"/>
                 </vbox>
+                <spacer flex="1"/>
                 <vbox>
                   <button id="fxaUnlinkButton"
                           oncommand="gSyncPane.unlinkFirefoxAccount(true);"
