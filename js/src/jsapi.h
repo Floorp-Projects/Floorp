@@ -2974,6 +2974,14 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         value().setUndefined();
     }
 
+    void assign(JSPropertyDescriptor &other) {
+        object().set(other.obj);
+        setAttributes(other.attrs);
+        setGetter(other.getter);
+        setSetter(other.setter);
+        value().set(other.value);
+    }
+
     JS::MutableHandleObject object() {
         return JS::MutableHandleObject::fromMarkedLocation(&desc()->obj);
     }
