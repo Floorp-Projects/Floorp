@@ -92,6 +92,7 @@
 
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "InputData.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -5094,6 +5095,11 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if ([self apzctm]) {
+    // Disable main-thread scrolling completely when using APZC.
+    return;
+  }
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   ChildViewMouseTracker::MouseScrolled(theEvent);
@@ -5173,6 +5179,97 @@ static int32_t RoundUp(double aDouble)
 
 - (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type
 {
+  APZCTreeManager* apzctm = [self apzctm];
+  if (!apzctm) {
+    return;
+  }
+
+  CGPoint loc = CGEventGetLocation(cgEvent);
+  loc.y = nsCocoaUtils::FlippedScreenY(loc.y);
+  NSPoint locationInWindow = [[self window] convertScreenToBase:NSPointFromCGPoint(loc)];
+  ScreenIntPoint location = ScreenPixel::FromUntyped([self convertWindowCoordinates:locationInWindow]);
+
+  static NSTimeInterval sStartTime = [NSDate timeIntervalSinceReferenceDate];
+  static TimeStamp sStartTimeStamp = TimeStamp::Now();
+
+  if (type == kCGEventScrollWheel) {
+    NSEvent* event = [NSEvent eventWithCGEvent:cgEvent];
+    NSEventPhase phase = nsCocoaUtils::EventPhase(event);
+    NSEventPhase momentumPhase = nsCocoaUtils::EventMomentumPhase(event);
+    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
+    nsCocoaUtils::GetScrollingDeltas(event, &pixelDeltaX, &pixelDeltaY);
+    uint32_t eventTime = ([event timestamp] - sStartTime) * 1000;
+    TimeStamp eventTimeStamp = sStartTimeStamp +
+      TimeDuration::FromSeconds([event timestamp] - sStartTime);
+    NSPoint locationInWindowMoved = NSMakePoint(
+      locationInWindow.x + pixelDeltaX,
+      locationInWindow.y - pixelDeltaY);
+    ScreenIntPoint locationMoved = ScreenPixel::FromUntyped(
+      [self convertWindowCoordinates:locationInWindowMoved]);
+    ScreenPoint delta = ScreenPoint(locationMoved - location);
+    ScrollableLayerGuid guid;
+
+    // MayBegin and Cancelled are dispatched when the fingers start or stop
+    // touching the touchpad before any scrolling has occurred. These events
+    // can be used to control scrollbar visibility or interrupt scroll
+    // animations. They are only dispatched on 10.8 or later, and only by
+    // relatively modern devices.
+    if (phase == NSEventPhaseMayBegin) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MAYSTART,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+      return;
+    }
+    if (phase == NSEventPhaseCancelled) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_CANCELLED,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+      return;
+    }
+
+    // Legacy scroll events are dispatched by devices that do not have a
+    // concept of a scroll gesture, for example by USB mice with
+    // traditional mouse wheels.
+    // For these kinds of scrolls, we want to surround every single scroll
+    // event with a PANGESTURE_START and a PANGESTURE_END event. The APZC
+    // needs to know that the real scroll gesture can end abruptly after any
+    // one of these events.
+    bool isLegacyScroll = (phase == NSEventPhaseNone &&
+      momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0));
+
+    if (phase == NSEventPhaseBegan || isLegacyScroll) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_START,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0)) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_PAN,
+                                                eventTime, eventTimeStamp, location,
+                                                delta, 0), &guid);
+    }
+    if (phase == NSEventPhaseEnded || isLegacyScroll) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_END,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+
+    // Any device that can dispatch momentum events supports all three momentum phases.
+    if (momentumPhase == NSEventPhaseBegan) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMSTART,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseChanged && delta != ScreenPoint(0, 0)) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMPAN,
+                                                eventTime, eventTimeStamp, location,
+                                                delta, 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseEnded) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMEND,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+  }
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
