@@ -141,18 +141,6 @@ class APZCTreeManager;
 
 @end
 
-// Support for pixel scroll deltas, not part of NSEvent.h
-// See http://lists.apple.com/archives/cocoa-dev/2007/Feb/msg00050.html
-@interface NSEvent (DeviceDelta)
-// Leopard and SnowLeopard
-- (CGFloat)deviceDeltaX;
-- (CGFloat)deviceDeltaY;
-// Lion and above
-- (CGFloat)scrollingDeltaX;
-- (CGFloat)scrollingDeltaY;
-- (BOOL)hasPreciseScrollingDeltas;
-@end
-
 #if !defined(MAC_OS_X_VERSION_10_6) || \
 MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
 @interface NSEvent (SnowLeopardEventFeatures)

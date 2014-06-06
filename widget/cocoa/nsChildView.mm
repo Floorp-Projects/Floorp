@@ -5124,19 +5124,14 @@ static int32_t RoundUp(double aDouble)
   wheelEvent.lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
   wheelEvent.lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
 
+  // wheelEvent.deltaMode was set by convertCocoaMouseWheelEvent:toGeckoEvent:
+  // and depends on whether the current scrolling device supports pixel deltas.
   if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    // Some scrolling devices supports pixel scrolling, e.g. a Macbook
-    // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
-    // contains the amount of pixels to scroll. Since Lion this has changed
-    // to [theEvent scrollingDeltaX/Y].
     double scale = mGeckoChild->BackingScaleFactor();
-    if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
-      wheelEvent.deltaX = -[theEvent scrollingDeltaX] * scale;
-      wheelEvent.deltaY = -[theEvent scrollingDeltaY] * scale;
-    } else {
-      wheelEvent.deltaX = -[theEvent deviceDeltaX] * scale;
-      wheelEvent.deltaY = -[theEvent deviceDeltaY] * scale;
-    }
+    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
+    nsCocoaUtils::GetScrollingDeltas(theEvent, &pixelDeltaX, &pixelDeltaY);
+    wheelEvent.deltaX = -pixelDeltaX * scale;
+    wheelEvent.deltaY = -pixelDeltaY * scale;
   } else {
     wheelEvent.deltaX = -[theEvent deltaX];
     wheelEvent.deltaY = -[theEvent deltaY];
@@ -5236,22 +5231,12 @@ static int32_t RoundUp(double aDouble)
                         toGeckoEvent:(WidgetWheelEvent*)outWheelEvent
 {
   [self convertCocoaMouseEvent:aMouseEvent toGeckoEvent:outWheelEvent];
-  outWheelEvent->deltaMode =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true) ?
-      nsIDOMWheelEvent::DOM_DELTA_PIXEL : nsIDOMWheelEvent::DOM_DELTA_LINE;
 
-  // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
-  // assertion and an Objective-C NSInternalInconsistencyException if the
-  // underlying "Carbon" event doesn't contain pixel scrolling information.
-  // For these events, carbonEventKind is kEventMouseWheelMoved instead of
-  // kEventMouseScroll.
-  if (outWheelEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    EventRef theCarbonEvent = [aMouseEvent _eventRef];
-    UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
-    if (carbonEventKind != kEventMouseScroll) {
-      outWheelEvent->deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
-    }
-  }
+  bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
+
+  outWheelEvent->deltaMode = usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
+                                              : nsIDOMWheelEvent::DOM_DELTA_LINE;
   outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
