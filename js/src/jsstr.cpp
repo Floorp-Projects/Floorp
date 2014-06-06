@@ -1050,7 +1050,7 @@ BoyerMooreHorspool(const TextChar *text, uint32_t textLen, const PatChar *pat, u
 
     uint32_t patLast = patLen - 1;
     for (uint32_t i = 0; i < patLast; i++) {
-        PatChar c = pat[i];
+        jschar c = pat[i];
         if (c >= sBMHCharSetSize)
             return sBMHBadPattern;
         skip[c] = uint8_t(patLast - i);
@@ -1064,7 +1064,7 @@ BoyerMooreHorspool(const TextChar *text, uint32_t textLen, const PatChar *pat, u
                 return static_cast<int>(i);  /* safe: max string size */
         }
 
-        TextChar c = text[k];
+        jschar c = text[k];
         k += (c >= sBMHCharSetSize) ? patLen : skip[c];
     }
     return -1;
