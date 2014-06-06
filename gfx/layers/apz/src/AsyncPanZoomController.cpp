@@ -714,6 +714,21 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
     }
     break;
   }
+  case PANGESTURE_INPUT: {
+    const PanGestureInput& panGestureInput = aEvent.AsPanGestureInput();
+    switch (panGestureInput.mType) {
+      case PanGestureInput::PANGESTURE_MAYSTART: rv = OnPanMayBegin(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_CANCELLED: rv = OnPanCancelled(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_START: rv = OnPanBegin(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_PAN: rv = OnPan(panGestureInput, true); break;
+      case PanGestureInput::PANGESTURE_END: rv = OnPanEnd(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMSTART: rv = OnPanMomentumStart(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, false); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
+      default: NS_WARNING("Unhandled pan gesture"); break;
+    }
+    break;
+  }
   default: NS_WARNING("Unhandled input event"); break;
   }
 
@@ -1085,6 +1100,93 @@ AsyncPanZoomController::ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut
   return false;
 }
 
+nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-maybegin in state %d\n", this, mState);
+
+  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+  CancelAnimation();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanCancelled(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-cancelled in state %d\n", this, mState);
+
+  mX.CancelTouch();
+  mY.CancelTouch();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+
+nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-begin in state %d\n", this, mState);
+
+  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+
+  if (GetAxisLockMode() == FREE) {
+    SetState(PANNING);
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
+  float dx = aEvent.mPanDisplacement.x, dy = aEvent.mPanDisplacement.y;
+  double angle = atan2(dy, dx); // range [-pi, pi]
+  angle = fabs(angle); // range [0, pi]
+
+  HandlePanning(angle);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad) {
+  APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
+
+  // We need to update the axis velocity in order to get a useful display port
+  // size and position. We need to do so even if this is a momentum pan (i.e.
+  // aFingersOnTouchpad == false); in that case the "with touch" part is not
+  // really appropriate, so we may want to rethink this at some point.
+  mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y, aEvent.mTime);
+
+  HandlePanningUpdate(aEvent.mPanDisplacement.x, aEvent.mPanDisplacement.y);
+
+  CallDispatchScroll(aEvent.mPanStartPoint, aEvent.mPanStartPoint + aEvent.mPanDisplacement, 0);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-end in state %d\n", this, mState);
+
+  mX.EndTouch(aEvent.mTime);
+  mY.EndTouch(aEvent.mTime);
+  RequestContentRepaint();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanMomentumStart(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-momentumstart in state %d\n", this, mState);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanMomentumEnd(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-momentumend in state %d\n", this, mState);
+
+  // We need to reset the velocity to zero. We don't really have a "touch"
+  // here because the touch has already ended long before the momentum
+  // animation started, but I guess it doesn't really matter for now.
+  mX.CancelTouch();
+  mY.CancelTouch();
+
+  RequestContentRepaint();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
 nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a long-press in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
@@ -1235,6 +1337,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
 }
 
 void AsyncPanZoomController::HandlePanning(double aAngle) {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.CanScrollNow() || !mY.CanScrollNow())) {
     SetState(PANNING);
   } else if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
@@ -1255,6 +1358,31 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     }
   } else {
     SetState(PANNING);
+  }
+}
+
+void AsyncPanZoomController::HandlePanningUpdate(float aDX, float aDY) {
+  // If we're axis-locked, check if the user is trying to break the lock
+  if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
+
+    double angle = atan2(aDY, aDX); // range [-pi, pi]
+    angle = fabs(angle); // range [0, pi]
+
+    float breakThreshold = AXIS_BREAKOUT_THRESHOLD * APZCTreeManager::GetDPI();
+
+    if (fabs(aDX) > breakThreshold || fabs(aDY) > breakThreshold) {
+      if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
+        if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
+          mY.SetAxisLocked(false);
+          SetState(PANNING);
+        }
+      } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
+        if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
+          mX.SetAxisLocked(false);
+          SetState(PANNING);
+        }
+      }
+    }
   }
 }
 
@@ -1435,31 +1563,9 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   ScreenIntPoint prevTouchPoint(mX.GetPos(), mY.GetPos());
   ScreenIntPoint touchPoint = GetFirstTouchScreenPoint(aEvent);
 
-  // If we're axis-locked, check if the user is trying to break the lock
-  if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
-    ScreenIntPoint point = GetFirstTouchScreenPoint(aEvent);
-    float dx = mX.PanDistance(point.x);
-    float dy = mY.PanDistance(point.y);
-
-    double angle = atan2(dy, dx); // range [-pi, pi]
-    angle = fabs(angle); // range [0, pi]
-
-    float breakThreshold = AXIS_BREAKOUT_THRESHOLD * APZCTreeManager::GetDPI();
-
-    if (fabs(dx) > breakThreshold || fabs(dy) > breakThreshold) {
-      if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
-        if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
-          mY.SetAxisLocked(false);
-          SetState(PANNING);
-        }
-      } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
-        if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
-          mX.SetAxisLocked(false);
-          SetState(PANNING);
-        }
-      }
-    }
-  }
+  float dx = mX.PanDistance(touchPoint.x);
+  float dy = mY.PanDistance(touchPoint.y);
+  HandlePanningUpdate(dx, dy);
 
   UpdateWithTouchAtDevicePoint(aEvent);
 
