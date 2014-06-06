@@ -10,7 +10,7 @@ class TestSharedUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestSharedUnits, self).setUp()
-        self.set_server_prefix("build/tests/marionette/tests/browser/components/loop/test/shared/")
+        self.set_server_prefix(".")
 
     def test_units(self):
         self.check_page("index.html")
