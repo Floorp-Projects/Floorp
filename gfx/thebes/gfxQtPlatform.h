@@ -83,8 +83,6 @@ public:
 
     virtual int GetScreenDepth() const MOZ_OVERRIDE;
 
-    virtual bool SupportsOffMainThreadCompositing() MOZ_OVERRIDE;
-
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 
