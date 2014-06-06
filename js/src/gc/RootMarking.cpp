@@ -19,6 +19,7 @@
 
 #include "builtin/MapObject.h"
 #include "frontend/BytecodeCompiler.h"
+#include "gc/ForkJoinNursery.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
@@ -125,6 +126,14 @@ MarkExactStackRoots(JSTracer *trc)
     MarkExactStackRootsForType<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(trc);
     MarkExactStackRootsForType<PropDesc, MarkPropDescRoot>(trc);
 }
+
+static void
+MarkExactStackRoots(ThreadSafeContext *cx, JSTracer *trc)
+{
+    for (unsigned i = 0; i < THING_ROOT_LIMIT; i++)
+        MarkExactStackRootList(trc, cx->thingGCRooters[i], ThingRootKind(i));
+}
+
 #endif /* JSGC_USE_EXACT_ROOTING */
 
 enum ConservativeGCTest
@@ -581,17 +590,15 @@ AutoGCRooter::trace(JSTracer *trc)
 /* static */ void
 AutoGCRooter::traceAll(JSTracer *trc)
 {
-    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
-        for (js::AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down)
-            gcr->trace(trc);
-    }
+    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
+        traceAllInContext(&*cx, trc);
 }
 
 /* static */ void
 AutoGCRooter::traceAllWrappers(JSTracer *trc)
 {
     for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
-        for (js::AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down) {
+        for (AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down) {
             if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
                 gcr->trace(trc);
         }
@@ -682,6 +689,27 @@ js::gc::MarkPersistentRootedChains(JSTracer *trc)
     PersistentRootedMarker<Value>::markChain<MarkValueRoot>(trc, rt->valuePersistentRooteds,
                                                             "PersistentRooted<Value>");
 }
+
+#ifdef JSGC_FJGENERATIONAL
+void
+js::gc::MarkForkJoinStack(ForkJoinNurseryCollectionTracer *trc)
+{
+    ForkJoinContext *cx = ForkJoinContext::current();
+    PerThreadData *ptd = cx->perThreadData;
+
+    AutoGCRooter::traceAllInContext(cx, trc);
+    MarkExactStackRoots(cx, trc);
+    jit::MarkJitActivations(ptd, trc);
+
+#ifdef DEBUG
+    // There should be only JIT activations on the stack
+    for (ActivationIterator iter(ptd); !iter.done(); ++iter) {
+        Activation *act = iter.activation();
+        JS_ASSERT(act->isJit());
+    }
+#endif
+}
+#endif  // JSGC_FJGENERATIONAL
 
 void
 js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
@@ -784,10 +812,10 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
             c->debugScopes->mark(trc);
     }
 
-    MarkInterpreterActivations(rt, trc);
+    MarkInterpreterActivations(&rt->mainThread, trc);
 
 #ifdef JS_ION
-    jit::MarkJitActivations(rt, trc);
+    jit::MarkJitActivations(&rt->mainThread, trc);
 #endif
 
     if (!isHeapMinorCollecting()) {
