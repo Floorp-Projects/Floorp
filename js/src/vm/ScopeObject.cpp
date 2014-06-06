@@ -534,19 +534,10 @@ with_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, unsigned
 }
 
 static bool
-with_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name,
-                    bool *succeeded)
+with_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::deleteProperty(cx, actual, name, succeeded);
-}
-
-static bool
-with_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index,
-                   bool *succeeded)
-{
-    RootedObject actual(cx, &obj->as<DynamicWithObject>().object());
-    return JSObject::deleteElement(cx, actual, index, succeeded);
+    return JSObject::deleteGeneric(cx, actual, id, succeeded);
 }
 
 static JSObject *
@@ -602,8 +593,7 @@ const Class DynamicWithObject::class_ = {
         with_SetElement,
         with_GetGenericAttributes,
         with_SetGenericAttributes,
-        with_DeleteProperty,
-        with_DeleteElement,
+        with_DeleteGeneric,
         nullptr, nullptr,    /* watch/unwatch */
         nullptr,             /* slice */
         nullptr,             /* enumerate (native enumeration of target doesn't work) */

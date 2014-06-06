@@ -265,6 +265,18 @@ Zone::hasMarkedCompartments()
     return false;
 }
 
+bool
+Zone::canCollect()
+{
+    // Zones cannot be collected while in use by other threads.
+    if (usedByExclusiveThread)
+        return false;
+    JSRuntime *rt = runtimeFromAnyThread();
+    if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
+        return false;
+    return true;
+}
+
 JS::Zone *
 js::ZoneOfValue(const JS::Value &value)
 {
@@ -272,4 +284,10 @@ js::ZoneOfValue(const JS::Value &value)
     if (value.isObject())
         return value.toObject().zone();
     return static_cast<js::gc::Cell *>(value.toGCThing())->tenuredZone();
+}
+
+bool
+js::ZonesIter::atAtomsZone(JSRuntime *rt)
+{
+    return rt->isAtomsZone(*it);
 }

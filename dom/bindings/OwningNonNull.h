@@ -43,6 +43,11 @@ public:
     init(aValue);
   }
 
+  void operator=(T& aValue)
+  {
+    init(&aValue);
+  }
+
   void operator=(const already_AddRefed<T>& aValue)
   {
     init(aValue);

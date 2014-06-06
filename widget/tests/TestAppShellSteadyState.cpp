@@ -407,7 +407,7 @@ Test4Internal(nsIAppShell* aAppShell)
   uint32_t flags = nsIWebBrowserChrome::CHROME_DEFAULT;
 
   nsCOMPtr<nsIXULWindow> xulWindow;
-  if (NS_FAILED(appService->CreateTopLevelWindow(nullptr, uri, flags, 100, 100,
+  if (NS_FAILED(appService->CreateTopLevelWindow(nullptr, uri, flags, 100, 100, nullptr,
                                                  getter_AddRefs(xulWindow)))) {
     fail("Failed to create new window");
     return false;
