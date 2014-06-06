@@ -525,16 +525,17 @@ public class BrowserHealthRecorder implements HealthRecorder, GeckoEventListener
 
         // Because the distribution lookup can take some time, do it at the end of
         // our background startup work, along with the Gecko snapshot fetch.
-        final GeckoEventListener self = this;
-        ThreadUtils.postToBackgroundThread(new Runnable() {
+        final Distribution distribution = Distribution.getInstance(context);
+        distribution.addOnDistributionReadyCallback(new Runnable() {
             @Override
             public void run() {
-                final DistributionDescriptor desc = new Distribution(context).getDescriptor();
+                Log.d(LOG_TAG, "Running post-distribution task: health recorder.");
+                final DistributionDescriptor desc = distribution.getDescriptor();
                 if (desc != null && desc.valid) {
                     profileCache.setDistributionString(desc.id, desc.version);
                 }
                 Log.d(LOG_TAG, "Requesting all add-ons and FHR prefs from Gecko.");
-                dispatcher.registerGeckoThreadListener(self, EVENT_SNAPSHOT);
+                dispatcher.registerGeckoThreadListener(BrowserHealthRecorder.this, EVENT_SNAPSHOT);
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("HealthReport:RequestSnapshot", null));
             }
         });
