@@ -692,7 +692,7 @@ function ArrayMapPar(func, mode) {
       break parallel;
 
     var slicesInfo = ComputeSlicesInfo(length);
-    ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode), buffer);
+    ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode));
     return buffer;
   }
 
@@ -741,7 +741,7 @@ function ArrayReducePar(func, mode) {
     var numSlices = slicesInfo.count;
     var subreductions = NewDenseArray(numSlices);
 
-    ForkJoin(reduceThread, 0, numSlices, ForkJoinMode(mode), null);
+    ForkJoin(reduceThread, 0, numSlices, ForkJoinMode(mode));
 
     var accumulator = subreductions[0];
     for (var i = 1; i < numSlices; i++)
@@ -800,7 +800,7 @@ function ArrayScanPar(func, mode) {
     var numSlices = slicesInfo.count;
 
     // Scan slices individually (see comment on phase1()).
-    ForkJoin(phase1, 0, numSlices, ForkJoinMode(mode), buffer);
+    ForkJoin(phase1, 0, numSlices, ForkJoinMode(mode));
 
     // Compute intermediates array (see comment on phase2()).
     var intermediates = [];
@@ -816,7 +816,7 @@ function ArrayScanPar(func, mode) {
     // We start from slice 1 instead of 0 since there is no work to be done
     // for slice 0.
     if (numSlices > 1)
-      ForkJoin(phase2, 1, numSlices, ForkJoinMode(mode), buffer);
+      ForkJoin(phase2, 1, numSlices, ForkJoinMode(mode));
     return buffer;
   }
 
@@ -1030,7 +1030,7 @@ function ArrayFilterPar(func, mode) {
       UnsafePutElements(counts, i, 0);
 
     var survivors = new Uint8Array(length);
-    ForkJoin(findSurvivorsThread, 0, numSlices, ForkJoinMode(mode), survivors);
+    ForkJoin(findSurvivorsThread, 0, numSlices, ForkJoinMode(mode));
 
     // Step 2. Compress the slices into one contiguous set.
     var count = 0;
@@ -1038,7 +1038,7 @@ function ArrayFilterPar(func, mode) {
       count += counts[i];
     var buffer = NewDenseArray(count);
     if (count > 0)
-      ForkJoin(copySurvivorsThread, 0, numSlices, ForkJoinMode(mode), buffer);
+      ForkJoin(copySurvivorsThread, 0, numSlices, ForkJoinMode(mode));
 
     return buffer;
   }
@@ -1148,7 +1148,7 @@ function ArrayStaticBuildPar(length, func, mode) {
       break parallel;
 
     var slicesInfo = ComputeSlicesInfo(length);
-    ForkJoin(constructThread, 0, slicesInfo.count, ForkJoinMode(mode), buffer);
+    ForkJoin(constructThread, 0, slicesInfo.count, ForkJoinMode(mode));
     return buffer;
   }
 

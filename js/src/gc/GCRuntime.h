@@ -467,16 +467,6 @@ class GCRuntime
 #endif
 
     /*
-     * ForkJoin workers enter and leave GC independently; this counter
-     * tracks the number that are currently in GC.
-     *
-     * Technically this should be #ifdef JSGC_FJGENERATIONAL but that
-     * affects the observed size of JSRuntime in problematic ways, see
-     * note in vm/ThreadPool.h.
-     */
-    mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> fjCollectionCounter;
-
-    /*
      * These options control the zealousness of the GC. The fundamental values
      * are   nextScheduled and gcDebugCompartmentGC. At every allocation,
      *   nextScheduled is decremented. When it reaches zero, we do either a
