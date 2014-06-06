@@ -180,16 +180,7 @@ struct MOZ_STACK_CLASS TreeMatchContext {
   }
 
 #ifdef DEBUG
-  void AssertHasAllStyleScopes(mozilla::dom::Element* aElement)
-  {
-    nsINode* cur = aElement->GetParentNode();
-    while (cur) {
-      if (cur->IsScopedStyleRoot()) {
-        MOZ_ASSERT(mStyleScopes.Contains(cur));
-      }
-      cur = cur->GetParentNode();
-    }
-  }
+  void AssertHasAllStyleScopes(mozilla::dom::Element* aElement) const;
 #endif
 
   bool SetStyleScopeForSelectorMatching(mozilla::dom::Element* aSubject,

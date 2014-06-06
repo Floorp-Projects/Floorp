@@ -2936,10 +2936,9 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
   TreeMatchContext treeMatchContext(true,
                                     nsRuleWalker::eRelevantLinkUnvisited,
                                     mPresContext->Document());
-  nsIContent *parent = content ? content->GetParent() : nullptr;
-  Element *parentElement =
-    parent && parent->IsElement() ? parent->AsElement() : nullptr;
-  treeMatchContext.InitAncestors(parentElement);
+  Element* parent =
+    content ? content->GetParentElementCrossingShadowRoot() : nullptr;
+  treeMatchContext.InitAncestors(parent);
   nsTArray<nsIContent*> visibleKidsOfHiddenElement;
   for (nsIFrame* ibSibling = aFrame; ibSibling;
        ibSibling = GetNextBlockInInlineSibling(propTable, ibSibling)) {
