@@ -505,6 +505,16 @@ public:
     return continueX || continueY;
   }
 
+  virtual void Cancel() MOZ_OVERRIDE
+  {
+    // If the snap-back animation is cancelled for some reason, we need to
+    // clear the overscroll, otherwise the user would be stuck in the
+    // overscrolled state (since touch blocks beginning in an overscrolled
+    // state are ignored).
+    mApzc.mX.ClearOverscroll();
+    mApzc.mY.ClearOverscroll();
+  }
+
 private:
   AsyncPanZoomController& mApzc;
 };
@@ -1684,7 +1694,12 @@ void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation)
 void AsyncPanZoomController::CancelAnimation() {
   ReentrantMonitorAutoEnter lock(mMonitor);
   SetState(NOTHING);
-  mAnimation = nullptr;
+  if (mAnimation) {
+    mAnimation->Cancel();
+    mAnimation = nullptr;
+    // mAnimation->Cancel() may have done something that requires a repaint.
+    RequestContentRepaint();
+  }
 }
 
 void AsyncPanZoomController::SetCompositorParent(CompositorParent* aCompositorParent) {

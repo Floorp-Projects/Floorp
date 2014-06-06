@@ -177,6 +177,10 @@ bool Axis::IsOverscrolled() const {
   return mOverscroll != 0;
 }
 
+void Axis::ClearOverscroll() {
+  mOverscroll = 0;
+}
+
 float Axis::PanDistance() {
   return fabsf(mPos - mStartPos);
 }
