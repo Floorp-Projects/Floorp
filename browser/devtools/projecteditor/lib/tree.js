@@ -39,7 +39,7 @@ var ResourceContainer = Class({
 
     this.line = doc.createElementNS(HTML_NS, "div");
     this.line.classList.add("child");
-    this.line.classList.add("side-menu-widget-item");
+    this.line.classList.add("entry");
     this.line.setAttribute("theme", "dark");
     this.line.setAttribute("tabindex", "0");
 
@@ -223,15 +223,14 @@ var TreeView = Class({
     this.models = new Set();
     this.roots = new Set();
     this._containers = new Map();
-    this.elt = document.createElement("vbox");
+    this.elt = document.createElementNS(HTML_NS, "div");
     this.elt.tree = this;
-    this.elt.className = "side-menu-widget-container sources-tree";
+    this.elt.className = "sources-tree";
     this.elt.setAttribute("with-arrows", "true");
     this.elt.setAttribute("theme", "dark");
     this.elt.setAttribute("flex", "1");
 
     this.children = document.createElementNS(HTML_NS, "ul");
-    this.children.setAttribute("flex", "1");
     this.elt.appendChild(this.children);
 
     this.resourceChildrenChanged = this.resourceChildrenChanged.bind(this);
@@ -315,7 +314,7 @@ var TreeView = Class({
         return;
       }
       let container = this.importResource(root);
-      container.line.classList.add("side-menu-widget-group-title");
+      container.line.classList.add("entry-group-title");
       container.line.setAttribute("theme", "dark");
       this.selectContainer(container);
 

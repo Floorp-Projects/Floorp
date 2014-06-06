@@ -205,7 +205,7 @@ add_task(function test_fetchAndCacheLinks_malformedURI() {
 add_task(function test_fetchAndCacheLinks_unknownHost() {
   yield DirectoryLinksProvider.init();
   yield cleanJsonFile();
-  let nonExistentServer = "http://nosuchhost";
+  let nonExistentServer = "http://nosuchhost.localhost";
   try {
     yield DirectoryLinksProvider._fetchAndCacheLinks(nonExistentServer);
     do_throw("BAD URIs should fail");
@@ -286,7 +286,7 @@ add_task(function test_DirectoryLinksProvider__prefObserver_url() {
   // tests these 2 things:
   // 1. _linksURL is properly set after the pref change
   // 2. invalid source url is correctly handled
-  let exampleUrl = 'http://nosuchhost/bad';
+  let exampleUrl = 'http://nosuchhost.localhost/bad';
   yield promiseDirectoryDownloadOnPrefChange(kSourceUrlPref, exampleUrl);
   do_check_eq(DirectoryLinksProvider._linksURL, exampleUrl);
 

@@ -638,11 +638,9 @@
 #endif
 
 ; [Webide Files]
-#ifdef MOZ_DEVTOOLS_WEBIDE
 @BINPATH@/browser/chrome/webide@JAREXT@
 @BINPATH@/browser/chrome/webide.manifest
 @BINPATH@/browser/@PREF_DIR@/webide-prefs.js
-#endif
 
 ; shell icons
 #ifdef XP_UNIX

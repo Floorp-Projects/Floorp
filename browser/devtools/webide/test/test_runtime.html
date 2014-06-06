@@ -49,10 +49,9 @@
 
           win.AppManager.update("runtimelist");
 
-          let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
-          yield win.Cmds.importHostedApp(hostedAppManifest);
+          let packagedAppLocation = getTestFilePath("app");
 
-          yield win.Cmds.showRuntimePanel();
+          yield win.Cmds.importPackagedApp(packagedAppLocation);
 
           let panelNode = win.document.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
@@ -65,36 +64,27 @@
 
           items[0].click();
 
-          yield deferred.promise;
+          ok(win.document.querySelector("window").className, "busy", "UI is busy");
+          yield win.UI._busyPromise;
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
+
+          ok(isPlayActive(), "play button is enabled 1");
+          ok(!isStopActive(), "stop button is disabled 1");
+          let oldProject = win.AppManager.selectedProject;
+          win.AppManager.selectedProject = null;
 
           yield nextTick();
 
           ok(!isPlayActive(), "play button is disabled 2");
           ok(!isStopActive(), "stop button is disabled 2");
-
-          win.AppManager.selectedProject.errorsCount = 0;
+          win.AppManager._selectedProject = oldProject;
           win.UI.updateCommands();
 
           yield nextTick();
 
           ok(isPlayActive(), "play button is enabled 3");
           ok(!isStopActive(), "stop button is disabled 3");
-          let oldProject = win.AppManager.selectedProject;
-          win.AppManager.selectedProject = null;
-
-          yield nextTick();
-
-          ok(!isPlayActive(), "play button is disabled 4");
-          ok(!isStopActive(), "stop button is disabled 4");
-          win.AppManager._selectedProject = oldProject;
-          win.UI.updateCommands();
-
-          yield nextTick();
-
-          ok(isPlayActive(), "play button is enabled 5");
-          ok(!isStopActive(), "stop button is disabled 5");
 
 
           yield win.Cmds.disconnectRuntime();
@@ -102,8 +92,8 @@
           is(Object.keys(DebuggerServer._connections).length, 0, "Disconnected");
 
           ok(win.AppManager.selectedProject, "A project is still selected");
-          ok(!isPlayActive(), "play button is disabled 6");
-          ok(!isStopActive(), "stop button is disabled 6");
+          ok(!isPlayActive(), "play button is disabled 4");
+          ok(!isStopActive(), "stop button is disabled 4");
 
           deferred = promise.defer();
           win.AppManager.connection.once(
@@ -121,6 +111,8 @@
           yield closeWebIDE(win);
 
           DebuggerServer.destroy();
+
+          yield removeAllProjects();
 
           SimpleTest.finish();
 

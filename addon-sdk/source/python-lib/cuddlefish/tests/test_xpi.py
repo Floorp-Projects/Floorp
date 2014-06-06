@@ -148,12 +148,12 @@ class SmallXPI(unittest.TestCase):
             os.path.join("sdk", "core", "promise.js"),
             os.path.join("sdk", "net", "url.js"),
             os.path.join("sdk", "util", "object.js"),
-            os.path.join("sdk", "util", "array.js")
+            os.path.join("sdk", "util", "array.js"),
+            os.path.join("sdk", "preferences", "service.js")
             ]])
 
         missing = set(expected) - set(used_files)
         extra = set(used_files) - set(expected)
-
         self.failUnlessEqual(list(missing), [])
         self.failUnlessEqual(list(extra), [])
         used_deps = m.get_used_packages()
@@ -190,6 +190,8 @@ class SmallXPI(unittest.TestCase):
                     "resources/addon-sdk/lib/sdk/util/object.js",
                     "resources/addon-sdk/lib/sdk/util/array.js",
                     "resources/addon-sdk/lib/sdk/net/url.js",
+                    "resources/addon-sdk/lib/sdk/preferences/",
+                    "resources/addon-sdk/lib/sdk/preferences/service.js",
                     "resources/three/",
                     "resources/three/lib/",
                     "resources/three/lib/main.js",

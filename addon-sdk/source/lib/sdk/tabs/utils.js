@@ -61,7 +61,8 @@ function activateTab(tab, window) {
 exports.activateTab = activateTab;
 
 function getTabBrowser(window) {
-  return window.gBrowser;
+  // bug 1009938 - may be null in SeaMonkey
+  return window.gBrowser || window.getBrowser();
 }
 exports.getTabBrowser = getTabBrowser;
 
@@ -240,62 +241,9 @@ exports.getAllTabContentWindows = getAllTabContentWindows;
 
 // gets the tab containing the provided window
 function getTabForContentWindow(window) {
-  // Retrieve the topmost frame container. It can be either <xul:browser>,
-  // <xul:iframe/> or <html:iframe/>. But in our case, it should be xul:browser.
-  let browser;
-  try {
-    browser = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                    .getInterface(Ci.nsIWebNavigation)
-                    .QueryInterface(Ci.nsIDocShell)
-                    .chromeEventHandler;
-  } catch(e) {
-    // Bug 699450: The tab may already have been detached so that `window` is
-    // in a almost destroyed state and can't be queryinterfaced anymore.
-  }
-
-  // Is null for toplevel documents
-  if (!browser) {
-    return null;
-  }
-
-  // Retrieve the owner window, should be browser.xul one
-  let chromeWindow = browser.ownerDocument.defaultView;
-
-  // Ensure that it is top-level browser window.
-  // We need extra checks because of Mac hidden window that has a broken
-  // `gBrowser` global attribute.
-  if ('gBrowser' in chromeWindow && chromeWindow.gBrowser &&
-      'browsers' in chromeWindow.gBrowser) {
-    // Looks like we are on Firefox Desktop
-    // Then search for the position in tabbrowser in order to get the tab object
-    let browsers = chromeWindow.gBrowser.browsers;
-    let i = browsers.indexOf(browser);
-    if (i !== -1)
-      return chromeWindow.gBrowser.tabs[i];
-    return null;
-  }
-  // Fennec
-  else if ('BrowserApp' in chromeWindow) {
-    return getTabForWindow(window);
-  }
-
-  return null;
+  return getTabs().find(tab => getTabContentWindow(tab) === window.top) || null;
 }
 exports.getTabForContentWindow = getTabForContentWindow;
-
-// used on fennec
-function getTabForWindow(window) {
-  for each (let { BrowserApp } in getWindows()) {
-    if (!BrowserApp)
-      continue;
-
-    for each (let tab in BrowserApp.tabs) {
-      if (tab.browser.contentWindow == window.top)
-        return tab;
-    }
-  }
-  return null;
-}
 
 function getTabURL(tab) {
   if (tab.browser) // fennec
