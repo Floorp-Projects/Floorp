@@ -17,6 +17,7 @@
 #include "nsISecureBrowserUI.h"
 #include "nsITabParent.h"
 #include "nsIXULBrowserWindow.h"
+#include "nsWeakReference.h"
 #include "Units.h"
 #include "js/TypeDecls.h"
 
@@ -50,6 +51,7 @@ class TabParent : public PBrowserParent
                 , public nsITabParent 
                 , public nsIAuthPromptProvider
                 , public nsISecureBrowserUI
+                , public nsSupportsWeakReference
                 , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
