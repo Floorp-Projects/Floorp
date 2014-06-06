@@ -660,7 +660,7 @@ function ArrayKeys() {
     return CreateArrayIterator(this, ITEM_KIND_KEY);
 }
 
-/* ES6 rev 24 (2014 April 27) 22.1.2.1 */
+/* ES6 rev 25 (2014 May 22) 22.1.2.1 */
 function ArrayFrom(arrayLike, mapfn=undefined, thisArg=undefined) {
     // Step 1.
     var C = this;
@@ -677,23 +677,36 @@ function ArrayFrom(arrayLike, mapfn=undefined, thisArg=undefined) {
     var attrs = ATTR_CONFIGURABLE | ATTR_ENUMERABLE | ATTR_WRITABLE;
 
     // Steps 6-8.
-    if (items["@@iterator"] !== undefined) {
+    var usingIterator = items["@@iterator"];
+    if (usingIterator !== undefined) {
         // Steps 8.a-c.
         var A = IsConstructor(C) ? new C() : [];
+
+        // Steps 8.d-e.
+        var iterator = callFunction(usingIterator, items);
 
         // Step 8.f.
         var k = 0;
 
-        // Steps 8.d-e and 8.g.i-vi.
-        for (var nextValue of items) {
+        // Steps 8.g.i-vi.
+        // These steps cannot be implemented using a for-of loop.
+        // See <https://bugs.ecmascript.org/show_bug.cgi?id=2883>.
+        var next;
+        while (true) {
+            // Steps 8.g.ii-vi.
+            next = iterator.next();
+            if (!IsObject(next))
+                ThrowError(JSMSG_NEXT_RETURNED_PRIMITIVE);
+            if (next.done)
+                break;  // Substeps of 8.g.iv are implemented below.
+            var nextValue = next.value;
+
             // Steps 8.g.vii-viii.
             var mappedValue = mapping ? callFunction(mapfn, thisArg, nextValue, k) : nextValue;
 
             // Steps 8.g.ix-xi.
             _DefineDataProperty(A, k++, mappedValue, attrs);
         }
-
-        // Here we're at step 8.g.iv.1. Fall through; it's implemented below.
     } else {
         // Step 9 is an assertion: items is not an Iterator. Testing this is
         // literally the very last thing we did, so we don't assert here.
