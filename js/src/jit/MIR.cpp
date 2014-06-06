@@ -655,7 +655,10 @@ void
 MParameter::printOpcode(FILE *fp) const
 {
     PrintOpcodeName(fp, op());
-    fprintf(fp, " %d", index());
+    if (index() == THIS_SLOT)
+        fprintf(fp, " THIS_SLOT");
+    else
+        fprintf(fp, " %d", index());
 }
 
 HashNumber
