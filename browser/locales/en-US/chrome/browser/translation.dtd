@@ -44,6 +44,8 @@
 <!ENTITY translation.errorTranslating.label     "There has been an error translating this page.">
 <!ENTITY translation.tryAgain.button            "Try Again">
 
+<!ENTITY translation.serviceUnavailable.label   "Translation is not available at the moment. Please try again later.">
+
 <!ENTITY translation.options.menu               "Options">
 <!-- LOCALIZATION NOTE (translation.options.neverForSite.accesskey,
   -                     translation.options.preferences.accesskey):
