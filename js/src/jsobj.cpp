@@ -1067,8 +1067,10 @@ js::DefineProperty(JSContext *cx, HandleObject obj, HandleId id, const PropDesc 
 
     if (obj->getOps()->lookupGeneric) {
         if (obj->is<ProxyObject>()) {
-            RootedValue pd(cx, desc.descriptorValue());
-            return Proxy::defineProperty(cx, obj, id, pd);
+            Rooted<PropertyDescriptor> pd(cx);
+            desc.populatePropertyDescriptor(obj, &pd);
+            pd.object().set(obj);
+            return Proxy::defineProperty(cx, obj, id, &pd);
         }
         return Reject(cx, obj, JSMSG_OBJECT_NOT_EXTENSIBLE, throwError, rval);
     }
@@ -1149,9 +1151,10 @@ js::DefineProperties(JSContext *cx, HandleObject obj, HandleObject props)
 
     if (obj->getOps()->lookupGeneric) {
         if (obj->is<ProxyObject>()) {
+            Rooted<PropertyDescriptor> pd(cx);
             for (size_t i = 0, len = ids.length(); i < len; i++) {
-                RootedValue pd(cx, descs[i].descriptorValue());
-                if (!Proxy::defineProperty(cx, obj, ids[i], pd))
+                descs[i].populatePropertyDescriptor(obj, &pd);
+                if (!Proxy::defineProperty(cx, obj, ids[i], &pd))
                     return false;
             }
             return true;
