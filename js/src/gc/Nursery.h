@@ -36,6 +36,7 @@ namespace gc {
 class Cell;
 class Collector;
 class MinorCollectionTracer;
+class ForkJoinNursery;
 } /* namespace gc */
 
 namespace types {
@@ -48,6 +49,39 @@ class MacroAssembler;
 class ICStubCompiler;
 class BaselineCompiler;
 }
+
+namespace gc {
+
+/*
+ * This structure overlays a Cell in the Nursery and re-purposes its memory
+ * for managing the Nursery collection process.
+ */
+class RelocationOverlay
+{
+    friend class MinorCollectionTracer;
+    friend class ForkJoinNursery;
+
+    /* The low bit is set so this should never equal a normal pointer. */
+    static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
+
+    /* Set to Relocated when moved. */
+    uintptr_t magic_;
+
+    /* The location |this| was moved to. */
+    Cell *newLocation_;
+
+    /* A list entry to track all relocated things. */
+    RelocationOverlay *next_;
+
+  public:
+    static inline RelocationOverlay *fromCell(Cell *cell);
+    inline bool isForwarded() const;
+    inline Cell *forwardingAddress() const;
+    inline void forwardTo(Cell *cell);
+    inline RelocationOverlay *next() const;
+};
+
+} /* namespace gc */
 
 class Nursery
 {
@@ -215,7 +249,7 @@ class Nursery
     MOZ_ALWAYS_INLINE void initChunk(int chunkno) {
         NurseryChunkLayout &c = chunk(chunkno);
         c.trailer.storeBuffer = JS::shadow::Runtime::asShadowRuntime(runtime())->gcStoreBufferPtr();
-        c.trailer.location = gc::ChunkLocationNursery;
+        c.trailer.location = gc::ChunkLocationBitNursery;
         c.trailer.runtime = runtime();
     }
 

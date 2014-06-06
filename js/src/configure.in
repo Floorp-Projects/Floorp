@@ -3199,6 +3199,8 @@ MOZ_ARG_DISABLE_BOOL(gcgenerational,
 if test -n "$JSGC_GENERATIONAL"; then
     AC_DEFINE(JSGC_GENERATIONAL)
 fi
+JSGC_GENERATIONAL_CONFIGURED=$JSGC_GENERATIONAL
+AC_SUBST(JSGC_GENERATIONAL_CONFIGURED)
 
 dnl ========================================================
 dnl = Use exact stack rooting for GC

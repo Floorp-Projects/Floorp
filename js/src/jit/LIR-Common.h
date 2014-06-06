@@ -374,7 +374,7 @@ class LNewPar : public LInstructionHelper<1, 1, 2>
     }
 };
 
-class LNewDenseArrayPar : public LCallInstructionHelper<1, 2, 3>
+class LNewDenseArrayPar : public LInstructionHelper<1, 2, 3>
 {
   public:
     LIR_HEADER(NewDenseArrayPar);
@@ -5361,7 +5361,7 @@ class LRest : public LCallInstructionHelper<1, 1, 3>
     }
 };
 
-class LRestPar : public LCallInstructionHelper<1, 2, 3>
+class LRestPar : public LInstructionHelper<1, 2, 3>
 {
   public:
     LIR_HEADER(RestPar);
