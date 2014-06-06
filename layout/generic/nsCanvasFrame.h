@@ -76,6 +76,17 @@ public:
      return mTouchCaretElement;
   }
 
+  // Selection Caret Handle function
+  mozilla::dom::Element* GetSelectionCaretsStartElement() const
+  {
+    return mSelectionCaretsStartElement;
+  }
+
+  mozilla::dom::Element* GetSelectionCaretsEndElement() const
+  {
+    return mSelectionCaretsEndElement;
+  }
+
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
    *  @param aHasFocus true to show focus ring, false to hide it
    */
@@ -125,6 +136,8 @@ protected:
   bool                      mAddedScrollPositionListener;
 
   nsCOMPtr<mozilla::dom::Element> mTouchCaretElement;
+  nsCOMPtr<mozilla::dom::Element> mSelectionCaretsStartElement;
+  nsCOMPtr<mozilla::dom::Element> mSelectionCaretsEndElement;
 };
 
 /**

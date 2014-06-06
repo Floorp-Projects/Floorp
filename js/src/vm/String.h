@@ -703,11 +703,12 @@ class JSFlatString : public JSLinearString
     bool isIndexSlow(uint32_t *indexp) const;
 
     void init(const jschar *chars, size_t length);
+    void init(const JS::Latin1Char *chars, size_t length);
 
   public:
-    template <js::AllowGC allowGC>
+    template <js::AllowGC allowGC, typename CharT>
     static inline JSFlatString *new_(js::ThreadSafeContext *cx,
-                                     const jschar *chars, size_t length);
+                                     const CharT *chars, size_t length);
 
     MOZ_ALWAYS_INLINE
     const jschar *charsZ() const {

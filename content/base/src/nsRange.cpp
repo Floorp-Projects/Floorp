@@ -23,7 +23,6 @@
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 #include "nsGenericDOMDataNode.h"
-#include "nsLayoutUtils.h"
 #include "nsTextFrame.h"
 #include "nsFontFaceList.h"
 #include "mozilla/dom/DocumentFragment.h"
@@ -2792,10 +2791,11 @@ static nsresult GetPartialTextRect(nsLayoutUtils::RectCallback* aCallback,
   return NS_OK;
 }
 
-static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
-                               nsRange* aRange,
-                               nsINode* aStartParent, int32_t aStartOffset,
-                               nsINode* aEndParent, int32_t aEndOffset)
+/* static */ void
+nsRange::CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
+                            nsRange* aRange,
+                            nsINode* aStartParent, int32_t aStartOffset,
+                            nsINode* aEndParent, int32_t aEndOffset)
 {
   // Hold strong pointers across the flush
   nsCOMPtr<nsINode> startContainer = aStartParent;
@@ -2826,7 +2826,7 @@ static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
       if (textFrame) {
         int32_t outOffset;
         nsIFrame* outFrame;
-        textFrame->GetChildFrameContainingOffset(aStartOffset, false, 
+        textFrame->GetChildFrameContainingOffset(aStartOffset, false,
           &outOffset, &outFrame);
         if (outFrame) {
            nsIFrame* relativeTo =

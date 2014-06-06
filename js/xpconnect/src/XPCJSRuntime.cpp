@@ -81,6 +81,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "__exposedProps__",     // IDX_EXPOSEDPROPS
     "eval",                 // IDX_EVAL
     "controllers",           // IDX_CONTROLLERS
+    "realFrameElement",     // IDX_REALFRAMEELEMENT
 };
 
 /***************************************************************************/
@@ -1384,6 +1385,11 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
         self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
         return true;
     }
+
+    // Sometimes we get called back during XPConnect initialization, before Gecko
+    // has finished bootstrapping. Avoid crashing in nsContentUtils below.
+    if (!nsContentUtils::IsInitialized())
+        return true;
 
     // This is at least the second interrupt callback we've received since
     // returning to the event loop. See how long it's been, and what the limit

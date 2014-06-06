@@ -617,27 +617,6 @@ gfxWindowsPlatform::CreateOffscreenSurface(const IntSize& size,
     return surf.forget();
 }
 
-already_AddRefed<gfxASurface>
-gfxWindowsPlatform::CreateOffscreenImageSurface(const gfxIntSize& aSize,
-                                                gfxContentType aContentType)
-{
-#ifdef CAIRO_HAS_D2D_SURFACE
-    if (mRenderMode == RENDER_DIRECT2D) {
-        nsRefPtr<gfxASurface> surface =
-          new gfxImageSurface(aSize, OptimalFormatForContent(aContentType));
-        return surface.forget();
-    }
-#endif
-
-    nsRefPtr<gfxASurface> surface = CreateOffscreenSurface(aSize.ToIntSize(),
-                                                           aContentType);
-#ifdef DEBUG
-    nsRefPtr<gfxImageSurface> imageSurface = surface->GetAsImageSurface();
-    NS_ASSERTION(imageSurface, "Surface cannot be converted to a gfxImageSurface");
-#endif
-    return surface.forget();
-}
-
 TemporaryRef<ScaledFont>
 gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {

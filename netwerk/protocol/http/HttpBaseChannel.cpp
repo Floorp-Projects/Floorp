@@ -2048,11 +2048,17 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     oldTimedChannel->GetResponseEnd(&prevResponseEnd);
     newTimedChannel->SetRedirectEnd(prevResponseEnd);
 
+    nsAutoString initiatorType;
+    oldTimedChannel->GetInitiatorType(initiatorType);
+    newTimedChannel->SetInitiatorType(initiatorType);
+
     // Check whether or not this was a cross-domain redirect.
     newTimedChannel->SetAllRedirectsSameOrigin(
         mAllRedirectsSameOrigin && SameOriginWithOriginalUri(newURI));
   }
 
+  // This channel has been redirected. Don't report timing info.
+  mTimingEnabled = false;
   return NS_OK;
 }
 

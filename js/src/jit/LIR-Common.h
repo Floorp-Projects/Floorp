@@ -3856,7 +3856,8 @@ class LInArray : public LInstructionHelper<1, 4, 0>
 };
 
 
-// Load a value from a dense array's elements vector. Bail out if it's the hole value.
+// Load a value from an array's elements vector, loading |undefined| if we hit a hole.
+// Bail out if we get a negative index.
 class LLoadElementHole : public LInstructionHelper<BOX_PIECES, 3, 0>
 {
   public:

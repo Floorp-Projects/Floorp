@@ -3231,6 +3231,20 @@ void nsLayoutUtils::RectListBuilder::AddRect(const nsRect& aRect) {
   mRectList->Append(rect);
 }
 
+nsLayoutUtils::FirstAndLastRectCollector::FirstAndLastRectCollector()
+  : mSeenFirstRect(false)
+{
+}
+
+void nsLayoutUtils::FirstAndLastRectCollector::AddRect(const nsRect& aRect) {
+  if (!mSeenFirstRect) {
+    mSeenFirstRect = true;
+    mFirstRect = aRect;
+  }
+
+  mLastRect = aRect;
+}
+
 nsIFrame* nsLayoutUtils::GetContainingBlockForClientRect(nsIFrame* aFrame)
 {
   return aFrame->PresContext()->PresShell()->GetRootFrame();

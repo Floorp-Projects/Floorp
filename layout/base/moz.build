@@ -90,6 +90,7 @@ UNIFIED_SOURCES += [
     'PositionedEventTargeting.cpp',
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
+    'SelectionCarets.cpp',
     'StackArena.cpp',
     'TouchCaret.cpp',
 ]
