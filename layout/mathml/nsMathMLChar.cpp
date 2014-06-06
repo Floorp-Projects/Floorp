@@ -1406,6 +1406,12 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const FontFamilyName& aFamily,
 {
   StretchEnumContext* context = static_cast<StretchEnumContext*>(aData);
 
+  // for comparisons, force use of unquoted names
+  FontFamilyName unquotedFamilyName(aFamily);
+  if (unquotedFamilyName.mType == eFamily_named_quoted) {
+    unquotedFamilyName.mType = eFamily_named;
+  }
+
   // Check font family if it is not a generic one
   // We test with the kNullGlyph
   nsStyleContext *sc = context->mChar->mStyleContext;
@@ -1413,7 +1419,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const FontFamilyName& aFamily,
   NormalizeDefaultFont(font);
   nsRefPtr<gfxFontGroup> fontGroup;
   FontFamilyList family;
-  family.Append(aFamily);
+  family.Append(unquotedFamilyName);
   if (!aGeneric && !context->mChar->SetFontFamily(context->mPresContext,
                                                   nullptr, kNullGlyph, family,
                                                   font, &fontGroup))
@@ -1434,7 +1440,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const FontFamilyName& aFamily,
       // Otherwise try to find a .properties file corresponding to that font
       // family or fallback to the Unicode table.
       nsAutoString familyName;
-      aFamily.AppendToString(familyName);
+      unquotedFamilyName.AppendToString(familyName);
       glyphTable = gGlyphTableList->GetGlyphTableFor(familyName);
     }
   }
