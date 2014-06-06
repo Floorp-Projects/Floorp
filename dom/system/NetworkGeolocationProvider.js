@@ -122,7 +122,7 @@ WifiGeoPositionProvider.prototype = {
       // This platform doesn't have the settings interface, and that is just peachy
     }
 
-    if (gWifiScanningEnabled) {
+    if (gWifiScanningEnabled && Cc["@mozilla.org/wifi/monitor;1"]) {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Components.interfaces.nsIWifiMonitor);
       this.wifiService.startWatching(this);
     }
