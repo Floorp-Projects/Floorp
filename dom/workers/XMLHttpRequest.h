@@ -245,7 +245,7 @@ public:
   }
 
   void
-  UpdateState(const StateData& aStateData);
+  UpdateState(const StateData& aStateData, bool aUseCachedArrayBufferResponse);
 
   void
   NullResponseText()
