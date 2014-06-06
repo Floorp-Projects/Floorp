@@ -2837,8 +2837,6 @@ JSObject::setSlotSpan(ThreadSafeContext *cx, HandleObject obj, uint32_t span)
     return true;
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the slot array
-// an attempt will be made to place the array in the tenured area.
 static HeapSlot *
 AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 {
@@ -2846,17 +2844,9 @@ AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateSlots(cx->asJSContext(), obj, nslots);
 #endif
-#ifdef JSGC_FJGENERATIONAL
-    if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().allocateSlots(obj, nslots);
-#endif
     return cx->pod_malloc<HeapSlot>(nslots);
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the slot array
-// an attempt will be made to place the array in the tenured area.
-//
-// If this returns null then the old slots will be left alone.
 static HeapSlot *
 ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
                 uint32_t oldCount, uint32_t newCount)
@@ -2864,14 +2854,8 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateSlots(cx->asJSContext(),
-                                                                        obj, oldSlots,
-                                                                        oldCount, newCount);
-    }
-#endif
-#ifdef JSGC_FJGENERATIONAL
-    if (cx->isForkJoinContext()) {
-        return cx->asForkJoinContext()->fjNursery().reallocateSlots(obj, oldSlots,
-                                                                    oldCount, newCount);
+                                                                          obj, oldSlots,
+                                                                          oldCount, newCount);
     }
 #endif
     return (HeapSlot *)cx->realloc_(oldSlots, oldCount * sizeof(HeapSlot),
@@ -2943,14 +2927,10 @@ JSObject::growSlots(ThreadSafeContext *cx, HandleObject obj, uint32_t oldCount, 
 static void
 FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
 {
+    // Note: threads without a JSContext do not have access to nursery allocated things.
 #ifdef JSGC_GENERATIONAL
-    // Note: threads without a JSContext do not have access to GGC nursery allocated things.
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.freeSlots(cx->asJSContext(), slots);
-#endif
-#ifdef JSGC_FJGENERATIONAL
-    if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().freeSlots(slots);
 #endif
     js_free(slots);
 }
@@ -3167,8 +3147,6 @@ JSObject::maybeDensifySparseElements(js::ExclusiveContext *cx, HandleObject obj)
     return ED_OK;
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the element array
-// an attempt will be made to place the array in the tenured area.
 static ObjectElements *
 AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 {
@@ -3176,16 +3154,10 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
     if (cx->isJSContext())
         return cx->asJSContext()->runtime()->gc.nursery.allocateElements(cx->asJSContext(), obj, nelems);
 #endif
-#ifdef JSGC_FJGENERATIONAL
-    if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().allocateElements(obj, nelems);
-#endif
 
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
 }
 
-// This will not run the garbage collector.  If a nursery cannot accomodate the element array
-// an attempt will be made to place the array in the tenured area.
 static ObjectElements *
 ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHeader,
                    uint32_t oldCount, uint32_t newCount)
@@ -3193,14 +3165,8 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 #ifdef JSGC_GENERATIONAL
     if (cx->isJSContext()) {
         return cx->asJSContext()->runtime()->gc.nursery.reallocateElements(cx->asJSContext(), obj,
-                                                                           oldHeader, oldCount,
-                                                                           newCount);
-    }
-#endif
-#ifdef JSGC_FJGENERATIONAL
-    if (cx->isForkJoinContext()) {
-        return cx->asForkJoinContext()->fjNursery().reallocateElements(obj, oldHeader,
-                                                                       oldCount, newCount);
+                                                                             oldHeader, oldCount,
+                                                                             newCount);
     }
 #endif
 

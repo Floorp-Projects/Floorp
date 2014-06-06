@@ -17,41 +17,52 @@
 namespace js {
 namespace gc {
 
-/* static */
-inline RelocationOverlay *
-RelocationOverlay::fromCell(Cell *cell)
+/*
+ * This structure overlays a Cell in the Nursery and re-purposes its memory
+ * for managing the Nursery collection process.
+ */
+class RelocationOverlay
 {
-    JS_ASSERT(!cell->isTenured());
-    return reinterpret_cast<RelocationOverlay *>(cell);
-}
+    friend class MinorCollectionTracer;
 
-inline bool
-RelocationOverlay::isForwarded() const
-{
-    return magic_ == Relocated;
-}
+    /* The low bit is set so this should never equal a normal pointer. */
+    static const uintptr_t Relocated = uintptr_t(0xbad0bad1);
 
-inline Cell *
-RelocationOverlay::forwardingAddress() const
-{
-    JS_ASSERT(isForwarded());
-    return newLocation_;
-}
+    /* Set to Relocated when moved. */
+    uintptr_t magic_;
 
-inline void
-RelocationOverlay::forwardTo(Cell *cell)
-{
-    JS_ASSERT(!isForwarded());
-    magic_ = Relocated;
-    newLocation_ = cell;
-    next_ = nullptr;
-}
+    /* The location |this| was moved to. */
+    Cell *newLocation_;
 
-inline RelocationOverlay *
-RelocationOverlay::next() const
-{
-    return next_;
-}
+    /* A list entry to track all relocated things. */
+    RelocationOverlay *next_;
+
+  public:
+    static RelocationOverlay *fromCell(Cell *cell) {
+        JS_ASSERT(!cell->isTenured());
+        return reinterpret_cast<RelocationOverlay *>(cell);
+    }
+
+    bool isForwarded() const {
+        return magic_ == Relocated;
+    }
+
+    Cell *forwardingAddress() const {
+        JS_ASSERT(isForwarded());
+        return newLocation_;
+    }
+
+    void forwardTo(Cell *cell) {
+        JS_ASSERT(!isForwarded());
+        magic_ = Relocated;
+        newLocation_ = cell;
+        next_ = nullptr;
+    }
+
+    RelocationOverlay *next() const {
+        return next_;
+    }
+};
 
 } /* namespace gc */
 } /* namespace js */

@@ -10,7 +10,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
-#include "gc/ForkJoinNursery.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
@@ -868,8 +867,10 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
         // longer reachable through the callee token (JSFunction/JSScript->ion
         // is now nullptr or recompiled). Manually trace it here.
         IonScript::Trace(trc, ionScript);
+    } else if (CalleeTokenIsFunction(layout->calleeToken())) {
+        ionScript = CalleeTokenToFunction(layout->calleeToken())->nonLazyScript()->ionScript();
     } else {
-        ionScript = frame.ionScriptFromCalleeToken();
+        ionScript = CalleeTokenToScript(layout->calleeToken())->ionScript();
     }
 
     if (CalleeTokenIsFunction(layout->calleeToken()))
@@ -936,8 +937,10 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
         // This frame has been invalidated, meaning that its IonScript is no
         // longer reachable through the callee token (JSFunction/JSScript->ion
         // is now nullptr or recompiled).
+    } else if (CalleeTokenIsFunction(layout->calleeToken())) {
+        ionScript = CalleeTokenToFunction(layout->calleeToken())->nonLazyScript()->ionScript();
     } else {
-        ionScript = frame.ionScriptFromCalleeToken();
+        ionScript = CalleeTokenToScript(layout->calleeToken())->ionScript();
     }
 
     const SafepointIndex *si = ionScript->getSafepointIndex(frame.returnAddressToFp());
@@ -947,16 +950,8 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
     uintptr_t *spill = frame.spillBase();
     for (GeneralRegisterBackwardIterator iter(safepoint.allGprSpills()); iter.more(); iter++) {
         --spill;
-        if (slotsRegs.has(*iter)) {
-#ifdef JSGC_FJGENERATIONAL
-            if (trc->callback == gc::ForkJoinNursery::MinorGCCallback) {
-                gc::ForkJoinNursery::forwardBufferPointer(trc,
-                                                          reinterpret_cast<HeapSlot **>(spill));
-                continue;
-            }
-#endif
+        if (slotsRegs.has(*iter))
             trc->runtime()->gc.nursery.forwardBufferPointer(reinterpret_cast<HeapSlot **>(spill));
-        }
     }
 
     // Skip to the right place in the safepoint
@@ -970,12 +965,6 @@ UpdateIonJSFrameForMinorGC(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getSlotsOrElementsSlot(&slot)) {
         HeapSlot **slots = reinterpret_cast<HeapSlot **>(layout->slotRef(slot));
-#ifdef JSGC_FJGENERATIONAL
-        if (trc->callback == gc::ForkJoinNursery::MinorGCCallback) {
-            gc::ForkJoinNursery::forwardBufferPointer(trc, slots);
-            continue;
-        }
-#endif
         trc->runtime()->gc.nursery.forwardBufferPointer(slots);
     }
 }
@@ -1237,9 +1226,9 @@ MarkJitActivation(JSTracer *trc, const JitActivationIterator &activations)
 }
 
 void
-MarkJitActivations(PerThreadData *ptd, JSTracer *trc)
+MarkJitActivations(JSRuntime *rt, JSTracer *trc)
 {
-    for (JitActivationIterator activations(ptd); !activations.done(); ++activations)
+    for (JitActivationIterator activations(rt); !activations.done(); ++activations)
         MarkJitActivation(trc, activations);
 }
 
@@ -1261,22 +1250,6 @@ UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc)
 {
     JS_ASSERT(trc->runtime()->isHeapMinorCollecting());
     for (JitActivationIterator activations(rt); !activations.done(); ++activations) {
-        for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
-            if (frames.type() == JitFrame_IonJS)
-                UpdateIonJSFrameForMinorGC(trc, frames);
-        }
-    }
-}
-
-void
-UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc)
-{
-#ifdef JSGC_FJGENERATIONAL
-    JS_ASSERT(trc->runtime()->isHeapMinorCollecting() || trc->runtime()->isFJMinorCollecting());
-#else
-    JS_ASSERT(trc->runtime()->isHeapMinorCollecting());
-#endif
-    for (JitActivationIterator activations(ptd); !activations.done(); ++activations) {
         for (JitFrameIterator frames(activations); !frames.done(); ++frames) {
             if (frames.type() == JitFrame_IonJS)
                 UpdateIonJSFrameForMinorGC(trc, frames);
@@ -1677,15 +1650,6 @@ JitFrameIterator::ionScript() const
     IonScript *ionScript = nullptr;
     if (checkInvalidation(&ionScript))
         return ionScript;
-    return ionScriptFromCalleeToken();
-}
-
-IonScript *
-JitFrameIterator::ionScriptFromCalleeToken() const
-{
-    JS_ASSERT(type() == JitFrame_IonJS);
-    JS_ASSERT(!checkInvalidation());
-
     switch (GetCalleeTokenTag(calleeToken())) {
       case CalleeToken_Function:
       case CalleeToken_Script:
