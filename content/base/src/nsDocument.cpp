@@ -3951,17 +3951,6 @@ nsDocument::InsertChildAt(nsIContent* aKid, uint32_t aIndex,
   return doInsertChildAt(aKid, aIndex, aNotify, mChildren);
 }
 
-nsresult
-nsDocument::AppendChildTo(nsIContent* aKid, bool aNotify)
-{
-  // Make sure to _not_ call the subclass InsertChildAt here.  If
-  // subclasses wanted to hook into this stuff, they would have
-  // overridden AppendChildTo.
-  // XXXbz maybe this should just be a non-virtual method on nsINode?
-  // Feels that way to me...
-  return nsDocument::InsertChildAt(aKid, GetChildCount(), aNotify);
-}
-
 void
 nsDocument::RemoveChildAt(uint32_t aIndex, bool aNotify)
 {

@@ -1337,7 +1337,7 @@ extern JS_FRIEND_DATA(const Class* const) Uint32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float64ArrayClassPtr;
 
-const size_t TypedArrayLengthSlot = 4;
+const size_t TypedArrayLengthSlot = 1;
 
 } // namespace detail
 

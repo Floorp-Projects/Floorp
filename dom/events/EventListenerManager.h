@@ -20,6 +20,7 @@ class nsIDOMEvent;
 class nsIEventListenerInfo;
 class nsIScriptContext;
 class nsPIDOMWindow;
+class JSTracer;
 
 struct EventTypeData;
 
@@ -403,6 +404,8 @@ public:
   }
 
   void MarkForCC();
+
+  void TraceListeners(JSTracer* aTrc);
 
   dom::EventTarget* GetTarget() { return mTarget; }
 
