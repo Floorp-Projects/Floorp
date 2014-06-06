@@ -109,12 +109,6 @@ toolbarseparator {
   background: url(chrome://browser/skin/Toolbar-background-noise.png) hsl(0,0%,83%);
 }
 
-#TabsToolbar:not([collapsed="true"]) + #nav-bar {
-  /* Position the toolbar above the bottom of background tabs */
-  position: relative;
-  z-index: 1;
-}
-
 #nav-bar {
   -moz-appearance: none;
   background: url(chrome://browser/skin/Toolbar-background-noise.png),
@@ -136,6 +130,19 @@ toolbarseparator {
   #nav-bar {
     background-size: 100px 100px, auto;
   }
+}
+
+/* Draw the bottom border of the tabs toolbar when it's not using
+   -moz-appearance: toolbar. */
+#main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
+#main-window:not([tabsintitlebar]) #TabsToolbar:not([collapsed="true"]) + #nav-bar,
+#TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-lwtheme {
+  border-top: 1px solid hsla(0,0%,0%,.3);
+  background-clip: padding-box;
+  margin-top: -@tabToolbarNavbarOverlap@;
+  /* Position the toolbar above the bottom of background tabs */
+  position: relative;
+  z-index: 1;
 }
 
 #nav-bar-customization-target {
@@ -2770,33 +2777,14 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   box-shadow: @focusRingShadow@;
 }
 
-/* We want the titlebar to be unified, but we still want to be able
- * to give #TabsToolbar a background. So we can't set -moz-appearance:
- * toolbar on #TabsToolbar itself. Instead, we set it on a box of the
- * right size which is put underneath #TabsToolbar.
- *
- * Because of Bug 941309, we make sure this pseudoelement always exists,
- * but we only make it visible when we need it.
- */
-#navigator-toolbox::before {
-  content: '';
-  display: block;
-  -moz-appearance: toolbar;
-  height: @tabMinHeight@;
-  margin-bottom: -@tabMinHeight@;
-  visibility: hidden;
-}
-
-#main-window:not([customizing]) #navigator-toolbox[inFullscreen]:not(:-moz-lwtheme)::before,
-#main-window:not(:-moz-any([customizing],[tabsintitlebar])) #navigator-toolbox:not(:-moz-lwtheme)::before {
-  visibility: visible;
-}
-
 #TabsToolbar {
-  position: relative;
   -moz-appearance: none;
-  background-repeat: repeat-x;
-  margin-bottom: -@tabToolbarNavbarOverlap@;
+  margin-bottom: -1px; /* Overlap the inner highlight at the top of the nav-bar */
+}
+
+#main-window:not([customizing]) #navigator-toolbox[inFullscreen] > #TabsToolbar:not(:-moz-lwtheme),
+#main-window:not(:-moz-any([customizing],[tabsintitlebar])) #navigator-toolbox > #TabsToolbar:not(:-moz-lwtheme) {
+  -moz-appearance: toolbar;
 }
 
 #TabsToolbar:not(:-moz-lwtheme) {
@@ -2804,32 +2792,10 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: @loweredShadow@;
 }
 
-/*
- * Draw the bottom border of the tabstrip when core doesn't do it for us.
- * Because of Bug 941309, we make sure this pseudoelement always exists,
- * but we only make it visible when we need it.
- */
-#TabsToolbar::after {
-  content: '';
-  /* Because we use placeholders for window controls etc. in the tabstrip,
-   * and position those with ordinal attributes, and because our layout code
-   * expects :before/:after nodes to come first/last in the frame list,
-   * we have to reorder this element to come last, hence the
-   * ordinal group value (see bug 853415). */
-  -moz-box-ordinal-group: 1001;
-  position: absolute;
-  bottom: @tabToolbarNavbarOverlap@;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  border-bottom: 1px solid hsla(0,0%,0%,.3);
-  visibility: hidden;
-}
-
-#main-window:-moz-any([sizemode="fullscreen"],[customize-entered]) #TabsToolbar::after,
-#main-window:not([tabsintitlebar]) #TabsToolbar::after,
-#TabsToolbar:-moz-lwtheme::after {
-  visibility: visible;
+@media (-moz-mac-lion-theme) {
+  #navigator-toolbox[inFullscreen] > #TabsToolbar {
+    padding-top: @spaceAboveTabbar@;
+  }
 }
 
 #tabbrowser-tabs {
@@ -4058,17 +4024,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   margin-left: 1em;
 }
 
-/* Lion Fullscreen window styling */
-@media (-moz-mac-lion-theme) {
-  #navigator-toolbox[inFullscreen]::before {
-    /* Adjust by the full element height of #titlebar, since that element is
-     * not displayed in native full-screen.
-     * Also add the height of the tabs, since we're calculating the
-     * total height of this pseudo-element, not just the top-padding. */
-    height: calc(@tabMinHeight@ + @spaceAboveTabbar@) !important;
-  }
-}
-
 #full-screen-warning-message {
   background-image: url("chrome://browser/skin/fullscreen-darknoise.png");
   color: white;
@@ -4419,6 +4374,11 @@ window > chatbox {
 #main-window[customize-entered] #customization-container,
 #main-window[customize-entered] #navigator-toolbox > toolbar:not(#TabsToolbar) {
   border-bottom-width: 0;
+}
+
+#main-window[customize-entered] #nav-bar {
+  border-top-left-radius: 2.5px;
+  border-top-right-radius: 2.5px;
 }
 
 /* Compensate for the border set above for this horizontal line. */

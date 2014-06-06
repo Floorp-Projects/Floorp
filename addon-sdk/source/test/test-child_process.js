@@ -540,3 +540,6 @@ exports.testFork = function (assert) {
 after(exports, cleanUp);
 
 require("test").run(exports);
+
+// Test disabled because of bug 979675
+module.exports = {};
