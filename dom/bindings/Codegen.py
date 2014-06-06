@@ -10192,7 +10192,7 @@ class CGDescriptor(CGThing):
             elif (m.isMethod() and
                   (not m.isIdentifierLess() or m == descriptor.operations['Stringifier'])):
                 if m.isStatic():
-                    assert descriptor.interface.hasInterfaceObject
+                    assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticMethod(descriptor, m))
                     if m.returnsPromise():
                         cgThings.append(CGStaticMethodJitinfo(m))
@@ -10212,7 +10212,7 @@ class CGDescriptor(CGThing):
                                     "See bug 824857.\n"
                                     "%s" % m.location)
                 if m.isStatic():
-                    assert descriptor.interface.hasInterfaceObject
+                    assert descriptor.interface.hasInterfaceObject()
                     cgThings.append(CGStaticGetter(descriptor, m))
                 elif descriptor.interface.hasInterfacePrototypeObject():
                     cgThings.append(CGSpecializedGetter(descriptor, m))
@@ -10230,7 +10230,7 @@ class CGDescriptor(CGThing):
                                             "%s" %
                                             (extAttr, m.location))
                     if m.isStatic():
-                        assert descriptor.interface.hasInterfaceObject
+                        assert descriptor.interface.hasInterfaceObject()
                         cgThings.append(CGStaticSetter(descriptor, m))
                     elif descriptor.interface.hasInterfacePrototypeObject():
                         cgThings.append(CGSpecializedSetter(descriptor, m))
