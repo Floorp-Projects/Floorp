@@ -83,6 +83,8 @@ this.POLL_STEP          = 1000 * 3;         // 3 seconds
 this.ONLOGIN_NOTIFICATION = "fxaccounts:onlogin";
 this.ONVERIFIED_NOTIFICATION = "fxaccounts:onverified";
 this.ONLOGOUT_NOTIFICATION = "fxaccounts:onlogout";
+// Internal to services/fxaccounts only
+this.ON_FXA_UPDATE_NOTIFICATION = "fxaccounts:update";
 
 // UI Requests.
 this.UI_REQUEST_SIGN_IN_FLOW = "signInFlow";
