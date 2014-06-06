@@ -435,12 +435,6 @@ gfxPlatformMac::UseAcceleratedCanvas()
   return nsCocoaFeatures::OnLionOrLater() && Preferences::GetBool("gfx.canvas.azure.accelerated", false);
 }
 
-bool
-gfxPlatformMac::SupportsOffMainThreadCompositing()
-{
-  return true;
-}
-
 void
 gfxPlatformMac::GetPlatformCMSOutputProfile(void* &mem, size_t &size)
 {

@@ -252,18 +252,6 @@ gfxPlatformGtk::GetScreenDepth() const
     return sDepth;
 }
 
-bool
-gfxPlatformGtk::SupportsOffMainThreadCompositing()
-{
-  // Nightly builds have OMTC support by default for Electrolysis testing.
-#if defined(MOZ_X11) && !defined(NIGHTLY_BUILD)
-  return (PR_GetEnv("MOZ_USE_OMTC") != nullptr) ||
-         (PR_GetEnv("MOZ_OMTC_ENABLED") != nullptr);
-#else
-  return true;
-#endif
-}
-
 void
 gfxPlatformGtk::GetPlatformCMSOutputProfile(void *&mem, size_t &size)
 {

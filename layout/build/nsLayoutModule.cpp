@@ -71,7 +71,6 @@
 #include "nsDOMBlobBuilder.h"
 #include "nsDOMFileReader.h"
 
-#include "gfxPlatform.h"
 #include "nsFormData.h"
 #include "nsHostObjectProtocolHandler.h"
 #include "nsHostObjectURI.h"
