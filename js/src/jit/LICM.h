@@ -15,15 +15,7 @@ namespace jit {
 class MIRGenerator;
 class MIRGraph;
 
-class LICM
-{
-    MIRGenerator *mir;
-    MIRGraph &graph;
-
-  public:
-    LICM(MIRGenerator *mir, MIRGraph &graph);
-    bool analyze();
-};
+bool LICM(MIRGenerator *mir, MIRGraph &graph);
 
 } // namespace jit
 } // namespace js
