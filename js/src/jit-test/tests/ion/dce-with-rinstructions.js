@@ -192,6 +192,35 @@ function rsub_object(i) {
     return i;
 }
 
+var uceFault_mul_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_number'));
+function rmul_number(i) {
+    var x = 2 * i;
+    if (uceFault_mul_number(i) || uceFault_mul_number(i))
+        assertEq(x, 198  /* = 1 * 99 */);
+    return i;
+}
+
+var uceFault_mul_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_float'));
+function rmul_float(i) {
+    var t = Math.fround(1/3);
+    var fi = Math.fround(i);
+    var x = Math.fround(Math.fround(Math.fround(Math.fround(t * fi) * t) * fi) * t);
+    if (uceFault_mul_float(i) || uceFault_mul_float(i))
+        assertEq(x, 363); /* != 363.0000324547301 (when computed with double multiplications) */
+    return i;
+}
+
+var uceFault_mul_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_object'));
+function rmul_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = o * i; /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_mul_object(i) || uceFault_mul_object(i))
+        assertEq(x, 9801);
+    return i;
+}
+
 var uceFault_mod_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_mod_number'));
 function rmod_number(i) {
     var x = i % 98;
@@ -231,6 +260,9 @@ for (i = 0; i < 100; i++) {
     rsub_number(i);
     rsub_float(i);
     rsub_object(i);
+    rmul_number(i);
+    rmul_float(i);
+    rmul_object(i);
     rmod_number(i);
     rmod_object(i);
 }
