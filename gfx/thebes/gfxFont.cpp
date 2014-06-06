@@ -23,7 +23,6 @@
 #include "gfxTypes.h"
 #include "gfxContext.h"
 #include "gfxFontMissingGlyphs.h"
-#include "gfxGraphiteShaper.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatformFontList.h"
@@ -3945,7 +3944,8 @@ gfxFont::ShapeText(gfxContext    *aContext,
                    uint32_t       aOffset,
                    uint32_t       aLength,
                    int32_t        aScript,
-                   gfxShapedText *aShapedText)
+                   gfxShapedText *aShapedText,
+                   bool           aPreferPlatformShaping)
 {
     nsDependentCSubstring ascii((const char*)aText, aLength);
     nsAutoString utf16;
@@ -3954,7 +3954,7 @@ gfxFont::ShapeText(gfxContext    *aContext,
         return false;
     }
     return ShapeText(aContext, utf16.BeginReading(), aOffset, aLength,
-                     aScript, aShapedText);
+                     aScript, aShapedText, aPreferPlatformShaping);
 }
 
 bool
@@ -3963,29 +3963,30 @@ gfxFont::ShapeText(gfxContext      *aContext,
                    uint32_t         aOffset,
                    uint32_t         aLength,
                    int32_t          aScript,
-                   gfxShapedText   *aShapedText)
+                   gfxShapedText   *aShapedText,
+                   bool             aPreferPlatformShaping)
 {
     bool ok = false;
 
-    if (FontCanSupportGraphite()) {
-        if (gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
-            if (!mGraphiteShaper) {
-                mGraphiteShaper = new gfxGraphiteShaper(this);
-            }
-            ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                            aScript, aShapedText);
-        }
+    if (mGraphiteShaper && gfxPlatform::GetPlatform()->UseGraphiteShaping()) {
+        ok = mGraphiteShaper->ShapeText(aContext, aText, aOffset, aLength,
+                                        aScript, aShapedText);
     }
 
-    if (!ok) {
-        if (!mHarfBuzzShaper) {
-            mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
-        }
+    if (!ok && mHarfBuzzShaper && !aPreferPlatformShaping) {
         ok = mHarfBuzzShaper->ShapeText(aContext, aText, aOffset, aLength,
                                         aScript, aShapedText);
     }
 
-    NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
+    if (!ok) {
+        if (!mPlatformShaper) {
+            CreatePlatformShaper();
+        }
+        if (mPlatformShaper) {
+            ok = mPlatformShaper->ShapeText(aContext, aText, aOffset, aLength,
+                                            aScript, aShapedText);
+        }
+    }
 
     PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
 
