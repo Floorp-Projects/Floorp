@@ -2578,6 +2578,7 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
     // that we're going to shadow. Make a property descriptor and define it.
     Rooted<PropertyDescriptor> newDesc(cx);
     newDesc.value().set(vp);
+    newDesc.setAttributes(JSPROP_ENUMERATE);
     return handler->defineProperty(cx, receiver, id, &newDesc);
 }
 
