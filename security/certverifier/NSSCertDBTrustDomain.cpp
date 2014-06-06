@@ -391,6 +391,13 @@ NSSCertDBTrustDomain::CheckRevocation(
       PR_SetError(cachedResponseErrorCode, 0);
       return SECFailure;
     }
+    if (stapledOCSPResponse) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: returning SECFailure from expired "
+              "stapled response after OCSP request failure"));
+      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+      return SECFailure;
+    }
 
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: returning SECSuccess after "
@@ -414,10 +421,18 @@ NSSCertDBTrustDomain::CheckRevocation(
     return rv;
   }
 
+  if (stapledOCSPResponse) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: returning SECFailure from expired stapled "
+            "response after OCSP request verification failure"));
+    PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+    return SECFailure;
+  }
+
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
          ("NSSCertDBTrustDomain: end of CheckRevocation"));
 
-  return SECSuccess;
+  return SECSuccess; // Soft fail -> success :(
 }
 
 SECStatus
