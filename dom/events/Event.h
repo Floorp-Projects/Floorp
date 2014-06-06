@@ -193,10 +193,7 @@ public:
     return mEvent->mFlags.mIsSynthesizedForTests;
   }
 
-  uint64_t TimeStamp() const
-  {
-    return mEvent->time;
-  }
+  uint64_t TimeStamp() const;
 
   void InitEvent(const nsAString& aType, bool aBubbles, bool aCancelable,
                  ErrorResult& aRv)
