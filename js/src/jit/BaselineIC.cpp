@@ -3888,9 +3888,9 @@ static bool
 TypedArrayRequiresFloatingPoint(TypedArrayObject *tarr)
 {
     uint32_t type = tarr->type();
-    return (type == ScalarTypeDescr::TYPE_UINT32 ||
-            type == ScalarTypeDescr::TYPE_FLOAT32 ||
-            type == ScalarTypeDescr::TYPE_FLOAT64);
+    return (type == Scalar::Uint32 ||
+            type == Scalar::Float32 ||
+            type == Scalar::Float64);
 }
 
 static bool
@@ -4646,7 +4646,7 @@ ICGetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
 
     // Load the value.
-    BaseIndex source(scratchReg, key, ScaleFromElemWidth(TypedArrayObject::slotWidth(type_)));
+    BaseIndex source(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
     masm.loadFromTypedArray(type_, source, R0, false, scratchReg, &failure);
 
     // Todo: Allow loading doubles from uint32 arrays, but this requires monitoring.
@@ -5535,7 +5535,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     // Load the elements vector.
     masm.loadPtr(Address(obj, TypedArrayObject::dataOffset()), scratchReg);
 
-    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(TypedArrayObject::slotWidth(type_)));
+    BaseIndex dest(scratchReg, key, ScaleFromElemWidth(Scalar::byteSize(type_)));
     Address value(BaselineStackReg, ICStackValueOffset);
 
     // We need a second scratch register. It's okay to clobber the type tag of
@@ -5546,10 +5546,10 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
     regs.take(scratchReg);
     Register secondScratch = regs.takeAny();
 
-    if (type_ == ScalarTypeDescr::TYPE_FLOAT32 || type_ == ScalarTypeDescr::TYPE_FLOAT64) {
+    if (type_ == Scalar::Float32 || type_ == Scalar::Float64) {
         masm.ensureDouble(value, FloatReg0, &failure);
         if (LIRGenerator::allowFloat32Optimizations() &&
-            type_ == ScalarTypeDescr::TYPE_FLOAT32)
+            type_ == Scalar::Float32)
         {
             masm.convertDoubleToFloat32(FloatReg0, ScratchFloat32Reg);
             masm.storeToTypedFloatArray(type_, ScratchFloat32Reg, dest);
@@ -5557,7 +5557,7 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
             masm.storeToTypedFloatArray(type_, FloatReg0, dest);
         }
         EmitReturnFromIC(masm);
-    } else if (type_ == ScalarTypeDescr::TYPE_UINT8_CLAMPED) {
+    } else if (type_ == Scalar::Uint8Clamped) {
         Label notInt32;
         masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);
         masm.unboxInt32(value, secondScratch);
@@ -10262,7 +10262,7 @@ ICGetElem_Dense::Clone(JSContext *cx, ICStubSpace *space, ICStub *firstMonitorSt
     return New(space, other.jitCode(), firstMonitorStub, shape);
 }
 
-ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode *stubCode, HandleShape shape, uint32_t type)
+ICGetElem_TypedArray::ICGetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type)
   : ICStub(GetElem_TypedArray, stubCode),
     shape_(shape)
 {
@@ -10303,7 +10303,7 @@ ICSetElemDenseAddCompiler::getStubSpecific(ICStubSpace *space, const AutoShapeVe
     return ICSetElem_DenseAddImpl<ProtoChainDepth>::New(space, stubCode, objType, shapes);
 }
 
-ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode *stubCode, HandleShape shape, uint32_t type,
+ICSetElem_TypedArray::ICSetElem_TypedArray(JitCode *stubCode, HandleShape shape, Scalar::Type type,
                                            bool expectOutOfBounds)
   : ICStub(SetElem_TypedArray, stubCode),
     shape_(shape)

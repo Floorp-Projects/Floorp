@@ -6760,34 +6760,34 @@ class MArrayConcat
 class MLoadTypedArrayElement
   : public MBinaryInstruction
 {
-    ScalarTypeDescr::Type arrayType_;
+    Scalar::Type arrayType_;
 
     MLoadTypedArrayElement(MDefinition *elements, MDefinition *index,
-                           ScalarTypeDescr::Type arrayType)
+                           Scalar::Type arrayType)
       : MBinaryInstruction(elements, index), arrayType_(arrayType)
     {
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeDescr::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElement)
 
     static MLoadTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index,
-                                       ScalarTypeDescr::Type arrayType)
+                                       Scalar::Type arrayType)
     {
         return new(alloc) MLoadTypedArrayElement(elements, index, arrayType);
     }
 
-    ScalarTypeDescr::Type arrayType() const {
+    Scalar::Type arrayType() const {
         return arrayType_;
     }
     bool fallible() const {
         // Bailout if the result does not fit in an int32.
-        return arrayType_ == ScalarTypeDescr::TYPE_UINT32 && type() == MIRType_Int32;
+        return arrayType_ == Scalar::Uint32 && type() == MIRType_Int32;
     }
     MDefinition *elements() const {
         return getOperand(0);
@@ -6812,7 +6812,7 @@ class MLoadTypedArrayElement
 
     void computeRange(TempAllocator &alloc);
 
-    bool canProduceFloat32() const { return arrayType_ == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canProduceFloat32() const { return arrayType_ == Scalar::Float32; }
 };
 
 // Load a value from a typed array. Out-of-bounds accesses are handled in-line.
@@ -6820,35 +6820,35 @@ class MLoadTypedArrayElementHole
   : public MBinaryInstruction,
     public SingleObjectPolicy
 {
-    int arrayType_;
+    Scalar::Type arrayType_;
     bool allowDouble_;
 
-    MLoadTypedArrayElementHole(MDefinition *object, MDefinition *index, int arrayType, bool allowDouble)
+    MLoadTypedArrayElementHole(MDefinition *object, MDefinition *index, Scalar::Type arrayType, bool allowDouble)
       : MBinaryInstruction(object, index), arrayType_(arrayType), allowDouble_(allowDouble)
     {
         setResultType(MIRType_Value);
         setMovable();
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeDescr::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElementHole)
 
     static MLoadTypedArrayElementHole *New(TempAllocator &alloc, MDefinition *object, MDefinition *index,
-                                           int arrayType, bool allowDouble)
+                                           Scalar::Type arrayType, bool allowDouble)
     {
         return new(alloc) MLoadTypedArrayElementHole(object, index, arrayType, allowDouble);
     }
 
-    int arrayType() const {
+    Scalar::Type arrayType() const {
         return arrayType_;
     }
     bool allowDouble() const {
         return allowDouble_;
     }
     bool fallible() const {
-        return arrayType_ == ScalarTypeDescr::TYPE_UINT32 && !allowDouble_;
+        return arrayType_ == Scalar::Uint32 && !allowDouble_;
     }
     TypePolicy *typePolicy() {
         return this;
@@ -6872,7 +6872,7 @@ class MLoadTypedArrayElementHole
     AliasSet getAliasSet() const {
         return AliasSet::Load(AliasSet::TypedArrayElement);
     }
-    bool canProduceFloat32() const { return arrayType_ == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canProduceFloat32() const { return arrayType_ == Scalar::Float32; }
 };
 
 // Load a value fallibly or infallibly from a statically known typed array.
@@ -6884,9 +6884,9 @@ class MLoadTypedArrayElementStatic
       : MUnaryInstruction(ptr), typedArray_(typedArray), fallible_(true)
     {
         int type = typedArray_->type();
-        if (type == ScalarTypeDescr::TYPE_FLOAT32)
+        if (type == Scalar::Float32)
             setResultType(MIRType_Float32);
-        else if (type == ScalarTypeDescr::TYPE_FLOAT64)
+        else if (type == Scalar::Float64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -6904,8 +6904,8 @@ class MLoadTypedArrayElementStatic
         return new(alloc) MLoadTypedArrayElementStatic(typedArray, ptr);
     }
 
-    ArrayBufferView::ViewType viewType() const {
-        return (ArrayBufferView::ViewType) typedArray_->type();
+    Scalar::Type viewType() const {
+        return typedArray_->type();
     }
     void *base() const;
     size_t length() const;
@@ -6929,48 +6929,48 @@ class MLoadTypedArrayElementStatic
 
     void computeRange(TempAllocator &alloc);
     bool truncate(TruncateKind kind);
-    bool canProduceFloat32() const { return typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32; }
+    bool canProduceFloat32() const { return typedArray_->type() == Scalar::Float32; }
 };
 
 class MStoreTypedArrayElement
   : public MTernaryInstruction,
     public StoreTypedArrayPolicy
 {
-    int arrayType_;
+    Scalar::Type arrayType_;
 
     // See note in MStoreElementCommon.
     bool racy_;
 
     MStoreTypedArrayElement(MDefinition *elements, MDefinition *index, MDefinition *value,
-                            int arrayType)
+                            Scalar::Type arrayType)
       : MTernaryInstruction(elements, index, value), arrayType_(arrayType), racy_(false)
     {
         setMovable();
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeDescr::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
     INSTRUCTION_HEADER(StoreTypedArrayElement)
 
     static MStoreTypedArrayElement *New(TempAllocator &alloc, MDefinition *elements, MDefinition *index,
-                                        MDefinition *value, int arrayType)
+                                        MDefinition *value, Scalar::Type arrayType)
     {
         return new(alloc) MStoreTypedArrayElement(elements, index, value, arrayType);
     }
 
-    int arrayType() const {
+    Scalar::Type arrayType() const {
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == ScalarTypeDescr::TYPE_INT8 ||
-                arrayType_ == ScalarTypeDescr::TYPE_UINT8 ||
-                arrayType_ == ScalarTypeDescr::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == Scalar::Int8 ||
+                arrayType_ == Scalar::Uint8 ||
+                arrayType_ == Scalar::Uint8Clamped);
     }
     bool isFloatArray() const {
-        return (arrayType_ == ScalarTypeDescr::TYPE_FLOAT32 ||
-                arrayType_ == ScalarTypeDescr::TYPE_FLOAT64);
+        return (arrayType_ == Scalar::Float32 ||
+                arrayType_ == Scalar::Float64);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -6996,7 +6996,7 @@ class MStoreTypedArrayElement
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use == getUseFor(2) && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(2) && arrayType_ == Scalar::Float32;
     }
 };
 
@@ -7004,10 +7004,10 @@ class MStoreTypedArrayElementHole
   : public MAryInstruction<4>,
     public StoreTypedArrayHolePolicy
 {
-    int arrayType_;
+    Scalar::Type arrayType_;
 
     MStoreTypedArrayElementHole(MDefinition *elements, MDefinition *length, MDefinition *index,
-                                MDefinition *value, int arrayType)
+                                MDefinition *value, Scalar::Type arrayType)
       : MAryInstruction<4>(), arrayType_(arrayType)
     {
         initOperand(0, elements);
@@ -7018,7 +7018,7 @@ class MStoreTypedArrayElementHole
         JS_ASSERT(elements->type() == MIRType_Elements);
         JS_ASSERT(length->type() == MIRType_Int32);
         JS_ASSERT(index->type() == MIRType_Int32);
-        JS_ASSERT(arrayType >= 0 && arrayType < ScalarTypeDescr::TYPE_MAX);
+        JS_ASSERT(arrayType >= 0 && arrayType < Scalar::TypeMax);
     }
 
   public:
@@ -7026,22 +7026,22 @@ class MStoreTypedArrayElementHole
 
     static MStoreTypedArrayElementHole *New(TempAllocator &alloc, MDefinition *elements,
                                             MDefinition *length, MDefinition *index,
-                                            MDefinition *value, int arrayType)
+                                            MDefinition *value, Scalar::Type arrayType)
     {
         return new(alloc) MStoreTypedArrayElementHole(elements, length, index, value, arrayType);
     }
 
-    int arrayType() const {
+    Scalar::Type arrayType() const {
         return arrayType_;
     }
     bool isByteArray() const {
-        return (arrayType_ == ScalarTypeDescr::TYPE_INT8 ||
-                arrayType_ == ScalarTypeDescr::TYPE_UINT8 ||
-                arrayType_ == ScalarTypeDescr::TYPE_UINT8_CLAMPED);
+        return (arrayType_ == Scalar::Int8 ||
+                arrayType_ == Scalar::Uint8 ||
+                arrayType_ == Scalar::Uint8Clamped);
     }
     bool isFloatArray() const {
-        return (arrayType_ == ScalarTypeDescr::TYPE_FLOAT32 ||
-                arrayType_ == ScalarTypeDescr::TYPE_FLOAT64);
+        return (arrayType_ == Scalar::Float32 ||
+                arrayType_ == Scalar::Float64);
     }
     TypePolicy *typePolicy() {
         return this;
@@ -7064,7 +7064,7 @@ class MStoreTypedArrayElementHole
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use == getUseFor(3) && arrayType_ == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(3) && arrayType_ == Scalar::Float32;
     }
 };
 
@@ -7092,12 +7092,12 @@ class MStoreTypedArrayElementStatic :
         return this;
     }
 
-    ArrayBufferView::ViewType viewType() const {
-        return (ArrayBufferView::ViewType) typedArray_->type();
+    Scalar::Type viewType() const {
+        return typedArray_->type();
     }
     bool isFloatArray() const {
-        return (viewType() == ArrayBufferView::TYPE_FLOAT32 ||
-                viewType() == ArrayBufferView::TYPE_FLOAT64);
+        return (viewType() == Scalar::Float32 ||
+                viewType() == Scalar::Float64);
     }
 
     void *base() const;
@@ -7111,7 +7111,7 @@ class MStoreTypedArrayElementStatic :
     TruncateKind operandTruncateKind(size_t index) const;
 
     bool canConsumeFloat32(MUse *use) const {
-        return use == getUseFor(1) && typedArray_->type() == ScalarTypeDescr::TYPE_FLOAT32;
+        return use == getUseFor(1) && typedArray_->type() == Scalar::Float32;
     }
 };
 
@@ -10308,28 +10308,28 @@ class MAsmJSNeg : public MUnaryInstruction
 
 class MAsmJSHeapAccess
 {
-    ArrayBufferView::ViewType viewType_;
+    Scalar::Type viewType_;
     bool skipBoundsCheck_;
 
   public:
-    MAsmJSHeapAccess(ArrayBufferView::ViewType vt, bool s)
+    MAsmJSHeapAccess(Scalar::Type vt, bool s)
       : viewType_(vt), skipBoundsCheck_(s)
     {}
 
-    ArrayBufferView::ViewType viewType() const { return viewType_; }
+    Scalar::Type viewType() const { return viewType_; }
     bool skipBoundsCheck() const { return skipBoundsCheck_; }
     void setSkipBoundsCheck(bool v) { skipBoundsCheck_ = v; }
 };
 
 class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 {
-    MAsmJSLoadHeap(ArrayBufferView::ViewType vt, MDefinition *ptr)
+    MAsmJSLoadHeap(Scalar::Type vt, MDefinition *ptr)
       : MUnaryInstruction(ptr), MAsmJSHeapAccess(vt, false)
     {
         setMovable();
-        if (vt == ArrayBufferView::TYPE_FLOAT32)
+        if (vt == Scalar::Float32)
             setResultType(MIRType_Float32);
-        else if (vt == ArrayBufferView::TYPE_FLOAT64)
+        else if (vt == Scalar::Float64)
             setResultType(MIRType_Double);
         else
             setResultType(MIRType_Int32);
@@ -10338,7 +10338,7 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
   public:
     INSTRUCTION_HEADER(AsmJSLoadHeap);
 
-    static MAsmJSLoadHeap *New(TempAllocator &alloc, ArrayBufferView::ViewType vt, MDefinition *ptr) {
+    static MAsmJSLoadHeap *New(TempAllocator &alloc, Scalar::Type vt, MDefinition *ptr) {
         return new(alloc) MAsmJSLoadHeap(vt, ptr);
     }
 
@@ -10353,14 +10353,14 @@ class MAsmJSLoadHeap : public MUnaryInstruction, public MAsmJSHeapAccess
 
 class MAsmJSStoreHeap : public MBinaryInstruction, public MAsmJSHeapAccess
 {
-    MAsmJSStoreHeap(ArrayBufferView::ViewType vt, MDefinition *ptr, MDefinition *v)
+    MAsmJSStoreHeap(Scalar::Type vt, MDefinition *ptr, MDefinition *v)
       : MBinaryInstruction(ptr, v) , MAsmJSHeapAccess(vt, false)
     {}
 
   public:
     INSTRUCTION_HEADER(AsmJSStoreHeap);
 
-    static MAsmJSStoreHeap *New(TempAllocator &alloc, ArrayBufferView::ViewType vt,
+    static MAsmJSStoreHeap *New(TempAllocator &alloc, Scalar::Type vt,
                                 MDefinition *ptr, MDefinition *v)
     {
         return new(alloc) MAsmJSStoreHeap(vt, ptr, v);
@@ -10704,7 +10704,7 @@ typedef Vector<MDefinition *, 8, IonAllocPolicy> MDefinitionVector;
 
 bool ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id);
 bool ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
-                               ScalarTypeDescr::Type *arrayType);
+                               Scalar::Type *arrayType);
 bool ElementAccessIsPacked(types::CompilerConstraintList *constraints, MDefinition *obj);
 bool ElementAccessHasExtraIndexedProperty(types::CompilerConstraintList *constraints,
                                           MDefinition *obj);
