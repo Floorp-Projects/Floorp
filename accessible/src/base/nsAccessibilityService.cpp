@@ -426,7 +426,7 @@ nsAccessibilityService::TreeViewChanged(nsIPresShell* aPresShell,
     Accessible* accessible = document->GetAccessible(aContent);
     if (accessible) {
       XULTreeAccessible* treeAcc = accessible->AsXULTree();
-      if (treeAcc) 
+      if (treeAcc)
         treeAcc->TreeViewChanged(aView);
     }
   }
@@ -1175,7 +1175,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
     nsRefPtr<Accessible> accessible = new OuterDocAccessible(aContent, aDoc);
     return accessible.forget();
   }
- 
+
   nsRefPtr<Accessible> accessible;
 #ifdef MOZ_XUL
   // XUL controls
@@ -1558,18 +1558,22 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       break;
 
     case eHTMLTableRowType: {
-      // Accessible HTML table row must be a child of tbody/tfoot/thead of
-      // accessible HTML table or must be a child of accessible of HTML table.
-      if (aContext->IsTable()) {
+      // Accessible HTML table row may be a child of tbody/tfoot/thead of
+      // accessible HTML table or a direct child of accessible of HTML table.
+      Accessible* table = aContext->IsTable() ?
+        aContext :
+        (aContext->Parent()->IsTable() ? aContext->Parent() : nullptr);
+
+      if (table) {
         nsIContent* parentContent = aContent->GetParent();
         nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
-        if (parentFrame->GetType() == nsGkAtoms::tableRowGroupFrame) {
+        if (parentFrame->GetType() != nsGkAtoms::tableOuterFrame) {
           parentContent = parentContent->GetParent();
           parentFrame = parentContent->GetPrimaryFrame();
         }
 
         if (parentFrame->GetType() == nsGkAtoms::tableOuterFrame &&
-            aContext->GetContent() == parentContent) {
+            table->GetContent() == parentContent) {
           newAcc = new HTMLTableRowAccessible(aContent, document);
         }
       }
@@ -1649,7 +1653,7 @@ NS_GetAccessibilityService(nsIAccessibilityService** aResult)
 {
   NS_ENSURE_TRUE(aResult, NS_ERROR_NULL_POINTER);
   *aResult = nullptr;
- 
+
   if (nsAccessibilityService::gAccessibilityService) {
     NS_ADDREF(*aResult = nsAccessibilityService::gAccessibilityService);
     return NS_OK;
