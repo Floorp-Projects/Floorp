@@ -17,10 +17,11 @@
 
 #include "nsIWindowCreator.idl"
 
+interface nsITabParent;
 interface nsIURI;
 interface nsIWebBrowserChrome;
 
-[scriptable, uuid(f673ec81-a4b0-11d6-964b-eb5a2bf216fc)]
+[scriptable, uuid(e28f810b-9b49-4927-a4be-62a74fadfe21)]
 
 interface nsIWindowCreator2 : nsIWindowCreator {
 
@@ -44,6 +45,8 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                  may use the URL to help determine what sort of window
                  to open or whether to cancel window creation. It will not
                  load the URL.
+      @param aOpeningTab The TabParent that is trying to open this new chrome
+                         window. Can be nullptr.
       @param cancel Return |true| to reject window creation. If true the
                     implementation has determined the window should not
                     be created at all. The caller should not default
@@ -54,5 +57,6 @@ interface nsIWindowCreator2 : nsIWindowCreator {
                                           in uint32_t chromeFlags,
                                           in uint32_t contextFlags,
                                           in nsIURI uri,
+                                          in nsITabParent aOpeningTab,
                                           out boolean cancel);
 };

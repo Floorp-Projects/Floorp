@@ -16,8 +16,9 @@
 interface nsIDocShell;
 interface nsIDocShellTreeItem;
 interface nsIXULBrowserWindow;
+interface nsITabParent;
 
-[scriptable, uuid(CCF9E98A-E442-4061-9F74-94539DD9FE9E)]
+[scriptable, uuid(a68a40b9-f7df-47ff-a874-2af3df7eb888)]
 interface nsIXULWindow : nsISupports
 {
   /**
@@ -108,9 +109,12 @@ interface nsIXULWindow : nsISupports
   /**
    * Create a new window.
    * @param aChromeFlags see nsIWebBrowserChrome
+   * @param aOpeningTab the TabParent that requested this new window be opened.
+   *                    Can be left null.
    * @return the newly minted window
    */
-  nsIXULWindow createNewWindow(in int32_t aChromeFlags);
+  nsIXULWindow createNewWindow(in int32_t aChromeFlags,
+                               in nsITabParent aOpeningTab);
 
   attribute nsIXULBrowserWindow XULBrowserWindow;
 
