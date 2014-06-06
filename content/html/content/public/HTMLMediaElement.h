@@ -467,6 +467,16 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::muted, aMuted, aRv);
   }
 
+  bool MozMediaStatisticsShowing() const
+  {
+    return mStatsShowing;
+  }
+
+  void SetMozMediaStatisticsShowing(bool aShow)
+  {
+    mStatsShowing = aShow;
+  }
+
   already_AddRefed<DOMMediaStream> GetMozSrcObject() const;
 
   void SetMozSrcObject(DOMMediaStream& aValue);
@@ -1047,6 +1057,10 @@ protected:
   };
 
   uint32_t mMuted;
+
+  // True if the media statistics are currently being shown by the builtin
+  // video controls
+  bool mStatsShowing;
 
   // True if the sound is being captured.
   bool mAudioCaptured;
