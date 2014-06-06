@@ -211,13 +211,16 @@ public:
 
     bool success = false;
     if (!dstLocked) {
+      // We need to hold a lock onto the RasterImage object itself so that
+      // it (and its associated imgFrames) aren't marked as discardable.
+      bool imgLocked = NS_SUCCEEDED(image->LockImage());
       bool srcLocked = NS_SUCCEEDED(srcFrame->LockImageData());
       srcSurface = srcFrame->GetSurface();
 
       dstLocked = NS_SUCCEEDED(dstFrame->LockImageData());
       dstSurface = dstFrame->GetSurface();
 
-      success = srcLocked && dstLocked && srcSurface && dstSurface;
+      success = imgLocked && srcLocked && dstLocked && srcSurface && dstSurface;
 
       if (success) {
         srcData = srcFrame->GetImageData();
@@ -253,6 +256,7 @@ public:
       if (DiscardingEnabled())
         dstFrame->SetDiscardable();
       success = NS_SUCCEEDED(dstFrame->UnlockImageData());
+      success = success && NS_SUCCEEDED(image->UnlockImage());
 
       dstLocked = false;
       srcData = nullptr;
