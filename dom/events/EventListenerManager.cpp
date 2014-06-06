@@ -877,7 +877,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   JS::CompileOptions options(cx);
   options.setIntroductionType("eventHandler")
          .setFileAndLine(url.get(), lineNo)
-         .setVersion(SCRIPTVERSION_DEFAULT)
+         .setVersion(JSVERSION_DEFAULT)
          .setElement(&v.toObject())
          .setElementAttributeName(jsStr)
          .setDefineOnScope(false);
