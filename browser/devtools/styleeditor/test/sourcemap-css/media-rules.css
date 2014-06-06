@@ -1,0 +1,8 @@
+@media screen and (max-width: 320px) {
+  div {
+    width: 100px; } }
+@media screen and (min-width: 1200px) {
+  div {
+    width: 400px; } }
+
+/*# sourceMappingURL=media-rules.css.map */
