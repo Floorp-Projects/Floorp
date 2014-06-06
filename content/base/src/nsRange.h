@@ -15,6 +15,7 @@
 #include "nsINode.h"
 #include "nsIDocument.h"
 #include "nsIDOMNode.h"
+#include "nsLayoutUtils.h"
 #include "prmon.h"
 #include "nsStubMutationObserver.h"
 #include "nsWrapperCache.h"
@@ -253,6 +254,11 @@ public:
 
   static bool IsNodeSelected(nsINode* aNode, uint32_t aStartOffset,
                              uint32_t aEndOffset);
+
+  static void CollectClientRects(nsLayoutUtils::RectCallback* aCollector,
+                                 nsRange* aRange,
+                                 nsINode* aStartParent, int32_t aStartOffset,
+                                 nsINode* aEndParent, int32_t aEndOffset);
 
   typedef nsTHashtable<nsPtrHashKey<nsRange> > RangeHashTable;
 protected:

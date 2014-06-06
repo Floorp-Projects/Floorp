@@ -31,10 +31,9 @@ class TypedArrayObject : public ArrayBufferViewObject
   protected:
     // Typed array properties stored in slots, beyond those shared by all
     // ArrayBufferViews.
-    static const size_t LENGTH_SLOT    = JS_TYPEDOBJ_SLOT_LENGTH;
-    static const size_t TYPE_SLOT      = JS_TYPEDOBJ_SLOT_TYPE_DESCR;
-    static const size_t RESERVED_SLOTS = JS_TYPEDOBJ_SLOTS;
-    static const size_t DATA_SLOT      = JS_TYPEDOBJ_SLOT_DATA;
+    static const size_t TYPE_SLOT      = JS_TYPEDARR_SLOT_TYPE;
+    static const size_t RESERVED_SLOTS = JS_TYPEDARR_SLOTS;
+    static const size_t DATA_SLOT      = JS_TYPEDARR_SLOT_DATA;
 
     static_assert(js::detail::TypedArrayLengthSlot == LENGTH_SLOT,
                   "bad inlined constant in jsfriendapi.h");
@@ -60,6 +59,10 @@ class TypedArrayObject : public ArrayBufferViewObject
         return gc::GetGCObjectKind(FIXED_DATA_START + dataSlots);
     }
 
+    ScalarTypeDescr::Type type() const {
+        return (ScalarTypeDescr::Type) getFixedSlot(TYPE_SLOT).toInt32();
+    }
+
     static Value bufferValue(TypedArrayObject *tarr) {
         return tarr->getFixedSlot(BUFFER_SLOT);
     }
@@ -67,7 +70,8 @@ class TypedArrayObject : public ArrayBufferViewObject
         return tarr->getFixedSlot(BYTEOFFSET_SLOT);
     }
     static Value byteLengthValue(TypedArrayObject *tarr) {
-        return tarr->getFixedSlot(BYTELENGTH_SLOT);
+        int32_t size = ScalarTypeDescr::size(tarr->type());
+        return Int32Value(tarr->getFixedSlot(LENGTH_SLOT).toInt32() * size);
     }
     static Value lengthValue(TypedArrayObject *tarr) {
         return tarr->getFixedSlot(LENGTH_SLOT);
@@ -95,9 +99,6 @@ class TypedArrayObject : public ArrayBufferViewObject
         return lengthValue(const_cast<TypedArrayObject*>(this)).toInt32();
     }
 
-    uint32_t type() const {
-        return getFixedSlot(TYPE_SLOT).toInt32();
-    }
     void *viewData() const {
         // Keep synced with js::Get<Type>ArrayLengthAndData in jsfriendapi.h!
         return static_cast<void*>(getPrivate(DATA_SLOT));
@@ -140,6 +141,8 @@ class TypedArrayObject : public ArrayBufferViewObject
 
     static int lengthOffset();
     static int dataOffset();
+
+    static bool isOriginalLengthGetter(ScalarTypeDescr::Type type, Native native);
 };
 
 inline bool
@@ -218,7 +221,7 @@ TypedArrayShift(ArrayBufferView::ViewType viewType)
 class DataViewObject : public ArrayBufferViewObject
 {
     static const size_t RESERVED_SLOTS = JS_DATAVIEW_SLOTS;
-    static const size_t DATA_SLOT      = JS_TYPEDOBJ_SLOT_DATA;
+    static const size_t DATA_SLOT      = JS_DATAVIEW_SLOT_DATA;
 
   private:
     static const Class protoClass;
@@ -253,7 +256,7 @@ class DataViewObject : public ArrayBufferViewObject
     }
 
     static Value byteLengthValue(DataViewObject *view) {
-        Value v = view->getReservedSlot(BYTELENGTH_SLOT);
+        Value v = view->getReservedSlot(LENGTH_SLOT);
         JS_ASSERT(v.toInt32() >= 0);
         return v;
     }

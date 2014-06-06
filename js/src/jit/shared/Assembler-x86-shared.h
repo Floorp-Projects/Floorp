@@ -288,6 +288,9 @@ class AssemblerX86Shared : public AssemblerShared
 
     void executableCopy(void *buffer);
     void processCodeLabels(uint8_t *rawCode);
+    static int32_t extractCodeLabelOffset(uint8_t *code) {
+        return *(uintptr_t *)code;
+    }
     void copyJumpRelocationTable(uint8_t *dest);
     void copyDataRelocationTable(uint8_t *dest);
     void copyPreBarrierTable(uint8_t *dest);
@@ -1677,6 +1680,11 @@ class AssemblerX86Shared : public AssemblerShared
     static void patchDataWithValueCheck(CodeLocationLabel data, ImmPtr newData, ImmPtr expectedData) {
         patchDataWithValueCheck(data, PatchedImmPtr(newData.value), PatchedImmPtr(expectedData.value));
     }
+
+    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm) {
+        MOZ_ASSUME_UNREACHABLE("Unused.");
+    }
+
     static uint32_t nopSize() {
         return 1;
     }

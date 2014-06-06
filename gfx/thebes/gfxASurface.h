@@ -210,19 +210,6 @@ public:
     }
 
     /**
-     * Move the pixels in |aSourceRect| to |aDestTopLeft|.  Like with
-     * memmove(), |aSourceRect| and the rectangle defined by
-     * |aDestTopLeft| are allowed to overlap, and the effect is
-     * equivalent to copying |aSourceRect| to a scratch surface and
-     * then back to |aDestTopLeft|.
-     *
-     * |aSourceRect| and the destination rectangle defined by
-     * |aDestTopLeft| are clipped to this surface's bounds.
-     */
-    virtual void MovePixels(const nsIntRect& aSourceRect,
-                            const nsIntPoint& aDestTopLeft);
-
-    /**
      * Mark the surface as being allowed/not allowed to be used as a source.
      */
     void SetAllowUseAsSource(bool aAllow) { mAllowUseAsSource = aAllow; }
@@ -235,14 +222,6 @@ protected:
 
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
-
-    /**
-     * An implementation of MovePixels that assumes the backend can
-     * internally handle this operation and doesn't allocate any
-     * temporary surfaces.
-     */
-    void FastMovePixels(const nsIntRect& aSourceRect,
-                        const nsIntPoint& aDestTopLeft);
 
     // NB: Init() *must* be called from within subclass's
     // constructors.  It's unsafe to call it after the ctor finishes;

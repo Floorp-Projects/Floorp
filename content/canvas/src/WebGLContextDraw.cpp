@@ -260,6 +260,14 @@ WebGLContext::DrawElements_check(GLsizei count, GLenum type,
         return false;
     }
 
+    // Bug 1008310 - Check if buffer has been used with a different previous type
+    if (elemArrayBuffer.IsElementArrayUsedWithMultipleTypes()) {
+        GenerateWarning("%s: bound element array buffer previously used with a type other than "
+                        "%s, this will affect performance.",
+                        info,
+                        WebGLContext::EnumName(type));
+    }
+
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {

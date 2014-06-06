@@ -310,6 +310,8 @@ private:
 
 MOZ_FINISH_NESTED_ENUM_CLASS(CycleCollectedJSRuntime::OOMState)
 
+void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
+
 } // namespace mozilla
 
 #endif // mozilla_CycleCollectedJSRuntime_h__

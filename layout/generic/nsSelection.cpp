@@ -54,6 +54,7 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsIPresShell.h"
 #include "nsCaret.h"
 #include "TouchCaret.h"
+#include "SelectionCarets.h"
 
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
@@ -684,6 +685,20 @@ GetCellParent(nsINode *aDomNode)
     return nullptr;
 }
 
+nsFrameSelection::HINT
+nsFrameSelection::GetHintForPosition(nsIContent* aContent, int32_t aOffset)
+{
+  HINT hint = HINTLEFT;
+  if (!aContent || aOffset < 1) {
+    return hint;
+  }
+  const nsTextFragment* text = aContent->GetText();
+  if (text && text->CharAt(aOffset - 1) == '\n') {
+    // Attach the caret to the next line if needed
+    hint = HINTRIGHT;
+  }
+  return hint;
+}
 
 void
 nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
@@ -700,6 +715,15 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
     int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     if (mDomSelections[index]) {
       mDomSelections[index]->AddSelectionListener(touchCaret);
+    }
+  }
+
+  // Set selection caret as selection listener
+  nsRefPtr<SelectionCarets> selectionCarets = mShell->GetSelectionCarets();
+  if (selectionCarets) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    if (mDomSelections[index]) {
+      mDomSelections[index]->AddSelectionListener(selectionCarets);
     }
   }
 }
@@ -1216,7 +1240,7 @@ nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
 
   const nsRange* anchorFocusRange =
     mDomSelections[index]->GetAnchorFocusRange();
-  if (anchorFocusRange) {
+  if (anchorFocusRange && aAmount != eSelectNoAmount) {
     mMaintainRange = anchorFocusRange->CloneRange();
     return NS_OK;
   }
@@ -3026,6 +3050,13 @@ nsFrameSelection::DisconnectFromPresShell()
     int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
     mDomSelections[index]->RemoveSelectionListener(touchCaret);
   }
+
+  nsRefPtr<SelectionCarets> selectionCarets = mShell->GetSelectionCarets();
+  if (selectionCarets) {
+    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    mDomSelections[index]->RemoveSelectionListener(selectionCarets);
+  }
+
   StopAutoScrollTimer();
   for (int32_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; i++) {
     mDomSelections[i]->Clear(nullptr);

@@ -618,10 +618,10 @@ GetCacheSession(nsCSubstring const &aScheme,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsICacheSession> session;
-  rv = serv->CreateSession(clientId.get(),
-                           storagePolicy,
-                           nsICache::STREAM_BASED,
-                           getter_AddRefs(session));
+  rv = nsCacheService::GlobalInstance()->CreateSessionInternal(clientId.get(),
+                                                               storagePolicy,
+                                                               nsICache::STREAM_BASED,
+                                                               getter_AddRefs(session));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = session->SetIsPrivate(aLoadInfo->IsPrivate());
@@ -984,7 +984,7 @@ NS_IMETHODIMP _OldStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCallbac
           do_GetService(NS_CACHESERVICE_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      rv = serv->EvictEntries(nsICache::STORE_OFFLINE);
+      rv = nsCacheService::GlobalInstance()->EvictEntriesInternal(nsICache::STORE_OFFLINE);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     else {
@@ -1073,7 +1073,7 @@ NS_IMETHODIMP _OldStorage::AsyncVisitStorage(nsICacheStorageVisitor* aVisitor,
 
   nsRefPtr<_OldVisitCallbackWrapper> cb = new _OldVisitCallbackWrapper(
     deviceID, aVisitor, aVisitEntries, mLoadInfo);
-  rv = serv->VisitEntries(cb);
+  rv = nsCacheService::GlobalInstance()->VisitEntriesInternal(cb);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

@@ -3876,7 +3876,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
     if (useHardFpABI())
         *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
 #endif
-    uint32_t alignmentAtPrologue = (callFromAsmJS) ? AlignmentAtAsmJSPrologue : 0;
+    uint32_t alignmentAtPrologue = callFromAsmJS ? AlignmentAtAsmJSPrologue : 0;
 
     if (!dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust + alignmentAtPrologue,
