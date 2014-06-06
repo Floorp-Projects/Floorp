@@ -11,6 +11,20 @@
   display: none;
 }
 
+.arrow {
+  -moz-appearance: treetwisty;
+  width: 20px;
+  height: 20px;
+}
+
+.arrow[open] {
+  -moz-appearance: treetwistyopen;
+}
+
+.arrow[invisible] {
+  visibility: hidden;
+}
+
 #projecteditor-menubar {
   /* XXX: Hide menu bar until we have option to add menu items
      to an existing one. */
@@ -27,7 +41,13 @@
 
 .sources-tree {
   overflow:auto;
+  overflow-x: hidden;
   -moz-user-focus: normal;
+
+  /* Allows this to expand inside of parent xul element, while
+     still supporting child flexbox elements, including ellipses. */
+  -moz-box-flex: 1;
+  display: block;
 }
 
 .sources-tree input {
@@ -37,94 +57,95 @@
 
 #main-deck .sources-tree {
   background: rgb(225, 225, 225);
-  min-width: 50px;
+  min-width: 100px;
 }
 
-#main-deck .sources-tree .side-menu-widget-item {
+.entry {
   color: #18191A;
+  display: flex;
+  align-items: center;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .file-label {
-  vertical-align: middle;
-  display: inline-block;
+.entry .file-label {
+  display: flex;
+  flex: 1;
+  align-items: center;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .file-icon {
+.entry .file-icon {
   display: inline-block;
   background: url(file-icons-sheet@2x.png);
   background-size: 140px 15px;
   background-repeat: no-repeat;
   width: 20px;
   height: 15px;
-  vertical-align: middle;
   background-position: -40px 0;
+  flex-shrink: 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .file-icon.icon-none {
+.entry .file-icon.icon-none {
   display: none;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-css {
+.entry .icon-css {
   background-position: 0 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-js {
+.entry .icon-js {
   background-position: -20px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-html {
+.entry .icon-html {
   background-position: -40px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-file {
+.entry .icon-file {
   background-position: -60px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-folder {
+.entry .icon-folder {
   background-position: -80px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-img {
+.entry .icon-img {
   background-position: -100px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item .icon-manifest {
+.entry .icon-manifest {
   background-position: -120px 0;
 }
 
-#main-deck .sources-tree .side-menu-widget-item:hover {
-  background: rgba(0, 0, 0, .05);
+.entry {
+  border: none;
+  box-shadow: none;
+  white-space: nowrap;
   cursor: pointer;
 }
 
-#main-deck .sources-tree .side-menu-widget-item {
-  border: none;
-  box-shadow: none;
-  line-height: 20px;
-  vertical-align: middle;
-  white-space: nowrap;
+.entry:hover:not(.entry-group-title):not(.selected) {
+  background: rgba(0, 0, 0, .05);
 }
 
-#main-deck .sources-tree .side-menu-widget-item.selected {
-  background: #3875D7;
+.entry.selected {
+  background: rgba(56, 117, 215, 1);
   color: #F5F7FA;
   outline: none;
 }
 
-#main-deck .sources-tree .side-menu-widget-group-title,
-#main-deck .sources-tree .side-menu-widget-group-title:hover:not(.selected) {
-  background: #B4D7EB;
-  color: #222;
+.entry-group-title {
+  background: rgba(56, 117, 215, 0.8);
+  color: #F5F7FA;
   font-weight: bold;
   font-size: 1.05em;
-  cursor: default;
   line-height: 35px;
+  padding: 0 10px;
 }
 
-#main-deck .sources-tree li.child:only-child .side-menu-widget-group-title .expander {
+.sources-tree .entry-group-title .expander {
   display: none;
 }
-#main-deck .sources-tree .side-menu-widget-item .expander {
+
+.entry .expander {
   width: 16px;
   padding: 0;
 }
@@ -143,30 +164,62 @@
   padding: 0 3px;
 }
 
+/* App Manager */
 .project-name-label {
   font-weight: bold;
   padding-left: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.project-version-label {
-  color: #666;
-  padding-left: 5px;
-  font-size: .9em;
+.project-flex {
+  flex: 1;
 }
 
 .project-image {
-  max-height: 28px;
-  margin-left: -.5em;
-  vertical-align: middle;
+  max-height: 25px;
+  margin-left: -10px;
 }
 
-.editor-image {
-  padding: 10px;
+.project-image,
+.project-status,
+.project-options {
+  flex-shrink: 0;
 }
 
+.project-status {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: solid 1px rgba(255, 255, 255, .5);
+  margin-right: 10px;
+  visibility: hidden;
+}
+
+.project-status[status=valid] {
+  background: #70bf53;
+  visibility: visible;
+}
+
+.project-status[status=warning] {
+  background: #d99b28;
+  visibility: visible;
+}
+
+.project-status[status=error] {
+  background: #ed2655;
+  visibility: visible;
+}
+
+/* Status Bar */
 .projecteditor-file-label {
   font-weight: bold;
   padding-left: 29px;
-  vertical-align: middle;
+  padding-right: 10px;
+  flex: 1;
 }
 
+/* Image View */
+.editor-image {
+  padding: 10px;
+}
