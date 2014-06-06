@@ -264,14 +264,29 @@ var ProjectEditor = Class({
    * @param string path
    *               The file path to set
    * @param Object opts
-   *               Custom options used by the project. See plugins/app-manager.
+   *               Custom options used by the project.
+   *                - name: display name for project
+   *                - iconUrl: path to icon for project
+   *                - validationStatus: one of 'unknown|error|warning|valid'
+   *                - projectOverviewURL: path to load for iframe when project
+   *                    is selected in the tree.
    * @param Promise
    *        Promise that is resolved once the project is ready to be used.
    */
   setProjectToAppPath: function(path, opts = {}) {
     this.project.appManagerOpts = opts;
-    this.project.removeAllStores();
-    this.project.addPath(path);
+
+    let existingPaths = this.project.allPaths();
+    if (existingPaths.length !== 1 || existingPaths[0] !== path) {
+      // Only fully reset if this is a new path.
+      this.project.removeAllStores();
+      this.project.addPath(path);
+    } else {
+      // Otherwise, just ask for the root to be redrawn
+      let rootResource = this.project.localStores.get(path).root;
+      emit(rootResource, "label-change", rootResource);
+    }
+
     return this.project.refresh();
   },
 
