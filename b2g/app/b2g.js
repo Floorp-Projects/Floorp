@@ -955,7 +955,7 @@ pref("apz.axis_lock_mode", 2);
 pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
-pref("apz.overscroll.enabled", false);
+pref("apz.overscroll.enabled", true);
 pref("apz.overscroll.fling_friction", "0.02");
 pref("apz.overscroll.fling_stopped_threshold", "0.4");
 pref("apz.overscroll.clamping", "0.5");
