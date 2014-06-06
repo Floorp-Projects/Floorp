@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test for Bug 1019761</title>
+	<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+	<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+</head>
+<body>
+<script type="application/javascript">
+
+/*
+	Tests whether Firefox crashes when accessing the dialogArguments property
+	of a modal window that has been closed.
+*/
+SimpleTest.waitForExplicitFinish();
+
+function openModal() {
+	showModalDialog("javascript:opener.winRef = window; \
+		window.opener.setTimeout(\'winRef.dialogArguments;\', 0);\
+		window.close();");
+
+	ok(true, "dialogArguments did not cause a crash.");
+	SimpleTest.finish();
+}
+
+window.onload = openModal;
+</script>
+</body>
+</html>
