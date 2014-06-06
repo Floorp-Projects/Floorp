@@ -1345,10 +1345,10 @@ namespace mozilla {
 namespace dmd {
 
 //---------------------------------------------------------------------------
-// Stack trace records
+// Heap block records
 //---------------------------------------------------------------------------
 
-class TraceRecordKey
+class RecordKey
 {
 public:
   const StackTrace* const mAllocStackTrace;   // never null
@@ -1357,7 +1357,7 @@ protected:
   const StackTrace* const mReportStackTrace2; // nullptr if not 2x-reported
 
 public:
-  TraceRecordKey(const Block& aB)
+  RecordKey(const Block& aB)
     : mAllocStackTrace(aB.AllocStackTrace()),
       mReportStackTrace1(aB.ReportStackTrace1()),
       mReportStackTrace2(aB.ReportStackTrace2())
@@ -1367,16 +1367,16 @@ public:
 
   // Hash policy.
 
-  typedef TraceRecordKey Lookup;
+  typedef RecordKey Lookup;
 
-  static uint32_t hash(const TraceRecordKey& aKey)
+  static uint32_t hash(const RecordKey& aKey)
   {
     return mozilla::HashGeneric(aKey.mAllocStackTrace,
                                 aKey.mReportStackTrace1,
                                 aKey.mReportStackTrace2);
   }
 
-  static bool match(const TraceRecordKey& aA, const TraceRecordKey& aB)
+  static bool match(const RecordKey& aA, const RecordKey& aB)
   {
     return aA.mAllocStackTrace   == aB.mAllocStackTrace &&
            aA.mReportStackTrace1 == aB.mReportStackTrace1 &&
@@ -1437,18 +1437,17 @@ public:
   }
 };
 
-// A collection of one or more heap blocks with a common TraceRecordKey.
-class TraceRecord : public TraceRecordKey
+// A collection of one or more heap blocks with a common RecordKey.
+class Record : public RecordKey
 {
-  // The TraceRecordKey base class serves as the key in TraceRecordTables.
-  // These two fields constitute the value, so it's ok for them to be
-  // |mutable|.
-  mutable uint32_t    mNumBlocks; // number of blocks with this TraceRecordKey
+  // The RecordKey base class serves as the key in RecordTables.  These two
+  // fields constitute the value, so it's ok for them to be |mutable|.
+  mutable uint32_t    mNumBlocks; // number of blocks with this RecordKey
   mutable RecordSize mRecordSize; // combined size of those blocks
 
 public:
-  explicit TraceRecord(const TraceRecordKey& aKey)
-    : TraceRecordKey(aKey),
+  explicit Record(const RecordKey& aKey)
+    : RecordKey(aKey),
       mNumBlocks(0),
       mRecordSize()
   {}
@@ -1471,25 +1470,24 @@ public:
 
   static int QsortCmp(const void* aA, const void* aB)
   {
-    const TraceRecord* const a = *static_cast<const TraceRecord* const*>(aA);
-    const TraceRecord* const b = *static_cast<const TraceRecord* const*>(aB);
+    const Record* const a = *static_cast<const Record* const*>(aA);
+    const Record* const b = *static_cast<const Record* const*>(aB);
 
     return RecordSize::Cmp(a->mRecordSize, b->mRecordSize);
   }
 };
 
-typedef js::HashSet<TraceRecord, TraceRecord, InfallibleAllocPolicy>
-        TraceRecordTable;
+typedef js::HashSet<Record, Record, InfallibleAllocPolicy> RecordTable;
 
 void
-TraceRecord::Print(const Writer& aWriter, LocationService* aLocService,
-                   uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
-                   size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
-                   size_t aTotalUsableSize) const
+Record::Print(const Writer& aWriter, LocationService* aLocService,
+              uint32_t aM, uint32_t aN, const char* aStr, const char* astr,
+              size_t aCategoryUsableSize, size_t aCumulativeUsableSize,
+              size_t aTotalUsableSize) const
 {
   bool showTilde = mRecordSize.IsSampled();
 
-  W("%s: %s block%s in stack trace record %s of %s\n",
+  W("%s: %s block%s in heap block record %s of %s\n",
     aStr,
     Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
     Show(aM, gBuf2, kBufLen),
@@ -1807,32 +1805,32 @@ ReportOnAlloc(const void* aPtr)
 //---------------------------------------------------------------------------
 
 static void
-PrintSortedTraceRecords(const Writer& aWriter, LocationService* aLocService,
-                        const char* aStr, const char* astr,
-                        const TraceRecordTable& aRecordTable,
-                        size_t aCategoryUsableSize, size_t aTotalUsableSize)
+PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
+                   const char* aStr, const char* astr,
+                   const RecordTable& aRecordTable,
+                   size_t aCategoryUsableSize, size_t aTotalUsableSize)
 {
-  StatusMsg("  creating and sorting %s stack trace record array...\n", astr);
+  StatusMsg("  creating and sorting %s heap block record array...\n", astr);
 
   // Convert the table into a sorted array.
-  js::Vector<const TraceRecord*, 0, InfallibleAllocPolicy> recordArray;
+  js::Vector<const Record*, 0, InfallibleAllocPolicy> recordArray;
   recordArray.reserve(aRecordTable.count());
-  for (TraceRecordTable::Range r = aRecordTable.all();
+  for (RecordTable::Range r = aRecordTable.all();
        !r.empty();
        r.popFront()) {
     recordArray.infallibleAppend(&r.front());
   }
   qsort(recordArray.begin(), recordArray.length(), sizeof(recordArray[0]),
-        TraceRecord::QsortCmp);
+        Record::QsortCmp);
 
-  WriteTitle("%s stack trace records\n", aStr);
+  WriteTitle("%s heap block records\n", aStr);
 
   if (recordArray.length() == 0) {
     W("(none)\n\n");
     return;
   }
 
-  StatusMsg("  printing %s stack trace record array...\n", astr);
+  StatusMsg("  printing %s heap block record array...\n", astr);
   size_t cumulativeUsableSize = 0;
 
   // Limit the number of records printed, because fix-linux-stack.pl is too
@@ -1841,13 +1839,13 @@ PrintSortedTraceRecords(const Writer& aWriter, LocationService* aLocService,
   uint32_t numRecords = recordArray.length();
   uint32_t maxRecords = gOptions->MaxRecords();
   for (uint32_t i = 0; i < numRecords; i++) {
-    const TraceRecord* r = recordArray[i];
+    const Record* r = recordArray[i];
     cumulativeUsableSize += r->GetRecordSize().Usable();
     if (i < maxRecords) {
       r->Print(aWriter, aLocService, i+1, numRecords, aStr, astr,
                aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
     } else if (i == maxRecords) {
-      W("%s: stopping after %s stack trace records\n\n", aStr,
+      W("%s: stopping after %s heap block records\n\n", aStr,
         Show(maxRecords, gBuf1, kBufLen));
     }
   }
@@ -1956,20 +1954,20 @@ Dump(Writer aWriter)
   static int dumpCount = 1;
   StatusMsg("Dump %d {\n", dumpCount++);
 
-  StatusMsg("  gathering stack trace records...\n");
+  StatusMsg("  gathering heap block records...\n");
 
-  TraceRecordTable unreportedTraceRecordTable;
-  (void)unreportedTraceRecordTable.init(1024);
+  RecordTable unreportedRecordTable;
+  (void)unreportedRecordTable.init(1024);
   size_t unreportedUsableSize = 0;
   size_t unreportedNumBlocks = 0;
 
-  TraceRecordTable onceReportedTraceRecordTable;
-  (void)onceReportedTraceRecordTable.init(1024);
+  RecordTable onceReportedRecordTable;
+  (void)onceReportedRecordTable.init(1024);
   size_t onceReportedUsableSize = 0;
   size_t onceReportedNumBlocks = 0;
 
-  TraceRecordTable twiceReportedTraceRecordTable;
-  (void)twiceReportedTraceRecordTable.init(0);
+  RecordTable twiceReportedRecordTable;
+  (void)twiceReportedRecordTable.init(0);
   size_t twiceReportedUsableSize = 0;
   size_t twiceReportedNumBlocks = 0;
 
@@ -1978,26 +1976,26 @@ Dump(Writer aWriter)
   for (BlockTable::Range r = gBlockTable->all(); !r.empty(); r.popFront()) {
     const Block& b = r.front();
 
-    TraceRecordTable* table;
+    RecordTable* table;
     uint32_t numReports = b.NumReports();
     if (numReports == 0) {
       unreportedUsableSize += b.UsableSize();
       unreportedNumBlocks++;
-      table = &unreportedTraceRecordTable;
+      table = &unreportedRecordTable;
     } else if (numReports == 1) {
       onceReportedUsableSize += b.UsableSize();
       onceReportedNumBlocks++;
-      table = &onceReportedTraceRecordTable;
+      table = &onceReportedRecordTable;
     } else {
       MOZ_ASSERT(numReports == 2);
       twiceReportedUsableSize += b.UsableSize();
       twiceReportedNumBlocks++;
-      table = &twiceReportedTraceRecordTable;
+      table = &twiceReportedRecordTable;
     }
-    TraceRecordKey key(b);
-    TraceRecordTable::AddPtr p = table->lookupForAdd(key);
+    RecordKey key(b);
+    RecordTable::AddPtr p = table->lookupForAdd(key);
     if (!p) {
-      TraceRecord tr(b);
+      Record tr(b);
       (void)table->add(p, tr);
     }
     p->Add(b);
@@ -2017,20 +2015,20 @@ Dump(Writer aWriter)
   // Allocate this on the heap instead of the stack because it's fairly large.
   LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
 
-  PrintSortedTraceRecords(aWriter, locService,
-                          "Twice-reported", "twice-reported",
-                          twiceReportedTraceRecordTable,
-                          twiceReportedUsableSize, totalUsableSize);
+  PrintSortedRecords(aWriter, locService,
+                     "Twice-reported", "twice-reported",
+                     twiceReportedRecordTable,
+                     twiceReportedUsableSize, totalUsableSize);
 
-  PrintSortedTraceRecords(aWriter, locService,
-                          "Unreported", "unreported",
-                          unreportedTraceRecordTable,
-                          unreportedUsableSize, totalUsableSize);
+  PrintSortedRecords(aWriter, locService,
+                     "Unreported", "unreported",
+                     unreportedRecordTable,
+                     unreportedUsableSize, totalUsableSize);
 
-  PrintSortedTraceRecords(aWriter, locService,
-                          "Once-reported", "once-reported",
-                          onceReportedTraceRecordTable,
-                          onceReportedUsableSize, totalUsableSize);
+  PrintSortedRecords(aWriter, locService,
+                     "Once-reported", "once-reported",
+                     onceReportedRecordTable,
+                     onceReportedUsableSize, totalUsableSize);
 
   bool showTilde = anyBlocksSampled;
   WriteTitle("Summary\n");
@@ -2089,25 +2087,25 @@ Dump(Writer aWriter)
     W("\nData structures that are destroyed after Dump() ends:\n");
 
     size_t unreportedSize =
-      unreportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
+      unreportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Unreported table:     %10s bytes (%s entries, %s used)\n",
-      Show(unreportedSize,                        gBuf1, kBufLen),
-      Show(unreportedTraceRecordTable.capacity(), gBuf2, kBufLen),
-      Show(unreportedTraceRecordTable.count(),    gBuf3, kBufLen));
+      Show(unreportedSize,                   gBuf1, kBufLen),
+      Show(unreportedRecordTable.capacity(), gBuf2, kBufLen),
+      Show(unreportedRecordTable.count(),    gBuf3, kBufLen));
 
     size_t onceReportedSize =
-      onceReportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
+      onceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Once-reported table:  %10s bytes (%s entries, %s used)\n",
-      Show(onceReportedSize,                        gBuf1, kBufLen),
-      Show(onceReportedTraceRecordTable.capacity(), gBuf2, kBufLen),
-      Show(onceReportedTraceRecordTable.count(),    gBuf3, kBufLen));
+      Show(onceReportedSize,                   gBuf1, kBufLen),
+      Show(onceReportedRecordTable.capacity(), gBuf2, kBufLen),
+      Show(onceReportedRecordTable.count(),    gBuf3, kBufLen));
 
     size_t twiceReportedSize =
-      twiceReportedTraceRecordTable.sizeOfIncludingThis(MallocSizeOf);
+      twiceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
     W("  Twice-reported table: %10s bytes (%s entries, %s used)\n",
-      Show(twiceReportedSize,                        gBuf1, kBufLen),
-      Show(twiceReportedTraceRecordTable.capacity(), gBuf2, kBufLen),
-      Show(twiceReportedTraceRecordTable.count(),    gBuf3, kBufLen));
+      Show(twiceReportedSize,                   gBuf1, kBufLen),
+      Show(twiceReportedRecordTable.capacity(), gBuf2, kBufLen),
+      Show(twiceReportedRecordTable.count(),    gBuf3, kBufLen));
 
     W("  Location service:     %10s bytes\n",
       Show(locService->SizeOfIncludingThis(), gBuf1, kBufLen));
@@ -2356,7 +2354,7 @@ RunTestMode(FILE* fp)
   }
   MOZ_ASSERT(gSmallBlockActualSizeCounter == 0);
 
-  // This allocates 16, 32, ..., 128 bytes, which results in a stack trace
+  // This allocates 16, 32, ..., 128 bytes, which results in a heap block
   // record that contains a mix of sample and non-sampled blocks, and so should
   // be printed with '~' signs.
   for (int i = 1; i <= 8; i++) {
