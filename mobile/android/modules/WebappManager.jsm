@@ -500,6 +500,12 @@ this.WebappManager = {
           type: "Webapps:InstallApk",
           filePath: apk.filePath,
           data: msg,
+        }, (data, error) => {
+          if (!!error) {
+            // There's no page to report back to so drop the error.
+            // TODO: we should notify the user about this failure.
+            debug("APK install failed : " + returnError);
+          }
         });
       }
     } else {

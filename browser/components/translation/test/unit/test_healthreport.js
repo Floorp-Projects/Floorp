@@ -170,6 +170,44 @@ add_task(function* test_record_translation() {
   yield storage.close();
 });
 
+add_task(function* test_collect_daily() {
+  let storage = yield Metrics.Storage("translation");
+  let provider = new TranslationProvider();
+  yield provider.init(storage);
+  let now = new Date();
+
+  // Set the prefs we test here to `false` initially.
+  const kPrefDetectLanguage = "browser.translation.detectLanguage";
+  const kPrefShowUI = "browser.translation.ui.show";
+  Services.prefs.setBoolPref(kPrefDetectLanguage, false);
+  Services.prefs.setBoolPref(kPrefShowUI, false);
+
+  // Initially nothing should be configured.
+  yield provider.collectDailyData();
+
+  let m = provider.getMeasurement("translation", 1);
+  let values = yield m.getValues();
+  Assert.equal(values.days.size, 1);
+  Assert.ok(values.days.hasDay(now));
+  let day = values.days.getDay(now);
+  Assert.ok(day.has("detectLanguageEnabled"));
+  Assert.ok(day.has("showTranslationUI"));
+
+  // Changes to the repective prefs should be picked up.
+  Services.prefs.setBoolPref(kPrefDetectLanguage, true);
+  Services.prefs.setBoolPref(kPrefShowUI, true);
+
+  yield provider.collectDailyData();
+
+  values = yield m.getValues();
+  day = values.days.getDay(now);
+  Assert.equal(day.get("detectLanguageEnabled"), 1);
+  Assert.equal(day.get("showTranslationUI"), 1);
+
+  yield provider.shutdown();
+  yield storage.close();
+});
+
 // Test the payload after recording with telemetry enabled.
 add_task(function* test_healthreporter_json() {
   Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
@@ -227,7 +265,7 @@ add_task(function* test_healthreporter_json() {
 });
 
 // Test the payload after recording with telemetry disabled.
-add_task(function* test_healthreporter_json() {
+add_task(function* test_healthreporter_json2() {
   Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
 
   let reporter = yield getHealthReporter("healthreporter_json");

@@ -55,6 +55,7 @@ dictionary NetworkProperties {
   DOMString pin;
   boolean dontConnect;
   DOMString serverCertificate;
+  DOMString subjectMatch;
 };
 
 [Constructor(optional NetworkProperties properties),
@@ -90,6 +91,7 @@ interface MozWifiNetwork {
            attribute DOMString? pin;
            attribute boolean? dontConnect;
            attribute DOMString? serverCertificate;
+           attribute DOMString? subjectMatch;
 };
 
 [JSImplementation="@mozilla.org/mozwificonnection;1",
