@@ -15,6 +15,7 @@
 #include "nsIWindowCreator.h" // for stupid compilers
 #include "nsIWindowWatcher.h"
 #include "nsIPromptFactory.h"
+#include "nsITabParent.h"
 #include "nsPIWindowWatcher.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
@@ -77,6 +78,7 @@ protected:
                               bool aCalledFromJS,
                               bool aDialog,
                               bool aNavigate,
+                              nsITabParent *aOpeningTab,
                               nsIArray *argv,
                               nsIDOMWindow **_retval);
 

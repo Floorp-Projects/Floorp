@@ -174,7 +174,7 @@ UnreachableCodeElimination::prunePointlessBranchesAndMarkReachableBlocks()
             if (!osrBlock->getSuccessor(i)->isMarked()) {
                 // OSR block has an otherwise unreachable successor, abort.
                 for (MBasicBlockIterator iter(graph_.begin()); iter != graph_.end(); iter++)
-                    iter->mark();
+                    iter->markUnchecked();
                 marked_ = graph_.numBlocks();
                 return true;
             }

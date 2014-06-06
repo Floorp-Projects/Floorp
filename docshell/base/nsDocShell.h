@@ -42,6 +42,7 @@
 #include "nsIWebShellServices.h"
 #include "nsILinkHandler.h"
 #include "nsIClipboardCommands.h"
+#include "nsITabParent.h"
 #include "nsCRT.h"
 #include "prtime.h"
 #include "nsRect.h"
@@ -902,6 +903,8 @@ private:
     nsTObserverArray<nsWeakPtr> mReflowObservers;
     nsTObserverArray<nsWeakPtr> mScrollObservers;
     nsCString         mOriginalUriString;
+    nsWeakPtr mOpener;
+    nsWeakPtr mOpenedRemote;
 
     // Separate function to do the actual name (i.e. not _top, _self etc.)
     // searching for FindItemWithName.
