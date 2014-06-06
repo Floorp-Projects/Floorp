@@ -238,6 +238,14 @@ js::GetPrefixInteger(ThreadSafeContext *cx, const CharT *start, const CharT *end
     return true;
 }
 
+template bool
+js::GetPrefixInteger(ThreadSafeContext *cx, const jschar *start, const jschar *end, int base,
+                     const jschar **endp, double *dp);
+
+template bool
+js::GetPrefixInteger(ThreadSafeContext *cx, const Latin1Char *start, const Latin1Char *end,
+                     int base, const Latin1Char **endp, double *dp);
+
 bool
 js::GetDecimalInteger(ExclusiveContext *cx, const jschar *start, const jschar *end, double *dp)
 {
@@ -1794,3 +1802,11 @@ js_strtod(ThreadSafeContext *cx, const CharT *begin, const CharT *end, const Cha
 
     return true;
 }
+
+template bool
+js_strtod(ThreadSafeContext *cx, const jschar *begin, const jschar *end, const jschar **dEnd,
+          double *d);
+
+template bool
+js_strtod(ThreadSafeContext *cx, const Latin1Char *begin, const Latin1Char *end,
+          const Latin1Char **dEnd, double *d);
