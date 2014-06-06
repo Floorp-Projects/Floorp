@@ -13,7 +13,6 @@
 #include "nsIChannelEventSink.h"
 #include "nsIObserver.h"
 #include "plstr.h"
-#include "nsIScriptExternalNameSet.h"
 #include "js/TypeDecls.h"
 
 #include <stdint.h>

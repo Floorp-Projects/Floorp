@@ -56,7 +56,6 @@
 
 // Window scriptable helper includes
 #include "nsIDocShell.h"
-#include "nsIScriptExternalNameSet.h"
 #include "nsJSUtils.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIJSNativeInitializer.h"
