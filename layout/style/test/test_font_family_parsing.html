@@ -55,14 +55,13 @@ var testFontFamilyLists = [
   { namelist: "arial, helvetica, 'times' new roman, sans-serif", invalid: true },
   { namelist: "arial, helvetica, \"times\" new roman, sans-serif", invalid: true },
 
-  // bug 660397 - quotes contained within family names are not escaped
-  // { namelist: "arial, helvetica, \"\\\"times new roman\", sans-serif" },
+  { namelist: "arial, helvetica, \"\\\"times new roman\", sans-serif" },
   { namelist: "arial, helvetica, '\\\"times new roman', sans-serif" },
   { namelist: "arial, helvetica, times 'new' roman, sans-serif", invalid: true },
   { namelist: "arial, helvetica, times \"new\" roman, sans-serif", invalid: true },
-  // { namelist: "\"simple", invalid: true, single: true },
-  // { namelist: "\\\"simple", single: true },
-  // { namelist: "\"\\\"simple\"", single: true },
+  { namelist: "\"simple", single: true },
+  { namelist: "\\\"simple", single: true },
+  { namelist: "\"\\\"simple\"", single: true },
   { namelist: "İsimple", single: true },
   { namelist: "ßsimple", single: true },
   { namelist: "ẙsimple", single: true },
@@ -71,26 +70,18 @@ var testFontFamilyLists = [
   { namelist: "\\s imple", single: true },
   { namelist: "\\073 imple", single: true },
 
-  // bug 475216 - css serialization doesn't escape characters that need escaping
-  // { namelist: "\\035 simple", single: true },
+  { namelist: "\\035 simple", single: true },
   { namelist: "sim\\035 ple", single: true },
-  // { namelist: "simple\\02cinitial", single: true },
-  // { namelist: "simple, \\02cinitial" },
-  // { namelist: "sim\\020 \\035 ple", single: true },
-  // { namelist: "sim\\020 5ple", single: true },
-  // { namelist: "\\;", single: true },
-  // { namelist: "\\;,\\;", single: true },
-  // { namelist: "\\,\\;", single: true },
-  // { namelist: "\\{", single: true },
-  // { namelist: "\\{\\;", single: true },
-  // { namelist: "\\}", single: true },
-  // { namelist: "\\}\\;", single: true },
-  // { namelist: "\\@simple", single: true },
-  // { namelist: "\\@simple\\;", single: true },
-  // { namelist: "\\@font-face", single: true },
-  // { namelist: "\\@font-face\\;", single: true },
-  // { namelist: "\\031 \\036 px", single: true },
-  // { namelist: "\\031 \\036 px", single: true },
+  { namelist: "simple\\02cinitial", single: true },
+  { namelist: "simple, \\02cinitial" },
+  { namelist: "sim\\020 \\035 ple", single: true },
+  { namelist: "sim\\020 5ple", single: true },
+  { namelist: "\\@simple", single: true },
+  { namelist: "\\@simple\\;", single: true },
+  { namelist: "\\@font-face", single: true },
+  { namelist: "\\@font-face\\;", single: true },
+  { namelist: "\\031 \\036 px", single: true },
+  { namelist: "\\031 \\036 px", single: true },
   { namelist: "\\1f4a9", single: true },
   { namelist: "\\01f4a9", single: true },
   { namelist: "\\0001f4a9", single: true },
@@ -137,7 +128,7 @@ var testFontFamilyLists = [
 
 ];
 
-if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
+if (window.SpecialPowers && SpecialPowers.getBoolPref("layout.css.unset-value.enabled")) {
   testFontFamilyLists.push(
     { namelist: "unset", invalid: true, fontonly: true, single: true },
     { namelist: "unset, simple", invalid: true },

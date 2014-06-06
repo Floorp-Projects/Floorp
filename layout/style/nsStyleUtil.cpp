@@ -143,6 +143,34 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   return true;
 }
 
+// unquoted family names must be a sequence of idents
+// so escape any parts that require escaping
+static void
+AppendUnquotedFamilyName(const nsAString& aFamilyName, nsAString& aResult)
+{
+  const char16_t *p, *p_end;
+  aFamilyName.BeginReading(p);
+  aFamilyName.EndReading(p_end);
+
+   bool moreThanOne = false;
+   while (p < p_end) {
+     const char16_t* identStart = p;
+     while (++p != p_end && *p != ' ')
+       /* nothing */ ;
+
+     nsDependentSubstring ident(identStart, p);
+     if (!ident.IsEmpty()) {
+       if (moreThanOne) {
+         aResult.Append(' ');
+       }
+       nsStyleUtil::AppendEscapedCSSIdent(ident, aResult);
+       moreThanOne = true;
+     }
+
+     ++p;
+  }
+}
+
 /* static */ void
 nsStyleUtil::AppendEscapedCSSFontFamilyList(
   const mozilla::FontFamilyList& aFamilyList,
@@ -157,9 +185,7 @@ nsStyleUtil::AppendEscapedCSSFontFamilyList(
     const FontFamilyName& name = fontlist[i];
     switch (name.mType) {
       case eFamily_named:
-        // xxx - need to do appropriate escaping, done in later patch
-        // iterate over idents, escape each ident
-        aResult.Append(name.mName);
+        AppendUnquotedFamilyName(name.mName, aResult);
         break;
       case eFamily_named_quoted:
         AppendEscapedCSSString(name.mName, aResult);
