@@ -32,7 +32,7 @@ function test_profiler_actor(aClient, aProfiler)
       for (var i = 0; i < features.length; i++)
         do_check_eq(aResponse.features[i], features[i]);
 
-      aClient.request({ to: aProfiler, type: "startProfiler", features: ['jank', 'js'] }, function (aResponse) {
+      aClient.request({ to: aProfiler, type: "startProfiler", features: ['js'] }, function (aResponse) {
         do_check_eq(typeof aResponse.msg, "string");
         aClient.request({ to: aProfiler, type: "isActive" }, function (aResponse) {
           do_check_true(aResponse.isActive);

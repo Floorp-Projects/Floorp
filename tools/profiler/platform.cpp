@@ -99,6 +99,20 @@ void Sampler::Shutdown() {
   sRegisteredThreads = nullptr;
 }
 
+ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
+                       bool aIsMainThread, PseudoStack* aPseudoStack,
+                       void* aStackTop)
+  : mName(strdup(aName))
+  , mThreadId(aThreadId)
+  , mIsMainThread(aIsMainThread)
+  , mPseudoStack(aPseudoStack)
+  , mPlatformData(Sampler::AllocPlatformData(aThreadId))
+  , mProfile(nullptr)
+  , mStackTop(aStackTop)
+{
+  mThread = NS_GetCurrentThread();
+}
+
 ThreadInfo::~ThreadInfo() {
   free(mName);
 

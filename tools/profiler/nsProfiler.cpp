@@ -5,9 +5,6 @@
 
 #include <string>
 #include <sstream>
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-#include "EventTracer.h"
-#endif
 #include "GeckoProfiler.h"
 #include "nsProfiler.h"
 #include "nsMemory.h"
@@ -81,10 +78,6 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   profiler_start(aEntries, aInterval,
                  aFeatures, aFeatureCount,
                  aThreadNameFilters, aFilterCount);
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-  bool printToConsole = false;
-  mozilla::InitEventTracing(printToConsole);
-#endif
   return NS_OK;
 }
 
