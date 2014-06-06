@@ -26,7 +26,7 @@ public class TopSitesThumbnailView extends ImageView {
     private static final int COLOR_FILTER = 0x46FFFFFF;
 
     // Default filter color for "Add a bookmark" views.
-    private static final int DEFAULT_COLOR = 0x46ECF0F3;
+    private static final int DEFAULT_COLOR = 0xFFECF0F3;
 
     // Stroke width for the border.
     private final float mStrokeWidth = getResources().getDisplayMetrics().density * 2;

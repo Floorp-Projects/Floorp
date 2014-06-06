@@ -109,13 +109,14 @@
 
     <!-- We draw after the menu items so when they are hidden, the cancel button,
          which is thus drawn on top, may be pressed. -->
-    <ImageView android:id="@+id/edit_cancel"
-               style="@style/UrlBar.ImageButton.Icon"
-               android:layout_alignParentRight="true"
-               android:src="@drawable/close_edit_mode"
-               android:paddingLeft="2dp"
-               android:paddingRight="2dp"
-               android:contentDescription="@string/edit_mode_cancel"
-               android:visibility="gone"/>
+    <org.mozilla.gecko.widget.ThemedImageView
+            android:id="@+id/edit_cancel"
+            style="@style/UrlBar.ImageButton.Icon"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/close_edit_mode_selector"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:contentDescription="@string/edit_mode_cancel"
+            android:visibility="gone"/>
 
 </merge>

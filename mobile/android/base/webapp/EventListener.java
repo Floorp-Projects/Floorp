@@ -183,7 +183,7 @@ public class EventListener implements NativeEventListener  {
         }
     }
 
-    public static void installApk(final Activity context, NativeJSObject message, EventCallback callback) {
+    public static void installApk(final Activity context, NativeJSObject message, final EventCallback callback) {
         final JSONObject messageData;
 
         // We get the manifest url out of javascript here so we can use it as a checksum
@@ -237,6 +237,7 @@ public class EventListener implements NativeEventListener  {
                         // unregistered the receiver).
                         Log.e(LOGTAG, "error unregistering install receiver: ", e);
                     }
+                    callback.sendError("APK installation cancelled by user");
                 }
             }
         });

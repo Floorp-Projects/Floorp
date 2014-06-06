@@ -252,29 +252,21 @@ interface CameraControl : MediaStream
      useful for synchronizing other UI elements. */
   attribute CameraPreviewStateChange? onPreviewStateChange;
 
-  /* the attribute is deprecated in favour of get/setPictureSize.
-
-     the size of the picture to be returned by a call to takePicture();
+  /* the size of the picture to be returned by a call to takePicture();
      an object with 'height' and 'width' properties that corresponds to
      one of the options returned by capabilities.pictureSizes. */
-  [Throws]
-  attribute any              pictureSize;
   [Throws]
   CameraSize getPictureSize();
   [Throws]
   void setPictureSize(optional CameraSize size);
 
-  /* the attribute is deprecated in favour of get/setThumbnailSize.
-
-     the size of the thumbnail to be included in the picture returned
+  /* the size of the thumbnail to be included in the picture returned
      by a call to takePicture(), assuming the chosen fileFormat supports
      one; an object with 'height' and 'width' properties that corresponds
      to one of the options returned by capabilities.pictureSizes.
 
      this setting should be considered a hint: the implementation will
      respect it when possible, and override it if necessary. */
-  [Throws]
-  attribute any              thumbnailSize;
   [Throws]
   CameraSize getThumbnailSize();
   [Throws]
