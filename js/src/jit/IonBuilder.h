@@ -381,7 +381,7 @@ class IonBuilder : public MIRGenerator
     MInstruction *addShapeGuard(MDefinition *obj, Shape *const shape, BailoutKind bailoutKind);
 
     MDefinition *convertShiftToMaskForStaticTypedArray(MDefinition *id,
-                                                       ArrayBufferView::ViewType viewType);
+                                                       Scalar::Type viewType);
 
     bool invalidatedIdempotentCache();
 

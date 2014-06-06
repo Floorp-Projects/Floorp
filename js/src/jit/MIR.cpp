@@ -3151,7 +3151,7 @@ jit::ElementAccessIsDenseNative(MDefinition *obj, MDefinition *id)
 
 bool
 jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
-                               ScalarTypeDescr::Type *arrayType)
+                               Scalar::Type *arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -3163,8 +3163,8 @@ jit::ElementAccessIsTypedArray(MDefinition *obj, MDefinition *id,
     if (!types)
         return false;
 
-    *arrayType = (ScalarTypeDescr::Type) types->getTypedArrayType();
-    return *arrayType != ScalarTypeDescr::TYPE_MAX;
+    *arrayType = types->getTypedArrayType();
+    return *arrayType != Scalar::TypeMax;
 }
 
 bool

@@ -239,24 +239,7 @@ class SimpleTypeDescr : public SizedTypeDescr
 class ScalarTypeDescr : public SimpleTypeDescr
 {
   public:
-    // Must match order of JS_FOR_EACH_SCALAR_TYPE_REPR below
-    enum Type {
-        TYPE_INT8 = JS_SCALARTYPEREPR_INT8,
-        TYPE_UINT8 = JS_SCALARTYPEREPR_UINT8,
-        TYPE_INT16 = JS_SCALARTYPEREPR_INT16,
-        TYPE_UINT16 = JS_SCALARTYPEREPR_UINT16,
-        TYPE_INT32 = JS_SCALARTYPEREPR_INT32,
-        TYPE_UINT32 = JS_SCALARTYPEREPR_UINT32,
-        TYPE_FLOAT32 = JS_SCALARTYPEREPR_FLOAT32,
-        TYPE_FLOAT64 = JS_SCALARTYPEREPR_FLOAT64,
-
-        /*
-         * Special type that's a uint8_t, but assignments are clamped to 0 .. 255.
-         * Treat the raw data type as a uint8_t.
-         */
-        TYPE_UINT8_CLAMPED = JS_SCALARTYPEREPR_UINT8_CLAMPED,
-    };
-    static const int32_t TYPE_MAX = TYPE_UINT8_CLAMPED + 1;
+    typedef Scalar::Type Type;
 
     static const type::Kind Kind = type::Scalar;
     static const bool Opaque = false;
@@ -267,8 +250,22 @@ class ScalarTypeDescr : public SimpleTypeDescr
     static const Class class_;
     static const JSFunctionSpec typeObjectMethods[];
 
-    ScalarTypeDescr::Type type() const {
-        return (ScalarTypeDescr::Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
+    Type type() const {
+        // Make sure the values baked into TypedObjectConstants.h line up with
+        // the Scalar::Type enum. We don't define Scalar::Type directly in
+        // terms of these constants to avoid making TypedObjectConstants.h a
+        // public header file.
+        JS_STATIC_ASSERT(Scalar::Int8 == JS_SCALARTYPEREPR_INT8);
+        JS_STATIC_ASSERT(Scalar::Uint8 == JS_SCALARTYPEREPR_UINT8);
+        JS_STATIC_ASSERT(Scalar::Int16 == JS_SCALARTYPEREPR_INT16);
+        JS_STATIC_ASSERT(Scalar::Uint16 == JS_SCALARTYPEREPR_UINT16);
+        JS_STATIC_ASSERT(Scalar::Int32 == JS_SCALARTYPEREPR_INT32);
+        JS_STATIC_ASSERT(Scalar::Uint32 == JS_SCALARTYPEREPR_UINT32);
+        JS_STATIC_ASSERT(Scalar::Float32 == JS_SCALARTYPEREPR_FLOAT32);
+        JS_STATIC_ASSERT(Scalar::Float64 == JS_SCALARTYPEREPR_FLOAT64);
+        JS_STATIC_ASSERT(Scalar::Uint8Clamped == JS_SCALARTYPEREPR_UINT8_CLAMPED);
+
+        return (Type) getReservedSlot(JS_DESCR_SLOT_TYPE).toInt32();
     }
 
     static bool call(JSContext *cx, unsigned argc, Value *vp);
@@ -277,20 +274,20 @@ class ScalarTypeDescr : public SimpleTypeDescr
 // Enumerates the cases of ScalarTypeDescr::Type which have
 // unique C representation. In particular, omits Uint8Clamped since it
 // is just a Uint8.
-#define JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                     \
-    macro_(ScalarTypeDescr::TYPE_INT8,    int8_t,   int8)            \
-    macro_(ScalarTypeDescr::TYPE_UINT8,   uint8_t,  uint8)           \
-    macro_(ScalarTypeDescr::TYPE_INT16,   int16_t,  int16)           \
-    macro_(ScalarTypeDescr::TYPE_UINT16,  uint16_t, uint16)          \
-    macro_(ScalarTypeDescr::TYPE_INT32,   int32_t,  int32)           \
-    macro_(ScalarTypeDescr::TYPE_UINT32,  uint32_t, uint32)          \
-    macro_(ScalarTypeDescr::TYPE_FLOAT32, float,    float32)         \
-    macro_(ScalarTypeDescr::TYPE_FLOAT64, double,   float64)
+#define JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)       \
+    macro_(Scalar::Int8,    int8_t,   int8)                     \
+    macro_(Scalar::Uint8,   uint8_t,  uint8)                    \
+    macro_(Scalar::Int16,   int16_t,  int16)                    \
+    macro_(Scalar::Uint16,  uint16_t, uint16)                   \
+    macro_(Scalar::Int32,   int32_t,  int32)                    \
+    macro_(Scalar::Uint32,  uint32_t, uint32)                   \
+    macro_(Scalar::Float32, float,    float32)                  \
+    macro_(Scalar::Float64, double,   float64)
 
 // Must be in same order as the enum ScalarTypeDescr::Type:
-#define JS_FOR_EACH_SCALAR_TYPE_REPR(macro_)                                    \
-    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)                           \
-    macro_(ScalarTypeDescr::TYPE_UINT8_CLAMPED, uint8_t, uint8Clamped)
+#define JS_FOR_EACH_SCALAR_TYPE_REPR(macro_)                    \
+    JS_FOR_EACH_UNIQUE_SCALAR_TYPE_REPR_CTYPE(macro_)           \
+    macro_(Scalar::Uint8Clamped, uint8_t, uint8Clamped)
 
 // Type for reference type constructors like `Any`, `String`, and
 // `Object`. All such type constructors share a common js::Class and
