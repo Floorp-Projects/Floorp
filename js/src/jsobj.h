@@ -807,6 +807,7 @@ class JSObject : public js::ObjectImpl
     bool isCallable() {
         return getClass()->isCallable();
     }
+    bool isConstructor() const;
 
     inline void finish(js::FreeOp *fop);
     MOZ_ALWAYS_INLINE void finalize(js::FreeOp *fop);
@@ -1184,10 +1185,19 @@ struct JSObject_Slots8 : JSObject { js::Value fslots[8]; };
 struct JSObject_Slots12 : JSObject { js::Value fslots[12]; };
 struct JSObject_Slots16 : JSObject { js::Value fslots[16]; };
 
-static inline bool
-js_IsCallable(const js::Value &v)
+namespace js {
+
+inline bool
+IsCallable(const Value &v)
 {
     return v.isObject() && v.toObject().isCallable();
+}
+
+// ES6 rev 24 (2014 April 27) 7.2.5 IsConstructor
+inline bool
+IsConstructor(const Value &v)
+{
+    return v.isObject() && v.toObject().isConstructor();
 }
 
 inline JSObject *
@@ -1207,6 +1217,8 @@ GetOuterObject(JSContext *cx, js::HandleObject obj)
         return op(cx, obj);
     return obj;
 }
+
+} /* namespace js */
 
 class JSValueArray {
   public:

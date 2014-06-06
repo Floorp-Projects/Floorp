@@ -651,8 +651,8 @@ PropDesc::PropDesc(const Value &getter, const Value &setter,
     hasValue_(false), hasWritable_(false), hasEnumerable_(true), hasConfigurable_(true),
     isUndefined_(false)
 {
-    MOZ_ASSERT(getter.isUndefined() || js_IsCallable(getter));
-    MOZ_ASSERT(setter.isUndefined() || js_IsCallable(setter));
+    MOZ_ASSERT(getter.isUndefined() || IsCallable(getter));
+    MOZ_ASSERT(setter.isUndefined() || IsCallable(setter));
 }
 
 static MOZ_ALWAYS_INLINE bool

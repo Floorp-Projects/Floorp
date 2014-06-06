@@ -915,7 +915,7 @@ ScriptedIndirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id
     RootedValue fval(cx), value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().has, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::has(cx, proxy, id, bp);
     return Trap1(cx, handler, fval, id, &value) &&
            ValueToBool(value, bp);
@@ -928,7 +928,7 @@ ScriptedIndirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId
     RootedValue fval(cx), value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().hasOwn, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
     return Trap1(cx, handler, fval, id, &value) &&
            ValueToBool(value, bp);
@@ -950,7 +950,7 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
     return Trap(cx, handler, fval, 2, argv.begin(), vp);
 }
@@ -972,7 +972,7 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
     return Trap(cx, handler, fval, 3, argv.begin(), &value);
 }
@@ -984,7 +984,7 @@ ScriptedIndirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVect
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().keys, &value))
         return false;
-    if (!js_IsCallable(value))
+    if (!IsCallable(value))
         return BaseProxyHandler::keys(cx, proxy, props);
     return Trap(cx, handler, value, 0, nullptr, &value) &&
            ArrayToIdVector(cx, value, props);
@@ -998,7 +998,7 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().iterate, &value))
         return false;
-    if (!js_IsCallable(value))
+    if (!IsCallable(value))
         return BaseProxyHandler::iterate(cx, proxy, flags, vp);
     return Trap(cx, handler, value, 0, nullptr, vp) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, vp);

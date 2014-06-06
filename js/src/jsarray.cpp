@@ -1140,7 +1140,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
     if (!JSObject::getProperty(cx, obj, obj, cx->names().join, &join))
         return false;
 
-    if (!js_IsCallable(join)) {
+    if (!IsCallable(join)) {
         JSString *str = JS_BasicObjectToString(cx, obj);
         if (!str)
             return false;
