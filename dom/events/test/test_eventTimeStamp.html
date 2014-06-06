@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=77992
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Event.timeStamp (Bug 77992)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank"
+  href="https://bugzilla.mozilla.org/show_bug.cgi?id=77992">Mozilla Bug 77992</a>
+<p id="display"></p>
+<pre id="test">
+<script type="text/js-worker" id="worker-src">
+  // Simply returns the event timestamp
+  // (Since we know that this isn't implemented correctly for dedicated workers
+  //  and isn't likely to be implemented correctly until we implement
+  //  WorkerPerformance, we make this return the *wrong* result so long as
+  //  'performance' is not available. Then we can use this in a todo() test
+  //  below and when we come to implement WorkerPerformance the todo() check
+  //  should fail reminding us to update this test.)
+  onmessage = function(evt) {
+    postMessage(typeof performance === "object" ? evt.timeStamp : 0);
+  }
+</script>
+<script type="text/js-worker" id="shared-worker-src">
+  // Simply returns the event timestamp
+  onconnect = function(evt) {
+    var port = evt.ports[0];
+    port.onmessage = function(messageEvt) {
+      port.postMessage(messageEvt.timeStamp);
+    };
+  };
+</script>
+<script type="application/javascript">
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+// We don't use SpecialPowers.pushPrefEnv since it can delay the test
+// function until after the load event has fired which means we can't
+// test the timestamp of the load event.
+const kPrefName = "dom.event.highrestimestamp.enabled";
+var prevPrefValue = SpecialPowers.getBoolPref(kPrefName);
+SpecialPowers.setBoolPref(kPrefName, true);
+testRegularEvents();
+
+// Event.timeStamp should be relative to the time origin which is:
+//
+//   Non-worker context: navigation start
+//   Dedicated worker: navigation start of the document that created the worker
+//   Shared worker: creation time of the shared worker
+//
+// See: https://w3c.github.io/web-performance/specs/HighResolutionTime2/Overview.html#sec-time-origin
+
+function testRegularEvents() {
+  if (document.readyState === "complete") {
+    ok(false, "Onload event has already fired");
+    finishTests();
+    return;
+  }
+  var timeBeforeEvent = window.performance.now();
+  window.addEventListener("load", function(evt) {
+    var timeAfterEvent = window.performance.now();
+    ok(evt.timeStamp > timeBeforeEvent &&
+       evt.timeStamp < timeAfterEvent,
+       "Event timestamp (" + evt.timeStamp + ") is in expected range: (" +
+         timeBeforeEvent + ", " + timeAfterEvent + ")");
+    testWorkerEvents();
+  });
+}
+
+function testWorkerEvents() {
+  var blob = new Blob([ document.getElementById("worker-src").textContent ],
+                      { type: "text/javascript" });
+  var worker = new Worker(window.URL.createObjectURL(blob));
+  worker.onmessage = function(evt) {
+    var timeAfterEvent = window.performance.now();
+    todo(evt.data > timeBeforeEvent &&
+         evt.data < timeAfterEvent,
+         "Event timestamp in dedicated worker (" + evt.data +
+           ") is in expected range: (" +
+           timeBeforeEvent + ", " + timeAfterEvent + ")");
+    worker.terminate();
+    testSharedWorkerEvents();
+  };
+  var timeBeforeEvent = window.performance.now();
+  worker.postMessage("");
+}
+
+function testSharedWorkerEvents() {
+  var blob =
+    new Blob([ document.getElementById("shared-worker-src").textContent ],
+             { type: "text/javascript" });
+  // Delay creation of worker slightly so it is easier to distinguish
+  // shared worker creation time from this document's navigation start
+  window.setTimeout(function() {
+    var timeBeforeWorkerCreation = window.performance.now();
+    var worker = new SharedWorker(window.URL.createObjectURL(blob));
+    worker.port.onmessage = function(evt) {
+      var timeAfterEvent = window.performance.now();
+      ok(evt.data > 0 &&
+         evt.data < timeAfterEvent - timeBeforeWorkerCreation,
+         "Event timestamp in shared worker (" + evt.data +
+           ") is in expected range: (0, " +
+           (timeAfterEvent - timeBeforeWorkerCreation) + ")");
+      worker.port.close();
+      finishTests();
+    };
+    worker.port.start();
+    worker.port.postMessage("");
+  }, 500);
+}
+
+var finishTests = function() {
+  SpecialPowers.setBoolPref(kPrefName, prevPrefValue);
+  SimpleTest.finish();
+};
+
+</script>
+</pre>
+</body>
+</html>
