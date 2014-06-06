@@ -10,43 +10,22 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/VolatileBuffer.h"
-#include "nsRect.h"
-#include "nsPoint.h"
-#include "nsSize.h"
-#include "gfxPattern.h"
 #include "gfxDrawable.h"
-#include "gfxImageSurface.h"
-#if defined(XP_WIN)
-#include "gfxWindowsSurface.h"
-#elif defined(XP_MACOSX)
-#include "gfxQuartzImageSurface.h"
-#endif
-#include "nsAutoPtr.h"
 #include "imgIContainer.h"
-#include "gfxColor.h"
-
-/*
- * This creates a gfxImageSurface which will unlock the buffer on destruction
- */
-
-class LockedImageSurface
-{
-public:
-  static gfxImageSurface *
-  CreateSurface(mozilla::VolatileBuffer *vbuf,
-                const gfxIntSize& size,
-                gfxImageFormat format);
-  static mozilla::TemporaryRef<mozilla::VolatileBuffer>
-  AllocateBuffer(const gfxIntSize& size, gfxImageFormat format);
-};
 
 class imgFrame
 {
+  typedef mozilla::gfx::Color Color;
+  typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
+  typedef mozilla::gfx::IntSize IntSize;
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::gfx::SurfaceFormat SurfaceFormat;
+
 public:
   imgFrame();
   ~imgFrame();
 
-  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, gfxImageFormat aFormat, uint8_t aPaletteDepth = 0);
+  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, mozilla::gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
   bool Draw(gfxContext *aContext, GraphicsFilter aFilter,
@@ -55,10 +34,9 @@ public:
             uint32_t aImageFlags = imgIContainer::FLAG_NONE);
 
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
-  bool GetIsDirty() const;
 
   nsIntRect GetRect() const;
-  gfxImageFormat GetFormat() const;
+  mozilla::gfx::SurfaceFormat GetFormat() const;
   bool GetNeedsBackground() const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
@@ -86,25 +64,15 @@ public:
 
   nsresult LockImageData();
   nsresult UnlockImageData();
-  void ApplyDirtToSurfaces();
 
   void SetDiscardable();
 
-  nsresult GetSurface(gfxASurface **aSurface)
-  {
-    *aSurface = ThebesSurface();
-    NS_IF_ADDREF(*aSurface);
-    return NS_OK;
-  }
+  mozilla::TemporaryRef<SourceSurface> GetSurface();
 
-  nsresult GetPattern(gfxPattern **aPattern)
+  Color
+  SinglePixelColor()
   {
-    if (mSinglePixel)
-      *aPattern = new gfxPattern(mSinglePixelColor);
-    else
-      *aPattern = new gfxPattern(ThebesSurface());
-    NS_ADDREF(*aPattern);
-    return NS_OK;
+    return mSinglePixelColor;
   }
 
   bool IsSinglePixel()
@@ -112,52 +80,7 @@ public:
     return mSinglePixel;
   }
 
-  gfxASurface* CachedThebesSurface()
-  {
-    if (mOptSurface)
-      return mOptSurface;
-#if defined(XP_WIN)
-    if (mWinSurface)
-      return mWinSurface;
-#elif defined(XP_MACOSX)
-    if (mQuartzSurface)
-      return mQuartzSurface;
-#endif
-    if (mImageSurface)
-      return mImageSurface;
-    return nullptr;
-  }
-
-  gfxASurface* ThebesSurface()
-  {
-    gfxASurface *sur = CachedThebesSurface();
-    if (sur)
-      return sur;
-    if (mVBuf) {
-      mozilla::VolatileBufferPtr<uint8_t> ref(mVBuf);
-      if (ref.WasBufferPurged())
-        return nullptr;
-
-      gfxImageSurface *imgSur =
-        LockedImageSurface::CreateSurface(mVBuf, mSize, mFormat);
-#if defined(XP_MACOSX)
-      // Manually addref and release to make sure the cairo surface isn't lost
-      NS_ADDREF(imgSur);
-      gfxQuartzImageSurface *quartzSur = new gfxQuartzImageSurface(imgSur);
-      // quartzSur does not hold on to the gfxImageSurface
-      NS_RELEASE(imgSur);
-      return quartzSur;
-#else
-      return imgSur;
-#endif
-    }
-    // We can return null here if we're single pixel optimized
-    // or a paletted image. However, one has to check for paletted
-    // image data first before attempting to get a surface, so
-    // this is only valid for single pixel optimized images
-    MOZ_ASSERT(mSinglePixel, "No image surface and not a single pixel!");
-    return nullptr;
-  }
+  mozilla::TemporaryRef<SourceSurface> CachedSurface();
 
   size_t SizeOfExcludingThisWithComputedFallbackIfHeap(
            gfxMemoryLocation aLocation,
@@ -175,9 +98,9 @@ private: // methods
 
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;
-    gfxImageFormat mFormat;
+    SurfaceFormat mFormat;
     SurfaceWithFormat() {}
-    SurfaceWithFormat(gfxDrawable* aDrawable, gfxImageFormat aFormat)
+    SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
      : mDrawable(aDrawable), mFormat(aFormat) {}
     bool IsValid() { return !!mDrawable; }
   };
@@ -191,25 +114,18 @@ private: // methods
                                       gfxRect&           aSubimage,
                                       gfxRect&           aSourceRect,
                                       gfxRect&           aImageRect,
-                                      gfxASurface*       aSurface);
+                                      SourceSurface*     aSurface);
 
 private: // data
-  nsRefPtr<gfxImageSurface> mImageSurface;
-  nsRefPtr<gfxASurface> mOptSurface;
-#if defined(XP_WIN)
-  nsRefPtr<gfxWindowsSurface> mWinSurface;
-#elif defined(XP_MACOSX)
-  nsRefPtr<gfxQuartzImageSurface> mQuartzSurface;
-#endif
+  mozilla::RefPtr<DataSourceSurface> mImageSurface;
+  mozilla::RefPtr<SourceSurface> mOptSurface;
 
-  nsRefPtr<gfxASurface> mDrawSurface;
-
-  nsIntSize    mSize;
+  IntSize      mSize;
   nsIntPoint   mOffset;
 
   nsIntRect    mDecoded;
 
-  mutable mozilla::Mutex mDirtyMutex;
+  mutable mozilla::Mutex mDecodedMutex;
 
   // The palette and image data for images that are paletted, since Cairo
   // doesn't support these images.
@@ -217,8 +133,8 @@ private: // data
   // Total length is PaletteDataLength() + GetImageDataLength().
   uint8_t*     mPalettedImageData;
 
-  // Note that the data stored in gfxRGBA is *non-alpha-premultiplied*.
-  gfxRGBA      mSinglePixelColor;
+  // Note that the data stored in gfx::Color is *non-alpha-premultiplied*.
+  Color        mSinglePixelColor;
 
   int32_t      mTimeout; // -1 means display forever
   int32_t      mDisposalMethod;
@@ -227,20 +143,18 @@ private: // data
   int32_t mLockCount;
 
   mozilla::RefPtr<mozilla::VolatileBuffer> mVBuf;
+  mozilla::VolatileBufferPtr<uint8_t> mVBufPtr;
 
-  gfxImageFormat mFormat;
+  SurfaceFormat mFormat;
   uint8_t      mPaletteDepth;
   int8_t       mBlendMethod;
   bool mSinglePixel;
-  bool mFormatChanged;
   bool mCompositingFailed;
   bool mNonPremult;
   bool mDiscardable;
 
   /** Have we called DiscardTracker::InformAllocation()? */
   bool mInformedDiscardTracker;
-
-  bool mDirty;
 };
 
 namespace mozilla {

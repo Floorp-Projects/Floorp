@@ -15,8 +15,9 @@ interface nsISimpleEnumerator;
 interface nsIWebBrowserChrome;
 interface nsIDocShellTreeItem;
 interface nsIArray;
+interface nsITabParent;
 
-[uuid(00788A84-152F-4BD8-A814-FD8EB545DB29)]
+[uuid(0f2d9d75-c46b-4114-802e-83b4655e61d2)]
 
 interface nsPIWindowWatcher : nsISupports
 {
@@ -51,6 +52,9 @@ interface nsPIWindowWatcher : nsISupports
       @param aDialog use dialog defaults (see nsIDOMWindow::openDialog)
       @param aNavigate true if we should navigate the new window to the
              specified URL.
+      @param aOpeningTab the nsITabParent that is opening the new window. The
+                         nsITabParent is a remote tab belonging to aParent. Can
+                         be nullptr if this window is not being opened from a tab.
       @param aArgs Window argument
       @return the new window
 
@@ -65,7 +69,8 @@ interface nsPIWindowWatcher : nsISupports
   nsIDOMWindow openWindow2(in nsIDOMWindow aParent, in string aUrl,
                            in string aName, in string aFeatures,
                            in boolean aCalledFromScript, in boolean aDialog,
-                           in boolean aNavigate, in nsISupports aArgs);
+                           in boolean aNavigate, in nsITabParent aOpeningTab,
+                           in nsISupports aArgs);
 
   /**
    * Find a named docshell tree item amongst all windows registered

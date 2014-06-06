@@ -105,7 +105,6 @@ class RangeAnalysis
                                                   MTest *test, BranchDirection direction);
     void analyzeLoopPhi(MBasicBlock *header, LoopIterationBound *loopBound, MPhi *phi);
     bool tryHoistBoundsCheck(MBasicBlock *header, MBoundsCheck *ins);
-    bool markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *current);
 };
 
 class Range : public TempObject {

@@ -100,13 +100,10 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
 
   // Determine an appropriate format for the surface.
   gfx::SurfaceFormat surfaceFormat;
-  gfxImageFormat imageFormat;
   if (InnerImage()->FrameIsOpaque(aWhichFrame)) {
     surfaceFormat = gfx::SurfaceFormat::B8G8R8X8;
-    imageFormat = gfxImageFormat::ARGB32;
   } else {
     surfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
-    imageFormat = gfxImageFormat::ARGB32;
   }
 
   // Create a surface to draw into.
@@ -131,7 +128,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   gfxRect imageRect(0, 0, width, height);
   gfxUtils::DrawPixelSnapped(ctx, drawable, OrientationMatrix(nsIntSize(width, height)),
                              imageRect, imageRect, imageRect, imageRect,
-                             imageFormat, GraphicsFilter::FILTER_FAST);
+                             surfaceFormat, GraphicsFilter::FILTER_FAST);
   
   return target->Snapshot();
 }
