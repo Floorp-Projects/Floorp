@@ -28,10 +28,8 @@ DIRS += [
     'tilt',
     'webaudioeditor',
     'webconsole',
+    'webide',
 ]
-
-if CONFIG['MOZ_DEVTOOLS_WEBIDE']:
-    DIRS += ['webide']
 
 EXTRA_COMPONENTS += [
     'devtools-clhandler.js',
