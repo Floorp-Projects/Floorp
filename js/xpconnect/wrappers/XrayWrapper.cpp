@@ -363,7 +363,7 @@ public:
         {
             JSAutoCompartment ac(cx, target);
             if (!JS_GetClassPrototype(cx, key, protop))
-                return nullptr;
+                return false;
         }
         return JS_WrapObject(cx, protop);
     }
