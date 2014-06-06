@@ -198,12 +198,10 @@
       </groupbox>
 #ifdef HAVE_SHELL_SERVICE
       <!-- System Defaults -->
-      <groupbox id="systemDefaultsGroup" orient="vertical">
+      <groupbox id="systemDefaultsGroup" orient="vertical" align="start">
         <caption><label>&systemDefaults.label;</label></caption>
-
         <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                  flex="1"/>
+                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"/>
         <hbox class="indent">
           <deck id="setDefaultPane">
             <button id="setDefaultButton"
@@ -293,11 +291,13 @@
                   label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                   oncommand="gAdvancedPane.clearCache();"/>
         </hbox>
-        <checkbox preference="browser.cache.disk.smart_size.enabled"
-                  id="allowSmartSize" flex="1"
-                  onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                  label="&overrideSmartCacheSize.label;"
-                  accesskey="&overrideSmartCacheSize.accesskey;"/>
+        <hbox>
+          <checkbox preference="browser.cache.disk.smart_size.enabled"
+                    id="allowSmartSize"
+                    onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
+                    label="&overrideSmartCacheSize.label;"
+                    accesskey="&overrideSmartCacheSize.accesskey;"/>
+        </hbox>
         <hbox align="center" class="indent">
           <label id="useCacheBefore" control="cacheSize"
                  accesskey="&limitCacheSizeBefore.accesskey;">
@@ -323,10 +323,11 @@
                   oncommand="gAdvancedPane.clearOfflineAppCache();"/>
         </hbox>
         <hbox align="center">
-          <checkbox id="offlineNotify" flex="1"
+          <checkbox id="offlineNotify"
                     label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
                     preference="browser.offline-apps.notify"
                     onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
+          <spacer flex="1"/>
           <button id="offlineNotifyExceptions"
                   label="&offlineNotifyExceptions.label;"
                   accesskey="&offlineNotifyExceptions.accesskey;"
@@ -356,7 +357,7 @@
     <!-- Update -->
     <tabpanel id="updatePanel" orient="vertical">
 #ifdef MOZ_UPDATER
-      <groupbox id="updateApp">
+      <groupbox id="updateApp" align="start">
         <caption><label>&updateApp.label;</label></caption>
         <radiogroup id="updateRadioGroup"
                     oncommand="gAdvancedPane.updateWritePrefs();">
@@ -408,7 +409,7 @@
 #endif
       </groupbox>
 #endif
-      <groupbox id="updateOthers">
+      <groupbox id="updateOthers" align="start">
         <caption><label>&updateOthers.label;</label></caption>
         <checkbox id="enableSearchUpdate"
                   label="&enableSearchUpdate.label;"
