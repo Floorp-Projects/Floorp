@@ -9229,15 +9229,8 @@ IonBuilder::jsop_setprop(PropertyName *name)
     if (!setPropTryInlineAccess(&emitted, obj, name, value, barrier, objTypes) || emitted)
         return emitted;
 
-    // Try to emit a polymorphic cache.
-    if (!setPropTryCache(&emitted, obj, name, value, barrier, objTypes) || emitted)
-        return emitted;
-
-    // Emit call.
-    MInstruction *ins = MCallSetProperty::New(alloc(), obj, value, name, script()->strict());
-    current->add(ins);
-    current->push(value);
-    return resumeAfter(ins);
+    // Emit a polymorphic cache.
+    return setPropTryCache(&emitted, obj, name, value, barrier, objTypes);
 }
 
 bool
