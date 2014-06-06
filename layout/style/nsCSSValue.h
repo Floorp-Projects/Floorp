@@ -547,6 +547,8 @@ public:
   {
     NS_ABORT_IF_FALSE(mUnit == eCSSUnit_FontFamilyList,
                       "not a font family list value");
+    NS_ASSERTION(mValue.mFontFamilyList != nullptr,
+                 "font family list value should never be null");
     return mValue.mFontFamilyList;
   }
 

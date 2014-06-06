@@ -9,6 +9,7 @@
 #include "gfxTypes.h"
 #include "nsString.h"
 #include "gfxPoint.h"
+#include "gfxFontFamilyList.h"
 #include "gfxFontUtils.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
@@ -3517,7 +3518,9 @@ public:
 
     static void Shutdown(); // platform must call this to release the languageAtomService
 
-    gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet = nullptr);
+    gfxFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                 const gfxFontStyle *aStyle,
+                 gfxUserFontSet *aUserFontSet = nullptr);
 
     virtual ~gfxFontGroup();
 
@@ -3601,26 +3604,11 @@ public:
     gfxTextRun *MakeHyphenTextRun(gfxContext *aCtx,
                                   uint32_t aAppUnitsPerDevUnit);
 
-    /* helper function for splitting font families on commas and
-     * calling a function for each family to fill the mFonts array
-     */
-    typedef bool (*FontCreationCallback) (const nsAString& aName,
-                                            const nsACString& aGenericName,
-                                            bool aUseFontSet,
-                                            void *closure);
-    bool ForEachFont(const nsAString& aFamilies,
-                       nsIAtom *aLanguage,
-                       FontCreationCallback fc,
-                       void *closure);
-    bool ForEachFont(FontCreationCallback fc, void *closure);
-
     /**
      * Check whether a given font (specified by its gfxFontEntry)
      * is already in the fontgroup's list of actual fonts
      */
     bool HasFont(const gfxFontEntry *aFontEntry);
-
-    const nsString& GetFamilies() { return mFamilies; }
 
     // This returns the preferred underline for this font group.
     // Some CJK fonts have wrong underline offset in its metrics.
@@ -3685,8 +3673,14 @@ public:
     gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel,
                                    LazyReferenceContextGetter& aRefContextGetter);
 
+    // helper method for resolving generic font families
+    static void
+    ResolveGenericFontNames(mozilla::FontFamilyType aGenericType,
+                            nsIAtom *aLanguage,
+                            nsTArray<nsString>& aGenericFamilies);
+
 protected:
-    nsString mFamilies;
+    mozilla::FontFamilyList mFamilyList;
     gfxFontStyle mStyle;
     nsTArray<FamilyFace> mFonts;
     gfxFloat mUnderlineOffset;
@@ -3747,36 +3741,26 @@ protected:
                        uint32_t aScriptRunEnd,
                        int32_t aRunScript);
 
-    /* If aResolveGeneric is true, then CSS/Gecko generic family names are
-     * replaced with preferred fonts.
-     *
-     * If aResolveFontName is true then fc() is called only for existing fonts
-     * and with actual font names.  If false then fc() is called with each
-     * family name in aFamilies (after resolving CSS/Gecko generic family names
-     * if aResolveGeneric).
-     * If aUseFontSet is true, the fontgroup's user font set is checked;
-     * if false then it is skipped.
-     */
-    bool ForEachFontInternal(const nsAString& aFamilies,
-                               nsIAtom *aLanguage,
-                               bool aResolveGeneric,
-                               bool aResolveFontName,
-                               bool aUseFontSet,
-                               FontCreationCallback fc,
-                               void *closure);
-
     // Helper for font-matching:
     // see if aCh is supported in any of the faces from aFamily;
     // if so return the best style match, else return null.
     already_AddRefed<gfxFont> TryAllFamilyMembers(gfxFontFamily* aFamily,
                                                   uint32_t aCh);
 
-    static bool FontResolverProc(const nsAString& aName, void *aClosure);
+    // helper methods for looking up fonts
 
-    static bool FindPlatformFont(const nsAString& aName,
-                                   const nsACString& aGenericName,
-                                   bool aUseFontSet,
-                                   void *closure);
+    // iterate over the fontlist, lookup names and expand generics
+    void EnumerateFontList(nsIAtom *aLanguage, void *aClosure = nullptr);
+
+    // expand a generic to a list of specific names based on prefs
+    void FindGenericFonts(mozilla::FontFamilyType aGenericType,
+                          nsIAtom *aLanguage,
+                          void *aClosure);
+
+    // lookup and add a font with a given name (i.e. *not* a generic!)
+    virtual void FindPlatformFont(const nsAString& aName,
+                                  bool aUseFontSet,
+                                  void *aClosure);
 
     static nsILanguageAtomService* gLangService;
 };

@@ -62,16 +62,13 @@ public:
 
     virtual nsresult UpdateFontList();
 
-    virtual nsresult ResolveFontName(const nsAString& aFontName,
-                                     FontResolverCallback aCallback,
-                                     void *aClosure, bool& aAborted);
-
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName,
                                            nsAString& aFamilyName);
 
-    virtual gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
-                                          const gfxFontStyle *aStyle,
-                                          gfxUserFontSet* aUserFontSet);
+    virtual gfxFontGroup*
+    CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                    const gfxFontStyle *aStyle,
+                    gfxUserFontSet* aUserFontSet);
 
     virtual bool FontHintingEnabled() MOZ_OVERRIDE;
     virtual bool RequiresLinearZoom() MOZ_OVERRIDE;

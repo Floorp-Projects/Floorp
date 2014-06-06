@@ -839,15 +839,35 @@ gfxGDIFontList::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 gfxFontFamily*
+gfxGDIFontList::FindFamily(const nsAString& aFamily)
+{
+    nsAutoString keyName(aFamily);
+    BuildKeyNameFromFontName(keyName);
+
+    gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
+    if (ff) {
+        return ff;
+    }
+
+    if (mNonExistingFonts.Contains(keyName)) {
+        return nullptr;
+    }
+
+    return gfxPlatformFontList::FindFamily(aFamily);
+}
+
+gfxFontFamily*
 gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle)
 {
+    gfxFontFamily *ff = nullptr;
+
     // this really shouldn't fail to find a font....
     HGDIOBJ hGDI = ::GetStockObject(DEFAULT_GUI_FONT);
     LOGFONTW logFont;
     if (hGDI && ::GetObjectW(hGDI, sizeof(logFont), &logFont)) {
-        nsAutoString resolvedName;
-        if (ResolveFontName(nsDependentString(logFont.lfFaceName), resolvedName)) {
-            return FindFamily(resolvedName);
+        ff = FindFamily(nsDependentString(logFont.lfFaceName));
+        if (ff) {
+            return ff;
         }
     }
 
@@ -857,35 +877,10 @@ gfxGDIFontList::GetDefaultFont(const gfxFontStyle* aStyle)
     BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
                                           sizeof(ncm), &ncm, 0);
     if (status) {
-        nsAutoString resolvedName;
-        if (ResolveFontName(nsDependentString(ncm.lfMessageFont.lfFaceName), resolvedName)) {
-            return FindFamily(resolvedName);
-        }
+        ff = FindFamily(nsDependentString(ncm.lfMessageFont.lfFaceName));
     }
 
-    return nullptr;
-}
-
-
-bool 
-gfxGDIFontList::ResolveFontName(const nsAString& aFontName, nsAString& aResolvedFontName)
-{
-    nsAutoString keyName(aFontName);
-    BuildKeyNameFromFontName(keyName);
-
-    gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
-    if (ff) {
-        aResolvedFontName = ff->Name();
-        return true;
-    }
-
-    if (mNonExistingFonts.Contains(keyName))
-        return false;
-
-    if (gfxPlatformFontList::ResolveFontName(aFontName, aResolvedFontName))
-        return true;
-
-    return false;
+    return ff;
 }
 
 void
