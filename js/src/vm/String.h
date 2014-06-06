@@ -1078,10 +1078,12 @@ class StaticStrings
     template <typename CharT>
     JSAtom *lookup(const CharT *chars, size_t length) {
         switch (length) {
-          case 1:
-            if (chars[0] < UNIT_STATIC_LIMIT)
-                return getUnit(chars[0]);
+          case 1: {
+            jschar c = chars[0];
+            if (c < UNIT_STATIC_LIMIT)
+                return getUnit(c);
             return nullptr;
+          }
           case 2:
             if (fitsInSmallChar(chars[0]) && fitsInSmallChar(chars[1]))
                 return getLength2(chars[0], chars[1]);
