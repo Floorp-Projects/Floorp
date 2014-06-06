@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<!--
+This is a slightly minimised, modified and self-contained version of
+gaia_switch/examples/index.html from the Gaia repository.
+-->
+<script>
+'use strict';
+
+(function(exports) {
+
+  /**
+   * ComponentUtils is a utility which allows us to use web components earlier
+   * than we should be able to by polyfilling and fixing platform deficiencies.
+   */
+  var ComponentUtils = {
+
+    /**
+     * Injects a style.css into both the shadow root and outside the shadow
+     * root so we can style projected content. Bug 992249.
+     */
+    style: function(baseUrl) {
+      var style = document.createElement('style');
+      style.setAttribute('scoped', '');
+      var url = baseUrl + '1017798-1.css';
+      style.innerHTML = '@import url(' + url + ');';
+
+      this.appendChild(style);
+
+      if (!this.shadowRoot) {
+        return;
+      }
+
+      // The setTimeout is necessary to avoid missing @import styles
+      // when appending two stylesheets. Bug 1003294.
+      setTimeout(function nextTick() {
+        this.shadowRoot.appendChild(style.cloneNode(true));
+      }.bind(this));
+    }
+
+  };
+
+  exports.ComponentUtils = ComponentUtils;
+
+}(window));
+</script>
+<script>
+'use strict';
+/* global ComponentUtils */
+
+window.GaiaSwitch = (function(win) {
+  // Extend from the HTMLElement prototype
+  var proto = Object.create(HTMLElement.prototype);
+
+  proto.createdCallback = function() {
+    var shadow = this.createShadowRoot();
+    this._template = template.content.cloneNode(true);
+    this._input = this._template.querySelector('input[type="checkbox"]');
+
+    var checked = this.getAttribute('checked');
+    if (checked !== null) {
+      this._input.checked = true;
+    }
+
+    shadow.appendChild(this._template);
+
+    ComponentUtils.style.call(this, '');
+  };
+
+  /**
+   * Proxy the checked property to the input element.
+   */
+  Object.defineProperty( proto, 'checked', {
+    get: function() {
+      return this._input.checked;
+    },
+    set: function(value) {
+      this._input.checked = value;
+    }
+  });
+
+  /**
+   * Proxy the name property to the input element.
+   */
+  Object.defineProperty( proto, 'name', {
+    get: function() {
+      return this.getAttribute('name');
+    },
+    set: function(value) {
+      this.setAttribute('name', value);
+    }
+  });
+
+  // HACK: Create a <template> in memory at runtime.
+  // When the custom-element is created we clone
+  // this template and inject into the shadow-root.
+  // Prior to this we would have had to copy/paste
+  // the template into the <head> of every app that
+  // wanted to use <gaia-switch>, this would make
+  // markup changes complicated, and could lead to
+  // things getting out of sync. This is a short-term
+  // hack until we can import entire custom-elements
+  // using HTML Imports (bug 877072).
+  var template = document.createElement('template');
+  template.innerHTML = '<label id="switch-label" class="pack-switch">' +
+      '<input type="checkbox">' +
+      '<span><content select="label"></content></span>' +
+    '</label>';
+
+  // Register and return the constructor
+  return document.registerElement('gaia-switch', { prototype: proto });
+})(window);
+</script>
+<body>
+<section>
+  <gaia-switch>
+    <label>With a label</label>
+  </gaia-switch>
+</section>
+<script>
+window.onload = function() {
+  document.querySelector('gaia-switch').checked = true;
+};
+</script>
