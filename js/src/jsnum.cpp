@@ -307,21 +307,33 @@ num_parseFloat(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setNaN();
         return true;
     }
+
     JSString *str = ToString<CanGC>(cx, args[0]);
     if (!str)
         return false;
-    const jschar *bp = str->getChars(cx);
-    if (!bp)
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return false;
-    const jschar *end = bp + str->length();
-    const jschar *ep;
+
     double d;
-    if (!js_strtod(cx, bp, end, &ep, &d))
-        return false;
-    if (ep == bp) {
-        args.rval().setNaN();
-        return true;
+    AutoCheckCannotGC nogc;
+    if (linear->hasLatin1Chars()) {
+        const Latin1Char *begin = linear->latin1Chars(nogc);
+        const Latin1Char *end;
+        if (!js_strtod(cx, begin, begin + linear->length(), &end, &d))
+            return false;
+        if (end == begin)
+            d = GenericNaN();
+    } else {
+        const jschar *begin = linear->twoByteChars(nogc);
+        const jschar *end;
+        if (!js_strtod(cx, begin, begin + linear->length(), &end, &d))
+            return false;
+        if (end == begin)
+            d = GenericNaN();
     }
+
     args.rval().setDouble(d);
     return true;
 }
@@ -1731,11 +1743,12 @@ js::ToUint16Slow(JSContext *cx, const HandleValue v, uint16_t *out)
     return true;
 }
 
+template <typename CharT>
 bool
-js_strtod(ThreadSafeContext *cx, const jschar *begin, const jschar *end,
-          const jschar **dEnd, double *d)
+js_strtod(ThreadSafeContext *cx, const CharT *begin, const CharT *end, const CharT **dEnd,
+          double *d)
 {
-    const jschar *s = SkipSpace(begin, end);
+    const CharT *s = SkipSpace(begin, end);
     size_t length = end - s;
 
     Vector<char, 32> chars(cx);
