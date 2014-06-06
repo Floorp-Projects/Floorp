@@ -433,7 +433,7 @@ Event::GetCancelable(bool* aCancelable)
 NS_IMETHODIMP
 Event::GetTimeStamp(uint64_t* aTimeStamp)
 {
-  *aTimeStamp = TimeStamp();
+  *aTimeStamp = mEvent->time;
   return NS_OK;
 }
 
@@ -970,30 +970,28 @@ Event::DefaultPrevented(JSContext* aCx) const
   return mEvent->mFlags.mDefaultPreventedByContent || IsChrome(aCx);
 }
 
-uint64_t
+double
 Event::TimeStamp() const
 {
   if (!sReturnHighResTimeStamp) {
-    return mEvent->time;
+    return static_cast<double>(mEvent->time);
   }
 
   if (mEvent->timeStamp.IsNull()) {
-    return 0L;
+    return 0.0;
   }
 
   if (mIsMainThreadEvent) {
     if (NS_WARN_IF(!mOwner)) {
-      return 0L;
+      return 0.0;
     }
 
     nsPerformance* perf = mOwner->GetPerformance();
     if (NS_WARN_IF(!perf)) {
-      return 0L;
+      return 0.0;
     }
 
-    DOMHighResTimeStamp eventTime =
-      perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->timeStamp);
-    return static_cast<uint64_t>(eventTime);
+    return perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->timeStamp);
   }
 
   // For dedicated workers, we should make times relative to the navigation
@@ -1007,7 +1005,7 @@ Event::TimeStamp() const
 
   TimeDuration duration =
     mEvent->timeStamp - workerPrivate->CreationTimeStamp();
-  return static_cast<uint64_t>(duration.ToMilliseconds());
+  return duration.ToMilliseconds();
 }
 
 bool
