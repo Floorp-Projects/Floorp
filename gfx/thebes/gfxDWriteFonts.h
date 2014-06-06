@@ -53,7 +53,7 @@ public:
                                gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing);
 
-    virtual bool ProvidesGlyphWidths() const;
+    virtual bool ProvidesGlyphWidths();
 
     virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID);
 
@@ -71,13 +71,9 @@ public:
     virtual cairo_scaled_font_t *GetCairoScaledFont();
 
 protected:
-    virtual bool ShapeText(gfxContext     *aContext,
-                           const char16_t *aText,
-                           uint32_t        aOffset,
-                           uint32_t        aLength,
-                           int32_t         aScript,
-                           gfxShapedText  *aShapedText,
-                           bool            aPreferPlatformShaping = false);
+    friend class gfxDWriteShaper;
+
+    virtual void CreatePlatformShaper();
 
     bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 

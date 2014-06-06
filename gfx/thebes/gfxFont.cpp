@@ -3983,6 +3983,7 @@ gfxFont::ShapeText(gfxContext      *aContext,
     if (!ok) {
         if (!mPlatformShaper) {
             CreatePlatformShaper();
+            NS_ASSERTION(mPlatformShaper, "no platform shaper available!");
         }
         if (mPlatformShaper) {
             ok = mPlatformShaper->ShapeText(aContext, aText, aOffset, aLength,
