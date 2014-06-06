@@ -38,9 +38,11 @@ virtualenv_url = 'https://raw.github.com/pypa/virtualenv/1.9.1/virtualenv.py'
 if sys.platform == 'win32':
     bin_name = os.path.join('Scripts', 'activate.bat')
     activate_env = os.path.join('Scripts', 'activate_this.py')
+    python_env = os.path.join('Scripts', 'python.exe')
 else:
     bin_name = os.path.join('bin', 'activate')
     activate_env = os.path.join('bin', 'activate_this.py')
+    python_env = os.path.join('bin', 'python')
 
 def main():
     parser = optparse.OptionParser('Usage: %prog [options] path_to_venv')
@@ -65,13 +67,12 @@ def main():
     subprocess.check_call(cmd_args)
 
     # Activate tps environment
-
     tps_env = os.path.join(target, activate_env)
     execfile(tps_env, dict(__file__=tps_env))
 
     # Install TPS in environment
-    subprocess.check_call(['python', os.path.join(here, 'setup.py'),
-                           'install'])
+    subprocess.check_call([os.path.join(target, python_env),
+                           os.path.join(here, 'setup.py'), 'install'])
 
     # Get the path to tests and extensions directory by checking check where
     # the tests and extensions directories are located
