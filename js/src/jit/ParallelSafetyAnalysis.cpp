@@ -375,7 +375,7 @@ ParallelSafetyAnalysis::analyze()
             if (!visitor.unsafe()) {
                 // Block consists of only safe instructions.  Visit its successors.
                 for (uint32_t i = 0; i < block->numSuccessors(); i++)
-                    block->getSuccessor(i)->mark();
+                    block->getSuccessor(i)->markUnchecked();
             } else {
                 // Block contains an unsafe instruction.  That means that once
                 // we enter this block, we are guaranteed to bailout.
