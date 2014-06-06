@@ -28,7 +28,9 @@
 #include "nsIScrollableFrame.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
+#include "nsPerformance.h"
 #include "nsPIWindowRoot.h"
+#include "WorkerPrivate.h"
 
 namespace mozilla {
 namespace dom {
@@ -38,6 +40,9 @@ extern bool IsCurrentThreadRunningChromeWorker();
 } // namespace workers
 
 static char *sPopupAllowedEvents;
+
+static bool sReturnHighResTimeStamp = false;
+static bool sReturnHighResTimeStampIsSet = false;
 
 Event::Event(EventTarget* aOwner,
              nsPresContext* aPresContext,
@@ -61,6 +66,13 @@ Event::ConstructorInit(EventTarget* aOwner,
   mIsMainThreadEvent = mOwner || NS_IsMainThread();
   if (mIsMainThreadEvent) {
     nsJSContext::LikelyShortLivingObjectCreated();
+  }
+
+  if (mIsMainThreadEvent && !sReturnHighResTimeStampIsSet) {
+    Preferences::AddBoolVarCache(&sReturnHighResTimeStamp,
+                                 "dom.event.highrestimestamp.enabled",
+                                 sReturnHighResTimeStamp);
+    sReturnHighResTimeStampIsSet = true;
   }
 
   mPrivateDataDuplicated = false;
@@ -956,6 +968,46 @@ Event::DefaultPrevented(JSContext* aCx) const
   // i.e., preventDefault() has been called by chrome, return true only when
   // this is called by chrome.
   return mEvent->mFlags.mDefaultPreventedByContent || IsChrome(aCx);
+}
+
+uint64_t
+Event::TimeStamp() const
+{
+  if (!sReturnHighResTimeStamp) {
+    return mEvent->time;
+  }
+
+  if (mEvent->timeStamp.IsNull()) {
+    return 0L;
+  }
+
+  if (mIsMainThreadEvent) {
+    if (NS_WARN_IF(!mOwner)) {
+      return 0L;
+    }
+
+    nsPerformance* perf = mOwner->GetPerformance();
+    if (NS_WARN_IF(!perf)) {
+      return 0L;
+    }
+
+    DOMHighResTimeStamp eventTime =
+      perf->GetDOMTiming()->TimeStampToDOMHighRes(mEvent->timeStamp);
+    return static_cast<uint64_t>(eventTime);
+  }
+
+  // For dedicated workers, we should make times relative to the navigation
+  // start of the document that created the worker. We currently don't have
+  // that information handy so for now we treat shared workers and dedicated
+  // workers alike and make times relative to the worker creation time. We can
+  // fix this when we implement WorkerPerformance.
+  workers::WorkerPrivate* workerPrivate =
+    workers::GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  TimeDuration duration =
+    mEvent->timeStamp - workerPrivate->CreationTimeStamp();
+  return static_cast<uint64_t>(duration.ToMilliseconds());
 }
 
 bool
