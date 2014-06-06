@@ -206,10 +206,8 @@ Writer::Write(const char* aFmt, ...) const
 
 #define W(...) aWriter.Write(__VA_ARGS__);
 
-#define WriteTitle(...)                                                       \
-  W("------------------------------------------------------------------\n");  \
-  W(__VA_ARGS__);                                                             \
-  W("------------------------------------------------------------------\n\n");
+#define WriteSeparator(...) \
+  W("#-----------------------------------------------------------------\n\n");
 
 MOZ_EXPORT void
 FpWrite(void* aWriteState, const char* aFmt, va_list aAp)
@@ -714,19 +712,19 @@ public:
     // Sometimes we get nothing useful.  Just print "???" for the entire entry
     // so that fix-linux-stack.pl doesn't complain about an empty filename.
     if (!entry.mFunction && !entry.mLibrary[0] && entry.mLOffset == 0) {
-      W("   ??? 0x%x\n", entryPc);
+      W("    ??? 0x%x\n", entryPc);
     } else {
       // Use "???" for unknown functions.
       const char* entryFunction = entry.mFunction ? entry.mFunction : "???";
       if (entry.mFileName) {
         // On Windows we can get the filename and line number at runtime.
-        W("   %s (%s:%lu) 0x%x\n",
+        W("    %s (%s:%lu) 0x%x\n",
           entryFunction, entry.mFileName, entry.mLineNo, entryPc);
       } else {
         // On Linux and Mac we cannot get the filename and line number at
         // runtime, so we print the offset in a form that fix-linux-stack.pl and
         // fix_macosx_stack.py can post-process.
-        W("   %s[%s +0x%X] 0x%x\n",
+        W("    %s[%s +0x%X] 0x%x\n",
           entryFunction, entry.mLibrary, entry.mLOffset, entryPc);
       }
     }
@@ -1487,38 +1485,42 @@ Record::Print(const Writer& aWriter, LocationService* aLocService,
 {
   bool showTilde = mRecordSize.IsSampled();
 
-  W("%s: %s block%s in heap block record %s of %s\n",
-    aStr,
+  W("%s {\n", aStr);
+  W("  %s block%s in heap block record %s of %s\n",
     Show(mNumBlocks, gBuf1, kBufLen, showTilde), Plural(mNumBlocks),
     Show(aM, gBuf2, kBufLen),
     Show(aN, gBuf3, kBufLen));
 
-  W(" %s bytes (%s requested / %s slop)\n",
+  W("  %s bytes (%s requested / %s slop)\n",
     Show(mRecordSize.Usable(), gBuf1, kBufLen, showTilde),
     Show(mRecordSize.Req(),    gBuf2, kBufLen, showTilde),
     Show(mRecordSize.Slop(),   gBuf3, kBufLen, showTilde));
 
-  W(" %4.2f%% of the heap (%4.2f%% cumulative); "
-    " %4.2f%% of %s (%4.2f%% cumulative)\n",
+  W("  %4.2f%% of the heap (%4.2f%% cumulative)\n",
     Percent(mRecordSize.Usable(), aTotalUsableSize),
-    Percent(aCumulativeUsableSize, aTotalUsableSize),
+    Percent(aCumulativeUsableSize, aTotalUsableSize));
+
+  W("  %4.2f%% of %s (%4.2f%% cumulative)\n",
     Percent(mRecordSize.Usable(), aCategoryUsableSize),
     astr,
     Percent(aCumulativeUsableSize, aCategoryUsableSize));
 
-  W(" Allocated at\n");
+  W("  Allocated at {\n");
   mAllocStackTrace->Print(aWriter, aLocService);
+  W("  }\n");
 
   if (mReportStackTrace1) {
-    W("\n Reported at\n");
+    W("  Reported at {\n");
     mReportStackTrace1->Print(aWriter, aLocService);
+    W("  }\n");
   }
   if (mReportStackTrace2) {
-    W("\n Reported again at\n");
+    W("  Reported again at {\n");
     mReportStackTrace2->Print(aWriter, aLocService);
+    W("  }\n");
   }
 
-  W("\n");
+  W("}\n\n");
 }
 
 //---------------------------------------------------------------------------
@@ -1823,10 +1825,10 @@ PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
   qsort(recordArray.begin(), recordArray.length(), sizeof(recordArray[0]),
         Record::QsortCmp);
 
-  WriteTitle("%s heap block records\n", aStr);
+  WriteSeparator();
 
   if (recordArray.length() == 0) {
-    W("(none)\n\n");
+    W("# no %s heap blocks\n\n", astr);
     return;
   }
 
@@ -1845,7 +1847,7 @@ PrintSortedRecords(const Writer& aWriter, LocationService* aLocService,
       r->Print(aWriter, aLocService, i+1, numRecords, aStr, astr,
                aCategoryUsableSize, cumulativeUsableSize, aTotalUsableSize);
     } else if (i == maxRecords) {
-      W("%s: stopping after %s heap block records\n\n", aStr,
+      W("# %s: stopping after %s heap block records\n\n", aStr,
         Show(maxRecords, gBuf1, kBufLen));
     }
   }
@@ -2007,10 +2009,11 @@ Dump(Writer aWriter)
   size_t totalNumBlocks =
     unreportedNumBlocks + onceReportedNumBlocks + twiceReportedNumBlocks;
 
-  WriteTitle("Invocation\n");
-  W("$DMD = '%s'\n", gOptions->DMDEnvVar());
-  W("Sample-below size = %lld\n\n",
-    (long long)(gOptions->SampleBelowSize()));
+  WriteSeparator();
+  W("Invocation {\n");
+  W("  $DMD = '%s'\n", gOptions->DMDEnvVar());
+  W("  Sample-below size = %lld\n", (long long)(gOptions->SampleBelowSize()));
+  W("}\n\n");
 
   // Allocate this on the heap instead of the stack because it's fairly large.
   LocationService* locService = InfallibleAllocPolicy::new_<LocationService>();
@@ -2031,99 +2034,103 @@ Dump(Writer aWriter)
                      onceReportedUsableSize, totalUsableSize);
 
   bool showTilde = anyBlocksSampled;
-  WriteTitle("Summary\n");
 
-  W("Total:          %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+  WriteSeparator();
+  W("Summary {\n");
+
+  W("  Total:          %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(totalUsableSize, gBuf1, kBufLen, showTilde),
     100.0,
     Show(totalNumBlocks,  gBuf2, kBufLen, showTilde),
     100.0);
 
-  W("Unreported:     %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+  W("  Unreported:     %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(unreportedUsableSize, gBuf1, kBufLen, showTilde),
     Percent(unreportedUsableSize, totalUsableSize),
     Show(unreportedNumBlocks, gBuf2, kBufLen, showTilde),
     Percent(unreportedNumBlocks, totalNumBlocks));
 
-  W("Once-reported:  %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+  W("  Once-reported:  %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(onceReportedUsableSize, gBuf1, kBufLen, showTilde),
     Percent(onceReportedUsableSize, totalUsableSize),
     Show(onceReportedNumBlocks, gBuf2, kBufLen, showTilde),
     Percent(onceReportedNumBlocks, totalNumBlocks));
 
-  W("Twice-reported: %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
+  W("  Twice-reported: %12s bytes (%6.2f%%) in %7s blocks (%6.2f%%)\n",
     Show(twiceReportedUsableSize, gBuf1, kBufLen, showTilde),
     Percent(twiceReportedUsableSize, totalUsableSize),
     Show(twiceReportedNumBlocks, gBuf2, kBufLen, showTilde),
     Percent(twiceReportedNumBlocks, totalNumBlocks));
 
-  W("\n");
+  W("}\n\n");
 
   // Stats are non-deterministic, so don't show them in test mode.
   if (!gOptions->IsTestMode()) {
     Sizes sizes;
     SizeOfInternal(&sizes);
 
-    WriteTitle("Execution measurements\n");
+    WriteSeparator();
+    W("Execution measurements {\n");
 
-    W("Data structures that persist after Dump() ends:\n");
+    W("  Data structures that persist after Dump() ends:\n");
 
-    W("  Used stack traces:    %10s bytes\n",
+    W("    Used stack traces:    %10s bytes\n",
       Show(sizes.mStackTracesUsed, gBuf1, kBufLen));
 
-    W("  Unused stack traces:  %10s bytes\n",
+    W("    Unused stack traces:  %10s bytes\n",
       Show(sizes.mStackTracesUnused, gBuf1, kBufLen));
 
-    W("  Stack trace table:    %10s bytes (%s entries, %s used)\n",
+    W("    Stack trace table:    %10s bytes (%s entries, %s used)\n",
       Show(sizes.mStackTraceTable,       gBuf1, kBufLen),
       Show(gStackTraceTable->capacity(), gBuf2, kBufLen),
       Show(gStackTraceTable->count(),    gBuf3, kBufLen));
 
-    W("  Block table:          %10s bytes (%s entries, %s used)\n",
+    W("    Block table:          %10s bytes (%s entries, %s used)\n",
       Show(sizes.mBlockTable,       gBuf1, kBufLen),
       Show(gBlockTable->capacity(), gBuf2, kBufLen),
       Show(gBlockTable->count(),    gBuf3, kBufLen));
 
-    W("\nData structures that are destroyed after Dump() ends:\n");
+    W("\n  Data structures that are destroyed after Dump() ends:\n");
 
     size_t unreportedSize =
       unreportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("  Unreported table:     %10s bytes (%s entries, %s used)\n",
+    W("    Unreported table:     %10s bytes (%s entries, %s used)\n",
       Show(unreportedSize,                   gBuf1, kBufLen),
       Show(unreportedRecordTable.capacity(), gBuf2, kBufLen),
       Show(unreportedRecordTable.count(),    gBuf3, kBufLen));
 
     size_t onceReportedSize =
       onceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("  Once-reported table:  %10s bytes (%s entries, %s used)\n",
+    W("    Once-reported table:  %10s bytes (%s entries, %s used)\n",
       Show(onceReportedSize,                   gBuf1, kBufLen),
       Show(onceReportedRecordTable.capacity(), gBuf2, kBufLen),
       Show(onceReportedRecordTable.count(),    gBuf3, kBufLen));
 
     size_t twiceReportedSize =
       twiceReportedRecordTable.sizeOfIncludingThis(MallocSizeOf);
-    W("  Twice-reported table: %10s bytes (%s entries, %s used)\n",
+    W("    Twice-reported table: %10s bytes (%s entries, %s used)\n",
       Show(twiceReportedSize,                   gBuf1, kBufLen),
       Show(twiceReportedRecordTable.capacity(), gBuf2, kBufLen),
       Show(twiceReportedRecordTable.count(),    gBuf3, kBufLen));
 
-    W("  Location service:     %10s bytes\n",
+    W("    Location service:     %10s bytes\n",
       Show(locService->SizeOfIncludingThis(), gBuf1, kBufLen));
 
-    W("\nCounts:\n");
+    W("\n  Counts:\n");
 
     size_t hits   = locService->NumCacheHits();
     size_t misses = locService->NumCacheMisses();
     size_t requests = hits + misses;
-    W("  Location service:    %10s requests\n",
+    W("    Location service:    %10s requests\n",
       Show(requests, gBuf1, kBufLen));
 
     size_t count    = locService->CacheCount();
     size_t capacity = locService->CacheCapacity();
-    W("  Location service cache:  %4.1f%% hit rate, %.1f%% occupancy at end\n",
+    W("    Location service cache:  "
+      "%4.1f%% hit rate, %.1f%% occupancy at end\n",
       Percent(hits, requests), Percent(count, capacity));
 
-    W("\n");
+    W("}\n\n");
   }
 
   InfallibleAllocPolicy::delete_(locService);
