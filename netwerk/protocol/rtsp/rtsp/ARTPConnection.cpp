@@ -145,7 +145,7 @@ void ARTPConnection::MakePortPair(
     unsigned start = (unsigned)((rand() * 1000ll) / RAND_MAX) + 15550;
     start &= ~1;
 
-    for (uint16_t port = start; port < 65536; port += 2) {
+    for (uint32_t port = start; port < 65536; port += 2) {
         PRNetAddr addr;
         addr.inet.family = PR_AF_INET;
         addr.inet.ip = PR_htonl(PR_INADDR_ANY);
