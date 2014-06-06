@@ -1904,9 +1904,9 @@ TabParent::GetWidget() const
 bool
 TabParent::UseAsyncPanZoom()
 {
-  bool usingOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
-  return (usingOffMainThreadCompositing && gfxPrefs::AsyncPanZoomEnabled() &&
-          GetScrollingBehavior() == ASYNC_PAN_ZOOM);
+  return gfxPlatform::UsesOffMainThreadCompositing() &&
+         gfxPrefs::AsyncPanZoomEnabled() &&
+         GetScrollingBehavior() == ASYNC_PAN_ZOOM;
 }
 
 nsEventStatus
