@@ -56,10 +56,10 @@ ARTSPConnection::ARTSPConnection(bool uidValid, uid_t uid)
       mUID(uid),
       mState(DISCONNECTED),
       mAuthType(NONE),
-      mSocket(nullptr),
       mConnectionID(0),
       mNextCSeq(0),
       mReceiveResponseEventPending(false),
+      mSocket(nullptr),
       mNumSocketPollTimeoutRetries(0) {
     MakeUserAgent(&mUserAgent);
 }
