@@ -159,11 +159,11 @@ void nsGIFDecoder2::BeginGIF()
 //******************************************************************************
 void nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
 {
-  gfxImageFormat format;
+  gfx::SurfaceFormat format;
   if (mGIFStruct.is_transparent)
-    format = gfxImageFormat::ARGB32;
+    format = gfx::SurfaceFormat::B8G8R8A8;
   else
-    format = gfxImageFormat::RGB24;
+    format = gfx::SurfaceFormat::B8G8R8X8;
 
   MOZ_ASSERT(HasSize());
 
@@ -188,7 +188,7 @@ void nsGIFDecoder2::BeginImageFrame(uint16_t aDepth)
                  format);
   } else {
     // Our preallocated frame matches up, with the possible exception of alpha.
-    if (format == gfxImageFormat::RGB24) {
+    if (format == gfx::SurfaceFormat::B8G8R8X8) {
       GetCurrentFrame()->SetHasNoAlpha();
     }
   }

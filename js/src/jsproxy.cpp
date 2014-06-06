@@ -427,7 +427,7 @@ DirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool
 {
     assertEnteredPolicy(cx, proxy, id, SET);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return JS_DeletePropertyById2(cx, target, id, bp);
+    return JSObject::deleteGeneric(cx, target, id, bp);
 }
 
 bool
@@ -915,7 +915,7 @@ ScriptedIndirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id
     RootedValue fval(cx), value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().has, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::has(cx, proxy, id, bp);
     return Trap1(cx, handler, fval, id, &value) &&
            ValueToBool(value, bp);
@@ -928,7 +928,7 @@ ScriptedIndirectProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId
     RootedValue fval(cx), value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().hasOwn, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::hasOwn(cx, proxy, id, bp);
     return Trap1(cx, handler, fval, id, &value) &&
            ValueToBool(value, bp);
@@ -950,7 +950,7 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::get(cx, proxy, receiver, id, vp);
     return Trap(cx, handler, fval, 2, argv.begin(), vp);
 }
@@ -972,7 +972,7 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
-    if (!js_IsCallable(fval))
+    if (!IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
     return Trap(cx, handler, fval, 3, argv.begin(), &value);
 }
@@ -984,7 +984,7 @@ ScriptedIndirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVect
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().keys, &value))
         return false;
-    if (!js_IsCallable(value))
+    if (!IsCallable(value))
         return BaseProxyHandler::keys(cx, proxy, props);
     return Trap(cx, handler, value, 0, nullptr, &value) &&
            ArrayToIdVector(cx, value, props);
@@ -998,7 +998,7 @@ ScriptedIndirectProxyHandler::iterate(JSContext *cx, HandleObject proxy, unsigne
     RootedValue value(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().iterate, &value))
         return false;
-    if (!js_IsCallable(value))
+    if (!IsCallable(value))
         return BaseProxyHandler::iterate(cx, proxy, flags, vp);
     return Trap(cx, handler, value, 0, nullptr, vp) &&
            ReturnedValueMustNotBePrimitive(cx, proxy, cx->names().iterate, vp);
@@ -2384,15 +2384,6 @@ Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 }
 
 bool
-Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v)
-{
-    JS_CHECK_RECURSION(cx, return false);
-    Rooted<PropertyDescriptor> desc(cx);
-    return ParsePropertyDescriptorObject(cx, proxy, v, &desc) &&
-           Proxy::defineProperty(cx, proxy, id, &desc);
-}
-
-bool
 Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
@@ -2920,30 +2911,14 @@ js::proxy_SetGenericAttributes(JSContext *cx, HandleObject obj, HandleId id, uns
     return Proxy::defineProperty(cx, obj, id, &desc);
 }
 
-static bool
-proxy_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
+bool
+js::proxy_DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
     bool deleted;
     if (!Proxy::delete_(cx, obj, id, &deleted))
         return false;
     *succeeded = deleted;
     return js_SuppressDeletedProperty(cx, obj, id);
-}
-
-bool
-js::proxy_DeleteProperty(JSContext *cx, HandleObject obj, HandlePropertyName name, bool *succeeded)
-{
-    RootedId id(cx, NameToId(name));
-    return proxy_DeleteGeneric(cx, obj, id, succeeded);
-}
-
-bool
-js::proxy_DeleteElement(JSContext *cx, HandleObject obj, uint32_t index, bool *succeeded)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-    return proxy_DeleteGeneric(cx, obj, id, succeeded);
 }
 
 void

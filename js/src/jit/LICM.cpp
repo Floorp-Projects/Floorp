@@ -6,377 +6,252 @@
 
 #include "jit/LICM.h"
 
-#include <stdio.h>
-
+#include "jit/IonAnalysis.h"
 #include "jit/IonSpewer.h"
-#include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 
 using namespace js;
 using namespace js::jit;
 
-namespace {
-
-typedef Vector<MInstruction*, 1, IonAllocPolicy> InstructionQueue;
-
-class Loop
+// Test whether any instruction in the loop possiblyCalls().
+static bool
+LoopContainsPossibleCall(MIRGraph &graph, MBasicBlock *header, MBasicBlock *backedge)
 {
-    MIRGenerator *mir;
-
-  public:
-    // Loop code may return three values:
-    enum LoopReturn {
-        LoopReturn_Success,
-        LoopReturn_Error, // Compilation failure.
-        LoopReturn_Skip   // The loop is not suitable for LICM, but there is no error.
-    };
-
-  public:
-    // A loop is constructed on a backedge found in the control flow graph.
-    Loop(MIRGenerator *mir, MBasicBlock *footer);
-
-    // Initializes the loop, finds all blocks and instructions contained in the loop.
-    LoopReturn init();
-
-    // Identifies hoistable loop invariant instructions and moves them out of the loop.
-    bool optimize();
-
-  private:
-    // These blocks define the loop.  header_ points to the loop header
-    MBasicBlock *header_;
-
-    // The pre-loop block is the first predecessor of the loop header.  It is where
-    // the loop is first entered and where hoisted instructions will be placed.
-    MBasicBlock* preLoop_;
-
-    // This indicates whether the loop contains calls or other things which
-    // clobber most or all floating-point registers. In such loops,
-    // floating-point constants should not be hoisted unless it enables further
-    // hoisting.
-    bool containsPossibleCall_;
-
-    TempAllocator &alloc() const {
-        return mir->alloc();
-    }
-
-    bool hoistInstructions(InstructionQueue &toHoist);
-
-    // Utility methods for invariance testing and instruction hoisting.
-    bool isInLoop(MDefinition *ins);
-    bool isBeforeLoop(MDefinition *ins);
-    bool isLoopInvariant(MInstruction *ins);
-
-    // This method determines if this block hot within a loop.  That is, if it's
-    // always or usually run when the loop executes
-    bool checkHotness(MBasicBlock *block);
-
-    // Worklist and worklist usage methods
-    InstructionQueue worklist_;
-    bool insertInWorklist(MInstruction *ins);
-    MInstruction* popFromWorklist();
-
-    inline bool isHoistable(const MDefinition *ins) const {
-        return ins->isMovable() && !ins->isEffectful() && !ins->neverHoist();
-    }
-
-    bool requiresHoistedUse(const MDefinition *ins) const;
-};
-
-} /* namespace anonymous */
-
-LICM::LICM(MIRGenerator *mir, MIRGraph &graph)
-  : mir(mir), graph(graph)
-{
-}
-
-bool
-LICM::analyze()
-{
-    IonSpew(IonSpew_LICM, "Beginning LICM pass.");
-
-    // Iterate in RPO to visit outer loops before inner loops.
-    for (ReversePostorderIterator i(graph.rpoBegin()); i != graph.rpoEnd(); i++) {
-        MBasicBlock *header = *i;
-
-        // Skip non-headers and self-loops.
-        if (!header->isLoopHeader() || header->numPredecessors() < 2)
+    for (auto i(graph.rpoBegin(header)); ; ++i) {
+        MOZ_ASSERT(i != graph.rpoEnd(), "Reached end of graph searching for blocks in loop");
+        MBasicBlock *block = *i;
+        if (!block->isMarked())
             continue;
 
-        // Attempt to optimize loop.
-        Loop loop(mir, header);
-
-        Loop::LoopReturn lr = loop.init();
-        if (lr == Loop::LoopReturn_Error)
-            return false;
-        if (lr == Loop::LoopReturn_Skip) {
-            graph.unmarkBlocks();
-            continue;
-        }
-
-        if (!loop.optimize())
-            return false;
-
-        graph.unmarkBlocks();
-    }
-
-    return true;
-}
-
-Loop::Loop(MIRGenerator *mir, MBasicBlock *header)
-  : mir(mir),
-    header_(header),
-    containsPossibleCall_(false),
-    worklist_(mir->alloc())
-{
-    preLoop_ = header_->getPredecessor(0);
-}
-
-Loop::LoopReturn
-Loop::init()
-{
-    IonSpew(IonSpew_LICM, "Loop identified, headed by block %d", header_->id());
-    IonSpew(IonSpew_LICM, "footer is block %d", header_->backedge()->id());
-
-    // The first predecessor of the loop header must dominate the header.
-    JS_ASSERT(header_->id() > header_->getPredecessor(0)->id());
-
-    // Loops from backedge to header and marks all visited blocks
-    // as part of the loop. At the same time add all hoistable instructions
-    // (in RPO order) to the instruction worklist.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> inlooplist(alloc());
-    if (!inlooplist.append(header_->backedge()))
-        return LoopReturn_Error;
-    header_->backedge()->mark();
-
-    while (!inlooplist.empty()) {
-        MBasicBlock *block = inlooplist.back();
-
-        // Hoisting requires more finesse if the loop contains a block that
-        // self-dominates: there exists control flow that may enter the loop
-        // without passing through the loop preheader.
-        //
-        // Rather than perform a complicated analysis of the dominance graph,
-        // just return a soft error to ignore this loop.
-        if (block->immediateDominator() == block) {
-            while (!worklist_.empty())
-                popFromWorklist();
-            return LoopReturn_Skip;
-        }
-
-        // Add not yet visited predecessors to the inlooplist.
-        if (block != header_) {
-            for (size_t i = 0; i < block->numPredecessors(); i++) {
-                MBasicBlock *pred = block->getPredecessor(i);
-                if (pred->isMarked())
-                    continue;
-
-                if (!inlooplist.append(pred))
-                    return LoopReturn_Error;
-                pred->mark();
+        for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd; ++insIter) {
+            MInstruction *ins = *insIter;
+            if (ins->possiblyCalls()) {
+                IonSpew(IonSpew_LICM, "    Possile call found at %s%u", ins->opName(), ins->id());
+                return true;
             }
         }
 
-        // If any block was added, process them first.
-        if (block != inlooplist.back())
-            continue;
-
-        // Add all instructions in this block (but the control instruction) to the worklist
-        for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
-            MInstruction *ins = *i;
-
-            // Remember whether this loop contains anything which clobbers most
-            // or all floating-point registers. This is just a rough heuristic.
-            if (ins->possiblyCalls())
-                containsPossibleCall_ = true;
-
-            if (isHoistable(ins)) {
-                if (!insertInWorklist(ins))
-                    return LoopReturn_Error;
-            }
-        }
-
-        // All successors of this block are visited.
-        inlooplist.popBack();
+        if (block == backedge)
+            break;
     }
-
-    return LoopReturn_Success;
+    return false;
 }
 
-bool
-Loop::optimize()
+// When a nested loop has no exits back into what would be its parent loop,
+// MarkLoopBlocks on the parent loop doesn't mark the blocks of the nested
+// loop, since they technically aren't part of the loop. However, AliasAnalysis
+// currently does consider such nested loops to be part of their parent
+// loops. Consequently, we can't use IsInLoop on dependency() values; we must
+// test whether a dependency() is *before* the loop, even if it is not
+// technically in the loop.
+static bool
+IsBeforeLoop(MDefinition *ins, MBasicBlock *header)
 {
-    InstructionQueue invariantInstructions(alloc());
-
-    IonSpew(IonSpew_LICM, "These instructions are in the loop: ");
-
-    while (!worklist_.empty()) {
-        if (mir->shouldCancel("LICM (worklist)"))
-            return false;
-
-        MInstruction *ins = popFromWorklist();
-
-        IonSpewHeader(IonSpew_LICM);
-
-        if (IonSpewEnabled(IonSpew_LICM)) {
-            ins->printName(IonSpewFile);
-            fprintf(IonSpewFile, " <- ");
-            ins->printOpcode(IonSpewFile);
-            fprintf(IonSpewFile, ":  ");
-        }
-
-        if (isLoopInvariant(ins)) {
-            // Flag this instruction as loop invariant.
-            ins->setLoopInvariant();
-            if (!invariantInstructions.append(ins))
-                return false;
-
-            if (IonSpewEnabled(IonSpew_LICM))
-                fprintf(IonSpewFile, " Loop Invariant!\n");
-        }
-    }
-
-    if (!hoistInstructions(invariantInstructions))
-        return false;
-    return true;
+    return ins->block()->id() < header->id();
 }
 
-bool
-Loop::requiresHoistedUse(const MDefinition *ins) const
+// Test whether the given instruction is inside the loop (and thus not
+// loop-invariant).
+static bool
+IsInLoop(MDefinition *ins)
 {
-    if (ins->isConstantElements() || ins->isBox())
+    return ins->block()->isMarked();
+}
+
+// Test whether the given instruction is cheap and not worth hoisting unless
+// one of its users will be hoisted as well.
+static bool
+RequiresHoistedUse(const MDefinition *ins, bool hasCalls)
+{
+    if (ins->isConstantElements())
         return true;
 
-    // Integer constants can often be folded as immediates and aren't worth
-    // hoisting on their own, in general. Floating-point constants typically
-    // are worth hoisting, unless they'll end up being spilled (eg. due to a
-    // call).
-    if (ins->isConstant() && (IsFloatingPointType(ins->type()) || containsPossibleCall_))
+    if (ins->isBox()) {
+        MOZ_ASSERT(!ins->toBox()->input()->isBox(),
+                "Box of a box could lead to unbounded recursion");
+        return true;
+    }
+
+    // Integer constants are usually cheap and aren't worth hoisting on their
+    // own, in general. Floating-point constants typically are worth hoisting,
+    // unless they'll end up being spilled (eg. due to a call).
+    if (ins->isConstant() && (!IsFloatingPointType(ins->type()) || hasCalls))
         return true;
 
     return false;
 }
 
-bool
-Loop::hoistInstructions(InstructionQueue &toHoist)
+// Test whether the given instruction has any operands defined within the loop.
+static bool
+HasOperandInLoop(MInstruction *ins, bool hasCalls)
 {
-    // Iterate in post-order (uses before definitions)
-    for (int32_t i = toHoist.length() - 1; i >= 0; i--) {
-        MInstruction *ins = toHoist[i];
+    // An instruction is only loop invariant if it and all of its operands can
+    // be safely hoisted into the loop preheader.
+    for (size_t i = 0, e = ins->numOperands(); i != e; ++i) {
+        MDefinition *op = ins->getOperand(i);
+
+        if (!IsInLoop(op))
+            continue;
+
+        if (RequiresHoistedUse(op, hasCalls)) {
+            // Recursively test for loop invariance. Note that the recursion is
+            // bounded because we require RequiresHoistedUse to be set at each
+            // level.
+            if (!HasOperandInLoop(op->toInstruction(), hasCalls))
+                continue;
+        }
+
+        return true;
+    }
+    return false;
+}
+
+// Test whether the given instruction is hoistable, ignoring memory
+// dependencies.
+static bool
+IsHoistableIgnoringDependency(MInstruction *ins, bool hasCalls)
+{
+    return ins->isMovable() && !ins->isEffectful() && !ins->neverHoist() &&
+           !HasOperandInLoop(ins, hasCalls);
+}
+
+// Test whether the given instruction has a memory dependency inside the loop.
+static bool
+HasDependencyInLoop(MInstruction *ins, MBasicBlock *header)
+{
+    // Don't hoist if this instruction depends on a store inside the loop.
+    if (MDefinition *dep = ins->dependency())
+        return !IsBeforeLoop(dep, header);
+    return false;
+}
+
+// Test whether the given instruction is hoistable.
+static bool
+IsHoistable(MInstruction *ins, MBasicBlock *header, bool hasCalls)
+{
+    return IsHoistableIgnoringDependency(ins, hasCalls) && !HasDependencyInLoop(ins, header);
+}
+
+// In preparation for hoisting an instruction, hoist any of its operands which
+// were too cheap to hoist on their own.
+static void
+MoveDeferredOperands(MInstruction *ins, MInstruction *hoistPoint, bool hasCalls)
+{
+    // If any of our operands were waiting for a user to be hoisted, make a note
+    // to hoist them.
+    for (size_t i = 0, e = ins->numOperands(); i != e; ++i) {
+        MDefinition *op = ins->getOperand(i);
+        if (!IsInLoop(op))
+            continue;
+        MOZ_ASSERT(RequiresHoistedUse(op, hasCalls),
+                   "Deferred loop-invariant operand is not cheap");
+        MInstruction *opIns = op->toInstruction();
+
+        // Recursively move the operands. Note that the recursion is bounded
+        // because we require RequiresHoistedUse to be set at each level.
+        MoveDeferredOperands(opIns, hoistPoint, hasCalls);
+
+        IonSpew(IonSpew_LICM, "    Hoisting %s%u (now that a user will be hoisted)",
+                opIns->opName(), opIns->id());
+
+        opIns->block()->moveBefore(hoistPoint, opIns);
+    }
+}
+
+static void
+VisitLoopBlock(MBasicBlock *block, MBasicBlock *header, MInstruction *hoistPoint, bool hasCalls)
+{
+    for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd; ) {
+        MInstruction *ins = *insIter++;
+
+        if (!IsHoistable(ins, header, hasCalls)) {
+#ifdef DEBUG
+            if (IsHoistableIgnoringDependency(ins, hasCalls)) {
+                IonSpew(IonSpew_LICM, "    %s%u isn't hoistable due to dependency on %s%u",
+                        ins->opName(), ins->id(),
+                        ins->dependency()->opName(), ins->dependency()->id());
+            }
+#endif
+            continue;
+        }
 
         // Don't hoist a cheap constant if it doesn't enable us to hoist one of
         // its uses. We want those instructions as close as possible to their
-        // use, to facilitate folding and minimize register pressure.
-        if (requiresHoistedUse(ins)) {
-            bool loopInvariantUse = false;
-            for (MUseDefIterator use(ins); use; use++) {
-                if (use.def()->isLoopInvariant()) {
-                    loopInvariantUse = true;
-                    break;
-                }
-            }
-
-            if (!loopInvariantUse)
-                ins->setNotLoopInvariant();
+        // use, to minimize register pressure.
+        if (RequiresHoistedUse(ins, hasCalls)) {
+            IonSpew(IonSpew_LICM, "    %s%u will be hoisted only if its users are",
+                    ins->opName(), ins->id());
+            continue;
         }
+
+        // Hoist operands which were too cheap to hoist on their own.
+        MoveDeferredOperands(ins, hoistPoint, hasCalls);
+
+        IonSpew(IonSpew_LICM, "    Hoisting %s%u", ins->opName(), ins->id());
+
+        // Move the instruction to the hoistPoint.
+        block->moveBefore(hoistPoint, ins);
     }
+}
 
-    // Move all instructions to the preLoop_ block just before the control instruction.
-    for (size_t i = 0; i < toHoist.length(); i++) {
-        MInstruction *ins = toHoist[i];
+static void
+VisitLoop(MIRGraph &graph, MBasicBlock *header)
+{
+    MInstruction *hoistPoint = header->loopPredecessor()->lastIns();
 
-        // Loads may have an implicit dependency on either stores (effectful instructions) or
-        // control instructions so we should never move these.
-        JS_ASSERT(!ins->isControlInstruction());
-        JS_ASSERT(!ins->isEffectful());
-        JS_ASSERT(ins->isMovable());
+    IonSpew(IonSpew_LICM, "  Visiting loop with header block%u, hoisting to %s%u",
+            header->id(), hoistPoint->opName(), hoistPoint->id());
 
-        if (!ins->isLoopInvariant())
+    MBasicBlock *backedge = header->backedge();
+
+    // This indicates whether the loop contains calls or other things which
+    // clobber most or all floating-point registers. In such loops,
+    // floating-point constants should not be hoisted unless it enables further
+    // hoisting.
+    bool hasCalls = LoopContainsPossibleCall(graph, header, backedge);
+
+    for (auto i(graph.rpoBegin(header)); ; ++i) {
+        MOZ_ASSERT(i != graph.rpoEnd(), "Reached end of graph searching for blocks in loop");
+        MBasicBlock *block = *i;
+        if (!block->isMarked())
             continue;
 
-        if (checkHotness(ins->block())) {
-            ins->block()->moveBefore(preLoop_->lastIns(), ins);
-            ins->setNotLoopInvariant();
-        }
-    }
+        VisitLoopBlock(block, header, hoistPoint, hasCalls);
 
-    return true;
+        if (block == backedge)
+            break;
+    }
 }
 
 bool
-Loop::isInLoop(MDefinition *ins)
+jit::LICM(MIRGenerator *mir, MIRGraph &graph)
 {
-    return ins->block()->isMarked();
-}
+    IonSpew(IonSpew_LICM, "Beginning LICM pass");
 
-bool
-Loop::isBeforeLoop(MDefinition *ins)
-{
-    return ins->block()->id() < header_->id();
-}
+    // Iterate in RPO to visit outer loops before inner loops. We'd hoist the
+    // same things either way, but outer first means we do a little less work.
+    for (auto i(graph.rpoBegin()), e(graph.rpoEnd()); i != e; ++i) {
+        MBasicBlock *header = *i;
+        if (!header->isLoopHeader())
+            continue;
 
-bool
-Loop::isLoopInvariant(MInstruction *ins)
-{
-    if (!isHoistable(ins)) {
-        if (IonSpewEnabled(IonSpew_LICM))
-            fprintf(IonSpewFile, "not hoistable\n");
-        return false;
-    }
+        bool canOsr;
+        MarkLoopBlocks(graph, header, &canOsr);
 
-    // Don't hoist if this instruction depends on a store inside or after the loop.
-    // Note: "after the loop" can sound strange, but Alias Analysis doesn't look
-    // at the control flow. Therefore it doesn't match the definition here, that a block
-    // is in the loop when there is a (directed) path from the block to the loop header.
-    if (ins->dependency() && !isBeforeLoop(ins->dependency())) {
-        if (IonSpewEnabled(IonSpew_LICM)) {
-            fprintf(IonSpewFile, "depends on store inside or after loop: ");
-            ins->dependency()->printName(IonSpewFile);
-            fprintf(IonSpewFile, "\n");
-        }
-        return false;
-    }
+        // Hoisting out of a loop that has an entry from the OSR block in
+        // addition to its normal entry is tricky. In theory we could clone
+        // the instruction and insert phis.
+        if (!canOsr)
+            VisitLoop(graph, header);
+        else
+            IonSpew(IonSpew_LICM, "  Skipping loop with header block%u due to OSR", header->id());
 
-    // An instruction is only loop invariant if it and all of its operands can
-    // be safely hoisted into the loop preheader.
-    for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
-        if (isInLoop(ins->getOperand(i)) &&
-            !ins->getOperand(i)->isLoopInvariant()) {
+        UnmarkLoopBlocks(graph, header);
 
-            if (IonSpewEnabled(IonSpew_LICM)) {
-                ins->getOperand(i)->printName(IonSpewFile);
-                fprintf(IonSpewFile, " is in the loop.\n");
-            }
-
+        if (mir->shouldCancel("LICM (main loop)"))
             return false;
-        }
     }
 
     return true;
-}
-
-bool
-Loop::checkHotness(MBasicBlock *block)
-{
-    // TODO: determine if instructions within this block are worth hoisting.
-    // They might not be if the block is cold enough within the loop.
-    // BUG 669517
-    return true;
-}
-
-bool
-Loop::insertInWorklist(MInstruction *ins)
-{
-    if (!worklist_.insert(worklist_.begin(), ins))
-        return false;
-    ins->setInWorklist();
-    return true;
-}
-
-MInstruction*
-Loop::popFromWorklist()
-{
-    MInstruction* toReturn = worklist_.popCopy();
-    toReturn->setNotInWorklist();
-    return toReturn;
 }

@@ -2312,17 +2312,17 @@ END_CASE(JSOP_DELNAME)
 
 CASE(JSOP_DELPROP)
 {
-    RootedPropertyName &name = rootName0;
-    name = script->getName(REGS.pc);
+    RootedId &id = rootId0;
+    id = NameToId(script->getName(REGS.pc));
 
     RootedObject &obj = rootObject0;
     FETCH_OBJECT(cx, -1, obj);
 
     bool succeeded;
-    if (!JSObject::deleteProperty(cx, obj, name, &succeeded))
+    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && script->strict()) {
-        obj->reportNotConfigurable(cx, NameToId(name));
+        obj->reportNotConfigurable(cx, id);
         goto error;
     }
     MutableHandleValue res = REGS.stackHandleAt(-1);
@@ -2340,15 +2340,12 @@ CASE(JSOP_DELELEM)
     propval = REGS.sp[-1];
 
     bool succeeded;
-    if (!JSObject::deleteByValue(cx, obj, propval, &succeeded))
+    RootedId &id = rootId0;
+    if (!ValueToId<CanGC>(cx, propval, &id))
+        goto error;
+    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         goto error;
     if (!succeeded && script->strict()) {
-        // XXX This observably calls ToString(propval).  We should convert to
-        //     PropertyKey and use that to delete, and to report an error if
-        //     necessary!
-        RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, propval, &id))
-            goto error;
         obj->reportNotConfigurable(cx, id);
         goto error;
     }
@@ -3684,7 +3681,8 @@ js::DeleteProperty(JSContext *cx, HandleValue v, HandlePropertyName name, bool *
     if (!obj)
         return false;
 
-    if (!JSObject::deleteProperty(cx, obj, name, bp))
+    RootedId id(cx, NameToId(name));
+    if (!JSObject::deleteGeneric(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
@@ -3705,16 +3703,13 @@ js::DeleteElement(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
     if (!obj)
         return false;
 
-    if (!JSObject::deleteByValue(cx, obj, index, bp))
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, index, &id))
+        return false;
+    if (!JSObject::deleteGeneric(cx, obj, id, bp))
         return false;
 
     if (strict && !*bp) {
-        // XXX This observably calls ToString(propval).  We should convert to
-        //     PropertyKey and use that to delete, and to report an error if
-        //     necessary!
-        RootedId id(cx);
-        if (!ValueToId<CanGC>(cx, index, &id))
-            return false;
         obj->reportNotConfigurable(cx, id);
         return false;
     }
@@ -3815,7 +3810,8 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
     }
 
     bool succeeded;
-    if (!JSObject::deleteProperty(cx, scope, name, &succeeded))
+    RootedId id(cx, NameToId(name));
+    if (!JSObject::deleteGeneric(cx, scope, id, &succeeded))
         return false;
     res.setBoolean(succeeded);
     return true;
