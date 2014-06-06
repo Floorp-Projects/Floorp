@@ -1476,11 +1476,12 @@ js::NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
     return sb.appendInflated(cstr, cstrlen);
 }
 
+template <typename CharT>
 static bool
-CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double *result)
+CharsToNumber(ThreadSafeContext *cx, const CharT *chars, size_t length, double *result)
 {
     if (length == 1) {
-        jschar c = chars[0];
+        CharT c = chars[0];
         if ('0' <= c && c <= '9')
             *result = c - '0';
         else if (unicode::IsSpace(c))
@@ -1490,8 +1491,8 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
         return true;
     }
 
-    const jschar *end = chars + length;
-    const jschar *bp = SkipSpace(chars, end);
+    const CharT *end = chars + length;
+    const CharT *bp = SkipSpace(chars, end);
 
     /* ECMA doesn't allow signed hex numbers (bug 273467). */
     if (end - bp >= 2 && bp[0] == '0' && (bp[1] == 'x' || bp[1] == 'X')) {
@@ -1500,7 +1501,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
          * digit after the 0x, and if no non-whitespace characters follow all
          * the hex digits.
          */
-        const jschar *endptr;
+        const CharT *endptr;
         double d;
         if (!GetPrefixInteger(cx, bp + 2, end, 16, &endptr, &d) ||
             endptr == bp + 2 ||
@@ -1520,7 +1521,7 @@ CharsToNumber(ThreadSafeContext *cx, const jschar *chars, size_t length, double 
      * that have made it here (which can only be negative ones) will
      * be treated as 0 without consuming the 'x' by js_strtod.
      */
-    const jschar *ep;
+    const CharT *ep;
     double d;
     if (!js_strtod(cx, bp, end, &ep, &d)) {
         *result = GenericNaN();
@@ -1543,7 +1544,9 @@ js::StringToNumber(ThreadSafeContext *cx, JSString *str, double *result)
     if (!inspector.ensureChars(cx, nogc))
         return false;
 
-    return CharsToNumber(cx, inspector.twoByteChars(), str->length(), result);
+    return inspector.hasLatin1Chars()
+           ? CharsToNumber(cx, inspector.latin1Chars(), str->length(), result)
+           : CharsToNumber(cx, inspector.twoByteChars(), str->length(), result);
 }
 
 bool
