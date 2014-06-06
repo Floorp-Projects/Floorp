@@ -2065,10 +2065,16 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
     assertEnteredPolicy(cx, wrapper, id, BaseProxyHandler::SET);
 
     Rooted<JSPropertyDescriptor> existing_desc(cx);
-    if (!getOwnPropertyDescriptor(cx, wrapper, id, &existing_desc))
+    if (!JS_GetPropertyDescriptorById(cx, wrapper, id, &existing_desc))
         return false;
 
-    if (existing_desc.object() && existing_desc.isPermanent())
+    // Note that the check here is intended to differentiate between own and
+    // non-own properties, since the above lookup is not limited to own
+    // properties. At present, this may not always do the right thing because
+    // we often lie (sloppily) about where we found properties and set
+    // desc.object() to |wrapper|. Once we fully fix our Xray prototype semantics,
+    // this should work as intended.
+    if (existing_desc.object() == wrapper && existing_desc.isPermanent())
         return true; // silently ignore attempt to overwrite native property
 
     bool defined = false;
