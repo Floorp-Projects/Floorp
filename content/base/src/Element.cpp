@@ -1289,13 +1289,26 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                NODE_NEEDS_FRAME | NODE_DESCENDANTS_NEED_FRAMES |
                // And the restyle bits
                ELEMENT_ALL_RESTYLE_FLAGS);
-
-    // Propagate scoped style sheet tracking bit.
-    SetIsElementInStyleScope(mParent->IsElementInStyleScope());
   } else if (!HasFlag(NODE_IS_IN_SHADOW_TREE)) {
     // If we're not in the doc and not in a shadow tree,
     // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());
+  }
+
+  // Propagate scoped style sheet tracking bit.
+  if (mParent->IsContent()) {
+    nsIContent* parent;
+    ShadowRoot* shadowRootParent = ShadowRoot::FromNode(mParent);
+    if (shadowRootParent) {
+      parent = shadowRootParent->GetHost();
+    } else {
+      parent = mParent->AsContent();
+    }
+
+    bool inStyleScope = parent->IsElementInStyleScope();
+
+    SetIsElementInStyleScope(inStyleScope);
+    SetIsElementInStyleScopeFlagOnShadowTree(inStyleScope);
   }
 
   // This has to be here, rather than in nsGenericHTMLElement::BindToTree,

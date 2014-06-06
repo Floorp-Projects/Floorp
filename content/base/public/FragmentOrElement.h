@@ -34,6 +34,12 @@ class nsDOMStringMap;
 class nsINodeInfo;
 class nsIURI;
 
+namespace mozilla {
+namespace dom {
+class Element;
+}
+}
+
 /**
  * Class that implements the nsIDOMNodeList interface (a list of children of
  * the content), by holding a reference to the content and delegating GetLength
@@ -230,6 +236,14 @@ public:
     return Children()->Length();
   }
 
+  /**
+   * Sets the IsElementInStyleScope flag on each element in the subtree rooted
+   * at this node, including any elements reachable through shadow trees.
+   *
+   * @param aInStyleScope The flag value to set.
+   */
+  void SetIsElementInStyleScopeFlagOnSubtree(bool aInStyleScope);
+
 public:
   /**
    * If there are listeners for DOMNodeInserted event, fires the event on all
@@ -414,6 +428,14 @@ protected:
   {
     return static_cast<nsDOMSlots*>(GetExistingSlots());
   }
+
+  /**
+   * Calls SetIsElementInStyleScopeFlagOnSubtree for each shadow tree attached
+   * to this node, which is assumed to be an Element.
+   *
+   * @param aInStyleScope The IsElementInStyleScope flag value to set.
+   */
+  void SetIsElementInStyleScopeFlagOnShadowTree(bool aInStyleScope);
 
   friend class ::ContentUnbinder;
   /**

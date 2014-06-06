@@ -2846,3 +2846,41 @@ FragmentOrElement::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 
   return n;
 }
+
+void
+FragmentOrElement::SetIsElementInStyleScopeFlagOnSubtree(bool aInStyleScope)
+{
+  if (aInStyleScope && IsElementInStyleScope()) {
+    return;
+  }
+
+  if (IsElement()) {
+    SetIsElementInStyleScope(aInStyleScope);
+    SetIsElementInStyleScopeFlagOnShadowTree(aInStyleScope);
+  }
+
+  nsIContent* n = GetNextNode(this);
+  while (n) {
+    if (n->IsElementInStyleScope()) {
+      n = n->GetNextNonChildNode(this);
+    } else {
+      if (n->IsElement()) {
+        n->SetIsElementInStyleScope(aInStyleScope);
+        n->AsElement()->SetIsElementInStyleScopeFlagOnShadowTree(aInStyleScope);
+      }
+      n = n->GetNextNode(this);
+    }
+  }
+}
+
+void
+FragmentOrElement::SetIsElementInStyleScopeFlagOnShadowTree(bool aInStyleScope)
+{
+  NS_ASSERTION(IsElement(), "calling SetIsElementInStyleScopeFlagOnShadowTree "
+                            "on a non-Element is useless");
+  ShadowRoot* shadowRoot = GetShadowRoot();
+  while (shadowRoot) {
+    shadowRoot->SetIsElementInStyleScopeFlagOnSubtree(aInStyleScope);
+    shadowRoot = shadowRoot->GetOlderShadow();
+  }
+}
