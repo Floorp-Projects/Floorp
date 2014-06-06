@@ -33,7 +33,6 @@ EXPORTS += [
     'nsIGlobalObject.h',
     'nsIJSNativeInitializer.h',
     'nsIScriptContext.h',
-    'nsIScriptExternalNameSet.h',
     'nsIScriptGlobalObject.h',
     'nsIScriptNameSpaceManager.h',
     'nsIScriptObjectPrincipal.h',
