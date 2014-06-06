@@ -19,13 +19,6 @@ namespace gc {
 void
 MarkPersistentRootedChains(JSTracer *trc);
 
-#ifdef JSGC_FJGENERATIONAL
-class ForkJoinNurseryCollectionTracer;
-
-void
-MarkForkJoinStack(ForkJoinNurseryCollectionTracer *trc);
-#endif
-
 class AutoCopyFreeListToArenas
 {
     JSRuntime *runtime;

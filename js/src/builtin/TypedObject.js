@@ -1195,7 +1195,7 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
   // relative to its owner (which is often but not always 0).
   const inBaseOffset = TYPEDOBJ_BYTEOFFSET(inArray);
 
-  ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode), outArray);
+  ForkJoin(mapThread, 0, slicesInfo.count, ForkJoinMode(mode));
   return outArray;
 
   function mapThread(workerId, sliceStart, sliceEnd) {
@@ -1251,17 +1251,11 @@ function MapTypedParImplDepth1(inArray, inArrayType, outArrayType, func) {
         inOffset += inGrainTypeSize;
         outOffset += outGrainTypeSize;
 
-#ifndef JSGC_FJGENERATIONAL
         // A transparent result type cannot contain references, and
         // hence there is no way for a pointer to a thread-local object
         // to escape.
-        //
-        // This has been disabled for the PJS generational collector
-        // as it probably has little effect in that setting and adds
-        // per-iteration cost.
         if (outGrainTypeIsTransparent)
           ClearThreadLocalArenas();
-#endif
       }
     }
 
