@@ -168,20 +168,6 @@ static const nsAttrValue::EnumTable kInputTypeTable[] = {
 // Default type is 'text'.
 static const nsAttrValue::EnumTable* kInputDefaultType = &kInputTypeTable[16];
 
-static const uint8_t NS_INPUT_AUTOCOMPLETE_OFF     = 0;
-static const uint8_t NS_INPUT_AUTOCOMPLETE_ON      = 1;
-static const uint8_t NS_INPUT_AUTOCOMPLETE_DEFAULT = 2;
-
-static const nsAttrValue::EnumTable kInputAutocompleteTable[] = {
-  { "", NS_INPUT_AUTOCOMPLETE_DEFAULT },
-  { "on", NS_INPUT_AUTOCOMPLETE_ON },
-  { "off", NS_INPUT_AUTOCOMPLETE_OFF },
-  { 0 }
-};
-
-// Default autocomplete value is "".
-static const nsAttrValue::EnumTable* kInputDefaultAutocomplete = &kInputAutocompleteTable[0];
-
 static const uint8_t NS_INPUT_INPUTMODE_AUTO              = 0;
 static const uint8_t NS_INPUT_INPUTMODE_NUMERIC           = 1;
 static const uint8_t NS_INPUT_INPUTMODE_DIGIT             = 2;
@@ -1113,6 +1099,7 @@ HTMLInputElement::HTMLInputElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
                                    FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo)
   , mType(kInputDefaultType->value)
+  , mAutocompleteAttrState(nsContentUtils::eAutocompleteAttrState_Unknown)
   , mDisabledChanged(false)
   , mValueChanged(false)
   , mCheckedChanged(false)
@@ -1474,6 +1461,9 @@ HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsIAtom* aName,
           numberControlFrame->SetValueOfAnonTextControl(value);
         }
       }
+    } else if (aName == nsGkAtoms::autocomplete) {
+      // Clear the cached @autocomplete attribute state.
+      mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
 
     UpdateState(aNotify);
@@ -1496,8 +1486,6 @@ NS_IMPL_BOOL_ATTR(HTMLInputElement, DefaultChecked, checked)
 NS_IMPL_STRING_ATTR(HTMLInputElement, Accept, accept)
 NS_IMPL_STRING_ATTR(HTMLInputElement, Align, align)
 NS_IMPL_STRING_ATTR(HTMLInputElement, Alt, alt)
-NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLInputElement, Autocomplete, autocomplete,
-                                kInputDefaultAutocomplete->tag)
 NS_IMPL_BOOL_ATTR(HTMLInputElement, Autofocus, autofocus)
 //NS_IMPL_BOOL_ATTR(HTMLInputElement, Checked, checked)
 NS_IMPL_BOOL_ATTR(HTMLInputElement, Disabled, disabled)
@@ -1526,6 +1514,37 @@ NS_IMPL_STRING_ATTR(HTMLInputElement, Pattern, pattern)
 NS_IMPL_STRING_ATTR(HTMLInputElement, Placeholder, placeholder)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(HTMLInputElement, Type, type,
                                 kInputDefaultType->tag)
+
+NS_IMETHODIMP
+HTMLInputElement::GetAutocomplete(nsAString& aValue)
+{
+  aValue.Truncate(0);
+  const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
+  if (!attributeVal ||
+      mAutocompleteAttrState == nsContentUtils::eAutocompleteAttrState_Invalid) {
+    return NS_OK;
+  }
+  if (mAutocompleteAttrState == nsContentUtils::eAutocompleteAttrState_Valid) {
+    uint32_t atomCount = attributeVal->GetAtomCount();
+    for (uint32_t i = 0; i < atomCount; i++) {
+      if (i != 0) {
+        aValue.Append(' ');
+      }
+      aValue.Append(nsDependentAtomString(attributeVal->AtomAt(i)));
+    }
+    nsContentUtils::ASCIIToLower(aValue);
+    return NS_OK;
+  }
+
+  mAutocompleteAttrState = nsContentUtils::SerializeAutocompleteAttribute(attributeVal, aValue);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HTMLInputElement::SetAutocomplete(const nsAString& aValue)
+{
+  return SetAttr(kNameSpaceID_None, nsGkAtoms::autocomplete, nullptr, aValue, true);
+}
 
 int32_t
 HTMLInputElement::TabIndexDefault()
@@ -4892,7 +4911,8 @@ HTMLInputElement::ParseAttribute(int32_t aNamespaceID,
       return aResult.ParseEnumValue(aValue, kFormEnctypeTable, false);
     }
     if (aAttribute == nsGkAtoms::autocomplete) {
-      return aResult.ParseEnumValue(aValue, kInputAutocompleteTable, false);
+      aResult.ParseAtomArray(aValue);
+      return true;
     }
     if (aAttribute == nsGkAtoms::inputmode) {
       return aResult.ParseEnumValue(aValue, kInputInputmodeTable, false);
