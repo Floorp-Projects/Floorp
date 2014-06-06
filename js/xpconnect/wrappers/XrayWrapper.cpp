@@ -45,6 +45,7 @@ IsJSXraySupported(JSProtoKey key)
 {
     switch (key) {
       case JSProto_Date:
+      case JSProto_Object:
         return true;
       default:
         return false;
