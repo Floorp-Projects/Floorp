@@ -218,16 +218,13 @@ interface CameraControl : MediaStream
   [Throws]
   readonly attribute unrestricted double focusDistanceFar;
 
-  /* 'compensation' is optional, and if missing, will
-     set the camera to use automatic exposure compensation.
-
-     acceptable values must range from minExposureCompensation
-     to maxExposureCompensation in steps of stepExposureCompensation;
-     invalid values will be rounded to the nearest valid value. */
+  /* over- or under-expose the image; acceptable values must range from
+     minExposureCompensation to maxExposureCompensation in steps of
+     stepExposureCompensation. Invalid values will be rounded to the nearest
+     valid value; out-of-bounds values will be limited to the range
+     supported by the camera. */
   [Throws]
-  void setExposureCompensation(optional double compensation);
-  [Throws]
-  readonly attribute unrestricted double exposureCompensation;
+  attribute double          exposureCompensation;
 
   /* one of the values chosen from capabilities.isoModes; default
      value is "auto" if supported. */
