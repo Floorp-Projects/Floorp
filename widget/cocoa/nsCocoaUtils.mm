@@ -137,18 +137,42 @@ NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
 }
 
+@interface NSEvent (ScrollPhase)
+// 10.5 and 10.6
+- (long long)_scrollPhase;
+// 10.7 and above
+- (NSEventPhase)phase;
+- (NSEventPhase)momentumPhase;
+@end
+
+NSEventPhase nsCocoaUtils::EventPhase(NSEvent* aEvent)
+{
+  if ([aEvent respondsToSelector:@selector(phase)]) {
+    return [aEvent phase];
+  }
+  return NSEventPhaseNone;
+}
+
+NSEventPhase nsCocoaUtils::EventMomentumPhase(NSEvent* aEvent)
+{
+  if ([aEvent respondsToSelector:@selector(momentumPhase)]) {
+    return [aEvent momentumPhase];
+  }
+  if ([aEvent respondsToSelector:@selector(_scrollPhase)]) {
+    switch ([aEvent _scrollPhase]) {
+      case 1: return NSEventPhaseBegan;
+      case 2: return NSEventPhaseChanged;
+      case 3: return NSEventPhaseEnded;
+      default: return NSEventPhaseNone;
+    }
+  }
+  return NSEventPhaseNone;
+}
+
 BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent)
 {
-  if ([aEvent type] != NSScrollWheel)
-    return NO;
-    
-  if ([aEvent respondsToSelector:@selector(momentumPhase)])
-    return ([aEvent momentumPhase] & NSEventPhaseChanged) != 0;
-    
-  if ([aEvent respondsToSelector:@selector(_scrollPhase)])
-    return [aEvent _scrollPhase] != 0;
-    
-  return NO;
+  return [aEvent type] == NSScrollWheel &&
+    EventMomentumPhase(aEvent) != NSEventPhaseNone;
 }
 
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen)
