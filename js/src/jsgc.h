@@ -41,6 +41,10 @@ class ScopeObject;
 class Shape;
 class UnownedBaseShape;
 
+namespace gc {
+class ForkJoinNursery;
+}
+
 unsigned GetCPUCount();
 
 enum HeapState {
@@ -166,6 +170,42 @@ template <> struct MapTypeToFinalizeKind<jit::JitCode>      { static const Alloc
 #if defined(JSGC_GENERATIONAL) || defined(DEBUG)
 static inline bool
 IsNurseryAllocable(AllocKind kind)
+{
+    JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
+    static const bool map[] = {
+        false,     /* FINALIZE_OBJECT0 */
+        true,      /* FINALIZE_OBJECT0_BACKGROUND */
+        false,     /* FINALIZE_OBJECT2 */
+        true,      /* FINALIZE_OBJECT2_BACKGROUND */
+        false,     /* FINALIZE_OBJECT4 */
+        true,      /* FINALIZE_OBJECT4_BACKGROUND */
+        false,     /* FINALIZE_OBJECT8 */
+        true,      /* FINALIZE_OBJECT8_BACKGROUND */
+        false,     /* FINALIZE_OBJECT12 */
+        true,      /* FINALIZE_OBJECT12_BACKGROUND */
+        false,     /* FINALIZE_OBJECT16 */
+        true,      /* FINALIZE_OBJECT16_BACKGROUND */
+        false,     /* FINALIZE_SCRIPT */
+        false,     /* FINALIZE_LAZY_SCRIPT */
+        false,     /* FINALIZE_SHAPE */
+        false,     /* FINALIZE_BASE_SHAPE */
+        false,     /* FINALIZE_TYPE_OBJECT */
+        false,     /* FINALIZE_FAT_INLINE_STRING */
+        false,     /* FINALIZE_STRING */
+        false,     /* FINALIZE_EXTERNAL_STRING */
+        false,     /* FINALIZE_JITCODE */
+    };
+    JS_STATIC_ASSERT(JS_ARRAY_LENGTH(map) == FINALIZE_LIMIT);
+    return map[kind];
+}
+#endif
+
+#if defined(JSGC_FJGENERATIONAL)
+// This is separate from IsNurseryAllocable() so that the latter can evolve
+// without worrying about what the ForkJoinNursery's needs are, and vice
+// versa to some extent.
+static inline bool
+IsFJNurseryAllocable(AllocKind kind)
 {
     JS_ASSERT(kind >= 0 && unsigned(kind) < FINALIZE_LIMIT);
     static const bool map[] = {
@@ -782,6 +822,7 @@ class ArenaLists
     inline void normalizeBackgroundFinalizeState(AllocKind thingKind);
 
     friend class js::Nursery;
+    friend class js::gc::ForkJoinNursery;
 };
 
 /*

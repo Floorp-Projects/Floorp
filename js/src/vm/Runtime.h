@@ -953,6 +953,15 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
     bool isHeapCollecting() { return gc.isHeapCollecting(); }
 
+    // Performance note: if isFJMinorCollecting turns out to be slow
+    // because reading the counter is slow then we may be able to
+    // augment the counter with a volatile flag that is set iff the
+    // counter is greater than zero.  (It will require some care to
+    // make sure the two variables stay in sync.)
+    bool isFJMinorCollecting() { return gc.fjCollectionCounter > 0; }
+    void incFJMinorCollecting() { gc.fjCollectionCounter++; }
+    void decFJMinorCollecting() { gc.fjCollectionCounter--; }
+
 #ifdef JS_GC_ZEAL
     int gcZeal() { return gc.zealMode; }
 
