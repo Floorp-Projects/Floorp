@@ -350,9 +350,7 @@ public:
   // nsWrapperCache
   virtual JSObject *WrapObject(JSContext *cx) MOZ_OVERRIDE
   {
-    NS_ASSERTION(IsOuterWindow(),
-                 "Inner window supports nsWrapperCache, fix WrapObject!");
-    return EnsureInnerWindow() ? GetWrapper() : nullptr;
+    return IsInnerWindow() || EnsureInnerWindow() ? GetWrapper() : nullptr;
   }
 
   // nsIGlobalJSObjectHolder
