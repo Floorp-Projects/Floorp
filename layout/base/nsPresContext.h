@@ -1064,23 +1064,28 @@ protected:
     LangGroupFontPrefs()
       : mLangGroup(nullptr)
       , mMinimumFontSize(0)
-      , mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                             NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultFixedFont("monospace", NS_FONT_STYLE_NORMAL,
+      , mDefaultVariableFont(mozilla::eFamily_serif, NS_FONT_STYLE_NORMAL,
+                             NS_FONT_VARIANT_NORMAL,
+                             NS_FONT_WEIGHT_NORMAL,
+                             NS_FONT_STRETCH_NORMAL, 0, 0)
+      , mDefaultFixedFont(mozilla::eFamily_monospace, NS_FONT_STYLE_NORMAL,
                           NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
                           NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultSerifFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
-                        NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultSansSerifFont("sans-serif", NS_FONT_STYLE_NORMAL,
+      , mDefaultSerifFont(mozilla::eFamily_serif, NS_FONT_STYLE_NORMAL,
+                          NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
+                          NS_FONT_STRETCH_NORMAL, 0, 0)
+      , mDefaultSansSerifFont(mozilla::eFamily_sans_serif,
+                              NS_FONT_STYLE_NORMAL,
+                              NS_FONT_VARIANT_NORMAL,
+                              NS_FONT_WEIGHT_NORMAL,
+                              NS_FONT_STRETCH_NORMAL, 0, 0)
+      , mDefaultMonospaceFont(mozilla::eFamily_monospace, NS_FONT_STYLE_NORMAL,
                               NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
                               NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultMonospaceFont("monospace", NS_FONT_STYLE_NORMAL,
-                              NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
-                              NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultCursiveFont("cursive", NS_FONT_STYLE_NORMAL,
+      , mDefaultCursiveFont(mozilla::eFamily_cursive, NS_FONT_STYLE_NORMAL,
                             NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
                             NS_FONT_STRETCH_NORMAL, 0, 0)
-      , mDefaultFantasyFont("fantasy", NS_FONT_STYLE_NORMAL,
+      , mDefaultFantasyFont(mozilla::eFamily_fantasy, NS_FONT_STYLE_NORMAL,
                             NS_FONT_VARIANT_NORMAL, NS_FONT_WEIGHT_NORMAL,
                             NS_FONT_STRETCH_NORMAL, 0, 0)
     {}

@@ -721,23 +721,16 @@ gfxFontUtils::MapCharToGlyph(const uint8_t *aCmapBuf, uint32_t aBufLength,
     return gid;
 }
 
-void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& aFontList)
+void gfxFontUtils::ParseFontList(const nsAString& aFamilyList,
+                                 nsTArray<nsString>& aFontList)
 {
     const char16_t kComma = char16_t(',');
     
-    aFontList.Clear();
-    
-    // get the list of single-face font families
-    nsAdoptingString fontlistValue = Preferences::GetString(aPrefName);
-    if (!fontlistValue) {
-        return;
-    }
-
     // append each font name to the list
     nsAutoString fontname;
     const char16_t *p, *p_end;
-    fontlistValue.BeginReading(p);
-    fontlistValue.EndReading(p_end);
+    aFamilyList.BeginReading(p);
+    aFamilyList.EndReading(p_end);
 
      while (p < p_end) {
         const char16_t *nameStart = p;
@@ -752,7 +745,25 @@ void gfxFontUtils::GetPrefsFontList(const char *aPrefName, nsTArray<nsString>& a
         aFontList.AppendElement(fontname);
         ++p;
     }
+}
 
+void gfxFontUtils::AppendPrefsFontList(const char *aPrefName,
+                                       nsTArray<nsString>& aFontList)
+{
+    // get the list of single-face font families
+    nsAdoptingString fontlistValue = Preferences::GetString(aPrefName);
+    if (!fontlistValue) {
+        return;
+    }
+
+    ParseFontList(fontlistValue, aFontList);
+}
+
+void gfxFontUtils::GetPrefsFontList(const char *aPrefName,
+                                    nsTArray<nsString>& aFontList)
+{
+    aFontList.Clear();
+    AppendPrefsFontList(aPrefName, aFontList);
 }
 
 // produce a unique font name that is (1) a valid Postscript name and (2) less

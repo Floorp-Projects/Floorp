@@ -728,8 +728,9 @@ gfxDWriteFontList::GetDefaultFont(const gfxFontStyle *aStyle)
     nsAutoString resolvedName;
 
     // try Arial first
-    if (ResolveFontName(NS_LITERAL_STRING("Arial"), resolvedName)) {
-        return FindFamily(resolvedName);
+    gfxFontFamily *ff;
+    if (ff = FindFamily(NS_LITERAL_STRING("Arial"))) {
+        return ff;
     }
 
     // otherwise, use local default
@@ -737,10 +738,11 @@ gfxDWriteFontList::GetDefaultFont(const gfxFontStyle *aStyle)
     ncm.cbSize = sizeof(ncm);
     BOOL status = ::SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 
                                           sizeof(ncm), &ncm, 0);
+
     if (status) {
-        if (ResolveFontName(nsDependentString(ncm.lfMessageFont.lfFaceName),
-                            resolvedName)) {
-            return FindFamily(resolvedName);
+        ff = FindFamily(nsDependentString(ncm.lfMessageFont.lfFaceName));
+        if (ff) {
+            return ff;
         }
     }
 
@@ -1323,6 +1325,18 @@ gfxFontFamily* gfxDWriteFontList::FindFamily(const nsAString& aFamily)
         DelayedInitFontList();
     }
 
+    nsAutoString keyName(aFamily);
+    BuildKeyNameFromFontName(keyName);
+
+    gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
+    if (ff) {
+        return ff;
+    }
+
+    if (mNonExistingFonts.Contains(keyName)) {
+        return nullptr;
+    }
+
     return gfxPlatformFontList::FindFamily(aFamily);
 }
 
@@ -1335,31 +1349,6 @@ gfxDWriteFontList::GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamily
     }
 
     return gfxPlatformFontList::GetFontFamilyList(aFamilyArray);
-}
-
-bool 
-gfxDWriteFontList::ResolveFontName(const nsAString& aFontName,
-                                   nsAString& aResolvedFontName)
-{
-    if (!mInitialized) {
-        mInitialized = true;
-        DelayedInitFontList();
-    }
-
-    nsAutoString keyName(aFontName);
-    BuildKeyNameFromFontName(keyName);
-
-    gfxFontFamily *ff = mFontSubstitutes.GetWeak(keyName);
-    if (ff) {
-        aResolvedFontName = ff->Name();
-        return true;
-    }
-
-    if (mNonExistingFonts.Contains(keyName)) {
-        return false;
-    }
-
-    return gfxPlatformFontList::ResolveFontName(aFontName, aResolvedFontName);
 }
 
 void

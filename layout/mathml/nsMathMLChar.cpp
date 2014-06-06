@@ -41,6 +41,15 @@ static const float kMaxScaleFactor = 20.0;
 static const float kLargeOpFactor = float(M_SQRT2);
 static const float kIntegralFactor = 2.0;
 
+static void
+NormalizeDefaultFont(nsFont& aFont)
+{
+  if (aFont.fontlist.GetDefaultFontType() != eFamily_none) {
+    aFont.fontlist.Append(aFont.fontlist.GetDefaultFontType());
+    aFont.fontlist.SetDefaultFontType(eFamily_none);
+  }
+}
+
 // -----------------------------------------------------------------------------
 static const nsGlyphCode kNullGlyph = {{{0, 0}}, 0};
 
@@ -61,7 +70,7 @@ class nsGlyphTable {
 public:
   virtual ~nsGlyphTable() {}
 
-  virtual const nsAString&
+  virtual const FontFamilyName&
   FontNameFor(const nsGlyphCode& aGlyphCode) const = 0;
 
   // Getters for the parts
@@ -148,11 +157,10 @@ LoadProperties(const nsString& aName,
 class nsPropertiesTable MOZ_FINAL : public nsGlyphTable {
 public:
   explicit nsPropertiesTable(const nsString& aPrimaryFontName)
-    : mFontName(1) // ensure space for primary font name.
-    , mState(NS_TABLE_STATE_EMPTY)
+    : mState(NS_TABLE_STATE_EMPTY)
   {
     MOZ_COUNT_CTOR(nsPropertiesTable);
-    mFontName.AppendElement(aPrimaryFontName);
+    mGlyphCodeFonts.AppendElement(FontFamilyName(aPrimaryFontName, eUnquotedName));
   }
 
   ~nsPropertiesTable()
@@ -160,17 +168,17 @@ public:
     MOZ_COUNT_DTOR(nsPropertiesTable);
   }
 
-  const nsAString& PrimaryFontName() const
+  const FontFamilyName& PrimaryFontName() const
   {
-    return mFontName[0];
+    return mGlyphCodeFonts[0];
   }
 
-  const nsAString&
+  const FontFamilyName&
   FontNameFor(const nsGlyphCode& aGlyphCode) const MOZ_OVERRIDE
   {
     NS_ASSERTION(!aGlyphCode.IsGlyphID(),
                  "nsPropertiesTable can only access glyphs by code point");
-    return mFontName[aGlyphCode.font];
+    return mGlyphCodeFonts[aGlyphCode.font];
   }
 
   virtual nsGlyphCode ElementAt(gfxContext*   aThebesContext,
@@ -213,10 +221,10 @@ public:
                                   const nsGlyphCode& aGlyph) MOZ_OVERRIDE;
 private:
 
-  // mFontName[0] is the primary font associated to this table. The others 
-  // are possible "external" fonts for glyphs not in the primary font
+  // mGlyphCodeFonts[0] is the primary font associated to this table. The
+  // others are possible "external" fonts for glyphs not in the primary font
   // but which are needed to stretch certain characters in the table
-  nsTArray<nsString> mFontName;
+  nsTArray<FontFamilyName> mGlyphCodeFonts;
 
   // Tri-state variable for error/empty/ready
   int32_t mState;
@@ -257,12 +265,14 @@ nsPropertiesTable::ElementAt(gfxContext*   /* aThebesContext */,
   if (mState == NS_TABLE_STATE_ERROR) return kNullGlyph;
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
-    nsresult rv = LoadProperties(mFontName[0], mGlyphProperties);
+    nsAutoString primaryFontName;
+    mGlyphCodeFonts[0].AppendToString(primaryFontName);
+    nsresult rv = LoadProperties(primaryFontName, mGlyphProperties);
 #ifdef DEBUG
     nsAutoCString uriStr;
     uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
-    LossyAppendUTF16toASCII(mFontName[0], uriStr);
-    uriStr.StripWhitespace(); // that may come from mFontName
+    LossyAppendUTF16toASCII(primaryFontName, uriStr);
+    uriStr.StripWhitespace(); // that may come from mGlyphCodeFonts
     uriStr.AppendLiteral(".properties");
     printf("Loading %s ... %s\n",
             uriStr.get(),
@@ -283,7 +293,7 @@ nsPropertiesTable::ElementAt(gfxContext*   /* aThebesContext */,
       rv = mGlyphProperties->GetStringProperty(key, value);
       if (NS_FAILED(rv)) break;
       Clean(value);
-      mFontName.AppendElement(value); // i.e., mFontName[i] holds this font name
+      mGlyphCodeFonts.AppendElement(FontFamilyName(value, eUnquotedName)); // i.e., mGlyphCodeFonts[i] holds this font name
     }
   }
 
@@ -303,7 +313,7 @@ nsPropertiesTable::ElementAt(gfxContext*   /* aThebesContext */,
     // This is where mGlyphCache is pre-processed to explicitly store all glyph
     // codes as combined pairs of 'code@font', excluding the '@' separator. This
     // means that mGlyphCache[3*k],mGlyphCache[3*k+1] will later be rendered
-    // with mFontName[mGlyphCache[3*k+2]]
+    // with mGlyphCodeFonts[mGlyphCache[3*k+2]]
     // Note: font identifier is internally an ASCII digit to avoid the null
     // char issue
     nsAutoString buffer;
@@ -330,12 +340,12 @@ nsPropertiesTable::ElementAt(gfxContext*   /* aThebesContext */,
         ++i;
         font = value[i] - '0';
         ++i;
-        if (font >= mFontName.Length()) {
+        if (font >= mGlyphCodeFonts.Length()) {
           NS_ERROR("Nonexistent font referenced in glyph table");
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed
-        if (!mFontName[font].Length()) {
+        if (!mGlyphCodeFonts[font].mName.Length()) {
           return kNullGlyph;
         }
       }
@@ -399,11 +409,11 @@ public:
                           char16_t      aChar,
                           bool          aVertical) MOZ_OVERRIDE;
 
-  const nsAString&
+  const FontFamilyName&
   FontNameFor(const nsGlyphCode& aGlyphCode) const MOZ_OVERRIDE {
     NS_ASSERTION(aGlyphCode.IsGlyphID(),
                  "nsOpenTypeTable can only access glyphs by id");
-    return mFontEntry->FamilyName();
+    return mFontFamilyName;
   }
 
   virtual gfxTextRun* MakeTextRun(gfxContext*        aThebesContext,
@@ -424,10 +434,12 @@ public:
 
 private:
   nsRefPtr<gfxFontEntry> mFontEntry;
+  FontFamilyName mFontFamilyName;
   uint32_t mGlyphID;
 
   explicit nsOpenTypeTable(gfxFontEntry* aFontEntry)
-    : mFontEntry(aFontEntry) {
+    : mFontEntry(aFontEntry),
+      mFontFamilyName(aFontEntry->FamilyName(), eUnquotedName) {
     MOZ_COUNT_CTOR(nsOpenTypeTable);
   }
 
@@ -671,9 +683,11 @@ nsGlyphTableList::GetGlyphTableFor(const nsAString& aFamily)
 {
   for (int32_t i = 0; i < PropertiesTableCount(); i++) {
     nsPropertiesTable* glyphTable = PropertiesTableAt(i);
-    const nsAString& fontName = glyphTable->PrimaryFontName();
+    const FontFamilyName& primaryFontName = glyphTable->PrimaryFontName();
+    nsAutoString primaryFontNameStr;
+    primaryFontName.AppendToString(primaryFontNameStr);
     // TODO: would be nice to consider StripWhitespace and other aliasing
-    if (fontName.Equals(aFamily, nsCaseInsensitiveStringComparator())) {
+    if (primaryFontNameStr.Equals(aFamily, nsCaseInsensitiveStringComparator())) {
       return glyphTable;
     }
   }
@@ -944,95 +958,27 @@ ComputeSizeFromParts(nsPresContext* aPresContext,
   return aTargetSize;
 }
 
-// Insert aFallbackFamilies before the first generic family in or at the end
-// of a CSS aFontName.
-static void
-AddFallbackFonts(nsAString& aFontName, const nsAString& aFallbackFamilies)
-{
-  if (aFallbackFamilies.IsEmpty())
-    return;
-
-  if (aFontName.IsEmpty()) {
-    return;
-  }
-
-  static const char16_t kSingleQuote  = char16_t('\'');
-  static const char16_t kDoubleQuote  = char16_t('\"');
-  static const char16_t kComma        = char16_t(',');
-
-  const char16_t *p_begin, *p_end;
-  aFontName.BeginReading(p_begin);
-  aFontName.EndReading(p_end);
-
-  const char16_t *p = p_begin;
-  const char16_t *p_name = nullptr;
-  while (p < p_end) {
-    while (nsCRT::IsAsciiSpace(*p))
-      if (++p == p_end)
-        goto insert;
-
-    p_name = p;
-    if (*p == kSingleQuote || *p == kDoubleQuote) {
-      // quoted font family
-      char16_t quoteMark = *p;
-      if (++p == p_end)
-        goto insert;
-
-      // XXX What about CSS character escapes?
-      while (*p != quoteMark)
-        if (++p == p_end)
-          goto insert;
-
-      while (++p != p_end && *p != kComma)
-        /* nothing */ ;
-
-    } else {
-      // unquoted font family
-      const char16_t *nameStart = p;
-      while (++p != p_end && *p != kComma)
-        /* nothing */ ;
-
-      nsAutoString family;
-      family = Substring(nameStart, p);
-      family.CompressWhitespace(false, true);
-
-      uint8_t generic;
-      nsFont::GetGenericID(family, &generic);
-      if (generic != kGenericFont_NONE)
-        goto insert;
-    }
-
-    ++p; // may advance past p_end
-  }
-
-  aFontName.Append(',');
-  aFontName.Append(aFallbackFamilies);
-  return;
-
-insert:
-  if (p_name) {
-    aFontName.Insert(aFallbackFamilies + NS_LITERAL_STRING(","),
-                     p_name - p_begin);
-  }
-  else { // whitespace or empty
-    aFontName = aFallbackFamilies;
-  }
-}
-
 // Update the font if there is a family change and returns the font group.
 bool
 nsMathMLChar::SetFontFamily(nsPresContext*          aPresContext,
                             const nsGlyphTable*     aGlyphTable,
                             const nsGlyphCode&      aGlyphCode,
-                            const nsAString&        aDefaultFamily,
+                            const FontFamilyList&   aDefaultFamilyList,
                             nsFont&                 aFont,
                             nsRefPtr<gfxFontGroup>* aFontGroup)
 {
-  const nsAString& family =
-    aGlyphCode.font ? aGlyphTable->FontNameFor(aGlyphCode) : aDefaultFamily;
-  if (!*aFontGroup || !family.Equals(aFont.name)) {
+  FontFamilyList glyphCodeFont;
+
+  if (aGlyphCode.font) {
+    glyphCodeFont.Append(aGlyphTable->FontNameFor(aGlyphCode));
+  }
+
+  const FontFamilyList& familyList =
+    aGlyphCode.font ? glyphCodeFont : aDefaultFamilyList;
+
+  if (!*aFontGroup || !(aFont.fontlist == familyList)) {
     nsFont font = aFont;
-    font.name = family;
+    font.fontlist = familyList;
     nsRefPtr<nsFontMetrics> fm;
     aPresContext->DeviceContext()->
       GetMetricsFor(font,
@@ -1042,10 +988,15 @@ nsMathMLChar::SetFontFamily(nsPresContext*          aPresContext,
                     *getter_AddRefs(fm));
     // Set the font if it is an unicode table
     // or if the same family name has been found
+    gfxFont *firstFont = fm->GetThebesFontGroup()->GetFontAt(0);
+    FontFamilyList firstFontList;
+    if (firstFont) {
+      firstFontList.Append(
+        FontFamilyName(firstFont->GetFontEntry()->FamilyName(), eUnquotedName));
+    }
     if (aGlyphTable == &gGlyphTableList->mUnicodeTable ||
-        fm->GetThebesFontGroup()->GetFontAt(0)->GetFontEntry()->
-        FamilyName() == family) {
-      aFont.name = family;
+        firstFontList == familyList) {
+      aFont.fontlist = familyList;
       *aFontGroup = fm->GetThebesFontGroup();
     } else {
       return false; // We did not set the font
@@ -1081,7 +1032,7 @@ public:
                      nscoord              aTargetSize,
                      uint32_t             aStretchHint,
                      nsBoundingMetrics&   aStretchedMetrics,
-                     const nsAString&     aFamilies,
+                     const FontFamilyList&  aFamilyList,
                      bool&              aGlyphFound)
     : mChar(aChar),
       mPresContext(aPresContext),
@@ -1090,21 +1041,21 @@ public:
       mTargetSize(aTargetSize),
       mStretchHint(aStretchHint),
       mBoundingMetrics(aStretchedMetrics),
-      mFamilies(aFamilies),
+      mFamilyList(aFamilyList),
       mTryVariants(true),
       mTryParts(true),
       mGlyphFound(aGlyphFound) {}
 
   static bool
-  EnumCallback(const nsString& aFamily, bool aGeneric, void *aData);
+  EnumCallback(const FontFamilyName& aFamily, bool aGeneric, void *aData);
 
 private:
   bool TryVariants(nsGlyphTable* aGlyphTable,
                    nsRefPtr<gfxFontGroup>* aFontGroup,
-                   const nsAString& aFamily);
+                   const FontFamilyList& aFamilyList);
   bool TryParts(nsGlyphTable* aGlyphTable,
                 nsRefPtr<gfxFontGroup>* aFontGroup,
-                const nsAString& aFamily);
+                const FontFamilyList& aFamilyList);
 
   nsMathMLChar* mChar;
   nsPresContext* mPresContext;
@@ -1114,7 +1065,7 @@ private:
   const uint32_t mStretchHint;
   nsBoundingMetrics& mBoundingMetrics;
   // Font families to search
-  const nsAString& mFamilies;
+  const FontFamilyList& mFamilyList;
 
 public:
   bool mTryVariants;
@@ -1133,11 +1084,12 @@ bool
 nsMathMLChar::
 StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
                                 nsRefPtr<gfxFontGroup>* aFontGroup,
-                                const nsAString& aFamily)
+                                const FontFamilyList& aFamilyList)
 {
   // Use our stretchy style context now that stretching is in progress
   nsStyleContext *sc = mChar->mStyleContext;
   nsFont font = sc->StyleFont()->mFont;
+  NormalizeDefaultFont(font);
 
   bool isVertical = (mDirection == NS_STRETCH_DIRECTION_VERTICAL);
   nscoord oneDevPixel = mPresContext->AppUnitsPerDevPixel();
@@ -1191,7 +1143,7 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
   while ((ch = aGlyphTable->BigOf(mThebesContext, oneDevPixel, *aFontGroup,
                                   uchar, isVertical, size)).Exists()) {
 
-    if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamily, font,
+    if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamilyList, font,
                               aFontGroup)) {
       // if largeopOnly is set, break now
       if (largeopOnly) break;
@@ -1282,10 +1234,11 @@ StretchEnumContext::TryVariants(nsGlyphTable* aGlyphTable,
 bool
 nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
                                            nsRefPtr<gfxFontGroup>* aFontGroup,
-                                           const nsAString& aFamily)
+                                           const FontFamilyList& aFamilyList)
 {
   // Use our stretchy style context now that stretching is in progress
   nsFont font = mChar->mStyleContext->StyleFont()->mFont;
+  NormalizeDefaultFont(font);
 
   // Compute the bounding metrics of all partial glyphs
   nsAutoPtr<gfxTextRun> textRun[4];
@@ -1306,7 +1259,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
                                             *aFontGroup, uchar, isVertical, i);
     chdata[i] = ch;
     if (ch.Exists()) {
-      if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamily, font,
+      if (!mChar->SetFontFamily(mPresContext, aGlyphTable, ch, aFamilyList, font,
                                 aFontGroup))
         return false;
 
@@ -1448,7 +1401,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable* aGlyphTable,
 
 // This is called for each family, whether it exists or not
 bool
-nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
+nsMathMLChar::StretchEnumContext::EnumCallback(const FontFamilyName& aFamily,
                                                bool aGeneric, void *aData)
 {
   StretchEnumContext* context = static_cast<StretchEnumContext*>(aData);
@@ -1457,9 +1410,12 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   // We test with the kNullGlyph
   nsStyleContext *sc = context->mChar->mStyleContext;
   nsFont font = sc->StyleFont()->mFont;
+  NormalizeDefaultFont(font);
   nsRefPtr<gfxFontGroup> fontGroup;
+  FontFamilyList family;
+  family.Append(aFamily);
   if (!aGeneric && !context->mChar->SetFontFamily(context->mPresContext,
-                                                  nullptr, kNullGlyph, aFamily,
+                                                  nullptr, kNullGlyph, family,
                                                   font, &fontGroup))
      return true; // Could not set the family
 
@@ -1477,7 +1433,9 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
     } else {
       // Otherwise try to find a .properties file corresponding to that font
       // family or fallback to the Unicode table.
-      glyphTable = gGlyphTableList->GetGlyphTableFor(aFamily);
+      nsAutoString familyName;
+      aFamily.AppendToString(familyName);
+      glyphTable = gGlyphTableList->GetGlyphTableFor(familyName);
     }
   }
 
@@ -1492,15 +1450,43 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
   // If the unicode table is being used, then search all font families.  If a
   // special table is being used then the font in this family should have the
   // specified glyphs.
-  const nsAString& family = glyphTable == &gGlyphTableList->mUnicodeTable ?
-    context->mFamilies : aFamily;
+  const FontFamilyList& familyList = glyphTable == &gGlyphTableList->mUnicodeTable ?
+    context->mFamilyList : family;
 
   if((context->mTryVariants &&
-      context->TryVariants(glyphTable, &fontGroup, family)) ||
-     (context->mTryParts && context->TryParts(glyphTable, &fontGroup, family)))
+      context->TryVariants(glyphTable, &fontGroup, familyList)) ||
+     (context->mTryParts && context->TryParts(glyphTable,
+                                              &fontGroup,
+                                              familyList)))
     return false; // no need to continue
 
   return true; // true means continue
+}
+
+// insert math fallback families just before the first generic or at the end
+// when no generic present
+static void
+InsertMathFallbacks(FontFamilyList& aFamilyList,
+                    nsTArray<nsString>& aFallbacks)
+{
+  FontFamilyList aMergedList;
+
+  bool inserted = false;
+  const nsTArray<FontFamilyName>& fontlist = aFamilyList.GetFontlist();
+  uint32_t i, num = fontlist.Length();
+  for (i = 0; i < num; i++) {
+    const FontFamilyName& name = fontlist[i];
+    if (!inserted && name.IsGeneric()) {
+      inserted = true;
+      aMergedList.Append(aFallbacks);
+    }
+    aMergedList.Append(name);
+  }
+
+  if (!inserted) {
+    aMergedList.Append(aFallbacks);
+  }
+  aFamilyList = aMergedList;
 }
 
 nsresult
@@ -1524,6 +1510,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   // mStyleContext is a leaf context used only when stretching happens.
   // For the base size, the default font should come from the parent context
   nsFont font = mStyleContext->GetParent()->StyleFont()->mFont;
+  NormalizeDefaultFont(font);
 
   nsRefPtr<nsFontMetrics> fm;
   aPresContext->DeviceContext()->
@@ -1636,22 +1623,33 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   if (!done) { // normal case
     // Use the css font-family but add preferred fallback fonts.
     font = mStyleContext->StyleFont()->mFont;
-    NS_NAMED_LITERAL_CSTRING(defaultKey, "font.mathfont-family");
-    nsAdoptingString fallbackFonts = Preferences::GetString(defaultKey.get());
-    if (!fallbackFonts.IsEmpty()) {
-      AddFallbackFonts(font.name, fallbackFonts);
-    }
+    NormalizeDefaultFont(font);
+
+    // really shouldn't be doing things this way but for now
+    // insert fallbacks into the list
+    nsAutoTArray<nsString, 10> mathFallbacks;
+    gfxFontUtils::GetPrefsFontList("font.mathfont-family", mathFallbacks);
+    InsertMathFallbacks(font.fontlist, mathFallbacks);
+
 
 #ifdef NOISY_SEARCH
+    nsAutoString fontlistStr;
+    font.fontlist.ToString(fontlistStr, false, true);
     printf("Searching in "%s" for a glyph of appropriate size for: 0x%04X:%c\n",
-           font.name, mData[0], mData[0]&0x00FF);
+           NS_ConvertUTF16toUTF8(fontlistStr).get(), mData[0], mData[0]&0x00FF);
 #endif
     StretchEnumContext enumData(this, aPresContext, aThebesContext,
                                 aStretchDirection, targetSize, aStretchHint,
-                                aDesiredStretchSize, font.name, glyphFound);
+                                aDesiredStretchSize, font.fontlist, glyphFound);
     enumData.mTryParts = !largeopOnly;
 
-    font.EnumerateFamilies(StretchEnumContext::EnumCallback, &enumData);
+    const nsTArray<FontFamilyName>& fontlist = font.fontlist.GetFontlist();
+    uint32_t i, num = fontlist.Length();
+    bool next = true;
+    for (i = 0; i < num && next; i++) {
+      const FontFamilyName& name = fontlist[i];
+      next = StretchEnumContext::EnumCallback(name, name.IsGeneric(), &enumData);
+    }
   }
 
   if (!maxWidth) {

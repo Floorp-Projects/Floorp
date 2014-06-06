@@ -557,13 +557,23 @@ nsPresContext::GetFontPrefsForLang(nsIAtom *aLanguage) const
 
       nsAdoptingString value = Preferences::GetString(pref.get());
       if (!value.IsEmpty()) {
-        prefs->mDefaultVariableFont.name.Assign(value);
+        FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
+        FontFamilyType defaultType = defaultVariableName.mType;
+        NS_ASSERTION(defaultType == eFamily_serif ||
+                     defaultType == eFamily_sans_serif,
+                     "default type must be serif or sans-serif");
+        prefs->mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
       }
       else {
         MAKE_FONT_PREF_KEY(pref, "font.default.", langGroup);
         value = Preferences::GetString(pref.get());
         if (!value.IsEmpty()) {
-          prefs->mDefaultVariableFont.name.Assign(value);
+          FontFamilyName defaultVariableName = FontFamilyName::Convert(value);
+          FontFamilyType defaultType = defaultVariableName.mType;
+          NS_ASSERTION(defaultType == eFamily_serif ||
+                       defaultType == eFamily_sans_serif,
+                       "default type must be serif or sans-serif");
+          prefs->mDefaultVariableFont.fontlist = FontFamilyList(defaultType);
         }
       }
     }

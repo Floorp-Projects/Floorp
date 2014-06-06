@@ -934,8 +934,17 @@ public:
         // otherwise we know this char cannot trigger bidi reordering
         return false;
     }
-    
-    // for a given font list pref name, set up a list of font names
+
+    // parse a simple list of font family names into
+    // an array of strings
+    static void ParseFontList(const nsAString& aFamilyList,
+                              nsTArray<nsString>& aFontList);
+
+    // for a given font list pref name, append list of font names
+    static void AppendPrefsFontList(const char *aPrefName,
+                                    nsTArray<nsString>& aFontList);
+
+    // for a given font list pref name, initialize a list of font names
     static void GetPrefsFontList(const char *aPrefName, 
                                  nsTArray<nsString>& aFontList);
 

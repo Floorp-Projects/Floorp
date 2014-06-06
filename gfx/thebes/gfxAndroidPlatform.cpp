@@ -248,22 +248,6 @@ gfxAndroidPlatform::UpdateFontList()
 }
 
 nsresult
-gfxAndroidPlatform::ResolveFontName(const nsAString& aFontName,
-                                    FontResolverCallback aCallback,
-                                    void *aClosure,
-                                    bool& aAborted)
-{
-    nsAutoString resolvedName;
-    if (!gfxPlatformFontList::PlatformFontList()->
-             ResolveFontName(aFontName, resolvedName)) {
-        aAborted = false;
-        return NS_OK;
-    }
-    aAborted = !(*aCallback)(resolvedName, aClosure);
-    return NS_OK;
-}
-
-nsresult
 gfxAndroidPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
 {
     gfxPlatformFontList::PlatformFontList()->GetStandardFamilyName(aFontName, aFamilyName);
@@ -305,11 +289,11 @@ gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
 }
 
 gfxFontGroup *
-gfxAndroidPlatform::CreateFontGroup(const nsAString &aFamilies,
-                               const gfxFontStyle *aStyle,
-                               gfxUserFontSet* aUserFontSet)
+gfxAndroidPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
+                                    const gfxFontStyle *aStyle,
+                                    gfxUserFontSet* aUserFontSet)
 {
-    return new gfxFontGroup(aFamilies, aStyle, aUserFontSet);
+    return new gfxFontGroup(aFontFamilyList, aStyle, aUserFontSet);
 }
 
 FT_Library
