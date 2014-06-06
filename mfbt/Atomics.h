@@ -866,7 +866,6 @@ template<typename T>
 struct IntrinsicAddSub<T*> : public IntrinsicApplyHelper<T*>
 {
   typedef typename IntrinsicApplyHelper<T*>::ValueType ValueType;
-  typedef typename IntrinsicBase<T>::Primitives Primitives;
 
   static ValueType add(ValueType& aPtr, ptrdiff_t aAmount)
   {
@@ -894,7 +893,6 @@ struct AtomicIntrinsics : public IntrinsicMemoryOps<T, Order>,
                           public IntrinsicIncDec<T>
 {
   typedef typename IntrinsicIncDec<T>::ValueType ValueType;
-  typedef typename IntrinsicBase<T>::Primitives Primitives;
 
   static ValueType or_(ValueType& aPtr, T aVal)
   {
