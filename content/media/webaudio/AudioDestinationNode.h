@@ -99,6 +99,7 @@ private:
   AudioChannel mAudioChannel;
   bool mIsOffline;
   bool mHasFinished;
+  bool mAudioChannelAgentPlaying;
 
   TimeStamp mStartedBlockingDueToBeingOnlyNode;
   double mExtraCurrentTime;
