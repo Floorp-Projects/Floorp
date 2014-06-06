@@ -197,7 +197,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  const gfxMatrix& aUserSpaceToImageSpace,
                                  const gfxRect& aSourceRect,
                                  const gfxRect& aSubimage,
-                                 const gfxImageFormat aFormat)
+                                 const SurfaceFormat aFormat)
 {
     PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable",
       js::ProfileEntry::Category::GRAPHICS);
@@ -233,9 +233,9 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       nsRefPtr<gfxASurface> temp = image->GetSubimage(needed);
       drawable = new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     } else {
-      mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+      RefPtr<DrawTarget> target =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
-                                                                     ImageFormatToSurfaceFormat(aFormat));
+                                                                     aFormat);
       if (!target) {
         return nullptr;
       }
@@ -403,7 +403,7 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aSourceRect,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
-                           const gfxImageFormat aFormat,
+                           const SurfaceFormat aFormat,
                            GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {

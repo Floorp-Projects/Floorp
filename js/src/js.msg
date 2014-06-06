@@ -357,7 +357,7 @@ MSG_DEF(JSMSG_ALREADY_HAS_PRAGMA, 303, 2, JSEXN_ERR,      "{0} is being assigned
 MSG_DEF(JSMSG_PAR_ARRAY_BAD_ARG,      304, 0, JSEXN_RANGEERR, "invalid parallel method argument")
 MSG_DEF(JSMSG_REGEXP_RUNTIME_ERROR,   305, 0, JSEXN_INTERNALERR, "an error occurred while executing regular expression")
 MSG_DEF(JSMSG_DEBUG_OPTIMIZED_OUT,    306, 0, JSEXN_ERR, "variable has been optimized out")
-MSG_DEF(JSMSG_UNUSED307,              307, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_NEXT_RETURNED_PRIMITIVE,307, 0, JSEXN_TYPEERR, "iterator.next() returned a non-object value")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_CONFLICT, 308, 0, JSEXN_ERR, "no conflict resolution function provided")
 MSG_DEF(JSMSG_PAR_ARRAY_SCATTER_BOUNDS, 309, 0, JSEXN_ERR, "index in scatter vector out of bounds")
 MSG_DEF(JSMSG_CANT_REPORT_NC_AS_NE,   310, 0, JSEXN_TYPEERR, "proxy can't report a non-configurable own property as non-existent")

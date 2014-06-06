@@ -1961,9 +1961,10 @@ MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
     // and won't be regenerated when SPS state changes.
     spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
+    // Push a C++ frame with non-copy label
     storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfLabel()));
     storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfSpOrScript()));
-    store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
+    store32(Imm32(0),               Address(temp, ProfileEntry::offsetOfLineOrPc()));
     store32(Imm32(ProfileEntry::IS_CPP_ENTRY), Address(temp, ProfileEntry::offsetOfFlags()));
 
     /* Always increment the stack size, whether or not we actually pushed. */

@@ -283,8 +283,7 @@ namespace js {
             js::proxy_SetElement,                                                       \
             js::proxy_GetGenericAttributes,                                             \
             js::proxy_SetGenericAttributes,                                             \
-            js::proxy_DeleteProperty,                                                   \
-            js::proxy_DeleteElement,                                                    \
+            js::proxy_DeleteGeneric,                                                    \
             js::proxy_Watch, js::proxy_Unwatch,                                         \
             js::proxy_Slice,                                                            \
             nullptr,             /* enumerate       */                                  \
@@ -349,10 +348,7 @@ proxy_GetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 extern JS_FRIEND_API(bool)
 proxy_SetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp);
 extern JS_FRIEND_API(bool)
-proxy_DeleteProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<PropertyName*> name,
-                     bool *succeeded);
-extern JS_FRIEND_API(bool)
-proxy_DeleteElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
+proxy_DeleteGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
 
 extern JS_FRIEND_API(void)
 proxy_Trace(JSTracer *trc, JSObject *obj);
