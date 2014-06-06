@@ -23,6 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   const Cu = Components.utils;
   let global = Cu.getGlobalForObject.bind(Cu);
 
+  function checkThrows(f, rgxp, msg) {
+    try {
+      f();
+      ok(false, "Should have thrown: " + msg);
+    } catch (e) {
+      ok(true, "Threw as expected: " + msg);
+      ok(rgxp.test(e), "Message correct: " + e);
+    }
+  }
+
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
                         'String', 'RegExp', 'Error', 'InternalError', 'EvalError',
                         'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError',
@@ -103,6 +113,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testDate();
 
+    testObject();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -128,6 +140,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     "toLocaleDateString", "toLocaleTimeString", "toDateString", "toTimeString",
     "toISOString", "toJSON", "toSource", "toString", "valueOf", "constructor",
     "toGMTString"];
+  gPrototypeProperties['Object'] = /* __proto__ is intentionally excluded here, because
+                                      the JS engine filters it out of getOwnPropertyNames */
+    ["constructor", "toSource", "toString", "toLocaleString", "valueOf", "watch",
+     "unwatch", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
+     "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__"];
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
@@ -148,7 +165,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ok(protoMethods.length > 0, "Need something to test");
     is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
     is(xrayProto, xray.__proto__, "Proto accessors agree");
-    is(Object.getPrototypeOf(xrayProto), iwin.Object.prototype, "proto proto is correct");
+    var protoProto = classname == "Object" ? null : iwin.Object.prototype;
+    is(Object.getPrototypeOf(xrayProto), protoProto, "proto proto is correct");
     for (let name of protoMethods) {
       info("Running tests for property: " + name);
       ok(xrayProto.hasOwnProperty(name), "proto should have the property as own");
@@ -191,6 +209,91 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(Cu.getGlobalForObject(d.toLocaleString), window, "Xray global is correct");
     is(Cu.getGlobalForObject(d.wrappedJSObject.toLocaleString), iwin, "Underlying global is correct");
     is(d.toLocaleString('de-DE'), d.wrappedJSObject.toLocaleString('de-DE'), "Results match");
+  }
+
+  function testObject() {
+    testXray('Object', iwin.Object.create(new iwin.Object()), new iwin.Object(), []);
+
+    // Construct an object full of tricky things.
+    var trickyObject =
+      iwin.eval('new Object({ \
+                   primitiveProp: 42, objectProp: { foo: 2 }, \
+                   xoProp: top.location, hasOwnProperty: 10, \
+                   get getterProp() { return 2; }, \
+                   set setterProp(x) { }, \
+                   get getterSetterProp() { return 3; }, \
+                   set getterSetterProp(x) { }, \
+                   callableProp: function() { }, \
+                   nonXrayableProp: new WeakMap() })');
+
+    // Make sure it looks right under the hood.
+    is(trickyObject.wrappedJSObject.getterProp, 2, "Underlying object has getter");
+    is(Cu.unwaiveXrays(trickyObject.wrappedJSObject.xoProp), top.location, "Underlying object has xo property");
+
+    // Test getOwnPropertyNames.
+    is(Object.getOwnPropertyNames(trickyObject).sort().toSource(),
+       ['objectProp', 'primitiveProp'].toSource(), "getOwnPropertyNames should be filtered correctly");
+
+    // Test iteration and in-place modification. Beware of 'expando', which is the property
+    // we placed on the xray proto.
+    var propCount = 0;
+    for (let prop in trickyObject) {
+      if (prop == 'primitiveProp')
+        trickyObject[prop] = trickyObject[prop] - 10;
+      if (prop != 'expando')
+        trickyObject[prop] = trickyObject[prop];
+      ++propCount;
+    }
+    is(propCount, 3, "Should iterate the correct number of times");
+
+    // Test Object.keys.
+    is(Object.keys(trickyObject).sort().toSource(),
+       ['objectProp', 'primitiveProp'].toSource(), "Object.keys should be filtered correctly");
+
+    // Test getOwnPropertyDescriptor.
+    is(trickyObject.primitiveProp, 32, "primitive prop works");
+    is(trickyObject.objectProp.foo, 2, "object prop works");
+    is(typeof trickyObject.callableProp, 'undefined', "filtering works correctly");
+    is(Object.getOwnPropertyDescriptor(trickyObject, 'primitiveProp').value, 32, "getOwnPropertyDescriptor works");
+    is(Object.getOwnPropertyDescriptor(trickyObject, 'xoProp'), undefined, "filtering works with getOwnPropertyDescriptor");
+
+    // Test defineProperty.
+
+    trickyObject.primitiveSetByXray = 'fourty two';
+    is(trickyObject.primitiveSetByXray, 'fourty two', "Can set primitive correctly over Xray (ready via Xray)");
+    is(trickyObject.wrappedJSObject.primitiveSetByXray, 'fourty two', "Can set primitive correctly over Xray (ready via Waiver)");
+
+    var newContentObject = iwin.eval('new Object({prop: 99, get getterProp() { return 2; }})');
+    trickyObject.objectSetByXray = newContentObject;
+    is(trickyObject.objectSetByXray.prop, 99, "Can set object correctly over Xray (ready via Xray)");
+    is(trickyObject.wrappedJSObject.objectSetByXray.prop, 99, "Can set object correctly over Xray (ready via Waiver)");
+    checkThrows(function() { trickyObject.rejectedProp = {foo: 33}}, /cross-origin object/,
+                "Should reject privileged object property definition");
+
+    // Test JSON.stringify.
+    var jsonStr = JSON.stringify(newContentObject);
+    ok(/prop/.test(jsonStr), "JSON stringification should work: " + jsonStr);
+
+    // Test deletion.
+    delete newContentObject.prop;
+    ok(!newContentObject.hasOwnProperty('prop'), "Deletion should work");
+    ok(!newContentObject.wrappedJSObject.hasOwnProperty('prop'), "Deletion should forward");
+    delete newContentObject.getterProp;
+    ok(newContentObject.wrappedJSObject.hasOwnProperty('getterProp'), "Deletion be no-op for filtered property");
+
+    // We should be able to overwrite an existing accessor prop and convert it
+    // to a value prop.
+    is(trickyObject.wrappedJSObject.getterSetterProp, 3, "Underlying object has getter");
+    is(trickyObject.getterSetterProp, undefined, "Filtering properly over Xray");
+    trickyObject.getterSetterProp = 'redefined';
+    is(trickyObject.getterSetterProp, 'redefined', "Redefinition works");
+    is(trickyObject.wrappedJSObject.getterSetterProp, 'redefined', "Redefinition forwards");
+
+    checkThrows(function() { trickyObject.hasOwnProperty = 33; }, /shadow/,
+                "Should reject shadowing of pre-existing inherited properties over Xrays");
+
+    checkThrows(function() { Object.defineProperty(trickyObject, 'rejectedProp', { get: function() {}}); },
+                /accessor property/, "Should reject accessor property definition");
   }
 
   ]]>
