@@ -1532,10 +1532,8 @@ XRE_XPCShellMain(int argc, char **argv, char **envp)
             return 1;
         }
 
-        // Make the default XPCShell global use a fresh zone (rather than the
-        // System Zone) to improve cross-zone test coverage.
         JS::CompartmentOptions options;
-        options.setZone(JS::FreshZone)
+        options.setZone(JS::SystemZone)
                .setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
