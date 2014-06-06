@@ -88,9 +88,15 @@ bool
 js::intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Value val = args[0];
-    bool isCallable = val.isObject() && val.toObject().isCallable();
-    args.rval().setBoolean(isCallable);
+    args.rval().setBoolean(IsCallable(args[0]));
+    return true;
+}
+
+static bool
+intrinsic_IsConstructor(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setBoolean(IsConstructor(args[0]));
     return true;
 }
 
@@ -757,6 +763,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToInteger",               intrinsic_ToInteger,               1,0),
     JS_FN("ToString",                intrinsic_ToString,                1,0),
     JS_FN("IsCallable",              intrinsic_IsCallable,              1,0),
+    JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
     JS_FN("ThrowError",              intrinsic_ThrowError,              4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("SetScriptHints",          intrinsic_SetScriptHints,          2,0),
