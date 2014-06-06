@@ -242,7 +242,7 @@ class CGNativePropertyHooks(CGThing):
             // would require a run-time load for proper initialization, which would
             // then induce static constructors.  Lots of static constructors.
             extern const NativePropertyHooks sNativePropertyHooks[];
-            """).rstrip()  # BOGUS strip newline from the last line here (!)
+            """)
 
     def define(self):
         if self.descriptor.workers:
@@ -400,9 +400,8 @@ JS_NULL_OBJECT_OPS
             newResolveHook = "JS_ResolveStub"
             enumerateHook = "JS_EnumerateStub"
 
-        return fill(  # BOGUS extra blank line at the top
+        return fill(
             """
-
             static const DOMJSClass Class = {
               { "${name}",
                 ${flags},
@@ -462,9 +461,8 @@ class CGDOMProxyJSClass(CGThing):
         if self.descriptor.interface.identifier.name == "HTMLAllCollection":
             flags.append("JSCLASS_EMULATES_UNDEFINED")
         callHook = LEGACYCALLER_HOOK_NAME if self.descriptor.operations["LegacyCaller"] else 'nullptr'
-        return fill(  # BOGUS extra blank line at the top
+        return fill(
             """
-
             static const DOMJSClass Class = {
               PROXY_CLASS_DEF("${name}",
                               0, /* extra slots */
@@ -636,9 +634,8 @@ class CGInterfaceObjectJSClass(CGThing):
         if len(self.descriptor.interface.namedConstructors) > 0:
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
-        return fill(  # BOGUS extra newline at the top
+        return fill(
             """
-
             static const DOMIfaceAndProtoJSClass InterfaceObjectClass = {
               {
                 "Function",
@@ -1419,8 +1416,7 @@ class CGAbstractClassHook(CGAbstractStaticMethod):
                                         args)
 
     def definition_body_prologue(self):
-        return ("\n"  # BOGUS extra blank line at start of function
-                "%s* self = UnwrapDOMObject<%s>(obj);\n" %
+        return ("%s* self = UnwrapDOMObject<%s>(obj);\n" %
                 (self.descriptor.nativeType, self.descriptor.nativeType))
 
     def definition_body(self):
@@ -1541,9 +1537,8 @@ class CGClassConstructor(CGAbstractStaticMethod):
         else:
             ctorName = self.descriptor.interface.identifier.name
 
-        preamble = fill(  # BOGUS extra blank line at beginning of function body
+        preamble = fill(
             """
-
             JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
             JS::Rooted<JSObject*> obj(cx, &args.callee());
             $*{chromeOnlyCheck}
@@ -1565,7 +1560,7 @@ class CGClassConstructor(CGAbstractStaticMethod):
         callGenerator = CGMethodCall(nativeName, True, self.descriptor,
                                      self._ctor, isConstructor=True,
                                      constructorName=ctorName)
-        return preamble + callGenerator.define()
+        return preamble + "\n" + callGenerator.define()
 
 
 # Encapsulate the constructor in a helper method to share genConstructorBody with CGJSImplMethod.
@@ -1707,9 +1702,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
         return self.generate_code()
 
     def generate_code(self):
-        # BOGUS extra blank line at start of function
         header = dedent("""
-
             if (!vp.isObject()) {
               *bp = false;
               return true;
@@ -1738,8 +1731,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
                     nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
                     *bp = !!qiResult;
                     return true;
-
-                    """,  # BOGUS extra blank line at end of function
+                    """,
                     nativeType=self.descriptor.nativeType,
                     name=self.descriptor.interface.identifier.name))
 
@@ -2355,8 +2347,7 @@ class CGNativeProperties(CGList):
         return ""
 
     def define(self):
-        # BOGUSly strip off a newline
-        return CGList.define(self).rstrip()
+        return CGList.define(self)
 
 
 class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
@@ -2585,15 +2576,13 @@ class CGGetPerInterfaceObject(CGAbstractMethod):
         self.id = idPrefix + "id::" + self.descriptor.name
 
     def definition_body(self):
-        # BOGUS extra blank line at the beginning of the code below
-        # BOGUS - should be a blank line between an if-block and following comment below
         return fill(
             """
-
             /* Make sure our global is sane.  Hopefully we can remove this sometime */
             if (!(js::GetObjectClass(aGlobal)->flags & JSCLASS_DOM_GLOBAL)) {
               return JS::NullPtr();
             }
+
             /* Check to see whether the interface objects are already installed */
             ProtoAndIfaceCache& protoAndIfaceCache = *GetProtoAndIfaceCache(aGlobal);
             if (!protoAndIfaceCache.EntrySlotIfExists(${id})) {
@@ -2621,12 +2610,11 @@ class CGGetProtoObjectMethod(CGGetPerInterfaceObject):
                                          "prototypes::")
 
     def definition_body(self):
-        # BOGUS extra blank line at start of method
         return dedent("""
-
             /* Get the interface prototype object for this class.  This will create the
                object as needed. */
             bool aDefineOnGlobal = true;
+
             """) + CGGetPerInterfaceObject.definition_body(self)
 
 
@@ -2641,11 +2629,10 @@ class CGGetConstructorObjectMethod(CGGetPerInterfaceObject):
             extraArgs=[Argument("bool", "aDefineOnGlobal", "true")])
 
     def definition_body(self):
-        # BOGUS extra blank line at start of method
         return dedent("""
-
             /* Get the interface object for this class.  This will create the object as
                needed. */
+
             """) + CGGetPerInterfaceObject.definition_body(self)
 
 
@@ -2821,8 +2808,7 @@ def InitUnforgeableProperties(descriptor, properties):
     if descriptor.proxy:
         unforgeableProperties = CGGeneric(
             "// Unforgeable properties on proxy-based bindings are stored in an object held\n"
-            "// by the interface prototype object.\n"
-            "\n")  # BOGUS extra blank line
+            "// by the interface prototype object.\n")
     else:
         unforgeableProperties = CGWrapper(
             InitUnforgeablePropertiesOnObject(descriptor, "obj", properties, "nullptr"),
@@ -2858,7 +2844,7 @@ def InitMemberSlots(descriptor, wrapperCache):
     ClearWrapper.
     """
     if not descriptor.interface.hasMembersInSlots():
-        return "\n"  # BOGUS blank line only if this returns empty
+        return ""
     if wrapperCache:
         clearWrapper = "  aCache->ClearWrapper();\n"
     else:
@@ -4220,8 +4206,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                 declType = CGGeneric("nsRefPtr<%s>" % name)
             else:
                 declType = CGGeneric("OwningNonNull<%s>" % name)
-            # BOGUS extra blank line here turns out to be at the end of a block:
-            conversion = indent(CGCallbackTempRoot(name).define()) + "\n"
+            conversion = indent(CGCallbackTempRoot(name).define())
 
             template = wrapObjectTemplate(conversion, type,
                                           "${declName} = nullptr;\n",
@@ -4364,8 +4349,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             if (!${objRef}.Init(&$${val}.toObject())) {
               $*{badType}
             }
-
-            """,  # BOGUS extra blank line
+            """,
             objRef=objRef,
             badType=onFailureBadType(failureCode, type.name).define())
         template = wrapObjectTemplate(template, type, "${declName}.SetNull();\n",
@@ -4454,8 +4438,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                       $*{convert}
                       $*{assign}
                     }
-
-                    """,  # BOGUS extra newline
+                    """,
                     convert=getConversionCode("str"),
                     assign=assignString),
                 declType=declType,
@@ -4595,7 +4578,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
                     assert(isinstance(defaultValue, IDLNullValue))
                     haveObject = "${haveValue} && " + haveObject
                 template = CGIfElseWrapper(haveObject,
-                                           CGGeneric(conversion + "\n"),  # BOGUS extra blank line
+                                           CGGeneric(conversion),
                                            CGGeneric("${declName} = nullptr;\n")).define()
             else:
                 template = conversion
@@ -6358,9 +6341,8 @@ class CGMethodCall(CGThing):
             requiredArgs = requiredArgCount(signature)
 
             if requiredArgs > 0:
-                code = fill(  # BOGUS extra blank line
+                code = fill(
                     """
-
                     if (args.length() < ${requiredArgs}) {
                       return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "${methodName}");
                     }
@@ -6703,13 +6685,12 @@ class CGMethodCall(CGThing):
         overloadCGThings.append(
             CGSwitch("argcount",
                      argCountCases,
-                     # BOGUS extra blank line at end of default block
-                     CGGeneric('return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s");\n\n' %
+                     CGGeneric('return ThrowErrorMessage(cx, MSG_MISSING_ARGUMENTS, "%s");\n' %
                                methodName)))
         overloadCGThings.append(
             CGGeneric('MOZ_CRASH("We have an always-returning default case");\n'
                       'return false;\n'))
-        self.cgRoot = CGWrapper(CGList(overloadCGThings), pre="\n")
+        self.cgRoot = CGList(overloadCGThings)
 
     def define(self):
         return self.cgRoot.define()
@@ -7858,9 +7839,8 @@ class CGEnum(CGThing):
         return len(self.enum.values()) + 1
 
     def declare(self):
-        decl = fill(  # BOGUS extra newline at top
+        decl = fill(
             """
-
             MOZ_BEGIN_ENUM_CLASS(${name}, uint32_t)
               $*{enums}
               EndGuard_
@@ -7874,9 +7854,8 @@ class CGEnum(CGThing):
         return decl + "\n" + strings.declare()
 
     def define(self):
-        strings = fill(  # BOGUS extra newline at top
+        strings = fill(
             """
-
             extern const EnumEntry ${name}[${count}] = {
               $*{entries}
               { nullptr, 0 }
@@ -7886,8 +7865,6 @@ class CGEnum(CGThing):
             count=self.nEnumStrings(),
             entries=''.join('{"%s", %d},\n' % (val, len(val))
                             for val in self.enum.values()))
-        # BOGUS - CGNamespace automatically indents; the extra indent() below causes
-        # the output to be indented 4 spaces.
         return CGNamespace(self.stringsNamespace(),
                            CGGeneric(define=indent(strings))).define()
 
@@ -8265,12 +8242,10 @@ class CGUnionStruct(CGThing):
         selfName = CGUnionStruct.unionTypeName(self.type, self.ownsMembers)
         if self.ownsMembers:
             if traceCases:
-                # BOGUS blank line in default case
                 traceBody = CGSwitch("mType", traceCases,
-                                     default=CGGeneric("\n")).define()
+                                     default=CGGeneric("")).define()
             else:
-                # BOGUS blank line in method
-                traceBody = "\n"
+                traceBody = ""
             methods.append(ClassMethod("TraceUnion", "void",
                                        [Argument("JSTracer*", "trc")],
                                        body=traceBody))
@@ -8715,7 +8690,7 @@ class ClassDestructor(ClassItem):
             """,
             decorators=self.getDecorators(False),
             className=cgClass.getNameString(),
-            body=self.getBody() or "\n")  # BOGUS extra blank line if empty
+            body=self.getBody())
 
 
 class ClassMember(ClassItem):
@@ -8957,8 +8932,7 @@ class CGResolveOwnProperty(CGAbstractStaticMethod):
                                         "bool", args)
 
     def definition_body(self):
-        # BOGUS extra blank line at end of function
-        return "return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc);\n\n"
+        return "return js::GetProxyHandler(obj)->getOwnPropertyDescriptor(cx, wrapper, id, desc);\n"
 
 
 class CGResolveOwnPropertyViaNewresolve(CGAbstractBindingMethod):
@@ -9016,8 +8990,7 @@ class CGEnumerateOwnProperties(CGAbstractStaticMethod):
                                         "EnumerateOwnProperties", "bool", args)
 
     def definition_body(self):
-        # BOGUS extra newline
-        return "return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);\n\n"
+        return "return js::GetProxyHandler(obj)->getOwnPropertyNames(cx, wrapper, props);\n"
 
 
 class CGEnumerateOwnPropertiesViaGetOwnPropertyNames(CGAbstractBindingMethod):
@@ -9524,11 +9497,10 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                                    "  return false;\n"
                                    "}\n"
                                    "if (hasUnforgeable) {\n"
-                                   "  *defined = true;"  # SUPER BOGUS missing newline
+                                   "  *defined = true;\n"
                                    "  bool unused;\n"
                                    "  return js_DefineOwnProperty(cx, ${holder}, id, desc, &unused);\n"
-                                   "}\n"
-                                   "\n")  # BOGUS extra blank line at end of block or method
+                                   "}\n")
             set += CallOnUnforgeableHolder(self.descriptor,
                                            defineOnUnforgeable,
                                            "xpc::WrapperFactory::IsXrayWrapper(proxy)")
@@ -9545,8 +9517,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 $*{callSetter}
 
                 return true;
-
-                """,  # BOGUS extra blank line at end of method
+                """,
                 callSetter=CGProxyNamedSetter(self.descriptor).define())
         else:
             if self.descriptor.supportsNamedProperties():
@@ -9651,12 +9622,10 @@ class CGDOMJSProxyHandler_delete(ClassMethod):
             delete += (namedBody +
                        "if (found) {\n"
                        "  return true;\n"
-                       "}\n\n")  # BOGUS extra blank line
+                       "}\n")
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
                 delete = CGIfWrapper(CGGeneric(delete),
                                      "!HasPropertyOnPrototype(cx, proxy, id)").define()
-        else:
-            delete += "\n"  # BOGUS extra blank line
 
         delete += dedent("""
 
@@ -9789,8 +9758,7 @@ class CGDOMJSProxyHandler_hasOwn(ClassMethod):
                      "\n" +
                      "*bp = found;\n")
             if not self.descriptor.interface.getExtendedAttribute('OverrideBuiltins'):
-                # BOGUS extra blank line at end of block
-                named = CGIfWrapper(CGGeneric(named + "return true;\n\n"),
+                named = CGIfWrapper(CGGeneric(named + "return true;\n"),
                                     "!HasPropertyOnPrototype(cx, proxy, id)").define()
                 named += "*bp = false;\n"
             else:
@@ -10639,8 +10607,6 @@ class CGDictionary(CGThing):
         if self.memberInfo:
             body += "\n".join(self.getMemberDefinition(m).define()
                               for m in self.memberInfo)
-        else:
-            body += "\n"  # BOGUS extra blank line
         body += "\nreturn true;\n"
 
         return ClassMethod("ToObject", "bool", [
@@ -10686,8 +10652,6 @@ class CGDictionary(CGThing):
 
         if memberTraces:
             body += "\n".join(memberTraces)
-        else:
-            body += "\n"  # BOGUS extra newline
 
         return ClassMethod("TraceDictionary", "void", [
             Argument("JSTracer*", "trc"),
@@ -10720,7 +10684,7 @@ class CGDictionary(CGThing):
             "operator=", "void",
             [Argument("const %s&" % self.makeClassName(self.dictionary),
                       "aOther")],
-            body=body.define() or "\n")  # BOGUS blank line when empty
+            body=body.define())
 
     def getStructs(self):
         d = self.dictionary
@@ -12825,10 +12789,6 @@ class CallbackMember(CGNativeMember):
             self.getRetvalInfo(self.retvalType,
                                False)[2]).substitute(replacements)
         type = convertType.define()
-        if type == "":
-            type = "\n"  # BOGUS extra blank line
-        if assignRetval == "":
-            assignRetval = "\n"  # BOGUS extra blank line
         return type + assignRetval
 
     def getArgConversions(self):
@@ -12838,7 +12798,7 @@ class CallbackMember(CGNativeMember):
         argConversions = [self.getArgConversion(i, arg)
                           for i, arg in enumerate(self.originalSig[1])]
         if not argConversions:
-            return "\n\n"  # BOGUS extra blank line
+            return "\n"
 
         # Do them back to front, so our argc modifications will work
         # correctly, because we examine trailing arguments first.
