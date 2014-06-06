@@ -155,15 +155,20 @@ LIRGeneratorX64::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     // protected area reserved for the heap.
     LAllocation ptrAlloc = useRegisterOrNonNegativeConstantAtStart(ptr);
     switch (ins->viewType()) {
-      case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
-      case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
-      case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
+      case Scalar::Int8:
+      case Scalar::Uint8:
+      case Scalar::Int16:
+      case Scalar::Uint16:
+      case Scalar::Int32:
+      case Scalar::Uint32:
         lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterOrConstantAtStart(ins->value()));
         break;
-      case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
+      case Scalar::Float32:
+      case Scalar::Float64:
         lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
         break;
-      default: MOZ_ASSUME_UNREACHABLE("unexpected array type");
+      default:
+        MOZ_ASSUME_UNREACHABLE("unexpected array type");
     }
 
     return add(lir, ins);

@@ -244,13 +244,13 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
         JS_ASSERT(ptrValue >= 0);
         LAllocation ptrAlloc = LAllocation(ptr->toConstant()->vp());
         switch (ins->viewType()) {
-          case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
+          case Scalar::Int8: case Scalar::Uint8:
             // See comment below.
             lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useFixed(ins->value(), eax));
             break;
-          case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
-          case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
-          case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
+          case Scalar::Int16: case Scalar::Uint16:
+          case Scalar::Int32: case Scalar::Uint32:
+          case Scalar::Float32: case Scalar::Float64:
             // See comment below.
             lir = new(alloc()) LAsmJSStoreHeap(ptrAlloc, useRegisterAtStart(ins->value()));
             break;
@@ -260,13 +260,13 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap *ins)
     }
 
     switch (ins->viewType()) {
-      case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
+      case Scalar::Int8: case Scalar::Uint8:
         // See comment for LIRGeneratorX86::useByteOpRegister.
         lir = new(alloc()) LAsmJSStoreHeap(useRegister(ins->ptr()), useFixed(ins->value(), eax));
         break;
-      case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
-      case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
-      case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
+      case Scalar::Int16: case Scalar::Uint16:
+      case Scalar::Int32: case Scalar::Uint32:
+      case Scalar::Float32: case Scalar::Float64:
         // For now, don't allow constant values. The immediate operand
         // affects instruction layout which affects patching.
         lir = new(alloc()) LAsmJSStoreHeap(useRegisterAtStart(ptr), useRegisterAtStart(ins->value()));
@@ -284,14 +284,14 @@ LIRGeneratorX86::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic
     // for AsmJSStoreHeap, and the same concerns apply.
     LStoreTypedArrayElementStatic *lir;
     switch (ins->viewType()) {
-      case ArrayBufferView::TYPE_INT8: case ArrayBufferView::TYPE_UINT8:
-      case ArrayBufferView::TYPE_UINT8_CLAMPED:
+      case Scalar::Int8: case Scalar::Uint8:
+      case Scalar::Uint8Clamped:
         lir = new(alloc()) LStoreTypedArrayElementStatic(useRegister(ins->ptr()),
                                                          useFixed(ins->value(), eax));
         break;
-      case ArrayBufferView::TYPE_INT16: case ArrayBufferView::TYPE_UINT16:
-      case ArrayBufferView::TYPE_INT32: case ArrayBufferView::TYPE_UINT32:
-      case ArrayBufferView::TYPE_FLOAT32: case ArrayBufferView::TYPE_FLOAT64:
+      case Scalar::Int16: case Scalar::Uint16:
+      case Scalar::Int32: case Scalar::Uint32:
+      case Scalar::Float32: case Scalar::Float64:
         lir = new(alloc()) LStoreTypedArrayElementStatic(useRegisterAtStart(ins->ptr()),
                                                          useRegisterAtStart(ins->value()));
         break;

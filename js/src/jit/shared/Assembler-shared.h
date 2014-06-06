@@ -651,14 +651,14 @@ class AsmJSHeapAccess
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // If 'cmp' equals 'offset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
-    AsmJSHeapAccess(uint32_t offset, uint32_t after, ArrayBufferView::ViewType vt,
+    AsmJSHeapAccess(uint32_t offset, uint32_t after, Scalar::Type vt,
                     AnyRegister loadedReg, uint32_t cmp = UINT32_MAX)
       : offset_(offset),
 # if defined(JS_CODEGEN_X86)
         cmpDelta_(cmp == UINT32_MAX ? 0 : offset - cmp),
 # endif
         opLength_(after - offset),
-        isFloat32Load_(vt == ArrayBufferView::TYPE_FLOAT32),
+        isFloat32Load_(vt == Scalar::Float32),
         loadedReg_(loadedReg.code())
     {}
     AsmJSHeapAccess(uint32_t offset, uint8_t after, uint32_t cmp = UINT32_MAX)
