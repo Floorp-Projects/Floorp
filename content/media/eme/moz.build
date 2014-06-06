@@ -1,0 +1,31 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.dom += [
+    'MediaKeyError.h',
+    'MediaKeyMessageEvent.h',
+    'MediaKeyNeededEvent.h',
+    'MediaKeys.h',
+    'MediaKeySession.h',
+]
+
+EXPORTS.mozilla += [
+    'CDMProxy.h',
+]
+
+UNIFIED_SOURCES += [
+    'CDMProxy.cpp',
+    'EMELog.cpp',
+    'MediaKeyError.cpp',
+    'MediaKeyMessageEvent.cpp',
+    'MediaKeyNeededEvent.cpp',
+    'MediaKeys.cpp',
+    'MediaKeySession.cpp',
+]
+
+FINAL_LIBRARY = 'gklayout'
+
+FAIL_ON_WARNINGS = True

@@ -20,6 +20,16 @@
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "mozilla/dom/TextTrackManager.h"
 #include "MediaDecoder.h"
+#include "mozilla/dom/MediaKeys.h"
+
+// Something on Linux #defines None, which is an entry in the
+// MediaWaitingFor enum, so undef it here before including the binfing,
+// so that the build doesn't fail...
+#ifdef None
+#undef None
+#endif
+
+#include "mozilla/dom/HTMLMediaElementBinding.h"
 
 // Define to output information on decoding and painting framerate
 /* #define DEBUG_FRAME_RATE 1 */
@@ -37,6 +47,7 @@ class MediaResource;
 class MediaDecoder;
 class VideoFrameContainer;
 namespace dom {
+class MediaKeys;
 class TextTrack;
 class TimeRanges;
 class WakeLock;
@@ -477,6 +488,22 @@ public:
   }
 
   // XPCOM MozPreservesPitch() is OK
+
+  MediaKeys* GetMediaKeys() const;
+
+  already_AddRefed<Promise> SetMediaKeys(MediaKeys* mediaKeys,
+                                         ErrorResult& aRv);
+  
+  MediaWaitingFor WaitingFor() const;
+
+  mozilla::dom::EventHandlerNonNull* GetOnneedkey();
+  void SetOnneedkey(mozilla::dom::EventHandlerNonNull* listener);
+
+  void DispatchNeedKey(const nsTArray<uint8_t>& aInitData,
+                       const nsAString& aInitDataType);
+
+
+  bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
 
   bool MozAutoplayEnabled() const
   {
@@ -1010,6 +1037,9 @@ protected:
   // Range of time played.
   nsRefPtr<TimeRanges> mPlayed;
 
+  // Encrypted Media Extension media keys.
+  nsRefPtr<MediaKeys> mMediaKeys;
+
   // Stores the time at the start of the current 'played' range.
   double mCurrentPlayRangeStart;
 
@@ -1139,6 +1169,8 @@ protected:
   nsCOMPtr<nsIAudioChannelAgent> mAudioChannelAgent;
 
   nsRefPtr<TextTrackManager> mTextTrackManager;
+
+  MediaWaitingFor mWaitingFor;
 };
 
 } // namespace dom
