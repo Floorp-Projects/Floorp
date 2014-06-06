@@ -1700,12 +1700,7 @@ XMLHttpRequest::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mProxy);
 
-  // Only send readystatechange event when state changed.
-  bool isStateChanged = false;
-  if (mStateData.mReadyState != 4) {
-    isStateChanged = true;
-    mStateData.mReadyState = 4;
-  }
+  mStateData.mReadyState = 4;
 
   if (mProxy->mSeenUploadLoadStart) {
     MOZ_ASSERT(mUpload);
@@ -1726,12 +1721,10 @@ XMLHttpRequest::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
   }
 
   if (mProxy->mSeenLoadStart) {
-    if (isStateChanged) {
-      DispatchPrematureAbortEvent(this, NS_LITERAL_STRING("readystatechange"),
-                                  false, aRv);
-      if (aRv.Failed()) {
-        return;
-      }
+    DispatchPrematureAbortEvent(this, NS_LITERAL_STRING("readystatechange"),
+                                false, aRv);
+    if (aRv.Failed()) {
+      return;
     }
 
     DispatchPrematureAbortEvent(this, NS_LITERAL_STRING("abort"), false, aRv);
