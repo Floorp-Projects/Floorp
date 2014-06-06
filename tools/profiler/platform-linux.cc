@@ -70,6 +70,7 @@
 #include "ProfileEntry.h"
 #include "nsThreadUtils.h"
 #include "TableTicker.h"
+#include "ThreadResponsiveness.h"
 #include "UnwinderThread2.h"
 #if defined(__ARM_EABI__) && defined(MOZ_WIDGET_GONK)
  // Should also work on other Android and ARM Linux, but not tested there yet.
@@ -316,6 +317,8 @@ static void* SignalSender(void* arg) {
           info->Profile()->flush();
           continue;
         }
+
+        info->Profile()->GetThreadResponsiveness()->Update();
 
         // We use sCurrentThreadProfile the ThreadProfile for the
         // thread we're profiling to the signal handler

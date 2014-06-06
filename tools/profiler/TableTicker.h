@@ -136,13 +136,7 @@ class TableTicker: public Sampler {
       return;
     }
 
-    ThreadProfile* profile = new ThreadProfile(aInfo->Name(),
-                                               EntrySize(),
-                                               aInfo->Stack(),
-                                               aInfo->ThreadId(),
-                                               aInfo->GetPlatformData(),
-                                               aInfo->IsMainThread(),
-                                               aInfo->StackTop());
+    ThreadProfile* profile = new ThreadProfile(aInfo, EntrySize());
     aInfo->SetProfile(profile);
   }
 
