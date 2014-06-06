@@ -505,17 +505,10 @@ nsDOMCameraControl::GetFocusDistanceFar(ErrorResult& aRv)
 }
 
 void
-nsDOMCameraControl::SetExposureCompensation(const Optional<double>& aCompensation, ErrorResult& aRv)
+nsDOMCameraControl::SetExposureCompensation(double aCompensation, ErrorResult& aRv)
 {
   MOZ_ASSERT(mCameraControl);
-
-  if (!aCompensation.WasPassed()) {
-    // use NaN to switch the camera back into auto mode
-    aRv = mCameraControl->Set(CAMERA_PARAM_EXPOSURECOMPENSATION, NAN);
-    return;
-  }
-
-  aRv = mCameraControl->Set(CAMERA_PARAM_EXPOSURECOMPENSATION, aCompensation.Value());
+  aRv = mCameraControl->Set(CAMERA_PARAM_EXPOSURECOMPENSATION, aCompensation);
 }
 
 double
