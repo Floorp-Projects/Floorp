@@ -5,6 +5,7 @@ const { emit } = require("sdk/event/core");
 const promise = require("projecteditor/helpers/promise");
 var { registerPlugin, Plugin } = require("projecteditor/plugins/core");
 const { AppProjectEditor } = require("./app-project-editor");
+const OPTION_URL = "chrome://browser/skin/devtools/tool-options.svg";
 
 var AppManagerRenderer = Class({
   extends: Plugin,
@@ -25,20 +26,32 @@ var AppManagerRenderer = Class({
     let {appManagerOpts} = this.host.project;
     let doc = elt.ownerDocument;
     let image = doc.createElement("image");
-    let label = doc.createElement("label");
+    let optionImage = doc.createElement("image");
+    let flexElement = doc.createElement("div");
+    let nameLabel = doc.createElement("span");
+    let statusElement = doc.createElement("div");
 
-    label.className = "project-name-label";
     image.className = "project-image";
+    optionImage.className = "project-options";
+    nameLabel.className = "project-name-label";
+    statusElement.className = "project-status";
+    flexElement.className = "project-flex";
 
     let name = appManagerOpts.name || resource.basename;
     let url = appManagerOpts.iconUrl || "icon-sample.png";
+    let status = appManagerOpts.validationStatus || "unknown";
 
-    label.textContent = name;
+    nameLabel.textContent = name;
     image.setAttribute("src", url);
+    optionImage.setAttribute("src", OPTION_URL);
+    statusElement.setAttribute("status", status)
 
     elt.innerHTML = "";
     elt.appendChild(image);
-    elt.appendChild(label);
+    elt.appendChild(nameLabel);
+    elt.appendChild(flexElement);
+    elt.appendChild(statusElement);
+    elt.appendChild(optionImage);
     return true;
   }
 });
