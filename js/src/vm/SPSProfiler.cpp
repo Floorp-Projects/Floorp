@@ -318,7 +318,8 @@ SPSProfiler::allocProfileString(JSScript *script, JSFunction *maybeFun)
     return cstr;
 }
 
-SPSEntryMarker::SPSEntryMarker(JSRuntime *rt
+SPSEntryMarker::SPSEntryMarker(JSRuntime *rt,
+                               JSScript *script
                                MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
     : profiler(&rt->spsProfiler)
 {
@@ -328,8 +329,9 @@ SPSEntryMarker::SPSEntryMarker(JSRuntime *rt
         return;
     }
     size_before = *profiler->size_;
-    profiler->push("js::RunScript", this, nullptr, nullptr, /* copy = */ false);
+    profiler->push("js::RunScript", nullptr, script, script->code(), /* copy = */ false);
 }
+
 SPSEntryMarker::~SPSEntryMarker()
 {
     if (profiler != nullptr) {
