@@ -445,6 +445,27 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
         }
       }
       break;
+    } case PANGESTURE_INPUT: {
+      const PanGestureInput& panInput = aEvent.AsPanGestureInput();
+      bool inOverscrolledApzc = false;
+      nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(panInput.mPanStartPoint,
+                                                            &inOverscrolledApzc);
+      if (apzc) {
+        if (panInput.mType == PanGestureInput::PANGESTURE_START ||
+            panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMSTART) {
+          BuildOverscrollHandoffChain(apzc);
+        }
+        apzc->GetGuid(aOutTargetGuid);
+        GetInputTransforms(apzc, transformToApzc, transformToGecko);
+        PanGestureInput inputForApzc(panInput);
+        ApplyTransform(&(inputForApzc.mPanStartPoint), transformToApzc);
+        result = apzc->ReceiveInputEvent(inputForApzc);
+        if (panInput.mType == PanGestureInput::PANGESTURE_END ||
+            panInput.mType == PanGestureInput::PANGESTURE_MOMENTUMEND) {
+          ClearOverscrollHandoffChain();
+        }
+      }
+      break;
     } case PINCHGESTURE_INPUT: {
       const PinchGestureInput& pinchInput = aEvent.AsPinchGestureInput();
       bool inOverscrolledApzc = false;

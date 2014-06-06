@@ -19,11 +19,13 @@ namespace mozilla {
 enum InputType
 {
   MULTITOUCH_INPUT,
+  PANGESTURE_INPUT,
   PINCHGESTURE_INPUT,
   TAPGESTURE_INPUT
 };
 
 class MultiTouchInput;
+class PanGestureInput;
 class PinchGestureInput;
 class TapGestureInput;
 
@@ -56,6 +58,7 @@ public:
   Modifiers modifiers;
 
   INPUTDATA_AS_CHILD_TYPE(MultiTouchInput, MULTITOUCH_INPUT)
+  INPUTDATA_AS_CHILD_TYPE(PanGestureInput, PANGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(PinchGestureInput, PINCHGESTURE_INPUT)
   INPUTDATA_AS_CHILD_TYPE(TapGestureInput, TAPGESTURE_INPUT)
 
@@ -182,6 +185,79 @@ public:
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
+};
+
+/**
+ * Encapsulation class for pan events, can be used off-main-thread.
+ * These events are currently only used for scrolling on desktop.
+ */
+class PanGestureInput : public InputData
+{
+public:
+  enum PanGestureType
+  {
+    // MayStart: Dispatched before any actual panning has occurred but when a
+    // pan gesture is probably about to start, for example when the user
+    // starts touching the touchpad. Should interrupt any ongoing APZ
+    // animation and can be used to trigger scrollability indicators (e.g.
+    // flashing overlay scrollbars).
+    PANGESTURE_MAYSTART,
+
+    // Cancelled: Dispatched after MayStart when no pan gesture is going to
+    // happen after all, for example when the user lifts their fingers from a
+    // touchpad without having done any scrolling.
+    PANGESTURE_CANCELLED,
+
+    // Start: A pan gesture is starting.
+    // For devices that do not support the MayStart event type, this event can
+    // be used to interrupt ongoing APZ animations.
+    PANGESTURE_START,
+
+    // Pan: The actual pan motion by mPanDisplacement.
+    PANGESTURE_PAN,
+
+    // End: The pan gesture has ended, for example because the user has lifted
+    // their fingers from a touchpad after scrolling.
+    // Any potential momentum events fire after this event.
+    PANGESTURE_END,
+
+    // The following momentum event types are used in order to control the pan
+    // momentum animation. Using these instead of our own animation ensures
+    // that the animation curve is OS native and that the animation stops
+    // reliably if it is cancelled by the user.
+
+    // MomentumStart: Dispatched between the End event of the actual
+    // user-controlled pan, and the first MomentumPan event of the momentum
+    // animation.
+    PANGESTURE_MOMENTUMSTART,
+
+    // MomentumPan: The actual momentum motion by mPanDisplacement.
+    PANGESTURE_MOMENTUMPAN,
+
+    // MomentumEnd: The momentum animation has ended, for example because the
+    // momentum velocity has gone below the stopping threshold, or because the
+    // user has stopped the animation by putting their fingers on a touchpad.
+    PANGESTURE_MOMENTUMEND
+  };
+
+  PanGestureInput(PanGestureType aType,
+                  uint32_t aTime,
+                  TimeStamp aTimeStamp,
+                  const ScreenPoint& aPanStartPoint,
+                  const ScreenPoint& aPanDisplacement,
+                  Modifiers aModifiers)
+    : InputData(PANGESTURE_INPUT, aTime, aTimeStamp, aModifiers),
+      mType(aType),
+      mPanStartPoint(aPanStartPoint),
+      mPanDisplacement(aPanDisplacement)
+  {
+  }
+
+  PanGestureType mType;
+  ScreenPoint mPanStartPoint;
+
+  // Only non-zero if mType is PANGESTURE_PAN or PANGESTURE_MOMENTUMPAN.
+  ScreenPoint mPanDisplacement;
 };
 
 /**
