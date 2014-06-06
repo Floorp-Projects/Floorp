@@ -161,17 +161,6 @@ gfxQtPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
 }
 
 bool
-gfxQtPlatform::SupportsOffMainThreadCompositing()
-{
-#if defined(MOZ_X11) && !defined(NIGHTLY_BUILD)
-  return (PR_GetEnv("MOZ_USE_OMTC") != nullptr) ||
-         (PR_GetEnv("MOZ_OMTC_ENABLED") != nullptr);
-#else
-  return true;
-#endif
-}
-
-bool
 gfxQtPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags)
 {
     // check for strange format flags
