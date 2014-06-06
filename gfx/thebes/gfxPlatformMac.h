@@ -35,15 +35,12 @@ public:
     mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 
-    nsresult ResolveFontName(const nsAString& aFontName,
-                             FontResolverCallback aCallback,
-                             void *aClosure, bool& aAborted);
-
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName);
 
-    gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
-                                  const gfxFontStyle *aStyle,
-                                  gfxUserFontSet *aUserFontSet);
+    gfxFontGroup*
+    CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                    const gfxFontStyle *aStyle,
+                    gfxUserFontSet *aUserFontSet);
 
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName);

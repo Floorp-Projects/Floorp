@@ -43,13 +43,9 @@ public:
 
     virtual nsresult UpdateFontList() MOZ_OVERRIDE;
 
-    virtual nsresult ResolveFontName(const nsAString& aFontName,
-                                     FontResolverCallback aCallback,
-                                     void *aClosure, bool& aAborted) MOZ_OVERRIDE;
-
     virtual nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) MOZ_OVERRIDE;
 
-    virtual gfxFontGroup *CreateFontGroup(const nsAString &aFamilies,
+    virtual gfxFontGroup *CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                                           const gfxFontStyle *aStyle,
                                           gfxUserFontSet* aUserFontSet) MOZ_OVERRIDE;
 

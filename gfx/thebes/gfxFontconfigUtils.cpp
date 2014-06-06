@@ -777,38 +777,6 @@ gfxFontconfigUtils::GetStandardFamilyName(const nsAString& aFontName, nsAString&
     return rv;
 }
 
-nsresult
-gfxFontconfigUtils::ResolveFontName(const nsAString& aFontName,
-                                    gfxPlatform::FontResolverCallback aCallback,
-                                    void *aClosure,
-                                    bool& aAborted)
-{
-    aAborted = false;
-
-    nsresult rv = UpdateFontListInternal();
-    if (NS_FAILED(rv))
-        return rv;
-
-    NS_ConvertUTF16toUTF8 fontname(aFontName);
-    // Sometimes, the font has two or more names (e.g., "Sazanami Gothic" has
-    // Japanese localized name).  We should not resolve to a single name
-    // because different names sometimes have different behavior. e.g., with
-    // the default settings of "Sazanami" on Fedora Core 5, the non-localized
-    // name uses anti-alias, but the localized name uses it.  So, we should
-    // check just whether the font is existing, without resolving to regular
-    // name.
-    //
-    // The family names in mAliasForMultiFonts are names understood by
-    // fontconfig.  The actual font to which they resolve depends on the
-    // entire match pattern.  That info is not available here, but there
-    // will be a font so leave the resolving to the gfxFontGroup.
-    if (IsExistingFamily(fontname) ||
-        mAliasForMultiFonts.Contains(fontname, gfxIgnoreCaseCStringComparator()))
-        aAborted = !(*aCallback)(aFontName, aClosure);
-
-    return NS_OK;
-}
-
 bool
 gfxFontconfigUtils::IsExistingFamily(const nsCString& aFamilyName)
 {

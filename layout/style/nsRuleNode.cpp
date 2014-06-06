@@ -3295,7 +3295,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     float devPerCSS =
       (float)nsPresContext::AppUnitsPerCSSPixel() /
       aPresContext->DeviceContext()->UnscaledAppUnitsPerDevPixel();
-    if (LookAndFeel::GetFont(fontID, systemFont.name, fontStyle, devPerCSS)) {
+    nsAutoString systemFontName;
+    if (LookAndFeel::GetFont(fontID, systemFontName, fontStyle, devPerCSS)) {
+      systemFontName.Trim("\"'");
+      systemFont.fontlist = FontFamilyList(systemFontName, eUnquotedName);
+      systemFont.fontlist.SetDefaultFontType(eFamily_none);
       systemFont.style = fontStyle.style;
       systemFont.systemFont = fontStyle.systemFont;
       systemFont.variant = NS_FONT_VARIANT_NORMAL;
@@ -3344,11 +3348,16 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
     if (aGenericFontID == kGenericFont_NONE) {
-      // only bother appending fallback fonts if this isn't a fallback generic font itself
-      if (!aFont->mFont.name.IsEmpty())
-        aFont->mFont.name.Append((char16_t)',');
-      // defaultVariableFont.name should always be "serif" or "sans-serif".
-      aFont->mFont.name.Append(defaultVariableFont->name);
+      uint32_t len = defaultVariableFont->fontlist.Length();
+      FontFamilyType generic = defaultVariableFont->fontlist.FirstGeneric();
+      NS_ASSERTION(len == 1 &&
+                   (generic == eFamily_serif || generic == eFamily_sans_serif),
+                   "default variable font must be a single serif or sans-serif");
+      if (len == 1 && generic != eFamily_none) {
+        aFont->mFont.fontlist.SetDefaultFontType(generic);
+      }
+    } else {
+      aFont->mFont.fontlist.SetDefaultFontType(eFamily_none);
     }
     aFont->mFont.systemFont = false;
     // Technically this is redundant with the code below, but it's good
@@ -3357,19 +3366,19 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     aFont->mGenericID = aGenericFontID;
   }
   else if (eCSSUnit_System_Font == familyValue->GetUnit()) {
-    aFont->mFont.name = systemFont.name;
+    aFont->mFont.fontlist = systemFont.fontlist;
     aFont->mFont.systemFont = true;
     aFont->mGenericID = kGenericFont_NONE;
   }
   else if (eCSSUnit_Inherit == familyValue->GetUnit() ||
            eCSSUnit_Unset == familyValue->GetUnit()) {
     aCanStoreInRuleTree = false;
-    aFont->mFont.name = aParentFont->mFont.name;
+    aFont->mFont.fontlist = aParentFont->mFont.fontlist;
     aFont->mFont.systemFont = aParentFont->mFont.systemFont;
     aFont->mGenericID = aParentFont->mGenericID;
   }
   else if (eCSSUnit_Initial == familyValue->GetUnit()) {
-    aFont->mFont.name = defaultVariableFont->name;
+    aFont->mFont.fontlist = defaultVariableFont->fontlist;
     aFont->mFont.systemFont = defaultVariableFont->systemFont;
     aFont->mGenericID = kGenericFont_NONE;
   }
@@ -3904,14 +3913,14 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // the optimization with a non-null aStartStruct?
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
   if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
-    font->mFont.name.Truncate();
     const FontFamilyList* fontlist = familyValue->GetFontFamilyListValue();
-    nsStyleUtil::AppendEscapedCSSFontFamilyList(*fontlist, font->mFont.name);
+    FontFamilyList& fl = font->mFont.fontlist;
+    fl = *fontlist;
 
     // extract the first generic in the fontlist, if exists
     FontFamilyType fontType = fontlist->FirstGeneric();
 
-    // if only a generic, set the generic type
+    // if only a single generic, set the generic type
     if (fontlist->Length() == 1) {
       switch (fontType) {
         case eFamily_serif:
@@ -3940,18 +3949,16 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
     // If we aren't allowed to use document fonts, then we are only entitled
     // to use the user's default variable-width font and fixed-width font
     if (!useDocumentFonts) {
-
       switch (fontType) {
         case eFamily_monospace:
-          font->mFont.name.AssignLiteral("monospace");
+          fl = FontFamilyList(eFamily_monospace);
           generic = kGenericFont_monospace;
           break;
         case eFamily_moz_fixed:
-          font->mFont.name.AssignLiteral("-moz-fixed");
+          fl = FontFamilyList(eFamily_moz_fixed);
           generic = kGenericFont_moz_fixed;
-          break;
         default:
-          font->mFont.name.Truncate();
+          fl.Clear();
           generic = kGenericFont_NONE;
           break;
       }

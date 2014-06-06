@@ -238,7 +238,7 @@ private:
   SetFontFamily(nsPresContext*          aPresContext,
                 const nsGlyphTable*     aGlyphTable,
                 const nsGlyphCode&      aGlyphCode,
-                const nsAString&        aDefaultFamily,
+                const mozilla::FontFamilyList& aDefaultFamily,
                 nsFont&                 aFont,
                 nsRefPtr<gfxFontGroup>* aFontGroup);
 

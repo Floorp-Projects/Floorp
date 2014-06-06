@@ -1225,85 +1225,10 @@ PrepareSortPattern(FcPattern *aPattern, double aFallbackSize,
  ** gfxPangoFontGroup
  **/
 
-struct FamilyCallbackData {
-    FamilyCallbackData(nsTArray<nsString> *aFcFamilyList,
-                       gfxUserFontSet *aUserFontSet)
-        : mFcFamilyList(aFcFamilyList), mUserFontSet(aUserFontSet)
-    {
-    }
-    nsTArray<nsString> *mFcFamilyList;
-    const gfxUserFontSet *mUserFontSet;
-};
-
-static int
-FFRECountHyphens (const nsAString &aFFREName)
-{
-    int h = 0;
-    int32_t hyphen = 0;
-    while ((hyphen = aFFREName.FindChar('-', hyphen)) >= 0) {
-        ++h;
-        ++hyphen;
-    }
-    return h;
-}
-
-static bool
-FamilyCallback (const nsAString& fontName, const nsACString& genericName,
-                bool aUseFontSet, void *closure)
-{
-    FamilyCallbackData *data = static_cast<FamilyCallbackData*>(closure);
-    nsTArray<nsString> *list = data->mFcFamilyList;
-
-    // We ignore prefs that have three hypens since they are X style prefs.
-    if (genericName.Length() && FFRECountHyphens(fontName) >= 3)
-        return true;
-
-    if (!list->Contains(fontName)) {
-        // The family properties of FcPatterns for @font-face fonts have a
-        // namespace to identify them among system fonts.  (see
-        // FONT_FACE_FAMILY_PREFIX.)
-        //
-        // Earlier versions of this code allowed the CSS family name to match
-        // either the @font-face family or the system font family, so both
-        // were added here. This was in accordance with earlier versions of
-        // the W3C specifications regarding @font-face.
-        //
-        // The current (2011-02-27) draft of CSS3 Fonts says
-        //
-        // (Section 4.2: Font family: the font-family descriptor):
-        // "If the font family name is the same as a font family available in
-        // a given user's environment, it effectively hides the underlying
-        // font for documents that use the stylesheet."
-        //
-        // (Section 5: Font matching algorithm)
-        // "... the user agent attempts to find the family name among fonts
-        // defined via @font-face rules and then among available system fonts,
-        // .... If a font family defined via @font-face rules contains only
-        // invalid font data, it should be considered as if a font was present
-        // but contained an empty character map; matching a platform font with
-        // the same name must not occur in this case."
-        //
-        // Therefore, for names present in the user font set, this code no
-        // longer includes the family name for matching against system fonts.
-        //
-        const gfxUserFontSet *userFontSet = data->mUserFontSet;
-        if (aUseFontSet && genericName.Length() == 0 &&
-            userFontSet && userFontSet->HasFamily(fontName)) {
-            nsAutoString userFontName =
-                NS_LITERAL_STRING(FONT_FACE_FAMILY_PREFIX) + fontName;
-            list->AppendElement(userFontName);
-        } else {
-            list->AppendElement(fontName);
-        }
-    }
-
-    return true;
-}
-
-gfxPangoFontGroup::gfxPangoFontGroup (const nsAString& families,
-                                      const gfxFontStyle *aStyle,
-                                      gfxUserFontSet *aUserFontSet)
-    : gfxFontGroup(families, aStyle, aUserFontSet),
+gfxPangoFontGroup::gfxPangoFontGroup(const FontFamilyList& aFontFamilyList,
+                                     const gfxFontStyle *aStyle,
+                                     gfxUserFontSet *aUserFontSet)
+    : gfxFontGroup(aFontFamilyList, aStyle, aUserFontSet),
       mPangoLanguage(GuessPangoLanguage(aStyle->language))
 {
     // This language is passed to the font for shaping.
@@ -1323,19 +1248,26 @@ gfxPangoFontGroup::~gfxPangoFontGroup()
 gfxFontGroup *
 gfxPangoFontGroup::Copy(const gfxFontStyle *aStyle)
 {
-    return new gfxPangoFontGroup(mFamilies, aStyle, mUserFontSet);
+    return new gfxPangoFontGroup(mFamilyList, aStyle, mUserFontSet);
 }
 
-// An array of family names suitable for fontconfig
 void
-gfxPangoFontGroup::GetFcFamilies(nsTArray<nsString> *aFcFamilyList,
-                                 nsIAtom *aLanguage)
+gfxPangoFontGroup::FindPlatformFont(const nsAString& fontName,
+                                    bool aUseFontSet,
+                                    void *aClosure)
 {
-    FamilyCallbackData data(aFcFamilyList, mUserFontSet);
-    // Leave non-existing fonts in the list so that fontconfig can get the
-    // best match.
-    ForEachFontInternal(mFamilies, aLanguage, true, false, true,
-                        FamilyCallback, &data);
+    nsTArray<nsString> *list = static_cast<nsTArray<nsString>*>(aClosure);
+
+    if (!list->Contains(fontName)) {
+        // names present in the user fontset are not matched against system fonts
+        if (aUseFontSet && mUserFontSet && mUserFontSet->HasFamily(fontName)) {
+            nsAutoString userFontName =
+                NS_LITERAL_STRING(FONT_FACE_FAMILY_PREFIX) + fontName;
+            list->AppendElement(userFontName);
+        } else {
+            list->AppendElement(fontName);
+        }
+    }
 }
 
 gfxFcFont *
@@ -1393,8 +1325,8 @@ gfxPangoFontGroup::MakeFontSet(PangoLanguage *aLang, gfxFloat aSizeAdjustFactor,
     }
 
     nsAutoTArray<nsString, 20> fcFamilyList;
-    GetFcFamilies(&fcFamilyList,
-                  langGroup ? langGroup.get() : mStyle.language.get());
+    EnumerateFontList(langGroup ? langGroup.get() : mStyle.language.get(),
+                      &fcFamilyList);
 
     // To consider: A fontset cache here could be helpful.
 
@@ -1692,7 +1624,7 @@ gfxPangoFontGroup::GetFTLibrary()
         // likely to be also used elsewhere.
         gfxFontStyle style;
         nsRefPtr<gfxPangoFontGroup> fontGroup =
-            new gfxPangoFontGroup(NS_LITERAL_STRING("sans-serif"),
+            new gfxPangoFontGroup(FontFamilyList(eFamily_sans_serif),
                                   &style, nullptr);
 
         gfxFcFont *font = fontGroup->GetBaseFont();

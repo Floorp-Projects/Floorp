@@ -24,10 +24,10 @@ typedef struct FT_LibraryRec_  *FT_Library;
 
 class gfxPangoFontGroup : public gfxFontGroup {
 public:
-    gfxPangoFontGroup (const nsAString& families,
-                       const gfxFontStyle *aStyle,
-                       gfxUserFontSet *aUserFontSet);
-    virtual ~gfxPangoFontGroup ();
+    gfxPangoFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
+                      const gfxFontStyle *aStyle,
+                      gfxUserFontSet *aUserFontSet);
+    virtual ~gfxPangoFontGroup();
 
     virtual gfxFontGroup *Copy(const gfxFontStyle *aStyle);
 
@@ -70,9 +70,6 @@ private:
     gfxFloat mSizeAdjustFactor;
     PangoLanguage *mPangoLanguage;
 
-    void GetFcFamilies(nsTArray<nsString> *aFcFamilyList,
-                       nsIAtom *aLanguage);
-
     // @param aLang [in] language to use for pref fonts and system font
     //        resolution, or nullptr to guess a language from the gfxFontStyle.
     // @param aMatchPattern [out] if non-nullptr, will return the pattern used.
@@ -89,6 +86,10 @@ private:
             GetBaseFontSet();
         return mSizeAdjustFactor;
     }
+
+    virtual void FindPlatformFont(const nsAString& aName,
+                                  bool aUseFontSet,
+                                  void *aClosure);
 
     friend class gfxSystemFcFontEntry;
     static FT_Library GetFTLibrary();
