@@ -5,33 +5,6 @@
 
 package org.mozilla.gecko.webapp;
 
-import org.mozilla.gecko.ActivityHandlerHelper;
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
-import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.ActivityResultHandler;
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.NativeEventListener;
-import org.mozilla.gecko.util.NativeJSObject;
-import org.mozilla.gecko.util.ThreadUtils;
-import org.mozilla.gecko.WebappAllocator;
-
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.Bitmap;
-import android.net.Uri;
-import android.util.Log;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -40,6 +13,25 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.ActivityHandlerHelper;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.util.ActivityResultHandler;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.util.Log;
 
 public class EventListener implements NativeEventListener  {
 
