@@ -351,6 +351,7 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         containerLayer->SetScrollHandoffParentId(attrs.scrollParentId());
         containerLayer->SetPreScale(attrs.preXScale(), attrs.preYScale());
         containerLayer->SetInheritedScale(attrs.inheritedXScale(), attrs.inheritedYScale());
+        containerLayer->SetBackgroundColor(attrs.backgroundColor().value());
         break;
       }
       case Specific::TColorLayerAttributes: {
