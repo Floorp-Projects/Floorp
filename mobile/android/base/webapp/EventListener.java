@@ -42,8 +42,6 @@ public class EventListener implements GeckoEventListener {
 
     private static final String LOGTAG = "GeckoWebappEventListener";
 
-    private EventListener() { }
-
     private static EventListener mEventListener;
 
     private static EventListener getEventListener() {
@@ -53,30 +51,24 @@ public class EventListener implements GeckoEventListener {
         return mEventListener;
     }
 
-    private static void registerEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().registerEventListener(event, EventListener.getEventListener());
+    public void registerEvents() {
+        EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher(); 
+        dispatcher.registerEventListener("Webapps:Preinstall", this);
+        dispatcher.registerEventListener("Webapps:InstallApk", this);
+        dispatcher.registerEventListener("Webapps:Postinstall", this);
+        dispatcher.registerEventListener("Webapps:Open", this);
+        dispatcher.registerEventListener("Webapps:Uninstall", this);
+        dispatcher.registerEventListener("Webapps:GetApkVersions", this);
     }
 
-    private static void unregisterEventListener(String event) {
-        GeckoAppShell.getEventDispatcher().unregisterEventListener(event, EventListener.getEventListener());
-    }
-
-    public static void registerEvents() {
-        registerEventListener("Webapps:Preinstall");
-        registerEventListener("Webapps:InstallApk");
-        registerEventListener("Webapps:Postinstall");
-        registerEventListener("Webapps:Open");
-        registerEventListener("Webapps:Uninstall");
-        registerEventListener("Webapps:GetApkVersions");
-    }
-
-    public static void unregisterEvents() {
-        unregisterEventListener("Webapps:Preinstall");
-        unregisterEventListener("Webapps:InstallApk");
-        unregisterEventListener("Webapps:Postinstall");
-        unregisterEventListener("Webapps:Open");
-        unregisterEventListener("Webapps:Uninstall");
-        unregisterEventListener("Webapps:GetApkVersions");
+    public void unregisterEvents() {
+        EventDispatcher dispatcher = GeckoAppShell.getEventDispatcher(); 
+        dispatcher.unregisterEventListener("Webapps:Preinstall", this);
+        dispatcher.unregisterEventListener("Webapps:InstallApk", this);
+        dispatcher.unregisterEventListener("Webapps:Postinstall", this);
+        dispatcher.unregisterEventListener("Webapps:Open", this);
+        dispatcher.unregisterEventListener("Webapps:Uninstall", this);
+        dispatcher.unregisterEventListener("Webapps:GetApkVersions", this);
     }
 
     @Override
