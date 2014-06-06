@@ -160,6 +160,11 @@ public:
                                     HandleObject wrapper, HandleObject holder,
                                     HandleId id, MutableHandle<JSPropertyDescriptor> desc);
 
+    bool delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp) {
+        *bp = true;
+        return true;
+    }
+
     virtual void preserveWrapper(JSObject *target) = 0;
 
     static bool set(JSContext *cx, HandleObject wrapper, HandleObject receiver, HandleId id,
@@ -305,6 +310,8 @@ public:
     virtual bool resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper, HandleObject wrapper,
                                     HandleObject holder, HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) MOZ_OVERRIDE;
+
+    bool delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp);
 
     bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
                         MutableHandle<JSPropertyDescriptor> desc,
@@ -648,6 +655,28 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                JS_GetPropertyDescriptorById(cx, holder, id, desc);
     }
 
+    return true;
+}
+
+bool
+JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp)
+{
+    RootedObject holder(cx, ensureHolder(cx, wrapper));
+
+    // If we're using Object Xrays, we allow callers to attempt to delete any
+    // property from the underlying object that they are able to resolve. Note
+    // that this deleting may fail if the property is non-configurable.
+    bool isObjectInstance = getProtoKey(holder) == JSProto_Object && !isPrototype(holder);
+    if (isObjectInstance) {
+        RootedObject target(cx, getTargetObject(wrapper));
+        JSAutoCompartment ac(cx, target);
+        Rooted<JSPropertyDescriptor> desc(cx);
+        if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
+            return false;
+        if (desc.object())
+            return JS_DeletePropertyById2(cx, target, id, bp);
+    }
+    *bp = true;
     return true;
 }
 
@@ -2337,8 +2366,8 @@ XrayWrapper<Base, Traits>::delete_(JSContext *cx, HandleObject wrapper,
         JSAutoCompartment ac(cx, expando);
         return JS_DeletePropertyById2(cx, expando, id, bp);
     }
-    *bp = true;
-    return true;
+
+    return Traits::singleton.delete_(cx, wrapper, id, bp);
 }
 
 template <typename Base, typename Traits>
