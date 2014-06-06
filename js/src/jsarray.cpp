@@ -850,17 +850,16 @@ AddLengthProperty(ExclusiveContext *cx, HandleObject obj)
 }
 
 #if JS_HAS_TOSOURCE
-
-static bool
-array_toSource(JSContext *cx, unsigned argc, Value *vp)
+MOZ_ALWAYS_INLINE bool
+IsArray(HandleValue v)
 {
-    JS_CHECK_RECURSION(cx, return false);
-    CallArgs args = CallArgsFromVp(argc, vp);
+    return v.isObject() && v.toObject().is<ArrayObject>();
+}
 
-    if (!args.thisv().isObject()) {
-        ReportIncompatible(cx, args);
-        return false;
-    }
+MOZ_ALWAYS_INLINE bool
+array_toSource_impl(JSContext *cx, CallArgs args)
+{
+    JS_ASSERT(IsArray(args.thisv()));
 
     Rooted<JSObject*> obj(cx, &args.thisv().toObject());
     RootedValue elt(cx);
@@ -926,6 +925,13 @@ array_toSource(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+static bool
+array_toSource(JSContext *cx, unsigned argc, Value *vp)
+{
+    JS_CHECK_RECURSION(cx, return false);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsArray, array_toSource_impl>(cx, args);
+}
 #endif
 
 struct EmptySeparatorOp
