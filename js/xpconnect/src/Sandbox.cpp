@@ -458,6 +458,8 @@ CloneNonReflectors(JSContext *cx, MutableHandleValue val)
         Maybe<JSAutoCompartment> ac;
         if (val.isObject()) {
             ac.construct(cx, &val.toObject());
+        } else if (val.isString() && !JS_WrapValue(cx, val)) {
+            return false;
         }
 
         if (!buffer.write(cx, val,
