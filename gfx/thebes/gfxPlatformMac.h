@@ -72,6 +72,8 @@ public:
 private:
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 
+    virtual bool SupportsOffMainThreadCompositing();
+
     // read in the pref value for the lower threshold on font anti-aliasing
     static uint32_t ReadAntiAliasingThreshold();
 

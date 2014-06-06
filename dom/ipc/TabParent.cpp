@@ -1892,9 +1892,9 @@ TabParent::GetWidget() const
 bool
 TabParent::UseAsyncPanZoom()
 {
-  return gfxPlatform::UsesOffMainThreadCompositing() &&
-         gfxPrefs::AsyncPanZoomEnabled() &&
-         GetScrollingBehavior() == ASYNC_PAN_ZOOM;
+  bool usingOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
+  return (usingOffMainThreadCompositing && gfxPrefs::AsyncPanZoomEnabled() &&
+          GetScrollingBehavior() == ASYNC_PAN_ZOOM);
 }
 
 nsEventStatus
