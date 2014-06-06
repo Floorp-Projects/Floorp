@@ -292,7 +292,6 @@ public:
   // documents?  Need to double-check the spec here.
   nsresult SetEventHandler(nsIAtom *aName,
                            const nsAString& aFunc,
-                           uint32_t aLanguage,
                            bool aDeferCompilation,
                            bool aPermitUntrustedEvents,
                            dom::Element* aElement);
