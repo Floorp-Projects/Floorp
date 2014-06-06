@@ -510,6 +510,9 @@ gfxPlatform::Shutdown()
 /* static */ void
 gfxPlatform::ShutdownLayersIPC()
 {
+    if (!gPlatform) {
+      return;
+    }
     MOZ_ASSERT(!gPlatform->mAlreadyShutDownLayersIPC);
     if (UsesOffMainThreadCompositing() &&
         XRE_GetProcessType() == GeckoProcessType_Default)
