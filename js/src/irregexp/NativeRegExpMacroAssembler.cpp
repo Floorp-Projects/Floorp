@@ -96,9 +96,11 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpS
             savedNonVolatileRegisters.add(reg);
     }
 
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM)
     // ARM additionally requires that the link register be saved.
     savedNonVolatileRegisters.add(Register::FromCode(Registers::lr));
+#elif defined(JS_CODEGEN_MIPS)
+    savedNonVolatileRegisters.add(Register::FromCode(Registers::ra));
 #endif
 
     masm.jump(&entry_label_);
@@ -393,8 +395,10 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
 
         // Save registers before calling C function
         RegisterSet volatileRegs = RegisterSet::Volatile();
-#ifdef JS_CODEGEN_ARM
+#if defined(JS_CODEGEN_ARM)
         volatileRegs.add(Register::FromCode(Registers::lr));
+#elif defined(JS_CODEGEN_MIPS)
+        volatileRegs.add(Register::FromCode(Registers::ra));
 #endif
         volatileRegs.takeUnchecked(temp0);
         volatileRegs.takeUnchecked(temp1);
@@ -815,7 +819,7 @@ NativeRegExpMacroAssembler::CheckBitInTable(uint8_t *table, Label *on_bit_set)
     masm.and32(current_character, temp1);
 
     masm.load8ZeroExtend(BaseIndex(temp0, temp1, TimesOne), temp0);
-    masm.branchTest32(Assembler::NotEqual, temp0, temp0, BranchOrBacktrack(on_bit_set));
+    masm.branchTest32(Assembler::NonZero, temp0, temp0, BranchOrBacktrack(on_bit_set));
 }
 
 void
@@ -1228,7 +1232,11 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(jschar type, Label* on_no
 bool
 NativeRegExpMacroAssembler::CanReadUnaligned()
 {
+#if defined(JS_CODEGEN_MIPS)
+    return false;
+#else
     return true;
+#endif
 }
 
 const uint8_t

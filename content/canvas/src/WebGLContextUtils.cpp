@@ -362,6 +362,64 @@ WebGLContext::ErrorName(GLenum error)
     }
 }
 
+const char*
+WebGLContext::EnumName(GLenum glenum)
+{
+    switch (glenum) {
+#define XX(x) case LOCAL_GL_##x: return #x
+        XX(ALPHA);
+        XX(ATC_RGB);
+        XX(ATC_RGBA_EXPLICIT_ALPHA);
+        XX(ATC_RGBA_INTERPOLATED_ALPHA);
+        XX(COMPRESSED_RGBA_PVRTC_2BPPV1);
+        XX(COMPRESSED_RGBA_PVRTC_4BPPV1);
+        XX(COMPRESSED_RGBA_S3TC_DXT1_EXT);
+        XX(COMPRESSED_RGBA_S3TC_DXT3_EXT);
+        XX(COMPRESSED_RGBA_S3TC_DXT5_EXT);
+        XX(COMPRESSED_RGB_PVRTC_2BPPV1);
+        XX(COMPRESSED_RGB_PVRTC_4BPPV1);
+        XX(COMPRESSED_RGB_S3TC_DXT1_EXT);
+        XX(DEPTH_COMPONENT);
+        XX(DEPTH_COMPONENT16);
+        XX(DEPTH_COMPONENT32);
+        XX(DEPTH_STENCIL);
+        XX(DEPTH24_STENCIL8);
+        XX(ETC1_RGB8_OES);
+        XX(FLOAT);
+        XX(HALF_FLOAT);
+        XX(LUMINANCE);
+        XX(LUMINANCE_ALPHA);
+        XX(RGB);
+        XX(RGB16F);
+        XX(RGB32F);
+        XX(RGBA);
+        XX(RGBA16F);
+        XX(RGBA32F);
+        XX(SRGB);
+        XX(SRGB_ALPHA);
+        XX(TEXTURE_2D);
+        XX(TEXTURE_3D);
+        XX(TEXTURE_CUBE_MAP);
+        XX(TEXTURE_CUBE_MAP_NEGATIVE_X);
+        XX(TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        XX(TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        XX(TEXTURE_CUBE_MAP_POSITIVE_X);
+        XX(TEXTURE_CUBE_MAP_POSITIVE_Y);
+        XX(TEXTURE_CUBE_MAP_POSITIVE_Z);
+        XX(UNSIGNED_BYTE);
+        XX(UNSIGNED_INT);
+        XX(UNSIGNED_INT_24_8);
+        XX(UNSIGNED_SHORT);
+        XX(UNSIGNED_SHORT_4_4_4_4);
+        XX(UNSIGNED_SHORT_5_5_5_1);
+        XX(UNSIGNED_SHORT_5_6_5);
+#undef XX
+    }
+
+    return "[Unknown enum name]";
+}
+
+
 bool
 WebGLContext::IsTextureFormatCompressed(GLenum format)
 {
