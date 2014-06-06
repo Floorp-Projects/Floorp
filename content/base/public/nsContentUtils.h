@@ -2027,6 +2027,22 @@ public:
    */
   static bool IsAutocompleteEnabled(nsIDOMHTMLInputElement* aInput);
 
+  enum AutocompleteAttrState MOZ_ENUM_TYPE(uint8_t)
+  {
+    eAutocompleteAttrState_Unknown = 1,
+    eAutocompleteAttrState_Invalid,
+    eAutocompleteAttrState_Valid,
+  };
+  /**
+   * Parses the value of the autocomplete attribute into aResult, ensuring it's
+   * composed of valid tokens, otherwise the value "" is used.
+   * Note that this method is used for form fields, not on a <form> itself.
+   *
+   * @return whether aAttr was valid and can be cached.
+   */
+  static AutocompleteAttrState SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
+                                                          nsAString& aResult);
+
   /**
    * This will parse aSource, to extract the value of the pseudo attribute
    * with the name specified in aName. See
@@ -2166,6 +2182,9 @@ private:
   static void* AllocClassMatchingInfo(nsINode* aRootNode,
                                       const nsString* aClasses);
 
+  static AutocompleteAttrState InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrVal,
+                                                                  nsAString& aResult);
+
   static nsIXPConnect *sXPConnect;
 
   static nsIScriptSecurityManager *sSecurityManager;
@@ -2225,6 +2244,7 @@ private:
   static uint32_t sHandlingInputTimeout;
   static bool sIsPerformanceTimingEnabled;
   static bool sIsResourceTimingEnabled;
+  static bool sIsExperimentalAutocompleteEnabled;
 
   static nsHtml5StringParser* sHTMLFragmentParser;
   static nsIParser* sXMLFragmentParser;

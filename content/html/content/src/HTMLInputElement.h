@@ -21,6 +21,7 @@
 #include "nsIFilePicker.h"
 #include "nsIContentPrefService2.h"
 #include "mozilla/Decimal.h"
+#include "nsContentUtils.h"
 
 class nsDOMFileList;
 class nsIRadioGroupContainer;
@@ -1268,6 +1269,7 @@ protected:
    * @see nsIFormControl.h (specifically NS_FORM_INPUT_*)
    */
   uint8_t                  mType;
+  nsContentUtils::AutocompleteAttrState mAutocompleteAttrState;
   bool                     mDisabledChanged     : 1;
   bool                     mValueChanged        : 1;
   bool                     mCheckedChanged      : 1;
