@@ -6605,6 +6605,7 @@ DispatchPointerFromMouseOrTouch(PresShell* aShell,
       event.tiltX = touch->tiltX;
       event.tiltY = touch->tiltY;
       event.time = touchEvent->time;
+      event.timeStamp = touchEvent->timeStamp;
       event.mFlags = touchEvent->mFlags;
       event.button = WidgetMouseEvent::eLeftButton;
       event.buttons = WidgetMouseEvent::eLeftButtonFlag;

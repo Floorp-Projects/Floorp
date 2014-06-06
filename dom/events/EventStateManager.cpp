@@ -2181,6 +2181,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
+  event.timeStamp = aEvent->timeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -2220,6 +2221,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
+  event.timeStamp = aEvent->timeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -4357,6 +4359,7 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.modifiers = aEvent->modifiers;
     event.buttons = aEvent->buttons;
     event.time = aEvent->time;
+    event.timeStamp = aEvent->timeStamp;
     event.mFlags.mNoContentDispatch = notDispatchToContents;
     event.button = aEvent->button;
     event.inputSource = aEvent->inputSource;
