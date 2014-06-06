@@ -230,7 +230,8 @@ VideoData* VideoData::Create(VideoInfo& aInfo,
 
   // The following situations could be triggered by invalid input
   if (aPicture.width <= 0 || aPicture.height <= 0) {
-    NS_WARNING("Empty picture rect");
+    // In debug mode, makes the error more noticeable
+    MOZ_ASSERT(false, "Empty picture rect");
     return nullptr;
   }
   if (!ValidatePlane(aBuffer.mPlanes[0]) || !ValidatePlane(aBuffer.mPlanes[1]) ||
