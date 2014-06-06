@@ -39,13 +39,18 @@ log.addAppender(new Log.ConsoleAppender(new Log.BasicFormatter()));
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsManager",
                                   "resource://gre/modules/FxAccountsManager.jsm",
                                   "FxAccountsManager");
+Cu.import("resource://gre/modules/FxAccountsCommon.js");
 #else
 log.warn("The FxAccountsManager is only functional in B2G at this time.");
 var FxAccountsManager = null;
+var ONVERIFIED_NOTIFICATION = null;
 #endif
 
 function FxAccountsService() {
   Services.obs.addObserver(this, "quit-application-granted", false);
+  if (ONVERIFIED_NOTIFICATION) {
+    Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION, false);
+  }
 
   // Maintain interface parity with Identity.jsm and MinimalIdentity.jsm
   this.RP = this;
@@ -61,8 +66,20 @@ FxAccountsService.prototype = {
 
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case null:
+        // Paranoia against matching null ONVERIFIED_NOTIFICATION
+        break;
+      case ONVERIFIED_NOTIFICATION:
+        log.debug("Received " + ONVERIFIED_NOTIFICATION + "; firing request()s");
+        for (let [rpId,] of this._rpFlows) {
+          this.request(rpId);
+        }
+        break;
       case "quit-application-granted":
         Services.obs.removeObserver(this, "quit-application-granted");
+        if (ONVERIFIED_NOTIFICATION) {
+          Services.obs.removeObserver(this, ONVERIFIED_NOTIFICATION);
+        }
         break;
     }
   },
