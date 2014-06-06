@@ -137,15 +137,7 @@ struct Zone : public JS::shadow::Zone,
     void setPreservingCode(bool preserving) { gcPreserveCode_ = preserving; }
     bool isPreservingCode() const { return gcPreserveCode_; }
 
-    bool canCollect() {
-        // Zones cannot be collected while in use by other threads.
-        if (usedByExclusiveThread)
-            return false;
-        JSRuntime *rt = runtimeFromAnyThread();
-        if (rt->isAtomsZone(this) && rt->exclusiveThreadsPresent())
-            return false;
-        return true;
-    }
+    bool canCollect();
 
     enum GCState {
         NoGC,
@@ -306,10 +298,12 @@ class ZonesIter
         end = rt->gc.zones.end();
 
         if (selector == SkipAtoms) {
-            JS_ASSERT(rt->isAtomsZone(*it));
+            MOZ_ASSERT(atAtomsZone(rt));
             it++;
         }
     }
+
+    bool atAtomsZone(JSRuntime *rt);
 
     bool done() const { return it == end; }
 

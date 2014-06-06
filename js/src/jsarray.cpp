@@ -337,10 +337,10 @@ DeleteArrayElement(JSContext *cx, HandleObject obj, double index, bool *succeede
         return true;
     }
 
-    if (index <= UINT32_MAX)
-        return JSObject::deleteElement(cx, obj, uint32_t(index), succeeded);
-
-    return JSObject::deleteByValue(cx, obj, DoubleValue(index), succeeded);
+    RootedId id(cx);
+    if (!ToId(cx, index, &id))
+        return false;
+    return JSObject::deleteGeneric(cx, obj, id, succeeded);
 }
 
 /* ES6 20130308 draft 9.3.5 */
@@ -1140,7 +1140,7 @@ array_toString(JSContext *cx, unsigned argc, Value *vp)
     if (!JSObject::getProperty(cx, obj, obj, cx->names().join, &join))
         return false;
 
-    if (!js_IsCallable(join)) {
+    if (!IsCallable(join)) {
         JSString *str = JS_BasicObjectToString(cx, obj);
         if (!str)
             return false;
@@ -2992,6 +2992,7 @@ static const JSFunctionSpec array_static_methods[] = {
     JS_SELF_HOSTED_FN("some",        "ArrayStaticSome",  2,0),
     JS_SELF_HOSTED_FN("reduce",      "ArrayStaticReduce", 2,0),
     JS_SELF_HOSTED_FN("reduceRight", "ArrayStaticReduceRight", 2,0),
+    JS_SELF_HOSTED_FN("from",        "ArrayFrom", 3,0),
     JS_FN("of",                 array_of,           0,0),
 
 #ifdef ENABLE_PARALLEL_JS
