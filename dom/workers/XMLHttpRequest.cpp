@@ -280,9 +280,7 @@ private:
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
   {
-    if (mXMLHttpRequestPrivate->SendInProgress()) {
-      mXMLHttpRequestPrivate->Unpin();
-    }
+    mXMLHttpRequestPrivate->Unpin();
 
     return true;
   }
@@ -356,9 +354,7 @@ class LoadStartDetectionRunnable MOZ_FINAL : public nsRunnable,
         aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, true);
       }
 
-      if (mXMLHttpRequestPrivate->SendInProgress()) {
-        mXMLHttpRequestPrivate->Unpin();
-      }
+      mXMLHttpRequestPrivate->Unpin();
 
       return true;
     }
@@ -1750,10 +1746,6 @@ XMLHttpRequest::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
     }
 
     mProxy->mSeenLoadStart = false;
-  }
-
-  if (mRooted) {
-    Unpin();
   }
 }
 

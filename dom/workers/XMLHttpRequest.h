@@ -264,12 +264,6 @@ public:
     return mMozSystem;
   }
 
-  bool
-  SendInProgress() const
-  {
-    return mRooted;
-  }
-
 private:
   XMLHttpRequest(WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequest();
@@ -289,6 +283,12 @@ private:
   DispatchPrematureAbortEvent(EventTarget* aTarget,
                               const nsAString& aEventType, bool aUploadTarget,
                               ErrorResult& aRv);
+
+  bool
+  SendInProgress() const
+  {
+    return mRooted;
+  }
 
   void
   SendInternal(const nsAString& aStringBody,
