@@ -28,8 +28,13 @@
 // Remove unsafe builtin functions.
 Object.defineProperty = null; // See bug 988416.
 
-// Cache builtin functions so using them doesn't require cloning the whole object they're 
+// Cache builtin functions so using them doesn't require cloning the whole object they're
 // installed on.
+//
+// WARNING: Do not make std_ references to builtin constructors (like Array and
+// Object) below. Setting `var std_Array = Array;`, for instance, would cause
+// the entire Array constructor, including its prototype and methods, to be
+// cloned into content compartments.
 var std_isFinite = isFinite;
 var std_isNaN = isNaN;
 var std_Array_indexOf = ArrayIndexOf;
