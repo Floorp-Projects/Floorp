@@ -796,6 +796,8 @@ TEST_F(AsyncPanZoomControllerTester, Fling) {
     EXPECT_GT(pointOut.y, lastPoint.y);
     lastPoint = pointOut;
   }
+
+  apzc->Destroy();
 }
 
 TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
@@ -823,6 +825,8 @@ TEST_F(AsyncPanZoomControllerTester, OverScrollPanning) {
   ApzcPan(apzc, tm, time, touchStart, touchEnd);
   apzc->SampleContentTransformForFrame(testStartTime+TimeDuration::FromMilliseconds(1000), &viewTransformOut, pointOut);
   EXPECT_EQ(ScreenPoint(0, 90), pointOut);
+
+  apzc->Destroy();
 }
 
 TEST_F(AsyncPanZoomControllerTester, ShortPress) {

@@ -307,6 +307,7 @@ private:
 
   static void PrefChanged(const char* aPref, void* aClosure);
   static double GetVolumeScale();
+  static bool GetFirstStream();
   static cubeb* GetCubebContext();
   static cubeb* GetCubebContextUnlocked();
   static uint32_t GetCubebLatency();
@@ -423,6 +424,7 @@ private:
 
   StreamState mState;
   bool mNeedsStart; // needed in case Start() is called before cubeb is open
+  bool mIsFirst;
 
   // This mutex protects the static members below.
   static StaticMutex sMutex;

@@ -1049,6 +1049,7 @@ static bool
 EnableSPSProfilingWithSlowAssertions(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setUndefined();
 
     if (cx->runtime()->spsProfiler.enabled()) {
         // If profiling already enabled with slow assertions disabled,
@@ -1070,15 +1071,16 @@ EnableSPSProfilingWithSlowAssertions(JSContext *cx, unsigned argc, jsval *vp)
     cx->runtime()->spsProfiler.enableSlowAssertions(true);
     cx->runtime()->spsProfiler.enable(true);
 
-    args.rval().setUndefined();
     return true;
 }
 
 static bool
 DisableSPSProfiling(JSContext *cx, unsigned argc, jsval *vp)
 {
+    CallArgs args = CallArgsFromVp(argc, vp);
     if (cx->runtime()->spsProfiler.installed())
         cx->runtime()->spsProfiler.enable(false);
+    args.rval().setUndefined();
     return true;
 }
 

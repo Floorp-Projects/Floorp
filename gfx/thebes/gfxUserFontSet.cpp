@@ -12,7 +12,6 @@
 #include "gfxPlatform.h"
 #include "nsUnicharUtils.h"
 #include "nsNetUtil.h"
-#include "nsICacheService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIPrincipal.h"
 #include "gfxFontConstants.h"
@@ -863,7 +862,7 @@ gfxUserFontSet::UserFontCache::Flusher::Observe(nsISupports* aSubject,
         return NS_OK;
     }
 
-    if (!strcmp(aTopic, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID)) {
+    if (!strcmp(aTopic, "cacheservice:empty-cache")) {
         sUserFonts->Clear();
     } else if (!strcmp(aTopic, "last-pb-context-exited")) {
         sUserFonts->EnumerateEntries(Entry::RemoveIfPrivate, nullptr);
@@ -917,7 +916,7 @@ gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry *aFontEntry)
             mozilla::services::GetObserverService();
         if (obs) {
             Flusher *flusher = new Flusher;
-            obs->AddObserver(flusher, NS_CACHESERVICE_EMPTYCACHE_TOPIC_ID,
+            obs->AddObserver(flusher, "cacheservice:empty-cache",
                              false);
             obs->AddObserver(flusher, "last-pb-context-exited", false);
             obs->AddObserver(flusher, "xpcom-shutdown", false);

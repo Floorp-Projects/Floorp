@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.sync.stage;
 
-import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
@@ -31,8 +30,7 @@ public class FennecTabsServerSyncStage extends ServerSyncStage {
 
   @Override
   protected Repository getLocalRepository() {
-    final ClientsDataDelegate clientsDelegate = session.getClientsDelegate();
-    return new FennecTabsRepository(clientsDelegate.getClientName(), clientsDelegate.getAccountGUID());
+    return new FennecTabsRepository(session.getClientsDelegate());
   }
 
   @Override

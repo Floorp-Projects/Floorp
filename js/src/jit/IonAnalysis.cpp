@@ -1201,6 +1201,9 @@ jit::BuildDominatorTree(MIRGraph &graph)
         MBasicBlock *child = *i;
         MBasicBlock *parent = child->immediateDominator();
 
+        // Domininace is defined such that blocks always dominate themselves.
+        child->addNumDominated(1);
+
         // If the block only self-dominates, it has no definite parent.
         if (child == parent)
             continue;
@@ -1208,15 +1211,14 @@ jit::BuildDominatorTree(MIRGraph &graph)
         if (!parent->addImmediatelyDominatedBlock(child))
             return false;
 
-        // An additional +1 for the child block.
-        parent->addNumDominated(child->numDominated() + 1);
+        parent->addNumDominated(child->numDominated());
     }
 
 #ifdef DEBUG
     // If compiling with OSR, many blocks will self-dominate.
     // Without OSR, there is only one root block which dominates all.
     if (!graph.osrBlock())
-        JS_ASSERT(graph.entryBlock()->numDominated() == graph.numBlocks() - 1);
+        JS_ASSERT(graph.entryBlock()->numDominated() == graph.numBlocks());
 #endif
     // Now, iterate through the dominator tree and annotate every
     // block with its index in the pre-order traversal of the
@@ -1431,12 +1433,14 @@ AssertDominatorTree(MIRGraph &graph)
     size_t i = graph.numBlocks();
     size_t totalNumDominated = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+        JS_ASSERT(block->dominates(*block));
+
         MBasicBlock *idom = block->immediateDominator();
         JS_ASSERT(idom->dominates(*block));
         JS_ASSERT(idom == *block || idom->id() < block->id());
 
         if (idom == *block) {
-            totalNumDominated += block->numDominated() + 1;
+            totalNumDominated += block->numDominated();
         } else {
             bool foundInParent = false;
             for (size_t j = 0; j < idom->numImmediatelyDominatedBlocks(); j++) {
@@ -1448,18 +1452,18 @@ AssertDominatorTree(MIRGraph &graph)
             JS_ASSERT(foundInParent);
         }
 
-        size_t numDominated = 0;
+        size_t numDominated = 1;
         for (size_t j = 0; j < block->numImmediatelyDominatedBlocks(); j++) {
             MBasicBlock *dom = block->getImmediatelyDominatedBlock(j);
             JS_ASSERT(block->dominates(dom));
             JS_ASSERT(dom->id() > block->id());
             JS_ASSERT(dom->immediateDominator() == *block);
 
-            numDominated += dom->numDominated() + 1;
+            numDominated += dom->numDominated();
         }
         JS_ASSERT(block->numDominated() == numDominated);
-        JS_ASSERT(block->numDominated() + 1 <= i);
-        JS_ASSERT(block->numSuccessors() != 0 || block->numDominated() == 0);
+        JS_ASSERT(block->numDominated() <= i);
+        JS_ASSERT(block->numSuccessors() != 0 || block->numDominated() == 1);
         i--;
     }
     JS_ASSERT(i == 0);
@@ -1532,7 +1536,7 @@ jit::AssertExtendedGraphCoherency(MIRGraph &graph)
 struct BoundsCheckInfo
 {
     MBoundsCheck *check;
-    uint32_t validUntil;
+    uint32_t validEnd;
 };
 
 typedef HashMap<uint32_t,
@@ -1556,11 +1560,11 @@ FindDominatingBoundsCheck(BoundsCheckMap &checks, MBoundsCheck *check, size_t in
     // See the comment in ValueNumberer::findDominatingDef.
     HashNumber hash = BoundsCheckHashIgnoreOffset(check);
     BoundsCheckMap::Ptr p = checks.lookup(hash);
-    if (!p || index > p->value().validUntil) {
+    if (!p || index >= p->value().validEnd) {
         // We didn't find a dominating bounds check.
         BoundsCheckInfo info;
         info.check = check;
-        info.validUntil = index + check->block()->numDominated();
+        info.validEnd = index + check->block()->numDominated();
 
         if(!checks.put(hash, info))
             return nullptr;

@@ -14,7 +14,6 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/GroupRule.h"
-#include "mozilla/Preferences.h"
 #include "nsIDOMCSSConditionRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSFontFeatureValuesRule.h"
@@ -634,11 +633,6 @@ public:
   NS_DECL_NSIDOMCSSSUPPORTSRULE
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
-
-  static bool PrefEnabled()
-  {
-    return Preferences::GetBool("layout.css.supports-rule.enabled");
-  }
 
 protected:
   bool mUseGroup;

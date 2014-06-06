@@ -272,7 +272,14 @@ Target.prototype = {
   },
 
   _send: function target_send(data) {
-    shell.sendEvent(this.frame, 'developer-hud-update', Cu.cloneInto(data, this.frame));
+    let frame = this.frame;
+
+    let systemapp = document.querySelector('#systemapp');
+    if (this.frame === systemapp) {
+      frame = getContentWindow();
+    }
+
+    shell.sendEvent(frame, 'developer-hud-update', Cu.cloneInto(data, target));
   }
 
 };

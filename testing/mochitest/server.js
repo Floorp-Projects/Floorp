@@ -573,6 +573,29 @@ function regularListing(metadata, response)
 }
 
 /**
+ * Read a manifestFile located at the root of the server's directory and turn
+ * it into an object for creating a table of clickable links for each test.
+ */
+function convertManifestToTestLinks(root, manifest)
+{
+  Cu.import("resource://gre/modules/NetUtil.jsm");
+
+  var manifestFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+  manifestFile.initWithFile(serverBasePath);
+  manifestFile.append(manifest);
+
+  var manifestStream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+  manifestStream.init(manifestFile, -1, 0, 0);
+
+  var manifestObj = JSON.parse(NetUtil.readInputStreamToString(manifestStream,
+                                                               manifestStream.available()));
+  var paths = manifestObj.tests;
+  var pathPrefix = '/' + root + '/'
+  return [paths.reduce(function(t, p) { t[pathPrefix + p.path] = true; return t; }, {}),
+          paths.length];
+}
+
+/**
  * Produce a test harness page containing all the test cases
  * below it, recursively.
  */
@@ -584,7 +607,13 @@ function testListing(metadata, response)
     [links, count] = list(metadata.path,
                           metadata.getProperty("directory"),
                           true);
+  } else if (typeof(Components) != undefined) {
+    var manifest = metadata.queryString.match(/manifestFile=([^&]+)/)[1];
+
+    [links, count] = convertManifestToTestLinks(metadata.path.split('/')[1],
+                                                manifest);
   }
+
   var table_class = metadata.queryString.indexOf("hideResultsTable=1") > -1 ? "invisible": "";
 
   let testname = (metadata.queryString.indexOf("testname=") > -1)

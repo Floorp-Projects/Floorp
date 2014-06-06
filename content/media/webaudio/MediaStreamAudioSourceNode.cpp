@@ -42,7 +42,7 @@ MediaStreamAudioSourceNode::MediaStreamAudioSourceNode(AudioContext* aContext,
   ProcessedMediaStream* outputStream = static_cast<ProcessedMediaStream*>(mStream.get());
   mInputPort = outputStream->AllocateInputPort(aMediaStream->GetStream(),
                                                MediaInputPort::FLAG_BLOCK_INPUT);
-  mInputStream->AddConsumerToKeepAlive(this);
+  mInputStream->AddConsumerToKeepAlive(static_cast<nsIDOMEventTarget*>(this));
 
   PrincipalChanged(mInputStream); // trigger enabling/disabling of the connector
   mInputStream->AddPrincipalChangeObserver(this);

@@ -18,12 +18,17 @@ namespace js {
  * Bytecode version number. Increment the subtrahend whenever JS bytecode
  * changes incompatibly.
  *
- * This version number is XDR'd near the front of xdr bytecode and
- * aborts deserialization if there is a mismatch between the current
- * and saved versions. If deserialization fails, the data should be
- * invalidated if possible.
+ * This version number is XDR'd near the front of xdr bytecode and aborts
+ * deserialization if there is a mismatch between the current and saved
+ * versions.  If deserialization fails, the data should be invalidated if
+ * possible.
+ *
+ * When you change this, run make_opcode_doc.py and copy the new output into
+ * this wiki page:
+ *
+ *  https://developer.mozilla.org/en-US/docs/SpiderMonkey/Internals/Bytecode
  */
-static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 172);
+static const uint32_t XDR_BYTECODE_VERSION = uint32_t(0xb973c0de - 173);
 
 class XDRBuffer {
   public:

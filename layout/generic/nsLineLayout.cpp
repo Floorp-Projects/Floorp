@@ -950,8 +950,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // added in later by nsLineLayout::ReflowInlineFrames.
   pfd->mOverflowAreas = metrics.mOverflowAreas;
 
-  pfd->mBounds.ISize(lineWM) = metrics.ISize();
-  pfd->mBounds.BSize(lineWM) = metrics.BSize();
+  pfd->mBounds.ISize(lineWM) = metrics.ISize(lineWM);
+  pfd->mBounds.BSize(lineWM) = metrics.BSize(lineWM);
 
   // Size the frame, but |RelativePositionFrames| will size the view.
   aFrame->SetSize(nsSize(metrics.Width(), metrics.Height()));

@@ -921,7 +921,12 @@ var BrowserApp = {
     aParams = aParams || {};
 
     let newTab = new Tab(aURI, aParams);
-    this._tabs.push(newTab);
+
+    if (typeof aParams.tabIndex == "number") {
+      this._tabs.splice(aParams.tabIndex, 0, newTab);
+    } else {
+      this._tabs.push(newTab);
+    }
 
     let selected = "selected" in aParams ? aParams.selected : true;
     if (selected)
@@ -972,17 +977,23 @@ var BrowserApp = {
     if (aTab == this.selectedTab)
       this.selectedTab = null;
 
+    let tabIndex = this._tabs.indexOf(aTab);
+
     let evt = document.createEvent("UIEvents");
-    evt.initUIEvent("TabClose", true, false, window, null);
+    evt.initUIEvent("TabClose", true, false, window, tabIndex);
     aTab.browser.dispatchEvent(evt);
 
-    // Get a title for the undo close toast. Fall back to the URL if there is no title.
-    let title = aTab.browser.contentDocument.title || aTab.browser.contentDocument.URL;
-
     aTab.destroy();
-    this._tabs.splice(this._tabs.indexOf(aTab), 1);
+    this._tabs.splice(tabIndex, 1);
 
     if (aShowUndoToast) {
+      // Get a title for the undo close toast. Fall back to the URL if there is no title.
+      let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+      let closedTabData = ss.getClosedTabs(window)[0];
+
+      let historyEntry = closedTabData.entries[closedTabData.index - 1];
+      let title = historyEntry.title || historyEntry.url;
+
       let message = Strings.browser.formatStringFromName("undoCloseToast.message", [title], 1);
       NativeWindow.toast.show(message, "short", {
         button: {
@@ -990,7 +1001,6 @@ var BrowserApp = {
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
           callback: function() {
             UITelemetry.addEvent("undo.1", "toast", null, "closetab");
-            let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
             ss.undoCloseTab(window, 0);
           }
         }
@@ -3050,6 +3060,7 @@ Tab.prototype = {
         tabID: this.id,
         uri: uri,
         parentId: ("parentId" in aParams) ? aParams.parentId : -1,
+        tabIndex: ("tabIndex" in aParams) ? aParams.tabIndex : -1,
         external: ("external" in aParams) ? aParams.external : false,
         selected: ("selected" in aParams) ? aParams.selected : true,
         title: title,

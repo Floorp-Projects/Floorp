@@ -76,7 +76,7 @@ public:
   NS_IMETHODIMP
   NotifyDialError(const nsAString& aError)
   {
-    mPromise->MaybeReject(aError);
+    mPromise->MaybeRejectBrokenly(aError);
     return NS_OK;
   }
 
@@ -255,13 +255,13 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
   nsRefPtr<Promise> promise = new Promise(global);
 
   if (!IsValidNumber(aNumber) || !IsValidServiceId(aServiceId)) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidAccessError"));
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
     return promise.forget();
   }
 
   // We only support one outgoing call at a time.
   if (HasDialingCall()) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidStateError"));
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 
@@ -269,7 +269,7 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
     new Callback(this, promise, aServiceId, aNumber);
   nsresult rv = mService->Dial(aServiceId, aNumber, aIsEmergency, callback);
   if (NS_FAILED(rv)) {
-    promise->MaybeReject(NS_LITERAL_STRING("InvalidStateError"));
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
   }
 

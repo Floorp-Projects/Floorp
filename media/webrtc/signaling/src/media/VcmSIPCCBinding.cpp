@@ -43,6 +43,7 @@
 
 #ifdef MOZ_WEBRTC_OMX
 #include "OMXVideoCodec.h"
+#include "OMXCodecWrapper.h"
 #endif
 
 extern "C" {
@@ -88,6 +89,7 @@ using namespace CSF;
 VcmSIPCCBinding * VcmSIPCCBinding::gSelf = nullptr;
 int VcmSIPCCBinding::gAudioCodecMask = 0;
 int VcmSIPCCBinding::gVideoCodecMask = 0;
+int VcmSIPCCBinding::gVideoCodecGmpMask = 0;
 nsIThread *VcmSIPCCBinding::gMainThread = nullptr;
 nsIEventTarget *VcmSIPCCBinding::gSTSThread = nullptr;
 nsCOMPtr<nsIPrefBranch> VcmSIPCCBinding::gBranch = nullptr;
@@ -224,6 +226,12 @@ void VcmSIPCCBinding::setVideoCodecs(int codecMask)
   VcmSIPCCBinding::gVideoCodecMask = codecMask;
 }
 
+void VcmSIPCCBinding::addVideoCodecsGmp(int codecMask)
+{
+  CSFLogDebug(logTag, "ADDING VIDEO: %d", codecMask);
+  VcmSIPCCBinding::gVideoCodecGmpMask |= codecMask;
+}
+
 int VcmSIPCCBinding::getAudioCodecs()
 {
   return VcmSIPCCBinding::gAudioCodecMask;
@@ -232,6 +240,35 @@ int VcmSIPCCBinding::getAudioCodecs()
 int VcmSIPCCBinding::getVideoCodecs()
 {
   return VcmSIPCCBinding::gVideoCodecMask;
+}
+
+int VcmSIPCCBinding::getVideoCodecsGmp()
+{
+  return VcmSIPCCBinding::gVideoCodecGmpMask;
+}
+
+int VcmSIPCCBinding::getVideoCodecsHw()
+{
+  // Check to see if what HW codecs are available (not in use) at this moment.
+  // Note that streaming video decode can reserve a decoder
+
+  // XXX See bug 1018791 Implement W3 codec reservation policy
+  // Note that currently, OMXCodecReservation needs to be held by an sp<> because it puts
+  // 'this' into an sp<EventListener> to talk to the resource reservation code
+#ifdef MOZ_WEBRTC_OMX
+  android::sp<android::OMXCodecReservation> encode = new android::OMXCodecReservation(true);
+  android::sp<android::OMXCodecReservation> decode = new android::OMXCodecReservation(false);
+
+  // Currently we just check if they're available right now, which will fail if we're
+  // trying to call ourself, for example.  It will work for most real-world cases, like
+  // if we try to add a person to a 2-way call to make a 3-way mesh call
+  if (encode->ReserveOMXCodec() && decode->ReserveOMXCodec()) {
+    CSFLogDebug( logTag, "%s: H264 hardware codec available", __FUNCTION__);
+    return VCM_CODEC_RESOURCE_H264;
+  }
+#endif
+
+  return 0;
 }
 
 void VcmSIPCCBinding::setMainThread(nsIThread *thread)
@@ -2725,12 +2762,29 @@ int vcmGetVideoCodecList(int request_type)
     CSFLogDebug( logTag, "%s(codec_mask = %X)", fname, codecMask);
 
     //return codecMask;
-        return VCM_CODEC_RESOURCE_H264;
+    return VCM_CODEC_RESOURCE_H264;
 #else
-  int codecMask = VcmSIPCCBinding::getVideoCodecs();
-  CSFLogDebug(logTag, "GetVideoCodecList returning %X", codecMask);
+  // Control if H264 is available and priority:
+  // If hardware codecs are available (VP8 or H264), use those as a preferred codec
+  // (question: on all platforms?)
+  // If OpenH264 is available, use that at lower priority to VP8
+  // (question: platform software or OS-unknown-impl codecs?  (Win8.x, etc)
+  // Else just use VP8 software
 
-  return codecMask;
+    int codecMask;
+    switch (request_type) {
+      case VCM_DSP_FULLDUPLEX_HW:
+        codecMask = VcmSIPCCBinding::getVideoCodecsHw();
+        break;
+      case VCM_DSP_FULLDUPLEX_GMP:
+        codecMask = VcmSIPCCBinding::getVideoCodecsGmp();
+        break;
+      default: // VCM_DSP_FULLDUPLEX
+        codecMask = VcmSIPCCBinding::getVideoCodecs();
+        break;
+    }
+    CSFLogDebug(logTag, "GetVideoCodecList returning %X", codecMask);
+    return codecMask;
 #endif
 }
 
