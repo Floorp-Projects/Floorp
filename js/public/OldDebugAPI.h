@@ -291,12 +291,6 @@ JS_GetFunctionScript(JSContext *cx, JS::HandleFunction fun);
 extern JS_PUBLIC_API(JSNative)
 JS_GetFunctionNative(JSContext *cx, JSFunction *fun);
 
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptPrincipals(JSScript *script);
-
-extern JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptOriginPrincipals(JSScript *script);
-
 JS_PUBLIC_API(JSFunction *)
 JS_GetScriptFunction(JSContext *cx, JSScript *script);
 
