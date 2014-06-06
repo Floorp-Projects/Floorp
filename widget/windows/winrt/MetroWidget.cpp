@@ -998,8 +998,7 @@ MetroWidget::ShouldUseOffMainThreadCompositing()
     return false;
   }
   // toolkit or test widgets can't use omtc, they don't have ICoreWindow.
-  return gfxPlatform::UsesOffMainThreadCompositing() &&
-         mWindowType == eWindowType_toplevel;
+  return (CompositorParent::CompositorLoop() && mWindowType == eWindowType_toplevel);
 }
 
 bool
@@ -1009,8 +1008,7 @@ MetroWidget::ShouldUseMainThreadD3D10Manager()
   if (!mView) {
     return false;
   }
-  return !gfxPlatform::UsesOffMainThreadCompositing() &&
-         mWindowType == eWindowType_toplevel;
+  return (!CompositorParent::CompositorLoop() && mWindowType == eWindowType_toplevel);
 }
 
 bool

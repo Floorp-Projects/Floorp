@@ -1710,7 +1710,8 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         // PBrowsers are created, because they rely on the Compositor
         // already being around.  (Creation is async, so can't happen
         // on demand.)
-        if (gfxPlatform::UsesOffMainThreadCompositing()) {
+        bool useOffMainThreadCompositing = !!CompositorParent::CompositorLoop();
+        if (useOffMainThreadCompositing) {
             DebugOnly<bool> opened = PCompositor::Open(this);
             MOZ_ASSERT(opened);
 
