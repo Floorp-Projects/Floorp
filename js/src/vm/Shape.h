@@ -111,10 +111,6 @@ class Nursery;
 class ObjectImpl;
 class StaticBlockObject;
 
-namespace gc {
-class ForkJoinNursery;
-}
-
 typedef JSPropertyOp         PropertyOp;
 typedef JSStrictPropertyOp   StrictPropertyOp;
 typedef JSPropertyDescriptor PropertyDescriptor;
@@ -616,7 +612,6 @@ class Shape : public gc::BarrieredCell<Shape>
     friend class ::JSFunction;
     friend class js::Bindings;
     friend class js::Nursery;
-    friend class js::gc::ForkJoinNursery;
     friend class js::ObjectImpl;
     friend class js::PropertyTree;
     friend class js::StaticBlockObject;

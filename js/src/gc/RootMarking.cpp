@@ -19,7 +19,6 @@
 
 #include "builtin/MapObject.h"
 #include "frontend/BytecodeCompiler.h"
-#include "gc/ForkJoinNursery.h"
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 #ifdef JS_ION
@@ -101,38 +100,30 @@ MarkExactStackRootList(JSTracer *trc, Source *s, const char *name)
 
 template <class T, void (MarkFunc)(JSTracer *trc, T *ref, const char *name)>
 static inline void
-MarkExactStackRootsForType(JSRuntime* rt, JSTracer *trc, const char *name = nullptr)
+MarkExactStackRootsForType(JSTracer *trc, const char *name = nullptr)
 {
-    for (ContextIter cx(rt); !cx.done(); cx.next())
+    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
         MarkExactStackRootList<T, MarkFunc>(trc, cx.get(), name);
-    MarkExactStackRootList<T, MarkFunc>(trc, &rt->mainThread, name);
+    MarkExactStackRootList<T, MarkFunc>(trc, &trc->runtime()->mainThread, name);
 }
 
-template <class T, void (MarkFunc)(JSTracer *trc, T *ref, const char *name)>
-static inline void
-MarkExactStackRootsForType(ThreadSafeContext* cx, JSTracer *trc, const char *name = nullptr)
-{
-    MarkExactStackRootList<T, MarkFunc>(trc, cx->perThreadData, name);
-}
-
-template <class T>
 static void
-MarkExactStackRoots(T context, JSTracer *trc)
+MarkExactStackRoots(JSTracer *trc)
 {
-    MarkExactStackRootsForType<JSObject *, MarkObjectRoot>(context, trc, "exact-object");
-    MarkExactStackRootsForType<Shape *, MarkShapeRoot>(context, trc, "exact-shape");
-    MarkExactStackRootsForType<BaseShape *, MarkBaseShapeRoot>(context, trc, "exact-baseshape");
-    MarkExactStackRootsForType<types::TypeObject *, MarkTypeObjectRoot>(context, trc, "exact-typeobject");
-    MarkExactStackRootsForType<JSString *, MarkStringRoot>(context, trc, "exact-string");
-    MarkExactStackRootsForType<jit::JitCode *, MarkJitCodeRoot>(context, trc, "exact-jitcode");
-    MarkExactStackRootsForType<JSScript *, MarkScriptRoot>(context, trc, "exact-script");
-    MarkExactStackRootsForType<LazyScript *, MarkLazyScriptRoot>(context, trc, "exact-lazy-script");
-    MarkExactStackRootsForType<jsid, MarkIdRoot>(context, trc, "exact-id");
-    MarkExactStackRootsForType<Value, MarkValueRoot>(context, trc, "exact-value");
-    MarkExactStackRootsForType<types::Type, MarkTypeRoot>(context, trc, "exact-type");
-    MarkExactStackRootsForType<Bindings, MarkBindingsRoot>(context, trc);
-    MarkExactStackRootsForType<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(context, trc);
-    MarkExactStackRootsForType<PropDesc, MarkPropDescRoot>(context, trc);
+    MarkExactStackRootsForType<JSObject *, MarkObjectRoot>(trc, "exact-object");
+    MarkExactStackRootsForType<Shape *, MarkShapeRoot>(trc, "exact-shape");
+    MarkExactStackRootsForType<BaseShape *, MarkBaseShapeRoot>(trc, "exact-baseshape");
+    MarkExactStackRootsForType<types::TypeObject *, MarkTypeObjectRoot>(trc, "exact-typeobject");
+    MarkExactStackRootsForType<JSString *, MarkStringRoot>(trc, "exact-string");
+    MarkExactStackRootsForType<jit::JitCode *, MarkJitCodeRoot>(trc, "exact-jitcode");
+    MarkExactStackRootsForType<JSScript *, MarkScriptRoot>(trc, "exact-script");
+    MarkExactStackRootsForType<LazyScript *, MarkLazyScriptRoot>(trc, "exact-lazy-script");
+    MarkExactStackRootsForType<jsid, MarkIdRoot>(trc, "exact-id");
+    MarkExactStackRootsForType<Value, MarkValueRoot>(trc, "exact-value");
+    MarkExactStackRootsForType<types::Type, MarkTypeRoot>(trc, "exact-type");
+    MarkExactStackRootsForType<Bindings, MarkBindingsRoot>(trc);
+    MarkExactStackRootsForType<JSPropertyDescriptor, MarkPropertyDescriptorRoot>(trc);
+    MarkExactStackRootsForType<PropDesc, MarkPropDescRoot>(trc);
 }
 #endif /* JSGC_USE_EXACT_ROOTING */
 
@@ -590,15 +581,17 @@ AutoGCRooter::trace(JSTracer *trc)
 /* static */ void
 AutoGCRooter::traceAll(JSTracer *trc)
 {
-    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next())
-        traceAllInContext(&*cx, trc);
+    for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
+        for (js::AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down)
+            gcr->trace(trc);
+    }
 }
 
 /* static */ void
 AutoGCRooter::traceAllWrappers(JSTracer *trc)
 {
     for (ContextIter cx(trc->runtime()); !cx.done(); cx.next()) {
-        for (AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down) {
+        for (js::AutoGCRooter *gcr = cx->autoGCRooters; gcr; gcr = gcr->down) {
             if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
                 gcr->trace(trc);
         }
@@ -690,27 +683,6 @@ js::gc::MarkPersistentRootedChains(JSTracer *trc)
                                                             "PersistentRooted<Value>");
 }
 
-#ifdef JSGC_FJGENERATIONAL
-void
-js::gc::MarkForkJoinStack(ForkJoinNurseryCollectionTracer *trc)
-{
-    ForkJoinContext *cx = ForkJoinContext::current();
-    PerThreadData *ptd = cx->perThreadData;
-
-    AutoGCRooter::traceAllInContext(cx, trc);
-    MarkExactStackRoots<ThreadSafeContext*>(cx, trc);
-    jit::MarkJitActivations(ptd, trc);
-
-#ifdef DEBUG
-    // There should be only JIT activations on the stack
-    for (ActivationIterator iter(ptd); !iter.done(); ++iter) {
-        Activation *act = iter.activation();
-        JS_ASSERT(act->isJit());
-    }
-#endif
-}
-#endif  // JSGC_FJGENERATIONAL
-
 void
 js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
 {
@@ -730,7 +702,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
 
     if (!rt->isBeingDestroyed()) {
 #ifdef JSGC_USE_EXACT_ROOTING
-        MarkExactStackRoots<JSRuntime*>(rt, trc);
+        MarkExactStackRoots(trc);
 #else
         markConservativeStackRoots(trc, useSavedRoots);
 #endif
@@ -812,10 +784,10 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
             c->debugScopes->mark(trc);
     }
 
-    MarkInterpreterActivations(&rt->mainThread, trc);
+    MarkInterpreterActivations(rt, trc);
 
 #ifdef JS_ION
-    jit::MarkJitActivations(&rt->mainThread, trc);
+    jit::MarkJitActivations(rt, trc);
 #endif
 
     if (!isHeapMinorCollecting()) {

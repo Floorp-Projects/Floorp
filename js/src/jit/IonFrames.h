@@ -264,7 +264,7 @@ void HandleParallelFailure(ResumeFromException *rfe);
 
 void EnsureExitFrame(IonCommonFrameLayout *frame);
 
-void MarkJitActivations(PerThreadData *ptd, JSTracer *trc);
+void MarkJitActivations(JSRuntime *rt, JSTracer *trc);
 void MarkIonCompilerRoots(JSTracer *trc);
 
 JSCompartment *
@@ -272,7 +272,6 @@ TopmostIonActivationCompartment(JSRuntime *rt);
 
 #ifdef JSGC_GENERATIONAL
 void UpdateJitActivationsForMinorGC(JSRuntime *rt, JSTracer *trc);
-void UpdateJitActivationsForMinorGC(PerThreadData *ptd, JSTracer *trc);
 #endif
 
 static inline uint32_t
