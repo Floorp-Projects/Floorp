@@ -75,7 +75,7 @@ def main():
         test_frame_re = re.compile(r".*(DMD.cpp)")
 
         for line in fin:
-            if re.match(r" (Allocated at|Reported( again)? at)", line):
+            if re.match(r"  (Allocated at {|Reported( again)? at {)", line):
                 # It's a heap block record.
                 print(line, end='', file=fout)
 
@@ -83,14 +83,14 @@ def main():
                 # or more frames involving DMD.cpp.
                 seen_DMD_frame = False
                 for frame in fin:
-                    if re.match(r"   ", frame):
+                    if re.match(r"    ", frame):
                         m = test_frame_re.match(frame)
                         if m:
                             seen_DMD_frame = True
                     else:
                         # We're past the stack trace.
                         if seen_DMD_frame:
-                            print("   ... DMD.cpp", file=fout)
+                            print("    ... DMD.cpp", file=fout)
                         print(frame, end='', file=fout)
                         break
 
