@@ -489,6 +489,69 @@ function ArrayFindIndex(predicate/*, thisArg*/) {
     return -1;
 }
 
+/* ES6 draft 2013-09-27 22.1.3.3. */
+function ArrayCopyWithin(target, start, end = undefined) {
+    /* Steps 1-2. */
+    var O = ToObject(this);
+
+    /* Steps 3-5. */
+    var len = ToInteger(O.length);
+
+    /* Steps 6-8. */
+    var relativeTarget = ToInteger(target);
+
+    var to = relativeTarget < 0 ? std_Math_max(len + relativeTarget, 0)
+                                : std_Math_min(relativeTarget, len);
+
+    /* Steps 9-11. */
+    var relativeStart = ToInteger(start);
+
+    var from = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
+                                 : std_Math_min(relativeStart, len);
+
+    /* Steps 12-14. */
+    var relativeEnd = end === undefined ? len
+                                        : ToInteger(end);
+
+    var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
+                                : std_Math_min(relativeEnd, len);
+
+    /* Step 15. */
+    var count = std_Math_min(final - from, len - to);
+
+    /* Steps 16-17. */
+    if (from < to && to < (from + count)) {
+        from = from + count - 1;
+        to = to + count - 1;
+        /* Step 18. */
+        while (count > 0) {
+            if (from in O)
+                O[to] = O[from];
+            else
+                delete O[to];
+
+            from--;
+            to--;
+            count--;
+        }
+    } else {
+        /* Step 18. */
+        while (count > 0) {
+            if (from in O)
+                O[to] = O[from];
+            else
+                delete O[to];
+
+            from++;
+            to++;
+            count--;
+        }
+    }
+
+    /* Step 19. */
+    return O;
+}
+
 // ES6 draft 2014-04-05 22.1.3.6
 function ArrayFill(value, start = 0, end = undefined) {
     // Steps 1-2.

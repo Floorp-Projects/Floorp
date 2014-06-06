@@ -88,8 +88,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         id_ = id;
     }
 
-    // Mark the current block and all dominated blocks as unreachable.
-    void setUnreachable();
+    // Mark this block (and only this block) as unreachable.
+    void setUnreachable() {
+        JS_ASSERT(!unreachable_);
+        unreachable_ = true;
+    }
     bool unreachable() const {
         return unreachable_;
     }
@@ -397,7 +400,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
         return immediatelyDominated_.end();
     }
 
+    // Return the number of blocks dominated by this block. All blocks
+    // dominate at least themselves, so this will always be non-zero.
     size_t numDominated() const {
+        JS_ASSERT(numDominated_ != 0);
         return numDominated_;
     }
 
@@ -414,6 +420,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     MResumePoint *entryResumePoint() const {
         return entryResumePoint_;
+    }
+    void clearEntryResumePoint() {
+        entryResumePoint_ = nullptr;
     }
     MResumePoint *callerResumePoint() {
         return entryResumePoint()->caller();

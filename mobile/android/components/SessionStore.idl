@@ -14,7 +14,7 @@ interface nsIDOMNode;
  * tabs contained in them.
  */
 
-[scriptable, uuid(fe116b56-0226-4562-b52a-a623dad07ead)]
+[scriptable, uuid(91eca9cf-6741-4c8f-a3a0-2e957240894d)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -32,9 +32,9 @@ interface nsISessionStore : nsISupports
    * Get closed tab data
    *
    * @param aWindow is the browser window for which to get closed tab data
-   * @returns a JSON string representing the list of closed tabs.
+   * @returns a JS array of closed tabs.
    */
-  AString getClosedTabData(in nsIDOMWindow aWindow);
+  jsval getClosedTabs(in nsIDOMWindow aWindow);
 
   /**
    * @param aWindow is the browser window to reopen a closed tab in.

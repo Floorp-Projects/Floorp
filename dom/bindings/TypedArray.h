@@ -26,7 +26,7 @@ struct TypedArrayObjectStorage : AllTypedArraysBase {
 protected:
   JSObject* mObj;
 
-  TypedArrayObjectStorage(JSObject *obj) : mObj(obj)
+  TypedArrayObjectStorage() : mObj(nullptr)
   {
   }
 
@@ -60,18 +60,8 @@ template<typename T,
 struct TypedArray_base : public TypedArrayObjectStorage {
   typedef T element_type;
 
-  TypedArray_base(JSObject* obj)
-    : TypedArrayObjectStorage(obj),
-      mData(nullptr),
-      mLength(0),
-      mComputed(false)
-  {
-    MOZ_ASSERT(obj != nullptr);
-  }
-
   TypedArray_base()
-    : TypedArrayObjectStorage(nullptr),
-      mData(nullptr),
+    : mData(nullptr),
       mLength(0),
       mComputed(false)
   {
@@ -97,7 +87,7 @@ public:
   inline bool Init(JSObject* obj)
   {
     MOZ_ASSERT(!inited());
-    DoInit(obj);
+    mObj = UnwrapArray(obj);
     return inited();
   }
 
@@ -135,11 +125,6 @@ public:
   }
 
 protected:
-  inline void DoInit(JSObject* obj)
-  {
-    mObj = UnwrapArray(obj);
-  }
-
   inline void ComputeData() const {
     MOZ_ASSERT(inited());
     if (!mComputed) {
@@ -163,10 +148,6 @@ private:
   typedef TypedArray_base<T, UnwrapArray, GetLengthAndData> Base;
 
 public:
-  TypedArray(JSObject* obj)
-    : Base(obj)
-  {}
-
   TypedArray()
     : Base()
   {}

@@ -47,6 +47,8 @@ public:
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  bool BeenUsedWithMultipleTypes() const;
+
 private:
 
   template<typename T>

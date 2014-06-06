@@ -7,6 +7,7 @@
 #include "mozilla/dom/Promise.h"
 
 #include "jsfriendapi.h"
+#include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/OwningNonNull.h"
 #include "mozilla/dom/PromiseBinding.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
@@ -1207,9 +1208,11 @@ Promise::RunResolveTask(JS::Handle<JS::Value> aValue,
 
     mFeature = new PromiseReportRejectFeature(this);
     if (NS_WARN_IF(!worker->AddFeature(worker->GetJSContext(), mFeature))) {
+      // To avoid a false RemoveFeature().
+      mFeature = nullptr;
       // Worker is shutting down, report rejection immediately since it is
       // unlikely that reject callbacks will be added after this point.
-      MaybeReportRejected();
+      MaybeReportRejectedOnce();
     }
   }
 
@@ -1429,6 +1432,16 @@ PromiseWorkerProxy::CleanUp(JSContext* aCx)
   mWorkerPromise = nullptr;
   mWorkerPrivate->RemoveFeature(aCx, this);
   mCleanedUp = true;
+}
+
+// Specializations of MaybeRejectBrokenly we actually support.
+template<>
+void Promise::MaybeRejectBrokenly(const nsRefPtr<DOMError>& aArg) {
+  MaybeSomething(aArg, &Promise::MaybeReject);
+}
+template<>
+void Promise::MaybeRejectBrokenly(const nsAString& aArg) {
+  MaybeSomething(aArg, &Promise::MaybeReject);
 }
 
 } // namespace dom

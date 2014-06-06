@@ -58,19 +58,14 @@ private:
     gfxQuartzNativeDrawing(const gfxQuartzNativeDrawing&) MOZ_DELETE;
     const gfxQuartzNativeDrawing& operator=(const gfxQuartzNativeDrawing&) MOZ_DELETE;
 
-
     // Final destination context
     nsRefPtr<gfxContext> mContext;
     mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
     mozilla::gfx::BorrowedCGContext mBorrowedContext;
-    // context that draws to mQuartzSurface; can be different from mContext
-    // if mContext is not drawing to Quartz
-    nsRefPtr<gfxContext> mSurfaceContext;
     gfxRect mNativeRect;
     gfxFloat mBackingScale;
 
     // saved state
-    nsRefPtr<gfxQuartzSurface> mQuartzSurface;
     CGContextRef mCGContext;
 };
 

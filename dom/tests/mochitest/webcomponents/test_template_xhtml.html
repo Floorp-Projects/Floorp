@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1011831
+-->
+<head>
+  <title>Test for template element</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1011831">Bug 1011831</a>
+<script>
+var docSrc =
+  '<!DOCTYPE html>' +
+  '<html xmlns="http://www.w3.org/1999/xhtml">' +
+    '<body>' +
+      '<template id="t">Content<span>Content</span></template>' +
+      '<div id="container"><template>One</template><div>Two</div></div>' +
+      '<template id="t2"></template>' +
+    '</body>' +
+  '</html>';
+
+var doc = (new DOMParser()).parseFromString(docSrc, 'application/xhtml+xml');
+
+var t = doc.getElementById("t");
+is(t.childNodes.length, 0, "Template should have no children.");
+is(t.content.childNodes.length, 2, "Template content should have two children, text node and a span.");
+
+// Test serialization of template element.
+is(t.innerHTML, 'Content<span xmlns="http://www.w3.org/1999/xhtml">Content</span>', "Template contents should be serialized.");
+is(t.outerHTML, '<template xmlns="http://www.w3.org/1999/xhtml" id="t">Content<span>Content</span></template>', "Template contents should be serialized.");
+
+var c = doc.getElementById("container");
+is(c.innerHTML, '<template xmlns="http://www.w3.org/1999/xhtml">One</template><div xmlns="http://www.w3.org/1999/xhtml">Two</div>', "Template contents should be serialized.");
+is(c.outerHTML, '<div xmlns="http://www.w3.org/1999/xhtml" id="container"><template>One</template><div>Two</div></div>', "Template contents should be serialized.");
+
+// Test setting innerHTML on template element.
+var t2 = doc.getElementById("t2");
+t2.innerHTML = 'Three<span>Four</span>';
+is(t2.childNodes.length, 0, "Setting innerHTML should append children into template content.");
+is(t2.content.childNodes.length, 2, "Setting innerHTML should append children into template content.");
+
+</script>
+</body>
+</html>

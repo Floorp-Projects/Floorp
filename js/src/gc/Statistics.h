@@ -207,7 +207,7 @@ struct AutoPhase
 
 struct MaybeAutoPhase
 {
-    MaybeAutoPhase(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
+    explicit MaybeAutoPhase(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM)
       : stats(nullptr)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;

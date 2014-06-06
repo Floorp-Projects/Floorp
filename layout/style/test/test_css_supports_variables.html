@@ -240,8 +240,7 @@ function runTest()
 }
 
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({ "set": [["layout.css.supports-rule.enabled", true],
-                                    ["layout.css.variables.enabled", true]] }, runTest);
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.variables.enabled", true]] }, runTest);
 </script>
 </pre>
 </body>

@@ -481,6 +481,12 @@ public:
                                            nsRect* aDisplayPort = nullptr);
 
   /**
+   * Store whether aThumbFrame wants its own layer. This sets a property on
+   * the frame.
+   */
+  static void SetScrollbarThumbLayerization(nsIFrame* aThumbFrame, bool aLayerize);
+
+  /**
    * Finds the nearest ancestor frame to aItem that is considered to have (or
    * will have) "animated geometry". For example the scrolled frames of
    * scrollframes which are actively being scrolled fall into this category.
@@ -1000,6 +1006,21 @@ public:
     DOMRectList* mRectList;
 
     RectListBuilder(DOMRectList* aList);
+    virtual void AddRect(const nsRect& aRect);
+  };
+
+  /**
+   * SelectionCaret draws carets base on range. The carets are at begin
+   * and end position of range's client rects. This class help us to
+   * collect first and last rect for drawing carets.
+   */
+  struct FirstAndLastRectCollector : public RectCallback {
+    nsRect mFirstRect;
+    nsRect mLastRect;
+    bool mSeenFirstRect;
+
+    FirstAndLastRectCollector();
+
     virtual void AddRect(const nsRect& aRect);
   };
 

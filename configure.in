@@ -3470,7 +3470,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.10.3, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.10.6, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -3938,6 +3938,7 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
 MOZ_ANDROID_SYNTHAPKS=
+MOZ_LOCALE_SWITCHER=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
@@ -4945,6 +4946,13 @@ MOZ_ARG_DISABLE_BOOL(websms-backend,
 
 if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
+fi
+
+dnl ========================================================
+dnl = Enable runtime locale switching on Android
+dnl ========================================================
+if test -n "$MOZ_LOCALE_SWITCHER"; then
+    AC_DEFINE(MOZ_LOCALE_SWITCHER)
 fi
 
 dnl ========================================================
@@ -6315,17 +6323,13 @@ if test "$MOZ_WEBAPP_RUNTIME"; then
     AC_DEFINE(MOZ_WEBAPP_RUNTIME)
 fi
 
-AC_MSG_CHECKING([for tar archiver])
 AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
 if test -z "$TAR"; then
     AC_MSG_ERROR([no tar archiver found in \$PATH])
 fi
-AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
 
-AC_MSG_CHECKING([for wget])
 AC_CHECK_PROGS(WGET, wget, "")
-AC_MSG_RESULT([$WGET])
 AC_SUBST(WGET)
 
 dnl ========================================================
@@ -8567,6 +8571,7 @@ AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_ANDROID_SYNTHAPKS)
+AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -9023,15 +9028,17 @@ dnl ========================================================
 dnl ICU Support
 dnl ========================================================
 
-if test "$MOZ_BUILD_APP" = "browser"; then
-    _INTL_API=yes
-else
-    # Internationalization isn't built or exposed by default in non-desktop
-    # builds.  Bugs to enable:
-    #
-    #   Android:  bug 864843
-    #   B2G:      bug 866301
+# Internationalization isn't built or exposed by default in non-desktop
+# builds.  Bugs to enable:
+#
+#   Android:  bug 864843
+#   B2G:      bug 866301
+
+if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
+   test "$MOZ_BUILD_APP" = "b2g"; then
     _INTL_API=no
+else
+    _INTL_API=yes
 fi
 
 MOZ_CONFIG_ICU()

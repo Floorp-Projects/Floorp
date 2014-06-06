@@ -20,6 +20,7 @@
 #include "nsIInterfaceInfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptinfo.h"
+#include "ShimInterfaceInfo.h"
 
 #include "nsIServiceManager.h"
 #include "nsIFile.h"
@@ -103,6 +104,7 @@ public:
     }        
 
     xptiInterfaceEntry* GetEntryAt(uint16_t i);
+    const char* GetEntryNameAt(uint16_t i);
 
 private:
     xptiTypelibGuts(XPTHeader* aHeader)
@@ -273,6 +275,13 @@ private:
     nsresult GetTypeInArray(const nsXPTParamInfo* param,
                             uint16_t dimension,
                             const XPTTypeDescriptor** type);
+
+    nsresult GetInterfaceIndexForParam(uint16_t methodIndex,
+                                       const nsXPTParamInfo* param,
+                                       uint16_t* interfaceIndex);
+
+    already_AddRefed<ShimInterfaceInfo>
+    GetShimForParam(uint16_t methodIndex, const nsXPTParamInfo* param);
 
 private:
     nsID                    mIID;

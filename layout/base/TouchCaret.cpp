@@ -38,8 +38,6 @@ using namespace mozilla;
 // front/end of the content. To advoid this, we need to deflate the content
 // boundary by 61 app units (1 pixel + 1 app unit).
 static const int32_t kBoundaryAppUnits = 61;
-// The auto scroll timer's interval in milliseconds.
-static const int32_t kAutoScrollTimerDelay = 30;
 
 NS_IMPL_ISUPPORTS(TouchCaret, nsISelectionListener)
 
@@ -284,7 +282,7 @@ TouchCaret::MoveCaret(const nsPoint& movePoint)
   offsetToCanvasFrame = nsPoint(0,0);
   nsLayoutUtils::TransformPoint(capturingFrame, canvasFrame, offsetToCanvasFrame);
   pt = movePoint - offsetToCanvasFrame;
-  fs->StartAutoScrollTimer(capturingFrame, pt, kAutoScrollTimerDelay);
+  fs->StartAutoScrollTimer(capturingFrame, pt, sAutoScrollTimerDelay);
 }
 
 bool

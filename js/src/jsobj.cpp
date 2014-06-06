@@ -263,7 +263,8 @@ js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
         return true;
     }
 
-    Rooted<PropDesc> d(cx);
+    /* We have our own property, so start creating the descriptor. */
+    AutoPropDescRooter d(cx);
 
     d.initFromPropertyDescriptor(desc);
     if (!d.makeObject(cx))
@@ -1061,12 +1062,13 @@ bool
 js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue descriptor,
                       bool *bp)
 {
-    Rooted<PropDesc> desc(cx);
-    if (!desc.initialize(cx, descriptor))
+    AutoPropDescArrayRooter descs(cx);
+    PropDesc *desc = descs.append();
+    if (!desc || !desc->initialize(cx, descriptor))
         return false;
 
     bool rval;
-    if (!DefineProperty(cx, obj, id, desc, true, &rval))
+    if (!DefineProperty(cx, obj, id, *desc, true, &rval))
         return false;
     *bp = !!rval;
     return true;
@@ -1076,12 +1078,15 @@ bool
 js::DefineOwnProperty(JSContext *cx, HandleObject obj, HandleId id,
                       Handle<PropertyDescriptor> descriptor, bool *bp)
 {
-    Rooted<PropDesc> desc(cx);
+    AutoPropDescArrayRooter descs(cx);
+    PropDesc *desc = descs.append();
+    if (!desc)
+        return false;
 
-    desc.initFromPropertyDescriptor(descriptor);
+    desc->initFromPropertyDescriptor(descriptor);
 
     bool rval;
-    if (!DefineProperty(cx, obj, id, desc, true, &rval))
+    if (!DefineProperty(cx, obj, id, *desc, true, &rval))
         return false;
     *bp = !!rval;
     return true;

@@ -244,6 +244,7 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mAc(cx(), aGlobalObject->GetGlobalJSObject())
   , mStack(ScriptSettingsStack::Ref())
+  , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.

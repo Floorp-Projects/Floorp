@@ -558,6 +558,11 @@ bool VCMCodecDataBase::SupportsRenderScheduling() const {
   if (current_dec_is_external_) {
     const VCMExtDecoderMapItem* ext_item = FindExternalDecoderItem(
         receive_codec_.plType);
+    if (!ext_item) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, VCMId(id_),
+                   "Unknown payload type: %u", receive_codec_.plType);
+      return false;
+    }
     render_timing = ext_item->internal_render_timing;
   }
   return render_timing;

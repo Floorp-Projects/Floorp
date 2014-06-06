@@ -420,7 +420,24 @@ ContentPermissionPrompt.prototype = {
     if (isApp) {
       details.manifestURL = DOMApplicationRegistry.getManifestURLByLocalId(principal.appId);
     }
-    SystemAppProxy.dispatchEvent(details);
+
+    // request.element is defined for OOP content, while request.window
+    // is defined for In-Process content.
+    // In both cases the message needs to be dispatched to the top-level
+    // <iframe mozbrowser> container in the system app.
+    // So the above code iterates over window.realFrameElement in order
+    // to crosss mozbrowser iframes boundaries and find the top-level
+    // one in the system app.
+    // window.realFrameElement will be |null| if the code try to cross
+    // content -> chrome boundaries.
+    let targetElement = request.element;
+    let targetWindow = request.window || targetElement.ownerDocument.defaultView;
+    while (targetWindow.realFrameElement) {
+      targetElement = targetWindow.realFrameElement;
+      targetWindow = targetElement.ownerDocument.defaultView;
+    }
+
+    SystemAppProxy.dispatchEvent(details, targetElement);
   },
 
   classID: Components.ID("{8c719f03-afe0-4aac-91ff-6c215895d467}"),
