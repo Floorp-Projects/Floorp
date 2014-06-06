@@ -772,6 +772,9 @@ pref("dom.forms.color", true);
 // Support for new @autocomplete values
 pref("dom.forms.autocomplete.experimental", false);
 
+// Enables requestAutocomplete DOM API on forms.
+pref("dom.forms.requestAutocomplete", false);
+
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 

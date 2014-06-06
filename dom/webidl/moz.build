@@ -623,6 +623,7 @@ if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
     ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [
+    'AutocompleteErrorEvent.webidl',
     'BlobEvent.webidl',
     'CallGroupErrorEvent.webidl',
     'CFStateChangeEvent.webidl',
