@@ -144,6 +144,34 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
 }
 
 /* static */ void
+nsStyleUtil::AppendEscapedCSSFontFamilyList(
+  const mozilla::FontFamilyList& aFamilyList,
+  nsAString& aResult)
+{
+  const nsTArray<FontFamilyName>& fontlist = aFamilyList.GetFontlist();
+  size_t i, len = fontlist.Length();
+  for (i = 0; i < len; i++) {
+    if (i != 0) {
+      aResult.Append(',');
+    }
+    const FontFamilyName& name = fontlist[i];
+    switch (name.mType) {
+      case eFamily_named:
+        // xxx - need to do appropriate escaping, done in later patch
+        // iterate over idents, escape each ident
+        aResult.Append(name.mName);
+        break;
+      case eFamily_named_quoted:
+        AppendEscapedCSSString(name.mName, aResult);
+        break;
+      default:
+        name.AppendToString(aResult);
+    }
+  }
+}
+
+
+/* static */ void
 nsStyleUtil::AppendBitmaskCSSValue(nsCSSProperty aProperty,
                                    int32_t aMaskedValue,
                                    int32_t aFirstMask,

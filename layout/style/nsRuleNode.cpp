@@ -3336,11 +3336,11 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
   }
 
-  // font-family: string list, enum, inherit
+  // font-family: font family list, enum, inherit
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
   NS_ASSERTION(eCSSUnit_Enumerated != familyValue->GetUnit(),
                "system fonts should not be in mFamily anymore");
-  if (eCSSUnit_Families == familyValue->GetUnit()) {
+  if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
     // set the correct font if we are using DocumentFonts OR we are overriding for XUL
     // MJA: bug 31816
     if (aGenericFontID == kGenericFont_NONE) {
@@ -3865,18 +3865,6 @@ nsRuleNode::SetGenericFont(nsPresContext* aPresContext,
   }
 }
 
-static bool ExtractGeneric(const nsString& aFamily, bool aGeneric,
-                             void *aData)
-{
-  nsAutoString *data = static_cast<nsAutoString*>(aData);
-
-  if (aGeneric) {
-    *data = aFamily;
-    return false; // stop enumeration
-  }
-  return true;
-}
-
 const void*
 nsRuleNode::ComputeFontData(void* aStartStruct,
                             const nsRuleData* aRuleData,
@@ -3915,32 +3903,57 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
   // XXXldb What if we would have had a string if we hadn't been doing
   // the optimization with a non-null aStartStruct?
   const nsCSSValue* familyValue = aRuleData->ValueForFontFamily();
-  if (eCSSUnit_Families == familyValue->GetUnit()) {
-    familyValue->GetStringValue(font->mFont.name);
-    // XXXldb Do we want to extract the generic for this if it's not only a
-    // generic?
-    nsFont::GetGenericID(font->mFont.name, &generic);
+  if (eCSSUnit_FontFamilyList == familyValue->GetUnit()) {
+    font->mFont.name.Truncate();
+    const FontFamilyList* fontlist = familyValue->GetFontFamilyListValue();
+    nsStyleUtil::AppendEscapedCSSFontFamilyList(*fontlist, font->mFont.name);
+
+    // extract the first generic in the fontlist, if exists
+    FontFamilyType fontType = fontlist->FirstGeneric();
+
+    // if only a generic, set the generic type
+    if (fontlist->Length() == 1) {
+      switch (fontType) {
+        case eFamily_serif:
+          generic = kGenericFont_serif;
+          break;
+        case eFamily_sans_serif:
+          generic = kGenericFont_sans_serif;
+          break;
+        case eFamily_monospace:
+          generic = kGenericFont_monospace;
+          break;
+        case eFamily_cursive:
+          generic = kGenericFont_cursive;
+          break;
+        case eFamily_fantasy:
+          generic = kGenericFont_fantasy;
+          break;
+        case eFamily_moz_fixed:
+          generic = kGenericFont_moz_fixed;
+          break;
+        default:
+          break;
+      }
+    }
 
     // If we aren't allowed to use document fonts, then we are only entitled
     // to use the user's default variable-width font and fixed-width font
     if (!useDocumentFonts) {
-      // Extract the generic from the specified font family...
-      nsAutoString genericName;
-      if (!font->mFont.EnumerateFamilies(ExtractGeneric, &genericName)) {
-        // The specified font had a generic family.
-        font->mFont.name = genericName;
-        nsFont::GetGenericID(genericName, &generic);
 
-        // ... and only use it if it's -moz-fixed or monospace
-        if (generic != kGenericFont_moz_fixed &&
-            generic != kGenericFont_monospace) {
+      switch (fontType) {
+        case eFamily_monospace:
+          font->mFont.name.AssignLiteral("monospace");
+          generic = kGenericFont_monospace;
+          break;
+        case eFamily_moz_fixed:
+          font->mFont.name.AssignLiteral("-moz-fixed");
+          generic = kGenericFont_moz_fixed;
+          break;
+        default:
           font->mFont.name.Truncate();
           generic = kGenericFont_NONE;
-        }
-      } else {
-        // The specified font did not have a generic family.
-        font->mFont.name.Truncate();
-        generic = kGenericFont_NONE;
+          break;
       }
     }
   }
