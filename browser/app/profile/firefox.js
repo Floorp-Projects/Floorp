@@ -1565,6 +1565,8 @@ pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings"
 pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
+// Encrypted media extensions.
+pref("media.eme.enabled", false);
 
 // Delete HTTP cache v2 data of users that didn't opt-in manually
 pref("browser.cache.auto_delete_cache_version", 1);
