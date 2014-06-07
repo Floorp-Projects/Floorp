@@ -366,7 +366,7 @@ public:
 
   virtual bool AssumeAllImagesVisible() MOZ_OVERRIDE;
 
-  virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot);
+  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot);
 
   void SetNextPaintCompressed() { mNextPaintCompressed = true; }
 
