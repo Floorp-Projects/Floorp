@@ -251,6 +251,16 @@ public:
   webrtc::VideoEngine* GetVideoEngine() { return mVideoEngine; }
   bool GetLocalSSRC(unsigned int* ssrc);
   bool GetRemoteSSRC(unsigned int* ssrc);
+  bool GetVideoEncoderStats(double* framerateMean,
+                            double* framerateStdDev,
+                            double* bitrateMean,
+                            double* bitrateStdDev,
+                            uint32_t* droppedFrames);
+  bool GetVideoDecoderStats(double* framerateMean,
+                            double* framerateStdDev,
+                            double* bitrateMean,
+                            double* bitrateStdDev,
+                            uint32_t* discardedPackets);
   bool GetAVStats(int32_t* jitterBufferDelayMs,
                   int32_t* playoutBufferDelayMs,
                   int32_t* avSyncOffsetMs);

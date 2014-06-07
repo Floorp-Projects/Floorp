@@ -137,12 +137,46 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
   }
 }
 
-bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc) {
+bool WebrtcVideoConduit::GetLocalSSRC(unsigned int* ssrc)
+{
   return !mPtrRTP->GetLocalSSRC(mChannel, *ssrc);
 }
 
-bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc) {
+bool WebrtcVideoConduit::GetRemoteSSRC(unsigned int* ssrc)
+{
   return !mPtrRTP->GetRemoteSSRC(mChannel, *ssrc);
+}
+
+bool WebrtcVideoConduit::GetVideoEncoderStats(double* framerateMean,
+                                              double* framerateStdDev,
+                                              double* bitrateMean,
+                                              double* bitrateStdDev,
+                                              uint32_t* droppedFrames)
+{
+  if (!mEngineTransmitting) {
+    return false;
+  }
+  MOZ_ASSERT(mVideoCodecStat);
+  mVideoCodecStat->GetEncoderStats(framerateMean, framerateStdDev,
+                                   bitrateMean, bitrateStdDev,
+                                   droppedFrames);
+  return true;
+}
+
+bool WebrtcVideoConduit::GetVideoDecoderStats(double* framerateMean,
+                                              double* framerateStdDev,
+                                              double* bitrateMean,
+                                              double* bitrateStdDev,
+                                              uint32_t* discardedPackets)
+{
+  if (!mEngineReceiving) {
+    return false;
+  }
+  MOZ_ASSERT(mVideoCodecStat);
+  mVideoCodecStat->GetDecoderStats(framerateMean, framerateStdDev,
+                                   bitrateMean, bitrateStdDev,
+                                   discardedPackets);
+  return true;
 }
 
 bool WebrtcVideoConduit::GetAVStats(int32_t* jitterBufferDelayMs,
@@ -571,7 +605,9 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
     return kMediaConduitUnknownError;
   }
 
-  mVideoCodecStat = new VideoCodecStatistics(mChannel, mPtrViECodec);
+  if (!mVideoCodecStat) {
+    mVideoCodecStat = new VideoCodecStatistics(mChannel, mPtrViECodec, true);
+  }
 
   mSendingWidth = 0;
   mSendingHeight = 0;
@@ -739,6 +775,10 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
   {
     CSFLogError(logTag, "%s Setting Receive Codec Failed ", __FUNCTION__);
     return kMediaConduitInvalidReceiveCodec;
+  }
+
+  if (!mVideoCodecStat) {
+    mVideoCodecStat = new VideoCodecStatistics(mChannel, mPtrViECodec, false);
   }
 
   // XXX Currently, we gather up all of the feedback types that the remote
