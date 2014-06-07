@@ -274,7 +274,7 @@ MSG_DEF(JSMSG_BAD_DELETE_OPERAND,     220, 0, JSEXN_REFERENCEERR, "invalid delet
 MSG_DEF(JSMSG_BAD_INCOP_OPERAND,      221, 0, JSEXN_REFERENCEERR, "invalid increment/decrement operand")
 MSG_DEF(JSMSG_UNEXPECTED_TYPE,        222, 2, JSEXN_TYPEERR, "{0} is {1}")
 MSG_DEF(JSMSG_LET_DECL_NOT_IN_BLOCK,  223, 0, JSEXN_SYNTAXERR, "let declaration not directly within block")
-MSG_DEF(JSMSG_BAD_OBJECT_INIT,        224, 0, JSEXN_SYNTAXERR, "invalid object initializer")
+MSG_DEF(JSMSG_UNUSED224,              224, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_CANT_SET_ARRAY_ATTRS,   225, 0, JSEXN_INTERNALERR, "can't set attributes on indexed array properties")
 MSG_DEF(JSMSG_EVAL_ARITY,             226, 0, JSEXN_TYPEERR, "eval accepts only one parameter")
 MSG_DEF(JSMSG_MISSING_FUN_ARG,        227, 2, JSEXN_TYPEERR, "missing argument {0} when calling function {1}")

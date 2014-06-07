@@ -3218,7 +3218,7 @@ EmitDestructuringOpsHelper(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode
             pn3 = pn2;
         } else {
             JS_ASSERT(pn->isKind(PNK_OBJECT));
-            JS_ASSERT(pn2->isKind(PNK_COLON));
+            JS_ASSERT(pn2->isKind(PNK_COLON) || pn2->isKind(PNK_SHORTHAND));
 
             ParseNode *key = pn2->pn_left;
             if (key->isKind(PNK_NUMBER)) {
@@ -5923,11 +5923,6 @@ EmitConditionalExpression(ExclusiveContext *cx, BytecodeEmitter *bce, Conditiona
 MOZ_NEVER_INLINE static bool
 EmitObject(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn)
 {
-    if (pn->pn_xflags & PNX_DESTRUCT) {
-        bce->reportError(pn, JSMSG_BAD_OBJECT_INIT);
-        return false;
-    }
-
     if (!(pn->pn_xflags & PNX_NONCONST) && pn->pn_head && bce->checkSingletonContext())
         return EmitSingletonInitialiser(cx, bce, pn);
 

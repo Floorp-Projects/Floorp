@@ -532,8 +532,8 @@ class NodeBuilder
     bool catchClause(HandleValue var, HandleValue guard, HandleValue body, TokenPos *pos,
                      MutableHandleValue dst);
 
-    bool propertyInitializer(HandleValue key, HandleValue val, PropKind kind, TokenPos *pos,
-                             MutableHandleValue dst);
+    bool propertyInitializer(HandleValue key, HandleValue val, PropKind kind, bool isShorthand,
+                             TokenPos *pos, MutableHandleValue dst);
 
 
     /*
@@ -1246,8 +1246,8 @@ NodeBuilder::propertyPattern(HandleValue key, HandleValue patt, TokenPos *pos,
 }
 
 bool
-NodeBuilder::propertyInitializer(HandleValue key, HandleValue val, PropKind kind, TokenPos *pos,
-                                 MutableHandleValue dst)
+NodeBuilder::propertyInitializer(HandleValue key, HandleValue val, PropKind kind, bool isShorthand,
+                                 TokenPos *pos, MutableHandleValue dst)
 {
     RootedValue kindName(cx);
     if (!atomValue(kind == PROP_INIT
@@ -1258,6 +1258,8 @@ NodeBuilder::propertyInitializer(HandleValue key, HandleValue val, PropKind kind
         return false;
     }
 
+    RootedValue isShorthandVal(cx, BooleanValue(isShorthand));
+
     RootedValue cb(cx, callbacks[AST_PROPERTY]);
     if (!cb.isNull())
         return callback(cb, kindName, key, val, pos, dst);
@@ -1266,6 +1268,7 @@ NodeBuilder::propertyInitializer(HandleValue key, HandleValue val, PropKind kind
                    "key", key,
                    "value", val,
                    "kind", kindName,
+                   "shorthand", isShorthandVal,
                    dst);
 }
 
@@ -2802,11 +2805,6 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
 
       case PNK_OBJECT:
       {
-        /* The parser notes any uninitialized properties by setting the PNX_DESTRUCT flag. */
-        if (pn->pn_xflags & PNX_DESTRUCT) {
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_OBJECT_INIT);
-            return false;
-        }
         NodeVector elts(cx);
         if (!elts.reserve(pn->pn_count))
             return false;
@@ -2924,10 +2922,11 @@ ASTSerializer::property(ParseNode *pn, MutableHandleValue dst)
         LOCAL_NOT_REACHED("unexpected object-literal property");
     }
 
+    bool isShorthand = pn->isKind(PNK_SHORTHAND);
     RootedValue key(cx), val(cx);
     return propertyName(pn->pn_left, &key) &&
            expression(pn->pn_right, &val) &&
-           builder.propertyInitializer(key, val, kind, &pn->pn_pos, dst);
+           builder.propertyInitializer(key, val, kind, isShorthand, &pn->pn_pos, dst);
 }
 
 bool

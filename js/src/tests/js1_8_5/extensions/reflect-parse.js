@@ -343,6 +343,8 @@ assertExpr("[1,(2,3)]", arrExpr([lit(1),seqExpr([lit(2),lit(3)])]));
 assertExpr("[,(2,3)]", arrExpr([null,seqExpr([lit(2),lit(3)])]));
 assertExpr("({})", objExpr([]));
 assertExpr("({x:1})", objExpr([{ key: ident("x"), value: lit(1) }]));
+assertExpr("({x:x, y})", objExpr([{ key: ident("x"), value: ident("x"), shorthand: false },
+                                  { key: ident("y"), value: ident("y"), shorthand: true }]));
 assertExpr("({x:1, y:2})", objExpr([{ key: ident("x"), value: lit(1) },
                                     { key: ident("y"), value: lit(2) } ]));
 assertExpr("({x:1, y:2, z:3})", objExpr([{ key: ident("x"), value: lit(1) },
@@ -998,13 +1000,6 @@ try {
 }
 if (!thrown)
     throw new Error("builder exception not propagated");
-
-// Missing property RHS's in an object literal should throw.
-try {
-    Reflect.parse("({foo})");
-    throw new Error("object literal missing property RHS didn't throw");
-} catch (e if e instanceof SyntaxError) { }
-
 
 // A simple proof-of-concept that the builder API can be used to generate other
 // formats, such as JsonMLAst:
