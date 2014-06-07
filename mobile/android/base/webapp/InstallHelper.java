@@ -19,7 +19,9 @@ import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -27,7 +29,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.util.Log;
 
-public class InstallHelper implements GeckoEventListener {
+public class InstallHelper implements NativeEventListener {
     private static final String LOGTAG = "GeckoWebappInstallHelper";
     private static final String[] INSTALL_EVENT_NAMES = new String[] {"Webapps:Postinstall"};
     private final Context mContext;
@@ -36,7 +38,7 @@ public class InstallHelper implements GeckoEventListener {
 
     public static interface InstallCallback {
         // on the GeckoThread
-        void installCompleted(InstallHelper installHelper, String event, JSONObject message);
+        void installCompleted(InstallHelper installHelper, String event, NativeJSObject message);
 
         // on the GeckoBackgroundThread
         void installErrored(InstallHelper installHelper, Exception exception);
@@ -162,7 +164,7 @@ public class InstallHelper implements GeckoEventListener {
     }
 
     @Override
-    public void handleMessage(String event, JSONObject message) {
+    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this, INSTALL_EVENT_NAMES);
 
         if (mCallback != null) {
