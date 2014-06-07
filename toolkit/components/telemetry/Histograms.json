@@ -5338,6 +5338,76 @@
     "n_buckets": 1000,
     "description": "Roundtrip time of outbound audio (ms). Sampled every second of a call."
   },
+  "WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Video encoder's average framerate (in fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Standard deviation from video encoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video encoder's number of frames dropped (in frames/min) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Video decoder's average framerate (in fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Standard deviation from video decoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video decoder's number of discarded packets (in packets/min) over an entire call"
+  },
   "WEBRTC_CALL_DURATION": {
     "expires_in_version": "never",
     "kind": "exponential",

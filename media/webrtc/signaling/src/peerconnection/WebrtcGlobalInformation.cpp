@@ -242,6 +242,8 @@ static void StoreLongTermICEStatisticsImpl_m(
     nsresult result,
     nsAutoPtr<RTCStatsQuery> query) {
 
+  using namespace Telemetry;
+
   if (NS_FAILED(result) ||
       !query->error.empty() ||
       !query->report->mIceCandidateStats.WasPassed()) {
@@ -345,6 +347,78 @@ static void StoreLongTermICEStatisticsImpl_m(
                             i->second.candidateTypeBitpattern);
     }
   }
+
+  // Beyond ICE, accumulate telemetry for various PER_CALL settings here.
+
+  if (query->report->mOutboundRTPStreamStats.WasPassed()) {
+    auto& array = query->report->mOutboundRTPStreamStats.Value();
+    for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
+      auto& s = array[i];
+      bool isVideo = (s.mId.Value().Find("video") != -1);
+      if (!isVideo || s.mIsRemote) {
+        continue;
+      }
+      if (s.mBitrateMean.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS,
+                   uint32_t(s.mBitrateMean.Value() / 1000));
+      }
+      if (s.mBitrateStdDev.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+                   uint32_t(s.mBitrateStdDev.Value() / 1000));
+      }
+      if (s.mFramerateMean.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL,
+                   uint32_t(s.mFramerateMean.Value()));
+      }
+      if (s.mFramerateStdDev.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+                   uint32_t(s.mFramerateStdDev.Value() * 10));
+      }
+      if (s.mDroppedFrames.WasPassed()) {
+        double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
+        if (mins > 0) {
+          Accumulate(WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM,
+                     uint32_t(double(s.mDroppedFrames.Value()) / mins));
+        }
+      }
+    }
+  }
+
+  if (query->report->mInboundRTPStreamStats.WasPassed()) {
+    auto& array = query->report->mInboundRTPStreamStats.Value();
+    for (decltype(array.Length()) i = 0; i < array.Length(); i++) {
+      auto& s = array[i];
+      bool isVideo = (s.mId.Value().Find("video") != -1);
+      if (!isVideo || s.mIsRemote) {
+        continue;
+      }
+      if (s.mBitrateMean.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+                   uint32_t(s.mBitrateMean.Value() / 1000));
+      }
+      if (s.mBitrateStdDev.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+                   uint32_t(s.mBitrateStdDev.Value() / 1000));
+      }
+      if (s.mFramerateMean.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+                   uint32_t(s.mFramerateMean.Value()));
+      }
+      if (s.mFramerateStdDev.WasPassed()) {
+        Accumulate(WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+                   uint32_t(s.mFramerateStdDev.Value() * 10));
+      }
+      if (s.mDiscardedPackets.WasPassed()) {
+        double mins = (TimeStamp::Now() - query->iceStartTime).ToSeconds() / 60;
+        if (mins > 0) {
+          Accumulate(WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM,
+                     uint32_t(double(s.mDiscardedPackets.Value()) / mins));
+        }
+      }
+    }
+  }
+
+  // Finally, store the stats
 
   PeerConnectionCtx *ctx = GetPeerConnectionCtx();
   if (ctx) {
