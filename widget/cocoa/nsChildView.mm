@@ -92,6 +92,7 @@
 
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "nsLayoutUtils.h"
 #include "InputData.h"
 
 using namespace mozilla;
