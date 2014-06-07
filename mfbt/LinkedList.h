@@ -232,7 +232,7 @@ class LinkedListElement
       NODE_KIND_SENTINEL
     };
 
-    LinkedListElement(NodeKind nodeKind)
+    explicit LinkedListElement(NodeKind nodeKind)
       : next(MOZ_THIS_IN_INITIALIZER_LIST()),
         prev(MOZ_THIS_IN_INITIALIZER_LIST()),
         isSentinel(nodeKind == NODE_KIND_SENTINEL)

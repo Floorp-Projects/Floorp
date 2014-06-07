@@ -191,7 +191,7 @@ class WeakPtr : public WeakPtrBase<T, detail::WeakReference<T> >
     typedef WeakPtrBase<T, detail::WeakReference<T> > Base;
   public:
     WeakPtr(const WeakPtr<T>& o) : Base(o) {}
-    WeakPtr(const Base& o) : Base(o) {}
+    MOZ_IMPLICIT WeakPtr(const Base& o) : Base(o) {}
     WeakPtr() {}
 };
 
