@@ -12,22 +12,31 @@ using namespace webrtc;
 // use the same tag as VideoConduit
 static const char* logTag ="WebrtcVideoSessionConduit";
 
-VideoCodecStatistics::VideoCodecStatistics(int channel, ViECodec* codec) :
+VideoCodecStatistics::VideoCodecStatistics(int channel,
+                                           ViECodec* codec,
+                                           bool encoder) :
   mChannel(channel),
   mSentRawFrames(0),
   mPtrViECodec(codec),
   mEncoderDroppedFrames(0),
-  mDecoderDiscardedPackets(0)
+  mDecoderDiscardedPackets(0),
+  mEncoderMode(encoder)
 {
   MOZ_ASSERT(mPtrViECodec);
-  mPtrViECodec->RegisterEncoderObserver(mChannel, *this);
-  mPtrViECodec->RegisterDecoderObserver(mChannel, *this);
+  if (mEncoderMode) {
+    mPtrViECodec->RegisterEncoderObserver(mChannel, *this);
+  } else {
+    mPtrViECodec->RegisterDecoderObserver(mChannel, *this);
+  }
 }
 
 VideoCodecStatistics::~VideoCodecStatistics()
 {
-  mPtrViECodec->DeregisterEncoderObserver(mChannel);
-  mPtrViECodec->DeregisterDecoderObserver(mChannel);
+  if (mEncoderMode) {
+    mPtrViECodec->DeregisterEncoderObserver(mChannel);
+  } else {
+    mPtrViECodec->DeregisterDecoderObserver(mChannel);
+  }
 }
 
 void VideoCodecStatistics::OutgoingRate(const int video_channel,
