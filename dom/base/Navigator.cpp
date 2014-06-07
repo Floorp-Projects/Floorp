@@ -795,7 +795,7 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
   nsTArray<uint32_t> pattern(aPattern);
 
   if (pattern.Length() > sMaxVibrateListLen) {
-    pattern.SetLength(sMaxVibrateMS);
+    pattern.SetLength(sMaxVibrateListLen);
   }
 
   for (size_t i = 0; i < pattern.Length(); ++i) {
