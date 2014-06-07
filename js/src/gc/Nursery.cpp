@@ -107,7 +107,7 @@ js::Nursery::enable()
     setCurrentChunk(0);
     currentStart_ = position();
 #ifdef JS_GC_ZEAL
-    if (runtime()->gc.zealMode == ZealGenerationalGCValue)
+    if (runtime()->gcZeal() == ZealGenerationalGCValue)
         enterZealMode();
 #endif
 }
@@ -129,7 +129,7 @@ js::Nursery::isEmpty() const
     JS_ASSERT(runtime_);
     if (!isEnabled())
         return true;
-    JS_ASSERT_IF(runtime_->gc.zealMode != ZealGenerationalGCValue, currentStart_ == start());
+    JS_ASSERT_IF(runtime_->gcZeal() != ZealGenerationalGCValue, currentStart_ == start());
     return position() == currentStart_;
 }
 
@@ -930,7 +930,7 @@ js::Nursery::sweep()
     for (int i = 0; i < NumNurseryChunks; ++i)
         initChunk(i);
 
-    if (runtime()->gc.zealMode == ZealGenerationalGCValue) {
+    if (runtime()->gcZeal() == ZealGenerationalGCValue) {
         MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
 
         /* Only reset the alloc point when we are close to the end. */
@@ -955,7 +955,7 @@ void
 js::Nursery::growAllocableSpace()
 {
 #ifdef JS_GC_ZEAL
-    MOZ_ASSERT_IF(runtime()->gc.zealMode == ZealGenerationalGCValue,
+    MOZ_ASSERT_IF(runtime()->gcZeal() == ZealGenerationalGCValue,
                   numActiveChunks_ == NumNurseryChunks);
 #endif
     numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
@@ -965,7 +965,7 @@ void
 js::Nursery::shrinkAllocableSpace()
 {
 #ifdef JS_GC_ZEAL
-    if (runtime()->gc.zealMode == ZealGenerationalGCValue)
+    if (runtime()->gcZeal() == ZealGenerationalGCValue)
         return;
 #endif
     numActiveChunks_ = Max(numActiveChunks_ - 1, 1);

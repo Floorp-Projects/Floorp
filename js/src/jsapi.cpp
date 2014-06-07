@@ -1615,20 +1615,13 @@ JS::RemoveScriptRootRT(JSRuntime *rt, JS::Heap<JSScript *> *rp)
 JS_PUBLIC_API(bool)
 JS_AddExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    AssertHeapIsIdle(rt);
-    return !!rt->gc.blackRootTracers.append(Callback<JSTraceDataOp>(traceOp, data));
+    return rt->gc.addBlackRootsTracer(traceOp, data);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    for (size_t i = 0; i < rt->gc.blackRootTracers.length(); i++) {
-        Callback<JSTraceDataOp> *e = &rt->gc.blackRootTracers[i];
-        if (e->op == traceOp && e->data == data) {
-            rt->gc.blackRootTracers.erase(e);
-            break;
-        }
-    }
+    return rt->gc.removeBlackRootsTracer(traceOp, data);
 }
 
 #ifdef DEBUG
@@ -1899,28 +1892,21 @@ JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime *rt, JSGCCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
-    rt->gc.gcCallback = cb;
-    rt->gc.gcCallbackData = data;
+    rt->gc.setGCCallback(cb, data);
 }
 
 JS_PUBLIC_API(bool)
 JS_AddFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb, void *data)
 {
     AssertHeapIsIdle(rt);
-    return rt->gc.finalizeCallbacks.append(Callback<JSFinalizeCallback>(cb, data));
+    return rt->gc.addFinalizeCallback(cb, data);
 }
 
 JS_PUBLIC_API(void)
 JS_RemoveFinalizeCallback(JSRuntime *rt, JSFinalizeCallback cb)
 {
-    for (Callback<JSFinalizeCallback> *p = rt->gc.finalizeCallbacks.begin();
-         p < rt->gc.finalizeCallbacks.end(); p++)
-    {
-        if (p->op == cb) {
-            rt->gc.finalizeCallbacks.erase(p);
-            break;
-        }
-    }
+    AssertHeapIsIdle(rt);
+    rt->gc.removeFinalizeCallback(cb);
 }
 
 JS_PUBLIC_API(bool)
@@ -1945,7 +1931,7 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
         break;
       }
       case JSGC_MAX_MALLOC_BYTES:
-        rt->setGCMaxMallocBytes(value);
+        rt->gc.setMaxMallocBytes(value);
         break;
       case JSGC_SLICE_TIME_BUDGET:
         rt->gc.sliceBudget = SliceBudget::TimeBudget(value);
@@ -6220,13 +6206,13 @@ JS_AbortIfWrongThread(JSRuntime *rt)
 JS_PUBLIC_API(void)
 JS_SetGCZeal(JSContext *cx, uint8_t zeal, uint32_t frequency)
 {
-    SetGCZeal(cx->runtime(), zeal, frequency);
+    cx->runtime()->gc.setZeal(zeal, frequency);
 }
 
 JS_PUBLIC_API(void)
 JS_ScheduleGC(JSContext *cx, uint32_t count)
 {
-    cx->runtime()->gc.nextScheduled = count;
+    cx->runtime()->gc.setNextScheduled(count);
 }
 #endif
 
