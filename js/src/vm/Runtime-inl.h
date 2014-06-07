@@ -56,7 +56,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entry_, js::gc::Initi
     if (type->shouldPreTenure())
         heap = gc::TenuredHeap;
 
-    if (cx->runtime()->upcomingZealousGC())
+    if (cx->runtime()->gc.upcomingZealousGC())
         return nullptr;
 
     // Trigger an identical allocation to the one that notified us of OOM
