@@ -6,7 +6,7 @@
 
 PARALLEL_DIRS += [
     'common',
-    'crypto',
+    'crypto'
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
@@ -26,5 +26,8 @@ if CONFIG['MOZ_SERVICES_FXACCOUNTS']:
 
 if CONFIG['MOZ_SERVICES_SYNC']:
     PARALLEL_DIRS += ['sync']
+
+if CONFIG['MOZ_B2G']:
+    PARALLEL_DIRS += ['mobileid']
 
 SPHINX_TREES['services'] = 'docs'
