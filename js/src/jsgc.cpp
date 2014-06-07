@@ -1095,7 +1095,7 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     generationalDisabled(0),
     manipulatingDeadZones(false),
     objectsMarkedInDeadZones(0),
-    poke(false),
+    poked(false),
     heapState(Idle),
 #ifdef JSGC_GENERATIONAL
     nursery(rt),
@@ -1110,8 +1110,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 #endif
     validate(true),
     fullCompartmentChecks(false),
-    gcCallback(nullptr),
-    sliceCallback(nullptr),
     mallocBytes(0),
     mallocGCTriggered(false),
 #ifdef DEBUG
@@ -1129,14 +1127,8 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
 
 #ifdef JS_GC_ZEAL
 
-extern void
-js::SetGCZeal(JSRuntime *rt, uint8_t zeal, uint32_t frequency)
-{
-    rt->gc.setGCZeal(zeal, frequency);
-}
-
 void
-GCRuntime::setGCZeal(uint8_t zeal, uint32_t frequency)
+GCRuntime::setZeal(uint8_t zeal, uint32_t frequency)
 {
     if (verifyPreData)
         VerifyBarriers(rt, PreBarrierVerifier);
@@ -1159,8 +1151,14 @@ GCRuntime::setGCZeal(uint8_t zeal, uint32_t frequency)
     nextScheduled = schedule ? frequency : 0;
 }
 
+void
+GCRuntime::setNextScheduled(uint32_t count)
+{
+    nextScheduled = count;
+}
+
 bool
-GCRuntime::initGCZeal()
+GCRuntime::initZeal()
 {
     const char *env = getenv("JS_GC_ZEAL");
     if (!env)
@@ -1196,7 +1194,7 @@ GCRuntime::initGCZeal()
         return false;
     }
 
-    setGCZeal(zeal, frequency);
+    setZeal(zeal, frequency);
     return true;
 }
 
@@ -1228,7 +1226,7 @@ GCRuntime::init(uint32_t maxbytes)
      * for default backward API compatibility.
      */
     maxBytes = maxbytes;
-    rt->setGCMaxMallocBytes(maxbytes);
+    setMaxMallocBytes(maxbytes);
 
 #ifndef JS_MORE_DETERMINISTIC
     jitReleaseTime = PRMJ_Now() + JIT_SCRIPT_RELEASE_TYPES_INTERVAL;
@@ -1243,7 +1241,7 @@ GCRuntime::init(uint32_t maxbytes)
 #endif
 
 #ifdef JS_GC_ZEAL
-    if (!initGCZeal())
+    if (!initZeal())
         return false;
 #endif
 
@@ -1328,6 +1326,63 @@ template <typename T> struct BarrierOwner {};
 template <typename T> struct BarrierOwner<T *> { typedef T result; };
 template <> struct BarrierOwner<Value> { typedef HeapValue result; };
 
+bool
+GCRuntime::addBlackRootsTracer(JSTraceDataOp traceOp, void *data)
+{
+    AssertHeapIsIdle(rt);
+    return !!blackRootTracers.append(Callback<JSTraceDataOp>(traceOp, data));
+}
+
+void
+GCRuntime::removeBlackRootsTracer(JSTraceDataOp traceOp, void *data)
+{
+    // Can be called from finalizers
+    for (size_t i = 0; i < blackRootTracers.length(); i++) {
+        Callback<JSTraceDataOp> *e = &blackRootTracers[i];
+        if (e->op == traceOp && e->data == data) {
+            blackRootTracers.erase(e);
+        }
+    }
+}
+
+void
+GCRuntime::setGrayRootsTracer(JSTraceDataOp traceOp, void *data)
+{
+    AssertHeapIsIdle(rt);
+    grayRootTracer.op = traceOp;
+    grayRootTracer.data = data;
+}
+
+void
+GCRuntime::setGCCallback(JSGCCallback callback, void *data)
+{
+    gcCallback.op = callback;
+    gcCallback.data = data;
+}
+
+bool
+GCRuntime::addFinalizeCallback(JSFinalizeCallback callback, void *data)
+{
+    return finalizeCallbacks.append(Callback<JSFinalizeCallback>(callback, data));
+}
+
+void
+GCRuntime::removeFinalizeCallback(JSFinalizeCallback callback)
+{
+    for (Callback<JSFinalizeCallback> *p = finalizeCallbacks.begin();
+         p < finalizeCallbacks.end(); p++) {
+        if (p->op == callback) {
+            finalizeCallbacks.erase(p);
+            break;
+        }
+    }
+}
+
+JS::GCSliceCallback
+GCRuntime::setSliceCallback(JS::GCSliceCallback callback) {
+    return stats.setSliceCallback(callback);
+}
+
 template <typename T>
 bool
 GCRuntime::addRoot(T *rp, const char *name, JSGCRootType rootType)
@@ -1348,7 +1403,7 @@ void
 GCRuntime::removeRoot(void *rp)
 {
     rootsHash.remove(rp);
-    poke = true;
+    poke();
 }
 
 template <typename T>
@@ -1422,9 +1477,42 @@ js::RemoveRoot(JSRuntime *rt, void *rp)
     rt->gc.removeRoot(rp);
 }
 
-typedef RootedValueMap::Range RootRange;
-typedef RootedValueMap::Entry RootEntry;
-typedef RootedValueMap::Enum RootEnum;
+void
+GCRuntime::setMaxMallocBytes(size_t value)
+{
+    /*
+     * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
+     * mean that value.
+     */
+    maxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
+    resetMallocBytes();
+    for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next())
+        zone->setGCMaxMallocBytes(value);
+}
+
+void
+GCRuntime::resetMallocBytes()
+{
+    mallocBytes = ptrdiff_t(maxMallocBytes);
+    mallocGCTriggered = false;
+}
+
+void
+GCRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
+{
+    mallocBytes -= ptrdiff_t(nbytes);
+    if (MOZ_UNLIKELY(isTooMuchMalloc()))
+        onTooMuchMalloc();
+    else if (zone)
+        zone->updateMallocCounter(nbytes);
+}
+
+void
+GCRuntime::onTooMuchMalloc()
+{
+    if (!mallocGCTriggered)
+        mallocGCTriggered = triggerGC(JS::gcreason::TOO_MUCH_MALLOC);
+}
 
 static size_t
 ComputeTriggerBytes(Zone *zone, size_t lastBytes, size_t maxBytes, JSGCInvocationKind gckind)
@@ -4353,7 +4441,7 @@ AutoGCSession::~AutoGCSession()
 
 #ifdef JS_GC_ZEAL
     /* Keeping these around after a GC is dangerous. */
-    gc->selectedForMarking.clearAndFree();
+    gc->clearSelectedForMarking();
 #endif
 
     /* Clear gcMallocBytes for all compartments */
@@ -4362,7 +4450,7 @@ AutoGCSession::~AutoGCSession()
         zone->unscheduleGC();
     }
 
-    gc->rt->resetGCMallocBytes();
+    gc->resetMallocBytes();
 }
 
 AutoCopyFreeListToArenas::AutoCopyFreeListToArenas(JSRuntime *rt, ZoneSelector selector)
@@ -4695,7 +4783,7 @@ GCRuntime::budgetIncrementalGC(int64_t *budget)
         return;
     }
 
-    if (rt->isTooMuchMalloc()) {
+    if (isTooMuchMalloc()) {
         *budget = SliceBudget::Unlimited;
         stats.nonincremental("malloc bytes trigger");
     }
@@ -4894,21 +4982,21 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
          */
         if (incrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_BEGIN);
-            if (gcCallback)
-                gcCallback(rt, JSGC_BEGIN, gcCallbackData);
+            if (gcCallback.op)
+                gcCallback.op(rt, JSGC_BEGIN, gcCallback.data);
         }
 
-        poke = false;
+        poked = false;
         bool wasReset = gcCycle(incremental, budget, gckind, reason);
 
         if (incrementalState == NO_INCREMENTAL) {
             gcstats::AutoPhase ap(stats, gcstats::PHASE_GC_END);
-            if (gcCallback)
-                gcCallback(rt, JSGC_END, gcCallbackData);
+            if (gcCallback.op)
+                gcCallback.op(rt, JSGC_END, gcCallback.data);
         }
 
         /* Need to re-schedule all zones for GC. */
-        if (poke && shouldCleanUpEverything)
+        if (poked && shouldCleanUpEverything)
             JS::PrepareForFullGC(rt);
 
         /*
@@ -4934,7 +5022,7 @@ GCRuntime::collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
          * case) until we can be sure that no additional garbage is created
          * (which typically happens if roots are dropped during finalizers).
          */
-        repeat = (poke && shouldCleanUpEverything) || wasReset || repeatForDeadZone;
+        repeat = (poked && shouldCleanUpEverything) || wasReset || repeatForDeadZone;
     } while (repeat);
 
     if (incrementalState == NO_INCREMENTAL) {
@@ -5294,27 +5382,40 @@ GCRuntime::runDebugGC()
 }
 
 void
-gc::SetDeterministicGC(JSContext *cx, bool enabled)
+GCRuntime::setValidate(bool enabled)
 {
+    JS_ASSERT(!isHeapMajorCollecting());
+    validate = enabled;
+}
+
+void
+GCRuntime::setFullCompartmentChecks(bool enabled)
+{
+    JS_ASSERT(!isHeapMajorCollecting());
+    fullCompartmentChecks = enabled;
+}
+
 #ifdef JS_GC_ZEAL
-    JSRuntime *rt = cx->runtime();
-    rt->gc.deterministicOnly = enabled;
+bool
+GCRuntime::selectForMarking(JSObject *object)
+{
+    JS_ASSERT(!isHeapMajorCollecting());
+    return selectedForMarking.append(object);
+}
+
+void
+GCRuntime::clearSelectedForMarking()
+{
+    selectedForMarking.clearAndFree();
+}
+
+void
+GCRuntime::setDeterministic(bool enabled)
+{
+    JS_ASSERT(!isHeapMajorCollecting());
+    deterministicOnly = enabled;
+}
 #endif
-}
-
-void
-gc::SetValidateGC(JSContext *cx, bool enabled)
-{
-    JSRuntime *rt = cx->runtime();
-    rt->gc.validate = enabled;
-}
-
-void
-gc::SetFullCompartmentChecks(JSContext *cx, bool enabled)
-{
-    JSRuntime *rt = cx->runtime();
-    rt->gc.fullCompartmentChecks = enabled;
-}
 
 #ifdef DEBUG
 
@@ -5501,13 +5602,11 @@ JS::AssertGCThingMustBeTenured(JSObject *obj)
 JS_FRIEND_API(void)
 js::gc::AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind)
 {
-#ifdef DEBUG
     JS_ASSERT(cell);
     if (IsInsideNursery(cell))
         JS_ASSERT(kind == JSTRACE_OBJECT);
     else
         JS_ASSERT(MapAllocToTraceKind(cell->tenuredGetAllocKind()) == kind);
-#endif
 }
 
 JS_FRIEND_API(size_t)
@@ -5522,7 +5621,7 @@ JS::GetGCNumber()
 
 #ifdef DEBUG
 JS::AutoAssertOnGC::AutoAssertOnGC()
-  : runtime(nullptr), gcNumber(0)
+  : gc(nullptr), gcNumber(0)
 {
     js::PerThreadData *data = js::TlsPerThreadData.get();
     if (data) {
@@ -5532,38 +5631,38 @@ JS::AutoAssertOnGC::AutoAssertOnGC()
          * code that works from both threads, however. We also use this to
          * annotate the off thread run loops.
          */
-        runtime = data->runtimeIfOnOwnerThread();
+        JSRuntime *runtime = data->runtimeIfOnOwnerThread();
         if (runtime) {
-            gcNumber = runtime->gc.number;
-            ++runtime->gc.inUnsafeRegion;
+            gc = &runtime->gc;
+            gcNumber = gc->number;
+            gc->enterUnsafeRegion();
         }
     }
 }
 
 JS::AutoAssertOnGC::AutoAssertOnGC(JSRuntime *rt)
-  : runtime(rt), gcNumber(rt->gc.number)
+  : gc(&rt->gc), gcNumber(rt->gc.number)
 {
-    ++rt->gc.inUnsafeRegion;
+    gc->enterUnsafeRegion();
 }
 
 JS::AutoAssertOnGC::~AutoAssertOnGC()
 {
-    if (runtime) {
-        --runtime->gc.inUnsafeRegion;
-        MOZ_ASSERT(runtime->gc.inUnsafeRegion >= 0);
+    if (gc) {
+        gc->leaveUnsafeRegion();
 
         /*
          * The following backstop assertion should never fire: if we bumped the
          * gcNumber, we should have asserted because inUnsafeRegion was true.
          */
-        MOZ_ASSERT(gcNumber == runtime->gc.number, "GC ran inside an AutoAssertOnGC scope.");
+        MOZ_ASSERT(gcNumber == gc->number, "GC ran inside an AutoAssertOnGC scope.");
     }
 }
 
 /* static */ void
 JS::AutoAssertOnGC::VerifyIsSafeToGC(JSRuntime *rt)
 {
-    if (rt->gc.inUnsafeRegion > 0)
+    if (rt->gc.isInsideUnsafeRegion())
         MOZ_CRASH("[AutoAssertOnGC] possible GC in GC-unsafe region");
 }
 #endif
