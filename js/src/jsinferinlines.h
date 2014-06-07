@@ -163,6 +163,28 @@ TypeFlagPrimitive(TypeFlags flags)
 }
 
 /*
+ * Check for numeric strings, as in js_StringIsIndex, but allow negative
+ * and overflowing integers.
+ */
+template <class Range>
+inline bool
+IdIsNumericTypeId(Range cp)
+{
+    if (cp.length() == 0)
+        return false;
+
+    if (!JS7_ISDEC(cp[0]) && cp[0] != '-')
+        return false;
+
+    for (size_t i = 1; i < cp.length(); ++i) {
+        if (!JS7_ISDEC(cp[i]))
+            return false;
+    }
+
+    return true;
+}
+
+/*
  * Get the canonical representation of an id to use when doing inference.  This
  * maintains the constraint that if two different jsids map to the same property
  * in JS (e.g. 3 and "3"), they have the same type representation.
@@ -179,21 +201,13 @@ IdToTypeId(jsid id)
     if (JSID_IS_INT(id))
         return JSID_VOID;
 
-    /*
-     * Check for numeric strings, as in js_StringIsIndex, but allow negative
-     * and overflowing integers.
-     */
     if (JSID_IS_STRING(id)) {
         JSAtom *atom = JSID_TO_ATOM(id);
-        JS::TwoByteChars cp = atom->range();
-        if (cp.length() > 0 && (JS7_ISDEC(cp[0]) || cp[0] == '-')) {
-            for (size_t i = 1; i < cp.length(); ++i) {
-                if (!JS7_ISDEC(cp[i]))
-                    return id;
-            }
-            return JSID_VOID;
-        }
-        return id;
+        AutoCheckCannotGC nogc;
+        bool isNumeric = atom->hasLatin1Chars()
+                         ? IdIsNumericTypeId(atom->latin1Range(nogc))
+                         : IdIsNumericTypeId(atom->twoByteRange(nogc));
+        return isNumeric ? JSID_VOID : id;
     }
 
     return JSID_VOID;
