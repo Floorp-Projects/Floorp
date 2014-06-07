@@ -172,6 +172,7 @@
 #include "nsIDragSession.h"
 #include "nsIFrameInlines.h"
 #include "mozilla/gfx/2D.h"
+#include "nsSubDocumentFrame.h"
 
 #ifdef ANDROID
 #include "nsIDocShellTreeOwner.h"
@@ -4956,7 +4957,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   // range.
   nsINode* startParent = range->GetStartParent();
   nsINode* endParent = range->GetEndParent();
-  nsIDocument* doc = startParent->GetCurrentDoc();
+  nsIDocument* doc = startParent->GetCrossShadowCurrentDoc();
   if (startParent == doc || endParent == doc) {
     ancestorFrame = rootFrame;
   }
@@ -5672,7 +5673,7 @@ RemoveAndStore(nsRefPtrHashKey<nsIImageLoadingContent>* aEntry, void* userArg)
 }
 
 void
-PresShell::RebuildImageVisibility(const nsDisplayList& aList)
+PresShell::RebuildImageVisibilityDisplayList(const nsDisplayList& aList)
 {
   MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
   mImageVisibilityVisited = true;
@@ -5682,7 +5683,7 @@ PresShell::RebuildImageVisibility(const nsDisplayList& aList)
   beforeImageList.SetCapacity(mVisibleImages.Count());
   mVisibleImages.EnumerateEntries(RemoveAndStore, &beforeImageList);
   MarkImagesInListVisible(aList);
-  for (uint32_t i = 0; i < beforeImageList.Length(); ++i) {
+  for (size_t i = 0; i < beforeImageList.Length(); ++i) {
     beforeImageList[i]->DecrementVisibleCount();
   }
 }
@@ -5718,6 +5719,120 @@ PresShell::ClearVisibleImagesList()
 }
 
 void
+PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect)
+{
+  MOZ_ASSERT(aFrame->PresContext()->PresShell() == this, "wrong presshell");
+
+  nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(aFrame->GetContent()));
+  if (content && aFrame->StyleVisibility()->IsVisible()) {
+    uint32_t count = mVisibleImages.Count();
+    mVisibleImages.PutEntry(content);
+    if (mVisibleImages.Count() > count) {
+      // content was added to mVisibleImages, so we need to increment its visible count
+      content->IncrementVisibleCount();
+    }
+  }
+
+  nsSubDocumentFrame* subdocFrame = do_QueryFrame(aFrame);
+  if (subdocFrame) {
+    nsIPresShell* presShell = subdocFrame->GetSubdocumentPresShellForPainting(
+      nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION);
+    if (presShell) {
+      nsRect rect = aRect;
+      nsIFrame* root = presShell->GetRootFrame();
+      if (root) {
+        rect.MoveBy(aFrame->GetOffsetToCrossDoc(root));
+      } else {
+        rect.MoveBy(-aFrame->GetContentRectRelativeToSelf().TopLeft());
+      }
+      rect = rect.ConvertAppUnitsRoundOut(
+        aFrame->PresContext()->AppUnitsPerDevPixel(),
+        presShell->GetPresContext()->AppUnitsPerDevPixel());
+
+      presShell->RebuildImageVisibility(&rect);
+    }
+    return;
+  }
+
+  nsRect rect = aRect;
+
+  nsIScrollableFrame* scrollFrame = do_QueryFrame(aFrame);
+  if (scrollFrame) {
+    nsRect displayPort;
+    bool usingDisplayport = nsLayoutUtils::GetDisplayPort(aFrame->GetContent(), &displayPort);
+    if (usingDisplayport) {
+      rect = displayPort;
+    } else {
+      rect = rect.Intersect(scrollFrame->GetScrollPortRect());      
+    }
+    rect = scrollFrame->ExpandRectToNearlyVisible(rect);
+  }
+
+  bool preserves3DChildren = aFrame->Preserves3DChildren();
+
+  // we assume all images in popups are visible elsewhere, so we skip them here
+  const nsIFrame::ChildListIDs skip(nsIFrame::kPopupList |
+                                    nsIFrame::kSelectPopupList);
+  for (nsIFrame::ChildListIterator childLists(aFrame);
+       !childLists.IsDone(); childLists.Next()) {
+    if (skip.Contains(childLists.CurrentID())) {
+      continue;
+    }
+
+    nsFrameList children = childLists.CurrentList();
+    for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next()) {
+      nsIFrame* child = e.get();
+
+      nsRect r = rect - child->GetPosition();
+      if (!r.IntersectRect(r, child->GetVisualOverflowRect())) {
+        continue;
+      }
+      if (child->IsTransformed()) {
+        // for children of a preserve3d element we just pass down the same dirty rect
+        if (!preserves3DChildren || !child->Preserves3D()) {
+          const nsRect overflow = child->GetVisualOverflowRectRelativeToSelf();
+          nsRect out;
+          if (nsDisplayTransform::UntransformRect(r, overflow, child, nsPoint(0,0), &out)) {
+            r = out;
+          } else {
+            r.SetEmpty();
+          }
+        }
+      }
+      MarkImagesInSubtreeVisible(child, r);
+    }
+  }
+}
+
+void
+PresShell::RebuildImageVisibility(nsRect* aRect)
+{
+  MOZ_ASSERT(!mImageVisibilityVisited, "already visited?");
+  mImageVisibilityVisited = true;
+
+  nsIFrame* rootFrame = GetRootFrame();
+  if (!rootFrame) {
+    return;
+  }
+
+  // Remove the entries of the mVisibleImages hashtable and put them in the
+  // beforeImageList array.
+  nsTArray< nsRefPtr<nsIImageLoadingContent> > beforeImageList;
+  beforeImageList.SetCapacity(mVisibleImages.Count());
+  mVisibleImages.EnumerateEntries(RemoveAndStore, &beforeImageList);
+
+  nsRect vis(nsPoint(0, 0), rootFrame->GetSize());
+  if (aRect) {
+    vis = *aRect;
+  }
+  MarkImagesInSubtreeVisible(rootFrame, vis);
+
+  for (size_t i = 0; i < beforeImageList.Length(); ++i) {
+    beforeImageList[i]->DecrementVisibleCount();
+  }
+}
+
+void
 PresShell::UpdateImageVisibility()
 {
   MOZ_ASSERT(!mPresContext || mPresContext->IsRootContentDocument(),
@@ -5736,21 +5851,44 @@ PresShell::UpdateImageVisibility()
     return;
   }
 
-  // We could walk the frame tree directly and skip creating a display list for
-  // better perf.
+  RebuildImageVisibility();
+  ClearImageVisibilityVisited(rootFrame->GetView(), true);
+
+#ifdef DEBUG_IMAGE_VISIBILITY_DISPLAY_LIST
+  // This can be used to debug the frame walker by comparing beforeImageList and
+  // mVisibleImages in RebuildImageVisibilityDisplayList to see if they produce
+  // the same results (mVisibleImages holds the images the display list thinks
+  // are visible, beforeImageList holds the images the frame walker thinks are
+  // visible).
+  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::IMAGE_VISIBILITY, false);
   nsRect updateRect(nsPoint(0, 0), rootFrame->GetSize());
-  nsDisplayListBuilder builder(rootFrame, nsDisplayListBuilder::IMAGE_VISIBILITY, true);
+  nsIFrame* rootScroll = GetRootScrollFrame();
+  if (rootScroll) {
+    nsIContent* content = rootScroll->GetContent();
+    if (content) {
+      nsLayoutUtils::GetDisplayPort(content, &updateRect);
+    }
+
+    if (IgnoringViewportScrolling()) {
+      builder.SetIgnoreScrollFrame(rootScroll);
+      // The ExpandRectToNearlyVisible that the root scroll frame would do gets short
+      // circuited due to us ignoring the root scroll frame, so we do it here.
+      nsIScrollableFrame* rootScrollable = do_QueryFrame(rootScroll);
+      updateRect = rootScrollable->ExpandRectToNearlyVisible(updateRect);
+    }
+  }
   builder.IgnorePaintSuppression();
   builder.EnterPresShell(rootFrame, updateRect);
   nsDisplayList list;
   rootFrame->BuildDisplayListForStackingContext(&builder, updateRect, &list);
   builder.LeavePresShell(rootFrame, updateRect);
 
-  RebuildImageVisibility(list);
+  RebuildImageVisibilityDisplayList(list);
 
   ClearImageVisibilityVisited(rootFrame->GetView(), true);
 
   list.DeleteAll();
+#endif
 }
 
 bool
@@ -5931,19 +6069,9 @@ private:
 };
 
 void
-PresShell::RestyleShadowRoot(ShadowRoot* aShadowRoot)
+PresShell::RecordShadowStyleChange(ShadowRoot* aShadowRoot)
 {
-  // Mark the children of the ShadowRoot as style changed but not
-  // the ShadowRoot itself because it is a document fragment and does not
-  // have a frame.
-  ExplicitChildIterator iterator(aShadowRoot);
-  for (nsIContent* child = iterator.GetNextChild();
-       child;
-       child = iterator.GetNextChild()) {
-    if (child->IsElement()) {
-      mChangedScopeStyleRoots.AppendElement(child->AsElement());
-    }
-  }
+  mChangedScopeStyleRoots.AppendElement(aShadowRoot->GetHost()->AsElement());
 }
 
 void
@@ -6206,7 +6334,7 @@ nsIContent*
 PresShell::GetCurrentEventContent()
 {
   if (mCurrentEventContent &&
-      mCurrentEventContent->GetCurrentDoc() != mDocument) {
+      mCurrentEventContent->GetCrossShadowCurrentDoc() != mDocument) {
     mCurrentEventContent = nullptr;
     mCurrentEventFrame = nullptr;
   }
@@ -6247,7 +6375,7 @@ PresShell::GetEventTargetContent(WidgetEvent* aEvent)
     nsIFrame* currentEventFrame = GetCurrentEventFrame();
     if (currentEventFrame) {
       currentEventFrame->GetContentForEvent(aEvent, getter_AddRefs(content));
-      NS_ASSERTION(!content || content->GetCurrentDoc() == mDocument,
+      NS_ASSERTION(!content || content->GetCrossShadowCurrentDoc() == mDocument,
                    "handing out content from a different doc");
     }
   }
@@ -6279,7 +6407,7 @@ PresShell::PopCurrentEventInfo()
 
     // Don't use it if it has moved to a different document.
     if (mCurrentEventContent &&
-        mCurrentEventContent->GetCurrentDoc() != mDocument) {
+        mCurrentEventContent->GetCrossShadowCurrentDoc() != mDocument) {
       mCurrentEventContent = nullptr;
       mCurrentEventFrame = nullptr;
     }
@@ -6749,7 +6877,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
     } else if (capturingContent) {
       // if the mouse is being captured then retarget the mouse event at the
       // document that is being captured.
-      retargetEventDoc = capturingContent->GetCurrentDoc();
+      retargetEventDoc = capturingContent->GetCrossShadowCurrentDoc();
 #ifdef ANDROID
     } else if (aEvent->eventStructType == NS_TOUCH_EVENT) {
       retargetEventDoc = GetTouchEventTargetDocument();
@@ -6850,7 +6978,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         if (!captureRetarget) {
           // A check was already done above to ensure that capturingContent is
           // in this presshell.
-          NS_ASSERTION(capturingContent->GetCurrentDoc() == GetDocument(),
+          NS_ASSERTION(capturingContent->GetCrossShadowCurrentDoc() == GetDocument(),
                        "Unexpected document");
           nsIFrame* captureFrame = capturingContent->GetPrimaryFrame();
           if (captureFrame) {
@@ -6999,7 +7127,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
                                                         capturingContent))) {
       // A check was already done above to ensure that capturingContent is
       // in this presshell.
-      NS_ASSERTION(capturingContent->GetCurrentDoc() == GetDocument(),
+      NS_ASSERTION(capturingContent->GetCrossShadowCurrentDoc() == GetDocument(),
                    "Unexpected document");
       nsIFrame* capturingFrame = capturingContent->GetPrimaryFrame();
       if (capturingFrame) {
@@ -7340,12 +7468,12 @@ PresShell::HandleEventWithTarget(WidgetEvent* aEvent, nsIFrame* aFrame,
   MOZ_ASSERT(!aFrame || aFrame->PresContext()->GetPresShell() == this,
              "wrong shell");
   if (aContent) {
-    nsIDocument* doc = aContent->GetCurrentDoc();
+    nsIDocument* doc = aContent->GetCrossShadowCurrentDoc();
     NS_ASSERTION(doc, "event for content that isn't in a document");
     NS_ASSERTION(!doc || doc->GetShell() == this, "wrong shell");
   }
 #endif
-  NS_ENSURE_STATE(!aContent || aContent->GetCurrentDoc() == mDocument);
+  NS_ENSURE_STATE(!aContent || aContent->GetCrossShadowCurrentDoc() == mDocument);
 
   PushCurrentEventInfo(aFrame, aContent);
   nsresult rv = HandleEventInternal(aEvent, aStatus);

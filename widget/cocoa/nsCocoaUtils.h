@@ -24,6 +24,25 @@
 - (CGFloat)backingScaleFactor;
 @end
 
+// When building with a pre-10.7 SDK, NSEventPhase is not defined.
+#if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
+enum {
+  NSEventPhaseNone        = 0,
+  NSEventPhaseBegan       = 0x1 << 0,
+  NSEventPhaseStationary  = 0x1 << 1,
+  NSEventPhaseChanged     = 0x1 << 2,
+  NSEventPhaseEnded       = 0x1 << 3,
+  NSEventPhaseCancelled   = 0x1 << 4,
+};
+typedef NSUInteger NSEventPhase;
+#endif // #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
+
+#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+enum {
+  NSEventPhaseMayBegin    = 0x1 << 5
+};
+#endif // #if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
+
 class nsIWidget;
 
 namespace mozilla {
@@ -214,7 +233,15 @@ public:
   // the event was originally targeted at is still alive!
   static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
 
+  // Compatibility wrappers for the -[NSEvent phase], -[NSEvent momentumPhase],
+  // -[NSEvent hasPreciseScrollingDeltas] and -[NSEvent scrollingDeltaX/Y] APIs
+  // that became availaible starting with the 10.7 SDK.
+  // All of these can be removed once we drop support for 10.6.
+  static NSEventPhase EventPhase(NSEvent* aEvent);
+  static NSEventPhase EventMomentumPhase(NSEvent* aEvent);
   static BOOL IsMomentumScrollEvent(NSEvent* aEvent);
+  static BOOL HasPreciseScrollingDeltas(NSEvent* aEvent);
+  static void GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFloat* aOutDeltaY);
 
   // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
   static void HideOSChromeOnScreen(bool aShouldHide, NSScreen* aScreen);

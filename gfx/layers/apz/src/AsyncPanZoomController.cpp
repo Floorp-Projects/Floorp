@@ -216,13 +216,36 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * Pref that enables overscrolling. If this is disabled, excess scroll that
  * cannot be handed off is discarded.
  *
- * "apz.overscroll.snap_back_accel"
- * Amount of acceleration applied during the snap-back animation.
+ * "apz.overscroll.fling_friction"
+ * Amount of friction applied during flings when in overscroll.
  *
- * "apz.overscroll.snap_back_init_vel"
- * Initial velocity of a snap-back animation along one axis.
+ * "apz.overscroll.fling_stopped_threshold"
+ * When flinging in an overscrolled state, if the velocity goes below this
+ * number, we stop the fling.
  * Units: screen pixels per millisecond
- * requests.
+ *
+ * "apz.overscroll.clamping"
+ * The maximum proportion of the composition bounds which can become blank
+ * as a result of overscroll, along the axis of overscroll.
+ *
+ * "apz.overscroll.z_effect"
+ * The fraction of "apz.overscroll.clamping" which can become blank as a result
+ * of overscroll, along the axis opposite to the axis of overscroll. Called
+ * "z_effect" because the shrinking that brings about the blank space on the
+ * opposite axis creates the effect of the page moving away from you along a
+ * "z" axis.
+ *
+ * "apz.overscroll.snap_back.spring_stiffness"
+ * The stiffness of the spring used in the physics model for the overscroll
+ * snap-back animation.
+ *
+ * "apz.overscroll.snap_back.spring_damping"
+ * The friction of the spring used in the physics model for the overscroll
+ * snap-back animation.
+ *
+ * "apz.overscroll.snap_back.mass"
+ * The mass of the page in the physics model for the overscroll snap-back
+ * animation.
  *
  * "apz.pan_repaint_interval"
  * Maximum amount of time while panning before sending a viewport change. This
@@ -471,17 +494,15 @@ private:
 class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
 public:
   OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
-    : mApzc(aApzc)
-  {
-    mApzc.mX.StartSnapBack();
-    mApzc.mY.StartSnapBack();
-  }
+    : mApzc(aApzc) {}
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) MOZ_OVERRIDE
   {
-    return mApzc.mX.SampleSnapBack(aDelta)
-        || mApzc.mY.SampleSnapBack(aDelta);
+    // Can't inline these variables due to short-circuit evaluation.
+    bool continueX = mApzc.mX.SampleSnapBack(aDelta);
+    bool continueY = mApzc.mY.SampleSnapBack(aDelta);
+    return continueX || continueY;
   }
 
 private:
@@ -690,6 +711,21 @@ nsEventStatus AsyncPanZoomController::HandleInputEvent(const InputData& aEvent) 
       case MultiTouchInput::MULTITOUCH_END: rv = OnTouchEnd(multiTouchInput); break;
       case MultiTouchInput::MULTITOUCH_CANCEL: rv = OnTouchCancel(multiTouchInput); break;
       default: NS_WARNING("Unhandled multitouch"); break;
+    }
+    break;
+  }
+  case PANGESTURE_INPUT: {
+    const PanGestureInput& panGestureInput = aEvent.AsPanGestureInput();
+    switch (panGestureInput.mType) {
+      case PanGestureInput::PANGESTURE_MAYSTART: rv = OnPanMayBegin(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_CANCELLED: rv = OnPanCancelled(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_START: rv = OnPanBegin(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_PAN: rv = OnPan(panGestureInput, true); break;
+      case PanGestureInput::PANGESTURE_END: rv = OnPanEnd(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMSTART: rv = OnPanMomentumStart(panGestureInput); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMPAN: rv = OnPan(panGestureInput, false); break;
+      case PanGestureInput::PANGESTURE_MOMENTUMEND: rv = OnPanMomentumEnd(panGestureInput); break;
+      default: NS_WARNING("Unhandled pan gesture"); break;
     }
     break;
   }
@@ -1064,6 +1100,93 @@ AsyncPanZoomController::ConvertToGecko(const ScreenPoint& aPoint, CSSPoint* aOut
   return false;
 }
 
+nsEventStatus AsyncPanZoomController::OnPanMayBegin(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-maybegin in state %d\n", this, mState);
+
+  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+  CancelAnimation();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanCancelled(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-cancelled in state %d\n", this, mState);
+
+  mX.CancelTouch();
+  mY.CancelTouch();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+
+nsEventStatus AsyncPanZoomController::OnPanBegin(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-begin in state %d\n", this, mState);
+
+  mX.StartTouch(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.StartTouch(aEvent.mPanStartPoint.y, aEvent.mTime);
+
+  if (GetAxisLockMode() == FREE) {
+    SetState(PANNING);
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
+  float dx = aEvent.mPanDisplacement.x, dy = aEvent.mPanDisplacement.y;
+  double angle = atan2(dy, dx); // range [-pi, pi]
+  angle = fabs(angle); // range [0, pi]
+
+  HandlePanning(angle);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad) {
+  APZC_LOG("%p got a pan-pan in state %d\n", this, mState);
+
+  // We need to update the axis velocity in order to get a useful display port
+  // size and position. We need to do so even if this is a momentum pan (i.e.
+  // aFingersOnTouchpad == false); in that case the "with touch" part is not
+  // really appropriate, so we may want to rethink this at some point.
+  mX.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.x, aEvent.mTime);
+  mY.UpdateWithTouchAtDevicePoint(aEvent.mPanStartPoint.y, aEvent.mTime);
+
+  HandlePanningUpdate(aEvent.mPanDisplacement.x, aEvent.mPanDisplacement.y);
+
+  CallDispatchScroll(aEvent.mPanStartPoint, aEvent.mPanStartPoint + aEvent.mPanDisplacement, 0);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-end in state %d\n", this, mState);
+
+  mX.EndTouch(aEvent.mTime);
+  mY.EndTouch(aEvent.mTime);
+  RequestContentRepaint();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanMomentumStart(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-momentumstart in state %d\n", this, mState);
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
+nsEventStatus AsyncPanZoomController::OnPanMomentumEnd(const PanGestureInput& aEvent) {
+  APZC_LOG("%p got a pan-momentumend in state %d\n", this, mState);
+
+  // We need to reset the velocity to zero. We don't really have a "touch"
+  // here because the touch has already ended long before the momentum
+  // animation started, but I guess it doesn't really matter for now.
+  mX.CancelTouch();
+  mY.CancelTouch();
+
+  RequestContentRepaint();
+
+  return nsEventStatus_eConsumeNoDefault;
+}
+
 nsEventStatus AsyncPanZoomController::OnLongPress(const TapGestureInput& aEvent) {
   APZC_LOG("%p got a long-press in state %d\n", this, mState);
   nsRefPtr<GeckoContentController> controller = GetGeckoContentController();
@@ -1214,6 +1337,7 @@ void AsyncPanZoomController::HandlePanningWithTouchAction(double aAngle, TouchBe
 }
 
 void AsyncPanZoomController::HandlePanning(double aAngle) {
+  ReentrantMonitorAutoEnter lock(mMonitor);
   if (!gfxPrefs::APZCrossSlideEnabled() && (!mX.CanScrollNow() || !mY.CanScrollNow())) {
     SetState(PANNING);
   } else if (IsCloseToHorizontal(aAngle, AXIS_LOCK_ANGLE)) {
@@ -1234,6 +1358,31 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     }
   } else {
     SetState(PANNING);
+  }
+}
+
+void AsyncPanZoomController::HandlePanningUpdate(float aDX, float aDY) {
+  // If we're axis-locked, check if the user is trying to break the lock
+  if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
+
+    double angle = atan2(aDY, aDX); // range [-pi, pi]
+    angle = fabs(angle); // range [0, pi]
+
+    float breakThreshold = AXIS_BREAKOUT_THRESHOLD * APZCTreeManager::GetDPI();
+
+    if (fabs(aDX) > breakThreshold || fabs(aDY) > breakThreshold) {
+      if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
+        if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
+          mY.SetAxisLocked(false);
+          SetState(PANNING);
+        }
+      } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
+        if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
+          mX.SetAxisLocked(false);
+          SetState(PANNING);
+        }
+      }
+    }
   }
 }
 
@@ -1414,31 +1563,9 @@ void AsyncPanZoomController::TrackTouch(const MultiTouchInput& aEvent) {
   ScreenIntPoint prevTouchPoint(mX.GetPos(), mY.GetPos());
   ScreenIntPoint touchPoint = GetFirstTouchScreenPoint(aEvent);
 
-  // If we're axis-locked, check if the user is trying to break the lock
-  if (GetAxisLockMode() == STICKY && !mPanDirRestricted) {
-    ScreenIntPoint point = GetFirstTouchScreenPoint(aEvent);
-    float dx = mX.PanDistance(point.x);
-    float dy = mY.PanDistance(point.y);
-
-    double angle = atan2(dy, dx); // range [-pi, pi]
-    angle = fabs(angle); // range [0, pi]
-
-    float breakThreshold = AXIS_BREAKOUT_THRESHOLD * APZCTreeManager::GetDPI();
-
-    if (fabs(dx) > breakThreshold || fabs(dy) > breakThreshold) {
-      if (mState == PANNING_LOCKED_X || mState == CROSS_SLIDING_X) {
-        if (!IsCloseToHorizontal(angle, AXIS_BREAKOUT_ANGLE)) {
-          mY.SetAxisLocked(false);
-          SetState(PANNING);
-        }
-      } else if (mState == PANNING_LOCKED_Y || mState == CROSS_SLIDING_Y) {
-        if (!IsCloseToVertical(angle, AXIS_BREAKOUT_ANGLE)) {
-          mX.SetAxisLocked(false);
-          SetState(PANNING);
-        }
-      }
-    }
-  }
+  float dx = mX.PanDistance(touchPoint.x);
+  float dy = mY.PanDistance(touchPoint.y);
+  HandlePanningUpdate(dx, dy);
 
   UpdateWithTouchAtDevicePoint(aEvent);
 
@@ -1466,8 +1593,14 @@ bool FlingAnimation::Sample(FrameMetrics& aFrameMetrics,
     return true;
   }
 
-  bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta),
-       shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta);
+  bool overscrolled = mApzc.IsOverscrolled();
+  float friction = overscrolled ? gfxPrefs::APZOverscrollFlingFriction()
+                                : gfxPrefs::APZFlingFriction();
+  float threshold = overscrolled ? gfxPrefs::APZOverscrollFlingStoppedThreshold()
+                                 : gfxPrefs::APZFlingStoppedThreshold();
+
+  bool shouldContinueFlingX = mApzc.mX.FlingApplyFrictionOrCancel(aDelta, friction, threshold),
+       shouldContinueFlingY = mApzc.mY.FlingApplyFrictionOrCancel(aDelta, friction, threshold);
   // If we shouldn't continue the fling, let's just stop and repaint.
   if (!shouldContinueFlingX && !shouldContinueFlingY) {
     // If we are in overscroll, schedule the snap-back animation that relieves it.
@@ -1821,15 +1954,11 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
 
 void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) const {
   // The overscroll effect applied here is a combination of a translation in
-  // the direction of overscroll, and shrinking in both directions. For
-  // example, when overscrolling past the top of the page, the rectangle of
-  // content that filled the composition bounds will now fill a smaller
-  // rectangle at the bottom of the composition bounds, centred horizontally.
-  // The magnitude of the translation and the shrinking depends on the amount
-  // of the overscroll.
+  // the direction of overscroll, and shrinking in both directions.
   // With the effect applied, we can think of the composited region as being
   // made up of the following subregions.
-  //  (1) The shrunk content that used to fill the composited region.
+  //  (1) The shrunk content (or a portion of it) that used to fill the
+  //      composited region.
   //  (2) The space created along the axis that has overscroll. This space is
   //      blank, filled by the background color of the overscrolled content.
   //      TODO(botond): Implement handling of background color.
@@ -1846,61 +1975,71 @@ void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) co
 
   // The maximum proportion of the composition length which can become blank
   // space along an axis as we overscroll along that axis.
-  const float CLAMPING = 0.5;
+  const float kClamping = gfxPrefs::APZOverscrollClamping();
 
   // The proportion of the composition length which will become blank space
   // along each axis as a result of overscroll along that axis. Since
   // Axis::ApplyResistance() keeps the magnitude of the overscroll in the range
   // [0, GetCompositionLength()], these scale factors should be in the range
-  // [0, CLAMPING].
-  float spacePropX = CLAMPING * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
-  float spacePropY = CLAMPING * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+  // [0, kClamping].
+  float spacePropX = kClamping * fabsf(mX.GetOverscroll()) / mX.GetCompositionLength();
+  float spacePropY = kClamping * fabsf(mY.GetOverscroll()) / mY.GetCompositionLength();
+
+  // The fraction of the proportions above which will become blank space along
+  // the _opposite_ axis as we zoom out as a result of overscroll along an axis.
+  // This creates a 3D effect, as in the layer were moving backward along a "z"
+  // axis.
+  const float kZEffect = gfxPrefs::APZOverscrollZEffect();
 
   // The translation to apply for overscroll along the x axis.
   CSSPoint translationX;
-  if (mX.GetOverscroll() < 0) {
-    // Overscroll on left.
-    // Keep content at the midpoint of the screen's right edge fixed.
-    translationX.x = spacePropX * mX.GetCompositionLength();
-    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
-  } else if (mX.GetOverscroll() > 0) {
-    // Overscroll on right.
-    // Keep content at the midpoint of the screen's left edge fixed.
-    translationX.y = (spacePropX * mY.GetCompositionLength()) / 2;
+  if (mX.IsOverscrolled()) {
+    // Keep the content centred vertically as we zoom out.
+    translationX.y = (spacePropX * kZEffect * mY.GetCompositionLength()) / 2;
+
+    if (mX.GetOverscroll() < 0) {
+      // Overscroll on left.
+      translationX.x = spacePropX * mX.GetCompositionLength();
+    } else {
+      // Overscroll on right.
+      // Note that zooming out already moves the content at the right edge
+      // of the composition bounds to the left, but since the zooming is
+      // dampened by kZEffect, it doesn't take us as far as we want to go.
+      translationX.x = - (spacePropX * (1 - kZEffect) * mX.GetCompositionLength());
+    }
   }
 
   // The translation to apply for overscroll along the y axis.
   CSSPoint translationY;
-  if (mY.GetOverscroll() < 0) {
-    // Overscroll at top.
-    // Keep content at the midpoint of the screen's bottom edge fixed.
-    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
-    translationY.y = spacePropY * mY.GetCompositionLength();
-  } else if (mY.GetOverscroll() > 0) {
-    // Overscroll at bottom.
-    // Keep content at the midpoint of the screen's top edge fixed.
-    translationY.x = (spacePropY * mX.GetCompositionLength()) / 2;
+  if (mY.IsOverscrolled()) {
+    // Keep the content centred horizontally as we zoom out.
+    translationY.x = (spacePropY * kZEffect * mX.GetCompositionLength()) / 2;
+
+    if (mY.GetOverscroll() < 0) {
+      // Overscroll at top.
+      translationY.y = spacePropY * mY.GetCompositionLength();
+    } else {
+      // Overscroll at bottom.
+      // Note that zooming out already moves the content at the bottom edge
+      // of the composition bounds up, but since the zooming is
+      // dampened by kZEffect, it doesn't take us as far as we want to go.
+      translationY.y = - (spacePropY * (1 - kZEffect) * mY.GetCompositionLength());
+    }
   }
 
   // Combine the transformations along the two axes.
-  // TODO(botond): This method of combination is imperfect, and results in a
-  // funny-looking snap-back animation when we have overscroll along both axes.
-  // We should fine-tune this.
-  float spaceProp = std::max(spacePropX, spacePropY);
-  CSSPoint translation(std::max(translationX.x, translationY.x),
-                       std::max(translationX.y, translationY.y));
+  float spaceProp = sqrtf(spacePropX * spacePropX + spacePropY * spacePropY);
+  CSSPoint translation = translationX + translationY;
 
-  // The prpoportion of the composition length which will be taken up by the
-  // original content; this is the scale we will apply to the content.
-  float contentProp = 1 - spaceProp;
+  float scale = 1 - (kZEffect * spaceProp);
 
   // In a ViewTransform, the translation is applied before the scale. We want
   // to apply our translation after our scale, so we compensate for that here.
-  translation.x /= contentProp;
-  translation.y /= contentProp;
+  translation.x /= scale;
+  translation.y /= scale;
 
   // Finally, apply the transformations.
-  aTransform->mScale.scale *= contentProp;
+  aTransform->mScale.scale *= scale;
   aTransform->mTranslation += translation * mFrameMetrics.LayersPixelsPerCSSPixel();
 }
 
@@ -1923,9 +2062,11 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
     *aNewTransform = GetCurrentAsyncTransform();
 
-    // GetCurrentAsyncTransform() does not consider any overscroll we may have.
-    // Adjust the transform to account for that.
-    ApplyOverscrollEffect(aNewTransform);
+    if (IsOverscrolled()) {
+      // GetCurrentAsyncTransform() does not consider any overscroll we may have.
+      // Adjust the transform to account for that.
+      ApplyOverscrollEffect(aNewTransform);
+    }
 
     LogRendertraceRect(GetGuid(), "viewport", "red",
       CSSRect(mFrameMetrics.GetScrollOffset(),

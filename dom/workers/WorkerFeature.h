@@ -28,6 +28,12 @@ BEGIN_WORKERS_NAMESPACE
  * |   Killing   |     yes     |       yes       |   doesn't run  |
  * +-------------+-------------+-----------------+----------------+
  */
+
+#ifdef Status
+/* Xlib headers insist on this for some reason... Nuke it because
+   it'll override our member name */
+#undef Status
+#endif
 enum Status
 {
   // Not yet scheduled.

@@ -47,6 +47,8 @@
 #include "secoidt.h"
 #include "stdint.h"
 
+typedef struct CERTSignedDataStr CERTSignedData;
+
 namespace mozilla { namespace pkix { namespace der {
 
 enum Class
@@ -647,6 +649,25 @@ OptionalVersion(Input& input, /*out*/ uint8_t& version)
   }
   return Success;
 }
+
+// Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
+// by a BIT STRING into signedData. This handles the commonality between
+// parsing the signed/signature fields of certificates and OCSP responses. In
+// the case of an OCSP response, the caller needs to parse the certs
+// separately.
+//
+// Certificate  ::=  SEQUENCE  {
+//        tbsCertificate       TBSCertificate,
+//        signatureAlgorithm   AlgorithmIdentifier,
+//        signatureValue       BIT STRING  }
+//
+// BasicOCSPResponse       ::= SEQUENCE {
+//    tbsResponseData      ResponseData,
+//    signatureAlgorithm   AlgorithmIdentifier,
+//    signature            BIT STRING,
+//    certs            [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
+Result
+SignedData(Input& input, /*out*/ Input& tbs, /*out*/ CERTSignedData& signedData);
 
 } } } // namespace mozilla::pkix::der
 

@@ -59,6 +59,9 @@ const uint16_t kDefaultStunServerPort=3478;
 const std::string kBogusIceCandidate(
     (char *)"candidate:0 2 UDP 2113601790 192.168.178.20 50769 typ");
 
+const std::string kUnreachableHostIceCandidate(
+    (char *)"candidate:0 1 UDP 2113601790 192.168.178.20 50769 typ host");
+
 std::string g_stun_server_address(kDefaultStunServerAddress);
 std::string g_stun_server_hostname(kDefaultStunServerHostname);
 std::string g_turn_server;
@@ -69,10 +72,26 @@ namespace {
 
 enum TrickleMode { TRICKLE_NONE, TRICKLE_SIMULATE, TRICKLE_REAL };
 
-typedef bool (*CandidateFilter)(const std::string& candidate);
+typedef std::string (*CandidateFilter)(const std::string& candidate);
 
-static bool IsRelayCandidate(const std::string& candidate) {
-  return candidate.find("typ relay") != std::string::npos;
+static std::string IsRelayCandidate(const std::string& candidate) {
+  if (candidate.find("typ relay") != std::string::npos) {
+    return candidate;
+  }
+  return std::string();
+}
+
+static std::string SabotageHostCandidateAndDropReflexive(
+    const std::string& candidate) {
+  if (candidate.find("typ srflx") != std::string::npos) {
+    return std::string();
+  }
+
+  if (candidate.find("typ host") != std::string::npos) {
+    return kUnreachableHostIceCandidate;
+  }
+
+  return candidate;
 }
 
 bool ContainsSucceededPair(const std::vector<NrIceCandidatePair>& pairs) {
@@ -120,6 +139,74 @@ class IceCandidatePairCompare {
       }
       return lhs.priority < rhs.priority;
     }
+};
+
+class IceTestPeer;
+
+class SchedulableTrickleCandidate {
+  public:
+    SchedulableTrickleCandidate(IceTestPeer *peer,
+                                size_t stream,
+                                const std::string &candidate) :
+      peer_(peer),
+      stream_(stream),
+      candidate_(candidate),
+      timer_handle_(nullptr) {
+    }
+
+    ~SchedulableTrickleCandidate() {
+      if (timer_handle_)
+        NR_async_timer_cancel(timer_handle_);
+    }
+
+    void Schedule(unsigned int ms) {
+      test_utils->sts_target()->Dispatch(
+          WrapRunnable(this, &SchedulableTrickleCandidate::Schedule_s, ms),
+          NS_DISPATCH_SYNC);
+    }
+
+    void Schedule_s(unsigned int ms) {
+      MOZ_ASSERT(!timer_handle_);
+      NR_ASYNC_TIMER_SET(ms, Trickle_cb, this, &timer_handle_);
+    }
+
+    static void Trickle_cb(NR_SOCKET s, int how, void *cb_arg) {
+      static_cast<SchedulableTrickleCandidate*>(cb_arg)->Trickle();
+    }
+
+    void Trickle();
+
+    std::string& Candidate() {
+      return candidate_;
+    }
+
+    const std::string& Candidate() const {
+      return candidate_;
+    }
+
+    size_t Stream() const {
+      return stream_;
+    }
+
+    bool IsHost() const {
+      return candidate_.find("typ host") != std::string::npos;
+    }
+
+    bool IsReflexive() const {
+      return candidate_.find("typ srflx") != std::string::npos;
+    }
+
+    bool IsRelay() const {
+      return candidate_.find("typ relay") != std::string::npos;
+    }
+
+  private:
+    IceTestPeer *peer_;
+    size_t stream_;
+    std::string candidate_;
+    void *timer_handle_;
+
+    DISALLOW_COPY_ASSIGN(SchedulableTrickleCandidate);
 };
 
 class IceTestPeer : public sigslot::has_slots<> {
@@ -253,6 +340,13 @@ class IceTestPeer : public sigslot::has_slots<> {
     return v;
   }
 
+  std::string FilterCandidate(const std::string& candidate) {
+    if (candidate_filter_) {
+      return candidate_filter_(candidate);
+    }
+    return candidate;
+  }
+
   std::vector<std::string> GetCandidates_s(size_t stream) {
     std::vector<std::string> candidates;
 
@@ -264,9 +358,10 @@ class IceTestPeer : public sigslot::has_slots<> {
 
 
     for (size_t i=0; i < candidates_in.size(); i++) {
-      if ((!candidate_filter_) || candidate_filter_(candidates_in[i])) {
-        std::cerr << "Returning candidate: " << candidates_in[i] << std::endl;
-        candidates.push_back(candidates_in[i]);
+      std::string candidate(FilterCandidate(candidates_in[i]));
+      if (!candidate.empty()) {
+        std::cerr << "Returning candidate: " << candidate << std::endl;
+        candidates.push_back(candidate);
       }
     }
 
@@ -340,23 +435,37 @@ class IceTestPeer : public sigslot::has_slots<> {
   void SimulateTrickle(size_t stream) {
     std::cerr << "Doing trickle for stream " << stream << std::endl;
     // If we are in trickle deferred mode, now trickle in the candidates
-    // for |stream}
-    nsresult res;
+    // for |stream|
 
     ASSERT_GT(remote_->streams_.size(), stream);
+
+    std::vector<SchedulableTrickleCandidate*>& candidates =
+      ControlTrickle(stream);
+
+    for (auto i = candidates.begin(); i != candidates.end(); ++i) {
+      (*i)->Schedule(0);
+    }
+  }
+
+  // Allows test case to completely control when/if candidates are trickled
+  // (test could also do things like insert extra trickle candidates, or
+  // change existing ones, or insert duplicates, really anything is fair game)
+  std::vector<SchedulableTrickleCandidate*>& ControlTrickle(size_t stream) {
+    std::cerr << "Doing controlled trickle for stream " << stream << std::endl;
 
     std::vector<std::string> candidates =
       remote_->GetCandidates(stream);
 
     for (size_t j=0; j<candidates.size(); j++) {
-      test_utils->sts_target()->Dispatch(
-        WrapRunnableRet(streams_[stream],
-                        &NrIceMediaStream::ParseTrickleCandidate,
-                        candidates[j],
-                        &res), NS_DISPATCH_SYNC);
-
-      ASSERT_TRUE(NS_SUCCEEDED(res));
+      controlled_trickle_candidates_[stream].push_back(
+          new SchedulableTrickleCandidate(this, stream, candidates[j]));
     }
+
+    return controlled_trickle_candidates_[stream];
+  }
+
+  nsresult TrickleCandidate_s(const std::string &candidate, size_t stream) {
+    return streams_[stream]->ParseTrickleCandidate(candidate);
   }
 
   void DumpCandidate(std::string which, const NrIceCandidate& cand) {
@@ -433,6 +542,14 @@ class IceTestPeer : public sigslot::has_slots<> {
   }
 
   void Shutdown() {
+    for (auto s = controlled_trickle_candidates_.begin();
+         s != controlled_trickle_candidates_.end();
+         ++s) {
+      for (auto cand = s->second.begin(); cand != s->second.end(); ++cand) {
+        delete *cand;
+      }
+    }
+
     ice_ctx_ = nullptr;
   }
 
@@ -471,7 +588,11 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   }
 
-  void CandidateInitialized(NrIceMediaStream *stream, const std::string &candidate) {
+  void CandidateInitialized(NrIceMediaStream *stream, const std::string &raw_candidate) {
+    std::string candidate(FilterCandidate(raw_candidate));
+    if (candidate.empty()) {
+      return;
+    }
     std::cerr << "Candidate initialized: " << candidate << std::endl;
     candidates_[stream->name()].push_back(candidate);
 
@@ -674,6 +795,9 @@ class IceTestPeer : public sigslot::has_slots<> {
   nsRefPtr<NrIceCtx> ice_ctx_;
   std::vector<mozilla::RefPtr<NrIceMediaStream> > streams_;
   std::map<std::string, std::vector<std::string> > candidates_;
+  // Maps from stream id to list of remote trickle candidates
+  std::map<size_t, std::vector<SchedulableTrickleCandidate*> >
+    controlled_trickle_candidates_;
   bool gathering_complete_;
   int ready_ct_;
   bool ice_complete_;
@@ -689,6 +813,12 @@ class IceTestPeer : public sigslot::has_slots<> {
   TrickleMode trickle_mode_;
   int trickled_;
 };
+
+void SchedulableTrickleCandidate::Trickle() {
+  timer_handle_ = nullptr;
+  nsresult res = peer_->TrickleCandidate_s(candidate_, stream_);
+  ASSERT_TRUE(NS_SUCCEEDED(res));
+}
 
 class IceGatherTest : public ::testing::Test {
  public:
@@ -1228,6 +1358,98 @@ TEST_F(IceConnectTest, TestConnectTurn) {
                 g_turn_user, g_turn_password);
   ASSERT_TRUE(Gather(true));
   Connect();
+}
+
+TEST_F(IceConnectTest, TestConnectTurnWithDelay) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  SetCandidateFilter(SabotageHostCandidateAndDropReflexive);
+  p1_->Gather();
+  PR_Sleep(500);
+  p2_->Gather();
+  ConnectTrickle(TRICKLE_REAL);
+  WaitForGather();
+  WaitForComplete();
+}
+
+void RealisticTrickleDelay(
+    std::vector<SchedulableTrickleCandidate*>& candidates) {
+  for (size_t i = 0; i < candidates.size(); ++i) {
+    SchedulableTrickleCandidate* cand = candidates[i];
+    if (cand->IsHost()) {
+      cand->Schedule(i*10);
+    } else if (cand->IsReflexive()) {
+      cand->Schedule(i*10 + 100);
+    } else if (cand->IsRelay()) {
+      cand->Schedule(i*10 + 200);
+    }
+  }
+}
+
+void DelayRelayCandidates(
+    std::vector<SchedulableTrickleCandidate*>& candidates,
+    unsigned int ms) {
+  for (auto i = candidates.begin(); i != candidates.end(); ++i) {
+    if ((*i)->IsRelay()) {
+      (*i)->Schedule(ms);
+    } else {
+      (*i)->Schedule(0);
+    }
+  }
+}
+
+TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelay) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  ASSERT_TRUE(Gather(true));
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(0));
+  RealisticTrickleDelay(p2_->ControlTrickle(0));
+
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+}
+
+TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  ASSERT_TRUE(Gather(true));
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(0));
+  p2_->SimulateTrickle(0);
+
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+}
+
+TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
+  if (g_turn_server.empty())
+    return;
+
+  AddStream("first", 1);
+  SetTurnServer(g_turn_server, kDefaultStunServerPort,
+                g_turn_user, g_turn_password);
+  SetCandidateFilter(SabotageHostCandidateAndDropReflexive);
+  ASSERT_TRUE(Gather(true));
+  ConnectTrickle();
+  // Trickle host candidates immediately, but delay relay candidates
+  DelayRelayCandidates(p1_->ControlTrickle(0), 3700);
+  DelayRelayCandidates(p2_->ControlTrickle(0), 3700);
+
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
 }
 
 TEST_F(IceConnectTest, TestConnectTurnTcp) {

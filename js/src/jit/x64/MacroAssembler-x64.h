@@ -42,7 +42,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     uint32_t passedFloatArgs_;
     uint32_t stackForCall_;
     bool dynamicAlignment_;
-    bool enoughMemory_;
 
     // These use SystemAllocPolicy since asm.js releases memory after each
     // function is compiled, and these need to live until after all functions
@@ -83,18 +82,13 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::store32;
 
     MacroAssemblerX64()
-      : inCall_(false),
-        enoughMemory_(true)
+      : inCall_(false)
     {
     }
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void finish();
-
-    bool oom() const {
-        return MacroAssemblerX86Shared::oom() || !enoughMemory_;
-    }
 
     /////////////////////////////////////////////////////////////////
     // X64 helpers.

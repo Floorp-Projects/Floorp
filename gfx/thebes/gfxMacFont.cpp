@@ -8,7 +8,9 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gfxCoreTextShaper.h"
+#include "gfxHarfBuzzShaper.h"
 #include <algorithm>
+#include "gfxGraphiteShaper.h"
 #include "gfxPlatformMac.h"
 #include "gfxContext.h"
 #include "gfxFontUtils.h"
@@ -104,6 +106,13 @@ gfxMacFont::gfxMacFont(MacOSFontEntry *aFontEntry, const gfxFontStyle *aFontStyl
         NS_WARNING(warnBuf);
 #endif
     }
+
+    if (FontCanSupportGraphite()) {
+        mGraphiteShaper = new gfxGraphiteShaper(this);
+    }
+    if (FontCanSupportHarfBuzz()) {
+        mHarfBuzzShaper = new gfxHarfBuzzShaper(this);
+    }
 }
 
 gfxMacFont::~gfxMacFont()
@@ -117,31 +126,29 @@ gfxMacFont::~gfxMacFont()
 }
 
 bool
-gfxMacFont::ShapeText(gfxContext     *aContext,
+gfxMacFont::ShapeText(gfxContext      *aContext,
                       const char16_t *aText,
-                      uint32_t        aOffset,
-                      uint32_t        aLength,
-                      int32_t         aScript,
-                      gfxShapedText  *aShapedText)
+                      uint32_t         aOffset,
+                      uint32_t         aLength,
+                      int32_t          aScript,
+                      gfxShapedText   *aShapedText,
+                      bool             aPreferPlatformShaping)
 {
     if (!mIsValid) {
         NS_WARNING("invalid font! expect incorrect text rendering");
         return false;
     }
 
-    if (static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout()) {
-        if (!mCoreTextShaper) {
-            mCoreTextShaper = new gfxCoreTextShaper(this);
-        }
-        if (mCoreTextShaper->ShapeText(aContext, aText, aOffset, aLength,
-                                       aScript, aShapedText)) {
-            PostShapingFixup(aContext, aText, aOffset, aLength, aShapedText);
-            return true;
-        }
-    }
+    bool requiresAAT =
+        static_cast<MacOSFontEntry*>(GetFontEntry())->RequiresAATLayout();
+    return gfxFont::ShapeText(aContext, aText, aOffset, aLength,
+                              aScript, aShapedText, requiresAAT);
+}
 
-    return gfxFont::ShapeText(aContext, aText, aOffset, aLength, aScript,
-                              aShapedText);
+void
+gfxMacFont::CreatePlatformShaper()
+{
+    mPlatformShaper = new gfxCoreTextShaper(this);
 }
 
 bool

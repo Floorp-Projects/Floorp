@@ -365,7 +365,7 @@ NeckoParent::RecvPRtspChannelConstructor(
   RtspChannelParent* p = static_cast<RtspChannelParent*>(aActor);
   return p->Init(aConnectArgs);
 #else
-  return nullptr;
+  return false;
 #endif
 }
 

@@ -672,12 +672,12 @@ TextOverflow::CanHaveTextOverflow(nsDisplayListBuilder* aBuilder,
                                   nsIFrame*             aBlockFrame)
 {
   const nsStyleTextReset* style = aBlockFrame->StyleTextReset();
-  // Nothing to do for text-overflow:clip or if 'overflow-x:visible'
-  // or if we're just building items for event processing.
+  // Nothing to do for text-overflow:clip or if 'overflow-x:visible' or if
+  // we're just building items for event processing or image visibility.
   if ((style->mTextOverflow.mLeft.mType == NS_STYLE_TEXT_OVERFLOW_CLIP &&
        style->mTextOverflow.mRight.mType == NS_STYLE_TEXT_OVERFLOW_CLIP) ||
       IsHorizontalOverflowVisible(aBlockFrame) ||
-      aBuilder->IsForEventDelivery()) {
+      aBuilder->IsForEventDelivery() || aBuilder->IsForImageVisibility()) {
     return false;
   }
 

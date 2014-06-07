@@ -903,6 +903,8 @@ LiveInterval::rangesToString() const
 void
 LiveInterval::dump()
 {
-    fprintf(stderr, "v%u: index=%u allocation=%s %s\n",
-            vreg(), index(), getAllocation()->toString(), rangesToString());
+    if (hasVreg())
+        fprintf(stderr, "v%u: ", vreg());
+    fprintf(stderr, "index=%u allocation=%s %s\n",
+            index(), getAllocation()->toString(), rangesToString());
 }
