@@ -275,7 +275,7 @@ FunctionStatementList(ParseNode *fn)
 static inline bool
 IsNormalObjectField(ExclusiveContext *cx, ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
+    JS_ASSERT(pn->isKind(PNK_COLON) || pn->isKind(PNK_SHORTHAND));
     return pn->getOp() == JSOP_INITPROP &&
            BinaryLeft(pn)->isKind(PNK_NAME) &&
            BinaryLeft(pn)->name() != cx->names().proto;
@@ -291,7 +291,7 @@ ObjectNormalFieldName(ExclusiveContext *cx, ParseNode *pn)
 static inline ParseNode *
 ObjectFieldInitializer(ParseNode *pn)
 {
-    JS_ASSERT(pn->isKind(PNK_COLON));
+    JS_ASSERT(pn->isKind(PNK_COLON) || pn->isKind(PNK_SHORTHAND));
     return BinaryRight(pn);
 }
 

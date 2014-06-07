@@ -252,18 +252,17 @@ class FullParseHandler
         return literal;
     }
 
-    bool addPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *expr) {
-        ParseNode *propdef = newBinary(PNK_COLON, name, expr, JSOP_INITPROP);
+    bool addPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *expr,
+                               bool isShorthand = false) {
+        JS_ASSERT(literal->isArity(PN_LIST));
+        ParseNode *propdef = newBinary(isShorthand ? PNK_SHORTHAND : PNK_COLON, name, expr,
+                                       JSOP_INITPROP);
+        if (isShorthand)
+            literal->pn_xflags |= PNX_NONCONST;
         if (!propdef)
             return false;
         literal->append(propdef);
         return true;
-    }
-
-    bool addShorthandPropertyDefinition(ParseNode *literal, ParseNode *name) {
-        JS_ASSERT(literal->isArity(PN_LIST));
-        literal->pn_xflags |= PNX_DESTRUCT | PNX_NONCONST;  // XXX why PNX_DESTRUCT?
-        return addPropertyDefinition(literal, name, name);
     }
 
     bool addAccessorPropertyDefinition(ParseNode *literal, ParseNode *name, ParseNode *fn, JSOp op)
