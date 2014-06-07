@@ -1,0 +1,14 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMHTMLFormElement;
+interface nsIDOMWindow;
+
+[scriptable, uuid(cbf47f9d-a13d-4fad-8221-8964086b1b8a)]
+interface nsIAutofillController : nsISupports
+{
+  void requestAutocomplete(in nsIDOMHTMLFormElement form, in nsIDOMWindow window);
+};

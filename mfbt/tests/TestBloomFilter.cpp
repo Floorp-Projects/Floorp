@@ -14,7 +14,7 @@ using mozilla::BloomFilter;
 class FilterChecker
 {
   public:
-    FilterChecker(uint32_t hash) : mHash(hash) { }
+    explicit FilterChecker(uint32_t hash) : mHash(hash) { }
 
     uint32_t hash() const { return mHash; }
 

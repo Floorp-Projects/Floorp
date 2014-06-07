@@ -29,7 +29,7 @@ public:
                          /*out*/ mozilla::pkix::ScopedCERTCertList& results)
                                  MOZ_OVERRIDE;
   SECStatus VerifySignedData(const CERTSignedData* signedData,
-                             const CERTCertificate* cert) MOZ_OVERRIDE;
+                             const SECItem& subjectPublicKeyInfo) MOZ_OVERRIDE;
   SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                             const CERTCertificate* cert,
                             /*const*/ CERTCertificate* issuerCertToDup,

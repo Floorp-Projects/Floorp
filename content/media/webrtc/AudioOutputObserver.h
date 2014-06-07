@@ -43,7 +43,7 @@ private:
   uint32_t mChunkSize;
 
   // chunking to 10ms support
-  nsAutoPtr<FarEndAudioChunk> mSaved;
+  FarEndAudioChunk *mSaved; // can't be nsAutoPtr since we need to use moz_free()
   uint32_t mSamplesSaved;
 };
 

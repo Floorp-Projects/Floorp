@@ -247,6 +247,18 @@ JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals
     compartment->isSystem = isSystem;
 }
 
+JS_FRIEND_API(JSPrincipals *)
+JS_GetScriptPrincipals(JSScript *script)
+{
+    return script->principals();
+}
+
+JS_FRIEND_API(JSPrincipals *)
+JS_GetScriptOriginPrincipals(JSScript *script)
+{
+    return script->originPrincipals();
+}
+
 JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc)
 {

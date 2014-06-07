@@ -12,6 +12,8 @@
 #ifndef mozilla_DebugOnly_h
 #define mozilla_DebugOnly_h
 
+#include "mozilla/Attributes.h"
+
 namespace mozilla {
 
 /**
@@ -39,7 +41,7 @@ public:
   T value;
 
   DebugOnly() { }
-  DebugOnly(const T& aOther) : value(aOther) { }
+  MOZ_IMPLICIT DebugOnly(const T& aOther) : value(aOther) { }
   DebugOnly(const DebugOnly& aOther) : value(aOther.value) { }
   DebugOnly& operator=(const T& aRhs) {
     value = aRhs;
@@ -59,7 +61,7 @@ public:
 
 #else
   DebugOnly() { }
-  DebugOnly(const T&) { }
+  MOZ_IMPLICIT DebugOnly(const T&) { }
   DebugOnly(const DebugOnly&) { }
   DebugOnly& operator=(const T&) { return *this; }
   void operator++(int) { }

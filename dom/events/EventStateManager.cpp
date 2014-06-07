@@ -1440,7 +1440,7 @@ EventStateManager::FireContextClick()
         }
       }
 
-      nsIDocument* doc = mGestureDownContent->GetCurrentDoc();
+      nsIDocument* doc = mGestureDownContent->GetCrossShadowCurrentDoc();
       AutoHandlingUserInputStatePusher userInpStatePusher(true, &event, doc);
 
       // dispatch to DOM
@@ -2011,7 +2011,7 @@ EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       int32_t change = (adjustment > 0) ? -1 : 1;
 
-      if (Preferences::GetBool("browser.zoom.full") || content->GetCurrentDoc()->IsSyntheticDocument()) {
+      if (Preferences::GetBool("browser.zoom.full") || content->OwnerDoc()->IsSyntheticDocument()) {
         ChangeFullZoom(change);
       } else {
         ChangeTextSize(change);
@@ -2752,7 +2752,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // NOTE: The newFocus isn't editable that also means it's not in
         // designMode.  In designMode, all contents are not focusable.
         if (newFocus && !newFocus->IsEditable()) {
-          nsIDocument *doc = newFocus->GetCurrentDoc();
+          nsIDocument *doc = newFocus->GetCrossShadowCurrentDoc();
           if (doc && newFocus == doc->GetRootElement()) {
             nsIContent *bodyContent =
               nsLayoutUtils::GetEditableRootContentByContentEditable(doc);
@@ -4633,7 +4633,8 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
         newHover = aContent;
       } else {
         NS_ASSERTION(!aContent ||
-                     aContent->GetCurrentDoc() == mPresContext->PresShell()->GetDocument(),
+                     aContent->GetCrossShadowCurrentDoc() ==
+                       mPresContext->PresShell()->GetDocument(),
                      "Unexpected document");
         nsIFrame *frame = aContent ? aContent->GetPrimaryFrame() : nullptr;
         if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {

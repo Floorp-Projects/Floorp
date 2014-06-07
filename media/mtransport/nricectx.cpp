@@ -419,6 +419,7 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     }
 
     NR_reg_set_uint4((char *)"stun.client.maximum_transmits",4);
+    NR_reg_set_uint4((char *)NR_ICE_REG_TRICKLE_GRACE_PERIOD, 5000);
   }
 
   // Create the ICE context

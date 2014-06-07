@@ -32,6 +32,9 @@ class Latin1Chars : public mozilla::Range<Latin1Char>
   public:
     Latin1Chars() : Base() {}
     Latin1Chars(char *aBytes, size_t aLength) : Base(reinterpret_cast<Latin1Char *>(aBytes), aLength) {}
+    Latin1Chars(const Latin1Char *aBytes, size_t aLength)
+      : Base(const_cast<Latin1Char *>(aBytes), aLength)
+    {}
     Latin1Chars(const char *aBytes, size_t aLength)
       : Base(reinterpret_cast<Latin1Char *>(const_cast<char *>(aBytes)), aLength)
     {}

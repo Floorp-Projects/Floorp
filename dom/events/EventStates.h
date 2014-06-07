@@ -38,17 +38,6 @@ public:
   {
   }
 
-  MOZ_CONSTEXPR EventStates(const EventStates& aEventStates)
-    : mStates(aEventStates.mStates)
-  {
-  }
-
-  EventStates& operator=(const EventStates& aEventStates)
-  {
-    mStates = aEventStates.mStates;
-    return *this;
-  }
-
   EventStates MOZ_CONSTEXPR operator|(const EventStates& aEventStates) const
   {
     return EventStates(mStates | aEventStates.mStates);
