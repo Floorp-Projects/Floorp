@@ -2600,6 +2600,10 @@ sidebarheader {
   text-shadow: none;
 }
 
+sidebarheader > .close-icon > .toolbarbutton-text {
+  display: none;
+}
+
 #sidebar-box {
   -moz-appearance: dialog;
   -moz-appearance: none;
