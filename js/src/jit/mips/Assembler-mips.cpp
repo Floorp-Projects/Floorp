@@ -434,8 +434,8 @@ BOffImm16::BOffImm16(InstImm inst)
 bool
 Assembler::oom() const
 {
-    return m_buffer.oom() ||
-           !enoughMemory_ ||
+    return AssemblerShared::oom() ||
+           m_buffer.oom() ||
            jumpRelocations_.oom() ||
            dataRelocations_.oom() ||
            preBarriers_.oom();

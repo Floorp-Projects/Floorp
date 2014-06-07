@@ -62,6 +62,7 @@ extern "C" {
 
 #define NR_ICE_REG_KEEPALIVE_TIMER      "ice.keepalive_timer"
 
+#define NR_ICE_REG_TRICKLE_GRACE_PERIOD "ice.trickle_grace_period"
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

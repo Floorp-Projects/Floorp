@@ -92,6 +92,7 @@
 
 #include "nsIDOMWheelEvent.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
+#include "InputData.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -4449,9 +4450,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
   }
 
+  NSEventPhase eventPhase = nsCocoaUtils::EventPhase(anEvent);
   // Verify that this is a scroll wheel event with proper phase to be tracked
   // by the OS.
-  if ([anEvent type] != NSScrollWheel || [anEvent phase] == NSEventPhaseNone) {
+  if ([anEvent type] != NSScrollWheel || eventPhase == NSEventPhaseNone) {
     return;
   }
 
@@ -4486,7 +4488,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // Only initiate horizontal tracking for gestures that have just begun --
     // otherwise a scroll to one side of the page can have a swipe tacked on
     // to it.
-    if ([anEvent phase] != NSEventPhaseBegan) {
+    if (eventPhase != NSEventPhaseBegan) {
       return;
     }
 
@@ -5093,6 +5095,11 @@ static int32_t RoundUp(double aDouble)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if ([self apzctm]) {
+    // Disable main-thread scrolling completely when using APZC.
+    return;
+  }
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   ChildViewMouseTracker::MouseScrolled(theEvent);
@@ -5105,18 +5112,16 @@ static int32_t RoundUp(double aDouble)
     return;
   }
 
-  if (nsCocoaFeatures::OnLionOrLater()) {
-    NSEventPhase phase = [theEvent phase];
-    // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
-    if (phase & NSEventPhaseMayBegin) {
-      [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
-      return;
-    }
+  NSEventPhase phase = nsCocoaUtils::EventPhase(theEvent);
+  // Fire NS_WHEEL_START/STOP events when 2 fingers touch/release the touchpad.
+  if (phase & NSEventPhaseMayBegin) {
+    [self sendWheelCondition:YES first:NS_WHEEL_STOP second:NS_WHEEL_START forEvent:theEvent];
+    return;
+  }
 
-    if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
-      [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
-      return;
-    }
+  if (phase & (NSEventPhaseEnded | NSEventPhaseCancelled)) {
+    [self sendWheelCondition:NO first:NS_WHEEL_START second:NS_WHEEL_STOP forEvent:theEvent];
+    return;
   }
 
   WidgetWheelEvent wheelEvent(true, NS_WHEEL_WHEEL, mGeckoChild);
@@ -5125,19 +5130,14 @@ static int32_t RoundUp(double aDouble)
   wheelEvent.lineOrPageDeltaX = RoundUp(-[theEvent deltaX]);
   wheelEvent.lineOrPageDeltaY = RoundUp(-[theEvent deltaY]);
 
+  // wheelEvent.deltaMode was set by convertCocoaMouseWheelEvent:toGeckoEvent:
+  // and depends on whether the current scrolling device supports pixel deltas.
   if (wheelEvent.deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    // Some scrolling devices supports pixel scrolling, e.g. a Macbook
-    // touchpad or a Mighty Mouse. On those devices, [theEvent deviceDeltaX/Y]
-    // contains the amount of pixels to scroll. Since Lion this has changed
-    // to [theEvent scrollingDeltaX/Y].
     double scale = mGeckoChild->BackingScaleFactor();
-    if ([theEvent respondsToSelector:@selector(scrollingDeltaX)]) {
-      wheelEvent.deltaX = -[theEvent scrollingDeltaX] * scale;
-      wheelEvent.deltaY = -[theEvent scrollingDeltaY] * scale;
-    } else {
-      wheelEvent.deltaX = -[theEvent deviceDeltaX] * scale;
-      wheelEvent.deltaY = -[theEvent deviceDeltaY] * scale;
-    }
+    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
+    nsCocoaUtils::GetScrollingDeltas(theEvent, &pixelDeltaX, &pixelDeltaY);
+    wheelEvent.deltaX = -pixelDeltaX * scale;
+    wheelEvent.deltaY = -pixelDeltaY * scale;
   } else {
     wheelEvent.deltaX = -[theEvent deltaX];
     wheelEvent.deltaY = -[theEvent deltaY];
@@ -5179,6 +5179,97 @@ static int32_t RoundUp(double aDouble)
 
 - (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type
 {
+  APZCTreeManager* apzctm = [self apzctm];
+  if (!apzctm) {
+    return;
+  }
+
+  CGPoint loc = CGEventGetLocation(cgEvent);
+  loc.y = nsCocoaUtils::FlippedScreenY(loc.y);
+  NSPoint locationInWindow = [[self window] convertScreenToBase:NSPointFromCGPoint(loc)];
+  ScreenIntPoint location = ScreenPixel::FromUntyped([self convertWindowCoordinates:locationInWindow]);
+
+  static NSTimeInterval sStartTime = [NSDate timeIntervalSinceReferenceDate];
+  static TimeStamp sStartTimeStamp = TimeStamp::Now();
+
+  if (type == kCGEventScrollWheel) {
+    NSEvent* event = [NSEvent eventWithCGEvent:cgEvent];
+    NSEventPhase phase = nsCocoaUtils::EventPhase(event);
+    NSEventPhase momentumPhase = nsCocoaUtils::EventMomentumPhase(event);
+    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
+    nsCocoaUtils::GetScrollingDeltas(event, &pixelDeltaX, &pixelDeltaY);
+    uint32_t eventTime = ([event timestamp] - sStartTime) * 1000;
+    TimeStamp eventTimeStamp = sStartTimeStamp +
+      TimeDuration::FromSeconds([event timestamp] - sStartTime);
+    NSPoint locationInWindowMoved = NSMakePoint(
+      locationInWindow.x + pixelDeltaX,
+      locationInWindow.y - pixelDeltaY);
+    ScreenIntPoint locationMoved = ScreenPixel::FromUntyped(
+      [self convertWindowCoordinates:locationInWindowMoved]);
+    ScreenPoint delta = ScreenPoint(locationMoved - location);
+    ScrollableLayerGuid guid;
+
+    // MayBegin and Cancelled are dispatched when the fingers start or stop
+    // touching the touchpad before any scrolling has occurred. These events
+    // can be used to control scrollbar visibility or interrupt scroll
+    // animations. They are only dispatched on 10.8 or later, and only by
+    // relatively modern devices.
+    if (phase == NSEventPhaseMayBegin) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MAYSTART,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+      return;
+    }
+    if (phase == NSEventPhaseCancelled) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_CANCELLED,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+      return;
+    }
+
+    // Legacy scroll events are dispatched by devices that do not have a
+    // concept of a scroll gesture, for example by USB mice with
+    // traditional mouse wheels.
+    // For these kinds of scrolls, we want to surround every single scroll
+    // event with a PANGESTURE_START and a PANGESTURE_END event. The APZC
+    // needs to know that the real scroll gesture can end abruptly after any
+    // one of these events.
+    bool isLegacyScroll = (phase == NSEventPhaseNone &&
+      momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0));
+
+    if (phase == NSEventPhaseBegan || isLegacyScroll) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_START,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseNone && delta != ScreenPoint(0, 0)) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_PAN,
+                                                eventTime, eventTimeStamp, location,
+                                                delta, 0), &guid);
+    }
+    if (phase == NSEventPhaseEnded || isLegacyScroll) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_END,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+
+    // Any device that can dispatch momentum events supports all three momentum phases.
+    if (momentumPhase == NSEventPhaseBegan) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMSTART,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseChanged && delta != ScreenPoint(0, 0)) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMPAN,
+                                                eventTime, eventTimeStamp, location,
+                                                delta, 0), &guid);
+    }
+    if (momentumPhase == NSEventPhaseEnded) {
+      apzctm->ReceiveInputEvent(PanGestureInput(PanGestureInput::PANGESTURE_MOMENTUMEND,
+                                                eventTime, eventTimeStamp, location,
+                                                ScreenPoint(0, 0), 0), &guid);
+    }
+  }
 }
 
 -(NSMenu*)menuForEvent:(NSEvent*)theEvent
@@ -5237,22 +5328,12 @@ static int32_t RoundUp(double aDouble)
                         toGeckoEvent:(WidgetWheelEvent*)outWheelEvent
 {
   [self convertCocoaMouseEvent:aMouseEvent toGeckoEvent:outWheelEvent];
-  outWheelEvent->deltaMode =
-    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true) ?
-      nsIDOMWheelEvent::DOM_DELTA_PIXEL : nsIDOMWheelEvent::DOM_DELTA_LINE;
 
-  // Calling deviceDeltaX or deviceDeltaY on theEvent will trigger a Cocoa
-  // assertion and an Objective-C NSInternalInconsistencyException if the
-  // underlying "Carbon" event doesn't contain pixel scrolling information.
-  // For these events, carbonEventKind is kEventMouseWheelMoved instead of
-  // kEventMouseScroll.
-  if (outWheelEvent->deltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL) {
-    EventRef theCarbonEvent = [aMouseEvent _eventRef];
-    UInt32 carbonEventKind = theCarbonEvent ? ::GetEventKind(theCarbonEvent) : 0;
-    if (carbonEventKind != kEventMouseScroll) {
-      outWheelEvent->deltaMode = nsIDOMWheelEvent::DOM_DELTA_LINE;
-    }
-  }
+  bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
+    Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
+
+  outWheelEvent->deltaMode = usePreciseDeltas ? nsIDOMWheelEvent::DOM_DELTA_PIXEL
+                                              : nsIDOMWheelEvent::DOM_DELTA_LINE;
   outWheelEvent->isMomentum = nsCocoaUtils::IsMomentumScrollEvent(aMouseEvent);
 }
 
@@ -6683,7 +6764,7 @@ HandleEvent(CGEventTapProxy aProxy, CGEventType aType,
     CGEventTapCreateForPSN(&currentProcess,
                            kCGHeadInsertEventTap,
                            kCGEventTapOptionListenOnly,
-                           kCGEventMaskForAllEvents,
+                           CGEventMaskBit(kCGEventScrollWheel),
                            HandleEvent,
                            self);
   CFRunLoopSourceRef eventPortSource =

@@ -542,7 +542,7 @@ public:
   // ShadowRoot has APIs that can change styles so we only
   // want to restyle elements in the ShadowRoot and not the whole
   // document.
-  virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
 
   /**
    * Determine if it is safe to flush all pending notifications
@@ -1465,7 +1465,8 @@ public:
 
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
-  virtual void RebuildImageVisibility(const nsDisplayList& aList) = 0;
+  virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) = 0;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) = 0;
 
   // Ensures the image is in the list of visible images.
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;

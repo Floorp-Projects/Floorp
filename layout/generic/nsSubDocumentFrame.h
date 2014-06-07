@@ -89,6 +89,10 @@ public:
   void EndSwapDocShells(nsIFrame* aOther);
   nsView* EnsureInnerView();
   nsIFrame* GetSubdocumentRootFrame();
+  enum {
+    IGNORE_PAINT_SUPPRESSION = 0x1
+  };
+  nsIPresShell* GetSubdocumentPresShellForPainting(uint32_t aFlags);
   nsIntSize GetSubdocumentSize();
 
   // nsIReflowCallback

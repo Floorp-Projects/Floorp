@@ -16,6 +16,7 @@ log_formatters = {
     'html': (formatters.HTMLFormatter, "HTML report"),
     'mach': (formatters.MachFormatter, "Uncolored mach-like output"),
     'mach_terminal': (formatters.MachTerminalFormatter, "Colored mach-like output for use in a tty"),
+    'tbpl': (formatters.TbplFormatter, "TBPL style log format"),
 }
 
 

@@ -1096,8 +1096,17 @@ nsFlexContainerFrame::
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
 
-  aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
-                                      aAxisTracker);
+  // For single-line vertical flexbox, we need to give our flex items an early
+  // opportunity to stretch, since any stretching of their cross-size (width)
+  // will likely impact the max-content main-size (height) that we're about to
+  // measure for them. (We can't do this for multi-line, since we don't know
+  // yet how many lines there will be & how much each line will stretch.)
+  if (NS_STYLE_FLEX_WRAP_NOWRAP ==
+      aParentReflowState.mStylePosition->mFlexWrap) {
+    aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
+                                        aAxisTracker);
+  }
+
   if (aFlexItem.IsStretched()) {
     childRSForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
     childRSForMeasuringHeight.mFlags.mHResize = true;

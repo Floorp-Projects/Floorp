@@ -162,6 +162,10 @@ void
 LBlock::dump(FILE *fp)
 {
     fprintf(fp, "block%u:\n", mir()->id());
+    for (size_t i = 0; i < numPhis(); ++i) {
+        getPhi(i)->dump(fp);
+        fprintf(fp, "\n");
+    }
     for (LInstructionIterator iter = begin(); iter != end(); iter++) {
         iter->dump(fp);
         fprintf(fp, "\n");
@@ -458,13 +462,15 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 void
 LInstruction::dump(FILE *fp)
 {
-    fprintf(fp, "{");
-    for (size_t i = 0; i < numDefs(); i++) {
-        PrintDefinition(fp, *getDef(i));
-        if (i != numDefs() - 1)
-            fprintf(fp, ", ");
+    if (numDefs() != 0) {
+        fprintf(fp, "{");
+        for (size_t i = 0; i < numDefs(); i++) {
+            PrintDefinition(fp, *getDef(i));
+            if (i != numDefs() - 1)
+                fprintf(fp, ", ");
+        }
+        fprintf(fp, "} <- ");
     }
-    fprintf(fp, "} <- ");
 
     printName(fp);
     printInfo(fp);

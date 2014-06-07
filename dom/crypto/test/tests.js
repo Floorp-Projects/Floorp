@@ -311,6 +311,62 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "Generate a 256-bit HMAC-SHA-256 key",
+  function() {
+    var that = this;
+    var alg = { name: "HMAC", length: 256, hash: {name: "SHA-256"} };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
+      complete(that, function(x) {
+        return hasKeyFields(x) && x.algorithm.length == 256;
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate a 256-bit HMAC-SHA-256 key without specifying a key length",
+  function() {
+    var that = this;
+    var alg = { name: "HMAC", hash: {name: "SHA-256"} };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
+      complete(that, function(x) {
+        return hasKeyFields(x) && x.algorithm.length == 256;
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail generating an HMAC key when specifying an invalid hash algorithm",
+  function() {
+    var that = this;
+    var alg = { name: "HMAC", hash: {name: "SHA-123"} };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
+      error(that),
+      complete(that, function() { return true; })
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Fail generating an HMAC key when specifying a zero length",
+  function() {
+    var that = this;
+    var alg = { name: "HMAC", hash: {name: "SHA-256"}, length: 0 };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
+      error(that),
+      complete(that, function() { return true; })
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "Generate a 192-bit AES key",
   function() {
     var that = this;

@@ -21,8 +21,6 @@
 SimpleTest.expectAssertions(5, 9);
 if (navigator.platform.startsWith("Win")) {
   SimpleTest.expectAssertions(4, 5);
-} else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(5, 7);
 }
 
 let manager = new MediaTestManager;

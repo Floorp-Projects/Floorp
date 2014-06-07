@@ -317,11 +317,16 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
 
   Element* oldScopeElement = GetScopeElement(mStyleSheet);
 
-  if (mStyleSheet && aOldDocument) {
-    // We're removing the link element from the document, unload the
-    // stylesheet.  We want to do this even if updates are disabled, since
-    // otherwise a sheet with a stale linking element pointer will be hanging
-    // around -- not good!
+  if (mStyleSheet && (aOldDocument || aOldShadowRoot)) {
+    MOZ_ASSERT(!(aOldDocument && aOldShadowRoot),
+               "ShadowRoot content is never in document, thus "
+               "there should not be a old document and old "
+               "ShadowRoot simultaneously.");
+
+    // We're removing the link element from the document or shadow tree,
+    // unload the stylesheet.  We want to do this even if updates are
+    // disabled, since otherwise a sheet with a stale linking element pointer
+    // will be hanging around -- not good!
     if (aOldShadowRoot) {
       aOldShadowRoot->RemoveSheet(mStyleSheet);
     } else {
@@ -342,8 +347,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocument> doc = thisContent->GetDocument();
-
+  nsCOMPtr<nsIDocument> doc = thisContent->GetCrossShadowCurrentDoc();
   if (!doc || !doc->CSSLoader()->GetEnabled()) {
     return NS_OK;
   }

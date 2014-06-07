@@ -23,6 +23,7 @@ PARALLEL_DIRS += [
     'exthelper',
     'filepicker',
     'finalizationwitness',
+    'formautofill',
     'find',
     'jsdownloads',
     'mediasniffer',

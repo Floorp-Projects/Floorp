@@ -18,7 +18,6 @@
 #define WEBCRYPTO_ALG_AES_GCM       "AES-GCM"
 #define WEBCRYPTO_ALG_SHA1          "SHA-1"
 #define WEBCRYPTO_ALG_SHA256        "SHA-256"
-#define WEBCRYPTO_ALG_SHA224        "SHA-224"
 #define WEBCRYPTO_ALG_SHA384        "SHA-384"
 #define WEBCRYPTO_ALG_SHA512        "SHA-512"
 #define WEBCRYPTO_ALG_HMAC          "HMAC"

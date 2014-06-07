@@ -642,6 +642,16 @@ class JSLinearString : public JSString
         return JS::TwoByteChars(chars(), length());
     }
 
+    JS::Latin1Chars latin1Range(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(JSString::isLinear());
+        return JS::Latin1Chars(latin1Chars(nogc), length());
+    }
+
+    JS::TwoByteChars twoByteRange(const JS::AutoCheckCannotGC &nogc) const {
+        JS_ASSERT(JSString::isLinear());
+        return JS::TwoByteChars(twoByteChars(nogc), length());
+    }
+
     MOZ_ALWAYS_INLINE
     jschar latin1OrTwoByteChar(size_t index) const {
         MOZ_ASSERT(JSString::isLinear());
@@ -700,7 +710,8 @@ class JSFlatString : public JSLinearString
     bool isFlat() const MOZ_DELETE;
     JSFlatString &asFlat() const MOZ_DELETE;
 
-    bool isIndexSlow(uint32_t *indexp) const;
+    template <typename CharT>
+    static bool isIndexSlow(const CharT *s, size_t length, uint32_t *indexp);
 
     void init(const jschar *chars, size_t length);
     void init(const JS::Latin1Char *chars, size_t length);
@@ -723,8 +734,14 @@ class JSFlatString : public JSLinearString
      * string equal to this string.)
      */
     inline bool isIndex(uint32_t *indexp) const {
-        const jschar *s = chars();
-        return JS7_ISDEC(*s) && isIndexSlow(indexp);
+        JS_ASSERT(JSString::isFlat());
+        JS::AutoCheckCannotGC nogc;
+        if (hasLatin1Chars()) {
+            const JS::Latin1Char *s = latin1Chars(nogc);
+            return JS7_ISDEC(*s) && isIndexSlow(s, length(), indexp);
+        }
+        const jschar *s = twoByteChars(nogc);
+        return JS7_ISDEC(*s) && isIndexSlow(s, length(), indexp);
     }
 
     /*

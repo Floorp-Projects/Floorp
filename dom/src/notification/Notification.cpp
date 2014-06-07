@@ -396,8 +396,13 @@ NS_IMETHODIMP
 NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
                               const char16_t* aData)
 {
+  nsCOMPtr<nsPIDOMWindow> window = mNotification->GetOwner();
+  if (!window) {
+    // Window has been closed, this observer is not valid anymore
+    return NS_ERROR_FAILURE;
+  }
+
   if (!strcmp("alertclickcallback", aTopic)) {
-    nsCOMPtr<nsPIDOMWindow> window = mNotification->GetOwner();
     nsIDocument* doc = window ? window->GetExtantDoc() : nullptr;
     if (doc) {
       nsContentUtils::DispatchChromeEvent(doc, window,

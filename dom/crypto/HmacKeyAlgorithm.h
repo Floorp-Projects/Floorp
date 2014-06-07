@@ -33,7 +33,6 @@ public:
   {
     switch (mHash->Mechanism()) {
       case CKM_SHA_1: mMechanism = CKM_SHA_1_HMAC; break;
-      case CKM_SHA224: mMechanism = CKM_SHA224_HMAC; break;
       case CKM_SHA256: mMechanism = CKM_SHA256_HMAC; break;
       case CKM_SHA384: mMechanism = CKM_SHA384_HMAC; break;
       case CKM_SHA512: mMechanism = CKM_SHA512_HMAC; break;

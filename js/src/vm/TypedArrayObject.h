@@ -171,8 +171,9 @@ AsTypedArrayBuffer(HandleValue v);
 // Return value is whether the string is some integer. If the string is an
 // integer which is not representable as a uint64_t, the return value is true
 // and the resulting index is UINT64_MAX.
+template <typename CharT>
 bool
-StringIsTypedArrayIndex(JSLinearString *str, uint64_t *indexp);
+StringIsTypedArrayIndex(const CharT *s, size_t length, uint64_t *indexp);
 
 inline bool
 IsTypedArrayIndex(jsid id, uint64_t *indexp)
@@ -187,13 +188,21 @@ IsTypedArrayIndex(jsid id, uint64_t *indexp)
     if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
         return false;
 
+    AutoCheckCannotGC nogc;
     JSAtom *atom = JSID_TO_ATOM(id);
+    size_t length = atom->length();
 
-    jschar c = atom->chars()[0];
-    if (!JS7_ISDEC(c) && c != '-')
+    if (atom->hasLatin1Chars()) {
+        const Latin1Char *s = atom->latin1Chars(nogc);
+        if (!JS7_ISDEC(*s) && *s != '-')
+            return false;
+        return StringIsTypedArrayIndex(s, length, indexp);
+    }
+
+    const jschar *s = atom->twoByteChars(nogc);
+    if (!JS7_ISDEC(*s) && *s != '-')
         return false;
-
-    return StringIsTypedArrayIndex(atom, indexp);
+    return StringIsTypedArrayIndex(s, length, indexp);
 }
 
 static inline unsigned

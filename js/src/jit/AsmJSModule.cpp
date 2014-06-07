@@ -6,6 +6,8 @@
 
 #include "jit/AsmJSModule.h"
 
+#include <errno.h>
+
 #ifndef XP_WIN
 # include <sys/mman.h>
 #endif
@@ -97,7 +99,7 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 #ifdef XP_WIN
     JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
 #else
-    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
+    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0 || errno == ENOMEM);
 #endif
 }
 

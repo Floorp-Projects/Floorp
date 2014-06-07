@@ -59,7 +59,7 @@ inline void VERIFY_COORD(nscoord aCoord) {
 
 inline nscoord NSToCoordRound(float aValue)
 {
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
   return NS_lroundup30(aValue);
 #else
   return nscoord(floorf(aValue + 0.5f));
@@ -68,7 +68,7 @@ inline nscoord NSToCoordRound(float aValue)
 
 inline nscoord NSToCoordRound(double aValue)
 {
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
   return NS_lroundup30((float)aValue);
 #else
   return nscoord(floor(aValue + 0.5f));

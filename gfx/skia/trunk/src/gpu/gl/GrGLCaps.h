@@ -14,6 +14,9 @@
 #include "SkTArray.h"
 #include "SkTDArray.h"
 
+// defined in Windows headers
+#undef interface
+
 class GrGLContextInfo;
 
 /**

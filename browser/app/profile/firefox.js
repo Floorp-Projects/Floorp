@@ -1237,8 +1237,12 @@ pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.lastTab", "help");
 pref("devtools.appmanager.manifestEditor.enabled", true);
 
-// Disable devtools webide until bug 1007059
+// Enable devtools webide
+#ifdef MOZ_DEVTOOLS_WEBIDE
+pref("devtools.webide.enabled", true);
+#else
 pref("devtools.webide.enabled", false);
+#endif
 
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
@@ -1561,6 +1565,8 @@ pref("identity.fxaccounts.settings.uri", "https://accounts.firefox.com/settings"
 pref("ui.key.menuAccessKeyFocuses", true);
 #endif
 
+// Encrypted media extensions.
+pref("media.eme.enabled", false);
 
 // Delete HTTP cache v2 data of users that didn't opt-in manually
 pref("browser.cache.auto_delete_cache_version", 1);

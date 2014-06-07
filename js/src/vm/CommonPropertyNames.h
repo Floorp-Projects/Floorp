@@ -69,7 +69,6 @@
     macro(fieldOffsets, fieldOffsets, "fieldOffsets") \
     macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
-    macro(FillTypedArrayWithValue, FillTypedArrayWithValue, "FillTypedArrayWithValue") \
     macro(fix, fix, "fix") \
     macro(float32, float32, "float32") \
     macro(float32x4, float32x4, "float32x4") \

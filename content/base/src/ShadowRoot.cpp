@@ -72,9 +72,14 @@ ShadowRoot::ShadowRoot(nsIContent* aContent,
     mInsertionPointChanged(false)
 {
   SetHost(aContent);
+
+  // Nodes in a shadow tree should never store a value
+  // in the subtree root pointer, nodes in the shadow tree
+  // track the subtree root using GetContainingShadow().
+  ClearSubtreeRootPointer();
+
   SetFlags(NODE_IS_IN_SHADOW_TREE);
-  // ShadowRoot isn't really in the document but it behaves like it is.
-  SetInDocument();
+
   DOMSlots()->mBindingParent = aContent;
   DOMSlots()->mContainingShadow = this;
 
@@ -92,7 +97,11 @@ ShadowRoot::~ShadowRoot()
     mPoolHost->RemoveMutationObserver(this);
   }
 
-  ClearInDocument();
+  UnsetFlags(NODE_IS_IN_SHADOW_TREE);
+
+  // nsINode destructor expects mSubtreeRoot == this.
+  SetSubtreeRootPointer(this);
+
   SetHost(nullptr);
 }
 
@@ -115,14 +124,14 @@ ShadowRoot::FromNode(nsINode* aNode)
 }
 
 void
-ShadowRoot::Restyle()
+ShadowRoot::StyleSheetChanged()
 {
   mProtoBinding->FlushSkinSheets();
 
   nsIPresShell* shell = OwnerDoc()->GetShell();
   if (shell) {
     OwnerDoc()->BeginUpdate(UPDATE_STYLE);
-    shell->RestyleShadowRoot(this);
+    shell->RecordShadowStyleChange(this);
     OwnerDoc()->EndUpdate(UPDATE_STYLE);
   }
 }
@@ -157,7 +166,9 @@ ShadowRoot::InsertSheet(nsCSSStyleSheet* aSheet,
     }
   }
 
-  Restyle();
+  if (aSheet->IsApplicable()) {
+    StyleSheetChanged();
+  }
 }
 
 void
@@ -171,7 +182,9 @@ ShadowRoot::RemoveSheet(nsCSSStyleSheet* aSheet)
   MOZ_ASSERT(found, "Trying to remove a sheet from a ShadowRoot "
                     "that does not exist.");
 
-  Restyle();
+  if (aSheet->IsApplicable()) {
+    StyleSheetChanged();
+  }
 }
 
 Element*
@@ -494,7 +507,7 @@ ShadowRoot::SetApplyAuthorStyles(bool aApplyAuthorStyles)
   nsIPresShell* shell = OwnerDoc()->GetShell();
   if (shell) {
     OwnerDoc()->BeginUpdate(UPDATE_STYLE);
-    shell->RestyleShadowRoot(this);
+    shell->RecordShadowStyleChange(this);
     OwnerDoc()->EndUpdate(UPDATE_STYLE);
   }
 }

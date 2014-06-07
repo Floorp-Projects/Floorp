@@ -307,8 +307,9 @@ namespace js {
 extern size_t
 PutEscapedStringImpl(char *buffer, size_t size, FILE *fp, JSLinearString *str, uint32_t quote);
 
+template <typename CharT>
 extern size_t
-PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const jschar *chars,
+PutEscapedStringImpl(char *buffer, size_t bufferSize, FILE *fp, const CharT *chars,
                      size_t length, uint32_t quote);
 
 /*

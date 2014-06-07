@@ -48,6 +48,10 @@ private:
 
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
+#ifdef MOZ_ENABLE_PROFILER_SPS
+  const char* AppendJSEntry(const volatile StackEntry* aEntry,
+                            const char* aPrevLabel);
+#endif
 
 public:
   /**

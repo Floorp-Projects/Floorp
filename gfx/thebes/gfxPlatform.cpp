@@ -143,6 +143,8 @@ NS_IMPL_ISUPPORTS(SRGBOverrideObserver, nsIObserver, nsISupportsWeakReference)
 
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
 
+#define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
+#define HARFBUZZ_SCRIPTS_DEFAULT  mozilla::unicode::SHAPING_DEFAULT
 #define GFX_PREF_FALLBACK_USE_CMAPS  "gfx.font_rendering.fallback.always_use_cmaps"
 
 #define GFX_PREF_OPENTYPE_SVG "gfx.font_rendering.opentype_svg.enabled"
@@ -260,6 +262,7 @@ gfxPlatform::gfxPlatform()
   : mAzureCanvasBackendCollector(MOZ_THIS_IN_INITIALIZER_LIST(),
                                  &gfxPlatform::GetAzureBackendInfo)
 {
+    mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mFallbackUsesCmaps = UNINITIALIZED_VALUE;
 
@@ -1110,6 +1113,18 @@ gfxPlatform::UseGraphiteShaping()
     return mGraphiteShapingEnabled;
 }
 
+bool
+gfxPlatform::UseHarfBuzzForScript(int32_t aScriptCode)
+{
+    if (mUseHarfBuzzScripts == UNINITIALIZED_VALUE) {
+        mUseHarfBuzzScripts = Preferences::GetInt(GFX_PREF_HARFBUZZ_SCRIPTS, HARFBUZZ_SCRIPTS_DEFAULT);
+    }
+
+    int32_t shapingType = mozilla::unicode::ScriptShapingType(aScriptCode);
+
+    return (mUseHarfBuzzScripts & shapingType) != 0;
+}
+
 gfxFontEntry*
 gfxPlatform::MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                               const uint8_t *aFontData,
@@ -1845,6 +1860,9 @@ gfxPlatform::FontsPrefsChanged(const char *aPref)
         FlushFontAndWordCaches();
     } else if (!strcmp(GFX_PREF_GRAPHITE_SHAPING, aPref)) {
         mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
+        FlushFontAndWordCaches();
+    } else if (!strcmp(GFX_PREF_HARFBUZZ_SCRIPTS, aPref)) {
+        mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
         FlushFontAndWordCaches();
     } else if (!strcmp(BIDI_NUMERAL_PREF, aPref)) {
         mBidiNumeralOption = UNINITIALIZED_VALUE;

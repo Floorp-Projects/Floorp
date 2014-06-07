@@ -1460,7 +1460,7 @@ IonBuilder::elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefin
     if (!objDescrs.arrayElementType(*this, &elemDescrs))
         return false;
 
-    if (elemDescrs.empty() || elemDescrs.kind() != TypeDescr::Scalar)
+    if (elemDescrs.empty() || elemDescrs.kind() != type::Scalar)
         return false;
 
     JS_ASSERT(TypeDescr::isSized(elemDescrs.kind()));

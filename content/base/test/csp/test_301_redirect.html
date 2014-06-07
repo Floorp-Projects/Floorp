@@ -28,10 +28,6 @@ function examiner() {
 
 examiner.prototype  = {
   observe: function(subject, topic, data) {
-    // subject should be an nsURI
-    if(!SpecialPowers.can_QI(subject))
-       return;
-
     if (topic === "specialpowers-http-notify-request") {
       // this is used to fail the test - if we see the POST to the target of the redirect
       // we know this is a fail

@@ -512,18 +512,6 @@ JS_GetFunctionNative(JSContext *cx, JSFunction *fun)
     return fun->maybeNative();
 }
 
-JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptPrincipals(JSScript *script)
-{
-    return script->principals();
-}
-
-JS_PUBLIC_API(JSPrincipals *)
-JS_GetScriptOriginPrincipals(JSScript *script)
-{
-    return script->originPrincipals();
-}
-
 /************************************************************************/
 
 JS_PUBLIC_API(JSFunction *)

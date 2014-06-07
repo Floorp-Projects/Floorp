@@ -489,8 +489,6 @@ public:
     switch (hashAlg->Mechanism()) {
       case CKM_SHA_1:
         mOidTag = SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION; break;
-      case CKM_SHA224:
-        mOidTag = SEC_OID_PKCS1_SHA224_WITH_RSA_ENCRYPTION; break;
       case CKM_SHA256:
         mOidTag = SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION; break;
       case CKM_SHA384:
@@ -598,8 +596,6 @@ public:
 
     if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA1))   {
       mOidTag = SEC_OID_SHA1;
-    } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA224)) {
-      mOidTag = SEC_OID_SHA224;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA256)) {
       mOidTag = SEC_OID_SHA256;
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_SHA384)) {
@@ -1022,8 +1018,7 @@ public:
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_HMAC)) {
       RootedDictionary<HmacKeyGenParams> params(aCx);
       mEarlyRv = Coerce(aCx, params, aAlgorithm);
-      if (NS_FAILED(mEarlyRv) || !params.mLength.WasPassed() ||
-          !params.mHash.WasPassed()) {
+      if (NS_FAILED(mEarlyRv) || !params.mHash.WasPassed()) {
         mEarlyRv = NS_ERROR_DOM_SYNTAX_ERR;
         return;
       }
@@ -1041,7 +1036,24 @@ public:
         hashName.Assign(hashAlg.mName.Value());
       }
 
-      mLength = params.mLength.Value();
+      if (params.mLength.WasPassed()) {
+        mLength = params.mLength.Value();
+      } else {
+        KeyAlgorithm hashAlg(global, hashName);
+        switch (hashAlg.Mechanism()) {
+          case CKM_SHA_1: mLength = 128; break;
+          case CKM_SHA256: mLength = 256; break;
+          case CKM_SHA384: mLength = 384; break;
+          case CKM_SHA512: mLength = 512; break;
+          default: mLength = 0; break;
+        }
+      }
+
+      if (mLength == 0) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
+
       algorithm = new HmacKeyAlgorithm(global, algName, mLength, hashName);
       allowedUsages = Key::SIGN | Key::VERIFY;
     } else {

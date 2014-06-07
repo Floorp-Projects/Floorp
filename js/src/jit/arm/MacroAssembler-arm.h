@@ -476,8 +476,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 #endif
     bool dynamicAlignment_;
 
-    bool enoughMemory_;
-
     // Used to work around the move resolver's lack of support for
     // moving into register pairs, which the softfp ABI needs.
     mozilla::Array<MoveOperand, 2> floatArgsInGPR;
@@ -505,12 +503,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
   public:
     MacroAssemblerARMCompat()
       : inCall_(false),
-        enoughMemory_(true),
         framePushed_(0)
     { }
-    bool oom() const {
-        return Assembler::oom() || !enoughMemory_;
-    }
 
   public:
     using MacroAssemblerARM::call;

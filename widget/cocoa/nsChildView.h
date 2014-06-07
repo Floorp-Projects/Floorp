@@ -141,18 +141,6 @@ class APZCTreeManager;
 
 @end
 
-// Support for pixel scroll deltas, not part of NSEvent.h
-// See http://lists.apple.com/archives/cocoa-dev/2007/Feb/msg00050.html
-@interface NSEvent (DeviceDelta)
-// Leopard and SnowLeopard
-- (CGFloat)deviceDeltaX;
-- (CGFloat)deviceDeltaY;
-// Lion and above
-- (CGFloat)scrollingDeltaX;
-- (CGFloat)scrollingDeltaY;
-- (BOOL)hasPreciseScrollingDeltas;
-@end
-
 #if !defined(MAC_OS_X_VERSION_10_6) || \
 MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
 @interface NSEvent (SnowLeopardEventFeatures)
@@ -176,16 +164,6 @@ MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
 // friends are defined (in AvailabilityMacros.h) as decimal numbers (not
 // hexadecimal numbers).
 #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-enum {
-  NSEventPhaseNone        = 0,
-  NSEventPhaseBegan       = 0x1 << 0,
-  NSEventPhaseStationary  = 0x1 << 1,
-  NSEventPhaseChanged     = 0x1 << 2,
-  NSEventPhaseEnded       = 0x1 << 3,
-  NSEventPhaseCancelled   = 0x1 << 4,
-};
-typedef NSUInteger NSEventPhase;
-
 enum {
    NSFullScreenWindowMask = 1 << 14
 };
@@ -221,21 +199,6 @@ typedef NSInteger NSEventGestureAxis;
 @end
 #endif // #ifdef __LP64__
 #endif // #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-
-#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-enum {
-  NSEventPhaseMayBegin    = 0x1 << 5
-};
-#endif // #if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-
-// Undocumented scrollPhase flag that lets us discern between real scrolls and
-// automatically firing momentum scroll events.
-@interface NSEvent (ScrollPhase)
-// Leopard and SnowLeopard
-- (long long)_scrollPhase;
-// Lion and above
-- (NSEventPhase)momentumPhase;
-@end
 
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY

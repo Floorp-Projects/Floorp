@@ -690,6 +690,8 @@ void AssertValidStringPtr(JSContext *cx, JSString *str);
 void AssertValidValue(JSContext *cx, Value *v);
 #endif
 
+JSObject *TypedObjectProto(JSObject *obj);
+
 } // namespace jit
 } // namespace js
 

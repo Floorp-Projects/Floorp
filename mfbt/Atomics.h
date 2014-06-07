@@ -942,7 +942,7 @@ protected:
 
 public:
   MOZ_CONSTEXPR AtomicBase() : mValue() {}
-  MOZ_CONSTEXPR AtomicBase(T aInit) : mValue(aInit) {}
+  explicit MOZ_CONSTEXPR AtomicBase(T aInit) : mValue(aInit) {}
 
   // Note: we can't provide operator T() here because Atomic<bool> inherits
   // from AtomcBase with T=uint32_t and not T=bool. If we implemented
@@ -992,7 +992,7 @@ class AtomicBaseIncDec : public AtomicBase<T, Order>
 
 public:
   MOZ_CONSTEXPR AtomicBaseIncDec() : Base() {}
-  MOZ_CONSTEXPR AtomicBaseIncDec(T aInit) : Base(aInit) {}
+  explicit MOZ_CONSTEXPR AtomicBaseIncDec(T aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -1048,7 +1048,7 @@ class Atomic<T, Order, typename EnableIf<IsIntegral<T>::value &&
 
 public:
   MOZ_CONSTEXPR Atomic() : Base() {}
-  MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
+  explicit MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -1096,7 +1096,7 @@ class Atomic<T*, Order> : public detail::AtomicBaseIncDec<T*, Order>
 
 public:
   MOZ_CONSTEXPR Atomic() : Base() {}
-  MOZ_CONSTEXPR Atomic(T* aInit) : Base(aInit) {}
+  explicit MOZ_CONSTEXPR Atomic(T* aInit) : Base(aInit) {}
 
   using Base::operator=;
 
@@ -1127,7 +1127,7 @@ class Atomic<T, Order, typename EnableIf<IsEnum<T>::value>::Type>
 
 public:
   MOZ_CONSTEXPR Atomic() : Base() {}
-  MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
+  explicit MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
 
   operator T() const { return Base::Intrinsics::load(Base::mValue); }
 
@@ -1161,7 +1161,7 @@ class Atomic<bool, Order>
 
 public:
   MOZ_CONSTEXPR Atomic() : Base() {}
-  MOZ_CONSTEXPR Atomic(bool aInit) : Base(aInit) {}
+  explicit MOZ_CONSTEXPR Atomic(bool aInit) : Base(aInit) {}
 
   // We provide boolean wrappers for the underlying AtomicBase methods.
   operator bool() const

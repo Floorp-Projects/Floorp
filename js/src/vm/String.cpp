@@ -536,25 +536,24 @@ JSDependentString::undepend(ExclusiveContext *cx)
     return &this->asFlat();
 }
 
-bool
-JSFlatString::isIndexSlow(uint32_t *indexp) const
+template <typename CharT>
+/* static */ bool
+JSFlatString::isIndexSlow(const CharT *s, size_t length, uint32_t *indexp)
 {
-    const jschar *s = charsZ();
-    jschar ch = *s;
+    CharT ch = *s;
 
     if (!JS7_ISDEC(ch))
         return false;
 
-    size_t n = length();
-    if (n > UINT32_CHAR_BUFFER_LENGTH)
+    if (length > UINT32_CHAR_BUFFER_LENGTH)
         return false;
 
     /*
      * Make sure to account for the '\0' at the end of characters, dereferenced
      * in the loop below.
      */
-    RangedPtr<const jschar> cp(s, n + 1);
-    const RangedPtr<const jschar> end(s + n, s, n + 1);
+    RangedPtr<const CharT> cp(s, length + 1);
+    const RangedPtr<const CharT> end(s + length, s, length + 1);
 
     uint32_t index = JS7_UNDEC(*cp++);
     uint32_t oldIndex = 0;
@@ -584,6 +583,12 @@ JSFlatString::isIndexSlow(uint32_t *indexp) const
 
     return false;
 }
+
+template bool
+JSFlatString::isIndexSlow(const Latin1Char *s, size_t length, uint32_t *indexp);
+
+template bool
+JSFlatString::isIndexSlow(const jschar *s, size_t length, uint32_t *indexp);
 
 bool
 ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx, const AutoCheckCannotGC &nogc)
