@@ -5765,7 +5765,7 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect)
     } else {
       rect = rect.Intersect(scrollFrame->GetScrollPortRect());      
     }
-    rect = scrollFrame->ExpandRect(rect);
+    rect = scrollFrame->ExpandRectToNearlyVisible(rect);
   }
 
   bool preserves3DChildren = aFrame->Preserves3DChildren();
@@ -5871,10 +5871,10 @@ PresShell::UpdateImageVisibility()
 
     if (IgnoringViewportScrolling()) {
       builder.SetIgnoreScrollFrame(rootScroll);
-      // The ExpandRect that the root scroll frame would do gets short circuited
-      // due to us ignoring the root scroll frame, so we do it here.
+      // The ExpandRectToNearlyVisible that the root scroll frame would do gets short
+      // circuited due to us ignoring the root scroll frame, so we do it here.
       nsIScrollableFrame* rootScrollable = do_QueryFrame(rootScroll);
-      updateRect = rootScrollable->ExpandRect(updateRect);
+      updateRect = rootScrollable->ExpandRectToNearlyVisible(updateRect);
     }
   }
   builder.IgnorePaintSuppression();

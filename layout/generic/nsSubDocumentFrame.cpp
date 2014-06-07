@@ -420,10 +420,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         aBuilder->SetIgnoreScrollFrame(rootScrollFrame);
 
         if (aBuilder->IsForImageVisibility()) {
-          // The ExpandRect that the root scroll frame would do gets short circuited
-          // due to us ignoring the root scroll frame, so we do it here.
+          // The ExpandRectToNearlyVisible that the root scroll frame would do gets short
+          // circuited due to us ignoring the root scroll frame, so we do it here.
           nsIScrollableFrame* rootScrollableFrame = do_QueryFrame(rootScrollFrame);
-          dirty = rootScrollableFrame->ExpandRect(dirty);
+          dirty = rootScrollableFrame->ExpandRectToNearlyVisible(dirty);
         }
       }
     }
