@@ -68,7 +68,7 @@ CompileRuntime::addressOfLastCachedNativeIterator()
 const void *
 CompileRuntime::addressOfGCZeal()
 {
-    return runtime()->gc.addressOfZealMode();
+    return &runtime()->gc.zealMode;
 }
 #endif
 
