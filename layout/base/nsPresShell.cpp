@@ -4957,7 +4957,7 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
   // range.
   nsINode* startParent = range->GetStartParent();
   nsINode* endParent = range->GetEndParent();
-  nsIDocument* doc = startParent->GetCurrentDoc();
+  nsIDocument* doc = startParent->GetCrossShadowCurrentDoc();
   if (startParent == doc || endParent == doc) {
     ancestorFrame = rootFrame;
   }

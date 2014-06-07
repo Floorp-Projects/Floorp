@@ -831,7 +831,7 @@ Element::CreateShadowRoot(ErrorResult& aError)
 
   // Recreate the frame for the bound content because binding a ShadowRoot
   // changes how things are rendered.
-  nsIDocument* doc = GetCurrentDoc();
+  nsIDocument* doc = GetCrossShadowCurrentDoc();
   if (doc) {
     nsIPresShell *shell = doc->GetShell();
     if (shell) {
@@ -1231,6 +1231,7 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
       SetFlags(NODE_CHROME_ONLY_ACCESS);
     }
     if (aParent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+      ClearSubtreeRootPointer();
       SetFlags(NODE_IS_IN_SHADOW_TREE);
     }
     ShadowRoot* parentContainingShadow = aParent->GetContainingShadow();
@@ -1291,8 +1292,9 @@ Element::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
     // Propagate scoped style sheet tracking bit.
     SetIsElementInStyleScope(mParent->IsElementInStyleScope());
-  } else {
-    // If we're not in the doc, update our subtree pointer.
+  } else if (!HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    // If we're not in the doc and not in a shadow tree,
+    // update our subtree pointer.
     SetSubtreeRootPointer(aParent->SubtreeRoot());
   }
 
@@ -1435,6 +1437,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
     SetParentIsContent(false);
   }
   ClearInDocument();
+  UnsetFlags(NODE_IS_IN_SHADOW_TREE);
 
   // Begin keeping track of our subtree root.
   SetSubtreeRootPointer(aNullParent ? this : mParent->SubtreeRoot());
@@ -1470,7 +1473,7 @@ Element::UnbindFromTree(bool aDeep, bool aNullParent)
   }
 
   // Unset this since that's what the old code effectively did.
-  UnsetFlags(NODE_FORCE_XBL_BINDINGS | NODE_IS_IN_SHADOW_TREE);
+  UnsetFlags(NODE_FORCE_XBL_BINDINGS);
   
 #ifdef MOZ_XUL
   nsXULElement* xulElem = nsXULElement::FromContent(this);
