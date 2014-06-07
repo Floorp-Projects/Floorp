@@ -43,6 +43,9 @@
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
+#ifdef MOZ_B2G
+#include "nsIMobileIdentityService.h"
+#endif
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/CellBroadcast.h"
@@ -1584,6 +1587,30 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
   return mTelephony;
 }
 
+#ifdef MOZ_B2G
+already_AddRefed<Promise>
+Navigator::GetMobileIdAssertion(ErrorResult& aRv)
+{
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIMobileIdentityService> service =
+    do_GetService("@mozilla.org/mobileidentity-service;1");
+  if (!service) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> promise;
+  aRv = service->GetMobileIdAssertion(mWindow, getter_AddRefs(promise));
+
+  nsRefPtr<Promise> p = static_cast<Promise*>(promise.get());
+  return p.forget();
+}
+#endif // MOZ_B2G
+
 #ifdef MOZ_B2G_RIL
 
 MobileConnectionArray*
@@ -1647,7 +1674,6 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
 
   return mIccManager;
 }
-
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_GAMEPAD
