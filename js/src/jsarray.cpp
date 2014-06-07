@@ -96,12 +96,11 @@ js::GetLengthProperty(JSContext *cx, HandleObject obj, uint32_t *lengthp)
  * "08" or "4.0" as array indices, which they are not.
  *
  */
-JS_FRIEND_API(bool)
-js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
+template <typename CharT>
+static bool
+StringIsArrayIndex(const CharT *s, uint32_t length, uint32_t *indexp)
 {
-    const jschar *s = str->chars();
-    uint32_t length = str->length();
-    const jschar *end = s + length;
+    const CharT *end = s + length;
 
     if (length == 0 || length > (sizeof("4294967294") - 1) || !JS7_ISDEC(*s))
         return false;
@@ -131,6 +130,15 @@ js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
     }
 
     return false;
+}
+
+JS_FRIEND_API(bool)
+js::StringIsArrayIndex(JSLinearString *str, uint32_t *indexp)
+{
+    AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? ::StringIsArrayIndex(str->latin1Chars(nogc), str->length(), indexp)
+           : ::StringIsArrayIndex(str->twoByteChars(nogc), str->length(), indexp);
 }
 
 static bool

@@ -2549,11 +2549,11 @@ js::AsTypedArrayBuffer(HandleValue v)
     return v.toObject().as<SharedArrayBufferObject>();
 }
 
+template <typename CharT>
 bool
-js::StringIsTypedArrayIndex(JSLinearString *str, uint64_t *indexp)
+js::StringIsTypedArrayIndex(const CharT *s, size_t length, uint64_t *indexp)
 {
-    const jschar *s = str->chars();
-    const jschar *end = s + str->length();
+    const CharT *end = s + length;
 
     if (s == end)
         return false;
@@ -2596,6 +2596,12 @@ js::StringIsTypedArrayIndex(JSLinearString *str, uint64_t *indexp)
         *indexp = index;
     return true;
 }
+
+template bool
+js::StringIsTypedArrayIndex(const jschar *s, size_t length, uint64_t *indexp);
+
+template bool
+js::StringIsTypedArrayIndex(const Latin1Char *s, size_t length, uint64_t *indexp);
 
 /* JS Friend API */
 
