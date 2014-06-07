@@ -696,19 +696,6 @@ JSRuntime::triggerActivityCallback(bool active)
 }
 
 void
-JSRuntime::setGCMaxMallocBytes(size_t value)
-{
-    /*
-     * For compatibility treat any value that exceeds PTRDIFF_T_MAX to
-     * mean that value.
-     */
-    gc.maxMallocBytes = (ptrdiff_t(value) >= 0) ? value : size_t(-1) >> 1;
-    resetGCMallocBytes();
-    for (ZonesIter zone(this, WithAtoms); !zone.done(); zone.next())
-        zone->setGCMaxMallocBytes(value);
-}
-
-void
 JSRuntime::updateMallocCounter(size_t nbytes)
 {
     updateMallocCounter(nullptr, nbytes);
@@ -717,12 +704,7 @@ JSRuntime::updateMallocCounter(size_t nbytes)
 void
 JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 {
-    /* We tolerate any thread races when updating gcMallocBytes. */
-    gc.mallocBytes -= ptrdiff_t(nbytes);
-    if (MOZ_UNLIKELY(gc.mallocBytes <= 0))
-        onTooMuchMalloc();
-    else if (zone)
-        zone->updateMallocCounter(nbytes);
+    gc.updateMallocCounter(zone, nbytes);
 }
 
 JS_FRIEND_API(void)
@@ -730,9 +712,7 @@ JSRuntime::onTooMuchMalloc()
 {
     if (!CurrentThreadCanAccessRuntime(this))
         return;
-
-    if (!gc.mallocGCTriggered)
-        gc.mallocGCTriggered = TriggerGC(this, JS::gcreason::TOO_MUCH_MALLOC);
+    gc.onTooMuchMalloc();
 }
 
 JS_FRIEND_API(void *)
