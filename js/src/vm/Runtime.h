@@ -134,6 +134,8 @@ struct ScopeCoordinateNameCache {
     void purge();
 };
 
+typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
+
 struct EvalCacheEntry
 {
     JSScript *script;
@@ -1001,6 +1003,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::jit::SimulatorRuntime *simulatorRuntime() const;
     void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
 #endif
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     const js::Value     NaNValue;
