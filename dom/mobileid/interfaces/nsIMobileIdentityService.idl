@@ -1,0 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMWindow;
+
+[scriptable, uuid(376d3a43-a7f2-4ac0-b196-d83acb3a68cc)]
+interface nsIMobileIdentityService : nsISupports
+{
+  nsISupports getMobileIdAssertion(in nsIDOMWindow window);
+};
