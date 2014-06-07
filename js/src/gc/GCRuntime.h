@@ -26,23 +26,6 @@
 
 namespace js {
 
-struct ScriptAndCounts
-{
-    /* This structure is stored and marked from the JSRuntime. */
-    JSScript *script;
-    ScriptCounts scriptCounts;
-
-    PCCounts &getPCCounts(jsbytecode *pc) const {
-        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
-    }
-
-    jit::IonScriptCounts *getIonCounts() const {
-        return scriptCounts.ionCounts;
-    }
-};
-
-typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
-
 namespace gc {
 
 typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
@@ -538,9 +521,6 @@ class GCRuntime
 
     /* The OS allocation granularity may not match the page size. */
     size_t                systemAllocGranularity;
-
-    /* Strong references on scripts held for PCCount profiling API. */
-    js::ScriptAndCountsVector *scriptAndCountsVector;
 
 #ifdef DEBUG
     /*

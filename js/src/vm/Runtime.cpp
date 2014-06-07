@@ -181,6 +181,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
     simulatorRuntime_(nullptr),
 #endif
+    scriptAndCountsVector(nullptr),
     NaNValue(DoubleNaNValue()),
     negativeInfinityValue(DoubleValue(NegativeInfinity<double>())),
     positiveInfinityValue(DoubleValue(PositiveInfinity<double>())),
