@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1412417248737000);
+const PRTime gPreloadListExpirationTime = INT64_C(1413022229231000);
 
 class nsSTSPreload
 {
@@ -24,8 +24,8 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "admin.google.com", true },
   { "adsfund.org", true },
   { "aladdinschools.appspot.com", false },
-  { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
+  { "api.simple.com", false },
   { "api.xero.com", false },
   { "apis.google.com", true },
   { "app.manilla.com", true },
@@ -86,7 +86,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "encircleapp.com", true },
   { "encrypted.google.com", true },
   { "entropia.de", false },
-  { "epoxate.com", false },
   { "errors.zenpayroll.com", false },
   { "espra.com", true },
   { "f-droid.org", true },
@@ -95,6 +94,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "faq.lookout.com", false },
   { "feedbin.com", false },
   { "fiken.no", true },
+  { "fj.simple.com", false },
   { "forum.linode.com", false },
   { "forum.quantifiedself.com", true },
   { "gernert-server.de", true },
@@ -229,13 +229,13 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "vmoagents.com", false },
   { "w-spotlight.appspot.com", true },
   { "wallet.google.com", true },
-  { "waveapps.com", true },
   { "webfilings-eu-mirror.appspot.com", true },
   { "webfilings-eu.appspot.com", true },
   { "webfilings-mirror-hrd.appspot.com", true },
   { "webfilings.appspot.com", true },
   { "webmail.gigahost.dk", false },
   { "webmail.onlime.ch", false },
+  { "wepay.com", false },
   { "wf-bigsky-master.appspot.com", true },
   { "wf-demo-eu.appspot.com", true },
   { "wf-demo-hrd.appspot.com", true },
@@ -280,6 +280,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.torproject.org", false },
   { "www.twitter.com", false },
   { "www.usaa.com", false },
+  { "www.wepay.com", false },
   { "www.zenpayroll.com", false },
   { "xbrlsuccess.appspot.com", true },
   { "zenpayroll.com", false },

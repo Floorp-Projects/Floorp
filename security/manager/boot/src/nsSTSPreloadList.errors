@@ -1,12 +1,11 @@
 admin.google.com: did not receive HSTS header (error ignored - included regardless)
 adsfund.org: could not connect to host
 airbnb.com: did not receive HSTS header
-alpha.irccloud.com: could not connect to host
+alpha.irccloud.com: did not receive HSTS header
 anycoin.me: did not receive HSTS header
 api.lookout.com: could not connect to host
 api.mega.co.nz: could not connect to host
 api.recurly.com: did not receive HSTS header
-api.simple.com: did not receive HSTS header
 apis.google.com: did not receive HSTS header (error ignored - included regardless)
 app.lookout.com: could not connect to host
 appengine.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -42,10 +41,10 @@ edmodo.com: did not receive HSTS header
 email.lookout.com: could not connect to host
 emailprivacytester.com: did not receive HSTS header
 encrypted.google.com: did not receive HSTS header (error ignored - included regardless)
+epoxate.com: did not receive HSTS header
 errors.zenpayroll.com: could not connect to host
 espra.com: could not connect to host
 fatzebra.com.au: did not receive HSTS header
-fj.simple.com: did not receive HSTS header
 get.zenpayroll.com: did not receive HSTS header
 glass.google.com: did not receive HSTS header (error ignored - included regardless)
 gmail.com: did not receive HSTS header (error ignored - included regardless)
@@ -92,6 +91,7 @@ play.google.com: did not receive HSTS header (error ignored - included regardles
 prodpad.com: did not receive HSTS header
 profiles.google.com: did not receive HSTS header (error ignored - included regardless)
 rapidresearch.me: did not receive HSTS header
+riseup.net: could not connect to host
 sah3.net: could not connect to host
 saturngames.co.uk: did not receive HSTS header
 script.google.com: did not receive HSTS header (error ignored - included regardless)
@@ -120,8 +120,8 @@ talkgadget.google.com: did not receive HSTS header (error ignored - included reg
 translate.googleapis.com: did not receive HSTS header (error ignored - included regardless)
 uprotect.it: could not connect to host
 wallet.google.com: did not receive HSTS header (error ignored - included regardless)
+waveapps.com: max-age too low: 0
 webmail.mayfirst.org: did not receive HSTS header
-wepay.com: max-age too low: 2592000
 whonix.org: did not receive HSTS header
 www.calyxinstitute.org: [Exception... "Component returned failure code: 0x80004005 (NS_ERROR_FAILURE) [nsISiteSecurityService.processHeader]"  nsresult: "0x80004005 (NS_ERROR_FAILURE)"  location: "JS frame :: /builds/slave/m-aurora-l64-hsts-000000000000/getHSTSPreloadList.js :: processStsHeader :: line 125"  data: no]
 www.cueup.com: did not receive HSTS header
@@ -143,5 +143,4 @@ www.paypal.com: [Exception... "Component returned failure code: 0x80004005 (NS_E
 www.roddis.net: did not receive HSTS header
 www.sandbox.mydigipass.com: could not connect to host
 www.surfeasy.com: did not receive HSTS header
-www.wepay.com: max-age too low: 2592000
 zoo24.de: max-age too low: 2592000
