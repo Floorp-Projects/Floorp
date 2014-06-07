@@ -191,6 +191,61 @@ nsSubDocumentFrame::GetSubdocumentRootFrame()
   return subdocView ? subdocView->GetFrame() : nullptr;
 }
 
+nsIPresShell*
+nsSubDocumentFrame::GetSubdocumentPresShellForPainting(uint32_t aFlags)
+{
+  if (!mInnerView)
+    return nullptr;
+
+  nsView* subdocView = mInnerView->GetFirstChild();
+  if (!subdocView)
+    return nullptr;
+
+  nsIPresShell* presShell = nullptr;
+
+  nsIFrame* subdocRootFrame = subdocView->GetFrame();
+  if (subdocRootFrame) {
+    presShell = subdocRootFrame->PresContext()->PresShell();
+  }
+
+  // If painting is suppressed in the presshell, we try to look for a better
+  // presshell to use.
+  if (!presShell || (presShell->IsPaintingSuppressed() &&
+                     !(aFlags & IGNORE_PAINT_SUPPRESSION))) {
+    // During page transition mInnerView will sometimes have two children, the
+    // first being the new page that may not have any frame, and the second
+    // being the old page that will probably have a frame.
+    nsView* nextView = subdocView->GetNextSibling();
+    nsIFrame* frame = nullptr;
+    if (nextView) {
+      frame = nextView->GetFrame();
+    }
+    if (frame) {
+      nsIPresShell* ps = frame->PresContext()->PresShell();
+      if (!presShell || (ps && !ps->IsPaintingSuppressed())) {
+        subdocView = nextView;
+        subdocRootFrame = frame;
+        presShell = ps;
+      }
+    }
+    if (!presShell) {
+      // If we don't have a frame we use this roundabout way to get the pres shell.
+      if (!mFrameLoader)
+        return nullptr;
+      nsCOMPtr<nsIDocShell> docShell;
+      mFrameLoader->GetDocShell(getter_AddRefs(docShell));
+      if (!docShell)
+        return nullptr;
+      presShell = docShell->GetPresShell();
+    }
+  }
+
+  return presShell;
+}
+
+
+
+
 nsIntSize
 nsSubDocumentFrame::GetSubdocumentSize()
 {
@@ -322,49 +377,15 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     return;
   }
 
-  nsView* subdocView = mInnerView->GetFirstChild();
-  if (!subdocView)
+  nsCOMPtr<nsIPresShell> presShell =
+    GetSubdocumentPresShellForPainting(
+      aBuilder->IsIgnoringPaintSuppression() ? IGNORE_PAINT_SUPPRESSION : 0);
+
+  if (!presShell) {
     return;
-
-  nsCOMPtr<nsIPresShell> presShell = nullptr;
-
-  nsIFrame* subdocRootFrame = subdocView->GetFrame();
-  if (subdocRootFrame) {
-    presShell = subdocRootFrame->PresContext()->PresShell();
   }
-  // If painting is suppressed in the presshell, we try to look for a better
-  // presshell to use.
-  if (!presShell || (presShell->IsPaintingSuppressed() &&
-                     !aBuilder->IsIgnoringPaintSuppression())) {
-    // During page transition mInnerView will sometimes have two children, the
-    // first being the new page that may not have any frame, and the second
-    // being the old page that will probably have a frame.
-    nsView* nextView = subdocView->GetNextSibling();
-    nsIFrame* frame = nullptr;
-    if (nextView) {
-      frame = nextView->GetFrame();
-    }
-    if (frame) {
-      nsIPresShell* ps = frame->PresContext()->PresShell();
-      if (!presShell || (ps && !ps->IsPaintingSuppressed())) {
-        subdocView = nextView;
-        subdocRootFrame = frame;
-        presShell = ps;
-      }
-    }
-    if (!presShell) {
-      // If we don't have a frame we use this roundabout way to get the pres shell.
-      if (!mFrameLoader)
-        return;
-      nsCOMPtr<nsIDocShell> docShell;
-      mFrameLoader->GetDocShell(getter_AddRefs(docShell));
-      if (!docShell)
-        return;
-      presShell = docShell->GetPresShell();
-      if (!presShell)
-        return;
-    }
-  }
+
+  nsIFrame* subdocRootFrame = presShell->GetRootFrame();
 
   nsPresContext* presContext = presShell->GetPresContext();
 
