@@ -53,13 +53,6 @@ public:
 
     mozilla::gl::GLContext* GLContext() const { return mGLContext; }
 
-    /**
-     * If we have a pending frame in the queue then we will need
-     * another SwapConsumer.
-     */
-    virtual bool HasDelayedFrame() const {
-      return false;
-    }
 
 protected:
     // |mProd| is owned by us, but can be ripped away when
@@ -67,13 +60,12 @@ protected:
     SharedSurface* mProducer;
     std::set<SharedSurface*> mSurfaces;
     std::stack<SharedSurface*> mScraps;
+    mutable Monitor mMonitor;
+    bool mIsAlive;
 
     // Do not use this. It exists solely so we can ref it in CanvasClientWebGL::Update()
     // before sent up to the compositor. You have been warned (Bug 894405)
     mozilla::gl::GLContext* mGLContext;
-
-    mutable Monitor mMonitor;
-    bool mIsAlive;
 
     // |previous| can be null, indicating this is the first one.
     // Otherwise, we pull in |mProd| from |previous| an our initial surface.
@@ -198,24 +190,18 @@ class SurfaceStream_TripleBuffer
 protected:
     SharedSurface* mStaging;
     SharedSurface* mConsumer;
-    SharedSurface* mDelay;
-    bool mUseSwapDelay;
 
     // Returns true if we were able to wait, false if not
     virtual void WaitForCompositor() {}
 
     // To support subclasses initializing the mType.
-    SurfaceStream_TripleBuffer(bool aUseSwapDelay, SurfaceStreamType type, SurfaceStream* prevStream);
+    SurfaceStream_TripleBuffer(SurfaceStreamType type, SurfaceStream* prevStream);
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SurfaceStream_TripleBuffer)
-    SurfaceStream_TripleBuffer(bool aUseSwapDelay, SurfaceStream* prevStream);
+    SurfaceStream_TripleBuffer(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer();
     virtual bool CopySurfaceToProducer(SharedSurface* src, SurfaceFactory* factory);
-
-    virtual bool HasDelayedFrame() const MOZ_OVERRIDE {
-      return !!mDelay;
-    }
 
 private:
     // Common constructor code.
@@ -238,7 +224,7 @@ protected:
     virtual void WaitForCompositor() MOZ_OVERRIDE;
 
 public:
-    SurfaceStream_TripleBuffer_Async(bool aSwapDelay, SurfaceStream* prevStream);
+    SurfaceStream_TripleBuffer_Async(SurfaceStream* prevStream);
     virtual ~SurfaceStream_TripleBuffer_Async();
 };
 
