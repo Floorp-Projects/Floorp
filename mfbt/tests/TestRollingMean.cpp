@@ -13,7 +13,7 @@ class MyClass
   public:
     uint32_t value;
 
-    MyClass(uint32_t val = 0) : value(val) {
+    explicit MyClass(uint32_t val = 0) : value(val) {
     }
 
     bool operator==(const MyClass& other) const {
