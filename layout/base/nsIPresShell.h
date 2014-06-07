@@ -542,7 +542,7 @@ public:
   // ShadowRoot has APIs that can change styles so we only
   // want to restyle elements in the ShadowRoot and not the whole
   // document.
-  virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
 
   /**
    * Determine if it is safe to flush all pending notifications
