@@ -158,35 +158,44 @@ this.WebappManager = {
     return deferred.promise;
   },
 
-  askInstall: function(aData) {
-    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-    file.initWithPath(aData.profilePath);
-
+  _deleteAppcachePath: function(aManifest) {
     // We don't yet support pre-installing an appcache because it isn't clear
     // how to do it without degrading the user experience (since users expect
     // apps to be available after the system tells them they've been installed,
     // which has already happened) and because nsCacheService shuts down
     // when we trigger the native install dialog and doesn't re-init itself
     // afterward (TODO: file bug about this behavior).
-    if ("appcache_path" in aData.app.manifest) {
-      debug("deleting appcache_path from manifest: " + aData.app.manifest.appcache_path);
-      delete aData.app.manifest.appcache_path;
+    if ("appcache_path" in aManifest) {
+      debug("deleting appcache_path from manifest: " + aManifest.appcache_path);
+      delete aManifest.appcache_path;
     }
+  },
+
+  askInstall: function(aData) {
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(aData.profilePath);
+
+    this._deleteAppcachePath(aData.app.manifest);
 
     DOMApplicationRegistry.registryReady.then(() => {
       DOMApplicationRegistry.confirmInstall(aData, file, (function(aManifest) {
-        let localeManifest = new ManifestHelper(aManifest, aData.app.origin);
-
-        // aData.app.origin may now point to the app: url that hosts this app.
-        sendMessageToJava({
-          type: "Webapps:Postinstall",
-          apkPackageName: aData.app.apkPackageName,
-          origin: aData.app.origin,
-        });
-
-        this.writeDefaultPrefs(file, localeManifest);
+        this._postInstall(aData.profilePath, aManifest, aData.app.origin, aData.app.apkPackageName);
       }).bind(this));
     });
+  },
+
+  _postInstall: function(aProfilePath, aNewManifest, aOrigin, aApkPackageName) {
+    // aOrigin may now point to the app: url that hosts this app.
+    sendMessageToJava({
+      type: "Webapps:Postinstall",
+      apkPackageName: aApkPackageName,
+      origin: aOrigin,
+    });
+
+    let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+    file.initWithPath(aProfilePath);
+    let localeManifest = new ManifestHelper(aNewManifest, aOrigin);
+    this.writeDefaultPrefs(file, localeManifest);
   },
 
   launch: function({ manifestURL, origin }) {
@@ -211,11 +220,16 @@ this.WebappManager = {
   },
 
   autoInstall: function(aData) {
-    let oldApp = DOMApplicationRegistry.getAppByManifestURL(aData.manifestURL);
-    if (oldApp) {
-      // If the app is already installed, update the existing installation.
-      this._autoUpdate(aData, oldApp);
-      return;
+    debug("autoInstall " + aData.manifestURL);
+
+    // If the app is already installed, update the existing installation.
+    // We should be able to use DOMApplicationRegistry.getAppByManifestURL,
+    // but it returns a mozIApplication, while _autoUpdate needs the original
+    // object from DOMApplicationRegistry.webapps in order to modify it.
+    for (let [ , app] in Iterator(DOMApplicationRegistry.webapps)) {
+      if (app.manifestURL == aData.manifestURL) {
+        return this._autoUpdate(aData, app);
+      }
     }
 
     let mm = {
@@ -276,12 +290,38 @@ this.WebappManager = {
     }
 
     if (aData.type == "hosted") {
+      this._deleteAppcachePath(aData.manifest);
       let oldManifest = yield DOMApplicationRegistry.getManifestFor(aData.manifestURL);
-      DOMApplicationRegistry.updateHostedApp(aData, aOldApp.id, aOldApp, oldManifest, aData.manifest);
+      yield DOMApplicationRegistry.updateHostedApp(aData, aOldApp.id, aOldApp, oldManifest, aData.manifest);
     } else {
-      DOMApplicationRegistry.updatePackagedApp(aData, aOldApp.id, aOldApp, aData.manifest);
+      yield this._autoUpdatePackagedApp(aData, aOldApp);
     }
+
+    this._postInstall(aData.profilePath, aData.manifest, aOldApp.origin, aOldApp.apkPackageName);
   }).bind(this)); },
+
+  _autoUpdatePackagedApp: Task.async(function*(aData, aOldApp) {
+    debug("_autoUpdatePackagedApp: " + aData.manifestURL);
+
+    if (aData.updateManifest && aData.zipFilePath) {
+      aData.updateManifest.package_path = aData.zipFilePath;
+    }
+
+    // updatePackagedApp just prepares the update, after which we must
+    // download the package via the misnamed startDownload and then apply it
+    // via applyDownload.
+    yield DOMApplicationRegistry.updatePackagedApp(aData, aOldApp.id, aOldApp, aData.updateManifest);
+
+    try {
+      yield DOMApplicationRegistry.startDownload(aData.manifestURL);
+    } catch (ex if ex.message == "PACKAGE_UNCHANGED") {
+      debug("package unchanged");
+      // If the package is unchanged, then there's nothing more to do.
+      return;
+    }
+
+    yield DOMApplicationRegistry.applyDownload(aData.manifestURL);
+  }),
 
   _checkingForUpdates: false,
 

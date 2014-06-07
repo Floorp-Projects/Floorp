@@ -240,8 +240,11 @@ this.FxAccountsClient.prototype = {
    * @param lifetime
    *        The lifetime of the certificate
    * @return Promise
-   *        Returns a promise that resolves to the signed certificate. The certificate
-   *        can be used to generate a Persona assertion.
+   *        Returns a promise that resolves to the signed certificate.
+   *        The certificate can be used to generate a Persona assertion.
+   * @throws a new Error
+   *         wrapping any of these HTTP code/errno pairs:
+   *           https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-12
    */
   signCertificate: function (sessionTokenHex, serializedPublicKey, lifetime) {
     let creds = this._deriveHawkCredentials(sessionTokenHex, "sessionToken");

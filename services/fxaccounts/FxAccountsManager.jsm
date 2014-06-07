@@ -152,8 +152,82 @@ this.FxAccountsManager = {
     );
   },
 
+  /**
+   * Determine whether the incoming error means that the current account
+   * has new server-side state via deletion or password change, and if so,
+   * spawn the appropriate UI (sign in or refresh); otherwise re-reject.
+   *
+   * As of May 2014, the only HTTP call triggered by this._getAssertion()
+   * is to /certificate/sign via:
+   *   FxAccounts.getAssertion()
+   *     FxAccountsInternal.getCertificateSigned()
+   *       FxAccountsClient.signCertificate()
+   * See the latter method for possible (error code, errno) pairs.
+   */
+  _handleGetAssertionError: function(reason, aAudience) {
+    let errno = (reason ? reason.errno : NaN) || NaN;
+    // If the previously valid email/password pair is no longer valid ...
+    if (errno == ERRNO_INVALID_AUTH_TOKEN) {
+      return this._fxAccounts.accountStatus().then(
+        (exists) => {
+          // ... if the email still maps to an account, the password
+          // must have changed, so ask the user to enter the new one ...
+          if (exists) {
+            return this.getAccount().then(
+              (user) => {
+                return this._refreshAuthentication(aAudience, user.email);
+              }
+            );
+          // ... otherwise, the account was deleted, so ask for Sign In/Up
+          } else {
+            return this._localSignOut().then(
+              () => {
+                return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience);
+              },
+              (reason) => { // reject primary problem, not signout failure
+                log.error("Signing out in response to server error threw: " + reason);
+                return this._error(reason);
+              }
+            );
+          }
+        }
+      );
+    }
+    return rejection;
+  },
+
   _getAssertion: function(aAudience) {
-    return this._fxAccounts.getAssertion(aAudience);
+    return this._fxAccounts.getAssertion(aAudience).then(
+      (result) => {
+        return result;
+      },
+      (reason) => {
+        return this._handleGetAssertionError(reason, aAudience);
+      }
+    );
+  },
+
+  _refreshAuthentication: function(aAudience, aEmail) {
+    this._refreshing = true;
+    return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
+                           aAudience, aEmail).then(
+      (assertion) => {
+        this._refreshing = false;
+        return assertion;
+      },
+      (reason) => {
+        this._refreshing = false;
+        return this._signOut().then(
+          () => {
+            return this._error(reason);
+          }
+        );
+      }
+    );
+  },
+
+  _localSignOut: function() {
+    return this._fxAccounts.signOut(true);
   },
 
   _signOut: function() {
@@ -167,7 +241,7 @@ this.FxAccountsManager = {
     // in case that we have network connection.
     let sessionToken = this._activeSession.sessionToken;
 
-    return this._fxAccounts.signOut(true).then(
+    return this._localSignOut().then(
       () => {
         // At this point the local session should already be removed.
 
@@ -362,36 +436,41 @@ this.FxAccountsManager = {
   },
 
   /*
-   * Try to get an assertion for the given audience.
+   * Try to get an assertion for the given audience. Here we implement
+   * the heart of the response to navigator.mozId.request() on device.
+   * (We can also be called via the IAC API, but it's request() that
+   * makes this method complex.) The state machine looks like this,
+   * ignoring simple errors:
+   *   If no one is signed in, and we aren't suppressing the UI:
+   *     trigger the sign in flow.
+   *   else if we were asked to refresh and the grace period is up:
+   *     trigger the refresh flow.
+   *   else ask the core code for an assertion, which might itself
+   *   trigger either the sign in or refresh flows (if our account
+   *   changed on the server).
    *
    * aOptions can include:
-   *
    *   refreshAuthentication  - (bool) Force re-auth.
-   *
    *   silent                 - (bool) Prevent any UI interaction.
    *                            I.e., try to get an automatic assertion.
-   *
    */
   getAssertion: function(aAudience, aOptions) {
     if (!aAudience) {
       return this._error(ERROR_INVALID_AUDIENCE);
     }
-
     if (Services.io.offline) {
       return this._error(ERROR_OFFLINE);
     }
-
     return this.getAccount().then(
       user => {
         if (user) {
-          // We cannot get assertions for unverified accounts.
+          // Three have-user cases to consider. First: are we unverified?
           if (!user.verified) {
             return this._error(ERROR_UNVERIFIED_ACCOUNT, {
               user: user
             });
           }
-
-          // RPs might require an authentication refresh.
+          // Second case: do we need to refresh?
           if (aOptions &&
               (typeof(aOptions.refreshAuthentication) != "undefined")) {
             let gracePeriod = aOptions.refreshAuthentication;
@@ -399,44 +478,24 @@ this.FxAccountsManager = {
               return this._error(ERROR_INVALID_REFRESH_AUTH_VALUE);
             }
             // Forcing refreshAuth to silent is a contradiction in terms,
-            // though it will sometimes succeed silently.
+            // though it might succeed silently if we didn't reject here.
             if (aOptions.silent) {
               return this._error(ERROR_NO_SILENT_REFRESH_AUTH);
             }
-            if ((Date.now() / 1000) - this._activeSession.authAt > gracePeriod) {
-              // Grace period expired, so we sign out and request the user to
-              // authenticate herself again. If the authentication succeeds, we
-              // will return the assertion. Otherwise, we will return an error.
-              this._refreshing = true;
-              return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
-                                     aAudience, user.email).then(
-                (assertion) => {
-                  this._refreshing = false;
-                  return assertion;
-                },
-                (reason) => {
-                  this._refreshing = false;
-                  return this._signOut().then(
-                    () => {
-                      return this._error(reason);
-                    }
-                  );
-                }
-              );
+            let secondsSinceAuth = (Date.now() / 1000) - this._activeSession.authAt;
+            if (secondsSinceAuth > gracePeriod) {
+              return this._refreshAuthentication(aAudience, user.email);
             }
           }
-
+          // Third case: we are all set *locally*. Probably we just return
+          // the assertion, but the attempt might lead to the server saying
+          // we are deleted or have a new password, which will trigger a flow.
           return this._getAssertion(aAudience);
         }
-
         log.debug("No signed in user");
-
         if (aOptions && aOptions.silent) {
           return Promise.resolve(null);
         }
-
-        // If there is no currently signed in user, we trigger the signIn UI
-        // flow.
         return this._uiRequest(UI_REQUEST_SIGN_IN_FLOW, aAudience);
       }
     );
