@@ -29,7 +29,6 @@
         "MOZ_TELEMETRY_REPORTING": "1"
     },
     "b2g_manifest": "nexus-4.xml",
-    "b2g_manifest_branch": "master",
     "b2g_manifest_intree": true,
     "additional_source_tarballs": [],
     "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
