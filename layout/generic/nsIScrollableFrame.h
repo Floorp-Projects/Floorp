@@ -290,7 +290,7 @@ public:
   * Expand the given rect taking into account which directions we can scroll
   * and how far we want to expand for image visibility purposes.
   */
-  virtual nsRect ExpandRect(const nsRect& aRect) const = 0;
+  virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const = 0;
   /**
    * Returns the origin passed in to the last ScrollToImpl call that took
    * effect.
