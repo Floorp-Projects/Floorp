@@ -948,9 +948,12 @@ this.DOMApplicationRegistry = {
           delete this.webapps[aResult.id];
           return;
         }
-        app.name = manifest.name;
+
+        let localeManifest = new ManifestHelper(manifest, app.origin);
+
+        app.name = localeManifest.name;
         app.csp = manifest.csp || "";
-        app.role = manifest.role || "";
+        app.role = localeManifest.role;
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
           app.redirects = this.sanitizeRedirects(manifest.redirects);
         }
