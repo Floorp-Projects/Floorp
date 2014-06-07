@@ -19,7 +19,7 @@ class VideoCodecStatistics : public webrtc::ViEEncoderObserver
                            , public webrtc::ViEDecoderObserver
 {
 public:
-  VideoCodecStatistics(int channel, webrtc::ViECodec* vieCodec);
+  VideoCodecStatistics(int channel, webrtc::ViECodec* vieCodec, bool encoder);
   ~VideoCodecStatistics();
 
   void SentFrame();
@@ -43,6 +43,35 @@ public:
                              int jitter_buffer_ms,
                              int min_playout_delay_ms,
                              int render_delay_ms) MOZ_OVERRIDE {}
+
+  bool GetEncoderStats(double* framerateMean,
+                       double* framerateStdDev,
+                       double* bitrateMean,
+                       double* bitrateStdDev,
+                       uint32_t* droppedFrames)
+  {
+    *framerateMean   = mEncoderFps.Mean();
+    *framerateStdDev = mEncoderFps.StandardDeviation();
+    *bitrateMean     = mEncoderBitRate.Mean();
+    *bitrateStdDev   = mEncoderBitRate.StandardDeviation();
+    *droppedFrames   = mEncoderDroppedFrames;
+    return true;
+  }
+
+  bool GetDecoderStats(double* framerateMean,
+                       double* framerateStdDev,
+                       double* bitrateMean,
+                       double* bitrateStdDev,
+                       uint32_t* discardedPackets)
+  {
+    *framerateMean    = mDecoderFps.Mean();
+    *framerateStdDev  = mDecoderFps.StandardDeviation();
+    *bitrateMean      = mDecoderBitRate.Mean();
+    *bitrateStdDev    = mDecoderBitRate.StandardDeviation();
+    *discardedPackets = mDecoderDiscardedPackets;
+    return true;
+  }
+
   void Dump();
 private:
   void Dump(RunningStat& s, const char *name);
@@ -57,6 +86,7 @@ private:
   RunningStat mDecoderBitRate;
   RunningStat mDecoderFps;
   uint32_t mDecoderDiscardedPackets;
+  const bool mEncoderMode;
 };
 }
 
