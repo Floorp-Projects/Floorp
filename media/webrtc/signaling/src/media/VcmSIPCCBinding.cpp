@@ -11,7 +11,6 @@
 #include "CSFVideoTermination.h"
 #include "MediaConduitErrors.h"
 #include "MediaConduitInterface.h"
-#include "GmpVideoCodec.h"
 #include "MediaPipeline.h"
 #include "MediaPipelineFilter.h"
 #include "VcmSIPCCBinding.h"
@@ -2173,6 +2172,7 @@ static int vcmEnsureExternalCodec(
   if (config->mName == "VP8") {
     // whitelist internal codecs; I420 will be here once we resolve bug 995884
     return 0;
+#ifdef MOZ_WEBRTC_OMX
   } else if (config->mName == "H264_P0" || config->mName == "H264_P1") {
     // Here we use "I420" to register H.264 because WebRTC.org code has a
     // whitelist of supported video codec in |webrtc::ViECodecImpl::CodecValid()|
@@ -2181,25 +2181,14 @@ static int vcmEnsureExternalCodec(
 
     // Register H.264 codec.
     if (send) {
-	VideoEncoder* encoder = nullptr;
-#ifdef MOZ_WEBRTC_OMX
-	encoder = OMXVideoCodec::CreateEncoder(
-	    OMXVideoCodec::CodecType::CODEC_H264);
-#else
-	encoder = mozilla::GmpVideoCodec::CreateEncoder();
-#endif
+      VideoEncoder* encoder = OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
       if (encoder) {
         return conduit->SetExternalSendCodec(config, encoder);
       } else {
         return kMediaConduitInvalidSendCodec;
       }
     } else {
-      VideoDecoder* decoder;
-#ifdef MOZ_WEBRTC_OMX
-      decoder = OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#else
-      decoder = mozilla::GmpVideoCodec::CreateDecoder();
-#endif
+      VideoDecoder* decoder = OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
       if (decoder) {
         return conduit->SetExternalRecvCodec(config, decoder);
       } else {
@@ -2207,6 +2196,10 @@ static int vcmEnsureExternalCodec(
       }
     }
     NS_NOTREACHED("Shouldn't get here!");
+#else
+  } else if (config->mName == "I420") {
+    return 0;
+#endif
   } else {
     CSFLogError( logTag, "%s: Invalid video codec configured: %s", __FUNCTION__, config->mName.c_str());
     return send ? kMediaConduitInvalidSendCodec : kMediaConduitInvalidReceiveCodec;

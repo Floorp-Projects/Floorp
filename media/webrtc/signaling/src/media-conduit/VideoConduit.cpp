@@ -80,11 +80,6 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     }
   }
 
-   if (mPtrExtCodec) {
-     mPtrExtCodec->Release();
-     mPtrExtCodec = NULL;
-   }
-
   //Deal with External Renderer
   if(mPtrViERender)
   {
@@ -351,13 +346,6 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
     return kMediaConduitSessionNotInited;
   }
 
-  mPtrExtCodec = webrtc::ViEExternalCodec::GetInterface(mVideoEngine);
-  if (!mPtrExtCodec) {
-    CSFLogError(logTag, "%s Unable to get external codec interface: %d ",
-                __FUNCTION__,mPtrViEBase->LastError());
-    return kMediaConduitSessionNotInited;
-  }
-
   if( !(mPtrRTP = webrtc::ViERTP_RTCP::GetInterface(mVideoEngine)))
   {
     CSFLogError(logTag, "%s Unable to get video RTCP interface ", __FUNCTION__);
@@ -530,7 +518,7 @@ WebrtcVideoConduit::AttachTransport(mozilla::RefPtr<TransportInterface> aTranspo
 MediaConduitErrorCode
 WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
 {
-  CSFLogDebug(logTag,  "%s for %s", __FUNCTION__, codecConfig ? codecConfig->mName.c_str() : "<null>");
+  CSFLogDebug(logTag,  "%s for %s", __FUNCTION__, codecConfig->mName.c_str());
   bool codecFound = false;
   MediaConduitErrorCode condError = kMediaConduitNoError;
   int error = 0; //webrtc engine errors
