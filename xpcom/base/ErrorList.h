@@ -201,6 +201,8 @@
   ERROR(NS_ERROR_NET_INTERRUPT,             FAILURE(71)),
   /* The connection attempt to a proxy failed. */
   ERROR(NS_ERROR_PROXY_CONNECTION_REFUSED,  FAILURE(72)),
+  /* A transfer was only partially done when it completed. */
+  ERROR(NS_ERROR_NET_PARTIAL_TRANSFER,      FAILURE(76)),
 
   /* XXX really need to better rationalize these error codes.  are consumers of
    * necko really expected to know how to discern the meaning of these?? */
