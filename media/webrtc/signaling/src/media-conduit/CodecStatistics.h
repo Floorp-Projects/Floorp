@@ -7,6 +7,8 @@
 
 #include "nsTArray.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/TimeStamp.h"
+#include "webrtc/common_types.h"
 #include "webrtc/video_engine/include/vie_codec.h"
 #include "MediaEngineWrapper.h"
 #include "RunningStat.h"
@@ -32,6 +34,10 @@ public:
   virtual void IncomingRate(const int video_channel,
                             const unsigned int framerate,
                             const unsigned int bitrate) MOZ_OVERRIDE;
+
+  void ReceiveStateChange(const int video_channel, webrtc::VideoReceiveState state) MOZ_OVERRIDE;
+
+  void EndOfCallStats();
 
   virtual void RequestNewKeyFrame(const int video_channel) MOZ_OVERRIDE {};
 
@@ -87,6 +93,15 @@ private:
   RunningStat mDecoderFps;
   uint32_t mDecoderDiscardedPackets;
   const bool mEncoderMode;
+
+  webrtc::VideoReceiveState mReceiveState;
+#ifdef MOZILLA_INTERNAL_API
+  TimeStamp mFirstDecodeTime;
+  TimeStamp mReceiveFailureTime;
+  TimeDuration mTotalLossTime;
+#endif
+  uint32_t mRecoveredBeforeLoss;
+  uint32_t mRecoveredLosses;
 };
 }
 
