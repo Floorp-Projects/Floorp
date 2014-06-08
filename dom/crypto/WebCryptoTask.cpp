@@ -1169,11 +1169,17 @@ public:
       } else {
         KeyAlgorithm hashAlg(global, hashName);
         switch (hashAlg.Mechanism()) {
-          case CKM_SHA_1: mLength = 128; break;
-          case CKM_SHA256: mLength = 256; break;
-          case CKM_SHA384: mLength = 384; break;
-          case CKM_SHA512: mLength = 512; break;
-          default: mLength = 0; break;
+          case CKM_SHA_1:
+          case CKM_SHA256:
+            mLength = 512;
+            break;
+          case CKM_SHA384:
+          case CKM_SHA512:
+            mLength = 1024;
+            break;
+          default:
+            mLength = 0;
+            break;
         }
       }
 
