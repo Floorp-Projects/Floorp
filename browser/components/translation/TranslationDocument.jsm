@@ -358,7 +358,7 @@ const TranslationItem_NodePlaceholder = {
  */
 function generateTranslationHtmlForItem(item, content) {
   let localName = item.isRoot ? "div" : "b";
-  return '<' + localName + ' id="n' + item.id + '">' +
+  return '<' + localName + ' id=n' + item.id + '>' +
          content +
          "</" + localName + ">";
 }
@@ -426,6 +426,63 @@ function parseResultNode(item, node) {
 /**
  * Helper function to swap the text of a TranslationItem
  * between its original and translated states.
+ * How it works:
+ *
+ * The function iterates through the target array (either the `original` or
+ * `translation` array from the TranslationItem), while also keeping a pointer
+ * to a current position in the child nodes from the actual DOM node that we
+ * are modifying. This pointer is moved forward after each item of the array
+ * is translated. If, at any given time, the pointer doesn't match the expected
+ * node that was supposed to be seen, it means that the original and translated
+ * contents have a different ordering, and thus we need to adjust that.
+ *
+ * A full example of the reordering process, swapping from Original to
+ * Translation:
+ *
+ *    Original (en): <div>I <em>miss</em> <b>you</b></div>
+ *
+ * Translation (fr): <div><b>Tu</b> me <em>manques</em></div>
+ *
+ * Step 1:
+ *   pointer points to firstChild of the DOM node, textnode "I "
+ *   first item in item.translation is [object TranslationItem <b>]
+ *
+ *   pointer does not match the expected element, <b>. So let's move <b> to the
+ *   pointer position.
+ *
+ *   Current state of the DOM:
+ *     <div><b>you</b>I <em>miss</em> </div>
+ *
+ * Step 2:
+ *   pointer moves forward to nextSibling, textnode "I " again.
+ *   second item in item.translation is the string " me "
+ *
+ *   pointer points to a text node, and we were expecting a text node. Match!
+ *   just replace the text content.
+ *
+ *   Current state of the DOM:
+ *     <div><b>you</b> me <em>miss</em> </div>
+ *
+ * Step 3:
+ *   pointer moves forward to nextSibling, <em>miss</em>
+ *   third item in item.translation is [object TranslationItem <em>]
+ *
+ *   pointer points to the expected node. Match! Nothing to do.
+ *
+ * Step 4:
+ *   all items in this item.translation were transformed. The remaining
+ *   text nodes are cleared to "", and domNode.normalize() removes them.
+ *
+ *   Current state of the DOM:
+ *     <div><b>you</b> me <em>miss</em></div>
+ *
+ * Further steps:
+ *   After that, the function will visit the child items (from the visitStack),
+ *   and the text inside the <b> and <em> nodes will be swapped as well,
+ *   yielding the final result:
+ *
+ *     <div><b>Tu</b> me <em>manques</em></div>
+ *
  *
  * @param item     A TranslationItem object
  * @param target   A string that is either "translation"
@@ -446,8 +503,6 @@ function swapTextForItem(item, target) {
       continue;
     }
 
-    let sourceNodeCount = 0;
-
     if (!curItem[target]) {
       // Translation not found for this item. This could be due to
       // an error in the server response. For example, if a translation
@@ -457,60 +512,162 @@ function swapTextForItem(item, target) {
       continue;
     }
 
+    domNode.normalize();
+
+    // curNode points to the child nodes of the DOM node that we are
+    // modifying. During most of the process, while the target array is
+    // being iterated (in the for loop below), it should walk together with
+    // the array and be pointing to the correct node that needs to modified.
+    // If it's not pointing to it, that means some sort of node reordering
+    // will be necessary to produce the correct translation.
+    // Note that text nodes don't need to be reordered, as we can just replace
+    // the content of one text node with another.
+    //
+    // curNode starts in the firstChild...
+    let curNode = domNode.firstChild;
+
+    // ... actually, let's make curNode start at the first useful node (either
+    // a non-blank text node or something else). This is not strictly necessary,
+    // as the reordering algorithm would correctly handle this case. However,
+    // this better aligns the resulting translation with the DOM content of the
+    // page, avoiding cases that would need to be unecessarily reordered.
+    //
+    // An example of how this helps:
+    //
+    // ---- Original: <div>                <b>Hello </b> world.</div>
+    //                       ^textnode 1      ^item 1      ^textnode 2
+    //
+    // - Translation: <div><b>Hallo </b> Welt.</div>
+    //
+    // Transformation process without this optimization:
+    //   1 - start pointer at textnode 1
+    //   2 - move item 1 to first position inside the <div>
+    //
+    //       Node now looks like: <div><b>Hello </b>[         ][ world.]</div>
+    //                                         textnode 1^       ^textnode 2
+    //
+    //   3 - replace textnode 1 with " Welt."
+    //   4 - clear remaining text nodes (in this case, textnode 2)
+    //
+    // Transformation process with this optimization:
+    //   1 - start pointer at item 1
+    //   2 - item 1 is already in position
+    //   3 - replace textnode 2 with " Welt."
+    //
+    // which completely avoids any node reordering, and requires only one
+    // text change instead of two (while also leaving the page closer to
+    // its original state).
+    while (curNode &&
+           curNode.nodeType == TEXT_NODE &&
+           curNode.nodeValue.trim() == "") {
+      curNode = curNode.nextSibling;
+    }
+
     // Now let's walk through all items in the `target` array of the
     // TranslationItem. This means either the TranslationItem.original or
     // TranslationItem.translation array.
-    for (let child of curItem[target]) {
-      // If the array element is another TranslationItem object, let's
-      // add it to the stack to be visited
-      if (child instanceof TranslationItem) {
-        // Adding this child to the stack.
-        visitStack.push(child);
-        continue;
+    for (let targetItem of curItem[target]) {
+
+      if (targetItem instanceof TranslationItem) {
+        // If the array element is another TranslationItem object, let's
+        // add it to the stack to be visited.
+        visitStack.push(targetItem);
+
+        let targetNode = targetItem.nodeRef;
+
+            // If the node is not in the expected position, let's reorder
+            // it into position...
+        if (curNode != targetNode &&
+            // ...unless the page has reparented this node under a totally
+            // different node (or removed it). In this case, all bets are off
+            // on being able to do anything correctly, so it's better not to
+            // bring back the node to this parent.
+            targetNode.parentNode == domNode) {
+
+          // We don't need to null-check curNode because insertBefore(..., null)
+          // does what we need in that case: reorder this node to the end
+          // of child nodes.
+          domNode.insertBefore(targetNode, curNode);
+          curNode = targetNode;
+        }
+
+        // Move pointer forward. Since we do not add empty text nodes to the
+        // list of translation items, we must skip them here too while
+        // traversing the DOM in order to get better alignment between the
+        // text nodes and the translation items.
+        if (curNode) {
+          curNode = getNextSiblingSkippingEmptyTextNodes(curNode);
+        }
+
+      } else if (targetItem === TranslationItem_NodePlaceholder) {
+        // If the current item is a placeholder node, we need to move
+        // our pointer "past" it, jumping from one side of a block of
+        // elements + empty text nodes to the other side. Even if
+        // non-placeholder elements exists inside the jumped block,
+        // they will be pulled correctly later in the process when the
+        // targetItem for those nodes are handled.
+
+        while (curNode &&
+               (curNode.nodeType != TEXT_NODE ||
+                curNode.nodeValue.trim() == "")) {
+          curNode = curNode.nextSibling;
+        }
+
+      } else {
+        // Finally, if it's a text item, we just need to find the next
+        // text node to use. Text nodes don't need to be reordered, so
+        // the first one found can be used.
+        while (curNode && curNode.nodeType != TEXT_NODE) {
+          curNode = curNode.nextSibling;
+        }
+
+        // If none was found and we reached the end of the child nodes,
+        // let's create a new one.
+        if (!curNode) {
+          // We don't know if the original content had a space or not,
+          // so the best bet is to create the text node with " " which
+          // will add one space at the beginning and one at the end.
+          curNode = domNode.appendChild(domNode.ownerDocument.createTextNode(" "));
+        }
+
+        // A trailing and a leading space must be preserved because
+        // they are meaningful in HTML.
+        let preSpace = /^\s/.test(curNode.nodeValue) ? " " : "";
+        let endSpace = /\s$/.test(curNode.nodeValue) ? " " : "";
+
+        curNode.nodeValue = preSpace + targetItem + endSpace;
+        curNode = getNextSiblingSkippingEmptyTextNodes(curNode);
       }
-
-      // If it's a string, say, the Nth string of the `target` array, let's
-      // replace the Nth child TextNode of this element with this string.
-      // During our translation process we skipped all empty text nodes, so we
-      // must also skip them here. If there are not enough text nodes to be used,
-      // a new text node will be created and appended to the end of the element.
-      let targetTextNode = getNthNonEmptyTextNodeFromElement(sourceNodeCount++, domNode);
-
-      // A trailing and a leading space must be preserved because they are meaningful in HTML.
-      let preSpace = targetTextNode.nodeValue.startsWith(" ") ? " " : "";
-      let endSpace = targetTextNode.nodeValue.endsWith(" ") ? " " : "";
-      targetTextNode.nodeValue = preSpace + child + endSpace;
     }
 
-    // The translated version of a node might have less text nodes than its original
-    // version. If that's the case, let's clear the remaining nodes.
-    if (sourceNodeCount > 0) {
-      clearRemainingNonEmptyTextNodesFromElement(sourceNodeCount, domNode);
+    // The translated version of a node might have less text nodes than its
+    // original version. If that's the case, let's clear the remaining nodes.
+    if (curNode) {
+      clearRemainingNonEmptyTextNodesFromElement(curNode);
     }
+
+    // And remove any garbage "" nodes left after clearing.
+    domNode.normalize();
   }
 }
 
-function getNthNonEmptyTextNodeFromElement(n, element) {
-  for (let childNode of element.childNodes) {
-    if (childNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-        childNode.nodeValue.trim() != "") {
-      if (n-- == 0)
-        return childNode;
-    }
+function getNextSiblingSkippingEmptyTextNodes(startSibling) {
+  let item = startSibling.nextSibling;
+  while (item &&
+         item.nodeType == TEXT_NODE &&
+         item.nodeValue.trim() == "") {
+    item = item.nextSibling;
   }
-
-  // If there are not enough DOM nodes, let's create a new one.
-  return element.appendChild(element.ownerDocument.createTextNode(""));
+  return item;
 }
 
-function clearRemainingNonEmptyTextNodesFromElement(start, element) {
-  let count = 0;
-  for (let childNode of element.childNodes) {
-    if (childNode.nodeType == Ci.nsIDOMNode.TEXT_NODE &&
-        childNode.nodeValue.trim() != "") {
-      if (count++ >= start) {
-        childNode.nodeValue = "";
-      }
+function clearRemainingNonEmptyTextNodesFromElement(startSibling) {
+  let item = startSibling;
+  while (item) {
+    if (item.nodeType == TEXT_NODE &&
+        item.nodeValue != "") {
+      item.nodeValue = "";
     }
+    item = item.nextSibling;
   }
 }
