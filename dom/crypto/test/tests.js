@@ -332,7 +332,22 @@ TestArray.addTest(
     var alg = { name: "HMAC", hash: {name: "SHA-256"} };
     crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
       complete(that, function(x) {
-        return hasKeyFields(x) && x.algorithm.length == 256;
+        return hasKeyFields(x) && x.algorithm.length == 512;
+      }),
+      error(that)
+    );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "Generate a 256-bit HMAC-SHA-512 key without specifying a key length",
+  function() {
+    var that = this;
+    var alg = { name: "HMAC", hash: {name: "SHA-512"} };
+    crypto.subtle.generateKey(alg, true, ["sign", "verify"]).then(
+      complete(that, function(x) {
+        return hasKeyFields(x) && x.algorithm.length == 1024;
       }),
       error(that)
     );
