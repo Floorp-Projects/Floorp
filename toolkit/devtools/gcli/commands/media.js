@@ -37,7 +37,6 @@ exports.items = [
   {
     name: "media reset",
     description: gcli.lookup("mediaResetDesc"),
-    manual: gcli.lookup("mediaEmulateManual"),
     exec: function(args, context) {
       let markupDocumentViewer = context.environment.chromeWindow
                                         .gBrowser.markupDocumentViewer;
