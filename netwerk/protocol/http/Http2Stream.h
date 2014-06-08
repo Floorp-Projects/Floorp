@@ -69,6 +69,9 @@ public:
   void SetRecvdFin(bool aStatus);
   bool RecvdFin() { return mRecvdFin; }
 
+  void SetRecvdData(bool aStatus) { mReceivedData = aStatus ? 1 : 0; }
+  bool RecvdData() { return mReceivedData; }
+
   void SetSentFin(bool aStatus);
   bool SentFin() { return mSentFin; }
 
@@ -197,6 +200,9 @@ private:
   // Flag is set after the response frame bearing the fin bit has
   // been processed. (i.e. after the server has closed).
   uint32_t                     mRecvdFin             : 1;
+
+  // Flag is set after 1st DATA frame has been passed to stream
+  uint32_t                     mReceivedData         : 1;
 
   // Flag is set after RST_STREAM has been received for this stream
   uint32_t                     mRecvdReset           : 1;

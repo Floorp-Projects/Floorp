@@ -140,6 +140,7 @@ Http2Session::ShutdownEnumerator(nsAHttpTransaction *key,
                                  void *closure)
 {
   Http2Session *self = static_cast<Http2Session *>(closure);
+  nsresult result;
 
   // On a clean server hangup the server sets the GoAwayID to be the ID of
   // the last transaction it processed. If the ID of stream in the
@@ -149,10 +150,14 @@ Http2Session::ShutdownEnumerator(nsAHttpTransaction *key,
   // restarted.
   if (self->mCleanShutdown &&
       (stream->StreamID() > self->mGoAwayID || !stream->HasRegisteredID())) {
-    self->CloseStream(stream, NS_ERROR_NET_RESET); // can be restarted
+    result = NS_ERROR_NET_RESET;  // can be restarted
+  } else if (stream->RecvdData()) {
+    result = NS_ERROR_NET_PARTIAL_TRANSFER;
   } else {
-    self->CloseStream(stream, NS_ERROR_ABORT);
+    result = NS_ERROR_ABORT;
   }
+
+  self->CloseStream(stream, result);
 
   return PL_DHASH_NEXT;
 }
@@ -2013,6 +2018,8 @@ Http2Session::ReadyToProcessDataFrame(enum internalStateType newState)
         mInputFrameDataSize));
   UpdateLocalRwin(mInputFrameDataStream, mInputFrameDataSize);
 
+  mInputFrameDataStream->SetRecvdData(true);
+
   return NS_OK;
 }
 
@@ -2285,7 +2292,9 @@ Http2Session::WriteSegments(nsAHttpSegmentWriter *writer,
     if (mDownstreamRstReason == REFUSED_STREAM_ERROR) {
       streamCleanupCode = NS_ERROR_NET_RESET;      // can retry this 100% safely
     } else {
-      streamCleanupCode = NS_ERROR_NET_INTERRUPT;
+      streamCleanupCode = mInputFrameDataStream->RecvdData() ?
+        NS_ERROR_NET_PARTIAL_TRANSFER :
+        NS_ERROR_NET_INTERRUPT;
     }
 
     if (mDownstreamRstReason == COMPRESSION_ERROR)
