@@ -188,16 +188,18 @@
               preference="browser.download.folderList"
               onsynctopreference="return gMainPane.getFolderListPref();"/>
     </hbox>
-    <radio id="alwaysAsk"
-           value="false"
-           label="&alwaysAsk.label;"
-           accesskey="&alwaysAsk.accesskey;"/>
+    <hbox>
+      <radio id="alwaysAsk"
+             value="false"
+             label="&alwaysAsk.label;"
+             accesskey="&alwaysAsk.accesskey;"/>
+    </hbox>
   </radiogroup>
 </groupbox>
 
 <!-- Tab preferences -->
 <groupbox data-category="paneGeneral"
-          hidden="true">
+          hidden="true" align="start">
     <caption><label>&tabsGroup.label;</label></caption>
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"

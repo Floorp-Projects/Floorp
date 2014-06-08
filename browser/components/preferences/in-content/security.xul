@@ -45,11 +45,12 @@
   <caption><label>&general.label;</label></caption>
 
   <hbox id="addonInstallBox">
-    <checkbox id="warnAddonInstall" flex="1"
+    <checkbox id="warnAddonInstall"
               label="&warnAddonInstall.label;"
               accesskey="&warnAddonInstall.accesskey;"
               preference="xpinstall.whitelist.required"
               onsyncfrompreference="return gSecurityPane.readWarnAddonInstall();"/>
+    <spacer flex="1"/>
     <button id="addonExceptions"
             label="&addonExceptions.label;"
             accesskey="&addonExceptions.accesskey;"
@@ -57,14 +58,16 @@
   </hbox>
 
   <separator class="thin"/>
-  <checkbox id="blockAttackSites"
-            label="&blockAttackSites.label;"
-            accesskey="&blockAttackSites.accesskey;"
-            preference="browser.safebrowsing.malware.enabled" />
-  <checkbox id="blockWebForgeries"
-            label="&blockWebForgeries.label;"
-            accesskey="&blockWebForgeries.accesskey;"
-            preference="browser.safebrowsing.enabled" />
+  <vbox align="start">
+    <checkbox id="blockAttackSites"
+              label="&blockAttackSites.label;"
+              accesskey="&blockAttackSites.accesskey;"
+              preference="browser.safebrowsing.malware.enabled" />
+    <checkbox id="blockWebForgeries"
+              label="&blockWebForgeries.label;"
+              accesskey="&blockWebForgeries.accesskey;"
+              preference="browser.safebrowsing.enabled" />
+  </vbox>
 </groupbox>
 
 <!-- Passwords -->
@@ -72,10 +75,11 @@
   <caption><label>&passwords.label;</label></caption>
 
   <hbox id="savePasswordsBox">
-    <checkbox id="savePasswords" flex="1"
+    <checkbox id="savePasswords"
               label="&rememberPasswords.label;" accesskey="&rememberPasswords.accesskey;"
               preference="signon.rememberSignons"
               onsyncfrompreference="return gSecurityPane.readSavePasswords();"/>
+    <spacer flex="1"/>
     <button id="passwordExceptions"
             label="&passwordExceptions.label;"
             accesskey="&passwordExceptions.accesskey;"
@@ -83,10 +87,11 @@
             preference="pref.privacy.disable_button.view_passwords_exceptions"/>
   </hbox>
   <hbox id="masterPasswordBox">
-    <checkbox id="useMasterPassword" flex="1"
+    <checkbox id="useMasterPassword"
               oncommand="gSecurityPane.updateMasterPasswordButton();"
               label="&useMasterPassword.label;"
               accesskey="&useMasterPassword.accesskey;"/>
+    <spacer flex="1"/>
     <button id="changeMasterPassword"
             label="&changeMasterPassword.label;"
             accesskey="&changeMasterPassword.accesskey;"
