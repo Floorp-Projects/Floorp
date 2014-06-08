@@ -47,6 +47,22 @@
          key="&toolboxZoomReset.key;"
          oncommand="void(0);"
          modifiers="accel"/>
+    <key id="toolbox-reload-key"
+         key="&toolboxReload.key;"
+         oncommand="void(0);"
+         modifiers="accel"/>
+    <key id="toolbox-force-reload-key"
+         key="&toolboxReload.key;"
+         oncommand="void(0);"
+         modifiers="accel shift"/>
+    <key id="toolbox-reload-key2"
+         keycode="VK_F5"
+         oncommand="void(0);"
+         modifiers=""/>
+    <key id="toolbox-force-reload-key2"
+         keycode="VK_F5"
+         oncommand="void(0);"
+         modifiers="accel"/>
   </keyset>
 
   <notificationbox id="toolbox-notificationbox" flex="1">
