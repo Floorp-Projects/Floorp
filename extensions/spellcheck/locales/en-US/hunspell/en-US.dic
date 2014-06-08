@@ -1,4 +1,4 @@
-57192
+57219
 0/nm
 0th/pt
 1/n1
@@ -16980,6 +16980,7 @@ advocacy/M
 advocate/MGDS
 advocator/SM
 advt
+adware/MS
 adz/MS
 adze/M
 aegis/M
@@ -18185,9 +18186,13 @@ arcade/MGS
 arcana
 arcane/PY
 arch/PZTGVMDRSY
+archaeoastronomy/M
+archaeologic
 archaeological/Y
 archaeologist/SM
 archaeology/M
+archaeomagnetic
+archaeomagnetism
 archaic
 archaically
 archaism/MS
@@ -18539,6 +18544,9 @@ astray
 astride
 astringency/M
 astringent/MYS
+astroarchaeology/SM
+astrobiology/M
+astrobleme/S
 astrolabe/SM
 astrologer/SM
 astrological/Y
@@ -20574,6 +20582,7 @@ bother/SMDG
 botheration
 bothersome
 bothy
+botnet/MS
 bottle/DRSMZG
 bottleneck/MS
 bottler/M
@@ -23437,7 +23446,7 @@ commendation/ASM
 commendatory
 commensurable/I
 commensurate/IY
-comment/GSMDR
+comment/GSMDRZ
 commentary/SM
 commentate/DSG
 commentator/SM
@@ -24828,6 +24837,7 @@ cricketer/M
 crier/M
 crikey
 crime/SM
+crimeware/M
 criminal/MYS
 criminality/M
 criminalization/C
@@ -26013,6 +26023,7 @@ desiderata
 desideratum/M
 design/MRZB
 designate/XDSGN
+designated/U
 designation/M
 designational
 designator/S
@@ -28738,11 +28749,13 @@ ex/MS
 exabyte/MS
 exacerbate/GNDS
 exacerbation/M
-exact/SPDRYTG
-exacting/Y
-exaction/M
+exact/SPDRYTGB
+exacta/S
+exacting/YP
+exaction/MS
 exactitude/M
 exactness/IM
+exactor/MS
 exaggerate/DSGNX
 exaggerated/Y
 exaggeration/M
@@ -36016,6 +36029,8 @@ keyboard/ZGSMDR
 keyboarder/M
 keyboardist/MS
 keyhole/MS
+keylogger/MS
+keylogging/MS
 keynote/MZGDRS
 keynoter/M
 keypad/SM
@@ -36753,6 +36768,7 @@ leopardess/MS
 leopardskin
 leotard/SM
 leper/SM
+lepidopterist/SM
 leprechaun/MS
 leprosy/M
 leprous
@@ -36966,6 +36982,9 @@ limiting/S
 limitless/P
 limitlessness/M
 limn/DSG
+limnological
+limnologist/MS
+limnology/M
 limo/MS
 limousine/MS
 limp/MDRYSPTG
@@ -37777,6 +37796,7 @@ maltose/M
 maltreat/GLDS
 maltreatment/M
 malty/TR
+malware/MS
 mam/S
 mama/MS
 mamba/SM
@@ -40142,10 +40162,12 @@ neuron/MS
 neuronal
 neurophysiology/M
 neuroscience/MS
+neuroscientist/MS
 neuroses
 neurosis/M
 neurosurgeon/MS
 neurosurgery/M
+neurosurgical
 neurotic/MS
 neurotically
 neurotransmitter/SM
@@ -47151,6 +47173,7 @@ roost/SMDRZG
 rooster/M
 root/MDRZGS
 rooter/M
+rootkit/MS
 rootless/P
 rootlet/SM
 rootstock
@@ -53951,6 +53974,7 @@ trident/MS
 tried/U
 triennial/MYS
 trier/SM
+trifecta/S
 triffid/S
 trifle/MZGDRS
 trifler/M
@@ -55717,6 +55741,9 @@ volcanically
 volcanism
 volcano/M
 volcanoes
+volcanological
+volcanologist/MS
+volcanology/M
 vole/MS
 volition/M
 volitional
