@@ -5324,6 +5324,34 @@
     "n_buckets": 1000,
     "description": "RTCP-reported jitter by remote recipient of outbound audio (ms). Sampled every second of a call (for easy comparison)."
   },
+  "WEBRTC_VIDEO_ERROR_RECOVERY_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 500,
+    "description": "Time to recover from a video error in ms"
+  },
+  "WEBRTC_VIDEO_RECOVERY_BEFORE_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered before error per min"
+  },
+  "WEBRTC_VIDEO_RECOVERY_AFTER_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered after error per min"
+  },
+  "WEBRTC_VIDEO_DECODE_ERROR_TIME_PERMILLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Percentage*10 (permille) of call decoding with errors or frozen due to errors"
+  },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT": {
     "expires_in_version": "never",
     "kind": "exponential",

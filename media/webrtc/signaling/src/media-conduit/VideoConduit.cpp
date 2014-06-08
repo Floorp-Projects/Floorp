@@ -118,6 +118,9 @@ WebrtcVideoConduit::~WebrtcVideoConduit()
     mVideoEngine = nullptr;
   } else {
     // mVideoCodecStat has a back-ptr to mPtrViECodec that must be released first
+    if (mVideoCodecStat) {
+      mVideoCodecStat->EndOfCallStats();
+    }
     mVideoCodecStat = nullptr;
     // We can't delete the VideoEngine until all these are released!
     // And we can't use a Scoped ptr, since the order is arbitrary
