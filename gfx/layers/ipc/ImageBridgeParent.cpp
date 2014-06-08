@@ -23,6 +23,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for PGrallocBufferParent
 #include "mozilla/layers/PCompositableParent.h"
 #include "mozilla/layers/PImageBridgeParent.h"
+#include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "mozilla/unused.h"
@@ -208,13 +209,13 @@ ImageBridgeParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
   messages.AppendElement(OpDeliverFence(aTracker->GetId(),
                                         aTexture, nullptr,
                                         aFence));
-  mozilla::unused << SendParentAsyncMessage(messages);
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 void
 ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
-  mozilla::unused << SendParentAsyncMessage(aMessage);
+  mozilla::unused << SendParentAsyncMessages(aMessage);
 }
 
 bool
@@ -224,6 +225,27 @@ ImageBridgeParent::RecvChildAsyncMessages(const InfallibleTArray<AsyncChildMessa
     const AsyncChildMessageData& message = aMessages[i];
 
     switch (message.type()) {
+      case AsyncChildMessageData::TOpDeliverFenceFromChild: {
+        const OpDeliverFenceFromChild& op = message.get_OpDeliverFenceFromChild();
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+        FenceHandle fence = FenceHandle(op.fence());
+        PTextureParent* parent = op.textureParent();
+
+        TextureHostOGL* hostOGL = nullptr;
+        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(parent);
+        if (texture) {
+          hostOGL = texture->AsHostOGL();
+        }
+        if (hostOGL) {
+          hostOGL->SetAcquireFence(fence.mFence);
+        }
+#endif
+        // Send back a response.
+        InfallibleTArray<AsyncParentMessageData> replies;
+        replies.AppendElement(OpReplyDeliverFence(op.transactionId()));
+        mozilla::unused << SendParentAsyncMessages(replies);
+        break;
+      }
       case AsyncChildMessageData::TOpReplyDeliverFence: {
         const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
         TransactionCompleteted(op.transactionId());
@@ -304,7 +326,7 @@ ImageBridgeParent::ReplyRemoveTexture(const OpReplyRemoveTexture& aReply)
 {
   InfallibleTArray<AsyncParentMessageData> messages;
   messages.AppendElement(aReply);
-  mozilla::unused << SendParentAsyncMessage(messages);
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 /*static*/ void
@@ -339,7 +361,7 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
                                                  aDestHolderId,
                                                  aTransactionId,
                                                  fence));
-  mozilla::unused << SendParentAsyncMessage(messages);
+  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 /*static*/ void
