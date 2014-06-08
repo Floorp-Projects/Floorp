@@ -10,7 +10,8 @@ import os
 import sys
 sys.path.append(os.path.dirname(__file__))
 from single_finger_functions import (
-        chain, chain_flick, context_menu, double_tap, long_press_action,
+        chain, chain_flick, context_menu, double_tap,
+        long_press_action, long_press_on_xy_action,
         move_element, move_element_offset, press_release, single_tap, wait,
         wait_with_value
         )
@@ -47,6 +48,9 @@ class testSingleFinger(MarionetteTestCase):
 
     def test_long_press_action(self):
         long_press_action(self.marionette, self.wait_for_condition, "button1-touchstart-contextmenu-touchend")
+
+    def test_long_press_on_xy_action(self):
+        long_press_on_xy_action(self.marionette, self.wait_for_condition, "button1-touchstart-touchend")
 
     """
     #Skipping due to Bug 865334
@@ -86,4 +90,3 @@ class testSingleFinger(MarionetteTestCase):
 
     def test_double_tap(self):
         double_tap(self.marionette, self.wait_for_condition, "button1-touchstart-touchend-mousemove-mousedown-mouseup-click-touchstart-touchend-mousemove-mousedown-mouseup-click")
-

@@ -365,15 +365,26 @@ class Actions(object):
         self.action_chain.append(['release'])
         return self
 
-    def long_press(self, element, time_in_seconds):
+    def long_press(self, element, time_in_seconds, x=None, y=None):
         '''
         Performs a long press gesture on the target element.
 
         :param element: The element to press.
         :param time_in_seconds: Time in seconds to wait before releasing the press.
+        :param x: Optional, x-coordinate to tap, relative to the top-left
+         corner of the element.
+        :param y: Optional, y-coordinate to tap, relative to the top-left
+         corner of the element.
+
+        This is equivalent to calling:
+
+        ::
+
+          action.press(element, x, y).wait(time_in_seconds).release()
+
         '''
         element = element.id
-        self.action_chain.append(['press', element])
+        self.action_chain.append(['press', element, x, y])
         self.action_chain.append(['wait', time_in_seconds])
         self.action_chain.append(['release'])
         return self
@@ -1398,7 +1409,7 @@ class Marionette(object):
 
         :param highlights: A list of HTMLElement objects to draw a red
             box around in the returned screenshot.
-        
+
         :param format: if "base64" (the default), returns the screenshot
             as a base64-string. If "binary", the data is decoded and
             returned as raw binary.
