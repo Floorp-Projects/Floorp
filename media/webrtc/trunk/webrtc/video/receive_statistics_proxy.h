@@ -60,6 +60,7 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
                              int min_playout_delay_ms,
                              int render_delay_ms) OVERRIDE {}
   virtual void RequestNewKeyFrame(const int video_channel) OVERRIDE {}
+  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) OVERRIDE;
 
   // Overrides RtcpStatisticsBallback.
   virtual void StatisticsUpdated(const webrtc::RtcpStatistics& statistics,
@@ -78,6 +79,7 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
   VideoReceiveStream::Stats stats_;
   RateStatistics decode_fps_estimator_;
   RateStatistics renders_fps_estimator_;
+  VideoReceiveState receive_state_;
   ViECodec* codec_;
   ViERTP_RTCP* rtp_rtcp_;
 };
