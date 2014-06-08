@@ -137,12 +137,16 @@ this.TranslationDocument.prototype = {
 
     let str = "";
     item.original = [];
+    let wasLastItemPlaceholder = false;
 
     for (let child of item.nodeRef.childNodes) {
       if (child.nodeType == TEXT_NODE) {
         let x = child.nodeValue.trim();
-        str += x;
-        item.original.push(x);
+        if (x != "") {
+          item.original.push(x);
+          str += x;
+          wasLastItemPlaceholder = false;
+        }
         continue;
       }
 
@@ -156,13 +160,20 @@ this.TranslationDocument.prototype = {
         // it will be stringfied separately for being a root.
         item.original.push(objInMap);
         str += this.generateTextForItem(objInMap);
+        wasLastItemPlaceholder = false;
       } else {
         // Otherwise, if this node doesn't contain any useful content,
         // or if it is a root itself, we can replace it with a placeholder node.
         // We can't simply eliminate this node from our string representation
         // because that could change the HTML structure (e.g., it would
         // probably merge two separate text nodes).
-        str += '<br/>';
+        // It's not necessary to add more than one placeholder in sequence;
+        // we can optimize them away.
+        if (!wasLastItemPlaceholder) {
+          item.original.push(TranslationItem_NodePlaceholder);
+          str += '<br>';
+          wasLastItemPlaceholder = true;
+        }
       }
     }
 
@@ -259,8 +270,8 @@ TranslationItem.prototype = {
   isSimpleRoot: false,
 
   toString: function() {
-    let rootType = this._isRoot
-                   ? (this._isSimpleRoot ? ' (simple root)' : ' (non simple root)')
+    let rootType = this.isRoot
+                   ? (this.isSimpleRoot ? ' (simple root)' : ' (non simple root)')
                    : '';
     return "[object TranslationItem: <" + this.nodeRef.localName + ">"
            + rootType + "]";
@@ -325,6 +336,19 @@ TranslationItem.prototype = {
 };
 
 /**
+ * This object represents a placeholder item for translation. It's similar to
+ * the TranslationItem class, but it represents nodes that have no meaningful
+ * content for translation. These nodes will be replaced by "<br>" in a
+ * translation request. It's necessary to keep them to use it as a mark
+ * for correct positioning and spliting of text nodes.
+ */
+const TranslationItem_NodePlaceholder = {
+  toString: function() {
+    return "[object TranslationItem_NodePlaceholder]";
+  }
+};
+
+/**
  * Generate the outer HTML representation for a given item.
  *
  * @param   item       A TranslationItem object.
@@ -354,22 +378,13 @@ function regenerateTextFromOriginalHelper(item) {
   }
 
   let str = "";
-
-  let wasLastItemText = false;
   for (let child of item.original) {
     if (child instanceof TranslationItem) {
       str += regenerateTextFromOriginalHelper(child);
-      wasLastItemText = false;
+    } else if (child === TranslationItem_NodePlaceholder) {
+      str += "<br>";
     } else {
-      // The non-significant elements (which were replaced with <br/>
-      // during the first call to generateTextForItem) are not stored
-      // in the original array. If they are not properly re-generated,
-      // two adjacent text nodes would be merged into one.
-      if (wasLastItemText) {
-        str += "<br/>";
-      }
       str += child;
-      wasLastItemText = true;
     }
   }
 
@@ -395,6 +410,8 @@ function parseResultNode(item, node) {
   for (let child of node.childNodes) {
     if (child.nodeType == TEXT_NODE) {
       item.translation.push(child.nodeValue);
+    } else if (child.localName == "br") {
+      item.translation.push(TranslationItem_NodePlaceholder);
     } else {
       let translationItemChild = item.getChildById(child.id);
 
