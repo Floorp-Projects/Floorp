@@ -553,6 +553,16 @@ enum RawVideoType
     kVideoUnknown  = 99
 };
 
+enum VideoReceiveState
+{
+  kReceiveStateInitial,            // No video decoded yet
+  kReceiveStateNormal,
+  kReceiveStatePreemptiveNACK,     // NACK sent for missing packet, no decode stall/fail yet
+  kReceiveStateWaitingKey,         // Decoding stalled, waiting for keyframe or NACK
+  kReceiveStateDecodingWithErrors, // Decoding with errors, waiting for keyframe or NACK
+  kReceiveStateNoIncoming,         // No errors, but no incoming video since last decode
+};
+
 // Video codec
 enum { kConfigParameterSize = 128};
 enum { kPayloadNameSize = 32};

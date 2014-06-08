@@ -140,6 +140,7 @@ class VideoReceiver {
   ~VideoReceiver();
 
   int32_t InitializeReceiver();
+  void SetReceiveState(VideoReceiveState state);
   int32_t RegisterReceiveCodec(const VideoCodec* receiveCodec,
                                int32_t numberOfCores,
                                bool requireKeyFrame);
@@ -154,6 +155,7 @@ class VideoReceiver {
       VCMDecoderTimingCallback* decoderTiming);
   int32_t RegisterFrameTypeCallback(VCMFrameTypeCallback* frameTypeCallback);
   int32_t RegisterPacketRequestCallback(VCMPacketRequestCallback* callback);
+  int32_t RegisterReceiveStateCallback(VCMReceiveStateCallback* callback);
   int RegisterRenderBufferSizeCallback(VCMRenderBufferSizeCallback* callback);
 
   int32_t Decode(uint16_t maxWaitTimeMs);
@@ -209,6 +211,7 @@ class VideoReceiver {
   scoped_ptr<CriticalSectionWrapper> process_crit_sect_;
   CriticalSectionWrapper* _receiveCritSect;
   bool _receiverInited;
+  VideoReceiveState _receiveState;
   VCMTiming _timing;
   VCMTiming _dualTiming;
   VCMReceiver _receiver;
@@ -219,6 +222,7 @@ class VideoReceiver {
   VCMReceiveStatisticsCallback* _receiveStatsCallback;
   VCMDecoderTimingCallback* _decoderTimingCallback;
   VCMPacketRequestCallback* _packetRequestCallback;
+  VCMReceiveStateCallback* _receiveStateCallback;
   VCMRenderBufferSizeCallback* render_buffer_callback_;
   VCMGenericDecoder* _decoder;
   VCMGenericDecoder* _dualDecoder;

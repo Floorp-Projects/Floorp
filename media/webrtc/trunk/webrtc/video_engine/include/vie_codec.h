@@ -75,6 +75,9 @@ class WEBRTC_DLLEXPORT ViEDecoderObserver {
   // on the sender.
   virtual void RequestNewKeyFrame(const int video_channel) = 0;
 
+  // This method is called when the decoder changes state
+  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) = 0;
+
  protected:
   virtual ~ViEDecoderObserver() {}
 };
