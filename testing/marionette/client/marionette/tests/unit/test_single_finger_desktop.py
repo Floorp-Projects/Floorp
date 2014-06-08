@@ -6,7 +6,8 @@ import os
 import sys
 sys.path.append(os.path.dirname(__file__))
 from single_finger_functions import (
-        chain, chain_flick, context_menu, double_tap, long_press_action,
+        chain, chain_flick, context_menu, double_tap,
+        long_press_action, long_press_on_xy_action,
         move_element, move_element_offset, press_release, single_tap, wait,
         wait_with_value
         )
@@ -77,6 +78,9 @@ prefs.setIntPref("ui.click_hold_context_menus.delay", arguments[0]);
 
     def test_long_press_action(self):
         long_press_action(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu-mouseup-click")
+
+    def test_long_press_on_xy_action(self):
+        long_press_on_xy_action(self.marionette, self.wait_for_condition, "button1-mousemove-mousedown-contextmenu-mouseup-click")
 
     """
     //Skipping due to Bug 865334
