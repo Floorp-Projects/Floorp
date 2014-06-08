@@ -867,6 +867,16 @@ nsHttpTransaction::Close(nsresult reason)
         }
     }
 
+    if ((mChunkedDecoder || (mContentLength >= int64_t(0))) &&
+        (mHttpVersion >= NS_HTTP_VERSION_1_1)) {
+
+        if (NS_SUCCEEDED(reason) && !mResponseIsComplete) {
+            reason = NS_ERROR_NET_PARTIAL_TRANSFER;
+            LOG(("Partial transfer, incomplete HTTP responese received: %s",
+                 mChunkedDecoder ? "broken chunk" : "c-l underrun"));
+        }
+    }
+
     bool relConn = true;
     if (NS_SUCCEEDED(reason)) {
         if (!mResponseIsComplete) {
