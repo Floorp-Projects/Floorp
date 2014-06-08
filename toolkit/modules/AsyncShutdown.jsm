@@ -693,7 +693,7 @@ Barrier.prototype = Object.freeze({
             " At least one completion condition failed to complete" +
 	    " within a reasonable amount of time. Causing a crash to" +
 	    " ensure that we do not leave the user with an unresponsive" +
-	    " process draining resources." +
+	    " process draining resources.";
 	  err(msg);
 	  if (gCrashReporter && gCrashReporter.enabled) {
             let data = {
