@@ -64,7 +64,7 @@ class GonkNativeWindow: public GonkConsumerBase
     // the consumer usage flags passed to the graphics allocator. The
     // bufferCount parameter specifies how many buffers can be locked for user
     // access at the same time.
-    GonkNativeWindow();
+    GonkNativeWindow(int bufferCount = GonkBufferQueue::MIN_UNDEQUEUED_BUFFERS);
 
     virtual ~GonkNativeWindow();
 
