@@ -516,7 +516,8 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 enum InitState { Uninitialized, Running, ShutDown };
 static InitState jsInitState = Uninitialized;
 
-bool jsIsShutDown()
+JS_PUBLIC_API(bool)
+JS_IsShutDown(void)
 {
     return jsInitState == ShutDown;
 }
