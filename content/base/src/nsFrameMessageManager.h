@@ -32,7 +32,7 @@
 namespace mozilla {
 namespace dom {
 
-class nsIContentParent;
+class ContentParent;
 class ContentChild;
 class ClonedMessageData;
 class MessageManagerReporter;
@@ -99,7 +99,7 @@ public:
   }
 
 protected:
-  bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
+  bool BuildClonedMessageDataForParent(ContentParent* aParent,
                                        const StructuredCloneData& aData,
                                        ClonedMessageData& aClonedData);
   bool BuildClonedMessageDataForChild(ContentChild* aChild,
@@ -217,7 +217,7 @@ public:
   NS_DECL_NSIPROCESSCHECKER
 
   static nsFrameMessageManager*
-  NewProcessMessageManager(mozilla::dom::nsIContentParent* aProcess);
+  NewProcessMessageManager(mozilla::dom::ContentParent* aProcess);
 
   nsresult ReceiveMessage(nsISupports* aTarget, const nsAString& aMessage,
                           bool aIsSync, const StructuredCloneData* aCloneData,

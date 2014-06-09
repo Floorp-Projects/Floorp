@@ -312,14 +312,12 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     if (mPermissionRequests[i].type().EqualsLiteral("audio-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.RECORD_AUDIO",
-        static_cast<TabParent*>(
-          mParent->Manager())->Manager()->AsContentParent()->Pid());
+        static_cast<TabParent*>(mParent->Manager())->Manager()->Pid());
     }
     if (mPermissionRequests[i].type().EqualsLiteral("video-capture")) {
       GonkPermissionService::GetInstance()->addGrantInfo(
         "android.permission.CAMERA",
-        static_cast<TabParent*>(
-          mParent->Manager())->Manager()->AsContentParent()->Pid());
+        static_cast<TabParent*>(mParent->Manager())->Manager()->Pid());
     }
   }
 #endif
