@@ -33,6 +33,8 @@
 using namespace js;
 using namespace js::selfhosted;
 
+using JS::AutoCheckCannotGC;
+
 static void
 selfHosting_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
 {

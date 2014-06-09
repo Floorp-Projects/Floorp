@@ -42,8 +42,6 @@ class MOZ_STACK_CLASS SourceBufferHolder;
 
 class HandleValueArray;
 
-class AutoCheckCannotGC;
-
 }
 
 // Do the importing.
@@ -134,8 +132,6 @@ using JS::UndefinedHandleValue;
 using JS::HandleValueArray;
 
 using JS::Zone;
-
-using JS::AutoCheckCannotGC;
 
 } /* namespace js */
 
