@@ -24,9 +24,6 @@
 #include "BluetoothService.h"
 #include "BluetoothUtils.h"
 
-#define ERR_INVALID_ADAPTER_STATE "InvalidAdapterStateError"
-#define ERR_CHANGE_ADAPTER_STATE  "ChangeAdapterStateError"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -721,19 +718,19 @@ BluetoothAdapter::EnableDisable(bool aEnable)
   // Make sure BluetoothService is available before modifying adapter state
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
-    promise->MaybeReject(ERR_CHANGE_ADAPTER_STATE);
+    promise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
     return promise.forget();
   }
 
   if (aEnable) {
     if (mState != BluetoothAdapterState::Disabled) {
-      promise->MaybeReject(ERR_INVALID_ADAPTER_STATE);
+      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
       return promise.forget();
     }
     mState = BluetoothAdapterState::Enabling;
   } else {
     if (mState != BluetoothAdapterState::Enabled) {
-      promise->MaybeReject(ERR_INVALID_ADAPTER_STATE);
+      promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
       return promise.forget();
     }
     mState = BluetoothAdapterState::Disabling;
@@ -743,7 +740,7 @@ BluetoothAdapter::EnableDisable(bool aEnable)
   nsRefPtr<BluetoothReplyRunnable> result = new EnableDisableAdapterTask(promise);
 
   if(NS_FAILED(bs->EnableDisable(aEnable, result))) {
-    promise->MaybeReject(ERR_CHANGE_ADAPTER_STATE);
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }
 
   return promise.forget();

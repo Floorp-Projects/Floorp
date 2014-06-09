@@ -800,6 +800,9 @@ public:
     // Resampler if the rate of the input track does not match the
     // MediaStreamGraph's.
     nsAutoRef<SpeexResamplerState> mResampler;
+#ifdef DEBUG
+    int mResamplerChannelCount;
+#endif
     TrackTicks mStart;
     // Each time the track updates are flushed to the media graph thread,
     // this is cleared.
