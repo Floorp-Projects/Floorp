@@ -502,9 +502,9 @@ ProcessPriorityManagerImpl::ObserveContentParentCreated(
 {
   // Do nothing; it's sufficient to get the PPPM.  But assign to nsRefPtr so we
   // don't leak the already_AddRefed object.
-  nsCOMPtr<nsIContentParent> cp = do_QueryInterface(aContentParent);
+  nsCOMPtr<nsIObserver> cp = do_QueryInterface(aContentParent);
   nsRefPtr<ParticularProcessPriorityManager> pppm =
-    GetParticularProcessPriorityManager(cp->AsContentParent());
+    GetParticularProcessPriorityManager(static_cast<ContentParent*>(cp.get()));
 }
 
 static PLDHashOperator
@@ -816,7 +816,6 @@ ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(nsISupports* aSubjec
   fl->GetTabParent(getter_AddRefs(tp));
   NS_ENSURE_TRUE_VOID(tp);
 
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
     return;
   }
@@ -830,7 +829,6 @@ ParticularProcessPriorityManager::OnTabParentDestroyed(nsISupports* aSubject)
   nsCOMPtr<nsITabParent> tp = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(tp);
 
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
     return;
   }
@@ -850,7 +848,6 @@ ParticularProcessPriorityManager::OnFrameloaderVisibleChanged(nsISupports* aSubj
     return;
   }
 
-  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   if (static_cast<TabParent*>(tp.get())->Manager() != mContentParent) {
     return;
   }
