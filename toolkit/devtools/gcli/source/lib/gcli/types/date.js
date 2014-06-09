@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 var Status = require('./types').Status;
 var Conversion = require('./types').Conversion;
@@ -174,7 +174,7 @@ exports.items = [
       var value;
 
       if (arg.text.replace(/\s/g, '').length === 0) {
-        return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+        return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
       }
 
       // Lots of room for improvement here: 1h ago, in two days, etc.
@@ -220,11 +220,11 @@ exports.items = [
 
         if (isNaN(value.getTime())) {
           var msg = l10n.lookupFormat('typesDateNan', [ arg.text ]);
-          return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+          return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
         }
       }
 
-      return promise.resolve(new Conversion(value, arg));
+      return Promise.resolve(new Conversion(value, arg));
     },
 
     decrement: function(value, context) {

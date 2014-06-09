@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Loop</title>
+    <link rel="stylesheet" type="text/css" href="shared/css/common.css">
+    <link rel="stylesheet" type="text/css" href="shared/css/conversation.css">
+    <link rel="stylesheet" type="text/css" href="css/webapp.css">
+    <link rel="prefetch" type="application/l10n" href="l10n/data.ini">
+  </head>
+  <body onload="loop.webapp.init();">
+
+    <header>
+      <h1>Loop</h1>
+    </header>
+
+    <div id="messages"></div>
+
+    <div id="main"></div>
+
+    <!-- libs -->
+    <script src="https://static.opentok.com/webrtc/v2.2/js/opentok.min.js"></script>
+    <script type="text/javascript" src="shared/libs/webl10n-20130617.js"></script>
+    <script type="text/javascript" src="shared/libs/jquery-2.1.0.js"></script>
+    <script type="text/javascript" src="shared/libs/lodash-2.4.1.js"></script>
+    <script type="text/javascript" src="shared/libs/backbone-1.1.2.js"></script>
+
+    <!-- app scripts -->
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript" src="shared/js/client.js"></script>
+    <script type="text/javascript" src="shared/js/models.js"></script>
+    <script type="text/javascript" src="shared/js/views.js"></script>
+    <script type="text/javascript" src="shared/js/router.js"></script>
+    <script type="text/javascript" src="js/webapp.js"></script>
+
+    <script>
+    // Set the 'lang' and 'dir' attributes to <html> when the page is translated
+    window.addEventListener('localized', function() {
+      document.documentElement.lang = document.webL10n.getLanguage();
+      document.documentElement.dir = document.webL10n.getDirection();
+    }, false);
+    </script>
+  </body>
+</html>
