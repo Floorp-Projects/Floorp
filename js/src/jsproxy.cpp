@@ -1089,23 +1089,6 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
 // This variable exists solely to provide a unique address for use as an identifier.
 static const char sScriptedDirectProxyHandlerFamily = 0;
 
-// Aux.2 FromGenericPropertyDescriptor(Desc)
-static bool
-FromGenericPropertyDescriptor(JSContext *cx, MutableHandle<PropDesc> desc, MutableHandleValue rval)
-{
-    // Aux.2 step 1
-    if (desc.isUndefined()) {
-        rval.setUndefined();
-        return true;
-    }
-
-    // steps 3-9
-    if (!desc.makeObject(cx))
-        return false;
-    rval.set(desc.descriptorValue());
-    return true;
-}
-
 static inline bool
 IsDataDescriptor(const PropertyDescriptor &desc)
 {
