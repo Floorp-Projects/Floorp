@@ -70,6 +70,12 @@ GetTransformToAncestorsParentLayer(Layer* aStart, Layer* aAncestor)
   gfx::Matrix4x4 transform;
   Layer* ancestorParent = aAncestor->GetParent();
   for (Layer* iter = aStart; iter != ancestorParent; iter = iter->GetParent()) {
+    if (iter->AsContainerLayer()) {
+      // If the layer has a non-transient async transform then we need to apply it here
+      // because it will get applied by the APZ in the compositor as well
+      const FrameMetrics& metrics = iter->AsContainerLayer()->GetFrameMetrics();
+      transform = transform * gfx::Matrix4x4().Scale(metrics.mResolution.scale, metrics.mResolution.scale, 1.f);
+    }
     transform = transform * iter->GetTransform();
   }
   gfx3DMatrix ret;
@@ -133,11 +139,14 @@ ClientTiledThebesLayer::BeginPaint()
   // display port ancestor to the Layer space of this layer.
   gfx3DMatrix transformToDisplayPort =
     GetTransformToAncestorsParentLayer(this, displayPortAncestor);
-  transformToDisplayPort.ScalePost(scrollMetrics.mCumulativeResolution.scale,
-                                   scrollMetrics.mCumulativeResolution.scale,
-                                   1.f);
 
   mPaintData.mTransformDisplayPortToLayer = transformToDisplayPort.Inverse();
+
+  // Note that below we use GetZoomToParent() in a number of places. Because this
+  // code runs on the client side, the mTransformScale field of the FrameMetrics
+  // will not have been set. This can result in incorrect values being returned
+  // by GetZoomToParent() when we have CSS transforms set on some of these layers.
+  // This code should be audited and updated as part of fixing bug 993525.
 
   // Compute the critical display port that applies to this layer in the
   // LayoutDevice space of this layer.
@@ -165,9 +174,8 @@ ClientTiledThebesLayer::BeginPaint()
   // Store the applicable composition bounds in this layer's Layer units.
   gfx3DMatrix transformToCompBounds =
     GetTransformToAncestorsParentLayer(this, scrollAncestor);
-  mPaintData.mCompositionBounds = TransformTo<LayerPixel>(
-    transformToCompBounds.Inverse(),
-    scrollMetrics.mCompositionBounds / scrollMetrics.GetParentResolution());
+  mPaintData.mCompositionBounds = ApplyParentLayerToLayerTransform(
+    transformToCompBounds.Inverse(), ParentLayerRect(scrollMetrics.mCompositionBounds));
   TILING_PRLOG_OBJ(("TILING 0x%p: Composition bounds %s\n", this, tmpstr.get()), mPaintData.mCompositionBounds);
 
   // Calculate the scroll offset since the last transaction
