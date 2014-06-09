@@ -3013,28 +3013,28 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
     mReferenceFrame = 
       aBuilder->FindReferenceFrameFor(GetTransformRootFrame(aFrame));
     mToReferenceFrame = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
-    return;
+  } else {
+    // If we're a transformed frame, then we need to find out if we're inside
+    // the nsDisplayTransform or outside of it. Frames inside the transform
+    // need mReferenceFrame == mFrame, outside needs the next ancestor
+    // reference frame.
+    // If we're inside the transform, then the nsDisplayItem constructor
+    // will have done the right thing.
+    // If we're outside the transform, then we should have only one child
+    // (since nsDisplayTransform wraps all actual content), and that child
+    // will have the correct reference frame set (since nsDisplayTransform
+    // handles this explictly).
+    //
+    // Preserve-3d can cause us to have multiple nsDisplayTransform
+    // children.
+    nsDisplayItem *i = mList.GetBottom();
+    if (i && (!i->GetAbove() || i->GetType() == TYPE_TRANSFORM) &&
+        i->Frame() == mFrame) {
+      mReferenceFrame = i->ReferenceFrame();
+      mToReferenceFrame = i->ToReferenceFrame();
+    }
   }
-
-  // If we're a transformed frame, then we need to find out if we're inside
-  // the nsDisplayTransform or outside of it. Frames inside the transform
-  // need mReferenceFrame == mFrame, outside needs the next ancestor
-  // reference frame.
-  // If we're inside the transform, then the nsDisplayItem constructor
-  // will have done the right thing.
-  // If we're outside the transform, then we should have only one child
-  // (since nsDisplayTransform wraps all actual content), and that child
-  // will have the correct reference frame set (since nsDisplayTransform
-  // handles this explictly).
-  //
-  // Preserve-3d can cause us to have multiple nsDisplayTransform
-  // children.
-  nsDisplayItem *i = mList.GetBottom();
-  if (i && (!i->GetAbove() || i->GetType() == TYPE_TRANSFORM) && 
-      i->Frame() == mFrame) {
-    mReferenceFrame = i->ReferenceFrame();
-    mToReferenceFrame = i->ToReferenceFrame();
-  }
+  mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -3053,14 +3053,14 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
     mReferenceFrame = 
       aBuilder->FindReferenceFrameFor(GetTransformRootFrame(aFrame));
     mToReferenceFrame = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
-    return;
+  } else {
+    // See the previous nsDisplayWrapList constructor
+    if (aItem->Frame() == aFrame) {
+      mReferenceFrame = aItem->ReferenceFrame();
+      mToReferenceFrame = aItem->ToReferenceFrame();
+    }
   }
-
-  // See the previous nsDisplayWrapList constructor
-  if (aItem->Frame() == aFrame) {
-    mReferenceFrame = aItem->ReferenceFrame();
-    mToReferenceFrame = aItem->ToReferenceFrame();
-  }
+  mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
 
 nsDisplayWrapList::~nsDisplayWrapList() {
@@ -4333,6 +4333,15 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame 
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
 }
 
+void
+nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
+{
+  mReferenceFrame =
+    aBuilder->FindReferenceFrameFor(GetTransformRootFrame(mFrame));
+  mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
+  mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
+}
+
 nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame *aFrame,
                                        nsDisplayList *aList, uint32_t aIndex) 
   : nsDisplayItem(aBuilder, aFrame)
@@ -4342,9 +4351,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame 
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
-  mReferenceFrame = 
-    aBuilder->FindReferenceFrameFor(GetTransformRootFrame(aFrame));
-  mToReferenceFrame = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
+  SetReferenceFrameToAncestor(aBuilder);
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
 }
 
@@ -4357,9 +4364,7 @@ nsDisplayTransform::nsDisplayTransform(nsDisplayListBuilder* aBuilder, nsIFrame 
 {
   MOZ_COUNT_CTOR(nsDisplayTransform);
   NS_ABORT_IF_FALSE(aFrame, "Must have a frame!");
-  mReferenceFrame =
-    aBuilder->FindReferenceFrameFor(GetTransformRootFrame(aFrame));
-  mToReferenceFrame = aFrame->GetOffsetToCrossDoc(mReferenceFrame);
+  SetReferenceFrameToAncestor(aBuilder);
   mStoredList.SetClip(aBuilder, DisplayItemClip::NoClip());
 }
 
@@ -5048,7 +5053,7 @@ nsRegion nsDisplayTransform::GetOpaqueRegion(nsDisplayListBuilder *aBuilder,
   if (matrix.Is2D(&matrix2d) &&
       matrix2d.PreservesAxisAlignedRectangles() &&
       mStoredList.GetOpaqueRegion(aBuilder, &tmpSnap).Contains(untransformedVisible)) {
-    result = mVisibleRect;
+    result = mVisibleRect.Intersect(GetBounds(aBuilder, &tmpSnap));
   }
   return result;
 }
@@ -5108,7 +5113,7 @@ nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
   /* Now, move everything over to this frame and signal that
    * we merged things!
    */
-  mStoredList.MergeFrom(&static_cast<nsDisplayTransform*>(aItem)->mStoredList);
+  mStoredList.MergeFromTrackingMergedFrames(&static_cast<nsDisplayTransform*>(aItem)->mStoredList);
   return true;
 }
 
