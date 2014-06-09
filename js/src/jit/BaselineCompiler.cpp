@@ -2861,9 +2861,8 @@ BaselineCompiler::emit_JSOP_DEBUGGER()
     return true;
 }
 
-typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, jsbytecode *);
-static const VMFunction DebugEpilogueInfo =
-    FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogueOnBaselineReturn);
+typedef bool (*DebugEpilogueFn)(JSContext *, BaselineFrame *, jsbytecode *, bool);
+static const VMFunction DebugEpilogueInfo = FunctionInfo<DebugEpilogueFn>(jit::DebugEpilogue);
 
 bool
 BaselineCompiler::emitReturn()
@@ -2878,6 +2877,7 @@ BaselineCompiler::emitReturn()
         masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
         prepareVMCall();
+        pushArg(Imm32(1));
         pushArg(ImmPtr(pc));
         pushArg(R0.scratchReg());
         if (!callVM(DebugEpilogueInfo))
