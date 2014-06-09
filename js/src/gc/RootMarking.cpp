@@ -730,8 +730,8 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
 
     MarkPersistentRootedChains(trc);
 
-    if (scriptAndCountsVector) {
-        ScriptAndCountsVector &vec = *scriptAndCountsVector;
+    if (rt->scriptAndCountsVector) {
+        ScriptAndCountsVector &vec = *rt->scriptAndCountsVector;
         for (size_t i = 0; i < vec.length(); i++)
             MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }

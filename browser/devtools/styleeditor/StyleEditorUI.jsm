@@ -490,6 +490,10 @@ StyleEditorUI.prototype = {
 
           // Is there any CSS coverage markup to include?
           csscoverage.getUsage(this._target).then(usage => {
+            if (usage == null) {
+              return;
+            }
+
             let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
             usage.createEditorReport(href).then(data => {
               editor.removeAllUnusedRegions();
