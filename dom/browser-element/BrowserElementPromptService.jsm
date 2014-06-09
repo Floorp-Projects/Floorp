@@ -442,12 +442,9 @@ AuthPromptWrapper.prototype = {
 
   _canGetParentElement: function(channel) {
     try {
-      let context = channel.notificationCallbacks.getInterface(Ci.nsILoadContext);
-      let frame = context.topFrameElement;
-      if (!frame) {
-        // This function returns a boolean value
-        return !!context.nestedFrameId;
-      }
+      let frame = channel.notificationCallbacks.getInterface(Ci.nsILoadContext).topFrameElement;
+      if (!frame)
+        return false;
 
       if (!BrowserElementPromptService.getBrowserElementParentForFrame(frame))
         return false;
