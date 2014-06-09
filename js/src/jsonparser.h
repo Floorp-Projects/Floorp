@@ -9,12 +9,14 @@
 
 #include "mozilla/Attributes.h"
 
+#include "jspubtd.h"
+
 #include "ds/IdValuePair.h"
 #include "vm/String.h"
 
 namespace js {
 
-class MOZ_STACK_CLASS JSONParser : private AutoGCRooter
+class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
