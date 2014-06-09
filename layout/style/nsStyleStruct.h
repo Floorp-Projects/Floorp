@@ -1480,7 +1480,9 @@ struct nsStyleTextReset {
 
   nsChangeHint CalcDifference(const nsStyleTextReset& aOther) const;
   static nsChangeHint MaxDifference() {
-    return NS_STYLE_HINT_REFLOW;
+    return nsChangeHint(
+        NS_STYLE_HINT_REFLOW | 
+        nsChangeHint_UpdateSubtreeOverflow);
   }
   static nsChangeHint MaxDifferenceNeverInherited() {
     // CalcDifference never returns nsChangeHint_NeedReflow or
