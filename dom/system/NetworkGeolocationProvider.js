@@ -9,8 +9,9 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 const POSITION_UNAVAILABLE = Ci.nsIDOMGeoPositionError.POSITION_UNAVAILABLE;
-const SETTING_DEBUG_ENABLED = "geolocation.debugging.enabled";
-const SETTING_CHANGED_TOPIC = "mozsettings-changed";
+const SETTINGS_DEBUG_ENABLED = "geolocation.debugging.enabled";
+const SETTINGS_CHANGED_TOPIC = "mozsettings-changed";
+const SETTINGS_WIFI_ENABLED = "wifi.enabled";
 
 let gLoggingEnabled = false;
 
@@ -80,16 +81,17 @@ WifiGeoPositionProvider.prototype = {
   listener: null,
 
   observe: function(aSubject, aTopic, aData) {
-    if (aTopic != SETTING_CHANGED_TOPIC) {
+    if (aTopic != SETTINGS_CHANGED_TOPIC) {
       return;
     }
 
     try {
       let setting = JSON.parse(aData);
-      if (setting.key != SETTING_DEBUG_ENABLED) {
-          return;
+      if (setting.key == SETTINGS_DEBUG_ENABLED) {
+        gLoggingEnabled = setting.value;
+      } else if (setting.key == SETTINGS_WIFI_ENABLED) {
+        gWifiScanningEnabled = setting.value;
       }
-      gLoggingEnabled = setting.value;
     } catch (e) {
     }
   },
@@ -99,9 +101,21 @@ WifiGeoPositionProvider.prototype = {
       return;
 
     this.started = true;
+    let self = this;
     let settingsCallback = {
       handle: function(name, result) {
-        gLoggingEnabled = result && result.value === true ? true : false;
+        if (name == SETTINGS_DEBUG_ENABLED) {
+          gLoggingEnabled = result;
+        } else if (name == SETTINGS_WIFI_ENABLED) {
+          gWifiScanningEnabled = result;
+          if (self.wifiService) {
+            self.wifiService.stopWatching(self);
+          }
+          if (gWifiScanningEnabled) {
+            self.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Ci.nsIWifiMonitor);
+            self.wifiService.startWatching(self);
+          }
+        }
       },
       
       handleError: function(message) {
@@ -111,9 +125,10 @@ WifiGeoPositionProvider.prototype = {
     };
 
     try {
-      Services.obs.addObserver(this, SETTING_CHANGED_TOPIC, false);
+      Services.obs.addObserver(this, SETTINGS_CHANGED_TOPIC, false);
       let settings = Cc["@mozilla.org/settingsService;1"].getService(Ci.nsISettingsService);
-      settings.createLock().get(SETTING_DEBUG_ENABLED, settingsCallback);
+      settings.createLock().get(SETTINGS_WIFI_ENABLED, settingsCallback);
+      settings.createLock().get(SETTINGS_DEBUG_ENABLED, settingsCallback);
     } catch(ex) {
       // This platform doesn't have the settings interface, and that is just peachy
     }
@@ -125,11 +140,13 @@ WifiGeoPositionProvider.prototype = {
       this.wifiService = Cc["@mozilla.org/wifi/monitor;1"].getService(Ci.nsIWifiMonitor);
       this.wifiService.startWatching(this);
     }
-    // wifi thread triggers WifiGeoPositionProvider to proceed, with no wifi, do manual timeout
-    this.timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-    this.timeoutTimer.initWithCallback(this,
-                                       gLocationRequestTimeout,
-                                       this.timeoutTimer.TYPE_REPEATING_SLACK);
+
+    if (!this.timeoutTimer) {
+      this.timeoutTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+      this.timeoutTimer.initWithCallback(this,
+                                         gLocationRequestTimeout,
+                                         this.timeoutTimer.TYPE_REPEATING_SLACK);
+    }
     LOG("startup called.");
   },
 
@@ -153,7 +170,7 @@ WifiGeoPositionProvider.prototype = {
       this.wifiService = null;
     }
 
-    Services.obs.removeObserver(this, SETTING_CHANGED_TOPIC);
+    Services.obs.removeObserver(this, SETTINGS_CHANGED_TOPIC);
 
     this.listener = null;
     this.started = false;
