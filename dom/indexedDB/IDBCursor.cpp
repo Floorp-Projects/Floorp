@@ -1133,7 +1133,7 @@ ContinueHelper::SendResponseToChildProcess(nsresult aResultCode)
     IDBDatabase* database = mTransaction->Database();
     NS_ASSERTION(database, "This should never be null!");
 
-    ContentParent* contentParent = database->GetContentParent();
+    nsIContentParent* contentParent = database->GetContentParent();
     NS_ASSERTION(contentParent, "This should never be null!");
 
     FileManager* fileManager = database->Manager();
