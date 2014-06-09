@@ -95,3 +95,6 @@ contract @mozilla.org/commandlinehandler/general-startup;1?type=b2goop {e30b0e13
 category command-line-handler m-b2goop @mozilla.org/commandlinehandler/general-startup;1?type=b2goop
 #endif
 
+# MobileIdentityUIGlue.js
+component {83dbe26a-81f3-4a75-9541-3d0b7ca496b5} MobileIdentityUIGlue.js
+contract @mozilla.org/services/mobileid-ui-glue;1 {83dbe26a-81f3-4a75-9541-3d0b7ca496b5}
