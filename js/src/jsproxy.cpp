@@ -88,7 +88,7 @@ BaseProxyHandler::BaseProxyHandler(const void *family)
 
 BaseProxyHandler::~BaseProxyHandler()
 {
-    MOZ_RELEASE_ASSERT(jsIsShutDown(), "Proxy handler destructor called with engine running?");
+    MOZ_RELEASE_ASSERT(JS_IsShutDown(), "Proxy handler destructor called with engine running?");
 }
 
 bool
