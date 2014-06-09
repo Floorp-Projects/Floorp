@@ -10,6 +10,7 @@ include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositor;
+include protocol PContentBridge;
 include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
@@ -442,6 +443,11 @@ parent:
         returns (uint64_t id, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline);
+
+    sync CreateChildProcess(IPCTabContext context,
+                            ProcessPriority priority)
+        returns (uint64_t id, bool isForApp, bool isForBrowser);
+    intr BridgeToChildProcess(uint64_t id);
 
     async PJavaScript();
 
