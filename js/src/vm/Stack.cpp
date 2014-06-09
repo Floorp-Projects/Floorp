@@ -558,7 +558,6 @@ FrameIter::settleOnActivation()
         if (data_.principals_) {
             JSContext *cx = data_.cx_->asJSContext();
             if (JSSubsumesOp subsumes = cx->runtime()->securityCallbacks->subsumes) {
-                JS::AutoSuppressGCAnalysis nogc;
                 if (!subsumes(data_.principals_, activation->compartment()->principals)) {
                     ++data_.activations_;
                     continue;
