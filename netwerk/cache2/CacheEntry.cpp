@@ -76,7 +76,7 @@ CacheEntryHandle::~CacheEntryHandle()
 
 CacheEntry::Callback::Callback(CacheEntry* aEntry,
                                nsICacheEntryOpenCallback *aCallback,
-                               bool aReadOnly, bool aCheckOnAnyThread, bool aForceAsync)
+                               bool aReadOnly, bool aCheckOnAnyThread)
 : mEntry(aEntry)
 , mCallback(aCallback)
 , mTargetThread(do_GetCurrentThread())
@@ -84,7 +84,6 @@ CacheEntry::Callback::Callback(CacheEntry* aEntry,
 , mCheckOnAnyThread(aCheckOnAnyThread)
 , mRecheckAfterWrite(false)
 , mNotWanted(false)
-, mForceAsync(aForceAsync)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -102,7 +101,6 @@ CacheEntry::Callback::Callback(CacheEntry::Callback const &aThat)
 , mCheckOnAnyThread(aThat.mCheckOnAnyThread)
 , mRecheckAfterWrite(aThat.mRecheckAfterWrite)
 , mNotWanted(aThat.mNotWanted)
-, mForceAsync(aThat.mForceAsync)
 {
   MOZ_COUNT_CTOR(CacheEntry::Callback);
 
@@ -133,19 +131,8 @@ void CacheEntry::Callback::ExchangeEntry(CacheEntry* aEntry)
   mEntry = aEntry;
 }
 
-nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread)
+nsresult CacheEntry::Callback::OnCheckThread(bool *aOnCheckThread) const
 {
-  if (mForceAsync) {
-    // Drop the flag now.  First time we must claim we are not on the proper thread
-    // what will simply force a post.  But, the post does the check again and that
-    // time we must already tell the true we are on the proper thread otherwise we
-    // just loop indefinitely.  Also, we need to post only once the first
-    // InvokeCallback for this callback.
-    mForceAsync = false;
-    *aOnCheckThread = false;
-    return NS_OK;
-  }
-
   if (!mCheckOnAnyThread) {
     // Check we are on the target
     return mTargetThread->IsOnCurrentThread(aOnCheckThread);
@@ -183,7 +170,6 @@ CacheEntry::CacheEntry(const nsACString& aStorageID,
 , mIsDoomed(false)
 , mSecurityInfoLoaded(false)
 , mPreventCallbacks(false)
-, mDispatchingCallbacks(false)
 , mHasData(false)
 , mState(NOTLOADED)
 , mRegistration(NEVERREGISTERED)
@@ -282,12 +268,11 @@ void CacheEntry::AsyncOpen(nsICacheEntryOpenCallback* aCallback, uint32_t aFlags
   bool truncate = aFlags & nsICacheStorage::OPEN_TRUNCATE;
   bool priority = aFlags & nsICacheStorage::OPEN_PRIORITY;
   bool multithread = aFlags & nsICacheStorage::CHECK_MULTITHREADED;
-  bool async = aFlags & nsICacheStorage::FORCE_ASYNC_CALLBACK;
 
   MOZ_ASSERT(!readonly || !truncate, "Bad flags combination");
   MOZ_ASSERT(!(truncate && mState > LOADING), "Must not call truncate on already loaded entry");
 
-  Callback callback(this, aCallback, readonly, multithread, async);
+  Callback callback(this, aCallback, readonly, multithread);
 
   mozilla::MutexAutoLock lock(mLock);
 
@@ -524,14 +509,9 @@ void CacheEntry::RememberCallback(Callback & aCallback, bool aBypassIfBusy)
   mCallbacks.AppendElement(aCallback);
 }
 
-void CacheEntry::InvokeDispatchedCallbacks()
+void CacheEntry::InvokeCallbacksLock()
 {
-  LOG(("CacheEntry::InvokeDispatchedCallbacks [this=%p]", this));
-
   mozilla::MutexAutoLock lock(mLock);
-
-  MOZ_ASSERT(mDispatchingCallbacks);
-  mDispatchingCallbacks = false;
   InvokeCallbacks();
 }
 
@@ -559,11 +539,6 @@ bool CacheEntry::InvokeCallbacks(bool aReadOnly)
       return false;
     }
 
-    if (mDispatchingCallbacks) {
-      LOG(("  waiting for re-redispatch!"));
-      return false;
-    }
-
     if (!mIsDoomed && (mState == WRITING || mState == REVALIDATING)) {
       LOG(("  entry is being written/revalidated"));
       return false;
@@ -581,17 +556,10 @@ bool CacheEntry::InvokeCallbacks(bool aReadOnly)
     if (NS_SUCCEEDED(rv) && !onCheckThread) {
       // Redispatch to the target thread
       nsRefPtr<nsRunnableMethod<CacheEntry> > event =
-        NS_NewRunnableMethod(this, &CacheEntry::InvokeDispatchedCallbacks);
+        NS_NewRunnableMethod(this, &CacheEntry::InvokeCallbacksLock);
 
       rv = mCallbacks[i].mTargetThread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
       if (NS_SUCCEEDED(rv)) {
-        // Setting this flag up prevents invocation of any callbacks until
-        // InvokeDispatchedCallbacks is fired on the target thread as a precaution
-        // of any unexpected call to InvokeCallbacks during climb back on the stack.
-        // E.g. GC could release a write handler that invokes callbacks immediately.
-        // Note: InvokeDispatchedCallbacks acquires the lock before checking/dropping
-        // this flag.
-        mDispatchingCallbacks = true;
         LOG(("  re-dispatching to target thread"));
         return false;
       }
@@ -620,11 +588,6 @@ bool CacheEntry::InvokeCallback(Callback & aCallback)
     this, StateString(mState), aCallback.mCallback.get()));
 
   mLock.AssertCurrentThreadOwns();
-
-  if (mDispatchingCallbacks) {
-    LOG(("  waiting for callbacks re-dispatch"));
-    return false;
-  }
 
   // When this entry is doomed we want to notify the callback any time
   if (!mIsDoomed) {

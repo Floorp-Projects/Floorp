@@ -135,7 +135,7 @@ private:
   public:
     Callback(CacheEntry* aEntry,
              nsICacheEntryOpenCallback *aCallback,
-             bool aReadOnly, bool aCheckOnAnyThread, bool aForceAsync);
+             bool aReadOnly, bool aCheckOnAnyThread);
     Callback(Callback const &aThat);
     ~Callback();
 
@@ -153,9 +153,8 @@ private:
     bool mCheckOnAnyThread : 1;
     bool mRecheckAfterWrite : 1;
     bool mNotWanted : 1;
-    bool mForceAsync : 1;
 
-    nsresult OnCheckThread(bool *aOnCheckThread);
+    nsresult OnCheckThread(bool *aOnCheckThread) const;
     nsresult OnAvailThread(bool *aOnAvailThread) const;
   };
 
@@ -212,7 +211,7 @@ private:
   void OnLoaded();
 
   void RememberCallback(Callback & aCallback, bool aBypassIfBusy);
-  void InvokeDispatchedCallbacks();
+  void InvokeCallbacksLock();
   void InvokeCallbacks();
   bool InvokeCallbacks(bool aReadOnly);
   bool InvokeCallback(Callback & aCallback);
@@ -278,12 +277,8 @@ private:
 
   // Whether security info has already been looked up in metadata.
   bool mSecurityInfoLoaded : 1;
-  // Prevents any callback invocation, used to not loop when we're recreating this entry.
+  // Prevents any callback invocation
   bool mPreventCallbacks : 1;
-  // Set at true between redispatch of callbacks from InvokeCallbacks and call of
-  // InvokeDispatchedCallbacks on the target thread.  Prevents any callback invocation
-  // during that time.
-  bool mDispatchingCallbacks : 1;
   // true: after load and an existing file, or after output stream has been opened.
   //       note - when opening an input stream, and this flag is false, output stream
   //       is open along ; this makes input streams on new entries behave correctly
