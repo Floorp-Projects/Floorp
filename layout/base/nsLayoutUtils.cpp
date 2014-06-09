@@ -3025,7 +3025,6 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
       nsRegion excludedRegion = builder.GetExcludedGlassRegion();
-      excludedRegion.Sub(excludedRegion, visibleRegion);
       nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
       widget->UpdateOpaqueRegion(windowRegion);
     }
