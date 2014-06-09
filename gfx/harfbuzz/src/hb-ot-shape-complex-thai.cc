@@ -330,8 +330,11 @@ preprocess_text_thai (const hb_ot_shape_plan_t *plan,
     if (unlikely (buffer->in_error))
       return;
 
-    /* Ok, let's see... */
+    /* Make Nikhahit be recognized as a mark when zeroing widths. */
     unsigned int end = buffer->out_len;
+    _hb_glyph_info_set_general_category (&buffer->out_info[end - 2], HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK);
+
+    /* Ok, let's see... */
     unsigned int start = end - 2;
     while (start > 0 && IS_TONE_MARK (buffer->out_info[start - 1].codepoint))
       start--;
