@@ -546,6 +546,9 @@ Link::SetHrefAttribute(nsIURI *aURI)
 {
   NS_ASSERTION(aURI, "Null URI is illegal!");
 
+  // if we change this code to not reserialize we need to do something smarter
+  // in SetProtocol because changing the protocol of an URI can change the
+  // "nature" of the nsIURL/nsIURI implementation.
   nsAutoCString href;
   (void)aURI->GetSpec(href);
   (void)mElement->SetAttr(kNameSpaceID_None, nsGkAtoms::href,
