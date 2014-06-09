@@ -727,6 +727,11 @@ static bool underMetaDataPath(const Vector<uint32_t> &path) {
 static void convertTimeToDate(int64_t time_1904, String8 *s) {
     time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
 
+    if (time_1970 < 0) {
+        s->clear();
+        return;
+    }
+
     char tmp[32];
     strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
 
@@ -1654,8 +1659,9 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
             String8 s;
             convertTimeToDate(creationTime, &s);
-
-            mFileMetaData->setCString(kKeyDate, s.string());
+            if (s.length()) {
+                mFileMetaData->setCString(kKeyDate, s.string());
+            }
 
             *offset += chunk_size;
             break;
