@@ -19,7 +19,7 @@ class mozIStorageConnection;
 
 namespace mozilla {
 namespace dom {
-class nsIContentParent;
+class ContentParent;
 }
 }
 
@@ -42,7 +42,7 @@ public:
                      uint64_t aRequestedVersion,
                      PersistenceType aPersistenceType,
                      bool aForDeletion,
-                     mozilla::dom::nsIContentParent* aContentParent,
+                     mozilla::dom::ContentParent* aContentParent,
                      StoragePrivilege aPrivilege)
     : HelperBase(aRequest), mOpenDBRequest(aRequest), mName(aName),
       mGroup(aGroup), mASCIIOrigin(aASCIIOrigin),
@@ -137,7 +137,7 @@ protected:
   bool mForDeletion;
   StoragePrivilege mPrivilege;
   nsCString mDatabaseId;
-  mozilla::dom::nsIContentParent* mContentParent;
+  mozilla::dom::ContentParent* mContentParent;
 
   // Out-params.
   nsTArray<nsRefPtr<ObjectStoreInfo> > mObjectStores;

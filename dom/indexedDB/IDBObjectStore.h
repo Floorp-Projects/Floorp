@@ -26,7 +26,7 @@ class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
-class nsIContentParent;
+class ContentParent;
 class PBlobChild;
 class PBlobParent;
 }
@@ -122,7 +122,7 @@ public:
 
   // Called only in the main process.
   static nsresult
-  ConvertBlobsToActors(nsIContentParent* aContentParent,
+  ConvertBlobsToActors(ContentParent* aContentParent,
                        FileManager* aFileManager,
                        const nsTArray<StructuredCloneFile>& aFiles,
                        InfallibleTArray<PBlobParent*>& aActors);
