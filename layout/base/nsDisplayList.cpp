@@ -2990,6 +2990,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame)
   , mOverrideZIndex(0)
 {
+  MOZ_COUNT_CTOR(nsDisplayWrapList);
+
   mList.AppendToTop(aList);
   UpdateBounds(aBuilder);
 
@@ -3034,6 +3036,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aFrame)
   , mOverrideZIndex(0)
 {
+  MOZ_COUNT_CTOR(nsDisplayWrapList);
+
   mList.AppendToTop(aItem);
   UpdateBounds(aBuilder);
   
@@ -3057,6 +3061,8 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
 
 nsDisplayWrapList::~nsDisplayWrapList() {
   mList.DeleteAll();
+
+  MOZ_COUNT_DTOR(nsDisplayWrapList);
 }
 
 void
