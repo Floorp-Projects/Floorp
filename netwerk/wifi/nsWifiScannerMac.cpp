@@ -47,7 +47,7 @@ nsWifiMonitor::DoScan()
     LOG(("waiting on monitor\n"));
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    mon.Wait(PR_SecondsToInterval(60));
+    mon.Wait(PR_SecondsToInterval(kDefaultWifiScanInterval));
   }
   while (mKeepGoing);
 
