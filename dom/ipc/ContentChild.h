@@ -8,9 +8,10 @@
 #define mozilla_dom_ContentChild_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/ipc/Blob.h"
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PContentChild.h"
-#include "mozilla/dom/ipc/Blob.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
@@ -88,6 +89,21 @@ public:
     void GetProcessName(nsAString& aName);
     void GetProcessName(nsACString& aName);
     static void AppendProcessId(nsACString& aName);
+
+    ContentBridgeParent* GetLastBridge() {
+        MOZ_ASSERT(mLastBridge);
+        ContentBridgeParent* parent = mLastBridge;
+        mLastBridge = nullptr;
+        return parent;
+    }
+    nsRefPtr<ContentBridgeParent> mLastBridge;
+
+    PContentBridgeParent*
+    AllocPContentBridgeParent(mozilla::ipc::Transport* transport,
+                              base::ProcessId otherProcess) MOZ_OVERRIDE;
+    PContentBridgeChild*
+    AllocPContentBridgeChild(mozilla::ipc::Transport* transport,
+                             base::ProcessId otherProcess) MOZ_OVERRIDE;
 
     PCompositorChild*
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
@@ -318,7 +334,7 @@ public:
                                          const uint64_t& aID,
                                          const bool& aIsForApp,
                                          const bool& aIsForBrowser) MOZ_OVERRIDE;
-protected:
+
     virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
                                          const IPCTabContext& aContext,
                                          const uint32_t& aChromeFlags,

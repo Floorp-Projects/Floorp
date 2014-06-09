@@ -44,15 +44,28 @@ public:
   BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
   virtual uint64_t ChildID() = 0;
+  virtual bool IsForApp() = 0;
+  virtual bool IsForBrowser() = 0;
 
   virtual PBlobParent* SendPBlobConstructor(
     PBlobParent* actor,
     const BlobConstructorParams& params) NS_WARN_UNUSED_RESULT = 0;
 
+  virtual PBrowserParent* SendPBrowserConstructor(
+    PBrowserParent* actor,
+    const IPCTabContext& context,
+    const uint32_t& chromeFlags,
+    const uint64_t& aId,
+    const bool& aIsForApp,
+    const bool& aIsForBrowser) NS_WARN_UNUSED_RESULT = 0;
+
   virtual jsipc::JavaScriptParent *GetCPOWManager() = 0;
 
   virtual bool IsContentParent() { return false; }
   ContentParent* AsContentParent();
+
+protected: // methods
+  bool CanOpenBrowser(const IPCTabContext& aContext);
 
 protected: // IPDL methods
   virtual mozilla::jsipc::PJavaScriptParent* AllocPJavaScriptParent();
