@@ -203,7 +203,7 @@ IdToTypeId(jsid id)
 
     if (JSID_IS_STRING(id)) {
         JSAtom *atom = JSID_TO_ATOM(id);
-        AutoCheckCannotGC nogc;
+        JS::AutoCheckCannotGC nogc;
         bool isNumeric = atom->hasLatin1Chars()
                          ? IdIsNumericTypeId(atom->latin1Range(nogc))
                          : IdIsNumericTypeId(atom->twoByteRange(nogc));
