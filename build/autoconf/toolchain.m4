@@ -10,15 +10,40 @@ GNU_CC=
 GNU_CXX=
 CC_VERSION='N/A'
 CXX_VERSION='N/A'
-if test "$GCC" = "yes"; then
-    GNU_CC=1
-    CC_VERSION=`$CC -v 2>&1 | grep 'gcc version'`
+cat <<EOF > conftest.c
+#if defined(_MSC_VER)
+#if defined(__clang__)
+COMPILER clang-cl _MSC_VER
+#else
+COMPILER msvc _MSC_VER
+#endif
+#elif defined(__clang__)
+COMPILER clang __clang_major__.__clang_minor__.__clang_patchlevel__
+#elif defined(__GNUC__)
+COMPILER gcc __GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__
+#elif defined(__INTEL_COMPILER)
+COMPILER icc __INTEL_COMPILER
+#endif
+EOF
+read dummy compiler CC_VERSION <<EOF
+$($CC -E conftest.c 2>/dev/null | grep COMPILER)
+EOF
+read dummy cxxcompiler CXX_VERSION <<EOF
+$($CXX -E conftest.c 2>/dev/null | grep COMPILER)
+EOF
+if test "$compiler" != "$cxxcompiler"; then
+    AC_MSG_ERROR([Your C and C++ compilers are different.  You need to use the same compiler.])
 fi
-if test "$GXX" = "yes"; then
+CC_VERSION=`echo "$CC_VERSION" | sed 's/ //g'`
+CXX_VERSION=`echo "$CXX_VERSION" | sed 's/ //g'`
+echo "$CC_VERSION"
+echo "$CXX_VERSION"
+ecit 1
+if test "$compiler" = "gcc"; then
+    GNU_CC=1
     GNU_CXX=1
-    CXX_VERSION=`$CXX -v 2>&1 | grep 'gcc version'`
     changequote(<<,>>)
-    GCC_VERSION_FULL=`echo "$CXX_VERSION" | $PERL -pe 's/^.*gcc version ([^ ]*).*/<<$>>1/'`
+    GCC_VERSION_FULL="$CXX_VERSION"
     GCC_VERSION=`echo "$GCC_VERSION_FULL" | $PERL -pe '(split(/\./))[0]>=4&&s/(^\d*\.\d*).*/<<$>>1/;'`
 
     GCC_MAJOR_VERSION=`echo ${GCC_VERSION} | $AWK -F\. '{ print <<$>>1 }'`
@@ -41,28 +66,26 @@ fi
 
 INTEL_CC=
 INTEL_CXX=
-if test "$GCC" = yes; then
-   if test "`$CC -help 2>&1 | grep -c 'Intel(R) C++ Compiler'`" != "0"; then
-     INTEL_CC=1
-   fi
-fi
-
-if test "$GXX" = yes; then
-   if test "`$CXX -help 2>&1 | grep -c 'Intel(R) C++ Compiler'`" != "0"; then
-     INTEL_CXX=1
-   fi
+if test "$compiler" = "icc"; then
+   INTEL_CC=1
+   INTEL_CXX=1
 fi
 
 CLANG_CC=
 CLANG_CXX=
-if test "`$CC -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
-   CLANG_CC=1
+CLANG_CL=
+if test "$compiler" = "clang"; then
+    GNU_CC=1
+    GNU_CXX=1
+    CLANG_CC=1
+    CLANG_CXX=1
+fi
+if test "$compiler" = "clang-cl"; then
+    CLANG_CL=1
 fi
 
-if test "`$CXX -v 2>&1 | egrep -c '(clang version|Apple.*clang)'`" != "0"; then
-   CLANG_CXX=1
-fi
 AC_SUBST(CLANG_CXX)
+AC_SUBST(CLANG_CL)
 ])
 
 AC_DEFUN([MOZ_CROSS_COMPILER],
