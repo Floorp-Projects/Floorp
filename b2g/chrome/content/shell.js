@@ -30,6 +30,7 @@ Cu.import('resource://gre/modules/FxAccountsMgmtService.jsm');
 #endif
 
 Cu.import('resource://gre/modules/DownloadsAPI.jsm');
+Cu.import('resource://gre/modules/MobileIdentityManager.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");

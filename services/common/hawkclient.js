@@ -28,12 +28,49 @@ this.EXPORTED_SYMBOLS = ["HawkClient"];
 
 const {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://services-common/observers.js");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+// loglevel should be one of "Fatal", "Error", "Warn", "Info", "Config",
+// "Debug", "Trace" or "All". If none is specified, "Error" will be used by
+// default.
+const PREF_LOG_LEVEL = "services.hawk.loglevel";
+
+// A pref that can be set so "sensitive" information (eg, personally
+// identifiable info, credentials, etc) will be logged.
+const PREF_LOG_SENSITIVE_DETAILS = "services.hawk.log.sensitive";
+
+XPCOMUtils.defineLazyGetter(this, "log", function() {
+  let log = Log.repository.getLogger("Hawk");
+  log.addAppender(new Log.DumpAppender());
+  log.level = Log.Level.Error;
+  try {
+    let level =
+      Services.prefs.getPrefType(PREF_LOG_LEVEL) == Ci.nsIPrefBranch.PREF_STRING
+      && Services.prefs.getCharPref(PREF_LOG_LEVEL);
+    log.level = Log.Level[level] || Log.Level.Error;
+  } catch (e) {
+    log.error(e);
+  }
+
+  return log;
+});
+
+// A boolean to indicate if personally identifiable information (or anything
+// else sensitive, such as credentials) should be logged.
+XPCOMUtils.defineLazyGetter(this, 'logPII', function() {
+  try {
+    return Services.prefs.getBoolPref(PREF_LOG_SENSITIVE_DETAILS);
+  } catch (_) {
+    return false;
+  }
+});
 
 /*
  * A general purpose client for making HAWK authenticated requests to a single
@@ -232,7 +269,7 @@ this.HawkClient.prototype = {
 
   // Given an optional header value, notify that a backoff has been requested.
   _maybeNotifyBackoff: function (response, headerName) {
-    if (!this.observerPrefix) {
+    if (!this.observerPrefix || !response.headers) {
       return;
     }
     let headerVal = response.headers[headerName];
@@ -243,8 +280,8 @@ this.HawkClient.prototype = {
     try {
       backoffInterval = parseInt(headerVal, 10);
     } catch (ex) {
-      this._log.error("hawkclient response had invalid backoff value in '" +
-                      headerName + "' header: " + headerVal);
+      log.error("hawkclient response had invalid backoff value in '" +
+                headerName + "' header: " + headerVal);
       return;
     }
     Observers.notify(this.observerPrefix + ":backoff:interval", backoffInterval);
@@ -254,4 +291,5 @@ this.HawkClient.prototype = {
   newHAWKAuthenticatedRESTRequest: function(uri, credentials, extra) {
     return new HAWKAuthenticatedRESTRequest(uri, credentials, extra);
   },
+
 }

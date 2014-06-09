@@ -831,6 +831,12 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/DataStoreImpl.js
 @BINPATH@/components/dom_datastore.xpt
 
+@BINPATH@/components/MobileIdentity.manifest
+@BINPATH@/components/MobileIdentity.js
+@BINPATH@/components/dom_mobileidentity.xpt
+@BINPATH@/components/MobileIdentityUIGlue.js
+@BINPATH@/components/services_mobileidentity.xpt
+
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechsynth.xpt
 #endif
