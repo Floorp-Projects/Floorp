@@ -122,6 +122,8 @@ class RegExpShared
 #endif
 #endif
 
+    JSCompartment *comp;
+
     /* Source to the RegExp, for lazy compilation. */
     HeapPtrAtom        source;
 
@@ -161,7 +163,7 @@ class RegExpShared
 #endif
 
   public:
-    RegExpShared(JSAtom *source, RegExpFlag flags);
+    RegExpShared(JSCompartment *comp, JSAtom *source, RegExpFlag flags);
     ~RegExpShared();
 
 #ifdef JS_YARR
@@ -199,6 +201,10 @@ class RegExpShared
     }
 
     /* Accessors */
+
+    JSCompartment *compartment() const {
+        return comp;
+    }
 
     size_t getParenCount() const {
         JS_ASSERT(isCompiled(true) || isCompiled(false) || canStringMatch);
@@ -457,6 +463,10 @@ class RegExpObject : public JSObject
 
     void setShared(RegExpShared &shared) {
         JS_ASSERT(!maybeShared());
+        if (maybeShared())
+            MOZ_CRASH();
+        if (shared.compartment() != compartment())
+            MOZ_CRASH();
         JSObject::setPrivate(&shared);
     }
 
