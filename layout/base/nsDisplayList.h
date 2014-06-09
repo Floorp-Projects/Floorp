@@ -2580,9 +2580,6 @@ private:
  * detect and handle this case.
  */
 class nsDisplayWrapList : public nsDisplayItem {
-  // This is never instantiated directly, so no need to count constructors and
-  // destructors.
-
 public:
   /**
    * Takes all the items from aList and puts them in our list.
@@ -2592,7 +2589,10 @@ public:
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
-    : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0) {}
+    : nsDisplayItem(aBuilder, aFrame), mOverrideZIndex(0)
+  {
+    MOZ_COUNT_CTOR(nsDisplayWrapList);
+  }
   virtual ~nsDisplayWrapList();
   /**
    * Call this if the wrapped list is changed.
