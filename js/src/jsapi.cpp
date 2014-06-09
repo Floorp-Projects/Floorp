@@ -516,12 +516,6 @@ JS_IsBuiltinFunctionConstructor(JSFunction *fun)
 enum InitState { Uninitialized, Running, ShutDown };
 static InitState jsInitState = Uninitialized;
 
-JS_PUBLIC_API(bool)
-JS_IsShutDown(void)
-{
-    return jsInitState == ShutDown;
-}
-
 #ifdef DEBUG
 static void
 CheckMessageNumbering()
