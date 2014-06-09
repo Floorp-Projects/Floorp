@@ -65,9 +65,7 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     debugScriptMap(nullptr),
     debugScopes(nullptr),
     enumerators(nullptr),
-    compartmentStats(nullptr),
-    scheduledForDestruction(false),
-    maybeAlive(true)
+    compartmentStats(nullptr)
 #ifdef JS_ION
     , jitCompartment_(nullptr)
 #endif
