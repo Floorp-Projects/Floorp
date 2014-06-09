@@ -9,7 +9,6 @@
 
 #include "AppProcessChecker.h"
 #include "ContentChild.h"
-#include "ContentParent.h"
 #include "nsContentUtils.h"
 #include "nsCxPusher.h"
 #include "nsError.h"
@@ -31,6 +30,8 @@
 #include "nsIDOMFile.h"
 #include "xpcpublic.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/StructuredCloneUtils.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/PBlobParent.h"
@@ -38,6 +39,7 @@
 #include "JavaScriptParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "nsPrintfCString.h"
+#include "nsXULAppAPI.h"
 #include <algorithm>
 
 #ifdef ANDROID
@@ -144,7 +146,7 @@ struct BlobTraits<Parent>
 {
   typedef mozilla::dom::BlobParent BlobType;
   typedef mozilla::dom::PBlobParent ProtocolType;
-  typedef mozilla::dom::ContentParent ConcreteContentManagerType;
+  typedef mozilla::dom::nsIContentParent ConcreteContentManagerType;
 };
 
 template <>
@@ -219,7 +221,7 @@ BuildClonedMessageData(typename BlobTraits<Flavor>::ConcreteContentManagerType* 
 }
 
 bool
-MessageManagerCallback::BuildClonedMessageDataForParent(ContentParent* aParent,
+MessageManagerCallback::BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                                         const StructuredCloneData& aData,
                                                         ClonedMessageData& aClonedData)
 {
@@ -1880,7 +1882,7 @@ NS_NewParentProcessMessageManager(nsIMessageBroadcaster** aResult)
 
 
 nsFrameMessageManager*
-nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::ContentParent* aProcess)
+nsFrameMessageManager::NewProcessMessageManager(mozilla::dom::nsIContentParent* aProcess)
 {
   if (!nsFrameMessageManager::sParentProcessManager) {
      nsCOMPtr<nsIMessageBroadcaster> dummy =
