@@ -53,6 +53,28 @@ exports.asyncOnce = function asyncOnce(func) {
   };
 };
 
+/**
+ * Adds an event listener to the given element, and then removes its event
+ * listener once the event is called, returning the event object as a promise.
+ * @param  nsIDOMElement element
+ *         The DOM element to listen on
+ * @param  String event
+ *         The name of the event type to listen for
+ * @param  Boolean useCapture
+ *         Should we initiate the capture phase?
+ * @return Promise
+ *         The promise resolved with the event object when the event first
+ *         happens
+ */
+exports.listenOnce = function listenOnce(element, event, useCapture) {
+  return new Promise(function(resolve, reject) {
+    var onEvent = function(ev) {
+      element.removeEventListener(event, onEvent, useCapture);
+      resolve(ev);
+    }
+    element.addEventListener(event, onEvent, useCapture);
+  });
+};
 
 /**
  * Call a function that expects a callback as the last argument and returns a
