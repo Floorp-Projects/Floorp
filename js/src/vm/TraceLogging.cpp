@@ -378,9 +378,6 @@ TraceLogger::createTextId(const char *text)
 uint32_t
 TraceLogger::createTextId(JSScript *script)
 {
-    if (!script->filename())
-        return createTextId("");
-
     assertNoQuotes(script->filename());
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(script);
@@ -409,9 +406,6 @@ TraceLogger::createTextId(JSScript *script)
 uint32_t
 TraceLogger::createTextId(const JS::ReadOnlyCompileOptions &compileOptions)
 {
-    if (!compileOptions.filename())
-        return createTextId("");
-
     assertNoQuotes(compileOptions.filename());
 
     PointerHashMap::AddPtr p = pointerMap.lookupForAdd(&compileOptions);
