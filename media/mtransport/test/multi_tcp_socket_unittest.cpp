@@ -10,6 +10,8 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/Atomics.h"
 #include "runnable_utils.h"
+#include "nss.h"
+#include "pk11pub.h"
 
 extern "C" {
 #include "nr_api.h"
@@ -66,10 +68,25 @@ class MultiTcpSocketTest : public ::testing::Test {
     }
   }
 
+  static uint16_t GetRandomPort() {
+    uint16_t result;
+    if (PK11_GenerateRandom((unsigned char*)&result, 2) != SECSuccess) {
+      MOZ_ASSERT(false);
+      return 0;
+    }
+    return result;
+  }
+
+  static uint16_t EnsureEphemeral(uint16_t port) {
+    // IANA ephemeral port range (49152 to 65535)
+    return port | 49152;
+  }
+
   void Create_s(nr_socket_tcp_type tcp_type, nr_socket *stun_server_socket,
                 int use_framing, nr_socket **sock) {
     nr_transport_addr local;
-    static unsigned short port_s = 40000;
+    // Get start of port range for test
+    static unsigned short port_s = GetRandomPort();
     int r;
 
     if (stun_server_socket) {
@@ -96,7 +113,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     r = 1;
     for (int tries=10; tries && r; --tries) {
       r = nr_ip4_str_port_to_transport_addr(
-        (char *)"127.0.0.1", port_s++, IPPROTO_TCP, &local);
+        (char *)"127.0.0.1", EnsureEphemeral(port_s++), IPPROTO_TCP, &local);
       ASSERT_EQ(0, r);
 
       r = nr_socket_multi_tcp_create(ice_ctx_->ctx(),
@@ -127,7 +144,7 @@ class MultiTcpSocketTest : public ::testing::Test {
     int r=nr_socket_getaddr(sock, &addr);
     ASSERT_EQ(0, r);
     printf("Listen on %s\n", addr.as_string);
-    r = nr_socket_listen(sock, 1);
+    r = nr_socket_listen(sock, 5);
     ASSERT_EQ(0, r);
   }
 
@@ -200,6 +217,7 @@ class MultiTcpSocketTest : public ::testing::Test {
 
   void RecvData_s(nr_socket *expected_from, nr_socket *sent_to,
                   const char *expected_data, size_t expected_len) {
+    SetReadable(false);
     char received_data[expected_len+1];
     nr_transport_addr addr_from, addr_to;
     nr_transport_addr retaddr;
@@ -229,7 +247,6 @@ class MultiTcpSocketTest : public ::testing::Test {
                 this, &MultiTcpSocketTest::RecvData_s, expected_from, sent_to,
                 expected_data, expected_len),
             NS_DISPATCH_SYNC);
-    SetReadable(false);
   }
 
   void TransferData(nr_socket *from, nr_socket *to, const char *data,
@@ -391,6 +408,7 @@ TEST_F(MultiTcpSocketTest, TestBigData) {
 int main(int argc, char **argv)
 {
   test_utils = new MtransportTestUtils();
+  NSS_NoDB_Init(nullptr); // For random number generation
 
   ::testing::TestEventListeners& listeners =
         ::testing::UnitTest::GetInstance()->listeners();
