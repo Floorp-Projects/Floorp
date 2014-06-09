@@ -283,7 +283,9 @@ nsGenericHTMLFrameElement::GetReallyIsBrowserOrApp(bool *aOut)
   }
 
   // Fail if this frame doesn't have the mozbrowser attribute.
-  if (!GetBoolAttr(nsGkAtoms::mozbrowser)) {
+  bool hasMozbrowser = false;
+  GetMozbrowser(&hasMozbrowser);
+  if (!hasMozbrowser) {
     return NS_OK;
   }
 

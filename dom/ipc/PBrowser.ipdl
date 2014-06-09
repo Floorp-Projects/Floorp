@@ -8,7 +8,6 @@
 include protocol PBlob;
 include protocol PColorPicker;
 include protocol PContent;
-include protocol PContentBridge;
 include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
 include protocol PFilePicker;
@@ -71,7 +70,7 @@ union MaybeNativeKeyBinding
 
 intr protocol PBrowser
 {
-    manager PContent or PContentBridge;
+    manager PContent;
 
     manages PColorPicker;
     manages PDocumentRenderer;

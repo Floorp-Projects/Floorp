@@ -22,8 +22,6 @@
 
 #include "chrome/common/process_watcher.h"
 
-#include <set>
-
 #include "AppProcessChecker.h"
 #include "AudioChannelService.h"
 #include "CrashReporterParent.h"
@@ -37,7 +35,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/ExternalHelperAppParent.h"
-#include "mozilla/dom/PContentBridgeParent.h"
 #include "mozilla/dom/PFileDescriptorSetParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
@@ -553,7 +550,6 @@ ContentParent::RunNuwaProcess()
     MOZ_ASSERT(NS_IsMainThread());
     nsRefPtr<ContentParent> nuwaProcess =
         new ContentParent(/* aApp = */ nullptr,
-                          /* aOpener = */ nullptr,
                           /* aIsForBrowser = */ false,
                           /* aIsForPreallocated = */ true,
                           PROCESS_PRIORITY_BACKGROUND,
@@ -570,7 +566,6 @@ ContentParent::PreallocateAppProcess()
 {
     nsRefPtr<ContentParent> process =
         new ContentParent(/* app = */ nullptr,
-                          /* aOpener = */ nullptr,
                           /* isForBrowserElement = */ false,
                           /* isForPreallocated = */ true,
                           PROCESS_PRIORITY_PREALLOC);
@@ -601,14 +596,16 @@ ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
 /*static*/ void
 ContentParent::StartUp()
 {
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+        return;
+    }
+
     // Note: This reporter measures all ContentParents.
     RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
     mozilla::dom::time::InitializeDateCacheCleaner();
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      BackgroundChild::Startup();
-    }
+    BackgroundChild::Startup();
 
     sCanLaunchSubprocesses = true;
 
@@ -617,9 +614,7 @@ ContentParent::StartUp()
 
     // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
     // testing preference is set.
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-      MaybeTestPBackground();
-    }
+    MaybeTestPBackground();
 }
 
 /*static*/ void
@@ -679,9 +674,7 @@ ContentParent::JoinAllSubprocesses()
 }
 
 /*static*/ already_AddRefed<ContentParent>
-ContentParent::GetNewOrUsed(bool aForBrowserElement,
-                            ProcessPriority aPriority,
-                            ContentParent* aOpener)
+ContentParent::GetNewOrUsed(bool aForBrowserElement, ProcessPriority aPriority)
 {
     if (!sNonAppContentParents)
         sNonAppContentParents = new nsTArray<ContentParent*>();
@@ -691,16 +684,10 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement,
         maxContentProcesses = 1;
 
     if (sNonAppContentParents->Length() >= uint32_t(maxContentProcesses)) {
-      uint32_t startIdx = rand() % sNonAppContentParents->Length();
-      uint32_t currIdx = startIdx;
-      do {
-        nsRefPtr<ContentParent> p = (*sNonAppContentParents)[currIdx];
-        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContntParents?");
-        if (p->mOpener == aOpener) {
-          return p.forget();
-        }
-        currIdx = (currIdx + 1) % sNonAppContentParents->Length();
-      } while (currIdx != startIdx);
+        uint32_t idx = rand() % sNonAppContentParents->Length();
+        nsRefPtr<ContentParent> p = (*sNonAppContentParents)[idx];
+        NS_ASSERTION(p->IsAlive(), "Non-alive contentparent in sNonAppContentParents?");
+        return p.forget();
     }
 
     // Try to take and transform the preallocated process into browser.
@@ -716,7 +703,6 @@ ContentParent::GetNewOrUsed(bool aForBrowserElement,
         }
 #endif
         p = new ContentParent(/* app = */ nullptr,
-                              aOpener,
                               aForBrowserElement,
                               /* isForPreallocated = */ false,
                               aPriority);
@@ -774,57 +760,6 @@ ContentParent::RunAfterPreallocatedProcessReady(nsIRunnable* aRequest)
 #endif
 }
 
-typedef std::map<ContentParent*, std::set<ContentParent*> > GrandchildMap;
-static GrandchildMap sGrandchildProcessMap;
-
-std::map<uint64_t, ContentParent*> sContentParentMap;
-
-bool
-ContentParent::RecvCreateChildProcess(const IPCTabContext& aContext,
-                                      const hal::ProcessPriority& aPriority,
-                                      uint64_t* aId,
-                                      bool* aIsForApp,
-                                      bool* aIsForBrowser)
-{
-#if 0
-    if (!CanOpenBrowser(aContext)) {
-        return false;
-    }
-#endif
-
-    nsRefPtr<ContentParent> cp = GetNewOrUsed(/* isBrowserElement = */ true,
-                                              aPriority,
-                                              this);
-    *aId = cp->ChildID();
-    *aIsForApp = cp->IsForApp();
-    *aIsForBrowser = cp->IsForBrowser();
-    sContentParentMap[*aId] = cp;
-    auto iter = sGrandchildProcessMap.find(this);
-    if (iter == sGrandchildProcessMap.end()) {
-        std::set<ContentParent*> children;
-        children.insert(cp);
-        sGrandchildProcessMap[this] = children;
-    } else {
-        iter->second.insert(cp);
-    }
-    return true;
-}
-
-bool
-ContentParent::AnswerBridgeToChildProcess(const uint64_t& id)
-{
-    ContentParent* cp = sContentParentMap[id];
-    auto iter = sGrandchildProcessMap.find(this);
-    if (iter != sGrandchildProcessMap.end() &&
-        iter->second.find(cp) != iter->second.end()) {
-        return PContentBridge::Bridge(this, cp);
-    } else {
-        // You can't bridge to a process you didn't open!
-        KillHard();
-        return false;
-    }
-}
-
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement)
@@ -836,50 +771,19 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
     ProcessPriority initialPriority = GetInitialProcessPriority(aFrameElement);
 
     if (aContext.IsBrowserElement() || !aContext.HasOwnApp()) {
-        nsRefPtr<TabParent> tp;
-        nsRefPtr<nsIContentParent> constructorSender;
-        if (XRE_GetProcessType() != GeckoProcessType_Default) {
-            MOZ_ASSERT(aContext.IsBrowserElement());
-            ContentChild* child = ContentChild::GetSingleton();
-            uint64_t id;
-            bool isForApp;
-            bool isForBrowser;
-            if (!child->SendCreateChildProcess(aContext.AsIPCTabContext(),
-                                               initialPriority,
-                                               &id,
-                                               &isForApp,
-                                               &isForBrowser)) {
-                return nullptr;
-            }
-            if (!child->CallBridgeToChildProcess(id)) {
-                return nullptr;
-            }
-            ContentBridgeParent* parent = child->GetLastBridge();
-            parent->SetChildID(id);
-            parent->SetIsForApp(isForApp);
-            parent->SetIsForBrowser(isForBrowser);
-            constructorSender = parent;
-        } else if (nsRefPtr<ContentParent> cp =
-                   GetNewOrUsed(aContext.IsBrowserElement(), initialPriority)) {
-            constructorSender = cp;
-        }
-        if (constructorSender) {
+        nsRefPtr<ContentParent> cp = GetNewOrUsed(aContext.IsBrowserElement(),
+                                                  initialPriority);
+
+        if (cp) {
             uint32_t chromeFlags = 0;
 
             // Propagate the private-browsing status of the element's parent
             // docshell to the remote docshell, via the chrome flags.
             nsCOMPtr<Element> frameElement = do_QueryInterface(aFrameElement);
             MOZ_ASSERT(frameElement);
-            nsPIDOMWindow* win = frameElement->OwnerDoc()->GetWindow();
-            if (!win) {
-                NS_WARNING("Remote frame has no window");
-                return nullptr;
-            }
-            nsIDocShell* docShell = win->GetDocShell();
-            if (!docShell) {
-                NS_WARNING("Remote frame has no docshell");
-                return nullptr;
-            }
+            nsIDocShell* docShell =
+                frameElement->OwnerDoc()->GetWindow()->GetDocShell();
+            MOZ_ASSERT(docShell);
             nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
             if (loadContext && loadContext->UsePrivateBrowsing()) {
                 chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -890,18 +794,17 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                 chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
             }
 
-            nsRefPtr<TabParent> tp(new TabParent(constructorSender,
-                                                 aContext, chromeFlags));
+            nsRefPtr<TabParent> tp(new TabParent(cp, aContext, chromeFlags));
             tp->SetOwnerElement(aFrameElement);
 
-            PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
+            PBrowserParent* browser = cp->SendPBrowserConstructor(
                 // DeallocPBrowserParent() releases this ref.
                 tp.forget().take(),
                 aContext.AsIPCTabContext(),
                 chromeFlags,
-                constructorSender->ChildID(),
-                constructorSender->IsForApp(),
-                constructorSender->IsForBrowser());
+                cp->ChildID(),
+                cp->IsForApp(),
+                cp->IsForBrowser());
             return static_cast<TabParent*>(browser);
         }
         return nullptr;
@@ -983,7 +886,6 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
 #endif
             NS_WARNING("Unable to use pre-allocated app process");
             p = new ContentParent(ownApp,
-                                  /* aOpener = */ nullptr,
                                   /* isForBrowserElement = */ false,
                                   /* isForPreallocated = */ false,
                                   initialPriority);
@@ -1328,13 +1230,6 @@ ContentParent::MarkAsDead()
     }
 
     mIsAlive = false;
-
-    sGrandchildProcessMap.erase(this);
-    for (auto iter = sGrandchildProcessMap.begin();
-         iter != sGrandchildProcessMap.end();
-         iter++) {
-        iter->second.erase(this);
-    }
 }
 
 void
@@ -1528,19 +1423,6 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
     // This runnable ensures that a reference to |this| lives on at
     // least until after the current task finishes running.
     NS_DispatchToCurrentThread(new DelayedDeleteContentParentTask(this));
-
-    // Destroy any processes created by this ContentParent
-    auto iter = sGrandchildProcessMap.find(this);
-    if (iter != sGrandchildProcessMap.end()) {
-        for(auto child = iter->second.begin();
-            child != iter->second.end();
-            child++) {
-            MessageLoop::current()->PostTask(
-                FROM_HERE,
-                NewRunnableMethod(*child, &ContentParent::ShutDownProcess,
-                                  /* closeWithError */ false));
-        }
-    }
 }
 
 void
@@ -1637,13 +1519,11 @@ ContentParent::InitializeMembers()
 }
 
 ContentParent::ContentParent(mozIApplication* aApp,
-                             ContentParent* aOpener,
                              bool aIsForBrowser,
                              bool aIsForPreallocated,
                              ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */,
                              bool aIsNuwaProcess /* = false */)
     : nsIContentParent()
-    , mOpener(aOpener)
     , mIsForBrowser(aIsForBrowser)
     , mIsNuwaProcess(aIsNuwaProcess)
 {
@@ -3415,22 +3295,6 @@ ContentParent::RecvSystemMessageHandled()
 {
     SystemMessageHandledListener::OnSystemMessageHandled();
     return true;
-}
-
-PBrowserParent*
-ContentParent::SendPBrowserConstructor(PBrowserParent* aActor,
-                                       const IPCTabContext& aContext,
-                                       const uint32_t& aChromeFlags,
-                                       const uint64_t& aId,
-                                       const bool& aIsForApp,
-                                       const bool& aIsForBrowser)
-{
-    return PContentParent::SendPBrowserConstructor(aActor,
-                                                   aContext,
-                                                   aChromeFlags,
-                                                   aId,
-                                                   aIsForApp,
-                                                   aIsForBrowser);
 }
 
 bool

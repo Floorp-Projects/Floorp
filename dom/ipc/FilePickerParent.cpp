@@ -113,7 +113,7 @@ FilePickerParent::FileSizeAndDateRunnable::Destroy()
 void
 FilePickerParent::SendFiles(const nsCOMArray<nsIDOMFile>& aDomfiles)
 {
-  nsIContentParent* parent = static_cast<TabParent*>(Manager())->Manager();
+  ContentParent* parent = static_cast<ContentParent*>(Manager()->Manager());
   InfallibleTArray<PBlobParent*> files;
 
   for (unsigned i = 0; i < aDomfiles.Length(); i++) {
