@@ -9,6 +9,8 @@
 #include "nsSize.h"
 #include "VorbisUtils.h"
 #include "ImageContainer.h"
+#include "SharedThreadPool.h"
+#include "mozilla/Preferences.h"
 
 #include <stdint.h>
 
@@ -188,6 +190,12 @@ IsValidVideoRegion(const nsIntSize& aFrame, const nsIntRect& aPicture,
     aDisplay.height <= PlanarYCbCrImage::MAX_DIMENSION &&
     aDisplay.width * aDisplay.height <= MAX_VIDEO_WIDTH * MAX_VIDEO_HEIGHT &&
     aDisplay.width * aDisplay.height != 0;
+}
+
+TemporaryRef<SharedThreadPool> GetMediaDecodeThreadPool()
+{
+  return SharedThreadPool::Get(NS_LITERAL_CSTRING("Media Decode"),
+                               Preferences::GetUint("media.num-decode-threads", 25));
 }
 
 } // end namespace mozilla
