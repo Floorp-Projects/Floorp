@@ -16,9 +16,9 @@ let ALLOW_LIST = 0;
 let BLOCK_LIST = 1;
 let NO_LIST = 2;
 
-let whitelistedURI = createURI("http://whitelisted.com");
-let exampleURI = createURI("http://example.com");
-let blocklistedURI = createURI("http://blocklisted.com");
+let whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
+let exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
+let blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
@@ -239,6 +239,25 @@ add_test(function test_unlisted() {
   listCounts[NO_LIST]++;
   gAppRep.queryReputation({
     sourceURI: exampleURI,
+    fileSize: 12,
+  }, function onComplete(aShouldBlock, aStatus) {
+    do_check_eq(Cr.NS_OK, aStatus);
+    do_check_false(aShouldBlock);
+    check_telemetry(counts.total + 1, counts.shouldBlock, listCounts);
+    run_next_test();
+  });
+});
+
+add_test(function test_non_uri() {
+  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+                             "http://localhost:4444/download");
+  let counts = get_telemetry_counts();
+  let listCounts = counts.listCounts;
+  // No listcount is incremented, since the sourceURI is not an nsIURL
+  let source = NetUtil.newURI("data:application/octet-stream,ABC");
+  do_check_false(source instanceof Ci.nsIURL);
+  gAppRep.queryReputation({
+    sourceURI: source,
     fileSize: 12,
   }, function onComplete(aShouldBlock, aStatus) {
     do_check_eq(Cr.NS_OK, aStatus);

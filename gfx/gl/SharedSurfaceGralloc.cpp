@@ -153,11 +153,24 @@ SharedSurface_Gralloc::Fence()
     // Android native fences are also likely to perform better.
     if (mEGL->IsExtensionSupported(GLLibraryEGL::ANDROID_native_fence_sync)) {
         mGL->MakeCurrent();
-        mSync = mEGL->fCreateSync(mEGL->Display(),
-                                  LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
-                                  nullptr);
-        if (mSync) {
+        EGLSync sync = mEGL->fCreateSync(mEGL->Display(),
+                                         LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
+                                         nullptr);
+        if (sync) {
             mGL->fFlush();
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+            int fenceFd = mEGL->fDupNativeFenceFDANDROID(mEGL->Display(), sync);
+            if (fenceFd != -1) {
+                mEGL->fDestroySync(mEGL->Display(), sync);
+                android::sp<android::Fence> fence(new android::Fence(fenceFd));
+                FenceHandle handle = FenceHandle(fence);
+                mTextureClient->SetAcquireFenceHandle(handle);
+            } else {
+                mSync = sync;
+            }
+#else
+            mSync = sync;
+#endif
             return;
         }
     }
