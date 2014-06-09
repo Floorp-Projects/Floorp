@@ -16,7 +16,7 @@ interface nsIDOMFontFaceList;
 interface nsIDOMRange;
 interface nsIDOMCSSStyleSheet;
 
-[scriptable, uuid(ceae6c68-f5d4-4597-a3d9-ca5646c25f1a)]
+[scriptable, uuid(948792a7-b786-4a2c-910d-f55b0773c2ca)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
@@ -103,6 +103,13 @@ interface inIDOMUtils : nsISupports
    *        The new source string for the style sheet.
    */
   void parseStyleSheet(in nsIDOMCSSStyleSheet aSheet, in DOMString aInput);
+  /**
+   * Scroll an element completely into view, if possible.
+   * This is similar to ensureElementIsVisible but for all ancestors.
+   *
+   * @param DOMElement aElement
+   */
+  void scrollElementIntoView(in nsIDOMElement aElement);
 };
 
 %{ C++

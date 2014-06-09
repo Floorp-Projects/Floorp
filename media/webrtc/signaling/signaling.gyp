@@ -99,6 +99,8 @@
         # Browser Logging
         './src/common/browser_logging/CSFLog.cpp',
         './src/common/browser_logging/CSFLog.h',
+        './src/common/browser_logging/WebRtcLog.cpp',
+        './src/common/browser_logging/WebRtcLog.h',
         # Browser Logging
         './src/common/time_profiling/timecard.c',
         './src/common/time_profiling/timecard.h',
