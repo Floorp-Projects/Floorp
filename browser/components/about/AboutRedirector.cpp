@@ -97,6 +97,16 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT },
   { "customizing", "chrome://browser/content/customizableui/aboutCustomizing.xul",
     nsIAboutModule::ALLOW_SCRIPT },
+#ifdef MOZ_LOOP
+  { "loopconversation", "chrome://browser/content/loop/conversation.html",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::ALLOW_SCRIPT |
+    nsIAboutModule::HIDE_FROM_ABOUTABOUT },
+  { "looppanel", "chrome://browser/content/loop/panel.html",
+    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
+    nsIAboutModule::ALLOW_SCRIPT |
+    nsIAboutModule::HIDE_FROM_ABOUTABOUT },
+#endif
 };
 static const int kRedirTotal = ArrayLength(kRedirMap);
 
@@ -119,7 +129,7 @@ GetAboutModuleName(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-AboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result) 
+AboutRedirector::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
   NS_ENSURE_ARG_POINTER(aURI);
   NS_ASSERTION(result, "must not be null");
