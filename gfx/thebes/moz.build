@@ -171,13 +171,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
     ]
-    # gfxGDIFontList.cpp and gfxGDIShaper.cpp force NSPR logging, so they cannot be built in unified mode.
+    # gfxGDIFontList.cpp forces NSPR logging, so it cannot be built in unified mode.
     SOURCES += [
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
-        'gfxGDIShaper.cpp',
         'gfxPDFSurface.cpp',
-        'gfxUniscribeShaper.cpp',
         'gfxWindowsNativeDrawing.cpp',
         'gfxWindowsPlatform.cpp',
         'gfxWindowsSurface.cpp',
@@ -189,8 +187,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'gfxDWriteCommon.cpp',
             'gfxDWriteFontList.cpp',
             'gfxDWriteFonts.cpp',
-            'gfxDWriteShaper.cpp',
-            'gfxDWriteTextAnalysis.cpp',
         ]
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
