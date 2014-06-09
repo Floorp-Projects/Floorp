@@ -1088,20 +1088,6 @@ nsDisplayTableItem::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) {
   return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
 }
 
-bool
-nsDisplayTableItem::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
-                                                   nsIFrame* aFrame)
-{
-  if (!mPartHasFixedBackground)
-    return false;
-
-  // If aFrame is mFrame or an ancestor in this document, and aFrame is
-  // not the viewport frame, then moving aFrame will move mFrame
-  // relative to the viewport, so our fixed-pos background will change.
-  return mFrame == aFrame ||
-    nsLayoutUtils::IsProperAncestorFrame(aFrame, mFrame);
-}
-
 /* static */ void
 nsDisplayTableItem::UpdateForFrameBackground(nsIFrame* aFrame)
 {
