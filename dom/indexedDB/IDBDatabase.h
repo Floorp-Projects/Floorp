@@ -28,7 +28,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 class EventChainPostVisitor;
 namespace dom {
-class nsIContentParent;
+class ContentParent;
 namespace quota {
 class Client;
 }
@@ -68,7 +68,7 @@ public:
          already_AddRefed<DatabaseInfo> aDatabaseInfo,
          const nsACString& aASCIIOrigin,
          FileManager* aFileManager,
-         mozilla::dom::nsIContentParent* aContentParent);
+         mozilla::dom::ContentParent* aContentParent);
 
   static IDBDatabase*
   FromStorage(nsIOfflineStorage* aStorage);
@@ -153,7 +153,7 @@ public:
     return mActorParent;
   }
 
-  mozilla::dom::nsIContentParent*
+  mozilla::dom::ContentParent*
   GetContentParent() const
   {
     return mContentParent;
@@ -258,7 +258,7 @@ private:
   IndexedDBDatabaseChild* mActorChild;
   IndexedDBDatabaseParent* mActorParent;
 
-  mozilla::dom::nsIContentParent* mContentParent;
+  mozilla::dom::ContentParent* mContentParent;
 
   nsRefPtr<mozilla::dom::quota::Client> mQuotaClient;
 
