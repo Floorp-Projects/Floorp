@@ -928,6 +928,70 @@ CssLogic.findCssSelector = function CssLogic_findCssSelector(ele) {
   return selector;
 };
 
+const TAB_CHARS = "\t";
+
+/**
+ * Prettify minified CSS text.
+ * This prettifies CSS code where there is no indentation in usual places while
+ * keeping original indentation as-is elsewhere.
+ * @param string text The CSS source to prettify.
+ * @return string Prettified CSS source
+ */
+CssLogic.prettifyCSS = function(text) {
+  if (CssLogic.LINE_SEPARATOR == null) {
+    let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+    CssLogic.LINE_SEPARATOR = (os === "WINNT" ? "\r\n" : "\n");
+  }
+
+  // remove initial and terminating HTML comments and surrounding whitespace
+  text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
+
+  let parts = [];    // indented parts
+  let partStart = 0; // start offset of currently parsed part
+  let indent = "";
+  let indentLevel = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    let c = text[i];
+    let shouldIndent = false;
+
+    switch (c) {
+      case "}":
+        if (i - partStart > 1) {
+          // there's more than just } on the line, add line
+          parts.push(indent + text.substring(partStart, i));
+          partStart = i;
+        }
+        indent = TAB_CHARS.repeat(--indentLevel);
+        /* fallthrough */
+      case ";":
+      case "{":
+        shouldIndent = true;
+        break;
+    }
+
+    if (shouldIndent) {
+      let la = text[i+1]; // one-character lookahead
+      if (!/\n/.test(la) || /^\s+$/.test(text.substring(i+1, text.length))) {
+        // following character should be a new line, but isn't,
+        // or it's whitespace at the end of the file
+        parts.push(indent + text.substring(partStart, i + 1));
+        if (c == "}") {
+          parts.push(""); // for extra line separator
+        }
+        partStart = i + 1;
+      } else {
+        return text; // assume it is not minified, early exit
+      }
+    }
+
+    if (c == "{") {
+      indent = TAB_CHARS.repeat(++indentLevel);
+    }
+  }
+  return parts.join(CssLogic.LINE_SEPARATOR);
+};
+
 /**
  * A safe way to access cached bits of information about a stylesheet.
  *
