@@ -178,6 +178,9 @@ public:
   void Resample(SpeexResamplerState* aResampler, uint32_t aInRate, uint32_t aOutRate)
   {
     mDuration = 0;
+#ifdef DEBUG
+    uint32_t segmentChannelCount = ChannelCount();
+#endif
 
     for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
       nsAutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
@@ -190,6 +193,7 @@ public:
         continue;
       }
       uint32_t channels = c.mChannelData.Length();
+      MOZ_ASSERT(channels == segmentChannelCount);
       output.SetLength(channels);
       bufferPtrs.SetLength(channels);
       uint32_t inFrames = c.mDuration;
