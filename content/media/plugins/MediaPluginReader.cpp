@@ -35,6 +35,11 @@ MediaPluginReader::MediaPluginReader(AbstractMediaDecoder *aDecoder,
 {
 }
 
+MediaPluginReader::~MediaPluginReader()
+{
+  ResetDecode();
+}
+
 nsresult MediaPluginReader::Init(MediaDecoderReader* aCloneDonor)
 {
   return NS_OK;
@@ -99,22 +104,18 @@ nsresult MediaPluginReader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
-void MediaPluginReader::Shutdown()
-{
-  ResetDecode();
-  if (mPlugin) {
-    GetMediaPluginHost()->DestroyDecoder(mPlugin);
-    mPlugin = nullptr;
-  }
-}
-
 // Resets all state related to decoding, emptying all buffers etc.
 nsresult MediaPluginReader::ResetDecode()
 {
   if (mLastVideoFrame) {
     mLastVideoFrame = nullptr;
   }
-  return MediaDecoderReader::ResetDecode();
+  if (mPlugin) {
+    GetMediaPluginHost()->DestroyDecoder(mPlugin);
+    mPlugin = nullptr;
+  }
+
+  return NS_OK;
 }
 
 bool MediaPluginReader::DecodeVideoFrame(bool &aKeyframeSkip,
@@ -319,6 +320,9 @@ bool MediaPluginReader::DecodeAudioData()
 nsresult MediaPluginReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime)
 {
   NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+
+  mVideoQueue.Reset();
+  mAudioQueue.Reset();
 
   if (mHasAudio && mHasVideo) {
     // The decoder seeks/demuxes audio and video streams separately. So if
