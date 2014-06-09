@@ -27,7 +27,7 @@ public:
 
 protected:
   virtual PHttpChannelChild*
-    AllocPHttpChannelChild(const PBrowserOrId&, const SerializedLoadContext&,
+    AllocPHttpChannelChild(PBrowserChild*, const SerializedLoadContext&,
                            const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool DeallocPHttpChannelChild(PHttpChannelChild*) MOZ_OVERRIDE;
   virtual PCookieServiceChild* AllocPCookieServiceChild() MOZ_OVERRIDE;
@@ -35,13 +35,12 @@ protected:
   virtual PWyciwygChannelChild* AllocPWyciwygChannelChild() MOZ_OVERRIDE;
   virtual bool DeallocPWyciwygChannelChild(PWyciwygChannelChild*) MOZ_OVERRIDE;
   virtual PFTPChannelChild*
-    AllocPFTPChannelChild(const PBrowserOrId& aBrowser,
+    AllocPFTPChannelChild(PBrowserChild* aBrowser,
                           const SerializedLoadContext& aSerialized,
                           const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool DeallocPFTPChannelChild(PFTPChannelChild*) MOZ_OVERRIDE;
   virtual PWebSocketChild*
-    AllocPWebSocketChild(const PBrowserOrId&,
-                         const SerializedLoadContext&) MOZ_OVERRIDE;
+    AllocPWebSocketChild(PBrowserChild*, const SerializedLoadContext&) MOZ_OVERRIDE;
   virtual bool DeallocPWebSocketChild(PWebSocketChild*) MOZ_OVERRIDE;
   virtual PTCPSocketChild* AllocPTCPSocketChild() MOZ_OVERRIDE;
   virtual bool DeallocPTCPSocketChild(PTCPSocketChild*) MOZ_OVERRIDE;
@@ -72,10 +71,6 @@ protected:
   AllocPChannelDiverterChild(const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
   virtual bool
   DeallocPChannelDiverterChild(PChannelDiverterChild* actor) MOZ_OVERRIDE;
-  virtual bool RecvAsyncAuthPromptForNestedFrame(const uint64_t& aNestedFrameId,
-                                                 const nsCString& aUri,
-                                                 const nsString& aRealm,
-                                                 const uint64_t& aCallbackId) MOZ_OVERRIDE;
 };
 
 /**

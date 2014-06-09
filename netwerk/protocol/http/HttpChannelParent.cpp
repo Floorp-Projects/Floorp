@@ -25,8 +25,6 @@
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "SerializedLoadContext.h"
-#include "nsIAuthInformation.h"
-#include "nsIAuthPromptCallback.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -34,7 +32,7 @@ using namespace mozilla::ipc;
 namespace mozilla {
 namespace net {
 
-HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
+HttpChannelParent::HttpChannelParent(PBrowserParent* iframeEmbedding,
                                      nsILoadContext* aLoadContext,
                                      PBOverrideStatus aOverrideStatus)
   : mIPCClosed(false)
@@ -50,7 +48,6 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
-  , mNestedFrameId(0)
 {
   // Ensure gHttpHandler is initialized: we need the atom table up and running.
   nsCOMPtr<nsIHttpProtocolHandler> dummyInitializer =
@@ -59,11 +56,7 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   MOZ_ASSERT(gHttpHandler);
   mHttpHandler = gHttpHandler;
 
-  if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
-    mTabParent = static_cast<dom::TabParent*>(iframeEmbedding.get_PBrowserParent());
-  } else {
-    mNestedFrameId = iframeEmbedding.get_uint64_t();
-  }
+  mTabParent = static_cast<mozilla::dom::TabParent*>(iframeEmbedding);
 }
 
 HttpChannelParent::~HttpChannelParent()
@@ -116,7 +109,6 @@ NS_IMPL_ISUPPORTS(HttpChannelParent,
                   nsIRequestObserver,
                   nsIStreamListener,
                   nsIParentChannel,
-                  nsIAuthPromptProvider,
                   nsIParentRedirectingChannel)
 
 //-----------------------------------------------------------------------------
@@ -128,16 +120,10 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void **result)
 {
   if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
       aIID.Equals(NS_GET_IID(nsISecureBrowserUI))) {
-    if (mTabParent) {
-      return mTabParent->QueryInterface(aIID, result);
-    }
-  }
+    if (!mTabParent)
+      return NS_NOINTERFACE;
 
-  // Only support nsIAuthPromptProvider in Content process
-  if (XRE_GetProcessType() == GeckoProcessType_Default &&
-      aIID.Equals(NS_GET_IID(nsIAuthPromptProvider))) {
-    *result = nullptr;
-    return NS_OK;
+    return mTabParent->QueryInterface(aIID, result);
   }
 
   // Only support nsILoadContext if child channel's callbacks did too
@@ -999,16 +985,6 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   if (!mIPCClosed) {
     unused << SendDeleteSelf();
   }
-}
-
-NS_IMETHODIMP
-HttpChannelParent::GetAuthPrompt(uint32_t aPromptReason, const nsIID& iid,
-                                 void** aResult)
-{
-  nsCOMPtr<nsIAuthPrompt2> prompt =
-    new NeckoParent::NestedFrameAuthPrompt(Manager(), mNestedFrameId);
-  prompt.forget(aResult);
-  return NS_OK;
 }
 
 }} // mozilla::net
