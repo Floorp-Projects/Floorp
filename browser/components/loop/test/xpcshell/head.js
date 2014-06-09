@@ -57,6 +57,16 @@ MockWebSocketChannel.prototype = {
     this.listener.onStart(this.context);
   },
 
+  notify: function(version) {
+    this.listener.onMessageAvailable(this.context,
+      JSON.stringify({
+        messageType: "notification", updates: [{
+          channelID: "8b1081ce-9b35-42b5-b8f5-3ff8cb813a50",
+          version: version
+        }]
+    }));
+  },
+
   sendMsg: function(aMsg) {
     var message = JSON.parse(aMsg);
 
