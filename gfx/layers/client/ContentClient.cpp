@@ -929,6 +929,7 @@ ContentClientIncremental::GetUpdateSurface(BufferType aType,
                                           mContentType,
                                           &desc)) {
     NS_WARNING("creating SurfaceDescriptor failed!");
+    Clear();
     return nullptr;
   }
 
