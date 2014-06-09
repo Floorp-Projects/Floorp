@@ -652,7 +652,7 @@ TabChild::PreloadSlowThings()
 }
 
 /*static*/ already_AddRefed<TabChild>
-TabChild::Create(nsIContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
+TabChild::Create(ContentChild* aManager, const TabContext &aContext, uint32_t aChromeFlags)
 {
     if (sPreallocatedTab &&
         sPreallocatedTab->mChromeFlags == aChromeFlags &&
@@ -674,7 +674,7 @@ TabChild::Create(nsIContentChild* aManager, const TabContext &aContext, uint32_t
 }
 
 
-TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
+TabChild::TabChild(ContentChild* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)
   , mRemoteFrame(nullptr)
   , mManager(aManager)
@@ -2322,7 +2322,7 @@ TabChild::RecvAsyncMessage(const nsString& aMessage,
     StructuredCloneData cloneData = UnpackClonedMessageDataForChild(aData);
     nsRefPtr<nsFrameMessageManager> mm =
       static_cast<nsFrameMessageManager*>(mTabChildGlobal->mMessageManager.get());
-    CpowIdHolder cpows(Manager()->GetCPOWManager(), aCpows);
+    CpowIdHolder cpows(static_cast<ContentChild*>(Manager())->GetCPOWManager(), aCpows);
     mm->ReceiveMessage(static_cast<EventTarget*>(mTabChildGlobal),
                        aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
   }
@@ -2668,13 +2668,14 @@ TabChild::DoSendBlockingMessage(JSContext* aCx,
                                 InfallibleTArray<nsString>* aJSONRetVal,
                                 bool aIsSync)
 {
+  ContentChild* cc = Manager();
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
+  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
   if (sCpowsEnabled) {
-    if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
   }
@@ -2694,13 +2695,14 @@ TabChild::DoSendAsyncMessage(JSContext* aCx,
                              JS::Handle<JSObject *> aCpows,
                              nsIPrincipal* aPrincipal)
 {
+  ContentChild* cc = Manager();
   ClonedMessageData data;
-  if (!BuildClonedMessageDataForChild(Manager(), aData, data)) {
+  if (!BuildClonedMessageDataForChild(cc, aData, data)) {
     return false;
   }
   InfallibleTArray<CpowEntry> cpows;
   if (sCpowsEnabled) {
-    if (!Manager()->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
+    if (!cc->GetCPOWManager()->Wrap(aCx, aCpows, &cpows)) {
       return false;
     }
   }

@@ -8,7 +8,6 @@
 #define mozilla_dom_ContentChild_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/ipc/Blob.h"
 #include "nsHashKeys.h"
@@ -49,7 +48,6 @@ class ClonedMessageData;
 class PFileDescriptorSetChild;
 
 class ContentChild : public PContentChild
-                   , public nsIContentChild
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;
@@ -58,9 +56,8 @@ class ContentChild : public PContentChild
 public:
     ContentChild();
     virtual ~ContentChild();
-    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
-    NS_IMETHOD_(MozExternalRefCountType) AddRef(void) { return 1; }
-    NS_IMETHOD_(MozExternalRefCountType) Release(void) { return 1; }
+    nsrefcnt AddRef() { return 1; }
+    nsrefcnt Release() { return 1; }
 
     struct AppInfo
     {
@@ -302,9 +299,7 @@ public:
     bool IsForApp() { return mIsForApp; }
     bool IsForBrowser() { return mIsForBrowser; }
 
-    virtual PBlobChild*
-    SendPBlobConstructor(PBlobChild* actor,
-                         const BlobConstructorParams& params) MOZ_OVERRIDE;
+    BlobChild* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
 
     virtual PFileDescriptorSetChild*
     AllocPFileDescriptorSetChild(const FileDescriptor&) MOZ_OVERRIDE;
@@ -312,12 +307,6 @@ public:
     virtual bool
     DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*) MOZ_OVERRIDE;
 
-    virtual bool SendPBrowserConstructor(PBrowserChild* actor,
-                                         const IPCTabContext& context,
-                                         const uint32_t& chromeFlags,
-                                         const uint64_t& aID,
-                                         const bool& aIsForApp,
-                                         const bool& aIsForBrowser) MOZ_OVERRIDE;
 protected:
     virtual bool RecvPBrowserConstructor(PBrowserChild* aCctor,
                                          const IPCTabContext& aContext,
