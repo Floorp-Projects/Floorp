@@ -473,17 +473,17 @@ void TraceImpl::AddMessageToList(
 
   if (idx >= WEBRTC_TRACE_MAX_QUEUE) {
     if (!trace_file_.Open() && !callback_) {
-      // Keep at least the last 1/4 of old messages when not logging.
+      // Drop the first 1/4 of old messages when not logging.
       // TODO(hellner): isn't this redundant. The user will make it known
       //                when to start logging. Why keep messages before
       //                that?
-      for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE / 4; ++n) {
-        const int last_quarter_offset = (3 * WEBRTC_TRACE_MAX_QUEUE / 4);
+      for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE * 3 / 4; ++n) {
+        const int last_quarter_offset = (1 * WEBRTC_TRACE_MAX_QUEUE / 4);
         memcpy(message_queue_[active_queue_][n],
                message_queue_[active_queue_][n + last_quarter_offset],
                WEBRTC_TRACE_MAX_MESSAGE_SIZE);
       }
-      idx = next_free_idx_[active_queue_] = WEBRTC_TRACE_MAX_QUEUE / 4;
+      idx = next_free_idx_[active_queue_] = WEBRTC_TRACE_MAX_QUEUE * 3 / 4;
     } else {
       // More messages are being written than there is room for in the
       // buffer. Drop any new messages.
