@@ -28,7 +28,7 @@
         "MOZILLA_OFFICIAL": "1",
         "MOZ_TELEMETRY_REPORTING": "1",
         "ANDROIDFS_DIR": "{workdir}/helix-ics",
-        "B2G_UPDATE_CHANNEL": "nightly"
+        "B2G_UPDATE_CHANNEL": "aurora"
     },
     "b2g_manifest": "helix.xml",
     "b2g_manifest_intree": true,
