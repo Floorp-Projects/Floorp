@@ -98,6 +98,8 @@ struct Statistics {
     jschar *formatMessage();
     jschar *formatJSON(uint64_t timestamp);
 
+    JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
+
   private:
     JSRuntime *runtime;
 
@@ -159,6 +161,8 @@ struct Statistics {
 
     /* Sweep times for SCCs of compartments. */
     Vector<int64_t, 0, SystemAllocPolicy> sccTimes;
+
+    JS::GCSliceCallback sliceCallback;
 
     void beginGC();
     void endGC();

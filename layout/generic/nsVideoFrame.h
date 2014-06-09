@@ -26,8 +26,6 @@ class nsAString;
 class nsPresContext;
 class nsDisplayItem;
 
-nsIFrame* NS_NewVideoFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
-
 class nsVideoFrame : public nsContainerFrame, public nsIAnonymousContentCreator
 {
 public:

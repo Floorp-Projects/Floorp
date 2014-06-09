@@ -1233,6 +1233,12 @@ function addHeapUnclassifiedNode(aT, aHeapAllocatedNode, aHeapTotal)
   if (aHeapAllocatedNode === undefined)
     return false;
 
+  if (aT.findKid("heap-unclassified")) {
+    // heap-unclassified was already calculated, there's nothing left to do.
+    // This can happen when memory reports are exported from areweslimyet.com.
+    return true;
+  }
+
   assert(aHeapAllocatedNode._isDegenerate, "heap-allocated is not degenerate");
   let heapAllocatedBytes = aHeapAllocatedNode._amount;
   let heapUnclassifiedT = new TreeNode("heap-unclassified", UNITS_BYTES);

@@ -8190,9 +8190,16 @@ class CGUnionStruct(CGThing):
                 fill("UnionMember<${structType} > m${name}", **vars))
             enumValues.append("e" + vars["name"])
 
-            toJSValCases.append(
-                CGCase("e" + vars["name"],
-                       self.getConversionToJS(vars, t)))
+            skipToJSVal = False
+            try:
+                toJSValCases.append(
+                    CGCase("e" + vars["name"],
+                           self.getConversionToJS(vars, t)))
+            except MethodNotNewObjectError:
+                # If we can't have a ToJSVal() because one of our members can
+                # only be returned from [NewObject] methods, then just skip
+                # generating ToJSVal.
+                skipToJSVal = True
             destructorCases.append(
                 CGCase("e" + vars["name"],
                        CGGeneric("Destroy%s();\n" % vars["name"])))
@@ -8226,18 +8233,19 @@ class CGUnionStruct(CGThing):
                                    bodyInHeader=not self.ownsMembers,
                                    inline=not self.ownsMembers))
 
-        methods.append(
-            ClassMethod(
-                "ToJSVal",
-                "bool",
-                [
-                    Argument("JSContext*", "cx"),
-                    Argument("JS::Handle<JSObject*>", "scopeObj"),
-                    Argument("JS::MutableHandle<JS::Value>", "rval")
-                ],
-                body=CGSwitch("mType", toJSValCases,
-                              default=CGGeneric("return false;\n")).define(),
-                const=True))
+        if not skipToJSVal:
+            methods.append(
+                ClassMethod(
+                    "ToJSVal",
+                    "bool",
+                    [
+                        Argument("JSContext*", "cx"),
+                        Argument("JS::Handle<JSObject*>", "scopeObj"),
+                        Argument("JS::MutableHandle<JS::Value>", "rval")
+                    ],
+                    body=CGSwitch("mType", toJSValCases,
+                                  default=CGGeneric("return false;\n")).define(),
+                    const=True))
 
         constructors = [ctor]
         selfName = CGUnionStruct.unionTypeName(self.type, self.ownsMembers)

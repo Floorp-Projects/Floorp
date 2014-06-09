@@ -336,7 +336,6 @@ namespace js {
 template <>
 struct GCMethods<PropDesc> {
     static PropDesc initial() { return PropDesc(); }
-    static ThingRootKind kind() { return THING_ROOT_PROP_DESC; }
     static bool poisoned(const PropDesc &desc) {
         return JS::IsPoisonedPtr(desc.descObj_) ||
                (desc.value_.isGCThing() &&

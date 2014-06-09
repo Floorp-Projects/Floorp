@@ -63,8 +63,7 @@ js::ForgetSourceHook(JSRuntime *rt)
 JS_FRIEND_API(void)
 JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
 {
-    rt->gc.grayRootTracer.op = traceOp;
-    rt->gc.grayRootTracer.data = data;
+    rt->gc.setGrayRootsTracer(traceOp, data);
 }
 
 JS_FRIEND_API(JSString *)
@@ -864,9 +863,7 @@ js::IsContextRunningJS(JSContext *cx)
 JS_FRIEND_API(JS::GCSliceCallback)
 JS::SetGCSliceCallback(JSRuntime *rt, GCSliceCallback callback)
 {
-    JS::GCSliceCallback old = rt->gc.sliceCallback;
-    rt->gc.sliceCallback = callback;
-    return old;
+    return rt->gc.setSliceCallback(callback);
 }
 
 JS_FRIEND_API(bool)
@@ -1026,7 +1023,7 @@ JS::IncrementalValueBarrier(const Value &v)
 JS_FRIEND_API(void)
 JS::PokeGC(JSRuntime *rt)
 {
-    rt->gc.poke = true;
+    rt->gc.poke();
 }
 
 JS_FRIEND_API(JSCompartment *)

@@ -412,9 +412,9 @@ int ViECodecImpl::SetImageScaleStatus(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetSendCodecStastistics(const int video_channel,
-                                          unsigned int& key_frames,
-                                          unsigned int& delta_frames) const {
+int ViECodecImpl::GetSendCodecStatistics(const int video_channel,
+                                         unsigned int& key_frames,
+                                         unsigned int& delta_frames) const {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
                ViEId(shared_data_->instance_id(), video_channel),
                "%s(video_channel %d)", __FUNCTION__, video_channel);
@@ -437,9 +437,9 @@ int ViECodecImpl::GetSendCodecStastistics(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetReceiveCodecStastistics(const int video_channel,
-                                             unsigned int& key_frames,
-                                             unsigned int& delta_frames) const {
+int ViECodecImpl::GetReceiveCodecStatistics(const int video_channel,
+                                            unsigned int& key_frames,
+                                            unsigned int& delta_frames) const {
   WEBRTC_TRACE(kTraceApiCall, kTraceVideo,
                ViEId(shared_data_->instance_id(), video_channel),
                "%s(video_channel: %d)", __FUNCTION__,

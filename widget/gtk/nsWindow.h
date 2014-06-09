@@ -282,14 +282,11 @@ public:
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
+    virtual gfxASurface *GetThebesSurface() MOZ_OVERRIDE;
 
 #if (MOZ_WIDGET_GTK == 2)
-    gfxASurface       *GetThebesSurface();
-
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                                                                   const nsIntSize& aSize);
-#else
-    gfxASurface       *GetThebesSurface(cairo_t *cr);
 #endif
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent);
 
@@ -446,6 +443,9 @@ private:
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr) MOZ_OVERRIDE;
+#if (MOZ_WIDGET_GTK == 3)
+    gfxASurface* GetThebesSurface(cairo_t *cr);
+#endif
 
     void CleanLayerManagerRecursive();
 

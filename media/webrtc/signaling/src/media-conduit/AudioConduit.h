@@ -178,6 +178,22 @@ public:
   webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
   bool GetLocalSSRC(unsigned int* ssrc);
   bool GetRemoteSSRC(unsigned int* ssrc);
+  bool GetVideoEncoderStats(double* framerateMean,
+                            double* framerateStdDev,
+                            double* bitrateMean,
+                            double* bitrateStdDev,
+                            uint32_t* droppedFrames)
+  {
+    return false;
+  }
+  bool GetVideoDecoderStats(double* framerateMean,
+                            double* framerateStdDev,
+                            double* bitrateMean,
+                            double* bitrateStdDev,
+                            uint32_t* discardedPackets)
+  {
+    return false;
+  }
   bool GetAVStats(int32_t* jitterBufferDelayMs,
                   int32_t* playoutBufferDelayMs,
                   int32_t* avSyncOffsetMs);
