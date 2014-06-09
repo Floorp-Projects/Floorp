@@ -17,9 +17,9 @@
 'use strict';
 
 var util = require('../util/util');
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 
-var RESOLVED = promise.resolve(true);
+var RESOLVED = Promise.resolve(true);
 
 /**
  * This is where we cache the languages that we know about
@@ -48,11 +48,11 @@ var baseLanguage = {
   caretMoved: function() {},
 
   handleUpArrow: function() {
-    return promise.resolve(false);
+    return Promise.resolve(false);
   },
 
   handleDownArrow: function() {
-    return promise.resolve(false);
+    return Promise.resolve(false);
   },
 
   handleTab: function() {
@@ -96,7 +96,7 @@ var baseLanguage = {
   },
 
   getCompleterTemplateData: function() {
-    return promise.resolve({
+    return Promise.resolve({
       statusMarkup: [
         {
           string: this.terminal.inputElement.value.replace(/ /g, '\u00a0'), // i.e. &nbsp;
@@ -163,11 +163,11 @@ exports.createLanguage = function(name, terminal) {
 
   if (typeof newInstance.constructor === 'function') {
     var reply = newInstance.constructor(terminal);
-    return promise.resolve(reply).then(function() {
+    return Promise.resolve(reply).then(function() {
       return newInstance;
     });
   }
   else {
-    return promise.resolve(newInstance);
+    return Promise.resolve(newInstance);
   }
 };

@@ -322,11 +322,9 @@ function spawnTest() {
         }
       },
       post: function() {
-        let deferred = promise.defer();
-        executeSoon(function() {
-          deferred.resolve();
+        return new Promise(resolve => {
+          executeSoon(resolve);
         });
-        return deferred.promise;
       }
     },
     {

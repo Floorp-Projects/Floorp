@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var Status = require('./types').Status;
 var Conversion = require('./types').Conversion;
 var BlankArgument = require('./types').BlankArgument;
@@ -40,10 +40,10 @@ exports.items = [
 
     parse: function(arg, context) {
       if (arg.type === 'TrueNamedArgument') {
-        return promise.resolve(new Conversion(true, arg));
+        return Promise.resolve(new Conversion(true, arg));
       }
       if (arg.type === 'FalseNamedArgument') {
-        return promise.resolve(new Conversion(false, arg));
+        return Promise.resolve(new Conversion(false, arg));
       }
       return SelectionType.prototype.parse.call(this, arg, context);
     },
@@ -57,7 +57,7 @@ exports.items = [
 
     getBlank: function(context) {
       return new Conversion(false, new BlankArgument(), Status.VALID, '',
-                            promise.resolve(this.lookup));
+                            Promise.resolve(this.lookup));
     }
   }
 ];

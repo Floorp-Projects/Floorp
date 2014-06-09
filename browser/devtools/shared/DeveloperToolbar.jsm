@@ -41,10 +41,17 @@ const Telemetry = require("devtools/shared/telemetry");
 
 // This lazy getter is needed to prevent a require loop
 XPCOMUtils.defineLazyGetter(this, "gcli", () => {
-  let gcli = require("gcli/index");
-  require("devtools/commandline/commands-index");
-  gcli.load();
-  return gcli;
+  try {
+    require("devtools/commandline/commands-index");
+    return require("gcli/index");
+  }
+  catch (ex) {
+    console.error(ex);
+  }
+});
+
+XPCOMUtils.defineLazyGetter(this, "util", () => {
+  return require("gcli/util/util");
 });
 
 Object.defineProperty(this, "ConsoleServiceListener", {
@@ -65,9 +72,10 @@ let CommandUtils = {
    * Utility to ensure that things are loaded in the correct order
    */
   createRequisition: function(environment) {
-    let temp = gcli.createDisplay; // Ensure GCLI is loaded
-    let Requisition = require("gcli/cli").Requisition
-    return new Requisition({ environment: environment });
+    return gcli.load().then(() => {
+      let Requisition = require("gcli/cli").Requisition
+      return new Requisition({ environment: environment });
+    });
   },
 
   /**
@@ -80,36 +88,23 @@ let CommandUtils = {
   },
 
   /**
-   * A toolbarSpec is an array of buttonSpecs. A buttonSpec is an array of
-   * strings each of which is a GCLI command (including args if needed).
+   * A toolbarSpec is an array of strings each of which is a GCLI command.
    *
    * Warning: this method uses the unload event of the window that owns the
    * buttons that are of type checkbox. this means that we don't properly
    * unregister event handlers until the window is destroyed.
    */
   createButtons: function(toolbarSpec, target, document, requisition) {
-    let reply = [];
-
-    toolbarSpec.forEach(function(buttonSpec) {
-      let button = document.createElement("toolbarbutton");
-      reply.push(button);
-
-      if (typeof buttonSpec == "string") {
-        buttonSpec = { typed: buttonSpec };
-      }
+    return util.promiseEach(toolbarSpec, typed => {
       // Ask GCLI to parse the typed string (doesn't execute it)
-      requisition.update(buttonSpec.typed);
+      return requisition.update(typed).then(() => {
+        let button = document.createElement("toolbarbutton");
 
-      // Ignore invalid commands
-      let command = requisition.commandAssignment.value;
-      if (command == null) {
-        // TODO: Have a broken icon
-        // button.icon = 'Broken';
-        button.setAttribute("label", "X");
-        button.setAttribute("tooltip", "Unknown command: " + buttonSpec.typed);
-        button.setAttribute("disabled", "true");
-      }
-      else {
+        // Ignore invalid commands
+        let command = requisition.commandAssignment.value;
+        if (command == null) {
+          throw new Error("No command '" + typed + "'");
+        }
         if (command.buttonId != null) {
           button.id = command.buttonId;
         }
@@ -123,22 +118,14 @@ let CommandUtils = {
           button.setAttribute("tooltiptext", command.description);
         }
 
-        button.addEventListener("click", function() {
-          requisition.update(buttonSpec.typed);
-          //if (requisition.getStatus() == Status.VALID) {
-            requisition.exec();
-          /*
-          }
-          else {
-            console.error('incomplete commands not yet supported');
-          }
-          */
+        button.addEventListener("click", () => {
+          requisition.updateExec(typed);
         }, false);
 
         // Allow the command button to be toggleable
         if (command.state) {
           button.setAttribute("autocheck", false);
-          let onChange = function(event, eventTab) {
+          let onChange = (event, eventTab) => {
             if (eventTab == target.tab) {
               if (command.state.isChecked(target)) {
                 button.setAttribute("checked", true);
@@ -150,16 +137,16 @@ let CommandUtils = {
           };
           command.state.onChange(target, onChange);
           onChange(null, target.tab);
-          document.defaultView.addEventListener("unload", function() {
+          document.defaultView.addEventListener("unload", () => {
             command.state.offChange(target, onChange);
           }, false);
         }
-      }
+
+        requisition.clear();
+
+        return button;
+      });
     });
-
-    requisition.update('');
-
-    return reply;
   },
 
   /**
@@ -382,56 +369,58 @@ DeveloperToolbar.prototype.show = function(focus) {
 
       this._doc.getElementById("Tools:DevToolbar").setAttribute("checked", "true");
 
-      this.display = gcli.createDisplay({
-        contentDocument: this._chromeWindow.getBrowser().contentDocument,
-        chromeDocument: this._doc,
-        chromeWindow: this._chromeWindow,
-        hintElement: this.tooltipPanel.hintElement,
-        inputElement: this._input,
-        completeElement: this._doc.querySelector(".gclitoolbar-complete-node"),
-        backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
-        outputDocument: this.outputPanel.document,
-        environment: CommandUtils.createEnvironment(this, "target"),
-        tooltipClass: "gcliterm-tooltip",
-        eval: null,
-        scratchpad: null
+      return gcli.load().then(() => {
+        this.display = gcli.createDisplay({
+          contentDocument: this._chromeWindow.getBrowser().contentDocument,
+          chromeDocument: this._doc,
+          chromeWindow: this._chromeWindow,
+          hintElement: this.tooltipPanel.hintElement,
+          inputElement: this._input,
+          completeElement: this._doc.querySelector(".gclitoolbar-complete-node"),
+          backgroundElement: this._doc.querySelector(".gclitoolbar-stack-node"),
+          outputDocument: this.outputPanel.document,
+          environment: CommandUtils.createEnvironment(this, "target"),
+          tooltipClass: "gcliterm-tooltip",
+          eval: null,
+          scratchpad: null
+        });
+
+        this.display.focusManager.addMonitoredElement(this.outputPanel._frame);
+        this.display.focusManager.addMonitoredElement(this._element);
+
+        this.display.onVisibilityChange.add(this.outputPanel._visibilityChanged,
+                                            this.outputPanel);
+        this.display.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
+                                            this.tooltipPanel);
+        this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
+
+        let tabbrowser = this._chromeWindow.getBrowser();
+        tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
+        tabbrowser.tabContainer.addEventListener("TabClose", this, false);
+        tabbrowser.addEventListener("load", this, true);
+        tabbrowser.addEventListener("beforeunload", this, true);
+
+        this._initErrorsCount(tabbrowser.selectedTab);
+        this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
+        this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
+        Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
+        Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
+
+        this._element.hidden = false;
+
+        if (focus) {
+          this._input.focus();
+        }
+
+        this._notify(NOTIFICATIONS.SHOW);
+
+        if (!DeveloperToolbar.introShownThisSession) {
+          this.display.maybeShowIntro();
+          DeveloperToolbar.introShownThisSession = true;
+        }
+
+        this._showPromise = null;
       });
-
-      this.display.focusManager.addMonitoredElement(this.outputPanel._frame);
-      this.display.focusManager.addMonitoredElement(this._element);
-
-      this.display.onVisibilityChange.add(this.outputPanel._visibilityChanged,
-                                          this.outputPanel);
-      this.display.onVisibilityChange.add(this.tooltipPanel._visibilityChanged,
-                                          this.tooltipPanel);
-      this.display.onOutput.add(this.outputPanel._outputChanged, this.outputPanel);
-
-      let tabbrowser = this._chromeWindow.getBrowser();
-      tabbrowser.tabContainer.addEventListener("TabSelect", this, false);
-      tabbrowser.tabContainer.addEventListener("TabClose", this, false);
-      tabbrowser.addEventListener("load", this, true);
-      tabbrowser.addEventListener("beforeunload", this, true);
-
-      this._initErrorsCount(tabbrowser.selectedTab);
-      this._devtoolsUnloaded = this._devtoolsUnloaded.bind(this);
-      this._devtoolsLoaded = this._devtoolsLoaded.bind(this);
-      Services.obs.addObserver(this._devtoolsUnloaded, "devtools-unloaded", false);
-      Services.obs.addObserver(this._devtoolsLoaded, "devtools-loaded", false);
-
-      this._element.hidden = false;
-
-      if (focus) {
-        this._input.focus();
-      }
-
-      this._notify(NOTIFICATIONS.SHOW);
-
-      if (!DeveloperToolbar.introShownThisSession) {
-        this.display.maybeShowIntro();
-        DeveloperToolbar.introShownThisSession = true;
-      }
-
-      this._showPromise = null;
     });
   });
 
