@@ -41,6 +41,14 @@ LoadContext::GetTopFrameElement(nsIDOMElement** aElement)
 }
 
 NS_IMETHODIMP
+LoadContext::GetNestedFrameId(uint64_t* aId)
+{
+  NS_ENSURE_ARG(aId);
+  *aId = mNestedFrameId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 LoadContext::IsAppOfType(uint32_t, bool*)
 {
   MOZ_ASSERT(mIsNotNull);
