@@ -1,0 +1,56 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PBlob;
+include protocol PBrowser;
+include protocol PContent;
+include protocol PJavaScript;
+
+include DOMTypes;
+include JavaScriptTypes;
+include PTabContext;
+
+using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
+
+namespace mozilla {
+namespace dom {
+
+/*
+ * PContentBridge allows us to represent a parent/child relationship between two
+ * child processes.  When a child process wants to open its own child, it asks
+ * the root process to create a new process and then bridge them.  The first
+ * child will allocate the PContentBridgeParent, and the newly opened child will
+ * allocate the PContentBridgeChild.  This protocol allows these processes to
+ * share PBrowsers and send messages to each other.
+ */
+intr protocol PContentBridge
+{
+    bridges PContent, PContent;
+
+    manages PBlob;
+    manages PBrowser;
+    manages PJavaScript;
+
+parent:
+    sync SyncMessage(nsString aMessage, ClonedMessageData aData,
+                     CpowEntry[] aCpows, Principal aPrincipal)
+      returns (nsString[] retval);
+both:
+    // Both the parent and the child can construct the PBrowser.
+    // See the comment in PContent::PBrowser().
+    async PBrowser(IPCTabContext context, uint32_t chromeFlags,
+                   uint64_t id, bool isForApp, bool isForBrowser);
+
+    async PBlob(BlobConstructorParams params);
+
+    async PJavaScript();
+
+    AsyncMessage(nsString aMessage, ClonedMessageData aData,
+                 CpowEntry[] aCpows, Principal aPrincipal);
+};
+
+}
+}
