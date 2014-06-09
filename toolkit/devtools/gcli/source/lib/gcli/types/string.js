@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var Status = require('./types').Status;
 var Conversion = require('./types').Conversion;
 
@@ -64,7 +64,7 @@ exports.items = [
 
     parse: function(arg, context) {
       if (!this.allowBlank && (arg.text == null || arg.text === '')) {
-        return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+        return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
       }
 
       // The string '\\' (i.e. an escaped \ (represented here as '\\\\' because it
@@ -87,7 +87,7 @@ exports.items = [
            .replace(/\\}/g, '}')
            .replace(/\uF000/g, '\\');
 
-      return promise.resolve(new Conversion(value, arg));
+      return Promise.resolve(new Conversion(value, arg));
     }
   }
 ];

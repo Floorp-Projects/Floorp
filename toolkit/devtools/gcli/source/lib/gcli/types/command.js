@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 var spell = require('../util/spell');
 var SelectionType = require('./selection').SelectionType;
@@ -48,7 +48,7 @@ exports.items = [
       }
       else {
         var message = l10n.lookup('cliUnusedArg');
-        return promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
+        return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, message));
       }
     }
   },
@@ -78,7 +78,7 @@ exports.items = [
 
     parse: function(arg, context) {
       var conversion = exports.parse(context, arg, this.allowNonExec);
-      return promise.resolve(conversion);
+      return Promise.resolve(conversion);
     }
   }
 ];
