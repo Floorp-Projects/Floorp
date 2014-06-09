@@ -279,8 +279,6 @@ public:
     return false;
   }
 
-  virtual void DestroyTextures();
-
   virtual bool Lock() {
     MOZ_ASSERT(!mLocked);
     ProcessTextureUpdates();
