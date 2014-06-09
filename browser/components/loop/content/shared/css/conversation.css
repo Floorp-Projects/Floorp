@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Conversation window styles */
+
+.conversation .controls {
+  background: #f2f2f2;
+  padding: .5em;
+}
+
+.conversation .media video {
+  background: #eee;
+}
+
+/* Nested video elements */
+
+.conversation .media.nested {
+  position: relative;
+}
+
+.conversation .media.nested .remote {
+  width: 100%;
+}
+
+.conversation .media.nested .local {
+  position: absolute;
+  bottom: .8em;
+  right: .8em;
+  width: 30%;
+  max-width: 140px;
+}
+
+/* Side by side video elements */
+
+.conversation .media.side-by-side .remote {
+  width: 50%;
+  float: left;
+}
+
+.conversation .media.side-by-side .local {
+  width: 50%;
+}
+
+/**
+ * Overriden SDK styles; .OT_video-container is using absolute positioning
+ * therefore moves the video elements it contains outside of the current
+ * viewport.
+ */
+.conversation .OT_video-container {
+  position: inherit;
+}
+
+/* Call ended view */
+.call-ended p {
+  text-align: center;
+}
+
+/* Incoming call */
+.incoming-call {
+  text-align: center;
+  min-height: 200px;
+}
+
+.incoming-call h2 {
+  font-size: 1.5em;
+  font-weight: normal;
+  margin-top: 3em;
+}
+
+.incoming-call button {
+  margin-right: .2em;
+}

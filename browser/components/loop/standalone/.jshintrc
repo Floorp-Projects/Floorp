@@ -1,0 +1,43 @@
+{
+  "browser" : true,   // Web Browser (window, document, etc)
+  "eqeqeq" : true,    // true: Require triple equals (===) for comparison
+  "devel" : true,     // Development/debugging (alert, confirm, etc)
+  "immed" : false,    // true: Require immediate invocations to be wrapped
+                      // in parens e.g. `(function () { } ());`
+  "indent" : 2,
+  "jquery": true,
+  "latedef" : true,   // true: Require variables to be defined before use
+                      // (helps avoid hoisting bugs)
+
+  "maxlen" : 80,      // {int} Max number of characters per line
+  "node" : true,      // Node.js
+  "strict": true,     // Strict mode
+  "trailing" : false, // true: Prohibit trailing whitespaces
+  "undef" : true,     // true: Require all non-global variables to be
+                      // declared (prevents global leaks)
+  "unused" : "vars",  // vars: Require all defined variables be used, but not
+                      //       function parameters
+
+  "globals": {
+    // chai global
+    "chai": false,
+
+    // mocha globals
+    "after": false,
+    "afterEach": false,
+    "before": false,
+    "beforeEach": false,
+    "describe": false,
+    "it": false,
+
+    // firefox stuff not covered by "browser" option
+    "indexedDB": true,
+    "mozRTCIceCandidate": false,
+    "mozRTCPeerConnection": false,
+    "mozRTCSessionDescription": false,
+
+    "Backbone": false,
+
+    "_": false
+  }
+}
