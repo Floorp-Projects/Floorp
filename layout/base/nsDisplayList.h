@@ -867,8 +867,10 @@ public:
     , mPainted(false)
 #endif
   {
-    mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame);
-    mToReferenceFrame = aBuilder->ToReferenceFrame(aFrame);
+    mReferenceFrame = aBuilder->FindReferenceFrameFor(aFrame, &mToReferenceFrame);
+    NS_ASSERTION(aBuilder->GetDirtyRect().width >= 0 ||
+                 !aBuilder->IsForPainting(), "dirty rect not set");
+    mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
   }
   /**
    * This constructor is only used in rare cases when we need to construct
@@ -885,7 +887,7 @@ public:
   {
   }
   virtual ~nsDisplayItem() {}
-  
+
   void* operator new(size_t aSize,
                      nsDisplayListBuilder* aBuilder) CPP_THROW_NEW {
     return aBuilder->Allocate(aSize);
@@ -2679,14 +2681,11 @@ public:
 protected:
   nsDisplayWrapList() {}
 
-  void MergeFrom(nsDisplayWrapList* aOther)
+  void MergeFromTrackingMergedFrames(nsDisplayWrapList* aOther)
   {
     mList.AppendToBottom(&aOther->mList);
     mBounds.UnionRect(mBounds, aOther->mBounds);
-  }
-  void MergeFromTrackingMergedFrames(nsDisplayWrapList* aOther)
-  {
-    MergeFrom(aOther);
+    mVisibleRect.UnionRect(mVisibleRect, aOther->mVisibleRect);
     mMergedFrames.AppendElement(aOther->mFrame);
     mMergedFrames.MoveElementsFrom(aOther->mMergedFrames);
   }
@@ -3428,6 +3427,8 @@ public:
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
 #endif
 private:
+  void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);
+
   static gfx3DMatrix GetResultingTransformMatrixInternal(const FrameTransformProperties& aProperties,
                                                          const nsPoint& aOrigin,
                                                          float aAppUnitsPerPixel,
