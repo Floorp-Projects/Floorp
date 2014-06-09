@@ -4122,8 +4122,6 @@ nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
 
 nsDisplayScrollInfoLayer::~nsDisplayScrollInfoLayer()
 {
-  FrameProperties props = mScrolledFrame->Properties();
-  props.Remove(nsIFrame::ScrollLayerCount());
   MOZ_COUNT_DTOR(nsDisplayScrollInfoLayer);
 }
 
