@@ -74,7 +74,17 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     }
 
     gfx::SurfaceFormat surfaceFormat = gfx::ImageFormatToSurfaceFormat(format);
-    mBuffer = CreateTextureClientForCanvas(surfaceFormat, flags, aLayer);
+    if (aLayer->IsGLLayer()) {
+      // We want a cairo backend here as we don't want to be copying into
+      // an accelerated backend and we like LockBits to work. This is currently
+      // the most effective way to make this work.
+      mBuffer = CreateBufferTextureClient(surfaceFormat, flags, BackendType::CAIRO);
+    } else {
+      // XXX - We should use CreateTextureClientForDrawing, but we first need
+      // to use double buffering.
+      mBuffer = CreateBufferTextureClient(surfaceFormat, flags,
+        gfxPlatform::GetPlatform()->GetPreferredCanvasBackend());
+    }
     MOZ_ASSERT(mBuffer->CanExposeDrawTarget());
     mBuffer->AllocateForSurface(aSize);
 
@@ -107,28 +117,6 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     GetForwarder()->UpdatedTexture(this, mBuffer, nullptr);
     GetForwarder()->UseTexture(this, mBuffer);
   }
-}
-
-TemporaryRef<TextureClient>
-CanvasClient2D::CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
-                                             TextureFlags aFlags,
-                                             ClientCanvasLayer* aLayer)
-{
-  if (aLayer->IsGLLayer()) {
-    // We want a cairo backend here as we don't want to be copying into
-    // an accelerated backend and we like LockBits to work. This is currently
-    // the most effective way to make this work.
-    return CreateBufferTextureClient(aFormat, aFlags, BackendType::CAIRO);
-  }
-
-  gfx::BackendType backend = gfxPlatform::GetPlatform()->GetPreferredCanvasBackend();
-#ifdef XP_WIN
-  return CreateTextureClientForDrawing(aFormat, aFlags, backend, aSize);
-#else
-  // XXX - We should use CreateTextureClientForDrawing, but we first need
-  // to use double buffering.
-  return CreateBufferTextureClient(aFormat, aFlags, backend);
-#endif
 }
 
 CanvasClientSurfaceStream::CanvasClientSurfaceStream(CompositableForwarder* aLayerForwarder,
