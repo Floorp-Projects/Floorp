@@ -53,8 +53,7 @@ NS_IMPL_ISUPPORTS(nsNSSDialogs, nsITokenPasswordDialogs,
                   nsICertPickDialogs,
                   nsITokenDialogs,
                   nsIDOMCryptoDialogs,
-                  nsIGeneratingKeypairInfoDialogs,
-                  nsISSLCertErrorDialog)
+                  nsIGeneratingKeypairInfoDialogs)
 
 nsresult
 nsNSSDialogs::Init()
@@ -556,43 +555,4 @@ nsNSSDialogs::DisplayProtectedAuth(nsIInterfaceRequestor *aCtx, nsIProtectedAuth
         getter_AddRefs(newWindow));
     
     return rv;
-}
-
-NS_IMETHODIMP
-nsNSSDialogs::ShowCertError(nsIInterfaceRequestor *ctx, 
-                            nsISSLStatus *status, 
-                            nsIX509Cert *cert, 
-                            const nsAString & textErrorMessage, 
-                            const nsAString & htmlErrorMessage, 
-                            const nsACString & hostName, 
-                            uint32_t portNumber)
-{
-  nsCOMPtr<nsIPKIParamBlock> block =
-           do_CreateInstance(NS_PKIPARAMBLOCK_CONTRACTID);
-  if (!block)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  nsCOMPtr<nsIDialogParamBlock> dialogBlock = do_QueryInterface(block);
-
-  nsresult rv;
-  rv = dialogBlock->SetInt(1, portNumber);
-  if (NS_FAILED(rv))
-    return rv; 
-
-  rv = dialogBlock->SetString(1, NS_ConvertUTF8toUTF16(hostName).get());
-  if (NS_FAILED(rv))
-    return rv;
-  
-  rv = dialogBlock->SetString(2, PromiseFlatString(textErrorMessage).get());
-  if (NS_FAILED(rv))
-    return rv;
-  
-  rv = block->SetISupportAtIndex(1, cert);
-  if (NS_FAILED(rv))
-    return rv;
-
-  rv = nsNSSDialogHelper::openDialog(nullptr, 
-                                     "chrome://pippki/content/certerror.xul",
-                                     block);
-  return rv;
 }
