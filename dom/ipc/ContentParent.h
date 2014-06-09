@@ -98,8 +98,7 @@ public:
     static already_AddRefed<ContentParent>
     GetNewOrUsed(bool aForBrowserElement = false,
                  hal::ProcessPriority aPriority =
-                   hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND,
-                 ContentParent* aOpener = nullptr);
+                   hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND);
 
     /**
      * Create a subprocess suitable for use as a preallocated app process.
@@ -119,13 +118,6 @@ public:
 
     static void GetAll(nsTArray<ContentParent*>& aArray);
     static void GetAllEvenIfDead(nsTArray<ContentParent*>& aArray);
-
-    virtual bool RecvCreateChildProcess(const IPCTabContext& aContext,
-                                        const hal::ProcessPriority& aPriority,
-                                        uint64_t* aId,
-                                        bool* aIsForApp,
-                                        bool* aIsForBrowser) MOZ_OVERRIDE;
-    virtual bool AnswerBridgeToChildProcess(const uint64_t& id) MOZ_OVERRIDE;
 
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ContentParent, nsIObserver)
 
@@ -161,8 +153,8 @@ public:
     bool RequestRunToCompletion();
 
     bool IsAlive();
-    virtual bool IsForApp() MOZ_OVERRIDE;
-    virtual bool IsForBrowser() MOZ_OVERRIDE
+    bool IsForApp();
+    bool IsForBrowser()
     {
       return mIsForBrowser;
     }
@@ -175,10 +167,6 @@ public:
     }
 
     int32_t Pid();
-
-    ContentParent* Opener() {
-        return mOpener;
-    }
 
     bool NeedsPermissionsUpdate() const {
         return mSendPermissionUpdates;
@@ -285,19 +273,12 @@ private:
 
     // Hide the raw constructor methods since we don't want client code
     // using them.
-    virtual PBrowserParent* SendPBrowserConstructor(
-        PBrowserParent* actor,
-        const IPCTabContext& context,
-        const uint32_t& chromeFlags,
-        const uint64_t& aId,
-        const bool& aIsForApp,
-        const bool& aIsForBrowser) MOZ_OVERRIDE;
+    using PContentParent::SendPBrowserConstructor;
     using PContentParent::SendPTestShellConstructor;
 
     // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated may be
     // true.
     ContentParent(mozIApplication* aApp,
-                  ContentParent* aOpener,
                   bool aIsForBrowser,
                   bool aIsForPreallocated,
                   hal::ProcessPriority aInitialPriority = hal::PROCESS_PRIORITY_FOREGROUND,
@@ -614,7 +595,6 @@ private:
     // details.
 
     GeckoChildProcessHost* mSubprocess;
-    ContentParent* mOpener;
 
     uint64_t mChildID;
     int32_t mGeolocationWatchID;
