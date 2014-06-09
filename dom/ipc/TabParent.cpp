@@ -1713,8 +1713,7 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
   NS_ASSERTION(Manager(), "Null manager?!");
 
   nsRefPtr<IDBFactory> factory;
-  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin,
-                          Manager()->AsContentParent(),
+  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin, Manager(),
                           getter_AddRefs(factory));
   NS_ENSURE_SUCCESS(rv, false);
 

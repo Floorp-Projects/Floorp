@@ -26,7 +26,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace dom {
-class ContentParent;
+class nsIContentParent;
 class IDBOpenDBOptions;
 
 namespace indexedDB {
@@ -42,7 +42,7 @@ struct ObjectStoreInfo;
 class IDBFactory MOZ_FINAL : public nsISupports,
                              public nsWrapperCache
 {
-  typedef mozilla::dom::ContentParent ContentParent;
+  typedef mozilla::dom::nsIContentParent nsIContentParent;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
   typedef nsTArray<nsRefPtr<ObjectStoreInfo> > ObjectStoreInfoArray;
   typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
@@ -55,12 +55,12 @@ public:
   static nsresult Create(nsPIDOMWindow* aWindow,
                          const nsACString& aGroup,
                          const nsACString& aASCIIOrigin,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   // Called when using IndexedDB from a window in the current process.
   static nsresult Create(nsPIDOMWindow* aWindow,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory)
   {
     return Create(aWindow, EmptyCString(), EmptyCString(), aContentParent,
@@ -71,12 +71,12 @@ public:
   // process.
   static nsresult Create(JSContext* aCx,
                          JS::Handle<JSObject*> aOwningObject,
-                         ContentParent* aContentParent,
+                         nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   // Called when using IndexedDB from a JS component or a JSM in a different
   // process or from a C++ component.
-  static nsresult Create(ContentParent* aContentParent,
+  static nsresult Create(nsIContentParent* aContentParent,
                          IDBFactory** aFactory);
 
   static already_AddRefed<nsIFileURL>
@@ -217,7 +217,7 @@ private:
   IndexedDBChild* mActorChild;
   IndexedDBParent* mActorParent;
 
-  mozilla::dom::ContentParent* mContentParent;
+  mozilla::dom::nsIContentParent* mContentParent;
 
   bool mRootedOwningObject;
 };
