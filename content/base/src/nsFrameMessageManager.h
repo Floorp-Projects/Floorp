@@ -33,7 +33,7 @@ namespace mozilla {
 namespace dom {
 
 class nsIContentParent;
-class ContentChild;
+class nsIContentChild;
 class ClonedMessageData;
 class MessageManagerReporter;
 
@@ -102,7 +102,7 @@ protected:
   bool BuildClonedMessageDataForParent(nsIContentParent* aParent,
                                        const StructuredCloneData& aData,
                                        ClonedMessageData& aClonedData);
-  bool BuildClonedMessageDataForChild(ContentChild* aChild,
+  bool BuildClonedMessageDataForChild(nsIContentChild* aChild,
                                       const StructuredCloneData& aData,
                                       ClonedMessageData& aClonedData);
 };
