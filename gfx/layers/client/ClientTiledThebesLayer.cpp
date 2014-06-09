@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// Uncomment this to enable the TILING_PRLOG stuff in this file
+// for release builds. To get the output you need to have
+// NSPR_LOG_MODULES=tiling:5 in your environment at runtime.
+// #define FORCE_PR_LOG
+
 #include "ClientTiledThebesLayer.h"
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for ScreenIntRect, CSSPoint, etc
@@ -18,6 +23,7 @@
 #include "mozilla/mozalloc.h"           // for operator delete, etc
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc
 #include "nsRect.h"                     // for nsIntRect
+#include "LayersLogging.h"
 
 namespace mozilla {
 namespace layers {
@@ -117,6 +123,9 @@ ClientTiledThebesLayer::BeginPaint()
     return;
   }
 
+  TILING_PRLOG(("TILING 0x%p: Found scrollAncestor 0x%p and displayPortAncestor 0x%p\n", this,
+    scrollAncestor, displayPortAncestor));
+
   const FrameMetrics& scrollMetrics = scrollAncestor->GetFrameMetrics();
   const FrameMetrics& displayportMetrics = displayPortAncestor->GetFrameMetrics();
 
@@ -138,6 +147,7 @@ ClientTiledThebesLayer::BeginPaint()
   mPaintData.mCriticalDisplayPort = LayoutDeviceIntRect::ToUntyped(RoundedOut(
     ApplyParentLayerToLayoutTransform(mPaintData.mTransformDisplayPortToLayoutDevice,
                                       criticalDisplayPort)));
+  TILING_PRLOG_OBJ(("TILING 0x%p: Critical displayport %s\n", this, tmpstr.get()), mPaintData.mCriticalDisplayPort);
 
   // Compute the viewport that applies to this layer in the LayoutDevice
   // space of this layer.
@@ -146,10 +156,12 @@ ClientTiledThebesLayer::BeginPaint()
     + displayportMetrics.mCompositionBounds.TopLeft();
   mPaintData.mViewport = ApplyParentLayerToLayoutTransform(
     mPaintData.mTransformDisplayPortToLayoutDevice, viewport);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Viewport %s\n", this, tmpstr.get()), mPaintData.mViewport);
 
   // Store the resolution from the displayport ancestor layer. Because this is Gecko-side,
   // before any async transforms have occurred, we can use the zoom for this.
   mPaintData.mResolution = displayportMetrics.GetZoomToParent();
+  TILING_PRLOG(("TILING 0x%p: Resolution %f\n", this, mPaintData.mResolution.scale));
 
   // Store the applicable composition bounds in this layer's LayoutDevice units.
   gfx3DMatrix layoutDeviceToCompBounds =
@@ -157,9 +169,11 @@ ClientTiledThebesLayer::BeginPaint()
   mPaintData.mCompositionBounds = TransformTo<LayoutDevicePixel>(
     layoutDeviceToCompBounds.Inverse(),
     scrollMetrics.mCompositionBounds / scrollMetrics.GetParentResolution());
+  TILING_PRLOG_OBJ(("TILING 0x%p: Composition bounds %s\n", this, tmpstr.get()), mPaintData.mCompositionBounds);
 
   // Calculate the scroll offset since the last transaction
   mPaintData.mScrollOffset = displayportMetrics.GetScrollOffset() * displayportMetrics.GetZoomToParent();
+  TILING_PRLOG_OBJ(("TILING 0x%p: Scroll offset %s\n", this, tmpstr.get()), mPaintData.mScrollOffset);
 }
 
 void
@@ -172,6 +186,7 @@ ClientTiledThebesLayer::EndPaint(bool aFinish)
   mPaintData.mLastScrollOffset = mPaintData.mScrollOffset;
   mPaintData.mPaintFinished = true;
   mPaintData.mFirstPaint = false;
+  TILING_PRLOG(("TILING 0x%p: Paint finished\n", this));
 }
 
 void
@@ -196,6 +211,9 @@ ClientTiledThebesLayer::RenderLayer()
   if (mContentClient->mTiledBuffer.HasFormatChanged()) {
     mValidRegion = nsIntRegion();
   }
+
+  TILING_PRLOG_OBJ(("TILING 0x%p: Initial visible region %s\n", this, tmpstr.get()), mVisibleRegion);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Initial valid region %s\n", this, tmpstr.get()), mValidRegion);
 
   nsIntRegion invalidRegion = mVisibleRegion;
   invalidRegion.Sub(invalidRegion, mValidRegion);
@@ -239,6 +257,9 @@ ClientTiledThebesLayer::RenderLayer()
     return;
   }
 
+  TILING_PRLOG_OBJ(("TILING 0x%p: Valid region %s\n", this, tmpstr.get()), mValidRegion);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Visible region %s\n", this, tmpstr.get()), mVisibleRegion);
+
   // Make sure that tiles that fall outside of the visible region are
   // discarded on the first update.
   if (!ClientManager()->IsRepeatTransaction()) {
@@ -269,6 +290,8 @@ ClientTiledThebesLayer::RenderLayer()
     }
   }
 
+  TILING_PRLOG_OBJ(("TILING 0x%p: Invalid region %s\n", this, tmpstr.get()), invalidRegion);
+
   if (!invalidRegion.IsEmpty() && mPaintData.mLowPrecisionPaintCount == 0) {
     bool updatedBuffer = false;
     // Only draw progressively when the resolution is unchanged.
@@ -284,6 +307,8 @@ ClientTiledThebesLayer::RenderLayer()
         oldValidRegion.And(oldValidRegion, mPaintData.mCriticalDisplayPort);
       }
 
+      TILING_PRLOG_OBJ(("TILING 0x%p: Progressive update with old valid region %s\n", this, tmpstr.get()), oldValidRegion);
+
       updatedBuffer =
         mContentClient->mTiledBuffer.ProgressiveUpdate(mValidRegion, invalidRegion,
                                                        oldValidRegion, &mPaintData,
@@ -294,6 +319,10 @@ ClientTiledThebesLayer::RenderLayer()
       if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
         mValidRegion.And(mValidRegion, mPaintData.mCriticalDisplayPort);
       }
+
+      TILING_PRLOG_OBJ(("TILING 0x%p: Painting: valid region %s\n", this, tmpstr.get()), mValidRegion);
+      TILING_PRLOG_OBJ(("TILING 0x%p: and invalid region %s\n", this, tmpstr.get()), invalidRegion);
+
       mContentClient->mTiledBuffer.SetFrameResolution(mPaintData.mResolution);
       mContentClient->mTiledBuffer.PaintThebes(mValidRegion, invalidRegion,
                                                callback, data);
@@ -317,6 +346,9 @@ ClientTiledThebesLayer::RenderLayer()
       return;
     }
   }
+
+  TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision invalid region is %s\n", this, tmpstr.get()), lowPrecisionInvalidRegion);
 
   // Render the low precision buffer, if there's area to invalidate and the
   // visible region is larger than the critical display port.
