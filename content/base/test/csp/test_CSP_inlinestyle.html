@@ -23,20 +23,20 @@ var done = 0;
 // When a CSP 1.0 compliant policy is specified we should block inline
 // styles applied by <style> element, style attribute, and SMIL <animate> and <set> tags
 // (when it's not explicitly allowed.)
-function checkStylesSpecCompliant(evt) {
+function checkStyles(evt) {
   var cspframe = document.getElementById('cspframe1');
   var color;
 
   // black means the style wasn't applied.  green colors are used for styles
   //expected to be applied.  A color is red if a style is erroneously applied
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'External Stylesheet (CSP 1.0 spec compliant) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'External Stylesheet (' + color + ')');
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'),null)['color'];
-  ok('rgb(0, 0, 0)' === color, 'Inline Style TAG (CSP 1.0 spec compliant) (' + color + ')');
+  ok('rgb(0, 0, 0)' === color, 'Inline Style TAG (' + color + ')');
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'),null)['color'];
-  ok('rgb(0, 0, 0)' === color, 'Style Attribute (CSP 1.0 spec compliant) (' + color + ')');
+  ok('rgb(0, 0, 0)' === color, 'Style Attribute (' + color + ')');
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'cssText (CSP 1.0 spec compliant) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'cssText (' + color + ')');
   // SMIL tests
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('xmlTest',null))['fill'];
   ok('rgb(0, 0, 0)' === color, 'XML Attribute styling (SMIL) (' + color + ')');
@@ -55,23 +55,23 @@ function checkStylesSpecCompliant(evt) {
 
 // When a CSP 1.0 compliant policy is specified we should allow inline
 // styles when it is explicitly allowed.
-function checkStylesSpecCompliantAllowed(evt) {
+function checkStylesAllowed(evt) {
   var cspframe = document.getElementById('cspframe2');
   var color;
 
   // black means the style wasn't applied.  green colors are used for styles
   // expected to be applied.  A color is red if a style is erroneously applied
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('linkstylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'External Stylesheet (CSP 1.0 spec compliant, allowed) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'External Stylesheet (' + color + ')');
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('inlinestylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'Inline Style TAG (CSP 1.0 spec compliant, allowed) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'Inline Style TAG (' + color + ')');
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('attrstylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'Style Attribute (CSP 1.0 spec compliant, allowed) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'Style Attribute (' + color + ')');
 
   // Note that the below test will fail if "script-src: 'unsafe-inline'" breaks,
   // since it relies on executing script to set .cssText
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('csstextstylediv'),null)['color'];
-  ok('rgb(0, 255, 0)' === color, 'style.cssText (CSP 1.0 spec compliant, allowed) (' + color + ')');
+  ok('rgb(0, 255, 0)' === color, 'style.cssText (' + color + ')');
   // SMIL tests
   color = window.getComputedStyle(cspframe.contentDocument.getElementById('xmlTest',null))['fill'];
   ok('rgb(0, 255, 0)' === color, 'XML Attribute styling (SMIL) (' + color + ')');
@@ -100,9 +100,9 @@ SpecialPowers.pushPrefEnv(
     // save this for last so that our listeners are registered.
     // ... this loads the testbed of good and bad requests.
     document.getElementById('cspframe1').src = 'file_CSP_inlinestyle_main.html';
-    document.getElementById('cspframe1').addEventListener('load', checkStylesSpecCompliant, false);
+    document.getElementById('cspframe1').addEventListener('load', checkStyles, false);
     document.getElementById('cspframe2').src = 'file_CSP_inlinestyle_main_allowed.html';
-    document.getElementById('cspframe2').addEventListener('load', checkStylesSpecCompliantAllowed, false);
+    document.getElementById('cspframe2').addEventListener('load', checkStylesAllowed, false);
   }
 );
 </script>
