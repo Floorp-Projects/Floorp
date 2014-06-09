@@ -32,6 +32,9 @@ exports.items = [
     description: l10n.lookup("csscoverageStartDesc"),
     exec: function*(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
+      if (usage == null) {
+        throw new Error(l10n.lookup("csscoverageNoRemoteError"));
+      }
       yield usage.start(context.environment.chromeWindow,
                         context.environment.target);
     }
@@ -43,6 +46,9 @@ exports.items = [
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
+      if (usage == null) {
+        throw new Error(l10n.lookup("csscoverageNoRemoteError"));
+      }
       yield usage.stop();
       yield gDevTools.showToolbox(target, "styleeditor");
     }
@@ -54,6 +60,9 @@ exports.items = [
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
+      if (usage == null) {
+        throw new Error(l10n.lookup("csscoverageNoRemoteError"));
+      }
       yield usage.oneshot();
       yield gDevTools.showToolbox(target, "styleeditor");
     }
@@ -65,6 +74,9 @@ exports.items = [
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
+      if (usage == null) {
+        throw new Error(l10n.lookup("csscoverageNoRemoteError"));
+      }
 
       let running = yield usage.toggle();
       if (running) {
@@ -81,6 +93,10 @@ exports.items = [
     description: l10n.lookup("csscoverageReportDesc"),
     exec: function*(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
+      if (usage == null) {
+        throw new Error(l10n.lookup("csscoverageNoRemoteError"));
+      }
+
       return {
         isTypedData: true,
         type: "csscoveragePageReport",
