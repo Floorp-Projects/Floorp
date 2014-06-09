@@ -4,7 +4,6 @@
 
 include protocol PBlobStream;
 include protocol PContent;
-include protocol PContentBridge;
 
 include DOMTypes;
 
@@ -19,7 +18,7 @@ union ResolveMysteryParams
 
 protocol PBlob
 {
-  manager PContent or PContentBridge;
+  manager PContent;
   manages PBlobStream;
 
 both:
