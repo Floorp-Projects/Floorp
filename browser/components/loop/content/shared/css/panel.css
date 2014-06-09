@@ -1,0 +1,83 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Panel styles */
+
+.panel {
+  /* XXX the Social API panel behaves weirdly on inner element size changes,
+     adding unwanted scrollbars; quickfix is to hide these for now. */
+  overflow: hidden;
+}
+
+.spacer {
+  margin-bottom: 1em;
+}
+
+.share {
+  background: #f2f2f2;
+}
+
+.share .description {
+  background: #f7f7f7 url("../img/icon_32.png") no-repeat 1em 1.5em;
+  border-bottom: 1px solid #c3c3c3;
+  padding: 1em 1em 0 4em;
+}
+
+.share .description .field {
+  padding-bottom: 1em;
+  border-bottom: 1px dotted #ddd;
+}
+
+.share .description select {
+  float: right;
+}
+
+.share .description .preview video {
+  background: #ccc;
+  float: right;
+  width: 180px;
+}
+
+.share .action {
+  clear: right;
+  padding: 1em;
+  border-top: 1px solid #fafafa;
+}
+
+.share .action p {
+  margin: 0 0 1em 0;
+}
+
+.share .action p.dnd {
+  margin-top: 1em;
+}
+
+.share .action input[type="text"],
+.share .action input[type="url"] {
+  border: 1px solid #ccc; /* Overriding background style for a text input (see
+                             below) resets its borders to a weird beveled style;
+                             defining a default 1px border solves the issue. */
+  font-size: .9em;
+  width: 65%;
+  padding: .5em;
+}
+
+.share .action input.pending {
+  background-image: url(../img/loading-icon.gif);
+  background-repeat: no-repeat;
+  background-position: right;
+}
+
+/* For some reason, buttons have a bigger default font size in FF; we're
+   reducing a bit for graphical consistency here. */
+.share .action button {
+  font-size: .9em;
+  padding-top: 6px;
+}
+
+/* Specific cases */
+
+.panel #messages .alert {
+  margin-bottom: 0;
+}
