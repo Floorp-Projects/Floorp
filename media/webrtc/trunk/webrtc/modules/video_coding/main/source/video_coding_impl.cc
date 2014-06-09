@@ -279,6 +279,11 @@ class VideoCodingModuleImpl : public VideoCodingModule {
     return receiver_->RegisterPacketRequestCallback(callback);
   }
 
+  virtual int32_t RegisterReceiveStateCallback(
+      VCMReceiveStateCallback* callback) OVERRIDE {
+    return receiver_->RegisterReceiveStateCallback(callback);
+  }
+
   virtual int RegisterRenderBufferSizeCallback(
       VCMRenderBufferSizeCallback* callback) OVERRIDE {
     return receiver_->RegisterRenderBufferSizeCallback(callback);

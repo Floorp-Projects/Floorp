@@ -26,6 +26,7 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "jsapi.h"
 #include "jsarray.h"
@@ -1097,53 +1098,133 @@ struct ManualCmp {
     }
 };
 
+template <typename TextChar, typename PatChar>
+static const TextChar*
+FirstCharMatcherUnrolled(const TextChar *text, uint32_t n, const PatChar pat)
+{
+    const TextChar *textend = text + n;
+    const TextChar *t = text;
+
+    switch ((textend - t) & 7) {
+        case 0: if (*t++ == pat) return t - 1;
+        case 7: if (*t++ == pat) return t - 1;
+        case 6: if (*t++ == pat) return t - 1;
+        case 5: if (*t++ == pat) return t - 1;
+        case 4: if (*t++ == pat) return t - 1;
+        case 3: if (*t++ == pat) return t - 1;
+        case 2: if (*t++ == pat) return t - 1;
+        case 1: if (*t++ == pat) return t - 1;
+    }
+    while (textend != t) {
+        if (t[0] == pat) return t;
+        if (t[1] == pat) return t + 1;
+        if (t[2] == pat) return t + 2;
+        if (t[3] == pat) return t + 3;
+        if (t[4] == pat) return t + 4;
+        if (t[5] == pat) return t + 5;
+        if (t[6] == pat) return t + 6;
+        if (t[7] == pat) return t + 7;
+        t += 8;
+    }
+    return nullptr;
+}
+
+static const char*
+FirstCharMatcher8bit(const char *text, uint32_t n, const char pat)
+{
+#if  defined(__clang__)
+    return FirstCharMatcherUnrolled<char, char>(text, n, pat);
+#else
+    return reinterpret_cast<const char *>(memchr(text, pat, n));
+#endif
+}
+
+static const jschar *
+FirstCharMatcher16bit (const jschar *text, uint32_t n, const jschar pat)
+{
+    /* Some platforms define wchar_t as signed and others not. */
+#if (WCHAR_MIN == 0 && WCHAR_MAX == UINT16_MAX) || (WCHAR_MIN == INT16_MIN && WCHAR_MAX == INT16_MAX)
+    /*
+     * Wmemchr works the best.
+     * But only possible to use this when,
+     * size of jschar = size of wchar_t.
+     */
+    const wchar_t *wtext = (const wchar_t *) text;
+    const wchar_t wpat = (const wchar_t) pat;
+    return (jschar *) (wmemchr(wtext, wpat, n));
+#elif defined(__clang__)
+    /*
+     * Performance under memchr is horrible in clang.
+     * Hence it is best to use UnrolledMatcher in this case
+     */
+    return FirstCharMatcherUnrolled<jschar, jschar>(text, n, pat);
+#else
+    /*
+     * For linux the best performance is obtained by slightly hacking memchr.
+     * memchr works only on 8bit char but jschar is 16bit. So we treat jschar
+     * in blocks of 8bit and use memchr.
+     */
+
+    const char *text8 = (const char *) text;
+    const char *pat8 = reinterpret_cast<const char *>(&pat);
+
+    JS_ASSERT(n < UINT32_MAX/2);
+    n *= 2;
+
+    uint32_t i = 0;
+    while (i < n) {
+        /* Find the first 8 bits of 16bit character in text. */
+        const char *pos8 = FirstCharMatcher8bit(text8 + i, n - i, pat8[0]);
+        if (pos8 == nullptr)
+            return nullptr;
+        i = static_cast<uint32_t>(pos8 - text8);
+
+        /* Incorrect match if it matches the last 8 bits of 16bit char. */
+        if (i % 2 != 0) {
+            i++;
+            continue;
+        }
+
+        /* Test if last 8 bits match last 8 bits of 16bit char. */
+        if (pat8[1] == text8[i + 1])
+            return (text + (i/2));
+
+        i += 2;
+    }
+    return nullptr;
+#endif
+}
+
 template <class InnerMatch, typename TextChar, typename PatChar>
 static int
-UnrolledMatch(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t patLen)
+Matcher(const TextChar *text, uint32_t textlen, const PatChar *pat, uint32_t patlen)
 {
-    JS_ASSERT(patLen > 0);
-    JS_ASSERT(textLen > 0);
+    const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patlen);
 
-    const TextChar *textend = text + textLen - (patLen - 1);
-    const PatChar p0 = *pat;
-    const PatChar *const patNext = pat + 1;
-    const typename InnerMatch::Extent extent = InnerMatch::computeExtent(pat, patLen);
-    uint8_t fixup;
+    uint32_t i = 0;
+    uint32_t n = textlen - patlen + 1;
+    while (i < n) {
+        const TextChar *pos;
 
-    const TextChar *t = text;
-    switch ((textend - t) & 7) {
-      case 0: if (*t++ == p0) { fixup = 8; goto match; }
-      case 7: if (*t++ == p0) { fixup = 7; goto match; }
-      case 6: if (*t++ == p0) { fixup = 6; goto match; }
-      case 5: if (*t++ == p0) { fixup = 5; goto match; }
-      case 4: if (*t++ == p0) { fixup = 4; goto match; }
-      case 3: if (*t++ == p0) { fixup = 3; goto match; }
-      case 2: if (*t++ == p0) { fixup = 2; goto match; }
-      case 1: if (*t++ == p0) { fixup = 1; goto match; }
-    }
-    while (t != textend) {
-      if (t[0] == p0) { t += 1; fixup = 8; goto match; }
-      if (t[1] == p0) { t += 2; fixup = 7; goto match; }
-      if (t[2] == p0) { t += 3; fixup = 6; goto match; }
-      if (t[3] == p0) { t += 4; fixup = 5; goto match; }
-      if (t[4] == p0) { t += 5; fixup = 4; goto match; }
-      if (t[5] == p0) { t += 6; fixup = 3; goto match; }
-      if (t[6] == p0) { t += 7; fixup = 2; goto match; }
-      if (t[7] == p0) { t += 8; fixup = 1; goto match; }
-        t += 8;
-        continue;
-        do {
-            if (*t++ == p0) {
-              match:
-                if (!InnerMatch::match(patNext, t, extent))
-                    goto failed_match;
-                return t - text - 1;
-            }
-          failed_match:;
-        } while (--fixup > 0);
-    }
-    return -1;
-}
+        if (sizeof(TextChar) == 2 && sizeof(PatChar) == 2)
+            pos = (TextChar *) FirstCharMatcher16bit((jschar *)text + i, n - i, pat[0]);
+        else if (sizeof(TextChar) == 1 && sizeof(PatChar) == 1)
+            pos = (TextChar *) FirstCharMatcher8bit((char *) text + i, n - i, pat[0]);
+        else
+            pos = (TextChar *) FirstCharMatcherUnrolled<TextChar, PatChar>(text + i, n - i, pat[0]);
+
+        if (pos == nullptr)
+            return -1;
+
+        i = static_cast<uint32_t>(pos - text);
+        if (InnerMatch::match(pat + 1, text + i + 1, extent))
+            return i;
+
+        i += 1;
+     }
+     return -1;
+ }
+
 
 template <typename TextChar, typename PatChar>
 static MOZ_ALWAYS_INLINE int
@@ -1198,10 +1279,10 @@ StringMatch(const TextChar *text, uint32_t textLen, const PatChar *pat, uint32_t
     return
 #if !defined(__linux__)
         (patLen > 128 && IsSame<TextChar, PatChar>::value)
-            ? UnrolledMatch<MemCmp<TextChar, PatChar>>(text, textLen, pat, patLen)
+            ? Matcher<MemCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen)
             :
 #endif
-              UnrolledMatch<ManualCmp<TextChar, PatChar>>(text, textLen, pat, patLen);
+              Matcher<ManualCmp<TextChar, PatChar>, TextChar, PatChar>(text, textLen, pat, patLen);
 }
 
 static int32_t

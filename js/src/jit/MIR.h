@@ -4343,7 +4343,7 @@ class MSub : public MBinaryArithInstruction
 
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
-        return specialization_ != MIRType_None;
+        return specialization_ < MIRType_Object;
     }
 };
 
@@ -4440,6 +4440,11 @@ class MMul : public MBinaryArithInstruction
     TruncateKind operandTruncateKind(size_t index) const;
 
     Mode mode() const { return mode_; }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MDiv : public MBinaryArithInstruction
@@ -4536,6 +4541,11 @@ class MDiv : public MBinaryArithInstruction
     bool truncate(TruncateKind kind);
     void collectRangeInfoPreTrunc();
     TruncateKind operandTruncateKind(size_t index) const;
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MMod : public MBinaryArithInstruction

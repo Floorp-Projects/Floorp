@@ -5274,7 +5274,7 @@ baseops::DeleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succe
         return CallJSDeletePropertyOp(cx, obj->getClass()->delProperty, obj, id, succeeded);
     }
 
-    GCPoke(cx->runtime());
+    cx->runtime()->gc.poke();
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
         if (obj->is<TypedArrayObject>()) {

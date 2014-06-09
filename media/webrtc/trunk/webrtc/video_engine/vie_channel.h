@@ -57,6 +57,7 @@ class ViEChannel
       public VCMReceiveStatisticsCallback,
       public VCMDecoderTimingCallback,
       public VCMPacketRequestCallback,
+      public VCMReceiveStateCallback,
       public RtcpFeedback,
       public RtpFeedback,
       public ViEFrameProviderBase {
@@ -347,6 +348,9 @@ class ViEChannel
   // Implements VideoPacketRequestCallback.
   virtual int32_t ResendPackets(const uint16_t* sequence_numbers,
                                 uint16_t length);
+
+  // Implements ReceiveStateCallback.
+  virtual void ReceiveStateChange(VideoReceiveState state);
 
   int32_t SetVoiceChannel(int32_t ve_channel_id,
                           VoEVideoSync* ve_sync_interface);

@@ -184,6 +184,11 @@ public:
                               TextureClient* aTexture,
                               nsIntRegion* aRegion) = 0;
 
+
+  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
+                               PTextureChild* aTexture,
+                               const FenceHandle& aFence) = 0;
+
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE

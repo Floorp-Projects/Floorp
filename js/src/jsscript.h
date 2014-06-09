@@ -273,7 +273,6 @@ class Bindings
 template <>
 struct GCMethods<Bindings> {
     static Bindings initial();
-    static ThingRootKind kind() { return THING_ROOT_BINDINGS; }
     static bool poisoned(const Bindings &bindings) {
         return IsPoisonedPtr(static_cast<Shape *>(bindings.callObjShape()));
     }
@@ -1927,6 +1926,21 @@ SweepScriptData(JSRuntime *rt);
 
 extern void
 FreeScriptData(JSRuntime *rt);
+
+struct ScriptAndCounts
+{
+    /* This structure is stored and marked from the JSRuntime. */
+    JSScript *script;
+    ScriptCounts scriptCounts;
+
+    PCCounts &getPCCounts(jsbytecode *pc) const {
+        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
+    }
+
+    jit::IonScriptCounts *getIonCounts() const {
+        return scriptCounts.ionCounts;
+    }
+};
 
 struct GSNCache;
 

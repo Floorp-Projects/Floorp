@@ -288,6 +288,10 @@ public:
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) MOZ_OVERRIDE;
 
+  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
+                               PTextureChild* aTexture,
+                               const FenceHandle& aFence) MOZ_OVERRIDE;
+
   /**
    * End the current transaction and forward it to LayerManagerComposite.
    * |aReplies| are directions from the LayerManagerComposite to the
