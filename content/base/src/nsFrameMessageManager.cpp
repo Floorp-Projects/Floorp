@@ -154,7 +154,7 @@ struct BlobTraits<Child>
 {
   typedef mozilla::dom::BlobChild BlobType;
   typedef mozilla::dom::PBlobChild ProtocolType;
-  typedef mozilla::dom::ContentChild ConcreteContentManagerType;
+  typedef mozilla::dom::nsIContentChild ConcreteContentManagerType;
 };
 
 template<ActorFlavorEnum>
@@ -229,7 +229,7 @@ MessageManagerCallback::BuildClonedMessageDataForParent(nsIContentParent* aParen
 }
 
 bool
-MessageManagerCallback::BuildClonedMessageDataForChild(ContentChild* aChild,
+MessageManagerCallback::BuildClonedMessageDataForChild(nsIContentChild* aChild,
                                                        const StructuredCloneData& aData,
                                                        ClonedMessageData& aClonedData)
 {
