@@ -127,7 +127,7 @@
 
           let stateName;
           for (let name of ["OFFER", "TRANSLATING", "TRANSLATED", "ERROR"]) {
-            if (this.translation["STATE_" + name] == val) {
+            if (Translation["STATE_" + name] == val) {
               stateName = name.toLowerCase();
               break;
             }
@@ -188,7 +188,7 @@
       <method name="translate">
         <body>
           <![CDATA[
-            if (this.state == this.translation.STATE_OFFER) {
+            if (this.state == Translation.STATE_OFFER) {
               this._getAnonElt("fromLanguage").value =
                 this._getAnonElt("detectedLanguage").value;
               this._getAnonElt("toLanguage").value =
@@ -235,7 +235,7 @@
           <![CDATA[
             // Get the source language name.
             let lang;
-            if (this.state == this.translation.STATE_OFFER)
+            if (this.state == Translation.STATE_OFFER)
               lang = this._getAnonElt("detectedLanguage").value;
             else
               lang = this._getAnonElt("fromLanguage").value;

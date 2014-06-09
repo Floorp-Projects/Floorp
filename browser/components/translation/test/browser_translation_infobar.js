@@ -34,7 +34,7 @@ function waitForCondition(condition, nextTest, errorMsg) {
 
 var TranslationStub = {
   translate: function(aFrom, aTo) {
-    this.state = this.STATE_TRANSLATING;
+    this.state = Translation.STATE_TRANSLATING;
     this.translatedFrom = aFrom;
     this.translatedTo = aTo;
   },
@@ -45,20 +45,22 @@ var TranslationStub = {
   },
 
   failTranslation: function() {
-    this.state = this.STATE_ERROR;
+    this.state = Translation.STATE_ERROR;
     this._reset();
   },
 
   finishTranslation: function() {
     this.showTranslatedContent();
-    this.state = this.STATE_TRANSLATED;
+    this.state = Translation.STATE_TRANSLATED;
     this._reset();
   }
 };
 
 function showTranslationUI(aDetectedLanguage) {
   let browser = gBrowser.selectedBrowser;
-  Translation.languageDetected(browser, aDetectedLanguage);
+  Translation.documentStateReceived(browser, {state: Translation.STATE_OFFER,
+                                              originalShown: true,
+                                              detectedLanguage: aDetectedLanguage});
   let ui = browser.translationUI;
   for (let name of ["translate", "_reset", "failTranslation", "finishTranslation"])
     ui[name] = TranslationStub[name];
@@ -100,13 +102,13 @@ function checkURLBarIcon(aExpectTranslated = false) {
 function run_tests(aFinishCallback) {
   info("Show an info bar saying the current page is in French");
   let notif = showTranslationUI("fr");
-  is(notif.state, notif.translation.STATE_OFFER, "the infobar is offering translation");
+  is(notif.state, Translation.STATE_OFFER, "the infobar is offering translation");
   is(notif._getAnonElt("detectedLanguage").value, "fr", "The detected language is displayed");
   checkURLBarIcon();
 
   info("Click the 'Translate' button");
   notif._getAnonElt("translate").click();
-  is(notif.state, notif.translation.STATE_TRANSLATING, "the infobar is in the translating state");
+  is(notif.state, Translation.STATE_TRANSLATING, "the infobar is in the translating state");
   ok(!!notif.translation.translatedFrom, "Translation.translate has been called");
   is(notif.translation.translatedFrom, "fr", "from language correct");
   is(notif.translation.translatedTo, Translation.defaultTargetLanguage, "from language correct");
@@ -114,12 +116,12 @@ function run_tests(aFinishCallback) {
 
   info("Make the translation fail and check we are in the error state.");
   notif.translation.failTranslation();
-  is(notif.state, notif.translation.STATE_ERROR, "infobar in the error state");
+  is(notif.state, Translation.STATE_ERROR, "infobar in the error state");
   checkURLBarIcon();
 
   info("Click the try again button");
   notif._getAnonElt("tryAgain").click();
-  is(notif.state, notif.translation.STATE_TRANSLATING, "infobar in the translating state");
+  is(notif.state, Translation.STATE_TRANSLATING, "infobar in the translating state");
   ok(!!notif.translation.translatedFrom, "Translation.translate has been called");
   is(notif.translation.translatedFrom, "fr", "from language correct");
   is(notif.translation.translatedTo, Translation.defaultTargetLanguage, "from language correct");
@@ -127,7 +129,7 @@ function run_tests(aFinishCallback) {
 
   info("Make the translation succeed and check we are in the 'translated' state.");
   notif.translation.finishTranslation();
-  is(notif.state, notif.translation.STATE_TRANSLATED, "infobar in the translated state");
+  is(notif.state, Translation.STATE_TRANSLATED, "infobar in the translated state");
   checkURLBarIcon(true);
 
   info("Test 'Show original' / 'Show Translation' buttons.");
@@ -153,7 +155,7 @@ function run_tests(aFinishCallback) {
   let from = notif._getAnonElt("fromLanguage");
   from.value = "es";
   from.doCommand();
-  is(notif.state, notif.translation.STATE_TRANSLATING, "infobar in the translating state");
+  is(notif.state, Translation.STATE_TRANSLATING, "infobar in the translating state");
   ok(!!notif.translation.translatedFrom, "Translation.translate has been called");
   is(notif.translation.translatedFrom, "es", "from language correct");
   is(notif.translation.translatedTo, Translation.defaultTargetLanguage, "to language correct");
@@ -167,7 +169,7 @@ function run_tests(aFinishCallback) {
   let to = notif._getAnonElt("toLanguage");
   to.value = "pl";
   to.doCommand();
-  is(notif.state, notif.translation.STATE_TRANSLATING, "infobar in the translating state");
+  is(notif.state, Translation.STATE_TRANSLATING, "infobar in the translating state");
   ok(!!notif.translation.translatedFrom, "Translation.translate has been called");
   is(notif.translation.translatedFrom, "es", "from language correct");
   is(notif.translation.translatedTo, "pl", "to language correct");
@@ -180,12 +182,12 @@ function run_tests(aFinishCallback) {
 
   info("Reopen the info bar to check that it's possible to override the detected language.");
   notif = showTranslationUI("fr");
-  is(notif.state, notif.translation.STATE_OFFER, "the infobar is offering translation");
+  is(notif.state, Translation.STATE_OFFER, "the infobar is offering translation");
   is(notif._getAnonElt("detectedLanguage").value, "fr", "The detected language is displayed");
   // Change the language and click 'Translate'
   notif._getAnonElt("detectedLanguage").value = "ja";
   notif._getAnonElt("translate").click();
-  is(notif.state, notif.translation.STATE_TRANSLATING, "the infobar is in the translating state");
+  is(notif.state, Translation.STATE_TRANSLATING, "the infobar is in the translating state");
   ok(!!notif.translation.translatedFrom, "Translation.translate has been called");
   is(notif.translation.translatedFrom, "ja", "from language correct");
   notif.close();
