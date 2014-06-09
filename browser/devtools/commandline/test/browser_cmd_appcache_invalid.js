@@ -118,3 +118,17 @@ function spawnTest() {
   yield helpers.closeToolbar(options);
   yield helpers.closeTab(options);
 }
+
+/**
+ * Creates a regular expression that matches a string. This greatly simplifies
+ * matching and debugging long strings.
+ *
+ * @param {String} text
+ *        Text to convert
+ * @return {RegExp}
+ *         Regular expression matching text
+ */
+function getRegexForString(str) {
+  str = str.replace(/(\.|\\|\/|\(|\)|\[|\]|\*|\+|\?|\$|\^|\|)/g, "\\$1");
+  return new RegExp(str);
+}
