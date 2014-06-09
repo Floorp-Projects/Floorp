@@ -20,6 +20,7 @@ CPP_UNIT_TESTS += [
     'TestIntegerPrintfMacros.cpp',
     'TestMacroArgs.cpp',
     'TestMacroForEach.cpp',
+    'TestPair.cpp',
     'TestRollingMean.cpp',
     'TestSHA1.cpp',
     'TestTypedEnum.cpp',
