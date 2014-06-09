@@ -83,6 +83,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     explicit Wrapper(unsigned flags, bool hasPrototype = false);
 
+    virtual ~Wrapper();
+
     virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE;
 
     static Wrapper singleton;
@@ -102,6 +104,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 {
   public:
     explicit CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false);
+
+    virtual ~CrossCompartmentWrapper();
 
     /* ES5 Harmony fundamental wrapper traps. */
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper) MOZ_OVERRIDE;

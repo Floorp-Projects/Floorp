@@ -52,6 +52,7 @@ class CPOWProxyHandler : public BaseProxyHandler
   public:
     CPOWProxyHandler()
       : BaseProxyHandler(&sCPOWProxyHandler) {}
+    virtual ~CPOWProxyHandler() {}
 
     virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE {
         return false;
