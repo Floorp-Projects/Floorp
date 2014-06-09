@@ -406,14 +406,6 @@ ContentHostIncremental::~ContentHostIncremental()
 {
 }
 
-void
-ContentHostIncremental::DestroyTextures()
-{
-  mSource = nullptr;
-  mSourceOnWhite = nullptr;
-  mUpdateList.Clear();
-}
-
 bool
 ContentHostIncremental::CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                                   const TextureInfo& aTextureInfo,
@@ -501,6 +493,8 @@ ContentHostIncremental::TextureCreationRequest::Execute(ContentHostIncremental* 
   }
 
   if (mTextureInfo.mDeprecatedTextureHostFlags & DeprecatedTextureHostFlags::COPY_PREVIOUS) {
+    MOZ_ASSERT(aHost->mSource);
+    MOZ_ASSERT(aHost->mSource->IsValid());
     nsIntRect bufferRect = aHost->mBufferRect;
     nsIntPoint bufferRotation = aHost->mBufferRotation;
     nsIntRect overlap;
