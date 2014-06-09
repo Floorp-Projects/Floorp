@@ -118,7 +118,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="ad1229307124c8c8b9a3579dd35dc24ff567c6d8"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="1ffedc01d27e30e53392a1b61e09ed1fc80d259e"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="6d29b672b039612c08c40e92d8051a4cfbd38162"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
