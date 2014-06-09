@@ -335,13 +335,7 @@ exports.items = [
         html:
           '<div>\n' +
           '  <div if="${includeIntro}">\n' +
-          '    <p>GCLI is an experiment to create a highly usable command line for web developers.</p>\n' +
-          '    <p>\n' +
-          '      Useful links:\n' +
-          '      <a href=\'https://github.com/joewalker/gcli\'>Source</a> (Apache-2.0),\n' +
-          '      <a href=\'https://github.com/joewalker/gcli/blob/master/docs/index.md\'>Documentation</a> (for users/embedders),\n' +
-          '      <a href=\'https://wiki.mozilla.org/DevTools/Features/GCLI\'>Mozilla feature page</a> (for GCLI in the web console).\n' +
-          '    </p>\n' +
+          '    <p>${l10n.helpIntro}</p>\n' +
           '  </div>\n' +
           '\n' +
           '  <p>${heading}</p>\n' +
@@ -374,13 +368,9 @@ exports.items = [
     exec: function(commandsData, context) {
       return {
         html:
-          '<pre><span if="${includeIntro}">## Welcome to GCLI\n' +
+          '<pre><span if="${includeIntro}">## ${l10n.helpIntro1}\n' +
           '\n' +
-          'GCLI is an experiment to create a highly usable JavaScript command line for developers.\n' +
-          '\n' +
-          'Useful links:\n' +
-          '- Source (Apache-2.0): https://github.com/joewalker/gcli\n' +
-          '- Documentation: https://github.com/joewalker/gcli/blob/master/docs/index.md</span>\n' +
+          '${l10n.helpIntro}\n' +
           '\n' +
           '# ${heading}\n' +
           '\n' +

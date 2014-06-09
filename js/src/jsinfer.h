@@ -71,14 +71,12 @@ struct RootKind<TaggedProto>
 template <> struct GCMethods<const TaggedProto>
 {
     static TaggedProto initial() { return TaggedProto(); }
-    static ThingRootKind kind() { return THING_ROOT_OBJECT; }
     static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 
 template <> struct GCMethods<TaggedProto>
 {
     static TaggedProto initial() { return TaggedProto(); }
-    static ThingRootKind kind() { return THING_ROOT_OBJECT; }
     static bool poisoned(const TaggedProto &v) { return IsPoisonedPtr(v.raw()); }
 };
 

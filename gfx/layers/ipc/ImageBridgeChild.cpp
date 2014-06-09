@@ -152,6 +152,19 @@ ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
 }
 
 void
+ImageBridgeChild::SendFenceHandle(AsyncTransactionTracker* aTracker,
+                                  PTextureChild* aTexture,
+                                  const FenceHandle& aFence)
+{
+  HoldUntilComplete(aTracker);
+  InfallibleTArray<AsyncChildMessageData> messages;
+  messages.AppendElement(OpDeliverFenceFromChild(aTracker->GetId(),
+                                                 nullptr, aTexture,
+                                                 FenceHandleFromChild(aFence)));
+  SendChildAsyncMessages(messages);
+}
+
+void
 ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
                                     const nsIntRect& aRect)
 {
@@ -533,6 +546,8 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
 
+  gfxPlatform::GetPlatform();
+
   ProcessHandle processHandle;
   if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
     return nullptr;
@@ -802,7 +817,7 @@ ImageBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 }
 
 bool
-ImageBridgeChild::RecvParentAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessages)
+ImageBridgeChild::RecvParentAsyncMessages(const InfallibleTArray<AsyncParentMessageData>& aMessages)
 {
   for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
     const AsyncParentMessageData& message = aMessages[i];
@@ -833,13 +848,18 @@ ImageBridgeChild::RecvParentAsyncMessage(const InfallibleTArray<AsyncParentMessa
         SendChildAsyncMessages(replies);
         break;
       }
+      case AsyncParentMessageData::TOpReplyDeliverFence: {
+        const OpReplyDeliverFence& op = message.get_OpReplyDeliverFence();
+        TransactionCompleteted(op.transactionId());
+        break;
+      }
       case AsyncParentMessageData::TOpReplyRemoveTexture: {
         const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
 
         AsyncTransactionTrackersHolder::TransactionCompleteted(op.holderId(),
                                                                op.transactionId());
-      break;
-    }
+        break;
+      }
       default:
         NS_ERROR("unknown AsyncParentMessageData type");
         return false;

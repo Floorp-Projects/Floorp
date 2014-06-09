@@ -32,6 +32,7 @@ VideoReceiver::VideoReceiver(const int32_t id,
       process_crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
       _receiveCritSect(CriticalSectionWrapper::CreateCriticalSection()),
       _receiverInited(false),
+      _receiveState(kReceiveStateInitial),
       _timing(clock_, id, 1),
       _dualTiming(clock_, id, 2, &_timing),
       _receiver(&_timing, clock_, event_factory, id, 1, true),
@@ -42,6 +43,7 @@ VideoReceiver::VideoReceiver(const int32_t id,
       _receiveStatsCallback(NULL),
       _decoderTimingCallback(NULL),
       _packetRequestCallback(NULL),
+      _receiveStateCallback(NULL),
       render_buffer_callback_(NULL),
       _decoder(NULL),
       _dualDecoder(NULL),
@@ -162,6 +164,25 @@ int32_t VideoReceiver::Process() {
   }
 
   return returnValue;
+}
+
+void VideoReceiver::SetReceiveState(VideoReceiveState state) {
+  if (state == _receiveState) {
+    return;
+  }
+  if (state == kReceiveStatePreemptiveNACK &&
+      (_receiveState == kReceiveStateWaitingKey ||
+       _receiveState == kReceiveStateDecodingWithErrors)) {
+    // invalid state transition - this lets us try to set it on NACK
+    // without worrying about the current state
+    return;
+  }
+  _receiveState = state;
+
+  CriticalSectionScoped cs(process_crit_sect_.get());
+  if (_receiveStateCallback != NULL) {
+    _receiveStateCallback->ReceiveStateChange(_receiveState);
+  }
 }
 
 int32_t VideoReceiver::TimeUntilNextProcess() {
@@ -295,6 +316,7 @@ int32_t VideoReceiver::InitializeReceiver() {
   _receiveStatsCallback = NULL;
   _decoderTimingCallback = NULL;
   _packetRequestCallback = NULL;
+  _receiveStateCallback = NULL;
   _keyRequestMode = kKeyOnError;
   _scheduleKeyRequest = false;
 
@@ -356,6 +378,13 @@ int32_t VideoReceiver::RegisterPacketRequestCallback(
   return VCM_OK;
 }
 
+int32_t VideoReceiver::RegisterReceiveStateCallback(
+    VCMReceiveStateCallback* callback) {
+  CriticalSectionScoped cs(process_crit_sect_.get());
+  _receiveStateCallback = callback;
+  return VCM_OK;
+}
+
 int VideoReceiver::RegisterRenderBufferSizeCallback(
     VCMRenderBufferSizeCallback* callback) {
   CriticalSectionScoped cs(process_crit_sect_.get());
@@ -399,9 +428,14 @@ int32_t VideoReceiver::Decode(uint16_t maxWaitTimeMs) {
     _dualDecoder = _codecDataBase.CreateDecoderCopy();
     if (_dualDecoder != NULL) {
       _dualDecoder->RegisterDecodeCompleteCallback(&_dualDecodedFrameCallback);
+      SetReceiveState(kReceiveStateDecodingWithErrors);
     } else {
       _dualReceiver.Reset();
+      // presume we have an error, though we might not yet
+      SetReceiveState(kReceiveStateWaitingKey);
     }
+  } else {
+    SetReceiveState(_receiver.ReceiveState());
   }
 
   if (frame == NULL) {
@@ -681,6 +715,7 @@ int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
     if (ret == VCM_FLUSH_INDICATOR) {
       RequestKeyFrame();
       ResetDecoder();
+      SetReceiveState(kReceiveStateWaitingKey);
     } else if (ret < 0) {
       return ret;
     }
@@ -692,6 +727,7 @@ int32_t VideoReceiver::IncomingPacket(const uint8_t* incomingPayload,
   if (ret == VCM_FLUSH_INDICATOR) {
     RequestKeyFrame();
     ResetDecoder();
+    SetReceiveState(kReceiveStateWaitingKey);
   } else if (ret < 0) {
     return ret;
   }
@@ -744,10 +780,16 @@ int32_t VideoReceiver::NackList(uint16_t* nackList, uint16_t* size) {
                    webrtc::kTraceVideoCoding,
                    VCMId(_id),
                    "Failed to get NACK list, requesting key frame");
+      SetReceiveState(kReceiveStateWaitingKey);
       return RequestKeyFrame();
     }
     default:
       break;
+  }
+  if (*size != 0) {
+    // Note: not a valid transition from WaitingKey or DecodingWithErrors;
+    // will be ignored in that case
+    SetReceiveState(kReceiveStatePreemptiveNACK);
   }
   return VCM_OK;
 }

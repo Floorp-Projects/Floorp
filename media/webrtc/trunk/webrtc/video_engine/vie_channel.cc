@@ -186,6 +186,10 @@ int32_t ViEChannel::Init() {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
                  "%s: VCM::RegisterFrameTypeCallback failure", __FUNCTION__);
   }
+  if (vcm_.RegisterReceiveStateCallback(this) != 0) {
+    WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
+                 "%s: VCM::RegisterReceiveStateCallback failure", __FUNCTION__);
+  }
   if (vcm_.RegisterReceiveStatisticsCallback(this) != 0) {
     WEBRTC_TRACE(kTraceWarning, kTraceVideo, ViEId(engine_id_, channel_id_),
                  "%s: VCM::RegisterReceiveStatisticsCallback failure",
@@ -1916,6 +1920,17 @@ int32_t ViEChannel::ResendPackets(const uint16_t* sequence_numbers,
   WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, channel_id_),
                "%s(length: %d)", __FUNCTION__, length);
   return rtp_rtcp_->SendNACK(sequence_numbers, length);
+}
+
+void ViEChannel::ReceiveStateChange(VideoReceiveState state) {
+  WEBRTC_TRACE(kTraceStream, kTraceVideo, ViEId(engine_id_, channel_id_),
+               "%s", __FUNCTION__);
+  {
+    CriticalSectionScoped cs(callback_cs_.get());
+    if (codec_observer_) {
+      codec_observer_->ReceiveStateChange(channel_id_, state);
+    }
+  }
 }
 
 bool ViEChannel::ChannelDecodeThreadFunction(void* obj) {

@@ -3009,7 +3009,6 @@ namespace js {
 template <>
 struct GCMethods<JSPropertyDescriptor> {
     static JSPropertyDescriptor initial() { return JSPropertyDescriptor(); }
-    static ThingRootKind kind() { return THING_ROOT_PROPERTY_DESCRIPTOR; }
     static bool poisoned(const JSPropertyDescriptor &desc) {
         return (desc.obj && JS::IsPoisonedPtr(desc.obj)) ||
                (desc.attrs & JSPROP_GETTER && desc.getter && JS::IsPoisonedPtr(desc.getter)) ||

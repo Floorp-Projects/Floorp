@@ -26,6 +26,8 @@ namespace jit {
     _(Ursh)                                     \
     _(Add)                                      \
     _(Sub)                                      \
+    _(Mul)                                      \
+    _(Div)                                      \
     _(Mod)                                      \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
@@ -202,6 +204,36 @@ class RMod MOZ_FINAL : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_(Mod)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RMul MOZ_FINAL : public RInstruction
+{
+  private:
+    bool isFloatOperation_;
+
+  public:
+    RINSTRUCTION_HEADER_(Mul)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RDiv MOZ_FINAL : public RInstruction
+{
+  private:
+    bool isFloatOperation_;
+
+  public:
+    RINSTRUCTION_HEADER_(Div)
 
     virtual uint32_t numOperands() const {
         return 2;

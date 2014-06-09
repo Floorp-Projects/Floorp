@@ -654,7 +654,6 @@ template <typename T>
 struct GCMethods<T *>
 {
     static T *initial() { return nullptr; }
-    static ThingRootKind kind() { return RootKind<T *>::rootKind(); }
     static bool poisoned(T *v) { return JS::IsPoisonedPtr(v); }
     static bool needsPostBarrier(T *v) { return false; }
 #ifdef JSGC_GENERATIONAL
@@ -667,7 +666,6 @@ template <>
 struct GCMethods<JSObject *>
 {
     static JSObject *initial() { return nullptr; }
-    static ThingRootKind kind() { return RootKind<JSObject *>::rootKind(); }
     static bool poisoned(JSObject *v) { return JS::IsPoisonedPtr(v); }
     static bool needsPostBarrier(JSObject *v) {
         return v != nullptr && gc::IsInsideNursery(reinterpret_cast<gc::Cell *>(v));
@@ -707,7 +705,7 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
     template <typename CX>
     void init(CX *cx) {
 #ifdef JSGC_TRACK_EXACT_ROOTS
-        js::ThingRootKind kind = js::GCMethods<T>::kind();
+        js::ThingRootKind kind = js::RootKind<T>::rootKind();
         this->stack = &cx->thingGCRooters[kind];
         this->prev = *stack;
         *stack = reinterpret_cast<Rooted<void*>*>(this);

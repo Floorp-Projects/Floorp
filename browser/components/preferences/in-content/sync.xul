@@ -195,7 +195,7 @@
     <spacer flex="1"/>
   </vbox>
 
-  <vbox id="noFxaAccount">
+  <vbox id="noFxaAccount" align="start">
     <label>&welcome.description;</label>
     <label class="text-link"
            onclick="gSyncPane.signUp(); return false;">

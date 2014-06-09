@@ -149,6 +149,7 @@ public class ButtonToast {
                 // If we are showing a toast and go in the background
                 // onAnimationEnd will be called when the app is restored
                 public void onPropertyAnimationEnd() {
+                    mView.clearAnimation();
                     mView.setVisibility(View.GONE);
                 }
                 public void onPropertyAnimationStart() { }
