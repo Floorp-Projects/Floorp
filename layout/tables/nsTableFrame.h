@@ -50,8 +50,6 @@ public:
       nsDisplayItem(aBuilder, aFrame),
       mPartHasFixedBackground(false) {}
 
-  virtual bool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
-                                                nsIFrame* aFrame) MOZ_OVERRIDE;
   // With collapsed borders, parts of the collapsed border can extend outside
   // the table part frames, so allow this display element to blow out to our
   // overflow rect. This is also useful for row frames that have spanning
