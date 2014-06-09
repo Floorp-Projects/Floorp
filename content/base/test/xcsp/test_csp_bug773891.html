@@ -1,0 +1,228 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+  https://bugzilla.mozilla.org/show_bug.cgi?id=768029
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for CSP on trusted/certified and installed apps -- bug 773891</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=773891">Mozilla Bug 773891</a>
+<p id="display"></p>
+<div id="content">
+
+</div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+/** Test for Bug 773891 **/
+
+// Note: we don't have to inspect all the different operations of CSP,
+// we're just looking for specific differences in behavior that indicate
+// a default CSP got applied.
+const DEFAULT_CSP_PRIV = "default-src *; script-src *; style-src 'self' 'unsafe-inline'; object-src 'none'";
+const DEFAULT_CSP_CERT = "default-src *; script-src *; style-src 'self'; object-src 'none'";
+
+const MANIFEST_CSP_PRIV = "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'";
+const MANIFEST_CSP_INST = "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'";
+const MANIFEST_CSP_CERT = "default-src *; script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'";
+
+SimpleTest.waitForExplicitFinish();
+
+var gData = [
+
+  {
+    app: "https://example.com/manifest_csp_inst.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_INSTALLED,
+    csp: MANIFEST_CSP_INST,
+    origin: "https://example.com",
+    uri: "https://example.com/tests/content/base/test/csp/file_csp_bug773891.html",
+    statusString: "installed app",
+    expectedTestResults: {
+      max_tests: 7, /* number of bools below plus one for the status check */
+      cross_origin: { img: true,  script: false, style: false },
+      same_origin:  { img: true,  script: true,  style: true  },
+    },
+  },
+  {
+    app: "https://example.com/manifest_csp_cert.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_CERTIFIED,
+    csp: MANIFEST_CSP_CERT,
+    origin: "https://example.com",
+    uri: "https://example.com/tests/content/base/test/csp/file_csp_bug773891.html",
+    statusString: "certified app",
+    expectedTestResults: {
+      max_tests: 7, /* number of bools below plus one for the status check */
+      cross_origin: { img: true,  script: false, style: false },
+      same_origin:  { img: true,  script: true,  style: true  },
+    },
+  },
+  {
+    app: "https://example.com/manifest_csp_priv.webapp",
+    appStatus: Components.interfaces.nsIPrincipal.APP_STATUS_PRIVILEGED,
+    csp: MANIFEST_CSP_PRIV,
+    origin: "https://example.com",
+    uri: "https://example.com/tests/content/base/test/csp/file_csp_bug773891.html",
+    statusString: "privileged app",
+    expectedTestResults: {
+      max_tests: 7, /* number of bools below plus one for the status check */
+      cross_origin: { img: true,  script: false, style: false },
+      same_origin:  { img: true,  script: true,  style: true  },
+    },
+  },
+];
+
+// Observer for watching allowed loads and blocked attempts
+function ThingyListener(app, iframe) {
+  Services.obs.addObserver(this, "csp-on-violate-policy", false);
+  Services.obs.addObserver(this, "http-on-modify-request", false);
+  dump("added observers\n");
+  // keep track of which app ID this test is monitoring.
+  this._testData = app;
+  this._expectedResults = app.expectedTestResults;
+  this._resultsRecorded = { cross_origin: {}, same_origin: {}};
+  this._iframe = iframe;
+  this._countedTests = 0;
+}
+ThingyListener.prototype = {
+
+  observe: function(subject, topic, data) {
+    // make sure to only observe app-generated calls to the helper for this test.
+    var testpat = new RegExp("file_csp_bug773891\\.sjs");
+
+    // used to extract which kind of load this is (img, script, etc).
+    var typepat = new RegExp("type=([\\_a-z0-9]+)");
+
+    // used to identify whether it's cross-origin or same-origin loads
+    // (the applied CSP allows same-origin loads).
+    var originpat = new RegExp("origin=([\\_a-z0-9]+)");
+
+    if (topic === "http-on-modify-request") {
+      // Matching requests on this topic were allowed by the csp
+      var chan = subject.QueryInterface(Components.interfaces.nsIHttpChannel);
+      var uri = chan.URI;
+      // ignore irrelevent URIs
+      if (!testpat.test(uri.asciiSpec)) return;
+
+      var loadType = typepat.exec(uri.asciiSpec)[1];
+      var originType = originpat.exec(uri.asciiSpec)[1];
+
+      // skip duplicate hits to this topic (potentially document loads
+      // may generate duplicate loads.
+      if (this._resultsRecorded[originType] &&
+          this._resultsRecorded[originType][loadType]) {
+        return;
+      }
+      var message = originType + " : " + loadType + " should be " +
+                    (this._expectedResults[originType][loadType] ? "allowed" : "blocked");
+      ok(this._expectedResults[originType][loadType] == true, message);
+      this._resultsRecorded[originType][loadType] = true;
+      this._countedTests++;
+    }
+    else if (topic === "csp-on-violate-policy") {
+      // Matching hits on this topic were blocked by the csp
+      var uri = subject.QueryInterface(Components.interfaces.nsIURI);
+      // ignore irrelevent URIs
+      if (!testpat.test(uri.asciiSpec)) return;
+
+      var loadType = typepat.exec(uri.asciiSpec)[1];
+      var originType = originpat.exec(uri.asciiSpec)[1];
+
+      // skip duplicate hits to this topic (potentially document loads
+      // may generate duplicate loads.
+      if (this._resultsRecorded[originType] &&
+          this._resultsRecorded[originType][loadType]) {
+        return;
+      }
+
+      var message = originType + " : " + loadType + " should be " +
+                    (this._expectedResults[originType][loadType] ? "allowed" : "blocked");
+      ok(this._expectedResults[originType][loadType] == false, message);
+      this._resultsRecorded[originType][loadType] = true;
+      this._countedTests++;
+    }
+    else {
+      // wrong topic!  Nothing to do.
+      return;
+    }
+
+    this._checkForFinish();
+  },
+
+  _checkForFinish: function() {
+    // check to see if there are load tests still pending.
+    // (All requests triggered by the app should hit one of the
+    // two observer topics.)
+    if (this._countedTests == this._expectedResults.max_tests) {
+      Services.obs.removeObserver(this, "csp-on-violate-policy");
+      Services.obs.removeObserver(this, "http-on-modify-request");
+      dump("removed observers\n");
+      checkedCount++;
+      if (checkedCount == checksTodo) {
+        SpecialPowers.removePermission("browser", "https://example.com");
+        SimpleTest.finish();
+      } else {
+        gTestRunner.next();
+      }
+    }
+  },
+
+  // verify the status of the app
+  checkAppStatus: function() {
+    var principal = this._iframe.contentDocument.nodePrincipal;
+    if (this._testData.app) {
+      is(principal.appStatus, this._testData.appStatus,
+         "iframe principal's app status doesn't match the expected app status.");
+      this._countedTests++;
+      this._checkForFinish();
+    }
+  }
+}
+
+var content = document.getElementById('content');
+var checkedCount = 0; // number of apps checked
+var checksTodo = gData.length;
+
+// quick check to make sure we can test apps:
+is('appStatus' in document.nodePrincipal, true,
+   'appStatus should be present in nsIPrincipal, if not the rest of this test will fail');
+
+function runTest() {
+  for (var i = 0; i < gData.length; i++) {
+    let data = gData[i];
+    var iframe = document.createElement('iframe');
+
+    // watch for successes and failures
+    var examiner = new ThingyListener(data, iframe);
+
+    iframe.setAttribute('mozapp', data.app);
+    iframe.setAttribute('mozbrowser', 'true');
+    iframe.addEventListener('load', examiner.checkAppStatus.bind(examiner));
+    iframe.src = data.uri;
+
+    content.appendChild(iframe);
+
+    yield undefined;
+  }
+}
+
+var gTestRunner = runTest();
+
+// load the default CSP and pref it on
+SpecialPowers.addPermission("browser", true, "https://example.com");
+
+SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                   ["security.apps.privileged.CSP.default", DEFAULT_CSP_PRIV],
+                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT]]},
+                          function() {  gTestRunner.next(); });
+
+
+</script>
+</pre>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=548193
+-->
+<head>
+  <title>Test for Bug 548193</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<iframe style="width:200px;height:200px;" id='cspframe'></iframe>
+<script class="testbody" type="text/javascript">
+// This is used to watch requests go out so we can see if the report is
+// sent correctly
+function examiner() {
+  SpecialPowers.addObserver(this, "http-on-opening-request", false);
+}
+examiner.prototype  = {
+  observe: function(subject, topic, data) {
+    // subject should be an nsURI
+    if (!SpecialPowers.can_QI(subject))
+      return;
+
+    const reportURI = "http://mochi.test:8888/csp-report.cgi";
+
+    if (topic === "http-on-opening-request") {
+      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
+      if (asciiSpec !== reportURI) return;
+
+      // Verify that the report was properly formatted.
+      // We'll parse the report text as JSON and verify that the properties
+      // have expected values.
+      var reportText = "{}";
+      try {
+        var uploadStream = SpecialPowers.wrap(SpecialPowers.do_QueryInterface(subject, "nsIUploadChannel")).uploadStream;
+
+        if (uploadStream) {
+          // get the bytes from the request body
+          var binstream = SpecialPowers.Cc["@mozilla.org/binaryinputstream;1"]
+                                          .createInstance(SpecialPowers.Ci.nsIBinaryInputStream);
+          binstream.setInputStream(uploadStream);
+
+          var segments = [];
+          for (var count = uploadStream.available(); count; count = uploadStream.available()) {
+            var data = binstream.readBytes(count);
+            segments.push(data);
+          }
+
+          var reportText = segments.join("");
+          // rewind stream as we are supposed to - there will be an assertion later if we don't.
+          SpecialPowers.do_QueryInterface(uploadStream, "nsISeekableStream").seek(SpecialPowers.Ci.nsISeekableStream.NS_SEEK_SET, 0);
+        }
+      }
+      catch(e) {}
+
+      var reportObj = JSON.parse(reportText);
+
+      // test for the proper values in the report object
+      window.checkResults(reportObj);
+
+      // finish up
+      window.examiner.remove();
+      SimpleTest.finish();
+    }
+  },
+
+  // remove the listener
+  remove: function() {
+    SpecialPowers.removeObserver(this, "http-on-opening-request");
+  }
+}
+
+// content file that triggers a violation report
+var testFile = "file_csp_report.sjs";
+
+window.checkResults = function(reportObj) {
+  var cspReport = reportObj["csp-report"];
+  // correct violating request
+  is(cspReport["document-uri"],
+     "http://mochi.test:8888/tests/content/base/test/csp/" + testFile,
+     "Incorrect violating request");
+  // correct blocked-uri
+  is(cspReport["blocked-uri"],
+     "http://example.org/tests/content/base/test/file_CSP.sjs?testid=img_bad&type=img/png",
+     "Incorrect blocked uri");
+  // correct violated-directive
+  is(cspReport["violated-directive"], "default-src http://mochi.test:8888",
+     "Incorrect violated directive");
+  // not practical to test request-headers as header names and values will
+  // change with the trunk
+}
+
+window.examiner = new examiner();
+
+SimpleTest.waitForExplicitFinish();
+
+// load the resource which will generate a CSP violation report
+document.getElementById("cspframe").src = testFile;
+
+</script>
+</pre>
+</body>
+</html>
