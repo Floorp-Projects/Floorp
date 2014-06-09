@@ -19,13 +19,6 @@
 #include "mozilla/dom/indexedDB/PIndexedDBRequestChild.h"
 #include "mozilla/dom/indexedDB/PIndexedDBTransactionChild.h"
 
-namespace mozilla {
-namespace dom {
-class ContentChild;
-class TabChild;
-} // dom
-} // mozilla
-
 BEGIN_INDEXEDDB_NAMESPACE
 
 class AsyncConnectionHelper;
@@ -43,9 +36,6 @@ class IDBTransactionListener;
 class IndexedDBChild : public PIndexedDBChild
 {
   IDBFactory* mFactory;
-  ContentChild* mManagerContent;
-  TabChild* mManagerTab;
-
   nsCString mASCIIOrigin;
 
 #ifdef DEBUG
@@ -53,26 +43,13 @@ class IndexedDBChild : public PIndexedDBChild
 #endif
 
 public:
-  IndexedDBChild(ContentChild* aContentChild, const nsCString& aASCIIOrigin);
-  IndexedDBChild(TabChild* aTabChild, const nsCString& aASCIIOrigin);
+  IndexedDBChild(const nsCString& aASCIIOrigin);
   virtual ~IndexedDBChild();
 
   const nsCString&
   ASCIIOrigin() const
   {
     return mASCIIOrigin;
-  }
-
-  ContentChild*
-  GetManagerContent() const
-  {
-    return mManagerContent;
-  }
-
-  TabChild*
-  GetManagerTab() const
-  {
-    return mManagerTab;
   }
 
   void
