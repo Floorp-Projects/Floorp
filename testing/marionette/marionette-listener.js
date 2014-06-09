@@ -72,7 +72,6 @@ let touchIds = {};
 let multiLast = {};
 let lastCoordinates = null;
 let isTap = false;
-let scrolling = false;
 // whether to send mouse event
 let mouseEventsOnly = false;
 
@@ -105,6 +104,10 @@ function registerSelf() {
     // check if we're the main process
     if (register[0][1] == true) {
       addMessageListener("MarionetteMainListener:emitTouchEvent", emitTouchEventForIFrame);
+      let height = getStatusbarHeight();
+      if (height) {
+        sendSyncMessage("Marionette:setStatusbarHeight", { height: height });
+      }
     }
     importedScripts = FileUtils.getDir('TmpD', [], false);
     importedScripts.append('marionetteContentScripts');
@@ -123,6 +126,14 @@ function emitTouchEventForIFrame(message) {
                              [message.radiusX], [message.radiusY],
                              [message.rotationAngle], [message.force],
                              1, 0);
+}
+
+function getStatusbarHeight(message) {
+  let statusbar = curFrame.document.getElementById("statusbar");
+  if (statusbar) {
+    //Yes, clientHeight. This statusbar affects screens where it isn't even visible, like FTU
+    return statusbar.clientHeight;
+  }
 }
 
 /**
@@ -679,24 +690,31 @@ function executeWithCallback(msg, useFinish) {
 /**
  * This function creates a touch event given a touch type and a touch
  */
-function emitTouchEvent(type, touch) {
+function emitTouchEvent(type, target, x, y, touchId) {
   if (!wasInterrupted()) {
-    let loggingInfo = "emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
-    dumpLog(loggingInfo);
     var docShell = curFrame.document.defaultView.
                    QueryInterface(Components.interfaces.nsIInterfaceRequestor).
                    getInterface(Components.interfaces.nsIWebNavigation).
                    QueryInterface(Components.interfaces.nsIDocShell);
-    if (docShell.asyncPanZoomEnabled && scrolling) {
+    if (docShell.asyncPanZoomEnabled) {
       // if we're in APZ and we're scrolling, we must use injectTouchEvent to dispatch our touchmove events
+      // NOTE: This is an internal frame, below the statusbar. The coordinates we get here must be offset by
+      // the coordinates of the statusbar
+      let statusbarHeight = sendSyncMessage("Marionette:getStatusbarHeight");
+      if (statusbarHeight) {
+        y += parseInt(statusbarHeight, 10);
+      }
+      let touch = createATouch(target, x, y, touchId);
       let index = sendSyncMessage("MarionetteFrame:getCurrentFrameId");
       // only call emitTouchEventForIFrame if we're inside an iframe.
       if (index != null) {
+        let loggingInfo = "emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
+        dumpLog(loggingInfo);
         sendSyncMessage("Marionette:emitTouchEvent", {index: index, type: type, id: touch.identifier,
                                                       clientX: touch.clientX, clientY: touch.clientY,
                                                       radiusX: touch.radiusX, radiusY: touch.radiusY,
                                                       rotation: touch.rotationAngle, force: touch.force});
-        return;
+        return touch;
       }
     }
     // we get here if we're not in asyncPacZoomEnabled land, or if we're the main process
@@ -707,8 +725,12 @@ function emitTouchEvent(type, touch) {
                     {log: elementManager.wrapValue(marionetteLogObj.getLogs())});
     marionetteLogObj.clearLogs();
     */
+    let touch = createATouch(target, x, y, touchId);
+    let loggingInfo = "emitting Touch event of type " + type + " to element with id: " + touch.target.id + " and tag name: " + touch.target.tagName + " at coordinates (" + touch.clientX + ", " + touch.clientY + ") relative to the viewport";
+    dumpLog(loggingInfo);
     let domWindowUtils = curFrame.QueryInterface(Components.interfaces.nsIInterfaceRequestor).getInterface(Components.interfaces.nsIDOMWindowUtils);
     domWindowUtils.sendTouchEvent(type, [touch.identifier], [touch.clientX], [touch.clientY], [touch.radiusX], [touch.radiusY], [touch.rotationAngle], [touch.force], 1, 0);
+    return touch;
   }
 }
 
@@ -819,9 +841,8 @@ function generateEvents(type, x, y, touchId, target) {
       }
       else {
         let touchId = nextTouchId++;
-        let touch = createATouch(target, x, y, touchId);
-        emitTouchEvent('touchstart', touch);
-        emitTouchEvent('touchend', touch);
+        emitTouchEvent('touchstart', target, x, y, touchId);
+        emitTouchEvent('touchend', target, x, y, touchId);
         mousetap(target.ownerDocument, x, y);
       }
       lastCoordinates = null;
@@ -834,9 +855,7 @@ function generateEvents(type, x, y, touchId, target) {
       }
       else {
         let touchId = nextTouchId++;
-        let touch = createATouch(target, x, y, touchId);
-        emitTouchEvent('touchstart', touch);
-        touchIds[touchId] = touch;
+        touchIds[touchId] = emitTouchEvent('touchstart', target, x, y, touchId);
         return touchId;
       }
       break;
@@ -846,8 +865,7 @@ function generateEvents(type, x, y, touchId, target) {
       }
       else {
         let touch = touchIds[touchId];
-        touch = createATouch(touch.target, lastCoordinates[0], lastCoordinates[1], touchId);
-        emitTouchEvent('touchend', touch);
+        emitTouchEvent('touchend', touch.target, lastCoordinates[0], lastCoordinates[1], touchId);
         if (isTap) {
           mousetap(touch.target.ownerDocument, touch.clientX, touch.clientY);
         }
@@ -862,7 +880,8 @@ function generateEvents(type, x, y, touchId, target) {
         emitMouseEvent(doc, 'mouseup', lastCoordinates[0], lastCoordinates[1]);
       }
       else {
-        emitTouchEvent('touchcancel', touchIds[touchId]);
+        let touch = touchIds[touchId];
+        emitTouchEvent('touchcancel', touch.target, x, y, touchId);
         delete touchIds[touchId];
       }
       lastCoordinates = null;
@@ -873,9 +892,7 @@ function generateEvents(type, x, y, touchId, target) {
         emitMouseEvent(doc, 'mousemove', x, y);
       }
       else {
-        touch = createATouch(touchIds[touchId].target, x, y, touchId);
-        touchIds[touchId] = touch;
-        emitTouchEvent('touchmove', touch);
+        touchIds[touchId] = emitTouchEvent('touchmove', touchIds[touchId].target, x, y, touchId);
       }
       break;
     case 'contextmenu':
@@ -981,9 +998,6 @@ function actions(chain, touchId, command_id, i) {
         return;
       }
       // look ahead to check if we're scrolling. Needed for APZ touch dispatching.
-      if ((i != chain.length) && (chain[i][0].indexOf('move') !== -1)) {
-        scrolling = true;
-      }
       el = elementManager.getKnownElement(pack[1], curFrame);
       c = coordinates(el, pack[2], pack[3]);
       touchId = generateEvents('press', c.x, c.y, null, el);
@@ -992,7 +1006,6 @@ function actions(chain, touchId, command_id, i) {
     case 'release':
       generateEvents('release', lastCoordinates[0], lastCoordinates[1], touchId);
       actions(chain, null, command_id, i);
-      scrolling =  false;
       break;
     case 'move':
       el = elementManager.getKnownElement(pack[1], curFrame);
@@ -1026,7 +1039,6 @@ function actions(chain, touchId, command_id, i) {
     case 'cancel':
       generateEvents('cancel', lastCoordinates[0], lastCoordinates[1], touchId);
       actions(chain, touchId, command_id, i);
-      scrolling = false;
       break;
     case 'longPress':
       generateEvents('contextmenu', lastCoordinates[0], lastCoordinates[1], touchId);

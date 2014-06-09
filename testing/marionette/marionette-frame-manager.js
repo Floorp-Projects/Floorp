@@ -166,6 +166,8 @@ FrameManager.prototype = {
     messageManager.addWeakMessageListener("Marionette:emitTouchEvent", this.server);
     messageManager.addWeakMessageListener("Marionette:log", this.server);
     messageManager.addWeakMessageListener("Marionette:register", this.server);
+    messageManager.addWeakMessageListener("Marionette:setStatusbarHeight", this.server);
+    messageManager.addWeakMessageListener("Marionette:getStatusbarHeight", this.server);
     messageManager.addWeakMessageListener("Marionette:runEmulatorCmd", this.server);
     messageManager.addWeakMessageListener("Marionette:runEmulatorShell", this.server);
     messageManager.addWeakMessageListener("Marionette:shareData", this.server);
@@ -196,6 +198,8 @@ FrameManager.prototype = {
     messageManager.removeWeakMessageListener("Marionette:log", this.server);
     messageManager.removeWeakMessageListener("Marionette:shareData", this.server);
     messageManager.removeWeakMessageListener("Marionette:register", this.server);
+    messageManager.removeWeakMessageListener("Marionette:setStatusbarHeight", this.server);
+    messageManager.removeWeakMessageListener("Marionette:getStatusbarHeight", this.server);
     messageManager.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server);
     messageManager.removeWeakMessageListener("Marionette:runEmulatorShell", this.server);
     messageManager.removeWeakMessageListener("Marionette:switchToFrame", this.server);

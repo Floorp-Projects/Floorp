@@ -1008,6 +1008,9 @@ CompositorOGL::DrawQuad(const Rect& aRect,
 
   IntRect intClipRect;
   aClipRect.ToIntRect(&intClipRect);
+  if (!mTarget) {
+    intClipRect.MoveBy(mRenderOffset.x, mRenderOffset.y);
+  }
 
   gl()->fScissor(intClipRect.x, FlipY(intClipRect.y + intClipRect.height),
                  intClipRect.width, intClipRect.height);

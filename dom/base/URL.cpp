@@ -15,6 +15,7 @@
 #include "nsIIOService.h"
 #include "nsEscape.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "nsIURL.h"
 
 namespace mozilla {
@@ -262,7 +263,34 @@ URL::SetProtocol(const nsAString& aProtocol)
   nsAString::const_iterator iter(start);
 
   FindCharInReadable(':', iter, end);
-  mURI->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+
+  // Changing the protocol of a URL, changes the "nature" of the URI
+  // implementation. In order to do this properly, we have to serialize the
+  // existing URL and reparse it in a new object.
+  nsCOMPtr<nsIURI> clone;
+  nsresult rv = mURI->Clone(getter_AddRefs(clone));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !clone) {
+    return;
+  }
+
+  rv = clone->SetScheme(NS_ConvertUTF16toUTF8(Substring(start, iter)));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsAutoCString href;
+  rv = clone->GetSpec(href);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), href);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  mURI = uri;
 }
 
 #define URL_GETTER( value, func ) \
