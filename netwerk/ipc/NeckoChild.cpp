@@ -9,7 +9,6 @@
 #include "nsHttp.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabChild.h"
 #include "mozilla/net/HttpChannelChild.h"
 #include "mozilla/net/CookieServiceChild.h"
 #include "mozilla/net/WyciwygChannelChild.h"
@@ -74,7 +73,7 @@ void NeckoChild::DestroyNeckoChild()
 }
 
 PHttpChannelChild*
-NeckoChild::AllocPHttpChannelChild(const PBrowserOrId& browser,
+NeckoChild::AllocPHttpChannelChild(PBrowserChild* browser,
                                    const SerializedLoadContext& loadContext,
                                    const HttpChannelCreationArgs& aOpenArgs)
 {
@@ -95,7 +94,7 @@ NeckoChild::DeallocPHttpChannelChild(PHttpChannelChild* channel)
 }
 
 PFTPChannelChild*
-NeckoChild::AllocPFTPChannelChild(const PBrowserOrId& aBrowser,
+NeckoChild::AllocPFTPChannelChild(PBrowserChild* aBrowser,
                                   const SerializedLoadContext& aSerialized,
                                   const FTPChannelCreationArgs& aOpenArgs)
 {
@@ -151,7 +150,7 @@ NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel)
 }
 
 PWebSocketChild*
-NeckoChild::AllocPWebSocketChild(const PBrowserOrId& browser,
+NeckoChild::AllocPWebSocketChild(PBrowserChild* browser,
                                  const SerializedLoadContext& aSerialized)
 {
   NS_NOTREACHED("AllocPWebSocketChild should not be called");
@@ -298,22 +297,6 @@ bool
 NeckoChild::DeallocPChannelDiverterChild(PChannelDiverterChild* child)
 {
   delete static_cast<ChannelDiverterChild*>(child);
-  return true;
-}
-
-bool
-NeckoChild::RecvAsyncAuthPromptForNestedFrame(const uint64_t& aNestedFrameId,
-                                              const nsCString& aUri,
-                                              const nsString& aRealm,
-                                              const uint64_t& aCallbackId)
-{
-  auto iter = dom::TabChild::NestedTabChildMap().find(aNestedFrameId);
-  if (iter == dom::TabChild::NestedTabChildMap().end()) {
-    MOZ_CRASH();
-    return false;
-  }
-  dom::TabChild* tabChild = iter->second;
-  tabChild->SendAsyncAuthPrompt(aUri, aRealm, aCallbackId);
   return true;
 }
 
