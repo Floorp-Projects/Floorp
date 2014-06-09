@@ -101,6 +101,10 @@ public:
   }
 
 private:
+  TemporaryRef<TextureClient> CreateTextureClientForCanvas(gfx::SurfaceFormat aFormat,
+                                                           TextureFlags aFlags,
+                                                           ClientCanvasLayer* aLayer);
+
   RefPtr<TextureClient> mBuffer;
 };
 
