@@ -75,10 +75,19 @@ BackCert::Init(const SECItem& certDER)
   for (const CERTCertExtension* ext = *exts; ext; ext = *++exts) {
     const SECItem** out = nullptr;
 
-    if (ext->id.len == 3 &&
-        ext->id.data[0] == 0x55 && ext->id.data[1] == 0x1d) {
-      // { id-ce x }
-      switch (ext->id.data[2]) {
+    // python DottedOIDToCode.py id-ce 2.5.29
+    static const uint8_t id_ce[] = {
+      0x55, 0x1d
+    };
+
+    // python DottedOIDToCode.py id-pe-authorityInfoAccess 1.3.6.1.5.5.7.1.1
+    static const uint8_t id_pe_authorityInfoAccess[] = {
+      0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x01
+    };
+
+    if (ext->id.len == PR_ARRAY_SIZE(id_ce) + 1 &&
+        !memcmp(ext->id.data, id_ce, PR_ARRAY_SIZE(id_ce))) {
+      switch (ext->id.data[ext->id.len - 1]) {
         case 14: out = &dummyEncodedSubjectKeyIdentifier; break; // bug 965136
         case 15: out = &encodedKeyUsage; break;
         case 17: out = &dummyEncodedSubjectAltName; break; // bug 970542
@@ -89,21 +98,20 @@ BackCert::Init(const SECItem& certDER)
         case 37: out = &encodedExtendedKeyUsage; break;
         case 54: out = &encodedInhibitAnyPolicy; break; // Bug 989051
       }
-    } else if (ext->id.len == 9 &&
-               ext->id.data[0] == 0x2b && ext->id.data[1] == 0x06 &&
-               ext->id.data[2] == 0x06 && ext->id.data[3] == 0x01 &&
-               ext->id.data[4] == 0x05 && ext->id.data[5] == 0x05 &&
-               ext->id.data[6] == 0x07 && ext->id.data[7] == 0x01) {
-      // { id-pe x }
-      switch (ext->id.data[8]) {
-        // We should remember the value of the encoded AIA extension here, but
-        // since our TrustDomain implementations get the OCSP URI using
-        // CERT_GetOCSPAuthorityInfoAccessLocation, we currently don't need to.
-        case 1: out = &dummyEncodedAuthorityInfoAccess; break;
-      }
-    } else if (ext->critical.data && ext->critical.len > 0) {
-      // The only valid explicit value of the critical flag is TRUE because
-      // it is defined as BOOLEAN DEFAULT FALSE, so we just assume it is true.
+    } else if (ext->id.len == PR_ARRAY_SIZE(id_pe_authorityInfoAccess) &&
+               !memcmp(ext->id.data, id_pe_authorityInfoAccess,
+                       PR_ARRAY_SIZE(id_pe_authorityInfoAccess))) {
+      // We should remember the value of the encoded AIA extension here, but
+      // since our TrustDomain implementations get the OCSP URI using
+      // CERT_GetOCSPAuthorityInfoAccessLocation, we currently don't need to.
+      out = &dummyEncodedAuthorityInfoAccess;
+    }
+
+    // If this is an extension we don't understand and it's marked critical,
+    // we must reject this certificate.
+    // (The only valid explicit value of the critical flag is TRUE because
+    // it is defined as BOOLEAN DEFAULT FALSE, so we just assume it is true.)
+    if (!out && ext->critical.data && ext->critical.len > 0) {
       return Fail(RecoverableError, SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
     }
 
