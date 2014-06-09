@@ -16,7 +16,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString, etc
 
-class gfx3DMatrix;
 struct gfxRGBA;
 struct nsIntPoint;
 struct nsIntRect;
@@ -44,10 +43,6 @@ AppendToString(nsACString& s, FrameMetrics::ViewID n,
 
 nsACString&
 AppendToString(nsACString& s, const gfxRGBA& c,
-               const char* pfx="", const char* sfx="");
-
-nsACString&
-AppendToString(nsACString& s, const gfx3DMatrix& m,
                const char* pfx="", const char* sfx="");
 
 nsACString&
