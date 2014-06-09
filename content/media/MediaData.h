@@ -37,7 +37,6 @@ public:
     , mOffset(aOffset)
     , mTime(aTimestamp)
     , mDuration(aDuration)
-    , mDiscontinuity(false)
   {}
 
   virtual ~MediaData() {}
@@ -53,10 +52,6 @@ public:
 
   // Duration of sample, in microseconds.
   const int64_t mDuration;
-
-  // True if this is the first sample after a gap or discontinuity in
-  // the stream. This is true for the first sample in a stream after a seek.
-  bool mDiscontinuity;
 
   int64_t GetEndTime() const { return mTime + mDuration; }
 
