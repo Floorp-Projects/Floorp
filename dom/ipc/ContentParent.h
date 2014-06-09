@@ -591,9 +591,6 @@ private:
 
     virtual void ProcessingError(Result what) MOZ_OVERRIDE;
 
-    virtual bool RecvAllocateLayerTreeId(uint64_t* aId) MOZ_OVERRIDE;
-    virtual bool RecvDeallocateLayerTreeId(const uint64_t& aId) MOZ_OVERRIDE;
-
     virtual bool RecvGetGraphicsFeatureStatus(const int32_t& aFeature,
                                               int32_t* aStatus,
                                               bool* aSuccess) MOZ_OVERRIDE;
