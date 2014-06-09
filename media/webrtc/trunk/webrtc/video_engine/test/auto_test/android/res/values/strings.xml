@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    
+
 <string name="app_name">ViEAutotest</string>
 <string name="TitleName">ViEAutotest</string>
 <string name="run_button">Run Test</string>

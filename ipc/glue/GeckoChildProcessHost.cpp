@@ -574,6 +574,22 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
       } else {
           newEnvVars["LD_LIBRARY_PATH"] = path.get();
       }
+
+#  if (MOZ_WIDGET_GTK == 3)
+      const char *ld_preload = PR_GetEnv("LD_PRELOAD");
+      nsCString new_ld_preload;
+
+      new_ld_preload.Assign(path.get());
+      new_ld_preload.AppendLiteral("/" DLL_PREFIX "mozgtk2" DLL_SUFFIX);
+
+      if (ld_preload && *ld_preload) {
+          new_ld_preload.AppendLiteral(":");
+          new_ld_preload.Append(ld_preload);
+      }
+      newEnvVars["LD_PRELOAD"] = new_ld_preload.get();
+#  endif // MOZ_WIDGET_GTK
+
+
 # elif OS_MACOSX
       newEnvVars["DYLD_LIBRARY_PATH"] = path.get();
       // XXX DYLD_INSERT_LIBRARIES should only be set when launching a plugin

@@ -40,6 +40,7 @@ using namespace mozilla::gfx;
 ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
   : mPhase(PHASE_NONE)
   , mWidget(aWidget)
+  , mLatestTransactionId(0)
   , mTargetRotation(ROTATION_0)
   , mRepeatTransaction(false)
   , mIsRepeatTransaction(false)
@@ -54,6 +55,9 @@ ClientLayerManager::ClientLayerManager(nsIWidget* aWidget)
 
 ClientLayerManager::~ClientLayerManager()
 {
+  if (mTransactionIdAllocator) {
+    DidComposite(mLatestTransactionId);
+  }
   ClearCachedResources();
   // Stop receiveing AsyncParentMessage at Forwarder.
   // After the call, the message is directly handled by LayerTransactionChild. 
@@ -179,7 +183,9 @@ ClientLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
                                            void* aCallbackData,
                                            EndTransactionFlags)
 {
-  PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal");
+  PROFILER_LABEL("ClientLayerManager", "EndTransactionInternal",
+    js::ProfileEntry::Category::GRAPHICS);
+
 #ifdef MOZ_LAYERS_HAVE_LOG
   MOZ_LAYERS_LOG(("  ----- (beginning paint)"));
   Log();
@@ -285,7 +291,7 @@ ClientLayerManager::Composite()
 }
 
 void
-ClientLayerManager::DidComposite()
+ClientLayerManager::DidComposite(uint64_t aTransactionId)
 {
   MOZ_ASSERT(mWidget);
   nsIWidgetListener *listener = mWidget->GetWidgetListener();
@@ -296,6 +302,7 @@ ClientLayerManager::DidComposite()
   if (listener) {
     listener->DidCompositeWindow();
   }
+  mTransactionIdAllocator->NotifyTransactionCompleted(aTransactionId);
 }
 
 void
@@ -421,11 +428,13 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 {
   mPhase = PHASE_FORWARD;
 
+  mLatestTransactionId = mTransactionIdAllocator->GetTransactionId();
+
   // forward this transaction's changeset to our LayerManagerComposite
   bool sent;
   AutoInfallibleTArray<EditReply, 10> replies;
   if (HasShadowManager() && mForwarder->EndTransaction(&replies, mRegionToClear,
-        aScheduleComposite, mPaintSequenceNumber, &sent)) {
+        mLatestTransactionId, aScheduleComposite, mPaintSequenceNumber, &sent)) {
     for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
       const EditReply& reply = replies[i];
 
@@ -478,6 +487,12 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
 
     if (sent) {
       mNeedsComposite = false;
+    }
+    if (!sent || mForwarder->GetShadowManager()->HasNoCompositor()) {
+      // Clear the transaction id so that it doesn't get returned
+      // unless we forwarded to somewhere that doesn't actually
+      // have a compositor.
+      mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
     }
   } else if (HasShadowManager()) {
     NS_WARNING("failed to forward Layers transaction");

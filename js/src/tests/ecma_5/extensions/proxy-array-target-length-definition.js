@@ -18,14 +18,23 @@ print(BUGNUMBER + ": " + summary);
 var arr = [];
 var p = new Proxy(arr, {});
 
-// This really should throw a TypeError, but we're buggy just yet, and this
-// silently does nothing.
-Object.defineProperty(p, "length", { value: 17, configurable: true });
+function assertThrowsTypeError(f)
+{
+    try {
+        f();
+        assertEq(false, true, "Must have thrown");
+    } catch (e) {
+        assertEq(e instanceof TypeError, true, "Must have thrown TypeError");
+    }
+}
+
+// Redefining non-configurable length should throw a TypeError
+assertThrowsTypeError(function () { Object.defineProperty(p, "length", { value: 17, configurable: true }); });
 
 // Same here.
-Object.defineProperty(p, "length", { value: 42, enumerable: true });
+assertThrowsTypeError(function () { Object.defineProperty(p, "length", { value: 42, enumerable: true }); });
 
-// But at least we can check the property went unchanged.
+// Check the property went unchanged.
 var pd = Object.getOwnPropertyDescriptor(p, "length");
 assertEq(pd.value, 0);
 assertEq(pd.writable, true);

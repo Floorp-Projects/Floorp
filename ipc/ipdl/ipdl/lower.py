@@ -5369,7 +5369,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def profilerLabel(self, tag, msgname):
         return StmtExpr(ExprCall(ExprVar('PROFILER_LABEL'),
                                  [ ExprLiteral.String('IPDL::' + self.protocol.name),
-                                   ExprLiteral.String(tag + msgname) ]))
+                                   ExprLiteral.String(tag + msgname),
+                                   ExprVar('js::ProfileEntry::Category::OTHER') ]))
 
     def saveActorId(self, md):
         idvar = ExprVar('__id')

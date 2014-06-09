@@ -149,12 +149,6 @@ protected:
   nsresult ResolveConstructor(JSContext *cx, JSObject *obj,
                               JSObject **objp);
 
-  // Checks if id is a number and returns the number, if aIsNumber is
-  // non-null it's set to true if the id is a number and false if it's
-  // not a number. If id is not a number this method returns -1
-  static int32_t GetArrayIndexFromId(JSContext *cx, JS::Handle<jsid> id,
-                                     bool *aIsNumber = nullptr);
-
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
 

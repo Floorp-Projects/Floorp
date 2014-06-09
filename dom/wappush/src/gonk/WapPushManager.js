@@ -63,23 +63,11 @@ this.WapPushManager = {
       return;
     }
 
-    let appid = options.headers["x-wap-application-id"];
-    if (!appid) {
-      // Assume message without applicatioin ID is WAP Push
-      debug("Push message doesn't contains X-Wap-Application-Id.");
-    }
-
-    // MMS
-    if (appid == "x-wap-application:mms.ua") {
-      let mmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
-                       .getService(Ci.nsIMmsService);
-      mmsService.QueryInterface(Ci.nsIWapPushApplication)
-                .receiveWapPush(data.array, data.array.length, data.offset, options);
-      return;
-    }
+    // TODO: Support to route the push request using x-wap-application-id.
+    // See 7.3. Application Addressing in WAP-235-PushOTA-20010425-a.
+    // http://technical.openmobilealliance.org/tech/affiliates/wap/wap-235-pushota-20010425-a.pdf
 
     /**
-    * Non-MMS, handled according to content type
     *
     * WAP Type            content-type                              x-wap-application-id
     * MMS                 "application/vnd.wap.mms-message"         "x-wap-application:mms.ua"
@@ -95,8 +83,13 @@ this.WapPushManager = {
     let contentType = options.headers["content-type"].media;
     let msg;
     let authInfo = null;
-
-    if (contentType === "text/vnd.wap.si" ||
+    if (contentType === "application/vnd.wap.mms-message") {
+      let mmsService = Cc["@mozilla.org/mms/rilmmsservice;1"]
+                       .getService(Ci.nsIMmsService);
+      mmsService.QueryInterface(Ci.nsIWapPushApplication)
+                .receiveWapPush(data.array, data.array.length, data.offset, options);
+      return;
+    } else if (contentType === "text/vnd.wap.si" ||
         contentType === "application/vnd.wap.sic") {
       msg = SI.PduHelper.parse(data, contentType);
     } else if (contentType === "text/vnd.wap.sl" ||

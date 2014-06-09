@@ -436,17 +436,6 @@ gfxPlatformFontList::LoadBadUnderlineList()
     }
 }
 
-bool 
-gfxPlatformFontList::ResolveFontName(const nsAString& aFontName, nsAString& aResolvedFontName)
-{
-    gfxFontFamily *family = FindFamily(aFontName);
-    if (family) {
-        aResolvedFontName = family->Name();
-        return true;
-    }
-    return false;
-}
-
 static PLDHashOperator
 RebuildLocalFonts(nsPtrHashKey<gfxUserFontSet>* aKey,
                   void* aClosure)
@@ -851,8 +840,12 @@ bool
 gfxPlatformFontList::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
 {
     aFamilyName.Truncate();
-    ResolveFontName(aFontName, aFamilyName);
-    return !aFamilyName.IsEmpty();
+    gfxFontFamily *ff = FindFamily(aFontName);
+    if (!ff) {
+        return false;
+    }
+    aFamilyName.Assign(ff->Name());
+    return true;
 }
 
 gfxCharacterMap*

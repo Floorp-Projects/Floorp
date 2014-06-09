@@ -542,6 +542,9 @@ let WebConsoleUtils = {
   get usageCount() {
     if (WebConsoleUtils._usageCount < CONSOLE_ENTRY_THRESHOLD) {
       WebConsoleUtils._usageCount = Services.prefs.getIntPref("devtools.selfxss.count")
+      if (Services.prefs.getBoolPref("devtools.chrome.enabled")) {
+        WebConsoleUtils.usageCount = CONSOLE_ENTRY_THRESHOLD;
+      }
     }
     return WebConsoleUtils._usageCount;
   },

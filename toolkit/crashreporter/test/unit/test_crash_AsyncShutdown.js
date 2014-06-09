@@ -20,15 +20,18 @@ function setup_crash() {
   });
 
   Services.obs.notifyObservers(null, TOPIC, null);
+  dump(new Error().stack + "\n");
   dump("Waiting for crash\n");
 }
 
 function after_crash(mdump, extra) {
   do_print("after crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
-  do_check_eq(info.phase, "testing-async-shutdown-crash");
-  do_print("Condition: " + JSON.stringify(info.conditions));
-  do_check_true(JSON.stringify(info.conditions).indexOf("A blocker that is never satisfied") != -1);
+  Assert.equal(info.phase, "testing-async-shutdown-crash");
+  Assert.equal(info.conditions[0].name, "A blocker that is never satisfied");
+  // This test spawns subprocesses by using argument "-e" of xpcshell, so
+  // this is the filename known to xpcshell.
+  Assert.equal(info.conditions[0].filename, "-e");
 }
 
 // Test that AsyncShutdown + OS.File reports errors correctly, in a case in which

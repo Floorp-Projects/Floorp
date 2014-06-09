@@ -165,7 +165,7 @@ private:
     void     Clear();
     void     InvalidateCache(bool invalidateCachedFile = true);
 
-    bool     EscapeIPv6(const char *host, nsCString &result);
+    bool     ValidIPv6orHostname(const char *host);
     bool     NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 

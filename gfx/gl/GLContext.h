@@ -2700,19 +2700,6 @@ public:
     GLint GetMaxTextureImageSize() { return mMaxTextureImageSize; }
 
 public:
-    /**
-     * Context reset constants.
-     * These are used to determine who is guilty when a context reset
-     * happens.
-     */
-    enum ContextResetARB {
-        CONTEXT_NO_ERROR = 0,
-        CONTEXT_GUILTY_CONTEXT_RESET_ARB = 0x8253,
-        CONTEXT_INNOCENT_CONTEXT_RESET_ARB = 0x8254,
-        CONTEXT_UNKNOWN_CONTEXT_RESET_ARB = 0x8255
-    };
-
-public:
     std::map<GLuint, SharedSurface_GL*> mFBOMapping;
 
     enum {

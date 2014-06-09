@@ -206,6 +206,16 @@ AndroidBridge::Init(JNIEnv *jEnv)
         jEGLSurfacePointerField = 0;
     }
 
+    jChannels = getClassGlobalRef("java/nio/channels/Channels");
+    jChannelCreate = jEnv->GetStaticMethodID(jChannels, "newChannel", "(Ljava/io/InputStream;)Ljava/nio/channels/ReadableByteChannel;");
+
+    jReadableByteChannel = getClassGlobalRef("java/nio/channels/ReadableByteChannel");
+    jByteBufferRead = jEnv->GetMethodID(jReadableByteChannel, "read", "(Ljava/nio/ByteBuffer;)I");
+
+    jInputStream = getClassGlobalRef("java/io/InputStream");
+    jClose = jEnv->GetMethodID(jInputStream, "close", "()V");
+    jAvailable = jEnv->GetMethodID(jInputStream, "available", "()I");
+
     InitAndroidJavaWrappers(jEnv);
 
     // jEnv should NOT be cached here by anything -- the jEnv here
@@ -1832,38 +1842,30 @@ nsresult AndroidBridge::CaptureThumbnail(nsIDOMWindow *window, int32_t bufW, int
     bool is24bit = (GetScreenDepth() == 24);
     uint32_t stride = bufW * (is24bit ? 4 : 2);
 
-    void* data = env->GetDirectBufferAddress(buffer);
+    uint8_t* data = static_cast<uint8_t*>(env->GetDirectBufferAddress(buffer));
     if (!data)
         return NS_ERROR_FAILURE;
 
-    nsRefPtr<gfxImageSurface> surf =
-        new gfxImageSurface(static_cast<unsigned char*>(data), nsIntSize(bufW, bufH), stride,
-                            is24bit ? gfxImageFormat::RGB24 :
-                                      gfxImageFormat::RGB16_565);
-    if (surf->CairoStatus() != 0) {
-        ALOG_BRIDGE("Error creating gfxImageSurface");
+    MOZ_ASSERT(gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO),
+               "Need BackendType::CAIRO support");
+    RefPtr<DrawTarget> dt =
+        Factory::CreateDrawTargetForData(BackendType::CAIRO,
+                                         data,
+                                         IntSize(bufW, bufH),
+                                         stride,
+                                         is24bit ? SurfaceFormat::B8G8R8X8 :
+                                                   SurfaceFormat::R5G6B5);
+    if (!dt) {
+        ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-
-    nsRefPtr<gfxContext> context;
-    if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(BackendType::CAIRO)) {
-        RefPtr<DrawTarget> dt =
-            gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, IntSize(bufW, bufH));
-
-        if (!dt) {
-            ALOG_BRIDGE("Error creating DrawTarget");
-            return NS_ERROR_FAILURE;
-        }
-        context = new gfxContext(dt);
-    } else {
-        context = new gfxContext(surf);
-    }
+    nsRefPtr<gfxContext> context = new gfxContext(dt);
     gfxPoint pt(0, 0);
     context->Translate(pt);
     context->Scale(scale * bufW / srcW, scale * bufH / srcH);
     rv = presShell->RenderDocument(r, renderDocFlags, bgColor, context);
     if (is24bit) {
-        gfxUtils::ConvertBGRAtoRGBA(surf);
+        gfxUtils::ConvertBGRAtoRGBA(data, stride * bufH);
     }
     NS_ENSURE_SUCCESS(rv, rv);
     return NS_OK;
@@ -2100,4 +2102,42 @@ AndroidBridge::RunDelayedTasks()
         task->Run();
     }
     return -1;
+}
+
+jobject AndroidBridge::ChannelCreate(jobject stream) {
+    JNIEnv *env = GetJNIForThread();
+    env->PushLocalFrame(1);
+    jobject channel = env->CallStaticObjectMethod(sBridge->jReadableByteChannel, sBridge->jChannelCreate, stream);
+    return env->PopLocalFrame(channel);
+}
+
+void AndroidBridge::InputStreamClose(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    env->CallVoidMethod(obj, sBridge->jClose);
+}
+
+uint32_t AndroidBridge::InputStreamAvailable(jobject obj) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    return env->CallIntMethod(obj, sBridge->jAvailable);
+}
+
+nsresult AndroidBridge::InputStreamRead(jobject obj, char *aBuf, uint32_t aCount, uint32_t *aRead) {
+    JNIEnv *env = GetJNIForThread();
+    AutoLocalJNIFrame jniFrame(env, 1);
+    jobject arr =  env->NewDirectByteBuffer(aBuf, aCount);
+    jint read = env->CallIntMethod(obj, sBridge->jByteBufferRead, arr);
+
+    if (env->ExceptionCheck()) {
+        env->ExceptionClear();
+        return NS_ERROR_FAILURE;
+    }
+
+    if (read <= 0) {
+        *aRead = 0;
+        return NS_OK;
+    }
+    *aRead = read;
+    return NS_OK;
 }

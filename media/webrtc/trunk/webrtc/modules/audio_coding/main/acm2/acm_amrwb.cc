@@ -40,6 +40,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifndef WEBRTC_CODEC_AMRWB
 ACMAMRwb::ACMAMRwb(int16_t /* codec_id */)
     : encoder_inst_ptr_(NULL),
@@ -312,5 +314,7 @@ ACMAMRPackingFormat ACMAMRwb::AMRwbDecoderPackingFormat() const {
 }
 
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc

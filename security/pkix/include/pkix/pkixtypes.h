@@ -34,13 +34,18 @@
 
 namespace mozilla { namespace pkix {
 
-typedef ScopedPtr<PLArenaPool, PL_FreeArenaPool> ScopedPLArenaPool;
+inline void
+PORT_FreeArena_false(PLArenaPool* arena) {
+  // PL_FreeArenaPool can't be used because it doesn't actually free the
+  // memory, which doesn't work well with memory analysis tools
+  return PORT_FreeArena(arena, PR_FALSE);
+}
+
+typedef ScopedPtr<PLArenaPool, PORT_FreeArena_false> ScopedPLArenaPool;
 
 typedef ScopedPtr<CERTCertificate, CERT_DestroyCertificate>
         ScopedCERTCertificate;
 typedef ScopedPtr<CERTCertList, CERT_DestroyCertList> ScopedCERTCertList;
-typedef ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
-        ScopedSECKEYPublicKey;
 
 MOZILLA_PKIX_ENUM_CLASS EndEntityOrCA { MustBeEndEntity = 0, MustBeCA = 1 };
 
@@ -95,7 +100,7 @@ public:
   // (assuming the candidate cert is not actively distrusted).
   virtual SECStatus GetCertTrust(EndEntityOrCA endEntityOrCA,
                                  const CertPolicyId& policy,
-                                 const CERTCertificate* candidateCert,
+                                 const SECItem& candidateCertDER,
                          /*out*/ TrustLevel* trustLevel) = 0;
 
   // Find all certificates (intermediate and/or root) in the certificate
@@ -110,15 +115,12 @@ public:
                                          PRTime time,
                                  /*out*/ ScopedCERTCertList& results) = 0;
 
-  // Verify the given signature using the public key of the given certificate.
-  // The implementation should be careful to ensure that the given certificate
-  // has all the public key information needed--i.e. it should ensure that the
-  // certificate is not trying to use EC(DSA) parameter inheritance.
+  // Verify the given signature using the given public key.
   //
   // Most implementations of this function should probably forward the call
   // directly to mozilla::pkix::VerifySignedData.
   virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
-                                     const CERTCertificate* cert) = 0;
+                                     const SECItem& subjectPublicKeyInfo) = 0;
 
   // issuerCertToDup is only non-const so CERT_DupCertificate can be called on
   // it.

@@ -338,18 +338,13 @@ bool VCMCodecDataBase::RequiresEncoderReset(const VideoCodec& new_send_codec) {
       }
       break;
     case kVideoCodecGeneric:
-      if (memcmp(&new_send_codec.codecSpecific.Generic,
-                 &send_codec_.codecSpecific.Generic,
-                 sizeof(new_send_codec.codecSpecific.Generic)) !=
-          0) {
-        return true;
-      }
       break;
     // Known codecs without payload-specifics
     case kVideoCodecI420:
     case kVideoCodecRED:
     case kVideoCodecULPFEC:
     case kVideoCodecH264:
+      // TODO(jesup): analyze codec config for H264
       break;
     // Unknown codec type, reset just to be sure.
     case kVideoCodecUnknown:
@@ -563,6 +558,11 @@ bool VCMCodecDataBase::SupportsRenderScheduling() const {
   if (current_dec_is_external_) {
     const VCMExtDecoderMapItem* ext_item = FindExternalDecoderItem(
         receive_codec_.plType);
+    if (!ext_item) {
+      WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, VCMId(id_),
+                   "Unknown payload type: %u", receive_codec_.plType);
+      return false;
+    }
     render_timing = ext_item->internal_render_timing;
   }
   return render_timing;

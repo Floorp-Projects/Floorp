@@ -8,6 +8,7 @@
 
 #include "mozilla/NullPtr.h"
 #include "js/TypeDecls.h"
+#include "js/ProfilingStack.h"
 #include <stdint.h>
 
 namespace mozilla {
@@ -23,9 +24,12 @@ class ProfilerMarkerPayload;
 
 // Returns a handle to pass on exit. This can check that we are popping the
 // correct callstack.
-inline void* mozilla_sampler_call_enter(const char *aInfo, void *aFrameAddress = nullptr,
-                                        bool aCopy = false, uint32_t line = 0);
+inline void* mozilla_sampler_call_enter(const char *aInfo, js::ProfileEntry::Category aCategory,
+                                        void *aFrameAddress = nullptr, bool aCopy = false,
+                                        uint32_t line = 0);
+
 inline void  mozilla_sampler_call_exit(void* handle);
+
 void  mozilla_sampler_add_marker(const char *aInfo,
                                  ProfilerMarkerPayload *aPayload = nullptr);
 

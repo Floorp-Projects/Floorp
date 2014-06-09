@@ -10,6 +10,7 @@
 
 #include "webrtc/voice_engine/voe_base_impl.h"
 
+#include "webrtc/common.h"
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_device/audio_device_impl.h"
@@ -223,24 +224,31 @@ int VoEBaseImpl::OnDataAvailable(const int voe_channels[],
   // No need to go through the APM, demultiplex the data to each VoE channel,
   // encode and send to the network.
   for (int i = 0; i < number_of_voe_channels; ++i) {
-    voe::ChannelOwner ch =
-        _shared->channel_manager().GetChannel(voe_channels[i]);
-    voe::Channel* channel_ptr = ch.channel();
-    if (!channel_ptr)
-      continue;
-
-    if (channel_ptr->InputIsOnHold()) {
-      channel_ptr->UpdateLocalTimeStamp();
-    } else if (channel_ptr->Sending()) {
-      channel_ptr->Demultiplex(audio_data, sample_rate, number_of_frames,
-                               number_of_channels);
-      channel_ptr->PrepareEncodeAndSend(sample_rate);
-      channel_ptr->EncodeAndSend();
-    }
+    OnData(voe_channels[i], audio_data, 16, sample_rate,
+           number_of_channels, number_of_frames);
   }
 
   // Return 0 to indicate no need to change the volume.
   return 0;
+}
+
+void VoEBaseImpl::OnData(int voe_channel, const void* audio_data,
+                         int bits_per_sample, int sample_rate,
+                         int number_of_channels,
+                         int number_of_frames) {
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(voe_channel);
+  voe::Channel* channel_ptr = ch.channel();
+  if (!channel_ptr)
+    return;
+
+  if (channel_ptr->InputIsOnHold()) {
+    channel_ptr->UpdateLocalTimeStamp();
+  } else if (channel_ptr->Sending()) {
+    channel_ptr->Demultiplex(static_cast<const int16_t*>(audio_data),
+                             sample_rate, number_of_frames, number_of_channels);
+    channel_ptr->PrepareEncodeAndSend(sample_rate);
+    channel_ptr->EncodeAndSend();
+  }
 }
 
 int VoEBaseImpl::RegisterVoiceEngineObserver(VoiceEngineObserver& observer)
@@ -468,22 +476,8 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
       LOG_FERR1(LS_ERROR, set_device_sample_rate_hz, 48000);
       return -1;
     }
-    // Assume 16 kHz mono until the audio frames are received from the capture
-    // device, at which point this can be updated.
-    if (audioproc->set_sample_rate_hz(16000)) {
-      LOG_FERR1(LS_ERROR, set_sample_rate_hz, 16000);
-      return -1;
-    }
-    if (audioproc->set_num_channels(1, 1) != 0) {
-      LOG_FERR2(LS_ERROR, set_num_channels, 1, 1);
-      return -1;
-    }
-    if (audioproc->set_num_reverse_channels(1) != 0) {
-      LOG_FERR1(LS_ERROR, set_num_reverse_channels, 1);
-      return -1;
-    }
 
-    // Configure AudioProcessing components. All are disabled by default.
+    // Configure AudioProcessing components.
     if (audioproc->high_pass_filter()->Enable(true) != 0) {
       LOG_FERR1(LS_ERROR, high_pass_filter()->Enable, true);
       return -1;
@@ -534,22 +528,34 @@ int VoEBaseImpl::Terminate()
     return TerminateInternal();
 }
 
-int VoEBaseImpl::CreateChannel()
+int VoEBaseImpl::CreateChannel() {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+               "CreateChannel()");
+  CriticalSectionScoped cs(_shared->crit_sec());
+  if (!_shared->statistics().Initialized()) {
+      _shared->SetLastError(VE_NOT_INITED, kTraceError);
+      return -1;
+  }
+
+  voe::ChannelOwner channel_owner = _shared->channel_manager().CreateChannel();
+
+  return InitializeChannel(&channel_owner);
+}
+
+int VoEBaseImpl::CreateChannel(const Config& config) {
+  CriticalSectionScoped cs(_shared->crit_sec());
+  if (!_shared->statistics().Initialized()) {
+      _shared->SetLastError(VE_NOT_INITED, kTraceError);
+      return -1;
+  }
+  voe::ChannelOwner channel_owner = _shared->channel_manager().CreateChannel(
+      config);
+  return InitializeChannel(&channel_owner);
+}
+
+int VoEBaseImpl::InitializeChannel(voe::ChannelOwner* channel_owner)
 {
-    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-                 "CreateChannel()");
-    CriticalSectionScoped cs(_shared->crit_sec());
-
-    if (!_shared->statistics().Initialized())
-    {
-        _shared->SetLastError(VE_NOT_INITED, kTraceError);
-        return -1;
-    }
-
-    voe::ChannelOwner channel_owner =
-        _shared->channel_manager().CreateChannel();
-
-    if (channel_owner.channel()->SetEngineInformation(
+    if (channel_owner->channel()->SetEngineInformation(
             _shared->statistics(),
             *_shared->output_mixer(),
             *_shared->transmit_mixer(),
@@ -563,23 +569,23 @@ int VoEBaseImpl::CreateChannel()
           "CreateChannel() failed to associate engine and channel."
           " Destroying channel.");
       _shared->channel_manager()
-          .DestroyChannel(channel_owner.channel()->ChannelId());
+          .DestroyChannel(channel_owner->channel()->ChannelId());
       return -1;
-    } else if (channel_owner.channel()->Init() != 0) {
+    } else if (channel_owner->channel()->Init() != 0) {
       _shared->SetLastError(
           VE_CHANNEL_NOT_CREATED,
           kTraceError,
           "CreateChannel() failed to initialize channel. Destroying"
           " channel.");
       _shared->channel_manager()
-          .DestroyChannel(channel_owner.channel()->ChannelId());
+          .DestroyChannel(channel_owner->channel()->ChannelId());
       return -1;
     }
 
     WEBRTC_TRACE(kTraceStateInfo, kTraceVoice,
         VoEId(_shared->instance_id(), -1),
-        "CreateChannel() => %d", channel_owner.channel()->ChannelId());
-    return channel_owner.channel()->ChannelId();
+        "CreateChannel() => %d", channel_owner->channel()->ChannelId());
+    return channel_owner->channel()->ChannelId();
 }
 
 int VoEBaseImpl::DeleteChannel(int channel)
@@ -868,7 +874,7 @@ int VoEBaseImpl::GetVersion(char version[1024])
 
 int32_t VoEBaseImpl::AddBuildInfo(char* str) const
 {
-    return sprintf(str, "Build: svn:%s %s\n", WEBRTC_SVNREVISION, BUILDINFO);
+    return sprintf(str, "Build: %s\n", BUILDINFO);
 }
 
 int32_t VoEBaseImpl::AddVoEVersion(char* str) const
@@ -1013,7 +1019,7 @@ int32_t VoEBaseImpl::StopPlayout() {
                VoEId(_shared->instance_id(), -1),
                "VoEBaseImpl::StopPlayout()");
   // Stop audio-device playing if no channel is playing out
-  if (_shared->NumOfSendingChannels() == 0) {
+  if (_shared->NumOfPlayingChannels() == 0) {
     if (_shared->audio_device()->StopPlayout() != 0) {
       _shared->SetLastError(VE_CANNOT_STOP_PLAYOUT,
                             kTraceError,
@@ -1151,17 +1157,11 @@ int VoEBaseImpl::ProcessRecordedDataWithAPM(
   assert(_shared->transmit_mixer() != NULL);
   assert(_shared->audio_device() != NULL);
 
-  bool is_analog_agc(false);
-  if (_shared->audio_processing() &&
-      _shared->audio_processing()->gain_control()->mode() ==
-          GainControl::kAdaptiveAnalog) {
-    is_analog_agc = true;
-  }
-
-  // Only deal with the volume in adaptive analog mode.
   uint32_t max_volume = 0;
   uint16_t current_voe_mic_level = 0;
-  if (is_analog_agc) {
+  // Check for zero to skip this calculation; the consumer may use this to
+  // indicate no volume is available.
+  if (current_volume != 0) {
     // Scale from ADM to VoE level range
     if (_shared->audio_device()->MaxMicrophoneVolume(&max_volume) == 0) {
       if (max_volume) {
@@ -1209,9 +1209,6 @@ int VoEBaseImpl::ProcessRecordedDataWithAPM(
     _shared->transmit_mixer()->EncodeAndSend(voe_channels,
                                              number_of_voe_channels);
   }
-
-  if (!is_analog_agc)
-    return 0;
 
   // Scale from VoE to ADM level range.
   uint32_t new_voe_mic_level = _shared->transmit_mixer()->CaptureLevel();

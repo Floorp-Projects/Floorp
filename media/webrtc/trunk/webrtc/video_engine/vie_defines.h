@@ -51,14 +51,6 @@ enum { kViEMaxCodecHeight = 3072 };
 enum { kViEMaxCodecFramerate = 60 };
 enum { kViEMinCodecBitrate = 30 };
 
-// ViEEncryption
-enum { kViEMaxSrtpKeyLength = 30 };
-enum { kViEMinSrtpEncryptLength = 16 };
-enum { kViEMaxSrtpEncryptLength = 256 };
-enum { kViEMaxSrtpAuthSh1Length = 20 };
-enum { kViEMaxSrtpTagAuthNullLength = 12 };
-enum { kViEMaxSrtpKeyAuthNullLength = 256 };
-
 // ViENetwork
 enum { kViEMaxMtu = 1500 };
 enum { kViESocketThreads = 1 };

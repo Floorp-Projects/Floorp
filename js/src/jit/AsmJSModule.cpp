@@ -6,6 +6,8 @@
 
 #include "jit/AsmJSModule.h"
 
+#include <errno.h>
+
 #ifndef XP_WIN
 # include <sys/mman.h>
 #endif
@@ -97,7 +99,7 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 #ifdef XP_WIN
     JS_ALWAYS_TRUE(VirtualFree(code, 0, MEM_RELEASE));
 #else
-    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0);
+    JS_ALWAYS_TRUE(munmap(code, totalBytes) == 0 || errno == ENOMEM);
 #endif
 }
 
@@ -313,7 +315,12 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
 
     for (size_t i = 0; i < staticLinkData_.relativeLinks.length(); i++) {
         RelativeLink link = staticLinkData_.relativeLinks[i];
-        *(void **)(code_ + link.patchAtOffset) = code_ + link.targetOffset;
+        uint8_t *patchAt = code_ + link.patchAtOffset;
+        uint8_t *target = code_ + link.targetOffset;
+        if (link.isRawPointerPatch())
+            *(uint8_t **)(patchAt) = target;
+        else
+            Assembler::patchInstructionImmediate(patchAt, PatchedImmPtr(target));
     }
 
     for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
@@ -374,6 +381,9 @@ AsmJSModule::~AsmJSModule()
 
         DeallocateExecutableMemory(code_, pod.totalBytes_);
     }
+
+    for (size_t i = 0; i < numFunctionCounts(); i++)
+        js_delete(functionCounts(i));
 }
 
 void
@@ -394,6 +404,7 @@ AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModu
 #if defined(JS_ION_PERF)
                         perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
 #endif
+                        functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
                         staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
 }
 
@@ -1009,7 +1020,8 @@ GetCPUID(uint32_t *cpuId)
         X86 = 0x1,
         X64 = 0x2,
         ARM = 0x3,
-        ARCH_BITS = 2
+        MIPS = 0x4,
+        ARCH_BITS = 3
     };
 
 #if defined(JS_CODEGEN_X86)
@@ -1023,6 +1035,10 @@ GetCPUID(uint32_t *cpuId)
 #elif defined(JS_CODEGEN_ARM)
     JS_ASSERT(GetARMFlags() <= (UINT32_MAX >> ARCH_BITS));
     *cpuId = ARM | (GetARMFlags() << ARCH_BITS);
+    return true;
+#elif defined(JS_CODEGEN_MIPS)
+    JS_ASSERT(GetMIPSFlags() <= (UINT32_MAX >> ARCH_BITS));
+    *cpuId = MIPS | (GetMIPSFlags() << ARCH_BITS);
     return true;
 #else
     return false;
@@ -1263,6 +1279,13 @@ js::StoreAsmJSModuleInCache(AsmJSParser &parser,
                             const AsmJSModule &module,
                             ExclusiveContext *cx)
 {
+    // Don't serialize modules with information about basic block hit counts
+    // compiled in, which both affects code speed and uses absolute addresses
+    // that can't be serialized. (This is separate from normal profiling and
+    // requires an addon to activate).
+    if (module.numFunctionCounts())
+        return false;
+
     MachineId machineId;
     if (!machineId.extractCurrentState(cx))
         return false;

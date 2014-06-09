@@ -58,6 +58,7 @@
 
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCharTraits.h"
 #include "nsCocoaFeatures.h"
@@ -614,6 +615,10 @@ gfxMacPlatformFontList::gfxMacPlatformFontList() :
     gfxPlatformFontList(false),
     mDefaultFont(nullptr)
 {
+#ifdef MOZ_BUNDLED_FONTS
+    ActivateBundledFonts();
+#endif
+
     ::CFNotificationCenterAddObserver(::CFNotificationCenterGetLocalCenter(),
                                       this,
                                       RegisteredFontsChangedNotificationCallback,
@@ -1125,3 +1130,57 @@ gfxMacPlatformFontList::CreateFontInfoData()
     return fi.forget();
 }
 
+#ifdef MOZ_BUNDLED_FONTS
+
+void
+gfxMacPlatformFontList::ActivateBundledFonts()
+{
+    nsCOMPtr<nsIFile> localDir;
+    nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+    if (NS_FAILED(localDir->Append(NS_LITERAL_STRING("fonts")))) {
+        return;
+    }
+    bool isDir;
+    if (NS_FAILED(localDir->IsDirectory(&isDir)) || !isDir) {
+        return;
+    }
+
+    nsCOMPtr<nsISimpleEnumerator> e;
+    rv = localDir->GetDirectoryEntries(getter_AddRefs(e));
+    if (NS_FAILED(rv)) {
+        return;
+    }
+
+    bool hasMore;
+    while (NS_SUCCEEDED(e->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr<nsISupports> entry;
+        if (NS_FAILED(e->GetNext(getter_AddRefs(entry)))) {
+            break;
+        }
+        nsCOMPtr<nsIFile> file = do_QueryInterface(entry);
+        if (!file) {
+            continue;
+        }
+        nsCString path;
+        if (NS_FAILED(file->GetNativePath(path))) {
+            continue;
+        }
+        CFURLRef fontURL =
+            ::CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault,
+                                                      (uint8_t*)path.get(),
+                                                      path.Length(),
+                                                      false);
+        if (fontURL) {
+            CFErrorRef error = nullptr;
+            ::CTFontManagerRegisterFontsForURL(fontURL,
+                                               kCTFontManagerScopeProcess,
+                                               &error);
+            ::CFRelease(fontURL);
+        }
+    }
+}
+
+#endif

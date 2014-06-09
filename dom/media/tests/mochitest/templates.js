@@ -135,6 +135,16 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    function (test) {
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
+        is(test.pcRemote.signalingState, STABLE,
+           "signalingState after remote setLocalDescription is 'stable'");
+        test.next();
+      });
+    }
+  ],
+  [
     'PC_LOCAL_GET_ANSWER',
     function (test) {
       if (test.pcRemote) {
@@ -157,16 +167,6 @@ var commandsPeerConnection = [
       test.setRemoteDescription(test.pcLocal, test._remote_answer, STABLE, function () {
         is(test.pcLocal.signalingState, STABLE,
            "signalingState after local setRemoteDescription is 'stable'");
-        test.next();
-      });
-    }
-  ],
-  [
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
-    function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
-        is(test.pcRemote.signalingState, STABLE,
-           "signalingState after remote setLocalDescription is 'stable'");
         test.next();
       });
     }
@@ -375,6 +375,42 @@ var commandsDataChannel = [
     }
   ],
   [
+    'PC_LOCAL_SETUP_DATA_CHANNEL_CALLBACK',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcLocal, function () {
+        ok(true, test.pcLocal + " dataChannels[0] switched to 'open'");
+      }, function () {
+        ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout')
+      });
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_DATA_CHANNEL_CALLBACK',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcRemote, function () {
+        ok(true, test.pcRemote + " dataChannels[0] switched to 'open'");
+      }, function () {
+        ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout');
+      });
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    function (test) {
+      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE,
+        function () {
+          is(test.pcRemote.signalingState, STABLE,
+             "signalingState after remote setLocalDescription is 'stable'");
+          test.next();
+        }
+      );
+    }
+  ],
+  [
     'PC_LOCAL_SET_REMOTE_DESCRIPTION',
     function (test) {
       test.setRemoteDescription(test.pcLocal, test.pcRemote._last_answer, STABLE,
@@ -386,18 +422,81 @@ var commandsDataChannel = [
     }
   ],
   [
-    'PC_REMOTE_SET_LOCAL_DESCRIPTION',
+    'PC_LOCAL_WAIT_FOR_ICE_CONNECTED',
     function (test) {
-      test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE,
-        function (sourceChannel, targetChannel) {
-          is(sourceChannel.readyState, "open", test.pcLocal + " is in state: 'open'");
-          is(targetChannel.readyState, "open", test.pcRemote + " is in state: 'open'");
+      var myTest = test;
+      var myPc = myTest.pcLocal;
 
-          is(test.pcRemote.signalingState, STABLE,
-             "signalingState after remote setLocalDescription is 'stable'");
-          test.next();
-        }
-      );
+      function onIceConnectedSuccess () {
+        ok(true, "pc_local: ICE switched to 'connected' state");
+        myTest.next();
+      };
+      function onIceConnectedFailed () {
+        dumpSdp(myTest);
+        ok(false, "pc_local: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
+        myTest.next();
+      };
+
+      if (myPc.isIceConnected()) {
+        ok(true, "pc_local: ICE is in connected state");
+        myTest.next();
+      } else if (myPc.isIceConnectionPending()) {
+        myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
+      } else {
+        dumpSdp(myTest);
+        ok(false, "pc_local: ICE is already in bad state: " + myPc.iceConnectionState);
+        myTest.next();
+      }
+    }
+  ],
+  [
+    'PC_REMOTE_WAIT_FOR_ICE_CONNECTED',
+    function (test) {
+      var myTest = test;
+      var myPc = myTest.pcRemote;
+
+      function onIceConnectedSuccess () {
+        ok(true, "pc_remote: ICE switched to 'connected' state");
+        myTest.next();
+      };
+      function onIceConnectedFailed () {
+        dumpSdp(myTest);
+        ok(false, "pc_remote: ICE failed to switch to 'connected' state: " + myPc.iceConnectionState);
+        myTest.next();
+      };
+
+      if (myPc.isIceConnected()) {
+        ok(true, "pc_remote: ICE is in connected state");
+        myTest.next();
+      } else if (myPc.isIceConnectionPending()) {
+        myPc.waitForIceConnected(onIceConnectedSuccess, onIceConnectedFailed);
+      } else {
+        dumpSdp(myTest);
+        ok(false, "pc_remote: ICE is already in bad state: " + myPc.iceConnectionState);
+        myTest.next();
+      }
+    }
+  ],
+  [
+    'PC_LOCAL_VERIFY_DATA_CHANNEL_STATE',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcLocal, function() {
+        test.next();
+      }, function() {
+        ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout')
+      });
+    }
+  ],
+  [
+    'PC_REMOTE_VERIFY_DATA_CHANNEL_STATE',
+    function (test) {
+      test.waitForInitialDataChannel(test.pcRemote, function() {
+        test.next();
+      }, function() {
+        ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
+        unexpectedEventAndFinish(this, 'timeout');
+      });
     }
   ],
   [
@@ -508,10 +607,27 @@ var commandsDataChannel = [
     }
   ],
   [
+    'SEND_MESSAGE_BACK_THROUGH_FIRST_CHANNEL',
+    function (test) {
+      var message = "Return a message also through 1st channel";
+      var options = {
+        sourceChannel: test.pcRemote.dataChannels[0],
+        targetChannel: test.pcLocal.dataChannels[0]
+      };
+
+      test.send(message, function (channel, data) {
+        is(test.pcLocal.dataChannels.indexOf(channel), 0, "1st channel used");
+        is(data, message, "Return message has the correct content.");
+
+        test.next();
+      }, options);
+    }
+  ],
+  [
     'CREATE_NEGOTIATED_DATA_CHANNEL',
     function (test) {
       var options = {negotiated:true, id: 5, protocol:"foo/bar", ordered:false,
-		     maxRetransmits:500};
+        maxRetransmits:500};
       test.createDataChannel(options, function (sourceChannel2, targetChannel2) {
         is(sourceChannel2.readyState, "open", sourceChannel2 + " is in state: 'open'");
         is(targetChannel2.readyState, "open", targetChannel2 + " is in state: 'open'");
@@ -521,10 +637,11 @@ var commandsDataChannel = [
 
         if (options.id != undefined) {
           is(sourceChannel2.id, options.id, sourceChannel2 + " id is:" + sourceChannel2.id);
-	} else {
-	  options.id = sourceChannel2.id;
-	}
-	var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
+        }
+        else {
+          options.id = sourceChannel2.id;
+        }
+        var reliable = !options.ordered ? false : (options.maxRetransmits || options.maxRetransmitTime);
         is(sourceChannel2.protocol, options.protocol, sourceChannel2 + " protocol is:" + sourceChannel2.protocol);
         is(sourceChannel2.reliable, reliable, sourceChannel2 + " reliable is:" + sourceChannel2.reliable);
 /*
@@ -561,30 +678,6 @@ var commandsDataChannel = [
       test.send(message, function (channel, data) {
         is(channels.indexOf(channel), channels.length - 1, "Last channel used");
         is(data, message, "Received message has the correct content.");
-
-        test.next();
-      });
-    }
-  ],
-  [
-    'CLOSE_LAST_OPENED_DATA_CHANNEL2',
-    function (test) {
-      var channels = test.pcRemote.dataChannels;
-
-      test.closeDataChannel(channels.length - 1, function (channel) {
-        is(channel.readyState, "closed", "Channel is in state: 'closed'");
-
-        test.next();
-      });
-    }
-  ],
-  [
-    'CLOSE_LAST_OPENED_DATA_CHANNEL',
-    function (test) {
-      var channels = test.pcRemote.dataChannels;
-
-      test.closeDataChannel(channels.length - 1, function (channel) {
-        is(channel.readyState, "closed", "Channel is in state: 'closed'");
 
         test.next();
       });

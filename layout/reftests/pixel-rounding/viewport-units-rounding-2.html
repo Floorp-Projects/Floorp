@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<title>viewport units rounding test</title>
+<meta charset="UTF-8">
+<style>
+
+body > div > div { line-height: 1px }
+span {
+  display: inline-block;
+  height: 1px;
+  width: var(--w);
+  vertical-align: bottom;
+}
+span:nth-child(1) {
+  background: red;
+}
+span:nth-child(2) {
+  background: white;
+  margin-left: var(--negw);
+}
+
+</style>
+<body>
+<script>
+
+for (var p = 0; p < 20; ++p) {
+  var position = ((20 * p) + (p / 50)) + "px";
+  var container = document.createElement("div");
+  container.style.position = "absolute";
+  container.style.top = "0px";
+  container.style.left = position;
+  for (var w = 0; w < 99; ++w) {
+    var width = (0.5 + w / 100) + "vw";
+    var div = document.createElement("div");
+    div.setAttribute("style", "--w: " + width + "; " +
+                              "--negw: -" + width);
+    div.appendChild(document.createElement("span"));
+    div.appendChild(document.createElement("span"));
+    container.appendChild(div);
+  }
+  document.body.appendChild(container);
+}
+
+</script>

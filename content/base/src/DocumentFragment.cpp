@@ -35,18 +35,6 @@ DocumentFragment::IsNodeOfType(uint32_t aFlags) const
   return !(aFlags & ~(eCONTENT | eDOCUMENT_FRAGMENT));
 }
 
-nsIAtom*
-DocumentFragment::DoGetID() const
-{
-  return nullptr;  
-}
-
-nsIAtom*
-DocumentFragment::GetIDAttributeName() const
-{
-  return nullptr;
-}
-
 NS_IMETHODIMP
 DocumentFragment::QuerySelector(const nsAString& aSelector,
                                 nsIDOMElement **aReturn)

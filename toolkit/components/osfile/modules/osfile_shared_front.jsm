@@ -550,7 +550,8 @@ AbstractFile.removeRecursive = function(path, options = {}) {
  */
 AbstractFile.makeDir = function(path, options = {}) {
   if (!options.from) {
-    return OS.File._makeDir(path, options);
+    OS.File._makeDir(path, options);
+    return;
   }
   if (!path.startsWith(options.from)) {
     throw new Error("Incorrect use of option |from|: " + path + " is not a descendant of " + options.from);

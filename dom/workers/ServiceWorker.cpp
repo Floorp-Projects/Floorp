@@ -44,3 +44,13 @@ ServiceWorker::WrapObject(JSContext* aCx)
 
   return ServiceWorkerBinding::Wrap(aCx, this);
 }
+
+WorkerPrivate*
+ServiceWorker::GetWorkerPrivate() const
+{
+  // At some point in the future, this may be optimized to terminate a worker
+  // that hasn't been used in a certain amount of time or when there is memory
+  // pressure or similar.
+  MOZ_ASSERT(mSharedWorker);
+  return mSharedWorker->GetWorkerPrivate();
+}

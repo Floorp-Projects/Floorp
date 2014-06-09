@@ -82,7 +82,6 @@ public class GeckoEvent {
         SENSOR_EVENT(3),
         LOCATION_EVENT(5),
         IME_EVENT(6),
-        DRAW(7),
         SIZE_CHANGED(8),
         APP_BACKGROUNDING(9),
         APP_FOREGROUNDING(10),
@@ -656,12 +655,6 @@ public class GeckoEvent {
         event.mRangeForeColor = rangeForeColor;
         event.mRangeBackColor = rangeBackColor;
         event.mRangeLineColor = rangeLineColor;
-        return event;
-    }
-
-    public static GeckoEvent createDrawEvent(Rect rect) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.DRAW);
-        event.mRect = rect;
         return event;
     }
 

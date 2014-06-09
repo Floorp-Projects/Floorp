@@ -149,3 +149,8 @@ a[href] img {
   vertical-align: middle;
   margin-left: 2px;
 }
+
+.handlersMenuList > .menulist-label-box > .menulist-icon {
+  max-width: 16px;
+  max-height: 16px;
+}

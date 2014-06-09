@@ -35,16 +35,18 @@ class PacketBuilder {
 
   struct ReportBlock {
     ReportBlock(uint32_t ssrc, uint32_t extended_max, uint8_t fraction_loss,
-                uint32_t cumulative_loss)
+                uint32_t cumulative_loss, uint32_t jitter)
         : ssrc(ssrc),
           extended_max(extended_max),
           fraction_loss(fraction_loss),
-          cumulative_loss(cumulative_loss) {}
+          cumulative_loss(cumulative_loss),
+          jitter(jitter) {}
 
     uint32_t ssrc;
     uint32_t extended_max;
     uint8_t fraction_loss;
     uint32_t cumulative_loss;
+    uint32_t jitter;
   };
 
   PacketBuilder()
@@ -108,9 +110,9 @@ class PacketBuilder {
 
   void AddRrPacket(uint32_t sender_ssrc, uint32_t rtp_ssrc,
                    uint32_t extended_max, uint8_t fraction_loss,
-                   uint32_t cumulative_loss) {
+                   uint32_t cumulative_loss, uint32_t jitter) {
     ReportBlock report_block(rtp_ssrc, extended_max, fraction_loss,
-                             cumulative_loss);
+                             cumulative_loss, jitter);
     std::list<ReportBlock> report_block_vector(&report_block,
                                                &report_block + 1);
     AddRrPacketMultipleReportBlocks(sender_ssrc, report_block_vector);
@@ -123,18 +125,68 @@ class PacketBuilder {
     for (std::list<ReportBlock>::const_iterator it = report_blocks.begin();
          it != report_blocks.end(); ++it) {
       AddReportBlock(it->ssrc, it->extended_max, it->fraction_loss,
-                     it->cumulative_loss);
+                     it->cumulative_loss, it->jitter);
     }
   }
 
   void AddReportBlock(uint32_t rtp_ssrc, uint32_t extended_max,
-                      uint8_t fraction_loss, uint32_t cumulative_loss) {
+                      uint8_t fraction_loss, uint32_t cumulative_loss,
+                      uint32_t jitter) {
     Add32(rtp_ssrc);
     Add32((fraction_loss << 24) + cumulative_loss);
     Add32(extended_max);
-    Add32(0);  // Jitter.
+    Add32(jitter);
     Add32(0);  // Last SR.
     Add32(0);  // Delay since last SR.
+  }
+
+  void AddXrHeader(uint32_t sender_ssrc) {
+    AddRtcpHeader(207, 0);
+    Add32(sender_ssrc);
+  }
+
+  void AddXrReceiverReferenceTimeBlock(uint32_t ntp_sec, uint32_t ntp_frac) {
+    Add8(4);                   // Block type.
+    Add8(0);                   // Reserved.
+    Add16(2);                  // Length.
+    Add64(ntp_sec, ntp_frac);  // NTP timestamp.
+  }
+
+  void AddXrDlrrBlock(std::vector<uint32_t>& remote_ssrc) {
+    ASSERT_LT(pos_ + 4 + static_cast<int>(remote_ssrc.size())*4,
+        kMaxPacketSize-1) << "Max buffer size reached.";
+    Add8(5);                      // Block type.
+    Add8(0);                      // Reserved.
+    Add16(remote_ssrc.size() * 3);  // Length.
+    for (size_t i = 0; i < remote_ssrc.size(); ++i) {
+      Add32(remote_ssrc.at(i));   // Receiver SSRC.
+      Add32(0x10203);             // Last RR.
+      Add32(0x40506);             // Delay since last RR.
+    }
+  }
+
+  void AddXrUnknownBlock() {
+    Add8(6);             // Block type.
+    Add8(0);             // Reserved.
+    Add16(9);            // Length.
+    Add32(0);            // Receiver SSRC.
+    Add64(0, 0);         // Remaining fields (RFC 3611) are set to zero.
+    Add64(0, 0);
+    Add64(0, 0);
+    Add64(0, 0);
+  }
+
+  void AddXrVoipBlock(uint32_t remote_ssrc, uint8_t loss) {
+    Add8(7);             // Block type.
+    Add8(0);             // Reserved.
+    Add16(8);            // Length.
+    Add32(remote_ssrc);  // Receiver SSRC.
+    Add8(loss);          // Loss rate.
+    Add8(0);             // Remaining statistics (RFC 3611) are set to zero.
+    Add16(0);
+    Add64(0, 0);
+    Add64(0, 0);
+    Add64(0, 0);
   }
 
   const uint8_t* packet() {
@@ -199,6 +251,8 @@ class TestTransport : public Transport,
 
 class RtcpReceiverTest : public ::testing::Test {
  protected:
+  static const uint32_t kRemoteBitrateEstimatorMinBitrateBps = 30000;
+
   RtcpReceiverTest()
       : over_use_detector_options_(),
         system_clock_(1335900000),
@@ -206,7 +260,8 @@ class RtcpReceiverTest : public ::testing::Test {
         remote_bitrate_estimator_(
             RemoteBitrateEstimatorFactory().Create(
                 &remote_bitrate_observer_,
-                &system_clock_)) {
+                &system_clock_,
+                kRemoteBitrateEstimatorMinBitrateBps)) {
     test_transport_ = new TestTransport();
 
     RtpRtcp::Configuration configuration;
@@ -228,14 +283,15 @@ class RtcpReceiverTest : public ::testing::Test {
   // Injects an RTCP packet into the receiver.
   // Returns 0 for OK, non-0 for failure.
   int InjectRtcpPacket(const uint8_t* packet,
-                        uint16_t packet_len) {
+                       uint16_t packet_len) {
     RTCPUtility::RTCPParserV2 rtcpParser(packet,
                                          packet_len,
                                          true);  // Allow non-compound RTCP
 
     RTCPHelp::RTCPPacketInformation rtcpPacketInformation;
-    int result = rtcp_receiver_->IncomingRTCPPacket(rtcpPacketInformation,
-                                                    &rtcpParser);
+    EXPECT_EQ(0, rtcp_receiver_->IncomingRTCPPacket(rtcpPacketInformation,
+                                                    &rtcpParser));
+    rtcp_receiver_->TriggerCallbacksFromRTCPPacket(rtcpPacketInformation);
     // The NACK list is on purpose not copied below as it isn't needed by the
     // test.
     rtcp_packet_info_.rtcpPacketTypeFlags =
@@ -255,7 +311,11 @@ class RtcpReceiverTest : public ::testing::Test {
     rtcp_packet_info_.ntp_secs = rtcpPacketInformation.ntp_secs;
     rtcp_packet_info_.ntp_frac = rtcpPacketInformation.ntp_frac;
     rtcp_packet_info_.rtp_timestamp = rtcpPacketInformation.rtp_timestamp;
-    return result;
+    rtcp_packet_info_.xr_dlrr_item = rtcpPacketInformation.xr_dlrr_item;
+    if (rtcpPacketInformation.VoIPMetric) {
+      rtcp_packet_info_.AddVoIPMetric(rtcpPacketInformation.VoIPMetric);
+    }
+    return 0;
   }
 
   OverUseDetectorOptions over_use_detector_options_;
@@ -287,6 +347,191 @@ TEST_F(RtcpReceiverTest, InjectSrPacket) {
             kRtcpSr & rtcp_packet_info_.rtcpPacketTypeFlags);
 }
 
+TEST_F(RtcpReceiverTest, XrPacketWithZeroReportBlocksIgnored) {
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(0U, rtcp_packet_info_.rtcpPacketTypeFlags);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrVoipPacket) {
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+
+  const uint8_t kLossRate = 123;
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrVoipBlock(kSourceSsrc, kLossRate);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  ASSERT_TRUE(rtcp_packet_info_.VoIPMetric != NULL);
+  EXPECT_EQ(kLossRate, rtcp_packet_info_.VoIPMetric->lossRate);
+  EXPECT_EQ(kRtcpXrVoipMetric, rtcp_packet_info_.rtcpPacketTypeFlags);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrReceiverReferenceTimePacket) {
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrReceiverReferenceTimeBlock(0x10203, 0x40506);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(kRtcpXrReceiverReferenceTime,
+            rtcp_packet_info_.rtcpPacketTypeFlags);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrDlrrPacketWithNoSubBlock) {
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrDlrrBlock(remote_ssrcs);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(0U, rtcp_packet_info_.rtcpPacketTypeFlags);
+  EXPECT_FALSE(rtcp_packet_info_.xr_dlrr_item);
+}
+
+TEST_F(RtcpReceiverTest, XrDlrrPacketNotToUsIgnored) {
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+  remote_ssrcs.push_back(kSourceSsrc+1);
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrDlrrBlock(remote_ssrcs);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(0U, rtcp_packet_info_.rtcpPacketTypeFlags);
+  EXPECT_FALSE(rtcp_packet_info_.xr_dlrr_item);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrDlrrPacketWithSubBlock) {
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+  remote_ssrcs.push_back(kSourceSsrc);
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrDlrrBlock(remote_ssrcs);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  // The parser should note the DLRR report block item, but not flag the packet
+  // since the RTT is not estimated.
+  EXPECT_TRUE(rtcp_packet_info_.xr_dlrr_item);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrDlrrPacketWithMultipleSubBlocks) {
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+  remote_ssrcs.push_back(kSourceSsrc+2);
+  remote_ssrcs.push_back(kSourceSsrc+1);
+  remote_ssrcs.push_back(kSourceSsrc);
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrDlrrBlock(remote_ssrcs);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  // The parser should note the DLRR report block item, but not flag the packet
+  // since the RTT is not estimated.
+  EXPECT_TRUE(rtcp_packet_info_.xr_dlrr_item);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrPacketWithMultipleReportBlocks) {
+  const uint8_t kLossRate = 123;
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+  remote_ssrcs.push_back(kSourceSsrc);
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrDlrrBlock(remote_ssrcs);
+  p.AddXrVoipBlock(kSourceSsrc, kLossRate);
+  p.AddXrReceiverReferenceTimeBlock(0x10203, 0x40506);
+
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(static_cast<unsigned int>(kRtcpXrReceiverReferenceTime +
+                                      kRtcpXrVoipMetric),
+            rtcp_packet_info_.rtcpPacketTypeFlags);
+  // The parser should note the DLRR report block item, but not flag the packet
+  // since the RTT is not estimated.
+  EXPECT_TRUE(rtcp_packet_info_.xr_dlrr_item);
+}
+
+TEST_F(RtcpReceiverTest, InjectXrPacketWithUnknownReportBlock) {
+  const uint8_t kLossRate = 123;
+  const uint32_t kSourceSsrc = 0x123456;
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+  std::vector<uint32_t> remote_ssrcs;
+  remote_ssrcs.push_back(kSourceSsrc);
+
+  PacketBuilder p;
+  p.AddXrHeader(0x2345);
+  p.AddXrVoipBlock(kSourceSsrc, kLossRate);
+  p.AddXrUnknownBlock();
+  p.AddXrReceiverReferenceTimeBlock(0x10203, 0x40506);
+
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(static_cast<unsigned int>(kRtcpXrReceiverReferenceTime +
+                                      kRtcpXrVoipMetric),
+            rtcp_packet_info_.rtcpPacketTypeFlags);
+}
+
+TEST(RtcpUtilityTest, MidNtp) {
+  const uint32_t kNtpSec = 0x12345678;
+  const uint32_t kNtpFrac = 0x23456789;
+  const uint32_t kNtpMid = 0x56782345;
+  EXPECT_EQ(kNtpMid, RTCPUtility::MidNtp(kNtpSec, kNtpFrac));
+}
+
+TEST_F(RtcpReceiverTest, TestXrRrRttInitiallyFalse) {
+  uint16_t rtt_ms;
+  EXPECT_FALSE(rtcp_receiver_->GetAndResetXrRrRtt(&rtt_ms));
+}
+
+TEST_F(RtcpReceiverTest, LastReceivedXrReferenceTimeInfoInitiallyFalse) {
+  RtcpReceiveTimeInfo info;
+  EXPECT_FALSE(rtcp_receiver_->LastReceivedXrReferenceTimeInfo(&info));
+}
+
+TEST_F(RtcpReceiverTest, GetLastReceivedXrReferenceTimeInfo) {
+  const uint32_t kSenderSsrc = 0x123456;
+  const uint32_t kNtpSec = 0x10203;
+  const uint32_t kNtpFrac = 0x40506;
+  const uint32_t kNtpMid = RTCPUtility::MidNtp(kNtpSec, kNtpFrac);
+
+  PacketBuilder p;
+  p.AddXrHeader(kSenderSsrc);
+  p.AddXrReceiverReferenceTimeBlock(kNtpSec, kNtpFrac);
+  EXPECT_EQ(0, InjectRtcpPacket(p.packet(), p.length()));
+  EXPECT_EQ(kRtcpXrReceiverReferenceTime,
+      rtcp_packet_info_.rtcpPacketTypeFlags);
+
+  RtcpReceiveTimeInfo info;
+  EXPECT_TRUE(rtcp_receiver_->LastReceivedXrReferenceTimeInfo(&info));
+  EXPECT_EQ(kSenderSsrc, info.sourceSSRC);
+  EXPECT_EQ(kNtpMid, info.lastRR);
+  EXPECT_EQ(0U, info.delaySinceLastRR);
+
+  system_clock_.AdvanceTimeMilliseconds(1000);
+  EXPECT_TRUE(rtcp_receiver_->LastReceivedXrReferenceTimeInfo(&info));
+  EXPECT_EQ(65536U, info.delaySinceLastRR);
+}
+
 TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
   const uint32_t kSenderSsrc = 0x10203;
   const uint32_t kSourceSsrc = 0x40506;
@@ -305,7 +550,7 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
 
   // Add a RR and advance the clock just enough to not trigger a timeout.
   PacketBuilder p1;
-  p1.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0);
+  p1.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0, 0);
   EXPECT_EQ(0, InjectRtcpPacket(p1.packet(), p1.length()));
   system_clock_.AdvanceTimeMilliseconds(3 * kRtcpIntervalMs - 1);
   EXPECT_FALSE(rtcp_receiver_->RtcpRrTimeout(kRtcpIntervalMs));
@@ -314,7 +559,7 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
   // Add a RR with the same extended max as the previous RR to trigger a
   // sequence number timeout, but not a RR timeout.
   PacketBuilder p2;
-  p2.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0);
+  p2.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0, 0);
   EXPECT_EQ(0, InjectRtcpPacket(p2.packet(), p2.length()));
   system_clock_.AdvanceTimeMilliseconds(2);
   EXPECT_FALSE(rtcp_receiver_->RtcpRrTimeout(kRtcpIntervalMs));
@@ -332,7 +577,7 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
   // Add a new RR with increase sequence number to reset timers.
   PacketBuilder p3;
   sequence_number++;
-  p2.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0);
+  p2.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0, 0);
   EXPECT_EQ(0, InjectRtcpPacket(p2.packet(), p2.length()));
   EXPECT_FALSE(rtcp_receiver_->RtcpRrTimeout(kRtcpIntervalMs));
   EXPECT_FALSE(rtcp_receiver_->RtcpRrSequenceNumberTimeout(kRtcpIntervalMs));
@@ -340,7 +585,7 @@ TEST_F(RtcpReceiverTest, ReceiveReportTimeout) {
   // Verify we can get a timeout again once we've received new RR.
   system_clock_.AdvanceTimeMilliseconds(2 * kRtcpIntervalMs);
   PacketBuilder p4;
-  p4.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0);
+  p4.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number, 0, 0, 0);
   EXPECT_EQ(0, InjectRtcpPacket(p4.packet(), p4.length()));
   system_clock_.AdvanceTimeMilliseconds(kRtcpIntervalMs + 1);
   EXPECT_FALSE(rtcp_receiver_->RtcpRrTimeout(kRtcpIntervalMs));
@@ -366,9 +611,9 @@ TEST_F(RtcpReceiverTest, TwoReportBlocks) {
   PacketBuilder packet;
   std::list<PacketBuilder::ReportBlock> report_blocks;
   report_blocks.push_back(PacketBuilder::ReportBlock(
-      kSourceSsrcs[0], sequence_numbers[0], 10, 5));
+      kSourceSsrcs[0], sequence_numbers[0], 10, 5, 0));
   report_blocks.push_back(PacketBuilder::ReportBlock(
-      kSourceSsrcs[1], sequence_numbers[1], 0, 0));
+      kSourceSsrcs[1], sequence_numbers[1], 0, 0, 0));
   packet.AddRrPacketMultipleReportBlocks(kSenderSsrc, report_blocks);
   EXPECT_EQ(0, InjectRtcpPacket(packet.packet(), packet.length()));
   ASSERT_EQ(2u, rtcp_packet_info_.report_blocks.size());
@@ -378,9 +623,9 @@ TEST_F(RtcpReceiverTest, TwoReportBlocks) {
   PacketBuilder packet2;
   report_blocks.clear();
   report_blocks.push_back(PacketBuilder::ReportBlock(
-      kSourceSsrcs[0], sequence_numbers[0], 0, 0));
+      kSourceSsrcs[0], sequence_numbers[0], 0, 0, 0));
   report_blocks.push_back(PacketBuilder::ReportBlock(
-      kSourceSsrcs[1], sequence_numbers[1], 20, 10));
+      kSourceSsrcs[1], sequence_numbers[1], 20, 10, 0));
   packet2.AddRrPacketMultipleReportBlocks(kSenderSsrc, report_blocks);
   EXPECT_EQ(0, InjectRtcpPacket(packet2.packet(), packet2.length()));
   ASSERT_EQ(2u, rtcp_packet_info_.report_blocks.size());
@@ -498,6 +743,61 @@ TEST_F(RtcpReceiverTest, TmmbrThreeConstraintsTimeOut) {
   EXPECT_EQ(kMediaRecipientSsrc + 2, candidate_set.Ssrc(0));
 }
 
+TEST_F(RtcpReceiverTest, Callbacks) {
+  class RtcpCallbackImpl : public RtcpStatisticsCallback {
+   public:
+    RtcpCallbackImpl() : RtcpStatisticsCallback(), ssrc_(0) {}
+    virtual ~RtcpCallbackImpl() {}
+
+    virtual void StatisticsUpdated(const RtcpStatistics& statistics,
+                                   uint32_t ssrc) {
+      stats_ = statistics;
+      ssrc_ = ssrc;
+    }
+
+    bool Matches(uint32_t ssrc, uint32_t extended_max, uint8_t fraction_loss,
+                 uint32_t cumulative_loss, uint32_t jitter) {
+      return ssrc_ == ssrc &&
+          stats_.fraction_lost == fraction_loss &&
+          stats_.cumulative_lost == cumulative_loss &&
+          stats_.extended_max_sequence_number == extended_max &&
+          stats_.jitter == jitter;
+    }
+
+    RtcpStatistics stats_;
+    uint32_t ssrc_;
+  } callback;
+
+  rtcp_receiver_->RegisterRtcpStatisticsCallback(&callback);
+
+  const uint32_t kSenderSsrc = 0x10203;
+  const uint32_t kSourceSsrc = 0x123456;
+  const uint8_t fraction_loss = 3;
+  const uint32_t cumulative_loss = 7;
+  const uint32_t jitter = 9;
+  uint32_t sequence_number = 1234;
+
+  std::set<uint32_t> ssrcs;
+  ssrcs.insert(kSourceSsrc);
+  rtcp_receiver_->SetSsrcs(kSourceSsrc, ssrcs);
+
+  // First packet, all numbers should just propagate
+  PacketBuilder p1;
+  p1.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number,
+                 fraction_loss, cumulative_loss, jitter);
+  EXPECT_EQ(0, InjectRtcpPacket(p1.packet(), p1.length()));
+  EXPECT_TRUE(callback.Matches(kSourceSsrc, sequence_number, fraction_loss,
+                               cumulative_loss, jitter));
+
+  rtcp_receiver_->RegisterRtcpStatisticsCallback(NULL);
+
+  // Add arbitrary numbers, callback should not be called (retain old values)
+  PacketBuilder p2;
+  p2.AddRrPacket(kSenderSsrc, kSourceSsrc, sequence_number + 1, 42, 137, 4711);
+  EXPECT_EQ(0, InjectRtcpPacket(p2.packet(), p2.length()));
+  EXPECT_TRUE(callback.Matches(kSourceSsrc, sequence_number, fraction_loss,
+                               cumulative_loss, jitter));
+}
 
 }  // Anonymous namespace
 

@@ -12,6 +12,7 @@
       'target_name': 'audio_device',
       'type': 'static_library',
       'dependencies': [
+        'webrtc_utility',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
@@ -88,7 +89,7 @@
         }], # moz_widget_toolkit_gonk==1
         ['enable_android_opensl==1', {
           'include_dirs': [
-	    'opensl',
+            'opensl',
           ],
         }], # enable_android_opensl
         ['include_internal_audio_device==0', {
@@ -126,16 +127,15 @@
             # used externally for getUserMedia
             'opensl/single_rw_fifo.cc',
             'opensl/single_rw_fifo.h',
+            'android/audio_device_template.h',
+            'android/audio_manager_jni.cc',
+            'android/audio_manager_jni.h',
+            'android/audio_record_jni.cc',
+            'android/audio_record_jni.h',
+            'android/audio_track_jni.cc',
+            'android/audio_track_jni.h',
           ],
           'conditions': [
-            ['OS=="android"', {
-              'sources': [
-                'opensl/audio_manager_jni.cc',
-                'opensl/audio_manager_jni.h',
-                'android/audio_device_jni_android.cc',
-                'android/audio_device_jni_android.h',
-               ],
-            }],
             ['OS=="android" or moz_widget_toolkit_gonk==1', {
               'link_settings': {
                 'libraries': [
@@ -146,8 +146,6 @@
               'conditions': [
                 ['enable_android_opensl==1', {
                   'sources': [
-                    'opensl/audio_device_opensles.cc',
-                    'opensl/audio_device_opensles.h',
                     'opensl/fine_audio_buffer.cc',
                     'opensl/fine_audio_buffer.h',
                     'opensl/low_latency_event_posix.cc',
@@ -164,8 +162,6 @@
                   'sources': [
                     'shared/audio_device_utility_shared.cc',
                     'shared/audio_device_utility_shared.h',
-                    'android/audio_device_jni_android.cc',
-                    'android/audio_device_jni_android.h',
                   ],
                 }],
                 ['enable_android_opensl_output==1', {
@@ -174,8 +170,8 @@
                   ],
                   'defines': [
                     'WEBRTC_ANDROID_OPENSLES_OUTPUT',
-                  ]},
-                ],
+                  ],
+                }],
               ],
             }],
             ['OS=="linux"', {
@@ -285,10 +281,10 @@
               'target_name': 'audio_device_tests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'audio_device_tests',
               ],
               'includes': [
+                '../../build/isolate.gypi',
                 'audio_device_tests.isolate',
               ],
               'sources': [

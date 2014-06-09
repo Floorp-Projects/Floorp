@@ -34,6 +34,8 @@ function startTests() {
   populateTree();
   testTreeItemInsertedCorrectly();
   testAPI();
+  populateUnsortedTree();
+  testUnsortedTreeItemInsertedCorrectly();
   endTests();
 }
 
@@ -117,6 +119,41 @@ function testTreeItemInsertedCorrectly() {
      "Data id of last top level element matches");
   is(tree.root.children.firstChild.firstChild.firstChild, node,
      "Newly added node is inserted at the right location");
+}
+
+/**
+ * Populate the unsorted tree.
+ */
+function populateUnsortedTree() {
+  tree.sorted = false;
+
+  tree.add([{ id: "g-1", label: "g-1"}])
+  tree.add(["g-1", { id: "d-2", label: "d-2.1"}]);
+  tree.add(["g-1", { id: "b-2", label: "b-2.2"}]);
+  tree.add(["g-1", { id: "a-2", label: "a-2.3"}]);
+}
+
+/**
+ * Test if the nodes are inserted correctly in the unsorted tree.
+ */
+function testUnsortedTreeItemInsertedCorrectly() {
+  ok(tree.root.items.has("g-1"), "g-1 top level element exists");
+
+  is(tree.root.children.firstChild.lastChild.children.length, 3,
+    "Number of children for g-1 matches");
+  is(tree.root.children.firstChild.dataset.id, JSON.stringify(["g-1"]),
+    "Data id of g-1 matches");
+  is(tree.root.children.firstChild.firstChild.textContent, "g-1",
+    "Text content of g-1 matches");
+  is(tree.root.children.firstChild.lastChild.firstChild.dataset.id,
+    JSON.stringify(["g-1", "d-2"]),
+    "Data id of d-2 matches");
+  is(tree.root.children.firstChild.lastChild.firstChild.textContent, "d-2.1",
+    "Text content of d-2 matches");
+  is(tree.root.children.firstChild.lastChild.firstChild.nextSibling.textContent,
+    "b-2.2", "Text content of b-2 matches");
+  is(tree.root.children.firstChild.lastChild.lastChild.textContent, "a-2.3",
+    "Text content of a-2 matches");
 }
 
 /**

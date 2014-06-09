@@ -49,7 +49,6 @@ struct nsGlobalNameStruct
     eTypeProperty,
     eTypeNavigatorProperty,
     eTypeExternalConstructor,
-    eTypeStaticNameSet,
     eTypeClassConstructor,
     eTypeClassProto,
     eTypeExternalClassInfoCreator,
@@ -99,7 +98,6 @@ public:
   virtual ~nsScriptNameSpaceManager();
 
   nsresult Init();
-  nsresult InitForContext(nsIScriptContext *aContext);
 
   // Returns a nsGlobalNameStruct for aName, or null if one is not
   // found. The returned nsGlobalNameStruct is only guaranteed to be

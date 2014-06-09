@@ -210,6 +210,67 @@ var tests = [
       next();
     },
   },
+  {
+    key: "fake-exposure-compensation",
+    prep: function setupFakeExposureCompensation(test) {
+      test.setFakeParameters("exposure-compensation=-1;max-exposure-compensation=6;min-exposure-compensation=-6;exposure-compensation-step=0.5", function () {
+        run();
+      });
+    },
+    test: function testFakeFocusAreas(cam, cap) {
+      ok(cap.exposureCompensationStep == 0.5,
+         "exposureCompensationStep = " + cap.exposureCompensationStep);
+      ok(cap.minExposureCompensation == -3.0,
+         "minExposureCompensation = " + cap.minExposureCompensation);
+      ok(cap.maxExposureCompensation == 3.0,
+         "maxExposureCompensation = " + cap.maxExposureCompensation);
+      ok(cam.exposureCompensation == -0.5,
+         "exposureCompensation = " + cam.exposureCompensation);
+
+      // Check normal values
+      cam.setExposureCompensation(0.0);
+      ok(cam.exposureCompensation == 0.0,
+         "exposureCompensation = " + cam.exposureCompensation);
+      cam.setExposureCompensation(cap.minExposureCompensation);
+      ok(cam.exposureCompensation == cap.minExposureCompensation,
+         "exposureCompensation(min) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(cap.maxExposureCompensation);
+      ok(cam.exposureCompensation == cap.maxExposureCompensation,
+         "exposureCompensation(max) = " + cam.exposureCompensation);
+
+      // Rounding
+      cam.setExposureCompensation(1.24);
+      ok(cam.exposureCompensation == 1.0,
+         "exposureCompensation(1.24) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(1.25);
+      ok(cam.exposureCompensation == 1.5,
+         "exposureCompensation(1.25) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(-1.24);
+      ok(cam.exposureCompensation == -1.0,
+         "exposureCompensation(-1.24) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(-1.25);
+      ok(cam.exposureCompensation == -1.5,
+         "exposureCompensation(-1.25) = " + cam.exposureCompensation);
+
+      // Check out-of-bounds values
+      cam.setExposureCompensation(cap.minExposureCompensation - 1.0);
+      ok(cam.exposureCompensation == cap.minExposureCompensation,
+         "exposureCompensation(min - 1.0) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(cap.maxExposureCompensation + 1.0);
+      ok(cam.exposureCompensation == cap.maxExposureCompensation,
+         "exposureCompensation(max + 1.0) = " + cam.exposureCompensation);
+
+      // Check extreme values
+      cam.setExposureCompensation(-1 * Math.pow(2, 32));
+      ok(cam.exposureCompensation == cap.minExposureCompensation,
+         "exposureCompensation(-2^32) = " + cam.exposureCompensation);
+      cam.setExposureCompensation(Math.pow(2, 32));
+      ok(cam.exposureCompensation == cap.maxExposureCompensation,
+         "exposureCompensation(2^32) = " + cam.exposureCompensation);
+
+      next();
+    },
+  },
 ];
 
 var testGenerator = function() {

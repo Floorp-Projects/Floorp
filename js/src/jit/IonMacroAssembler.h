@@ -177,7 +177,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     mozilla::Maybe<AutoRooter> autoRooter_;
     mozilla::Maybe<IonContext> ionContext_;
     mozilla::Maybe<AutoIonContextAlloc> alloc_;
-    bool enoughMemory_;
     bool embedsNurseryPointers_;
 
     // SPS instrumentation, only used for Ion caches.
@@ -201,8 +200,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // provided, but otherwise it can be safely omitted to prevent all
     // instrumentation from being emitted.
     MacroAssembler()
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
         IonContext *icx = GetIonContext();
@@ -226,8 +224,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     // (for example, Trampoline-$(ARCH).cpp and IonCaches.cpp).
     explicit MacroAssembler(JSContext *cx, IonScript *ion = nullptr,
                             JSScript *script = nullptr, jsbytecode *pc = nullptr)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
         constructRoot(cx);
@@ -251,11 +248,10 @@ class MacroAssembler : public MacroAssemblerSpecific
         }
     }
 
-    // asm.js compilation handles its own IonContet-pushing
+    // asm.js compilation handles its own IonContext-pushing
     struct AsmJSToken {};
     explicit MacroAssembler(AsmJSToken)
-      : enoughMemory_(true),
-        embedsNurseryPointers_(false),
+      : embedsNurseryPointers_(false),
         sps_(nullptr)
     {
 #ifdef JS_CODEGEN_ARM
@@ -284,13 +280,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     size_t instructionsSize() const {
         return size();
-    }
-
-    void propagateOOM(bool success) {
-        enoughMemory_ &= success;
-    }
-    bool oom() const {
-        return !enoughMemory_ || MacroAssemblerSpecific::oom();
     }
 
     bool embedsNurseryPointers() const {
@@ -381,6 +370,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void loadStringChars(Register str, Register dest);
+    void loadStringChar(Register str, Register index, Register output);
 
     void branchIfRope(Register str, Label *label) {
         Address flags(str, JSString::offsetOfFlags());
@@ -645,11 +635,10 @@ class MacroAssembler : public MacroAssemblerSpecific
             branch32(cond, length, Imm32(key.constant()), label);
     }
 
-    void branchTestNeedsBarrier(Condition cond, Register scratch, Label *label) {
+    void branchTestNeedsBarrier(Condition cond, Label *label) {
         JS_ASSERT(cond == Zero || cond == NonZero);
         CompileZone *zone = GetIonContext()->compartment->zone();
-        movePtr(ImmPtr(zone->addressOfNeedsBarrier()), scratch);
-        Address needsBarrierAddr(scratch, 0);
+        AbsoluteAddress needsBarrierAddr(zone->addressOfNeedsBarrier());
         branchTest32(cond, needsBarrierAddr, Imm32(0x1), label);
     }
 
@@ -905,6 +894,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
         // be unset if the code never needed to push its JitCode*.
         if (hasEnteredExitFrame()) {
+            exitCodePatch_.fixup(this);
             patchDataWithValueCheck(CodeLocationLabel(code, exitCodePatch_),
                                     ImmPtr(code),
                                     ImmPtr((void*)-1));
@@ -1085,10 +1075,11 @@ class MacroAssembler : public MacroAssemblerSpecific
         Label stackFull;
         spsProfileEntryAddress(p, 0, temp, &stackFull);
 
+        // Push a JS frame with a copy label
         storePtr(ImmPtr(str), Address(temp, ProfileEntry::offsetOfLabel()));
         storePtr(ImmGCPtr(s), Address(temp, ProfileEntry::offsetOfSpOrScript()));
         store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        store32(Imm32(0), Address(temp, ProfileEntry::offsetOfFlags()));
+        store32(Imm32(ProfileEntry::FRAME_LABEL_COPY), Address(temp, ProfileEntry::offsetOfFlags()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);
@@ -1103,6 +1094,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         Label stackFull;
         spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
+        // Push a JS frame with a copy label
         loadPtr(str, temp2);
         storePtr(temp2, Address(temp, ProfileEntry::offsetOfLabel()));
 
@@ -1113,7 +1105,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         // (See probes::EnterScript, which calls spsProfiler.enter, which pushes an entry
         //  with 0 pcIdx).
         store32(Imm32(0), Address(temp, ProfileEntry::offsetOfLineOrPc()));
-        store32(Imm32(0), Address(temp, ProfileEntry::offsetOfFlags()));
+        store32(Imm32(ProfileEntry::FRAME_LABEL_COPY), Address(temp, ProfileEntry::offsetOfFlags()));
 
         /* Always increment the stack size, whether or not we actually pushed. */
         bind(&stackFull);

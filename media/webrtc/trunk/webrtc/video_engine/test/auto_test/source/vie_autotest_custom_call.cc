@@ -72,6 +72,10 @@ class ViEAutotestEncoderObserver : public webrtc::ViEEncoderObserver {
     std::cout << "Send FR: " << framerate
               << " BR: " << bitrate << std::endl;
   }
+
+  virtual void SuspendChange(int video_channel, bool is_suspended) OVERRIDE {
+    std::cout << "SuspendChange: " << is_suspended << std::endl;
+  }
 };
 
 class ViEAutotestDecoderObserver : public webrtc::ViEDecoderObserver {
@@ -85,6 +89,23 @@ class ViEAutotestDecoderObserver : public webrtc::ViEDecoderObserver {
     std::cout << "Received FR: " << framerate
               << " BR: " << bitrate << std::endl;
   }
+
+  virtual void DecoderTiming(int decode_ms,
+                             int max_decode_ms,
+                             int current_delay_ms,
+                             int target_delay_ms,
+                             int jitter_buffer_ms,
+                             int min_playout_delay_ms,
+                             int render_delay_ms) {
+    std::cout << "Decoder timing: DecodeMS: " << decode_ms
+              << ", MaxDecodeMS: " << max_decode_ms
+              << ", CurrentDelayMS: " << current_delay_ms
+              << ", TargetDelayMS: " << target_delay_ms
+              << ", JitterBufferMS: " << jitter_buffer_ms
+              << ", MinPlayoutDelayMS: " << min_playout_delay_ms
+              << ", RenderDelayMS: " << render_delay_ms;
+  }
+
   void IncomingCodecChanged(const int video_channel,
                             const webrtc::VideoCodec& codec) {}
   void RequestNewKeyFrame(const int video_channel) {
@@ -1488,10 +1509,7 @@ void PrintRTCCPStatistics(webrtc::ViERTP_RTCP* vie_rtp_rtcp,
                           StatisticsType stat_type) {
   int error = 0;
   int number_of_errors = 0;
-  uint16_t fraction_lost = 0;
-  unsigned int cumulative_lost = 0;
-  unsigned int extended_max = 0;
-  unsigned int jitter = 0;
+  webrtc::RtcpStatistics rtcp_stats;
   int rtt_ms = 0;
 
   switch (stat_type) {
@@ -1499,11 +1517,9 @@ void PrintRTCCPStatistics(webrtc::ViERTP_RTCP* vie_rtp_rtcp,
       std::cout << "RTCP Received statistics"
                 << std::endl;
       // Get and print the Received RTCP Statistics
-      error = vie_rtp_rtcp->GetReceivedRTCPStatistics(video_channel,
-                                                      fraction_lost,
-                                                      cumulative_lost,
-                                                      extended_max,
-                                                      jitter, rtt_ms);
+      error = vie_rtp_rtcp->GetReceiveChannelRtcpStatistics(video_channel,
+                                                      rtcp_stats,
+                                                      rtt_ms);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
@@ -1512,22 +1528,22 @@ void PrintRTCCPStatistics(webrtc::ViERTP_RTCP* vie_rtp_rtcp,
       std::cout << "RTCP Sent statistics"
                 << std::endl;
       // Get and print the Sent RTCP Statistics
-      error = vie_rtp_rtcp->GetSentRTCPStatistics(video_channel, fraction_lost,
-                                                  cumulative_lost, extended_max,
-                                                  jitter, rtt_ms);
+      error = vie_rtp_rtcp->GetSendChannelRtcpStatistics(video_channel,
+                                                  rtcp_stats,
+                                                  rtt_ms);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
       break;
   }
   std::cout << "\tRTCP fraction of lost packets: "
-            << fraction_lost << std::endl;
+            << rtcp_stats.fraction_lost << std::endl;
   std::cout << "\tRTCP cumulative number of lost packets: "
-            << cumulative_lost << std::endl;
+            << rtcp_stats.cumulative_lost << std::endl;
   std::cout << "\tRTCP max received sequence number "
-            << extended_max << std::endl;
+            << rtcp_stats.extended_max_sequence_number << std::endl;
   std::cout << "\tRTCP jitter: "
-            << jitter << std::endl;
+            << rtcp_stats.jitter << std::endl;
   std::cout << "\tRTCP round trip (ms): "
             << rtt_ms << std::endl;
 }
@@ -1536,29 +1552,25 @@ void PrintRTPStatistics(webrtc::ViERTP_RTCP* vie_rtp_rtcp,
                         int video_channel) {
   int error = 0;
   int number_of_errors = 0;
-  unsigned int bytes_sent = 0;
-  unsigned int packets_sent = 0;
-  unsigned int bytes_received = 0;
-  unsigned int packets_received = 0;
+  webrtc::StreamDataCounters sent;
+  webrtc::StreamDataCounters received;
 
   std::cout << "RTP statistics"
             << std::endl;
 
   // Get and print the RTP Statistics
-  error = vie_rtp_rtcp->GetRTPStatistics(video_channel, bytes_sent,
-                                         packets_sent, bytes_received,
-                                         packets_received);
+  error = vie_rtp_rtcp->GetRtpStatistics(video_channel, sent, received);
   number_of_errors += ViETest::TestError(error == 0,
                                          "ERROR: %s at line %d",
                                          __FUNCTION__, __LINE__);
   std::cout << "\tRTP bytes sent: "
-            << bytes_sent << std::endl;
+            << sent.bytes << std::endl;
   std::cout << "\tRTP packets sent: "
-            << packets_sent << std::endl;
+            << sent.packets << std::endl;
   std::cout << "\tRTP bytes received: "
-            << bytes_received << std::endl;
+            << received.bytes << std::endl;
   std::cout << "\tRTP packets received: "
-            << packets_received << std::endl;
+            << received.packets << std::endl;
 }
 
 void PrintBandwidthUsage(webrtc::ViERTP_RTCP* vie_rtp_rtcp,
@@ -1613,8 +1625,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Receive statistics"
                 << std::endl;
       // Get and print the Receive Codec Statistics
-      error = vie_codec->GetReceiveCodecStastistics(video_channel, key_frames,
-                                                    delta_frames);
+      error = vie_codec->GetReceiveCodecStatistics(video_channel, key_frames,
+                                                   delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
@@ -1623,8 +1635,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Send statistics"
                 << std::endl;
       // Get and print the Send Codec Statistics
-      error = vie_codec->GetSendCodecStastistics(video_channel, key_frames,
-                                                 delta_frames);
+      error = vie_codec->GetSendCodecStatistics(video_channel, key_frames,
+                                                delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);

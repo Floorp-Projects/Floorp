@@ -24,13 +24,17 @@ const int kRttTimeoutMs = 1500;
 // Time interval for updating the observers.
 const int kUpdateIntervalMs = 1000;
 
-class RtcpObserver : public RtcpRttObserver {
+class RtcpObserver : public RtcpRttStats {
  public:
   explicit RtcpObserver(CallStats* owner) : owner_(owner) {}
   virtual ~RtcpObserver() {}
 
   virtual void OnRttUpdate(uint32_t rtt) {
     owner_->OnRttUpdate(rtt);
+  }
+
+  virtual uint32_t LastProcessedRtt() const {
+    return owner_->last_processed_rtt_ms();
   }
 
  private:
@@ -41,8 +45,9 @@ class RtcpObserver : public RtcpRttObserver {
 
 CallStats::CallStats()
     : crit_(CriticalSectionWrapper::CreateCriticalSection()),
-      rtcp_rtt_observer_(new RtcpObserver(this)),
-      last_process_time_(TickTime::MillisecondTimestamp()) {
+      rtcp_rtt_stats_(new RtcpObserver(this)),
+      last_process_time_(TickTime::MillisecondTimestamp()),
+      last_processed_rtt_ms_(0) {
 }
 
 CallStats::~CallStats() {
@@ -81,12 +86,18 @@ int32_t CallStats::Process() {
       (*it)->OnRttUpdate(max_rtt);
     }
   }
+  last_processed_rtt_ms_ = max_rtt;
   last_process_time_ = time_now;
   return 0;
 }
 
-RtcpRttObserver* CallStats::rtcp_rtt_observer() const {
-  return rtcp_rtt_observer_.get();
+uint32_t CallStats::last_processed_rtt_ms() const {
+  CriticalSectionScoped cs(crit_.get());
+  return last_processed_rtt_ms_;
+}
+
+RtcpRttStats* CallStats::rtcp_rtt_stats() const {
+  return rtcp_rtt_stats_.get();
 }
 
 void CallStats::RegisterStatsObserver(CallStatsObserver* observer) {

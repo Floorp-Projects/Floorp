@@ -65,7 +65,9 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     debugScriptMap(nullptr),
     debugScopes(nullptr),
     enumerators(nullptr),
-    compartmentStats(nullptr)
+    compartmentStats(nullptr),
+    scheduledForDestruction(false),
+    maybeAlive(true)
 #ifdef JS_ION
     , jitCompartment_(nullptr)
 #endif
@@ -489,6 +491,41 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
     for (size_t n = 0; n < size_t(length); ++n) {
         if (!wrapId(cx, &vector[n]))
             return false;
+    }
+    return true;
+}
+
+bool
+JSCompartment::wrap(JSContext *cx, MutableHandle<PropDesc> desc)
+{
+    if (desc.isUndefined())
+        return true;
+
+    JSCompartment *comp = cx->compartment();
+
+    if (desc.hasValue()) {
+        RootedValue value(cx, desc.value());
+        if (!comp->wrap(cx, &value))
+            return false;
+        desc.setValue(value);
+    }
+    if (desc.hasGet()) {
+        RootedValue get(cx, desc.getterValue());
+        if (!comp->wrap(cx, &get))
+            return false;
+        desc.setGetter(get);
+    }
+    if (desc.hasSet()) {
+        RootedValue set(cx, desc.setterValue());
+        if (!comp->wrap(cx, &set))
+            return false;
+        desc.setSetter(set);
+    }
+    if (desc.descriptorValue().isObject()) {
+        RootedObject descObj(cx, &desc.descriptorValue().toObject());
+        if (!comp->wrap(cx, &descObj))
+            return false;
+        desc.setDescriptorObject(descObj);
     }
     return true;
 }

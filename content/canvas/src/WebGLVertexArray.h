@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-class WebGLVertexArray MOZ_FINAL
+class WebGLVertexArray
     : public nsWrapperCache
     , public WebGLRefCountedObject<WebGLVertexArray>
     , public LinkedListElement<WebGLVertexArray>
@@ -25,21 +25,24 @@ class WebGLVertexArray MOZ_FINAL
 // -----------------------------------------------------------------------------
 // PUBLIC
 public:
+    static WebGLVertexArray* Create(WebGLContext* context);
 
-    // -------------------------------------------------------------------------
-    // CONSTRUCTOR & DESTRUCTOR
-
-    WebGLVertexArray(WebGLContext *context);
-
-    ~WebGLVertexArray() {
-        DeleteOnce();
+    void BindVertexArray() {
+        SetHasEverBeenBound(true);
+        BindVertexArrayImpl();
     };
 
+    virtual void GenVertexArray() = 0;
+    virtual void BindVertexArrayImpl() = 0;
+
+    GLuint GLName() const { return mGLName; }
 
     // -------------------------------------------------------------------------
-    // IMPLMENET PARENT CLASSES
+    // IMPLEMENT PARENT CLASSES
 
     void Delete();
+
+    virtual void DeleteImpl() = 0;
 
     WebGLContext* GetParentObject() const {
         return Context();
@@ -50,13 +53,11 @@ public:
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLVertexArray)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLVertexArray)
 
-
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
     void SetHasEverBeenBound(bool x) { mHasEverBeenBound = x; }
-    GLuint GLName() const { return mGLName; }
 
     bool EnsureAttrib(GLuint index, const char *info);
     bool HasAttrib(GLuint index) {
@@ -68,8 +69,13 @@ public:
 
 
 // -----------------------------------------------------------------------------
-// PRIVATE
-private:
+// PROTECTED
+protected:
+    WebGLVertexArray(WebGLContext* context);
+
+    virtual ~WebGLVertexArray() {
+        MOZ_ASSERT(IsDeleted());
+    };
 
     // -------------------------------------------------------------------------
     // MEMBERS
@@ -77,8 +83,7 @@ private:
     GLuint mGLName;
     bool mHasEverBeenBound;
     nsTArray<WebGLVertexAttribData> mAttribs;
-    WebGLRefPtr<WebGLBuffer> mBoundElementArrayBuffer;
-
+    WebGLRefPtr<WebGLBuffer> mElementArrayBuffer;
 
     // -------------------------------------------------------------------------
     // FRIENDSHIPS

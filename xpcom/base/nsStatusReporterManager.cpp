@@ -21,13 +21,11 @@
 #include <unistd.h>
 #endif
 
-#if defined(XP_LINUX) || defined(__FreeBSD__)
+#ifdef XP_UNIX
 #define DO_STATUS_REPORT 1
-#else
-#define DO_STATUS_REPORT 0
 #endif
 
-#if DO_STATUS_REPORT // {
+#ifdef DO_STATUS_REPORT // {
 namespace {
 
 class DumpStatusInfoToTempDirRunnable : public nsRunnable
@@ -133,7 +131,7 @@ nsStatusReporterManager::Init()
   RegisterReporter(new NS_STATUS_REPORTER_NAME(StatusReporter));
   gStatusReportProgress = 1;
 
-#if DO_STATUS_REPORT
+#ifdef DO_STATUS_REPORT
   if (FifoWatcher::MaybeCreate()) {
     FifoWatcher* fw = FifoWatcher::GetSingleton();
     fw->RegisterCallback(NS_LITERAL_CSTRING("status report"), doStatusReport);

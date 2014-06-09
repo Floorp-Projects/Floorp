@@ -127,8 +127,7 @@ public class DataReportingNotification {
             result = true;
         } finally {
             // We want to track any errors, so record notification outcome.
-            final String notificationEvent = TelemetryContract.Event.POLICY_NOTIFICATION_SUCCESS + result;
-            Telemetry.sendUIEvent(notificationEvent);
+            Telemetry.sendUIEvent(TelemetryContract.Event.POLICY_NOTIFICATION_SUCCESS, result);
         }
     }
 }

@@ -36,32 +36,61 @@ using mozilla::BinarySearch;
 using mozilla::IsNaN;
 using mozilla::PodZero;
 
-AsmJSFrameIterator::AsmJSFrameIterator(const AsmJSActivation *activation)
+static uint8_t *
+ReturnAddressForExitCall(uint8_t **psp)
 {
-    if (!activation || activation->isInterruptedSP()) {
-        PodZero(this);
-        JS_ASSERT(done());
-        return;
-    }
-
-    module_ = &activation->module();
-    sp_ = activation->exitSP();
-
+    uint8_t *sp = *psp;
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     // For calls to Ion/C++ on x86/x64, the exitSP is the SP right before the call
     // to C++. Since the call instruction pushes the return address, we know
     // that the return address is 1 word below exitSP.
-    returnAddress_ = *(uint8_t**)(sp_ - sizeof(void*));
-#else
+    return *(uint8_t**)(sp - sizeof(void*));
+#elif defined(JS_CODEGEN_ARM)
     // For calls to Ion/C++ on ARM, the *caller* pushes the return address on
     // the stack. For Ion, this is just part of the ABI. For C++, the return
     // address is explicitly pushed before the call since we cannot expect the
     // callee to immediately push lr. This means that exitSP points to the
     // return address.
-    returnAddress_ = *(uint8_t**)sp_;
+    return *(uint8_t**)sp;
+#elif defined(JS_CODEGEN_MIPS)
+    // On MIPS we have two cases: an exit to C++ will store the return address
+    // at ShadowStackSpace above sp; an exit to Ion will store the return
+    // address at sp. To distinguish the two cases, the low bit of sp (which is
+    // aligned and therefore zero) is set for Ion exits.
+    if (uintptr_t(sp) & 0x1) {
+        sp = *psp -= 0x1;  // Clear the low bit
+        return *(uint8_t**)sp;
+    }
+    return *(uint8_t**)(sp + ShadowStackSpace);
+#else
+# error "Unknown architecture!"
 #endif
+}
 
-    settle();
+static uint8_t *
+ReturnAddressForJitCall(uint8_t *sp)
+{
+    // Once inside JIT code, sp always points to the word before the return
+    // address.
+    return *(uint8_t**)(sp - sizeof(void*));
+}
+
+AsmJSFrameIterator::AsmJSFrameIterator(const AsmJSActivation *activation)
+  : module_(nullptr)
+{
+    if (!activation || activation->isInterruptedSP())
+        return;
+
+    module_ = &activation->module();
+    sp_ = activation->exitSP();
+
+    settle(ReturnAddressForExitCall(&sp_));
+}
+
+void
+AsmJSFrameIterator::operator++()
+{
+    settle(ReturnAddressForJitCall(sp_));
 }
 
 struct GetCallSite
@@ -74,43 +103,31 @@ struct GetCallSite
 };
 
 void
-AsmJSFrameIterator::popFrame()
+AsmJSFrameIterator::settle(uint8_t *returnAddress)
 {
-    // After adding stackDepth, sp points to the word before the return address,
-    // on both ARM and x86/x64.
-    sp_ += callsite_->stackDepth();
-    returnAddress_ = *(uint8_t**)(sp_ - sizeof(void*));
-}
+    uint32_t target = returnAddress - module_->codeBase();
+    size_t lowerBound = 0;
+    size_t upperBound = module_->numCallSites();
 
-void
-AsmJSFrameIterator::settle()
-{
-    while (true) {
-        uint32_t target = returnAddress_ - module_->codeBase();
-        size_t lowerBound = 0;
-        size_t upperBound = module_->numCallSites();
-
-        size_t match;
-        if (!BinarySearch(GetCallSite(*module_), lowerBound, upperBound, target, &match)) {
-            callsite_ = nullptr;
-            return;
-        }
-
-        callsite_ = &module_->callSite(match);
-
-        if (callsite_->isExit()) {
-            popFrame();
-            continue;
-        }
-
-        if (callsite_->isEntry()) {
-            callsite_ = nullptr;
-            return;
-        }
-
-        JS_ASSERT(callsite_->isNormal());
+    size_t match;
+    if (!BinarySearch(GetCallSite(*module_), lowerBound, upperBound, target, &match)) {
+        module_ = nullptr;
         return;
     }
+
+    callsite_ = &module_->callSite(match);
+
+    if (callsite_->isEntry()) {
+        module_ = nullptr;
+        return;
+    }
+
+    sp_ += callsite_->stackDepth();
+
+    if (callsite_->isExit())
+        return settle(ReturnAddressForJitCall(sp_));
+
+    JS_ASSERT(callsite_->isNormal());
 }
 
 JSAtom *

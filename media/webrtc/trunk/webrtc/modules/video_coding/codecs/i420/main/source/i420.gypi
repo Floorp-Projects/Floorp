@@ -14,17 +14,6 @@
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-      'include_dirs': [
-        '../interface',
-        '../../../interface',
-        '../../../../../../common_video/interface',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../interface',
-          '../../../../../../common_video/interface',
-        ],
-      },
       'sources': [
         '../interface/i420.h',
         'i420.cc',

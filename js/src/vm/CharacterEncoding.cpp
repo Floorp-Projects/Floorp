@@ -132,9 +132,11 @@ DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const jschar *src, size_t s
 
 bufferTooSmall:
     *dstlenp = (origDstlen - dstlen);
-    if (cx->isJSContext())
+    if (cx->isJSContext()) {
+        js::gc::AutoSuppressGC suppress(cx->asJSContext());
         JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, nullptr,
                              JSMSG_BUFFER_TOO_SMALL);
+    }
     return false;
 }
 

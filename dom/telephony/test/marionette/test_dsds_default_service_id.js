@@ -6,8 +6,8 @@ MARIONETTE_CONTEXT = "chrome";
 
 Cu.import("resource://gre/modules/Promise.jsm");
 
-const TELEPHONY_PROVIDER_CONTRACTID =
-  "@mozilla.org/telephony/telephonyprovider;1";
+const TELEPHONY_SERVICE_CONTRACTID =
+  "@mozilla.org/telephony/telephonyservice;1";
 
 const PREF_RIL_NUM_RADIO_INTERFACES = "ril.numRadioInterfaces";
 const PREF_DEFAULT_SERVICE_ID = "dom.telephony.defaultServiceId";
@@ -122,6 +122,6 @@ function verify(contractId, ifaceName, attrName, prefKey, numRil) {
 }
 
 getNumRadioInterfaces()
-  .then(verify.bind(null, TELEPHONY_PROVIDER_CONTRACTID, "nsITelephonyProvider",
+  .then(verify.bind(null, TELEPHONY_SERVICE_CONTRACTID, "nsITelephonyService",
                     "defaultServiceId", PREF_DEFAULT_SERVICE_ID))
   .then(finish);

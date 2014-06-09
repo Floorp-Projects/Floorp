@@ -33,35 +33,6 @@ namespace webrtc
 //                              Static Methods
 // ============================================================================
 
-bool AudioDeviceLinuxPulse::PulseAudioIsSupported()
-{
-    WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, -1, "%s",
-                 __FUNCTION__);
-
-    bool pulseAudioIsSupported(true);
-
-    // Check that we can initialize
-    AudioDeviceLinuxPulse* admPulse = new AudioDeviceLinuxPulse(-1);
-    if (admPulse->InitPulseAudio() == -1)
-    {
-        pulseAudioIsSupported = false;
-    }
-    admPulse->TerminatePulseAudio();
-    delete admPulse;
-
-    if (pulseAudioIsSupported)
-    {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
-                     "*** Linux Pulse Audio is supported ***");
-    } else
-    {
-        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, -1,
-                     "*** Linux Pulse Audio is NOT supported => will revert to the ALSA API ***");
-    }
-
-    return (pulseAudioIsSupported);
-}
-
 AudioDeviceLinuxPulse::AudioDeviceLinuxPulse(const int32_t id) :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
@@ -2646,7 +2617,7 @@ int32_t AudioDeviceLinuxPulse::ReadRecordedData(const void* bufferData,
 int32_t AudioDeviceLinuxPulse::ProcessRecordedData(
     int8_t *bufferData,
     uint32_t bufferSizeInSamples,
-    uint32_t recDelay)
+    uint32_t recDelay) EXCLUSIVE_LOCKS_REQUIRED(_critSect)
 {
     uint32_t currentMicLevel(0);
     uint32_t newMicLevel(0);

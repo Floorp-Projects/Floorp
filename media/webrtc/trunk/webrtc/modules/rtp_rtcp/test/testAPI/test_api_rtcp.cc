@@ -336,7 +336,7 @@ TEST_F(RtpRtcpRtcpTest, RTCP) {
 
   StreamStatistician *statistician =
       receive_statistics2_->GetStatistician(reportBlockReceived.sourceSSRC);
-  StreamStatistician::Statistics stats;
+  RtcpStatistics stats;
   EXPECT_TRUE(statistician->GetStatistics(&stats, true));
   EXPECT_EQ(0, stats.fraction_lost);
   EXPECT_EQ((uint32_t)0, stats.cumulative_lost);

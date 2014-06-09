@@ -12,6 +12,8 @@
 
 #include <string.h>
 
+#include <algorithm>
+
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/interface/module_common_types.h"
 
@@ -54,12 +56,14 @@ void Rtcp::Update(const RTPHeader& rtp_header, uint32_t receive_timestamp) {
 
 void Rtcp::GetStatistics(bool no_reset, RtcpStatistics* stats) {
   // Extended highest sequence number received.
-  stats->extended_max = (static_cast<int>(cycles_) << 16) + max_seq_no_;
+  stats->extended_max_sequence_number =
+      (static_cast<int>(cycles_) << 16) + max_seq_no_;
 
   // Calculate expected number of packets and compare it with the number of
   // packets that were actually received. The cumulative number of lost packets
   // can be extracted.
-  uint32_t expected_packets = stats->extended_max - base_seq_no_ + 1;
+  uint32_t expected_packets =
+      stats->extended_max_sequence_number - base_seq_no_ + 1;
   if (received_packets_ == 0) {
     // No packets received, assume none lost.
     stats->cumulative_lost = 0;
@@ -83,10 +87,7 @@ void Rtcp::GetStatistics(bool no_reset, RtcpStatistics* stats) {
   if (expected_since_last == 0 || lost <= 0 || received_packets_ == 0) {
     stats->fraction_lost = 0;
   } else {
-    stats->fraction_lost = (lost << 8) / expected_since_last;
-  }
-  if (stats->fraction_lost > 0xFF) {
-    stats->fraction_lost = 0xFF;
+    stats->fraction_lost = std::min(0xFFU, (lost << 8) / expected_since_last);
   }
 
   stats->jitter = jitter_ >> 4;  // Scaling from Q4.

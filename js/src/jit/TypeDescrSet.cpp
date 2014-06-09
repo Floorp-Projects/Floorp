@@ -176,14 +176,14 @@ TypeDescrSet::allOfArrayKind()
         return false;
 
     switch (kind()) {
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         return true;
 
-      case TypeDescr::X4:
-      case TypeDescr::Reference:
-      case TypeDescr::Scalar:
-      case TypeDescr::Struct:
+      case type::X4:
+      case type::Reference:
+      case type::Scalar:
+      case type::Struct:
         return false;
     }
 
@@ -191,7 +191,7 @@ TypeDescrSet::allOfArrayKind()
 }
 
 bool
-TypeDescrSet::allOfKind(TypeDescr::Kind aKind)
+TypeDescrSet::allOfKind(type::Kind aKind)
 {
     if (empty())
         return false;
@@ -226,7 +226,7 @@ TypeDescrSet::knownPrototype() const
     return &get(0)->as<ComplexTypeDescr>().instancePrototype();
 }
 
-TypeDescr::Kind
+type::Kind
 TypeDescrSet::kind()
 {
     JS_ASSERT(!empty());
@@ -237,7 +237,7 @@ template<typename T>
 bool
 TypeDescrSet::genericType(typename T::Type *out)
 {
-    JS_ASSERT(allOfKind(TypeDescr::Scalar));
+    JS_ASSERT(allOfKind(type::Scalar));
 
     typename T::Type type = get(0)->as<T>().type();
     for (size_t i = 1; i < length(); i++) {
@@ -271,10 +271,10 @@ bool
 TypeDescrSet::hasKnownArrayLength(int32_t *l)
 {
     switch (kind()) {
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
         return false;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
       {
         const size_t result = get(0)->as<SizedArrayTypeDescr>().length();
         for (size_t i = 1; i < length(); i++) {
@@ -297,12 +297,12 @@ TypeDescrSet::arrayElementType(IonBuilder &builder, TypeDescrSet *out)
     TypeDescrSetBuilder elementTypes;
     for (size_t i = 0; i < length(); i++) {
         switch (kind()) {
-          case TypeDescr::UnsizedArray:
+          case type::UnsizedArray:
             if (!elementTypes.insert(&get(i)->as<UnsizedArrayTypeDescr>().elementType()))
                 return false;
             break;
 
-          case TypeDescr::SizedArray:
+          case type::SizedArray:
             if (!elementTypes.insert(&get(i)->as<SizedArrayTypeDescr>().elementType()))
                 return false;
             break;
@@ -321,7 +321,7 @@ TypeDescrSet::fieldNamed(IonBuilder &builder,
                          TypeDescrSet *out,
                          size_t *index)
 {
-    JS_ASSERT(kind() == TypeDescr::Struct);
+    JS_ASSERT(kind() == type::Struct);
 
     // Initialize `*offset` and `*out` for the case where incompatible
     // or absent fields are found.

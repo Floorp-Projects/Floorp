@@ -109,7 +109,6 @@ namespace jit {
     _(StringReplace)                                                        \
     _(Lambda)                                                               \
     _(LambdaArrow)                                                          \
-    _(ImplicitThis)                                                         \
     _(Slots)                                                                \
     _(Elements)                                                             \
     _(ConstantElements)                                                     \
@@ -137,6 +136,7 @@ namespace jit {
     _(SetArrayLength)                                                       \
     _(TypedArrayLength)                                                     \
     _(TypedArrayElements)                                                   \
+    _(TypedObjectProto)                                                     \
     _(TypedObjectElements)                                                  \
     _(SetTypedObjectOffset)                                                 \
     _(InitializedLength)                                                    \

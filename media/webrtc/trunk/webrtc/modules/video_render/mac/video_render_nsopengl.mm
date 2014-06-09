@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "engine_configurations.h"
+#include "webrtc/engine_configurations.h"
 #if defined(COCOA_RENDERING)
 
 #include "video_render_nsopengl.h"
@@ -16,7 +16,7 @@
 #include "event_wrapper.h"
 #include "trace.h"
 #include "thread_wrapper.h"
-#include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 namespace webrtc {
 

@@ -1,0 +1,56 @@
+<!--
+2   Any copyright is dedicated to the Public Domain.
+3   http://creativecommons.org/publicdomain/zero/1.0/
+4 -->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1008126
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1008126</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1008126">Mozilla Bug 1008126</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+function runTest() {
+
+  var worker = new Worker("file_bug1008126_worker.js");
+
+  worker.onmessage = function(event) {
+    if (event.data.type == 'finish') {
+      SimpleTest.finish();
+    } else if (event.data.type == 'status') {
+      ok(event.data.status, event.data.msg);
+    }
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error: " + event.message);
+    SimpleTest.finish();
+  };
+
+  worker.postMessage(true);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+   SpecialPowers.pushPrefEnv({"set": [["dom.mapped_arraybuffer.enabled", true]]}, function() {
+     SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], runTest);
+   });
+});
+</script>
+</pre>
+</body>
+</html>

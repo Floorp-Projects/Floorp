@@ -29,12 +29,12 @@ public:
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                              uint8_t aWidgetType, nsIntMargin* aResult);
 
-  virtual NS_HIDDEN_(bool) GetWidgetPadding(nsDeviceContext* aContext,
+  virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               uint8_t aWidgetType,
                                               nsIntMargin* aResult);
 
-  virtual NS_HIDDEN_(bool) GetWidgetOverflow(nsDeviceContext* aContext,
+  virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                                nsIFrame* aFrame,
                                                uint8_t aWidgetType,
                                                nsRect* aOverflowRect);

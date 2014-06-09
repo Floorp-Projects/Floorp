@@ -958,7 +958,9 @@ AsyncDeleteIconFromDisk::~AsyncDeleteIconFromDisk()
 {
 }
 
-AsyncDeleteAllFaviconsFromDisk::AsyncDeleteAllFaviconsFromDisk()
+AsyncDeleteAllFaviconsFromDisk::
+  AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent)
+  : mIgnoreRecent(aIgnoreRecent)
 {
 }
 
@@ -996,6 +998,24 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
       bool exists;
       if (NS_FAILED(currFile->Exists(&exists)) || !exists)
         continue;
+
+      if (mIgnoreRecent) {
+        // Check to make sure the icon wasn't just recently created.
+        // If it was created recently, don't delete it yet.
+        int64_t fileModTime = 0;
+        rv = currFile->GetLastModifiedTime(&fileModTime);
+        fileModTime /= PR_MSEC_PER_SEC;
+        // If the icon is older than the regeneration time (+ 10 min to be
+        // safe), then it's old and we can get rid of it.
+        // This code is only hit directly after a regeneration.
+        int32_t icoNoDeleteSeconds =
+          FaviconHelper::GetICOCacheSecondsTimeout() + 600;
+        int64_t nowTime = PR_Now() / int64_t(PR_USEC_PER_SEC);
+        if (NS_FAILED(rv) ||
+          (nowTime - fileModTime) < icoNoDeleteSeconds) {
+          continue;
+        }
+      }
 
       // We found an ICO file that exists, so we should remove it
       currFile->Remove(false);

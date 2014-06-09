@@ -21,7 +21,8 @@ def FindFiles(path, pattern):
   """Finds files matching |pattern| under |path|.
 
   Returns a list of file paths matching |pattern|, by walking the directory tree
-  under |path|. Filenames containing the string 'do_not_use' are excluded.
+  under |path|. Filenames containing the string 'do_not_use' or 'protoc' are
+  excluded.
 
   Args:
     path: The root path for the search.
@@ -34,7 +35,7 @@ def FindFiles(path, pattern):
   files = []
   for root, _, filenames in os.walk(path):
     for filename in fnmatch.filter(filenames, pattern):
-      if 'do_not_use' not in filename:
+      if 'do_not_use' not in filename and 'protoc' not in filename:
         # We use the relative path here to avoid "argument list too long"
         # errors on Linux.
         files.append(os.path.relpath(os.path.join(root, filename)))

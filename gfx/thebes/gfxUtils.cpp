@@ -142,53 +142,10 @@ gfxUtils::UnpremultiplyDataSurface(DataSourceSurface* aSurface)
 }
 
 void
-gfxUtils::ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
-                            gfxImageSurface *aDestSurface) {
-    if (!aDestSurface)
-        aDestSurface = aSourceSurface;
-
-    MOZ_ASSERT(aSourceSurface->Format() == aDestSurface->Format() &&
-               aSourceSurface->Width()  == aDestSurface->Width() &&
-               aSourceSurface->Height() == aDestSurface->Height() &&
-               aSourceSurface->Stride() == aDestSurface->Stride(),
-               "Source and destination surfaces don't have identical characteristics");
-
-    MOZ_ASSERT(aSourceSurface->Stride() == aSourceSurface->Width() * 4,
-               "Source surface stride isn't tightly packed");
-
-    MOZ_ASSERT(aSourceSurface->Format() == gfxImageFormat::ARGB32 || aSourceSurface->Format() == gfxImageFormat::RGB24,
-               "Surfaces must be ARGB32 or RGB24");
-
-    uint8_t *src = aSourceSurface->Data();
-    uint8_t *dst = aDestSurface->Data();
-
-    uint32_t dim = aSourceSurface->Width() * aSourceSurface->Height();
-    uint8_t *srcEnd = src + 4*dim;
-
-    if (src == dst) {
-        uint8_t buffer[4];
-        for (; src != srcEnd; src += 4) {
-            buffer[0] = src[2];
-            buffer[1] = src[1];
-            buffer[2] = src[0];
-
-            src[0] = buffer[0];
-            src[1] = buffer[1];
-            src[2] = buffer[2];
-        }
-    } else {
-        for (; src != srcEnd; src += 4, dst += 4) {
-            dst[0] = src[2];
-            dst[1] = src[1];
-            dst[2] = src[0];
-            dst[3] = src[3];
-        }
-    }
-}
-
-void
 gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
 {
+    MOZ_ASSERT((aLength % 4) == 0, "Loop below will pass srcEnd!");
+
     uint8_t *src = aData;
     uint8_t *srcEnd = src + aLength;
 
@@ -240,9 +197,11 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
                                  const gfxMatrix& aUserSpaceToImageSpace,
                                  const gfxRect& aSourceRect,
                                  const gfxRect& aSubimage,
-                                 const gfxImageFormat aFormat)
+                                 const SurfaceFormat aFormat)
 {
-    PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable");
+    PROFILER_LABEL("gfxUtils", "CreateSamplingRestricedDrawable",
+      js::ProfileEntry::Category::GRAPHICS);
+
     gfxRect userSpaceClipExtents = aContext->GetClipExtents();
     // This isn't optimal --- if aContext has a rotation then GetClipExtents
     // will have to do a bounding-box computation, and TransformBounds might
@@ -274,9 +233,9 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
       nsRefPtr<gfxASurface> temp = image->GetSubimage(needed);
       drawable = new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     } else {
-      mozilla::RefPtr<mozilla::gfx::DrawTarget> target =
+      RefPtr<DrawTarget> target =
         gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(ToIntSize(size),
-                                                                     ImageFormatToSurfaceFormat(aFormat));
+                                                                     aFormat);
       if (!target) {
         return nullptr;
       }
@@ -444,11 +403,13 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
                            const gfxRect&   aSourceRect,
                            const gfxRect&   aImageRect,
                            const gfxRect&   aFill,
-                           const gfxImageFormat aFormat,
+                           const SurfaceFormat aFormat,
                            GraphicsFilter aFilter,
                            uint32_t         aImageFlags)
 {
-    PROFILER_LABEL("gfxUtils", "DrawPixelSnapped");
+    PROFILER_LABEL("gfxUtils", "DrawPixelSnapped",
+      js::ProfileEntry::Category::GRAPHICS);
+
     bool doTile = !aImageRect.Contains(aSourceRect) &&
                   !(aImageFlags & imgIContainer::FLAG_CLAMP);
 
@@ -720,6 +681,9 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const IntPoint& aToTopLeft,
   return m;
 }
 
+/* This function is sort of shitty. We truncate doubles
+ * to ints then convert those ints back to doubles to make sure that
+ * they equal the doubles that we got in. */
 bool
 gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {

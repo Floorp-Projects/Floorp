@@ -60,8 +60,8 @@ public class RemoteTabsContainerPanel extends GeckoSwipeRefreshLayout
         list = (RemoteTabsList) child;
 
         // Must be called after the child view has been added.
-        setColorScheme(R.color.swipe_refresh_orange_dark, R.color.background_tabs,
-                       R.color.swipe_refresh_orange_dark, R.color.background_tabs);
+        setColorScheme(R.color.swipe_refresh_orange1, R.color.swipe_refresh_orange2,
+                       R.color.swipe_refresh_orange3, R.color.swipe_refresh_orange4);
     }
 
 

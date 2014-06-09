@@ -65,7 +65,7 @@ int32_t ViERenderManager::RegisterVideoRenderModule(
   }
 
   // Register module.
-  render_list_.PushBack(static_cast<void*>(render_module));
+  render_list_.push_back(render_module);
   use_external_render_module_ = true;
   return 0;
 }
@@ -81,24 +81,17 @@ int32_t ViERenderManager::DeRegisterVideoRenderModule(
     return -1;
   }
 
-  // Erase the render module from the map.
-  ListItem* list_item = NULL;
-  bool found = false;
-  for (list_item = render_list_.First(); list_item != NULL;
-       list_item = render_list_.Next(list_item)) {
-    if (render_module == static_cast<VideoRender*>(list_item->GetItem())) {
-      // We've found our renderer.
-      render_list_.Erase(list_item);
-      found = true;
-      break;
+  for (RenderList::iterator iter = render_list_.begin();
+       iter != render_list_.end(); ++iter) {
+    if (render_module == *iter) {
+      // We've found our renderer. Erase the render module from the map.
+      render_list_.erase(iter);
+      return 0;
     }
   }
-  if (!found) {
-    WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, ViEId(engine_id_),
-                 "Module not registered");
-    return -1;
-  }
-  return 0;
+  WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideo, ViEId(engine_id_),
+               "Module not registered");
+  return -1;
 }
 
 ViERenderer* ViERenderManager::AddRenderStream(const int32_t render_id,
@@ -129,7 +122,7 @@ ViERenderer* ViERenderManager::AddRenderStream(const int32_t render_id,
                    "Could not create new render module");
       return NULL;
     }
-    render_list_.PushBack(static_cast<void*>(render_module));
+    render_list_.push_back(render_module);
   }
 
   ViERenderer* vie_renderer = ViERenderer::CreateViERenderer(render_id,
@@ -176,12 +169,11 @@ int32_t ViERenderManager::RemoveRenderStream(
   if (!use_external_render_module_ &&
       renderer.GetNumIncomingRenderStreams() == 0) {
     // Erase the render module from the map.
-    ListItem* list_item = NULL;
-    for (list_item = render_list_.First(); list_item != NULL;
-         list_item = render_list_.Next(list_item)) {
-      if (&renderer == static_cast<VideoRender*>(list_item->GetItem())) {
+    for (RenderList::iterator iter = render_list_.begin();
+         iter != render_list_.end(); ++iter) {
+      if (&renderer == *iter) {
         // We've found our renderer.
-        render_list_.Erase(list_item);
+        render_list_.erase(iter);
         break;
       }
     }
@@ -192,21 +184,14 @@ int32_t ViERenderManager::RemoveRenderStream(
 }
 
 VideoRender* ViERenderManager::FindRenderModule(void* window) {
-  VideoRender* renderer = NULL;
-  ListItem* list_item = NULL;
-  for (list_item = render_list_.First(); list_item != NULL;
-       list_item = render_list_.Next(list_item)) {
-    renderer = static_cast<VideoRender*>(list_item->GetItem());
-    if (renderer == NULL) {
-      break;
-    }
-    if (renderer->Window() == window) {
+  for (RenderList::iterator iter = render_list_.begin();
+       iter != render_list_.end(); ++iter) {
+    if ((*iter)->Window() == window) {
       // We've found the render module.
-      break;
+      return *iter;
     }
-    renderer = NULL;
   }
-  return renderer;
+  return NULL;
 }
 
 ViERenderer* ViERenderManager::ViERenderPtr(int32_t render_id) const {

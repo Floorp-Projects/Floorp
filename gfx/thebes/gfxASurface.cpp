@@ -155,7 +155,7 @@ gfxASurface::SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf)
 }
 
 already_AddRefed<gfxASurface>
-gfxASurface::Wrap (cairo_surface_t *csurf)
+gfxASurface::Wrap (cairo_surface_t *csurf, const gfxIntSize& aSize)
 {
     nsRefPtr<gfxASurface> result;
 
@@ -190,7 +190,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
 #endif
 #ifdef CAIRO_HAS_QUARTZ_SURFACE
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
-        result = new gfxQuartzSurface(csurf);
+        result = new gfxQuartzSurface(csurf, aSize);
     }
     else if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
         result = new gfxQuartzImageSurface(csurf);
@@ -202,7 +202,7 @@ gfxASurface::Wrap (cairo_surface_t *csurf)
     }
 #endif
     else {
-        result = new gfxUnknownSurface(csurf);
+        result = new gfxUnknownSurface(csurf, aSize);
     }
 
     // fprintf(stderr, "New wrapper for %p -> %p\n", csurf, result);
@@ -337,7 +337,7 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
         return nullptr;
     }
 
-    nsRefPtr<gfxASurface> result = Wrap(surface);
+    nsRefPtr<gfxASurface> result = Wrap(surface, aSize);
     cairo_surface_destroy(surface);
     return result.forget();
 }
@@ -523,52 +523,6 @@ gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
             NS_WARNING("Unknown byte per pixel value for Image format");
     }
     return 0;
-}
-
-void
-gfxASurface::FastMovePixels(const nsIntRect& aSourceRect,
-                            const nsIntPoint& aDestTopLeft)
-{
-    // Used when the backend can internally handle self copies.
-    nsIntRect dest(aDestTopLeft, aSourceRect.Size());
-    
-    nsRefPtr<gfxContext> ctx = new gfxContext(this);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    nsIntPoint srcOrigin = dest.TopLeft() - aSourceRect.TopLeft();
-    ctx->SetSource(this, gfxPoint(srcOrigin.x, srcOrigin.y));
-    ctx->Rectangle(gfxRect(dest.x, dest.y, dest.width, dest.height));
-    ctx->Fill();
-}
-
-void
-gfxASurface::MovePixels(const nsIntRect& aSourceRect,
-                        const nsIntPoint& aDestTopLeft)
-{
-    // Assume the backend can't handle self copying well and allocate
-    // a temporary surface instead.
-    nsRefPtr<gfxASurface> tmp = 
-      CreateSimilarSurface(GetContentType(), 
-                           nsIntSize(aSourceRect.width, aSourceRect.height));
-    // CreateSimilarSurface can return nullptr if the current surface is
-    // in an error state. This isn't good, but its better to carry
-    // on with the error surface instead of crashing.
-    NS_WARN_IF_FALSE(tmp, "Must have temporary surface to move pixels!");
-    if (!tmp) {
-        return;
-    }
-    nsRefPtr<gfxContext> ctx = new gfxContext(tmp);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->SetSource(this, gfxPoint(-aSourceRect.x, -aSourceRect.y));
-    ctx->Paint();
-
-    ctx = new gfxContext(this);
-    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    ctx->SetSource(tmp, gfxPoint(aDestTopLeft.x, aDestTopLeft.y));
-    ctx->Rectangle(gfxRect(aDestTopLeft.x, 
-                           aDestTopLeft.y, 
-                           aSourceRect.width, 
-                           aSourceRect.height));
-    ctx->Fill();
 }
 
 /** Memory reporting **/

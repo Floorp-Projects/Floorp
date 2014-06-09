@@ -183,8 +183,7 @@ static const uint32_t StackAlignment = 16;
 static const bool StackKeptAligned = false;
 static const uint32_t CodeAlignment = 8;
 static const uint32_t NativeFrameSize = sizeof(void*);
-static const uint32_t AlignmentAtPrologue = sizeof(void*);
-static const uint32_t AlignmentMidPrologue = AlignmentAtPrologue;
+static const uint32_t AlignmentAtAsmJSPrologue = sizeof(void*);
 
 static const Scale ScalePointer = TimesEight;
 
@@ -403,6 +402,24 @@ class Assembler : public AssemblerX86Shared
     }
     void andq(Imm32 imm, Register dest) {
         masm.andq_ir(imm.value, dest.code());
+    }
+    void andq(const Operand &src, Register dest) {
+        switch (src.kind()) {
+          case Operand::REG:
+            masm.andq_rr(src.reg(), dest.code());
+            break;
+          case Operand::MEM_REG_DISP:
+            masm.andq_mr(src.disp(), src.base(), dest.code());
+            break;
+          case Operand::MEM_SCALE:
+            masm.andq_mr(src.disp(), src.base(), src.index(), src.scale(), dest.code());
+            break;
+          case Operand::MEM_ADDRESS32:
+            masm.andq_mr(src.address(), dest.code());
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("unexpected operand kind");
+        }
     }
 
     void addq(Imm32 imm, Register dest) {

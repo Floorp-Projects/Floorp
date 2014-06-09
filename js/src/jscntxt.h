@@ -285,7 +285,6 @@ struct ThreadSafeContext : ContextFriendFields,
     const JS::AsmJSCacheOps &asmJSCacheOps() { return runtime_->asmJSCacheOps; }
     PropertyName *emptyString() { return runtime_->emptyString; }
     FreeOp *defaultFreeOp() { return runtime_->defaultFreeOp(); }
-    bool useHelperThreads() { return runtime_->useHelperThreads(); }
     void *runtimeAddressForJit() { return runtime_; }
     void *stackLimitAddress(StackKind kind) { return &runtime_->mainThread.nativeStackLimit[kind]; }
     void *stackLimitAddressForJitCode(StackKind kind);
@@ -299,7 +298,7 @@ struct ThreadSafeContext : ContextFriendFields,
     }
 };
 
-struct WorkerThread;
+struct HelperThread;
 
 class ExclusiveContext : public ThreadSafeContext
 {
@@ -310,14 +309,14 @@ class ExclusiveContext : public ThreadSafeContext
     friend void JSScript::initCompartment(ExclusiveContext *cx);
     friend class jit::IonContext;
 
-    // The worker on which this context is running, if this is not a JSContext.
-    WorkerThread *workerThread_;
+    // The thread on which this context is running, if this is not a JSContext.
+    HelperThread *helperThread_;
 
   public:
 
     ExclusiveContext(JSRuntime *rt, PerThreadData *pt, ContextKind kind)
       : ThreadSafeContext(rt, pt, kind),
-        workerThread_(nullptr),
+        helperThread_(nullptr),
         enterCompartmentDepth_(0)
     {}
 
@@ -353,8 +352,8 @@ class ExclusiveContext : public ThreadSafeContext
     inline void enterNullCompartment();
     inline void leaveCompartment(JSCompartment *oldCompartment);
 
-    void setWorkerThread(WorkerThread *workerThread);
-    WorkerThread *workerThread() const { return workerThread_; }
+    void setHelperThread(HelperThread *helperThread);
+    HelperThread *helperThread() const { return helperThread_; }
 
     // Threads with an ExclusiveContext may freely access any data in their
     // compartment and zone.
@@ -392,7 +391,7 @@ class ExclusiveContext : public ThreadSafeContext
         return runtime_->scriptDataTable();
     }
 
-    // Methods specific to any WorkerThread for the context.
+    // Methods specific to any HelperThread for the context.
     frontend::CompileError &addPendingCompileError();
     void addPendingOverRecursed();
 };
@@ -422,6 +421,10 @@ struct JSContext : public js::ExclusiveContext,
 
     /* Per-context options. */
     JS::ContextOptions  options_;
+
+    // True if propagating a forced return from an interrupt handler during
+    // debug mode.
+    bool                propagatingForcedReturn_;
 
   public:
     int32_t             reportGranularity;  /* see vm/Probes.h */
@@ -570,6 +573,10 @@ struct JSContext : public js::ExclusiveContext,
         throwing = false;
         unwrappedException_.setUndefined();
     }
+
+    bool isPropagatingForcedReturn() const { return propagatingForcedReturn_; }
+    void setPropagatingForcedReturn() { propagatingForcedReturn_ = true; }
+    void clearPropagatingForcedReturn() { propagatingForcedReturn_ = false; }
 
 #ifdef DEBUG
     /*
@@ -1003,12 +1010,13 @@ class ContextAllocPolicy
 /* Exposed intrinsics so that Ion may inline them. */
 bool intrinsic_ToObject(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ToInteger(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_ToString(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_IsCallable(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_ThrowError(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_NewDenseArray(JSContext *cx, unsigned argc, Value *vp);
 
 bool intrinsic_UnsafePutElements(JSContext *cx, unsigned argc, Value *vp);
-bool intrinsic_DefineValueProperty(JSContext *cx, unsigned argc, Value *vp);
+bool intrinsic_DefineDataProperty(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeSetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_UnsafeGetReservedSlot(JSContext *cx, unsigned argc, Value *vp);
 bool intrinsic_HaveSameClass(JSContext *cx, unsigned argc, Value *vp);

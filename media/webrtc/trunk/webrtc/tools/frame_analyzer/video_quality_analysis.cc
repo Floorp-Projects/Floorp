@@ -232,6 +232,11 @@ void RunAnalysis(const char* reference_file_name, const char* test_file_name,
 
 void PrintMaxRepeatedAndSkippedFrames(const std::string& label,
                                       const std::string& stats_file_name) {
+  PrintMaxRepeatedAndSkippedFrames(stdout, label, stats_file_name);
+}
+
+void PrintMaxRepeatedAndSkippedFrames(FILE* output, const std::string& label,
+                                      const std::string& stats_file_name) {
   FILE* stats_file = fopen(stats_file_name.c_str(), "r");
   if (stats_file == NULL) {
     fprintf(stderr, "Couldn't open stats file for reading: %s\n",
@@ -271,33 +276,38 @@ void PrintMaxRepeatedAndSkippedFrames(const std::string& label,
     }
     previous_frame_number = decoded_frame_number;
   }
-  fprintf(stdout, "RESULT Max_repeated: %s= %d\n", label.c_str(),
+  fprintf(output, "RESULT Max_repeated: %s= %d\n", label.c_str(),
           max_repeated_frames);
-  fprintf(stdout, "RESULT Max_skipped: %s= %d\n", label.c_str(),
+  fprintf(output, "RESULT Max_skipped: %s= %d\n", label.c_str(),
           max_skipped_frames);
   fclose(stats_file);
 }
 
 void PrintAnalysisResults(const std::string& label, ResultsContainer* results) {
+  PrintAnalysisResults(stdout, label, results);
+}
+
+void PrintAnalysisResults(FILE* output, const std::string& label,
+                          ResultsContainer* results) {
   std::vector<AnalysisResult>::iterator iter;
 
-  fprintf(stdout, "RESULT Unique_frames_count: %s= %u\n", label.c_str(),
+  fprintf(output, "RESULT Unique_frames_count: %s= %u\n", label.c_str(),
           static_cast<unsigned int>(results->frames.size()));
 
   if (results->frames.size() > 0u) {
-    fprintf(stdout, "RESULT PSNR: %s= [", label.c_str());
+    fprintf(output, "RESULT PSNR: %s= [", label.c_str());
     for (iter = results->frames.begin(); iter != results->frames.end() - 1;
          ++iter) {
-      fprintf(stdout, "%f,", iter->psnr_value);
+      fprintf(output, "%f,", iter->psnr_value);
     }
-    fprintf(stdout, "%f] dB\n", iter->psnr_value);
+    fprintf(output, "%f] dB\n", iter->psnr_value);
 
-    fprintf(stdout, "RESULT SSIM: %s= [", label.c_str());
+    fprintf(output, "RESULT SSIM: %s= [", label.c_str());
     for (iter = results->frames.begin(); iter != results->frames.end() - 1;
          ++iter) {
-      fprintf(stdout, "%f,", iter->ssim_value);
+      fprintf(output, "%f,", iter->ssim_value);
     }
-    fprintf(stdout, "%f]\n", iter->ssim_value);
+    fprintf(output, "%f]\n", iter->ssim_value);
   }
 }
 

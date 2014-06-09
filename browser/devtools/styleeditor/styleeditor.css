@@ -15,6 +15,10 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   display: block;
 }
 
+.devtools-toolbar > spacer {
+  -moz-box-flex: 1;
+}
+
 .splitview-nav > li,
 .stylesheet-info,
 .stylesheet-more {

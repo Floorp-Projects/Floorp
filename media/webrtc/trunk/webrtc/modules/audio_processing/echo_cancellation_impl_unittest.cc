@@ -12,7 +12,6 @@
 extern "C" {
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
 }
-#include "webrtc/modules/audio_processing/echo_cancellation_impl.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 

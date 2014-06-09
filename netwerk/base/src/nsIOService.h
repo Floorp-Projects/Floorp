@@ -56,8 +56,8 @@ public:
     // Returns an addrefed pointer.
     static nsIOService* GetInstance();
 
-    NS_HIDDEN_(nsresult) Init();
-    NS_HIDDEN_(nsresult) NewURI(const char* aSpec, nsIURI* aBaseURI,
+    nsresult Init();
+    nsresult NewURI(const char* aSpec, nsIURI* aBaseURI,
                                 nsIURI* *result,
                                 nsIProtocolHandler* *hdlrResult);
 
@@ -78,22 +78,22 @@ private:
     // These shouldn't be called directly:
     // - construct using GetInstance
     // - destroy using Release
-    nsIOService() NS_HIDDEN;
-    ~nsIOService() NS_HIDDEN;
+    nsIOService();
+    ~nsIOService();
 
-    NS_HIDDEN_(nsresult) TrackNetworkLinkStatusForOffline();
+    nsresult TrackNetworkLinkStatusForOffline();
 
-    NS_HIDDEN_(nsresult) GetCachedProtocolHandler(const char *scheme,
+    nsresult GetCachedProtocolHandler(const char *scheme,
                                                   nsIProtocolHandler* *hdlrResult,
                                                   uint32_t start=0,
                                                   uint32_t end=0);
-    NS_HIDDEN_(nsresult) CacheProtocolHandler(const char *scheme,
+    nsresult CacheProtocolHandler(const char *scheme,
                                               nsIProtocolHandler* hdlr);
 
     // Prefs wrangling
-    NS_HIDDEN_(void) PrefsChanged(nsIPrefBranch *prefs, const char *pref = nullptr);
-    NS_HIDDEN_(void) GetPrefBranch(nsIPrefBranch **);
-    NS_HIDDEN_(void) ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove);
+    void PrefsChanged(nsIPrefBranch *prefs, const char *pref = nullptr);
+    void GetPrefBranch(nsIPrefBranch **);
+    void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, bool remove);
 
     nsresult InitializeSocketTransportService();
     nsresult InitializeNetworkLinkService();

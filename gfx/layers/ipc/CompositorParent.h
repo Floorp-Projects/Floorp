@@ -63,8 +63,8 @@ private:
   uint64_t mLayersId;
 };
 
-class CompositorParent MOZ_FINAL : public PCompositorParent,
-                                   public ShadowLayersManager
+class CompositorParent : public PCompositorParent,
+                         public ShadowLayersManager
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorParent)
 
@@ -96,6 +96,7 @@ public:
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   virtual void ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                   const uint64_t& aTransactionId,
                                    const TargetConfig& aTargetConfig,
                                    bool aIsFirstPaint,
                                    bool aScheduleComposite,
@@ -205,15 +206,6 @@ public:
   static PCompositorParent*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
-  /**
-   * Setup external message loop and thread ID for Compositor.
-   * Should be used when CompositorParent should work in existing thread/MessageLoop,
-   * for example moving Compositor into native toolkit main thread will allow to avoid
-   * extra synchronization and call ::Composite() right from toolkit::Paint event
-   */
-  static void StartUpWithExistingThread(MessageLoop* aMsgLoop,
-                                        PlatformThreadId aThreadID);
-
   struct LayerTreeState {
     LayerTreeState();
     nsRefPtr<Layer> mRoot;
@@ -226,6 +218,7 @@ public:
     PCompositorParent* mCrossProcessParent;
     TargetConfig mTargetConfig;
     APZTestData mApzTestData;
+    LayerTransactionParent* mLayerTree;
   };
 
   /**
@@ -242,8 +235,8 @@ public:
    */
   static bool IsInCompositorThread();
 
-private:
-  // Private destructor, to discourage deletion outside of Release():
+protected:
+  // Protected destructor, to discourage deletion outside of Release():
   virtual ~CompositorParent();
 
   virtual PLayerTransactionParent*
@@ -253,7 +246,7 @@ private:
                                  bool* aSuccess) MOZ_OVERRIDE;
   virtual bool DeallocPLayerTransactionParent(PLayerTransactionParent* aLayers) MOZ_OVERRIDE;
   virtual void ScheduleTask(CancelableTask*, int);
-  void Composite();
+  void CompositeCallback();
   void CompositeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const nsIntRect* aRect = nullptr);
 
@@ -265,8 +258,6 @@ private:
   void ResumeCompositionAndResize(int width, int height);
   void ForceComposition();
   void CancelCurrentCompositeTask();
-
-  inline static PlatformThreadId CompositorThreadID();
 
   /**
    * Creates a global map referencing each compositor by ID.
@@ -327,6 +318,8 @@ private:
   TimeStamp mExpectedComposeStartTime;
 #endif
 
+  uint64_t mPendingTransaction;
+
   bool mPaused;
 
   bool mUseExternalSurfaceSize;
@@ -342,8 +335,6 @@ private:
   CancelableTask* mForceCompositionTask;
 
   nsRefPtr<APZCTreeManager> mApzcTreeManager;
-
-  bool mWantDidCompositeEvent;
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
 };

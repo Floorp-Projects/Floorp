@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1017932
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1017932</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1017932 **/
+   var doc = new Document;
+   ok(doc instanceof Document, "Should have a document");
+   ok(!(doc instanceof XMLDocument), "Should not be an XMLDocument");
+   ok(!("load" in doc), "Should not have a load() method");
+   is(Object.getPrototypeOf(doc), Document.prototype,
+      "Should have the right proto");
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1017932">Mozilla Bug 1017932</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

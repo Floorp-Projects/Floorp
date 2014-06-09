@@ -318,6 +318,7 @@ struct JSCompartment
     bool wrap(JSContext *cx, js::StrictPropertyOp *op);
     bool wrap(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc);
     bool wrap(JSContext *cx, js::AutoIdVector &props);
+    bool wrap(JSContext *cx, JS::MutableHandle<js::PropDesc> desc);
 
     bool putWrapper(JSContext *cx, const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
 
@@ -446,6 +447,11 @@ struct JSCompartment
 
     /* Used by memory reporters and invalid otherwise. */
     void               *compartmentStats;
+
+    // These flags help us to discover if a compartment that shouldn't be alive
+    // manages to outlive a GC.
+    bool scheduledForDestruction;
+    bool maybeAlive;
 
 #ifdef JS_ION
   private:

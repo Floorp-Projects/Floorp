@@ -442,6 +442,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static JSTrapStatus onSingleStep(JSContext *cx, MutableHandleValue vp);
     static bool handleBaselineOsr(JSContext *cx, InterpreterFrame *from, jit::BaselineFrame *to);
     static bool handleIonBailout(JSContext *cx, jit::RematerializedFrame *from, jit::BaselineFrame *to);
+    static void propagateForcedReturn(JSContext *cx, AbstractFramePtr frame, HandleValue rval);
 
     /************************************* Functions for use by Debugger.cpp. */
 
@@ -506,6 +507,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * happens in the target compartment--rotational symmetry.)
      */
     bool unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp);
+    bool unwrapPropDescInto(JSContext *cx, HandleObject obj, Handle<PropDesc> wrapped,
+                            MutableHandle<PropDesc> unwrapped);
 
     /*
      * Store the Debugger.Frame object for frame in *vp.

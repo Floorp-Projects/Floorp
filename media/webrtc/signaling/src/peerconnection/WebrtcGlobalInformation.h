@@ -6,6 +6,7 @@
 #define _WEBRTC_GLOBAL_INFORMATION_H_
 
 #include "nsString.h"
+#include "mozilla/dom/BindingDeclarations.h" // for Optional
 
 namespace sipcc {
 class PeerConnectionImpl;
@@ -24,6 +25,7 @@ class WebrtcGlobalInformation
 public:
   static void GetAllStats(const GlobalObject& aGlobal,
                           WebrtcGlobalStatisticsCallback& aStatsCallback,
+                          const Optional<nsAString>& pcIdFilter,
                           ErrorResult& aRv);
 
   static void GetLogging(const GlobalObject& aGlobal,

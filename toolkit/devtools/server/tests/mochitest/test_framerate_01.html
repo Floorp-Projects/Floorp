@@ -46,8 +46,8 @@ window.onload = function() {
       window.setTimeout(() => {
         front.startRecording().then(() => {
           window.setTimeout(() => {
-            front.stopRecording().then(timeline => {
-              onRecordingStopped(timeline);
+            front.stopRecording().then(rawData => {
+              onRecordingStopped(front, rawData);
             });
           }, 1000);
         });
@@ -55,24 +55,42 @@ window.onload = function() {
     });
   });
 
-  function onRecordingStopped(timeline) {
-    ok(timeline, "There should be a recording available.");
+  function onRecordingStopped(front, rawData) {
+    ok(rawData, "There should be a recording available.");
 
-    var ticks = Object.keys(timeline);
-    var values = ticks.map(e => timeline[e]);
+    var timeline = front.plotFPS(rawData);
+    ok(timeline.length >= 2,
+      "There should be at least one measurement available, with two entries.");
 
-    ok(ticks.length >= 1,
-      "There should be at least one measurement available.");
-    is(ticks[0], 100,
-      "The first measurement should be performed when exactly 100ms passed.");
+    var prevTimeStart = timeline[0].delta;
 
-    for (var tick of ticks) {
-      info("Testing tick: " + tick);
-      is(tick % 100, 0, "All ticks should be divisible by the resolution.");
+    for (var i = 0; i < timeline.length; i += 2) {
+      var currTimeStart = timeline[i].delta;
+      var currTimeEnd = timeline[i + 1].delta;
+      info("Testing delta: " + currTimeStart + " vs. " + currTimeEnd);
+
+      ok(currTimeStart < currTimeEnd,
+        "The start and end time deltas should be consecutive.");
+      is(currTimeStart, prevTimeStart,
+        "There should be two time deltas for each framerate value.");
+
+      prevTimeStart = currTimeEnd;
     }
-    for (var value of values) {
-      info("Testing value: " + value);
-      is(typeof value, "number", "All values should be integers.");
+
+    var prevFramerateValue = -1;
+
+    for (var i = 0; i < timeline.length; i += 2) {
+      var currFramerateStart = timeline[i].value;
+      var currFramerateEnd = timeline[i + 1].value;
+      info("Testing framerate: " + currFramerateStart);
+
+      is(currFramerateStart, currFramerateEnd,
+        "The start and end framerate values should be equal.");
+      isnot(currFramerateStart, prevFramerateValue,
+        "There should be different framerate values for each bucket.");
+
+      is(typeof currFramerateStart, "number", "All values should be numbers.");
+      prevFramerateValue = currFramerateStart;
     }
 
     client.close(() => {

@@ -26,6 +26,7 @@ import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.announcements.AnnouncementsConstants;
 import org.mozilla.gecko.background.common.GlobalConstants;
 import org.mozilla.gecko.background.healthreport.HealthReportConstants;
@@ -130,6 +131,7 @@ OnSharedPreferenceChangeListener
      * Track the last locale so we know whether to redisplay.
      */
     private Locale lastLocale = Locale.getDefault();
+    private boolean localeSwitchingIsEnabled;
 
     private void updateActionBarTitle(int title) {
         if (Build.VERSION.SDK_INT >= 14) {
@@ -267,6 +269,10 @@ OnSharedPreferenceChangeListener
         // Apply the current user-selected locale, if necessary.
         checkLocale();
 
+        // Track this so we can decide whether to show locale options.
+        // See also the workaround below for Bug 1015209.
+        localeSwitchingIsEnabled = BrowserLocaleManager.getInstance().isEnabled();
+
         // For Android v11+ where we use Fragments (v11+ only due to bug 866352),
         // check that PreferenceActivity.EXTRA_SHOW_FRAGMENT has been set
         // (or set it) before super.onCreate() is called so Android can display
@@ -282,10 +288,17 @@ OnSharedPreferenceChangeListener
                 updateTitle(getString(R.string.pref_header_customize));
             }
 
-            // So that Android doesn't put the fragment title (or nothing at
-            // all) in the action bar.
             if (onIsMultiPane()) {
+                // So that Android doesn't put the fragment title (or nothing at
+                // all) in the action bar.
                 updateActionBarTitle(R.string.settings_title);
+
+                if (Build.VERSION.SDK_INT < 13) {
+                    // Affected by Bug 1015209 -- no detach/attach.
+                    // If we try rejigging fragments, we'll crash, so don't
+                    // enable locale switching at all.
+                    localeSwitchingIsEnabled = false;
+                }
             }
         }
 
@@ -396,6 +409,18 @@ OnSharedPreferenceChangeListener
     public void onBuildHeaders(List<Header> target) {
         if (onIsMultiPane()) {
             loadHeadersFromResource(R.xml.preference_headers, target);
+
+            // If locale switching is disabled, remove the section
+            // entirely. This logic will need to be extended when
+            // content language selection (Bug 881510) is implemented.
+            if (!localeSwitchingIsEnabled) {
+                for (Header header : target) {
+                    if (header.id == R.id.pref_header_language) {
+                        target.remove(header);
+                        break;
+                    }
+                }
+            }
         }
     }
 
@@ -563,9 +588,20 @@ OnSharedPreferenceChangeListener
     private void setupPreferences(PreferenceGroup preferences, ArrayList<String> prefs) {
         for (int i = 0; i < preferences.getPreferenceCount(); i++) {
             Preference pref = preferences.getPreference(i);
+
+            // Eliminate locale switching if necessary.
+            // This logic will need to be extended when
+            // content language selection (Bug 881510) is implemented.
+            if (!localeSwitchingIsEnabled &&
+                "preferences_locale".equals(pref.getExtras().getString("resource", null))) {
+                preferences.removePreference(pref);
+                i--;
+                continue;
+            }
+
             String key = pref.getKey();
             if (pref instanceof PreferenceGroup) {
-                // If no datareporting is enabled, remove UI.
+                // If datareporting is disabled, remove UI.
                 if (PREFS_DATA_REPORTING_PREFERENCES.equals(key)) {
                     if (!AppConstants.MOZ_DATA_REPORTING) {
                         preferences.removePreference(pref);
@@ -854,9 +890,9 @@ OnSharedPreferenceChangeListener
                     if (null == localeManager.setSelectedLocale(context, newValue)) {
                         localeManager.updateConfiguration(context, Locale.getDefault());
                     }
-                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, null,
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_UNSELECTED, Method.NONE,
                                           currentLocale == null ? "unknown" : currentLocale);
-                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, null, newValue);
+                    Telemetry.sendUIEvent(TelemetryContract.Event.LOCALE_BROWSER_SELECTED, Method.NONE, newValue);
                 }
 
                 ThreadUtils.postToUiThread(new Runnable() {

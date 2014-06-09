@@ -809,6 +809,7 @@ RenderFrameParent::ContentViewScaleChanged(nsContentView* aView)
 
 void
 RenderFrameParent::ShadowLayersUpdated(LayerTransactionParent* aLayerTree,
+                                       const uint64_t& aTransactionId,
                                        const TargetConfig& aTargetConfig,
                                        bool aIsFirstPaint,
                                        bool aScheduleComposite,

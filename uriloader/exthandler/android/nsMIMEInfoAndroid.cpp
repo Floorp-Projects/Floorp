@@ -405,7 +405,7 @@ nsMIMEInfoAndroid::SystemChooser::SetDetailedDescription(const nsAString&) {
 // XXX Workaround for bug 986975 to maintain the existing broken semantics
 template<>
 struct nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void> {
-  static const nsIID kIID NS_HIDDEN;
+  static const nsIID kIID;
 };
 const nsIID nsIHandlerApp::COMTypeInfo<nsMIMEInfoAndroid::SystemChooser, void>::kIID = NS_IHANDLERAPP_IID;
 

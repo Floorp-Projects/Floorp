@@ -71,13 +71,13 @@ enum TracingMetadata {
 // Insert a RAII in this scope to active a pseudo label. Any samples collected
 // in this scope will contain this annotation. For dynamic strings use
 // PROFILER_LABEL_PRINTF. Arguments must be string literals.
-#define PROFILER_LABEL(name_space, info) do {} while (0)
+#define PROFILER_LABEL(name_space, info, category) do {} while (0)
 
 // Format a dynamic string as a pseudo label. These labels will a considerable
 // storage size in the circular buffer compared to regular labels. This function
 // can be used to annotate custom information such as URL for the resource being
 // decoded or the size of the paint.
-#define PROFILER_LABEL_PRINTF(name_space, info, format, ...) do {} while (0)
+#define PROFILER_LABEL_PRINTF(name_space, info, category, format, ...) do {} while (0)
 
 // Insert a marker in the profile timeline. This is useful to delimit something
 // important happening such as the first paint. Unlike profiler_label that are
@@ -87,8 +87,8 @@ enum TracingMetadata {
 #define PROFILER_MARKER_PAYLOAD(info, payload) do {} while (0)
 
 // Main thread specilization to avoid TLS lookup for performance critical use.
-#define PROFILER_MAIN_THREAD_LABEL(name_space, info) do {} while (0)
-#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, format, ...) do {} while (0)
+#define PROFILER_MAIN_THREAD_LABEL(name_space, info, category) do {} while (0)
+#define PROFILER_MAIN_THREAD_LABEL_PRINTF(name_space, info, category, format, ...) do {} while (0)
 
 static inline void profiler_tracing(const char* aCategory, const char* aInfo,
                                     TracingMetadata metaData = TRACING_DEFAULT) {}

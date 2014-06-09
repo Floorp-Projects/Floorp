@@ -15,6 +15,7 @@
     <menuitem id="b"/>
   </menugroup>
   <menuitem id="c" label="c"/>
+  <menugroup/>
 </menupopup>
 
 <button label="Check"/>

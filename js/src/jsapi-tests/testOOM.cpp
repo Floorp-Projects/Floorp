@@ -17,7 +17,7 @@ BEGIN_TEST(testOOM)
 
 virtual JSRuntime * createRuntime()
 {
-    JSRuntime *rt = JS_NewRuntime(0, JS_USE_HELPER_THREADS);
+    JSRuntime *rt = JS_NewRuntime(0);
     if (!rt)
         return nullptr;
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, (uint32_t)-1);
@@ -54,7 +54,7 @@ BEGIN_TEST(testNewRuntime)
 
     JSRuntime *rt;
     START_OOM_TEST("new runtime");
-    rt = JS_NewRuntime(8L * 1024 * 1024, JS_USE_HELPER_THREADS);
+    rt = JS_NewRuntime(8L * 1024 * 1024);
     if (rt)
         OOM_TEST_FINISHED;
     END_OOM_TEST;

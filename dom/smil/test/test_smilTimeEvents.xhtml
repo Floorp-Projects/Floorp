@@ -235,12 +235,14 @@ function sanityCheckEvent(evt)
   is(evt.eventPhase, evt.AT_TARGET);
   is(evt.bubbles, false, "Event should not bubble");
   is(evt.cancelable, false, "Event should not be cancelable");
-  // Currently we set event timestamps to 0 which DOM 2 allows. This isn't
-  // correct since SMIL uses this field to avoid synchronisation slew but first
-  // we need to fix bug 323039 and bug 77992 which involve storing timestamps as
-  // 64-bit integers and deciding whether those timestamps should be related to
-  // the epoch or system start.
-  is(evt.timeStamp, 0, "Event timeStamp should be 0");
+  if (SpecialPowers.getBoolPref("dom.event.highrestimestamp.enabled")) {
+    var now = window.performance.now();
+    ok(evt.timeStamp > 0 && evt.timeStamp < now,
+       "Event timeStamp (" + evt.timeStamp + ") should be > 0 but " +
+       "before the current time (" + now + ")");
+  } else {
+    is(evt.timeStamp, 0, "Event timeStamp should be 0");
+  }
   ok(evt.view !== null, "Event view not set");
 }
 

@@ -650,7 +650,7 @@ let settingsToObserve = {
     prefName: 'dom.browser_frames.useAsyncPanZoom',
     defaultValue: false
   },
-  'apz.overscroll.enabled': false,
+  'apz.overscroll.enabled': true,
   'debug.fps.enabled': {
     prefName: 'layers.acceleration.draw-fps',
     defaultValue: false

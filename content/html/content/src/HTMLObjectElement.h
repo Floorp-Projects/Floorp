@@ -225,7 +225,7 @@ private:
   /**
    * Calls LoadObject with the correct arguments to start the plugin load.
    */
-  NS_HIDDEN_(void) StartObjectLoad(bool aNotify);
+  void StartObjectLoad(bool aNotify);
 
   /**
    * Returns if the element is currently focusable regardless of it's tabindex

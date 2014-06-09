@@ -47,6 +47,8 @@ public:
   // aTrackTypes indicate this muxer should multiplex into Video only or A/V foramt.
   // Run in MediaRecorder thread
   WebMWriter(uint32_t aTrackTypes);
+  virtual ~WebMWriter();
+
   // WriteEncodedTrack inserts raw packets into WebM stream.
   nsresult WriteEncodedTrack(const EncodedFrameContainer &aData,
                              uint32_t aFlags = 0) MOZ_OVERRIDE;

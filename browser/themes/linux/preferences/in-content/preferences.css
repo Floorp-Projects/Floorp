@@ -4,6 +4,14 @@
 
 %include ../../../shared/incontentprefs/preferences.css
 
+tab[selected] {
+  /* Override styles for tab[selected] from
+     toolkit/themes/linux/global/tabbox.css */
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 button > .button-box,
 menulist > .menulist-label-box {
   -moz-appearance: none;

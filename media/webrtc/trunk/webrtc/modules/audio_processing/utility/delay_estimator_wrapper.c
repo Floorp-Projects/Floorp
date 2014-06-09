@@ -16,7 +16,7 @@
 
 #include "webrtc/modules/audio_processing/utility/delay_estimator.h"
 #include "webrtc/modules/audio_processing/utility/delay_estimator_internal.h"
-#include "webrtc/system_wrappers/interface/compile_assert.h"
+#include "webrtc/system_wrappers/interface/compile_assert_c.h"
 
 // Only bit |kBandFirst| through bit |kBandLast| are processed and
 // |kBandFirst| - |kBandLast| must be < 32.
@@ -310,6 +310,47 @@ int WebRtc_InitDelayEstimator(void* handle) {
   self->near_spectrum_initialized = 0;
 
   return 0;
+}
+
+int WebRtc_set_allowed_offset(void* handle, int allowed_offset) {
+  DelayEstimator* self = (DelayEstimator*) handle;
+
+  if ((self == NULL) || (allowed_offset < 0)) {
+    return -1;
+  }
+  self->binary_handle->allowed_offset = allowed_offset;
+  return 0;
+}
+
+int WebRtc_get_allowed_offset(const void* handle) {
+  const DelayEstimator* self = (const DelayEstimator*) handle;
+
+  if (self == NULL) {
+    return -1;
+  }
+  return self->binary_handle->allowed_offset;
+}
+
+int WebRtc_enable_robust_validation(void* handle, int enable) {
+  DelayEstimator* self = (DelayEstimator*) handle;
+
+  if (self == NULL) {
+    return -1;
+  }
+  if ((enable < 0) || (enable > 1)) {
+    return -1;
+  }
+  self->binary_handle->robust_validation_enabled = enable;
+  return 0;
+}
+
+int WebRtc_is_robust_validation_enabled(const void* handle) {
+  const DelayEstimator* self = (const DelayEstimator*) handle;
+
+  if (self == NULL) {
+    return -1;
+  }
+  return self->binary_handle->robust_validation_enabled;
 }
 
 int WebRtc_DelayEstimatorProcessFix(void* handle,

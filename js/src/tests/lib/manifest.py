@@ -2,7 +2,9 @@
 #
 # This includes classes for representing and parsing JS manifests.
 
-import os, os.path, re, sys
+from __future__ import print_function
+
+import os, re, sys
 from subprocess import Popen, PIPE
 
 from tests import TestCase
@@ -166,7 +168,7 @@ def _parse_one(testcase, xul_tester):
                 testcase.expect = testcase.enable = False
             pos += 1
         else:
-            print 'warning: invalid manifest line element "%s"'%parts[pos]
+            print('warning: invalid manifest line element "%s"'%parts[pos])
             pos += 1
 
 def _build_manifest_script_entry(script_name, test):
@@ -330,7 +332,7 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
             testcase.comment = entry["comment"]
             _parse_one(testcase, xul_tester)
 
-def load(location, xul_tester, reldir = ''):
+def load(location, requested_paths, excluded_paths, xul_tester, reldir = ''):
     """
     Locates all tests by walking the filesystem starting at |location|.
     Uses xul_tester to evaluate any test conditions in the test header.
@@ -365,6 +367,14 @@ def load(location, xul_tester, reldir = ''):
         # Get the full path and relative location of the file.
         filename = os.path.join(root, basename)
         fullpath = os.path.join(location, filename)
+
+        # If any tests are requested by name, skip tests that do not match.
+        if requested_paths and not any(req in filename for req in requested_paths):
+            continue
+
+        # Skip excluded tests.
+        if filename in excluded_paths:
+            continue
 
         # Skip empty files.
         statbuf = os.stat(fullpath)

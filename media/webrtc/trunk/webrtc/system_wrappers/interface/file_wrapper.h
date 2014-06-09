@@ -12,6 +12,7 @@
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_FILE_WRAPPER_H_
 
 #include <stddef.h>
+#include <stdio.h>
 
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
@@ -36,6 +37,14 @@ class FileWrapper : public InStream, public OutStream {
                        bool read_only,
                        bool loop = false,
                        bool text = false) = 0;
+
+  // Initializes the wrapper from an existing handle. |read_only| must match in
+  // the mode the file was opened in. If |manage_file| is true, the wrapper
+  // takes ownership of |handle| and closes it in CloseFile().
+  virtual int OpenFromFileHandle(FILE* handle,
+                                 bool manage_file,
+                                 bool read_only,
+                                 bool loop = false) = 0;
 
   virtual int CloseFile() = 0;
 

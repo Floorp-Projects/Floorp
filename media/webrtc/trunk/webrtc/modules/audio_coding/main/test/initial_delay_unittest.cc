@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "gtest/gtest.h"
+#include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -30,6 +31,7 @@
 namespace webrtc {
 
 namespace {
+
 double FrameRms(AudioFrame& frame) {
   int samples = frame.num_channels_ * frame.samples_per_channel_;
   double rms = 0;
@@ -42,19 +44,14 @@ double FrameRms(AudioFrame& frame) {
 
 }
 
-class InitialPlayoutDelayTest : public ::testing::Test {
- protected:
-
-  InitialPlayoutDelayTest()
-      : acm_a_(AudioCodingModule::Create(0)),
-        acm_b_(AudioCodingModule::Create(1)),
-        channel_a2b_(NULL) {
-  }
+class InitialPlayoutDelayTest {
+ public:
+  explicit InitialPlayoutDelayTest(const Config& config)
+      : acm_a_(config.Get<AudioCodingModuleFactory>().Create(0)),
+        acm_b_(config.Get<AudioCodingModuleFactory>().Create(1)),
+        channel_a2b_(NULL) {}
 
   ~InitialPlayoutDelayTest() {
-  }
-
-  void TearDown() {
     if (channel_a2b_ != NULL) {
       delete channel_a2b_;
       channel_a2b_ = NULL;
@@ -62,8 +59,11 @@ class InitialPlayoutDelayTest : public ::testing::Test {
   }
 
   void SetUp() {
-    acm_b_->InitializeReceiver();
-    acm_a_->InitializeReceiver();
+    ASSERT_TRUE(acm_a_.get() != NULL);
+    ASSERT_TRUE(acm_b_.get() != NULL);
+
+    EXPECT_EQ(0, acm_b_->InitializeReceiver());
+    EXPECT_EQ(0, acm_a_->InitializeReceiver());
 
     // Register all L16 codecs in receiver.
     CodecInst codec;
@@ -82,6 +82,45 @@ class InitialPlayoutDelayTest : public ::testing::Test {
     channel_a2b_->RegisterReceiverACM(acm_b_.get());
   }
 
+  void NbMono() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 8000, 1);
+    Run(codec, 2000);
+  }
+
+  void WbMono() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 16000, 1);
+    Run(codec, 2000);
+  }
+
+  void SwbMono() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 32000, 1);
+    Run(codec, 1500);  // NetEq buffer is not sufficiently large for 3 sec of
+                       // PCM16 super-wideband.
+  }
+
+  void NbStereo() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 8000, 2);
+    Run(codec, 2000);
+  }
+
+  void WbStereo() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 16000, 2);
+    Run(codec, 1500);
+  }
+
+  void SwbStereo() {
+    CodecInst codec;
+    AudioCodingModule::Codec("L16", &codec, 32000, 2);
+    Run(codec, 600);  // NetEq buffer is not sufficiently large for 3 sec of
+                      // PCM16 super-wideband.
+  }
+
+ private:
   void Run(CodecInst codec, int initial_delay_ms) {
     AudioFrame in_audio_frame;
     AudioFrame out_audio_frame;
@@ -119,43 +158,72 @@ class InitialPlayoutDelayTest : public ::testing::Test {
   Channel* channel_a2b_;
 };
 
-TEST_F( InitialPlayoutDelayTest, NbMono) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 8000, 1);
-  Run(codec, 3000);
+namespace {
+
+InitialPlayoutDelayTest* CreateLegacy() {
+  Config config;
+  UseLegacyAcm(&config);
+  InitialPlayoutDelayTest* test = new InitialPlayoutDelayTest(config);
+  test->SetUp();
+  return test;
 }
 
-TEST_F( InitialPlayoutDelayTest, WbMono) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 16000, 1);
-  Run(codec, 3000);
+InitialPlayoutDelayTest* CreateNew() {
+  Config config;
+  UseNewAcm(&config);
+  InitialPlayoutDelayTest* test = new InitialPlayoutDelayTest(config);
+  test->SetUp();
+  return test;
 }
 
-TEST_F( InitialPlayoutDelayTest, SwbMono) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 32000, 1);
-  Run(codec, 2000);  // NetEq buffer is not sufficiently large for 3 sec of
-                     // PCM16 super-wideband.
+}  // namespace
+
+TEST(InitialPlayoutDelayTest, NbMono) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->NbMono();
+
+  test.reset(CreateNew());
+  test->NbMono();
 }
 
-TEST_F( InitialPlayoutDelayTest, NbStereo) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 8000, 2);
-  Run(codec, 3000);
+TEST(InitialPlayoutDelayTest, WbMono) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->WbMono();
+
+  test.reset(CreateNew());
+  test->WbMono();
 }
 
-TEST_F( InitialPlayoutDelayTest, WbStereo) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 16000, 2);
-  Run(codec, 3000);
+TEST(InitialPlayoutDelayTest, SwbMono) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->SwbMono();
+
+  test.reset(CreateNew());
+  test->SwbMono();
 }
 
-TEST_F( InitialPlayoutDelayTest, SwbStereo) {
-  CodecInst codec;
-  AudioCodingModule::Codec("L16", &codec, 32000, 2);
-  Run(codec, 2000);  // NetEq buffer is not sufficiently large for 3 sec of
-                     // PCM16 super-wideband.
+TEST(InitialPlayoutDelayTest, NbStereo) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->NbStereo();
+
+  test.reset(CreateNew());
+  test->NbStereo();
 }
 
+TEST(InitialPlayoutDelayTest, WbStereo) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->WbStereo();
+
+  test.reset(CreateNew());
+  test->WbStereo();
 }
-  // namespace webrtc
+
+TEST(InitialPlayoutDelayTest, SwbStereo) {
+  scoped_ptr<InitialPlayoutDelayTest> test(CreateLegacy());
+  test->SwbStereo();
+
+  test.reset(CreateNew());
+  test->SwbStereo();
+}
+
+}  // namespace webrtc

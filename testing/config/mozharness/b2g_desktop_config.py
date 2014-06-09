@@ -14,6 +14,7 @@ config = {
 
     "reftest_options": [
         "--desktop", "--profile=%(gaia_profile)s", "--appname=%(application)s",
+        "--total-chunks=%(total_chunks)s", "--this-chunk=%(this_chunk)s",
         "--browser-arg=%(browser_arg)s", "--symbols-path=%(symbols_path)s",
         "%(test_manifest)s"
     ]

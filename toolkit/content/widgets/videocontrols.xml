@@ -477,7 +477,7 @@
                     this.adjustControlSize();
 
                     // Preserve Statistics when toggling fullscreen mode due to bug 714071.
-                    if (XPCNativeWrapper.unwrap(this.video).mozMediaStatisticsShowing)
+                    if (this.video.mozMediaStatisticsShowing)
                         this.showStatistics(true);
 
                     this._handleCustomEventsBound = this.handleCustomEvents.bind(this);
@@ -1152,15 +1152,13 @@
                         this.statsInterval = null;
                     }
 
-                    let unwrappedVideo = XPCNativeWrapper.unwrap(this.video);
                     if (shouldShow) {
-                        unwrappedVideo.mozMediaStatisticsShowing = true;
-
+                        this.video.mozMediaStatisticsShowing = true;
                         this.statsOverlay.hidden = false;
                         this.statsInterval = setInterval(this.updateStats.bind(this), this.STATS_INTERVAL_MS);
                         this.updateStats();
                     } else {
-                        delete unwrappedVideo.mozMediaStatisticsShowing;
+                        this.video.mozMediaStatisticsShowing = false;
                         this.statsOverlay.hidden = true;
                     }
                 },

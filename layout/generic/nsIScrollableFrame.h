@@ -286,6 +286,11 @@ public:
    * visibility heuristics for how close it is to the visible scrollport.
    */
   virtual bool IsRectNearlyVisible(const nsRect& aRect) = 0;
+ /**
+  * Expand the given rect taking into account which directions we can scroll
+  * and how far we want to expand for image visibility purposes.
+  */
+  virtual nsRect ExpandRectToNearlyVisible(const nsRect& aRect) const = 0;
   /**
    * Returns the origin passed in to the last ScrollToImpl call that took
    * effect.

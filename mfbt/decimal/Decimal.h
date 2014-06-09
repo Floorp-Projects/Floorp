@@ -112,7 +112,7 @@ public:
         Sign m_sign;
     };
 
-    MFBT_API Decimal(int32_t = 0);
+    MFBT_API explicit Decimal(int32_t = 0);
     MFBT_API Decimal(Sign, int exponent, uint64_t coefficient);
     MFBT_API Decimal(const Decimal&);
 
@@ -185,7 +185,7 @@ private:
         int exponent;
     };
 
-    MFBT_API Decimal(double);
+    MFBT_API explicit Decimal(double);
     MFBT_API Decimal compareTo(const Decimal&) const;
 
     static MFBT_API AlignedOperands alignOperands(const Decimal& lhs, const Decimal& rhs);

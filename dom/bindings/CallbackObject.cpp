@@ -81,10 +81,15 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
   nsIGlobalObject* globalObject = nullptr;
 
   {
-    JS::AutoAssertNoGC nogc;
+    // Bug 955660: we cannot do "proper" rooting here because we need the
+    // global to get a context. Everything here is simple getters that cannot
+    // GC, so just paper over the necessary dataflow inversion.
+    JS::AutoSuppressGCAnalysis nogc;
     if (mIsMainThread) {
-      // Now get the global and JSContext for this callback.
-      nsGlobalWindow* win = xpc::WindowGlobalOrNull(realCallback);
+      // Now get the global and JSContext for this callback.  Note that for the
+      // case of JS-implemented WebIDL we never have a window here.
+      nsGlobalWindow* win =
+        aIsJSImplementedWebIDL ? nullptr : xpc::WindowGlobalOrNull(realCallback);
       if (win) {
         // Make sure that if this is a window it's the current inner, since the
         // nsIScriptContext and hence JSContext are associated with the outer
@@ -148,7 +153,9 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     mRootedCallable.construct(cx, aCallback->Callback());
   }
 
-  if (mIsMainThread) {
+  // JS-implemented WebIDL is always OK to run, since it runs with Chrome
+  // privileges anyway.
+  if (mIsMainThread && !aIsJSImplementedWebIDL) {
     // Check that it's ok to run this callback at all.
     // Make sure to use realCallback to get the global of the callback object,
     // not the wrapper.
@@ -217,24 +224,24 @@ CallbackObject::CallSetup::~CallSetup()
   // Now, if we have a JSContext, report any pending errors on it, unless we
   // were told to re-throw them.
   if (mCx) {
-    bool dealtWithPendingException = false;
+    bool needToDealWithException = JS_IsExceptionPending(mCx);
     if ((mCompartment && mExceptionHandling == eRethrowContentExceptions) ||
         mExceptionHandling == eRethrowExceptions) {
       // Restore the old context options
       JS::ContextOptionsRef(mCx) = mSavedJSContextOptions;
       mErrorResult.MightThrowJSException();
-      if (JS_IsExceptionPending(mCx)) {
+      if (needToDealWithException) {
         JS::Rooted<JS::Value> exn(mCx);
         if (JS_GetPendingException(mCx, &exn) &&
             ShouldRethrowException(exn)) {
           mErrorResult.ThrowJSException(mCx, exn);
           JS_ClearPendingException(mCx);
-          dealtWithPendingException = true;
+          needToDealWithException = false;
         }
       }
     }
 
-    if (!dealtWithPendingException) {
+    if (needToDealWithException) {
       // Either we're supposed to report our exceptions, or we're supposed to
       // re-throw them but we failed to JS_GetPendingException.  Either way,
       // just report the pending exception, if any.

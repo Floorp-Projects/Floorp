@@ -23,17 +23,17 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
 {
     enum { NumRuns = 30 };
     uint32_t frameNum = 0;
-    const uint32_t frameRate = 15;
+    const uint32_t frame_rate = 15;
 
-    int64_t minRuntime = 0;
-    int64_t avgRuntime = 0;
+    int64_t min_runtime = 0;
+    int64_t avg_runtime = 0;
 
     // Close automatically opened Foreman.
-    fclose(_sourceFile);
+    fclose(source_file_);
     const std::string input_file =
         webrtc::test::ResourcePath("deflicker_before_cif_short", "yuv");
-    _sourceFile  = fopen(input_file.c_str(), "rb");
-    ASSERT_TRUE(_sourceFile != NULL) <<
+    source_file_  = fopen(input_file.c_str(), "rb");
+    ASSERT_TRUE(source_file_ != NULL) <<
         "Cannot read input file: " << input_file << "\n";
 
     const std::string output_file =
@@ -43,57 +43,57 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
         "Could not open output file: " << output_file << "\n";
 
     printf("\nRun time [us / frame]:\n");
-    scoped_array<uint8_t> video_buffer(new uint8_t[_frame_length]);
-    for (uint32_t runIdx = 0; runIdx < NumRuns; runIdx++)
+    scoped_array<uint8_t> video_buffer(new uint8_t[frame_length_]);
+    for (uint32_t run_idx = 0; run_idx < NumRuns; run_idx++)
     {
         TickTime t0;
         TickTime t1;
-        TickInterval accTicks;
+        TickInterval acc_ticks;
         uint32_t timeStamp = 1;
 
         frameNum = 0;
-        while (fread(video_buffer.get(), 1, _frame_length, _sourceFile) ==
-               _frame_length)
+        while (fread(video_buffer.get(), 1, frame_length_, source_file_) ==
+               frame_length_)
         {
             frameNum++;
             EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                                       _width, _height,
-                                       0, kRotateNone, &_videoFrame));
-            _videoFrame.set_timestamp(timeStamp);
+                                       width_, height_,
+                                       0, kRotateNone, &video_frame_));
+            video_frame_.set_timestamp(timeStamp);
 
             t0 = TickTime::Now();
             VideoProcessingModule::FrameStats stats;
-            ASSERT_EQ(0, _vpm->GetFrameStats(&stats, _videoFrame));
-            ASSERT_EQ(0, _vpm->Deflickering(&_videoFrame, &stats));
+            ASSERT_EQ(0, vpm_->GetFrameStats(&stats, video_frame_));
+            ASSERT_EQ(0, vpm_->Deflickering(&video_frame_, &stats));
             t1 = TickTime::Now();
-            accTicks += (t1 - t0);
+            acc_ticks += (t1 - t0);
 
-            if (runIdx == 0)
+            if (run_idx == 0)
             {
-              if (PrintI420VideoFrame(_videoFrame, deflickerFile) < 0) {
+              if (PrintI420VideoFrame(video_frame_, deflickerFile) < 0) {
                 return;
               }
             }
-            timeStamp += (90000 / frameRate);
+            timeStamp += (90000 / frame_rate);
         }
-        ASSERT_NE(0, feof(_sourceFile)) << "Error reading source file";
+        ASSERT_NE(0, feof(source_file_)) << "Error reading source file";
 
-        printf("%u\n", static_cast<int>(accTicks.Microseconds() / frameNum));
-        if (accTicks.Microseconds() < minRuntime || runIdx == 0)
+        printf("%u\n", static_cast<int>(acc_ticks.Microseconds() / frameNum));
+        if (acc_ticks.Microseconds() < min_runtime || run_idx == 0)
         {
-            minRuntime = accTicks.Microseconds();
+            min_runtime = acc_ticks.Microseconds();
         }
-        avgRuntime += accTicks.Microseconds();
+        avg_runtime += acc_ticks.Microseconds();
 
-        rewind(_sourceFile);
+        rewind(source_file_);
     }
     ASSERT_EQ(0, fclose(deflickerFile));
     // TODO(kjellander): Add verification of deflicker output file.
 
     printf("\nAverage run time = %d us / frame\n",
-        static_cast<int>(avgRuntime / frameNum / NumRuns));
+        static_cast<int>(avg_runtime / frameNum / NumRuns));
     printf("Min run time = %d us / frame\n\n",
-        static_cast<int>(minRuntime / frameNum));
+        static_cast<int>(min_runtime / frameNum));
 }
 
 }  // namespace webrtc

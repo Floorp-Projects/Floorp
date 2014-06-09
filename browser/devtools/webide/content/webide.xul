@@ -139,6 +139,8 @@
         <vbox id="runtime-panel-usbruntime"></vbox>
         <label class="panel-header">&runtimePanel_simulators;</label>
         <vbox id="runtime-panel-simulators"></vbox>
+        <label class="panel-header">&runtimePanel_custom;</label>
+        <vbox id="runtime-panel-custom"></vbox>
         <vbox flex="1" id="runtime-actions" hidden="true">
           <toolbarbutton class="panel-item" id="runtime-details" command="cmd_showRuntimeDetails"/>
           <toolbarbutton class="panel-item" id="runtime-permissions" command="cmd_showPermissionsTable"/>

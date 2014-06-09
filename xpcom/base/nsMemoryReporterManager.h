@@ -150,6 +150,12 @@ public:
   // when debugging transient memory spikes with printf instrumentation.
   static int64_t ResidentFast();
 
+#if defined(XP_LINUX)
+  // Convenience function to get USS easily from other code.  This is useful
+  // when debugging unshared memory pages for forked processes.
+  static int64_t ResidentUnique();
+#endif
+
   // Functions that measure per-tab memory consumption.
   struct SizeOfTabFns
   {

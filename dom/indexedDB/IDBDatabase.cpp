@@ -802,7 +802,8 @@ CreateObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "CreateObjectStoreHelper::DoDatabaseWork");
+  PROFILER_LABEL("CreateObjectStoreHelper", "DoDatabaseWork",
+    js::ProfileEntry::Category::STORAGE);
 
   if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
     NS_WARNING("Refusing to create additional objectStore because disk space "
@@ -862,7 +863,8 @@ DeleteObjectStoreHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "DeleteObjectStoreHelper::DoDatabaseWork");
+  PROFILER_LABEL("DeleteObjectStoreHelper", "DoDatabaseWork",
+    js::ProfileEntry::Category::STORAGE);
 
   nsCOMPtr<mozIStorageStatement> stmt =
     mTransaction->GetCachedStatement(NS_LITERAL_CSTRING(
@@ -888,7 +890,8 @@ CreateFileHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   AssertIsOnIOThread();
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "CreateFileHelper::DoDatabaseWork");
+  PROFILER_LABEL("CreateFileHelper", "DoDatabaseWork",
+    js::ProfileEntry::Category::STORAGE);
 
   if (IndexedDatabaseManager::InLowDiskSpaceMode()) {
     NS_WARNING("Refusing to create file because disk space is low!");

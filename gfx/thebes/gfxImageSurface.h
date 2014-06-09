@@ -124,9 +124,6 @@ public:
     virtual already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
     /** See gfxASurface.h. */
-    virtual void MovePixels(const nsIntRect& aSourceRect,
-                            const nsIntPoint& aDestTopLeft) MOZ_OVERRIDE;
-
     static long ComputeStride(const gfxIntSize&, gfxImageFormat);
 
     virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const

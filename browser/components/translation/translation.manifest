@@ -1,0 +1,3 @@
+#ifdef MOZ_SERVICES_HEALTHREPORT
+category healthreport-js-provider-default TranslationProvider resource:///modules/translation/Translation.jsm
+#endif

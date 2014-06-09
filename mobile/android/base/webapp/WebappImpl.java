@@ -18,6 +18,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.webapp.InstallHelper.InstallCallback;
 
 import android.content.Intent;
@@ -325,13 +326,13 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     }
 
     @Override
-    public void installCompleted(InstallHelper installHelper, String event, JSONObject message) {
+    public void installCompleted(InstallHelper installHelper, String event, NativeJSObject message) {
         if (event == null) {
             return;
         }
 
         if (event.equals("Webapps:Postinstall")) {
-            String origin = message.optString("origin");
+            String origin = message.optString("origin", null);
             launchWebapp(origin);
         }
     }

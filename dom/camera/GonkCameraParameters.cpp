@@ -138,6 +138,7 @@ GonkCameraParameters::GonkCameraParameters()
   : mLock(PR_NewRWLock(PR_RWLOCK_RANK_NONE, "GonkCameraParameters.Lock"))
   , mDirty(false)
   , mInitialized(false)
+  , mExposureCompensationStep(0.0)
 {
   MOZ_COUNT_CTOR(GonkCameraParameters);
   if (!mLock) {
@@ -199,15 +200,20 @@ GonkCameraParameters::Initialize()
 {
   nsresult rv;
 
-  rv = GetImpl(CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION, mExposureCompensationMin);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to initialize minimum exposure compensation");
-    mExposureCompensationMin = 0;
-  }
-  rv = GetImpl(CAMERA_PARAM_SUPPORTED_EXPOSURECOMPENSATIONSTEP, mExposureCompensationStep);
+  rv = GetImpl(Parameters::KEY_EXPOSURE_COMPENSATION_STEP, mExposureCompensationStep);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to initialize exposure compensation step size");
-    mExposureCompensationStep = 0;
+    mExposureCompensationStep = 0.0;
+  }
+  rv = GetImpl(Parameters::KEY_MIN_EXPOSURE_COMPENSATION, mExposureCompensationMinIndex);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize minimum exposure compensation index");
+    mExposureCompensationMinIndex = 0;
+  }
+  rv = GetImpl(Parameters::KEY_MAX_EXPOSURE_COMPENSATION, mExposureCompensationMaxIndex);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to initialize maximum exposure compensation index");
+    mExposureCompensationMaxIndex = 0;
   }
 
   rv = GetListAsArray(CAMERA_PARAM_SUPPORTED_ZOOMRATIOS, mZoomRatios);
@@ -540,8 +546,8 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
 
   switch (aKey) {
     case CAMERA_PARAM_EXPOSURECOMPENSATION:
-      if (mExposureCompensationStep == 0) {
-        DOM_CAMERA_LOGE("Exposure compensation not supported, can't set %f\n", aValue);
+      if (mExposureCompensationStep == 0.0) {
+        DOM_CAMERA_LOGE("Exposure compensation not supported, can't set EV=%f\n", aValue);
         return NS_ERROR_NOT_AVAILABLE;
       }
 
@@ -549,9 +555,16 @@ GonkCameraParameters::SetTranslated(uint32_t aKey, const double& aValue)
        * Convert from real value to a Gonk index, round
        * to the nearest step; index is 1-based.
        */
-      index =
-        (aValue - mExposureCompensationMin + mExposureCompensationStep / 2) /
-        mExposureCompensationStep + 1;
+      {
+        double i = round(aValue / mExposureCompensationStep);
+        if (i < mExposureCompensationMinIndex) {
+          index = mExposureCompensationMinIndex;
+        } else if (i > mExposureCompensationMaxIndex) {
+          index = mExposureCompensationMaxIndex;
+        } else {
+          index = i;
+        }
+      }
       DOM_CAMERA_LOGI("Exposure compensation = %f --> index = %d\n", aValue, index);
       return SetImpl(CAMERA_PARAM_EXPOSURECOMPENSATION, index);
 
@@ -643,15 +656,16 @@ GonkCameraParameters::GetTranslated(uint32_t aKey, double& aValue)
       break;
 
     case CAMERA_PARAM_EXPOSURECOMPENSATION:
+    case CAMERA_PARAM_SUPPORTED_MINEXPOSURECOMPENSATION:
+    case CAMERA_PARAM_SUPPORTED_MAXEXPOSURECOMPENSATION:
+      if (mExposureCompensationStep == 0.0) {
+        DOM_CAMERA_LOGE("Exposure compensation not supported, can't get EV\n");
+        return NS_ERROR_NOT_AVAILABLE;
+      }
       rv = GetImpl(aKey, index);
       if (NS_SUCCEEDED(rv)) {
-        if (!index) {
-          // NaN indicates automatic exposure compensation
-          val = NAN;
-        } else {
-          val = (index - 1) * mExposureCompensationStep + mExposureCompensationMin;
-          DOM_CAMERA_LOGI("index = %d --> compensation = %f\n", index, val);
-        }
+        val = index * mExposureCompensationStep;
+        DOM_CAMERA_LOGI("exposure compensation (aKey=%d): index=%d --> EV=%f\n", aKey, index, val);
       }
       break;
 

@@ -25,7 +25,7 @@ namespace webrtc {
 
 int Merge::Process(int16_t* input, size_t input_length,
                    int16_t* external_mute_factor_array,
-                   AudioMultiVector<int16_t>* output) {
+                   AudioMultiVector* output) {
   // TODO(hlundin): Change to an enumerator and skip assert.
   assert(fs_hz_ == 8000 || fs_hz_ == 16000 || fs_hz_ ==  32000 ||
          fs_hz_ == 48000);
@@ -37,7 +37,7 @@ int Merge::Process(int16_t* input, size_t input_length,
   int expanded_length = GetExpandedSignal(&old_length, &expand_period);
 
   // Transfer input signal to an AudioMultiVector.
-  AudioMultiVector<int16_t> input_vector(num_channels_);
+  AudioMultiVector input_vector(num_channels_);
   input_vector.PushBackInterleaved(input, input_length);
   size_t input_length_per_channel = input_vector.Size();
   assert(input_length_per_channel == input_length / num_channels_);
@@ -162,7 +162,7 @@ int Merge::GetExpandedSignal(int* old_length, int* expand_period) {
   // This assert should always be true thanks to the if statement above.
   assert(210 * kMaxSampleRate / 8000 - *old_length >= 0);
 
-  AudioMultiVector<int16_t> expanded_temp(num_channels_);
+  AudioMultiVector expanded_temp(num_channels_);
   expand_->Process(&expanded_temp);
   *expand_period = static_cast<int>(expanded_temp.Size());  // Samples per
                                                             // channel.

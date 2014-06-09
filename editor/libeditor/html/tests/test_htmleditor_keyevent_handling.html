@@ -271,10 +271,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     reset("a");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab", true, true, false);
+    check(aDescription + "Ctrl+Tab", false, false, false);
     is(aElement.innerHTML, "a", aDescription + "Ctrl+Tab");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Ctrl+Tab)");
@@ -336,10 +337,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on UL)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     resetForIndent("<ul><li id=\"target\">ul list item</li></ul>");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab on UL", true, true, false);
+    check(aDescription + "Ctrl+Tab on UL", false, false, false);
     is(aElement.innerHTML, "<ul><li id=\"target\">ul list item</li></ul>",
        aDescription + "Ctrl+Tab on UL");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
@@ -404,10 +406,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on OL)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     resetForIndent("<ol><li id=\"target\">ol list item</li></ol>");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab on OL", true, true, false);
+    check(aDescription + "Ctrl+Tab on OL", false, false, false);
     is(aElement.innerHTML, "<ol><li id=\"target\">ol list item</li></ol>",
        aDescription + "Ctrl+Tab on OL");
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
@@ -471,10 +474,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on TD)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     resetForIndent("<table><tr><td id=\"target\">td</td></tr></table>");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab on TD", true, true, false);
+    check(aDescription + "Ctrl+Tab on TD", false, false, false);
     is(aElement.innerHTML,
        "<table><tbody><tr><td id=\"target\">td</td></tr></tbody></table>",
        aDescription + "Ctrl+Tab on TD");
@@ -542,10 +546,11 @@ function runTests()
     is(SpecialPowers.unwrap(fm.focusedElement), aElement,
        aDescription + "focus moved unexpectedly (Shift+Tab on TH)");
 
-    // Ctrl+Tab may be consumed by tabbrowser but editor shouldn't consume this.
+    // Ctrl+Tab should be consumed by tabbrowser at keydown, so, keypress
+    // event should never be fired.
     resetForIndent("<table><tr><th id=\"target\">th</th></tr></table>");
     synthesizeKey("VK_TAB", { ctrlKey: true });
-    check(aDescription + "Ctrl+Tab on TH", true, true, false);
+    check(aDescription + "Ctrl+Tab on TH", false, false, false);
     is(aElement.innerHTML,
        "<table><tbody><tr><th id=\"target\">th</th></tr></tbody></table>",
        aDescription + "Ctrl+Tab on TH");

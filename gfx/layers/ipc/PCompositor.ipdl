@@ -42,7 +42,7 @@ child:
   // The compositor completed a layers transaction. id is the layers id
   // of the child layer tree that was composited (or 0 when notifying
   // the root layer tree).
-  async DidComposite(uint64_t id);
+  async DidComposite(uint64_t id, uint64_t transactionId);
 
   // The parent sends the child the requested fill ratio numbers.
   async Overfill(uint32_t aOverfill);

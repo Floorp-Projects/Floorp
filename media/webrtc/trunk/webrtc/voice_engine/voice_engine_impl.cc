@@ -8,13 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#if !defined(WEBRTC_GONK)
-#if defined(WEBRTC_ANDROID_OPENSLES)
-#include "webrtc/modules/audio_device/android/audio_manager_jni.h"
-#endif
 #if defined(WEBRTC_ANDROID)
-#include "webrtc/modules/audio_device/android/audio_device_jni_android.h"
+#include "webrtc/modules/audio_device/android/audio_device_template.h"
+#if !defined(WEBRTC_GONK)
+#include "webrtc/modules/audio_device/android/audio_record_jni.h"
+#include "webrtc/modules/audio_device/android/audio_track_jni.h"
 #endif
+#include "webrtc/modules/audio_device/android/opensles_input.h"
+#include "webrtc/modules/audio_device/android/opensles_output.h"
 #endif
 
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
@@ -148,16 +149,29 @@ bool VoiceEngine::Delete(VoiceEngine*& voiceEngine)
 
 int VoiceEngine::SetAndroidObjects(void* javaVM, void* env, void* context)
 {
-#if !defined(WEBRTC_GONK) && defined(ANDROID)
-#if defined(WEBRTC_ANDROID_OPENSLES)
-    // Initialize both backends. The OpenSLES one will fall back
-    // to JNI if some failure happens.
-    AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+#ifdef WEBRTC_ANDROID
+#ifdef WEBRTC_ANDROID_OPENSLES
+  typedef AudioDeviceTemplate<OpenSlesInput, OpenSlesOutput>
+      AudioDeviceInstance;
 #endif
-    return AudioDeviceAndroidJni::SetAndroidAudioDeviceObjects(
-         javaVM, env, context);
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
+  typedef AudioDeviceTemplate<AudioRecordJni, AudioTrackJni>
+      AudioDeviceInstanceJni;
+#endif
+  if (javaVM && env && context) {
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
+    AudioDeviceInstanceJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+#endif
+    AudioDeviceInstance::SetAndroidAudioDeviceObjects(javaVM, env, context);
+  } else {
+#if !defined(WEBRTC_GONK) && defined(ANDROID)
+    AudioDeviceInstanceJni::ClearAndroidAudioDeviceObjects();
+#endif
+    AudioDeviceInstance::ClearAndroidAudioDeviceObjects();
+  }
+  return 0;
 #else
-    return -1;
+  return -1;
 #endif
 }
 

@@ -1431,30 +1431,10 @@ nsComputedDOMStyle::DoGetFontFamily()
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
 
   const nsStyleFont* font = StyleFont();
-
-  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocumentWeak);
-  NS_ASSERTION(doc, "document is required");
-  nsIPresShell* presShell = doc->GetShell();
-  NS_ASSERTION(presShell, "pres shell is required");
-  nsPresContext *presContext = presShell->GetPresContext();
-  NS_ASSERTION(presContext, "pres context is required");
-
-  const nsString& fontName = font->mFont.name;
-  if (font->mGenericID == kGenericFont_NONE && !font->mFont.systemFont) {
-    const nsFont* defaultFont =
-      presContext->GetDefaultFont(kPresContext_DefaultVariableFont_ID,
-                                  font->mLanguage);
-
-    int32_t lendiff = fontName.Length() - defaultFont->name.Length();
-    if (lendiff > 0) {
-      val->SetString(Substring(fontName, 0, lendiff-1)); // -1 removes comma
-    } else {
-      val->SetString(fontName);
-    }
-  } else {
-    val->SetString(fontName);
-  }
-
+  nsAutoString fontlistStr;
+  nsStyleUtil::AppendEscapedCSSFontFamilyList(font->mFont.fontlist,
+                                              fontlistStr);
+  val->SetString(fontlistStr);
   return val;
 }
 

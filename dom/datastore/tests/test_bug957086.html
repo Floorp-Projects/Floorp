@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for DataStore - bug 957086</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="container"></div>
+  <script type="application/javascript;version=1.7">
+
+  var gHostedManifestURL1 = 'http://test/tests/dom/datastore/tests/file_app.sjs?testToken=file_bug957086.html&template=file_app2.template.webapp';
+  var gHostedManifestURL2 = 'http://example.com/tests/dom/datastore/tests/file_app.sjs?testToken=file_bug957086.html';
+  var gApps = [];
+
+  function cbError() {
+    ok(false, "Error callback invoked");
+    finish();
+  }
+
+  function installApp(manifest) {
+    var request = navigator.mozApps.install(manifest);
+    request.onerror = cbError;
+    request.onsuccess = function() {
+      gApps.push(request.result);
+      runTest();
+    }
+  }
+
+  function uninstallApp() {
+    if (!gApps.length) {
+      // All done.
+      info("All done");
+      runTest();
+      return;
+    }
+
+    // Uninstall the app.
+    var request = navigator.mozApps.mgmt.uninstall(gApps.pop());
+    request.onerror = cbError;
+    request.onsuccess = uninstallApp;
+  }
+
+  function testApp() {
+    var ifr = document.createElement('iframe');
+    ifr.setAttribute('mozbrowser', 'true');
+    ifr.setAttribute('mozapp', gApps[0].manifestURL);
+    ifr.setAttribute('src', gApps[0].manifest.launch_path);
+    var domParent = document.getElementById('container');
+
+    // Set us up to listen for messages from the app.
+    var listener = function(e) {
+      var message = e.detail.message;
+      if (/^OK/.exec(message)) {
+        ok(true, "Message from app: " + message);
+      } else if (/KO/.exec(message)) {
+        ok(false, "Message from app: " + message);
+      } else if (/DONE/.exec(message)) {
+        ok(true, "Messaging from app complete");
+        ifr.removeEventListener('mozbrowsershowmodalprompt', listener);
+        domParent.removeChild(ifr);
+        runTest();
+      }
+    }
+
+    // This event is triggered when the app calls "alert".
+    ifr.addEventListener('mozbrowsershowmodalprompt', listener, false);
+    domParent.appendChild(ifr);
+  }
+
+  var tests = [
+    // Permissions
+    function() {
+      SpecialPowers.pushPermissions(
+        [{ "type": "browser", "allow": 1, "context": document },
+         { "type": "embed-apps", "allow": 1, "context": document },
+         { "type": "webapps-manage", "allow": 1, "context": document }], runTest);
+    },
+
+    // Preferences
+    function() {
+      SpecialPowers.pushPrefEnv({"set": [["dom.datastore.enabled", true],
+                                         ["dom.ipc.browser_frames.oop_by_default", true],
+                                         ["dom.testing.ignore_ipc_principal", true],
+                                         ["dom.testing.datastore_enabled_for_hosted_apps", true]]}, runTest);
+    },
+
+    function() {
+      SpecialPowers.setAllAppsLaunchable(true);
+      SpecialPowers.setBoolPref("dom.mozBrowserFramesEnabled", true);
+      runTest();
+    },
+
+    // No confirmation needed when an app is installed
+    function() {
+      SpecialPowers.autoConfirmAppInstall(runTest);
+    },
+
+    // Installing the app - access only
+    function() { installApp(gHostedManifestURL1) },
+
+    // Installing the app - owner only
+    function() { installApp(gHostedManifestURL2) },
+
+    // Run tests in app
+    testApp,
+
+    // Uninstall the app
+    uninstallApp
+  ];
+
+  function runTest() {
+    if (!tests.length) {
+      finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
+
+  function finish() {
+    SimpleTest.finish();
+  }
+
+  if (SpecialPowers.isMainProcess()) {
+    SpecialPowers.Cu.import("resource://gre/modules/DataStoreChangeNotifier.jsm");
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  runTest();
+  </script>
+</body>
+</html>

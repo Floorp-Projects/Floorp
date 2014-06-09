@@ -423,7 +423,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
         }
 
         case LOCAL_GL_ELEMENT_ARRAY_BUFFER_BINDING: {
-            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mBoundElementArrayBuffer.get(), rv);
+            return WebGLObjectAsJSValue(cx, mBoundVertexArray->mElementArrayBuffer.get(), rv);
         }
 
         case LOCAL_GL_RENDERBUFFER_BINDING: {

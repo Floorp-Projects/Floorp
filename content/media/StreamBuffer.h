@@ -18,13 +18,6 @@ typedef MediaTime StreamTime;
 const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
 
 /**
- * Track rate in Hz. Maximum 1 << MEDIA_TIME_FRAC_BITS Hz. This ensures
- * calculations below don't overflow.
- */
-typedef int32_t TrackRate;
-const TrackRate TRACK_RATE_MAX = 1 << MEDIA_TIME_FRAC_BITS;
-
-/**
  * Unique ID for track within a StreamBuffer. Tracks from different
  * StreamBuffers may have the same ID; this matters when appending StreamBuffers,
  * since tracks with the same ID are matched. Only IDs greater than 0 are allowed.
@@ -224,8 +217,14 @@ public:
    */
   Track& AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment)
   {
-    NS_ASSERTION(TimeToTicksRoundDown(aRate, mTracksKnownTime) <= aStart,
-                 "Start time too early");
+    if (mTracksKnownTime == STREAM_TIME_MAX) {
+      // There exists code like
+      // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
+      NS_WARNING("Adding track to StreamBuffer that should have no more tracks");
+    } else {
+      NS_ASSERTION(TimeToTicksRoundDown(aRate, mTracksKnownTime) <= aStart,
+                   "Start time too early");
+    }
     NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
 
     return **mTracks.InsertElementSorted(new Track(aID, aRate, aStart, aSegment),

@@ -20,7 +20,7 @@
  * events can help prevent a backlog of unprocessed transport events in the
  * case that the target thread is overworked.
  */
-NS_HIDDEN_(nsresult)
+nsresult
 net_NewTransportEventSinkProxy(nsITransportEventSink **aResult,
                                nsITransportEventSink *aSink,
                                nsIEventTarget *aTarget,

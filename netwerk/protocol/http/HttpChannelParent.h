@@ -84,6 +84,7 @@ protected:
                    const uint16_t&            priority,
                    const uint8_t&             redirectionLimit,
                    const bool&                allowPipelining,
+                   const bool&                allowSTS,
                    const bool&                forceAllowThirdPartyCookie,
                    const bool&                doResumeAt,
                    const uint64_t&            startPos,

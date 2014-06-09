@@ -171,6 +171,36 @@ function dumpRtpStat(stat, label) {
   return div;
 }
 
+function dumpCoderStat(stat) {
+  var div = document.createElement('div');
+  if (stat.bitrateMean !== undefined ||
+      stat.framerateMean !== undefined ||
+      stat.droppedFrames !== undefined ||
+      stat.discardedPackets !== undefined) {
+    var statsString = (stat.packetsReceived !== undefined)? " Decoder:" : " Encoder:";
+    if (stat.bitrateMean !== undefined) {
+      statsString += " Avg. bitrate: " + (stat.bitrateMean/1000000).toFixed(2) + " Mbps";
+      if (stat.bitrateStdDev !== undefined) {
+        statsString += " (" + (stat.bitrateStdDev/1000000).toFixed(2) + " SD)";
+      }
+    }
+    if (stat.framerateMean !== undefined) {
+      statsString += " Avg. framerate: " + (stat.framerateMean).toFixed(2) + " fps";
+      if (stat.framerateStdDev !== undefined) {
+        statsString += " (" + stat.framerateStdDev.toFixed(2) + " SD)";
+      }
+    }
+    if (stat.droppedFrames !== undefined) {
+      statsString += " Dropped frames: " + stat.droppedFrames;
+    }
+    if (stat.discardedPackets !== undefined) {
+      statsString += " Discarded packets: " + stat.discardedPackets;
+    }
+    div.appendChild(document.createTextNode(statsString));
+  }
+  return div;
+}
+
 function buildPcDiv(stats, pcDivHeading) {
   var newPcDiv = document.createElement('div');
 
@@ -300,6 +330,7 @@ function buildPcDiv(stats, pcDivHeading) {
           rtpStat.mozJitterBufferDelay !== undefined) {
         newPcDiv.appendChild(dumpAvStat(rtpStat));
       }
+      newPcDiv.appendChild(dumpCoderStat(rtpStat));
       newPcDiv.appendChild(dumpRtpStat(rtpStat, "Local: "));
 
       // Might not be receiving RTCP, so we have no idea what the

@@ -32,13 +32,13 @@
     * number of undesired macros and symbols.
     */
 #  ifdef __cplusplus
-   extern "C" {
+extern "C" {
 #  endif
-   __declspec(dllimport) int __stdcall
-   TerminateProcess(void* hProcess, unsigned int uExitCode);
-   __declspec(dllimport) void* __stdcall GetCurrentProcess(void);
+__declspec(dllimport) int __stdcall
+TerminateProcess(void* hProcess, unsigned int uExitCode);
+__declspec(dllimport) void* __stdcall GetCurrentProcess(void);
 #  ifdef __cplusplus
-   }
+}
 #  endif
 #else
 #  include <signal.h>
@@ -124,21 +124,23 @@ extern "C" {
 #endif
 
 /*
- * Prints |s| as an assertion failure (using file and ln as the location of the
- * assertion) to the standard debug-output channel.
+ * Prints |aStr| as an assertion failure (using aFilename and aLine as the
+ * location of the assertion) to the standard debug-output channel.
  *
  * Usually you should use MOZ_ASSERT or MOZ_CRASH instead of this method.  This
  * method is primarily for internal use in this header, and only secondarily
  * for use in implementing release-build assertions.
  */
 static MOZ_ALWAYS_INLINE void
-MOZ_ReportAssertionFailure(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
+MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
+  MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
 #ifdef ANDROID
   __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert",
-                      "Assertion failure: %s, at %s:%d\n", s, file, ln);
+                      "Assertion failure: %s, at %s:%d\n",
+                      aStr, aFilename, aLine);
 #else
-  fprintf(stderr, "Assertion failure: %s, at %s:%d\n", s, file, ln);
+  fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
 #ifdef MOZ_DUMP_ASSERTION_STACK
   nsTraceRefcnt::WalkTheStack(stderr);
 #endif
@@ -147,13 +149,13 @@ MOZ_ReportAssertionFailure(const char* s, const char* file, int ln) MOZ_PRETEND_
 }
 
 static MOZ_ALWAYS_INLINE void
-MOZ_ReportCrash(const char* s, const char* file, int ln) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
+MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine) MOZ_PRETEND_NORETURN_FOR_STATIC_ANALYSIS
 {
 #ifdef ANDROID
-    __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
-                        "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
+  __android_log_print(ANDROID_LOG_FATAL, "MOZ_CRASH",
+                      "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
 #else
-  fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", s, file, ln);
+  fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
 #ifdef MOZ_DUMP_ASSERTION_STACK
   nsTraceRefcnt::WalkTheStack(stderr);
 #endif
@@ -319,13 +321,13 @@ namespace detail {
 template<typename T>
 struct IsFunction
 {
-    static const bool value = false;
+  static const bool value = false;
 };
 
 template<typename R, typename... A>
 struct IsFunction<R(A...)>
 {
-    static const bool value = true;
+  static const bool value = true;
 };
 
 template<typename T>
@@ -333,47 +335,51 @@ void ValidateAssertConditionType()
 {
   typedef typename RemoveReference<T>::Type ValueT;
   static_assert(!IsArray<ValueT>::value,
-                "Expected boolean assertion condition, got an array or a string!");
+                "Expected boolean assertion condition, got an array or a "
+                "string!");
   static_assert(!IsFunction<ValueT>::value,
-                "Expected boolean assertion condition, got a function! Did you intend to call that function?");
+                "Expected boolean assertion condition, got a function! Did "
+                "you intend to call that function?");
   static_assert(!IsFloatingPoint<ValueT>::value,
-                "It's often a bad idea to assert that a floating-point number is nonzero, "
-                "because such assertions tend to intermittently fail. Shouldn't your code gracefully handle "
-                "this case instead of asserting? Anyway, if you really want to "
-                "do that, write an explicit boolean condition, like !!x or x!=0.");
+                "It's often a bad idea to assert that a floating-point number "
+                "is nonzero, because such assertions tend to intermittently "
+                "fail. Shouldn't your code gracefully handle this case instead "
+                "of asserting? Anyway, if you really want to do that, write an "
+                "explicit boolean condition, like !!x or x!=0.");
 }
 
 } // namespace detail
 } // namespace mozilla
-#  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x) mozilla::detail::ValidateAssertConditionType<decltype(x)>()
+#  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x) \
+     mozilla::detail::ValidateAssertConditionType<decltype(x)>()
 #else
 #  define MOZ_VALIDATE_ASSERT_CONDITION_TYPE(x)
 #endif
 
 /* First the single-argument form. */
 #define MOZ_ASSERT_HELPER1(expr) \
-   do { \
-     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
-     if (MOZ_UNLIKELY(!(expr))) { \
-       MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
-       MOZ_REALLY_CRASH(); \
-     } \
-   } while (0)
+  do { \
+    MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
+    if (MOZ_UNLIKELY(!(expr))) { \
+      MOZ_ReportAssertionFailure(#expr, __FILE__, __LINE__); \
+      MOZ_REALLY_CRASH(); \
+    } \
+  } while (0)
 /* Now the two-argument form. */
 #define MOZ_ASSERT_HELPER2(expr, explain) \
-   do { \
-     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
-     if (MOZ_UNLIKELY(!(expr))) { \
-       MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
-       MOZ_REALLY_CRASH(); \
-     } \
-   } while (0)
+  do { \
+    MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr); \
+    if (MOZ_UNLIKELY(!(expr))) { \
+      MOZ_ReportAssertionFailure(#expr " (" explain ")", __FILE__, __LINE__); \
+      MOZ_REALLY_CRASH(); \
+    } \
+  } while (0)
 
 #define MOZ_RELEASE_ASSERT_GLUE(a, b) a b
 #define MOZ_RELEASE_ASSERT(...) \
-   MOZ_RELEASE_ASSERT_GLUE( \
-     MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
-     (__VA_ARGS__))
+  MOZ_RELEASE_ASSERT_GLUE( \
+    MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
+    (__VA_ARGS__))
 
 #ifdef DEBUG
 #  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
@@ -411,10 +417,11 @@ void ValidateAssertConditionType()
 #endif
 
 /*
- * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that it is
- * undefined behavior for execution to reach this point.  No guarantees are made
- * about what will happen if this is reached at runtime.  Most code should use
- * MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra asserts.
+ * MOZ_ASSUME_UNREACHABLE_MARKER() expands to an expression which states that
+ * it is undefined behavior for execution to reach this point.  No guarantees
+ * are made about what will happen if this is reached at runtime.  Most code
+ * should use MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE because it has extra
+ * asserts.
  */
 #if defined(__clang__)
 #  define MOZ_ASSUME_UNREACHABLE_MARKER() __builtin_unreachable()

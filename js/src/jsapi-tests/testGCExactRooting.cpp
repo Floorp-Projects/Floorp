@@ -21,3 +21,17 @@ BEGIN_TEST(testGCExactRooting)
     return true;
 }
 END_TEST(testGCExactRooting)
+
+BEGIN_TEST(testGCSuppressions)
+{
+    JS::AutoAssertOnGC nogc;
+    JS::AutoCheckCannotGC checkgc;
+    JS::AutoSuppressGCAnalysis noanalysis;
+
+    JS::AutoAssertOnGC nogcRt(cx->runtime());
+    JS::AutoCheckCannotGC checkgcRt(cx->runtime());
+    JS::AutoSuppressGCAnalysis noanalysisRt(cx->runtime());
+
+    return true;
+}
+END_TEST(testGCSuppressions)

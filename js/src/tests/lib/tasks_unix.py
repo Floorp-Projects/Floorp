@@ -145,7 +145,7 @@ def reap_zombies(tasks, results, timeout):
             pid, status = os.waitpid(0, os.WNOHANG)
             if pid == 0:
                 break
-        except OSError, e:
+        except OSError as e:
             if e.errno == errno.ECHILD:
                 break
             raise e

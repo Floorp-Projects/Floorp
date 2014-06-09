@@ -7,6 +7,7 @@
 #define OMXCodecWrapper_h_
 
 #include <gui/Surface.h>
+#include <utils/RefBase.h>
 #include <stagefright/foundation/ABuffer.h>
 #include <stagefright/foundation/AMessage.h>
 #include <stagefright/MediaCodec.h>
@@ -15,9 +16,44 @@
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 
+#include "IMediaResourceManagerService.h"
+#include "MediaResourceManagerClient.h"
+
 #include <speex/speex_resampler.h>
 
 namespace android {
+
+// Wrapper class for managing HW codec reservations
+class OMXCodecReservation : public MediaResourceManagerClient::EventListener
+{
+public:
+  OMXCodecReservation(bool aEncoder)
+  {
+    mType = aEncoder ? IMediaResourceManagerService::HW_VIDEO_ENCODER :
+            IMediaResourceManagerService::HW_VIDEO_DECODER;
+  }
+
+  virtual ~OMXCodecReservation()
+  {
+    ReleaseOMXCodec();
+  }
+
+  /** Reserve the Encode or Decode resource for this instance */
+  virtual bool ReserveOMXCodec();
+
+  /** Release the Encode or Decode resource for this instance */
+  virtual void ReleaseOMXCodec();
+
+  // MediaResourceManagerClient::EventListener
+  virtual void statusChanged(int event) {}
+
+private:
+  IMediaResourceManagerService::ResourceType mType;
+
+  sp<MediaResourceManagerClient> mClient;
+  sp<IMediaResourceManagerService> mManagerService;
+};
+
 
 class OMXAudioEncoder;
 class OMXVideoEncoder;

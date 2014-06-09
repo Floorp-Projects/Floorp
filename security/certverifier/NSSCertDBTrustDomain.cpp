@@ -9,6 +9,7 @@
 #include <stdint.h>
 
 #include "ExtendedValidation.h"
+#include "NSSErrorsService.h"
 #include "OCSPRequestor.h"
 #include "certdb.h"
 #include "mozilla/Telemetry.h"
@@ -71,13 +72,12 @@ NSSCertDBTrustDomain::FindPotentialIssuers(
 SECStatus
 NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                                    const CertPolicyId& policy,
-                                   const CERTCertificate* candidateCert,
+                                   const SECItem& candidateCertDER,
                                    /*out*/ TrustLevel* trustLevel)
 {
-  PR_ASSERT(candidateCert);
   PR_ASSERT(trustLevel);
 
-  if (!candidateCert || !trustLevel) {
+  if (!trustLevel) {
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
@@ -89,13 +89,27 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   }
 #endif
 
+  // XXX: This would be cleaner and more efficient if we could get the trust
+  // information without constructing a CERTCertificate here, but NSS doesn't
+  // expose it in any other easy-to-use fashion. The use of
+  // CERT_NewTempCertificate to get a CERTCertificate shouldn't be a
+  // performance problem because NSS will just find the existing
+  // CERTCertificate in its in-memory cache and return it.
+  ScopedCERTCertificate candidateCert(
+    CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                            const_cast<SECItem*>(&candidateCertDER), nullptr,
+                            false, true));
+  if (!candidateCert) {
+    return SECFailure;
+  }
+
   // XXX: CERT_GetCertTrust seems to be abusing SECStatus as a boolean, where
   // SECSuccess means that there is a trust record and SECFailure means there
   // is not a trust record. I looked at NSS's internal uses of
   // CERT_GetCertTrust, and all that code uses the result as a boolean meaning
   // "We have a trust record."
   CERTCertTrust trust;
-  if (CERT_GetCertTrust(candidateCert, &trust) == SECSuccess) {
+  if (CERT_GetCertTrust(candidateCert.get(), &trust) == SECSuccess) {
     PRUint32 flags = SEC_GET_TRUST_FLAGS(&trust, mCertDBTrustType);
 
     // For DISTRUST, we use the CERTDB_TRUSTED or CERTDB_TRUSTED_CA bit,
@@ -121,7 +135,7 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
         return SECSuccess;
       }
 #ifndef MOZ_NO_EV_CERTS
-      if (CertIsAuthoritativeForEVPolicy(candidateCert, policy)) {
+      if (CertIsAuthoritativeForEVPolicy(candidateCert.get(), policy)) {
         *trustLevel = TrustLevel::TrustAnchor;
         return SECSuccess;
       }
@@ -135,9 +149,10 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 
 SECStatus
 NSSCertDBTrustDomain::VerifySignedData(const CERTSignedData* signedData,
-                                       const CERTCertificate* cert)
+                                       const SECItem& subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedData(signedData, cert, mPinArg);
+  return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                           mPinArg);
 }
 
 static PRIntervalTime
@@ -184,6 +199,15 @@ NSSCertDBTrustDomain::CheckRevocation(
     return SECFailure;
   }
 
+  // Bug 991815: The BR allow OCSP for intermediates to be up to one year old.
+  // Since this affects EV there is no reason why DV should be more strict
+  // so all intermediatates are allowed to have OCSP responses up to one year
+  // old.
+  uint16_t maxOCSPLifetimeInDays = 10;
+  if (endEntityOrCA == EndEntityOrCA::MustBeCA) {
+    maxOCSPLifetimeInDays = 365;
+  }
+
   // If we have a stapled OCSP response then the verification of that response
   // determines the result unless the OCSP response is expired. We make an
   // exception for expired responses because some servers, nginx in particular,
@@ -192,6 +216,7 @@ NSSCertDBTrustDomain::CheckRevocation(
     PR_ASSERT(endEntityOrCA == EndEntityOrCA::MustBeEndEntity);
     SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert,
                                                           time,
+                                                          maxOCSPLifetimeInDays,
                                                           stapledOCSPResponse,
                                                           ResponseWasStapled);
     if (rv == SECSuccess) {
@@ -367,6 +392,13 @@ NSSCertDBTrustDomain::CheckRevocation(
       PR_SetError(cachedResponseErrorCode, 0);
       return SECFailure;
     }
+    if (stapledOCSPResponse) {
+      PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+             ("NSSCertDBTrustDomain: returning SECFailure from expired "
+              "stapled response after OCSP request failure"));
+      PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+      return SECFailure;
+    }
 
     PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
            ("NSSCertDBTrustDomain: returning SECSuccess after "
@@ -375,6 +407,7 @@ NSSCertDBTrustDomain::CheckRevocation(
   }
 
   SECStatus rv = VerifyAndMaybeCacheEncodedOCSPResponse(cert, issuerCert, time,
+                                                        maxOCSPLifetimeInDays,
                                                         response,
                                                         ResponseIsFromNetwork);
   if (rv == SECSuccess || mOCSPFetching != FetchOCSPForDVSoftFail) {
@@ -389,22 +422,31 @@ NSSCertDBTrustDomain::CheckRevocation(
     return rv;
   }
 
+  if (stapledOCSPResponse) {
+    PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
+           ("NSSCertDBTrustDomain: returning SECFailure from expired stapled "
+            "response after OCSP request verification failure"));
+    PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+    return SECFailure;
+  }
+
   PR_LOG(gCertVerifierLog, PR_LOG_DEBUG,
          ("NSSCertDBTrustDomain: end of CheckRevocation"));
 
-  return SECSuccess;
+  return SECSuccess; // Soft fail -> success :(
 }
 
 SECStatus
 NSSCertDBTrustDomain::VerifyAndMaybeCacheEncodedOCSPResponse(
   const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
-  const SECItem* encodedResponse, EncodedResponseSource responseSource)
+  uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
+  EncodedResponseSource responseSource)
 {
   PRTime thisUpdate = 0;
   PRTime validThrough = 0;
   SECStatus rv = VerifyEncodedOCSPResponse(*this, cert, issuerCert, time,
-                                           encodedResponse, &thisUpdate,
-                                           &validThrough);
+                                           maxLifetimeInDays, encodedResponse,
+                                           &thisUpdate, &validThrough);
   PRErrorCode error = (rv == SECSuccess ? 0 : PR_GetError());
   // validThrough is only trustworthy if the response successfully verifies
   // or it indicates a revoked or unknown certificate.
@@ -461,7 +503,7 @@ NSSCertDBTrustDomain::IsChainValid(const CERTCertList* certChain) {
   if (chainOK) {
     return SECSuccess;
   }
-  PR_SetError(SEC_ERROR_APPLICATION_CALLBACK_ERROR, 0);
+  PR_SetError(PSM_ERROR_KEY_PINNING_FAILURE, 0);
   return SECFailure;
 }
 

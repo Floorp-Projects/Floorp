@@ -103,9 +103,9 @@ pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
 // predictive actions
-pref("network.seer.enabled", false);
-pref("network.seer.max-db-size", 2097152); // bytes
-pref("network.seer.preserve", 50); // percentage of seer data to keep when cleaning up
+pref("network.predictor.enabled", false);
+pref("network.predictor.max-db-size", 2097152); // bytes
+pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
 
 /* history max results display */
 pref("browser.display.history.maxresults", 100);

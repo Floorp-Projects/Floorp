@@ -6,13 +6,17 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.mozglue.RobocopTarget;
+import org.mozilla.gecko.TelemetryContract.Event;
+import org.mozilla.gecko.TelemetryContract.Method;
+import org.mozilla.gecko.TelemetryContract.Reason;
+import org.mozilla.gecko.TelemetryContract.Session;
 
 import android.os.SystemClock;
 import android.util.Log;
 
 /**
  * All telemetry times are relative to one of two clocks:
- * 
+ *
  * * Real time since the device was booted, including deep sleep. Use this
  *   as a substitute for wall clock.
  * * Uptime since the device was booted, excluding deep sleep. Use this to
@@ -107,41 +111,96 @@ public class Telemetry {
         }
     }
 
-    public static void startUISession(String sessionName) {
+    public static void startUISession(final Session session, final String sessionNameSuffix) {
+        final String sessionName = getSessionName(session, sessionNameSuffix);
+
         Log.d(LOGTAG, "StartUISession: " + sessionName);
-        GeckoEvent event = GeckoEvent.createTelemetryUISessionStartEvent(sessionName, realtime());
-        GeckoAppShell.sendEventToGecko(event);
+        final GeckoEvent geckoEvent =
+                GeckoEvent.createTelemetryUISessionStartEvent(sessionName, realtime());
+        GeckoAppShell.sendEventToGecko(geckoEvent);
     }
 
-    public static void stopUISession(String sessionName, String reason) {
+    public static void startUISession(final Session session) {
+        startUISession(session, null);
+    }
+
+    public static void stopUISession(final Session session, final String sessionNameSuffix,
+            final Reason reason) {
+        final String sessionName = getSessionName(session, sessionNameSuffix);
+
         Log.d(LOGTAG, "StopUISession: " + sessionName + ", reason=" + reason);
-        GeckoEvent event = GeckoEvent.createTelemetryUISessionStopEvent(sessionName, reason, realtime());
-        GeckoAppShell.sendEventToGecko(event);
+        final GeckoEvent geckoEvent = GeckoEvent.createTelemetryUISessionStopEvent(
+                sessionName, reason.toString(), realtime());
+        GeckoAppShell.sendEventToGecko(geckoEvent);
     }
 
-    public static void stopUISession(String sessionName) {
-        stopUISession(sessionName, null);
+    public static void stopUISession(final Session session, final Reason reason) {
+        stopUISession(session, null, reason);
     }
 
-    public static void sendUIEvent(String action, String method, long timestamp, String extras) {
-        Log.d(LOGTAG, "SendUIEvent: action = " + action + " method = " + method + " timestamp = " + timestamp + " extras = " + extras);
-        GeckoEvent event = GeckoEvent.createTelemetryUIEvent(action, method, timestamp, extras);
-        GeckoAppShell.sendEventToGecko(event);
+    public static void stopUISession(final Session session, final String sessionNameSuffix) {
+        stopUISession(session, sessionNameSuffix, Reason.NONE);
     }
 
-    public static void sendUIEvent(String action, String method, long timestamp) {
-        sendUIEvent(action, method, timestamp, null);
+    public static void stopUISession(final Session session) {
+        stopUISession(session, null, Reason.NONE);
     }
 
-    public static void sendUIEvent(String action, String method, String extras) {
-        sendUIEvent(action, method, realtime(), extras);
+    private static String getSessionName(final Session session, final String sessionNameSuffix) {
+        if (sessionNameSuffix != null) {
+            return session.toString() + ":" + sessionNameSuffix;
+        } else {
+            return session.toString();
+        }
     }
 
-    public static void sendUIEvent(String action, String method) {
-        sendUIEvent(action, method, realtime(), null);
+    /**
+     * @param method A non-null method (if null is desired, consider using Method.NONE)
+     */
+    private static void sendUIEvent(final String eventName, final Method method,
+            final long timestamp, final String extras) {
+        if (method == null) {
+            throw new IllegalArgumentException("Expected non-null method - use Method.NONE?");
+        }
+
+        Log.d(LOGTAG, "SendUIEvent: event = " + eventName + " method = " + method +
+                " timestamp = " + timestamp + " extras = " + extras);
+        final GeckoEvent geckoEvent = GeckoEvent.createTelemetryUIEvent(
+                eventName, method.toString(), timestamp, extras);
+        GeckoAppShell.sendEventToGecko(geckoEvent);
     }
 
-    public static void sendUIEvent(String action) {
-        sendUIEvent(action, null, realtime(), null);
+    public static void sendUIEvent(final Event event, final Method method, final long timestamp,
+            final String extras) {
+        sendUIEvent(event.toString(), method, timestamp, extras);
+    }
+
+    public static void sendUIEvent(final Event event, final Method method, final long timestamp) {
+        sendUIEvent(event, method, timestamp, null);
+    }
+
+    public static void sendUIEvent(final Event event, final Method method, final String extras) {
+        sendUIEvent(event, method, realtime(), extras);
+    }
+
+    public static void sendUIEvent(final Event event, final Method method) {
+        sendUIEvent(event, method, realtime(), null);
+    }
+
+    public static void sendUIEvent(final Event event) {
+        sendUIEvent(event, Method.NONE, realtime(), null);
+    }
+
+    /**
+     * Sends a UIEvent with the given status appended to the event name.
+     *
+     * This method is a slight bend of the Telemetry framework so chances
+     * are that you don't want to use this: please think really hard before you do.
+     *
+     * Intended for use with data policy notifications.
+     */
+    public static void sendUIEvent(final Event event, final boolean eventStatus) {
+        final String eventName = event + ":" + eventStatus;
+        sendUIEvent(eventName, Method.NONE, realtime(), null);
     }
 }

@@ -1200,7 +1200,6 @@ FramePointerStackWalk(NS_WalkStackCallback aCallback, uint32_t aSkipFrames,
     bp += 2;
 #endif
     if (IsCriticalAddress(pc)) {
-      printf("Aborting stack trace, PC is critical\n");
       return NS_ERROR_UNEXPECTED;
     }
     if (--skip < 0) {
@@ -1277,7 +1276,6 @@ unwind_callback(struct _Unwind_Context* context, void* closure)
   void* pc = reinterpret_cast<void*>(_Unwind_GetIP(context));
   // TODO Use something like '_Unwind_GetGR()' to get the stack pointer.
   if (IsCriticalAddress(pc)) {
-    printf("Aborting stack trace, PC is critical\n");
     info->isCriticalAbort = true;
     // We just want to stop the walk, so any error code will do.  Using
     // _URC_NORMAL_STOP would probably be the most accurate, but it is not

@@ -8,21 +8,23 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef TWO_WAY_COMMUNICATION_H
-#define TWO_WAY_COMMUNICATION_H
+#ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TWOWAYCOMMUNICATION_H_
+#define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TWOWAYCOMMUNICATION_H_
 
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
+#include "webrtc/modules/audio_coding/main/test/ACMTest.h"
+#include "webrtc/modules/audio_coding/main/test/Channel.h"
+#include "webrtc/modules/audio_coding/main/test/PCMFile.h"
+#include "webrtc/modules/audio_coding/main/test/utility.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "ACMTest.h"
-#include "Channel.h"
-#include "PCMFile.h"
-#include "audio_coding_module.h"
-#include "utility.h"
 
 namespace webrtc {
 
+class Config;
+
 class TwoWayCommunication : public ACMTest {
  public:
-  TwoWayCommunication(int testMode = 1);
+  TwoWayCommunication(int testMode, const Config& config);
   ~TwoWayCommunication();
 
   void Perform();
@@ -57,4 +59,4 @@ class TwoWayCommunication : public ACMTest {
 
 }  // namespace webrtc
 
-#endif
+#endif  // WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TWOWAYCOMMUNICATION_H_

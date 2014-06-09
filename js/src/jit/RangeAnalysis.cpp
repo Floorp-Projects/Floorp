@@ -1537,37 +1537,6 @@ MRandom::computeRange(TempAllocator &alloc)
 ///////////////////////////////////////////////////////////////////////////////
 
 bool
-RangeAnalysis::markBlocksInLoopBody(MBasicBlock *header, MBasicBlock *backedge)
-{
-    Vector<MBasicBlock *, 16, IonAllocPolicy> worklist(alloc());
-
-    // Mark the header as being in the loop. This terminates the walk.
-    header->mark();
-
-    backedge->mark();
-    if (!worklist.append(backedge))
-        return false;
-
-    // If we haven't reached the loop header yet, walk up the predecessors
-    // we haven't seen already.
-    while (!worklist.empty()) {
-        MBasicBlock *current = worklist.popCopy();
-        for (size_t i = 0; i < current->numPredecessors(); i++) {
-            MBasicBlock *pred = current->getPredecessor(i);
-
-            if (pred->isMarked())
-                continue;
-
-            pred->mark();
-            if (!worklist.append(pred))
-                return false;
-        }
-    }
-
-    return true;
-}
-
-bool
 RangeAnalysis::analyzeLoop(MBasicBlock *header)
 {
     JS_ASSERT(header->hasUniqueBackedge());
@@ -1581,8 +1550,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     if (backedge == header)
         return true;
 
-    if (!markBlocksInLoopBody(header, backedge))
-        return false;
+    bool canOsr;
+    MarkLoopBlocks(graph_, header, &canOsr);
 
     LoopIterationBound *iterationBound = nullptr;
 
@@ -1609,7 +1578,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
     } while (block != header);
 
     if (!iterationBound) {
-        graph_.unmarkBlocks();
+        UnmarkLoopBlocks(graph_, header);
         return true;
     }
 
@@ -1662,7 +1631,7 @@ RangeAnalysis::analyzeLoop(MBasicBlock *header)
         }
     }
 
-    graph_.unmarkBlocks();
+    UnmarkLoopBlocks(graph_, header);
     return true;
 }
 
@@ -2004,9 +1973,15 @@ RangeAnalysis::analyze()
 
     for (ReversePostorderIterator iter(graph_.rpoBegin()); iter != graph_.rpoEnd(); iter++) {
         MBasicBlock *block = *iter;
+        JS_ASSERT(!block->unreachable());
 
-        if (block->unreachable())
+        // If the block's immediate dominator is unreachable, the block is
+        // unreachable. Iterating in RPO, we'll always see the immediate
+        // dominator before the block.
+        if (block->immediateDominator()->unreachable()) {
+            block->setUnreachable();
             continue;
+        }
 
         for (MDefinitionIterator iter(block); iter; iter++) {
             MDefinition *def = *iter;
@@ -2015,6 +1990,11 @@ RangeAnalysis::analyze()
             IonSpew(IonSpew_Range, "computing range on %d", def->id());
             SpewRange(def);
         }
+
+        // Beta node range analysis may have marked this block unreachable. If
+        // so, it's no longer interesting to continue processing it.
+        if (block->unreachable())
+            continue;
 
         if (block->isLoopHeader()) {
             if (!analyzeLoop(block))
@@ -2435,6 +2415,42 @@ MCompare::operandTruncateKind(size_t index) const
     return truncateOperands_ ? TruncateAfterBailouts : NoTruncate;
 }
 
+static void
+TruncateTest(TempAllocator &alloc, MTest *test)
+{
+    // If all possible inputs to the test are either int32 or boolean,
+    // convert those inputs to int32 so that an int32 test can be performed.
+
+    if (test->input()->type() != MIRType_Value)
+        return;
+
+    if (!test->input()->isPhi() || !test->input()->hasOneDefUse() || test->input()->isImplicitlyUsed())
+        return;
+
+    MPhi *phi = test->input()->toPhi();
+    for (size_t i = 0; i < phi->numOperands(); i++) {
+        MDefinition *def = phi->getOperand(i);
+        if (!def->isBox())
+            return;
+        MDefinition *inner = def->getOperand(0);
+        if (inner->type() != MIRType_Boolean && inner->type() != MIRType_Int32)
+            return;
+    }
+
+    for (size_t i = 0; i < phi->numOperands(); i++) {
+        MDefinition *inner = phi->getOperand(i)->getOperand(0);
+        if (inner->type() != MIRType_Int32) {
+            MBasicBlock *block = inner->block();
+            inner = MToInt32::New(alloc, inner);
+            block->insertBefore(block->lastIns(), inner->toInstruction());
+        }
+        JS_ASSERT(inner->type() == MIRType_Int32);
+        phi->replaceOperand(i, inner);
+    }
+
+    phi->setResultType(MIRType_Int32);
+}
+
 // Examine all the users of |candidate| and determine the most aggressive
 // truncate kind that satisfies all of them.
 static MDefinition::TruncateKind
@@ -2574,8 +2590,11 @@ RangeAnalysis::truncate()
 
     for (PostorderIterator block(graph_.poBegin()); block != graph_.poEnd(); block++) {
         for (MInstructionReverseIterator iter(block->rbegin()); iter != block->rend(); iter++) {
-            if (iter->type() == MIRType_None)
+            if (iter->type() == MIRType_None) {
+                if (iter->isTest())
+                    TruncateTest(alloc(), iter->toTest());
                 continue;
+            }
 
             // Remember all bitop instructions for folding after range analysis.
             switch (iter->op()) {

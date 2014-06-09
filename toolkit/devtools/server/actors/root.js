@@ -142,17 +142,51 @@ RootActor.prototype = {
   get window() Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
 
   /**
+   * The list of all windows
+   */
+  get windows() {
+    return this.docShells.map(docShell => {
+      return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
+    });
+  },
+
+  /**
    * URL of the chrome window.
    */
   get url() { return this.window ? this.window.document.location.href : null; },
 
   /**
+   * The top level window's docshell
+   */
+  get docShell() {
+    return this.window
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDocShell);
+  },
+
+  /**
+   * The list of all docshells
+   */
+  get docShells() {
+    let docShellsEnum = this.docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let docShells = [];
+    while (docShellsEnum.hasMoreElements()) {
+      docShells.push(docShellsEnum.getNext());
+    }
+
+    return docShells;
+  },
+
+  /**
    * Getter for the best nsIWebProgress for to watching this window.
    */
   get webProgress() {
-    return this.window
-      .QueryInterface(Ci.nsIInterfaceRequestor)
-      .getInterface(Ci.nsIDocShell)
+    return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIWebProgress);
   },

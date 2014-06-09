@@ -958,6 +958,24 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     RemoveStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
   }
 
+#ifdef DEBUG
+  nsFrameList::Enumerator oc(GetChildList(kOverflowContainersList));
+  for (; !oc.AtEnd(); oc.Next()) {
+    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(oc.get()));
+  }
+  nsFrameList::Enumerator eoc(GetChildList(kExcessOverflowContainersList));
+  for (; !eoc.AtEnd(); eoc.Next()) {
+    MOZ_ASSERT(!IS_TRUE_OVERFLOW_CONTAINER(eoc.get()));
+  }
+#endif
+
+  nsOverflowAreas ocBounds;
+  nsReflowStatus ocStatus = NS_FRAME_COMPLETE;
+  if (GetPrevInFlow()) {
+    ReflowOverflowContainerChildren(aPresContext, aReflowState, ocBounds, 0,
+                                    ocStatus);
+  }
+
   //------------ Handle Incremental Reflow -----------------
 
   ReflowConfig config = ChooseColumnStrategy(aReflowState);
@@ -994,15 +1012,19 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
     aStatus = NS_FRAME_COMPLETE;
   }
 
+  NS_ASSERTION(NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
+               aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE,
+               "Column set should be complete if the available height is unconstrained");
+
+  // Merge overflow container bounds and status.
+  aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
+  NS_MergeReflowStatusInto(&aStatus, ocStatus);
+
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus, false);
 
   aDesiredSize.mCarriedOutBottomMargin = carriedOutBottomMargin;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
-
-  NS_ASSERTION(NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
-               aReflowState.AvailableHeight() != NS_UNCONSTRAINEDSIZE,
-               "Column set should be complete if the available height is unconstrained");
 }
 
 void

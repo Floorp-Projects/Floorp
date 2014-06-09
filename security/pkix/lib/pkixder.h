@@ -47,6 +47,8 @@
 #include "secoidt.h"
 #include "stdint.h"
 
+typedef struct CERTSignedDataStr CERTSignedData;
+
 namespace mozilla { namespace pkix { namespace der {
 
 enum Class
@@ -116,7 +118,7 @@ public:
   Result Expect(const uint8_t* expected, uint16_t expectedLen)
   {
     if (EnsureLength(expectedLen) != Success) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Failure;
     }
     if (memcmp(input, expected, expectedLen)) {
       return Fail(SEC_ERROR_BAD_DER);
@@ -132,8 +134,8 @@ public:
 
   Result Read(uint8_t& out)
   {
-    if (input == end) {
-      return Fail(SEC_ERROR_BAD_DER);
+    if (EnsureLength(1) != Success) {
+      return Failure;
     }
     out = *input++;
     return Success;
@@ -141,8 +143,8 @@ public:
 
   Result Read(uint16_t& out)
   {
-    if (input == end || input + 1 == end) {
-      return Fail(SEC_ERROR_BAD_DER);
+    if (EnsureLength(2) != Success) {
+      return Failure;
     }
     out = *input++;
     out <<= 8u;
@@ -151,9 +153,12 @@ public:
   }
 
   template <uint16_t N>
-  bool MatchBytes(const uint8_t (&toMatch)[N])
+  bool MatchRest(const uint8_t (&toMatch)[N])
   {
-    if (EnsureLength(N) != Success) {
+    // Normally we use EnsureLength which compares (input + len < end), but
+    // here we want to be sure that there is nothing following the matched
+    // bytes
+    if (static_cast<size_t>(end - input) != N) {
       return false;
     }
     if (memcmp(input, toMatch, N)) {
@@ -191,7 +196,7 @@ public:
   Result Skip(uint16_t len)
   {
     if (EnsureLength(len) != Success) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Failure;
     }
     input += len;
     return Success;
@@ -200,7 +205,7 @@ public:
   Result Skip(uint16_t len, Input& skippedInput)
   {
     if (EnsureLength(len) != Success) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Failure;
     }
     if (skippedInput.Init(input, len) != Success) {
       return Failure;
@@ -212,7 +217,7 @@ public:
   Result Skip(uint16_t len, SECItem& skippedItem)
   {
     if (EnsureLength(len) != Success) {
-      return Fail(SEC_ERROR_BAD_DER);
+      return Failure;
     }
     skippedItem.type = siBuffer;
     skippedItem.data = const_cast<uint8_t*>(input);
@@ -228,7 +233,7 @@ public:
 
   Result EnsureLength(uint16_t len)
   {
-    if (input + len > end) {
+    if (static_cast<size_t>(end - input) < len) {
       return Fail(SEC_ERROR_BAD_DER);
     }
     return Success;
@@ -644,6 +649,25 @@ OptionalVersion(Input& input, /*out*/ uint8_t& version)
   }
   return Success;
 }
+
+// Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
+// by a BIT STRING into signedData. This handles the commonality between
+// parsing the signed/signature fields of certificates and OCSP responses. In
+// the case of an OCSP response, the caller needs to parse the certs
+// separately.
+//
+// Certificate  ::=  SEQUENCE  {
+//        tbsCertificate       TBSCertificate,
+//        signatureAlgorithm   AlgorithmIdentifier,
+//        signatureValue       BIT STRING  }
+//
+// BasicOCSPResponse       ::= SEQUENCE {
+//    tbsResponseData      ResponseData,
+//    signatureAlgorithm   AlgorithmIdentifier,
+//    signature            BIT STRING,
+//    certs            [0] EXPLICIT SEQUENCE OF Certificate OPTIONAL }
+Result
+SignedData(Input& input, /*out*/ Input& tbs, /*out*/ CERTSignedData& signedData);
 
 } } } // namespace mozilla::pkix::der
 

@@ -13,6 +13,7 @@ loader.lazyImporter(this, "gDevTools", "resource:///modules/devtools/gDevTools.j
 loader.lazyImporter(this, "Task","resource://gre/modules/Task.jsm");
 
 const Heritage = require("sdk/core/heritage");
+const URI = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
@@ -1081,6 +1082,11 @@ Messages.Extended.prototype = Heritage.extend(Messages.Simple.prototype,
 
     let result = this.document.createElementNS(XHTML_NS, "span");
     if (isPrimitive) {
+      if (Widgets.URLString.prototype.containsURL.call(Widgets.URLString.prototype, grip)) {
+        let widget = new Widgets.URLString(this, grip, options).render();
+        return widget.element;
+      }
+
       let className = this.getClassNameForValueGrip(grip);
       if (className) {
         result.className = className;
@@ -1756,6 +1762,125 @@ Widgets.MessageTimestamp.prototype = Heritage.extend(Widgets.BaseWidget.prototyp
   },
 }); // Widgets.MessageTimestamp.prototype
 
+
+/**
+ * The URLString widget, for rendering strings where at least one token is a
+ * URL.
+ *
+ * @constructor
+ * @param object message
+ *        The owning message.
+ * @param string str
+ *        The string, which contains at least one valid URL.
+ */
+Widgets.URLString = function(message, str)
+{
+  Widgets.BaseWidget.call(this, message);
+  this.str = str;
+};
+
+Widgets.URLString.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
+{
+  /**
+   * The string to format, which contains at least one valid URL.
+   * @type string
+   */
+  str: "",
+
+  render: function()
+  {
+    if (this.element) {
+      return this;
+    }
+
+    // The rendered URLString will be a <span> containing a number of text
+    // <spans> for non-URL tokens and <a>'s for URL tokens.
+    this.element = this.el("span", {
+      class: "console-string"
+    });
+    this.element.appendChild(this._renderText("\""));
+
+    // As we walk through the tokens of the source string, we make sure to preserve
+    // the original whitespace that seperated the tokens.
+    let tokens = this.str.split(/\s+/);
+    let textStart = 0;
+    let tokenStart;
+    for (let token of tokens) {
+      tokenStart = this.str.indexOf(token, textStart);
+      if (this._isURL(token)) {
+        this.element.appendChild(this._renderText(this.str.slice(textStart, tokenStart)));
+        textStart = tokenStart + token.length;
+        this.element.appendChild(this._renderURL(token));
+      }
+    }
+
+    // Clean up any non-URL text at the end of the source string.
+    this.element.appendChild(this._renderText(this.str.slice(textStart, this.str.length)));
+    this.element.appendChild(this._renderText("\""));
+
+    return this;
+  },
+
+  /**
+   * Determines whether a grip is a string containing a URL.
+   *
+   * @param string grip
+   *        The grip, which may contain a URL.
+   * @return boolean
+   *         Whether the grip is a string containing a URL.
+   */
+  containsURL: function(grip)
+  {
+    if (typeof grip != "string") {
+      return false;
+    }
+
+    let tokens = grip.split(/\s+/);
+    return tokens.some(this._isURL);
+  },
+
+  /**
+   * Determines whether a string token is a valid URL.
+   *
+   * @param string token
+   *        The token.
+   * @return boolean
+   *         Whenther the token is a URL.
+   */
+  _isURL: function(token) {
+    try {
+      let uri = URI.newURI(token, null, null);
+      let url = uri.QueryInterface(Ci.nsIURL);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  /**
+   * Renders a string as a URL.
+   *
+   * @param string url
+   *        The string to be rendered as a url.
+   * @return DOMElement
+   *         An element containing the rendered string.
+   */
+  _renderURL: function(url)
+  {
+    let result = this.el("a", {
+      class: "url",
+      title: url,
+      href: url,
+      draggable: false
+    }, url);
+    this.message._addLinkCallback(result);
+    return result;
+  },
+
+  _renderText: function(text) {
+    return this.el("span", text);
+  },
+}); // Widgets.URLString.prototype
 
 /**
  * Widget used for displaying ObjectActors that have no specialised renderers.

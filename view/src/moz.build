@@ -15,7 +15,3 @@ FAIL_ON_WARNINGS = True
 MSVC_ENABLE_PGO = True
 
 FINAL_LIBRARY = 'gklayout'
-
-if CONFIG['GNU_CC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    # Work around bug 986928
-    CXXFLAGS += ['-Wno-error=format']

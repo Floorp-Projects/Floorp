@@ -26,6 +26,7 @@ namespace mozilla {
 namespace dom {
 
 class AnyCallback;
+class DOMError;
 class PromiseCallback;
 class PromiseInit;
 class PromiseNativeHandler;
@@ -89,11 +90,21 @@ public:
     MaybeSomething(aArg, &Promise::MaybeResolve);
   }
 
-  // aArg is a const reference so we can pass rvalues like NS_ERROR_*
-  template <typename T>
-  void MaybeReject(const T& aArg) {
+  inline void MaybeReject(nsresult aArg) {
+    MOZ_ASSERT(NS_FAILED(aArg));
     MaybeSomething(aArg, &Promise::MaybeReject);
   }
+  // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
+  // rejected with Error instances.
+  // Note: MaybeRejectBrokenly is a template so we can use it with DOMError
+  // without instantiating the DOMError specialization of MaybeSomething in
+  // every translation unit that includes this header, because that would
+  // require use to include DOMError.h either here or in all those translation
+  // units.
+  template<typename T>
+  void MaybeRejectBrokenly(const T& aArg); // Not implemented by default; see
+                                           // specializations in the .cpp for
+                                           // the T values we support.
 
   // WebIDL
 

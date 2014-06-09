@@ -60,6 +60,8 @@ class AutoHashableValueRooter : private AutoGCRooter
         return value;
     }
 
+    Value get() const { return value.get(); }
+
     friend void AutoGCRooter::trace(JSTracer *trc);
     void trace(JSTracer *trc);
 

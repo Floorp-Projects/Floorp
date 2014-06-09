@@ -355,9 +355,14 @@ protected:
         {
           // REG=r, R/M=r or REG=r, R/M=[r]
           nBytes += 2;
-        } else if (((b & 0xc0) == 0x40) && ((b & 0x38) != 0x20)) {
-          // REG=r, R/M=[r + disp8]
-          nBytes += 3;
+        } else if ((b & 0xc0) == 0x40) {
+          if ((b & 0x07) == 0x04) {
+            // REG=r, R/M=[SIB + disp8]
+            nBytes += 4;
+          } else {
+            // REG=r, R/M=[r + disp8]
+            nBytes += 3;
+          }
         } else {
           // complex MOV, bail
           return;

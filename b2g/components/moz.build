@@ -15,9 +15,11 @@ EXTRA_COMPONENTS += [
     'HelperAppDialog.js',
     'InterAppCommUIGlue.js',
     'MailtoProtocolHandler.js',
+    'MobileIdentityUIGlue.js',
     'PaymentGlue.js',
     'ProcessGlobal.js',
     'SmsProtocolHandler.js',
+    'SystemMessageGlue.js',
     'TelProtocolHandler.js',
     'WebappsUpdateTimer.js',
     'YoutubeProtocolHandler.js',
@@ -42,6 +44,7 @@ if CONFIG['MOZ_UPDATER']:
 
 EXTRA_JS_MODULES += [
     'AlertsHelper.jsm',
+    'ContentRequestHelper.jsm',
     'ErrorPage.jsm',
     'SignInToWebsite.jsm',
     'SystemAppProxy.jsm',

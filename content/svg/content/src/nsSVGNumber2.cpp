@@ -6,7 +6,6 @@
 #include "nsSVGNumber2.h"
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h" // NS_ENSURE_FINITE
-#include "nsIDOMSVGNumber.h"
 #include "nsSMILFloatType.h"
 #include "nsSMILValue.h"
 #include "nsSVGAttrTearoffTable.h"

@@ -590,7 +590,8 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
   if (!count)
     return NS_OK;
 
-  PROFILER_LABEL("CSS", "ProcessRestyledFrames");
+  PROFILER_LABEL("RestyleManager", "ProcessRestyledFrames",
+    js::ProfileEntry::Category::CSS);
 
   // Make sure to not rebuild quote or counter lists while we're
   // processing restyles
@@ -2908,7 +2909,8 @@ RestyleManager::ComputeStyleChangeFor(nsIFrame*          aFrame,
                                       RestyleTracker&    aRestyleTracker,
                                       bool               aRestyleDescendants)
 {
-  PROFILER_LABEL("CSS", "ComputeStyleChangeFor");
+  PROFILER_LABEL("RestyleManager", "ComputeStyleChangeFor",
+    js::ProfileEntry::Category::CSS);
 
   nsIContent *content = aFrame->GetContent();
   if (aMinChange) {

@@ -26,7 +26,7 @@ class MockDtmfToneGenerator : public DtmfToneGenerator {
   MOCK_METHOD0(Reset,
       void());
   MOCK_METHOD2(Generate,
-      int(int num_samples, AudioMultiVector<int16_t>* output));
+      int(int num_samples, AudioMultiVector* output));
   MOCK_CONST_METHOD0(initialized,
       bool());
 };

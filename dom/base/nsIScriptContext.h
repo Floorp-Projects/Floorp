@@ -30,10 +30,6 @@ class nsIURI;
 { 0x274840b6, 0x7349, 0x4798, \
   { 0xbe, 0x24, 0xbd, 0x75, 0xa6, 0x46, 0x99, 0xb7 } }
 
-/* This MUST match JSVERSION_DEFAULT.  This version stuff if we don't
-   know what language we have is a little silly... */
-#define SCRIPTVERSION_DEFAULT JSVERSION_DEFAULT
-
 class nsIOffThreadScriptReceiver;
 
 /**

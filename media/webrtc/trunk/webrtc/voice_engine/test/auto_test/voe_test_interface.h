@@ -23,31 +23,16 @@ using namespace webrtc;
 
 // TestType enumerator
 enum TestType {
-  Invalid = -1, Standard = 0, Extended = 1, Stress = 2, Unit = 3, CPU = 4
-};
+  Invalid = -1,
+  Standard = 0,
 
-// ExtendedSelection enumerator
-enum ExtendedSelection {
-  XSEL_Invalid = -1,
-  XSEL_None = 0,
-  XSEL_All,
-  XSEL_Base,
-  XSEL_CallReport,
-  XSEL_Codec,
-  XSEL_DTMF,
-  XSEL_Encryption,
-  XSEL_ExternalMedia,
-  XSEL_File,
-  XSEL_Hardware,
-  XSEL_NetEqStats,
-  XSEL_Network,
-  XSEL_RTP_RTCP,
-  XSEL_VideoSync,
-  XSEL_VolumeControl,
+  Stress = 2,
+  Unit = 3,
+  CPU = 4
 };
 
 // Main test function
-int runAutoTest(TestType testType, ExtendedSelection extendedSel);
+int runAutoTest(TestType testType);
 
 }  // namespace voetest
 #endif // WEBRTC_VOICE_ENGINE_VOE_TEST_INTERFACE_H

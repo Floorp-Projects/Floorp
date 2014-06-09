@@ -3,8 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <cstring>
+
 #include "2D.h"
 #include "DataSurfaceHelpers.h"
+#include "Tools.h"
 
 namespace mozilla {
 namespace gfx {
@@ -135,6 +138,33 @@ SurfaceToPackedBGR(DataSourceSurface *aSurface)
   aSurface->Unmap();
 
   return imageBuffer;
+}
+
+void
+ClearDataSourceSurface(DataSourceSurface *aSurface)
+{
+  DataSourceSurface::MappedSurface map;
+  if (!aSurface->Map(DataSourceSurface::MapType::WRITE, &map)) {
+    MOZ_ASSERT(false, "Failed to map DataSourceSurface");
+    return;
+  }
+
+  // We avoid writing into the gaps between the rows here since we can't be
+  // sure that some drivers don't use those bytes.
+
+  uint32_t width = aSurface->GetSize().width;
+  uint32_t bytesPerRow = width * BytesPerPixel(aSurface->GetFormat());
+  uint8_t* row = map.mData;
+  // converting to size_t here because otherwise the temporaries can overflow
+  // and we can end up with |end| being a bad address!
+  uint8_t* end = row + size_t(map.mStride) * size_t(aSurface->GetSize().height);
+
+  while (row != end) {
+    memset(row, 0, bytesPerRow);
+    row += map.mStride;
+  }
+
+  aSurface->Unmap();
 }
 
 }

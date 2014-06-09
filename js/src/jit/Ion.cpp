@@ -11,7 +11,6 @@
 
 #include "jscompartment.h"
 #include "jsprf.h"
-#include "jsworkers.h"
 
 #include "gc/Marking.h"
 #include "jit/AliasAnalysis.h"
@@ -41,6 +40,7 @@
 #include "jit/UnreachableCodeElimination.h"
 #include "jit/ValueNumbering.h"
 #include "vm/ForkJoin.h"
+#include "vm/HelperThreads.h"
 #include "vm/TraceLogging.h"
 
 #include "jscompartmentinlines.h"
@@ -564,14 +564,14 @@ static inline void
 FinishAllOffThreadCompilations(JSCompartment *comp)
 {
 #ifdef JS_THREADSAFE
-    AutoLockWorkerThreadState lock;
-    GlobalWorkerThreadState::IonBuilderVector &finished = WorkerThreadState().ionFinishedList();
+    AutoLockHelperThreadState lock;
+    GlobalHelperThreadState::IonBuilderVector &finished = HelperThreadState().ionFinishedList();
 
     for (size_t i = 0; i < finished.length(); i++) {
         IonBuilder *builder = finished[i];
         if (builder->compartment == CompileCompartment::get(comp)) {
             FinishOffThreadBuilder(builder);
-            WorkerThreadState().remove(finished, &i);
+            HelperThreadState().remove(finished, &i);
         }
     }
 #endif
@@ -607,7 +607,7 @@ JitCompartment::mark(JSTracer *trc, JSCompartment *compartment)
             JSScript *script = e.front();
 
             // If the script has since been invalidated or was attached by an
-            // off-thread worker too late (i.e., the ForkJoin finished with
+            // off-thread helper too late (i.e., the ForkJoin finished with
             // warmup doing all the work), remove it.
             if (!script->hasParallelIonScript() ||
                 !script->parallelIonScript()->isParallelEntryScript())
@@ -1413,8 +1413,7 @@ OptimizeMIR(MIRGenerator *mir)
         // frequently.
         JSScript *script = mir->info().script();
         if (!script || !script->hadFrequentBailouts()) {
-            LICM licm(mir, graph);
-            if (!licm.analyze())
+            if (!LICM(mir, graph))
                 return false;
             IonSpewPass("LICM");
             AssertExtendedGraphCoherency(graph);
@@ -1505,6 +1504,21 @@ OptimizeMIR(MIRGenerator *mir)
         AssertExtendedGraphCoherency(graph);
 
         if (mir->shouldCancel("DCE"))
+            return false;
+    }
+
+    // Make loops contiguious. We do this after GVN/UCE and range analysis,
+    // which can remove CFG edges, exposing more blocks that can be moved.
+    // We also disable this when profiling, since reordering blocks appears
+    // to make the profiler unhappy.
+    {
+        AutoTraceLog log(logger, TraceLogger::MakeLoopsContiguous);
+        if (!MakeLoopsContiguous(graph))
+            return false;
+        IonSpewPass("Make loops contiguous");
+        AssertExtendedGraphCoherency(graph);
+
+        if (mir->shouldCancel("Make loops contiguous"))
             return false;
     }
 
@@ -1678,9 +1692,9 @@ AttachFinishedCompilations(JSContext *cx)
         return;
 
     types::AutoEnterAnalysis enterTypes(cx);
-    AutoLockWorkerThreadState lock;
+    AutoLockHelperThreadState lock;
 
-    GlobalWorkerThreadState::IonBuilderVector &finished = WorkerThreadState().ionFinishedList();
+    GlobalHelperThreadState::IonBuilderVector &finished = HelperThreadState().ionFinishedList();
 
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
 
@@ -1694,7 +1708,7 @@ AttachFinishedCompilations(JSContext *cx)
             IonBuilder *testBuilder = finished[i];
             if (testBuilder->compartment == CompileCompartment::get(cx->compartment())) {
                 builder = testBuilder;
-                WorkerThreadState().remove(finished, &i);
+                HelperThreadState().remove(finished, &i);
                 break;
             }
         }
@@ -1714,9 +1728,9 @@ AttachFinishedCompilations(JSContext *cx)
 
             bool success;
             {
-                // Release the worker thread lock and root the compiler for GC.
+                // Release the helper thread lock and root the compiler for GC.
                 AutoTempAllocatorRooter root(cx, &builder->alloc());
-                AutoUnlockWorkerThreadState unlock;
+                AutoUnlockHelperThreadState unlock;
                 success = codegen->link(cx, builder->constraints());
             }
 
@@ -1746,14 +1760,9 @@ OffThreadCompilationAvailable(JSContext *cx)
     //
     // Require cpuCount > 1 so that Ion compilation jobs and main-thread
     // execution are not competing for the same resources.
-    //
-    // Skip off thread compilation if PC count profiling is enabled, as
-    // CodeGenerator::maybeCreateScriptCounts will not attach script profiles
-    // when running off thread.
     return cx->runtime()->canUseParallelIonCompilation()
-        && WorkerThreadState().cpuCount > 1
-        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL
-        && !cx->runtime()->profilingScripts;
+        && HelperThreadState().cpuCount > 1
+        && cx->runtime()->gc.incrementalState == gc::NO_INCREMENTAL;
 #else
     return false;
 #endif
@@ -1805,7 +1814,7 @@ IonCompile(JSContext *cx, JSScript *script,
     JS_ASSERT(optimizationLevel > Optimization_DontCompile);
 
     // Make sure the script's canonical function isn't lazy. We can't de-lazify
-    // it in a worker thread.
+    // it in a helper thread.
     script->ensureNonLazyCanonicalFunction(cx);
 
     TrackPropertiesForSingletonScopes(cx, script, baselineFrame);
@@ -1977,36 +1986,20 @@ CheckScriptSize(JSContext *cx, JSScript* script)
 
     uint32_t numLocalsAndArgs = NumLocalsAndArgs(script);
 
-    if (cx->runtime()->isWorkerRuntime()) {
-        // DOM Workers don't have off thread compilation enabled. Since workers
-        // don't block the browser's event loop, allow them to compile larger
-        // scripts.
-        JS_ASSERT(!cx->runtime()->canUseParallelIonCompilation());
-
-        if (script->length() > MAX_DOM_WORKER_SCRIPT_SIZE ||
-            numLocalsAndArgs > MAX_DOM_WORKER_LOCALS_AND_ARGS)
-        {
-            return Method_CantCompile;
-        }
-
-        return Method_Compiled;
-    }
-
     if (script->length() > MAX_MAIN_THREAD_SCRIPT_SIZE ||
         numLocalsAndArgs > MAX_MAIN_THREAD_LOCALS_AND_ARGS)
     {
 #ifdef JS_THREADSAFE
-        size_t cpuCount = WorkerThreadState().cpuCount;
+        size_t cpuCount = HelperThreadState().cpuCount;
 #else
         size_t cpuCount = 1;
 #endif
         if (cx->runtime()->canUseParallelIonCompilation() && cpuCount > 1) {
             // Even if off thread compilation is enabled, there are cases where
             // compilation must still occur on the main thread. Don't compile
-            // in these cases (except when profiling scripts, as compilations
-            // occurring with profiling should reflect those without), but do
-            // not forbid compilation so that the script may be compiled later.
-            if (!OffThreadCompilationAvailable(cx) && !cx->runtime()->profilingScripts) {
+            // in these cases, but do not forbid compilation so that the script
+            // may be compiled later.
+            if (!OffThreadCompilationAvailable(cx)) {
                 IonSpew(IonSpew_Abort,
                         "Script too large for main thread, skipping (%u bytes) (%u locals/args)",
                         script->length(), numLocalsAndArgs);

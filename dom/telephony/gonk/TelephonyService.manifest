@@ -1,0 +1,2 @@
+component {67d26434-d063-4d28-9f48-5b3189788155} TelephonyService.js
+contract @mozilla.org/telephony/gonktelephonyservice;1 {67d26434-d063-4d28-9f48-5b3189788155}

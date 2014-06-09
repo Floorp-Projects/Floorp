@@ -12,3 +12,4 @@ pref(dom.webcomponents.enabled,true) == remove-insertion-point-1.html remove-ins
 pref(dom.webcomponents.enabled,true) == nested-insertion-point-1.html nested-insertion-point-1-ref.html
 pref(dom.webcomponents.enabled,true) == basic-shadow-element-1.html basic-shadow-element-1-ref.html
 pref(dom.webcomponents.enabled,true) == nested-shadow-element-1.html nested-shadow-element-1-ref.html
+pref(dom.webcomponents.enabled,true) == update-dist-node-descendants-1.html update-dist-node-descendants-1-ref.html

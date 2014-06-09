@@ -36,7 +36,7 @@ LIRGeneratorX86Shared::visitGuardShape(MGuardShape *ins)
 {
     JS_ASSERT(ins->obj()->type() == MIRType_Object);
 
-    LGuardShape *guard = new(alloc()) LGuardShape(useRegister(ins->obj()));
+    LGuardShape *guard = new(alloc()) LGuardShape(useRegisterAtStart(ins->obj()));
     if (!assignSnapshot(guard, ins->bailoutKind()))
         return false;
     if (!add(guard, ins))
@@ -49,7 +49,7 @@ LIRGeneratorX86Shared::visitGuardObjectType(MGuardObjectType *ins)
 {
     JS_ASSERT(ins->obj()->type() == MIRType_Object);
 
-    LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegister(ins->obj()));
+    LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegisterAtStart(ins->obj()));
     if (!assignSnapshot(guard))
         return false;
     if (!add(guard, ins))
@@ -75,9 +75,9 @@ LIRGeneratorX86Shared::lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefiniti
     // shift operator should be constant or in register ecx
     // x86 can't shift a non-ecx register
     if (rhs->isConstant())
-        ins->setOperand(1, useOrConstant(rhs));
+        ins->setOperand(1, useOrConstantAtStart(rhs));
     else
-        ins->setOperand(1, useFixed(rhs, ecx));
+        ins->setOperand(1, lhs != rhs ? useFixed(rhs, ecx) : useFixedAtStart(rhs, ecx));
 
     return defineReuseInput(ins, mir, 0);
 }
@@ -95,7 +95,7 @@ LIRGeneratorX86Shared::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition
                                    MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, useOrConstant(rhs));
+    ins->setOperand(1, lhs != rhs ? useOrConstant(rhs) : useOrConstantAtStart(rhs));
     return defineReuseInput(ins, mir, 0);
 }
 
@@ -103,7 +103,7 @@ bool
 LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs, MDefinition *rhs)
 {
     ins->setOperand(0, useRegisterAtStart(lhs));
-    ins->setOperand(1, use(rhs));
+    ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
     return defineReuseInput(ins, mir, 0);
 }
 

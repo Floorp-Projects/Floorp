@@ -446,15 +446,15 @@
     { 0x8d, 0x17, 0xa2, 0x7e, 0x44, 0xa8, 0x39, 0x3e } \
 }
 
-// service implementing nsINetworkSeer
-#define NS_NETWORKSEER_CONTRACTID \
-    "@mozilla.org/network/seer;1"
-#define NS_NETWORKSEER_CID \
-{ /* {1C218009-A531-46AD-8351-1E7F45D5A3C4} */ \
-    0x1C218009, \
-    0xA531, \
-    0x46AD, \
-    { 0x83, 0x51, 0x1E, 0x7F, 0x45, 0xD5, 0xA3, 0xC4 } \
+// service implementing nsINetworkPredictor
+#define NS_NETWORKPREDICTOR_CONTRACTID \
+    "@mozilla.org/network/predictor;1"
+#define NS_NETWORKPREDICTOR_CID \
+{ /* {969adfdf-7221-4419-aecf-05f8faf00c9b} */ \
+    0x969adfdf, \
+    0x7221, \
+    0x4419, \
+    { 0xae, 0xcf, 0x05, 0xf8, 0xfa, 0xf0, 0x0c, 0x9b } \
 }
 
 /******************************************************************************
@@ -927,7 +927,7 @@
     0x40f7,                                            \
     { 0x86, 0xf8, 0x63, 0xf2, 0x25, 0xb9, 0x40, 0xae } \
   }
-  
+
 /******************************************************************************
  * Contracts that can be implemented by necko users.
  */

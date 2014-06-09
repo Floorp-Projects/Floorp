@@ -114,8 +114,8 @@ nsScriptElement::MaybeProcessScript()
   NS_ASSERTION(cont->DebugGetSlots()->mMutationObservers.Contains(this),
                "You forgot to add self as observer");
 
-  if (mAlreadyStarted || !mDoneAddingChildren || !cont->IsInDoc() ||
-      mMalformed || !HasScriptContent()) {
+  if (mAlreadyStarted || !mDoneAddingChildren ||
+      !cont->GetCrossShadowCurrentDoc() || mMalformed || !HasScriptContent()) {
     return false;
   }
 

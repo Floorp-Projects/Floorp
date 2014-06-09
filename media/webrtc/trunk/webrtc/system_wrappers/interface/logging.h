@@ -92,8 +92,6 @@ class LogMessage {
 //////////////////////////////////////////////////////////////////////
 
 #ifndef LOG
-#if defined(WEBRTC_LOGGING)
-
 // The following non-obvious technique for implementation of a
 // conditional log stream was stolen from google3/base/logging.h.
 
@@ -109,8 +107,16 @@ class LogMessageVoidify {
   void operator&(std::ostream&) { }
 };
 
+#if defined(WEBRTC_RESTRICT_LOGGING)
+// This should compile away logs matching the following condition.
+#define RESTRICT_LOGGING_PRECONDITION(sev)  \
+  sev < webrtc::LS_INFO ? (void) 0 :
+#else
+#define RESTRICT_LOGGING_PRECONDITION(sev)
+#endif
+
 #define LOG_SEVERITY_PRECONDITION(sev) \
-  !(webrtc::LogMessage::Loggable(sev)) \
+  RESTRICT_LOGGING_PRECONDITION(sev) !(webrtc::LogMessage::Loggable(sev)) \
     ? (void) 0 \
     : webrtc::LogMessageVoidify() &
 
@@ -130,19 +136,6 @@ class LogMessageVoidify {
 #else
 #define LOG_F(sev) LOG(sev) << __FUNCTION__ << ": "
 #endif
-
-#else  // !defined(WEBRTC_LOGGING)
-
-// Hopefully, the compiler will optimize away some of this code.
-// Note: syntax of "1 ? (void)0 : LogMessage" was causing errors in g++,
-//   converted to "while (false)"
-#define LOG(sev) \
-  while (false)webrtc::LogMessage(NULL, 0, webrtc::sev).stream()
-#define LOG_V(sev) \
-  while (false) webrtc::LogMessage(NULL, 0, sev).stream()
-#define LOG_F(sev) LOG(sev) << __FUNCTION__ << ": "
-
-#endif  // !defined(WEBRTC_LOGGING)
 
 #define LOG_API0() LOG_F(LS_VERBOSE)
 #define LOG_API1(v1) LOG_API0() << #v1 << "=" << v1

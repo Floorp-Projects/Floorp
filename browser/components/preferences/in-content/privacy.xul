@@ -72,13 +72,12 @@
       hidden="true"
       data-category="panePrivacy">
   <image class="header-icon"/>
-  <label class="header-name"
-         value="&panePrivacy.title;"/>
+  <label class="header-name">&panePrivacy.title;</label>
 </hbox>
 
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true" align="start">
-  <caption label="&tracking.label;"/>
+  <caption><label>&tracking.label;</label></caption>
   <radiogroup id="doNotTrackSelection" orient="vertical"
               preference="privacy.donottrackheader.value"
               onsynctopreference="return gPrivacyPane.setTrackingPrefs()"
@@ -91,13 +90,14 @@
             accesskey="&dntTrackingNopref.accesskey;" />
   </radiogroup>
   <label class="text-link" id="doNotTrackInfo"
-         href="https://www.mozilla.org/dnt"
-         value="&doNotTrackInfo.label;"/>
+         href="https://www.mozilla.org/dnt">
+    &doNotTrackInfo.label;
+  </label>
 </groupbox>
 
 <!-- History -->
 <groupbox id="historyGroup" data-category="panePrivacy" hidden="true">
-  <caption label="&history.label;"/>
+  <caption><label>&history.label;</label></caption>
   <hbox align="center">
     <label id="historyModeLabel"
            control="historyMode"
@@ -230,7 +230,7 @@
 
 <!-- Location Bar -->
 <groupbox id="locationBarGroup" data-category="panePrivacy" hidden="true">
-  <caption label="&locationBar.label;"/>
+  <caption><label>&locationBar.label;</label></caption>
   <hbox align="center">
     <label id="locationBarSuggestionLabel"
            control="locationBarSuggestion"

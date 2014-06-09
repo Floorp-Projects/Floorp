@@ -88,9 +88,9 @@ pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  16384);
 
 // predictive actions
-pref("network.seer.enable", false); // disabled on b2g
-pref("network.seer.max-db-size", 2097152); // bytes
-pref("network.seer.preserve", 50); // percentage of seer data to keep when cleaning up
+pref("network.predictor.enable", false); // disabled on b2g
+pref("network.predictor.max-db-size", 2097152); // bytes
+pref("network.predictor.preserve", 50); // percentage of predictor data to keep when cleaning up
 
 /* session history */
 pref("browser.sessionhistory.max_total_viewers", 1);
@@ -109,14 +109,15 @@ pref("mozilla.widget.use-buffer-pixmap", true);
 pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
 pref("layers.enable-tiles", true);
+pref("layers.low-precision-buffer", true);
 /*
    Cross Process Mutex is not supported on Mac OS X so progressive
-   paint can not be enabled for B2G on Mac OS X desktop
+   paint cannot be enabled for B2G on Mac OS X desktop
 */
 #ifdef MOZ_WIDGET_COCOA
 pref("layers.progressive-paint", false);
 #else
-pref("layers.progressive-paint", false);
+pref("layers.progressive-paint", true);
 #endif
 
 /* download manager (don't show the window or alert) */
@@ -954,9 +955,14 @@ pref("apz.axis_lock_mode", 2);
 pref("apz.subframe.enabled", true);
 
 // Overscroll-related settings
-pref("apz.overscroll.enabled", false);
-pref("apz.overscroll.snap_back_accel", "0.003");
-pref("apz.overscroll.snap_back_init_vel", "1");
+pref("apz.overscroll.enabled", true);
+pref("apz.overscroll.fling_friction", "0.02");
+pref("apz.overscroll.fling_stopped_threshold", "0.4");
+pref("apz.overscroll.clamping", "0.5");
+pref("apz.overscroll.z_effect", "0.2");
+pref("apz.overscroll.snap_back.spring_stiffness", "0.6");
+pref("apz.overscroll.snap_back.spring_friction", "0.1");
+pref("apz.overscroll.snap_back.mass", "1000");
 
 // This preference allows FirefoxOS apps (and content, I think) to force
 // the use of software (instead of hardware accelerated) 2D canvases by
@@ -975,11 +981,19 @@ pref("browser.autofocus", false);
 // Enable wakelock
 pref("dom.wakelock.enabled", true);
 
+// Disable touch caret by default
+pref("touchcaret.enabled", false);
+
+// Disable selection caret by default
+pref("selectioncaret.enabled", false);
+
 // Enable sync and mozId with Firefox Accounts.
 #ifdef MOZ_SERVICES_FXACCOUNTS
 pref("services.sync.fxaccounts.enabled", true);
 pref("identity.fxaccounts.enabled", true);
 #endif
+
+pref("services.mobileid.server.uri", "http://msisdn.dev.mozaws.net");
 
 // Enable mapped array buffer
 pref("dom.mapped_arraybuffer.enabled", true);

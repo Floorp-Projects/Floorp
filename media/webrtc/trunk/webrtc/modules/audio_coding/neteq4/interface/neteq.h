@@ -15,6 +15,7 @@
 
 #include <vector>
 
+#include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/neteq4/interface/audio_decoder.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/typedefs.h"
@@ -23,14 +24,6 @@ namespace webrtc {
 
 // Forward declarations.
 struct WebRtcRTPHeader;
-
-// RTCP statistics.
-struct RtcpStatistics {
-  uint16_t fraction_lost;
-  uint32_t cumulative_lost;
-  uint32_t extended_max;
-  uint32_t jitter;
-};
 
 struct NetEqNetworkStatistics {
   uint16_t current_buffer_size_ms;  // Current jitter buffer size in ms.
@@ -66,9 +59,9 @@ enum NetEqPlayoutMode {
 };
 
 enum NetEqBackgroundNoiseMode {
-  kBgnOn,
-  kBgnFade,
-  kBgnOff
+  kBgnOn,    // Default behavior with eternal noise.
+  kBgnFade,  // Noise fades to zero after some time.
+  kBgnOff    // Background noise is always zero.
 };
 
 // This is the interface class for NetEq.
@@ -105,7 +98,8 @@ class NetEq {
     kFrameSplitError,
     kRedundancySplitError,
     kPacketBufferCorruption,
-    kOversizePacket
+    kOversizePacket,
+    kSyncPacketNotAccepted
   };
 
   static const int kMaxNumPacketsInBuffer = 240;  // TODO(hlundin): Remove.
@@ -126,6 +120,18 @@ class NetEq {
                            const uint8_t* payload,
                            int length_bytes,
                            uint32_t receive_timestamp) = 0;
+
+  // Inserts a sync-packet into packet queue. Sync-packets are decoded to
+  // silence and are intended to keep AV-sync intact in an event of long packet
+  // losses when Video NACK is enabled but Audio NACK is not. Clients of NetEq
+  // might insert sync-packet when they observe that buffer level of NetEq is
+  // decreasing below a certain threshold, defined by the application.
+  // Sync-packets should have the same payload type as the last audio payload
+  // type, i.e. they cannot have DTMF or CNG payload type, nor a codec change
+  // can be implied by inserting a sync-packet.
+  // Returns kOk on success, kFail on failure.
+  virtual int InsertSyncPacket(const WebRtcRTPHeader& rtp_header,
+                               uint32_t receive_timestamp) = 0;
 
   // Instructs NetEq to deliver 10 ms of audio data. The data is written to
   // |output_audio|, which can hold (at least) |max_length| elements.
@@ -241,14 +247,13 @@ class NetEq {
 
   // Get sequence number and timestamp of the latest RTP.
   // This method is to facilitate NACK.
-  virtual int DecodedRtpInfo(int* sequence_number, uint32_t* timestamp) = 0;
+  virtual int DecodedRtpInfo(int* sequence_number,
+                             uint32_t* timestamp) const = 0;
 
-  // Not implemented.
-  virtual int InsertSyncPacket(const WebRtcRTPHeader& rtp_header,
-                               uint32_t receive_timestamp) = 0;
-
+  // Sets the background noise mode.
   virtual void SetBackgroundNoiseMode(NetEqBackgroundNoiseMode mode) = 0;
 
+  // Gets the background noise mode.
   virtual NetEqBackgroundNoiseMode BackgroundNoiseMode() const = 0;
 
  protected:

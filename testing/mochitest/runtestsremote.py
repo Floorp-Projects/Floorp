@@ -239,7 +239,7 @@ class MochiRemote(Mochitest):
         self._automation.deleteANRs()
         self.certdbNew = True
 
-    def cleanup(self, manifest, options):
+    def cleanup(self, options):
         if self._dm.fileExists(self.remoteLog):
             self._dm.getFile(self.remoteLog, self.localLog)
             self._dm.removeFile(self.remoteLog)
@@ -247,7 +247,7 @@ class MochiRemote(Mochitest):
             log.warn("Unable to retrieve log file (%s) from remote device",
                 self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
-        Mochitest.cleanup(self, manifest, options)
+        Mochitest.cleanup(self, options)
 
     def findPath(self, paths, filename = None):
         for path in paths:
@@ -711,7 +711,7 @@ def main():
                 traceback.print_exc()
                 mochitest.stopServers()
                 try:
-                    mochitest.cleanup(None, options)
+                    mochitest.cleanup(options)
                 except devicemanager.DMError:
                     # device error cleaning up... oh well!
                     pass
@@ -746,7 +746,7 @@ def main():
             traceback.print_exc()
             mochitest.stopServers()
             try:
-                mochitest.cleanup(None, options)
+                mochitest.cleanup(options)
             except devicemanager.DMError:
                 # device error cleaning up... oh well!
                 pass

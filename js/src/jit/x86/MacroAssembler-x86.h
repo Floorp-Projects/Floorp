@@ -25,7 +25,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     uint32_t passedArgs_;
     uint32_t stackForCall_;
     bool dynamicAlignment_;
-    bool enoughMemory_;
 
     struct Double {
         double value;
@@ -69,23 +68,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
+    using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
     using MacroAssemblerX86Shared::call;
 
     MacroAssemblerX86()
-      : inCall_(false),
-        enoughMemory_(true)
+      : inCall_(false)
     {
     }
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void finish();
-
-    bool oom() const {
-        return MacroAssemblerX86Shared::oom() || !enoughMemory_;
-    }
 
     /////////////////////////////////////////////////////////////////
     // X86-specific interface.
@@ -593,6 +588,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         cmpl(Operand(lhs), rhs);
         j(cond, label);
     }
+    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
+        testl(Operand(address), imm);
+        j(cond, label);
+    }
 
     // Specialization for AsmJSAbsoluteAddress.
     void branchPtr(Condition cond, AsmJSAbsoluteAddress lhs, Register ptr, Label *label) {
@@ -972,6 +971,10 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         else
             movl(Operand(src), dest.gpr());
     }
+
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+                           MIRType slotType);
 
     void rshiftPtr(Imm32 imm, Register dest) {
         shrl(imm, dest);

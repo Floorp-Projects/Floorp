@@ -28,7 +28,7 @@ int Normal::Process(const int16_t* input,
                     size_t length,
                     Modes last_mode,
                     int16_t* external_mute_factor_array,
-                    AudioMultiVector<int16_t>* output) {
+                    AudioMultiVector* output) {
   if (length == 0) {
     // Nothing to process.
     output->Clear();
@@ -55,7 +55,7 @@ int Normal::Process(const int16_t* input,
     expand_->SetParametersForNormalAfterExpand();
 
     // Call Expand.
-    AudioMultiVector<int16_t> expanded(output->Channels());
+    AudioMultiVector expanded(output->Channels());
     expand_->Process(&expanded);
     expand_->Reset();
 

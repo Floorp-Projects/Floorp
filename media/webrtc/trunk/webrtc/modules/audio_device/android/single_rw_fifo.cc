@@ -8,10 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 #if defined(_MSC_VER)
 #include <windows.h>
 #endif
+
+#include "webrtc/modules/audio_device/android/single_rw_fifo.h"
 
 static int UpdatePos(int pos, int capacity) {
   return (pos + 1) % capacity;
@@ -21,13 +22,43 @@ namespace webrtc {
 
 namespace subtle {
 
+// Start with compiler support, then processor-specific hacks
+#if defined(__GNUC__) || defined(__clang__)
+// Available on GCC and clang - others?
 inline void MemoryBarrier() {
-#if defined(_MSC_VER)
-  ::MemoryBarrier();
-#else
   __sync_synchronize();
-#endif
 }
+
+#elif defined(_MSC_VER)
+inline void MemoryBarrier() {
+  ::MemoryBarrier();
+}
+
+#elif defined(__ARMEL__)
+// From http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_arm_gcc.h
+// Note that it is only the MemoryBarrier function that makes this class arm
+// specific. Borrowing other MemoryBarrier implementations, this class could
+// be extended to more platforms.
+inline void MemoryBarrier() {
+  // Note: This is a function call, which is also an implicit compiler
+  // barrier.
+  typedef void (*KernelMemoryBarrierFunc)();
+  ((KernelMemoryBarrierFunc)0xffff0fa0)();
+}
+
+#elif defined(__x86_64__) || defined (__i386__)
+// From http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_x86_gcc.h
+// mfence exists on x64 and x86 platforms containing SSE2.
+// x86 platforms that don't have SSE2 will crash with SIGILL.
+// If this code needs to run on such platforms in the future,
+// add runtime CPU detection here.
+inline void MemoryBarrier() {
+  __asm__ __volatile__("mfence" : : : "memory");
+}
+
+#else
+#error Add an implementation of MemoryBarrier() for this platform!
+#endif
 
 }  // namespace subtle
 

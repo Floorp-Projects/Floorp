@@ -81,6 +81,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "__exposedProps__",     // IDX_EXPOSEDPROPS
     "eval",                 // IDX_EVAL
     "controllers",           // IDX_CONTROLLERS
+    "realFrameElement",     // IDX_REALFRAMEELEMENT
 };
 
 /***************************************************************************/
@@ -503,19 +504,19 @@ Scriptability::Get(JSObject *aScope)
 }
 
 bool
-IsXBLScope(JSCompartment *compartment)
+IsContentXBLScope(JSCompartment *compartment)
 {
     // We always eagerly create compartment privates for XBL scopes.
     CompartmentPrivate *priv = GetCompartmentPrivate(compartment);
     if (!priv || !priv->scope)
         return false;
-    return priv->scope->IsXBLScope();
+    return priv->scope->IsContentXBLScope();
 }
 
 bool
-IsInXBLScope(JSObject *obj)
+IsInContentXBLScope(JSObject *obj)
 {
-    return IsXBLScope(js::GetObjectCompartment(obj));
+    return IsContentXBLScope(js::GetObjectCompartment(obj));
 }
 
 bool
@@ -1384,6 +1385,11 @@ XPCJSRuntime::InterruptCallback(JSContext *cx)
         self->mSlowScriptCheckpoint = TimeStamp::NowLoRes();
         return true;
     }
+
+    // Sometimes we get called back during XPConnect initialization, before Gecko
+    // has finished bootstrapping. Avoid crashing in nsContentUtils below.
+    if (!nsContentUtils::IsInitialized())
+        return true;
 
     // This is at least the second interrupt callback we've received since
     // returning to the event loop. See how long it's been, and what the limit
@@ -3045,7 +3051,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 };
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
-   : CycleCollectedJSRuntime(nullptr, 32L * 1024L * 1024L, JS_USE_HELPER_THREADS),
+   : CycleCollectedJSRuntime(nullptr, 32L * 1024L * 1024L),
    mJSContextStack(new XPCJSContextStack(MOZ_THIS_IN_INITIALIZER_LIST())),
    mCallContext(nullptr),
    mAutoRoots(nullptr),
@@ -3129,9 +3135,9 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
 #if defined(XP_MACOSX) || defined(DARWIN)
     // MacOS has a gargantuan default stack size of 8MB. Go wild with 7MB,
-    // and give trusted script 140k extra. The stack is huge on mac anyway.
+    // and give trusted script 180k extra. The stack is huge on mac anyway.
     const size_t kStackQuota = 7 * 1024 * 1024;
-    const size_t kTrustedScriptBuffer = 140 * 1024;
+    const size_t kTrustedScriptBuffer = 180 * 1024;
 #elif defined(MOZ_ASAN)
     // ASan requires more stack space due to red-zones, so give it double the
     // default (2MB on 32-bit, 4MB on 64-bit). ASAN stack frame measurements

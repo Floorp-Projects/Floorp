@@ -9,12 +9,11 @@
 //
 // "pinsets" is a list of objects. Each object has the following members:
 //   name: (string) the name of the pinset
-//   static_spki_hashes: (list of strings) the set of allowed SPKIs hashes
+//   sha256_hashes: (list of strings) the set of allowed SPKIs hashes
 //
 // For a given pinset, a certificate is accepted if at least one of the
-// "static_spki_hashes" SPKIs is found in the chain.
-// SPKIs are specified as names, which must match up with the name given
-// in the Mozilla root store.
+// Subject Public Key Infos (SPKIs) is found in the chain.  SPKIs are specified
+// as names, which must match up with the name given in the Mozilla root store.
 //
 // "entries" is a list of objects. Each object has the following members:
 //   name: (string) the DNS name of the host in question
@@ -76,6 +75,12 @@
         "VeriSign Class 3 Public Primary Certification Authority - G5",
         "Verisign Class 4 Public Primary Certification Authority - G3",
         "VeriSign Universal Root Certification Authority"
+      ]
+    },
+    {
+      "name": "mozilla_fxa",
+      "sha256_hashes": [
+        "DigiCert Global Root CA"
       ]
     },
     // For pinning tests on pinning.example.com, the certificate must be 'End
@@ -171,11 +176,13 @@
     // Only domains that are operationally crucial to Firefox can have per-host
     // telemetry reporting (the "id") field
     { "name": "addons.mozilla.org", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 1 },
+      "pins": "mozilla", "test_mode": false, "id": 1 },
     { "name": "addons.mozilla.net", "include_subdomains": true,
-      "pins": "mozilla", "test_mode": true, "id": 2 },
+      "pins": "mozilla", "test_mode": false, "id": 2 },
     { "name": "aus4.mozilla.org", "include_subdomains": true,
       "pins": "mozilla", "test_mode": true, "id": 3 },
+    { "name": "accounts.firefox.com", "include_subdomains": true,
+      "pins": "mozilla_fxa", "test_mode": true, "id": 4 },
     { "name": "cdn.mozilla.net", "include_subdomains": true,
       "pins": "mozilla", "test_mode": false },
     { "name": "cdn.mozilla.org", "include_subdomains": true,

@@ -34,6 +34,8 @@ BluetoothReplyRunnable::~BluetoothReplyRunnable()
 nsresult
 BluetoothReplyRunnable::FireReply(JS::Handle<JS::Value> aVal)
 {
+  NS_ENSURE_TRUE(mDOMRequest, NS_OK);
+
   nsCOMPtr<nsIDOMRequestService> rs =
     do_GetService(DOMREQUEST_SERVICE_CONTRACTID);
   NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
@@ -46,6 +48,8 @@ BluetoothReplyRunnable::FireReply(JS::Handle<JS::Value> aVal)
 nsresult
 BluetoothReplyRunnable::FireErrorString()
 {
+  NS_ENSURE_TRUE(mDOMRequest, NS_OK);
+
   nsCOMPtr<nsIDOMRequestService> rs =
     do_GetService("@mozilla.org/dom/dom-request-service;1");
   NS_ENSURE_TRUE(rs, NS_ERROR_FAILURE);
@@ -57,7 +61,6 @@ NS_IMETHODIMP
 BluetoothReplyRunnable::Run()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDOMRequest);
   MOZ_ASSERT(mReply);
 
   nsresult rv;
