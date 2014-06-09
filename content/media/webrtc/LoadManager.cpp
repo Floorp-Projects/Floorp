@@ -58,7 +58,6 @@ LoadManager::LoadManager(int aLoadMeasurementInterval,
 
 LoadManager::~LoadManager()
 {
-  LOG(("LoadManager: shutting down LoadMonitor"));
   mLoadMonitor->Shutdown();
 }
 
