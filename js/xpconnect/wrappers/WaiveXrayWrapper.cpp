@@ -35,10 +35,6 @@ WaiveXrayWrapper::WaiveXrayWrapper(unsigned flags) : js::CrossCompartmentWrapper
 {
 }
 
-WaiveXrayWrapper::~WaiveXrayWrapper()
-{
-}
-
 bool
 WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
                                         HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
