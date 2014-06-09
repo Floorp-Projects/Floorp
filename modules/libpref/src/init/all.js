@@ -257,6 +257,15 @@ pref("media.navigator.load_adapt.high_load","0.90");
 pref("media.navigator.load_adapt.low_load","0.40");
 pref("media.navigator.video.default_fps",30);
 pref("media.navigator.video.default_minfps",10);
+
+pref("media.webrtc.debug.trace_mask", 0);
+pref("media.webrtc.debug.multi_log", false);
+#if defined(ANDROID) || defined(XP_WIN)
+pref("media.webrtc.debug.log_file", "");
+#else
+pref("media.webrtc.debug.log_file", "/tmp/WebRTC.log");
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 pref("media.navigator.video.default_width",320);
 pref("media.navigator.video.default_height",240);

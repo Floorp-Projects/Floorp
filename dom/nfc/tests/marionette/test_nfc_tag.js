@@ -56,13 +56,12 @@ function testUrlTagDiscover() {
     is(type, NfcUtils.toUTF8(records[0].type), "check for type field in NDEF");
     is(payload, NfcUtils.toUTF8(records[0].payload), "check for payload field in NDEF");
 
-    toggleNFC(false, runNextTest);
+    toggleNFC(false).then(runNextTest);
   });
 
-  toggleNFC(true, function() {
-    setTagData(T2T_RE_INDEX, flag, tnf, btoa(type), btoa(payload))
-    .then(() => activateRE(T2T_RE_INDEX));
-  });
+  toggleNFC(true)
+  .then(() => setTagData(T2T_RE_INDEX, flag, tnf, btoa(type), btoa(payload)))
+  .then(() => activateRE(T2T_RE_INDEX));
 }
 
 let tests = [

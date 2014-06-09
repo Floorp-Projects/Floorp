@@ -8,7 +8,7 @@
 #include <string>
 
 #include "CSFLog.h"
-
+#include "WebRtcLog.h"
 #include "mozilla/dom/WebrtcGlobalInformationBinding.h"
 
 #include "nsAutoPtr.h"
@@ -230,6 +230,21 @@ WebrtcGlobalInformation::GetLogging(
   }
 
   aRv = rv;
+}
+
+static int32_t sLastSetLevel = 0;
+
+void
+WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel)
+{
+  StartWebRtcLog(webrtc::TraceLevel(aLevel));
+  sLastSetLevel = aLevel;
+}
+
+int32_t
+WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal)
+{
+  return sLastSetLevel;
 }
 
 struct StreamResult {
