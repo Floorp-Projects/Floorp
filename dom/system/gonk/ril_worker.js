@@ -4424,6 +4424,19 @@ RilObject.prototype = {
     this.sendChromeMessage(message);
   },
 
+  _updateNetworkSelectionMode: function(mode) {
+    if (this.networkSelectionMode === mode) {
+      return;
+    }
+
+    let options = {
+      rilMessageType: "networkselectionmodechange",
+      mode: mode
+    };
+    this.networkSelectionMode = mode;
+    this._sendNetworkInfoMessage(NETWORK_INFO_NETWORK_SELECTION_MODE, options);
+  },
+
   _processNetworks: function() {
     let strings = this.context.Buf.readStringList();
     let networks = [];
@@ -6145,15 +6158,13 @@ RilObject.prototype[REQUEST_QUERY_NETWORK_SELECTION_MODE] = function REQUEST_QUE
       break;
   }
 
-  if (this.networkSelectionMode != selectionMode) {
-    this.networkSelectionMode = options.mode = selectionMode;
-    options.rilMessageType = "networkselectionmodechange";
-    this._sendNetworkInfoMessage(NETWORK_INFO_NETWORK_SELECTION_MODE, options);
-  }
+  this._updateNetworkSelectionMode(selectionMode);
 };
 RilObject.prototype[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_SET_NETWORK_SELECTION_AUTOMATIC(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  } else {
+    this._updateNetworkSelectionMode(GECKO_NETWORK_SELECTION_AUTOMATIC);
   }
 
   this.sendChromeMessage(options);
@@ -6161,6 +6172,8 @@ RilObject.prototype[REQUEST_SET_NETWORK_SELECTION_AUTOMATIC] = function REQUEST_
 RilObject.prototype[REQUEST_SET_NETWORK_SELECTION_MANUAL] = function REQUEST_SET_NETWORK_SELECTION_MANUAL(length, options) {
   if (options.rilRequestError) {
     options.errorMsg = RIL_ERROR_TO_GECKO_ERROR[options.rilRequestError];
+  } else {
+    this._updateNetworkSelectionMode(GECKO_NETWORK_SELECTION_MANUAL);
   }
 
   this.sendChromeMessage(options);
