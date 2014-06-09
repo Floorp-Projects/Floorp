@@ -263,6 +263,7 @@ public:
    */
   void Accumulate(ContainerState* aState,
                   nsDisplayItem* aItem,
+                  const nsIntRegion& aClippedOpaqueRegion,
                   const nsIntRect& aVisibleRect,
                   const nsIntRect& aDrawRect,
                   const DisplayItemClip& aClip);
@@ -489,12 +490,14 @@ public:
                  FrameLayerBuilder* aLayerBuilder,
                  nsIFrame* aContainerFrame,
                  nsDisplayItem* aContainerItem,
+                 const nsRect& aContainerBounds,
                  ContainerLayer* aContainerLayer,
                  const ContainerLayerParameters& aParameters) :
     mBuilder(aBuilder), mManager(aManager),
     mLayerBuilder(aLayerBuilder),
     mContainerFrame(aContainerFrame),
     mContainerLayer(aContainerLayer),
+    mContainerBounds(aContainerBounds),
     mParameters(aParameters),
     mNextFreeRecycledThebesLayer(0)
   {
@@ -532,8 +535,6 @@ public:
    * set *aTextContentFlags to CONTENT_COMPONENT_ALPHA
    */
   void Finish(uint32_t *aTextContentFlags, LayerManagerData* aData, bool& aHasComponentAlphaChildren);
-
-  nsRect GetChildrenBounds() { return mBounds; }
 
   nscoord GetAppUnitsPerDevPixel() { return mAppUnitsPerDevPixel; }
 
@@ -713,13 +714,14 @@ protected:
   nsIFrame*                        mContainerReferenceFrame;
   const nsIFrame*                  mContainerAnimatedGeometryRoot;
   ContainerLayer*                  mContainerLayer;
+  nsRect                           mContainerBounds;
+  DebugOnly<nsRect>                mAccumulatedChildBounds;
   ContainerLayerParameters         mParameters;
   /**
    * The region of ThebesLayers that should be invalidated every time
    * we recycle one.
    */
   nsIntRegion                      mInvalidThebesContent;
-  nsRect                           mBounds;
   nsAutoTArray<nsAutoPtr<ThebesLayerData>,1>  mThebesLayerDataStack;
   /**
    * We collect the list of children in here. During ProcessDisplayItems,
@@ -2108,6 +2110,7 @@ WindowHasTransparency(nsDisplayListBuilder* aBuilder)
 void
 ThebesLayerData::Accumulate(ContainerState* aState,
                             nsDisplayItem* aItem,
+                            const nsIntRegion& aClippedOpaqueRegion,
                             const nsIntRect& aVisibleRect,
                             const nsIntRect& aDrawRect,
                             const DisplayItemClip& aClip)
@@ -2188,19 +2191,9 @@ ThebesLayerData::Accumulate(ContainerState* aState,
     mDrawRegion.SimplifyOutward(4);
   }
 
-  bool snap;
-  nsRegion opaque = aItem->GetOpaqueRegion(aState->mBuilder, &snap);
-  if (!opaque.IsEmpty()) {
-    nsRegion opaqueClipped;
-    nsRegionRectIterator iter(opaque);
-    for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-      opaqueClipped.Or(opaqueClipped, aClip.ApproximateIntersectInward(*r));
-    }
-
-    nsIntRegion opaquePixels = aState->ScaleRegionToInsidePixels(opaqueClipped, snap);
-
-    nsIntRegionRectIterator iter2(opaquePixels);
-    for (const nsIntRect* r = iter2.Next(); r; r = iter2.Next()) {
+  if (!aClippedOpaqueRegion.IsEmpty()) {
+    nsIntRegionRectIterator iter(aClippedOpaqueRegion);
+    for (const nsIntRect* r = iter.Next(); r; r = iter.Next()) {
       // We don't use SimplifyInward here since it's not defined exactly
       // what it will discard. For our purposes the most important case
       // is a large opaque background at the bottom of z-order (e.g.,
@@ -2525,8 +2518,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       itemDrawRect.IntersectRect(itemDrawRect, clipRect);
       clipRect.MoveBy(mParameters.mOffset);
     }
-    mBounds.UnionRect(mBounds, itemContent);
+#ifdef DEBUG
+    ((nsRect&)mAccumulatedChildBounds).UnionRect(mAccumulatedChildBounds, itemContent);
+#endif
     itemVisibleRect.IntersectRect(itemVisibleRect, itemDrawRect);
+    ThebesLayerData* accumulateIntoThebesLayerData = nullptr;
 
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
     if (layerState == LAYER_INACTIVE &&
@@ -2702,30 +2698,49 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
                                          topLeft, nullptr,
                                          dummy);
     } else {
-      ThebesLayerData* data =
+      ThebesLayerData* thebesLayerData =
         FindThebesLayerFor(item, itemVisibleRect, animatedGeometryRoot, topLeft,
                            shouldFixToViewport);
 
       if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
             static_cast<nsDisplayLayerEventRegions*>(item);
-        data->AccumulateEventRegions(eventRegions->HitRegion(),
-                                     eventRegions->MaybeHitRegion(),
-                                     eventRegions->DispatchToContentHitRegion());
+        thebesLayerData->AccumulateEventRegions(eventRegions->HitRegion(),
+                                                eventRegions->MaybeHitRegion(),
+                                                eventRegions->DispatchToContentHitRegion());
       } else {
         // check to see if the new item has rounded rect clips in common with
         // other items in the layer
-        data->UpdateCommonClipCount(itemClip);
-        data->Accumulate(this, item, itemVisibleRect, itemDrawRect, itemClip);
+        thebesLayerData->UpdateCommonClipCount(itemClip);
 
         nsAutoPtr<nsDisplayItemGeometry> geometry(item->AllocateGeometry(mBuilder));
-        InvalidateForLayerChange(item, data->mLayer, itemClip, topLeft, geometry);
+        InvalidateForLayerChange(item, thebesLayerData->mLayer, itemClip, topLeft, geometry);
 
-        mLayerBuilder->AddThebesDisplayItem(data, item, itemClip,
+        mLayerBuilder->AddThebesDisplayItem(thebesLayerData, item, itemClip,
                                             mContainerFrame,
                                             layerState, topLeft,
                                             geometry);
+        accumulateIntoThebesLayerData = thebesLayerData;
       }
+    }
+
+    bool snapOpaque;
+    nsRegion opaque = item->GetOpaqueRegion(mBuilder, &snapOpaque);
+    nsRegion opaqueClipped;
+    if (!opaque.IsEmpty()) {
+      nsRegionRectIterator iter(opaque);
+      for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
+        opaqueClipped.Or(opaqueClipped, itemClip.ApproximateIntersectInward(*r));
+      }
+      if (opaqueClipped.Contains(mContainerBounds)) {
+        aList->SetIsOpaque();
+      }
+    }
+    if (accumulateIntoThebesLayerData) {
+      nsIntRegion opaquePixels =
+          ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
+      accumulateIntoThebesLayerData->Accumulate(this, item,
+          opaquePixels, itemVisibleRect, itemDrawRect, itemClip);
     }
   }
 
@@ -3134,6 +3149,9 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData, boo
     PopThebesLayerData();
   }
 
+  NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
+               "Bounds computation mismatch");
+
   uint32_t textContentFlags = 0;
 
   // Make sure that current/existing layers are added to the parent and are
@@ -3477,7 +3495,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   LayerManagerData* data = static_cast<LayerManagerData*>
     (aManager->GetUserData(&gLayerManagerUserData));
 
-  nsRect bounds;
+  nsRect bounds = aChildren->GetBounds(aBuilder);
   nsIntRect pixBounds;
   int32_t appUnitsPerDevPixel;
   uint32_t stateFlags = 0;
@@ -3488,7 +3506,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   uint32_t flags;
   while (true) {
     ContainerState state(aBuilder, aManager, aManager->GetLayerBuilder(),
-                         aContainerFrame, aContainerItem,
+                         aContainerFrame, aContainerItem, bounds,
                          containerLayer, scaleParameters);
 
     state.ProcessDisplayItems(aChildren, stateFlags);
@@ -3498,7 +3516,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     // pixels in its own layer, but over opaque parts of previous siblings.
     bool hasComponentAlphaChildren = false;
     state.Finish(&flags, data, hasComponentAlphaChildren);
-    bounds = state.GetChildrenBounds();
+
     pixBounds = state.ScaleToOutsidePixels(bounds, false);
     appUnitsPerDevPixel = state.GetAppUnitsPerDevPixel();
 
@@ -3522,7 +3540,6 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
     break;
   }
 
-  NS_ASSERTION(bounds.IsEqualInterior(aChildren->GetBounds(aBuilder)), "Wrong bounds");
   pixBounds.MoveBy(nsIntPoint(scaleParameters.mOffset.x, scaleParameters.mOffset.y));
   if (aParameters.mAncestorClipRect && !(aFlags & CONTAINER_NOT_CLIPPED_BY_ANCESTORS)) {
     SetVisibleRegionForLayer(containerLayer, nsIntRegion(pixBounds),
@@ -3542,7 +3559,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   // Make sure that rounding the visible region out didn't add any area
   // we won't paint
-  if (aChildren->IsOpaque() && !aChildren.NeedsTransparentSurface()) {
+  if (aChildren->IsOpaque() && !aChildren->NeedsTransparentSurface()) {
     bounds.ScaleRoundIn(scaleParameters.mXScale, scaleParameters.mYScale);
     if (bounds.Contains(pixBounds.ToAppUnits(appUnitsPerDevPixel))) {
       // Clear CONTENT_COMPONENT_ALPHA and add CONTENT_OPAQUE instead.
