@@ -5,12 +5,22 @@
 
 let {utils: Cu, interfaces: Ci} = Components;
 
-let {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
-let {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
+let {XPCOMUtils} = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
+
+// Bug 1014484 can only be reproduced by loading OS.File first from the
+// CommonJS loader, so we do not want OS.File to be loaded eagerly for
+// all the tests in this directory.
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+  "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+
 let {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-let {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
-let {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 
 Services.prefs.setBoolPref("toolkit.osfile.log", true);
 
