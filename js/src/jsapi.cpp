@@ -98,6 +98,8 @@ using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodZero;
 
+using JS::AutoGCRooter;
+
 using js::frontend::Parser;
 
 #ifdef HAVE_VA_LIST_AS_ARRAY

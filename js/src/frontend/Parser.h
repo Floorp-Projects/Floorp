@@ -313,7 +313,7 @@ enum VarContext { HoistVars, DontHoistVars };
 enum FunctionType { Getter, Setter, Normal };
 
 template <typename ParseHandler>
-class Parser : private AutoGCRooter, public StrictModeGetter
+class Parser : private JS::AutoGCRooter, public StrictModeGetter
 {
   public:
     ExclusiveContext *const context;
@@ -392,7 +392,7 @@ class Parser : private AutoGCRooter, public StrictModeGetter
         traceListHead = m.traceListHead;
     }
 
-    friend void js::frontend::MarkParser(JSTracer *trc, AutoGCRooter *parser);
+    friend void js::frontend::MarkParser(JSTracer *trc, JS::AutoGCRooter *parser);
 
     const char *getFilename() const { return tokenStream.getFilename(); }
     JSVersion versionNumber() const { return tokenStream.versionNumber(); }
