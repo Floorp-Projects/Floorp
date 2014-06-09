@@ -104,7 +104,10 @@ let gTests = [
   desc: "never for language",
   run: function* checkNeverForLanguage() {
     // Show the infobar for example.com and fr.
-    Translation.languageDetected(gBrowser.selectedBrowser, "fr");
+    Translation.documentStateReceived(gBrowser.selectedBrowser,
+                                      {state: Translation.STATE_OFFER,
+                                       originalShown: true,
+                                       detectedLanguage: "fr"});
     let notif = getInfoBar();
     ok(notif, "the infobar is visible");
     let ui = gBrowser.selectedBrowser.translationUI;
@@ -150,7 +153,10 @@ let gTests = [
   desc: "never for site",
   run: function* checkNeverForSite() {
     // Show the infobar for example.com and fr.
-    Translation.languageDetected(gBrowser.selectedBrowser, "fr");
+    Translation.documentStateReceived(gBrowser.selectedBrowser,
+                                      {state: Translation.STATE_OFFER,
+                                       originalShown: true,
+                                       detectedLanguage: "fr"});
     let notif = getInfoBar();
     ok(notif, "the infobar is visible");
     let ui = gBrowser.selectedBrowser.translationUI;
