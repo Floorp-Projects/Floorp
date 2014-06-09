@@ -30,6 +30,7 @@ Cu.import('resource://gre/modules/FxAccountsMgmtService.jsm');
 #endif
 
 Cu.import('resource://gre/modules/DownloadsAPI.jsm');
+Cu.import('resource://gre/modules/MobileIdentityManager.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
@@ -370,10 +371,6 @@ var shell = {
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
     ppmm.removeMessageListener("content-handler", this);
-    if (this.timer) {
-      this.timer.cancel();
-      this.timer = null;
-    }
 
     UserAgentOverrides.uninit();
     IndexedDBPromptHelper.uninit();
@@ -475,9 +472,6 @@ var shell = {
   },
 
   lastHardwareButtonEventType: null, // property for the hack above
-  needBufferOpenAppReq: true,
-  bufferedOpenAppReqs: [],
-  timer: null,
   visibleNormalAudioActive: false,
 
   handleEvent: function shell_handleEvent(evt) {
@@ -595,20 +589,6 @@ var shell = {
                    Cu.cloneInto(details, getContentWindow()));
   },
 
-  openAppForSystemMessage: function shell_openAppForSystemMessage(msg) {
-    let payload = {
-      url: msg.pageURL,
-      manifestURL: msg.manifestURL,
-      isActivity: (msg.type == 'activity'),
-      onlyShowApp: msg.onlyShowApp,
-      showApp: msg.showApp,
-      target: msg.target,
-      expectingSystemMessage: true,
-      extra: msg.extra
-    }
-    this.sendCustomEvent('open-app', payload);
-  },
-
   receiveMessage: function shell_receiveMessage(message) {
     var activities = { 'content-handler': { name: 'view', response: null },
                        'dial-handler':    { name: 'dial', response: null },
@@ -677,18 +657,6 @@ var shell = {
   }
 };
 
-// Listen for the request of opening app and relay them to Gaia.
-Services.obs.addObserver(function onSystemMessageOpenApp(subject, topic, data) {
-  let msg = JSON.parse(data);
-  // Buffer non-activity request until content starts to load for 10 seconds.
-  // We'll revisit this later if new kind of requests don't need to be cached.
-  if (shell.needBufferOpenAppReq && msg.type !== 'activity') {
-    shell.bufferedOpenAppReqs.push(msg);
-    return;
-  }
-  shell.openAppForSystemMessage(msg);
-}, 'system-messages-open-app', false);
-
 Services.obs.addObserver(function onFullscreenOriginChange(subject, topic, data) {
   shell.sendChromeEvent({ type: "fullscreenoriginchange",
                           fullscreenorigin: data });
@@ -717,21 +685,6 @@ var CustomEventManager = {
     window.addEventListener("ContentStart", (function(evt) {
       let content = shell.contentBrowser.contentWindow;
       content.addEventListener("mozContentEvent", this, false, true);
-
-      // After content starts to load for 10 seconds, send and
-      // clean up the buffered open-app requests if there is any.
-      //
-      // TODO: Bug 793420 - Remove the waiting timer for the 'open-app'
-      //                    mozChromeEvents requested by System Message
-      shell.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-      shell.timer.initWithCallback(function timerCallback() {
-        shell.bufferedOpenAppReqs.forEach(function bufferOpenAppReq(msg) {
-          shell.openAppForSystemMessage(msg);
-        });
-        shell.bufferedOpenAppReqs.length = 0;
-        shell.needBufferOpenAppReq = false;
-        shell.timer = null;
-      }, 10000, Ci.nsITimer.TYPE_ONE_SHOT);
     }).bind(this), false);
   },
 
@@ -1063,6 +1016,7 @@ var CaptivePortalLoginHelper = {
   init: function init() {
     Services.obs.addObserver(this, 'captive-portal-login', false);
     Services.obs.addObserver(this, 'captive-portal-login-abort', false);
+    Services.obs.addObserver(this, 'captive-portal-login-success', false);
   },
   handleEvent: function handleEvent(detail) {
     Services.captivePortalDetector.cancelLogin(detail.id);

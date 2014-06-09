@@ -27,7 +27,7 @@ skip-if(B2G) == filter-html-01-extref.xhtml filter-html-01-ref.svg
 == mask-html-01.xhtml mask-html-01-ref.svg
 skip-if(B2G) == mask-html-01-extref-01.xhtml mask-html-01-ref.svg
 skip-if(B2G) == mask-html-01-extref-02.xhtml mask-html-01-ref.svg
-== mask-html-zoomed-01.xhtml mask-html-01-ref.svg
+fuzzy-if(B2G&&browserIsRemote,1,2000) == mask-html-zoomed-01.xhtml mask-html-01-ref.svg
 skip-if(B2G&&browserIsRemote) == mask-html-xbl-bound-01.html mask-html-01-ref.svg
 == mask-transformed-html-01.xhtml ../pass.svg
 == mask-transformed-html-02.xhtml ../pass.svg

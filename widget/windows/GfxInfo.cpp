@@ -945,17 +945,17 @@ GfxInfo::GetGfxDriverInfo()
       nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
       DRIVER_LESS_THAN_OR_EQUAL, V(8,15,10,2302) );
 
-    /* Disable D2D on AMD Catalyst 14.4+
+    /* Disable D2D on AMD Catalyst 14.4 until 14.6
      * See bug 984488
      */
-    APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE( DRIVER_OS_ALL,
         (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorATI), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_GREATER_THAN_OR_EQUAL, V(14,1,0,0) );
-    APPEND_TO_DRIVER_BLOCKLIST2( DRIVER_OS_ALL,
+      DRIVER_BETWEEN_INCLUSIVE_START, V(14,1,0,0), V(14,2,0,0), "ATI Catalyst 14.6+");
+    APPEND_TO_DRIVER_BLOCKLIST_RANGE( DRIVER_OS_ALL,
         (nsAString&) GfxDriverInfo::GetDeviceVendor(VendorAMD), GfxDriverInfo::allDevices,
       nsIGfxInfo::FEATURE_DIRECT2D, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
-      DRIVER_GREATER_THAN_OR_EQUAL, V(14,1,0,0) );
+      DRIVER_BETWEEN_INCLUSIVE_START, V(14,1,0,0), V(14,2,0,0), "ATI Catalyst 14.6+");
 
     /* Disable D3D9 layers on NVIDIA 6100/6150/6200 series due to glitches
      * whilst scrolling. See bugs: 612007, 644787 & 645872.

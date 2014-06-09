@@ -65,7 +65,7 @@ foreignObject {
 }
 
 *[xml|space=preserve] {
-  white-space: -moz-pre-discard-newlines;
+  white-space: -moz-pre-space;
 }
 
 *|*::-moz-svg-marker-anon-child {

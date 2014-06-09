@@ -367,7 +367,8 @@ CSPService::AsyncOnChannelRedirect(nsIChannel *oldChannel,
   // to enforce the load policy if it redirects again, so we stop it now.
   nsAutoCString newUriSpec;
   rv = newUri->GetSpec(newUriSpec);
-  const char16_t *formatParams[] = { NS_ConvertUTF8toUTF16(newUriSpec).get() };
+  NS_ConvertUTF8toUTF16 unicodeSpec(newUriSpec);
+  const char16_t *formatParams[] = { unicodeSpec.get() };
   if (NS_SUCCEEDED(rv)) {
     nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                     NS_LITERAL_CSTRING("Redirect Error"), nullptr,

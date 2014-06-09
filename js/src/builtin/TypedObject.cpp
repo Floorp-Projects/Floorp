@@ -710,12 +710,12 @@ ArrayMetaTypeDescr::construct(JSContext *cx, unsigned argc, Value *vp)
     contents.append(")");
     RootedAtom stringRepr(cx, contents.finishAtom());
     if (!stringRepr)
-        return nullptr;
+        return false;
 
     // Extract ArrayType.prototype
     RootedObject arrayTypePrototype(cx, GetPrototype(cx, arrayTypeGlobal));
     if (!arrayTypePrototype)
-        return nullptr;
+        return false;
 
     // Create the instance of ArrayType
     Rooted<UnsizedArrayTypeDescr *> obj(cx);
@@ -728,7 +728,7 @@ ArrayMetaTypeDescr::construct(JSContext *cx, unsigned argc, Value *vp)
     if (!JSObject::defineProperty(cx, obj, cx->names().length,
                                   UndefinedHandleValue, nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
-        return nullptr;
+        return false;
 
     args.rval().setObject(*obj);
     return true;
@@ -762,7 +762,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     if (!size.isValid()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_TYPEDOBJECT_TOO_BIG);
-        return nullptr;
+        return false;
     }
 
     // Construct a canonical string `new ArrayType(<elementType>).dimension(N)`:
@@ -775,7 +775,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     contents.append(")");
     RootedAtom stringRepr(cx, contents.finishAtom());
     if (!stringRepr)
-        return nullptr;
+        return false;
 
     // Create the sized type object.
     Rooted<SizedArrayTypeDescr*> obj(cx);
@@ -793,7 +793,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     if (!JSObject::defineProperty(cx, obj, cx->names().length,
                                   lengthVal, nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
-        return nullptr;
+        return false;
 
     // Add `unsized` property, which is a link from the sized
     // array to the unsized array.
@@ -801,7 +801,7 @@ UnsizedArrayTypeDescr::dimension(JSContext *cx, unsigned int argc, jsval *vp)
     if (!JSObject::defineProperty(cx, obj, cx->names().unsized,
                                   unsizedTypeDescrValue, nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
-        return nullptr;
+        return false;
 
     args.rval().setObject(*obj);
     return true;
@@ -822,8 +822,7 @@ js::IsTypedObjectArray(JSObject &obj)
 
 const Class StructTypeDescr::class_ = {
     "StructType",
-    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) |
-    JSCLASS_HAS_PRIVATE, // used to store FieldList
+    JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS),
     JS_PropertyStub,
     JS_DeletePropertyStub,
     JS_PropertyStub,
@@ -1016,7 +1015,7 @@ StructMetaTypeDescr::create(JSContext *cx,
     if (!descr)
         return nullptr;
 
-    descr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(TypeDescr::Struct));
+    descr->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::Struct));
     descr->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
     descr->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(alignment));
     descr->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(totalSize.value()));
@@ -1121,13 +1120,13 @@ StructMetaTypeDescr::construct(JSContext *cx, unsigned int argc, Value *vp)
 }
 
 size_t
-StructTypeDescr::fieldCount()
+StructTypeDescr::fieldCount() const
 {
     return getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).toObject().getDenseInitializedLength();
 }
 
 bool
-StructTypeDescr::fieldIndex(jsid id, size_t *out)
+StructTypeDescr::fieldIndex(jsid id, size_t *out) const
 {
     JSObject &fieldNames = getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).toObject();
     size_t l = fieldNames.getDenseInitializedLength();
@@ -1142,14 +1141,14 @@ StructTypeDescr::fieldIndex(jsid id, size_t *out)
 }
 
 JSAtom &
-StructTypeDescr::fieldName(size_t index)
+StructTypeDescr::fieldName(size_t index) const
 {
     JSObject &fieldNames = getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_NAMES).toObject();
     return fieldNames.getDenseElement(index).toString()->asAtom();
 }
 
 int32_t
-StructTypeDescr::fieldOffset(size_t index)
+StructTypeDescr::fieldOffset(size_t index) const
 {
     JSObject &fieldOffsets =
         getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_OFFSETS).toObject();
@@ -1158,7 +1157,7 @@ StructTypeDescr::fieldOffset(size_t index)
 }
 
 SizedTypeDescr&
-StructTypeDescr::fieldDescr(size_t index)
+StructTypeDescr::fieldDescr(size_t index) const
 {
     JSObject &fieldDescrs =
         getReservedSlot(JS_DESCR_SLOT_STRUCT_FIELD_TYPES).toObject();
@@ -1253,7 +1252,7 @@ DefineSimpleTypeDescr(JSContext *cx,
     Rooted<TypedProto*> proto(cx);
     proto = NewObjectWithProto<TypedProto>(cx, objProto, nullptr, TenuredObject);
     if (!proto)
-        return nullptr;
+        return false;
     proto->initTypeDescrSlot(*descr);
     descr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
@@ -1358,14 +1357,14 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
 #define BINARYDATA_SCALAR_DEFINE(constant_, type_, name_)                       \
     if (!DefineSimpleTypeDescr<ScalarTypeDescr>(cx, global, module, constant_,      \
                                             cx->names().name_))                 \
-        return nullptr;
+        return false;
     JS_FOR_EACH_SCALAR_TYPE_REPR(BINARYDATA_SCALAR_DEFINE)
 #undef BINARYDATA_SCALAR_DEFINE
 
 #define BINARYDATA_REFERENCE_DEFINE(constant_, type_, name_)                    \
     if (!DefineSimpleTypeDescr<ReferenceTypeDescr>(cx, global, module, constant_,   \
                                                cx->names().name_))              \
-        return nullptr;
+        return false;
     JS_FOR_EACH_REFERENCE_TYPE_REPR(BINARYDATA_REFERENCE_DEFINE)
 #undef BINARYDATA_REFERENCE_DEFINE
 
@@ -1375,14 +1374,14 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
     arrayType = DefineMetaTypeDescr<ArrayMetaTypeDescr>(
         cx, global, module, TypedObjectModuleObject::ArrayTypePrototype);
     if (!arrayType)
-        return nullptr;
+        return false;
 
     RootedValue arrayTypeValue(cx, ObjectValue(*arrayType));
     if (!JSObject::defineProperty(cx, module, cx->names().ArrayType,
                                   arrayTypeValue,
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
-        return nullptr;
+        return false;
 
     // StructType.
 
@@ -1390,14 +1389,14 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
     structType = DefineMetaTypeDescr<StructMetaTypeDescr>(
         cx, global, module, TypedObjectModuleObject::StructTypePrototype);
     if (!structType)
-        return nullptr;
+        return false;
 
     RootedValue structTypeValue(cx, ObjectValue(*structType));
     if (!JSObject::defineProperty(cx, module, cx->names().StructType,
                                   structTypeValue,
                                   nullptr, nullptr,
                                   JSPROP_READONLY | JSPROP_PERMANENT))
-        return nullptr;
+        return false;
 
     // Everything is setup, install module on the global object:
     RootedValue moduleValue(cx, ObjectValue(*module));
@@ -1407,7 +1406,7 @@ GlobalObject::initTypedObjectModule(JSContext *cx, Handle<GlobalObject*> global)
                                   nullptr, nullptr,
                                   0))
     {
-        return nullptr;
+        return false;
     }
 
     return module;
@@ -1478,23 +1477,11 @@ TypedObject::createUnattachedWithClass(JSContext *cx,
     if (!obj)
         return nullptr;
 
-    obj->setPrivate(nullptr);
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(0));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, NullValue());
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_NEXT_VIEW, PrivateValue(nullptr));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(length));
-    obj->initReservedSlot(JS_TYPEDOBJ_SLOT_TYPE_DESCR, ObjectValue(*type));
-
-    // Tag the type object for this instance with the type
-    // representation, if that has not been done already.
-    if (!type->is<SimpleTypeDescr>()) { // FIXME Bug 929651
-        RootedTypeObject typeObj(cx, obj->getType(cx));
-        if (typeObj) {
-            if (!typeObj->addTypedObjectAddendum(cx, type))
-                return nullptr;
-        }
-    }
+    obj->initPrivate(nullptr);
+    obj->initReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(0));
+    obj->initReservedSlot(JS_BUFVIEW_SLOT_LENGTH, Int32Value(length));
+    obj->initReservedSlot(JS_BUFVIEW_SLOT_OWNER, NullValue());
+    obj->initReservedSlot(JS_BUFVIEW_SLOT_NEXT_VIEW, PrivateValue(nullptr));
 
     return static_cast<TypedObject*>(&*obj);
 }
@@ -1507,8 +1494,8 @@ TypedObject::attach(ArrayBufferObject &buffer, int32_t offset)
 
     buffer.addView(this);
     InitArrayBufferViewDataPointer(this, &buffer, offset);
-    setReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(offset));
-    setReservedSlot(JS_TYPEDOBJ_SLOT_OWNER, ObjectValue(buffer));
+    setReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(offset));
+    setReservedSlot(JS_BUFVIEW_SLOT_OWNER, ObjectValue(buffer));
 }
 
 void
@@ -1526,16 +1513,16 @@ static int32_t
 TypedObjLengthFromType(TypeDescr &descr)
 {
     switch (descr.kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::Struct:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::Reference:
+      case type::Struct:
+      case type::X4:
         return 0;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
         return descr.as<SizedArrayTypeDescr>().length();
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
         MOZ_ASSUME_UNREACHABLE("TypedObjLengthFromType() invoked on unsized type");
     }
     MOZ_ASSUME_UNREACHABLE("Invalid kind");
@@ -1575,11 +1562,11 @@ TypedObject::createZeroed(JSContext *cx,
     // Allocate and initialize the memory for this instance.
     // Also initialize the JS_TYPEDOBJ_SLOT_LENGTH slot.
     switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::Struct:
-      case TypeDescr::X4:
-      case TypeDescr::SizedArray:
+      case type::Scalar:
+      case type::Reference:
+      case type::Struct:
+      case type::X4:
+      case type::SizedArray:
       {
         size_t totalSize = descr->as<SizedTypeDescr>().size();
         Rooted<ArrayBufferObject*> buffer(cx);
@@ -1591,7 +1578,7 @@ TypedObject::createZeroed(JSContext *cx,
         return obj;
       }
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
       {
         Rooted<SizedTypeDescr*> elementTypeRepr(cx);
         elementTypeRepr = &descr->as<UnsizedArrayTypeDescr>().elementType();
@@ -1638,9 +1625,6 @@ ReportTypedObjTypeError(JSContext *cx,
 /*static*/ void
 TypedObject::obj_trace(JSTracer *trace, JSObject *object)
 {
-    gc::MarkSlot(trace, &object->getReservedSlotRef(JS_TYPEDOBJ_SLOT_TYPE_DESCR),
-                 "TypedObjectTypeDescr");
-
     ArrayBufferViewObject::trace(trace, object);
 
     JS_ASSERT(object->is<TypedObject>());
@@ -1655,15 +1639,15 @@ TypedObject::obj_trace(JSTracer *trace, JSObject *object)
             return;
 
         switch (descr.kind()) {
-          case TypeDescr::Scalar:
-          case TypeDescr::Reference:
-          case TypeDescr::Struct:
-          case TypeDescr::SizedArray:
-          case TypeDescr::X4:
+          case type::Scalar:
+          case type::Reference:
+          case type::Struct:
+          case type::SizedArray:
+          case type::X4:
             descr.as<SizedTypeDescr>().traceInstances(trace, mem, 1);
             break;
 
-          case TypeDescr::UnsizedArray:
+          case type::UnsizedArray:
             descr.as<UnsizedArrayTypeDescr>().elementType().traceInstances(trace, mem, typedObj.length());
             break;
         }
@@ -1678,13 +1662,13 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
 
     Rooted<TypeDescr*> descr(cx, &obj->as<TypedObject>().typeDescr());
     switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::Reference:
+      case type::X4:
         break;
 
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
       {
         uint32_t index;
         if (js_IdIsIndex(id, &index))
@@ -1698,7 +1682,7 @@ TypedObject::obj_lookupGeneric(JSContext *cx, HandleObject obj, HandleId id,
         break;
       }
 
-      case TypeDescr::Struct:
+      case type::Struct:
       {
         StructTypeDescr &structDescr = descr->as<StructTypeDescr>();
         size_t index;
@@ -1804,15 +1788,15 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
     // Handle everything else here:
 
     switch (typedObj->typeDescr().kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
+      case type::Scalar:
+      case type::Reference:
         break;
 
-      case TypeDescr::X4:
+      case type::X4:
         break;
 
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             if (typedObj->owner().isNeutered() || !typedObj->typedMem()) { // unattached
                 JS_ReportErrorNumber(
@@ -1826,7 +1810,7 @@ TypedObject::obj_getGeneric(JSContext *cx, HandleObject obj, HandleObject receiv
         }
         break;
 
-      case TypeDescr::Struct: {
+      case type::Struct: {
         Rooted<StructTypeDescr*> descr(cx, &typedObj->typeDescr().as<StructTypeDescr>());
 
         size_t fieldIndex;
@@ -1865,17 +1849,17 @@ TypedObject::obj_getElement(JSContext *cx, HandleObject obj, HandleObject receiv
     Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
 
     switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::X4:
-      case TypeDescr::Struct:
+      case type::Scalar:
+      case type::Reference:
+      case type::X4:
+      case type::Struct:
         break;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
         return obj_getArrayElement<SizedArrayTypeDescr>(cx, typedObj, descr,
                                                         index, vp);
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
         return obj_getArrayElement<UnsizedArrayTypeDescr>(cx, typedObj, descr,
                                                           index, vp);
     }
@@ -1921,15 +1905,15 @@ TypedObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
         return obj_setElement(cx, obj, index, vp, strict);
 
     switch (typedObj->typeDescr().kind()) {
-      case ScalarTypeDescr::Scalar:
-      case TypeDescr::Reference:
+      case type::Scalar:
+      case type::Reference:
         break;
 
-      case ScalarTypeDescr::X4:
+      case type::X4:
         break;
 
-      case ScalarTypeDescr::SizedArray:
-      case ScalarTypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         if (JSID_IS_ATOM(id, cx->names().length)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
@@ -1937,7 +1921,7 @@ TypedObject::obj_setGeneric(JSContext *cx, HandleObject obj, HandleId id,
         }
         break;
 
-      case ScalarTypeDescr::Struct: {
+      case type::Struct: {
         Rooted<StructTypeDescr*> descr(cx, &typedObj->typeDescr().as<StructTypeDescr>());
 
         size_t fieldIndex;
@@ -1971,16 +1955,16 @@ TypedObject::obj_setElement(JSContext *cx, HandleObject obj, uint32_t index,
     Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
 
     switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::X4:
-      case TypeDescr::Struct:
+      case type::Scalar:
+      case type::Reference:
+      case type::X4:
+      case type::Struct:
         break;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
         return obj_setArrayElement<SizedArrayTypeDescr>(cx, typedObj, descr, index, vp);
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
         return obj_setArrayElement<UnsizedArrayTypeDescr>(cx, typedObj, descr, index, vp);
     }
 
@@ -2016,15 +2000,15 @@ TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
     uint32_t index;
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     switch (typedObj->typeDescr().kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
+      case type::Scalar:
+      case type::Reference:
         break;
 
-      case TypeDescr::X4:
+      case type::X4:
         break;
 
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         if (js_IdIsIndex(id, &index)) {
             *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT;
             return true;
@@ -2035,7 +2019,7 @@ TypedObject::obj_getGenericAttributes(JSContext *cx, HandleObject obj,
         }
         break;
 
-      case TypeDescr::Struct:
+      case type::Struct:
         size_t index;
         if (typedObj->typeDescr().as<StructTypeDescr>().fieldIndex(id, &index)) {
             *attrsp = JSPROP_ENUMERATE | JSPROP_PERMANENT;
@@ -2059,16 +2043,16 @@ IsOwnId(JSContext *cx, HandleObject obj, HandleId id)
     uint32_t index;
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     switch (typedObj->typeDescr().kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::Reference:
+      case type::X4:
         return false;
 
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         return js_IdIsIndex(id, &index) || JSID_IS_ATOM(id, cx->names().length);
 
-      case TypeDescr::Struct:
+      case type::Struct:
         size_t index;
         if (typedObj->typeDescr().as<StructTypeDescr>().fieldIndex(id, &index))
             return true;
@@ -2094,10 +2078,8 @@ TypedObject::obj_setGenericAttributes(JSContext *cx, HandleObject obj,
 }
 
 bool
-TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj,
-                                HandlePropertyName name, bool *succeeded)
+TypedObject::obj_deleteGeneric(JSContext *cx, HandleObject obj, HandleId id, bool *succeeded)
 {
-    Rooted<jsid> id(cx, NameToId(name));
     if (IsOwnId(cx, obj, id))
         return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
 
@@ -2107,27 +2089,7 @@ TypedObject::obj_deleteProperty(JSContext *cx, HandleObject obj,
         return true;
     }
 
-    return JSObject::deleteProperty(cx, proto, name, succeeded);
-}
-
-bool
-TypedObject::obj_deleteElement(JSContext *cx, HandleObject obj, uint32_t index,
-                               bool *succeeded)
-{
-    RootedId id(cx);
-    if (!IndexToId(cx, index, &id))
-        return false;
-
-    if (IsOwnId(cx, obj, id))
-        return ReportPropertyError(cx, JSMSG_CANT_DELETE, id);
-
-    RootedObject proto(cx, obj->getProto());
-    if (!proto) {
-        *succeeded = false;
-        return true;
-    }
-
-    return JSObject::deleteElement(cx, proto, index, succeeded);
+    return JSObject::deleteGeneric(cx, proto, id, succeeded);
 }
 
 bool
@@ -2140,9 +2102,9 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
     Rooted<TypedObject *> typedObj(cx, &obj->as<TypedObject>());
     Rooted<TypeDescr *> descr(cx, &typedObj->typeDescr());
     switch (descr->kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::Reference:
+      case type::X4:
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
@@ -2156,8 +2118,8 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
         }
         break;
 
-      case TypeDescr::SizedArray:
-      case TypeDescr::UnsizedArray:
+      case type::SizedArray:
+      case type::UnsizedArray:
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
@@ -2166,7 +2128,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
             break;
 
           case JSENUMERATE_NEXT:
-            index = static_cast<int32_t>(statep.toInt32());
+            index = statep.toInt32();
 
             if (index < typedObj->length()) {
                 idp.set(INT_TO_JSID(index));
@@ -2184,7 +2146,7 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
         }
         break;
 
-      case TypeDescr::Struct:
+      case type::Struct:
         switch (enum_op) {
           case JSENUMERATE_INIT_ALL:
           case JSENUMERATE_INIT:
@@ -2217,28 +2179,35 @@ TypedObject::obj_enumerate(JSContext *cx, HandleObject obj, JSIterateOp enum_op,
 /* static */ size_t
 TypedObject::offsetOfOwnerSlot()
 {
-    return JSObject::getFixedSlotOffset(JS_TYPEDOBJ_SLOT_OWNER);
+    return JSObject::getFixedSlotOffset(JS_BUFVIEW_SLOT_OWNER);
 }
 
 /* static */ size_t
 TypedObject::offsetOfDataSlot()
 {
-    // the offset of 7 is based on the alloc kind
+#   ifdef DEBUG
+    // Compute offset of private data based on TransparentTypedObject;
+    // both OpaqueTypedObject and TransparentTypedObject have the same
+    // number of slots, so no problem there.
+    gc::AllocKind allocKind = gc::GetGCObjectKind(&TransparentTypedObject::class_);
+    size_t nfixed = gc::GetGCKindSlots(allocKind);
+    JS_ASSERT(JS_TYPEDOBJ_SLOT_DATA == nfixed - 1);
+#   endif
+
     return JSObject::getPrivateDataOffset(JS_TYPEDOBJ_SLOT_DATA);
 }
 
 /* static */ size_t
 TypedObject::offsetOfByteOffsetSlot()
 {
-    return JSObject::getFixedSlotOffset(JS_TYPEDOBJ_SLOT_BYTEOFFSET);
+    return JSObject::getFixedSlotOffset(JS_BUFVIEW_SLOT_BYTEOFFSET);
 }
 
 void
 TypedObject::neuter(void *newData)
 {
-    setSlot(JS_TYPEDOBJ_SLOT_LENGTH, Int32Value(0));
-    setSlot(JS_TYPEDOBJ_SLOT_BYTELENGTH, Int32Value(0));
-    setSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(0));
+    setSlot(JS_BUFVIEW_SLOT_LENGTH, Int32Value(0));
+    setSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(0));
     setPrivate(newData);
 }
 
@@ -2281,8 +2250,7 @@ const Class TransparentTypedObject::class_ = {
         TypedObject::obj_setElement,
         TypedObject::obj_getGenericAttributes,
         TypedObject::obj_setGenericAttributes,
-        TypedObject::obj_deleteProperty,
-        TypedObject::obj_deleteElement,
+        TypedObject::obj_deleteGeneric,
         nullptr, nullptr, // watch/unwatch
         nullptr,   /* slice */
         TypedObject::obj_enumerate,
@@ -2294,16 +2262,16 @@ static int32_t
 LengthForType(TypeDescr &descr)
 {
     switch (descr.kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::Reference:
-      case TypeDescr::Struct:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::Reference:
+      case type::Struct:
+      case type::X4:
         return 0;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
         return descr.as<SizedArrayTypeDescr>().length();
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
         return 0;
     }
 
@@ -2466,7 +2434,7 @@ TypedObject::constructUnsized(JSContext *cx, unsigned int argc, Value *vp)
         if (length < 0) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage,
                                  nullptr, JSMSG_TYPEDOBJECT_BAD_ARGS);
-            return nullptr;
+            return false;
         }
         Rooted<TypedObject*> obj(cx, createZeroed(cx, callee, length));
         if (!obj)
@@ -2627,8 +2595,7 @@ const Class OpaqueTypedObject::class_ = {
         TypedObject::obj_setElement,
         TypedObject::obj_getGenericAttributes,
         TypedObject::obj_setGenericAttributes,
-        TypedObject::obj_deleteProperty,
-        TypedObject::obj_deleteElement,
+        TypedObject::obj_deleteGeneric,
         nullptr, nullptr, // watch/unwatch
         nullptr, // slice
         TypedObject::obj_enumerate,
@@ -2723,7 +2690,7 @@ js::SetTypedObjectOffset(ThreadSafeContext *, unsigned argc, Value *vp)
     JS_ASSERT(typedObj.typedMem() != nullptr); // must be attached already
 
     typedObj.setPrivate(typedObj.owner().dataPointer() + offset);
-    typedObj.setReservedSlot(JS_TYPEDOBJ_SLOT_BYTEOFFSET, Int32Value(offset));
+    typedObj.setReservedSlot(JS_BUFVIEW_SLOT_BYTEOFFSET, Int32Value(offset));
     args.rval().setUndefined();
     return true;
 }
@@ -3113,15 +3080,15 @@ visitReferences(SizedTypeDescr &descr,
         return;
 
     switch (descr.kind()) {
-      case TypeDescr::Scalar:
-      case TypeDescr::X4:
+      case type::Scalar:
+      case type::X4:
         return;
 
-      case TypeDescr::Reference:
+      case type::Reference:
         visitor.visitReference(descr.as<ReferenceTypeDescr>(), mem);
         return;
 
-      case TypeDescr::SizedArray:
+      case type::SizedArray:
       {
         SizedArrayTypeDescr &arrayDescr = descr.as<SizedArrayTypeDescr>();
         SizedTypeDescr &elementDescr = arrayDescr.elementType();
@@ -3132,12 +3099,12 @@ visitReferences(SizedTypeDescr &descr,
         return;
       }
 
-      case TypeDescr::UnsizedArray:
+      case type::UnsizedArray:
       {
         MOZ_ASSUME_UNREACHABLE("Only Sized Type representations");
       }
 
-      case TypeDescr::Struct:
+      case type::Struct:
       {
         StructTypeDescr &structDescr = descr.as<StructTypeDescr>();
         for (size_t i = 0; i < structDescr.fieldCount(); i++) {

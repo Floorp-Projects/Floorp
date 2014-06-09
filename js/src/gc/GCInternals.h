@@ -8,9 +8,9 @@
 #define gc_GCInternals_h
 
 #include "jscntxt.h"
-#include "jsworkers.h"
 
 #include "gc/Zone.h"
+#include "vm/HelperThreads.h"
 #include "vm/Runtime.h"
 
 namespace js {

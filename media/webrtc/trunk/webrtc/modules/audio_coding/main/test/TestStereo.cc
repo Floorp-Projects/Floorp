@@ -15,7 +15,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
-
+#include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -108,9 +108,9 @@ void TestPackStereo::set_lost_packet(bool lost) {
   lost_packet_ = lost;
 }
 
-TestStereo::TestStereo(int test_mode)
-    : acm_a_(AudioCodingModule::Create(0)),
-      acm_b_(AudioCodingModule::Create(1)),
+TestStereo::TestStereo(int test_mode, const Config& config)
+    : acm_a_(config.Get<AudioCodingModuleFactory>().Create(0)),
+      acm_b_(config.Get<AudioCodingModuleFactory>().Create(1)),
       channel_a2b_(NULL),
       test_cntr_(0),
       pack_size_samp_(0),

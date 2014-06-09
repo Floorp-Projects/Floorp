@@ -68,11 +68,11 @@ public:
 
   virtual SECStatus GetCertTrust(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                  const mozilla::pkix::CertPolicyId& policy,
-                                 const CERTCertificate* candidateCert,
+                                 const SECItem& candidateCertDER,
                          /*out*/ mozilla::pkix::TrustLevel* trustLevel);
 
   virtual SECStatus VerifySignedData(const CERTSignedData* signedData,
-                                     const CERTCertificate* cert);
+                                     const SECItem& subjectPublicKeyInfo);
 
   virtual SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
                                     const CERTCertificate* cert,
@@ -90,7 +90,8 @@ private:
   static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
   SECStatus VerifyAndMaybeCacheEncodedOCSPResponse(
     const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
-    const SECItem* encodedResponse, EncodedResponseSource responseSource);
+    uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
+    EncodedResponseSource responseSource);
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;

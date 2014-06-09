@@ -147,6 +147,7 @@
 #define VIDEO_OGG                           "video/ogg"
 #define VIDEO_WEBM                          "video/webm"
 #define VIDEO_3GPP                          "video/3gpp"
+#define VIDEO_3GPP2                         "video/3gpp2"
 #define APPLICATION_OGG                     "application/ogg"
 
 /* x-uuencode-apple-single. QuickMail made me do this. */

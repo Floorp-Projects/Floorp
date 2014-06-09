@@ -51,21 +51,29 @@ public:
 
     static DeviceInfo* CreateDeviceInfo(const int32_t id);
 
+    // Helpers for converting between (integral) degrees and
+    // VideoCaptureRotation values.  Return 0 on success.
+    static int32_t RotationFromDegrees(int degrees,
+                                       VideoCaptureRotation* rotation);
+    static int32_t RotationInDegrees(VideoCaptureRotation rotation,
+                                     int* degrees);
+
     // Implements Module declared functions.
     virtual int32_t ChangeUniqueId(const int32_t id);
 
     //Call backs
-    virtual int32_t RegisterCaptureDataCallback(VideoCaptureDataCallback& dataCallback);
-    virtual int32_t DeRegisterCaptureDataCallback();
-    virtual int32_t RegisterCaptureCallback(VideoCaptureFeedBack& callBack);
-    virtual int32_t DeRegisterCaptureCallback();
+    virtual void RegisterCaptureDataCallback(
+        VideoCaptureDataCallback& dataCallback);
+    virtual void DeRegisterCaptureDataCallback();
+    virtual void RegisterCaptureCallback(VideoCaptureFeedBack& callBack);
+    virtual void DeRegisterCaptureCallback();
 
-    virtual int32_t SetCaptureDelay(int32_t delayMS);
+    virtual void SetCaptureDelay(int32_t delayMS);
     virtual int32_t CaptureDelay();
     virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation);
 
-    virtual int32_t EnableFrameRateCallback(const bool enable);
-    virtual int32_t EnableNoPictureAlarm(const bool enable);
+    virtual void EnableFrameRateCallback(const bool enable);
+    virtual void EnableNoPictureAlarm(const bool enable);
 
     virtual const char* CurrentDeviceName() const;
 
@@ -79,9 +87,9 @@ public:
                                   int32_t videoFrameLength,
                                   const VideoCaptureCapability& frameInfo,
                                   int64_t captureTime = 0);
-    virtual int32_t IncomingFrameI420(
-        const VideoFrameI420& video_frame,
-        int64_t captureTime = 0);
+
+    virtual int32_t IncomingI420VideoFrame(I420VideoFrame* video_frame,
+                                           int64_t captureTime = 0);
 
     // Platform dependent
     virtual int32_t StartCapture(const VideoCaptureCapability& capability)

@@ -43,8 +43,6 @@ public:
     static void PremultiplyDataSurface(DataSourceSurface *aSurface);
     static mozilla::TemporaryRef<DataSourceSurface> UnpremultiplyDataSurface(DataSourceSurface* aSurface);
 
-    static void ConvertBGRAtoRGBA(gfxImageSurface *aSourceSurface,
-                                  gfxImageSurface *aDestSurface = nullptr);
     static void ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength);
 
     /**
@@ -67,7 +65,7 @@ public:
                                  const gfxRect&   aSourceRect,
                                  const gfxRect&   aImageRect,
                                  const gfxRect&   aFill,
-                                 const gfxImageFormat aFormat,
+                                 const mozilla::gfx::SurfaceFormat aFormat,
                                  GraphicsFilter aFilter,
                                  uint32_t         aImageFlags = imgIContainer::FLAG_NONE);
 

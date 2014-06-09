@@ -12,12 +12,18 @@
 #include "nsStyleContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
+#include "nsPresShell.h"
 #include "nsIPresShell.h"
 #include "nsDisplayList.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsFrameManager.h"
 #include "gfxPlatform.h"
-
+#include "nsPrintfCString.h"
+// for touchcaret
+#include "nsContentList.h"
+#include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
+#include "nsStyleSet.h"
 // for focus
 #include "nsIScrollableFrame.h"
 #ifdef DEBUG_CANVAS_FOCUS
@@ -40,7 +46,80 @@ NS_IMPL_FRAMEARENA_HELPERS(nsCanvasFrame)
 
 NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsCanvasFrame)
+  NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+
+nsresult
+nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
+{
+  if (!mContent) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
+  nsresult rv = NS_OK;
+  ErrorResult er;
+  // We won't create touch caret element if preference is not enabled.
+  if (PresShell::TouchCaretPrefEnabled()) {
+    nsCOMPtr<nsINodeInfo> nodeInfo;
+
+    // Create and append touch caret frame.
+    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
+                                                   kNameSpaceID_XHTML,
+                                                   nsIDOMNode::ELEMENT_NODE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = NS_NewHTMLElement(getter_AddRefs(mTouchCaretElement), nodeInfo.forget(),
+                           mozilla::dom::NOT_FROM_PARSER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aElements.AppendElement(mTouchCaretElement);
+
+    // Add a _moz_anonclass attribute as touch caret selector.
+    mTouchCaretElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
+                                     NS_LITERAL_STRING("mozTouchCaret"), er);
+    NS_ENSURE_SUCCESS(er.ErrorCode(), er.ErrorCode());
+
+    // Set touch caret to visibility: hidden by default.
+    nsAutoString classValue;
+    classValue.AppendLiteral("moz-touchcaret hidden");
+    rv = mTouchCaretElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                     classValue, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (PresShell::SelectionCaretPrefEnabled()) {
+    // Selection caret
+    mSelectionCaretsStartElement = doc->CreateHTMLElement(nsGkAtoms::div);
+    aElements.AppendElement(mSelectionCaretsStartElement);
+
+    mSelectionCaretsEndElement = doc->CreateHTMLElement(nsGkAtoms::div);
+    aElements.AppendElement(mSelectionCaretsEndElement);
+
+    mSelectionCaretsStartElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
+                                               NS_LITERAL_STRING("mozTouchCaret"), er);
+    rv = mSelectionCaretsStartElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                               NS_LITERAL_STRING("moz-selectioncaret-left hidden"),
+                                               true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mSelectionCaretsEndElement->SetAttribute(NS_LITERAL_STRING("_moz_anonclass"),
+                                             NS_LITERAL_STRING("mozTouchCaret"), er);
+    rv = mSelectionCaretsEndElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                             NS_LITERAL_STRING("moz-selectioncaret-right hidden"),
+                                             true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
+void
+nsCanvasFrame::AppendAnonymousContentTo(nsBaseContentList& aElements, uint32_t aFilter)
+{
+  aElements.MaybeAppendElement(mTouchCaretElement);
+  aElements.MaybeAppendElement(mSelectionCaretsStartElement);
+  aElements.MaybeAppendElement(mSelectionCaretsEndElement);
+}
 
 void
 nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
@@ -51,6 +130,9 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
     sf->RemoveScrollPositionListener(this);
   }
 
+  nsContentUtils::DestroyAnonymousContent(&mTouchCaretElement);
+  nsContentUtils::DestroyAnonymousContent(&mSelectionCaretsStartElement);
+  nsContentUtils::DestroyAnonymousContent(&mSelectionCaretsEndElement);
   nsContainerFrame::DestroyFrom(aDestructRoot);
 }
 
@@ -98,9 +180,14 @@ nsCanvasFrame::AppendFrames(ChildListID     aListID,
                             nsFrameList&    aFrameList)
 {
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
-  MOZ_ASSERT(mFrames.IsEmpty(), "already have a child frame");
-  MOZ_ASSERT(aFrameList.FirstChild() == aFrameList.LastChild(),
-             "Only one principal child frame allowed");
+  if (!mFrames.IsEmpty()) {
+    for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
+      // We only allow native anonymous child frame for touch caret,
+      // which its placeholder is added to the Principal child lists.
+      MOZ_ASSERT(e.get()->GetContent()->IsInNativeAnonymousSubtree(),
+                 "invalid child list");
+    }
+  }
   nsFrame::VerifyDirtyBitSet(aFrameList);
   nsContainerFrame::AppendFrames(aListID, aFrameList);
 }
@@ -121,7 +208,6 @@ nsCanvasFrame::RemoveFrame(ChildListID     aListID,
                            nsIFrame*       aOldFrame)
 {
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
-  MOZ_ASSERT(aOldFrame == mFrames.FirstChild(), "unknown aOldFrame");
   nsContainerFrame::RemoveFrame(aListID, aOldFrame);
 }
 #endif
@@ -152,6 +238,16 @@ nsDisplayCanvasBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
     aCtx->FillRect(bgClipRect);
   }
 }
+
+#ifdef MOZ_DUMP_PAINTING
+void
+nsDisplayCanvasBackgroundColor::WriteDebugInfo(nsACString& aTo)
+{
+  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)",
+          NS_GET_R(mColor), NS_GET_G(mColor),
+          NS_GET_B(mColor), NS_GET_A(mColor));
+}
+#endif
 
 static void BlitSurface(gfxContext* aDest, const gfxRect& aRect, gfxASurface* aSource)
 {

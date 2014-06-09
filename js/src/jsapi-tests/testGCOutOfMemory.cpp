@@ -52,7 +52,7 @@ BEGIN_TEST(testGCOutOfMemory)
 }
 
 virtual JSRuntime * createRuntime() {
-    JSRuntime *rt = JS_NewRuntime(768 * 1024, JS_USE_HELPER_THREADS);
+    JSRuntime *rt = JS_NewRuntime(768 * 1024);
     if (!rt)
         return nullptr;
     setNativeStackQuota(rt);

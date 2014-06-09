@@ -17,9 +17,11 @@ const {AppProjects} = require("devtools/app-manager/app-projects");
 const TEST_BASE = "chrome://mochitests/content/chrome/browser/devtools/webide/test/";
 
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
+Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 
 SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.enabled");
+  Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
 });
 
 function openWebIDE() {

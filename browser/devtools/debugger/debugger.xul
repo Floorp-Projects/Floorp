@@ -412,7 +412,6 @@
           <button id="black-boxed-message-button"
                   class="devtools-toolbarbutton"
                   label="&debuggerUI.blackBoxMessage.unBlackBoxButton;"
-                  image="chrome://browser/skin/devtools/debugger-blackbox-eye.png"
                   command="unBlackBoxCommand"/>
         </vbox>
         <vbox id="source-progress-container"

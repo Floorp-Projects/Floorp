@@ -70,6 +70,9 @@ public:
 protected:
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
+  friend nsresult (::NS_NewXMLDocument)(nsIDocument**, bool, bool);
+
+
   // mChannelIsPending indicates whether we're currently asynchronously loading
   // data from mChannel (via document.load() or normal load).  It's set to true
   // when we first find out about the channel (StartDocumentLoad) and set to
@@ -79,6 +82,9 @@ protected:
   bool mChannelIsPending;
   bool mAsync;
   bool mLoopingForSyncLoad;
+
+  // If true. we're really a Document, not an XMLDocument
+  bool mIsPlainDocument;
 };
 
 } // namespace dom

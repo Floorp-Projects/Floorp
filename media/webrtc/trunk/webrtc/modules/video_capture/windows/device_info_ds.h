@@ -29,8 +29,8 @@ struct VideoCaptureCapabilityWindows: public VideoCaptureCapability
         directShowCapabilityIndex = 0;
         supportFrameRateControl = false;
     }
-
 };
+
 class DeviceInfoDS: public DeviceInfoImpl
 {
 public:
@@ -55,7 +55,7 @@ public:
                       char* productUniqueIdUTF8,
                       uint32_t productUniqueIdUTF8Length);
 
-    /* 
+    /*
      * Display OS /capture device specific settings dialog
      */
     virtual int32_t
@@ -98,7 +98,7 @@ protected:
 private:
     ICreateDevEnum* _dsDevEnum;
     bool _CoUninitializeIsRequired;
-
+    std::vector<VideoCaptureCapabilityWindows> _captureCapabilitiesWindows;
 };
 }  // namespace videocapturemodule
 }  // namespace webrtc

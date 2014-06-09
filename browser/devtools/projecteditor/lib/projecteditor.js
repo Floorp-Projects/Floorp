@@ -22,16 +22,16 @@ const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 const ITCHPAD_URL = "chrome://browser/content/devtools/projecteditor.xul";
 
 // Enabled Plugins
-require("projecteditor/plugins/dirty/lib/dirty");
-require("projecteditor/plugins/delete/lib/delete");
-require("projecteditor/plugins/new/lib/new");
-require("projecteditor/plugins/save/lib/save");
-require("projecteditor/plugins/image-view/lib/plugin");
-require("projecteditor/plugins/app-manager/lib/plugin");
-require("projecteditor/plugins/status-bar/lib/plugin");
+require("projecteditor/plugins/dirty/dirty");
+require("projecteditor/plugins/delete/delete");
+require("projecteditor/plugins/new/new");
+require("projecteditor/plugins/save/save");
+require("projecteditor/plugins/image-view/plugin");
+require("projecteditor/plugins/app-manager/plugin");
+require("projecteditor/plugins/status-bar/plugin");
 
 // Uncomment to enable logging.
-// require("projecteditor/plugins/logging/lib/logging");
+// require("projecteditor/plugins/logging/logging");
 
 /**
  * This is the main class tying together an instance of the ProjectEditor.
@@ -264,14 +264,29 @@ var ProjectEditor = Class({
    * @param string path
    *               The file path to set
    * @param Object opts
-   *               Custom options used by the project. See plugins/app-manager.
+   *               Custom options used by the project.
+   *                - name: display name for project
+   *                - iconUrl: path to icon for project
+   *                - validationStatus: one of 'unknown|error|warning|valid'
+   *                - projectOverviewURL: path to load for iframe when project
+   *                    is selected in the tree.
    * @param Promise
    *        Promise that is resolved once the project is ready to be used.
    */
   setProjectToAppPath: function(path, opts = {}) {
     this.project.appManagerOpts = opts;
-    this.project.removeAllStores();
-    this.project.addPath(path);
+
+    let existingPaths = this.project.allPaths();
+    if (existingPaths.length !== 1 || existingPaths[0] !== path) {
+      // Only fully reset if this is a new path.
+      this.project.removeAllStores();
+      this.project.addPath(path);
+    } else {
+      // Otherwise, just ask for the root to be redrawn
+      let rootResource = this.project.localStores.get(path).root;
+      emit(rootResource, "label-change", rootResource);
+    }
+
     return this.project.refresh();
   },
 

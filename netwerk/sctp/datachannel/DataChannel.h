@@ -108,12 +108,6 @@ public:
     MOZ_DECLARE_REFCOUNTED_TYPENAME(DataChannelConnection::DataConnectionListener)
     virtual ~DataConnectionListener() {}
 
-    // Called when a the connection is open
-    virtual void NotifyConnection() = 0;
-
-    // Called when a the connection is lost/closed
-    virtual void NotifyClosedConnection() = 0;
-
     // Called when a new DataChannel has been opened by the other side.
     virtual void NotifyDataChannel(already_AddRefed<DataChannel> channel) = 0;
   };
@@ -480,11 +474,9 @@ public:
 
   // for ON_CONNECTION/ON_DISCONNECTED
   DataChannelOnMessageAvailable(int32_t     aType,
-                                DataChannelConnection *aConnection,
-                                bool aResult = true)
+                                DataChannelConnection *aConnection)
     : mType(aType),
-      mConnection(aConnection),
-      mResult(aResult) {}
+      mConnection(aConnection) {}
 
   NS_IMETHOD Run()
   {
@@ -533,14 +525,7 @@ public:
             // important to give it an already_AddRefed pointer!
             mConnection->mListener->NotifyDataChannel(mChannel.forget());
             break;
-          case ON_CONNECTION:
-            if (mResult) {
-              mConnection->mListener->NotifyConnection();
-            }
-            // FIX - on mResult false (failure) we should do something.  Needs spec work here
-            break;
-          case ON_DISCONNECTED:
-            mConnection->mListener->NotifyClosedConnection();
+          default:
             break;
         }
         break;
@@ -560,7 +545,6 @@ private:
   nsRefPtr<DataChannelConnection>   mConnection;
   nsCString                         mData;
   int32_t                           mLen;
-  bool                              mResult;
 };
 
 }

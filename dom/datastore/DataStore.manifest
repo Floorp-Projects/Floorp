@@ -1,2 +1,2 @@
-component {d193d0e2-c677-4a7b-bb0a-19155b470f2e} DataStoreService.js
-contract @mozilla.org/datastore-service;1 {d193d0e2-c677-4a7b-bb0a-19155b470f2e}
+component {db5c9602-030f-4bff-a3de-881a8de370f2} DataStoreImpl.js
+contract @mozilla.org/dom/datastore;1 {db5c9602-030f-4bff-a3de-881a8de370f2}

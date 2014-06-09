@@ -379,6 +379,8 @@
 @BINPATH@/components/nsFormHistory.js
 @BINPATH@/components/FormHistoryStartup.js
 @BINPATH@/components/nsInputListAutoComplete.js
+@BINPATH@/components/formautofill.manifest
+@BINPATH@/components/AutofillController.js
 @BINPATH@/components/contentSecurityPolicy.manifest
 @BINPATH@/components/contentSecurityPolicy.js
 @BINPATH@/components/contentAreaDropListener.manifest
@@ -624,5 +626,5 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 #endif
 
 @BINPATH@/components/DataStore.manifest
-@BINPATH@/components/DataStoreService.js
+@BINPATH@/components/DataStoreImpl.js
 @BINPATH@/components/dom_datastore.xpt

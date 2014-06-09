@@ -80,7 +80,7 @@ OMXCodecProxy::~OMXCodecProxy()
   IPCThreadState::self()->flushCommands();
 
   if (mManagerService.get() && mClient.get()) {
-    mManagerService->cancelClient(mClient);
+    mManagerService->cancelClient(mClient, IMediaResourceManagerService::HW_VIDEO_DECODER);
   }
 
   mSource.clear();
@@ -126,7 +126,7 @@ void OMXCodecProxy::requestResource()
     return;
   }
 
-  mManagerService->requestMediaResource(mClient, MediaResourceManagerClient::HW_VIDEO_DECODER);
+  mManagerService->requestMediaResource(mClient, IMediaResourceManagerService::HW_VIDEO_DECODER, true /* will wait */);
 }
 
 bool OMXCodecProxy::IsWaitingResources()

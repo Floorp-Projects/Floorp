@@ -27,6 +27,8 @@ gyp_vars = {
     'build_libyuv': 0,
     'libyuv_dir': '/media/libyuv',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
+    # don't use openssl
+    'use_openssl': 0,
 
     # saves 4MB when webrtc_trace is off
     'enable_lazy_trace_alloc': 1,

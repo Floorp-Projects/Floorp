@@ -270,7 +270,35 @@ add_task(function* test_phase_removeBlocker() {
 
 });
 
-add_task(function() {
+add_task(function* test_state() {
+  do_print("Testing information contained in `state`");
+
+  let BLOCKER_NAME = "test_state blocker " + Math.random();
+
+  // Set up the barrier. Note that we cannot test `barrier.state`
+  // immediately, as it initially contains "Not started"
+  let barrier = new AsyncShutdown.Barrier("test_filename");
+  let deferred = Promise.defer();
+  let {filename, lineNumber} = Components.stack;
+  barrier.client.addBlocker(BLOCKER_NAME,
+    function() {
+      return deferred.promise;
+    });
+
+  let promiseDone = barrier.wait();
+
+  // Now that we have called `wait()`, the state contains interesting things
+  let state = barrier.state[0];
+  do_print("State: " + JSON.stringify(barrier.state, null, "\t"));
+  Assert.equal(state.filename, filename);
+  Assert.equal(state.lineNumber, lineNumber + 2);
+  Assert.equal(state.name, BLOCKER_NAME);
+  
+  deferred.resolve();
+  yield promiseDone;
+});
+
+add_task(function*() {
   Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
 });
 

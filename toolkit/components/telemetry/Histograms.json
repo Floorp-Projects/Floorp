@@ -50,6 +50,20 @@
     "kind": "boolean",
     "description": "Application reputation query count (both local and remote)"
   },
+  "AUDIOSTREAM_FIRST_OPEN_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "description": "The length of time (in milliseconds) for the first open of AudioStream."
+  },
+  "AUDIOSTREAM_LATER_OPEN_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "description": "The length of time (in milliseconds) for the subsequent opens of AudioStream."
+  },
   "BACKGROUNDFILESAVER_THREAD_COUNT": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -2090,39 +2104,39 @@
     "extended_statistics_ok": true,
     "description": "Time for an unsuccessful DNS OS resolution (msec)"
   },
-  "SEER_PREDICT_ATTEMPTS": {
+  "PREDICTOR_PREDICT_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Predict is called and attempts to predict"
+    "description": "Number of times nsINetworkPredictor::Predict is called and attempts to predict"
   },
-  "SEER_LEARN_ATTEMPTS": {
+  "PREDICTOR_LEARN_ATTEMPTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Learn is called and attempts to learn"
+    "description": "Number of times nsINetworkPredictor::Learn is called and attempts to learn"
   },
-  "SEER_PREDICT_FULL_QUEUE": {
+  "PREDICTOR_PREDICT_FULL_QUEUE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Predict doesn't continue because the queue is full"
+    "description": "Number of times nsINetworkPredictor::Predict doesn't continue because the queue is full"
   },
-  "SEER_LEARN_FULL_QUEUE": {
+  "PREDICTOR_LEARN_FULL_QUEUE": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
     "n_buckets": 50,
     "extended_statistics_ok": true,
-    "description": "Number of times nsINetworkSeer::Learn doesn't continue because the queue is full"
+    "description": "Number of times nsINetworkPredictor::Learn doesn't continue because the queue is full"
   },
-  "SEER_PREDICT_WAIT_TIME": {
+  "PREDICTOR_PREDICT_WAIT_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2130,7 +2144,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time a predict event waits in the queue (ms)"
   },
-  "SEER_PREDICT_WORK_TIME": {
+  "PREDICTOR_PREDICT_WORK_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2138,7 +2152,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time spent doing the work for predict (ms)"
   },
-  "SEER_LEARN_WAIT_TIME": {
+  "PREDICTOR_LEARN_WAIT_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2146,7 +2160,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time a learn event waits in the queue (ms)"
   },
-  "SEER_LEARN_WORK_TIME": {
+  "PREDICTOR_LEARN_WORK_TIME": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
@@ -2154,7 +2168,7 @@
     "extended_statistics_ok": true,
     "description": "Amount of time spent doing the work for learn (ms)"
   },
-  "SEER_TOTAL_PREDICTIONS": {
+  "PREDICTOR_TOTAL_PREDICTIONS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2162,7 +2176,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual predictions (preresolves, preconnects, ...) happen"
   },
-  "SEER_TOTAL_PRECONNECTS": {
+  "PREDICTOR_TOTAL_PRECONNECTS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2170,7 +2184,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual preconnects happen"
   },
-  "SEER_TOTAL_PRERESOLVES": {
+  "PREDICTOR_TOTAL_PRERESOLVES": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2178,7 +2192,7 @@
     "extended_statistics_ok": true,
     "description": "How many actual preresolves happen"
   },
-  "SEER_PREDICTIONS_CALCULATED": {
+  "PREDICTOR_PREDICTIONS_CALCULATED": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "1000 * 1000",
@@ -2186,94 +2200,94 @@
     "extended_statistics_ok": true,
     "description": "How many prediction calculations are performed"
   },
-  "SEER_GLOBAL_DEGRADATION": {
+  "PREDICTOR_GLOBAL_DEGRADATION": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The global degradation calculated"
   },
-  "SEER_SUBRESOURCE_DEGRADATION": {
+  "PREDICTOR_SUBRESOURCE_DEGRADATION": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The degradation calculated for a subresource"
   },
-  "SEER_BASE_CONFIDENCE": {
+  "PREDICTOR_BASE_CONFIDENCE": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The base confidence calculated for a subresource"
   },
-  "SEER_CONFIDENCE": {
+  "PREDICTOR_CONFIDENCE": {
     "expires_in_version": "never",
     "kind": "linear",
     "high": "100",
     "n_buckets": 50,
     "description": "The final confidence calculated for a subresource"
   },
-  "SEER_PREDICT_TIME_TO_ACTION": {
+  "PREDICTOR_PREDICT_TIME_TO_ACTION": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "description": "How long it takes from the time Predict() is called to the time we take action"
   },
-  "SEER_PREDICT_TIME_TO_INACTION": {
+  "PREDICTOR_PREDICT_TIME_TO_INACTION": {
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
     "description": "How long it takes from the time Predict() is called to the time we figure out there's nothing to do"
   },
-  "SEER_CLEANUP_DELTA": {
+  "PREDICTOR_CLEANUP_DELTA": {
       "expires_in_version": "never",
       "kind": "exponential",
       "high": "60000",
       "n_buckets": 50,
-      "description": "How long between seer db cleanups, in ms"
+      "description": "How long between predictor db cleanups, in ms"
   },
-  "SEER_CLEANUP_SUCCEEDED": {
+  "PREDICTOR_CLEANUP_SUCCEEDED": {
       "expires_in_version": "never",
       "kind": "boolean",
-      "description": "Whether or not the seer cleanup succeeded"
+      "description": "Whether or not the predictor cleanup succeeded"
   },
-  "SEER_CLEANUP_TIME": {
+  "PREDICTOR_CLEANUP_TIME": {
       "expires_in_version": "never",
       "kind": "exponential",
       "high": "5000",
       "n_buckets": 10,
-      "description": "How long it takes to run the seer cleanup"
+      "description": "How long it takes to run the predictor cleanup"
   },
-  "SEER_CLEANUP_SCHEDULED": {
+  "PREDICTOR_CLEANUP_SCHEDULED": {
       "expires_in_version": "never",
       "kind": "boolean",
       "description": "Whether or not we actually try the cleanup method when we think about it"
   },
-  "SEER_LOAD_COUNT_IS_ZERO": {
+  "PREDICTOR_LOAD_COUNT_IS_ZERO": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times load count is zero"
   },
-  "SEER_LOAD_COUNT_OVERFLOWS": {
+  "PREDICTOR_LOAD_COUNT_OVERFLOWS": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times load count overflowed"
   },
-  "SEER_STARTUP_COUNT_IS_ZERO": {
+  "PREDICTOR_STARTUP_COUNT_IS_ZERO": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
       "n_buckets": 50,
       "description": "Number of times startup count is zero"
   },
-  "SEER_STARTUP_COUNT_OVERFLOWS": {
+  "PREDICTOR_STARTUP_COUNT_OVERFLOWS": {
       "expires_in_version": "never",
       "kind": "linear",
       "high": "100",
@@ -2327,6 +2341,14 @@
     "high": "5000",
     "n_buckets": 20,
     "description": "Time spent loading plugin DLL and obtaining metadata (ms)"
+  },
+  "PLUGIN_STARTUP_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "5000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Time spent starting up plugins (ms)"
   },
   "PLUGIN_SHUTDOWN_MS": {
     "expires_in_version": "never",
@@ -4121,6 +4143,60 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket."
   },
+  "NEWTAB_PAGE_DIRECTORY_LINK0_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #0 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK1_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #1 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK2_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #2 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK3_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #3 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK4_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #4 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK5_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #5 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK6_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #6 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK7_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #7 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
+  "NEWTAB_PAGE_DIRECTORY_LINK8_SHOWN": {
+    "expires_in_version": "35",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Track impression count of directory link #8 per index (0-8). Grid configurations showing 9+ tiles fall into the '9' bucket."
+  },
   "NEWTAB_PAGE_DIRECTORY_AFFILIATE_SHOWN": {
     "expires_in_version": "35",
     "kind": "enumerated",
@@ -5248,6 +5324,34 @@
     "n_buckets": 1000,
     "description": "RTCP-reported jitter by remote recipient of outbound audio (ms). Sampled every second of a call (for easy comparison)."
   },
+  "WEBRTC_VIDEO_ERROR_RECOVERY_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 500,
+    "description": "Time to recover from a video error in ms"
+  },
+  "WEBRTC_VIDEO_RECOVERY_BEFORE_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered before error per min"
+  },
+  "WEBRTC_VIDEO_RECOVERY_AFTER_ERROR_PER_MIN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 200,
+    "description": "Number of losses recovered after error per min"
+  },
+  "WEBRTC_VIDEO_DECODE_ERROR_TIME_PERMILLE": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 100,
+    "description": "Percentage*10 (permille) of call decoding with errors or frozen due to errors"
+  },
   "WEBRTC_VIDEO_QUALITY_OUTBOUND_RTT": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5262,6 +5366,76 @@
     "n_buckets": 1000,
     "description": "Roundtrip time of outbound audio (ms). Sampled every second of a call."
   },
+  "WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video encoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Video encoder's average framerate (in fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 200,
+    "n_buckets": 50,
+    "description": "Standard deviation from video encoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_ENCODER_DROPPED_FRAMES_PER_CALL_FPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video encoder's number of frames dropped (in frames/min) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "Video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "description": "Standard deviation from video decoder's average bitrate (in kbits/s) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Video decoder's average framerate (in fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "200",
+    "n_buckets": "50",
+    "description": "Standard deviation from video decoder's average framerate (in 1/10 fps) over an entire call"
+  },
+  "WEBRTC_VIDEO_DECODER_DISCARDED_PACKETS_PER_CALL_PPM": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "description": "Video decoder's number of discarded packets (in packets/min) over an entire call"
+  },
   "WEBRTC_CALL_DURATION": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -5275,6 +5449,20 @@
     "high": "500",
     "n_buckets": "50",
     "description": "The number of calls made during a session."
+  },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
+  },
+  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "30",
+    "n_buckets": "29",
+    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
   },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_TRACERDETACH_MS": {
     "expires_in_version": "never",
@@ -5886,6 +6074,24 @@
     "extended_statistics_ok": true,
     "description": "Time spent to open an existing cache entry"
   },
+  "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the PasswordsProvider due to a locked DB."
+  },
+  "SQLITEBRIDGE_PROVIDER_FORMS_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the FormHistoryProvider due to a locked DB."
+  },
+  "SQLITEBRIDGE_PROVIDER_HOME_LOCKED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "description": "The number of errors using the HomeProvider due to a locked DB."
+  },
   "SSL_TLS12_INTOLERANCE_REASON_PRE": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -6124,5 +6330,20 @@
     "high": 1000,
     "n_buckets": 10,
     "description": "The number of times a sync successfully completed in this session"
+  },
+  "WEAVE_CUSTOM_LEGACY_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether legacy Sync is configured to use a custom server"
+  },
+  "WEAVE_CUSTOM_FXA_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom authentication server"
+  },
+  "WEAVE_CUSTOM_TOKEN_SERVER_CONFIGURATION": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether FxA Sync is configured to use a custom token server"
   }
 }

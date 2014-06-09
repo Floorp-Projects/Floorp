@@ -734,9 +734,38 @@ nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   nsPresContext *presContext = PresContext();
   EnsureIntrinsicSizeAndRatio(presContext);
 
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
+  NS_ASSERTION(imageLoader, "No content node??");
+  mozilla::IntrinsicSize intrinsicSize(mIntrinsicSize);
+
+  // Content may override our default dimensions. This is termed as overriding
+  // the intrinsic size by the spec, but all other consumers of mIntrinsic*
+  // values are being used to refer to the real/true size of the image data.
+  if (imageLoader && mImage &&
+      intrinsicSize.width.GetUnit() == eStyleUnit_Coord &&
+      intrinsicSize.height.GetUnit() == eStyleUnit_Coord) {
+    uint32_t width;
+    uint32_t height;
+    if (NS_SUCCEEDED(imageLoader->GetNaturalWidth(&width)) &&
+        NS_SUCCEEDED(imageLoader->GetNaturalHeight(&height))) {
+      nscoord appWidth = nsPresContext::CSSPixelsToAppUnits((int32_t)width);
+      nscoord appHeight = nsPresContext::CSSPixelsToAppUnits((int32_t)height);
+      // If this image is rotated, we'll need to transpose the natural
+      // width/height.
+      bool coordFlip;
+      if (StyleVisibility()->mImageOrientation.IsFromImage()) {
+        coordFlip = mImage->GetOrientation().SwapsWidthAndHeight();
+      } else {
+        coordFlip = StyleVisibility()->mImageOrientation.SwapsWidthAndHeight();
+      }
+      intrinsicSize.width.SetCoordValue(coordFlip ? appHeight : appWidth);
+      intrinsicSize.height.SetCoordValue(coordFlip ? appWidth : appHeight);
+    }
+  }
+
   return nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
                             aRenderingContext, this,
-                            mIntrinsicSize, mIntrinsicRatio, aCBSize,
+                            intrinsicSize, mIntrinsicRatio, aCBSize,
                             aMargin, aBorder, aPadding);
 }
 

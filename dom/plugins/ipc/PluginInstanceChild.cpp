@@ -13,7 +13,10 @@
 #include "PluginProcessChild.h"
 #include "gfxASurface.h"
 #include "gfxContext.h"
+#include "gfxPlatform.h"
+#include "gfx2DGlue.h"
 #include "nsNPAPIPluginInstance.h"
+#include "mozilla/gfx/2D.h"
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
@@ -42,14 +45,9 @@ using namespace std;
 #ifdef MOZ_WIDGET_GTK
 
 #include <gtk/gtk.h>
-#if (MOZ_WIDGET_GTK == 3)
-#include <gtk/gtkx.h>
-#endif
 #include <gdk/gdkx.h>
 #include <gdk/gdk.h>
-#if (MOZ_WIDGET_GTK == 2)
 #include "gtk2xtbin.h"
-#endif
 
 #elif defined(MOZ_WIDGET_QT)
 #undef KeyPress
@@ -97,6 +95,31 @@ struct RunnableMethodTraits<PluginInstanceChild>
     static void ReleaseCallee(PluginInstanceChild* obj) { }
 };
 
+/**
+ * We can't use gfxPlatform::CreateDrawTargetForSurface() because calling
+ * gfxPlatform::GetPlatform() instantiates the prefs service, and that's not
+ * allowed from processes other than the main process. So we have our own
+ * version here.
+ */
+static RefPtr<DrawTarget>
+CreateDrawTargetForSurface(gfxASurface *aSurface)
+{
+  SurfaceFormat format;
+  if (aSurface->GetContentType() == gfxContentType::ALPHA) {
+    format = SurfaceFormat::A8;
+  } else if (aSurface->GetContentType() == gfxContentType::COLOR) {
+    format = SurfaceFormat::B8G8R8X8;
+  } else {
+    format = SurfaceFormat::B8G8R8A8;
+  }
+  RefPtr<DrawTarget> drawTarget =
+    Factory::CreateDrawTargetForCairoSurface(aSurface->CairoSurface(),
+                                             ToIntSize(gfxIntSize(aSurface->GetSize())),
+                                             &format);
+  aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
+  return drawTarget;
+}
+
 PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     : mPluginIface(aPluginIface)
 #if defined(XP_MACOSX)
@@ -108,7 +131,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
     , mAsyncInvalidateTask(0)
     , mCachedWindowActor(nullptr)
     , mCachedElementActor(nullptr)
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     , mXEmbed(false)
 #endif // MOZ_WIDGET_GTK
 #if defined(OS_WIN)
@@ -152,7 +175,7 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     mWindow.ws_info = &mWsInfo;
     memset(&mWsInfo, 0, sizeof(mWsInfo));
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     mWsInfo.display = nullptr;
     mXtClient.top_widget = nullptr;
 #else
@@ -482,7 +505,7 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
             return NPERR_GENERIC_ERROR;
 
         NPWindowType newWindowType = windowed ? NPWindowTypeWindow : NPWindowTypeDrawable;
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
         if (mWindow.type != newWindowType && mWsInfo.display) {
            // plugin type has been changed but we already have a valid display
            // so update it for the recent plugin mode
@@ -1026,7 +1049,7 @@ bool PluginInstanceChild::CreateWindow(const NPRemoteWindow& aWindow)
                       aWindow.x, aWindow.y,
                       aWindow.width, aWindow.height));
 
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     if (mXEmbed) {
         mWindow.window = reinterpret_cast<void*>(aWindow.window);
     }
@@ -1055,7 +1078,7 @@ void PluginInstanceChild::DeleteWindow()
   if (!mWindow.window)
       return;
 
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
   if (mXtClient.top_widget) {     
       xt_client_unrealize(&mXtClient);
       xt_client_destroy(&mXtClient); 
@@ -1103,7 +1126,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
         CreateWindow(aWindow);
     }
 
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     if (mXEmbed && gtk_check_version(2,18,7) != nullptr) { // older
         if (aWindow.type == NPWindowTypeWindow) {
             GdkWindow* socket_window = gdk_window_lookup(static_cast<GdkNativeWindow>(aWindow.window));
@@ -1236,7 +1259,7 @@ PluginInstanceChild::AnswerNPP_SetWindow(const NPRemoteWindow& aWindow)
 bool
 PluginInstanceChild::Initialize()
 {
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     NPError rv;
 
     if (mWsInfo.display) {
@@ -3176,23 +3199,22 @@ PluginInstanceChild::PaintRectToSurface(const nsIntRect& aRect,
 #endif
 
     if (mIsTransparent && !CanPaintOnBackground()) {
-       // Clear surface content for transparent rendering
-       nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
-       ctx->SetDeviceColor(aColor);
-       ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-       ctx->Rectangle(GfxFromNsRect(plPaintRect));
-       ctx->Fill();
+        // Clear surface content for transparent rendering
+        nsRefPtr<gfxContext> ctx = new gfxContext(renderSurface);
+        ctx->SetDeviceColor(aColor);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->Rectangle(GfxFromNsRect(plPaintRect));
+        ctx->Fill();
     }
 
     PaintRectToPlatformSurface(plPaintRect, renderSurface);
 
     if (renderSurface != aSurface) {
         // Copy helper surface content to target
-        nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-        ctx->SetSource(renderSurface);
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->Rectangle(GfxFromNsRect(aRect));
-        ctx->Fill();
+        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(aSurface);
+        RefPtr<SourceSurface> surface =
+            gfxPlatform::GetSourceSurfaceForSurface(dt, renderSurface);
+        dt->CopySurface(surface, ToIntRect(aRect), ToIntPoint(aRect.TopLeft()));
     }
 }
 
@@ -3247,12 +3269,10 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     // background and copy the result
     PaintRectToSurface(rect, aSurface, gfxRGBA(1.0, 1.0, 1.0));
     {
-        gfxRect copyRect(gfxPoint(0, 0), targetRect.Size());
-        nsRefPtr<gfxContext> ctx = new gfxContext(whiteImage);
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->SetSource(aSurface, deviceOffset);
-        ctx->Rectangle(copyRect);
-        ctx->Fill();
+        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(whiteImage);
+        RefPtr<SourceSurface> surface =
+            gfxPlatform::GetSourceSurfaceForSurface(dt, aSurface);
+        dt->CopySurface(surface, ToIntRect(rect), IntPoint());
     }
 
     // Paint the plugin directly onto the target, with a black
@@ -3293,11 +3313,12 @@ PluginInstanceChild::PaintRectWithAlphaExtraction(const nsIntRect& aRect,
     // If we had to use a temporary black surface, copy the pixels
     // with alpha back to the target
     if (!useSurfaceSubimageForBlack) {
-        nsRefPtr<gfxContext> ctx = new gfxContext(aSurface);
-        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-        ctx->SetSource(blackImage);
-        ctx->Rectangle(targetRect);
-        ctx->Fill();
+        RefPtr<DrawTarget> dt = CreateDrawTargetForSurface(aSurface);
+        RefPtr<SourceSurface> surface =
+            gfxPlatform::GetSourceSurfaceForSurface(dt, blackImage);
+        dt->CopySurface(surface,
+                        IntRect(0, 0, rect.width, rect.height),
+                        ToIntPoint(rect.TopLeft()));
     }
 }
 
@@ -3990,7 +4011,7 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
         mAsyncBitmaps.Enumerate(DeleteSurface, this);
     }
 
-#if (MOZ_WIDGET_GTK == 2)
+#ifdef MOZ_WIDGET_GTK
     if (mWindow.type == NPWindowTypeWindow && !mXEmbed) {
       xt_client_xloop_destroy();
     }

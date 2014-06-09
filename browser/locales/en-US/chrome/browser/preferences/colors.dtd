@@ -11,16 +11,16 @@
 
 <!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">
-<!ENTITY  textColor.accesskey             "t">
+<!ENTITY  textColor.accesskey             "T">
 <!ENTITY  backgroundColor.label           "Background:">
-<!ENTITY  backgroundColor.accesskey       "b">
+<!ENTITY  backgroundColor.accesskey       "B">
 <!ENTITY  useSystemColors.label           "Use system colors">
 <!ENTITY  useSystemColors.accesskey       "s">
 
 <!ENTITY  underlineLinks.label            "Underline links">
-<!ENTITY  underlineLinks.accesskey        "u">
+<!ENTITY  underlineLinks.accesskey        "U">
 <!ENTITY  links                           "Link Colors">
 <!ENTITY  linkColor.label                 "Unvisited Links:">
-<!ENTITY  linkColor.accesskey             "l">
+<!ENTITY  linkColor.accesskey             "L">
 <!ENTITY  visitedLinkColor.label          "Visited Links:">
-<!ENTITY  visitedLinkColor.accesskey      "v">
+<!ENTITY  visitedLinkColor.accesskey      "V">

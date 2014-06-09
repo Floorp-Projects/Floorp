@@ -14,6 +14,7 @@
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
 #include "webrtc/modules/desktop_capture/shared_memory.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -53,6 +54,19 @@ class DesktopFrame {
   int32_t capture_time_ms() const { return capture_time_ms_; }
   void set_capture_time_ms(int32_t time_ms) { capture_time_ms_ = time_ms; }
 
+  // Optional shape for the frame. Frames may be shaped e.g. if
+  // capturing the contents of a shaped window.
+  const DesktopRegion* shape() const { return shape_.get(); }
+  void set_shape(DesktopRegion* shape) { shape_.reset(shape); }
+
+  // Copies pixels from a buffer or another frame. |dest_rect| rect must lay
+  // within bounds of this frame.
+  void CopyPixelsFrom(uint8_t* src_buffer, int src_stride,
+                      const DesktopRect& dest_rect);
+  void CopyPixelsFrom(const DesktopFrame& src_frame,
+                      const DesktopVector& src_pos,
+                      const DesktopRect& dest_rect);
+
  protected:
   DesktopFrame(DesktopSize size,
                int stride,
@@ -69,9 +83,9 @@ class DesktopFrame {
   SharedMemory* const shared_memory_;
 
   DesktopRegion updated_region_;
-
   DesktopVector dpi_;
   int32_t capture_time_ms_;
+  scoped_ptr<DesktopRegion> shape_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(DesktopFrame);
@@ -82,6 +96,9 @@ class BasicDesktopFrame : public DesktopFrame {
  public:
   explicit BasicDesktopFrame(DesktopSize size);
   virtual ~BasicDesktopFrame();
+
+  // Creates a BasicDesktopFrame that contains copy of |frame|.
+  static DesktopFrame* CopyOf(const DesktopFrame& frame);
 
  private:
   DISALLOW_COPY_AND_ASSIGN(BasicDesktopFrame);

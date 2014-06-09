@@ -69,7 +69,6 @@ public:
   NS_IMETHOD HandleStartElement(const char16_t *aName, 
                                 const char16_t **aAtts, 
                                 uint32_t aAttsCount, 
-                                int32_t aIndex, 
                                 uint32_t aLineNumber) MOZ_OVERRIDE;
 
   NS_IMETHOD HandleEndElement(const char16_t *aName) MOZ_OVERRIDE;

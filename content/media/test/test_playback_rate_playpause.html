@@ -10,13 +10,16 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
+// In varying quantities:
+// ASSERTION: Clock should go forwards if the playback rate is > 0.:
+//            'mCurrentFrameTime <= clock_time || mPlaybackRate <= 0',
+//            file MediaDecoderStateMachine.cpp, line 2379
 if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(0, 1);
+  SimpleTest.expectAssertions(1, 6);
 } else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(0, 2);
-} else if (navigator.platform.startsWith("Linux")) {
-  // Bug 897024
-  SimpleTest.expectAssertions(0, 2);
+  SimpleTest.expectAssertions(3, 7);
+} else if (navigator.platform.startsWith("Linux arm")) {
+  SimpleTest.expectAssertions(3, 11);
 }
 
 let manager = new MediaTestManager;

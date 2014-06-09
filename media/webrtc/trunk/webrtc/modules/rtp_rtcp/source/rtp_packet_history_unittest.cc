@@ -74,8 +74,8 @@ TEST_F(RtpPacketHistoryTest, NoStoreStatus) {
   // Packet should not be stored.
   len = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_FALSE(hist_->GetRTPPacket(kSeqNum, 0, packet_, &len, &time, &type));
+  EXPECT_FALSE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_, &len,
+                                              &time));
 }
 
 TEST_F(RtpPacketHistoryTest, DontStore) {
@@ -89,8 +89,8 @@ TEST_F(RtpPacketHistoryTest, DontStore) {
   // Packet should not be stored.
   len = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_FALSE(hist_->GetRTPPacket(kSeqNum, 0, packet_, &len, &time, &type));
+  EXPECT_FALSE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_, &len,
+                                              &time));
 }
 
 TEST_F(RtpPacketHistoryTest, PutRtpPacket_TooLargePacketLength) {
@@ -112,17 +112,16 @@ TEST_F(RtpPacketHistoryTest, GetRtpPacket_TooSmallBuffer) {
                                    capture_time_ms, kAllowRetransmission));
   uint16_t len_out = len - 1;
   int64_t time;
-  StorageType type;
-  EXPECT_FALSE(hist_->GetRTPPacket(kSeqNum, 0, packet_, &len_out, &time,
-                                   &type));
+  EXPECT_FALSE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_,
+                                              &len_out, &time));
 }
 
 TEST_F(RtpPacketHistoryTest, GetRtpPacket_NotStored) {
   hist_->SetStorePacketsStatus(true, 10);
   uint16_t len = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_FALSE(hist_->GetRTPPacket(0, 0, packet_, &len, &time, &type));
+  EXPECT_FALSE(hist_->GetPacketAndSetSendTime(0, 0, false, packet_, &len,
+                                              &time));
 }
 
 TEST_F(RtpPacketHistoryTest, PutRtpPacket) {
@@ -147,11 +146,9 @@ TEST_F(RtpPacketHistoryTest, GetRtpPacket) {
 
   uint16_t len_out = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 0, packet_out_, &len_out, &time,
-                                  &type));
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_out_,
+                                             &len_out, &time));
   EXPECT_EQ(len, len_out);
-  EXPECT_EQ(kAllowRetransmission, type);
   EXPECT_EQ(capture_time_ms, time);
   for (int i = 0; i < len; i++)  {
     EXPECT_EQ(packet_[i], packet_out_[i]);
@@ -176,11 +173,9 @@ TEST_F(RtpPacketHistoryTest, ReplaceRtpHeader) {
 
   uint16_t len_out = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 0, packet_out_, &len_out, &time,
-                                  &type));
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_out_,
+                                             &len_out, &time));
   EXPECT_EQ(len, len_out);
-  EXPECT_EQ(kAllowRetransmission, type);
   EXPECT_EQ(capture_time_ms, time);
   for (int i = 0; i < len; i++)  {
     EXPECT_EQ(packet_[i], packet_out_[i]);
@@ -207,11 +202,9 @@ TEST_F(RtpPacketHistoryTest, NoCaptureTime) {
 
   uint16_t len_out = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 0, packet_out_, &len_out, &time,
-                                  &type));
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_out_,
+                                             &len_out, &time));
   EXPECT_EQ(len, len_out);
-  EXPECT_EQ(kAllowRetransmission, type);
   EXPECT_EQ(capture_time_ms, time);
   for (int i = 0; i < len; i++)  {
     EXPECT_EQ(packet_[i], packet_out_[i]);
@@ -228,11 +221,9 @@ TEST_F(RtpPacketHistoryTest, DontRetransmit) {
 
   uint16_t len_out = kMaxPacketLength;
   int64_t time;
-  StorageType type;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 0, packet_out_, &len_out, &time,
-                                  &type));
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 0, false, packet_out_,
+                                             &len_out, &time));
   EXPECT_EQ(len, len_out);
-  EXPECT_EQ(kDontRetransmit, type);
   EXPECT_EQ(capture_time_ms, time);
 }
 
@@ -244,20 +235,21 @@ TEST_F(RtpPacketHistoryTest, MinResendTime) {
   EXPECT_EQ(0, hist_->PutRTPPacket(packet_, len, kMaxPacketLength,
                                    capture_time_ms, kAllowRetransmission));
 
-  hist_->UpdateResendTime(kSeqNum);
+  int64_t time;
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 100, false, packet_, &len,
+                                             &time));
   fake_clock_.AdvanceTimeMilliseconds(100);
 
   // Time has elapsed.
   len = kMaxPacketLength;
-  StorageType type;
-  int64_t time;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 100, packet_, &len, &time, &type));
+  EXPECT_TRUE(hist_->GetPacketAndSetSendTime(kSeqNum, 100, false, packet_, &len,
+                                             &time));
   EXPECT_GT(len, 0);
   EXPECT_EQ(capture_time_ms, time);
 
   // Time has not elapsed. Packet should be found, but no bytes copied.
   len = kMaxPacketLength;
-  EXPECT_TRUE(hist_->GetRTPPacket(kSeqNum, 101, packet_, &len, &time, &type));
-  EXPECT_EQ(0, len);
+  EXPECT_FALSE(hist_->GetPacketAndSetSendTime(kSeqNum, 101, false, packet_,
+                                              &len, &time));
 }
 }  // namespace webrtc

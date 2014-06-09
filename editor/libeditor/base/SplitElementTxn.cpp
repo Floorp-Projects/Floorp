@@ -34,7 +34,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitElementTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP SplitElementTxn::Init(nsEditor   *aEditor,
-                                    nsINode    *aNode,
+                                    nsIDOMNode *aNode,
                                     int32_t     aOffset)
 {
   NS_ASSERTION(aEditor && aNode, "bad args");
@@ -52,23 +52,18 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
   if (!mExistingRightNode || !mEditor) { return NS_ERROR_NOT_INITIALIZED; }
 
   // create a new node
-  ErrorResult rv;
-  mNewLeftNode = mExistingRightNode->CloneNode(false, rv);
-  NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
-  NS_ASSERTION(mNewLeftNode, "could not create element.");
-  NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NULL_POINTER);
+  nsresult result = mExistingRightNode->CloneNode(false, 1, getter_AddRefs(mNewLeftNode));
+  NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewLeftNode)), "could not create element.");
+  NS_ENSURE_SUCCESS(result, result);
   mEditor->MarkNodeDirty(mExistingRightNode);
 
   // get the parent node
-  mParent = mExistingRightNode->GetParentNode();
+  result = mExistingRightNode->GetParentNode(getter_AddRefs(mParent));
+  NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(mParent, NS_ERROR_NULL_POINTER);
 
   // insert the new node
-  nsresult result = mEditor->SplitNodeImpl(mExistingRightNode->AsDOMNode(),
-                                           mOffset,
-                                           mNewLeftNode->AsDOMNode(),
-                                           mParent->AsDOMNode());
-  NS_ENSURE_SUCCESS(result, result);
+  result = mEditor->SplitNodeImpl(mExistingRightNode, mOffset, mNewLeftNode, mParent);
   if (mNewLeftNode) {
     bool bAdjustSelection;
     mEditor->ShouldTxnSetSelection(&bAdjustSelection);
@@ -78,7 +73,7 @@ NS_IMETHODIMP SplitElementTxn::DoTransaction(void)
       result = mEditor->GetSelection(getter_AddRefs(selection));
       NS_ENSURE_SUCCESS(result, result);
       NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-      result = selection->Collapse(mNewLeftNode->AsDOMNode(), mOffset);
+      result = selection->Collapse(mNewLeftNode, mOffset);
     }
     else
     {
@@ -96,7 +91,10 @@ NS_IMETHODIMP SplitElementTxn::UndoTransaction(void)
   }
 
   // this assumes Do inserted the new node in front of the prior existing node
-  return mEditor->JoinNodesImpl(mExistingRightNode, mNewLeftNode, mParent);
+  nsCOMPtr<nsINode> right = do_QueryInterface(mExistingRightNode);
+  nsCOMPtr<nsINode> left = do_QueryInterface(mNewLeftNode);
+  nsCOMPtr<nsINode> parent = do_QueryInterface(mParent);
+  return mEditor->JoinNodesImpl(right, left, parent);
 }
 
 /* redo cannot simply resplit the right node, because subsequent transactions
@@ -109,6 +107,8 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  nsresult result;
+  nsCOMPtr<nsIDOMNode>resultNode;
   // first, massage the existing node so it is in its post-split state
   nsCOMPtr<nsIDOMCharacterData>rightNodeAsText = do_QueryInterface(mExistingRightNode);
   if (rightNodeAsText)
@@ -118,24 +118,26 @@ NS_IMETHODIMP SplitElementTxn::RedoTransaction(void)
   }
   else
   {
-    nsCOMPtr<nsINode> child = mExistingRightNode->GetFirstChild();
-    for (int32_t i=0; i<mOffset; i++)
+    nsCOMPtr<nsIDOMNode>child;
+    nsCOMPtr<nsIDOMNode>nextSibling;
+    result = mExistingRightNode->GetFirstChild(getter_AddRefs(child));
+    int32_t i;
+    for (i=0; i<mOffset; i++)
     {
+      if (NS_FAILED(result)) {return result;}
       if (!child) {return NS_ERROR_NULL_POINTER;}
-      ErrorResult rv;
-      mExistingRightNode->RemoveChild(*child, rv);
-      if (NS_SUCCEEDED(rv.ErrorCode()))
+      child->GetNextSibling(getter_AddRefs(nextSibling));
+      result = mExistingRightNode->RemoveChild(child, getter_AddRefs(resultNode));
+      if (NS_SUCCEEDED(result))
       {
-        mNewLeftNode->AppendChild(*child, rv);
-        NS_ENSURE_SUCCESS(rv.ErrorCode(), rv.ErrorCode());
+        result = mNewLeftNode->AppendChild(child, getter_AddRefs(resultNode));
       }
-      child = child->GetNextSibling();
+      child = do_QueryInterface(nextSibling);
     }
   }
   // second, re-insert the left node into the tree
-  ErrorResult rv;
-  mParent->InsertBefore(*mNewLeftNode, mExistingRightNode, rv);
-  return rv.ErrorCode();
+  result = mParent->InsertBefore(mNewLeftNode, mExistingRightNode, getter_AddRefs(resultNode));
+  return result;
 }
 
 
@@ -145,7 +147,7 @@ NS_IMETHODIMP SplitElementTxn::GetTxnDescription(nsAString& aString)
   return NS_OK;
 }
 
-NS_IMETHODIMP SplitElementTxn::GetNewNode(nsINode **aNewNode)
+NS_IMETHODIMP SplitElementTxn::GetNewNode(nsIDOMNode **aNewNode)
 {
   NS_ENSURE_TRUE(aNewNode, NS_ERROR_NULL_POINTER);
   NS_ENSURE_TRUE(mNewLeftNode, NS_ERROR_NOT_INITIALIZED);

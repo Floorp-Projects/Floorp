@@ -205,7 +205,7 @@ protected:
 protected:
     void RegUnregAccessKey(bool aDoReg);
 
-  NS_HIDDEN_(void) CheckBoxOrder();
+  void CheckBoxOrder();
 
 private: 
 

@@ -49,9 +49,8 @@
 #undef RGB
 #define RGB(r,g,b) r|g<<8|b<<16
 
-enum {
-  kAutoTestSleepTimeMs = 5000
-};
+enum { kAutoTestSleepTimeMs = 5000 };
+enum { kAutoTestFullStackSleepTimeMs = 20000 };
 
 struct AutoTestSize {
   unsigned int width;

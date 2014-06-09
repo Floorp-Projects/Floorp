@@ -17,6 +17,7 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 #include "webrtc/modules/audio_coding/neteq4/delay_peak_detector.h"
+#include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
@@ -85,10 +86,9 @@ int DelayManager::Update(uint16_t sequence_number,
   }
 
   // Try calculating packet length from current and previous timestamps.
-  // TODO(hlundin): Take care of wrap-around. Not done yet due to legacy
-  // bit-exactness.
   int packet_len_ms;
-  if ((timestamp <= last_timestamp_) || (sequence_number <= last_seq_no_)) {
+  if (!IsNewerTimestamp(timestamp, last_timestamp_) ||
+      !IsNewerSequenceNumber(sequence_number, last_seq_no_)) {
     // Wrong timestamp or sequence order; use stored value.
     packet_len_ms = packet_len_ms_;
   } else {
@@ -111,18 +111,14 @@ int DelayManager::Update(uint16_t sequence_number,
     }
 
     // Check for discontinuous packet sequence and re-ordering.
-    if (sequence_number > last_seq_no_ + 1) {
-      // TODO(hlundin): Take care of wrap-around. Not done yet due to legacy
-      // bit-exactness.
+    if (IsNewerSequenceNumber(sequence_number, last_seq_no_ + 1)) {
       // Compensate for gap in the sequence numbers. Reduce IAT with the
       // expected extra time due to lost packets, but ensure that the IAT is
       // not negative.
-      iat_packets -= sequence_number - last_seq_no_ - 1;
+      iat_packets -= static_cast<uint16_t>(sequence_number - last_seq_no_ - 1);
       iat_packets = std::max(iat_packets, 0);
-    } else if (sequence_number < last_seq_no_) {
-      // TODO(hlundin): Take care of wrap-around.
-      // Compensate for re-ordering.
-      iat_packets += last_seq_no_ + 1 - sequence_number;
+    } else if (!IsNewerSequenceNumber(sequence_number, last_seq_no_)) {
+      iat_packets += static_cast<uint16_t>(last_seq_no_ + 1 - sequence_number);
     }
 
     // Saturate IAT at maximum value.

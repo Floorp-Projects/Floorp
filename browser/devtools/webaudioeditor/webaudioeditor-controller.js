@@ -183,6 +183,18 @@ let WebAudioEditorController = {
   },
 
   /**
+   * Called when page is reloaded to show the reload notice and waiting
+   * for an audio context notice.
+   */
+  reset: function () {
+    $("#reload-notice").hidden = true;
+    $("#waiting-notice").hidden = false;
+    $("#content").hidden = true;
+    WebAudioGraphView.resetUI();
+    WebAudioInspectorView.resetUI();
+  },
+
+  /**
    * Called when a new audio node is created, or the audio context
    * routing changes.
    */
@@ -202,22 +214,20 @@ let WebAudioEditorController = {
   /**
    * Called for each location change in the debugged tab.
    */
-  _onTabNavigated: function(event) {
+  _onTabNavigated: Task.async(function* (event) {
     switch (event) {
       case "will-navigate": {
-        Task.spawn(function() {
-          // Make sure the backend is prepared to handle audio contexts.
-          yield gFront.setup({ reload: false });
+        // Make sure the backend is prepared to handle audio contexts.
+        yield gFront.setup({ reload: false });
 
-          // Reset UI to show "Waiting for Audio Context..." and clear out
-          // current UI.
-          WebAudioGraphView.resetUI();
-          WebAudioInspectorView.resetUI();
+        // Reset UI to show "Waiting for Audio Context..." and clear out
+        // current UI.
+        this.reset();
 
-          // Clear out stored audio nodes
-          AudioNodes.length = 0;
-          AudioNodeConnections.clear();
-        }).then(() => window.emit(EVENTS.UI_RESET));
+        // Clear out stored audio nodes
+        AudioNodes.length = 0;
+        AudioNodeConnections.clear();
+        window.emit(EVENTS.UI_RESET);
         break;
       }
       case "navigate": {
@@ -226,14 +236,16 @@ let WebAudioEditorController = {
         break;
       }
     }
-  },
+  }),
 
   /**
    * Called after the first audio node is created in an audio context,
    * signaling that the audio context is being used.
    */
   _onStartContext: function() {
-    WebAudioGraphView.showContent();
+    $("#reload-notice").hidden = true;
+    $("#waiting-notice").hidden = true;
+    $("#content").hidden = false;
     window.emit(EVENTS.START_CONTEXT);
   },
 

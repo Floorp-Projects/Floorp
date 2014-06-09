@@ -13,7 +13,6 @@ struct IPCCallStateData
   uint32_t callIndex;
   uint16_t callState;
   nsString number;
-  bool     isActive;
   bool     isOutGoing;
   bool     isEmergency;
   bool     isConference;

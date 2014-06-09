@@ -379,8 +379,7 @@ public:
 
     // nsISupports
     NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULElement,
-                                                       mozilla::dom::Element)
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULElement, nsStyledElement)
 
     // nsINode
     virtual nsresult PreHandleEvent(

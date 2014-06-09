@@ -526,7 +526,7 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
     nscoord posAtStart = rangeContentRect.x + thumbSize.width/2;
     nscoord posAtEnd = posAtStart + traversableDistance;
     nscoord posOfPoint = mozilla::clamped(point.x, posAtStart, posAtEnd);
-    fraction = Decimal(posOfPoint - posAtStart) / traversableDistance;
+    fraction = Decimal(posOfPoint - posAtStart) / Decimal(traversableDistance);
     if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
       fraction = Decimal(1) - fraction;
     }
@@ -540,10 +540,10 @@ nsRangeFrame::GetValueAtEventPoint(WidgetGUIEvent* aEvent)
     nscoord posOfPoint = mozilla::clamped(point.y, posAtStart, posAtEnd);
     // For a vertical range, the top (posAtStart) is the highest value, so we
     // subtract the fraction from 1.0 to get that polarity correct.
-    fraction = Decimal(1) - Decimal(posOfPoint - posAtStart) / traversableDistance;
+    fraction = Decimal(1) - Decimal(posOfPoint - posAtStart) / Decimal(traversableDistance);
   }
 
-  MOZ_ASSERT(fraction >= 0 && fraction <= 1);
+  MOZ_ASSERT(fraction >= Decimal(0) && fraction <= Decimal(1));
   return minimum + fraction * range;
 }
 

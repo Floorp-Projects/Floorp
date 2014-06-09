@@ -1915,10 +1915,14 @@ LIRGenerator::visitToString(MToString *ins)
         return assignSafepoint(lir, ins);
       }
 
+      case MIRType_String:
+        return redefine(ins, ins->input());
+
       case MIRType_Value: {
-        JS_ASSERT(!opd->mightBeType(MIRType_Object));
-        LPrimitiveToString *lir = new(alloc()) LPrimitiveToString(tempToUnbox());
-        if (!useBox(lir, LPrimitiveToString::Input, opd))
+        LValueToString *lir = new(alloc()) LValueToString(tempToUnbox());
+        if (!useBox(lir, LValueToString::Input, opd))
+            return false;
+        if (ins->fallible() && !assignSnapshot(lir))
             return false;
         if (!define(lir, ins))
             return false;
@@ -1926,7 +1930,7 @@ LIRGenerator::visitToString(MToString *ins)
       }
 
       default:
-        // Objects might be effectful. (see ToPrimitive)
+        // Float32 and objects are not supported.
         MOZ_ASSUME_UNREACHABLE("unexpected type");
     }
 }
@@ -2091,15 +2095,6 @@ LIRGenerator::visitLambdaPar(MLambdaPar *ins)
                                               useRegister(ins->scopeChain()),
                                               temp(), temp());
     return define(lir, ins);
-}
-
-bool
-LIRGenerator::visitImplicitThis(MImplicitThis *ins)
-{
-    JS_ASSERT(ins->callee()->type() == MIRType_Object);
-
-    LImplicitThis *lir = new(alloc()) LImplicitThis(useRegister(ins->callee()));
-    return assignSnapshot(lir) && defineBox(lir, ins);
 }
 
 bool
@@ -2390,6 +2385,16 @@ LIRGenerator::visitTypedArrayElements(MTypedArrayElements *ins)
 }
 
 bool
+LIRGenerator::visitTypedObjectProto(MTypedObjectProto *ins)
+{
+    JS_ASSERT(ins->type() == MIRType_Object);
+    return defineReturn(new(alloc()) LTypedObjectProto(
+                            useFixed(ins->object(), CallTempReg0),
+                            tempFixed(CallTempReg1)),
+                        ins);
+}
+
+bool
 LIRGenerator::visitTypedObjectElements(MTypedObjectElements *ins)
 {
     JS_ASSERT(ins->type() == MIRType_Elements);
@@ -2549,7 +2554,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       case MIRType_Value:
       {
         LLoadElementV *lir = new(alloc()) LLoadElementV(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return defineBox(lir, ins);
@@ -2561,7 +2566,7 @@ LIRGenerator::visitLoadElement(MLoadElement *ins)
       default:
       {
         LLoadElementT *lir = new(alloc()) LLoadElementT(useRegister(ins->elements()),
-                                               useRegisterOrConstant(ins->index()));
+                                                        useRegisterOrConstant(ins->index()));
         if (ins->fallible() && !assignSnapshot(lir))
             return false;
         return define(lir, ins);
@@ -3722,17 +3727,6 @@ LIRGenerator::visitBlock(MBasicBlock *block)
 }
 
 bool
-LIRGenerator::precreatePhi(LBlock *block, MPhi *phi)
-{
-    LPhi *lir = LPhi::New(gen, phi);
-    if (!lir)
-        return false;
-    if (!block->addPhi(lir))
-        return false;
-    return true;
-}
-
-bool
 LIRGenerator::generate()
 {
     // Create all blocks and prep all phis beforehand.
@@ -3743,20 +3737,8 @@ LIRGenerator::generate()
         current = LBlock::New(alloc(), *block);
         if (!current)
             return false;
-        if (!lirGraph_.addBlock(current))
-            return false;
+        lirGraph_.setBlock(block->id(), current);
         block->assignLir(current);
-
-        // For each MIR phi, add LIR phis as appropriate. We'll fill in their
-        // operands on each incoming edge, and set their definitions at the
-        // start of their defining block.
-        for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
-            int numPhis = (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
-            for (int i = 0; i < numPhis; i++) {
-                if (!precreatePhi(block->lir(), *phi))
-                    return false;
-            }
-        }
     }
 
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
@@ -3766,9 +3748,6 @@ LIRGenerator::generate()
         if (!visitBlock(*block))
             return false;
     }
-
-    if (graph.osrBlock())
-        lirGraph_.setOsrBlock(graph.osrBlock()->lir());
 
     lirGraph_.setArgumentSlotCount(maxargslots_);
     return true;

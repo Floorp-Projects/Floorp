@@ -4,9 +4,6 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-const SETTINGS_KEY_DATA_ENABLED = "ril.data.enabled";
-const TOPIC_NETWORK_ACTIVE_CHANGED = "network-active-changed";
-
 let networkManager =
   Cc["@mozilla.org/network/manager;1"].getService(Ci.nsINetworkManager);
 ok(networkManager,

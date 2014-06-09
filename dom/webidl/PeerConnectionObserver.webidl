@@ -30,8 +30,6 @@ interface PeerConnectionObserver
 
   /* Data channel callbacks */
   void notifyDataChannel(DataChannel channel);
-  void notifyConnection();
-  void notifyClosedConnection();
 
   /* Notification of one of several types of state changed */
   void onStateChange(PCObserverStateType state);

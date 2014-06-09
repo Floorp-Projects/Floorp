@@ -37,6 +37,8 @@ enum OCSPResponseType
   ORTDelegatedIncludedLast, // same, but multiple other certificates are included
   ORTDelegatedMissing, // the response is signed by a not included delegated responder
   ORTDelegatedMissingMultiple, // same, but multiple other certificates are included
+  ORTLongValidityAlmostExpired, // a good response, but that was generated a almost a year ago
+  ORTAncientAlmostExpired, // a good response, with a validity of almost two years almost expiring
 };
 
 struct OCSPHost

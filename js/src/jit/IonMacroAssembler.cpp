@@ -484,7 +484,7 @@ MacroAssembler::nurseryAllocate(Register result, Register slots, gc::AllocKind a
     int totalSize = thingSize + nDynamicSlots * sizeof(HeapSlot);
     loadPtr(AbsoluteAddress(nursery.addressOfPosition()), result);
     computeEffectiveAddress(Address(result, totalSize), temp);
-    branchPtr(Assembler::BelowOrEqual, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
+    branchPtr(Assembler::Below, AbsoluteAddress(nursery.addressOfCurrentEnd()), temp, fail);
     storePtr(temp, AbsoluteAddress(nursery.addressOfPosition()));
 
     if (nDynamicSlots)
@@ -877,6 +877,26 @@ MacroAssembler::loadStringChars(Register str, Register dest)
 
     bind(&isInline);
     computeEffectiveAddress(Address(str, JSInlineString::offsetOfInlineStorage()), dest);
+
+    bind(&done);
+}
+
+void
+MacroAssembler::loadStringChar(Register str, Register index, Register output)
+{
+    MOZ_ASSERT(str != output);
+    MOZ_ASSERT(index != output);
+
+    loadStringChars(str, output);
+
+    Label isLatin1, done;
+    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
+                 Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    load16ZeroExtend(BaseIndex(output, index, TimesTwo), output);
+    jump(&done);
+
+    bind(&isLatin1);
+    load8ZeroExtend(BaseIndex(output, index, TimesOne), output);
 
     bind(&done);
 }
@@ -1880,9 +1900,8 @@ MacroAssembler::branchIfNotInterpretedConstructor(Register fun, Register scratch
         branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::SELF_HOSTED_CTOR << 16), label);
 
 #ifdef DEBUG
-        // Function.prototype should not have the SELF_HOSTED_CTOR flag.
         branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::IS_FUN_PROTO << 16), &done);
-        breakpoint();
+        assumeUnreachable("Function.prototype should not have the SELF_HOSTED_CTOR flag");
 #endif
     }
     bind(&done);
@@ -1942,9 +1961,10 @@ MacroAssembler::spsMarkJit(SPSProfiler *p, Register framePtr, Register temp)
     // and won't be regenerated when SPS state changes.
     spsProfileEntryAddressSafe(p, 0, temp, &stackFull);
 
+    // Push a C++ frame with non-copy label
     storePtr(ImmPtr(enterJitLabel), Address(temp, ProfileEntry::offsetOfLabel()));
     storePtr(framePtr,              Address(temp, ProfileEntry::offsetOfSpOrScript()));
-    store32(Imm32(ProfileEntry::NullPCOffset), Address(temp, ProfileEntry::offsetOfLineOrPc()));
+    store32(Imm32(0),               Address(temp, ProfileEntry::offsetOfLineOrPc()));
     store32(Imm32(ProfileEntry::IS_CPP_ENTRY), Address(temp, ProfileEntry::offsetOfFlags()));
 
     /* Always increment the stack size, whether or not we actually pushed. */

@@ -94,7 +94,9 @@ public:
     static void RunAfterPreallocatedProcessReady(nsIRunnable* aRequest);
 
     static already_AddRefed<ContentParent>
-    GetNewOrUsed(bool aForBrowserElement = false);
+    GetNewOrUsed(bool aForBrowserElement = false,
+                 hal::ProcessPriority aPriority =
+                   hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND);
 
     /**
      * Create a subprocess suitable for use as a preallocated app process.
@@ -150,6 +152,10 @@ public:
 
     bool IsAlive();
     bool IsForApp();
+    bool IsForBrowser()
+    {
+      return mIsForBrowser;
+    }
 #ifdef MOZ_NUWA_PROCESS
     bool IsNuwaProcess();
 #endif
@@ -160,8 +166,12 @@ public:
 
     int32_t Pid();
 
-    bool NeedsPermissionsUpdate() {
+    bool NeedsPermissionsUpdate() const {
         return mSendPermissionUpdates;
+    }
+
+    bool NeedsDataStoreInfos() const {
+        return mSendDataStoreInfos;
     }
 
     BlobParent* GetOrCreateActorForBlob(nsIDOMBlob* aBlob);
@@ -328,6 +338,10 @@ private:
      */
     void ShutDownProcess(bool aCloseWithError);
 
+    // Perform any steps necesssary to gracefully shtudown the message
+    // manager and null out mMessageManager.
+    void ShutDownMessageManager();
+
     PCompositorParent*
     AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
@@ -350,7 +364,10 @@ private:
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) MOZ_OVERRIDE;
 
     virtual PBrowserParent* AllocPBrowserParent(const IPCTabContext& aContext,
-                                                const uint32_t& aChromeFlags) MOZ_OVERRIDE;
+                                                const uint32_t& aChromeFlags,
+                                                const uint64_t& aId,
+                                                const bool& aIsForApp,
+                                                const bool& aIsForBrowser) MOZ_OVERRIDE;
     virtual bool DeallocPBrowserParent(PBrowserParent* frame) MOZ_OVERRIDE;
 
     virtual PDeviceStorageRequestParent*
@@ -526,6 +543,11 @@ private:
     virtual bool RecvGetSystemMemory(const uint64_t& getterId) MOZ_OVERRIDE;
     virtual bool RecvBroadcastVolume(const nsString& aVolumeName) MOZ_OVERRIDE;
 
+    virtual bool RecvDataStoreGetStores(
+                       const nsString& aName,
+                       const IPC::Principal& aPrincipal,
+                       InfallibleTArray<DataStoreSetting>* aValue) MOZ_OVERRIDE;
+
     virtual bool RecvSpeakerManagerGetSpeakerStatus(bool* aValue) MOZ_OVERRIDE;
 
     virtual bool RecvSpeakerManagerForceSpeaker(const bool& aEnable) MOZ_OVERRIDE;
@@ -600,6 +622,7 @@ private:
     bool mIsAlive;
 
     bool mSendPermissionUpdates;
+    bool mSendDataStoreInfos;
     bool mIsForBrowser;
     bool mIsNuwaProcess;
 

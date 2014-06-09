@@ -5,13 +5,22 @@
 
 let {
   getLayoutChangesObserver,
-  releaseLayoutChangesObserver
+  releaseLayoutChangesObserver,
+  LayoutChangesObserver
 } = devtools.require("devtools/server/actors/layout");
+
+// Override set/clearTimeout on LayoutChangesObserver to avoid depending on
+// time in this unit test. This means that LayoutChangesObserver.eventLoopTimer
+// will be the timeout callback instead of the timeout itself, so test cases
+// will need to execute it to fake a timeout
+LayoutChangesObserver.prototype._setTimeout = cb => cb;
+LayoutChangesObserver.prototype._clearTimeout = function() {};
 
 // Mock the tabActor since we only really want to test the LayoutChangesObserver
 // and don't want to depend on a window object, nor want to test protocol.js
 function MockTabActor() {
   this.window = new MockWindow();
+  this.windows = [this.window];
 }
 
 function MockWindow() {}
@@ -22,7 +31,9 @@ MockWindow.prototype = {
       getInterface: function() {
         return {
           QueryInterface: function() {
-            self.docShell = new MockDocShell();
+            if (!self.docShell) {
+              self.docShell = new MockDocShell();
+            }
             return self.docShell;
           }
         };
@@ -91,7 +102,6 @@ function eventsAreBatched() {
   // Note that in this test, we mock the TabActor and its window property, so we
   // also mock the setTimeout/clearTimeout mechanism and just call the callback
   // manually
-
   let tabActor = new MockTabActor();
   let observer = getLayoutChangesObserver(tabActor);
 

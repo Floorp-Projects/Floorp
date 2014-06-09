@@ -37,7 +37,12 @@
  * conflicts */
 #define UNINDENTED_BLOCK_START {
 #define UNINDENTED_BLOCK_END }
+#else
+#define UNINDENTED_BLOCK_START
+#define UNINDENTED_BLOCK_END
+#endif
 
+#ifdef WIN32
 static char *
 strsep(char **stringp, const char *delim)
 {
@@ -53,9 +58,6 @@ strsep(char **stringp, const char *delim)
     }
     return res;
 }
-#else
-#define UNINDENTED_BLOCK_START
-#define UNINDENTED_BLOCK_END
 #endif
 
 typedef struct FilterInfo_t {

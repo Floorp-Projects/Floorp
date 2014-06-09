@@ -11,6 +11,8 @@
 #ifndef SYSTEM_WRAPPERS_INTERFACE_SCOPED_REFPTR_H_
 #define SYSTEM_WRAPPERS_INTERFACE_SCOPED_REFPTR_H_
 
+#include <stddef.h>
+
 namespace webrtc {
 
 // Extracted from Chromium's src/base/memory/ref_counted.h.

@@ -370,7 +370,7 @@ Discard(uint64_t *buffer, size_t nbytes, const JSStructuredCloneCallbacks *cb, v
         return;
 
     // freeTransfer should not GC
-    JS::AutoAssertNoGC nogc;
+    JS::AutoSuppressGCAnalysis nogc;
 
     uint64_t numTransferables = LittleEndian::readUint64(point++);
     while (numTransferables--) {

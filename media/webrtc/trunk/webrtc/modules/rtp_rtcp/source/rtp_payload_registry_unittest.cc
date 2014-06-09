@@ -38,7 +38,7 @@ class RtpPayloadRegistryTest : public ::testing::Test {
 
  protected:
   ModuleRTPUtility::Payload* ExpectReturnOfTypicalAudioPayload(
-      uint8_t payload_type, int rate) {
+      uint8_t payload_type, uint32_t rate) {
     bool audio = true;
     ModuleRTPUtility::Payload returned_payload = { "name", audio, {
         // Initialize the audio struct in this case.

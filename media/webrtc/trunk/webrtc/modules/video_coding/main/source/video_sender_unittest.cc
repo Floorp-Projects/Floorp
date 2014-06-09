@@ -11,15 +11,17 @@
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/common_video/test/frame_generator.h"
+#include "webrtc/common.h"
 #include "webrtc/modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8_common_types.h"
+#include "webrtc/modules/video_coding/codecs/vp8/temporal_layers.h"
 #include "webrtc/modules/video_coding/main/interface/mock/mock_vcm_callbacks.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/video_coding_impl.h"
 #include "webrtc/modules/video_coding/main/test/test_util.h"
 #include "webrtc/system_wrappers/interface/clock.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/frame_generator.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 
@@ -31,16 +33,44 @@ using ::testing::Field;
 using ::testing::NiceMock;
 using ::testing::Pointee;
 using ::testing::Return;
+using ::testing::FloatEq;
 using std::vector;
 using webrtc::test::FrameGenerator;
 
 namespace webrtc {
 namespace vcm {
 namespace {
+enum {
+  kMaxNumberOfTemporalLayers = 3
+};
+
+struct Vp8StreamInfo {
+  float framerate_fps[kMaxNumberOfTemporalLayers];
+  int bitrate_kbps[kMaxNumberOfTemporalLayers];
+};
+
+MATCHER_P(MatchesVp8StreamInfo, expected, "") {
+  bool res = true;
+  for (int tl = 0; tl < kMaxNumberOfTemporalLayers; ++tl) {
+    if (abs(expected.framerate_fps[tl] - arg.framerate_fps[tl]) > 0.5) {
+      *result_listener << " framerate_fps[" << tl
+                       << "] = " << arg.framerate_fps[tl] << " (expected "
+                       << expected.framerate_fps[tl] << ") ";
+      res = false;
+    }
+    if (abs(expected.bitrate_kbps[tl] - arg.bitrate_kbps[tl]) > 10) {
+      *result_listener << " bitrate_kbps[" << tl
+                       << "] = " << arg.bitrate_kbps[tl] << " (expected "
+                       << expected.bitrate_kbps[tl] << ") ";
+      res = false;
+    }
+  }
+  return res;
+}
 
 class EmptyFrameGenerator : public FrameGenerator {
  public:
-  virtual I420VideoFrame& NextFrame() OVERRIDE { return frame_; }
+  I420VideoFrame* NextFrame() OVERRIDE { frame_.ResetSize(); return &frame_; }
 
  private:
   I420VideoFrame frame_;
@@ -79,6 +109,15 @@ class PacketizationCallback : public VCMPacketizationCallback {
   float BitrateKbpsWithinTemporalLayer(int temporal_layer) {
     return SumPayloadBytesWithinTemporalLayer(temporal_layer) * 8.0 /
            interval_ms();
+  }
+
+  Vp8StreamInfo CalculateVp8StreamInfo() {
+    Vp8StreamInfo info;
+    for (int tl = 0; tl < 3; ++tl) {
+      info.framerate_fps[tl] = FramerateFpsWithinTemporalLayer(tl);
+      info.bitrate_kbps[tl] = BitrateKbpsWithinTemporalLayer(tl);
+    }
+    return info;
   }
 
  private:
@@ -134,18 +173,19 @@ class TestVideoSender : public ::testing::Test {
   TestVideoSender() : clock_(1000), packetization_callback_(&clock_) {}
 
   virtual void SetUp() {
-    sender_.reset(new VideoSender(0, &clock_));
+    sender_.reset(new VideoSender(0, &clock_, &post_encode_callback_));
     EXPECT_EQ(0, sender_->InitializeSender());
     EXPECT_EQ(0, sender_->RegisterTransportCallback(&packetization_callback_));
   }
 
   void AddFrame() {
     assert(generator_.get());
-    sender_->AddVideoFrame(generator_->NextFrame(), NULL, NULL);
+    sender_->AddVideoFrame(*generator_->NextFrame(), NULL, NULL);
   }
 
   SimulatedClock clock_;
   PacketizationCallback packetization_callback_;
+  MockEncodedImageCallback post_encode_callback_;
   scoped_ptr<VideoSender> sender_;
   scoped_ptr<FrameGenerator> generator_;
 };
@@ -319,6 +359,18 @@ class TestVideoSenderWithVp8 : public TestVideoSender {
     }
   }
 
+  Vp8StreamInfo SimulateWithFramerate(float framerate) {
+    const float short_simulation_interval = 5.0;
+    const float long_simulation_interval = 10.0;
+    // It appears that this 5 seconds simulation is needed to allow
+    // bitrate and framerate to stabilize.
+    InsertFrames(framerate, short_simulation_interval);
+    packetization_callback_.Reset();
+
+    InsertFrames(framerate, long_simulation_interval);
+    return packetization_callback_.CalculateVp8StreamInfo();
+  }
+
  protected:
   VideoCodec codec_;
   int codec_bitrate_kbps_;
@@ -327,51 +379,56 @@ class TestVideoSenderWithVp8 : public TestVideoSender {
 
 TEST_F(TestVideoSenderWithVp8,
        DISABLED_ON_ANDROID(FixedTemporalLayersStrategy)) {
-  // It appears that this 5 seconds simulation are need to allow
-  // bitrate and framerate to stabilize.
-  // TODO(andresp): the framerate calculation should be improved.
-  double framerate = 30.0;
-  InsertFrames(framerate, 5.0);
-  packetization_callback_.Reset();
+  const int low_b = codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][0];
+  const int mid_b = codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][1];
+  const int high_b = codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][2];
+  {
+    Vp8StreamInfo expected = {{7.5, 15.0, 30.0}, {low_b, mid_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(30.0), MatchesVp8StreamInfo(expected));
+  }
+  {
+    Vp8StreamInfo expected = {{3.75, 7.5, 15.0}, {low_b, mid_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(15.0), MatchesVp8StreamInfo(expected));
+  }
+}
 
-  // Need to simulate for 10 seconds due to VP8 bitrate controller.
-  InsertFrames(framerate, 10.0);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(2), 30.0, 0.5);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(1), 15.0, 0.5);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(0), 7.5, 0.5);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(2),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][2],
-              10);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(1),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][1],
-              10);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(0),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][0],
-              10);
+TEST_F(TestVideoSenderWithVp8,
+       DISABLED_ON_ANDROID(RealTimeTemporalLayersStrategy)) {
+  Config extra_options;
+  extra_options.Set<TemporalLayers::Factory>(
+      new RealTimeTemporalLayersFactory());
+  VideoCodec codec = MakeVp8VideoCodec(352, 288, 3);
+  codec.extra_options = &extra_options;
+  codec.minBitrate = 10;
+  codec.startBitrate = codec_bitrate_kbps_;
+  codec.maxBitrate = codec_bitrate_kbps_;
+  EXPECT_EQ(0, sender_->RegisterSendCodec(&codec, 1, 1200));
 
-  framerate = 15.0;
-  InsertFrames(framerate, 5.0);
-  packetization_callback_.Reset();
+  const int low_b = codec_bitrate_kbps_ * 0.4;
+  const int mid_b = codec_bitrate_kbps_ * 0.6;
+  const int high_b = codec_bitrate_kbps_;
 
-  InsertFrames(15.0, 10.0);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(2), 15.0, 0.5);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(1), 7.5, 0.5);
-  EXPECT_NEAR(
-      packetization_callback_.FramerateFpsWithinTemporalLayer(0), 3.75, 0.5);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(2),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][2],
-              10);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(1),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][1],
-              10);
-  EXPECT_NEAR(packetization_callback_.BitrateKbpsWithinTemporalLayer(0),
-              codec_bitrate_kbps_ * kVp8LayerRateAlloction[2][0],
-              10);
+  {
+    Vp8StreamInfo expected = {{7.5, 15.0, 30.0}, {low_b, mid_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(30.0), MatchesVp8StreamInfo(expected));
+  }
+  {
+    Vp8StreamInfo expected = {{5.0, 10.0, 20.0}, {low_b, mid_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(20.0), MatchesVp8StreamInfo(expected));
+  }
+  {
+    Vp8StreamInfo expected = {{7.5, 15.0, 15.0}, {mid_b, high_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(15.0), MatchesVp8StreamInfo(expected));
+  }
+  {
+    Vp8StreamInfo expected = {{5.0, 10.0, 10.0}, {mid_b, high_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(10.0), MatchesVp8StreamInfo(expected));
+  }
+  {
+    // TODO(andresp): Find out why this fails with framerate = 7.5
+    Vp8StreamInfo expected = {{7.0, 7.0, 7.0}, {high_b, high_b, high_b}};
+    EXPECT_THAT(SimulateWithFramerate(7.0), MatchesVp8StreamInfo(expected));
+  }
 }
 }  // namespace
 }  // namespace vcm

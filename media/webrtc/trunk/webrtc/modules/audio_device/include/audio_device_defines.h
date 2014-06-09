@@ -85,8 +85,8 @@ public:
     // will be ignored.
     // The return value is the new microphone volume, in the range of |0, 255].
     // When the volume does not need to be updated, it returns 0.
-    // TODO(xians): Make the interface pure virtual after libjingle has its
-    // implementation.
+    // TODO(xians): Remove this interface after Chrome and Libjingle switches
+    // to OnData().
     virtual int OnDataAvailable(const int voe_channels[],
                                 int number_of_voe_channels,
                                 const int16_t* audio_data,
@@ -97,6 +97,16 @@ public:
                                 int current_volume,
                                 bool key_pressed,
                                 bool need_audio_processing) { return 0; }
+
+    // Method to pass the captured audio data to the specific VoE channel.
+    // |voe_channel| is the id of the VoE channel which is the sink to the
+    // capture data.
+    // TODO(xians): Make the interface pure virtual after libjingle
+    // has its implementation.
+    virtual void OnData(int voe_channel, const void* audio_data,
+                        int bits_per_sample, int sample_rate,
+                        int number_of_channels,
+                        int number_of_frames) {}
 
 protected:
     virtual ~AudioTransport() {}

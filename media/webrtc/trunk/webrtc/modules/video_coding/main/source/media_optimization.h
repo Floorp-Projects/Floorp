@@ -29,33 +29,25 @@ class VCMContentMetricsProcessing;
 
 namespace media_optimization {
 
-enum {
-  kBitrateMaxFrameSamples = 60
-};
-enum {
-  kBitrateAverageWinMs = 1000
-};
-
-struct EncodedFrameSample {
-  EncodedFrameSample(int size_bytes,
-                     uint32_t timestamp,
-                     int64_t time_complete_ms)
-      : size_bytes(size_bytes),
-        timestamp(timestamp),
-        time_complete_ms(time_complete_ms) {}
-
-  uint32_t size_bytes;
-  uint32_t timestamp;
-  int64_t time_complete_ms;
-};
-
+// TODO(andresp): Make thread safe.
 class MediaOptimization {
  public:
   MediaOptimization(int32_t id, Clock* clock);
-  ~MediaOptimization(void);
+  ~MediaOptimization();
 
-  // Resets the Media Optimization module.
-  int32_t Reset();
+  // TODO(andresp): Can Reset and SetEncodingData be done at construction time
+  // only?
+  void Reset();
+
+  // Informs media optimization of initial encoding state.
+  void SetEncodingData(VideoCodecType send_codec_type,
+                       int32_t max_bit_rate,
+                       uint32_t frame_rate,
+                       uint32_t bit_rate,
+                       uint16_t width,
+                       uint16_t height,
+                       int num_temporal_layers,
+                       int32_t mtu);
 
   // Sets target rates for the encoder given the channel parameters.
   // Inputs:  target bitrate - the encoder target bitrate in bits/s.
@@ -63,33 +55,27 @@ class MediaOptimization {
   //          round_trip_time_ms - round trip time in milliseconds.
   //          min_bit_rate - the bit rate of the end-point with lowest rate.
   //          max_bit_rate - the bit rate of the end-point with highest rate.
+  // TODO(andresp): Find if the callbacks can be triggered only after releasing
+  // an internal critical section.
   uint32_t SetTargetRates(uint32_t target_bitrate,
                           uint8_t fraction_lost,
-                          uint32_t round_trip_time_ms);
+                          uint32_t round_trip_time_ms,
+                          VCMProtectionCallback* protection_callback,
+                          VCMQMSettingsCallback* qmsettings_callback);
 
-  // Informs media optimization of initial encoding state.
-  int32_t SetEncodingData(VideoCodecType send_codec_type,
-                          int32_t max_bit_rate,
-                          uint32_t frame_rate,
-                          uint32_t bit_rate,
-                          uint16_t width,
-                          uint16_t height,
-                          int num_temporal_layers);
-
-  // Enables protection method.
   void EnableProtectionMethod(bool enable, VCMProtectionMethodEnum method);
+  void EnableQM(bool enable);
+  void EnableFrameDropper(bool enable);
 
-  // Returns weather or not protection method is enabled.
-  bool IsProtectionMethodEnabled(VCMProtectionMethodEnum method);
+  // Lets the sender suspend video when the rate drops below
+  // |threshold_bps|, and turns back on when the rate goes back up above
+  // |threshold_bps| + |window_bps|.
+  void SuspendBelowMinBitrate(int threshold_bps, int window_bps);
+  bool IsVideoSuspended() const;
 
-  // Returns the actual input frame rate.
-  uint32_t InputFrameRate();
+  bool DropFrame();
 
-  // Returns the actual sent frame rate.
-  uint32_t SentFrameRate();
-
-  // Returns the actual sent bit rate.
-  uint32_t SentBitRate();
+  void UpdateContentData(const VideoContentMetrics* content_metrics);
 
   // Informs Media Optimization of encoding output: Length and frame type.
   int32_t UpdateWithEncodedData(int encoded_length,
@@ -99,61 +85,47 @@ class MediaOptimization {
   // Informs Media Optimization of CPU Load state
   void SetCPULoadState(CPULoadState state);
 
-  // Registers a protection callback to be used to inform the user about the
-  // protection methods used.
-  int32_t RegisterProtectionCallback(
-      VCMProtectionCallback* protection_callback);
-
-  // Registers a quality settings callback to be used to inform VPM/user.
-  int32_t RegisterVideoQMCallback(VCMQMSettingsCallback* video_qmsettings);
-
-  void EnableFrameDropper(bool enable);
-
-  bool DropFrame();
-
-  // Returns the number of key/delta frames encoded.
-  int32_t SentFrameCount(VCMFrameCount* frame_count) const;
-
-  // Updates incoming frame rate value.
-  void UpdateIncomingFrameRate();
-
-  // Update content metric data.
-  void UpdateContentData(const VideoContentMetrics* content_metrics);
-
-  // Computes new Quality Mode.
-  int32_t SelectQuality();
-
-  // Accessors and mutators.
-  int32_t max_bit_rate() const { return max_bit_rate_; }
-  void set_max_payload_size(int32_t mtu) { max_payload_size_ = mtu; }
+  uint32_t InputFrameRate();
+  uint32_t SentFrameRate();
+  uint32_t SentBitRate();
+  VCMFrameCount SentFrameCount();
 
  private:
-  typedef std::list<EncodedFrameSample> FrameSampleList;
   enum {
     kFrameCountHistorySize = 90
   };
   enum {
     kFrameHistoryWinMs = 2000
   };
+  enum {
+    kBitrateAverageWinMs = 1000
+  };
 
-  // Updates protection callback with protection settings.
-  int UpdateProtectionCallback(VCMProtectionMethod* selected_method,
-                               uint32_t* total_video_rate_bps,
-                               uint32_t* nack_overhead_rate_bps,
-                               uint32_t* fec_overhead_rate_bps);
+  struct EncodedFrameSample;
+  typedef std::list<EncodedFrameSample> FrameSampleList;
 
+  void UpdateIncomingFrameRate();
   void PurgeOldFrameSamples(int64_t now_ms);
   void UpdateSentBitrate(int64_t now_ms);
   void UpdateSentFramerate();
 
+  // Computes new Quality Mode.
+  int32_t SelectQuality(VCMQMSettingsCallback* qmsettings_callback);
+
   // Verifies if QM settings differ from default, i.e. if an update is required.
   // Computes actual values, as will be sent to the encoder.
-  bool QMUpdate(VCMResolutionScale* qm);
+  bool QMUpdate(VCMResolutionScale* qm,
+                VCMQMSettingsCallback* qmsettings_callback);
 
   // Checks if we should make a QM change. Return true if yes, false otherwise.
   bool CheckStatusForQMchange();
 
   void ProcessIncomingFrameRate(int64_t now);
+
+  // Checks conditions for suspending the video. The method compares
+  // |target_bit_rate_| with the threshold values for suspension, and changes
+  // the state of |video_suspended_| accordingly.
+  void CheckSuspendConditions();
 
   int32_t id_;
   Clock* clock_;
@@ -168,12 +140,10 @@ class MediaOptimization {
   uint32_t send_statistics_[4];
   uint32_t send_statistics_zero_encode_;
   int32_t max_payload_size_;
-  uint32_t target_bit_rate_;
+  int target_bit_rate_;
   float incoming_frame_rate_;
   int64_t incoming_frame_times_[kFrameCountHistorySize];
   bool enable_qm_;
-  VCMProtectionCallback* video_protection_callback_;
-  VCMQMSettingsCallback* video_qmsettings_callback_;
   std::list<EncodedFrameSample> encoded_frame_samples_;
   uint32_t avg_sent_bit_rate_bps_;
   uint32_t avg_sent_framerate_;
@@ -184,9 +154,12 @@ class MediaOptimization {
   int64_t last_qm_update_time_;
   int64_t last_change_time_;  // Content/user triggered.
   int num_layers_;
+  bool suspension_enabled_;
+  bool video_suspended_;
+  int suspension_threshold_bps_;
+  int suspension_window_bps_;
   CPULoadState loadstate_;
-};  // End of MediaOptimization class declaration.
-
+};
 }  // namespace media_optimization
 }  // namespace webrtc
 

@@ -19,6 +19,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifndef WEBRTC_CODEC_PCM16
 
 ACMPCM16B::ACMPCM16B(int16_t /* codec_id */) { return; }
@@ -88,5 +90,7 @@ void ACMPCM16B::DestructEncoderSafe() {
 }
 
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc

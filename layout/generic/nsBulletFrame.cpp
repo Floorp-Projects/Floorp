@@ -19,6 +19,7 @@
 #include "prprf.h"
 #include "nsDisplayList.h"
 #include "nsCounterManager.h"
+#include "nsBidiUtils.h"
 
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
@@ -312,8 +313,6 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
-  mTextIsRTL = false;
-
   nsAutoString text;
   switch (listStyleType) {
   case NS_STYLE_LIST_STYLE_NONE:
@@ -415,12 +414,15 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     GetListItemText(*myList, text);
     aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
-    aRenderingContext.SetTextRunRTL(mTextIsRTL);
-    aRenderingContext.DrawString(
-        text, mPadding.left + aPt.x,
-        NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
-                this, aRenderingContext.ThebesContext(),
-                mPadding.top + aPt.y, ascent)));
+    aPt.MoveBy(mPadding.left, mPadding.top);
+    aPt.y = NSToCoordRound(nsLayoutUtils::GetSnappedBaselineY(
+            this, aRenderingContext.ThebesContext(), aPt.y, ascent));
+    nsPresContext* presContext = PresContext();
+    if (!presContext->BidiEnabled() && HasRTLChars(text)) {
+      presContext->SetBidiEnabled();
+    }
+    nsLayoutUtils::DrawString(this, &aRenderingContext,
+                              text.get(), text.Length(), aPt);
     break;
   }
 }
@@ -1454,18 +1456,16 @@ nsBulletFrame::AppendCounterText(int32_t aListStyleType,
 
 /* static */ void
 nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
-                                 nsString& aResult,
-                                 bool& aSuppressPadding)
+                                 nsString& aResult)
 {
-  aResult = '.';
-  aSuppressPadding = false;
+  aResult.AssignLiteral(MOZ_UTF16(". "));
 
   switch (aListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE: // used by counters code only
     case NS_STYLE_LIST_STYLE_DISC: // used by counters code only
     case NS_STYLE_LIST_STYLE_CIRCLE: // used by counters code only
     case NS_STYLE_LIST_STYLE_SQUARE: // used by counters code only
-      aResult.Truncate();
+      aResult = ' ';
       break;
 
     case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
@@ -1485,7 +1485,6 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
     case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
     case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
       aResult = 0x3001;
-      aSuppressPadding = true;
       break;
 
     case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
@@ -1493,7 +1492,7 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-      aResult = ',';
+      aResult.AssignLiteral(MOZ_UTF16(", "));
       break;
   }
 }
@@ -1502,27 +1501,30 @@ void
 nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
                                nsString& result)
 {
-  const nsStyleVisibility* vis = StyleVisibility();
-
   NS_ASSERTION(aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_NONE &&
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_DISC &&
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
                aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_SQUARE,
                "we should be using specialized code for these types");
 
-  result.Truncate();
-  AppendCounterText(aListStyle.mListStyleType, mOrdinal, result, mTextIsRTL);
+  bool isRTL;
+  nsAutoString number;
+  AppendCounterText(aListStyle.mListStyleType, mOrdinal, number, isRTL);
 
   nsAutoString suffix;
-  GetListItemSuffix(aListStyle.mListStyleType, suffix, mSuppressPadding);
+  GetListItemSuffix(aListStyle.mListStyleType, suffix);
 
-  // We're not going to do proper Bidi reordering on the list item marker, but
-  // just display the whole thing as RTL or LTR, so we fake reordering by
-  // appending the suffix to the end of the list item marker if the
-  // directionality of the characters is the same as the style direction or
-  // prepending it to the beginning if they are different.
-  result = (mTextIsRTL == (vis->mDirection == NS_STYLE_DIRECTION_RTL)) ?
-          result + suffix : suffix + result;
+  result.Truncate();
+  if (GetWritingMode().IsBidiLTR() != isRTL) {
+    result.Append(number);
+  } else {
+    // RLM = 0x200f, LRM = 0x200e
+    char16_t mark = isRTL ? 0x200f : 0x200e;
+    result.Append(mark);
+    result.Append(number);
+    result.Append(mark);
+  }
+  result.Append(suffix);
 }
 
 #define MIN_BULLET_SIZE 1
@@ -1539,6 +1541,9 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   
   const nsStyleList* myList = StyleList();
   nscoord ascent;
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
+                                        aFontSizeInflation);
 
   RemoveStateBits(BULLET_FRAME_IMAGE_LOADING);
 
@@ -1550,6 +1555,17 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       // auto size the image
       aMetrics.Width() = mIntrinsicSize.width;
       aMetrics.SetTopAscent(aMetrics.Height() = mIntrinsicSize.height);
+
+      // Add spacing to the padding.
+      nscoord halfEm = fm->EmHeight() / 2;
+      WritingMode wm = GetWritingMode();
+      if (wm.IsVertical()) {
+        mPadding.bottom += halfEm;
+      } else if (wm.IsBidiLTR()) {
+        mPadding.right += halfEm;
+      } else {
+        mPadding.left += halfEm;
+      }
 
       AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 
@@ -1565,9 +1581,6 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   // match the image size).
   mIntrinsicSize.SizeTo(0, 0);
 
-  nsRefPtr<nsFontMetrics> fm;
-  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
-                                        aFontSizeInflation);
   nscoord bulletSize;
 
   nsAutoString text;
@@ -1579,14 +1592,26 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
 
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
-    case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_SQUARE: {
       ascent = fm->MaxAscent();
       bulletSize = std::max(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
       aMetrics.Width() = aMetrics.Height() = bulletSize;
       aMetrics.SetTopAscent(bulletSize + mPadding.bottom);
+
+      // Add spacing to the padding.
+      nscoord halfEm = fm->EmHeight() / 2;
+      WritingMode wm = GetWritingMode();
+      if (wm.IsVertical()) {
+        mPadding.bottom += halfEm;
+      } else if (wm.IsBidiLTR()) {
+        mPadding.right += halfEm;
+      } else {
+        mPadding.left += halfEm;
+      }
       break;
+    }
 
     default:
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
@@ -1669,22 +1694,15 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   SetFontSizeInflation(inflation);
 
   // Get the base size
-  // This will also set mSuppressPadding appropriately (via GetListItemText())
-  // for the builtin counter styles with ideographic comma as suffix where the
-  // default padding from ua.css is not desired.
   GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice
   const nsMargin& borderPadding = aReflowState.ComputedPhysicalBorderPadding();
-  if (!mSuppressPadding ||
-      aPresContext->HasAuthorSpecifiedRules(this,
-                                            NS_AUTHOR_SPECIFIED_PADDING)) {
-    mPadding.top += NSToCoordRound(borderPadding.top * inflation);
-    mPadding.right += NSToCoordRound(borderPadding.right * inflation);
-    mPadding.bottom += NSToCoordRound(borderPadding.bottom * inflation);
-    mPadding.left += NSToCoordRound(borderPadding.left * inflation);
-  }
+  mPadding.top += NSToCoordRound(borderPadding.top * inflation);
+  mPadding.right += NSToCoordRound(borderPadding.right * inflation);
+  mPadding.bottom += NSToCoordRound(borderPadding.bottom * inflation);
+  mPadding.left += NSToCoordRound(borderPadding.left * inflation);
   aMetrics.Width() += mPadding.left + mPadding.right;
   aMetrics.Height() += mPadding.top + mPadding.bottom;
   aMetrics.SetTopAscent(aMetrics.TopAscent() + mPadding.top);

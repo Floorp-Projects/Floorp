@@ -575,7 +575,9 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
                             nsStyleContext* aStyleContext,
                             int aSkipSides)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBorder");
+  PROFILER_LABEL("nsCSSRendering", "PaintBorder",
+    js::ProfileEntry::Category::GRAPHICS);
+
   nsStyleContext *styleIfVisited = aStyleContext->GetStyleIfVisited();
   const nsStyleBorder *styleBorder = aStyleContext->StyleBorder();
   // Don't check RelevantLinkVisited here, since we want to take the
@@ -1551,7 +1553,9 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
                                 nsRect* aBGClipRect,
                                 int32_t aLayer)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBackground");
+  PROFILER_LABEL("nsCSSRendering", "PaintBackground",
+    js::ProfileEntry::Category::GRAPHICS);
+
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -1588,7 +1592,9 @@ nsCSSRendering::PaintBackgroundColor(nsPresContext* aPresContext,
                                      const nsRect& aBorderArea,
                                      uint32_t aFlags)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintBackgroundColor");
+  PROFILER_LABEL("nsCSSRendering", "PaintBackgroundColor",
+    js::ProfileEntry::Category::GRAPHICS);
+
   NS_PRECONDITION(aForFrame,
                   "Frame is expected to be provided to PaintBackground");
 
@@ -2228,7 +2234,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const CSSIntRect& aSrc,
                               const nsSize& aIntrinsicSize)
 {
-  PROFILER_LABEL("nsCSSRendering", "PaintGradient");
+  PROFILER_LABEL("nsCSSRendering", "PaintGradient",
+    js::ProfileEntry::Category::GRAPHICS);
+
   Telemetry::AutoTimer<Telemetry::GRADIENT_DURATION, Telemetry::Microsecond> gradientTimer;
   if (aDest.IsEmpty() || aFillArea.IsEmpty()) {
     return;
@@ -5002,6 +5010,10 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
     RefPtr<DrawTarget> srcSlice = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(srcRect.width, srcRect.height),
                              SurfaceFormat::B8G8R8A8);
+    if (!srcSlice) {
+      NS_ERROR("Could not create DrawTarget for element");
+      return;
+    }
     nsRefPtr<gfxContext> ctx = new gfxContext(srcSlice);
 
     // grab the entire source

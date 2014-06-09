@@ -18,7 +18,7 @@ public:
   const nsLiteralString kChannelPolicy;
 };
 
-extern NS_HIDDEN_(nsNetStrings*) gNetStrings;
+extern nsNetStrings* gNetStrings;
 
 
 #endif

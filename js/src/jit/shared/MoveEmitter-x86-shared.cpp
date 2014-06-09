@@ -241,8 +241,8 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
             masm.storeDouble(to.floatReg(), cycleSlot());
         }
         break;
-#ifdef JS_CODEGEN_X64
       case MoveOp::INT32:
+#ifdef JS_CODEGEN_X64
         // x64 can't pop to a 32-bit destination, so don't push.
         if (to.isMemory()) {
             masm.load32(toAddress(to), ScratchReg);
@@ -251,9 +251,6 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
             masm.store32(to.reg(), cycleSlot());
         }
         break;
-#endif
-#ifndef JS_CODEGEN_X64
-      case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
         masm.Push(toOperand(to));
@@ -293,8 +290,8 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
             masm.loadDouble(cycleSlot(), to.floatReg());
         }
         break;
-#ifdef JS_CODEGEN_X64
       case MoveOp::INT32:
+#ifdef JS_CODEGEN_X64
         JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(int32_t));
         // x64 can't pop to a 32-bit destination.
@@ -305,9 +302,6 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
             masm.load32(cycleSlot(), to.reg());
         }
         break;
-#endif
-#ifndef JS_CODEGEN_X64
-      case MoveOp::INT32:
 #endif
       case MoveOp::GENERAL:
         JS_ASSERT(masm.framePushed() - pushedAtStart_ >= sizeof(intptr_t));

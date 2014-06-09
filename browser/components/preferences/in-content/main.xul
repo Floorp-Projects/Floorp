@@ -89,20 +89,21 @@
 
 <hbox id="header-general"
       class="header"
+      hidden="true"
       data-category="paneGeneral">
   <image class="header-icon"/>
-  <label class="header-name"
-         value="&paneGeneral.title;"/>
+  <label class="header-name">&paneGeneral.title;</label>
 </hbox>
 
 <!-- Startup -->
-<groupbox id="startupGroup" data-category="paneGeneral">
-  <caption label="&startup.label;"/>
+<groupbox id="startupGroup"
+          data-category="paneGeneral"
+          hidden="true">
+  <caption><label>&startup.label;</label></caption>
 
   <hbox align="center">
-    <label value="&startupPage.label;"
-           accesskey="&startupPage.accesskey;"
-           control="browserStartupPage"/>
+    <label accesskey="&startupPage.accesskey;"
+           control="browserStartupPage">&startupPage.label;</label>
     <menulist id="browserStartupPage"
               preference="browser.startup.page">
       <menupopup>
@@ -120,9 +121,8 @@
   </hbox>
   <separator class="thin"/>
   <hbox align="center">
-    <label value="&homepage.label;"
-           accesskey="&homepage.accesskey;"
-           control="browserHomePage"/>
+    <label accesskey="&homepage.accesskey;"
+           control="browserHomePage">&homepage.label;</label>
     <textbox id="browserHomePage"
              class="padded uri-element"
              flex="1"
@@ -155,8 +155,10 @@
 </groupbox>
 
 <!-- Downloads -->
-<groupbox id="downloadsGroup" data-category="paneGeneral">
-  <caption label="&downloads.label;"/>
+<groupbox id="downloadsGroup"
+          data-category="paneGeneral"
+          hidden="true">
+  <caption><label>&downloads.label;</label></caption>
 
   <radiogroup id="saveWhere"
               preference="browser.download.useDownloadDir"
@@ -186,16 +188,19 @@
               preference="browser.download.folderList"
               onsynctopreference="return gMainPane.getFolderListPref();"/>
     </hbox>
-    <radio id="alwaysAsk"
-           value="false"
-           label="&alwaysAsk.label;"
-           accesskey="&alwaysAsk.accesskey;"/>
+    <hbox>
+      <radio id="alwaysAsk"
+             value="false"
+             label="&alwaysAsk.label;"
+             accesskey="&alwaysAsk.accesskey;"/>
+    </hbox>
   </radiogroup>
 </groupbox>
 
 <!-- Tab preferences -->
-<groupbox data-category="paneGeneral">
-    <caption label="&tabsGroup.label;"/>
+<groupbox data-category="paneGeneral"
+          hidden="true" align="start">
+    <caption><label>&tabsGroup.label;</label></caption>
     <checkbox id="linkTargeting" label="&newWindowsAsTabs.label;"
               accesskey="&newWindowsAsTabs.accesskey;"
               preference="browser.link.open_newwindow"

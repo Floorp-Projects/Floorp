@@ -46,8 +46,8 @@ public:
    * root frame is controlled by the frame manager. When the frame manager is
    * destroyed, it destroys the entire frame hierarchy.
    */
-  NS_HIDDEN_(nsIFrame*) GetRootFrame() const { return mRootFrame; }
-  NS_HIDDEN_(void)      SetRootFrame(nsIFrame* aRootFrame)
+  nsIFrame* GetRootFrame() const { return mRootFrame; }
+  void      SetRootFrame(nsIFrame* aRootFrame)
   {
     NS_ASSERTION(!mRootFrame, "already have a root frame");
     mRootFrame = aRootFrame;

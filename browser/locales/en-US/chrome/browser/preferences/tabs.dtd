@@ -9,13 +9,13 @@
 <!ENTITY warnCloseMultipleTabs.accesskey  "m">
 
 <!ENTITY warnOpenManyTabs.label       "Warn me when opening multiple tabs might slow down &brandShortName;">
-<!ENTITY warnOpenManyTabs.accesskey   "o">
+<!ENTITY warnOpenManyTabs.accesskey   "d">
 
 <!ENTITY restoreTabsOnDemand.label        "Don’t load tabs until selected">
-<!ENTITY restoreTabsOnDemand.accesskey    "l">
+<!ENTITY restoreTabsOnDemand.accesskey    "u">
 
 <!ENTITY switchToNewTabs.label        "When I open a link in a new tab, switch to it immediately">
-<!ENTITY switchToNewTabs.accesskey    "s">
+<!ENTITY switchToNewTabs.accesskey    "h">
 
 <!ENTITY showTabsInTaskbar.label          "Show tab previews in the Windows taskbar">
 <!ENTITY showTabsInTaskbar.accesskey      "k">

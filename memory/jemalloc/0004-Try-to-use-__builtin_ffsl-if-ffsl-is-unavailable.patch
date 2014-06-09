@@ -1,0 +1,354 @@
+diff --git a/configure b/configure
+--- a/configure
++++ b/configure
+@@ -6940,18 +6940,67 @@ else
+   je_cv_function_ffsl=no
+ fi
+ rm -f core conftest.err conftest.$ac_objext \
+     conftest$ac_exeext conftest.$ac_ext
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_function_ffsl" >&5
+ $as_echo "$je_cv_function_ffsl" >&6; }
+ 
+-if test "x${je_cv_function_ffsl}" != "xyes" ; then
+-   as_fn_error $? "Cannot build without ffsl(3)" "$LINENO" 5
++if test "x${je_cv_function_ffsl}" == "xyes" ; then
++  $as_echo "#define JEMALLOC_INTERNAL_FFSL ffsl" >>confdefs.h
++
++  $as_echo "#define JEMALLOC_INTERNAL_FFS ffs" >>confdefs.h
++
++else
++
++{ $as_echo "$as_me:${as_lineno-$LINENO}: checking whether a program using __builtin_ffsl is compilable" >&5
++$as_echo_n "checking whether a program using __builtin_ffsl is compilable... " >&6; }
++if ${je_cv_gcc_builtin_ffsl+:} false; then :
++  $as_echo_n "(cached) " >&6
++else
++  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
++/* end confdefs.h.  */
++
++  #include <stdio.h>
++  #include <strings.h>
++  #include <string.h>
++
++int
++main ()
++{
++
++	{
++		int rv = __builtin_ffsl(0x08);
++		printf("%d\n", rv);
++	}
++
++  ;
++  return 0;
++}
++_ACEOF
++if ac_fn_c_try_link "$LINENO"; then :
++  je_cv_gcc_builtin_ffsl=yes
++else
++  je_cv_gcc_builtin_ffsl=no
++fi
++rm -f core conftest.err conftest.$ac_objext \
++    conftest$ac_exeext conftest.$ac_ext
++fi
++{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $je_cv_gcc_builtin_ffsl" >&5
++$as_echo "$je_cv_gcc_builtin_ffsl" >&6; }
++
++  if test "x${je_cv_gcc_builtin_ffsl}" == "xyes" ; then
++    $as_echo "#define JEMALLOC_INTERNAL_FFSL __builtin_ffsl" >>confdefs.h
++
++    $as_echo "#define JEMALLOC_INTERNAL_FFS __builtin_ffs" >>confdefs.h
++
++  else
++    as_fn_error $? "Cannot build without ffsl(3) or __builtin_ffsl()" "$LINENO" 5
++  fi
+ fi
+ 
+ 
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether atomic(9) is compilable" >&5
+ $as_echo_n "checking whether atomic(9) is compilable... " >&6; }
+ if ${je_cv_atomic9+:} false; then :
+   $as_echo_n "(cached) " >&6
+diff --git a/configure.ac b/configure.ac
+--- a/configure.ac
++++ b/configure.ac
+@@ -1160,31 +1160,51 @@ fi
+ AC_SUBST([enable_tls])
+ if test "x${enable_tls}" = "x1" ; then
+   AC_DEFINE_UNQUOTED([JEMALLOC_TLS], [ ])
+ elif test "x${force_tls}" = "x1" ; then
+   AC_MSG_ERROR([Failed to configure TLS, which is mandatory for correct function])
+ fi
+ 
+ dnl ============================================================================
+-dnl Check for ffsl(3), and fail if not found.  This function exists on all
+-dnl platforms that jemalloc currently has a chance of functioning on without
+-dnl modification.
++dnl Check for ffsl(3), then __builtin_ffsl(), and fail if neither are found.
++dnl One of those two functions should (theoretically) exist on all platforms
++dnl that jemalloc currently has a chance of functioning on without modification.
++dnl We additionally assume ffs() or __builtin_ffs() are defined if
++dnl ffsl() or __builtin_ffsl() are defined, respectively.
+ JE_COMPILABLE([a program using ffsl], [
+ #include <stdio.h>
+ #include <strings.h>
+ #include <string.h>
+ ], [
+ 	{
+ 		int rv = ffsl(0x08);
+ 		printf("%d\n", rv);
+ 	}
+ ], [je_cv_function_ffsl])
+-if test "x${je_cv_function_ffsl}" != "xyes" ; then
+-   AC_MSG_ERROR([Cannot build without ffsl(3)])
++if test "x${je_cv_function_ffsl}" == "xyes" ; then
++  AC_DEFINE([JEMALLOC_INTERNAL_FFSL], [ffsl])
++  AC_DEFINE([JEMALLOC_INTERNAL_FFS], [ffs])
++else
++  JE_COMPILABLE([a program using __builtin_ffsl], [
++  #include <stdio.h>
++  #include <strings.h>
++  #include <string.h>
++  ], [
++	{
++		int rv = __builtin_ffsl(0x08);
++		printf("%d\n", rv);
++	}
++  ], [je_cv_gcc_builtin_ffsl])
++  if test "x${je_cv_gcc_builtin_ffsl}" == "xyes" ; then
++    AC_DEFINE([JEMALLOC_INTERNAL_FFSL], [__builtin_ffsl])
++    AC_DEFINE([JEMALLOC_INTERNAL_FFS], [__builtin_ffs])
++  else
++    AC_MSG_ERROR([Cannot build without ffsl(3) or __builtin_ffsl()])
++  fi
+ fi
+ 
+ dnl ============================================================================
+ dnl Check for atomic(9) operations as provided on FreeBSD.
+ 
+ JE_COMPILABLE([atomic(9)], [
+ #include <sys/types.h>
+ #include <machine/atomic.h>
+diff --git a/include/jemalloc/internal/arena.h b/include/jemalloc/internal/arena.h
+--- a/include/jemalloc/internal/arena.h
++++ b/include/jemalloc/internal/arena.h
+@@ -810,17 +810,17 @@ arena_run_regind(arena_run_t *run, arena
+ 	 * Avoid doing division with a variable divisor if possible.  Using
+ 	 * actual division here can reduce allocator throughput by over 20%!
+ 	 */
+ 	diff = (unsigned)((uintptr_t)ptr - (uintptr_t)run -
+ 	    bin_info->reg0_offset);
+ 
+ 	/* Rescale (factor powers of 2 out of the numerator and denominator). */
+ 	interval = bin_info->reg_interval;
+-	shift = ffs(interval) - 1;
++	shift = jemalloc_ffs(interval) - 1;
+ 	diff >>= shift;
+ 	interval >>= shift;
+ 
+ 	if (interval == 1) {
+ 		/* The divisor was a power of 2. */
+ 		regind = diff;
+ 	} else {
+ 		/*
+diff --git a/include/jemalloc/internal/bitmap.h b/include/jemalloc/internal/bitmap.h
+--- a/include/jemalloc/internal/bitmap.h
++++ b/include/jemalloc/internal/bitmap.h
+@@ -125,21 +125,21 @@ bitmap_sfu(bitmap_t *bitmap, const bitma
+ 	size_t bit;
+ 	bitmap_t g;
+ 	unsigned i;
+ 
+ 	assert(bitmap_full(bitmap, binfo) == false);
+ 
+ 	i = binfo->nlevels - 1;
+ 	g = bitmap[binfo->levels[i].group_offset];
+-	bit = ffsl(g) - 1;
++	bit = jemalloc_ffsl(g) - 1;
+ 	while (i > 0) {
+ 		i--;
+ 		g = bitmap[binfo->levels[i].group_offset + bit];
+-		bit = (bit << LG_BITMAP_GROUP_NBITS) + (ffsl(g) - 1);
++		bit = (bit << LG_BITMAP_GROUP_NBITS) + (jemalloc_ffsl(g) - 1);
+ 	}
+ 
+ 	bitmap_set(bitmap, binfo, bit);
+ 	return (bit);
+ }
+ 
+ JEMALLOC_INLINE void
+ bitmap_unset(bitmap_t *bitmap, const bitmap_info_t *binfo, size_t bit)
+diff --git a/include/jemalloc/internal/jemalloc_internal.h.in b/include/jemalloc/internal/jemalloc_internal.h.in
+--- a/include/jemalloc/internal/jemalloc_internal.h.in
++++ b/include/jemalloc/internal/jemalloc_internal.h.in
+@@ -9,21 +9,23 @@
+ #  define EPERM  ERROR_WRITE_FAULT
+ #  define EFAULT ERROR_INVALID_ADDRESS
+ #  define ENOMEM ERROR_NOT_ENOUGH_MEMORY
+ #  undef ERANGE
+ #  define ERANGE ERROR_INVALID_DATA
+ #else
+ #  include <sys/param.h>
+ #  include <sys/mman.h>
+-#  include <sys/syscall.h>
+-#  if !defined(SYS_write) && defined(__NR_write)
+-#    define SYS_write __NR_write
++#  if !defined(__pnacl__) && !defined(__native_client__)
++#    include <sys/syscall.h>
++#    if !defined(SYS_write) && defined(__NR_write)
++#      define SYS_write __NR_write
++#    endif
++#    include <sys/uio.h>
+ #  endif
+-#  include <sys/uio.h>
+ #  include <pthread.h>
+ #  include <errno.h>
+ #endif
+ #include <sys/types.h>
+ 
+ #include <limits.h>
+ #ifndef SIZE_T_MAX
+ #  define SIZE_T_MAX	SIZE_MAX
+@@ -275,16 +277,19 @@ static const bool config_ivsalloc =
+ #    define LG_QUANTUM		4
+ #  endif
+ #  ifdef __SH4__
+ #    define LG_QUANTUM		4
+ #  endif
+ #  ifdef __tile__
+ #    define LG_QUANTUM		4
+ #  endif
++#  ifdef __le32__
++#    define LG_QUANTUM		4
++#  endif
+ #  ifndef LG_QUANTUM
+ #    error "No LG_QUANTUM definition for architecture; specify via CPPFLAGS"
+ #  endif
+ #endif
+ 
+ #define	QUANTUM			((size_t)(1U << LG_QUANTUM))
+ #define	QUANTUM_MASK		(QUANTUM - 1)
+ 
+diff --git a/include/jemalloc/internal/jemalloc_internal_defs.h.in b/include/jemalloc/internal/jemalloc_internal_defs.h.in
+--- a/include/jemalloc/internal/jemalloc_internal_defs.h.in
++++ b/include/jemalloc/internal/jemalloc_internal_defs.h.in
+@@ -153,16 +153,23 @@
+  * memory map holes, much like munmap(2) does.
+  */
+ #undef JEMALLOC_MREMAP
+ 
+ /* TLS is used to map arenas and magazine caches to threads. */
+ #undef JEMALLOC_TLS
+ 
+ /*
++ * ffs()/ffsl() functions to use for bitmapping.  Don't use these directly;
++ * instead, use jemalloc_ffs() or jemalloc_ffsl() from util.h.
++ */
++#undef JEMALLOC_INTERNAL_FFSL
++#undef JEMALLOC_INTERNAL_FFS
++
++/*
+  * JEMALLOC_IVSALLOC enables ivsalloc(), which verifies that pointers reside
+  * within jemalloc-owned chunks before dereferencing them.
+  */
+ #undef JEMALLOC_IVSALLOC
+ 
+ /*
+  * Darwin (OS X) uses zones to work around Mach-O symbol override shortcomings.
+  */
+diff --git a/include/jemalloc/internal/util.h b/include/jemalloc/internal/util.h
+--- a/include/jemalloc/internal/util.h
++++ b/include/jemalloc/internal/util.h
+@@ -104,22 +104,44 @@ void malloc_cprintf(void (*write)(void *
+ void	malloc_printf(const char *format, ...)
+     JEMALLOC_ATTR(format(printf, 1, 2));
+ 
+ #endif /* JEMALLOC_H_EXTERNS */
+ /******************************************************************************/
+ #ifdef JEMALLOC_H_INLINES
+ 
+ #ifndef JEMALLOC_ENABLE_INLINE
++int	jemalloc_ffsl(long bitmap);
++int	jemalloc_ffs(int bitmap);
+ size_t	pow2_ceil(size_t x);
+ void	set_errno(int errnum);
+ int	get_errno(void);
+ #endif
+ 
+ #if (defined(JEMALLOC_ENABLE_INLINE) || defined(JEMALLOC_UTIL_C_))
++
++/* Sanity check: */
++#if !defined(JEMALLOC_INTERNAL_FFSL) || !defined(JEMALLOC_INTERNAL_FFS)
++#  error Both JEMALLOC_INTERNAL_FFSL && JEMALLOC_INTERNAL_FFS should have been defined by configure
++#endif
++
++JEMALLOC_ALWAYS_INLINE int
++jemalloc_ffsl(long bitmap)
++{
++
++        return (JEMALLOC_INTERNAL_FFSL(bitmap));
++}
++
++JEMALLOC_ALWAYS_INLINE int
++jemalloc_ffs(int bitmap)
++{
++
++        return (JEMALLOC_INTERNAL_FFS(bitmap));
++}
++
+ /* Compute the smallest power of 2 that is >= x. */
+ JEMALLOC_INLINE size_t
+ pow2_ceil(size_t x)
+ {
+ 
+ 	x--;
+ 	x |= x >> 1;
+ 	x |= x >> 2;
+diff --git a/src/arena.c b/src/arena.c
+--- a/src/arena.c
++++ b/src/arena.c
+@@ -2378,17 +2378,17 @@ bin_info_run_size_calc(arena_bin_info_t 
+ 	/*
+ 	 * Determine redzone size based on minimum alignment and minimum
+ 	 * redzone size.  Add padding to the end of the run if it is needed to
+ 	 * align the regions.  The padding allows each redzone to be half the
+ 	 * minimum alignment; without the padding, each redzone would have to
+ 	 * be twice as large in order to maintain alignment.
+ 	 */
+ 	if (config_fill && opt_redzone) {
+-		size_t align_min = ZU(1) << (ffs(bin_info->reg_size) - 1);
++		size_t align_min = ZU(1) << (jemalloc_ffs(bin_info->reg_size) - 1);
+ 		if (align_min <= REDZONE_MINSIZE) {
+ 			bin_info->redzone_size = REDZONE_MINSIZE;
+ 			pad_size = 0;
+ 		} else {
+ 			bin_info->redzone_size = align_min >> 1;
+ 			pad_size = bin_info->redzone_size;
+ 		}
+ 	} else {
+diff --git a/src/rtree.c b/src/rtree.c
+--- a/src/rtree.c
++++ b/src/rtree.c
+@@ -4,18 +4,18 @@
+ rtree_t *
+ rtree_new(unsigned bits, rtree_alloc_t *alloc, rtree_dalloc_t *dalloc)
+ {
+ 	rtree_t *ret;
+ 	unsigned bits_per_level, bits_in_leaf, height, i;
+ 
+ 	assert(bits > 0 && bits <= (sizeof(uintptr_t) << 3));
+ 
+-	bits_per_level = ffs(pow2_ceil((RTREE_NODESIZE / sizeof(void *)))) - 1;
+-	bits_in_leaf = ffs(pow2_ceil((RTREE_NODESIZE / sizeof(uint8_t)))) - 1;
++	bits_per_level = jemalloc_ffs(pow2_ceil((RTREE_NODESIZE / sizeof(void *)))) - 1;
++	bits_in_leaf = jemalloc_ffs(pow2_ceil((RTREE_NODESIZE / sizeof(uint8_t)))) - 1;
+ 	if (bits > bits_in_leaf) {
+ 		height = 1 + (bits - bits_in_leaf) / bits_per_level;
+ 		if ((height-1) * bits_per_level + bits_in_leaf != bits)
+ 			height++;
+ 	} else {
+ 		height = 1;
+ 	}
+ 	assert((height-1) * bits_per_level + bits_in_leaf >= bits);

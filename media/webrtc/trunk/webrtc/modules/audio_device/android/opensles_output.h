@@ -19,7 +19,7 @@
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
 #endif
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
-#include "webrtc/modules/audio_device/android/opensles_common.h"
+#include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
@@ -32,13 +32,21 @@ class FineAudioBuffer;
 class SingleRwFifo;
 class ThreadWrapper;
 
+#ifdef WEBRTC_ANDROID_OPENSLES_OUTPUT
+// allow us to replace it with a dummy
+
 // OpenSL implementation that facilitate playing PCM data to an android device.
 // This class is Thread-compatible. I.e. Given an instance of this class, calls
 // to non-const methods require exclusive access to the object.
-class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
+class OpenSlesOutput : public PlayoutDelayProvider {
  public:
   explicit OpenSlesOutput(const int32_t id);
   virtual ~OpenSlesOutput();
+
+  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
+                                              void* env,
+                                              void* context);
+  static void ClearAndroidAudioDeviceObjects();
 
   // Main initializaton and termination
   int32_t Init();
@@ -56,6 +64,9 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
   int32_t SetPlayoutDevice(uint16_t index);
   int32_t SetPlayoutDevice(
       AudioDeviceModule::WindowsDeviceType device) { return 0; }
+
+  // No-op
+  int32_t SetPlayoutSampleRate(uint32_t sample_rate_hz) { return 0; }
 
   // Audio transport initialization
   int32_t PlayoutIsAvailable(bool& available);  // NOLINT
@@ -135,7 +146,7 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
     // there will be jitter in audio pipe line due to the acquisition of locks.
     // Note: The buffers in the OpenSL queue do not count towards the 10ms of
     // frames needed since OpenSL needs to have them ready for playout.
-    kNum10MsToBuffer = 4,
+    kNum10MsToBuffer = 6,
   };
 
   bool InitSampleRate();
@@ -250,6 +261,200 @@ class OpenSlesOutput : public webrtc_opensl::PlayoutDelayProvider {
   SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
   SLInterfaceID SL_IID_VOLUME_;
 };
+
+#else
+
+// Dummy OpenSlesOutput
+class OpenSlesOutput : public PlayoutDelayProvider {
+ public:
+  explicit OpenSlesOutput(const int32_t id) :
+    initialized_(false), speaker_initialized_(false),
+    play_initialized_(false), playing_(false)
+  {}
+  virtual ~OpenSlesOutput() {}
+
+  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
+                                              void* env,
+                                              void* context) { return 0; }
+  static void ClearAndroidAudioDeviceObjects() {}
+
+  // Main initializaton and termination
+  int32_t Init() { initialized_ = true; return 0; }
+  int32_t Terminate() { initialized_ = false; return 0; }
+  bool Initialized() const { return initialized_; }
+
+  // Device enumeration
+  int16_t PlayoutDevices() { return 1; }
+
+  int32_t PlayoutDeviceName(uint16_t index,
+                            char name[kAdmMaxDeviceNameSize],
+                            char guid[kAdmMaxGuidSize])
+  {
+    assert(index == 0);
+    // Empty strings.
+    name[0] = '\0';
+    guid[0] = '\0';
+    return 0;
+  }
+
+  // Device selection
+  int32_t SetPlayoutDevice(uint16_t index)
+  {
+    assert(index == 0);
+    return 0;
+  }
+  int32_t SetPlayoutDevice(
+      AudioDeviceModule::WindowsDeviceType device) { return 0; }
+
+  // No-op
+  int32_t SetPlayoutSampleRate(uint32_t sample_rate_hz) { return 0; }
+
+  // Audio transport initialization
+  int32_t PlayoutIsAvailable(bool& available)  // NOLINT
+  {
+    available = true;
+    return 0;
+  }
+  int32_t InitPlayout()
+  {
+    assert(initialized_);
+    play_initialized_ = true;
+    return 0;
+  }
+  bool PlayoutIsInitialized() const { return play_initialized_; }
+
+  // Audio transport control
+  int32_t StartPlayout()
+  {
+    assert(play_initialized_);
+    assert(!playing_);
+    playing_ = true;
+    return 0;
+  }
+
+  int32_t StopPlayout()
+  {
+    playing_ = false;
+    return 0;
+  }
+
+  bool Playing() const { return playing_; }
+
+  // Audio mixer initialization
+  int32_t SpeakerIsAvailable(bool& available)  // NOLINT
+  {
+    available = true;
+    return 0;
+  }
+  int32_t InitSpeaker()
+  {
+    assert(!playing_);
+    speaker_initialized_ = true;
+    return 0;
+  }
+  bool SpeakerIsInitialized() const { return speaker_initialized_; }
+
+  // Speaker volume controls
+  int32_t SpeakerVolumeIsAvailable(bool& available)  // NOLINT
+  {
+    available = true;
+    return 0;
+  }
+  int32_t SetSpeakerVolume(uint32_t volume)
+  {
+    assert(speaker_initialized_);
+    assert(initialized_);
+    return 0;
+  }
+  int32_t SpeakerVolume(uint32_t& volume) const { return 0; }  // NOLINT
+  int32_t MaxSpeakerVolume(uint32_t& maxVolume) const  // NOLINT
+  {
+    assert(speaker_initialized_);
+    assert(initialized_);
+    maxVolume = 0;
+    return 0;
+  }
+  int32_t MinSpeakerVolume(uint32_t& minVolume) const  // NOLINT
+  {
+    assert(speaker_initialized_);
+    assert(initialized_);
+    minVolume = 0;
+    return 0;
+  }
+  int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const  // NOLINT
+  {
+    assert(speaker_initialized_);
+    assert(initialized_);
+    stepSize = 0;
+    return 0;
+  }
+
+  // Speaker mute control
+  int32_t SpeakerMuteIsAvailable(bool& available)  // NOLINT
+  {
+    available = true;
+    return 0;
+  }
+  int32_t SetSpeakerMute(bool enable) { return -1; }
+  int32_t SpeakerMute(bool& enabled) const { return -1; }  // NOLINT
+
+
+  // Stereo support
+  int32_t StereoPlayoutIsAvailable(bool& available)  // NOLINT
+  {
+    available = true;
+    return 0;
+  }
+  int32_t SetStereoPlayout(bool enable)
+  {
+    return 0;
+  }
+  int32_t StereoPlayout(bool& enabled) const  // NOLINT
+  {
+    enabled = kNumChannels == 2;
+    return 0;
+  }
+
+  // Delay information and control
+  int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
+                                   uint16_t sizeMS) { return -1; }
+  int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type,  // NOLINT
+                        uint16_t& sizeMS) const
+  {
+    type = AudioDeviceModule::kAdaptiveBufferSize;
+    sizeMS = 40;
+    return 0;
+  }
+  int32_t PlayoutDelay(uint16_t& delayMS) const  // NOLINT
+  {
+    delayMS = 0;
+    return 0;
+  }
+
+
+  // Error and warning information
+  bool PlayoutWarning() const { return false; }
+  bool PlayoutError() const { return false; }
+  void ClearPlayoutWarning() {}
+  void ClearPlayoutError() {}
+
+  // Attach audio buffer
+  void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) {}
+
+  // Speaker audio routing
+  int32_t SetLoudspeakerStatus(bool enable) { return 0; }
+  int32_t GetLoudspeakerStatus(bool& enable) const { enable = true; return 0; }  // NOLINT
+
+ protected:
+  virtual int PlayoutDelayMs() { return 40; }
+
+ private:
+  bool initialized_;
+  bool speaker_initialized_;
+  bool play_initialized_;
+  bool playing_;
+};
+#endif
 
 }  // namespace webrtc
 

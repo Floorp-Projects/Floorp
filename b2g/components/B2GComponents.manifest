@@ -28,6 +28,10 @@ contract @mozilla.org/dom/activities/ui-glue;1 {3a54788b-48cc-4ab4-93d6-0d6a8ef7
 component {879ee66c-e246-11e3-9910-74d02b97e723} InterAppCommUIGlue.js
 contract @mozilla.org/dom/apps/inter-app-comm-ui-glue;1 {879ee66c-e246-11e3-9910-74d02b97e723}
 
+# SystemMessageGlue.js
+component {2846f034-e614-11e3-93cd-74d02b97e723} SystemMessageGlue.js
+contract @mozilla.org/dom/messages/system-message-glue;1 {2846f034-e614-11e3-93cd-74d02b97e723}
+
 # ProcessGlobal.js
 component {1a94c87a-5ece-4d11-91e1-d29c29f21b28} ProcessGlobal.js
 contract @mozilla.org/b2g-process-global;1 {1a94c87a-5ece-4d11-91e1-d29c29f21b28}
@@ -91,3 +95,6 @@ contract @mozilla.org/commandlinehandler/general-startup;1?type=b2goop {e30b0e13
 category command-line-handler m-b2goop @mozilla.org/commandlinehandler/general-startup;1?type=b2goop
 #endif
 
+# MobileIdentityUIGlue.js
+component {83dbe26a-81f3-4a75-9541-3d0b7ca496b5} MobileIdentityUIGlue.js
+contract @mozilla.org/services/mobileid-ui-glue;1 {83dbe26a-81f3-4a75-9541-3d0b7ca496b5}

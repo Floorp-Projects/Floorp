@@ -27,15 +27,11 @@ interface nsIExpatSink : nsISupports
    *        and attributes that are defined to have default values in a DTD are
    *        present in aAtts.
    * @param aAttsCount the number of elements in aAtts.
-   * @param aIndex If the element has an attribute of type ID, then
-   *        aAtts[aIndex] is the name of that attribute.  Otherwise, aIndex
-   *        is -1
    * @param aLineNumber the line number of the start tag in the data stream.
    */
   void HandleStartElement(in wstring aName,
                           [array, size_is(aAttsCount)] in wstring aAtts,
                           in unsigned long aAttsCount,
-                          in long aIndex,
                           in unsigned long aLineNumber);
 
   /**

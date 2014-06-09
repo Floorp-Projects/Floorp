@@ -8,7 +8,6 @@
  <name>Init dictionary for the event constructor. """
 
 simple_events = [
-    'ProgressEvent',
     'MozSettingsEvent',
     'CustomEvent',
     'PageTransitionEvent',

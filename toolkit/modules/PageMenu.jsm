@@ -54,6 +54,8 @@ PageMenu.prototype = {
     if (pos == "start") {
       insertionPoint.insertBefore(fragment,
                                   insertionPoint.firstChild);
+    } else if (pos.startsWith("#")) {
+      insertionPoint.insertBefore(fragment, insertionPoint.querySelector(pos));
     } else {
       insertionPoint.appendChild(fragment);
     }

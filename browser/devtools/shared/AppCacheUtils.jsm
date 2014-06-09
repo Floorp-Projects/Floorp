@@ -29,6 +29,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 let { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 let { Services }   = Cu.import("resource://gre/modules/Services.jsm", {});
+let { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 let { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
@@ -118,7 +119,8 @@ AppCacheUtils.prototype = {
     for (let neturi of parsed.uris) {
       if (neturi.section == "NETWORK") {
         for (let parsedUri of parsed.uris) {
-          if (parsedUri.uri.startsWith(neturi.uri)) {
+          if (parsedUri.section !== "NETWORK" &&
+              parsedUri.uri.startsWith(neturi.uri)) {
             this._addError(neturi.line, "networkBlocksURI", neturi.line,
                            neturi.original, parsedUri.line, parsedUri.original,
                            parsedUri.section);
@@ -164,7 +166,7 @@ AppCacheUtils.prototype = {
             this._addError(parsedUri.line, "cacheControlNoStore",
                            parsedUri.original, parsedUri.line);
           }
-        } else {
+        } else if (parsedUri.original !== "*") {
           this._addError(parsedUri.line, "notAvailable",
                          parsedUri.original, parsedUri.line);
         }
@@ -182,7 +184,6 @@ AppCacheUtils.prototype = {
     let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
     let deferred = promise.defer();
-    let channelCharset = "";
     let buffer = "";
     let channel = Services.io.newChannel(uri, null, null);
 
@@ -203,7 +204,7 @@ AppCacheUtils.prototype = {
       },
 
       onStopRequest: function onStartRequest(request, context, statusCode) {
-        if (statusCode == 0) {
+        if (statusCode === 0) {
           request.QueryInterface(Ci.nsIHttpChannel);
 
           let result = {
@@ -247,70 +248,48 @@ AppCacheUtils.prototype = {
 
     let entries = [];
 
-    Services.cache.visitEntries({
-      visitDevice: function(deviceID, deviceInfo) {
-        return true;
-      },
+    let appCacheStorage = Services.cache2.appCacheStorage(LoadContextInfo.default, null);
+    appCacheStorage.asyncVisitStorage({
+      onCacheStorageInfo: function() {},
 
-      visitEntry: function(deviceID, entryInfo) {
-        if (entryInfo.deviceID == "offline") {
-          let entry = {};
-          let lowerKey = entryInfo.key.toLowerCase();
+      onCacheEntryInfo: function(aURI, aIdEnhance, aDataSize, aFetchCount, aLastModifiedTime, aExpirationTime) {
+        let lowerKey = aURI.asciiSpec.toLowerCase();
 
-          if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
-            return true;
-          }
-
-          for (let [key, value] of Iterator(entryInfo)) {
-            if (key == "QueryInterface") {
-              continue;
-            }
-            if (key == "clientID") {
-              entry.key = entryInfo.key;
-            }
-            if (key == "expirationTime" || key == "lastFetched" || key == "lastModified") {
-              value = new Date(value * 1000);
-            }
-            entry[key] = value;
-          }
-          entries.push(entry);
+        if (searchTerm && lowerKey.indexOf(searchTerm.toLowerCase()) == -1) {
+          return;
         }
+
+        if (aIdEnhance) {
+          aIdEnhance += ":";
+        }
+
+        let entry = {
+          "deviceID": "offline",
+          "key": aIdEnhance + aURI.asciiSpec,
+          "fetchCount": aFetchCount,
+          "lastFetched": null,
+          "lastModified": new Date(aLastModifiedTime * 1000),
+          "expirationTime": new Date(aExpirationTime * 1000),
+          "dataSize": aDataSize
+        };
+
+        entries.push(entry);
         return true;
       }
-    });
+    }, true);
 
-    if (entries.length == 0) {
+    if (entries.length === 0) {
       throw new Error(l10n.GetStringFromName("noResults"));
     }
     return entries;
   },
 
   viewEntry: function ACU_viewEntry(key) {
-    let uri;
-
-    Services.cache.visitEntries({
-      visitDevice: function(deviceID, deviceInfo) {
-        return true;
-      },
-
-      visitEntry: function(deviceID, entryInfo) {
-        if (entryInfo.deviceID == "offline" && entryInfo.key == key) {
-          uri = "about:cache-entry?client=" + entryInfo.clientID +
-                "&sb=1&key=" + entryInfo.key;
-          return false;
-        }
-        return true;
-      }
-    });
-
-    if (uri) {
-      let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
-                 .getService(Ci.nsIWindowMediator);
-      let win = wm.getMostRecentWindow("navigator:browser");
-      win.gBrowser.selectedTab = win.gBrowser.addTab(uri);
-    } else {
-      return l10n.GetStringFromName("entryNotFound");
-    }
+    let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
+               .getService(Ci.nsIWindowMediator);
+    let win = wm.getMostRecentWindow("navigator:browser");
+    win.gBrowser.selectedTab = win.gBrowser.addTab(
+      "about:cache-entry?storage=appcache&context=&eid=&uri=" + key);
   },
 
   clearAll: function ACU_clearAll() {
@@ -320,17 +299,23 @@ AppCacheUtils.prototype = {
   _getManifestURI: function ACU__getManifestURI() {
     let deferred = promise.defer();
 
-    let getURI = node => {
+    let getURI = () => {
       let htmlNode = this.doc.querySelector("html[manifest]");
       if (htmlNode) {
         let pageUri = this.doc.location ? this.doc.location.href : this.uri;
         let origin = pageUri.substr(0, pageUri.lastIndexOf("/") + 1);
-        return origin + htmlNode.getAttribute("manifest");
+        let manifestURI = htmlNode.getAttribute("manifest");
+
+        if (manifestURI.startsWith("/")) {
+          manifestURI = manifestURI.substr(1);
+        }
+
+        return origin + manifestURI;
       }
     };
 
     if (this.doc) {
-      let uri = getURI(this.doc);
+      let uri = getURI();
       return promise.resolve(uri);
     } else {
       this._getURIInfo(this.uri).then(uriInfo => {
@@ -338,7 +323,7 @@ AppCacheUtils.prototype = {
           let html = uriInfo.text;
           let parser = _DOMParser;
           this.doc = parser.parseFromString(html, "text/html");
-          let uri = getURI(this.doc);
+          let uri = getURI();
           deferred.resolve(uri);
         } else {
           this.errors.push({
@@ -394,10 +379,10 @@ ManifestParser.prototype = {
     this.currSection = "CACHE";
 
     for (let i = 0; i < lines.length; i++) {
-      let text = this.text = lines[i].replace(/^\s+|\s+$/g);
+      let text = this.text = lines[i].trim();
       this.currentLine = i + 1;
 
-      if (i == 0 && text != "CACHE MANIFEST") {
+      if (i === 0 && text !== "CACHE MANIFEST") {
         this._addError(1, "firstLineMustBeCacheManifest", 1);
       }
 
@@ -453,7 +438,7 @@ ManifestParser.prototype = {
 
     if (/\s/.test(text)) {
       this._addError(this.currentLine, "escapeSpaces", this.currentLine);
-      text = text.replace(/\s/g, "%20")
+      text = text.replace(/\s/g, "%20");
     }
 
     if (text[0] == "/") {
@@ -506,7 +491,7 @@ ManifestParser.prototype = {
 
     if (/\s/.test(namespace)) {
       this._addError(this.currentLine, "escapeSpaces", this.currentLine);
-      namespace = namespace.replace(/\s/g, "%20")
+      namespace = namespace.replace(/\s/g, "%20");
     }
 
     if (namespace.substr(0, 4) == "/../") {

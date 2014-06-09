@@ -983,7 +983,8 @@ CursorHelper::Dispatch(nsIEventTarget* aDatabaseThread)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB", "CursorHelper::Dispatch");
+  PROFILER_MAIN_THREAD_LABEL("CursorHelper", "Dispatch",
+    js::ProfileEntry::Category::STORAGE);
 
   if (IndexedDatabaseManager::IsMainProcess()) {
     return AsyncConnectionHelper::Dispatch(aDatabaseThread);
@@ -1019,7 +1020,8 @@ ContinueHelper::DoDatabaseWork(mozIStorageConnection* aConnection)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "ContinueHelper::DoDatabaseWork");
+  PROFILER_LABEL("ContinueHelper", "DoDatabaseWork",
+    js::ProfileEntry::Category::STORAGE);
 
   // We need to pick a query based on whether or not the cursor's mContinueToKey
   // is set. If it is unset then othing was passed to continue so we'll grab the
@@ -1101,8 +1103,8 @@ ContinueHelper::PackArgumentsForParentProcess(CursorRequestParams& aParams)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "ContinueHelper::PackArgumentsForParentProcess");
+  PROFILER_MAIN_THREAD_LABEL("ContinueHelper", "PackArgumentsForParentProcess",
+    js::ProfileEntry::Category::STORAGE);
 
   ContinueParams params;
 
@@ -1119,8 +1121,8 @@ ContinueHelper::SendResponseToChildProcess(nsresult aResultCode)
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_MAIN_THREAD_LABEL("IndexedDB",
-                             "ContinueHelper::SendResponseToChildProcess");
+  PROFILER_MAIN_THREAD_LABEL("ContinueHelper", "SendResponseToChildProcess",
+    js::ProfileEntry::Category::STORAGE);
 
   IndexedDBRequestParentBase* actor = mRequest->GetActorParent();
   NS_ASSERTION(actor, "How did we get this far without an actor?");

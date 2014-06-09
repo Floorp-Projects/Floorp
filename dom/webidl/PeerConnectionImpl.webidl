@@ -68,9 +68,9 @@ interface PeerConnectionImpl  {
 
   readonly attribute PCImplIceConnectionState iceConnectionState;
   readonly attribute PCImplIceGatheringState iceGatheringState;
-  readonly attribute PCImplReadyState readyState;
   readonly attribute PCImplSignalingState signalingState;
   readonly attribute PCImplSipccState sipccState;
+  readonly attribute DOMString id;
 
   attribute DOMString peerIdentity;
   readonly attribute boolean privacyRequested;

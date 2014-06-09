@@ -29,7 +29,7 @@
 #include <unistd.h>
 #endif
 
-#if defined(XP_LINUX) || defined(__FreeBSD__) || defined(XP_MACOSX)
+#ifdef XP_UNIX
 #define MOZ_SUPPORTS_FIFO 1
 #endif
 

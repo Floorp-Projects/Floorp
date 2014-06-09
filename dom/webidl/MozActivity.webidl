@@ -7,6 +7,7 @@
 dictionary ActivityOptions {
   DOMString name = "";
   any data = null;
+  boolean getFilterResults = false;
 };
 
 [Pref="dom.sysmsg.enabled",

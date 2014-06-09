@@ -22,7 +22,7 @@ namespace webrtc {
 TimeStretch::ReturnCodes TimeStretch::Process(
     const int16_t* input,
     size_t input_len,
-    AudioMultiVector<int16_t>* output,
+    AudioMultiVector* output,
     int16_t* length_change_samples) {
 
   // Pre-calculate common multiplication with |fs_mult_|.

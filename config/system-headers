@@ -347,7 +347,6 @@ commdlg.h
 compat.h
 condapi.h
 ConditionalMacros.h
-config.h
 conio.h
 console.h
 ControlDefinitions.h

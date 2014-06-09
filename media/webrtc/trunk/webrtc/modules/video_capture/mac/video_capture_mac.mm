@@ -27,8 +27,8 @@
 #include <QuickTime/video_capture_quick_time.h>
 #include <QuickTime/video_capture_quick_time_info.h>
 #else
-#include "qtkit/video_capture_qtkit.h"
-#include "qtkit/video_capture_qtkit_info.h"
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit.h"
+#include "webrtc/modules/video_capture/mac/qtkit/video_capture_qtkit_info.h"
 #endif
 
 namespace webrtc

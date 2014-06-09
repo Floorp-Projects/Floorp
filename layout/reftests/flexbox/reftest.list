@@ -117,7 +117,7 @@ fails == flexbox-inlinecontent-horiz-1b.xhtml flexbox-inlinecontent-horiz-1-ref.
 fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-2.xhtml  flexbox-inlinecontent-horiz-2-ref.xhtml
 == flexbox-inlinecontent-horiz-3a.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-3b.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
-fails-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
+random-if(B2G&&browserIsRemote) == flexbox-inlinecontent-horiz-3c.xhtml flexbox-inlinecontent-horiz-3-ref.xhtml
 == flexbox-inlinecontent-horiz-4.xhtml  flexbox-inlinecontent-horiz-4-ref.xhtml
 == flexbox-inlinecontent-horiz-5.xhtml  flexbox-inlinecontent-horiz-5-ref.xhtml
 

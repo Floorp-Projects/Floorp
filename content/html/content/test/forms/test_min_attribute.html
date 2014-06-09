@@ -69,9 +69,12 @@ function checkValidity(aElement, aValidity, aApply, aRangeApply)
      "element validity should be " + aValidity);
   is(aElement.validity.rangeUnderflow, !aValidity,
      "element underflow status should be " + !aValidity);
-  is(aElement.validationMessage, aValidity
-       ? "" : "Please select a value that is higher than " + aElement.min + ".",
-     "validation message");
+  var underflowMsg =
+        (aElement.type == "date" || aElement.type == "time") ?
+        ("Please select a value that is no earlier than " + aElement.min + ".") :
+        ("Please select a value that is no less than " + aElement.min + ".");
+  is(aElement.validationMessage,
+     aValidity ? "" : underflowMsg, "Checking range underflow validation message");
 
   is(aElement.mozMatchesSelector(":valid"), aElement.willValidate && aValidity,
      (aElement.willValidate && aValidity) ? ":valid should apply" : "valid shouldn't apply");
@@ -254,7 +257,7 @@ for (var test of data) {
       input.min = "4.333333333333333333333333333333333331";
       input.value = "2";
       is(input.validationMessage,
-         "Please select a value that is higher than 4.33333333333333.",
+         "Please select a value that is no less than 4.33333333333333.",
          "validation message");
       break;
     case 'range':

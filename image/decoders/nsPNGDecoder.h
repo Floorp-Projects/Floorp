@@ -33,7 +33,7 @@ public:
 
   void CreateFrame(png_uint_32 x_offset, png_uint_32 y_offset,
                    int32_t width, int32_t height,
-                   gfxImageFormat format);
+                   gfx::SurfaceFormat format);
   void EndImageFrame();
 
   // Check if PNG is valid ICO (32bpp RGBA)
@@ -76,7 +76,7 @@ public:
   qcms_profile *mInProfile;
   qcms_transform *mTransform;
 
-  gfxImageFormat format;
+  gfx::SurfaceFormat format;
 
   // For size decodes
   uint8_t mSizeBytes[8]; // Space for width and height, both 4 bytes

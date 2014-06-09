@@ -293,6 +293,39 @@ function promiseHistoryClearedState(aURIs, aShouldBeCleared) {
 }
 
 /**
+ * Allows waiting for an observer notification once.
+ *
+ * @param topic
+ *        Notification topic to observe.
+ *
+ * @return {Promise}
+ * @resolves The array [subject, data] from the observed notification.
+ * @rejects Never.
+ */
+function promiseTopicObserved(topic)
+{
+  let deferred = Promise.defer();
+  Services.obs.addObserver(function PTO_observe(subject, topic, data) {
+    Services.obs.removeObserver(PTO_observe, topic);
+    deferred.resolve([subject, data]);
+  }, topic, false);
+  return deferred.promise;
+}
+
+/**
+ * Clears history asynchronously.
+ *
+ * @return {Promise}
+ * @resolves When history has been cleared.
+ * @rejects Never.
+ */
+function promiseClearHistory() {
+  let promise = promiseTopicObserved(PlacesUtils.TOPIC_EXPIRATION_FINISHED);
+  PlacesUtils.bhistory.removeAllPages();
+  return promise;
+}
+
+/**
  * Waits for the next top-level document load in the current browser.  The URI
  * of the document is compared against aExpectedURL.  The load is then stopped
  * before it actually starts.

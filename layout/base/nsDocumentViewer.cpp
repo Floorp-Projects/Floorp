@@ -81,6 +81,7 @@
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
+#include "SelectionCarets.h"
 
 //--------------------------
 // Printing Include
@@ -572,36 +573,33 @@ nsDocumentViewer::SyncParentSubDocMap()
   }
 
   nsCOMPtr<nsPIDOMWindow> pwin(docShell->GetWindow());
-  nsCOMPtr<Element> element;
-
-  if (mDocument && pwin) {
-    element = pwin->GetFrameElementInternal();
+  if (!mDocument || !pwin) {
+    return NS_OK;
   }
 
-  if (element) {
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    docShell->GetParent(getter_AddRefs(parent));
-
-    nsCOMPtr<nsIDOMWindow> parent_win = parent ? parent->GetWindow() : nullptr;
-
-    if (parent_win) {
-      nsCOMPtr<nsIDOMDocument> dom_doc;
-      parent_win->GetDocument(getter_AddRefs(dom_doc));
-
-      nsCOMPtr<nsIDocument> parent_doc(do_QueryInterface(dom_doc));
-
-      if (parent_doc) {
-        if (mDocument &&
-            parent_doc->GetSubDocumentFor(element) != mDocument) {
-          mDocument->SuppressEventHandling(nsIDocument::eEvents,
-                                           parent_doc->EventHandlingSuppressed());
-        }
-        return parent_doc->SetSubDocumentFor(element, mDocument);
-      }
-    }
+  nsCOMPtr<Element> element = pwin->GetFrameElementInternal();
+  if (!element) {
+    return NS_OK;
   }
 
-  return NS_OK;
+  nsCOMPtr<nsIDocShellTreeItem> parent;
+  docShell->GetParent(getter_AddRefs(parent));
+
+  nsCOMPtr<nsPIDOMWindow> parent_win = parent ? parent->GetWindow() : nullptr;
+  if (!parent_win) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocument> parent_doc = parent_win->GetDoc();
+  if (!parent_doc) {
+    return NS_OK;
+  }
+
+  if (mDocument && parent_doc->GetSubDocumentFor(element) != mDocument) {
+    mDocument->SuppressEventHandling(nsIDocument::eEvents,
+                                     parent_doc->EventHandlingSuppressed());
+  }
+  return parent_doc->SetSubDocumentFor(element, mDocument);
 }
 
 NS_IMETHODIMP
@@ -719,6 +717,14 @@ nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow)
   rv = selPrivate->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv))
     return rv;
+
+  nsRefPtr<SelectionCarets> selectionCaret = mPresShell->GetSelectionCarets();
+  if (selectionCaret) {
+    nsCOMPtr<nsIDocShell> docShell(mContainer);
+    if (docShell) {
+      docShell->AddWeakScrollObserver(selectionCaret);
+    }
+  }
 
   // Save old listener so we can unregister it
   nsRefPtr<nsDocViewerFocusListener> oldFocusListener = mFocusListener;
@@ -4415,6 +4421,14 @@ nsDocumentViewer::DestroyPresShell()
   nsCOMPtr<nsISelectionPrivate> selPrivate = do_QueryInterface(selection);
   if (selPrivate && mSelectionListener)
     selPrivate->RemoveSelectionListener(mSelectionListener);
+
+  nsRefPtr<SelectionCarets> selectionCaret = mPresShell->GetSelectionCarets();
+  if (selectionCaret) {
+    nsCOMPtr<nsIDocShell> docShell(mContainer);
+    if (docShell) {
+      docShell->RemoveWeakScrollObserver(selectionCaret);
+    }
+  }
 
   nsAutoScriptBlocker scriptBlocker;
   mPresShell->Destroy();

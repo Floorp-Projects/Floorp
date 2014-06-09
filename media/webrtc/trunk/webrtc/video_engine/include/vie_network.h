@@ -65,7 +65,8 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // the RTP header and payload.
   virtual int ReceivedRTPPacket(const int video_channel,
                                 const void* data,
-                                const int length) = 0;
+                                const int length,
+                                const PacketTime& packet_time) = 0;
 
   // When using external transport for a channel, received RTCP packets should
   // be passed to VideoEngine using this function.

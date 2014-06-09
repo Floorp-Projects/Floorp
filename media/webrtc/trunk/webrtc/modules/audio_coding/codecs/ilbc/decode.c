@@ -28,7 +28,7 @@
 #include "decode_residual.h"
 #include "unpack_bits.h"
 #include "hp_output.h"
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
 #include "swap_bytes.h"
 #endif
 
@@ -54,7 +54,7 @@ void WebRtcIlbcfix_DecodeImpl(
   int16_t PLCresidual[BLOCKL_MAX + LPC_FILTERORDER];
   int16_t syntdenum[NSUB_MAX*(LPC_FILTERORDER+1)];
   int16_t PLClpc[LPC_FILTERORDER + 1];
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   uint16_t swapped[NO_OF_WORDS_30MS];
 #endif
   iLBC_bits *iLBCbits_inst = (iLBC_bits*)PLCresidual;
@@ -68,7 +68,7 @@ void WebRtcIlbcfix_DecodeImpl(
 
     /* Unpacketize bits into parameters */
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
     WebRtcIlbcfix_SwapBytes(bytes, iLBCdec_inst->no_of_words, swapped);
     last_bit = WebRtcIlbcfix_UnpackBits(swapped, iLBCbits_inst, iLBCdec_inst->mode);
 #else

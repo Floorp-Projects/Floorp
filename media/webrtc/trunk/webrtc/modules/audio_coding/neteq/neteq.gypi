@@ -21,10 +21,12 @@
       ],
       'include_dirs': [
         'interface',
+        '<(webrtc_root)',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
           'interface',
+          '<(webrtc_root)',
         ],
       },
       'sources': [
@@ -165,6 +167,7 @@
             'PCM16B',
             'neteq_unittest_tools',
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+            '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
           'sources': [
             'test/neteq_speed_test.cc',
@@ -251,10 +254,10 @@
               'target_name': 'neteq_unittests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'neteq_unittests',
               ],
               'includes': [
+                '../../../build/isolate.gypi',
                 'neteq_unittests.isolate',
               ],
               'sources': [

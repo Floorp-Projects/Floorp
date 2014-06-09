@@ -406,7 +406,8 @@ var PageStyleActor = protocol.ActorClass({
         rules.push({
           rule: ruleActor,
           inherited: inherited,
-          pseudoElement: pseudo
+          pseudoElement: pseudo,
+          isSystem: isSystem
         });
       }
 

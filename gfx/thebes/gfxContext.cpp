@@ -354,7 +354,9 @@ gfxContext::Stroke()
 void
 gfxContext::Fill()
 {
-  PROFILER_LABEL("gfxContext", "Fill");
+  PROFILER_LABEL("gfxContext", "Fill",
+    js::ProfileEntry::Category::GRAPHICS);
+
   if (mCairo) {
     cairo_fill_preserve(mCairo);
   } else {
@@ -1504,7 +1506,9 @@ gfxContext::Mask(gfxPattern *pattern)
 void
 gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
 {
-  PROFILER_LABEL("gfxContext", "Mask");
+  PROFILER_LABEL("gfxContext", "Mask",
+    js::ProfileEntry::Category::GRAPHICS);
+
   if (mCairo) {
     cairo_mask_surface(mCairo, surface->CairoSurface(), offset.x, offset.y);
   } else {
@@ -1538,7 +1542,9 @@ gfxContext::Mask(SourceSurface *surface, const Point& offset)
 void
 gfxContext::Paint(gfxFloat alpha)
 {
-  PROFILER_LABEL("gfxContext", "Paint");
+  PROFILER_LABEL("gfxContext", "Paint",
+    js::ProfileEntry::Category::GRAPHICS);
+
   if (mCairo) {
     cairo_paint_with_alpha(mCairo, alpha);
   } else {

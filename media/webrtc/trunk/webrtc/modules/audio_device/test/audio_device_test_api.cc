@@ -142,6 +142,10 @@ class AudioTransportAPI: public AudioTransport {
     return 0;
   }
 
+  virtual void OnData(int voe_channel, const void* audio_data,
+                      int bits_per_sample, int sample_rate,
+                      int number_of_channels,
+                      int number_of_frames) {}
  private:
   uint32_t rec_count_;
   uint32_t play_count_;

@@ -394,4 +394,35 @@ int ViERenderImpl::AddRenderer(const int render_id,
   }
 }
 
+int ViERenderImpl::AddRenderCallback(int render_id,
+                                     VideoRenderCallback* callback) {
+  if (render_id < kViEChannelIdBase || render_id > kViEChannelIdMax)
+    return -1;
+  // This is a channel.
+  ViEChannelManagerScoped cm(*(shared_data_->channel_manager()));
+  ViEFrameProviderBase* frame_provider = cm.Channel(render_id);
+  if (!frame_provider) {
+    WEBRTC_TRACE(kTraceError,
+                 kTraceVideo,
+                 ViEId(shared_data_->instance_id()),
+                 "%s: FrameProvider id %d doesn't exist",
+                 __FUNCTION__,
+                 render_id);
+    shared_data_->SetLastError(kViERenderInvalidRenderId);
+    return -1;
+  }
+  ViERenderer* renderer = shared_data_->render_manager()->AddRenderStream(
+      render_id, NULL, 0, 0.0f, 0.0f, 1.0f, 1.0f);
+  if (!renderer) {
+    shared_data_->SetLastError(kViERenderUnknownError);
+    return -1;
+  }
+  if (renderer->SetVideoRenderCallback(render_id, callback) != 0) {
+    shared_data_->SetLastError(kViERenderUnknownError);
+    return -1;
+  }
+
+  return frame_provider->RegisterFrameCallback(render_id, renderer);
+}
+
 }  // namespace webrtc

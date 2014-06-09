@@ -877,6 +877,46 @@ nsImageLoadingContent::ForceImageState(bool aForce,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsImageLoadingContent::GetNaturalWidth(uint32_t* aNaturalWidth)
+{
+  NS_ENSURE_ARG_POINTER(aNaturalWidth);
+
+  nsCOMPtr<imgIContainer> image;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetImage(getter_AddRefs(image));
+  }
+
+  int32_t width;
+  if (image && NS_SUCCEEDED(image->GetWidth(&width))) {
+    *aNaturalWidth = width;
+  } else {
+    *aNaturalWidth = 0;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImageLoadingContent::GetNaturalHeight(uint32_t* aNaturalHeight)
+{
+  NS_ENSURE_ARG_POINTER(aNaturalHeight);
+
+  nsCOMPtr<imgIContainer> image;
+  if (mCurrentRequest) {
+    mCurrentRequest->GetImage(getter_AddRefs(image));
+  }
+
+  int32_t height;
+  if (image && NS_SUCCEEDED(image->GetHeight(&height))) {
+    *aNaturalHeight = height;
+  } else {
+    *aNaturalHeight = 0;
+  }
+
+  return NS_OK;
+}
+
 EventStates
 nsImageLoadingContent::ImageState() const
 {

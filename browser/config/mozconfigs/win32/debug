@@ -1,6 +1,8 @@
 . "$topsrcdir/browser/config/mozconfigs/common"
 
 ac_add_options --enable-debug
+ac_add_options --enable-dmd
+ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
 ac_add_options --enable-signmar
 ac_add_options --enable-require-all-d3dc-versions
 

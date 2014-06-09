@@ -280,7 +280,7 @@ static void nr_ice_candidate_pair_stun_cb(NR_SOCKET s, int how, void *cb_arg)
 
           nr_ice_candidate_pair_set_state(pair->pctx,pair,NR_ICE_PAIR_STATE_SUCCEEDED);
 
-          if(r=nr_ice_candidate_pair_insert(&pair->remote->stream->check_list,pair))
+          if(r=nr_ice_component_insert_pair(pair->remote->component,pair))
             ABORT(r);
 
           /* If the original pair was nominated, make us nominated,

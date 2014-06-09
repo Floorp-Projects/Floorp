@@ -89,7 +89,7 @@ class ABIArgGenerator
 
     uint32_t stackBytesConsumedSoFar() const {
         if (usedArgSlots_ <= 4)
-            return 4 * sizeof(intptr_t);
+            return ShadowStackSpace;
 
         return usedArgSlots_ * sizeof(intptr_t);
     }
@@ -113,6 +113,21 @@ static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::f18 }
 static MOZ_CONSTEXPR_VAR FloatRegister SecondScratchFloatReg = { FloatRegisters::f16 };
 
 static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::f30 };
+
+// Registers used in the GenerateFFIIonExit Enable Activation block.
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = t0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE0 = a0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE1 = a1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE2 = a2;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegE3 = a3;
+
+// Registers used in the GenerateFFIIonExit Disable Activation block.
+// None of these may be the second scratch register (t8).
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnData = JSReturnReg_Data;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegReturnType = JSReturnReg_Type;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = a0;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = a1;
+static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = a2;
 
 static MOZ_CONSTEXPR_VAR FloatRegister f0  = {FloatRegisters::f0};
 static MOZ_CONSTEXPR_VAR FloatRegister f2  = {FloatRegisters::f2};
@@ -138,8 +153,7 @@ static const uint32_t CodeAlignment = 4;
 static const bool StackKeptAligned = true;
 // NativeFrameSize is the size of return adress on stack in AsmJS functions.
 static const uint32_t NativeFrameSize = sizeof(void*);
-static const uint32_t AlignmentAtPrologue = 0;
-static const uint32_t AlignmentMidPrologue = NativeFrameSize;
+static const uint32_t AlignmentAtAsmJSPrologue = sizeof(void*);
 
 static const Scale ScalePointer = TimesFour;
 
@@ -710,14 +724,11 @@ class Assembler : public AssemblerShared
     CompactBufferWriter relocations_;
     CompactBufferWriter preBarriers_;
 
-    bool enoughMemory_;
-
     MIPSBuffer m_buffer;
 
   public:
     Assembler()
-      : enoughMemory_(true),
-        m_buffer(),
+      : m_buffer(),
         isFinished(false)
     { }
 
@@ -925,6 +936,7 @@ class Assembler : public AssemblerShared
 
     BufferOffset as_abss(FloatRegister fd, FloatRegister fs);
     BufferOffset as_absd(FloatRegister fd, FloatRegister fs);
+    BufferOffset as_negs(FloatRegister fd, FloatRegister fs);
     BufferOffset as_negd(FloatRegister fd, FloatRegister fs);
 
     BufferOffset as_muls(FloatRegister fd, FloatRegister fs, FloatRegister ft);
@@ -1017,6 +1029,9 @@ class Assembler : public AssemblerShared
     static void patchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
                                         ImmPtr expectedValue);
     static void patchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
+
+    static void patchInstructionImmediate(uint8_t *code, PatchedImmPtr imm);
+
     static uint32_t alignDoubleArg(uint32_t offset) {
         return (offset + 1U) &~ 1U;
     }
@@ -1030,6 +1045,7 @@ class Assembler : public AssemblerShared
 
     static void updateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
     void processCodeLabels(uint8_t *rawCode);
+    static int32_t extractCodeLabelOffset(uint8_t *code);
 
     bool bailed() {
         return m_buffer.bail();

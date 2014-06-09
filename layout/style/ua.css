@@ -77,9 +77,10 @@
 *|*::-moz-list-bullet, *|*::-moz-list-number {
   display: inline;
   vertical-align: baseline;
-  /* Note that this padding is suppressed for some CJK numbering styles;
-   * see bug 934072 */
-  -moz-padding-end: 0.5em;
+  /* TODO: Replace this with font-variant-numeric:tabular-nums once the
+     font-variant-* properties are enabled for all channels (bug 975744). */
+  -moz-font-feature-settings: "tnum";
+  font-feature-settings: "tnum";
 }
 
 /* Links */
@@ -285,4 +286,109 @@ parsererror|sourcetext {
   color: red;
   font-weight: bold;
   font-size: 12pt;
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+  background-image: url("resource://gre/res/text_selection_handle.png");
+  position: absolute;
+  width: 19px;
+  height: 24px;
+  margin-left: -10px;
+  background-position: center center;
+  z-index: 2147483647;
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left,
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right {
+  background-image: url("resource://gre/res/text_caret.png");
+  position: absolute;
+  width: 21px;
+  height: 26px;
+  margin-left: -11px;
+  background-position: center center;
+  background-size: 100% 100%;
+  z-index: 2147483647;
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.tilt {
+  background-image: url("resource://gre/res/text_caret_tilt_left.png");
+  margin-left: -22px;
+  width: 22px;
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.tilt {
+  background-image: url("resource://gre/res/text_caret_tilt_right.png");
+  margin-left: 0px;
+  width: 22px;
+}
+
+@media (min-resolution: 1.5dppx) {
+  div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+    background-image: url("resource://gre/res/text_selection_handle@1.5.png");
+    position: absolute;
+    width: 29px;
+    height: 36px;
+    margin-left: -15px;
+    background-position: center center;
+    z-index: 2147483647;
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left,
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right {
+    background-image: url("resource://gre/res/text_caret@1.5x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_left@1.5x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_right@1.5x.png");
+  }
+}
+
+@media (min-resolution: 2dppx) {
+  div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret {
+    background-image: url("resource://gre/res/text_selection_handle@2.png");
+    position: absolute;
+    width: 38px;
+    height: 48px;
+    margin-left: -19px;
+    background-position: center center;
+    z-index: 2147483647;
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left,
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right {
+    background-image: url("resource://gre/res/text_caret@2x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_left@2x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_right@2x.png");
+  }
+}
+
+@media (min-resolution: 2.25dppx) {
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right {
+    background-image: url("resource://gre/res/text_caret@2.25x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_left@2.25x.png");
+  }
+
+  div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.tilt {
+    background-image: url("resource://gre/res/text_caret_tilt_right@2.25x.png");
+  }
+}
+
+div[\_moz_anonclass="mozTouchCaret"].moz-touchcaret.hidden,
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-left.hidden,
+div[\_moz_anonclass="mozTouchCaret"].moz-selectioncaret-right.hidden {
+  visibility: hidden;
 }

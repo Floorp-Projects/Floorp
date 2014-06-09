@@ -1611,19 +1611,19 @@ ScriptSource::setSourceCopy(ExclusiveContext *cx, SourceBufferHolder &srcBuf,
     //    in Parser::stringLiteral).
     //
     // Lastly, since the parsing thread will eventually perform a blocking wait
-    // on the compresion task's worker thread, require that there are at least 2
-    // worker threads:
-    //  - If we are on a worker thread, there must be another worker thread to
+    // on the compression task's thread, require that there are at least 2
+    // helper threads:
+    //  - If we are on a helper thread, there must be another helper thread to
     //    execute our compression task.
-    //  - If we are on the main thread, there must be at least two worker
-    //    threads since at most one worker thread can be blocking on the main
-    //    thread (see WorkerThreadState::canStartParseTask) which would cause a
-    //    deadlock if there wasn't a second worker thread that could make
+    //  - If we are on the main thread, there must be at least two helper
+    //    threads since at most one helper thread can be blocking on the main
+    //    thread (see HelperThreadState::canStartParseTask) which would cause a
+    //    deadlock if there wasn't a second helper thread that could make
     //    progress on our compression task.
 #if defined(JS_THREADSAFE) && defined(USE_ZLIB)
     bool canCompressOffThread =
-        WorkerThreadState().cpuCount > 1 &&
-        WorkerThreadState().threadCount >= 2;
+        HelperThreadState().cpuCount > 1 &&
+        HelperThreadState().threadCount >= 2;
 #else
     bool canCompressOffThread = false;
 #endif

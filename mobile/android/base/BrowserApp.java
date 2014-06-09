@@ -416,19 +416,6 @@ abstract public class BrowserApp extends GeckoApp
         return values;
     }
 
-    void handleReaderRemoved(final String url) {
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
-                showToast(R.string.page_removed, Toast.LENGTH_SHORT);
-
-                final int count = BrowserDB.getReadingListCount(getContentResolver());
-                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Reader:ListCountUpdated", Integer.toString(count)));
-            }
-        });
-    }
-
     private void handleReaderFaviconRequest(final String url) {
         (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
@@ -542,7 +529,6 @@ abstract public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:ListStatusRequest",
-            "Reader:Removed",
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
@@ -900,7 +886,6 @@ abstract public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:ListStatusRequest",
-            "Reader:Removed",
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
@@ -1230,10 +1215,6 @@ abstract public class BrowserApp extends GeckoApp
 
         } else if ("Reader:ListStatusRequest".equals(event)) {
             handleReaderListStatusRequest(message.getString("url"));
-
-        } else if ("Reader:Removed".equals(event)) {
-            final String url = message.getString("url");
-            handleReaderRemoved(url);
 
         } else if ("Reader:Share".equals(event)) {
             final String title = message.getString("title");
@@ -1617,6 +1598,10 @@ abstract public class BrowserApp extends GeckoApp
             throw new IllegalArgumentException("Cannot handle null URLs in enterEditingMode");
         }
 
+        if (mBrowserToolbar.isEditing() || mBrowserToolbar.isAnimating()) {
+            return;
+        }
+
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
         mTargetTabForEditingMode = (selectedTab != null ? selectedTab.getId() : null);
 
@@ -1699,7 +1684,9 @@ abstract public class BrowserApp extends GeckoApp
                 // Otherwise, construct a search query from the bookmark keyword.
                 final String searchUrl = keywordUrl.replace("%s", URLEncoder.encode(keywordSearch));
                 Tabs.getInstance().loadUrl(searchUrl, Tabs.LOADURL_USER_ENTERED);
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, "", "keyword");
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL,
+                                      TelemetryContract.Method.NONE,
+                                      "keyword");
             }
         });
     }

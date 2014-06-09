@@ -42,7 +42,7 @@ protected:
    * @param aApp The application to launch (may not be null)
    * @param aArg The argument to pass on the command line
    */
-  NS_HIDDEN_(nsresult) LaunchWithIProcess(const nsCString &aArg);
+  nsresult LaunchWithIProcess(const nsCString &aArg);
 };
 
 // any platforms that need a platform-specific class instead of just 

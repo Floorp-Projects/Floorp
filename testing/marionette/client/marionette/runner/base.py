@@ -471,6 +471,11 @@ class BaseMarionetteOptions(OptionParser):
                         dest='shuffle',
                         default=False,
                         help='run tests in a random order')
+        self.add_option('--shuffle-seed',
+                        dest='shuffle_seed',
+                        type=int,
+                        default=random.randint(0, sys.maxint),
+                        help='Use given seed to shuffle tests')
         self.add_option('--total-chunks',
                         dest='total_chunks',
                         type=int,
@@ -564,7 +569,8 @@ class BaseMarionetteTestRunner(object):
                  logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
                  testvars=None, tree=None, type=None, device_serial=None,
                  symbols_path=None, timeout=None, es_servers=None, shuffle=False,
-                 sdcard=None, this_chunk=1, total_chunks=1, sources=None, server_root=None,
+                 shuffle_seed=random.randint(0, sys.maxint), sdcard=None,
+                 this_chunk=1, total_chunks=1, sources=None, server_root=None,
                  gecko_log=None,
                  **kwargs):
         self.address = address
@@ -600,6 +606,7 @@ class BaseMarionetteTestRunner(object):
         self._appName = None
         self.es_servers = es_servers
         self.shuffle = shuffle
+        self.shuffle_seed = shuffle_seed
         self.sdcard = sdcard
         self.sources = sources
         self.server_root = server_root
@@ -860,6 +867,8 @@ class BaseMarionetteTestRunner(object):
 
         for run_tests in self.mixin_run_tests:
             run_tests(tests)
+        if self.shuffle:
+            self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
 
     def add_test(self, test, expected='pass', oop=None):
         filepath = os.path.abspath(test)
@@ -1011,6 +1020,7 @@ class BaseMarionetteTestRunner(object):
 
     def run_test_set(self, tests):
         if self.shuffle:
+            random.seed(self.shuffle_seed)
             random.shuffle(tests)
 
         for test in tests:

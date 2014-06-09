@@ -17,7 +17,7 @@ namespace webrtc {
 Accelerate::ReturnCodes Accelerate::Process(
     const int16_t* input,
     size_t input_length,
-    AudioMultiVector<int16_t>* output,
+    AudioMultiVector* output,
     int16_t* length_change_samples) {
   // Input length must be (almost) 30 ms.
   static const int k15ms = 120;  // 15 ms = 120 samples at 8 kHz sample rate.
@@ -43,7 +43,7 @@ void Accelerate::SetParametersForPassiveSpeech(size_t /*len*/,
 Accelerate::ReturnCodes Accelerate::CheckCriteriaAndStretch(
     const int16_t* input, size_t input_length, size_t peak_index,
     int16_t best_correlation, bool active_speech,
-    AudioMultiVector<int16_t>* output) const {
+    AudioMultiVector* output) const {
   // Check for strong correlation or passive speech.
   if ((best_correlation > kCorrelationThreshold) || !active_speech) {
     // Do accelerate operation by overlap add.
@@ -56,7 +56,7 @@ Accelerate::ReturnCodes Accelerate::CheckCriteriaAndStretch(
     // Copy first part; 0 to 15 ms.
     output->PushBackInterleaved(input, fs_mult_120 * num_channels_);
     // Copy the |peak_index| starting at 15 ms to |temp_vector|.
-    AudioMultiVector<int16_t> temp_vector(num_channels_);
+    AudioMultiVector temp_vector(num_channels_);
     temp_vector.PushBackInterleaved(&input[fs_mult_120 * num_channels_],
                                     peak_index * num_channels_);
     // Cross-fade |temp_vector| onto the end of |output|.
@@ -76,6 +76,13 @@ Accelerate::ReturnCodes Accelerate::CheckCriteriaAndStretch(
     output->PushBackInterleaved(input, input_length);
     return kNoStretch;
   }
+}
+
+Accelerate* AccelerateFactory::Create(
+    int sample_rate_hz,
+    size_t num_channels,
+    const BackgroundNoise& background_noise) const {
+  return new Accelerate(sample_rate_hz, num_channels, background_noise);
 }
 
 }  // namespace webrtc

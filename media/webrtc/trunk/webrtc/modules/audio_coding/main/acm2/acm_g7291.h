@@ -19,6 +19,8 @@ struct G729_1_inst_t_;
 
 namespace webrtc {
 
+namespace acm2 {
+
 class ACMG729_1 : public ACMGenericCodec {
  public:
   explicit ACMG729_1(int16_t codec_id);
@@ -46,6 +48,8 @@ class ACMG729_1 : public ACMGenericCodec {
   int16_t flag_8khz_;
   int16_t flag_g729_mode_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

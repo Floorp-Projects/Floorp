@@ -281,7 +281,7 @@ protected:
 
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
-    static NS_HIDDEN_(void) DirectionChanged(const char* aPrefName, void* aData);
+    static void DirectionChanged(const char* aPrefName, void* aData);
 
     // pseudo constants
     static int32_t gRefCnt;

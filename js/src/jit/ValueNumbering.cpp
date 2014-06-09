@@ -308,7 +308,7 @@ ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t 
     JS_ASSERT(ins->valueNumber() != 0);
     InstructionMap::Ptr p = defs.lookup(ins->valueNumber());
     MDefinition *dom;
-    if (!p || index > p->value().validUntil) {
+    if (!p || index >= p->value().validEnd) {
         DominatingValue value;
         value.def = ins;
         // Since we are traversing the dominator tree in pre-order, when we
@@ -316,9 +316,9 @@ ValueNumberer::findDominatingDef(InstructionMap &defs, MDefinition *ins, size_t 
         // we traverse are precisely the set of blocks that are dominated.
         //
         // So, this value is visible in all blocks if:
-        // index <= index + ins->block->numDominated()
+        // index < index + ins->block->numDominated()
         // and becomes invalid after that.
-        value.validUntil = index + ins->block()->numDominated();
+        value.validEnd = index + ins->block()->numDominated();
 
         if(!defs.put(ins->valueNumber(), value))
             return nullptr;

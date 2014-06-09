@@ -920,7 +920,8 @@ NS_IMETHODIMP
 nsObjectLoadingContent::OnStartRequest(nsIRequest *aRequest,
                                        nsISupports *aContext)
 {
-  PROFILER_LABEL("nsObjectLoadingContent", "OnStartRequest");
+  PROFILER_LABEL("nsObjectLoadingContent", "OnStartRequest",
+    js::ProfileEntry::Category::NETWORK);
 
   LOG(("OBJLC [%p]: Channel OnStartRequest", this));
 
@@ -982,6 +983,9 @@ nsObjectLoadingContent::OnStopRequest(nsIRequest *aRequest,
                                       nsISupports *aContext,
                                       nsresult aStatusCode)
 {
+  PROFILER_LABEL("nsObjectLoadingContent", "OnStopRequest",
+    js::ProfileEntry::Category::NETWORK);
+
   NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
 
   if (aRequest != mChannel) {
@@ -2646,7 +2650,7 @@ nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
   MOZ_ASSERT_IF(nsContentUtils::GetCurrentJSContext(),
                 aCx == nsContentUtils::GetCurrentJSContext());
   bool callerIsContentJS = (!nsContentUtils::IsCallerChrome() &&
-                            !nsContentUtils::IsCallerXBL() &&
+                            !nsContentUtils::IsCallerContentXBL() &&
                             js::IsContextRunningJS(aCx));
 
   nsCOMPtr<nsIContent> thisContent =

@@ -154,6 +154,18 @@ PowerManager::SetScreenEnabled(bool aEnabled)
   hal::SetScreenEnabled(aEnabled);
 }
 
+bool
+PowerManager::KeyLightEnabled()
+{
+  return hal::GetKeyLightEnabled();
+}
+
+void
+PowerManager::SetKeyLightEnabled(bool aEnabled)
+{
+  hal::SetKeyLightEnabled(aEnabled);
+}
+
 double
 PowerManager::ScreenBrightness()
 {

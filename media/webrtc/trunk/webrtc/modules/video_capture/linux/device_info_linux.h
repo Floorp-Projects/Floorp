@@ -42,7 +42,7 @@ public:
         void* /*parentWindow*/,
         uint32_t /*positionX*/,
         uint32_t /*positionY*/) { return -1;}
-    int32_t FillCapabilityMap(int fd);
+    int32_t FillCapabilities(int fd);
     int32_t Init();
 private:
 

@@ -15,7 +15,7 @@ const {require} = devtools;
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const {Connection} = require("devtools/client/connection-manager");
-const {AppManager} = require("devtools/app-manager");
+const {AppManager} = require("devtools/webide/app-manager");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const ProjectEditor = require("projecteditor/projecteditor");
 
@@ -210,37 +210,28 @@ let UI = {
   updateRuntimeList: function() {
     let USBListNode = document.querySelector("#runtime-panel-usbruntime");
     let simulatorListNode = document.querySelector("#runtime-panel-simulators");
-    while (USBListNode.hasChildNodes()) {
-      USBListNode.firstChild.remove();
-    }
+    let customListNode = document.querySelector("#runtime-panel-custom");
 
-    for (let runtime of AppManager.runtimeList.usb) {
-      let panelItemNode = document.createElement("toolbarbutton");
-      panelItemNode.className = "panel-item runtime-panel-item-usbruntime";
-      panelItemNode.setAttribute("label", runtime.getName());
-      USBListNode.appendChild(panelItemNode);
-      let r = runtime;
-      panelItemNode.addEventListener("click", () => {
-        this.hidePanels();
-        this.connectToRuntime(r);
-      }, true);
+    for (let [type, parent] of [
+      ["usb", USBListNode],
+      ["simulator", simulatorListNode],
+      ["custom", customListNode],
+    ]) {
+      while (parent.hasChildNodes()) {
+        parent.firstChild.remove();
+      }
+      for (let runtime of AppManager.runtimeList[type]) {
+        let panelItemNode = document.createElement("toolbarbutton");
+        panelItemNode.className = "panel-item runtime-panel-item-" + type;
+        panelItemNode.setAttribute("label", runtime.getName());
+        parent.appendChild(panelItemNode);
+        let r = runtime;
+        panelItemNode.addEventListener("click", () => {
+          this.hidePanels();
+          this.connectToRuntime(r);
+        }, true);
+      }
     }
-
-    while (simulatorListNode.hasChildNodes()) {
-      simulatorListNode.firstChild.remove();
-    }
-    for (let runtime of AppManager.runtimeList.simulator) {
-      let panelItemNode = document.createElement("toolbarbutton");
-      panelItemNode.className = "panel-item runtime-panel-item-simulator";
-      panelItemNode.setAttribute("label", runtime.getName());
-      simulatorListNode.appendChild(panelItemNode);
-      let r = runtime;
-      panelItemNode.addEventListener("click", () => {
-        this.hidePanels();
-        this.connectToRuntime(r);
-      }, true);
-    }
-
   },
 
   connectToRuntime: function(runtime) {
@@ -625,11 +616,10 @@ let Cmds = {
         projectsNode.appendChild(panelItemNode);
         panelItemNode.setAttribute("label", project.name || AppManager.DEFAULT_PROJECT_NAME);
         panelItemNode.setAttribute("image", project.icon || AppManager.DEFAULT_PROJECT_ICON);
-        if (!project.validationStatus) {
-          // The result of the validation process (storing names, icons, …) has never been
-          // stored in the IndexedDB database. This happens when the project has been created
-          // from the old app manager. We need to run the validation again and update the name
-          // and icon of the app
+        if (!project.name || !project.icon) {
+          // The result of the validation process (storing names, icons, …) is not stored in
+          // the IndexedDB database when App Manager v1 is used.
+          // We need to run the validation again and update the name and icon of the app.
           AppManager.validateProject(project).then(() => {
             panelItemNode.setAttribute("label", project.name);
             panelItemNode.setAttribute("image", project.icon);

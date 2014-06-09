@@ -4,5 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 pref("devtools.webide.showProjectEditor", true);
-pref("devtools.webide.templatesURL", "http://fixme/");
+pref("devtools.webide.templatesURL", "http://people.mozilla.org/~prouget/webidetemplates/template.json"); // See bug 1021504
 pref("devtools.webide.lastprojectlocation", "");
+pref("devtools.webide.enableLocalRuntime", false);

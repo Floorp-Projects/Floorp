@@ -38,7 +38,7 @@ void BackgroundNoise::Reset() {
   // Keep _bgnMode as it is.
 }
 
-void BackgroundNoise::Update(const AudioMultiVector<int16_t>& input,
+void BackgroundNoise::Update(const AudioMultiVector& input,
                              const PostDecodeVad& vad) {
   if (vad.running() && vad.active_speech()) {
     // Do not update the background noise parameters if we know that the signal

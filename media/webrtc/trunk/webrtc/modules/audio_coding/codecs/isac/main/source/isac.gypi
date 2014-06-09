@@ -16,10 +16,12 @@
       ],
       'include_dirs': [
         '../interface',
+        '<(webrtc_root)',
       ],
       'direct_dependent_settings': {
         'include_dirs': [
           '../interface',
+          '<(webrtc_root)',
         ],
       },
       'sources': [
@@ -73,18 +75,13 @@
         'structs.h',
         'os_specific_inline.h',
      ],
-      'conditions': [
-        ['OS!="win"', {
-          'defines': [
-            'WEBRTC_LINUX',
-          ],
-          'link_settings': {
-            'libraries': [
-              '-lm',
-            ],
-          },
-        }],
-      ],
+     'conditions': [
+       ['OS=="linux"', {
+         'link_settings': {
+           'libraries': ['-lm',],
+         },
+       }],
+     ],
     },
   ],
 }

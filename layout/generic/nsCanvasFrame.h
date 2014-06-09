@@ -13,6 +13,7 @@
 #include "nsContainerFrame.h"
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"
+#include "nsIAnonymousContentCreator.h"
 
 class nsPresContext;
 class nsRenderingContext;
@@ -25,7 +26,8 @@ class nsRenderingContext;
  * frame
  */
 class nsCanvasFrame : public nsContainerFrame,
-                      public nsIScrollPositionListener
+                      public nsIScrollPositionListener,
+                      public nsIAnonymousContentCreator
 {
 public:
   nsCanvasFrame(nsStyleContext* aContext)
@@ -62,6 +64,27 @@ public:
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
              ~(nsIFrame::eCanContainOverflowContainers));
+  }
+
+  // nsIAnonymousContentCreator
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
+  virtual void AppendAnonymousContentTo(nsBaseContentList& aElements, uint32_t aFilter) MOZ_OVERRIDE;
+
+  // Touch caret handle function
+  mozilla::dom::Element* GetTouchCaretElement() const
+  {
+     return mTouchCaretElement;
+  }
+
+  // Selection Caret Handle function
+  mozilla::dom::Element* GetSelectionCaretsStartElement() const
+  {
+    return mSelectionCaretsStartElement;
+  }
+
+  mozilla::dom::Element* GetSelectionCaretsEndElement() const
+  {
+    return mSelectionCaretsEndElement;
   }
 
   /** SetHasFocus tells the CanvasFrame to draw with focus ring
@@ -111,6 +134,10 @@ protected:
   // Data members
   bool                      mDoPaintFocus;
   bool                      mAddedScrollPositionListener;
+
+  nsCOMPtr<mozilla::dom::Element> mTouchCaretElement;
+  nsCOMPtr<mozilla::dom::Element> mSelectionCaretsStartElement;
+  nsCOMPtr<mozilla::dom::Element> mSelectionCaretsEndElement;
 };
 
 /**
@@ -181,6 +208,9 @@ public:
   }
 
   NS_DISPLAY_DECL_NAME("CanvasBackgroundColor", TYPE_CANVAS_BACKGROUND_COLOR)
+#ifdef MOZ_DUMP_PAINTING
+  virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
+#endif
 
 private:
   nscolor mColor;

@@ -42,7 +42,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     uint32_t passedFloatArgs_;
     uint32_t stackForCall_;
     bool dynamicAlignment_;
-    bool enoughMemory_;
 
     // These use SystemAllocPolicy since asm.js releases memory after each
     // function is compiled, and these need to live until after all functions
@@ -78,22 +77,18 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
+    using MacroAssemblerX86Shared::branchTest32;
     using MacroAssemblerX86Shared::load32;
     using MacroAssemblerX86Shared::store32;
 
     MacroAssemblerX64()
-      : inCall_(false),
-        enoughMemory_(true)
+      : inCall_(false)
     {
     }
 
     // The buffer is about to be linked, make sure any constant pools or excess
     // bookkeeping has been flushed to the instruction stream.
     void finish();
-
-    bool oom() const {
-        return MacroAssemblerX86Shared::oom() || !enoughMemory_;
-    }
 
     /////////////////////////////////////////////////////////////////
     // X64 helpers.
@@ -454,8 +449,12 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
     void cmpPtr(Register lhs, const ImmWord rhs) {
         JS_ASSERT(lhs != ScratchReg);
-        mov(rhs, ScratchReg);
-        cmpq(lhs, ScratchReg);
+        if (intptr_t(rhs.value) <= INT32_MAX && intptr_t(rhs.value) >= INT32_MIN) {
+            cmpq(lhs, Imm32(int32_t(rhs.value)));
+        } else {
+            movq(rhs, ScratchReg);
+            cmpq(lhs, ScratchReg);
+        }
     }
     void cmpPtr(Register lhs, const ImmPtr rhs) {
         cmpPtr(lhs, ImmWord(uintptr_t(rhs.value)));
@@ -469,6 +468,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmpq(lhs, rhs);
     }
     void cmpPtr(const Operand &lhs, const ImmGCPtr rhs) {
+        JS_ASSERT(!lhs.containsReg(ScratchReg));
         movq(rhs, ScratchReg);
         cmpq(lhs, ScratchReg);
     }
@@ -591,6 +591,15 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
             mov(ImmPtr(lhs.addr), ScratchReg);
             branch32(cond, Address(ScratchReg, 0), rhs, label);
         }
+    }
+    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
+        if (JSC::X86Assembler::isAddressImmediate(address.addr)) {
+            testl(Operand(address), imm);
+        } else {
+            mov(ImmPtr(address.addr), ScratchReg);
+            testl(Operand(ScratchReg, 0), imm);
+        }
+        j(cond, label);
     }
 
     // Specialization for AbsoluteAddress.
@@ -1072,9 +1081,14 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void unboxNonDouble(const Operand &src, Register dest) {
         // Explicitly permits |dest| to be used in |src|.
         JS_ASSERT(dest != ScratchReg);
-        mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
-        movq(src, dest);
-        andq(ScratchReg, dest);
+        if (src.containsReg(dest)) {
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), ScratchReg);
+            movq(src, dest);
+            andq(ScratchReg, dest);
+        } else {
+            mov(ImmWord(JSVAL_PAYLOAD_MASK), dest);
+            andq(src, dest);
+        }
     }
 
     void unboxString(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
@@ -1216,6 +1230,9 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         else
             unboxNonDouble(Operand(src), dest.gpr());
     }
+
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest, MIRType slotType);
 
     void loadInstructionPointerAfterCall(Register dest) {
         loadPtr(Address(StackPointer, 0x0), dest);

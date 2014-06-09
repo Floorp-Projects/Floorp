@@ -21,27 +21,29 @@
 
 #include "structs.h"
 
+#define NUM_AR_RC_QUANT_BAUNDARY 12
+
 /********************* AR Coefficient Tables ************************/
 /* cdf for quantized reflection coefficient 1 */
-extern const uint16_t WebRtcIsac_kQArRc1Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc1Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* cdf for quantized reflection coefficient 2 */
-extern const uint16_t WebRtcIsac_kQArRc2Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc2Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* cdf for quantized reflection coefficient 3 */
-extern const uint16_t WebRtcIsac_kQArRc3Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc3Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* cdf for quantized reflection coefficient 4 */
-extern const uint16_t WebRtcIsac_kQArRc4Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc4Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* cdf for quantized reflection coefficient 5 */
-extern const uint16_t WebRtcIsac_kQArRc5Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc5Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* cdf for quantized reflection coefficient 6 */
-extern const uint16_t WebRtcIsac_kQArRc6Cdf[12];
+extern const uint16_t WebRtcIsac_kQArRc6Cdf[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* quantization boundary levels for reflection coefficients */
-extern const int16_t WebRtcIsac_kQArBoundaryLevels[12];
+extern const int16_t WebRtcIsac_kQArBoundaryLevels[NUM_AR_RC_QUANT_BAUNDARY];
 
 /* initial indices for AR reflection coefficient quantizer and cdf table search */
 extern const uint16_t WebRtcIsac_kQArRcInitIndex[AR_ORDER];

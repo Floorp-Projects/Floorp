@@ -102,6 +102,9 @@ partial interface HTMLMediaElement {
   attribute boolean mozPreservesPitch;
   readonly attribute boolean mozAutoplayEnabled;
 
+  // NB: for internal use with the video controls:
+  [Func="IsChromeOrXBL"] attribute boolean mozMediaStatisticsShowing;
+
   // Mozilla extension: stream capture
   [Throws]
   MediaStream mozCaptureStream();
@@ -129,4 +132,26 @@ partial interface HTMLMediaElement {
   // * onmozinterruptbegin - called when the media element is interrupted
   //   because of the audiochannel manager.
   // * onmozinterruptend - called when the interruption is concluded
+};
+
+enum MediaWaitingFor {
+  "none",
+  "data",
+  "key"
+};
+
+// Encrypted Media Extensions
+partial interface HTMLMediaElement {
+  [Pref="media.eme.enabled"]
+  readonly attribute MediaKeys? mediaKeys;
+  
+  // Promise<any>
+  [Pref="media.eme.enabled", Throws, NewObject]
+  Promise setMediaKeys(MediaKeys? mediaKeys);
+  
+  [Pref="media.eme.enabled"]
+  attribute EventHandler onneedkey;
+
+  [Pref="media.eme.enabled"]
+  readonly attribute MediaWaitingFor waitingFor;
 };

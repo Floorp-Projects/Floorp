@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaSourceBinding.h"
+#include "mozilla/Monitor.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
@@ -89,6 +90,12 @@ public:
   // that were evicted are provided.
   void NotifyEvicted(double aStart, double aEnd);
 
+  // Block thread waiting for data to be appended to a SourceBuffer.
+  void WaitForData();
+
+  // Unblock threads waiting for data to be appended to a SourceBuffer.
+  void NotifyGotData();
+
 private:
   explicit MediaSource(nsPIDOMWindow* aWindow);
 
@@ -106,6 +113,10 @@ private:
   nsRefPtr<MediaSourceDecoder> mDecoder;
 
   MediaSourceReadyState mReadyState;
+
+  // Monitor for waiting for when new data is appended to
+  // a Source Buffer.
+  Monitor mWaitForDataMonitor;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(MediaSource, MOZILLA_DOM_MEDIASOURCE_IMPLEMENTATION_IID)

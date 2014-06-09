@@ -2428,7 +2428,8 @@ let BrowserOnClick = {
         TabCrashReporter.submitCrashReport(browser);
       }
 #endif
-      openUILinkIn(button.getAttribute("url"), "current");
+
+      TabCrashReporter.reloadCrashedTabs();
     }
   },
 
@@ -6065,7 +6066,7 @@ function GetSearchFieldBookmarkData(node) {
 
 
 function AddKeywordForSearchField() {
-  bookmarkData = GetSearchFieldBookmarkData(gContextMenu.target);
+  let bookmarkData = GetSearchFieldBookmarkData(gContextMenu.target);
 
   PlacesUIUtils.showBookmarkDialog({ action: "add"
                                    , type: "bookmark"

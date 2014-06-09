@@ -50,6 +50,13 @@ interface MozPowerManager
     attribute boolean screenEnabled;
 
     /**
+     * Is the device's keypad/button backlight enabled? Setting it to false will
+     * turn off the device's keypad/button backlight. And the brightness level
+     * is the same as |screenBrightness|.
+     */
+    attribute boolean keyLightEnabled;
+
+    /**
      * How bright is the screen's backlight, on a scale from 0 (very dim) to 1
      * (full brightness)?  Setting this attribute modifies the screen's
      * brightness.

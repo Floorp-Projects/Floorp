@@ -8,6 +8,9 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// TODO(hlundin): The functionality in this file should be moved into one or
+// several classes.
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -16,10 +19,13 @@
 #include <string>
 
 #include "google/gflags.h"
+#include "webrtc/modules/audio_coding/codecs/pcm16b/include/pcm16b.h"
 #include "webrtc/modules/audio_coding/neteq4/interface/neteq.h"
 #include "webrtc/modules/audio_coding/neteq4/test/NETEQTEST_RTPpacket.h"
 #include "webrtc/modules/audio_coding/neteq4/test/NETEQTEST_DummyRTPpacket.h"
+#include "webrtc/modules/audio_coding/neteq4/tools/input_audio_file.h"
 #include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/typedefs.h"
@@ -88,11 +94,23 @@ DEFINE_bool(codec_map, false, "Prints the mapping between RTP payload type and "
     "codec");
 DEFINE_bool(dummy_rtp, false, "The input file contains ""dummy"" RTP data, "
             "i.e., only headers");
+DEFINE_string(replacement_audio_file, "",
+              "A PCM file that will be used to populate ""dummy"" RTP packets");
 
 // Declaring helper functions (defined further down in this file).
 std::string CodecName(webrtc::NetEqDecoder codec);
 void RegisterPayloadTypes(NetEq* neteq);
 void PrintCodecMapping();
+size_t ReplacePayload(webrtc::test::InputAudioFile* replacement_audio_file,
+                      webrtc::scoped_ptr<int16_t[]>* replacement_audio,
+                      webrtc::scoped_ptr<uint8_t[]>* payload,
+                      size_t* payload_mem_size_bytes,
+                      size_t* frame_size_samples,
+                      WebRtcRTPHeader* rtp_header,
+                      NETEQTEST_RTPpacket* next_rtp);
+int CodecSampleRate(uint8_t payload_type);
+int CodecTimestampRate(uint8_t payload_type);
+bool IsComfortNosie(uint8_t payload_type);
 
 int main(int argc, char* argv[]) {
   static const int kMaxChannels = 5;
@@ -135,6 +153,15 @@ int main(int argc, char* argv[]) {
   }
   std::cout << "Output file: " << argv[2] << std::endl;
 
+  // Check if a replacement audio file was provided, and if so, open it.
+  bool replace_payload = false;
+  webrtc::scoped_ptr<webrtc::test::InputAudioFile> replacement_audio_file;
+  if (!FLAGS_replacement_audio_file.empty()) {
+    replacement_audio_file.reset(
+        new webrtc::test::InputAudioFile(FLAGS_replacement_audio_file));
+    replace_payload = true;
+  }
+
   // Read RTP file header.
   if (NETEQTEST_RTPpacket::skipFileHeader(in_file) != 0) {
     std::cerr << "Wrong format in RTP file" << std::endl;
@@ -153,15 +180,39 @@ int main(int argc, char* argv[]) {
   RegisterPayloadTypes(neteq);
 
   // Read first packet.
-  NETEQTEST_RTPpacket *rtp;
+  NETEQTEST_RTPpacket* rtp;
+  NETEQTEST_RTPpacket* next_rtp = NULL;
   if (!FLAGS_dummy_rtp) {
     rtp = new NETEQTEST_RTPpacket();
+    if (replace_payload) {
+      next_rtp = new NETEQTEST_RTPpacket();
+    }
   } else {
     rtp = new NETEQTEST_DummyRTPpacket();
+    if (replace_payload) {
+      next_rtp = new NETEQTEST_DummyRTPpacket();
+    }
   }
   rtp->readFromFile(in_file);
-  if (!rtp) {
+  if (rtp->dataLen() < 0) {
     std::cout  << "Warning: RTP file is empty" << std::endl;
+  }
+
+  // Set up variables for audio replacement if needed.
+  size_t input_frame_size_timestamps = 0;
+  webrtc::scoped_ptr<int16_t[]> replacement_audio;
+  webrtc::scoped_ptr<uint8_t[]> payload;
+  size_t payload_mem_size_bytes = 0;
+  if (replace_payload) {
+    // Initially assume that the frame size is 30 ms at the initial sample rate.
+    // This value will be replaced with the correct one as soon as two
+    // consecutive packets are found.
+    input_frame_size_timestamps = 30 * sample_rate_hz / 1000;
+    replacement_audio.reset(new int16_t[input_frame_size_timestamps]);
+    payload_mem_size_bytes = 2 * input_frame_size_timestamps;
+    payload.reset(new uint8_t[payload_mem_size_bytes]);
+    assert(next_rtp);
+    next_rtp->readFromFile(in_file);
   }
 
   // This is the main simulation loop.
@@ -181,9 +232,21 @@ int main(int argc, char* argv[]) {
         // Parse RTP header.
         WebRtcRTPHeader rtp_header;
         rtp->parseHeader(&rtp_header);
-        int error = neteq->InsertPacket(rtp_header, rtp->payload(),
-                                         rtp->payloadLen(),
-                                         rtp->time() * sample_rate_hz / 1000);
+        uint8_t* payload_ptr = rtp->payload();
+        size_t payload_len = rtp->payloadLen();
+        if (replace_payload) {
+          payload_len = ReplacePayload(replacement_audio_file.get(),
+                                       &replacement_audio,
+                                       &payload,
+                                       &payload_mem_size_bytes,
+                                       &input_frame_size_timestamps,
+                                       &rtp_header,
+                                       next_rtp);
+          payload_ptr = payload.get();
+        }
+        int error = neteq->InsertPacket(rtp_header, payload_ptr,
+                                        static_cast<int>(payload_len),
+                                        rtp->time() * sample_rate_hz / 1000);
         if (error != NetEq::kOK) {
           std::cerr << "InsertPacket returned error code " <<
               neteq->LastError() << std::endl;
@@ -191,6 +254,13 @@ int main(int argc, char* argv[]) {
       }
       // Get next packet from file.
       rtp->readFromFile(in_file);
+      if (replace_payload) {
+        // At this point |rtp| contains the packet *after* |next_rtp|.
+        // Swap RTP packet objects between |rtp| and |next_rtp|.
+        NETEQTEST_RTPpacket* temp_rtp = rtp;
+        rtp = next_rtp;
+        next_rtp = temp_rtp;
+      }
       next_input_time_ms = rtp->time();
     }
 
@@ -212,6 +282,7 @@ int main(int argc, char* argv[]) {
       }
 
       // Write to file.
+      // TODO(hlundin): Make writing to file optional.
       size_t write_len = samples_per_channel * num_channels;
       if (fwrite(out_data, sizeof(out_data[0]), write_len, out_file) !=
           write_len) {
@@ -229,6 +300,8 @@ int main(int argc, char* argv[]) {
 
   fclose(in_file);
   fclose(out_file);
+  delete rtp;
+  delete next_rtp;
   delete neteq;
   webrtc::Trace::ReturnTrace();
   return 0;
@@ -420,4 +493,134 @@ void PrintCodecMapping() {
       FLAGS_cn_swb32 << std::endl;
   std::cout << CodecName(webrtc::kDecoderCNGswb48kHz).c_str() << ": " <<
       FLAGS_cn_swb48 << std::endl;
+}
+
+size_t ReplacePayload(webrtc::test::InputAudioFile* replacement_audio_file,
+                      webrtc::scoped_ptr<int16_t[]>* replacement_audio,
+                      webrtc::scoped_ptr<uint8_t[]>* payload,
+                      size_t* payload_mem_size_bytes,
+                      size_t* frame_size_samples,
+                      WebRtcRTPHeader* rtp_header,
+                      NETEQTEST_RTPpacket* next_rtp) {
+  size_t payload_len = 0;
+  // Check for CNG.
+  if (IsComfortNosie(rtp_header->header.payloadType)) {
+    // If CNG, simply insert a zero-energy one-byte payload.
+    if (*payload_mem_size_bytes < 1) {
+      (*payload).reset(new uint8_t[1]);
+      *payload_mem_size_bytes = 1;
+    }
+    (*payload)[0] = 127;  // Max attenuation of CNG.
+    payload_len = 1;
+  } else {
+    if (next_rtp->payloadLen() > 0) {
+      // Check if payload length has changed.
+      if (next_rtp->sequenceNumber() == rtp_header->header.sequenceNumber + 1) {
+        if (*frame_size_samples !=
+            next_rtp->timeStamp() - rtp_header->header.timestamp) {
+          *frame_size_samples =
+              next_rtp->timeStamp() - rtp_header->header.timestamp;
+          (*replacement_audio).reset(
+              new int16_t[*frame_size_samples]);
+          *payload_mem_size_bytes = 2 * *frame_size_samples;
+          (*payload).reset(new uint8_t[*payload_mem_size_bytes]);
+        }
+      }
+    }
+    // Get new speech.
+    assert((*replacement_audio).get());
+    if (CodecTimestampRate(rtp_header->header.payloadType) !=
+        CodecSampleRate(rtp_header->header.payloadType) ||
+        rtp_header->header.payloadType == FLAGS_red ||
+        rtp_header->header.payloadType == FLAGS_avt) {
+      // Some codecs have different sample and timestamp rates. And neither
+      // RED nor DTMF is supported for replacement.
+      std::cerr << "Codec not supported for audio replacement." <<
+          std::endl;
+      webrtc::Trace::ReturnTrace();
+      exit(1);
+    }
+    assert(*frame_size_samples > 0);
+    if (!replacement_audio_file->Read(*frame_size_samples,
+                                      (*replacement_audio).get())) {
+      std::cerr << "Could no read replacement audio file." << std::endl;
+      webrtc::Trace::ReturnTrace();
+      exit(1);
+    }
+    // Encode it as PCM16.
+    assert((*payload).get());
+    payload_len = WebRtcPcm16b_Encode((*replacement_audio).get(),
+                                      static_cast<int16_t>(*frame_size_samples),
+                                      (*payload).get());
+    assert(payload_len == 2 * *frame_size_samples);
+    // Change payload type to PCM16.
+    switch (CodecSampleRate(rtp_header->header.payloadType)) {
+      case 8000:
+        rtp_header->header.payloadType = FLAGS_pcm16b;
+        break;
+      case 16000:
+        rtp_header->header.payloadType = FLAGS_pcm16b_wb;
+        break;
+      case 32000:
+        rtp_header->header.payloadType = FLAGS_pcm16b_swb32;
+        break;
+      case 48000:
+        rtp_header->header.payloadType = FLAGS_pcm16b_swb48;
+        break;
+      default:
+        std::cerr << "Payload type " <<
+            static_cast<int>(rtp_header->header.payloadType) <<
+            " not supported or unknown." << std::endl;
+        webrtc::Trace::ReturnTrace();
+        exit(1);
+        assert(false);
+    }
+  }
+  return payload_len;
+}
+
+int CodecSampleRate(uint8_t payload_type) {
+  if (payload_type == FLAGS_pcmu ||
+      payload_type == FLAGS_pcma ||
+      payload_type == FLAGS_ilbc ||
+      payload_type == FLAGS_pcm16b ||
+      payload_type == FLAGS_cn_nb) {
+    return 8000;
+  } else if (payload_type == FLAGS_isac ||
+      payload_type == FLAGS_pcm16b_wb ||
+      payload_type == FLAGS_g722 ||
+      payload_type == FLAGS_cn_wb) {
+    return 16000;
+  } else if (payload_type == FLAGS_isac_swb ||
+      payload_type == FLAGS_pcm16b_swb32 ||
+      payload_type == FLAGS_cn_swb32) {
+    return 32000;
+  } else if (payload_type == FLAGS_pcm16b_swb48 ||
+      payload_type == FLAGS_cn_swb48) {
+    return 48000;
+  } else if (payload_type == FLAGS_avt ||
+      payload_type == FLAGS_red) {
+      return 0;
+  } else {
+    return -1;
+  }
+}
+
+int CodecTimestampRate(uint8_t payload_type) {
+  if (payload_type == FLAGS_g722) {
+    return 8000;
+  } else {
+    return CodecSampleRate(payload_type);
+  }
+}
+
+bool IsComfortNosie(uint8_t payload_type) {
+  if (payload_type == FLAGS_cn_nb ||
+      payload_type == FLAGS_cn_wb ||
+      payload_type == FLAGS_cn_swb32 ||
+      payload_type == FLAGS_cn_swb48) {
+    return true;
+  } else {
+    return false;
+  }
 }

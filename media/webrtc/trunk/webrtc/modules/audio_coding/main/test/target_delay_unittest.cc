@@ -9,8 +9,11 @@
  */
 
 #include "gtest/gtest.h"
+#include "webrtc/common.h"
 #include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/codecs/pcm16b/include/pcm16b.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
+#include "webrtc/modules/audio_coding/main/test/utility.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
@@ -18,22 +21,14 @@
 #include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
-class TargetDelayTest : public ::testing::Test {
- protected:
-  static const int kSampleRateHz = 16000;
-  static const int kNum10msPerFrame = 2;
-  static const int kFrameSizeSamples = 320;  // 20 ms @ 16 kHz.
-  // payload-len = frame-samples * 2 bytes/sample.
-  static const int kPayloadLenBytes = 320 * 2;
-  // Inter-arrival time in number of packets in a jittery channel. One is no
-  // jitter.
-  static const int kInterarrivalJitterPacket = 2;
 
-  TargetDelayTest()
-      : acm_(AudioCodingModule::Create(0)) {}
 
-  ~TargetDelayTest() {
-  }
+class TargetDelayTest {
+ public:
+  explicit TargetDelayTest(const Config& config)
+      : acm_(config.Get<AudioCodingModuleFactory>().Create(0)) {}
+
+  ~TargetDelayTest() {}
 
   void SetUp() {
     EXPECT_TRUE(acm_.get() != NULL);
@@ -51,13 +46,107 @@ class TargetDelayTest : public ::testing::Test {
     rtp_info_.type.Audio.channel = 1;
     rtp_info_.type.Audio.isCNG = false;
     rtp_info_.frameType = kAudioFrameSpeech;
+
+    int16_t audio[kFrameSizeSamples];
+    const int kRange = 0x7FF;  // 2047, easy for masking.
+    for (int n = 0; n < kFrameSizeSamples; ++n)
+      audio[n] = (rand() & kRange) - kRange / 2;
+    WebRtcPcm16b_Encode(audio, kFrameSizeSamples, payload_);
   }
+
+  void OutOfRangeInput() {
+    EXPECT_EQ(-1, SetMinimumDelay(-1));
+    EXPECT_EQ(-1, SetMinimumDelay(10001));
+  }
+
+  void NoTargetDelayBufferSizeChanges() {
+    for (int n = 0; n < 30; ++n)  // Run enough iterations.
+      Run(true);
+    int clean_optimal_delay = GetCurrentOptimalDelayMs();
+    Run(false);  // Run with jitter.
+    int jittery_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_GT(jittery_optimal_delay, clean_optimal_delay);
+    int required_delay = RequiredDelay();
+    EXPECT_GT(required_delay, 0);
+    EXPECT_NEAR(required_delay, jittery_optimal_delay, 1);
+  }
+
+  void WithTargetDelayBufferNotChanging() {
+    // A target delay that is one packet larger than jitter.
+    const int kTargetDelayMs = (kInterarrivalJitterPacket + 1) *
+        kNum10msPerFrame * 10;
+    ASSERT_EQ(0, SetMinimumDelay(kTargetDelayMs));
+    for (int n = 0; n < 30; ++n)  // Run enough iterations to fill the buffer.
+      Run(true);
+    int clean_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_EQ(kTargetDelayMs, clean_optimal_delay);
+    Run(false);  // Run with jitter.
+    int jittery_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_EQ(jittery_optimal_delay, clean_optimal_delay);
+  }
+
+  void RequiredDelayAtCorrectRange() {
+    for (int n = 0; n < 30; ++n)  // Run clean and store delay.
+      Run(true);
+    int clean_optimal_delay = GetCurrentOptimalDelayMs();
+
+    // A relatively large delay.
+    const int kTargetDelayMs = (kInterarrivalJitterPacket + 10) *
+        kNum10msPerFrame * 10;
+    ASSERT_EQ(0, SetMinimumDelay(kTargetDelayMs));
+    for (int n = 0; n < 300; ++n)  // Run enough iterations to fill the buffer.
+      Run(true);
+    Run(false);  // Run with jitter.
+
+    int jittery_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_EQ(kTargetDelayMs, jittery_optimal_delay);
+
+    int required_delay = RequiredDelay();
+
+    // Checking |required_delay| is in correct range.
+    EXPECT_GT(required_delay, 0);
+    EXPECT_GT(jittery_optimal_delay, required_delay);
+    EXPECT_GT(required_delay, clean_optimal_delay);
+
+    // A tighter check for the value of |required_delay|.
+    // The jitter forces a delay of
+    // |kInterarrivalJitterPacket * kNum10msPerFrame * 10| milliseconds. So we
+    // expect |required_delay| be close to that.
+    EXPECT_NEAR(kInterarrivalJitterPacket * kNum10msPerFrame * 10,
+                required_delay, 1);
+  }
+
+  void TargetDelayBufferMinMax() {
+    const int kTargetMinDelayMs = kNum10msPerFrame * 10;
+    ASSERT_EQ(0, SetMinimumDelay(kTargetMinDelayMs));
+    for (int m = 0; m < 30; ++m)  // Run enough iterations to fill the buffer.
+      Run(true);
+    int clean_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_EQ(kTargetMinDelayMs, clean_optimal_delay);
+
+    const int kTargetMaxDelayMs = 2 * (kNum10msPerFrame * 10);
+    ASSERT_EQ(0, SetMaximumDelay(kTargetMaxDelayMs));
+    for (int n = 0; n < 30; ++n)  // Run enough iterations to fill the buffer.
+      Run(false);
+
+    int capped_optimal_delay = GetCurrentOptimalDelayMs();
+    EXPECT_EQ(kTargetMaxDelayMs, capped_optimal_delay);
+  }
+
+ private:
+  static const int kSampleRateHz = 16000;
+  static const int kNum10msPerFrame = 2;
+  static const int kFrameSizeSamples = 320;  // 20 ms @ 16 kHz.
+  // payload-len = frame-samples * 2 bytes/sample.
+  static const int kPayloadLenBytes = 320 * 2;
+  // Inter-arrival time in number of packets in a jittery channel. One is no
+  // jitter.
+  static const int kInterarrivalJitterPacket = 2;
 
   void Push() {
     rtp_info_.header.timestamp += kFrameSizeSamples;
     rtp_info_.header.sequenceNumber++;
-    uint8_t payload[kPayloadLenBytes];  // Doesn't need to be initialized.
-    ASSERT_EQ(0, acm_->IncomingPacket(payload, kFrameSizeSamples * 2,
+    ASSERT_EQ(0, acm_->IncomingPacket(payload_, kFrameSizeSamples * 2,
                                       rtp_info_));
   }
 
@@ -110,85 +199,69 @@ class TargetDelayTest : public ::testing::Test {
 
   scoped_ptr<AudioCodingModule> acm_;
   WebRtcRTPHeader rtp_info_;
+  uint8_t payload_[kPayloadLenBytes];
 };
 
-TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(OutOfRangeInput)) {
-  EXPECT_EQ(-1, SetMinimumDelay(-1));
-  EXPECT_EQ(-1, SetMinimumDelay(10001));
+
+namespace {
+
+TargetDelayTest* CreateLegacy() {
+  Config config;
+  UseLegacyAcm(&config);
+  TargetDelayTest* test = new TargetDelayTest(config);
+  test->SetUp();
+  return test;
 }
 
-TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(NoTargetDelayBufferSizeChanges)) {
-  for (int n = 0; n < 30; ++n)  // Run enough iterations.
-    Run(true);
-  int clean_optimal_delay = GetCurrentOptimalDelayMs();
-  Run(false);  // Run with jitter.
-  int jittery_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_GT(jittery_optimal_delay, clean_optimal_delay);
-  int required_delay = RequiredDelay();
-  EXPECT_GT(required_delay, 0);
-  EXPECT_NEAR(required_delay, jittery_optimal_delay, 1);
+TargetDelayTest* CreateNew() {
+  Config config;
+  UseNewAcm(&config);
+  TargetDelayTest* test = new TargetDelayTest(config);
+  test->SetUp();
+  return test;
 }
 
-TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(WithTargetDelayBufferNotChanging)) {
-  // A target delay that is one packet larger than jitter.
-  const int kTargetDelayMs = (kInterarrivalJitterPacket + 1) *
-      kNum10msPerFrame * 10;
-  ASSERT_EQ(0, SetMinimumDelay(kTargetDelayMs));
-  for (int n = 0; n < 30; ++n)  // Run enough iterations to fill up the buffer.
-    Run(true);
-  int clean_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_EQ(kTargetDelayMs, clean_optimal_delay);
-  Run(false);  // Run with jitter.
-  int jittery_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_EQ(jittery_optimal_delay, clean_optimal_delay);
+}  // namespace
+
+TEST(TargetDelayTest, DISABLED_ON_ANDROID(OutOfRangeInput)) {
+  scoped_ptr<TargetDelayTest> test(CreateLegacy());
+  test->OutOfRangeInput();
+
+  test.reset(CreateNew());
+  test->OutOfRangeInput();
 }
 
-TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(RequiredDelayAtCorrectRange)) {
-  for (int n = 0; n < 30; ++n)  // Run clean and store delay.
-    Run(true);
-  int clean_optimal_delay = GetCurrentOptimalDelayMs();
+TEST(TargetDelayTest, DISABLED_ON_ANDROID(NoTargetDelayBufferSizeChanges)) {
+  scoped_ptr<TargetDelayTest> test(CreateLegacy());
+  test->NoTargetDelayBufferSizeChanges();
 
-  // A relatively large delay.
-  const int kTargetDelayMs = (kInterarrivalJitterPacket + 10) *
-      kNum10msPerFrame * 10;
-  ASSERT_EQ(0, SetMinimumDelay(kTargetDelayMs));
-  for (int n = 0; n < 300; ++n)  // Run enough iterations to fill up the buffer.
-    Run(true);
-  Run(false);  // Run with jitter.
-
-  int jittery_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_EQ(kTargetDelayMs, jittery_optimal_delay);
-
-  int required_delay = RequiredDelay();
-
-  // Checking |required_delay| is in correct range.
-  EXPECT_GT(required_delay, 0);
-  EXPECT_GT(jittery_optimal_delay, required_delay);
-  EXPECT_GT(required_delay, clean_optimal_delay);
-
-  // A tighter check for the value of |required_delay|.
-  // The jitter forces a delay of
-  // |kInterarrivalJitterPacket * kNum10msPerFrame * 10| milliseconds. So we
-  // expect |required_delay| be close to that.
-  EXPECT_NEAR(kInterarrivalJitterPacket * kNum10msPerFrame * 10,
-              required_delay, 1);
+  test.reset(CreateNew());
+  test->NoTargetDelayBufferSizeChanges();
 }
 
-TEST_F(TargetDelayTest, DISABLED_ON_ANDROID(TargetDelayBufferMinMax)) {
-  const int kTargetMinDelayMs = kNum10msPerFrame * 10;
-  ASSERT_EQ(0, SetMinimumDelay(kTargetMinDelayMs));
-  for (int m = 0; m < 30; ++m)  // Run enough iterations to fill up the buffer.
-    Run(true);
-  int clean_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_EQ(kTargetMinDelayMs, clean_optimal_delay);
+TEST(TargetDelayTest, DISABLED_ON_ANDROID(WithTargetDelayBufferNotChanging)) {
+  scoped_ptr<TargetDelayTest> test(CreateLegacy());
+  test->WithTargetDelayBufferNotChanging();
 
-  const int kTargetMaxDelayMs = 2 * (kNum10msPerFrame * 10);
-  ASSERT_EQ(0, SetMaximumDelay(kTargetMaxDelayMs));
-  for (int n = 0; n < 30; ++n)  // Run enough iterations to fill up the buffer.
-    Run(false);
-
-  int capped_optimal_delay = GetCurrentOptimalDelayMs();
-  EXPECT_EQ(kTargetMaxDelayMs, capped_optimal_delay);
+  test.reset(CreateNew());
+  test->WithTargetDelayBufferNotChanging();
 }
 
-}  // webrtc
+TEST(TargetDelayTest, DISABLED_ON_ANDROID(RequiredDelayAtCorrectRange)) {
+  scoped_ptr<TargetDelayTest> test(CreateLegacy());
+  test->RequiredDelayAtCorrectRange();
+
+  test.reset(CreateNew());
+  test->RequiredDelayAtCorrectRange();
+}
+
+TEST(TargetDelayTest, DISABLED_ON_ANDROID(TargetDelayBufferMinMax)) {
+  scoped_ptr<TargetDelayTest> test(CreateLegacy());
+  test->TargetDelayBufferMinMax();
+
+  test.reset(CreateNew());
+  test->TargetDelayBufferMinMax();
+}
+
+}  // namespace webrtc
+

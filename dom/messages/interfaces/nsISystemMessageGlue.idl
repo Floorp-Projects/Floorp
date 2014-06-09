@@ -1,0 +1,31 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+
+// Implemented by the contract id @mozilla.org/dom/messages/system-message-glue;1
+
+[scriptable, uuid(b5d98286-e7cc-11e3-92fb-74d02b97e723)]
+interface nsISystemMessageGlue : nsISupports
+{
+    /* Notify the system app to open the target app.
+     *
+     * @param pageURL     The URL of the page that will be opened.
+     * @param manifestURL The webapp's manifest URL.
+     * @param type        The message type.
+     * @param target      The target which the message is associated with.
+     * @param showApp     This flag indicates the app must be brought to the
+     *                    foreground.
+     * @param onlyShowApp This flag indicates the app must be *only* brought to
+     *                    the foreground without loading to handle messages.
+     * @param extra       Extra opaque info to pass around for opening the page.
+     */
+    void openApp(in DOMString pageURL,
+                 in DOMString manifestURL,
+                 in DOMString type,
+                 in jsval target,
+                 in boolean showApp,
+                 in boolean onlyShowApp,
+                 [optional] in jsval extra);
+};

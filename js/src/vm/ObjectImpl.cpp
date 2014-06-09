@@ -18,26 +18,34 @@ using namespace js;
 using JS::GenericNaN;
 
 PropDesc::PropDesc()
-  : pd_(UndefinedValue()),
-    value_(UndefinedValue()),
-    get_(UndefinedValue()),
-    set_(UndefinedValue()),
-    attrs(0),
-    hasGet_(false),
-    hasSet_(false),
-    hasValue_(false),
-    hasWritable_(false),
-    hasEnumerable_(false),
-    hasConfigurable_(false),
-    isUndefined_(true)
 {
+    setUndefined();
 }
+
+void
+PropDesc::setUndefined()
+{
+    descObj_ = nullptr;
+    value_ = UndefinedValue();
+    get_ = UndefinedValue();
+    set_ = UndefinedValue();
+    attrs = 0;
+    hasGet_ = false;
+    hasSet_ = false;
+    hasValue_ = false;
+    hasWritable_ = false;
+    hasEnumerable_ = false;
+    hasConfigurable_ = false;
+
+    isUndefined_ = true;
+}
+
 
 bool
 PropDesc::checkGetter(JSContext *cx)
 {
     if (hasGet_) {
-        if (!js_IsCallable(get_) && !get_.isUndefined()) {
+        if (!IsCallable(get_) && !get_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_getter_str);
             return false;
@@ -50,101 +58,13 @@ bool
 PropDesc::checkSetter(JSContext *cx)
 {
     if (hasSet_) {
-        if (!js_IsCallable(set_) && !set_.isUndefined()) {
+        if (!IsCallable(set_) && !set_.isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_GET_SET_FIELD,
                                  js_setter_str);
             return false;
         }
     }
     return true;
-}
-
-static bool
-CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
-                    const char *methodname, const char *propname)
-{
-    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
-                             methodname, propname);
-        return false;
-    }
-    return true;
-}
-
-/*
- * Convert Debugger.Objects in desc to debuggee values.
- * Reject non-callable getters and setters.
- */
-bool
-PropDesc::unwrapDebuggerObjectsInto(JSContext *cx, Debugger *dbg, HandleObject obj,
-                                    PropDesc *unwrapped) const
-{
-    MOZ_ASSERT(!isUndefined());
-
-    *unwrapped = *this;
-
-    if (unwrapped->hasValue()) {
-        RootedValue value(cx, unwrapped->value_);
-        if (!dbg->unwrapDebuggeeValue(cx, &value) ||
-            !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
-        {
-            return false;
-        }
-        unwrapped->value_ = value;
-    }
-
-    if (unwrapped->hasGet()) {
-        RootedValue get(cx, unwrapped->get_);
-        if (!dbg->unwrapDebuggeeValue(cx, &get) ||
-            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
-        {
-            return false;
-        }
-        unwrapped->get_ = get;
-    }
-
-    if (unwrapped->hasSet()) {
-        RootedValue set(cx, unwrapped->set_);
-        if (!dbg->unwrapDebuggeeValue(cx, &set) ||
-            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
-        {
-            return false;
-        }
-        unwrapped->set_ = set;
-    }
-
-    return true;
-}
-
-/*
- * Rewrap *idp and the fields of *desc for the current compartment.  Also:
- * defining a property on a proxy requires pd_ to contain a descriptor object,
- * so reconstitute desc->pd_ if needed.
- */
-bool
-PropDesc::wrapInto(JSContext *cx, HandleObject obj, const jsid &id, jsid *wrappedId,
-                   PropDesc *desc) const
-{
-    MOZ_ASSERT(!isUndefined());
-
-    JSCompartment *comp = cx->compartment();
-
-    *wrappedId = id;
-    if (!comp->wrapId(cx, wrappedId))
-        return false;
-
-    *desc = *this;
-    RootedValue value(cx, desc->value_);
-    RootedValue get(cx, desc->get_);
-    RootedValue set(cx, desc->set_);
-
-    if (!comp->wrap(cx, &value) || !comp->wrap(cx, &get) || !comp->wrap(cx, &set))
-        return false;
-
-    desc->value_ = value;
-    desc->get_ = get;
-    desc->set_ = set;
-    return !obj->is<ProxyObject>() || desc->makeObject(cx);
 }
 
 static const ObjectElements emptyElementsHeader(0, 0);
@@ -380,10 +300,11 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 }
 
 void
-AutoPropDescRooter::trace(JSTracer *trc)
+PropDesc::trace(JSTracer *trc)
 {
-    gc::MarkValueRoot(trc, &propDesc.pd_, "AutoPropDescRooter pd");
-    gc::MarkValueRoot(trc, &propDesc.value_, "AutoPropDescRooter value");
-    gc::MarkValueRoot(trc, &propDesc.get_, "AutoPropDescRooter get");
-    gc::MarkValueRoot(trc, &propDesc.set_, "AutoPropDescRooter set");
+    if (descObj_)
+        gc::MarkObjectRoot(trc, &descObj_, "PropDesc descriptor object");
+    gc::MarkValueRoot(trc, &value_, "PropDesc value");
+    gc::MarkValueRoot(trc, &get_, "PropDesc get");
+    gc::MarkValueRoot(trc, &set_, "PropDesc set");
 }

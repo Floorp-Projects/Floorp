@@ -11,9 +11,9 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_RENDER_MANAGER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_RENDER_MANAGER_H_
 
+#include <list>
 #include <map>
 
-#include "webrtc/system_wrappers/interface/list_wrapper.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_engine/vie_manager_base.h"
@@ -46,6 +46,7 @@ class ViERenderManager : private ViEManagerBase {
   int32_t RemoveRenderStream(int32_t render_id);
 
  private:
+  typedef std::list<VideoRender*> RenderList;
   // Returns a pointer to the render module if it exists in the render list.
   // Assumed protected.
   VideoRender* FindRenderModule(void* window);
@@ -58,8 +59,7 @@ class ViERenderManager : private ViEManagerBase {
   // Protected by ViEManagerBase.
   typedef std::map<int32_t, ViERenderer*> RendererMap;
   RendererMap stream_to_vie_renderer_;
-
-  ListWrapper render_list_;
+  RenderList render_list_;
   bool use_external_render_module_;
 };
 

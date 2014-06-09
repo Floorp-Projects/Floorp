@@ -10,8 +10,10 @@
 #include <media/stagefright/foundation/ABase.h>
 #include <media/stagefright/foundation/AHandlerReflector.h>
 #include <media/stagefright/foundation/ALooper.h>
+#include <utils/KeyedVector.h>
 #include <utils/List.h>
 #include <utils/RefBase.h>
+#include <utils/Vector.h>
 
 #include "IMediaResourceManagerClient.h"
 #include "IMediaResourceManagerService.h"
@@ -20,19 +22,26 @@ namespace android {
 
 /**
  * Manage permissions of using media resources(hw decoder, hw encoder, camera)
- * XXX Current implementaion support only one hw video decoder.
+ * XXX Current implementation supports only one hw video codec.
  *     Need to extend to support multiple instance and other resources.
  */
 class MediaResourceManagerService: public BnMediaResourceManagerService,
                                    public IBinder::DeathRecipient
 {
 public:
-  // The maximum number of hardware decoders available.
-  enum { VIDEO_DECODER_COUNT = 1 };
-
-  enum {
-    kNotifyRequest = 'noti'
+  // The maximum number of hardware resoureces available.
+  enum
+  {
+    VIDEO_DECODER_COUNT = 1,
+    VIDEO_ENCODER_COUNT = 1
   };
+
+  enum
+  {
+    kNotifyRequest = 'noti',
+  };
+
+  static const char* kMsgKeyResourceType;
 
   // Instantiate MediaResourceManagerService and register to service manager.
   // If service manager is not present, wait until service manager becomes present.
@@ -42,8 +51,10 @@ public:
   virtual void binderDied(const wp<IBinder>& who);
 
   // derived from IMediaResourceManagerService
-  virtual void requestMediaResource(const sp<IMediaResourceManagerClient>& client, int resourceType);
-  virtual status_t cancelClient(const sp<IMediaResourceManagerClient>& client);
+  virtual status_t requestMediaResource(const sp<IMediaResourceManagerClient>& client,
+                                        int resourceType, bool willWait);
+  virtual status_t cancelClient(const sp<IMediaResourceManagerClient>& client,
+                                int resourceType);
 
   // Receive a message from AHandlerReflector.
   // Called on ALooper thread.
@@ -53,30 +64,54 @@ protected:
   MediaResourceManagerService();
   virtual ~MediaResourceManagerService();
 
-protected:
+private:
   // Represent a media resouce.
   // Hold a IMediaResourceManagerClient that got a media resource as IBinder.
-  struct ResourceSlot {
-    ResourceSlot ()
-      {
-      }
-      sp<IBinder> mClient;
-    };
+  struct ResourceSlot
+  {
+    sp<IBinder> mClient;
+  };
+  typedef Vector<ResourceSlot> Slots;
 
-  void cancelClientLocked(const sp<IBinder>& binder);
-
-  // mVideoDecoderSlots is the array of slots that represent a media resource.
-  ResourceSlot mVideoDecoderSlots[VIDEO_DECODER_COUNT];
-  // The maximum number of hardware decoders available on the device.
-  int mVideoDecoderCount;
-
-  // The lock protects mVideoDecoderSlots and mVideoCodecRequestQueue called
-  //  from multiple threads.
-  Mutex mLock;
   typedef List<sp<IBinder> > Fifo;
-  // Queue of media resource requests.
-  // Hold IMediaResourceManagerClient that requesting a media resource as IBinder.
-  Fifo mVideoCodecRequestQueue;
+  struct Resources
+  {
+    // Queue of media resource requests. Hold IMediaResourceManagerClient that
+    // requesting a media resource as IBinder.
+    Fifo mRequestQueue;
+    // All resources that can be requested. Hold |ResourceSlot|s that track
+    // their usage.
+    Slots mSlots;
+  };
+
+  typedef KeyedVector<ResourceType, Resources> ResourcesMap;
+  // Manages requests from clients and availability of resources.
+  class ResourceTable
+  {
+    ResourceTable();
+    ~ResourceTable();
+    // Resource operations.
+    bool supportsType(ResourceType type);
+    ssize_t findAvailableResource(ResourceType type, size_t number_needed = 1);
+    bool isOwnedByClient(const sp<IBinder>& client, ResourceType type, size_t index);
+    status_t aquireResource(const sp<IBinder>& client, ResourceType type, size_t index);
+    ResourceSlot* resourceOfTypeAt(ResourceType type, size_t index);
+    // Request operations.
+    bool hasRequest(ResourceType type);
+    uint32_t countRequests(ResourceType type);
+    const sp<IBinder>& nextRequest(ResourceType type);
+    status_t enqueueRequest(const sp<IBinder>& client, ResourceType type);
+    status_t dequeueRequest(ResourceType type);
+    status_t forgetClient(const sp<IBinder>& client, ResourceType type);
+    status_t forgetClient(const sp<IBinder>& client);
+
+    friend class MediaResourceManagerService;
+
+    // A map for all types of supported resources.
+    ResourcesMap mMap;
+  };
+
+  void cancelClientLocked(const sp<IBinder>& binder, ResourceType resourceType);
 
   // ALooper is a message loop used in stagefright.
   // It creates a thread for messages and handles messages in the thread.
@@ -88,6 +123,11 @@ protected:
   // http://developer.android.com/reference/android/os/Handler.html
   sp<AHandlerReflector<MediaResourceManagerService> > mReflector;
 
+  // The lock protects manager operations called from multiple threads.
+  Mutex mLock;
+
+  // Keeps all the records.
+  ResourceTable mResources;
 };
 
 }; // namespace android

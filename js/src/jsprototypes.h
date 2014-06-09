@@ -64,7 +64,7 @@
     imaginary(Null,              0,     js_InitNullClass,          dummy) \
     real(Object,                 1,     js_InitViaClassSpec,       &JSObject::class_) \
     real(Function,               2,     js_InitViaClassSpec,       &JSFunction::class_) \
-    real(Array,                  3,     js_InitArrayClass,         OCLASP(Array)) \
+    real(Array,                  3,     js_InitViaClassSpec,       OCLASP(Array)) \
     real(Boolean,                4,     js_InitBooleanClass,       OCLASP(Boolean)) \
     real(JSON,                   5,     js_InitJSONClass,          CLASP(JSON)) \
     real(Date,                   6,     js_InitViaClassSpec,       OCLASP(Date)) \
@@ -82,21 +82,21 @@
     real(URIError,              18,     js_InitExceptionClasses,   OCLASP(Error)) \
     real(Iterator,              19,     js_InitIteratorClasses,    OCLASP(PropertyIterator)) \
     real(StopIteration,         20,     js_InitIteratorClasses,    OCLASP(StopIteration)) \
-    real(ArrayBuffer,           21,     js_InitTypedArrayClasses,  &js::ArrayBufferObject::protoClass) \
-    real(Int8Array,             22,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_INT8)) \
-    real(Uint8Array,            23,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_UINT8)) \
-    real(Int16Array,            24,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_INT16)) \
-    real(Uint16Array,           25,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_UINT16)) \
-    real(Int32Array,            26,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_INT32)) \
-    real(Uint32Array,           27,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_UINT32)) \
-    real(Float32Array,          28,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_FLOAT32)) \
-    real(Float64Array,          29,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_FLOAT64)) \
-    real(Uint8ClampedArray,     30,     js_InitTypedArrayClasses,  TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)) \
+    real(ArrayBuffer,           21,     js_InitArrayBufferClass,   &js::ArrayBufferObject::protoClass) \
+    real(Int8Array,             22,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_INT8)) \
+    real(Uint8Array,            23,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_UINT8)) \
+    real(Int16Array,            24,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_INT16)) \
+    real(Uint16Array,           25,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_UINT16)) \
+    real(Int32Array,            26,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_INT32)) \
+    real(Uint32Array,           27,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_UINT32)) \
+    real(Float32Array,          28,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_FLOAT32)) \
+    real(Float64Array,          29,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_FLOAT64)) \
+    real(Uint8ClampedArray,     30,     js_InitViaClassSpec,       TYPED_ARRAY_CLASP(TYPE_UINT8_CLAMPED)) \
     real(Proxy,                 31,     js_InitProxyClass,         &ProxyObject::uncallableClass_) \
     real(WeakMap,               32,     js_InitWeakMapClass,       OCLASP(WeakMap)) \
     real(Map,                   33,     js_InitMapClass,           OCLASP(Map)) \
     real(Set,                   34,     js_InitSetClass,           OCLASP(Set)) \
-    real(DataView,              35,     js_InitTypedArrayClasses,  OCLASP(DataView)) \
+    real(DataView,              35,     js_InitDataViewClass,      OCLASP(DataView)) \
 IF_SAB(real,imaginary)(SharedArrayBuffer,       36,     js_InitSharedArrayBufferClass, &js::SharedArrayBufferObject::protoClass) \
 IF_INTL(real,imaginary) (Intl,                  37,     js_InitIntlClass,          CLASP(Intl)) \
 IF_BDATA(real,imaginary)(TypedObject,           38,     js_InitTypedObjectModuleObject,   OCLASP(TypedObjectModule)) \

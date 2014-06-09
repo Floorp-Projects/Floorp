@@ -19,6 +19,7 @@
 #include "webrtc/modules/rtp_rtcp/source/rtcp_sender.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_sender.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/testsupport/gtest_prod_util.h"
 
 #ifdef MATLAB
 class MatlabPlot;
@@ -94,11 +95,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   virtual uint32_t ByteCountSent() const;
 
-  virtual int32_t SetRTXSendStatus(const RtxMode mode,
+  virtual int32_t SetRTXSendStatus(const int mode,
                                    const bool set_ssrc,
                                    const uint32_t ssrc) OVERRIDE;
 
-  virtual int32_t RTXSendStatus(RtxMode* mode, uint32_t* ssrc,
+  virtual int32_t RTXSendStatus(int* mode, uint32_t* ssrc,
                                 int* payloadType) const OVERRIDE;
 
 
@@ -126,11 +127,17 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
       const RTPFragmentationHeader* fragmentation = NULL,
       const RTPVideoHeader* rtp_video_hdr = NULL) OVERRIDE;
 
-  virtual bool TimeToSendPacket(uint32_t ssrc, uint16_t sequence_number,
-                                int64_t capture_time_ms) OVERRIDE;
+  virtual bool TimeToSendPacket(uint32_t ssrc,
+                                uint16_t sequence_number,
+                                int64_t capture_time_ms,
+                                bool retransmission) OVERRIDE;
   // Returns the number of padding bytes actually sent, which can be more or
   // less than |bytes|.
   virtual int TimeToSendPadding(int bytes) OVERRIDE;
+
+  virtual bool GetSendSideDelay(int* avg_send_delay_ms,
+                                int* max_send_delay_ms) const OVERRIDE;
+
   // RTCP part.
 
   // Get RTCP status.
@@ -170,8 +177,6 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   // Reset RoundTripTime statistics.
   virtual int32_t ResetRTT(const uint32_t remote_ssrc) OVERRIDE;
-
-  virtual void SetRtt(uint32_t rtt) OVERRIDE;
 
   virtual int32_t GetReportBlockInfo(const uint32_t remote_ssrc,
                                      uint32_t* ntp_high,
@@ -251,6 +256,12 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   virtual bool StorePackets() const OVERRIDE;
 
+  // Called on receipt of RTCP report block from remote side.
+  virtual void RegisterSendChannelRtcpStatisticsCallback(
+      RtcpStatisticsCallback* callback) OVERRIDE;
+  virtual RtcpStatisticsCallback*
+      GetSendChannelRtcpStatisticsCallback() OVERRIDE;
+
   // (APP) Application specific data.
   virtual int32_t SetRTCPApplicationSpecificData(
       const uint8_t sub_type,
@@ -260,6 +271,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   // (XR) VOIP metric.
   virtual int32_t SetRTCPVoIPMetrics(const RTCPVoIPMetric* VoIPMetric) OVERRIDE;
+
+  // (XR) Receiver reference time report.
+  virtual void SetRtcpXrRrtrStatus(bool enable) OVERRIDE;
+
+  virtual bool RtcpXrRrtrStatus() const OVERRIDE;
 
   // Audio part.
 
@@ -330,6 +346,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
                                   uint32_t& NTPfrac,
                                   uint32_t& remote_sr);
 
+  virtual bool LastReceivedXrReferenceTimeInfo(RtcpReceiveTimeInfo* info) const;
+
   virtual int32_t BoundingSet(bool& tmmbr_owner, TMMBRSet*& bounding_set_rec);
 
   virtual void BitrateSent(uint32_t* total_rate,
@@ -337,14 +355,26 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
                            uint32_t* fec_rate,
                            uint32_t* nackRate) const OVERRIDE;
 
+  virtual void RegisterVideoBitrateObserver(BitrateStatisticsObserver* observer)
+      OVERRIDE;
+
+  virtual BitrateStatisticsObserver* GetVideoBitrateObserver() const OVERRIDE;
+
   virtual bool GetSendReportMetadata(const uint32_t send_report,
                                      uint32_t *time_of_send,
                                      uint32_t *packet_count,
                                      uint64_t *octet_count);
 
+  virtual bool SendTimeOfXrRrReport(uint32_t mid_ntp, int64_t* time_ms) const;
+
   // Good state of RTP receiver inform sender.
   virtual int32_t SendRTCPReferencePictureSelection(
       const uint64_t picture_id) OVERRIDE;
+
+  virtual void RegisterSendChannelRtpStatisticsCallback(
+      StreamDataCountersCallback* callback);
+  virtual StreamDataCountersCallback*
+      GetSendChannelRtpStatisticsCallback() const;
 
   void OnReceivedTMMBR();
 
@@ -361,6 +391,10 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
   void OnReceivedNACK(const std::list<uint16_t>& nack_sequence_numbers);
 
   void OnRequestSendReport();
+
+  virtual void RegisterSendFrameCountObserver(
+      FrameCountObserver* observer) OVERRIDE;
+  virtual FrameCountObserver* GetSendFrameCountObserver() const OVERRIDE;
 
  protected:
   void RegisterChildModule(RtpRtcp* module);
@@ -385,8 +419,15 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
   Clock*                    clock_;
 
  private:
+  FRIEND_TEST_ALL_PREFIXES(RtpRtcpImplTest, Rtt);
+  FRIEND_TEST_ALL_PREFIXES(RtpRtcpImplTest, RttForReceiverOnly);
   int64_t RtcpReportInterval();
   void SetRtcpReceiverSsrcs(uint32_t main_ssrc);
+
+  void set_rtt_ms(uint32_t rtt_ms);
+  uint32_t rtt_ms() const;
+
+  bool IsDefaultModule() const;
 
   int32_t             id_;
   const bool                audio_;
@@ -416,7 +457,11 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
   MatlabPlot*           plot1_;
 #endif
 
-  RtcpRttObserver* rtt_observer_;
+  RtcpRttStats* rtt_stats_;
+
+  // The processed RTT from RtcpRttStats.
+  scoped_ptr<CriticalSectionWrapper> critical_section_rtt_;
+  uint32_t rtt_ms_;
 };
 
 }  // namespace webrtc

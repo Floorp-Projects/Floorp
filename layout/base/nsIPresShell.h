@@ -53,8 +53,13 @@ class nsViewManager;
 class nsView;
 class nsRenderingContext;
 class nsIPageSequenceFrame;
+class nsCanvasFrame;
 class nsAString;
 class nsCaret;
+namespace mozilla {
+class TouchCaret;
+class SelectionCarets;
+} // namespace mozilla
 class nsFrameSelection;
 class nsFrameManager;
 class nsILayoutHistoryState;
@@ -132,10 +137,10 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-//61e60df7-128a-4cdd-a684-5f0bd2ceb61f
+//a4e5ff3a-dc5c-4b3a-a625-d164a9e50619
 #define NS_IPRESSHELL_IID \
-{ 0x61e60df7, 0x128a, 0x4cdd, \
-  {0xa6, 0x84, 0x5f, 0x0b, 0xd2, 0xce, 0xb6, 0x1f}}
+{ 0xa4e5ff3a, 0xdc5c, 0x4b3a, \
+  {0xa6, 0x25, 0xd1, 0x64, 0xa9, 0xe5, 0x06, 0x19}}
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -191,7 +196,7 @@ public:
    * content model and printing calls |EndObservingDocument| multiple
    * times to make form controls behave nicely when printed.
    */
-  virtual NS_HIDDEN_(void) Destroy() = 0;
+  virtual void Destroy() = 0;
 
   bool IsDestroying() { return mIsDestroying; }
 
@@ -205,7 +210,7 @@ public:
    * This is used in cases where a presshell is created for reasons
    * other than reflow/painting.
    */
-  virtual NS_HIDDEN_(void) MakeZombie() = 0;
+  virtual void MakeZombie() = 0;
 
   /**
    * All frames owned by the shell are allocated from an arena.  They
@@ -327,8 +332,8 @@ public:
    */
   // XXX these could easily be inlined, but there is a circular #include
   // problem with nsStyleSet.
-  NS_HIDDEN_(void) SetAuthorStyleDisabled(bool aDisabled);
-  NS_HIDDEN_(bool) GetAuthorStyleDisabled() const;
+  void SetAuthorStyleDisabled(bool aDisabled);
+  bool GetAuthorStyleDisabled() const;
 
   /*
    * Called when stylesheets are added/removed/enabled/disabled to rebuild
@@ -340,8 +345,8 @@ public:
    * is calling AddOverrideStyleSheet/RemoveOverrideStyleSheet, and I think
    * those should just handle reconstructing style data...
    */
-  virtual NS_HIDDEN_(void) ReconstructStyleDataExternal();
-  NS_HIDDEN_(void) ReconstructStyleDataInternal();
+  virtual void ReconstructStyleDataExternal();
+  void ReconstructStyleDataInternal();
 #ifdef MOZILLA_INTERNAL_API
   void ReconstructStyleData() { ReconstructStyleDataInternal(); }
 #else
@@ -356,7 +361,7 @@ public:
    *
    * - initially created for bugs 31816, 20760, 22963
    */
-  virtual NS_HIDDEN_(nsresult) SetPreferenceStyleRules(bool aForceReflow) = 0;
+  virtual nsresult SetPreferenceStyleRules(bool aForceReflow) = 0;
 
   /**
    * FrameSelection will return the Frame based selection API.
@@ -373,10 +378,10 @@ public:
 
   // Make shell be a document observer.  If called after Destroy() has
   // been called on the shell, this will be ignored.
-  virtual NS_HIDDEN_(void) BeginObservingDocument() = 0;
+  virtual void BeginObservingDocument() = 0;
 
   // Make shell stop being a document observer
-  virtual NS_HIDDEN_(void) EndObservingDocument() = 0;
+  virtual void EndObservingDocument() = 0;
 
   /**
    * Return whether Initialize() was previously called.
@@ -394,19 +399,19 @@ public:
    * is guaranteed to survive through arbitrary script execution.
    * Calling Initialize can execute arbitrary script.
    */
-  virtual NS_HIDDEN_(nsresult) Initialize(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult Initialize(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  virtual NS_HIDDEN_(nsresult) ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult ResizeReflow(nscoord aWidth, nscoord aHeight) = 0;
   /**
    * Reflow, and also change presshell state so as to only permit
    * reflowing off calls to ResizeReflowOverride() in the future.
    * ResizeReflow() calls are ignored after ResizeReflowOverride().
    */
-  virtual NS_HIDDEN_(nsresult) ResizeReflowOverride(nscoord aWidth, nscoord aHeight) = 0;
+  virtual nsresult ResizeReflowOverride(nscoord aWidth, nscoord aHeight) = 0;
 
   /**
    * Returns true if ResizeReflowOverride has been called.
@@ -421,12 +426,12 @@ public:
   /**
    * Called when document load completes.
    */
-  virtual NS_HIDDEN_(void) LoadComplete() = 0;
+  virtual void LoadComplete() = 0;
 
   /**
    * This calls through to the frame manager to get the root frame.
    */
-  virtual NS_HIDDEN_(nsIFrame*) GetRootFrameExternal() const;
+  virtual nsIFrame* GetRootFrameExternal() const;
   nsIFrame* GetRootFrame() const {
 #ifdef MOZILLA_INTERNAL_API
     return mFrameManager->GetRootFrame();
@@ -465,7 +470,13 @@ public:
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns nullptr if not a paginated view.
    */
-  virtual NS_HIDDEN_(nsIPageSequenceFrame*) GetPageSequenceFrame() const = 0;
+  virtual nsIPageSequenceFrame* GetPageSequenceFrame() const = 0;
+
+  /**
+  * Returns the canvas frame associated with the frame hierarchy.
+  * Returns nullptr if is XUL document.
+  */
+  virtual nsCanvasFrame* GetCanvasFrame() const = 0;
 
   /**
    * Gets the real primary frame associated with the content object.
@@ -474,13 +485,13 @@ public:
    * the real primary frame is the frame that is out of the flow and not the
    * placeholder frame.
    */
-  virtual NS_HIDDEN_(nsIFrame*) GetRealPrimaryFrameFor(nsIContent* aContent) const = 0;
+  virtual nsIFrame* GetRealPrimaryFrameFor(nsIContent* aContent) const = 0;
 
   /**
    * Gets the placeholder frame associated with the specified frame. This is
    * a helper frame that forwards the request to the frame manager.
    */
-  virtual NS_HIDDEN_(nsIFrame*) GetPlaceholderFrameFor(nsIFrame* aFrame) const = 0;
+  virtual nsIFrame* GetPlaceholderFrameFor(nsIFrame* aFrame) const = 0;
 
   /**
    * Tell the pres shell that a frame needs to be marked dirty and needs
@@ -495,7 +506,7 @@ public:
     eTreeChange, // mark intrinsic widths dirty on aFrame and its ancestors
     eStyleChange // Do eTreeChange, plus all of aFrame's descendants
   };
-  virtual NS_HIDDEN_(void) FrameNeedsReflow(nsIFrame *aFrame,
+  virtual void FrameNeedsReflow(nsIFrame *aFrame,
                                             IntrinsicDirty aIntrinsicDirty,
                                             nsFrameState aBitToAdd) = 0;
 
@@ -515,14 +526,14 @@ public:
    * method doesn't mark any intrinsic widths dirty and doesn't add any bits
    * other than NS_FRAME_HAS_DIRTY_CHILDREN.
    */
-  virtual NS_HIDDEN_(void) FrameNeedsToContinueReflow(nsIFrame *aFrame) = 0;
+  virtual void FrameNeedsToContinueReflow(nsIFrame *aFrame) = 0;
 
-  virtual NS_HIDDEN_(void) CancelAllPendingReflows() = 0;
+  virtual void CancelAllPendingReflows() = 0;
 
   /**
    * Recreates the frames for a node
    */
-  virtual NS_HIDDEN_(nsresult) RecreateFramesFor(nsIContent* aContent) = 0;
+  virtual nsresult RecreateFramesFor(nsIContent* aContent) = 0;
 
   void PostRecreateFramesFor(mozilla::dom::Element* aElement);
   void RestyleForAnimation(mozilla::dom::Element* aElement,
@@ -531,14 +542,14 @@ public:
   // ShadowRoot has APIs that can change styles so we only
   // want to restyle elements in the ShadowRoot and not the whole
   // document.
-  virtual void RestyleShadowRoot(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
+  virtual void RecordShadowStyleChange(mozilla::dom::ShadowRoot* aShadowRoot) = 0;
 
   /**
    * Determine if it is safe to flush all pending notifications
    * @param aIsSafeToFlush true if it is safe, false otherwise.
    *
    */
-  virtual NS_HIDDEN_(bool) IsSafeToFlush() const = 0;
+  virtual bool IsSafeToFlush() const = 0;
 
   /**
    * Flush pending notifications of the type specified.  This method
@@ -549,17 +560,17 @@ public:
    *
    * @param aType the type of notifications to flush
    */
-  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozFlushType aType) = 0;
-  virtual NS_HIDDEN_(void) FlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
+  virtual void FlushPendingNotifications(mozFlushType aType) = 0;
+  virtual void FlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
 
   /**
    * Callbacks will be called even if reflow itself fails for
    * some reason.
    */
-  virtual NS_HIDDEN_(nsresult) PostReflowCallback(nsIReflowCallback* aCallback) = 0;
-  virtual NS_HIDDEN_(void) CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
+  virtual nsresult PostReflowCallback(nsIReflowCallback* aCallback) = 0;
+  virtual void CancelReflowCallback(nsIReflowCallback* aCallback) = 0;
 
-  virtual NS_HIDDEN_(void) ClearFrameRefs(nsIFrame* aFrame) = 0;
+  virtual void ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   /**
    * Get a reference rendering context. This is a context that should not
@@ -576,7 +587,7 @@ public:
    * the pres shell that there is no current target, and |aScroll| must
    * be false.
    */
-  virtual NS_HIDDEN_(nsresult) GoToAnchor(const nsAString& aAnchorName, bool aScroll) = 0;
+  virtual nsresult GoToAnchor(const nsAString& aAnchorName, bool aScroll) = 0;
 
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by
@@ -586,7 +597,7 @@ public:
    * scrolled to by GoToAnchor (we don't want to keep it alive if it's
    * removed from the DOM), so don't call this more than once.
    */
-  virtual NS_HIDDEN_(nsresult) ScrollToAnchor() = 0;
+  virtual nsresult ScrollToAnchor() = 0;
 
   enum {
     SCROLL_TOP     = 0,
@@ -669,7 +680,7 @@ public:
    *                  nodes in this document, not in any parent documents which
    *                  contain this document in a iframe or the like.
    */
-  virtual NS_HIDDEN_(nsresult) ScrollContentIntoView(nsIContent* aContent,
+  virtual nsresult ScrollContentIntoView(nsIContent* aContent,
                                                      ScrollAxis  aVertical,
                                                      ScrollAxis  aHorizontal,
                                                      uint32_t    aFlags) = 0;
@@ -726,26 +737,62 @@ public:
    * Suppress notification of the frame manager that frames are
    * being destroyed.
    */
-  virtual NS_HIDDEN_(void) SetIgnoreFrameDestruction(bool aIgnore) = 0;
+  virtual void SetIgnoreFrameDestruction(bool aIgnore) = 0;
 
   /**
    * Notification sent by a frame informing the pres shell that it is about to
    * be destroyed.
    * This allows any outstanding references to the frame to be cleaned up
    */
-  virtual NS_HIDDEN_(void) NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+  virtual void NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
+
+  /**
+   * Get the touch caret, if it exists. AddRefs it.
+   */
+  virtual already_AddRefed<mozilla::TouchCaret> GetTouchCaret() const = 0;
+
+  /**
+   * Returns the touch caret element of the presshell.
+   */
+  virtual mozilla::dom::Element* GetTouchCaretElement() const = 0;
+
+  /**
+   * Will be called when touch caret visibility has changed.
+   * Set the mMayHaveTouchCaret flag to aSet.
+   */
+  virtual void SetMayHaveTouchCaret(bool aSet) = 0;
+
+  /**
+   * Get the mMayHaveTouchCaret flag.
+   */
+  virtual bool MayHaveTouchCaret() = 0;
+
+  /**
+   * Get the selection caret, if it exists. AddRefs it.
+   */
+  virtual NS_HIDDEN_(already_AddRefed<mozilla::SelectionCarets>) GetSelectionCarets() const = 0;
+
+  /**
+   * Returns the start part of selection caret element of the presshell.
+   */
+  virtual NS_HIDDEN_(mozilla::dom::Element*) GetSelectionCaretsStartElement() const = 0;
+
+  /**
+   * Returns the end part of selection caret element of the presshell.
+   */
+  virtual NS_HIDDEN_(mozilla::dom::Element*) GetSelectionCaretsEndElement() const = 0;
 
   /**
    * Get the caret, if it exists. AddRefs it.
    */
-  virtual NS_HIDDEN_(already_AddRefed<nsCaret>) GetCaret() const = 0;
+  virtual already_AddRefed<nsCaret> GetCaret() const = 0;
 
   /**
    * Invalidate the caret's current position if it's outside of its frame's
    * boundaries. This function is useful if you're batching selection
    * notifications and might remove the caret's frame out from under it.
    */
-  virtual NS_HIDDEN_(void) MaybeInvalidateCaretPosition() = 0;
+  virtual void MaybeInvalidateCaretPosition() = 0;
 
   /**
    * Set the current caret to a new caret. To undo this, call RestoreCaret.
@@ -781,7 +828,7 @@ public:
     * Interface to dispatch events via the presshell
     * @note The caller must have a strong reference to the PresShell.
     */
-  virtual NS_HIDDEN_(nsresult) HandleEventWithTarget(
+  virtual nsresult HandleEventWithTarget(
                                  mozilla::WidgetEvent* aEvent,
                                  nsIFrame* aFrame,
                                  nsIContent* aContent,
@@ -791,7 +838,7 @@ public:
    * Dispatch event to content only (NOT full processing)
    * @note The caller must have a strong reference to the PresShell.
    */
-  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(
+  virtual nsresult HandleDOMEventWithTarget(
                                  nsIContent* aTargetContent,
                                  mozilla::WidgetEvent* aEvent,
                                  nsEventStatus* aStatus) = 0;
@@ -800,26 +847,26 @@ public:
    * Dispatch event to content only (NOT full processing)
    * @note The caller must have a strong reference to the PresShell.
    */
-  virtual NS_HIDDEN_(nsresult) HandleDOMEventWithTarget(nsIContent* aTargetContent,
+  virtual nsresult HandleDOMEventWithTarget(nsIContent* aTargetContent,
                                                         nsIDOMEvent* aEvent,
                                                         nsEventStatus* aStatus) = 0;
 
   /**
     * Gets the current target event frame from the PresShell
     */
-  virtual NS_HIDDEN_(nsIFrame*) GetEventTargetFrame() = 0;
+  virtual nsIFrame* GetEventTargetFrame() = 0;
 
   /**
     * Gets the current target event frame from the PresShell
     */
-  virtual NS_HIDDEN_(already_AddRefed<nsIContent>) GetEventTargetContent(
+  virtual already_AddRefed<nsIContent> GetEventTargetContent(
                                                      mozilla::WidgetEvent* aEvent) = 0;
 
   /**
    * Get and set the history state for the current document
    */
 
-  virtual NS_HIDDEN_(nsresult) CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
+  virtual nsresult CaptureHistoryState(nsILayoutHistoryState** aLayoutHistoryState) = 0;
 
   /**
    * Determine if reflow is currently locked
@@ -851,7 +898,7 @@ public:
   /**
    * Unsuppress painting.
    */
-  virtual NS_HIDDEN_(void) UnsuppressPainting() = 0;
+  virtual void UnsuppressPainting() = 0;
 
   /**
    * Called to disable nsITheme support in a specific presshell.
@@ -915,15 +962,15 @@ public:
   virtual nsIFrame* GetAbsoluteContainingBlock(nsIFrame* aFrame);
 
 #ifdef MOZ_REFLOW_PERF
-  virtual NS_HIDDEN_(void) DumpReflows() = 0;
-  virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame) = 0;
-  virtual NS_HIDDEN_(void) PaintCount(const char * aName,
+  virtual void DumpReflows() = 0;
+  virtual void CountReflows(const char * aName, nsIFrame * aFrame) = 0;
+  virtual void PaintCount(const char * aName,
                                       nsRenderingContext* aRenderingContext,
                                       nsPresContext * aPresContext,
                                       nsIFrame * aFrame,
                                       const nsPoint& aOffset,
                                       uint32_t aColor) = 0;
-  virtual NS_HIDDEN_(void) SetPaintFrameCount(bool aOn) = 0;
+  virtual void SetPaintFrameCount(bool aOn) = 0;
   virtual bool IsPaintingFrameCounts() = 0;
 #endif
 
@@ -1016,7 +1063,7 @@ public:
     RENDER_DOCUMENT_RELATIVE = 0x20,
     RENDER_DRAWWINDOW_NOT_FLUSHING = 0x40
   };
-  virtual NS_HIDDEN_(nsresult) RenderDocument(const nsRect& aRect, uint32_t aFlags,
+  virtual nsresult RenderDocument(const nsRect& aRect, uint32_t aFlags,
                                               nscolor aBackgroundColor,
                                               gfxContext* aRenderedContext) = 0;
 
@@ -1087,7 +1134,7 @@ public:
    * @param aDisable If true, disable all non synthetic test mouse
    * events on all presShells.  Otherwise, enable them.
    */
-  virtual NS_HIDDEN_(void) DisableNonTestMouseEvents(bool aDisable) = 0;
+  virtual void DisableNonTestMouseEvents(bool aDisable) = 0;
 
   /**
    * Record the background color of the most recently drawn canvas. This color
@@ -1418,7 +1465,8 @@ public:
 
   // Clears the current list of visible images on this presshell and replaces it
   // with images that are in the display list aList.
-  virtual void RebuildImageVisibility(const nsDisplayList& aList) = 0;
+  virtual void RebuildImageVisibilityDisplayList(const nsDisplayList& aList) = 0;
+  virtual void RebuildImageVisibility(nsRect* aRect = nullptr) = 0;
 
   // Ensures the image is in the list of visible images.
   virtual void EnsureImageInVisibleList(nsIImageLoadingContent* aImage) = 0;

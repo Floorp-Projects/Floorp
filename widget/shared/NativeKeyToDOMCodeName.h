@@ -694,36 +694,31 @@ CODE_MAP_X11(Pause,                     0x007F)
 CODE_MAP_ANDROID(Pause,                 0x0077)
 
 // Media keys
-
-// NOTE: Following media keys which cause scancode 0xE000 on Windows should be
-//       mapped with virtual keycode.
-//       See KeyboardLayout::ConvertScanCodeToCodeNameIndex() for the detail.
-
-// CODE_MAP_WIN(BrowserBack,               0xE000) // VK_BROWSER_BACK
+CODE_MAP_WIN(BrowserBack,               0xE06A)
 CODE_MAP_X11(BrowserBack,               0x00A6)
 CODE_MAP_ANDROID(BrowserBack,           0x009E)
 
-// CODE_MAP_WIN(BrowserFavorites,          0xE000) // VK_BROWSER_FAVORITES
+CODE_MAP_WIN(BrowserFavorites,          0xE066)
 CODE_MAP_X11(BrowserFavorites,          0x00A4)
 CODE_MAP_ANDROID(BrowserFavorites,      0x009C)
 
-// CODE_MAP_WIN(BrowserForward,            0xE000) // VK_BROWSER_FORWARD
+CODE_MAP_WIN(BrowserForward,            0xE069)
 CODE_MAP_X11(BrowserForward,            0x00A7)
 CODE_MAP_ANDROID(BrowserForward,        0x009F)
 
-// CODE_MAP_WIN(BrowserHome,               0xE000) // VK_BROWSER_HOME
+CODE_MAP_WIN(BrowserHome,               0xE032)
 CODE_MAP_X11(BrowserHome,               0x00B4)
 // CODE_MAP_ANDROID(BrowserHome) // not available? works as Home key.
 
-// CODE_MAP_WIN(BrowserRefresh,            0xE000) // VK_BROWSER_REFRESH
+CODE_MAP_WIN(BrowserRefresh,            0xE067)
 CODE_MAP_X11(BrowserRefresh,            0x00B5)
 CODE_MAP_ANDROID(BrowserRefresh,        0x00AD)
 
-// CODE_MAP_WIN(BrowserSearch,             0xE000) // VK_BROWSER_SEARCH
+CODE_MAP_WIN(BrowserSearch,             0xE065)
 CODE_MAP_X11(BrowserSearch,             0x00E1)
 CODE_MAP_ANDROID(BrowserSearch,         0x00D9)
 
-// CODE_MAP_WIN(BrowserStop,               0xE000) // VK_BROWSER_STOP
+CODE_MAP_WIN(BrowserStop,               0xE068)
 CODE_MAP_X11(BrowserStop,               0x0088)
 CODE_MAP_ANDROID(BrowserStop,           0x0080)
 
@@ -732,35 +727,35 @@ CODE_MAP_ANDROID(BrowserStop,           0x0080)
 CODE_MAP_X11(Eject,                     0x00A9)
 CODE_MAP_ANDROID(Eject,                 0x00A1)
 
-// CODE_MAP_WIN(LaunchApp1,                0xE000) // VK_LAUNCH_APP1
+CODE_MAP_WIN(LaunchApp1,                0xE06B)
 CODE_MAP_X11(LaunchApp1,                0x0098)
 CODE_MAP_ANDROID(LaunchApp1,            0x0090)
 
-// CODE_MAP_WIN(LaunchApp2,                0xE000) // VK_LAUNCH_APP2
+CODE_MAP_WIN(LaunchApp2,                0xE021)
 CODE_MAP_X11(LaunchApp2,                0x0094)
 // CODE_MAP_ANDROID(LaunchApp2) // not available?
 
-// CODE_MAP_WIN(LaunchMail,                0xE000) // VK_LAUNCH_MAIL
+CODE_MAP_WIN(LaunchMail,                0xE06C)
 CODE_MAP_X11(LaunchMail,                0x00A3)
 // CODE_MAP_ANDROID(LaunchMail) // not available?
 
-// CODE_MAP_WIN(MediaPlayPause,            0xE000) // VK_MEDIA_PLAY_PAUSE
+CODE_MAP_WIN(MediaPlayPause,            0xE022)
 CODE_MAP_X11(MediaPlayPause,            0x00AC)
 CODE_MAP_ANDROID(MediaPlayPause,        0x00A4)
 
-// CODE_MAP_WIN(MediaSelect,               0xE000) // VK_LAUNCH_MEDIA_SELECT
+CODE_MAP_WIN(MediaSelect,               0xE06D)
 CODE_MAP_X11(MediaSelect,               0x00B3)
 // CODE_MAP_ANDROID(MediaSelect) // not available?
 
-// CODE_MAP_WIN(MediaStop,                 0xE000) // VK_MEDIA_STOP
+CODE_MAP_WIN(MediaStop,                 0xE024)
 CODE_MAP_X11(MediaStop,                 0x00AE)
 CODE_MAP_ANDROID(MediaStop,             0x00A6)
 
-// CODE_MAP_WIN(MediaTrackNext,            0xE000) // VK_MEDIA_NEXT_TRACK
+CODE_MAP_WIN(MediaTrackNext,            0xE019)
 CODE_MAP_X11(MediaTrackNext,            0x00AB)
 CODE_MAP_ANDROID(MediaTrackNext,        0x00A3)
 
-// CODE_MAP_WIN(MediaTrackPrevious,        0xE000) // VK_MEDIA_PREV_TRACK
+CODE_MAP_WIN(MediaTrackPrevious,        0xE010)
 CODE_MAP_X11(MediaTrackPrevious,        0x00AD)
 CODE_MAP_ANDROID(MediaTrackPrevious,    0x00A5)
 
@@ -773,17 +768,17 @@ CODE_MAP_ANDROID(Power,                 0x0074)
 // CODE_MAP_X11(Sleep) // not available?
 CODE_MAP_ANDROID(Sleep,                 0x008E)
 
-// CODE_MAP_WIN(VolumeDown,                0xE000) // VK_VOLUME_DOWN
+CODE_MAP_WIN(VolumeDown,                0xE02E)
 CODE_MAP_MAC(VolumeDown,                kVK_VolumeDown) // not available?
 CODE_MAP_X11(VolumeDown,                0x007A)
 CODE_MAP_ANDROID(VolumeDown,            0x0072)
 
-// CODE_MAP_WIN(VolumeMute,                0xE000) // VK_VOLUME_MUTE
+CODE_MAP_WIN(VolumeMute,                0xE020)
 CODE_MAP_MAC(VolumeMute,                kVK_Mute) // not available?
 CODE_MAP_X11(VolumeMute,                0x0079)
 CODE_MAP_ANDROID(VolumeMute,            0x0071)
 
-// CODE_MAP_WIN(VolumeUp,                  0xE000) // VK_VOLUME_UP
+CODE_MAP_WIN(VolumeUp,                  0xE030)
 CODE_MAP_MAC(VolumeUp,                  kVK_VolumeUp) // not available?
 CODE_MAP_X11(VolumeUp,                  0x007B)
 CODE_MAP_ANDROID(VolumeUp,              0x0073) // side of body, not on keyboard

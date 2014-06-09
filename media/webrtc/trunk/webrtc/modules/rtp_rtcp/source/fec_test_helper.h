@@ -17,9 +17,6 @@
 namespace webrtc {
 
 enum {
-  kRtpHeaderSize = 12
-};
-enum {
   kFecPayloadType = 96
 };
 enum {

@@ -89,7 +89,6 @@ NS_IMPL_QUERY_INTERFACE(StartTransactionRunnable, nsIRunnable)
 
 } // anonymous namespace
 
-
 // static
 already_AddRefed<IDBTransaction>
 IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
@@ -115,6 +114,15 @@ IDBTransaction::CreateInternal(IDBDatabase* aDatabase,
   transaction->mDatabaseInfo = aDatabase->Info();
   transaction->mObjectStoreNames.AppendElements(aObjectStoreNames);
   transaction->mObjectStoreNames.Sort();
+
+  // Remove any duplicate object store names
+  const uint32_t count = transaction->mObjectStoreNames.Length();
+  for (uint32_t index = count - 1; index > 0 && count > 0; index--) {
+    if (transaction->mObjectStoreNames[index] ==
+        transaction->mObjectStoreNames[index - 1]) {
+      transaction->mObjectStoreNames.RemoveElementAt(index);
+    }
+  }
 
   IndexedDBTransactionChild* actor = nullptr;
 
@@ -365,7 +373,8 @@ IDBTransaction::GetOrCreateConnection(mozIStorageConnection** aResult)
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
 
-  PROFILER_LABEL("IndexedDB", "IDBTransaction::GetOrCreateConnection");
+  PROFILER_LABEL("IDBTransaction", "GetOrCreateConnection",
+    js::ProfileEntry::Category::STORAGE);
 
   if (mDatabase->IsInvalidated()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -784,7 +793,8 @@ NS_IMETHODIMP
 CommitHelper::Run()
 {
   if (NS_IsMainThread()) {
-    PROFILER_MAIN_THREAD_LABEL("IndexedDB", "CommitHelper::Run");
+    PROFILER_MAIN_THREAD_LABEL("CommitHelper", "Run",
+      js::ProfileEntry::Category::STORAGE);
 
     NS_ASSERTION(mDoomedObjects.IsEmpty(), "Didn't release doomed objects!");
 
@@ -852,7 +862,8 @@ CommitHelper::Run()
     return NS_OK;
   }
 
-  PROFILER_LABEL("IndexedDB", "CommitHelper::Run");
+  PROFILER_LABEL("CommitHelper", "Run",
+    js::ProfileEntry::Category::STORAGE);
 
   IDBDatabase* database = mTransaction->Database();
   if (database->IsInvalidated()) {
@@ -945,7 +956,7 @@ CommitHelper::WriteAutoIncrementCounts()
 
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("osid"), info->id);
     NS_ENSURE_SUCCESS(rv, rv);
-    
+
     rv = stmt->BindInt64ByName(NS_LITERAL_CSTRING("ai"),
                                info->nextAutoIncrementId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -953,7 +964,7 @@ CommitHelper::WriteAutoIncrementCounts()
     rv = stmt->Execute();
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  
+
   return NS_OK;
 }
 

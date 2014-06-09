@@ -250,7 +250,7 @@ pref("media.apple.mp3.enabled", true);
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
 pref("media.navigator.video.enabled", true);
-pref("media.navigator.load_adapt", false);
+pref("media.navigator.load_adapt", true);
 pref("media.navigator.load_adapt.measure_interval",1000);
 pref("media.navigator.load_adapt.avg_seconds",3);
 pref("media.navigator.load_adapt.high_load","0.90");
@@ -359,6 +359,9 @@ pref("media.video_stats.enabled", true);
 // Whether to enable the audio writing APIs on the audio element
 pref("media.audio_data.enabled", false);
 
+// Whether to use async panning and zooming
+pref("layers.async-pan-zoom.enabled", false);
+
 // Whether to lock touch scrolling to one axis at a time
 // 0 = FREE (No locking at all)
 // 1 = STANDARD (Once locked, remain locked until scrolling ends)
@@ -368,8 +371,19 @@ pref("apz.axis_lock_mode", 0);
 // Whether to print the APZC tree for debugging
 pref("apz.printtree", false);
 
+#ifdef XP_MACOSX
 // Layerize scrollable subframes to allow async panning
+pref("apz.subframe.enabled", true);
+pref("apz.fling_repaint_interval", 16);
+pref("apz.pan_repaint_interval", 16);
+pref("apz.apz.x_skate_size_multiplier", "2.5");
+pref("apz.apz.y_skate_size_multiplier", "3.5");
+#else
 pref("apz.subframe.enabled", false);
+#endif
+
+// APZ testing (bug 961289)
+pref("apz.test.logging_enabled", false);
 
 #ifdef XP_MACOSX
 // Whether to run in native HiDPI mode on machines with "Retina"/HiDPI display;
@@ -772,6 +786,12 @@ pref("dom.forms.number", true);
 // platforms which don't have a color picker implemented yet.
 pref("dom.forms.color", true);
 
+// Support for new @autocomplete values
+pref("dom.forms.autocomplete.experimental", false);
+
+// Enables requestAutocomplete DOM API on forms.
+pref("dom.forms.requestAutocomplete", false);
+
 // Enables system messages and activities
 pref("dom.sysmsg.enabled", false);
 
@@ -801,6 +821,11 @@ pref("privacy.donottrackheader.value",      1);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.clipboardevents.enabled",   true);
+#if defined(XP_WIN) && !defined(RELEASE_BUILD)
+pref("dom.event.highrestimestamp.enabled",  true);
+#else
+pref("dom.event.highrestimestamp.enabled",  false);
+#endif
 
 pref("dom.webcomponents.enabled",           false);
 
@@ -1341,24 +1366,24 @@ pref("network.dir.format", 2);
 pref("network.prefetch-next", true);
 
 // enables the predictive service
-pref("network.seer.enabled", false);
-pref("network.seer.enable-hover-on-ssl", false);
-pref("network.seer.page-degradation.day", 0);
-pref("network.seer.page-degradation.week", 5);
-pref("network.seer.page-degradation.month", 10);
-pref("network.seer.page-degradation.year", 25);
-pref("network.seer.page-degradation.max", 50);
-pref("network.seer.subresource-degradation.day", 1);
-pref("network.seer.subresource-degradation.week", 10);
-pref("network.seer.subresource-degradation.month", 25);
-pref("network.seer.subresource-degradation.year", 50);
-pref("network.seer.subresource-degradation.max", 100);
-pref("network.seer.preconnect-min-confidence", 90);
-pref("network.seer.preresolve-min-confidence", 60);
-pref("network.seer.redirect-likely-confidence", 75);
-pref("network.seer.max-queue-size", 50);
-pref("network.seer.max-db-size", 157286400); // bytes
-pref("network.seer.preserve", 80); // percentage of seer data to keep when cleaning up
+pref("network.predictor.enabled", false);
+pref("network.predictor.enable-hover-on-ssl", false);
+pref("network.predictor.page-degradation.day", 0);
+pref("network.predictor.page-degradation.week", 5);
+pref("network.predictor.page-degradation.month", 10);
+pref("network.predictor.page-degradation.year", 25);
+pref("network.predictor.page-degradation.max", 50);
+pref("network.predictor.subresource-degradation.day", 1);
+pref("network.predictor.subresource-degradation.week", 10);
+pref("network.predictor.subresource-degradation.month", 25);
+pref("network.predictor.subresource-degradation.year", 50);
+pref("network.predictor.subresource-degradation.max", 100);
+pref("network.predictor.preconnect-min-confidence", 90);
+pref("network.predictor.preresolve-min-confidence", 60);
+pref("network.predictor.redirect-likely-confidence", 75);
+pref("network.predictor.max-queue-size", 50);
+pref("network.predictor.max-db-size", 157286400); // bytes
+pref("network.predictor.preserve", 80); // percentage of predictor data to keep when cleaning up
 
 
 // The following prefs pertain to the negotiate-auth extension (see bug 17578),
@@ -1578,6 +1603,9 @@ pref("security.csp.newbackend.enable", false);
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
 pref("security.mixed_content.block_display_content", false);
+
+// Disable pinning checks by default.
+pref("security.cert_pinning.enforcement_level", 0);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
@@ -1830,9 +1858,6 @@ pref("layout.css.masking.enabled", true);
 
 // Is support for mix-blend-mode enabled?
 pref("layout.css.mix-blend-mode.enabled", true);
-
-// Is support for the the @supports rule enabled?
-pref("layout.css.supports-rule.enabled", true);
 
 // Is support for CSS Filters enabled?
 pref("layout.css.filters.enabled", false);
@@ -2098,13 +2123,9 @@ pref("svg.svg-iframe.enabled", false);
 pref("svg.svg-iframe.enabled", false);
 #endif
 
-// Is support for the new getBBox method from SVG 2 enabled?  
+// Is support for the new getBBox method from SVG 2 enabled?
 // See https://svgwg.org/svg2-draft/single-page.html#types-SVGBoundingBoxOptions
-#ifdef RELEASE_BUILD
 pref("svg.new-getBBox.enabled", false);
-#else
-pref("svg.new-getBBox.enabled", true);
-#endif
 
 // Default font types and sizes by locale
 pref("font.default.ar", "sans-serif");
@@ -3158,7 +3179,7 @@ pref("font.name.monospace.ko", "Fira Mono OT");
 pref("font.name.serif.th", "Charis SIL Compact");
 pref("font.name.sans-serif.th", "Fira Sans OT");
 pref("font.name.monospace.th", "Fira Mono OT");
-pref("font.name-list.sans-serif.th", "Fira Sans OT, Droid Sans Thai");
+pref("font.name-list.sans-serif.th", "Fira Sans OT, Noto Sans Thai, Droid Sans Thai");
 
 pref("font.name.serif.tr", "Charis SIL Compact");
 pref("font.name.sans-serif.tr", "Fira Sans OT");
@@ -3738,6 +3759,7 @@ pref("layers.draw-tile-borders", false);
 pref("layers.draw-bigimage-borders", false);
 pref("layers.frame-counter", false);
 pref("layers.enable-tiles", false);
+pref("layers.low-precision-buffer", false);
 pref("layers.tile-width", 256);
 pref("layers.tile-height", 256);
 // Max number of layers per container. See Overwrite in mobile prefs.
@@ -3893,6 +3915,9 @@ pref("dom.vibrator.max_vibrate_list_len", 128);
 // Battery API
 pref("dom.battery.enabled", true);
 
+// Image srcset
+pref("dom.image.srcset.enabled", false);
+
 // WebSMS
 pref("dom.sms.enabled", false);
 // Enable Latin characters replacement with corresponding ones in GSM SMS
@@ -3941,8 +3966,12 @@ pref("profiler.enabled", false);
 pref("profiler.interval", 10);
 pref("profiler.entries", 100000);
 
+#if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 // Network Information API
 pref("dom.netinfo.enabled", true);
+#else
+pref("dom.netinfo.enabled", false);
+#endif
 
 #ifdef XP_WIN
 // On 32-bit Windows, fire a low-memory notification if we have less than this
@@ -4154,6 +4183,26 @@ pref("urlclassifier.disallow_completions", "test-malware-simple,test-phish-simpl
 
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
+
+// Turn off touch caret by default.
+pref("touchcaret.enabled", false);
+
+// Maximum distance to the center of touch caret (in app unit square) which
+// will be accepted to drag touch caret (0 means only in the bounding box of touch
+// caret is accepted)
+pref("touchcaret.distance.threshold", 1500);
+
+// We'll start to increment time when user release the control of touch caret.
+// When time exceed this expiration time, we'll hide touch caret.
+// In milliseconds. (0 means disable this feature)
+pref("touchcaret.expiration.time", 3000);
+
+// Turn off selection caret by default
+pref("selectioncaret.enabled", false);
+
+// This will inflate size of selection caret frame when we checking if
+// user click on selection caret or not. In app units.
+pref("selectioncaret.inflatesize.threshold", 40);
 
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);

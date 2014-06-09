@@ -1096,8 +1096,17 @@ nsFlexContainerFrame::
   childRSForMeasuringHeight.mFlags.mIsFlexContainerMeasuringHeight = true;
   childRSForMeasuringHeight.Init(aPresContext);
 
-  aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
-                                      aAxisTracker);
+  // For single-line vertical flexbox, we need to give our flex items an early
+  // opportunity to stretch, since any stretching of their cross-size (width)
+  // will likely impact the max-content main-size (height) that we're about to
+  // measure for them. (We can't do this for multi-line, since we don't know
+  // yet how many lines there will be & how much each line will stretch.)
+  if (NS_STYLE_FLEX_WRAP_NOWRAP ==
+      aParentReflowState.mStylePosition->mFlexWrap) {
+    aFlexItem.ResolveStretchedCrossSize(aParentReflowState.ComputedWidth(),
+                                        aAxisTracker);
+  }
+
   if (aFlexItem.IsStretched()) {
     childRSForMeasuringHeight.SetComputedWidth(aFlexItem.GetCrossSize());
     childRSForMeasuringHeight.mFlags.mHResize = true;
@@ -1759,12 +1768,16 @@ FlexLine::ResolveFlexibleLengths(nscoord aFlexContainerMainSize)
     PR_LOG(GetFlexContainerLog(), PR_LOG_DEBUG,
            (" available free space = %d\n", availableFreeSpace));
 
-    MOZ_ASSERT((isUsingFlexGrow && availableFreeSpace >= 0) ||
-               (!isUsingFlexGrow && availableFreeSpace <= 0),
-               "The sign of our free space should never disagree with the "
-               "type of flexing (grow/shrink) that we're doing. Any potential "
-               "disagreement should've made us use the other type of flexing, "
-               "or should've been resolved in FreezeItemsEarly");
+
+    // The sign of our free space should agree with the type of flexing
+    // (grow/shrink) that we're doing (except if we've had integer overflow;
+    // then, all bets are off). Any disagreement should've made us use the
+    // other type of flexing, or should've been resolved in FreezeItemsEarly.
+    // XXXdholbert If & when bug 765861 is fixed, we should upgrade this
+    // assertion to be fatal except in documents with enormous lengths.
+    NS_ASSERTION((isUsingFlexGrow && availableFreeSpace >= 0) ||
+                 (!isUsingFlexGrow && availableFreeSpace <= 0),
+                 "availableFreeSpace's sign should match isUsingFlexGrow");
 
     // If we have any free space available, give each flexible item a portion
     // of availableFreeSpace.

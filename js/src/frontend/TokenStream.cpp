@@ -19,10 +19,10 @@
 #include "jscntxt.h"
 #include "jsexn.h"
 #include "jsnum.h"
-#include "jsworkers.h"
 
 #include "frontend/BytecodeCompiler.h"
 #include "js/CharacterEncoding.h"
+#include "vm/HelperThreads.h"
 #include "vm/Keywords.h"
 #include "vm/StringBuffer.h"
 

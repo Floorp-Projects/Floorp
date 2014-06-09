@@ -55,3 +55,14 @@ xptiTypelibGuts::GetEntryAt(uint16_t i)
 
     return r;
 }
+
+const char*
+xptiTypelibGuts::GetEntryNameAt(uint16_t i)
+{
+    NS_ASSERTION(mHeader, "bad state");
+    NS_ASSERTION(i < GetEntryCount(), "bad index");
+
+    XPTInterfaceDirectoryEntry* iface = mHeader->interface_directory + i;
+
+    return iface->name;
+}

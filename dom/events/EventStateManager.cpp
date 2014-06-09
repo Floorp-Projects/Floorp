@@ -1440,7 +1440,7 @@ EventStateManager::FireContextClick()
         }
       }
 
-      nsIDocument* doc = mGestureDownContent->GetCurrentDoc();
+      nsIDocument* doc = mGestureDownContent->GetCrossShadowCurrentDoc();
       AutoHandlingUserInputStatePusher userInpStatePusher(true, &event, doc);
 
       // dispatch to DOM
@@ -2011,7 +2011,7 @@ EventStateManager::DoScrollZoom(nsIFrame* aTargetFrame,
       // positive adjustment to decrease zoom, negative to increase
       int32_t change = (adjustment > 0) ? -1 : 1;
 
-      if (Preferences::GetBool("browser.zoom.full") || content->GetCurrentDoc()->IsSyntheticDocument()) {
+      if (Preferences::GetBool("browser.zoom.full") || content->OwnerDoc()->IsSyntheticDocument()) {
         ChangeFullZoom(change);
       } else {
         ChangeTextSize(change);
@@ -2181,6 +2181,7 @@ EventStateManager::SendLineScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
+  event.timeStamp = aEvent->timeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -2220,6 +2221,7 @@ EventStateManager::SendPixelScrollEvent(nsIFrame* aTargetFrame,
   event.refPoint = aEvent->refPoint;
   event.widget = aEvent->widget;
   event.time = aEvent->time;
+  event.timeStamp = aEvent->timeStamp;
   event.modifiers = aEvent->modifiers;
   event.buttons = aEvent->buttons;
   event.isHorizontal = (aDeltaDirection == DELTA_DIRECTION_X);
@@ -2750,7 +2752,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // NOTE: The newFocus isn't editable that also means it's not in
         // designMode.  In designMode, all contents are not focusable.
         if (newFocus && !newFocus->IsEditable()) {
-          nsIDocument *doc = newFocus->GetCurrentDoc();
+          nsIDocument *doc = newFocus->GetCrossShadowCurrentDoc();
           if (doc && newFocus == doc->GetRootElement()) {
             nsIContent *bodyContent =
               nsLayoutUtils::GetEditableRootContentByContentEditable(doc);
@@ -3573,7 +3575,9 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
 {
   WidgetPointerEvent* sourcePointer = aMouseEvent->AsPointerEvent();
   if (sourcePointer) {
-    PROFILER_LABEL("Input", "DispatchPointerEvent");
+    PROFILER_LABEL("Input", "DispatchPointerEvent",
+      js::ProfileEntry::Category::EVENTS);
+
     nsAutoPtr<WidgetPointerEvent> newPointerEvent;
     newPointerEvent =
       new WidgetPointerEvent(aMouseEvent->mFlags.mIsTrusted, aMessage,
@@ -3644,7 +3648,8 @@ EventStateManager::DispatchMouseOrPointerEvent(WidgetMouseEvent* aMouseEvent,
   nsIFrame* targetFrame = nullptr;
 
   if (aMouseEvent->AsMouseEvent()) {
-    PROFILER_LABEL("Input", "DispatchMouseEvent");
+    PROFILER_LABEL("Input", "DispatchMouseEvent",
+      js::ProfileEntry::Category::EVENTS);
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -4354,6 +4359,7 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.modifiers = aEvent->modifiers;
     event.buttons = aEvent->buttons;
     event.time = aEvent->time;
+    event.timeStamp = aEvent->timeStamp;
     event.mFlags.mNoContentDispatch = notDispatchToContents;
     event.button = aEvent->button;
     event.inputSource = aEvent->inputSource;
@@ -4627,7 +4633,8 @@ EventStateManager::SetContentState(nsIContent* aContent, EventStates aState)
         newHover = aContent;
       } else {
         NS_ASSERTION(!aContent ||
-                     aContent->GetCurrentDoc() == mPresContext->PresShell()->GetDocument(),
+                     aContent->GetCrossShadowCurrentDoc() ==
+                       mPresContext->PresShell()->GetDocument(),
                      "Unexpected document");
         nsIFrame *frame = aContent ? aContent->GetPrimaryFrame() : nullptr;
         if (frame && nsLayoutUtils::IsViewportScrollbarFrame(frame)) {

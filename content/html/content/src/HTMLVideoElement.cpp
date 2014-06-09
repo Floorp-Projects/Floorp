@@ -25,7 +25,6 @@
 
 #include "nsITimer.h"
 
-#include "nsIDOMProgressEvent.h"
 #include "MediaError.h"
 #include "MediaDecoder.h"
 #include "mozilla/Preferences.h"

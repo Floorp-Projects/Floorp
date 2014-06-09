@@ -173,20 +173,22 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   padding: 12px 0 0;
 }
 
-#runtime-panel-simulators {
+#runtime-panel-custom {
   margin-bottom: 12px;
 }
 
 #runtime-permissions,
 #runtime-screenshot,
-.runtime-panel-item-usbruntime,
+.runtime-panel-item-usb,
+.runtime-panel-item-custom,
 .runtime-panel-item-simulator {
   list-style-image: url("icons.png");
 }
 
 #runtime-screenshot             { -moz-image-region: rect(200px, 640px, 240px, 600px) }
 #runtime-permissions            { -moz-image-region: rect(100px, 840px, 140px, 800px) }
-.runtime-panel-item-usbruntime  { -moz-image-region: rect(100px, 640px, 140px, 600px) }
+.runtime-panel-item-usb         { -moz-image-region: rect(100px, 640px, 140px, 600px) }
+.runtime-panel-item-custom      { -moz-image-region: rect(100px, 640px, 140px, 600px) }
 .runtime-panel-item-simulator   { -moz-image-region: rect(100px, 740px, 140px, 700px) }
 
 #runtime-actions {
@@ -203,7 +205,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 }
 
 #runtime-actions > toolbarbutton:hover {
-  background-color: rgba(221,221,221,1);
+  background-color: #CBF0FE;
 }
 
 #runtime-actions > toolbarbutton:last-child {

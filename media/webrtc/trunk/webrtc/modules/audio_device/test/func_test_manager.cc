@@ -37,15 +37,6 @@ const char* RecordedMicrophoneBoostFile =
 const char* RecordedMicrophoneAGCFile = "recorded_microphone_AGC_mono_48.pcm";
 const char* RecordedSpeakerFile = "recorded_speaker_48.pcm";
 
-struct AudioPacket
-{
-    uint8_t dataBuffer[4 * 960];
-    uint16_t nSamples;
-    uint16_t nBytesPerSample;
-    uint8_t nChannels;
-    uint32_t samplesPerSec;
-};
-
 // Helper functions
 #if !defined(WEBRTC_IOS)
 char* GetFilename(char* filename)
@@ -103,8 +94,7 @@ AudioTransportImpl::AudioTransportImpl(AudioDeviceModule* audioDevice) :
     _loopBackMeasurements(false),
     _playFile(*FileWrapper::Create()),
     _recCount(0),
-    _playCount(0),
-    _audioList()
+    _playCount(0)
 {
     _resampler.Reset(48000, 48000, kResamplerSynchronousStereo);
 }
@@ -115,18 +105,9 @@ AudioTransportImpl::~AudioTransportImpl()
     _playFile.CloseFile();
     delete &_playFile;
 
-    while (!_audioList.Empty())
-    {
-        ListItem* item = _audioList.First();
-        if (item)
-        {
-            AudioPacket* packet = static_cast<AudioPacket*> (item->GetItem());
-            if (packet)
-            {
-                delete packet;
-            }
-        }
-        _audioList.PopFront();
+    for (AudioPacketList::iterator iter = _audioList.begin();
+         iter != _audioList.end(); ++iter) {
+            delete *iter;
     }
 }
 
@@ -152,19 +133,11 @@ void AudioTransportImpl::SetFullDuplex(bool enable)
 {
     _fullDuplex = enable;
 
-    while (!_audioList.Empty())
-    {
-        ListItem* item = _audioList.First();
-        if (item)
-        {
-            AudioPacket* packet = static_cast<AudioPacket*> (item->GetItem());
-            if (packet)
-            {
-                delete packet;
-            }
-        }
-        _audioList.PopFront();
+    for (AudioPacketList::iterator iter = _audioList.begin();
+         iter != _audioList.end(); ++iter) {
+            delete *iter;
     }
+    _audioList.clear();
 }
 
 int32_t AudioTransportImpl::RecordedDataIsAvailable(
@@ -179,7 +152,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
     const bool keyPressed,
     uint32_t& newMicLevel)
 {
-    if (_fullDuplex && _audioList.GetSize() < 15)
+    if (_fullDuplex && _audioList.size() < 15)
     {
         AudioPacket* packet = new AudioPacket();
         memcpy(packet->dataBuffer, audioSamples, nSamples * nBytesPerSample);
@@ -187,7 +160,7 @@ int32_t AudioTransportImpl::RecordedDataIsAvailable(
         packet->nBytesPerSample = nBytesPerSample;
         packet->nChannels = nChannels;
         packet->samplesPerSec = samplesPerSec;
-        _audioList.PushBack(packet);
+        _audioList.push_back(packet);
     }
 
     _recCount++;
@@ -323,14 +296,14 @@ int32_t AudioTransportImpl::NeedMorePlayData(
 {
     if (_fullDuplex)
     {
-        if (_audioList.Empty())
+        if (_audioList.empty())
         {
             // use zero stuffing when not enough data
             memset(audioSamples, 0, nBytesPerSample * nSamples);
         } else
         {
-            ListItem* item = _audioList.First();
-            AudioPacket* packet = static_cast<AudioPacket*> (item->GetItem());
+            AudioPacket* packet = _audioList.front();
+            _audioList.pop_front();
             if (packet)
             {
                 int ret(0);
@@ -435,7 +408,6 @@ int32_t AudioTransportImpl::NeedMorePlayData(
                 nSamplesOut = nSamples;
                 delete packet;
             }
-            _audioList.PopFront();
         }
     }  // if (_fullDuplex)
 
@@ -525,12 +497,12 @@ int32_t AudioTransportImpl::NeedMorePlayData(
         {
             uint16_t recDelayMS(0);
             uint16_t playDelayMS(0);
-            uint32_t nItemsInList(0);
+            size_t nItemsInList(0);
 
-            nItemsInList = _audioList.GetSize();
+            nItemsInList = _audioList.size();
             EXPECT_EQ(0, _audioDevice->RecordingDelay(&recDelayMS));
             EXPECT_EQ(0, _audioDevice->PlayoutDelay(&playDelayMS));
-            TEST_LOG("Delay (rec+play)+buf: %3u (%3u+%3u)+%3u [ms]\n",
+            TEST_LOG("Delay (rec+play)+buf: %3zu (%3u+%3u)+%3zu [ms]\n",
                      recDelayMS + playDelayMS + 10 * (nItemsInList + 1),
                      recDelayMS, playDelayMS, 10 * (nItemsInList + 1));
 
@@ -563,6 +535,12 @@ int AudioTransportImpl::OnDataAvailable(const int voe_channels[],
                                         bool need_audio_processing) {
   return 0;
 }
+
+void AudioTransportImpl::OnData(int voe_channel,
+                                const void* audio_data,
+                                int bits_per_sample, int sample_rate,
+                                int number_of_channels,
+                                int number_of_frames) {}
 
 FuncTestManager::FuncTestManager() :
     _processThread(NULL),

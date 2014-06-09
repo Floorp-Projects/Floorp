@@ -22,35 +22,25 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
-
-#include "nss.h"
+#include "nssgtest.h"
 #include "pkix/pkix.h"
 #include "pkixder.h"
-#include "pkixtestutil.h"
 #include "prerror.h"
 #include "secerr.h"
 
 using namespace mozilla::pkix;
 using namespace mozilla::pkix::test;
 
-class pkix_ocsp_request_tests : public ::testing::Test
+class pkix_ocsp_request_tests : public NSSTest
 {
 protected:
-  ScopedPLArenaPool arena;
   // These SECItems are allocated in arena, and so will be auto-cleaned.
   SECItem* unsupportedLongSerialNumber;
   SECItem* shortSerialNumber;
   SECItem* longestRequiredSerialNumber;
-  PRTime now;
-  PRTime oneDayBeforeNow;
-  PRTime oneDayAfterNow;
 
   void SetUp()
   {
-    NSS_NoDB_Init(nullptr);
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-
     static const uint8_t UNSUPPORTED_LEN = 128; // must be larger than 127
     // tag + length + value is 1 + 2 + UNSUPPORTED_LEN
     unsupportedLongSerialNumber = SECITEM_AllocItem(arena.get(), nullptr,
@@ -79,21 +69,6 @@ protected:
     longestRequiredSerialNumber->data[0] = der::INTEGER;
     longestRequiredSerialNumber->data[1] = LONGEST_REQUIRED_LEN;
     longestRequiredSerialNumber->data[2] = 0x01; // value is 0x010000...00
-
-    now = PR_Now();
-    oneDayBeforeNow = now - ONE_DAY;
-    oneDayAfterNow = now + ONE_DAY;
-  }
-
-  const SECItem*
-  ASCIIToDERName(const char* cn)
-  {
-    ScopedPtr<CERTName, CERT_DestroyName> certName(CERT_AsciiToName(cn));
-    if (!certName) {
-      return nullptr;
-    }
-    return SEC_ASN1EncodeItem(arena.get(), nullptr, certName.get(),
-                              CERT_NameTemplate);
   }
 
   void MakeTwoCerts(const char* issuerCN, SECItem* issuerSerial,
@@ -101,7 +76,7 @@ protected:
                     const char* childCN, SECItem* childSerial,
                     /*out*/ ScopedCERTCertificate& child)
   {
-    const SECItem* issuerNameDer = ASCIIToDERName(issuerCN);
+    const SECItem* issuerNameDer = ASCIIToDERName(arena.get(), issuerCN);
     ASSERT_TRUE(issuerNameDer);
     ScopedSECKEYPrivateKey issuerKey;
     SECItem* issuerCertDer(CreateEncodedCertificate(arena.get(), v3,
@@ -109,7 +84,7 @@ protected:
                              oneDayBeforeNow, oneDayAfterNow, issuerNameDer,
                              nullptr, nullptr, SEC_OID_SHA256, issuerKey));
     ASSERT_TRUE(issuerCertDer);
-    const SECItem* childNameDer = ASCIIToDERName(childCN);
+    const SECItem* childNameDer = ASCIIToDERName(arena.get(), childCN);
     ASSERT_TRUE(childNameDer);
     ScopedSECKEYPrivateKey childKey;
     SECItem* childDer(CreateEncodedCertificate(arena.get(), v3,

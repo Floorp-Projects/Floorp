@@ -21,13 +21,17 @@ add_task(function*() {
   let panelShownPromise = promisePanelElementShown(window, widgetOverflowPanel);
   let identityBox = document.getElementById("identity-box");
   let overflowChevron = document.getElementById("nav-bar-overflow-button");
+
+  // Listen for hiding immediately so we don't miss the event because of the
+  // async-ness of the 'shown' yield...
+  let panelHiddenPromise = promisePanelElementHidden(window, widgetOverflowPanel);
+
   ChromeUtils.synthesizeDrop(identityBox, overflowChevron, [], null);
   yield panelShownPromise;
 
-  ok(true, "Overflow panel is shown.");
+  info("Overflow panel is shown.");
 
-  let panelHiddenPromise = promisePanelElementHidden(window, widgetOverflowPanel);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  widgetOverflowPanel.hidePopup();
   yield panelHiddenPromise;
 });
 

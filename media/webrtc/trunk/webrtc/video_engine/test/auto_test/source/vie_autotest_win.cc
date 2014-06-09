@@ -64,7 +64,7 @@ ViEAutoTestWindowManager::~ViEAutoTestWindowManager() {
     ViEDestroyWindow(_hwnd1);
   }
   if (_hwnd2) {
-    ViEDestroyWindow(_hwnd1);
+    ViEDestroyWindow(_hwnd2);
   }
   delete &_crit;
 }

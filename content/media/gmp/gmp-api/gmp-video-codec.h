@@ -35,6 +35,7 @@
 #define GMP_VIDEO_CODEC_h_
 
 #include <stdint.h>
+#include <stddef.h>
 
 enum { kGMPPayloadNameSize = 32};
 enum { kGMPMaxSimulcastStreams = 4};
@@ -75,15 +76,33 @@ struct GMPVideoCodecVP8
   int32_t mKeyFrameInterval;
 };
 
+// H264 specific
+struct GMPVideoCodecH264
+{
+  uint8_t        mProfile;
+  uint8_t        mConstraints;
+  uint8_t        mLevel;
+  uint8_t        mPacketizationMode; // 0 or 1
+  bool           mFrameDroppingOn;
+  int32_t        mKeyFrameInterval;
+  // These are null/0 if not externally negotiated
+  const uint8_t* mSPSData;
+  size_t         mSPSLen;
+  const uint8_t* mPPSData;
+  size_t         mPPSLen;
+};
+
 enum GMPVideoCodecType
 {
   kGMPVideoCodecVP8,
+  kGMPVideoCodecH264,
   kGMPVideoCodecInvalid // Should always be last.
 };
 
 union GMPVideoCodecUnion
 {
   GMPVideoCodecVP8 mVP8;
+  GMPVideoCodecH264 mH264;
 };
 
 // Simulcast is when the same stream is encoded multiple times with different
@@ -128,7 +147,23 @@ struct GMPVideoCodec
   GMPVideoCodecMode mMode;
 };
 
+// Either single encoded unit, or multiple units separated by 8/16/24/32
+// bit lengths, all with the same timestamp.  Note there is no final 0-length
+// entry; one should check the overall end-of-buffer against where the next
+// length would be.
+enum GMPBufferType {
+  GMP_BufferSingle = 0,
+  GMP_BufferLength8,
+  GMP_BufferLength16,
+  GMP_BufferLength24,
+  GMP_BufferLength32,
+};
+
 struct GMPCodecSpecificInfoGeneric {
+  uint8_t mSimulcastIdx;
+};
+
+struct GMPCodecSpecificInfoH264 {
   uint8_t mSimulcastIdx;
 };
 
@@ -161,6 +196,7 @@ union GMPCodecSpecificInfoUnion
 struct GMPCodecSpecificInfo
 {
   GMPVideoCodecType mCodecType;
+  GMPBufferType mBufferType;
   GMPCodecSpecificInfoUnion mCodecSpecific;
 };
 

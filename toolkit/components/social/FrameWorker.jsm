@@ -57,6 +57,8 @@ this.getFrameWorkerHandle =
   existingWorker.browserPromise.then(browser => {
     browser.messageManager.sendAsyncMessage("frameworker:connect",
                                             { portId: portid });
+  }).then(null, (ex) => {
+    Cu.reportError("Could not send frameworker:connect: " + ex);
   });
   // return the pseudo worker object.
   let port = new ParentPort(portid, existingWorker.browserPromise, clientWindow);

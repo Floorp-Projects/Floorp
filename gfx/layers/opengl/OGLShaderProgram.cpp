@@ -21,8 +21,6 @@ namespace layers {
 
 using namespace std;
 
-typedef ProgramProfileOGL::Argument Argument;
-
 #define GAUSSIAN_KERNEL_HALF_WIDTH 11
 #define GAUSSIAN_KERNEL_STEP 0.2
 
@@ -150,12 +148,11 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "uniform mat4 uLayerTransform;" << endl;
   vs << "uniform vec4 uRenderTargetOffset;" << endl;
 
-  vs << "attribute vec4 aVertexCoord;" << endl;
+  vs << "attribute vec4 aCoord;" << endl;
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "uniform mat4 uTextureTransform;" << endl;
     vs << "uniform vec4 uTextureRects[4];" << endl;
-    vs << "attribute vec4 aTexCoord;" << endl;
     vs << "varying vec2 vTexCoord;" << endl;
   }
 
@@ -166,9 +163,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   vs << "void main() {" << endl;
-  vs << "  int vertexID = int(aVertexCoord.w);" << endl;
+  vs << "  int vertexID = int(aCoord.w);" << endl;
   vs << "  vec4 layerRect = uLayerRects[vertexID];" << endl;
-  vs << "  vec4 finalPosition = vec4(aVertexCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
+  vs << "  vec4 finalPosition = vec4(aCoord.xy * layerRect.zw + layerRect.xy, 0.0, 1.0);" << endl;
   vs << "  finalPosition = uLayerTransform * finalPosition;" << endl;
   vs << "  finalPosition.xyz /= finalPosition.w;" << endl;
 
@@ -187,7 +184,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   if (!(aConfig.mFeatures & ENABLE_RENDER_COLOR)) {
     vs << "  vec4 textureRect = uTextureRects[vertexID];" << endl;
-    vs << "  vec2 texCoord = aTexCoord.xy * textureRect.zw + textureRect.xy;" << endl;
+    vs << "  vec2 texCoord = aCoord.xy * textureRect.zw + textureRect.xy;" << endl;
     vs << "  vTexCoord = (uTextureTransform * vec4(texCoord, 0.0, 1.0)).xy;" << endl;
   }
 
@@ -355,11 +352,9 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   result.mVertexShaderString = vs.str();
   result.mFragmentShaderString = fs.str();
 
-  result.mAttributes.AppendElement(Argument("aVertexCoord"));
   if (aConfig.mFeatures & ENABLE_RENDER_COLOR) {
     result.mTextureCount = 0;
   } else {
-    result.mAttributes.AppendElement(Argument("aTexCoord"));
     if (aConfig.mFeatures & ENABLE_TEXTURE_YCBCR) {
       result.mTextureCount = 3;
     } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
@@ -375,9 +370,6 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
 
   return result;
 }
-
-const char* const ShaderProgramOGL::VertexCoordAttrib = "aVertexCoord";
-const char* const ShaderProgramOGL::TexCoordAttrib = "aTexCoord";
 
 ShaderProgramOGL::ShaderProgramOGL(GLContext* aGL, const ProgramProfileOGL& aProfile)
   : mGL(aGL)
@@ -425,14 +417,6 @@ ShaderProgramOGL::Initialize()
     mProfile.mUniforms[i].mLocation =
       mGL->fGetUniformLocation(mProgram, mProfile.mUniforms[i].mNameString);
   }
-
-  for (uint32_t i = 0; i < mProfile.mAttributes.Length(); ++i) {
-    mProfile.mAttributes[i].mLocation =
-      mGL->fGetAttribLocation(mProgram, mProfile.mAttributes[i].mName);
-    NS_ASSERTION(mProfile.mAttributes[i].mLocation >= 0, "Bad attribute location.");
-  }
-
-  //mProfile.mHasMatrixProj = mProfile.mUniforms[KnownUniform::MatrixProj].mLocation != -1;
 
   return true;
 }

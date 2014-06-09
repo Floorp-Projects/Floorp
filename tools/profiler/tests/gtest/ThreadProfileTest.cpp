@@ -38,7 +38,7 @@ TEST(ThreadProfile, InsertTagsNoWrap) {
   int readPos = tp.mReadPos;
   while (readPos != tp.mWritePos) {
     ASSERT_TRUE(tp.mEntries[readPos].mTagName == 't');
-    ASSERT_TRUE(tp.mEntries[readPos].mTagLine == readPos);
+    ASSERT_TRUE(tp.mEntries[readPos].mTagInt == readPos);
     readPos = (readPos + 1) % tp.mEntrySize;
   }
 }
@@ -61,7 +61,7 @@ TEST(ThreadProfile, InsertTagsWrap) {
   while (readPos != tp.mWritePos) {
     ASSERT_TRUE(tp.mEntries[readPos].mTagName == 't');
     // the first few tags were discarded when we wrapped
-    ASSERT_TRUE(tp.mEntries[readPos].mTagLine == ctr + (test_size - tags));
+    ASSERT_TRUE(tp.mEntries[readPos].mTagInt == ctr + (test_size - tags));
     ctr++;
     readPos = (readPos + 1) % tp.mEntrySize;
   }

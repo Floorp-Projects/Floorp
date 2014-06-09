@@ -145,7 +145,7 @@ void ARTPConnection::MakePortPair(
     unsigned start = (unsigned)((rand() * 1000ll) / RAND_MAX) + 15550;
     start &= ~1;
 
-    for (uint16_t port = start; port < 65536; port += 2) {
+    for (uint32_t port = start; port < 65536; port += 2) {
         PRNetAddr addr;
         addr.inet.family = PR_AF_INET;
         addr.inet.ip = PR_htonl(PR_INADDR_ANY);
@@ -278,7 +278,7 @@ void ARTPConnection::onPollStreams() {
         moz_xcalloc(pollCount, sizeof(PRPollDesc));
 
     // |pollIndex| is used to map different RTP & RTCP socket pairs.
-    int numSocketsToPoll = 0, pollIndex = 0;
+    uint32_t numSocketsToPoll = 0, pollIndex = 0;
     for (List<StreamInfo>::iterator it = mStreams.begin();
          it != mStreams.end(); ++it, pollIndex += 2) {
         if (pollIndex >= pollCount) {

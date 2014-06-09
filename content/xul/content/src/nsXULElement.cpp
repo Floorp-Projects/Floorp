@@ -336,6 +336,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULElement,
     }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULElement,
+                                                nsStyledElement)
+    // Why aren't we unlinking the prototype?
+    tmp->ClearHasID();
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULElement, nsStyledElement)
 NS_IMPL_RELEASE_INHERITED(nsXULElement, nsStyledElement)
 
@@ -1503,7 +1509,6 @@ nsXULElement::GetBoxObject(ErrorResult& rv)
   }
 
 
-NS_IMPL_XUL_STRING_ATTR(ClassName, _class)
 NS_IMPL_XUL_STRING_ATTR(Align, align)
 NS_IMPL_XUL_STRING_ATTR(Dir, dir)
 NS_IMPL_XUL_STRING_ATTR(Flex, flex)

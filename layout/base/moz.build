@@ -90,7 +90,9 @@ UNIFIED_SOURCES += [
     'PositionedEventTargeting.cpp',
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
+    'SelectionCarets.cpp',
     'StackArena.cpp',
+    'TouchCaret.cpp',
 ]
 
 # nsDocumentViewer.cpp and nsPresShell.cpp need to be built separately

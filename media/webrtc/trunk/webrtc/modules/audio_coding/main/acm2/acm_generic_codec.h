@@ -26,8 +26,12 @@ struct WebRtcCngEncInst;
 
 namespace webrtc {
 
-// forward declaration
+struct WebRtcACMCodecParams;
 struct CodecInst;
+
+namespace acm2 {
+
+// forward declaration
 class AcmReceiver;
 
 class ACMGenericCodec {
@@ -908,6 +912,8 @@ class ACMGenericCodec {
   uint32_t last_timestamp_;
   uint32_t unique_id_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

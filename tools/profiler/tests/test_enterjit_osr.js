@@ -29,7 +29,7 @@ function run_test() {
     })();
     do_check_neq(profile.length, 0);
     let stack = profile[profile.length - 1].frames.map(f => f.location);
-    stack = stack.slice(stack.indexOf("js::RunScript") + 1);
+    stack = stack.slice(stack.lastIndexOf("js::RunScript") + 1);
 
     do_print(stack);
     // This test needs to not break on platforms and configurations

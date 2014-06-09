@@ -18,9 +18,7 @@
 namespace webrtc {
 
 PushResampler::PushResampler()
-    : sinc_resampler_(NULL),
-      sinc_resampler_right_(NULL),
-      src_sample_rate_hz_(0),
+    : src_sample_rate_hz_(0),
       dst_sample_rate_hz_(0),
       num_channels_(0),
       src_left_(NULL),
