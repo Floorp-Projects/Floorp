@@ -5,9 +5,10 @@
 from mozboot.base import BaseBootstrapper
 
 class FreeBSDBootstrapper(BaseBootstrapper):
-    def __init__(self, version):
+    def __init__(self, version, flavor):
         BaseBootstrapper.__init__(self)
         self.version = int(version.split('.')[0])
+        self.flavor  = flavor.lower()
 
         self.packages = [
             'autoconf213',
@@ -24,8 +25,11 @@ class FreeBSDBootstrapper(BaseBootstrapper):
             'zip',
         ]
 
+        if self.flavor == 'dragonfly':
+            self.packages.append('unzip')
+
         # gcc in base is too old
-        if self.version < 9:
+        if self.flavor == 'freebsd' and self.version < 9:
             self.packages.append('gcc')
 
     def pkg_install(self, *packages):
