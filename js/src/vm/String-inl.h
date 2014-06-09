@@ -88,7 +88,7 @@ NewFatInlineString(ExclusiveContext *cx, Handle<JSLinearString*> base, size_t st
     if (!s)
         return nullptr;
 
-    AutoCheckCannotGC nogc;
+    JS::AutoCheckCannotGC nogc;
     mozilla::PodCopy(chars, base->chars<CharT>(nogc) + start, length);
     chars[length] = 0;
     return s;

@@ -17,6 +17,8 @@
 using namespace js;
 using namespace jit;
 
+using JS::AutoCheckCannotGC;
+
 using parallel::Spew;
 using parallel::SpewOps;
 using parallel::SpewBailouts;

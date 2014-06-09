@@ -46,6 +46,8 @@ using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
+
+using JS::AutoCheckCannotGC;
 using JS::GenericNaN;
 
 /*
