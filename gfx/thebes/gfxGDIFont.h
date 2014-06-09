@@ -14,6 +14,7 @@
 #include "nsHashKeys.h"
 
 #include "cairo.h"
+#include "usp10.h"
 
 class gfxGDIFont : public gfxFont
 {
@@ -96,6 +97,7 @@ protected:
 
     // cache of glyph IDs (used for non-sfnt fonts only)
     nsAutoPtr<nsDataHashtable<nsUint32HashKey,uint32_t> > mGlyphIDs;
+    SCRIPT_CACHE          mScriptCache;
 
     // cache of glyph widths in 16.16 fixed-point pixels
     nsAutoPtr<nsDataHashtable<nsUint32HashKey,int32_t> > mGlyphWidths;
