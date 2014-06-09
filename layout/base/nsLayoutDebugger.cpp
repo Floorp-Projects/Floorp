@@ -154,10 +154,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
   nsDisplayList* list = aItem->GetChildren();
   const DisplayItemClip& clip = aItem->GetClip();
-  nsRegion opaque;
-  if (!list || list->DidComputeVisibility()) {
-    opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
-  }
+  nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
   if (aDumpHtml && aItem->Painted()) {
     nsCString string(aItem->Name());
     string.Append('-');
