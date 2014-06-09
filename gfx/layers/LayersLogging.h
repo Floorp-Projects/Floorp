@@ -80,6 +80,18 @@ AppendToString(nsACString& s, const mozilla::gfx::RectTyped<T>& r,
   return s += sfx;
 }
 
+template<class T>
+nsACString&
+AppendToString(nsACString& s, const mozilla::gfx::IntRectTyped<T>& r,
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s.AppendPrintf(
+    "(x=%d, y=%d, w=%d, h=%d)",
+    r.x, r.y, r.width, r.height);
+  return s += sfx;
+}
+
 nsACString&
 AppendToString(nsACString& s, const nsIntRegion& r,
                const char* pfx="", const char* sfx="");
