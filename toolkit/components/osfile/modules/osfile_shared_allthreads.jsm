@@ -1253,6 +1253,7 @@ function OSError(operation, path = "") {
   this.operation = operation;
   this.path = path;
 }
+OSError.prototype = Object.create(Error.prototype);
 exports.OSError = OSError;
 
 
