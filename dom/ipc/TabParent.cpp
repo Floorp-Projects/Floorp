@@ -206,7 +206,7 @@ NS_IMPL_ISUPPORTS(TabParent,
                   nsISecureBrowserUI,
                   nsISupportsWeakReference)
 
-TabParent::TabParent(nsIContentParent* aManager, const TabContext& aContext, uint32_t aChromeFlags)
+TabParent::TabParent(ContentParent* aManager, const TabContext& aContext, uint32_t aChromeFlags)
   : TabContext(aContext)
   , mFrameElement(nullptr)
   , mIMESelectionAnchor(0)
@@ -230,7 +230,6 @@ TabParent::TabParent(nsIContentParent* aManager, const TabContext& aContext, uin
   , mAppPackageFileDescriptorSent(false)
   , mChromeFlags(aChromeFlags)
 {
-  MOZ_ASSERT(aManager);
 }
 
 TabParent::~TabParent()
@@ -300,18 +299,14 @@ TabParent::Destroy()
   }
   mIsDestroyed = true;
 
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    Manager()->AsContentParent()->NotifyTabDestroying(this);
-  }
+  Manager()->NotifyTabDestroying(this);
   mMarkedDestroying = true;
 }
 
 bool
 TabParent::Recv__delete__()
 {
-  if (XRE_GetProcessType() == GeckoProcessType_Default) {
-    Manager()->AsContentParent()->NotifyTabDestroyed(this, mMarkedDestroying);
-  }
+  Manager()->NotifyTabDestroyed(this, mMarkedDestroying);
   return true;
 }
 
@@ -977,16 +972,15 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
                            const IPC::Principal& aPrincipal,
                            InfallibleTArray<nsString>* aJSONRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
-  ContentParent* parent = Manager()->AsContentParent();
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
   if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      parent && principal && !AssertAppPrincipal(parent, principal)) {
+      principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(Manager()->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -997,16 +991,15 @@ TabParent::AnswerRpcMessage(const nsString& aMessage,
                             const IPC::Principal& aPrincipal,
                             InfallibleTArray<nsString>* aJSONRetVal)
 {
-  // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
-  ContentParent* parent = Manager()->AsContentParent();
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
   if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      parent && principal && !AssertAppPrincipal(parent, principal)) {
+      principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(Manager()->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, true, &cloneData, &cpows, aPrincipal, aJSONRetVal);
 }
 
@@ -1016,16 +1009,15 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
                             const InfallibleTArray<CpowEntry>& aCpows,
                             const IPC::Principal& aPrincipal)
 {
-  // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
-  ContentParent* parent = Manager()->AsContentParent();
+  ContentParent* parent = static_cast<ContentParent*>(Manager());
   if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
-      parent && principal && !AssertAppPrincipal(parent, principal)) {
+      principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }
 
   StructuredCloneData cloneData = ipc::UnpackClonedMessageDataForParent(aData);
-  CpowIdHolder cpows(Manager()->GetCPOWManager(), aCpows);
+  CpowIdHolder cpows(parent->GetCPOWManager(), aCpows);
   return ReceiveMessage(aMessage, false, &cloneData, &cpows, aPrincipal, nullptr);
 }
 
@@ -1710,11 +1702,11 @@ TabParent::RecvPIndexedDBConstructor(PIndexedDBParent* aActor,
     return true;
   }
 
-  NS_ASSERTION(Manager(), "Null manager?!");
+  ContentParent* contentParent = Manager();
+  NS_ASSERTION(contentParent, "Null manager?!");
 
   nsRefPtr<IDBFactory> factory;
-  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin,
-                          Manager()->AsContentParent(),
+  rv = IDBFactory::Create(window, aGroup, aASCIIOrigin, contentParent,
                           getter_AddRefs(factory));
   NS_ENSURE_SUCCESS(rv, false);
 
