@@ -84,7 +84,6 @@ WalkTheTree(Layer* aLayer,
           ref->ConnectReferentLayer(referent);
         } else {
           ref->DetachReferentLayer(referent);
-          WalkTheTree<OP>(referent, aReady, aTargetConfig);
         }
       }
     }
