@@ -4,6 +4,8 @@ ac_add_options --target=x86_64-pc-mingw32
 ac_add_options --host=x86_64-pc-mingw32
 
 ac_add_options --enable-debug
+ac_add_options --enable-dmd
+ac_add_options --enable-profiling  # needed for --enable-dmd to work on Windows
 ac_add_options --enable-signmar
 
 # Needed to enable breakpad in application.ini

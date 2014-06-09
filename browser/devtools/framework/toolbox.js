@@ -247,6 +247,7 @@ Toolbox.prototype = {
         this._buildTabs();
         this._buildButtons();
         this._addKeysToWindow();
+        this._addReloadKeys();
         this._addToolSwitchingKeys();
         this._addZoomKeys();
         this._loadInitialZoom();
@@ -293,6 +294,19 @@ Toolbox.prototype = {
     if (e.keyCode === e.DOM_VK_ESCAPE && !responsiveModeActive) {
       this.toggleSplitConsole();
     }
+  },
+
+  _addReloadKeys: function() {
+    [
+      ["toolbox-reload-key", false],
+      ["toolbox-reload-key2", false],
+      ["toolbox-force-reload-key", true],
+      ["toolbox-force-reload-key2", true]
+    ].forEach(([id, force]) => {
+      this.doc.getElementById(id).addEventListener("command", (event) => {
+        this.reloadTarget(force);
+      }, true);
+    });
   },
 
   _addToolSwitchingKeys: function() {
@@ -576,7 +590,8 @@ Toolbox.prototype = {
       "command-button-paintflashing",
       "command-button-tilt",
       "command-button-scratchpad",
-      "command-button-eyedropper"
+      "command-button-eyedropper",
+      "command-button-screenshot"
     ].map(id => {
       let button = this.doc.getElementById(id);
       // Some buttons may not exist inside of Browser Toolbox
@@ -911,6 +926,13 @@ Toolbox.prototype = {
         });
       }
     }
+  },
+
+  /**
+   * Tells the target tab to reload.
+   */
+  reloadTarget: function(force) {
+    this.target.activeTab.reload({ force: force });
   },
 
   /**

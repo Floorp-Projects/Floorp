@@ -246,8 +246,9 @@ SPSProfiler::stringsReset()
 class SPSEntryMarker
 {
   public:
-    explicit SPSEntryMarker(JSRuntime *rt
-                   MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+    explicit SPSEntryMarker(JSRuntime *rt,
+                            JSScript *script
+                            MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
     ~SPSEntryMarker();
 
   private:

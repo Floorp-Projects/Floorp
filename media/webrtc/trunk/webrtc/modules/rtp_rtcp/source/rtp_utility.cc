@@ -125,16 +125,12 @@ bool StringCompare(const char* str1, const char* str2,
 }
 #endif
 
-#if !defined(WEBRTC_LITTLE_ENDIAN) && !defined(WEBRTC_BIG_ENDIAN)
-#error Either WEBRTC_LITTLE_ENDIAN or WEBRTC_BIG_ENDIAN must be defined
-#endif
-
 /* for RTP/RTCP
     All integer fields are carried in network byte order, that is, most
     significant byte (octet) first.  AKA big-endian.
 */
 void AssignUWord32ToBuffer(uint8_t* dataBuffer, uint32_t value) {
-#if defined(WEBRTC_LITTLE_ENDIAN)
+#if defined(WEBRTC_ARCH_LITTLE_ENDIAN)
   dataBuffer[0] = static_cast<uint8_t>(value >> 24);
   dataBuffer[1] = static_cast<uint8_t>(value >> 16);
   dataBuffer[2] = static_cast<uint8_t>(value >> 8);
@@ -146,7 +142,7 @@ void AssignUWord32ToBuffer(uint8_t* dataBuffer, uint32_t value) {
 }
 
 void AssignUWord24ToBuffer(uint8_t* dataBuffer, uint32_t value) {
-#if defined(WEBRTC_LITTLE_ENDIAN)
+#if defined(WEBRTC_ARCH_LITTLE_ENDIAN)
   dataBuffer[0] = static_cast<uint8_t>(value >> 16);
   dataBuffer[1] = static_cast<uint8_t>(value >> 8);
   dataBuffer[2] = static_cast<uint8_t>(value);
@@ -158,7 +154,7 @@ void AssignUWord24ToBuffer(uint8_t* dataBuffer, uint32_t value) {
 }
 
 void AssignUWord16ToBuffer(uint8_t* dataBuffer, uint16_t value) {
-#if defined(WEBRTC_LITTLE_ENDIAN) 
+#if defined(WEBRTC_ARCH_LITTLE_ENDIAN)
   dataBuffer[0] = static_cast<uint8_t>(value >> 8);
   dataBuffer[1] = static_cast<uint8_t>(value);
 #else
@@ -168,7 +164,7 @@ void AssignUWord16ToBuffer(uint8_t* dataBuffer, uint16_t value) {
 }
 
 uint16_t BufferToUWord16(const uint8_t* dataBuffer) {
-#if defined(WEBRTC_LITTLE_ENDIAN)
+#if defined(WEBRTC_ARCH_LITTLE_ENDIAN)
   return (dataBuffer[0] << 8) + dataBuffer[1];
 #else
   return *reinterpret_cast<const uint16_t*>(dataBuffer);
@@ -180,7 +176,7 @@ uint32_t BufferToUWord24(const uint8_t* dataBuffer) {
 }
 
 uint32_t BufferToUWord32(const uint8_t* dataBuffer) {
-#if defined(WEBRTC_LITTLE_ENDIAN)
+#if defined(WEBRTC_ARCH_LITTLE_ENDIAN)
   return (dataBuffer[0] << 24) + (dataBuffer[1] << 16) + (dataBuffer[2] << 8) +
       dataBuffer[3];
 #else
@@ -395,9 +391,11 @@ bool RTPHeaderParser::Parse(RTPHeader& header,
 
   // If in effect, MAY be omitted for those packets for which the offset
   // is zero.
+  header.extension.hasTransmissionTimeOffset = false;
   header.extension.transmissionTimeOffset = 0;
 
   // May not be present in packet.
+  header.extension.hasAbsoluteSendTime = false;
   header.extension.absoluteSendTime = 0;
 
   if (X) {
@@ -494,6 +492,7 @@ void RTPHeaderParser::ParseOneByteExtensionHeader(
           // Negative offset, correct sign for Word24 to Word32.
           header.extension.transmissionTimeOffset |= 0xFF000000;
         }
+        header.extension.hasTransmissionTimeOffset = true;
         break;
       }
       case kRtpExtensionAudioLevel: {
@@ -528,6 +527,7 @@ void RTPHeaderParser::ParseOneByteExtensionHeader(
         absoluteSendTime += *ptr++ << 8;
         absoluteSendTime += *ptr++;
         header.extension.absoluteSendTime = absoluteSendTime;
+        header.extension.hasAbsoluteSendTime = true;
         break;
       }
       default: {

@@ -950,8 +950,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // added in later by nsLineLayout::ReflowInlineFrames.
   pfd->mOverflowAreas = metrics.mOverflowAreas;
 
-  pfd->mBounds.ISize(lineWM) = metrics.ISize();
-  pfd->mBounds.BSize(lineWM) = metrics.BSize();
+  pfd->mBounds.ISize(lineWM) = metrics.ISize(lineWM);
+  pfd->mBounds.BSize(lineWM) = metrics.BSize(lineWM);
 
   // Size the frame, but |RelativePositionFrames| will size the view.
   aFrame->SetSize(nsSize(metrics.Width(), metrics.Height()));
@@ -1476,8 +1476,8 @@ nsLineLayout::BlockDirAlignLine()
 #ifdef NOISY_BLOCKDIR_ALIGN
   printf(
     "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
-    mLineBox->mBounds.IStart(lineWM), mLineBox->mBounds.BStart(lineWM),
-    mLineBox->mBounds.ISize(lineWM), mLineBox->mBounds.BSize(lineWM),
+    mLineBox->GetBounds().IStart(lineWM), mLineBox->GetBounds().BStart(lineWM),
+    mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
     mFinalLineBSize, mLineBox->GetAscent());
 #endif
 

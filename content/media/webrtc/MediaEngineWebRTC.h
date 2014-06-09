@@ -43,6 +43,8 @@
 #include "webrtc/voice_engine/include/voe_call_report.h"
 
 // Video Engine
+// conflicts with #include of scoped_ptr.h
+#undef FF
 #include "webrtc/video_engine/include/vie_base.h"
 #include "webrtc/video_engine/include/vie_codec.h"
 #include "webrtc/video_engine/include/vie_render.h"

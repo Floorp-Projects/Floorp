@@ -170,6 +170,7 @@ int32_t ACMGenericCodec::Add10MsDataSafe(const uint32_t timestamp,
     memmove(in_timestamp_, in_timestamp_ + missed_10ms_blocks,
             (in_timestamp_ix_write_ - missed_10ms_blocks) * sizeof(uint32_t));
     in_timestamp_ix_write_ -= missed_10ms_blocks;
+    assert(in_timestamp_ix_write_ >= 0);
     in_timestamp_[in_timestamp_ix_write_] = timestamp;
     in_timestamp_ix_write_++;
 
@@ -351,7 +352,7 @@ int16_t ACMGenericCodec::Encode(uint8_t* bitstream,
             (in_timestamp_ix_write_ - num_10ms_blocks) * sizeof(int32_t));
   }
   in_timestamp_ix_write_ -= num_10ms_blocks;
-
+  assert(in_timestamp_ix_write_ >= 0);
   // Remove encoded audio and move next audio to be encoded to the beginning
   // of the buffer. Accordingly, adjust the read and write indices.
   if (in_audio_ix_read_ < in_audio_ix_write_) {
@@ -359,6 +360,7 @@ int16_t ACMGenericCodec::Encode(uint8_t* bitstream,
             (in_audio_ix_write_ - in_audio_ix_read_) * sizeof(int16_t));
   }
   in_audio_ix_write_ -= in_audio_ix_read_;
+  assert(in_timestamp_ix_write_ >= 0);
   in_audio_ix_read_ = 0;
   last_encoded_timestamp_ = *timestamp;
   return (status < 0) ? (-1) : (*bitstream_len_byte);
@@ -574,20 +576,23 @@ int16_t ACMGenericCodec::InitEncoderSafe(WebRtcACMCodecParams* codec_params,
       if (in_audio_ == NULL) {
         return -1;
       }
-      memset(in_audio_, 0, AUDIO_BUFFER_SIZE_W16 * sizeof(int16_t));
     }
     if (in_timestamp_ == NULL) {
       in_timestamp_ = new uint32_t[TIMESTAMP_BUFFER_SIZE_W32];
       if (in_timestamp_ == NULL) {
         return -1;
       }
-      memset(in_timestamp_, 0, sizeof(uint32_t) * TIMESTAMP_BUFFER_SIZE_W32);
     }
+    // Fresh start for audio buffer.
     is_audio_buff_fresh_ = true;
+    memset(in_audio_, 0, AUDIO_BUFFER_SIZE_W16 * sizeof(int16_t));
+    memset(in_timestamp_, 0, sizeof(uint32_t) * TIMESTAMP_BUFFER_SIZE_W32);
+    in_audio_ix_write_ = 0;
+    in_audio_ix_read_ = 0;
+    in_timestamp_ix_write_ = 0;
   }
   status = SetVADSafe(&codec_params->enable_dtx, &codec_params->enable_vad,
                       &codec_params->vad_mode);
-
   return status;
 }
 

@@ -275,6 +275,10 @@ int32_t TraceImpl::AddModuleAndId(char* trace_message,
         sprintf(trace_message, "  VIDEO PROC:%5ld %5ld;", id_engine,
                 id_channel);
         break;
+      case kTraceRemoteBitrateEstimator:
+        sprintf(trace_message, "     BWE RBE:%5ld %5ld;", id_engine,
+                id_channel);
+        break;
     }
   } else {
     switch (module) {
@@ -333,6 +337,9 @@ int32_t TraceImpl::AddModuleAndId(char* trace_message,
         break;
       case kTraceVideoPreocessing:
         sprintf(trace_message, "  VIDEO PROC:%11ld;", idl);
+        break;
+      case kTraceRemoteBitrateEstimator:
+        sprintf(trace_message, "     BWE RBE:%11ld;", idl);
         break;
     }
   }
@@ -460,8 +467,8 @@ void TraceImpl::AddMessageToList(
   // the message in the buffer.  Use the indexing as this minimizes
   // cache misses/etc
   if (!message_queue_[active_queue_][idx]) {
-      return;
-  }
+  return;
+}
 #endif
 
   if (idx >= WEBRTC_TRACE_MAX_QUEUE) {

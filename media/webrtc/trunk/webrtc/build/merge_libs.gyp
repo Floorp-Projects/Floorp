@@ -10,7 +10,7 @@
   'includes': ['common.gypi',],
   'variables': {
     'merge_libs_dependencies': [
-      '../video_engine/video_engine.gyp:video_engine_core',
+      '../webrtc.gyp:webrtc',
     ],
   },
   'targets': [
@@ -31,7 +31,7 @@
       'actions': [
         {
           'variables': {
-            'output_lib_name': 'webrtc',
+            'output_lib_name': 'webrtc_merged',
             'output_lib': '<(PRODUCT_DIR)/<(STATIC_LIB_PREFIX)<(output_lib_name)<(STATIC_LIB_SUFFIX)',
           },
           'action_name': 'merge_libs',

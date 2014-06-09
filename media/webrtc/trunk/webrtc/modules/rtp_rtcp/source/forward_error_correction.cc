@@ -11,20 +11,18 @@
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
 
 #include <assert.h>
-#include <cstdlib> // for abs()
+#include <stdlib.h>
 #include <string.h>
 
 #include <algorithm>
 #include <iterator>
 
+#include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
-
-// Minimum RTP header size in bytes.
-const uint8_t kRtpHeaderSize = 12;
 
 // FEC header size in bytes.
 const uint8_t kFecHeaderSize = 10;

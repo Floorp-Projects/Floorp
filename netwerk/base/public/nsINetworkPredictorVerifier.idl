@@ -1,0 +1,31 @@
+/* vim: set ts=2 sts=2 et sw=2: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/**
+ * nsINetworkPredictorVerifier - used for testing the network predictor to
+ *                               ensure it does what we expect it to do.
+ */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+
+[scriptable, uuid(00360c7d-a046-4f8d-a1fc-8bdc0f0fb444)]
+interface nsINetworkPredictorVerifier : nsISupports
+{
+    /**
+     * Callback for when we do a predictive preconnect
+     *
+     * @param uri - The URI that was preconnected to
+     */
+    void onPredictPreconnect(in nsIURI uri);
+
+    /**
+     * Callback for when we do a predictive DNS lookup
+     *
+     * @param uri - The URI that was looked up
+     */
+    void onPredictDNS(in nsIURI uri);
+};

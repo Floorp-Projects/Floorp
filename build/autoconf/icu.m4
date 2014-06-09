@@ -85,11 +85,11 @@ if test -n "$ENABLE_INTL_API"; then
             WINNT)
                 ICU_LIB_NAMES="icuin icuuc icudt"
                 if test -n "$MOZ_SHARED_ICU"; then
-                    DBG_SUFFIX=
-                    if test -n "$MOZ_DEBUG"; then
-                        DBG_SUFFIX=d
+                    MOZ_ICU_DBG_SUFFIX=
+                    if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
+                        MOZ_ICU_DBG_SUFFIX=d
                     fi
-                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(DBG_SUFFIX).$(LIB_SUFFIX))'
+                    MOZ_ICU_LIBS='$(foreach lib,$(ICU_LIB_NAMES),$(DEPTH)/intl/icu/target/lib/$(LIB_PREFIX)$(lib)$(MOZ_ICU_DBG_SUFFIX).$(LIB_SUFFIX))'
                 fi
                 ;;
             Darwin)
@@ -113,7 +113,7 @@ if test -n "$ENABLE_INTL_API"; then
     fi
 fi
 
-AC_SUBST(DBG_SUFFIX)
+AC_SUBST(MOZ_ICU_DBG_SUFFIX)
 AC_SUBST(ENABLE_INTL_API)
 AC_SUBST(ICU_LIB_NAMES)
 AC_SUBST(MOZ_ICU_LIBS)
@@ -259,7 +259,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     	    # But, not debug build.
     	    ICU_CFLAGS="$ICU_CFLAGS -UDEBUG -DNDEBUG"
     	    ICU_CXXFLAGS="$ICU_CXXFLAGS -UDEBUG -DNDEBUG"
-    	else
+    	elif test -z "$MOZ_NO_DEBUG_RTL"; then
     	    ICU_BUILD_OPTS="$ICU_BUILD_OPTS --enable-debug"
     	fi
         fi
@@ -284,7 +284,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     	fi
 
     	# Add RTL flags for MSVCRT.DLL
-    	if test -n "$MOZ_DEBUG"; then
+    	if test -n "$MOZ_DEBUG" -a -z "$MOZ_NO_DEBUG_RTL"; then
     	    ICU_CFLAGS="$ICU_CFLAGS -MDd"
     	    ICU_CXXFLAGS="$ICU_CXXFLAGS -MDd"
     	else

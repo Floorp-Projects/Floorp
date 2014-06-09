@@ -21,6 +21,8 @@ Arguments:
   dirpath               directory filled with parsilicious js files
 """
 
+from __future__ import print_function
+
 import math
 import optparse
 import os
@@ -77,9 +79,9 @@ def bench(shellpath, filepath, warmup_runs, counted_runs, stfu=False):
     mean = avg(milliseconds)
     sigma = stddev(milliseconds, mean)
     if not stfu:
-        print 'Runs:', [int(ms) for ms in milliseconds]
-        print 'Mean:', mean
-        print 'Stddev: %.2f (%.2f%% of mean)' % (sigma, sigma / mean * 100)
+        print('Runs:', [int(ms) for ms in milliseconds])
+        print('Mean:', mean)
+        print('Stddev: %.2f (%.2f%% of mean)' % (sigma, sigma / mean * 100))
     return mean, sigma
 
 
@@ -89,17 +91,17 @@ def parsemark(filepaths, fbench, stfu=False):
     for filepath in filepaths:
         filename = os.path.split(filepath)[-1]
         if not stfu:
-            print 'Parsemarking %s...' % filename
+            print('Parsemarking %s...' % filename)
         bench_map[filename] = fbench(filepath)
-    print '{'
+    print('{')
     for i, (filename, (avg, stddev)) in enumerate(bench_map.iteritems()):
         assert '"' not in filename
         fmt = '    %30s: {"average_ms": %6.2f, "stddev_ms": %6.2f}'
         if i != len(bench_map) - 1:
             fmt += ','
         filename_str = '"%s"' % filename
-        print fmt % (filename_str, avg, stddev)
-    print '}'
+        print(fmt % (filename_str, avg, stddev))
+    print('}')
     return dict((filename, dict(average_ms=avg, stddev_ms=stddev))
             for filename, (avg, stddev) in bench_map.iteritems())
 
@@ -122,25 +124,25 @@ def main():
         shellpath = args.pop(0)
     except IndexError:
         parser.print_help()
-        print
-        print >> sys.stderr, 'error: shellpath required'
+        print()
+        print('error: shellpath required', file=sys.stderr)
         return -1
     try:
         dirpath = args.pop(0)
     except IndexError:
         parser.print_help()
-        print
-        print >> sys.stderr, 'error: dirpath required'
+        print()
+        print('error: dirpath required', file=sys.stderr)
         return -1
     if not shellpath or not os.path.exists(shellpath):
-        print >> sys.stderr, 'error: could not find shell:', shellpath
+        print('error: could not find shell:', shellpath, file=sys.stderr)
         return -1
     if options.baseline_path:
         if not os.path.isfile(options.baseline_path):
-            print >> sys.stderr, 'error: baseline file does not exist'
+            print('error: baseline file does not exist', file=sys.stderr)
             return -1
         if not compare_bench:
-            print >> sys.stderr, 'error: JSON support is missing, cannot compare benchmarks'
+            print('error: JSON support is missing, cannot compare benchmarks', file=sys.stderr)
             return -1
     benchfile = lambda filepath: bench(shellpath, filepath,
             options.warmup_runs, options.counted_runs, stfu=options.stfu)

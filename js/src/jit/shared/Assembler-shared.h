@@ -11,12 +11,11 @@
 
 #include <limits.h>
 
-#include "jsworkers.h"
-
 #include "jit/IonAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
 #include "jit/RegisterSets.h"
+#include "vm/HelperThreads.h"
 
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM)
 // JS_SMALL_BRANCH means the range on a branch instruction
@@ -113,6 +112,21 @@ IsCompilingAsmJS()
     IonContext *ictx = MaybeGetIonContext();
     return ictx && ictx->compartment == nullptr;
 }
+
+static inline bool
+CanUsePointerImmediates()
+{
+    if (!IsCompilingAsmJS())
+        return true;
+
+    // Pointer immediates can still be used with asm.js when the resulting code
+    // is being profiled; the module will not be serialized in this case.
+    IonContext *ictx = MaybeGetIonContext();
+    if (ictx && ictx->runtime->profilingScripts())
+        return true;
+
+    return false;
+}
 #endif
 
 // Pointer to be embedded as an immediate in an instruction.
@@ -124,42 +138,42 @@ struct ImmPtr
     {
         // To make code serialization-safe, asm.js compilation should only
         // compile pointer immediates using AsmJSImmPtr.
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R>
     explicit ImmPtr(R (*pf)())
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1>
     explicit ImmPtr(R (*pf)(A1))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2>
     explicit ImmPtr(R (*pf)(A1, A2))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3>
     explicit ImmPtr(R (*pf)(A1, A2, A3))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3, class A4>
     explicit ImmPtr(R (*pf)(A1, A2, A3, A4))
       : value(JS_FUNC_TO_DATA_PTR(void *, pf))
     {
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
 };
@@ -218,8 +232,7 @@ struct AbsoluteAddress
     explicit AbsoluteAddress(const void *addr)
       : addr(const_cast<void*>(addr))
     {
-        // asm.js shouldn't be creating GC things
-        JS_ASSERT(!IsCompilingAsmJS());
+        JS_ASSERT(CanUsePointerImmediates());
     }
 
     AbsoluteAddress offset(ptrdiff_t delta) {
@@ -678,7 +691,7 @@ class AsmJSHeapAccess
         isFloat32Load_(false),
         loadedReg_(UINT8_MAX)
     {}
-#elif defined(JS_CODEGEN_ARM)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     explicit AsmJSHeapAccess(uint32_t offset)
       : offset_(offset)
     {}
@@ -792,7 +805,22 @@ class AssemblerShared
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
     Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
 
+  protected:
+    bool enoughMemory_;
+
   public:
+    AssemblerShared()
+     : enoughMemory_(true)
+    {}
+
+    void propagateOOM(bool success) {
+        enoughMemory_ &= success;
+    }
+
+    bool oom() const {
+        return !enoughMemory_;
+    }
+
     bool append(CallSite callsite) { return callsites_.append(callsite); }
     CallSiteVector &&extractCallSites() { return Move(callsites_); }
 

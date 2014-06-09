@@ -16,6 +16,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.URLConnection;
+import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -2718,6 +2720,33 @@ public class GeckoAppShell
                                      getContext().getResources().getString(R.string.share_image_failed),
                                      Toast.LENGTH_SHORT);
         toast.show();
+    }
+
+    @WrapElementForJNI(allowMultithread = true)
+    static InputStream createInputStream(URLConnection connection) throws IOException {
+        return connection.getInputStream();
+    }
+
+    @WrapElementForJNI(allowMultithread = true, narrowChars = true)
+    static URLConnection getConnection(String url) throws MalformedURLException, IOException {
+        String spec;
+        if (url.startsWith("android://")) {
+            spec = url.substring(10);
+        } else {
+            spec = url.substring(8);
+        }
+
+        // if the colon got stripped, put it back
+        int colon = spec.indexOf(':');
+        if (colon == -1 || colon > spec.indexOf('/')) {
+            spec = spec.replaceFirst("/", ":/");
+        }
+        return new URL(spec).openConnection();
+    }
+
+    @WrapElementForJNI(allowMultithread = true, narrowChars = true)
+    static String connectionGetMimeType(URLConnection connection) {
+        return connection.getContentType();
     }
 
 }

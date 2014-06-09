@@ -29,6 +29,7 @@
 # Build directories for js shell
 _DBG\.OBJ/
 _OPT\.OBJ/
+^js/src/.*-obj/
 
 # SpiderMonkey configury
 ^js/src/configure$

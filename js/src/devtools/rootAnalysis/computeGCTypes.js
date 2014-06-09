@@ -133,6 +133,7 @@ addGCType('js::LazyScript');
 addGCType('js::ion::IonCode');
 addGCPointer('JS::Value');
 addGCPointer('jsid');
+addGCPointer('JS::AutoCheckCannotGC');
 
 function explain(csu, indent, seen) {
     if (!seen)

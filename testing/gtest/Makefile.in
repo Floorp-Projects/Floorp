@@ -14,7 +14,12 @@ ifeq (browser,$(MOZ_BUILD_APP))
 # LNK1112: module machine type 'x64' conflicts with target machine type 'X86'
 ifneq ($(OS_ARCH),WINNT)
 ifdef COMPILE_ENVIRONMENT
-check gtest::
+gtest::
+	$(MAKE) -C $(DEPTH)/toolkit/library gtestxul
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+	$(MAKE) -C $(DEPTH)/browser/app repackage
+endif
+check::
 	$(MAKE) -C $(DEPTH)/toolkit/library gtestxul
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(MAKE) -C $(DEPTH)/browser/app repackage

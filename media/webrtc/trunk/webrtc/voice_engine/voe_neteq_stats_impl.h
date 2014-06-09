@@ -13,6 +13,7 @@
 
 #include "webrtc/voice_engine/include/voe_neteq_stats.h"
 
+#include "webrtc/common_types.h"
 #include "webrtc/voice_engine/shared_data.h"
 
 namespace webrtc {
@@ -22,6 +23,9 @@ class VoENetEqStatsImpl : public VoENetEqStats
 public:
     virtual int GetNetworkStatistics(int channel,
                                      NetworkStatistics& stats);
+
+    virtual int GetDecodingCallStatistics(
+        int channel, AudioDecodingCallStats* stats) const;
 
 protected:
     VoENetEqStatsImpl(voe::SharedData* shared);

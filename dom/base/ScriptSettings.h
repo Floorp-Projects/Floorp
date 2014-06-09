@@ -179,7 +179,14 @@ public:
 private:
   JSAutoCompartment mAc;
   dom::ScriptSettingsStack& mStack;
-  nsCOMPtr<nsIPrincipal> mWebIDLCallerPrincipal;
+  // It's safe to make this a weak pointer, since it's the subject principal
+  // when we go on the stack, so can't go away until after we're gone.  In
+  // particular, this is only used from the CallSetup constructor, and only in
+  // the aIsJSImplementedWebIDL case.  And in that case, the subject principal
+  // is the principal of the callee function that is part of the CallArgs just a
+  // bit up the stack, and which will outlive us.  So we know the principal
+  // can't go away until then either.
+  nsIPrincipal* mWebIDLCallerPrincipal;
   friend nsIPrincipal* GetWebIDLCallerPrincipal();
 };
 

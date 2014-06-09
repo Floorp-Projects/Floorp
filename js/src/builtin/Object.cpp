@@ -371,7 +371,7 @@ DefineAccessor(JSContext *cx, unsigned argc, Value *vp)
     if (!BoxNonStrictThis(cx, args))
         return false;
 
-    if (args.length() < 2 || !js_IsCallable(args[1])) {
+    if (args.length() < 2 || !IsCallable(args[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              Type == GetterAccessor ? js_getter_str : js_setter_str);
@@ -1063,6 +1063,14 @@ static bool
 ProtoSetter(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    // Do this here, rather than after the this-check so even likely-buggy
+    // use of the __proto__ setter on unacceptable values, where no subsequent
+    // use occurs on an acceptable value, will trigger a warning.
+    RootedObject callee(cx, &args.callee());
+    if (!GlobalObject::warnOnceAboutPrototypeMutation(cx, callee))
+       return false;
+
     HandleValue thisv = args.thisv();
     if (thisv.isNullOrUndefined()) {
         ReportIncompatible(cx, args);

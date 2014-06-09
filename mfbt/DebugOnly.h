@@ -12,6 +12,8 @@
 #ifndef mozilla_DebugOnly_h
 #define mozilla_DebugOnly_h
 
+#include "mozilla/Attributes.h"
+
 namespace mozilla {
 
 /**
@@ -34,47 +36,44 @@ namespace mozilla {
 template<typename T>
 class DebugOnly
 {
-  public:
+public:
 #ifdef DEBUG
-    T value;
+  T value;
 
-    DebugOnly() { }
-    DebugOnly(const T& other) : value(other) { }
-    DebugOnly(const DebugOnly& other) : value(other.value) { }
-    DebugOnly& operator=(const T& rhs) {
-      value = rhs;
-      return *this;
-    }
-    void operator++(int) {
-      value++;
-    }
-    void operator--(int) {
-      value--;
-    }
+  DebugOnly() { }
+  MOZ_IMPLICIT DebugOnly(const T& aOther) : value(aOther) { }
+  DebugOnly(const DebugOnly& aOther) : value(aOther.value) { }
+  DebugOnly& operator=(const T& aRhs) {
+    value = aRhs;
+    return *this;
+  }
 
-    T* operator&() { return &value; }
+  void operator++(int) { value++; }
+  void operator--(int) { value--; }
 
-    operator T&() { return value; }
-    operator const T&() const { return value; }
+  T* operator&() { return &value; }
 
-    T& operator->() { return value; }
-    const T& operator->() const { return value; }
+  operator T&() { return value; }
+  operator const T&() const { return value; }
+
+  T& operator->() { return value; }
+  const T& operator->() const { return value; }
 
 #else
-    DebugOnly() { }
-    DebugOnly(const T&) { }
-    DebugOnly(const DebugOnly&) { }
-    DebugOnly& operator=(const T&) { return *this; }
-    void operator++(int) { }
-    void operator--(int) { }
+  DebugOnly() { }
+  MOZ_IMPLICIT DebugOnly(const T&) { }
+  DebugOnly(const DebugOnly&) { }
+  DebugOnly& operator=(const T&) { return *this; }
+  void operator++(int) { }
+  void operator--(int) { }
 #endif
 
-    /*
-     * DebugOnly must always have a destructor or else it will
-     * generate "unused variable" warnings, exactly what it's intended
-     * to avoid!
-     */
-    ~DebugOnly() {}
+  /*
+   * DebugOnly must always have a destructor or else it will
+   * generate "unused variable" warnings, exactly what it's intended
+   * to avoid!
+   */
+  ~DebugOnly() {}
 };
 
 }

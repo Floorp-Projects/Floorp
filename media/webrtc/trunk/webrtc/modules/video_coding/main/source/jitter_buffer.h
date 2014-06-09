@@ -98,10 +98,9 @@ class VCMJitterBuffer {
   // Empty the jitter buffer of all its data.
   void Flush();
 
-  // Get the number of received key and delta frames since the jitter buffer
+  // Get the number of received frames, by type, since the jitter buffer
   // was started.
-  void FrameStatistics(uint32_t* received_delta_frames,
-                       uint32_t* received_key_frames) const;
+  std::map<FrameType, uint32_t> FrameStatistics() const;
 
   // The number of packets discarded by the jitter buffer because the decoder
   // won't be able to decode them.
@@ -297,8 +296,8 @@ class VCMJitterBuffer {
   bool first_packet_since_reset_;
 
   // Statistics.
-  // Frame counter for each type (key, delta, golden, key-delta).
-  unsigned int receive_statistics_[4];
+  // Frame counts for each type (key, delta, ...)
+  std::map<FrameType, uint32_t> receive_statistics_;
   // Latest calculated frame rates of incoming stream.
   unsigned int incoming_frame_rate_;
   unsigned int incoming_frame_count_;

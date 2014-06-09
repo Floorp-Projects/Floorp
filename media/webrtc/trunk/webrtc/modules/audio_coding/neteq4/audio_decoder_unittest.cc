@@ -17,6 +17,9 @@
 
 #include "gtest/gtest.h"
 #include "webrtc/common_audio/resampler/include/resampler.h"
+#ifdef WEBRTC_CODEC_CELT
+#include "webrtc/modules/audio_coding/codecs/celt/include/celt_interface.h"
+#endif
 #include "webrtc/modules/audio_coding/codecs/g711/include/g711_interface.h"
 #include "webrtc/modules/audio_coding/codecs/g722/include/g722_interface.h"
 #include "webrtc/modules/audio_coding/codecs/ilbc/interface/ilbc.h"
@@ -116,14 +119,16 @@ class AudioDecoderTest : public ::testing::Test {
       encoded_bytes_ += enc_len;
       processed_samples += frame_size_;
     }
-    // This test fails on Win x64, see issue webrtc:1459
-#if !(defined(_WIN32) && defined(WEBRTC_ARCH_64_BITS))
-    EXPECT_EQ(expected_bytes, encoded_bytes_);
+    // For some codecs it doesn't make sense to check expected number of bytes,
+    // since the number can vary for different platforms. Opus and iSAC are
+    // such codecs. In this case expected_bytes is set to 0.
+    if (expected_bytes) {
+      EXPECT_EQ(expected_bytes, encoded_bytes_);
+    }
     CompareInputOutput(processed_samples, tolerance, delay);
     if (channels_ == 2)
       CompareTwoChannels(processed_samples, channel_diff_tolerance);
     EXPECT_LE(MseInputOutput(processed_samples, delay), mse);
-#endif
   }
 
   // The absolute difference between the input and output (the first channel) is
@@ -143,11 +148,12 @@ class AudioDecoderTest : public ::testing::Test {
 
   // The absolute difference between the two channels in a stereo is compared vs
   // |tolerance|.
-  virtual void CompareTwoChannels(size_t num_samples, int tolerance) const {
-    assert(num_samples <= data_length_);
-    for (unsigned int n = 0; n < num_samples; ++n)
-        ASSERT_NEAR(decoded_[channels_ * n], decoded_[channels_ * n + 1],
-                    tolerance) << "Stereo samples differ.";
+  virtual void CompareTwoChannels(size_t samples_per_channel,
+                                  int tolerance) const {
+    assert(samples_per_channel <= data_length_);
+    for (unsigned int n = 0; n < samples_per_channel; ++n)
+      ASSERT_NEAR(decoded_[channels_ * n], decoded_[channels_ * n + 1],
+                  tolerance) << "Stereo samples differ.";
   }
 
   // Calculates mean-squared error between input and output (the first channel).
@@ -199,12 +205,12 @@ class AudioDecoderTest : public ::testing::Test {
     EXPECT_EQ(0, decoder_->Init());
     size_t dec_len =
         decoder_->Decode(encoded_, enc_len, decoded_, &speech_type);
-    EXPECT_EQ(frame_size_, dec_len);
+    EXPECT_EQ(frame_size_ * channels_, dec_len);
     // Call DecodePlc and verify that we get one frame of data.
     // (Overwrite the output from the above Decode call, but that does not
     // matter.)
     dec_len = decoder_->DecodePlc(1, decoded_);
-    EXPECT_EQ(frame_size_, dec_len);
+    EXPECT_EQ(frame_size_ * channels_, dec_len);
   }
 
   std::string input_file_;
@@ -527,6 +533,77 @@ class AudioDecoderG722StereoTest : public AudioDecoderG722Test {
   }
 };
 
+#ifdef WEBRTC_CODEC_CELT
+class AudioDecoderCeltTest : public AudioDecoderTest {
+ protected:
+  static const int kEncodingRateBitsPerSecond = 64000;
+  AudioDecoderCeltTest() : AudioDecoderTest(), encoder_(NULL) {
+    frame_size_ = 640;
+    data_length_ = 10 * frame_size_;
+    decoder_ = AudioDecoder::CreateAudioDecoder(kDecoderCELT_32);
+    assert(decoder_);
+    WebRtcCelt_CreateEnc(&encoder_, static_cast<int>(channels_));
+  }
+
+  ~AudioDecoderCeltTest() {
+    WebRtcCelt_FreeEnc(encoder_);
+  }
+
+  virtual void InitEncoder() {
+    assert(encoder_);
+    ASSERT_EQ(0, WebRtcCelt_EncoderInit(
+        encoder_, static_cast<int>(channels_), kEncodingRateBitsPerSecond));
+  }
+
+  virtual int EncodeFrame(const int16_t* input, size_t input_len_samples,
+                          uint8_t* output) {
+    assert(encoder_);
+    return WebRtcCelt_Encode(encoder_, input, output);
+  }
+
+  CELT_encinst_t* encoder_;
+};
+
+class AudioDecoderCeltStereoTest : public AudioDecoderTest {
+ protected:
+  static const int kEncodingRateBitsPerSecond = 64000;
+  AudioDecoderCeltStereoTest() : AudioDecoderTest(), encoder_(NULL) {
+    channels_ = 2;
+    frame_size_ = 640;
+    data_length_ = 10 * frame_size_;
+    decoder_ = AudioDecoder::CreateAudioDecoder(kDecoderCELT_32_2ch);
+    assert(decoder_);
+    stereo_input_ = new int16_t[frame_size_ * channels_];
+    WebRtcCelt_CreateEnc(&encoder_, static_cast<int>(channels_));
+  }
+
+  ~AudioDecoderCeltStereoTest() {
+    delete [] stereo_input_;
+    WebRtcCelt_FreeEnc(encoder_);
+  }
+
+  virtual void InitEncoder() {
+    assert(encoder_);
+    ASSERT_EQ(0, WebRtcCelt_EncoderInit(
+        encoder_, static_cast<int>(channels_), kEncodingRateBitsPerSecond));
+  }
+
+  virtual int EncodeFrame(const int16_t* input, size_t input_len_samples,
+                          uint8_t* output) {
+    assert(encoder_);
+    assert(stereo_input_);
+    for (size_t n = 0; n < frame_size_; ++n) {
+      stereo_input_[n * 2] = stereo_input_[n * 2 + 1] = input[n];
+    }
+    return WebRtcCelt_Encode(encoder_, stereo_input_, output);
+  }
+
+  int16_t* stereo_input_;
+  CELT_encinst_t* encoder_;
+};
+
+#endif
+
 class AudioDecoderOpusTest : public AudioDecoderTest {
  protected:
   AudioDecoderOpusTest() : AudioDecoderTest() {
@@ -658,7 +735,7 @@ TEST_F(AudioDecoderIsacFloatTest, EncodeDecode) {
   double mse = 434951.0;
   int delay = 48;  // Delay from input to output.
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderISAC));
-  EncodeDecodeTest(883, tolerance, mse, delay);
+  EncodeDecodeTest(0, tolerance, mse, delay);
   ReInitTest();
   EXPECT_TRUE(decoder_->HasDecodePlc());
   DecodePlcTest();
@@ -669,7 +746,7 @@ TEST_F(AudioDecoderIsacSwbTest, EncodeDecode) {
   double mse = 8.18e6;
   int delay = 160;  // Delay from input to output.
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderISACswb));
-  EncodeDecodeTest(853, tolerance, mse, delay);
+  EncodeDecodeTest(0, tolerance, mse, delay);
   ReInitTest();
   EXPECT_TRUE(decoder_->HasDecodePlc());
   DecodePlcTest();
@@ -680,7 +757,7 @@ TEST_F(AudioDecoderIsacFbTest, EncodeDecode) {
   double mse = 8.18e6;
   int delay = 160;  // Delay from input to output.
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderISACswb));
-  EncodeDecodeTest(853, tolerance, mse, delay);
+  EncodeDecodeTest(0, tolerance, mse, delay);
   ReInitTest();
   EXPECT_TRUE(decoder_->HasDecodePlc());
   DecodePlcTest();
@@ -726,7 +803,7 @@ TEST_F(AudioDecoderOpusTest, EncodeDecode) {
   double mse = 238630.0;
   int delay = 22;  // Delay from input to output.
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderOpus));
-  EncodeDecodeTest(731, tolerance, mse, delay);
+  EncodeDecodeTest(0, tolerance, mse, delay);
   ReInitTest();
   EXPECT_FALSE(decoder_->HasDecodePlc());
 }
@@ -737,10 +814,42 @@ TEST_F(AudioDecoderOpusStereoTest, EncodeDecode) {
   double mse = 238630.0;
   int delay = 22;  // Delay from input to output.
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderOpus_2ch));
-  EncodeDecodeTest(1383, tolerance, mse, delay, channel_diff_tolerance);
+  EncodeDecodeTest(0, tolerance, mse, delay, channel_diff_tolerance);
   ReInitTest();
   EXPECT_FALSE(decoder_->HasDecodePlc());
 }
+
+#ifdef WEBRTC_CODEC_CELT
+// In the two following CELT tests, the low amplitude of the test signal allow
+// us to have such low error thresholds, i.e. |tolerance|, |mse|. Furthermore,
+// in general, stereo signals with identical channels do not result in identical
+// encoded channels.
+TEST_F(AudioDecoderCeltTest, EncodeDecode) {
+  int tolerance = 20;
+  double mse = 17.0;
+  int delay = 80;  // Delay from input to output in samples.
+  EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderCELT_32));
+  EncodeDecodeTest(1600, tolerance, mse, delay);
+  ReInitTest();
+  EXPECT_TRUE(decoder_->HasDecodePlc());
+  DecodePlcTest();
+}
+
+TEST_F(AudioDecoderCeltStereoTest, EncodeDecode) {
+  int tolerance = 20;
+  // If both channels are identical, CELT not necessarily decodes identical
+  // channels. However, for this input this is the case.
+  int channel_diff_tolerance = 0;
+  double mse = 20.0;
+  // Delay from input to output in samples, accounting for stereo.
+  int delay = 160;
+  EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderCELT_32_2ch));
+  EncodeDecodeTest(1600, tolerance, mse, delay, channel_diff_tolerance);
+  ReInitTest();
+  EXPECT_TRUE(decoder_->HasDecodePlc());
+  DecodePlcTest();
+}
+#endif
 
 TEST(AudioDecoder, CodecSampleRateHz) {
   EXPECT_EQ(8000, AudioDecoder::CodecSampleRateHz(kDecoderPCMu));
@@ -772,8 +881,13 @@ TEST(AudioDecoder, CodecSampleRateHz) {
   EXPECT_EQ(-1, AudioDecoder::CodecSampleRateHz(kDecoderArbitrary));
   EXPECT_EQ(32000, AudioDecoder::CodecSampleRateHz(kDecoderOpus));
   EXPECT_EQ(32000, AudioDecoder::CodecSampleRateHz(kDecoderOpus_2ch));
+#ifdef WEBRTC_CODEC_CELT
+  EXPECT_EQ(32000, AudioDecoder::CodecSampleRateHz(kDecoderCELT_32));
+  EXPECT_EQ(32000, AudioDecoder::CodecSampleRateHz(kDecoderCELT_32_2ch));
+#else
   EXPECT_EQ(-1, AudioDecoder::CodecSampleRateHz(kDecoderCELT_32));
   EXPECT_EQ(-1, AudioDecoder::CodecSampleRateHz(kDecoderCELT_32_2ch));
+#endif
 }
 
 TEST(AudioDecoder, CodecSupported) {
@@ -805,8 +919,13 @@ TEST(AudioDecoder, CodecSupported) {
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderArbitrary));
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderOpus));
   EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderOpus_2ch));
+#ifdef WEBRTC_CODEC_CELT
+  EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderCELT_32));
+  EXPECT_TRUE(AudioDecoder::CodecSupported(kDecoderCELT_32_2ch));
+#else
   EXPECT_FALSE(AudioDecoder::CodecSupported(kDecoderCELT_32));
   EXPECT_FALSE(AudioDecoder::CodecSupported(kDecoderCELT_32_2ch));
+#endif
 }
 
 }  // namespace webrtc

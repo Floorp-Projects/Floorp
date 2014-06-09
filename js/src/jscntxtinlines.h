@@ -11,11 +11,11 @@
 #include "jscompartment.h"
 
 #include "jsiter.h"
-#include "jsworkers.h"
 
 #include "builtin/Object.h"
 #include "jit/IonFrames.h"
 #include "vm/ForkJoin.h"
+#include "vm/HelperThreads.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
 

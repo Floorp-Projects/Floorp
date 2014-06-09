@@ -1,0 +1,171 @@
+/* vim: set ts=2 sts=2 et sw=2: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIURI;
+interface nsILoadContext;
+interface nsINetworkPredictorVerifier;
+
+typedef unsigned long PredictorPredictReason;
+typedef unsigned long PredictorLearnReason;
+
+/**
+ * nsINetworkPredictor - learn about pages users visit, and allow us to take
+ *                       predictive actions upon future visits.
+ *                       NOTE: nsINetworkPredictor should only
+ *                       be used on the main thread.
+ */
+[scriptable, uuid(980f70bc-0487-4b22-a4c1-bf1185c8ae1f)]
+interface nsINetworkPredictor : nsISupports
+{
+  /**
+   * Prediction reasons
+   *
+   * PREDICT_LINK - we are being asked to take predictive action because
+   * the user is hovering over a link.
+   *
+   * PREDICT_LOAD - we are being asked to take predictive action because
+   * the user has initiated a pageload.
+   *
+   * PREDICT_STARTUP - we are being asked to take predictive action
+   * because the browser is starting up.
+   */
+  const PredictorPredictReason PREDICT_LINK = 0;
+  const PredictorPredictReason PREDICT_LOAD = 1;
+  const PredictorPredictReason PREDICT_STARTUP = 2;
+
+  /**
+   * Start taking predictive actions
+   *
+   * Calling this will cause the predictor to (possibly) start
+   * taking actions such as DNS prefetch and/or TCP preconnect based on
+   * (1) the host name that we are given, and (2) the reason we are being
+   * asked to take actions.
+   *
+   * @param targetURI - The URI we are being asked to take actions based on.
+   * @param sourceURI - The URI that is currently loaded. This is so we can
+   *   avoid doing predictive actions for link hover on an HTTPS page (for
+   *   example).
+   * @param reason - The reason we are being asked to take actions. Can be
+   *   any of the PREDICT_* values above.
+   *   In the case of PREDICT_LINK, targetURI should be the URI of the link
+   *   that is being hovered over, and sourceURI should be the URI of the page
+   *   on which the link appears.
+   *   In the case of PREDICT_LOAD, targetURI should be the URI of the page that
+   *   is being loaded and sourceURI should be null.
+   *   In the case of PREDICT_STARTUP, both targetURI and sourceURI should be
+   *   null.
+   * @param loadContext - The nsILoadContext of the page load we are predicting
+   *   about.
+   * @param verifier - An nsINetworkPredictorVerifier used in testing to ensure
+   *   we're predicting the way we expect to. Not necessary (or desired) for
+   *   normal operation.
+   */
+  void predict(in nsIURI targetURI,
+               in nsIURI sourceURI,
+               in PredictorPredictReason reason,
+               in nsILoadContext loadContext,
+               in nsINetworkPredictorVerifier verifier);
+
+
+  /*
+   * Reasons we are learning something
+   *
+   * LEARN_LOAD_TOPLEVEL - we are learning about the toplevel resource of a
+   *                       pageload (NOTE: this should ONLY be used by tests)
+   *
+   * LEARN_LOAD_SUBRESOURCE - we are learning a subresource from a pageload
+   *
+   * LEARN_LOAD_REDIRECT - we are learning about the re-direct of a URI
+   *
+   * LEARN_STARTUP - we are learning about a page loaded during startup
+   */
+  const PredictorLearnReason LEARN_LOAD_TOPLEVEL = 0;
+  const PredictorLearnReason LEARN_LOAD_SUBRESOURCE = 1;
+  const PredictorLearnReason LEARN_LOAD_REDIRECT = 2;
+  const PredictorLearnReason LEARN_STARTUP = 3;
+
+  /**
+   * Add to our compendium of knowledge
+   *
+   * This adds to our prediction database to make things (hopefully)
+   * smarter next time we predict something.
+   *
+   * @param targetURI - The URI that was loaded that we are keeping track of.
+   * @param sourceURI - The URI that caused targetURI to be loaded (for page
+   *   loads). This means the DOCUMENT URI.
+   * @param reason - The reason we are learning this bit of knowledge.
+   *   Reason can be any of the LEARN_* values.
+   *   In the case of LEARN_LOAD_SUBRESOURCE, targetURI should be the URI of a
+   *   subresource of a page, and sourceURI should be the top-level URI.
+   *   In the case of LEARN_LOAD_REDIRECT, targetURI is the NEW URI of a
+   *   top-level resource that was redirected to, and sourceURI is the
+   *   ORIGINAL URI of said top-level resource.
+   *   In the case of LEARN_STARTUP, targetURI should be the URI of a page
+   *   that was loaded immediately after browser startup, and sourceURI should
+   *   be null.
+   * @param loadContext - The nsILoadContext for the page load that we are
+   *   learning about.
+   */
+  void learn(in nsIURI targetURI,
+             in nsIURI sourceURI,
+             in PredictorLearnReason reason,
+             in nsILoadContext loadContext);
+
+  /**
+   * Clear out all our learned knowledge
+   *
+   * This removes everything from our database so that any predictions begun
+   * after this completes will start from a blank slate.
+   */
+  void reset();
+
+  /**
+   * @deprecated THIS API IS FOR TESTING ONLY. IF YOU DON'T KNOW WHAT IT DOES,
+   * DON'T USE IT
+   */
+  void prepareForDnsTest(in long long timestamp, in string uri);
+};
+
+%{C++
+// Wrapper functions to make use of the predictor easier and less invasive
+class nsIChannel;
+class nsIDocument;
+class nsILoadContext;
+class nsILoadGroup;
+class nsINetworkPredictorVerifier;
+
+namespace mozilla {
+namespace net {
+
+nsresult PredictorPredict(nsIURI *targetURI,
+                          nsIURI *sourceURI,
+                          PredictorPredictReason reason,
+                          nsILoadContext *loadContext,
+                          nsINetworkPredictorVerifier *verifier);
+
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsILoadContext *loadContext);
+
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsILoadGroup *loadGroup);
+
+nsresult PredictorLearn(nsIURI *targetURI,
+                        nsIURI *sourceURI,
+                        PredictorLearnReason reason,
+                        nsIDocument *document);
+
+nsresult PredictorLearnRedirect(nsIURI *targetURI,
+                                nsIChannel *channel,
+                                nsILoadContext *loadContext);
+
+} // mozilla::net
+} // mozilla
+%}

@@ -36,6 +36,13 @@ DefaultTemporalLayers::DefaultTemporalLayers(int numberOfTemporalLayers,
   memset(temporal_pattern_, 0, sizeof(temporal_pattern_));
 }
 
+int DefaultTemporalLayers::CurrentLayerId() const {
+  assert(temporal_ids_length_ > 0);
+  int index = pattern_idx_ % temporal_ids_length_;
+  assert(index >= 0);
+  return temporal_ids_[index];
+ }
+
 bool DefaultTemporalLayers::ConfigureBitrates(int bitrateKbit,
                                               int max_bitrate_kbit,
                                               int framerate,
@@ -247,8 +254,7 @@ void DefaultTemporalLayers::PopulateCodecSpecific(
     vp8_info->temporalIdx = 0;
     vp8_info->layerSync = true;
     } else {
-      vp8_info->temporalIdx = temporal_ids_
-          [pattern_idx_ % temporal_ids_length_];
+      vp8_info->temporalIdx = CurrentLayerId();
       TemporalReferences temporal_reference =
           temporal_pattern_[pattern_idx_ % temporal_pattern_length_];
 

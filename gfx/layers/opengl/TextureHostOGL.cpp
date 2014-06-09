@@ -5,6 +5,7 @@
 
 #include "TextureHostOGL.h"
 #include "GLContext.h"                  // for GLContext, etc
+#include "GLLibraryEGL.h"               // for GLLibraryEGL
 #include "GLSharedHandleHelpers.h"
 #include "GLUploadHelpers.h"
 #include "GLReadTexImageHelper.h"
@@ -220,6 +221,56 @@ TextureHostOGL::GetAndResetReleaseFence()
   mReleaseFence = android::Fence::NO_FENCE;
   return mPrevReleaseFence;
 }
+
+void
+TextureHostOGL::SetAcquireFence(const android::sp<android::Fence>& aAcquireFence)
+{
+  mAcquireFence = aAcquireFence;
+}
+
+android::sp<android::Fence>
+TextureHostOGL::GetAcquireFence()
+{
+  return mAcquireFence;
+}
+
+void
+TextureHostOGL::WaitAcquireFenceSyncComplete()
+{
+  if (!mAcquireFence.get() || !mAcquireFence->isValid()) {
+    return;
+  }
+
+  int fenceFd = mAcquireFence->dup();
+  if (fenceFd == -1) {
+    NS_WARNING("failed to dup fence fd");
+    return;
+  }
+
+  EGLint attribs[] = {
+              LOCAL_EGL_SYNC_NATIVE_FENCE_FD_ANDROID, fenceFd,
+              LOCAL_EGL_NONE
+          };
+
+  EGLSync sync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
+                                         LOCAL_EGL_SYNC_NATIVE_FENCE_ANDROID,
+                                         attribs);
+  if (!sync) {
+    NS_WARNING("failed to create native fence sync");
+    return;
+  }
+
+  EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(),
+                                              sync,
+                                              0,
+                                              LOCAL_EGL_FOREVER);
+  if (status != LOCAL_EGL_CONDITION_SATISFIED) {
+    NS_WARNING("failed to wait native fence sync");
+  }
+  MOZ_ALWAYS_TRUE( sEGLLibrary.fDestroySync(EGL_DISPLAY(), sync) );
+  mAcquireFence = nullptr;
+}
+
 #endif
 
 bool

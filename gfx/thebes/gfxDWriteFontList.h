@@ -354,9 +354,6 @@ public:
                                            const uint8_t *aFontData,
                                            uint32_t aLength);
     
-    virtual bool ResolveFontName(const nsAString& aFontName,
-                                   nsAString& aResolvedFontName);
-
     bool GetStandardFamilyName(const nsAString& aFontName,
                                  nsAString& aFamilyName);
 
@@ -390,6 +387,13 @@ private:
 
     virtual bool UsesSystemFallback() { return true; }
 
+    void GetFontsFromCollection(IDWriteFontCollection* aCollection);
+
+#ifdef MOZ_BUNDLED_FONTS
+    already_AddRefed<IDWriteFontCollection>
+    CreateBundledFontsCollection(IDWriteFactory* aFactory);
+#endif
+
     /**
      * Fonts listed in the registry as substitutes but for which no actual
      * font family is found.
@@ -417,6 +421,11 @@ private:
 
     nsRefPtr<FontFallbackRenderer> mFallbackRenderer;
     nsRefPtr<IDWriteTextFormat>    mFallbackFormat;
+
+    nsRefPtr<IDWriteFontCollection> mSystemFonts;
+#ifdef MOZ_BUNDLED_FONTS
+    nsRefPtr<IDWriteFontCollection> mBundledFonts;
+#endif
 };
 
 

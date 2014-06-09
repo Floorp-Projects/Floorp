@@ -15,7 +15,7 @@
 extern "C" {
 #endif
 
-#include <typedefs.h>
+#include "webrtc/typedefs.h"
 
 // List of features in x86.
 typedef enum {

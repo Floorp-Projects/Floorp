@@ -115,7 +115,6 @@ public:
 
   virtual already_AddRefed<nsINodeList> GetChildren(uint32_t aFilter) MOZ_OVERRIDE;
 
-  virtual nsIAtom *GetIDAttributeName() const MOZ_OVERRIDE;
 
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                    const nsAString& aValue, bool aNotify)
@@ -170,13 +169,10 @@ public:
   virtual mozilla::dom::CustomElementData* GetCustomElementData() const MOZ_OVERRIDE;
   virtual void SetCustomElementData(mozilla::dom::CustomElementData* aData) MOZ_OVERRIDE;
 
-  virtual nsIAtom* DoGetID() const MOZ_OVERRIDE;
-  virtual const nsAttrValue* DoGetClasses() const MOZ_OVERRIDE;
   NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const;
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const;
-  virtual nsIAtom *GetClassAttributeName() const;
 
   virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE
   {

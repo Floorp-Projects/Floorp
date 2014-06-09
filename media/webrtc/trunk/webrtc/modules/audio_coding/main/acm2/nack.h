@@ -49,6 +49,8 @@
 //
 namespace webrtc {
 
+namespace acm2 {
+
 class Nack {
  public:
   // A limit for the size of the NACK list.
@@ -203,6 +205,8 @@ class Nack {
   // |sequence_num_last_received_rtp_| - |max_nack_list_size_|.
   size_t max_nack_list_size_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

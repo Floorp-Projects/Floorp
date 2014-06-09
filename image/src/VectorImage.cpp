@@ -720,6 +720,11 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
     CreateOffscreenContentDrawTarget(IntSize(imageIntSize.width,
                                              imageIntSize.height),
                                      SurfaceFormat::B8G8R8A8);
+  if (!dt) {
+    NS_ERROR("Could not create a DrawTarget");
+    return nullptr;
+  }
+
   nsRefPtr<gfxContext> context = new gfxContext(dt);
 
   nsresult rv = Draw(context, GraphicsFilter::FILTER_NEAREST, gfxMatrix(),
@@ -908,7 +913,7 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
                              ThebesIntRect(aParams.imageRect),
                              ThebesIntRect(aParams.imageRect),
                              ThebesIntRect(aParams.imageRect),
-                             gfxImageFormat::ARGB32,
+                             SurfaceFormat::B8G8R8A8,
                              GraphicsFilter::FILTER_NEAREST, aParams.flags);
 
   // Attempt to cache the resulting surface.
@@ -935,7 +940,7 @@ VectorImage::Show(gfxDrawable* aDrawable, const SVGDrawingParameters& aParams)
                              aParams.userSpaceToImageSpace,
                              aParams.subimage, aParams.sourceRect,
                              ThebesIntRect(aParams.imageRect), aParams.fill,
-                             gfxImageFormat::ARGB32,
+                             SurfaceFormat::B8G8R8A8,
                              aParams.filter, aParams.flags);
 
   MOZ_ASSERT(mRenderingObserver, "Should have a rendering observer by now");

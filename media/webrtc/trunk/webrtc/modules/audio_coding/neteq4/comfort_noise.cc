@@ -50,7 +50,7 @@ int ComfortNoise::UpdateParameters(Packet* packet) {
 }
 
 int ComfortNoise::Generate(size_t requested_length,
-                           AudioMultiVector<int16_t>* output) {
+                           AudioMultiVector* output) {
   // TODO(hlundin): Change to an enumerator and skip assert.
   assert(fs_hz_ == 8000 || fs_hz_ == 16000 || fs_hz_ ==  32000 ||
          fs_hz_ == 48000);

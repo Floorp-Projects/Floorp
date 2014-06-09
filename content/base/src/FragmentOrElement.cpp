@@ -153,14 +153,33 @@ nsIContent::FindFirstNonChromeOnlyAccessContent() const
 nsIContent*
 nsIContent::GetFlattenedTreeParent() const
 {
-  if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
-    nsIContent* parent = GetXBLInsertionParent();
-    if (parent) {
-      return parent;
+  nsIContent* parent = nullptr;
+
+  nsTArray<nsIContent*>* destInsertionPoints = GetExistingDestInsertionPoints();
+  if (destInsertionPoints && !destInsertionPoints->IsEmpty()) {
+    // This node was distributed into an insertion point. The last node in
+    // the list of destination insertion insertion points is where this node
+    // appears in the composed tree (see Shadow DOM spec).
+    nsIContent* lastInsertionPoint = destInsertionPoints->LastElement();
+    parent = lastInsertionPoint->GetParent();
+  } else if (HasFlag(NODE_MAY_BE_IN_BINDING_MNGR)) {
+    parent = GetXBLInsertionParent();
+  }
+
+  if (!parent) {
+    parent = GetParent();
+  }
+
+  // Shadow roots never shows up in the flattened tree. Return the host
+  // instead.
+  if (parent && parent->HasFlag(NODE_IS_IN_SHADOW_TREE)) {
+    ShadowRoot* parentShadowRoot = ShadowRoot::FromNode(parent);
+    if (parentShadowRoot) {
+      return parentShadowRoot->GetHost();
     }
   }
 
-  return GetParent();
+  return parent;
 }
 
 nsIContent::IMEState
@@ -884,13 +903,6 @@ nsIContent::IsFocusableInternal(int32_t* aTabIndex, bool aWithMouse)
     *aTabIndex = -1; // Default, not tabbable
   }
   return false;
-}
-
-const nsAttrValue*
-FragmentOrElement::DoGetClasses() const
-{
-  NS_NOTREACHED("Shouldn't ever be called");
-  return nullptr;
 }
 
 NS_IMETHODIMP
@@ -2604,9 +2616,10 @@ Serialize(FragmentOrElement* aRoot, bool aDescendentsOnly, nsAString& aOut)
 
       current = current->GetParentNode();
 
-      // Template case, if we are in a template's content, then the parent
-      // should be the host template element.
-      if (current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      // Handle template element. If the parent is a template's content,
+      // then adjust the parent to be the template element.
+      if (current != aRoot &&
+          current->NodeType() == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
         DocumentFragment* frag = static_cast<DocumentFragment*>(current);
         nsIContent* fragHost = frag->GetHost();
         if (fragHost && nsNodeUtils::IsTemplateElement(fragHost)) {

@@ -132,9 +132,10 @@ ParseDecimalNumber(const JS::TwoByteChars chars);
  * If [start, end) does not begin with a number with the specified base,
  * *dp == 0 and *endp == start upon return.
  */
+template <typename CharT>
 extern bool
-GetPrefixInteger(ThreadSafeContext *cx, const jschar *start, const jschar *end, int base,
-                 const jschar **endp, double *dp);
+GetPrefixInteger(ThreadSafeContext *cx, const CharT *start, const CharT *end, int base,
+                 const CharT **endp, double *dp);
 
 /*
  * This is like GetPrefixInteger, but only deals with base 10, and doesn't have
@@ -174,12 +175,15 @@ num_parseInt(JSContext *cx, unsigned argc, Value *vp);
  *
  * Also allows inputs of the form [+|-]Infinity, which produce an infinity of
  * the appropriate sign.  The case of the "Infinity" string must match exactly.
- * If the string does not contain a number, set *ep to s and return 0.0 in dp.
+ * If the string does not contain a number, set *dEnd to begin and return 0.0
+ * in *d.
+ *
  * Return false if out of memory.
  */
+template <typename CharT>
 extern bool
-js_strtod(js::ThreadSafeContext *cx, const jschar *s, const jschar *send,
-          const jschar **ep, double *dp);
+js_strtod(js::ThreadSafeContext *cx, const CharT *begin, const CharT *end,
+          const CharT **dEnd, double *d);
 
 extern bool
 js_num_toString(JSContext *cx, unsigned argc, js::Value *vp);

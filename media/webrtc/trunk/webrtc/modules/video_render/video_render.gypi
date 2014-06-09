@@ -16,16 +16,6 @@
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-      'include_dirs': [
-        'include',
-        '../interface',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          'include',
-          '../interface',
-        ],
-      },
       'sources': [
         'android/video_render_android_impl.cc',
         'android/video_render_android_impl.h',
@@ -150,11 +140,6 @@
             },
           },
         }],
-        ['OS=="mac"', {
-          'direct_dependent_settings': {
-            'include_dirs': ['mac',],
-          },
-        }],
         ['OS=="win" and include_internal_video_render==1', {
           'variables': {
             # 'directx_sdk_path' will be overridden in the condition block
@@ -243,10 +228,10 @@
               'target_name': 'video_render_tests_run',
               'type': 'none',
               'dependencies': [
-                '<(import_isolate_path):import_isolate_gypi',
                 'video_render_tests',
               ],
               'includes': [
+                '../../build/isolate.gypi',
                 'video_render_tests.isolate',
               ],
               'sources': [

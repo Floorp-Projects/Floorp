@@ -709,6 +709,21 @@ public:
         m_formatter.oneByteOp64(OP_AND_GvEv, dst, base, offset);
     }
 
+    void andq_mr(int offset, RegisterID base, RegisterID index, int scale, RegisterID dst)
+    {
+        spew("andq       %s0x%x(%s,%s,%d), %s",
+             PRETTY_PRINT_OFFSET(offset), nameIReg(8,base), nameIReg(8,index), 1<<scale,
+             nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_AND_GvEv, dst, base, index, scale, offset);
+    }
+
+    void andq_mr(const void *addr, RegisterID dst)
+    {
+        spew("andq       %p, %s",
+             addr, nameIReg(8,dst));
+        m_formatter.oneByteOp64(OP_AND_GvEv, dst, addr);
+    }
+
     void orq_mr(int offset, RegisterID base, RegisterID dst)
     {
         spew("orq        %s0x%x(%s), %s",
@@ -1489,6 +1504,14 @@ public:
         spew("testl      $0x%x, %s0x%x(%s)",
              imm, PRETTY_PRINT_OFFSET(offset), nameIReg(base));
         m_formatter.oneByteOp(OP_GROUP3_EvIz, GROUP3_OP_TEST, base, offset);
+        m_formatter.immediate32(imm);
+    }
+
+    void testl_i32m(int imm, const void *addr)
+    {
+        spew("testl      $0x%x, %p",
+             imm, addr);
+        m_formatter.oneByteOp(OP_GROUP3_EvIz, GROUP3_OP_TEST, addr);
         m_formatter.immediate32(imm);
     }
 

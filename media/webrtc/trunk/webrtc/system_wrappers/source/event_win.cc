@@ -23,16 +23,17 @@ EventWindows::EventWindows()
 }
 
 EventWindows::~EventWindows() {
+  StopTimer();
   CloseHandle(event_);
 }
 
 bool EventWindows::Set() {
   // Note: setting an event that is already set has no effect.
-  return SetEvent(event_) == 1 ? true : false;
+  return SetEvent(event_) == 1;
 }
 
 bool EventWindows::Reset() {
-  return ResetEvent(event_) == 1 ? true : false;
+  return ResetEvent(event_) == 1;
 }
 
 EventTypeWrapper EventWindows::Wait(unsigned long max_time) {
@@ -52,6 +53,7 @@ bool EventWindows::StartTimer(bool periodic, unsigned long time) {
     timeKillEvent(timerID_);
     timerID_ = NULL;
   }
+
   if (periodic) {
     timerID_ = timeSetEvent(time, 0, (LPTIMECALLBACK)HANDLE(event_), 0,
                             TIME_PERIODIC | TIME_CALLBACK_EVENT_PULSE);
@@ -60,15 +62,15 @@ bool EventWindows::StartTimer(bool periodic, unsigned long time) {
                             TIME_ONESHOT | TIME_CALLBACK_EVENT_SET);
   }
 
-  if (timerID_ == NULL) {
-    return false;
-  }
-  return true;
+  return timerID_ != NULL;
 }
 
 bool EventWindows::StopTimer() {
-  timeKillEvent(timerID_);
-  timerID_ = NULL;
+  if (timerID_ != NULL) {
+    timeKillEvent(timerID_);
+    timerID_ = NULL;
+  }
+
   return true;
 }
 

@@ -475,6 +475,16 @@ static const StaticPinset kPinset_mozilla = {
   &kPinset_mozilla_sha256
 };
 
+static const char* kPinset_mozilla_fxa_sha256_Data[] = {
+  kDigiCert_Global_Root_CAFingerprint,
+};
+static const StaticFingerprints kPinset_mozilla_fxa_sha256 = { 1, kPinset_mozilla_fxa_sha256_Data };
+
+static const StaticPinset kPinset_mozilla_fxa = {
+  nullptr,
+  &kPinset_mozilla_fxa_sha256
+};
+
 static const char* kPinset_mozilla_test_sha256_Data[] = {
   kEnd_Entity_Test_CertFingerprint,
 };
@@ -660,9 +670,10 @@ struct TransportSecurityPreload {
 
 /* Sort hostnames for binary search. */
 static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
+  { "accounts.firefox.com", true, true, false, 4, &kPinset_mozilla_fxa },
   { "accounts.google.com", true, true, false, -1, &kPinset_google_root_pems },
-  { "addons.mozilla.net", true, true, true, 2, &kPinset_mozilla },
-  { "addons.mozilla.org", true, true, true, 1, &kPinset_mozilla },
+  { "addons.mozilla.net", true, false, true, 2, &kPinset_mozilla },
+  { "addons.mozilla.org", true, false, true, 1, &kPinset_mozilla },
   { "admin.google.com", true, true, false, -1, &kPinset_google_root_pems },
   { "android.com", true, true, false, -1, &kPinset_google_root_pems },
   { "api.twitter.com", true, false, false, -1, &kPinset_twitterCDN },
@@ -984,8 +995,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "ytimg.com", true, true, false, -1, &kPinset_google_root_pems },
 };
 
-static const int kPublicKeyPinningPreloadListLength = 322;
+static const int kPublicKeyPinningPreloadListLength = 323;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1412099175458000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1412966638293000);

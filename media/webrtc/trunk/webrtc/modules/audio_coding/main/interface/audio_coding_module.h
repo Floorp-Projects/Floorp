@@ -73,6 +73,10 @@ class ACMVQMonCallback {
       const uint16_t delayMS) = 0;  // average delay in ms
 };
 
+// Version string for testing, to distinguish instances of ACM1 from ACM2.
+extern const char kLegacyAcmVersion[];
+extern const char kExperimentalAcmVersion[];
+
 class AudioCodingModule: public Module {
  protected:
   AudioCodingModule() {}
@@ -173,6 +177,11 @@ class AudioCodingModule: public Module {
   //   false if any parameter is not valid.
   //
   static bool IsCodecValid(const CodecInst& codec);
+
+  // Returns the version of ACM. This facilitates distinguishing instances of
+  // ACM1 from ACM2 while testing. This API will be removed when ACM1 is
+  // completely removed.
+  virtual const char* Version() const = 0;
 
   ///////////////////////////////////////////////////////////////////////////
   //   Sender
@@ -922,6 +931,9 @@ class AudioCodingModule: public Module {
   // is returned.
   //
   virtual std::vector<uint16_t> GetNackList(int round_trip_time_ms) const = 0;
+
+  virtual void GetDecodingCallStatistics(
+      AudioDecodingCallStats* call_stats) const = 0;
 };
 
 struct AudioCodingModuleFactory {

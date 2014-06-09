@@ -120,7 +120,7 @@
 #include "nsIFaviconService.h"
 #include "mozIAsyncFavicons.h"
 #endif
-#include "nsINetworkSeer.h"
+#include "nsINetworkPredictor.h"
 
 // Editor-related
 #include "nsIEditingSession.h"
@@ -542,7 +542,7 @@ static void
 SendPing(void *closure, nsIContent *content, nsIURI *uri, nsIIOService *ios)
 {
   SendPingInfo *info = static_cast<SendPingInfo *>(closure);
-  if (info->numPings >= info->maxPings)
+  if (info->maxPings > -1 && info->numPings >= info->maxPings)
     return;
 
   if (info->requireSameHost) {
@@ -5565,11 +5565,19 @@ nsDocShell::GetVisibility(bool * aVisibility)
             return NS_OK;
         }
 
-        nsIContent *shellContent =
-            pPresShell->GetDocument()->FindContentForSubDocument(presShell->GetDocument());
-        NS_ASSERTION(shellContent, "subshell not in the map");
+        vm = presShell->GetViewManager();
+        if (vm) {
+          view = vm->GetRootView();
+        }
 
-        nsIFrame* frame = shellContent ? shellContent->GetPrimaryFrame() : nullptr;
+        if (view) {
+          view = view->GetParent(); // anonymous inner view
+          if (view) {
+            view = view->GetParent(); // subdocumentframe's view
+          }
+        }
+
+        nsIFrame* frame = view ? view->GetFrame() : nullptr;
         bool isDocShellOffScreen = false;
         docShell->GetIsOffScreenBrowser(&isDocShellOffScreen);
         if (frame &&
@@ -7203,7 +7211,7 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
         }
     } // if we have a host
     else if (url && NS_SUCCEEDED(aStatus)) {
-        mozilla::net::SeerLearnRedirect(url, aChannel, this);
+        mozilla::net::PredictorLearnRedirect(url, aChannel, this);
     }
 
     return NS_OK;
@@ -9595,8 +9603,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     else
       srcdoc = NullString();
 
-    mozilla::net::SeerPredict(aURI, nullptr, nsINetworkSeer::PREDICT_LOAD,
-                              this, nullptr);
+    mozilla::net::PredictorPredict(aURI, nullptr,
+                                   nsINetworkPredictor::PREDICT_LOAD,
+                                   this, nullptr);
 
     nsCOMPtr<nsIRequest> req;
     rv = DoURILoad(aURI, aReferrer,
@@ -12725,8 +12734,9 @@ nsDocShell::OnOverLink(nsIContent* aContent,
   rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);    
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mozilla::net::SeerPredict(aURI, mCurrentURI, nsINetworkSeer::PREDICT_LINK,
-                            this, nullptr);
+  mozilla::net::PredictorPredict(aURI, mCurrentURI,
+                                 nsINetworkPredictor::PREDICT_LINK,
+                                 this, nullptr);
 
   if (browserChrome2) {
     nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aContent);
@@ -13042,4 +13052,30 @@ void
 nsDocShell::SetInvisible(bool aInvisible)
 {
     mInvisible = aInvisible;
+}
+
+void
+nsDocShell::SetOpener(nsITabParent* aOpener)
+{
+  mOpener = do_GetWeakReference(aOpener);
+}
+
+nsITabParent*
+nsDocShell::GetOpener()
+{
+  nsCOMPtr<nsITabParent> opener(do_QueryReferent(mOpener));
+  return opener;
+}
+
+void
+nsDocShell::SetOpenedRemote(nsITabParent* aOpenedRemote)
+{
+  mOpenedRemote = do_GetWeakReference(aOpenedRemote);
+}
+
+nsITabParent*
+nsDocShell::GetOpenedRemote()
+{
+  nsCOMPtr<nsITabParent> openedRemote(do_QueryReferent(mOpenedRemote));
+  return openedRemote;
 }

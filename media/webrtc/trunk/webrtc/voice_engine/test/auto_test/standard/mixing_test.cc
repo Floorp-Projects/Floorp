@@ -9,9 +9,9 @@
  */
 
 #include <stdio.h>
-
 #include <string>
 
+#include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/voice_engine/test/auto_test/fixtures/after_initialization_fixture.h"
 
@@ -22,15 +22,13 @@ const int16_t kLimiterHeadroom = 29204;  // == -1 dbFS
 const int16_t kInt16Max = 0x7fff;
 const int kSampleRateHz = 16000;
 const int kTestDurationMs = 3000;
-const int kSkipOutputMs = 500;
 
 }  // namespace
 
 class MixingTest : public AfterInitializationFixture {
  protected:
   MixingTest()
-    : input_filename_(test::OutputPath() + "mixing_test_input.pcm"),
-      output_filename_(test::OutputPath() + "mixing_test_output.pcm") {
+      : output_filename_(test::OutputPath() + "mixing_test_output.pcm") {
   }
   void SetUp() {
     transport_ = new LoopBackTransport(voe_network_);
@@ -53,12 +51,18 @@ class MixingTest : public AfterInitializationFixture {
   void RunMixingTest(int num_remote_streams,
                      int num_local_streams,
                      int num_remote_streams_using_mono,
+                     bool real_audio,
                      int16_t input_value,
                      int16_t max_output_value,
                      int16_t min_output_value) {
     ASSERT_LE(num_remote_streams_using_mono, num_remote_streams);
 
-    GenerateInputFile(input_value);
+    if (real_audio) {
+      input_filename_ = test::ResourcePath("voice_engine/audio_long16", "pcm");
+    } else {
+      input_filename_ = test::OutputPath() + "mixing_test_input.pcm";
+      GenerateInputFile(input_value);
+    }
 
     std::vector<int> local_streams(num_local_streams);
     for (size_t i = 0; i < local_streams.size(); ++i) {
@@ -76,25 +80,30 @@ class MixingTest : public AfterInitializationFixture {
     StartRemoteStreams(remote_streams, num_remote_streams_using_mono);
     TEST_LOG("Playing %d remote streams.\n", num_remote_streams);
 
+    // Give it plenty of time to get started.
+    SleepMs(1000);
+
     // Start recording the mixed output and wait.
     EXPECT_EQ(0, voe_file_->StartRecordingPlayout(-1 /* record meeting */,
         output_filename_.c_str()));
-    Sleep(kTestDurationMs);
+    SleepMs(kTestDurationMs);
     EXPECT_EQ(0, voe_file_->StopRecordingPlayout(-1));
 
     StopLocalStreams(local_streams);
     StopRemoteStreams(remote_streams);
 
-    VerifyMixedOutput(max_output_value, min_output_value);
+    if (!real_audio) {
+      VerifyMixedOutput(max_output_value, min_output_value);
+    }
   }
 
  private:
   // Generate input file with constant values equal to |input_value|. The file
-  // will be one second longer than the duration of the test.
+  // will be twice the duration of the test.
   void GenerateInputFile(int16_t input_value) {
     FILE* input_file = fopen(input_filename_.c_str(), "wb");
     ASSERT_TRUE(input_file != NULL);
-    for (int i = 0; i < kSampleRateHz / 1000 * (kTestDurationMs + 1000); i++) {
+    for (int i = 0; i < kSampleRateHz / 1000 * (kTestDurationMs * 2); i++) {
       ASSERT_EQ(1u, fwrite(&input_value, sizeof(input_value), 1, input_file));
     }
     ASSERT_EQ(0, fclose(input_file));
@@ -105,9 +114,6 @@ class MixingTest : public AfterInitializationFixture {
     FILE* output_file = fopen(output_filename_.c_str(), "rb");
     ASSERT_TRUE(output_file != NULL);
     int16_t output_value = 0;
-    // Skip the first segment to avoid initialization and ramping-in effects.
-    EXPECT_EQ(0, fseek(output_file, sizeof(output_value) *
-                       kSampleRateHz / 1000 * kSkipOutputMs, SEEK_SET));
     int samples_read = 0;
     while (fread(&output_value, sizeof(output_value), 1, output_file) == 1) {
       samples_read++;
@@ -117,11 +123,10 @@ class MixingTest : public AfterInitializationFixture {
       EXPECT_LE(output_value, max_output_value);
       EXPECT_GE(output_value, min_output_value);
     }
-    // Ensure the recording length is close to the duration of the test.
-    // We have to use a relaxed tolerance here due to filesystem flakiness on
-    // the bots.
-    ASSERT_GE((samples_read * 1000.0) / kSampleRateHz,
-              0.7 * (kTestDurationMs - kSkipOutputMs));
+    // Ensure we've at least recorded half as much file as the duration of the
+    // test. We have to use a relaxed tolerance here due to filesystem flakiness
+    // on the bots.
+    ASSERT_GE((samples_read * 1000.0) / kSampleRateHz, 0.5 * kTestDurationMs);
     // Ensure we read the entire file.
     ASSERT_NE(0, feof(output_file));
     ASSERT_EQ(0, fclose(output_file));
@@ -157,6 +162,10 @@ class MixingTest : public AfterInitializationFixture {
     codec_inst.rate = codec_inst.plfreq * sizeof(int16_t) * 8;  // 8 bits/byte.
 
     for (int i = 0; i < num_remote_streams_using_mono; ++i) {
+      // Add some delay between starting up the channels in order to give them
+      // different energies in the "real audio" test and hopefully exercise
+      // more code paths.
+      SleepMs(50);
       StartRemoteStream(streams[i], codec_inst, 1234 + 2 * i);
     }
 
@@ -190,63 +199,71 @@ class MixingTest : public AfterInitializationFixture {
     }
   }
 
-  const std::string input_filename_;
+  std::string input_filename_;
   const std::string output_filename_;
   LoopBackTransport* transport_;
 };
 
+// This test has no verification, but exercises additional code paths in a
+// somewhat more realistic scenario using real audio. It can at least hunt for
+// asserts and crashes.
+TEST_F(MixingTest, MixManyChannelsForStress) {
+  RunMixingTest(10, 0, 10, true, 0, 0, 0);
+}
+
 // These tests assume a maximum of three mixed participants. We typically allow
 // a +/- 10% range around the expected output level to account for distortion
 // from coding and processing in the loopback chain.
-TEST_F(MixingTest, DISABLED_FourChannelsWithOnlyThreeMixed) {
+TEST_F(MixingTest, FourChannelsWithOnlyThreeMixed) {
   const int16_t kInputValue = 1000;
   const int16_t kExpectedOutput = kInputValue * 3;
-  RunMixingTest(4, 0, 4, kInputValue, 1.1 * kExpectedOutput,
+  RunMixingTest(4, 0, 4, false, kInputValue, 1.1 * kExpectedOutput,
                 0.9 * kExpectedOutput);
 }
 
 // Ensure the mixing saturation protection is working. We can do this because
 // the mixing limiter is given some headroom, so the expected output is less
 // than full scale.
-TEST_F(MixingTest, DISABLED_VerifySaturationProtection) {
+TEST_F(MixingTest, VerifySaturationProtection) {
   const int16_t kInputValue = 20000;
   const int16_t kExpectedOutput = kLimiterHeadroom;
   // If this isn't satisfied, we're not testing anything.
   ASSERT_GT(kInputValue * 3, kInt16Max);
   ASSERT_LT(1.1 * kExpectedOutput, kInt16Max);
-  RunMixingTest(3, 0, 3, kInputValue, 1.1 * kExpectedOutput,
+  RunMixingTest(3, 0, 3, false, kInputValue, 1.1 * kExpectedOutput,
                0.9 * kExpectedOutput);
 }
 
-TEST_F(MixingTest, DISABLED_SaturationProtectionHasNoEffectOnOneChannel) {
+TEST_F(MixingTest, SaturationProtectionHasNoEffectOnOneChannel) {
   const int16_t kInputValue = kInt16Max;
   const int16_t kExpectedOutput = kInt16Max;
   // If this isn't satisfied, we're not testing anything.
   ASSERT_GT(0.95 * kExpectedOutput, kLimiterHeadroom);
   // Tighter constraints are required here to properly test this.
-  RunMixingTest(1, 0, 1, kInputValue, kExpectedOutput,
+  RunMixingTest(1, 0, 1, false, kInputValue, kExpectedOutput,
                 0.95 * kExpectedOutput);
 }
 
-TEST_F(MixingTest, DISABLED_VerifyAnonymousAndNormalParticipantMixing) {
+TEST_F(MixingTest, VerifyAnonymousAndNormalParticipantMixing) {
   const int16_t kInputValue = 1000;
   const int16_t kExpectedOutput = kInputValue * 2;
-  RunMixingTest(1, 1, 1, kInputValue, 1.1 * kExpectedOutput,
+  RunMixingTest(1, 1, 1, false, kInputValue, 1.1 * kExpectedOutput,
                 0.9 * kExpectedOutput);
 }
 
-TEST_F(MixingTest, DISABLED_AnonymousParticipantsAreAlwaysMixed) {
+TEST_F(MixingTest, AnonymousParticipantsAreAlwaysMixed) {
   const int16_t kInputValue = 1000;
   const int16_t kExpectedOutput = kInputValue * 4;
-  RunMixingTest(3, 1, 3, kInputValue, 1.1 * kExpectedOutput,
+  RunMixingTest(3, 1, 3, false, kInputValue, 1.1 * kExpectedOutput,
                 0.9 * kExpectedOutput);
 }
 
-TEST_F(MixingTest, DISABLED_VerifyStereoAndMonoMixing) {
+TEST_F(MixingTest, VerifyStereoAndMonoMixing) {
   const int16_t kInputValue = 1000;
   const int16_t kExpectedOutput = kInputValue * 2;
-  RunMixingTest(2, 0, 1, kInputValue, 1.1 * kExpectedOutput,
-                0.9 * kExpectedOutput);
+  RunMixingTest(2, 0, 1, false, kInputValue, 1.1 * kExpectedOutput,
+                // Lower than 0.9 due to observed flakiness on bots.
+                0.8 * kExpectedOutput);
 }
 
 }  // namespace webrtc

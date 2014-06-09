@@ -283,11 +283,9 @@ select[disabled] > button {
 *:-moz-any-link:active,
 *[role=button]:active,
 button:active,
-input:active,
 option:active,
 select:active,
-label:active,
-textarea:active {
+label:active {
   background-color: rgba(141, 184, 216, 0.5);
 }
 

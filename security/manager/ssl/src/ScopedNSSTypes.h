@@ -7,6 +7,7 @@
 #ifndef mozilla_ScopedNSSTypes_h
 #define mozilla_ScopedNSSTypes_h
 
+#include "NSSErrorsService.h"
 #include "mozilla/Likely.h"
 #include "mozilla/mozalloc_oom.h"
 #include "mozilla/Scoped.h"
@@ -42,37 +43,22 @@ inline const uint8_t *
 uint8_t_ptr_cast(const char * p) { return reinterpret_cast<const uint8_t*>(p); }
 
 // NSPR APIs use PRStatus/PR_GetError and NSS APIs use SECStatus/PR_GetError to
-// report success/failure. These funtions make it more convenient and *safer*
-// to translate NSPR/NSS results to nsresult. They are safer because they
-// refuse to traslate any bad PRStatus/SECStatus into an NS_OK, even when the
-// NSPR/NSS function forgot to call PR_SetError.
-
-// IMPORTANT: This must be called immediately after the function that set the
-// error code. Prefer using MapSECStatus to this.
-inline nsresult
-PRErrorCode_to_nsresult(PRErrorCode error)
-{
-  if (!error) {
-    MOZ_CRASH("Function failed without calling PR_GetError");
-  }
-
-  // From NSSErrorsService::GetXPCOMFromNSSError
-  // XXX Don't make up nsresults, it's supposed to be an enum (bug 778113)
-  return (nsresult)NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_SECURITY,
-                                             -1 * error);
-}
-
+// report success/failure. This funtion makes it more convenient and *safer*
+// to translate NSPR/NSS results to nsresult. It is safer because it
+// refuses to traslate any bad PRStatus/SECStatus into an NS_OK, even when the
+// NSPR/NSS function forgot to call PR_SetError. The actual enforcement of
+// this happens in mozilla::psm::GetXPCOMFromNSSError.
 // IMPORTANT: This must be called immediately after the function returning the
 // SECStatus result. The recommended usage is:
 //    nsresult rv = MapSECStatus(f(x, y, z));
 inline nsresult
 MapSECStatus(SECStatus rv)
 {
-  if (rv == SECSuccess)
+  if (rv == SECSuccess) {
     return NS_OK;
+  }
 
-  PRErrorCode error = PR_GetError();
-  return PRErrorCode_to_nsresult(error);
+  return mozilla::psm::GetXPCOMFromNSSError(PR_GetError());
 }
 
 // Alphabetical order by NSS type

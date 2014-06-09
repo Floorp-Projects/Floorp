@@ -24,7 +24,7 @@ interface nsIVariant;
  * @see <http://www.whatwg.org/html/#window>
  */
 
-[scriptable, uuid(fbefa573-0ba2-4d15-befb-d60277643a0b)]
+[scriptable, uuid(d4316591-d16e-405c-8093-b441cbef3230)]
 interface nsIDOMWindow : nsISupports
 {
   // the current browsing context
@@ -151,7 +151,11 @@ interface nsIDOMWindow : nsISupports
   }
   %}
 
-           attribute nsIDOMWindow                       opener;
+  [implicit_jscontext, binaryname(ScriptableOpener)]
+           attribute jsval                              opener;
+
+  [noscript, binaryname(Opener)]
+           attribute nsIDOMWindow                       openerWindow;
 
   /**
    * |frameElement| gets this window's <iframe> or <frame> element, if it has

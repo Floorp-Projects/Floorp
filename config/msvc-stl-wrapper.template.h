@@ -36,13 +36,13 @@
 #  error "STL code can only be used with infallible ::operator new()"
 #endif
 
-#ifdef DEBUG
+#ifdef _DEBUG
 // From
 //   http://msdn.microsoft.com/en-us/library/aa985982%28VS.80%29.aspx
 // and
 //   http://msdn.microsoft.com/en-us/library/aa985965%28VS.80%29.aspx
 // there appear to be two types of STL container checking.  The
-// former is enabled by -D_DEBUG (which is implied by -DDEBUG), and
+// former is enabled by -D_DEBUG (which is implied by -MDd or -MTd), and
 // looks to be full generation/mutation checked iterators as done by
 // _GLIBCXX_DEBUG.  The latter appears to just be bounds checking, and
 // is enabled by the following macros.  It appears that the _DEBUG

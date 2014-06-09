@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=377413
+-->
+<head>
+  <title>Test for Bug 377413</title>
+  <script type="text/javascript" src="/resources/testharness.js"></script>
+  <link rel='stylesheet' href='/resources/testharness.css'>
+  <script type="text/javascript" src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=377413">Mozilla Bug 377413</a>
+<p id="log"></p>
+<div id="content">
+      <form>
+        <table>
+            <tbody>
+            </tbody>
+        </table>
+    </form>
+</div>
+
+<script type="text/javascript">
+
+/** Tests for Bug 377413 **/
+var tb = document.getElementsByTagName('tbody')[0];
+
+test(function(){
+    tb.innerHTML = '<tr><td><input name="fooboo"></td></tr>';
+    document.forms[0].fooboo.value = 'testme';
+    document.getElementsByTagName('table')[0].deleteRow(0);
+    assert_equals(document.forms[0].fooboo, undefined);
+}, "no element reference after deleting it with deleteRow()");
+
+test(function(){
+    var b = tb.appendChild(document.createElement('tr')).appendChild(document.createElement('td')).appendChild(document.createElement('button'));
+    b.name = b.value = 'boofoo';
+    assert_equals(document.forms[0].elements[0].value, 'boofoo');
+}, 'element value set correctly');
+
+test(function(){
+    assert_true('boofoo' in document.forms[0]);
+}, 'element name has created property on form');
+
+test(function(){
+    tb.innerHTML = '';
+    assert_false('boofoo' in document.forms[0]);
+}, "no element reference after deleting it by setting innerHTML");
+
+
+</script>
+</body>
+</html>

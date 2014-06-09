@@ -13,7 +13,7 @@ let { RootActor } = require("devtools/server/actors/root");
 let { AddonThreadActor, ThreadActor } = require("devtools/server/actors/script");
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
-let { dbg_assert, dumpn } = DevToolsUtils;
+let { dbg_assert } = DevToolsUtils;
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -568,12 +568,41 @@ TabActor.prototype = {
   },
 
   /**
+   * Getter for the list of all docshell in this tabActor
+   * @return {Array}
+   */
+  get docShells() {
+    let docShellsEnum = this.docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let docShells = [];
+    while (docShellsEnum.hasMoreElements()) {
+      docShells.push(docShellsEnum.getNext());
+    }
+
+    return docShells;
+  },
+
+  /**
    * Getter for the tab content's DOM window.
    */
   get window() {
     return this.docShell
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindow);
+  },
+
+  /**
+   * Getter for the list of all content DOM windows in this tabActor
+   * @return {Array}
+   */
+  get windows() {
+    return this.docShells.map(docShell => {
+      return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
+    });
   },
 
   /**
@@ -740,7 +769,7 @@ TabActor.prototype = {
   /**
    * Does the actual work of detaching from a tab.
    *
-   * @returns false if the tab wasn't attached or true of detahing succeeds.
+   * @returns false if the tab wasn't attached or true of detaching succeeds.
    */
   _detach: function BTA_detach() {
     if (!this.attached) {
@@ -752,6 +781,7 @@ TabActor.prototype = {
     if (this.docShell) {
       this._progressListener.unwatch(this.docShell);
     }
+    this._progressListener.destroy();
     this._progressListener = null;
 
     this._popContext();
@@ -798,10 +828,12 @@ TabActor.prototype = {
    * Reload the page in this tab.
    */
   onReload: function(aRequest) {
+    let force = aRequest && aRequest.options && aRequest.options.force;
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     Services.tm.currentThread.dispatch(DevToolsUtils.makeInfallible(() => {
-      this.window.location.reload();
+      this.webNavigation.reload(force ? Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE
+                                      : Ci.nsIWebNavigation.LOAD_FLAGS_NONE);
     }, "TabActor.prototype.onReload's delayed body"), 0);
     return {};
   },
@@ -945,7 +977,6 @@ TabActor.prototype = {
    */
   _windowReady: function (window) {
     let isTopLevel = window == this.window;
-    dumpn("window-ready: " + window.location + " isTopLevel:" + isTopLevel);
 
     events.emit(this, "window-ready", {
       window: window,
@@ -970,6 +1001,13 @@ TabActor.prototype = {
     }
   },
 
+  _windowDestroyed: function (window) {
+    events.emit(this, "window-destroyed", {
+      window: window,
+      isTopLevel: window == this.window
+    });
+  },
+
   /**
    * Start notifying server codebase and client about a new document
    * being loaded in the currently targeted context.
@@ -988,7 +1026,6 @@ TabActor.prototype = {
       newURI: newURI,
       request: request
     });
-
 
     // We don't do anything for inner frames in TabActor.
     // (we will only update thread actor on window-ready)
@@ -1390,6 +1427,15 @@ BrowserAddonActor.prototype.requestTypes = {
 function DebuggerProgressListener(aTabActor) {
   this._tabActor = aTabActor;
   this._onWindowCreated = this.onWindowCreated.bind(this);
+  this._onWindowHidden = this.onWindowHidden.bind(this);
+
+  // Watch for windows destroyed (global observer that will need filtering)
+  Services.obs.addObserver(this, "inner-window-destroyed", false);
+
+  // XXX: for now we maintain the list of windows we know about in this instance
+  // so that we can discriminate windows we care about when observing
+  // inner-window-destroyed events. Bug 1016952 would remove the need for this.
+  this._knownWindowIDs = new Map();
 }
 
 DebuggerProgressListener.prototype = {
@@ -1399,7 +1445,13 @@ DebuggerProgressListener.prototype = {
     Ci.nsISupports,
   ]),
 
-  watch: function DPL_watch(docShell) {
+  destroy: function() {
+    Services.obs.removeObserver(this, "inner-window-destroyed", false);
+    this._knownWindowIDs.clear();
+    this._knownWindowIDs = null;
+  },
+
+  watch: function(docShell) {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATUS |
@@ -1407,52 +1459,116 @@ DebuggerProgressListener.prototype = {
                                           Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
 
     // TODO: fix docShell.chromeEventHandler in child processes!
-    let chromeEventHandler = docShell.chromeEventHandler ||
-                             docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIContentFrameMessageManager);
+    let handler = docShell.chromeEventHandler ||
+                  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIContentFrameMessageManager);
 
-    // Watch for globals being created in this docshell tree.
-    chromeEventHandler.addEventListener("DOMWindowCreated",
-                                        this._onWindowCreated, true);
-    chromeEventHandler.addEventListener("pageshow",
-                                        this._onWindowCreated, true);
+    handler.addEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    handler.addEventListener("pageshow", this._onWindowCreated, true);
+    handler.addEventListener("pagehide", this._onWindowHidden, true);
+
+    // Dispatch the _windowReady event on the tabActor for pre-existing windows
+    for (let win of this._getWindowsInDocShell(docShell)) {
+      this._tabActor._windowReady(win);
+      this._knownWindowIDs.set(this._getWindowID(win), win);
+    }
   },
 
-  unwatch: function DPL_unwatch(docShell) {
+  unwatch: function(docShell) {
     let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                               .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(this);
 
     // TODO: fix docShell.chromeEventHandler in child processes!
-    let chromeEventHandler = docShell.chromeEventHandler ||
-                             docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                                     .getInterface(Ci.nsIContentFrameMessageManager);
-    chromeEventHandler.removeEventListener("DOMWindowCreated",
-                                           this._onWindowCreated, true);
-    chromeEventHandler.removeEventListener("pageshow",
-                                           this._onWindowCreated, true);
+    let handler = docShell.chromeEventHandler ||
+                  docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIContentFrameMessageManager);
+
+    handler.removeEventListener("DOMWindowCreated", this._onWindowCreated, true);
+    handler.removeEventListener("pageshow", this._onWindowCreated, true);
+    handler.removeEventListener("pagehide", this._onWindowHidden, true);
+
+    for (let win of this._getWindowsInDocShell(docShell)) {
+      this._knownWindowIDs.delete(this._getWindowID(win));
+    }
   },
 
-  onWindowCreated:
-  DevToolsUtils.makeInfallible(function DPL_onWindowCreated(evt) {
-    // Ignore any event if the tab actor isn't attached.
+  _getWindowsInDocShell: function(docShell) {
+    let docShellsEnum = docShell.getDocShellEnumerator(
+      Ci.nsIDocShellTreeItem.typeAll,
+      Ci.nsIDocShell.ENUMERATE_FORWARDS
+    );
+
+    let windows = [];
+    while (docShellsEnum.hasMoreElements()) {
+      let w = docShellsEnum.getNext().QueryInterface(Ci.nsIInterfaceRequestor)
+                                     .getInterface(Ci.nsIDOMWindow);
+      windows.push(w);
+    }
+    return windows;
+  },
+
+  _getWindowID: function(window) {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIDOMWindowUtils)
+                 .currentInnerWindowID;
+  },
+
+  onWindowCreated: DevToolsUtils.makeInfallible(function(evt) {
     if (!this._tabActor.attached) {
       return;
     }
 
     // pageshow events for non-persisted pages have already been handled by a
-    // prior DOMWindowCreated event.
+    // prior DOMWindowCreated event. For persisted pages, act as if the window
+    // had just been created since it's been unfrozen from bfcache.
     if (evt.type == "pageshow" && !evt.persisted) {
       return;
     }
 
     let window = evt.target.defaultView;
     this._tabActor._windowReady(window);
+
+    if (evt.type !== "pageshow") {
+      this._knownWindowIDs.set(this._getWindowID(window), window);
+    }
   }, "DebuggerProgressListener.prototype.onWindowCreated"),
 
+  onWindowHidden: DevToolsUtils.makeInfallible(function(evt) {
+    if (!this._tabActor.attached) {
+      return;
+    }
+
+    // Only act as if the window has been destroyed if the 'pagehide' event
+    // was sent for a persisted window (persisted is set when the page is put
+    // and frozen in the bfcache). If the page isn't persisted, the observer's
+    // inner-window-destroyed event will handle it.
+    if (!evt.persisted) {
+      return;
+    }
+
+    let window = evt.target.defaultView;
+    this._tabActor._windowDestroyed(window);
+  }, "DebuggerProgressListener.prototype.onWindowHidden"),
+
+  observe: DevToolsUtils.makeInfallible(function(subject, topic) {
+    if (!this._tabActor.attached) {
+      return;
+    }
+
+    // Because this observer will be called for all inner-window-destroyed in
+    // the application, we need to filter out events for windows we are not
+    // watching
+    let innerID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+    let window = this._knownWindowIDs.get(innerID);
+    if (window) {
+      this._knownWindowIDs.delete(innerID);
+      this._tabActor._windowDestroyed(window);
+    }
+  }, "DebuggerProgressListener.prototype.observe"),
+
   onStateChange:
-  DevToolsUtils.makeInfallible(function DPL_onStateChange(aProgress, aRequest, aFlag, aStatus) {
-    // Ignore any event if the tab actor isn't attached.
+  DevToolsUtils.makeInfallible(function(aProgress, aRequest, aFlag, aStatus) {
     if (!this._tabActor.attached) {
       return;
     }

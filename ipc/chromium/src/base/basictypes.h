@@ -154,6 +154,15 @@ inline To implicit_cast(From const &f) {
   return f;
 }
 
+// The COMPILE_ASSERT macro (below) creates an otherwise-unused typedef.  This
+// triggers compiler warnings with gcc 4.8 and higher, so mark the typedef
+// as permissibly-unused to disable the warnings.
+#  if defined(__GNUC__)
+#    define COMPILE_ASSERT_UNUSED_ATTRIBUTE __attribute__((unused))
+#  else
+#    define COMPILE_ASSERT_UNUSED_ATTRIBUTE /* nothing */
+#  endif
+
 // The COMPILE_ASSERT macro can be used to verify that a compile time
 // expression is true. For example, you could use it to verify the
 // size of a static array:
@@ -169,13 +178,16 @@ inline To implicit_cast(From const &f) {
 // the expression is false, most compilers will issue a warning/error
 // containing the name of the variable.
 
+// Avoid multiple definitions for webrtc
+#if !defined(COMPILE_ASSERT)
 template <bool>
 struct CompileAssert {
 };
 
-#undef COMPILE_ASSERT
 #define COMPILE_ASSERT(expr, msg) \
-  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1]
+  typedef CompileAssert<(bool(expr))> msg[bool(expr) ? 1 : -1] \
+  COMPILE_ASSERT_UNUSED_ATTRIBUTE
+#endif
 
 // Implementation details of COMPILE_ASSERT:
 //

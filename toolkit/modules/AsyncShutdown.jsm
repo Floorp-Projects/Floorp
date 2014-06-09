@@ -107,15 +107,15 @@ function err(msg, error = null) {
 // of a blocker.
 // We are a little paranoid here to ensure that in case of evaluation
 // error we do not block the AsyncShutdown.
-function safeGetState(state) {
-  if (!state) {
+function safeGetState(fetchState) {
+  if (!fetchState) {
     return "(none)";
   }
   let data, string;
   try {
-    // Evaluate state(), normalize the result into something that we can
+    // Evaluate fetchState(), normalize the result into something that we can
     // safely stringify or upload.
-    string = JSON.stringify(state());
+    string = JSON.stringify(fetchState());
     data = JSON.parse(string);
     // Simplify the rest of the code by ensuring that we can simply
     // concatenate the result to a message.
@@ -215,7 +215,7 @@ function getPhase(topic) {
      * resulting promise is either resolved or rejected. If
      * |condition| is not a function but another value |v|, it behaves
      * as if it were a function returning |v|.
-     * @param {function*} state Optionally, a function returning
+     * @param {function*} fetchState Optionally, a function returning
      * information about the current state of the blocker as an
      * object. Used for providing more details when logging errors or
      * crashing.
@@ -241,8 +241,8 @@ function getPhase(topic) {
      *       // No specific guarantee about completion of profileBeforeChange
      * });
      */
-    addBlocker: function(name, condition, state = null) {
-      spinner.addBlocker(name, condition, state);
+    addBlocker: function(name, condition, fetchState = null) {
+      spinner.addBlocker(name, condition, fetchState);
     },
     /**
      * Remove the blocker for a condition.
@@ -306,8 +306,8 @@ Spinner.prototype = {
    * we wait until the promise is resolved/rejected before proceeding
    * to the next runstate.
    */
-  addBlocker: function(name, condition, state) {
-    this._barrier.client.addBlocker(name, condition, state);
+  addBlocker: function(name, condition, fetchState) {
+    this._barrier.client.addBlocker(name, condition, fetchState);
   },
   /**
    * Remove the blocker for a condition.
@@ -364,7 +364,7 @@ function Barrier(name) {
    * The set of conditions registered by clients, as a map.
    *
    * Key: condition (function)
-   * Value: Array of {name: string, state: function}
+   * Value: Array of {name: string, fetchState: function}
    */
   this._conditions = new Map();
 
@@ -411,16 +411,16 @@ function Barrier(name) {
      * resulting promise is either resolved or rejected. If
      * |condition| is not a function but another value |v|, it behaves
      * as if it were a function returning |v|.
-     * @param {function*} state Optionally, a function returning
+     * @param {function*} fetchState Optionally, a function returning
      * information about the current state of the blocker as an
      * object. Used for providing more details when logging errors or
      * crashing.
      */
-    addBlocker: function(name, condition, state) {
+    addBlocker: function(name, condition, fetchState) {
       if (typeof name != "string") {
         throw new TypeError("Expected a human-readable name as first argument");
       }
-      if (state && typeof state != "function") {
+      if (fetchState && typeof fetchState != "function") {
         throw new TypeError("Expected nothing or a function as third argument");
       }
       if (!this._conditions) {
@@ -428,12 +428,22 @@ function Barrier(name) {
 			" has already begun, it is too late to register" +
 			" completion condition '" + name + "'.");
       }
+
+      // Determine the filename and line number of the caller.
+      let leaf = Components.stack;
+      let frame;
+      for (frame = leaf; frame != null && frame.filename == leaf.filename; frame = frame.caller) {
+        // Climb up the stack
+      }
       let set = this._conditions.get(condition);
       if (!set) {
         set = [];
         this._conditions.set(condition, set);
       }
-      set.push({name: name, state: state});
+      set.push({name: name,
+                fetchState: fetchState,
+                filename: frame ? frame.filename : "?",
+                lineNumber: frame ? frame.lineNumber : -1});
     }.bind(this),
 
     /**
@@ -480,9 +490,12 @@ Barrier.prototype = Object.freeze({
       return "Complete";
     }
     let frozen = [];
-    for (let {name, isComplete, state} of this._monitors) {
+    for (let {name, isComplete, fetchState, filename, lineNumber} of this._monitors) {
       if (!isComplete) {
-        frozen.push({name: name, state: safeGetState(state)});
+        frozen.push({name: name,
+                     state: safeGetState(fetchState),
+                     filename: filename,
+                     lineNumber: lineNumber});
       }
     }
     return frozen;
@@ -536,7 +549,7 @@ Barrier.prototype = Object.freeze({
     for (let _condition of conditions.keys()) {
       for (let current of conditions.get(_condition)) {
         let condition = _condition; // Avoid capturing the wrong variable
-        let {name, state} = current;
+        let {name, fetchState, filename, lineNumber} = current;
 
         // An indirection on top of condition, used to let clients
         // cancel a blocker through removeBlocker.
@@ -565,7 +578,9 @@ Barrier.prototype = Object.freeze({
           let monitor = {
             isComplete: false,
             name: name,
-            state: state
+            fetchState: fetchState,
+            filename: filename,
+            lineNumber: lineNumber
           };
 
 	  condition = condition.then(null, function onError(error) {
@@ -573,7 +588,7 @@ Barrier.prototype = Object.freeze({
               " while we were spinning the event loop." +
 	      " Condition: " + name +
               " Phase: " + topic +
-              " State: " + safeGetState(state);
+              " State: " + safeGetState(fetchState);
 	    warn(msg, error);
 	  });
           condition.then(() => indirection.resolve());
@@ -587,7 +602,7 @@ Barrier.prototype = Object.freeze({
                   " while we were initializing the phase." +
                   " Condition: " + name +
                   " Phase: " + topic +
-                  " State: " + safeGetState(state);
+                  " State: " + safeGetState(fetchState);
             warn(msg, error);
         }
 
@@ -669,12 +684,16 @@ Barrier.prototype = Object.freeze({
 	  // Report the problem as best as we can, then crash.
 	  let state = this.state;
 
-	  let msg = "At least one completion condition failed to complete" +
+          // If you change the following message, please make sure
+          // that any information on the topic and state appears
+          // within the first 200 characters of the message. This
+          // helps automatically sort oranges.
+          let msg = "AsyncShutdown timeout in " + topic +
+            " Conditions: " + JSON.stringify(state) +
+            " At least one completion condition failed to complete" +
 	    " within a reasonable amount of time. Causing a crash to" +
 	    " ensure that we do not leave the user with an unresponsive" +
-	    " process draining resources." +
-	    " Conditions: " + JSON.stringify(state) +
-	    " Barrier: " + topic;
+	    " process draining resources.";
 	  err(msg);
 	  if (gCrashReporter && gCrashReporter.enabled) {
             let data = {
@@ -682,13 +701,27 @@ Barrier.prototype = Object.freeze({
               conditions: state
 	    };
             gCrashReporter.annotateCrashReport("AsyncShutdownTimeout",
-            JSON.stringify(data));
+              JSON.stringify(data));
 	  } else {
             warn("No crash reporter available");
 	  }
 
-	  let error = new Error();
-	  gDebug.abort(error.fileName, error.lineNumber + 1);
+          // To help sorting out bugs, we want to make sure that the
+          // call to nsIDebug.abort points to a guilty client, rather
+          // than to AsyncShutdown itself. We search through all the
+          // clients until we find one that is guilty and use its
+          // filename/lineNumber, which have been determined during
+          // the call to `addBlocker`.
+          let filename = "?";
+          let lineNumber = -1;
+          for (let monitor of this._monitors) {
+            if (monitor.isComplete) {
+              continue;
+            }
+            filename = monitor.filename;
+            lineNumber = monitor.lineNumber;
+          }
+	  gDebug.abort(filename, lineNumber);
         }.bind(this),
 	  function onSatisfied() {
             // The promise has been rejected, which means that we have satisfied
@@ -697,7 +730,7 @@ Barrier.prototype = Object.freeze({
 
       promise = promise.then(function() {
         timeToCrash.reject();
-      }.bind(this)/* No error is possible here*/);
+      }/* No error is possible here*/);
     }
 
     return promise;

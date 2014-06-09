@@ -19,11 +19,29 @@
 namespace webrtc {
 
 TEST(TimeStretch, CreateAndDestroy) {
-  int sample_rate = 8000;
-  size_t num_channels = 1;
-  BackgroundNoise bgn(num_channels);
-  Accelerate accelerate(sample_rate, num_channels, bgn);
-  PreemptiveExpand preemptive_expand(sample_rate, num_channels, bgn);
+  const int kSampleRate = 8000;
+  const size_t kNumChannels = 1;
+  BackgroundNoise bgn(kNumChannels);
+  Accelerate accelerate(kSampleRate, kNumChannels, bgn);
+  PreemptiveExpand preemptive_expand(kSampleRate, kNumChannels, bgn);
+}
+
+TEST(TimeStretch, CreateUsingFactory) {
+  const int kSampleRate = 8000;
+  const size_t kNumChannels = 1;
+  BackgroundNoise bgn(kNumChannels);
+
+  AccelerateFactory accelerate_factory;
+  Accelerate* accelerate =
+      accelerate_factory.Create(kSampleRate, kNumChannels, bgn);
+  EXPECT_TRUE(accelerate != NULL);
+  delete accelerate;
+
+  PreemptiveExpandFactory preemptive_expand_factory;
+  PreemptiveExpand* preemptive_expand =
+      preemptive_expand_factory.Create(kSampleRate, kNumChannels, bgn);
+  EXPECT_TRUE(preemptive_expand != NULL);
+  delete preemptive_expand;
 }
 
 // TODO(hlundin): Write more tests.

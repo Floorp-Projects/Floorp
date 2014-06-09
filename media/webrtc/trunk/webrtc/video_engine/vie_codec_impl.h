@@ -43,12 +43,12 @@ class ViECodecImpl
     unsigned char config_parameters[kConfigParameterSize],
     unsigned char& config_parameters_size) const;
   virtual int SetImageScaleStatus(const int video_channel, const bool enable);
-  virtual int GetSendCodecStastistics(const int video_channel,
-                                      unsigned int& key_frames,
-                                      unsigned int& delta_frames) const;
-  virtual int GetReceiveCodecStastistics(const int video_channel,
-                                         unsigned int& key_frames,
-                                         unsigned int& delta_frames) const;
+  virtual int GetSendCodecStatistics(const int video_channel,
+                                     unsigned int& key_frames,
+                                     unsigned int& delta_frames) const;
+  virtual int GetReceiveCodecStatistics(const int video_channel,
+                                        unsigned int& key_frames,
+                                        unsigned int& delta_frames) const;
   virtual int GetReceiveSideDelay(const int video_channel,
                                   int* delay_ms) const;
   virtual int GetCodecTargetBitrate(const int video_channel,
@@ -70,6 +70,9 @@ class ViECodecImpl
   virtual int StartDebugRecording(int video_channel,
                                   const char* file_name_utf8);
   virtual int StopDebugRecording(int video_channel);
+  virtual void SuspendBelowMinBitrate(int video_channel);
+  virtual bool GetSendSideDelay(int video_channel, int* avg_delay_ms,
+                                int* max_delay_ms) const;
 
  protected:
   explicit ViECodecImpl(ViESharedData* shared_data);

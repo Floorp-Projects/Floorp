@@ -13,6 +13,7 @@
 #include "mozilla/Mutex.h"
 #include <algorithm>
 #include "mozilla/Preferences.h"
+#include "mozilla/Telemetry.h"
 #include "soundtouch/SoundTouch.h"
 #include "Latency.h"
 
@@ -70,6 +71,16 @@ bool AudioStream::sCubebLatencyPrefSet;
     StaticMutexAutoLock lock(sMutex);
     sCubebLatency = std::min<uint32_t>(std::max<uint32_t>(value, 1), 1000);
   }
+}
+
+/*static*/ bool AudioStream::GetFirstStream()
+{
+  static bool sFirstStream = true;
+
+  StaticMutexAutoLock lock(sMutex);
+  bool result = sFirstStream;
+  sFirstStream = false;
+  return result;
 }
 
 /*static*/ double AudioStream::GetVolumeScale()
@@ -133,8 +144,8 @@ static cubeb_stream_type ConvertChannelToCubebType(dom::AudioChannel aChannel)
       return CUBEB_STREAM_TYPE_VOICE_CALL;
     case dom::AudioChannel::Ringer:
       return CUBEB_STREAM_TYPE_RING;
-    // Currently Android openSLES library doesn't support FORCE_AUDIBLE yet.
     case dom::AudioChannel::Publicnotification:
+      return CUBEB_STREAM_TYPE_SYSTEM_ENFORCED;
     default:
       NS_ERROR("The value of AudioChannel is invalid");
       return CUBEB_STREAM_TYPE_MAX;
@@ -384,6 +395,9 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
                   const dom::AudioChannel aAudioChannel,
                   LatencyRequest aLatencyRequest)
 {
+  mStartTime = TimeStamp::Now();
+  mIsFirst = GetFirstStream();
+
   if (!GetCubebContext() || aNumChannels < 0 || aRate < 0) {
     return NS_ERROR_FAILURE;
   }
@@ -492,6 +506,14 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams,
       LOG(("AudioStream::OpenCubeb() %p failed to init cubeb", this));
       return NS_ERROR_FAILURE;
     }
+  }
+
+  if (!mStartTime.IsNull()) {
+		TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
+    LOG(("AudioStream creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
+         (uint32_t) timeDelta.ToMilliseconds()));
+		Telemetry::Accumulate(mIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
+                          Telemetry::AUDIOSTREAM_LATER_OPEN_MS, timeDelta.ToMilliseconds());
   }
 
   return NS_OK;

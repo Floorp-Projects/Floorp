@@ -51,7 +51,7 @@ static bool GetX4Lane(JSContext *cx, unsigned argc, Value *vp) {
 
     TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
     TypeDescr &descr = typedObj.typeDescr();
-    if (descr.kind() != TypeDescr::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
+    if (descr.kind() != type::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              X4TypeDescr::class_.name, laneNames[lane],
                              InformalValueTypeName(args.thisv()));
@@ -94,7 +94,7 @@ static bool SignMask(JSContext *cx, unsigned argc, Value *vp) {
 
     TypedObject &typedObj = args.thisv().toObject().as<TypedObject>();
     TypeDescr &descr = typedObj.typeDescr();
-    if (descr.kind() != TypeDescr::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
+    if (descr.kind() != type::X4 || descr.as<X4TypeDescr>().type() != Type32x4::type) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
                              X4TypeDescr::class_.name, "signMask",
                              InformalValueTypeName(args.thisv()));
@@ -216,7 +216,7 @@ CreateX4Class(JSContext *cx,
     if (!x4)
         return nullptr;
 
-    x4->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(TypeDescr::X4));
+    x4->initReservedSlot(JS_DESCR_SLOT_KIND, Int32Value(type::X4));
     x4->initReservedSlot(JS_DESCR_SLOT_STRING_REPR, StringValue(stringRepr));
     x4->initReservedSlot(JS_DESCR_SLOT_ALIGNMENT, Int32Value(X4TypeDescr::size(type)));
     x4->initReservedSlot(JS_DESCR_SLOT_SIZE, Int32Value(X4TypeDescr::alignment(type)));
@@ -399,7 +399,7 @@ IsVectorObject(HandleValue v)
         return false;
 
     TypeDescr &typeRepr = obj.as<TypedObject>().typeDescr();
-    if (typeRepr.kind() != TypeDescr::X4)
+    if (typeRepr.kind() != type::X4)
         return false;
 
     return typeRepr.as<X4TypeDescr>().type() == V::type;

@@ -465,15 +465,11 @@ case "$target" in
         changequote([,])
 
         # Determine compiler version
-        CC_VERSION=`${CC} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
-        _CC_MINOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $2 }'`
-        _CC_RELEASE=`echo ${CC_VERSION} | $AWK -F\. '{ print $3 }'`
-        _CC_BUILD=`echo ${CC_VERSION} | $AWK -F\. '{ print $4 }'`
-        _MSC_VER=${_CC_MAJOR_VERSION}${_CC_MINOR_VERSION}
+        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | cut -c 1-2`
+        _CC_MINOR_VERSION=`echo ${CC_VERSION} | cut -c 3-4`
+        _MSC_VER=${CC_VERSION}
 
-        CXX_VERSION=`${CXX} -v 2>&1 | sed -nre "$_MSVC_VER_FILTER"`
-        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
+        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | cut -c 1-2`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
             AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
@@ -496,7 +492,10 @@ case "$target" in
         fi
         AC_SUBST(MSVS_VERSION)
 
-        AC_DEFINE(HAVE_SEH_EXCEPTIONS)
+        # Disable SEH on clang-cl because it doesn't implement them yet.
+        if test -z "$CLANG_CL"; then
+            AC_DEFINE(HAVE_SEH_EXCEPTIONS)
+        fi
 
         if test -n "$WIN32_REDIST_DIR"; then
           if test ! -d "$WIN32_REDIST_DIR"; then
@@ -617,8 +616,10 @@ case "$target" in
         fi
 
         if test "$WRAP_STL_INCLUDES" = "1"; then
-            STL_FLAGS='-D_HAS_EXCEPTIONS=0 -I$(DIST)/stl_wrappers'
+            STL_FLAGS='-I$(DIST)/stl_wrappers'
         fi
+        CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
+        CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
     elif test -z "$CLANG_CC"; then
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`
@@ -898,11 +899,6 @@ tools are selected during the Xcode/Developer Tools installation.])
 fi
 
 fi # COMPILE_ENVIRONMENT
-
-AC_MSG_CHECKING([compiler version])
-# Just print it so it shows up in the logs.
-cc_version=$($CC --version)
-AC_MSG_RESULT([$cc_version])
 
 if test -n "$MAKE"; then
   if test `echo $MAKE | grep -c make.py` != 1; then
@@ -2166,7 +2162,11 @@ ia64*-hpux*)
         MOZ_OPTIMIZE_FLAGS='-O1 -Oi'
         MOZ_FIX_LINK_PATHS=
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-        LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        # Disable these flags on clang-cl since it doesn't ignore unknown arguments by default, and
+        # autoconf insists on passing $LDFLAGS to the compiler.
+        if test -z "$CLANG_CL"; then
+            LDFLAGS="$LDFLAGS -LARGEADDRESSAWARE -NXCOMPAT"
+        fi
         if test -z "$DEVELOPER_OPTIONS"; then
             LDFLAGS="$LDFLAGS -RELEASE"
         fi
@@ -2189,6 +2189,7 @@ ia64*-hpux*)
         dnl both SSSE3 and SSE4.1.
         HAVE_TOOLCHAIN_SUPPORT_MSSSE3=1
         HAVE_TOOLCHAIN_SUPPORT_MSSE4_1=1
+        MOZ_MEMORY=1
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -2253,7 +2254,11 @@ ia64*-hpux*)
             LDFLAGS="$LDFLAGS -Wl,--enable-stdcall-fixup -Wl,--large-address-aware"
         else
             DSO_LDOPTS="$DSO_LDOPTS -MACHINE:X86"
-            LDFLAGS="$LDFLAGS -SAFESEH"
+            # Disable this flag on clang-cl since it doesn't ignore unknown arguments by default, and
+            # autoconf insists on passing $LDFLAGS to the compiler.
+            if test -z "$CLANG_CL"; then
+                LDFLAGS="$LDFLAGS -SAFESEH"
+            fi
         fi
 
         AC_DEFINE(_X86_)
@@ -3469,7 +3474,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.10.3, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.10.6, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -3937,6 +3942,7 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
 MOZ_ANDROID_SYNTHAPKS=
+MOZ_LOCALE_SWITCHER=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
 MOZ_PAY=
@@ -4376,7 +4382,7 @@ if test "$COMPILE_ENVIRONMENT"; then
   if test "$MOZ_ENABLE_GTK3"; then
     PKG_CHECK_MODULES(MOZ_GTK3, gtk+-3.0 >= $GTK3_VERSION gtk+-unix-print-3.0 glib-2.0 gobject-2.0 $GDK_PACKAGES)
   fi
-  if test "$MOZ_ENABLE_GTK2"; then
+  if test "$MOZ_ENABLE_GTK"; then
     if test "$MOZ_X11"; then
       GDK_PACKAGES=gdk-x11-2.0
     fi
@@ -4944,6 +4950,13 @@ MOZ_ARG_DISABLE_BOOL(websms-backend,
 
 if test -n "$MOZ_WEBSMS_BACKEND"; then
     AC_DEFINE(MOZ_WEBSMS_BACKEND)
+fi
+
+dnl ========================================================
+dnl = Enable runtime locale switching on Android
+dnl ========================================================
+if test -n "$MOZ_LOCALE_SWITCHER"; then
+    AC_DEFINE(MOZ_LOCALE_SWITCHER)
 fi
 
 dnl ========================================================
@@ -6314,17 +6327,13 @@ if test "$MOZ_WEBAPP_RUNTIME"; then
     AC_DEFINE(MOZ_WEBAPP_RUNTIME)
 fi
 
-AC_MSG_CHECKING([for tar archiver])
 AC_CHECK_PROGS(TAR, gnutar gtar tar, "")
 if test -z "$TAR"; then
     AC_MSG_ERROR([no tar archiver found in \$PATH])
 fi
-AC_MSG_RESULT([$TAR])
 AC_SUBST(TAR)
 
-AC_MSG_CHECKING([for wget])
 AC_CHECK_PROGS(WGET, wget, "")
-AC_MSG_RESULT([$WGET])
 AC_SUBST(WGET)
 
 dnl ========================================================
@@ -6350,6 +6359,19 @@ if test -n "$MOZ_MAINTENANCE_SERVICE"; then
   else
     AC_MSG_ERROR([Can only build with --enable-maintenance-service with a Windows target])
   fi
+fi
+
+dnl ========================================================
+dnl Bundled fonts on desktop platforms
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(bundled-fonts,
+[  --enable-bundled-fonts  Enable support for bundled fonts on desktop platforms],
+    MOZ_BUNDLED_FONTS=1,
+    MOZ_BUNDLED_FONTS=)
+
+if test -n "$MOZ_BUNDLED_FONTS"; then
+  AC_DEFINE(MOZ_BUNDLED_FONTS)
 fi
 
 dnl ========================================================
@@ -7101,16 +7123,13 @@ else
     ;;
   *-mingw*)
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    if test -z "$MOZ_DEBUG"; then
-      WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
-    else
-      WIN32_CRT_LIBS="msvcrtd.lib msvcprtd.lib"
-    fi
+    export MOZ_NO_DEBUG_RTL=1
+    WIN32_CRT_LIBS="msvcrt.lib msvcprt.lib"
     dnl Look for a broken crtdll.obj
     WIN32_CRTDLL_FULLPATH=`lib -nologo -list $WIN32_CRT_LIBS | grep crtdll\\.obj`
     lib -NOLOGO -OUT:crtdll.obj $WIN32_CRT_LIBS -EXTRACT:$WIN32_CRTDLL_FULLPATH
     if grep -q '__imp__\{0,1\}free' crtdll.obj; then
-      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcrtd -NODEFAULTLIB:msvcprt -NODEFAULTLIB:msvcprtd -DEFAULTLIB:mozcrt'
+      MOZ_GLUE_LDFLAGS='-LIBPATH:$(DIST)/lib -NODEFAULTLIB:msvcrt -NODEFAULTLIB:msvcprt -DEFAULTLIB:mozcrt'
       dnl Also pass this to NSPR/NSS
       DLLFLAGS="$DLLFLAGS $MOZ_GLUE_LDFLAGS"
     else
@@ -8120,7 +8139,13 @@ AC_SUBST(MOZ_PIXMAN_LIBS)
 # Check for headers defining standard int types.
 if test -n "$COMPILE_ENVIRONMENT"; then
     MOZ_CHECK_HEADERS(stdint.h inttypes.h sys/int_types.h)
+
+    if test "${ac_cv_header_inttypes_h}" = "yes"; then
+        HAVE_INTTYPES_H=1
+    fi
 fi
+
+AC_SUBST(HAVE_INTTYPES_H)
 
 if test "$MOZ_TREE_CAIRO"; then
     MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
@@ -8550,6 +8575,7 @@ AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_ANDROID_SYNTHAPKS)
+AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(ENABLE_STRIP)
 AC_SUBST(PKG_SKIP_STRIP)
@@ -8851,7 +8877,6 @@ AC_SUBST(CC_VERSION)
 AC_SUBST(CXX_VERSION)
 AC_SUBST(MSMANIFEST_TOOL)
 AC_SUBST(NS_ENABLE_TSF)
-AC_SUBST(MOZ_NSS_PATCH)
 AC_SUBST(MOZ_APP_COMPONENT_LIBS)
 AC_SUBST(MOZ_APP_EXTRA_LIBS)
 
@@ -9007,15 +9032,17 @@ dnl ========================================================
 dnl ICU Support
 dnl ========================================================
 
-if test "$MOZ_BUILD_APP" = "browser"; then
-    _INTL_API=yes
-else
-    # Internationalization isn't built or exposed by default in non-desktop
-    # builds.  Bugs to enable:
-    #
-    #   Android:  bug 864843
-    #   B2G:      bug 866301
+# Internationalization isn't built or exposed by default in non-desktop
+# builds.  Bugs to enable:
+#
+#   Android:  bug 864843
+#   B2G:      bug 866301
+
+if test "$MOZ_WIDGET_TOOLKIT" = "android" ||
+   test "$MOZ_BUILD_APP" = "b2g"; then
     _INTL_API=no
+else
+    _INTL_API=yes
 fi
 
 MOZ_CONFIG_ICU()
@@ -9171,6 +9198,7 @@ if test -z "$direct_nspr_config"; then
     LDFLAGS="$_SUBDIR_LDFLAGS"
     HOST_CC="$_SUBDIR_HOST_CC"
     HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+    HOST_CXXFLAGS="$_SUBDIR_HOST_CXXFLAGS"
     HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
     RC=
 fi
@@ -9202,6 +9230,9 @@ if test -z "$MOZ_NATIVE_NSPR"; then
         ac_configure_args="$ac_configure_args --disable-debug"
     else
         ac_configure_args="$ac_configure_args --enable-debug"
+        if test -n "$MOZ_NO_DEBUG_RTL"; then
+            ac_configure_args="$ac_configure_args --disable-debug-rtl"
+        fi
     fi
     if test "$MOZ_OPTIMIZE" = "1"; then
         ac_configure_args="$ac_configure_args --enable-optimize"
@@ -9270,6 +9301,7 @@ CXXFLAGS="$_SUBDIR_CXXFLAGS"
 LDFLAGS="$_SUBDIR_LDFLAGS"
 HOST_CC="$_SUBDIR_HOST_CC"
 HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
+HOST_CXXFLAGS="$_SUBDIR_HOST_CXXFLAGS"
 HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
 RC=
 

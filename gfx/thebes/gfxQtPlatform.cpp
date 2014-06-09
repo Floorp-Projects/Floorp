@@ -131,27 +131,17 @@ gfxQtPlatform::UpdateFontList()
 }
 
 nsresult
-gfxQtPlatform::ResolveFontName(const nsAString& aFontName,
-                                FontResolverCallback aCallback,
-                                void *aClosure,
-                                bool& aAborted)
-{
-    return sFontconfigUtils->ResolveFontName(aFontName, aCallback,
-                                             aClosure, aAborted);
-}
-
-nsresult
 gfxQtPlatform::GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName)
 {
     return sFontconfigUtils->GetStandardFamilyName(aFontName, aFamilyName);
 }
 
 gfxFontGroup *
-gfxQtPlatform::CreateFontGroup(const nsAString &aFamilies,
+gfxQtPlatform::CreateFontGroup(const FontFamilyList& aFontFamilyList,
                                const gfxFontStyle *aStyle,
                                gfxUserFontSet* aUserFontSet)
 {
-    return new gfxPangoFontGroup(aFamilies, aStyle, aUserFontSet);
+    return new gfxPangoFontGroup(aFontFamilyList, aStyle, aUserFontSet);
 }
 
 gfxFontEntry*

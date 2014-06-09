@@ -5,6 +5,8 @@ The JS Shell Test Harness.
 See the adjacent README.txt for more details.
 """
 
+from __future__ import print_function
+
 import os, sys, textwrap
 from os.path import abspath, dirname, realpath
 from copy import copy
@@ -195,7 +197,7 @@ def parse_args():
             options.show_output = True
         try:
             options.output_fp = open(options.output_file, 'w')
-        except IOError, ex:
+        except IOError as ex:
             raise SystemExit("Failed to open output file: " + str(ex))
 
     options.show = options.show_cmd or options.show_output
@@ -227,7 +229,7 @@ def load_tests(options, requested_paths, excluded_paths):
         xul_tester = manifest.XULInfoTester(xul_info, options.js_shell)
 
     test_dir = dirname(abspath(__file__))
-    test_list = manifest.load(test_dir, xul_tester)
+    test_list = manifest.load(test_dir, requested_paths, excluded_paths, xul_tester)
     skip_list = []
 
     if options.make_manifests:
@@ -255,17 +257,6 @@ def load_tests(options, requested_paths, excluded_paths):
             paths |= set([ line.strip() for line in open(test_file).readlines()])
         test_list = [ _ for _ in test_list if _.path in paths ]
 
-    if requested_paths:
-        def p(path):
-            for arg in requested_paths:
-                if path.find(arg) != -1:
-                    return True
-            return False
-        test_list = [ _ for _ in test_list if p(_.path) ]
-
-    if options.exclude_file:
-        test_list = [_ for _ in test_list if _.path not in excluded_paths]
-
     if options.no_extensions:
         pattern = os.sep + 'extensions' + os.sep
         test_list = [_ for _ in test_list if pattern not in _.path]
@@ -291,7 +282,7 @@ def main():
     skip_list, test_list = load_tests(options, requested_paths, excluded_paths)
 
     if not test_list:
-        print 'no tests selected'
+        print('no tests selected')
         return 1
 
     test_dir = dirname(abspath(__file__))
@@ -305,7 +296,7 @@ def main():
 
         cmd = test_list[0].get_command(TestCase.js_cmd_prefix)
         if options.show_cmd:
-            print list2cmdline(cmd)
+            print(list2cmdline(cmd))
         if test_dir not in ('', '.'):
             os.chdir(test_dir)
         call(cmd)

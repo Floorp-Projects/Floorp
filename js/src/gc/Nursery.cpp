@@ -56,8 +56,8 @@ js::Nursery::init()
         return false;
 
     heapStart_ = uintptr_t(heap);
+    heapEnd_ = heapStart_ + NurserySize;
     currentStart_ = start();
-    heapEnd_ = chunk(LastNurseryChunk).end();
     numActiveChunks_ = 1;
     JS_POISON(heap, JS_FRESH_NURSERY_PATTERN, NurserySize);
     setCurrentChunk(0);
@@ -88,8 +88,10 @@ js::Nursery::updateDecommittedRegion()
         //             optimization worthwhile.
 # ifndef XP_MACOSX
         uintptr_t decommitStart = chunk(numActiveChunks_).start();
-        JS_ASSERT(decommitStart == AlignBytes(decommitStart, 1 << 20));
-        runtime()->gc.pageAllocator.markPagesUnused((void *)decommitStart, heapEnd() - decommitStart);
+        uintptr_t decommitSize = heapEnd() - decommitStart;
+        JS_ASSERT(decommitStart == AlignBytes(decommitStart, Alignment));
+        JS_ASSERT(decommitSize == AlignBytes(decommitStart, Alignment));
+        runtime()->gc.pageAllocator.markPagesUnused((void *)decommitStart, decommitSize);
 # endif
     }
 #endif
@@ -105,7 +107,7 @@ js::Nursery::enable()
     setCurrentChunk(0);
     currentStart_ = position();
 #ifdef JS_GC_ZEAL
-    if (runtime()->gc.zealMode == ZealGenerationalGCValue)
+    if (runtime()->gcZeal() == ZealGenerationalGCValue)
         enterZealMode();
 #endif
 }
@@ -127,9 +129,26 @@ js::Nursery::isEmpty() const
     JS_ASSERT(runtime_);
     if (!isEnabled())
         return true;
-    JS_ASSERT_IF(runtime_->gc.zealMode != ZealGenerationalGCValue, currentStart_ == start());
+    JS_ASSERT_IF(runtime_->gcZeal() != ZealGenerationalGCValue, currentStart_ == start());
     return position() == currentStart_;
 }
+
+#ifdef JS_GC_ZEAL
+void
+js::Nursery::enterZealMode() {
+    if (isEnabled())
+        numActiveChunks_ = NumNurseryChunks;
+}
+
+void
+js::Nursery::leaveZealMode() {
+    if (isEnabled()) {
+        JS_ASSERT(isEmpty());
+        setCurrentChunk(0);
+        currentStart_ = start();
+    }
+}
+#endif // JS_GC_ZEAL
 
 JSObject *
 js::Nursery::allocateObject(JSContext *cx, size_t size, size_t numDynamic)
@@ -172,7 +191,7 @@ js::Nursery::allocate(size_t size)
     JS_ASSERT(!runtime()->isHeapBusy());
     JS_ASSERT(position() >= currentStart_);
 
-    if (position() + size > currentEnd()) {
+    if (currentEnd() < position() + size) {
         if (currentChunk_ + 1 == numActiveChunks_)
             return nullptr;
         setCurrentChunk(currentChunk_ + 1);
@@ -267,15 +286,6 @@ js::Nursery::allocateHugeSlots(JSContext *cx, size_t nslots)
     /* If this put fails, we will only leak the slots. */
     (void)hugeSlots.put(slots);
     return slots;
-}
-
-void
-js::Nursery::notifyInitialSlots(Cell *cell, HeapSlot *slots)
-{
-    if (IsInsideNursery(cell) && !isInside(slots)) {
-        /* If this put fails, we will only leak the slots. */
-        (void)hugeSlots.put(slots);
-    }
 }
 
 namespace js {
@@ -726,10 +736,10 @@ CheckHashTablesAfterMovingGC(JSRuntime *rt)
 void
 js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList *pretenureTypes)
 {
-    JS_AbortIfWrongThread(rt);
-
     if (rt->mainThread.suppressGC)
         return;
+
+    JS_AbortIfWrongThread(rt);
 
     if (!isEnabled())
         return;
@@ -841,11 +851,11 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     // Sweep.
     TIME_START(freeHugeSlots);
-    freeHugeSlots(rt);
+    freeHugeSlots();
     TIME_END(freeHugeSlots);
 
     TIME_START(sweep);
-    sweep(rt);
+    sweep();
     TIME_END(sweep);
 
     TIME_START(clearStoreBuffer);
@@ -903,15 +913,16 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 }
 
 void
-js::Nursery::freeHugeSlots(JSRuntime *rt)
+js::Nursery::freeHugeSlots()
 {
+    FreeOp *fop = runtime()->defaultFreeOp();
     for (HugeSlotsSet::Range r = hugeSlots.all(); !r.empty(); r.popFront())
-        rt->defaultFreeOp()->free_(r.front());
+        fop->free_(r.front());
     hugeSlots.clear();
 }
 
 void
-js::Nursery::sweep(JSRuntime *rt)
+js::Nursery::sweep()
 {
 #ifdef JS_GC_ZEAL
     /* Poison the nursery contents so touching a freed object will crash. */
@@ -919,7 +930,7 @@ js::Nursery::sweep(JSRuntime *rt)
     for (int i = 0; i < NumNurseryChunks; ++i)
         initChunk(i);
 
-    if (rt->gc.zealMode == ZealGenerationalGCValue) {
+    if (runtime()->gcZeal() == ZealGenerationalGCValue) {
         MOZ_ASSERT(numActiveChunks_ == NumNurseryChunks);
 
         /* Only reset the alloc point when we are close to the end. */
@@ -944,7 +955,7 @@ void
 js::Nursery::growAllocableSpace()
 {
 #ifdef JS_GC_ZEAL
-    MOZ_ASSERT_IF(runtime()->gc.zealMode == ZealGenerationalGCValue,
+    MOZ_ASSERT_IF(runtime()->gcZeal() == ZealGenerationalGCValue,
                   numActiveChunks_ == NumNurseryChunks);
 #endif
     numActiveChunks_ = Min(numActiveChunks_ * 2, NumNurseryChunks);
@@ -954,7 +965,7 @@ void
 js::Nursery::shrinkAllocableSpace()
 {
 #ifdef JS_GC_ZEAL
-    if (runtime()->gc.zealMode == ZealGenerationalGCValue)
+    if (runtime()->gcZeal() == ZealGenerationalGCValue)
         return;
 #endif
     numActiveChunks_ = Max(numActiveChunks_ - 1, 1);

@@ -35,11 +35,11 @@
 namespace mozilla { namespace pkix {
 
 SECStatus
-VerifySignedData(const CERTSignedData* sd, const CERTCertificate* cert,
+VerifySignedData(const CERTSignedData* sd, const SECItem& subjectPublicKeyInfo,
                  void* pkcs11PinArg)
 {
   if (!sd || !sd->data.data || !sd->signatureAlgorithm.algorithm.data ||
-      !sd->signature.data || !cert) {
+      !sd->signature.data) {
     PR_NOT_REACHED("invalid args to VerifySignedData");
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
@@ -55,12 +55,13 @@ VerifySignedData(const CERTSignedData* sd, const CERTCertificate* cert,
   SECItem sig = sd->signature;
   DER_ConvertBitString(&sig);
 
-  // Use SECKEY_ExtractPublicKey instead of CERT_ExtractPublicKey because
-  // CERT_ExtractPublicKey would try to do (EC)DSA parameter inheritance, using
-  // the classic (wrong) NSS path building logic. We intentionally do not
-  // support parameter inheritance.
-  ScopedSECKEYPublicKey
-    pubKey(SECKEY_ExtractPublicKey(&cert->subjectPublicKeyInfo));
+  ScopedPtr<CERTSubjectPublicKeyInfo, SECKEY_DestroySubjectPublicKeyInfo>
+    spki(SECKEY_DecodeDERSubjectPublicKeyInfo(&subjectPublicKeyInfo));
+  if (!spki) {
+    return SECFailure;
+  }
+  ScopedPtr<SECKEYPublicKey, SECKEY_DestroyPublicKey>
+    pubKey(SECKEY_ExtractPublicKey(spki.get()));
   if (!pubKey) {
     return SECFailure;
   }

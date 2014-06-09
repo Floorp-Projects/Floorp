@@ -18,7 +18,7 @@ using namespace js;
 using namespace js::jit;
 
 LIRGraph::LIRGraph(MIRGraph *mir)
-  : blocks_(mir->alloc()),
+  : blocks_(),
     constantPool_(mir->alloc()),
     constantPoolMap_(mir->alloc()),
     safepoints_(mir->alloc()),
@@ -28,7 +28,6 @@ LIRGraph::LIRGraph(MIRGraph *mir)
     localSlotCount_(0),
     argumentSlotCount_(0),
     entrySnapshot_(nullptr),
-    osrBlock_(nullptr),
     mir_(*mir)
 {
 }
@@ -58,12 +57,6 @@ LIRGraph::noteNeedsSafepoint(LInstruction *ins)
 }
 
 void
-LIRGraph::removeBlock(size_t i)
-{
-    blocks_.erase(blocks_.begin() + i);
-}
-
-void
 LIRGraph::dump(FILE *fp) const
 {
     for (size_t i = 0; i < numBlocks(); i++) {
@@ -78,11 +71,51 @@ LIRGraph::dump() const
     dump(stderr);
 }
 
+LBlock *
+LBlock::New(TempAllocator &alloc, MBasicBlock *from)
+{
+    LBlock *block = new(alloc) LBlock(from);
+    if (!block)
+        return nullptr;
+
+    // Count the number of LPhis we'll need.
+    size_t numLPhis = 0;
+    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+        MPhi *phi = *i;
+        numLPhis += (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
+    }
+
+    // Allocate space for the LPhis.
+    if (!block->phis_.init(alloc, numLPhis))
+        return nullptr;
+
+    // For each MIR phi, set up LIR phis as appropriate. We'll fill in their
+    // operands on each incoming edge, and set their definitions at the start of
+    // their defining block.
+    size_t phiIndex = 0;
+    size_t numPreds = from->numPredecessors();
+    for (MPhiIterator i(from->phisBegin()), e(from->phisEnd()); i != e; ++i) {
+        MPhi *phi = *i;
+        MOZ_ASSERT(phi->numOperands() == numPreds);
+
+        int numPhis = (phi->type() == MIRType_Value) ? BOX_PIECES : 1;
+        for (int i = 0; i < numPhis; i++) {
+            void *array = alloc.allocateArray<sizeof(LAllocation)>(numPreds);
+            LAllocation *inputs = static_cast<LAllocation *>(array);
+            if (!inputs)
+                return nullptr;
+
+            new (&block->phis_[phiIndex++]) LPhi(phi, inputs);
+        }
+    }
+    return block;
+}
+
 uint32_t
 LBlock::firstId()
 {
     if (phis_.length()) {
-        return phis_[0]->id();
+        return phis_[0].id();
     } else {
         for (LInstructionIterator i(instructions_.begin()); i != instructions_.end(); i++) {
             if (i->id())
@@ -129,6 +162,10 @@ void
 LBlock::dump(FILE *fp)
 {
     fprintf(fp, "block%u:\n", mir()->id());
+    for (size_t i = 0; i < numPhis(); ++i) {
+        getPhi(i)->dump(fp);
+        fprintf(fp, "\n");
+    }
     for (LInstructionIterator iter = begin(); iter != end(); iter++) {
         iter->dump(fp);
         fprintf(fp, "\n");
@@ -274,19 +311,6 @@ LSnapshot::rewriteRecoveredInput(LUse input)
         if (getEntry(i)->isUse() && getEntry(i)->toUse()->virtualRegister() == input.virtualRegister())
             setEntry(i, LUse(input.virtualRegister(), LUse::RECOVERED_INPUT));
     }
-}
-
-LPhi *
-LPhi::New(MIRGenerator *gen, MPhi *ins)
-{
-    LPhi *phi = new (gen->alloc()) LPhi();
-    LAllocation *inputs = gen->allocate<LAllocation>(ins->numOperands());
-    if (!inputs)
-        return nullptr;
-
-    phi->inputs_ = inputs;
-    phi->setMir(ins);
-    return phi;
 }
 
 void
@@ -438,13 +462,15 @@ LInstruction::assignSnapshot(LSnapshot *snapshot)
 void
 LInstruction::dump(FILE *fp)
 {
-    fprintf(fp, "{");
-    for (size_t i = 0; i < numDefs(); i++) {
-        PrintDefinition(fp, *getDef(i));
-        if (i != numDefs() - 1)
-            fprintf(fp, ", ");
+    if (numDefs() != 0) {
+        fprintf(fp, "{");
+        for (size_t i = 0; i < numDefs(); i++) {
+            PrintDefinition(fp, *getDef(i));
+            if (i != numDefs() - 1)
+                fprintf(fp, ", ");
+        }
+        fprintf(fp, "} <- ");
     }
-    fprintf(fp, "} <- ");
 
     printName(fp);
     printInfo(fp);

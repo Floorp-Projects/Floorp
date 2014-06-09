@@ -406,12 +406,32 @@ label.requests-menu-status-code {
   -moz-image-region: rect(0px,16px,16px,0px);
 }
 
+#details-pane-toggle > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
 #details-pane-toggle[pane-collapsed] {
   list-style-image: url("chrome://browser/skin/devtools/debugger-expand.png");
 }
 
 #details-pane-toggle:active {
   -moz-image-region: rect(0px,32px,16px,16px);
+}
+
+@media (min-resolution: 2dppx) {
+  #details-pane-toggle {
+    list-style-image: url("chrome://browser/skin/devtools/debugger-collapse@2x.png");
+    -moz-image-region: rect(0px,32px,32px,0px);
+  }
+
+  #details-pane-toggle[pane-collapsed] {
+    list-style-image: url("chrome://browser/skin/devtools/debugger-expand@2x.png");
+  }
+
+  #details-pane-toggle:active {
+    -moz-image-region: rect(0px,64px,32px,32px);
+  }
 }
 
 /* Network request details tabpanels */

@@ -251,10 +251,10 @@ NS_IMETHODIMP
 nsXBLContentSink::HandleStartElement(const char16_t *aName, 
                                      const char16_t **aAtts, 
                                      uint32_t aAttsCount, 
-                                     int32_t aIndex, 
                                      uint32_t aLineNumber)
 {
-  nsresult rv = nsXMLContentSink::HandleStartElement(aName,aAtts,aAttsCount,aIndex,aLineNumber);
+  nsresult rv = nsXMLContentSink::HandleStartElement(aName, aAtts, aAttsCount,
+                                                     aLineNumber);
   if (NS_FAILED(rv))
     return rv;
 

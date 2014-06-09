@@ -37,7 +37,7 @@
         '../interface/event_wrapper.h',
         '../interface/file_wrapper.h',
         '../interface/fix_interlocked_exchange_pointer_win.h',
-        '../interface/list_wrapper.h',
+        '../interface/logcat_trace_context.h',
         '../interface/logging.h',
         '../interface/ref_count.h',
         '../interface/rw_lock_wrapper.h',
@@ -47,6 +47,7 @@
         '../interface/sort.h',
         '../interface/static_instance.h',
         '../interface/stringize_macros.h',
+        '../interface/thread_annotations.h',
         '../interface/thread_wrapper.h',
         '../interface/tick_util.h',
         '../interface/trace.h',
@@ -81,9 +82,8 @@
         'event_win.h',
         'file_impl.cc',
         'file_impl.h',
-        'list_no_stl.cc',
+        'logcat_trace_context.cc',
         'logging.cc',
-        'logging_no_op.cc',
         'rw_lock.cc',
         'rw_lock_generic.cc',
         'rw_lock_generic.h',
@@ -102,7 +102,6 @@
         'thread_win.h',
         'trace_impl.cc',
         'trace_impl.h',
-        'trace_impl_no_op.cc',
         'trace_posix.cc',
         'trace_posix.h',
         'trace_win.cc',
@@ -114,22 +113,6 @@
         }, {
           'sources!': [ 'data_log.cc', ],
         },],
-        ['enable_tracing==1', {
-          'sources!': [
-            'logging_no_op.cc',
-            'trace_impl_no_op.cc',
-          ],
-        }, {
-          'sources!': [
-            'logging.cc',
-            'trace_impl.cc',
-            'trace_impl.h',
-            'trace_posix.cc',
-            'trace_posix.h',
-            'trace_win.cc',
-            'trace_win.h',
-          ],
-        }],
         ['enable_lazy_trace_alloc==1', {
           'defines': [
             'WEBRTC_LAZY_TRACE_ALLOC',
@@ -149,6 +132,16 @@
             # Android doesn't have these in <=2.2
             'rw_lock_posix.cc',
             'rw_lock_posix.h',
+          ],
+          'link_settings': {
+            'libraries': [
+              '-llog',
+            ],
+          },
+        }, {  # OS!="android"
+          'sources!': [
+            '../interface/logcat_trace_context.h',
+            'logcat_trace_context.cc',
           ],
         }],
         ['OS=="linux"', {
@@ -207,15 +200,9 @@
     ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'targets': [
         {
-          'variables': {
-            # Treat this as third-party code.
-            'chromium_code': 0,
-          },
           'target_name': 'cpu_features_android',
           'type': 'static_library',
           'sources': [
-            # TODO(leozwang): Ideally we want to audomatically exclude .c files
-            # as with .cc files, gyp currently only excludes .cc files.
             'cpu_features_android.c',
           ],
           'conditions': [
@@ -231,15 +218,14 @@
                   ],
                 }],
               ],
-            }, {
-              'sources': [
-                'android/cpu-features.c',
-                'android/cpu-features.h',
-              ],
-            }],
-          ],
-        },
-      ],
+         }, {
+           'sources': [
+             'droid-cpu-features.c',
+             'droid-cpu-features.h',
+           ],
+         }],
+        ],
+      }],
     }],
   ], # conditions
 }

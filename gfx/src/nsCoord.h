@@ -59,7 +59,7 @@ inline void VERIFY_COORD(nscoord aCoord) {
 
 inline nscoord NSToCoordRound(float aValue)
 {
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
   return NS_lroundup30(aValue);
 #else
   return nscoord(floorf(aValue + 0.5f));
@@ -68,7 +68,7 @@ inline nscoord NSToCoordRound(float aValue)
 
 inline nscoord NSToCoordRound(double aValue)
 {
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
   return NS_lroundup30((float)aValue);
 #else
   return nscoord(floor(aValue + 0.5f));
@@ -266,6 +266,52 @@ inline nscoord NSToCoordCeilClamped(double aValue)
   }
 #endif
   return NSToCoordCeil(aValue);
+}
+
+// The NSToCoordTrunc* functions remove the fractional component of
+// aValue, and are thus equivalent to NSToCoordFloor* for positive
+// values and NSToCoordCeil* for negative values.
+
+inline nscoord NSToCoordTrunc(float aValue)
+{
+  // There's no need to use truncf() since it matches the default
+  // rules for float to integer conversion.
+  return nscoord(aValue);
+}
+
+inline nscoord NSToCoordTrunc(double aValue)
+{
+  // There's no need to use trunc() since it matches the default
+  // rules for float to integer conversion.
+  return nscoord(aValue);
+}
+
+inline nscoord NSToCoordTruncClamped(float aValue)
+{
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of float, to avoid overflow
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordTrunc(aValue);
+}
+
+inline nscoord NSToCoordTruncClamped(double aValue)
+{
+#ifndef NS_COORD_IS_FLOAT
+  // Bounds-check before converting out of double, to avoid overflow
+  if (aValue >= nscoord_MAX) {
+    return nscoord_MAX;
+  }
+  if (aValue <= nscoord_MIN) {
+    return nscoord_MIN;
+  }
+#endif
+  return NSToCoordTrunc(aValue);
 }
 
 /*

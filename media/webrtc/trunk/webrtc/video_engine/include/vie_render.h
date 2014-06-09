@@ -22,10 +22,11 @@ namespace webrtc {
 
 class VideoEngine;
 class VideoRender;
+class VideoRenderCallback;
 
 // This class declares an abstract interface to be used for external renderers.
 // The user implemented derived class is registered using AddRenderer().
-class WEBRTC_DLLEXPORT ExternalRenderer {
+class ExternalRenderer {
  public:
   // This method will be called when the stream to be rendered changes in
   // resolution or number of streams mixed in the image.
@@ -51,7 +52,7 @@ class WEBRTC_DLLEXPORT ExternalRenderer {
   virtual ~ExternalRenderer() {}
 };
 
-class WEBRTC_DLLEXPORT ViERender {
+class ViERender {
  public:
   // Factory for the ViERender sub‐API and increases an internal reference
   // counter if successful. Returns NULL if the API is not supported or if
@@ -110,6 +111,13 @@ class WEBRTC_DLLEXPORT ViERender {
   virtual int AddRenderer(const int render_id,
                           RawVideoType video_input_format,
                           ExternalRenderer* renderer) = 0;
+
+  // Propagating VideoRenderCallback down to the VideoRender module for new API.
+  // Contains default-implementation not to break code mocking this interface.
+  // (Ugly, but temporary.)
+  virtual int AddRenderCallback(int render_id, VideoRenderCallback* callback) {
+    return 0;
+  }
 
  protected:
   ViERender() {}

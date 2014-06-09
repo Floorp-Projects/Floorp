@@ -18,6 +18,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/differ.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor_shape.h"
@@ -40,13 +41,14 @@ namespace webrtc {
 namespace {
 
 // A class to perform video frame capturing for Linux.
-class ScreenCapturerLinux : public ScreenCapturer {
+class ScreenCapturerLinux : public ScreenCapturer,
+                            public SharedXDisplay::XEventHandler {
  public:
   ScreenCapturerLinux();
   virtual ~ScreenCapturerLinux();
 
   // TODO(ajwong): Do we really want this to be synchronous?
-  bool Init(bool use_x_damage);
+  bool Init(const DesktopCaptureOptions& options);
 
   // DesktopCapturer interface.
   virtual void Start(Callback* delegate) OVERRIDE;
@@ -55,23 +57,23 @@ class ScreenCapturerLinux : public ScreenCapturer {
   // ScreenCapturer interface.
   virtual void SetMouseShapeObserver(
       MouseShapeObserver* mouse_shape_observer) OVERRIDE;
+  virtual bool GetScreenList(ScreenList* screens) OVERRIDE;
+  virtual bool SelectScreen(ScreenId id) OVERRIDE;
 
  private:
-  void InitXDamage();
+  Display* display() { return options_.x_display()->display(); }
 
-  // Read and handle all currently-pending XEvents.
-  // In the DAMAGE case, process the XDamage events and store the resulting
-  // damage rectangles in the ScreenCapturerHelper.
-  // In all cases, call ScreenConfigurationChanged() in response to any
-  // ConfigNotify events.
-  void ProcessPendingXEvents();
+  // SharedXDisplay::XEventHandler interface.
+  virtual bool HandleXEvent(const XEvent& event) OVERRIDE;
+
+  void InitXDamage();
 
   // Capture the cursor image and notify the delegate if it was captured.
   void CaptureCursor();
 
   // Capture screen pixels to the current buffer in the queue. In the DAMAGE
   // case, the ScreenCapturerHelper already holds the list of invalid rectangles
-  // from ProcessPendingXEvents(). In the non-DAMAGE case, this captures the
+  // from HandleXEvent(). In the non-DAMAGE case, this captures the
   // whole screen, then calculates some invalid rectangles that include any
   // differences between this and the previous capture.
   DesktopFrame* CaptureScreen();
@@ -88,11 +90,12 @@ class ScreenCapturerLinux : public ScreenCapturer {
 
   void DeinitXlib();
 
+  DesktopCaptureOptions options_;
+
   Callback* callback_;
   MouseShapeObserver* mouse_shape_observer_;
 
   // X11 graphics context.
-  Display* display_;
   GC gc_;
   Window root_window_;
 
@@ -131,7 +134,6 @@ class ScreenCapturerLinux : public ScreenCapturer {
 ScreenCapturerLinux::ScreenCapturerLinux()
     : callback_(NULL),
       mouse_shape_observer_(NULL),
-      display_(NULL),
       gc_(NULL),
       root_window_(BadValue),
       has_xfixes_(false),
@@ -146,35 +148,40 @@ ScreenCapturerLinux::ScreenCapturerLinux()
 }
 
 ScreenCapturerLinux::~ScreenCapturerLinux() {
+  options_.x_display()->RemoveEventHandler(ConfigureNotify, this);
+  if (use_damage_) {
+    options_.x_display()->RemoveEventHandler(
+        damage_event_base_ + XDamageNotify, this);
+  }
+  if (has_xfixes_) {
+    options_.x_display()->RemoveEventHandler(
+        xfixes_event_base_ + XFixesCursorNotify, this);
+  }
   DeinitXlib();
 }
 
-bool ScreenCapturerLinux::Init(bool use_x_damage) {
-  // TODO(ajwong): We should specify the display string we are attaching to
-  // in the constructor.
-  display_ = XOpenDisplay(NULL);
-  if (!display_) {
-    LOG(LS_ERROR) << "Unable to open display";
-    return false;
-  }
+bool ScreenCapturerLinux::Init(const DesktopCaptureOptions& options) {
+  options_ = options;
 
-  root_window_ = RootWindow(display_, DefaultScreen(display_));
+  root_window_ = RootWindow(display(), DefaultScreen(display()));
   if (root_window_ == BadValue) {
     LOG(LS_ERROR) << "Unable to get the root window";
     DeinitXlib();
     return false;
   }
 
-  gc_ = XCreateGC(display_, root_window_, 0, NULL);
+  gc_ = XCreateGC(display(), root_window_, 0, NULL);
   if (gc_ == NULL) {
     LOG(LS_ERROR) << "Unable to get graphics context";
     DeinitXlib();
     return false;
   }
 
+  options_.x_display()->AddEventHandler(ConfigureNotify, this);
+
   // Check for XFixes extension. This is required for cursor shape
   // notifications, and for our use of XDamage.
-  if (XFixesQueryExtension(display_, &xfixes_event_base_,
+  if (XFixesQueryExtension(display(), &xfixes_event_base_,
                            &xfixes_error_base_)) {
     has_xfixes_ = true;
   } else {
@@ -182,20 +189,22 @@ bool ScreenCapturerLinux::Init(bool use_x_damage) {
   }
 
   // Register for changes to the dimensions of the root window.
-  XSelectInput(display_, root_window_, StructureNotifyMask);
+  XSelectInput(display(), root_window_, StructureNotifyMask);
 
-  if (!x_server_pixel_buffer_.Init(display_, DefaultRootWindow(display_))) {
+  if (!x_server_pixel_buffer_.Init(display(), DefaultRootWindow(display()))) {
     LOG(LS_ERROR) << "Failed to initialize pixel buffer.";
     return false;
   }
 
   if (has_xfixes_) {
     // Register for changes to the cursor shape.
-    XFixesSelectCursorInput(display_, root_window_,
+    XFixesSelectCursorInput(display(), root_window_,
                             XFixesDisplayCursorNotifyMask);
+    options_.x_display()->AddEventHandler(
+        xfixes_event_base_ + XFixesCursorNotify, this);
   }
 
-  if (use_x_damage) {
+  if (options_.use_update_notifications()) {
     InitXDamage();
   }
 
@@ -209,7 +218,7 @@ void ScreenCapturerLinux::InitXDamage() {
   }
 
   // Check for XDamage extension.
-  if (!XDamageQueryExtension(display_, &damage_event_base_,
+  if (!XDamageQueryExtension(display(), &damage_event_base_,
                              &damage_error_base_)) {
     LOG(LS_INFO) << "X server does not support XDamage.";
     return;
@@ -221,7 +230,7 @@ void ScreenCapturerLinux::InitXDamage() {
   // properly.
 
   // Request notifications every time the screen becomes damaged.
-  damage_handle_ = XDamageCreate(display_, root_window_,
+  damage_handle_ = XDamageCreate(display(), root_window_,
                                  XDamageReportNonEmpty);
   if (!damage_handle_) {
     LOG(LS_ERROR) << "Unable to initialize XDamage.";
@@ -229,12 +238,15 @@ void ScreenCapturerLinux::InitXDamage() {
   }
 
   // Create an XFixes server-side region to collate damage into.
-  damage_region_ = XFixesCreateRegion(display_, 0, 0);
+  damage_region_ = XFixesCreateRegion(display(), 0, 0);
   if (!damage_region_) {
-    XDamageDestroy(display_, damage_handle_);
+    XDamageDestroy(display(), damage_handle_);
     LOG(LS_ERROR) << "Unable to create XFixes region.";
     return;
   }
+
+  options_.x_display()->AddEventHandler(
+      damage_event_base_ + XDamageNotify, this);
 
   use_damage_ = true;
   LOG(LS_INFO) << "Using XDamage extension.";
@@ -253,7 +265,7 @@ void ScreenCapturerLinux::Capture(const DesktopRegion& region) {
   queue_.MoveToNextFrame();
 
   // Process XEvents for XDamage and cursor shape tracking.
-  ProcessPendingXEvents();
+  options_.x_display()->ProcessPendingXEvents();
 
   // ProcessPendingXEvents() may call ScreenConfigurationChanged() which
   // reinitializes |x_server_pixel_buffer_|. Check if the pixel buffer is still
@@ -300,36 +312,50 @@ void ScreenCapturerLinux::SetMouseShapeObserver(
   mouse_shape_observer_ = mouse_shape_observer;
 }
 
-void ScreenCapturerLinux::ProcessPendingXEvents() {
-  // Find the number of events that are outstanding "now."  We don't just loop
-  // on XPending because we want to guarantee this terminates.
-  int events_to_process = XPending(display_);
-  XEvent e;
+bool ScreenCapturerLinux::GetScreenList(ScreenList* screens) {
+  DCHECK(screens->size() == 0);
+  // TODO(jiayl): implement screen enumeration.
+  Screen default_screen;
+  default_screen.id = 0;
+  screens->push_back(default_screen);
+  return true;
+}
 
-  for (int i = 0; i < events_to_process; i++) {
-    XNextEvent(display_, &e);
-    if (use_damage_ && (e.type == damage_event_base_ + XDamageNotify)) {
-      XDamageNotifyEvent* event = reinterpret_cast<XDamageNotifyEvent*>(&e);
-      DCHECK(event->level == XDamageReportNonEmpty);
-    } else if (e.type == ConfigureNotify) {
-      ScreenConfigurationChanged();
-    } else if (has_xfixes_ &&
-               e.type == xfixes_event_base_ + XFixesCursorNotify) {
-      XFixesCursorNotifyEvent* cne;
-      cne = reinterpret_cast<XFixesCursorNotifyEvent*>(&e);
-      if (cne->subtype == XFixesDisplayCursorNotify) {
-        CaptureCursor();
-      }
-    } else {
-      LOG(LS_WARNING) << "Got unknown event type: " << e.type;
+bool ScreenCapturerLinux::SelectScreen(ScreenId id) {
+  // TODO(jiayl): implement screen selection.
+  return true;
+}
+
+bool ScreenCapturerLinux::HandleXEvent(const XEvent& event) {
+  if (use_damage_ && (event.type == damage_event_base_ + XDamageNotify)) {
+    const XDamageNotifyEvent* damage_event =
+        reinterpret_cast<const XDamageNotifyEvent*>(&event);
+    if (damage_event->damage != damage_handle_)
+      return false;
+    DCHECK(damage_event->level == XDamageReportNonEmpty);
+    return true;
+  } else if (event.type == ConfigureNotify) {
+    ScreenConfigurationChanged();
+    return true;
+  } else if (has_xfixes_ &&
+             event.type == xfixes_event_base_ + XFixesCursorNotify) {
+    const XFixesCursorNotifyEvent* cursor_event =
+        reinterpret_cast<const XFixesCursorNotifyEvent*>(&event);
+    if (cursor_event->window == root_window_ &&
+        cursor_event->subtype == XFixesDisplayCursorNotify) {
+      CaptureCursor();
     }
+    // Always return false for cursor notifications, because there might be
+    // other listeners for these for the same window.
+    return false;
   }
+  return false;
 }
 
 void ScreenCapturerLinux::CaptureCursor() {
   DCHECK(has_xfixes_);
 
-  XFixesCursorImage* img = XFixesGetCursorImage(display_);
+  XFixesCursorImage* img = XFixesGetCursorImage(display());
   if (!img) {
     return;
   }
@@ -375,10 +401,10 @@ DesktopFrame* ScreenCapturerLinux::CaptureScreen() {
   x_server_pixel_buffer_.Synchronize();
   if (use_damage_ && queue_.previous_frame()) {
     // Atomically fetch and clear the damage region.
-    XDamageSubtract(display_, damage_handle_, None, damage_region_);
+    XDamageSubtract(display(), damage_handle_, None, damage_region_);
     int rects_num = 0;
     XRectangle bounds;
-    XRectangle* rects = XFixesFetchRegionAndBounds(display_, damage_region_,
+    XRectangle* rects = XFixesFetchRegionAndBounds(display(), damage_region_,
                                                    &rects_num, &bounds);
     for (int i = 0; i < rects_num; ++i) {
       updated_region->AddRect(DesktopRect::MakeXYWH(
@@ -430,7 +456,7 @@ void ScreenCapturerLinux::ScreenConfigurationChanged() {
   queue_.Reset();
 
   helper_.ClearInvalidRegion();
-  if (!x_server_pixel_buffer_.Init(display_, DefaultRootWindow(display_))) {
+  if (!x_server_pixel_buffer_.Init(display(), DefaultRootWindow(display()))) {
     LOG(LS_ERROR) << "Failed to initialize pixel buffer after screen "
         "configuration change.";
   }
@@ -452,51 +478,40 @@ void ScreenCapturerLinux::SynchronizeFrame() {
   DCHECK(current != last);
   for (DesktopRegion::Iterator it(last_invalid_region_);
        !it.IsAtEnd(); it.Advance()) {
-    const DesktopRect& r = it.rect();
-    int offset = r.top() * current->stride() +
-        r.left() * DesktopFrame::kBytesPerPixel;
-    for (int i = 0; i < r.height(); ++i) {
-      memcpy(current->data() + offset, last->data() + offset,
-             r.width() * DesktopFrame::kBytesPerPixel);
-      offset += current->size().width() * DesktopFrame::kBytesPerPixel;
-    }
+    current->CopyPixelsFrom(*last, it.rect().top_left(), it.rect());
   }
 }
 
 void ScreenCapturerLinux::DeinitXlib() {
   if (gc_) {
-    XFreeGC(display_, gc_);
+    XFreeGC(display(), gc_);
     gc_ = NULL;
   }
 
   x_server_pixel_buffer_.Release();
 
-  if (display_) {
-    if (damage_handle_)
-      XDamageDestroy(display_, damage_handle_);
-    if (damage_region_)
-      XFixesDestroyRegion(display_, damage_region_);
-    XCloseDisplay(display_);
-    display_ = NULL;
-    damage_handle_ = 0;
-    damage_region_ = 0;
+  if (display()) {
+    if (damage_handle_) {
+      XDamageDestroy(display(), damage_handle_);
+      damage_handle_ = 0;
+    }
+
+    if (damage_region_) {
+      XFixesDestroyRegion(display(), damage_region_);
+      damage_region_ = 0;
+    }
   }
 }
 
 }  // namespace
 
 // static
-ScreenCapturer* ScreenCapturer::Create() {
-  scoped_ptr<ScreenCapturerLinux> capturer(new ScreenCapturerLinux());
-  if (!capturer->Init(false))
-    capturer.reset();
-  return capturer.release();
-}
+ScreenCapturer* ScreenCapturer::Create(const DesktopCaptureOptions& options) {
+  if (!options.x_display())
+    return NULL;
 
-// static
-ScreenCapturer* ScreenCapturer::CreateWithXDamage(bool use_x_damage) {
   scoped_ptr<ScreenCapturerLinux> capturer(new ScreenCapturerLinux());
-  if (!capturer->Init(use_x_damage))
+  if (!capturer->Init(options))
     capturer.reset();
   return capturer.release();
 }

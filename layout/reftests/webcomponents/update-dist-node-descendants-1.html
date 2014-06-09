@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<head>
+</head>
+<body>
+<div id="outer"><span id="distnode">text</span></div>
+<script>
+var shadowRoot = document.getElementById('outer').createShadowRoot();
+shadowRoot.innerHTML = '<div><content></content></div>';
+
+function tweak() {
+  var distNode = document.getElementById("distnode");
+  distNode.textContent = "Hello World";
+
+  document.documentElement.removeAttribute("class");
+}
+
+window.addEventListener("MozReftestInvalidate", tweak);
+</script>
+</body>
+</html>

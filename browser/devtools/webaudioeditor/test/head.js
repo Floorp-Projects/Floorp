@@ -352,6 +352,16 @@ function getGripValue (value) {
 }
 
 /**
+ * Counts how many nodes and edges are currently in the graph.
+ */
+function countGraphObjects (win) {
+  return {
+    nodes: win.document.querySelectorAll(".nodes > .audionode").length,
+    edges: win.document.querySelectorAll(".edgePaths > .edgePath").length
+  }
+}
+
+/**
  * List of audio node properties to test against expectations of the AudioNode actor
  */
 

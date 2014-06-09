@@ -313,14 +313,13 @@ public:
 
     virtual gfxFontFamily* GetDefaultFont(const gfxFontStyle* aStyle);
 
+    virtual gfxFontFamily* FindFamily(const nsAString& aFamily);
+
     virtual gfxFontEntry* LookupLocalFont(const gfxProxyFontEntry *aProxyEntry,
                                           const nsAString& aFontName);
 
     virtual gfxFontEntry* MakePlatformFont(const gfxProxyFontEntry *aProxyEntry,
                                            const uint8_t *aFontData, uint32_t aLength);
-
-    virtual bool ResolveFontName(const nsAString& aFontName,
-                                   nsAString& aResolvedFontName);
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;
@@ -340,6 +339,10 @@ private:
                                           LPARAM lParam);
 
     virtual already_AddRefed<FontInfoData> CreateFontInfoData();
+
+#ifdef MOZ_BUNDLED_FONTS
+    void ActivateBundledFonts();
+#endif
 
     typedef nsRefPtrHashtable<nsStringHashKey, gfxFontFamily> FontTable;
 

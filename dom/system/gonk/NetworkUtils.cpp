@@ -102,8 +102,11 @@ static nsTArray<QueueData> gCommandQueue;
 static CurrentCommand gCurrentCommand;
 static bool gPending = false;
 static nsTArray<nsCString> gReason;
+static NetworkParams *gWifiTetheringParms = 0;
+
 
 CommandFunc NetworkUtils::sWifiEnableChain[] = {
+  NetworkUtils::clearWifiTetherParms,
   NetworkUtils::wifiFirmwareReload,
   NetworkUtils::startAccessPointDriver,
   NetworkUtils::setAccessPoint,
@@ -119,6 +122,7 @@ CommandFunc NetworkUtils::sWifiEnableChain[] = {
 };
 
 CommandFunc NetworkUtils::sWifiDisableChain[] = {
+  NetworkUtils::clearWifiTetherParms,
   NetworkUtils::stopSoftAP,
   NetworkUtils::stopAccessPointDriver,
   NetworkUtils::wifiFirmwareReload,
@@ -132,9 +136,30 @@ CommandFunc NetworkUtils::sWifiDisableChain[] = {
 };
 
 CommandFunc NetworkUtils::sWifiFailChain[] = {
+  NetworkUtils::clearWifiTetherParms,
   NetworkUtils::stopSoftAP,
   NetworkUtils::setIpForwardingEnabled,
   NetworkUtils::stopTethering
+};
+
+CommandFunc NetworkUtils::sWifiRetryChain[] = {
+  NetworkUtils::clearWifiTetherParms,
+  NetworkUtils::stopSoftAP,
+  NetworkUtils::stopTethering,
+
+  // sWifiEnableChain:
+  NetworkUtils::wifiFirmwareReload,
+  NetworkUtils::startAccessPointDriver,
+  NetworkUtils::setAccessPoint,
+  NetworkUtils::startSoftAP,
+  NetworkUtils::setInterfaceUp,
+  NetworkUtils::tetherInterface,
+  NetworkUtils::setIpForwardingEnabled,
+  NetworkUtils::tetheringStatus,
+  NetworkUtils::startTethering,
+  NetworkUtils::setDnsForwarders,
+  NetworkUtils::enableNat,
+  NetworkUtils::wifiTetheringSuccess
 };
 
 CommandFunc NetworkUtils::sWifiOperationModeChain[] = {
@@ -583,6 +608,15 @@ void NetworkUtils::stopSoftAP(CommandChain* aChain,
   doCommand(command, aChain, aCallback);
 }
 
+void NetworkUtils::clearWifiTetherParms(CommandChain* aChain,
+                                        CommandCallback aCallback,
+                                        NetworkResultOptions& aResult)
+{
+  delete gWifiTetheringParms;
+  gWifiTetheringParms = 0;
+  next(aChain, false, aResult);
+}
+
 void NetworkUtils::getRxBytes(CommandChain* aChain,
                               CommandCallback aCallback,
                               NetworkResultOptions& aResult)
@@ -920,6 +954,11 @@ void NetworkUtils::wifiTetheringSuccess(CommandChain* aChain,
                                         NetworkResultOptions& aResult)
 {
   ASSIGN_FIELD(mEnable)
+
+  if (aChain->getParams().mEnable) {
+    MOZ_ASSERT(!gWifiTetheringParms);
+    gWifiTetheringParms = new NetworkParams(aChain->getParams());
+  }
   postMessage(aChain->getParams(), aResult);
 }
 
@@ -1126,6 +1165,21 @@ void NetworkUtils::onNetdMessage(NetdCommand* aCommand)
     DEBUG("Receiving broadcast message from netd.");
     DEBUG("          ==> Code: %d  Reason: %s", code, reason);
     sendBroadcastMessage(code, reason);
+
+    if (code == NETD_COMMAND_INTERFACE_CHANGE) {
+      if (gWifiTetheringParms) {
+        char linkdownReason[MAX_COMMAND_SIZE];
+        snprintf(linkdownReason, MAX_COMMAND_SIZE - 1,
+                 "Iface linkstate %s down",
+                 NS_ConvertUTF16toUTF8(gWifiTetheringParms->mIfname).get());
+
+        if (!strcmp(reason, linkdownReason)) {
+          DEBUG("Wifi link down, restarting tethering.");
+          RUN_CHAIN(*gWifiTetheringParms, sWifiRetryChain, wifiTetheringFail)
+        }
+      }
+    }
+
     nextNetdCommand();
     return;
   }

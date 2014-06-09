@@ -13,6 +13,9 @@
 #include <assert.h>
 #include <string.h>  // memmove
 
+#ifdef WEBRTC_CODEC_CELT
+#include "webrtc/modules/audio_coding/codecs/celt/include/celt_interface.h"
+#endif
 #include "webrtc/modules/audio_coding/codecs/cng/include/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/codecs/g711/include/g711_interface.h"
 #ifdef WEBRTC_CODEC_G722
@@ -374,6 +377,55 @@ void AudioDecoderG722Stereo::SplitStereoPacket(const uint8_t* encoded,
             encoded_len - i - 2);
     encoded_deinterleaved[encoded_len - 1] = right_byte;
   }
+}
+#endif
+
+// CELT
+#ifdef WEBRTC_CODEC_CELT
+AudioDecoderCelt::AudioDecoderCelt(enum NetEqDecoder type)
+    : AudioDecoder(type) {
+  assert(type == kDecoderCELT_32 || type == kDecoderCELT_32_2ch);
+  if (type == kDecoderCELT_32) {
+    channels_ = 1;
+  } else {
+    channels_ = 2;
+  }
+  WebRtcCelt_CreateDec(reinterpret_cast<CELT_decinst_t**>(&state_),
+                       static_cast<int>(channels_));
+}
+
+AudioDecoderCelt::~AudioDecoderCelt() {
+  WebRtcCelt_FreeDec(static_cast<CELT_decinst_t*>(state_));
+}
+
+int AudioDecoderCelt::Decode(const uint8_t* encoded, size_t encoded_len,
+                             int16_t* decoded, SpeechType* speech_type) {
+  int16_t temp_type = 1;  // Default to speech.
+  int ret = WebRtcCelt_DecodeUniversal(static_cast<CELT_decinst_t*>(state_),
+                                       encoded, static_cast<int>(encoded_len),
+                                       decoded, &temp_type);
+  *speech_type = ConvertSpeechType(temp_type);
+  if (ret < 0) {
+    return -1;
+  }
+  // Return the total number of samples.
+  return ret * static_cast<int>(channels_);
+}
+
+int AudioDecoderCelt::Init() {
+  return WebRtcCelt_DecoderInit(static_cast<CELT_decinst_t*>(state_));
+}
+
+bool AudioDecoderCelt::HasDecodePlc() const { return true; }
+
+int AudioDecoderCelt::DecodePlc(int num_frames, int16_t* decoded) {
+  int ret = WebRtcCelt_DecodePlc(static_cast<CELT_decinst_t*>(state_),
+                                 decoded, num_frames);
+  if (ret < 0) {
+    return -1;
+  }
+  // Return the total number of samples.
+  return ret * static_cast<int>(channels_);
 }
 #endif
 

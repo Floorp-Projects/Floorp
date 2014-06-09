@@ -333,7 +333,7 @@ BackCert::GetConstrainedNames(/*out*/ const CERTGeneralName** result)
     }
 
     constrainedNames =
-      CERT_GetConstrainedCertificateNames(nssCert, arena.get(),
+      CERT_GetConstrainedCertificateNames(GetNSSCert(), arena.get(),
                                           includeCN == IncludeCN::Yes);
     if (!constrainedNames) {
       return MapSECStatus(SECFailure);
@@ -427,25 +427,25 @@ MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
         // Comodo has issued certificates that require this behavior that don't
         // expire until June 2020! TODO(bug 982932): Limit this exception to
         // old certificates.
-        match = value.MatchBytes(server) ||
+        match = value.MatchRest(server) ||
                 (endEntityOrCA == EndEntityOrCA::MustBeCA &&
-                 value.MatchBytes(serverStepUp));
+                 value.MatchRest(serverStepUp));
         break;
 
       case KeyPurposeId::id_kp_clientAuth:
-        match = value.MatchBytes(client);
+        match = value.MatchRest(client);
         break;
 
       case KeyPurposeId::id_kp_codeSigning:
-        match = value.MatchBytes(code);
+        match = value.MatchRest(code);
         break;
 
       case KeyPurposeId::id_kp_emailProtection:
-        match = value.MatchBytes(email);
+        match = value.MatchRest(email);
         break;
 
       case KeyPurposeId::id_kp_OCSPSigning:
-        match = value.MatchBytes(ocsp);
+        match = value.MatchRest(ocsp);
         break;
 
       case KeyPurposeId::anyExtendedKeyUsage:
@@ -459,13 +459,11 @@ MatchEKU(der::Input& value, KeyPurposeId requiredEKU,
   }
 
   if (match) {
-    if (value.AtEnd()) {
-      found = true;
-      if (requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
-        foundOCSPSigning = true;
-      }
+    found = true;
+    if (requiredEKU == KeyPurposeId::id_kp_OCSPSigning) {
+      foundOCSPSigning = true;
     }
-  } else if (value.MatchBytes(ocsp) && value.AtEnd()) {
+  } else if (value.MatchRest(ocsp)) {
     foundOCSPSigning = true;
   }
 
@@ -560,10 +558,8 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
   Result rv;
 
   TrustLevel trustLevel;
-  rv = MapSECStatus(trustDomain.GetCertTrust(endEntityOrCA,
-                                             requiredPolicy,
-                                             cert.GetNSSCert(),
-                                             &trustLevel));
+  rv = MapSECStatus(trustDomain.GetCertTrust(endEntityOrCA, requiredPolicy,
+                                             cert.GetDER(), &trustLevel));
   if (rv != Success) {
     return rv;
   }

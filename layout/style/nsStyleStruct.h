@@ -1529,7 +1529,7 @@ struct nsStyleText {
   bool WhiteSpaceIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_SPACE;
   }
 
   bool NewlineIsSignificant() const {
@@ -1538,15 +1538,16 @@ struct nsStyleText {
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_LINE;
   }
 
-  bool NewlineIsDiscarded() const {
-    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
-  }
-
   bool WhiteSpaceOrNewlineIsSignificant() const {
     return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP ||
            mWhiteSpace == NS_STYLE_WHITESPACE_PRE_LINE ||
-           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_DISCARD_NEWLINES;
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_SPACE;
+  }
+
+  bool TabIsSignificant() const {
+    return mWhiteSpace == NS_STYLE_WHITESPACE_PRE ||
+           mWhiteSpace == NS_STYLE_WHITESPACE_PRE_WRAP;
   }
 
   bool WhiteSpaceCanWrapStyle() const {
@@ -1606,6 +1607,10 @@ struct nsStyleImageOrientation {
   bool IsDefault()   const { return mOrientation == 0; }
   bool IsFlipped()   const { return mOrientation & FLIP_MASK; }
   bool IsFromImage() const { return mOrientation & FROM_IMAGE_MASK; }
+  bool SwapsWidthAndHeight() const {
+    uint8_t angle = mOrientation & ORIENTATION_MASK;
+    return (angle == ANGLE_90) || (angle == ANGLE_270);
+  }
 
   mozilla::image::Angle Angle() const {
     switch (mOrientation & ORIENTATION_MASK) {

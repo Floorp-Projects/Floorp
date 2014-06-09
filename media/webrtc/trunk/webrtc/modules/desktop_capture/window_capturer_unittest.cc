@@ -10,9 +10,8 @@
 
 #include "webrtc/modules/desktop_capture/window_capturer.h"
 
-#include <iostream>
-
 #include "gtest/gtest.h"
+#include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_region.h"
 #include "webrtc/system_wrappers/interface/logging.h"
@@ -24,7 +23,8 @@ class WindowCapturerTest : public testing::Test,
                            public DesktopCapturer::Callback {
  public:
   void SetUp() OVERRIDE {
-    capturer_.reset(WindowCapturer::Create());
+    capturer_.reset(
+        WindowCapturer::Create(DesktopCaptureOptions::CreateDefault()));
   }
 
   void TearDown() OVERRIDE {

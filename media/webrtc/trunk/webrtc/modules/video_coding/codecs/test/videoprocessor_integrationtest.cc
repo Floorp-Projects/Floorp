@@ -156,8 +156,7 @@ class VideoProcessorIntegrationTest: public testing::Test {
     // Setup the TestConfig struct for processing of a clip in CIF resolution.
     config_.input_filename =
         webrtc::test::ResourcePath("foreman_cif", "yuv");
-    config_.output_filename = webrtc::test::OutputPath() +
-          "foreman_cif_short_video_codecs_test_framework_integrationtests.yuv";
+    config_.output_filename = tmpnam(NULL);
     config_.frame_length_in_bytes = CalcBufferSize(kI420,
                                                    kCIFWidth, kCIFHeight);
     config_.verbose = false;
@@ -495,6 +494,9 @@ class VideoProcessorIntegrationTest: public testing::Test {
     EXPECT_GT(psnr_result.min, quality_metrics.minimum_min_psnr);
     EXPECT_GT(ssim_result.average, quality_metrics.minimum_avg_ssim);
     EXPECT_GT(ssim_result.min, quality_metrics.minimum_min_ssim);
+    if (!remove(config_.output_filename.c_str())) {
+      fprintf(stderr, "Failed to remove temporary file!");
+    }
   }
 };
 

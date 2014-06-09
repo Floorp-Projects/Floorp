@@ -70,142 +70,6 @@ static const int16_t WebRtcNsx_kLogTableFrac[256] = {
 // Skip first frequency bins during estimation. (0 <= value < 64)
 static const int kStartBand = 5;
 
-static const int16_t kPowTableFrac[1024] = {
-  0,    1,    1,    2,    3,    3,    4,    5,
-  6,    6,    7,    8,    8,    9,   10,   10,
-  11,   12,   13,   13,   14,   15,   15,   16,
-  17,   17,   18,   19,   20,   20,   21,   22,
-  22,   23,   24,   25,   25,   26,   27,   27,
-  28,   29,   30,   30,   31,   32,   32,   33,
-  34,   35,   35,   36,   37,   37,   38,   39,
-  40,   40,   41,   42,   42,   43,   44,   45,
-  45,   46,   47,   48,   48,   49,   50,   50,
-  51,   52,   53,   53,   54,   55,   56,   56,
-  57,   58,   58,   59,   60,   61,   61,   62,
-  63,   64,   64,   65,   66,   67,   67,   68,
-  69,   69,   70,   71,   72,   72,   73,   74,
-  75,   75,   76,   77,   78,   78,   79,   80,
-  81,   81,   82,   83,   84,   84,   85,   86,
-  87,   87,   88,   89,   90,   90,   91,   92,
-  93,   93,   94,   95,   96,   96,   97,   98,
-  99,  100,  100,  101,  102,  103,  103,  104,
-  105,  106,  106,  107,  108,  109,  109,  110,
-  111,  112,  113,  113,  114,  115,  116,  116,
-  117,  118,  119,  119,  120,  121,  122,  123,
-  123,  124,  125,  126,  126,  127,  128,  129,
-  130,  130,  131,  132,  133,  133,  134,  135,
-  136,  137,  137,  138,  139,  140,  141,  141,
-  142,  143,  144,  144,  145,  146,  147,  148,
-  148,  149,  150,  151,  152,  152,  153,  154,
-  155,  156,  156,  157,  158,  159,  160,  160,
-  161,  162,  163,  164,  164,  165,  166,  167,
-  168,  168,  169,  170,  171,  172,  173,  173,
-  174,  175,  176,  177,  177,  178,  179,  180,
-  181,  181,  182,  183,  184,  185,  186,  186,
-  187,  188,  189,  190,  190,  191,  192,  193,
-  194,  195,  195,  196,  197,  198,  199,  200,
-  200,  201,  202,  203,  204,  205,  205,  206,
-  207,  208,  209,  210,  210,  211,  212,  213,
-  214,  215,  215,  216,  217,  218,  219,  220,
-  220,  221,  222,  223,  224,  225,  225,  226,
-  227,  228,  229,  230,  231,  231,  232,  233,
-  234,  235,  236,  237,  237,  238,  239,  240,
-  241,  242,  243,  243,  244,  245,  246,  247,
-  248,  249,  249,  250,  251,  252,  253,  254,
-  255,  255,  256,  257,  258,  259,  260,  261,
-  262,  262,  263,  264,  265,  266,  267,  268,
-  268,  269,  270,  271,  272,  273,  274,  275,
-  276,  276,  277,  278,  279,  280,  281,  282,
-  283,  283,  284,  285,  286,  287,  288,  289,
-  290,  291,  291,  292,  293,  294,  295,  296,
-  297,  298,  299,  299,  300,  301,  302,  303,
-  304,  305,  306,  307,  308,  308,  309,  310,
-  311,  312,  313,  314,  315,  316,  317,  318,
-  318,  319,  320,  321,  322,  323,  324,  325,
-  326,  327,  328,  328,  329,  330,  331,  332,
-  333,  334,  335,  336,  337,  338,  339,  339,
-  340,  341,  342,  343,  344,  345,  346,  347,
-  348,  349,  350,  351,  352,  352,  353,  354,
-  355,  356,  357,  358,  359,  360,  361,  362,
-  363,  364,  365,  366,  367,  367,  368,  369,
-  370,  371,  372,  373,  374,  375,  376,  377,
-  378,  379,  380,  381,  382,  383,  384,  385,
-  385,  386,  387,  388,  389,  390,  391,  392,
-  393,  394,  395,  396,  397,  398,  399,  400,
-  401,  402,  403,  404,  405,  406,  407,  408,
-  409,  410,  410,  411,  412,  413,  414,  415,
-  416,  417,  418,  419,  420,  421,  422,  423,
-  424,  425,  426,  427,  428,  429,  430,  431,
-  432,  433,  434,  435,  436,  437,  438,  439,
-  440,  441,  442,  443,  444,  445,  446,  447,
-  448,  449,  450,  451,  452,  453,  454,  455,
-  456,  457,  458,  459,  460,  461,  462,  463,
-  464,  465,  466,  467,  468,  469,  470,  471,
-  472,  473,  474,  475,  476,  477,  478,  479,
-  480,  481,  482,  483,  484,  485,  486,  487,
-  488,  489,  490,  491,  492,  493,  494,  495,
-  496,  498,  499,  500,  501,  502,  503,  504,
-  505,  506,  507,  508,  509,  510,  511,  512,
-  513,  514,  515,  516,  517,  518,  519,  520,
-  521,  522,  523,  525,  526,  527,  528,  529,
-  530,  531,  532,  533,  534,  535,  536,  537,
-  538,  539,  540,  541,  542,  544,  545,  546,
-  547,  548,  549,  550,  551,  552,  553,  554,
-  555,  556,  557,  558,  560,  561,  562,  563,
-  564,  565,  566,  567,  568,  569,  570,  571,
-  572,  574,  575,  576,  577,  578,  579,  580,
-  581,  582,  583,  584,  585,  587,  588,  589,
-  590,  591,  592,  593,  594,  595,  596,  597,
-  599,  600,  601,  602,  603,  604,  605,  606,
-  607,  608,  610,  611,  612,  613,  614,  615,
-  616,  617,  618,  620,  621,  622,  623,  624,
-  625,  626,  627,  628,  630,  631,  632,  633,
-  634,  635,  636,  637,  639,  640,  641,  642,
-  643,  644,  645,  646,  648,  649,  650,  651,
-  652,  653,  654,  656,  657,  658,  659,  660,
-  661,  662,  664,  665,  666,  667,  668,  669,
-  670,  672,  673,  674,  675,  676,  677,  678,
-  680,  681,  682,  683,  684,  685,  687,  688,
-  689,  690,  691,  692,  693,  695,  696,  697,
-  698,  699,  700,  702,  703,  704,  705,  706,
-  708,  709,  710,  711,  712,  713,  715,  716,
-  717,  718,  719,  720,  722,  723,  724,  725,
-  726,  728,  729,  730,  731,  732,  733,  735,
-  736,  737,  738,  739,  741,  742,  743,  744,
-  745,  747,  748,  749,  750,  751,  753,  754,
-  755,  756,  757,  759,  760,  761,  762,  763,
-  765,  766,  767,  768,  770,  771,  772,  773,
-  774,  776,  777,  778,  779,  780,  782,  783,
-  784,  785,  787,  788,  789,  790,  792,  793,
-  794,  795,  796,  798,  799,  800,  801,  803,
-  804,  805,  806,  808,  809,  810,  811,  813,
-  814,  815,  816,  818,  819,  820,  821,  823,
-  824,  825,  826,  828,  829,  830,  831,  833,
-  834,  835,  836,  838,  839,  840,  841,  843,
-  844,  845,  846,  848,  849,  850,  851,  853,
-  854,  855,  857,  858,  859,  860,  862,  863,
-  864,  866,  867,  868,  869,  871,  872,  873,
-  874,  876,  877,  878,  880,  881,  882,  883,
-  885,  886,  887,  889,  890,  891,  893,  894,
-  895,  896,  898,  899,  900,  902,  903,  904,
-  906,  907,  908,  909,  911,  912,  913,  915,
-  916,  917,  919,  920,  921,  923,  924,  925,
-  927,  928,  929,  931,  932,  933,  935,  936,
-  937,  938,  940,  941,  942,  944,  945,  946,
-  948,  949,  950,  952,  953,  955,  956,  957,
-  959,  960,  961,  963,  964,  965,  967,  968,
-  969,  971,  972,  973,  975,  976,  977,  979,
-  980,  981,  983,  984,  986,  987,  988,  990,
-  991,  992,  994,  995,  996,  998,  999, 1001,
-  1002, 1003, 1005, 1006, 1007, 1009, 1010, 1012,
-  1013, 1014, 1016, 1017, 1018, 1020, 1021, 1023
-};
-
-static const int16_t kIndicatorTable[17] = {
-  0, 2017, 3809, 5227, 6258, 6963, 7424, 7718,
-  7901, 8014, 8084, 8126, 8152, 8168, 8177, 8183, 8187
-};
-
 // hybrib Hanning & flat window
 static const int16_t kBlocks80w128x[128] = {
   0,    536,   1072,   1606,   2139,   2669,   3196,   3720,   4240,   4756,   5266,
@@ -612,7 +476,7 @@ static void PrepareSpectrumC(NsxInst_t* inst, int16_t* freq_buf) {
 }
 
 // Denormalize the real-valued signal |in|, the output from inverse FFT.
-static __inline void Denormalize(NsxInst_t* inst, int16_t* in, int factor) {
+static void DenormalizeC(NsxInst_t* inst, int16_t* in, int factor) {
   int i = 0;
   int32_t tmp32 = 0;
   for (i = 0; i < inst->anaLen; i += 1) {
@@ -677,9 +541,9 @@ static void AnalysisUpdateC(NsxInst_t* inst,
 }
 
 // Normalize the real-valued signal |in|, the input to forward FFT.
-static __inline void NormalizeRealBuffer(NsxInst_t* inst,
-                                         const int16_t* in,
-                                         int16_t* out) {
+static void NormalizeRealBufferC(NsxInst_t* inst,
+                                 const int16_t* in,
+                                 int16_t* out) {
   int i = 0;
   for (i = 0; i < inst->anaLen; ++i) {
     out[i] = WEBRTC_SPL_LSHIFT_W16(in[i], inst->normData); // Q(normData)
@@ -691,6 +555,8 @@ NoiseEstimation WebRtcNsx_NoiseEstimation;
 PrepareSpectrum WebRtcNsx_PrepareSpectrum;
 SynthesisUpdate WebRtcNsx_SynthesisUpdate;
 AnalysisUpdate WebRtcNsx_AnalysisUpdate;
+Denormalize WebRtcNsx_Denormalize;
+NormalizeRealBuffer WebRtcNsx_NormalizeRealBuffer;
 
 #if (defined WEBRTC_DETECT_ARM_NEON || defined WEBRTC_ARCH_ARM_NEON)
 // Initialize function pointers for ARM Neon platform.
@@ -699,6 +565,19 @@ static void WebRtcNsx_InitNeon(void) {
   WebRtcNsx_PrepareSpectrum = WebRtcNsx_PrepareSpectrumNeon;
   WebRtcNsx_SynthesisUpdate = WebRtcNsx_SynthesisUpdateNeon;
   WebRtcNsx_AnalysisUpdate = WebRtcNsx_AnalysisUpdateNeon;
+}
+#endif
+
+#if defined(MIPS32_LE)
+// Initialize function pointers for MIPS platform.
+static void WebRtcNsx_InitMips(void) {
+  WebRtcNsx_PrepareSpectrum = WebRtcNsx_PrepareSpectrum_mips;
+  WebRtcNsx_SynthesisUpdate = WebRtcNsx_SynthesisUpdate_mips;
+  WebRtcNsx_AnalysisUpdate = WebRtcNsx_AnalysisUpdate_mips;
+  WebRtcNsx_NormalizeRealBuffer = WebRtcNsx_NormalizeRealBuffer_mips;
+#if defined(MIPS_DSP_R1_LE)
+  WebRtcNsx_Denormalize = WebRtcNsx_Denormalize_mips;
+#endif
 }
 #endif
 
@@ -889,6 +768,8 @@ int32_t WebRtcNsx_InitCore(NsxInst_t* inst, uint32_t fs) {
   WebRtcNsx_PrepareSpectrum = PrepareSpectrumC;
   WebRtcNsx_SynthesisUpdate = SynthesisUpdateC;
   WebRtcNsx_AnalysisUpdate = AnalysisUpdateC;
+  WebRtcNsx_Denormalize = DenormalizeC;
+  WebRtcNsx_NormalizeRealBuffer = NormalizeRealBufferC;
 
 #ifdef WEBRTC_DETECT_ARM_NEON
   uint64_t features = WebRtc_GetCPUFeaturesARM();
@@ -897,6 +778,10 @@ int32_t WebRtcNsx_InitCore(NsxInst_t* inst, uint32_t fs) {
   }
 #elif defined(WEBRTC_ARCH_ARM_NEON)
   WebRtcNsx_InitNeon();
+#endif
+
+#if defined(MIPS32_LE)
+  WebRtcNsx_InitMips();
 #endif
 
   inst->initFlag = 1;
@@ -1300,239 +1185,6 @@ void WebRtcNsx_ComputeSpectralDifference(NsxInst_t* inst, uint16_t* magnIn) {
   }
 }
 
-// Compute speech/noise probability
-// speech/noise probability is returned in: probSpeechFinal
-//snrLocPrior is the prior SNR for each frequency (in Q11)
-//snrLocPost is the post SNR for each frequency (in Q11)
-void WebRtcNsx_SpeechNoiseProb(NsxInst_t* inst, uint16_t* nonSpeechProbFinal,
-                               uint32_t* priorLocSnr, uint32_t* postLocSnr) {
-  uint32_t zeros, num, den, tmpU32no1, tmpU32no2, tmpU32no3;
-
-  int32_t invLrtFX, indPriorFX, tmp32, tmp32no1, tmp32no2, besselTmpFX32;
-  int32_t frac32, logTmp;
-  int32_t logLrtTimeAvgKsumFX;
-
-  int16_t indPriorFX16;
-  int16_t tmp16, tmp16no1, tmp16no2, tmpIndFX, tableIndex, frac, intPart;
-
-  int i, normTmp, normTmp2, nShifts;
-
-  // compute feature based on average LR factor
-  // this is the average over all frequencies of the smooth log LRT
-  logLrtTimeAvgKsumFX = 0;
-  for (i = 0; i < inst->magnLen; i++) {
-    besselTmpFX32 = (int32_t)postLocSnr[i]; // Q11
-    normTmp = WebRtcSpl_NormU32(postLocSnr[i]);
-    num = WEBRTC_SPL_LSHIFT_U32(postLocSnr[i], normTmp); // Q(11+normTmp)
-    if (normTmp > 10) {
-      den = WEBRTC_SPL_LSHIFT_U32(priorLocSnr[i], normTmp - 11); // Q(normTmp)
-    } else {
-      den = WEBRTC_SPL_RSHIFT_U32(priorLocSnr[i], 11 - normTmp); // Q(normTmp)
-    }
-    if (den > 0) {
-      besselTmpFX32 -= WEBRTC_SPL_UDIV(num, den); // Q11
-    } else {
-      besselTmpFX32 -= num; // Q11
-    }
-
-    // inst->logLrtTimeAvg[i] += LRT_TAVG * (besselTmp - log(snrLocPrior) - inst->logLrtTimeAvg[i]);
-    // Here, LRT_TAVG = 0.5
-    zeros = WebRtcSpl_NormU32(priorLocSnr[i]);
-    frac32 = (int32_t)(((priorLocSnr[i] << zeros) & 0x7FFFFFFF) >> 19);
-    tmp32 = WEBRTC_SPL_MUL(frac32, frac32);
-    tmp32 = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(tmp32, -43), 19);
-    tmp32 += WEBRTC_SPL_MUL_16_16_RSFT((int16_t)frac32, 5412, 12);
-    frac32 = tmp32 + 37;
-    // tmp32 = log2(priorLocSnr[i])
-    tmp32 = (int32_t)(((31 - zeros) << 12) + frac32) - (11 << 12); // Q12
-    logTmp = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL_32_16(tmp32, 178), 8); // log2(priorLocSnr[i])*log(2)
-    tmp32no1 = WEBRTC_SPL_RSHIFT_W32(logTmp + inst->logLrtTimeAvgW32[i], 1); // Q12
-    inst->logLrtTimeAvgW32[i] += (besselTmpFX32 - tmp32no1); // Q12
-
-    logLrtTimeAvgKsumFX += inst->logLrtTimeAvgW32[i]; // Q12
-  }
-  inst->featureLogLrt = WEBRTC_SPL_RSHIFT_W32(logLrtTimeAvgKsumFX * 5, inst->stages + 10); // 5 = BIN_SIZE_LRT / 2
-  // done with computation of LR factor
-
-  //
-  //compute the indicator functions
-  //
-
-  // average LRT feature
-  // FLOAT code
-  // indicator0 = 0.5 * (tanh(widthPrior * (logLrtTimeAvgKsum - threshPrior0)) + 1.0);
-  tmpIndFX = 16384; // Q14(1.0)
-  tmp32no1 = logLrtTimeAvgKsumFX - inst->thresholdLogLrt; // Q12
-  nShifts = 7 - inst->stages; // WIDTH_PR_MAP_SHIFT - inst->stages + 5;
-  //use larger width in tanh map for pause regions
-  if (tmp32no1 < 0) {
-    tmpIndFX = 0;
-    tmp32no1 = -tmp32no1;
-    //widthPrior = widthPrior * 2.0;
-    nShifts++;
-  }
-  tmp32no1 = WEBRTC_SPL_SHIFT_W32(tmp32no1, nShifts); // Q14
-  // compute indicator function: sigmoid map
-  tableIndex = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32no1, 14);
-  if ((tableIndex < 16) && (tableIndex >= 0)) {
-    tmp16no2 = kIndicatorTable[tableIndex];
-    tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
-    frac = (int16_t)(tmp32no1 & 0x00003fff); // Q14
-    tmp16no2 += (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16no1, frac, 14);
-    if (tmpIndFX == 0) {
-      tmpIndFX = 8192 - tmp16no2; // Q14
-    } else {
-      tmpIndFX = 8192 + tmp16no2; // Q14
-    }
-  }
-  indPriorFX = WEBRTC_SPL_MUL_16_16(inst->weightLogLrt, tmpIndFX); // 6*Q14
-
-  //spectral flatness feature
-  if (inst->weightSpecFlat) {
-    tmpU32no1 = WEBRTC_SPL_UMUL(inst->featureSpecFlat, 400); // Q10
-    tmpIndFX = 16384; // Q14(1.0)
-    //use larger width in tanh map for pause regions
-    tmpU32no2 = inst->thresholdSpecFlat - tmpU32no1; //Q10
-    nShifts = 4;
-    if (inst->thresholdSpecFlat < tmpU32no1) {
-      tmpIndFX = 0;
-      tmpU32no2 = tmpU32no1 - inst->thresholdSpecFlat;
-      //widthPrior = widthPrior * 2.0;
-      nShifts++;
-    }
-    tmp32no1 = (int32_t)WebRtcSpl_DivU32U16(WEBRTC_SPL_LSHIFT_U32(tmpU32no2,
-                                                                        nShifts), 25); //Q14
-    tmpU32no1 = WebRtcSpl_DivU32U16(WEBRTC_SPL_LSHIFT_U32(tmpU32no2, nShifts), 25); //Q14
-    // compute indicator function: sigmoid map
-    // FLOAT code
-    // indicator1 = 0.5 * (tanh(sgnMap * widthPrior * (threshPrior1 - tmpFloat1)) + 1.0);
-    tableIndex = (int16_t)WEBRTC_SPL_RSHIFT_U32(tmpU32no1, 14);
-    if (tableIndex < 16) {
-      tmp16no2 = kIndicatorTable[tableIndex];
-      tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
-      frac = (int16_t)(tmpU32no1 & 0x00003fff); // Q14
-      tmp16no2 += (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16no1, frac, 14);
-      if (tmpIndFX) {
-        tmpIndFX = 8192 + tmp16no2; // Q14
-      } else {
-        tmpIndFX = 8192 - tmp16no2; // Q14
-      }
-    }
-    indPriorFX += WEBRTC_SPL_MUL_16_16(inst->weightSpecFlat, tmpIndFX); // 6*Q14
-  }
-
-  //for template spectral-difference
-  if (inst->weightSpecDiff) {
-    tmpU32no1 = 0;
-    if (inst->featureSpecDiff) {
-      normTmp = WEBRTC_SPL_MIN(20 - inst->stages,
-                               WebRtcSpl_NormU32(inst->featureSpecDiff));
-      tmpU32no1 = WEBRTC_SPL_LSHIFT_U32(inst->featureSpecDiff, normTmp); // Q(normTmp-2*stages)
-      tmpU32no2 = WEBRTC_SPL_RSHIFT_U32(inst->timeAvgMagnEnergy, 20 - inst->stages
-                                        - normTmp);
-      if (tmpU32no2 > 0) {
-        // Q(20 - inst->stages)
-        tmpU32no1 = WEBRTC_SPL_UDIV(tmpU32no1, tmpU32no2);
-      } else {
-        tmpU32no1 = (uint32_t)(0x7fffffff);
-      }
-    }
-    tmpU32no3 = WEBRTC_SPL_UDIV(WEBRTC_SPL_LSHIFT_U32(inst->thresholdSpecDiff, 17), 25);
-    tmpU32no2 = tmpU32no1 - tmpU32no3;
-    nShifts = 1;
-    tmpIndFX = 16384; // Q14(1.0)
-    //use larger width in tanh map for pause regions
-    if (tmpU32no2 & 0x80000000) {
-      tmpIndFX = 0;
-      tmpU32no2 = tmpU32no3 - tmpU32no1;
-      //widthPrior = widthPrior * 2.0;
-      nShifts--;
-    }
-    tmpU32no1 = WEBRTC_SPL_RSHIFT_U32(tmpU32no2, nShifts);
-    // compute indicator function: sigmoid map
-    /* FLOAT code
-     indicator2 = 0.5 * (tanh(widthPrior * (tmpFloat1 - threshPrior2)) + 1.0);
-     */
-    tableIndex = (int16_t)WEBRTC_SPL_RSHIFT_U32(tmpU32no1, 14);
-    if (tableIndex < 16) {
-      tmp16no2 = kIndicatorTable[tableIndex];
-      tmp16no1 = kIndicatorTable[tableIndex + 1] - kIndicatorTable[tableIndex];
-      frac = (int16_t)(tmpU32no1 & 0x00003fff); // Q14
-      tmp16no2 += (int16_t)WEBRTC_SPL_MUL_16_16_RSFT_WITH_ROUND(
-                    tmp16no1, frac, 14);
-      if (tmpIndFX) {
-        tmpIndFX = 8192 + tmp16no2;
-      } else {
-        tmpIndFX = 8192 - tmp16no2;
-      }
-    }
-    indPriorFX += WEBRTC_SPL_MUL_16_16(inst->weightSpecDiff, tmpIndFX); // 6*Q14
-  }
-
-  //combine the indicator function with the feature weights
-  // FLOAT code
-  // indPrior = 1 - (weightIndPrior0 * indicator0 + weightIndPrior1 * indicator1 + weightIndPrior2 * indicator2);
-  indPriorFX16 = WebRtcSpl_DivW32W16ResW16(98307 - indPriorFX, 6); // Q14
-  // done with computing indicator function
-
-  //compute the prior probability
-  // FLOAT code
-  // inst->priorNonSpeechProb += PRIOR_UPDATE * (indPriorNonSpeech - inst->priorNonSpeechProb);
-  tmp16 = indPriorFX16 - inst->priorNonSpeechProb; // Q14
-  inst->priorNonSpeechProb += (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
-                                PRIOR_UPDATE_Q14, tmp16, 14); // Q14
-
-  //final speech probability: combine prior model with LR factor:
-
-  memset(nonSpeechProbFinal, 0, sizeof(uint16_t) * inst->magnLen);
-
-  if (inst->priorNonSpeechProb > 0) {
-    for (i = 0; i < inst->magnLen; i++) {
-      // FLOAT code
-      // invLrt = exp(inst->logLrtTimeAvg[i]);
-      // invLrt = inst->priorSpeechProb * invLrt;
-      // nonSpeechProbFinal[i] = (1.0 - inst->priorSpeechProb) / (1.0 - inst->priorSpeechProb + invLrt);
-      // invLrt = (1.0 - inst->priorNonSpeechProb) * invLrt;
-      // nonSpeechProbFinal[i] = inst->priorNonSpeechProb / (inst->priorNonSpeechProb + invLrt);
-      if (inst->logLrtTimeAvgW32[i] < 65300) {
-        tmp32no1 = WEBRTC_SPL_RSHIFT_W32(WEBRTC_SPL_MUL(inst->logLrtTimeAvgW32[i], 23637),
-                                         14); // Q12
-        intPart = (int16_t)WEBRTC_SPL_RSHIFT_W32(tmp32no1, 12);
-        if (intPart < -8) {
-          intPart = -8;
-        }
-        frac = (int16_t)(tmp32no1 & 0x00000fff); // Q12
-
-        // Quadratic approximation of 2^frac
-        tmp32no2 = WEBRTC_SPL_RSHIFT_W32(frac * frac * 44, 19); // Q12
-        tmp32no2 += WEBRTC_SPL_MUL_16_16_RSFT(frac, 84, 7); // Q12
-        invLrtFX = WEBRTC_SPL_LSHIFT_W32(1, 8 + intPart)
-                   + WEBRTC_SPL_SHIFT_W32(tmp32no2, intPart - 4); // Q8
-
-        normTmp = WebRtcSpl_NormW32(invLrtFX);
-        normTmp2 = WebRtcSpl_NormW16((16384 - inst->priorNonSpeechProb));
-        if (normTmp + normTmp2 >= 7) {
-          if (normTmp + normTmp2 < 15) {
-            invLrtFX = WEBRTC_SPL_RSHIFT_W32(invLrtFX, 15 - normTmp2 - normTmp);
-            // Q(normTmp+normTmp2-7)
-            tmp32no1 = WEBRTC_SPL_MUL_32_16(invLrtFX, (16384 - inst->priorNonSpeechProb));
-            // Q(normTmp+normTmp2+7)
-            invLrtFX = WEBRTC_SPL_SHIFT_W32(tmp32no1, 7 - normTmp - normTmp2); // Q14
-          } else {
-            tmp32no1 = WEBRTC_SPL_MUL_32_16(invLrtFX, (16384 - inst->priorNonSpeechProb)); // Q22
-            invLrtFX = WEBRTC_SPL_RSHIFT_W32(tmp32no1, 8); // Q14
-          }
-
-          tmp32no1 = WEBRTC_SPL_LSHIFT_W32((int32_t)inst->priorNonSpeechProb, 8); // Q22
-
-          nonSpeechProbFinal[i] = (uint16_t)WEBRTC_SPL_DIV(tmp32no1,
-              (int32_t)inst->priorNonSpeechProb + invLrtFX); // Q8
-        }
-      }
-    }
-  }
-}
-
 // Transform input (speechFrame) to frequency domain magnitude (magnU16)
 void WebRtcNsx_DataAnalysis(NsxInst_t* inst, short* speechFrame, uint16_t* magnU16) {
 
@@ -1592,7 +1244,7 @@ void WebRtcNsx_DataAnalysis(NsxInst_t* inst, short* speechFrame, uint16_t* magnU
   right_shifts_in_magnU16 = WEBRTC_SPL_MAX(right_shifts_in_magnU16, 0);
 
   // create realImag as winData interleaved with zeros (= imag. part), normalize it
-  NormalizeRealBuffer(inst, winData, realImag);
+  WebRtcNsx_NormalizeRealBuffer(inst, winData, realImag);
 
   // FFT output will be in winData[].
   WebRtcSpl_RealForwardFFT(inst->real_fft, realImag, winData);
@@ -1824,7 +1476,7 @@ void WebRtcNsx_DataSynthesis(NsxInst_t* inst, short* outFrame) {
   // Inverse FFT output will be in rfft_out[].
   outCIFFT = WebRtcSpl_RealInverseFFT(inst->real_fft, realImag, rfft_out);
 
-  Denormalize(inst, rfft_out, outCIFFT);
+  WebRtcNsx_Denormalize(inst, rfft_out, outCIFFT);
 
   //scale factor: only do it after END_STARTUP_LONG time
   gainFactor = 8192; // 8192 = Q13(1.0)

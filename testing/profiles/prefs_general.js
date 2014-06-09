@@ -190,3 +190,6 @@ user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
 // actually need a functioning FxA server, so just set it to something that
 // resolves and accepts requests, even if they all fail.
 user_pref('identity.fxaccounts.auth.uri', 'https://%(server)s/fxa-dummy/');
+
+// Enable logging of APZ test data (see bug 961289).
+user_pref('apz.test.logging_enabled', true);

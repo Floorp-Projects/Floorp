@@ -68,18 +68,20 @@ int main(int argc, char* argv[])
 	uint32_t ATdiff = 0;
     if (argc > 4)
     {
-        if (argv[4] >= 0)
-            SNdiff = atoi(argv[4]) - packet.sequenceNumber();
+        int startSN = atoi(argv[4]);
+        if (startSN >= 0)
+            SNdiff = startSN - packet.sequenceNumber();
         if (argc > 5)
         {
-            if (argv[5] >= 0)
-                ATdiff = atoi(argv[5]) - packet.time();
+            int startTS = atoi(argv[5]);
+            if (startTS >= 0)
+                ATdiff = startTS - packet.time();
         }
     }
 
     while (packLen >= 0)
     {
-        
+
         packet.setTimeStamp(packet.timeStamp() + TSdiff);
         packet.setSequenceNumber(packet.sequenceNumber() + SNdiff);
         packet.setTime(packet.time() + ATdiff);

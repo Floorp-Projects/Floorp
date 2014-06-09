@@ -213,6 +213,7 @@ static const char* const gOmxTypes[] = {
   "audio/amr",
   "video/mp4",
   "video/3gpp",
+  "video/3gpp2",
   "video/quicktime",
 #ifdef MOZ_OMX_WEBM_DECODER
   "video/webm",

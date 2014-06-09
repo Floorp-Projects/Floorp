@@ -10,8 +10,6 @@
  * liability, trademark and document use rules apply.
  */
 
-interface SVGNumber;
-
 interface SVGNumberList {
   readonly attribute unsigned long numberOfItems;
   [Throws]

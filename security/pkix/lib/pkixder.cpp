@@ -23,6 +23,8 @@
  */
 
 #include "pkixder.h"
+#include "pkix/bind.h"
+#include "cert.h"
 
 namespace mozilla { namespace pkix { namespace der {
 
@@ -89,5 +91,48 @@ ExpectTagAndGetLength(Input& input, uint8_t expectedTag, uint16_t& length)
 }
 
 } // namespace internal
+
+Result
+SignedData(Input& input, /*out*/ Input& tbs, /*out*/ CERTSignedData& signedData)
+{
+  Input::Mark mark(input.GetMark());
+
+  if (ExpectTagAndGetValue(input, SEQUENCE, tbs) != Success) {
+    return Failure;
+  }
+
+  if (input.GetSECItem(siBuffer, mark, signedData.data) != Success) {
+    return Failure;
+  }
+
+  if (Nested(input, SEQUENCE,
+             bind(AlgorithmIdentifier, _1, ref(signedData.signatureAlgorithm)))
+        != Success) {
+    return Failure;
+  }
+
+  if (ExpectTagAndGetValue(input, BIT_STRING, signedData.signature)
+        != Success) {
+    return Failure;
+  }
+  if (signedData.signature.len == 0) {
+    return Fail(SEC_ERROR_BAD_SIGNATURE);
+  }
+  unsigned int unusedBitsAtEnd = signedData.signature.data[0];
+  // XXX: Really the constraint should be that unusedBitsAtEnd must be less
+  // than 7. But, we suspect there are no real-world OCSP responses or X.509
+  // certificates with non-zero unused bits. It seems like NSS assumes this in
+  // various places, so we enforce it too in order to simplify this code. If we
+  // find compatibility issues, we'll know we're wrong and we'll have to figure
+  // out how to shift the bits around.
+  if (unusedBitsAtEnd != 0) {
+    return Fail(SEC_ERROR_BAD_SIGNATURE);
+  }
+  ++signedData.signature.data;
+  --signedData.signature.len;
+  signedData.signature.len = (signedData.signature.len << 3); // Bytes to bits
+
+  return Success;
+}
 
 } } } // namespace mozilla::pkix::der

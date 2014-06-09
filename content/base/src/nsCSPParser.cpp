@@ -231,8 +231,8 @@ nsCSPParser::port()
 
   // Port must start with a number
   if (!accept(isNumberToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParsePort",
                              params, ArrayLength(params));
     return false;
   }
@@ -260,11 +260,15 @@ nsCSPParser::subPath(nsCSPHostSrc* aCspHost)
       ++charCounter;
     }
     if (accept(SLASH)) {
+      ++charCounter;
       aCspHost->appendPath(mCurValue);
       // Resetting current value since we are appending parts of the path
       // to aCspHost, e.g; "http://www.example.com/path1/path2" then the
       // first part is "/path1", second part "/path2"
       resetCurValue();
+    }
+    if (atEnd()) {
+      return true;
     }
     if (charCounter > kSubHostPathCharacterCutoff) {
       return false;
@@ -289,12 +293,20 @@ nsCSPParser::path(nsCSPHostSrc* aCspHost)
   resetCurValue();
 
   if (!accept(SLASH)) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   if (atEnd()) {
     return true;
   }
+  // path can begin with "/" but not "//"
+  // see http://tools.ietf.org/html/rfc3986#section-3.3
   if (!hostChar()) {
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
+                             params, ArrayLength(params));
     return false;
   }
   return subPath(aCspHost);
@@ -347,8 +359,8 @@ nsCSPParser::host()
     }
     // If the token is not only the "*", a "." must follow right after
     if (!accept(DOT)) {
-      const char16_t* params[] = { mCurValue.get() };
-      logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+      const char16_t* params[] = { mCurToken.get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                                params, ArrayLength(params));
       return nullptr;
     }
@@ -356,16 +368,16 @@ nsCSPParser::host()
 
   // Expecting at least one Character
   if (!accept(isCharacterToken)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
 
   // There might be several sub hosts defined.
   if (!subHost()) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidHost",
                              params, ArrayLength(params));
     return nullptr;
   }
@@ -374,7 +386,7 @@ nsCSPParser::host()
   if (CSP_IsQuotelessKeyword(mCurValue)) {
     nsString keyword = mCurValue;
     ToLowerCase(keyword);
-    const char16_t* params[] = { mCurValue.get(), keyword.get() };
+    const char16_t* params[] = { mCurToken.get(), keyword.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "hostNameMightBeKeyword",
                              params, ArrayLength(params));
   }
@@ -395,8 +407,8 @@ nsCSPParser::appHost()
 
   // appHosts have to end with "}", otherwise we have to report an error
   if (!accept(CLOSE_CURL)) {
-    const char16_t* params[] = { mCurValue.get() };
-    logWarningErrorToConsole(nsIScriptError::warningFlag, "policyURIParseError",
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "couldntParseInvalidSource",
                              params, ArrayLength(params));
     return nullptr;
   }
@@ -464,7 +476,11 @@ nsCSPParser::hostSource()
   // occurs, path() reports the error; handing cspHost as an argument
   // which simplifies parsing of several paths.
   if (!path(cspHost)) {
-    return cspHost;
+    // If the host [port] is followed by a path, it has to be a valid path,
+    // otherwise we pass the nullptr, indicating an error, up the callstack.
+    // see also http://www.w3.org/TR/CSP11/#source-list
+    delete cspHost;
+    return nullptr;
   }
 
   // Calling fileAndArguments to see if there are any files to parse;
@@ -696,7 +712,8 @@ nsCSPParser::sourceList(nsTArray<nsCSPBaseSrc*>& outSrcs)
     }
     // Otherwise, we ignore 'none' and report a warning
     else {
-      const char16_t* params[] = { NS_ConvertUTF8toUTF16(CSP_EnumToKeyword(CSP_NONE)).get() };
+      NS_ConvertUTF8toUTF16 unicodeNone(CSP_EnumToKeyword(CSP_NONE));
+      const char16_t* params[] = { unicodeNone.get() };
       logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringUnknownOption",
                                params, ArrayLength(params));
     }
@@ -887,7 +904,8 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
       nsAutoCString prePath;
       nsresult rv = aSelfURI->GetPrePath(prePath);
       NS_ENSURE_SUCCESS(rv, policy);
-      const char16_t* params[] = { NS_ConvertUTF8toUTF16(prePath).get() };
+      NS_ConvertUTF8toUTF16 unicodePrePath(prePath);
+      const char16_t* params[] = { unicodePrePath.get() };
       parser.logWarningErrorToConsole(nsIScriptError::warningFlag, "reportURInotInReportOnlyHeader",
                                       params, ArrayLength(params));
     }

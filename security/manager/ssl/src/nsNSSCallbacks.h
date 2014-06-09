@@ -33,6 +33,10 @@ private:
   // For XPCOM implementations that are not a base class for some other
   // class, it is good practice to make the destructor non-virtual and
   // private.  Then the only way to delete the object is via Release.
+#ifdef _MSC_VER
+  // C4265: Class has virtual members but destructor is not virtual
+  __pragma(warning(disable:4265))
+#endif
   ~nsHTTPListener();
 
 public:

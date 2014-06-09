@@ -526,6 +526,19 @@ public:
   }
 
   /**
+   * This method gets the current doc of the node hosting this content
+   * or the current doc of this content if it is not being hosted. This
+   * method walks through ShadowRoot boundaries until it reach the host
+   * that is located in the root of the "tree of trees" (see Shadow DOM
+   * spec) and returns the current doc for that host.
+   */
+  nsIDocument* GetCrossShadowCurrentDoc() const
+  {
+    return HasFlag(NODE_IS_IN_SHADOW_TREE) ?
+      GetCrossShadowCurrentDocInternal() : GetCurrentDoc();
+  }
+
+  /**
    * The values returned by this function are the ones defined for
    * nsIDOMNode.nodeType
    */
@@ -808,29 +821,7 @@ public:
    * null.  It may return 'this' (e.g. for document nodes, and nodes that
    * are the roots of disconnected subtrees).
    */
-  nsINode* SubtreeRoot() const
-  {
-    // There are three cases of interest here.  nsINodes that are really:
-    // 1. nsIDocument nodes - Are always in the document.
-    // 2. nsIContent nodes - Are either in the document, or mSubtreeRoot
-    //    is updated in BindToTree/UnbindFromTree.
-    // 3. nsIAttribute nodes - Are never in the document, and mSubtreeRoot
-    //    is always 'this' (as set in nsINode's ctor).
-    nsINode* node = IsInDoc() ? OwnerDocAsNode() : mSubtreeRoot;
-    NS_ASSERTION(node, "Should always have a node here!");
-#ifdef DEBUG
-    {
-      const nsINode* slowNode = this;
-      const nsINode* iter = slowNode;
-      while ((iter = iter->GetParentNode())) {
-        slowNode = iter;
-      }
-
-      NS_ASSERTION(slowNode == node, "These should always be in sync!");
-    }
-#endif
-    return node;
-  }
+  nsINode* SubtreeRoot() const;
 
   /**
    * See nsIDOMEventTarget
@@ -1205,6 +1196,8 @@ public:
 
 private:
 
+  nsIDocument* GetCrossShadowCurrentDocInternal() const;
+
   nsIContent* GetNextNodeImpl(const nsINode* aRoot,
                               const bool aSkipChildren) const
   {
@@ -1520,7 +1513,8 @@ protected:
   void SetSubtreeRootPointer(nsINode* aSubtreeRoot)
   {
     NS_ASSERTION(aSubtreeRoot, "aSubtreeRoot can never be null!");
-    NS_ASSERTION(!(IsNodeOfType(eCONTENT) && IsInDoc()), "Shouldn't be here!");
+    NS_ASSERTION(!(IsNodeOfType(eCONTENT) && IsInDoc()) &&
+                 !HasFlag(NODE_IS_IN_SHADOW_TREE), "Shouldn't be here!");
     mSubtreeRoot = aSubtreeRoot;
   }
 

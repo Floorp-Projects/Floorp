@@ -8,10 +8,12 @@ if [ -d "$topsrcdir/clang" ]; then
     # mozilla-central based build
     export CC=$topsrcdir/clang/bin/clang
     export CXX=$topsrcdir/clang/bin/clang++
+    export LLVMCONFIG=$topsrcdir/clang/bin/llvm-config
 elif [ -d "$topsrcdir/../clang" ]; then
     # comm-central based build
     export CC=$topsrcdir/../clang/bin/clang
     export CXX=$topsrcdir/../clang/bin/clang++
+    export LLVMCONFIG=$topsrcdir/../clang/bin/llvm-config
 fi
 
 # If not set use the system default clang

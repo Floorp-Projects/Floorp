@@ -103,9 +103,6 @@ public:
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 
-  virtual nsIAtom* DoGetID() const MOZ_OVERRIDE;
-  virtual nsIAtom *GetIDAttributeName() const MOZ_OVERRIDE;
-
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers) MOZ_OVERRIDE

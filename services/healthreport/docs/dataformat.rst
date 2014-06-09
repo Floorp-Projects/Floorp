@@ -1528,6 +1528,76 @@ Example
     }
 
 
+org.mozilla.translation.translation
+-----------------------------------
+
+This daily measurement contains information about the usage of the translation
+feature. It is a special telemetry measurement which will only be recorded in
+FHR if telemetry is enabled.
+
+Version 1
+^^^^^^^^^
+
+Daily counts are reported in the following properties:
+
+translationOpportunityCount
+    Integer count of the number of opportunities there were to translate a page.
+pageTranslatedCount
+    Integer count of the number of pages translated.
+charactersTranslatedCount
+    Integer count of the number of characters translated.
+detectedLanguageChangedBefore
+    Integer count of the number of times the user manually adjusted the detected
+    language before translating.
+detectedLanguageChangedAfter
+    Integer count of the number of times the user manually adjusted the detected
+    language after having first translated the page.
+
+Additional daily counts broken down by language are reported in the following
+properties:
+
+translationOpportunityCountsByLanguage
+    A mapping from language to count of opportunities to translate that
+    language.
+pageTranslatedCountsByLanguage
+    A mapping from language to the counts of pages translated from that
+    language. Each language entry will be an object containing a "total" member
+    along with individual counts for each language translated to.
+
+Other properties:
+
+detectLanguageEnabled
+    Whether automatic language detection is enabled. This is an integer, 0 or 1.
+showTranslationUI
+    Whether the translation feature UI will be shown. This is an integer, 0 or 1.
+
+Example
+^^^^^^^
+
+::
+
+    "org.mozilla.translation.translation": {
+      "_v": 1,
+      "detectLanguageEnabled": 1,
+      "showTranslationUI": 1,
+      "translationOpportunityCount": 134,
+      "pageTranslatedCount": 6,
+      "charactersTranslatedCount": "1126",
+      "detectedLanguageChangedBefore": 1,
+      "detectedLanguageChangedAfter": 2,
+      "translationOpportunityCountsByLanguage": {
+        "fr": 100,
+        "es": 34
+      },
+      "pageTranslatedCountsByLanguage": {
+        "fr": {
+          "total": 6,
+          "es": 5,
+          "en": 1
+        }
+      }
+    }
+
 
 org.mozilla.experiments.info
 ----------------------------------

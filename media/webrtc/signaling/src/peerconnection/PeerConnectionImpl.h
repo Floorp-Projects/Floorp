@@ -246,8 +246,6 @@ public:
   void onCallEvent(const OnCallEventArgs &args);
 
   // DataConnection observers
-  void NotifyConnection();
-  void NotifyClosedConnection();
   void NotifyDataChannel(already_AddRefed<mozilla::DataChannel> aChannel);
 
   // Get the media object
@@ -408,6 +406,17 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   const PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
   nsresult SetPeerIdentity(const nsAString& peerIdentity);
+
+  const std::string& GetIdAsAscii() const
+  {
+    return mName;
+  }
+
+  nsresult GetId(nsAString& id)
+  {
+    id = NS_ConvertASCIItoUTF16(mName.c_str());
+    return NS_OK;
+  }
 #endif
 
   // this method checks to see if we've made a promise to protect media.
@@ -440,15 +449,6 @@ public:
     GetRemoteDescription(&tmp);
     aSDP.AssignASCII(tmp);
     delete tmp;
-  }
-
-  NS_IMETHODIMP ReadyState(mozilla::dom::PCImplReadyState* aState);
-
-  mozilla::dom::PCImplReadyState ReadyState()
-  {
-    mozilla::dom::PCImplReadyState state;
-    ReadyState(&state);
-    return state;
   }
 
   NS_IMETHODIMP SignalingState(mozilla::dom::PCImplSignalingState* aState);
@@ -539,6 +539,10 @@ public:
   // is called to start the list over.
   void ClearSdpParseErrorMessages();
 
+  void OnAddIceCandidateError() {
+    ++mAddCandidateErrorCount;
+  }
+
   // Called to retreive the list of parsing errors.
   const std::vector<std::string> &GetSdpParseErrors();
 
@@ -578,7 +582,6 @@ private:
   NS_IMETHODIMP EnsureDataConnection(uint16_t aNumstreams);
 
   nsresult CloseInt();
-  void ChangeReadyState(mozilla::dom::PCImplReadyState aReadyState);
   nsresult CheckApiState(bool assert_ice_ready) const;
   void CheckThread() const {
     NS_ABORT_IF_FALSE(CheckThreadInt(), "Wrong thread");
@@ -640,7 +643,6 @@ private:
 
   // The call
   mozilla::ScopedDeletePtr<Internal> mInternal;
-  mozilla::dom::PCImplReadyState mReadyState;
   mozilla::dom::PCImplSignalingState mSignalingState;
 
   // ICE State
@@ -720,6 +722,7 @@ private:
 
   // Holder for error messages from parsing SDP
   std::vector<std::string> mSDPParseErrorMessages;
+  unsigned int mAddCandidateErrorCount;
 
   bool mTrickle;
 

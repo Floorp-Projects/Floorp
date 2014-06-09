@@ -42,6 +42,17 @@
       ],
     },
     {
+      'target_name': 'frame_generator',
+      'type': 'static_library',
+      'sources': [
+        'frame_generator.cc',
+        'frame_generator.h',
+      ],
+      'dependencies': [
+        '<(webrtc_root)/common_video/common_video.gyp:common_video',
+      ],
+    },
+    {
       'target_name': 'test_support',
       'type': 'static_library',
       'dependencies': [
@@ -82,21 +93,6 @@
           'sources!': [
             'testsupport/android/root_path_android.cc',
           ],
-          # WebRTC tests use resource files for testing. These files are not
-          # hosted in WebRTC. The script ensures that the needed resources
-          # are downloaded. In stand alone WebRTC the script is called by
-          # the DEPS file. In Chromium, i.e. here, the files are pulled down
-          # only if tests requiring the resources are being built.
-          'actions': [
-            {
-              'action_name': 'get_resources',
-              'inputs': ['<(webrtc_root)/tools/update_resources.py'],
-              'outputs': ['../../../resources'],
-              'action': ['python',
-                         '<(webrtc_root)/tools/update_resources.py',
-                         '-p',
-                         '../../../'],
-            }],
         }, {
           'sources!': [
             'testsupport/android/root_path_android_chromium.cc',
@@ -167,28 +163,32 @@
         }],
       ],
     },
-    {
-      'target_name': 'buildbot_tests_scripts',
-      'type': 'none',
-      'copies': [
-        {
-          'destination': '<(PRODUCT_DIR)',
-          'files': [
-            'buildbot_tests.py',
-            '<(DEPTH)/tools/e2e_quality/audio/run_audio_test.py',
-          ],
-        },
-        {
-          'destination': '<(PRODUCT_DIR)/perf',
-          'files': [
-            '<(DEPTH)/tools/perf/__init__.py',
-            '<(DEPTH)/tools/perf/perf_utils.py',
-          ],
-        },
-      ],
-    },  # target buildbot_tests_scripts
   ],
   'conditions': [
+    ['build_with_chromium==0', {
+      'targets': [
+        {
+          'target_name': 'buildbot_tests_scripts',
+          'type': 'none',
+          'copies': [
+            {
+              'destination': '<(PRODUCT_DIR)',
+              'files': [
+                'buildbot_tests.py',
+                '<(webrtc_root)/tools/e2e_quality/audio/run_audio_test.py',
+              ],
+            },
+            {
+              'destination': '<(PRODUCT_DIR)/perf',
+              'files': [
+                '<(DEPTH)/tools/perf/__init__.py',
+                '<(DEPTH)/tools/perf/perf_utils.py',
+              ],
+            },
+          ],
+        },  # target buildbot_tests_scripts
+      ],
+    }],
     # TODO(henrike): remove build_with_chromium==1 when the bots are using
     # Chromium's buildbots.
     ['include_tests==1 and build_with_chromium==1 and OS=="android" and gtest_target_type=="shared_library"', {
@@ -208,10 +208,10 @@
           'target_name': 'test_support_unittests_run',
           'type': 'none',
           'dependencies': [
-            '<(import_isolate_path):import_isolate_gypi',
             'test_support_unittests',
           ],
           'includes': [
+            '../build/isolate.gypi',
             'test_support_unittests.isolate',
           ],
           'sources': [

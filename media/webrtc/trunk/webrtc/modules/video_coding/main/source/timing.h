@@ -82,6 +82,15 @@ class VCMTiming {
   // certain amount of processing time.
   bool EnoughTimeToDecode(uint32_t available_processing_time_ms) const;
 
+  // Return current timing information.
+  void GetTimings(int* decode_ms,
+                  int* max_decode_ms,
+                  int* current_delay_ms,
+                  int* target_delay_ms,
+                  int* jitter_buffer_ms,
+                  int* min_playout_delay_ms,
+                  int* render_delay_ms) const;
+
   enum { kDefaultRenderDelayMs = 10 };
   enum { kDelayMaxChangeMsPerS = 100 };
 
@@ -102,6 +111,7 @@ class VCMTiming {
   uint32_t min_playout_delay_ms_;
   uint32_t jitter_delay_ms_;
   uint32_t current_delay_ms_;
+  int last_decode_ms_;
   uint32_t prev_frame_timestamp_;
 };
 }  // namespace webrtc

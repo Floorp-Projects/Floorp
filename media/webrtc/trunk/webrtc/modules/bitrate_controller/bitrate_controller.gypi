@@ -14,15 +14,6 @@
       'dependencies': [
         '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
       ],
-      'include_dirs': [
-        '../interface',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../interface',
-          '<(webrtc_root)/modules/rtp_rtcp/interface',
-        ],
-      },
       'sources': [
         'bitrate_controller_impl.cc',
         'bitrate_controller_impl.h',

@@ -48,7 +48,7 @@ TEST(DspHelper, RampSignalArray) {
 TEST(DspHelper, RampSignalAudioMultiVector) {
   static const int kLen = 100;
   static const int kChannels = 5;
-  AudioMultiVector<int16_t> input(kChannels, kLen * 3);
+  AudioMultiVector input(kChannels, kLen * 3);
   // Fill input with 1000.
   for (int i = 0; i < kLen * 3; ++i) {
     for (int channel = 0; channel < kChannels; ++channel) {

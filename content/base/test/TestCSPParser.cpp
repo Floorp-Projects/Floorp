@@ -391,6 +391,10 @@ nsresult TestSimplePolicies() {
       "default-src http://abc" },
     { "script-src 'none' 'none' 'none';",
       "script-src 'none'" },
+    { "script-src http://www.example.com/path-1//",
+      "script-src http://www.example.com" },
+    { "script-src http://www.example.com/path-1//path_2",
+      "script-src http://www.example.com" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -407,28 +411,6 @@ nsresult TestPoliciesThatLogWarning() {
       "script-src http://www.selfuri.com" },
     { "script-src 'none' test.com; script-src example.com",
       "script-src http://test.com" },
-    { "script-src http://www.example.com//",
-      "script-src http://www.example.com" },
-    { "script-src http://www.example.com/path-1//",
-      "script-src http://www.example.com" },
-    { "script-src http://www.example.com/path-1//path_2",
-      "script-src http://www.example.com" },
-    { "script-src http://www.example.com:88path-1/",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:88//",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:88//path-1",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:88//path-1",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:88/.js",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:88.js",
-      "script-src http://www.example.com:88" },
-    { "script-src http://www.example.com:*.js",
-      "script-src http://www.example.com:*" },
-    { "script-src http://www.example.com:*.",
-      "script-src http://www.example.com:*" }
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -461,7 +443,16 @@ nsresult TestBadPolicies() {
     { "img-src *::88", "" },
     { "object-src http://localhost:", "" },
     { "script-src test..com", "" },
-    { "script-src sub1.sub2.example+", "" }
+    { "script-src sub1.sub2.example+", "" },
+    { "script-src http://www.example.com//", "" },
+    { "script-src http://www.example.com:88path-1/", "" },
+    { "script-src http://www.example.com:88//", "" },
+    { "script-src http://www.example.com:88//path-1", "" },
+    { "script-src http://www.example.com:88//path-1", "" },
+    { "script-src http://www.example.com:88/.js", "" },
+    { "script-src http://www.example.com:88.js", "" },
+    { "script-src http://www.example.com:*.js", "" },
+    { "script-src http://www.example.com:*.", "" },
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -730,6 +721,147 @@ nsresult TestBadGeneratedPolicies() {
   return runTestSuite(policies, policyCount, 0);
 }
 
+// ============ TestGoodGeneratedPoliciesForPathHandling ============
+
+nsresult TestGoodGeneratedPoliciesForPathHandling() {
+  // Once bug 808292 (Implement path-level host-source matching to CSP)
+  // lands we have to update the expected output to include the parsed path
+
+  static const PolicyTest policies[] =
+  {
+    { "img-src http://test1.example.com",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/file.js",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/file_1.js",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/file-2.js",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/f.js",
+      "img-src http://test1.example.com" },
+    { "img-src http://test1.example.com/path-1/path_2/f.oo.js",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/file.js",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/file_1.js",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/file-2.js",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/f.js",
+      "img-src http://test1.example.com" },
+    { "img-src test1.example.com/path-1/path_2/f.oo.js",
+      "img-src http://test1.example.com" },
+    { "img-src *.example.com",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/file.js",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/file_1.js",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/file-2.js",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/f.js",
+      "img-src http://*.example.com" },
+    { "img-src *.example.com/path-1/path_2/f.oo.js",
+      "img-src http://*.example.com" },
+    { "img-src test1.example.com:80",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1/",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1/path_2",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1/path_2/",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1/path_2/file.js",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:80/path-1/path_2/f.ile.js",
+      "img-src http://test1.example.com:80" },
+    { "img-src test1.example.com:*",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1/",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1/path_2",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1/path_2/",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1/path_2/file.js",
+      "img-src http://test1.example.com:*" },
+    { "img-src test1.example.com:*/path-1/path_2/f.ile.js",
+      "img-src http://test1.example.com:*" },
+    { "img-src http://test1.example.com/abc//",
+      "img-src http://test1.example.com" },
+    { "img-src https://test1.example.com/abc/def//",
+      "img-src https://test1.example.com" },
+    { "img-src https://test1.example.com/abc/def/ghi//",
+      "img-src https://test1.example.com" },
+    { "img-src http://test1.example.com:80/abc//",
+      "img-src http://test1.example.com:80" },
+    { "img-src https://test1.example.com:80/abc/def//",
+      "img-src https://test1.example.com:80" },
+    { "img-src https://test1.example.com:80/abc/def/ghi//",
+      "img-src https://test1.example.com:80" },
+    { "img-src https://test1.example.com/abc////////////def/",
+      "img-src https://test1.example.com" },
+    { "img-src https://test1.example.com/abc////////////",
+      "img-src https://test1.example.com" },
+  };
+
+  uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
+  return runTestSuite(policies, policyCount, 1);
+}
+
+// ============ TestBadGeneratedPoliciesForPathHandling ============
+
+nsresult TestBadGeneratedPoliciesForPathHandling() {
+
+  static const PolicyTest policies[] =
+  {
+    { "img-src test1.example.com:88path-1/", "" },
+    { "img-src test1.example.com:80.js", "" },
+    { "img-src test1.example.com:*.js", "" },
+    { "img-src test1.example.com:*.", "" },
+    { "img-src http://test1.example.com//", "" },
+    { "img-src http://test1.example.com:80//", "" },
+    { "img-src http://test1.example.com:80abc", "" },
+  };
+
+  uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
+  return runTestSuite(policies, policyCount, 0);
+}
+
 // ============================= TestFuzzyPolicies ========================
 
 // Use a policy, eliminate one character at a time,
@@ -886,21 +1018,23 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  if (NS_FAILED(TestDirectives()))                   { return 1; }
-  if (NS_FAILED(TestKeywords()))                     { return 1; }
-  if (NS_FAILED(TestIgnoreUpperLowerCasePolicies())) { return 1; }
-  if (NS_FAILED(TestIgnorePaths()))                  { return 1; }
-  if (NS_FAILED(TestSimplePolicies()))               { return 1; }
-  if (NS_FAILED(TestPoliciesThatLogWarning()))       { return 1; }
-  if (NS_FAILED(TestBadPolicies()))                  { return 1; }
-  if (NS_FAILED(TestGoodGeneratedPolicies()))        { return 1; }
-  if (NS_FAILED(TestBadGeneratedPolicies()))         { return 1; }
-  if (NS_FAILED(TestShorteningPolicies()))           { return 1; }
+  if (NS_FAILED(TestDirectives()))                           { return 1; }
+  if (NS_FAILED(TestKeywords()))                             { return 1; }
+  if (NS_FAILED(TestIgnoreUpperLowerCasePolicies()))         { return 1; }
+  if (NS_FAILED(TestIgnorePaths()))                          { return 1; }
+  if (NS_FAILED(TestSimplePolicies()))                       { return 1; }
+  if (NS_FAILED(TestPoliciesThatLogWarning()))               { return 1; }
+  if (NS_FAILED(TestBadPolicies()))                          { return 1; }
+  if (NS_FAILED(TestGoodGeneratedPolicies()))                { return 1; }
+  if (NS_FAILED(TestBadGeneratedPolicies()))                 { return 1; }
+  if (NS_FAILED(TestGoodGeneratedPoliciesForPathHandling())) { return 1; }
+  if (NS_FAILED(TestBadGeneratedPoliciesForPathHandling()))  { return 1; }
+  if (NS_FAILED(TestShorteningPolicies()))                   { return 1; }
 
 #if RUN_OFFLINE_TESTS
-  if (NS_FAILED(TestFuzzyPolicies()))                { return 1; }
-  if (NS_FAILED(TestFuzzyPoliciesIncDir()))          { return 1; }
-  if (NS_FAILED(TestFuzzyPoliciesIncDirLimASCII()))  { return 1; }
+  if (NS_FAILED(TestFuzzyPolicies()))                        { return 1; }
+  if (NS_FAILED(TestFuzzyPoliciesIncDir()))                  { return 1; }
+  if (NS_FAILED(TestFuzzyPoliciesIncDirLimASCII()))          { return 1; }
 #endif
 
   return 0;

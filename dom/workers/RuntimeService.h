@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_runtimeservice_h__
 
 #include "Workers.h"
+#include "WorkerPrivate.h" // For the WorkerType enum.
 
 #include "nsIObserver.h"
 
@@ -24,8 +25,8 @@ class nsPIDOMWindow;
 
 BEGIN_WORKERS_NAMESPACE
 
+class ServiceWorker;
 class SharedWorker;
-class WorkerPrivate;
 
 class RuntimeService MOZ_FINAL : public nsIObserver
 {
@@ -145,7 +146,17 @@ public:
   CreateSharedWorker(const GlobalObject& aGlobal,
                      const nsAString& aScriptURL,
                      const nsACString& aName,
-                     SharedWorker** aSharedWorker);
+                     SharedWorker** aSharedWorker)
+  {
+    return CreateSharedWorkerInternal(aGlobal, aScriptURL, aName,
+                                      WorkerTypeShared, aSharedWorker);
+  }
+
+  nsresult
+  CreateServiceWorker(const GlobalObject& aGlobal,
+                      const nsAString& aScriptURL,
+                      const nsACString& aScope,
+                      ServiceWorker** aServiceWorker);
 
   void
   ForgetSharedWorker(WorkerPrivate* aWorkerPrivate);
@@ -278,6 +289,13 @@ private:
 
   static void
   JSVersionChanged(const char* aPrefName, void* aClosure);
+
+  nsresult
+  CreateSharedWorkerInternal(const GlobalObject& aGlobal,
+                             const nsAString& aScriptURL,
+                             const nsACString& aName,
+                             WorkerType aType,
+                             SharedWorker** aSharedWorker);
 };
 
 END_WORKERS_NAMESPACE

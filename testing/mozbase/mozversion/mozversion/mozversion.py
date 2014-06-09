@@ -31,33 +31,52 @@ class LocalAppNotFoundError(VersionError):
             'containing the binary.')
 
 
+INI_DATA_MAPPING = (('application', 'App'), ('platform', 'Build'))
+
 class Version(mozlog.LoggingMixin):
 
     def __init__(self):
         self._info = {}
 
-    def get_gecko_info(self, config_path):
-        for filename, section in (('application', 'App'),
-                                  ('platform', 'Build')):
-            config = ConfigParser.RawConfigParser()
-            config_file = os.path.join(config_path, '%s.ini' % filename)
+    def get_gecko_info(self, path):
+        for type, section in INI_DATA_MAPPING:
+            config_file = os.path.join(path, "%s.ini" % type)
             if os.path.exists(config_file):
-                config.read(config_file)
-                name_map = {'CodeName': 'display_name',
-                            'SourceRepository': 'repository',
-                            'SourceStamp': 'changeset'}
-                for key in ('BuildID', 'Name', 'CodeName', 'Version',
-                            'SourceRepository', 'SourceStamp'):
-                    name = name_map.get(key, key).lower()
-                    self._info['%s_%s' % (filename, name)] = config.has_option(
-                        section, key) and config.get(section, key) or None
-
-                if not self._info.get('application_display_name'):
-                    self._info['application_display_name'] = \
-                        self._info.get('application_name')
+                self._parse_ini_file(open(config_file), type, section)
             else:
                 self.warn('Unable to find %s' % config_file)
 
+    def _parse_ini_file(self, fp, type, section):
+        config = ConfigParser.RawConfigParser()
+        config.readfp(fp)
+        name_map = {'CodeName': 'display_name',
+                    'SourceRepository': 'repository',
+                    'SourceStamp': 'changeset'}
+        for key in ('BuildID', 'Name', 'CodeName', 'Version',
+                    'SourceRepository', 'SourceStamp'):
+            name = name_map.get(key, key).lower()
+            self._info['%s_%s' % (type, name)] = config.has_option(
+                section, key) and config.get(section, key) or None
+
+        if not self._info.get('application_display_name'):
+            self._info['application_display_name'] = \
+                self._info.get('application_name')
+
+class LocalFennecVersion(Version):
+
+    def __init__(self, path, **kwargs):
+        Version.__init__(self, **kwargs)
+        self.get_gecko_info(path)
+
+    def get_gecko_info(self, path):
+        archive = zipfile.ZipFile(path, 'r')
+        for type, section in INI_DATA_MAPPING:
+            filename = "%s.ini" % type
+            if filename in archive.namelist():
+                self._parse_ini_file(archive.open(filename), type,
+                                     section)
+            else:
+                self.warn('Unable to find %s' % filename)
 
 class LocalVersion(Version):
 
@@ -201,20 +220,26 @@ class RemoteB2GVersion(B2GVersion):
 
 def get_version(binary=None, sources=None, dm_type=None, host=None):
     """
-    Returns the application version information as a dict. If binary path is
-    omitted then the current directory is checked for the existance of an
-    application.ini file. If not found, then it is assumed the target
-    application is a remote Firefox OS instance.
+    Returns the application version information as a dict. You can specify
+    a path to the binary of the application or an Android APK file (to get
+    version information for Firefox for Android). If this is omitted then the
+    current directory is checked for the existance of an application.ini
+    file. If not found, then it is assumed the target application is a remote
+    Firefox OS instance.
 
-    :param binary: Path to the binary for the application
+    :param binary: Path to the binary for the application or Android APK file
     :param sources: Path to the sources.xml file (Firefox OS)
     :param dm_type: Device manager type. Must be 'adb' or 'sut' (Firefox OS)
     :param host: Host address of remote Firefox OS instance (SUT)
     """
     try:
-        version = LocalVersion(binary)
-        if version._info.get('application_name') == 'B2G':
-            version = LocalB2GVersion(binary, sources=sources)
+        if binary and zipfile.is_zipfile(binary) and 'AndroidManifest.xml' in \
+           zipfile.ZipFile(binary, 'r').namelist():
+            version = LocalFennecVersion(binary)
+        else:
+            version = LocalVersion(binary)
+            if version._info.get('application_name') == 'B2G':
+                version = LocalB2GVersion(binary, sources=sources)
     except LocalAppNotFoundError:
         version = RemoteB2GVersion(sources=sources, dm_type=dm_type, host=host)
     return version._info
@@ -224,7 +249,7 @@ def cli(args=sys.argv[1:]):
     parser = OptionParser()
     parser.add_option('--binary',
                       dest='binary',
-                      help='path to application binary')
+                      help='path to application binary or apk')
     parser.add_option('--sources',
                       dest='sources',
                       help='path to sources.xml (Firefox OS only)')

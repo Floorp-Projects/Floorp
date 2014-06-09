@@ -37,6 +37,8 @@ class DefaultTemporalLayers : public TemporalLayers {
 
   virtual void FrameEncoded(unsigned int size, uint32_t timestamp) {}
 
+  virtual int CurrentLayerId() const;
+
  private:
   enum TemporalReferences {
     // For 1 layer case: reference all (last, golden, and alt ref), but only

@@ -37,7 +37,7 @@
 #include "nsXULAppAPI.h"
 #include "nsCategoryCache.h"
 #include "nsIContentSniffer.h"
-#include "Seer.h"
+#include "Predictor.h"
 #include "nsNetUtil.h"
 #include "nsIThreadPool.h"
 #include "mozilla/net/NeckoChild.h"
@@ -49,8 +49,8 @@
 #endif
 
 typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
-NS_HIDDEN_(ContentSnifferCache*) gNetSniffers = nullptr;
-NS_HIDDEN_(ContentSnifferCache*) gDataSniffers = nullptr;
+ContentSnifferCache* gNetSniffers = nullptr;
+ContentSnifferCache* gDataSniffers = nullptr;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -822,7 +822,7 @@ NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
 NS_DEFINE_NAMED_CID(NS_REDIRECTCHANNELREGISTRAR_CID);
 NS_DEFINE_NAMED_CID(NS_CACHE_STORAGE_SERVICE_CID);
-NS_DEFINE_NAMED_CID(NS_NETWORKSEER_CID);
+NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
@@ -965,7 +965,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_SERIALIZATION_HELPER_CID, false, nullptr, nsSerializationHelperConstructor },
     { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, nullptr, RedirectChannelRegistrarConstructor },
     { &kNS_CACHE_STORAGE_SERVICE_CID, false, nullptr, CacheStorageServiceConstructor },
-    { &kNS_NETWORKSEER_CID, false, nullptr, mozilla::net::Seer::Create },
+    { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
     { nullptr }
 };
 
@@ -1111,7 +1111,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_SERIALIZATION_HELPER_CONTRACTID, &kNS_SERIALIZATION_HELPER_CID },
     { NS_REDIRECTCHANNELREGISTRAR_CONTRACTID, &kNS_REDIRECTCHANNELREGISTRAR_CID },
     { NS_CACHE_STORAGE_SERVICE_CONTRACTID, &kNS_CACHE_STORAGE_SERVICE_CID },
-    { NS_NETWORKSEER_CONTRACTID, &kNS_NETWORKSEER_CID },
+    { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
     { nullptr }
 };
 

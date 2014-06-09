@@ -163,7 +163,7 @@ this.PermissionsTable =  { geolocation: {
                            },
                            attention: {
                              app: DENY_ACTION,
-                             privileged: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
                            "webapps-manage": {
@@ -298,7 +298,7 @@ this.PermissionsTable =  { geolocation: {
                            "audio-capture": {
                              app: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
-                             certified: PROMPT_ACTION
+                             certified: ALLOW_ACTION
                            },
                            "nfc": {
                              app: DENY_ACTION,
@@ -324,7 +324,7 @@ this.PermissionsTable =  { geolocation: {
                            "video-capture": {
                              app: PROMPT_ACTION,
                              privileged: PROMPT_ACTION,
-                             certified: PROMPT_ACTION
+                             certified: ALLOW_ACTION
                            },
                            "feature-detection": {
                              app: DENY_ACTION,

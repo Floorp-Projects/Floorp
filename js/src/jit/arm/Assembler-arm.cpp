@@ -1255,11 +1255,11 @@ VFPRegister::isMissing()
 bool
 Assembler::oom() const
 {
-    return m_buffer.oom() ||
-        !enoughMemory_ ||
-        jumpRelocations_.oom() ||
-        dataRelocations_.oom() ||
-        preBarriers_.oom();
+    return AssemblerShared::oom() ||
+           m_buffer.oom() ||
+           jumpRelocations_.oom() ||
+           dataRelocations_.oom() ||
+           preBarriers_.oom();
 }
 
 bool

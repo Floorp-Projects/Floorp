@@ -43,6 +43,9 @@
 #include "Connection.h"
 #include "mozilla/dom/Event.h" // for nsIDOMEvent::InternalDOMEvent()
 #include "nsGlobalWindow.h"
+#ifdef MOZ_B2G
+#include "nsIMobileIdentityService.h"
+#endif
 #ifdef MOZ_B2G_RIL
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/CellBroadcast.h"
@@ -82,7 +85,7 @@
 #endif
 
 #include "nsIDOMGlobalPropertyInitializer.h"
-#include "nsIDataStoreService.h"
+#include "mozilla/dom/DataStoreService.h"
 #include "nsJSUtils.h"
 
 #include "nsScriptNameSpaceManager.h"
@@ -795,7 +798,7 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
   nsTArray<uint32_t> pattern(aPattern);
 
   if (pattern.Length() > sMaxVibrateListLen) {
-    pattern.SetLength(sMaxVibrateMS);
+    pattern.SetLength(sMaxVibrateListLen);
   }
 
   for (size_t i = 0; i < pattern.Length(); ++i) {
@@ -1466,8 +1469,7 @@ Navigator::GetDataStores(nsPIDOMWindow* aWindow,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDataStoreService> service =
-    do_GetService("@mozilla.org/datastore-service;1");
+  nsRefPtr<DataStoreService> service = DataStoreService::GetOrCreate();
   if (!service) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -1498,7 +1500,7 @@ Navigator::GetFeature(const nsAString& aName)
     if (XRE_GetProcessType() == GeckoProcessType_Default) {
       uint32_t memLevel = mozilla::hal::GetTotalSystemMemoryLevel();
       if (memLevel == 0) {
-        p->MaybeReject(NS_LITERAL_STRING("Abnormal"));
+        p->MaybeReject(NS_ERROR_NOT_AVAILABLE);
         return p.forget();
       }
       p->MaybeResolve((int)memLevel);
@@ -1585,6 +1587,30 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
   return mTelephony;
 }
 
+#ifdef MOZ_B2G
+already_AddRefed<Promise>
+Navigator::GetMobileIdAssertion(ErrorResult& aRv)
+{
+  if (!mWindow || !mWindow->GetDocShell()) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIMobileIdentityService> service =
+    do_GetService("@mozilla.org/mobileidentity-service;1");
+  if (!service) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> promise;
+  aRv = service->GetMobileIdAssertion(mWindow, getter_AddRefs(promise));
+
+  nsRefPtr<Promise> p = static_cast<Promise*>(promise.get());
+  return p.forget();
+}
+#endif // MOZ_B2G
+
 #ifdef MOZ_B2G_RIL
 
 MobileConnectionArray*
@@ -1648,7 +1674,6 @@ Navigator::GetMozIccManager(ErrorResult& aRv)
 
   return mIccManager;
 }
-
 #endif // MOZ_B2G_RIL
 
 #ifdef MOZ_GAMEPAD

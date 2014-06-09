@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "webrtc/common.h"
 #include "webrtc/voice_engine/channel_manager.h"
 
 #include "webrtc/voice_engine/channel.h"
@@ -51,8 +52,16 @@ ChannelManager::ChannelManager(uint32_t instance_id, const Config& config)
       config_(config) {}
 
 ChannelOwner ChannelManager::CreateChannel() {
+  return CreateChannelInternal(config_);
+}
+
+ChannelOwner ChannelManager::CreateChannel(const Config& external_config) {
+  return CreateChannelInternal(external_config);
+}
+
+ChannelOwner ChannelManager::CreateChannelInternal(const Config& config) {
   Channel* channel;
-  Channel::CreateChannel(channel, ++last_channel_id_, instance_id_, config_);
+  Channel::CreateChannel(channel, ++last_channel_id_, instance_id_, config);
   ChannelOwner channel_owner(channel);
 
   CriticalSectionScoped crit(lock_.get());

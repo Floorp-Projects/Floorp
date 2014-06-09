@@ -83,7 +83,7 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.apiRedirectTo(), a.loadFlags(), a.requestHeaders(),
                        a.requestMethod(), a.uploadStream(),
                        a.uploadStreamHasHeaders(), a.priority(),
-                       a.redirectionLimit(), a.allowPipelining(),
+                       a.redirectionLimit(), a.allowPipelining(), a.allowSTS(),
                        a.forceAllowThirdPartyCookie(), a.resumeAt(),
                        a.startPos(), a.entityID(), a.chooseApplicationCache(),
                        a.appCacheClientID(), a.allowSpdy(), a.fds());
@@ -154,6 +154,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const uint16_t&            priority,
                                  const uint8_t&             redirectionLimit,
                                  const bool&              allowPipelining,
+                                 const bool&              allowSTS,
                                  const bool&              forceAllowThirdPartyCookie,
                                  const bool&                doResumeAt,
                                  const uint64_t&            startPos,
@@ -243,6 +244,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     mChannel->SetPriority(priority);
   mChannel->SetRedirectionLimit(redirectionLimit);
   mChannel->SetAllowPipelining(allowPipelining);
+  mChannel->SetAllowSTS(allowSTS);
   mChannel->SetForceAllowThirdPartyCookie(forceAllowThirdPartyCookie);
   mChannel->SetAllowSpdy(allowSpdy);
 

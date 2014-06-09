@@ -131,12 +131,15 @@
       hidden="true"
       data-category="paneAdvanced">
   <image class="header-icon"/>
-  <label class="header-name"
-         value="&paneAdvanced.title;"/>
+  <label class="header-name">&paneAdvanced.title;</label>
 </hbox>
 
-<tabbox id="advancedPrefs" flex="1"
-        data-category="paneAdvanced" hidden="true"
+<tabbox id="advancedPrefs"
+        handleCtrlTab="false"
+        handleCtrlPageUpDown="false"
+        flex="1"
+        data-category="paneAdvanced"
+        hidden="true"
         onselect="gAdvancedPane.tabSelectionChanged();">
 
   <tabs id="tabsElement">
@@ -155,7 +158,7 @@
     <tabpanel id="generalPanel" orient="vertical">
       <!-- Accessibility -->
       <groupbox id="accessibilityGroup" align="start">
-        <caption label="&accessibility.label;"/>
+        <caption><label>&accessibility.label;</label></caption>
 
         <checkbox id="useCursorNavigation"
                   label="&useCursorNavigation.label;"
@@ -172,7 +175,7 @@
       </groupbox>
       <!-- Browsing -->
       <groupbox id="browsingGroup" align="start">
-        <caption label="&browsing.label;"/>
+        <caption><label>&browsing.label;</label></caption>
 
         <checkbox id="useAutoScroll"
                   label="&useAutoScroll.label;"
@@ -195,19 +198,17 @@
       </groupbox>
 #ifdef HAVE_SHELL_SERVICE
       <!-- System Defaults -->
-      <groupbox id="systemDefaultsGroup" orient="vertical">
-        <caption label="&systemDefaults.label;"/>
-
+      <groupbox id="systemDefaultsGroup" orient="vertical" align="start">
+        <caption><label>&systemDefaults.label;</label></caption>
         <checkbox id="alwaysCheckDefault" preference="browser.shell.checkDefaultBrowser"
-                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"
-                  flex="1"/>
+                  label="&alwaysCheckDefault.label;" accesskey="&alwaysCheckDefault.accesskey;"/>
         <hbox class="indent">
           <deck id="setDefaultPane">
             <button id="setDefaultButton"
                     label="&setDefault.label;" accesskey="&setDefault.accesskey;"
                     oncommand="gAdvancedPane.setDefaultBrowser();"
                     preference="pref.general.disable_button.default_browser"/>
-            <description>&isDefault.label;</description>
+            <label id="isDefaultLabel">&isDefault.label;</label>
           </deck>
         </hbox>
       </groupbox>
@@ -218,7 +219,7 @@
     <tabpanel id="dataChoicesPanel" orient="vertical">
 #ifdef MOZ_TELEMETRY_REPORTING
       <groupbox>
-        <caption label="&telemetrySection.label;"/>
+        <caption><label>&telemetrySection.label;</label></caption>
         <description>&telemetryDesc.label;</description>
         <hbox>
           <checkbox id="submitTelemetryBox"
@@ -227,14 +228,13 @@
                     accesskey="&enableTelemetry.accesskey;"/>
           <spacer flex="1"/>
           <label id="telemetryLearnMore"
-                 class="text-link"
-                 value="&telemetryLearnMore.label;"/>
+                 class="text-link">&telemetryLearnMore.label;</label>
         </hbox>
       </groupbox>
 #endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
       <groupbox>
-        <caption label="&healthReportSection.label;"/>
+        <caption><label>&healthReportSection.label;</label></caption>
         <description>&healthReportDesc.label;</description>
         <hbox>
           <checkbox id="submitHealthReportBox"
@@ -243,14 +243,13 @@
                     accesskey="&enableHealthReport.accesskey;"/>
           <spacer flex="1"/>
           <label id="FHRLearnMore"
-                 class="text-link"
-                 value="&healthReportLearnMore.label;"/>
+                 class="text-link">&healthReportLearnMore.label;</label>
         </hbox>
       </groupbox>
 #endif
 #ifdef MOZ_CRASHREPORTER
       <groupbox>
-        <caption label="&crashReporterSection.label;"/>
+        <caption><label>&crashReporterSection.label;</label></caption>
         <description>&crashReporterDesc.label;</description>
         <hbox>
           <checkbox id="submitCrashesBox"
@@ -260,8 +259,7 @@
 
           <spacer flex="1"/>
           <label id="crashReporterLearnMore"
-                 class="text-link"
-                 value="&crashReporterLearnMore.label;"/>
+                 class="text-link">&crashReporterLearnMore.label;</label>
         </hbox>
       </groupbox>
 #endif
@@ -273,7 +271,7 @@
 
       <!-- Connection -->
       <groupbox id="connectionGroup">
-        <caption label="&connection.label;"/>
+        <caption><label>&connection.label;</label></caption>
 
         <hbox align="center">
           <description flex="1" control="connectionSettings">&connectionDesc.label;</description>
@@ -285,7 +283,7 @@
 
       <!-- Cache -->
       <groupbox id="cacheGroup">
-        <caption label="&httpCache.label;"/>
+        <caption><label>&httpCache.label;</label></caption>
 
         <hbox align="center">
           <label id="actualDiskCacheSize" flex="1"/>
@@ -293,15 +291,18 @@
                   label="&clearCacheNow.label;" accesskey="&clearCacheNow.accesskey;"
                   oncommand="gAdvancedPane.clearCache();"/>
         </hbox>
-        <checkbox preference="browser.cache.disk.smart_size.enabled"
-                  id="allowSmartSize" flex="1"
-                  onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
-                  label="&overrideSmartCacheSize.label;"
-                  accesskey="&overrideSmartCacheSize.accesskey;"/>
+        <hbox>
+          <checkbox preference="browser.cache.disk.smart_size.enabled"
+                    id="allowSmartSize"
+                    onsyncfrompreference="return gAdvancedPane.readSmartSizeEnabled();"
+                    label="&overrideSmartCacheSize.label;"
+                    accesskey="&overrideSmartCacheSize.accesskey;"/>
+        </hbox>
         <hbox align="center" class="indent">
           <label id="useCacheBefore" control="cacheSize"
-                accesskey="&limitCacheSizeBefore.accesskey;"
-                value="&limitCacheSizeBefore.label;"/>
+                 accesskey="&limitCacheSizeBefore.accesskey;">
+            &limitCacheSizeBefore.label;
+          </label>
           <textbox id="cacheSize" type="number" size="4" max="1024"
                   preference="browser.cache.disk.capacity"
                   onsyncfrompreference="return gAdvancedPane.readCacheSize();"
@@ -313,7 +314,7 @@
 
       <!-- Offline apps -->
       <groupbox id="offlineGroup">
-        <caption label="&offlineStorage2.label;"/>
+        <caption><label>&offlineStorage2.label;</label></caption>
 
         <hbox align="center">
           <label id="actualAppCacheSize" flex="1"/>
@@ -322,10 +323,11 @@
                   oncommand="gAdvancedPane.clearOfflineAppCache();"/>
         </hbox>
         <hbox align="center">
-          <checkbox id="offlineNotify" flex="1"
+          <checkbox id="offlineNotify"
                     label="&offlineNotify.label;" accesskey="&offlineNotify.accesskey;"
                     preference="browser.offline-apps.notify"
                     onsyncfrompreference="return gAdvancedPane.readOfflineNotify();"/>
+          <spacer flex="1"/>
           <button id="offlineNotifyExceptions"
                   label="&offlineNotifyExceptions.label;"
                   accesskey="&offlineNotifyExceptions.accesskey;"
@@ -355,8 +357,8 @@
     <!-- Update -->
     <tabpanel id="updatePanel" orient="vertical">
 #ifdef MOZ_UPDATER
-      <groupbox id="updateApp">
-        <caption label="&updateApp.label;"/>
+      <groupbox id="updateApp" align="start">
+        <caption><label>&updateApp.label;</label></caption>
         <radiogroup id="updateRadioGroup"
                     oncommand="gAdvancedPane.updateWritePrefs();">
 #ifdef XP_WIN
@@ -367,7 +369,7 @@
                      accesskey="&updateAutoMetro.accesskey;"/>
               <hbox id="autoMetroIndent"
                     class="indent">
-                <label value="&updateAutoMetroWarn.label;"/>
+                <label>&updateAutoMetroWarn.label;</label>
               </hbox>
 #endif
 #endif
@@ -407,8 +409,8 @@
 #endif
       </groupbox>
 #endif
-      <groupbox id="updateOthers">
-        <caption label="&updateOthers.label;"/>
+      <groupbox id="updateOthers" align="start">
+        <caption><label>&updateOthers.label;</label></caption>
         <checkbox id="enableSearchUpdate"
                   label="&enableSearchUpdate.label;"
                   accesskey="&enableSearchUpdate.accesskey;"

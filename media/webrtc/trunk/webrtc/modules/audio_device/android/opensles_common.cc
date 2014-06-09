@@ -12,6 +12,10 @@
 
 #include <assert.h>
 
+#include "webrtc/modules/audio_device/android/audio_common.h"
+
+using webrtc::kNumChannels;
+
 namespace webrtc_opensl {
 
 SLDataFormat_PCM CreatePcmConfiguration(int sample_rate) {

@@ -105,56 +105,61 @@ int NETEQTEST_RTPpacket::readFromFile(FILE *fp)
 
     uint16_t length, plen;
     uint32_t offset;
+    int packetLen;
 
-    if (fread(&length,2,1,fp)==0)
-    {
-        reset();
-        return(-2);
-    }
-    length = ntohs(length);
+    bool readNextPacket = true;
+    while (readNextPacket) {
+        readNextPacket = false;
+        if (fread(&length,2,1,fp)==0)
+        {
+            reset();
+            return(-2);
+        }
+        length = ntohs(length);
 
-    if (fread(&plen,2,1,fp)==0)
-    {
-        reset();
-        return(-1);
-    }
-    int packetLen = ntohs(plen);
+        if (fread(&plen,2,1,fp)==0)
+        {
+            reset();
+            return(-1);
+        }
+        packetLen = ntohs(plen);
 
-    if (fread(&offset,4,1,fp)==0)
-    {
-        reset();
-        return(-1);
-    }
-    uint32_t receiveTime = ntohl(offset); // store in local variable until we have passed the reset below
+        if (fread(&offset,4,1,fp)==0)
+        {
+            reset();
+            return(-1);
+        }
+        // store in local variable until we have passed the reset below
+        uint32_t receiveTime = ntohl(offset);
 
-    // Use length here because a plen of 0 specifies rtcp
-    length = (uint16_t) (length - _kRDHeaderLen);
+        // Use length here because a plen of 0 specifies rtcp
+        length = (uint16_t) (length - _kRDHeaderLen);
 
-    // check buffer size
-    if (_datagram && _memSize < length)
-    {
-        reset();
-    }
+        // check buffer size
+        if (_datagram && _memSize < length)
+        {
+            reset();
+        }
 
-    if (!_datagram)
-    {
-        _datagram = new uint8_t[length];
-        _memSize = length;
-    }
+        if (!_datagram)
+        {
+            _datagram = new uint8_t[length];
+            _memSize = length;
+        }
 
-    if (fread((unsigned short *) _datagram,1,length,fp) != length)
-    {
-        reset();
-        return(-1);
-    }
+        if (fread((unsigned short *) _datagram,1,length,fp) != length)
+        {
+            reset();
+            return(-1);
+        }
 
-    _datagramLen = length;
-    _receiveTime = receiveTime;
+        _datagramLen = length;
+        _receiveTime = receiveTime;
 
-    if (!_blockList.empty() && _blockList.count(payloadType()) > 0)
-    {
-        // discard this payload
-        return(readFromFile(fp));
+        if (!_blockList.empty() && _blockList.count(payloadType()) > 0)
+        {
+            readNextPacket = true;
+        }
     }
 
     _rtpParsed = false;

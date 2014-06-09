@@ -17,10 +17,10 @@
 
 #include "webrtc/modules/audio_coding/neteq4/audio_vector.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
+#include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-template <typename T>
 class AudioMultiVector {
  public:
   // Creates an empty AudioMultiVector with |N| audio channels. |N| must be
@@ -43,23 +43,23 @@ class AudioMultiVector {
   // are deleted. After the operation is done, |copy_to| will be an exact
   // replica of this object. The source and the destination must have the same
   // number of channels.
-  virtual void CopyFrom(AudioMultiVector<T>* copy_to) const;
+  virtual void CopyFrom(AudioMultiVector* copy_to) const;
 
   // Appends the contents of array |append_this| to the end of this
   // object. The array is assumed to be channel-interleaved. |length| must be
   // an even multiple of this object's number of channels.
   // The length of this object is increased with the |length| divided by the
   // number of channels.
-  virtual void PushBackInterleaved(const T* append_this, size_t length);
+  virtual void PushBackInterleaved(const int16_t* append_this, size_t length);
 
   // Appends the contents of AudioMultiVector |append_this| to this object. The
   // length of this object is increased with the length of |append_this|.
-  virtual void PushBack(const AudioMultiVector<T>& append_this);
+  virtual void PushBack(const AudioMultiVector& append_this);
 
   // Appends the contents of AudioMultiVector |append_this| to this object,
   // taken from |index| up until the end of |append_this|. The length of this
   // object is increased.
-  virtual void PushBackFromIndex(const AudioMultiVector<T>& append_this,
+  virtual void PushBackFromIndex(const AudioMultiVector& append_this,
                                  size_t index);
 
   // Removes |length| elements from the beginning of this object, from each
@@ -75,18 +75,18 @@ class AudioMultiVector {
   // returned, i.e., |length| * number of channels. If the AudioMultiVector
   // contains less than |length| samples per channel, this is reflected in the
   // return value.
-  virtual size_t ReadInterleaved(size_t length, T* destination) const;
+  virtual size_t ReadInterleaved(size_t length, int16_t* destination) const;
 
   // Like ReadInterleaved() above, but reads from |start_index| instead of from
   // the beginning.
   virtual size_t ReadInterleavedFromIndex(size_t start_index,
                                           size_t length,
-                                          T* destination) const;
+                                          int16_t* destination) const;
 
   // Like ReadInterleaved() above, but reads from the end instead of from
   // the beginning.
   virtual size_t ReadInterleavedFromEnd(size_t length,
-                                        T* destination) const;
+                                        int16_t* destination) const;
 
   // Overwrites each channel in this AudioMultiVector with values taken from
   // |insert_this|. The values are taken from the beginning of |insert_this| and
@@ -95,18 +95,18 @@ class AudioMultiVector {
   // extends beyond the end of the current AudioVector, the vector is extended
   // to accommodate the new data. |length| is limited to the length of
   // |insert_this|.
-  virtual void OverwriteAt(const AudioMultiVector<T>& insert_this,
+  virtual void OverwriteAt(const AudioMultiVector& insert_this,
                            size_t length,
                            size_t position);
 
   // Appends |append_this| to the end of the current vector. Lets the two
   // vectors overlap by |fade_length| samples (per channel), and cross-fade
   // linearly in this region.
-  virtual void CrossFade(const AudioMultiVector<T>& append_this,
+  virtual void CrossFade(const AudioMultiVector& append_this,
                          size_t fade_length);
 
   // Returns the number of channels.
-  virtual size_t Channels() const { return channels_.size(); }
+  virtual size_t Channels() const { return num_channels_; }
 
   // Returns the number of elements per channel in this AudioMultiVector.
   virtual size_t Size() const;
@@ -119,11 +119,12 @@ class AudioMultiVector {
 
   // Accesses and modifies a channel (i.e., an AudioVector object) of this
   // AudioMultiVector.
-  const AudioVector<T>& operator[](size_t index) const;
-  AudioVector<T>& operator[](size_t index);
+  const AudioVector& operator[](size_t index) const;
+  AudioVector& operator[](size_t index);
 
  protected:
-  std::vector<AudioVector<T>*> channels_;
+  std::vector<AudioVector*> channels_;
+  size_t num_channels_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(AudioMultiVector);

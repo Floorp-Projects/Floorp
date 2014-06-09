@@ -155,7 +155,7 @@
         ok(notif.dbId.match(uuidRegEx), "Notification dbId is valid: " + notif.dbId);
         is(notif.dir, "ltr", "Notification dir is valid: " + notif.dir);
         is(notif.tag, "fakeTag", "Notification tag is valid: " + notif.tag);
-        ok((notif.timestamp > now), "Notification timestamp is valid: " + notif.timestamp);
+        ok((notif.timestamp >= now), "Notification timestamp is valid: (" + notif.timestamp + " >= " + now + ")");
         notif2.close();
       });
     }

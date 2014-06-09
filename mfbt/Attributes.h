@@ -150,10 +150,10 @@
  *   template<typename T>
  *   class Ptr
  *   {
- *      T* ptr;
- *      MOZ_EXPLICIT_CONVERSION operator bool() const {
- *        return ptr != nullptr;
- *      }
+ *     T* ptr;
+ *     MOZ_EXPLICIT_CONVERSION operator bool() const {
+ *       return ptr != nullptr;
+ *     }
  *   };
  *
  */
@@ -267,9 +267,9 @@
  *
  *   struct NonCopyable
  *   {
- *     private:
- *       NonCopyable(const NonCopyable& other) MOZ_DELETE;
- *       void operator=(const NonCopyable& other) MOZ_DELETE;
+ *   private:
+ *     NonCopyable(const NonCopyable& other) MOZ_DELETE;
+ *     void operator=(const NonCopyable& other) MOZ_DELETE;
  *   };
  *
  * If MOZ_DELETE can't be implemented for the current compiler, use of the
@@ -295,23 +295,23 @@
  *
  *   class Base
  *   {
- *     public:
- *       virtual void f() = 0;
+ *   public:
+ *     virtual void f() = 0;
  *   };
  *   class Derived1 : public Base
  *   {
- *     public:
- *       virtual void f() MOZ_OVERRIDE;
+ *   public:
+ *     virtual void f() MOZ_OVERRIDE;
  *   };
  *   class Derived2 : public Base
  *   {
- *     public:
- *       virtual void f() MOZ_OVERRIDE = 0;
+ *   public:
+ *     virtual void f() MOZ_OVERRIDE = 0;
  *   };
  *   class Derived3 : public Base
  *   {
- *     public:
- *       virtual void f() MOZ_OVERRIDE { }
+ *   public:
+ *     virtual void f() MOZ_OVERRIDE { }
  *   };
  *
  * In compilers supporting C++11 override controls, MOZ_OVERRIDE *requires* that
@@ -339,16 +339,16 @@
  *
  *   class Base MOZ_FINAL
  *   {
- *     public:
- *       Base();
- *       ~Base();
- *       virtual void f() { }
+ *   public:
+ *     Base();
+ *     ~Base();
+ *     virtual void f() { }
  *   };
  *   // This will be an error in some compilers:
  *   class Derived : public Base
  *   {
- *     public:
- *       ~Derived() { }
+ *   public:
+ *     ~Derived() { }
  *   };
  *
  * One particularly common reason to specify MOZ_FINAL upon a class is to tell
@@ -375,14 +375,14 @@
  *
  *   class Base
  *   {
- *     public:
- *       virtual void f() MOZ_FINAL;
+ *   public:
+ *     virtual void f() MOZ_FINAL;
  *   };
  *   class Derived
  *   {
- *     public:
- *       // This will be an error in some compilers:
- *       virtual void f();
+ *   public:
+ *     // This will be an error in some compilers:
+ *     virtual void f();
  *   };
  *
  * In compilers implementing final controls, it is an error for a derived class

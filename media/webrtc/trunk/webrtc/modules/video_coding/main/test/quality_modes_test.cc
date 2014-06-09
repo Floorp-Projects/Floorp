@@ -249,7 +249,7 @@ QualityModesTest::Perform(const CmdArgs& args)
 
   VideoContentMetrics* contentMetrics = NULL;
   // setting user frame rate
-  _vpm->SetMaxFrameRate((uint32_t)(_nativeFrameRate+ 0.5f));
+  _vpm->SetMaxFramerate((uint32_t)(_nativeFrameRate+ 0.5f));
   // for starters: keeping native values:
   _vpm->SetTargetResolution(_width, _height,
                             (uint32_t)(_frameRate+ 0.5f));

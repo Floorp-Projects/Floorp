@@ -249,7 +249,9 @@ void
 nsAppShell::ProcessGeckoEvents(void* aInfo)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-  PROFILER_LABEL("Events", "ProcessGeckoEvents");
+  PROFILER_LABEL("Events", "ProcessGeckoEvents",
+    js::ProfileEntry::Category::EVENTS);
+
   nsAppShell* self = static_cast<nsAppShell*> (aInfo);
 
   if (self->mRunningEventLoop) {
@@ -482,10 +484,17 @@ nsAppShell::ProcessNextNativeEvent(bool aMayWait)
         continue;
       }
       EventAttributes attrs = GetEventAttributes(currentEvent);
+      UInt32 eventKind = GetEventKind(currentEvent);
+      bool osCocoaEvent =
+        ((GetEventClass(currentEvent) == 'cgs ') &&
+         ((eventKind == NSAppKitDefined) || (eventKind == NSSystemDefined)));
       // If attrs is kEventAttributeUserEvent or kEventAttributeMonitored
       // (i.e. a user input event), we shouldn't process it here while
-      // aMayWait is false.
-      if (attrs != kEventAttributeNone) {
+      // aMayWait is false.  Likewise if currentEvent will eventually be
+      // turned into an OS-defined Cocoa event.  Doing otherwise risks
+      // doing too much work here, and preventing the event from being
+      // properly processed as a Cocoa event.
+      if ((attrs != kEventAttributeNone) || osCocoaEvent) {
         // Since we can't process the next event here (while aMayWait is false),
         // we want moreEvents to be false on return.
         eventProcessed = false;

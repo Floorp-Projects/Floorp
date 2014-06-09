@@ -227,7 +227,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioDestinationNode, AudioNode,
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(AudioDestinationNode)
   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
   NS_INTERFACE_MAP_ENTRY(nsIAudioChannelAgentCallback)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(AudioNode)
 
 NS_IMPL_ADDREF_INHERITED(AudioDestinationNode, AudioNode)
@@ -247,6 +246,7 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   , mAudioChannel(AudioChannel::Normal)
   , mIsOffline(aIsOffline)
   , mHasFinished(false)
+  , mAudioChannelAgentPlaying(false)
   , mExtraCurrentTime(0)
   , mExtraCurrentTimeSinceLastStartedBlocking(0)
   , mExtraCurrentTimeUpdatedSinceLastStableState(false)
@@ -426,7 +426,18 @@ AudioDestinationNode::HandleEvent(nsIDOMEvent* aEvent)
 NS_IMETHODIMP
 AudioDestinationNode::CanPlayChanged(int32_t aCanPlay)
 {
-  SetCanPlay(aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  bool playing = aCanPlay == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL;
+  if (playing == mAudioChannelAgentPlaying) {
+    return NS_OK;
+  }
+
+  mAudioChannelAgentPlaying = playing;
+  SetCanPlay(playing);
+
+  Context()->DispatchTrustedEvent(
+    playing ? NS_LITERAL_STRING("mozinterruptend")
+            : NS_LITERAL_STRING("mozinterruptbegin"));
+
   return NS_OK;
 }
 
@@ -531,7 +542,9 @@ AudioDestinationNode::CreateAudioChannelAgent()
 
   int32_t state = 0;
   mAudioChannelAgent->StartPlaying(&state);
-  SetCanPlay(state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL);
+  mAudioChannelAgentPlaying =
+    state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL;
+  SetCanPlay(mAudioChannelAgentPlaying);
 }
 
 void

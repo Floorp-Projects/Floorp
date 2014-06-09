@@ -972,6 +972,17 @@ int VoEAudioProcessingImpl::StartDebugRecording(const char* fileNameUTF8) {
   return _shared->audio_processing()->StartDebugRecording(fileNameUTF8);
 }
 
+int VoEAudioProcessingImpl::StartDebugRecording(FILE* file_handle) {
+  WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+               "StartDebugRecording()");
+  if (!_shared->statistics().Initialized()) {
+    _shared->SetLastError(VE_NOT_INITED, kTraceError);
+    return -1;
+  }
+
+  return _shared->audio_processing()->StartDebugRecording(file_handle);
+}
+
 int VoEAudioProcessingImpl::StopDebugRecording() {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "StopDebugRecording()");

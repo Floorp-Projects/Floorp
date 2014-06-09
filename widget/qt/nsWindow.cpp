@@ -29,6 +29,7 @@
 #ifdef MOZ_X11
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include "gfxXlibSurface.h"
 #endif //MOZ_X11
 
 #include "nsXULAppAPI.h"
@@ -804,6 +805,32 @@ nsWindow::GetGLFrameBufferFormat()
         return LOCAL_GL_RGB;
     }
     return LOCAL_GL_NONE;
+}
+
+TemporaryRef<DrawTarget>
+nsWindow::StartRemoteDrawing()
+{
+    if (!mWidget) {
+        return nullptr;
+    }
+
+#ifdef MOZ_X11
+    Display* dpy = gfxQtPlatform::GetXDisplay(mWidget);
+    Screen* screen = DefaultScreenOfDisplay(dpy);
+    Visual* defaultVisual = DefaultVisualOfScreen(screen);
+    gfxASurface* surf = new gfxXlibSurface(dpy, mWidget->winId(), defaultVisual,
+                                           gfxIntSize(mWidget->width(),
+                                                      mWidget->height()));
+
+    IntSize size(surf->GetSize().width, surf->GetSize().height);
+    if (size.width <= 0 || size.height <= 0) {
+        return nullptr;
+    }
+
+    return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, size);
+#else
+    return nullptr;
+#endif
 }
 
 NS_IMETHODIMP

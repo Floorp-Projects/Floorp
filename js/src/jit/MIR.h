@@ -60,7 +60,6 @@ MIRType MIRTypeFromValue(const js::Value &vp)
 #define MIR_FLAG_LIST(_)                                                        \
     _(InWorklist)                                                               \
     _(EmittedAtUses)                                                            \
-    _(LoopInvariant)                                                            \
     _(Commutative)                                                              \
     _(Movable)       /* Allow LICM and GVN to move this instruction */          \
     _(Lowered)       /* (Debug only) has a virtual register */                  \
@@ -734,11 +733,15 @@ class MUseDefIterator
     operator bool() const {
         return current_ != def_->usesEnd();
     }
+    MUseDefIterator operator ++() {
+        JS_ASSERT(current_ != def_->usesEnd());
+        ++current_;
+        current_ = search(current_);
+        return *this;
+    }
     MUseDefIterator operator ++(int) {
         MUseDefIterator old(*this);
-        if (current_ != def_->usesEnd())
-            current_++;
-        current_ = search(current_);
+        operator++();
         return old;
     }
     MUse *use() const {
@@ -857,7 +860,7 @@ class MBinaryInstruction : public MAryInstruction<2>
         MDefinition *lhs = getOperand(0);
         MDefinition *rhs = getOperand(1);
 
-        return op() ^ lhs->valueNumber() ^ rhs->valueNumber();
+        return op() + lhs->valueNumber() + rhs->valueNumber();
     }
     void swapOperands() {
         MDefinition *temp = getOperand(0);
@@ -922,7 +925,7 @@ class MTernaryInstruction : public MAryInstruction<3>
         MDefinition *second = getOperand(1);
         MDefinition *third = getOperand(2);
 
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^ third->valueNumber();
+        return op() + first->valueNumber() + second->valueNumber() + third->valueNumber();
     }
 };
 
@@ -946,8 +949,8 @@ class MQuaternaryInstruction : public MAryInstruction<4>
         MDefinition *third = getOperand(2);
         MDefinition *fourth = getOperand(3);
 
-        return op() ^ first->valueNumber() ^ second->valueNumber() ^
-                      third->valueNumber() ^ fourth->valueNumber();
+        return op() + first->valueNumber() + second->valueNumber() +
+                      third->valueNumber() + fourth->valueNumber();
     }
 };
 
@@ -1691,6 +1694,39 @@ class MNewPar : public MUnaryInstruction
 
     JSObject *templateObject() const {
         return templateObject_;
+    }
+};
+
+class MTypedObjectProto
+  : public MUnaryInstruction,
+    public SingleObjectPolicy
+{
+  private:
+    MTypedObjectProto(MDefinition *object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Object);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(TypedObjectProto)
+
+    static MTypedObjectProto *New(TempAllocator &alloc, MDefinition *object) {
+        return new(alloc) MTypedObjectProto(object);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
+    }
+    MDefinition *object() const {
+        return getOperand(0);
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const {
+        return AliasSet::Load(AliasSet::ObjectFields);
     }
 };
 
@@ -3362,17 +3398,13 @@ class MTruncateToInt32 : public MUnaryInstruction
 };
 
 // Converts any type to a string
-class MToString : public MUnaryInstruction
+class MToString :
+  public MUnaryInstruction,
+  public ToStringPolicy
 {
     explicit MToString(MDefinition *def)
       : MUnaryInstruction(def)
     {
-        // Converting an object to a string might be effectful.
-        JS_ASSERT(!def->mightBeType(MIRType_Object));
-
-        // NOP
-        JS_ASSERT(def->type() != MIRType_String);
-
         setResultType(MIRType_String);
         setMovable();
     }
@@ -3386,12 +3418,20 @@ class MToString : public MUnaryInstruction
 
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
 
+    TypePolicy *typePolicy() {
+        return this;
+    }
+
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
     }
+
     AliasSet getAliasSet() const {
-        JS_ASSERT(!input()->mightBeType(MIRType_Object));
         return AliasSet::None();
+    }
+
+    bool fallible() const {
+        return input()->mightBeType(MIRType_Object);
     }
 };
 
@@ -4303,7 +4343,7 @@ class MSub : public MBinaryArithInstruction
 
     bool writeRecoverData(CompactBufferWriter &writer) const;
     bool canRecoverOnBailout() const {
-        return specialization_ != MIRType_None;
+        return specialization_ < MIRType_Object;
     }
 };
 
@@ -4400,6 +4440,11 @@ class MMul : public MBinaryArithInstruction
     TruncateKind operandTruncateKind(size_t index) const;
 
     Mode mode() const { return mode_; }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MDiv : public MBinaryArithInstruction
@@ -4496,6 +4541,11 @@ class MDiv : public MBinaryArithInstruction
     bool truncate(TruncateKind kind);
     void collectRangeInfoPreTrunc();
     TruncateKind operandTruncateKind(size_t index) const;
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
+    }
 };
 
 class MMod : public MBinaryArithInstruction
@@ -4543,6 +4593,11 @@ class MMod : public MBinaryArithInstruction
 
     bool isUnsigned() const {
         return unsigned_;
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ < MIRType_Object;
     }
 
     bool fallible() const;
@@ -5537,36 +5592,6 @@ class MLambdaPar
 
     const LambdaFunctionInfo &info() const {
         return info_;
-    }
-};
-
-// Determines the implicit |this| value for function calls.
-class MImplicitThis
-  : public MUnaryInstruction,
-    public SingleObjectPolicy
-{
-    explicit MImplicitThis(MDefinition *callee)
-      : MUnaryInstruction(callee)
-    {
-        setResultType(MIRType_Value);
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(ImplicitThis)
-
-    static MImplicitThis *New(TempAllocator &alloc, MDefinition *callee) {
-        return new(alloc) MImplicitThis(callee);
-    }
-
-    TypePolicy *typePolicy() {
-        return this;
-    }
-    MDefinition *callee() const {
-        return getOperand(0);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
     }
 };
 
@@ -6663,8 +6688,7 @@ class MLoadTypedArrayElement
     bool canProduceFloat32() const { return arrayType_ == ScalarTypeDescr::TYPE_FLOAT32; }
 };
 
-// Load a value from a typed array. Out-of-bounds accesses are handled using
-// a VM call.
+// Load a value from a typed array. Out-of-bounds accesses are handled in-line.
 class MLoadTypedArrayElementHole
   : public MBinaryInstruction,
     public SingleObjectPolicy
@@ -8686,8 +8710,11 @@ class MGetDOMProperty
         return info_->aliasSet();
     }
     size_t domMemberSlotIndex() const {
-        MOZ_ASSERT(info_->isInSlot);
+        MOZ_ASSERT(info_->isAlwaysInSlot || info_->isLazilyCachedInSlot);
         return info_->slotIndex;
+    }
+    bool valueMayBeInSlot() const {
+        return info_->isLazilyCachedInSlot;
     }
     MDefinition *object() {
         return getOperand(0);
@@ -8835,7 +8862,7 @@ class MCeil
   : public MUnaryInstruction,
     public FloatingPointPolicy<0>
 {
-    MCeil(MDefinition *num)
+    explicit MCeil(MDefinition *num)
       : MUnaryInstruction(num)
     {
         setResultType(MIRType_Int32);
@@ -9743,33 +9770,25 @@ class MProfilerStackOp : public MNullaryInstruction
   public:
     enum Type {
         Enter,        // a function has begun executing and it is not inline
-        Exit,         // any function has exited (inlined or normal)
-        InlineEnter,  // an inline function has begun executing
-
-        InlineExit    // all instructions of an inline function are done, a
-                      // return from the inline function could have occurred
-                      // before this boundary
+        Exit          // any function has exited and is not inline
     };
 
   private:
     JSScript *script_;
     Type type_;
-    unsigned inlineLevel_;
 
-    MProfilerStackOp(JSScript *script, Type type, unsigned inlineLevel)
-      : script_(script), type_(type), inlineLevel_(inlineLevel)
+    MProfilerStackOp(JSScript *script, Type type)
+      : script_(script), type_(type)
     {
-        JS_ASSERT_IF(type != InlineExit, script != nullptr);
-        JS_ASSERT_IF(type == InlineEnter, inlineLevel != 0);
+        JS_ASSERT(script);
         setGuard();
     }
 
   public:
     INSTRUCTION_HEADER(ProfilerStackOp)
 
-    static MProfilerStackOp *New(TempAllocator &alloc, JSScript *script, Type type,
-                                  unsigned inlineLevel = 0) {
-        return new(alloc) MProfilerStackOp(script, type, inlineLevel);
+    static MProfilerStackOp *New(TempAllocator &alloc, JSScript *script, Type type) {
+        return new(alloc) MProfilerStackOp(script, type);
     }
 
     JSScript *script() {
@@ -9778,10 +9797,6 @@ class MProfilerStackOp : public MNullaryInstruction
 
     Type type() {
         return type_;
-    }
-
-    unsigned inlineLevel() {
-        return inlineLevel_;
     }
 
     AliasSet getAliasSet() const {

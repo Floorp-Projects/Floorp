@@ -64,7 +64,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
     return new Promise(function(resolve) { SpecialPowers.popPrefEnv(resolve); });
   }
 
+  var gGoCount = 0;
   function go() {
+    debug("Invoking go for window with id: " + window.getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID);
+    is(++gGoCount, 1, "Should only call go once!");
     checkLoadFileURI('http://example.com', false).then(
       pushPrefs.bind(null, [['capability.policy.policynames', ' somepolicy '],
                             ['capability.policy.somepolicy.checkloaduri.enabled', 'AlLAcCeSs'],

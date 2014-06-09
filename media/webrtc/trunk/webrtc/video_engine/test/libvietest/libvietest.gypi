@@ -28,14 +28,12 @@
         'helpers/vie_to_file_renderer.cc',
 
         # Testbed classes
-        'include/fake_network_pipe.h',
         'include/tb_capture_device.h',
         'include/tb_external_transport.h',
         'include/tb_I420_codec.h',
         'include/tb_interfaces.h',
         'include/tb_video_channel.h',
 
-        'testbed/fake_network_pipe.cc',
         'testbed/tb_capture_device.cc',
         'testbed/tb_external_transport.cc',
         'testbed/tb_I420_codec.cc',
@@ -48,23 +46,4 @@
       ],
     },
   ],
-  'conditions': [
-    ['include_tests==1', {
-      'targets': [
-        {
-          'target_name': 'libvietest_unittests',
-          'type': 'executable',
-          'dependencies': [
-            'libvietest',
-            '<(DEPTH)/testing/gtest.gyp:gtest',
-            '<(DEPTH)/testing/gmock.gyp:gmock',
-            '<(webrtc_root)/test/test.gyp:test_support_main',
-          ],
-          'sources': [
-            'testbed/fake_network_pipe_unittest.cc',
-          ],
-        },
-      ], #targets
-    }], # include_tests
-  ], # conditions
 }

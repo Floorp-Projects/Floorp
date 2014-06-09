@@ -109,7 +109,7 @@ RuleViewTool.prototype = {
   },
 
   refresh: function RVT_refresh() {
-    this.view.nodeChanged();
+    this.view.refreshPanel();
   },
 
   destroy: function RVT_destroy() {

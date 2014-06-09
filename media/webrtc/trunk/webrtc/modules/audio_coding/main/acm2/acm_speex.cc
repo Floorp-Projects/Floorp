@@ -21,6 +21,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 #ifndef WEBRTC_CODEC_SPEEX
 ACMSPEEX::ACMSPEEX(int16_t /* codec_id */)
     : encoder_inst_ptr_(NULL),
@@ -325,5 +327,7 @@ int16_t ACMSPEEX::SetComplMode(int16_t mode) {
 #endif
 
 #endif
+
+}  // namespace acm2
 
 }  // namespace webrtc

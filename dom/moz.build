@@ -113,7 +113,10 @@ if CONFIG['MOZ_NFC']:
     PARALLEL_DIRS += ['nfc']
 
 if CONFIG['MOZ_B2G']:
-    PARALLEL_DIRS += ['downloads']
+    PARALLEL_DIRS += [
+        'downloads',
+        'mobileid'
+    ]
 
 if CONFIG['MOZ_B2G_BT_API_V2']:
     PARALLEL_DIRS += ['bluetooth2']

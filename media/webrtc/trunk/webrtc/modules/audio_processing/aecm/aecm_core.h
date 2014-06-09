@@ -272,6 +272,125 @@ void WebRtcAecm_FetchFarFrame(AecmCore_t * const aecm,
                               int16_t * const farend,
                               const int farLen, const int knownDelay);
 
+
+// All the functions below are intended to be private
+
+////////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_UpdateFarHistory()
+//
+// Moves the pointer to the next entry and inserts |far_spectrum| and
+// corresponding Q-domain in its buffer.
+//
+// Inputs:
+//      - self          : Pointer to the delay estimation instance
+//      - far_spectrum  : Pointer to the far end spectrum
+//      - far_q         : Q-domain of far end spectrum
+//
+void WebRtcAecm_UpdateFarHistory(AecmCore_t* self,
+                                 uint16_t* far_spectrum,
+                                 int far_q);
+
+////////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_AlignedFarend()
+//
+// Returns a pointer to the far end spectrum aligned to current near end
+// spectrum. The function WebRtc_DelayEstimatorProcessFix(...) should have been
+// called before AlignedFarend(...). Otherwise, you get the pointer to the
+// previous frame. The memory is only valid until the next call of
+// WebRtc_DelayEstimatorProcessFix(...).
+//
+// Inputs:
+//      - self              : Pointer to the AECM instance.
+//      - delay             : Current delay estimate.
+//
+// Output:
+//      - far_q             : The Q-domain of the aligned far end spectrum
+//
+// Return value:
+//      - far_spectrum      : Pointer to the aligned far end spectrum
+//                            NULL - Error
+//
+const uint16_t* WebRtcAecm_AlignedFarend(AecmCore_t* self,
+                                         int* far_q,
+                                         int delay);
+
+///////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_CalcSuppressionGain()
+//
+// This function calculates the suppression gain that is used in the
+// Wiener filter.
+//
+// Inputs:
+//      - aecm              : Pointer to the AECM instance.
+//
+// Return value:
+//      - supGain           : Suppression gain with which to scale the noise
+//                            level (Q14).
+//
+int16_t WebRtcAecm_CalcSuppressionGain(AecmCore_t * const aecm);
+
+///////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_CalcEnergies()
+//
+// This function calculates the log of energies for nearend, farend and
+// estimated echoes. There is also an update of energy decision levels,
+// i.e. internal VAD.
+//
+// Inputs:
+//      - aecm              : Pointer to the AECM instance.
+//      - far_spectrum      : Pointer to farend spectrum.
+//      - far_q             : Q-domain of farend spectrum.
+//      - nearEner          : Near end energy for current block in
+//                            Q(aecm->dfaQDomain).
+//
+// Output:
+//     - echoEst            : Estimated echo in Q(xfa_q+RESOLUTION_CHANNEL16).
+//
+void WebRtcAecm_CalcEnergies(AecmCore_t * aecm,
+                             const uint16_t* far_spectrum,
+                             const int16_t far_q,
+                             const uint32_t nearEner,
+                             int32_t * echoEst);
+
+///////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_CalcStepSize()
+//
+// This function calculates the step size used in channel estimation
+//
+// Inputs:
+//      - aecm              : Pointer to the AECM instance.
+//
+// Return value:
+//      - mu                : Stepsize in log2(), i.e. number of shifts.
+//
+int16_t WebRtcAecm_CalcStepSize(AecmCore_t * const aecm);
+
+///////////////////////////////////////////////////////////////////////////////
+// WebRtcAecm_UpdateChannel(...)
+//
+// This function performs channel estimation.
+// NLMS and decision on channel storage.
+//
+// Inputs:
+//      - aecm              : Pointer to the AECM instance.
+//      - far_spectrum      : Absolute value of the farend signal in Q(far_q)
+//      - far_q             : Q-domain of the farend signal
+//      - dfa               : Absolute value of the nearend signal
+//                            (Q[aecm->dfaQDomain])
+//      - mu                : NLMS step size.
+// Input/Output:
+//      - echoEst           : Estimated echo in Q(far_q+RESOLUTION_CHANNEL16).
+//
+void WebRtcAecm_UpdateChannel(AecmCore_t * aecm,
+                              const uint16_t* far_spectrum,
+                              const int16_t far_q,
+                              const uint16_t * const dfa,
+                              const int16_t mu,
+                              int32_t * echoEst);
+
+extern const int16_t WebRtcAecm_kCosTable[];
+extern const int16_t WebRtcAecm_kSinTable[];
+
 ///////////////////////////////////////////////////////////////////////////////
 // Some function pointers, for internal functions shared by ARM NEON and
 // generic C code.
@@ -310,6 +429,22 @@ void WebRtcAecm_StoreAdaptiveChannelNeon(AecmCore_t* aecm,
                                          int32_t* echo_est);
 
 void WebRtcAecm_ResetAdaptiveChannelNeon(AecmCore_t* aecm);
+#endif
+
+#if defined(MIPS32_LE)
+void WebRtcAecm_CalcLinearEnergies_mips(AecmCore_t* aecm,
+                                        const uint16_t* far_spectrum,
+                                        int32_t* echo_est,
+                                        uint32_t* far_energy,
+                                        uint32_t* echo_energy_adapt,
+                                        uint32_t* echo_energy_stored);
+#if defined(MIPS_DSP_R1_LE)
+void WebRtcAecm_StoreAdaptiveChannel_mips(AecmCore_t* aecm,
+                                          const uint16_t* far_spectrum,
+                                          int32_t* echo_est);
+
+void WebRtcAecm_ResetAdaptiveChannel_mips(AecmCore_t* aecm);
+#endif
 #endif
 
 #endif

@@ -456,8 +456,7 @@ nsCoreUtils::IsErrorPage(nsIDocument *aDocument)
 bool
 nsCoreUtils::GetID(nsIContent *aContent, nsAString& aID)
 {
-  nsIAtom *idAttribute = aContent->GetIDAttributeName();
-  return idAttribute ? aContent->GetAttr(kNameSpaceID_None, idAttribute, aID) : false;
+  return aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::id, aID);
 }
 
 bool

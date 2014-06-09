@@ -15,9 +15,10 @@
 // read/write locks instead.
 
 #include "webrtc/common_types.h"
+#include "webrtc/system_wrappers/interface/thread_annotations.h"
 
 namespace webrtc {
-class CriticalSectionWrapper {
+class LOCKABLE CriticalSectionWrapper {
  public:
   // Factory method, constructor disabled
   static CriticalSectionWrapper* CreateCriticalSection();
@@ -26,33 +27,25 @@ class CriticalSectionWrapper {
 
   // Tries to grab lock, beginning of a critical section. Will wait for the
   // lock to become available if the grab failed.
-  virtual void Enter() = 0;
+  virtual void Enter() EXCLUSIVE_LOCK_FUNCTION() = 0;
 
   // Returns a grabbed lock, end of critical section.
-  virtual void Leave() = 0;
+  virtual void Leave() UNLOCK_FUNCTION() = 0;
 };
 
 // RAII extension of the critical section. Prevents Enter/Leave mismatches and
 // provides more compact critical section syntax.
-class CriticalSectionScoped {
+class SCOPED_LOCKABLE CriticalSectionScoped {
  public:
   explicit CriticalSectionScoped(CriticalSectionWrapper* critsec)
-    : ptr_crit_sec_(critsec) {
+      EXCLUSIVE_LOCK_FUNCTION(critsec)
+      : ptr_crit_sec_(critsec) {
     ptr_crit_sec_->Enter();
   }
 
-  ~CriticalSectionScoped() {
-    if (ptr_crit_sec_) {
-      Leave();
-    }
-  }
+  ~CriticalSectionScoped() UNLOCK_FUNCTION() { ptr_crit_sec_->Leave(); }
 
  private:
-  void Leave() {
-    ptr_crit_sec_->Leave();
-    ptr_crit_sec_ = 0;
-  }
-
   CriticalSectionWrapper* ptr_crit_sec_;
 };
 

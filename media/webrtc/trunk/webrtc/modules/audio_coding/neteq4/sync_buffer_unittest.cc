@@ -53,7 +53,7 @@ TEST(SyncBuffer, PushBackAndFlush) {
   static const size_t kChannels = 2;
   SyncBuffer sync_buffer(kChannels, kLen);
   static const size_t kNewLen = 10;
-  AudioMultiVector<int16_t> new_data(kChannels, kNewLen);
+  AudioMultiVector new_data(kChannels, kNewLen);
   // Populate |new_data|.
   for (size_t channel = 0; channel < kChannels; ++channel) {
     for (size_t i = 0; i < kNewLen; ++i) {
@@ -93,7 +93,7 @@ TEST(SyncBuffer, PushFrontZeros) {
   static const size_t kChannels = 2;
   SyncBuffer sync_buffer(kChannels, kLen);
   static const size_t kNewLen = 10;
-  AudioMultiVector<int16_t> new_data(kChannels, kNewLen);
+  AudioMultiVector new_data(kChannels, kNewLen);
   // Populate |new_data|.
   for (size_t channel = 0; channel < kChannels; ++channel) {
     for (size_t i = 0; i < kNewLen; ++i) {
@@ -126,7 +126,7 @@ TEST(SyncBuffer, GetNextAudioInterleaved) {
   static const size_t kChannels = 2;
   SyncBuffer sync_buffer(kChannels, kLen);
   static const size_t kNewLen = 10;
-  AudioMultiVector<int16_t> new_data(kChannels, kNewLen);
+  AudioMultiVector new_data(kChannels, kNewLen);
   // Populate |new_data|.
   for (size_t channel = 0; channel < kChannels; ++channel) {
     for (size_t i = 0; i < kNewLen; ++i) {

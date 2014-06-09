@@ -17,19 +17,58 @@ function test() {
     waitForFocus(setupInfobarTest, content);
   }, true);
 
-  let style = "body{width:100%;height: 100%} div {position: absolute;height: 100px;width: 500px}#bottom {bottom: 0px}#vertical {height: 100%}#farbottom{bottom: -200px}";
-  let html = "<style>" + style + "</style><div id=vertical></div><div id=top class='class1 class2'></div><div id=bottom></div><div id=farbottom></div>"
+  let style = "body{width:100%;height: 100%} div {position: absolute;" +
+              "height: 100px;width: 500px}#bottom {bottom: 0px}#vertical {"+
+              "height: 100%}#farbottom{bottom: -200px}";
+  let html = "<style>" + style + "</style><div id=vertical></div>" +
+             "<div id=top class='class1 class2'></div><div id=bottom></div>" +
+             "<div id=farbottom></div>"
 
-  content.location = "data:text/html," + encodeURIComponent(html);
+  content.location = "data:text/html;charset=utf-8," + encodeURIComponent(html);
 
   function setupInfobarTest() {
     nodes = [
-      {node: doc.querySelector("#top"), position: "bottom", tag: "DIV", id: "#top", classes: ".class1.class2"},
-      {node: doc.querySelector("#vertical"), position: "overlap", tag: "DIV", id: "#vertical", classes: ""},
-      {node: doc.querySelector("#bottom"), position: "top", tag: "DIV", id: "#bottom", classes: ""},
-      {node: doc.querySelector("body"), position: "overlap", tag: "BODY", id: "", classes: ""},
-      {node: doc.querySelector("#farbottom"), position: "top", tag: "DIV", id: "#farbottom", classes: ""},
-    ]
+      {
+        node: doc.querySelector("#top"),
+        position: "bottom",
+        tag: "DIV",
+        id: "#top",
+        classes: ".class1.class2",
+        dims: "500 x 100"
+      },
+      {
+        node: doc.querySelector("#vertical"),
+        position: "overlap",
+        tag: "DIV",
+        id: "#vertical",
+        classes: ""
+        // No dims as they will vary between computers
+      },
+      {
+        node: doc.querySelector("#bottom"),
+        position: "top",
+        tag: "DIV",
+        id: "#bottom",
+        classes: "",
+        dims: "500 x 100"
+      },
+      {
+        node: doc.querySelector("body"),
+        position: "overlap",
+        tag: "BODY",
+        id: "",
+        classes: ""
+        // No dims as they will vary between computers
+      },
+      {
+        node: doc.querySelector("#farbottom"),
+        position: "top",
+        tag: "DIV",
+        id: "#farbottom",
+        classes: "",
+        dims: "500 x 100"
+      },
+    ];
 
     for (let i = 0; i < nodes.length; i++) {
       ok(nodes[i].node, "node " + i + " found");
@@ -74,16 +113,24 @@ function test() {
     let stack = browser.parentNode;
 
     let container = stack.querySelector(".highlighter-nodeinfobar-positioner");
-    is(container.getAttribute("position"), nodes[cursor].position, "node " + cursor + ": position matches.");
+    is(container.getAttribute("position"),
+      nodes[cursor].position, "node " + cursor + ": position matches.");
 
     let tagNameLabel = stack.querySelector(".highlighter-nodeinfobar-tagname");
-    is(tagNameLabel.textContent, nodes[cursor].tag, "node " + cursor  + ": tagName matches.");
+    is(tagNameLabel.textContent, nodes[cursor].tag,
+      "node " + cursor  + ": tagName matches.");
 
     let idLabel = stack.querySelector(".highlighter-nodeinfobar-id");
     is(idLabel.textContent, nodes[cursor].id, "node " + cursor  + ": id matches.");
 
     let classesBox = stack.querySelector(".highlighter-nodeinfobar-classes");
-    is(classesBox.textContent, nodes[cursor].classes, "node " + cursor  + ": classes match.");
+    is(classesBox.textContent, nodes[cursor].classes,
+      "node " + cursor  + ": classes match.");
+
+    if (nodes[cursor].dims) {
+      let dimBox = stack.querySelector(".highlighter-nodeinfobar-dimensions");
+      is(dimBox.textContent, nodes[cursor].dims, "node " + cursor  + ": dims match.");
+    }
   }
 
   function finishUp() {

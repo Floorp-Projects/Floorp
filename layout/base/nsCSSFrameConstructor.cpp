@@ -29,6 +29,7 @@
 #include "nsTableCellFrame.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsHTMLParts.h"
+#include "nsPresShell.h"
 #include "nsIPresShell.h"
 #include "nsUnicharUtils.h"
 #include "nsStyleSet.h"
@@ -1796,7 +1797,12 @@ nsCSSFrameConstructor::CreateGeneratedContentItem(nsFrameConstructorState& aStat
     return;
   container->SetIsNativeAnonymousRoot();
 
-  rv = container->BindToTree(mDocument, aParentContent, aParentContent, true);
+  // If the parent is in a shadow tree, make sure we don't
+  // bind with a document because shadow roots and its descendants
+  // are not in document.
+  nsIDocument* bindDocument =
+    aParentContent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
+  rv = container->BindToTree(bindDocument, aParentContent, aParentContent, true);
   if (NS_FAILED(rv)) {
     container->UnbindFromTree();
     return;
@@ -2597,6 +2603,12 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
 
   SetInitialSingleChild(mDocElementContainingBlock, newFrame);
 
+  // Create touch caret frame if there is a canvas frame
+  if (mDocElementContainingBlock->GetType() == nsGkAtoms::canvasFrame) {
+    ConstructAnonymousContentForCanvas(state, mDocElementContainingBlock,
+                                       aDocElement);
+  }
+
   return newFrame;
 }
 
@@ -2850,6 +2862,29 @@ nsCSSFrameConstructor::SetUpDocElementContainingBlock(nsIContent* aDocElement)
     nsFrameList newFrameList(newFrame, newFrame);
     viewportFrame->AppendFrames(kPrincipalList, newFrameList);
   }
+}
+
+void
+nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(nsFrameConstructorState& aState,
+                                                          nsIFrame* aFrame,
+                                                          nsIContent* aDocElement)
+{
+  NS_ASSERTION(aFrame->GetType() == nsGkAtoms::canvasFrame, "aFrame should be canvas frame!");
+
+  nsAutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
+  GetAnonymousContent(aDocElement, aFrame, anonymousItems);
+  if (anonymousItems.IsEmpty()) {
+    // Touch caret is not enabled.
+    return;
+  }
+
+  FrameConstructionItemList itemsToConstruct;
+  nsContainerFrame* frameAsContainer = do_QueryFrame(aFrame);
+  AddFCItemsForAnonymousContent(aState, frameAsContainer, anonymousItems, itemsToConstruct);
+
+  nsFrameItems frameItems;
+  ConstructFramesFromItemList(aState, itemsToConstruct, frameAsContainer, frameItems);
+  frameAsContainer->AppendFrames(kPrincipalList, frameItems);
 }
 
 nsContainerFrame*
@@ -4020,7 +4055,13 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     ConnectAnonymousTreeDescendants(content, aContent[i].mChildren);
 
     bool anonContentIsEditable = content->HasFlag(NODE_IS_EDITABLE);
-    rv = content->BindToTree(mDocument, aParent, aParent, true);
+
+    // If the parent is in a shadow tree, make sure we don't
+    // bind with a document because shadow roots and its descendants
+    // are not in document.
+    nsIDocument* bindDocument =
+      aParent->HasFlag(NODE_IS_IN_SHADOW_TREE) ? nullptr : mDocument;
+    rv = content->BindToTree(bindDocument, aParent, aParent, true);
     // If the anonymous content creator requested that the content should be
     // editable, honor its request.
     // We need to set the flag on the whole subtree, because existing
@@ -8701,7 +8742,7 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIContent* aContent,
   // anyway).
   // Rebuilding the frame tree can have bad effects, especially if it's the
   // frame tree for chrome (see bug 157322).
-  NS_ENSURE_TRUE(aContent->GetDocument(), NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(aContent->GetCrossShadowCurrentDoc(), NS_ERROR_FAILURE);
 
   // Is the frame ib-split? If so, we need to reframe the containing
   // block *here*, rather than trying to remove and re-insert the

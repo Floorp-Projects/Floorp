@@ -23,9 +23,11 @@
 
 namespace webrtc {
 
+class Config;
+
 class OpusTest : public ACMTest {
  public:
-  OpusTest();
+  explicit OpusTest(const Config& config);
   ~OpusTest();
 
   void Perform();

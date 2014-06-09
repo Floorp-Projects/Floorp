@@ -97,7 +97,7 @@ void AudioDeviceMac::logCAMsg(const TraceLevel level,
     assert(msg != NULL);
     assert(err != NULL);
 
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     WEBRTC_TRACE(level, module, id, "%s: %.4s", msg, err);
 #else
     // We need to flip the characters in this case.
@@ -1457,7 +1457,7 @@ int32_t AudioDeviceMac::InitPlayout()
 
     _outDesiredFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger
         | kLinearPCMFormatFlagIsPacked;
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     _outDesiredFormat.mFormatFlags |= kLinearPCMFormatFlagIsBigEndian;
 #endif
     _outDesiredFormat.mFormatID = kAudioFormatLinearPCM;
@@ -1681,7 +1681,7 @@ int32_t AudioDeviceMac::InitRecording()
 
     _inDesiredFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger
         | kLinearPCMFormatFlagIsPacked;
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     _inDesiredFormat.mFormatFlags |= kLinearPCMFormatFlagIsBigEndian;
 #endif
     _inDesiredFormat.mFormatID = kAudioFormatLinearPCM;

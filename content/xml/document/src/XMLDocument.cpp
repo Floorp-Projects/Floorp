@@ -50,6 +50,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/XMLDocumentBinding.h"
+#include "mozilla/dom/DocumentBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -87,7 +88,10 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   } else if (aFlavor == DocumentFlavorHTML) {
     rv = NS_NewHTMLDocument(getter_AddRefs(d));
     isHTML = true;
+  } else if (aFlavor == DocumentFlavorPlain) {
+    rv = NS_NewXMLDocument(getter_AddRefs(d), aLoadedAsData, true);
   } else if (aDoctype) {
+    MOZ_ASSERT(aFlavor == DocumentFlavorLegacyGuess);
     nsAutoString publicId, name;
     aDoctype->GetPublicId(publicId);
     if (publicId.IsEmpty()) {
@@ -117,6 +121,7 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
       rv = NS_NewXMLDocument(getter_AddRefs(d));
     }
   } else {
+    MOZ_ASSERT(aFlavor == DocumentFlavorLegacyGuess);
     rv = NS_NewXMLDocument(getter_AddRefs(d));
   }
 
@@ -172,7 +177,8 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
 }
 
 nsresult
-NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
+NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData,
+                  bool aIsPlainDocument)
 {
   nsRefPtr<XMLDocument> doc = new XMLDocument();
 
@@ -184,6 +190,7 @@ NS_NewXMLDocument(nsIDocument** aInstancePtrResult, bool aLoadedAsData)
   }
 
   doc->SetLoadedAsData(aLoadedAsData);
+  doc->mIsPlainDocument = aIsPlainDocument;
   doc.forget(aInstancePtrResult);
 
   return NS_OK;
@@ -597,6 +604,7 @@ XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 
   // State from XMLDocument
   clone->mAsync = mAsync;
+  clone->mIsPlainDocument = mIsPlainDocument;
 
   return CallQueryInterface(clone.get(), aResult);
 }
@@ -604,6 +612,10 @@ XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
 JSObject*
 XMLDocument::WrapNode(JSContext *aCx)
 {
+  if (mIsPlainDocument) {
+    return DocumentBinding::Wrap(aCx, this);
+  }
+
   return XMLDocumentBinding::Wrap(aCx, this);
 }
 

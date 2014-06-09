@@ -419,6 +419,16 @@ public class TopSitesPanel extends HomeFragment {
         mList.setHeaderDividersEnabled(c != null && c.getCount() > mMaxGridEntries);
     }
 
+    private void updateUiWithThumbnails(Map<String, Bitmap> thumbnails) {
+        if (mGridAdapter != null) {
+            mGridAdapter.updateThumbnails(thumbnails);
+        }
+
+        // Once thumbnails have finished loading, the UI is ready. Reset
+        // Gecko to normal priority.
+        ThreadUtils.resetGeckoPriority();
+    }
+
     private static class TopSitesLoader extends SimpleCursorLoader {
         // Max number of search results
         private static final int SEARCH_LIMIT = 30;
@@ -518,11 +528,7 @@ public class TopSitesPanel extends HomeFragment {
 
             // If there is no url, then show "add bookmark".
             if (type == TopSites.TYPE_BLANK) {
-                // Wait until thumbnails are loaded before showing anything.
-                if (mThumbnails != null) {
-                    view.blankOut();
-                }
-
+                view.blankOut();
                 return;
             }
 
@@ -533,12 +539,6 @@ public class TopSitesPanel extends HomeFragment {
             // fetches.
             final boolean updated = view.updateState(title, url, type, thumbnail);
 
-            // If thumbnails are still being loaded, don't try to load favicons
-            // just yet. If we sent in a thumbnail, we're done now.
-            if (mThumbnails == null || thumbnail != null) {
-                return;
-            }
-
             // Thumbnails are delivered late, so we can't short-circuit any
             // sooner than this. But we can avoid a duplicate favicon
             // fetch...
@@ -547,11 +547,18 @@ public class TopSitesPanel extends HomeFragment {
                 return;
             }
 
-            final int imageUrlIndex = cursor.getColumnIndex(TopSites.IMAGE_URL);
-            if (!cursor.isNull(imageUrlIndex)) {
-                String imageUrl = cursor.getString(imageUrlIndex);
-                String bgColor = cursor.getString(cursor.getColumnIndex(TopSites.BG_COLOR));
-                view.displayThumbnail(imageUrl, Color.parseColor(bgColor));
+            // Suggested images have precedence over thumbnails, no need to wait
+            // for them to be loaded. See: CursorLoaderCallbacks.onLoadFinished()
+            final String imageUrl = BrowserDB.getSuggestedImageUrlForUrl(url);
+            if (!TextUtils.isEmpty(imageUrl)) {
+                final int bgColor = BrowserDB.getSuggestedBackgroundColorForUrl(url);
+                view.displayThumbnail(imageUrl, bgColor);
+                return;
+            }
+
+            // If thumbnails are still being loaded, don't try to load favicons
+            // just yet. If we sent in a thumbnail, we're done now.
+            if (mThumbnails == null || thumbnail != null) {
                 return;
             }
 
@@ -635,10 +642,20 @@ public class TopSitesPanel extends HomeFragment {
             final ArrayList<String> urls = new ArrayList<String>();
             int i = 1;
             do {
-                urls.add(c.getString(col));
+                final String url = c.getString(col);
+
+                // Only try to fetch thumbnails for non-empty URLs that
+                // don't have an associated suggested image URL.
+                if (TextUtils.isEmpty(url) || BrowserDB.hasSuggestedImageUrl(url)) {
+                    continue;
+                }
+
+                urls.add(url);
             } while (i++ < mMaxGridEntries && c.moveToNext());
 
             if (urls.isEmpty()) {
+                // Short-circuit empty results to the UI.
+                updateUiWithThumbnails(new HashMap<String, Bitmap>());
                 return;
             }
 
@@ -776,13 +793,7 @@ public class TopSitesPanel extends HomeFragment {
 
         @Override
         public void onLoadFinished(Loader<Map<String, Bitmap>> loader, Map<String, Bitmap> thumbnails) {
-            if (mGridAdapter != null) {
-                mGridAdapter.updateThumbnails(thumbnails);
-            }
-
-            // Once thumbnails have finished loading, the UI is ready. Reset
-            // Gecko to normal priority.
-            ThreadUtils.resetGeckoPriority();
+            updateUiWithThumbnails(thumbnails);
         }
 
         @Override

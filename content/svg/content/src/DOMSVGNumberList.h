@@ -12,7 +12,6 @@
 #include "nsDebug.h"
 #include "nsTArray.h"
 #include "SVGNumberList.h"
-#include "nsIDOMSVGNumber.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 
@@ -109,22 +108,19 @@ public:
     return LengthNoFlush();
   }
   void Clear(ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> Initialize(nsIDOMSVGNumber *newItem,
-                                               ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> GetItem(uint32_t index,
+  already_AddRefed<DOMSVGNumber> Initialize(DOMSVGNumber& newItem,
                                             ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> IndexedGetter(uint32_t index, bool& found,
-                                                  ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> InsertItemBefore(nsIDOMSVGNumber *newItem,
-                                                     uint32_t index,
-                                                     ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> ReplaceItem(nsIDOMSVGNumber *newItem,
-                                                uint32_t index,
-                                                ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> RemoveItem(uint32_t index,
+  already_AddRefed<DOMSVGNumber> GetItem(uint32_t index, ErrorResult& error);
+  already_AddRefed<DOMSVGNumber> IndexedGetter(uint32_t index, bool& found,
                                                ErrorResult& error);
-  already_AddRefed<nsIDOMSVGNumber> AppendItem(nsIDOMSVGNumber *newItem,
-                                               ErrorResult& error)
+  already_AddRefed<DOMSVGNumber> InsertItemBefore(DOMSVGNumber& newItem,
+                                                  uint32_t index, ErrorResult& error);
+  already_AddRefed<DOMSVGNumber> ReplaceItem(DOMSVGNumber& newItem, uint32_t index,
+                                             ErrorResult& error);
+  already_AddRefed<DOMSVGNumber> RemoveItem(uint32_t index,
+                                            ErrorResult& error);
+  already_AddRefed<DOMSVGNumber> AppendItem(DOMSVGNumber& newItem,
+                                            ErrorResult& error)
   {
     return InsertItemBefore(newItem, LengthNoFlush(), error);
   }
@@ -160,8 +156,8 @@ private:
    */
   SVGNumberList& InternalList() const;
 
-  /// Returns the nsIDOMSVGNumber at aIndex, creating it if necessary.
-  already_AddRefed<nsIDOMSVGNumber> GetItemAt(uint32_t aIndex);
+  /// Returns the DOMSVGNumber at aIndex, creating it if necessary.
+  already_AddRefed<DOMSVGNumber> GetItemAt(uint32_t aIndex);
 
   void MaybeInsertNullInAnimValListAt(uint32_t aIndex);
   void MaybeRemoveItemFromAnimValListAt(uint32_t aIndex);

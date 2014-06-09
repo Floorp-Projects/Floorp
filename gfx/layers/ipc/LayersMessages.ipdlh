@@ -40,6 +40,7 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
+using struct mozilla::layers::FenceHandleFromChild from "mozilla/layers/FenceUtils.h";
 using mozilla::layers::TextureIdentifier from "mozilla/layers/CompositorTypes.h";
 
 namespace mozilla {
@@ -226,6 +227,7 @@ struct ContainerLayerAttributes {
   float preYScale;
   float inheritedXScale;
   float inheritedYScale;
+  LayerColor backgroundColor;
 };
 struct ColorLayerAttributes     { LayerColor color; nsIntRect bounds; };
 struct CanvasLayerAttributes    { GraphicsFilterType filter; nsIntRect bounds; };
@@ -387,6 +389,12 @@ struct OpDeliverFenceToTracker {
   FenceHandle fence;
 };
 
+struct OpDeliverFenceFromChild {
+  uint64_t transactionId;
+  PTexture texture;
+  FenceHandleFromChild fence;
+};
+
 struct OpReplyDeliverFence {
   uint64_t transactionId;
 };
@@ -466,10 +474,12 @@ union EditReply {
 union AsyncParentMessageData {
   OpDeliverFence;
   OpDeliverFenceToTracker;
+  OpReplyDeliverFence;
   OpReplyRemoveTexture;
 };
 
 union AsyncChildMessageData {
+  OpDeliverFenceFromChild;
   OpReplyDeliverFence;
 };
 

@@ -16,16 +16,6 @@
         '<(webrtc_root)/modules/modules.gyp:paced_sender',
         '<(webrtc_root)/modules/modules.gyp:remote_bitrate_estimator',
       ],
-      'include_dirs': [
-        '../interface',
-        '../../interface',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../interface',
-          '../../interface',
-        ],
-      },
       'sources': [
         # Common
         '../interface/fec_receiver.h',
@@ -37,6 +27,7 @@
         '../interface/rtp_rtcp_defines.h',
         'bitrate.cc',
         'bitrate.h',
+        'byte_io.h',
         'fec_receiver_impl.cc',
         'fec_receiver_impl.h',
         'receive_statistics_impl.cc',

@@ -44,8 +44,6 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
 {
     JS_ASSERT(parent);
 
-    AutoMarkInDeadZone amd(cx->zone());
-
     RootedValue priv(cx, ObjectValue(*obj));
     mozilla::Maybe<WrapperOptions> opts;
     if (!options) {
@@ -569,8 +567,16 @@ CrossCompartmentWrapper::fun_toString(JSContext *cx, HandleObject wrapper, unsig
 bool
 CrossCompartmentWrapper::regexp_toShared(JSContext *cx, HandleObject wrapper, RegExpGuard *g)
 {
-    AutoCompartment call(cx, wrappedObject(wrapper));
-    return Wrapper::regexp_toShared(cx, wrapper, g);
+    RegExpGuard wrapperGuard(cx);
+    {
+        AutoCompartment call(cx, wrappedObject(wrapper));
+        if (!Wrapper::regexp_toShared(cx, wrapper, &wrapperGuard))
+            return false;
+    }
+
+    // Get an equivalent RegExpShared associated with the current compartment.
+    RegExpShared *re = wrapperGuard.re();
+    return cx->compartment()->regExps.get(cx, re->getSource(), re->getFlags(), g);
 }
 
 bool
@@ -1037,8 +1043,6 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
-    AutoMaybeTouchDeadZones agc(cx);
-
     AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {

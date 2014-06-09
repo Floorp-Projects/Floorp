@@ -79,18 +79,11 @@ private:
 class VolatileBufferPtr_base {
 public:
   explicit VolatileBufferPtr_base(VolatileBuffer* vbuf) : mVBuf(vbuf) {
-    if (vbuf) {
-      mPurged = !vbuf->Lock(&mMapping);
-    } else {
-      mMapping = nullptr;
-      mPurged = false;
-    }
+    Lock();
   }
 
   ~VolatileBufferPtr_base() {
-    if (mVBuf) {
-      mVBuf->Unlock();
-    }
+    Unlock();
   }
 
   bool WasBufferPurged() const {
@@ -100,9 +93,30 @@ public:
 protected:
   void* mMapping;
 
+  void Set(VolatileBuffer* vbuf) {
+    Unlock();
+    mVBuf = vbuf;
+    Lock();
+  }
+
 private:
   RefPtr<VolatileBuffer> mVBuf;
   bool mPurged;
+
+  void Lock() {
+    if (mVBuf) {
+      mPurged = !mVBuf->Lock(&mMapping);
+    } else {
+      mMapping = nullptr;
+      mPurged = false;
+    }
+  }
+
+  void Unlock() {
+    if (mVBuf) {
+      mVBuf->Unlock();
+    }
+  }
 };
 
 template <class T>
@@ -110,10 +124,17 @@ class VolatileBufferPtr : public VolatileBufferPtr_base
 {
 public:
   explicit VolatileBufferPtr(VolatileBuffer* vbuf) : VolatileBufferPtr_base(vbuf) {}
+  VolatileBufferPtr() : VolatileBufferPtr_base(nullptr) {}
 
   operator T*() const {
     return (T*) mMapping;
   }
+
+  void operator =(VolatileBuffer* vbuf) {
+    Set(vbuf);
+  }
+private:
+  VolatileBufferPtr(VolatileBufferPtr const& vbufptr) MOZ_DELETE;
 };
 
 }; /* namespace mozilla */

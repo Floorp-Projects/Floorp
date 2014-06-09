@@ -83,16 +83,20 @@ stjar.javac_flags = ['-Xlint:none']
 
 if CONFIG['MOZ_WEBRTC']:
     video_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_capture/android/java/src/org/webrtc/videoengine/'
+    video_render_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/video_render/android/java/src/org/webrtc/videoengine/'
     audio_root = TOPSRCDIR + '/media/webrtc/trunk/webrtc/modules/audio_device/android/java/src/org/webrtc/voiceengine/'
     wrjar = add_java_jar('webrtc')
     wrjar.sources += [
         video_root + 'CaptureCapabilityAndroid.java',
         video_root + 'VideoCaptureAndroid.java',
         video_root + 'VideoCaptureDeviceInfoAndroid.java',
+        video_render_root + 'ViEAndroidGLES20.java',
+        video_render_root + 'ViERenderer.java',
     ]
     wrjar.sources += [
         audio_root + 'AudioManagerAndroid.java',
-        audio_root + 'WebRTCAudioDevice.java',
+        audio_root + 'WebRtcAudioRecord.java',
+        audio_root + 'WebRtcAudioTrack.java',
     ]
     wrjar.extra_jars = [
         'gecko-R.jar',
@@ -542,13 +546,17 @@ if '-march=armv7' in CONFIG['OS_CFLAGS']:
 else:
     DEFINES['MOZ_MIN_CPU_VERSION'] = 5
 
+generated_recursive_make_targets = ['.aapt.deps', '.locales.deps'] # Captures dependencies on Android manifest and all resources.
+
 generated = add_android_eclipse_library_project('FennecResourcesGenerated')
 generated.package_name = 'org.mozilla.fennec.resources.generated'
 generated.res = OBJDIR + '/res'
+generated.recursive_make_targets += generated_recursive_make_targets
 
 branding = add_android_eclipse_library_project('FennecResourcesBranding')
 branding.package_name = 'org.mozilla.fennec.resources.branding'
 branding.res = TOPSRCDIR + '/' + CONFIG['MOZ_BRANDING_DIRECTORY'] + '/res'
+branding.recursive_make_targets += generated_recursive_make_targets
 
 main = add_android_eclipse_project('Fennec', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.gecko'
@@ -561,7 +569,7 @@ main.filtered_resources += [
     '1.0-projectRelativePath-matches-false-false-*org/mozilla/gecko/tests/**',
 ]
 
-main.recursive_make_targets += ['.aapt.deps'] # Captures dependencies on Android manifest and all resources.
+main.recursive_make_targets += generated_recursive_make_targets
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
 main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]
 
@@ -587,6 +595,7 @@ resources = add_android_eclipse_library_project('FennecResources')
 resources.package_name = 'org.mozilla.fennec.resources'
 resources.res = SRCDIR + '/resources'
 resources.included_projects += ['../' + generated.name, '../' + branding.name]
+resources.recursive_make_targets += generated_recursive_make_targets
 
 main.included_projects += ['../' + resources.name]
 main.referenced_projects += [resources.name]

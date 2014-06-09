@@ -17,7 +17,6 @@
 #include "webrtc/voice_engine/include/voe_errors.h"
 #include "webrtc/voice_engine/voice_engine_impl.h"
 
-
 namespace webrtc {
 
 VoENetEqStats* VoENetEqStats::GetInterface(VoiceEngine* voiceEngine)
@@ -71,6 +70,27 @@ int VoENetEqStatsImpl::GetNetworkStatistics(int channel,
     }
 
     return channelPtr->GetNetworkStatistics(stats);
+}
+
+int VoENetEqStatsImpl::GetDecodingCallStatistics(
+    int channel, AudioDecodingCallStats* stats) const {
+  ANDROID_NOT_SUPPORTED(_shared->statistics());
+
+  if (!_shared->statistics().Initialized()) {
+    _shared->SetLastError(VE_NOT_INITED, kTraceError);
+    return -1;
+  }
+  voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+  voe::Channel* channelPtr = ch.channel();
+  if (channelPtr == NULL) {
+    _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+                          "GetDecodingCallStatistics() failed to locate "
+                          "channel");
+    return -1;
+  }
+
+  channelPtr->GetDecodingCallStatistics(stats);
+  return 0;
 }
 
 #endif  // #ifdef WEBRTC_VOICE_ENGINE_NETEQ_STATS_API

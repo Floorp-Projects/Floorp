@@ -7,6 +7,7 @@
 
 #include "mozilla/Attributes.h"
 #include "nsContainerFrame.h"
+#include "nsIFrameInlines.h" // for methods used by IS_TRUE_OVERFLOW_CONTAINER
 
 class nsColumnSetFrame : public nsContainerFrame {
 public:
@@ -51,8 +52,11 @@ public:
   }
 
   virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) MOZ_OVERRIDE
-  { // nsColumnSetFrame keeps overflow containers in main child list
-    return nsContainerFrame::StealFrame(aChild, true);
+  {
+    // nsColumnSetFrame keeps true overflow containers in the normal flow
+    // child lists (i.e. the principal and overflow lists).
+    return nsContainerFrame::StealFrame(aChild,
+                                        IS_TRUE_OVERFLOW_CONTAINER(aChild));
   }
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE

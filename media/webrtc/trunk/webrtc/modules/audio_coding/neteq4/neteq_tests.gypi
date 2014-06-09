@@ -14,6 +14,8 @@
       'dependencies': [
         'NetEq4',
         'NetEq4TestTools',
+        'neteq_unittest_tools',
+        'PCM16B',
         '<(webrtc_root)/test/test.gyp:test_support_main',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
       ],
@@ -56,6 +58,7 @@
       'include_dirs': [
         'interface',
         'test',
+        '<(webrtc_root)',
       ],
       'sources': [
         'test/RTPencode.cc',
@@ -145,6 +148,7 @@
         'neteq_unittest_tools',
         'PCM16B',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
+        '<(webrtc_root)/test/test.gyp:test_support_main',
       ],
       'sources': [
         'test/neteq_speed_test.cc',
@@ -172,6 +176,7 @@
         'include_dirs': [
           'interface',
           'test',
+          '<(webrtc_root)',
         ],
       },
       'defines': [
@@ -179,6 +184,7 @@
       'include_dirs': [
         'interface',
         'test',
+        '<(webrtc_root)',
       ],
       'sources': [
         'test/NETEQTEST_DummyRTPpacket.cc',

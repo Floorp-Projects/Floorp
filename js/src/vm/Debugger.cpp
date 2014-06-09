@@ -809,6 +809,63 @@ Debugger::unwrapDebuggeeValue(JSContext *cx, MutableHandleValue vp)
     return true;
 }
 
+/*
+ * Convert Debugger.Objects in desc to debuggee values.
+ * Reject non-callable getters and setters.
+ */
+static bool
+CheckArgCompartment(JSContext *cx, JSObject *obj, HandleValue v,
+                    const char *methodname, const char *propname)
+{
+    if (v.isObject() && v.toObject().compartment() != obj->compartment()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_DEBUG_COMPARTMENT_MISMATCH,
+                             methodname, propname);
+        return false;
+    }
+    return true;
+}
+
+bool
+Debugger::unwrapPropDescInto(JSContext *cx, HandleObject obj, Handle<PropDesc> wrapped,
+                             MutableHandle<PropDesc> unwrapped)
+{
+    MOZ_ASSERT(!wrapped.isUndefined());
+
+    unwrapped.set(wrapped);
+
+    if (unwrapped.hasValue()) {
+        RootedValue value(cx, unwrapped.value());
+        if (!unwrapDebuggeeValue(cx, &value) ||
+            !CheckArgCompartment(cx, obj, value, "defineProperty", "value"))
+        {
+            return false;
+        }
+        unwrapped.setValue(value);
+    }
+
+    if (unwrapped.hasGet()) {
+        RootedValue get(cx, unwrapped.getterValue());
+        if (!unwrapDebuggeeValue(cx, &get) ||
+            !CheckArgCompartment(cx, obj, get, "defineProperty", "get"))
+        {
+            return false;
+        }
+        unwrapped.setGetter(get);
+    }
+
+    if (unwrapped.hasSet()) {
+        RootedValue set(cx, unwrapped.setterValue());
+        if (!unwrapDebuggeeValue(cx, &set) ||
+            !CheckArgCompartment(cx, obj, set, "defineProperty", "set"))
+        {
+            return false;
+        }
+        unwrapped.setSetter(set);
+    }
+
+    return true;
+}
+
 JSTrapStatus
 Debugger::handleUncaughtExceptionHelper(Maybe<AutoCompartment> &ac,
                                         MutableHandleValue *vp, bool callHook)
@@ -990,7 +1047,7 @@ CallMethodIfPresent(JSContext *cx, HandleObject obj, const char *name, int argc,
     RootedId id(cx, AtomToId(atom));
     RootedValue fval(cx);
     return JSObject::getGeneric(cx, obj, obj, id, &fval) &&
-           (!js_IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
+           (!IsCallable(fval) || Invoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
 JSTrapStatus
@@ -2036,7 +2093,7 @@ Debugger::addAllGlobalsAsDebuggees(JSContext *cx, unsigned argc, Value *vp)
         for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
             if (c == dbg->object->compartment() || c->options().invisibleToDebugger())
                 continue;
-            c->zone()->scheduledForDestruction = false;
+            c->scheduledForDestruction = false;
             GlobalObject *global = c->maybeGlobal();
             if (global) {
                 Rooted<GlobalObject*> rg(cx, global);
@@ -2833,7 +2890,7 @@ Debugger::findAllGlobals(JSContext *cx, unsigned argc, Value *vp)
         if (c->options().invisibleToDebugger())
             continue;
 
-        c->zone()->scheduledForDestruction = false;
+        c->scheduledForDestruction = false;
 
         GlobalObject *global = c->maybeGlobal();
 
@@ -3674,6 +3731,23 @@ Debugger::handleIonBailout(JSContext *cx, jit::RematerializedFrame *from, jit::B
     while (iter.abstractFramePtr() != to)
         ++iter;
     return replaceFrameGuts(cx, from, to, iter);
+}
+
+/* static */ void
+Debugger::propagateForcedReturn(JSContext *cx, AbstractFramePtr frame, HandleValue rval)
+{
+    // Invoking the interrupt handler is considered a step and invokes the
+    // youngest frame's onStep handler, if any. However, we cannot handle
+    // { return: ... } resumption values straightforwardly from the interrupt
+    // handler. Instead, we set the intended return value in the frame's rval
+    // slot and set the propagating-forced-return flag on the JSContext.
+    //
+    // The interrupt handler then returns false with no exception set,
+    // signaling an uncatchable exception. In the exception handlers, we then
+    // check for the special propagating-forced-return flag.
+    MOZ_ASSERT(!cx->isExceptionPending());
+    cx->setPropagatingForcedReturn();
+    frame.setReturnValue(rval);
 }
 
 static bool
@@ -5257,34 +5331,29 @@ DebuggerObject_defineProperty(JSContext *cx, unsigned argc, Value *vp)
     if (!ValueToId<CanGC>(cx, args[0], &id))
         return false;
 
-    AutoPropDescArrayRooter descs(cx);
-    if (!descs.reserve(3)) // desc, unwrappedDesc, rewrappedDesc
+    Rooted<PropDesc> desc(cx);
+    if (!desc.initialize(cx, args[1], false))
         return false;
-    PropDesc *desc = descs.append();
-    if (!desc || !desc->initialize(cx, args[1], false))
-        return false;
-    desc->clearPd();
+    desc.clearDescriptorObject();
 
-    PropDesc *unwrappedDesc = descs.append();
-    if (!unwrappedDesc || !desc->unwrapDebuggerObjectsInto(cx, dbg, obj, unwrappedDesc))
+    if (!dbg->unwrapPropDescInto(cx, obj, desc, &desc))
         return false;
-    if (!unwrappedDesc->checkGetter(cx) || !unwrappedDesc->checkSetter(cx))
+    if (!desc.checkGetter(cx) || !desc.checkSetter(cx))
         return false;
 
     {
-        PropDesc *rewrappedDesc = descs.append();
-        if (!rewrappedDesc)
-            return false;
-        RootedId wrappedId(cx);
-
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
-        if (!unwrappedDesc->wrapInto(cx, obj, id, wrappedId.address(), rewrappedDesc))
+        if (!cx->compartment()->wrapId(cx, id.address()))
+            return false;
+        if (!cx->compartment()->wrap(cx, &desc))
+            return false;
+        if (!desc.makeObject(cx))
             return false;
 
         ErrorCopier ec(ac, dbg->toJSObject());
         bool dummy;
-        if (!DefineProperty(cx, obj, wrappedId, *rewrappedDesc, true, &dummy))
+        if (!DefineProperty(cx, obj, id, desc, true, &dummy))
             return false;
     }
 
@@ -5304,44 +5373,35 @@ DebuggerObject_defineProperties(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     AutoIdVector ids(cx);
-    AutoPropDescArrayRooter descs(cx);
+    AutoPropDescVector descs(cx);
     if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs))
         return false;
     size_t n = ids.length();
 
-    AutoPropDescArrayRooter unwrappedDescs(cx);
     for (size_t i = 0; i < n; i++) {
-        if (!unwrappedDescs.append())
+        if (!dbg->unwrapPropDescInto(cx, obj, descs[i], descs[i]))
             return false;
-        if (!descs[i].unwrapDebuggerObjectsInto(cx, dbg, obj, &unwrappedDescs[i]))
-            return false;
-        if (!unwrappedDescs[i].checkGetter(cx) || !unwrappedDescs[i].checkSetter(cx))
+        if (!descs[i].checkGetter(cx) || !descs[i].checkSetter(cx))
             return false;
     }
 
     {
-        AutoIdVector rewrappedIds(cx);
-        AutoPropDescArrayRooter rewrappedDescs(cx);
-
         Maybe<AutoCompartment> ac;
         ac.construct(cx, obj);
-        RootedId id(cx);
         for (size_t i = 0; i < n; i++) {
-            if (!rewrappedIds.append(JSID_VOID) || !rewrappedDescs.append())
+            if (!cx->compartment()->wrapId(cx, ids[i].address()))
                 return false;
-            id = ids[i];
-            if (!unwrappedDescs[i].wrapInto(cx, obj, id, rewrappedIds[i].address(), &rewrappedDescs[i]))
+            if (!cx->compartment()->wrap(cx, descs[i]))
+                return false;
+            if (descs[i].descriptorValue().isUndefined() && !descs[i].makeObject(cx))
                 return false;
         }
 
         ErrorCopier ec(ac, dbg->toJSObject());
         for (size_t i = 0; i < n; i++) {
             bool dummy;
-            if (!DefineProperty(cx, obj, rewrappedIds[i],
-                                rewrappedDescs[i], true, &dummy))
-            {
+            if (!DefineProperty(cx, obj, ids[i], descs[i], true, &dummy))
                 return false;
-            }
         }
     }
 
@@ -5357,16 +5417,18 @@ static bool
 DebuggerObject_deleteProperty(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "deleteProperty", args, dbg, obj);
-    RootedValue nameArg(cx, args.get(0));
+    RootedId id(cx);
+    if (!ValueToId<CanGC>(cx, args.get(0), &id))
+        return false;
 
     Maybe<AutoCompartment> ac;
     ac.construct(cx, obj);
-    if (!cx->compartment()->wrap(cx, &nameArg))
+    if (!cx->compartment()->wrapId(cx, id.address()))
         return false;
 
     bool succeeded;
     ErrorCopier ec(ac, dbg->toJSObject());
-    if (!JSObject::deleteByValue(cx, obj, nameArg, &succeeded))
+    if (!JSObject::deleteGeneric(cx, obj, id, &succeeded))
         return false;
     args.rval().setBoolean(succeeded);
     return true;

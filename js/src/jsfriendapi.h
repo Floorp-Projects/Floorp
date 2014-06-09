@@ -50,9 +50,6 @@ JS_SetGrayGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 extern JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt);
 
-extern JS_FRIEND_API(void)
-JS_SetIsWorkerRuntime(JSRuntime *rt);
-
 extern JS_FRIEND_API(JSObject *)
 JS_FindCompilationScope(JSContext *cx, JS::HandleObject obj);
 
@@ -124,6 +121,12 @@ JS_GetCompartmentPrincipals(JSCompartment *compartment);
 
 extern JS_FRIEND_API(void)
 JS_SetCompartmentPrincipals(JSCompartment *compartment, JSPrincipals *principals);
+
+extern JS_FRIEND_API(JSPrincipals *)
+JS_GetScriptPrincipals(JSScript *script);
+
+extern JS_FRIEND_API(JSPrincipals *)
+JS_GetScriptOriginPrincipals(JSScript *script);
 
 /* Safe to call with input obj == nullptr. Returns non-nullptr iff obj != nullptr. */
 extern JS_FRIEND_API(JSObject *)
@@ -286,8 +289,7 @@ namespace js {
             js::proxy_SetElement,                                                       \
             js::proxy_GetGenericAttributes,                                             \
             js::proxy_SetGenericAttributes,                                             \
-            js::proxy_DeleteProperty,                                                   \
-            js::proxy_DeleteElement,                                                    \
+            js::proxy_DeleteGeneric,                                                    \
             js::proxy_Watch, js::proxy_Unwatch,                                         \
             js::proxy_Slice,                                                            \
             nullptr,             /* enumerate       */                                  \
@@ -352,10 +354,7 @@ proxy_GetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id,
 extern JS_FRIEND_API(bool)
 proxy_SetGenericAttributes(JSContext *cx, JS::HandleObject obj, JS::HandleId id, unsigned *attrsp);
 extern JS_FRIEND_API(bool)
-proxy_DeleteProperty(JSContext *cx, JS::HandleObject obj, JS::Handle<PropertyName*> name,
-                     bool *succeeded);
-extern JS_FRIEND_API(bool)
-proxy_DeleteElement(JSContext *cx, JS::HandleObject obj, uint32_t index, bool *succeeded);
+proxy_DeleteGeneric(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *succeeded);
 
 extern JS_FRIEND_API(void)
 proxy_Trace(JSTracer *trc, JSObject *obj);
@@ -592,9 +591,9 @@ struct Atom {
     uint32_t flags;
     uint32_t length;
     union {
-        const char *nonInlineCharsLatin1;
+        const JS::Latin1Char *nonInlineCharsLatin1;
         const jschar *nonInlineCharsTwoByte;
-        char inlineStorageLatin1[1];
+        JS::Latin1Char inlineStorageLatin1[1];
         jschar inlineStorageTwoByte[1];
     };
 };
@@ -1340,7 +1339,7 @@ extern JS_FRIEND_DATA(const Class* const) Uint32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float32ArrayClassPtr;
 extern JS_FRIEND_DATA(const Class* const) Float64ArrayClassPtr;
 
-const size_t TypedArrayLengthSlot = 4;
+const size_t TypedArrayLengthSlot = 1;
 
 } // namespace detail
 
@@ -1883,12 +1882,18 @@ struct JSJitInfo {
                                   not be enough (e.g. in cases when it can
                                   throw). */
     // XXXbz should we have a JSValueType for the type of the member?
-    uint32_t isInSlot : 1;     /* True if this is a getter that can get a member
-                                  from a slot of the "this" object directly. */
+    uint32_t isAlwaysInSlot : 1; /* True if this is a getter that can always
+                                    get the value from a slot of the "this"
+                                    object. */
+    uint32_t isLazilyCachedInSlot : 1; /* True if this is a getter that can
+                                          sometimes (if the slot doesn't contain
+                                          UndefinedValue()) get the value from a
+                                          slot of the "this" object. */
     uint32_t isTypedMethod : 1; /* True if this is an instance of
                                    JSTypedMethodJitInfo. */
-    uint32_t slotIndex : 12;   /* If isInSlot is true, the index of the slot to
-                                  get the value from.  Otherwise 0. */
+    uint32_t slotIndex : 11;   /* If isAlwaysInSlot or isSometimesInSlot is
+                                  true, the index of the slot to get the value
+                                  from.  Otherwise 0. */
 };
 
 static_assert(sizeof(JSJitInfo) == (sizeof(void*) + 2 * sizeof(uint32_t)),
@@ -1946,7 +1951,7 @@ inline int CheckIsParallelNative(JSParallelNative parallelNative);
  */
 #define JS_JITINFO_NATIVE_PARALLEL(infoName, parallelOp)                \
     const JSJitInfo infoName =                                          \
-        {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSJitInfo::AliasEverything,JSVAL_TYPE_MISSING,false,false,false,false,0}
+        {{JS_CAST_PARALLEL_NATIVE_TO(parallelOp, JSJitGetterOp)},0,0,JSJitInfo::ParallelNative,JSJitInfo::AliasEverything,JSVAL_TYPE_MISSING,false,false,false,false,false,0}
 
 #define JS_JITINFO_NATIVE_PARALLEL_THREADSAFE(infoName, wrapperName, serialOp) \
     bool wrapperName##_ParallelNativeThreadSafeWrapper(js::ForkJoinContext *cx, unsigned argc, \

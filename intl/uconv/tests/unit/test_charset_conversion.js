@@ -76,7 +76,7 @@ function test_utf8_1()
     do_check_true(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 
-    if (!equal(new UTF8(pipe.inputStream),
+    if (!equalStreams(new UTF8(pipe.inputStream),
                stringToCodePoints(UNICODE_STRINGS[i])))
       do_throw("UNICODE_STRINGS[" + i + "] not handled correctly");
   }
@@ -91,7 +91,7 @@ function test_utf16_1()
     do_check_true(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 
-    if (!equal(new UTF16(pipe.inputStream),
+    if (!equalStreams(new UTF16(pipe.inputStream),
                stringToCodePoints(UNICODE_STRINGS[i])))
       do_throw("UNICODE_STRINGS[" + i + "] not handled correctly");
   }
@@ -106,7 +106,7 @@ function test_utf16_2()
     do_check_true(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 
-    if (!equal(new UTF16(pipe.inputStream, false),
+    if (!equalStreams(new UTF16(pipe.inputStream, false),
                stringToCodePoints(UNICODE_STRINGS[i])))
       do_throw("UNICODE_STRINGS[" + i + "] not handled correctly");
   }
@@ -121,7 +121,7 @@ function test_utf16_3()
     do_check_true(conv.writeString(UNICODE_STRINGS[i]));
     conv.close();
 
-    if (!equal(new UTF16(pipe.inputStream, true),
+    if (!equalStreams(new UTF16(pipe.inputStream, true),
                stringToCodePoints(UNICODE_STRINGS[i])))
       do_throw("UNICODE_STRINGS[" + i + "] not handled correctly");
   }
@@ -187,7 +187,7 @@ function getBinaryInputStream(filename, encoding)
   return new BIS(fis);
 }
 
-function equal(stream, codePoints)
+function equalStreams(stream, codePoints)
 {
   var sz, currIndex = 0;
   while (true)

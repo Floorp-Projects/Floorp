@@ -10,10 +10,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=806506
 </head>
 <body>
 <div class="tall" id="bodydiv"></div>
+<div id="container"></div>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=806506">Bug 806506</a>
 <script>
 // Create ShadowRoot.
+var container = document.getElementById("container");
 var elem = document.createElement("div");
+container.appendChild(elem); // Put ShadowRoot host in document.
 var firstRoot = elem.createShadowRoot();
 var secondRoot = elem.createShadowRoot();
 var thirdRoot = elem.createShadowRoot();

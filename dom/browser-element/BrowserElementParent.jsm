@@ -40,33 +40,6 @@ function getIntPref(prefName, def) {
   }
 }
 
-function exposeAll(obj) {
-  // Filter for Objects and Arrays.
-  if (typeof obj !== "object" || !obj)
-    return;
-
-  // Recursively expose our children.
-  Object.keys(obj).forEach(function(key) {
-    exposeAll(obj[key]);
-  });
-
-  // If we're not an Array, generate an __exposedProps__ object for ourselves.
-  if (obj instanceof Array)
-    return;
-  var exposed = {};
-  Object.keys(obj).forEach(function(key) {
-    exposed[key] = 'rw';
-  });
-  obj.__exposedProps__ = exposed;
-}
-
-function defineAndExpose(obj, name, value) {
-  obj[name] = value;
-  if (!('__exposedProps__' in obj))
-    obj.__exposedProps__ = {};
-  obj.__exposedProps__[name] = 'r';
-}
-
 function visibilityChangeHandler(e) {
   // The visibilitychange event's target is the document.
   let win = e.target.defaultView;
@@ -334,17 +307,15 @@ BrowserElementParent.prototype = {
 
       evt = this._createEvent('usernameandpasswordrequired', detail,
                               /* cancelable */ true);
-      defineAndExpose(evt.detail, 'authenticate', function(username, password) {
+      Cu.exportFunction(function(username, password) {
         if (callbackCalled)
           return;
         callbackCalled = true;
         callback(true, username, password);
-      });
+      }, evt.detail, { defineAs: 'authenticate' });
     }
 
-    defineAndExpose(evt.detail, 'cancel', function() {
-      cancelCallback();
-    });
+    Cu.exportFunction(cancelCallback, evt.detail, { defineAs: 'cancel' });
 
     this._frameElement.dispatchEvent(evt);
 
@@ -402,9 +373,9 @@ BrowserElementParent.prototype = {
 
     if (detail.contextmenu) {
       var self = this;
-      defineAndExpose(evt.detail, 'contextMenuItemSelected', function(id) {
+      Cu.exportFunction(function(id) {
         self._sendAsyncMsg('fire-ctx-callback', {menuitem: id});
-      });
+      }, evt.detail, { defineAs: 'contextMenuItemSelected' });
     }
 
     // The embedder may have default actions on context menu events, so
@@ -482,9 +453,7 @@ BrowserElementParent.prototype = {
       self._sendAsyncMsg('unblock-modal-prompt', data);
     }
 
-    defineAndExpose(evt.detail, 'unblock', function() {
-      sendUnblockMsg();
-    });
+    Cu.exportFunction(sendUnblockMsg, evt.detail, { defineAs: 'unblock' });
 
     this._frameElement.dispatchEvent(evt);
 
@@ -499,7 +468,7 @@ BrowserElementParent.prototype = {
     // This will have to change if we ever want to send a CustomEvent with null
     // detail.  For now, it's OK.
     if (detail !== undefined && detail !== null) {
-      exposeAll(detail);
+      detail = Cu.cloneInto(detail, this._window);
       return new this._window.CustomEvent('mozbrowser' + evtName,
                                           { bubbles: true,
                                             cancelable: cancelable,

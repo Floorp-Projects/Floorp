@@ -19,24 +19,12 @@
 #endif
 #include "gc/Tracer.h"
 
+/* Perform validation of incremental marking in debug builds but not on B2G. */
+#if defined(DEBUG) && !defined(MOZ_B2G)
+#define JS_GC_MARKING_VALIDATION
+#endif
+
 namespace js {
-
-struct ScriptAndCounts
-{
-    /* This structure is stored and marked from the JSRuntime. */
-    JSScript *script;
-    ScriptCounts scriptCounts;
-
-    PCCounts &getPCCounts(jsbytecode *pc) const {
-        return scriptCounts.pcCountsVector[script->pcToOffset(pc)];
-    }
-
-    jit::IonScriptCounts *getIonCounts() const {
-        return scriptCounts.ionCounts;
-    }
-};
-
-typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
 
 namespace gc {
 
@@ -108,7 +96,10 @@ class GCRuntime
     bool init(uint32_t maxbytes);
     void finish();
 
-    void setGCZeal(uint8_t zeal, uint32_t frequency);
+    inline int zeal();
+    inline bool upcomingZealousGC();
+    inline bool needZealousGC();
+
     template <typename T> bool addRoot(T *rp, const char *name, JSGCRootType rootType);
     void removeRoot(void *rp);
     void setMarkStackLimit(size_t limit);
@@ -128,14 +119,21 @@ class GCRuntime
                  JS::gcreason::Reason reason);
     void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis);
     void runDebugGC();
+    inline void poke();
 
     void markRuntime(JSTracer *trc, bool useSavedRoots = false);
 
 #ifdef JS_GC_ZEAL
+    const void *addressOfZealMode() { return &zealMode; }
+    void setZeal(uint8_t zeal, uint32_t frequency);
+    void setNextScheduled(uint32_t count);
     void verifyPreBarriers();
     void verifyPostBarriers();
     void maybeVerifyPreBarriers(bool always);
     void maybeVerifyPostBarriers(bool always);
+    bool selectForMarking(JSObject *object);
+    void clearSelectedForMarking();
+    void setDeterministic(bool enable);
 #endif
 
   public:
@@ -196,6 +194,13 @@ class GCRuntime
         JS_ASSERT(!isAllocAllowed());
         --noGCOrAllocationCheck;
     }
+
+    bool isInsideUnsafeRegion() { return inUnsafeRegion != 0; }
+    void enterUnsafeRegion() { ++inUnsafeRegion; }
+    void leaveUnsafeRegion() {
+        JS_ASSERT(inUnsafeRegion > 0);
+        --inUnsafeRegion;
+    }
 #endif
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
@@ -203,6 +208,24 @@ class GCRuntime
     bool isGenerationalGCEnabled() { return generationalDisabled == 0; }
     void disableGenerationalGC();
     void enableGenerationalGC();
+
+    void setGrayRootsTracer(JSTraceDataOp traceOp, void *data);
+    bool addBlackRootsTracer(JSTraceDataOp traceOp, void *data);
+    void removeBlackRootsTracer(JSTraceDataOp traceOp, void *data);
+
+    void setMaxMallocBytes(size_t value);
+    void resetMallocBytes();
+    bool isTooMuchMalloc() const { return mallocBytes <= 0; }
+    void updateMallocCounter(JS::Zone *zone, size_t nbytes);
+    void onTooMuchMalloc();
+
+    void setGCCallback(JSGCCallback callback, void *data);
+    bool addFinalizeCallback(JSFinalizeCallback callback, void *data);
+    void removeFinalizeCallback(JSFinalizeCallback func);
+    JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
+
+    void setValidate(bool enable);
+    void setFullCompartmentChecks(bool enable);
 
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
@@ -219,7 +242,7 @@ class GCRuntime
 
     inline bool wantBackgroundAllocation() const;
 
-    bool initGCZeal();
+    bool initZeal();
     void requestInterrupt(JS::gcreason::Reason reason);
     bool gcCycle(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
@@ -410,7 +433,7 @@ class GCRuntime
      */
     js::gc::ArenaHeader   *arenasAllocatedDuringSweep;
 
-#ifdef DEBUG
+#ifdef JS_GC_MARKING_VALIDATION
     js::gc::MarkingValidator *markingValidator;
 #endif
 
@@ -452,7 +475,7 @@ class GCRuntime
      */
     unsigned              objectsMarkedInDeadZones;
 
-    bool                  poke;
+    bool                  poked;
 
     volatile js::HeapState heapState;
 
@@ -461,6 +484,7 @@ class GCRuntime
     js::gc::StoreBuffer   storeBuffer;
 #endif
 
+  private:
     /*
      * These options control the zealousness of the GC. The fundamental values
      * are   nextScheduled and gcDebugCompartmentGC. At every allocation,
@@ -498,10 +522,7 @@ class GCRuntime
     bool                  validate;
     bool                  fullCompartmentChecks;
 
-    JSGCCallback          gcCallback;
-    void                  *gcCallbackData;
-
-    JS::GCSliceCallback   sliceCallback;
+    Callback<JSGCCallback>  gcCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
 
     /*
@@ -511,7 +532,7 @@ class GCRuntime
     mozilla::Atomic<ptrdiff_t, mozilla::ReleaseAcquire>   mallocBytes;
 
     /*
-     * Whether a GC has been triggered as a result of   mallocBytes falling
+     * Whether a GC has been triggered as a result of mallocBytes falling
      * below zero.
      */
     mozilla::Atomic<bool, mozilla::ReleaseAcquire>   mallocGCTriggered;
@@ -525,19 +546,16 @@ class GCRuntime
     CallbackVector<JSTraceDataOp> blackRootTracers;
     Callback<JSTraceDataOp> grayRootTracer;
 
+#ifdef DEBUG
     /*
-     * The GC can only safely decommit memory when the page size of the
-     * running process matches the compiled arena size.
+     * Some regions of code are hard for the static rooting hazard analysis to
+     * understand. In those cases, we trade the static analysis for a dynamic
+     * analysis. When this is non-zero, we should assert if we trigger, or
+     * might trigger, a GC.
      */
-    size_t                systemPageSize;
+    int inUnsafeRegion;
+#endif
 
-    /* The OS allocation granularity may not match the page size. */
-    size_t                systemAllocGranularity;
-
-    /* Strong references on scripts held for PCCount profiling API. */
-    js::ScriptAndCountsVector *scriptAndCountsVector;
-
-  private:
     /* Always preserve JIT code during GCs, for testing. */
     bool                  alwaysPreserveCode;
 
@@ -553,10 +571,41 @@ class GCRuntime
 
     ConservativeGCData conservativeGC;
 
-    //friend class js::gc::Chunk; // todo: remove
     friend class js::GCHelperState;
     friend class js::gc::MarkingValidator;
 };
+
+#ifdef JS_GC_ZEAL
+inline int
+GCRuntime::zeal() {
+    return zealMode;
+}
+
+inline bool
+GCRuntime::upcomingZealousGC() {
+    return nextScheduled == 1;
+}
+
+inline bool
+GCRuntime::needZealousGC() {
+    if (nextScheduled > 0 && --nextScheduled == 0) {
+        if (zealMode == ZealAllocValue ||
+            zealMode == ZealGenerationalGCValue ||
+            (zealMode >= ZealIncrementalRootsThenFinish &&
+             zealMode <= ZealIncrementalMultipleSlices))
+        {
+            nextScheduled = zealFrequency;
+        }
+        return true;
+    }
+    return false;
+}
+#else
+inline int GCRuntime::zeal() { return 0; }
+inline bool GCRuntime::upcomingZealousGC() { return false; }
+inline bool GCRuntime::needZealousGC() { return false; }
+#endif
+
 
 } /* namespace gc */
 } /* namespace js */

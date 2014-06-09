@@ -36,6 +36,7 @@ VCMTiming::VCMTiming(Clock* clock,
       min_playout_delay_ms_(0),
       jitter_delay_ms_(0),
       current_delay_ms_(0),
+      last_decode_ms_(0),
       prev_frame_timestamp_(0) {
   if (master_timing == NULL) {
     master_ = true;
@@ -158,7 +159,7 @@ int32_t VCMTiming::StopDecodeTimer(uint32_t time_stamp,
         timing_id_), "Codec timer error: %d", time_diff_ms);
     assert(false);
   }
-
+  last_decode_ms_ = time_diff_ms;
   if (master_) {
     WEBRTC_TRACE(webrtc::kTraceDebug, webrtc::kTraceVideoCoding, VCMId(vcm_id_,
         timing_id_),
@@ -260,6 +261,23 @@ uint32_t VCMTiming::TargetDelayInternal() const {
       render_delay_ms_);
   return std::max(min_playout_delay_ms_,
       jitter_delay_ms_ + MaxDecodeTimeMs() + render_delay_ms_);
+}
+
+void VCMTiming::GetTimings(int* decode_ms,
+                           int* max_decode_ms,
+                           int* current_delay_ms,
+                           int* target_delay_ms,
+                           int* jitter_buffer_ms,
+                           int* min_playout_delay_ms,
+                           int* render_delay_ms) const {
+  CriticalSectionScoped cs(crit_sect_);
+  *decode_ms = last_decode_ms_;
+  *max_decode_ms = MaxDecodeTimeMs();
+  *current_delay_ms = current_delay_ms_;
+  *target_delay_ms = TargetDelayInternal();
+  *jitter_buffer_ms = jitter_delay_ms_;
+  *min_playout_delay_ms = min_playout_delay_ms_;
+  *render_delay_ms = render_delay_ms_;
 }
 
 }  // namespace webrtc

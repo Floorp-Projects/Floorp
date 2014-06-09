@@ -12,6 +12,11 @@ if CONFIG['MOZ_WEBRTC']:
         '/media/webrtc/trunk',
     ]
 
+    if CONFIG['GNU_CXX']:
+        CXXFLAGS += [
+            '-Wno-unused-local-typedefs', # Workaround until we fix bug 1020661
+        ]
+
 TEST_DIRS += ['tests/mochitest', 'tests/ipc', 'tests/identity']
 
 XPIDL_SOURCES += [

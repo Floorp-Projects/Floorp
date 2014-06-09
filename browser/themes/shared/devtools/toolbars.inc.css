@@ -136,7 +136,7 @@
 .devtools-menulist > .menulist-dropmarker {
   -moz-appearance: none;
   display: -moz-box;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
   -moz-box-align: center;
   min-width: 16px;
 }
@@ -168,7 +168,7 @@
 .devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
 .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
   -moz-appearance: none !important;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.png");
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
   -moz-box-align: center;
   padding: 0 3px;
 }
@@ -510,6 +510,8 @@
   background-repeat: no-repeat;
   background-position: 0, 1px, 2px;
 }
+
+#toolbox-buttons:empty + #toolbox-controls-separator,
 #toolbox-controls-separator[invisible] {
   visibility: hidden;
 }
@@ -554,6 +556,10 @@
   background-image: url("chrome://browser/skin/devtools/command-paintflashing.png");
 }
 
+#command-button-screenshot > image {
+  background-image: url("chrome://browser/skin/devtools/command-screenshot.png");
+}
+
 #command-button-responsive > image {
   background-image: url("chrome://browser/skin/devtools/command-responsivemode.png");
 }
@@ -582,6 +588,10 @@
 @media (min-resolution: 2dppx) {
   #command-button-paintflashing > image {
     background-image: url("chrome://browser/skin/devtools/command-paintflashing@2x.png");
+  }
+
+  #command-button-screenshot > image {
+    background-image: url("chrome://browser/skin/devtools/command-screenshot@2x.png");
   }
 
   #command-button-responsive > image {
@@ -709,7 +719,7 @@
   opacity: 1;
 }
 
-.theme-dark .devtools-tab[selected] {
+.theme-dark .devtools-tabbar .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #1a4666;
   box-shadow: 0 2px 0 #d7f1ff inset,
@@ -717,7 +727,7 @@
               0 -2px 0 rgba(0,0,0,.2) inset;
 }
 
-.theme-light .devtools-tab[selected] {
+.theme-light .devtools-tabbar .devtools-tab[selected] {
   color: #f5f7fa;
   background-color: #4c9ed9;
   box-shadow: 0 2px 0 #d7f1ff inset,

@@ -187,7 +187,7 @@ proto.report = function(failed, actual, expected, message, operator) {
       throw err;
     }
   } else {
-    this._reporter(failed ? err : null, message, err.stack);
+    this._reporter(failed ? err : null, err.message, err.stack);
   }
 };
 

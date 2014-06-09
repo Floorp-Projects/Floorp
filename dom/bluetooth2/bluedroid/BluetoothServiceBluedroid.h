@@ -22,18 +22,19 @@ public:
   BluetoothServiceBluedroid();
   ~BluetoothServiceBluedroid();
 
-  virtual nsresult StartInternal();
-  virtual nsresult StopInternal();
+  virtual nsresult StartInternal(BluetoothReplyRunnable* aRunnable);
+  virtual nsresult StopInternal(BluetoothReplyRunnable* aRunnable);
 
-  virtual nsresult GetDefaultAdapterPathInternal(
-                                             BluetoothReplyRunnable* aRunnable);
+  virtual nsresult
+  GetAdaptersInternal(BluetoothReplyRunnable* aRunnable);
 
-  virtual nsresult GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
-                                             BluetoothReplyRunnable* aRunnable);
+  virtual nsresult
+  GetConnectedDevicePropertiesInternal(uint16_t aProfileId,
+                                       BluetoothReplyRunnable* aRunnable);
 
-  virtual nsresult GetPairedDevicePropertiesInternal(
-                                     const nsTArray<nsString>& aDeviceAddress,
-                                     BluetoothReplyRunnable* aRunnable);
+  virtual nsresult
+  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddress,
+                                    BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
   virtual nsresult StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable);

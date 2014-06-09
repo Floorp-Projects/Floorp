@@ -301,6 +301,9 @@ class MacroAssemblerMIPS : public Assembler
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
 
+    // calls reg, storing the return address into sp[stackArgBytes]
+    void ma_callAndStoreRet(const Register reg, uint32_t stackArgBytes);
+
     void ma_call(ImmPtr dest);
 
     void ma_jump(ImmPtr dest);
@@ -337,7 +340,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 
     bool dynamicAlignment_;
 
-    bool enoughMemory_;
     // Compute space needed for the function call and set the properties of the
     // callee.  It returns the space which has to be allocated for calling the
     // function.
@@ -360,12 +362,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
   public:
     MacroAssemblerMIPSCompat()
       : inCall_(false),
-        enoughMemory_(true),
         framePushed_(0)
     { }
-    bool oom() const {
-        return Assembler::oom();
-    }
 
   public:
     using MacroAssemblerMIPS::call;
@@ -396,7 +394,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     void call(Label *label) {
-        // for now, assume that it'll be nearby?
         ma_bal(label);
     }
 
@@ -418,6 +415,40 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
         ma_callIonHalfPush(ScratchRegister);
     }
+
+    void appendCallSite(const CallSiteDesc &desc) {
+        // Add an extra sizeof(void*) to include the return address that was
+        // pushed by the call instruction (see CallSite::stackDepth).
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
+    }
+
+    void call(const CallSiteDesc &desc, const Register reg) {
+        call(reg);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, Label *label) {
+        call(label);
+        appendCallSite(desc);
+    }
+    void call(const CallSiteDesc &desc, AsmJSImmPtr imm) {
+        call(imm);
+        appendCallSite(desc);
+    }
+    void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
+        movePtr(imm, CallReg);
+        ma_callAndStoreRet(CallReg, stackArgBytes);
+        appendCallSite(CallSiteDesc::Exit());
+    }
+    void callIonFromAsmJS(const Register reg) {
+        ma_callIonNoPush(reg);
+        appendCallSite(CallSiteDesc::Exit());
+
+        // The Ion ABI has the callee pop the return address off the stack.
+        // The asm.js caller assumes that the call leaves sp unchanged, so bump
+        // the stack.
+        subPtr(Imm32(sizeof(void*)), StackPointer);
+    }
+
     void branch(JitCode *c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
@@ -494,7 +525,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
-        CodeOffsetLabel label = currentOffset();
+        CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
         ma_liPatchable(dest, Imm32(imm.value));
         return label;
     }
@@ -547,6 +578,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void unboxString(const ValueOperand &operand, Register dest);
     void unboxString(const Address &src, Register dest);
     void unboxObject(const ValueOperand &src, Register dest);
+    void unboxObject(const Address &src, Register dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 
@@ -1133,6 +1165,10 @@ public:
     void addPtr(ImmPtr imm, const Register dest) {
         addPtr(ImmWord(uintptr_t(imm.value)), dest);
     }
+    void mulBy3(const Register &src, const Register &dest) {
+        as_addu(dest, src, src);
+        as_addu(dest, dest, src);
+    }
 
     void breakpoint();
 
@@ -1196,7 +1232,7 @@ public:
     bool buildOOLFakeExitFrame(void *fakeReturnAddr);
 
   private:
-    void callWithABIPre(uint32_t *stackAdjust);
+    void callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJS = false);
     void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:

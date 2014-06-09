@@ -14,6 +14,16 @@
 
 namespace webrtc {
 
+bool DesktopRect::Contains(const DesktopVector& point) const {
+  return point.x() >= left() && point.x() < right() &&
+         point.y() >= top() && point.y() < bottom();
+}
+
+bool DesktopRect::ContainsRect(const DesktopRect& rect) const {
+  return rect.left() >= left() && rect.right() <= right() &&
+         rect.top() >= top() && rect.bottom() <= bottom();
+}
+
 void DesktopRect::IntersectWith(const DesktopRect& rect) {
   left_ = std::max(left(), rect.left());
   top_ = std::max(top(), rect.top());

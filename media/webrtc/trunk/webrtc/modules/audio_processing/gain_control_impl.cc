@@ -91,6 +91,7 @@ int GainControlImpl::AnalyzeCaptureAudio(AudioBuffer* audio) {
   int err = apm_->kNoError;
 
   if (mode_ == kAdaptiveAnalog) {
+    capture_levels_.assign(num_handles(), analog_capture_level_);
     for (int i = 0; i < num_handles(); i++) {
       Handle* my_handle = static_cast<Handle*>(handle(i));
       err = WebRtcAgc_AddMic(
@@ -114,7 +115,6 @@ int GainControlImpl::AnalyzeCaptureAudio(AudioBuffer* audio) {
           audio->low_pass_split_data(i),
           audio->high_pass_split_data(i),
           static_cast<int16_t>(audio->samples_per_split_channel()),
-          //capture_levels_[i],
           analog_capture_level_,
           &capture_level_out);
 
@@ -189,13 +189,6 @@ int GainControlImpl::set_stream_analog_level(int level) {
   was_analog_level_set_ = true;
   if (level < minimum_capture_level_ || level > maximum_capture_level_) {
     return apm_->kBadParameterError;
-  }
-
-  if (mode_ == kAdaptiveAnalog) {
-    if (level != analog_capture_level_) {
-      // The analog level has been changed; update our internal levels.
-      capture_levels_.assign(num_handles(), level);
-    }
   }
   analog_capture_level_ = level;
 
@@ -309,11 +302,7 @@ int GainControlImpl::Initialize() {
     return err;
   }
 
-  analog_capture_level_ =
-      (maximum_capture_level_ - minimum_capture_level_) >> 1;
   capture_levels_.assign(num_handles(), analog_capture_level_);
-  was_analog_level_set_ = false;
-
   return apm_->kNoError;
 }
 

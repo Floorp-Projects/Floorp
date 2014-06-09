@@ -19,6 +19,7 @@
 #include "webrtc/modules/audio_coding/main/source/acm_codec_database.h"
 #include "webrtc/modules/audio_coding/main/source/acm_neteq.h"
 #include "webrtc/modules/audio_coding/main/source/acm_resampler.h"
+#include "webrtc/modules/audio_coding/main/acm2/call_statistics.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
@@ -29,19 +30,21 @@ class CriticalSectionWrapper;
 class RWLockWrapper;
 class Clock;
 
+namespace acm2 {
+class Nack;
+}
+
 namespace acm1 {
 
 class ACMDTMFDetection;
 class ACMGenericCodec;
-class Nack;
 
 class AudioCodingModuleImpl : public AudioCodingModule {
  public:
-  // Constructor
   AudioCodingModuleImpl(const int32_t id, Clock* clock);
-
-  // Destructor
   ~AudioCodingModuleImpl();
+
+  virtual const char* Version() const;
 
   // Change the unique identifier of this object.
   virtual int32_t ChangeUniqueId(const int32_t id);
@@ -301,6 +304,8 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   // Disable NACK.
   void DisableNack();
 
+  void GetDecodingCallStatistics(AudioDecodingCallStats* call_stats) const;
+
  private:
   // Change required states after starting to receive the codec corresponding
   // to |index|.
@@ -437,8 +442,10 @@ class AudioCodingModuleImpl : public AudioCodingModule {
   int64_t last_receive_timestamp_;
 
   Clock* clock_;
-  scoped_ptr<Nack> nack_;
+  scoped_ptr<acm2::Nack> nack_;
   bool nack_enabled_;
+
+  acm2::CallStatistics call_stats_;
 };
 
 }  // namespace acm1

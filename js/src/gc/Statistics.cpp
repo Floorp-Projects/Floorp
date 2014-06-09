@@ -137,7 +137,7 @@ class gcstats::StatisticsSerializer
             return nullptr;
         }
 
-        InflateStringToBuffer(buf, nchars, out);
+        CopyAndInflateChars(out, buf, nchars);
         js_free(buf);
 
         out[nchars] = 0;
@@ -446,7 +446,8 @@ Statistics::Statistics(JSRuntime *rt)
     compartmentCount(0),
     nonincrementalReason(nullptr),
     preBytes(0),
-    phaseNestingDepth(0)
+    phaseNestingDepth(0),
+    sliceCallback(nullptr)
 {
     PodArrayZero(phaseTotals);
     PodArrayZero(counts);
@@ -487,6 +488,13 @@ Statistics::~Statistics()
         if (fp != stdout && fp != stderr)
             fclose(fp);
     }
+}
+
+JS::GCSliceCallback
+Statistics::setSliceCallback(JS::GCSliceCallback newCallback) {
+    JS::GCSliceCallback oldCallback = sliceCallback;
+    sliceCallback = newCallback;
+    return oldCallback;
 }
 
 void
@@ -581,9 +589,9 @@ Statistics::beginSlice(int collectedCount, int zoneCount, int compartmentCount,
     // Slice callbacks should only fire for the outermost level
     if (++gcDepth == 1) {
         bool wasFullGC = collectedCount == zoneCount;
-        if (JS::GCSliceCallback cb = runtime->gc.sliceCallback)
-            (*cb)(runtime, first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
-                  JS::GCDescription(!wasFullGC));
+        if (sliceCallback)
+            (*sliceCallback)(runtime, first ? JS::GC_CYCLE_BEGIN : JS::GC_SLICE_BEGIN,
+                             JS::GCDescription(!wasFullGC));
     }
 }
 
@@ -605,9 +613,9 @@ Statistics::endSlice()
     // Slice callbacks should only fire for the outermost level
     if (--gcDepth == 0) {
         bool wasFullGC = collectedCount == zoneCount;
-        if (JS::GCSliceCallback cb = runtime->gc.sliceCallback)
-            (*cb)(runtime, last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
-                  JS::GCDescription(!wasFullGC));
+        if (sliceCallback)
+            (*sliceCallback)(runtime, last ? JS::GC_CYCLE_END : JS::GC_SLICE_END,
+                             JS::GCDescription(!wasFullGC));
     }
 
     /* Do this after the slice callback since it uses these values. */

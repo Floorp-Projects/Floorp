@@ -10,7 +10,7 @@
 #endif
 
 #include "GLLibraryLoader.h"
-
+#include "mozilla/ThreadLocal.h"
 #include "nsIFile.h"
 
 #include <bitset>
@@ -412,6 +412,14 @@ public:
         return b;
     }
 
+    EGLint fDupNativeFenceFDANDROID(EGLDisplay dpy, EGLSync sync)
+    {
+        MOZ_ASSERT(mSymbols.fDupNativeFenceFDANDROID);
+        BEFORE_GL_CALL;
+        EGLint ret = mSymbols.fDupNativeFenceFDANDROID(dpy, sync);
+        AFTER_GL_CALL;
+        return ret;
+    }
 
     EGLDisplay Display() {
         return mEGLDisplay;
@@ -522,11 +530,40 @@ public:
         pfnClientWaitSync fClientWaitSync;
         typedef EGLBoolean (GLAPIENTRY * pfnGetSyncAttrib)(EGLDisplay dpy, EGLSync sync, EGLint attribute, EGLint *value);
         pfnGetSyncAttrib fGetSyncAttrib;
+        typedef EGLint (GLAPIENTRY * pfnDupNativeFenceFDANDROID)(EGLDisplay dpy, EGLSync sync);
+        pfnDupNativeFenceFDANDROID fDupNativeFenceFDANDROID;
     } mSymbols;
 
 #ifdef DEBUG
     static void BeforeGLCall(const char* glFunction);
     static void AfterGLCall(const char* glFunction);
+#endif
+
+#ifdef MOZ_B2G
+    EGLContext CachedCurrentContext() {
+        return sCurrentContext.get();
+    }
+    void UnsetCachedCurrentContext() {
+        sCurrentContext.set(nullptr);
+    }
+    void SetCachedCurrentContext(EGLContext aCtx) {
+        sCurrentContext.set(aCtx);
+    }
+    bool CachedCurrentContextMatches() {
+        return sCurrentContext.get() == fGetCurrentContext();
+    }
+
+private:
+    static ThreadLocal<EGLContext> sCurrentContext;
+public:
+
+#else
+    EGLContext CachedCurrentContext() {
+        return nullptr;
+    }
+    void UnsetCachedCurrentContext() {}
+    void SetCachedCurrentContext(EGLContext aCtx) { }
+    bool CachedCurrentContextMatches() { return true; }
 #endif
 
 private:

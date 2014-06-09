@@ -327,7 +327,7 @@ int16_t WebRtcIsacfix_Encode(ISACFIX_MainStruct *ISAC_main_inst,
 {
   ISACFIX_SubStruct *ISAC_inst;
   int16_t stream_len;
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
 
@@ -352,7 +352,7 @@ int16_t WebRtcIsacfix_Encode(ISACFIX_MainStruct *ISAC_main_inst,
 
 
   /* convert from bytes to int16_t */
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0;k<(stream_len+1)>>1;k++) {
     encoded[k] = (int16_t)( ( (uint16_t)(ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] >> 8 )
                                   | (((ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] & 0x00FF) << 8));
@@ -442,7 +442,7 @@ int16_t WebRtcIsacfix_EncodeNb(ISACFIX_MainStruct *ISAC_main_inst,
 
 
   /* convert from bytes to int16_t */
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0;k<(stream_len+1)>>1;k++) {
     encoded[k] = (int16_t)(((uint16_t)(ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] >> 8)
                                  | (((ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] & 0x00FF) << 8));
@@ -485,7 +485,7 @@ int16_t WebRtcIsacfix_GetNewBitStream(ISACFIX_MainStruct *ISAC_main_inst,
 {
   ISACFIX_SubStruct *ISAC_inst;
   int16_t stream_len;
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
 
@@ -507,7 +507,7 @@ int16_t WebRtcIsacfix_GetNewBitStream(ISACFIX_MainStruct *ISAC_main_inst,
     return -1;
   }
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0;k<(stream_len+1)>>1;k++) {
     encoded[k] = (int16_t)( ( (uint16_t)(ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] >> 8 )
                                   | (((ISAC_inst->ISACenc_obj.bitstr_obj).stream[k] & 0x00FF) << 8));
@@ -588,7 +588,7 @@ int16_t WebRtcIsacfix_UpdateBwEstimate1(ISACFIX_MainStruct *ISAC_main_inst,
   ISACFIX_SubStruct *ISAC_inst;
   Bitstr_dec streamdata;
   uint16_t partOfStream[5];
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t err;
@@ -621,7 +621,7 @@ int16_t WebRtcIsacfix_UpdateBwEstimate1(ISACFIX_MainStruct *ISAC_main_inst,
   streamdata.stream_index = 0;
   streamdata.full = 1;
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<5; k++) {
     streamdata.stream[k] = (uint16_t) (((uint16_t)encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }
@@ -676,7 +676,7 @@ int16_t WebRtcIsacfix_UpdateBwEstimate(ISACFIX_MainStruct *ISAC_main_inst,
   ISACFIX_SubStruct *ISAC_inst;
   Bitstr_dec streamdata;
   uint16_t partOfStream[5];
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t err;
@@ -709,7 +709,7 @@ int16_t WebRtcIsacfix_UpdateBwEstimate(ISACFIX_MainStruct *ISAC_main_inst,
   streamdata.stream_index = 0;
   streamdata.full = 1;
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<5; k++) {
     streamdata.stream[k] = (uint16_t) ((encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }
@@ -765,7 +765,7 @@ int16_t WebRtcIsacfix_Decode(ISACFIX_MainStruct *ISAC_main_inst,
   /* number of samples (480 or 960), output from decoder */
   /* that were actually used in the encoder/decoder (determined on the fly) */
   int16_t     number_of_samples;
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t declen = 0;
@@ -793,7 +793,7 @@ int16_t WebRtcIsacfix_Decode(ISACFIX_MainStruct *ISAC_main_inst,
   (ISAC_inst->ISACdec_obj.bitstr_obj).stream = (uint16_t *)encoded;
 
   /* convert bitstream from int16_t to bytes */
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<(len>>1); k++) {
     (ISAC_inst->ISACdec_obj.bitstr_obj).stream[k] = (uint16_t) ((encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }
@@ -868,7 +868,7 @@ int16_t WebRtcIsacfix_DecodeNb(ISACFIX_MainStruct *ISAC_main_inst,
   /* twice the number of samples (480 or 960), output from decoder */
   /* that were actually used in the encoder/decoder (determined on the fly) */
   int16_t     number_of_samples;
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t declen = 0;
@@ -894,7 +894,7 @@ int16_t WebRtcIsacfix_DecodeNb(ISACFIX_MainStruct *ISAC_main_inst,
   (ISAC_inst->ISACdec_obj.bitstr_obj).stream = (uint16_t *)encoded;
 
   /* convert bitstream from int16_t to bytes */
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<(len>>1); k++) {
     (ISAC_inst->ISACdec_obj.bitstr_obj).stream[k] = (uint16_t) ((encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }
@@ -1267,7 +1267,7 @@ int16_t WebRtcIsacfix_ReadFrameLen(const int16_t* encoded,
 {
   Bitstr_dec streamdata;
   uint16_t partOfStream[5];
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t err;
@@ -1280,7 +1280,7 @@ int16_t WebRtcIsacfix_ReadFrameLen(const int16_t* encoded,
   streamdata.stream_index = 0;
   streamdata.full = 1;
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<5; k++) {
     streamdata.stream[k] = (uint16_t) (((uint16_t)encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }
@@ -1316,7 +1316,7 @@ int16_t WebRtcIsacfix_ReadBwIndex(const int16_t* encoded,
 {
   Bitstr_dec streamdata;
   uint16_t partOfStream[5];
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   int k;
 #endif
   int16_t err;
@@ -1329,7 +1329,7 @@ int16_t WebRtcIsacfix_ReadBwIndex(const int16_t* encoded,
   streamdata.stream_index = 0;
   streamdata.full = 1;
 
-#ifndef WEBRTC_BIG_ENDIAN
+#ifndef WEBRTC_ARCH_BIG_ENDIAN
   for (k=0; k<5; k++) {
     streamdata.stream[k] = (uint16_t) (((uint16_t)encoded[k] >> 8)|((encoded[k] & 0xFF)<<8));
   }

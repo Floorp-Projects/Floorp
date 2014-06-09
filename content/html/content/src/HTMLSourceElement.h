@@ -64,6 +64,16 @@ public:
     SetHTMLAttr(nsGkAtoms::media, aMedia, rv);
   }
 
+  void GetKeySystem(nsString& aKeySystem) const
+  {
+    GetHTMLAttr(nsGkAtoms::keysystem, aKeySystem);
+  }
+
+  void SetKeySystem(const nsAString& aKeySystem)
+  {
+    SetHTMLAttr(nsGkAtoms::keysystem, aKeySystem);
+  }
+
 protected:
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 

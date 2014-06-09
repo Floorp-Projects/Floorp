@@ -136,13 +136,11 @@ var Project = Class({
   /**
    * Get every file path used inside of the project.
    *
-   * @returns generator-iterator<string>
+   * @returns Array<string>
    *          A list of all file paths
    */
-  allPaths: function*() {
-    for (let [path, store] of this.localStores) {
-      yield path;
-    }
+  allPaths: function() {
+    return [path for (path of this.localStores.keys())];
   },
 
   /**

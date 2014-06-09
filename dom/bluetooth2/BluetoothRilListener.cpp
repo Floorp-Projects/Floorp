@@ -181,7 +181,6 @@ TelephonyListener::CallStateChanged(uint32_t aServiceId,
                                     uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
-                                    bool aIsActive,
                                     bool aIsOutgoing,
                                     bool aIsEmergency,
                                     bool aIsConference,
@@ -201,7 +200,6 @@ TelephonyListener::EnumerateCallState(uint32_t aServiceId,
                                       uint32_t aCallIndex,
                                       uint16_t aCallState,
                                       const nsAString_internal& aNumber,
-                                      bool aIsActive,
                                       bool aIsOutgoing,
                                       bool aIsEmergency,
                                       bool aIsConference,
@@ -231,7 +229,7 @@ TelephonyListener::NotifyError(uint32_t aServiceId,
     // instead of CallStateChanged(). We need to reset the call array state
     // via setting CALL_STATE_DISCONNECTED
     hfp->HandleCallStateChanged(aCallIndex,
-                                nsITelephonyProvider::CALL_STATE_DISCONNECTED,
+                                nsITelephonyService::CALL_STATE_DISCONNECTED,
                                 aError, EmptyString(), false, false, true);
     BT_WARNING("Reset the call state due to call transition ends abnormally");
   }
@@ -285,15 +283,15 @@ TelephonyListener::NotifyCdmaCallWaiting(uint32_t aServiceId,
 bool
 TelephonyListener::Listen(bool aStart)
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
-  NS_ENSURE_TRUE(provider, false);
+  nsCOMPtr<nsITelephonyService> service =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(service, false);
 
   nsresult rv;
   if (aStart) {
-    rv = provider->RegisterListener(this);
+    rv = service->RegisterListener(this);
   } else {
-    rv = provider->UnregisterListener(this);
+    rv = service->UnregisterListener(this);
   }
 
   return NS_SUCCEEDED(rv);
@@ -396,14 +394,14 @@ BluetoothRilListener::ServiceChanged(uint32_t aClientId, bool aRegistered)
 void
 BluetoothRilListener::EnumerateCalls()
 {
-  nsCOMPtr<nsITelephonyProvider> provider =
-    do_GetService(TELEPHONY_PROVIDER_CONTRACTID);
-  NS_ENSURE_TRUE_VOID(provider);
+  nsCOMPtr<nsITelephonyService> service =
+    do_GetService(TELEPHONY_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(service);
 
   nsCOMPtr<nsITelephonyListener> listener(
     do_QueryObject(mTelephonyListener));
 
-  provider->EnumerateCalls(listener);
+  service->EnumerateCalls(listener);
 }
 
 bool

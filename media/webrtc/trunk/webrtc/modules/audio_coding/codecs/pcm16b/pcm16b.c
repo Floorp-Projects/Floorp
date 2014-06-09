@@ -25,7 +25,7 @@ int16_t WebRtcPcm16b_EncodeW16(int16_t *speechIn16b,
                                int16_t len,
                                int16_t *speechOut16b)
 {
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     memcpy(speechOut16b, speechIn16b, len * sizeof(int16_t));
 #else
     int i;
@@ -64,7 +64,7 @@ int16_t WebRtcPcm16b_DecodeW16(void *inst,
                                int16_t *speechOut16b,
                                int16_t* speechType)
 {
-#ifdef WEBRTC_BIG_ENDIAN
+#ifdef WEBRTC_ARCH_BIG_ENDIAN
     memcpy(speechOut16b, speechIn16b, ((len*sizeof(int16_t)+1)>>1));
 #else
     int i;

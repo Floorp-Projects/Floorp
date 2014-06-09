@@ -21,6 +21,8 @@ namespace webrtc {
 
 enum ACMAMRPackingFormat;
 
+namespace acm2 {
+
 class ACMAMR : public ACMGenericCodec {
  public:
   explicit ACMAMR(int16_t codec_id);
@@ -59,6 +61,8 @@ class ACMAMR : public ACMGenericCodec {
   int16_t encoding_rate_;
   ACMAMRPackingFormat encoder_packing_format_;
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

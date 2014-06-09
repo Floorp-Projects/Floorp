@@ -17,11 +17,14 @@ namespace webrtc {
 
 class RemoteBitrateEstimatorSingleTest : public RemoteBitrateEstimatorTest {
  public:
+  static const uint32_t kRemoteBitrateEstimatorMinBitrateBps = 30000;
+
   RemoteBitrateEstimatorSingleTest() {}
   virtual void SetUp() {
     bitrate_estimator_.reset(RemoteBitrateEstimatorFactory().Create(
         bitrate_observer_.get(),
-        &clock_));
+        &clock_,
+        kRemoteBitrateEstimatorMinBitrateBps));
   }
  protected:
   DISALLOW_COPY_AND_ASSIGN(RemoteBitrateEstimatorSingleTest);

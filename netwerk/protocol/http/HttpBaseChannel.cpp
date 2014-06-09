@@ -15,6 +15,7 @@
 #include "nsNetUtil.h"
 
 #include "nsICachingChannel.h"
+#include "nsIPrincipal.h"
 #include "nsISeekableStream.h"
 #include "nsITimedChannel.h"
 #include "nsIEncodedChannel.h"
@@ -50,6 +51,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mRequestObserversCalled(false)
   , mResponseHeadersModified(false)
   , mAllowPipelining(true)
+  , mAllowSTS(true)
   , mForceAllowThirdPartyCookie(false)
   , mUploadStreamHasHeaders(false)
   , mInheritApplicationCache(true)
@@ -1194,6 +1196,23 @@ HttpBaseChannel::SetAllowPipelining(bool value)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetAllowSTS(bool *value)
+{
+  NS_ENSURE_ARG_POINTER(value);
+  *value = mAllowSTS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetAllowSTS(bool value)
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+
+  mAllowSTS = value;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetRedirectionLimit(uint32_t *value)
 {
   NS_ENSURE_ARG_POINTER(value);
@@ -1858,6 +1877,13 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(newLoadFlags);
 
+  // If our owner is a null principal it will have been set as a security
+  // measure, so we want to propagate it to the new channel.
+  nsCOMPtr<nsIPrincipal> ownerPrincipal = do_QueryInterface(mOwner);
+  if (ownerPrincipal && ownerPrincipal->GetIsNullPrincipal()) {
+    newChannel->SetOwner(mOwner);
+  }
+
   // Try to preserve the privacy bit if it has been overridden
   if (mPrivateBrowsingOverriden) {
     nsCOMPtr<nsIPrivateBrowsingChannel> newPBChannel =
@@ -1923,8 +1949,9 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
   // convey the referrer if one was used for this channel to the next one
   if (mReferrer)
     httpChannel->SetReferrer(mReferrer);
-  // convey the mAllowPipelining flag
+  // convey the mAllowPipelining and mAllowSTS flags
   httpChannel->SetAllowPipelining(mAllowPipelining);
+  httpChannel->SetAllowSTS(mAllowSTS);
   // convey the new redirection limit
   httpChannel->SetRedirectionLimit(mRedirectionLimit - 1);
 
@@ -2021,11 +2048,17 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     oldTimedChannel->GetResponseEnd(&prevResponseEnd);
     newTimedChannel->SetRedirectEnd(prevResponseEnd);
 
+    nsAutoString initiatorType;
+    oldTimedChannel->GetInitiatorType(initiatorType);
+    newTimedChannel->SetInitiatorType(initiatorType);
+
     // Check whether or not this was a cross-domain redirect.
     newTimedChannel->SetAllRedirectsSameOrigin(
         mAllRedirectsSameOrigin && SameOriginWithOriginalUri(newURI));
   }
 
+  // This channel has been redirected. Don't report timing info.
+  mTimingEnabled = false;
   return NS_OK;
 }
 

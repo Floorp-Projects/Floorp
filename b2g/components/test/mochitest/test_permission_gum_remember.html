@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=978660
+-->
+<head>
+  <meta charset="utf-8">
+  <title>gUM Remember Permission Test</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978660">Test remembering gUM Permission</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+const PROMPT_ACTION = SpecialPowers.Ci.nsIPermissionManager.PROMPT_ACTION;
+
+var gUrl = SimpleTest.getTestFileURL('permission_handler_chrome.js');
+var gScript = SpecialPowers.loadChromeScript(gUrl);
+gScript.addMessageListener('permission-request', function(detail) {
+  ok(false, 'unexpected mozChromeEvent for permission prompt');
+  let response = {
+    id: detail.id,
+    type: 'permission-deny',
+    remember: false,
+  };
+  gScript.sendAsyncMessage('permission-response', response);
+});
+
+var gTests = [
+  {
+    'audio': true,
+    'video': {facingMode: 'environment', required: ['facingMode']},
+  },
+  {
+    'video': {facingMode: 'environment', required: ['facingMode']},
+  },
+  {
+    'audio': true,
+  },
+];
+
+function testGranted() {
+  info('test remember permission granted');
+  return new Promise(function(resolve, reject) {
+    let steps = [].concat(gTests);
+    function nextStep() {
+      if (steps.length > 0) {
+        let requestedType = steps.shift();
+        info('getUserMedia for ' + JSON.stringify(requestedType));
+        navigator.mozGetUserMedia(requestedType, function success(stream) {
+          ok(true, 'expected gUM success');
+          stream.stop();
+          nextStep();
+        }, function failure(err) {
+          ok(false, 'unexpected gUM fail: ' + err);
+          nextStep();
+        });
+      } else {
+        resolve();
+      }
+    }
+
+    SpecialPowers.pushPermissions([
+      {type: 'video-capture', allow: true, context: document},
+      {type: 'audio-capture', allow: true, context: document},
+    ], nextStep);
+  });
+}
+
+function testDenied() {
+  info('test remember permission denied');
+  return new Promise(function(resolve, reject) {
+    let steps = [].concat(gTests);
+    function nextStep() {
+      if (steps.length > 0) {
+        let requestedType = steps.shift();
+        info('getUserMedia for ' + JSON.stringify(requestedType));
+        navigator.mozGetUserMedia(requestedType, function success(stream) {
+          ok(false, 'unexpected gUM success');
+          stream.stop();
+          nextStep();
+        }, function failure(err) {
+          ok(true, 'expected gUM fail: ' + err);
+          nextStep();
+        });
+      } else {
+        resolve();
+      }
+    }
+
+    SpecialPowers.pushPermissions([
+      {type: 'video-capture', allow: false, context: document},
+      {type: 'audio-capture', allow: false, context: document},
+    ], nextStep);
+  });
+}
+
+function testPartialDeniedAudio() {
+  info('test remember permission partial denied: audio');
+  return new Promise(function(resolve, reject) {
+    info('getUserMedia for video and audio');
+    function nextStep() {
+      navigator.mozGetUserMedia({video: {facingMode: 'environment', required: ['facingMode']},
+                                 audio: true}, function success(stream) {
+        ok(false, 'unexpected gUM success');
+        stream.stop();
+        resolve();
+      }, function failure(err) {
+        ok(true, 'expected gUM fail: ' + err);
+        resolve();
+      });
+    }
+
+    SpecialPowers.pushPermissions([
+      {type: 'video-capture', allow: true, context: document},
+      {type: 'audio-capture', allow: false, context: document},
+    ], nextStep);
+  });
+}
+
+function testPartialDeniedVideo() {
+  info('test remember permission partial denied: video');
+  return new Promise(function(resolve, reject) {
+    info('getUserMedia for video and audio');
+    function nextStep() {
+      navigator.mozGetUserMedia({video: {facingMode: 'environment', required: ['facingMode']},
+                                 audio: true}, function success(stream) {
+        ok(false, 'unexpected gUM success');
+        stream.stop();
+        resolve();
+      }, function failure(err) {
+        ok(true, 'expected gUM fail: ' + err);
+        resolve();
+      });
+    }
+
+    SpecialPowers.pushPermissions([
+      {type: 'video-capture', allow: false, context: document},
+      {type: 'audio-capture', allow: true, context: document},
+    ], nextStep);
+  });
+}
+
+function runTests() {
+  testGranted()
+  .then(testDenied)
+  .then(testPartialDeniedAudio)
+  .then(testPartialDeniedVideo)
+  .then(function() {
+    info('test finished, teardown');
+    gScript.sendAsyncMessage('teardown', '');
+    gScript.destroy();
+    SimpleTest.finish();
+  });
+}
+
+SpecialPowers.pushPrefEnv({
+  'set': [
+    ['media.navigator.permission.disabled', false],
+  ]
+}, runTests);
+</script>
+</pre>
+</body>
+</html>

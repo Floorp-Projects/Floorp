@@ -138,7 +138,7 @@ struct AllocationIntegrityState
 class CodePosition
 {
   private:
-    MOZ_CONSTEXPR explicit CodePosition(const uint32_t &bits)
+    MOZ_CONSTEXPR explicit CodePosition(uint32_t bits)
       : bits_(bits)
     { }
 
@@ -178,27 +178,27 @@ class CodePosition
         return (SubPosition)(bits_ & SUBPOSITION_MASK);
     }
 
-    bool operator <(const CodePosition &other) const {
+    bool operator <(CodePosition other) const {
         return bits_ < other.bits_;
     }
 
-    bool operator <=(const CodePosition &other) const {
+    bool operator <=(CodePosition other) const {
         return bits_ <= other.bits_;
     }
 
-    bool operator !=(const CodePosition &other) const {
+    bool operator !=(CodePosition other) const {
         return bits_ != other.bits_;
     }
 
-    bool operator ==(const CodePosition &other) const {
+    bool operator ==(CodePosition other) const {
         return bits_ == other.bits_;
     }
 
-    bool operator >(const CodePosition &other) const {
+    bool operator >(CodePosition other) const {
         return bits_ > other.bits_;
     }
 
-    bool operator >=(const CodePosition &other) const {
+    bool operator >=(CodePosition other) const {
         return bits_ >= other.bits_;
     }
 
@@ -268,7 +268,7 @@ class InstructionDataMap
         return true;
     }
 
-    InstructionData &operator[](const CodePosition &pos) {
+    InstructionData &operator[](CodePosition pos) {
         JS_ASSERT(pos.ins() < numIns_);
         return insData_[pos.ins()];
     }

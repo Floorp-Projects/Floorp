@@ -54,4 +54,4 @@ void RandomVector::IncreaseSeedIncrement(int16_t increase_by) {
   seed_increment_+= increase_by;
   seed_increment_ &= kRandomTableSize - 1;
 }
-}
+}  // namespace webrtc

@@ -11,7 +11,6 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.activities.FxAccountCreateAccountActivity;
 import org.mozilla.gecko.tabspanel.TabsPanel.PanelView;
-import org.mozilla.gecko.util.HardwareUtils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -69,11 +68,6 @@ class RemoteTabsSetupPanel extends LinearLayout implements PanelView {
 
     @Override
     public void show() {
-        // We don't have a tablet implementation of this panel.
-        if (HardwareUtils.isTablet()) {
-            return;
-        }
-
         setVisibility(View.VISIBLE);
     }
 

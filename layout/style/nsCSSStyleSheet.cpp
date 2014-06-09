@@ -12,6 +12,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/css/NameSpaceRule.h"
 #include "mozilla/css/GroupRule.h"
@@ -1120,8 +1121,6 @@ nsCSSStyleSheet::TraverseInner(nsCycleCollectionTraversalCallback &cb)
   }
 }
 
-DOMCI_DATA(CSSStyleSheet, nsCSSStyleSheet)
-
 // QueryInterface implementation for nsCSSStyleSheet
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSStyleSheet)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
@@ -1130,7 +1129,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSStyleSheet)
   NS_INTERFACE_MAP_ENTRY(nsICSSLoaderObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleSheet)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSStyleSheet)
   if (aIID.Equals(NS_GET_IID(nsCSSStyleSheet)))
     foundInterface = reinterpret_cast<nsISupports*>(this);
   else
@@ -1295,6 +1293,13 @@ nsCSSStyleSheet::SetComplete()
     mDocument->BeginUpdate(UPDATE_STYLE);
     mDocument->SetStyleSheetApplicableState(this, true);
     mDocument->EndUpdate(UPDATE_STYLE);
+  }
+
+  if (mOwningNode && !mDisabled &&
+      mOwningNode->HasFlag(NODE_IS_IN_SHADOW_TREE) &&
+      mOwningNode->IsContent()) {
+    ShadowRoot* shadowRoot = mOwningNode->AsContent()->GetContainingShadow();
+    shadowRoot->StyleSheetChanged();
   }
 }
 

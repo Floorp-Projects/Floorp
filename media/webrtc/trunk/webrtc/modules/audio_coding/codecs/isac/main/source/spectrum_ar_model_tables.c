@@ -13,68 +13,69 @@
 
 /********************* AR Coefficient Tables ************************/
 /* cdf for quantized reflection coefficient 1 */
-const uint16_t WebRtcIsac_kQArRc1Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc1Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  129,  7707,  57485,  65495,  65527,  65529,  65531,
  65533,  65535};
 
 /* cdf for quantized reflection coefficient 2 */
-const uint16_t WebRtcIsac_kQArRc2Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc2Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  7,  531,  25298,  64525,  65526,  65529,  65531,
  65533,  65535};
 
 /* cdf for quantized reflection coefficient 3 */
-const uint16_t WebRtcIsac_kQArRc3Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc3Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  6,  620,  22898,  64843,  65527,  65529,  65531,
  65533,  65535};
 
 /* cdf for quantized reflection coefficient 4 */
-const uint16_t WebRtcIsac_kQArRc4Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc4Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  6,  35,  10034,  60733,  65506,  65529,  65531,
  65533,  65535};
 
 /* cdf for quantized reflection coefficient 5 */
-const uint16_t WebRtcIsac_kQArRc5Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc5Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  6,  36,  7567,  56727,  65385,  65529,  65531,
  65533,  65535};
 
 /* cdf for quantized reflection coefficient 6 */
-const uint16_t WebRtcIsac_kQArRc6Cdf[12] = {
+const uint16_t WebRtcIsac_kQArRc6Cdf[NUM_AR_RC_QUANT_BAUNDARY] = {
  0,  2,  4,  6,  14,  6579,  57360,  65409,  65529,  65531,
  65533,  65535};
 
 /* representation levels for quantized reflection coefficient 1 */
-const int16_t WebRtcIsac_kQArRc1Levels[11] = {
+const int16_t WebRtcIsac_kQArRc1Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
  -32104, -29007, -23202, -15496, -9279, -2577, 5934, 17535, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 2 */
-const int16_t WebRtcIsac_kQArRc2Levels[11] = {
+const int16_t WebRtcIsac_kQArRc2Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
  -32104, -29503, -23494, -15261, -7309, -1399, 6158, 16381, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 3 */
-const int16_t WebRtcIsac_kQArRc3Levels[11] = {
+const int16_t WebRtcIsac_kQArRc3Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
 -32104, -29503, -23157, -15186, -7347, -1359, 5829, 17535, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 4 */
-const int16_t WebRtcIsac_kQArRc4Levels[11] = {
+const int16_t WebRtcIsac_kQArRc4Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
 -32104, -29503, -24512, -15362, -6665, -342, 6596, 14585, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 5 */
-const int16_t WebRtcIsac_kQArRc5Levels[11] = {
+const int16_t WebRtcIsac_kQArRc5Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
 -32104, -29503, -24512, -15005, -6564, -106, 7123, 14920, 24512, 29503, 32104
 };
 
 /* representation levels for quantized reflection coefficient 6 */
-const int16_t WebRtcIsac_kQArRc6Levels[11] = {
+const int16_t WebRtcIsac_kQArRc6Levels[NUM_AR_RC_QUANT_BAUNDARY - 1] = {
 -32104, -29503, -24512, -15096, -6656, -37, 7036, 14847, 24512, 29503, 32104
 };
 
 /* quantization boundary levels for reflection coefficients */
-const int16_t WebRtcIsac_kQArBoundaryLevels[12] = {
--32768, -31441, -27566, -21458, -13612, -4663, 4663, 13612, 21458, 27566, 31441, 32767
+const int16_t WebRtcIsac_kQArBoundaryLevels[NUM_AR_RC_QUANT_BAUNDARY] = {
+-32768, -31441, -27566, -21458, -13612, -4663, 4663, 13612, 21458, 27566, 31441,
+32767
 };
 
 /* initial index for AR reflection coefficient quantizer and cdf table search */

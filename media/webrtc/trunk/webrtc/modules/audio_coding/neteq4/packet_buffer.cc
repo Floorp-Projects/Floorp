@@ -234,19 +234,19 @@ int PacketBuffer::NumSamplesInBuffer(DecoderDatabase* decoder_database,
                                      int last_decoded_length) const {
   PacketList::const_iterator it;
   int num_samples = 0;
+  int last_duration = last_decoded_length;
   for (it = buffer_.begin(); it != buffer_.end(); ++it) {
     Packet* packet = (*it);
     AudioDecoder* decoder =
         decoder_database->GetDecoder(packet->header.payloadType);
     if (decoder) {
-      int duration = decoder->PacketDuration(packet->payload,
-                                             packet->payload_length);
+      int duration = packet->sync_packet ? last_duration :
+          decoder->PacketDuration(packet->payload, packet->payload_length);
       if (duration >= 0) {
-        num_samples += duration;
-        continue;  // Go to next packet in loop.
+        last_duration = duration;  // Save the most up-to-date (valid) duration.
       }
     }
-    num_samples += last_decoded_length;
+    num_samples += last_duration;
   }
   return num_samples;
 }

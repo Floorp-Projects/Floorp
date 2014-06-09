@@ -104,14 +104,13 @@ AppTrustDomain::FindPotentialIssuers(const SECItem* encodedIssuerName,
 SECStatus
 AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                              const CertPolicyId& policy,
-                             const CERTCertificate* candidateCert,
+                             const SECItem& candidateCertDER,
                      /*out*/ TrustLevel* trustLevel)
 {
   MOZ_ASSERT(policy.IsAnyPolicy());
-  MOZ_ASSERT(candidateCert);
   MOZ_ASSERT(trustLevel);
   MOZ_ASSERT(mTrustedRoot);
-  if (!candidateCert || !trustLevel || !policy.IsAnyPolicy()) {
+  if (!trustLevel || !policy.IsAnyPolicy()) {
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
@@ -121,8 +120,20 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   }
 
   // Handle active distrust of the certificate.
+
+  // XXX: This would be cleaner and more efficient if we could get the trust
+  // information without constructing a CERTCertificate here, but NSS doesn't
+  // expose it in any other easy-to-use fashion.
+  ScopedCERTCertificate candidateCert(
+    CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
+                            const_cast<SECItem*>(&candidateCertDER), nullptr,
+                            false, true));
+  if (!candidateCert) {
+    return SECFailure;
+  }
+
   CERTCertTrust trust;
-  if (CERT_GetCertTrust(candidateCert, &trust) == SECSuccess) {
+  if (CERT_GetCertTrust(candidateCert.get(), &trust) == SECSuccess) {
     PRUint32 flags = SEC_GET_TRUST_FLAGS(&trust, trustObjectSigning);
 
     // For DISTRUST, we use the CERTDB_TRUSTED or CERTDB_TRUSTED_CA bit,
@@ -141,7 +152,7 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   }
 
   // mTrustedRoot is the only trust anchor for this validation.
-  if (CERT_CompareCerts(mTrustedRoot.get(), candidateCert)) {
+  if (CERT_CompareCerts(mTrustedRoot.get(), candidateCert.get())) {
     *trustLevel = TrustLevel::TrustAnchor;
     return SECSuccess;
   }
@@ -152,9 +163,10 @@ AppTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
 
 SECStatus
 AppTrustDomain::VerifySignedData(const CERTSignedData* signedData,
-                                  const CERTCertificate* cert)
+                                 const SECItem& subjectPublicKeyInfo)
 {
-  return ::mozilla::pkix::VerifySignedData(signedData, cert, mPinArg);
+  return ::mozilla::pkix::VerifySignedData(signedData, subjectPublicKeyInfo,
+                                           mPinArg);
 }
 
 SECStatus

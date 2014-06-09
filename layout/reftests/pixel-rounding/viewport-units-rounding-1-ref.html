@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<title>viewport units rounding reference</title>
+<meta charset="UTF-8">
+<style>
+div.contain { height: 50px }
+div.contain > div { height: 10px }
+div.contain > div > div { height: 10px; float: left }
+</style>
+
+<div class="contain" style="width: 200px">
+  <div>
+    <div style="width: 50px; background: fuchsia"></div>
+    <div style="width: 50px; background: aqua"></div>
+    <div style="width: 50px; background: silver"></div>
+    <div style="width: 50px; background: yellow"></div>
+  </div>
+  <div>
+    <div style="width: 48px; background: fuchsia"></div>
+    <div style="width: 48px; background: aqua"></div>
+    <div style="width: 48px; background: silver"></div>
+    <div style="width: 48px; background: yellow"></div>
+    <div style="width: 8px; background: gray"></div>
+  </div>
+  <div>
+    <div style="width: 42px; background: fuchsia"></div>
+    <div style="width: 42px; background: aqua"></div>
+    <div style="width: 42px; background: silver"></div>
+    <div style="width: 42px; background: yellow"></div>
+    <div style="width: 32px; background: gray"></div>
+  </div>
+</div>
+
+<div class="contain" style="width: 201px">
+  <div>
+    <div style="width: 50px; background: fuchsia"></div>
+    <div style="width: 51px; background: aqua"></div>
+    <div style="width: 50px; background: silver"></div>
+    <div style="width: 50px; background: yellow"></div>
+  </div>
+  <div>
+    <div style="width: 48px; background: fuchsia"></div>
+    <div style="width: 48px; background: aqua"></div>
+    <div style="width: 49px; background: silver"></div>
+    <div style="width: 48px; background: yellow"></div>
+    <div style="width: 8px; background: gray"></div>
+  </div>
+  <div>
+    <div style="width: 42px; background: fuchsia"></div>
+    <div style="width: 42px; background: aqua"></div>
+    <div style="width: 43px; background: silver"></div>
+    <div style="width: 42px; background: yellow"></div>
+    <div style="width: 32px; background: gray"></div>
+  </div>
+</div>
+
+<div class="contain" style="width: 202px">
+  <div>
+    <div style="width: 51px; background: fuchsia"></div>
+    <div style="width: 50px; background: aqua"></div>
+    <div style="width: 51px; background: silver"></div>
+    <div style="width: 50px; background: yellow"></div>
+  </div>
+  <div>
+    <div style="width: 48px; background: fuchsia"></div>
+    <div style="width: 49px; background: aqua"></div>
+    <div style="width: 48px; background: silver"></div>
+    <div style="width: 49px; background: yellow"></div>
+    <div style="width: 8px; background: gray"></div>
+  </div>
+  <div>
+    <div style="width: 42px; background: fuchsia"></div>
+    <div style="width: 43px; background: aqua"></div>
+    <div style="width: 42px; background: silver"></div>
+    <div style="width: 43px; background: yellow"></div>
+    <div style="width: 32px; background: gray"></div>
+  </div>
+</div>
+
+<div class="contain" style="width: 203px">
+  <div>
+    <div style="width: 51px; background: fuchsia"></div>
+    <div style="width: 51px; background: aqua"></div>
+    <div style="width: 50px; background: silver"></div>
+    <div style="width: 51px; background: yellow"></div>
+  </div>
+  <div>
+    <div style="width: 49px; background: fuchsia"></div>
+    <div style="width: 48px; background: aqua"></div>
+    <div style="width: 49px; background: silver"></div>
+    <div style="width: 49px; background: yellow"></div>
+    <div style="width: 8px; background: gray"></div>
+  </div>
+  <div>
+    <div style="width: 43px; background: fuchsia"></div>
+    <div style="width: 42px; background: aqua"></div>
+    <div style="width: 43px; background: silver"></div>
+    <div style="width: 42px; background: yellow"></div>
+    <div style="width: 33px; background: gray"></div>
+  </div>
+</div>
+
+<div class="contain" style="width: 204px">
+  <div>
+    <div style="width: 51px; background: fuchsia"></div>
+    <div style="width: 51px; background: aqua"></div>
+    <div style="width: 51px; background: silver"></div>
+    <div style="width: 51px; background: yellow"></div>
+  </div>
+  <div>
+    <div style="width: 49px; background: fuchsia"></div>
+    <div style="width: 49px; background: aqua"></div>
+    <div style="width: 49px; background: silver"></div>
+    <div style="width: 49px; background: yellow"></div>
+    <div style="width: 8px; background: gray"></div>
+  </div>
+  <div>
+    <div style="width: 43px; background: fuchsia"></div>
+    <div style="width: 43px; background: aqua"></div>
+    <div style="width: 43px; background: silver"></div>
+    <div style="width: 42px; background: yellow"></div>
+    <div style="width: 33px; background: gray"></div>
+  </div>
+</div>

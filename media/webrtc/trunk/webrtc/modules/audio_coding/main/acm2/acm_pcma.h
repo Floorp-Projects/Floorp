@@ -15,6 +15,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 class ACMPCMA : public ACMGenericCodec {
  public:
   explicit ACMPCMA(int16_t codec_id);
@@ -34,6 +36,8 @@ class ACMPCMA : public ACMGenericCodec {
 
   void InternalDestructEncoderInst(void* ptr_inst);
 };
+
+}  // namespace acm2
 
 }  // namespace webrtc
 

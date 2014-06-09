@@ -31,13 +31,6 @@ DeviceInfoImpl::DeviceInfoImpl(const int32_t id)
 DeviceInfoImpl::~DeviceInfoImpl(void)
 {
     _apiLock.AcquireLockExclusive();
-
-    for (VideoCaptureCapabilityMap::iterator it = _captureCapabilities.begin();
-         it != _captureCapabilities.end();
-         ++it) {
-      delete it->second;
-    }
-
     free(_lastUsedDeviceName);
     _apiLock.ReleaseLockExclusive();
 
@@ -124,23 +117,7 @@ int32_t DeviceInfoImpl::GetCapability(const char* deviceUniqueIdUTF8,
         return -1;
     }
 
-    VideoCaptureCapabilityMap::iterator item =
-        _captureCapabilities.find(deviceCapabilityNumber);
-
-    if (item == _captureCapabilities.end())
-    {
-        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
-                   "Failed to find capability number %d of %d possible",
-                   deviceCapabilityNumber, _captureCapabilities.size());
-        return -1;
-    }
-
-    if (item->second == NULL)
-    {
-        return -1;
-    }
-
-    capability = *item->second;
+    capability = _captureCapabilities[deviceCapabilityNumber];
     return 0;
 }
 
@@ -188,11 +165,7 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
 
     for (int32_t tmp = 0; tmp < numberOfCapabilies; ++tmp) // Loop through all capabilities
     {
-      VideoCaptureCapabilityMap::iterator item = _captureCapabilities.find(tmp);
-      if (item == _captureCapabilities.end())
-            return -1;
-
-        VideoCaptureCapability& capability = *item->second;
+        VideoCaptureCapability& capability = _captureCapabilities[tmp];
 
         const int32_t diffWidth = capability.width - requested.width;
         const int32_t diffHeight = capability.height - requested.height;
@@ -298,15 +271,9 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
                bestWidth, bestHeight, bestFrameRate, bestRawType);
 
     // Copy the capability
-    VideoCaptureCapabilityMap::iterator item =
-        _captureCapabilities.find(bestformatIndex);
-    if (item == _captureCapabilities.end())
+    if (bestformatIndex < 0)
         return -1;
-    if (item->second == NULL)
-        return -1;
-
-    resulting = *item->second;
-
+    resulting = _captureCapabilities[bestformatIndex];
     return bestformatIndex;
 }
 

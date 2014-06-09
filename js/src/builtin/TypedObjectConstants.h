@@ -91,22 +91,36 @@
 ///////////////////////////////////////////////////////////////////////////
 // Slots for typed objects
 
-#define JS_TYPEDOBJ_SLOT_BYTEOFFSET       0
-#define JS_TYPEDOBJ_SLOT_BYTELENGTH       1
-#define JS_TYPEDOBJ_SLOT_OWNER            2
-#define JS_TYPEDOBJ_SLOT_NEXT_VIEW        3
 
-#define JS_DATAVIEW_SLOTS              4 // Number of slots for data views
+// Common to data view, typed arrays, and typed objects:
+#define JS_BUFVIEW_SLOT_BYTEOFFSET       0
+#define JS_BUFVIEW_SLOT_LENGTH           1 // see (*) below
+#define JS_BUFVIEW_SLOT_OWNER            2
+#define JS_BUFVIEW_SLOT_NEXT_VIEW        3
 
-#define JS_TYPEDOBJ_SLOT_LENGTH           4 // Length of array (see (*) below)
-#define JS_TYPEDOBJ_SLOT_TYPE_DESCR       5 // For typed objects, type descr
+// Specific to data view:
+#define JS_DATAVIEW_SLOT_DATA            7 // see (**) below
+#define JS_DATAVIEW_SLOTS                4 // Number of slots for data views
 
-#define JS_TYPEDOBJ_SLOT_DATA             7 // private slot, based on alloc kind
-#define JS_TYPEDOBJ_SLOTS                 6 // Number of slots for typed objs
+// Specific to typed arrays:
+#define JS_TYPEDARR_SLOT_TYPE            4 // A ScalarTypeDescr::Type constant
+#define JS_TYPEDARR_SLOT_DATA            7 // see (**) below
+#define JS_TYPEDARR_SLOTS                5 // Number of slots for typed arrays
 
-// (*) The JS_TYPEDOBJ_SLOT_LENGTH slot stores the length for typed objects of
-// sized and unsized array type. The slot contains 0 for non-arrays.
-// The slot also contains 0 for *unattached* typed objects, no matter what
-// type they have.
+// Specific to typed objects:
+#define JS_TYPEDOBJ_SLOT_DATA            7
+#define JS_TYPEDOBJ_SLOTS                4 // Number of slots for typed objs
+
+// (*) The interpretation of the JS_BUFVIEW_SLOT_LENGTH slot depends on
+// the kind of view:
+// - DataView: stores the length in bytes
+// - TypedArray: stores the array length
+// - TypedObject: for arrays, stores the array length, else 0
+
+// (**) This is the index of the slot that will be used for private data.
+// It is hardcoded here based on the GC Kind that will be assigned. It is
+// a function of the total number of slots, but it is non-trivial to encode
+// that function at compile-time, so we instead use a hardcoded constant
+// coupled with some handy assertions.
 
 #endif

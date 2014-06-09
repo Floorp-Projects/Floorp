@@ -18,6 +18,8 @@
 
 namespace webrtc {
 
+namespace acm2 {
+
 ACMPCMU::ACMPCMU(int16_t codec_id) { codec_id_ = codec_id; }
 
 ACMPCMU::~ACMPCMU() {}
@@ -55,5 +57,7 @@ void ACMPCMU::DestructEncoderSafe() {
   encoder_exist_ = false;
   encoder_initialized_ = false;
 }
+
+}  // namespace acm2
 
 }  // namespace webrtc

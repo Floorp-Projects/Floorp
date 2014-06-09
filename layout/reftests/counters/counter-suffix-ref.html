@@ -7,57 +7,33 @@
     width: 3em;
     text-align: end;
     box-sizing: border-box;
+    -moz-font-feature-settings: "tnum"; /* to match ua.css, see bug 1020143 */
+    font-feature-settings: "tnum";
   }
-  .def span { -moz-padding-end: 0.5em; }
-  .fix span { -moz-padding-end: 1em; }
 </style>
 <div id="wrapper">
-  <p class="def">
-    <span>1.</span>foo<br>
-    <span>2.</span>bar
+  <p>
+    <span>1.&nbsp;</span>foo<br>
+    <span>2.&nbsp;</span>bar
   </p>
-  <p class="def">
-    <span>&#x5d0;.</span>foo<br>
-    <span>&#x5d1;.</span>bar
+  <p>
+    <span>&#x5d0;.&nbsp;</span>foo<br>
+    <span>&#x5d1;.&nbsp;</span>bar
   </p>
   <p>
     <span>&#x4e00;&#x3001;</span>foo<br>
     <span>&#x4e8c;&#x3001;</span>bar
   </p>
-  <p class="def">
-    <span>&#xc77c;,</span>foo<br>
-    <span>&#xc774;,</span>bar
+  <p>
+    <span>&#xc77c;,&nbsp;</span>foo<br>
+    <span>&#xc774;,&nbsp;</span>bar
   </p>
-  <p class="fix">
-    <span>1.</span>foo<br>
-    <span>2.</span>bar
+  <p dir="rtl">
+    <span>1.&nbsp;</span>foo<br>
+    <span>2.&nbsp;</span>bar
   </p>
-  <p class="fix">
-    <span>&#x5d0;.</span>foo<br>
-    <span>&#x5d1;.</span>bar
-  </p>
-  <p class="fix">
-    <span>&#x4e00;&#x3001;</span>foo<br>
-    <span>&#x4e8c;&#x3001;</span>bar
-  </p>
-  <p class="fix">
-    <span>&#xc77c;,</span>foo<br>
-    <span>&#xc774;,</span>bar
-  </p>
-  <p class="def" dir="rtl">
-    <span>1.</span>foo<br>
-    <span>2.</span>bar
-  </p>
-  <p class="def" dir="rtl">
-    <span>&#x5d0;.</span>foo<br>
-    <span>&#x5d1;.</span>bar
-  </p>
-  <p class="fix" dir="rtl">
-    <span>1.</span>foo<br>
-    <span>2.</span>bar
-  </p>
-  <p class="fix" dir="rtl">
-    <span>&#x5d0;.</span>foo<br>
-    <span>&#x5d1;.</span>bar
+  <p dir="rtl">
+    <span>&#x5d0;.&nbsp;</span>foo<br>
+    <span>&#x5d1;.&nbsp;</span>bar
   </p>
 </div>

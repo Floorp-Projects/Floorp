@@ -6,7 +6,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(3a5c7a0f-f5da-4a8b-a748-d7c5a528f33b)]
+[scriptable, uuid(dc8013f2-4aed-47a8-bc4e-9fd7a6cc60fa)]
 interface nsINSSErrorsService : nsISupports
 {
     /**
@@ -50,4 +50,16 @@ interface nsINSSErrorsService : nsISupports
     const long NSS_SEC_ERROR_LIMIT = (NSS_SEC_ERROR_BASE + 1000);
     const long NSS_SSL_ERROR_BASE  = -(0x3000);
     const long NSS_SSL_ERROR_LIMIT = (NSS_SSL_ERROR_BASE + 1000);
+
+    /**
+     * The error codes within each module must fit in 16 bits. We want these
+     * errors to fit in the same module as the NSS errors but not overlap with
+     * any of them. Converting an NSS SEC, NSS SSL, or PSM error to an NS error
+     * involves negating the value of the error and then synthesizing an error
+     * in the NS_ERROR_MODULE_SECURITY module. Hence, PSM errors will start at
+     * a negative value that both doesn't overlap with the current value
+     * ranges for NSS errors and that will fit in 16 bits when negated.
+     */
+    const long PSM_ERROR_BASE  = -(0x4000);
+    const long PSM_ERROR_LIMIT = (PSM_ERROR_BASE + 1000);
 };

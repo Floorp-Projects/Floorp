@@ -162,9 +162,57 @@ function test_setRef()
   }
 }
 
+// Bug 960014 - Make nsStandardURL::SetHost less magical around IPv6
+function test_ipv6()
+{
+  var url = stringToURL("http://example.com");
+  url.host = "[2001::1]";
+  do_check_eq(url.host, "2001::1");
+
+  url = stringToURL("http://example.com");
+  url.hostPort = "[2001::1]:30";
+  do_check_eq(url.host, "2001::1");
+  do_check_eq(url.port, 30);
+  do_check_eq(url.hostPort, "[2001::1]:30");
+
+  url = stringToURL("http://example.com");
+  url.hostPort = "2001:1";
+  do_check_eq(url.host, "2001");
+  do_check_eq(url.port, 1);
+  do_check_eq(url.hostPort, "2001:1");
+}
+
+function test_ipv6_fail()
+{
+  var url = stringToURL("http://example.com");
+
+  Assert.throws(() => { url.host = "2001::1"; }, "missing brackets");
+  Assert.throws(() => { url.host = "[2001::1]:20"; }, "url.host with port");
+  Assert.throws(() => { url.host = "[2001::1"; }, "missing last bracket");
+  Assert.throws(() => { url.host = "2001::1]"; }, "missing first bracket");
+  Assert.throws(() => { url.host = "2001[::1]"; }, "bad bracket position");
+  Assert.throws(() => { url.host = "[]"; }, "empty IPv6 address");
+  Assert.throws(() => { url.host = "[hello]"; }, "bad IPv6 address");
+  Assert.throws(() => { url.host = "[192.168.1.1]"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "2001::1"; }, "missing brackets");
+  Assert.throws(() => { url.hostPort = "[2001::1]30"; }, "missing : after IP");
+  Assert.throws(() => { url.hostPort = "[2001:1]"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "[2001:1]10"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "[2001:1]10:20"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "[2001:1]:10:20"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "[2001:1"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "2001]:1"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = "2001:1]"; }, "bad IPv6 address");
+  Assert.throws(() => { url.hostPort = ""; }, "Empty hostPort should fail");
+  Assert.throws(() => { url.hostPort = "[2001::1]:"; }, "missing port number");
+  Assert.throws(() => { url.hostPort = "[2001::1]:bad"; }, "bad port number");
+}
+
 function run_test()
 {
   test_setEmptyPath();
   test_setQuery();
   test_setRef();
+  test_ipv6();
+  test_ipv6_fail();
 }

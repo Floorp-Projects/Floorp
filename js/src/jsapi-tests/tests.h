@@ -281,7 +281,7 @@ class JSAPITest
     }
 
     virtual JSRuntime * createRuntime() {
-        JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024, JS_USE_HELPER_THREADS);
+        JSRuntime *rt = JS_NewRuntime(8L * 1024 * 1024);
         if (!rt)
             return nullptr;
         setNativeStackQuota(rt);

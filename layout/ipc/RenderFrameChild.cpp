@@ -37,6 +37,11 @@ RenderFrameChild::AllocPLayerTransactionChild()
 {
   LayerTransactionChild* c = new LayerTransactionChild();
   c->AddIPDLReference();
+  // We only create PLayerTransaction objects through PRenderFrame when we don't
+  // have a PCompositor. This means that the child process content will never
+  // get drawn to the screen, but some tests rely on it pretending to function
+  // for now.
+  c->SetHasNoCompositor();
   return c;
 }
 

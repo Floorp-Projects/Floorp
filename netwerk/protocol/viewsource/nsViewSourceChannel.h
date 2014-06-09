@@ -47,9 +47,9 @@ public:
         : mIsDocument(false)
         , mOpened(false) {}
 
-    NS_HIDDEN_(nsresult) Init(nsIURI* uri);
+    nsresult Init(nsIURI* uri);
 
-    NS_HIDDEN_(nsresult) InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc,
+    nsresult InitSrcdoc(nsIURI* aURI, const nsAString &aSrcdoc,
                                     nsIURI* aBaseURI);
 
 protected:

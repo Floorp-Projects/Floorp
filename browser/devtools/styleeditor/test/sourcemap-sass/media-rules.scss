@@ -1,0 +1,11 @@
+$break-small: 320px;
+$break-large: 1200px;
+
+div {
+  @media screen and (max-width: $break-small) {
+    width: 100px;
+  }
+  @media screen and (min-width: $break-large) {
+    width: 400px;
+  }
+}

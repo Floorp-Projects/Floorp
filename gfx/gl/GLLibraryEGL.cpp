@@ -6,6 +6,7 @@
 
 #include "gfxCrashReporterUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Assertions.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsPrintfCString.h"
@@ -20,6 +21,9 @@ namespace mozilla {
 namespace gl {
 
 GLLibraryEGL sEGLLibrary;
+#ifdef MOZ_B2G
+ThreadLocal<EGLContext> GLLibraryEGL::sCurrentContext;
+#endif
 
 // should match the order of EGLExtensions, and be null-terminated.
 static const char *sEGLExtensionNames[] = {
@@ -103,6 +107,11 @@ GLLibraryEGL::EnsureInitialized()
     }
 
     mozilla::ScopedGfxFeatureReporter reporter("EGL");
+
+#ifdef MOZ_B2G
+    if (!sCurrentContext.init())
+	    MOZ_CRASH("Tls init failed");
+#endif
 
 #ifdef XP_WIN
 #ifdef MOZ_WEBGL
@@ -322,6 +331,24 @@ GLLibraryEGL::EnsureInitialized()
         }
     } else {
         MarkExtensionUnsupported(KHR_image_pixmap);
+    }
+
+    if (IsExtensionSupported(ANDROID_native_fence_sync)) {
+        GLLibraryLoader::SymLoadStruct nativeFenceSymbols[] = {
+            { (PRFuncPtr*) &mSymbols.fDupNativeFenceFDANDROID, { "eglDupNativeFenceFDANDROID", nullptr } },
+            { nullptr, { nullptr } }
+        };
+
+        bool success = GLLibraryLoader::LoadSymbols(mEGLLibrary,
+                                                    &nativeFenceSymbols[0],
+                                                    lookupFunction);
+        if (!success) {
+            NS_ERROR("EGL supports ANDROID_native_fence_sync without exposing its functions!");
+
+            MarkExtensionUnsupported(ANDROID_native_fence_sync);
+
+            mSymbols.fDupNativeFenceFDANDROID = nullptr;
+        }
     }
 
     mInitialized = true;

@@ -26,6 +26,8 @@ class MockScreenCapturer : public ScreenCapturer {
   MOCK_METHOD1(Capture, void(const DesktopRegion& region));
   MOCK_METHOD1(SetMouseShapeObserver, void(
       MouseShapeObserver* mouse_shape_observer));
+  MOCK_METHOD1(GetScreenList, bool(ScreenList* screens));
+  MOCK_METHOD1(SelectScreen, bool(ScreenId id));
 
  private:
   DISALLOW_COPY_AND_ASSIGN(MockScreenCapturer);

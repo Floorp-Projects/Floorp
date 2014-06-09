@@ -109,12 +109,34 @@ void	malloc_printf(const char *format, ...)
 #ifdef JEMALLOC_H_INLINES
 
 #ifndef JEMALLOC_ENABLE_INLINE
+int	jemalloc_ffsl(long bitmap);
+int	jemalloc_ffs(int bitmap);
 size_t	pow2_ceil(size_t x);
 void	set_errno(int errnum);
 int	get_errno(void);
 #endif
 
 #if (defined(JEMALLOC_ENABLE_INLINE) || defined(JEMALLOC_UTIL_C_))
+
+/* Sanity check: */
+#if !defined(JEMALLOC_INTERNAL_FFSL) || !defined(JEMALLOC_INTERNAL_FFS)
+#  error Both JEMALLOC_INTERNAL_FFSL && JEMALLOC_INTERNAL_FFS should have been defined by configure
+#endif
+
+JEMALLOC_ALWAYS_INLINE int
+jemalloc_ffsl(long bitmap)
+{
+
+        return (JEMALLOC_INTERNAL_FFSL(bitmap));
+}
+
+JEMALLOC_ALWAYS_INLINE int
+jemalloc_ffs(int bitmap)
+{
+
+        return (JEMALLOC_INTERNAL_FFS(bitmap));
+}
+
 /* Compute the smallest power of 2 that is >= x. */
 JEMALLOC_INLINE size_t
 pow2_ceil(size_t x)

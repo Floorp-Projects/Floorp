@@ -20,7 +20,6 @@
         '../testing/gmock.gyp:*',
         '../testing/gtest.gyp:*',
         '../third_party/bzip2/bzip2.gyp:*',
-        '../third_party/icu/icu.gyp:*',
         '../third_party/libxml/libxml.gyp:*',
         '../third_party/sqlite/sqlite.gyp:*',
         '../third_party/zlib/zlib.gyp:*',
@@ -104,7 +103,7 @@
             }],
           ],
         }],
-        ['toolkit_uses_gtk==1', {
+        ['(toolkit_uses_gtk==1) and (build_with_mozilla==0)', {
           'dependencies': [
             '../tools/gtk_clipboard_dump/gtk_clipboard_dump.gyp:*',
             '../tools/xdisplaycheck/xdisplaycheck.gyp:*',

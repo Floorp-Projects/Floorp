@@ -79,6 +79,7 @@ class VoEAudioProcessingImpl : public VoEAudioProcessing {
   virtual int GetEcDelayMetrics(int& delay_median, int& delay_std);
 
   virtual int StartDebugRecording(const char* fileNameUTF8);
+  virtual int StartDebugRecording(FILE* file_handle);
 
   virtual int StopDebugRecording();
 

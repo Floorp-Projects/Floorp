@@ -67,9 +67,17 @@ double CalculateMetrics(VideoAnalysisMetricsType video_metrics_type,
 // no output will be written.
 void PrintAnalysisResults(const std::string& label, ResultsContainer* results);
 
+// Similar to the above, but will print to the specified file handle.
+void PrintAnalysisResults(FILE* output, const std::string& label,
+                          ResultsContainer* results);
+
 // Calculates max repeated and skipped frames and prints them to stdout in a
 // format that is compatible with Chromium performance numbers.
 void PrintMaxRepeatedAndSkippedFrames(const std::string& label,
+                                      const std::string& stats_file_name);
+
+// Similar to the above, but will print to the specified file handle.
+void PrintMaxRepeatedAndSkippedFrames(FILE* output, const std::string& label,
                                       const std::string& stats_file_name);
 
 // Gets the next line from an open stats file.

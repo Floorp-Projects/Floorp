@@ -1405,7 +1405,7 @@ WrapNativeParent(JSContext* cx, T* p, nsWrapperCache* cache,
 
   // If useXBLScope is true, it means that the canonical reflector for this
   // native object should live in the XBL scope.
-  if (xpc::IsInXBLScope(parent)) {
+  if (xpc::IsInContentXBLScope(parent)) {
     return parent;
   }
   JS::Rooted<JSObject*> rootedParent(cx, parent);
@@ -2717,15 +2717,12 @@ CreateGlobal(JSContext* aCx, T* aNative, nsWrapperCache* aCache,
                                  JS::DontFireOnNewGlobalHook, aOptions));
   if (!aGlobal) {
     NS_WARNING("Failed to create global");
-    return nullptr;
+    return false;
   }
 
   JSAutoCompartment ac(aCx, aGlobal);
 
   {
-    JS::AutoAssertNoGC nogc;
-
-    // The setup of our global needs to be done before a GC happens.
     js::SetReservedSlot(aGlobal, DOM_OBJECT_SLOT, PRIVATE_TO_JSVAL(aNative));
     NS_ADDREF(aNative);
 

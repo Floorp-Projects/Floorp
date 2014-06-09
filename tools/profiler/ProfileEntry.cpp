@@ -59,8 +59,8 @@ ProfileEntry::ProfileEntry(char aTagName, Address aTagAddress)
   , mTagName(aTagName)
 { }
 
-ProfileEntry::ProfileEntry(char aTagName, int aTagLine)
-  : mTagLine(aTagLine)
+ProfileEntry::ProfileEntry(char aTagName, int aTagInt)
+  : mTagInt(aTagInt)
   , mTagName(aTagName)
 { }
 
@@ -94,9 +94,9 @@ void ProfileEntry::log()
   //   mTagMarker (ProfilerMarker*) m
   //   mTagData   (const char*)  c,s
   //   mTagPtr    (void*)        d,l,L,B (immediate backtrace), S(start-of-stack)
-  //   mTagLine   (int)          n,f
+  //   mTagInt    (int)          n,f,y
   //   mTagChar   (char)         h
-  //   mTagFloat  (double)       r,t,p,R (resident memory)
+  //   mTagFloat  (double)       r,t,p,R (resident memory), U (unshared memory)
   switch (mTagName) {
     case 'm':
       LOGF("%c \"%s\"", mTagName, mTagMarker->GetMarkerName()); break;
@@ -104,11 +104,11 @@ void ProfileEntry::log()
       LOGF("%c \"%s\"", mTagName, mTagData); break;
     case 'd': case 'l': case 'L': case 'B': case 'S':
       LOGF("%c %p", mTagName, mTagPtr); break;
-    case 'n': case 'f':
-      LOGF("%c %d", mTagName, mTagLine); break;
+    case 'n': case 'f': case 'y':
+      LOGF("%c %d", mTagName, mTagInt); break;
     case 'h':
       LOGF("%c \'%c\'", mTagName, mTagChar); break;
-    case 'r': case 't': case 'p': case 'R':
+    case 'r': case 't': case 'p': case 'R': case 'U':
       LOGF("%c %f", mTagName, mTagFloat); break;
     default:
       LOGF("'%c' unknown_tag", mTagName); break;
@@ -162,6 +162,7 @@ ThreadProfile::ThreadProfile(const char* aName, int aEntrySize,
   , mStackTop(aStackTop)
 #ifdef XP_LINUX
   , mRssMemory(0)
+  , mUssMemory(0)
 #endif
 {
   mEntries = new ProfileEntry[mEntrySize];
@@ -359,10 +360,17 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
               }
             }
             break;
+          case 'U':
+            {
+              if (sample) {
+                b.NameValue("uss", entry.mTagFloat);
+              }
+            }
+            break;
           case 'f':
             {
               if (sample) {
-                b.NameValue("frameNumber", entry.mTagLine);
+                b.NameValue("frameNumber", entry.mTagInt);
               }
             }
             break;
@@ -399,6 +407,7 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
                 while (framePos != mLastFlushPos && frame.mTagName != 's') {
                   int incBy = 1;
                   frame = mEntries[framePos];
+
                   // Read ahead to the next tag, if it's a 'd' tag process it now
                   const char* tagStringData = frame.mTagData;
                   int readAheadPos = (framePos + 1) % mEntrySize;
@@ -413,7 +422,8 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
 
                   // Write one frame. It can have either
                   // 1. only location - 'l' containing a memory address
-                  // 2. location and line number - 'c' followed by 'd's and an optional 'n'
+                  // 2. location and line number - 'c' followed by 'd's,
+                  // an optional 'n' and an optional 'y'
                   if (frame.mTagName == 'l') {
                     b.BeginObject();
                       // Bug 753041
@@ -429,7 +439,13 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
                       readAheadPos = (framePos + incBy) % mEntrySize;
                       if (readAheadPos != mLastFlushPos &&
                           mEntries[readAheadPos].mTagName == 'n') {
-                        b.NameValue("line", mEntries[readAheadPos].mTagLine);
+                        b.NameValue("line", mEntries[readAheadPos].mTagInt);
+                        incBy++;
+                      }
+                      readAheadPos = (framePos + incBy) % mEntrySize;
+                      if (readAheadPos != mLastFlushPos &&
+                          mEntries[readAheadPos].mTagName == 'y') {
+                        b.NameValue("category", mEntries[readAheadPos].mTagInt);
                         incBy++;
                       }
                     b.EndObject();

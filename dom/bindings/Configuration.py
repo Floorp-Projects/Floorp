@@ -414,12 +414,9 @@ class Descriptor(DescriptorProvider):
             for attribute in ['implicitJSContext', 'resultNotAddRefed']:
                 addExtendedAttribute(attribute, desc.get(attribute, {}))
 
-        self.binaryNames = desc.get('binaryNames', {})
-        if '__legacycaller' not in self.binaryNames:
-            self.binaryNames["__legacycaller"] = "LegacyCall"
-        if '__stringifier' not in self.binaryNames:
-            self.binaryNames["__stringifier"] = "Stringify"
-
+        self._binaryNames = desc.get('binaryNames', {})
+        self._binaryNames.setdefault('__legacycaller', 'LegacyCall')
+        self._binaryNames.setdefault('__stringifier', 'Stringify')
 
         if not self.interface.isExternal():
             self.permissions = dict()
@@ -456,6 +453,9 @@ class Descriptor(DescriptorProvider):
             parent = parent.parent
         config.maxProtoChainLength = max(config.maxProtoChainLength,
                                          len(self.prototypeChain))
+
+    def binaryNameFor(self, name):
+        return self._binaryNames.get(name, name)
 
     def hasInterfaceOrInterfacePrototypeObject(self):
 

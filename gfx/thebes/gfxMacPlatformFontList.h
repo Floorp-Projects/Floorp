@@ -118,6 +118,10 @@ private:
 
     virtual already_AddRefed<FontInfoData> CreateFontInfoData();
 
+#ifdef MOZ_BUNDLED_FONTS
+    void ActivateBundledFonts();
+#endif
+
     enum {
         kATSGenerationInitial = -1
     };

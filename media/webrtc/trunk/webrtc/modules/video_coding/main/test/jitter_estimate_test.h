@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_VIDEO_CODING_TEST_JITTER_ESTIMATE_TEST_H_
 #define WEBRTC_MODULES_VIDEO_CODING_TEST_JITTER_ESTIMATE_TEST_H_
 
-#include "typedefs.h"
+#include "webrtc/typedefs.h"
 #include "jitter_buffer.h"
 #include "jitter_estimator.h"
 #include <stdlib.h>

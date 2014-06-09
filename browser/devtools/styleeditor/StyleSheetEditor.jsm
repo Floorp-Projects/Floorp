@@ -96,21 +96,14 @@ function StyleSheetEditor(styleSheet, win, file, isNew, walker) {
   this.checkLinkedFileForChanges = this.checkLinkedFileForChanges.bind(this);
   this.markLinkedFileBroken = this.markLinkedFileBroken.bind(this);
 
-  this.mediaRules = [];
-  if (this.styleSheet.getMediaRules) {
-    this.styleSheet.getMediaRules().then(this._onMediaRulesChanged);
-  }
-  this.styleSheet.on("media-rules-changed", this._onMediaRulesChanged);
-
   this._focusOnSourceEditorReady = false;
-
-  let relatedSheet = this.styleSheet.relatedStyleSheet;
-  if (relatedSheet) {
-    relatedSheet.on("property-change", this._onPropertyChange);
-  }
-  this.styleSheet.on("property-change", this._onPropertyChange);
+  this.cssSheet.on("property-change", this._onPropertyChange);
   this.styleSheet.on("error", this._onError);
-
+  this.mediaRules = [];
+  if (this.cssSheet.getMediaRules) {
+    this.cssSheet.getMediaRules().then(this._onMediaRulesChanged);
+  }
+  this.cssSheet.on("media-rules-changed", this._onMediaRulesChanged);
   this.savedFile = file;
   this.linkCSSFile();
 }
@@ -129,6 +122,17 @@ StyleSheetEditor.prototype = {
    */
   get isNew() {
     return this._isNew;
+  },
+
+  /**
+   * The style sheet or the generated style sheet for this source if it's an
+   * original source.
+   */
+  get cssSheet() {
+    if (this.styleSheet.isOriginalSource) {
+      return this.styleSheet.relatedStyleSheet;
+    }
+    return this.styleSheet;
   },
 
   get savedFile() {
@@ -222,7 +226,7 @@ StyleSheetEditor.prototype = {
   fetchSource: function(callback) {
     return this.styleSheet.getText().then((longStr) => {
       longStr.string().then((source) => {
-        this._state.text = prettifyCSS(source);
+        this._state.text = CssLogic.prettifyCSS(source);
         this.sourceLoaded = true;
 
         if (callback) {
@@ -530,7 +534,9 @@ StyleSheetEditor.prototype = {
     this._friendlyName = null;
     this.savedFile = returnFile;
 
-    this.sourceEditor.setClean();
+    if (this.sourceEditor) {
+      this.sourceEditor.setClean();
+    }
 
     this.emit("property-change");
 
@@ -628,77 +634,10 @@ StyleSheetEditor.prototype = {
     if (this.sourceEditor) {
       this.sourceEditor.destroy();
     }
-    this.styleSheet.off("media-rules-changed", this._onMediaRulesChanged);
-    this.styleSheet.off("property-change", this._onPropertyChange);
+    this.cssSheet.off("property-change", this._onPropertyChange);
+    this.cssSheet.off("media-rules-changed", this._onMediaRulesChanged);
     this.styleSheet.off("error", this._onError);
   }
-}
-
-
-const TAB_CHARS = "\t";
-
-const CURRENT_OS = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
-const LINE_SEPARATOR = CURRENT_OS === "WINNT" ? "\r\n" : "\n";
-
-/**
- * Prettify minified CSS text.
- * This prettifies CSS code where there is no indentation in usual places while
- * keeping original indentation as-is elsewhere.
- *
- * @param string text
- *        The CSS source to prettify.
- * @return string
- *         Prettified CSS source
- */
-function prettifyCSS(text)
-{
-  // remove initial and terminating HTML comments and surrounding whitespace
-  text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
-
-  let parts = [];    // indented parts
-  let partStart = 0; // start offset of currently parsed part
-  let indent = "";
-  let indentLevel = 0;
-
-  for (let i = 0; i < text.length; i++) {
-    let c = text[i];
-    let shouldIndent = false;
-
-    switch (c) {
-      case "}":
-        if (i - partStart > 1) {
-          // there's more than just } on the line, add line
-          parts.push(indent + text.substring(partStart, i));
-          partStart = i;
-        }
-        indent = TAB_CHARS.repeat(--indentLevel);
-        /* fallthrough */
-      case ";":
-      case "{":
-        shouldIndent = true;
-        break;
-    }
-
-    if (shouldIndent) {
-      let la = text[i+1]; // one-character lookahead
-      if (!/\n/.test(la) || /^\s+$/.test(text.substring(i+1, text.length))) {
-        // following character should be a new line, but isn't,
-        // or it's whitespace at the end of the file
-        parts.push(indent + text.substring(partStart, i + 1));
-        if (c == "}") {
-          parts.push(""); // for extra line separator
-        }
-        partStart = i + 1;
-      } else {
-        return text; // assume it is not minified, early exit
-      }
-    }
-
-    if (c == "{") {
-      indent = TAB_CHARS.repeat(++indentLevel);
-    }
-  }
-  return parts.join(LINE_SEPARATOR);
 }
 
 /**

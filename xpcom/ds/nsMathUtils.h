@@ -19,15 +19,15 @@
 /*
  * round
  */
-inline NS_HIDDEN_(double) NS_round(double x)
+inline double NS_round(double x)
 {
     return x >= 0.0 ? floor(x + 0.5) : ceil(x - 0.5);
 }
-inline NS_HIDDEN_(float) NS_roundf(float x)
+inline float NS_roundf(float x)
 {
     return x >= 0.0f ? floorf(x + 0.5f) : ceilf(x - 0.5f);
 }
-inline NS_HIDDEN_(int32_t) NS_lround(double x)
+inline int32_t NS_lround(double x)
 {
     return x >= 0.0 ? int32_t(x + 0.5) : int32_t(x - 0.5);
 }
@@ -35,8 +35,8 @@ inline NS_HIDDEN_(int32_t) NS_lround(double x)
 /* NS_roundup30 rounds towards infinity for positive and       */
 /* negative numbers.                                           */
 
-#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__)
-inline NS_HIDDEN_(int32_t) NS_lroundup30(float x)
+#if defined(XP_WIN32) && defined(_M_IX86) && !defined(__GNUC__) && !defined(__clang__)
+inline int32_t NS_lroundup30(float x)
 {
     /* Code derived from Laurent de Soras' paper at             */
     /* http://ldesoras.free.fr/doc/articles/rounding_en.pdf     */
@@ -68,7 +68,7 @@ inline NS_HIDDEN_(int32_t) NS_lroundup30(float x)
 }
 #endif /* XP_WIN32 && _M_IX86 && !__GNUC__ */
 
-inline NS_HIDDEN_(int32_t) NS_lroundf(float x)
+inline int32_t NS_lroundf(float x)
 {
     return x >= 0.0f ? int32_t(x + 0.5f) : int32_t(x - 0.5f);
 }
@@ -78,7 +78,7 @@ inline NS_HIDDEN_(int32_t) NS_lroundf(float x)
  * turns up with none of the possibilities below it would be okay to fall
  * back to sqrt(x*x + y*y).
  */
-inline NS_HIDDEN_(double) NS_hypot(double x, double y)
+inline double NS_hypot(double x, double y)
 {
 #ifdef __GNUC__
     return __builtin_hypot(x, y);
@@ -93,7 +93,7 @@ inline NS_HIDDEN_(double) NS_hypot(double x, double y)
  * Check whether a floating point number is finite (not +/-infinity and not a
  * NaN value).
  */
-inline NS_HIDDEN_(bool) NS_finite(double d)
+inline bool NS_finite(double d)
 {
 #ifdef WIN32
     // NOTE: '!!' casts an int to bool without spamming MSVC warning C4800.
@@ -113,7 +113,7 @@ inline NS_HIDDEN_(bool) NS_finite(double d)
  * The main difference is that the result of this method will have the sign of
  * y while the result of fmod(x, y) will have the sign of x.
  */
-inline NS_HIDDEN_(double) NS_floorModulo(double x, double y)
+inline double NS_floorModulo(double x, double y)
 {
   return (x - y * floor(x / y));
 }

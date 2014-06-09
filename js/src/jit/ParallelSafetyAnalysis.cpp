@@ -198,7 +198,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     UNSAFE_OP(RegExp)
     CUSTOM_OP(Lambda)
     UNSAFE_OP(LambdaArrow)
-    UNSAFE_OP(ImplicitThis)
     SAFE_OP(Slots)
     SAFE_OP(Elements)
     SAFE_OP(ConstantElements)
@@ -225,6 +224,7 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     WRITE_GUARDED_OP(SetArrayLength, elements)
     SAFE_OP(TypedArrayLength)
     SAFE_OP(TypedArrayElements)
+    SAFE_OP(TypedObjectProto)
     SAFE_OP(TypedObjectElements)
     SAFE_OP(SetTypedObjectOffset)
     SAFE_OP(InitializedLength)
@@ -376,7 +376,7 @@ ParallelSafetyAnalysis::analyze()
             if (!visitor.unsafe()) {
                 // Block consists of only safe instructions.  Visit its successors.
                 for (uint32_t i = 0; i < block->numSuccessors(); i++)
-                    block->getSuccessor(i)->mark();
+                    block->getSuccessor(i)->markUnchecked();
             } else {
                 // Block contains an unsafe instruction.  That means that once
                 // we enter this block, we are guaranteed to bailout.

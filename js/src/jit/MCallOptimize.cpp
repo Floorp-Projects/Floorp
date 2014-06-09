@@ -165,6 +165,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineToObject(callInfo);
     if (native == intrinsic_ToInteger)
         return inlineToInteger(callInfo);
+    if (native == intrinsic_ToString)
+        return inlineToString(callInfo);
 
     // TypedObject intrinsics.
     if (native == intrinsic_ObjectIsTypedObject)
@@ -200,6 +202,35 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
     // Bound function
     if (native == js::CallOrConstructBoundFunction)
         return inlineBoundFunction(callInfo, target);
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineNativeGetter(CallInfo &callInfo, JSFunction *target)
+{
+    JS_ASSERT(target->isNative());
+    JSNative native = target->native();
+
+    if (!optimizationInfo().inlineNative())
+        return InliningStatus_NotInlined;
+
+    types::TemporaryTypeSet *thisTypes = callInfo.thisArg()->resultTypeSet();
+    JS_ASSERT(callInfo.argc() == 0);
+
+    // Try to optimize typed array lengths. There is one getter for each
+    // typed array prototype, and make sure we are accessing the right one
+    // for the type of the instance object.
+    if (thisTypes) {
+        ScalarTypeDescr::Type type = (ScalarTypeDescr::Type) thisTypes->getTypedArrayType();
+        if (type != ScalarTypeDescr::TYPE_MAX &&
+            TypedArrayObject::isOriginalLengthGetter(type, native))
+        {
+            MInstruction *length = addTypedArrayLength(callInfo.thisArg());
+            current->push(length);
+            return InliningStatus_Inlined;
+        }
+    }
 
     return InliningStatus_NotInlined;
 }
@@ -1429,7 +1460,7 @@ IonBuilder::elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefin
     if (!objDescrs.arrayElementType(*this, &elemDescrs))
         return false;
 
-    if (elemDescrs.empty() || elemDescrs.kind() != TypeDescr::Scalar)
+    if (elemDescrs.empty() || elemDescrs.kind() != type::Scalar)
         return false;
 
     JS_ASSERT(TypeDescr::isSized(elemDescrs.kind()));
@@ -1911,6 +1942,22 @@ IonBuilder::inlineToInteger(CallInfo &callInfo)
     MToInt32 *toInt32 = MToInt32::New(alloc(), callInfo.getArg(0));
     current->add(toInt32);
     current->push(toInt32);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineToString(CallInfo &callInfo)
+{
+    if (callInfo.argc() != 1 || callInfo.constructing())
+        return InliningStatus_NotInlined;
+
+    if (getInlineReturnType() != MIRType_String)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+    MToString *toString = MToString::New(alloc(), callInfo.getArg(0));
+    current->add(toString);
+    current->push(toString);
     return InliningStatus_Inlined;
 }
 

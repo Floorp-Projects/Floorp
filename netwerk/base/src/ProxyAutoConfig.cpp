@@ -544,7 +544,7 @@ private:
 
   nsresult Init()
   {
-    mRuntime = JS_NewRuntime(sRuntimeHeapSize, JS_NO_HELPER_THREADS);
+    mRuntime = JS_NewRuntime(sRuntimeHeapSize);
     NS_ENSURE_TRUE(mRuntime, NS_ERROR_OUT_OF_MEMORY);
 
     /*

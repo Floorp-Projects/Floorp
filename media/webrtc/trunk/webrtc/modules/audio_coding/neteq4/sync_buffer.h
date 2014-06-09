@@ -17,10 +17,10 @@
 
 namespace webrtc {
 
-class SyncBuffer : public AudioMultiVector<int16_t> {
+class SyncBuffer : public AudioMultiVector {
  public:
   SyncBuffer(size_t channels, size_t length)
-      : AudioMultiVector<int16_t>(channels, length),
+      : AudioMultiVector(channels, length),
         next_index_(length),
         end_timestamp_(0),
         dtmf_index_(0) {}
@@ -34,7 +34,7 @@ class SyncBuffer : public AudioMultiVector<int16_t> {
   // the same number of samples from the beginning of the SyncBuffer, to
   // maintain a constant buffer size. The |next_index_| is updated to reflect
   // the move of the beginning of "future" data.
-  void PushBack(const AudioMultiVector<int16_t>& append_this);
+  void PushBack(const AudioMultiVector& append_this);
 
   // Adds |length| zeros to the beginning of each channel. Removes
   // the same number of samples from the end of the SyncBuffer, to
@@ -56,13 +56,13 @@ class SyncBuffer : public AudioMultiVector<int16_t> {
   // and |position| are selected such that the new data would extend beyond the
   // end of the current SyncBuffer, the buffer is not extended.
   // The |next_index_| is not updated.
-  virtual void ReplaceAtIndex(const AudioMultiVector<int16_t>& insert_this,
+  virtual void ReplaceAtIndex(const AudioMultiVector& insert_this,
                               size_t length,
                               size_t position);
 
   // Same as the above method, but where all of |insert_this| is written (with
   // the same constraints as above, that the SyncBuffer is not extended).
-  virtual void ReplaceAtIndex(const AudioMultiVector<int16_t>& insert_this,
+  virtual void ReplaceAtIndex(const AudioMultiVector& insert_this,
                               size_t position);
 
   // Reads |requested_len| samples from each channel and writes them interleaved
@@ -78,7 +78,7 @@ class SyncBuffer : public AudioMultiVector<int16_t> {
   // created.
   void Flush();
 
-  const AudioVector<int16_t>& Channel(size_t n) { return *channels_[n]; }
+  const AudioVector& Channel(size_t n) { return *channels_[n]; }
 
   // Accessors and mutators.
   size_t next_index() const { return next_index_; }

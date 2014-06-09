@@ -28,6 +28,17 @@
 extern FILE *delay_fid2; /* file pointer to delay log file */
 #endif /* NETEQ_DELAY_LOGGING */
 
+// These two functions are copied from module_common_types.h, but adapted for C.
+int WebRtcNetEQ_IsNewerSequenceNumber(uint16_t sequence_number,
+                                      uint16_t prev_sequence_number) {
+  return sequence_number != prev_sequence_number &&
+         ((uint16_t) (sequence_number - prev_sequence_number)) < 0x8000;
+}
+
+int WebRtcNetEQ_IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
+  return timestamp != prev_timestamp &&
+         ((uint32_t) (timestamp - prev_timestamp)) < 0x80000000;
+}
 
 int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
                                     uint16_t seqNumber, uint32_t timeStamp,
@@ -55,7 +66,8 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
     /****************************/
 
     /* Try calculating packet length from current and previous timestamps */
-    if ((timeStamp <= inst->lastTimeStamp) || (seqNumber <= inst->lastSeqNo))
+    if (!WebRtcNetEQ_IsNewerTimestamp(timeStamp, inst->lastTimeStamp) ||
+        !WebRtcNetEQ_IsNewerSequenceNumber(seqNumber, inst->lastSeqNo))
     {
         /* Wrong timestamp or sequence order; revert to backup plan */
         packetLenSamp = inst->packetSpeechLenSamp; /* use stored value */
@@ -68,7 +80,7 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
     }
 
     /* Check that the packet size is positive; if not, the statistics cannot be updated. */
-    if (packetLenSamp > 0)
+    if (inst->firstPacketReceived && packetLenSamp > 0)
     { /* packet size ok */
 
         /* calculate inter-arrival time in integer packets (rounding down) */
@@ -113,19 +125,19 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
         } /* end of streaming mode */
 
         /* check for discontinuous packet sequence and re-ordering */
-        if (seqNumber > inst->lastSeqNo + 1)
+        if (WebRtcNetEQ_IsNewerSequenceNumber(seqNumber, inst->lastSeqNo + 1))
         {
             /* Compensate for gap in the sequence numbers.
              * Reduce IAT with expected extra time due to lost packets, but ensure that
              * the IAT is not negative.
              */
             timeIat -= WEBRTC_SPL_MIN(timeIat,
-                (uint32_t) (seqNumber - inst->lastSeqNo - 1));
+                (uint16_t) (seqNumber - (uint16_t) (inst->lastSeqNo + 1)));
         }
-        else if (seqNumber < inst->lastSeqNo)
+        else if (!WebRtcNetEQ_IsNewerSequenceNumber(seqNumber, inst->lastSeqNo))
         {
             /* compensate for re-ordering */
-            timeIat += (uint32_t) (inst->lastSeqNo + 1 - seqNumber);
+            timeIat += (uint16_t) (inst->lastSeqNo + 1 - seqNumber);
         }
 
         /* saturate IAT at maximum value */
@@ -315,6 +327,8 @@ int WebRtcNetEQ_UpdateIatStatistics(AutomodeInst_t *inst, int maxBufLen,
     inst->lastSeqNo = seqNumber; /* remember current sequence number */
 
     inst->lastTimeStamp = timeStamp; /* remember current timestamp */
+
+    inst->firstPacketReceived = 1;
 
     return retval;
 }

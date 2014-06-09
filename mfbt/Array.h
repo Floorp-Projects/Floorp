@@ -19,31 +19,35 @@ namespace mozilla {
 template<typename T, size_t Length>
 class Array
 {
-    T arr[Length];
+  T mArr[Length];
 
-  public:
-    T& operator[](size_t i) {
-      MOZ_ASSERT(i < Length);
-      return arr[i];
-    }
+public:
+  T& operator[](size_t aIndex)
+  {
+    MOZ_ASSERT(aIndex < Length);
+    return mArr[aIndex];
+  }
 
-    const T& operator[](size_t i) const {
-      MOZ_ASSERT(i < Length);
-      return arr[i];
-    }
+  const T& operator[](size_t aIndex) const
+  {
+    MOZ_ASSERT(aIndex < Length);
+    return mArr[aIndex];
+  }
 };
 
 template<typename T>
 class Array<T, 0>
 {
-  public:
-    T& operator[](size_t i) {
-      MOZ_CRASH("indexing into zero-length array");
-    }
+public:
+  T& operator[](size_t aIndex)
+  {
+    MOZ_CRASH("indexing into zero-length array");
+  }
 
-    const T& operator[](size_t i) const {
-      MOZ_CRASH("indexing into zero-length array");
-    }
+  const T& operator[](size_t aIndex) const
+  {
+    MOZ_CRASH("indexing into zero-length array");
+  }
 };
 
 }  /* namespace mozilla */

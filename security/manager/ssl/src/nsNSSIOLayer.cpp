@@ -39,6 +39,7 @@
 #include "SharedSSLState.h"
 #include "mozilla/Preferences.h"
 #include "nsContentUtils.h"
+#include "NSSErrorsService.h"
 
 #include "ssl.h"
 #include "sslproto.h"
@@ -1096,7 +1097,7 @@ checkHandshake(int32_t bytesTransfered, bool wasReading,
     // nsHandleSSLError, which has logic to avoid replacing the error message,
     // so without the !socketInfo->GetErrorCode(), it would just be an
     // expensive no-op.)
-    if (!wantRetry && (IS_SSL_ERROR(err) || IS_SEC_ERROR(err)) &&
+    if (!wantRetry && mozilla::psm::IsNSSErrorCode(err) &&
         !socketInfo->GetErrorCode()) {
       RefPtr<SyncRunnableBase> runnable(new SSLErrorRunnable(socketInfo,
                                                              PlainErrorMessage,

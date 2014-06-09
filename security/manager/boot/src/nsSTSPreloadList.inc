@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1411812390249000);
+const PRTime gPreloadListExpirationTime = INT64_C(1413022251299000);
 
 class nsSTSPreload
 {
@@ -24,8 +24,8 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "admin.google.com", true },
   { "adsfund.org", true },
   { "aladdinschools.appspot.com", false },
-  { "alpha.irccloud.com", false },
   { "api.intercom.io", false },
+  { "api.simple.com", false },
   { "api.xero.com", false },
   { "apis.google.com", true },
   { "app.manilla.com", true },
@@ -86,7 +86,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "encircleapp.com", true },
   { "encrypted.google.com", true },
   { "entropia.de", false },
-  { "epoxate.com", false },
   { "errors.zenpayroll.com", false },
   { "espra.com", true },
   { "f-droid.org", true },
@@ -95,6 +94,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "faq.lookout.com", false },
   { "feedbin.com", false },
   { "fiken.no", true },
+  { "fj.simple.com", false },
   { "forum.linode.com", false },
   { "forum.quantifiedself.com", true },
   { "gernert-server.de", true },
@@ -144,6 +144,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mailbox.org", false },
   { "makeyourlaws.org", true },
   { "manage.zenpayroll.com", false },
+  { "manageprojects.com", true },
   { "manager.linode.com", false },
   { "market.android.com", true },
   { "matteomarescotti.name", true },
@@ -219,10 +220,12 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "talkgadget.google.com", true },
   { "tent.io", true },
   { "therapynotes.com", false },
+  { "tinfoilsecurity.com", false },
   { "torproject.org", false },
   { "translate.googleapis.com", true },
   { "twitter.com", false },
   { "ubertt.org", true },
+  { "usaa.com", false },
   { "vmoagents.com", false },
   { "w-spotlight.appspot.com", true },
   { "wallet.google.com", true },
@@ -232,6 +235,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "webfilings.appspot.com", true },
   { "webmail.gigahost.dk", false },
   { "webmail.onlime.ch", false },
+  { "wepay.com", false },
   { "wf-bigsky-master.appspot.com", true },
   { "wf-demo-eu.appspot.com", true },
   { "wf-demo-hrd.appspot.com", true },
@@ -260,7 +264,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.gov.uk", false },
   { "www.grc.com", false },
   { "www.heliosnet.com", true },
-  { "www.intercom.io", false },
   { "www.irccloud.com", false },
   { "www.linode.com", false },
   { "www.lookout.com", false },
@@ -273,9 +276,11 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "www.simbolo.co.uk", false },
   { "www.simple.com", false },
   { "www.therapynotes.com", false },
+  { "www.tinfoilsecurity.com", false },
   { "www.torproject.org", false },
   { "www.twitter.com", false },
   { "www.usaa.com", false },
+  { "www.wepay.com", false },
   { "www.zenpayroll.com", false },
   { "xbrlsuccess.appspot.com", true },
   { "zenpayroll.com", false },

@@ -315,7 +315,7 @@ class RegExpCompartment
         Key(JSAtom *atom, RegExpFlag flag)
           : atom(atom), flag(flag)
         { }
-        Key(RegExpShared *shared)
+        MOZ_IMPLICIT Key(RegExpShared *shared)
           : atom(shared->getSource()), flag(shared->getFlags())
         { }
 
@@ -502,14 +502,7 @@ class RegExpObject : public JSObject
 bool
 ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut);
 
-/*
- * Assuming ObjectClassIs(obj, ESClass_RegExp), return obj's RegExpShared.
- *
- * Beware: this RegExpShared can be owned by a compartment other than
- * cx->compartment. Normal RegExpGuard (which is necessary anyways)
- * will protect the object but it is important not to assign the return value
- * to be the private of any RegExpObject.
- */
+/* Assuming ObjectClassIs(obj, ESClass_RegExp), return a RegExpShared for obj. */
 inline bool
 RegExpToShared(JSContext *cx, HandleObject obj, RegExpGuard *g)
 {

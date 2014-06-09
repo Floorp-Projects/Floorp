@@ -28,104 +28,20 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // nsIContent methods
 
-nsIAtom*
-nsStyledElementNotElementCSSInlineStyle::GetClassAttributeName() const
-{
-  return nsGkAtoms::_class;
-}
-
-nsIAtom*
-nsStyledElementNotElementCSSInlineStyle::GetIDAttributeName() const
-{
-  return nsGkAtoms::id;
-}
-
-nsIAtom*
-nsStyledElementNotElementCSSInlineStyle::DoGetID() const
-{
-  NS_ASSERTION(HasID(), "Unexpected call");
-
-  // The nullcheck here is needed because Element::UnsetAttr calls
-  // out to various code between removing the attribute and we get a chance to
-  // ClearHasID().
-
-  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsGkAtoms::id);
-
-  return attr ? attr->GetAtomValue() : nullptr;
-}
-
-const nsAttrValue*
-nsStyledElementNotElementCSSInlineStyle::DoGetClasses() const
-{
-  NS_ASSERTION(HasFlag(NODE_MAY_HAVE_CLASS), "Unexpected call");
-  return mAttrsAndChildren.GetAttr(nsGkAtoms::_class);
-}
-
 bool
 nsStyledElementNotElementCSSInlineStyle::ParseAttribute(int32_t aNamespaceID,
                                                         nsIAtom* aAttribute,
                                                         const nsAString& aValue,
                                                         nsAttrValue& aResult)
 {
-  if (aNamespaceID == kNameSpaceID_None) {
-    if (aAttribute == nsGkAtoms::style) {
-      SetMayHaveStyle();
-      ParseStyleAttribute(aValue, aResult, false);
-      return true;
-    }
-    if (aAttribute == nsGkAtoms::_class) {
-      SetFlags(NODE_MAY_HAVE_CLASS);
-      aResult.ParseAtomArray(aValue);
-      return true;
-    }
-    if (aAttribute == nsGkAtoms::id) {
-      // Store id as an atom.  id="" means that the element has no id,
-      // not that it has an emptystring as the id.
-      RemoveFromIdTable();
-      if (aValue.IsEmpty()) {
-        ClearHasID();
-        return false;
-      }
-      aResult.ParseAtom(aValue);
-      SetHasID();
-      AddToIdTable(aResult.GetAtomValue());
-      return true;
-    }
+  if (aAttribute == nsGkAtoms::style && aNamespaceID == kNameSpaceID_None) {
+    SetMayHaveStyle();
+    ParseStyleAttribute(aValue, aResult, false);
+    return true;
   }
 
   return nsStyledElementBase::ParseAttribute(aNamespaceID, aAttribute, aValue,
                                              aResult);
-}
-
-nsresult
-nsStyledElementNotElementCSSInlineStyle::UnsetAttr(int32_t aNameSpaceID,
-                                                   nsIAtom* aAttribute,
-                                                   bool aNotify)
-{
-  nsAutoScriptBlocker scriptBlocker;
-  if (aAttribute == nsGkAtoms::id && aNameSpaceID == kNameSpaceID_None) {
-    // Have to do this before clearing flag. See RemoveFromIdTable
-    RemoveFromIdTable();
-  }
-
-  return Element::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
-}
-
-nsresult
-nsStyledElementNotElementCSSInlineStyle::AfterSetAttr(int32_t aNamespaceID,
-                                                      nsIAtom* aAttribute,
-                                                      const nsAttrValue* aValue,
-                                                      bool aNotify)
-{
-  if (aNamespaceID == kNameSpaceID_None && !aValue &&
-      aAttribute == nsGkAtoms::id) {
-    // The id has been removed when calling UnsetAttr but we kept it because
-    // the id is used for some layout stuff between UnsetAttr and AfterSetAttr.
-    // Now. the id is really removed so it would not be safe to keep this flag.
-    ClearHasID();
-  }
-
-  return Element::AfterSetAttr(aNamespaceID, aAttribute, aValue, aNotify);
 }
 
 nsresult

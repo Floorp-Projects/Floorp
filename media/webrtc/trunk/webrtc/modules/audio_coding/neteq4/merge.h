@@ -53,7 +53,7 @@ class Merge {
   // must have |num_channels_| elements.
   int Process(int16_t* input, size_t input_length,
               int16_t* external_mute_factor_array,
-              AudioMultiVector<int16_t>* output);
+              AudioMultiVector* output);
 
  private:
   static const int kMaxSampleRate = 48000;
@@ -95,7 +95,7 @@ class Merge {
   SyncBuffer* sync_buffer_;
   int16_t expanded_downsampled_[kExpandDownsampLength];
   int16_t input_downsampled_[kInputDownsampLength];
-  AudioMultiVector<int16_t> expanded_;
+  AudioMultiVector expanded_;
 
   DISALLOW_COPY_AND_ASSIGN(Merge);
 };

@@ -13,6 +13,7 @@
 
 #include <assert.h>
 
+#include "webrtc/common.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
@@ -71,6 +72,7 @@ class BeforeInitializationFixture : public testing::Test {
   webrtc::VoEExternalMedia*   voe_xmedia_;
   webrtc::VoECallReport*      voe_call_report_;
   webrtc::VoENetEqStats*      voe_neteq_stats_;
+  webrtc::Config              config_;
 };
 
 #endif  // SRC_VOICE_ENGINE_MAIN_TEST_AUTO_TEST_STANDARD_TEST_BASE_H_

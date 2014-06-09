@@ -20,7 +20,6 @@ LOCAL_SRC_FILES := \
     vie_base_impl.cc \
     vie_capture_impl.cc \
     vie_codec_impl.cc \
-    vie_encryption_impl.cc \
     vie_external_codec_impl.cc \
     vie_file_impl.cc \
     vie_image_process_impl.cc \
@@ -61,7 +60,6 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/../common_video/vplib/main/interface \
     $(LOCAL_PATH)/../modules/interface \
     $(LOCAL_PATH)/../modules/audio_coding/main/interface \
-    $(LOCAL_PATH)/../modules/media_file/interface \
     $(LOCAL_PATH)/../modules/rtp_rtcp/interface \
     $(LOCAL_PATH)/../modules/udp_transport/interface \
     $(LOCAL_PATH)/../modules/utility/interface \

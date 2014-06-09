@@ -319,6 +319,29 @@ public:
   bool IsPannable() const;
 
 protected:
+  enum PanZoomState {
+    NOTHING,                  /* no touch-start events received */
+    FLING,                    /* all touches removed, but we're still scrolling page */
+    TOUCHING,                 /* one touch-start event received */
+
+    PANNING,                  /* panning the frame */
+    PANNING_LOCKED_X,         /* touch-start followed by move (i.e. panning with axis lock) X axis */
+    PANNING_LOCKED_Y,         /* as above for Y axis */
+
+    CROSS_SLIDING_X,          /* Panning disabled while user does a horizontal gesture
+                                 on a vertically-scrollable view. This used for the
+                                 Windows Metro "cross-slide" gesture. */
+    CROSS_SLIDING_Y,          /* as above for Y axis */
+
+    PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
+    ANIMATING_ZOOM,           /* animated zoom to a new rect */
+    WAITING_CONTENT_RESPONSE, /* a state halfway between NOTHING and TOUCHING - the user has
+                                 put a finger down, but we don't yet know if a touch listener has
+                                 prevented the default actions yet and the allowed touch behavior
+                                 was not set yet. we still need to abort animations. */
+    SNAP_BACK,                /* snap-back animation to relieve overscroll */
+  };
+
   // Protected destructor, to discourage deletion outside of Release():
   ~AsyncPanZoomController();
 
@@ -363,6 +386,17 @@ protected:
    * any cleanup after a scale has ended.
    */
   nsEventStatus OnScaleEnd(const PinchGestureInput& aEvent);
+
+  /**
+   * Helper methods for handling pan events.
+   */
+  nsEventStatus OnPanMayBegin(const PanGestureInput& aEvent);
+  nsEventStatus OnPanCancelled(const PanGestureInput& aEvent);
+  nsEventStatus OnPanBegin(const PanGestureInput& aEvent);
+  nsEventStatus OnPan(const PanGestureInput& aEvent, bool aFingersOnTouchpad);
+  nsEventStatus OnPanEnd(const PanGestureInput& aEvent);
+  nsEventStatus OnPanMomentumStart(const PanGestureInput& aEvent);
+  nsEventStatus OnPanMomentumEnd(const PanGestureInput& aEvent);
 
   /**
    * Helper methods for long press gestures.
@@ -449,6 +483,11 @@ protected:
   void HandlePanning(double angle);
 
   /**
+   * Update the panning state and axis locks.
+   */
+  void HandlePanningUpdate(float aDX, float aDY);
+
+  /**
    * Sets up anything needed for panning. This takes us out of the "TOUCHING"
    * state and starts actually panning us.
    */
@@ -519,29 +558,6 @@ protected:
   void FireAsyncScrollOnTimeout();
 
 private:
-  enum PanZoomState {
-    NOTHING,                  /* no touch-start events received */
-    FLING,                    /* all touches removed, but we're still scrolling page */
-    TOUCHING,                 /* one touch-start event received */
-
-    PANNING,                  /* panning the frame */
-    PANNING_LOCKED_X,         /* touch-start followed by move (i.e. panning with axis lock) X axis */
-    PANNING_LOCKED_Y,         /* as above for Y axis */
-
-    CROSS_SLIDING_X,          /* Panning disabled while user does a horizontal gesture
-                                 on a vertically-scrollable view. This used for the
-                                 Windows Metro "cross-slide" gesture. */
-    CROSS_SLIDING_Y,          /* as above for Y axis */
-
-    PINCHING,                 /* nth touch-start, where n > 1. this mode allows pan and zoom */
-    ANIMATING_ZOOM,           /* animated zoom to a new rect */
-    WAITING_CONTENT_RESPONSE, /* a state halfway between NOTHING and TOUCHING - the user has
-                                 put a finger down, but we don't yet know if a touch listener has
-                                 prevented the default actions yet and the allowed touch behavior
-                                 was not set yet. we still need to abort animations. */
-    SNAP_BACK,                /* snap-back animation to relieve overscroll */
-  };
-
   // State related to a single touch block. Does not persist across touch blocks.
   struct TouchBlockState {
 
@@ -690,6 +706,10 @@ protected:
   // (e.g. with the gtest framework).
   bool mTouchActionPropertyEnabled;
 
+  // Stores the state of panning and zooming this frame. This is protected by
+  // |mMonitor|; that is, it should be held whenever this is updated.
+  PanZoomState mState;
+
 private:
   // Metrics of the container layer corresponding to this APZC. This is
   // stored here so that it is accessible from the UI/controller thread.
@@ -731,10 +751,6 @@ private:
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
   ParentLayerPoint mLastZoomFocus;
-
-  // Stores the state of panning and zooming this frame. This is protected by
-  // |mMonitor|; that is, it should be held whenever this is updated.
-  PanZoomState mState;
 
   // The last time and offset we fire the mozbrowserasyncscroll event when
   // compositor has sampled the content transform for this frame.
@@ -1015,6 +1031,9 @@ public:
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) = 0;
+
+  // Called if the animation is cancelled before it ends.
+  virtual void Cancel() {}
 
   /**
    * Get the deferred tasks in |mDeferredTasks|. See |mDeferredTasks|

@@ -111,6 +111,13 @@ nsCSSValue::nsCSSValue(mozilla::css::GridTemplateAreasValue* aValue)
   mValue.mGridTemplateAreas->AddRef();
 }
 
+nsCSSValue::nsCSSValue(FontFamilyList* aValue)
+  : mUnit(eCSSUnit_FontFamilyList)
+{
+  mValue.mFontFamilyList = aValue;
+  mValue.mFontFamilyList->AddRef();
+}
+
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   : mUnit(aCopy.mUnit)
 {
@@ -189,6 +196,10 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
     mValue.mGridTemplateAreas = aCopy.mValue.mGridTemplateAreas;
     mValue.mGridTemplateAreas->AddRef();
   }
+  else if (eCSSUnit_FontFamilyList == mUnit) {
+    mValue.mFontFamilyList = aCopy.mValue.mFontFamilyList;
+    mValue.mFontFamilyList->AddRef();
+  }
   else {
     NS_ABORT_IF_FALSE(false, "unknown unit");
   }
@@ -263,6 +274,9 @@ bool nsCSSValue::operator==(const nsCSSValue& aOther) const
     }
     else if (eCSSUnit_GridTemplateAreas == mUnit) {
       return *mValue.mGridTemplateAreas == *aOther.mValue.mGridTemplateAreas;
+    }
+    else if (eCSSUnit_FontFamilyList == mUnit) {
+      return *mValue.mFontFamilyList == *aOther.mValue.mFontFamilyList;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -352,6 +366,8 @@ void nsCSSValue::DoReset()
     mValue.mPairList->Release();
   } else if (eCSSUnit_GridTemplateAreas == mUnit) {
     mValue.mGridTemplateAreas->Release();
+  } else if (eCSSUnit_FontFamilyList == mUnit) {
+    mValue.mFontFamilyList->Release();
   }
   mUnit = eCSSUnit_Null;
 }
@@ -473,6 +489,14 @@ void nsCSSValue::SetGridTemplateAreas(mozilla::css::GridTemplateAreasValue* aVal
   mUnit = eCSSUnit_GridTemplateAreas;
   mValue.mGridTemplateAreas = aValue;
   mValue.mGridTemplateAreas->AddRef();
+}
+
+void nsCSSValue::SetFontFamilyListValue(FontFamilyList* aValue)
+{
+  Reset();
+  mUnit = eCSSUnit_FontFamilyList;
+  mValue.mFontFamilyList = aValue;
+  mValue.mFontFamilyList->AddRef();
 }
 
 void nsCSSValue::SetPairValue(const nsCSSValuePair* aValue)
@@ -825,9 +849,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     GetStringValue(buffer);
     if (unit == eCSSUnit_String) {
       nsStyleUtil::AppendEscapedCSSString(buffer, aResult);
-    } else if (unit == eCSSUnit_Families) {
-      // XXX We really need to do *some* escaping.
-      aResult.Append(buffer);
     } else {
       nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
     }
@@ -1354,6 +1375,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       aResult.Append(char16_t(' '));
       nsStyleUtil::AppendEscapedCSSString(areas->mTemplates[i], aResult);
     }
+  } else if (eCSSUnit_FontFamilyList == unit) {
+    nsStyleUtil::AppendEscapedCSSFontFamilyList(*mValue.mFontFamilyList,
+                                                aResult);
   }
 
   switch (unit) {
@@ -1371,9 +1395,9 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
       NS_ABORT_IF_FALSE(false, "should never serialize");
       break;
 
+    case eCSSUnit_FontFamilyList: break;
     case eCSSUnit_String:       break;
     case eCSSUnit_Ident:        break;
-    case eCSSUnit_Families:     break;
     case eCSSUnit_URL:          break;
     case eCSSUnit_Image:        break;
     case eCSSUnit_Element:      break;
@@ -1474,7 +1498,6 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // String
     case eCSSUnit_String:
     case eCSSUnit_Ident:
-    case eCSSUnit_Families:
     case eCSSUnit_Attr:
     case eCSSUnit_Local_Font:
     case eCSSUnit_Font_Format:
@@ -1560,6 +1583,10 @@ nsCSSValue::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
     // GridTemplateAreas
     case eCSSUnit_GridTemplateAreas:
       n += mValue.mGridTemplateAreas->SizeOfIncludingThis(aMallocSizeOf);
+      break;
+
+    case eCSSUnit_FontFamilyList:
+      n += mValue.mFontFamilyList->SizeOfIncludingThis(aMallocSizeOf);
       break;
 
     // Int: nothing extra to measure.

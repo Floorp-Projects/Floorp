@@ -14,6 +14,7 @@
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/system_wrappers/interface/constructor_magic.h"
 #include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/test/testsupport/gtest_prod_util.h"
 
 namespace webrtc {
 
@@ -27,8 +28,8 @@ class VCMExpFilter;
 const float kOveruseStdDevMs = 15.0f;
 const float kNormalUseStdDevMs = 7.0f;
 #elif WEBRTC_MAC
-const float kOveruseStdDevMs = 22.0f;
-const float kNormalUseStdDevMs = 12.0f;
+const float kOveruseStdDevMs = 24.0f;
+const float kNormalUseStdDevMs = 14.0f;
 #else
 const float kOveruseStdDevMs = 17.0f;
 const float kNormalUseStdDevMs = 10.0f;
@@ -71,13 +72,60 @@ class OveruseFrameDetector : public Module {
   // Called for each captured frame.
   void FrameCaptured(int width, int height);
 
+  // Called when the processing of a captured frame is started.
+  void FrameProcessingStarted();
+
+  // Called for each encoded frame.
+  void FrameEncoded(int encode_time_ms);
+
+  // Accessors.
+  // The last estimated jitter based on the incoming captured frames.
+  int last_capture_jitter_ms() const;
+
+  // Running average of reported encode time (FrameEncoded()).
+  // Only used for stats.
+  int AvgEncodeTimeMs() const;
+
+  // The average encode time divided by the average time difference between
+  // incoming captured frames.
+  // This variable is currently only used for statistics.
+  int EncodeUsagePercent() const;
+
+  // The current time delay between an incoming captured frame (FrameCaptured())
+  // until the frame is being processed (FrameProcessingStarted()).
+  // (Note: if a new frame is received before an old frame has been processed,
+  // the old frame is skipped).
+  // The delay is returned as the delay in ms per second.
+  // This variable is currently only used for statistics.
+  int AvgCaptureQueueDelayMsPerS() const;
+  int CaptureQueueDelayMsPerS() const;
+
   // Implements Module.
   virtual int32_t TimeUntilNextProcess() OVERRIDE;
   virtual int32_t Process() OVERRIDE;
 
  private:
+  FRIEND_TEST_ALL_PREFIXES(OveruseFrameDetectorTest, TriggerOveruse);
+  FRIEND_TEST_ALL_PREFIXES(OveruseFrameDetectorTest, OveruseAndRecover);
+  FRIEND_TEST_ALL_PREFIXES(OveruseFrameDetectorTest, DoubleOveruseAndRecover);
+  FRIEND_TEST_ALL_PREFIXES(
+      OveruseFrameDetectorTest, TriggerNormalUsageWithMinProcessCount);
+  FRIEND_TEST_ALL_PREFIXES(
+      OveruseFrameDetectorTest, ConstantOveruseGivesNoNormalUsage);
+  FRIEND_TEST_ALL_PREFIXES(OveruseFrameDetectorTest, LastCaptureJitter);
+
+  void set_min_process_count_before_reporting(int64_t count) {
+    min_process_count_before_reporting_ = count;
+  }
+
+  class EncodeTimeAvg;
+  class EncodeUsage;
+  class CaptureQueueDelay;
+
   bool IsOverusing();
   bool IsUnderusing(int64_t time_now);
+
+  bool DetectFrameTimeout(int64_t now) const;
 
   // Protecting all members.
   scoped_ptr<CriticalSectionWrapper> crit_;
@@ -86,11 +134,14 @@ class OveruseFrameDetector : public Module {
   const float normaluse_stddev_ms_;
   const float overuse_stddev_ms_;
 
+  int64_t min_process_count_before_reporting_;
+
   // Observer getting overuse reports.
   CpuOveruseObserver* observer_;
 
   Clock* clock_;
   int64_t next_process_time_;
+  int64_t num_process_times_;
 
   Statistics capture_deltas_;
   int64_t last_capture_time_;
@@ -104,6 +155,14 @@ class OveruseFrameDetector : public Module {
 
   // Number of pixels of last captured frame.
   int num_pixels_;
+
+  int last_capture_jitter_ms_;
+
+  int64_t last_encode_sample_ms_;
+  scoped_ptr<EncodeTimeAvg> encode_time_;
+  scoped_ptr<EncodeUsage> encode_usage_;
+
+  scoped_ptr<CaptureQueueDelay> capture_queue_delay_;
 
   DISALLOW_COPY_AND_ASSIGN(OveruseFrameDetector);
 };

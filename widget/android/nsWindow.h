@@ -48,8 +48,6 @@ public:
 
     nsWindow* FindWindowForPoint(const nsIntPoint& pt);
 
-    void OnAndroidEvent(mozilla::AndroidGeckoEvent *ae);
-    void OnDraw(mozilla::AndroidGeckoEvent *ae);
     bool OnMultitouchEvent(mozilla::AndroidGeckoEvent *ae);
     void OnNativeGestureEvent(mozilla::AndroidGeckoEvent *ae);
     void OnMouseEvent(mozilla::AndroidGeckoEvent *ae);

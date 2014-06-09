@@ -218,7 +218,7 @@ void TestFullStack(const TbInterfaces& interfaces,
                                                          decode_filter));
   // Send video.
   EXPECT_EQ(0, base_interface->StartSend(video_channel));
-  AutoTestSleep(kAutoTestSleepTimeMs);
+  AutoTestSleep(kAutoTestFullStackSleepTimeMs);
 
   ViETest::Log("Done!");
 

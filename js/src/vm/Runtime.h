@@ -134,6 +134,8 @@ struct ScopeCoordinateNameCache {
     void purge();
 };
 
+typedef Vector<ScriptAndCounts, 0, SystemAllocPolicy> ScriptAndCountsVector;
+
 struct EvalCacheEntry
 {
     JSScript *script;
@@ -432,7 +434,7 @@ AtomStateOffsetToName(const JSAtomState &atomState, size_t offset)
 // the acquisition must be done in the order below to avoid deadlocks.
 enum RuntimeLock {
     ExclusiveAccessLock,
-    WorkerThreadStateLock,
+    HelperThreadStateLock,
     InterruptLock,
     GCLock
 };
@@ -953,31 +955,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
     bool isHeapCollecting() { return gc.isHeapCollecting(); }
 
-#ifdef JS_GC_ZEAL
-    int gcZeal() { return gc.zealMode; }
-
-    bool upcomingZealousGC() {
-        return gc.nextScheduled == 1;
-    }
-
-    bool needZealousGC() {
-        if (gc.nextScheduled > 0 && --gc.nextScheduled == 0) {
-            if (gcZeal() == js::gc::ZealAllocValue ||
-                gcZeal() == js::gc::ZealGenerationalGCValue ||
-                (gcZeal() >= js::gc::ZealIncrementalRootsThenFinish &&
-                 gcZeal() <= js::gc::ZealIncrementalMultipleSlices))
-            {
-                gc.nextScheduled = gc.zealFrequency;
-            }
-            return true;
-        }
-        return false;
-    }
-#else
-    int gcZeal() { return 0; }
-    bool upcomingZealousGC() { return false; }
-    bool needZealousGC() { return false; }
-#endif
+    int gcZeal() { return gc.zeal(); }
 
     void lockGC() {
         assertCanLock(js::GCLock);
@@ -1001,6 +979,9 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::jit::SimulatorRuntime *simulatorRuntime() const;
     void setSimulatorRuntime(js::jit::SimulatorRuntime *srt);
 #endif
+
+    /* Strong references on scripts held for PCCount profiling API. */
+    js::ScriptAndCountsVector *scriptAndCountsVector;
 
     /* Well-known numbers held for use by this runtime's contexts. */
     const js::Value     NaNValue;
@@ -1269,19 +1250,12 @@ struct JSRuntime : public JS::shadow::Runtime,
         return liveRuntimesCount > 0;
     }
 
-    JSRuntime(JSRuntime *parentRuntime, JSUseHelperThreads useHelperThreads);
+    JSRuntime(JSRuntime *parentRuntime);
     ~JSRuntime();
 
     bool init(uint32_t maxbytes);
 
     JSRuntime *thisFromCtor() { return this; }
-
-    void setGCMaxMallocBytes(size_t value);
-
-    void resetGCMallocBytes() {
-        gc.mallocBytes = ptrdiff_t(gc.maxMallocBytes);
-        gc.mallocGCTriggered = false;
-    }
 
     /*
      * Call this after allocating memory held by GC things, to update memory
@@ -1295,10 +1269,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     void updateMallocCounter(JS::Zone *zone, size_t nbytes);
 
     void reportAllocationOverflow() { js_ReportAllocationOverflow(nullptr); }
-
-    bool isTooMuchMalloc() const {
-        return gc.mallocBytes <= 0;
-    }
 
     /*
      * The function must be called outside the GC lock.
@@ -1335,27 +1305,11 @@ struct JSRuntime : public JS::shadow::Runtime,
   private:
     JS::RuntimeOptions options_;
 
-    JSUseHelperThreads useHelperThreads_;
-
     // Settings for how helper threads can be used.
     bool parallelIonCompilationEnabled_;
     bool parallelParsingEnabled_;
 
-    // True iff this is a DOM Worker runtime.
-    bool isWorkerRuntime_;
-
   public:
-
-    // This controls whether the JSRuntime is allowed to create any helper
-    // threads at all. This means both specific threads (background GC thread)
-    // and the general JS worker thread pool.
-    bool useHelperThreads() const {
-#ifdef JS_THREADSAFE
-        return useHelperThreads_ == JS_USE_HELPER_THREADS;
-#else
-        return false;
-#endif
-    }
 
     // Note: these values may be toggled dynamically (in response to about:config
     // prefs changing).
@@ -1363,22 +1317,21 @@ struct JSRuntime : public JS::shadow::Runtime,
         parallelIonCompilationEnabled_ = value;
     }
     bool canUseParallelIonCompilation() const {
-        return useHelperThreads() &&
-               parallelIonCompilationEnabled_;
+#ifdef JS_THREADSAFE
+        return parallelIonCompilationEnabled_;
+#else
+        return false;
+#endif
     }
     void setParallelParsingEnabled(bool value) {
         parallelParsingEnabled_ = value;
     }
     bool canUseParallelParsing() const {
-        return useHelperThreads() &&
-               parallelParsingEnabled_;
-    }
-
-    void setIsWorkerRuntime() {
-        isWorkerRuntime_ = true;
-    }
-    bool isWorkerRuntime() const {
-        return isWorkerRuntime_;
+#ifdef JS_THREADSAFE
+        return parallelParsingEnabled_;
+#else
+        return false;
+#endif
     }
 
     const JS::RuntimeOptions &options() const {

@@ -151,6 +151,15 @@ callback interface MozIdleObserver {
   void onactive();
 };
 
+#ifdef MOZ_B2G
+[NoInterfaceObject]
+interface NavigatorMobileId {
+    [Throws, NewObject]
+    Promise getMobileIdAssertion();
+};
+Navigator implements NavigatorMobileId;
+#endif // MOZ_B2G
+
 // nsIDOMNavigator
 partial interface Navigator {
   [Throws]

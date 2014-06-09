@@ -374,8 +374,17 @@ void addProfileEntry(volatile StackEntry &entry, ThreadProfile &aProfile,
       lineno = entry.line();
     }
   }
+
   if (lineno != -1) {
     aProfile.addTag(ProfileEntry('n', lineno));
+  }
+
+  uint32_t category = entry.category();
+  MOZ_ASSERT(!(category & StackEntry::IS_CPP_ENTRY));
+  MOZ_ASSERT(!(category & StackEntry::FRAME_LABEL_COPY));
+
+  if (category) {
+    aProfile.addTag(ProfileEntry('y', (int)category));
   }
 }
 
@@ -661,6 +670,11 @@ void TableTicker::InplaceTick(TickSample* sample)
   // rssMemory is equal to 0 when we are not recording.
   if (sample && sample->rssMemory != 0) {
     currThreadProfile.addTag(ProfileEntry('R', static_cast<float>(sample->rssMemory)));
+  }
+
+  // ussMemory is equal to 0 when we are not recording.
+  if (sample && sample->ussMemory != 0) {
+    currThreadProfile.addTag(ProfileEntry('U', static_cast<float>(sample->ussMemory)));
   }
 
 #if defined(XP_WIN)

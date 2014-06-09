@@ -430,6 +430,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -472,6 +474,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -509,6 +513,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -558,6 +564,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -608,6 +616,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -634,6 +644,8 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
+            event.preventDefault();
+
             if (this.view.rowCount == 0)
               return;
 
@@ -868,7 +880,6 @@
           if (this._editingColumn)
             return;
           _moveByOffset(-1, 0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_DOWN" modifiers="accel any">
@@ -876,7 +887,6 @@
           if (this._editingColumn)
             return;
           _moveByOffset(1, this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_UP" modifiers="accel any, shift">
@@ -884,7 +894,6 @@
           if (this._editingColumn)
             return;
           _moveByOffsetShift(-1, 0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_DOWN" modifiers="accel any, shift">
@@ -892,7 +901,6 @@
           if (this._editingColumn)
             return;
           _moveByOffsetShift(1, this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_PAGE_UP" modifiers="accel any">
@@ -900,7 +908,6 @@
           if (this._editingColumn)
             return;
           _moveByPage(-1, 0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_PAGE_DOWN" modifiers="accel any">
@@ -908,7 +915,6 @@
           if (this._editingColumn)
             return;
           _moveByPage(1, this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_PAGE_UP" modifiers="accel any, shift">
@@ -916,7 +922,6 @@
           if (this._editingColumn)
             return;
           _moveByPageShift(-1, 0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_PAGE_DOWN" modifiers="accel any, shift">
@@ -924,7 +929,6 @@
           if (this._editingColumn)
             return;
           _moveByPageShift(1, this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_HOME" modifiers="accel any">
@@ -932,7 +936,6 @@
           if (this._editingColumn)
             return;
           _moveToEdge(0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_END" modifiers="accel any">
@@ -940,7 +943,6 @@
           if (this._editingColumn)
             return;
           _moveToEdge(this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_HOME" modifiers="accel any, shift">
@@ -948,7 +950,6 @@
           if (this._editingColumn)
             return;
           _moveToEdgeShift(0, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keydown" keycode="VK_END" modifiers="accel any, shift">
@@ -956,7 +957,6 @@
           if (this._editingColumn)
             return;
           _moveToEdgeShift(this.view.rowCount - 1, event);
-          event.preventDefault();
         ]]>
       </handler>
       <handler event="keypress">

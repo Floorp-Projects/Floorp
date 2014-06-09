@@ -31,6 +31,8 @@
                         android:layout_marginTop="16dp"
                         android:layout_alignLeft="@id/tabs"/>
 
+    <!-- In editing mode, the toolbar shrinks by changing to
+         dynamically constructed LayoutParams. -->
     <ImageView android:id="@+id/url_bar_entry"
                android:layout_width="fill_parent"
                android:layout_height="fill_parent"
@@ -63,7 +65,7 @@
     <org.mozilla.gecko.toolbar.ToolbarEditLayout android:id="@+id/edit_layout"
                   style="@style/UrlBar.Button"
                   android:paddingLeft="12dp"
-                  android:paddingRight="4dp"
+                  android:paddingRight="12dp"
                   android:visibility="gone"
                   android:orientation="horizontal"
                   android:layout_toRightOf="@id/back"
@@ -104,5 +106,17 @@
                android:layout_alignParentBottom="true"
                android:background="@color/url_bar_shadow"
                android:contentDescription="@null"/>
+
+    <!-- We draw after the menu items so when they are hidden, the cancel button,
+         which is thus drawn on top, may be pressed. -->
+    <org.mozilla.gecko.widget.ThemedImageView
+            android:id="@+id/edit_cancel"
+            style="@style/UrlBar.ImageButton.Icon"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/close_edit_mode_selector"
+            android:paddingLeft="2dp"
+            android:paddingRight="2dp"
+            android:contentDescription="@string/edit_mode_cancel"
+            android:visibility="gone"/>
 
 </merge>

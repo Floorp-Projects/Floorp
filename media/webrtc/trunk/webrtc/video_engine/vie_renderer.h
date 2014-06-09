@@ -86,6 +86,9 @@ class ViERenderer: public ViEFrameCallback {
                               RawVideoType video_input_format,
                               ExternalRenderer* external_renderer);
 
+  int32_t SetVideoRenderCallback(const int32_t render_id,
+                                 VideoRenderCallback* callback);
+
  private:
   ViERenderer(const int32_t render_id, const int32_t engine_id,
                 VideoRender& render_module,

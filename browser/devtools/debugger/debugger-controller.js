@@ -444,7 +444,6 @@ ThreadState.prototype = {
     this.activeThread.addListener("resumed", this._update);
     this.activeThread.pauseOnExceptions(Prefs.pauseOnExceptions,
                                         Prefs.ignoreCaughtExceptions);
-    this.handleTabNavigation();
   },
 
   /**

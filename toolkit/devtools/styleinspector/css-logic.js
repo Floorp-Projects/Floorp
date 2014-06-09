@@ -38,7 +38,9 @@
  * @constructor
  */
 
-const {Cc, Ci, Cu} = require("chrome");
+const { Cc, Ci, Cu } = require("chrome");
+const Services = require("Services");
+const DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 
 const RX_UNIVERSAL_SELECTOR = /\s*\*\s*/g;
 const RX_NOT = /:not\((.*?)\)/g;
@@ -48,9 +50,11 @@ const RX_ID = /\s*#\w+\s*/g;
 const RX_CLASS_OR_ATTRIBUTE = /\s*(?:\.\w+|\[.+?\])\s*/g;
 const RX_PSEUDO = /\s*:?:([\w-]+)(\(?\)?)\s*/g;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(['CSS']);
+// This should be ok because none of the functions that use this should be used
+// on the worker thread, where Cu is not available.
+if (Cu) {
+  Cu.importGlobalProperties(['CSS']);
+}
 
 function CssLogic()
 {
@@ -730,8 +734,8 @@ CssLogic.getSelectors = function CssLogic_getSelectors(aDOMRule)
  */
 CssLogic.l10n = function(aName) CssLogic._strings.GetStringFromName(aName);
 
-XPCOMUtils.defineLazyGetter(CssLogic, "_strings", function() Services.strings
-        .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
+DevToolsUtils.defineLazyGetter(CssLogic, "_strings", function() Services.strings
+             .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
 
 /**
  * Is the given property sheet a content stylesheet?
@@ -913,12 +917,79 @@ CssLogic.findCssSelector = function CssLogic_findCssSelector(ele) {
     }
   }
 
-  // So we can be unique w.r.t. our parent, and use recursion
-  index = positionInNodeList(ele, ele.parentNode.children) + 1;
-  selector = CssLogic_findCssSelector(ele.parentNode) + ' > ' +
-          tagName + ':nth-child(' + index + ')';
+  // Not unique enough yet.  As long as it's not a child of the document,
+  // continue recursing up until it is unique enough.
+  if (ele.parentNode !== document) {
+    index = positionInNodeList(ele, ele.parentNode.children) + 1;
+    selector = CssLogic_findCssSelector(ele.parentNode) + ' > ' +
+            tagName + ':nth-child(' + index + ')';
+  }
 
   return selector;
+};
+
+const TAB_CHARS = "\t";
+
+/**
+ * Prettify minified CSS text.
+ * This prettifies CSS code where there is no indentation in usual places while
+ * keeping original indentation as-is elsewhere.
+ * @param string text The CSS source to prettify.
+ * @return string Prettified CSS source
+ */
+CssLogic.prettifyCSS = function(text) {
+  if (CssLogic.LINE_SEPARATOR == null) {
+    let os = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
+    CssLogic.LINE_SEPARATOR = (os === "WINNT" ? "\r\n" : "\n");
+  }
+
+  // remove initial and terminating HTML comments and surrounding whitespace
+  text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
+
+  let parts = [];    // indented parts
+  let partStart = 0; // start offset of currently parsed part
+  let indent = "";
+  let indentLevel = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    let c = text[i];
+    let shouldIndent = false;
+
+    switch (c) {
+      case "}":
+        if (i - partStart > 1) {
+          // there's more than just } on the line, add line
+          parts.push(indent + text.substring(partStart, i));
+          partStart = i;
+        }
+        indent = TAB_CHARS.repeat(--indentLevel);
+        /* fallthrough */
+      case ";":
+      case "{":
+        shouldIndent = true;
+        break;
+    }
+
+    if (shouldIndent) {
+      let la = text[i+1]; // one-character lookahead
+      if (!/\n/.test(la) || /^\s+$/.test(text.substring(i+1, text.length))) {
+        // following character should be a new line, but isn't,
+        // or it's whitespace at the end of the file
+        parts.push(indent + text.substring(partStart, i + 1));
+        if (c == "}") {
+          parts.push(""); // for extra line separator
+        }
+        partStart = i + 1;
+      } else {
+        return text; // assume it is not minified, early exit
+      }
+    }
+
+    if (c == "{") {
+      indent = TAB_CHARS.repeat(++indentLevel);
+    }
+  }
+  return parts.join(CssLogic.LINE_SEPARATOR);
 };
 
 /**
@@ -1801,6 +1872,6 @@ CssSelectorInfo.prototype = {
   },
 };
 
-XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
+DevToolsUtils.defineLazyGetter(this, "domUtils", function() {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });

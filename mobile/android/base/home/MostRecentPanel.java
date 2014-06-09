@@ -150,7 +150,7 @@ public class MostRecentPanel extends HomeFragment {
                     }
                 });
 
-                dialogBuilder.setPositiveButton(R.string.button_yes, new AlertDialog.OnClickListener() {
+                dialogBuilder.setPositiveButton(R.string.button_ok, new AlertDialog.OnClickListener() {
                     @Override
                     public void onClick(final DialogInterface dialog, final int which) {
                         dialog.dismiss();
@@ -161,6 +161,8 @@ public class MostRecentPanel extends HomeFragment {
                                 BrowserDB.clearHistory(cr);
                             }
                         });
+
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SANITIZE, TelemetryContract.Method.BUTTON, "history");
                     }
                 });
 

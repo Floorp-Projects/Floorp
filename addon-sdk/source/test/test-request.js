@@ -43,6 +43,23 @@ exports.testOptionsValidator = function(assert) {
   }, /The option "url" is invalid/);
   // The url shouldn't have changed, so check that
   assert.equal(req.url, "http://playground.zpao.com/jetpack/request/text.php");
+
+  // Test default anonymous parameter value
+  assert.equal(req.anonymous, false);
+  // Test set anonymous parameter value
+  req = Request({
+    url: "http://playground.zpao.com/jetpack/request/text.php",
+    anonymous: true,
+    onComplete: function () {}
+  });
+  assert.equal(req.anonymous, true);
+  // Test wrong value as anonymous parameter value
+  assert.throws(function() {
+    Request({
+      url: "http://playground.zpao.com/jetpack/request/text.php",
+      anonymous: "invalidvalue"
+    });
+  }, /The option "anonymous" must be one of the following types/);
 };
 
 exports.testContentValidator = function(assert, done) {
@@ -180,6 +197,60 @@ exports.test3rdPartyCookies = function (assert, done) {
         }
       }).get();
     }
+  }).get();
+};
+
+// Test anonymous request behavior
+exports.testAnonymousRequest = function(assert, done) {
+  let srv = startServerAsync(port, basePath);
+  let basename = "test-anonymous-request.sjs";
+  let testUrl = "http://localhost:" + port + "/" + basename;
+  // Function to handle the requests in the server
+  let content = function handleRequest(request, response) {
+    // Request to store cookie
+    response.setHeader("Set-Cookie", "anonymousKey=anonymousValue;", "true");
+    // Set response content type
+    response.setHeader("Content-Type", "application/json");
+    // Check if cookie was send during request
+    var cookiePresent = request.hasHeader("Cookie");
+    // Create server respone content
+    response.write(JSON.stringify({ "hasCookie": cookiePresent }));
+  }.toString();
+  prepareFile(basename, content);
+  // Create request callbacks
+  var checkCookieCreated = function (response) {
+    // Check that the server created the cookie
+    assert.equal(response.headers['Set-Cookie'], 'anonymousKey=anonymousValue;');
+    // Make an other request and check that the server this time got the cookie
+    Request({
+      url: testUrl,
+      onComplete: checkCookieSend
+    }).get();
+  },
+  checkCookieSend = function (response) {
+    // Check the response sent headers and cookies
+    assert.equal(response.anonymous, false);
+    // Check the server got the created cookie
+    assert.equal(response.json.hasCookie, true);
+    // Make a anonymous request and check the server did not get the cookie
+    Request({
+      url: testUrl,
+      anonymous: true,
+      onComplete: checkCookieNotSend
+    }).get();
+  },
+  checkCookieNotSend = function (response) {
+    // Check the response is anonymous
+    assert.equal(response.anonymous, true);
+    // Check the server did not get the cookie
+    assert.equal(response.json.hasCookie, false);
+    // Stop the server
+    srv.stop(done);
+  };
+  // Make the first request to create cookie
+  Request({
+    url: testUrl,
+    onComplete: checkCookieCreated
   }).get();
 };
 
