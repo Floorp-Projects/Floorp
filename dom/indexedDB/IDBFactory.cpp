@@ -157,7 +157,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
     TabChild* tabChild = TabChild::GetFrom(aWindow);
     IDB_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    IndexedDBChild* actor = new IndexedDBChild(origin);
+    IndexedDBChild* actor = new IndexedDBChild(tabChild, origin);
 
     bool allowed;
     tabChild->SendPIndexedDBConstructor(actor, group, origin, &allowed);
@@ -216,7 +216,7 @@ IDBFactory::Create(JSContext* aCx,
     ContentChild* contentChild = ContentChild::GetSingleton();
     IDB_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    IndexedDBChild* actor = new IndexedDBChild(origin);
+    IndexedDBChild* actor = new IndexedDBChild(contentChild, origin);
 
     contentChild->SendPIndexedDBConstructor(actor);
 
