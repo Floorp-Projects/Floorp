@@ -21,6 +21,7 @@
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/interface/native_handle.h"
 #include "webrtc/video_engine/include/vie_errors.h"
+#include "browser_logging/WebRtcLog.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidJNIWrapper.h"
@@ -305,20 +306,7 @@ MediaConduitErrorCode WebrtcVideoConduit::Init(WebrtcVideoConduit *other)
       return kMediaConduitSessionNotInited;
     }
 
-    PRLogModuleInfo *logs = GetWebRTCLogInfo();
-    if (!gWebrtcTraceLoggingOn && logs && logs->level > 0) {
-      // no need to a critical section or lock here
-      gWebrtcTraceLoggingOn = 1;
-
-      const char *file = PR_GetEnv("WEBRTC_TRACE_FILE");
-      if (!file) {
-        file = "WebRTC.log";
-      }
-      CSFLogDebug(logTag,  "%s Logging webrtc to %s level %d", __FUNCTION__,
-                  file, logs->level);
-      mVideoEngine->SetTraceFilter(logs->level);
-      mVideoEngine->SetTraceFile(file);
-    }
+    EnableWebRtcLog();
   }
 
   if( !(mPtrViEBase = ViEBase::GetInterface(mVideoEngine)))
