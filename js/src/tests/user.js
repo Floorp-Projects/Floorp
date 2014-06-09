@@ -25,3 +25,5 @@ user_pref("security.turn_off_all_security_so_that_viruses_can_take_over_this_com
 user_pref("toolkit.telemetry.enabled", false);
 user_pref("browser.safebrowsing.enabled", false);
 user_pref("browser.safebrowsing.malware.enabled", false);
+user_pref("browser.snippets.enabled", false);
+user_pref("browser.snippets.syncPromo.enabled", false);
