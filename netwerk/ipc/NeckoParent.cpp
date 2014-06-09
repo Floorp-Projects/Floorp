@@ -35,6 +35,8 @@
 #include "nsEscape.h"
 #include "RemoteOpenFileParent.h"
 #include "SerializedLoadContext.h"
+#include "nsAuthInformationHolder.h"
+#include "nsIAuthPromptCallback.h"
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::TabParent;
@@ -151,28 +153,43 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
 }
 
 const char *
-NeckoParent::CreateChannelLoadContext(PBrowserParent* aBrowser,
+NeckoParent::CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                                       PContentParent* aContent,
                                       const SerializedLoadContext& aSerialized,
                                       nsCOMPtr<nsILoadContext> &aResult)
 {
   uint32_t appId = NECKO_UNKNOWN_APP_ID;
   bool inBrowser = false;
-  dom::Element* topFrameElement = nullptr;
   const char* error = GetValidatedAppInfo(aSerialized, aContent, &appId, &inBrowser);
   if (error) {
     return error;
   }
 
-  if (aBrowser) {
-    nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(aBrowser);
-    topFrameElement = tabParent->GetOwnerElement();
-  }
-
   // if !UsingNeckoIPCSecurity(), we may not have a LoadContext to set. This is
   // the common case for most xpcshell tests.
   if (aSerialized.IsNotNull()) {
-    aResult = new LoadContext(aSerialized, topFrameElement, appId, inBrowser);
+    switch (aBrowser.type()) {
+      case PBrowserOrId::TPBrowserParent:
+      {
+        nsRefPtr<TabParent> tabParent =
+          static_cast<TabParent*>(aBrowser.get_PBrowserParent());
+        dom::Element* topFrameElement = nullptr;
+        if (tabParent) {
+          topFrameElement = tabParent->GetOwnerElement();
+        }
+        aResult = new LoadContext(aSerialized, topFrameElement,
+                                  appId, inBrowser);
+        break;
+      }
+      case PBrowserOrId::Tuint64_t:
+      {
+        aResult = new LoadContext(aSerialized, aBrowser.get_uint64_t(),
+                                  appId, inBrowser);
+        break;
+      }
+      default:
+        MOZ_CRASH();
+    }
   }
 
   return nullptr;
@@ -185,7 +202,7 @@ NeckoParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 PHttpChannelParent*
-NeckoParent::AllocPHttpChannelParent(PBrowserParent* aBrowser,
+NeckoParent::AllocPHttpChannelParent(const PBrowserOrId& aBrowser,
                                      const SerializedLoadContext& aSerialized,
                                      const HttpChannelCreationArgs& aOpenArgs)
 {
@@ -215,7 +232,7 @@ NeckoParent::DeallocPHttpChannelParent(PHttpChannelParent* channel)
 bool
 NeckoParent::RecvPHttpChannelConstructor(
                       PHttpChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const HttpChannelCreationArgs& aOpenArgs)
 {
@@ -224,7 +241,7 @@ NeckoParent::RecvPHttpChannelConstructor(
 }
 
 PFTPChannelParent*
-NeckoParent::AllocPFTPChannelParent(PBrowserParent* aBrowser,
+NeckoParent::AllocPFTPChannelParent(const PBrowserOrId& aBrowser,
                                     const SerializedLoadContext& aSerialized,
                                     const FTPChannelCreationArgs& aOpenArgs)
 {
@@ -254,7 +271,7 @@ NeckoParent::DeallocPFTPChannelParent(PFTPChannelParent* channel)
 bool
 NeckoParent::RecvPFTPChannelConstructor(
                       PFTPChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const FTPChannelCreationArgs& aOpenArgs)
 {
@@ -292,7 +309,7 @@ NeckoParent::DeallocPWyciwygChannelParent(PWyciwygChannelParent* channel)
 }
 
 PWebSocketParent*
-NeckoParent::AllocPWebSocketParent(PBrowserParent* browser,
+NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
                                    const SerializedLoadContext& serialized)
 {
   nsCOMPtr<nsILoadContext> loadContext;
@@ -305,7 +322,7 @@ NeckoParent::AllocPWebSocketParent(PBrowserParent* browser,
     return nullptr;
   }
 
-  TabParent* tabParent = static_cast<TabParent*>(browser);
+  nsRefPtr<TabParent> tabParent = static_cast<TabParent*>(browser.get_PBrowserParent());
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(tabParent, loadContext,
                                                          overrideStatus);
@@ -699,6 +716,89 @@ NeckoParent::CloneProtocol(Channel* aChannel,
     return nullptr;
   }
   return actor.forget();
+}
+
+namespace {
+std::map<uint64_t, nsCOMPtr<nsIAuthPromptCallback> >&
+CallbackMap()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static std::map<uint64_t, nsCOMPtr<nsIAuthPromptCallback> > sCallbackMap;
+  return sCallbackMap;
+}
+} // anonymous namespace
+
+NS_IMPL_ISUPPORTS(NeckoParent::NestedFrameAuthPrompt, nsIAuthPrompt2)
+
+NeckoParent::NestedFrameAuthPrompt::NestedFrameAuthPrompt(PNeckoParent* aParent,
+                                                          uint64_t aNestedFrameId)
+  : mNeckoParent(aParent)
+  , mNestedFrameId(aNestedFrameId)
+{}
+
+NS_IMETHODIMP
+NeckoParent::NestedFrameAuthPrompt::AsyncPromptAuth(
+  nsIChannel* aChannel, nsIAuthPromptCallback* callback,
+  nsISupports*, uint32_t,
+  nsIAuthInformation* aInfo, nsICancelable**)
+{
+  static uint64_t callbackId = 0;
+  MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString spec;
+  if (uri) {
+    rv = uri->GetSpec(spec);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  nsString realm;
+  rv = aInfo->GetRealm(realm);
+  NS_ENSURE_SUCCESS(rv, rv);
+  callbackId++;
+  if (mNeckoParent->SendAsyncAuthPromptForNestedFrame(mNestedFrameId,
+                                                      spec,
+                                                      realm,
+                                                      callbackId)) {
+    CallbackMap()[callbackId] = callback;
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
+bool
+NeckoParent::RecvOnAuthAvailable(const uint64_t& aCallbackId,
+                                 const nsString& aUser,
+                                 const nsString& aPassword,
+                                 const nsString& aDomain)
+{
+  nsCOMPtr<nsIAuthPromptCallback> callback = CallbackMap()[aCallbackId];
+  if (!callback) {
+    return true;
+  }
+  CallbackMap().erase(aCallbackId);
+
+  nsRefPtr<nsAuthInformationHolder> holder =
+    new nsAuthInformationHolder(0, EmptyString(), EmptyCString());
+  holder->SetUsername(aUser);
+  holder->SetPassword(aPassword);
+  holder->SetDomain(aDomain);
+
+  callback->OnAuthAvailable(nullptr, holder);
+  return true;
+}
+
+bool
+NeckoParent::RecvOnAuthCancelled(const uint64_t& aCallbackId,
+                                 const bool& aUserCancel)
+{
+  nsCOMPtr<nsIAuthPromptCallback> callback = CallbackMap()[aCallbackId];
+  if (!callback) {
+    return true;
+  }
+  CallbackMap().erase(aCallbackId);
+  callback->OnAuthCancelled(nullptr, aUserCancel);
+  return true;
 }
 
 }} // mozilla::net
