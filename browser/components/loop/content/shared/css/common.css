@@ -1,0 +1,148 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Generic rules */
+
+/**
+ * "Fixes" the Box Model.
+ * @see http://www.paulirish.com/2012/box-sizing-border-box-ftw/
+ */
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans;
+  font-size: 14px;
+  background: #f2f2f2;
+}
+
+button {
+  font-size: .9em; /* for some reason, text is larger within <button> */
+}
+
+img {
+  border: none;
+}
+
+/* Helpers */
+
+/**
+ * Clearfix impl. for modern browsers
+ * 1. The space content is one way to avoid an Opera bug when the
+ *    contenteditable attribute is included anywhere else in the document.
+ *    Otherwise it causes space to appear at the top and bottom of elements
+ *    that are clearfixed.
+ * 2. The use of `table` rather than `block` is only necessary if using
+ *    `:before` to contain the top-margins of child elements.
+ */
+.cf:before,
+.cf:after {
+  content: " ";   /* 1 */
+  display: table; /* 2 */
+}
+
+.cf:after {
+  clear: both;
+}
+
+.hide {
+  display: none;
+}
+
+.tc {
+  text-align: center;
+}
+
+/* Buttons */
+
+.btn {
+  display: inline-block;
+  background: #a5a;
+  border: none;
+  color: #fff;
+  text-decoration: none;
+  padding: .25em .5em .3em;
+  border-radius: .2em;
+}
+
+.btn-info {
+  background: #428BCA;
+}
+
+.btn-success {
+  background: #5cb85c;
+}
+
+.btn-warning {
+  background: #f0ad4e;
+}
+
+.btn-error {
+  background: #d9534f;
+}
+
+.disabled, button[disabled] {
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.65;
+}
+
+/* Alerts */
+.alert {
+  background: #eee;
+  padding: .2em 1em;
+  margin-bottom: 1em;
+}
+
+.alert p.message {
+  padding: 0;
+  margin: 0;
+}
+
+.alert.alert-error {
+  background: #f99;
+  border: 1px solid #f77;
+}
+
+.alert.alert-warning {
+  background: #fcf8e3;
+  border: 1px solid #fbeed5;
+}
+
+.alert .close {
+  position: relative;
+  top: -.2em;
+  right: -1em;
+}
+
+/* Misc */
+
+.close {
+  float: right;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1em;
+  color: #000;
+  opacity: .2;
+}
+
+.close:before {
+  /* \2716 is unicode representation of the close button icon */
+  content: '\2716';
+}
+
+button.close {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Transitions */
+.fade-out {
+  transition: opacity 0.5s ease-in;
+  opacity: 0;
+}

@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 var cli = require('../cli');
 
@@ -68,13 +68,13 @@ function getHelpManData(commandData, context) {
         input = l10n.lookupFormat('helpManOptional');
         /*
         var val = param.type.stringify(param.defaultValue);
-        input = promise.resolve(val).then(function(defaultValue) {
+        input = Promise.resolve(val).then(function(defaultValue) {
           return l10n.lookupFormat('helpManDefault', [ defaultValue ]);
         }.bind(this));
         */
       }
 
-      return promise.resolve(input).then(function(defaultDescr) {
+      return Promise.resolve(input).then(function(defaultDescr) {
         return '(' + (param.type.name || param.type) + ', ' + defaultDescr + ')';
       }.bind(this));
     },

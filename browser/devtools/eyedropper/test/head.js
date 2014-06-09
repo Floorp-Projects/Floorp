@@ -6,6 +6,7 @@ const TEST_HOST = 'mochi.test:8888';
 
 let { devtools } = Components.utils.import("resource://gre/modules/devtools/Loader.jsm", {});
 const { Eyedropper, EyedropperManager } = devtools.require("devtools/eyedropper/eyedropper");
+const { Promise: promise } = devtools.require("resource://gre/modules/Promise.jsm");
 
 let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
