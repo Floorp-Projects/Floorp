@@ -17,6 +17,7 @@
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nsTArray.h"                   // for nsTArray
+#include "prlog.h"                      // for PR_LOG
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
 #include <ui/Fence.h>
@@ -24,6 +25,24 @@
 
 namespace mozilla {
 namespace layers {
+
+// To get this logging, you need PR logging enabled (either by
+// doing a debug build, or #define'ing FORCE_PR_LOG at the top
+// of a .cpp file), and then run with NSPR_LOG_MODULES=tiling:5
+// in your environment at runtime.
+#ifdef PR_LOGGING
+#  define TILING_PRLOG(_args) PR_LOG(gTilingLog, PR_LOG_DEBUG, _args)
+#  define TILING_PRLOG_OBJ(_args, obj) \
+    { \
+    nsAutoCString tmpstr; \
+    AppendToString(tmpstr, obj); \
+    PR_LOG(gTilingLog, PR_LOG_DEBUG, _args); \
+    }
+   extern PRLogModuleInfo* gTilingLog;
+#else
+#  define TILING_PRLOG(_args)
+#  define TILING_PRLOG_OBJ(_args, obj)
+#endif
 
 // An abstract implementation of a tile buffer. This code covers the logic of
 // moving and reusing tiles and leaves the validation up to the implementor. To
