@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 var Status = require('./types').Status;
 var Conversion = require('./types').Conversion;
@@ -96,12 +96,12 @@ exports.items = [
     parse: function(arg, context) {
       var msg;
       if (arg.text.replace(/^\s*-?/, '').length === 0) {
-        return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
+        return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE, ''));
       }
 
       if (!this.allowFloat && (arg.text.indexOf('.') !== -1)) {
         msg = l10n.lookupFormat('typesNumberNotInt2', [ arg.text ]);
-        return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+        return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
       }
 
       var value;
@@ -114,22 +114,22 @@ exports.items = [
 
       if (isNaN(value)) {
         msg = l10n.lookupFormat('typesNumberNan', [ arg.text ]);
-        return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+        return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
       }
 
       var max = this.getMax(context);
       if (max != null && value > max) {
         msg = l10n.lookupFormat('typesNumberMax', [ value, max ]);
-        return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+        return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
       }
 
       var min = this.getMin(context);
       if (min != null && value < min) {
         msg = l10n.lookupFormat('typesNumberMin', [ value, min ]);
-        return promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
+        return Promise.resolve(new Conversion(undefined, arg, Status.ERROR, msg));
       }
 
-      return promise.resolve(new Conversion(value, arg));
+      return Promise.resolve(new Conversion(value, arg));
     },
 
     decrement: function(value, context) {
