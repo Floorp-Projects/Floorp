@@ -578,7 +578,7 @@ index 4a0c35c..ccf60e3 100644
  
 +#undef LOG_TAG
 diff --git a/media/libstagefright/MPEG4Extractor.cpp b/media/libstagefright/MPEG4Extractor.cpp
-index ad985ee..f0165e5 100644
+index ad985ee..71a0613 100644
 --- a/media/libstagefright/MPEG4Extractor.cpp
 +++ b/media/libstagefright/MPEG4Extractor.cpp
 @@ -15,6 +15,7 @@
@@ -598,7 +598,19 @@ index ad985ee..f0165e5 100644
  
  class MPEG4Source : public MediaSource {
  public:
-@@ -1248,6 +1249,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
+@@ -726,6 +727,11 @@ static bool underMetaDataPath(const Vector<uint32_t> &path) {
+ static void convertTimeToDate(int64_t time_1904, String8 *s) {
+     time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
+ 
++    if (time_1970 < 0) {
++      s->clear();
++      return;
++    }
++
+     char tmp[32];
+     strftime(tmp, sizeof(tmp), "%Y%m%dT%H%M%S.000Z", gmtime(&time_1970));
+ 
+@@ -1248,6 +1254,7 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
              ALOGV("*** coding='%s' %d channels, size %d, rate %d\n",
                     chunk, num_channels, sample_size, sample_rate);
              mLastTrack->meta->setInt32(kKeyChannelCount, num_channels);
@@ -606,7 +618,19 @@ index ad985ee..f0165e5 100644
              mLastTrack->meta->setInt32(kKeySampleRate, sample_rate);
  
              off64_t stop_offset = *offset + chunk_size;
-@@ -2278,6 +2280,10 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
+@@ -1652,8 +1659,9 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
+ 
+             String8 s;
+             convertTimeToDate(creationTime, &s);
+-
+-            mFileMetaData->setCString(kKeyDate, s.string());
++            if (s.length()) {
++                mFileMetaData->setCString(kKeyDate, s.string());
++            }
+ 
+             *offset += chunk_size;
+             break;
+@@ -2278,6 +2286,10 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
          objectType = 32 + br.getBits(6);
      }
  
@@ -617,7 +641,7 @@ index ad985ee..f0165e5 100644
      uint32_t freqIndex = br.getBits(4);
  
      int32_t sampleRate = 0;
-@@ -3154,6 +3160,7 @@ status_t MPEG4Source::read(
+@@ -3154,6 +3166,7 @@ status_t MPEG4Source::read(
              CHECK(mBuffer != NULL);
              mBuffer->set_range(0, size);
              mBuffer->meta_data()->clear();
@@ -625,7 +649,7 @@ index ad985ee..f0165e5 100644
              mBuffer->meta_data()->setInt64(
                      kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
  
-@@ -3276,6 +3283,7 @@ status_t MPEG4Source::read(
+@@ -3276,6 +3289,7 @@ status_t MPEG4Source::read(
          }
  
          mBuffer->meta_data()->clear();
@@ -633,7 +657,7 @@ index ad985ee..f0165e5 100644
          mBuffer->meta_data()->setInt64(
                  kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
  
-@@ -3360,6 +3368,18 @@ status_t MPEG4Source::fragmentedRead(
+@@ -3360,6 +3374,18 @@ status_t MPEG4Source::fragmentedRead(
              // move to next fragment
              Sample lastSample = mCurrentSamples[mCurrentSamples.size() - 1];
              off64_t nextMoof = mNextMoofOffset; // lastSample.offset + lastSample.size;
@@ -652,7 +676,7 @@ index ad985ee..f0165e5 100644
              mCurrentMoofOffset = nextMoof;
              mCurrentSamples.clear();
              mCurrentSampleIndex = 0;
-@@ -3626,6 +3646,7 @@ static bool isCompatibleBrand(uint32_t fourcc) {
+@@ -3626,6 +3652,7 @@ static bool isCompatibleBrand(uint32_t fourcc) {
      return false;
  }
  
@@ -660,7 +684,7 @@ index ad985ee..f0165e5 100644
  // Attempt to actually parse the 'ftyp' atom and determine if a suitable
  // compatible brand is present.
  // Also try to identify where this file's metadata ends
-@@ -3756,5 +3777,8 @@ bool SniffMPEG4(
+@@ -3756,5 +3783,8 @@ bool SniffMPEG4(
  
      return false;
  }

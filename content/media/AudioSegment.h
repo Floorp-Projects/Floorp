@@ -178,6 +178,9 @@ public:
   void Resample(SpeexResamplerState* aResampler, uint32_t aInRate, uint32_t aOutRate)
   {
     mDuration = 0;
+#ifdef DEBUG
+    uint32_t segmentChannelCount = ChannelCount();
+#endif
 
     for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
       nsAutoTArray<nsTArray<T>, GUESS_AUDIO_CHANNELS> output;
@@ -190,26 +193,32 @@ public:
         continue;
       }
       uint32_t channels = c.mChannelData.Length();
+      MOZ_ASSERT(channels == segmentChannelCount);
       output.SetLength(channels);
       bufferPtrs.SetLength(channels);
-      uint32_t inFrames = c.mDuration,
-      outFrames = c.mDuration * aOutRate / aInRate;
+      uint32_t inFrames = c.mDuration;
+      // Round up to allocate; the last frame may not be used.
+      NS_ASSERTION((UINT32_MAX - aInRate + 1) / c.mDuration >= aOutRate,
+                   "Dropping samples");
+      uint32_t outSize = (c.mDuration * aOutRate + aInRate - 1) / aInRate;
       for (uint32_t i = 0; i < channels; i++) {
         const T* in = static_cast<const T*>(c.mChannelData[i]);
-        T* out = output[i].AppendElements(outFrames);
+        T* out = output[i].AppendElements(outSize);
+        uint32_t outFrames = outSize;
 
         dom::WebAudioUtils::SpeexResamplerProcess(aResampler, i,
                                                   in, &inFrames,
                                                   out, &outFrames);
-
+        MOZ_ASSERT(inFrames == c.mDuration);
         bufferPtrs[i] = out;
         output[i].SetLength(outFrames);
       }
+      MOZ_ASSERT(channels > 0);
+      c.mDuration = output[0].Length();
       c.mBuffer = new mozilla::SharedChannelArrayBuffer<T>(&output);
       for (uint32_t i = 0; i < channels; i++) {
         c.mChannelData[i] = bufferPtrs[i];
       }
-      c.mDuration = outFrames;
       mDuration += c.mDuration;
     }
   }
