@@ -1260,6 +1260,9 @@ JS_Init(void);
 extern JS_PUBLIC_API(void)
 JS_ShutDown(void);
 
+extern JS_PUBLIC_API(bool)
+JS_IsShutDown(void);
+
 extern JS_PUBLIC_API(JSRuntime *)
 JS_NewRuntime(uint32_t maxbytes, JSRuntime *parentRuntime = nullptr);
 
