@@ -135,6 +135,7 @@ function BrowserElementParent(frameLoader, hasRemoteFrame, isPendingFrame) {
   defineNoReturnMethod('goForward', this._goForward);
   defineNoReturnMethod('reload', this._reload);
   defineNoReturnMethod('stop', this._stop);
+  defineMethod('download', this._download);
   defineDOMRequestMethod('purgeHistory', 'purge-history');
   defineMethod('getScreenshot', this._getScreenshot);
   defineMethod('addNextPaintListener', this._addNextPaintListener);
@@ -618,6 +619,106 @@ BrowserElementParent.prototype = {
 
   _stop: function() {
     this._sendAsyncMsg('stop');
+  },
+
+  _download: function(_url, _options) {
+    let ioService =
+      Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+    let uri = ioService.newURI(_url, null, null);
+    let url = uri.QueryInterface(Ci.nsIURL);
+
+    // Ensure we have _options, we always use it to send the filename.
+    _options = _options || {};
+    if (!_options.filename) {
+      _options.filename = url.fileName;
+    }
+
+    debug('_options = ' + uneval(_options));
+
+    // Ensure we have a filename.
+    if (!_options.filename) {
+      throw Components.Exception("Invalid argument", Cr.NS_ERROR_INVALID_ARG);
+    }
+
+    let interfaceRequestor =
+      this._frameLoader.loadContext.QueryInterface(Ci.nsIInterfaceRequestor);
+    let req = Services.DOMRequest.createRequest(this._window);
+
+    function DownloadListener() {
+      debug('DownloadListener Constructor');
+    }
+    DownloadListener.prototype = {
+      extListener: null,
+      onStartRequest: function(aRequest, aContext) {
+        debug('DownloadListener - onStartRequest');
+        let extHelperAppSvc =
+          Cc['@mozilla.org/uriloader/external-helper-app-service;1'].
+          getService(Ci.nsIExternalHelperAppService);
+        let channel = aRequest.QueryInterface(Ci.nsIChannel);
+
+        this.extListener =
+          extHelperAppSvc.doContent(
+              channel.contentType,
+              aRequest,
+              interfaceRequestor,
+              true);
+        this.extListener.onStartRequest(aRequest, aContext);
+      },
+      onStopRequest: function(aRequest, aContext, aStatusCode) {
+        debug('DownloadListener - onStopRequest (aStatusCode = ' +
+               aStatusCode + ')');
+        if (aStatusCode == Cr.NS_OK) {
+          // Everything looks great.
+          debug('DownloadListener - Download Successful.');
+          this.services.DOMRequest.fireSuccess(this.req, aStatusCode);
+        }
+        else {
+          // In case of failure, we'll simply return the failure status code.
+          debug('DownloadListener - Download Failed!');
+          this.services.DOMRequest.fireError(this.req, aStatusCode);
+        }
+
+        if (this.extListener) {
+          this.extListener.onStopRequest(aRequest, aContext, aStatusCode);
+        }
+      },
+      onDataAvailable: function(aRequest, aContext, aInputStream,
+                                aOffset, aCount) {
+        this.extListener.onDataAvailable(aRequest, aContext, aInputStream,
+                                         aOffset, aCount);
+      },
+      QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener, 
+                                             Ci.nsIRequestObserver])
+    };
+
+    let channel = ioService.newChannelFromURI(url);
+
+    // XXX We would set private browsing information prior to calling this.
+    channel.notificationCallbacks = interfaceRequestor;
+
+    // Since we're downloading our own local copy we'll want to bypass the
+    // cache and local cache if the channel let's us specify this.
+    let flags = Ci.nsIChannel.LOAD_CALL_CONTENT_SNIFFERS |
+                Ci.nsIChannel.LOAD_BYPASS_CACHE;
+    if (channel instanceof Ci.nsICachingChannel) {
+      debug('This is a caching channel. Forcing bypass.');
+      flags |= Ci.nsICachingChannel.LOAD_BYPASS_LOCAL_CACHE_IF_BUSY;
+    }
+
+    channel.loadFlags |= flags;
+
+    if (channel instanceof Ci.nsIHttpChannel) {
+      debug('Setting HTTP referrer = ' + this._window.document.documentURIObject);
+      channel.referrer = this._window.document.documentURIObject;
+      if (channel instanceof Ci.nsIHttpChannelInternal) {
+        channel.forceAllowThirdPartyCookie = true;
+      }
+    }
+
+    // Set-up complete, let's get things started.
+    channel.asyncOpen(new DownloadListener(), null);
+
+    return req;
   },
 
   _getScreenshot: function(_width, _height, _mimeType) {
