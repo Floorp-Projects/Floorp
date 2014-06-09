@@ -878,3 +878,22 @@ inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
 
   return sheet->ParseSheet(aInput);
 }
+
+NS_IMETHODIMP
+inDOMUtils::ScrollElementIntoView(nsIDOMElement *aElement)
+{
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  NS_ENSURE_ARG_POINTER(content);
+
+  nsIPresShell* presShell = content->OwnerDoc()->GetShell();
+  if (!presShell) {
+    return NS_OK;
+  }
+
+  presShell->ScrollContentIntoView(content,
+                                   nsIPresShell::ScrollAxis(),
+                                   nsIPresShell::ScrollAxis(),
+                                   nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+
+  return NS_OK;
+}
