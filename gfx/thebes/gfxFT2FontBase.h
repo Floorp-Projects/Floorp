@@ -25,7 +25,7 @@ public:
     virtual uint32_t GetSpaceGlyph();
     virtual bool ProvidesGetGlyph() const { return true; }
     virtual uint32_t GetGlyph(uint32_t unicode, uint32_t variation_selector);
-    virtual bool ProvidesGlyphWidths() { return true; }
+    virtual bool ProvidesGlyphWidths() const { return true; }
     virtual int32_t GetGlyphWidth(gfxContext *aCtx, uint16_t aGID);
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
