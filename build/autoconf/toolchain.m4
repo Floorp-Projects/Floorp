@@ -36,9 +36,6 @@ if test "$compiler" != "$cxxcompiler"; then
 fi
 CC_VERSION=`echo "$CC_VERSION" | sed 's/ //g'`
 CXX_VERSION=`echo "$CXX_VERSION" | sed 's/ //g'`
-echo "$CC_VERSION"
-echo "$CXX_VERSION"
-ecit 1
 if test "$compiler" = "gcc"; then
     GNU_CC=1
     GNU_CXX=1
