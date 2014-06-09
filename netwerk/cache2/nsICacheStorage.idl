@@ -51,6 +51,13 @@ interface nsICacheStorage : nsISupports
   const uint32_t CHECK_MULTITHREADED = 1 << 4;
 
   /**
+   * Forces the callback to be invoked always only asynchronously regardless
+   * we have all the information to invoke it directly from inside asyncOpenURI
+   * method.
+   */
+  const uint32_t FORCE_ASYNC_CALLBACK = 1 << 5;
+
+  /**
    * Asynchronously opens a cache entry for the specified URI.
    * Result is fetched asynchronously via the callback.
    *
@@ -69,6 +76,7 @@ interface nsICacheStorage : nsISupports
    *    OPEN_BYPASS_IF_BUSY - backward compatibility only, LOAD_BYPASS_LOCAL_CACHE_IF_BUSY
    *    CHECK_MULTITHREADED - onCacheEntryCheck may be called on any thread, consumer 
    *                          implementation is thread-safe
+   *    FORCE_ASYNC_CALLBACK - always call the callback asynchronously
    * @param aCallback
    *    The consumer that receives the result.
    *    IMPORTANT: The callback may be called sooner the method returns.
