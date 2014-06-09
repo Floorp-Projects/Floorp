@@ -236,7 +236,7 @@ exports.createEvent = function(name) {
 
 //------------------------------------------------------------------------------
 
-var promise = require('./promise');
+var Promise = require('../util/promise').Promise;
 
 /**
  * promiseEach is roughly like Array.forEach except that the action is taken to
@@ -252,34 +252,34 @@ var promise = require('./promise');
  */
 exports.promiseEach = function(array, action, scope) {
   if (array.length === 0) {
-    return promise.resolve([]);
+    return Promise.resolve([]);
   }
 
-  var deferred = promise.defer();
-  var replies = [];
+  return new Promise(function(resolve, reject) {
+    var replies = [];
 
-  var callNext = function(index) {
-    var onSuccess = function(reply) {
-      replies[index] = reply;
+    var callNext = function(index) {
+      var onSuccess = function(reply) {
+        replies[index] = reply;
 
-      if (index + 1 >= array.length) {
-        deferred.resolve(replies);
-      }
-      else {
-        callNext(index + 1);
-      }
+        if (index + 1 >= array.length) {
+          resolve(replies);
+        }
+        else {
+          callNext(index + 1);
+        }
+      };
+
+      var onFailure = function(ex) {
+        reject(ex);
+      };
+
+      var reply = action.call(scope, array[index], index, array);
+      Promise.resolve(reply).then(onSuccess).then(null, onFailure);
     };
 
-    var onFailure = function(ex) {
-      deferred.reject(ex);
-    };
-
-    var reply = action.call(scope, array[index], index, array);
-    promise.resolve(reply).then(onSuccess).then(null, onFailure);
-  };
-
-  callNext(0);
-  return deferred.promise;
+    callNext(0);
+  });
 };
 
 /**
@@ -515,16 +515,6 @@ exports.setContents = function(elem, contents) {
       throw ex;
     }
   }
-};
-
-/**
- * Load some HTML into the given document and return a DOM element.
- * This utility assumes that the html has a single root (other than whitespace)
- */
-exports.toDom = function(document, html) {
-  var div = exports.createElement(document, 'div');
-  exports.setContents(div, html);
-  return div.children[0];
 };
 
 /**

@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var l10n = require('../util/l10n');
 
 var Conversion = require('./types').Conversion;
@@ -86,15 +86,15 @@ JavascriptType.prototype.parse = function(arg, context) {
 
   // No input is undefined
   if (typed === '') {
-    return promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
+    return Promise.resolve(new Conversion(undefined, arg, Status.INCOMPLETE));
   }
   // Just accept numbers
   if (!isNaN(parseFloat(typed)) && isFinite(typed)) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
   // Just accept constants like true/false/null/etc
   if (typed.trim().match(/(null|undefined|NaN|Infinity|true|false)/)) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
 
   // Analyze the input text and find the beginning of the last part that
@@ -103,19 +103,19 @@ JavascriptType.prototype.parse = function(arg, context) {
 
   // There was an error analyzing the string.
   if (beginning.err) {
-    return promise.resolve(new Conversion(typed, arg, Status.ERROR, beginning.err));
+    return Promise.resolve(new Conversion(typed, arg, Status.ERROR, beginning.err));
   }
 
   // If the current state is ParseState.COMPLEX, then we can't do completion.
   // so bail out now
   if (beginning.state === ParseState.COMPLEX) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
 
   // If the current state is not ParseState.NORMAL, then we are inside of a
   // string which means that no completion is possible.
   if (beginning.state !== ParseState.NORMAL) {
-    return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+    return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
   }
 
   var completionPart = typed.substring(beginning.startPos);
@@ -130,18 +130,18 @@ JavascriptType.prototype.parse = function(arg, context) {
 
       // We can't complete on null.foo, so bail out
       if (scope == null) {
-        return promise.resolve(new Conversion(typed, arg, Status.ERROR,
+        return Promise.resolve(new Conversion(typed, arg, Status.ERROR,
                                         l10n.lookup('jstypeParseScope')));
       }
 
       if (prop === '') {
-        return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+        return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
       }
 
       // Check if prop is a getter function on 'scope'. Functions can change
       // other stuff so we can't execute them to get the next object. Stop here.
       if (this._isSafeProperty(scope, prop)) {
-        return promise.resolve(new Conversion(typed, arg));
+        return Promise.resolve(new Conversion(typed, arg));
       }
 
       try {
@@ -151,7 +151,7 @@ JavascriptType.prototype.parse = function(arg, context) {
         // It would be nice to be able to report this error in some way but
         // as it can happen just when someone types '{sessionStorage.', it
         // almost doesn't really count as an error, so we ignore it
-        return promise.resolve(new Conversion(typed, arg, Status.VALID, ''));
+        return Promise.resolve(new Conversion(typed, arg, Status.VALID, ''));
       }
     }
   }
@@ -162,24 +162,24 @@ JavascriptType.prototype.parse = function(arg, context) {
   // If the reason we just stopped adjusting the scope was a non-simple string,
   // then we're not sure if the input is valid or invalid, so accept it
   if (prop && !prop.match(/^[0-9A-Za-z]*$/)) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
 
   // However if the prop was a simple string, it is an error
   if (scope == null) {
     var msg = l10n.lookupFormat('jstypeParseMissing', [ prop ]);
-    return promise.resolve(new Conversion(typed, arg, Status.ERROR, msg));
+    return Promise.resolve(new Conversion(typed, arg, Status.ERROR, msg));
   }
 
   // If the thing we're looking for isn't a simple string, then we're not going
   // to find it, but we're not sure if it's valid or invalid, so accept it
   if (!matchProp.match(/^[0-9A-Za-z]*$/)) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
 
   // Skip Iterators and Generators.
   if (this._isIteratorOrGenerator(scope)) {
-    return promise.resolve(new Conversion(typed, arg));
+    return Promise.resolve(new Conversion(typed, arg));
   }
 
   var matchLen = matchProp.length;
@@ -219,7 +219,7 @@ JavascriptType.prototype.parse = function(arg, context) {
     }
   }
   catch (ex) {
-    return promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
+    return Promise.resolve(new Conversion(typed, arg, Status.INCOMPLETE, ''));
   }
 
   // Convert to an array for sorting, and while we're at it, note if we got
@@ -313,8 +313,8 @@ JavascriptType.prototype.parse = function(arg, context) {
     predictions = [];
   }
 
-  return promise.resolve(new Conversion(typed, arg, status, message,
-                                  promise.resolve(predictions)));
+  return Promise.resolve(new Conversion(typed, arg, status, message,
+                                  Promise.resolve(predictions)));
 };
 
 /**
