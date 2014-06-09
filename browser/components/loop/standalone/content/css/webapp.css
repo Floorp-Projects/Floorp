@@ -1,0 +1,11 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+body {
+  width: 100%;
+  /* prevent the video convsersation elements to occupy the whole available
+     width hence the height while keeping aspect ratio */
+  max-width: 730px;
+  margin: 0 auto;
+}
