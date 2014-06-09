@@ -28,8 +28,6 @@ typedef enum{
     CSF_LOG_OBNOXIOUS
 } CSFLogLevel;
 
-
-
 #define CSFLogError(tag , format, ...) CSFLog( CSF_LOG_ERROR, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
 #define CSFLogErrorV(tag , format, va_list_arg) CSFLogV(CSF_LOG_ERROR, __FILE__ , __LINE__ , tag , format , va_list_arg )
 #define CSFLogWarn(tag , format, ...) CSFLog( CSF_LOG_WARNING, __FILE__ , __LINE__ , tag , format , ## __VA_ARGS__ )
@@ -52,11 +50,11 @@ void CSFLog( CSFLogLevel priority, const char* sourceFile, int sourceLine, const
   __attribute__ ((format (printf, 5, 6)))
 #endif
 ;
+
 void CSFLogV( CSFLogLevel priority, const char* sourceFile, int sourceLine, const char* tag , const char* format, va_list args);
 
 PRLogModuleInfo *GetSignalingLogInfo();
 PRLogModuleInfo *GetWebRTCLogInfo();
-extern int gWebrtcTraceLoggingOn;
 
 #ifdef __cplusplus
 }
