@@ -129,6 +129,7 @@ ToolbarView.prototype = {
       DebuggerController.StackFrames.currentFrameDepth = -1;
       DebuggerController.activeThread.resume(warn);
     } else {
+      DebuggerController.ThreadState.interruptedByResumeButton = true;
       DebuggerController.activeThread.interrupt();
     }
   },
