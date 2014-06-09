@@ -384,13 +384,41 @@ function displayStats(globalReport) {
   });
 }
 
+function onLoad() {
+  WebrtcGlobalInformation.getAllStats(displayStats);
+  if (WebrtcGlobalInformation.debugLevel) {
+    setDebugButton(true);
+  } else {
+    setDebugButton(false);
+  }
+}
+
+function startDebugMode() {
+  WebrtcGlobalInformation.debugLevel = 65535;
+  setDebugButton(true);
+}
+
+function stopDebugMode() {
+  WebrtcGlobalInformation.debugLevel = 0;
+  setDebugButton(false);
+}
+
+function setDebugButton(on) {
+  var button = document.getElementById("debug-toggle-button");
+  button.innerHTML = on ? "Stop debug mode" : "Start debug mode";
+  button.onclick = on ? stopDebugMode : startDebugMode;
+}
+
   </script>
 
-  <body id="body" onload="WebrtcGlobalInformation.getAllStats(displayStats)">
+  <body id="body" onload="onLoad()">
     <div id="stats">
     </div>
     <button onclick="WebrtcGlobalInformation.getLogging('', displayLogs)">
-      Show/refresh logging
+      Connection log
+    </button>
+    <button id="debug-toggle-button" onclick="startDebugMode()">
+      Start debug mode
     </button>
     <div id="logs">
     </div>
