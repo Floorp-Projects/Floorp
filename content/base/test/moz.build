@@ -6,6 +6,7 @@
 
 TEST_TOOL_DIRS += [
     'csp',
+    'xcsp',
     'websocket_hybi',
 ]
 

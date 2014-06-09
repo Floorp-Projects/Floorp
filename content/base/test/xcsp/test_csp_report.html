@@ -82,7 +82,7 @@ window.checkResults = function(reportObj) {
   var cspReport = reportObj["csp-report"];
   // correct violating request
   is(cspReport["document-uri"],
-     "http://mochi.test:8888/tests/content/base/test/csp/" + testFile,
+     "http://mochi.test:8888/tests/content/base/test/xcsp/" + testFile,
      "Incorrect violating request");
   // correct blocked-uri
   is(cspReport["blocked-uri"],
