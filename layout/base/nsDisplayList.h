@@ -1704,6 +1704,10 @@ public:
   bool DidComputeVisibility() const { return mDidComputeVisibility; }
 #endif
 
+  void SetIsOpaque()
+  {
+    mIsOpaque = true;
+  }
   nsRect GetVisibleRect() const { return mVisibleRect; }
 
 private:
