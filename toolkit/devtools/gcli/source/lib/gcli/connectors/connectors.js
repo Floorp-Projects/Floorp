@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 
 /**
  * This is where we cache the connectors that we know about
@@ -30,7 +30,7 @@ var connectors = {};
  *    name: 'foo',
  *
  *    connect: function(url) {
- *      return promise.resolve(new FooConnection(url));
+ *      return Promise.resolve(new FooConnection(url));
  *    }
  *  };
  */
@@ -106,7 +106,7 @@ Connection.prototype.call = function(feature, data) {
  * common route back to being connected once this has been called
  */
 Connection.prototype.disconnect = function() {
-  return promise.resolve();
+  return Promise.resolve();
 };
 
 exports.Connection = Connection;

@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var Highlighter = require('../util/host').Highlighter;
 var l10n = require('../util/l10n');
 var util = require('../util/util');
@@ -151,7 +151,7 @@ exports.items = [
         }
       }
 
-      return promise.resolve(reply);
+      return Promise.resolve(reply);
     },
 
     onEnter: onEnter,
@@ -223,7 +223,7 @@ exports.items = [
         reply.matches = util.createEmptyNodeList(doc);
       }
 
-      return promise.resolve(reply);
+      return Promise.resolve(reply);
     },
 
     onEnter: onEnter,
