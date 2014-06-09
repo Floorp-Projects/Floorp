@@ -74,17 +74,17 @@ class TempAllocator
 };
 
 // Stack allocated rooter for all roots associated with a TempAllocator
-class AutoTempAllocatorRooter : private AutoGCRooter
+class AutoTempAllocatorRooter : private JS::AutoGCRooter
 {
   public:
     explicit AutoTempAllocatorRooter(JSContext *cx, TempAllocator *temp
                                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, IONALLOC), temp(temp)
+      : JS::AutoGCRooter(cx, IONALLOC), temp(temp)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void JS::AutoGCRooter::trace(JSTracer *trc);
     void trace(JSTracer *trc);
 
   private:
