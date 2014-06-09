@@ -1156,15 +1156,22 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     }
   }
 
-  // the dimensions of the anchor in its app units
-  nsRect parentRect = aAnchorFrame->GetScreenRectInAppUnits();
+  // In order to deal with transforms, possibly on an ancestor of the <iframe>
+  // or <browser> containing our anchor, we need the root prescontext:
+  nsPresContext* rootPresContext = presContext->GetRootPresContext();
+  nsIFrame* referenceFrame = rootPresContext->FrameManager()->GetRootFrame();
 
-  // the anchor may be in a different document with a different scale,
-  // so adjust the size so that it is in the app units of the popup instead
-  // of the anchor.
-  parentRect = parentRect.ConvertAppUnitsRoundOut(
-    aAnchorFrame->PresContext()->AppUnitsPerDevPixel(),
-    presContext->AppUnitsPerDevPixel());
+  // the dimensions of the anchor
+  nsRect parentRect = aAnchorFrame->GetRectRelativeToSelf();
+  // Relative to the root
+  parentRect = nsLayoutUtils::TransformFrameRectToAncestor(aAnchorFrame,
+                                                           parentRect,
+                                                           referenceFrame);
+  // Relative to the screen
+  parentRect.MoveBy(referenceFrame->GetScreenRectInAppUnits().TopLeft());
+  // In its own app units
+  parentRect.ConvertAppUnitsRoundOut(rootPresContext->AppUnitsPerDevPixel(),
+                                     presContext->AppUnitsPerDevPixel());
 
   // Set the popup's size to the preferred size. Below, this size will be
   // adjusted to fit on the screen or within the content area. If the anchor
