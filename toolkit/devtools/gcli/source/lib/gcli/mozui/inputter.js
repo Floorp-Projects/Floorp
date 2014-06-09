@@ -16,14 +16,14 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var util = require('../util/util');
 var KeyEvent = require('../util/util').KeyEvent;
 
 var Status = require('../types/types').Status;
 var History = require('../ui/history').History;
 
-var RESOLVED = promise.resolve(true);
+var RESOLVED = Promise.resolve(true);
 
 /**
  * A wrapper to take care of the functions concerning an input element

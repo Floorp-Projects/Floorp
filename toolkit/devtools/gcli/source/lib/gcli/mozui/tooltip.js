@@ -17,6 +17,7 @@
 'use strict';
 
 var util = require('../util/util');
+var host = require('../util/host');
 var domtemplate = require('../util/domtemplate');
 
 var CommandAssignment = require('../cli').CommandAssignment;
@@ -62,7 +63,7 @@ function Tooltip(options, components) {
   // We cache the fields we create so we can destroy them later
   this.fields = [];
 
-  this.template = util.toDom(this.document, tooltipHtml);
+  this.template = host.toDom(this.document, tooltipHtml);
   this.templateOptions = { blankNullUndefined: true, stack: 'tooltip.html' };
 
   this.inputter.onChoiceChange.add(this.choiceChanged, this);

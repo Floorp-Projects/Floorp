@@ -16,7 +16,7 @@
 
 'use strict';
 
-var promise = require('../util/promise');
+var Promise = require('../util/promise').Promise;
 var util = require('../util/util');
 var host = require('../util/host');
 
@@ -233,7 +233,7 @@ function getFallbackConverter(from, to) {
 exports.convert = function(data, from, to, conversionContext) {
   try {
     if (from === to) {
-      return promise.resolve(data);
+      return Promise.resolve(data);
     }
 
     var converter = getConverter(from, to);

@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test URL API - data:plain</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1018682">Mozilla Bug 1018682</a>
+
+<script type="application/javascript">
+
+var base = new URL("data:text/plain,");
+
+base.protocol = "chrome:";
+is(base.protocol, 'data:', "The protocol should not change from data to chrome.");
+
+try {
+  var relative = new URL("a", base);
+  ok(false, "Relative URL from a data:text/plain should not work.");
+} catch(e) {
+  ok(true, "Relative URL from a data:text/plain should not work.");
+}
+
+base.protocol = "http:";
+ok(true, "Protocol: http changed");
+is(base.href, "http://text/plain,", "Base URL is correct");
+
+var relative = new URL("a", base);
+ok(relative, "This works.");
+is(relative.href, "http://text/a", "Relative URL is correct");
+
+</script>
+
+</body>
+</html>

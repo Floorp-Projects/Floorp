@@ -21,7 +21,7 @@ var Cc = require('chrome').Cc;
 var Ci = require('chrome').Ci;
 
 var OS = Cu.import('resource://gre/modules/osfile.jsm', {}).OS;
-var promise = require('./promise');
+var Promise = require('../util/promise').Promise;
 
 /**
  * A set of functions that don't really belong in 'fs' (because they're not
@@ -122,5 +122,5 @@ exports.stat = function(pathname) {
  * Right now, however, we do nothing.
  */
 exports.describe = function(pathname) {
-  return promise.resolve('');
+  return Promise.resolve('');
 };
