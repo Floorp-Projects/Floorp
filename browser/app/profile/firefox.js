@@ -1363,6 +1363,11 @@ pref("devtools.gcli.hideIntro", false);
 // How eager are we to show help: never=1, sometimes=2, always=3
 pref("devtools.gcli.eagerHelper", 2);
 
+// Alias to the script URLs for inject command.
+pref("devtools.gcli.jquerySrc", "http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js");
+pref("devtools.gcli.lodashSrc", "http://cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.min.js");
+pref("devtools.gcli.underscoreSrc", "http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.6.0/underscore-min.js");
+
 // Remember the Web Console filters
 pref("devtools.webconsole.filter.network", true);
 pref("devtools.webconsole.filter.networkinfo", false);
