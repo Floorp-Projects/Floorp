@@ -6,24 +6,27 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>Tooltip Tests</p>";
 
 function test() {
-  addTab(TEST_URI, function(browser, tab) {
-    info("Starting browser_toolbar_tooltip.js");
-    openTest();
+  addTab(TEST_URI, function() {
+    Task.spawn(runTest).catch(err => {
+      ok(false, ex);
+      console.error(ex);
+    }).then(finish);
   });
 }
 
-function openTest() {
+function* runTest() {
+  info("Starting browser_toolbar_tooltip.js");
+
   ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in runTest");
 
-  oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW, catchFail(runTest));
+  let showPromise = observeOnce(DeveloperToolbar.NOTIFICATIONS.SHOW);
   document.getElementById("Tools:DevToolbar").doCommand();
-}
+  yield showPromise;
 
-function runTest() {
   let tooltipPanel = DeveloperToolbar.tooltipPanel;
 
   DeveloperToolbar.display.focusManager.helpRequest();
-  DeveloperToolbar.display.inputter.setInput('help help');
+  yield DeveloperToolbar.display.inputter.setInput('help help');
 
   DeveloperToolbar.display.inputter.setCursor({ start: 'help help'.length });
   is(tooltipPanel._dimensions.start, 'help '.length,
@@ -44,11 +47,19 @@ function runTest() {
   is(tooltipPanel._dimensions.start, 0,
           'search param start, when cursor at start');
   ok(getLeftMargin() > 9, 'tooltip offset, when cursor at start')
-
-  finish();
 }
 
 function getLeftMargin() {
   let style = DeveloperToolbar.tooltipPanel._panel.style.marginLeft;
   return parseInt(style.slice(0, -2), 10);
+}
+
+function observeOnce(topic, ownsWeak=false) {
+  return new Promise(function(resolve, reject) {
+    let resolver = function(subject) {
+      Services.obs.removeObserver(resolver, topic);
+      resolve(subject);
+    };
+    Services.obs.addObserver(resolver, topic, ownsWeak);
+  }.bind(this));
 }
