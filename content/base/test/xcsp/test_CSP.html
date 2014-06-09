@@ -10,10 +10,7 @@
 <div id="content" style="display: none">
 </div>
 <iframe style="width:200px;height:200px;" id='cspframe'></iframe>
-<iframe style="width:200px;height:200px;" id='cspframe2'></iframe>
 <script class="testbody" type="text/javascript">
-
-var path = "/tests/content/base/test/csp/";
 
 // These are test results: -1 means it hasn't run,
 // true/false is the pass/fail result.
@@ -34,22 +31,6 @@ window.tests = {
   font_bad: -1,
   object_good: -1,
   object_bad: -1,
-  img_spec_compliant_good: -1,
-  img_spec_compliant_bad: -1,
-  style_spec_compliant_good: -1,
-  style_spec_compliant_bad: -1,
-  frame_spec_compliant_good: -1,
-  frame_spec_compliant_bad: -1,
-  script_spec_compliant_good: -1,
-  script_spec_compliant_bad: -1,
-  xhr_spec_compliant_good: -1,
-  xhr_spec_compliant_bad: -1,
-  media_spec_compliant_good: -1,
-  media_spec_compliant_bad: -1,
-  font_spec_compliant_good: -1,
-  font_spec_compliant_bad: -1,
-  object_spec_compliant_good: -1,
-  object_spec_compliant_bad: -1,
 };
 
 // This is used to watch the blocked data bounce off CSP and allowed data
@@ -131,7 +112,6 @@ SpecialPowers.pushPrefEnv(
       // save this for last so that our listeners are registered.
       // ... this loads the testbed of good and bad requests.
       document.getElementById('cspframe').src = 'file_CSP_main.html';
-      document.getElementById('cspframe2').src = 'file_CSP_main_spec_compliant.html';
     });
 </script>
 </pre>
