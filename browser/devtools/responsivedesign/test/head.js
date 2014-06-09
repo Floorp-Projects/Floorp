@@ -3,6 +3,8 @@
 
 "use strict";
 
+const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+
 let {devtools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
 let TargetFactory = devtools.TargetFactory;
 

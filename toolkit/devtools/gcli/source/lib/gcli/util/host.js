@@ -21,7 +21,7 @@ var Ci = require('chrome').Ci;
 
 var Task = require('resource://gre/modules/Task.jsm').Task;
 
-var promise = require('./promise');
+var Promise = require('../util/promise').Promise;
 var util = require('./util');
 
 function Highlighter(document) {
@@ -72,16 +72,26 @@ exports.exec = function(task) {
 };
 
 /**
+ * Load some HTML into the given document and return a DOM element.
+ * This utility assumes that the html has a single root (other than whitespace)
+ */
+exports.toDom = function(document, html) {
+  var div = util.createElement(document, 'div');
+  util.setContents(div, html);
+  return div.children[0];
+};
+
+/**
  * When dealing with module paths on windows we want to use the unix
  * directory separator rather than the windows one, so we avoid using
  * OS.Path.dirname, and use unix version on all platforms.
  */
-let resourceDirName = function(path) {
-  let index = path.lastIndexOf("/");
+var resourceDirName = function(path) {
+  var index = path.lastIndexOf('/');
   if (index == -1) {
-    return ".";
+    return '.';
   }
-  while (index >= 0 && path[index] == "/") {
+  while (index >= 0 && path[index] == '/') {
     --index;
   }
   return path.slice(0, index + 1);
@@ -92,37 +102,30 @@ let resourceDirName = function(path) {
  * @see lib/gcli/util/host.js
  */
 exports.staticRequire = function(requistingModule, name) {
-  var deferred = promise.defer();
-
   if (name.match(/\.css$/)) {
-    deferred.resolve('');
+    return Promise.resolve('');
   }
   else {
-    var filename = resourceDirName(requistingModule.id) + '/' + name;
-    filename = filename.replace(/\/\.\//g, '/');
-    filename = 'resource://gre/modules/devtools/' + filename;
+    return new Promise(function(resolve, reject) {
+      var filename = resourceDirName(requistingModule.id) + '/' + name;
+      filename = filename.replace(/\/\.\//g, '/');
+      filename = 'resource://gre/modules/devtools/' + filename;
 
-    var xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
-                .createInstance(Ci.nsIXMLHttpRequest);
+      var xhr = Cc['@mozilla.org/xmlextras/xmlhttprequest;1']
+                  .createInstance(Ci.nsIXMLHttpRequest);
 
-    xhr.onload = function onload() {
-      deferred.resolve(xhr.responseText);
-    }.bind(this);
+      xhr.onload = function onload() {
+        resolve(xhr.responseText);
+      }.bind(this);
 
-    xhr.onabort = xhr.onerror = xhr.ontimeout = function(err) {
-      deferred.reject(err);
-    }.bind(this);
+      xhr.onabort = xhr.onerror = xhr.ontimeout = function(err) {
+        reject(err);
+      }.bind(this);
 
-    try {
       xhr.open('GET', filename);
       xhr.send();
-    }
-    catch (ex) {
-      deferred.reject(ex);
-    }
+    }.bind(this));
   }
-
-  return deferred.promise;
 };
 
 /**
@@ -146,64 +149,62 @@ exports.script.useTarget = function(tgt) {
 
   // Local debugging needs to make the target remote.
   var targetPromise = target.isRemote ?
-                      promise.resolve(target) :
+                      Promise.resolve(target) :
                       target.makeRemote();
 
   return targetPromise.then(function() {
-    var deferred = promise.defer();
+    return new Promise(function(resolve, reject) {
+      client = target._client;
 
-    client = target._client;
+      client.addListener('pageError', function(packet) {
+        if (packet.from === consoleActor) {
+          // console.log('pageError', packet.pageError);
+          exports.script.onOutput({
+            level: 'exception',
+            message: packet.exception.class
+          });
+        }
+      });
 
-    client.addListener('pageError', function(packet) {
-      if (packet.from === consoleActor) {
-        // console.log('pageError', packet.pageError);
-        exports.script.onOutput({
-          level: 'exception',
-          message: packet.exception.class
-        });
-      }
-    });
+      client.addListener('consoleAPICall', function(type, packet) {
+        if (packet.from === consoleActor) {
+          var data = packet.message;
 
-    client.addListener('consoleAPICall', function(type, packet) {
-      if (packet.from === consoleActor) {
-        var data = packet.message;
-
-        var ev = {
-          level: data.level,
-          arguments: data.arguments,
-        };
-
-        if (data.filename !== 'debugger eval code') {
-          ev.source = {
-            filename: data.filename,
-            lineNumber: data.lineNumber,
-            functionName: data.functionName
+          var ev = {
+            level: data.level,
+            arguments: data.arguments,
           };
+
+          if (data.filename !== 'debugger eval code') {
+            ev.source = {
+              filename: data.filename,
+              lineNumber: data.lineNumber,
+              functionName: data.functionName
+            };
+          }
+
+          exports.script.onOutput(ev);
+        }
+      });
+
+      consoleActor = target._form.consoleActor;
+
+      var onAttach = function(response, wcc) {
+        webConsoleClient = wcc;
+
+        if (response.error != null) {
+          reject(response);
+        }
+        else {
+          resolve(response);
         }
 
-        exports.script.onOutput(ev);
-      }
-    });
+        // TODO: add _onTabNavigated code?
+      };
 
-    consoleActor = target._form.consoleActor;
-
-    var onAttach = function(response, wcc) {
-      webConsoleClient = wcc;
-
-      if (response.error != null) {
-        deferred.reject(response);
-      }
-      else {
-        deferred.resolve(response);
-      }
-
-      // TODO: add _onTabNavigated code?
-    };
-
-    var listeners = [ 'PageError', 'ConsoleAPI' ];
-    client.attachConsole(consoleActor, listeners, onAttach);
-
-    return deferred.promise;
+      var listeners = [ 'PageError', 'ConsoleAPI' ];
+      client.attachConsole(consoleActor, listeners, onAttach);
+    }.bind(this));
   });
 };
 
@@ -211,21 +212,20 @@ exports.script.useTarget = function(tgt) {
  * Execute some JavaScript
  */
 exports.script.eval = function(javascript) {
-  var deferred = promise.defer();
+  return new Promise(function(resolve, reject) {
+    var onResult = function(response) {
+      var output = response.result;
+      if (typeof output === 'object' && output.type === 'undefined') {
+        output = undefined;
+      }
 
-  var onResult = function(response) {
-    var output = response.result;
-    if (typeof output === 'object' && output.type === 'undefined') {
-      output = undefined;
-    }
+      resolve({
+        input: response.input,
+        output: output,
+        exception: response.exception
+      });
+    };
 
-    deferred.resolve({
-      input: response.input,
-      output: output,
-      exception: response.exception
-    });
-  };
-
-  webConsoleClient.evaluateJS(javascript, onResult, {});
-  return deferred.promise;
+    webConsoleClient.evaluateJS(javascript, onResult, {});
+  }.bind(this));
 };

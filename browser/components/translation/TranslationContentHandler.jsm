@@ -12,10 +12,16 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LanguageDetector",
   "resource:///modules/translation/LanguageDetector.jsm");
 
+const STATE_OFFER = 0;
+const STATE_TRANSLATED = 2;
+const STATE_ERROR = 3;
+
 this.TranslationContentHandler = function(global, docShell) {
   let webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
                             .getInterface(Ci.nsIWebProgress);
   webProgress.addProgressListener(this, Ci.nsIWebProgress.NOTIFY_STATE_DOCUMENT);
+
+  global.addEventListener("pageshow", this);
 
   global.addMessageListener("Translation:TranslateDocument", this);
   global.addMessageListener("Translation:ShowTranslation", this);
@@ -24,6 +30,35 @@ this.TranslationContentHandler = function(global, docShell) {
 }
 
 TranslationContentHandler.prototype = {
+  handleEvent: function(aEvent) {
+    // We are only listening to pageshow events.
+    let target = aEvent.target;
+
+    // Only handle top-level frames.
+    let win = target.defaultView;
+    if (win.parent !== win)
+      return;
+
+    let content = this.global.content;
+    if (!content.detectedLanguage)
+      return;
+
+    let data = {};
+    let trDoc = content.translationDocument;
+    if (trDoc) {
+      data.state = trDoc.translationError ? STATE_ERROR : STATE_TRANSLATED;
+      data.translatedFrom = trDoc.translatedFrom;
+      data.translatedTo = trDoc.translatedTo;
+      data.originalShown = trDoc.originalShown;
+    } else {
+      data.state = STATE_OFFER;
+      data.originalShown = true;
+    }
+    data.detectedLanguage = content.detectedLanguage;
+
+    this.global.sendAsyncMessage("Translation:DocumentState", data);
+  },
+
   /* nsIWebProgressListener implementation */
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (!aWebProgress.isTopLevel ||
@@ -35,10 +70,14 @@ TranslationContentHandler.prototype = {
     if (!url.startsWith("http://") && !url.startsWith("https://"))
       return;
 
+    let content = this.global.content;
+    if (content.detectedLanguage)
+      return;
+
     // Grab a 60k sample of text from the page.
     let encoder = Cc["@mozilla.org/layout/documentEncoder;1?type=text/plain"]
                     .createInstance(Ci.nsIDocumentEncoder);
-    encoder.init(this.global.content.document, "text/plain", encoder.SkipInvisibleContent);
+    encoder.init(content.document, "text/plain", encoder.SkipInvisibleContent);
     let string = encoder.encodeToStringWithMaxLength(60 * 1024);
 
     // Language detection isn't reliable on very short strings.
@@ -46,8 +85,17 @@ TranslationContentHandler.prototype = {
       return;
 
     LanguageDetector.detectLanguage(string).then(result => {
-      if (result.confident)
-        this.global.sendAsyncMessage("LanguageDetection:Result", result.language);
+      if (!result.confident)
+        return;
+
+      content.detectedLanguage = result.language;
+
+      let data = {
+        state: STATE_OFFER,
+        originalShown: true,
+        detectedLanguage: result.language
+      };
+      this.global.sendAsyncMessage("Translation:DocumentState", data);
     });
   },
 
@@ -78,12 +126,17 @@ TranslationContentHandler.prototype = {
                                                   msg.data.to);
 
         this.global.content.translationDocument = translationDocument;
+        translationDocument.translatedFrom = msg.data.from;
+        translationDocument.translatedTo = msg.data.to;
+        translationDocument.translationError = false;
+
         bingTranslation.translate().then(
           success => {
             this.global.sendAsyncMessage("Translation:Finished", {success: true});
             translationDocument.showTranslation();
           },
           error => {
+            translationDocument.translationError = true;
             this.global.sendAsyncMessage("Translation:Finished", {success: false});
           }
         );

@@ -3067,7 +3067,10 @@
           this.mCurrentBrowser = document.getAnonymousElementByAttribute(this, "anonid", "initialBrowser");
 
           this.mCurrentTab = this.tabContainer.firstChild;
-          let els = Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
+          const nsIEventListenerService =
+            Components.interfaces.nsIEventListenerService;
+          let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+                              .getService(nsIEventListenerService);
           els.addSystemEventListener(document, "keydown", this, false);
           els.addSystemEventListener(document, "keypress", this, false);
           window.addEventListener("sizemodechange", this, false);
@@ -3147,7 +3150,10 @@
             this.mTabListeners[i].destroy();
             this.mTabListeners[i] = null;
           }
-          let els = Cc["@mozilla.org/eventlistenerservice;1"].getService(Ci.nsIEventListenerService);
+          const nsIEventListenerService =
+            Components.interfaces.nsIEventListenerService;
+          let els = Components.classes["@mozilla.org/eventlistenerservice;1"]
+                              .getService(nsIEventListenerService);
           els.removeSystemEventListener(document, "keydown", this, false);
           els.removeSystemEventListener(document, "keypress", this, false);
           window.removeEventListener("sizemodechange", this, false);
