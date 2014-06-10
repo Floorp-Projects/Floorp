@@ -11,6 +11,7 @@
  * JS public API typedefs.
  */
 
+#include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NullPtr.h"
 #include "mozilla/PodOperations.h"
@@ -32,8 +33,6 @@ class CallArgs;
 template <typename T>
 class Rooted;
 
-class JS_PUBLIC_API(AutoGCRooter);
-
 class JS_FRIEND_API(CompileOptions);
 class JS_FRIEND_API(ReadOnlyCompileOptions);
 class JS_FRIEND_API(OwningCompileOptions);
@@ -42,6 +41,10 @@ class JS_PUBLIC_API(CompartmentOptions);
 struct Zone;
 
 } /* namespace JS */
+
+namespace js {
+struct ContextFriendFields;
+} // namespace js
 
 /*
  * Run-time version enumeration.  For compile-time version checking, please use
@@ -246,6 +249,68 @@ inline mozilla::LinkedList<PersistentRootedValue>
 &Runtime::getPersistentRootedList<Value>() { return valuePersistentRooteds; }
 
 } /* namespace shadow */
+
+class JS_PUBLIC_API(AutoGCRooter)
+{
+  public:
+    AutoGCRooter(JSContext *cx, ptrdiff_t tag);
+    AutoGCRooter(js::ContextFriendFields *cx, ptrdiff_t tag);
+
+    ~AutoGCRooter() {
+        MOZ_ASSERT(this == *stackTop);
+        *stackTop = down;
+    }
+
+    /* Implemented in gc/RootMarking.cpp. */
+    inline void trace(JSTracer *trc);
+    static void traceAll(JSTracer *trc);
+    static void traceAllWrappers(JSTracer *trc);
+
+  protected:
+    AutoGCRooter * const down;
+
+    /*
+     * Discriminates actual subclass of this being used.  If non-negative, the
+     * subclass roots an array of values of the length stored in this field.
+     * If negative, meaning is indicated by the corresponding value in the enum
+     * below.  Any other negative value indicates some deeper problem such as
+     * memory corruption.
+     */
+    ptrdiff_t tag_;
+
+    enum {
+        VALARRAY =     -2, /* js::AutoValueArray */
+        PARSER =       -3, /* js::frontend::Parser */
+        SHAPEVECTOR =  -4, /* js::AutoShapeVector */
+        IDARRAY =      -6, /* js::AutoIdArray */
+        DESCVECTOR =   -7, /* js::AutoPropDescVector */
+        VALVECTOR =   -10, /* js::AutoValueVector */
+        IDVECTOR =    -13, /* js::AutoIdVector */
+        OBJVECTOR =   -14, /* js::AutoObjectVector */
+        STRINGVECTOR =-15, /* js::AutoStringVector */
+        SCRIPTVECTOR =-16, /* js::AutoScriptVector */
+        NAMEVECTOR =  -17, /* js::AutoNameVector */
+        HASHABLEVALUE=-18, /* js::HashableValue */
+        IONMASM =     -19, /* js::jit::MacroAssembler */
+        IONALLOC =    -20, /* js::jit::AutoTempAllocatorRooter */
+        WRAPVECTOR =  -21, /* js::AutoWrapperVector */
+        WRAPPER =     -22, /* js::AutoWrapperRooter */
+        OBJOBJHASHMAP=-23, /* js::AutoObjectObjectHashMap */
+        OBJU32HASHMAP=-24, /* js::AutoObjectUnsigned32HashMap */
+        OBJHASHSET =  -25, /* js::AutoObjectHashSet */
+        JSONPARSER =  -26, /* js::JSONParser */
+        CUSTOM =      -27, /* js::CustomAutoRooter */
+        FUNVECTOR =   -28  /* js::AutoFunctionVector */
+    };
+
+  private:
+    AutoGCRooter ** const stackTop;
+
+    /* No copy or assignment semantics. */
+    AutoGCRooter(AutoGCRooter &ida) MOZ_DELETE;
+    void operator=(AutoGCRooter &ida) MOZ_DELETE;
+};
+
 } /* namespace JS */
 
 namespace js {

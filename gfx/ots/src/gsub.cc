@@ -614,36 +614,48 @@ bool ots_gsub_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
     DROP_THIS_TABLE("Bad version");
     return true;
   }
-  if ((offset_script_list < kGsubHeaderSize ||
-       offset_script_list >= length) ||
-      (offset_feature_list < kGsubHeaderSize ||
-       offset_feature_list >= length) ||
-      (offset_lookup_list < kGsubHeaderSize ||
-       offset_lookup_list >= length)) {
-    DROP_THIS_TABLE("Bad offset in table header");
-    return true;
-  }
 
-  if (!ParseLookupListTable(file, data + offset_lookup_list,
-                            length - offset_lookup_list,
-                            &kGsubLookupSubtableParser,
-                            &gsub->num_lookups)) {
-    DROP_THIS_TABLE("Failed to parse lookup list table");
-    return true;
+  if (offset_lookup_list) {
+    if (offset_lookup_list < kGsubHeaderSize || offset_lookup_list >= length) {
+      DROP_THIS_TABLE("Bad lookup list offset in table header");
+      return true;
+    }
+
+    if (!ParseLookupListTable(file, data + offset_lookup_list,
+                              length - offset_lookup_list,
+                              &kGsubLookupSubtableParser,
+                              &gsub->num_lookups)) {
+      DROP_THIS_TABLE("Failed to parse lookup list table");
+      return true;
+    }
   }
 
   uint16_t num_features = 0;
-  if (!ParseFeatureListTable(file, data + offset_feature_list,
-                             length - offset_feature_list, gsub->num_lookups,
-                             &num_features)) {
-    DROP_THIS_TABLE("Failed to parse feature list table");
-    return true;
+  if (offset_feature_list) {
+    if (offset_feature_list < kGsubHeaderSize || offset_feature_list >= length) {
+      DROP_THIS_TABLE("Bad feature list offset in table header");
+      return true;
+    }
+
+    if (!ParseFeatureListTable(file, data + offset_feature_list,
+                               length - offset_feature_list, gsub->num_lookups,
+                               &num_features)) {
+      DROP_THIS_TABLE("Failed to parse feature list table");
+      return true;
+    }
   }
 
-  if (!ParseScriptListTable(file, data + offset_script_list,
-                            length - offset_script_list, num_features)) {
-    DROP_THIS_TABLE("Failed to parse script list table");
-    return true;
+  if (offset_script_list) {
+    if (offset_script_list < kGsubHeaderSize || offset_script_list >= length) {
+      DROP_THIS_TABLE("Bad script list offset in table header");
+      return true;
+    }
+
+    if (!ParseScriptListTable(file, data + offset_script_list,
+                              length - offset_script_list, num_features)) {
+      DROP_THIS_TABLE("Failed to parse script list table");
+      return true;
+    }
   }
 
   gsub->data = data;
@@ -669,3 +681,5 @@ void ots_gsub_free(OpenTypeFile *file) {
 
 }  // namespace ots
 
+#undef TABLE_NAME
+#undef DROP_THIS_TABLE

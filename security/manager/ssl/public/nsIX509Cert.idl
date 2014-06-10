@@ -74,7 +74,7 @@ interface nsIX509Cert : nsISupports {
   readonly attribute AString sha256Fingerprint;
 
   /**
-   *  The fingerprint of the certificate's public key,
+   *  The fingerprint of the certificate's DER encoding,
    *  calculated using the SHA1 algorithm.
    */
   readonly attribute AString sha1Fingerprint;
