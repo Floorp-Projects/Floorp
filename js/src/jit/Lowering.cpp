@@ -132,11 +132,7 @@ LIRGenerator::visitCheckOverRecursedPar(MCheckOverRecursedPar *ins)
 {
     LCheckOverRecursedPar *lir =
         new(alloc()) LCheckOverRecursedPar(useRegister(ins->forkJoinContext()), temp());
-    if (!add(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-    return true;
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -229,7 +225,7 @@ LIRGenerator::visitNewCallObjectPar(MNewCallObjectPar *ins)
 {
     const LAllocation &parThreadContext = useRegister(ins->forkJoinContext());
     LNewCallObjectPar *lir = LNewCallObjectPar::New(alloc(), parThreadContext, temp(), temp());
-    return define(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -2094,7 +2090,7 @@ LIRGenerator::visitLambdaPar(MLambdaPar *ins)
     LLambdaPar *lir = new(alloc()) LLambdaPar(useRegister(ins->forkJoinContext()),
                                               useRegister(ins->scopeChain()),
                                               temp(), temp());
-    return define(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -2200,30 +2196,30 @@ LIRGenerator::visitInterruptCheckPar(MInterruptCheckPar *ins)
 {
     LInterruptCheckPar *lir =
         new(alloc()) LInterruptCheckPar(useRegister(ins->forkJoinContext()), temp());
-    if (!add(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-    return true;
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitNewPar(MNewPar *ins)
 {
     LNewPar *lir = new(alloc()) LNewPar(useRegister(ins->forkJoinContext()), temp(), temp());
-    return define(lir, ins);
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
 LIRGenerator::visitNewDenseArrayPar(MNewDenseArrayPar *ins)
 {
+    JS_ASSERT(ins->forkJoinContext()->type() == MIRType_ForkJoinContext);
+    JS_ASSERT(ins->length()->type() == MIRType_Int32);
+    JS_ASSERT(ins->type() == MIRType_Object);
+
     LNewDenseArrayPar *lir =
-        new(alloc()) LNewDenseArrayPar(useFixed(ins->forkJoinContext(), CallTempReg0),
-                                       useFixed(ins->length(), CallTempReg1),
-                                       tempFixed(CallTempReg2),
-                                       tempFixed(CallTempReg3),
-                                       tempFixed(CallTempReg4));
-    return defineReturn(lir, ins);
+        new(alloc()) LNewDenseArrayPar(useRegister(ins->forkJoinContext()),
+                                       useRegister(ins->length()),
+                                       temp(),
+                                       temp(),
+                                       temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -3329,12 +3325,12 @@ LIRGenerator::visitRestPar(MRestPar *ins)
 {
     JS_ASSERT(ins->numActuals()->type() == MIRType_Int32);
 
-    LRestPar *lir = new(alloc()) LRestPar(useFixed(ins->forkJoinContext(), CallTempReg0),
-                                          useFixed(ins->numActuals(), CallTempReg1),
-                                          tempFixed(CallTempReg2),
-                                          tempFixed(CallTempReg3),
-                                          tempFixed(CallTempReg4));
-    return defineReturn(lir, ins) && assignSafepoint(lir, ins);
+    LRestPar *lir = new(alloc()) LRestPar(useRegister(ins->forkJoinContext()),
+                                          useRegister(ins->numActuals()),
+                                          temp(),
+                                          temp(),
+                                          temp());
+    return define(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
