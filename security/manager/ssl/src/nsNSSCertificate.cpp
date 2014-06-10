@@ -258,6 +258,7 @@ GetKeyUsagesString(CERTCertificate* cert, nsINSSComponent* nssComponent,
 
   SECItem keyUsageItem;
   keyUsageItem.data = nullptr;
+  keyUsageItem.len = 0;
 
   SECStatus srv;
 
@@ -273,8 +274,11 @@ GetKeyUsagesString(CERTCertificate* cert, nsINSSComponent* nssComponent,
     else
       return NS_ERROR_FAILURE;
   }
+  unsigned char keyUsage = 0;
+  if (keyUsageItem.len) {
+    keyUsage = keyUsageItem.data[0];
+  }
 
-  unsigned char keyUsage = keyUsageItem.data[0];
   nsAutoString local;
   nsresult rv;
   const char16_t comma = ',';
