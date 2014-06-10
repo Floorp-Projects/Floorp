@@ -1797,7 +1797,7 @@ Scope.prototype = {
     element.className = aTargetClassName;
 
     let arrow = this._arrow = document.createElement("hbox");
-    arrow.className = "arrow";
+    arrow.className = "arrow theme-twisty";
 
     let name = this._name = document.createElement("label");
     name.className = "plain name";
