@@ -31,7 +31,7 @@ interface nsIXPConnectWrappedNative;
  * boolean to PR_TRUE before making the call.  Implementations may skip writing
  * to *_retval unless they want to return PR_FALSE.
  */
-[uuid(187b7295-255d-469c-b7b3-ce91373df24b)]
+[uuid(9bae4ff5-5618-4ccd-b106-8e21e3fb64d3)]
 interface nsIXPCScriptable : nsISupports
 {
     /* bitflags used for 'flags' (only 32 bits available!) */
