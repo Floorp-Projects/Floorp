@@ -96,11 +96,6 @@ ThebesLayerD3D9::CopyRegion(IDirect3DTexture9* aSrc, const nsIntPoint &aSrcOffse
   aValidRegion->And(*aValidRegion, retainedRegion);
 }
 
-static uint64_t RectArea(const nsIntRect& aRect)
-{
-  return aRect.width*uint64_t(aRect.height);
-}
-
 void
 ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
 {
