@@ -581,7 +581,8 @@ CGPointDistance(CGPoint a, CGPoint b)
 }
 
 static void
-DrawRadialRepeatingGradient(CGContextRef cg, const RadialGradientPattern &aPattern, const CGRect &aExtents)
+DrawRadialRepeatingGradient(CGContextRef cg, const RadialGradientPattern &aPattern,
+                            const CGRect &aExtents, bool aReflect)
 {
   GradientStopsCG *stops = static_cast<GradientStopsCG*>(aPattern.mStops.get());
   CGPoint startCenter = { aPattern.mCenter1.x, aPattern.mCenter1.y };
@@ -597,31 +598,39 @@ DrawRadialRepeatingGradient(CGContextRef cg, const RadialGradientPattern &aPatte
   minimumEndRadius = max(minimumEndRadius, CGPointDistance(endCenter, CGRectBottomRight(aExtents)));
 
   CGFloat length = endRadius - startRadius;
-  int repeatCount = 1;
+  int repeatStartFactor = 0, repeatEndFactor = 1;
   while (endRadius < minimumEndRadius) {
     endRadius += length;
-    repeatCount++;
+    repeatEndFactor++;
   }
 
   while (startRadius-length >= 0) {
     startRadius -= length;
-    repeatCount++;
+    repeatStartFactor--;
   }
 
+  int repeatCount = repeatEndFactor - repeatStartFactor;
+  uint32_t numStops = stops->mStops.size();
   double scale = 1./repeatCount;
 
   std::vector<CGFloat> colors;
   std::vector<CGFloat> offsets;
-  colors.reserve(stops->mStops.size()*repeatCount*4);
-  offsets.reserve(stops->mStops.size()*repeatCount);
-  for (int j = 0; j < repeatCount; j++) {
-    for (uint32_t i = 0; i < stops->mStops.size(); i++) {
-      colors.push_back(stops->mStops[i].color.r);
-      colors.push_back(stops->mStops[i].color.g);
-      colors.push_back(stops->mStops[i].color.b);
-      colors.push_back(stops->mStops[i].color.a);
+  colors.reserve(numStops*repeatCount*4);
+  offsets.reserve(numStops*repeatCount);
+  for (int j = repeatStartFactor; j < repeatEndFactor; j++) {
+    bool isReflected = aReflect && (j % 2) != 0;
+    for (uint32_t i = 0; i < numStops; i++) {
+      uint32_t stopIndex = isReflected ? numStops - i - 1 : i;
+      colors.push_back(stops->mStops[stopIndex].color.r);
+      colors.push_back(stops->mStops[stopIndex].color.g);
+      colors.push_back(stops->mStops[stopIndex].color.b);
+      colors.push_back(stops->mStops[stopIndex].color.a);
 
-      offsets.push_back((stops->mStops[i].offset + j)*scale);
+      CGFloat offset = stops->mStops[stopIndex].offset;
+      if (isReflected) {
+        offset = 1 - offset;
+      }
+      offsets.push_back((offset + (j - repeatStartFactor)) * scale);
     }
   }
 
@@ -629,7 +638,7 @@ DrawRadialRepeatingGradient(CGContextRef cg, const RadialGradientPattern &aPatte
   CGGradientRef gradient = CGGradientCreateWithColorComponents(colorSpace,
                                                                &colors.front(),
                                                                &offsets.front(),
-                                                               repeatCount*stops->mStops.size());
+                                                               repeatCount*numStops);
   CGColorSpaceRelease(colorSpace);
 
   //XXX: are there degenerate radial gradients that we should avoid drawing?
@@ -679,8 +688,8 @@ DrawGradient(CGContextRef cg, const Pattern &aPattern, const CGRect &aExtents)
       //XXX: are there degenerate radial gradients that we should avoid drawing?
       CGContextDrawRadialGradient(cg, stops->mGradient, startCenter, startRadius, endCenter, endRadius,
                                   kCGGradientDrawsBeforeStartLocation | kCGGradientDrawsAfterEndLocation);
-    } else if (stops->mExtend == ExtendMode::REPEAT) {
-      DrawRadialRepeatingGradient(cg, pat, aExtents);
+    } else if (stops->mExtend == ExtendMode::REPEAT || stops->mExtend == ExtendMode::REFLECT) {
+      DrawRadialRepeatingGradient(cg, pat, aExtents, stops->mExtend == ExtendMode::REFLECT);
     }
   } else {
     assert(0);
