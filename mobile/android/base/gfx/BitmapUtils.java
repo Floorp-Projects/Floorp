@@ -122,7 +122,7 @@ public final class BitmapUtils {
             try {
                 final Drawable d = context.getPackageManager().getApplicationIcon(resource);
                 runOnBitmapFoundOnUiThread(loader, d);
-            } catch(Exception ex) { }
+            } catch (Exception ex) { }
 
             return;
         }
