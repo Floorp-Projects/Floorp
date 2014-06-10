@@ -1,0 +1,90 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=855952
+-->
+<head>
+  <title>Test for basic sanity of the device storage API </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="devicestorage_common.js"></script>
+
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=855952">Mozilla Bug 855952</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var file   = new Blob(["This is a text file."], {type: "text/plain"});
+var appendFile   = new Blob([" Another text file."], {type: "text/plain"});
+
+devicestorage_setup();
+
+function deleteSuccess(e) {
+  devicestorage_cleanup();
+}
+
+function deleteError(e) {
+  ok(false, "deleteError was called : " + e.target.error.name);
+  devicestorage_cleanup();
+}
+
+function appendSuccess(e) {
+  ok(true, "appendSuccess was called.");
+
+  request = gStorage.delete(e.target.result)
+  request.onsuccess = deleteSuccess;
+  request.onerror = deleteError;
+}
+
+function appendError(e) {
+  ok(false, "appendError was called.");
+  devicestorage_cleanup();
+}
+
+function addSuccess(e) {
+  ok(true, "addSuccess was called");
+
+  request = gStorage.appendNamed(appendFile, e.target.result);
+  ok(request, "Should have a non-null request");
+
+  request.onsuccess = appendSuccess;
+  request.onerror = appendError;
+}
+
+function addError(e) {
+  // test file is already exists.  clean it up and try again..
+  request = gStorage.delete(e.target.result)
+  request.onsuccess = addFile;
+}
+
+function addFile() {
+  // Add a file first
+  request = gStorage.addNamed(file, "devicestorage/append.asc");
+  ok(request, "Should have a non-null request");
+  request.onsuccess = addSuccess;
+  request.onerror = addError;
+}
+
+function runtest() {
+  addFile();
+}
+
+var gStorage = navigator.getDeviceStorage("sdcard");
+ok(navigator.getDeviceStorage, "Should have getDeviceStorage");
+ok(gStorage, "Should get storage from sdcard");
+runtest();
+
+</script>
+</pre>
+</body>
+</html>
+
