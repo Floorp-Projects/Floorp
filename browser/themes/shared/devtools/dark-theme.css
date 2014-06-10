@@ -282,6 +282,10 @@ div.CodeMirror span.eval-text {
   background-position: -42px -14px;
 }
 
+.theme-twisty[invisible] {
+  visibility: hidden;
+}
+
 .theme-checkbox {
   display: inline-block;
   border: 0;
