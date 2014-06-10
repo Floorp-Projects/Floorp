@@ -47,6 +47,29 @@ function checkForUpdates(aEvent) {
   WebappManager.checkForUpdates(true);
 }
 
+let ContextMenus = {
+  target: null,
+
+  init: function() {
+    document.addEventListener("contextmenu", this, false);
+    document.getElementById("uninstallLabel").addEventListener("click", this.uninstall.bind(this), false);
+  },
+
+  handleEvent: function(event) {
+    // store the target of context menu events so that we know which app to act on
+    this.target = event.target;
+    while (!this.target.hasAttribute("contextmenu")) {
+      this.target = this.target.parentNode;
+    }
+  },
+
+  uninstall: function() {
+    navigator.mozApps.mgmt.uninstall(this.target.app);
+
+    this.target = null;
+  }
+};
+
 function onLoad(aEvent) {
   let elmts = document.querySelectorAll("[pref]");
   for (let i = 0; i < elmts.length; i++) {
@@ -58,6 +81,8 @@ function onLoad(aEvent) {
   navigator.mozApps.mgmt.oninstall = onInstall;
   navigator.mozApps.mgmt.onuninstall = onUninstall;
   updateList();
+
+  ContextMenus.init();
 
   // XXX - Hack to fix bug 985867 for now
   document.addEventListener("touchstart", function() { });
@@ -84,6 +109,7 @@ function addApplication(aApp) {
 
   let container = document.createElement("div");
   container.className = "app list-item";
+  container.setAttribute("contextmenu", "appmenu");
   container.setAttribute("id", "app-" + aApp.origin);
   container.setAttribute("mozApp", aApp.origin);
   container.setAttribute("title", manifest.name);
