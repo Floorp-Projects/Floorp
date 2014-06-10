@@ -72,6 +72,10 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
 
   private static final String LOG_TAG = FxAccountAbstractSetupActivity.class.getSimpleName();
 
+  // By default, any custom server configuration is only shown when the account
+  // is configured to use a custom server.
+  private static boolean ALWAYS_SHOW_CUSTOM_SERVER_LAYOUT = false;
+
   protected int minimumPasswordLength = 8;
 
   protected AutoCompleteTextView emailEdit;
@@ -403,6 +407,8 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
       FxAccountConstants.pii(LOG_TAG, "Using auth server: " + authServerEndpoint);
       FxAccountConstants.pii(LOG_TAG, "Using sync server: " + syncServerEndpoint);
     }
+
+    updateCustomServerView();
   }
 
   @Override
@@ -500,5 +506,29 @@ abstract public class FxAccountAbstractSetupActivity extends FxAccountAbstractAc
       // Sync time.
       Logger.warn(LOG_TAG, "Mozilla's Sync token servers only works with Mozilla's auth servers. Sync will likely be mis-configured.");
     }
+  }
+
+  protected void updateCustomServerView() {
+    final boolean shouldShow =
+        ALWAYS_SHOW_CUSTOM_SERVER_LAYOUT ||
+        !FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT.equals(authServerEndpoint) ||
+        !FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT.equals(syncServerEndpoint);
+
+    if (!shouldShow) {
+      setCustomServerViewVisibility(View.GONE);
+      return;
+    }
+
+    final TextView authServerView = (TextView) ensureFindViewById(null, R.id.account_server_summary, "account server");
+    final TextView syncServerView = (TextView) ensureFindViewById(null, R.id.sync_server_summary, "Sync server");
+    authServerView.setText(authServerEndpoint);
+    syncServerView.setText(syncServerEndpoint);
+
+    setCustomServerViewVisibility(View.VISIBLE);
+  }
+
+  protected void setCustomServerViewVisibility(int visibility) {
+    ensureFindViewById(null, R.id.account_server_layout, "account server layout").setVisibility(visibility);
+    ensureFindViewById(null, R.id.sync_server_layout, "sync server layout").setVisibility(visibility);
   }
 }

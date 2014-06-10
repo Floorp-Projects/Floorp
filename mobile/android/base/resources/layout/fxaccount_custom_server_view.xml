@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <LinearLayout
+        android:id="@+id/account_server_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@color/fxaccount_error_preference_backgroundcolor"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeight" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/fxaccount_empty_contentDescription"
+            android:gravity="center"
+            android:minWidth="48dip"
+            android:padding="10dip"
+            android:src="@drawable/fxaccount_sync_error" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingBottom="6dip"
+            android:paddingRight="10dip"
+            android:paddingTop="6dip" >
+
+            <TextView
+                android:id="@+android:id/account_server_title"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="0dp"
+                android:gravity="center_vertical"
+                android:text="@string/fxaccount_custom_server_account_title" >
+            </TextView>
+
+            <TextView
+                android:id="@+android:id/account_server_summary"
+                style="@style/FxAccountTextItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="0dp"
+                android:ellipsize="middle"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sync_server_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:background="@color/fxaccount_error_preference_backgroundcolor"
+        android:gravity="center_vertical"
+        android:minHeight="?android:attr/listPreferredItemHeight" >
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/fxaccount_empty_contentDescription"
+            android:gravity="center"
+            android:minWidth="48dip"
+            android:padding="10dip"
+            android:src="@drawable/fxaccount_sync_error" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingBottom="6dip"
+            android:paddingRight="10dip"
+            android:paddingTop="6dip" >
+
+            <TextView
+                android:id="@+android:id/sync_server_title"
+                style="@style/FxAccountTextItem"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="0dp"
+                android:gravity="center_vertical"
+                android:text="@string/fxaccount_custom_server_sync_title" >
+            </TextView>
+
+            <TextView
+                android:id="@+android:id/sync_server_summary"
+                style="@style/FxAccountTextItem"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="0dp"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textSize="12sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</merge>
