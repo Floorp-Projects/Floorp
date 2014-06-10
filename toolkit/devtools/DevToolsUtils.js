@@ -290,6 +290,12 @@ exports.hasSafeGetter = function hasSafeGetter(aDesc) {
  *         True if it is safe to read properties from aObj, or false otherwise.
  */
 exports.isSafeJSObject = function isSafeJSObject(aObj) {
+  // If we are running on a worker thread, Cu is not available. In this case,
+  // we always return false, just to be on the safe side.
+  if (!Cu) {
+    return false;
+  }
+
   if (Cu.getGlobalForObject(aObj) ==
       Cu.getGlobalForObject(exports.isSafeJSObject)) {
     return true; // aObj is not a cross-compartment wrapper.
