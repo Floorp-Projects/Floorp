@@ -58,6 +58,9 @@ function onLoad(aEvent) {
   navigator.mozApps.mgmt.oninstall = onInstall;
   navigator.mozApps.mgmt.onuninstall = onUninstall;
   updateList();
+
+  // XXX - Hack to fix bug 985867 for now
+  document.addEventListener("touchstart", function() { });
 }
 
 function updateList() {
