@@ -59,7 +59,7 @@ bool gTestsComplete = false;
 #error USE_FAKE_PCOBSERVER undefined
 #endif
 
-static int kDefaultTimeout = 5000;
+static int kDefaultTimeout = 7000;
 static bool fRtcpMux = true;
 
 static std::string callerName = "caller";
@@ -735,7 +735,7 @@ class SignalingAgent {
 
   void WaitForGather() {
     ASSERT_TRUE_WAIT(ice_gathering_state() == PCImplIceGatheringState::Complete,
-                     5000);
+                     kDefaultTimeout);
 
     std::cout << name << ": Init Complete" << std::endl;
   }
@@ -744,7 +744,7 @@ class SignalingAgent {
     EXPECT_TRUE_WAIT(
         ice_gathering_state() == PCImplIceGatheringState::Complete ||
         ice_connection_state() == PCImplIceConnectionState::Failed,
-        5000);
+        kDefaultTimeout);
 
     if (ice_connection_state() == PCImplIceConnectionState::Failed) {
       std::cout << name << ": Init Failed" << std::endl;
