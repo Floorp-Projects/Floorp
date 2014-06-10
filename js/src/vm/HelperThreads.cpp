@@ -633,6 +633,7 @@ GlobalHelperThreadState::finishParseTask(JSContext *maybecx, JSRuntime *rt, void
 
     // Mark the zone as no longer in use by an ExclusiveContext, and available
     // to be collected by the GC.
+    parseTask->cx->leaveCompartment(parseTask->cx->compartment());
     rt->clearUsedByExclusiveThread(parseTask->cx->zone());
     if (!maybecx) {
         return nullptr;
