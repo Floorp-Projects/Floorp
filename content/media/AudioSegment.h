@@ -188,7 +188,7 @@ public:
       AudioChunk& c = *ci;
       // If this chunk is null, don't bother resampling, just alter its duration
       if (c.IsNull()) {
-        c.mDuration *= aOutRate / aInRate;
+        c.mDuration = (c.mDuration * aOutRate) / aInRate;
         mDuration += c.mDuration;
         continue;
       }
