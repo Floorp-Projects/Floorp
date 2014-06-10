@@ -18,7 +18,7 @@ class TestManifestParser(unittest.TestCase):
     """
     Test the manifest parser
 
-    You must have ManifestDestiny installed before running these tests.
+    You must have manifestparser installed before running these tests.
     Run ``python manifestparser.py setup develop`` with setuptools installed.
     """
 

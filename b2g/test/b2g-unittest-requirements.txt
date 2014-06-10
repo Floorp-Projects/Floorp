@@ -1,4 +1,4 @@
-ManifestDestiny==0.5.6
+manifestparser==0.5.7
 mozprocess==0.9
 mozprofile==0.6
 mozrunner==5.15
