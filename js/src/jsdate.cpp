@@ -911,35 +911,30 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 static bool
 date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
-    double msec;
+    if (date_parseISOString(str, result, dtInfo))
+        return true;
 
-    const jschar *s;
-    size_t limit;
-    size_t i = 0;
+    const jschar *s = str->chars();
+    size_t limit = str->length();
+    if (limit == 0)
+        return false;
+
     int year = -1;
     int mon = -1;
     int mday = -1;
     int hour = -1;
     int min = -1;
     int sec = -1;
-    int c = -1;
-    int n = -1;
     int tzoffset = -1;
+
     int prevc = 0;
+
     bool seenplusminus = false;
-    int temp;
     bool seenmonthname = false;
 
-    if (date_parseISOString(str, result, dtInfo))
-        return true;
-
-    s = str->chars();
-    limit = str->length();
-    if (limit == 0)
-        return false;
-
+    size_t i = 0;
     while (i < limit) {
-        c = s[i];
+        int c = s[i];
         i++;
         if (c <= ' ' || c == ',' || c == '-') {
             if (c == '-' && '0' <= s[i] && s[i] <= '9') {
@@ -960,7 +955,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             continue;
         }
         if ('0' <= c && c <= '9') {
-            n = c - '0';
+            int n = c - '0';
             while (i < limit && '0' <= (c = s[i]) && c <= '9') {
                 n = n * 10 + c - '0';
                 i++;
@@ -1067,7 +1062,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                                 return false;
 
                             seenmonthname = true;
-                            temp = /*byte*/ (action - 2) + 1;
+                            int temp = /*byte*/ (action - 2) + 1;
 
                             if (mon < 0) {
                                 mon = temp;
@@ -1127,7 +1122,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             return false;
 
         if (mday > year) {
-            temp = year;
+            int temp = year;
             year = mday;
             mday = temp;
         }
@@ -1140,7 +1135,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         }
     } else if (mon < 100) { /* (b) year/month/day */
         if (mday < 70) {
-            temp = year;
+            int temp = year;
             year = mon + 1900;
             mon = mday;
             mday = temp;
@@ -1149,7 +1144,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         }
     } else { /* (c) year/month/day */
         if (mday < 70) {
-            temp = year;
+            int temp = year;
             year = mon;
             mon = mday;
             mday = temp;
@@ -1166,7 +1161,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     if (hour < 0)
         hour = 0;
 
-    msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
+    double msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
     if (tzoffset == -1) /* no time zone specified, have to use local */
         msec = UTC(msec, dtInfo);
