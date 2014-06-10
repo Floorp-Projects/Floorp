@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+  <head>
+  </head>
+  <body>
+    <div id="host"></div>
+    <script>
+      var host = document.getElementById("host");
+      var root = host.createShadowRoot();
+      root.innerHTML = '<style>input ~ div { background: red; transition: background 100ms; } input:checked ~ div { background: green; }</style><input id="one" type="checkbox"><div style="height: 50px; width: 50px;"></div>';
+
+      function tweak() {
+          var el = root.getElementById("one");
+          el.checked = true;
+          el.nextSibling.addEventListener("transitionend", function() {
+            document.documentElement.removeAttribute("class");
+          }, false);
+      }
+
+      window.addEventListener("MozReftestInvalidate", tweak, false);
+    </script>
+  </body>
+</html>
