@@ -377,6 +377,11 @@ private:
    * was inside an overscrolled APZC.
    */
   bool mInOverscrolledApzc;
+  /* Sometimes we want to ignore all touches except one. In such cases, this
+   * is set to the identifier of the touch we are not ignoring; in other cases,
+   * this is set to -1.
+   */
+  int32_t mRetainedTouchIdentifier;
   /* The number of touch points we are tracking that are currently on the screen. */
   uint32_t mTouchCount;
   /* The transform from root screen coordinates into mApzcForInputBlock's
