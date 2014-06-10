@@ -962,6 +962,9 @@ AsyncDeleteAllFaviconsFromDisk::
   AsyncDeleteAllFaviconsFromDisk(bool aIgnoreRecent)
   : mIgnoreRecent(aIgnoreRecent)
 {
+  // We can't call FaviconHelper::GetICOCacheSecondsTimeout() on non-main
+  // threads, as it reads a pref, so cache its value here.
+  mIcoNoDeleteSeconds = FaviconHelper::GetICOCacheSecondsTimeout() + 600;
 }
 
 NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
@@ -1008,11 +1011,9 @@ NS_IMETHODIMP AsyncDeleteAllFaviconsFromDisk::Run()
         // If the icon is older than the regeneration time (+ 10 min to be
         // safe), then it's old and we can get rid of it.
         // This code is only hit directly after a regeneration.
-        int32_t icoNoDeleteSeconds =
-          FaviconHelper::GetICOCacheSecondsTimeout() + 600;
         int64_t nowTime = PR_Now() / int64_t(PR_USEC_PER_SEC);
         if (NS_FAILED(rv) ||
-          (nowTime - fileModTime) < icoNoDeleteSeconds) {
+          (nowTime - fileModTime) < mIcoNoDeleteSeconds) {
           continue;
         }
       }
