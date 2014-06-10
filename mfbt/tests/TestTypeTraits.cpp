@@ -19,6 +19,7 @@ using mozilla::IsSigned;
 using mozilla::IsUnsigned;
 using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
+using mozilla::RemoveExtent;
 
 static_assert(!IsArray<bool>::value, "bool not an array");
 static_assert(IsArray<bool[]>::value, "bool[] is an array");
@@ -291,6 +292,15 @@ static_assert(IsSame<MakeUnsigned<volatile char>::Type, volatile unsigned char>:
               "volatile char won't unsignify correctly");
 static_assert(IsSame<MakeUnsigned<const char>::Type, const unsigned char>::value,
               "const char won't unsignify correctly");
+
+static_assert(IsSame<RemoveExtent<int>::Type, int>::value,
+              "removing extent from non-array must return the non-array");
+static_assert(IsSame<RemoveExtent<const int[]>::Type, const int>::value,
+              "removing extent from unknown-bound array must return element type");
+static_assert(IsSame<RemoveExtent<volatile int[5]>::Type, volatile int>::value,
+              "removing extent from known-bound array must return element type");
+static_assert(IsSame<RemoveExtent<long[][17]>::Type, long[17]>::value,
+              "removing extent from multidimensional array must return element type");
 
 /*
  * Android's broken [u]intptr_t inttype macros are broken because its PRI*PTR
