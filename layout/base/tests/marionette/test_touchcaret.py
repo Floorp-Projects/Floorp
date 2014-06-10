@@ -3,8 +3,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import string
-
 from by import By
 from marionette import Actions
 from marionette_test import MarionetteTestCase
@@ -14,18 +12,44 @@ class TouchCaretTest(MarionetteTestCase):
     _input_selector = (By.ID, 'input')
     _textarea_selector = (By.ID, 'textarea')
     _contenteditable_selector = (By.ID, 'contenteditable')
+    _large_expiration_time = 3000 * 20  # 60 seconds
 
     def setUp(self):
-        # Code to execute before a tests are run.
+        # Code to execute before a test is being run.
         MarionetteTestCase.setUp(self)
         self.actions = Actions(self.marionette)
+        self.original_expiration_time = self.expiration_time
 
-    def openTestHtml(self, enabled=True):
-        '''Open html for testing and locate elements, and enable/disable touch
-        caret.'''
+    def tearDown(self):
+        # Code to execute after a test is being run.
+        self.expiration_time = self.original_expiration_time
+        MarionetteTestCase.tearDown(self)
+
+    @property
+    def expiration_time(self):
+        'Return touch caret expiration time in milliseconds.'
+        return self.marionette.execute_script(
+            'return SpecialPowers.getIntPref("touchcaret.expiration.time");')
+
+    @expiration_time.setter
+    def expiration_time(self, expiration_time):
+        'Set touch caret expiration time in milliseconds.'
+        self.marionette.execute_script(
+            'SpecialPowers.setIntPref("touchcaret.expiration.time", arguments[0]);',
+            script_args=[expiration_time])
+
+    def openTestHtml(self, enabled=True, expiration_time=None):
+        '''Open html for testing and locate elements, enable/disable touch caret, and
+        set touch caret expiration time in milliseconds).
+
+        '''
         self.marionette.execute_script(
             'SpecialPowers.setBoolPref("touchcaret.enabled", %s);' %
             ('true' if enabled else 'false'))
+
+        # Set a larger expiration time to avoid intermittent test failures.
+        if expiration_time is not None:
+            self.expiration_time = expiration_time
 
         test_html = self.marionette.absolute_url('test_touchcaret.html')
         self.marionette.navigate(test_html)
@@ -195,10 +219,8 @@ class TouchCaretTest(MarionetteTestCase):
         content_to_add = '!'
         non_target_content = content_to_add + self.get_content(el)
 
-        # Get touch caret timeout in millisecond, and convert it to second.
-        timeout = self.marionette.execute_script(
-            'return SpecialPowers.getIntPref("touchcaret.expiration.time");')
-        timeout /= 1000.0
+        # Get touch caret expiration time in millisecond, and convert it to second.
+        timeout = self.expiration_time / 1000.0
 
         # Tap to make touch caret appear. Note: it's strange that when the caret
         # is at the end, the rect of the caret in <textarea> cannot be obtained.
@@ -220,15 +242,15 @@ class TouchCaretTest(MarionetteTestCase):
     # <input> test cases with touch caret enabled
     ########################################################################
     def test_input_move_caret_to_the_right_by_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_the_right_by_one_character(self._input, self.assertEqual)
 
     def test_input_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self._input, self.assertEqual)
 
     def test_input_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self._input, self.assertEqual)
 
     def test_input_touch_caret_timeout(self):
@@ -250,15 +272,15 @@ class TouchCaretTest(MarionetteTestCase):
     # <textarea> test cases with touch caret enabled
     ########################################################################
     def test_textarea_move_caret_to_the_right_by_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_the_right_by_one_character(self._textarea, self.assertEqual)
 
     def test_textarea_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self._textarea, self.assertEqual)
 
     def test_textarea_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self._textarea, self.assertEqual)
 
     def test_textarea_touch_caret_timeout(self):
@@ -280,15 +302,15 @@ class TouchCaretTest(MarionetteTestCase):
     # <div> contenteditable test cases with touch caret enabled
     ########################################################################
     def test_contenteditable_move_caret_to_the_right_by_one_character(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_the_right_by_one_character(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_end_by_dragging_touch_caret_to_bottom_right_corner(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self):
-        self.openTestHtml(enabled=True)
+        self.openTestHtml(enabled=True, expiration_time=self._large_expiration_time)
         self._test_move_caret_to_front_by_dragging_touch_caret_to_top_left_corner(self._contenteditable, self.assertEqual)
 
     def test_contenteditable_touch_caret_timeout(self):
