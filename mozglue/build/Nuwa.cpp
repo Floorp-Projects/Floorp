@@ -548,16 +548,45 @@ thread_info_cleanup(void *arg) {
   thread_info_t *tinfo = (thread_info_t *)arg;
   pthread_attr_destroy(&tinfo->threadAttr);
 
+  uintptr_t pageGuard = ceilToPage((uintptr_t)tinfo->stk);
+  mprotect((void*)pageGuard, getPageSize(), PROT_READ | PROT_WRITE);
+  free(tinfo->stk);
+
   REAL(pthread_mutex_lock)(&sThreadCountLock);
   /* unlink tinfo from sAllThreads */
   tinfo->remove();
+  pthread_mutex_unlock(&sThreadCountLock);
 
+  // while sThreadCountLock is held, since delete calls wrapped functions
+  // which try to lock sThreadCountLock. This results in deadlock. And we
+  // need to delete |tinfo| before decreasing sThreadCount, so Nuwa won't
+  // get ready before tinfo is cleaned.
+  delete tinfo;
+
+  REAL(pthread_mutex_lock)(&sThreadCountLock);
   sThreadCount--;
   pthread_cond_signal(&sThreadChangeCond);
   pthread_mutex_unlock(&sThreadCountLock);
+}
 
-  free(tinfo->stk);
-  delete tinfo;
+static void*
+cleaner_thread(void *arg) {
+  thread_info_t *tinfo = (thread_info_t *)arg;
+  pthread_t *thread = sIsNuwaProcess ? &tinfo->origThreadID
+                                     : &tinfo->recreatedThreadID;
+  // Wait until target thread end.
+  while (!pthread_kill(*thread, 0)) {
+    sched_yield();
+  }
+  thread_info_cleanup(tinfo);
+  return nullptr;
+}
+
+static void
+thread_cleanup(void *arg) {
+  pthread_t thread;
+  REAL(pthread_create)(&thread, nullptr, &cleaner_thread, arg);
+  pthread_detach(thread);
 }
 
 static void *
@@ -573,7 +602,7 @@ _thread_create_startup(void *arg) {
   tinfo->origThreadID = REAL(pthread_self)();
   tinfo->origNativeThreadID = gettid();
 
-  pthread_cleanup_push(thread_info_cleanup, tinfo);
+  pthread_cleanup_push(thread_cleanup, tinfo);
 
   r = tinfo->startupFunc(tinfo->startupArg);
 
