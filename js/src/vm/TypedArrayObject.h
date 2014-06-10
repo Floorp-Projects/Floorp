@@ -188,7 +188,7 @@ IsTypedArrayIndex(jsid id, uint64_t *indexp)
     if (MOZ_UNLIKELY(!JSID_IS_STRING(id)))
         return false;
 
-    AutoCheckCannotGC nogc;
+    JS::AutoCheckCannotGC nogc;
     JSAtom *atom = JSID_TO_ATOM(id);
     size_t length = atom->length();
 

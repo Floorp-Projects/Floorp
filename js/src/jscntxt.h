@@ -914,12 +914,12 @@ class AutoObjectHashSet : public AutoHashSetRooter<JSObject *>
 };
 
 /* AutoArrayRooter roots an external array of Values. */
-class AutoArrayRooter : private AutoGCRooter
+class AutoArrayRooter : private JS::AutoGCRooter
 {
   public:
     AutoArrayRooter(JSContext *cx, size_t len, Value *vec
                     MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, len), array(vec)
+      : JS::AutoGCRooter(cx, len), array(vec)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         JS_ASSERT(tag_ >= 0);
@@ -961,7 +961,7 @@ class AutoArrayRooter : private AutoGCRooter
         return HandleValue::fromMarkedLocation(&array[i]);
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void JS::AutoGCRooter::trace(JSTracer *trc);
 
   private:
     Value *array;

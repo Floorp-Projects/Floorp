@@ -1,1 +1,1 @@
-skip load 408431-1.html # bug 1022509 - renable when the cause of that is backed out
+load 408431-1.html

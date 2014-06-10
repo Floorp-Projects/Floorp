@@ -76,6 +76,9 @@ function forEachType(options, typeSpec, callback) {
     else if (name === 'remote') {
       return;
     }
+    else if (name === 'union') {
+      typeSpec.types = [{ name: "string" }];
+    }
 
     var type = types.createType(typeSpec);
     var reply = callback(type);
@@ -86,6 +89,7 @@ function forEachType(options, typeSpec, callback) {
       delete typeSpec.data;
       delete typeSpec.delegateType;
       delete typeSpec.subtype;
+      delete typeSpec.types;
 
       return value;
     });

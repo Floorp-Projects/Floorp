@@ -548,6 +548,13 @@ MacroAssembler::allocateObject(Register result, Register slots, gc::AllocKind al
 {
     JS_ASSERT(allocKind >= gc::FINALIZE_OBJECT0 && allocKind <= gc::FINALIZE_OBJECT_LAST);
 
+#ifdef JS_CODEGEN_ARM
+    // Bug 1011474: Always take the ool path when allocating malloc slots on
+    //              ARM to work around a top-crasher while we investigate.
+    if (nDynamicSlots)
+        return jump(fail);
+#endif
+
     checkAllocatorState(fail);
 
     if (shouldNurseryAllocate(allocKind, initialHeap))
