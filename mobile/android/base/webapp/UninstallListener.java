@@ -147,9 +147,7 @@ public class UninstallListener extends BroadcastReceiver {
             ThreadUtils.assertOnBackgroundThread();
 
             // Perform webapp uninstalls as appropiate.
-            if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
-                UninstallListener.initUninstallPackageScan(mApp.getApplicationContext());
-            }
+            UninstallListener.initUninstallPackageScan(mApp.getApplicationContext());
         }
     }
 }
