@@ -36,6 +36,13 @@ VolatileBufferRelease(void *vbuf)
   delete static_cast<VolatileBufferPtr<unsigned char>*>(vbuf);
 }
 
+static int32_t
+VolatileSurfaceStride(const IntSize& size, SurfaceFormat format)
+{
+  // Stride must be a multiple of four or cairo will complain.
+  return (size.width * BytesPerPixel(format) + 0x3) & ~0x3;
+}
+
 static TemporaryRef<DataSourceSurface>
 CreateLockedSurface(VolatileBuffer *vbuf,
                     const IntSize& size,
@@ -45,7 +52,7 @@ CreateLockedSurface(VolatileBuffer *vbuf,
     new VolatileBufferPtr<unsigned char>(vbuf);
   MOZ_ASSERT(!vbufptr->WasBufferPurged(), "Expected image data!");
 
-  int32_t stride = size.width * BytesPerPixel(format);
+  int32_t stride = VolatileSurfaceStride(size, format);
   RefPtr<DataSourceSurface> surf =
     Factory::CreateWrappingDataSourceSurface(*vbufptr, stride, size, format);
   if (!surf) {
@@ -60,7 +67,7 @@ CreateLockedSurface(VolatileBuffer *vbuf,
 static TemporaryRef<VolatileBuffer>
 AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
 {
-  int32_t stride = size.width * BytesPerPixel(format);
+  int32_t stride = VolatileSurfaceStride(size, format);
   RefPtr<VolatileBuffer> buf = new VolatileBuffer();
   if (buf->Init(stride * size.height,
                 1 << gfxAlphaRecovery::GoodAlignmentLog2()))
