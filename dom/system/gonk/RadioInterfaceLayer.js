@@ -71,6 +71,7 @@ const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kScreenStateChangedTopic           = "screen-state-changed";
 
+const kSettingsCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kSettingsCellBroadcastSearchList = "ril.cellbroadcast.searchlist";
 const kSettingsClockAutoUpdateEnabled = "time.clock.automatic-update.enabled";
 const kSettingsClockAutoUpdateAvailable = "time.clock.automatic-update.available";
@@ -79,7 +80,6 @@ const kSettingsTimezoneAutoUpdateAvailable = "time.timezone.automatic-update.ava
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
-const kPrefCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
@@ -1591,7 +1591,6 @@ WorkerMessenger.prototype = {
   init: function() {
     let options = {
       debug: DEBUG,
-      cellBroadcastDisabled: false,
       quirks: {
         callstateExtraUint32:
           libcutils.property_get("ro.moz.ril.callstate_extra_int", "false") === "true",
@@ -1613,11 +1612,6 @@ WorkerMessenger.prototype = {
       rilEmergencyNumbers: libcutils.property_get("ril.ecclist") ||
                            libcutils.property_get("ro.ril.ecclist")
     };
-
-    try {
-      options.cellBroadcastDisabled =
-        Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
-    } catch(e) {}
 
     this.send(null, "setInitialOptions", options);
   },
@@ -1816,6 +1810,16 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   this.setTimezoneAutoUpdateAvailable(false);
 
   /**
+  * Read the settings of the toggle of Cellbroadcast Service:
+  *
+  * Simple Format: Boolean
+  *   true if CBS is disabled. The value is applied to all RadioInterfaces.
+  * Enhanced Format: Array of Boolean
+  *   Each element represents the toggle of CBS per RadioInterface.
+  */
+  lock.get(kSettingsCellBroadcastDisabled, this);
+
+  /**
    * Read the Cell Broadcast Search List setting to set listening channels:
    *
    * Simple Format:
@@ -1837,7 +1841,6 @@ function RadioInterface(aClientId, aWorkerMessenger) {
 
   Services.obs.addObserver(this, kNetworkConnStateChangedTopic, false);
   Services.obs.addObserver(this, kNetworkActiveChangedTopic, false);
-  Services.prefs.addObserver(kPrefCellBroadcastDisabled, this, false);
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
@@ -3323,16 +3326,6 @@ RadioInterface.prototype = {
         let setting = JSON.parse(data);
         this.handleSettingsChange(setting.key, setting.value, setting.message);
         break;
-      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
-        if (data === kPrefCellBroadcastDisabled) {
-          let value = false;
-          try {
-            value = Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
-          } catch(e) {}
-          this.workerMessenger.send("setCellBroadcastDisabled",
-                                    { disabled: value });
-        }
-        break;
       case kSysClockChangeObserverTopic:
         let offset = parseInt(data, 10);
         if (this._lastNitzMessage) {
@@ -3496,6 +3489,17 @@ RadioInterface.prototype = {
         }
 
         this.setCellBroadcastSearchList(aResult);
+        break;
+      case kSettingsCellBroadcastDisabled:
+        if (DEBUG) {
+          this.debug("'" + kSettingsCellBroadcastDisabled +
+            "' is now " + JSON.stringify(aResult));
+        }
+
+        let setCbsDisabled =
+          Array.isArray(aResult) ? aResult[this.clientId] : aResult;
+        this.workerMessenger.send("setCellBroadcastDisabled",
+                                  { disabled: setCbsDisabled });
         break;
     }
   },
