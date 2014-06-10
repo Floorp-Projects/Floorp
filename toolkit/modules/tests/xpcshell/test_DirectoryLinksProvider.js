@@ -30,10 +30,8 @@ const kTestURL = 'data:application/json,' + JSON.stringify(kURLData);
 // DirectoryLinksProvider preferences
 const kLocalePref = DirectoryLinksProvider._observedPrefs.prefSelectedLocale;
 const kSourceUrlPref = DirectoryLinksProvider._observedPrefs.linksURL;
-
-// app/profile/firefox.js are not avaialble in xpcshell: hence, preset them
-Services.prefs.setCharPref(kLocalePref, "en-US");
-Services.prefs.setCharPref(kSourceUrlPref, kTestURL);
+const kReportClickUrlPref = "browser.newtabpage.directory.reportClickEndPoint";
+const kTelemetryEnabledPref = "toolkit.telemetry.enabled";
 
 // httpd settings
 var server;
@@ -41,8 +39,16 @@ const kDefaultServerPort = 9000;
 const kBaseUrl = "http://localhost:" + kDefaultServerPort;
 const kExamplePath = "/exampleTest/";
 const kFailPath = "/fail/";
+const kReportClickPath = "/reportClick/";
 const kExampleURL = kBaseUrl + kExamplePath;
 const kFailURL = kBaseUrl + kFailPath;
+const kReportClickUrl = kBaseUrl + kReportClickPath;
+
+// app/profile/firefox.js are not avaialble in xpcshell: hence, preset them
+Services.prefs.setCharPref(kLocalePref, "en-US");
+Services.prefs.setCharPref(kSourceUrlPref, kTestURL);
+Services.prefs.setCharPref(kReportClickUrlPref, kReportClickUrl);
+Services.prefs.setBoolPref(kTelemetryEnabledPref, true);
 
 const kHttpHandlerData = {};
 kHttpHandlerData[kExamplePath] = {"en-US": [{"url":"http://example.com","title":"RemoteSource"}]};
@@ -165,8 +171,30 @@ function run_test() {
     DirectoryLinksProvider.reset();
     Services.prefs.clearUserPref(kLocalePref);
     Services.prefs.clearUserPref(kSourceUrlPref);
+    Services.prefs.clearUserPref(kReportClickUrlPref);
+    Services.prefs.clearUserPref(kTelemetryEnabledPref);
   });
 }
+
+add_task(function test_reportLinkAction() {
+  let link = 1;
+  let action = "click";
+  let tile = 2;
+  let score = 3;
+  let pin = 1;
+  let expectedQuery = "list=&link=1&action=click&tile=2&score=3&pin=1"
+  let expectedPath = kReportClickPath;
+
+  let deferred = Promise.defer();
+  server.registerPrefixHandler(kReportClickPath, (aRequest, aResponse) => {
+    do_check_eq(aRequest.path, expectedPath);
+    do_check_eq(aRequest.queryString, expectedQuery);
+    deferred.resolve();
+  });
+
+  DirectoryLinksProvider.reportLinkAction({directoryIndex: link, frecency: score}, action, tile, pin);
+  return deferred.promise;
+});
 
 add_task(function test_fetchAndCacheLinks_local() {
   yield DirectoryLinksProvider.init();

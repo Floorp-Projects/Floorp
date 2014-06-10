@@ -24,6 +24,9 @@ let isLinux = ("@mozilla.org/gnome-gconf-service;1" in Cc);
 let isWindows = ("@mozilla.org/windows-registry-key;1" in Cc);
 let gWindow = window;
 
+// Default to empty directory links
+let gDirectorySource = "data:application/json,{}";
+
 // The tests assume all three rows of sites are shown, but the window may be too
 // short to actually show three rows.  Resize it if necessary.
 let requiredInnerHeight =
@@ -95,9 +98,10 @@ function test() {
   waitForExplicitFinish();
   // start TestRunner.run() after directory links is downloaded and written to disk
   watchLinksChangeOnce().then(() => {
-    TestRunner.run();
+    // Wait for hidden page to update with the desired links
+    whenPagesUpdated(() => TestRunner.run(), true);
   });
-  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, "data:application/json,{}");
+  Services.prefs.setCharPref(PREF_NEWTAB_DIRECTORYSOURCE, gDirectorySource);
 }
 
 /**
