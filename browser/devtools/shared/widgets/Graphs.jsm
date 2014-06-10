@@ -501,14 +501,15 @@ AbstractCanvasGraph.prototype = {
     let ctx = this._ctx;
     ctx.clearRect(0, 0, this._width, this._height);
 
+    // Draw the grpah underneath the cursor and selection.
+    if (this.hasData()) {
+      ctx.drawImage(this._cachedGraphImage, 0, 0, this._width, this._height);
+    }
     if (this.hasCursor()) {
       this._drawCliphead();
     }
     if (this.hasSelection() || this.hasSelectionInProgress()) {
       this._drawSelection();
-    }
-    if (this.hasData()) {
-      ctx.drawImage(this._cachedGraphImage, 0, 0, this._width, this._height);
     }
 
     this._shouldRedraw = false;
