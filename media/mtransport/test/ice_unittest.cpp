@@ -50,6 +50,8 @@ MtransportTestUtils *test_utils;
 
 bool stream_added = false;
 
+static int kDefaultTimeout = 7000;
+
 const std::string kDefaultStunServerAddress((char *)"23.21.150.121");
 const std::string kDefaultStunServerHostname(
     (char *)"ec2-23-21-150-121.compute-1.amazonaws.com");
@@ -839,7 +841,7 @@ class IceGatherTest : public ::testing::Test {
   }
 
   void WaitForGather() {
-    ASSERT_TRUE_WAIT(peer_->gathering_complete(), 10000);
+    ASSERT_TRUE_WAIT(peer_->gathering_complete(), kDefaultTimeout);
   }
 
   void UseFakeStunServerWithResponse(const std::string& fake_addr,
@@ -899,10 +901,10 @@ class IceConnectTest : public ::testing::Test {
     p2_->Gather();
 
     if (wait) {
-      EXPECT_TRUE_WAIT(p1_->gathering_complete(), 10000);
+      EXPECT_TRUE_WAIT(p1_->gathering_complete(), kDefaultTimeout);
       if (!p1_->gathering_complete())
         return false;
-      EXPECT_TRUE_WAIT(p2_->gathering_complete(), 10000);
+      EXPECT_TRUE_WAIT(p2_->gathering_complete(), kDefaultTimeout);
       if (!p2_->gathering_complete())
         return false;
     }
@@ -933,8 +935,10 @@ class IceConnectTest : public ::testing::Test {
     p1_->Connect(p2_, TRICKLE_NONE);
     p2_->Connect(p1_, TRICKLE_NONE);
 
-    ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1, 5000);
-    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
+    ASSERT_TRUE_WAIT(p1_->ready_ct() == 1 && p2_->ready_ct() == 1,
+                     kDefaultTimeout);
+    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(),
+                     kDefaultTimeout);
 
     p1_->DumpAndCheckActiveCandidates();
     p2_->DumpAndCheckActiveCandidates();
@@ -962,13 +966,14 @@ class IceConnectTest : public ::testing::Test {
 
   void WaitForComplete(int expected_streams = 1) {
     ASSERT_TRUE_WAIT(p1_->ready_ct() == expected_streams &&
-                     p2_->ready_ct() == expected_streams, 5000);
-    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(), 5000);
+                     p2_->ready_ct() == expected_streams, kDefaultTimeout);
+    ASSERT_TRUE_WAIT(p1_->ice_complete() && p2_->ice_complete(),
+                     kDefaultTimeout);
   }
 
   void WaitForGather() {
-    ASSERT_TRUE_WAIT(p1_->gathering_complete(), 10000);
-    ASSERT_TRUE_WAIT(p2_->gathering_complete(), 10000);
+    ASSERT_TRUE_WAIT(p1_->gathering_complete(), kDefaultTimeout);
+    ASSERT_TRUE_WAIT(p2_->gathering_complete(), kDefaultTimeout);
   }
 
   void ConnectTrickle(TrickleMode trickle = TRICKLE_SIMULATE) {
@@ -979,8 +984,8 @@ class IceConnectTest : public ::testing::Test {
   void SimulateTrickle(size_t stream) {
     p1_->SimulateTrickle(stream);
     p2_->SimulateTrickle(stream);
-    ASSERT_TRUE_WAIT(p1_->is_ready(stream), 5000);
-    ASSERT_TRUE_WAIT(p2_->is_ready(stream), 5000);
+    ASSERT_TRUE_WAIT(p1_->is_ready(stream), kDefaultTimeout);
+    ASSERT_TRUE_WAIT(p2_->is_ready(stream), kDefaultTimeout);
   }
 
   void SimulateTrickleP1(size_t stream) {
@@ -1007,7 +1012,7 @@ class IceConnectTest : public ::testing::Test {
     p2_->StartChecks();
 
     // Wait to see if we crash
-    PR_Sleep(PR_MillisecondsToInterval(5000));
+    PR_Sleep(PR_MillisecondsToInterval(kDefaultTimeout));
   }
 
   void SendReceive() {
@@ -1337,8 +1342,8 @@ TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
   AddStream("second", 1);
   ASSERT_TRUE(Gather(false));
   ConnectTrickle(TRICKLE_REAL);
-  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
-  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
   WaitForGather();  // ICE can complete before we finish gathering.
 }
 
@@ -1414,8 +1419,8 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelay) {
   RealisticTrickleDelay(p1_->ControlTrickle(0));
   RealisticTrickleDelay(p2_->ControlTrickle(0));
 
-  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
-  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
 }
 
 TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
@@ -1430,8 +1435,8 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
   RealisticTrickleDelay(p1_->ControlTrickle(0));
   p2_->SimulateTrickle(0);
 
-  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
-  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
 }
 
 TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
@@ -1448,8 +1453,8 @@ TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
   DelayRelayCandidates(p1_->ControlTrickle(0), 3700);
   DelayRelayCandidates(p2_->ControlTrickle(0), 3700);
 
-  ASSERT_TRUE_WAIT(p1_->ice_complete(), 5000);
-  ASSERT_TRUE_WAIT(p2_->ice_complete(), 5000);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
 }
 
 TEST_F(IceConnectTest, TestConnectTurnTcp) {
