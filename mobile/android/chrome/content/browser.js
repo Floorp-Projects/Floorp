@@ -2283,16 +2283,46 @@ var NativeWindow = {
       return res;
     },
 
+    _findTarget: function(x, y) {
+      let isDescendant = function(parent, child) {
+        let node = child;
+        while (node) {
+          if (node === parent) {
+            return true;
+          }
+
+          node = node.parentNode;
+        }
+
+        return false;
+      };
+
+      let target = BrowserEventHandler._highlightElement;
+      let touchTarget = ElementTouchHelper.anyElementFromPoint(x, y);
+
+      // If we have a highlighted element that has a click handler, we want to ensure our target is inside it
+      if (isDescendant(target, touchTarget)) {
+        target = touchTarget;
+      } else if (!target) {
+        // Otherwise, let's try to find something clickable
+        target = ElementTouchHelper.elementFromPoint(x, y);
+
+        // If that failed, we'll just fall back to anything under the user's finger
+        if (!target) {
+          target = touchTarget;
+        }
+      }
+
+      return target;
+    },
+
     /* Checks if there are context menu items to show, and if it finds them
      * sends a contextmenu event to content. We also send showing events to
      * any html5 context menus we are about to show, and fire some local notifications
      * for chrome consumers to do lazy menuitem construction
      */
     _sendToContent: function(x, y) {
-      let target = BrowserEventHandler._highlightElement || ElementTouchHelper.elementFromPoint(x, y);
-      if (!target)
-        target = ElementTouchHelper.anyElementFromPoint(x, y);
-
+      let target = this._findTarget(x, y);
       if (!target)
         return;
 
