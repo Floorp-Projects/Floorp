@@ -35,6 +35,7 @@ nsIIDNService *nsStandardURL::gIDN = nullptr;
 bool nsStandardURL::gInitialized = false;
 bool nsStandardURL::gEscapeUTF8 = true;
 bool nsStandardURL::gAlwaysEncodeInUTF8 = true;
+char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
 
 #if defined(PR_LOGGING)
 //
@@ -1423,6 +1424,18 @@ nsStandardURL::SetPassword(const nsACString &input)
     return NS_OK;
 }
 
+void
+nsStandardURL::FindHostLimit(nsACString::const_iterator& aStart,
+                             nsACString::const_iterator& aEnd)
+{
+  for (int32_t i = 0; gHostLimitDigits[i]; ++i) {
+    nsACString::const_iterator c(aStart);
+    if (FindCharInReadable(gHostLimitDigits[i], c, aEnd)) {
+      aEnd = c;
+    }
+  }
+}
+
 NS_IMETHODIMP
 nsStandardURL::SetHostPort(const nsACString &aValue)
 {
@@ -1437,6 +1450,8 @@ nsStandardURL::SetHostPort(const nsACString &aValue)
     aValue.EndReading(end);
     nsACString::const_iterator iter(start);
     bool isIPv6 = false;
+
+    FindHostLimit(start, end);
 
     if (*start == '[') { // IPv6 address
         if (!FindCharInReadable(']', iter, end)) {
@@ -1496,7 +1511,15 @@ nsStandardURL::SetHost(const nsACString &input)
 {
     ENSURE_MUTABLE();
 
-    const nsPromiseFlatCString &flat = PromiseFlatCString(input);
+    const nsPromiseFlatCString &hostname = PromiseFlatCString(input);
+
+    nsACString::const_iterator start, end;
+    hostname.BeginReading(start);
+    hostname.EndReading(end);
+
+    FindHostLimit(start, end);
+
+    const nsCString flat(Substring(start, end));
     const char *host = flat.get();
 
     LOG(("nsStandardURL::SetHost [host=%s]\n", host));
