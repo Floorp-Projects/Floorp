@@ -2007,6 +2007,8 @@ PeerConnectionImpl::IceConnectionStateChange_m(PCImplIceConnectionState aState)
     case PCImplIceConnectionState::Closed:
       STAMP_TIMECARD(mTimeCard, "Ice state: closed");
       break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected mIceConnectionState!");
   }
 
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
@@ -2044,6 +2046,8 @@ PeerConnectionImpl::IceGatheringStateChange_m(PCImplIceGatheringState aState)
     case PCImplIceGatheringState::Complete:
       STAMP_TIMECARD(mTimeCard, "Ice gathering state: complete");
       break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected mIceGatheringState!");
   }
 
   nsRefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
