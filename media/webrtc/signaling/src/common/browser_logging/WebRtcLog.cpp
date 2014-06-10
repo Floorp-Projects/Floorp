@@ -33,9 +33,10 @@ class WebRtcTraceCallback: public webrtc::TraceCallback
 public:
   void Print(webrtc::TraceLevel level, const char* message, int length)
   {
+#ifdef PR_LOGGING
     PRLogModuleInfo *log = GetWebRtcTraceLog();
     PR_LOG(log, PR_LOG_DEBUG, ("%s", message));
-    return;
+#endif
   }
 };
 
