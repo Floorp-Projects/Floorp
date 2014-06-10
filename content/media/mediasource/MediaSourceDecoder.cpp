@@ -43,6 +43,8 @@ class MediaSourceReader : public MediaDecoderReader
 public:
   MediaSourceReader(MediaSourceDecoder* aDecoder, dom::MediaSource* aSource)
     : MediaDecoderReader(aDecoder)
+    , mTimeThreshold(-1)
+    , mDropVideoBeforeThreshold(false)
     , mActiveVideoDecoder(-1)
     , mActiveAudioDecoder(-1)
     , mMediaSource(aSource)
@@ -62,53 +64,72 @@ public:
     return mDecoders.IsEmpty() && mPendingDecoders.IsEmpty();
   }
 
-  bool DecodeAudioData() MOZ_OVERRIDE
+  void RequestAudioData() MOZ_OVERRIDE
   {
     if (!GetAudioReader()) {
       MSE_DEBUG("%p DecodeAudioFrame called with no audio reader", this);
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
-      return false;
+      GetCallback()->OnDecodeError();
+      return;
     }
-    bool rv = GetAudioReader()->DecodeAudioData();
-
-    nsAutoTArray<AudioData*, 10> audio;
-    GetAudioReader()->AudioQueue().GetElementsAfter(-1, &audio);
-    for (uint32_t i = 0; i < audio.Length(); ++i) {
-      AudioQueue().Push(audio[i]);
-    }
-    GetAudioReader()->AudioQueue().Empty();
-
-    return rv;
+    GetAudioReader()->RequestAudioData();
   }
 
-  bool DecodeVideoFrame(bool& aKeyFrameSkip, int64_t aTimeThreshold) MOZ_OVERRIDE
+  void OnAudioDecoded(AudioData* aSample)
+  {
+    GetCallback()->OnAudioDecoded(aSample);
+  }
+
+  void OnAudioEOS()
+  {
+    GetCallback()->OnAudioEOS();
+  }
+
+  void RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThreshold) MOZ_OVERRIDE
   {
     if (!GetVideoReader()) {
       MSE_DEBUG("%p DecodeVideoFrame called with no video reader", this);
       MOZ_ASSERT(mPendingDecoders.IsEmpty());
-      return false;
+      GetCallback()->OnDecodeError();
+      return;
     }
+    mTimeThreshold = aTimeThreshold;
+    GetVideoReader()->RequestVideoData(aSkipToNextKeyframe, aTimeThreshold);
+  }
 
-    if (MaybeSwitchVideoReaders(aTimeThreshold)) {
-      GetVideoReader()->DecodeToTarget(aTimeThreshold);
+  void OnVideoDecoded(VideoData* aSample)
+  {
+    if (mDropVideoBeforeThreshold) {
+      if (aSample->mTime < mTimeThreshold) {
+        delete aSample;
+        GetVideoReader()->RequestVideoData(false, mTimeThreshold);
+      } else {
+        mDropVideoBeforeThreshold = false;
+        GetCallback()->OnVideoDecoded(aSample);
+      }
+    } else {
+      GetCallback()->OnVideoDecoded(aSample);
     }
+  }
 
-    bool rv = GetVideoReader()->DecodeVideoFrame(aKeyFrameSkip, aTimeThreshold);
-
-    nsAutoTArray<VideoData*, 10> video;
-    GetVideoReader()->VideoQueue().GetElementsAfter(-1, &video);
-    for (uint32_t i = 0; i < video.Length(); ++i) {
-      VideoQueue().Push(video[i]);
-    }
-    GetVideoReader()->VideoQueue().Empty();
-
-    if (rv) {
-      return true;
-    }
-
+  void OnVideoEOS()
+  {
+    // End of stream. See if we can switch to another video decoder.
     MSE_DEBUG("%p MSR::DecodeVF %d (%p) returned false (readers=%u)",
               this, mActiveVideoDecoder, mDecoders[mActiveVideoDecoder].get(), mDecoders.Length());
-    return rv;
+    if (MaybeSwitchVideoReaders()) {
+      // Success! Resume decoding with next video decoder.
+      RequestVideoData(false, mTimeThreshold);
+    } else {
+      // End of stream.
+      MSE_DEBUG("%p MSR::DecodeVF %d (%p) EOS (readers=%u)",
+                this, mActiveVideoDecoder, mDecoders[mActiveVideoDecoder].get(), mDecoders.Length());
+      GetCallback()->OnVideoEOS();
+    }
+  }
+
+  void OnDecodeError() {
+    GetCallback()->OnDecodeError();
   }
 
   bool HasVideo() MOZ_OVERRIDE
@@ -126,7 +147,22 @@ public:
                 int64_t aCurrentTime) MOZ_OVERRIDE;
   nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime) MOZ_OVERRIDE;
   already_AddRefed<SubBufferDecoder> CreateSubDecoder(const nsACString& aType,
-                                                      MediaSourceDecoder* aParentDecoder);
+                                                      MediaSourceDecoder* aParentDecoder,
+                                                      MediaTaskQueue* aTaskQueue);
+
+  void Shutdown() MOZ_OVERRIDE {
+    MediaDecoderReader::Shutdown();
+    for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+      mDecoders[i]->GetReader()->Shutdown();
+    }
+  }
+
+  virtual void BreakCycles() MOZ_OVERRIDE {
+    MediaDecoderReader::BreakCycles();
+    for (uint32_t i = 0; i < mDecoders.Length(); ++i) {
+      mDecoders[i]->GetReader()->BreakCycles();
+    }
+  }
 
   void InitializePendingDecoders();
 
@@ -136,7 +172,12 @@ public:
   }
 
 private:
-  bool MaybeSwitchVideoReaders(int64_t aTimeThreshold) {
+
+  // These are read and written on the decode task queue threads.
+  int64_t mTimeThreshold;
+  bool mDropVideoBeforeThreshold;
+
+  bool MaybeSwitchVideoReaders() {
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     MOZ_ASSERT(mActiveVideoDecoder != -1);
 
@@ -146,7 +187,7 @@ private:
       if (!mDecoders[i]->GetReader()->GetMediaInfo().HasVideo()) {
         continue;
       }
-      if (aTimeThreshold >= mDecoders[i]->GetMediaStartTime()) {
+      if (mTimeThreshold >= mDecoders[i]->GetMediaStartTime()) {
         GetVideoReader()->SetIdle();
 
         mActiveVideoDecoder = i;
@@ -196,7 +237,7 @@ public:
     if (!mReader) {
       return nullptr;
     }
-    return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder);
+    return static_cast<MediaSourceReader*>(mReader.get())->CreateSubDecoder(aType, aParentDecoder, mDecodeTaskQueue);
   }
 
   nsresult EnqueueDecoderInitialization() {
@@ -366,7 +407,9 @@ MediaSourceReader::InitializePendingDecoders()
 }
 
 already_AddRefed<SubBufferDecoder>
-MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder* aParentDecoder)
+MediaSourceReader::CreateSubDecoder(const nsACString& aType,
+                                    MediaSourceDecoder* aParentDecoder,
+                                    MediaTaskQueue* aTaskQueue)
 {
   // XXX: Why/when is mDecoder null here, since it should be equal to aParentDecoder?!
   nsRefPtr<SubBufferDecoder> decoder =
@@ -375,6 +418,13 @@ MediaSourceReader::CreateSubDecoder(const nsACString& aType, MediaSourceDecoder*
   if (!reader) {
     return nullptr;
   }
+  // Set a callback on the subreader that forwards calls to this reader.
+  // This reader will then forward them onto the state machine via this
+  // reader's callback.
+  RefPtr<MediaDataDecodedListener<MediaSourceReader>> callback =
+    new MediaDataDecodedListener<MediaSourceReader>(this, aTaskQueue);
+  reader->SetCallback(callback);
+  reader->SetTaskQueue(aTaskQueue);
   reader->Init(nullptr);
   ReentrantMonitorAutoEnter mon(aParentDecoder->GetReentrantMonitor());
   MSE_DEBUG("Registered subdecoder %p subreader %p", decoder.get(), reader.get());
@@ -424,7 +474,7 @@ MediaSourceReader::Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
   while (!mMediaSource->ActiveSourceBuffers()->AllContainsTime (aTime / USECS_PER_S)
          && !IsShutdown()) {
     mMediaSource->WaitForData();
-    MaybeSwitchVideoReaders(aTime);
+    MaybeSwitchVideoReaders();
   }
 
   if (IsShutdown()) {

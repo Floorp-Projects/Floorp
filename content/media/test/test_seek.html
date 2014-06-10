@@ -61,10 +61,10 @@ function createTestArray() {
 
 function startTest(test, token) {
   var v = document.createElement('video');
-  manager.started(token);
+  v.token = token += "-seek" + test.number + ".js";
+  manager.started(v.token);
   v.src = test.name;
   v.preload = "metadata";
-  v.token = token;
   document.body.appendChild(v);
   var name = test.name + " seek test " + test.number;
   var localIs = function(name) { return function(a, b, msg) {
@@ -76,7 +76,7 @@ function startTest(test, token) {
   var localFinish = function(v, manager) { return function() {
     v.onerror = null;
     removeNodeAndSource(v);
-    dump("SEEK-TEST: Finished " + name + "\n");
+    dump("SEEK-TEST: Finished " + name + " token: " + v.token + "\n");
     manager.finished(v.token);
   }}(v, manager);
   dump("SEEK-TEST: Started " + name + "\n");
