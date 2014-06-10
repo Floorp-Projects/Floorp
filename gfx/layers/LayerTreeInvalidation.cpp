@@ -151,9 +151,7 @@ struct LayerPropertiesBase : public LayerProperties
     {
       aGeometryChanged = true;
       result = OldTransformedBounds();
-      if (transformChanged) {
-        AddRegion(result, NewTransformedBounds());
-      }
+      AddRegion(result, NewTransformedBounds());
 
       // If we don't have to generate invalidations separately for child
       // layers then we can just stop here since we've already invalidated the entire
