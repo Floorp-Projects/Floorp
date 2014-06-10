@@ -2948,7 +2948,7 @@
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
     "extended_statistics_ok": true,
-    "description": "FENNEC: (Places) Number of favicons stored"
+    "description": "Number of favicons stored in the browser DB"
   },
   "FENNEC_THUMBNAILS_COUNT": {
     "expires_in_version": "never",
@@ -2957,7 +2957,7 @@
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
     "extended_statistics_ok": true,
-    "description": "FENNEC: (Places) Number of thumbnails stored"
+    "description": "Number of thumbnails stored in the browser DB"
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "expires_in_version": "never",
