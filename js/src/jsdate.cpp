@@ -936,7 +936,8 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     s = str->chars();
     limit = str->length();
     if (limit == 0)
-        goto syntax;
+        return false;
+
     while (i < limit) {
         c = s[i];
         i++;
@@ -985,20 +986,20 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 if (prevc == '+')       /* plus means east of GMT */
                     n = -n;
                 if (tzoffset != 0 && tzoffset != -1)
-                    goto syntax;
+                    return false;
                 tzoffset = n;
             } else if (prevc == '/' && mon >= 0 && mday >= 0 && year < 0) {
                 if (c <= ' ' || c == ',' || c == '/' || i >= limit)
                     year = n;
                 else
-                    goto syntax;
+                    return false;
             } else if (c == ':') {
                 if (hour < 0)
                     hour = /*byte*/ n;
                 else if (min < 0)
                     min = /*byte*/ n;
                 else
-                    goto syntax;
+                    return false;
             } else if (c == '/') {
                 /* until it is determined that mon is the actual
                    month, keep it as 1-based rather than 0-based */
@@ -1007,9 +1008,9 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 else if (mday < 0)
                     mday = /*byte*/ n;
                 else
-                    goto syntax;
+                    return false;
             } else if (i < limit && c != ',' && c > ' ' && c != '-' && c != '(') {
-                goto syntax;
+                return false;
             } else if (seenplusminus && n < 60) {  /* handle GMT-3:30 */
                 if (tzoffset < 0)
                     tzoffset -= n;
@@ -1026,7 +1027,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             } else if (mon >= 0 && mday >= 0 && year < 0) {
                 year = n;
             } else {
-                goto syntax;
+                return false;
             }
             prevc = 0;
         } else if (c == '/' || c == ':' || c == '+' || c == '-') {
@@ -1041,8 +1042,8 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 i++;
             }
             if (i <= st + 1)
-                goto syntax;
-            for (k = ArrayLength(wtb); --k >= 0;)
+                return false;
+            for (k = ArrayLength(wtb); --k >= 0;) {
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
                     if (action != 0) {
@@ -1052,21 +1053,19 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                              * 12:30, instead of blindly adding 12 if PM.
                              */
                             JS_ASSERT(action == -1 || action == -2);
-                            if (hour > 12 || hour < 0) {
-                                goto syntax;
-                            } else {
-                                if (action == -1 && hour == 12) { /* am */
-                                    hour = 0;
-                                } else if (action == -2 && hour != 12) { /* pm */
-                                    hour += 12;
-                                }
-                            }
+                            if (hour > 12 || hour < 0)
+                                return false;
+
+                            if (action == -1 && hour == 12) /* am */
+                                hour = 0;
+                            else if (action == -2 && hour != 12) /* pm */
+                                hour += 12;
                         } else if (action <= 13) { /* month! */
                             /* Adjust mon to be 1-based until the final values
                                for mon, mday and year are adjusted below */
-                            if (seenmonthname) {
-                                goto syntax;
-                            }
+                            if (seenmonthname)
+                                return false;
+
                             seenmonthname = true;
                             temp = /*byte*/ (action - 2) + 1;
 
@@ -1079,7 +1078,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                                 year = mon;
                                 mon = temp;
                             } else {
-                                goto syntax;
+                                return false;
                             }
                         } else {
                             tzoffset = action - 10000;
@@ -1087,13 +1086,16 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                     }
                     break;
                 }
+            }
             if (k < 0)
-                goto syntax;
+                return false;
             prevc = 0;
         }
     }
+
     if (year < 0 || mon < 0 || mday < 0)
-        goto syntax;
+        return false;
+
     /*
       Case 1. The input string contains an English month name.
               The form of the string can be month f l, or f month l, or
@@ -1121,9 +1123,9 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                  ii. If m >= 70, the date is invalid.
     */
     if (seenmonthname) {
-        if ((mday >= 70 && year >= 70) || (mday < 70 && year < 70)) {
-            goto syntax;
-        }
+        if ((mday >= 70 && year >= 70) || (mday < 70 && year < 70))
+            return false;
+
         if (mday > year) {
             temp = year;
             year = mday;
@@ -1143,7 +1145,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             mon = mday;
             mday = temp;
         } else {
-            goto syntax;
+            return false;
         }
     } else { /* (c) year/month/day */
         if (mday < 70) {
@@ -1152,9 +1154,10 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             mon = mday;
             mday = temp;
         } else {
-            goto syntax;
+            return false;
         }
     }
+
     mon -= 1; /* convert month to 0-based */
     if (sec < 0)
         sec = 0;
@@ -1165,19 +1168,13 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 
     msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
-    if (tzoffset == -1) { /* no time zone specified, have to use local */
+    if (tzoffset == -1) /* no time zone specified, have to use local */
         msec = UTC(msec, dtInfo);
-    } else {
+    else
         msec += tzoffset * msPerMinute;
-    }
 
     *result = msec;
     return true;
-
-syntax:
-    /* syntax error */
-    *result = 0;
-    return false;
 }
 
 static bool
