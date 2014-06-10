@@ -5,20 +5,24 @@
 
 package org.mozilla.gecko.home;
 
+import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.db.BrowserDB;
 
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
+import android.util.Log;
 
 /**
  * Encapsulates the implementation of the search cursor loader.
  */
 class SearchLoader {
-    // Key for search terms
+    public static final String LOGTAG = "GeckoSearchLoader";
+
     private static final String KEY_SEARCH_TERM = "search_term";
 
     private SearchLoader() {
@@ -53,6 +57,8 @@ class SearchLoader {
     }
 
     public static class SearchCursorLoader extends SimpleCursorLoader {
+        private static final String TELEMETRY_HISTOGRAM_LOAD_CURSOR = "FENNEC_SEARCH_LOADER_TIME_MS";
+
         // Max number of search results
         private static final int SEARCH_LIMIT = 100;
 
@@ -66,7 +72,12 @@ class SearchLoader {
 
         @Override
         public Cursor loadCursor() {
-            return BrowserDB.filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT);
+            final long start = SystemClock.uptimeMillis();
+            final Cursor cursor = BrowserDB.filter(getContext().getContentResolver(), mSearchTerm, SEARCH_LIMIT);
+            final long end = SystemClock.uptimeMillis();
+            final long took = end - start;
+            Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));
+            return cursor;
         }
 
         public String getSearchTerm() {
