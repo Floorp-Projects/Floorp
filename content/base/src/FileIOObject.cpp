@@ -25,8 +25,7 @@ NS_IMPL_RELEASE_INHERITED(FileIOObject, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileIOObject)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(FileIOObject)
@@ -35,14 +34,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(FileIOObject,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mError)
-  // Can't traverse mChannel because it's a multithreaded object.
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(FileIOObject,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mError)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mChannel)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  
 NS_IMPL_EVENT_HANDLER(FileIOObject, abort)
@@ -141,29 +138,31 @@ FileIOObject::Notify(nsITimer* aTimer)
   return NS_OK;
 }
 
-// nsIStreamListener
+// InputStreamCallback
 NS_IMETHODIMP
-FileIOObject::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
+FileIOObject::OnInputStreamReady(nsIAsyncInputStream* aStream)
 {
-  return DoOnStartRequest(aRequest, aContext);
-}
+  if (mReadyState != 1 || aStream != mAsyncStream) {
+    return NS_OK;
+  }
 
-NS_IMETHODIMP
-FileIOObject::DoOnStartRequest(nsIRequest *request, nsISupports *ctxt)
-{
-  return NS_OK;
-}
+  uint64_t aCount;
+  nsresult rv = aStream->Available(&aCount);
 
-NS_IMETHODIMP
-FileIOObject::OnDataAvailable(nsIRequest *aRequest,
-                              nsISupports *aContext,
-                              nsIInputStream *aInputStream,
-                              uint64_t aOffset,
-                              uint32_t aCount)
-{
-  nsresult rv;
-  rv = DoOnDataAvailable(aRequest, aContext, aInputStream, aOffset, aCount);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_SUCCEEDED(rv) && aCount) {
+    rv = DoReadData(aStream, aCount);
+  }
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = DoAsyncWait(aStream);
+  }
+
+  if (!aCount || NS_FAILED(rv)) {
+    if (rv == NS_BASE_STREAM_CLOSED) {
+      rv = NS_OK;
+    }
+    return OnLoadEnd(rv);
+  }
 
   mTransferred += aCount;
 
@@ -180,15 +179,9 @@ FileIOObject::OnDataAvailable(nsIRequest *aRequest,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-FileIOObject::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                            nsresult aStatus)
+nsresult
+FileIOObject::OnLoadEnd(nsresult aStatus)
 {
-  // If we're here as a result of a call from Abort(),
-  // simply ignore the request.
-  if (aRequest != mChannel)
-    return NS_OK;
-
   // Cancel the progress event timer
   ClearProgressEventTimer();
 
@@ -196,8 +189,7 @@ FileIOObject::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   mReadyState = 2;
 
   nsString successEvent, termEvent;
-  nsresult rv = DoOnStopRequest(aRequest, aContext, aStatus,
-                                successEvent, termEvent);
+  nsresult rv = DoOnLoadEnd(aStatus, successEvent, termEvent);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Set the status field as appropriate
@@ -211,6 +203,15 @@ FileIOObject::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
   DispatchProgressEvent(termEvent);
 
   return NS_OK;
+}
+
+nsresult
+FileIOObject::DoAsyncWait(nsIAsyncInputStream* aStream)
+{
+  return aStream->AsyncWait(this,
+                            /* aFlags*/ 0,
+                            /* aRequestedCount */ 0,
+                            NS_GetCurrentThread());
 }
 
 void

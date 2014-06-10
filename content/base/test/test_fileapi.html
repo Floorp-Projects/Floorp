@@ -64,7 +64,11 @@ var asciiFile = createFileWithData(testASCIIData);
 var binaryFile = createFileWithData(testBinaryData);
 
 var fileList = document.getElementById('fileList');
-SpecialPowers.wrap(fileList).value = "/none/existing/path/fileAPI/testing";
+SpecialPowers.Cu.import("resource://gre/modules/FileUtils.jsm", window);
+var FU = SpecialPowers.wrap(FileUtils);
+var fakeFile = FU.getDir("TmpD", [], false);
+fakeFile.append("FileThatDoesntExist.abc");
+SpecialPowers.wrap(fileList).value = fakeFile.path;
 var nonExistingFile = fileList.files[0];
 
 // Test that plain reading works and fires events as expected, both
@@ -356,14 +360,21 @@ expectedTestCount++;
 // Test reading from nonexistent files
 r = new FileReader();
 var didThrow = false;
+r.onerror = function (event) {
+  is(event.target.readyState, FileReader.DONE, "should be DONE while firing onerror");
+  is(event.target.error.name, "NotFoundError", "error set to NotFoundError for nonexistent files");
+  is(event.target.result, null, "file data should be null on aborted reads");
+  testHasRun();
+};
 try {
   r.readAsDataURL(nonExistingFile);
+  expectedTestCount++;
 } catch(ex) {
   didThrow = true;
 }
 // Once this test passes, we should test that onerror gets called and
 // that the FileReader object is in the right state during that call.
-todo(!didThrow, "shouldn't throw when opening nonexistent file, should fire error instead");
+is(didThrow, false, "shouldn't throw when opening nonexistent file, should fire error instead");
 
 
 function getLoadHandler(expectedResult, expectedLength, testName) {
