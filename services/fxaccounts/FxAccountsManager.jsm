@@ -177,7 +177,7 @@ this.FxAccountsManager = {
           if (exists) {
             return this.getAccount().then(
               (user) => {
-                return this._refreshAuthentication(aAudience, user.email);
+                return this._refreshAuthentication(aAudience, user.email, true);
               }
             );
           // ... otherwise, the account was deleted, so ask for Sign In/Up
@@ -209,7 +209,17 @@ this.FxAccountsManager = {
     );
   },
 
-  _refreshAuthentication: function(aAudience, aEmail) {
+  /**
+   * "Refresh authentication" means:
+   *   Interactively demonstrate knowledge of the FxA password
+   *   for the currently logged-in account.
+   * There are two very different scenarios:
+   *   1) The password has changed on the server. Failure should log
+   *      the current account OUT.
+   *   2) The person typing can't prove knowledge of the password used
+   *      to log in. Failure should do nothing.
+   */
+  _refreshAuthentication: function(aAudience, aEmail, logoutOnFailure=false) {
     this._refreshing = true;
     return this._uiRequest(UI_REQUEST_REFRESH_AUTH,
                            aAudience, aEmail).then(
@@ -219,11 +229,14 @@ this.FxAccountsManager = {
       },
       (reason) => {
         this._refreshing = false;
-        return this._signOut().then(
-          () => {
-            return this._error(reason);
-          }
-        );
+        if (logoutOnFailure) {
+          return this._signOut().then(
+            () => {
+              return this._error(reason);
+            }
+          );
+        }
+        return this._error(reason);
       }
     );
   },
