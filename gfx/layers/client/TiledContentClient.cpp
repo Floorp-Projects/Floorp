@@ -889,29 +889,29 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   return aTile;
 }
 
-static LayoutDeviceRect
+static LayerRect
 TransformCompositionBounds(const ParentLayerRect& aCompositionBounds,
                            const CSSToParentLayerScale& aZoom,
                            const ParentLayerPoint& aScrollOffset,
                            const CSSToParentLayerScale& aResolution,
-                           const gfx3DMatrix& aTransformDisplayPortToLayoutDevice)
+                           const gfx3DMatrix& aTransformDisplayPortToLayer)
 {
   // Transform the composition bounds from the space of the displayport ancestor
-  // layer into the LayoutDevice space of this layer. Do this by
+  // layer into the Layer space of this layer. Do this by
   // compensating for the difference in resolution and subtracting the
   // old composition bounds origin.
   ParentLayerRect offsetViewportRect = (aCompositionBounds / aZoom) * aResolution;
   offsetViewportRect.MoveBy(-aScrollOffset);
 
   gfxRect transformedViewport =
-    aTransformDisplayPortToLayoutDevice.TransformBounds(
+    aTransformDisplayPortToLayer.TransformBounds(
       gfxRect(offsetViewportRect.x, offsetViewportRect.y,
               offsetViewportRect.width, offsetViewportRect.height));
 
-  return LayoutDeviceRect(transformedViewport.x,
-                          transformedViewport.y,
-                          transformedViewport.width,
-                          transformedViewport.height);
+  return LayerRect(transformedViewport.x,
+                   transformedViewport.y,
+                   transformedViewport.width,
+                   transformedViewport.height);
 }
 
 bool
@@ -976,26 +976,27 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
     }
   }
 
-  LayoutDeviceRect transformedCompositionBounds =
+  LayerRect transformedCompositionBounds =
     TransformCompositionBounds(compositionBounds, zoom, aPaintData->mScrollOffset,
-                               aPaintData->mResolution, aPaintData->mTransformDisplayPortToLayoutDevice);
+                               aPaintData->mResolution, aPaintData->mTransformDisplayPortToLayer);
 
   // Paint tiles that have stale content or that intersected with the screen
   // at the time of issuing the draw command in a single transaction first.
   // This is to avoid rendering glitches on animated page content, and when
   // layers change size/shape.
-  LayoutDeviceRect typedCoherentUpdateRect =
+  LayerRect typedCoherentUpdateRect =
     transformedCompositionBounds.Intersect(aPaintData->mCompositionBounds);
 
   // Offset by the viewport origin, as the composition bounds are stored in
   // Layer space and not LayoutDevice space.
+  // TODO(kats): does this make sense?
   typedCoherentUpdateRect.MoveBy(aPaintData->mViewport.TopLeft());
 
   // Convert to untyped to intersect with the invalid region.
-  nsIntRect roundedCoherentUpdateRect =
-    LayoutDeviceIntRect::ToUntyped(RoundedOut(typedCoherentUpdateRect));
+  nsIntRect untypedCoherentUpdateRect(LayerIntRect::ToUntyped(
+    RoundedOut(typedCoherentUpdateRect)));
 
-  aRegionToPaint.And(aInvalidRegion, roundedCoherentUpdateRect);
+  aRegionToPaint.And(aInvalidRegion, untypedCoherentUpdateRect);
   aRegionToPaint.Or(aRegionToPaint, staleRegion);
   bool drawingStale = !aRegionToPaint.IsEmpty();
   if (!drawingStale) {
@@ -1004,8 +1005,8 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
 
   // Prioritise tiles that are currently visible on the screen.
   bool paintVisible = false;
-  if (aRegionToPaint.Intersects(roundedCoherentUpdateRect)) {
-    aRegionToPaint.And(aRegionToPaint, roundedCoherentUpdateRect);
+  if (aRegionToPaint.Intersects(untypedCoherentUpdateRect)) {
+    aRegionToPaint.And(aRegionToPaint, untypedCoherentUpdateRect);
     paintVisible = true;
   }
 

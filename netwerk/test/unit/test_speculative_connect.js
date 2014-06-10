@@ -37,43 +37,18 @@ var localIPv6Literals =
     ];
 var localIPLiterals = localIPv4Literals.concat(localIPv6Literals);
 
-/** Example remote IP addresses
- *
- * Note: The test environment may not have external network access, so
- * resolving hostnames may not be possible. Thus, literals are used here, and
- * should be directly converted by the stub resolver to IP addresses.
- */
-var remoteIPv4Literals =
-    [ "93.184.216.119", // example.com
-      "74.125.239.130", // google.com
-      "63.245.217.105", // mozilla.org
-      "173.252.110.27"  // facebook.com
-    ];
-
-var remoteIPv6Literals =
-    [ "2607:f8b0:4005:802::1009",        // google.com
-      "2620:101:8008:5::2:1",            // mozilla.org
-      "2a03:2880:2110:df07:face:b00c::1" // facebook.com
-    ];
-
-var remoteIPLiterals = remoteIPv4Literals.concat(remoteIPv6Literals);
-
 /** Test function list and descriptions.
  */
 var testList =
     [ test_speculative_connect,
       test_hostnames_resolving_to_local_addresses,
-      test_hostnames_resolving_to_remote_addresses,
-      test_proxies_with_local_addresses,
-      test_proxies_with_remote_addresses
+      test_proxies_with_local_addresses
     ];
 
 var testDescription =
     [ "Expect pass with localhost",
       "Expect failure with resolved local IPs",
-      "Expect success with resolved remote IPs",
-      "Expect failure for proxies with local IPs",
-      "Expect success for proxies with remote IPs"
+      "Expect failure for proxies with local IPs"
     ];
 
 var testIdx = 0;
@@ -250,30 +225,6 @@ function test_hostnames_resolving_to_local_addresses() {
     test_hostnames_resolving_to_addresses(host, false, next);
 }
 
-/**
- * test_hostnames_resolving_to_remote_addresses
- *
- * Creates an nsISocketTransport and simulates a speculative connect request
- * for a hostname that resolves to a local IP address.
- * Runs asynchronously; on test success (i.e. failure to connect), the callback
- * will call this function again until all hostnames in the test list are done.
- *
- * Note: This test also uses an IP literal for the hostname. This should be ok,
- * as the socket layer will ask for the hostname to be resolved anyway, and DNS
- * code should return a numerical version of the address internally.
- */
-function test_hostnames_resolving_to_remote_addresses() {
-    if (hostIdx >= remoteIPLiterals.length) {
-        // No more remote IP addresses; move on.
-        next_test();
-        return;
-    }
-    var host = remoteIPLiterals[hostIdx++];
-    // Test another remote IP address when the current one is done.
-    var next = test_hostnames_resolving_to_remote_addresses;
-    test_hostnames_resolving_to_addresses(host, true, next);
-}
-
 /** test_speculative_connect_with_host_list
  *
  * Common test function for resolved proxy hosts. Takes a list of hosts, a
@@ -346,30 +297,6 @@ function test_proxies_with_local_addresses() {
     // Test another local IP address when the current one is done.
     var next = test_proxies_with_local_addresses;
     test_proxies(host, false, next);
-}
-
-/**
- * test_proxies_with_remote_addresses
- *
- * Creates an nsISocketTransport and simulates a speculative connect request
- * for a proxy that resolves to a local IP address.
- * Runs asynchronously; on test success (i.e. failure to connect), the callback
- * will call this function again until all proxies in the test list are done.
- *
- * Note: This test also uses an IP literal for the proxy. This should be ok,
- * as the socket layer will ask for the proxy to be resolved anyway, and DNS
- * code should return a numerical version of the address internally.
- */
-function test_proxies_with_remote_addresses() {
-    if (hostIdx >= remoteIPLiterals.length) {
-        // No more local IP addresses; move on.
-        next_test();
-        return;
-    }
-    var host = remoteIPLiterals[hostIdx++];
-    // Test another local IP address when the current one is done.
-    var next = test_proxies_with_remote_addresses;
-    test_proxies(host, true, next);
 }
 
 /** next_test
