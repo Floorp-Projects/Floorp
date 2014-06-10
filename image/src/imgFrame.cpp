@@ -383,16 +383,29 @@ bool imgFrame::Draw(gfxContext *aContext, GraphicsFilter aFilter,
   bool doPadding = aPadding != nsIntMargin(0,0,0,0);
   bool doPartialDecode = !ImageComplete();
 
-  RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
-
   if (mSinglePixel && !doPadding && !doPartialDecode) {
     if (mSinglePixelColor.a == 0.0) {
       return true;
     }
 
-    Rect target(aFill.x, aFill.y, aFill.width, aFill.height);
-    dt->FillRect(target, ColorPattern(mSinglePixelColor),
-                 DrawOptions(1.0f, CompositionOpForOp(aContext->CurrentOperator())));
+    if (aContext->IsCairo()) {
+      gfxContext::GraphicsOperator op = aContext->CurrentOperator();
+      if (op == gfxContext::OPERATOR_OVER && mSinglePixelColor.a == 1.0) {
+        aContext->SetOperator(gfxContext::OPERATOR_SOURCE);
+      }
+      aContext->SetDeviceColor(ThebesColor(mSinglePixelColor));
+      aContext->NewPath();
+      aContext->Rectangle(aFill);
+      aContext->Fill();
+      aContext->SetOperator(op);
+      aContext->SetDeviceColor(gfxRGBA(0,0,0,0));
+      return true;
+    }
+    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
+    dt->FillRect(ToRect(aFill),
+                 ColorPattern(mSinglePixelColor),
+                 DrawOptions(1.0f,
+                             CompositionOpForOp(aContext->CurrentOperator())));
     return true;
   }
 
