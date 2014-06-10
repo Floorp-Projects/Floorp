@@ -1,4 +1,4 @@
-./transport
+marionette-transport == 0.2
 manifestparser
 mozhttpd >= 0.5
 mozinfo >= 0.7
