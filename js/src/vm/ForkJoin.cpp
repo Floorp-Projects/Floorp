@@ -27,7 +27,7 @@
 
 #if defined(JS_THREADSAFE) && defined(JS_ION)
 # include "jit/JitCommon.h"
-# ifdef DEBUG
+# ifdef FORKJOIN_SPEW
 #  include "jit/Ion.h"
 #  include "jit/JitCompartment.h"
 #  include "jit/MIR.h"
@@ -35,6 +35,7 @@
 # endif
 #endif // THREADSAFE && ION
 
+#include "gc/ForkJoinNursery-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -279,7 +280,7 @@ class ForkJoinOperation
     jsbytecode *bailoutBytecode;
 
     ForkJoinOperation(JSContext *cx, HandleFunction fun, uint16_t sliceStart,
-                      uint16_t sliceEnd, ForkJoinMode mode);
+                      uint16_t sliceEnd, ForkJoinMode mode, HandleObject updatable);
     ExecutionStatus apply();
 
   private:
@@ -318,6 +319,7 @@ class ForkJoinOperation
 
     JSContext *cx_;
     HandleFunction fun_;
+    HandleObject updatable_;
     uint16_t sliceStart_;
     uint16_t sliceEnd_;
     Vector<ParallelBailoutRecord, 16> bailoutRecords_;
@@ -345,12 +347,17 @@ class ForkJoinOperation
 
 class ForkJoinShared : public ParallelJob, public Monitor
 {
+#ifdef JSGC_FJGENERATIONAL
+    friend class gc::ForkJoinGCShared;
+#endif
+
     /////////////////////////////////////////////////////////////////////////
     // Constant fields
 
     JSContext *const cx_;                  // Current context
     ThreadPool *const threadPool_;         // The thread pool
     HandleFunction fun_;                   // The JavaScript function to execute
+    HandleObject updatable_;               // Pre-existing object that might be updated
     uint16_t sliceStart_;                  // The starting slice id.
     uint16_t sliceEnd_;                    // The ending slice id + 1.
     PRLock *cxLock_;                       // Locks cx_ for parallel VM calls
@@ -387,6 +394,7 @@ class ForkJoinShared : public ParallelJob, public Monitor
     ForkJoinShared(JSContext *cx,
                    ThreadPool *threadPool,
                    HandleFunction fun,
+                   HandleObject updatable,
                    uint16_t sliceStart,
                    uint16_t sliceEnd,
                    ParallelBailoutRecord *records);
@@ -428,6 +436,8 @@ class ForkJoinShared : public ParallelJob, public Monitor
 
     JSContext *acquireJSContext() { PR_Lock(cxLock_); return cx_; }
     void releaseJSContext() { PR_Unlock(cxLock_); }
+
+    HandleObject updatable() { return updatable_; }
 };
 
 class AutoEnterWarmup
@@ -502,24 +512,26 @@ static const char *ForkJoinModeString(ForkJoinMode mode);
 bool
 js::ForkJoin(JSContext *cx, CallArgs &args)
 {
-    JS_ASSERT(args.length() == 4); // else the self-hosted code is wrong
+    JS_ASSERT(args.length() == 5); // else the self-hosted code is wrong
     JS_ASSERT(args[0].isObject());
     JS_ASSERT(args[0].toObject().is<JSFunction>());
     JS_ASSERT(args[1].isInt32());
     JS_ASSERT(args[2].isInt32());
     JS_ASSERT(args[3].isInt32());
     JS_ASSERT(args[3].toInt32() < NumForkJoinModes);
+    JS_ASSERT(args[4].isObjectOrNull());
 
     RootedFunction fun(cx, &args[0].toObject().as<JSFunction>());
     uint16_t sliceStart = (uint16_t)(args[1].toInt32());
     uint16_t sliceEnd = (uint16_t)(args[2].toInt32());
     ForkJoinMode mode = (ForkJoinMode)(args[3].toInt32());
+    RootedObject updatable(cx, args[4].toObjectOrNull());
 
     MOZ_ASSERT(sliceStart == args[1].toInt32());
     MOZ_ASSERT(sliceEnd == args[2].toInt32());
     MOZ_ASSERT(sliceStart <= sliceEnd);
 
-    ForkJoinOperation op(cx, fun, sliceStart, sliceEnd, mode);
+    ForkJoinOperation op(cx, fun, sliceStart, sliceEnd, mode, updatable);
     ExecutionStatus status = op.apply();
     if (status == ExecutionFatal)
         return false;
@@ -578,13 +590,14 @@ ForkJoinModeString(ForkJoinMode mode) {
 }
 
 ForkJoinOperation::ForkJoinOperation(JSContext *cx, HandleFunction fun, uint16_t sliceStart,
-                                     uint16_t sliceEnd, ForkJoinMode mode)
+                                     uint16_t sliceEnd, ForkJoinMode mode, HandleObject updatable)
   : bailouts(0),
     bailoutCause(ParallelBailoutNone),
     bailoutScript(cx),
     bailoutBytecode(nullptr),
     cx_(cx),
     fun_(fun),
+    updatable_(updatable),
     sliceStart_(sliceStart),
     sliceEnd_(sliceEnd),
     bailoutRecords_(cx),
@@ -1237,7 +1250,8 @@ ForkJoinOperation::parallelExecution(ExecutionStatus *status)
 
     ForkJoinActivation activation(cx_);
     ThreadPool *threadPool = &cx_->runtime()->threadPool;
-    ForkJoinShared shared(cx_, threadPool, fun_, sliceStart_, sliceEnd_, &bailoutRecords_[0]);
+    ForkJoinShared shared(cx_, threadPool, fun_, updatable_, sliceStart_, sliceEnd_,
+                          &bailoutRecords_[0]);
     if (!shared.init()) {
         *status = ExecutionFatal;
         return RedLight;
@@ -1333,7 +1347,8 @@ class ParallelIonInvoke
 
     bool invoke(ForkJoinContext *cx) {
         JitActivation activation(cx);
-        Value result;
+        // In-out parameter: on input it denotes the number of values to preserve after the call.
+        Value result = Int32Value(0);
         CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
                             nullptr, 0, &result);
         return !result.isMagic();
@@ -1347,12 +1362,14 @@ class ParallelIonInvoke
 ForkJoinShared::ForkJoinShared(JSContext *cx,
                                ThreadPool *threadPool,
                                HandleFunction fun,
+                               HandleObject updatable,
                                uint16_t sliceStart,
                                uint16_t sliceEnd,
                                ParallelBailoutRecord *records)
   : cx_(cx),
     threadPool_(threadPool),
     fun_(fun),
+    updatable_(updatable),
     sliceStart_(sliceStart),
     sliceEnd_(sliceEnd),
     cxLock_(nullptr),
@@ -1402,7 +1419,8 @@ ForkJoinShared::init()
 
 ForkJoinShared::~ForkJoinShared()
 {
-    PR_DestroyLock(cxLock_);
+    if (cxLock_)
+        PR_DestroyLock(cxLock_);
 
     while (allocators_.length() > 0)
         js_delete(allocators_.popCopy());
@@ -1425,11 +1443,14 @@ ForkJoinShared::execute()
 
         // Push parallel tasks and wait until they're all done.
         jobResult = threadPool_->executeJob(cx_, this, sliceStart_, sliceEnd_);
-        if (jobResult == TP_FATAL)
-            return TP_FATAL;
     }
 
+    // Arenas must be transfered unconditionally until we have the means
+    // to clear the ForkJoin result array, see bug 993347.
     transferArenasToCompartmentAndProcessGCRequests();
+
+    if (jobResult == TP_FATAL)
+        return TP_FATAL;
 
     // Check if any of the workers failed.
     if (abort_) {
@@ -1438,11 +1459,15 @@ ForkJoinShared::execute()
         return TP_RETRY_SEQUENTIALLY;
     }
 
-#ifdef DEBUG
+#ifdef FORKJOIN_SPEW
     Spew(SpewOps, "Completed parallel job [slices: %d, threads: %d, stolen: %d (work stealing:%s)]",
          sliceEnd_ - sliceStart_,
          threadPool_->numWorkers(),
+#ifdef DEBUG
          threadPool_->stolenSlices(),
+#else
+         0,
+#endif
          threadPool_->workStealing() ? "ON" : "OFF");
 #endif
 
@@ -1458,6 +1483,7 @@ ForkJoinShared::transferArenasToCompartmentAndProcessGCRequests()
         comp->adoptWorkerAllocator(allocators_[i]);
 
     if (gcRequested_) {
+        Spew(SpewGC, "Triggering garbage collection in SpiderMonkey heap");
         if (!gcZone_)
             TriggerGC(cx_->runtime(), gcReason_);
         else
@@ -1493,7 +1519,22 @@ ForkJoinShared::executeFromWorker(ThreadPoolWorker *worker, uintptr_t stackLimit
 bool
 ForkJoinShared::executeFromMainThread(ThreadPoolWorker *worker)
 {
-    executePortion(&cx_->mainThread(), worker);
+    // Note that we need new PerThreadData on the main thread as well,
+    // so that PJS GC does not walk up the old mainThread stack.
+    PerThreadData *oldData = TlsPerThreadData.get();
+    PerThreadData thisThread(cx_->runtime());
+    if (!thisThread.init()) {
+        setAbortFlagAndRequestInterrupt(true);
+        return false;
+    }
+    TlsPerThreadData.set(&thisThread);
+
+    // Don't use setIonStackLimit() because that acquires the ionStackLimitLock, and the
+    // lock has not been initialized in these cases.
+    thisThread.jitStackLimit = oldData->jitStackLimit;
+    executePortion(&thisThread, worker);
+    TlsPerThreadData.set(oldData);
+
     return !abort_;
 }
 
@@ -1512,7 +1553,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
     // assertion here for maximum clarity.
     JS::AutoSuppressGCAnalysis nogc;
 
-#ifdef DEBUG
+#ifdef FORKJOIN_SPEW
     // Set the maximum worker and slice number for prettier spewing.
     cx.maxWorkerId = threadPool_->numWorkers();
 #endif
@@ -1544,8 +1585,36 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
 
         bool ok = fii.invoke(&cx);
         JS_ASSERT(ok == !cx.bailoutRecord->topScript);
-        if (!ok)
+        if (!ok) {
             setAbortFlagAndRequestInterrupt(false);
+#ifdef JSGC_FJGENERATIONAL
+            // TODO: See bugs 1010169, 993347.
+            //
+            // It is not desirable to promote here, but if we don't do
+            // this then we can't unconditionally transfer arenas to
+            // the compartment, since the arenas can contain objects
+            // that point into the nurseries.  If those objects are
+            // touched at all by the GC, eg as part of a prebarrier,
+            // then chaos ensues.
+            //
+            // The proper fix might appear to be to note the abort and
+            // not transfer, but instead clear, the arenas.  However,
+            // the result array will remain live and unless it is
+            // cleared immediately and without running barriers then
+            // it will have pointers into the now-cleared areas, which
+            // is also wrong.
+            //
+            // For the moment, until we figure out how to clear the
+            // result array properly and implement that, it may be
+            // that the best thing we can do here is to evacuate and
+            // then let the GC run its course.
+            cx.evacuateLiveData();
+#endif
+        } else {
+#ifdef JSGC_FJGENERATIONAL
+            cx.evacuateLiveData();
+#endif
+        }
     }
 
     Spew(SpewOps, "Down");
@@ -1608,6 +1677,49 @@ ForkJoinShared::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
     }
 }
 
+#ifdef JSGC_FJGENERATIONAL
+
+JSRuntime*
+js::gc::ForkJoinGCShared::runtime()
+{
+    return shared_->runtime();
+}
+
+JS::Zone*
+js::gc::ForkJoinGCShared::zone()
+{
+    return shared_->zone();
+}
+
+JSObject*
+js::gc::ForkJoinGCShared::updatable()
+{
+    return shared_->updatable();
+}
+
+js::gc::ForkJoinNurseryChunk *
+js::gc::ForkJoinGCShared::allocateNurseryChunk()
+{
+    return shared_->threadPool_->getChunk();
+}
+
+void
+js::gc::ForkJoinGCShared::freeNurseryChunk(js::gc::ForkJoinNurseryChunk *p)
+{
+    shared_->threadPool_->putFreeChunk(p);
+}
+
+void
+js::gc::ForkJoinGCShared::spewGC(const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    SpewVA(SpewGC, fmt, ap);
+    va_end(ap);
+}
+
+#endif // JSGC_FJGENERATIONAL
+
 /////////////////////////////////////////////////////////////////////////////
 // ForkJoinContext
 //
@@ -1620,6 +1732,10 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
     targetRegionStart(nullptr),
     targetRegionEnd(nullptr),
     shared_(shared),
+#ifdef JSGC_FJGENERATIONAL
+    gcShared_(shared),
+    fjNursery_(const_cast<ForkJoinContext*>(this), &this->gcShared_, allocator),
+#endif
     worker_(worker),
     acquiredJSContext_(false),
     nogc_()
@@ -1779,7 +1895,7 @@ js::ParallelBailoutRecord::addTrace(JSScript *script,
 // Debug spew
 //
 
-#ifdef DEBUG
+#ifdef FORKJOIN_SPEW
 
 static const char *
 ExecutionStatusToString(ExecutionStatus status)
@@ -1873,6 +1989,8 @@ class ParallelSpewer
                 active[SpewCompile] = true;
             if (strstr(env, "bailouts"))
                 active[SpewBailouts] = true;
+            if (strstr(env, "gc"))
+                active[SpewGC] = true;
             if (strstr(env, "full")) {
                 for (uint32_t i = 0; i < NumSpewChannels; i++)
                     active[i] = true;
@@ -2078,6 +2196,12 @@ parallel::Spew(SpewChannel channel, const char *fmt, ...)
 }
 
 void
+parallel::SpewVA(SpewChannel channel, const char *fmt, va_list ap)
+{
+    spewer.spewVA(channel, fmt, ap);
+}
+
+void
 parallel::SpewBeginOp(JSContext *cx, const char *name)
 {
     spewer.beginOp(cx, name);
@@ -2125,7 +2249,7 @@ parallel::SpewBailoutIR(IonLIRTraceData *data)
     spewer.spewBailoutIR(data);
 }
 
-#endif // DEBUG
+#endif // FORKJOIN_SPEW
 
 bool
 js::InExclusiveParallelSection()
