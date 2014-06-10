@@ -6510,6 +6510,13 @@
     "kind": "flag",
     "description": "If a master-password is enabled for this profile"
   },
+  "FENNEC_TILES_CACHE_HIT": {
+    "expires_in_version": "never",
+    "kind": "linear",
+    "high": "13",
+    "n_buckets": 12,
+    "description": "Cache hits on the tile-info metadata database"
+  },
   "DISPLAY_SCALING_OSX" : {
     "expires_in_version": "never",
     "kind": "linear",

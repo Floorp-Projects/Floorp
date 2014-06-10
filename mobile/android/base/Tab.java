@@ -8,6 +8,7 @@ package org.mozilla.gecko;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -15,6 +16,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.URLMetadata;
 import org.mozilla.gecko.gfx.Layer;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -301,6 +303,21 @@ public class Tab {
 
     public void setErrorType(ErrorType type) {
         mErrorType = type;
+    }
+
+    public void setMetadata(JSONObject metadata) {
+        if (metadata == null) {
+            return;
+        }
+
+        final ContentResolver cr = mAppContext.getContentResolver();
+        final Map<String, Object> data = URLMetadata.fromJSON(metadata);
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                URLMetadata.save(cr, mUrl, data);
+            }
+        });
     }
 
     public ErrorType getErrorType() {

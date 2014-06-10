@@ -6,7 +6,6 @@ package org.mozilla.gecko.db;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
-import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
@@ -98,20 +97,6 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
         return Build.VERSION.SDK_INT >= 11;
     }
 
-    protected static String computeSQLInClause(int items, String field) {
-        final StringBuilder builder = new StringBuilder(field);
-        builder.append(" IN (");
-        int i = 0;
-        for (; i < items - 1; ++i) {
-            builder.append("?, ");
-        }
-        if (i < items) {
-            builder.append("?");
-        }
-        builder.append(")");
-        return builder.toString();
-    }
-
     private boolean isInBatch() {
         final Boolean isInBatch = isInBatchOperation.get();
         if (isInBatch == null) {
@@ -189,26 +174,6 @@ public abstract class AbstractTransactionalProvider extends ContentProvider {
         trace("Ending batch.");
         db.endTransaction();
         isInBatchOperation.set(Boolean.FALSE);
-    }
-
-    /**
-     * Turn a single-column cursor of longs into a single SQL "IN" clause.
-     * We can do this without using selection arguments because Long isn't
-     * vulnerable to injection.
-     */
-    protected static String computeSQLInClauseFromLongs(final Cursor cursor, String field) {
-        final StringBuilder builder = new StringBuilder(field);
-        builder.append(" IN (");
-        final int commaLimit = cursor.getCount() - 1;
-        int i = 0;
-        while (cursor.moveToNext()) {
-            builder.append(cursor.getLong(0));
-            if (i++ < commaLimit) {
-                builder.append(", ");
-            }
-        }
-        builder.append(")");
-        return builder.toString();
     }
 
     @Override
