@@ -85,39 +85,55 @@ function expressionUsesVariable(exp, variable)
     return false;
 }
 
-function edgeUsesVariable(edge, variable)
+// If the edge uses the given variable, return the earliest point at which the
+// use is definite. Usually, that means the source of the edge (anything that
+// reaches that source point will end up using the variable, but there may be
+// other ways to reach the destination of the edge.)
+//
+// Return values are implicitly used at the very last point in the function.
+// This makes a difference: if an RAII class GCs in its destructor, we need to
+// start looking at the final point in the function, not one point back from
+// that, since that would skip over the GCing call.
+//
+function edgeUsesVariable(edge, variable, body)
 {
     if (ignoreEdgeUse(edge, variable))
-        return false;
+        return 0;
+
+    if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
+        return edge.Index[1]; // Last point in body uses the return value
+
+    var src = edge.Index[0];
+
     switch (edge.Kind) {
 
     case "Assign":
         if (expressionUsesVariable(edge.Exp[0], variable))
-            return true;
-        return expressionUsesVariable(edge.Exp[1], variable);
+            return src;
+        return expressionUsesVariable(edge.Exp[1], variable) ? src : 0;
 
     case "Assume":
-        return expressionUsesVariable(edge.Exp[0], variable);
+        return expressionUsesVariable(edge.Exp[0], variable) ? src : 0;
 
     case "Call":
         if (expressionUsesVariable(edge.Exp[0], variable))
-            return true;
+            return src;
         if (1 in edge.Exp && expressionUsesVariable(edge.Exp[1], variable))
-            return true;
+            return src;
         if ("PEdgeCallInstance" in edge) {
             if (expressionUsesVariable(edge.PEdgeCallInstance.Exp, variable))
-                return true;
+                return src;
         }
         if ("PEdgeCallArguments" in edge) {
             for (var exp of edge.PEdgeCallArguments.Exp) {
                 if (expressionUsesVariable(exp, variable))
-                    return true;
+                    return src;
             }
         }
-        return false;
+        return 0;
 
     case "Loop":
-        return false;
+        return 0;
 
     default:
         assert(false);
@@ -281,6 +297,8 @@ function variableUseFollowsGC(suppressed, variable, worklist)
                     }
                 }
             } else if (variable.Kind == "Arg" && entry.gcInfo) {
+                // The scope of arguments starts at the beginning of the
+                // function
                 return {gcInfo:entry.gcInfo, why:entry};
             }
         }
@@ -307,7 +325,7 @@ function variableUseFollowsGC(suppressed, variable, worklist)
                     gcInfo = {name:gcName, body:body, ppoint:source};
             }
 
-            if (edgeUsesVariable(edge, variable)) {
+            if (edgeUsesVariable(edge, variable, body)) {
                 if (gcInfo)
                     return {gcInfo:gcInfo, why:entry};
                 if (!body.minimumUse || source < body.minimumUse)
@@ -350,8 +368,10 @@ function variableLiveAcrossGC(suppressed, variable)
         if (!("PEdge" in body))
             continue;
         for (var edge of body.PEdge) {
-            if (edgeUsesVariable(edge, variable) && !edgeKillsVariable(edge, variable)) {
-                var worklist = [{body:body, ppoint:edge.Index[0], gcInfo:null, why:null}];
+            var usePoint = edgeUsesVariable(edge, variable, body);
+            if (usePoint && !edgeKillsVariable(edge, variable)) {
+                // Found a use, possibly after a GC.
+                var worklist = [{body:body, ppoint:usePoint, gcInfo:null, why:null}];
                 var call = variableUseFollowsGC(suppressed, variable, worklist);
                 if (call)
                     return call;
@@ -499,13 +519,14 @@ function processBodies(functionName)
         return;
     var suppressed = (mangled(functionName) in suppressedFunctions);
     for (var variable of functionBodies[0].DefineVariable) {
-        if (variable.Variable.Kind == "Return")
-            continue;
         var name;
         if (variable.Variable.Kind == "This")
             name = "this";
+        else if (variable.Variable.Kind == "Return")
+            name = "<returnvalue>";
         else
             name = variable.Variable.Name[0];
+
         if (isRootedType(variable.Type)) {
             if (!variableLiveAcrossGC(suppressed, variable.Variable)) {
                 // The earliest use of the variable should be its constructor.
