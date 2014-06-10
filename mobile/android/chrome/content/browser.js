@@ -1662,6 +1662,10 @@ var BrowserApp = {
 
         Services.prefs.setBoolPref("intl.locale.matchOS", !aData);
 
+        // Ensure that this choice is immediately persisted, because
+        // Gecko won't be told again if it forgets.
+        Services.prefs.savePrefFile(null);
+
         // Blow away the string cache so that future lookups get the
         // correct locale.
         Services.strings.flushBundles();
