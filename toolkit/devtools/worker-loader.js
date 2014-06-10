@@ -102,7 +102,6 @@ function createModule(id) {
 //
 // TODO: Remove this when the whitelist becomes empty
 let chromeWhitelist = [
-  "devtools/toolkit/DevToolsUtils",
   "devtools/toolkit/event-emitter",
 ];
 
