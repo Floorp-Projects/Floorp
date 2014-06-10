@@ -16,9 +16,11 @@
 <!ENTITY netmonitorUI.perfNotice1         "• Click on the">
 <!ENTITY netmonitorUI.perfNotice2         "button to start performance analysis.">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.emptyNotice3): This is the label displayed
-  -  in the network table when empty. -->
-<!ENTITY netmonitorUI.emptyNotice3        "• Perform a request or reload the page to see detailed information about network activity.">
+<!-- LOCALIZATION NOTE (netmonitorUI.reload1/2/3): These are the labels displayed
+  -  in the network table when empty to start logging network requests. -->
+<!ENTITY netmonitorUI.reloadNotice1       "• Perform a request or">
+<!ENTITY netmonitorUI.reloadNotice2       "Reload">
+<!ENTITY netmonitorUI.reloadNotice3       "the page to see detailed information about network activity.">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.toolbar.status2): This is the label displayed
   -  in the network table toolbar, above the "status" column. -->
