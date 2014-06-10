@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsICSSRuleList_h
-#define nsICSSRuleList_h
+#ifndef mozilla_dom_CSSRuleList_h
+#define mozilla_dom_CSSRuleList_h
 
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSRuleList.h"
@@ -12,25 +12,28 @@
 
 class nsCSSStyleSheet;
 
-// IID for the nsICSSRuleList interface
+namespace mozilla {
+namespace dom {
+
+// IID for the CSSRuleList interface
 #define NS_ICSSRULELIST_IID \
 { 0x56ac8d1c, 0xc1ed, 0x45fe, \
   { 0x9a, 0x4d, 0x3a, 0xdc, 0xf9, 0xd1, 0xb9, 0x3f } }
 
-class nsICSSRuleList : public nsIDOMCSSRuleList
-                     , public nsWrapperCache
+class CSSRuleList : public nsIDOMCSSRuleList
+                  , public nsWrapperCache
 {
 public:
-  nsICSSRuleList()
+  CSSRuleList()
   {
     SetIsDOMBinding();
   }
-  virtual ~nsICSSRuleList() {}
+  virtual ~CSSRuleList() {}
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSRULELIST_IID)
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsICSSRuleList)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CSSRuleList)
 
   virtual nsCSSStyleSheet* GetParentObject() = 0;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE MOZ_FINAL;
@@ -59,6 +62,9 @@ public:
   virtual uint32_t Length() = 0;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRuleList, NS_ICSSRULELIST_IID)
+NS_DEFINE_STATIC_IID_ACCESSOR(CSSRuleList, NS_ICSSRULELIST_IID)
 
-#endif /* nsICSSRuleList_h */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_CSSRuleList_h */
