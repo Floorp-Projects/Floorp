@@ -20,6 +20,8 @@
             style="@style/FxAccountHeaderItem"
             android:text="@string/fxaccount_sign_in_sub_header" />
 
+        <include layout="@layout/fxaccount_custom_server_view" />
+
         <include layout="@layout/fxaccount_email_password_view" />
 
         <TextView
