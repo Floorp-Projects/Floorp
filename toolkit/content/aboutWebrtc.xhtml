@@ -368,20 +368,6 @@ function displayStats(globalReport) {
       document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
     }
   });
-
-  globalReport.errors.forEach(function (error) {
-    var pcDivHeading = 'PeerConnection:' + error.pcid;
-
-    var pcDiv = document.getElementById(pcDivHeading);
-    var newPcDiv = buildPcDiv(error, pcDivHeading);
-    newPcDiv.id = pcDivHeading;
-
-    if (pcDiv) {
-      document.getElementById('stats').replaceChild(newPcDiv, pcDiv);
-    } else {
-      document.getElementById('stats').appendChild(newPcDiv);
-    }
-  });
 }
 
 function onLoad() {

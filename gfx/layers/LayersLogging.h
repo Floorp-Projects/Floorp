@@ -16,7 +16,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString, etc
 
-class gfx3DMatrix;
 struct gfxRGBA;
 struct nsIntPoint;
 struct nsIntRect;
@@ -47,10 +46,6 @@ AppendToString(nsACString& s, const gfxRGBA& c,
                const char* pfx="", const char* sfx="");
 
 nsACString&
-AppendToString(nsACString& s, const gfx3DMatrix& m,
-               const char* pfx="", const char* sfx="");
-
-nsACString&
 AppendToString(nsACString& s, const nsIntPoint& p,
                const char* pfx="", const char* sfx="");
 
@@ -76,6 +71,18 @@ AppendToString(nsACString& s, const mozilla::gfx::RectTyped<T>& r,
   s += pfx;
   s.AppendPrintf(
     "(x=%f, y=%f, w=%f, h=%f)",
+    r.x, r.y, r.width, r.height);
+  return s += sfx;
+}
+
+template<class T>
+nsACString&
+AppendToString(nsACString& s, const mozilla::gfx::IntRectTyped<T>& r,
+               const char* pfx="", const char* sfx="")
+{
+  s += pfx;
+  s.AppendPrintf(
+    "(x=%d, y=%d, w=%d, h=%d)",
     r.x, r.y, r.width, r.height);
   return s += sfx;
 }

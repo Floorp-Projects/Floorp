@@ -244,7 +244,7 @@ js::Nursery::reallocateSlots(JSContext *cx, JSObject *obj, HeapSlot *oldSlots,
 
     if (!isInside(oldSlots)) {
         HeapSlot *newSlots = static_cast<HeapSlot *>(cx->realloc_(oldSlots, oldSize, newSize));
-        if (oldSlots != newSlots) {
+        if (newSlots && oldSlots != newSlots) {
             hugeSlots.remove(oldSlots);
             /* If this put fails, we will only leak the slots. */
             (void)hugeSlots.put(newSlots);
@@ -257,7 +257,8 @@ js::Nursery::reallocateSlots(JSContext *cx, JSObject *obj, HeapSlot *oldSlots,
         return oldSlots;
 
     HeapSlot *newSlots = allocateSlots(cx, obj, newCount);
-    PodCopy(newSlots, oldSlots, oldCount);
+    if (newSlots)
+        PodCopy(newSlots, oldSlots, oldCount);
     return newSlots;
 }
 
@@ -284,7 +285,8 @@ js::Nursery::allocateHugeSlots(JSContext *cx, size_t nslots)
 {
     HeapSlot *slots = cx->pod_malloc<HeapSlot>(nslots);
     /* If this put fails, we will only leak the slots. */
-    (void)hugeSlots.put(slots);
+    if (slots)
+        (void)hugeSlots.put(slots);
     return slots;
 }
 
