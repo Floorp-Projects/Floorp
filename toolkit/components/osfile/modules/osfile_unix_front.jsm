@@ -174,27 +174,6 @@
      };
 
      /**
-      * Set the file's access permissions.  Without any options, the
-      * permissions are set to an approximation of what they would
-      * have been if the file had been created in its current
-      * directory in the "most typical" fashion for the operating
-      * system.  In the current implementation, this means we set
-      * the POSIX file mode to (0666 & ~umask).
-      *
-      * @param {*=} options
-      * - {number} unixMode     If present, the POSIX file mode is set to
-      *                         exactly this value, unless |unixHonorUmask| is
-      *                         also present.
-      * - {bool} unixHonorUmask If true, any |unixMode| value is modified by
-      *                         the process umask, as open() would have done.
-      */
-     File.prototype.setPermissions = function setPermissions(options = {}) {
-       throw_on_negative("setPermissions",
-                         UnixFile.fchmod(this.fd, unixMode(options)),
-                         this._path);
-     };
-
-     /**
       * Set the last access and modification date of the file.
       * The time stamp resolution is 1 second at best, but might be worse
       * depending on the platform.
@@ -931,28 +910,6 @@
      };
 
      /**
-      * Set the file's access permissions.  Without any options, the
-      * permissions are set to an approximation of what they would
-      * have been if the file had been created in its current
-      * directory in the "most typical" fashion for the operating
-      * system.  In the current implementation, this means we set
-      * the POSIX file mode to (0666 & ~umask).
-      *
-      * @param {string} path   The name of the file to reset the permissions of.
-      * @param {*=} options
-      * - {number} unixMode     If present, the POSIX file mode is set to
-      *                         exactly this value, unless |unixHonorUmask| is
-      *                         also present.
-      * - {bool} unixHonorUmask If true, any |unixMode| value is modified by
-      *                         the process umask, as open() would have done.
-      */
-     File.setPermissions = function setPermissions(path, options = {}) {
-       throw_on_negative("setPermissions",
-                         UnixFile.chmod(path, unixMode(options)),
-                         path);
-     };
-
-     /**
       * Convert an access date and a modification date to an array
       * of two |timeval|.
       */
@@ -1153,25 +1110,6 @@
        }
        return date;
      };
-
-     /**
-      * Helper used by both versions of setPermissions.
-      */
-     function unixMode(options) {
-       let mode = 438; /* 0666 */
-       let unixHonorUmask = true;
-       if ("unixMode" in options) {
-         unixHonorUmask = false;
-         mode = options.unixMode;
-       }
-       if ("unixHonorUmask" in options) {
-         unixHonorUmask = options.unixHonorUmask;
-       }
-       if (unixHonorUmask) {
-         mode &= ~SharedAll.Constants.Sys.umask;
-       }
-       return mode;
-     }
 
      File.Unix = exports.OS.Unix.File;
      File.Error = SysAll.Error;
