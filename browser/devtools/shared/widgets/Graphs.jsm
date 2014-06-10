@@ -5,8 +5,9 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 
 this.EXPORTED_SYMBOLS = ["LineGraphWidget"];
 
@@ -116,6 +117,7 @@ GraphSelectionResizer.prototype = {
 this.AbstractCanvasGraph = function(parent, name, sharpness) {
   EventEmitter.decorate(this);
 
+  this._ready = promise.defer();
   this._parent = parent;
   this._uid = "canvas-graph-" + Date.now();
 
@@ -165,6 +167,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
 
     this._animationId = this._window.requestAnimationFrame(this._onAnimationFrame);
 
+    this._ready.resolve(this);
     this.emit("ready", this);
   });
 }
@@ -179,6 +182,13 @@ AbstractCanvasGraph.prototype = {
   },
   get height() {
     return this._height;
+  },
+
+  /**
+   * Returns a promise resolved once this graph is ready to receive data.
+   */
+  ready: function() {
+    return this._ready.promise;
   },
 
   /**
