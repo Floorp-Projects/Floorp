@@ -51,23 +51,29 @@ body {
   outline: 0;
 }
 
+.property-value, .other-property-value {
+  background-image: url(arrow-e.png);
+  background-repeat: no-repeat;
+  background-size: 5px 8px;
+}
+
+@media (min-resolution: 2dppx) {
+  .property-value, .other-property-value {
+    background-image: url(arrow-e@2x.png);
+  }
+}
+
 .property-value {
   width: 100%;
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  background-image: url(arrow-e.png);
-  background-repeat: no-repeat;
-  background-size: 5px 8px;
   background-position: 2px center;
   padding-left: 10px;
   outline: 0;
 }
 
 .other-property-value {
-  background-image: url(arrow-e.png);
-  background-repeat: no-repeat;
-  background-size: 5px 8px;
   background-position: left center;
   padding-left: 8px;
 }

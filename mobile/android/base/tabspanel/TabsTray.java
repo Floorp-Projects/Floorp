@@ -151,7 +151,7 @@ class TabsTray extends TwoWayView
                 @Override
                 public void onClick(View v) {
                     TabRow tab = (TabRow) v.getTag();
-                    final int pos = (isVertical() ? tab.info.getWidth() : tab.info.getHeight());
+                    final int pos = (isVertical() ? tab.info.getWidth() : 0 - tab.info.getHeight());
                     animateClose(tab.info, pos);
                 }
             };
