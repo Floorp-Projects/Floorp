@@ -1472,7 +1472,11 @@ pref("browser.newtabpage.rows", 3);
 // number of columns of newtab grid
 pref("browser.newtabpage.columns", 3);
 
+// directory tiles download URL
 pref("browser.newtabpage.directory.source", "chrome://global/content/directoryLinks.json");
+
+// endpoint to send newtab click reports
+pref("browser.newtabpage.directory.reportClickEndPoint", "https://tiles.up.mozillalabs.com/ping/click");
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);

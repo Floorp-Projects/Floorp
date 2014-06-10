@@ -202,43 +202,54 @@ Site.prototype = {
     }
     Services.telemetry.getHistogramById("NEWTAB_PAGE_SITE_CLICKED")
                       .add(aIndex);
-
-    // Specially count clicks on directory tiles
-    let typeIndex = DirectoryLinksProvider.linkTypes.indexOf(this.link.type);
-    if (typeIndex != -1) {
-      Services.telemetry.getHistogramById("NEWTAB_PAGE_DIRECTORY_TYPE_CLICKED")
-                        .add(typeIndex);
-    }
   },
 
   /**
    * Handles site click events.
    */
   onClick: function Site_onClick(aEvent) {
+    let action;
+    let pinned = this.isPinned();
+    let tileIndex = this.cell.index;
     let {button, target} = aEvent;
     if (target.classList.contains("newtab-link") ||
         target.parentElement.classList.contains("newtab-link")) {
       // Record for primary and middle clicks
       if (button == 0 || button == 1) {
-        this._recordSiteClicked(this.cell.index);
+        this._recordSiteClicked(tileIndex);
+        action = "click";
       }
-      return;
     }
-
     // Only handle primary clicks for the remaining targets
-    if (button != 0) {
-      return;
+    else if (button == 0) {
+      aEvent.preventDefault();
+      if (target.classList.contains("newtab-control-block")) {
+        this.block();
+        action = "block";
+      }
+      else if (target.classList.contains("newtab-control-sponsored")) {
+        gPage.showSponsoredPanel(target);
+        action = "sponsored";
+      }
+      else if (pinned) {
+        this.unpin();
+        action = "unpin";
+      }
+      else {
+        this.pin();
+        action = "pin";
+      }
     }
 
-    aEvent.preventDefault();
-    if (aEvent.target.classList.contains("newtab-control-block"))
-      this.block();
-    else if (target.classList.contains("newtab-control-sponsored"))
-      gPage.showSponsoredPanel(target);
-    else if (this.isPinned())
-      this.unpin();
-    else
-      this.pin();
+    // Specially count click actions for directory tiles
+    let typeIndex = DirectoryLinksProvider.linkTypes.indexOf(this.link.type);
+    if (action !== undefined && typeIndex != -1) {
+      if (action == "click") {
+        Services.telemetry.getHistogramById("NEWTAB_PAGE_DIRECTORY_TYPE_CLICKED")
+                          .add(typeIndex);
+      }
+      DirectoryLinksProvider.reportLinkAction(this.link, action, tileIndex, pinned);
+    }
   },
 
   /**
