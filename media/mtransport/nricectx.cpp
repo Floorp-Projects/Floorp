@@ -410,7 +410,7 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
       NR_reg_set_uchar((char *)"ice.pref.interface.wlan0", 232);
     }
 
-    NR_reg_set_uint4((char *)"stun.client.maximum_transmits",4);
+    NR_reg_set_uint4((char *)"stun.client.maximum_transmits",5);
   }
 
   // Create the ICE context
