@@ -282,7 +282,7 @@ public:
    virtual nsresult    ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
    nsresult            UpdateTranslucentWindowAlphaInternal(const nsIntRect& aRect,
                                                             uint8_t* aAlphas, int32_t aStride);
-    virtual gfxASurface *GetThebesSurface() MOZ_OVERRIDE;
+    virtual gfxASurface *GetThebesSurface();
 
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<gfxASurface> GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
