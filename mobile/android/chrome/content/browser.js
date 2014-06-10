@@ -328,7 +328,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "webapps-runtime-install-package", false);
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
-    Services.obs.addObserver(this, "webapps-uninstall", false);
+    Services.obs.addObserver(this, "webapps-runtime-uninstall", false);
     Services.obs.addObserver(this, "Webapps:AutoInstall", false);
     Services.obs.addObserver(this, "Webapps:Load", false);
     Services.obs.addObserver(this, "Webapps:AutoUninstall", false);
@@ -1631,8 +1631,8 @@ var BrowserApp = {
         break;
       }
 
-      case "webapps-uninstall": {
-        WebappManager.uninstall(JSON.parse(aData));
+      case "webapps-runtime-uninstall": {
+        WebappManager.uninstall(JSON.parse(aData), aSubject);
         break;
       }
 
