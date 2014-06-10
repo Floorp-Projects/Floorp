@@ -137,7 +137,6 @@ EXTRA_COMPONENTS += [
 EXTRA_JS_MODULES += [
     'DOMRequestHelper.jsm',
     'IndexedDBHelper.jsm',
-    'ObjectWrapper.jsm',
 ]
 
 FAIL_ON_WARNINGS = True
