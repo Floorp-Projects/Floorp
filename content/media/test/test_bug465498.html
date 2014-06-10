@@ -14,11 +14,14 @@
 var manager = new MediaTestManager;
 
 function startTest(e) {
+  var v = e.target;
+  info(v._name + " loadedmetadata");
   e.target.play();
 }
 
 function playbackEnded(e) {
   var v = e.target;
+  info(v._name + " ended");
   if (v._finished)
     return;
   ok(v.currentTime >= v.duration - 0.1 && v.currentTime <= v.duration + 0.1,
@@ -32,6 +35,7 @@ function playbackEnded(e) {
 
 function seekEnded(e) {
   var v = e.target;
+  info(v._name + " seeked");
   if (v._finished)
     return;
   ok(v.currentTime == 0, "Checking currentTime after seek: " +
@@ -40,6 +44,11 @@ function seekEnded(e) {
   v._finished = true;
   v.parentNode.removeChild(v);
   manager.finished(v.token);
+}
+
+function seeking(e) {
+  var v = e.target;
+  info(v._name + " seeking");
 }
 
 function initTest(test, token) {
@@ -62,6 +71,7 @@ function initTest(test, token) {
   v.addEventListener("loadedmetadata", startTest, false);
   v.addEventListener("ended", playbackEnded, false);
   v.addEventListener("seeked", seekEnded, false);
+  v.addEventListener("seeking", seeking, false);
   document.body.appendChild(v);
 }
 
