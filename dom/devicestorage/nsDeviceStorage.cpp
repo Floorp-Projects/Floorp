@@ -408,6 +408,7 @@ DeviceStorageTypeChecker::GetAccessForRequest(
       aAccessResult.AssignLiteral("read");
       break;
     case DEVICE_STORAGE_REQUEST_WRITE:
+    case DEVICE_STORAGE_REQUEST_APPEND:
     case DEVICE_STORAGE_REQUEST_DELETE:
     case DEVICE_STORAGE_REQUEST_FORMAT:
     case DEVICE_STORAGE_REQUEST_MOUNT:
@@ -1063,9 +1064,6 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return rv;
   }
 
-  uint64_t bufSize = 0;
-  aInputStream->Available(&bufSize);
-
   nsCOMPtr<nsIOutputStream> outputStream;
   NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mFile);
 
@@ -1073,36 +1071,7 @@ DeviceStorageFile::Write(nsIInputStream* aInputStream)
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
-                                  outputStream,
-                                  4096*4);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  while (bufSize) {
-    uint32_t wrote;
-    rv = bufferedOutputStream->WriteFrom(
-      aInputStream,
-      static_cast<uint32_t>(std::min<uint64_t>(bufSize, UINT32_MAX)),
-      &wrote);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-    bufSize -= wrote;
-  }
-
-  iocomplete = new IOEventComplete(this, "modified");
-  rv = NS_DispatchToMainThread(iocomplete);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bufferedOutputStream->Close();
-  outputStream->Close();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-  return NS_OK;
+  return Append(aInputStream, outputStream);
 }
 
 nsresult
@@ -1142,6 +1111,62 @@ DeviceStorageFile::Write(InfallibleTArray<uint8_t>& aBits)
 
   if (aBits.Length() != wrote) {
     return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
+DeviceStorageFile::Append(nsIInputStream* aInputStream)
+{
+  if (!aInputStream || !mFile) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIOutputStream> outputStream;
+  NS_NewLocalFileOutputStream(getter_AddRefs(outputStream), mFile, PR_WRONLY | PR_CREATE_FILE | PR_APPEND, -1, 0);
+
+  if (!outputStream) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return Append(aInputStream, outputStream);
+}
+
+
+nsresult
+DeviceStorageFile::Append(nsIInputStream* aInputStream, nsIOutputStream* aOutputStream)
+{
+  uint64_t bufSize = 0;
+  aInputStream->Available(&bufSize);
+
+  nsCOMPtr<nsIOutputStream> bufferedOutputStream;
+  nsresult rv = NS_NewBufferedOutputStream(getter_AddRefs(bufferedOutputStream),
+                                  aOutputStream,
+                                  4096*4);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  while (bufSize) {
+    uint32_t wrote;
+    rv = bufferedOutputStream->WriteFrom(
+      aInputStream,
+        static_cast<uint32_t>(std::min<uint64_t>(bufSize, UINT32_MAX)),
+        &wrote);
+    if (NS_FAILED(rv)) {
+      break;
+    }
+    bufSize -= wrote;
+  }
+
+  nsCOMPtr<nsIRunnable> iocomplete = new IOEventComplete(this, "modified");
+  rv = NS_DispatchToMainThread(iocomplete);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bufferedOutputStream->Close();
+  aOutputStream->Close();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
   return NS_OK;
 }
@@ -2373,13 +2398,16 @@ class WriteFileEvent : public nsRunnable
 public:
   WriteFileEvent(nsIDOMBlob* aBlob,
                  DeviceStorageFile *aFile,
-                 already_AddRefed<DOMRequest> aRequest)
+                 already_AddRefed<DOMRequest> aRequest,
+                 int32_t aRequestType)
     : mBlob(aBlob)
     , mFile(aFile)
     , mRequest(aRequest)
+    , mRequestType(aRequestType)
   {
     MOZ_ASSERT(mFile);
     MOZ_ASSERT(mRequest);
+    MOZ_ASSERT(mRequestType);
   }
 
   ~WriteFileEvent() {}
@@ -2393,17 +2421,33 @@ public:
 
     bool check = false;
     mFile->mFile->Exists(&check);
-    if (check) {
+    nsresult rv;
+
+    if (mRequestType == DEVICE_STORAGE_REQUEST_APPEND) {
+      if (!check) {
+        nsCOMPtr<nsIRunnable> event =
+          new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
+        return NS_DispatchToMainThread(event);
+      }
+      rv = mFile->Append(stream);
+    }
+    else if (mRequestType == DEVICE_STORAGE_REQUEST_CREATE) {
+      if (check) {
+        nsCOMPtr<nsIRunnable> event =
+          new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_EXISTS);
+        return NS_DispatchToMainThread(event);
+      }
+      rv = mFile->Write(stream);
+      if (NS_FAILED(rv)) {
+        mFile->mFile->Remove(false);
+      }
+    } else {
       nsCOMPtr<nsIRunnable> event =
-        new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_FILE_EXISTS);
+        new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_UNKNOWN);
       return NS_DispatchToMainThread(event);
     }
 
-    nsresult rv = mFile->Write(stream);
-
     if (NS_FAILED(rv)) {
-      mFile->mFile->Remove(false);
-
       nsCOMPtr<nsIRunnable> event =
         new PostErrorEvent(mRequest.forget(), POST_ERROR_EVENT_UNKNOWN);
       return NS_DispatchToMainThread(event);
@@ -2420,7 +2464,9 @@ private:
   nsCOMPtr<nsIDOMBlob> mBlob;
   nsRefPtr<DeviceStorageFile> mFile;
   nsRefPtr<DOMRequest> mRequest;
+  int32_t mRequestType;
 };
+
 
 class ReadFileEvent : public nsRunnable
 {
@@ -2841,7 +2887,49 @@ public:
             ->SendPDeviceStorageRequestConstructor(child, params);
           return NS_OK;
         }
-        r = new WriteFileEvent(mBlob, mFile, mRequest.forget());
+        r = new WriteFileEvent(mBlob, mFile, mRequest.forget(), mRequestType);
+        break;
+      }
+
+      case DEVICE_STORAGE_REQUEST_APPEND:
+      {
+        if (!mBlob || !mFile->mFile) {
+          return NS_ERROR_FAILURE;
+        }
+
+        DeviceStorageTypeChecker* typeChecker
+          = DeviceStorageTypeChecker::CreateOrGet();
+        if (!typeChecker) {
+          return NS_OK;
+        }
+
+        if (!typeChecker->Check(mFile->mStorageType, mFile->mFile) ||
+            !typeChecker->Check(mFile->mStorageType, mBlob)) {
+          r = new PostErrorEvent(mRequest.forget(),
+                                 POST_ERROR_EVENT_ILLEGAL_TYPE);
+          return NS_DispatchToCurrentThread(r);
+        }
+
+        if (XRE_GetProcessType() != GeckoProcessType_Default) {
+          BlobChild* actor
+            = ContentChild::GetSingleton()->GetOrCreateActorForBlob(mBlob);
+          if (!actor) {
+            return NS_ERROR_FAILURE;
+          }
+
+          DeviceStorageAppendParams params;
+          params.blobChild() = actor;
+          params.type() = mFile->mStorageType;
+          params.storageName() = mFile->mStorageName;
+          params.relpath() = mFile->mPath;
+
+          PDeviceStorageRequestChild* child
+            = new DeviceStorageRequestChild(mRequest, mFile);
+          ContentChild::GetSingleton()
+            ->SendPDeviceStorageRequestConstructor(child, params);
+          return NS_OK;
+        }
+        r = new WriteFileEvent(mBlob, mFile, mRequest.forget(), mRequestType);
         break;
       }
 
