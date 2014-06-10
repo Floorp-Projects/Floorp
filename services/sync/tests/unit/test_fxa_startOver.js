@@ -27,6 +27,10 @@ add_task(function* test_startover() {
   // we expect the "legacy" provider (but can't instanceof that, as BrowserIDManager
   // extends it)
   do_check_false(Service.identity instanceof BrowserIDManager);
+
+  Service.serverURL = "https://localhost/";
+  Service.clusterURL = Service.serverURL;
+
   Service.login();
   // We should have a cluster URL
   do_check_true(Service.clusterURL.length > 0);

@@ -32,6 +32,7 @@ add_test(function test_change_password() {
 
   try {
     Service.baseURI = "http://localhost:9999/";
+    Service.serverURL = "http://localhost:9999/";
     setBasicCredentials("johndoe", "ilovejane");
 
     _("changePassword() returns false for a network error, the password won't change.");
