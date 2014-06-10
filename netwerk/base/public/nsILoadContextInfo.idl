@@ -11,7 +11,7 @@
  * It shall be used where nsILoadContext cannot be used or is not
  * available.
  */
-[scriptable, uuid(40f2718d-12e9-4bf5-959b-9b924b3872e7)]
+[scriptable, uuid(1ea9cbdb-9df4-46a0-8c45-f4091aad9459)]
 interface nsILoadContextInfo : nsISupports
 {
   /**
