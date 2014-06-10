@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.home;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
@@ -340,7 +342,16 @@ abstract class HomeFragment extends Fragment {
             BrowserDB.removeHistoryEntry(cr, mUrl);
 
             BrowserDB.removeReadingListItemWithURL(cr, mUrl);
-            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", mUrl);
+
+            final JSONObject json = new JSONObject();
+            try {
+                json.put("url", mUrl);
+                json.put("notify", false);
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "error building JSON arguments");
+            }
+
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("Reader:Remove", json.toString());
             GeckoAppShell.sendEventToGecko(e);
 
             return null;
