@@ -46,6 +46,8 @@ using mozilla::NegativeInfinity;
 using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
 using mozilla::RangedPtr;
+
+using JS::AutoCheckCannotGC;
 using JS::GenericNaN;
 
 /*
@@ -1058,22 +1060,6 @@ Number_isInteger(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-// ES6 drafult ES6 15.7.3.13
-static bool
-Number_toInteger(JSContext *cx, unsigned argc, Value *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
-        args.rval().setInt32(0);
-        return true;
-    }
-    double asint;
-    if (!ToInteger(cx, args[0], &asint))
-        return false;
-    args.rval().setNumber(asint);
-    return true;
-}
-
 
 static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isFinite", "Number_isFinite", 1,0),
@@ -1082,7 +1068,6 @@ static const JSFunctionSpec number_static_methods[] = {
     JS_SELF_HOSTED_FN("isSafeInteger", "Number_isSafeInteger", 1,0),
     JS_FN("parseFloat", num_parseFloat, 1, 0),
     JS_FN("parseInt", num_parseInt, 2, 0),
-    JS_FN("toInteger", Number_toInteger, 1, 0),
     JS_FS_END
 };
 

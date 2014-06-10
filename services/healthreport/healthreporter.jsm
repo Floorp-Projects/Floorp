@@ -402,7 +402,15 @@ AbstractHealthReporter.prototype = Object.freeze({
       // The database needs to be shut down by the end of shutdown
       // phase profileBeforeChange.
       Metrics.Storage.shutdown.addBlocker("FHR: Flushing storage shutdown",
-        this._promiseShutdown,
+        () => {
+          // Workaround bug 1017706
+          // Apparently, in some cases, quit-application is not triggered
+          // (or is triggered after profile-before-change), so we need to
+          // make sure that `_initiateShutdown()` is triggered at least
+          // once.
+          this._initiateShutdown();
+          return this._promiseShutdown;
+        },
         () => ({
             shutdownInitiated: this._shutdownInitiated,
             initialized: this._initialized,
@@ -412,7 +420,7 @@ AbstractHealthReporter.prototype = Object.freeze({
             storageInProgress: this._storageInProgress,
             hasProviderManager: !!this._providerManager,
             hasStorage: !!this._storage,
-            shutdownComplete: this.shutdownComplete
+            shutdownComplete: this._shutdownComplete
           }));
 
       try {
