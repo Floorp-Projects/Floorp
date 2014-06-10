@@ -5444,14 +5444,17 @@ JitRuntime::generateMallocStub(JSContext *cx)
 {
     const Register regReturn = CallTempReg0;
     const Register regNBytes = CallTempReg0;
-    const Register regRuntime = CallTempReg1;
-    const Register regTemp = CallTempReg1;
 
     MacroAssembler masm(cx);
 
     RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(regNBytes);
     masm.PushRegsInMask(regs);
+
+    const Register regTemp = regs.takeGeneral();
+    const Register regRuntime = regTemp;
+    regs.add(regTemp);
+    JS_ASSERT(regTemp != regNBytes);
 
     masm.setupUnalignedABICall(2, regTemp);
     masm.movePtr(ImmPtr(cx->runtime()), regRuntime);
@@ -5478,13 +5481,16 @@ JitCode *
 JitRuntime::generateFreeStub(JSContext *cx)
 {
     const Register regSlots = CallTempReg0;
-    const Register regTemp = CallTempReg1;
 
     MacroAssembler masm(cx);
 
     RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(regSlots);
     masm.PushRegsInMask(regs);
+
+    const Register regTemp = regs.takeGeneral();
+    regs.add(regTemp);
+    JS_ASSERT(regTemp != regSlots);
 
     masm.setupUnalignedABICall(1, regTemp);
     masm.passABIArg(regSlots);
