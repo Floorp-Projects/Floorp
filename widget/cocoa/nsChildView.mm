@@ -2135,16 +2135,6 @@ nsChildView::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
   return compositor;
 }
 
-gfxASurface*
-nsChildView::GetThebesSurface()
-{
-  if (!mTempThebesSurface) {
-    mTempThebesSurface = new gfxQuartzSurface(gfxSize(1, 1), gfxImageFormat::ARGB32);
-  }
-
-  return mTempThebesSurface;
-}
-
 void
 nsChildView::NotifyDirtyRegion(const nsIntRegion& aDirtyRegion)
 {

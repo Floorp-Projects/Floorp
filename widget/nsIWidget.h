@@ -30,7 +30,6 @@ class   nsDeviceContext;
 struct  nsFont;
 class   nsIRollupListener;
 class   imgIContainer;
-class   gfxASurface;
 class   nsIContent;
 class   ViewWrapper;
 class   nsIWidgetListener;
@@ -1585,11 +1584,6 @@ class nsIWidget : public nsISupports {
      * @return Whether a resize widget is shown.
      */
     virtual bool ShowsResizeIndicator(nsIntRect* aResizerRect) = 0;
-
-    /**
-     * Get the Thebes surface associated with this widget.
-     */
-    virtual gfxASurface *GetThebesSurface() = 0;
 
     /**
      * Return the popup that was last rolled up, or null if there isn't one.

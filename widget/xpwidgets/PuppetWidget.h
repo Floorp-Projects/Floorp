@@ -15,6 +15,8 @@
 #ifndef mozilla_widget_PuppetWidget_h__
 #define mozilla_widget_PuppetWidget_h__
 
+#include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsBaseScreen.h"
 #include "nsBaseWidget.h"
 #include "nsIScreenManager.h"
@@ -38,6 +40,7 @@ class AutoCacheNativeKeyCommands;
 class PuppetWidget : public nsBaseWidget, public nsSupportsWeakReference
 {
   typedef mozilla::dom::TabChild TabChild;
+  typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef nsBaseWidget Base;
 
   // The width and height of the "widget" are clamped to this.
@@ -158,7 +161,6 @@ public:
                   LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                   LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                   bool* aAllowRetaining = nullptr);
-  virtual gfxASurface*      GetThebesSurface();
 
   NS_IMETHOD NotifyIME(const IMENotification& aIMENotification) MOZ_OVERRIDE;
   NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
@@ -225,7 +227,7 @@ private:
   bool mVisible;
   // XXX/cjones: keeping this around until we teach LayerManager to do
   // retained-content-only transactions
-  nsRefPtr<gfxASurface> mSurface;
+  mozilla::RefPtr<DrawTarget> mDrawTarget;
   // IME
   nsIMEUpdatePreference mIMEPreferenceOfParent;
   bool mIMEComposing;

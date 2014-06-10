@@ -2057,13 +2057,6 @@ NS_IMETHODIMP nsCocoaWindow::SynthesizeNativeMouseEvent(nsIntPoint aPoint,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-gfxASurface* nsCocoaWindow::GetThebesSurface()
-{
-  if (mPopupContentView)
-    return mPopupContentView->GetThebesSurface();
-  return nullptr;
-}
-
 void nsCocoaWindow::SetPopupWindowLevel()
 {
   if (!mWindow)

@@ -595,18 +595,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
     return mLayerManager;
 }
 
-gfxASurface *
-nsWindow::GetThebesSurface()
-{
-    /* This is really a dummy surface; this is only used when doing reflow, because
-     * we need a RenderingContext to measure text against.
-     */
-
-    // XXX this really wants to return already_AddRefed, but this only really gets used
-    // on direct assignment to a gfxASurface
-    return new gfxImageSurface(gfxIntSize(5,5), gfxImageFormat::RGB24);
-}
-
 void
 nsWindow::BringToTop()
 {

@@ -22,6 +22,7 @@
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 using namespace mozilla::gfx;
@@ -108,9 +109,8 @@ PuppetWidget::Create(nsIWidget        *aParent,
   mEnabled = true;
   mVisible = true;
 
-  mSurface = gfxPlatform::GetPlatform()
-             ->CreateOffscreenSurface(IntSize(1, 1),
-                                      gfxASurface::ContentFromFormat(gfxImageFormat::ARGB32));
+  mDrawTarget = gfxPlatform::GetPlatform()->
+    CreateOffscreenContentDrawTarget(IntSize(1, 1), SurfaceFormat::B8G8R8A8);
 
   mIMEComposing = false;
   mNeedIMEStateInit = MightNeedIMEFocus(aInitData);
@@ -388,12 +388,6 @@ PuppetWidget::GetLayerManager(PLayerTransactionChild* aShadowManager,
     *aAllowRetaining = true;
   }
   return mLayerManager;
-}
-
-gfxASurface*
-PuppetWidget::GetThebesSurface()
-{
-  return mSurface;
 }
 
 nsresult
@@ -694,7 +688,7 @@ PuppetWidget::Paint()
         mTabChild->NotifyPainted();
       }
     } else {
-      nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
+      nsRefPtr<gfxContext> ctx = new gfxContext(mDrawTarget);
       ctx->Rectangle(gfxRect(0,0,0,0));
       ctx->Clip();
       AutoLayerManagerSetup setupLayerManager(this, ctx,
