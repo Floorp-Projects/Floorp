@@ -66,27 +66,29 @@
 
 .stylesheet-sidebar {
   width: 230px;
+  -moz-border-start: 1px solid;
 }
 
 .theme-light .stylesheet-sidebar {
-  border-left: 1px solid #A6A6A6;
+  border-color: #aaa; /* Splitters */
 }
 
 .theme-dark .stylesheet-sidebar {
-  border-left: 1px solid #606C75;
+  border-color: #000;  /* Splitters */
 }
 
 .theme-light .media-rule-label {
-  border-bottom: 1px solid #CCC;
+  border-bottom-color: #cddae5; /* Grey */
 }
 
 .theme-dark .media-rule-label {
-  border-bottom: 1px solid #343C45;
+  border-bottom-color: #303b47; /* Grey */
 }
 
 .media-rule-label {
   padding: 4px;
   cursor: pointer;
+  border-bottom: 1px solid;
 }
 
 .theme-light .media-condition-unmatched {
