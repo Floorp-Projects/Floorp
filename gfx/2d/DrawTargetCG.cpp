@@ -472,7 +472,8 @@ UpdateLinearParametersToIncludePoint(double *min_t, double *max_t,
  */
 static void
 CalculateRepeatingGradientParams(CGPoint *aStart, CGPoint *aEnd,
-                                 CGRect aExtents, int *aRepeatCount)
+                                 CGRect aExtents, int *aRepeatStartFactor,
+                                 int *aRepeatEndFactor)
 {
   double t_min = INFINITY;
   double t_max = -INFINITY;
@@ -506,39 +507,49 @@ CalculateRepeatingGradientParams(CGPoint *aStart, CGPoint *aEnd,
   aStart->x = aStart->x + dx * t_min;
   aStart->y = aStart->y + dy * t_min;
 
-  *aRepeatCount = t_max - t_min;
+  *aRepeatStartFactor = t_min;
+  *aRepeatEndFactor = t_max;
 }
 
 static void
-DrawLinearRepeatingGradient(CGContextRef cg, const LinearGradientPattern &aPattern, const CGRect &aExtents)
+DrawLinearRepeatingGradient(CGContextRef cg, const LinearGradientPattern &aPattern,
+                            const CGRect &aExtents, bool aReflect)
 {
   GradientStopsCG *stops = static_cast<GradientStopsCG*>(aPattern.mStops.get());
   CGPoint startPoint = { aPattern.mBegin.x, aPattern.mBegin.y };
   CGPoint endPoint = { aPattern.mEnd.x, aPattern.mEnd.y };
 
-  int repeatCount = 1;
+  int repeatStartFactor = 0, repeatEndFactor = 1;
   // if we don't have a line then we can't extend it
   if (aPattern.mEnd.x != aPattern.mBegin.x ||
       aPattern.mEnd.y != aPattern.mBegin.y) {
     CalculateRepeatingGradientParams(&startPoint, &endPoint, aExtents,
-                                     &repeatCount);
+                                     &repeatStartFactor, &repeatEndFactor);
   }
 
+  int repeatCount = repeatEndFactor - repeatStartFactor;
+  uint32_t numStops = stops->mStops.size();
   double scale = 1./repeatCount;
 
   std::vector<CGFloat> colors;
   std::vector<CGFloat> offsets;
-  colors.reserve(stops->mStops.size()*repeatCount*4);
-  offsets.reserve(stops->mStops.size()*repeatCount);
+  colors.reserve(numStops*repeatCount*4);
+  offsets.reserve(numStops*repeatCount);
 
-  for (int j = 0; j < repeatCount; j++) {
-    for (uint32_t i = 0; i < stops->mStops.size(); i++) {
-      colors.push_back(stops->mStops[i].color.r);
-      colors.push_back(stops->mStops[i].color.g);
-      colors.push_back(stops->mStops[i].color.b);
-      colors.push_back(stops->mStops[i].color.a);
+  for (int j = repeatStartFactor; j < repeatEndFactor; j++) {
+    bool isReflected = aReflect && (j % 2) != 0;
+    for (uint32_t i = 0; i < numStops; i++) {
+      uint32_t stopIndex = isReflected ? numStops - i - 1 : i;
+      colors.push_back(stops->mStops[stopIndex].color.r);
+      colors.push_back(stops->mStops[stopIndex].color.g);
+      colors.push_back(stops->mStops[stopIndex].color.b);
+      colors.push_back(stops->mStops[stopIndex].color.a);
 
-      offsets.push_back((stops->mStops[i].offset + j)*scale);
+      CGFloat offset = stops->mStops[stopIndex].offset;
+      if (isReflected) {
+        offset = 1 - offset;
+      }
+      offsets.push_back((offset + (j - repeatStartFactor)) * scale);
     }
   }
 
@@ -546,7 +557,7 @@ DrawLinearRepeatingGradient(CGContextRef cg, const LinearGradientPattern &aPatte
   CGGradientRef gradient = CGGradientCreateWithColorComponents(colorSpace,
                                                                &colors.front(),
                                                                &offsets.front(),
-                                                               repeatCount*stops->mStops.size());
+                                                               repeatCount*numStops);
   CGColorSpaceRelease(colorSpace);
 
   CGContextDrawLinearGradient(cg, gradient, startPoint, endPoint,
@@ -650,8 +661,8 @@ DrawGradient(CGContextRef cg, const Pattern &aPattern, const CGRect &aExtents)
 
       CGContextDrawLinearGradient(cg, stops->mGradient, startPoint, endPoint,
                                   kCGGradientDrawsBeforeStartLocation | kCGGradientDrawsAfterEndLocation);
-    } else if (stops->mExtend == ExtendMode::REPEAT) {
-      DrawLinearRepeatingGradient(cg, pat, aExtents);
+    } else if (stops->mExtend == ExtendMode::REPEAT || stops->mExtend == ExtendMode::REFLECT) {
+      DrawLinearRepeatingGradient(cg, pat, aExtents, stops->mExtend == ExtendMode::REFLECT);
     }
   } else if (aPattern.GetType() == PatternType::RADIAL_GRADIENT) {
     const RadialGradientPattern& pat = static_cast<const RadialGradientPattern&>(aPattern);
