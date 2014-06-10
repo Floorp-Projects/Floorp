@@ -318,6 +318,13 @@ public:
    */
   bool IsPannable() const;
 
+  /**
+   * Returns the identifier of the touch in the last touch event processed by
+   * this APZC. This should only be called when the last touch event contained
+   * only one touch.
+   */
+  int32_t GetLastTouchIdentifier() const;
+
 protected:
   enum PanZoomState {
     NOTHING,                  /* no touch-start events received */
