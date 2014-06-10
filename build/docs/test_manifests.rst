@@ -7,7 +7,7 @@ Test Manifests
 Many test suites have their test metadata defined in files called
 **test manifests**.
 
-Test manifests are divided into two flavors: :ref:`manifest_destiny_manifests`
+Test manifests are divided into two flavors: :ref:`manifestparser_manifests`
 and :ref:`reftest_manifests`.
 
 Naming Convention
@@ -34,16 +34,16 @@ xpcshell.ini
 webapprt.ini
    For the *chrome* flavor of webapp runtime mochitests.
 
-.. _manifest_destiny_manifests:
+.. _manifestparser_manifests:
 
-Manifest Destiny Manifests
+ManifestParser Manifests
 ==========================
 
-Manifest destiny manifests are essentially ini files that conform to a basic
+ManifestParser manifests are essentially ini files that conform to a basic
 set of assumptions.
 
-The `reference documentation <http://mozbase.readthedocs.org/en/latest/manifestdestiny.html>`_
-for manifest destiny manifests describes the basic format of test manifests.
+The `reference documentation <http://mozbase.readthedocs.org/en/latest/manifestparser.html>`_
+for manifestparser manifests describes the basic format of test manifests.
 
 In summary, manifests are ini files with section names describing test files::
 
@@ -166,7 +166,7 @@ The expressions can reference a well-defined set of variables, such as
 the :ref:`mozinfo documentation <mozinfo_attributes>`.
 
 See
-`the source <https://hg.mozilla.org/mozilla-central/file/default/testing/mozbase/manifestdestiny/manifestparser/manifestparser.py>`_ for the full documentation of the
+`the source <https://hg.mozilla.org/mozilla-central/file/default/testing/mozbase/manifestparser/manifestparser/manifestparser.py>`_ for the full documentation of the
 expression syntax until it is documented here.
 
 .. todo::

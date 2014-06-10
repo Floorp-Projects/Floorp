@@ -1,4 +1,4 @@
-../mozbase/manifestdestiny
+../mozbase/manifestparser
 ../mozbase/mozcrash
 ../mozbase/mozdevice
 ../mozbase/mozfile

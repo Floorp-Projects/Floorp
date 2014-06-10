@@ -7,13 +7,13 @@ platform or build of Mozilla. To handle these cases (and more), we
 created a python library to create and use test "manifests", which
 codify this information.
 
-:mod:`manifestdestiny` --- Create and manage test manifests
+:mod:`manifestparser` --- Create and manage test manifests
 -----------------------------------------------------------
 
-manifestdestiny lets you easily create and use test manifests, to
+manifestparser lets you easily create and use test manifests, to
 control which tests are run under what circumstances.
 
-What ManifestDestiny gives you:
+What manifestparser gives you:
 
 * manifests are ordered lists of tests
 * tests may have an arbitrary number of key, value pairs
@@ -24,14 +24,14 @@ What ManifestDestiny gives you:
 .. code-block:: text
 
     [{'expected': 'pass',
-      'path': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests/testToolbar/testBackForwardButtons.js',
+      'path': '/home/mozilla/mozmill/src/manifestparser/manifestparser/tests/testToolbar/testBackForwardButtons.js',
       'relpath': 'testToolbar/testBackForwardButtons.js',
       'name': 'testBackForwardButtons.js',
-      'here': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests',
-      'manifest': '/home/mozilla/mozmill/src/ManifestDestiny/manifestdestiny/tests/manifest.ini',}]
+      'here': '/home/mozilla/mozmill/src/manifestparser/manifestparser/tests',
+      'manifest': '/home/mozilla/mozmill/src/manifestparser/manifestparser/tests/manifest.ini',}]
 
 The keys displayed here (path, relpath, name, here, and manifest) are
-reserved keys for ManifestDestiny and any consuming APIs.  You can add
+reserved keys for manifestparser and any consuming APIs.  You can add
 additional key, value metadata to each test.
 
 Why have test manifests?
@@ -173,7 +173,7 @@ as well.
 
 Outside of the reserved keys, the remaining key, values
 are up to convention to use.  There is a (currently very minimal)
-generic integration layer in ManifestDestiny for use of all harnesses,
+generic integration layer in manifestparser for use of all harnesses,
 `manifestparser.TestManifest`.
 For instance, if the 'disabled' key is present, you can get the set of
 tests without disabled (various other queries are doable as well).
@@ -201,7 +201,7 @@ To recap:
 * you can use it however you want or process it further as you need
 
 Tests are denoted by sections in an .ini file (see
-http://hg.mozilla.org/automation/ManifestDestiny/file/tip/manifestdestiny/tests/mozmill-example.ini).
+http://hg.mozilla.org/automation/manifestparser/file/tip/manifestparser/tests/mozmill-example.ini).
 
 Additional manifest files may be included with an `[include:]` directive:
 
@@ -216,10 +216,10 @@ The `[DEFAULT]` section contains variables that all tests inherit from.
 Included files will inherit the top-level variables but may override
 in their own `[DEFAULT]` section.
 
-ManifestDestiny Architecture
+manifestparser Architecture
 ````````````````````````````
 
-There is a two- or three-layered approach to the ManifestDestiny
+There is a two- or three-layered approach to the manifestparser
 architecture, depending on your needs:
 
 1. ManifestParser: this is a generic parser for .ini manifests that
@@ -234,9 +234,9 @@ test-specific. TestManifest faciliates `skip-if` and `run-if` logic.
 from TestManifest if more harness-specific customization is desired at
 the manifest level.
 
-See the source code at https://github.com/mozilla/mozbase/tree/master/manifestdestiny
+See the source code at https://github.com/mozilla/mozbase/tree/master/manifestparser
 and
-https://github.com/mozilla/mozbase/blob/master/manifestdestiny/manifestparser.py
+https://github.com/mozilla/mozbase/blob/master/manifestparser/manifestparser.py
 in particular.
 
 Using Manifests
@@ -270,7 +270,7 @@ is up to the harness to pass in tags appropriate to its usage.
 Creating Manifests
 ``````````````````
 
-ManifestDestiny comes with a console script, `manifestparser create`, that
+manifestparser comes with a console script, `manifestparser create`, that
 may be used to create a seed manifest structure from a directory of
 files.  Run `manifestparser help create` for usage information.
 
@@ -386,9 +386,9 @@ To update from a directory of tests in `~/mozmill/src/mozmill-tests/firefox/` ru
 Tests
 `````
 
-ManifestDestiny includes a suite of tests:
+manifestparser includes a suite of tests:
 
-https://github.com/mozilla/mozbase/tree/master/manifestdestiny/tests
+https://github.com/mozilla/mozbase/tree/master/manifestparsery/tests
 
 `test_manifest.txt` is a doctest that may be helpful in figuring out
 how to use the API.  Tests are run via `python test.py`.
