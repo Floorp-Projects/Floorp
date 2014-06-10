@@ -42,15 +42,6 @@ ContainerLayerD3D10::GetFirstChildD3D10()
   return static_cast<LayerD3D10*>(mFirstChild->ImplData());
 }
 
-static inline LayerD3D10*
-GetNextSiblingD3D10(LayerD3D10* aLayer)
-{
-   Layer* layer = aLayer->GetLayer()->GetNextSibling();
-   return layer ? static_cast<LayerD3D10*>(layer->
-                                           ImplData())
-                : nullptr;
-}
-
 void
 ContainerLayerD3D10::RenderLayer()
 {
