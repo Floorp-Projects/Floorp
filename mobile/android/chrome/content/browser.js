@@ -1673,6 +1673,10 @@ var BrowserApp = {
         }
 
         Services.prefs.setBoolPref("intl.locale.matchOS", !aData);
+
+        // Ensure that this choice is immediately persisted, because
+        // Gecko won't be told again if it forgets.
+        Services.prefs.savePrefFile(null);
         break;
 
       default:
