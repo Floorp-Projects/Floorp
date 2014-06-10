@@ -1676,6 +1676,10 @@ var BrowserApp = {
         }
 
         Services.prefs.setBoolPref("intl.locale.matchOS", !aData);
+
+        // Blow away the string cache so that future lookups get the
+        // correct locale.
+        Services.strings.flushBundles();
         break;
 
       default:
