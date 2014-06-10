@@ -100,21 +100,15 @@ public abstract class SharedBrowserDatabaseProvider extends AbstractPerProfileDa
 
         final String profile = fromUri.getQueryParameter(BrowserContract.PARAM_PROFILE);
         final SQLiteDatabase db = getWritableDatabaseForProfile(profile, isTest(fromUri));
-        final String[] ids;
         final String limit = Long.toString(DELETED_RECORDS_PURGE_LIMIT, 10);
         final Cursor cursor = db.query(tableName, new String[] { CommonColumns._ID }, selection, null, null, null, null, limit);
+        final String inClause;
         try {
-            ids = new String[cursor.getCount()];
-            int i = 0;
-            while (cursor.moveToNext()) {
-                ids[i++] = Long.toString(cursor.getLong(0), 10);
-            }
+            inClause = DBUtils.computeSQLInClauseFromLongs(cursor, CommonColumns._ID);
         } finally {
             cursor.close();
         }
 
-        final String inClause = computeSQLInClause(ids.length,
-                CommonColumns._ID);
-        db.delete(tableName, inClause, ids);
+        db.delete(tableName, inClause, null);
     }
 }
