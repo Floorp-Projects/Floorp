@@ -184,3 +184,4 @@ bool SerialiseMetricsTable(const ots::OpenTypeFile *file,
 
 }  // namespace ots
 
+#undef TABLE_NAME

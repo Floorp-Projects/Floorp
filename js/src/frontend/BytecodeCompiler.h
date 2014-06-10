@@ -68,7 +68,7 @@ IsKeyword(JSLinearString *str);
 
 /* GC marking. Defined in Parser.cpp. */
 void
-MarkParser(JSTracer *trc, AutoGCRooter *parser);
+MarkParser(JSTracer *trc, JS::AutoGCRooter *parser);
 
 } /* namespace frontend */
 } /* namespace js */

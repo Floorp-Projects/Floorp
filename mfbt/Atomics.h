@@ -866,6 +866,7 @@ template<typename T>
 struct IntrinsicAddSub<T*> : public IntrinsicApplyHelper<T*>
 {
   typedef typename IntrinsicApplyHelper<T*>::ValueType ValueType;
+  typedef typename IntrinsicBase<T*>::Primitives Primitives;
 
   static ValueType add(ValueType& aPtr, ptrdiff_t aAmount)
   {
@@ -893,6 +894,7 @@ struct AtomicIntrinsics : public IntrinsicMemoryOps<T, Order>,
                           public IntrinsicIncDec<T>
 {
   typedef typename IntrinsicIncDec<T>::ValueType ValueType;
+  typedef typename IntrinsicBase<T>::Primitives Primitives;
 
   static ValueType or_(ValueType& aPtr, T aVal)
   {
@@ -915,6 +917,9 @@ struct AtomicIntrinsics<T*, Order> : public IntrinsicMemoryOps<T*, Order>,
                                      public IntrinsicIncDec<T*>
 {
   typedef typename IntrinsicMemoryOps<T*, Order>::ValueType ValueType;
+  // This is required to make us be able to build with MSVC10, for unknown
+  // reasons.
+  typedef typename IntrinsicBase<T*>::Primitives Primitives;
 };
 
 } // namespace detail

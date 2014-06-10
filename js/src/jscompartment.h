@@ -448,11 +448,6 @@ struct JSCompartment
     /* Used by memory reporters and invalid otherwise. */
     void               *compartmentStats;
 
-    // These flags help us to discover if a compartment that shouldn't be alive
-    // manages to outlive a GC.
-    bool scheduledForDestruction;
-    bool maybeAlive;
-
 #ifdef JS_ION
   private:
     js::jit::JitCompartment *jitCompartment_;
@@ -656,11 +651,11 @@ class AutoWrapperVector : public AutoVectorRooter<WrapperValue>
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class AutoWrapperRooter : private AutoGCRooter {
+class AutoWrapperRooter : private JS::AutoGCRooter {
   public:
     AutoWrapperRooter(JSContext *cx, WrapperValue v
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : AutoGCRooter(cx, WRAPPER), value(v)
+      : JS::AutoGCRooter(cx, WRAPPER), value(v)
     {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
     }
@@ -669,7 +664,7 @@ class AutoWrapperRooter : private AutoGCRooter {
         return value.get().toObjectOrNull();
     }
 
-    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void JS::AutoGCRooter::trace(JSTracer *trc);
 
   private:
     WrapperValue value;
