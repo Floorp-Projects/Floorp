@@ -412,8 +412,7 @@ function computePrintedLines(functionName)
 
     // Distribute lines of output to the block they originate from.
     var currentBody = null;
-    for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
+    for (var line of lines) {
         if (/^block:/.test(line)) {
             if (match = /:(loop#[\d#]+)/.exec(line)) {
                 var loop = match[1];
@@ -578,6 +577,13 @@ var each = Math.floor(N/numBatches);
 var start = minStream + each * (batch - 1);
 var end = Math.min(minStream + each * batch - 1, maxStream);
 
+// For debugging: Set this variable to the function name you're interested in
+// debugging and run once. That will print out the nameIndex of that function.
+// Insert that into the following statement to go directly to just that
+// function. Add your debugging printouts or debugger; statements or whatever.
+var theFunctionNameToFind;
+// var start = end = 12345;
+
 for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var name = xdb.read_key(nameIndex);
     var functionName = name.readString();
@@ -586,6 +592,15 @@ for (var nameIndex = start; nameIndex <= end; nameIndex++) {
     var json = data.readString();
     xdb.free_string(data);
     functionBodies = JSON.parse(json);
+
+    if (theFunctionNameToFind) {
+        if (functionName == theFunctionNameToFind) {
+            printErr("nameIndex = " + nameIndex);
+            quit(1);
+        } else {
+            continue;
+        }
+    }
 
     for (var body of functionBodies)
         body.suppressed = [];
