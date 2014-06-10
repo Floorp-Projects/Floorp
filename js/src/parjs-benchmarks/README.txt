@@ -1,18 +1,30 @@
-# Parallel JS Benchmarks
+This directory contains benchmarks for PJS, to be run manually for
+the time being.
 
-This is a preliminary benchmark suite for Parallel JS.  Each test is
-intended to test various aspects of the engine, as described below.
-The set of tests is very preliminary and is expected to grow and
-eventually include more real-world examples.
+ray.js is a ray tracer and ray-expected.ppm is its expected output.
+  Instructions are in a comment in the program.  Expect runs on
+  release builds to take 30+ seconds even in the best case.
 
-To run the tests, do something like:
+  The ray tracer allocates somewhere in the vicinity of 360GB on a
+  64-bit system.
 
-    parjs-benchmarks/run.sh build-opt/js parjs-benchmarks/*.js
+The cat-convolve-mapPar-*.js programs are two variations on a simple
+  convolver benchmark.  These programs allocate hardly anything, and
+  nothing within the PJS parallel section.
 
-Where `build-opt/js` is the path to your shell.
+  Instructions are in comments in the programs.
 
-# The tests
+  All the convolution tests must be run from a directory containing
+  the input file "cat.pgm".  That file is a free photo of an Amur
+  leopard taken from morguefile.com on 27 May 2014, URL
+  http://mrg.bz/MT0rPL.  It has been scaled down significantly,
+  cropped slightly, and converted from jpeg to pgm.
 
-- Mandelbrot: A test of embarassingly parallel arithmetic.  Exercises
-  the comprehension form of 2D parallel arrays.
-- Allocator: A test of parallel allocation.
+SimPJS-test.js is an allocation-heavy program originating with Intel.
+  It runs parallel and sequential versions of the same code and prints
+  the times for both.
+
+unhex.c is a utility that is used to process the output of some of
+  these tests; the output is represented as hex-encoded byte streams.
+  Compile this first if you need to run the programs in non-benchmark
+  mode to check the output.
