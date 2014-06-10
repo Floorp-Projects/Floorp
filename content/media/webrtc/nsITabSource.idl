@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 #include "nsIDOMWindow.idl"
 
-[scriptable,uuid(ff9c0e45-4646-45ec-b2f0-3b16d9e41875)]
+[scriptable,uuid(b3a7a402-2760-4583-b4a3-af095fe00c84)]
 interface nsITabSource : nsISupports
 {
   nsIDOMWindow getTabToStream();
