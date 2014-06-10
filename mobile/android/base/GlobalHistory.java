@@ -5,24 +5,28 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.util.ThreadUtils;
-
-import android.database.Cursor;
-import android.net.Uri;
-import android.os.Handler;
-import android.util.Log;
-
 import java.lang.ref.SoftReference;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
+import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import android.database.Cursor;
+import android.os.Handler;
+import android.os.SystemClock;
+import android.util.Log;
+
 class GlobalHistory {
     private static final String LOGTAG = "GeckoGlobalHistory";
 
-    private static GlobalHistory sInstance = new GlobalHistory();
+    private static final String TELEMETRY_HISTOGRAM_ADD = "FENNEC_GLOBALHISTORY_ADD_MS";
+    private static final String TELEMETRY_HISTOGRAM_UPDATE = "FENNEC_GLOBALHISTORY_UPDATE_MS";
+    private static final String TELEMETRY_HISTOGRAM_BUILD_VISITED_LINK = "FENNEC_GLOBALHISTORY_VISITED_BUILD_MS";
+
+    private static final GlobalHistory sInstance = new GlobalHistory();
 
     static GlobalHistory getInstance() {
         return sInstance;
@@ -48,35 +52,38 @@ class GlobalHistory {
             public void run() {
                 Set<String> visitedSet = mVisitedCache.get();
                 if (visitedSet == null) {
-                    // the cache was wiped away, repopulate it
+                    // The cache was wiped. Repopulate it.
                     Log.w(LOGTAG, "Rebuilding visited link set...");
-                    visitedSet = new HashSet<String>();
-                    Cursor c = null;
-                    try {
-                        c = BrowserDB.getAllVisitedHistory(GeckoAppShell.getContext().getContentResolver());
-                        if (c == null) {
-                            return;
-                        }
+                    final long start = SystemClock.uptimeMillis();
+                    final Cursor c = BrowserDB.getAllVisitedHistory(GeckoAppShell.getContext().getContentResolver());
+                    if (c == null) {
+                        return;
+                    }
 
+                    try {
+                        visitedSet = new HashSet<String>();
                         if (c.moveToFirst()) {
                             do {
                                 visitedSet.add(c.getString(0));
                             } while (c.moveToNext());
                         }
                         mVisitedCache = new SoftReference<Set<String>>(visitedSet);
+                        final long end = SystemClock.uptimeMillis();
+                        final long took = end - start;
+                        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_BUILD_VISITED_LINK, (int) Math.min(took, Integer.MAX_VALUE));
                     } finally {
-                        if (c != null)
-                            c.close();
+                        c.close();
                     }
                 }
 
-                // this runs on the same handler thread as the checkUriVisited code,
-                // so no synchronization needed
+                // This runs on the same handler thread as the checkUriVisited code,
+                // so no synchronization is needed.
                 while (true) {
-                    String uri = mPendingUris.poll();
+                    final String uri = mPendingUris.poll();
                     if (uri == null) {
                         break;
                     }
+
                     if (visitedSet.contains(uri)) {
                         GeckoAppShell.notifyUriVisited(uri);
                     }
@@ -95,12 +102,21 @@ class GlobalHistory {
     }
 
     public void add(String uri) {
+        final long start = SystemClock.uptimeMillis();
         BrowserDB.updateVisitedHistory(GeckoAppShell.getContext().getContentResolver(), uri);
+        final long end = SystemClock.uptimeMillis();
+        final long took = end - start;
+        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_ADD, (int) Math.min(took, Integer.MAX_VALUE));
         addToGeckoOnly(uri);
     }
 
+    @SuppressWarnings("static-method")
     public void update(String uri, String title) {
+        final long start = SystemClock.uptimeMillis();
         BrowserDB.updateHistoryTitle(GeckoAppShell.getContext().getContentResolver(), uri, title);
+        final long end = SystemClock.uptimeMillis();
+        final long took = end - start;
+        Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_UPDATE, (int) Math.min(took, Integer.MAX_VALUE));
     }
 
     public void checkUriVisited(final String uri) {
