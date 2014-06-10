@@ -152,7 +152,6 @@ public:
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr);
-  gfxASurface             *GetThebesSurface();
   NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
                                                          double aOriginalDeltaY,

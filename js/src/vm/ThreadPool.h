@@ -24,6 +24,10 @@ namespace js {
 
 class ThreadPool;
 
+namespace gc {
+struct ForkJoinNurseryChunk;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // ThreadPoolWorker
 //
@@ -174,10 +178,9 @@ class ThreadPool : public Monitor
     // The current job.
     ParallelJob *job_;
 
-#ifdef DEBUG
     // Initialized at startup only.
     JSRuntime *const runtime_;
-
+#ifdef DEBUG
     // Number of stolen slices in the last parallel job.
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> stolenSlices_;
 #endif
@@ -250,6 +253,80 @@ class ThreadPool : public Monitor
 
     // Abort the current job.
     void abortJob();
+
+    // Chunk pool for the PJS parallel nurseries.  The nurseries need
+    // to have a useful pool of cheap chunks, they cannot map/unmap
+    // chunks as needed, as that slows down collection much too much.
+    //
+    // Technically the following should be #ifdef JSGC_FJGENERATIONAL
+    // but that affects the observed size of JSRuntime, of which
+    // ThreadPool is a member.  JSGC_FJGENERATIONAL can only be set if
+    // PJS is enabled, but the latter is enabled in js/src/moz.build;
+    // meanwhile, JSGC_FJGENERATIONAL must be enabled globally if it
+    // is enabled at all, since plenty of Firefox code includes files
+    // to make JSRuntime visible.  JSGC_FJGENERATIONAL will go away
+    // soon, in the mean time the problem is resolved by not making
+    // definitions exported from SpiderMonkey dependent on it.
+
+    // Obtain chunk memory from the cache, or allocate new.  In debug
+    // mode poison the memory, see poisionChunk().
+    //
+    // Returns nullptr on OOM.
+    gc::ForkJoinNurseryChunk *getChunk();
+
+    // Free chunk memory to the cache.  In debug mode poison it, see
+    // poisionChunk().
+    void putFreeChunk(gc::ForkJoinNurseryChunk *mem);
+
+    // If enough time has passed since any allocation activity on the
+    // chunk pool then release any free chunks.  It's meaningful to
+    // call this from the main GC's chunk expiry mechanism; it has low
+    // cost if it does not do anything.
+    //
+    // This must be called with the GC lock taken.
+    void pruneChunkCache();
+
+  private:
+    // Ignore requests to prune the pool until this number of seconds
+    // has passed since the last allocation request.
+    static const int32_t secondsBeforePrune = 10;
+
+    // This lock controls access to the following variables and to the
+    // 'next' field of any ChunkFreeList object reachable from freeChunks_.
+    //
+    // You will be tempted to remove this lock and instead introduce a
+    // lock-free push/pop data structure using Atomic.compareExchange.
+    // Before you do that, consider that such a data structure
+    // implemented naively is vulnerable to the ABA problem in a way
+    // that leads to a corrupt free list; the problem occurs in
+    // practice during very heavily loaded runs where preeption
+    // windows can be long (eg, running the parallel jit_tests on all
+    // cores means having a number of runnable threads quadratic in
+    // the number of cores).  To do better some ABA-defeating scheme
+    // is needed additionally.
+    PRLock *chunkLock_;
+
+    // Timestamp of last allocation from the chunk pool, in seconds.
+    int32_t timeOfLastAllocation_;
+
+    // This structure overlays the beginning of the chunk when the
+    // chunk is on the free list; the rest of the chunk is unused.
+    struct ChunkFreeList {
+        ChunkFreeList *next;
+    };
+
+    // List of free chunks.
+    ChunkFreeList *freeChunks_;
+
+    // Poison a free chunk by filling with JS_POISONED_FORKJOIN_CHUNK
+    // and setting the runtime pointer to null.
+    void poisonChunk(gc::ForkJoinNurseryChunk *c);
+
+    // Release the memory of the chunks that are on the free list.
+    //
+    // This should be called only from the ThreadPool's destructor or
+    // from pruneChunkCache().
+    void clearChunkCache();
 };
 
 } // namespace js

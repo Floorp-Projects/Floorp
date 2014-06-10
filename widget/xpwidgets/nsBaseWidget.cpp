@@ -1012,19 +1012,6 @@ nsDeviceContext* nsBaseWidget::GetDeviceContext()
 
 //-------------------------------------------------------------------------
 //
-// Get the thebes surface
-//
-//-------------------------------------------------------------------------
-gfxASurface *nsBaseWidget::GetThebesSurface()
-{
-  // in theory we should get our parent's surface,
-  // clone it, and set a device offset before returning
-  return nullptr;
-}
-
-
-//-------------------------------------------------------------------------
-//
 // Destroy the window
 //
 //-------------------------------------------------------------------------

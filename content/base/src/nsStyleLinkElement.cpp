@@ -14,6 +14,7 @@
 
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/FragmentOrElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/Preferences.h"
 #include "nsCSSStyleSheet.h"
@@ -220,28 +221,6 @@ IsScopedStyleElement(nsIContent* aContent)
          aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::scoped);
 }
 
-static void
-SetIsElementInStyleScopeFlagOnSubtree(Element* aElement)
-{
-  if (aElement->IsElementInStyleScope()) {
-    return;
-  }
-
-  aElement->SetIsElementInStyleScope();
-
-  nsIContent* n = aElement->GetNextNode(aElement);
-  while (n) {
-    if (n->IsElementInStyleScope()) {
-      n = n->GetNextNonChildNode(aElement);
-    } else {
-      if (n->IsElement()) {
-        n->SetIsElementInStyleScope();
-      }
-      n = n->GetNextNode(aElement);
-    }
-  }
-}
-
 static bool
 HasScopedStyleSheetChild(nsIContent* aContent)
 {
@@ -396,7 +375,7 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
   Element* scopeElement = isScoped ? thisContent->GetParentElement() : nullptr;
   if (scopeElement) {
     NS_ASSERTION(isInline, "non-inline style must not have scope element");
-    SetIsElementInStyleScopeFlagOnSubtree(scopeElement);
+    scopeElement->SetIsElementInStyleScopeFlagOnSubtree(true);
   }
 
   bool doneLoading = false;
@@ -488,6 +467,6 @@ nsStyleLinkElement::UpdateStyleSheetScopedness(bool aIsNowScoped)
     UpdateIsElementInStyleScopeFlagOnSubtree(oldScopeElement);
   }
   if (newScopeElement) {
-    SetIsElementInStyleScopeFlagOnSubtree(newScopeElement);
+    newScopeElement->SetIsElementInStyleScopeFlagOnSubtree(true);
   }
 }

@@ -2778,6 +2778,11 @@ WifiWorker.prototype = {
     var timer = null;
     var self = this;
 
+    if (!WifiManager.enabled) {
+      callback.onfailure();
+      return;
+    }
+
     self.waitForScan(waitForScanCallback);
     doScan();
     function doScan() {

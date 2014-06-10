@@ -315,8 +315,6 @@ public:
 
     void DispatchSizeModeEvent();
 
-    virtual gfxASurface* GetThebesSurface();
-
     // be notified that a some form of drag event needs to go into Gecko
     virtual bool DragEvent(unsigned int aMessage, Point aMouseGlobal, UInt16 aKeyModifiers);
 

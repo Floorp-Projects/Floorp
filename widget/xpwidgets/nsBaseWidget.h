@@ -144,7 +144,6 @@ public:
   virtual void            EndRemoteDrawing() { };
   virtual void            CleanupRemoteDrawing() { };
   virtual void            UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) {}
-  virtual gfxASurface*    GetThebesSurface();
   NS_IMETHOD              SetModal(bool aModal);
   virtual uint32_t        GetMaxTouchPoints() const;
   NS_IMETHOD              SetWindowClass(const nsAString& xulWinType);
