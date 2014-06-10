@@ -226,6 +226,9 @@ private:
 
     static void PrefsChanged(nsIPrefBranch *prefs, const char *pref);
 
+    void FindHostLimit(nsACString::const_iterator& aStart,
+                       nsACString::const_iterator& aEnd);
+
     // mSpec contains the normalized version of the URL spec (UTF-8 encoded).
     nsCString mSpec;
     int32_t   mDefaultPort;
@@ -270,6 +273,7 @@ private:
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.
     static nsIIDNService               *gIDN;
+    static char                         gHostLimitDigits[];
     static bool                         gInitialized;
     static bool                         gEscapeUTF8;
     static bool                         gAlwaysEncodeInUTF8;
