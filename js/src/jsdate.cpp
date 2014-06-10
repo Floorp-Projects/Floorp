@@ -925,21 +925,20 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     int hour = -1;
     int min = -1;
     int sec = -1;
-    int tzoffset = -1;
+    int tzOffset = -1;
 
     int prevc = 0;
 
-    bool seenplusminus = false;
-    bool seenmonthname = false;
+    bool seenPlusMinus = false;
+    bool seenMonthName = false;
 
     size_t i = 0;
     while (i < limit) {
         int c = s[i];
         i++;
         if (c <= ' ' || c == ',' || c == '-') {
-            if (c == '-' && '0' <= s[i] && s[i] <= '9') {
-              prevc = c;
-            }
+            if (c == '-' && '0' <= s[i] && s[i] <= '9')
+                prevc = c;
             continue;
         }
         if (c == '(') { /* comments) */
@@ -947,10 +946,12 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
             while (i < limit) {
                 c = s[i];
                 i++;
-                if (c == '(') depth++;
-                else if (c == ')')
+                if (c == '(') {
+                    depth++;
+                } else if (c == ')') {
                     if (--depth <= 0)
                         break;
+                }
             }
             continue;
         }
@@ -961,28 +962,31 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 i++;
             }
 
-            /* allow TZA before the year, so
-             * 'Wed Nov 05 21:49:11 GMT-0800 1997'
-             * works */
-
-            /* uses of seenplusminus allow : in TZA, so Java
-             * no-timezone style of GMT+4:30 works
+            /*
+             * Allow TZA before the year, so 'Wed Nov 05 21:49:11 GMT-0800 1997'
+             * works.
+             *
+             * Uses of seenPlusMinus allow ':' in TZA, so Java no-timezone style
+             * of GMT+4:30 works.
              */
 
             if ((prevc == '+' || prevc == '-')/*  && year>=0 */) {
-                /* make ':' case below change tzoffset */
-                seenplusminus = true;
+                /* Make ':' case below change tzOffset. */
+                seenPlusMinus = true;
 
                 /* offset */
                 if (n < 24)
                     n = n * 60; /* EG. "GMT-3" */
                 else
                     n = n % 100 + n / 100 * 60; /* eg "GMT-0430" */
+
                 if (prevc == '+')       /* plus means east of GMT */
                     n = -n;
-                if (tzoffset != 0 && tzoffset != -1)
+
+                if (tzOffset != 0 && tzOffset != -1)
                     return false;
-                tzoffset = n;
+
+                tzOffset = n;
             } else if (prevc == '/' && mon >= 0 && mday >= 0 && year < 0) {
                 if (c <= ' ' || c == ',' || c == '/' || i >= limit)
                     year = n;
@@ -996,8 +1000,10 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 else
                     return false;
             } else if (c == '/') {
-                /* until it is determined that mon is the actual
-                   month, keep it as 1-based rather than 0-based */
+                /*
+                 * Until it is determined that mon is the actual month, keep
+                 * it as 1-based rather than 0-based.
+                 */
                 if (mon < 0)
                     mon = /*byte*/ n;
                 else if (mday < 0)
@@ -1006,11 +1012,11 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                     return false;
             } else if (i < limit && c != ',' && c > ' ' && c != '-' && c != '(') {
                 return false;
-            } else if (seenplusminus && n < 60) {  /* handle GMT-3:30 */
-                if (tzoffset < 0)
-                    tzoffset -= n;
+            } else if (seenPlusMinus && n < 60) {  /* handle GMT-3:30 */
+                if (tzOffset < 0)
+                    tzOffset -= n;
                 else
-                    tzoffset += n;
+                    tzOffset += n;
             } else if (hour >= 0 && min < 0) {
                 min = /*byte*/ n;
             } else if (prevc == ':' && min >= 0 && sec < 0) {
@@ -1036,8 +1042,10 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                     break;
                 i++;
             }
+
             if (i <= st + 1)
                 return false;
+
             for (k = ArrayLength(wtb); --k >= 0;) {
                 if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
                     int action = ttb[k];
@@ -1056,12 +1064,14 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                             else if (action == -2 && hour != 12) /* pm */
                                 hour += 12;
                         } else if (action <= 13) { /* month! */
-                            /* Adjust mon to be 1-based until the final values
-                               for mon, mday and year are adjusted below */
-                            if (seenmonthname)
+                            /*
+                             * Adjust mon to be 1-based until the final values
+                             * for mon, mday and year are adjusted below.
+                             */
+                            if (seenMonthName)
                                 return false;
 
-                            seenmonthname = true;
+                            seenMonthName = true;
                             int temp = /*byte*/ (action - 2) + 1;
 
                             if (mon < 0) {
@@ -1076,14 +1086,16 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                                 return false;
                             }
                         } else {
-                            tzoffset = action - 10000;
+                            tzOffset = action - 10000;
                         }
                     }
                     break;
                 }
             }
+
             if (k < 0)
                 return false;
+
             prevc = 0;
         }
     }
@@ -1092,32 +1104,32 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         return false;
 
     /*
-      Case 1. The input string contains an English month name.
-              The form of the string can be month f l, or f month l, or
-              f l month which each evaluate to the same date.
-              If f and l are both greater than or equal to 70, or
-              both less than 70, the date is invalid.
-              The year is taken to be the greater of the values f, l.
-              If the year is greater than or equal to 70 and less than 100,
-              it is considered to be the number of years after 1900.
-      Case 2. The input string is of the form "f/m/l" where f, m and l are
-              integers, e.g. 7/16/45.
-              Adjust the mon, mday and year values to achieve 100% MSIE
-              compatibility.
-              a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
-                 i.  If year < 100, it is the number of years after 1900
-                 ii. If year >= 100, it is the number of years after 0.
-              b. If 70 <= f < 100
-                 i.  If m < 70, f/m/l is interpreted as
-                     year/month/day where year is the number of years after
-                     1900.
-                 ii. If m >= 70, the date is invalid.
-              c. If f >= 100
-                 i.  If m < 70, f/m/l is interpreted as
-                     year/month/day where year is the number of years after 0.
-                 ii. If m >= 70, the date is invalid.
-    */
-    if (seenmonthname) {
+     * Case 1. The input string contains an English month name.
+     *         The form of the string can be month f l, or f month l, or
+     *         f l month which each evaluate to the same date.
+     *         If f and l are both greater than or equal to 70, or
+     *         both less than 70, the date is invalid.
+     *         The year is taken to be the greater of the values f, l.
+     *         If the year is greater than or equal to 70 and less than 100,
+     *         it is considered to be the number of years after 1900.
+     * Case 2. The input string is of the form "f/m/l" where f, m and l are
+     *         integers, e.g. 7/16/45.
+     *         Adjust the mon, mday and year values to achieve 100% MSIE
+     *         compatibility.
+     *         a. If 0 <= f < 70, f/m/l is interpreted as month/day/year.
+     *            i.  If year < 100, it is the number of years after 1900
+     *            ii. If year >= 100, it is the number of years after 0.
+     *         b. If 70 <= f < 100
+     *            i.  If m < 70, f/m/l is interpreted as
+     *                year/month/day where year is the number of years after
+     *                1900.
+     *            ii. If m >= 70, the date is invalid.
+     *         c. If f >= 100
+     *            i.  If m < 70, f/m/l is interpreted as
+     *                year/month/day where year is the number of years after 0.
+     *            ii. If m >= 70, the date is invalid.
+     */
+    if (seenMonthName) {
         if ((mday >= 70 && year >= 70) || (mday < 70 && year < 70))
             return false;
 
@@ -1163,10 +1175,10 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 
     double msec = date_msecFromDate(year, mon, mday, hour, min, sec, 0);
 
-    if (tzoffset == -1) /* no time zone specified, have to use local */
+    if (tzOffset == -1) /* no time zone specified, have to use local */
         msec = UTC(msec, dtInfo);
     else
-        msec += tzoffset * msPerMinute;
+        msec += tzOffset * msPerMinute;
 
     *result = msec;
     return true;
