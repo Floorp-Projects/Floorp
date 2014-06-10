@@ -670,7 +670,6 @@ let settingsToObserve = {
   'layers.enable-tiles': true,
   'layers.simple-tiles': false,
   'privacy.donottrackheader.enabled': false,
-  'ril.cellbroadcast.disabled': false,
   'ril.radio.disabled': false,
   'ril.mms.requestReadReport.enabled': {
     prefName: 'dom.mms.requestReadReport',
