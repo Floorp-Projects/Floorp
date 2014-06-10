@@ -14,12 +14,18 @@
 #include <cmath>
 
 namespace mozilla {
+
+template <typename> struct IsPixel;
+
 namespace gfx {
 
 template<class units>
 struct IntMarginTyped:
     public BaseMargin<int32_t, IntMarginTyped<units> >,
     public units {
+    static_assert(IsPixel<units>::value,
+                  "'units' must be a coordinate system tag");
+
     typedef BaseMargin<int32_t, IntMarginTyped<units> > Super;
 
     IntMarginTyped() : Super() {}
@@ -32,6 +38,9 @@ template<class units>
 struct MarginTyped:
     public BaseMargin<Float, MarginTyped<units> >,
     public units {
+    static_assert(IsPixel<units>::value,
+                  "'units' must be a coordinate system tag");
+
     typedef BaseMargin<Float, MarginTyped<units> > Super;
 
     MarginTyped() : Super() {}
@@ -56,6 +65,9 @@ template<class units>
 struct IntRectTyped :
     public BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> >,
     public units {
+    static_assert(IsPixel<units>::value,
+                  "'units' must be a coordinate system tag");
+
     typedef BaseRect<int32_t, IntRectTyped<units>, IntPointTyped<units>, IntSizeTyped<units>, IntMarginTyped<units> > Super;
 
     IntRectTyped() : Super() {}
@@ -86,6 +98,9 @@ template<class units>
 struct RectTyped :
     public BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> >,
     public units {
+    static_assert(IsPixel<units>::value,
+                  "'units' must be a coordinate system tag");
+
     typedef BaseRect<Float, RectTyped<units>, PointTyped<units>, SizeTyped<units>, MarginTyped<units> > Super;
 
     RectTyped() : Super() {}
