@@ -609,6 +609,11 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
     MBasicBlock *block = oldInstruction->block();
     block->insertBefore(oldInstruction, replacementInstruction);
     oldInstruction->replaceAllUsesWith(replacementInstruction);
+    MResumePoint *rp = oldInstruction->resumePoint();
+    if (rp && rp->instruction() == oldInstruction) {
+        rp->setInstruction(replacementInstruction);
+        replacementInstruction->setResumePoint(rp);
+    }
     block->discard(oldInstruction);
 
     // We may have replaced a specialized Float32 instruction by its

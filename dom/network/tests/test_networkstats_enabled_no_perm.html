@@ -13,21 +13,34 @@
 <script type="application/javascript">
 
 // Test to ensure NetworkStats is enabled but mozNetworkStats.getAvailableNetworks
-// does not work in content.
+// does not work in content because mozNetworkStats is null when no permission.
 
 SpecialPowers.setBoolPref("dom.mozNetworkStats.enabled", true);
 SpecialPowers.removePermission("networkstats-manage", document);
 
-ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should be accessible if dom.mozNetworkStats.enabled is true");
+ok(SpecialPowers.getBoolPref("dom.mozNetworkStats.enabled"),
+   "Preference 'dom.mozNetworkStats.enabled' is true.");
+
+ok(!SpecialPowers.hasPermission("networkstats-manage", document),
+   "Has no permission 'networkstats-manage'.");
+
+ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
+
+is(navigator.mozNetworkStats, null,
+   "mozNetworkStats should be null when no permission.");
 
 var error;
 try {
   navigator.mozNetworkStats.getAvailableNetworks;
-  ok(false, "Accessing navigator.mozNetworkStats.getAvailableNetworks should have thrown!");
+
+  ok(false,
+  	 "Accessing navigator.mozNetworkStats.getAvailableNetworks should throw!");
 } catch (ex) {
   error = ex;
 }
-ok(error, "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
+
+ok(error,
+   "Got an exception accessing navigator.mozNetworkStats.getAvailableNetworks");
 
 </script>
 </pre>

@@ -2736,3 +2736,25 @@ EventTarget::DispatchEvent(Event& aEvent,
   aRv = DispatchEvent(&aEvent, &result);
   return result;
 }
+
+Element*
+nsINode::GetParentElementCrossingShadowRoot() const
+{
+  if (!mParent) {
+    return nullptr;
+  }
+
+  if (mParent->IsElement()) {
+    return mParent->AsElement();
+  }
+
+  ShadowRoot* shadowRoot = ShadowRoot::FromNode(mParent);
+  if (shadowRoot) {
+    nsIContent* host = shadowRoot->GetHost();
+    MOZ_ASSERT(host, "ShowRoots should always have a host");
+    MOZ_ASSERT(host->IsElement(), "ShadowRoot hosts should always be Elements");
+    return host->AsElement();
+  }
+
+  return nullptr;
+}

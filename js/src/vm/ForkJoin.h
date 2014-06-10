@@ -9,11 +9,18 @@
 
 #include "mozilla/ThreadLocal.h"
 
+#include <stdarg.h>
+
 #include "jscntxt.h"
 
+#include "gc/ForkJoinNursery.h"
 #include "gc/GCInternals.h"
 
 #include "jit/Ion.h"
+
+#ifdef DEBUG
+  #define FORKJOIN_SPEW
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
 // Read Me First
@@ -30,7 +37,7 @@
 // to enable parallel execution.  At the top-level, it consists of a native
 // function (exposed as the ForkJoin intrinsic) that is used like so:
 //
-//     ForkJoin(func, sliceStart, sliceEnd, mode)
+//     ForkJoin(func, sliceStart, sliceEnd, mode, updatable)
 //
 // The intention of this statement is to start some some number (usually the
 // number of hardware threads) of copies of |func()| running in parallel. Each
@@ -46,6 +53,13 @@
 //
 // The fourth argument, |mode|, is an internal mode integer giving finer
 // control over the behavior of ForkJoin. See the |ForkJoinMode| enum.
+//
+// The fifth argument, |updatable|, if not null, is an object that may
+// be updated in a race-free manner by |func()| or its callees.
+// Typically this is some sort of pre-sized array.  Only this object
+// may be updated by |func()|, and updates must not race.  (A more
+// general approach is perhaps desirable, eg passing an Array of
+// objects that may be updated, but that is not presently needed.)
 //
 // func() should expect the following arguments:
 //
@@ -164,7 +178,7 @@
 // the error location might not be in the same JSScript as the one
 // which was executing due to inlining.
 //
-// Garbage collection and allocation:
+// Garbage collection, allocation, and write barriers:
 //
 // Code which executes on these parallel threads must be very careful
 // with respect to garbage collection and allocation.  The typical
@@ -173,24 +187,49 @@
 // any synchronization.  They can also trigger GC in an ad-hoc way.
 //
 // To deal with this, the forkjoin code creates a distinct |Allocator|
-// object for each slice.  You can access the appropriate object via
-// the |ForkJoinContext| object that is provided to the callbacks.  Once
-// the execution is complete, all the objects found in these distinct
-// |Allocator| is merged back into the main compartment lists and
-// things proceed normally.
+// object for each worker, which is used as follows.
+//
+// In a non-generational setting you can access the appropriate
+// allocator via the |ForkJoinContext| object that is provided to the
+// callbacks.  Once the parallel execution is complete, all the
+// objects found in these distinct |Allocator| are merged back into
+// the main compartment lists and things proceed normally.  (If it is
+// known that the result array contains no references then no merging
+// is necessary.)
+//
+// In a generational setting there is a per-thread |ForkJoinNursery|
+// in addition to the per-thread Allocator.  All "simple" objects
+// (meaning they are reasonably small, can be copied, and have no
+// complicated finalization semantics) are allocated in the nurseries;
+// other objects are allocated directly in the threads' Allocators,
+// which serve as the tenured areas for the threads.
+//
+// When a thread's nursery fills up it can be collected independently
+// of the other threads' nurseries, and does not require any of the
+// threads to bail out of the parallel section.  The nursery is
+// copy-collected, and the expectation is that the survival rate will
+// be very low and the collection will be very cheap.
+//
+// When the parallel execution is complete, and only if merging of the
+// Allocators into the main compartment is necessary, then the live
+// objects of the nurseries are copied into the respective Allocators,
+// in parallel, before the merging takes place.
 //
 // In Ion-generated code, we will do allocation through the
-// |Allocator| found in |ForkJoinContext| (which is obtained via TLS).
-// Also, no write barriers are emitted.  Conceptually, we should never
-// need a write barrier because we only permit writes to objects that
-// are newly allocated, and such objects are always black (to use
-// incremental GC terminology).  However, to be safe, we also block
-// upon entering a parallel section to ensure that any concurrent
-// marking or incremental GC has completed.
+// |ForkJoinNursery| or |Allocator| found in |ForkJoinContext| (which
+// is obtained via TLS).
+//
+// No write barriers are emitted.  We permit writes to thread-local
+// objects, and such writes can create cross-generational pointers or
+// pointers that may interact with incremental GC.  However, the
+// per-thread generational collector scans its entire tenured area on
+// each minor collection, and we block upon entering a parallel
+// section to ensure that any concurrent marking or incremental GC has
+// completed.
 //
 // In the future, it should be possible to lift the restriction that
-// we must block until inc. GC has completed and also to permit GC
-// during parallel exeution. But we're not there yet.
+// we must block until incremental GC has completed. But we're not
+// there yet.
 //
 // Load balancing (work stealing):
 //
@@ -316,7 +355,7 @@ class ForkJoinContext : public ThreadSafeContext
     // Bailout record used to record the reason this thread stopped executing
     ParallelBailoutRecord *const bailoutRecord;
 
-#ifdef DEBUG
+#ifdef FORKJOIN_SPEW
     // Records the last instr. to execute on this thread.
     IonLIRTraceData traceData;
 
@@ -412,6 +451,21 @@ class ForkJoinContext : public ThreadSafeContext
         return offsetof(ForkJoinContext, worker_);
     }
 
+#ifdef JSGC_FJGENERATIONAL
+    // There is already a nursery() method in ThreadSafeContext.
+    gc::ForkJoinNursery &fjNursery() { return fjNursery_; }
+
+    // Evacuate live data from the per-thread nursery into the per-thread
+    // tenured area.
+    void evacuateLiveData() { fjNursery_.evacuatingGC(); }
+
+    // Used in inlining nursery allocation.  Note the nursery is a
+    // member of the ForkJoinContext (a substructure), not a pointer.
+    static size_t offsetOfFJNursery() {
+        return offsetof(ForkJoinContext, fjNursery_);
+    }
+#endif
+
   private:
     friend class AutoSetForkJoinContext;
 
@@ -419,6 +473,11 @@ class ForkJoinContext : public ThreadSafeContext
     static mozilla::ThreadLocal<ForkJoinContext*> tlsForkJoinContext;
 
     ForkJoinShared *const shared_;
+
+#ifdef JSGC_FJGENERATIONAL
+    gc::ForkJoinGCShared gcShared_;
+    gc::ForkJoinNursery fjNursery_;
+#endif
 
     ThreadPoolWorker *worker_;
 
@@ -504,13 +563,15 @@ enum SpewChannel {
     SpewOps,
     SpewCompile,
     SpewBailouts,
+    SpewGC,
     NumSpewChannels
 };
 
-#if defined(DEBUG) && defined(JS_THREADSAFE) && defined(JS_ION)
+#if defined(FORKJOIN_SPEW) && defined(JS_THREADSAFE) && defined(JS_ION)
 
 bool SpewEnabled(SpewChannel channel);
 void Spew(SpewChannel channel, const char *fmt, ...);
+void SpewVA(SpewChannel channel, const char *fmt, va_list args);
 void SpewBeginOp(JSContext *cx, const char *name);
 void SpewBailout(uint32_t count, HandleScript script, jsbytecode *pc,
                  ParallelBailoutCause cause);
@@ -524,6 +585,7 @@ void SpewBailoutIR(IonLIRTraceData *data);
 
 static inline bool SpewEnabled(SpewChannel channel) { return false; }
 static inline void Spew(SpewChannel channel, const char *fmt, ...) { }
+static inline void SpewVA(SpewChannel channel, const char *fmt, va_list args) { }
 static inline void SpewBeginOp(JSContext *cx, const char *name) { }
 static inline void SpewBailout(uint32_t count, HandleScript script,
                                jsbytecode *pc, ParallelBailoutCause cause) {}
@@ -535,7 +597,7 @@ static inline void SpewMIR(jit::MDefinition *mir, const char *fmt, ...) { }
 #endif
 static inline void SpewBailoutIR(IonLIRTraceData *data) { }
 
-#endif // DEBUG && JS_THREADSAFE && JS_ION
+#endif // FORKJOIN_SPEW && JS_THREADSAFE && JS_ION
 
 } // namespace parallel
 } // namespace js
