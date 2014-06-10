@@ -968,24 +968,17 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let width = canvas.width = this._width;
     let height = canvas.height = this._height;
 
+    let totalTicks = this._data.length;
+    let firstTick = this._data[0].delta;
+    let lastTick = this._data[totalTicks - 1].delta;
     let maxValue = Number.MIN_SAFE_INTEGER;
     let minValue = Number.MAX_SAFE_INTEGER;
     let sumValues = 0;
-    let totalTicks = 0;
-    let firstTick;
-    let lastTick;
 
     for (let { delta, value } of this._data) {
       maxValue = Math.max(value, maxValue);
       minValue = Math.min(value, minValue);
       sumValues += value;
-      totalTicks++;
-
-      if (!firstTick) {
-        firstTick = delta;
-      } else {
-        lastTick = delta;
-      }
     }
 
     let dataScaleX = this.dataScaleX = width / lastTick;
@@ -1008,7 +1001,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     ctx.fillStyle = gradient;
     ctx.strokeStyle = LINE_GRAPH_STROKE_COLOR;
     ctx.lineWidth = LINE_GRAPH_STROKE_WIDTH;
-    ctx.setLineDash([]);
     ctx.beginPath();
 
     let prevX = 0;
