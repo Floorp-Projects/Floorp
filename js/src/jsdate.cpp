@@ -772,10 +772,6 @@ DaysInMonth(int year, int month)
 static bool
 date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 {
-    double msec;
-
-    const jschar *s;
-    size_t limit;
     size_t i = 0;
     int tzMul = 1;
     int dateMul = 1;
@@ -792,9 +788,9 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 
 #define PEEK(ch) (i < limit && s[i] == ch)
 
-#define NEED(ch)                                                     \
-    JS_BEGIN_MACRO                                                   \
-        if (i >= limit || s[i] != ch) { goto syntax; } else { ++i; } \
+#define NEED(ch)                                                      \
+    JS_BEGIN_MACRO                                                    \
+        if (i >= limit || s[i] != ch) { return false; } else { ++i; } \
     JS_END_MACRO
 
 #define DONE_DATE_UNLESS(ch)                                            \
@@ -809,11 +805,11 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 
 #define NEED_NDIGITS(n, field)                                      \
     JS_BEGIN_MACRO                                                  \
-        if (!ndigits(n, &field, s, &i, limit)) { goto syntax; }     \
+        if (!ndigits(n, &field, s, &i, limit)) { return false; }    \
     JS_END_MACRO
 
-    s = str->chars();
-    limit = str->length();
+    const jschar *s = str->chars();
+    size_t limit = str->length();
 
     if (PEEK('+') || PEEK('-')) {
         if (PEEK('-'))
@@ -840,7 +836,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         if (PEEK('.')) {
             ++i;
             if (!fractional(&frac, s, &i, limit))
-                goto syntax;
+                return false;
         }
     }
 
@@ -856,7 +852,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
          * allow "-0700" as a time zone offset, not just "-07:00".
          */
         if (PEEK(':'))
-          ++i;
+            ++i;
         NEED_NDIGITS(2, tzMin);
     } else {
         isLocalTime = true;
@@ -872,35 +868,28 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         || sec > 59
         || tzHour > 23
         || tzMin > 59)
-        goto syntax;
+    {
+        return false;
+    }
 
     if (i != limit)
-        goto syntax;
+        return false;
 
     month -= 1; /* convert month to 0-based */
 
-    msec = date_msecFromDate(dateMul * (double)year, month, day,
-                             hour, min, sec,
-                             frac * 1000.0);;
+    double msec = date_msecFromDate(dateMul * double(year), month, day,
+                                    hour, min, sec, frac * 1000.0);
 
-    if (isLocalTime) {
+    if (isLocalTime)
         msec = UTC(msec, dtInfo);
-    } else {
-        msec -= ((tzMul) * ((tzHour * msPerHour)
-                            + (tzMin * msPerMinute)));
-    }
+    else
+        msec -= tzMul * (tzHour * msPerHour + tzMin * msPerMinute);
 
     if (msec < -8.64e15 || msec > 8.64e15)
-        goto syntax;
+        return false;
 
     *result = msec;
-
     return true;
-
- syntax:
-    /* syntax error */
-    *result = 0;
-    return false;
 
 #undef PEEK
 #undef NEED
