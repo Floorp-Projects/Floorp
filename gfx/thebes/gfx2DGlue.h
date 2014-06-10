@@ -49,6 +49,11 @@ inline Color ToColor(const gfxRGBA &aRGBA)
                Float(aRGBA.b), Float(aRGBA.a));
 }
 
+inline gfxRGBA ThebesColor(Color &aColor)
+{
+  return gfxRGBA(aColor.r, aColor.g, aColor.b, aColor.a);
+}
+
 inline Matrix ToMatrix(const gfxMatrix &aMatrix)
 {
   return Matrix(Float(aMatrix.xx), Float(aMatrix.yx), Float(aMatrix.xy),
