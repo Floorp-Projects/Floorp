@@ -3531,7 +3531,7 @@ CloneIntoReadStructuredClone(JSContext *cx,
       if (!JS_WrapObject(cx, &obj))
           return nullptr;
 
-      if (!xpc::NewFunctionForwarder(cx, obj, true, &functionValue))
+      if (!xpc::NewFunctionForwarder(cx, obj, false, &functionValue))
           return nullptr;
 
       return &functionValue.toObject();
