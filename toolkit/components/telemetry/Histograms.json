@@ -319,7 +319,7 @@
     "expires_in_version": "never",
     "kind": "linear",
     "high": "18000",
-    "n_buckets": 200,  
+    "n_buckets": 200,
     "description": "Location accuracy"
   },
   "GEOLOCATION_ERROR": {
@@ -6345,5 +6345,42 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether FxA Sync is configured to use a custom token server"
+  },
+  "WEBCRYPTO_EXTRACTABLE_IMPORT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether an imported key was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_GENERATE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a generated key was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_ENC": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a key used in an encrypt/decrypt operation was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_SIG": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a key used in a sign/verify operation was marked as extractable"
+  },
+  "WEBCRYPTO_RESOLVED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a promise created by WebCrypto was resolved (vs rejected)"
+  },
+  "WEBCRYPTO_METHOD": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Methods invoked under window.crypto.subtle (0=encrypt, 1=decrypt, 2=sign, 3=verify, 4=digest, 5=generateKey, 6=deriveKey, 7=deriveBits, 8=importKey, 9=exportKey, 10=wrapKey, 11=unwrapKey)"
+  },
+  "WEBCRYPTO_ALG": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Algorithms used with WebCrypto (see table in WebCryptoTask.cpp)"
   }
 }
