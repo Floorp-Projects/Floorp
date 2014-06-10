@@ -1,0 +1,48 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1020041
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1020041</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1020041">Mozilla Bug 1020041</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  <iframe name="x" id="x"></iframe>
+  <iframe name="y" id="y"></iframe>
+</div>
+<pre id="test">
+</pre>
+  <a id="link" href="http://www.example.com:8080">foobar</a>
+  <area id="area" href="http://www.example.com:8080" />
+  <script type="application/javascript">
+
+  var tests = [
+    { host: '?', expected: 'www.example.com' },
+    { host: 'what?' , expected: 'what' },
+    { host: 'so what' , expected: 'www.example.com' },
+    { host: 'aa#bb' , expected: 'aa' },
+    { host: 'a/b' , expected: 'a' },
+    { host: 'a\\b', expected: 'a' },
+    { host: '[2001::1]#bla:10', expected: '[2001::1]'}
+  ];
+
+  for (var i = 0; i < tests.length; ++i) {
+    var url = new URL('http://www.example.com');
+    url.host = tests[i].host;
+    is (url.host, tests[i].expected, "URL.host is: " + url.host);
+
+    url = new URL('http://www.example.com');
+    url.hostname = tests[i].host;
+    is (url.hostname, tests[i].expected, "URL.hostname is: " + url.host);
+  }
+
+  </script>
+</body>
+</html>

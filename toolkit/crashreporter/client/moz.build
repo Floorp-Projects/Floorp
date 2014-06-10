@@ -49,3 +49,5 @@ RCINCLUDE = 'crashreporter.rc'
 # Don't use the STL wrappers in the crashreporter clients; they don't
 # link with -lmozalloc, and it really doesn't matter here anyway.
 DISABLE_STL_WRAPPING = True
+
+include('/toolkit/crashreporter/crashreporter.mozbuild')
