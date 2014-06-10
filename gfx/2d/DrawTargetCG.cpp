@@ -517,18 +517,18 @@ CreateRepeatingGradient(CGContextRef cg, GradientStopsCG* aStops,
                         bool aReflect)
 {
   int repeatCount = aRepeatEndFactor - aRepeatStartFactor;
-  uint32_t numStops = aStops->mStops.size();
+  uint32_t stopCount = aStops->mStops.size();
   double scale = 1./repeatCount;
 
   std::vector<CGFloat> colors;
   std::vector<CGFloat> offsets;
-  colors.reserve(numStops*repeatCount*4);
-  offsets.reserve(numStops*repeatCount);
+  colors.reserve(stopCount*repeatCount*4);
+  offsets.reserve(stopCount*repeatCount);
 
   for (int j = aRepeatStartFactor; j < aRepeatEndFactor; j++) {
     bool isReflected = aReflect && (j % 2) != 0;
-    for (uint32_t i = 0; i < numStops; i++) {
-      uint32_t stopIndex = isReflected ? numStops - i - 1 : i;
+    for (uint32_t i = 0; i < stopCount; i++) {
+      uint32_t stopIndex = isReflected ? stopCount - i - 1 : i;
       colors.push_back(aStops->mStops[stopIndex].color.r);
       colors.push_back(aStops->mStops[stopIndex].color.g);
       colors.push_back(aStops->mStops[stopIndex].color.b);
@@ -546,7 +546,7 @@ CreateRepeatingGradient(CGContextRef cg, GradientStopsCG* aStops,
   CGGradientRef gradient = CGGradientCreateWithColorComponents(colorSpace,
                                                                &colors.front(),
                                                                &offsets.front(),
-                                                               repeatCount*numStops);
+                                                               repeatCount*stopCount);
   CGColorSpaceRelease(colorSpace);
   return gradient;
 }
