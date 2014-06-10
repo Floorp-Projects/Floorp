@@ -71,17 +71,17 @@ public:
                       size_t* aBytesRead) MOZ_OVERRIDE
   {
     uint32_t sum = 0;
+    uint32_t bytesRead = 0;
     do {
       uint32_t offset = aOffset + sum;
       char* buffer = reinterpret_cast<char*>(aBuffer) + sum;
       uint32_t toRead = aCount - sum;
-      uint32_t bytesRead = 0;
       nsresult rv = mResource->ReadAt(offset, buffer, toRead, &bytesRead);
       if (NS_FAILED(rv)) {
         return false;
       }
       sum += bytesRead;
-    } while (sum < aCount);
+    } while (sum < aCount && bytesRead > 0);
     *aBytesRead = sum;
     return true;
   }
