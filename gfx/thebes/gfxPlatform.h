@@ -178,9 +178,6 @@ public:
       CreateOffscreenSurface(const IntSize& size,
                              gfxContentType contentType) = 0;
 
-    virtual already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
-                                                        gfxImageFormat format);
-
     /**
      * Beware that these methods may return DrawTargets which are not fully supported
      * on the current platform and might fail silently in subtle ways. This is a massive

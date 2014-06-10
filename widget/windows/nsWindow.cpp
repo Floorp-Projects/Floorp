@@ -3389,26 +3389,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
 
 /**************************************************************
  *
- * SECTION: nsIWidget::GetThebesSurface
- *
- * Get the Thebes surface associated with this widget.
- *
- **************************************************************/
-
-gfxASurface *nsWindow::GetThebesSurface()
-{
-  if (mPaintDC)
-    return (new gfxWindowsSurface(mPaintDC));
-
-  uint32_t flags = gfxWindowsSurface::FLAG_TAKE_DC;
-  if (mTransparencyMode != eTransparencyOpaque) {
-      flags |= gfxWindowsSurface::FLAG_IS_TRANSPARENT;
-  }
-  return (new gfxWindowsSurface(mWnd, flags));
-}
-
-/**************************************************************
- *
  * SECTION: nsIWidget::OnDefaultButtonLoaded
  *
  * Called after the dialog is loaded and it has a default button.

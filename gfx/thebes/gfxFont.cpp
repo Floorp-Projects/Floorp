@@ -4871,6 +4871,11 @@ gfxFontGroup::ResolveGenericFontNames(FontFamilyType aGenericType,
     static const char kGeneric_cursive[] = "cursive";
     static const char kGeneric_fantasy[] = "fantasy";
 
+    // treat -moz-fixed as monospace
+    if (aGenericType == eFamily_moz_fixed) {
+        aGenericType = eFamily_monospace;
+    }
+
     // type should be standard generic type at this point
     NS_ASSERTION(aGenericType >= eFamily_serif &&
                  aGenericType <= eFamily_fantasy,

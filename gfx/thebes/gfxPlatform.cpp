@@ -539,30 +539,6 @@ gfxPlatform::PreferMemoryOverShmem() const {
   return mLayersPreferMemoryOverShmem;
 }
 
-already_AddRefed<gfxASurface>
-gfxPlatform::OptimizeImage(gfxImageSurface *aSurface,
-                           gfxImageFormat format)
-{
-    IntSize surfaceSize = aSurface->GetSize().ToIntSize();
-
-#ifdef XP_WIN
-    if (gfxWindowsPlatform::GetPlatform()->GetRenderMode() ==
-        gfxWindowsPlatform::RENDER_DIRECT2D) {
-        return nullptr;
-    }
-#endif
-    nsRefPtr<gfxASurface> optSurface = CreateOffscreenSurface(surfaceSize, gfxASurface::ContentFromFormat(format));
-    if (!optSurface || optSurface->CairoStatus() != 0)
-        return nullptr;
-
-    gfxContext tmpCtx(optSurface);
-    tmpCtx.SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpCtx.SetSource(aSurface);
-    tmpCtx.Paint();
-
-    return optSurface.forget();
-}
-
 cairo_user_data_key_t kDrawTarget;
 
 RefPtr<DrawTarget>
