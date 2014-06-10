@@ -7,13 +7,3 @@
 .breadcrumbs-widget-item:-moz-focusring > .button-box {
   border-width: 0;
 }
-
-.arrow {
-  -moz-appearance: none;
-  background: url("chrome://global/skin/tree/twisty-clsd.png") center center no-repeat;
-}
-
-.arrow[open] {
-  -moz-appearance: none;
-  background-image: url("chrome://global/skin/tree/twisty-open.png");
-}
