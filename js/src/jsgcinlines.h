@@ -10,6 +10,7 @@
 #include "jsgc.h"
 
 #include "gc/Zone.h"
+#include "vm/ForkJoin.h"
 
 namespace js {
 
@@ -56,8 +57,17 @@ ThreadSafeContext::isThreadLocal(T thing) const
     if (!isForkJoinContext())
         return true;
 
-    if (!IsInsideNursery(thing) &&
-        allocator_->arenas.containsArena(runtime_, thing->arenaHeader()))
+#ifdef JSGC_FJGENERATIONAL
+    ForkJoinContext *cx = static_cast<ForkJoinContext*>(const_cast<ThreadSafeContext*>(this));
+    if (cx->fjNursery().isInsideNewspace(thing))
+        return true;
+#endif
+
+    // Global invariant
+    JS_ASSERT(!IsInsideNursery(thing));
+
+    // The thing is not in the nursery, but is it in the private tenured area?
+    if (allocator_->arenas.containsArena(runtime_, thing->arenaHeader()))
     {
         // GC should be suppressed in preparation for mutating thread local
         // objects, as we don't want to trip any barriers.
@@ -88,6 +98,14 @@ inline bool
 ShouldNurseryAllocate(const Nursery &nursery, AllocKind kind, InitialHeap heap)
 {
     return nursery.isEnabled() && IsNurseryAllocable(kind) && heap != TenuredHeap;
+}
+#endif
+
+#ifdef JSGC_FJGENERATIONAL
+inline bool
+ShouldFJNurseryAllocate(const ForkJoinNursery &nursery, AllocKind kind, InitialHeap heap)
+{
+    return IsFJNurseryAllocable(kind) && heap != TenuredHeap;
 }
 #endif
 
@@ -130,13 +148,17 @@ class ArenaIter
         init(zone, kind);
     }
 
-    void init(JS::Zone *zone, AllocKind kind) {
-        aheader = zone->allocator.arenas.getFirstArena(kind);
-        remainingHeader = zone->allocator.arenas.getFirstArenaToSweep(kind);
+    void init(Allocator *allocator, AllocKind kind) {
+        aheader = allocator->arenas.getFirstArena(kind);
+        remainingHeader = allocator->arenas.getFirstArenaToSweep(kind);
         if (!aheader) {
             aheader = remainingHeader;
             remainingHeader = nullptr;
         }
+    }
+
+    void init(JS::Zone *zone, AllocKind kind) {
+        init(&zone->allocator, kind);
     }
 
     bool done() const {
@@ -187,7 +209,11 @@ class ArenaCellIterImpl
     }
 
   public:
-    ArenaCellIterImpl() {}
+    ArenaCellIterImpl()
+      : firstThingOffset(0)     // Squelch
+      , thingSize(0)            //   warnings
+    {
+    }
 
     void initUnsynchronized(ArenaHeader *aheader) {
         AllocKind kind = aheader->getAllocKind();
@@ -479,6 +505,28 @@ TryNewNurseryObject(ThreadSafeContext *cxArg, size_t thingSize, size_t nDynamicS
 }
 #endif /* JSGC_GENERATIONAL */
 
+#ifdef JSGC_FJGENERATIONAL
+template <AllowGC allowGC>
+inline JSObject *
+TryNewFJNurseryObject(ForkJoinContext *cx, size_t thingSize, size_t nDynamicSlots)
+{
+    ForkJoinNursery &nursery = cx->fjNursery();
+    bool tooLarge = false;
+    JSObject *obj = nursery.allocateObject(thingSize, nDynamicSlots, tooLarge);
+    if (obj)
+        return obj;
+
+    if (!tooLarge && allowGC) {
+        nursery.minorGC();
+        obj = nursery.allocateObject(thingSize, nDynamicSlots, tooLarge);
+        if (obj)
+            return obj;
+    }
+
+    return nullptr;
+}
+#endif /* JSGC_FJGENERATIONAL */
+
 static inline bool
 PossiblyFail()
 {
@@ -568,6 +616,16 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
             return obj;
     }
 #endif
+#ifdef JSGC_FJGENERATIONAL
+    if (cx->isForkJoinContext() &&
+        ShouldFJNurseryAllocate(cx->asForkJoinContext()->fjNursery(), kind, heap))
+    {
+        JSObject *obj =
+            TryNewFJNurseryObject<allowGC>(cx->asForkJoinContext(), thingSize, nDynamicSlots);
+        if (obj)
+            return obj;
+    }
+#endif
 
     HeapSlot *slots = nullptr;
     if (nDynamicSlots) {
@@ -615,6 +673,8 @@ AllocateNonObject(ThreadSafeContext *cx)
  * other hand, since these allocations are extremely common, we don't want to
  * delay GC from these allocation sites. Instead we allow the GC, but still
  * fail the allocation, forcing the non-cached path.
+ *
+ * Observe this won't be used for ForkJoin allocation, as it takes a JSContext*
  */
 template <AllowGC allowGC>
 inline JSObject *
