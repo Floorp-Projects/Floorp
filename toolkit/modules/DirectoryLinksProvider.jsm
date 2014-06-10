@@ -38,6 +38,12 @@ const PREF_SELECTED_LOCALE = "general.useragent.locale";
 // The preference that tells where to obtain directory links
 const PREF_DIRECTORY_SOURCE = "browser.newtabpage.directory.source";
 
+// The preference that tells where to send click reports
+const PREF_DIRECTORY_REPORT_CLICK_ENDPOINT = "browser.newtabpage.directory.reportClickEndPoint";
+
+// The preference that tells if telemetry is enabled
+const PREF_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
+
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
 
@@ -229,7 +235,9 @@ let DirectoryLinksProvider = {
       try {
         let locale = this.locale;
         let json = gTextDecoder.decode(binaryData);
-        output = JSON.parse(json)[locale];
+        let list = JSON.parse(json);
+        this._listId = list.id;
+        output = list[locale];
       }
       catch (e) {
         Cu.reportError(e);
@@ -240,6 +248,43 @@ let DirectoryLinksProvider = {
       Cu.reportError(error);
       return [];
     });
+  },
+
+  /**
+   * Report a click behavior on a link for an action
+   * @param link Link object from DirectoryLinksProvider
+   * @param action String of the behavior to report
+   * @param tileIndex Number for the tile position of the link
+   * @param pinned Boolean if the tile is pinned
+   */
+  reportLinkAction: function DirectoryLinksProvider_reportLinkAction(link, action, tileIndex, pinned) {
+    let reportClickEndPoint;
+    let telemetryEnabled = false;
+    try {
+      reportClickEndPoint = Services.prefs.getCharPref(PREF_DIRECTORY_REPORT_CLICK_ENDPOINT);
+      telemetryEnabled = Services.prefs.getBoolPref(PREF_TELEMETRY_ENABLED);
+    }
+    catch (ex) {
+      return;
+    }
+
+    if (!telemetryEnabled) {
+      return;
+    }
+
+    // Package the data to be sent with the ping
+    let ping = new XMLHttpRequest();
+    let queryParams = [
+      ["list", this._listId || ""],
+      ["link", link.directoryIndex],
+      ["action", action],
+      ["tile", tileIndex],
+      ["score", link.frecency],
+      ["pin", +pinned],
+    ].map(([key, val]) => encodeURIComponent(key) + "=" + encodeURIComponent(val));
+
+    ping.open("GET", reportClickEndPoint + "?" + queryParams.join("&"));
+    ping.send();
   },
 
   /**
