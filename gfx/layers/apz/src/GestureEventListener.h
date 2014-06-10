@@ -53,6 +53,13 @@ public:
    */
   nsEventStatus HandleInputEvent(const MultiTouchInput& aEvent);
 
+  /**
+   * Returns the identifier of the touch in the last touch event processed by
+   * this GestureEventListener. This should only be called when the last touch
+   * event contained only one touch.
+   */
+  int32_t GetLastTouchIdentifier() const;
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~GestureEventListener();

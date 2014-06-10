@@ -40,6 +40,7 @@ static bool gPrintApzcTree = false;
 APZCTreeManager::APZCTreeManager()
     : mTreeLock("APZCTreeLock"),
       mInOverscrolledApzc(false),
+      mRetainedTouchIdentifier(-1),
       mTouchCount(0),
       mApzcTreeLog("apzctree")
 {
@@ -379,6 +380,16 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
     case MULTITOUCH_INPUT: {
       const MultiTouchInput& multiTouchInput = aEvent.AsMultiTouchInput();
       if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_START) {
+        // If we are in an overscrolled state and a second finger goes down,
+        // ignore that second touch point completely. The touch-start for it is
+        // dropped completely; subsequent touch events until the touch-end for it
+        // will have this touch point filtered out.
+        if (mApzcForInputBlock && mApzcForInputBlock->IsOverscrolled()) {
+          if (mRetainedTouchIdentifier == -1) {
+            mRetainedTouchIdentifier = mApzcForInputBlock->GetLastTouchIdentifier();
+          }
+          return nsEventStatus_eConsumeNoDefault;
+        }
         // MULTITOUCH_START input contains all active touches of the current
         // session thus resetting mTouchCount.
         mTouchCount = multiTouchInput.mTouches.Length();
@@ -412,13 +423,43 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
       } else if (mApzcForInputBlock) {
         APZCTM_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
       }
+
+      // If we receive a touch-cancel, it means all touches are finished, so we
+      // can stop ignoring any that we were ignoring.
+      if (multiTouchInput.mType == MultiTouchInput::MULTITOUCH_CANCEL) {
+        mRetainedTouchIdentifier = -1;
+      }
+
       if (mApzcForInputBlock) {
         mApzcForInputBlock->GetGuid(aOutTargetGuid);
         // Use the cached transform to compute the point to send to the APZC.
         // This ensures that the sequence of touch points an APZC sees in an
         // input block are all in the same coordinate space.
         transformToApzc = mCachedTransformToApzcForInputBlock;
+
+        // Make a copy of the input event that we pass, with some modifications,
+        // to the target APZC.
         MultiTouchInput inputForApzc(multiTouchInput);
+
+        // If we are currently ignoring any touch points, filter them out from
+        // the set of touch points included in this event.
+        if (mRetainedTouchIdentifier != -1) {
+          for (size_t j = 0; j < inputForApzc.mTouches.Length(); ++j) {
+            if (inputForApzc.mTouches[j].mIdentifier != mRetainedTouchIdentifier) {
+              // TODO(botond): Once we get rid of ReceiveInputEvent(WidgetInputEvent),
+              // the signature of this function will change to take the InputData
+              // via non-const reference. We can then remove the touch point from
+              // multiTouchInput rather than the copy (inputForApzc), so that
+              // content doesn't get it either.
+              inputForApzc.mTouches.RemoveElementAt(j);
+              --j;
+            }
+          }
+          if (inputForApzc.mTouches.IsEmpty()) {
+            return nsEventStatus_eConsumeNoDefault;
+          }
+        }
+
         for (size_t i = 0; i < inputForApzc.mTouches.Length(); i++) {
           ApplyTransform(&(inputForApzc.mTouches[i].mScreenPoint), transformToApzc);
         }
@@ -441,6 +482,7 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
         if (mTouchCount == 0) {
           mApzcForInputBlock = nullptr;
           mInOverscrolledApzc = false;
+          mRetainedTouchIdentifier = -1;
           ClearOverscrollHandoffChain();
         }
       }
@@ -538,6 +580,16 @@ APZCTreeManager::ProcessTouchEvent(WidgetTouchEvent& aEvent,
     return nsEventStatus_eIgnore;
   }
   if (aEvent.message == NS_TOUCH_START) {
+    // If we are in an overscrolled state and a second finger goes down,
+    // ignore that second touch point completely. The touch-start for it is
+    // dropped completely; subsequent touch events until the touch-end for it
+    // will have this touch point filtered out.
+    if (mApzcForInputBlock && mApzcForInputBlock->IsOverscrolled()) {
+      if (mRetainedTouchIdentifier == -1) {
+        mRetainedTouchIdentifier = mApzcForInputBlock->GetLastTouchIdentifier();
+      }
+      return nsEventStatus_eConsumeNoDefault;
+    }
     // NS_TOUCH_START event contains all active touches of the current
     // session thus resetting mTouchCount.
     mTouchCount = aEvent.touches.Length();
@@ -550,6 +602,28 @@ APZCTreeManager::ProcessTouchEvent(WidgetTouchEvent& aEvent,
     } else {
       // Reset the cached apz transform
       mCachedTransformToApzcForInputBlock = gfx3DMatrix();
+    }
+  }
+
+  // If we receive a touch-cancel, it means all touches are finished, so we
+  // can stop ignoring any that we were ignoring.
+  if (aEvent.message == NS_TOUCH_CANCEL) {
+    mRetainedTouchIdentifier = -1;
+  }
+
+  // If we are currently ignoring any touch points, filter them out from the
+  // set of touch points included in this event. Note that we modify aEvent
+  // itself, so that the touch points are also filtered out when the caller
+  // passes the event on to content.
+  if (mRetainedTouchIdentifier != -1) {
+    for (size_t j = 0; j < aEvent.touches.Length(); ++j) {
+      if (aEvent.touches[j]->Identifier() != mRetainedTouchIdentifier) {
+        aEvent.touches.RemoveElementAt(j);
+        --j;
+      }
+    }
+    if (aEvent.touches.IsEmpty()) {
+      return nsEventStatus_eConsumeNoDefault;
     }
   }
 
@@ -592,6 +666,7 @@ APZCTreeManager::ProcessTouchEvent(WidgetTouchEvent& aEvent,
     if (mTouchCount == 0) {
       mApzcForInputBlock = nullptr;
       mInOverscrolledApzc = false;
+      mRetainedTouchIdentifier = -1;
       ClearOverscrollHandoffChain();
     }
   }
