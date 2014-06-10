@@ -83,7 +83,6 @@ PARALLEL_DIRS += [
     'webidl',
     'xbl',
     'xslt',
-    'resourcestats',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
