@@ -980,6 +980,8 @@ var BrowserApp = {
     aTab.destroy();
     this._tabs.splice(tabIndex, 1);
 
+/* Disabled for Firefox 32. See bug 1023406.
+
     if (aShowUndoToast) {
       // Get a title for the undo close toast. Fall back to the URL if there is no title.
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
@@ -1005,6 +1007,7 @@ var BrowserApp = {
         }
       });
     }
+*/
   },
 
   // Use this method to select a tab from JS. This method sends a message
