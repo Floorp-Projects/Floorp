@@ -50,6 +50,8 @@ using namespace js::types;
 using mozilla::ArrayLength;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
+
+using JS::AutoCheckCannotGC;
 using JS::GenericNaN;
 
 /*
@@ -547,33 +549,20 @@ static const int ttb[] = {
     10000 + 8 * 60, 10000 + 7 * 60     /* PST/PDT */
 };
 
-/* helper for date_parse */
+template <typename CharT>
 static bool
-date_regionMatches(const char* s1, int s1off, const jschar* s2, int s2off,
-                   int count, int ignoreCase)
+RegionMatches(const char *s1, int s1off, const CharT *s2, int s2off, int count)
 {
-    bool result = false;
-    /* return true if matches, otherwise, false */
-
     while (count > 0 && s1[s1off] && s2[s2off]) {
-        if (ignoreCase) {
-            if (unicode::ToLowerCase(s1[s1off]) != unicode::ToLowerCase(s2[s2off]))
-                break;
-        } else {
-            if ((jschar)s1[s1off] != s2[s2off]) {
-                break;
-            }
-        }
+        if (unicode::ToLowerCase(s1[s1off]) != unicode::ToLowerCase(s2[s2off]))
+            break;
+
         s1off++;
         s2off++;
         count--;
     }
 
-    if (count == 0) {
-        result = true;
-    }
-
-    return result;
+    return count == 0;
 }
 
 /* find UTC time from given date... no 1900 correction! */
@@ -649,13 +638,13 @@ date_UTC(JSContext *cx, unsigned argc, Value *vp)
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
+template <typename CharT>
 static bool
-digits(size_t *result, const jschar *s, size_t *i, size_t limit)
+ParseDigits(size_t *result, const CharT *s, size_t *i, size_t limit)
 {
     size_t init = *i;
     *result = 0;
-    while (*i < limit &&
-           ('0' <= s[*i] && s[*i] <= '9')) {
+    while (*i < limit && ('0' <= s[*i] && s[*i] <= '9')) {
         *result *= 10;
         *result += (s[*i] - '0');
         ++(*i);
@@ -671,14 +660,14 @@ digits(size_t *result, const jschar *s, size_t *i, size_t limit)
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
+template <typename CharT>
 static bool
-fractional(double *result, const jschar *s, size_t *i, size_t limit)
+ParseFractional(double *result, const CharT *s, size_t *i, size_t limit)
 {
     double factor = 0.1;
     size_t init = *i;
     *result = 0.0;
-    while (*i < limit &&
-           ('0' <= s[*i] && s[*i] <= '9')) {
+    while (*i < limit && ('0' <= s[*i] && s[*i] <= '9')) {
         *result += (s[*i] - '0') * factor;
         factor *= 0.1;
         ++(*i);
@@ -693,12 +682,13 @@ fractional(double *result, const jschar *s, size_t *i, size_t limit)
  * Succeed if exactly n digits are converted. Advance *i only
  * on success.
  */
+template <typename CharT>
 static bool
-ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
+ParseDigitsN(size_t n, size_t *result, const CharT *s, size_t *i, size_t limit)
 {
     size_t init = *i;
 
-    if (digits(result, s, i, Min(limit, init+n)))
+    if (ParseDigits(result, s, i, Min(limit, init + n)))
         return (*i - init) == n;
 
     *i = init;
@@ -768,9 +758,9 @@ DaysInMonth(int year, int month)
  *   s    = one or more digits representing a decimal fraction of a second
  *   TZD  = time zone designator (Z or +hh:mm or -hh:mm or missing for local)
  */
-
+template <typename CharT>
 static bool
-date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
+ParseISODate(const CharT *s, size_t length, double *result, DateTimeInfo *dtInfo)
 {
     size_t i = 0;
     int tzMul = 1;
@@ -786,30 +776,19 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     size_t tzHour = 0;
     size_t tzMin = 0;
 
-#define PEEK(ch) (i < limit && s[i] == ch)
+#define PEEK(ch) (i < length && s[i] == ch)
 
-#define NEED(ch)                                                      \
-    JS_BEGIN_MACRO                                                    \
-        if (i >= limit || s[i] != ch) { return false; } else { ++i; } \
-    JS_END_MACRO
+#define NEED(ch)                                                               \
+    if (i >= length || s[i] != ch) { return false; } else { ++i; }
 
-#define DONE_DATE_UNLESS(ch)                                            \
-    JS_BEGIN_MACRO                                                      \
-        if (i >= limit || s[i] != ch) { goto done_date; } else { ++i; } \
-    JS_END_MACRO
+#define DONE_DATE_UNLESS(ch)                                                   \
+    if (i >= length || s[i] != ch) { goto done_date; } else { ++i; }
 
-#define DONE_UNLESS(ch)                                            \
-    JS_BEGIN_MACRO                                                 \
-        if (i >= limit || s[i] != ch) { goto done; } else { ++i; } \
-    JS_END_MACRO
+#define DONE_UNLESS(ch)                                                        \
+    if (i >= length || s[i] != ch) { goto done; } else { ++i; }
 
-#define NEED_NDIGITS(n, field)                                      \
-    JS_BEGIN_MACRO                                                  \
-        if (!ndigits(n, &field, s, &i, limit)) { return false; }    \
-    JS_END_MACRO
-
-    const jschar *s = str->chars();
-    size_t limit = str->length();
+#define NEED_NDIGITS(n, field)                                                 \
+    if (!ParseDigitsN(n, &field, s, &i, length)) { return false; }
 
     if (PEEK('+') || PEEK('-')) {
         if (PEEK('-'))
@@ -835,7 +814,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         NEED_NDIGITS(2, sec);
         if (PEEK('.')) {
             ++i;
-            if (!fractional(&frac, s, &i, limit))
+            if (!ParseFractional(&frac, s, &i, length))
                 return false;
         }
     }
@@ -872,7 +851,7 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         return false;
     }
 
-    if (i != limit)
+    if (i != length)
         return false;
 
     month -= 1; /* convert month to 0-based */
@@ -897,15 +876,14 @@ date_parseISOString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 #undef NEED_NDIGITS
 }
 
+template <typename CharT>
 static bool
-date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
+ParseDate(const CharT *s, size_t length, double *result, DateTimeInfo *dtInfo)
 {
-    if (date_parseISOString(str, result, dtInfo))
+    if (ParseISODate(s, length, result, dtInfo))
         return true;
 
-    const jschar *s = str->chars();
-    size_t limit = str->length();
-    if (limit == 0)
+    if (length == 0)
         return false;
 
     int year = -1;
@@ -922,7 +900,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
     bool seenMonthName = false;
 
     size_t i = 0;
-    while (i < limit) {
+    while (i < length) {
         int c = s[i];
         i++;
         if (c <= ' ' || c == ',' || c == '-') {
@@ -932,7 +910,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         }
         if (c == '(') { /* comments) */
             int depth = 1;
-            while (i < limit) {
+            while (i < length) {
                 c = s[i];
                 i++;
                 if (c == '(') {
@@ -946,7 +924,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         }
         if ('0' <= c && c <= '9') {
             int n = c - '0';
-            while (i < limit && '0' <= (c = s[i]) && c <= '9') {
+            while (i < length && '0' <= (c = s[i]) && c <= '9') {
                 n = n * 10 + c - '0';
                 i++;
             }
@@ -977,7 +955,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 
                 tzOffset = n;
             } else if (prevc == '/' && mon >= 0 && mday >= 0 && year < 0) {
-                if (c <= ' ' || c == ',' || c == '/' || i >= limit)
+                if (c <= ' ' || c == ',' || c == '/' || i >= length)
                     year = n;
                 else
                     return false;
@@ -999,7 +977,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                     mday = /*byte*/ n;
                 else
                     return false;
-            } else if (i < limit && c != ',' && c > ' ' && c != '-' && c != '(') {
+            } else if (i < length && c != ',' && c > ' ' && c != '-' && c != '(') {
                 return false;
             } else if (seenPlusMinus && n < 60) {  /* handle GMT-3:30 */
                 if (tzOffset < 0)
@@ -1025,7 +1003,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
         } else {
             size_t st = i - 1;
             int k;
-            while (i < limit) {
+            while (i < length) {
                 c = s[i];
                 if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')))
                     break;
@@ -1036,7 +1014,7 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
                 return false;
 
             for (k = ArrayLength(wtb); --k >= 0;) {
-                if (date_regionMatches(wtb[k], 0, s, st, i-st, 1)) {
+                if (RegionMatches(wtb[k], 0, s, st, i - st)) {
                     int action = ttb[k];
                     if (action != 0) {
                         if (action < 0) {
@@ -1174,6 +1152,15 @@ date_parseString(JSLinearString *str, double *result, DateTimeInfo *dtInfo)
 }
 
 static bool
+ParseDate(JSLinearString *s, double *result, DateTimeInfo *dtInfo)
+{
+    AutoCheckCannotGC nogc;
+    return s->hasLatin1Chars()
+           ? ParseDate(s->latin1Chars(nogc), s->length(), result, dtInfo)
+           : ParseDate(s->twoByteChars(nogc), s->length(), result, dtInfo);
+}
+
+static bool
 date_parse(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1191,7 +1178,7 @@ date_parse(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     double result;
-    if (!date_parseString(linearStr, &result, &cx->runtime()->dateTimeInfo)) {
+    if (!ParseDate(linearStr, &result, &cx->runtime()->dateTimeInfo)) {
         args.rval().setNaN();
         return true;
     }
@@ -2974,7 +2961,7 @@ js_Date(JSContext *cx, unsigned argc, Value *vp)
             if (!linearStr)
                 return false;
 
-            if (!date_parseString(linearStr, &d, &cx->runtime()->dateTimeInfo))
+            if (!ParseDate(linearStr, &d, &cx->runtime()->dateTimeInfo))
                 d = GenericNaN();
             else
                 d = TimeClip(d);
