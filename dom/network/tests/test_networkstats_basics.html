@@ -323,7 +323,21 @@ function next() {
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.addPermission("networkstats-manage", true, document);
-SpecialPowers.pushPrefEnv({'set': [["dom.mozNetworkStats.enabled", true]]}, test);
+SpecialPowers.pushPrefEnv({'set': [["dom.mozNetworkStats.enabled", true]]},
+                          function() {
+  ok(SpecialPowers.hasPermission("networkstats-manage", document),
+     "Has permission 'networkstats-manage'.");
+
+  ok(SpecialPowers.getBoolPref("dom.mozNetworkStats.enabled"),
+     "Preference 'dom.mozNetworkStats.enabled' is true.");
+
+  ok('mozNetworkStats' in navigator, "navigator.mozNetworkStats should exist");
+
+  ok(navigator.mozNetworkStats instanceof SpecialPowers.Ci.nsIDOMMozNetworkStatsManager,
+     "navigator.mozNetworkStats should be a nsIDOMMozNetworkStatsManager object");
+
+  test();
+});
 
 </script>
 </pre>
