@@ -36,10 +36,16 @@ add_task(function() {
   is(newWinBookmarksToolbarPlaceholder.getAttribute("wrap"), "true",
      "Button in new window should have 'wrap' attribute");
 
-  info("Waiting for panel in new window to close");
-  panelHiddenPromise = promisePanelHidden(newWin);
-  newWin.PanelUI.hide();
-  yield panelHiddenPromise;
+  //XXXgijs on Linux, we're sometimes seeing the panel being hidden early
+  // in the newly created window, probably because something else steals focus.
+  if (newWin.PanelUI.panel.state != "closed") {
+    info("Panel is still open in new window, waiting for it to close");
+    panelHiddenPromise = promisePanelHidden(newWin);
+    newWin.PanelUI.hide();
+    yield panelHiddenPromise;
+  } else {
+    info("panel was already closed");
+  }
 
   info("Waiting for new window to close");
   yield promiseWindowClosed(newWin);
