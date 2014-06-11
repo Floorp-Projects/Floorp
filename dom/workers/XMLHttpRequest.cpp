@@ -2313,8 +2313,10 @@ XMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aResponseType,
   mResponseType = ConvertStringToResponseType(acceptedResponseTypeString);
 }
 
-jsval
-XMLHttpRequest::GetResponse(JSContext* /* unused */, ErrorResult& aRv)
+void
+XMLHttpRequest::GetResponse(JSContext* /* unused */,
+                            JS::MutableHandle<JS::Value> aResponse,
+                            ErrorResult& aRv)
 {
   if (NS_SUCCEEDED(mStateData.mResponseTextResult) &&
       mStateData.mResponse.isUndefined()) {
@@ -2327,14 +2329,15 @@ XMLHttpRequest::GetResponse(JSContext* /* unused */, ErrorResult& aRv)
                           mStateData.mResponseText.Length());
     if (!str) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return JSVAL_VOID;
+      return;
     }
 
     mStateData.mResponse = STRING_TO_JSVAL(str);
   }
 
+  JS::ExposeValueToActiveJS(mStateData.mResponse);
   aRv = mStateData.mResponseResult;
-  return mStateData.mResponse;
+  aResponse.set(mStateData.mResponse);
 }
 
 void

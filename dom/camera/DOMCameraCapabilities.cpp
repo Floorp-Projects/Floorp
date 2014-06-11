@@ -293,10 +293,12 @@ CameraCapabilities::ExposureCompensationStep() const
   return mExposureCompensationStep;
 }
 
-JS::Value
-CameraCapabilities::RecorderProfiles(JSContext* aCx) const
+void
+CameraCapabilities::GetRecorderProfiles(JSContext* aCx,
+                                        JS::MutableHandle<JS::Value> aRetval) const
 {
-  return mRecorderProfiles;
+  JS::ExposeValueToActiveJS(mRecorderProfiles);
+  aRetval.set(mRecorderProfiles);
 }
 
 void

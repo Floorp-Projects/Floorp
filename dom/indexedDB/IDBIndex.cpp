@@ -826,24 +826,30 @@ IDBIndex::WrapObject(JSContext* aCx)
   return IDBIndexBinding::Wrap(aCx, this);
 }
 
-JS::Value
-IDBIndex::GetKeyPath(JSContext* aCx, ErrorResult& aRv)
+void
+IDBIndex::GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                     ErrorResult& aRv)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   if (!mCachedKeyPath.isUndefined()) {
-    return mCachedKeyPath;
+    JS::ExposeValueToActiveJS(mCachedKeyPath);
+    aResult.set(mCachedKeyPath);
+    return;
   }
 
   aRv = GetKeyPath().ToJSVal(aCx, mCachedKeyPath);
-  ENSURE_SUCCESS(aRv, JSVAL_VOID);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
   if (mCachedKeyPath.isGCThing()) {
     mozilla::HoldJSObjects(this);
     mRooted = true;
   }
 
-  return mCachedKeyPath;
+  JS::ExposeValueToActiveJS(mCachedKeyPath);
+  aResult.set(mCachedKeyPath);
 }
 
 already_AddRefed<IDBRequest>
