@@ -1554,7 +1554,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
         !(status & imgIRequest::STATUS_ERROR)) {
       // auto size the image
       aMetrics.Width() = mIntrinsicSize.width;
-      aMetrics.SetTopAscent(aMetrics.Height() = mIntrinsicSize.height);
+      aMetrics.SetBlockStartAscent(aMetrics.Height() = mIntrinsicSize.height);
 
       // Add spacing to the padding.
       nscoord halfEm = fm->EmHeight() / 2;
@@ -1587,7 +1587,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   switch (myList->mListStyleType) {
     case NS_STYLE_LIST_STYLE_NONE:
       aMetrics.Width() = aMetrics.Height() = 0;
-      aMetrics.SetTopAscent(0);
+      aMetrics.SetBlockStartAscent(0);
       break;
 
     case NS_STYLE_LIST_STYLE_DISC:
@@ -1598,7 +1598,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
       aMetrics.Width() = aMetrics.Height() = bulletSize;
-      aMetrics.SetTopAscent(bulletSize + mPadding.bottom);
+      aMetrics.SetBlockStartAscent(bulletSize + mPadding.bottom);
 
       // Add spacing to the padding.
       nscoord halfEm = fm->EmHeight() / 2;
@@ -1676,7 +1676,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       aMetrics.Width() =
         nsLayoutUtils::GetStringWidth(this, aRenderingContext,
                                       text.get(), text.Length());
-      aMetrics.SetTopAscent(fm->MaxAscent());
+      aMetrics.SetBlockStartAscent(fm->MaxAscent());
       break;
   }
 }
@@ -1705,7 +1705,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   mPadding.left += NSToCoordRound(borderPadding.left * inflation);
   aMetrics.Width() += mPadding.left + mPadding.right;
   aMetrics.Height() += mPadding.top + mPadding.bottom;
-  aMetrics.SetTopAscent(aMetrics.TopAscent() + mPadding.top);
+  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() + mPadding.top);
 
   // XXX this is a bit of a hack, we're assuming that no glyphs used for bullets
   // overflow their font-boxes. It'll do for now; to fix it for real, we really
