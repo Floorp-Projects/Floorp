@@ -241,6 +241,9 @@ class TabChild : public TabChildBase,
     typedef mozilla::layers::ActiveElementManager ActiveElementManager;
 
 public:
+    static std::map<uint64_t, nsRefPtr<TabChild> >& NestedTabChildMap();
+
+public:
     /** 
      * This is expected to be called off the critical path to content
      * startup.  This is an opportunity to load things that are slow
@@ -255,6 +258,24 @@ public:
     virtual ~TabChild();
 
     bool IsRootContentDocument();
+
+    const uint64_t Id() const {
+        return mUniqueId;
+    }
+
+    static uint64_t
+    GetTabChildId(TabChild* aTabChild)
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        if (aTabChild->Id() != 0) {
+            return aTabChild->Id();
+        }
+        static uint64_t sId = 0;
+        sId++;
+        aTabChild->mUniqueId = sId;
+        NestedTabChildMap()[sId] = aTabChild;
+        return sId;
+    }
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIWEBBROWSERCHROME
@@ -568,6 +589,7 @@ private:
     bool mIgnoreKeyPressEvent;
     nsRefPtr<ActiveElementManager> mActiveElementManager;
     bool mHasValidInnerSize;
+    uint64_t mUniqueId;
 
     DISALLOW_EVIL_CONSTRUCTORS(TabChild);
 };

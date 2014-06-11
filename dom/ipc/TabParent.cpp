@@ -22,6 +22,7 @@
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/net/NeckoChild.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
@@ -61,6 +62,10 @@
 #include "TabChild.h"
 #include "LoadContext.h"
 #include "nsNetCID.h"
+#include "nsIAuthInformation.h"
+#include "nsIAuthPromptCallback.h"
+#include "nsAuthInformationHolder.h"
+#include "nsICancelable.h"
 #include "gfxPrefs.h"
 #include <algorithm>
 
@@ -2075,6 +2080,146 @@ TabParent::SetIsDocShellActive(bool isActive)
   unused << SendSetIsDocShellActive(isActive);
   return NS_OK;
 }
+
+class FakeChannel MOZ_FINAL : public nsIChannel,
+                              public nsIAuthPromptCallback,
+                              public nsIInterfaceRequestor,
+                              public nsILoadContext
+{
+public:
+  FakeChannel(const nsCString& aUri, uint64_t aCallbackId, Element* aElement)
+    : mCallbackId(aCallbackId)
+    , mElement(aElement)
+  {
+    NS_NewURI(getter_AddRefs(mUri), aUri);
+  }
+
+  NS_DECL_ISUPPORTS
+#define NO_IMPL { return NS_ERROR_NOT_IMPLEMENTED; }
+  NS_IMETHOD GetName(nsACString&) NO_IMPL
+  NS_IMETHOD IsPending(bool*) NO_IMPL
+  NS_IMETHOD GetStatus(nsresult*) NO_IMPL
+  NS_IMETHOD Cancel(nsresult) NO_IMPL
+  NS_IMETHOD Suspend() NO_IMPL
+  NS_IMETHOD Resume() NO_IMPL
+  NS_IMETHOD GetLoadGroup(nsILoadGroup**) NO_IMPL
+  NS_IMETHOD SetLoadGroup(nsILoadGroup*) NO_IMPL
+  NS_IMETHOD SetLoadFlags(nsLoadFlags) NO_IMPL
+  NS_IMETHOD GetLoadFlags(nsLoadFlags*) NO_IMPL
+  NS_IMETHOD GetOriginalURI(nsIURI**) NO_IMPL
+  NS_IMETHOD SetOriginalURI(nsIURI*) NO_IMPL
+  NS_IMETHOD GetURI(nsIURI** aUri)
+  {
+    NS_IF_ADDREF(mUri);
+    *aUri = mUri;
+    return NS_OK;
+  }
+  NS_IMETHOD GetOwner(nsISupports**) NO_IMPL
+  NS_IMETHOD SetOwner(nsISupports*) NO_IMPL
+  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor** aRequestor)
+  {
+    NS_ADDREF(*aRequestor = this);
+    return NS_OK;
+  }
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*) NO_IMPL
+  NS_IMETHOD GetSecurityInfo(nsISupports**) NO_IMPL
+  NS_IMETHOD GetContentType(nsACString&) NO_IMPL
+  NS_IMETHOD SetContentType(const nsACString&) NO_IMPL
+  NS_IMETHOD GetContentCharset(nsACString&) NO_IMPL
+  NS_IMETHOD SetContentCharset(const nsACString&) NO_IMPL
+  NS_IMETHOD GetContentLength(int64_t*) NO_IMPL
+  NS_IMETHOD SetContentLength(int64_t) NO_IMPL
+  NS_IMETHOD Open(nsIInputStream**) NO_IMPL
+  NS_IMETHOD AsyncOpen(nsIStreamListener*, nsISupports*) NO_IMPL
+  NS_IMETHOD GetContentDisposition(uint32_t*) NO_IMPL
+  NS_IMETHOD SetContentDisposition(uint32_t) NO_IMPL
+  NS_IMETHOD GetContentDispositionFilename(nsAString&) NO_IMPL
+  NS_IMETHOD SetContentDispositionFilename(const nsAString&) NO_IMPL
+  NS_IMETHOD GetContentDispositionHeader(nsACString&) NO_IMPL
+  NS_IMETHOD OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo);
+  NS_IMETHOD OnAuthCancelled(nsISupports *aContext, bool userCancel);
+  NS_IMETHOD GetInterface(const nsIID & uuid, void **result)
+  {
+    return QueryInterface(uuid, result);
+  }
+  NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**) NO_IMPL
+  NS_IMETHOD GetTopWindow(nsIDOMWindow**) NO_IMPL
+  NS_IMETHOD GetTopFrameElement(nsIDOMElement** aElement)
+  {
+    nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(mElement);
+    elem.forget(aElement);
+    return NS_OK;
+  }
+  NS_IMETHOD GetNestedFrameId(uint64_t*) NO_IMPL
+  NS_IMETHOD IsAppOfType(uint32_t, bool*) NO_IMPL
+  NS_IMETHOD GetIsContent(bool*) NO_IMPL
+  NS_IMETHOD GetUsePrivateBrowsing(bool*) NO_IMPL
+  NS_IMETHOD SetUsePrivateBrowsing(bool) NO_IMPL
+  NS_IMETHOD SetPrivateBrowsing(bool) NO_IMPL
+  NS_IMETHOD GetIsInBrowserElement(bool*) NO_IMPL
+  NS_IMETHOD GetAppId(uint32_t*) NO_IMPL
+  NS_IMETHOD GetUseRemoteTabs(bool*) NO_IMPL
+  NS_IMETHOD SetRemoteTabs(bool) NO_IMPL
+#undef NO_IMPL
+
+protected:
+  nsCOMPtr<nsIURI> mUri;
+  uint64_t mCallbackId;
+  nsCOMPtr<Element> mElement;
+};
+
+NS_IMPL_ISUPPORTS(FakeChannel, nsIChannel, nsIAuthPromptCallback,
+                  nsIRequest, nsIInterfaceRequestor, nsILoadContext);
+
+bool
+TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
+                               const nsString& aRealm,
+                               const uint64_t& aCallbackId)
+{
+  nsCOMPtr<nsIAuthPrompt2> authPrompt;
+  GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL,
+                NS_GET_IID(nsIAuthPrompt2),
+                getter_AddRefs(authPrompt));
+  nsRefPtr<FakeChannel> channel = new FakeChannel(aUri, aCallbackId, mFrameElement);
+  uint32_t promptFlags = nsIAuthInformation::AUTH_HOST;
+
+  nsRefPtr<nsAuthInformationHolder> holder =
+    new nsAuthInformationHolder(promptFlags, aRealm,
+                                EmptyCString());
+
+  uint32_t level = nsIAuthPrompt2::LEVEL_NONE;
+  nsCOMPtr<nsICancelable> dummy;
+  nsresult rv =
+    authPrompt->AsyncPromptAuth(channel, channel, nullptr,
+                                level, holder, getter_AddRefs(dummy));
+
+  return rv == NS_OK;
+}
+
+NS_IMETHODIMP
+FakeChannel::OnAuthAvailable(nsISupports *aContext, nsIAuthInformation *aAuthInfo)
+{
+  nsAuthInformationHolder* holder =
+    static_cast<nsAuthInformationHolder*>(aAuthInfo);
+
+  if (!net::gNeckoChild->SendOnAuthAvailable(mCallbackId,
+                                             holder->User(),
+                                             holder->Password(),
+                                             holder->Domain())) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+FakeChannel::OnAuthCancelled(nsISupports *aContext, bool userCancel)
+{
+  if (!net::gNeckoChild->SendOnAuthCancelled(mCallbackId, userCancel)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 
 } // namespace tabs
 } // namespace mozilla

@@ -33,6 +33,11 @@ using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 namespace mozilla {
 namespace net {
 
+union PBrowserOrId {
+  nullable PBrowser;
+  uint64_t;
+};
+
 //-------------------------------------------------------------------
 sync protocol PNecko
 {
@@ -55,14 +60,14 @@ parent:
   __delete__();
 
   PCookieService();
-  PHttpChannel(nullable PBrowser browser,
+  PHttpChannel(PBrowserOrId browser,
                SerializedLoadContext loadContext,
                HttpChannelCreationArgs args);
   PWyciwygChannel();
-  PFTPChannel(PBrowser browser, SerializedLoadContext loadContext,
+  PFTPChannel(PBrowserOrId browser, SerializedLoadContext loadContext,
               FTPChannelCreationArgs args);
 
-  PWebSocket(PBrowser browser, SerializedLoadContext loadContext);
+  PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
   PUDPSocket(nsCString host, uint16_t port, nsCString filter);
 
@@ -77,6 +82,24 @@ parent:
   PRtspController();
   PRtspChannel(RtspChannelConnectArgs args);
   PChannelDiverter(ChannelDiverterArgs channel);
+
+  /**
+   * These are called from the child with the results of the auth prompt.
+   * callbackId is the id that was passed in PBrowser::AsyncAuthPrompt,
+   * corresponding to an nsIAuthPromptCallback
+   */
+  OnAuthAvailable(uint64_t callbackId, nsString user,
+                  nsString password, nsString domain);
+  OnAuthCancelled(uint64_t callbackId, bool userCancel);
+
+child:
+  /*
+   * Bring up the http auth prompt for a nested remote mozbrowser.
+   * NestedFrameId is the id corresponding to the PBrowser.  It is the same id
+   * that was passed to the PBrowserOrId param in to the PHttpChannel constructor
+   */
+  AsyncAuthPromptForNestedFrame(uint64_t nestedFrameId, nsCString uri,
+                                nsString realm, uint64_t callbackId);
 
 both:
   PTCPSocket();

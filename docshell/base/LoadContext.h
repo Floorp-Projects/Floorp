@@ -45,6 +45,24 @@ public:
               dom::Element* aTopFrameElement,
               uint32_t aAppId, bool aInBrowser)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
+    , mNestedFrameId(0)
+    , mAppId(aAppId)
+    , mIsContent(aToCopy.mIsContent)
+    , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
+    , mUseRemoteTabs(aToCopy.mUseRemoteTabs)
+    , mIsInBrowserElement(aInBrowser)
+#ifdef DEBUG
+    , mIsNotNull(aToCopy.mIsNotNull)
+#endif
+  {}
+
+  // AppId/inBrowser arguments override those in SerializedLoadContext provided
+  // by child process.
+  LoadContext(const IPC::SerializedLoadContext& aToCopy,
+              uint64_t aNestedFrameId,
+              uint32_t aAppId, bool aInBrowser)
+    : mTopFrameElement(nullptr)
+    , mNestedFrameId(aNestedFrameId)
     , mAppId(aAppId)
     , mIsContent(aToCopy.mIsContent)
     , mUsePrivateBrowsing(aToCopy.mUsePrivateBrowsing)
@@ -62,6 +80,7 @@ public:
               bool aUseRemoteTabs,
               bool aIsInBrowserElement)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
+    , mNestedFrameId(0)
     , mAppId(aAppId)
     , mIsContent(aIsContent)
     , mUsePrivateBrowsing(aUsePrivateBrowsing)
@@ -75,6 +94,7 @@ public:
   // Constructor taking reserved appId for the safebrowsing cookie.
   LoadContext(uint32_t aAppId)
     : mTopFrameElement(nullptr)
+    , mNestedFrameId(0)
     , mAppId(aAppId)
     , mIsContent(false)
     , mUsePrivateBrowsing(false)
@@ -87,6 +107,7 @@ public:
 
 private:
   nsWeakPtr     mTopFrameElement;
+  uint64_t      mNestedFrameId;
   uint32_t      mAppId;
   bool          mIsContent;
   bool          mUsePrivateBrowsing;
