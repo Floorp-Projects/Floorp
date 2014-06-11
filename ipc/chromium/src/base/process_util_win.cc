@@ -406,54 +406,6 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs) {
 
 }
 
-NamedProcessIterator::NamedProcessIterator(const std::wstring& executable_name,
-                                           const ProcessFilter* filter)
-    : started_iteration_(false),
-      executable_name_(executable_name),
-      filter_(filter) {
-  snapshot_ = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-}
-
-NamedProcessIterator::~NamedProcessIterator() {
-  CloseHandle(snapshot_);
-}
-
-
-const ProcessEntry* NamedProcessIterator::NextProcessEntry() {
-  bool result = false;
-  do {
-    result = CheckForNextProcess();
-  } while (result && !IncludeEntry());
-
-  if (result) {
-    return &entry_;
-  }
-
-  return NULL;
-}
-
-bool NamedProcessIterator::CheckForNextProcess() {
-  InitProcessEntry(&entry_);
-
-  if (!started_iteration_) {
-    started_iteration_ = true;
-    return !!Process32First(snapshot_, &entry_);
-  }
-
-  return !!Process32Next(snapshot_, &entry_);
-}
-
-bool NamedProcessIterator::IncludeEntry() {
-  return _wcsicmp(executable_name_.c_str(), entry_.szExeFile) == 0 &&
-                  (!filter_ || filter_->Includes(entry_.th32ProcessID,
-                                                 entry_.th32ParentProcessID));
-}
-
-void NamedProcessIterator::InitProcessEntry(ProcessEntry* entry) {
-  memset(entry, 0, sizeof(*entry));
-  entry->dwSize = sizeof(*entry);
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // ProcesMetrics
 

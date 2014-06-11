@@ -33,6 +33,10 @@
 namespace mozilla {
 namespace net {
 
+#if defined(_MSC_VER) && defined(__clang__)
+// This is needed until http://llvm.org/PR19987 is fixed
+class __multiple_inheritance HttpChannelChild;
+#endif
 class HttpChannelChild : public PHttpChannelChild
                        , public HttpBaseChannel
                        , public HttpAsyncAborter<HttpChannelChild>

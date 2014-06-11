@@ -90,7 +90,3 @@
 <!ENTITY protectedAuth.title "Protected Token Authentication">
 <!ENTITY protectedAuth.msg "Please authenticate to the token. Authentication method depends on the type of your token.">
 <!ENTITY protectedAuth.tokenName.label "Token:">
-
-<!ENTITY certErrorDlg.title "Secure Connection Failed">
-<!ENTITY certErrorDlg.info1 "This could be a problem with the server's configuration or it could be someone trying to impersonate the server.">
-<!ENTITY certErrorDlg.info2 "If you have connected to this server successfully in the past the error may be temporary and you can try again later.">

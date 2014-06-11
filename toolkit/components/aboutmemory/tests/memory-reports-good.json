@@ -16,6 +16,10 @@
 
     {"process": "Main Process (pid NNN)", "path": "redundant/should-be-ignored", "kind": 1, "units": 0, "amount": 1024, "description": ""},
 
+    {"process": "Heap-unclassified process", "path": "heap-allocated", "kind": 2, "units": 0, "amount": 262144000, "description": "Heap allocated."},
+    {"process": "Heap-unclassified process", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 52428800, "description": "A b."},
+    {"process": "Heap-unclassified process", "path": "explicit/heap-unclassified", "kind": 1, "units": 0, "amount": 209715200, "description": "Heap unclassified"},
+
     {"process": "Explicit-only process", "path": "explicit/a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},
 
     {"process": "Other-only process", "path": "a/b", "kind": 1, "units": 0, "amount": 100000, "description": "A b."},

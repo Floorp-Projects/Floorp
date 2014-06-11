@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-  https://bugzilla.mozilla.org/show_bug.cgi?id=768029
+  https://bugzilla.mozilla.org/show_bug.cgi?id=773891
 -->
 <head>
   <meta charset="utf-8">
@@ -218,7 +218,8 @@ SpecialPowers.addPermission("browser", true, "https://example.com");
 
 SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
                                    ["security.apps.privileged.CSP.default", DEFAULT_CSP_PRIV],
-                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT]]},
+                                   ["security.apps.certified.CSP.default", DEFAULT_CSP_CERT],
+                                   ["security.csp.speccompliant", true]]},
                           function() {  gTestRunner.next(); });
 
 

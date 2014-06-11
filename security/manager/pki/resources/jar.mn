@@ -9,8 +9,6 @@ pippki.jar:
     content/pippki/password.js               (content/password.js)
     content/pippki/resetpassword.xul         (content/resetpassword.xul)
     content/pippki/resetpassword.js          (content/resetpassword.js)
-    content/pippki/certerror.js              (content/certerror.js)
-*   content/pippki/certerror.xul             (content/certerror.xul)
     content/pippki/downloadcert.js           (content/downloadcert.js)
     content/pippki/downloadcert.xul          (content/downloadcert.xul)
     content/pippki/certManager.js            (content/certManager.js)

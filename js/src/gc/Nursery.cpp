@@ -583,9 +583,13 @@ js::Nursery::moveObjectToTenured(JSObject *dst, JSObject *src, AllocKind dstKind
      * Arrays do not necessarily have the same AllocKind between src and dst.
      * We deal with this by copying elements manually, possibly re-inlining
      * them if there is adequate room inline in dst.
+     *
+     * For Arrays we're reducing tenuredSize to the smaller srcSize
+     * because moveElementsToTenured() accounts for all Array elements,
+     * even if they are inlined.
      */
     if (src->is<ArrayObject>())
-        srcSize = sizeof(ObjectImpl);
+        tenuredSize = srcSize = sizeof(ObjectImpl);
 
     js_memcpy(dst, src, srcSize);
     tenuredSize += moveSlotsToTenured(dst, src, dstKind);
