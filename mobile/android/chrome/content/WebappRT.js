@@ -11,11 +11,9 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/PermissionsInstaller.jsm");
 Cu.import("resource://gre/modules/PermissionPromptHelper.jsm");
 Cu.import("resource://gre/modules/ContactService.jsm");
-#ifdef MOZ_ANDROID_SYNTHAPKS
 Cu.import("resource://gre/modules/AppsUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
-#endif
 
 function pref(name, value) {
   return {
@@ -70,14 +68,12 @@ let WebappRT = {
       });
     }
 
-#ifdef MOZ_ANDROID_SYNTHAPKS
     // If the app is in debug mode, configure and enable the remote debugger.
     sendMessageToJava({ type: "NativeApp:IsDebuggable" }, (response) => {
       if (response.isDebuggable) {
         this._enableRemoteDebugger(aUrl);
       }
     });
-#endif
 
     this.findManifestUrlFor(aUrl, aCallback);
   },
@@ -163,7 +159,6 @@ let WebappRT = {
     }
   },
 
-#ifdef MOZ_ANDROID_SYNTHAPKS
   _enableRemoteDebugger: function(aUrl) {
     // Skip the connection prompt in favor of notifying the user below.
     Services.prefs.setBoolPref("devtools.debugger.prompt-connection", false);
@@ -195,7 +190,6 @@ let WebappRT = {
       });
     });
   },
-#endif
 
   handleEvent: function(event) {
     let target = event.target;
