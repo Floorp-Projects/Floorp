@@ -407,9 +407,16 @@ ClientTiledThebesLayer::RenderLayer()
     ClientManager()->Hold(this);
     mContentClient->UseTiledLayerBuffer(TiledContentClient::TILED_BUFFER);
 
+    if (!mPaintData.mPaintFinished) {
+      // There is still more high-res stuff to paint, so we're not
+      // done yet. A subsequent transaction will take care of this.
+      ClientManager()->SetRepeatTransaction();
+      return;
+    }
+
     // If there are low precision updates, mark the paint as unfinished and
     // request a repeat transaction.
-    if (!lowPrecisionInvalidRegion.IsEmpty() && mPaintData.mPaintFinished) {
+    if (!lowPrecisionInvalidRegion.IsEmpty()) {
       ClientManager()->SetRepeatTransaction();
       mPaintData.mLowPrecisionPaintCount = 1;
       mPaintData.mPaintFinished = false;
@@ -428,6 +435,12 @@ ClientTiledThebesLayer::RenderLayer()
   if (updatedLowPrecision) {
     ClientManager()->Hold(this);
     mContentClient->UseTiledLayerBuffer(TiledContentClient::LOW_PRECISION_TILED_BUFFER);
+
+    if (!mPaintData.mPaintFinished) {
+      // There is still more low-res stuff to paint, so we're not
+      // done yet. A subsequent transaction will take care of this.
+      ClientManager()->SetRepeatTransaction();
+    }
   }
 
   EndPaint(false);
