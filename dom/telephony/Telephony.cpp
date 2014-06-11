@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Telephony.h"
+#include "mozilla/dom/CallEvent.h"
 #include "mozilla/dom/TelephonyBinding.h"
 #include "mozilla/dom/Promise.h"
 
@@ -21,7 +22,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 
-#include "CallEvent.h"
 #include "CallsList.h"
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
@@ -692,7 +692,12 @@ Telephony::DispatchCallEvent(const nsAString& aType,
              aType.EqualsLiteral("remoteheld") ||
              aType.EqualsLiteral("remtoeresumed"));
 
-  nsRefPtr<CallEvent> event = CallEvent::Create(this, aType, aCall, false, false);
+  CallEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mCall = aCall;
+
+  nsRefPtr<CallEvent> event = CallEvent::Constructor(this, aType, init);
 
   return DispatchTrustedEvent(event);
 }

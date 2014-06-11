@@ -7,8 +7,8 @@
 #include "Voicemail.h"
 
 #include "mozilla/dom/MozVoicemailBinding.h"
+#include "mozilla/dom/MozVoicemailEvent.h"
 #include "nsIDOMMozVoicemailStatus.h"
-#include "nsIDOMMozVoicemailEvent.h"
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
@@ -164,15 +164,14 @@ Voicemail::GetDisplayName(const Optional<uint32_t>& aServiceId, nsString& aDispl
 NS_IMETHODIMP
 Voicemail::NotifyStatusChanged(nsIDOMMozVoicemailStatus* aStatus)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-  NS_NewDOMMozVoicemailEvent(getter_AddRefs(event), this, nullptr, nullptr);
+  MozVoicemailEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mStatus = aStatus;
 
-  nsCOMPtr<nsIDOMMozVoicemailEvent> ce = do_QueryInterface(event);
-  nsresult rv = ce->InitMozVoicemailEvent(NS_LITERAL_STRING("statuschanged"),
-                                          false, false, aStatus);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return DispatchTrustedEvent(ce);
+  nsRefPtr<MozVoicemailEvent> event =
+    MozVoicemailEvent::Constructor(this, NS_LITERAL_STRING("statuschanged"), init);
+  return DispatchTrustedEvent(event);
 }
 
 nsresult
