@@ -21,7 +21,14 @@ function convertAppsArray(aApps, aWindow) {
   let apps = new aWindow.Array();
   for (let i = 0; i < aApps.length; i++) {
     let app = aApps[i];
-    apps.push(createApplicationObject(aWindow, app));
+    // Our application objects are JS-implemented XPCOM objects with DOM_OBJECT
+    // set in classinfo. These objects are reflector-per-scope, so as soon as we
+    // pass them to content, we'll end up with a new object in content. But from
+    // this code, they _appear_ to be chrome objects, and so the Array Xray code
+    // vetos the attempt to define a chrome-privileged object on a content Array.
+    // Very carefully waive Xrays so that this can keep working until we convert
+    // mozApps to WebIDL in bug 899322.
+    Cu.waiveXrays(apps)[i] = createApplicationObject(aWindow, app);
   }
 
   return apps;
