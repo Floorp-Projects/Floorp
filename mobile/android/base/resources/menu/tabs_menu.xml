@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/new_tab"
+          android:title="@string/new_tab"/>
+
+    <item android:id="@+id/new_private_tab"
+          android:title="@string/new_private_tab"/>
+
+    <item android:id="@+id/close_all_tabs"
+          android:title="@string/close_all_tabs"/>
+
+    <item android:id="@+id/close_private_tabs"
+          android:title="@string/close_private_tabs"/>
+
+</menu>
