@@ -368,18 +368,13 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             return false;
           }
 
-          nsRefPtr<gfxContext> thebesContext;
-          if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(mozilla::gfx::BackendType::CAIRO)) {
-            RECT paintRect;
-            ::GetClientRect(mWnd, &paintRect);
-            RefPtr<mozilla::gfx::DrawTarget> dt =
-              gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
-                                                                     mozilla::gfx::IntSize(paintRect.right - paintRect.left,
-                                                                                           paintRect.bottom - paintRect.top));
-            thebesContext = new gfxContext(dt);
-          } else {
-            thebesContext = new gfxContext(targetSurface);
-          }
+          RECT paintRect;
+          ::GetClientRect(mWnd, &paintRect);
+          RefPtr<DrawTarget> dt =
+            gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
+                                                                   IntSize(paintRect.right - paintRect.left,
+                                                                   paintRect.bottom - paintRect.top));
+          nsRefPtr<gfxContext> thebesContext = new gfxContext(dt);
 
           // don't need to double buffer with anything but GDI
           BufferMode doubleBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
