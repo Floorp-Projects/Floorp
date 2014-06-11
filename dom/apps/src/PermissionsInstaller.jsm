@@ -56,7 +56,8 @@ this.PermissionsInstaller = {
    *        A function called if an error occurs
    * @returns void
    **/
-  installPermissions: function installPermissions(aApp, aIsReinstall, aOnError) {
+  installPermissions: function installPermissions(aApp, aIsReinstall, aOnError,
+                                                  aIsSystemUpdate) {
     try {
       let newManifest = new ManifestHelper(aApp.manifest, aApp.origin);
       if (!newManifest.permissions && !aIsReinstall) {
@@ -145,6 +146,10 @@ this.PermissionsInstaller = {
           expandPermissions(permName,
                             newManifest.permissions[permName].access);
         for (let idx in expandedPermNames) {
+
+          let isPromptPermission =
+            PermissionsTable[permName][appStatus] === PROMPT_ACTION;
+
           // We silently upgrade the permission to whatever the permission
           // is for certified apps (ALLOW or PROMPT) only if the
           // following holds true:
@@ -152,15 +157,26 @@ this.PermissionsInstaller = {
           // * The permission that would be granted is PROMPT
           // * The app is privileged
           let permission =
-            aApp.isPreinstalled &&
-            PermissionsTable[permName][appStatus] === PROMPT_ACTION &&
+            aApp.isPreinstalled && isPromptPermission &&
             appStatus === "privileged"
                 ? PermissionsTable[permName]["certified"]
                 : PermissionsTable[permName][appStatus];
 
-          this._setPermission(expandedPermNames[idx],
-                              PERM_TO_STRING[permission],
-                              aApp);
+          let permValue = PERM_TO_STRING[permission];
+          if (!aIsSystemUpdate && isPromptPermission) {
+            // If it's not a system update, then we should keep the prompt
+            // permissions that have been granted or denied previously.
+            permValue =
+              PermissionSettingsModule.getPermission(permName,
+                                                     aApp.manifestURL,
+                                                     aApp.origin,
+                                                     false);
+            if (permValue === "unknown") {
+              permValue = PERM_TO_STRING[permission];
+            }
+          }
+
+          this._setPermission(expandedPermNames[idx], permValue, aApp);
         }
       }
     }

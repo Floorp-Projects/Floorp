@@ -55,7 +55,7 @@ function checkForUpdate(aExpected, aOnSuccess, aOnApplied, aOnDownloadError,
 
 function checkLastAppState(aMiniManifestURL, aExpectedReady, aExpectedDownload,
                            aExpectedVersion, aCb) {
-  ok(true, aExpectedReady ? "App downloaded" : "App download applied");
+  info(aExpectedReady ? "App downloaded" : "App download applied");
   var expected = {
     name: PackagedTestHelper.gAppName,
     manifestURL: aMiniManifestURL,
@@ -91,26 +91,68 @@ function updateApp(aExpectedReady, aPreviousVersion, aNextVersion) {
 
 }
 
+var initialPermissionState = {
+  "geolocation": "prompt",
+  "audio-capture": "prompt",
+  "video-capture": "prompt",
+  "downloads": "deny"
+}
+
+var permissionsToSet = {
+  "geolocation": "allow",
+  "audio-capture": "deny"
+}
+
+var permissionsToCheck = {
+  "geolocation": "allow",
+  "audio-capture": "deny",
+  "video-capture": "prompt",
+  "downloads": "deny"
+}
+
+function validatePermissions(aList, aDontFail) {
+  var gApp = PackagedTestHelper.gApp;
+  var mozPermissions = window.navigator.mozPermissionSettings;
+  var permission;
+  for (permission in aList) {
+    var permValue = mozPermissions.get(permission, gApp.manifestURL,
+                                       gApp.origin, false);
+    var wouldFail = permValue != aList[permission];
+    var checkFun = (aDontFail && wouldFail) ? todo_is : is;
+    checkFun(permValue, aList[permission],
+            "Permission " + permission + " should be " + aList[permission]);
+  }
+}
+
 
 var steps = [
   function() {
     // Set up
     SpecialPowers.setAllAppsLaunchable(true);
     SpecialPowers.addPermission("webapps-manage", true, document);
-    ok(true, "Set up");
-    PackagedTestHelper.next();
+    info("Set up");
+    // Note that without useCurrentProfile the permissions just aren't added.
+    SpecialPowers.pushPermissions(
+      [{'type': 'permissions', 'allow': true, 'context': document}],
+      function() {
+        SpecialPowers.pushPrefEnv(
+           {"set": [["dom.mozPermissionSettings.enabled", true],
+                    ["dom.webapps.useCurrentProfile", true]]},
+           PackagedTestHelper.next);
+      }
+    );
   },
   function() {
-    ok(true, "autoConfirmAppInstall");
+    info("autoConfirmAppInstall");
     SpecialPowers.autoConfirmAppInstall(PackagedTestHelper.next);
   },
   function() {
     PackagedTestHelper.setAppVersion(2, PackagedTestHelper.next);
   },
   function() {
-    ok(true, "== TEST == Install packaged app");
+    info("== TEST == Install packaged app");
     navigator.mozApps.mgmt.oninstall = function(evt) {
-      ok(true, "Got oninstall event");
+      info("Got oninstall event");
       PackagedTestHelper.gApp = evt.application;
       PackagedTestHelper.gApp.ondownloaderror = function() {
         ok(false, "Download error " + PackagedTestHelper.gApp.downloadError.name);
@@ -124,11 +166,16 @@ var steps = [
     var request = navigator.mozApps.installPackage(miniManifestURL);
     request.onerror = PackagedTestHelper.mozAppsError;
     request.onsuccess = function() {
-      ok(true, "Application installed");
+      info("Application installed");
     };
   },
   function() {
-    ok(true, "== TEST == Check for Update and try to download it without update available");
+    info("== TEST == Permissions installed correctly");
+    validatePermissions(initialPermissionState);
+    PackagedTestHelper.next();
+  },
+  function() {
+    info("== TEST == Check for Update and try to download it without update available");
 
     function onerror() {
       is(PackagedTestHelper.gApp.downloadError.name, "NO_DOWNLOAD_AVAILABLE", "Download not available");
@@ -143,32 +190,62 @@ var steps = [
     checkForUpdate(false, onsuccess, null, onerror, true);
   },
   function() {
+    info("== TEST == Remember permissions");
+    var gApp = PackagedTestHelper.gApp;
+    var mozPermissions = window.navigator.mozPermissionSettings;
+    var permission;
+    for (permission in permissionsToSet) {
+      try {
+        window.navigator.mozPermissionSettings.set(permission,
+                                                   permissionsToSet[permission],
+                                                   gApp.manifestURL,
+                                                   gApp.origin, false);
+      } catch (e) {
+        ok(false,
+           "mozPermissionSettings.set failed for " + permission + " - " + e);
+      }
+    }
+    PackagedTestHelper.next();
+  },
+  function() {
+    info("== TEST == Check that the permissions have been saved");
+    // Since the permission API isn't really synchronous, just log any errors
+    // here.
+    validatePermissions(permissionsToCheck, true /*dontFail*/);
+    PackagedTestHelper.next();
+  },
+  function() {
     PackagedTestHelper.setAppVersion(3, PackagedTestHelper.next);
   },
   function() {
-    ok(true, "== TEST == Update packaged app");
+    info("== TEST == Update packaged app");
     updateApp(true, 2, 3);
   },
   function() {
-    ok(true, "== TEST == Check for Update after getting a new package");
+    info("== TEST == Check that saved permissions were kept");
+    validatePermissions(permissionsToCheck);
+    PackagedTestHelper.next();
+  },
+  function() {
+    info("== TEST == Check for Update after getting a new package");
     checkForUpdate(false);
   },
   function() {
     PackagedTestHelper.setAppVersion(4, PackagedTestHelper.next, true);
   },
   function() {
-    ok(true, "== TEST == Update packaged app - same package");
+    info("== TEST == Update packaged app - same package");
     updateApp(false, 3, 3);
   },
   function() {
-    ok(true, "== TEST == Check for Update after getting the same package");
+    info("== TEST == Check for Update after getting the same package");
     checkForUpdate(false);
   },
   function() {
     PackagedTestHelper.setAppVersion(1, PackagedTestHelper.next);
   },
   function() {
-    ok(true, "== TEST == Update packaged app - Updating a pending app");
+    info("== TEST == Update packaged app - Updating a pending app");
     miniManifestURL = PackagedTestHelper.gSJS +
                       "?getManifest=true" +
                       "&appName=arandomname" +
@@ -180,7 +257,7 @@ var steps = [
       checkForUpdate(false, null, null, null, false,
                      function (request) {
         if (request.error.name === "PENDING_APP_NOT_UPDATABLE") {
-          ok(true, "Got expected PENDING_APP_NOT_UPDATEABLE");
+          info("Got expected PENDING_APP_NOT_UPDATEABLE");
         } else {
           ok(false, "Got unexpected " + request.error.name);
         }
@@ -189,7 +266,7 @@ var steps = [
     });
   },
   function() {
-    ok(true, "all done!\n");
+    info("all done!\n");
     PackagedTestHelper.finish();
   }
 ];
