@@ -226,6 +226,12 @@ function whenTabLoaded(aTab, aCallback) {
   }, true);
 }
 
+function promiseTabLoaded(aTab) {
+  let deferred = Promise.defer();
+  whenTabLoaded(aTab, deferred.resolve);
+  return deferred.promise;
+}
+
 function addVisits(aPlaceInfo, aCallback) {
   let places = [];
   if (aPlaceInfo instanceof Ci.nsIURI) {
