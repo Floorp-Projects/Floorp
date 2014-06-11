@@ -264,7 +264,8 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
         break;
 
       case ComputedTiming::AnimationPhase_After:
-        TimeDuration activeDuration = anim->ActiveDuration();
+        TimeDuration activeDuration =
+          ElementAnimation::ActiveDuration(anim->mTiming);
         // If we skipped the animation interval entirely, dispatch
         // 'animationstart' first
         if (anim->mLastNotification ==
