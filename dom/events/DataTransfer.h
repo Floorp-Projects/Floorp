@@ -164,8 +164,9 @@ public:
   void MozSetDataAt(JSContext* aCx, const nsAString& aFormat,
                     JS::Handle<JS::Value> aData, uint32_t aIndex,
                     mozilla::ErrorResult& aRv);
-  JS::Value MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
-                         uint32_t aIndex, mozilla::ErrorResult& aRv);
+  void MozGetDataAt(JSContext* aCx, const nsAString& aFormat,
+                    uint32_t aIndex, JS::MutableHandle<JS::Value> aRetval,
+                    mozilla::ErrorResult& aRv);
   bool MozUserCancelled()
   {
     return mUserCancelled;

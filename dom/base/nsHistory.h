@@ -37,7 +37,8 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
-  JS::Value GetState(JSContext* aCx, mozilla::ErrorResult& aRv) const;
+  void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                mozilla::ErrorResult& aRv) const;
   void Go(int32_t aDelta, mozilla::ErrorResult& aRv);
   void Back(mozilla::ErrorResult& aRv);
   void Forward(mozilla::ErrorResult& aRv);
