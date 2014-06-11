@@ -1077,6 +1077,10 @@ SpecialPowersAPI.prototype = {
     this.pushPrefEnv({set: [['dom.mozApps.auto_confirm_install', true]]}, cb);
   },
 
+  autoConfirmAppUninstall: function(cb) {
+    this.pushPrefEnv({set: [['dom.mozApps.auto_confirm_uninstall', true]]}, cb);
+  },
+
   // Allow tests to disable the per platform app validity checks so we can
   // test higher level WebApp functionality without full platform support.
   setAllAppsLaunchable: function(launchable) {
