@@ -59,6 +59,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "mozilla/dom/workers/Workers.h"
 #include "mozilla/dom/MessagePortList.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsJSPrincipals.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Debug.h"
@@ -5825,7 +5826,7 @@ nsGlobalWindow::DispatchResizeEvent(const nsIntSize& aSize)
   detail.mWidth = aSize.width;
   detail.mHeight = aSize.height;
   JS::Rooted<JS::Value> detailValue(cx);
-  if (!detail.ToObject(cx, &detailValue)) {
+  if (!ToJSValue(cx, detail, &detailValue)) {
     return false;
   }
 

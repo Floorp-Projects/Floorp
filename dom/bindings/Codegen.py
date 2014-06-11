@@ -5443,7 +5443,7 @@ def getWrapTemplateForType(type, descriptorProvider, result, successCode,
                 False)
 
     if type.isDictionary():
-        return (wrapAndSetPtr("%s.ToObject(cx, ${jsvalHandle})" % result),
+        return (wrapAndSetPtr("%s.ToObjectInternal(cx, ${jsvalHandle})" % result),
                 False)
 
     if type.isDate():
@@ -10651,7 +10651,7 @@ class CGDictionary(CGThing):
                 return Init(cx, json);
                 """))
 
-    def toObjectMethod(self):
+    def toObjectInternalMethod(self):
         body = ""
         if self.needToInitIds:
             body += fill(
@@ -10668,7 +10668,7 @@ class CGDictionary(CGThing):
             body += fill(
                 """
                 // Per spec, we define the parent's members first
-                if (!${dictName}::ToObject(cx, rval)) {
+                if (!${dictName}::ToObjectInternal(cx, rval)) {
                   return false;
                 }
                 JS::Rooted<JSObject*> obj(cx, &rval.toObject());
@@ -10691,7 +10691,7 @@ class CGDictionary(CGThing):
                               for m in self.memberInfo)
         body += "\nreturn true;\n"
 
-        return ClassMethod("ToObject", "bool", [
+        return ClassMethod("ToObjectInternal", "bool", [
             Argument('JSContext*', 'cx'),
             Argument('JS::MutableHandle<JS::Value>', 'rval'),
         ], const=True, body=body)
@@ -10777,11 +10777,11 @@ class CGDictionary(CGThing):
         methods.append(self.initMethod())
         methods.append(self.initFromJSONMethod())
         try:
-            methods.append(self.toObjectMethod())
+            methods.append(self.toObjectInternalMethod())
         except MethodNotNewObjectError:
-            # If we can't have a ToObject() because one of our members can only
-            # be returned from [NewObject] methods, then just skip generating
-            # ToObject().
+            # If we can't have a ToObjectInternal() because one of our members
+            # can only be returned from [NewObject] methods, then just skip
+            # generating ToObjectInternal().
             pass
         methods.append(self.traceDictionaryMethod())
 
