@@ -2314,8 +2314,22 @@ XrayWrapper<Base, Traits>::defineProperty(JSContext *cx, HandleObject wrapper,
     // we often lie (sloppily) about where we found properties and set
     // desc.object() to |wrapper|. Once we fully fix our Xray prototype semantics,
     // this should work as intended.
-    if (existing_desc.object() == wrapper && existing_desc.isPermanent())
-        return true; // silently ignore attempt to overwrite native property
+    if (existing_desc.object() == wrapper && existing_desc.isPermanent()) {
+        // We have a non-configurable property. See if the caller is trying to
+        // re-configure it in any way other than making it non-writable.
+        if (existing_desc.hasGetterOrSetterObject() || desc.hasGetterOrSetterObject() ||
+            existing_desc.isEnumerable() != desc.isEnumerable() ||
+            (existing_desc.isReadonly() && !desc.isReadonly()))
+        {
+            // We should technically report non-configurability in strict mode, but
+            // doing that via JSAPI is a lot of trouble.
+            return true;
+        }
+        if (existing_desc.isReadonly()) {
+            // Same as the above for non-writability.
+            return true;
+        }
+    }
 
     bool defined = false;
     if (!Traits::singleton.defineProperty(cx, wrapper, id, desc, existing_desc, &defined))
