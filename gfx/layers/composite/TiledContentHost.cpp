@@ -360,10 +360,8 @@ TiledContentHost::RenderTile(const TileHost& aTile,
     return;
   }
 
-  RefPtr<TexturedEffect> effect = CreateTexturedEffect(aTile.mTextureHost->GetFormat(),
-                                                       source,
-                                                       aFilter,
-                                                       true);
+  RefPtr<TexturedEffect> effect =
+    CreateTexturedEffect(aTile.mTextureHost->GetFormat(), source, aFilter);
   if (!effect) {
     return;
   }

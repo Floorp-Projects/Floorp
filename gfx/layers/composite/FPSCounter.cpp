@@ -435,10 +435,7 @@ void FPSState::DrawFPS(TimeStamp aNow,
   }
 
   EffectChain effectChain;
-  effectChain.mPrimaryEffect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8,
-                                                    mFPSTextureSource,
-                                                    Filter::POINT,
-                                                    true);
+  effectChain.mPrimaryEffect = CreateTexturedEffect(SurfaceFormat::B8G8R8A8, mFPSTextureSource, Filter::POINT);
 
   unsigned int fps = unsigned(mCompositionFps.AddFrameAndGetFps(aNow));
   unsigned int txnFps = unsigned(mTransactionFps.GetFPS(aNow));

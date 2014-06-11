@@ -59,7 +59,7 @@ protected:
 
   uint32_t mCanvasFramebuffer;
 
-  bool mIsAlphaPremultiplied;
+  bool mIsGLAlphaPremult;
   bool mNeedsYFlip;
 
   RefPtr<gfx::DataSourceSurface> mCachedTempSurface;
