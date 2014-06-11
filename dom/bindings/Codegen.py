@@ -11875,6 +11875,9 @@ class CGNativeMember(ClassMethod):
 
         return Argument(decl.define(), arg.identifier.name)
 
+    def arguments(self):
+        return self.member.signatures()[0][1]
+
 
 class CGExampleMethod(CGNativeMember):
     def __init__(self, descriptor, method, signature, isConstructor, breakAfter=True):
@@ -13642,9 +13645,9 @@ class CGEventMethod(CGNativeMember):
     def declare(self, cgClass):
         self.args = list(self.originalArgs)
         self.args.insert(0, Argument("mozilla::dom::EventTarget*", "aOwner"))
-        constructorForNativeCaller = CGNativeMember.declare(self, cgClass) + "\n"
+        constructorForNativeCaller = CGNativeMember.declare(self, cgClass)
         self.args = list(self.originalArgs)
-        if needCx(None, self.descriptorProvider.interface.members, [], True):
+        if needCx(None, self.arguments(), [], True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
         self.args.append(Argument('ErrorResult&', 'aRv'))
@@ -13695,7 +13698,7 @@ class CGEventMethod(CGNativeMember):
             """,
             arg0=self.args[0].name,
             arg1=self.args[1].name)
-        if needCx(None, self.descriptorProvider.interface.members, [], True):
+        if needCx(None, self.arguments(), [], True):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
         self.args.append(Argument('ErrorResult&', 'aRv'))
