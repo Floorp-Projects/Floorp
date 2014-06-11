@@ -28,6 +28,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
+                                   "@mozilla.org/toolkit/finalizationwitness;1",
+                                   "nsIFinalizationWitnessService");
 
 
 // Counts the number of created connections per database basename(). This is
@@ -38,6 +41,19 @@ let connectionCounters = new Map();
  * Once `true`, reject any attempt to open or close a database.
  */
 let isClosed = false;
+
+// Displays a script error message
+function logScriptError(message) {
+  let consoleMessage = Cc["@mozilla.org/scripterror;1"].
+                       createInstance(Ci.nsIScriptError);
+  let stack = new Error();
+  consoleMessage.init(message, stack.fileName, null, stack.lineNumber, 0,
+                      Ci.nsIScriptError.errorFlag, "component javascript");
+  Services.console.logMessage(consoleMessage);
+
+  // Always dump errors, in case the Console Service isn't listening anymore
+  dump("*** " + message + "\n");
+}
 
 /**
  * Barriers used to ensure that Sqlite.jsm is shutdown after all
@@ -62,6 +78,29 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
   };
 
   /**
+   * Observer for the event which is broadcasted when the finalization
+   * witness `_witness` of `OpenedConnection` is garbage collected.
+   *
+   * The observer is passed the connection identifier of the database
+   * connection that is being finalized.
+   */
+  let finalizationObserver = function (subject, topic, connectionIdentifier) {
+    let connectionData = ConnectionData.byId.get(connectionIdentifier);
+
+    if (connectionData === undefined) {
+      logScriptError("Error: Attempt to finalize unknown Sqlite connection: " +
+                     connectionIdentifier + "\n");
+      return;
+    }
+
+    ConnectionData.byId.delete(connectionIdentifier);
+    logScriptError("Warning: Sqlite connection '" + connectionIdentifier +
+                   "' was not properly closed. Auto-close triggered by garbage collection.\n");
+    connectionData.close();
+  };
+  Services.obs.addObserver(finalizationObserver, "sqlite-finalization-witness", false);
+
+  /**
    * Ensure that Sqlite.jsm:
    * - informs its clients before shutting down;
    * - lets clients open connections during shutdown, if necessary;
@@ -79,6 +118,9 @@ XPCOMUtils.defineLazyGetter(this, "Barriers", () => {
 
       // Now, wait until all databases are closed
       yield Barriers.connections.wait();
+
+      // Everything closed, no finalization events to catch
+      Services.obs.removeObserver(finalizationObserver, "sqlite-finalization-witness");
     }),
 
     function status() {
@@ -154,6 +196,18 @@ function ConnectionData(connection, basename, number, options) {
     this._deferredClose.promise
   );
 }
+
+/**
+ * Map of connection identifiers to ConnectionData objects
+ *
+ * The connection identifier is a human-readable name of the
+ * database. Used by finalization witnesses to be able to close opened
+ * connections on garbage collection.
+ *
+ * Key: _connectionIdentifier of ConnectionData
+ * Value: ConnectionData object
+ */
+ConnectionData.byId = new Map();
 
 ConnectionData.prototype = Object.freeze({
   close: function () {
@@ -720,7 +774,7 @@ function cloneStorageConnection(options) {
   }
 
   if (isClosed) {
-    throw new Error("Sqlite.jsm has been shutdown. Cannot close connection to: " + source.database.path);
+    throw new Error("Sqlite.jsm has been shutdown. Cannot clone connection to: " + source.database.path);
   }
 
   let openedOptions = {};
@@ -815,6 +869,19 @@ function OpenedConnection(connection, basename, number, options) {
   // OpenedConnection. On garbage collection, we will still be able to
   // close the database using this extra reference.
   this._connectionData = new ConnectionData(connection, basename, number, options);
+
+  // Store the extra reference in a map with connection identifier as
+  // key.
+  ConnectionData.byId.set(this._connectionData._connectionIdentifier,
+                          this._connectionData);
+
+  // Make a finalization witness. If this object is garbage collected
+  // before its `forget` method has been called, an event with topic
+  // "sqlite-finalization-witness" is broadcasted along with the
+  // connection identifier string of the database.
+  this._witness = FinalizationWitnessService.make(
+    "sqlite-finalization-witness",
+    this._connectionData._connectionIdentifier);
 }
 
 OpenedConnection.prototype = Object.freeze({
@@ -871,6 +938,13 @@ OpenedConnection.prototype = Object.freeze({
    * @return Promise<>
    */
   close: function () {
+    // Unless cleanup has already been done by a previous call to
+    // `close`, delete the database entry from map and tell the
+    // finalization witness to forget.
+    if (ConnectionData.byId.has(this._connectionData._connectionIdentifier)) {
+      ConnectionData.byId.delete(this._connectionData._connectionIdentifier);
+      this._witness.forget();
+    }
     return this._connectionData.close();
   },
 
