@@ -416,6 +416,16 @@ abstract public class BrowserApp extends GeckoApp
         return values;
     }
 
+    void handleReaderRemoved(final String url) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                BrowserDB.removeReadingListItemWithURL(getContentResolver(), url);
+                showToast(R.string.page_removed, Toast.LENGTH_SHORT);
+            }
+        });
+    }
+
     private void handleReaderFaviconRequest(final String url) {
         (new UiAsyncTask<Void, Void, String>(ThreadUtils.getBackgroundHandler()) {
             @Override
@@ -529,6 +539,7 @@ abstract public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:ListStatusRequest",
+            "Reader:Removed",
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
@@ -886,6 +897,7 @@ abstract public class BrowserApp extends GeckoApp
             "Menu:Add",
             "Menu:Remove",
             "Reader:ListStatusRequest",
+            "Reader:Removed",
             "Reader:Share",
             "Settings:Show",
             "Telemetry:Gather",
@@ -1215,6 +1227,10 @@ abstract public class BrowserApp extends GeckoApp
 
         } else if ("Reader:ListStatusRequest".equals(event)) {
             handleReaderListStatusRequest(message.getString("url"));
+
+        } else if ("Reader:Removed".equals(event)) {
+            final String url = message.getString("url");
+            handleReaderRemoved(url);
 
         } else if ("Reader:Share".equals(event)) {
             final String title = message.getString("title");

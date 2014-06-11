@@ -208,16 +208,53 @@ this.WebappManager = {
     });
   },
 
-  uninstall: function(aData) {
+  uninstall: Task.async(function*(aData, aMessageManager) {
     debug("uninstall: " + aData.manifestURL);
 
+    yield DOMApplicationRegistry.registryReady;
+
     if (this._testing) {
-      // We don't have to do anything, as the registry does all the work.
+      // Go directly to DOM.  Do not uninstall APK, do not collect $200.
+      DOMApplicationRegistry.doUninstall(aData, aMessageManager);
       return;
     }
 
-    // TODO: uninstall the APK.
-  },
+    let app = DOMApplicationRegistry.getAppByManifestURL(aData.manifestURL);
+    if (!app) {
+      throw new Error("app not found in registry");
+    }
+
+    // If the APK is installed, then _getAPKVersions will return a version
+    // for it, so we can use that function to determine its install status.
+    let apkVersions = yield this._getAPKVersions([ app.apkPackageName ]);
+    if (app.apkPackageName in apkVersions) {
+      debug("APK is installed; requesting uninstallation");
+      sendMessageToJava({
+        type: "Webapps:UninstallApk",
+        apkPackageName: app.apkPackageName,
+      });
+
+      // We don't need to call DOMApplicationRegistry.doUninstall at this point,
+      // because the APK uninstall listener will call autoUninstall once the APK
+      // is uninstalled; and if the user cancels the APK uninstallation, then we
+      // shouldn't remove the app from the registry anyway.
+
+      // But we should tell the requesting document the result of their request.
+      // TODO: tell the requesting document if uninstallation succeeds or fails
+      // by storing weak references to the message/manager pair here and then
+      // using them in autoUninstall if they're still defined when it's called;
+      // and make EventListener.uninstallApk return an error when APK uninstall
+      // fails (which it should be able to detect reliably on Android 4+),
+      // which we observe here and use to notify the requester of failure.
+    } else {
+      // The APK isn't installed, but remove the app from the registry anyway,
+      // to ensure the user can always remove an app from the registry (and thus
+      // about:apps) even if it's out of sync with installed APKs.
+      debug("APK not installed; proceeding directly to removal from registry");
+      DOMApplicationRegistry.doUninstall(aData, aMessageManager);
+    }
+
+  }),
 
   autoInstall: function(aData) {
     debug("autoInstall " + aData.manifestURL);

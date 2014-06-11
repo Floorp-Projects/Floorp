@@ -282,6 +282,10 @@ div.CodeMirror span.eval-text {
   background-position: -14px -14px;
 }
 
+.theme-twisty[invisible] {
+  visibility: hidden;
+}
+
 /* Use white twisty when next to a selected item in markup view */
 .theme-selected ~ .theme-twisty {
   background-position: -28px -14px;

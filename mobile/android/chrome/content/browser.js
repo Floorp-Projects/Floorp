@@ -328,7 +328,7 @@ var BrowserApp = {
     Services.obs.addObserver(this, "webapps-runtime-install-package", false);
     Services.obs.addObserver(this, "webapps-ask-install", false);
     Services.obs.addObserver(this, "webapps-launch", false);
-    Services.obs.addObserver(this, "webapps-uninstall", false);
+    Services.obs.addObserver(this, "webapps-runtime-uninstall", false);
     Services.obs.addObserver(this, "Webapps:AutoInstall", false);
     Services.obs.addObserver(this, "Webapps:Load", false);
     Services.obs.addObserver(this, "Webapps:AutoUninstall", false);
@@ -1631,8 +1631,8 @@ var BrowserApp = {
         break;
       }
 
-      case "webapps-uninstall": {
-        WebappManager.uninstall(JSON.parse(aData));
+      case "webapps-runtime-uninstall": {
+        WebappManager.uninstall(JSON.parse(aData), aSubject);
         break;
       }
 
@@ -7320,9 +7320,20 @@ let Reader = {
       }
 
       case "Reader:Remove": {
-        let url = aData;
-        this.removeArticleFromCache(url, function(success) {
-          this.log("Reader:Remove success=" + success + ", url=" + url);
+        let args = JSON.parse(aData);
+
+        if (!("url" in args)) {
+          throw new Error("Reader:Remove requires URL as an argument");
+        }
+
+        this.removeArticleFromCache(args.url, function(success) {
+          this.log("Reader:Remove success=" + success + ", url=" + args.url);
+          if (success && args.notify) {
+            sendMessageToJava({
+              type: "Reader:Removed",
+              url: args.url
+            });
+          }
         }.bind(this));
         break;
       }
