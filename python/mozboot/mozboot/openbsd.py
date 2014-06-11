@@ -19,7 +19,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
             'dbus-glib',
             'gstreamer-plugins-base',
             'pulseaudio',
-            'libIDL',
             'gmake',
             'gtar',
             'wget',
