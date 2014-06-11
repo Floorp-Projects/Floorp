@@ -34,14 +34,19 @@
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content">
 
+            <!-- Setting gravity/layout_gravity in portrait is redundant to these elements'
+                 styles, however, it overrides the default left-align behavior in landscape. -->
             <Button android:id="@+id/remote_tabs_setup_get_started"
-                    android:layout_width="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     style="@style/RemoteTabsItem.Button"
                     android:text="@string/fxaccount_getting_started_get_started"
                     android:layout_marginBottom="15dp"/>
 
             <TextView android:id="@+id/remote_tabs_setup_old_sync_link"
+                      android:gravity="center"
+                      android:layout_gravity="center"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       style="@style/RemoteTabsItem.TextAppearance.Linkified"
