@@ -56,7 +56,6 @@ function test(str, f) {
     assertEq(threw, true);
 }
 
-test("new Array(1,2,3)", function(a) Array.prototype.toSource.call(a));
 test("new Boolean(true)", function(b) Boolean.prototype.toSource.call(b));
 test("new Boolean(true)", function(b) Boolean.prototype.toString.call(b));
 test("new Boolean(true)", function(b) Boolean.prototype.valueOf.call(b));

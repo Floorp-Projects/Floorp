@@ -18,17 +18,7 @@ var y =
     configurable: true
   });
 f.__proto__ = [];
-
-try
-{
-  uneval(y);
-  throw new Error("didn't throw");
-}
-catch(ex)
-{
-  assertEq(ex instanceof TypeError, true,
-           "wrong exception thrown: expected TypeError, got " + ex);
-}
+uneval(y);
 
 if (typeof reportCompare === "function")
   reportCompare(true, true);
