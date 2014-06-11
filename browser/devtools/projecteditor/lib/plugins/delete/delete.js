@@ -27,7 +27,7 @@ var DeletePlugin = Class({
       let tree = this.host.projectTree;
       let resource = tree.getSelectedResource();
       let parent = resource.parent;
-      tree.deleteResource(resource).then(() => {
+      resource.delete().then(() => {
         this.host.project.refresh();
       })
     }
