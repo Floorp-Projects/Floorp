@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1019417
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1019417</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1019417 **/
+  SimpleTest.waitForExplicitFinish();
+  addLoadEvent(function() {
+    var names1 = Object.getOwnPropertyNames(window);
+    var names2 = [];
+    var gsp = Object.getPrototypeOf(Window.prototype);
+    var names3 = Object.getOwnPropertyNames(gsp);
+    for (var i in window) {
+      names2.push(i);
+    }
+
+    is(names1.indexOf(""), -1,
+       "Frame with no name or empty name should not be in our own prop list");
+    is(names2.indexOf(""), -1,
+       "Frame with no name or empty name should not be in our enumeration list");
+    is(names3.indexOf(""), -1,
+       "Frame with no name or empty name should not be in GSP own prop list");
+    is(names1.indexOf("x"), -1,
+       "Frame with about:blank loaded should not be in our own prop list");
+    isnot(names2.indexOf("x"), -1,
+          "Frame with about:blank loaded should be in our enumeration list");
+    isnot(names3.indexOf("x"), -1,
+          "Frame with about:blank loaded should be in GSP own prop list");
+    is(names1.indexOf("y"), -1,
+       "Frame with same-origin loaded should not be in our own prop list");
+    isnot(names2.indexOf("y"), -1,
+          "Frame with same-origin loaded should be in our enumeration list");
+    isnot(names3.indexOf("y"), -1,
+          "Frame with same-origin loaded should be in GSP own prop list");
+    is(names1.indexOf("z"), -1,
+       "Frame with cross-origin loaded should not be in our own prop list");
+    isnot(names2.indexOf("z"), -1,
+          "Frame with cross-origin loaded should be in our enumeration list");
+    isnot(names3.indexOf("z"), -1,
+          "Frame with cross-origin loaded should be in GSPown prop list");
+    is(names1.indexOf("sameorigin"), -1,
+          "Frame with same-origin changed name should not be in our own prop list");
+    isnot(names2.indexOf("sameorigin"), -1,
+          "Frame with same-origin changed name should be in our enumeration list");
+    isnot(names3.indexOf("sameorigin"), -1,
+          "Frame with same-origin changed name should be in GSP own prop list");
+    is(names1.indexOf("crossorigin"), -1,
+       "Frame with cross-origin changed name should not be in our own prop list");
+    is(names2.indexOf("crossorigin"), -1,
+       "Frame with cross-origin changed name should not be in our enumeration list");
+    is(names3.indexOf("crossorigin"), -1,
+       "Frame with cross-origin changed name should not be in GSP own prop list");
+
+    ise(Object.getOwnPropertyDescriptor(gsp, ""), undefined,
+        "Should not have empty string as a named frame");
+    isnot(Object.getOwnPropertyDescriptor(gsp, "x"), undefined,
+        "Should have about:blank subframe as a named frame");
+    isnot(Object.getOwnPropertyDescriptor(gsp, "y"), undefined,
+        "Should have same-origin subframe as a named frame");
+    isnot(Object.getOwnPropertyDescriptor(gsp, "z"), undefined,
+        "Should have cross-origin subframe as a named frame");
+    isnot(Object.getOwnPropertyDescriptor(gsp, "sameorigin"), undefined,
+          "Should have same-origin changed name as a named frame");
+    ise(Object.getOwnPropertyDescriptor(gsp, "crossorigin"), undefined,
+        "Should not have cross-origin-origin changed name as a named frame");
+    SimpleTest.finish();
+  });
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1019417">Mozilla Bug 1019417</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+<iframe></iframe>
+<iframe name=""></iframe>
+<iframe name="x"></iframe>
+<iframe name="y"
+        src="http://mochi.test:8888/tests/dom/base/test/file_empty.html"></iframe>
+<iframe name="z"
+        src="http://example.com/tests/dom/base/test/file_empty.html"></iframe>
+<iframe name="v"
+        src="http://mochi.test:8888/tests/dom/base/test/file_setname.html?sameorigin"></iframe>
+<iframe name="w"
+        src="http://example.com/tests/dom/base/test/file_setname.html?crossorigin"></iframe>
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
