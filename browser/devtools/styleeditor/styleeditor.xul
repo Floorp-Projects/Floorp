@@ -150,7 +150,9 @@
               <xul:toolbar class="devtools-toolbar">
                 &mediaRules.label;
               </xul:toolbar>
-              <xul:vbox class="stylesheet-media-list"/>
+              <xul:vbox class="stylesheet-media-container" flex="1">
+                <div class="stylesheet-media-list" />
+              </xul:vbox>
             </xul:vbox>
           </xul:hbox>
         </xul:box>
