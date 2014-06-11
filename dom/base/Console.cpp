@@ -436,18 +436,17 @@ private:
       wp = wp->GetParent();
     }
 
-    AutoPushJSContext cx(wp->ParentJSContext());
+    AutoJSAPI jsapi;
+    JSContext* cx = jsapi.cx();
     ClearException ce(cx);
-
-    JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    NS_ENSURE_TRUE_VOID(global);
-    JSAutoCompartment ac(cx, global);
 
     nsPIDOMWindow* window = wp->GetWindow();
     NS_ENSURE_TRUE_VOID(window);
 
     nsRefPtr<nsGlobalWindow> win = static_cast<nsGlobalWindow*>(window);
     NS_ENSURE_TRUE_VOID(win);
+
+    JSAutoCompartment ac(cx, win->GetWrapperPreserveColor());
 
     ErrorResult error;
     nsRefPtr<Console> console = win->GetConsole(error);
