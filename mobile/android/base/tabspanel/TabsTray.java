@@ -17,6 +17,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.PropertyAnimator.Property;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.TwoWayView;
 import org.mozilla.gecko.widget.TabThumbnailWrapper;
 
@@ -38,21 +39,28 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 class TabsTray extends TwoWayView
-    implements TabsPanel.PanelView {
+               implements TabsPanel.PanelView,
+                          TabsPanel.CloseAllPanelView {
     private static final String LOGTAG = "Gecko" + TabsTray.class.getSimpleName();
 
     private Context mContext;
     private TabsPanel mTabsPanel;
 
+    final private boolean mIsPrivate;
+
     private TabsAdapter mTabsAdapter;
 
     private List<View> mPendingClosedTabs;
-    private int mCloseAnimationCount;
+    private int mCloseAnimationCount = 0;
+    private int mCloseAllAnimationCount = 0;
 
     private TabSwipeGestureListener mSwipeListener;
 
     // Time to animate non-flinged tabs of screen, in milliseconds
     private static final int ANIMATION_DURATION = 250;
+
+    // Time between starting successive tab animations in closeAllTabs.
+    private static final int ANIMATION_CASCADE_DELAY = 75;
 
     private int mOriginalSize = 0;
 
@@ -60,16 +68,15 @@ class TabsTray extends TwoWayView
         super(context, attrs);
         mContext = context;
 
-        mCloseAnimationCount = 0;
         mPendingClosedTabs = new ArrayList<View>();
 
         setItemsCanFocus(true);
 
         TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.TabsTray);
-        boolean isPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
+        mIsPrivate = (a.getInt(R.styleable.TabsTray_tabs, 0x0) == 1);
         a.recycle();
 
-        mTabsAdapter = new TabsAdapter(mContext, isPrivate);
+        mTabsAdapter = new TabsAdapter(mContext);
         setAdapter(mTabsAdapter);
 
         mSwipeListener = new TabSwipeGestureListener();
@@ -137,15 +144,13 @@ class TabsTray extends TwoWayView
     // Adapter to bind tabs into a list
     private class TabsAdapter extends BaseAdapter implements Tabs.OnTabsChangedListener {
         private Context mContext;
-        private boolean mIsPrivate;
         private ArrayList<Tab> mTabs;
         private LayoutInflater mInflater;
         private Button.OnClickListener mOnCloseClickListener;
 
-        public TabsAdapter(Context context, boolean isPrivate) {
+        public TabsAdapter(Context context) {
             mContext = context;
             mInflater = LayoutInflater.from(mContext);
-            mIsPrivate = isPrivate;
 
             mOnCloseClickListener = new Button.OnClickListener() {
                 @Override
@@ -281,15 +286,20 @@ class TabsTray extends TwoWayView
 
         private void resetTransforms(View view) {
             ViewHelper.setAlpha(view, 1);
-            if (mOriginalSize == 0)
-                return;
 
             if (isVertical()) {
-                ViewHelper.setHeight(view, mOriginalSize);
                 ViewHelper.setTranslationX(view, 0);
             } else {
-                ViewHelper.setWidth(view, mOriginalSize);
                 ViewHelper.setTranslationY(view, 0);
+            }
+
+            // We only need to reset the height or width after individual tab close animations.
+            if (mOriginalSize != 0) {
+                if (isVertical()) {
+                    ViewHelper.setHeight(view, mOriginalSize);
+                } else {
+                    ViewHelper.setWidth(view, mOriginalSize);
+                }
             }
         }
 
@@ -318,6 +328,75 @@ class TabsTray extends TwoWayView
 
     private boolean isVertical() {
         return (getOrientation().compareTo(TwoWayView.Orientation.VERTICAL) == 0);
+    }
+
+    @Override
+    public void closeAll() {
+        final int childCount = getChildCount();
+
+        // Just close the panel if there are no tabs to close.
+        if (childCount == 0) {
+            autoHidePanel();
+            return;
+        }
+
+        // Disable the view so that gestures won't interfere wth the tab close animation.
+        setEnabled(false);
+
+        // Delay starting each successive animation to create a cascade effect.
+        int cascadeDelay = 0;
+
+        for (int i = childCount - 1; i >= 0; i--) {
+            final View view = getChildAt(i);
+            final PropertyAnimator animator = new PropertyAnimator(ANIMATION_DURATION);
+            animator.attach(view, Property.ALPHA, 0);
+
+            if (isVertical()) {
+                animator.attach(view, Property.TRANSLATION_X, view.getWidth());
+            } else {
+                animator.attach(view, Property.TRANSLATION_Y, view.getHeight());
+            }
+
+            mCloseAllAnimationCount++;
+
+            animator.addPropertyAnimationListener(new PropertyAnimator.PropertyAnimationListener() {
+                @Override
+                public void onPropertyAnimationStart() { }
+
+                @Override
+                public void onPropertyAnimationEnd() {
+                    mCloseAllAnimationCount--;
+                    if (mCloseAllAnimationCount > 0) {
+                        return;
+                    }
+
+                    // Hide the panel after the animation is done.
+                    autoHidePanel();
+
+                    // Re-enable the view after the animation is done.
+                    TabsTray.this.setEnabled(true);
+
+                    // Then actually close all the tabs.
+                    final Iterable<Tab> tabs = Tabs.getInstance().getTabsInOrder();
+                    for (Tab tab : tabs) {
+                        // In the normal panel we want to close all tabs (both private and normal),
+                        // but in the private panel we only want to close private tabs.
+                        if (!mIsPrivate || tab.isPrivate()) {
+                            Tabs.getInstance().closeTab(tab, false);
+                        }
+                    }
+                }
+            });
+
+            ThreadUtils.getUiHandler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    animator.start();
+                }
+            }, cascadeDelay);
+
+            cascadeDelay += ANIMATION_CASCADE_DELAY;
+        }
     }
 
     private void animateClose(final View view, int pos) {
@@ -565,7 +644,7 @@ class TabsTray extends TwoWayView
                 }
 
                 case MotionEvent.ACTION_MOVE: {
-                    if (mSwipeView == null)
+                    if (mSwipeView == null || mVelocityTracker == null)
                         break;
 
                     mVelocityTracker.addMovement(e);
