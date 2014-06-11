@@ -145,6 +145,9 @@ public:
   bool operator==(const TimeDuration& aOther) const {
     return mValue == aOther.mValue;
   }
+  bool operator!=(const TimeDuration& aOther) const {
+    return mValue != aOther.mValue;
+  }
 
   // Return a best guess at the system's current timing resolution,
   // which might be variable.  TimeDurations below this order of
