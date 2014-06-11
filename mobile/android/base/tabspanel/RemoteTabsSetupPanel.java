@@ -17,13 +17,16 @@ import android.content.Intent;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 
 /**
  * A tabs panel which allows a user to get started setting up a Firefox
  * Accounts account. Currently used as one sub-panel in a sequence
  * contained by the {@link RemoteTabsPanel}.
  */
-class RemoteTabsSetupPanel extends LinearLayout implements PanelView {
+class RemoteTabsSetupPanel extends ScrollView implements PanelView {
+    private LinearLayout containingLayout;
+
     private TabsPanel tabsPanel;
 
     public RemoteTabsSetupPanel(Context context, AttributeSet attrs) {
@@ -34,7 +37,10 @@ class RemoteTabsSetupPanel extends LinearLayout implements PanelView {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        final View setupGetStartedButton = findViewById(R.id.remote_tabs_setup_get_started);
+        containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_setup_containing_layout);
+
+        final View setupGetStartedButton =
+                containingLayout.findViewById(R.id.remote_tabs_setup_get_started);
         setupGetStartedButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -47,7 +53,8 @@ class RemoteTabsSetupPanel extends LinearLayout implements PanelView {
             }
         });
 
-        final View setupOlderVersionLink = findViewById(R.id.remote_tabs_setup_old_sync_link);
+        final View setupOlderVersionLink =
+                containingLayout.findViewById(R.id.remote_tabs_setup_old_sync_link);
         setupOlderVersionLink.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -78,6 +85,6 @@ class RemoteTabsSetupPanel extends LinearLayout implements PanelView {
 
     @Override
     public boolean shouldExpand() {
-        return getOrientation() == LinearLayout.VERTICAL;
+        return containingLayout.getOrientation() == LinearLayout.VERTICAL;
     }
 }
