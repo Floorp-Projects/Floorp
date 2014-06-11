@@ -623,6 +623,11 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
 {
   AssertInvariants();
 
+  // kInvalidProcessHandle is used to indicate that it's the same process.
+  if (aProcess == kInvalidProcessHandle) {
+    aProcess = base::GetCurrentProcessHandle();
+  }
+
   if (SharedMemory::TYPE_BASIC == mSegment->Type()) {
     SharedMemoryBasic* seg = static_cast<SharedMemoryBasic*>(mSegment);
     SharedMemoryBasic::Handle handle;
