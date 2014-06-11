@@ -68,8 +68,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.IsEmpty() ||
-          anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
+      if (anim->mProperties.IsEmpty()) {
         continue;
       }
 
@@ -113,9 +112,8 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      if (anim->mProperties.IsEmpty() ||
-          anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
-        // The animation isn't active or filling at this time.
+      if (anim->mProperties.IsEmpty()) {
+        // Empty keyframes rule.
         continue;
       }
 
@@ -218,14 +216,9 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = mAnimations[animIdx];
 
-    // We should *not* skip animations with zero duration (bug 1004365) or
-    // those with no keyframes (bug 1004377).
-    // We will fix this separately but for now this is necessary since
-    // ElementAnimation::GetComputedTimingAt does not yet handle
-    // zero-duration iterations.
-    if (anim->mProperties.IsEmpty() ||
-        anim->mTiming.mIterationDuration.ToMilliseconds() <= 0.0) {
-      // The animation isn't active or filling at this time.
+    // We should *not* skip animations with no keyframes (bug 1004377).
+    if (anim->mProperties.IsEmpty()) {
+      // Empty keyframes rule.
       continue;
     }
 
