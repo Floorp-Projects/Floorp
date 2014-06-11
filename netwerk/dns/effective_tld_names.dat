@@ -8117,6 +8117,10 @@ global.ssl.fastly.net
 a.prod.fastly.net
 global.prod.fastly.net
 
+// Firebase, Inc.
+// Submitted by Chris Raynor <chris@firebase.com> 2014-01-21
+firebaseapp.com
+
 // GitHub, Inc.
 // Submitted by Ben Toews <btoews@github.com> 2014-02-06
 github.io
