@@ -31,6 +31,7 @@ this.WebappManager = {
 
   init: function() {
     Services.obs.addObserver(this, "webapps-ask-install", false);
+    Services.obs.addObserver(this, "webapps-ask-uninstall", false);
     Services.obs.addObserver(this, "webapps-launch", false);
     Services.obs.addObserver(this, "webapps-uninstall", false);
     cpmm.addMessageListener("Webapps:Install:Return:OK", this);
@@ -40,6 +41,7 @@ this.WebappManager = {
 
   uninit: function() {
     Services.obs.removeObserver(this, "webapps-ask-install");
+    Services.obs.removeObserver(this, "webapps-ask-uninstall");
     Services.obs.removeObserver(this, "webapps-launch");
     Services.obs.removeObserver(this, "webapps-uninstall");
     cpmm.removeMessageListener("Webapps:Install:Return:OK", this);
@@ -81,11 +83,18 @@ this.WebappManager = {
     let data = JSON.parse(aData);
     data.mm = aSubject;
 
+    let win;
     switch(aTopic) {
       case "webapps-ask-install":
-        let win = this._getWindowForId(data.oid);
+        win = this._getWindowForId(data.oid);
         if (win && win.location.href == data.from) {
           this.doInstall(data, win);
+        }
+        break;
+      case "webapps-ask-uninstall":
+        win = this._getWindowForId(data.windowId);
+        if (win && win.location.href == data.from) {
+          this.doUninstall(data, win);
         }
         break;
       case "webapps-launch":
@@ -193,6 +202,49 @@ this.WebappManager = {
                                                      "webapps-notification-icon",
                                                      mainAction);
 
+  },
+
+  doUninstall: function(aData, aWindow) {
+    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIWebNavigation)
+                         .QueryInterface(Ci.nsIDocShell)
+                         .chromeEventHandler;
+    let chromeDoc = browser.ownerDocument;
+    let chromeWin = chromeDoc.defaultView;
+
+    let bundle = chromeWin.gNavigatorBundle;
+    let jsonManifest = aData.app.manifest;
+
+    let notification;
+
+    let mainAction = {
+      label: bundle.getString("webapps.uninstall"),
+      accessKey: bundle.getString("webapps.uninstall.accesskey"),
+      callback: () => {
+        notification.remove();
+        DOMApplicationRegistry.confirmUninstall(aData);
+      }
+    };
+
+    let secondaryAction = {
+      label: bundle.getString("webapps.doNotUninstall"),
+      accessKey: bundle.getString("webapps.doNotUninstall.accesskey"),
+      callback: () => {
+        notification.remove();
+        DOMApplicationRegistry.denyUninstall(aData, "USER_DECLINED");
+      }
+    };
+
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin,
+                                      aData.app.manifestURL);
+
+    let message = bundle.getFormattedString("webapps.requestUninstall",
+                                            [manifest.name]);
+
+    notification = chromeWin.PopupNotifications.show(
+                     browser, "webapps-uninstall", message,
+                     "webapps-notification-icon",
+                     mainAction, [secondaryAction]);
   }
 }
 
