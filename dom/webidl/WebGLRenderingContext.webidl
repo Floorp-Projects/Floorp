@@ -959,3 +959,9 @@ interface WebGLExtensionInstancedArrays {
     void drawElementsInstancedANGLE(GLenum mode, GLsizei count, GLenum type, GLintptr offset, GLsizei primcount);
     void vertexAttribDivisorANGLE(GLuint index, GLuint divisor);
 };
+
+[NoInterfaceObject]
+interface WebGLExtensionBlendMinMax {
+    const GLenum MIN_EXT = 0x8007;
+    const GLenum MAX_EXT = 0x8008;
+};

@@ -64,6 +64,7 @@ WebGLContext::InitWebGL2()
 
     const WebGLExtensionID sExtensionNativelySupportedArr[] = {
         WebGLExtensionID::ANGLE_instanced_arrays,
+        WebGLExtensionID::EXT_blend_minmax,
         WebGLExtensionID::OES_element_index_uint,
         WebGLExtensionID::OES_standard_derivatives,
         WebGLExtensionID::OES_texture_float,
@@ -73,7 +74,6 @@ WebGLContext::InitWebGL2()
         WebGLExtensionID::WEBGL_draw_buffers
     };
     const GLFeature sFeatureRequiredArr[] = {
-        GLFeature::blend_minmax,
         GLFeature::instanced_non_arrays,
         GLFeature::transform_feedback
     };
