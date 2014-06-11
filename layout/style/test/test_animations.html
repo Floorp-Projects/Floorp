@@ -1589,6 +1589,193 @@ check_events([{ type: 'animationstart', target: div,
              "events after skipping over animation with negative delay");
 done_div();
 
+/*
+ * Bug 1004365 - zero-duration animations
+ */
+
+new_div("margin-right: 200px; animation: anim2 0s 1s both");
+listen();
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of zero-duration animation");
+advance_clock(2000); // Skip over animation
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during forwards fill of zero-duration animation");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after skipping over zero-duration animation");
+done_div();
+
+new_div("margin-right: 200px; animation: anim2 0s 1s both");
+listen();
+advance_clock(0);
+// Seek to just before the animation starts and stops
+advance_clock(999);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right at exact end of zero-duration animation");
+check_events([]);
+// Seek to exactly the point where the animation starts and stops
+advance_clock(1);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right at exact end of zero-duration animation");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after seeking to end of zero-duration animation");
+// Check no further events are dispatched
+advance_clock(0);
+advance_clock(100);
+check_events([]);
+done_div();
+
+// Test with animation-direction reverse
+new_div("margin-right: 200px; animation: anim2 0s 1s both reverse");
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during backwards fill of reversed zero-duration animation");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during forwards fill of reversed zero-duration animation");
+done_div();
+
+// Test with animation-direction alternate
+new_div("margin-right: 200px; animation: anim2 0s 1s both alternate 2");
+listen();
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of alternating zero-duration animation");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during forwards fill of alternating zero-duration animation");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after seeking to end of zero-duration animation"
+             + " that repeats twice");
+done_div();
+
+// Test with animation-direction alternate and odd number of iterations
+new_div("margin-right: 200px; animation: anim2 0s 1s both alternate 3");
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of alternating zero-duration " +
+   "animation with odd number of iterations");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during forwards fill of alternating zero-duration " +
+   "animation with odd number of iterations");
+done_div();
+
+// Test with animation-direction alternate and non-integral number of iterations
+new_div("margin-right: 200px; " +
+        "animation: anim2 0s 1s both alternate 7.3 linear");
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of alternating zero-duration " +
+   "animation with non-integral number of iterations");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "70px",
+   "margin-right during forwards fill of alternating zero-duration " +
+   "animation with non-integral number of iterations");
+done_div();
+
+// Test with infinite iteration count
+// CSS Animations doesn't actually define what the behavior is in this case
+// (and many many other similar cases) so we follow the behavior defined in Web
+// Animations which is that the zero-duration "wins".
+new_div("margin-right: 200px; animation: anim2 0s 1s both infinite");
+listen();
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of infinitely repeating " +
+   "zero-duration animation");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during forwards fill of infinitely repeating " +
+   "zero-duration animation");
+// Check we don't get infinite iteration events :)
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after seeking to end of infinitely repeating " +
+             "zero-duration animation");
+done_div();
+
+// Test with infinite iteration count and alternating direction
+new_div("margin-right: 200px; animation: anim2 0s 1s alternate both infinite");
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of infinitely repeating and " +
+   "alternating zero-duration animation");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during forwards fill of infinitely repeating and " +
+   "alternating zero-duration animation");
+done_div();
+
+// Test with infinite iteration count and alternate-reverse direction
+new_div("margin-right: 200px; " +
+        "animation: anim2 0s 1s alternate-reverse infinite both");
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during backwards fill of infinitely repeating and " +
+   "alternate-reverse zero-duration animation");
+advance_clock(2000);
+is(cs.getPropertyValue("margin-right"), "100px",
+   "margin-right during forwards fill of infinitely repeating and " +
+   "alternate-reverse zero-duration animation");
+done_div();
+
+// Test with negative delay
+new_div("margin-right: 200px; " +
+        "animation: anim2 0s -1s both reverse 12.7 linear");
+listen();
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "30px",
+   "margin-right during forwards fill of reversed and repeated " +
+   "zero-duration animation with negative delay");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after skipping over zero-duration animation " +
+             "with negative delay");
+done_div();
+
+// Test zero duration with zero iteration count
+new_div("margin-right: 200px; animation: anim2 0s 1s both 0");
+listen();
+advance_clock(0);
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during backwards fill of zero-duration animation");
+advance_clock(2000); // Skip over animation
+is(cs.getPropertyValue("margin-right"), "0px",
+   "margin-right during forwards fill of zero-duration animation");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events after skipping over zero-duration, zero iteration count"
+             + " animation");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>

@@ -1876,6 +1876,103 @@ addAsyncTest(function *() {
  * to animation throttling.
  */
 
+/*
+ * Bug 1004365 - zero-duration animations
+ */
+
+addAsyncTest(function *() {
+  new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
+  listen();
+  advance_clock(0);
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          "transform during backwards fill of zero-duration animation");
+  advance_clock(2000); // Skip over animation
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during backwards fill of zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after skipping over zero-duration animation");
+  done_div();
+});
+
+addAsyncTest(function *() {
+  new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
+  listen();
+  advance_clock(0);
+  // Seek to exactly the point where the animation starts and stops
+  advance_clock(1000);
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during backwards fill of zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after seeking to end of zero-duration animation");
+  // Check no further events are dispatched
+  advance_clock(0);
+  advance_clock(100);
+  check_events([]);
+  done_div();
+});
+
+// We don't need to include all the animation-direction related tests
+// found in test_animations.html. We have already asserted above that
+// these zero-length animations do in fact run on the main thread and
+// we have checked that they dispatch events correctly.
+// The actual calculation of values on the main thread is covered by
+// test_animations.html
+
+// We do however still want to test with an infinite repeat count and zero
+// duration to ensure this does not confuse the screening of OMTA animations.
+addAsyncTest(function *() {
+  new_div("transform: translate(0, 200px); " +
+          "animation: anim4 0s 1s both infinite");
+  listen();
+  advance_clock(0);
+  omta_is("transform", { ty: 0 }, RunningOn.MainThread,
+          "transform during backwards fill of infinitely repeating " +
+          "zero-duration animation");
+  advance_clock(2000);
+  omta_is("transform", { ty: 100 }, RunningOn.MainThread,
+          "transform during forwards fill of infinitely repeating " +
+          "zero-duration animation");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after seeking to end of infinitely repeating " +
+               "zero-duration animation");
+  done_div();
+});
+
+// Test with negative delay
+addAsyncTest(function *() {
+  new_div("transform: translate(0, 200px)");
+  listen();
+  gDiv.style.animation = "anim4 0s -1s both reverse 12.7 linear";
+  advance_clock(0);
+  omta_is("transform", { ty: 30 }, RunningOn.MainThread,
+          "transform during forwards fill of reversed and repeated " +
+          "zero-duration animation with negative delay");
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'anim4', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events after skipping over zero-duration animation " +
+               "with negative delay");
+  done_div();
+});
+
 //----------------------------------------------------------------------
 //
 // Helper functions from test_animations.html
