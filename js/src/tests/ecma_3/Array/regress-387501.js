@@ -6,8 +6,7 @@
 //-----------------------------------------------------------------------------
 var BUGNUMBER = 387501;
 var summary =
-  'Array.prototype.toString|toLocaleString are generic, ' +
-  'Array.prototype.toSource is not generic';
+  'Array.prototype.toString|toLocaleString|toSource are generic';
 var actual = '';
 var expect = '';
 
@@ -30,11 +29,13 @@ function test()
   actual = Array.prototype.toLocaleString.call((new String('foo')));
   assertEq(actual, expect, summary);
 
+  assertEq('["f", "o", "o"]', Array.prototype.toSource.call(new String('foo')));
+
   if (typeof Array.prototype.toSource != 'undefined')
   {
     try
     {
-      Array.prototype.toSource.call(new String('foo'));
+      Array.prototype.toSource.call('foo');
       throw new Error("didn't throw");
     }
     catch(ex)
