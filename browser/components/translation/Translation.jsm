@@ -195,6 +195,10 @@ TranslationUI.prototype = {
           this.state = this.STATE_TRANSLATED;
           this.showURLBarIcon(true);
           this.originalShown = false;
+
+          // Record the number of characters translated.
+          TranslationHealthReport.recordTranslation(msg.data.from, msg.data.to,
+                                                    msg.data.characterCount);
         } else {
           this.state = this.STATE_ERROR;
         }
