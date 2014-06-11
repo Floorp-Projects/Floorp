@@ -18,7 +18,7 @@ template <class> class nsRevocableEventPtr;
 namespace mozilla {
 namespace dom {
 
-class ContentChild;
+class nsIContentChild;
 class nsIContentParent;
 class PBlobStreamChild;
 class PBlobStreamParent;
@@ -26,14 +26,14 @@ class PBlobStreamParent;
 class BlobChild MOZ_FINAL
   : public PBlobChild
 {
-  friend class ContentChild;
+  friend class nsIContentChild;
 
   class RemoteBlob;
   friend class RemoteBlob;
 
   nsIDOMBlob* mBlob;
   RemoteBlob* mRemoteBlob;
-  nsRefPtr<ContentChild> mStrongManager;
+  nsRefPtr<nsIContentChild> mStrongManager;
 
   bool mOwnsBlob;
   bool mBlobIsFile;
@@ -41,7 +41,7 @@ class BlobChild MOZ_FINAL
 public:
   // This create function is called on the sending side.
   static BlobChild*
-  Create(ContentChild* aManager, nsIDOMBlob* aBlob)
+  Create(nsIContentChild* aManager, nsIDOMBlob* aBlob)
   {
     return new BlobChild(aManager, aBlob);
   }
@@ -63,19 +63,21 @@ public:
   bool
   SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength);
 
+  nsIContentChild* Manager();
+
 private:
   // This constructor is called on the sending side.
-  BlobChild(ContentChild* aManager, nsIDOMBlob* aBlob);
+  BlobChild(nsIContentChild* aManager, nsIDOMBlob* aBlob);
 
   // This constructor is called on the receiving side.
-  BlobChild(ContentChild* aManager, const ChildBlobConstructorParams& aParams);
+  BlobChild(nsIContentChild* aManager, const ChildBlobConstructorParams& aParams);
 
   // Only destroyed by ContentChild.
   ~BlobChild();
 
   // This create function is called on the receiving side by ContentChild.
   static BlobChild*
-  Create(ContentChild* aManager, const ChildBlobConstructorParams& aParams);
+  Create(nsIContentChild* aManager, const ChildBlobConstructorParams& aParams);
 
   static already_AddRefed<RemoteBlob>
   CreateRemoteBlob(const ChildBlobConstructorParams& aParams);

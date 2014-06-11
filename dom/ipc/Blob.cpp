@@ -13,6 +13,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/nsIContentParent.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBlobStreamChild.h"
 #include "mozilla/dom/PBlobStreamParent.h"
 #include "mozilla/dom/PFileDescriptorSetParent.h"
@@ -1056,7 +1057,7 @@ RemoteBlob::GetPBlob()
  * BlobChild
  ******************************************************************************/
 
-BlobChild::BlobChild(ContentChild* aManager, nsIDOMBlob* aBlob)
+BlobChild::BlobChild(nsIContentChild* aManager, nsIDOMBlob* aBlob)
   : mBlob(aBlob)
   , mRemoteBlob(nullptr)
   , mStrongManager(aManager)
@@ -1073,7 +1074,7 @@ BlobChild::BlobChild(ContentChild* aManager, nsIDOMBlob* aBlob)
   mBlobIsFile = !!file;
 }
 
-BlobChild::BlobChild(ContentChild* aManager,
+BlobChild::BlobChild(nsIContentChild* aManager,
                      const ChildBlobConstructorParams& aParams)
   : mBlob(nullptr)
   , mRemoteBlob(nullptr)
@@ -1105,7 +1106,7 @@ BlobChild::~BlobChild()
 }
 
 BlobChild*
-BlobChild::Create(ContentChild* aManager,
+BlobChild::Create(nsIContentChild* aManager,
                   const ChildBlobConstructorParams& aParams)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1203,6 +1204,12 @@ BlobChild::SetMysteryBlobInfo(const nsString& aContentType, uint64_t aLength)
 
   NormalBlobConstructorParams params(aContentType, aLength);
   return SendResolveMystery(params);
+}
+
+nsIContentChild*
+BlobChild::Manager()
+{
+  return mStrongManager;
 }
 
 already_AddRefed<BlobChild::RemoteBlob>
