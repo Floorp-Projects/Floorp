@@ -72,10 +72,11 @@ nsGonkCameraControl::nsGonkCameraControl(uint32_t aCameraId)
   , mDeferConfigUpdate(0)
   , mMediaProfiles(nullptr)
   , mRecorder(nullptr)
+  , mRecorderMonitor("GonkCameraControl::mRecorder.Monitor")
   , mProfileManager(nullptr)
   , mRecorderProfile(nullptr)
   , mVideoFile(nullptr)
-  , mReentrantMonitor("GonkCameraControl::OnTakePictureMonitor")
+  , mReentrantMonitor("GonkCameraControl::OnTakePicture.Monitor")
 {
   // Constructor runs on the main thread...
   DOM_CAMERA_LOGT("%s:%d : this=%p\n", __func__, __LINE__, this);
@@ -952,6 +953,8 @@ nsGonkCameraControl::StartRecordingImpl(DeviceStorageFileDescriptor* aFileDescri
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
 
+  ReentrantMonitorAutoEnter mon(mRecorderMonitor);
+
   NS_ENSURE_TRUE(mRecorderProfile, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_FALSE(mRecorder, NS_ERROR_FAILURE);
 
@@ -1041,7 +1044,7 @@ nsGonkCameraControl::StopRecordingImpl()
     nsRefPtr<DeviceStorageFile> mFile;
   };
 
-  MOZ_ASSERT(NS_GetCurrentThread() == mCameraThread);
+  ReentrantMonitorAutoEnter mon(mRecorderMonitor);
 
   // nothing to do if we have no mRecorder
   NS_ENSURE_TRUE(mRecorder, NS_OK);
@@ -1569,6 +1572,8 @@ nsGonkCameraControl::SetupRecording(int aFd, int aRotation,
   // choosing a size big enough to hold the params
   const size_t SIZE = 256;
   char buffer[SIZE];
+
+  ReentrantMonitorAutoEnter mon(mRecorderMonitor);
 
   mRecorder = new GonkRecorder();
   CHECK_SETARG_RETURN(mRecorder->init(), NS_ERROR_FAILURE);
