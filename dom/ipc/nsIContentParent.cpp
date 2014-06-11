@@ -64,6 +64,46 @@ nsIContentParent::DeallocPJavaScriptParent(PJavaScriptParent* aParent)
   return true;
 }
 
+bool
+nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
+{
+  const IPCTabAppBrowserContext& appBrowser = aContext.appBrowserContext();
+
+  // We don't trust the IPCTabContext we receive from the child, so we'll bail
+  // if we receive an IPCTabContext that's not a PopupIPCTabContext.
+  // (PopupIPCTabContext lets the child process prove that it has access to
+  // the app it's trying to open.)
+  if (appBrowser.type() != IPCTabAppBrowserContext::TPopupIPCTabContext) {
+    NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
+    return false;
+  }
+
+  const PopupIPCTabContext& popupContext = appBrowser.get_PopupIPCTabContext();
+  TabParent* opener = static_cast<TabParent*>(popupContext.openerParent());
+  if (!opener) {
+    NS_ERROR("Got null opener from child; aborting AllocPBrowserParent.");
+    return false;
+  }
+
+  // Popup windows of isBrowser frames must be isBrowser if the parent
+  // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
+  // the content to access data it's not supposed to.
+  if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
+    NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
+    return false;
+  }
+
+  MaybeInvalidTabContext tc(aContext);
+  if (!tc.IsValid()) {
+    NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
+                             "Aborting AllocPBrowserParent.",
+                             tc.GetInvalidReason()).get());
+    return false;
+  }
+
+  return true;
+}
+
 PBrowserParent*
 nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
                                       const uint32_t& aChromeFlags,
@@ -76,40 +116,12 @@ nsIContentParent::AllocPBrowserParent(const IPCTabContext& aContext,
   unused << aIsForApp;
   unused << aIsForBrowser;
 
-  const IPCTabAppBrowserContext& appBrowser = aContext.appBrowserContext();
-
-  // We don't trust the IPCTabContext we receive from the child, so we'll bail
-  // if we receive an IPCTabContext that's not a PopupIPCTabContext.
-  // (PopupIPCTabContext lets the child process prove that it has access to
-  // the app it's trying to open.)
-  if (appBrowser.type() != IPCTabAppBrowserContext::TPopupIPCTabContext) {
-    NS_ERROR("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
-    return nullptr;
-  }
-
-  const PopupIPCTabContext& popupContext = appBrowser.get_PopupIPCTabContext();
-  TabParent* opener = static_cast<TabParent*>(popupContext.openerParent());
-  if (!opener) {
-    NS_ERROR("Got null opener from child; aborting AllocPBrowserParent.");
-    return nullptr;
-  }
-
-  // Popup windows of isBrowser frames must be isBrowser if the parent
-  // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
-  // the content to access data it's not supposed to.
-  if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
-    NS_ERROR("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
+  if (!CanOpenBrowser(aContext)) {
     return nullptr;
   }
 
   MaybeInvalidTabContext tc(aContext);
-  if (!tc.IsValid()) {
-    NS_ERROR(nsPrintfCString("Child passed us an invalid TabContext.  (%s)  "
-                             "Aborting AllocPBrowserParent.",
-                             tc.GetInvalidReason()).get());
-    return nullptr;
-  }
-
+  MOZ_ASSERT(tc.IsValid());
   TabParent* parent = new TabParent(this, tc.GetTabContext(), aChromeFlags);
 
   // We release this ref in DeallocPBrowserParent()
