@@ -14,6 +14,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 /**
@@ -21,8 +22,10 @@ import android.widget.TextView;
  * to confirm a Firefox Account. Currently used as one sub-panel in a sequence
  * contained by the {@link RemoteTabsPanel}.
  */
-class RemoteTabsVerificationPanel extends LinearLayout implements PanelView {
+class RemoteTabsVerificationPanel extends ScrollView implements PanelView {
     private static final String LOG_TAG = RemoteTabsVerificationPanel.class.getSimpleName();
+
+    private LinearLayout containingLayout;
 
     private TabsPanel tabsPanel;
 
@@ -34,7 +37,9 @@ class RemoteTabsVerificationPanel extends LinearLayout implements PanelView {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        final View resendLink = findViewById(R.id.remote_tabs_confirm_resend);
+        containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_setup_containing_layout);
+
+        final View resendLink = containingLayout.findViewById(R.id.remote_tabs_confirm_resend);
         resendLink.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -56,7 +61,7 @@ class RemoteTabsVerificationPanel extends LinearLayout implements PanelView {
 
     private void refresh() {
         final TextView verificationView =
-                (TextView) findViewById(R.id.remote_tabs_confirm_verification);
+                (TextView) containingLayout.findViewById(R.id.remote_tabs_confirm_verification);
         final String email = FirefoxAccounts.getFirefoxAccountEmail(getContext());
         if (email == null) {
             autoHideTabsPanelOnUnexpectedState("Account email DNE on View refresh.");
@@ -108,6 +113,6 @@ class RemoteTabsVerificationPanel extends LinearLayout implements PanelView {
 
     @Override
     public boolean shouldExpand() {
-        return getOrientation() == LinearLayout.VERTICAL;
+        return containingLayout.getOrientation() == LinearLayout.VERTICAL;
     }
 }
