@@ -8,6 +8,7 @@
 .controlsOverlay {
   -moz-box-pack: center;
   -moz-box-align: end;
+  padding: 20px;
   -moz-box-flex: 1;
   -moz-box-orient: horizontal;
 }
@@ -15,7 +16,9 @@
 .controlBar {
   -moz-box-flex: 1;
   font-size: 16pt;
+  padding: 10px;
   background-color: rgba(50,50,50,0.8);
+  border-radius: 8px;
   width: 100%;
 }
 
@@ -26,8 +29,7 @@
 
 .playButton,
 .castingButton,
-.muteButton,
-.fullscreenButton {
+.muteButton {
   -moz-appearance: none;
   min-height: 42px;
   min-width: 42px;
@@ -35,6 +37,7 @@
 }
 
 .playButton {
+  -moz-transform: translateX(21px);
   background: url("chrome://browser/skin/images/pause-hdpi.png") no-repeat center;
 }
 
@@ -50,13 +53,6 @@
   background: url("chrome://browser/skin/images/cast-active-hdpi.png") no-repeat center;
 }
 
-/* If the casting button is showing, there will be two buttons on the right side of the controls.
- * This shifts the play button to be centered.
- */
-.castingButton:not([hidden="true"]) + .fullscreenButton + spacer + .playButton {
-  transform: translateX(-21px);
-}
-
 .muteButton {
   background: url("chrome://browser/skin/images/mute-hdpi.png") no-repeat center;
 }
@@ -65,13 +61,9 @@
   background: url("chrome://browser/skin/images/unmute-hdpi.png") no-repeat center;
 }
 
+/* This button is hidden until bug 704229 is fixed. */
 .fullscreenButton {
-  background-color: transparent;
-  background: url("chrome://browser/skin/images/fullscreen-hdpi.png") no-repeat center;
-}
-
-.fullscreenButton[fullscreened] {
-  background: url("chrome://browser/skin/images/exitfullscreen-hdpi.png") no-repeat center;
+  display: none;
 }
 
 /* bars */
