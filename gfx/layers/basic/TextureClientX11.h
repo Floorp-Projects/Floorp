@@ -19,7 +19,7 @@ namespace layers {
 class TextureClientX11 : public TextureClient
 {
  public:
-  TextureClientX11(gfx::SurfaceFormat format, TextureFlags aFlags = TextureFlags::DEFAULT);
+  TextureClientX11(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat format, TextureFlags aFlags = TextureFlags::DEFAULT);
 
   ~TextureClientX11();
 
@@ -51,6 +51,7 @@ class TextureClientX11 : public TextureClient
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   RefPtr<gfxXlibSurface> mSurface;
+  RefPtr<ISurfaceAllocator> mAllocator;
   bool mLocked;
 };
 

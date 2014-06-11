@@ -527,7 +527,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion, TextureClientPool *aP
     }
     mBackBuffer = aPool->GetTextureClient();
     // Create a lock for our newly created back-buffer.
-    if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+    if (mManager->AsShadowForwarder()->IsSameProcess()) {
       // If our compositor is in the same process, we can save some cycles by not
       // using shared memory.
       mBackLock = new gfxMemorySharedReadLock();
@@ -1064,13 +1064,10 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
     // sure it happens in the same transaction by requesting this work be
     // repeated immediately.
     // If this is unnecessary, the remaining work will be done tile-by-tile in
-    // subsequent transactions.
-    if (!drawingLowPrecision && paintInSingleTransaction) {
-      return true;
-    }
-
-    mManager->SetRepeatTransaction();
-    return false;
+    // subsequent transactions. The caller code is responsible for scheduling
+    // the subsequent transactions as long as we don't set the mPaintFinished
+    // flag to true.
+    return (!drawingLowPrecision && paintInSingleTransaction);
   }
 
   // We're not repeating painting and we've not requested a repeat transaction,

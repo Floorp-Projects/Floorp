@@ -710,8 +710,6 @@ JSRuntime::updateMallocCounter(JS::Zone *zone, size_t nbytes)
 JS_FRIEND_API(void)
 JSRuntime::onTooMuchMalloc()
 {
-    if (!CurrentThreadCanAccessRuntime(this))
-        return;
     gc.onTooMuchMalloc();
 }
 
