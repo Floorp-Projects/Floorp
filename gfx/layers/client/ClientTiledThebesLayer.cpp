@@ -185,6 +185,17 @@ ClientTiledThebesLayer::BeginPaint()
   TILING_PRLOG_OBJ(("TILING 0x%p: Scroll offset %s\n", this, tmpstr.get()), mPaintData.mScrollOffset);
 }
 
+bool
+ClientTiledThebesLayer::UseFastPath()
+{
+  const FrameMetrics& parentMetrics = GetParent()->GetFrameMetrics();
+  bool multipleTransactionsNeeded = gfxPrefs::UseProgressiveTilePainting()
+                                 || gfxPrefs::UseLowPrecisionBuffer()
+                                 || !parentMetrics.mCriticalDisplayPort.IsEmpty();
+  bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
+  return !multipleTransactionsNeeded || isFixed || parentMetrics.mDisplayPort.IsEmpty();
+}
+
 void
 ClientTiledThebesLayer::EndPaint(bool aFinish)
 {
@@ -224,8 +235,8 @@ ClientTiledThebesLayer::RenderLayer()
   TILING_PRLOG_OBJ(("TILING 0x%p: Initial visible region %s\n", this, tmpstr.get()), mVisibleRegion);
   TILING_PRLOG_OBJ(("TILING 0x%p: Initial valid region %s\n", this, tmpstr.get()), mValidRegion);
 
-  nsIntRegion invalidRegion = mVisibleRegion;
-  invalidRegion.Sub(invalidRegion, mValidRegion);
+  nsIntRegion invalidRegion;
+  invalidRegion.Sub(mVisibleRegion, mValidRegion);
   if (invalidRegion.IsEmpty()) {
     EndPaint(true);
     return;
@@ -236,17 +247,8 @@ ClientTiledThebesLayer::RenderLayer()
     ToClientLayer(GetMaskLayer())->RenderLayer();
   }
 
-  bool isFixed = GetIsFixedPosition() || GetParent()->GetIsFixedPosition();
-
-  // Fast path for no progressive updates, no low-precision updates and no
-  // critical display-port set, or no display-port set, or this is a fixed
-  // position layer/contained in a fixed position layer
-  const FrameMetrics& parentMetrics = GetParent()->GetFrameMetrics();
-  if ((!gfxPrefs::UseProgressiveTilePainting() &&
-       !gfxPrefs::UseLowPrecisionBuffer() &&
-       parentMetrics.mCriticalDisplayPort.IsEmpty()) ||
-       parentMetrics.mDisplayPort.IsEmpty() ||
-       isFixed) {
+  // In some cases we can take a fast path and just be done with it.
+  if (UseFastPath()) {
     mValidRegion = mVisibleRegion;
 
     NS_ASSERTION(!ClientManager()->IsRepeatTransaction(), "Didn't paint our mask layer");
