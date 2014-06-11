@@ -196,9 +196,9 @@ AboutReader.prototype = {
         }
         break;
       }
-
       case "Reader:Remove": {
-        if (aData == this._article.url) {
+        let args = JSON.parse(aData);
+        if (args.url == this._article.url) {
           if (this._isReadingListItem != 0) {
             this._isReadingListItem = 0;
             this._updateToggleButton();
@@ -316,7 +316,8 @@ AboutReader.prototype = {
       // In addition to removing the article from the cache (handled in
       // browser.js), sending this message will cause the toggle button to be
       // updated (handled in this file).
-      Services.obs.notifyObservers(null, "Reader:Remove", this._article.url);
+      let json = JSON.stringify({ url: this._article.url, notify: true });
+      Services.obs.notifyObservers(null, "Reader:Remove", json);
 
       UITelemetry.addEvent("unsave.1", "button", null, "reader");
     }
