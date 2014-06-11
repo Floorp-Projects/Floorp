@@ -502,7 +502,7 @@ function generateDataURI(aFile) {
          btoa(stream.readBytes(stream.available()));
 }
 
-function confirmNextInstall() {
+function confirmNextPopup() {
   let popupPanel = window.top.QueryInterface(Ci.nsIInterfaceRequestor).
                               getInterface(Ci.nsIWebNavigation).
                               QueryInterface(Ci.nsIDocShell).
