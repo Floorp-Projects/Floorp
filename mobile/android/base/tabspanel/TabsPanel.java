@@ -15,7 +15,6 @@ import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
-import org.mozilla.gecko.widget.GeckoPopupMenu;
 import org.mozilla.gecko.widget.IconTabWidget;
 
 import android.content.Context;
@@ -24,10 +23,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -36,8 +32,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
 public class TabsPanel extends LinearLayout
-                       implements GeckoPopupMenu.OnMenuItemClickListener,
-                                  LightweightTheme.OnChangeListener,
+                       implements LightweightTheme.OnChangeListener,
                                   IconTabWidget.OnTabChangedListener {
     @SuppressWarnings("unused")
     private static final String LOGTAG = "Gecko" + TabsPanel.class.getSimpleName();
@@ -53,10 +48,6 @@ public class TabsPanel extends LinearLayout
         public void show();
         public void hide();
         public boolean shouldExpand();
-    }
-
-    public static interface CloseAllPanelView {
-        public void closeAll();
     }
 
     public static interface TabsLayoutChangeListener {
@@ -77,15 +68,12 @@ public class TabsPanel extends LinearLayout
     private AppStateListener mAppStateListener;
 
     private IconTabWidget mTabWidget;
-    private static ImageButton mMenuButton;
     private static ImageButton mAddTab;
 
     private Panel mCurrentPanel;
     private boolean mIsSideBar;
     private boolean mVisible;
     private boolean mHeaderVisible;
-
-    private GeckoPopupMenu mPopupMenu;
 
     public TabsPanel(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -102,10 +90,6 @@ public class TabsPanel extends LinearLayout
         mHeaderVisible = false;
 
         mIsSideBar = false;
-
-        mPopupMenu = new GeckoPopupMenu(context);
-        mPopupMenu.inflate(R.menu.tabs_menu);
-        mPopupMenu.setOnMenuItemClickListener(this);
 
         LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
         initialize();
@@ -165,19 +149,6 @@ public class TabsPanel extends LinearLayout
         }
 
         mTabWidget.setTabSelectionListener(this);
-
-        mMenuButton = (ImageButton) findViewById(R.id.menu);
-        mMenuButton.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                final Menu menu = mPopupMenu.getMenu();
-                menu.findItem(R.id.close_all_tabs).setVisible(mCurrentPanel == Panel.NORMAL_TABS);
-                menu.findItem(R.id.close_private_tabs).setVisible(mCurrentPanel == Panel.PRIVATE_TABS);
-
-                mPopupMenu.show();
-            }
-        });
-        mPopupMenu.setAnchor(mMenuButton);
     }
 
     public void addTab() {
@@ -199,37 +170,6 @@ public class TabsPanel extends LinearLayout
         } else {
             show(Panel.REMOTE_TABS);
         }
-    }
-
-    @Override
-    public boolean onMenuItemClick(MenuItem item) {
-        final int itemId = item.getItemId();
-
-        if (itemId == R.id.close_all_tabs) {
-            if (mCurrentPanel == Panel.NORMAL_TABS) {
-                // Disable the menu button so that the menu won't interfere with the tab close animation.
-                mMenuButton.setEnabled(false);
-                ((CloseAllPanelView) mPanelNormal).closeAll();
-            } else {
-                Log.e(LOGTAG, "Close all tabs menu item should only be visible for normal tabs panel");
-            }
-            return true;
-        }
-
-        if (itemId == R.id.close_private_tabs) {
-            if (mCurrentPanel == Panel.PRIVATE_TABS) {
-                ((CloseAllPanelView) mPanelPrivate).closeAll();
-            } else {
-                Log.e(LOGTAG, "Close private tabs menu item should only be visible for private tabs panel");
-            }
-            return true;
-        }
-
-        if (itemId == R.id.new_tab || itemId == R.id.new_private_tab) {
-            hide();
-        }
-
-        return mActivity.onOptionsItemSelected(item);
     }
 
     private static int getTabContainerHeight(TabsListContainer listContainer) {
@@ -410,17 +350,12 @@ public class TabsPanel extends LinearLayout
                 mFooter.setVisibility(View.GONE);
 
             mAddTab.setVisibility(View.INVISIBLE);
-
-            mMenuButton.setVisibility(View.INVISIBLE);
         } else {
             if (mFooter != null)
                 mFooter.setVisibility(View.VISIBLE);
 
             mAddTab.setVisibility(View.VISIBLE);
             mAddTab.setImageLevel(index);
-
-            mMenuButton.setVisibility(View.VISIBLE);
-            mMenuButton.setEnabled(true);
         }
 
         if (isSideBar()) {
@@ -439,7 +374,6 @@ public class TabsPanel extends LinearLayout
 
         if (mVisible) {
             mVisible = false;
-            mPopupMenu.dismiss();
             dispatchLayoutChange(0, 0);
         }
     }
