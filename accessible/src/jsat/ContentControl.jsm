@@ -213,8 +213,7 @@ this.ContentControl.prototype = {
 
     let focusedAcc = Utils.AccRetrieval.getAccessibleFor(
       this.document.activeElement);
-    if (focusedAcc && this.vc.position === focusedAcc
-        && focusedAcc.role === Roles.ENTRY) {
+    if (focusedAcc && focusedAcc.role === Roles.ENTRY) {
       let accText = focusedAcc.QueryInterface(Ci.nsIAccessibleText);
       let oldOffset = accText.caretOffset;
       let newOffset = aMessage.json.offset;
