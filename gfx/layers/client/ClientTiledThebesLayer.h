@@ -104,11 +104,10 @@ private:
                           void* aCallbackData);
 
   /**
-   * When a paint ends, updates any data necessary to persist until the next
-   * paint. If aFinish is true, this will cause the paint to be marked as
-   * finished.
+   * This causes the paint to be marked as finished, and updates any data
+   * necessary to persist until the next paint.
    */
-  void EndPaint(bool aFinish);
+  void EndPaint();
 
   RefPtr<TiledContentClient> mContentClient;
   nsIntRegion mLowPrecisionValidRegion;
