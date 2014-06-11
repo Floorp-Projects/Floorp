@@ -18,12 +18,16 @@
 #include "TabChild.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/asmjscache/AsmJSCache.h"
-#include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/dom/ContentBridgeChild.h"
+#include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
-#include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/asmjscache/AsmJSCache.h"
+#include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
+#include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
@@ -31,10 +35,9 @@
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/PCompositorChild.h"
+#include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/net/NeckoChild.h"
-#include "mozilla/Preferences.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
 #if defined(XP_WIN)
@@ -497,6 +500,11 @@ ContentChild::~ContentChild()
 {
 }
 
+NS_INTERFACE_MAP_BEGIN(ContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsIContentChild)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
+
 bool
 ContentChild::Init(MessageLoop* aIOLoop,
                    base::ProcessHandle aParentHandle,
@@ -829,6 +837,23 @@ ContentChild::DeallocPCycleCollectWithLogsChild(PCycleCollectWithLogsChild* /* a
     return true;
 }
 
+PContentBridgeChild*
+ContentChild::AllocPContentBridgeChild(mozilla::ipc::Transport* aTransport,
+                                       base::ProcessId aOtherProcess)
+{
+    return ContentBridgeChild::Create(aTransport, aOtherProcess);
+}
+
+PContentBridgeParent*
+ContentChild::AllocPContentBridgeParent(mozilla::ipc::Transport* aTransport,
+                                        base::ProcessId aOtherProcess)
+{
+    MOZ_ASSERT(!mLastBridge);
+    mLastBridge = static_cast<ContentBridgeParent*>(
+        ContentBridgeParent::Create(aTransport, aOtherProcess));
+    return mLastBridge;
+}
+
 PCompositorChild*
 ContentChild::AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
@@ -900,51 +925,43 @@ ContentChild::AllocPJavaScriptChild()
 {
     MOZ_ASSERT(!ManagedPJavaScriptChild().Length());
 
-    nsCOMPtr<nsIJSRuntimeService> svc = do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
-    NS_ENSURE_TRUE(svc, nullptr);
-
-    JSRuntime *rt;
-    svc->GetRuntime(&rt);
-    NS_ENSURE_TRUE(svc, nullptr);
-
-    mozilla::jsipc::JavaScriptChild *child = new mozilla::jsipc::JavaScriptChild(rt);
-    if (!child->init()) {
-        delete child;
-        return nullptr;
-    }
-    return child;
+    return nsIContentChild::AllocPJavaScriptChild();
 }
 
 bool
-ContentChild::DeallocPJavaScriptChild(PJavaScriptChild *child)
+ContentChild::DeallocPJavaScriptChild(PJavaScriptChild *aChild)
 {
-    static_cast<mozilla::jsipc::JavaScriptChild *>(child)->decref();
-    return true;
+    return nsIContentChild::DeallocPJavaScriptChild(aChild);
 }
 
 PBrowserChild*
 ContentChild::AllocPBrowserChild(const IPCTabContext& aContext,
                                  const uint32_t& aChromeFlags,
-                                 const uint64_t& aId,
+                                 const uint64_t& aID,
                                  const bool& aIsForApp,
                                  const bool& aIsForBrowser)
 {
-    // We'll happily accept any kind of IPCTabContext here; we don't need to
-    // check that it's of a certain type for security purposes, because we
-    // believe whatever the parent process tells us.
+    return nsIContentChild::AllocPBrowserChild(aContext,
+                                               aChromeFlags,
+                                               aID,
+                                               aIsForApp,
+                                               aIsForBrowser);
+}
 
-    MaybeInvalidTabContext tc(aContext);
-    if (!tc.IsValid()) {
-        NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
-                                 "the parent process. (%s)  Crashing...",
-                                 tc.GetInvalidReason()).get());
-        MOZ_CRASH("Invalid TabContext received from the parent process.");
-    }
-
-    nsRefPtr<TabChild> child = TabChild::Create(this, tc.GetTabContext(), aChromeFlags);
-
-    // The ref here is released in DeallocPBrowserChild.
-    return child.forget().take();
+bool
+ContentChild::SendPBrowserConstructor(PBrowserChild* aActor,
+                                      const IPCTabContext& aContext,
+                                      const uint32_t& aChromeFlags,
+                                      const uint64_t& aID,
+                                      const bool& aIsForApp,
+                                      const bool& aIsForBrowser)
+{
+    return PContentChild::SendPBrowserConstructor(aActor,
+                                                  aContext,
+                                                  aChromeFlags,
+                                                  aID,
+                                                  aIsForApp,
+                                                  aIsForBrowser);
 }
 
 bool
@@ -998,108 +1015,28 @@ ContentChild::DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor)
 }
 
 bool
-ContentChild::DeallocPBrowserChild(PBrowserChild* iframe)
+ContentChild::DeallocPBrowserChild(PBrowserChild* aIframe)
 {
-    TabChild* child = static_cast<TabChild*>(iframe);
-    NS_RELEASE(child);
-    return true;
+    return nsIContentChild::DeallocPBrowserChild(aIframe);
 }
 
 PBlobChild*
 ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 {
-    return BlobChild::Create(this, aParams);
+    return nsIContentChild::AllocPBlobChild(aParams);
 }
 
 bool
 ContentChild::DeallocPBlobChild(PBlobChild* aActor)
 {
-    delete aActor;
-    return true;
+    return nsIContentChild::DeallocPBlobChild(aActor);
 }
 
-BlobChild*
-ContentChild::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
+PBlobChild*
+ContentChild::SendPBlobConstructor(PBlobChild* aActor,
+                                   const BlobConstructorParams& aParams)
 {
-    MOZ_ASSERT(NS_IsMainThread());
-    MOZ_ASSERT(aBlob);
-
-    // If the blob represents a remote blob then we can simply pass its actor back
-    // here.
-    if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob)) {
-        BlobChild* actor =
-            static_cast<BlobChild*>(
-            static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
-        MOZ_ASSERT(actor);
-        return actor;
-    }
-
-    // All blobs shared between processes must be immutable.
-    nsCOMPtr<nsIMutable> mutableBlob = do_QueryInterface(aBlob);
-    if (!mutableBlob || NS_FAILED(mutableBlob->SetMutable(false))) {
-        NS_WARNING("Failed to make blob immutable!");
-        return nullptr;
-    }
-
-#ifdef DEBUG
-    {
-        // XXX This is only safe so long as all blob implementations in our tree
-        //     inherit nsDOMFileBase. If that ever changes then this will need to
-        //     grow a real interface or something.
-        const auto* blob = static_cast<nsDOMFileBase*>(aBlob);
-
-        MOZ_ASSERT(!blob->IsSizeUnknown());
-        MOZ_ASSERT(!blob->IsDateUnknown());
-    }
-#endif
-
-    ParentBlobConstructorParams params;
-
-    nsString contentType;
-    nsresult rv = aBlob->GetType(contentType);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    uint64_t length;
-    rv = aBlob->GetSize(&length);
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    nsCOMPtr<nsIInputStream> stream;
-    rv = aBlob->GetInternalStream(getter_AddRefs(stream));
-    NS_ENSURE_SUCCESS(rv, nullptr);
-
-    InputStreamParams inputStreamParams;
-    nsTArray<mozilla::ipc::FileDescriptor> fds;
-    SerializeInputStream(stream, inputStreamParams, fds);
-
-    MOZ_ASSERT(fds.IsEmpty());
-
-    params.optionalInputStreamParams() = inputStreamParams;
-
-    nsCOMPtr<nsIDOMFile> file = do_QueryInterface(aBlob);
-    if (file) {
-        FileBlobConstructorParams fileParams;
-
-        rv = file->GetName(fileParams.name());
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        rv = file->GetMozLastModifiedDate(&fileParams.modDate());
-        NS_ENSURE_SUCCESS(rv, nullptr);
-
-        fileParams.contentType() = contentType;
-        fileParams.length() = length;
-
-        params.blobParams() = fileParams;
-    } else {
-        NormalBlobConstructorParams blobParams;
-        blobParams.contentType() = contentType;
-        blobParams.length() = length;
-        params.blobParams() = blobParams;
-    }
-
-    BlobChild* actor = BlobChild::Create(this, aBlob);
-    NS_ENSURE_TRUE(actor, nullptr);
-
-    return SendPBlobConstructor(actor, params) ? actor : nullptr;
+    return PContentChild::SendPBlobConstructor(aActor, aParams);
 }
 
 PCrashReporterChild*

@@ -13,6 +13,7 @@
 # include "LayerManagerD3D9.h"
 #endif //MOZ_ENABLE_D3D9_LAYER
 #include "mozilla/BrowserElementParent.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -749,6 +750,9 @@ RenderFrameParent::RenderFrameParent(nsFrameLoader* aFrameLoader,
       mContentController = new RemoteContentController(this);
       CompositorParent::SetControllerForLayerTree(mLayersId, mContentController);
     }
+  } else if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    ContentChild::GetSingleton()->SendAllocateLayerTreeId(aId);
+    mLayersId = *aId;
   }
   // Set a default RenderFrameParent
   mFrameLoader->SetCurrentRemoteFrame(this);
@@ -946,7 +950,11 @@ void
 RenderFrameParent::ActorDestroy(ActorDestroyReason why)
 {
   if (mLayersId != 0) {
-    CompositorParent::DeallocateLayerTreeId(mLayersId);
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      ContentChild::GetSingleton()->SendDeallocateLayerTreeId(mLayersId);
+    } else {
+      CompositorParent::DeallocateLayerTreeId(mLayersId);
+    }
     if (mContentController) {
       // Stop our content controller from requesting repaints of our
       // content.

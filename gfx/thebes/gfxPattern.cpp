@@ -98,13 +98,13 @@ gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 }
 
 void
-gfxPattern::SetColorStops(mozilla::RefPtr<mozilla::gfx::GradientStops> aStops)
+gfxPattern::SetColorStops(mozilla::RefPtr<GradientStops> aStops)
 {
   mStops = aStops;
 }
 
 void
-gfxPattern::CacheColorStops(mozilla::gfx::DrawTarget *aDT)
+gfxPattern::CacheColorStops(DrawTarget *aDT)
 {
   if (mPattern) {
     mStops = nullptr;
@@ -115,14 +115,14 @@ gfxPattern::CacheColorStops(mozilla::gfx::DrawTarget *aDT)
     for (int n = 0; n < count; ++n) {
       double offset, r, g, b, a;
       cairo_pattern_get_color_stop_rgba(mPattern, n, &offset, &r, &g, &b, &a);
-      stops[n].color = mozilla::gfx::Color(r, g, b, a);
+      stops[n].color = Color(r, g, b, a);
       stops[n].offset = offset;
     }
-    mStops = gfxGradientCache::GetOrCreateGradientStops(aDT,
-                                                        stops,
-                                                        (cairo_pattern_get_extend(mPattern) == CAIRO_EXTEND_REPEAT)
-                                                        ? mozilla::gfx::ExtendMode::REPEAT
-                                                        : mozilla::gfx::ExtendMode::CLAMP);
+
+    GraphicsExtend extend = GraphicsExtend(cairo_pattern_get_extend(mPattern));
+
+    mStops = gfxGradientCache::GetOrCreateGradientStops(aDT, stops,
+                                                        ToExtendMode(extend));
   }
 }
 
@@ -187,7 +187,7 @@ gfxPattern::GetPattern(DrawTarget *aTarget, Matrix *aPatternTransform)
     return mGfxPattern;
   }
 
-  GraphicsExtend extend = (GraphicsExtend)cairo_pattern_get_extend(mPattern);
+  GraphicsExtend extend = GraphicsExtend(cairo_pattern_get_extend(mPattern));
 
   switch (cairo_pattern_get_type(mPattern)) {
   case CAIRO_PATTERN_TYPE_SOLID:
@@ -385,7 +385,7 @@ gfxPattern::GraphicsExtend
 gfxPattern::Extend() const
 {
   if (mPattern) {
-    return (GraphicsExtend)cairo_pattern_get_extend(mPattern);
+    return GraphicsExtend(cairo_pattern_get_extend(mPattern));
   } else {
     return mExtend;
   }

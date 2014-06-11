@@ -1,5 +1,4 @@
 # This is just a list of tests to skip, one test per line
-TestTXMgr                           # Bug 919595
 TestPlainTextSerializer             # Bug 919599
 TestNativeXMLHttpRequest            # Bug 919642
 mediapipeline_unittest              # Bug 919646

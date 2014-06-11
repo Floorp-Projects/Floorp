@@ -294,7 +294,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // ok our child could have gotten bigger. So lets get its bounds
   aDesiredSize.Width() = mRect.width;
   aDesiredSize.Height() = mRect.height;
-  aDesiredSize.SetTopAscent(GetBoxAscent(state));
+  aDesiredSize.SetBlockStartAscent(GetBoxAscent(state));
 
   // the overflow rect is set in SetBounds() above
   aDesiredSize.mOverflowAreas = GetOverflowAreas();

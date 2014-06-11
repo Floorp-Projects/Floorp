@@ -17,6 +17,8 @@ EXPORTS.mozilla.dom.ipc += [
 ]
 
 EXPORTS.mozilla.dom += [
+    'ContentBridgeChild.h',
+    'ContentBridgeParent.h',
     'ContentChild.h',
     'ContentParent.h',
     'ContentProcess.h',
@@ -25,6 +27,8 @@ EXPORTS.mozilla.dom += [
     'FileDescriptorSetChild.h',
     'FileDescriptorSetParent.h',
     'FilePickerParent.h',
+    'nsIContentChild.h',
+    'nsIContentParent.h',
     'PermissionMessageUtils.h',
     'StructuredCloneUtils.h',
     'TabChild.h',
@@ -42,12 +46,16 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'AppProcessChecker.cpp',
     'ColorPickerParent.cpp',
+    'ContentBridgeChild.cpp',
+    'ContentBridgeParent.cpp',
     'ContentParent.cpp',
     'ContentProcess.cpp',
     'CrashReporterParent.cpp',
     'FileDescriptorSetChild.cpp',
     'FileDescriptorSetParent.cpp',
     'FilePickerParent.cpp',
+    'nsIContentChild.cpp',
+    'nsIContentParent.cpp',
     'PermissionMessageUtils.cpp',
     'PreallocatedProcessManager.cpp',
     'ProcessPriorityManager.cpp',
@@ -75,6 +83,7 @@ IPDL_SOURCES += [
     'PBrowser.ipdl',
     'PColorPicker.ipdl',
     'PContent.ipdl',
+    'PContentBridge.ipdl',
     'PContentPermission.ipdlh',
     'PContentPermissionRequest.ipdl',
     'PCrashReporter.ipdl',
