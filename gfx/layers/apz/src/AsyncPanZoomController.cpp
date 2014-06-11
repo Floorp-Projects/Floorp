@@ -2261,13 +2261,16 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
     mFrameMetrics.mHasScrollgrab = aLayerMetrics.mHasScrollgrab;
 
     if (scrollOffsetUpdated) {
-      CancelAnimation();
-
       APZC_LOG("%p updating scroll offset from (%f, %f) to (%f, %f)\n", this,
         mFrameMetrics.GetScrollOffset().x, mFrameMetrics.GetScrollOffset().y,
         aLayerMetrics.GetScrollOffset().x, aLayerMetrics.GetScrollOffset().y);
 
       mFrameMetrics.CopyScrollInfoFrom(aLayerMetrics);
+
+      // Cancel the animation (which will also trigger a repaint request)
+      // after we update the scroll offset above. Otherwise we can be left
+      // in a state where things are out of sync.
+      CancelAnimation();
 
       // Because of the scroll offset update, any inflight paint requests are
       // going to be ignored by layout, and so mLastDispatchedPaintMetrics
