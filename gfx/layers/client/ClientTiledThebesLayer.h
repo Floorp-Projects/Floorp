@@ -88,6 +88,14 @@ private:
   bool UseFastPath();
 
   /**
+   * Helper functions to do the high-precision paint.
+   * This function returns true if it updated the paint buffer.
+   */
+  bool RenderHighPrecision(nsIntRegion& aInvalidRegion,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData);
+
+  /**
    * When a paint ends, updates any data necessary to persist until the next
    * paint. If aFinish is true, this will cause the paint to be marked as
    * finished.
