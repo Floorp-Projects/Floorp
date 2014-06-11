@@ -569,6 +569,99 @@ operator!=(NullptrT n, const UniquePtr<T, D>& x)
 
 // No operator<, operator>, operator<=, operator>= for now because simplicity.
 
+namespace detail {
+
+template<typename T>
+struct UniqueSelector
+{
+    typedef UniquePtr<T> SingleObject;
+};
+
+template<typename T>
+struct UniqueSelector<T[]>
+{
+    typedef UniquePtr<T[]> UnknownBound;
+};
+
+template<typename T, decltype(sizeof(int)) N>
+struct UniqueSelector<T[N]>
+{
+    typedef UniquePtr<T[N]> KnownBound;
+};
+
+} // namespace detail
+
+// We don't have variadic template support everywhere, so just hard-code arities
+// 0-4 for now.  If you need more arguments, feel free to add the extra
+// overloads.
+//
+// Beware!  Due to lack of true nullptr support in gcc 4.4 and 4.5, passing
+// literal nullptr to MakeUnique will not work on some platforms.  See Move.h
+// for more details.
+
+template<typename T>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique()
+{
+  return UniquePtr<T>(new T());
+}
+
+template<typename T, typename A1>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1)));
+}
+
+template<typename T, typename A1, typename A2>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2)));
+}
+
+template<typename T, typename A1, typename A2, typename A3>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2, A3&& a3)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2), Forward<A3>(a3)));
+}
+
+template<typename T, typename A1, typename A2, typename A3, typename A4>
+typename detail::UniqueSelector<T>::SingleObject
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4)
+{
+  return UniquePtr<T>(new T(Forward<A1>(a1), Forward<A2>(a2), Forward<A3>(a3), Forward<A4>(a4)));
+}
+
+template<typename T>
+typename detail::UniqueSelector<T>::UnknownBound
+MakeUnique(decltype(sizeof(int)) n)
+{
+  typedef typename RemoveExtent<T>::Type ArrayType;
+  return UniquePtr<T>(new ArrayType[n]());
+}
+
+template<typename T>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique() MOZ_DELETE;
+
+template<typename T, typename A1>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3) MOZ_DELETE;
+
+template<typename T, typename A1, typename A2, typename A3, typename A4>
+typename detail::UniqueSelector<T>::KnownBound
+MakeUnique(A1&& a1, A2&& a2, A3&& a3, A4&& a4) MOZ_DELETE;
+
 } // namespace mozilla
 
 #endif /* mozilla_UniquePtr_h */

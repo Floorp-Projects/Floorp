@@ -16,6 +16,7 @@
 using mozilla::DefaultDelete;
 using mozilla::IsNullPointer;
 using mozilla::IsSame;
+using mozilla::MakeUnique;
 using mozilla::Swap;
 using mozilla::UniquePtr;
 using mozilla::Vector;
@@ -543,6 +544,48 @@ TestArray()
   return true;
 }
 
+struct Q
+{
+    Q() {}
+    Q(const Q& q) {}
+
+    Q(Q& q, char c) {}
+
+    template<typename T>
+    Q(Q q, T&& t, int i)
+    {}
+
+    Q(int i, long j, double k, void* l) {}
+};
+
+static int randomInt() { return 4; }
+
+static bool
+TestMakeUnique()
+{
+  UniquePtr<int> a1(MakeUnique<int>());
+  UniquePtr<long> a2(MakeUnique<long>(4));
+
+  // no args, easy
+  UniquePtr<Q> q0(MakeUnique<Q>());
+
+  // temporary bound to const lval ref
+  UniquePtr<Q> q1(MakeUnique<Q>(Q()));
+
+  // passing through a non-const lval ref
+  UniquePtr<Q> q2(MakeUnique<Q>(*q1, 'c'));
+
+  // pass by copying, forward a temporary, pass by value
+  UniquePtr<Q> q3(MakeUnique<Q>(Q(), UniquePtr<int>(), randomInt()));
+
+  // various type mismatching to test "fuzzy" forwarding
+  UniquePtr<Q> q4(MakeUnique<Q>('s', 66LL, 3.141592654, &q3));
+
+  UniquePtr<char[]> c1(MakeUnique<char[]>(5));
+
+  return true;
+}
+
 int
 main()
 {
@@ -557,5 +600,7 @@ main()
   if (!TestVector())
     return 1;
   if (!TestArray())
+    return 1;
+  if (!TestMakeUnique())
     return 1;
 }
