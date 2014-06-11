@@ -118,7 +118,7 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="70c66225521828ad568c0c72859c6f17c3182f1b"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="b8ff7901a20aab3041aaca4eb73abd6d57f4bb8a"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="6d29b672b039612c08c40e92d8051a4cfbd38162"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
@@ -144,4 +144,5 @@
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d0aa65b140a45016975ed0ecf35f280dd336e1d3"/>
   <project name="platform/system/qcom" path="system/qcom" revision="1cdab258b15258b7f9657da70e6f06ebd5a2fc25"/>
   <project name="platform/vendor/qcom/msm8610" path="device/qcom/msm8610" revision="4ae5df252123591d5b941191790e7abed1bce5a4"/>
+  <project name="platform/vendor/qcom-opensource/wlan/prima" path="vendor/qcom/opensource/wlan/prima" revision="ce18b47b4a4f93a581d672bbd5cb6d12fe796ca9"/>
 </manifest>
