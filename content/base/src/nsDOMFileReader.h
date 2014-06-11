@@ -7,16 +7,16 @@
 #define nsDOMFileReader_h__
 
 #include "mozilla/Attributes.h"
-#include "nsISupportsUtils.h"      
+#include "nsISupportsUtils.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
-#include "nsIStreamListener.h"     
-#include "nsIInterfaceRequestor.h" 
-#include "nsJSUtils.h"             
-#include "nsTArray.h"              
+#include "nsIStreamListener.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsJSUtils.h"
+#include "nsTArray.h"
 #include "nsIJSNativeInitializer.h"
-#include "prtime.h"                
-#include "nsITimer.h"              
+#include "prtime.h"
+#include "nsITimer.h"
 #include "nsIAsyncInputStream.h"
 
 #include "nsIDOMFile.h"
@@ -125,7 +125,7 @@ protected:
                        ErrorResult& aRv);
   nsresult GetAsText(nsIDOMBlob *aFile, const nsACString &aCharset,
                      const char *aFileData, uint32_t aDataLen, nsAString &aResult);
-  nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, uint32_t aDataLen, nsAString &aResult); 
+  nsresult GetAsDataURL(nsIDOMBlob *aFile, const char *aFileData, uint32_t aDataLen, nsAString &aResult);
 
   void FreeFileData() {
     moz_free(mFileData);
