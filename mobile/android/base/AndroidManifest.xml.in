@@ -188,7 +188,6 @@
             </intent-filter>
         </activity>
 
-#ifdef MOZ_ANDROID_SYNTHAPKS
         <activity android:name="org.mozilla.gecko.webapp.Dispatcher"
             android:noHistory="true" >
             <intent-filter>
@@ -212,7 +211,6 @@
              <category android:name="android.intent.category.DEFAULT" />
           </intent-filter>
         </receiver>
-#endif
 
         <activity android:name=".Webapp"
                   android:label="@string/webapp_generic_name"

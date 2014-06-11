@@ -22,16 +22,10 @@ EXTRA_JS_MODULES += [
     'SharedPreferences.jsm',
     'SimpleServiceDiscovery.jsm',
     'SSLExceptions.jsm',
+    'WebappManagerWorker.js',
 ]
 
 EXTRA_PP_JS_MODULES += [
     'RokuApp.jsm',
+    'WebappManager.jsm',
 ]
-
-if CONFIG['MOZ_ANDROID_SYNTHAPKS']:
-    EXTRA_PP_JS_MODULES += [
-        'WebappManager.jsm',
-    ]
-    EXTRA_JS_MODULES += [
-        'WebappManagerWorker.js',
-    ]

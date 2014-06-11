@@ -94,18 +94,6 @@ function createModule(id) {
   });
 };
 
-// A whitelist of modules from which the built-in chrome module may be
-// required. The idea is add all modules that depend on chrome to the whitelist
-// initially, and then remove them one by one, fixing any errors as we go along.
-// Once the whitelist is empty, we can remove the built-in chrome module from
-// the loader entirely.
-//
-// TODO: Remove this when the whitelist becomes empty
-let chromeWhitelist = [
-  "devtools/toolkit/DevToolsUtils",
-  "devtools/toolkit/event-emitter",
-];
-
 // Create a CommonJS loader with the following options:
 // - createSandbox:
 //     A function that will be used to create sandboxes. It takes the name and
@@ -186,17 +174,6 @@ function WorkerDebuggerLoader(options) {
       // Make sure an id was passed.
       if (id === undefined) {
         throw new Error("can't require module without id!");
-      }
-
-      // If the module to be required is the built-in chrome module, and the
-      // requirer is not in the whitelist, return a vacuous object as if the
-      // module was unavailable.
-      //
-      // TODO: Remove this when the whitelist becomes empty
-      if (id === "chrome" && chromeWhitelist.indexOf(requirer.id) < 0) {
-        return { CC: undefined, Cc: undefined,
-                 ChromeWorker: undefined, Cm: undefined, Ci: undefined, Cu: undefined,
-                 Cr: undefined, components: undefined };
       }
 
       // Built-in modules are cached by id rather than URL, so try to find the
@@ -332,9 +309,9 @@ if (typeof Components === "object") {
     let SourceMap = {};
     Cu.import("resource://gre/modules/devtools/SourceMap.jsm", SourceMap);
     const Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
-    const chrome = { CC: Function.bind.call(CC, Components), Cc: Cc,
-                     ChromeWorker: ChromeWorker, Cm: Cm, Ci: Ci, Cu: Cu,
-                     Cr: Cr, components: Components };
+    const chrome = { CC: undefined, Cc: undefined, ChromeWorker: undefined,
+                     Cm: undefined, Ci: undefined, Cu: undefined,
+                     Cr: undefined, components: undefined };
     const xpcInspector = Cc["@mozilla.org/jsinspector;1"].
                          getService(Ci.nsIJSInspector);
 
