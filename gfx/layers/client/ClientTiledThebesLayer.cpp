@@ -237,6 +237,65 @@ ClientTiledThebesLayer::RenderHighPrecision(nsIntRegion& aInvalidRegion,
   return true;
 }
 
+bool
+ClientTiledThebesLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
+                                           LayerManager::DrawThebesLayerCallback aCallback,
+                                           void* aCallbackData)
+{
+  // Render the low precision buffer, if there's area to invalidate and the
+  // visible region is larger than the critical display port.
+  if (!aInvalidRegion.IsEmpty() &&
+      !nsIntRegion(LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort)).Contains(mVisibleRegion)) {
+    nsIntRegion oldValidRegion = mContentClient->mLowPrecisionTiledBuffer.GetValidRegion();
+    oldValidRegion.And(oldValidRegion, mVisibleRegion);
+
+    bool updatedBuffer = false;
+
+    // If the frame resolution or format have changed, invalidate the buffer
+    if (mContentClient->mLowPrecisionTiledBuffer.GetFrameResolution() != mPaintData.mResolution ||
+        mContentClient->mLowPrecisionTiledBuffer.HasFormatChanged()) {
+      if (!mLowPrecisionValidRegion.IsEmpty()) {
+        updatedBuffer = true;
+      }
+      oldValidRegion.SetEmpty();
+      mLowPrecisionValidRegion.SetEmpty();
+      mContentClient->mLowPrecisionTiledBuffer.SetFrameResolution(mPaintData.mResolution);
+      aInvalidRegion = mVisibleRegion;
+    }
+
+    // Invalidate previously valid content that is no longer visible
+    if (mPaintData.mLowPrecisionPaintCount == 1) {
+      mLowPrecisionValidRegion.And(mLowPrecisionValidRegion, mVisibleRegion);
+    }
+    mPaintData.mLowPrecisionPaintCount++;
+
+    // Remove the valid high-precision region from the invalid low-precision
+    // region. We don't want to spend time drawing things twice.
+    aInvalidRegion.Sub(aInvalidRegion, mValidRegion);
+
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision invalid region is %s\n", this, tmpstr.get()), aInvalidRegion);
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision new valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
+
+    if (!aInvalidRegion.IsEmpty()) {
+      updatedBuffer = mContentClient->mLowPrecisionTiledBuffer.ProgressiveUpdate(
+                            mLowPrecisionValidRegion, aInvalidRegion, oldValidRegion,
+                            &mPaintData, aCallback, aCallbackData);
+    }
+    return updatedBuffer;
+  }
+  if (!mLowPrecisionValidRegion.IsEmpty()) {
+    TILING_PRLOG(("TILING 0x%p: Clearing low-precision buffer\n", this));
+    // Clear the low precision tiled buffer.
+    mLowPrecisionValidRegion.SetEmpty();
+    mContentClient->mLowPrecisionTiledBuffer.ResetPaintedAndValidState();
+    // Return true here so we send a Painted callback after clearing the valid
+    // region of the low precision buffer. This allows the shadow buffer's valid
+    // region to be updated and the associated resources to be freed.
+    return true;
+  }
+  return false;
+}
+
 void
 ClientTiledThebesLayer::EndPaint(bool aFinish)
 {
@@ -362,54 +421,7 @@ ClientTiledThebesLayer::RenderLayer()
   TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
   TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision invalid region is %s\n", this, tmpstr.get()), lowPrecisionInvalidRegion);
 
-  // Render the low precision buffer, if there's area to invalidate and the
-  // visible region is larger than the critical display port.
-  bool updatedLowPrecision = false;
-  if (!lowPrecisionInvalidRegion.IsEmpty() &&
-      !nsIntRegion(LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort)).Contains(mVisibleRegion)) {
-    nsIntRegion oldValidRegion =
-      mContentClient->mLowPrecisionTiledBuffer.GetValidRegion();
-    oldValidRegion.And(oldValidRegion, mVisibleRegion);
-
-    // If the frame resolution or format have changed, invalidate the buffer
-    if (mContentClient->mLowPrecisionTiledBuffer.GetFrameResolution() != mPaintData.mResolution ||
-        mContentClient->mLowPrecisionTiledBuffer.HasFormatChanged()) {
-      if (!mLowPrecisionValidRegion.IsEmpty()) {
-        updatedLowPrecision = true;
-      }
-      oldValidRegion.SetEmpty();
-      mLowPrecisionValidRegion.SetEmpty();
-      mContentClient->mLowPrecisionTiledBuffer.SetFrameResolution(mPaintData.mResolution);
-      lowPrecisionInvalidRegion = mVisibleRegion;
-    }
-
-    // Invalidate previously valid content that is no longer visible
-    if (mPaintData.mLowPrecisionPaintCount == 1) {
-      mLowPrecisionValidRegion.And(mLowPrecisionValidRegion, mVisibleRegion);
-    }
-    mPaintData.mLowPrecisionPaintCount++;
-
-    // Remove the valid high-precision region from the invalid low-precision
-    // region. We don't want to spend time drawing things twice.
-    lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
-
-    if (!lowPrecisionInvalidRegion.IsEmpty()) {
-      updatedLowPrecision = mContentClient->mLowPrecisionTiledBuffer
-                              .ProgressiveUpdate(mLowPrecisionValidRegion,
-                                                 lowPrecisionInvalidRegion,
-                                                 oldValidRegion, &mPaintData,
-                                                 callback, data);
-    }
-  } else if (!mLowPrecisionValidRegion.IsEmpty()) {
-    // Clear the low precision tiled buffer
-    updatedLowPrecision = true;
-    mLowPrecisionValidRegion.SetEmpty();
-    mContentClient->mLowPrecisionTiledBuffer.ResetPaintedAndValidState();
-  }
-
-  // We send a Painted callback if we clear the valid region of the low
-  // precision buffer, so that the shadow buffer's valid region can be updated
-  // and the associated resources can be freed.
+  bool updatedLowPrecision = RenderLowPrecision(lowPrecisionInvalidRegion, callback, data);
   if (updatedLowPrecision) {
     ClientManager()->Hold(this);
     mContentClient->UseTiledLayerBuffer(TiledContentClient::LOW_PRECISION_TILED_BUFFER);
