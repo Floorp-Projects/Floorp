@@ -16,7 +16,7 @@
 <script class="testbody" type="text/javascript">
 
   function simpleRegister() {
-    var p = navigator.serviceWorker.register("/fake_worker.js");
+    var p = navigator.serviceWorker.register("worker.js");
     ok(p instanceof Promise, "register() should return a Promise");
     return Promise.resolve();
   }
@@ -50,7 +50,49 @@
       ok(false, "non-HTTPS pages cannot register ServiceWorkers");
     }, function(e) {
       ok(e.name === "SecurityError", "Should fail with a SecurityError");
+    }).then(function() {
+      return new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
     });
+  }
+
+  function realWorker() {
+    var p = navigator.serviceWorker.register("worker.js");
+    return p.then(function(w) {
+      ok(w instanceof ServiceWorker, "Register a ServiceWorker");
+      info(w.scope);
+      ok(w.scope == (new URL("/*", document.baseURI)).href, "Scope should match");
+      ok(w.url == (new URL("worker.js", document.baseURI)).href, "URL should be of the worker");
+    }, function(e) {
+      info(e.name);
+      ok(false, "Registration should have succeeded!");
+    });
+  }
+
+  function abortPrevious() {
+    var p = navigator.serviceWorker.register("worker2.js", { scope: "foo/*" });
+    var q = navigator.serviceWorker.register("worker3.js", { scope: "foo/*" });
+
+    return Promise.all([
+      p.then(function(w) {
+        ok(false, "First registration should fail with AbortError");
+      }, function(e) {
+        ok(e.name === "AbortError", "First registration should fail with AbortError");
+      }),
+
+      q.then(function(w) {
+        ok(w instanceof ServiceWorker, "Second registration should succeed");
+      }, function(e) {
+        ok(false, "Second registration should succeed");
+      })
+    ]);
+  }
+
+  function networkError404() {
+    return navigator.serviceWorker.register("404.js").then(function(w) {
+        todo(false, "Should fail with NetworkError");
+      }, function(e) {
+        todo(e.name === "NetworkError", "Should fail with NetworkError");
+      });
   }
 
   function runTest() {
@@ -58,6 +100,10 @@
       .then(sameOriginWorker)
       .then(sameOriginScope)
       .then(httpsOnly)
+      .then(realWorker)
+      .then(abortPrevious)
+      // FIXME(nsm): Uncomment once we have the error trapping patch from Bug 984048.
+      // .then(networkError404)
       // put more tests here.
       .then(function() {
         SimpleTest.finish();
