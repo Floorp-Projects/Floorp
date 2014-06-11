@@ -906,3 +906,101 @@ add_task(function* test_readOnly_clone() {
   yield c.close();
   yield clone.close();
 });
+
+/**
+ * Test finalization
+ */
+add_task(function* test_closed_by_witness() {
+  let c = yield getDummyDatabase("closed_by_witness");
+
+  Services.obs.notifyObservers(null, "sqlite-finalization-witness",
+                               c._connectionData._connectionIdentifier);
+  // Since we triggered finalization ourselves, tell the witness to
+  // forget the connection so it does not trigger a finalization again
+  c._witness.forget();
+  yield c._connectionData._deferredClose.promise;
+  do_check_false(c._connectionData._open);
+});
+
+add_task(function* test_warning_message_on_finalization() {
+  let c = yield getDummyDatabase("warning_message_on_finalization");
+  let connectionIdentifier = c._connectionData._connectionIdentifier;
+  let deferred = Promise.defer();
+
+  let listener = {
+    observe: function(msg) {
+      let messageText = msg.message;
+      // Make sure the message starts with a warning containing the
+      // connection identifier
+      if (messageText.indexOf("Warning: Sqlite connection '" + connectionIdentifier + "'") !== -1) {
+        deferred.resolve();
+      }
+    }
+  };
+  Services.console.registerListener(listener);
+
+  Services.obs.notifyObservers(null, "sqlite-finalization-witness", connectionIdentifier);
+  // Since we triggered finalization ourselves, tell the witness to
+  // forget the connection so it does not trigger a finalization again
+  c._witness.forget();
+
+  yield deferred.promise;
+  Services.console.unregisterListener(listener);
+});
+
+add_task(function* test_error_message_on_unknown_finalization() {
+  let deferred = Promise.defer();
+
+  let listener = {
+    observe: function(msg) {
+      let messageText = msg.message;
+      if (messageText.indexOf("Error: Attempt to finalize unknown " +
+                              "Sqlite connection: foo") !== -1) {
+        deferred.resolve();
+      }
+    }
+  };
+  Services.console.registerListener(listener);
+  Services.obs.notifyObservers(null, "sqlite-finalization-witness", "foo");
+
+  yield deferred.promise;
+  Services.console.unregisterListener(listener);
+});
+
+add_task(function* test_forget_witness_on_close() {
+  let c = yield getDummyDatabase("forget_witness_on_close");
+
+  let forgetCalled = false;
+  let oldWitness = c._witness;
+  c._witness = {
+    forget: function () {
+      forgetCalled = true;
+      oldWitness.forget();
+    },
+  };
+
+  yield c.close();
+  // After close, witness should have forgotten the connection
+  do_check_true(forgetCalled);
+});
+
+add_task(function* test_close_database_on_gc() {
+  let deferred = Promise.defer();
+
+  for (let i = 0; i < 100; ++i) {
+    let c = yield getDummyDatabase("gc_" + i);
+    c._connectionData._deferredClose.promise.then(deferred.resolve);
+  }
+
+  // Call getDummyDatabase once more to clear any remaining
+  // references. This is needed at the moment, otherwise
+  // garbage-collection takes place after the shutdown barrier and the
+  // test will timeout. Once that is fixed, we can remove this line
+  // and be fine as long as at least one connection is
+  // garbage-collected.
+  let last = yield getDummyDatabase("gc_last");
+  yield last.close();
+
+  Components.utils.forceGC();
+  yield deferred.promise;
+});
