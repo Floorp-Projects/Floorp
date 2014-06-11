@@ -1185,6 +1185,7 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     nsHTMLReflowMetrics metrics(aReflowState);
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
+    WritingMode wm = aReflowState.GetWritingMode();
     bool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
     nscoord lineTop = havePosition ? position.mTop
                                    : reflowState->ComputedPhysicalBorderPadding().top;
@@ -1200,9 +1201,9 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
       // bullets that are placed next to a child block (bug 92896)
     
       // Tall bullets won't look particularly nice here...
-      nsRect bbox = bullet->GetRect();
-      bbox.y = position.mBaseline - metrics.TopAscent();
-      bullet->SetRect(bbox);
+      LogicalRect bbox = bullet->GetLogicalRect(wm, metrics.Width());
+      bbox.BStart(wm) = position.mBaseline - metrics.BlockStartAscent();
+      bullet->SetRect(wm, bbox, metrics.Width());
     }
     // Otherwise just leave the bullet where it is, up against our top padding.
   }
@@ -2455,13 +2456,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     if (!BulletIsEmpty()) {
       // There are no lines so we have to fake up some y motion so that
       // we end up with *some* height.
+      WritingMode wm = aState.mReflowState.GetWritingMode();
 
-      if (metrics.TopAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+      if (metrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
         nscoord ascent;
         if (nsLayoutUtils::GetFirstLineBaseline(bullet, &ascent)) {
-          metrics.SetTopAscent(ascent);
+          metrics.SetBlockStartAscent(ascent);
         } else {
-          metrics.SetTopAscent(metrics.Height());
+          metrics.SetBlockStartAscent(metrics.BSize(wm));
         }
       }
 
@@ -2474,10 +2476,11 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
-      aState.mY += std::max(minAscent, metrics.TopAscent()) +
-                   std::max(minDescent, metrics.Height() - metrics.TopAscent());
+      aState.mY += std::max(minAscent, metrics.BlockStartAscent()) +
+                   std::max(minDescent, metrics.BSize(wm) -
+                                         metrics.BlockStartAscent());
 
-      nscoord offset = minAscent - metrics.TopAscent();
+      nscoord offset = minAscent - metrics.BlockStartAscent();
       if (offset > 0) {
         bullet->SetRect(bullet->GetRect() + nsPoint(0, offset));
       }
