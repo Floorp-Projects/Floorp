@@ -154,10 +154,4 @@ public class StringUtils {
 
         return url.substring(FILTER_URL_PREFIX.length());
     }
-
-    public static boolean isShareableUrl(final String url) {
-        final String scheme = Uri.parse(url).getScheme();
-        return !(scheme.equals("about") || scheme.equals("chrome") ||
-                scheme.equals("file") || scheme.equals("resource"));
-    }
 }
