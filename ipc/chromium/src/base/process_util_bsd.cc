@@ -6,16 +6,9 @@
 
 #include "base/process_util.h"
 
-#include <sys/param.h>
-#include <sys/sysctl.h>
 #include <sys/wait.h>
-#if defined(OS_DRAGONFLY) || defined(OS_FREEBSD)
-#include <sys/user.h>
-#endif
 
-#include <ctype.h>
 #include <fcntl.h>
-#include <kvm.h>
 #include <unistd.h>
 
 #include <string>
@@ -310,65 +303,5 @@ void SetCurrentProcessPrivileges(ChildPrivileges privs) {
 }
 
 #endif
-
-NamedProcessIterator::NamedProcessIterator(const std::wstring& executable_name,
-                                           const ProcessFilter* filter)
-{
-  int numEntries;
-  kvm_t *kvm;
-  std::string exe(WideToASCII(executable_name));
-
-#if defined(OS_DRAGONFLY) || defined(OS_FREEBSD)
-  kvm  = kvm_open(NULL, NULL, NULL, O_RDONLY, NULL);
-  struct kinfo_proc* procs = kvm_getprocs(kvm, KERN_PROC_UID, getuid(), &numEntries);
-  if (procs != NULL && numEntries > 0) {
-    for (int i = 0; i < numEntries; i++) {
-#  if defined(OS_DRAGONFLY)
-    if (exe != procs[i].kp_comm) continue;
-      if (filter && !filter->Includes(procs[i].kp_pid, procs[i].kp_ppid)) continue;
-      ProcessEntry e;
-      e.pid = procs[i].kp_pid;
-      e.ppid = procs[i].kp_ppid;
-      strlcpy(e.szExeFile, procs[i].kp_comm, sizeof e.szExeFile);
-      content.push_back(e);
-#  elif defined(OS_FREEBSD)
-    if (exe != procs[i].ki_comm) continue;
-      if (filter && !filter->Includes(procs[i].ki_pid, procs[i].ki_ppid)) continue;
-      ProcessEntry e;
-      e.pid = procs[i].ki_pid;
-      e.ppid = procs[i].ki_ppid;
-      strlcpy(e.szExeFile, procs[i].ki_comm, sizeof e.szExeFile);
-      content.push_back(e);
-#  endif
-#else
-  kvm  = kvm_open(NULL, NULL, NULL, KVM_NO_FILES, NULL);
-#if defined(OS_OPENBSD)
-  struct kinfo_proc* procs = kvm_getprocs(kvm, KERN_PROC_UID, getuid(), sizeof(struct kinfo_proc), &numEntries);
-#else
-  struct kinfo_proc2* procs = kvm_getproc2(kvm, KERN_PROC_UID, getuid(), sizeof(struct kinfo_proc2), &numEntries);
-#endif
-  if (procs != NULL && numEntries > 0) {
-    for (int i = 0; i < numEntries; i++) {
-    if (exe != procs[i].p_comm) continue;
-      if (filter && !filter->Includes(procs[i].p_pid, procs[i].p_ppid)) continue;
-      ProcessEntry e;
-      e.pid = procs[i].p_pid;
-      e.ppid = procs[i].p_ppid;
-      strlcpy(e.szExeFile, procs[i].p_comm, sizeof e.szExeFile);
-      content.push_back(e);
-#endif
-    }
-  }
-  nextEntry = 0;
-  kvm_close(kvm);
-}
-
-NamedProcessIterator::~NamedProcessIterator() {
-}
-
-const ProcessEntry* NamedProcessIterator::NextProcessEntry() {
-  if (nextEntry >= content.size()) return NULL;
-  return &content[nextEntry++];
-}
 
 }  // namespace base

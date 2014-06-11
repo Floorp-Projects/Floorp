@@ -122,13 +122,6 @@ KeyStoreConnector::GetSocketAddr(const sockaddr_any& aAddr,
   MOZ_CRASH("This should never be called!");
 }
 
-static char *
-get_cert_db_filename(void *arg, int vers)
-{
-  static char keystoreDbPath[] = "/data/misc/wifi/keystore";
-  return keystoreDbPath;
-}
-
 KeyStore::KeyStore()
 {
   // Initial NSS

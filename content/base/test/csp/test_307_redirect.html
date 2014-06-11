@@ -66,7 +66,13 @@ window.done = function(result) {
 SimpleTest.waitForExplicitFinish();
 
 // save this for last so that our listeners are registered.
-document.getElementById('content_iframe').src = 'file_redirect_content.sjs?307';
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+    function() {
+      // save this for last so that our listeners are registered.
+      // ... this loads the testbed of good and bad requests.
+      document.getElementById('content_iframe').src = 'file_redirect_content.sjs?307';
+    });
 </script>
 </pre>
 </body>

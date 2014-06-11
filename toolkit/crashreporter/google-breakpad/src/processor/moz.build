@@ -28,3 +28,4 @@ LOCAL_INCLUDES += [
     '../..',
 ]
 
+include('/toolkit/crashreporter/crashreporter.mozbuild')

@@ -1,1 +1,1 @@
-X-Content-Security-Policy: default-src *; options inline-script
+Content-Security-Policy: default-src *; script-src 'unsafe-inline'
