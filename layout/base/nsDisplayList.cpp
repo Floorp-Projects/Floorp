@@ -619,7 +619,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
                                nsIFrame* aScrollFrame,
                                const nsIFrame* aReferenceFrame,
                                ContainerLayer* aRoot,
-                               const nsRect& aVisibleRect,
                                const nsRect& aViewport,
                                bool aForceNullScrollId,
                                bool aIsRoot,
@@ -627,10 +626,6 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   nsPresContext* presContext = aForFrame->PresContext();
   int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
   LayoutDeviceToLayerScale resolution(aContainerParameters.mXScale, aContainerParameters.mYScale);
-
-  nsIntRect visible = aVisibleRect.ScaleToNearestPixels(
-    resolution.scale, resolution.scale, auPerDevPixel);
-  aRoot->SetVisibleRegion(visible);
 
   nsIPresShell* presShell = presContext->GetPresShell();
   FrameMetrics metrics;
@@ -1359,7 +1354,7 @@ void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
 
   RecordFrameMetrics(aForFrame, rootScrollFrame,
                      aBuilder->FindReferenceFrameFor(aForFrame),
-                     root, mVisibleRect, viewport,
+                     root, viewport,
                      !isRoot, isRoot, containerParameters);
   if (usingDisplayport &&
       !(root->GetContentFlags() & Layer::CONTENT_OPAQUE)) {
@@ -3627,7 +3622,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
 
     container->SetScrollHandoffParentId(mScrollParentId);
     RecordFrameMetrics(mFrame, rootScrollFrame, ReferenceFrame(),
-                       container, mList.GetVisibleRect(), viewport,
+                       container, viewport,
                        false, isRootContentDocument, aContainerParameters);
   }
 
@@ -3906,8 +3901,7 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   layer->SetScrollHandoffParentId(mScrollParentId);
   RecordFrameMetrics(mScrolledFrame, mScrollFrame, ReferenceFrame(), layer,
-                     mList.GetVisibleRect(), viewport,
-                     false, false, aContainerParameters);
+                     viewport, false, false, aContainerParameters);
 
   return layer.forget();
 }
