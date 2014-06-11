@@ -365,17 +365,22 @@ ClientTiledThebesLayer::RenderLayer()
       return;
     }
 
-    TILING_PRLOG_OBJ(("TILING 0x%p: Valid region %s\n", this, tmpstr.get()), mValidRegion);
-    TILING_PRLOG_OBJ(("TILING 0x%p: Visible region %s\n", this, tmpstr.get()), mVisibleRegion);
-
-    // Make sure that tiles that fall outside of the visible region are
-    // discarded on the first update.
+    // Make sure that tiles that fall outside of the visible region or outside of the
+    // critical displayport are discarded on the first update. Also make sure that we
+    // only draw stuff inside the critical displayport on the first update.
     mValidRegion.And(mValidRegion, mVisibleRegion);
     if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
-      // Make sure that tiles that fall outside of the critical displayport are
-      // discarded on the first update.
       mValidRegion.And(mValidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
+      invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
     }
+
+    TILING_PRLOG_OBJ(("TILING 0x%p: First-transaction valid region %s\n", this, tmpstr.get()), mValidRegion);
+    TILING_PRLOG_OBJ(("TILING 0x%p: First-transaction invalid region %s\n", this, tmpstr.get()), invalidRegion);
+  } else {
+    if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
+      invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
+    }
+    TILING_PRLOG_OBJ(("TILING 0x%p: Repeat-transaction invalid region %s\n", this, tmpstr.get()), invalidRegion);
   }
 
   nsIntRegion lowPrecisionInvalidRegion;
@@ -389,8 +394,6 @@ ClientTiledThebesLayer::RenderLayer()
       lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
     }
 
-    // Clip the invalid region to the critical display-port
-    invalidRegion.And(invalidRegion, LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort));
     if (invalidRegion.IsEmpty() && lowPrecisionInvalidRegion.IsEmpty()) {
       EndPaint(true);
       return;
