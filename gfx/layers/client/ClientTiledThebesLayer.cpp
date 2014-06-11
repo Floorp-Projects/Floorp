@@ -242,10 +242,9 @@ ClientTiledThebesLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
                                            LayerManager::DrawThebesLayerCallback aCallback,
                                            void* aCallbackData)
 {
-  // Render the low precision buffer, if there's area to invalidate and the
-  // visible region is larger than the critical display port.
-  if (!aInvalidRegion.IsEmpty() &&
-      !nsIntRegion(LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort)).Contains(mVisibleRegion)) {
+  // Render the low precision buffer, if the visible region is larger than the
+  // critical display port.
+  if (!nsIntRegion(LayerIntRect::ToUntyped(mPaintData.mCriticalDisplayPort)).Contains(mVisibleRegion)) {
     nsIntRegion oldValidRegion = mContentClient->mLowPrecisionTiledBuffer.GetValidRegion();
     oldValidRegion.And(oldValidRegion, mVisibleRegion);
 
@@ -334,6 +333,7 @@ ClientTiledThebesLayer::RenderLayer()
 
   TILING_PRLOG_OBJ(("TILING 0x%p: Initial visible region %s\n", this, tmpstr.get()), mVisibleRegion);
   TILING_PRLOG_OBJ(("TILING 0x%p: Initial valid region %s\n", this, tmpstr.get()), mValidRegion);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Initial low-precision valid region %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
 
   nsIntRegion invalidRegion;
   invalidRegion.Sub(mVisibleRegion, mValidRegion);
@@ -384,23 +384,13 @@ ClientTiledThebesLayer::RenderLayer()
   }
 
   nsIntRegion lowPrecisionInvalidRegion;
-  if (!mPaintData.mCriticalDisplayPort.IsEmpty()) {
-    if (gfxPrefs::UseLowPrecisionBuffer()) {
-      // Calculate the invalid region for the low precision buffer
-      lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
-
-      // Remove the valid region from the low precision valid region (we don't
-      // validate this part of the low precision buffer).
-      lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
-    }
-
-    if (invalidRegion.IsEmpty() && lowPrecisionInvalidRegion.IsEmpty()) {
-      EndPaint(true);
-      return;
-    }
+  if (gfxPrefs::UseLowPrecisionBuffer()) {
+    // Calculate the invalid region for the low precision buffer. Make sure
+    // to remove the valid high-precision area so we don't double-paint it.
+    lowPrecisionInvalidRegion.Sub(mVisibleRegion, mLowPrecisionValidRegion);
+    lowPrecisionInvalidRegion.Sub(lowPrecisionInvalidRegion, mValidRegion);
   }
-
-  TILING_PRLOG_OBJ(("TILING 0x%p: Invalid region %s\n", this, tmpstr.get()), invalidRegion);
+  TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision invalid region %s\n", this, tmpstr.get()), lowPrecisionInvalidRegion);
 
   bool updatedHighPrecision = RenderHighPrecision(invalidRegion, callback, data);
   if (updatedHighPrecision) {
@@ -413,23 +403,26 @@ ClientTiledThebesLayer::RenderLayer()
       ClientManager()->SetRepeatTransaction();
       return;
     }
+  }
 
-    // If there are low precision updates, mark the paint as unfinished and
-    // request a repeat transaction.
-    if (!lowPrecisionInvalidRegion.IsEmpty()) {
-      ClientManager()->SetRepeatTransaction();
-      mPaintData.mLowPrecisionPaintCount = 1;
-      mPaintData.mPaintFinished = false;
-    }
-
-    // Return so that low precision updates aren't performed in the same
-    // transaction as high-precision updates.
-    EndPaint(false);
+  // If there is nothing to draw in low-precision, then we're done.
+  if (lowPrecisionInvalidRegion.IsEmpty()) {
+    EndPaint(true);
     return;
   }
 
-  TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
-  TILING_PRLOG_OBJ(("TILING 0x%p: Low-precision invalid region is %s\n", this, tmpstr.get()), lowPrecisionInvalidRegion);
+  if (updatedHighPrecision) {
+    // If there are low precision updates, but we just did some high-precision
+    // updates, then mark the paint as unfinished and request a repeat transaction.
+    // This is so that we don't perform low-precision updates in the same transaction
+    // as high-precision updates.
+    TILING_PRLOG(("TILING 0x%p: Scheduling repeat transaction for low-precision painting\n", this));
+    ClientManager()->SetRepeatTransaction();
+    mPaintData.mLowPrecisionPaintCount = 1;
+    mPaintData.mPaintFinished = false;
+    EndPaint(false);
+    return;
+  }
 
   bool updatedLowPrecision = RenderLowPrecision(lowPrecisionInvalidRegion, callback, data);
   if (updatedLowPrecision) {
