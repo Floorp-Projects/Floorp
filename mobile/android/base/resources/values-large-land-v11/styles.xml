@@ -70,8 +70,10 @@
     <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
-        <item name="android:paddingLeft">36dp</item>
-        <item name="android:paddingRight">36dp</item>
+        <item name="android:paddingLeft">6dp</item>
+        <item name="android:paddingRight">6dp</item>
+        <item name="android:layout_marginLeft">12dp</item>
+        <item name="android:layout_marginRight">12dp</item>
         <item name="android:textSize">16dp</item>
     </style>
 

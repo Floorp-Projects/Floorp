@@ -93,4 +93,19 @@
         <item name="android:paddingRight">32dp</item>
     </style>
 
+    <!-- Tabs panel -->
+    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+        <item name="android:paddingLeft">84dp</item>
+        <item name="android:paddingRight">84dp</item>
+    </style>
+
+    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:paddingLeft">9dp</item>
+        <item name="android:paddingRight">9dp</item>
+        <item name="android:layout_marginLeft">90dp</item>
+        <item name="android:layout_marginRight">90dp</item>
+    </style>
+
 </resources>
