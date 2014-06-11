@@ -17,6 +17,10 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
     // vertex attribute pointers
     gl::GLContext* gl = mContext->gl;
 
+    WebGLRefPtr<WebGLVertexArray> prevVertexArray = mContext->mBoundVertexArray;
+
+    mContext->mBoundVertexArray = this;
+
     WebGLRefPtr<WebGLBuffer> prevBuffer = mContext->mBoundArrayBuffer;
     mContext->BindBuffer(LOCAL_GL_ELEMENT_ARRAY_BUFFER, mElementArrayBuffer);
 
@@ -31,6 +35,14 @@ WebGLVertexArrayFake::BindVertexArrayImpl()
         if (vd.enabled) {
             gl->fEnableVertexAttribArray(i);
         } else {
+            gl->fDisableVertexAttribArray(i);
+        }
+    }
+
+    for (size_t i = mAttribs.Length(); i < prevVertexArray->mAttribs.Length(); ++i) {
+        const WebGLVertexAttribData& vd = prevVertexArray->mAttribs[i];
+
+        if (vd.enabled) {
             gl->fDisableVertexAttribArray(i);
         }
     }
