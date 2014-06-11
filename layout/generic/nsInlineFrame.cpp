@@ -706,13 +706,14 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // The height of our box is the sum of our font size plus the top
     // and bottom border and padding. The height of children do not
     // affect our height.
-    aMetrics.SetTopAscent(fm->MaxAscent());
+    aMetrics.SetBlockStartAscent(fm->MaxAscent());
     aMetrics.Height() = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
-    aMetrics.SetTopAscent(aMetrics.Height() = 0);
+    aMetrics.SetBlockStartAscent(aMetrics.Height() = 0);
   }
-  aMetrics.SetTopAscent(aMetrics.TopAscent() + aReflowState.ComputedPhysicalBorderPadding().top);
+  aMetrics.SetBlockStartAscent(aMetrics.BlockStartAscent() +
+                               framePadding.BStart(frameWM));
   aMetrics.Height() += aReflowState.ComputedPhysicalBorderPadding().top +
     aReflowState.ComputedPhysicalBorderPadding().bottom;
 

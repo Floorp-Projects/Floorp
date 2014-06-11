@@ -11,7 +11,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/storage.h"
-#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/DOMStringList.h"
 #include "mozilla/dom/DOMStringListBinding.h"
 #include "mozilla/dom/quota/Client.h"
@@ -39,7 +39,7 @@
 #include "mozilla/dom/IDBDatabaseBinding.h"
 
 USING_INDEXEDDB_NAMESPACE
-using mozilla::dom::ContentParent;
+using mozilla::dom::nsIContentParent;
 using mozilla::dom::quota::AssertIsOnIOThread;
 using mozilla::dom::quota::Client;
 using mozilla::dom::quota::QuotaManager;
@@ -183,7 +183,7 @@ IDBDatabase::Create(IDBWrapperCache* aOwnerCache,
                     already_AddRefed<DatabaseInfo> aDatabaseInfo,
                     const nsACString& aASCIIOrigin,
                     FileManager* aFileManager,
-                    mozilla::dom::ContentParent* aContentParent)
+                    mozilla::dom::nsIContentParent* aContentParent)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
   NS_ASSERTION(aFactory, "Null pointer!");

@@ -8,6 +8,7 @@
 include protocol PBlob;
 include protocol PColorPicker;
 include protocol PContent;
+include protocol PContentBridge;
 include protocol PDocumentRenderer;
 include protocol PContentPermissionRequest;
 include protocol PFilePicker;
@@ -70,7 +71,7 @@ union MaybeNativeKeyBinding
 
 intr protocol PBrowser
 {
-    manager PContent;
+    manager PContent or PContentBridge;
 
     manages PColorPicker;
     manages PDocumentRenderer;
@@ -355,6 +356,15 @@ parent:
      */
     UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId, bool aIsRoot,
                           ZoomConstraints aConstraints);
+
+    /**
+     * Brings up the auth prompt dialog.
+     * Called when this is the PBrowserParent for a nested remote iframe.
+     * aCallbackId corresponds to an nsIAuthPromptCallback that lives in the
+     * root process.  It will be passed back to the root process with either the
+     * OnAuthAvailable or OnAuthCancelled message.
+     */
+    AsyncAuthPrompt(nsCString uri, nsString realm, uint64_t aCallbackId);
 
     __delete__();
 
