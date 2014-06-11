@@ -1287,15 +1287,17 @@ nsLineLayout::CanPlaceFrame(PerFrameData* pfd,
 void
 nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 {
-  // Record ascent and update max-ascent and max-descent values
-  if (aMetrics.TopAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
-    pfd->mAscent = pfd->mFrame->GetBaseline();
-  else
-    pfd->mAscent = aMetrics.TopAscent();
-
-  // Advance to next inline coordinate
   WritingMode frameWM = pfd->mFrame->GetWritingMode();
   WritingMode lineWM = mRootSpan->mWritingMode;
+
+  // Record ascent and update max-ascent and max-descent values
+  if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+    pfd->mAscent = pfd->mFrame->GetBaseline();
+  } else {
+    pfd->mAscent = aMetrics.BlockStartAscent();
+  }
+
+  // Advance to next inline coordinate
   mCurrentSpan->mICoord = pfd->mBounds.IEnd(lineWM) +
                           pfd->mMargin.ConvertTo(lineWM, frameWM).IEnd(lineWM);
 
@@ -1326,17 +1328,18 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     mLineBox->SetHasBullet();
   }
 
+  WritingMode lineWM = mRootSpan->mWritingMode;
   PerFrameData* pfd = NewPerFrameData(aFrame);
   mRootSpan->AppendFrame(pfd);
   pfd->SetFlag(PFD_ISBULLET, true);
-  if (aMetrics.TopAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE)
+  if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
     pfd->mAscent = aFrame->GetBaseline();
-  else
-    pfd->mAscent = aMetrics.TopAscent();
+  } else {
+    pfd->mAscent = aMetrics.BlockStartAscent();
+  }
 
   // Note: block-coord value will be updated during block-direction alignment
-  pfd->mBounds = LogicalRect(mRootSpan->mWritingMode,
-                             aFrame->GetRect(), mContainerWidth);
+  pfd->mBounds = LogicalRect(lineWM, aFrame->GetRect(), mContainerWidth);
   pfd->mOverflowAreas = aMetrics.mOverflowAreas;
 }
 

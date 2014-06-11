@@ -324,8 +324,8 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nsIFrame* overFrame = nullptr;
   nsIFrame* underFrame = nullptr;
   nsIFrame* baseFrame = mFrames.FirstChild();
-  underSize.SetTopAscent(0);
-  overSize.SetTopAscent(0);
+  underSize.SetBlockStartAscent(0);
+  overSize.SetBlockStartAscent(0);
   bool haveError = false;
   if (baseFrame) {
     if (tag == nsGkAtoms::munder_ ||
@@ -547,8 +547,10 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   nsBoundingMetrics bmAnonymousBase = mBoundingMetrics;
   nscoord ascentAnonymousBase =
     std::max(mBoundingMetrics.ascent + overDelta2,
-           overSize.TopAscent() + bmOver.descent + overDelta1 + bmBase.ascent);
-  ascentAnonymousBase = std::max(ascentAnonymousBase, baseSize.TopAscent());
+             overSize.BlockStartAscent() + bmOver.descent +
+             overDelta1 + bmBase.ascent);
+  ascentAnonymousBase = std::max(ascentAnonymousBase,
+                                 baseSize.BlockStartAscent());
 
   // Width of non-spacing marks is zero so use left and right bearing.
   nscoord underWidth = bmUnder.width;
@@ -587,35 +589,37 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   mBoundingMetrics.rightBearing = 
     std::max(dxAnonymousBase + bmAnonymousBase.rightBearing, dxUnder + bmUnder.rightBearing);
 
-  aDesiredSize.SetTopAscent(ascentAnonymousBase);
-  aDesiredSize.Height() = aDesiredSize.TopAscent() +
+  aDesiredSize.SetBlockStartAscent(ascentAnonymousBase);
+  aDesiredSize.Height() = aDesiredSize.BlockStartAscent() +
     std::max(mBoundingMetrics.descent + underDelta2,
            bmAnonymousBase.descent + underDelta1 + bmUnder.ascent +
-             underSize.Height() - underSize.TopAscent());
+             underSize.Height() - underSize.BlockStartAscent());
   aDesiredSize.Height() = std::max(aDesiredSize.Height(),
-                               aDesiredSize.TopAscent() +
-                               baseSize.Height() - baseSize.TopAscent());
+                               aDesiredSize.BlockStartAscent() +
+                               baseSize.Height() - baseSize.BlockStartAscent());
   aDesiredSize.Width() = mBoundingMetrics.width;
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.TopAscent();
+  mReference.y = aDesiredSize.BlockStartAscent();
 
   if (aPlaceOrigin) {
     nscoord dy;
     // place overscript
     if (overFrame) {
-      dy = aDesiredSize.TopAscent() - mBoundingMetrics.ascent + bmOver.ascent 
-        - overSize.TopAscent();
+      dy = aDesiredSize.BlockStartAscent() -
+           mBoundingMetrics.ascent + bmOver.ascent -
+           overSize.BlockStartAscent();
       FinishReflowChild (overFrame, PresContext(), overSize, nullptr, dxOver, dy, 0);
     }
     // place base
-    dy = aDesiredSize.TopAscent() - baseSize.TopAscent();
+    dy = aDesiredSize.BlockStartAscent() - baseSize.BlockStartAscent();
     FinishReflowChild (baseFrame, PresContext(), baseSize, nullptr, dxBase, dy, 0);
     // place underscript
     if (underFrame) {
-      dy = aDesiredSize.TopAscent() + mBoundingMetrics.descent - bmUnder.descent 
-        - underSize.TopAscent();
+      dy = aDesiredSize.BlockStartAscent() +
+           mBoundingMetrics.descent - bmUnder.descent -
+           underSize.BlockStartAscent();
       FinishReflowChild (underFrame, PresContext(), underSize, nullptr,
                          dxUnder, dy, 0);
     }

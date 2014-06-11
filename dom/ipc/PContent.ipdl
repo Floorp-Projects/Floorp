@@ -10,6 +10,7 @@ include protocol PBlob;
 include protocol PBluetooth;
 include protocol PBrowser;
 include protocol PCompositor;
+include protocol PContentBridge;
 include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
 include protocol PExternalHelperApp;
@@ -443,6 +444,11 @@ parent:
     sync GetXPCOMProcessAttributes()
         returns (bool isOffline);
 
+    sync CreateChildProcess(IPCTabContext context,
+                            ProcessPriority priority)
+        returns (uint64_t id, bool isForApp, bool isForBrowser);
+    intr BridgeToChildProcess(uint64_t id);
+
     async PJavaScript();
 
     PDeviceStorageRequest(DeviceStorageParams params);
@@ -589,6 +595,11 @@ parent:
 
     sync KeywordToURI(nsCString keyword)
         returns (OptionalInputStreamParams postData, OptionalURIParams uri);
+
+    // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
+    sync AllocateLayerTreeId()
+        returns (uint64_t id);
+    async DeallocateLayerTreeId(uint64_t id);
 
     sync SpeakerManagerForceSpeaker(bool aEnable);
 
