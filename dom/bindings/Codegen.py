@@ -5642,7 +5642,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             return CGGeneric("JS::Value"), None, None, None
         return CGGeneric("JS::Rooted<JS::Value>"), "ptr", None, "cx"
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
-        return CGGeneric("JSObject*"), None, None, None
+        if isMember:
+            return CGGeneric("JSObject*"), None, None, None
+        return CGGeneric("JS::Rooted<JSObject*>"), "ptr", None, "cx"
     if returnType.isSequence():
         nullable = returnType.nullable()
         if nullable:
@@ -11588,13 +11590,19 @@ class CGNativeMember(ClassMethod):
             return "void", "", "aRetVal.set(${declName});\n"
 
         if type.isObject():
-            return "JSObject*", "nullptr", "return ${declName};\n"
+            if isMember:
+                # No need for a third element in the isMember case
+                return "JSObject*", None, None
+            return "void", "", "aRetVal.set(${declName});\n"
         if type.isSpiderMonkeyInterface():
+            if isMember:
+                # No need for a third element in the isMember case
+                return "JSObject*", None, None
             if type.nullable():
-                returnCode = "return ${declName}.IsNull() ? nullptr : ${declName}.Value().Obj();\n"
+                returnCode = "${declName}.IsNull() ? nullptr : ${declName}.Value().Obj();\n"
             else:
-                returnCode = "return ${declName}.Obj();\n"
-            return "JSObject*", "nullptr", returnCode
+                returnCode = "${declName}.Obj();\n"
+            return "void", "", "aRetVal.set(%s);\n" % returnCode
         if type.isSequence():
             # If we want to handle sequence-of-sequences return values, we're
             # going to need to fix example codegen to not produce nsTArray<void>
@@ -11686,6 +11694,8 @@ class CGNativeMember(ClassMethod):
                                  "aRetVal"))
         elif returnType.isAny():
             args.append(Argument("JS::MutableHandle<JS::Value>", "aRetVal"))
+        elif returnType.isObject() or returnType.isSpiderMonkeyInterface():
+            args.append(Argument("JS::MutableHandle<JSObject*>", "aRetVal"))
 
         # And the ErrorResult
         if 'infallible' not in self.extendedAttrs:
@@ -13566,7 +13576,8 @@ class CGEventGetter(CGNativeMember):
                 if (${memberName}) {
                   JS::ExposeObjectToActiveJS(${memberName});
                 }
-                return ${memberName};
+                aRetVal.set(${memberName});
+                return;
                 """,
                 memberName=memberName)
         if type.isAny():

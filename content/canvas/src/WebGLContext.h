@@ -285,7 +285,9 @@ public:
     void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
     bool IsContextLost() const { return mContextStatus != ContextNotLost; }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
-    JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
+    void GetExtension(JSContext* cx, const nsAString& aName,
+                      JS::MutableHandle<JSObject*> aRetval,
+                      ErrorResult& rv);
     void ActiveTexture(GLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, GLuint location,
