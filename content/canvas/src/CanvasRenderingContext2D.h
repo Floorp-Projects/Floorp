@@ -400,7 +400,8 @@ public:
                                      mozilla::ErrorResult& error);
   void GetFillRule(nsAString& fillRule);
   void SetFillRule(const nsAString& fillRule);
-  JS::Value GetMozDash(JSContext* cx, mozilla::ErrorResult& error);
+  void GetMozDash(JSContext* cx, JS::MutableHandle<JS::Value> retval,
+		  mozilla::ErrorResult& error);
   void SetMozDash(JSContext* cx, const JS::Value& mozDash,
                   mozilla::ErrorResult& error);
 

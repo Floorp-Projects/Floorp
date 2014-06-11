@@ -441,12 +441,12 @@ nsDOMCameraControl::SetZoom(double aZoom, ErrorResult& aRv)
 }
 
 /* attribute jsval meteringAreas; */
-JS::Value
-nsDOMCameraControl::GetMeteringAreas(JSContext* cx, ErrorResult& aRv)
+void
+nsDOMCameraControl::GetMeteringAreas(JSContext* cx,
+				     JS::MutableHandle<JS::Value> aMeteringAreas,
+				     ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> areas(cx);
-  aRv = Get(cx, CAMERA_PARAM_METERINGAREAS, areas.address());
-  return areas;
+  aRv = Get(cx, CAMERA_PARAM_METERINGAREAS, aMeteringAreas.address());
 }
 
 void
@@ -456,12 +456,12 @@ nsDOMCameraControl::SetMeteringAreas(JSContext* cx, JS::Handle<JS::Value> aMeter
             mCurrentConfiguration->mMaxMeteringAreas);
 }
 
-JS::Value
-nsDOMCameraControl::GetFocusAreas(JSContext* cx, ErrorResult& aRv)
+void
+nsDOMCameraControl::GetFocusAreas(JSContext* cx,
+				  JS::MutableHandle<JS::Value> aFocusAreas,
+				  ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> value(cx);
-  aRv = Get(cx, CAMERA_PARAM_FOCUSAREAS, value.address());
-  return value;
+  aRv = Get(cx, CAMERA_PARAM_FOCUSAREAS, aFocusAreas.address());
 }
 void
 nsDOMCameraControl::SetFocusAreas(JSContext* cx, JS::Handle<JS::Value> aFocusAreas, ErrorResult& aRv)
@@ -494,19 +494,18 @@ GetSize(JSContext* aCx, JS::Value* aValue, const ICameraControl::Size& aSize)
 }
 
 /* attribute any pictureSize */
-JS::Value
-nsDOMCameraControl::GetPictureSize(JSContext* cx, ErrorResult& aRv)
+void
+nsDOMCameraControl::GetPictureSize(JSContext* cx,
+				   JS::MutableHandle<JS::Value> aSize,
+				   ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> value(cx);
-
   ICameraControl::Size size;
   aRv = mCameraControl->Get(CAMERA_PARAM_PICTURE_SIZE, size);
   if (aRv.Failed()) {
-    return value;
+    return;
   }
 
-  aRv = GetSize(cx, value.address(), size);
-  return value;
+  aRv = GetSize(cx, aSize.address(), size);
 }
 void
 nsDOMCameraControl::SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, ErrorResult& aRv)
@@ -522,19 +521,18 @@ nsDOMCameraControl::SetPictureSize(JSContext* aCx, JS::Handle<JS::Value> aSize, 
 }
 
 /* attribute any thumbnailSize */
-JS::Value
-nsDOMCameraControl::GetThumbnailSize(JSContext* aCx, ErrorResult& aRv)
+void
+nsDOMCameraControl::GetThumbnailSize(JSContext* aCx,
+				     JS::MutableHandle<JS::Value> aSize,
+				     ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> value(aCx);
-
   ICameraControl::Size size;
   aRv = mCameraControl->Get(CAMERA_PARAM_THUMBNAILSIZE, size);
   if (aRv.Failed()) {
-    return value;
+    return;
   }
 
-  aRv = GetSize(aCx, value.address(), size);
-  return value;
+  aRv = GetSize(aCx, aSize.address(), size);
 }
 void
 nsDOMCameraControl::SetThumbnailSize(JSContext* aCx, JS::Handle<JS::Value> aSize, ErrorResult& aRv)

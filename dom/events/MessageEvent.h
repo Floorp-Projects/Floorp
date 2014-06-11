@@ -46,7 +46,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  JS::Value GetData(JSContext* aCx, ErrorResult& aRv);
+  void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
+               ErrorResult& aRv);
 
   void GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const;
 
