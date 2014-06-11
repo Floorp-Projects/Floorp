@@ -5638,7 +5638,9 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         name = returnType.unroll().identifier.name
         return CGGeneric("nsRefPtr<%s>" % name), None, None, None
     if returnType.isAny():
-        return CGGeneric("JS::Value"), None, None, None
+        if isMember:
+            return CGGeneric("JS::Value"), None, None, None
+        return CGGeneric("JS::Rooted<JS::Value>"), "ptr", None, "cx"
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
         return CGGeneric("JSObject*"), None, None, None
     if returnType.isSequence():
@@ -11579,7 +11581,12 @@ class CGNativeMember(ClassMethod):
             return ("already_AddRefed<%s>" % type.unroll().identifier.name,
                     "nullptr", "return ${declName}.forget();\n")
         if type.isAny():
-            return "JS::Value", "JS::UndefinedValue()", "return ${declName};\n"
+            if isMember:
+                # No need for a third element in the isMember case
+                return "JS::Value", None, None
+            # Outparam
+            return "void", "", "aRetVal.set(${declName});\n"
+
         if type.isObject():
             return "JSObject*", "nullptr", "return ${declName};\n"
         if type.isSpiderMonkeyInterface():
@@ -11677,6 +11684,9 @@ class CGNativeMember(ClassMethod):
             args.append(Argument("%s&" %
                                  CGUnionStruct.unionTypeDecl(returnType, True),
                                  "aRetVal"))
+        elif returnType.isAny():
+            args.append(Argument("JS::MutableHandle<JS::Value>", "aRetVal"))
+
         # And the ErrorResult
         if 'infallible' not in self.extendedAttrs:
             # Use aRv so it won't conflict with local vars named "rv"
@@ -13563,7 +13573,8 @@ class CGEventGetter(CGNativeMember):
             return fill(
                 """
                 JS::ExposeValueToActiveJS(${memberName});
-                return ${memberName};
+                aRetVal.set(${memberName});
+                return;
                 """,
                 memberName=memberName)
         if type.isUnion():
