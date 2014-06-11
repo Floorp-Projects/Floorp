@@ -43,7 +43,7 @@ runAll(steps);
  * the app itself is from a different origin (http://test1.example.com).
  */
 function installAppFromOwnOrigin(next) {
-  confirmNextInstall();
+  confirmNextPopup();
   navigator.mozApps.install(url1, null).onsuccess = function onInstall() {
     app1 = this.result;
     next();
@@ -93,7 +93,9 @@ function getAll(next) {
 }
 
 function uninstall(next) {
+  confirmNextPopup();
   navigator.mozApps.mgmt.uninstall(app1).onsuccess = function onUninstallApp1() {
+    confirmNextPopup();
     navigator.mozApps.mgmt.uninstall(app2).onsuccess = function onUninstallApp2() {
       next();
     };
