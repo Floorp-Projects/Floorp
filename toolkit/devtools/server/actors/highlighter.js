@@ -508,6 +508,10 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
 
     this._svgRoot = this._createSVGNode("root", "svg", this._highlighterContainer);
 
+    // Set the SVG canvas height to 0 to stop content jumping around on small
+    // screens.
+    this._svgRoot.setAttribute("height", "0");
+
     this._boxModelContainer = this._createSVGNode("container", "g", this._svgRoot);
 
     this._boxModelNodes = {
