@@ -56,9 +56,11 @@
                        tabindex="0"/>
       </toolbar>
       <splitter class="devtools-horizontal-splitter"/>
-      <box id="web-audio-content-pane" flex="1">
+      <box id="web-audio-content-pane"
+           class="devtools-responsive-container"
+           flex="1">
         <hbox flex="1">
-          <box id="web-audio-graph" class="devtools-responsive-container" flex="1">
+          <box id="web-audio-graph" flex="1">
             <vbox flex="1">
               <svg id="graph-svg" flex="1" viewBox="0 0 1000 500"
                   xmlns="http://www.w3.org/2000/svg"
