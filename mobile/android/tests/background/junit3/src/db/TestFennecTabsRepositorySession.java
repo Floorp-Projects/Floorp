@@ -9,12 +9,15 @@ import org.mozilla.gecko.background.sync.helpers.ExpectFetchDelegate;
 import org.mozilla.gecko.background.sync.helpers.SessionTestHelper;
 import org.mozilla.gecko.background.testhelpers.MockClientsDataDelegate;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
+import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository.FennecTabsRepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 
@@ -28,10 +31,14 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
   public static final MockClientsDataDelegate clientsDataDelegate = new MockClientsDataDelegate();
   public static final String TEST_CLIENT_GUID = clientsDataDelegate.getAccountGUID();
   public static final String TEST_CLIENT_NAME = clientsDataDelegate.getClientName();
+  public static final String TEST_CLIENT_DEVICE_TYPE = "phablet";
 
   // Override these to test against data that is not live.
   public static final String TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS ?";
   public static final String[] TEST_TABS_CLIENT_GUID_IS_LOCAL_SELECTION_ARGS = new String[] { TEST_CLIENT_GUID };
+
+  public static final String TEST_CLIENTS_GUID_IS_LOCAL_SELECTION = BrowserContract.Clients.GUID + " IS ?";
+  public static final String[] TEST_CLIENTS_GUID_IS_LOCAL_SELECTION_ARGS = new String[] { TEST_CLIENT_GUID };
 
   protected ContentProviderClient tabsClient = null;
 
@@ -214,5 +221,56 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     performWait(fetchSinceRunnable(session, now, new Record[] { tabsRecord }));
 
     session.abort();
+  }
+
+  // Verify that storing a tabs record writes a clients record with the correct
+  // device type to the Fennec clients provider.
+  public void testStore() throws NoContentProviderException, RemoteException {
+    // Get a valid tabsRecord to write.
+    final TabsRecord tabsRecord = insertTestTabsAndExtractTabsRecord();
+    deleteAllTestTabs(tabsClient);
+
+    final ContentResolver cr = getApplicationContext().getContentResolver();
+    final ContentProviderClient clientsClient = cr.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
+
+    try {
+      // We can't delete only our test clients due to a Fennec CP issue with guid vs. client_guid.
+      clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, null, null);
+
+      // This clients DB is not the Fennec DB; it's Sync's own clients DB.
+      final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(getApplicationContext());
+      try {
+        ClientRecord clientRecord = new ClientRecord(TEST_CLIENT_GUID);
+        clientRecord.name = TEST_CLIENT_NAME;
+        clientRecord.type = TEST_CLIENT_DEVICE_TYPE;
+        db.store(clientRecord);
+      } finally {
+        db.close();
+      }
+
+      final FennecTabsRepositorySession session = createAndBeginSession();
+      performWait(AndroidBrowserRepositoryTestCase.storeRunnable(session, tabsRecord));
+
+      session.abort();
+
+      // This store should write Sync's idea of the client's device_type to Fennec's clients CP.
+      final Cursor cursor = clientsClient.query(BrowserContractHelpers.CLIENTS_CONTENT_URI, null,
+          TEST_CLIENTS_GUID_IS_LOCAL_SELECTION, TEST_CLIENTS_GUID_IS_LOCAL_SELECTION_ARGS, null);
+      assertNotNull(cursor);
+
+      try {
+        assertTrue(cursor.moveToFirst());
+        assertEquals(TEST_CLIENT_GUID, cursor.getString(cursor.getColumnIndex(Clients.GUID)));
+        assertEquals(TEST_CLIENT_NAME, cursor.getString(cursor.getColumnIndex(Clients.NAME)));
+        assertEquals(TEST_CLIENT_DEVICE_TYPE, cursor.getString(cursor.getColumnIndex(Clients.DEVICE_TYPE)));
+        assertTrue(cursor.isLast());
+      } finally {
+        cursor.close();
+      }
+    } finally {
+      // We can't delete only our test client due to a Fennec CP issue with guid vs. client_guid.
+      clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, null, null);
+      clientsClient.release();
+    }
   }
 }
