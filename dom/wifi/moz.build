@@ -5,10 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIDOMMozWifiConnectionInfoEvent.idl',
-    'nsIDOMMozWifiP2pStatusChangeEvent.idl',
-    'nsIDOMMozWifiStationInfoEvent.idl',
-    'nsIDOMMozWifiStatusChangeEvent.idl',
     'nsIWifi.idl',
     'nsIWifiCertService.idl',
     'nsIWifiService.idl',

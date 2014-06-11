@@ -5,7 +5,7 @@
  */
 interface MozVoicemailStatus;
 
-[Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict), HeaderFile="GeneratedEventClasses.h", Pref="dom.voicemail.enabled"]
+[Constructor(DOMString type, optional MozVoicemailEventInit eventInitDict), Pref="dom.voicemail.enabled"]
 interface MozVoicemailEvent : Event
 {
   readonly attribute MozVoicemailStatus? status;

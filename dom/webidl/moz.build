@@ -42,7 +42,6 @@ WEBIDL_FILES = [
     'BiquadFilterNode.webidl',
     'Blob.webidl',
     'BrowserElementDictionaries.webidl',
-    'CallEvent.webidl',
     'CallsList.webidl',
     'CameraCapabilities.webidl',
     'CameraControl.webidl',
@@ -533,9 +532,7 @@ WEBIDL_FILES += [
     'ElementReplaceEvent.webidl',
     'HashChangeEvent.webidl',
     'MozApplicationEvent.webidl',
-    'MozMmsEvent.webidl',
     'MozSettingsEvent.webidl',
-    'MozSmsEvent.webidl',
     'PageTransitionEvent.webidl',
     'PopStateEvent.webidl',
     'PopupBlockedEvent.webidl',
@@ -571,7 +568,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'DOMMMIError.webidl',
         'IccCardLockError.webidl',
         'MozCellBroadcast.webidl',
-        'MozCellBroadcastEvent.webidl',
         'MozIcc.webidl',
         'MozIccManager.webidl',
         'MozMobileCellInfo.webidl',
@@ -580,7 +576,6 @@ if CONFIG['MOZ_B2G_RIL']:
         'MozMobileConnectionInfo.webidl',
         'MozMobileNetworkInfo.webidl',
         'MozVoicemail.webidl',
-        'MozVoicemailEvent.webidl',
     ]
 
 if CONFIG['MOZ_NFC']:
@@ -599,12 +594,8 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'MozNetworkStatsInterface.webidl',
         'MozSpeakerManager.webidl',
         'MozWifiCapabilities.webidl',
-        'MozWifiConnectionInfoEvent.webidl',
         'MozWifiManager.webidl',
         'MozWifiP2pManager.webidl',
-        'MozWifiP2pStatusChangeEvent.webidl',
-        'MozWifiStationInfoEvent.webidl',
-        'MozWifiStatusChangeEvent.webidl',
     ]
 else:
     WEBIDL_FILES += [
@@ -630,6 +621,7 @@ if not CONFIG['MOZ_DISABLE_CRYPTOLEGACY']:
 GENERATED_EVENTS_WEBIDL_FILES = [
     'AutocompleteErrorEvent.webidl',
     'BlobEvent.webidl',
+    'CallEvent.webidl',
     'CallGroupErrorEvent.webidl',
     'CFStateChangeEvent.webidl',
     'DataErrorEvent.webidl',
@@ -644,7 +636,9 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     'MozContactChangeEvent.webidl',
     'MozEmergencyCbModeEvent.webidl',
     'MozInterAppMessageEvent.webidl',
+    'MozMmsEvent.webidl',
     'MozOtaStatusEvent.webidl',
+    'MozSmsEvent.webidl',
     'MozStkCommandEvent.webidl',
     'ProgressEvent.webidl',
     'RTCDataChannelEvent.webidl',
@@ -677,6 +671,20 @@ if CONFIG['MOZ_B2G_BT']:
     GENERATED_EVENTS_WEBIDL_FILES += [
         'BluetoothDeviceEvent.webidl',
         'BluetoothStatusChangedEvent.webidl',
+    ]
+
+if CONFIG['MOZ_B2G_RIL']:
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'MozCellBroadcastEvent.webidl',
+        'MozVoicemailEvent.webidl',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    GENERATED_EVENTS_WEBIDL_FILES += [
+        'MozWifiConnectionInfoEvent.webidl',
+        'MozWifiP2pStatusChangeEvent.webidl',
+        'MozWifiStationInfoEvent.webidl',
+        'MozWifiStatusChangeEvent.webidl',
     ]
 
 if CONFIG['MOZ_BUILD_APP'] in ['browser', 'xulrunner']:

@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "TelephonyCall.h"
+#include "mozilla/dom/CallEvent.h"
 #include "mozilla/dom/TelephonyCallBinding.h"
 
 #include "mozilla/dom/DOMError.h"
 
-#include "CallEvent.h"
 #include "Telephony.h"
 #include "TelephonyCallGroup.h"
 
@@ -145,7 +145,12 @@ TelephonyCall::DispatchCallEvent(const nsAString& aType,
 {
   MOZ_ASSERT(aCall);
 
-  nsRefPtr<CallEvent> event = CallEvent::Create(this, aType, aCall, false, false);
+  CallEventInit init;
+  init.mBubbles = false;
+  init.mCancelable = false;
+  init.mCall = aCall;
+
+  nsRefPtr<CallEvent> event = CallEvent::Constructor(this, aType, init);
 
   return DispatchTrustedEvent(event);
 }

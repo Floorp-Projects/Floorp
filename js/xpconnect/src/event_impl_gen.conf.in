@@ -21,19 +21,7 @@ simple_events = [
     'StyleRuleChangeEvent',
     'StyleSheetChangeEvent',
     'StyleSheetApplicableStateChangeEvent',
-#ifdef MOZ_WIDGET_GONK
-    'MozWifiP2pStatusChangeEvent',
-    'MozWifiStatusChangeEvent',
-    'MozWifiConnectionInfoEvent',
-    'MozWifiStationInfoEvent',
-#endif
-#ifdef MOZ_B2G_RIL
-    'MozCellBroadcastEvent',
-    'MozVoicemailEvent',
-#endif
     'ElementReplaceEvent',
-    'MozSmsEvent',
-    'MozMmsEvent',
 #ifdef MOZ_WEBSPEECH
     'SpeechSynthesisEvent',
 #endif
