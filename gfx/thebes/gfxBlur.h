@@ -86,6 +86,8 @@ public:
         return mContext;
     }
 
+    mozilla::TemporaryRef<mozilla::gfx::SourceSurface> DoBlur(mozilla::gfx::DrawTarget* aDT, mozilla::gfx::IntPoint* aTopLeft);
+
     /**
      * Does the actual blurring/spreading and mask applying. Users of this
      * object must have drawn whatever they want to be blurred onto the internal
@@ -128,6 +130,8 @@ public:
                               const gfxRGBA& aShadowColor,
                               const gfxRect& aDirtyRect,
                               const gfxRect& aSkipRect);
+
+    static void ShutdownBlurCache();
 
 
 

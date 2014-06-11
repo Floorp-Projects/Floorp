@@ -63,11 +63,6 @@ members = [
 
     # dom/indexedDB
     'nsIIndexedDatabaseManager.*',
-
-    # dom/quota
-    'nsIQuotaManager.*',
-    'nsIQuotaRequest.*',
-    'nsIUsageCallback.*',
     ]
 
 # Most interfaces can be found by searching the includePath; to find

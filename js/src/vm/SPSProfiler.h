@@ -403,6 +403,12 @@ class SPSInstrumentation
         frame->script = script;
     }
 
+    JSScript *getPushed() {
+        if (!enabled())
+            return nullptr;
+        return frame->script;
+    }
+
     /*
      * Flags entry into a JS function for the first time. Before this is called,
      * no instrumentation is emitted, but after this instrumentation is emitted.
