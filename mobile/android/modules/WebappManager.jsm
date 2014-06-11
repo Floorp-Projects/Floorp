@@ -194,6 +194,12 @@ this.WebappManager = {
     });
   },
 
+  askUninstall: function(aData) {
+    // Android does not currently support automatic uninstalling of apps.
+    // See bug 1019054.
+    DOMApplicationRegistry.denyUninstall(aData, "NOT_SUPPORTED");
+  },
+
   launch: function({ apkPackageName }) {
     debug("launch: " + apkPackageName);
 
@@ -633,8 +639,7 @@ this.WebappManager = {
         let app = DOMApplicationRegistry.webapps[id];
         if (aData.apkPackageNames.indexOf(app.apkPackageName) > -1) {
           debug("attempting to uninstall " + app.name);
-          DOMApplicationRegistry.uninstall(
-            app.manifestURL,
+          DOMApplicationRegistry.uninstall(app.manifestURL).then(
             function() {
               debug("success uninstalling " + app.name);
             },
