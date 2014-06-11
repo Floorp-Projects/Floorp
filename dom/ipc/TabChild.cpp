@@ -617,6 +617,15 @@ private:
 
 StaticRefPtr<TabChild> sPreallocatedTab;
 
+/*static*/
+std::map<uint64_t, nsRefPtr<TabChild> >&
+TabChild::NestedTabChildMap()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static std::map<uint64_t, nsRefPtr<TabChild> > sNestedTabChildMap;
+  return sNestedTabChildMap;
+}
+
 /*static*/ void
 TabChild::PreloadSlowThings()
 {
@@ -696,6 +705,7 @@ TabChild::TabChild(nsIContentChild* aManager, const TabContext& aContext, uint32
   , mIgnoreKeyPressEvent(false)
   , mActiveElementManager(new ActiveElementManager())
   , mHasValidInnerSize(false)
+  , mUniqueId(0)
 {
   if (!sActiveDurationMsSet) {
     Preferences::AddIntVarCache(&sActiveDurationMs,
@@ -1371,6 +1381,9 @@ TabChild::ActorDestroy(ActorDestroyReason why)
     static_cast<nsFrameMessageManager*>
       (mTabChildGlobal->mMessageManager.get())->Disconnect();
     mTabChildGlobal->mMessageManager = nullptr;
+  }
+  if (Id() != 0) {
+    NestedTabChildMap().erase(Id());
   }
 }
 
