@@ -72,6 +72,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=826058
     yield undefined;
     SpecialPowers.autoConfirmAppInstall(continueTest);
     yield undefined;
+    SpecialPowers.autoConfirmAppUninstall(continueTest);
+    yield undefined;
 
     // Load the app, uninstalled.
     checkAppState(null, false, 1, continueTest);
