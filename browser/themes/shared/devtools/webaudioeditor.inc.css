@@ -111,12 +111,6 @@ text {
   transition: opacity .5s ease-out 0s;
 }
 
-@media (min-resolution: 2dppx) {
-  .web-audio-inspector .error {
-    background-image: url(alerticon-warning@2x.png);
-  }
-}
-
 #inspector-pane-toggle {
   background: none;
   box-shadow: none;
@@ -151,4 +145,29 @@ text {
   #inspector-pane-toggle:active {
     -moz-image-region: rect(0px,64px,32px,32px);
   }
+
+  .web-audio-inspector .error {
+    background-image: url(alerticon-warning@2x.png);
+  }
 }
+
+/**
+ * Responsive Styles
+ * `.devtools-responsive-container` takes care of most of
+ * the changing of host types.
+ */
+@media (max-width: 700px) {
+  /**
+   * Override the inspector toggle so it's always open
+   * in the portrait view, with the toggle button hidden.
+   */
+  #inspector-pane-toggle {
+    display: none;
+  }
+
+  #web-audio-inspector {
+    margin-left: 0px !important;
+    margin-right: 0px !important;
+  }
+}
+
