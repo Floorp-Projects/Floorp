@@ -111,7 +111,7 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
   gfx::SurfaceFormat format =
     gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aContent);
   size_t size = ImageDataSerializer::ComputeMinBufferSize(aSize, format);
-  if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+  if (IsSameProcess()) {
     uint8_t *data = new (std::nothrow) uint8_t[size];
     if (!data) {
       return false;
