@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/CheckedInt.h"
+#include "nsIThread.h"
 
 #if !(defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)) || \
     defined(MOZ_ASAN)
@@ -91,6 +92,27 @@ public:
 private:
   nsCOMPtr<nsIThread> mThread;
 };
+
+template<class T>
+class DeleteObjectTask: public nsRunnable {
+public:
+  DeleteObjectTask(nsAutoPtr<T>& aObject)
+    : mObject(aObject)
+  {
+  }
+  NS_IMETHOD Run() {
+    NS_ASSERTION(NS_IsMainThread(), "Must be on main thread.");
+    mObject = nullptr;
+    return NS_OK;
+  }
+private:
+  nsAutoPtr<T> mObject;
+};
+
+template<class T>
+void DeleteOnMainThread(nsAutoPtr<T>& aObject) {
+  NS_DispatchToMainThread(new DeleteObjectTask<T>(aObject));
+}
 
 class MediaResource;
 

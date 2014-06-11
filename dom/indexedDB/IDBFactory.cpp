@@ -14,7 +14,7 @@
 #include "nsIXPCScriptable.h"
 
 #include <algorithm>
-#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/PBrowserChild.h"
@@ -55,7 +55,7 @@ USING_INDEXEDDB_NAMESPACE
 USING_QUOTA_NAMESPACE
 
 using mozilla::dom::ContentChild;
-using mozilla::dom::ContentParent;
+using mozilla::dom::nsIContentParent;
 using mozilla::dom::IDBOpenDBOptions;
 using mozilla::dom::NonNull;
 using mozilla::dom::Optional;
@@ -103,7 +103,7 @@ nsresult
 IDBFactory::Create(nsPIDOMWindow* aWindow,
                    const nsACString& aGroup,
                    const nsACString& aASCIIOrigin,
-                   ContentParent* aContentParent,
+                   nsIContentParent* aContentParent,
                    IDBFactory** aFactory)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -157,7 +157,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
     TabChild* tabChild = TabChild::GetFrom(aWindow);
     IDB_ENSURE_TRUE(tabChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    IndexedDBChild* actor = new IndexedDBChild(origin);
+    IndexedDBChild* actor = new IndexedDBChild(tabChild, origin);
 
     bool allowed;
     tabChild->SendPIndexedDBConstructor(actor, group, origin, &allowed);
@@ -179,7 +179,7 @@ IDBFactory::Create(nsPIDOMWindow* aWindow,
 nsresult
 IDBFactory::Create(JSContext* aCx,
                    JS::Handle<JSObject*> aOwningObject,
-                   ContentParent* aContentParent,
+                   nsIContentParent* aContentParent,
                    IDBFactory** aFactory)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
@@ -216,7 +216,7 @@ IDBFactory::Create(JSContext* aCx,
     ContentChild* contentChild = ContentChild::GetSingleton();
     IDB_ENSURE_TRUE(contentChild, NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR);
 
-    IndexedDBChild* actor = new IndexedDBChild(origin);
+    IndexedDBChild* actor = new IndexedDBChild(contentChild, origin);
 
     contentChild->SendPIndexedDBConstructor(actor);
 
@@ -229,7 +229,7 @@ IDBFactory::Create(JSContext* aCx,
 
 // static
 nsresult
-IDBFactory::Create(ContentParent* aContentParent,
+IDBFactory::Create(nsIContentParent* aContentParent,
                    IDBFactory** aFactory)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");

@@ -35,13 +35,13 @@ WebGLContext::BindVertexArray(WebGLVertexArray *array)
 
     MakeContextCurrent();
 
-    if (array) {
-        mBoundVertexArray = array;
-    } else {
-        mBoundVertexArray = mDefaultVertexArray;
+    if (array == nullptr) {
+        array = mDefaultVertexArray;
     }
 
-    mBoundVertexArray->BindVertexArray();
+    array->BindVertexArray();
+
+    MOZ_ASSERT(mBoundVertexArray == array);
 }
 
 already_AddRefed<WebGLVertexArray>
