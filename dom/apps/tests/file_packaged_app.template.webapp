@@ -4,6 +4,12 @@
   "size" : PACKAGESIZETOKEN,
   "package_path": "PACKAGEPATHTOKEN",
   "description": "Updated even faster than Firefox, just to annoy slashdotters",
+  "permissions": {
+     "geolocation": {},
+     "audio-capture": {},
+     "video-capture": {},
+     "downloads": {}
+   },
   "launch_path": "tests/dom/apps/tests/file_packaged_app.sjs",
   "developer": {
     "name": "DEVELOPERTOKEN",
