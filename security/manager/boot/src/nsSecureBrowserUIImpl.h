@@ -104,7 +104,7 @@ protected:
                         nsIRequest* aRequest);
 
   nsresult EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsISupports *info,
-                                          bool withNewLocation);
+                                          bool withNewLocation, bool withNewSink);
   void UpdateSubrequestMembers(nsISupports *securityInfo);
 
   void ObtainEventSink(nsIChannel *channel, 
