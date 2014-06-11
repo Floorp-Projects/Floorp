@@ -89,7 +89,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
                        // mode by nsLineLayout::VerticalAlignFrames .
                        // However, it's not always 0.  See below.
   aMetrics.Width() = 0;
-  aMetrics.SetTopAscent(0);
+  aMetrics.SetBlockStartAscent(0);
 
   // Only when the BR is operating in a line-layout situation will it
   // behave like a BR.
@@ -120,10 +120,10 @@ BRFrame::Reflow(nsPresContext* aPresContext,
       if (fm) {
         nscoord logicalHeight = aReflowState.CalcLineHeight();
         aMetrics.Height() = logicalHeight;
-        aMetrics.SetTopAscent(nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight));
+        aMetrics.SetBlockStartAscent(nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight));
       }
       else {
-        aMetrics.SetTopAscent(aMetrics.Height() = 0);
+        aMetrics.SetBlockStartAscent(aMetrics.Height() = 0);
       }
 
       // XXX temporary until I figure out a better solution; see the
@@ -151,7 +151,7 @@ BRFrame::Reflow(nsPresContext* aPresContext,
 
   aMetrics.SetOverflowAreasToDesiredBounds();
 
-  mAscent = aMetrics.TopAscent();
+  mAscent = aMetrics.BlockStartAscent();
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aMetrics);
 }

@@ -88,6 +88,7 @@
 #include "mozilla/dom/SVGIFrameElement.h"
 #include "nsSandboxFlags.h"
 #include "JavaScriptParent.h"
+#include "CompositorChild.h"
 
 #include "mozilla/dom/StructuredCloneUtils.h"
 
@@ -1543,9 +1544,16 @@ nsFrameLoader::ShouldUseRemoteProcess()
     return false;
   }
 
-  // If we're inside a content process, don't use a remote process for this
-  // frame; it won't work properly until bug 761935 is fixed.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+  // Don't try to launch nested children if we don't have OMTC.
+  // They won't render!
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+      !CompositorChild::ChildProcessHasCompositor()) {
+    return false;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content &&
+      !(PR_GetEnv("MOZ_NESTED_OOP_TABS") ||
+        Preferences::GetBool("dom.ipc.tabs.nested.enabled", false))) {
     return false;
   }
 
@@ -2093,10 +2101,7 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
   nsCOMPtr<nsIXULWindow> window(do_GetInterface(parentOwner));
-  if (!window) {
-    return false;
-  }
-  if (NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
+  if (window && NS_FAILED(window->GetChromeFlags(&chromeFlags))) {
     return false;
   }
 
@@ -2135,11 +2140,12 @@ nsFrameLoader::TryRemoteBrowser()
     parentAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
     nsCOMPtr<nsIDOMWindow> rootWin = rootItem->GetWindow();
     nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
-    NS_ABORT_IF_FALSE(rootChromeWin, "How did we not get a chrome window here?");
 
-    nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
-    rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-    mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
+    if (rootChromeWin) {
+      nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+      rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
+      mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
+    }
 
     mContentParent = mRemoteBrowser->Manager();
 
@@ -2301,7 +2307,7 @@ nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
   TabParent* tabParent = mRemoteBrowser;
   if (tabParent) {
     ClonedMessageData data;
-    ContentParent* cp = tabParent->Manager();
+    nsIContentParent* cp = tabParent->Manager();
     if (!BuildClonedMessageDataForParent(cp, aData, data)) {
       return false;
     }
@@ -2424,8 +2430,9 @@ nsFrameLoader::EnsureMessageManager()
     return NS_OK;
   }
 
+  bool useRemoteProcess = ShouldUseRemoteProcess();
   if (mMessageManager) {
-    if (ShouldUseRemoteProcess() && mRemoteBrowserShown) {
+    if (useRemoteProcess && mRemoteBrowserShown) {
       mMessageManager->InitWithCallback(this);
     }
     return NS_OK;
@@ -2449,7 +2456,7 @@ nsFrameLoader::EnsureMessageManager()
     }
   }
 
-  if (ShouldUseRemoteProcess()) {
+  if (useRemoteProcess) {
     mMessageManager = new nsFrameMessageManager(mRemoteBrowserShown ? this : nullptr,
                                                 static_cast<nsFrameMessageManager*>(parentManager.get()),
                                                 MM_CHROME);

@@ -2916,13 +2916,14 @@ static void
 ResolveReflowedChildAscent(nsIFrame* aFrame,
                            nsHTMLReflowMetrics& aChildDesiredSize)
 {
-  if (aChildDesiredSize.TopAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
+  if (aChildDesiredSize.BlockStartAscent() ==
+      nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
     // Use GetFirstLineBaseline(), or just GetBaseline() if that fails.
     nscoord ascent;
     if (nsLayoutUtils::GetFirstLineBaseline(aFrame, &ascent)) {
-      aChildDesiredSize.SetTopAscent(ascent);
+      aChildDesiredSize.SetBlockStartAscent(ascent);
     } else {
-      aChildDesiredSize.SetTopAscent(aFrame->GetBaseline());
+      aChildDesiredSize.SetBlockStartAscent(aFrame->GetBaseline());
     }
   }
 }
@@ -3025,7 +3026,7 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   // If we need to do baseline-alignment, store the child's ascent.
   if (aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_BASELINE) {
     ResolveReflowedChildAscent(aItem.Frame(), childDesiredSize);
-    aItem.SetAscent(childDesiredSize.TopAscent());
+    aItem.SetAscent(childDesiredSize.BlockStartAscent());
   }
 
   return NS_OK;
@@ -3416,8 +3417,11 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
         // (We use GetNormalPosition() instead of physicalPosn because we don't
         // want relative positioning on the child to affect the baseline that we
         // read from it).
-        flexContainerAscent = item->Frame()->GetNormalPosition().y +
-          childDesiredSize.TopAscent();
+        WritingMode wm = aReflowState.GetWritingMode();
+        flexContainerAscent =
+          item->Frame()->GetLogicalNormalPosition(wm,
+                                                  childDesiredSize.Width()).B(wm) +
+          childDesiredSize.BlockStartAscent();
       }
     }
   }
@@ -3443,7 +3447,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
     // Per spec, just use the bottom of content-box.
     flexContainerAscent = aDesiredSize.Height();
   }
-  aDesiredSize.SetTopAscent(flexContainerAscent);
+  aDesiredSize.SetBlockStartAscent(flexContainerAscent);
 
   // Now: If we're complete, add bottom border/padding to desired height
   // (unless that pushes us over available height, in which case we become

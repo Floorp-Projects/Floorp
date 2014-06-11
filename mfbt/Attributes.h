@@ -37,6 +37,7 @@
 #  define MOZ_ALWAYS_INLINE     inline
 #endif
 
+#if defined(_MSC_VER)
 /*
  * g++ requires -std=c++0x or -std=gnu++0x to support C++11 functionality
  * without warnings (functionality used by the macros below).  These modes are
@@ -44,8 +45,27 @@
  * standardly, by checking whether __cplusplus has a C++11 or greater value.
  * Current versions of g++ do not correctly set __cplusplus, so we check both
  * for forward compatibility.
+ *
+ * Even though some versions of MSVC support explicit conversion operators, we
+ * don't indicate support for them here, due to
+ * http://stackoverflow.com/questions/20498142/visual-studio-2013-explicit-keyword-bug
  */
-#if defined(__clang__)
+#  if _MSC_VER >= 1800
+#    define MOZ_HAVE_CXX11_DELETE
+#  endif
+#  if _MSC_VER >= 1700
+#    define MOZ_HAVE_CXX11_FINAL         final
+#  else
+#    if defined(__clang__)
+#      error Please do not try to use clang-cl with MSVC10 or below emulation!
+#    endif
+     /* MSVC <= 10 used to spell "final" as "sealed". */
+#    define MOZ_HAVE_CXX11_FINAL         sealed
+#  endif
+#  define MOZ_HAVE_CXX11_OVERRIDE
+#  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
+#  define MOZ_HAVE_NORETURN              __declspec(noreturn)
+#elif defined(__clang__)
    /*
     * Per Clang documentation, "Note that marketing version numbers should not
     * be used to check for language features, as different vendors use different
@@ -94,21 +114,6 @@
 #  endif
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
-#elif defined(_MSC_VER)
-#  if _MSC_VER >= 1800
-#    define MOZ_HAVE_CXX11_DELETE
-#  endif
-#  if _MSC_VER >= 1700
-#    define MOZ_HAVE_CXX11_FINAL         final
-#  else
-     /* MSVC <= 10 used to spell "final" as "sealed". */
-#    define MOZ_HAVE_CXX11_FINAL         sealed
-#  endif
-#  define MOZ_HAVE_CXX11_OVERRIDE
-#  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
-#  define MOZ_HAVE_NORETURN              __declspec(noreturn)
-// Staying away from explicit conversion operators in MSVC for now, see
-// http://stackoverflow.com/questions/20498142/visual-studio-2013-explicit-keyword-bug
 #endif
 
 /*

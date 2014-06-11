@@ -30,6 +30,7 @@
 #include "vm/Debugger.h"
 #include "vm/ForkJoin.h"
 #include "vm/Interpreter.h"
+#include "vm/TraceLogging.h"
 
 #include "jsscriptinlines.h"
 #include "jit/JitFrameIterator-inl.h"
@@ -584,6 +585,7 @@ void
 HandleException(ResumeFromException *rfe)
 {
     JSContext *cx = GetJSContextFromJitCode();
+    TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
 
@@ -634,10 +636,14 @@ HandleException(ResumeFromException *rfe)
                 // When profiling, each frame popped needs a notification that
                 // the function has exited, so invoke the probe that a function
                 // is exiting.
+
                 JSScript *script = frames.script();
                 probes::ExitScript(cx, script, script->functionNonDelazifying(), popSPSFrame);
-                if (!frames.more())
+                if (!frames.more()) {
+                    TraceLogStopEvent(logger, TraceLogger::IonMonkey);
+                    TraceLogStopEvent(logger);
                     break;
+                }
                 ++frames;
             }
 
@@ -664,6 +670,9 @@ HandleException(ResumeFromException *rfe)
 
             if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME)
                 return;
+
+            TraceLogStopEvent(logger, TraceLogger::Baseline);
+            TraceLogStopEvent(logger);
 
             // Unwind profiler pseudo-stack
             JSScript *script = iter.script();
