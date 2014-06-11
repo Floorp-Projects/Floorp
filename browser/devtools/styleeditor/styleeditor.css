@@ -29,10 +29,8 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   -moz-box-flex: 1;
 }
 
-.stylesheet-media-list {
-  overflow-x: hidden;
+.stylesheet-media-container {
   overflow-y: auto;
-  -moz-box-flex: 1;
 }
 
 .media-rule-label {
