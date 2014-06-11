@@ -102,6 +102,7 @@ UNIFIED_SOURCES += [
     'DrawTargetCairo.cpp',
     'DrawTargetDual.cpp',
     'DrawTargetRecording.cpp',
+    'DrawTargetTiled.cpp',
     'Factory.cpp',
     'FilterNodeSoftware.cpp',
     'FilterProcessing.cpp',

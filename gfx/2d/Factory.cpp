@@ -43,6 +43,7 @@
 #endif
 
 #include "DrawTargetDual.h"
+#include "DrawTargetTiled.h"
 #include "DrawTargetRecording.h"
 
 #include "SourceSurfaceRawData.h"
@@ -376,6 +377,18 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   return retVal;
+}
+
+TemporaryRef<DrawTarget>
+Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
+{
+  RefPtr<DrawTargetTiled> dt = new DrawTargetTiled();
+
+  if (!dt->Init(aTileSet)) {
+    return nullptr;
+  }
+
+  return dt;
 }
 
 TemporaryRef<ScaledFont>
