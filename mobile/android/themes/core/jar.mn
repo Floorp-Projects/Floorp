@@ -57,6 +57,8 @@ chrome.jar:
   skin/images/dropmarker.svg                (images/dropmarker.svg)
   skin/images/dropmarker-right.svg          (images/dropmarker-right.svg)
   skin/images/errorpage-warning.png         (images/errorpage-warning.png)
+  skin/images/exitfullscreen-hdpi.png       (images/exitfullscreen-hdpi.png)
+  skin/images/fullscreen-hdpi.png           (images/fullscreen-hdpi.png)
   skin/images/certerror-warning.png         (images/certerror-warning.png)
   skin/images/errorpage-larry-white.png     (images/errorpage-larry-white.png)
   skin/images/errorpage-larry-black.png     (images/errorpage-larry-black.png)
