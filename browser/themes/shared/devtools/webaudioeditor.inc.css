@@ -40,8 +40,8 @@
 
 /* Context Graph */
 svg {
-  position: fixed;
   overflow: hidden;
+  -moz-box-flex: 1;
 }
 
 /* Edges in graph */
@@ -170,4 +170,3 @@ text {
     margin-right: 0px !important;
   }
 }
-
