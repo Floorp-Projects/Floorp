@@ -5,6 +5,7 @@
 
 var gJar1 = "jar:http://example.org/tests/content/base/test/file_bug945152.jar!/data_1.txt";
 var gJar2 = "jar:http://example.org/tests/content/base/test/file_bug945152.jar!/data_2.txt";
+var gJar3 = "jar:http://example.org/tests/content/base/test/file_bug945152.jar!/data_big.txt";
 var gPaddingChar = ".";
 var gPaddingSize = 10000;
 var gPadding = "";
@@ -55,14 +56,22 @@ self.onmessage = function onmessage(event) {
     var lastIndex = 0;
     xhr.onprogress = function(event) {
       if (xhr.response) {
-        var str = String.fromCharCode.apply(null, Uint8Array(xhr.response));
-        ok(str.length == gData1.length, "Data size is correct");
-        ok(str == gData1.substr(lastIndex, str.length), "Data chunk is correct");
+        var buf = new Uint8Array(xhr.response);
+        var allMatched = true;
+        // The content of data cycles from 0 to 9 (i.e. 01234567890123......).
+        for (var i = 0; i < buf.length; i++) {
+          if (String.fromCharCode(buf[i]) != lastIndex % 10) {
+            allMatched = false;
+            break;
+          }
+          lastIndex++;
+        }
+        ok(allMatched, "Data chunk is correct.  Loaded " +
+                        event.loaded + "/" + event.total + " bytes.");
       }
-      lastIndex += str.length;
     };
     xhr.onload = runTests;
-    xhr.open("GET", gJar1, true);
+    xhr.open("GET", gJar3, true);
     xhr.responseType = "moz-chunked-arraybuffer";
     xhr.send();
   }
