@@ -1395,6 +1395,39 @@ ContentParent::ProcessingError(Result what)
     KillHard();
 }
 
+typedef std::pair<ContentParent*, std::set<uint64_t> > IDPair;
+static std::map<ContentParent*, std::set<uint64_t> > sNestedBrowserIds;
+
+bool
+ContentParent::RecvAllocateLayerTreeId(uint64_t* aId)
+{
+    *aId = CompositorParent::AllocateLayerTreeId();
+
+    auto iter = sNestedBrowserIds.find(this);
+    if (iter == sNestedBrowserIds.end()) {
+        std::set<uint64_t> ids;
+        ids.insert(*aId);
+        sNestedBrowserIds.insert(IDPair(this, ids));
+    } else {
+        iter->second.insert(*aId);
+    }
+    return true;
+}
+
+bool
+ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
+{
+    auto iter = sNestedBrowserIds.find(this);
+    if (iter != sNestedBrowserIds.end() &&
+        iter->second.find(aId) != iter->second.end()) {
+        CompositorParent::DeallocateLayerTreeId(aId);
+    } else {
+        // You can't deallocate layer tree ids that you didn't allocate
+        KillHard();
+    }
+    return true;
+}
+
 namespace {
 
 void
