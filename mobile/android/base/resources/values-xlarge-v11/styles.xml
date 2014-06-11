@@ -30,4 +30,14 @@
         <item name="android:paddingTop">30dp</item>
     </style>
 
+    <!-- Tabs panel -->
+    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+        <item name="android:paddingTop">18dp</item>
+        <item name="android:paddingBottom">18dp</item>
+        <item name="android:paddingLeft">9dp</item>
+        <item name="android:paddingRight">9dp</item>
+        <item name="android:layout_marginLeft">180dp</item>
+        <item name="android:layout_marginRight">180dp</item>
+    </style>
+
 </resources>
