@@ -5593,8 +5593,10 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     1) A CGThing for the type of the return value, or None if there is no need
        for a return value.
 
-    2) A boolean indicating whether the return value is passed as an out
-       parameter.
+    2) A value indicating the kind of ourparam to pass the value as.  Valid
+       options are None to not pass as an out param at all, "ref" (to pass a
+       reference as an out param), and "ptr" (to pass a pointer as an out
+       param).
 
     3) A CGThing for a tracer for the return value, or None if no tracing is
        needed.
@@ -5604,23 +5606,23 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
     """
     if returnType is None or returnType.isVoid():
         # Nothing to declare
-        return None, False, None, None
+        return None, None, None, None
     if returnType.isPrimitive() and returnType.tag() in builtinNames:
         result = CGGeneric(builtinNames[returnType.tag()])
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, False, None, None
+        return result, None, None, None
     if returnType.isDOMString():
         if isMember:
-            return CGGeneric("nsString"), True, None, None
-        return CGGeneric("DOMString"), True, None, None
+            return CGGeneric("nsString"), "ref", None, None
+        return CGGeneric("DOMString"), "ref", None, None
     if returnType.isByteString():
-        return CGGeneric("nsCString"), True, None, None
+        return CGGeneric("nsCString"), "ref", None, None
     if returnType.isEnum():
         result = CGGeneric(returnType.unroll().inner.identifier.name)
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, False, None, None
+        return result, None, None, None
     if returnType.isGeckoInterface():
         result = CGGeneric(descriptorProvider.getDescriptor(
             returnType.unroll().inner.identifier.name).nativeType)
@@ -5631,14 +5633,14 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             result = CGTemplatedType("nsRefPtr", result)
         else:
             result = CGWrapper(result, post="*")
-        return result, False, None, None
+        return result, None, None, None
     if returnType.isCallback():
         name = returnType.unroll().identifier.name
-        return CGGeneric("nsRefPtr<%s>" % name), False, None, None
+        return CGGeneric("nsRefPtr<%s>" % name), None, None, None
     if returnType.isAny():
-        return CGGeneric("JS::Value"), False, None, None
+        return CGGeneric("JS::Value"), None, None, None
     if returnType.isObject() or returnType.isSpiderMonkeyInterface():
-        return CGGeneric("JSObject*"), False, None, None
+        return CGGeneric("JSObject*"), None, None, None
     if returnType.isSequence():
         nullable = returnType.nullable()
         if nullable:
@@ -5658,7 +5660,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGTemplatedType("nsTArray", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
-        return result, True, rooter, None
+        return result, "ref", rooter, None
     if returnType.isMozMap():
         nullable = returnType.nullable()
         if nullable:
@@ -5678,7 +5680,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
         result = CGTemplatedType("MozMap", result)
         if nullable:
             result = CGTemplatedType("Nullable", result)
-        return result, True, rooter, None
+        return result, "ref", rooter, None
     if returnType.isDictionary():
         nullable = returnType.nullable()
         dictName = CGDictionary.makeDictionaryName(returnType.unroll().inner)
@@ -5693,7 +5695,7 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             if nullable:
                 result = CGTemplatedType("Nullable", result)
             resultArgs = None
-        return result, True, None, resultArgs
+        return result, "ref", None, resultArgs
     if returnType.isUnion():
         result = CGGeneric(CGUnionStruct.unionTypeName(returnType.unroll(), True))
         if not isMember and typeNeedsRooting(returnType):
@@ -5706,12 +5708,12 @@ def getRetvalDeclarationForType(returnType, descriptorProvider,
             if returnType.nullable():
                 result = CGTemplatedType("Nullable", result)
             resultArgs = None
-        return result, True, None, resultArgs
+        return result, "ref", None, resultArgs
     if returnType.isDate():
         result = CGGeneric("Date")
         if returnType.nullable():
             result = CGTemplatedType("Nullable", result)
-        return result, False, None, None
+        return result, None, None, None
     raise TypeError("Don't know how to declare return value for %s" %
                     returnType)
 
@@ -5800,8 +5802,13 @@ class CGCallGenerator(CGThing):
             args.append(arg)
 
         # Return values that go in outparams go here
-        if resultOutParam:
-            args.append(CGGeneric("result"))
+        if resultOutParam is not None:
+            if resultOutParam is "ref":
+                args.append(CGGeneric("result"))
+            else:
+                assert resultOutParam is "ptr"
+                args.append(CGGeneric("&result"))
+
         if isFallible:
             args.append(CGGeneric("rv"))
         args.extend(CGGeneric(arg) for arg in argsPost)
