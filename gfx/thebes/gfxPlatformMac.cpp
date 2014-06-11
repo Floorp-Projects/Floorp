@@ -105,25 +105,6 @@ gfxPlatformMac::CreateOffscreenSurface(const IntSize& size,
     return newSurface.forget();
 }
 
-already_AddRefed<gfxASurface>
-gfxPlatformMac::OptimizeImage(gfxImageSurface *aSurface,
-                              gfxImageFormat format)
-{
-    const gfxIntSize& surfaceSize = aSurface->GetSize();
-    nsRefPtr<gfxImageSurface> isurf = aSurface;
-
-    if (format != aSurface->Format()) {
-        isurf = new gfxImageSurface (surfaceSize, format);
-        if (!isurf->CopyFrom (aSurface)) {
-            // don't even bother doing anything more
-            nsRefPtr<gfxASurface> ret = aSurface;
-            return ret.forget();
-        }
-    }
-
-    return nullptr;
-}
-
 TemporaryRef<ScaledFont>
 gfxPlatformMac::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
 {

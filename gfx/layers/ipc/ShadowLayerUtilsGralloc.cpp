@@ -222,39 +222,6 @@ PixelFormatForImageFormat(gfxImageFormat aFormat)
   return android::PIXEL_FORMAT_RGBA_8888;
 }
 
-static size_t
-BytesPerPixelForPixelFormat(android::PixelFormat aFormat)
-{
-  switch (aFormat) {
-  case PIXEL_FORMAT_RGBA_8888:
-  case PIXEL_FORMAT_RGBX_8888:
-  case PIXEL_FORMAT_BGRA_8888:
-    return 4;
-  case PIXEL_FORMAT_RGB_888:
-    return 3;
-  case PIXEL_FORMAT_RGB_565:
-  case PIXEL_FORMAT_RGBA_5551:
-  case PIXEL_FORMAT_RGBA_4444:
-    return 2;
-  default:
-    return 0;
-  }
-  return 0;
-}
-
-static android::PixelFormat
-PixelFormatForContentType(gfxContentType aContentType)
-{
-  return PixelFormatForImageFormat(
-    gfxPlatform::GetPlatform()->OptimalFormatForContent(aContentType));
-}
-
-static gfxContentType
-ContentTypeFromPixelFormat(android::PixelFormat aFormat)
-{
-  return gfxASurface::ContentFromFormat(ImageFormatForPixelFormat(aFormat));
-}
-
 /*static*/ bool
 LayerManagerComposite::SupportsDirectTexturing()
 {

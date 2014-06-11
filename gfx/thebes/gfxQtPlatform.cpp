@@ -101,20 +101,6 @@ gfxQtPlatform::CreateOffscreenSurface(const IntSize& size,
     return newSurface.forget();
 }
 
-already_AddRefed<gfxASurface>
-gfxQtPlatform::OptimizeImage(gfxImageSurface *aSurface,
-                             gfxImageFormat format)
-{
-    /* Qt have no special offscreen surfaces so we can avoid a copy */
-    if (OptimalFormatForContent(gfxASurface::ContentFromFormat(format)) ==
-        format) {
-        return nullptr;
-    }
-
-    return gfxPlatform::OptimizeImage(aSurface, format);
-}
-
-
 nsresult
 gfxQtPlatform::GetFontList(nsIAtom *aLangGroup,
                            const nsACString& aGenericFamily,

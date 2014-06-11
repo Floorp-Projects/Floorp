@@ -12,14 +12,13 @@
 <iframe style="width:100%;height:300px;" id='cspframe'></iframe>
 <iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
 <iframe style="width:100%;height:300px;" id='cspframe3'></iframe>
-<iframe style="width:100%;height:300px;" id='cspframe4'></iframe>
 <script class="testbody" type="text/javascript">
 
 var path = "/tests/content/base/test/csp/";
 
 var evalScriptsThatRan = 0;
 var evalScriptsBlocked = 0;
-var evalScriptsTotal = 4;
+var evalScriptsTotal = 3;
 
 // called by scripts that run
 var scriptRan = function(shouldrun, testname, data) {
@@ -55,9 +54,8 @@ SpecialPowers.pushPrefEnv(
       // save this for last so that our listeners are registered.
       // ... this loads the testbed of good and bad requests.
       document.getElementById('cspframe').src = 'file_CSP_evalscript_main_getCRMFRequest.html';
-      document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_spec_compliant_getCRMFRequest.html';
-      document.getElementById('cspframe3').src = 'file_CSP_evalscript_main_spec_compliant_allowed_getCRMFRequest.html';
-      document.getElementById('cspframe4').src = 'file_CSP_evalscript_no_CSP_at_all.html';
+      document.getElementById('cspframe2').src = 'file_CSP_evalscript_main_allowed_getCRMFRequest.html';
+      document.getElementById('cspframe3').src = 'file_CSP_evalscript_no_CSP_at_all.html';
     });
 </script>
 </pre>

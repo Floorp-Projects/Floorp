@@ -1031,6 +1031,10 @@ SpdyStream3::Uncompress(z_stream *context,
                         char *blockStart,
                         uint32_t blockLen)
 {
+  // ensure the minimum size
+  EnsureBuffer(mDecompressBuffer, SpdySession3::kDefaultBufferSize,
+               mDecompressBufferUsed, mDecompressBufferSize);
+
   mDecompressedBytes += blockLen;
 
   context->avail_in = blockLen;
@@ -1043,22 +1047,23 @@ SpdyStream3::Uncompress(z_stream *context,
       mDecompressBufferUsed;
     context->avail_out = mDecompressBufferSize - mDecompressBufferUsed;
     int zlib_rv = inflate(context, Z_NO_FLUSH);
+    LOG3(("SpdyStream3::Uncompress %p zlib_rv %d\n", this, zlib_rv));
 
     if (zlib_rv == Z_NEED_DICT) {
       if (triedDictionary) {
-        LOG3(("SpdySession3::Uncompress %p Dictionary Error\n", this));
+        LOG3(("SpdyStream3::Uncompress %p Dictionary Error\n", this));
         return NS_ERROR_ILLEGAL_VALUE;
       }
 
       triedDictionary = true;
       inflateSetDictionary(context, kDictionary, sizeof(kDictionary));
-    }
-
-    if (zlib_rv == Z_DATA_ERROR)
+    } else if (zlib_rv == Z_DATA_ERROR) {
+      LOG3(("SpdyStream3::Uncompress %p inflate returned data err\n", this));
       return NS_ERROR_ILLEGAL_VALUE;
-
-    if (zlib_rv == Z_MEM_ERROR)
+    } else  if (zlib_rv < Z_OK) { // probably Z_MEM_ERROR
+      LOG3(("SpdyStream3::Uncompress %p inflate returned %d\n", this, zlib_rv));
       return NS_ERROR_FAILURE;
+    }
 
     // zlib's inflate() decreases context->avail_out by the amount it places
     // in the output buffer

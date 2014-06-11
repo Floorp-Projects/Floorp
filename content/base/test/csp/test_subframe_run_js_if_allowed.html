@@ -13,6 +13,7 @@ allows this.
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
+<iframe id="i"></iframe>
 <script class="testbody" type="text/javascript">
 var javascript_link_ran = false;
 
@@ -26,7 +27,11 @@ function checkResult()
 }
 
 SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {'set':[["security.csp.speccompliant", true]]},
+  function() {
+    document.getElementById('i').src = 'file_subframe_run_js_if_allowed.html';
+  });
 </script>
-<iframe id="i" src="file_subframe_run_js_if_allowed.html"></iframe>
 </body>
 </html>

@@ -125,7 +125,7 @@ load 385344-2.html
 load 385414-1.html
 load 385414-2.html
 load 385426-1.html
-skip-if(B2G) load 385526.html # Bug 891347
+skip-if(B2G) skip-if(Android&&AndroidVersion==10) load 385526.html # Bug 891347
 load 385681.html
 load 385885-1.xul
 load 386799-1.html
@@ -483,7 +483,7 @@ skip-if(Android) load 784600.html
 load 786740-1.html
 asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
 test-pref(font.size.inflation.minTwips,120) load 794693.html
-asserts(8) load 798020-1.html
+asserts-if(!Android,8) load 798020-1.html
 load 798235-1.html
 load 799207-1.html
 load 799207-2.html
@@ -531,6 +531,6 @@ load 986899.html
 load 1001233.html
 load 1001258-1.html
 pref(layout.css.grid.enabled,true) load 1015562.html
-asserts(2) load 1015563-1.html
-asserts(2) load 1015563-2.html
+asserts(1-2) load 1015563-1.html
+asserts(1-2) load 1015563-2.html
 load outline-on-frameset.xhtml

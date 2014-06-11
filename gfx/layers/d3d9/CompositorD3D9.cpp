@@ -591,14 +591,6 @@ CompositorD3D9::Ready()
   return false;
 }
 
-static void
-CancelCompositing(Rect* aRenderBoundsOut)
-{
-  if (aRenderBoundsOut) {
-    *aRenderBoundsOut = Rect(0, 0, 0, 0);
-  }
-}
-
 void
 CompositorD3D9::BeginFrame(const nsIntRegion& aInvalidRegion,
                            const Rect *aClipRectIn,

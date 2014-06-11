@@ -71,7 +71,7 @@ function _setAppProperties(aObj, aApp) {
   aObj.csp = aApp.csp;
   aObj.installOrigin = aApp.installOrigin;
   aObj.origin = aApp.origin;
-#ifdef MOZ_ANDROID_SYNTHAPKS
+#ifdef MOZ_WIDGET_ANDROID
   aObj.apkPackageName = aApp.apkPackageName;
 #endif
   aObj.receipts = aApp.receipts ? JSON.parse(JSON.stringify(aApp.receipts)) : null;
