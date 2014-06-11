@@ -1184,6 +1184,25 @@ pref("browser.tabs.remote", false);
 #endif
 pref("browser.tabs.remote.autostart", false);
 
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
+// This controls whether the content process on Windows is sandboxed.
+// You also need to be using remote tabs, see above.
+// on = full sandbox enabled
+// warn = warn only sandbox enabled
+// anything else = sandbox disabled
+// This will probably require a restart.
+pref("browser.tabs.remote.sandbox", "off");
+
+// This is essentially the same logic that decides whether nsStackWalk.cpp gets
+// built, which we use for the stack trace. See xpcom/base/moz.build
+#if !defined(MOZ_OPTIMIZE) || defined(MOZ_PROFILING) || defined(DEBUG)
+// This controls the depth of stack trace that is logged when the warn only
+// sandbox reports that a resource access request has been blocked.
+// This does not require a restart to take effect.
+pref("browser.tabs.remote.sandbox.warnOnlyStackTraceDepth", 0);
+#endif
+#endif
+
 // This pref governs whether we attempt to work around problems caused by
 // plugins using OS calls to manipulate the cursor while running out-of-
 // process.  These workarounds all involve intercepting (hooking) certain
