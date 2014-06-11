@@ -254,7 +254,7 @@ add_task(function test_execute_invalid_statement() {
 
   let deferred = Promise.defer();
 
-  do_check_eq(c._anonymousStatements.size, 0);
+  do_check_eq(c._connectionData._anonymousStatements.size, 0);
 
   c.execute("SELECT invalid FROM unknown").then(do_throw, function onError(error) {
     deferred.resolve();
@@ -263,7 +263,7 @@ add_task(function test_execute_invalid_statement() {
   yield deferred.promise;
 
   // Ensure we don't leak the statement instance.
-  do_check_eq(c._anonymousStatements.size, 0);
+  do_check_eq(c._connectionData._anonymousStatements.size, 0);
 
   yield c.close();
 });
@@ -436,9 +436,9 @@ add_task(function test_no_shrink_on_init() {
   let c = yield getConnection("no_shrink_on_init",
                               {shrinkMemoryOnConnectionIdleMS: 200});
 
-  let oldShrink = c.shrinkMemory;
+  let oldShrink = c._connectionData.shrinkMemory;
   let count = 0;
-  Object.defineProperty(c, "shrinkMemory", {
+  Object.defineProperty(c._connectionData, "shrinkMemory", {
     value: function () {
       count++;
     },
@@ -458,16 +458,16 @@ add_task(function test_no_shrink_on_init() {
 add_task(function test_idle_shrink_fires() {
   let c = yield getDummyDatabase("idle_shrink_fires",
                                  {shrinkMemoryOnConnectionIdleMS: 200});
-  c._clearIdleShrinkTimer();
+  c._connectionData._clearIdleShrinkTimer();
 
-  let oldShrink = c.shrinkMemory;
+  let oldShrink = c._connectionData.shrinkMemory;
   let shrinkPromises = [];
 
   let count = 0;
-  Object.defineProperty(c, "shrinkMemory", {
+  Object.defineProperty(c._connectionData, "shrinkMemory", {
     value: function () {
       count++;
-      let promise = oldShrink.call(c);
+      let promise = oldShrink.call(c._connectionData);
       shrinkPromises.push(promise);
       return promise;
     },
@@ -475,7 +475,7 @@ add_task(function test_idle_shrink_fires() {
 
   // We reset the idle shrink timer after monkeypatching because otherwise the
   // installed timer callback will reference the non-monkeypatched function.
-  c._startIdleShrinkTimer();
+  c._connectionData._startIdleShrinkTimer();
 
   yield sleep(220);
   do_check_eq(count, 1);
@@ -502,23 +502,23 @@ add_task(function test_idle_shrink_reset_on_operation() {
   let c = yield getDummyDatabase("idle_shrink_reset_on_operation",
                                  {shrinkMemoryOnConnectionIdleMS: INTERVAL});
 
-  c._clearIdleShrinkTimer();
+  c._connectionData._clearIdleShrinkTimer();
 
-  let oldShrink = c.shrinkMemory;
+  let oldShrink = c._connectionData.shrinkMemory;
   let shrinkPromises = [];
   let count = 0;
 
-  Object.defineProperty(c, "shrinkMemory", {
+  Object.defineProperty(c._connectionData, "shrinkMemory", {
     value: function () {
       count++;
-      let promise = oldShrink.call(c);
+      let promise = oldShrink.call(c._connectionData);
       shrinkPromises.push(promise);
       return promise;
     },
   });
 
   let now = new Date();
-  c._startIdleShrinkTimer();
+  c._connectionData._startIdleShrinkTimer();
 
   let initialIdle = new Date(now.getTime() + INTERVAL);
 
@@ -547,11 +547,11 @@ add_task(function test_idle_shrink_reset_on_operation() {
 
 add_task(function test_in_progress_counts() {
   let c = yield getDummyDatabase("in_progress_counts");
-  do_check_eq(c._statementCounter, c._initialStatementCount);
-  do_check_eq(c._pendingStatements.size, 0);
+  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount);
+  do_check_eq(c._connectionData._pendingStatements.size, 0);
   yield c.executeCached("INSERT INTO dirs (path) VALUES ('foo')");
-  do_check_eq(c._statementCounter, c._initialStatementCount + 1);
-  do_check_eq(c._pendingStatements.size, 0);
+  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 1);
+  do_check_eq(c._connectionData._pendingStatements.size, 0);
 
   let expectOne;
   let expectTwo;
@@ -569,12 +569,12 @@ add_task(function test_in_progress_counts() {
   yield c.executeCached("SELECT * from dirs", null, function onRow() {
     // In the onRow handler, we're still an outstanding query.
     // Expect a single in-progress entry.
-    expectOne = c._pendingStatements.size;
+    expectOne = c._connectionData._pendingStatements.size;
 
     // Start another query, checking that after its statement has been created
     // there are two statements in progress.
     let p = c.executeCached("SELECT 10, path from dirs");
-    expectTwo = c._pendingStatements.size;
+    expectTwo = c._connectionData._pendingStatements.size;
 
     // Now wait for it to be done before we return from the row handler …
     p.then(function onInner() {
@@ -592,8 +592,8 @@ add_task(function test_in_progress_counts() {
 
   do_check_eq(expectOne, 1);
   do_check_eq(expectTwo, 2);
-  do_check_eq(c._statementCounter, c._initialStatementCount + 3);
-  do_check_eq(c._pendingStatements.size, 0);
+  do_check_eq(c._connectionData._statementCounter, c._initialStatementCount + 3);
+  do_check_eq(c._connectionData._pendingStatements.size, 0);
 
   yield c.close();
 });
@@ -628,16 +628,16 @@ add_task(function test_discard_cached() {
   let c = yield getDummyDatabase("discard_cached");
 
   yield c.executeCached("SELECT * from dirs");
-  do_check_eq(1, c._cachedStatements.size);
+  do_check_eq(1, c._connectionData._cachedStatements.size);
 
   yield c.executeCached("SELECT * from files");
-  do_check_eq(2, c._cachedStatements.size);
+  do_check_eq(2, c._connectionData._cachedStatements.size);
 
   yield c.executeCached("SELECT * from dirs");
-  do_check_eq(2, c._cachedStatements.size);
+  do_check_eq(2, c._connectionData._cachedStatements.size);
 
   c.discardCachedStatements();
-  do_check_eq(0, c._cachedStatements.size);
+  do_check_eq(0, c._connectionData._cachedStatements.size);
 
   yield c.close();
 });
