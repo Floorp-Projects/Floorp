@@ -141,7 +141,8 @@ var TextEditor = Class({
       mode: mode,
       lineNumbers: true,
       extraKeys: this.extraKeys,
-      themeSwitching: false
+      themeSwitching: false,
+      autocomplete: true
     });
 
     // Trigger editor specific events on `this`
@@ -153,6 +154,11 @@ var TextEditor = Class({
     });
 
     this.appended = this.editor.appendTo(this.elt);
+    this.appended.then(() => {
+      if (this.editor) {
+        this.editor.setupAutoCompletion();
+      }
+    });
   },
 
   /**
