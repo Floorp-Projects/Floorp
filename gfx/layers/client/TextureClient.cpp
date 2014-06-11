@@ -377,15 +377,13 @@ bool TextureClient::CopyToTextureClient(TextureClient* aTarget,
     return false;
   }
 
-  RefPtr<DrawTarget> destinationTarget = aTarget->GetAsDrawTarget();
-  RefPtr<DrawTarget> sourceTarget = GetAsDrawTarget();
+  DrawTarget* destinationTarget = aTarget->BorrowDrawTarget();
+  DrawTarget* sourceTarget = BorrowDrawTarget();
   RefPtr<gfx::SourceSurface> source = sourceTarget->Snapshot();
   destinationTarget->CopySurface(source,
                                  aRect ? *aRect : gfx::IntRect(gfx::IntPoint(0, 0), GetSize()),
                                  aPoint ? *aPoint : gfx::IntPoint(0, 0));
-  destinationTarget = nullptr;
   source = nullptr;
-  sourceTarget = nullptr;
 
   return true;
 }
@@ -576,11 +574,11 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
   return true;
 }
 
-TemporaryRef<gfx::DrawTarget>
-BufferTextureClient::GetAsDrawTarget()
+gfx::DrawTarget*
+BufferTextureClient::BorrowDrawTarget()
 {
   MOZ_ASSERT(IsValid());
-  MOZ_ASSERT(mLocked, "GetAsDrawTarget should be called on locked textures only");
+  MOZ_ASSERT(mLocked, "BorrowDrawTarget should be called on locked textures only");
 
   if (mDrawTarget) {
     return mDrawTarget;
@@ -619,7 +617,7 @@ BufferTextureClient::Unlock()
     return;
   }
 
-  // see the comment on TextureClient::GetAsDrawTarget.
+  // see the comment on TextureClient::BorrowDrawTarget.
   // This DrawTarget is internal to the TextureClient and is only exposed to the
   // outside world between Lock() and Unlock(). This assertion checks that no outside
   // reference remains by the time Unlock() is called.

@@ -52,6 +52,17 @@ TextureClientX11::Unlock()
   MOZ_ASSERT(mLocked, "The TextureClient is already Unlocked!");
   mLocked = false;
 
+  if (mDrawTarget) {
+    // see the comment on TextureClient::BorrowDrawTarget.
+    // This DrawTarget is internal to the TextureClient and is only exposed to the
+    // outside world between Lock() and Unlock(). This assertion checks that no outside
+    // reference remains by the time Unlock() is called.
+    MOZ_ASSERT(mDrawTarget->refCount() == 1);
+
+    mDrawTarget->Flush();
+    mDrawTarget = nullptr;
+  }
+
   if (mSurface && !mAllocator->IsSameProcess()) {
     FinishX(DefaultXDisplay());
   }
@@ -95,14 +106,20 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
   return true;
 }
 
-TemporaryRef<DrawTarget>
-TextureClientX11::GetAsDrawTarget()
+DrawTarget*
+TextureClientX11::BorrowDrawTarget()
 {
   MOZ_ASSERT(IsValid());
+  MOZ_ASSERT(mLocked);
+
   if (!mSurface) {
     return nullptr;
   }
 
-  IntSize size = ToIntSize(mSurface->GetSize());
-  return Factory::CreateDrawTargetForCairoSurface(mSurface->CairoSurface(), size);
+  if (!mDrawTarget) {
+    IntSize size = ToIntSize(mSurface->GetSize());
+    mDrawTarget = Factory::CreateDrawTargetForCairoSurface(mSurface->CairoSurface(), size);
+  }
+
+  return mDrawTarget;
 }
