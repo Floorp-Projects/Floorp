@@ -19,15 +19,22 @@ Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 Cu.import("resource://webapprt/modules/WebappRT.jsm");
 
 this.WebappManager = {
-  observe: function(subject, topic, data) {
-    data = JSON.parse(data);
-    data.mm = subject;
+  observe: function(aSubject, aTopic, aData) {
+    let data = JSON.parse(aData);
+    data.mm = aSubject;
 
-    switch (topic) {
+    let chromeWin;
+    switch (aTopic) {
       case "webapps-ask-install":
-        let chromeWin = Services.wm.getOuterWindowWithId(data.oid);
+        chromeWin = Services.wm.getOuterWindowWithId(data.oid);
         if (chromeWin)
           this.doInstall(data, chromeWin);
+        break;
+      case "webapps-ask-uninstall":
+        chromeWin = Services.wm.getOuterWindowWithId(data.windowId);
+        if (chromeWin) {
+          this.doUninstall(data, chromeWin);
+        }
         break;
       case "webapps-launch":
         WebappOSUtils.launch(data);
@@ -75,7 +82,7 @@ this.WebappManager = {
       try {
         localDir = nativeApp.createProfile();
       } catch (ex) {
-        DOMApplicationRegistry.denyInstall(aData);
+        DOMApplicationRegistry.denyInstall(data);
         return;
       }
 
@@ -89,11 +96,43 @@ this.WebappManager = {
     }
   },
 
+  doUninstall: function(aData, aWindow) {
+    let jsonManifest = aData.isPackage ? aData.app.updateManifest : aData.app.manifest;
+    let manifest = new ManifestHelper(jsonManifest, aData.app.origin,
+                                      aData.app.manifestURL);
+    let name = manifest.name;
+    let bundle = Services.strings.createBundle("chrome://webapprt/locale/webapp.properties");
+
+    let choice = Services.prompt.confirmEx(
+      aWindow,
+      bundle.formatStringFromName("webapps.uninstall.title", [name], 1),
+      bundle.formatStringFromName("webapps.uninstall.description", [name], 1),
+      // Set both buttons to strings with the cancel button being default
+      Ci.nsIPromptService.BUTTON_POS_1_DEFAULT |
+        Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_0 |
+        Ci.nsIPromptService.BUTTON_TITLE_IS_STRING * Ci.nsIPromptService.BUTTON_POS_1,
+      bundle.GetStringFromName("webapps.uninstall.uninstall"),
+      bundle.GetStringFromName("webapps.uninstall.dontuninstall"),
+      null,
+      null,
+      {});
+
+    // Perform the uninstall if the user allows it
+    if (choice == 0) {
+      DOMApplicationRegistry.confirmUninstall(aData).then((aApp) => {
+        WebappOSUtils.uninstall(aApp);
+      });
+    } else {
+      DOMApplicationRegistry.denyUninstall(aData);
+    }
+  },
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference])
 };
 
 Services.obs.addObserver(WebappManager, "webapps-ask-install", false);
+Services.obs.addObserver(WebappManager, "webapps-ask-uninstall", false);
 Services.obs.addObserver(WebappManager, "webapps-launch", false);
 Services.obs.addObserver(WebappManager, "webapps-uninstall", false);
 Services.obs.addObserver(WebappManager, "webapps-update", false);
