@@ -662,6 +662,22 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
 
   TempBitmap bitmap = GetBitmapForSurface(aSurface);
 
+  // This is a fast path that is disabled for now to mimimize risk
+  if (false && !bitmap.mBitmap.getTexture() && mCanvas->getDevice()->config() == bitmap.mBitmap.config()) {
+	SkBitmap bm(bitmap.mBitmap);
+	bm.lockPixels();
+	if (bm.getPixels()) {
+	  SkImageInfo info = bm.info();
+	  info.fWidth = aSourceRect.width;
+	  info.fHeight = aSourceRect.height;
+	  uint8_t* pixels = static_cast<uint8_t*>(bm.getPixels());
+	  // adjust pixels for the source offset
+	  pixels += aSourceRect.x + aSourceRect.y*bm.rowBytes();
+	  mCanvas->writePixels(info, pixels, bm.rowBytes(), aDestination.x, aDestination.y);
+	  return;
+	}
+  }
+
   mCanvas->save();
   mCanvas->resetMatrix();
   SkRect dest = IntRectToSkRect(IntRect(aDestination.x, aDestination.y, aSourceRect.width, aSourceRect.height)); 
@@ -677,7 +693,14 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
   } else {
     paint.setXfermodeMode(SkXfermode::kSrc_Mode);
   }
-
+  // drawBitmapRect with A8 bitmaps ends up doing a mask operation
+  // so we need to clear before
+  if (bitmap.mBitmap.config() == SkBitmap::kA8_Config) {
+    SkPaint clearPaint;
+    clearPaint.setColor(SkColorSetARGB(0, 0, 0, 0));
+    clearPaint.setXfermodeMode(SkXfermode::kSrc_Mode);
+    mCanvas->drawPaint(clearPaint);
+  }
   mCanvas->drawBitmapRect(bitmap.mBitmap, &source, dest, &paint);
   mCanvas->restore();
 }
