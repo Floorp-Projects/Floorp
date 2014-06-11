@@ -283,8 +283,8 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
 
   bool firstPrescriptsPair = false;
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript, bmMultiSub, bmMultiSup;
-  multiSubSize.SetTopAscent(-0x7FFFFFFF);
-  multiSupSize.SetTopAscent(-0x7FFFFFFF);
+  multiSubSize.SetBlockStartAscent(-0x7FFFFFFF);
+  multiSupSize.SetBlockStartAscent(-0x7FFFFFFF);
   bmMultiSub.ascent = bmMultiSup.ascent = -0x7FFFFFFF;
   bmMultiSub.descent = bmMultiSup.descent = -0x7FFFFFFF;
   nscoord italicCorrection = 0;
@@ -375,13 +375,14 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         // parameter v, Rule 18a, App. G, TeXbook
         minSubScriptShift = bmBase.descent + subDrop;
         trySubScriptShift = std::max(minSubScriptShift,subScriptShift);
-        multiSubSize.SetTopAscent(std::max(multiSubSize.TopAscent(),
-                                       subScriptSize.TopAscent()));
+        multiSubSize.SetBlockStartAscent(
+           std::max(multiSubSize.BlockStartAscent(),
+                    subScriptSize.BlockStartAscent()));
         bmMultiSub.ascent = std::max(bmMultiSub.ascent, bmSubScript.ascent);
         bmMultiSub.descent = std::max(bmMultiSub.descent, bmSubScript.descent);
         multiSubSize.Height() = 
           std::max(multiSubSize.Height(),
-                   subScriptSize.Height() - subScriptSize.TopAscent());
+                   subScriptSize.Height() - subScriptSize.BlockStartAscent());
         if (bmSubScript.width)
           width = bmSubScript.width + aScriptSpace;
         rightBearing = bmSubScript.rightBearing;
@@ -414,13 +415,14 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         trySupScriptShift = std::max(minSupScriptShift,
                                      std::max(minShiftFromXHeight,
                                               supScriptShift));
-        multiSupSize.SetTopAscent(std::max(multiSupSize.TopAscent(),
-                                       supScriptSize.TopAscent()));
+        multiSupSize.SetBlockStartAscent(
+          std::max(multiSupSize.BlockStartAscent(),
+                   supScriptSize.BlockStartAscent()));
         bmMultiSup.ascent = std::max(bmMultiSup.ascent, bmSupScript.ascent);
         bmMultiSup.descent = std::max(bmMultiSup.descent, bmSupScript.descent);
-        multiSupSize.Height() = 
+        multiSupSize.Height() =
           std::max(multiSupSize.Height(),
-                   supScriptSize.Height() - supScriptSize.TopAscent());
+                   supScriptSize.Height() - supScriptSize.BlockStartAscent());
 
         if (bmSupScript.width)
           width = std::max(width, bmSupScript.width + aScriptSpace);
@@ -527,18 +529,18 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
   aFrame->SetBoundingMetrics(boundingMetrics);
 
   // get the reflow metrics ...
-  aDesiredSize.SetTopAscent( 
-    std::max(baseSize.TopAscent(), 
-             std::max(multiSubSize.TopAscent() - maxSubScriptShift,
-                      multiSupSize.TopAscent() + maxSupScriptShift)));
-  aDesiredSize.Height() = aDesiredSize.TopAscent() +
-    std::max(baseSize.Height() - baseSize.TopAscent(),
+  aDesiredSize.SetBlockStartAscent(
+    std::max(baseSize.BlockStartAscent(),
+             std::max(multiSubSize.BlockStartAscent() - maxSubScriptShift,
+                      multiSupSize.BlockStartAscent() + maxSupScriptShift)));
+  aDesiredSize.Height() = aDesiredSize.BlockStartAscent() +
+    std::max(baseSize.Height() - baseSize.BlockStartAscent(),
              std::max(multiSubSize.Height() + maxSubScriptShift,
                       multiSupSize.Height() - maxSupScriptShift));
   aDesiredSize.Width() = boundingMetrics.width;
   aDesiredSize.mBoundingMetrics = boundingMetrics;
 
-  aFrame->SetReference(nsPoint(0, aDesiredSize.TopAscent()));
+  aFrame->SetReference(nsPoint(0, aDesiredSize.BlockStartAscent()));
 
   //////////////////
   // Place Children
@@ -564,7 +566,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
         isPreScript = false;
         // place the base ...
         childFrame = baseFrame;
-        dy = aDesiredSize.TopAscent() - baseSize.TopAscent();
+        dy = aDesiredSize.BlockStartAscent() - baseSize.BlockStartAscent();
         FinishReflowChild (baseFrame, aPresContext, baseSize, nullptr,
                            aFrame->MirrorIfRTL(aDesiredSize.Width(),
                                                baseSize.Width(),
@@ -599,7 +601,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
             // https://bugzilla.mozilla.org/show_bug.cgi?id=928675
             if (isPreScript)
               x += width - subScriptSize.Width();
-            dy = aDesiredSize.TopAscent() - subScriptSize.TopAscent() +
+            dy = aDesiredSize.BlockStartAscent() - subScriptSize.BlockStartAscent() +
               maxSubScriptShift;
             FinishReflowChild (subScriptFrame, aPresContext, subScriptSize,
                                nullptr,
@@ -617,7 +619,7 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*      aPresContext,
               // post superscripts are shifted by the italic correction value
               x += italicCorrection;
             }
-            dy = aDesiredSize.TopAscent() - supScriptSize.TopAscent() -
+            dy = aDesiredSize.BlockStartAscent() - supScriptSize.BlockStartAscent() -
               maxSupScriptShift;
             FinishReflowChild (supScriptFrame, aPresContext, supScriptSize,
                                nullptr,

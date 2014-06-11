@@ -492,7 +492,7 @@ IOInterposer::Clear()
   /* Clear() is a no-op on opt builds so that we may continue to trap I/O until
      process termination. In debug builds we need to shut down IOInterposer so
      that all references are properly released and refcnt log remains clean. */
-#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING)
+#if defined(DEBUG) || defined(FORCE_BUILD_REFCNT_LOGGING) || defined(MOZ_ASAN)
   UnregisterCurrentThread();
   sMasterList = nullptr;
 #endif

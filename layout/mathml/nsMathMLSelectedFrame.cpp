@@ -105,7 +105,7 @@ nsMathMLSelectedFrame::Reflow(nsPresContext*          aPresContext,
 {
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
-  aDesiredSize.SetTopAscent(0);
+  aDesiredSize.SetBlockStartAscent(0);
   mBoundingMetrics = nsBoundingMetrics();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
@@ -135,7 +135,7 @@ nsMathMLSelectedFrame::Place(nsRenderingContext& aRenderingContext,
   }
 
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
-  aDesiredSize.SetTopAscent(0);
+  aDesiredSize.SetBlockStartAscent(0);
   mBoundingMetrics = nsBoundingMetrics();
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);
@@ -143,7 +143,7 @@ nsMathMLSelectedFrame::Place(nsRenderingContext& aRenderingContext,
       FinishReflowChild(childFrame, PresContext(), aDesiredSize, nullptr, 0, 0, 0);
     }
     mReference.x = 0;
-    mReference.y = aDesiredSize.TopAscent();
+    mReference.y = aDesiredSize.BlockStartAscent();
   }
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   return NS_OK;

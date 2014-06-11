@@ -155,7 +155,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsReflowStatus childStatus;
 
   aDesiredSize.Width() = aDesiredSize.Height() = 0;
-  aDesiredSize.SetTopAscent(0);
+  aDesiredSize.SetBlockStartAscent(0);
 
   nsBoundingMetrics bmSqr, bmBase, bmIndex;
   nsRenderingContext& renderingContext = *aReflowState.rendContext;
@@ -279,10 +279,10 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   mBoundingMetrics.rightBearing = bmSqr.width + 
     std::max(bmBase.width, bmBase.rightBearing); // take also care of the rule
 
-  aDesiredSize.SetTopAscent(mBoundingMetrics.ascent + leading);
-  aDesiredSize.Height() = aDesiredSize.TopAscent() +
-    std::max(baseSize.Height() - baseSize.TopAscent(),
-           mBoundingMetrics.descent + ruleThickness);
+  aDesiredSize.SetBlockStartAscent(mBoundingMetrics.ascent + leading);
+  aDesiredSize.Height() = aDesiredSize.BlockStartAscent() +
+    std::max(baseSize.Height() - baseSize.BlockStartAscent(),
+             mBoundingMetrics.descent + ruleThickness);
   aDesiredSize.Width() = mBoundingMetrics.width;
 
   /////////////
@@ -300,9 +300,9 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
     indexClearance = 
       indexRaisedAscent - mBoundingMetrics.ascent; // excess gap introduced by a tall index 
     mBoundingMetrics.ascent = indexRaisedAscent;
-    nscoord descent = aDesiredSize.Height() - aDesiredSize.TopAscent();
-    aDesiredSize.SetTopAscent(mBoundingMetrics.ascent + leading);
-    aDesiredSize.Height() = aDesiredSize.TopAscent() + descent;
+    nscoord descent = aDesiredSize.Height() - aDesiredSize.BlockStartAscent();
+    aDesiredSize.SetBlockStartAscent(mBoundingMetrics.ascent + leading);
+    aDesiredSize.Height() = aDesiredSize.BlockStartAscent() + descent;
   }
 
   nscoord dxIndex, dxSqr;
@@ -320,7 +320,8 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   // place the index
   nscoord dx = dxIndex;
-  nscoord dy = aDesiredSize.TopAscent() - (indexRaisedAscent + indexSize.TopAscent() - bmIndex.ascent);
+  nscoord dy = aDesiredSize.BlockStartAscent() -
+    (indexRaisedAscent + indexSize.BlockStartAscent() - bmIndex.ascent);
   FinishReflowChild(indexFrame, aPresContext, indexSize, nullptr,
                     MirrorIfRTL(aDesiredSize.Width(), indexSize.Width(), dx),
                     dy, 0);
@@ -335,13 +336,13 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                    dy, bmBase.width, ruleThickness);
 
   // place the base
-  dy = aDesiredSize.TopAscent() - baseSize.TopAscent();
+  dy = aDesiredSize.BlockStartAscent() - baseSize.BlockStartAscent();
   FinishReflowChild(baseFrame, aPresContext, baseSize, nullptr,
                     MirrorIfRTL(aDesiredSize.Width(), baseSize.Width(), dx),
                     dy, 0);
 
   mReference.x = 0;
-  mReference.y = aDesiredSize.TopAscent();
+  mReference.y = aDesiredSize.BlockStartAscent();
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
