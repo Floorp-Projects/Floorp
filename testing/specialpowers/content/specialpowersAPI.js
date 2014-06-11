@@ -76,6 +76,13 @@ function isXrayWrapper(x) {
   return Cu.isXrayWrapper(x);
 }
 
+function isObjectOrArray(obj) {
+  if (Object(obj) !== obj)
+    return false;
+  let className = Cu.getClassName(obj, true);
+  return className == 'Object' || className == 'Array';
+}
+
 function callGetOwnPropertyDescriptor(obj, name) {
   // Quickstubbed getters and setters are propertyOps, and don't get reified
   // until someone calls __lookupGetter__ or __lookupSetter__ on them (note
@@ -105,9 +112,7 @@ function doApply(fun, invocant, args) {
   // clamping for Xrayed DOM objects reached from literals, so passing things
   // like {l : xoWin.location} won't work. Hopefully the rabbit hole doesn't
   // go that deep.
-  args = args.map(x => (Object(x) === x &&
-                        Cu.getClassName(x, true) == 'Object')
-                  ? Cu.waiveXrays(x) : x);
+  args = args.map(x => isObjectOrArray(x) ? Cu.waiveXrays(x) : x);
   return Function.prototype.apply.call(fun, invocant, args);
 }
 
@@ -230,12 +235,13 @@ SpecialPowersHandler.prototype.doGetPropertyDescriptor = function(name, own) {
   //   non-privileged method that returns only strings, we can just waive Xray
   //   for that case.
   //
-  // *  We implement Xrays to pure JS [[Object]] instances that filter out tricky
-  //    things like callables. This is the right thing for security in general,
-  //    but tends to break tests that try to pass object literals into
-  //    SpecialPowers. So we waive [[Object]] instances before inspecting properties.
+  // *  We implement Xrays to pure JS [[Object]] and [[Array]] instances that
+  //    filter out tricky things like callables. This is the right thing for
+  //    security in general, but tends to break tests that try to pass object
+  //    literals into SpecialPowers. So we waive [[Object]] and [[Array]]
+  //    instances before inspecting properties.
   var obj = this.wrappedObject;
-  if (name == 'toString' || Cu.getClassName(obj, true) == 'Object')
+  if (name == 'toString' || isObjectOrArray(obj))
     obj = XPCNativeWrapper.unwrap(obj);
 
   //
