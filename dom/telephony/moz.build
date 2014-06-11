@@ -11,7 +11,6 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'dom_telephony'
 
 EXPORTS.mozilla.dom += [
-    'CallEvent.h',
     'CallsList.h',
     'Telephony.h',
     'TelephonyCall.h',
@@ -26,7 +25,6 @@ EXPORTS.mozilla.dom.telephony += [
 ]
 
 UNIFIED_SOURCES += [
-    'CallEvent.cpp',
     'CallsList.cpp',
     'ipc/TelephonyChild.cpp',
     'ipc/TelephonyIPCService.cpp',

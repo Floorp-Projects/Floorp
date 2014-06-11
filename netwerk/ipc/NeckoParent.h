@@ -32,13 +32,6 @@ public:
   MOZ_WARN_UNUSED_RESULT
   static const char *
   GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
-                      PBrowserParent* aBrowser,
-                      uint32_t* aAppId,
-                      bool* aInBrowserElement);
-
-  MOZ_WARN_UNUSED_RESULT
-  static const char *
-  GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
                       PContentParent* aBrowser,
                       uint32_t* aAppId,
                       bool* aInBrowserElement);
@@ -52,7 +45,7 @@ public:
    */
   MOZ_WARN_UNUSED_RESULT
   static const char*
-  CreateChannelLoadContext(PBrowserParent* aBrowser,
+  CreateChannelLoadContext(const PBrowserOrId& aBrowser,
                            PContentParent* aContent,
                            const SerializedLoadContext& aSerialized,
                            nsCOMPtr<nsILoadContext> &aResult);
@@ -69,14 +62,48 @@ public:
     return PNeckoParent::RecvPCookieServiceConstructor(aActor);
   }
 
+  /*
+   * This implementation of nsIAuthPrompt2 is used for nested remote iframes that
+   * want an auth prompt.  This class lives in the parent process and informs the
+   * NeckoChild that we want an auth prompt, which forwards the request to the
+   * TabParent in the remote iframe that contains the nested iframe
+   */
+  class NestedFrameAuthPrompt MOZ_FINAL : public nsIAuthPrompt2
+  {
+  public:
+    NS_DECL_ISUPPORTS
+
+    NestedFrameAuthPrompt(PNeckoParent* aParent, uint64_t aNestedFrameId);
+
+    NS_IMETHOD PromptAuth(nsIChannel*, uint32_t, nsIAuthInformation*, bool*)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+    NS_IMETHOD AsyncPromptAuth(nsIChannel* aChannel, nsIAuthPromptCallback* callback,
+                               nsISupports*, uint32_t,
+                               nsIAuthInformation* aInfo, nsICancelable**);
+
+    NS_IMETHOD AsyncPromptAuth2(nsIChannel*, nsIDOMElement*,
+                                nsIAuthPromptCallback*, nsISupports*,
+                                uint32_t, nsIAuthInformation*, nsICancelable**)
+    {
+      return NS_ERROR_NOT_IMPLEMENTED;
+    }
+
+  protected:
+    PNeckoParent* mNeckoParent;
+    uint64_t mNestedFrameId;
+  };
+
 protected:
   virtual PHttpChannelParent*
-    AllocPHttpChannelParent(PBrowserParent*, const SerializedLoadContext&,
+    AllocPHttpChannelParent(const PBrowserOrId&, const SerializedLoadContext&,
                             const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool
     RecvPHttpChannelConstructor(
                       PHttpChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const HttpChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool DeallocPHttpChannelParent(PHttpChannelParent*) MOZ_OVERRIDE;
@@ -84,18 +111,18 @@ protected:
   virtual PWyciwygChannelParent* AllocPWyciwygChannelParent() MOZ_OVERRIDE;
   virtual bool DeallocPWyciwygChannelParent(PWyciwygChannelParent*) MOZ_OVERRIDE;
   virtual PFTPChannelParent*
-    AllocPFTPChannelParent(PBrowserParent* aBrowser,
+    AllocPFTPChannelParent(const PBrowserOrId& aBrowser,
                            const SerializedLoadContext& aSerialized,
                            const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool
     RecvPFTPChannelConstructor(
                       PFTPChannelParent* aActor,
-                      PBrowserParent* aBrowser,
+                      const PBrowserOrId& aBrowser,
                       const SerializedLoadContext& aSerialized,
                       const FTPChannelCreationArgs& aOpenArgs) MOZ_OVERRIDE;
   virtual bool DeallocPFTPChannelParent(PFTPChannelParent*) MOZ_OVERRIDE;
   virtual PWebSocketParent*
-    AllocPWebSocketParent(PBrowserParent* browser,
+    AllocPWebSocketParent(const PBrowserOrId& browser,
                           const SerializedLoadContext& aSerialized) MOZ_OVERRIDE;
   virtual bool DeallocPWebSocketParent(PWebSocketParent*) MOZ_OVERRIDE;
   virtual PTCPSocketParent* AllocPTCPSocketParent() MOZ_OVERRIDE;
@@ -165,6 +192,13 @@ protected:
                                   const ChannelDiverterArgs& channel) MOZ_OVERRIDE;
   virtual bool DeallocPChannelDiverterParent(PChannelDiverterParent* actor)
                                                                 MOZ_OVERRIDE;
+
+  virtual bool RecvOnAuthAvailable(const uint64_t& aCallbackId,
+                                   const nsString& aUser,
+                                   const nsString& aPassword,
+                                   const nsString& aDomain) MOZ_OVERRIDE;
+  virtual bool RecvOnAuthCancelled(const uint64_t& aCallbackId,
+                                   const bool& aUserCancel) MOZ_OVERRIDE;
 
 private:
   nsCString mCoreAppsBasePath;

@@ -180,6 +180,7 @@ ar
 com.ar
 edu.ar
 gob.ar
+gov.ar
 int.ar
 mil.ar
 net.ar
@@ -222,7 +223,6 @@ edu.au
 gov.au
 asn.au
 id.au
-csiro.au
 // Historic 2LDs (closed to new registration, but sites still exist)
 info.au
 conf.au
@@ -245,7 +245,7 @@ sa.edu.au
 tas.edu.au
 vic.edu.au
 wa.edu.au
-act.gov.au
+// act.gov.au  Bug 984824 - Removed at request of Greg Tankard
 // nsw.gov.au  Bug 547985 - Removed at request of <Shae.Donelan@services.nsw.gov.au>
 // nt.gov.au  Bug 940478 - Removed at request of Greg Connors <Greg.Connors@nt.gov.au>
 qld.gov.au
@@ -292,6 +292,7 @@ rs.ba
 // bb : http://en.wikipedia.org/wiki/.bb
 bb
 biz.bb
+co.bb
 com.bb
 edu.bb
 gov.bb
@@ -299,6 +300,7 @@ info.bb
 net.bb
 org.bb
 store.bb
+tv.bb
 
 // bd : http://en.wikipedia.org/wiki/.bd
 *.bd
@@ -5146,7 +5148,24 @@ com.nr
 nu
 
 // nz : http://en.wikipedia.org/wiki/.nz
-*.nz
+// Confirmed by registry <jay@nzrs.net.nz> 2014-05-19
+nz
+ac.nz
+co.nz
+cri.nz
+geek.nz
+gen.nz
+govt.nz
+health.nz
+iwi.nz
+kiwi.nz
+maori.nz
+mil.nz
+māori.nz
+net.nz
+org.nz
+parliament.nz
+school.nz
 
 // om : http://en.wikipedia.org/wiki/.om
 om
@@ -5613,7 +5632,6 @@ oryol.ru
 palana.ru
 penza.ru
 perm.ru
-pskov.ru
 ptz.ru
 rnd.ru
 ryazan.ru
@@ -6440,16 +6458,24 @@ edu.vc
 
 // ve : https://registro.nic.ve/
 // Confirmed by registry 2012-10-04
+// Updated 2014-05-20 - Bug 940478
 ve
+arts.ve
 co.ve
 com.ve
 e12.ve
 edu.ve
+firm.ve
+gob.ve
 gov.ve
 info.ve
+int.ve
 mil.ve
 net.ve
 org.ve
+rec.ve
+store.ve
+tec.ve
 web.ve
 
 // vg : http://en.wikipedia.org/wiki/.vg
@@ -6482,8 +6508,12 @@ pro.vn
 health.vn
 
 // vu : http://en.wikipedia.org/wiki/.vu
-// list of 2nd level tlds ?
+// http://www.vunic.vu/
 vu
+com.vu
+edu.vu
+net.vu
+org.vu
 
 // wf : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
 wf
@@ -6609,7 +6639,14 @@ yt
 فلسطين
 
 // xn--90a3ac ("srb" Cyrillic) : RS
+// http://www.rnids.rs/en/the-.срб-domain
 срб
+пр.срб
+орг.срб
+обр.срб
+од.срб
+упр.срб
+ак.срб
 
 // xn--p1ai ("rf" Russian-Cyrillic) : RU
 // http://www.cctld.ru/en/docs/rulesrf.php
@@ -7663,20 +7700,22 @@ reise
 cloudfront.net
 
 // Amazon Elastic Compute Cloud: https://aws.amazon.com/ec2/
-// Submitted by Osman Surkatty <osmans@amazon.com> 2013-04-02
-compute.amazonaws.com
-us-east-1.amazonaws.com
-compute-1.amazonaws.com
-z-1.compute-1.amazonaws.com
-z-2.compute-1.amazonaws.com
+// Submitted by Osman Surkatty <osmans@amazon.com> 2014-05-20
 ap-northeast-1.compute.amazonaws.com
 ap-southeast-1.compute.amazonaws.com
 ap-southeast-2.compute.amazonaws.com
+cn-north-1.compute.amazonaws.cn
+compute.amazonaws.cn
+compute.amazonaws.com
+compute-1.amazonaws.com
 eu-west-1.compute.amazonaws.com
 sa-east-1.compute.amazonaws.com
+us-east-1.amazonaws.com
 us-gov-west-1.compute.amazonaws.com
 us-west-1.compute.amazonaws.com
 us-west-2.compute.amazonaws.com
+z-1.compute-1.amazonaws.com
+z-2.compute-1.amazonaws.com
 
 // Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/
 // Submitted by Adam Stein <astein@amazon.com> 2013-04-02
@@ -8152,6 +8191,10 @@ co.pl
 azurewebsites.net
 azure-mobile.net
 cloudapp.net
+
+// One Fold Media : http://www.onefoldmedia.com/
+// Submitted by Eddie Jones <eddie@onefoldmedia.com> 2014-06-10
+nid.io
 
 // NYC.mn : http://www.information.nyc.mn
 // Submitted by Matthew Brown <mattbrown@nyc.mn> 2013-03-11

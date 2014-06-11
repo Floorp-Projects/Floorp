@@ -88,6 +88,7 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
                                                        JS::Handle<jsid> aId,
                                                        JS::MutableHandle<JSPropertyDescriptor> aDesc)
 {
+  // Note: The infallibleInit call below depends on this check.
   if (!JSID_IS_STRING(aId)) {
     // Nothing to do if we're resolving a non-string property.
     return true;
@@ -98,7 +99,8 @@ WindowNamedPropertiesHandler::getOwnPropertyDescriptor(JSContext* aCx,
     return true;
   }
 
-  nsDependentJSString str(aId);
+  nsDependentJSString str;
+  str.infallibleInit(aId);
 
   // Grab the DOM window.
   nsGlobalWindow* win = GetWindowFromGlobal(global);
@@ -176,6 +178,15 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
   nsGlobalWindow* win = GetWindowFromGlobal(JS_GetGlobalForObject(aCx, aProxy));
   nsTArray<nsString> names;
   win->GetSupportedNames(names);
+  // Filter out the ones we wouldn't expose from getOwnPropertyDescriptor.
+  // We iterate backwards so we can remove things from the list easily.
+  for (size_t i = names.Length(); i > 0; ) {
+    --i; // Now we're pointing at the next name we want to look at
+    nsIDOMWindow* childWin = win->GetChildWindow(names[i]);
+    if (!childWin || !ShouldExposeChildWindow(names[i], childWin)) {
+      names.RemoveElementAt(i);
+    }
+  }
   if (!AppendNamedPropertyIds(aCx, aProxy, names, false, aProps)) {
     return false;
   }

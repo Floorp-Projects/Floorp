@@ -2689,7 +2689,7 @@ nsTextFrame::ClearMetrics(nsHTMLReflowMetrics& aMetrics)
 {
   aMetrics.Width() = 0;
   aMetrics.Height() = 0;
-  aMetrics.SetTopAscent(0);
+  aMetrics.SetBlockStartAscent(0);
   mAscent = 0;
 }
 
@@ -7973,12 +7973,13 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   aMetrics.Width() = NSToCoordCeil(std::max(gfxFloat(0.0), textMetrics.mAdvanceWidth));
 
   if (transformedCharsFit == 0 && !usedHyphenation) {
-    aMetrics.SetTopAscent(0);
+    aMetrics.SetBlockStartAscent(0);
     aMetrics.Height() = 0;
   } else if (boundingBoxType != gfxFont::LOOSE_INK_EXTENTS) {
     // Use actual text metrics for floating first letter frame.
-    aMetrics.SetTopAscent(NSToCoordCeil(textMetrics.mAscent));
-    aMetrics.Height() = aMetrics.TopAscent() + NSToCoordCeil(textMetrics.mDescent);
+    aMetrics.SetBlockStartAscent(NSToCoordCeil(textMetrics.mAscent));
+    aMetrics.Height() = aMetrics.BlockStartAscent() +
+      NSToCoordCeil(textMetrics.mDescent);
   } else {
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
@@ -7986,15 +7987,17 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     nsFontMetrics* fm = provider.GetFontMetrics();
     nscoord fontAscent = fm->MaxAscent();
     nscoord fontDescent = fm->MaxDescent();
-    aMetrics.SetTopAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
+    aMetrics.SetBlockStartAscent(std::max(NSToCoordCeil(textMetrics.mAscent), fontAscent));
     nscoord descent = std::max(NSToCoordCeil(textMetrics.mDescent), fontDescent);
-    aMetrics.Height() = aMetrics.TopAscent() + descent;
+    aMetrics.Height() = aMetrics.BlockStartAscent() + descent;
   }
 
-  NS_ASSERTION(aMetrics.TopAscent() >= 0, "Negative ascent???");
-  NS_ASSERTION(aMetrics.Height() - aMetrics.TopAscent() >= 0, "Negative descent???");
+  NS_ASSERTION(aMetrics.BlockStartAscent() >= 0,
+               "Negative ascent???");
+  NS_ASSERTION(aMetrics.Height() - aMetrics.BlockStartAscent() >= 0,
+               "Negative descent???");
 
-  mAscent = aMetrics.TopAscent();
+  mAscent = aMetrics.BlockStartAscent();
 
   // Handle text that runs outside its normal bounds.
   nsRect boundingBox = RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent);
@@ -8113,7 +8116,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
 #ifdef NOISY_REFLOW
   ListTag(stdout);
   printf(": desiredSize=%d,%d(b=%d) status=%x\n",
-         aMetrics.Width(), aMetrics.Height(), aMetrics.TopAscent(),
+         aMetrics.Width(), aMetrics.Height(), aMetrics.BlockStartAscent(),
          aStatus);
 #endif
 }

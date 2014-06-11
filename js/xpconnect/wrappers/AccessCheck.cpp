@@ -148,7 +148,9 @@ IsFrameId(JSContext *cx, JSObject *objArg, jsid idArg)
     if (JSID_IS_INT(id)) {
         col->Item(JSID_TO_INT(id), getter_AddRefs(domwin));
     } else if (JSID_IS_STRING(id)) {
-        col->NamedItem(nsDependentJSString(id), getter_AddRefs(domwin));
+        nsDependentJSString idAsString;
+        idAsString.infallibleInit(id);
+        col->NamedItem(idAsString, getter_AddRefs(domwin));
     }
 
     return domwin != nullptr;
