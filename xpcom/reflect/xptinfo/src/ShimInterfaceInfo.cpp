@@ -116,18 +116,8 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsIDOMMozApplicationEvent.h"
-#include "nsIDOMMozMmsEvent.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMMozSettingsEvent.h"
-#include "nsIDOMMozSmsEvent.h"
-#ifdef MOZ_B2G_RIL
-#include "nsIDOMMozVoicemailEvent.h"
-#endif
-#ifdef MOZ_WIDGET_GONK
-#include "nsIDOMMozWifiConnectionInfoEvent.h"
-#include "nsIDOMMozWifiStatusChangeEvent.h"
-#include "nsIDOMMozWifiP2pStatusChangeEvent.h"
-#endif
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeIterator.h"
 #include "nsIDOMNotifyPaintEvent.h"
@@ -285,18 +275,8 @@
 #include "mozilla/dom/MouseScrollEventBinding.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/MozApplicationEventBinding.h"
-#include "mozilla/dom/MozMmsEventBinding.h"
 #include "mozilla/dom/MozNamedAttrMapBinding.h"
 #include "mozilla/dom/MozSettingsEventBinding.h"
-#include "mozilla/dom/MozSmsEventBinding.h"
-#ifdef MOZ_B2G_RIL
-#include "mozilla/dom/MozVoicemailEventBinding.h"
-#endif
-#ifdef MOZ_WIDGET_GONK
-#include "mozilla/dom/MozWifiConnectionInfoEventBinding.h"
-#include "mozilla/dom/MozWifiStatusChangeEventBinding.h"
-#include "mozilla/dom/MozWifiP2pStatusChangeEventBinding.h"
-#endif
 #include "mozilla/dom/NodeIteratorBinding.h"
 #include "mozilla/dom/NodeBinding.h"
 #include "mozilla/dom/NotifyPaintEventBinding.h"
@@ -505,18 +485,8 @@ const ComponentsInterfaceShimEntry kComponentsInterfaceShimMap[] =
   DEFINE_SHIM(MouseScrollEvent),
   DEFINE_SHIM(MutationEvent),
   DEFINE_SHIM(MozApplicationEvent),
-  DEFINE_SHIM(MozMmsEvent),
   DEFINE_SHIM(MozNamedAttrMap),
   DEFINE_SHIM(MozSettingsEvent),
-  DEFINE_SHIM(MozSmsEvent),
-#ifdef MOZ_B2G_RIL
-  DEFINE_SHIM(MozVoicemailEvent),
-#endif
-#ifdef MOZ_WIDGET_GONK
-  DEFINE_SHIM(MozWifiConnectionInfoEvent),
-  DEFINE_SHIM(MozWifiP2pStatusChangeEvent),
-  DEFINE_SHIM(MozWifiStatusChangeEvent),
-#endif
   DEFINE_SHIM(NodeIterator),
   DEFINE_SHIM(Node),
   DEFINE_SHIM(NotifyPaintEvent),
