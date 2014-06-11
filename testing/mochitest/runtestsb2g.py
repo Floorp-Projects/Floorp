@@ -66,7 +66,8 @@ class B2GMochitest(MochitestUtilsMixin):
         self.test_script_args.append(test_url)
 
     def buildTestPath(self, options):
-        # Skip over the manifest building that happens on desktop.
+        if options.manifestFile != 'tests.json':
+            super(B2GMochitest, self).buildTestPath(options, disabled=False)
         return self.buildTestURL(options)
 
     def build_profile(self, options):
@@ -163,13 +164,14 @@ class B2GMochitest(MochitestUtilsMixin):
         return status
 
 
-class B2GDeviceMochitest(B2GMochitest):
+class B2GDeviceMochitest(B2GMochitest, Mochitest):
 
     _dm = None
 
     def __init__(self, marionette, devicemanager, profile_data_dir,
                  local_binary_dir, remote_test_root=None, remote_log_file=None):
         B2GMochitest.__init__(self, marionette, out_of_process=True, profile_data_dir=profile_data_dir)
+        Mochitest.__init__(self)
         self._dm = devicemanager
         self.remote_test_root = remote_test_root or self._dm.getDeviceRoot()
         self.remote_profile = posixpath.join(self.remote_test_root, 'profile')
@@ -219,6 +221,9 @@ class B2GDeviceMochitest(B2GMochitest):
         retVal = super(B2GDeviceMochitest, self).buildURLOptions(options, env)
 
         self.setup_common_options(options)
+
+        # buildURLOptions has already been called so we're hacking it here
+        self.urlOpts.append("manifestFile=%s" % options.manifestFile)
 
         options.profilePath = self.remote_profile
         options.logFile = self.local_log
