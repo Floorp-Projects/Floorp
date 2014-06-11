@@ -991,13 +991,17 @@ public:
                                             const nsAString& aOptions,
                                             const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
                                             mozilla::ErrorResult& aError);
-  JSObject* GetContent(JSContext* aCx, mozilla::ErrorResult& aError);
-  JSObject* Get_content(JSContext* aCx, mozilla::ErrorResult& aError)
+  void GetContent(JSContext* aCx,
+                  JS::MutableHandle<JSObject*> aRetval,
+                  mozilla::ErrorResult& aError);
+  void Get_content(JSContext* aCx,
+                   JS::MutableHandle<JSObject*> aRetval,
+                   mozilla::ErrorResult& aError)
   {
     if (mDoc) {
       mDoc->WarnOnceAbout(nsIDocument::eWindow_Content);
     }
-    return GetContent(aCx, aError);
+    GetContent(aCx, aRetval, aError);
   }
 
   // ChromeWindow bits.  Do NOT call these unless your window is in
