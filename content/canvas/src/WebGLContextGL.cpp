@@ -2530,17 +2530,7 @@ WebGLContext::SurfaceFromElementResultToImageSurface(nsLayoutUtils::SurfaceFromE
     }
 
     if (!mPixelStorePremultiplyAlpha && res.mIsPremultiplied) {
-        switch (data->GetFormat()) {
-        case SurfaceFormat::B8G8R8X8:
-            // No alpha, so de-facto premult'd.
-            break;
-        case SurfaceFormat::B8G8R8A8:
-            data = gfxUtils::CreateUnpremultipliedDataSurface(data);
-            break;
-        default:
-            MOZ_ASSERT(false, "Format unsupported.");
-            break;
-        }
+      data = gfxUtils::UnpremultiplyDataSurface(data);
     }
 
     // We disallow loading cross-domain images and videos that have not been validated
