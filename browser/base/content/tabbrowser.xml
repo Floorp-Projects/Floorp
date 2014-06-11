@@ -4157,8 +4157,6 @@
       </method>
 
       <!-- Deprecated stuff, implemented for backwards compatibility. -->
-      <property name="mTabstripClosebutton" readonly="true"
-                onget="return document.getElementById('tabs-closebutton');"/>
       <property name="mAllTabsPopup" readonly="true"
                 onget="return document.getElementById('alltabs-popup');"/>
     </implementation>
