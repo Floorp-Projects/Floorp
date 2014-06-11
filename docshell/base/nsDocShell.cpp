@@ -12261,6 +12261,13 @@ nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetNestedFrameId(uint64_t* aId)
+{
+    *aId = 0;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::IsAppOfType(uint32_t aAppType, bool *aIsOfType)
 {
     nsCOMPtr<nsIDocShell> shell = this;

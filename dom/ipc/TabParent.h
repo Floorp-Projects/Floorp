@@ -307,6 +307,10 @@ protected:
                         nsIPrincipal* aPrincipal,
                         InfallibleTArray<nsString>* aJSONRetVal = nullptr);
 
+    virtual bool RecvAsyncAuthPrompt(const nsCString& aUri,
+                                     const nsString& aRealm,
+                                     const uint64_t& aCallbackId) MOZ_OVERRIDE;
+
     virtual bool Recv__delete__() MOZ_OVERRIDE;
 
     virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
