@@ -18,9 +18,10 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-TextureClientX11::TextureClientX11(SurfaceFormat aFormat, TextureFlags aFlags)
+TextureClientX11::TextureClientX11(ISurfaceAllocator* aAllocator, SurfaceFormat aFormat, TextureFlags aFlags)
   : TextureClient(aFlags),
     mFormat(aFormat),
+    mAllocator(aAllocator),
     mLocked(false)
 {
   MOZ_COUNT_CTOR(TextureClientX11);
@@ -51,7 +52,7 @@ TextureClientX11::Unlock()
   MOZ_ASSERT(mLocked, "The TextureClient is already Unlocked!");
   mLocked = false;
 
-  if (mSurface) {
+  if (mSurface && !mAllocator->IsSameProcess()) {
     FinishX(DefaultXDisplay());
   }
 }
@@ -86,6 +87,11 @@ TextureClientX11::AllocateForSurface(IntSize aSize, TextureAllocationFlags aText
 
   // The host is always responsible for freeing the pixmap.
   mSurface->ReleasePixmap();
+
+  if (!mAllocator->IsSameProcess()) {
+    FinishX(DefaultXDisplay());
+  }
+
   return true;
 }
 

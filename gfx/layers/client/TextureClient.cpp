@@ -284,7 +284,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       type == gfxSurfaceType::Xlib &&
       !(aTextureFlags & TextureFlags::ALLOC_FALLBACK))
   {
-    result = new TextureClientX11(aFormat, aTextureFlags);
+    result = new TextureClientX11(aAllocator, aFormat, aTextureFlags);
   }
 #ifdef GL_PROVIDER_GLX
   if (parentBackend == LayersBackend::LAYERS_OPENGL &&
@@ -293,7 +293,7 @@ TextureClient::CreateTextureClientForDrawing(ISurfaceAllocator* aAllocator,
       aFormat != SurfaceFormat::A8 &&
       gl::sGLXLibrary.UseTextureFromPixmap())
   {
-    result = new TextureClientX11(aFormat, aTextureFlags);
+    result = new TextureClientX11(aAllocator, aFormat, aTextureFlags);
   }
 #endif
 #endif
@@ -325,7 +325,7 @@ TextureClient::CreateBufferTextureClient(ISurfaceAllocator* aAllocator,
                                          TextureFlags aTextureFlags,
                                          gfx::BackendType aMoz2DBackend)
 {
-  if (gfxPlatform::GetPlatform()->PreferMemoryOverShmem()) {
+  if (aAllocator->IsSameProcess()) {
     RefPtr<BufferTextureClient> result = new MemoryTextureClient(aAllocator, aFormat,
                                                                  aMoz2DBackend,
                                                                  aTextureFlags);

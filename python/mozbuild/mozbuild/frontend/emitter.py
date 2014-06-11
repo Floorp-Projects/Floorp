@@ -481,7 +481,7 @@ class TreeMetadataEmitter(LoggingMixin):
             if filter_inactive:
                 # We return tests that don't exist because we want manifests
                 # defining tests that don't exist to result in error.
-                filtered = m.active_tests(exists=False, disabled=False,
+                filtered = m.active_tests(exists=False, disabled=True,
                     **self.info)
 
                 missing = [t['name'] for t in filtered if not os.path.exists(t['path'])]
