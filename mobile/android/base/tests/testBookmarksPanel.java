@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.util.StringUtils;
 
 public class testBookmarksPanel extends AboutHomeTest {
     public void testBookmarksPanel() {
@@ -21,13 +22,10 @@ public class testBookmarksPanel extends AboutHomeTest {
             isBookmarkDisplayed(url);
         }
 
-        // Open the context menu for the first bookmark in the list
-        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[0]);
+        assertAllContextMenuOptionsArePresent(StringHelper.DEFAULT_BOOKMARKS_URLS[1],
+                StringHelper.DEFAULT_BOOKMARKS_URLS[0]);
 
-        // Test that the options are all displayed
-        for (String contextMenuOption : StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS) {
-            mAsserter.ok(mSolo.searchText(contextMenuOption), "Checking that the context menu option is present", contextMenuOption + " is present");
-        }
+        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[0]);
 
         // Test that "Open in New Tab" works
         final Element tabCount = mDriver.findElement(getActivity(), R.id.tabs_counter);
@@ -80,6 +78,44 @@ public class testBookmarksPanel extends AboutHomeTest {
         mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[3]);
         waitForText("Bookmark removed");
         mAsserter.ok(!mDatabaseHelper.isBookmark(editedBookmarkValues[1]), "Checking that the bookmark was removed", "The bookmark was removed");
+    }
+
+    /**
+     * Asserts that all context menu items are present on the given links. For one link,
+     * the context menu is expected to not have the "Share" context menu item.
+     *
+     * @param shareableURL A URL that is expected to have the "Share" context menu item
+     * @param nonShareableURL A URL that is expected not to have the "Share" context menu item.
+     */
+    private void assertAllContextMenuOptionsArePresent(final String shareableURL,
+            final String nonShareableURL) {
+        mAsserter.ok(StringUtils.isShareableUrl(shareableURL), "Ensuring url is shareable", "");
+        mAsserter.ok(!StringUtils.isShareableUrl(nonShareableURL), "Ensuring url is not shareable", "");
+
+        openBookmarkContextMenu(shareableURL);
+        for (String contextMenuOption : StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS) {
+            mAsserter.ok(mSolo.searchText(contextMenuOption),
+                    "Checking that the context menu option is present",
+                    contextMenuOption + " is present");
+        }
+
+        // Close the menu.
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
+
+        openBookmarkContextMenu(nonShareableURL);
+        for (String contextMenuOption : StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS) {
+            // This link is not shareable: skip the "Share" option.
+            if ("Share".equals(contextMenuOption)) {
+                continue;
+            }
+
+            mAsserter.ok(mSolo.searchText(contextMenuOption),
+                    "Checking that the context menu option is present",
+                    contextMenuOption + " is present");
+        }
+
+        // Close the menu.
+        mActions.sendSpecialKey(Actions.SpecialKey.BACK);
     }
 
    /**
