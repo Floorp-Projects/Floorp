@@ -3111,10 +3111,12 @@ CanvasRenderingContext2D::SetMozDash(JSContext* cx,
   }
 }
 
-JS::Value
-CanvasRenderingContext2D::GetMozDash(JSContext* cx, ErrorResult& error)
+void
+CanvasRenderingContext2D::GetMozDash(JSContext* cx,
+                                     JS::MutableHandle<JS::Value> retval,
+                                     ErrorResult& error)
 {
-  return DashArrayToJSVal(CurrentState().dash, cx, error);
+  DashArrayToJSVal(CurrentState().dash, cx, retval, error);
 }
 
 void

@@ -326,8 +326,9 @@ IDBRequest::WrapObject(JSContext* aCx)
   return IDBRequestBinding::Wrap(aCx, this);
 }
 
-JS::Value
-IDBRequest::GetResult(mozilla::ErrorResult& aRv) const
+void
+IDBRequest::GetResult(JS::MutableHandle<JS::Value> aResult,
+                      ErrorResult& aRv) const
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
@@ -336,7 +337,8 @@ IDBRequest::GetResult(mozilla::ErrorResult& aRv) const
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_NOT_ALLOWED_ERR);
   }
 
-  return mResultVal;
+  JS::ExposeValueToActiveJS(mResultVal);
+  aResult.set(mResultVal);
 }
 
 mozilla::dom::DOMError*

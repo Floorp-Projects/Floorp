@@ -180,12 +180,11 @@ nsDOMFileReader::GetReadyState(uint16_t *aReadyState)
   return NS_OK;
 }
 
-JS::Value
-nsDOMFileReader::GetResult(JSContext* aCx, ErrorResult& aRv)
+void
+nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                           ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> result(aCx);
-  aRv = GetResult(aCx, &result);
-  return result;
+  aRv = GetResult(aCx, aResult);
 }
 
 NS_IMETHODIMP

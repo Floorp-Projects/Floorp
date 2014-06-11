@@ -1611,12 +1611,14 @@ public:
   // HasAttributes is defined inline in Element.h.
   bool HasAttributes() const;
   nsDOMAttributeMap* GetAttributes();
-  JS::Value SetUserData(JSContext* aCx, const nsAString& aKey,
-                        JS::Handle<JS::Value> aData,
-                        nsIDOMUserDataHandler* aHandler,
-                        mozilla::ErrorResult& aError);
-  JS::Value GetUserData(JSContext* aCx, const nsAString& aKey,
-                        mozilla::ErrorResult& aError);
+  void SetUserData(JSContext* aCx, const nsAString& aKey,
+                   JS::Handle<JS::Value> aData,
+                   nsIDOMUserDataHandler* aHandler,
+                   JS::MutableHandle<JS::Value> aRetval,
+                   mozilla::ErrorResult& aError);
+  void GetUserData(JSContext* aCx, const nsAString& aKey,
+                   JS::MutableHandle<JS::Value> aRetval,
+                   mozilla::ErrorResult& aError);
 
   // Helper method to remove this node from its parent. This is not exposed
   // through WebIDL.
