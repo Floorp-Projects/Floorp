@@ -82,6 +82,12 @@ private:
   void BeginPaint();
 
   /**
+   * Determine if we can use a fast path to just do a single high-precision,
+   * non-progressive paint.
+   */
+  bool UseFastPath();
+
+  /**
    * When a paint ends, updates any data necessary to persist until the next
    * paint. If aFinish is true, this will cause the paint to be marked as
    * finished.
