@@ -793,41 +793,19 @@ public class GeckoAppShell
     public static Intent getWebappIntent(String aURI, String aOrigin, String aTitle, Bitmap aIcon) {
         Intent intent;
 
-        if (AppConstants.MOZ_ANDROID_SYNTHAPKS) {
-            Allocator slots = Allocator.getInstance(getContext());
-            int index = slots.getIndexForOrigin(aOrigin);
+        Allocator slots = Allocator.getInstance(getContext());
+        int index = slots.getIndexForOrigin(aOrigin);
 
-            if (index == -1) {
-                return null;
-            }
-            String packageName = slots.getAppForIndex(index);
-            intent = getContext().getPackageManager().getLaunchIntentForPackage(packageName);
-            if (aURI != null) {
-                intent.setData(Uri.parse(aURI));
-            }
-        } else {
-            int index;
-            if (aIcon != null && !TextUtils.isEmpty(aTitle))
-                index = WebappAllocator.getInstance(getContext()).findAndAllocateIndex(aOrigin, aTitle, aIcon);
-            else
-                index = WebappAllocator.getInstance(getContext()).getIndexForApp(aOrigin);
-
-            if (index == -1)
-                return null;
-
-            intent = getWebappIntent(index, aURI);
+        if (index == -1) {
+            return null;
         }
 
-        return intent;
-    }
+        String packageName = slots.getAppForIndex(index);
+        intent = getContext().getPackageManager().getLaunchIntentForPackage(packageName);
+        if (aURI != null) {
+            intent.setData(Uri.parse(aURI));
+        }
 
-    // The old implementation of getWebappIntent.  Not used by MOZ_ANDROID_SYNTHAPKS.
-    public static Intent getWebappIntent(int aIndex, String aURI) {
-        Intent intent = new Intent();
-        intent.setAction(GeckoApp.ACTION_WEBAPP_PREFIX + aIndex);
-        intent.setData(Uri.parse(aURI));
-        intent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
-                            AppConstants.ANDROID_PACKAGE_NAME + ".WebApps$WebApp" + aIndex);
         return intent;
     }
 

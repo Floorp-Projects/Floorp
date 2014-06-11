@@ -8,12 +8,22 @@
 var gDebuggee;
 var gClient;
 var gThreadClient;
+var gCallback;
 
 function run_test()
 {
-  initTestDebuggerServer();
-  gDebuggee = addTestGlobal("test-stack");
-  gClient = new DebuggerClient(DebuggerServer.connectPipe());
+  run_test_with_server(DebuggerServer, function () {
+    run_test_with_server(WorkerDebuggerServer, do_test_finished);
+  });
+  do_test_pending();
+};
+
+function run_test_with_server(aServer, aCallback)
+{
+  gCallback = aCallback;
+  initTestDebuggerServer(aServer);
+  gDebuggee = addTestGlobal("test-stack", aServer);
+  gClient = new DebuggerClient(aServer.connectPipe());
   gClient.connect(function () {
     attachTestTabAndResume(gClient, "test-stack", function (aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
@@ -25,7 +35,6 @@ function run_test()
       }, Ci.nsIThread.DISPATCH_NORMAL);
     });
   });
-  do_test_pending();
 }
 
 function test_simple_stepping()
@@ -55,7 +64,7 @@ function test_simple_stepping()
               do_check_eq(aPacket.why.frameFinished.throw, "ah");
 
               gThreadClient.resume(function () {
-                finishClient(gClient);
+                gClient.close(gCallback);
               });
             });
             gThreadClient.stepOut();
