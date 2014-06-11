@@ -62,7 +62,7 @@
         <hbox flex="1">
           <box id="web-audio-graph" flex="1">
             <vbox flex="1">
-              <svg id="graph-svg" flex="1" viewBox="0 0 1000 500"
+              <svg id="graph-svg"
                   xmlns="http://www.w3.org/2000/svg"
                   xmlns:xlink="http://www.w3.org/1999/xlink">
                 <g id="graph-target" transform="translate(20,20)"/>
