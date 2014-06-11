@@ -55,6 +55,7 @@ CanvasLayerD3D10::Initialize(const Data& aData)
     if (!gfxPrefs::WebGLForceLayersReadback()) {
       if (mGLContext->IsANGLE()) {
         factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext,
+                                                          device(),
                                                           screen->Caps());
       }
     }
@@ -129,20 +130,8 @@ CanvasLayerD3D10::UpdateSurface()
     switch (surf->Type()) {
       case SharedSurfaceType::EGLSurfaceANGLE: {
         SharedSurface_ANGLEShareHandle* shareSurf = SharedSurface_ANGLEShareHandle::Cast(surf);
-        HANDLE shareHandle = shareSurf->GetShareHandle();
 
-        HRESULT hr = device()->OpenSharedResource(shareHandle,
-                                                  __uuidof(ID3D10Texture2D),
-                                                  getter_AddRefs(mTexture));
-        if (FAILED(hr))
-          return;
-
-        hr = device()->CreateShaderResourceView(mTexture,
-                                                nullptr,
-                                                getter_AddRefs(mSRView));
-        if (FAILED(hr))
-          return;
-
+        mSRView = shareSurf->GetSRV();
         return;
       }
       case SharedSurfaceType::Basic: {
