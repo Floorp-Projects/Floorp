@@ -282,8 +282,9 @@ public:
     aName.Assign(mName);
   }
 
-  JS::Value
-  GetKeyPath(JSContext* aCx, ErrorResult& aRv);
+  void
+  GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+             ErrorResult& aRv);
 
   already_AddRefed<DOMStringList>
   GetIndexNames(ErrorResult& aRv);

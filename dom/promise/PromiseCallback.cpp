@@ -219,8 +219,8 @@ WrapperPromiseCallback::Call(JSContext* aCx,
 
   // If invoking callback threw an exception, run resolver's reject with the
   // thrown exception as argument and the synchronous flag set.
-  JS::Rooted<JS::Value> retValue(aCx,
-    mCallback->Call(value, rv, CallbackObject::eRethrowExceptions));
+  JS::Rooted<JS::Value> retValue(aCx);
+  mCallback->Call(value, &retValue, rv, CallbackObject::eRethrowExceptions);
 
   rv.WouldReportJSException();
 
