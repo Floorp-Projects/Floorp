@@ -106,7 +106,6 @@ class GlobalHistory {
         BrowserDB.updateVisitedHistory(GeckoAppShell.getContext().getContentResolver(), uri);
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
-        Log.d(LOGTAG, "GlobalHistory.add took " + took + "msec.");
         Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_ADD, (int) Math.min(took, Integer.MAX_VALUE));
         addToGeckoOnly(uri);
     }
@@ -117,7 +116,6 @@ class GlobalHistory {
         BrowserDB.updateHistoryTitle(GeckoAppShell.getContext().getContentResolver(), uri, title);
         final long end = SystemClock.uptimeMillis();
         final long took = end - start;
-        Log.d(LOGTAG, "GlobalHistory.update took " + took + "msec.");
         Telemetry.HistogramAdd(TELEMETRY_HISTOGRAM_UPDATE, (int) Math.min(took, Integer.MAX_VALUE));
     }
 
