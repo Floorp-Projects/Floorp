@@ -188,6 +188,8 @@ fuzzy-if(Android||B2G,9,980) == gradient-live-01d.svg gradient-live-01-ref.svg
 == lang-attribute-03.svg pass.svg
 == linearGradient-basic-01.svg pass.svg
 == linearGradient-basic-02.svg pass.svg
+# off-by-one fuzziness expected. OS X is broken with bad aliasing though (bug 1023640).
+fuzzy-if(cocoaWidget,15,19679) fuzzy-if(winWidget,1,8800) fuzzy-if(!cocoaWidget&&!winWidget,1,4000) == linearGradient-basic-03.svg linearGradient-basic-03-ref.svg
 == markers-and-group-opacity-01.svg markers-and-group-opacity-01-ref.svg
 == marker-attribute-01.svg pass.svg
 == marker-effects-01.svg marker-effects-01-ref.svg
