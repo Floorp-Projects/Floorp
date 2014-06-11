@@ -15,7 +15,7 @@ function handleRequest(request, response)
 
   // grab the desired policy from the query, and then serve a page
   if (query['csp'])
-    response.setHeader("X-Content-Security-Policy", 
+    response.setHeader("Content-Security-Policy",
                         unescape(query['csp']),
                         false);
   if (query['scriptedreport']) {
@@ -31,7 +31,7 @@ function handleRequest(request, response)
     response.write('<html><head>');
     if (query['double'])
       response.write('<script src="file_CSP_frameancestors.sjs?double=1&scriptedreport=' + query['testid'] + '"></script>');
-    else 
+    else
       response.write('<script src="file_CSP_frameancestors.sjs?scriptedreport=' + query['testid'] + '"></script>');
     response.write('</head><body>');
     response.write(unescape(query['internalframe']));

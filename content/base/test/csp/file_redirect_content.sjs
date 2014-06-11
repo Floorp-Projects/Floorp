@@ -25,7 +25,7 @@ function handleRequest(request, response) {
 
   var csp = "default-src \'self\';report-uri http://mochi.test:8888/tests/content/base/test/csp/file_redirect_report.sjs?" + redirect;
 
-  response.setHeader("X-Content-Security-Policy", csp, false);
+  response.setHeader("Content-Security-Policy", csp, false);
 
   // the actual file content.
   // this image load will (intentionally) fail due to the CSP policy of default-src: 'self'

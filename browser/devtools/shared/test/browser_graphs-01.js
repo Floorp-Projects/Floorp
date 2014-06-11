@@ -20,7 +20,12 @@ function* performTest() {
   doc.body.setAttribute("style", "position: fixed; width: 100%; height: 100%; margin: 0;");
 
   let graph = new LineGraphWidget(doc.body, "fps");
-  yield graph.once("ready");
+
+  let readyEventEmitted;
+  graph.once("ready", () => readyEventEmitted = true);
+
+  yield graph.ready();
+  ok(readyEventEmitted, "The 'ready' event should have been emitted");
 
   testGraph(host, graph);
 

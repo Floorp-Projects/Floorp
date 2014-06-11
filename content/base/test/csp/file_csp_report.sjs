@@ -14,8 +14,8 @@ function handleRequest(request, response)
   response.setHeader("Cache-Control", "no-cache", false);
 
   // set CSP header
-  response.setHeader("X-Content-Security-Policy",
-                     "allow 'self'; report-uri http://mochi.test:8888/csp-report.cgi",
+  response.setHeader("Content-Security-Policy",
+                     "default-src 'self'; report-uri http://mochi.test:8888/csp-report.cgi",
                      false);
 
   // content which will trigger a violation report

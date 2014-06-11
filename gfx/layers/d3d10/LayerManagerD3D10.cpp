@@ -434,11 +434,6 @@ LayerManagerD3D10::CreateReadbackLayer()
   return layer.forget();
 }
 
-static void ReleaseTexture(void *texture)
-{
-  static_cast<ID3D10Texture2D*>(texture)->Release();
-}
-
 TemporaryRef<DrawTarget>
 LayerManagerD3D10::CreateOptimalDrawTarget(const IntSize &aSize,
                                            SurfaceFormat aFormat)

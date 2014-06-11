@@ -130,6 +130,43 @@
   -moz-padding-start: @tabCurveHalfWidth@;
 }
 
+/* Tab Overflow */
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]),
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
+  background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
+  background-size: 100% 100%;
+  width: 14px;
+  margin-bottom: @tabToolbarNavbarOverlap@;
+  pointer-events: none;
+  position: relative;
+  z-index: 3; /* the selected tab's z-index + 1 */
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:-moz-locale-dir(rtl),
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator:not([collapsed]) {
+  -moz-margin-start: -2px;
+  -moz-margin-end: -12px;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator:not([collapsed]) {
+  -moz-margin-start: -12px;
+  -moz-margin-end: -2px;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator[collapsed],
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator[collapsed] {
+  opacity: 0;
+}
+
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-start-indicator,
+.tabbrowser-arrowscrollbox > .arrowscrollbox-overflow-end-indicator {
+  transition: opacity 150ms ease;
+}
+
 .tab-background-start[selected=true]::after,
 .tab-background-start[selected=true]::before,
 .tab-background-start,

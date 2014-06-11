@@ -3941,7 +3941,6 @@ MOZ_USE_NATIVE_POPUP_WINDOWS=
 MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
-MOZ_ANDROID_SYNTHAPKS=
 MOZ_LOCALE_SWITCHER=
 ACCESSIBILITY=1
 MOZ_TIME_MANAGER=
@@ -4964,18 +4963,6 @@ dnl = Enable NFC permission on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_BEAM"; then
     AC_DEFINE(MOZ_ANDROID_BEAM)
-fi
-
-dnl ========================================================
-dnl = Synthesized Webapp APKs on Android
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(android-synthapks,
-[  --enable-android-synthapks       Enable synthesized APKs],
-    MOZ_ANDROID_SYNTHAPKS=1,
-    MOZ_ANDROID_SYNTHAPKS=)
-
-if test -n "$MOZ_ANDROID_SYNTHAPKS"; then
-    AC_DEFINE(MOZ_ANDROID_SYNTHAPKS)
 fi
 
 dnl ========================================================
@@ -8574,7 +8561,6 @@ AC_SUBST(MOZ_METRO)
 AC_SUBST(MOZ_ANDROID_HISTORY)
 AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
-AC_SUBST(MOZ_ANDROID_SYNTHAPKS)
 AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(ENABLE_STRIP)

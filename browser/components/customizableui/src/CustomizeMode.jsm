@@ -665,7 +665,7 @@ CustomizeMode.prototype = {
       if (customizationTarget && customizationTarget != areaNode) {
         areas.push(customizationTarget.id);
       }
-      let overflowTarget = areaNode.getAttribute("overflowtarget");
+      let overflowTarget = areaNode && areaNode.getAttribute("overflowtarget");
       if (overflowTarget) {
         areas.push(overflowTarget);
       }

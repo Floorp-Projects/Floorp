@@ -29,9 +29,6 @@ public:
       CreateOffscreenSurface(const IntSize& size,
                              gfxContentType contentType) MOZ_OVERRIDE;
 
-    already_AddRefed<gfxASurface> OptimizeImage(gfxImageSurface *aSurface,
-                                                gfxImageFormat format);
-
     mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
       GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
 

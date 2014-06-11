@@ -11,24 +11,15 @@ var thisSite = "http://mochi.test:8888";
 var otherSite = "http://example.com";
 var page = "/tests/content/base/test/csp/file_csp_redirects_page.sjs";
 
-var tests = { "font-src": thisSite+page+"?testid=font-src&csp=1",
-              "frame-src": thisSite+page+"?testid=frame-src&csp=1",
-              "img-src":  thisSite+page+"?testid=img-src&csp=1",
-              "media-src":  thisSite+page+"?testid=media-src&csp=1",
-              "object-src":  thisSite+page+"?testid=object-src&csp=1",
-              "script-src":  thisSite+page+"?testid=script-src&csp=1",
-              "style-src":  thisSite+page+"?testid=style-src&csp=1",
-              "worker":  thisSite+page+"?testid=worker&csp=1",
-              "xhr-src":  thisSite+page+"?testid=xhr-src&csp=1",
-              "font-src-spec-compliant": thisSite+page+"?testid=font-src-spec-compliant&csp=1&spec=1",
-              "frame-src-spec-compliant": thisSite+page+"?testid=frame-src-spec-compliant&csp=1&spec=1",
-              "img-src-spec-compliant":  thisSite+page+"?testid=img-src-spec-compliant&csp=1&spec=1",
-              "media-src-spec-compliant":  thisSite+page+"?testid=media-src-spec-compliant&csp=1&spec=1",
-              "object-src-spec-compliant":  thisSite+page+"?testid=object-src-spec-compliant&csp=1&spec=1",
-              "script-src-spec-compliant":  thisSite+page+"?testid=script-src-spec-compliant&csp=1&spec=1",
-              "style-src-spec-compliant":  thisSite+page+"?testid=style-src-spec-compliant&csp=1&spec=1",
-              "worker-spec-compliant":  thisSite+page+"?testid=worker-spec-compliant&csp=1&spec=1",
-              "xhr-src-spec-compliant":  thisSite+page+"?testid=xhr-src-spec-compliant&csp=1&spec=1",
+var tests = { "font-src": thisSite+page+"?testid=font-src&csp=1&spec=1",
+              "frame-src": thisSite+page+"?testid=frame-src&csp=1&spec=1",
+              "img-src":  thisSite+page+"?testid=img-src&csp=1&spec=1",
+              "media-src":  thisSite+page+"?testid=media-src&csp=1&spec=1",
+              "object-src":  thisSite+page+"?testid=object-src&csp=1&spec=1",
+              "script-src":  thisSite+page+"?testid=script-src&csp=1&spec=1",
+              "style-src":  thisSite+page+"?testid=style-src&csp=1&spec=1",
+              "worker":  thisSite+page+"?testid=worker&csp=1&spec=1",
+              "xhr-src":  thisSite+page+"?testid=xhr-src&csp=1&spec=1",
             };
 
 var container = document.getElementById("container");

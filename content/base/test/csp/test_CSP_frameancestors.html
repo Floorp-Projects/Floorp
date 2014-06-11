@@ -10,15 +10,12 @@
 <div id="content" style="display: none">
 </div>
 <iframe style="width:100%;height:300px;" id='cspframe'></iframe>
-<iframe style="width:100%;height:300px;" id='cspframe2'></iframe>
 <script class="testbody" type="text/javascript">
-
-var path = "/tests/content/base/test/csp/";
 
 // These are test results: -1 means it hasn't run,
 // true/false is the pass/fail result.
 var framesThatShouldLoad = {
-  aa_allow: -1,    /* innermost frame allows a */
+  aa_allow: -1,    /* innermost frame allows a *
   //aa_block: -1,    /* innermost frame denies a */
   ab_allow: -1,    /* innermost frame allows a */
   //ab_block: -1,    /* innermost frame denies a */
@@ -28,19 +25,9 @@ var framesThatShouldLoad = {
   abb_allow: -1,   /* innermost frame allows b,a */
   //abb_block: -1,   /* innermost frame denies b */
   //abb2_block: -1,  /* innermost frame denies a */
-  aa_allow_spec_compliant: -1,    /* innermost frame allows a *
-  //aa_block_spec_compliant: -1,    /* innermost frame denies a */
-  ab_allow_spec_compliant: -1,    /* innermost frame allows a */
-  //ab_block_spec_compliant: -1,    /* innermost frame denies a */
-  aba_allow_spec_compliant: -1,   /* innermost frame allows b,a */
-  //aba_block_spec_compliant: -1,   /* innermost frame denies b */
-  //aba2_block_spec_compliant: -1,  /* innermost frame denies a */
-  abb_allow_spec_compliant: -1,   /* innermost frame allows b,a */
-  //abb_block_spec_compliant: -1,   /* innermost frame denies b */
-  //abb2_block_spec_compliant: -1,  /* innermost frame denies a */
 };
 
-var expectedViolationsLeft = 12;
+var expectedViolationsLeft = 6;
 
 // This is used to watch the blocked data bounce off CSP and allowed data
 // get sent out to the wire.
@@ -127,7 +114,6 @@ SpecialPowers.pushPrefEnv(
     // save this for last so that our listeners are registered.
     // ... this loads the testbed of good and bad requests.
     document.getElementById('cspframe').src = 'file_CSP_frameancestors_main.html';
-    document.getElementById('cspframe2').src = 'file_CSP_frameancestors_main_spec_compliant.html';
   });
 
 </script>

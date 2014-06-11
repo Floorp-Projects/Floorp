@@ -5,11 +5,21 @@
     <link rel='stylesheet' type='text/css'
           href='file_CSP.sjs?testid=style_good&type=text/css' />
 
-    <!-- Used to embed inline styles here for testing fonts, but can't do that -->
-    <!-- due to bug 763879 (block inline styles). Moved these to an external, CSS -->
-    <!-- file (file_CSP.css).  -->
-    <link rel='stylesheet' type='text/css' href='file_CSP.css' />
 
+    <style>
+      /* CSS font embedding tests */
+      @font-face {
+        font-family: "arbitrary_good";
+        src: url('file_CSP.sjs?testid=font_good&type=application/octet-stream');
+      }
+      @font-face {
+        font-family: "arbitrary_bad";
+        src: url('http://example.org/tests/content/base/test/csp/file_CSP.sjs?testid=font_bad&type=application/octet-stream');
+      }
+
+      .div_arbitrary_good { font-family: "arbitrary_good"; }
+      .div_arbitrary_bad { font-family: "arbitrary_bad"; }
+    </style>
   </head>
   <body>
     <!-- these should be stopped by CSP.  :) -->
@@ -33,8 +43,8 @@
       <embed src="file_CSP.sjs?testid=object_good&type=application/x-shockwave-flash"></embed>
     </object>
 
-    <!-- XHR tests... they're taken care of in this script, 
-         and since the URI doesn't have any 'testid' values, 
+    <!-- XHR tests... they're taken care of in this script,
+         and since the URI doesn't have any 'testid' values,
          it will just be ignored by the test framework.  -->
     <script src='file_CSP_main.js'></script>
 

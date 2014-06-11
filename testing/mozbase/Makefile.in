@@ -10,7 +10,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Harness packages from the srcdir
 MOZBASE_PACKAGES = \
-  manifestdestiny \
+  manifestparser \
   mozcrash \
   mozfile \
   mozhttpd \
