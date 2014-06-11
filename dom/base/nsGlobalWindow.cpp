@@ -3929,45 +3929,48 @@ nsGlobalWindow::GetRealTop(nsIDOMWindow** aTop)
   return GetTopImpl(outer, aTop, /* aScriptable = */ false);
 }
 
-JSObject*
-nsGlobalWindow::GetContent(JSContext* aCx, ErrorResult& aError)
+void
+nsGlobalWindow::GetContent(JSContext* aCx,
+                           JS::MutableHandle<JSObject*> aRetval,
+                           ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetContent, (aCx, aError), aError, nullptr);
+  FORWARD_TO_OUTER_OR_THROW(GetContent, (aCx, aRetval, aError), aError, );
 
   nsCOMPtr<nsIDOMWindow> content = GetContentInternal(aError);
   if (aError.Failed()) {
-    return nullptr;
+    return;
   }
 
   if (content) {
     JS::Rooted<JS::Value> val(aCx);
     aError = nsContentUtils::WrapNative(aCx, content, &val);
     if (aError.Failed()) {
-      return nullptr;
+      return;
     }
 
-    return &val.toObject();
+    aRetval.set(&val.toObject());
+    return;
   }
 
   if (!nsContentUtils::IsCallerChrome() || !IsChromeWindow()) {
     aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return;
   }
 
   // Something tries to get .content on a ChromeWindow, try to fetch the CPOW.
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner = GetTreeOwner();
   if (!treeOwner) {
     aError.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return;
   }
 
   JS::Rooted<JS::Value> val(aCx, JS::NullValue());
   aError = treeOwner->GetContentWindow(aCx, &val);
   if (aError.Failed()) {
-    return nullptr;
+    return;
   }
 
-  return val.toObjectOrNull();
+  aRetval.set(val.toObjectOrNull());
 }
 
 already_AddRefed<nsIDOMWindow>
@@ -4035,7 +4038,8 @@ NS_IMETHODIMP
 nsGlobalWindow::GetScriptableContent(JSContext* aCx, JS::MutableHandle<JS::Value> aVal)
 {
   ErrorResult rv;
-  JS::Rooted<JSObject*> content(aCx, GetContent(aCx, rv));
+  JS::Rooted<JSObject*> content(aCx);
+  GetContent(aCx, &content, rv);
   if (!rv.Failed()) {
     aVal.setObjectOrNull(content);
   }

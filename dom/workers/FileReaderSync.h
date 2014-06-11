@@ -42,9 +42,10 @@ public:
 
   JSObject* WrapObject(JSContext* aCx);
 
-  JSObject* ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
-                              JS::Handle<JSObject*> aBlob,
-                              ErrorResult& aRv);
+  void ReadAsArrayBuffer(JSContext* aCx, JS::Handle<JSObject*> aScopeObj,
+                         JS::Handle<JSObject*> aBlob,
+                         JS::MutableHandle<JSObject*> aRetval,
+                         ErrorResult& aRv);
   void ReadAsBinaryString(JS::Handle<JSObject*> aBlob, nsAString& aResult,
                           ErrorResult& aRv);
   void ReadAsText(JS::Handle<JSObject*> aBlob,
