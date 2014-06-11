@@ -742,7 +742,7 @@ addAsyncTest(function *() {
   advance_clock(1000);
   omta_is("transform", { tx: 160 }, RunningOn.Compositor,
           "keyframe timing functions test at 5s");
-  advance_clock(1010); // avoid floating point error
+  advance_clock(1010); // avoid floating-point error
   omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 6s");
@@ -772,7 +772,7 @@ addAsyncTest(function *() {
   omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 32s");
-  advance_clock(1000);
+  advance_clock(990); // avoid floating-point error
   omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.8) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 33s");
@@ -780,7 +780,7 @@ addAsyncTest(function *() {
   omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 34s");
-  advance_clock(1000);
+  advance_clock(1010);
   omta_is("transform", { tx: 160 }, RunningOn.Compositor,
           "keyframe timing functions test at 35s");
   advance_clock(1000);
@@ -817,11 +817,11 @@ addAsyncTest(function *() {
   omta_is_approx("transform", { tx: 60 + 100 * gTF.ease_in(0.6) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 14s");
-  advance_clock(2000);
+  advance_clock(2010); // avoid floating-point error
   omta_is_approx("transform", { tx: 160 - 40 * step_end(5)(0.4) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 16s");
-  advance_clock(2000);
+  advance_clock(1990);
   omta_is_approx("transform", { tx: 120 - 100 * gTF.linear(0.2) },
                  RunningOn.Compositor, 0.01,
                  "keyframe timing functions test at 18s");
