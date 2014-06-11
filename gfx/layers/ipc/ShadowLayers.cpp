@@ -569,8 +569,10 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
                             mTxn->mTargetOrientation,
                             aRegionToClear);
 
-  MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
-  PlatformSyncBeforeUpdate();
+  if (!IsSameProcess()) {
+    MOZ_LAYERS_LOG(("[LayersForwarder] syncing before send..."));
+    PlatformSyncBeforeUpdate();
+  }
 
   profiler_tracing("Paint", "Rasterize", TRACING_INTERVAL_END);
   if (mTxn->mSwapRequired) {
