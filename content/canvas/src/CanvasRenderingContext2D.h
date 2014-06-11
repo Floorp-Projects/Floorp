@@ -388,13 +388,15 @@ public:
   void Arc(double x, double y, double radius, double startAngle,
            double endAngle, bool anticlockwise, mozilla::ErrorResult& error);
 
-  JSObject* GetMozCurrentTransform(JSContext* cx,
-                                   mozilla::ErrorResult& error) const;
+  void GetMozCurrentTransform(JSContext* cx,
+			      JS::MutableHandle<JSObject*> result,
+			      mozilla::ErrorResult& error) const;
   void SetMozCurrentTransform(JSContext* cx,
                               JS::Handle<JSObject*> currentTransform,
                               mozilla::ErrorResult& error);
-  JSObject* GetMozCurrentTransformInverse(JSContext* cx,
-                                          mozilla::ErrorResult& error) const;
+  void GetMozCurrentTransformInverse(JSContext* cx,
+				     JS::MutableHandle<JSObject*> result,
+				     mozilla::ErrorResult& error) const;
   void SetMozCurrentTransformInverse(JSContext* cx,
                                      JS::Handle<JSObject*> currentTransform,
                                      mozilla::ErrorResult& error);

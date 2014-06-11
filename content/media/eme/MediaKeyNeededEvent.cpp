@@ -94,8 +94,10 @@ MediaKeyNeededEvent::GetInitDataType(nsString& aRetVal) const
   aRetVal = mInitDataType;
 }
 
-JSObject*
-MediaKeyNeededEvent::GetInitData(JSContext* cx, ErrorResult& aRv)
+void
+MediaKeyNeededEvent::GetInitData(JSContext* cx,
+                                 JS::MutableHandle<JSObject*> aData,
+                                 ErrorResult& aRv)
 {
   if (mRawInitData.Length()) {
     mInitData = Uint8Array::Create(cx,
@@ -104,14 +106,14 @@ MediaKeyNeededEvent::GetInitData(JSContext* cx, ErrorResult& aRv)
                                    mRawInitData.Elements());
     if (!mInitData) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
+      return;
     }
     mRawInitData.Clear();
   }
   if (mInitData) {
     JS::ExposeObjectToActiveJS(mInitData);
   }
-  return mInitData;
+  aData.set(mInitData);
 }
 
 } // namespace dom

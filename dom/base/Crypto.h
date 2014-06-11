@@ -41,8 +41,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Crypto)
 
-  JSObject *
+  void
   GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
+		  JS::MutableHandle<JSObject*> aRetval,
 		  ErrorResult& aRv);
 
   SubtleCrypto*
