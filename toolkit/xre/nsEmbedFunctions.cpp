@@ -74,6 +74,11 @@
 
 #include "GeckoProfiler.h"
 
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
+#define TARGET_SANDBOX_EXPORTS
+#include "mozilla/warnonlysandbox/wosCallbacks.h"
+#endif
+
 #ifdef MOZ_IPDL_TESTS
 #include "mozilla/_ipdltest/IPDLUnitTests.h"
 #include "mozilla/_ipdltest/IPDLUnitTestProcessChild.h"
@@ -534,6 +539,12 @@ XRE_InitChildProcess(int aArgc,
         NS_LogTerm();
         return NS_ERROR_FAILURE;
       }
+
+#if defined(MOZ_CONTENT_SANDBOX) && defined(XP_WIN)
+      // We need to do this after the process has been initialised, as
+      // InitIfRequired needs access to prefs.
+      mozilla::warnonlysandbox::InitIfRequired();
+#endif
 
       // Run the UI event loop on the main thread.
       uiMessageLoop.MessageLoop::Run();

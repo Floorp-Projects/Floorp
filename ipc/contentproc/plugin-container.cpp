@@ -26,6 +26,10 @@
 #include "sandbox/win/src/sandbox.h"
 #include "sandbox/win/src/sandbox_factory.h"
 #include "mozilla/sandboxTarget.h"
+
+#if defined(MOZ_CONTENT_SANDBOX)
+#include "mozilla/warnonlysandbox/wosCallbacks.h"
+#endif
 #endif
 
 #ifdef MOZ_WIDGET_GONK
@@ -143,6 +147,10 @@ content_process_main(int argc, char* argv[])
            return 2;
         }
         mozilla::SandboxTarget::Instance()->SetStartSandboxCallback(StartSandboxCallback);
+
+#if defined(MOZ_CONTENT_SANDBOX)
+        mozilla::warnonlysandbox::PrepareForInit();
+#endif
     }
 #endif
 #endif
