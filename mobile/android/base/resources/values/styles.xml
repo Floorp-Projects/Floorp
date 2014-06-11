@@ -452,7 +452,7 @@
     <style name="RemoteTabsPanelChildBase">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
-        <item name="android:paddingTop">62dp</item>
+        <item name="android:paddingTop">32dp</item>
         <item name="android:orientation">vertical</item>
     </style>
 
