@@ -202,10 +202,6 @@ EXTRA_DSO_LDOPTS += -lelf -ldemangle
 endif
 endif
 
-ifneq (,$(filter DragonFly FreeBSD NetBSD OpenBSD,$(OS_ARCH)))
-OS_LIBS += $(call EXPAND_LIBNAME,kvm)
-endif
-
 ifeq ($(OS_ARCH),FreeBSD)
 OS_LIBS += $(call EXPAND_LIBNAME,util)
 endif

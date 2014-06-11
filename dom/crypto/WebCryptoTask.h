@@ -180,57 +180,15 @@ protected:
   virtual void Resolve() {}
   virtual void Cleanup() {}
 
-  void FailWithError(nsresult aRv)
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Blindly convert nsresult to DOMException
-    // Individual tasks must ensure they pass the right values
-    mResultPromise->MaybeReject(aRv);
-    // Manually release mResultPromise while we're on the main thread
-    mResultPromise = nullptr;
-    Cleanup();
-  }
+  void FailWithError(nsresult aRv);
 
   // Subclasses should override this method if they keep references to
   // any NSS objects, e.g., SECKEYPrivateKey or PK11SymKey.
   virtual void ReleaseNSSResources() MOZ_OVERRIDE {}
 
-  virtual nsresult CalculateResult() MOZ_OVERRIDE MOZ_FINAL
-  {
-    MOZ_ASSERT(!NS_IsMainThread());
+  virtual nsresult CalculateResult() MOZ_OVERRIDE MOZ_FINAL;
 
-    if (NS_FAILED(mEarlyRv)) {
-      return mEarlyRv;
-    }
-
-    if (isAlreadyShutDown()) {
-      return NS_ERROR_DOM_UNKNOWN_ERR;
-    }
-
-    return DoCrypto();
-  }
-
-  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE MOZ_FINAL
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    if (NS_FAILED(rv)) {
-      FailWithError(rv);
-      return;
-    }
-
-    nsresult rv2 = AfterCrypto();
-    if (NS_FAILED(rv2)) {
-      FailWithError(rv2);
-      return;
-    }
-
-    Resolve();
-
-    // Manually release mResultPromise while we're on the main thread
-    mResultPromise = nullptr;
-    Cleanup();
-  }
+  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE MOZ_FINAL;
 };
 
 } // namespace dom

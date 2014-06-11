@@ -35,7 +35,6 @@ EXPORTS += [
     'nsICSSDeclaration.h',
     'nsICSSLoaderObserver.h',
     'nsICSSPseudoComparator.h',
-    'nsICSSRuleList.h',
     'nsICSSStyleRuleDOMWrapper.h',
     'nsIStyleRule.h',
     'nsIStyleRuleProcessor.h',
@@ -65,6 +64,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     'CSS.h',
+    'CSSRuleList.h',
     'CSSValue.h',
     'MediaQueryList.h',
 ]
@@ -84,6 +84,7 @@ EXPORTS.mozilla.css += [
 UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
     'CSS.cpp',
+    'CSSRuleList.cpp',
     'CSSVariableDeclarations.cpp',
     'CSSVariableResolver.cpp',
     'CSSVariableValues.cpp',
@@ -112,7 +113,6 @@ UNIFIED_SOURCES += [
     'nsDOMCSSValueList.cpp',
     'nsHTMLCSSStyleSheet.cpp',
     'nsHTMLStyleSheet.cpp',
-    'nsICSSRuleList.cpp',
     'nsLayoutStylesheetCache.cpp',
     'nsMediaFeatures.cpp',
     'nsNthIndexCache.cpp',
