@@ -19,12 +19,10 @@
 #ifndef _nsFrameManager_h_
 #define _nsFrameManager_h_
 
+#include "nsIFrame.h"
 #include "nsFrameManagerBase.h"
-#include "nsFrameList.h"
-#include "nsIPresShell.h" // Needed for our inline GetPresContext() impl.
+#include "nsIContent.h"
 
-class nsIFrame;
-class nsIContent;
 class nsContainerFrame;
 
 namespace mozilla {
@@ -77,7 +75,7 @@ struct UndisplayedNode {
 
 class nsFrameManager : public nsFrameManagerBase
 {
-  typedef mozilla::layout::FrameChildListID ChildListID;
+  typedef nsIFrame::ChildListID ChildListID;
 
 public:
   nsFrameManager(nsIPresShell *aPresShell, nsStyleSet* aStyleSet) {
