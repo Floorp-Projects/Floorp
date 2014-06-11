@@ -677,7 +677,7 @@ is_approx(px_to_num(cs.paddingBottom), 60 + 100 * gTF.ease_in(0.6), 0.01,
 advance_clock(1000);
 is(cs.paddingBottom, "160px",
    "keyframe timing functions test at 5s");
-advance_clock(1010); // avoid floating point error
+advance_clock(1010); // avoid floating-point error
 is_approx(px_to_num(cs.paddingBottom), 160 - 40 * step_end(5)(0.4), 0.01,
           "keyframe timing functions test at 6s");
 advance_clock(1000);
@@ -701,13 +701,13 @@ is_approx(px_to_num(cs.paddingBottom), 120 - 100 * gTF.linear(0.6), 0.01,
 advance_clock(1000);
 is_approx(px_to_num(cs.paddingBottom), 120 - 100 * gTF.linear(0.2), 0.01,
           "keyframe timing functions test at 32s");
-advance_clock(1000);
+advance_clock(990); // avoid floating-point error
 is_approx(px_to_num(cs.paddingBottom), 160 - 40 * step_end(5)(0.8), 0.01,
           "keyframe timing functions test at 33s");
 advance_clock(1000);
 is_approx(px_to_num(cs.paddingBottom), 160 - 40 * step_end(5)(0.4), 0.01,
           "keyframe timing functions test at 34s");
-advance_clock(1000);
+advance_clock(1010);
 is(cs.paddingBottom, "160px",
    "keyframe timing functions test at 35s");
 advance_clock(1000);
@@ -737,10 +737,10 @@ is_approx(px_to_num(cs.paddingBottom), 20 + 40 * gTF.ease(0.4), 0.01,
 advance_clock(3000);
 is_approx(px_to_num(cs.paddingBottom), 60 + 100 * gTF.ease_in(0.6), 0.01,
           "keyframe timing functions test at 14s");
-advance_clock(2000);
+advance_clock(2010); // avoid floating-point error
 is_approx(px_to_num(cs.paddingBottom), 160 - 40 * step_end(5)(0.4), 0.01,
           "keyframe timing functions test at 16s");
-advance_clock(2000);
+advance_clock(1990);
 is_approx(px_to_num(cs.paddingBottom), 120 - 100 * gTF.linear(0.2), 0.01,
           "keyframe timing functions test at 18s");
 done_div();
