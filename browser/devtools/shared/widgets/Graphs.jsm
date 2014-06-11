@@ -5,8 +5,9 @@
 
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/devtools/event-emitter.js");
 Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
+const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
 
 this.EXPORTED_SYMBOLS = ["LineGraphWidget"];
 
@@ -116,6 +117,7 @@ GraphSelectionResizer.prototype = {
 this.AbstractCanvasGraph = function(parent, name, sharpness) {
   EventEmitter.decorate(this);
 
+  this._ready = promise.defer();
   this._parent = parent;
   this._uid = "canvas-graph-" + Date.now();
 
@@ -165,6 +167,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
 
     this._animationId = this._window.requestAnimationFrame(this._onAnimationFrame);
 
+    this._ready.resolve(this);
     this.emit("ready", this);
   });
 }
@@ -179,6 +182,13 @@ AbstractCanvasGraph.prototype = {
   },
   get height() {
     return this._height;
+  },
+
+  /**
+   * Returns a promise resolved once this graph is ready to receive data.
+   */
+  ready: function() {
+    return this._ready.promise;
   },
 
   /**
@@ -501,14 +511,15 @@ AbstractCanvasGraph.prototype = {
     let ctx = this._ctx;
     ctx.clearRect(0, 0, this._width, this._height);
 
+    // Draw the graph underneath the cursor and selection.
+    if (this.hasData()) {
+      ctx.drawImage(this._cachedGraphImage, 0, 0, this._width, this._height);
+    }
     if (this.hasCursor()) {
       this._drawCliphead();
     }
     if (this.hasSelection() || this.hasSelectionInProgress()) {
       this._drawSelection();
-    }
-    if (this.hasData()) {
-      ctx.drawImage(this._cachedGraphImage, 0, 0, this._width, this._height);
     }
 
     this._shouldRedraw = false;
@@ -957,24 +968,17 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     let width = canvas.width = this._width;
     let height = canvas.height = this._height;
 
+    let totalTicks = this._data.length;
+    let firstTick = this._data[0].delta;
+    let lastTick = this._data[totalTicks - 1].delta;
     let maxValue = Number.MIN_SAFE_INTEGER;
     let minValue = Number.MAX_SAFE_INTEGER;
     let sumValues = 0;
-    let totalTicks = 0;
-    let firstTick;
-    let lastTick;
 
     for (let { delta, value } of this._data) {
       maxValue = Math.max(value, maxValue);
       minValue = Math.min(value, minValue);
       sumValues += value;
-      totalTicks++;
-
-      if (!firstTick) {
-        firstTick = delta;
-      } else {
-        lastTick = delta;
-      }
     }
 
     let dataScaleX = this.dataScaleX = width / lastTick;
@@ -997,7 +1001,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     ctx.fillStyle = gradient;
     ctx.strokeStyle = LINE_GRAPH_STROKE_COLOR;
     ctx.lineWidth = LINE_GRAPH_STROKE_WIDTH;
-    ctx.setLineDash([]);
     ctx.beginPath();
 
     let prevX = 0;

@@ -41,25 +41,35 @@ let startTests = Task.async(function*() {
 
 function* performTests(inspector, ruleview) {
   yield togglePseudoClass(inspector);
-  yield testAdded(inspector, ruleview);
+  yield assertPseudoAddedToNode(inspector, ruleview);
 
   yield togglePseudoClass(inspector);
-  yield testRemoved();
-  yield testRemovedFromUI(inspector, ruleview);
+  yield assertPseudoRemovedFromNode();
+  yield assertPseudoRemovedFromView(inspector, ruleview);
 
   yield togglePseudoClass(inspector);
   yield testNavigate(inspector, ruleview);
 }
 
 function* togglePseudoClass(inspector) {
-  info("Toggle the pseudoclass, wait for the pseudoclass event and wait for the refresh of the rule view");
+  info("Toggle the pseudoclass, wait for it to be applied");
 
+  // Give the inspector panels a chance to update when the pseudoclass changes
   let onPseudo = inspector.selection.once("pseudoclass");
   let onRefresh = inspector.once("rule-view-refreshed");
-  inspector.togglePseudoClass(PSEUDO);
+  let onMutations = waitForMutation(inspector);
+
+  yield inspector.togglePseudoClass(PSEUDO);
 
   yield onPseudo;
   yield onRefresh;
+  yield onMutations;
+}
+
+function waitForMutation(inspector) {
+  let def = promise.defer();
+  inspector.walker.once("mutations", def.resolve);
+  return def.promise;
 }
 
 function* testNavigate(inspector, ruleview) {
@@ -87,7 +97,7 @@ function showPickerOn(node, inspector) {
   return highlighter.showBoxModel(getNodeFront(node));
 }
 
-function* testAdded(inspector, ruleview) {
+function* assertPseudoAddedToNode(inspector, ruleview) {
   info("Make sure the pseudoclass lock is applied to #div-1 and its ancestors");
   let node = getNode("#div-1");
   do {
@@ -110,7 +120,7 @@ function* testAdded(inspector, ruleview) {
   yield inspector.toolbox.highlighter.hideBoxModel();
 }
 
-function* testRemoved() {
+function* assertPseudoRemovedFromNode() {
   info("Make sure the pseudoclass lock is removed from #div-1 and its ancestors");
   let node = getNode("#div-1");
   do {
@@ -120,7 +130,7 @@ function* testRemoved() {
   } while (node.parentNode)
 }
 
-function* testRemovedFromUI(inspector, ruleview) {
+function* assertPseudoRemovedFromView(inspector, ruleview) {
   info("Check that the ruleview no longer contains the pseudo-class rule");
   let rules = ruleview.element.querySelectorAll(".ruleview-rule.theme-separator");
   is(rules.length, 2, "rule view is showing 2 rules after removing lock");
@@ -137,6 +147,6 @@ function* finishUp(toolbox) {
   toolbox.destroy();
   yield onDestroy;
 
-  yield testRemoved(getNode("#div-1"));
+  yield assertPseudoRemovedFromNode(getNode("#div-1"));
   gBrowser.removeCurrentTab();
 }

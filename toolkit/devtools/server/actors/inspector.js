@@ -935,9 +935,12 @@ var WalkerActor = protocol.ActorClass({
   },
 
   destroy: function() {
-    this._hoveredNode = null;
+    this._destroyed = true;
+
     this.clearPseudoClassLocks();
     this._activePseudoClassLocks = null;
+
+    this._hoveredNode = null;
     this.rootDoc = null;
 
     this.reflowObserver.off("reflows", this._onReflows);
@@ -1711,13 +1714,14 @@ var WalkerActor = protocol.ActorClass({
     if (!node.writePseudoClassLocks()) {
       this._activePseudoClassLocks.delete(node);
     }
+
     this._queuePseudoClassMutation(node);
     return true;
   },
 
   /**
-   * Clear all the pseudo-classes on a given node
-   * or all nodes.
+   * Clear all the pseudo-classes on a given node or all nodes.
+   * @param {NodeActor} node Optional node to clear pseudo-classes on
    */
   clearPseudoClassLocks: method(function(node) {
     if (node) {
@@ -1929,7 +1933,7 @@ var WalkerActor = protocol.ActorClass({
   }),
 
   queueMutation: function(mutation) {
-    if (!this.actorID) {
+    if (!this.actorID || this._destroyed) {
       // We've been destroyed, don't bother queueing this mutation.
       return;
     }

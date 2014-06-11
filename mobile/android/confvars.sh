@@ -67,8 +67,5 @@ MOZ_DATA_REPORTING=1
 # Enable runtime locale switching.
 MOZ_LOCALE_SWITCHER=1
 
-# Enable the "synthetic APKs" implementation of Open Web Apps.
-MOZ_ANDROID_SYNTHAPKS=1
-
 # Enable second screen and casting support for external devices.
 MOZ_DEVICES=1

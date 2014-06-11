@@ -6,19 +6,23 @@
  * EventEmitter.
  */
 
+(function (factory) { // Module boilerplate
+  if (this.module && module.id.indexOf("event-emitter") >= 0) { // require
+    factory.call(this, require, exports, module);
+  } else { // Cu.import
+      const Cu = Components.utils;
+      const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+      this.promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+      factory.call(this, devtools.require, this, { exports: this });
+      this.EXPORTED_SYMBOLS = ["EventEmitter"];
+  }
+}).call(this, function (require, exports, module) {
+
 this.EventEmitter = function EventEmitter() {};
+module.exports = EventEmitter;
 
-if (typeof(require) === "function") {
-   module.exports = EventEmitter;
-   var {Cu, components} = require("chrome");
-} else {
-  var EXPORTED_SYMBOLS = ["EventEmitter"];
-  var Cu = this["Components"].utils;
-  var components = Components;
-}
-
-const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
-const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+const { Cu, components } = require("chrome");
+const Services = require("Services");
 
 /**
  * Decorate an object with event emitter functionality.
@@ -190,3 +194,5 @@ EventEmitter.prototype = {
     }
   },
 };
+
+});
