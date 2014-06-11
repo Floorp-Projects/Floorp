@@ -4,7 +4,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="64px" height="64px" viewBox="0 0 64 64">
   <path fill="#E25026" d="M32,4.894c-15.74,0-28.5,12.76-28.5,28.5s12.76,28.5,28.5,28.5s28.5-12.76,28.5-28.5S47.74,4.894,32,4.894
     z M46.903,48.674c-1.817,1.817-4.691,1.76-6.449,0.002l-8.327-8.327l-8.151,8.151c-1.877,1.877-4.87,1.814-6.685,0
