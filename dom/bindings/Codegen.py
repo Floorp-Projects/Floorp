@@ -2143,10 +2143,9 @@ class MethodDefiner(PropertyDefiner):
                         accessor = "genericCrossOriginMethod"
                     elif self.descriptor.needsSpecialGenericOps():
                         if m.get("returnsPromise", False):
-                            raise TypeError("%s returns a Promise but needs "
-                                            "special generic ops?" %
-                                            accessor)
-                        accessor = "genericMethod"
+                            accessor = "genericPromiseReturningMethod"
+                        else:
+                            accessor = "genericMethod"
                     elif m.get("returnsPromise", False):
                         accessor = "GenericPromiseReturningBindingMethod"
                     else:
@@ -6904,6 +6903,53 @@ class CGGenericMethod(CGAbstractBindingMethod):
             return ok;
             """))
 
+class CGGenericPromiseReturningMethod(CGAbstractBindingMethod):
+    """
+    A class for generating the C++ code for an IDL method that returns a Promise.
+
+    Does not handle cross-origin this.
+    """
+    def __init__(self, descriptor):
+        args = [Argument('JSContext*', 'cx'),
+                Argument('unsigned', 'argc'),
+                Argument('JS::Value*', 'vp')]
+        unwrapFailureCode = dedent("""
+            ThrowInvalidThis(cx, args, GetInvalidThisErrorForMethod(%%(securityError)s), "%s");\n
+            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                             args.rval());\n""" %
+            descriptor.interface.identifier.name)
+
+        name = "genericPromiseReturningMethod"
+        customCallArgs = dedent("""
+            JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+            // Make sure to save the callee before someone maybe messes with rval().
+            JS::Rooted<JSObject*> callee(cx, &args.callee());
+        """)
+
+        CGAbstractBindingMethod.__init__(self, descriptor, name,
+                                         args,
+                                         callArgs=customCallArgs,
+                                         unwrapFailureCode=unwrapFailureCode)
+
+    def generate_code(self):
+        return CGGeneric(dedent("""
+            const JSJitInfo *info = FUNCTION_VALUE_TO_JITINFO(args.calleev());
+            MOZ_ASSERT(info->type() == JSJitInfo::Method);
+            JSJitMethodOp method = info->method;
+            bool ok = method(cx, obj, self, JSJitMethodCallArgs(args));
+            if (ok) {
+            #ifdef DEBUG
+              AssertReturnTypeMatchesJitinfo(info, args.rval());
+            #endif
+              return true;
+            }
+
+            MOZ_ASSERT(info->returnType() == JSVAL_TYPE_OBJECT);
+            return ConvertExceptionToPromise(cx, xpc::XrayAwareCalleeGlobal(callee),
+                                             args.rval());
+            """))
+
+
 
 class CGSpecializedMethod(CGAbstractStaticMethod):
     """
@@ -10153,7 +10199,8 @@ class CGDescriptor(CGThing):
         # These are set to true if at least one non-static
         # method/getter/setter or jsonifier exist on the interface.
         (hasMethod, hasGetter, hasLenientGetter, hasSetter, hasJsonifier,
-            hasLenientSetter) = False, False, False, False, False, False
+            hasLenientSetter,
+            hasPromiseReturningMethod) = False, False, False, False, False, False, False
         crossOriginMethods, crossOriginGetters, crossOriginSetters = set(), set(), set()
         for n in descriptor.interface.namedConstructors:
             cgThings.append(CGClassConstructor(descriptor, n,
@@ -10176,6 +10223,8 @@ class CGDescriptor(CGThing):
                     specializedMethod = CGSpecializedMethod(descriptor, m)
                     cgThings.append(specializedMethod)
                     if m.returnsPromise():
+                        if descriptor.needsSpecialGenericOps():
+                            hasPromiseReturningMethod = True
                         cgThings.append(CGMethodPromiseWrapper(descriptor, specializedMethod))
                     cgThings.append(CGMemberJITInfo(descriptor, m))
                     if m.getExtendedAttribute("CrossOriginCallable"):
@@ -10234,6 +10283,8 @@ class CGDescriptor(CGThing):
             cgThings.append(CGMemberJITInfo(descriptor, jsonifierMethod))
         if hasMethod:
             cgThings.append(CGGenericMethod(descriptor))
+        if hasPromiseReturningMethod:
+            cgThings.append(CGGenericPromiseReturningMethod(descriptor))
         if len(crossOriginMethods):
             cgThings.append(CGGenericMethod(descriptor,
                                             allowCrossOriginThis=True))
