@@ -596,6 +596,11 @@ parent:
     sync KeywordToURI(nsCString keyword)
         returns (OptionalInputStreamParams postData, OptionalURIParams uri);
 
+    // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
+    sync AllocateLayerTreeId()
+        returns (uint64_t id);
+    async DeallocateLayerTreeId(uint64_t id);
+
     sync SpeakerManagerForceSpeaker(bool aEnable);
 
     sync SpeakerManagerGetSpeakerStatus()
