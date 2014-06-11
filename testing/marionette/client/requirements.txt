@@ -1,5 +1,5 @@
 ./transport
-manifestdestiny
+manifestparser
 mozhttpd >= 0.5
 mozinfo >= 0.7
 mozprocess >= 0.9

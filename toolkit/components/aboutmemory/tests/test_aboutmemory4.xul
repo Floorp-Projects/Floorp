@@ -100,6 +100,18 @@ Explicit Allocations\n\
 Other Measurements\n\
 \n\
 End of Explicit-only process\n\
+Heap-unclassified process\n\
+Explicit Allocations\n\
+\n\
+250.00 MB (100.0%) -- explicit\n\
+├──200.00 MB (80.00%) ── heap-unclassified\n\
+└───50.00 MB (20.00%) ── a/b\n\
+\n\
+Other Measurements\n\
+\n\
+250.00 MB ── heap-allocated\n\
+\n\
+End of Heap-unclassified process\n\
 Main Process (pid NNN)\n\
 Explicit Allocations\n\
 \n\

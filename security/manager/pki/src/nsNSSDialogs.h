@@ -14,7 +14,6 @@
 #include "nsITokenDialogs.h"
 #include "nsIDOMCryptoDialogs.h"
 #include "nsIGenKeypairInfoDlg.h"
-#include "nsISSLCertErrorDialog.h"
 
 #include "nsCOMPtr.h"
 #include "nsIStringBundle.h"
@@ -30,8 +29,7 @@ class nsNSSDialogs
   public nsICertPickDialogs,
   public nsITokenDialogs,
   public nsIDOMCryptoDialogs,
-  public nsIGeneratingKeypairInfoDialogs,
-  public nsISSLCertErrorDialog
+  public nsIGeneratingKeypairInfoDialogs
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -42,7 +40,6 @@ public:
   NS_DECL_NSITOKENDIALOGS
   NS_DECL_NSIDOMCRYPTODIALOGS
   NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS
-  NS_DECL_NSISSLCERTERRORDIALOG
   nsNSSDialogs();
   virtual ~nsNSSDialogs();
 

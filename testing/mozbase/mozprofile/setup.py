@@ -11,7 +11,7 @@ PACKAGE_VERSION = '0.21'
 # we only support python 2 right now
 assert sys.version_info[0] == 2
 
-deps = ['ManifestDestiny >= 0.5.4',
+deps = ['manifestparser >= 0.6',
         'mozfile >= 1.0',
         'mozlog']
 

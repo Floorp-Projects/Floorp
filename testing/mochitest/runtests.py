@@ -505,7 +505,7 @@ class MochitestUtilsMixin(object):
 
       paths.sort(path_sort)
 
-      # Bug 883865 - add this functionality into manifestDestiny
+      # Bug 883865 - add this functionality into manifestparser
       with open(os.path.join(SCRIPT_DIR, 'tests.json'), 'w') as manifestFile:
         manifestFile.write(json.dumps({'tests': paths}))
       options.manifestFile = 'tests.json'

@@ -398,13 +398,6 @@ nsresult MediaOmxReader::Seek(int64_t aTarget, int64_t aStartTime, int64_t aEndT
   return NS_OK;
 }
 
-static uint64_t BytesToTime(int64_t offset, uint64_t length, uint64_t durationUs) {
-  double perc = double(offset) / double(length);
-  if (perc > 1.0)
-    perc = 1.0;
-  return uint64_t(double(durationUs) * perc);
-}
-
 void MediaOmxReader::SetIdle() {
   if (!mOmxDecoder.get()) {
     return;

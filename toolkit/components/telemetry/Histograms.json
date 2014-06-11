@@ -319,7 +319,7 @@
     "expires_in_version": "never",
     "kind": "linear",
     "high": "18000",
-    "n_buckets": 200,  
+    "n_buckets": 200,
     "description": "Location accuracy"
   },
   "GEOLOCATION_ERROR": {
@@ -2948,7 +2948,7 @@
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
     "extended_statistics_ok": true,
-    "description": "FENNEC: (Places) Number of favicons stored"
+    "description": "Number of favicons stored in the browser DB"
   },
   "FENNEC_THUMBNAILS_COUNT": {
     "expires_in_version": "never",
@@ -2957,7 +2957,7 @@
     "n_buckets": 10,
     "cpp_guard": "ANDROID",
     "extended_statistics_ok": true,
-    "description": "FENNEC: (Places) Number of thumbnails stored"
+    "description": "Number of thumbnails stored in the browser DB"
   },
   "PLACES_SORTED_BOOKMARKS_PERC": {
     "expires_in_version": "never",
@@ -4281,13 +4281,31 @@
     "description": "Number of history entries in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_AWESOMEBAR_ALLPAGES_EMPTY_TIME": {
+  "FENNEC_GLOBALHISTORY_ADD_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
     "low": 10,
     "high": "20000",
     "n_buckets": 20,
-    "description": "Fennec: Time for the Awesomebar Top Sites query to return with no filter set (ms)",
+    "description": "Time for a record to be added to history (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_GLOBALHISTORY_UPDATE_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Time for a record to be updated in history (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_GLOBALHISTORY_VISITED_BUILD_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Time to update the visited link set (ms)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_LOWMEM_TAB_COUNT": {
@@ -4304,13 +4322,20 @@
     "description": "Fennec is starting up but the Gecko thread was still running",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_STARTUP_TIME_JAVAUI": {
+  "FENNEC_SEARCH_LOADER_TIME_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
-    "low": 100,
-    "high": "5000",
+    "low": 10,
+    "high": "20000",
     "n_buckets": 20,
-    "description": "Time for the Java UI to load (ms)",
+    "description": "Time for a URL bar DB search to return (ms)",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_STARTUP_GECKOAPP_ACTION": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_STARTUP_TIME_ABOUTHOME": {
@@ -4331,11 +4356,13 @@
     "description": "Time for the Gecko:Ready message to arrive (ms)",
     "cpp_guard": "ANDROID"
   },
-  "FENNEC_STARTUP_GECKOAPP_ACTION": {
+  "FENNEC_STARTUP_TIME_JAVAUI": {
     "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "The way the GeckoApp was launched. (Normal, URL, Prefetch, Redirector)",
+    "kind": "exponential",
+    "low": 100,
+    "high": "5000",
+    "n_buckets": 20,
+    "description": "Time for the Java UI to load (ms)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_TAB_EXPIRED": {
@@ -4356,6 +4383,15 @@
     "n_buckets": 20,
     "extended_statistics_ok": true,
     "description": "How long (in seconds) a tab was inactive when it was OOM-zombified",
+    "cpp_guard": "ANDROID"
+  },
+  "FENNEC_TOPSITES_LOADER_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 10,
+    "high": "20000",
+    "n_buckets": 20,
+    "description": "Time for the home screen Top Sites query to return with no filter set (ms)",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_WAS_KILLED": {
@@ -6345,5 +6381,42 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Whether FxA Sync is configured to use a custom token server"
+  },
+  "WEBCRYPTO_EXTRACTABLE_IMPORT": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether an imported key was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_GENERATE": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a generated key was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_ENC": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a key used in an encrypt/decrypt operation was marked as extractable"
+  },
+  "WEBCRYPTO_EXTRACTABLE_SIG": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a key used in a sign/verify operation was marked as extractable"
+  },
+  "WEBCRYPTO_RESOLVED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether a promise created by WebCrypto was resolved (vs rejected)"
+  },
+  "WEBCRYPTO_METHOD": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Methods invoked under window.crypto.subtle (0=encrypt, 1=decrypt, 2=sign, 3=verify, 4=digest, 5=generateKey, 6=deriveKey, 7=deriveBits, 8=importKey, 9=exportKey, 10=wrapKey, 11=unwrapKey)"
+  },
+  "WEBCRYPTO_ALG": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Algorithms used with WebCrypto (see table in WebCryptoTask.cpp)"
   }
 }

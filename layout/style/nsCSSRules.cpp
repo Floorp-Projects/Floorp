@@ -22,7 +22,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIMediaList.h"
-#include "nsICSSRuleList.h"
+#include "mozilla/dom/CSSRuleList.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 
@@ -130,7 +130,7 @@ Rule::SizeOfCOMArrayElementIncludingThis(css::Rule* aElement,
 // Style Rule List for group rules
 //
 
-class GroupRuleRuleList MOZ_FINAL : public nsICSSRuleList
+class GroupRuleRuleList MOZ_FINAL : public dom::CSSRuleList
 {
 public:
   GroupRuleRuleList(GroupRule *aGroupRule);

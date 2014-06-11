@@ -1,4 +1,4 @@
-manifestdestiny.pth:testing/mozbase/manifestdestiny
+manifestparser.pth:testing/mozbase/manifestparser
 mozb2g.pth:testing/mozbase/mozb2g
 mozcrash.pth:testing/mozbase/mozcrash
 mozdevice.pth:testing/mozbase/mozdevice

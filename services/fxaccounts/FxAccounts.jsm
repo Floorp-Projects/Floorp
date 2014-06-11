@@ -649,6 +649,7 @@ FxAccountsInternal.prototype = {
       data.kB = CommonUtils.bytesAsHex(kB_hex);
 
       delete data.keyFetchToken;
+      delete data.unwrapBKey;
 
       log.debug("Keys Obtained: kA=" + !!data.kA + ", kB=" + !!data.kB);
       if (logPII) {

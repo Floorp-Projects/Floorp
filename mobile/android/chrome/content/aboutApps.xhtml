@@ -28,14 +28,6 @@
   </head>
 
   <body dir="&locale.dir;">
-
-#ifndef MOZ_ANDROID_SYNTHAPKS
-    <menu type="context" id="appmenu">
-      <menuitem id="addToHomescreenLabel" label="&aboutApps.addToHomescreen;"></menuitem>
-      <menuitem id="uninstallLabel" label="&aboutApps.uninstall;"></menuitem>
-    </menu>
-#endif
-
     <div class="header">
       <div>&aboutApps.header;</div>
       <div id="header-button" role="button" aria-label="&aboutApps.browseMarketplace;" pref="app.marketplaceURL"/>
@@ -55,13 +47,11 @@
         <div id="browse-title" class="title">&aboutApps.browseMarketplace;</div>
       </div>
     </div>
-#ifdef MOZ_ANDROID_SYNTHAPKS
     <div class="list-item" id="update-item" role="button">
       <img class="icon" src="chrome://browser/skin/images/update.png" />
       <div class="inner">
         <div id="browse-title" class="title">&aboutApps.checkForUpdates;</div>
       </div>
     </div>
-#endif
   </body>
 </html>
