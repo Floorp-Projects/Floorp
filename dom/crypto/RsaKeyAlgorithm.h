@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_RsaKeyAlgorithm_h
 #define mozilla_dom_RsaKeyAlgorithm_h
 
+#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/KeyAlgorithm.h"
 #include "js/TypeDecls.h"
 
@@ -35,10 +36,16 @@ public:
     return mModulusLength;
   }
 
-  JSObject* PublicExponent(JSContext* cx) const
+  void GetPublicExponent(JSContext* cx, JS::MutableHandle<JSObject*> aRetval,
+                         ErrorResult& aError) const
   {
     TypedArrayCreator<Uint8Array> creator(mPublicExponent);
-    return creator.Create(cx);
+    JSObject* retval = creator.Create(cx);
+    if (!retval) {
+      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+    } else {
+      aRetval.set(retval);
+    }
   }
 
   virtual bool WriteStructuredClone(JSStructuredCloneWriter* aWriter) const MOZ_OVERRIDE;
