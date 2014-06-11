@@ -153,6 +153,24 @@ from its prototype:
     environment enclosing the function when it was created. If the referent
     is a function proxy or not debuggee code, this is `undefined`.
 
+`isBoundFunction`
+:   `true` if the referent is a bound function; `false` otherwise.
+
+`boundTargetFunction`
+:   If the referent is a bound function, this is its target function—the
+    function that was bound to a particular `this` object. If the referent
+    is not a bound function, this is `undefined`.
+
+`boundThis`
+:   If the referent is a bound function, this is the `this` value it was
+    bound to. If the referent is not a bound function, this is `undefined`.
+
+`boundArguments`
+:   If the referent is a bound function, this is an array (in the Debugger
+    object's compartment) that contains the debuggee values of the `arguments`
+    object it was bound to. If the referent is not a bound function, this is
+    `undefined`.
+
 `proxyHandler`
 :   If the referent is a proxy whose handler object was allocated by
     debuggee code, this is its handler object—the object whose methods are

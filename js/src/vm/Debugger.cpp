@@ -5223,6 +5223,70 @@ DebuggerObject_getEnvironment(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
+DebuggerObject_getIsBoundFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isBoundFunction", args, refobj);
+
+    args.rval().setBoolean(refobj->isBoundFunction());
+    return true;
+}
+
+static bool
+DebuggerObject_getBoundTargetFunction(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundFunctionTarget", args, dbg, refobj);
+
+    if (!refobj->isBoundFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setObject(*refobj->as<JSFunction>().getBoundFunctionTarget());
+    return dbg->wrapDebuggeeValue(cx, args.rval());
+}
+
+static bool
+DebuggerObject_getBoundThis(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundThis", args, dbg, refobj);
+
+    if (!refobj->isBoundFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+    args.rval().set(refobj->as<JSFunction>().getBoundFunctionThis());
+    return dbg->wrapDebuggeeValue(cx, args.rval());
+}
+
+static bool
+DebuggerObject_getBoundArguments(JSContext *cx, unsigned argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundArguments", args, dbg, refobj);
+
+    if (!refobj->isBoundFunction()) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    Rooted<JSFunction*> fun(cx, &refobj->as<JSFunction>());
+    size_t length = fun->getBoundFunctionArgumentCount();
+    AutoValueVector boundArgs(cx);
+    if (!boundArgs.resize(length))
+        return false;
+    for (size_t i = 0; i < length; i++) {
+        boundArgs[i].set(fun->getBoundFunctionArgument(i));
+        if (!dbg->wrapDebuggeeValue(cx, boundArgs[i]))
+            return false;
+    }
+
+    JSObject *aobj = NewDenseCopiedArray(cx, boundArgs.length(), boundArgs.begin());
+    if (!aobj)
+        return false;
+    args.rval().setObject(*aobj);
+    return true;
+}
+
+static bool
 DebuggerObject_getGlobal(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get global", args, dbg, obj);
@@ -5728,6 +5792,10 @@ static const JSPropertySpec DebuggerObject_properties[] = {
     JS_PSG("parameterNames", DebuggerObject_getParameterNames, 0),
     JS_PSG("script", DebuggerObject_getScript, 0),
     JS_PSG("environment", DebuggerObject_getEnvironment, 0),
+    JS_PSG("isBoundFunction", DebuggerObject_getIsBoundFunction, 0),
+    JS_PSG("boundTargetFunction", DebuggerObject_getBoundTargetFunction, 0),
+    JS_PSG("boundThis", DebuggerObject_getBoundThis, 0),
+    JS_PSG("boundArguments", DebuggerObject_getBoundArguments, 0),
     JS_PSG("global", DebuggerObject_getGlobal, 0),
     JS_PS_END
 };
