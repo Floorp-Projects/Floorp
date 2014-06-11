@@ -768,9 +768,15 @@ NetworkManager.prototype = {
     this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
   },
 
-  getNetworkInterface: function(type) {
+  getNetworkInterface: function(type, serviceId) {
     for each (let network in this.networkInterfaces) {
       if (network.type == type) {
+#ifdef MOZ_B2G_RIL
+        if (serviceId != undefined && this.isNetworkTypeMobile(network.type) &&
+            network.serviceId != serviceId) {
+          continue;
+        }
+#endif
         return network;
       }
     }
@@ -857,7 +863,7 @@ NetworkManager.prototype = {
   handleDunConnection: function(enable, callback) {
     debug("handleDunConnection: " + enable);
     let dun = this.getNetworkInterface(
-      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN, this._dataDefaultServiceId);
 
     if (!enable) {
       this._dunActiveUsers--;
@@ -933,7 +939,8 @@ NetworkManager.prototype = {
     if (this.active) {
       this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = this.active.name;
     } else {
-      let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+      let mobile = this.getNetworkInterface(
+        Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
       if (mobile) {
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
       }
@@ -1054,7 +1061,8 @@ NetworkManager.prototype = {
     }
 #endif
 
-    let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+    let mobile = this.getNetworkInterface(
+      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
     // Update the real interface name
     if (mobile) {
       this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
