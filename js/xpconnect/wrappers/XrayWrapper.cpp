@@ -46,6 +46,7 @@ IsJSXraySupported(JSProtoKey key)
     switch (key) {
       case JSProto_Date:
       case JSProto_Object:
+      case JSProto_Array:
         return true;
       default:
         return false;
@@ -472,7 +473,7 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext *cx,
             // forcibly override the behavior here for Arrays until bug 987163
             // lands.
             JSProtoKey key = IdentifyStandardInstanceOrPrototype(propObj);
-            if (key != JSProto_Array && key != JSProto_Uint8ClampedArray &&
+            if (key != JSProto_Uint8ClampedArray &&
                 key != JSProto_Int8Array && key != JSProto_Uint8Array &&
                 key != JSProto_Int16Array && key != JSProto_Uint16Array &&
                 key != JSProto_Int32Array && key != JSProto_Uint32Array &&
@@ -519,10 +520,18 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
 
     RootedObject target(cx, getTargetObject(wrapper));
     if (!isPrototype(holder)) {
-        // For object instances, we expose some properties from the underlying
-        // object, but only after filtering them carefully.
+        // For Object and Array instances, we expose some properties from the
+        // underlying object, but only after filtering them carefully.
+        //
+        // Note that, as far as JS observables go, Arrays are just Objects with
+        // a different prototype and a magic (own, non-configurable) |.length| that
+        // serves as a non-tight upper bound on |own| indexed properties. So while
+        // it's tempting to try to impose some sort of structure on what Arrays
+        // "should" look like over Xrays, the underlying object is squishy enough
+        // that it makes sense to just treat them like Objects for Xray purposes.
         switch (getProtoKey(holder)) {
           case JSProto_Object:
+          case JSProto_Array:
             {
                 JSAutoCompartment ac(cx, target);
                 if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, desc))
@@ -669,8 +678,10 @@ JSXrayTraits::delete_(JSContext *cx, HandleObject wrapper, HandleId id, bool *bp
     // If we're using Object Xrays, we allow callers to attempt to delete any
     // property from the underlying object that they are able to resolve. Note
     // that this deleting may fail if the property is non-configurable.
-    bool isObjectInstance = getProtoKey(holder) == JSProto_Object && !isPrototype(holder);
-    if (isObjectInstance) {
+    JSProtoKey key = getProtoKey(holder);
+    bool isObjectOrArrayInstance = (key == JSProto_Object || key == JSProto_Array) &&
+                                   !isPrototype(holder);
+    if (isObjectOrArrayInstance) {
         RootedObject target(cx, getTargetObject(wrapper));
         JSAutoCompartment ac(cx, target);
         Rooted<JSPropertyDescriptor> desc(cx);
@@ -695,34 +706,36 @@ JSXrayTraits::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
         return false;
 
 
-    // Object instances are special. For that case, we forward property
+    // Object and Array instances are special. For those cases, we forward property
     // definitions to the underlying object if the following conditions are met:
     // * The property being defined is a value-prop.
     // * The property being defined is either a primitive or subsumed by the target.
     // * As seen from the Xray, any existing property that we would overwrite is an
     //   |own| value-prop.
     //
-    // To avoid confusion, we disallow expandos on Object instances, and
+    // To avoid confusion, we disallow expandos on Object and Array instances, and
     // therefore raise an exception here if the above conditions aren't met.
-    bool isObjectInstance = getProtoKey(holder) == JSProto_Object && !isPrototype(holder);
-    if (isObjectInstance) {
+    JSProtoKey key = getProtoKey(holder);
+    bool isObjectOrArrayInstance = (key == JSProto_Object || key == JSProto_Array) &&
+                                   !isPrototype(holder);
+    if (isObjectOrArrayInstance) {
         RootedObject target(cx, getTargetObject(wrapper));
         if (desc.hasGetterOrSetter()) {
-            JS_ReportError(cx, "Not allowed to define accessor property on [Object] XrayWrapper");
+            JS_ReportError(cx, "Not allowed to define accessor property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (desc.value().isObject() &&
             !AccessCheck::subsumes(target, js::UncheckedUnwrap(&desc.value().toObject())))
         {
-            JS_ReportError(cx, "Not allowed to define cross-origin object as property on [Object] XrayWrapper");
+            JS_ReportError(cx, "Not allowed to define cross-origin object as property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (existingDesc.hasGetterOrSetter()) {
-            JS_ReportError(cx, "Not allowed to overwrite accessor property on [Object] XrayWrapper");
+            JS_ReportError(cx, "Not allowed to overwrite accessor property on [Object] or [Array] XrayWrapper");
             return false;
         }
         if (existingDesc.object() && existingDesc.object() != wrapper) {
-            JS_ReportError(cx, "Not allowed to shadow non-own Xray-resolved property on [Object] XrayWrapper");
+            JS_ReportError(cx, "Not allowed to shadow non-own Xray-resolved property on [Object] or [Array] XrayWrapper");
             return false;
         }
 
@@ -750,10 +763,11 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
         return false;
 
     if (!isPrototype(holder)) {
-        // For object instances, we expose some properties from the underlying
+        // For Object and Array instances, we expose some properties from the underlying
         // object, but only after filtering them carefully.
         switch (getProtoKey(holder)) {
           case JSProto_Object:
+          case JSProto_Array:
             MOZ_ASSERT(props.empty());
             {
                 JSAutoCompartment ac(cx, target);
