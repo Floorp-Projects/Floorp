@@ -41,7 +41,7 @@ class TextureClientX11 : public TextureClient
 
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+  virtual gfx::DrawTarget* BorrowDrawTarget() MOZ_OVERRIDE;
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -52,6 +52,7 @@ class TextureClientX11 : public TextureClient
   gfx::IntSize mSize;
   RefPtr<gfxXlibSurface> mSurface;
   RefPtr<ISurfaceAllocator> mAllocator;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   bool mLocked;
 };
 
