@@ -13,9 +13,9 @@
 #include "mozilla/Services.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "mozilla/dom/MobileMessageManagerBinding.h"
+#include "mozilla/dom/MozMmsEvent.h"
 #include "mozilla/dom/MozMmsMessageBinding.h"
-#include "nsIDOMMozSmsEvent.h"
-#include "nsIDOMMozMmsEvent.h"
+#include "mozilla/dom/MozSmsEvent.h"
 #include "nsIDOMMozSmsMessage.h"
 #include "nsIDOMMozMmsMessage.h"
 #include "nsJSUtils.h"
@@ -476,27 +476,27 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const char* aTopic,
                                                     const nsAString& aEventName,
                                                     nsISupports* aMsg)
 {
-  nsCOMPtr<nsIDOMEvent> event;
-
   nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMsg);
   if (sms) {
-    NS_NewDOMMozSmsEvent(getter_AddRefs(event), this, nullptr, nullptr);
-    NS_ASSERTION(event, "This should never fail!");
+    MozSmsEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mMessage = sms;
 
-    nsCOMPtr<nsIDOMMozSmsEvent> se = do_QueryInterface(event);
-    nsresult rv = se->InitMozSmsEvent(aEventName, false, false, sms);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<MozSmsEvent> event =
+      MozSmsEvent::Constructor(this, aEventName, init);
     return DispatchTrustedEvent(event);
   }
 
   nsCOMPtr<nsIDOMMozMmsMessage> mms = do_QueryInterface(aMsg);
   if (mms) {
-    NS_NewDOMMozMmsEvent(getter_AddRefs(event), this, nullptr, nullptr);
-    NS_ASSERTION(event, "This should never fail!");
+    MozMmsEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
+    init.mMessage = mms;
 
-    nsCOMPtr<nsIDOMMozMmsEvent> se = do_QueryInterface(event);
-    nsresult rv = se->InitMozMmsEvent(aEventName, false, false, mms);
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<MozMmsEvent> event =
+      MozMmsEvent::Constructor(this, aEventName, init);
     return DispatchTrustedEvent(event);
   }
 
