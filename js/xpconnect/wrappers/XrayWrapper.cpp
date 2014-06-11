@@ -412,7 +412,9 @@ inline bool
 SilentFailure(JSContext *cx, HandleId id, const char *reason)
 {
 #ifdef DEBUG
-    nsDependentJSString name(id);
+    nsDependentJSString name;
+    if (!name.init(cx, id))
+        return false;
     AutoFilename filename;
     unsigned line = 0;
     DescribeScriptedCaller(cx, &filename, &line);
@@ -2145,7 +2147,9 @@ XrayWrapper<Base, Traits>::getPropertyDescriptor(JSContext *cx, HandleObject wra
         JSID_IS_STRING(id) &&
         (win = AsWindow(cx, wrapper)))
     {
-        nsDependentJSString name(id);
+        // Note - The infallibleInit() depends on the JSID_IS_STRING check above.
+        nsDependentJSString name;
+        name.infallibleInit(id);
         nsCOMPtr<nsIDOMWindow> childDOMWin = win->GetChildWindow(name);
         if (childDOMWin) {
             nsGlobalWindow *cwin = static_cast<nsGlobalWindow*>(childDOMWin.get());
