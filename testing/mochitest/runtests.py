@@ -446,15 +446,11 @@ class MochitestUtilsMixin(object):
       testURL = "about:blank"
     return testURL
 
-  def buildTestPath(self, options, disabled=True):
+  def buildTestPath(self, options):
     """ Build the url path to the specific test harness and test file or directory
         Build a manifest of tests to run and write out a json file for the harness to read
-
-        disabled -- This allows to add all disabled tests on the build side
-                    and then on the run side to only run the enabled ones
     """
-    self.testRoot = self.getTestRoot(options)
-    self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
+    manifest = None
     manifest = self.getTestManifest(options)
 
     if manifest:
@@ -475,12 +471,12 @@ class MochitestUtilsMixin(object):
          testPath.endswith('.xul') or \
          testPath.endswith('.js'):
           # In the case where we have a single file, we don't want to filter based on options such as subsuite.
-          tests = manifest.active_tests(disabled=disabled, options=None, **info)
+          tests = manifest.active_tests(disabled=True, options=None, **info)
           for test in tests:
               if 'disabled' in test:
                   del test['disabled']
       else:
-          tests = manifest.active_tests(disabled=disabled, options=options, **info)
+          tests = manifest.active_tests(disabled=True, options=options, **info)
       paths = []
 
       for test in tests:
@@ -493,7 +489,7 @@ class MochitestUtilsMixin(object):
           continue
 
         if not self.isTest(options, tp):
-          log.warning('Warning: %s from manifest %s is not a valid test' % (test['name'], test['manifest']))
+          print 'Warning: %s from manifest %s is not a valid test' % (test['name'], test['manifest'])
           continue
 
         testob = {'path': tp}
