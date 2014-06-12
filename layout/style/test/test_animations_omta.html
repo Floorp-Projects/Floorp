@@ -138,6 +138,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
              transform: translate(50px); }
     }
 
+    @keyframes empty { }
+    @keyframes nearlyempty {
+      to {
+        transform: translate(100px);
+      }
+    }
+
     .target {
       /* The animation target needs geometry in order to qualify for OMTA */
       width: 100px;
@@ -1912,6 +1919,105 @@ addAsyncAnimTest(function *() {
                   pseudoElement: "" }],
                "events after skipping over zero-duration animation " +
                "with negative delay");
+  done_div();
+});
+
+/*
+ * Bug 1004377 - Animations with empty keyframes rule
+ */
+
+addAsyncAnimTest(function *() {
+  new_div("margin-right: 200px; animation: empty 2s 1s both");
+  listen();
+  advance_clock(0);
+  yield waitForPaintsFlushed();
+  check_events([], "events during delay");
+  advance_clock(2000); // Skip to middle of animation
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events during middle of animation with empty keyframes rule");
+  advance_clock(1000); // Skip to end of animation
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'empty', elapsedTime: 2,
+                  pseudoElement: "" }],
+               "events at end of animation with empty keyframes rule");
+  done_div();
+});
+
+// Test with a zero-duration animation and empty @keyframes rule
+addAsyncAnimTest(function *() {
+  new_div("margin-right: 200px; animation: empty 0s 1s both");
+  listen();
+  yield waitForPaintsFlushed();
+  advance_clock(1000);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" },
+                { type: 'animationend', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events at end of zero-duration animation with " +
+               "empty keyframes rule");
+  done_div();
+});
+
+// Test with a keyframes rule that becomes empty
+addAsyncAnimTest(function *() {
+  new_div("animation: nearlyempty 1s both linear");
+  yield waitForPaintsFlushed();
+  advance_clock(500);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is animating on compositor");
+
+  // Update keyframes rule and check the result gets removed
+  listen();
+  findKeyframesRule("nearlyempty").deleteRule("to");
+  yield waitForPaintsFlushed();
+  omta_is("transform", { }, RunningOn.MainThread,
+          "Animation with (now) empty keyframes rule is cleared " +
+          "from compositor");
+
+  // Check we still dispatch the end event however
+  advance_clock(500);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationend', target: gDiv,
+                  animationName: 'nearlyempty', elapsedTime: 1,
+                  pseudoElement: "" }],
+               "events at end of animation with newly " +
+               "empty keyframes rule");
+
+  done_div();
+});
+
+// Test when we update to point to an empty animation
+addAsyncAnimTest(function *() {
+  new_div("animation: always_fifty 1s both linear");
+  yield waitForPaintsFlushed();
+  advance_clock(500);
+  omta_is("transform", { tx: 50 }, RunningOn.Compositor,
+          "Animation is animating on compositor");
+
+  // Update animation name
+  listen();
+  gDiv.style.animationName = "empty";
+  yield waitForPaintsFlushed();
+  omta_is("transform", { }, RunningOn.MainThread,
+          "Animation updated to use empty keyframes rule is cleared " +
+          "from compositor");
+
+  // Check events
+  advance_clock(500);
+  gDiv.clientTop; // Trigger events
+  check_events([{ type: 'animationstart', target: gDiv,
+                  animationName: 'empty', elapsedTime: 0,
+                  pseudoElement: "" }],
+               "events at start of animation updated to use " +
+               "empty keyframes rule");
+
   done_div();
 });
 
