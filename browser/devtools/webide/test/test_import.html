@@ -22,6 +22,9 @@
             let win = yield openWebIDE();
             let packagedAppLocation = getTestFilePath("app");
 
+            yield win.AppProjects.load();
+            is(win.AppProjects.store.object.projects.length, 0, "IDB is empty");
+
             yield win.Cmds.importPackagedApp(packagedAppLocation);
 
             let project = win.AppManager.selectedProject;
