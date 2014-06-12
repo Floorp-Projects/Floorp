@@ -111,7 +111,7 @@ public:
 };
 
 Telephony::Telephony(nsPIDOMWindow* aOwner)
-  : DOMEventTargetHelper(aOwner), mActiveCall(nullptr), mEnumerated(false)
+  : DOMEventTargetHelper(aOwner), mEnumerated(false)
 {
 }
 
@@ -207,6 +207,8 @@ bool
 Telephony::IsActiveState(uint16_t aCallState) {
   return aCallState == nsITelephonyService::CALL_STATE_DIALING ||
       aCallState == nsITelephonyService::CALL_STATE_ALERTING ||
+      aCallState == nsITelephonyService::CALL_STATE_HOLDING ||
+      aCallState == nsITelephonyService::CALL_STATE_DISCONNECTING ||
       aCallState == nsITelephonyService::CALL_STATE_CONNECTED;
 }
 
@@ -234,14 +236,6 @@ Telephony::HasDialingCall()
   }
 
   return false;
-}
-
-bool
-Telephony::MatchActiveCall(TelephonyCall* aCall)
-{
-  return (mActiveCall &&
-          mActiveCall->CallIndex() == aCall->CallIndex() &&
-          mActiveCall->ServiceId() == aCall->ServiceId());
 }
 
 already_AddRefed<Promise>
@@ -300,16 +294,6 @@ Telephony::NotifyCallsChanged(TelephonyCall* aCall)
   return DispatchCallEvent(NS_LITERAL_STRING("callschanged"), aCall);
 }
 
-void
-Telephony::UpdateActiveCall(TelephonyCall* aCall, bool aIsActive)
-{
-  if (aIsActive) {
-    mActiveCall = aCall;
-  } else if (MatchActiveCall(aCall)) {
-    mActiveCall = nullptr;
-  }
-}
-
 already_AddRefed<TelephonyCall>
 Telephony::GetCall(uint32_t aServiceId, uint32_t aCallIndex)
 {
@@ -351,7 +335,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(Telephony,
                                                 DOMEventTargetHelper)
   tmp->Shutdown();
-  tmp->mActiveCall = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCalls)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCallsList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGroup)
@@ -451,11 +434,16 @@ Telephony::SetSpeakerEnabled(bool aEnabled, ErrorResult& aRv)
 void
 Telephony::GetActive(Nullable<OwningTelephonyCallOrTelephonyCallGroup>& aValue)
 {
-  if (mActiveCall) {
-    aValue.SetValue().SetAsTelephonyCall() = mActiveCall;
-  } else if (mGroup->CallState() == nsITelephonyService::CALL_STATE_CONNECTED) {
+  if (mGroup->CallState() == nsITelephonyService::CALL_STATE_CONNECTED) {
     aValue.SetValue().SetAsTelephonyCallGroup() = mGroup;
   } else {
+    // Search the first active call.
+    for (uint32_t i = 0; i < mCalls.Length(); i++) {
+      if (IsActiveState(mCalls[i]->CallState())) {
+        aValue.SetValue().SetAsTelephonyCall() = mCalls[i];
+        return;
+      }
+    }
     aValue.SetNull();
   }
 }
@@ -502,10 +490,6 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
     modifiedCall->UpdateEmergency(aIsEmergency);
     modifiedCall->UpdateSwitchable(aIsSwitchable);
     modifiedCall->UpdateMergeable(aIsMergeable);
-
-    if (!aIsConference) {
-      UpdateActiveCall(modifiedCall, IsActiveState(aCallState));
-    }
 
     if (modifiedCall->CallState() != aCallState) {
       // We don't fire the statechange event on a call in conference here.
@@ -660,8 +644,6 @@ Telephony::NotifyError(uint32_t aServiceId,
     NS_ERROR("Don't call me with a bad call index!");
     return NS_ERROR_UNEXPECTED;
   }
-
-  UpdateActiveCall(callToNotify, false);
 
   // Set the call state to 'disconnected' and remove it from the calls list.
   callToNotify->NotifyError(aError);
