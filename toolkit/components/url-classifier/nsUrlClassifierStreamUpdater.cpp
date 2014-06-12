@@ -39,13 +39,13 @@ static const PRLogModuleInfo *gUrlClassifierStreamUpdaterLog = nullptr;
 
 nsUrlClassifierStreamUpdater::nsUrlClassifierStreamUpdater()
   : mIsUpdating(false), mInitialized(false), mDownloadError(false),
-    mBeganStream(false), mUpdateUrl(nullptr), mChannel(nullptr)
+    mBeganStream(false), mChannel(nullptr)
 {
 #if defined(PR_LOGGING)
   if (!gUrlClassifierStreamUpdaterLog)
     gUrlClassifierStreamUpdaterLog = PR_NewLogModule("UrlClassifierStreamUpdater");
 #endif
-
+  LOG(("nsUrlClassifierStreamUpdater init [this=%p]", this));
 }
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierStreamUpdater,
@@ -76,33 +76,20 @@ nsUrlClassifierStreamUpdater::DownloadDone()
 ///////////////////////////////////////////////////////////////////////////////
 // nsIUrlClassifierStreamUpdater implementation
 
-NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::GetUpdateUrl(nsACString & aUpdateUrl)
-{
-  if (mUpdateUrl) {
-    mUpdateUrl->GetSpec(aUpdateUrl);
-  } else {
-    aUpdateUrl.Truncate();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsUrlClassifierStreamUpdater::SetUpdateUrl(const nsACString & aUpdateUrl)
-{
-  LOG(("Update URL is %s\n", PromiseFlatCString(aUpdateUrl).get()));
-
-  nsresult rv = NS_NewURI(getter_AddRefs(mUpdateUrl), aUpdateUrl);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return NS_OK;
-}
-
 nsresult
 nsUrlClassifierStreamUpdater::FetchUpdate(nsIURI *aUpdateUrl,
                                           const nsACString & aRequestBody,
                                           const nsACString & aStreamTable)
 {
+
+#ifdef DEBUG
+  {
+    nsCString spec;
+    aUpdateUrl->GetSpec(spec);
+    LOG(("Fetching update %s from %s", aRequestBody.Data(), spec.get()));
+  }
+#endif
+
   nsresult rv;
   uint32_t loadFlags = nsIChannel::INHIBIT_CACHING |
                        nsIChannel::LOAD_BYPASS_CACHE;
@@ -165,24 +152,33 @@ nsUrlClassifierStreamUpdater::FetchUpdate(const nsACString & aUpdateUrl,
 
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::DownloadUpdates(
-                                const nsACString &aRequestTables,
-                                const nsACString &aRequestBody,
-                                nsIUrlClassifierCallback *aSuccessCallback,
-                                nsIUrlClassifierCallback *aUpdateErrorCallback,
-                                nsIUrlClassifierCallback *aDownloadErrorCallback,
-                                bool *_retval)
+  const nsACString &aRequestTables,
+  const nsACString &aRequestBody,
+  const nsACString &aUpdateUrl,
+  nsIUrlClassifierCallback *aSuccessCallback,
+  nsIUrlClassifierCallback *aUpdateErrorCallback,
+  nsIUrlClassifierCallback *aDownloadErrorCallback,
+  bool *_retval)
 {
   NS_ENSURE_ARG(aSuccessCallback);
   NS_ENSURE_ARG(aUpdateErrorCallback);
   NS_ENSURE_ARG(aDownloadErrorCallback);
 
   if (mIsUpdating) {
-    LOG(("already updating, skipping update"));
+    LOG(("Already updating, queueing update %s from %s", aRequestBody.Data(),
+         aUpdateUrl.Data()));
     *_retval = false;
+    PendingRequest *request = mPendingRequests.AppendElement();
+    request->mTables = aRequestTables;
+    request->mRequest = aRequestBody;
+    request->mUrl = aUpdateUrl;
+    request->mSuccessCallback = aSuccessCallback;
+    request->mUpdateErrorCallback = aUpdateErrorCallback;
+    request->mDownloadErrorCallback = aDownloadErrorCallback;
     return NS_OK;
   }
 
-  if (!mUpdateUrl) {
+  if (aUpdateUrl.IsEmpty()) {
     NS_ERROR("updateUrl not set");
     return NS_ERROR_NOT_INITIALIZED;
   }
@@ -208,10 +204,20 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
 
   rv = mDBService->BeginUpdate(this, aRequestTables);
   if (rv == NS_ERROR_NOT_AVAILABLE) {
-    LOG(("already updating, skipping update"));
+    LOG(("Service busy, already updating, queuing update %s from %s",
+         aRequestBody.Data(), aUpdateUrl.Data()));
     *_retval = false;
+    PendingRequest *request = mPendingRequests.AppendElement();
+    request->mTables = aRequestTables;
+    request->mRequest = aRequestBody;
+    request->mUrl = aUpdateUrl;
+    request->mSuccessCallback = aSuccessCallback;
+    request->mUpdateErrorCallback = aUpdateErrorCallback;
+    request->mDownloadErrorCallback = aDownloadErrorCallback;
     return NS_OK;
-  } else if (NS_FAILED(rv)) {
+  }
+
+  if (NS_FAILED(rv)) {
     return rv;
   }
 
@@ -222,14 +228,10 @@ nsUrlClassifierStreamUpdater::DownloadUpdates(
   mIsUpdating = true;
   *_retval = true;
 
-  nsAutoCString urlSpec;
-  mUpdateUrl->GetAsciiSpec(urlSpec);
-
-  LOG(("FetchUpdate: %s", urlSpec.get()));
+  LOG(("FetchUpdate: %s", aUpdateUrl.Data()));
   //LOG(("requestBody: %s", aRequestBody.Data()));
 
-  LOG(("Calling into FetchUpdate"));
-  return FetchUpdate(mUpdateUrl, aRequestBody, EmptyCString());
+  return FetchUpdate(aUpdateUrl, aRequestBody, EmptyCString());
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -290,6 +292,34 @@ nsUrlClassifierStreamUpdater::FetchNext()
   return NS_OK;
 }
 
+nsresult
+nsUrlClassifierStreamUpdater::FetchNextRequest()
+{
+  if (mPendingRequests.Length() == 0) {
+    LOG(("No more requests, returning"));
+    return NS_OK;
+  }
+
+  PendingRequest &request = mPendingRequests[0];
+  LOG(("Stream updater: fetching next request: %s, %s",
+       request.mTables.get(), request.mUrl.get()));
+  bool dummy;
+  DownloadUpdates(
+    request.mTables,
+    request.mRequest,
+    request.mUrl,
+    request.mSuccessCallback,
+    request.mUpdateErrorCallback,
+    request.mDownloadErrorCallback,
+    &dummy);
+  request.mSuccessCallback = nullptr;
+  request.mUpdateErrorCallback = nullptr;
+  request.mDownloadErrorCallback = nullptr;
+  mPendingRequests.RemoveElementAt(0);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsUrlClassifierStreamUpdater::StreamFinished(nsresult status,
                                              uint32_t requestedDelay)
@@ -334,6 +364,9 @@ nsUrlClassifierStreamUpdater::UpdateSuccess(uint32_t requestedTimeout)
   if (successCallback) {
     successCallback->HandleEvent(strTimeout);
   }
+  // Now fetch the next request
+  LOG(("stream updater: calling into fetch next request"));
+  FetchNextRequest();
 
   return NS_OK;
 }
