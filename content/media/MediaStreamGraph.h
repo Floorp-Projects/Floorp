@@ -479,6 +479,31 @@ public:
   }
   const StreamBuffer& GetStreamBuffer() { return mBuffer; }
   GraphTime GetStreamBufferStartTime() { return mBufferStartTime; }
+
+  double StreamTimeToSeconds(StreamTime aTime)
+  {
+    return mozilla::MediaTimeToSeconds(aTime);
+  }
+  int64_t StreamTimeToMicroseconds(StreamTime aTime)
+  {
+    return mozilla::MediaTimeToMicroseconds(aTime);
+  }
+  StreamTime SecondsToStreamTimeRoundDown(double aS)
+  {
+    return mozilla::SecondsToMediaTime(aS);
+  }
+  TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
+  {
+    return mozilla::TimeToTicksRoundUp(aRate, aTime);
+  }
+  TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
+  {
+    return mozilla::TimeToTicksRoundDown(aRate, aTime);
+  }
+  StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
+  {
+    return mozilla::TicksToTimeRoundDown(aRate, aTicks);
+  }
   /**
    * Convert graph time to stream time. aTime must be <= mStateComputedTime
    * to ensure we know exactly how much time this stream will be blocked during
