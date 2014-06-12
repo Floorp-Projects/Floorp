@@ -31,7 +31,7 @@ function test() {
       waitFor(aMonitor.panelWin, RESPONSE_BODY_DISPLAYED).then(() =>
         NetMonitorView.editor("#response-content-textarea")
       ).then((aEditor) => {
-        is(aEditor.getText().indexOf("\u044F"), 302, // я
+        is(aEditor.getText().indexOf("\u044F"), 486, // я
           "The text shown in the source editor is incorrect.");
         is(aEditor.getMode(), Editor.modes.html,
           "The mode active in the source editor is incorrect.");
