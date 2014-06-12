@@ -6,6 +6,11 @@
  */
 
 function test() {
+  // These test suite functions are removed from the global scope inside a
+  // cleanup function. However, we still need them.
+  let gInfo = info;
+  let gOk = ok;
+
   initNetMonitor(SIMPLE_URL).then(([aTab, aDebuggee, aMonitor]) => {
     info("Starting test... ");
 
@@ -36,20 +41,20 @@ function test() {
     }
 
     function checkIfDestroyed(aTag) {
-      info("Checking if destruction is ok.");
+      gInfo("Checking if destruction is ok.");
 
-      ok(aMonitor._view,
+      gOk(aMonitor._view,
         "The network monitor view object still exists (" + aTag + ").");
-      ok(aMonitor._controller,
+      gOk(aMonitor._controller,
         "The network monitor controller object still exists (" + aTag + ").");
-      ok(aMonitor._controller._shutdown,
+      gOk(aMonitor._controller._shutdown,
         "The network monitor controller object still exists and is destroyed (" + aTag + ").");
 
-      ok(!aMonitor._controller.client,
+      gOk(!aMonitor._controller.client,
         "There shouldn't be a client available after destruction (" + aTag + ").");
-      ok(!aMonitor._controller.tabClient,
+      gOk(!aMonitor._controller.tabClient,
         "There shouldn't be a tabClient available after destruction (" + aTag + ").");
-      ok(!aMonitor._controller.webConsoleClient,
+      gOk(!aMonitor._controller.webConsoleClient,
         "There shouldn't be a webConsoleClient available after destruction (" + aTag + ").");
     }
 
@@ -75,12 +80,12 @@ function test() {
 
       aMonitor._controller.shutdownNetMonitor()
         .then(() => {
-          info("Shutting down again shouldn't do anything special.");
+          gInfo("Shutting down again shouldn't do anything special.");
           checkIfDestroyed(2);
           return aMonitor._controller.disconnect();
         })
         .then(() => {
-          info("Disconnecting again shouldn't do anything special.");
+          gInfo("Disconnecting again shouldn't do anything special.");
           checkIfDestroyed(3);
         });
     });
