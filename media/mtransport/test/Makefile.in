@@ -3,10 +3,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# Statically linking NSS libssl ensures that we can debug NSS too
 LIBS = \
   $(XPCOM_LIBS) \
   $(NSPR_LIBS) \
-  $(NSS_LIBS) \
+  $(DEPTH)/dist/lib/$(LIB_PREFIX)ssl.$(LIB_SUFFIX) \
+  $(DEPTH)/dist/lib/$(LIB_PREFIX)nss3.$(LIB_SUFFIX) \
+  $(DEPTH)/dist/lib/$(LIB_PREFIX)nssutil3.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/standalone/$(LIB_PREFIX)mtransport_s.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/third_party/nICEr/nicer_nicer/$(LIB_PREFIX)nicer.$(LIB_SUFFIX) \
   $(DEPTH)/media/mtransport/third_party/nrappkit/nrappkit_nrappkit/$(LIB_PREFIX)nrappkit.$(LIB_SUFFIX) \

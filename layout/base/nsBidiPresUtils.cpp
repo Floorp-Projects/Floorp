@@ -852,7 +852,6 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
             }
           }
           frame->AdjustOffsetsForBidi(contentOffset, contentOffset + fragmentLength);
-          currentLine->MarkDirty();
         }
       } // isTextFrame
       else {
@@ -1113,6 +1112,7 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
                   CreateContinuation(frame, &next, true);
                   createdContinuation = true;
                 }
+                // Mark the line before the newline as dirty.
                 aBpd->GetLineForFrameAt(aBpd->FrameCount() - 1)->MarkDirty();
               }
               ResolveParagraphWithinBlock(aBlockFrame, aBpd);
@@ -1122,6 +1122,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
               } else if (next) {
                 frame = next;
                 aBpd->AppendFrame(frame, aLineIter);
+                // Mark the line after the newline as dirty.
+                aBpd->GetLineForFrameAt(aBpd->FrameCount() - 1)->MarkDirty();
               }
 
               /*
