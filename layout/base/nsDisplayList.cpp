@@ -3274,7 +3274,8 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 
 nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList)
-    : nsDisplayWrapList(aBuilder, aFrame, aList) {
+    : nsDisplayWrapList(aBuilder, aFrame, aList)
+    , mOpacity(aFrame->StyleDisplay()->mOpacity) {
   MOZ_COUNT_CTOR(nsDisplayOpacity);
 }
 
@@ -3287,8 +3288,9 @@ nsDisplayOpacity::~nsDisplayOpacity() {
 nsRegion nsDisplayOpacity::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                            bool* aSnap) {
   *aSnap = false;
-  // We are never opaque, if our opacity was < 1 then we wouldn't have
-  // been created.
+  // The only time where mOpacity == 1.0 should be when we have will-change.
+  // We could report this as opaque then but when the will-change value starts
+  // animating the element would become non opaque and could cause repaints.
   return nsRegion();
 }
 
@@ -3297,7 +3299,7 @@ already_AddRefed<Layer>
 nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
                              LayerManager* aManager,
                              const ContainerLayerParameters& aContainerParameters) {
-  if (mFrame->StyleDisplay()->mOpacity == 0 && mFrame->GetContent() &&
+  if (mOpacity == 0 && mFrame->GetContent() &&
       !nsLayoutUtils::HasAnimations(mFrame->GetContent(), eCSSProperty_opacity)) {
     return nullptr;
   }
@@ -3307,7 +3309,7 @@ nsDisplayOpacity::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (!container)
     return nullptr;
 
-  container->SetOpacity(mFrame->StyleDisplay()->mOpacity);
+  container->SetOpacity(mOpacity);
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                                            this, mFrame,
                                                            eCSSProperty_opacity);
@@ -3345,6 +3347,18 @@ nsDisplayOpacity::NeedsActiveLayer()
 }
 
 bool
+nsDisplayOpacity::ApplyOpacity(nsDisplayListBuilder* aBuilder,
+                             float aOpacity,
+                             const DisplayItemClip* aClip)
+{
+  mOpacity = mOpacity * aOpacity;
+  if (aClip) {
+    IntersectClip(aBuilder, *aClip);
+  }
+  return true;
+}
+
+bool
 nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
   if (NeedsActiveLayer())
@@ -3358,7 +3372,7 @@ nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
     return false;
   }
 
-  return child->ApplyOpacity(aBuilder, mFrame->StyleDisplay()->mOpacity, mClip);
+  return child->ApplyOpacity(aBuilder, mOpacity, mClip);
 }
 
 nsDisplayItem::LayerState
@@ -3408,7 +3422,7 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
 void
 nsDisplayOpacity::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString(" (opacity %f)", mFrame->StyleDisplay()->mOpacity);
+  aTo += nsPrintfCString(" (opacity %f)", mOpacity);
 }
 #endif
 
