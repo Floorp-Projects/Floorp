@@ -21,6 +21,7 @@ patch -p1 < ../0004-Try-to-use-__builtin_ffsl-if-ffsl-is-unavailable.patch
 patch -p1 < ../0005-Check-for-__builtin_ffsl-before-ffsl.patch
 patch -p1 < ../0006-Fix-clang-warnings.patch
 patch -p1 < ../0007-Ensure-the-default-purgeable-zone-is-after-the-defau.patch
+patch -p1 < ../0008-Allow-to-build-with-clang-cl.patch
 
 cd ..
 hg addremove -q src
