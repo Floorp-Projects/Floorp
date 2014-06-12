@@ -1,0 +1,63 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>Bound event listeners test page</title>
+  </head>
+
+  <body>
+    <button id="initialSetup">initialSetup</button>
+    <button id="clicker">clicker</button>
+    <button id="handleEventClick">handleEventClick</button>
+    <button id="boundHandleEventClick">boundHandleEventClick</button>
+
+    <script type="text/javascript">
+      window.addEventListener("load", function onload() {
+        window.removeEventListener("load", onload);
+        function initialSetup(event) {
+          var button = document.getElementById("initialSetup");
+          button.removeEventListener("click", initialSetup);
+          debugger;
+        }
+
+        function clicker(event) {
+          window.foobar = "clicker";
+        }
+
+        function handleEventClick() {
+          var button = document.getElementById("handleEventClick");
+          // Create a long prototype chain to test for weird edge cases.
+          button.addEventListener("click", Object.create(Object.create(this)));
+        }
+
+        handleEventClick.prototype.handleEvent = function() {
+          window.foobar = "handleEventClick";
+        };
+
+        function boundHandleEventClick() {
+          var button = document.getElementById("boundHandleEventClick");
+          this.handleEvent = this.handleEvent.bind(this);
+          button.addEventListener("click", this);
+        }
+
+        boundHandleEventClick.prototype.handleEvent = function() {
+          window.foobar = "boundHandleEventClick";
+        };
+
+        var button = document.getElementById("clicker");
+        // Bind more than once to test for weird edge cases.
+        var boundClicker = clicker.bind(this).bind(this).bind(this);
+        button.addEventListener("click", boundClicker);
+
+        new handleEventClick();
+        new boundHandleEventClick();
+
+        var initButton = document.getElementById("initialSetup");
+        initButton.addEventListener("click", initialSetup);
+      });
+    </script>
+  </body>
+
+</html>
