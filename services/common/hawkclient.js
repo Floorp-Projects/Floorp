@@ -244,7 +244,7 @@ this.HawkClient.prototype = {
 
   // Given an optional header value, notify that a backoff has been requested.
   _maybeNotifyBackoff: function (response, headerName) {
-    if (!this.observerPrefix) {
+    if (!this.observerPrefix || !response.headers) {
       return;
     }
     let headerVal = response.headers[headerName];
@@ -255,8 +255,8 @@ this.HawkClient.prototype = {
     try {
       backoffInterval = parseInt(headerVal, 10);
     } catch (ex) {
-      this._log.error("hawkclient response had invalid backoff value in '" +
-                      headerName + "' header: " + headerVal);
+      log.error("hawkclient response had invalid backoff value in '" +
+                headerName + "' header: " + headerVal);
       return;
     }
     Observers.notify(this.observerPrefix + ":backoff:interval", backoffInterval);
