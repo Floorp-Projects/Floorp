@@ -35,6 +35,7 @@ function openWebIDE() {
   win.addEventListener("load", function onLoad() {
     win.removeEventListener("load", onLoad);
     info("WebIDE open");
+    SimpleTest.requestCompleteLog();
     SimpleTest.executeSoon(() => {
       deferred.resolve(win);
     });

@@ -168,6 +168,7 @@ let UI = {
     let timeout = setTimeout(() => {
       this.unbusy();
       UI.reportError("error_operationTimeout", operationDescription);
+      promise.reject("promise timeout: " + operationDescription);
     }, 30000);
     this.busy();
     promise.then(() => {
