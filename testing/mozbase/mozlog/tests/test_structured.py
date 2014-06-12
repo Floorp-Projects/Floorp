@@ -1,6 +1,6 @@
 import argparse
+import optparse
 import os
-import time
 import unittest
 import StringIO
 import json
@@ -10,6 +10,7 @@ from mozlog.structured import (
     reader,
     structuredlog,
     stdadapter,
+    handlers,
 )
 
 
@@ -194,6 +195,14 @@ class TestCommandline(unittest.TestCase):
         args = parser.parse_args(["--log-raw=-"])
         logger = commandline.setup_logging("test", args, {})
         self.assertEqual(len(logger.handlers), 1)
+
+    def test_setup_logging_optparse(self):
+        parser = optparse.OptionParser()
+        commandline.add_logging_group(parser)
+        args, _ = parser.parse_args(["--log-raw=-"])
+        logger = commandline.setup_logging("test_optparse", args, {})
+        self.assertEqual(len(logger.handlers), 1)
+        self.assertIsInstance(logger.handlers[0], handlers.StreamHandler)
 
 class TestReader(unittest.TestCase):
     def to_file_like(self, obj):
