@@ -33,28 +33,6 @@ typedef int64_t MediaTime;
 const int64_t MEDIA_TIME_FRAC_BITS = 20;
 const int64_t MEDIA_TIME_MAX = INT64_MAX >> TRACK_RATE_MAX_BITS;
 
-inline MediaTime MillisecondsToMediaTime(int32_t aMS)
-{
-  return (MediaTime(aMS) << MEDIA_TIME_FRAC_BITS)/1000;
-}
-
-inline MediaTime SecondsToMediaTime(double aS)
-{
-  NS_ASSERTION(aS <= (MEDIA_TIME_MAX >> MEDIA_TIME_FRAC_BITS),
-               "Out of range");
-  return MediaTime(aS * (1 << MEDIA_TIME_FRAC_BITS));
-}
-
-inline double MediaTimeToSeconds(MediaTime aTime)
-{
-  return aTime*(1.0/(1 << MEDIA_TIME_FRAC_BITS));
-}
-
-inline int64_t MediaTimeToMicroseconds(MediaTime aTime)
-{
-  return aTime*(1000000.0/(1 << MEDIA_TIME_FRAC_BITS));
-}
-
 /**
  * A number of ticks at a rate determined by some underlying track (e.g.
  * audio sample rate). We want to make sure that multiplying TrackTicks by

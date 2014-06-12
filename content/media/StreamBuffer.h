@@ -43,6 +43,20 @@ inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate,
   return (aTicks * aOutRate + aInRate - 1) / aInRate;
 }
 
+inline TrackTicks SecondsToTicksRoundDown(TrackRate aRate, double aSeconds)
+{
+  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
+  NS_ASSERTION(0 <= aSeconds && aSeconds <= TRACK_TICKS_MAX/TRACK_RATE_MAX,
+               "Bad seconds");
+  return aSeconds * aRate;
+}
+inline double TrackTicksToSeconds(TrackRate aRate, TrackTicks aTicks)
+{
+  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return static_cast<double>(aTicks)/aRate;
+}
+
 /**
  * This object contains the decoded data for a stream's tracks.
  * A StreamBuffer can be appended to. Logically a StreamBuffer only gets longer,
