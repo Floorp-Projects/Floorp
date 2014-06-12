@@ -1013,6 +1013,7 @@ public final class AttributeName
     public static final AttributeName FILL_RULE = new AttributeName(ALL_NO_NS, SAME_LOCAL("fill-rule"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FONTSTYLE = new AttributeName(ALL_NO_NS, SAME_LOCAL("fontstyle"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName FONT_SIZE = new AttributeName(ALL_NO_NS, SAME_LOCAL("font-size"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
+    public static final AttributeName KEYSYSTEM = new AttributeName(ALL_NO_NS, SAME_LOCAL("keysystem"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName KEYPOINTS = new AttributeName(ALL_NO_NS, SVG_DIFFERENT("keypoints", "keyPoints"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName HIDEFOCUS = new AttributeName(ALL_NO_NS, SAME_LOCAL("hidefocus"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
     public static final AttributeName ONMESSAGE = new AttributeName(ALL_NO_NS, SAME_LOCAL("onmessage"), ALL_NO_PREFIX, NCNAME_HTML | NCNAME_FOREIGN | NCNAME_LANG);
@@ -1596,6 +1597,7 @@ public final class AttributeName
     FILL_RULE,
     FONTSTYLE,
     FONT_SIZE,
+    KEYSYSTEM,
     KEYPOINTS,
     HIDEFOCUS,
     ONMESSAGE,
@@ -2180,6 +2182,7 @@ public final class AttributeName
     310252031,
     310358241,
     310373094,
+    310833159,
     311015256,
     313357609,
     313683893,
