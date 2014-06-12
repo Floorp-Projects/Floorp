@@ -6168,19 +6168,19 @@ com.ug
 org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
-// Submitted by registry <noc@nominet.org.uk> 2012-10-02
-// and tweaked by us pending further consultation.
-*.uk
+// Submitted by registry <Michael.Daly@nominet.org.uk>
+uk
+ac.uk
+co.uk
+gov.uk
+ltd.uk
+me.uk
+net.uk
+nhs.uk
+org.uk
+plc.uk
+police.uk
 *.sch.uk
-!bl.uk
-!british-library.uk
-!jet.uk
-!mod.uk
-!national-library-scotland.uk
-!nel.uk
-!nic.uk
-!nls.uk
-!parliament.uk
 
 // us : http://en.wikipedia.org/wiki/.us
 us
