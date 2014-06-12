@@ -1057,6 +1057,22 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_HIDDEN  0
 #define NS_STYLE_CONTROL_CHARACTER_VISIBILITY_VISIBLE 1
 
+// counter system
+#define NS_STYLE_COUNTER_SYSTEM_CYCLIC      0
+#define NS_STYLE_COUNTER_SYSTEM_NUMERIC     1
+#define NS_STYLE_COUNTER_SYSTEM_ALPHABETIC  2
+#define NS_STYLE_COUNTER_SYSTEM_SYMBOLIC    3
+#define NS_STYLE_COUNTER_SYSTEM_ADDITIVE    4
+#define NS_STYLE_COUNTER_SYSTEM_FIXED       5
+#define NS_STYLE_COUNTER_SYSTEM_EXTENDS     6
+
+#define NS_STYLE_COUNTER_RANGE_INFINITE     0
+
+#define NS_STYLE_COUNTER_SPEAKAS_BULLETS    0
+#define NS_STYLE_COUNTER_SPEAKAS_NUMBERS    1
+#define NS_STYLE_COUNTER_SPEAKAS_WORDS      2
+#define NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT  3
+
 /*****************************************************************************
  * Constants for media features.                                             *
  *****************************************************************************/
