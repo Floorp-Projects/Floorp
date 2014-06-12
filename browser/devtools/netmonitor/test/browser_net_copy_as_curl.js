@@ -39,8 +39,9 @@ function test() {
       '-H "Connection: keep-alive"'
     ].join(" ");
 
-    const EXPECTED_RESULT = Services.appinfo.OS == "WINNT" ?
-                            EXPECTED_WIN_RESULT : EXPECTED_POSIX_RESULT;
+    const EXPECTED_RESULT = Services.appinfo.OS == "WINNT"
+      ? EXPECTED_WIN_RESULT
+      : EXPECTED_POSIX_RESULT;
 
     let { NetMonitorView } = aMonitor.panelWin;
     let { RequestsMenu } = NetMonitorView;
