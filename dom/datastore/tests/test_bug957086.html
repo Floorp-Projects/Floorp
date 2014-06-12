@@ -112,6 +112,11 @@
     // Run tests in app
     testApp,
 
+    // No confirmation needed when an app is installed
+    function() {
+      SpecialPowers.autoConfirmAppUninstall(runTest);
+    },
+
     // Uninstall the app
     uninstallApp
   ];
