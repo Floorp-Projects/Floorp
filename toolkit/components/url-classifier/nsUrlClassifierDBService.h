@@ -13,6 +13,7 @@
 #include "nsIObserver.h"
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsIUrlClassifierHashCompleter.h"
+#include "nsIUrlListManager.h"
 #include "nsIUrlClassifierDBService.h"
 #include "nsIURIClassifier.h"
 #include "nsToolkitCompsCID.h"

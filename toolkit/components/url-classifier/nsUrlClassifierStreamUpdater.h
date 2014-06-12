@@ -63,16 +63,28 @@ private:
 
   // Fetches the next table, from mPendingUpdates.
   nsresult FetchNext();
+  // Fetches the next request, from mPendingRequests
+  nsresult FetchNextRequest();
+
 
   bool mIsUpdating;
   bool mInitialized;
   bool mDownloadError;
   bool mBeganStream;
-  nsCOMPtr<nsIURI> mUpdateUrl;
   nsCString mStreamTable;
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIUrlClassifierDBService> mDBService;
   nsCOMPtr<nsITimer> mTimer;
+
+  struct PendingRequest {
+    nsCString mTables;
+    nsCString mRequest;
+    nsCString mUrl;
+    nsCOMPtr<nsIUrlClassifierCallback> mSuccessCallback;
+    nsCOMPtr<nsIUrlClassifierCallback> mUpdateErrorCallback;
+    nsCOMPtr<nsIUrlClassifierCallback> mDownloadErrorCallback;
+  };
+  nsTArray<PendingRequest> mPendingRequests;
 
   struct PendingUpdate {
     nsCString mUrl;
