@@ -19,6 +19,13 @@ function dumpSdp(test) {
     dump("ERROR: SDP answer: " + test._remote_answer.sdp.replace(/[\r]/g, ''));
   }
 
+  if (typeof test.pcLocal.iceConnectionLog !== 'undefined') {
+    dump("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog + "\n");
+  }
+  if (typeof test.pcRemote.iceConnectionLog !== 'undefined') {
+    dump("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog + "\n");
+  }
+
   if ((typeof test.pcLocal.setRemoteDescDate !== 'undefined') &&
     (typeof test.pcRemote.setLocalDescDate !== 'undefined')) {
     var delta = deltaSeconds(test.pcLocal.setRemoteDescDate, test.pcRemote.setLocalDescDate);
@@ -66,6 +73,20 @@ var commandsPeerConnection = [
     function (test) {
       is(test.pcRemote.signalingState, STABLE,
          "Initial remote signalingState is 'stable'");
+      test.next();
+    }
+  ],
+  [
+    'PC_LOCAL_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcLocal.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcRemote.logIceConnectionState();
       test.next();
     }
   ],
@@ -178,6 +199,7 @@ var commandsPeerConnection = [
       var myPc = myTest.pcLocal;
 
       function onIceConnectedSuccess () {
+        info("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog);
         ok(true, "pc_local: ICE switched to 'connected' state");
         myTest.next();
       };
@@ -188,6 +210,7 @@ var commandsPeerConnection = [
       };
 
       if (myPc.isIceConnected()) {
+        info("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog);
         ok(true, "pc_local: ICE is in connected state");
         myTest.next();
       } else if (myPc.isIceConnectionPending()) {
@@ -206,6 +229,7 @@ var commandsPeerConnection = [
       var myPc = myTest.pcRemote;
 
       function onIceConnectedSuccess () {
+        info("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog);
         ok(true, "pc_remote: ICE switched to 'connected' state");
         myTest.next();
       };
@@ -216,6 +240,7 @@ var commandsPeerConnection = [
       };
 
       if (myPc.isIceConnected()) {
+        info("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog);
         ok(true, "pc_remote: ICE is in connected state");
         myTest.next();
       } else if (myPc.isIceConnectionPending()) {
@@ -301,6 +326,13 @@ var commandsDataChannel = [
     }
   ],
   [
+    'PC_LOCAL_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcLocal.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
     'PC_REMOTE_GUM',
     function (test) {
       test.pcRemote.getAllUserMedia(function () {
@@ -313,6 +345,13 @@ var commandsDataChannel = [
     function (test) {
       is(test.pcRemote.signalingState, STABLE,
          "Initial remote signalingState is stable");
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcRemote.logIceConnectionState();
       test.next();
     }
   ],
@@ -428,6 +467,7 @@ var commandsDataChannel = [
       var myPc = myTest.pcLocal;
 
       function onIceConnectedSuccess () {
+        info("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog);
         ok(true, "pc_local: ICE switched to 'connected' state");
         myTest.next();
       };
@@ -438,6 +478,7 @@ var commandsDataChannel = [
       };
 
       if (myPc.isIceConnected()) {
+        info("pcLocal ICE connection state log: " + test.pcLocal.iceConnectionLog);
         ok(true, "pc_local: ICE is in connected state");
         myTest.next();
       } else if (myPc.isIceConnectionPending()) {
@@ -456,6 +497,7 @@ var commandsDataChannel = [
       var myPc = myTest.pcRemote;
 
       function onIceConnectedSuccess () {
+        info("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog);
         ok(true, "pc_remote: ICE switched to 'connected' state");
         myTest.next();
       };
@@ -466,6 +508,7 @@ var commandsDataChannel = [
       };
 
       if (myPc.isIceConnected()) {
+        info("pcRemote ICE connection state log: " + test.pcRemote.iceConnectionLog);
         ok(true, "pc_remote: ICE is in connected state");
         myTest.next();
       } else if (myPc.isIceConnectionPending()) {
