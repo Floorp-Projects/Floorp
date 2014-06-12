@@ -25,6 +25,7 @@ import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoThread.LaunchState;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.RobocopUtils;
+import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 
 import android.app.Activity;
@@ -234,6 +235,12 @@ abstract class BaseTest extends BaseRobocopTest {
             mAsserter.dumpLog("Exception in loadUrl", e);
             throw new RuntimeException(e);
         }
+    }
+
+    protected final void closeTab(int tabId) {
+        Tabs tabs = Tabs.getInstance();
+        Tab tab = tabs.getTab(tabId);
+        tabs.closeTab(tab);
     }
 
     public final void verifyUrl(String url) {
