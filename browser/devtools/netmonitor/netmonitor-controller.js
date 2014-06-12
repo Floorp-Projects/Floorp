@@ -224,6 +224,14 @@ let NetMonitorController = {
   },
 
   /**
+   * Checks whether the netmonitor connection is active.
+   * @return boolean
+   */
+  isConnected: function() {
+    return !!this.client;
+  },
+
+  /**
    * Sets up a monitoring session.
    *
    * @param DebuggerClient aClient
