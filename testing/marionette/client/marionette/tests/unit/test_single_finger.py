@@ -19,7 +19,10 @@ from single_finger_functions import (
 
 class testSingleFinger(MarionetteTestCase):
     def test_press_release(self):
-        press_release(self.marionette, self.wait_for_condition, "button1-touchstart-touchend-mousemove-mousedown-mouseup-click")
+        press_release(self.marionette, 1, self.wait_for_condition, "button1-touchstart-touchend-mousemove-mousedown-mouseup-click")
+
+    def test_press_release_twice(self):
+        press_release(self.marionette, 2, self.wait_for_condition, "button1-touchstart-touchend-mousemove-mousedown-mouseup-click-touchstart-touchend-mousemove-mousedown-mouseup-click")
 
     def test_move_element(self):
         move_element(self.marionette, self.wait_for_condition, "button1-touchstart", "button2-touchmove-touchend")
