@@ -431,6 +431,7 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     int32_t stun_client_maximum_transmits = 7;
     int32_t ice_trickle_grace_period = 5000;
     int32_t ice_tcp_so_sock_count = 3;
+    int32_t ice_tcp_listen_backlog = 10;
 #ifndef MOZILLA_XPCOMRT_API
     nsresult res;
     nsCOMPtr<nsIPrefService> prefs =
@@ -448,6 +449,9 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
         branch->GetIntPref(
             "media.peerconnection.ice.tcp_so_sock_count",
             &ice_tcp_so_sock_count);
+        branch->GetIntPref(
+            "media.peerconnection.ice.tcp_listen_backlog",
+            &ice_tcp_listen_backlog);
       }
     }
 #endif
@@ -457,6 +461,10 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
                      ice_trickle_grace_period);
     NR_reg_set_int4((char *)NR_ICE_REG_ICE_TCP_SO_SOCK_COUNT,
                      ice_tcp_so_sock_count);
+    NR_reg_set_int4((char *)NR_ICE_REG_ICE_TCP_SO_SOCK_COUNT,
+                     ice_tcp_so_sock_count);
+    NR_reg_set_int4((char *)NR_ICE_REG_ICE_TCP_LISTEN_BACKLOG,
+                     ice_tcp_listen_backlog);
 
     if (allow_loopback) {
       NR_reg_set_char((char *)NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, 1);
