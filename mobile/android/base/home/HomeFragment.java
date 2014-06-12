@@ -19,6 +19,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
@@ -333,6 +334,9 @@ abstract class HomeFragment extends Fragment {
 
             if (mPosition > -1) {
                 BrowserDB.unpinSite(cr, mPosition);
+                if (BrowserDB.hideSuggestedSite(mUrl)) {
+                    cr.notifyChange(SuggestedSites.CONTENT_URI, null);
+                }
             }
 
             BrowserDB.removeBookmarksWithURL(cr, mUrl);
