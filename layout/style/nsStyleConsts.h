@@ -634,6 +634,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_OVERFLOW_CLIP_BOX_CONTENT_BOX  1
 
 // See nsStyleList
+#define NS_STYLE_LIST_STYLE_CUSTOM                -1 // for @counter-style
 #define NS_STYLE_LIST_STYLE_NONE                  0
 #define NS_STYLE_LIST_STYLE_DISC                  1
 #define NS_STYLE_LIST_STYLE_CIRCLE                2
@@ -696,6 +697,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM  152
 #define NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER  153
 #define NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET  154
+#define NS_STYLE_LIST_STYLE__MAX                         155
 
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE     0
@@ -1072,6 +1074,7 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_COUNTER_SPEAKAS_NUMBERS    1
 #define NS_STYLE_COUNTER_SPEAKAS_WORDS      2
 #define NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT  3
+#define NS_STYLE_COUNTER_SPEAKAS_OTHER      255 // refer to another style
 
 /*****************************************************************************
  * Constants for media features.                                             *

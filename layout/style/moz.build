@@ -84,6 +84,7 @@ EXPORTS.mozilla.css += [
 
 UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
+    'CounterStyleManager.cpp',
     'CSS.cpp',
     'CSSRuleList.cpp',
     'CSSVariableDeclarations.cpp',
