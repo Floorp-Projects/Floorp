@@ -392,7 +392,8 @@ public:
    */
   void ResumeAllAudioOutputs();
 
-  TrackRate AudioSampleRate() { return mSampleRate; }
+  TrackRate AudioSampleRate() const { return mSampleRate; }
+  TrackRate GraphRate() const { return 1 << MEDIA_TIME_FRAC_BITS; }
 
   // Data members
 

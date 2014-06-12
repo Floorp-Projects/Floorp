@@ -1870,6 +1870,7 @@ MediaStream::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 {
   MOZ_ASSERT(!mGraph, "Should only be called once");
   mGraph = aGraph;
+  mBuffer.InitGraphRate(aGraph->GraphRate());
 }
 
 void
