@@ -53,6 +53,7 @@ function forEachInStmt(lhs, rhs, body) Pattern({ type: "ForInStatement", left: l
 function breakStmt(lab) Pattern({ type: "BreakStatement", label: lab })
 function continueStmt(lab) Pattern({ type: "ContinueStatement", label: lab })
 function blockStmt(body) Pattern({ type: "BlockStatement", body: body })
+function literal(val) Pattern({ type: "Literal",  value: val })
 var emptyStmt = Pattern({ type: "EmptyStatement" })
 function ifStmt(test, cons, alt) Pattern({ type: "IfStatement", test: test, alternate: alt, consequent: cons })
 function labStmt(lab, stmt) Pattern({ type: "LabeledStatement", label: lab, body: stmt })
@@ -135,6 +136,10 @@ function assertLocalDecl(src, patt) {
 
 function assertGlobalStmt(src, patt, builder) {
     program([patt]).assert(Reflect.parse(src, {builder: builder}));
+}
+
+function assertStringExpr(src, patt) {
+    program([exprStmt(patt)]).assert(Reflect.parse(src));
 }
 
 function assertGlobalExpr(src, patt, builder) {
@@ -395,6 +400,13 @@ assertStmt("if (foo) { throw 1; throw 2; throw 3; } else true;",
            ifStmt(ident("foo"),
                   blockStmt([throwStmt(lit(1)), throwStmt(lit(2)), throwStmt(lit(3))]),
                   exprStmt(lit(true))));
+var hasTemplateStrings = false;  try { eval("``"); hasTemplateStrings = true; } catch (exc) { }
+if (hasTemplateStrings == true) {
+    assertStringExpr("`hey there`", literal("hey there"));
+    assertStringExpr("`hey\nthere`", literal("hey\nthere"));
+}
+assertStringExpr("\"hey there\"", literal("hey there"));
+
 assertStmt("foo: for(;;) break foo;", labStmt(ident("foo"), forStmt(null, null, null, breakStmt(ident("foo")))));
 assertStmt("foo: for(;;) continue foo;", labStmt(ident("foo"), forStmt(null, null, null, continueStmt(ident("foo")))));
 assertStmt("with (obj) { }", withStmt(ident("obj"), blockStmt([])));

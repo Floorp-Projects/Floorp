@@ -29,6 +29,7 @@ namespace jit {
     _(Mul)                                      \
     _(Div)                                      \
     _(Mod)                                      \
+    _(Concat)                                   \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
 
@@ -234,6 +235,18 @@ class RDiv MOZ_FINAL : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_(Div)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RConcat MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Concat)
 
     virtual uint32_t numOperands() const {
         return 2;

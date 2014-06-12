@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=530396
+-->
+<head>
+  <title>Test for Bug 530396</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=530396">Mozilla Bug 530396</a>
+
+<p>
+
+<iframe id="testFrame" src="http://mochi.test:8888/tests/docshell/test/bug530396-subframe.html"></iframe>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+// NOTE: If we ever make subframes do bfcache stuff, this test will need to be
+// modified accordingly!  It assumes that subframes do NOT get bfcached.
+var onloadCount = 0;
+
+var step = 0;
+
+var gTestFrame = document.getElementById('testFrame');
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(doNextStep);
+
+function doNextStep() {
+  ++step;
+  switch (step) {
+    case 1:
+      is(onloadCount, 1, "Loaded initial page");
+      sendMouseEvent({type: "click"}, "target2", gTestFrame.contentWindow);
+      window.setTimeout(doNextStep, 1000);
+      break;
+
+    case 2:
+      is(onloadCount, 1, "opener must be null");
+      sendMouseEvent({type: "click"}, "target1", gTestFrame.contentWindow);
+      break;
+
+    case 3:
+      is(onloadCount, 2, "don't send referrer with rel=referrer"); 
+      SimpleTest.finish();
+      break;
+  }
+}
+</script>
+</pre>
+</html>

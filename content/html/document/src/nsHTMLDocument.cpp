@@ -2244,15 +2244,17 @@ nsHTMLDocument::ResolveName(const nsAString& aName, nsWrapperCache **aCache)
   return nullptr;
 }
 
-JSObject*
+void
 nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
+                            JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& rv)
 {
   nsWrapperCache* cache;
   nsISupports* supp = ResolveName(aName, &cache);
   if (!supp) {
     aFound = false;
-    return nullptr;
+    aRetval.set(nullptr);
+    return;
   }
 
   JS::Rooted<JS::Value> val(cx);
@@ -2260,10 +2262,10 @@ nsHTMLDocument::NamedGetter(JSContext* cx, const nsAString& aName, bool& aFound,
   // here?
   if (!dom::WrapObject(cx, supp, cache, nullptr, &val)) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
+    return;
   }
   aFound = true;
-  return &val.toObject();
+  aRetval.set(&val.toObject());
 }
 
 bool

@@ -337,12 +337,9 @@ void nsCARenderer::SetViewport(int aWidth, int aHeight) {
   ::glScalef(1.0, -1.0, 1.0);
 }
 
-void nsCARenderer::AttachIOSurface(RefPtr<MacIOSurface> aSurface) {
+void nsCARenderer::AttachIOSurface(MacIOSurface *aSurface) {
   if (mIOSurface &&
       aSurface->GetIOSurfaceID() == mIOSurface->GetIOSurfaceID()) {
-    // This object isn't needed since we already have a
-    // handle to the same io surface.
-    aSurface = nullptr;
     return;
   }
 

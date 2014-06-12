@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Activity.h"
-
+#include "mozilla/dom/ToJSValue.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsIConsoleService.h"
@@ -67,7 +67,7 @@ Activity::Initialize(nsPIDOMWindow* aWindow,
   NS_ENSURE_SUCCESS(rv, rv);
 
   JS::Rooted<JS::Value> optionsValue(aCx);
-  if (!aOptions.ToObject(aCx, &optionsValue)) {
+  if (!ToJSValue(aCx, aOptions, &optionsValue)) {
     return NS_ERROR_FAILURE;
   }
 

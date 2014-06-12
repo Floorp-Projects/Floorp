@@ -51,7 +51,9 @@ public:
 
   void GetInitDataType(nsString& aRetVal) const;
 
-  JSObject* GetInitData(JSContext* cx, ErrorResult& aRv);
+  void GetInitData(JSContext* cx,
+                   JS::MutableHandle<JSObject*> aData,
+                   ErrorResult& aRv);
 private:
   nsTArray<uint8_t> mRawInitData;
 };

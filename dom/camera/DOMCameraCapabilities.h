@@ -71,7 +71,7 @@ public:
   double MinExposureCompensation() const;
   double MaxExposureCompensation() const;
   double ExposureCompensationStep() const;
-  JS::Value RecorderProfiles(JSContext* cx) const;
+  void GetRecorderProfiles(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval) const;
   void GetIsoModes(nsTArray<nsString>& aRetVal) const;
 
 protected:

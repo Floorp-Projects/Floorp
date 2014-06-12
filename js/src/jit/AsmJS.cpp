@@ -6627,10 +6627,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = masm.framePushed();
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-    offsetToCallerStackArgs += NativeFrameSize;
-#endif
+    unsigned offsetToCallerStackArgs = masm.framePushed() + NativeFrameSize;
     FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
     argOffset += exit.sig().args().length() * sizeof(Value);
     JS_ASSERT(argOffset == offsetToArgs + argBytes);

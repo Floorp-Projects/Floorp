@@ -925,6 +925,7 @@ input[type=number]::-moz-number-text {
    */
   text-align: inherit;
   flex: 1;
+  min-width: 0;
   padding: 0;
   border: 0;
   margin: 0;

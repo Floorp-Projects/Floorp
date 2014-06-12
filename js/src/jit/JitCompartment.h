@@ -405,10 +405,11 @@ class JitCompartment
 
     // Stub to concatenate two strings inline. Note that it can't be
     // stored in JitRuntime because masm.newGCString bakes in zone-specific
-    // pointers. This has to be a weak pointer to avoid keeping the whole
-    // compartment alive.
-    ReadBarrieredJitCode stringConcatStub_;
-    ReadBarrieredJitCode parallelStringConcatStub_;
+    // pointers. These are weak pointers, but are not declared as ReadBarriered
+    // since they are only read from during Ion compilation, which may occur
+    // off thread and whose barriers are captured during CodeGenerator::link.
+    JitCode *stringConcatStub_;
+    JitCode *parallelStringConcatStub_;
 
     // Set of JSScripts invoked by ForkJoin (i.e. the entry script). These
     // scripts are marked if their respective parallel IonScripts' age is less
@@ -474,9 +475,9 @@ class JitCompartment
     bool ensureIonStubsExist(JSContext *cx);
 
     void mark(JSTracer *trc, JSCompartment *compartment);
-    void sweep(FreeOp *fop);
+    void sweep(FreeOp *fop, JSCompartment *compartment);
 
-    JitCode *stringConcatStub(ExecutionMode mode) const {
+    JitCode *stringConcatStubNoBarrier(ExecutionMode mode) const {
         switch (mode) {
           case SequentialExecution: return stringConcatStub_;
           case ParallelExecution:   return parallelStringConcatStub_;

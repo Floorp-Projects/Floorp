@@ -2454,9 +2454,16 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
 
     // Ok. Either there was no pre-existing property, or it was a value prop
     // that we're going to shadow. Make a property descriptor and define it.
+    //
+    // Note that for pre-existing own value properties, we inherit the existing
+    // attributes, since we're really just changing the value and not trying to
+    // reconfigure the property.
     Rooted<PropertyDescriptor> newDesc(cx);
+    if (desc.object() == proxy)
+        newDesc.setAttributes(desc.attributes());
+    else
+        newDesc.setAttributes(JSPROP_ENUMERATE);
     newDesc.value().set(vp);
-    newDesc.setAttributes(JSPROP_ENUMERATE);
     return handler->defineProperty(cx, receiver, id, &newDesc);
 }
 

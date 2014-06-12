@@ -837,7 +837,8 @@ public:
 protected:
   nsIDOMWindow* GetOpenerWindow(mozilla::ErrorResult& aError);
 public:
-  JS::Value GetOpener(JSContext* aCx, mozilla::ErrorResult& aError);
+  void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
+                 mozilla::ErrorResult& aError);
   void SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
                  mozilla::ErrorResult& aError);
   using nsIDOMWindow::GetParent;
@@ -867,7 +868,11 @@ public:
   void Prompt(const nsAString& aMessage, const nsAString& aInitial,
               nsAString& aReturn, mozilla::ErrorResult& aError);
   void Print(mozilla::ErrorResult& aError);
-  JS::Value ShowModalDialog(JSContext* aCx, const nsAString& aUrl, JS::Handle<JS::Value> aArgument, const nsAString& aOptions, mozilla::ErrorResult& aError);
+  void ShowModalDialog(JSContext* aCx, const nsAString& aUrl,
+                       JS::Handle<JS::Value> aArgument,
+                       const nsAString& aOptions,
+                       JS::MutableHandle<JS::Value> aRetval,
+                       mozilla::ErrorResult& aError);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const mozilla::dom::Optional<mozilla::dom::Sequence<JS::Value > >& aTransfer,
@@ -986,13 +991,17 @@ public:
                                             const nsAString& aOptions,
                                             const mozilla::dom::Sequence<JS::Value>& aExtraArgument,
                                             mozilla::ErrorResult& aError);
-  JSObject* GetContent(JSContext* aCx, mozilla::ErrorResult& aError);
-  JSObject* Get_content(JSContext* aCx, mozilla::ErrorResult& aError)
+  void GetContent(JSContext* aCx,
+                  JS::MutableHandle<JSObject*> aRetval,
+                  mozilla::ErrorResult& aError);
+  void Get_content(JSContext* aCx,
+                   JS::MutableHandle<JSObject*> aRetval,
+                   mozilla::ErrorResult& aError)
   {
     if (mDoc) {
       mDoc->WarnOnceAbout(nsIDocument::eWindow_Content);
     }
-    return GetContent(aCx, aError);
+    GetContent(aCx, aRetval, aError);
   }
 
   // ChromeWindow bits.  Do NOT call these unless your window is in
@@ -1017,13 +1026,16 @@ public:
                        mozilla::dom::Element* aPanel,
                        mozilla::ErrorResult& aError);
 
-  JS::Value GetDialogArguments(JSContext* aCx, mozilla::ErrorResult& aError);
-  JS::Value GetReturnValue(JSContext* aCx, mozilla::ErrorResult& aError);
+  void GetDialogArguments(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
+                          mozilla::ErrorResult& aError);
+  void GetReturnValue(JSContext* aCx, JS::MutableHandle<JS::Value> aReturnValue,
+                      mozilla::ErrorResult& aError);
   void SetReturnValue(JSContext* aCx, JS::Handle<JS::Value> aReturnValue,
                       mozilla::ErrorResult& aError);
 
-  JS::Value GetInterface(JSContext* aCx, nsIJSID* aIID,
-                         mozilla::ErrorResult& aError);
+  void GetInterface(JSContext* aCx, nsIJSID* aIID,
+                    JS::MutableHandle<JS::Value> aRetval,
+                    mozilla::ErrorResult& aError);
 
 protected:
   // Array of idle observers that are notified of idle events.
