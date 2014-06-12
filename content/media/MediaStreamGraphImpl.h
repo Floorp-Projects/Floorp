@@ -395,6 +395,11 @@ public:
   TrackRate AudioSampleRate() const { return mSampleRate; }
   TrackRate GraphRate() const { return 1 << MEDIA_TIME_FRAC_BITS; }
 
+  TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
+  {
+    return RateConvertTicksRoundDown(aRate, GraphRate(), aTime);
+  }
+
   // Data members
 
   /**
