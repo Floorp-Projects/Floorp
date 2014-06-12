@@ -1280,7 +1280,7 @@ HTMLMediaElement::CurrentTime() const
   if (mSrcStream) {
     MediaStream* stream = GetSrcMediaStream();
     if (stream) {
-      return MediaTimeToSeconds(stream->GetCurrentTime());
+      return stream->StreamTimeToSeconds(stream->GetCurrentTime());
     }
   }
 

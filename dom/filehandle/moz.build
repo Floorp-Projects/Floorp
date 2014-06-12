@@ -12,7 +12,7 @@ EXPORTS.mozilla.dom += [
     'FileHelper.h',
     'FileRequest.h',
     'FileService.h',
-    'LockedFile.h',
+    'MutableFile.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -23,9 +23,9 @@ UNIFIED_SOURCES += [
     'FileRequest.cpp',
     'FileService.cpp',
     'FileStreamWrappers.cpp',
-    'LockedFile.cpp',
     'MemoryStreams.cpp',
     'MetadataHelper.cpp',
+    'MutableFile.cpp',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -16,7 +16,7 @@
 namespace mozilla {
 
 /**
- * Track rate in Hz. Maximum 1 << TRACK_RATE_MAX_BITS Hz. This
+ * Track or graph rate in Hz. Maximum 1 << TRACK_RATE_MAX_BITS Hz. This
  * maximum avoids overflow in conversions between track rates and conversions
  * from seconds.
  */
@@ -25,43 +25,20 @@ const int64_t TRACK_RATE_MAX_BITS = 20;
 const TrackRate TRACK_RATE_MAX = 1 << TRACK_RATE_MAX_BITS;
 
 /**
- * We represent media times in 64-bit fixed point. So 1 MediaTime is
- * 1/(2^MEDIA_TIME_FRAC_BITS) seconds.  We want to make sure that multiplying
- * MediaTime by a TrackRate doesn't overflow, so we set its max accordingly.
- */
-typedef int64_t MediaTime;
-const int64_t MEDIA_TIME_FRAC_BITS = 20;
-const int64_t MEDIA_TIME_MAX = INT64_MAX >> TRACK_RATE_MAX_BITS;
-
-inline MediaTime MillisecondsToMediaTime(int32_t aMS)
-{
-  return (MediaTime(aMS) << MEDIA_TIME_FRAC_BITS)/1000;
-}
-
-inline MediaTime SecondsToMediaTime(double aS)
-{
-  NS_ASSERTION(aS <= (MEDIA_TIME_MAX >> MEDIA_TIME_FRAC_BITS),
-               "Out of range");
-  return MediaTime(aS * (1 << MEDIA_TIME_FRAC_BITS));
-}
-
-inline double MediaTimeToSeconds(MediaTime aTime)
-{
-  return aTime*(1.0/(1 << MEDIA_TIME_FRAC_BITS));
-}
-
-inline int64_t MediaTimeToMicroseconds(MediaTime aTime)
-{
-  return aTime*(1000000.0/(1 << MEDIA_TIME_FRAC_BITS));
-}
-
-/**
  * A number of ticks at a rate determined by some underlying track (e.g.
  * audio sample rate). We want to make sure that multiplying TrackTicks by
- * 2^MEDIA_TIME_FRAC_BITS doesn't overflow, so we set its max accordingly.
+ * a TrackRate doesn't overflow, so we set its max accordingly.
  */
 typedef int64_t TrackTicks;
-const int64_t TRACK_TICKS_MAX = INT64_MAX >> MEDIA_TIME_FRAC_BITS;
+const int64_t TRACK_TICKS_MAX = INT64_MAX >> TRACK_RATE_MAX_BITS;
+
+/**
+ * We represent media times in 64-bit audio frame counts or ticks.
+ * All audio tracks in a MediaStreamGraph have the same sample rate and all
+ * streams in the graph measure time using ticks at the same audio rate.
+ */
+typedef int64_t MediaTime;
+const int64_t MEDIA_TIME_MAX = TRACK_TICKS_MAX;
 
 /**
  * A MediaSegment is a chunk of media data sequential in time. Different

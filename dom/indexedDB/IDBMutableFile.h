@@ -4,32 +4,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_indexeddb_idbfilehandle_h__
-#define mozilla_dom_indexeddb_idbfilehandle_h__
+#ifndef mozilla_dom_indexeddb_idbmutablefile_h__
+#define mozilla_dom_indexeddb_idbmutablefile_h__
 
 #include "IndexedDatabase.h"
 
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/FileHandle.h"
 #include "mozilla/dom/indexedDB/FileInfo.h"
+#include "mozilla/dom/MutableFile.h"
 #include "nsCycleCollectionParticipant.h"
 
 BEGIN_INDEXEDDB_NAMESPACE
 
 class IDBDatabase;
 
-class IDBFileHandle : public FileHandle
+class IDBMutableFile : public MutableFile
 {
-  typedef mozilla::dom::LockedFile LockedFile;
+  typedef mozilla::dom::FileHandle FileHandle;
 
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBFileHandle, FileHandle)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(IDBMutableFile, MutableFile)
 
-  static already_AddRefed<IDBFileHandle>
+  static already_AddRefed<IDBMutableFile>
   Create(const nsAString& aName, const nsAString& aType,
          IDBDatabase* aDatabase, already_AddRefed<FileInfo> aFileInfo);
 
@@ -65,7 +65,7 @@ public:
   UnsetThreadLocals() MOZ_OVERRIDE;
 
   virtual already_AddRefed<nsIDOMFile>
-  CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize) MOZ_OVERRIDE;
+  CreateFileObject(FileHandle* aFileHandle, uint32_t aFileSize) MOZ_OVERRIDE;
 
   // nsWrapperCache
   virtual JSObject*
@@ -81,9 +81,9 @@ public:
   }
 
 private:
-  IDBFileHandle(IDBDatabase* aOwner);
+  IDBMutableFile(IDBDatabase* aOwner);
 
-  ~IDBFileHandle()
+  ~IDBMutableFile()
   {
   }
 
@@ -93,4 +93,4 @@ private:
 
 END_INDEXEDDB_NAMESPACE
 
-#endif // mozilla_dom_indexeddb_idbfilehandle_h__
+#endif // mozilla_dom_indexeddb_idbmutablefile_h__

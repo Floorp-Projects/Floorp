@@ -7,7 +7,7 @@
   <title>File Handle Test</title>
 
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
   function testSteps()
@@ -21,15 +21,19 @@
       let mutableFile = event.target.result;
       mutableFile.onerror = errorHandler;
 
-      request = mutableFile.getFile();
-      ok(request instanceof DOMRequest, "Correct interface");
-      ok(!(request instanceof FileRequest), "Correct interface");
-      ok(!('fileHandle' in request), "Property should not exist");
-      ok(request.fileHandle === undefined, "Property should not exist");
-      ok(!('lockedFile' in request), "Property should not exist");
-      ok(request.lockedFile === undefined, "Property should not exist");
-      ok(!('onprogress' in request), "Property should not exist");
-      ok(request.onprogress === undefined, "Property should not exist");
+      let fileHandle = mutableFile.open();
+      continueToNextStep();
+      yield undefined;
+
+      try {
+        fileHandle.getMetadata({ size: true });
+        ok(false, "Should have thrown!");
+      }
+      catch (e) {
+        ok(e instanceof DOMException, "Got exception.");
+        is(e.name, "FileHandleInactiveError", "Good error.");
+        is(e.code, 0, "Good error code.");
+      }
     }
 
     finishTest();

@@ -7,7 +7,7 @@
   <title>File Handle Test</title>
 
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 
   <script type="text/javascript;version=1.7">
   function testSteps()
@@ -21,24 +21,11 @@
       let fileHandle = event.target.result;
       fileHandle.onerror = errorHandler;
 
-      let lockedFile1 = fileHandle.open("readwrite");
-      let lockedFile2 = fileHandle.open("readwrite");
+      let lockedFile = fileHandle.open();
+      ok(lockedFile.fileHandle === fileHandle, "Correct property");
 
-      let request1 = lockedFile2.write("2");
-      let request2 = lockedFile1.write("1");
-
-      lockedFile1.oncomplete = grabEventAndContinueHandler;
-      lockedFile2.oncomplete = grabEventAndContinueHandler;
-
-      yield undefined;
-      yield undefined;
-
-      let lockedFile3 = fileHandle.open("readonly");
-      let request3 = lockedFile3.readAsText(1);
-      request3.onsuccess = grabEventAndContinueHandler;
-
-      event = yield undefined;
-      is(event.target.result, "2", "Locked files were ordered properly.");
+      request = lockedFile.getMetadata({ size: true });
+      ok(request.lockedFile === lockedFile, "Correct property");
     }
 
     finishTest();
