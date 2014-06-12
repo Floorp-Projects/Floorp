@@ -277,7 +277,7 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LDivPowTwoI *lir = new(alloc()) LDivPowTwoI(useRegisterAtStart(div->lhs()), shift);
-            if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+            if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
                 return false;
             return define(lir, div);
         }
@@ -285,14 +285,14 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
 
     if (hasIDIV()) {
         LDivI *lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
-        if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return define(lir, div);
     }
 
     LSoftDivI *lir = new(alloc()) LSoftDivI(useFixedAtStart(div->lhs(), r0), useFixedAtStart(div->rhs(), r1),
                                             tempFixed(r1), tempFixed(r2), tempFixed(r3));
-    if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+    if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
         return false;
     return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
 }
@@ -301,7 +301,7 @@ bool
 LIRGeneratorARM::lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs)
 {
     LMulI *lir = new(alloc()) LMulI;
-    if (mul->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+    if (mul->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
         return false;
     return lowerForALU(lir, mul, lhs, rhs);
 }
@@ -317,12 +317,12 @@ LIRGeneratorARM::lowerModI(MMod *mod)
         int32_t shift = FloorLog2(rhs);
         if (rhs > 0 && 1 << shift == rhs) {
             LModPowTwoI *lir = new(alloc()) LModPowTwoI(useRegister(mod->lhs()), shift);
-            if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+            if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
                 return false;
             return define(lir, mod);
         } else if (shift < 31 && (1 << (shift+1)) - 1 == rhs) {
             LModMaskI *lir = new(alloc()) LModMaskI(useRegister(mod->lhs()), temp(LDefinition::GENERAL), shift+1);
-            if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+            if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
                 return false;
             return define(lir, mod);
         }
@@ -330,7 +330,7 @@ LIRGeneratorARM::lowerModI(MMod *mod)
 
     if (hasIDIV()) {
         LModI *lir = new(alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
-        if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return define(lir, mod);
     }
@@ -338,7 +338,7 @@ LIRGeneratorARM::lowerModI(MMod *mod)
     LSoftModI *lir = new(alloc()) LSoftModI(useFixedAtStart(mod->lhs(), r0), useFixedAtStart(mod->rhs(), r1),
                                             tempFixed(r0), tempFixed(r2), tempFixed(r3),
                                             temp(LDefinition::GENERAL));
-    if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+    if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
         return false;
     return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
 }
@@ -386,7 +386,7 @@ LIRGeneratorARM::visitGuardObjectType(MGuardObjectType *ins)
 
     LDefinition tempObj = temp(LDefinition::OBJECT);
     LGuardObjectType *guard = new(alloc()) LGuardObjectType(useRegister(ins->obj()), tempObj);
-    if (!assignSnapshot(guard))
+    if (!assignSnapshot(guard, Bailout_ObjectIdentityOrTypeGuard))
         return false;
     if (!add(guard, ins))
         return false;
@@ -429,13 +429,13 @@ LIRGeneratorARM::lowerUDiv(MDiv *div)
         LUDiv *lir = new(alloc()) LUDiv;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));
-        if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return define(lir, div);
     } else {
         LSoftUDivOrMod *lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
                                                           tempFixed(r1), tempFixed(r2), tempFixed(r3));
-        if (div->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return defineFixed(lir, div, LAllocation(AnyRegister(r0)));
     }
@@ -451,13 +451,13 @@ LIRGeneratorARM::lowerUMod(MMod *mod)
         LUMod *lir = new(alloc()) LUMod;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));
-        if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return define(lir, mod);
     } else {
         LSoftUDivOrMod *lir = new(alloc()) LSoftUDivOrMod(useFixedAtStart(lhs, r0), useFixedAtStart(rhs, r1),
                                                           tempFixed(r0), tempFixed(r2), tempFixed(r3));
-        if (mod->fallible() && !assignSnapshot(lir, Bailout_BaselineInfo))
+        if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
         return defineFixed(lir, mod, LAllocation(AnyRegister(r1)));
     }
