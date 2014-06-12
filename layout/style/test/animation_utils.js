@@ -180,3 +180,79 @@ function runOMTATest(aTestFunction, aOnSkip) {
     });
   }
 }
+
+// Common architecture for setting up a series of asynchronous animation tests
+//
+// Usage example:
+//
+//    addAsyncAnimTest(function *() {
+//       .. do work ..
+//       yield functionThatReturnsAPromise();
+//       .. do work ..
+//    });
+//    runAllAsyncAnimTests().then(SimpleTest.finish());
+//
+(function() {
+  var tests = [];
+
+  window.addAsyncAnimTest = function(generator) {
+    tests.push(generator);
+  };
+
+  // Returns a promise when all tests have run
+  window.runAllAsyncAnimTests = function(aOnAbort) {
+    // runAsyncAnimTest returns a Promise that is resolved when the
+    // test is finished so we can chain them together
+    return tests.reduce(function(sequence, test) {
+        return sequence.then(function() {
+          return runAsyncAnimTest(test, aOnAbort);
+        });
+      }, Promise.resolve() /* the start of the sequence */);
+  };
+
+  // Takes a generator function that represents a test case. Each point in the
+  // test case that waits asynchronously for some result yields a Promise that
+  // is resolved when the asynchronous action has completed. By chaining these
+  // intermediate results together we run the test to completion.
+  //
+  // This method itself returns a Promise that is resolved when the generator
+  // function has completed.
+  //
+  // This arrangement is based on add_task() which is currently only available
+  // in mochitest-chrome (bug 872229). If add_task becomes available in
+  // mochitest-plain, we can remove this function and use add_task instead.
+  function runAsyncAnimTest(aTestFunc, aOnAbort) {
+    var generator;
+
+    function step(arg) {
+      var next;
+      try {
+        next = generator.next(arg);
+      } catch (e) {
+        return Promise.reject(e);
+      }
+      if (next.done) {
+        return Promise.resolve(next.value);
+      } else {
+        return Promise.resolve(next.value)
+               .then(step, function(err) { throw err; });
+      }
+    }
+
+    // Put refresh driver under test control
+    SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(0);
+
+    // Run test
+    generator = aTestFunc();
+    return step()
+    .catch(function(err) {
+      ok(false, err.message);
+      if (typeof aOnAbort == "function") {
+        aOnAbort();
+      }
+    }).then(function() {
+      // Restore clock
+      SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+    });
+  }
+})();
