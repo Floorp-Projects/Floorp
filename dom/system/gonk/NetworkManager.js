@@ -102,7 +102,7 @@ const IPV6_ADDRESS_ANY                 = "::0";
 const IPV4_MAX_PREFIX_LENGTH           = 32;
 const IPV6_MAX_PREFIX_LENGTH           = 128;
 
-const PREF_DATA_DEFAULT_SERVICE_ID     = "ril.data.defaultServiceId";
+const SETTINGS_DATA_DEFAULT_SERVICE_ID = "ril.data.defaultServiceId";
 const MOBILE_DUN_CONNECT_TIMEOUT       = 30000;
 const MOBILE_DUN_RETRY_INTERVAL        = 5000;
 const MOBILE_DUN_MAX_RETRIES           = 5;
@@ -151,6 +151,8 @@ function NetworkManager() {
   // Possible usb tethering interfaces for different gonk platform.
   this.possibleInterface = POSSIBLE_USB_INTERFACE_NAME.split(",");
 
+  this._dataDefaultServiceId = 0;
+
   // Default values for internal and external interfaces.
   this._tetheringInterface = Object.create(null);
   this._tetheringInterface[TETHERING_TYPE_USB] = {
@@ -165,6 +167,8 @@ function NetworkManager() {
   this.initTetheringSettings();
 
   let settingsLock = gSettingsService.createLock();
+  // Read the default service id for data call.
+  settingsLock.get(SETTINGS_DATA_DEFAULT_SERVICE_ID, this);
   // Read usb tethering data from settings DB.
   settingsLock.get(SETTINGS_USB_IP, this);
   settingsLock.get(SETTINGS_USB_PREFIX, this);
@@ -410,6 +414,8 @@ NetworkManager.prototype = {
   _manageOfflineStatus: true,
 
   networkInterfaces: null,
+
+  _dataDefaultServiceId: null,
 
   _preferredNetworkType: DEFAULT_PREFERRED_NETWORK_TYPE,
   get preferredNetworkType() {
@@ -714,6 +720,10 @@ NetworkManager.prototype = {
 
   handle: function(aName, aResult) {
     switch(aName) {
+      case SETTINGS_DATA_DEFAULT_SERVICE_ID:
+        this._dataDefaultServiceId = aResult || 0;
+        debug("'_dataDefaultServiceId' is now " + this._dataDefaultServiceId);
+        break;
       case SETTINGS_USB_ENABLED:
         this._oldUsbTetheringEnabledState = this.tetheringSettings[SETTINGS_USB_ENABLED];
       case SETTINGS_USB_IP:
@@ -758,9 +768,15 @@ NetworkManager.prototype = {
     this.tetheringSettings[SETTINGS_USB_ENABLED] = false;
   },
 
-  getNetworkInterface: function(type) {
+  getNetworkInterface: function(type, serviceId) {
     for each (let network in this.networkInterfaces) {
       if (network.type == type) {
+#ifdef MOZ_B2G_RIL
+        if (serviceId != undefined && this.isNetworkTypeMobile(network.type) &&
+            network.serviceId != serviceId) {
+          continue;
+        }
+#endif
         return network;
       }
     }
@@ -815,7 +831,7 @@ NetworkManager.prototype = {
   dunRetryTimer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   setupDunConnection: function() {
     this.dunRetryTimer.cancel();
-    let ril = this.mRil.getRadioInterface(this.gDataDefaultServiceId);
+    let ril = this.mRil.getRadioInterface(this._dataDefaultServiceId);
 
     if (ril.rilContext && ril.rilContext.data &&
         ril.rilContext.data.state === "registered") {
@@ -847,7 +863,7 @@ NetworkManager.prototype = {
   handleDunConnection: function(enable, callback) {
     debug("handleDunConnection: " + enable);
     let dun = this.getNetworkInterface(
-      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN);
+      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN, this._dataDefaultServiceId);
 
     if (!enable) {
       this._dunActiveUsers--;
@@ -862,7 +878,7 @@ NetworkManager.prototype = {
       this._pendingTetheringRequests = [];
 
       if (dun && (dun.state == Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
-        this.mRil.getRadioInterface(this.gDataDefaultServiceId)
+        this.mRil.getRadioInterface(this._dataDefaultServiceId)
           .deactivateDataCallByType("dun");
       }
       return;
@@ -923,7 +939,8 @@ NetworkManager.prototype = {
     if (this.active) {
       this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = this.active.name;
     } else {
-      let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+      let mobile = this.getNetworkInterface(
+        Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
       if (mobile) {
         this._tetheringInterface[TETHERING_TYPE_USB].externalInterface = mobile.name;
       }
@@ -1044,7 +1061,8 @@ NetworkManager.prototype = {
     }
 #endif
 
-    let mobile = this.getNetworkInterface(Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE);
+    let mobile = this.getNetworkInterface(
+      Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE, this._dataDefaultServiceId);
     // Update the real interface name
     if (mobile) {
       this._tetheringInterface[TETHERING_TYPE_WIFI].externalInterface = mobile.name;
@@ -1147,15 +1165,8 @@ NetworkManager.prototype = {
     }
 
 #ifdef MOZ_B2G_RIL
-    // We can not use network.type only to check if it's dun, cause if it is
-    // shared with default, the returned type would always be default, see bug
-    // 939046. In most cases, if dun is required, it should not be shared with
-    // default.
     if (this.tetheringSettings[SETTINGS_DUN_REQUIRED] &&
-        (network.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN ||
-         this.mRil.getRadioInterface(this.gDataDefaultServiceId)
-           .getDataCallStateByType("dun") ===
-         Ci.nsINetworkInterface.NETWORK_STATE_CONNECTED)) {
+        network.type === Ci.nsINetworkInterface.NETWORK_TYPE_MOBILE_DUN) {
       this.dunConnectTimer.cancel();
       debug("DUN data call connected, process callbacks.");
       while (this._pendingTetheringRequests.length > 0) {
@@ -1294,15 +1305,6 @@ let CaptivePortalDetectionHelper = (function() {
 XPCOMUtils.defineLazyServiceGetter(NetworkManager.prototype, "mRil",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
-
-XPCOMUtils.defineLazyGetter(NetworkManager.prototype,
-                            "gDataDefaultServiceId", function() {
-  try {
-    return Services.prefs.getIntPref(PREF_DATA_DEFAULT_SERVICE_ID);
-  } catch(e) {}
-
-  return 0;
-});
 #endif
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([NetworkManager]);
