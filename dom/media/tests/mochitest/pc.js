@@ -1710,6 +1710,21 @@ PeerConnectionWrapper.prototype = {
 
   /**
    * Registers a callback for the ICE connection state change and
+   * appends the new state to an array for logging it later.
+   */
+  logIceConnectionState: function PCW_logIceConnectionState() {
+    var self = this;
+
+    function logIceConState () {
+      self.iceConnectionLog.push(self._pc.iceConnectionState);
+    }
+
+    self.iceConnectionLog = [self._pc.iceConnectionState];
+    self.ice_connection_callbacks.logIceStatus = logIceConState;
+  },
+
+  /**
+   * Registers a callback for the ICE connection state change and
    * reports success (=connected) or failure via the callbacks.
    * States "new" and "checking" are ignored.
    *
