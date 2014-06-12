@@ -159,6 +159,7 @@ public:
   virtual already_AddRefed<nsIContent> GetEventTargetContent(
                                                      mozilla::WidgetEvent* aEvent) MOZ_OVERRIDE;
 
+  virtual void NotifyCounterStylesAreDirty();
 
   virtual nsresult ReconstructFrames(void) MOZ_OVERRIDE;
   virtual void Freeze() MOZ_OVERRIDE;

@@ -20,6 +20,7 @@
 #include "nsDisplayList.h"
 #include "nsCounterManager.h"
 #include "nsBidiUtils.h"
+#include "CounterStyleManager.h"
 
 #include "imgIContainer.h"
 #include "imgRequestProxy.h"
@@ -91,7 +92,7 @@ nsBulletFrame::IsEmpty()
 bool
 nsBulletFrame::IsSelfEmpty() 
 {
-  return StyleList()->mListStyleType == NS_STYLE_LIST_STYLE_NONE;
+  return StyleList()->GetCounterStyle()->IsNone();
 }
 
 /* virtual */ void
@@ -166,11 +167,11 @@ nsBulletFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
       const nsStyleList* oldStyleList = aOldStyleContext->PeekStyleList();
       if (oldStyleList) {
         bool hadBullet = oldStyleList->GetListStyleImage() ||
-            oldStyleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE;
+          !oldStyleList->GetCounterStyle()->IsNone();
 
         const nsStyleList* newStyleList = StyleList();
         bool hasBullet = newStyleList->GetListStyleImage() ||
-            newStyleList->mListStyleType != NS_STYLE_LIST_STYLE_NONE;
+          !newStyleList->GetCounterStyle()->IsNone();
 
         if (hadBullet != hasBullet) {
           accService->UpdateListBullet(PresContext()->GetPresShell(), mContent,
@@ -289,7 +290,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect, uint32_t aFlags)
 {
   const nsStyleList* myList = StyleList();
-  uint8_t listStyleType = myList->mListStyleType;
+  CounterStyle* listStyleType = myList->GetCounterStyle();
 
   if (myList->GetListStyleImage() && mImageRequest) {
     uint32_t status;
@@ -314,11 +315,10 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
   aRenderingContext.SetColor(nsLayoutUtils::GetColor(this, eCSSProperty_color));
 
   nsAutoString text;
-  switch (listStyleType) {
+  switch (listStyleType->GetStyle()) {
   case NS_STYLE_LIST_STYLE_NONE:
     break;
 
-  default:
   case NS_STYLE_LIST_STYLE_DISC:
     aRenderingContext.FillEllipse(mPadding.left + aPt.x, mPadding.top + aPt.y,
                                   mRect.width - (mPadding.left + mPadding.right),
@@ -353,65 +353,10 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     }
     break;
 
-  case NS_STYLE_LIST_STYLE_DECIMAL:
-  case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-  case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
-  case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-  case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-  case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-  case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-  case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-  case NS_STYLE_LIST_STYLE_HEBREW:
-  case NS_STYLE_LIST_STYLE_ARMENIAN:
-  case NS_STYLE_LIST_STYLE_GEORGIAN:
-  case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
-  case NS_STYLE_LIST_STYLE_HIRAGANA:
-  case NS_STYLE_LIST_STYLE_KATAKANA:
-  case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-  case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-  case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-  case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-  case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-  case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-  case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-  case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-  case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-  case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-  case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-  case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
-  case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-  case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-  case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-  case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-  case NS_STYLE_LIST_STYLE_MOZ_URDU:
-  case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-  case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-  case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-  case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-  case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-  case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-  case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-  case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-  case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-  case NS_STYLE_LIST_STYLE_MOZ_THAI:
-  case NS_STYLE_LIST_STYLE_MOZ_LAO:
-  case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-  case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-  case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-  case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
-  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-  case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
+  default:
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
-    GetListItemText(*myList, text);
+    GetListItemText(text);
     aRenderingContext.SetFont(fm);
     nscoord ascent = fm->MaxAscent();
     aPt.MoveBy(mPadding.left, mPadding.top);
@@ -1498,33 +1443,33 @@ nsBulletFrame::GetListItemSuffix(int32_t aListStyleType,
 }
 
 void
-nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
-                               nsString& result)
+nsBulletFrame::GetListItemText(nsAString& aResult)
 {
-  NS_ASSERTION(aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_NONE &&
-               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_DISC &&
-               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_CIRCLE &&
-               aListStyle.mListStyleType != NS_STYLE_LIST_STYLE_SQUARE,
+  CounterStyle* style = StyleList()->GetCounterStyle();
+  NS_ASSERTION(style->GetStyle() != NS_STYLE_LIST_STYLE_NONE &&
+               style->GetStyle() != NS_STYLE_LIST_STYLE_DISC &&
+               style->GetStyle() != NS_STYLE_LIST_STYLE_CIRCLE &&
+               style->GetStyle() != NS_STYLE_LIST_STYLE_SQUARE,
                "we should be using specialized code for these types");
 
   bool isRTL;
-  nsAutoString number;
-  AppendCounterText(aListStyle.mListStyleType, mOrdinal, number, isRTL);
+  nsAutoString counter, prefix, suffix;
+  style->GetPrefix(prefix);
+  style->GetSuffix(suffix);
+  style->GetCounterText(mOrdinal, counter, isRTL);
 
-  nsAutoString suffix;
-  GetListItemSuffix(aListStyle.mListStyleType, suffix);
-
-  result.Truncate();
+  aResult.Truncate();
+  aResult.Append(prefix);
   if (GetWritingMode().IsBidiLTR() != isRTL) {
-    result.Append(number);
+    aResult.Append(counter);
   } else {
     // RLM = 0x200f, LRM = 0x200e
     char16_t mark = isRTL ? 0x200f : 0x200e;
-    result.Append(mark);
-    result.Append(number);
-    result.Append(mark);
+    aResult.Append(mark);
+    aResult.Append(counter);
+    aResult.Append(mark);
   }
-  result.Append(suffix);
+  aResult.Append(suffix);
 }
 
 #define MIN_BULLET_SIZE 1
@@ -1584,7 +1529,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   nscoord bulletSize;
 
   nsAutoString text;
-  switch (myList->mListStyleType) {
+  switch (myList->GetCounterStyle()->GetStyle()) {
     case NS_STYLE_LIST_STYLE_NONE:
       aMetrics.Width() = aMetrics.Height() = 0;
       aMetrics.SetBlockStartAscent(0);
@@ -1614,63 +1559,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     }
 
     default:
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-    case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-    case NS_STYLE_LIST_STYLE_HEBREW: 
-    case NS_STYLE_LIST_STYLE_ARMENIAN: 
-    case NS_STYLE_LIST_STYLE_GEORGIAN: 
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
-    case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_INFORMAL:
-    case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL: 
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-    case NS_STYLE_LIST_STYLE_MOZ_URDU:
-    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-    case NS_STYLE_LIST_STYLE_MOZ_THAI:
-    case NS_STYLE_LIST_STYLE_MOZ_LAO:
-    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-      GetListItemText(*myList, text);
+      GetListItemText(text);
       aMetrics.Height() = fm->MaxHeight();
       aRenderingContext->SetFont(fm);
       aMetrics.Width() =
@@ -1883,8 +1772,8 @@ nsBulletFrame::GetBaseline() const
     nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
-    const nsStyleList* myList = StyleList();
-    switch (myList->mListStyleType) {
+    CounterStyle* listStyleType = StyleList()->GetCounterStyle();
+    switch (listStyleType->GetStyle()) {
       case NS_STYLE_LIST_STYLE_NONE:
         break;
 
@@ -1904,6 +1793,22 @@ nsBulletFrame::GetBaseline() const
     }
   }
   return ascent + GetUsedBorderAndPadding().top;
+}
+
+void
+nsBulletFrame::GetSpokenText(nsAString& aText)
+{
+  CounterStyle* style = StyleList()->GetCounterStyle();
+  bool isBullet;
+  style->GetSpokenCounterText(mOrdinal, aText, isBullet);
+  if (isBullet) {
+    aText.Append(' ');
+  } else {
+    nsAutoString prefix, suffix;
+    style->GetPrefix(prefix);
+    style->GetSuffix(suffix);
+    aText = prefix + aText + suffix;
+  }
 }
 
 
