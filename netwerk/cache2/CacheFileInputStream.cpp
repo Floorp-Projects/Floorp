@@ -330,7 +330,7 @@ CacheFileInputStream::Seek(int32_t whence, int64_t offset)
       return NS_ERROR_INVALID_ARG;
   }
   mPos = newPos;
-  EnsureCorrectChunk(true);
+  EnsureCorrectChunk(false);
 
   LOG(("CacheFileInputStream::Seek() [this=%p, pos=%lld]", this, mPos));
   return NS_OK;
