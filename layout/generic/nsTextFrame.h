@@ -519,8 +519,6 @@ public:
 
   bool IsFloatingFirstLetterChild() const;
 
-  virtual bool UpdateOverflow() MOZ_OVERRIDE;
-
 protected:
   virtual ~nsTextFrame();
 
@@ -554,7 +552,7 @@ protected:
   SelectionDetails* GetSelectionDetails();
 
   void UnionAdditionalOverflow(nsPresContext* aPresContext,
-                               nsIFrame* aBlock,
+                               const nsHTMLReflowState& aBlockReflowState,
                                PropertyProvider& aProvider,
                                nsRect* aVisualOverflowRect,
                                bool aIncludeTextDecorations);
