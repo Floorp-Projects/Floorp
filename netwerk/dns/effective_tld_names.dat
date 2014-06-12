@@ -598,9 +598,12 @@ gob.cl
 co.cl
 mil.cl
 
-// cm : http://en.wikipedia.org/wiki/.cm
+// cm : http://en.wikipedia.org/wiki/.cm plus bug 981927
 cm
+co.cm
+com.cm
 gov.cm
+net.cm
 
 // cn : http://en.wikipedia.org/wiki/.cn
 // Submitted by registry <tanyaling@cnnic.cn> 2008-06-11
