@@ -5,6 +5,19 @@
 "use strict";
 
 
+const iceStateTransitions = {
+  "new": ["checking", "closed"], //Note: 'failed' might need to added here
+                                 //      even though it is not in the standard
+  "checking": ["new", "connected", "failed", "closed"], //Note: do we need to
+                                                        // allow 'completed' in
+                                                        // here as well?
+  "connected": ["new", "completed", "disconnected", "closed"],
+  "completed": ["new", "disconnected", "closed"],
+  "disconnected": ["new", "connected", "completed", "failed", "closed"],
+  "failed": ["new", "disconnected", "closed"],
+  "closed": []
+  }
+
 /**
  * This class mimics a state machine and handles a list of commands by
  * executing them synchronously.
@@ -1716,6 +1729,13 @@ PeerConnectionWrapper.prototype = {
     var self = this;
 
     function logIceConState () {
+      var newstate = self._pc.iceConnectionState;
+      var oldstate = self.iceConnectionLog[self.iceConnectionLog.length - 1]
+      if (Object.keys(iceStateTransitions).indexOf(oldstate) != -1) {
+        ok(iceStateTransitions[oldstate].indexOf(newstate) != -1, "Legal ICE state transition from " + oldstate + " to " + newstate);
+      } else {
+        ok(false, "Old ICE state " + oldstate + " missing in ICE transition array");
+      }
       self.iceConnectionLog.push(self._pc.iceConnectionState);
     }
 
