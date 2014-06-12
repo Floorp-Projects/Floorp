@@ -426,7 +426,8 @@ void MediaDecoderStateMachine::SendStreamData()
       }
       minLastAudioPacketTime = std::min(minLastAudioPacketTime, stream->mLastAudioPacketTime);
       endPosition = std::max(endPosition,
-          TicksToTimeRoundDown(mInfo.mAudio.mRate, stream->mAudioFramesWritten));
+          mediaStream->TicksToTimeRoundDown(mInfo.mAudio.mRate,
+                                            stream->mAudioFramesWritten));
     }
 
     if (mInfo.HasVideo()) {
@@ -469,7 +470,7 @@ void MediaDecoderStateMachine::SendStreamData()
         stream->mHaveSentFinishVideo = true;
       }
       endPosition = std::max(endPosition,
-          TicksToTimeRoundDown(RATE_VIDEO, stream->mNextVideoTime - stream->mInitialTime));
+          mediaStream->TicksToTimeRoundDown(RATE_VIDEO, stream->mNextVideoTime - stream->mInitialTime));
     }
 
     if (!stream->mHaveSentFinish) {
