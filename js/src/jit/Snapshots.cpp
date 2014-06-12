@@ -482,7 +482,7 @@ SnapshotReader::SnapshotReader(const uint8_t *snapshots, uint32_t offset,
 
 // Details of snapshot header packing.
 static const uint32_t SNAPSHOT_BAILOUTKIND_SHIFT = 0;
-static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 3;
+static const uint32_t SNAPSHOT_BAILOUTKIND_BITS = 5;
 static const uint32_t SNAPSHOT_BAILOUTKIND_MASK = COMPUTE_MASK_(SNAPSHOT_BAILOUTKIND);
 
 static const uint32_t SNAPSHOT_ROFFSET_SHIFT = COMPUTE_SHIFT_AFTER_(SNAPSHOT_BAILOUTKIND);
