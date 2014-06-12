@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: extends upper-roman;
+    prefix: "Appendix ";
+  }
+  section {
+    counter-reset: p -3;
+  }
+  p {
+    counter-increment: p;
+  }
+  p::before {
+    content: counter(p, a);
+  }
+</style>
+<ol start="-2" style="list-style-type: a">
+  <li><li><li><li><li>
+</ol>
+<section>
+  <p><p><p><p><p>
+</section>

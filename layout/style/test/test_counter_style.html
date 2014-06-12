@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Test for css3-counter-style (Bug 966166)</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style type="text/css">
+    #ol_test, #ol_ref {
+      display: inline-block;
+      list-style-position: inside;
+    }
+    #ol_test { list-style-type: test; }
+    #ol_ref { list-style-type: ref; }
+    #div_test, #div_ref {
+      display: inline-block;
+      counter-reset: a -1;
+    }
+    #div_test::before { content: counter(a, test); }
+    #div_ref::before { content: counter(a, ref); }
+  </style>
+  <style type="text/css" id="counter">
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=966166">Mozilla Bug 966166</a>
+<div id="display"></div>
+<ol id="ol_test" start="-1"><li></li></ol><br>
+<ol id="ol_ref" start="-1"><li></li></ol><br>
+<div id="div_test"></div><br>
+<div id="div_ref"></div><br>
+<pre id="test">
+<script type="application/javascript">
+var gOlTest = document.getElementById("ol_test"),
+    gOlRef = document.getElementById("ol_ref"),
+    gDivTest = document.getElementById("div_test"),
+    gDivRef = document.getElementById("div_ref"),
+    gCounterSheet = document.getElementById("counter").sheet;
+
+var testRule, refRule;
+
+var basicStyle = "system: extends decimal; range: infinite infinite; ";
+var info = [
+  ["system",
+   "system: fixed -1; symbols: xxx;",
+   "system: fixed; symbols: xxx;"],
+  ["system",
+   "system: extends decimal;",
+   "system: extends cjk-ideographic;"],
+  ["negative", "", "negative: '((' '))';"],
+  ["negative", "", "negative: '---';"],
+  ["prefix", "", "prefix: '###';"],
+  ["suffix", "", "suffix: '###';"],
+  ["range",
+   "fallback: cjk-ideographic;",
+   "fallback: cjk-ideographic; range: 10 infinite;"],
+  ["pad", "", "pad: 10 '0';"],
+  ["fallback",
+   "range: 0 infinite;",
+   "range: 0 infinite; fallback: cjk-ideographic;"],
+  ["symbols",
+   "system: symbolic; symbols: '1';",
+   "system: symbolic; symbols: '111';"],
+  ["additiveSymbols",
+   "system: additive; additive-symbols: 1 '1';",
+   "system: additive; additive-symbols: 1 '111';"],
+];
+
+// force a reflow before test to eliminate bug 994418
+gOlTest.getBoundingClientRect().width;
+
+for (var i in info) {
+  var item = info[i];
+  var desc = item[0],
+      testStyle = item[1],
+      refStyle = item[2];
+  var isFix = (desc == "prefix" || desc == "suffix");
+
+  while (gCounterSheet.cssRules.length > 0) {
+    gCounterSheet.deleteRule(0);
+  }
+  gCounterSheet.insertRule("@counter-style test { " +
+    basicStyle + testStyle + "}", 0);
+  gCounterSheet.insertRule("@counter-style ref { " +
+    basicStyle + refStyle + "}", 1);
+  testRule = gCounterSheet.cssRules[0];
+  refRule = gCounterSheet.cssRules[1];
+
+  var olTestWidth = gOlTest.getBoundingClientRect().width;
+  var olRefWidth = gOlRef.getBoundingClientRect().width;
+  ok(olTestWidth > 0, "test ol has width");
+  ok(olRefWidth > 0, "ref ol has width");
+  ok(olTestWidth != olRefWidth,
+     "OLs have different width " +
+     "for rule '" + testStyle + "' and '" + refStyle + "'");
+
+  var divTestWidth = gDivTest.getBoundingClientRect().width;
+  var divRefWidth = gDivRef.getBoundingClientRect().width;
+  if (!isFix) {
+    ok(divTestWidth > 0, "test div has width");
+    ok(divRefWidth > 0, "ref div has width");
+    ok(divTestWidth != divRefWidth,
+       "DIVs have different width" +
+       "for rule '" + testStyle + "' and '" + refStyle + "'");
+  }
+
+  ok(testRule[desc] != refRule[desc],
+     "rules have different values for desciptor '" + desc + "'");
+  testRule[desc] = refRule[desc];
+
+  var olNewWidth = gOlTest.getBoundingClientRect().width;
+  var divNewWidth = gDivTest.getBoundingClientRect().width;
+  is(olNewWidth, olRefWidth);
+  if (!isFix) {
+    is(divNewWidth, divRefWidth);
+  }
+}
+</script>
+</pre>
+</body>
+</html>
