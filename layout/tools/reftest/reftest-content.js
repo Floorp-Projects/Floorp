@@ -321,43 +321,43 @@ const STATE_WAITING_FOR_SPELL_CHECKS = 2;
 const STATE_WAITING_TO_FINISH = 3;
 const STATE_COMPLETED = 4;
 
+function FlushRendering() {
+    var anyPendingPaintsGeneratedInDescendants = false;
+
+    function flushWindow(win) {
+        var utils = win.QueryInterface(CI.nsIInterfaceRequestor)
+                    .getInterface(CI.nsIDOMWindowUtils);
+        var afterPaintWasPending = utils.isMozAfterPaintPending;
+
+        try {
+            // Flush pending restyles and reflows for this window
+            win.document.documentElement.getBoundingClientRect();
+        } catch (e) {
+            LogWarning("flushWindow failed: " + e + "\n");
+        }
+
+        if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
+            LogInfo("FlushRendering generated paint for window " + win.location.href);
+            anyPendingPaintsGeneratedInDescendants = true;
+        }
+
+        for (var i = 0; i < win.frames.length; ++i) {
+            flushWindow(win.frames[i]);
+        }
+    }
+
+    flushWindow(content);
+
+    if (anyPendingPaintsGeneratedInDescendants &&
+        !windowUtils().isMozAfterPaintPending) {
+        LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
+    }
+}
+
 function WaitForTestEnd(contentRootElement, inPrintMode, spellCheckedElements) {
     var stopAfterPaintReceived = false;
     var currentDoc = content.document;
     var state = STATE_WAITING_TO_FIRE_INVALIDATE_EVENT;
-
-    function FlushRendering() {
-        var anyPendingPaintsGeneratedInDescendants = false;
-
-        function flushWindow(win) {
-            var utils = win.QueryInterface(CI.nsIInterfaceRequestor)
-                        .getInterface(CI.nsIDOMWindowUtils);
-            var afterPaintWasPending = utils.isMozAfterPaintPending;
-
-            try {
-                // Flush pending restyles and reflows for this window
-                win.document.documentElement.getBoundingClientRect();
-            } catch (e) {
-                LogWarning("flushWindow failed: " + e + "\n");
-            }
-
-            if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
-                LogInfo("FlushRendering generated paint for window " + win.location.href);
-                anyPendingPaintsGeneratedInDescendants = true;
-            }
-
-            for (var i = 0; i < win.frames.length; ++i) {
-                flushWindow(win.frames[i]);
-            }
-        }
-
-        flushWindow(content);
-
-        if (anyPendingPaintsGeneratedInDescendants &&
-            !windowUtils().isMozAfterPaintPending) {
-            LogWarning("Internal error: descendant frame generated a MozAfterPaint event, but the root document doesn't have one!");
-        }
-    }
 
     function AfterPaintListener(event) {
         LogInfo("AfterPaintListener in " + event.target.document.location.href);
@@ -596,6 +596,9 @@ function OnDocumentLoad(event)
         // Regrab the root element, because the document may have changed.
         var contentRootElement =
           content.document ? content.document.documentElement : null;
+
+        // Flush the document in case it got modified in a load event handler.
+        FlushRendering();
 
         // Take a snapshot now. We need to do this before we check whether
         // we should wait, since this might trigger dispatching of

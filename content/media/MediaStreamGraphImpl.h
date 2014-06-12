@@ -392,7 +392,26 @@ public:
    */
   void ResumeAllAudioOutputs();
 
-  TrackRate AudioSampleRate() { return mSampleRate; }
+  TrackRate AudioSampleRate() const { return mSampleRate; }
+  TrackRate GraphRate() const { return mSampleRate; }
+
+  double MediaTimeToSeconds(GraphTime aTime)
+  {
+    return TrackTicksToSeconds(GraphRate(), aTime);
+  }
+  GraphTime SecondsToMediaTime(double aS)
+  {
+    return SecondsToTicksRoundDown(GraphRate(), aS);
+  }
+  GraphTime MillisecondsToMediaTime(int32_t aMS)
+  {
+    return RateConvertTicksRoundDown(GraphRate(), 1000, aMS);
+  }
+
+  TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
+  {
+    return RateConvertTicksRoundDown(aRate, GraphRate(), aTime);
+  }
 
   // Data members
 

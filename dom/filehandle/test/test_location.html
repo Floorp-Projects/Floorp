@@ -13,25 +13,25 @@
   function testSteps()
   {
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open("readwrite");
-      is(lockedFile.location, 0, "Correct location");
+      let fileHandle = mutableFile.open("readwrite");
+      is(fileHandle.location, 0, "Correct location");
 
-      lockedFile.location = 100000;
-      is(lockedFile.location, 100000, "Correct location");
+      fileHandle.location = 100000;
+      is(fileHandle.location, 100000, "Correct location");
 
-      lockedFile.location = null;
-      ok(lockedFile.location === null, "Correct location");
+      fileHandle.location = null;
+      ok(fileHandle.location === null, "Correct location");
 
       try {
-        lockedFile.readAsArrayBuffer(1);
+        fileHandle.readAsArrayBuffer(1);
         ok(false, "Should have thrown!");
       }
       catch (e) {
@@ -41,7 +41,7 @@
       }
 
       try {
-        lockedFile.readAsText(1);
+        fileHandle.readAsText(1);
         ok(false, "Should have thrown!");
       }
       catch (e) {
@@ -51,7 +51,7 @@
       }
 
       try {
-        lockedFile.write({});
+        fileHandle.write({});
         ok(false, "Should have thrown!");
       }
       catch (e) {
@@ -60,14 +60,14 @@
         is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
       }
 
-      request = lockedFile.append("foo");
+      request = fileHandle.append("foo");
       request.onsuccess = grabEventAndContinueHandler;
       event = yield undefined;
 
-      ok(lockedFile.location === null, "Correct location");
+      ok(fileHandle.location === null, "Correct location");
 
       try {
-        lockedFile.truncate();
+        fileHandle.truncate();
         ok(false, "Should have thrown!");
       }
       catch (e) {
@@ -76,11 +76,11 @@
         is(e.code, DOMException.INVALID_STATE_ERR, "Good error code.");
       }
 
-      request = lockedFile.truncate(0);
+      request = fileHandle.truncate(0);
       request.onsuccess = grabEventAndContinueHandler;
       event = yield undefined;
 
-      is(lockedFile.location, 0, "Correct location");
+      is(fileHandle.location, 0, "Correct location");
     }
 
     finishTest();

@@ -328,6 +328,8 @@ public class BrowserContract {
         // Last modified time for the client's tab record. For remote records, a server
         // timestamp provided by Sync during insertion.
         public static final String LAST_MODIFIED = "last_modified";
+
+        public static final String DEVICE_TYPE = "device_type";
     }
 
     // Data storage for dynamic panels on about:home

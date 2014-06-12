@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 interface FileRequest : DOMRequest {
-  readonly attribute LockedFile? lockedFile;
+  readonly attribute FileHandle? fileHandle;
+  // this is deprecated due to renaming in the spec
+  readonly attribute FileHandle? lockedFile; // now fileHandle
 
   attribute EventHandler onprogress;
 };
+

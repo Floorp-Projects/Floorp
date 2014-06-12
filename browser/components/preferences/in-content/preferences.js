@@ -33,6 +33,15 @@ function init_all() {
   let categories = document.getElementById("categories");
   categories.addEventListener("select", event => gotoPref(event.target.value));
 
+  document.documentElement.addEventListener("keydown", function(event) {
+    if (event.keyCode == KeyEvent.DOM_VK_TAB) {
+      categories.setAttribute("keyboard-navigation", "true");
+    }
+  });
+  categories.addEventListener("mousedown", function() {
+    this.removeAttribute("keyboard-navigation");
+  });
+
   gotoPref("paneGeneral");
 }
 

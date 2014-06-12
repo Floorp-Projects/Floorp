@@ -1237,12 +1237,8 @@ pref("devtools.appmanager.enabled", true);
 pref("devtools.appmanager.lastTab", "help");
 pref("devtools.appmanager.manifestEditor.enabled", true);
 
-// Enable devtools webide
-#ifdef MOZ_DEVTOOLS_WEBIDE
-pref("devtools.webide.enabled", true);
-#else
+// Disable devtools webide until bug 1007059
 pref("devtools.webide.enabled", false);
-#endif
 
 // Toolbox preferences
 pref("devtools.toolbox.footer.height", 250);
@@ -1343,7 +1339,7 @@ pref("devtools.scratchpad.enableAutocompletion", true);
 pref("devtools.styleeditor.enabled", true);
 pref("devtools.styleeditor.source-maps-enabled", false);
 pref("devtools.styleeditor.autocompletion-enabled", true);
-pref("devtools.styleeditor.showMediaSidebar", false);
+pref("devtools.styleeditor.showMediaSidebar", true);
 
 // Enable the Shader Editor.
 pref("devtools.shadereditor.enabled", false);

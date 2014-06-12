@@ -15,19 +15,19 @@
     var testBuffer = getRandomBuffer(100000);
 
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open("readwrite");
+      let fileHandle = mutableFile.open("readwrite");
 
       let sum = 0;
 
-      request = lockedFile.write(testBuffer);
+      request = fileHandle.write(testBuffer);
       request.onprogress = function(event) {
         let loaded = event.loaded;
         let total = event.total;
@@ -42,8 +42,8 @@
 
       sum = 0;
 
-      lockedFile.location = 0;
-      request = lockedFile.readAsArrayBuffer(testBuffer.byteLength);
+      fileHandle.location = 0;
+      request = fileHandle.readAsArrayBuffer(testBuffer.byteLength);
       request.onprogress = function(event) {
         let loaded = event.loaded;
         let total = event.total;

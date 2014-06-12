@@ -106,7 +106,7 @@ namespace WebAudioUtils {
 
   inline bool IsTimeValid(double aTime)
   {
-    return aTime >= 0 &&  aTime <= (MEDIA_TIME_MAX >> MEDIA_TIME_FRAC_BITS);
+    return aTime >= 0 && aTime <= (MEDIA_TIME_MAX >> TRACK_RATE_MAX_BITS);
   }
 
   /**

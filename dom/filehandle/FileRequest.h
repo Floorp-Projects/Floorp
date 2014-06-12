@@ -21,8 +21,8 @@ class EventChainPreVisitor;
 
 namespace dom {
 
+class FileHandle;
 class FileHelper;
-class LockedFile;
 
 class FileRequest : public DOMRequest
 {
@@ -32,7 +32,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileRequest, DOMRequest)
 
   static already_AddRefed<FileRequest>
-  Create(nsPIDOMWindow* aOwner, LockedFile* aLockedFile,
+  Create(nsPIDOMWindow* aOwner, FileHandle* aFileHandle,
          bool aWrapAsDOMRequest);
 
   // nsIDOMEventTarget
@@ -53,8 +53,14 @@ public:
   WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   // WebIDL
-  LockedFile*
-  GetLockedFile() const;
+  FileHandle*
+  GetFileHandle() const;
+
+  FileHandle*
+  GetLockedFile() const
+  {
+    return GetFileHandle();
+  }
 
   IMPL_EVENT_HANDLER(progress)
 
@@ -65,7 +71,7 @@ protected:
   void
   FireProgressEvent(uint64_t aLoaded, uint64_t aTotal);
 
-  nsRefPtr<LockedFile> mLockedFile;
+  nsRefPtr<FileHandle> mFileHandle;
 
   bool mWrapAsDOMRequest;
 };

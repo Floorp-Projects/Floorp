@@ -4,7 +4,12 @@
 
 "use strict";
 
-let Cu = Components.utils;
+// NB: this file can be loaded from aboutSupport.xhtml or from the
+// resetProfile.xul dialog, and so Cu may or may not exist already.
+// Proceed with caution:
+if (!("Cu" in window)) {
+  window.Cu = Components.utils;
+}
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/ResetProfile.jsm");

@@ -25,39 +25,36 @@ const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
 typedef int32_t TrackID;
 const TrackID TRACK_NONE = 0;
 
-inline TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
+inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
+                                            TrackRate aInRate,
+                                            TrackTicks aTicks)
 {
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-  return (aTime*aRate + (1 << MEDIA_TIME_FRAC_BITS) - 1) >> MEDIA_TIME_FRAC_BITS;
+  NS_ASSERTION(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  NS_ASSERTION(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate) / aInRate;
+}
+inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate,
+                                          TrackRate aInRate, TrackTicks aTicks)
+{
+  NS_ASSERTION(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  NS_ASSERTION(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate + aInRate - 1) / aInRate;
 }
 
-inline TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
+inline TrackTicks SecondsToTicksRoundDown(TrackRate aRate, double aSeconds)
 {
   NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-  return (aTime*aRate) >> MEDIA_TIME_FRAC_BITS;
+  NS_ASSERTION(0 <= aSeconds && aSeconds <= TRACK_TICKS_MAX/TRACK_RATE_MAX,
+               "Bad seconds");
+  return aSeconds * aRate;
 }
-
-inline StreamTime TicksToTimeRoundUp(TrackRate aRate, TrackTicks aTicks)
+inline double TrackTicksToSeconds(TrackRate aRate, TrackTicks aTicks)
 {
   NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
-  return ((aTicks << MEDIA_TIME_FRAC_BITS) + aRate - 1)/aRate;
-}
-
-inline StreamTime TicksToTimeRound(TrackRate aRate, TrackTicks aTicks)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
-  return ((aTicks << MEDIA_TIME_FRAC_BITS) + aRate/2)/aRate;
-}
-
-inline StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_WARN_IF_FALSE(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
-  return (aTicks << MEDIA_TIME_FRAC_BITS)/aRate;
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return static_cast<double>(aTicks)/aRate;
 }
 
 /**
@@ -86,11 +83,11 @@ public:
    * Takes ownership of aSegment.
    */
   class Track {
-  public:
-    Track(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment)
+    Track(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment, TrackRate aGraphRate)
       : mStart(aStart),
         mSegment(aSegment),
         mRate(aRate),
+        mGraphRate(aGraphRate),
         mID(aID),
         mEnded(false)
     {
@@ -100,6 +97,7 @@ public:
       NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Invalid rate");
       NS_ASSERTION(0 <= aStart && aStart <= aSegment->GetDuration(), "Bad start position");
     }
+  public:
     ~Track()
     {
       MOZ_COUNT_DTOR(Track);
@@ -119,19 +117,19 @@ public:
     TrackTicks GetEnd() const { return mSegment->GetDuration(); }
     StreamTime GetEndTimeRoundDown() const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, mSegment->GetDuration());
+      return TicksToTimeRoundDown(mSegment->GetDuration());
     }
     StreamTime GetStartTimeRoundDown() const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, mStart);
+      return TicksToTimeRoundDown(mStart);
     }
     TrackTicks TimeToTicksRoundDown(StreamTime aTime) const
     {
-      return mozilla::TimeToTicksRoundDown(mRate, aTime);
+      return RateConvertTicksRoundDown(mRate, mGraphRate, aTime);
     }
     StreamTime TicksToTimeRoundDown(TrackTicks aTicks) const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, aTicks);
+      return RateConvertTicksRoundDown(mGraphRate, mRate, aTicks);
     }
     MediaSegment::Type GetType() const { return mSegment->GetType(); }
 
@@ -173,7 +171,8 @@ public:
     // The segment data starts at the start of the owning StreamBuffer, i.e.,
     // there's mStart silence/no video at the beginning.
     nsAutoPtr<MediaSegment> mSegment;
-    TrackRate mRate; // rate in ticks per second
+    TrackRate mRate; // track rate in ticks per second
+    TrackRate mGraphRate; // graph rate in StreamTime per second
     // Unique ID
     TrackID mID;
     // True when the track ends with the data in mSegment
@@ -192,6 +191,9 @@ public:
 
   StreamBuffer()
     : mTracksKnownTime(0), mForgottenTime(0)
+#ifdef DEBUG
+    , mGraphRateIsSet(false)
+#endif
   {
     MOZ_COUNT_CTOR(StreamBuffer);
   }
@@ -211,24 +213,45 @@ public:
   }
 
   /**
+   * Initialize the graph rate for use in calculating StreamTimes from track
+   * ticks.  Called when a MediaStream's graph pointer is initialized.
+   */
+  void InitGraphRate(TrackRate aGraphRate)
+  {
+    mGraphRate = aGraphRate;
+#if DEBUG
+    MOZ_ASSERT(!mGraphRateIsSet);
+    mGraphRateIsSet = true;
+#endif
+  }
+
+  TrackRate GraphRate() const
+  {
+    MOZ_ASSERT(mGraphRateIsSet);
+    return mGraphRate;
+  }
+
+  /**
    * Takes ownership of aSegment. Don't do this while iterating, or while
    * holding a Track reference.
    * aSegment must have aStart worth of null data.
    */
   Track& AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment)
   {
+    NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
+
+    Track* track = new Track(aID, aRate, aStart, aSegment, GraphRate());
+    mTracks.InsertElementSorted(track, CompareTracksByID());
+
     if (mTracksKnownTime == STREAM_TIME_MAX) {
       // There exists code like
       // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
       NS_WARNING("Adding track to StreamBuffer that should have no more tracks");
     } else {
-      NS_ASSERTION(TimeToTicksRoundDown(aRate, mTracksKnownTime) <= aStart,
+      NS_ASSERTION(track->TimeToTicksRoundDown(mTracksKnownTime) <= aStart,
                    "Start time too early");
     }
-    NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
-
-    return **mTracks.InsertElementSorted(new Track(aID, aRate, aStart, aSegment),
-                                         CompareTracksByID());
+    return *track;
   }
   void AdvanceKnownTracksTime(StreamTime aKnownTime)
   {
@@ -309,12 +332,16 @@ public:
   }
 
 protected:
+  TrackRate mGraphRate; // StreamTime per second
   // Any new tracks added will start at or after this time. In other words, the track
   // list is complete and correct for all times less than this time.
   StreamTime mTracksKnownTime;
   StreamTime mForgottenTime;
   // All known tracks for this StreamBuffer
   nsTArray<nsAutoPtr<Track> > mTracks;
+#ifdef DEBUG
+  bool mGraphRateIsSet;
+#endif
 };
 
 }

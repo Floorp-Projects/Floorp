@@ -15,7 +15,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/nsIContentParent.h"
-#include "mozilla/dom/FileHandleBinding.h"
+#include "mozilla/dom/MutableFileBinding.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ipc/Blob.h"
@@ -34,9 +34,9 @@
 #include "AsyncConnectionHelper.h"
 #include "IDBCursor.h"
 #include "IDBEvents.h"
-#include "IDBFileHandle.h"
 #include "IDBIndex.h"
 #include "IDBKeyRange.h"
+#include "IDBMutableFile.h"
 #include "IDBTransaction.h"
 #include "DatabaseInfo.h"
 #include "KeyPath.h"
@@ -63,7 +63,7 @@ using mozilla::NativeEndian;
 
 BEGIN_INDEXEDDB_NAMESPACE
 
-struct FileHandleData
+struct MutableFileData
 {
   nsString type;
   nsString name;
@@ -779,19 +779,19 @@ ResolveMysteryBlob(nsIDOMBlob* aBlob, const nsString& aContentType,
 class MainThreadDeserializationTraits
 {
 public:
-  static JSObject* CreateAndWrapFileHandle(JSContext* aCx,
-                                           IDBDatabase* aDatabase,
-                                           StructuredCloneFile& aFile,
-                                           const FileHandleData& aData)
+  static JSObject* CreateAndWrapMutableFile(JSContext* aCx,
+                                            IDBDatabase* aDatabase,
+                                            StructuredCloneFile& aFile,
+                                            const MutableFileData& aData)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     nsRefPtr<FileInfo>& fileInfo = aFile.mFileInfo;
 
-    nsRefPtr<IDBFileHandle> fileHandle = IDBFileHandle::Create(aData.name,
+    nsRefPtr<IDBMutableFile> mutableFile = IDBMutableFile::Create(aData.name,
       aData.type, aDatabase, fileInfo.forget());
 
-    return fileHandle->WrapObject(aCx);
+    return mutableFile->WrapObject(aCx);
   }
 
   static JSObject* CreateAndWrapBlobOrFile(JSContext* aCx,
@@ -881,12 +881,12 @@ public:
 class CreateIndexDeserializationTraits
 {
 public:
-  static JSObject* CreateAndWrapFileHandle(JSContext* aCx,
-                                           IDBDatabase* aDatabase,
-                                           StructuredCloneFile& aFile,
-                                           const FileHandleData& aData)
+  static JSObject* CreateAndWrapMutableFile(JSContext* aCx,
+                                            IDBDatabase* aDatabase,
+                                            StructuredCloneFile& aFile,
+                                            const MutableFileData& aData)
   {
-    // FileHandle can't be used in index creation, so just make a dummy object.
+    // MutableFile can't be used in index creation, so just make a dummy object.
     return JS_NewObject(aCx, nullptr, JS::NullPtr(), JS::NullPtr());
   }
 
@@ -1404,10 +1404,10 @@ StructuredCloneReadString(JSStructuredCloneReader* aReader,
 
 // static
 bool
-IDBObjectStore::ReadFileHandle(JSStructuredCloneReader* aReader,
-                               FileHandleData* aRetval)
+IDBObjectStore::ReadMutableFile(JSStructuredCloneReader* aReader,
+                                MutableFileData* aRetval)
 {
-  static_assert(SCTAG_DOM_FILEHANDLE == 0xFFFF8004,
+  static_assert(SCTAG_DOM_MUTABLEFILE == 0xFFFF8004,
                 "Update me!");
   MOZ_ASSERT(aReader && aRetval);
 
@@ -1443,7 +1443,7 @@ IDBObjectStore::ReadBlobOrFile(JSStructuredCloneReader* aReader,
 
   aRetval->tag = aTag;
 
-  // If it's not a FileHandle, it's a Blob or a File.
+  // If it's not a MutableFile, it's a Blob or a File.
   uint64_t size;
   if (!JS_ReadBytes(aReader, &size, sizeof(uint64_t))) {
     NS_WARNING("Failed to read size!");
@@ -1500,13 +1500,13 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
   // so that if people accidentally change them they notice.
   static_assert(SCTAG_DOM_BLOB == 0xFFFF8001 &&
                 SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE == 0xFFFF8002 &&
-                SCTAG_DOM_FILEHANDLE == 0xFFFF8004 &&
+                SCTAG_DOM_MUTABLEFILE == 0xFFFF8004 &&
                 SCTAG_DOM_FILE == 0xFFFF8005,
                 "You changed our structured clone tag values and just ate "
                 "everyone's IndexedDB data.  I hope you are happy.");
 
   if (aTag == SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE ||
-      aTag == SCTAG_DOM_FILEHANDLE ||
+      aTag == SCTAG_DOM_MUTABLEFILE ||
       aTag == SCTAG_DOM_BLOB ||
       aTag == SCTAG_DOM_FILE) {
     StructuredCloneReadInfo* cloneReadInfo =
@@ -1520,14 +1520,14 @@ IDBObjectStore::StructuredCloneReadCallback(JSContext* aCx,
     StructuredCloneFile& file = cloneReadInfo->mFiles[aData];
     IDBDatabase* database = cloneReadInfo->mDatabase;
 
-    if (aTag == SCTAG_DOM_FILEHANDLE) {
-      FileHandleData data;
-      if (!ReadFileHandle(aReader, &data)) {
+    if (aTag == SCTAG_DOM_MUTABLEFILE) {
+      MutableFileData data;
+      if (!ReadMutableFile(aReader, &data)) {
         return nullptr;
       }
 
-      return DeserializationTraits::CreateAndWrapFileHandle(aCx, database,
-                                                            file, data);
+      return DeserializationTraits::CreateAndWrapMutableFile(aCx, database,
+                                                             file, data);
     }
 
     BlobOrFileData data;
@@ -1572,25 +1572,25 @@ IDBObjectStore::StructuredCloneWriteCallback(JSContext* aCx,
   IDBTransaction* transaction = cloneWriteInfo->mTransaction;
   FileManager* fileManager = transaction->Database()->Manager();
 
-  FileHandle* fileHandle = nullptr;
-  if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, aObj, fileHandle))) {
-    nsRefPtr<FileInfo> fileInfo = fileHandle->GetFileInfo();
+  MutableFile* mutableFile = nullptr;
+  if (NS_SUCCEEDED(UNWRAP_OBJECT(MutableFile, aObj, mutableFile))) {
+    nsRefPtr<FileInfo> fileInfo = mutableFile->GetFileInfo();
 
-    // Throw when trying to store non IDB file handles or IDB file handles
+    // Throw when trying to store non IDB mutable files or IDB mutable files
     // across databases.
     if (!fileInfo || fileInfo->Manager() != fileManager) {
       return false;
     }
 
-    NS_ConvertUTF16toUTF8 convType(fileHandle->Type());
+    NS_ConvertUTF16toUTF8 convType(mutableFile->Type());
     uint32_t convTypeLength =
       NativeEndian::swapToLittleEndian(convType.Length());
 
-    NS_ConvertUTF16toUTF8 convName(fileHandle->Name());
+    NS_ConvertUTF16toUTF8 convName(mutableFile->Name());
     uint32_t convNameLength =
       NativeEndian::swapToLittleEndian(convName.Length());
 
-    if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_FILEHANDLE,
+    if (!JS_WriteUint32Pair(aWriter, SCTAG_DOM_MUTABLEFILE,
                             cloneWriteInfo->mFiles.Length()) ||
         !JS_WriteBytes(aWriter, &convTypeLength, sizeof(uint32_t)) ||
         !JS_WriteBytes(aWriter, convType.get(), convType.Length()) ||
