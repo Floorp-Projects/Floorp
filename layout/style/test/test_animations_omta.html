@@ -158,74 +158,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
 /** Test for css3-animations running on the compositor thread (Bug 964646) **/
  
 // Global state
-var gAsyncTests     = [],
-    gDisplay        = document.getElementById("display"),
+var gDisplay        = document.getElementById("display"),
     gDiv            = null,
     gEventsReceived = [];
 
 SimpleTest.waitForExplicitFinish();
 runOMTATest(function() {
-  // The async test runner returns a Promise that is resolved when the
-  // test is finished so we can chain them together
-  gAsyncTests.reduce(function(sequence, test) {
-    return sequence.then(function() { return runAsyncTest(test); });
-  }, Promise.resolve() /* the start of the sequence */)
-  // Final step in the sequence
-  .then(function() {
-    SimpleTest.finish();
-  });
-}, SimpleTest.finish);
-
-// Takes a generator function that represents a test case. Each point in the
-// test case that waits asynchronously for some result yields a Promise that is
-// resolved when the asychronous action has completed. By chaining these
-// intermediate results together we run the test to completion.
-//
-// This method itself returns a Promise that is resolved when the generator
-// function has completed.
-//
-// This arrangement is based on add_task() which is currently only available
-// in mochitest-chrome (bug 872229). Once add_task is available in
-// mochitest-plain we can remove this function and use add_task instead.
-function runAsyncTest(test) {
-  var generator;
-
-  function step(arg) {
-    var next;
-    try {
-      next = generator.next(arg);
-    } catch (e) {
-      return Promise.reject(e);
-    }
-    if (next.done) {
-      return Promise.resolve(next.value);
-    } else {
-      return Promise.resolve(next.value)
-             .then(step, function(err) { throw err; });
-    }
-  }
-
-  // Put refresh driver under test control
-  advance_clock(0);
-
-  // Run test
-  generator = test();
-  return step()
-  .catch(function(err) {
-    ok(false, err.message);
-    // Clear up the test div in case we aborted the test before doing clean-up
+  var onAbort = function() {
     if (gDiv) {
       done_div();
     }
-  }).then(function() {
-    // Restore clock
-    SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
+  };
+  runAllAsyncAnimTests(onAbort).then(function() {
+    SimpleTest.finish();
   });
-}
-
-function addAsyncTest(generator) {
-  gAsyncTests.push(generator);
-}
+}, SimpleTest.finish);
 
 //----------------------------------------------------------------------
 //
@@ -235,7 +182,7 @@ function addAsyncTest(generator) {
 
 // This test is not in test_animations.html but is here to test that
 // transform animations are actually run on the compositor thread as expected.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: transform-anim linear 300s");
 
   yield waitForPaints();
@@ -343,11 +290,11 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   done_div();
 }
 
-addAsyncTest(function() { return testFillMode("", false, false); });
-addAsyncTest(function() { return testFillMode("none", false, false); });
-addAsyncTest(function() { return testFillMode("forwards", false, true); });
-addAsyncTest(function() { return testFillMode("backwards", true, false); });
-addAsyncTest(function() { return testFillMode("both", true, true); });
+addAsyncAnimTest(function() { return testFillMode("", false, false); });
+addAsyncAnimTest(function() { return testFillMode("none", false, false); });
+addAsyncAnimTest(function() { return testFillMode("forwards", false, true); });
+addAsyncAnimTest(function() { return testFillMode("backwards", true, false); });
+addAsyncAnimTest(function() { return testFillMode("both", true, true); });
 
 // Test that animations continue running when the animation name
 // list is changed.
@@ -358,7 +305,7 @@ addAsyncTest(function() { return testFillMode("both", true, true); });
 // in order to exercise the same functionality.
 
 // Append to list
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s");
   yield waitForPaints();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
@@ -382,7 +329,7 @@ addAsyncTest(function *() {
 });
 
 // Prepend to list; delete from list
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s");
   yield waitForPaints();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
@@ -416,7 +363,7 @@ addAsyncTest(function *() {
 });
 
 // Swap elements
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s, anim2 linear 10s");
   yield waitForPaints();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
@@ -524,7 +471,7 @@ addAsyncTest(function *() {
 // (simultaneously, test that reverse animations have their keyframes
 // run backwards)
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   // 100px at 0%, 50px at 50%, 150px at 100%
   new_div("transform: translate(100px); " +
           "animation: kf1 ease 1s alternate infinite");
@@ -718,7 +665,7 @@ addAsyncTest(function *() {
  * http://dev.w3.org/csswg/css3-animations/#timing-functions-for-keyframes-
  */
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: kf_tf1 ease-in 10s alternate infinite");
   yield waitForPaints();
   omta_is("transform", { tx: 20 }, RunningOn.Compositor,
@@ -840,7 +787,7 @@ addAsyncTest(function *() {
 // Test that 'animation-name: none' steps the animation, and setting
 // it again starts a new one.
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("");
   gDiv.style.animation = "anim2 ease-in-out 10s";
   yield waitForPaintsFlushed();
@@ -895,7 +842,7 @@ addAsyncTest(function *() {
  * css3-animations:  3.5. The 'animation-iteration-count' Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-iteration-count-property-
  */
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim2 ease-in 10s 0.3 forwards");
   yield waitForPaints();
   omta_is("opacity", 0, RunningOn.Compositor,
@@ -1028,7 +975,7 @@ addAsyncTest(function *() {
 
 // Tested in tests for sections 3.1 and 3.5.
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim2 ease-in 10s infinite");
   gDiv.style.animationDirection = "normal";
   yield waitForPaintsFlushed();
@@ -1139,7 +1086,7 @@ addAsyncTest(function *() {
  * http://dev.w3.org/csswg/css3-animations/#the-animation-play-state-property-
  */
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   // simple test with just one animation
   new_div("");
   gDiv.style.animationTimingFunction = "ease";
@@ -1335,7 +1282,7 @@ addAsyncTest(function *() {
  * http://dev.w3.org/csswg/css3-animations/#the-animation-delay-property-
  */
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   // test positive delay
   new_div("animation: anim2 1s 0.5s ease-out");
   yield waitForPaints();
@@ -1483,7 +1430,7 @@ addAsyncTest(function *() {
  * Test handling of properties that are present in only some of the
  * keyframes.
  */
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: multiprop 1s ease-in-out alternate infinite");
   yield waitForPaints();
   omta_is("transform", { tx: 10 }, RunningOn.Compositor,
@@ -1535,7 +1482,7 @@ addAsyncTest(function *() {
 // Test for https://bugzilla.mozilla.org/show_bug.cgi?id=651456 -- make
 // sure that refreshing of animations doesn't break when we get two
 // refreshes with the same timestamp.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim2 1s linear");
   yield waitForPaints();
   omta_is("opacity", 0, RunningOn.Compositor, "bug 651456 at 0ms");
@@ -1556,7 +1503,7 @@ addAsyncTest(function *() {
 
 // Test that author !important rules override animations, but
 // that animations override regular author rules.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: always_fifty 1s linear infinite; " +
           "transform: translate(200px)");
   yield waitForPaints();
@@ -1576,7 +1523,7 @@ addAsyncTest(function *() {
 // This test depends on kf3 getting its 0% and 100% values from the
 // rules below it in the cascade; we're checking that the animation
 // isn't rebuilt when the restyles happen.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: kf3 1s linear forwards");
   yield waitForPaints();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
@@ -1602,7 +1549,7 @@ addAsyncTest(function *() {
 // This test depends on kf3 getting its 0% and 100% values from the
 // rules below it in the cascade; we're checking that the animation
 // isn't rebuilt when the restyles happen.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   // Bug 1012527 - ASSERTION: Why did this not get handled while processing
   // mRestyleRoots? on B2G emulator builds
   // (Note that we don't expect assertions anywhere else in this file so the
@@ -1633,7 +1580,7 @@ addAsyncTest(function *() {
 // Test that cascading between keyframes rules is per-property rather
 // than per-rule (bug ), and that the timing function isn't taken from a
 // rule that's skipped.  (Bug 738003)
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: cascade 1s linear forwards; position: relative");
   yield waitForPaints();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
@@ -1684,7 +1631,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: cascade2 8s linear forwards");
   yield waitForPaints();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 0s");
@@ -1705,7 +1652,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: primitives1 2s linear forwards");
   yield waitForPaints();
   omta_is("transform", { }, RunningOn.Compositor, "primitives1 at 0s");
@@ -1719,7 +1666,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: important1 1s linear forwards");
   yield waitForPaints();
   omta_is("opacity", 0.5, RunningOn.Compositor, "important1 test at 0s");
@@ -1731,7 +1678,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: important2 1s linear forwards");
   yield waitForPaints();
   omta_is("opacity", 0.5, RunningOn.Compositor,
@@ -1747,7 +1694,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   // Test that it's the length of the 'animation-name' list that's used to
   // start animations.
   // note: anim2 animates opacity from 0 to 1
@@ -1777,7 +1724,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   var dyn_sheet_elt = document.createElement("style");
   document.head.appendChild(dyn_sheet_elt);
   var dyn_sheet = dyn_sheet_elt.sheet;
@@ -1849,7 +1796,7 @@ addAsyncTest(function *() {
  * Bug 1004361 - CSS animations with short duration sometimes don't dispatch
  * a start event
  */
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("animation: anim2 1s 0.1s");
   listen();
   yield waitForPaints();
@@ -1880,7 +1827,7 @@ addAsyncTest(function *() {
  * Bug 1004365 - zero-duration animations
  */
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
   listen();
   advance_clock(0);
@@ -1899,7 +1846,7 @@ addAsyncTest(function *() {
   done_div();
 });
 
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
   listen();
   advance_clock(0);
@@ -1930,7 +1877,7 @@ addAsyncTest(function *() {
 
 // We do however still want to test with an infinite repeat count and zero
 // duration to ensure this does not confuse the screening of OMTA animations.
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); " +
           "animation: anim4 0s 1s both infinite");
   listen();
@@ -1954,7 +1901,7 @@ addAsyncTest(function *() {
 });
 
 // Test with negative delay
-addAsyncTest(function *() {
+addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px)");
   listen();
   gDiv.style.animation = "anim4 0s -1s both reverse 12.7 linear";
