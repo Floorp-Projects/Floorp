@@ -27,8 +27,6 @@
 #include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 #include "webrtc/typedefs.h"
 
-extern int AECDebug();
-
 // Measured delays [ms]
 // Device                Chrome  GTP
 // MacBook Air           10
@@ -167,9 +165,16 @@ int32_t WebRtcAec_Create(void** aecInst) {
     aecpc = NULL;
     return -1;
   }
-  aecpc->bufFile = aecpc->skewFile = aecpc->delayFile = NULL;
-  OpenDebugFiles(aecpc, &webrtc_aec_instance_count);
-
+  {
+    char filename[64];
+    sprintf(filename, "aec_buf%d.dat", webrtc_aec_instance_count);
+    aecpc->bufFile = fopen(filename, "wb");
+    sprintf(filename, "aec_skew%d.dat", webrtc_aec_instance_count);
+    aecpc->skewFile = fopen(filename, "wb");
+    sprintf(filename, "aec_delay%d.dat", webrtc_aec_instance_count);
+    aecpc->delayFile = fopen(filename, "wb");
+    webrtc_aec_instance_count++;
+  }
 #endif
 
   return 0;
@@ -186,12 +191,9 @@ int32_t WebRtcAec_Free(void* aecInst) {
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   WebRtc_FreeBuffer(aecpc->far_pre_buf_s16);
-  if (aecpc->bufFile) {
-    // we don't let one be open and not the others
-    fclose(aecpc->bufFile);
-    fclose(aecpc->skewFile);
-    fclose(aecpc->delayFile);
-  }
+  fclose(aecpc->bufFile);
+  fclose(aecpc->skewFile);
+  fclose(aecpc->delayFile);
 #endif
 
   WebRtcAec_FreeAec(aecpc->aec);
@@ -437,12 +439,9 @@ int32_t WebRtcAec_Process(void* aecInst,
   {
     int16_t far_buf_size_ms = (int16_t)(WebRtcAec_system_delay(aecpc->aec) /
                                         (sampMsNb * aecpc->rate_factor));
-    OpenDebugFiles(aecpc, &webrtc_aec_instance_count);
-    if (aecpc->bufFile) {
-      (void)fwrite(&far_buf_size_ms, 2, 1, aecpc->bufFile);
-      (void)fwrite(
+    (void)fwrite(&far_buf_size_ms, 2, 1, aecpc->bufFile);
+    (void)fwrite(
         &aecpc->knownDelay, sizeof(aecpc->knownDelay), 1, aecpc->delayFile);
-    }
   }
 #endif
 
@@ -679,10 +678,7 @@ static int ProcessNormal(aecpc_t* aecpc,
       }
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
-      OpenDebugFiles(aecpc, &webrtc_aec_instance_count);
-      if (aecpc->skewFile) {
-        (void)fwrite(&aecpc->skew, sizeof(aecpc->skew), 1, aecpc->skewFile);
-      }
+      (void)fwrite(&aecpc->skew, sizeof(aecpc->skew), 1, aecpc->skewFile);
 #endif
     }
   }
@@ -972,43 +968,3 @@ static void EstBufDelayExtended(aecpc_t* self) {
     self->knownDelay = WEBRTC_SPL_MAX((int)self->filtDelay - 256, 0);
   }
 }
-
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-void
-OpenDebugFiles(aecpc_t* aecpc,
-               int *instance_count)
-{
-  int error = 0;
-  // XXX  If this impacts performance (opening files here), move file open
-  // to Trace::set_aec_debug(), and just grab them here
-  if (AECDebug() && !aecpc->bufFile) {
-    char filename[128];
-    sprintf(filename, "aec_buf%d.dat", *instance_count);
-    aecpc->bufFile = fopen(filename, "wb");
-    sprintf(filename, "aec_skew%d.dat", *instance_count);
-    aecpc->skewFile = fopen(filename, "wb");
-    sprintf(filename, "aec_delay%d.dat", *instance_count);
-    aecpc->delayFile = fopen(filename, "wb");
-
-    if (!aecpc->bufFile || !aecpc->skewFile || !aecpc->delayFile) {
-      error = 1;
-    } else {
-      (*instance_count)++;
-    }
-  }
-  if (error ||
-      (!AECDebug() && aecpc->bufFile)) {
-    if (aecpc->bufFile) {
-      fclose(aecpc->bufFile);
-    }
-    if (aecpc->skewFile) {
-      fclose(aecpc->skewFile);
-    }
-    if (aecpc->delayFile) {
-      fclose(aecpc->delayFile);
-    }
-    aecpc->bufFile = aecpc->skewFile = aecpc->delayFile = NULL;
-  }
-}
-
-#endif
