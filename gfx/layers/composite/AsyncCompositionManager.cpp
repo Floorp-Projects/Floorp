@@ -335,12 +335,12 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   }
 
   // Fixed layers are relative to their nearest scrollable layer, so when we
-  // encounter a scrollable layer, reset the transform to that layer and remove
-  // the fixed margins.
+  // encounter a scrollable layer, bail. ApplyAsyncContentTransformToTree will
+  // have already recursed on this layer and called AlignFixedAndStickyLayers
+  // on it with its own transforms.
   if (aLayer->AsContainerLayer() &&
       aLayer->AsContainerLayer()->GetFrameMetrics().IsScrollable() &&
       aLayer != aTransformedSubtreeRoot) {
-    AlignFixedAndStickyLayers(aLayer, aLayer, aLayer->GetTransform(), LayerMargin(0, 0, 0, 0));
     return;
   }
 
