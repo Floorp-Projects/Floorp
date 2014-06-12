@@ -65,11 +65,11 @@
 #include "mozilla/layers/ShadowLayers.h"
 
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/FileHandle.h"
-#include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/indexedDB/IndexedDatabaseManager.h"
+#include "mozilla/dom/MutableFile.h"
+#include "mozilla/dom/MutableFileBinding.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "nsDOMBlobBuilder.h"
@@ -3025,9 +3025,9 @@ nsDOMWindowUtils::GetFileId(JS::Handle<JS::Value> aFile, JSContext* aCx,
   if (!aFile.isPrimitive()) {
     JSObject* obj = aFile.toObjectOrNull();
 
-    FileHandle* fileHandle = nullptr;
-    if (NS_SUCCEEDED(UNWRAP_OBJECT(FileHandle, obj, fileHandle))) {
-      *aResult = fileHandle->GetFileId();
+    MutableFile* mutableFile = nullptr;
+    if (NS_SUCCEEDED(UNWRAP_OBJECT(MutableFile, obj, mutableFile))) {
+      *aResult = mutableFile->GetFileId();
       return NS_OK;
     }
 
@@ -3668,32 +3668,6 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMElement* aElement,
-                                         const nsAString& aProperty,
-                                         nsAString& aResult)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  // Try to get OMTA style
-  nsresult rv = GetOMTAStyle(aElement, aProperty, aResult);
-  if (NS_FAILED(rv) || !aResult.IsEmpty()) {
-    return rv;
-  }
-
-  // Otherwise, fall back to computed style
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (!element) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
-  rv = element->GetCurrentDoc()->GetWindow()->
-    GetComputedStyle(aElement, aProperty, getter_AddRefs(style));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return style->GetPropertyValue(aProperty, aResult);
 }
 
 NS_IMETHODIMP

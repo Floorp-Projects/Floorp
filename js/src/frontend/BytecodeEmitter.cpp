@@ -3061,7 +3061,7 @@ EmitDestructuringLHS(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn, 
     } else if (emitOption == PushInitialValues) {
         // The lhs is a simple name so the to-be-destructured value is
         // its initial value and there is nothing to do.
-        JS_ASSERT(pn->getOp() == JSOP_GETLOCAL);
+        JS_ASSERT(pn->getOp() == JSOP_SETLOCAL);
         JS_ASSERT(pn->pn_dflags & PND_BOUND);
     } else {
         switch (pn->getKind()) {

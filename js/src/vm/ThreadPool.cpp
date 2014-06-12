@@ -9,6 +9,7 @@
 #include "mozilla/Atomics.h"
 
 #include "jslock.h"
+#include "jsnum.h" // for FIX_FPU
 
 #include "js/Utility.h"
 #include "vm/ForkJoin.h"
@@ -173,6 +174,10 @@ ThreadPoolWorker::HelperThreadMain(void *arg)
         NuwaMarkCurrentThread(nullptr, nullptr);
     }
 #endif
+
+    // Set the FPU control word to be the same as the main thread's, else we
+    // might get inconsistent results from math functions.
+    FIX_FPU();
 
     worker->helperLoop();
 }

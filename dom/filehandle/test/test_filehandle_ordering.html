@@ -13,27 +13,32 @@
   function testSteps()
   {
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open();
-      continueToNextStep();
+      let fileHandle1 = mutableFile.open("readwrite");
+      let fileHandle2 = mutableFile.open("readwrite");
+
+      let request1 = fileHandle2.write("2");
+      let request2 = fileHandle1.write("1");
+
+      fileHandle1.oncomplete = grabEventAndContinueHandler;
+      fileHandle2.oncomplete = grabEventAndContinueHandler;
+
+      yield undefined;
       yield undefined;
 
-      try {
-        lockedFile.getMetadata({ size: true });
-        ok(false, "Should have thrown!");
-      }
-      catch (e) {
-        ok(e instanceof DOMException, "Got exception.");
-        is(e.name, "LockedFileInactiveError", "Good error.");
-        is(e.code, 0, "Good error code.");
-      }
+      let fileHandle3 = mutableFile.open("readonly");
+      let request3 = fileHandle3.readAsText(1);
+      request3.onsuccess = grabEventAndContinueHandler;
+
+      event = yield undefined;
+      is(event.target.result, "2", "File handles were ordered properly.");
     }
 
     finishTest();

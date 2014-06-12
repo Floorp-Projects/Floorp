@@ -85,6 +85,10 @@ class Fake_MediaStream {
 
   virtual void Periodic() {}
 
+  double StreamTimeToSeconds(mozilla::StreamTime aTime);
+  mozilla::StreamTime
+  TicksToTimeRoundDown(mozilla::TrackRate aRate, mozilla::TrackTicks aTicks);
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStream);
 
  protected:

@@ -44,8 +44,27 @@ public class LocaleListPreference extends ListPreference {
         }
 
         public LocaleDescriptor(Locale locale, String tag) {
-            this.nativeName = locale.getDisplayName(locale);
             this.tag = tag;
+
+            final String displayName = locale.getDisplayName(locale);
+            if (TextUtils.isEmpty(displayName)) {
+                // There's nothing sane we can do.
+                Log.w(LOG_TAG, "Display name is empty. Using " + locale.toString());
+                this.nativeName = locale.toString();
+                return;
+            }
+
+            // For now, uppercase the first character of LTR locale names.
+            // This is pretty much what Android does. This is a reasonable hack
+            // for Bug 1014602, but it won't generalize to all locales.
+            final byte directionality = Character.getDirectionality(displayName.charAt(0));
+            if (directionality == Character.DIRECTIONALITY_LEFT_TO_RIGHT) {
+                this.nativeName = displayName.substring(0, 1).toUpperCase(locale) +
+                                  displayName.substring(1);
+                return;
+            }
+
+            this.nativeName = displayName;
         }
 
         public String getTag() {

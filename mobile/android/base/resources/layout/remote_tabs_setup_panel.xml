@@ -4,44 +4,55 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.tabspanel.RemoteTabsSetupPanel
-       xmlns:android="http://schemas.android.com/apk/res/android"
-       style="@style/RemoteTabsPanelChild"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       android:visibility="gone">
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
 
-    <LinearLayout style="@style/RemoteTabsSection"
+    <LinearLayout android:id="@+id/remote_tabs_setup_containing_layout"
+                  style="@style/RemoteTabsPanelChild"
                   android:layout_width="match_parent"
-                  android:layout_height="wrap_content">
+                  android:layout_height="match_parent">
 
-       <TextView style="@style/RemoteTabsItem.TextAppearance.Header"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:text="@string/fxaccount_getting_started_welcome_to_sync"/>
+        <LinearLayout style="@style/RemoteTabsSection"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content">
 
-       <TextView style="@style/RemoteTabsItem.TextAppearance"
-                 android:layout_width="match_parent"
-                 android:layout_height="wrap_content"
-                 android:text="@string/fxaccount_getting_started_description"/>
+           <TextView style="@style/RemoteTabsItem.TextAppearance.Header"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="@string/fxaccount_getting_started_welcome_to_sync"/>
 
-    </LinearLayout>
+           <TextView style="@style/RemoteTabsItem.TextAppearance"
+                     android:layout_width="match_parent"
+                     android:layout_height="wrap_content"
+                     android:text="@string/fxaccount_getting_started_description"/>
 
-    <LinearLayout style="@style/RemoteTabsSection"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content">
+        </LinearLayout>
 
-        <Button android:id="@+id/remote_tabs_setup_get_started"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                style="@style/RemoteTabsItem.Button"
-                android:text="@string/fxaccount_getting_started_get_started"
-                android:layout_marginBottom="15dp"/>
+        <LinearLayout style="@style/RemoteTabsSection"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content">
 
-        <TextView android:id="@+id/remote_tabs_setup_old_sync_link"
-                  android:layout_width="match_parent"
-                  android:layout_height="wrap_content"
-                  style="@style/RemoteTabsItem.TextAppearance.Linkified"
-                  android:text="@string/fxaccount_getting_started_old_firefox"/>
+            <!-- Setting gravity/layout_gravity in portrait is redundant to these elements'
+                 styles, however, it overrides the default left-align behavior in landscape. -->
+            <Button android:id="@+id/remote_tabs_setup_get_started"
+                    android:layout_gravity="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    style="@style/RemoteTabsItem.Button"
+                    android:text="@string/fxaccount_getting_started_get_started"
+                    android:layout_marginBottom="15dp"/>
+
+            <TextView android:id="@+id/remote_tabs_setup_old_sync_link"
+                      android:gravity="center"
+                      android:layout_gravity="center"
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      style="@style/RemoteTabsItem.TextAppearance.Linkified"
+                      android:text="@string/fxaccount_getting_started_old_firefox"/>
+
+        </LinearLayout>
 
     </LinearLayout>
 
