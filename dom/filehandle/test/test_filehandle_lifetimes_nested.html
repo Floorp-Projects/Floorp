@@ -13,17 +13,17 @@
   function testSteps()
   {
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open();
+      let fileHandle = mutableFile.open();
 
-      let lockedFile2;
+      let fileHandle2;
 
       let comp = SpecialPowers.wrap(SpecialPowers.Components);
       let thread = comp.classes["@mozilla.org/thread-manager;1"]
@@ -35,14 +35,14 @@
       thread.dispatch(function() {
         eventHasRun = true;
 
-        lockedFile2 = fileHandle.open();
+        fileHandle2 = mutableFile.open();
       }, SpecialPowers.Ci.nsIThread.DISPATCH_NORMAL);
 
       while (!eventHasRun) {
         thread.processNextEvent(false);
       }
 
-      ok(lockedFile2, "Non-null lockedFile2");
+      ok(fileHandle2, "Non-null fileHandle2");
 
       continueToNextStep();
       yield undefined;

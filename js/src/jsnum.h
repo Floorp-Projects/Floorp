@@ -332,6 +332,8 @@ NonObjectToUint32(ThreadSafeContext *cx, const Value &v, uint32_t *out)
     return NonObjectToUint32Slow(cx, v, out);
 }
 
+void FIX_FPU();
+
 } /* namespace js */
 
 #endif /* jsnum_h */

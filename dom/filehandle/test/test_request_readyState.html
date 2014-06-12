@@ -13,7 +13,7 @@
   function testSteps()
   {
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       is(request.readyState, "pending", "Correct readyState");
 
       request.onerror = errorHandler;
@@ -22,11 +22,11 @@
 
       is(request.readyState, "done", "Correct readyState");
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open("readwrite");
-      request = lockedFile.write("string");
+      let fileHandle = mutableFile.open("readwrite");
+      request = fileHandle.write("string");
       is(request.readyState, "pending", "Correct readyState");
 
       request.onsuccess = grabEventAndContinueHandler;
@@ -34,8 +34,8 @@
 
       is(request.readyState, "done", "Correct readyState");
 
-      lockedFile.location = 0;
-      request = lockedFile.readAsText(6);
+      fileHandle.location = 0;
+      request = fileHandle.readAsText(6);
       request.onsuccess = grabEventAndContinueHandler;
       is(request.readyState, "pending", "Correct readyState");
       event = yield undefined;
