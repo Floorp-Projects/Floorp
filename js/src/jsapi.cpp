@@ -4473,9 +4473,9 @@ JS::CompileOptions::wrap(JSContext *cx, JSCompartment *compartment)
     return true;
 }
 
-JSScript *
+bool
 JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-            SourceBufferHolder &srcBuf)
+            SourceBufferHolder &srcBuf, MutableHandleScript script)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4483,7 +4483,8 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     assertSameCompartment(cx, obj);
     AutoLastFrameCheck lfc(cx);
 
-    return frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf);
+    script.set(frontend::CompileScript(cx, &cx->tempLifoAlloc(), obj, NullPtr(), options, srcBuf));
+    return !!script;
 }
 
 JSScript *
@@ -4491,7 +4492,10 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
             const jschar *chars, size_t length)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    return Compile(cx, obj, options, srcBuf);
+    RootedScript script(cx);
+    if (!Compile(cx, obj, options, srcBuf, &script))
+        return nullptr;
+    return script;
 }
 
 JSScript *
@@ -4530,8 +4534,7 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
         return nullptr;
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    JSScript *script = Compile(cx, obj, options, file.fp());
-    return script;
+    return Compile(cx, obj, options, file.fp());
 }
 
 JS_PUBLIC_API(bool)
@@ -4644,10 +4647,10 @@ JS_GetGlobalFromScript(JSScript *script)
     return &script->global();
 }
 
-JS_PUBLIC_API(JSFunction *)
+JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    SourceBufferHolder &srcBuf)
+                    SourceBufferHolder &srcBuf, MutableHandleFunction fun)
 {
     JS_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
     AssertHeapIsIdle(cx);
@@ -4659,32 +4662,32 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (name) {
         funAtom = Atomize(cx, name, strlen(name));
         if (!funAtom)
-            return nullptr;
+            return false;
     }
 
     AutoNameVector formals(cx);
     for (unsigned i = 0; i < nargs; i++) {
         RootedAtom argAtom(cx, Atomize(cx, argnames[i], strlen(argnames[i])));
         if (!argAtom || !formals.append(argAtom->asPropertyName()))
-            return nullptr;
+            return false;
     }
 
-    RootedFunction fun(cx, NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, obj,
-                                       funAtom, JSFunction::FinalizeKind, TenuredObject));
+    fun.set(NewFunction(cx, NullPtr(), nullptr, 0, JSFunction::INTERPRETED, obj,
+                        funAtom, JSFunction::FinalizeKind, TenuredObject));
     if (!fun)
-        return nullptr;
+        return false;
 
-    if (!frontend::CompileFunctionBody(cx, &fun, options, formals, srcBuf))
-        return nullptr;
+    if (!frontend::CompileFunctionBody(cx, fun, options, formals, srcBuf))
+        return false;
 
     if (obj && funAtom && options.defineOnScope) {
         Rooted<jsid> id(cx, AtomToId(funAtom));
         RootedValue value(cx, ObjectValue(*fun));
         if (!JSObject::defineGeneric(cx, obj, id, value, nullptr, nullptr, JSPROP_ENUMERATE))
-            return nullptr;
+            return false;
     }
 
-    return fun;
+    return true;
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4692,8 +4695,11 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
                     const char *name, unsigned nargs, const char *const *argnames,
                     const jschar *chars, size_t length)
 {
-  SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-  return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf);
+    RootedFunction fun(cx);
+    SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
+    if (!JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, &fun))
+        return nullptr;
+    return fun;
 }
 
 JS_PUBLIC_API(JSFunction *)
