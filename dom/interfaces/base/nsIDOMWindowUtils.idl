@@ -48,7 +48,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(8435ca79-517f-40ba-acd9-55201a2a119d)]
+[scriptable, uuid(75b7674b-3e6e-4fac-931b-8fd3c4e4e8d2)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1653,14 +1653,6 @@ interface nsIDOMWindowUtils : nsISupports {
     * returns an empty string.
     */
    AString getOMTAStyle(in nsIDOMElement aElement, in AString aProperty);
-
-   /*
-    * Returns the value of a given property.  If the property is animated off
-    * the main thread, this function will fetch the correct value from the
-    * compositor.
-    */
-   AString getOMTAOrComputedStyle(in nsIDOMElement aElement,
-                                  in AString aProperty);
 
    /**
     * Get the content- and compositor-side APZ test data instances.
