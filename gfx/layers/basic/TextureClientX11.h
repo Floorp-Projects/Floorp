@@ -19,7 +19,7 @@ namespace layers {
 class TextureClientX11 : public TextureClient
 {
  public:
-  TextureClientX11(gfx::SurfaceFormat format, TextureFlags aFlags = TextureFlags::DEFAULT);
+  TextureClientX11(ISurfaceAllocator* aAllocator, gfx::SurfaceFormat format, TextureFlags aFlags = TextureFlags::DEFAULT);
 
   ~TextureClientX11();
 
@@ -41,7 +41,7 @@ class TextureClientX11 : public TextureClient
 
   virtual bool CanExposeDrawTarget() const MOZ_OVERRIDE { return true; }
 
-  virtual TemporaryRef<gfx::DrawTarget> GetAsDrawTarget() MOZ_OVERRIDE;
+  virtual gfx::DrawTarget* BorrowDrawTarget() MOZ_OVERRIDE;
 
   virtual gfx::SurfaceFormat GetFormat() const { return mFormat; }
 
@@ -51,6 +51,8 @@ class TextureClientX11 : public TextureClient
   gfx::SurfaceFormat mFormat;
   gfx::IntSize mSize;
   RefPtr<gfxXlibSurface> mSurface;
+  RefPtr<ISurfaceAllocator> mAllocator;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
   bool mLocked;
 };
 

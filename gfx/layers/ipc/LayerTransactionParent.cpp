@@ -551,10 +551,12 @@ LayerTransactionParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
     }
   }
 
-  // Ensure that any pending operations involving back and front
-  // buffers have completed, so that neither process stomps on the
-  // other's buffer contents.
-  LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
+  if (!IsSameProcess()) {
+    // Ensure that any pending operations involving back and front
+    // buffers have completed, so that neither process stomps on the
+    // other's buffer contents.
+    LayerManagerComposite::PlatformSyncBeforeReplyUpdate();
+  }
 
   mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,
                                             isFirstPaint, scheduleComposite, paintSequenceNumber);
