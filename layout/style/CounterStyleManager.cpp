@@ -327,8 +327,6 @@ BuiltinCounterStyle::GetNegative(NegativeType& aResult)
   switch (mStyle) {
     case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
     case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL:
       aResult.before = gJapaneseNegative;
       break;
 
@@ -340,16 +338,11 @@ BuiltinCounterStyle::GetNegative(NegativeType& aResult)
 
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL:
       aResult.before = gSimpChineseNegative;
       break;
 
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
     case NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
       aResult.before = gTradChineseNegative;
       break;
 
@@ -371,9 +364,7 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_SQUARE:
     // use DecimalToText
     case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
     // use CJKIdeographicToText
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
     case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
     case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
@@ -383,55 +374,8 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL:
-    // use OtherDecimalToText
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-    case NS_STYLE_LIST_STYLE_MOZ_URDU:
-    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-    case NS_STYLE_LIST_STYLE_MOZ_THAI:
-    case NS_STYLE_LIST_STYLE_MOZ_LAO:
-    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
       return true;
 
-    // use CharListDecimalToText
-    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
-      return aOrdinal >= 0;
-
-    // use RomanToText
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-      return aOrdinal >= 1 && aOrdinal <= 3999;
-
-    // use CharListToText
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
     // use EthiopicToText
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
       return aOrdinal >= 1;
@@ -440,15 +384,9 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_HEBREW:
       return aOrdinal >= 1 && aOrdinal <= 999999;
 
-    // use ArmenianToText
-    case NS_STYLE_LIST_STYLE_ARMENIAN:
     // use TamilToText
     case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
       return aOrdinal >= 1 && aOrdinal <= 9999;
-
-    // use GeorgianToText
-    case NS_STYLE_LIST_STYLE_GEORGIAN:
-      return aOrdinal >= 1 && aOrdinal <= 19999;
   }
 }
 
@@ -463,55 +401,13 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_SQUARE:
     // numeric:
     case NS_STYLE_LIST_STYLE_DECIMAL:
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-    case NS_STYLE_LIST_STYLE_CJK_DECIMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC:
-    case NS_STYLE_LIST_STYLE_MOZ_PERSIAN:
-    case NS_STYLE_LIST_STYLE_MOZ_URDU:
-    case NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI:
-    case NS_STYLE_LIST_STYLE_MOZ_GURMUKHI:
-    case NS_STYLE_LIST_STYLE_MOZ_GUJARATI:
-    case NS_STYLE_LIST_STYLE_MOZ_ORIYA:
-    case NS_STYLE_LIST_STYLE_MOZ_KANNADA:
-    case NS_STYLE_LIST_STYLE_MOZ_MALAYALAM:
-    case NS_STYLE_LIST_STYLE_MOZ_THAI:
-    case NS_STYLE_LIST_STYLE_MOZ_LAO:
-    case NS_STYLE_LIST_STYLE_MOZ_MYANMAR:
-    case NS_STYLE_LIST_STYLE_MOZ_KHMER:
-    case NS_STYLE_LIST_STYLE_MOZ_BENGALI:
-    case NS_STYLE_LIST_STYLE_MOZ_TELUGU:
-    // fixed: no predefined counter style
       return true;
 
-    // alphabetic:
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM:
-    case NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
-    case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
-    // symbolic: no predefined counter style
-      return aOrdinal >= 1;
-
     // additive:
-    case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
-    case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    case NS_STYLE_LIST_STYLE_ARMENIAN:
-    case NS_STYLE_LIST_STYLE_GEORGIAN:
     case NS_STYLE_LIST_STYLE_HEBREW:
       return aOrdinal >= 0;
 
     // complex predefined:
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC:
     case NS_STYLE_LIST_STYLE_JAPANESE_FORMAL:
     case NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_KOREAN_HANJA_FORMAL:
@@ -521,12 +417,6 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
     case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
       return IsOrdinalInRange(aOrdinal);
@@ -540,16 +430,8 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
 /* virtual */ void
 BuiltinCounterStyle::GetPad(PadType& aResult)
 {
-  switch (mStyle) {
-    case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-      aResult.width = 2;
-      aResult.symbol.AssignLiteral(MOZ_UTF16("0"));
-      break;
-    default:
-      aResult.width = 0;
-      aResult.symbol.Truncate();
-      break;
-  }
+  aResult.width = 0;
+  aResult.symbol.Truncate();
 }
 
 /* virtual */ CounterStyle*
@@ -569,14 +451,6 @@ BuiltinCounterStyle::GetSpeakAs()
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
       return NS_STYLE_COUNTER_SPEAKAS_BULLETS;
-    case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    case NS_STYLE_LIST_STYLE_KATAKANA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-    case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-      return NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT;
     default:
       return NS_STYLE_COUNTER_SPEAKAS_NUMBERS;
   }
@@ -1546,6 +1420,11 @@ CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
                     "Require a valid builtin style constant");
   NS_ABORT_IF_FALSE(!gBuiltinStyleTable[aStyle].IsDependentStyle(),
                     "Cannot get dependent builtin style");
+  NS_ASSERTION(aStyle != NS_STYLE_LIST_STYLE_LOWER_ROMAN &&
+               aStyle != NS_STYLE_LIST_STYLE_UPPER_ROMAN &&
+               aStyle != NS_STYLE_LIST_STYLE_LOWER_ALPHA &&
+               aStyle != NS_STYLE_LIST_STYLE_UPPER_ALPHA,
+               "lower/upper-roman/alpha should be custom counter style");
   return &gBuiltinStyleTable[aStyle];
 }
 
