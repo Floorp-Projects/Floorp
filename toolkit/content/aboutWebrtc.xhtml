@@ -377,6 +377,11 @@ function onLoad() {
   } else {
     setDebugButton(false);
   }
+  if (WebrtcGlobalInformation.aecDebug) {
+    setAECDebugButton(true);
+  } else {
+    setAECDebugButton(false);
+  }
 }
 
 function startDebugMode() {
@@ -395,6 +400,24 @@ function setDebugButton(on) {
   button.onclick = on ? stopDebugMode : startDebugMode;
 }
 
+function startAECDebugMode() {
+  WebrtcGlobalInformation.aecDebug = true;
+  setAECDebugButton(true);
+}
+
+function stopAECDebugMode() {
+  WebrtcGlobalInformation.aecDebug = false;
+  setAECDebugButton(false);
+}
+
+function setAECDebugButton(on) {
+  var button = document.getElementById("aec-debug-toggle-button");
+  button.innerHTML = on ? "Stop AEC logging" : "Start AEC logging";
+  button.onclick = on ? stopAECDebugMode : startAECDebugMode;
+}
+
+
+
   </script>
 
   <body id="body" onload="onLoad()">
@@ -405,6 +428,9 @@ function setDebugButton(on) {
     </button>
     <button id="debug-toggle-button" onclick="startDebugMode()">
       Start debug mode
+    </button>
+    <button id="aec-debug-toggle-button" onclick="startAECDebugMode()">
+      Start AEC logging
     </button>
     <div id="logs">
     </div>
