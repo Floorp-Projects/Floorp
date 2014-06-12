@@ -28,6 +28,11 @@
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
+extern int AECDebug();
+extern uint32_t AECDebugMaxSize();
+extern void AECDebugEnable(uint32_t enable);
+static void OpenCoreDebugFiles(AecCore* aec, int *instance_count);
+
 // Buffer size (samples)
 static const size_t kBufSizePartitions = 250;  // 1 second of audio in 16 kHz.
 
@@ -211,17 +216,9 @@ int WebRtcAec_CreateAec(AecCore** aecInst) {
     aec = NULL;
     return -1;
   }
-  {
-    char filename[64];
-    sprintf(filename, "aec_far%d.pcm", webrtc_aec_instance_count);
-    aec->farFile = fopen(filename, "wb");
-    sprintf(filename, "aec_near%d.pcm", webrtc_aec_instance_count);
-    aec->nearFile = fopen(filename, "wb");
-    sprintf(filename, "aec_out%d.pcm", webrtc_aec_instance_count);
-    aec->outFile = fopen(filename, "wb");
-    sprintf(filename, "aec_out_linear%d.pcm", webrtc_aec_instance_count);
-    aec->outLinearFile = fopen(filename, "wb");
-  }
+  aec->outLinearFile = aec->outFile = aec->nearFile = aec->farFile = NULL;
+  aec->debugWritten = 0;
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
 #endif
   aec->delay_estimator_farend =
       WebRtc_CreateDelayEstimatorFarend(PART_LEN1, kHistorySizeBlocks);
@@ -256,10 +253,13 @@ int WebRtcAec_FreeAec(AecCore* aec) {
   WebRtc_FreeBuffer(aec->far_buf_windowed);
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   WebRtc_FreeBuffer(aec->far_time_buf);
-  fclose(aec->farFile);
-  fclose(aec->nearFile);
-  fclose(aec->outFile);
-  fclose(aec->outLinearFile);
+  if (aec->farFile) {
+    // we don't let one be open and not the others
+    fclose(aec->farFile);
+    fclose(aec->nearFile);
+    fclose(aec->outFile);
+    fclose(aec->outLinearFile);
+  }
 #endif
   WebRtc_FreeDelayEstimator(aec->delay_estimator);
   WebRtc_FreeDelayEstimatorFarend(aec->delay_estimator_farend);
@@ -848,8 +848,15 @@ static void ProcessBlock(AecCore* aec) {
     int16_t farend[PART_LEN];
     int16_t* farend_ptr = NULL;
     WebRtc_ReadBuffer(aec->far_time_buf, (void**)&farend_ptr, farend, 1);
-    (void)fwrite(farend_ptr, sizeof(int16_t), PART_LEN, aec->farFile);
-    (void)fwrite(nearend_ptr, sizeof(int16_t), PART_LEN, aec->nearFile);
+    OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+    if (aec->farFile) {
+      (void)fwrite(farend_ptr, sizeof(int16_t), PART_LEN, aec->farFile);
+      (void)fwrite(nearend_ptr, sizeof(int16_t), PART_LEN, aec->nearFile);
+      aec->debugWritten += sizeof(int16_t) * PART_LEN;
+      if (aec->debugWritten >= AECDebugMaxSize()) {
+        AECDebugEnable(0);
+      }
+    }
   }
 #endif
 
@@ -1006,8 +1013,11 @@ static void ProcessBlock(AecCore* aec) {
           WEBRTC_SPL_WORD16_MAX, e[i], WEBRTC_SPL_WORD16_MIN);
     }
 
-    (void)fwrite(eInt16, sizeof(int16_t), PART_LEN, aec->outLinearFile);
-    (void)fwrite(output, sizeof(int16_t), PART_LEN, aec->outFile);
+    OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+    if (aec->outLinearFile) {
+      (void)fwrite(eInt16, sizeof(int16_t), PART_LEN, aec->outLinearFile);
+      (void)fwrite(output, sizeof(int16_t), PART_LEN, aec->outFile);
+    }
   }
 #endif
 }
@@ -1711,3 +1721,47 @@ static void TimeToFrequency(float time_data[PART_LEN2],
   }
 }
 
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+static void
+OpenCoreDebugFiles(AecCore* aec,
+                   int *instance_count)
+{
+  int error = 0;
+  // XXX  If this impacts performance (opening files here), move file open
+  // to Trace::set_aec_debug(), and just grab them here
+  if (AECDebug() && !aec->farFile) {
+    char filename[128];
+    if (!aec->farFile) {
+      sprintf(filename, "aec_far%d.pcm", webrtc_aec_instance_count);
+      aec->farFile = fopen(filename, "wb");
+      sprintf(filename, "aec_near%d.pcm", webrtc_aec_instance_count);
+      aec->nearFile = fopen(filename, "wb");
+      sprintf(filename, "aec_out%d.pcm", webrtc_aec_instance_count);
+      aec->outFile = fopen(filename, "wb");
+      sprintf(filename, "aec_out_linear%d.pcm", webrtc_aec_instance_count);
+      aec->outLinearFile = fopen(filename, "wb");
+      aec->debugWritten = 0;
+      if (!aec->outLinearFile || !aec->outFile || !aec->nearFile || !aec->farFile) {
+        error = 1;
+      }
+    }
+  }
+  if (error ||
+      (!AECDebug() && aec->farFile)) {
+    if (aec->farFile) {
+      fclose(aec->farFile);
+    }
+    if (aec->nearFile) {
+      fclose(aec->nearFile);
+    }
+    if (aec->outFile) {
+      fclose(aec->outFile);
+    }
+    if (aec->outLinearFile) {
+      fclose(aec->outLinearFile);
+    }
+    aec->outLinearFile = aec->outFile = aec->nearFile = aec->farFile = NULL;
+    aec->debugWritten = 0;
+  }
+}
+#endif
