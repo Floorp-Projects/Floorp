@@ -73,7 +73,7 @@ function test() {
       name: "background-color",
       value: "transparent",
       test: fragment => {
-        is(countAll(fragment), 1);
+        is(countAll(fragment), 2);
         is(countColors(fragment), 1);
         is(fragment.textContent, "transparent");
       }
@@ -98,7 +98,7 @@ function test() {
       name: "border",
       value: "80em dotted pink",
       test: fragment => {
-        is(countAll(fragment), 1);
+        is(countAll(fragment), 2);
         is(countColors(fragment), 1);
         is(getColor(fragment), "pink");
       }
@@ -119,7 +119,7 @@ function test() {
         is(countUrls(fragment), 1);
         is(getColor(fragment), "red");
         is(getUrl(fragment), "test.png");
-        is(countAll(fragment), 2);
+        is(countAll(fragment), 3);
       }
     },
     {
@@ -130,7 +130,7 @@ function test() {
         is(countUrls(fragment), 1);
         is(getColor(fragment), "blue");
         is(getUrl(fragment), "test.png");
-        is(countAll(fragment), 2);
+        is(countAll(fragment), 3);
       }
     },
     {
@@ -163,7 +163,7 @@ function test() {
       name: "background",
       value: "linear-gradient(to right, rgba(183,222,237,1) 0%, rgba(33,180,226,1) 30%, rgba(31,170,217,.5) 44%, #F06 75%, red 100%)",
       test: fragment => {
-        is(countAll(fragment), 5);
+        is(countAll(fragment), 10);
         let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
         is(allSwatches.length, 5);
         is(allSwatches[0].textContent, "rgba(183,222,237,1)");
@@ -177,7 +177,7 @@ function test() {
       name: "background",
       value: "-moz-radial-gradient(center 45deg, circle closest-side, orange 0%, red 100%)",
       test: fragment => {
-        is(countAll(fragment), 2);
+        is(countAll(fragment), 4);
         let allSwatches = fragment.querySelectorAll("." + COLOR_CLASS);
         is(allSwatches.length, 2);
         is(allSwatches[0].textContent, "orange");
@@ -188,7 +188,7 @@ function test() {
       name: "background",
       value: "white  url(http://test.com/wow_such_image.png) no-repeat top left",
       test: fragment => {
-        is(countAll(fragment), 2);
+        is(countAll(fragment), 3);
         is(countUrls(fragment), 1);
         is(countColors(fragment), 1);
       }
@@ -213,7 +213,7 @@ function test() {
       name: "background",
       value: "red url(    \"http://wow.com/cool/../../../you're(doingit)wrong\"   ) repeat center",
       test: fragment => {
-        is(countAll(fragment), 2);
+        is(countAll(fragment), 3);
         is(countColors(fragment), 1);
         is(getUrl(fragment), "http://wow.com/cool/../../../you're(doingit)wrong");
       }

@@ -86,3 +86,11 @@ description {
   font-size: 1.25rem;
   line-height: 22px;
 }
+
+#popupPolicyRow {
+  /* Override styles from
+     browser/themes/osx/preferences/preferences.css */
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+  border-bottom: none;
+}
