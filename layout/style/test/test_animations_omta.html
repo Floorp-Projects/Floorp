@@ -1983,25 +1983,5 @@ function check_events(events_expected, desc) {
 function advance_clock(milliseconds) {
   SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(milliseconds);
 }
-
-//----------------------------------------------------------------------
-//
-// Helper functions for querying the compositor thread
-//
-//----------------------------------------------------------------------
-
-// Returns a Promise that resolves once all paints have completed
-function waitForPaints() {
-  return new Promise(function(resolve, reject) {
-    waitForAllPaints(resolve);
-  });
-}
-
-// As with waitForPaints but also flushes pending style changes before waiting
-function waitForPaintsFlushed() {
-  return new Promise(function(resolve, reject) {
-    waitForAllPaintsFlushed(resolve);
-  });
-}
 </script>
 </html>
