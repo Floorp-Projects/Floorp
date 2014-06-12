@@ -29,9 +29,6 @@ interface WebrtcGlobalInformation {
   // - Subsequently setting a zero debug level writes that log to disk.
 
   static attribute long debugLevel;
-
-  // WebRTC AEC debugging enable
-  static attribute boolean aecDebug;
 };
 
 
