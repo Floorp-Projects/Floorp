@@ -556,13 +556,15 @@ AudioNodeStream::TimeFromDestinationTime(AudioNodeStream* aDestination,
   MOZ_ASSERT(aDestination->SampleRate() == SampleRate());
 
   double destinationSeconds = std::max(0.0, aSeconds);
-  StreamTime streamTime = SecondsToMediaTime(destinationSeconds);
+  StreamTime streamTime =
+    aDestination->SecondsToStreamTimeRoundDown(destinationSeconds);
   // MediaTime does not have the resolution of double
-  double offset = destinationSeconds - MediaTimeToSeconds(streamTime);
+  double offset =
+    destinationSeconds - aDestination->StreamTimeToSeconds(streamTime);
 
   GraphTime graphTime = aDestination->StreamTimeToGraphTime(streamTime);
   StreamTime thisStreamTime = GraphTimeToStreamTimeOptimistic(graphTime);
-  double thisSeconds = MediaTimeToSeconds(thisStreamTime) + offset;
+  double thisSeconds = StreamTimeToSeconds(thisStreamTime) + offset;
   MOZ_ASSERT(thisSeconds >= 0.0);
   return thisSeconds;
 }
@@ -588,7 +590,7 @@ AudioNodeStream::DestinationTimeFromTicks(AudioNodeStream* aDestination,
   StreamTime sourceTime = TicksToTimeRoundDown(SampleRate(), aPosition);
   GraphTime graphTime = StreamTimeToGraphTime(sourceTime);
   StreamTime destinationTime = aDestination->GraphTimeToStreamTimeOptimistic(graphTime);
-  return MediaTimeToSeconds(destinationTime);
+  return StreamTimeToSeconds(destinationTime);
 }
 
 }

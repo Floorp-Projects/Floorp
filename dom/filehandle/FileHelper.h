@@ -15,11 +15,11 @@
 namespace mozilla {
 namespace dom {
 
-class FileHelper;
 class FileHandle;
+class FileHelper;
 class FileRequest;
 class FileOutputStreamWrapper;
-class LockedFile;
+class MutableFile;
 
 class FileHelperListener
 {
@@ -63,11 +63,11 @@ public:
   void
   OnStreamDestroy();
 
-  static LockedFile*
-  GetCurrentLockedFile();
+  static FileHandle*
+  GetCurrentFileHandle();
 
 protected:
-  FileHelper(LockedFile* aLockedFile, FileRequest* aRequest);
+  FileHelper(FileHandle* aFileHandle, FileRequest* aRequest);
 
   virtual ~FileHelper();
 
@@ -83,8 +83,8 @@ protected:
   void
   Finish();
 
+  nsRefPtr<MutableFile> mMutableFile;
   nsRefPtr<FileHandle> mFileHandle;
-  nsRefPtr<LockedFile> mLockedFile;
   nsRefPtr<FileRequest> mFileRequest;
 
   nsRefPtr<FileHelperListener> mListener;

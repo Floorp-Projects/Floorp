@@ -69,7 +69,7 @@ enum DOM4ErrorTypeCodeMap {
   NotReadableError         = 0,
 
   /* FileHandle API errors */
-  LockedFileInactiveError = 0,
+  FileHandleInactiveError = 0,
 
   /* WebCrypto errors https://dvcs.w3.org/hg/webcrypto-api/raw-file/tip/spec/Overview.html#dfn-DataError */
   OperationError           = 0,

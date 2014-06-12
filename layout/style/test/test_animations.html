@@ -136,6 +136,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     to   { margin-top: 150px !important; /* ignored */
            margin-bottom: 50px; }
   }
+
+  @keyframes empty { }
+  @keyframes nearlyempty { to { margin-left: 100px; } }
   </style>
 </head>
 <body>
@@ -1774,6 +1777,83 @@ check_events([{ type: 'animationstart', target: div,
                 pseudoElement: "" }],
              "events after skipping over zero-duration, zero iteration count"
              + " animation");
+done_div();
+
+/*
+ * Bug 1004377 - Animations with empty keyframes rule
+ */
+
+new_div("margin-right: 200px; animation: empty 2s 1s both");
+listen();
+advance_clock(0);
+check_events([], "events during delay");
+advance_clock(2000); // Skip to middle of animation
+div.clientTop; // Trigger events
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'empty', elapsedTime: 0,
+                pseudoElement: "" }],
+             "middle of animation with empty keyframes rule");
+advance_clock(1000); // Skip to end of animation
+div.clientTop; // Trigger events
+check_events([{ type: 'animationend', target: div,
+                animationName: 'empty', elapsedTime: 2,
+                pseudoElement: "" }],
+             "end of animation with empty keyframes rule");
+done_div();
+
+// Test with a zero-duration animation and empty @keyframes rule
+new_div("margin-right: 200px; animation: empty 0s 1s both");
+listen();
+advance_clock(0);
+advance_clock(1000);
+div.clientTop; // Trigger events
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'empty', elapsedTime: 0,
+                pseudoElement: "" },
+              { type: 'animationend', target: div,
+                animationName: 'empty', elapsedTime: 0,
+                pseudoElement: "" }],
+             "end of zero-duration animation with empty keyframes rule");
+done_div();
+
+// Test with a keyframes rule that becomes empty
+new_div("animation: nearlyempty 1s both linear");
+advance_clock(0);
+advance_clock(500);
+is(cs.getPropertyValue("margin-left"), "50px",
+   "margin-left for animation that is about to be emptied");
+listen();
+findKeyframesRule("nearlyempty").deleteRule("to");
+is(cs.getPropertyValue("margin-left"), "0px",
+   "margin-left for animation with (now) empty keyframes rule");
+check_events([], "events after emptying keyframes rule");
+advance_clock(500);
+div.clientTop; // Trigger events
+check_events([{ type: 'animationend', target: div,
+                animationName: 'nearlyempty', elapsedTime: 1,
+                pseudoElement: "" }],
+             "events at end of animation with newly " +
+             "empty keyframes rule");
+done_div();
+
+// Test when we update to point to an empty animation
+new_div("animation: always_fifty 1s both linear");
+advance_clock(0);
+advance_clock(500);
+is(cs.getPropertyValue("margin-left"), "50px",
+   "margin-left for animation that will soon point to an empty keyframes rule");
+listen();
+div.style.animationName = "empty";
+is(cs.getPropertyValue("margin-left"), "0px",
+   "margin-left for animation now points to empty keyframes rule");
+advance_clock(500);
+div.clientTop; // Trigger events
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'empty', elapsedTime: 0,
+                pseudoElement: "" }],
+             "events at start of animation updated to use " +
+             "empty keyframes rule");
+
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

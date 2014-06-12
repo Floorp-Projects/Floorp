@@ -6,10 +6,10 @@
 
 #include "MetadataHelper.h"
 
+#include "FileHandle.h"
 #include "js/Value.h"
 #include "js/RootingAPI.h"
 #include "jsapi.h"
-#include "LockedFile.h"
 #include "mozilla/dom/FileModeBinding.h"
 #include "nsDebug.h"
 #include "nsIFileStreams.h"
@@ -21,7 +21,7 @@ namespace dom {
 nsresult
 MetadataHelper::DoAsyncRun(nsISupports* aStream)
 {
-  bool readWrite = mLockedFile->mMode == FileMode::Readwrite;
+  bool readWrite = mFileHandle->mMode == FileMode::Readwrite;
 
   nsRefPtr<AsyncMetadataGetter> getter =
     new AsyncMetadataGetter(aStream, mParams, readWrite);

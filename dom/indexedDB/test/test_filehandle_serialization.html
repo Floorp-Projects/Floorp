@@ -47,19 +47,19 @@
 
     let db1 = databases[0];
 
-    let request = db1.mozCreateFileHandle("random.bin", "binary/random");
+    let request = db1.createMutableFile("random.bin", "binary/random");
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
-    let fileHandle = event.target.result;
-    is(getFileId(fileHandle), 1, "Correct file id");
-    is(fileHandle.name, "random.bin", "Correct name");
-    is(fileHandle.type, "binary/random", "Correct type");
+    let mutableFile = event.target.result;
+    is(getFileId(mutableFile), 1, "Correct file id");
+    is(mutableFile.name, "random.bin", "Correct name");
+    is(mutableFile.type, "binary/random", "Correct type");
 
     let trans = db1.transaction([objectStoreName], READ_WRITE);
     let objectStore = trans.objectStore(objectStoreName);
 
-    request = objectStore.add(fileHandle, 42);
+    request = objectStore.add(mutableFile, 42);
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
@@ -69,8 +69,8 @@
 
     let result = event.target.result;
     is(getFileId(result), 1, "Correct file id");
-    is(result.name, fileHandle.name, "Correct name");
-    is(result.type, fileHandle.type, "Correct type");
+    is(result.name, mutableFile.name, "Correct name");
+    is(result.type, mutableFile.type, "Correct type");
 
     let db2 = databases[1];
 
@@ -78,7 +78,7 @@
     objectStore = trans.objectStore(objectStoreName);
 
     try {
-      objectStore.add(fileHandle, 42);
+      objectStore.add(mutableFile, 42);
       ok(false, "Should have thrown!");
     }
     catch (e) {

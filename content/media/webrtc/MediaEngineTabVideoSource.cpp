@@ -161,7 +161,7 @@ NotifyPull(MediaStreamGraph*, SourceMediaStream* aSource, mozilla::TrackID aID, 
 
   // Note: we're not giving up mImage here
   nsRefPtr<layers::CairoImage> image = mImage;
-  TrackTicks target = TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
+  TrackTicks target = aSource->TimeToTicksRoundUp(USECS_PER_S, aDesiredTime);
   TrackTicks delta = target - aLastEndTime;
   if (delta > 0) {
     // nullptr images are allowed
