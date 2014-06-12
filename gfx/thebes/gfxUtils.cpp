@@ -965,7 +965,7 @@ gfxUtils::CopyAsDataURL(DrawTarget* aDT)
 }
 
 /* static */ void
-gfxUtils::WriteAsPNG(gfx::SourceSurface* aSourceSurface, const char* aFile)
+gfxUtils::WriteAsPNG(RefPtr<gfx::SourceSurface> aSourceSurface, const char* aFile)
 {
   RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
   RefPtr<gfx::DrawTarget> dt
@@ -978,7 +978,7 @@ gfxUtils::WriteAsPNG(gfx::SourceSurface* aSourceSurface, const char* aFile)
 }
 
 /* static */ void
-gfxUtils::DumpAsDataURL(gfx::SourceSurface* aSourceSurface)
+gfxUtils::DumpAsDataURL(RefPtr<gfx::SourceSurface> aSourceSurface)
 {
   RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
   RefPtr<gfx::DrawTarget> dt
@@ -991,7 +991,7 @@ gfxUtils::DumpAsDataURL(gfx::SourceSurface* aSourceSurface)
 }
 
 /* static */ void
-gfxUtils::CopyAsDataURL(gfx::SourceSurface* aSourceSurface)
+gfxUtils::CopyAsDataURL(RefPtr<gfx::SourceSurface> aSourceSurface)
 {
   RefPtr<gfx::DataSourceSurface> dataSurface = aSourceSurface->GetDataSurface();
   RefPtr<gfx::DrawTarget> dt
