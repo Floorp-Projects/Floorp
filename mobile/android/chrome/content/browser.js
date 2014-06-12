@@ -121,10 +121,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
     Services.scriptloader.loadSubScript(script, sandbox);
     return sandbox[name];
   });
-  notifications.forEach(function (aNotification) {
-    Services.obs.addObserver(function(s, t, d) {
-        window[name].observe(s, t, d)
-    }, aNotification, false);
+  let observer = (s, t, d) => {
+    Services.obs.removeObserver(observer, t);
+    Services.obs.addObserver(window[name], t, false);
+    window[name].observe(s, t, d); // Explicitly notify new observer
+  };
+  notifications.forEach((notification) => {
+    Services.obs.addObserver(observer, notification, false);
   });
 });
 
@@ -135,10 +138,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
 ].forEach(module => {
   let [name, notifications, resource] = module;
   XPCOMUtils.defineLazyModuleGetter(this, name, resource);
+  let observer = (s, t, d) => {
+    Services.obs.removeObserver(observer, t);
+    Services.obs.addObserver(this[name], t, false);
+    this[name].observe(s, t, d); // Explicitly notify new observer
+  };
   notifications.forEach(notification => {
-    Services.obs.addObserver((s,t,d) => {
-      this[name].observe(s,t,d)
-    }, notification, false);
+    Services.obs.addObserver(observer, notification, false);
   });
 });
 

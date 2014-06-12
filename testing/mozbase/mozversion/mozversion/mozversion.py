@@ -33,6 +33,7 @@ class LocalAppNotFoundError(VersionError):
 
 INI_DATA_MAPPING = (('application', 'App'), ('platform', 'Build'))
 
+
 class Version(mozlog.LoggingMixin):
 
     def __init__(self):
@@ -62,6 +63,7 @@ class Version(mozlog.LoggingMixin):
             self._info['application_display_name'] = \
                 self._info.get('application_name')
 
+
 class LocalFennecVersion(Version):
 
     def __init__(self, path, **kwargs):
@@ -77,6 +79,7 @@ class LocalFennecVersion(Version):
                                      section)
             else:
                 self.warn('Unable to find %s' % filename)
+
 
 class LocalVersion(Version):
 
@@ -168,11 +171,12 @@ class LocalB2GVersion(B2GVersion):
 
 class RemoteB2GVersion(B2GVersion):
 
-    def __init__(self, sources=None, dm_type='adb', host=None, **kwargs):
+    def __init__(self, sources=None, dm_type='adb', host=None,
+                 device_serial=None, **kwargs):
         B2GVersion.__init__(self, sources, **kwargs)
 
         if dm_type == 'adb':
-            dm = mozdevice.DeviceManagerADB()
+            dm = mozdevice.DeviceManagerADB(deviceSerial=device_serial)
         elif dm_type == 'sut':
             if not host:
                 raise Exception('A host for SUT must be supplied.')
@@ -218,7 +222,8 @@ class RemoteB2GVersion(B2GVersion):
                     self._info[desired_props[key]] = value
 
 
-def get_version(binary=None, sources=None, dm_type=None, host=None):
+def get_version(binary=None, sources=None, dm_type=None, host=None,
+                device_serial=None):
     """
     Returns the application version information as a dict. You can specify
     a path to the binary of the application or an Android APK file (to get
@@ -231,6 +236,7 @@ def get_version(binary=None, sources=None, dm_type=None, host=None):
     :param sources: Path to the sources.xml file (Firefox OS)
     :param dm_type: Device manager type. Must be 'adb' or 'sut' (Firefox OS)
     :param host: Host address of remote Firefox OS instance (SUT)
+    :param device_serial: Serial identifier of Firefox OS device (ADB)
     """
     try:
         if binary and zipfile.is_zipfile(binary) and 'AndroidManifest.xml' in \
@@ -241,7 +247,8 @@ def get_version(binary=None, sources=None, dm_type=None, host=None):
             if version._info.get('application_name') == 'B2G':
                 version = LocalB2GVersion(binary, sources=sources)
     except LocalAppNotFoundError:
-        version = RemoteB2GVersion(sources=sources, dm_type=dm_type, host=host)
+        version = RemoteB2GVersion(sources=sources, dm_type=dm_type, host=host,
+                                   device_serial=device_serial)
     return version._info
 
 
@@ -253,13 +260,17 @@ def cli(args=sys.argv[1:]):
     parser.add_option('--sources',
                       dest='sources',
                       help='path to sources.xml (Firefox OS only)')
+    parser.add_option('--device',
+                      help='serial identifier of device to target (Firefox OS '
+                           'only)')
     (options, args) = parser.parse_args(args)
 
     dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
     version = get_version(binary=options.binary, sources=options.sources,
-                          dm_type=dm_type, host=host)
+                          dm_type=dm_type, host=host,
+                          device_serial=options.device)
     for (key, value) in sorted(version.items()):
         if value:
             print '%s: %s' % (key, value)
