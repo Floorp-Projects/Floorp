@@ -326,7 +326,7 @@ Experiments.Policy.prototype = {
             .healthReporter;
       yield reporter.onInit();
       let payload = yield reporter.collectAndObtainJSONPayload();
-      throw new Task.Result(payload);
+      return payload;
     });
   },
 
@@ -1567,10 +1567,6 @@ Experiments.ExperimentEntry.prototype = {
       };
 
       let sandbox = Cu.Sandbox(nullprincipal);
-      let context = {};
-      context.healthReportPayload = yield this._policy.healthReportPayload();
-      context.telemetryPayload    = yield this._policy.telemetryPayload();
-
       try {
         Cu.evalInSandbox(jsfilter, sandbox);
       } catch (e) {
@@ -1580,7 +1576,7 @@ Experiments.ExperimentEntry.prototype = {
 
       // You can't insert arbitrarily complex objects into a sandbox, so
       // we serialize everything through JSON.
-      sandbox._hr = JSON.stringify(yield this._policy.healthReportPayload());
+      sandbox._hr = yield this._policy.healthReportPayload();
       Object.defineProperty(sandbox, "_t",
         { get: () => JSON.stringify(this._policy.telemetryPayload()) });
 
