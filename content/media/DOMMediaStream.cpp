@@ -164,7 +164,8 @@ DOMMediaStream::CurrentTime()
   if (!mStream) {
     return 0.0;
   }
-  return MediaTimeToSeconds(mStream->GetCurrentTime() - mLogicalStreamStartTime);
+  return mStream->
+    StreamTimeToSeconds(mStream->GetCurrentTime() - mLogicalStreamStartTime);
 }
 
 void
