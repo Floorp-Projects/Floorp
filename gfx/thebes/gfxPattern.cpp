@@ -98,7 +98,7 @@ gfxPattern::AddColorStop(gfxFloat offset, const gfxRGBA& c)
 }
 
 void
-gfxPattern::SetColorStops(GradientStops* aStops)
+gfxPattern::SetColorStops(mozilla::RefPtr<GradientStops> aStops)
 {
   mStops = aStops;
 }

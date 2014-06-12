@@ -155,10 +155,7 @@ GetBackendName(mozilla::gfx::BackendType aBackend)
 
 class gfxPlatform {
 public:
-    typedef mozilla::gfx::DataSourceSurface DataSourceSurface;
-    typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::gfx::IntSize IntSize;
-    typedef mozilla::gfx::SourceSurface SourceSurface;
 
     /**
      * Return a pointer to the current active platform.
@@ -190,10 +187,10 @@ public:
      * support the DrawTarget we get back.
      * See SupportsAzureContentForDrawTarget.
      */
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const mozilla::gfx::IntSize& aSize);
 
     /*
@@ -208,12 +205,12 @@ public:
      * PluginInstanceChild (where we can't call gfxPlatform::GetPlatform()
      * because the prefs service can only be accessed from the main process).
      */
-    static mozilla::TemporaryRef<SourceSurface>
+    static mozilla::RefPtr<mozilla::gfx::SourceSurface>
       GetSourceSurfaceForSurface(mozilla::gfx::DrawTarget *aTarget, gfxASurface *aSurface);
 
     static void ClearSourceSurfaceForSurface(gfxASurface *aSurface);
 
-    static mozilla::TemporaryRef<DataSourceSurface>
+    static mozilla::RefPtr<mozilla::gfx::DataSourceSurface>
         GetWrappedDataSourceSurface(gfxASurface *aSurface);
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
@@ -222,13 +219,13 @@ public:
     virtual already_AddRefed<gfxASurface>
       GetThebesSurfaceForDrawTarget(mozilla::gfx::DrawTarget *aTarget);
 
-    mozilla::TemporaryRef<DrawTarget>
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateOffscreenContentDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
-    mozilla::TemporaryRef<DrawTarget>
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateOffscreenCanvasDrawTarget(const mozilla::gfx::IntSize& aSize, mozilla::gfx::SurfaceFormat aFormat);
 
-    virtual mozilla::TemporaryRef<DrawTarget>
+    virtual mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForData(unsigned char* aData, const mozilla::gfx::IntSize& aSize, 
                               int32_t aStride, mozilla::gfx::SurfaceFormat aFormat);
 
@@ -560,7 +557,7 @@ protected:
      * Helper method, creates a draw target for a specific Azure backend.
      * Used by CreateOffscreenDrawTarget.
      */
-    mozilla::TemporaryRef<DrawTarget>
+    mozilla::RefPtr<mozilla::gfx::DrawTarget>
       CreateDrawTargetForBackend(mozilla::gfx::BackendType aBackend,
                                  const mozilla::gfx::IntSize& aSize,
                                  mozilla::gfx::SurfaceFormat aFormat);
