@@ -157,12 +157,14 @@ let UI = {
   unbusy: function() {
     document.querySelector("window").classList.remove("busy")
     this.updateCommands();
+    this._busyPromise = null;
   },
 
   busyUntil: function(promise, operationDescription) {
     // Freeze the UI until the promise is resolved. A 30s timeout
     // will unfreeze the UI, just in case the promise never gets
     // resolved.
+    this._busyPromise = promise;
     let timeout = setTimeout(() => {
       this.unbusy();
       UI.reportError("error_operationTimeout", operationDescription);
