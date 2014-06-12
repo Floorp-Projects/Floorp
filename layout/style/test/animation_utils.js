@@ -439,10 +439,10 @@ const ExpectComparisonTo = {
           e: array[4], f: array[5] } );
     } else if (array.length == 16) {
       return [
-        array.slice(0, 3),
-        array.slice(4, 7),
-        array.slice(8, 11),
-        array.slice(12, 15)
+        array.slice(0, 4),
+        array.slice(4, 8),
+        array.slice(8, 12),
+        array.slice(12, 16)
       ];
     } else {
       return null;
