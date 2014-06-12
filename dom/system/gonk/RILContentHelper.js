@@ -305,7 +305,8 @@ MobileCallForwardingInfo.prototype = {
                       serviceClass: 'r'}
 };
 
-function CellBroadcastMessage(pdu) {
+function CellBroadcastMessage(clientId, pdu) {
+  this.serviceId = clientId;
   this.gsmGeographicalScope = RIL.CB_GSM_GEOGRAPHICAL_SCOPE_NAMES[pdu.geographicalScope];
   this.messageCode = pdu.messageCode;
   this.messageId = pdu.messageId;
@@ -331,6 +332,7 @@ CellBroadcastMessage.prototype = {
   }),
 
   // nsIDOMMozCellBroadcastMessage
+  serviceId: -1,
 
   gsmGeographicalScope: null,
   messageCode: null,
@@ -1544,13 +1546,17 @@ RILContentHelper.prototype = {
 
   registerCellBroadcastMsg: function(listener) {
     if (DEBUG) debug("Registering for Cell Broadcast related messages");
-    //TODO: Bug 921326 - Cellbroadcast API: support multiple sim cards
+    // Instead of registering multiple listeners for Multi-SIM, we reuse
+    // clientId 0 to route all CBS messages to single listener and provide the
+    // |clientId| info by |CellBroadcastMessage.serviceId|.
     this.registerListener("_cellBroadcastListeners", 0, listener);
     cpmm.sendAsyncMessage("RIL:RegisterCellBroadcastMsg");
   },
 
   unregisterCellBroadcastMsg: function(listener) {
-    //TODO: Bug 921326 - Cellbroadcast API: support multiple sim cards
+    // Instead of unregistering multiple listeners for Multi-SIM, we reuse
+    // clientId 0 to route all CBS messages to single listener and provide the
+    // |clientId| info by |CellBroadcastMessage.serviceId|.
     this.unregisterListener("_cellBroadcastListeners", 0, listener);
   },
 
@@ -1824,8 +1830,10 @@ RILContentHelper.prototype = {
         this.handleSimpleRequest(data.requestId, data.errorMsg, null);
         break;
       case "RIL:CellBroadcastReceived": {
-        let message = new CellBroadcastMessage(data);
-        this._deliverEvent(clientId,
+        // All CBS messages are to routed the listener for clientId 0 and
+        // provide the |clientId| info by |CellBroadcastMessage.serviceId|.
+        let message = new CellBroadcastMessage(clientId, data);
+        this._deliverEvent(0, // route to clientId 0.
                            "_cellBroadcastListeners",
                            "notifyMessageReceived",
                            [message]);
