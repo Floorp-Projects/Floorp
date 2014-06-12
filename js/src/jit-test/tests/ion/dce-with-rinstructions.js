@@ -144,14 +144,6 @@ function radd_float(i) {
     return i;
 }
 
-var uceFault_add_string = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_string'));
-function radd_string(i) {
-    var x = "s" + i;
-    if (uceFault_add_string(i) || uceFault_add_string(i))
-        assertEq(x, "s99");
-    return i;
-}
-
 var uceFault_add_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_object'));
 function radd_object(i) {
     var t = i;
@@ -269,6 +261,22 @@ function rmod_object(i) {
     return i;
 }
 
+var uceFault_concat_string = eval(uneval(uceFault).replace('uceFault', 'uceFault_concat_string'));
+function rconcat_string(i) {
+    var x = "s" + i.toString();
+    if (uceFault_concat_string(i) || uceFault_concat_string(i))
+        assertEq(x, "s99");
+    return i;
+}
+
+var uceFault_concat_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_concat_number'));
+function rconcat_number(i) {
+    var x = "s" + i;
+    if (uceFault_concat_number(i) || uceFault_concat_number(i))
+        assertEq(x, "s99");
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -284,7 +292,6 @@ for (i = 0; i < 100; i++) {
     rursh_object(i);
     radd_number(i);
     radd_float(i);
-    radd_string(i);
     radd_object(i);
     rsub_number(i);
     rsub_float(i);
@@ -297,6 +304,8 @@ for (i = 0; i < 100; i++) {
     rdiv_object(i);
     rmod_number(i);
     rmod_object(i);
+    rconcat_string(i);
+    rconcat_number(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
