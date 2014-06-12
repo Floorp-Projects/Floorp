@@ -303,7 +303,7 @@ static int nr_ice_component_get_port_from_ephemeral_range(uint16_t *port)
     void *buf = port;
     if(r=nr_crypto_random_bytes(buf, 2))
       ABORT(r);
-    *port|=0x8000; /* make it >= 0x8000 */
+    *port|=49152; /* make it fit into IANA ephemeral port range >= 49152 */
     _status=0;
 abort:
     return(_status);
@@ -311,7 +311,7 @@ abort:
 
 static int nr_ice_component_create_tcp_host_candidate(struct nr_ice_ctx_ *ctx,
   nr_ice_component *component, nr_transport_addr *interface_addr, nr_socket_tcp_type tcp_type,
-  int so_sock_ct, char *lufrag, Data *pwd, nr_ice_socket **isock)
+  int backlog, int so_sock_ct, char *lufrag, Data *pwd, nr_ice_socket **isock)
   {
     int r,_status;
     nr_ice_candidate *cand=0;
@@ -344,7 +344,7 @@ static int nr_ice_component_create_tcp_host_candidate(struct nr_ice_ctx_ *ctx,
 
     } while(r);
 
-    if((tcp_type == TCP_TYPE_PASSIVE) && (r=nr_socket_listen(nrsock,1)))
+    if((tcp_type == TCP_TYPE_PASSIVE) && (r=nr_socket_listen(nrsock,backlog)))
       ABORT(r);
 
     if((r=nr_ice_socket_create(ctx,component,nrsock,NR_ICE_SOCKET_TYPE_STREAM_TCP,&isock_tmp)))
@@ -385,10 +385,16 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
     int j;
     int r,_status;
     int so_sock_ct=0;
+    int backlog=10;
 
     r_log(LOG_ICE,LOG_DEBUG,"nr_ice_component_initialize_tcp");
 
     if(r=NR_reg_get_int4(NR_ICE_REG_ICE_TCP_SO_SOCK_COUNT,&so_sock_ct)){
+      if(r!=R_NOT_FOUND)
+        ABORT(r);
+    }
+
+    if(r=NR_reg_get_int4(NR_ICE_REG_ICE_TCP_LISTEN_BACKLOG,&backlog)){
       if(r!=R_NOT_FOUND)
         ABORT(r);
     }
@@ -409,18 +415,18 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
       /* passive host candidate */
       if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-        TCP_TYPE_PASSIVE, 0, lufrag, pwd, &isock_psv)))
+        TCP_TYPE_PASSIVE, backlog, 0, lufrag, pwd, &isock_psv)))
         ABORT(r);
 
       /* active host candidate */
       if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-        TCP_TYPE_ACTIVE, 0, lufrag, pwd, NULL)))
+        TCP_TYPE_ACTIVE, 0, 0, lufrag, pwd, NULL)))
         ABORT(r);
 
       /* simultaneous-open host candidate */
       if (so_sock_ct) {
         if ((r=nr_ice_component_create_tcp_host_candidate(ctx, component, &addrs[i].addr,
-          TCP_TYPE_SO, so_sock_ct, lufrag, pwd, &isock_so)))
+          TCP_TYPE_SO, 0, so_sock_ct, lufrag, pwd, &isock_so)))
           ABORT(r);
       }
 
