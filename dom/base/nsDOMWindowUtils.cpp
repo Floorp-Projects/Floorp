@@ -3671,32 +3671,6 @@ nsDOMWindowUtils::GetOMTAStyle(nsIDOMElement* aElement,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::GetOMTAOrComputedStyle(nsIDOMElement* aElement,
-                                         const nsAString& aProperty,
-                                         nsAString& aResult)
-{
-  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
-
-  // Try to get OMTA style
-  nsresult rv = GetOMTAStyle(aElement, aProperty, aResult);
-  if (NS_FAILED(rv) || !aResult.IsEmpty()) {
-    return rv;
-  }
-
-  // Otherwise, fall back to computed style
-  nsCOMPtr<Element> element = do_QueryInterface(aElement);
-  if (!element) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  nsCOMPtr<nsIDOMCSSStyleDeclaration> style;
-  rv = element->GetCurrentDoc()->GetWindow()->
-    GetComputedStyle(aElement, aProperty, getter_AddRefs(style));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  return style->GetPropertyValue(aProperty, aResult);
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::GetContentAPZTestData(JSContext* aContext,
                                         JS::MutableHandleValue aOutContentTestData)
 {
