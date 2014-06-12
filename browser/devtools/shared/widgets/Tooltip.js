@@ -1011,6 +1011,7 @@ SwatchColorPickerTooltip.prototype = Heritage.extend(SwatchBasedEditorTooltip.pr
   _selectColor: function(color) {
     if (this.activeSwatch) {
       this.activeSwatch.style.backgroundColor = color;
+      this.activeSwatch.parentNode.dataset.color = color;
       this.currentSwatchColor.textContent = color;
       this.preview(color);
     }

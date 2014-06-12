@@ -59,7 +59,23 @@ GARBAGE += \
 
 GARBAGE_DIRS += classes db jars res sync services generated
 
-JAVA_CLASSPATH = $(ANDROID_SDK)/android.jar
+JAVA_BOOTCLASSPATH = \
+    $(ANDROID_SDK)/android.jar \
+    $(ANDROID_COMPAT_LIB) \
+    $(NULL)
+
+JAVA_BOOTCLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_BOOTCLASSPATH)))
+
+# If native devices are enabled, add Google Play Services and some of the v7 compat libraries
+ifdef MOZ_NATIVE_DEVICES
+    JAVA_CLASSPATH += \
+        $(GOOGLE_PLAY_SERVICES_LIB) \
+        $(ANDROID_MEDIAROUTER_LIB) \
+        $(ANDROID_APPCOMPAT_LIB) \
+        $(NULL)
+endif
+
+JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 ALL_JARS = \
   gecko-R.jar \
@@ -83,9 +99,16 @@ include $(topsrcdir)/config/config.mk
 # because Android resource classes must be compiled together in order to avoid overlapping resource
 # indices.
 
+library_jars = \
+    $(JAVA_CLASSPATH) \
+    $(JAVA_BOOTCLASSPATH) \
+    $(NULL)
+
+library_jars := $(subst $(NULL) ,:,$(strip $(library_jars)))
+
 classes.dex: .proguard.deps
 	$(REPORT_BUILD)
-	$(DX) --dex --output=classes.dex jars-proguarded $(ANDROID_COMPAT_LIB)
+	$(DX) --dex --output=classes.dex jars-proguarded $(subst :, ,$(ANDROID_COMPAT_LIB):$(JAVA_CLASSPATH))
 
 ifdef MOZ_DISABLE_PROGUARD
   PROGUARD_PASSES=0
@@ -113,7 +136,7 @@ endif
 		-optimizationpasses $(PROGUARD_PASSES) \
 		-injars $(subst ::,:,$(subst $(NULL) ,:,$(strip $(ALL_JARS)))) \
 		-outjars jars-proguarded \
-		-libraryjars $(ANDROID_SDK)/android.jar:$(ANDROID_COMPAT_LIB)
+		-libraryjars $(library_jars)
 
 CLASSES_WITH_JNI= \
     org.mozilla.gecko.ANRReporter \
@@ -141,16 +164,15 @@ ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotation
 
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
-	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
+	$(JAVA) -classpath gecko-mozglue.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
-gecko_package_dir = generated/org/mozilla/gecko
 # Like generated/org/mozilla/fennec_$USERID.
 android_package_dir = $(addprefix generated/,$(subst .,/,$(ANDROID_PACKAGE_NAME)))
 
 # These _PP_JAVAFILES are specified in moz.build and defined in
 # backend.mk, which is included by config.mk.  Therefore this needs to
 # be defined after config.mk is included.
-PP_JAVAFILES := $(filter-out $(gecko_package_dir)/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
+PP_JAVAFILES := $(filter-out generated/org/mozilla/gecko/R.java,$(gecko-mozglue_PP_JAVAFILES) $(gecko-browser_PP_JAVAFILES))
 
 manifest := \
   AndroidManifest.xml.in \
@@ -163,9 +185,9 @@ PP_TARGETS += manifest
 # generates these files into generated/org/mozilla/gecko for
 # consumption by the build system and IDEs.
 
-preprocessed := $(addsuffix .in,$(subst $(gecko_package_dir)/,,$(filter $(gecko_package_dir)/%,$(PP_JAVAFILES))))
+preprocessed := $(addsuffix .in,$(subst generated/org/mozilla/gecko/,,$(filter generated/org/mozilla/gecko/%,$(PP_JAVAFILES))))
 
-preprocessed_PATH := $(gecko_package_dir)
+preprocessed_PATH := generated/org/mozilla/gecko
 preprocessed_KEEP_PATH := 1
 
 PP_TARGETS += preprocessed
@@ -222,6 +244,7 @@ $(ANDROID_GENERATED_RESFILES): $(call mkdir_deps,$(sort $(dir $(ANDROID_GENERATE
 	$(TOUCH) $@
 	$(MAKE) -C locales
 
+
 # This .deps pattern saves an invocation of the sub-Make: the single
 # invocation generates both strings.xml and suggestedsites.json. The
 # trailing semi-colon defines an empty recipe: defining no recipe at
@@ -268,7 +291,24 @@ geckoview_resources.zip: $(all_resources) $(GLOBAL_DEPS)
 # Make to treat the target differently, in a way that defeats our
 # dependencies.
 
-$(gecko_package_dir)/R.java: .aapt.deps ;
+generated/org/mozilla/gecko/R.java: .aapt.deps ;
+
+# If native devices are enabled, add Google Play Services, build their resources
+generated/android/support/v7/appcompat/R.java: .aapt.deps ;
+generated/android/support/v7/mediarouter/R.java: .aapt.deps ;
+generated/com/google/android/gms/R.java: .aapt.deps ;
+
+ifdef MOZ_NATIVE_DEVICES
+    extra_packages += android.support.v7.appcompat
+    extra_res_dirs += $(ANDROID_APPCOMPAT_RES)
+
+    extra_packages += android.support.v7.mediarouter
+    extra_res_dirs += $(ANDROID_MEDIAROUTER_RES)
+
+    extra_packages += com.google.android.gms
+    extra_res_dirs += $(GOOGLE_PLAY_SERVICES_RES)
+endif
+
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;
 
@@ -289,6 +329,8 @@ gecko-nodeps/R.txt: .aapt.nodeps ;
 
 ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc:*~:\#*:*.rej:*.orig
 
+extra_packages := $(subst $(NULL) ,:,$(strip $(extra_packages)))
+
 # 1: target file.
 # 2: dependencies.
 # 3: name of ap_ file to write.
@@ -301,10 +343,15 @@ ANDROID_AAPT_IGNORE := !.svn:!.git:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*.scc
 define aapt_command
 $(1): $$(call mkdir_deps,$(filter-out ./,$(dir $(3) $(4) $(5)))) $(2)
 	@$$(TOUCH) $$@
-	$$(AAPT) package -f -M AndroidManifest.xml -I $$(ANDROID_SDK)/android.jar \
+	$$(AAPT) package -f -m \
+		-M AndroidManifest.xml \
+		-I $(ANDROID_SDK)/android.jar \
 		--auto-add-overlay \
 		$$(addprefix -S ,$$(ANDROID_RES_DIRS)) \
-		--custom-package org.mozilla.gecko --non-constant-id \
+		$(if $(extra_res_dirs),$$(addprefix -S ,$$(extra_res_dirs)),) \
+		$(if $(extra_packages),--extra-packages $$(extra_packages),) \
+		--custom-package org.mozilla.gecko \
+		--non-constant-id \
 		-F $(3) \
 		-J $(4) \
 		--output-text-symbols $(5) \
@@ -319,12 +366,12 @@ endef
 # toolkit/mozapps/installer/packager.mk.
 
 # .aapt.deps: $(all_resources)
-$(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,$(gecko_package_dir)/,./))
+$(eval $(call aapt_command,.aapt.deps,$(all_resources),gecko.ap_,generated/,./))
 
 # .aapt.nodeps: $(CURDIR)/AndroidManifest.xml FORCE
 $(eval $(call aapt_command,.aapt.nodeps,$(CURDIR)/AndroidManifest.xml FORCE,gecko-nodeps.ap_,gecko-nodeps/,gecko-nodeps/))
 
-fennec_ids.txt: $(gecko_package_dir)/R.java fennec-ids-generator.py
+fennec_ids.txt: generated/org/mozilla/gecko/R.java fennec-ids-generator.py
 	$(PYTHON) $(topsrcdir)/mobile/android/base/fennec-ids-generator.py -i $< -o $@
 
 # Override the Java settings with some specific android settings

@@ -28,12 +28,12 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
-    this._contentWin = tabActor.window;
+    this._chromeWin = getChromeWin(tabActor.window);
     this._onRefreshDriverTick = this._onRefreshDriverTick.bind(this);
   },
   destroy: function(conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
-    this.finalize();
+    this.stopRecording();
   },
 
   /**
@@ -46,8 +46,8 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     this._recording = true;
     this._ticks = [];
 
-    this._startTime = this._contentWin.performance.now();
-    this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._startTime = this._chromeWin.performance.now();
+    this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
   }, {
   }),
 
@@ -61,9 +61,25 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     this._recording = false;
 
     // We don't need to store the ticks array for future use, release it.
-    let ticks = this._ticks.filter(e => e >= beginAt && e <= endAt);
+    let ticks = this.getPendingTicks(beginAt, endAt);
     this._ticks = null;
     return ticks;
+  }, {
+    request: {
+      beginAt: Arg(0, "nullable:number"),
+      endAt: Arg(1, "nullable:number")
+    },
+    response: { ticks: RetVal("array:number") }
+  }),
+
+  /**
+   * Gets the refresh driver ticks recorded so far.
+   */
+  getPendingTicks: method(function(beginAt = 0, endAt = Number.MAX_SAFE_INTEGER) {
+    if (!this._ticks) {
+      return [];
+    }
+    return this._ticks.filter(e => e >= beginAt && e <= endAt);
   }, {
     request: {
       beginAt: Arg(0, "nullable:number"),
@@ -79,10 +95,10 @@ let FramerateActor = exports.FramerateActor = protocol.ActorClass({
     if (!this._recording) {
       return;
     }
-    this._contentWin.requestAnimationFrame(this._onRefreshDriverTick);
+    this._chromeWin.requestAnimationFrame(this._onRefreshDriverTick);
 
     // Store the amount of time passed since the recording started.
-    let currentTime = this._contentWin.performance.now();
+    let currentTime = this._chromeWin.performance.now();
     let elapsedTime = currentTime - this._startTime;
     this._ticks.push(elapsedTime);
   }
@@ -144,3 +160,19 @@ let FramerateFront = exports.FramerateFront = protocol.FrontClass(FramerateActor
     return timeline;
   }
 });
+
+
+/**
+ * Gets the top level browser window from a content window.
+ *
+ * @param nsIDOMWindow innerWin
+ *        The content window to query.
+ * @return nsIDOMWindow
+ *         The top level browser window.
+ */
+function getChromeWin(innerWin) {
+  return innerWin
+    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIWebNavigation)
+    .QueryInterface(Ci.nsIDocShellTreeItem).rootTreeItem
+    .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow);
+}
