@@ -393,7 +393,7 @@ public:
   void ResumeAllAudioOutputs();
 
   TrackRate AudioSampleRate() const { return mSampleRate; }
-  TrackRate GraphRate() const { return 1 << MEDIA_TIME_FRAC_BITS; }
+  TrackRate GraphRate() const { return mSampleRate; }
 
   double MediaTimeToSeconds(GraphTime aTime)
   {
