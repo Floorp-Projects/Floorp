@@ -25,32 +25,22 @@ const StreamTime STREAM_TIME_MAX = MEDIA_TIME_MAX;
 typedef int32_t TrackID;
 const TrackID TRACK_NONE = 0;
 
-inline TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
+inline TrackTicks RateConvertTicksRoundDown(TrackRate aOutRate,
+                                            TrackRate aInRate,
+                                            TrackTicks aTicks)
 {
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-  return (aTime*aRate + (1 << MEDIA_TIME_FRAC_BITS) - 1) >> MEDIA_TIME_FRAC_BITS;
+  NS_ASSERTION(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  NS_ASSERTION(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate) / aInRate;
 }
-
-inline TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
+inline TrackTicks RateConvertTicksRoundUp(TrackRate aOutRate,
+                                          TrackRate aInRate, TrackTicks aTicks)
 {
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTime && aTime <= STREAM_TIME_MAX, "Bad time");
-  return (aTime*aRate) >> MEDIA_TIME_FRAC_BITS;
-}
-
-inline StreamTime TicksToTimeRoundUp(TrackRate aRate, TrackTicks aTicks)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
-  return ((aTicks << MEDIA_TIME_FRAC_BITS) + aRate - 1)/aRate;
-}
-
-inline StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
-{
-  NS_ASSERTION(0 < aRate && aRate <= TRACK_RATE_MAX, "Bad rate");
-  NS_WARN_IF_FALSE(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad samples");
-  return (aTicks << MEDIA_TIME_FRAC_BITS)/aRate;
+  NS_ASSERTION(0 < aOutRate && aOutRate <= TRACK_RATE_MAX, "Bad out rate");
+  NS_ASSERTION(0 < aInRate && aInRate <= TRACK_RATE_MAX, "Bad in rate");
+  NS_ASSERTION(0 <= aTicks && aTicks <= TRACK_TICKS_MAX, "Bad ticks");
+  return (aTicks * aOutRate + aInRate - 1) / aInRate;
 }
 
 /**
@@ -113,19 +103,19 @@ public:
     TrackTicks GetEnd() const { return mSegment->GetDuration(); }
     StreamTime GetEndTimeRoundDown() const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, mSegment->GetDuration());
+      return TicksToTimeRoundDown(mSegment->GetDuration());
     }
     StreamTime GetStartTimeRoundDown() const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, mStart);
+      return TicksToTimeRoundDown(mStart);
     }
     TrackTicks TimeToTicksRoundDown(StreamTime aTime) const
     {
-      return mozilla::TimeToTicksRoundDown(mRate, aTime);
+      return RateConvertTicksRoundDown(mRate, mGraphRate, aTime);
     }
     StreamTime TicksToTimeRoundDown(TrackTicks aTicks) const
     {
-      return mozilla::TicksToTimeRoundDown(mRate, aTicks);
+      return RateConvertTicksRoundDown(mGraphRate, mRate, aTicks);
     }
     MediaSegment::Type GetType() const { return mSegment->GetType(); }
 
@@ -234,18 +224,20 @@ public:
    */
   Track& AddTrack(TrackID aID, TrackRate aRate, TrackTicks aStart, MediaSegment* aSegment)
   {
+    NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
+
+    Track* track = new Track(aID, aRate, aStart, aSegment, GraphRate());
+    mTracks.InsertElementSorted(track, CompareTracksByID());
+
     if (mTracksKnownTime == STREAM_TIME_MAX) {
       // There exists code like
       // http://mxr.mozilla.org/mozilla-central/source/media/webrtc/signaling/src/mediapipeline/MediaPipeline.cpp?rev=96b197deb91e&mark=1292-1297#1292
       NS_WARNING("Adding track to StreamBuffer that should have no more tracks");
     } else {
-      NS_ASSERTION(TimeToTicksRoundDown(aRate, mTracksKnownTime) <= aStart,
+      NS_ASSERTION(track->TimeToTicksRoundDown(mTracksKnownTime) <= aStart,
                    "Start time too early");
     }
-    NS_ASSERTION(!FindTrack(aID), "Track with this ID already exists");
-
-    Track* track = new Track(aID, aRate, aStart, aSegment, GraphRate());
-    return **mTracks.InsertElementSorted(track, CompareTracksByID());
+    return *track;
   }
   void AdvanceKnownTracksTime(StreamTime aKnownTime)
   {
