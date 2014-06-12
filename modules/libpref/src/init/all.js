@@ -265,6 +265,7 @@ pref("media.webrtc.debug.log_file", "");
 #else
 pref("media.webrtc.debug.log_file", "/tmp/WebRTC.log");
 #endif
+pref("media.webrtc.debug.aec_dump_max_size", 4194304); // 4MB
 
 #ifdef MOZ_WIDGET_GONK
 pref("media.navigator.video.default_width",320);
