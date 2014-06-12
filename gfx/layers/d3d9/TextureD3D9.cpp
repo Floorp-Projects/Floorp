@@ -587,7 +587,7 @@ CairoTextureClientD3D9::Lock(OpenMode)
   mIsLocked = true;
 
   if (mNeedsClear) {
-    mDrawTarget = GetAsDrawTarget();
+    mDrawTarget = BorrowDrawTarget();
     mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
     mNeedsClear = false;
   }
@@ -628,8 +628,8 @@ CairoTextureClientD3D9::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-TemporaryRef<gfx::DrawTarget>
-CairoTextureClientD3D9::GetAsDrawTarget()
+gfx::DrawTarget*
+CairoTextureClientD3D9::BorrowDrawTarget()
 {
   MOZ_ASSERT(mIsLocked && mD3D9Surface);
   if (mDrawTarget) {
@@ -731,8 +731,8 @@ DIBTextureClientD3D9::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   return true;
 }
 
-TemporaryRef<gfx::DrawTarget>
-DIBTextureClientD3D9::GetAsDrawTarget()
+gfx::DrawTarget*
+DIBTextureClientD3D9::BorrowDrawTarget()
 {
   MOZ_ASSERT(mIsLocked && IsAllocated());
 

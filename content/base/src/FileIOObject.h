@@ -7,12 +7,11 @@
 #define FileIOObject_h__
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsIChannel.h"
 #include "nsIFile.h"
 #include "nsIDOMFile.h"
-#include "nsIStreamListener.h"
 #include "nsITimer.h"
 #include "nsCOMPtr.h"
+#include "nsIAsyncInputStream.h"
 
 #include "mozilla/dom/DOMError.h"
 
@@ -29,7 +28,7 @@ extern const uint64_t kUnknownSize;
 // A common base class for FileReader and FileSaver
 
 class FileIOObject : public DOMEventTargetHelper,
-                     public nsIStreamListener,
+                     public nsIInputStreamCallback,
                      public nsITimerCallback
 {
 public:
@@ -61,26 +60,21 @@ public:
 
   NS_DECL_NSITIMERCALLBACK
 
-  NS_DECL_NSISTREAMLISTENER
-
-  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSIINPUTSTREAMCALLBACK
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileIOObject, DOMEventTargetHelper)
 
 protected:
   // Implemented by the derived class to do whatever it needs to do for abort
   virtual void DoAbort(nsAString& aEvent) = 0;
-  // for onStartRequest (this has a default impl since FileReader doesn't need
-  // special handling
-  NS_IMETHOD DoOnStartRequest(nsIRequest *aRequest, nsISupports *aContext);
-  // for onStopRequest
-  NS_IMETHOD DoOnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
-                             nsresult aStatus, nsAString& aSuccessEvent,
-                             nsAString& aTerminationEvent) = 0;
-  // and for onDataAvailable
-  NS_IMETHOD DoOnDataAvailable(nsIRequest *aRequest, nsISupports *aContext,
-                               nsIInputStream *aInputStream, uint64_t aOffset,
-                               uint32_t aCount) = 0;
+
+  virtual nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount) = 0;
+
+  virtual nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
+                               nsAString& aTerminationEvent) = 0;
+
+  nsresult OnLoadEnd(nsresult aStatus);
+  nsresult DoAsyncWait(nsIAsyncInputStream* aStream);
 
   void StartProgressEventTimer();
   void ClearProgressEventTimer();
@@ -91,8 +85,9 @@ protected:
   bool mProgressEventWasDelayed;
   bool mTimerIsActive;
 
+  nsCOMPtr<nsIAsyncInputStream> mAsyncStream;
+
   nsRefPtr<DOMError> mError;
-  nsCOMPtr<nsIChannel> mChannel;
 
   uint16_t mReadyState;
 
