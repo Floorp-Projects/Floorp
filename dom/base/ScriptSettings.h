@@ -158,6 +158,8 @@ private:
 class AutoJSAPIWithErrorsReportedToWindow : public AutoJSAPI {
   public:
     AutoJSAPIWithErrorsReportedToWindow(nsIScriptContext* aScx);
+    // Equivalent to AutoJSAPI if aGlobal is not a Window.
+    AutoJSAPIWithErrorsReportedToWindow(nsIGlobalObject* aGlobalObject);
 };
 
 /*
