@@ -180,7 +180,7 @@ WindowNamedPropertiesHandler::ownPropNames(JSContext* aCx,
   // We iterate backwards so we can remove things from the list easily.
   for (size_t i = names.Length(); i > 0; ) {
     --i; // Now we're pointing at the next name we want to look at
-    nsIDOMWindow* childWin = win->GetChildWindow(names[i]);
+    nsCOMPtr<nsIDOMWindow> childWin = win->GetChildWindow(names[i]);
     if (!childWin || !ShouldExposeChildWindow(names[i], childWin)) {
       names.RemoveElementAt(i);
     }
