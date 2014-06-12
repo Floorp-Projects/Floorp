@@ -8,9 +8,11 @@ dictionary DOMFileMetadataParameters
   boolean lastModified = true;
 };
 
-interface LockedFile : EventTarget
+interface FileHandle : EventTarget
 {
-  readonly attribute FileHandle? fileHandle;
+  readonly attribute MutableFile? mutableFile;
+  // this is deprecated due to renaming in the spec
+  readonly attribute MutableFile? fileHandle; // now mutableFile
   readonly attribute FileMode mode;
   readonly attribute boolean active;
   attribute unsigned long long? location;

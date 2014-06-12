@@ -4,10 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "LockedFile.h"
+#include "FileHandle.h"
 
 #include "AsyncHelper.h"
-#include "FileHandle.h"
 #include "FileHelper.h"
 #include "FileRequest.h"
 #include "FileService.h"
@@ -15,8 +14,9 @@
 #include "MemoryStreams.h"
 #include "MetadataHelper.h"
 #include "mozilla/dom/EncodingUtils.h"
-#include "mozilla/dom/LockedFileBinding.h"
+#include "mozilla/dom/FileHandleBinding.h"
 #include "mozilla/EventDispatcher.h"
+#include "MutableFile.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
 #include "nsError.h"
@@ -44,14 +44,14 @@ NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 class ReadHelper : public FileHelper
 {
 public:
-  ReadHelper(LockedFile* aLockedFile,
+  ReadHelper(FileHandle* aFileHandle,
              FileRequest* aFileRequest,
              uint64_t aLocation,
              uint64_t aSize)
-  : FileHelper(aLockedFile, aFileRequest),
+  : FileHelper(aFileHandle, aFileRequest),
     mLocation(aLocation), mSize(aSize)
   {
-    NS_ASSERTION(mSize, "Passed zero size!");
+    MOZ_ASSERT(mSize, "Passed zero size!");
   }
 
   nsresult
@@ -74,12 +74,12 @@ protected:
 class ReadTextHelper : public ReadHelper
 {
 public:
-  ReadTextHelper(LockedFile* aLockedFile,
+  ReadTextHelper(FileHandle* aFileHandle,
                  FileRequest* aFileRequest,
                  uint64_t aLocation,
                  uint64_t aSize,
                  const nsAString& aEncoding)
-  : ReadHelper(aLockedFile, aFileRequest, aLocation, aSize),
+  : ReadHelper(aFileHandle, aFileRequest, aLocation, aSize),
     mEncoding(aEncoding)
   { }
 
@@ -94,15 +94,15 @@ private:
 class WriteHelper : public FileHelper
 {
 public:
-  WriteHelper(LockedFile* aLockedFile,
+  WriteHelper(FileHandle* aFileHandle,
               FileRequest* aFileRequest,
               uint64_t aLocation,
               nsIInputStream* aStream,
               uint64_t aLength)
-  : FileHelper(aLockedFile, aFileRequest),
+  : FileHelper(aFileHandle, aFileRequest),
     mLocation(aLocation), mStream(aStream), mLength(aLength)
   {
-    NS_ASSERTION(mLength, "Passed zero length!");
+    MOZ_ASSERT(mLength, "Passed zero length!");
   }
 
   nsresult
@@ -117,10 +117,10 @@ private:
 class TruncateHelper : public FileHelper
 {
 public:
-  TruncateHelper(LockedFile* aLockedFile,
+  TruncateHelper(FileHandle* aFileHandle,
                  FileRequest* aFileRequest,
                  uint64_t aOffset)
-  : FileHelper(aLockedFile, aFileRequest),
+  : FileHelper(aFileHandle, aFileRequest),
     mOffset(aOffset)
   { }
 
@@ -137,7 +137,7 @@ private:
     { }
   protected:
     nsresult
-    DoStreamWork(nsISupports* aStream);
+    DoStreamWork(nsISupports* aStream) MOZ_OVERRIDE;
 
     uint64_t mOffset;
   };
@@ -148,9 +148,9 @@ private:
 class FlushHelper : public FileHelper
 {
 public:
-  FlushHelper(LockedFile* aLockedFile,
+  FlushHelper(FileHandle* aFileHandle,
               FileRequest* aFileRequest)
-  : FileHelper(aLockedFile, aFileRequest)
+  : FileHelper(aFileHandle, aFileRequest)
   { }
 
   nsresult
@@ -165,18 +165,18 @@ private:
     { }
   protected:
     nsresult
-    DoStreamWork(nsISupports* aStream);
+    DoStreamWork(nsISupports* aStream) MOZ_OVERRIDE;
   };
 };
 
 class OpenStreamHelper : public FileHelper
 {
 public:
-  OpenStreamHelper(LockedFile* aLockedFile,
+  OpenStreamHelper(FileHandle* aFileHandle,
                    bool aWholeFile,
                    uint64_t aStart,
                    uint64_t aLength)
-  : FileHelper(aLockedFile, nullptr),
+  : FileHelper(aFileHandle, nullptr),
     mWholeFile(aWholeFile), mStart(aStart), mLength(aLength)
   { }
 
@@ -214,39 +214,39 @@ CreateGenericEvent(EventTarget* aEventOwner,
 } // anonymous namespace
 
 // static
-already_AddRefed<LockedFile>
-LockedFile::Create(FileHandle* aFileHandle,
+already_AddRefed<FileHandle>
+FileHandle::Create(MutableFile* aMutableFile,
                    FileMode aMode,
                    RequestMode aRequestMode)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-  nsRefPtr<LockedFile> lockedFile = new LockedFile();
+  nsRefPtr<FileHandle> fileHandle = new FileHandle();
 
-  lockedFile->BindToOwner(aFileHandle);
+  fileHandle->BindToOwner(aMutableFile);
 
-  lockedFile->mFileHandle = aFileHandle;
-  lockedFile->mMode = aMode;
-  lockedFile->mRequestMode = aRequestMode;
+  fileHandle->mMutableFile = aMutableFile;
+  fileHandle->mMode = aMode;
+  fileHandle->mRequestMode = aRequestMode;
 
   nsCOMPtr<nsIAppShell> appShell = do_GetService(kAppShellCID);
   NS_ENSURE_TRUE(appShell, nullptr);
 
-  nsresult rv = appShell->RunBeforeNextEvent(lockedFile);
+  nsresult rv = appShell->RunBeforeNextEvent(fileHandle);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  lockedFile->mCreating = true;
+  fileHandle->mCreating = true;
 
   FileService* service = FileService::GetOrCreate();
   NS_ENSURE_TRUE(service, nullptr);
 
-  rv = service->Enqueue(lockedFile, nullptr);
+  rv = service->Enqueue(fileHandle, nullptr);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
-  return lockedFile.forget();
+  return fileHandle.forget();
 }
 
-LockedFile::LockedFile()
+FileHandle::FileHandle()
 : mReadyState(INITIAL),
   mMode(FileMode::Readonly),
   mRequestMode(NORMAL),
@@ -255,72 +255,71 @@ LockedFile::LockedFile()
   mAborted(false),
   mCreating(false)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   SetIsDOMBinding();
 }
 
-LockedFile::~LockedFile()
+FileHandle::~FileHandle()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 }
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(LockedFile, DOMEventTargetHelper,
-                                   mFileHandle)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FileHandle, DOMEventTargetHelper,
+                                   mMutableFile)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(LockedFile)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileHandle)
   NS_INTERFACE_MAP_ENTRY(nsIRunnable)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(LockedFile, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(LockedFile, DOMEventTargetHelper)
+NS_IMPL_ADDREF_INHERITED(FileHandle, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(FileHandle, DOMEventTargetHelper)
 
 nsresult
-LockedFile::PreHandleEvent(EventChainPreVisitor& aVisitor)
+FileHandle::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   aVisitor.mCanHandle = true;
-  aVisitor.mParentTarget = mFileHandle;
+  aVisitor.mParentTarget = mMutableFile;
   return NS_OK;
 }
 
 void
-LockedFile::OnNewRequest()
+FileHandle::OnNewRequest()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   if (!mPendingRequests) {
-    NS_ASSERTION(mReadyState == INITIAL,
-                 "Reusing a locked file!");
+    MOZ_ASSERT(mReadyState == INITIAL, "Reusing a file handle!");
     mReadyState = LOADING;
   }
   ++mPendingRequests;
 }
 
 void
-LockedFile::OnRequestFinished()
+FileHandle::OnRequestFinished()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mPendingRequests, "Mismatched calls!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(mPendingRequests, "Mismatched calls!");
   --mPendingRequests;
   if (!mPendingRequests) {
-    NS_ASSERTION(mAborted || mReadyState == LOADING,
-                 "Bad state!");
-    mReadyState = LockedFile::FINISHING;
+    MOZ_ASSERT(mAborted || mReadyState == LOADING, "Bad state!");
+    mReadyState = FileHandle::FINISHING;
     Finish();
   }
 }
 
 nsresult
-LockedFile::CreateParallelStream(nsISupports** aStream)
+FileHandle::CreateParallelStream(nsISupports** aStream)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-  if (mFileHandle->IsInvalid()) {
+  if (mMutableFile->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsISupports> stream =
-    mFileHandle->CreateStream(mFileHandle->mFile, mMode == FileMode::Readonly);
+    mMutableFile->CreateStream(mMutableFile->mFile,
+                               mMode == FileMode::Readonly);
   NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
 
   mParallelStreams.AppendElement(stream);
@@ -330,17 +329,18 @@ LockedFile::CreateParallelStream(nsISupports** aStream)
 }
 
 nsresult
-LockedFile::GetOrCreateStream(nsISupports** aStream)
+FileHandle::GetOrCreateStream(nsISupports** aStream)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-  if (mFileHandle->IsInvalid()) {
+  if (mMutableFile->IsInvalid()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!mStream) {
     nsCOMPtr<nsISupports> stream =
-      mFileHandle->CreateStream(mFileHandle->mFile, mMode == FileMode::Readonly);
+      mMutableFile->CreateStream(mMutableFile->mFile,
+                                 mMode == FileMode::Readonly);
     NS_ENSURE_TRUE(stream, NS_ERROR_FAILURE);
 
     stream.swap(mStream);
@@ -353,35 +353,35 @@ LockedFile::GetOrCreateStream(nsISupports** aStream)
 }
 
 already_AddRefed<FileRequest>
-LockedFile::GenerateFileRequest()
+FileHandle::GenerateFileRequest()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
   return FileRequest::Create(GetOwner(), this, /* aWrapAsDOMRequest */ false);
 }
 
 bool
-LockedFile::IsOpen() const
+FileHandle::IsOpen() const
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // If we haven't started anything then we're open.
   if (mReadyState == INITIAL) {
-    NS_ASSERTION(FileHelper::GetCurrentLockedFile() != this,
-                 "This should be some other locked file (or null)!");
+    MOZ_ASSERT(FileHelper::GetCurrentFileHandle() != this,
+               "This should be some other file handle (or null)!");
     return true;
   }
 
   // If we've already started then we need to check to see if we still have the
   // mCreating flag set. If we do (i.e. we haven't returned to the event loop
   // from the time we were created) then we are open. Otherwise check the
-  // currently running locked files to see if it's the same. We only allow other
-  // requests to be made if this locked file is currently running.
+  // currently running file handles to see if it's the same. We only allow other
+  // requests to be made if this file handle is currently running.
   if (mReadyState == LOADING) {
     if (mCreating) {
       return true;
     }
 
-    if (FileHelper::GetCurrentLockedFile() == this) {
+    if (FileHelper::GetCurrentFileHandle() == this) {
       return true;
     }
   }
@@ -391,16 +391,16 @@ LockedFile::IsOpen() const
 
 // virtual
 JSObject*
-LockedFile::WrapObject(JSContext* aCx)
+FileHandle::WrapObject(JSContext* aCx)
 {
-  return LockedFileBinding::Wrap(aCx, this);
+  return FileHandleBinding::Wrap(aCx, this);
 }
 
 already_AddRefed<FileRequest>
-LockedFile::GetMetadata(const DOMFileMetadataParameters& aParameters,
+FileHandle::GetMetadata(const DOMFileMetadataParameters& aParameters,
                         ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // Common state checking
   if (!CheckState(aRv)) {
@@ -433,9 +433,9 @@ LockedFile::GetMetadata(const DOMFileMetadataParameters& aParameters,
 }
 
 already_AddRefed<FileRequest>
-LockedFile::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
+FileHandle::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // State and argument checking for read
   if (!CheckStateAndArgumentsForRead(aSize, aRv)) {
@@ -464,10 +464,10 @@ LockedFile::ReadAsArrayBuffer(uint64_t aSize, ErrorResult& aRv)
 }
 
 already_AddRefed<FileRequest>
-LockedFile::ReadAsText(uint64_t aSize, const nsAString& aEncoding,
+FileHandle::ReadAsText(uint64_t aSize, const nsAString& aEncoding,
                        ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // State and argument checking for read
   if (!CheckStateAndArgumentsForRead(aSize, aRv)) {
@@ -496,9 +496,9 @@ LockedFile::ReadAsText(uint64_t aSize, const nsAString& aEncoding,
 }
 
 already_AddRefed<FileRequest>
-LockedFile::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
+FileHandle::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // State checking for write
   if (!CheckStateForWrite(aRv)) {
@@ -509,7 +509,7 @@ LockedFile::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
   uint64_t location;
   if (aSize.WasPassed()) {
     // Just in case someone calls us from C++
-    NS_ASSERTION(aSize.Value() != UINT64_MAX, "Passed wrong size!");
+    MOZ_ASSERT(aSize.Value() != UINT64_MAX, "Passed wrong size!");
     location = aSize.Value();
   } else {
     if (mLocation == UINT64_MAX) {
@@ -542,9 +542,9 @@ LockedFile::Truncate(const Optional<uint64_t>& aSize, ErrorResult& aRv)
 }
 
 already_AddRefed<FileRequest>
-LockedFile::Flush(ErrorResult& aRv)
+FileHandle::Flush(ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // State checking for write
   if (!CheckStateForWrite(aRv)) {
@@ -569,16 +569,16 @@ LockedFile::Flush(ErrorResult& aRv)
 }
 
 void
-LockedFile::Abort(ErrorResult& aRv)
+FileHandle::Abort(ErrorResult& aRv)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // This method is special enough for not using generic state checking methods.
 
   // We can't use IsOpen here since we need it to be possible to call Abort()
   // even from outside of transaction callbacks.
-  if (mReadyState != LockedFile::INITIAL &&
-      mReadyState != LockedFile::LOADING) {
+  if (mReadyState != FileHandle::INITIAL &&
+      mReadyState != FileHandle::LOADING) {
     aRv.Throw(NS_ERROR_DOM_FILEHANDLE_NOT_ALLOWED_ERR);
     return;
   }
@@ -596,9 +596,9 @@ LockedFile::Abort(ErrorResult& aRv)
 }
 
 NS_IMETHODIMP
-LockedFile::Run()
+FileHandle::Run()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   // We're back at the event loop, no longer newborn.
   mCreating = false;
@@ -616,12 +616,12 @@ LockedFile::Run()
 }
 
 nsresult
-LockedFile::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
+FileHandle::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
                             nsIInputStream** aResult)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-  NS_ASSERTION(mRequestMode == PARALLEL,
-               "Don't call me in other than parallel mode!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(mRequestMode == PARALLEL,
+             "Don't call me in other than parallel mode!");
 
   // Common state checking
   ErrorResult error;
@@ -648,10 +648,10 @@ LockedFile::OpenInputStream(bool aWholeFile, uint64_t aStart, uint64_t aLength,
 }
 
 bool
-LockedFile::CheckState(ErrorResult& aRv)
+FileHandle::CheckState(ErrorResult& aRv)
 {
   if (!IsOpen()) {
-    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_LOCKEDFILE_INACTIVE_ERR);
+    aRv.Throw(NS_ERROR_DOM_FILEHANDLE_INACTIVE_ERR);
     return false;
   }
 
@@ -659,7 +659,7 @@ LockedFile::CheckState(ErrorResult& aRv)
 }
 
 bool
-LockedFile::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
+FileHandle::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
 {
   // Common state checking
   if (!CheckState(aRv)) {
@@ -682,7 +682,7 @@ LockedFile::CheckStateAndArgumentsForRead(uint64_t aSize, ErrorResult& aRv)
 }
 
 bool
-LockedFile::CheckStateForWrite(ErrorResult& aRv)
+FileHandle::CheckStateForWrite(ErrorResult& aRv)
 {
   // Common state checking
   if (!CheckState(aRv)) {
@@ -699,7 +699,7 @@ LockedFile::CheckStateForWrite(ErrorResult& aRv)
 }
 
 already_AddRefed<FileRequest>
-LockedFile::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
+FileHandle::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
                           bool aAppend, ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
@@ -734,14 +734,14 @@ LockedFile::WriteInternal(nsIInputStream* aInputStream, uint64_t aInputLength,
 }
 
 nsresult
-LockedFile::Finish()
+FileHandle::Finish()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+  MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
   nsRefPtr<FinishHelper> helper(new FinishHelper(this));
 
   FileService* service = FileService::Get();
-  NS_ASSERTION(service, "This should never be null");
+  MOZ_ASSERT(service, "This should never be null");
 
   nsIEventTarget* target = service->StreamTransportTarget();
 
@@ -753,7 +753,7 @@ LockedFile::Finish()
 
 // static
 already_AddRefed<nsIInputStream>
-LockedFile::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
+FileHandle::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
                            ErrorResult& aRv)
 {
   aValue.ComputeLengthAndData();
@@ -773,7 +773,7 @@ LockedFile::GetInputStream(const ArrayBuffer& aValue, uint64_t* aInputLength,
 
 // static
 already_AddRefed<nsIInputStream>
-LockedFile::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
+FileHandle::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
                            ErrorResult& aRv)
 {
   uint64_t length;
@@ -794,7 +794,7 @@ LockedFile::GetInputStream(nsIDOMBlob* aValue, uint64_t* aInputLength,
 
 // static
 already_AddRefed<nsIInputStream>
-LockedFile::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
+FileHandle::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
                            ErrorResult& aRv)
 {
   NS_ConvertUTF16toUTF8 cstr(aValue);
@@ -809,12 +809,12 @@ LockedFile::GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
   return stream.forget();
 }
 
-FinishHelper::FinishHelper(LockedFile* aLockedFile)
-: mLockedFile(aLockedFile),
-  mAborted(aLockedFile->mAborted)
+FinishHelper::FinishHelper(FileHandle* aFileHandle)
+: mFileHandle(aFileHandle),
+  mAborted(aFileHandle->mAborted)
 {
-  mParallelStreams.SwapElements(aLockedFile->mParallelStreams);
-  mStream.swap(aLockedFile->mStream);
+  mParallelStreams.SwapElements(aFileHandle->mParallelStreams);
+  mStream.swap(aFileHandle->mStream);
 }
 
 NS_IMPL_ISUPPORTS(FinishHelper, nsIRunnable)
@@ -823,35 +823,35 @@ NS_IMETHODIMP
 FinishHelper::Run()
 {
   if (NS_IsMainThread()) {
-    mLockedFile->mReadyState = LockedFile::DONE;
+    mFileHandle->mReadyState = FileHandle::DONE;
 
     FileService* service = FileService::Get();
     if (service) {
-      service->NotifyLockedFileCompleted(mLockedFile);
+      service->NotifyFileHandleCompleted(mFileHandle);
     }
 
     nsCOMPtr<nsIDOMEvent> event;
     if (mAborted) {
-      event = CreateGenericEvent(mLockedFile, NS_LITERAL_STRING("abort"),
+      event = CreateGenericEvent(mFileHandle, NS_LITERAL_STRING("abort"),
                                  true, false);
     }
     else {
-      event = CreateGenericEvent(mLockedFile, NS_LITERAL_STRING("complete"),
+      event = CreateGenericEvent(mFileHandle, NS_LITERAL_STRING("complete"),
                                  false, false);
     }
     NS_ENSURE_TRUE(event, NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
 
     bool dummy;
-    if (NS_FAILED(mLockedFile->DispatchEvent(event, &dummy))) {
+    if (NS_FAILED(mFileHandle->DispatchEvent(event, &dummy))) {
       NS_WARNING("Dispatch failed!");
     }
 
-    mLockedFile = nullptr;
+    mFileHandle = nullptr;
 
     return NS_OK;
   }
 
-  if (mLockedFile->mFileHandle->IsInvalid()) {
+  if (mFileHandle->mMutableFile->IsInvalid()) {
     mAborted = true;
   }
 
@@ -891,7 +891,7 @@ ReadHelper::Init()
 nsresult
 ReadHelper::DoAsyncRun(nsISupports* aStream)
 {
-  NS_ASSERTION(aStream, "Passed a null stream!");
+  MOZ_ASSERT(aStream, "Passed a null stream!");
 
   uint32_t flags = FileStreamWrapper::NOTIFY_PROGRESS;
 
@@ -899,7 +899,7 @@ ReadHelper::DoAsyncRun(nsISupports* aStream)
     new FileInputStreamWrapper(aStream, this, mLocation, mSize, flags);
 
   FileService* service = FileService::Get();
-  NS_ASSERTION(service, "This should never be null");
+  MOZ_ASSERT(service, "This should never be null");
 
   nsIEventTarget* target = service->StreamTransportTarget();
 
@@ -966,7 +966,7 @@ ReadTextHelper::GetSuccessResult(JSContext* aCx,
 nsresult
 WriteHelper::DoAsyncRun(nsISupports* aStream)
 {
-  NS_ASSERTION(aStream, "Passed a null stream!");
+  MOZ_ASSERT(aStream, "Passed a null stream!");
 
   uint32_t flags = FileStreamWrapper::NOTIFY_PROGRESS;
 
@@ -974,7 +974,7 @@ WriteHelper::DoAsyncRun(nsISupports* aStream)
     new FileOutputStreamWrapper(aStream, this, mLocation, mLength, flags);
 
   FileService* service = FileService::Get();
-  NS_ASSERTION(service, "This should never be null");
+  MOZ_ASSERT(service, "This should never be null");
 
   nsIEventTarget* target = service->StreamTransportTarget();
 
@@ -995,7 +995,7 @@ WriteHelper::DoAsyncRun(nsISupports* aStream)
 nsresult
 TruncateHelper::DoAsyncRun(nsISupports* aStream)
 {
-  NS_ASSERTION(aStream, "Passed a null stream!");
+  MOZ_ASSERT(aStream, "Passed a null stream!");
 
   nsRefPtr<AsyncTruncator> truncator = new AsyncTruncator(aStream, mOffset);
 
@@ -1022,7 +1022,7 @@ TruncateHelper::AsyncTruncator::DoStreamWork(nsISupports* aStream)
 nsresult
 FlushHelper::DoAsyncRun(nsISupports* aStream)
 {
-  NS_ASSERTION(aStream, "Passed a null stream!");
+  MOZ_ASSERT(aStream, "Passed a null stream!");
 
   nsRefPtr<AsyncFlusher> flusher = new AsyncFlusher(aStream);
 
@@ -1046,7 +1046,7 @@ FlushHelper::AsyncFlusher::DoStreamWork(nsISupports* aStream)
 nsresult
 OpenStreamHelper::DoAsyncRun(nsISupports* aStream)
 {
-  NS_ASSERTION(aStream, "Passed a null stream!");
+  MOZ_ASSERT(aStream, "Passed a null stream!");
 
   uint32_t flags = FileStreamWrapper::NOTIFY_CLOSE |
                    FileStreamWrapper::NOTIFY_DESTROY;
