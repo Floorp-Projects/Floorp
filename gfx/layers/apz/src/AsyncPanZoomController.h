@@ -674,11 +674,11 @@ private:
      compositor thread. */
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
-  Monitor mRefPtrMonitor;
+  mutable Monitor mRefPtrMonitor;
 
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
-  already_AddRefed<GeckoContentController> GetGeckoContentController();
-  already_AddRefed<GestureEventListener> GetGestureEventListener();
+  already_AddRefed<GeckoContentController> GetGeckoContentController() const;
+  already_AddRefed<GestureEventListener> GetGestureEventListener() const;
 
   // If we are sharing our frame metrics with content across processes
   bool mSharingFrameMetricsAcrossProcesses;
