@@ -398,7 +398,7 @@ const ExpectComparisonTo = {
   //  "matrix3d(...)"
   //  [ 1, 0, 0, ... ]
   //  { a: 1, ty: 23 } etc.
-  function convertTo3dMatrix(matrixLike) {
+  window.convertTo3dMatrix = function(matrixLike) {
     if (typeof(matrixLike) == "string") {
       return convertStringTo3dMatrix(matrixLike);
     } else if (Array.isArray(matrixLike)) {
@@ -408,7 +408,13 @@ const ExpectComparisonTo = {
     } else {
       return null;
     }
-  }
+  };
+
+  // In future most of these methods should be able to be replaced
+  // with DOMMatrix
+  window.isInvertible = function(matrix) {
+    return getDeterminant(matrix) != 0;
+  };
 
   // Converts strings of the format "matrix(...)" and "matrix3d(...)" to a 3d
   // matrix
@@ -497,6 +503,37 @@ const ExpectComparisonTo = {
            matrix[2][0] === 0 && matrix[2][1] === 0 &&
            matrix[2][2] === 1 && matrix[2][3] === 0 &&
            matrix[3][2] === 0 && matrix[3][3] === 1;
+  }
+
+  function getDeterminant(matrix) {
+    if (is2d(matrix)) {
+      return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
+    }
+
+    return   matrix[0][3] * matrix[1][2] * matrix[2][1] * matrix[3][0]
+           - matrix[0][2] * matrix[1][3] * matrix[2][1] * matrix[3][0]
+           - matrix[0][3] * matrix[1][1] * matrix[2][2] * matrix[3][0]
+           + matrix[0][1] * matrix[1][3] * matrix[2][2] * matrix[3][0]
+           + matrix[0][2] * matrix[1][1] * matrix[2][3] * matrix[3][0]
+           - matrix[0][1] * matrix[1][2] * matrix[2][3] * matrix[3][0]
+           - matrix[0][3] * matrix[1][2] * matrix[2][0] * matrix[3][1]
+           + matrix[0][2] * matrix[1][3] * matrix[2][0] * matrix[3][1]
+           + matrix[0][3] * matrix[1][0] * matrix[2][2] * matrix[3][1]
+           - matrix[0][0] * matrix[1][3] * matrix[2][2] * matrix[3][1]
+           - matrix[0][2] * matrix[1][0] * matrix[2][3] * matrix[3][1]
+           + matrix[0][0] * matrix[1][2] * matrix[2][3] * matrix[3][1]
+           + matrix[0][3] * matrix[1][1] * matrix[2][0] * matrix[3][2]
+           - matrix[0][1] * matrix[1][3] * matrix[2][0] * matrix[3][2]
+           - matrix[0][3] * matrix[1][0] * matrix[2][1] * matrix[3][2]
+           + matrix[0][0] * matrix[1][3] * matrix[2][1] * matrix[3][2]
+           + matrix[0][1] * matrix[1][0] * matrix[2][3] * matrix[3][2]
+           - matrix[0][0] * matrix[1][1] * matrix[2][3] * matrix[3][2]
+           - matrix[0][2] * matrix[1][1] * matrix[2][0] * matrix[3][3]
+           + matrix[0][1] * matrix[1][2] * matrix[2][0] * matrix[3][3]
+           + matrix[0][2] * matrix[1][0] * matrix[2][1] * matrix[3][3]
+           - matrix[0][0] * matrix[1][2] * matrix[2][1] * matrix[3][3]
+           - matrix[0][1] * matrix[1][0] * matrix[2][2] * matrix[3][3]
+           + matrix[0][0] * matrix[1][1] * matrix[2][2] * matrix[3][3];
   }
 })();
 

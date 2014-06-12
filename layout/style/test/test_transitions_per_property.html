@@ -1955,11 +1955,6 @@ function addAsyncTransformTests() {
 }
 
 function *runTransformTest(test) {
-  // Skip the following test for now.
-  // We'll work around this properly in a subsequent patch in this queue.
-  if (test.start == "skew(45deg, 45deg)")
-    return;
-
   OMTAdiv.style.setProperty("transition-property", "none", "");
   OMTAdiv.style.setProperty("transform", test.start, "");
   OMTACs.getPropertyValue("transform");
@@ -1968,7 +1963,17 @@ function *runTransformTest(test) {
   OMTACs.getPropertyValue("transform");
   yield waitForPaints();
 
-  winUtils.advanceTimeAndRefresh(200000);
+  // If the start value produced a non-invertible matrix the layer won't be
+  // created yet so we need to force an extra sample.
+  if (!isTransformInvertible(test.start)) {
+    winUtils.advanceTimeAndRefresh(100000);
+    yield waitForPaints();
+    winUtils.advanceTimeAndRefresh(100000);
+    yield waitForPaints();
+  } else {
+    winUtils.advanceTimeAndRefresh(200000);
+    yield waitForPaints();
+  }
 
   omta_is_approx(OMTAdiv, "transform", OMTACs.getPropertyValue("transform"),
                  0.0001, RunningOn.Compositor,
@@ -1996,6 +2001,22 @@ function addAsyncOpacityTest() {
 
     OMTAdiv.style.removeProperty("transition");
   });
+}
+
+function isTransformInvertible(transformStr) {
+  var computedStr = transformStrToComputedStr(transformStr);
+  if (!transformStr)
+    return false;
+  var matrix = convertTo3dMatrix(computedStr);
+  if (matrix === null)
+    return false;
+  return isInvertible(matrix);
+}
+
+function transformStrToComputedStr(transformStr) {
+  var div = document.createElement("div");
+  div.style.transform = transformStr;
+  return window.getComputedStyle(div).transform;
 }
 </script>
 </pre>
