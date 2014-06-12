@@ -12,7 +12,7 @@ exports.items = [
   {
     name: "inject",
     description: gcli.lookup("injectDesc"),
-    manual: gcli.lookup("injectManual"),
+    manual: gcli.lookup("injectManual2"),
     params: [{
       name: 'library',
       type: {
