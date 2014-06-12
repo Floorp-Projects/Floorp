@@ -1698,7 +1698,14 @@ JitFrameIterator::ionScriptFromCalleeToken() const
     switch (GetCalleeTokenTag(calleeToken())) {
       case CalleeToken_Function:
       case CalleeToken_Script:
-        return mode_ == ParallelExecution ? script()->parallelIonScript() : script()->ionScript();
+        switch (mode_) {
+          case SequentialExecution:
+            return script()->ionScript();
+          case ParallelExecution:
+            return script()->parallelIonScript();
+          default:
+            MOZ_ASSUME_UNREACHABLE("No such execution mode");
+        }
       default:
         MOZ_ASSUME_UNREACHABLE("unknown callee token type");
     }
