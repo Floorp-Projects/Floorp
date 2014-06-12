@@ -166,9 +166,7 @@ this.CommonUtils = {
     }
 
     // Create a special timer that we can add extra properties
-    let timer = {
-      __proto__: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
-    };
+    let timer = Object.create(Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer));
 
     // Provide an easy way to clear out the timer
     timer.clear = function() {
