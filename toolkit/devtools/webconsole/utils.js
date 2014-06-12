@@ -1748,16 +1748,20 @@ function JSTermHelpers(aOwner)
   };
 
   /**
-   * Print a string to the output, as-is.
+   * Print the String representation of a value to the output, as-is.
    *
-   * @param string aString
-   *        A string you want to output.
+   * @param any aValue
+   *        A value you want to output as a string.
    * @return void
    */
-  aOwner.sandbox.print = function JSTH_print(aString)
+  aOwner.sandbox.print = function JSTH_print(aValue)
   {
     aOwner.helperResult = { rawOutput: true };
-    return String(aString);
+    // Waiving Xrays here allows us to see a closer representation of the
+    // underlying object. This may execute arbitrary content code, but that
+    // code will run with content privileges, and the result will be rendered
+    // inert by coercing it to a String.
+    return String(Cu.waiveXrays(aValue));
   };
 }
 exports.JSTermHelpers = JSTermHelpers;

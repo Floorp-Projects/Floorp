@@ -31,6 +31,9 @@
       // Use the larger google_root_pems pinset instead of google
       "google": "google_root_pems"
     },
+    "production_pinsets": [
+      "google_root_pems"
+    ],
     "production_domains": [
       // Chrome's test domain.
       "pinningtest.appspot.com",
