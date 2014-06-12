@@ -237,6 +237,11 @@ AutoJSAPIWithErrorsReportedToWindow::AutoJSAPIWithErrorsReportedToWindow(nsIScri
 {
 }
 
+AutoJSAPIWithErrorsReportedToWindow::AutoJSAPIWithErrorsReportedToWindow(nsIGlobalObject* aGlobalObject)
+  : AutoJSAPI(FindJSContext(aGlobalObject), /* aIsMainThread = */ true)
+{
+}
+
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
