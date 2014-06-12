@@ -10417,7 +10417,7 @@ class MAsmJSPassStackArg : public MUnaryInstruction
     }
 };
 
-class MAsmJSCall MOZ_FINAL : public MInstruction
+class MAsmJSCall MOZ_FINAL : public MVariadicInstruction
 {
   public:
     class Callee {
@@ -10442,33 +10442,14 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     };
 
   private:
-    struct Operand {
-        AnyRegister reg;
-        MUse use;
-    };
-
     CallSiteDesc desc_;
     Callee callee_;
-    FixedList<MUse> operands_;
     FixedList<AnyRegister> argRegs_;
     size_t spIncrement_;
-
-    void initOperand(size_t index, MDefinition *operand) {
-        // FixedList doesn't initialize its elements, so do an unchecked init.
-        operands_[index].initUnchecked(operand, this);
-    }
 
     MAsmJSCall(const CallSiteDesc &desc, Callee callee, size_t spIncrement)
      : desc_(desc), callee_(callee), spIncrement_(spIncrement)
     { }
-
-  protected:
-    MUse *getUseFor(size_t index) {
-        return &operands_[index];
-    }
-    const MUse *getUseFor(size_t index) const {
-        return &operands_[index];
-    }
 
   public:
     INSTRUCTION_HEADER(AsmJSCall);
@@ -10483,21 +10464,6 @@ class MAsmJSCall MOZ_FINAL : public MInstruction
     static MAsmJSCall *New(TempAllocator &alloc, const CallSiteDesc &desc, Callee callee,
                            const Args &args, MIRType resultType, size_t spIncrement);
 
-    size_t numOperands() const {
-        return operands_.length();
-    }
-    size_t indexOf(const MUse *u) const MOZ_FINAL MOZ_OVERRIDE {
-        MOZ_ASSERT(u >= &operands_[0]);
-        MOZ_ASSERT(u <= &operands_[numOperands() - 1]);
-        return u - &operands_[0];
-    }
-    void replaceOperand(size_t index, MDefinition *operand) MOZ_FINAL MOZ_OVERRIDE {
-        operands_[index].replaceProducer(operand);
-    }
-    MDefinition *getOperand(size_t index) const {
-        JS_ASSERT(index < numOperands());
-        return operands_[index].producer();
-    }
     size_t numArgs() const {
         return argRegs_.length();
     }
