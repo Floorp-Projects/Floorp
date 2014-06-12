@@ -391,17 +391,14 @@ void
 MDefinition::replaceAllUsesWith(MDefinition *dom)
 {
     JS_ASSERT(dom != nullptr);
-    if (dom == this)
-        return;
+    JS_ASSERT(dom != this);
 
     for (size_t i = 0, e = numOperands(); i < e; i++)
         getOperand(i)->setUseRemovedUnchecked();
 
-    for (MUseIterator i(usesBegin()); i != usesEnd(); ) {
-        MUse *use = *i++;
-        JS_ASSERT(use->producer() == this);
-        use->replaceProducer(dom);
-    }
+    for (MUseIterator i(usesBegin()); i != usesEnd(); i++)
+        i->setProducerUnchecked(dom);
+    dom->uses_.takeElements(uses_);
 }
 
 bool
