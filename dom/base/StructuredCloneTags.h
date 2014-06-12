@@ -23,7 +23,7 @@ enum StructuredCloneTags {
   SCTAG_DOM_FILE_WITHOUT_LASTMODIFIEDDATE,
 
   SCTAG_DOM_FILELIST,
-  SCTAG_DOM_FILEHANDLE,
+  SCTAG_DOM_MUTABLEFILE,
   SCTAG_DOM_FILE,
 
   // These tags are used for both main thread and workers.

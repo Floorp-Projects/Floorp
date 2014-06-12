@@ -10,9 +10,9 @@
 #include "FileRequest.h"
 #include "FileService.h"
 #include "js/Value.h"
-#include "LockedFile.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
+#include "MutableFile.h"
 #include "nsDebug.h"
 #include "nsError.h"
 #include "nsIRequest.h"
@@ -22,14 +22,14 @@ namespace dom {
 
 namespace {
 
-LockedFile* gCurrentLockedFile = nullptr;
+FileHandle* gCurrentFileHandle = nullptr;
 
 } // anonymous namespace
 
-FileHelper::FileHelper(LockedFile* aLockedFile,
+FileHelper::FileHelper(FileHandle* aFileHandle,
                        FileRequest* aFileRequest)
-: mFileHandle(aLockedFile->mFileHandle),
-  mLockedFile(aLockedFile),
+: mMutableFile(aFileHandle->mMutableFile),
+  mFileHandle(aFileHandle),
   mFileRequest(aFileRequest),
   mResultCode(NS_OK),
   mFinished(false)
@@ -39,7 +39,7 @@ FileHelper::FileHelper(LockedFile* aLockedFile,
 
 FileHelper::~FileHelper()
 {
-  MOZ_ASSERT(!mFileHandle && !mLockedFile && !mFileRequest && !mListener &&
+  MOZ_ASSERT(!mMutableFile && !mFileHandle && !mFileRequest && !mListener &&
              !mRequest, "Should have cleared this!");
 }
 
@@ -53,11 +53,11 @@ FileHelper::Enqueue()
   FileService* service = FileService::GetOrCreate();
   NS_ENSURE_TRUE(service, NS_ERROR_FAILURE);
 
-  nsresult rv = service->Enqueue(mLockedFile, this);
+  nsresult rv = service->Enqueue(mFileHandle, this);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mLockedFile) {
-    mLockedFile->OnNewRequest();
+  if (mFileHandle) {
+    mFileHandle->OnNewRequest();
   }
 
   return NS_OK;
@@ -75,11 +75,11 @@ FileHelper::AsyncRun(FileHelperListener* aListener)
   nsresult rv;
 
   nsCOMPtr<nsISupports> stream;
-  if (mLockedFile->mRequestMode == LockedFile::PARALLEL) {
-    rv = mLockedFile->CreateParallelStream(getter_AddRefs(stream));
+  if (mFileHandle->mRequestMode == FileHandle::PARALLEL) {
+    rv = mFileHandle->CreateParallelStream(getter_AddRefs(stream));
   }
   else {
-    rv = mLockedFile->GetOrCreateStream(getter_AddRefs(stream));
+    rv = mFileHandle->GetOrCreateStream(getter_AddRefs(stream));
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -129,7 +129,7 @@ FileHelper::OnStreamProgress(uint64_t aProgress, uint64_t aProgressMax)
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  if (mLockedFile->IsAborted()) {
+  if (mFileHandle->IsAborted()) {
     NS_ASSERTION(mRequest, "Should have a request!\n");
 
     nsresult rv = mRequest->Cancel(NS_BINDING_ABORTED);
@@ -146,12 +146,12 @@ FileHelper::OnStreamProgress(uint64_t aProgress, uint64_t aProgressMax)
 }
 
 // static
-LockedFile*
-FileHelper::GetCurrentLockedFile()
+FileHandle*
+FileHelper::GetCurrentFileHandle()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  return gCurrentLockedFile;
+  return gCurrentFileHandle;
 }
 
 nsresult
@@ -169,8 +169,8 @@ FileHelper::ReleaseObjects()
 {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
+  mMutableFile = nullptr;
   mFileHandle = nullptr;
-  mLockedFile = nullptr;
   mFileRequest = nullptr;
   mListener = nullptr;
   mRequest = nullptr;
@@ -187,14 +187,14 @@ FileHelper::Finish()
 
   mFinished = true;
 
-  if (mLockedFile->IsAborted()) {
+  if (mFileHandle->IsAborted()) {
     // Always fire a "error" event with ABORT_ERR if the transaction was
     // aborted, even if the request succeeded or failed with another error.
     mResultCode = NS_ERROR_DOM_FILEHANDLE_ABORT_ERR;
   }
 
-  LockedFile* oldLockedFile = gCurrentLockedFile;
-  gCurrentLockedFile = mLockedFile;
+  FileHandle* oldFileHandle = gCurrentFileHandle;
+  gCurrentFileHandle = mFileHandle;
 
   if (mFileRequest) {
     nsresult rv = mFileRequest->NotifyHelperCompleted(this);
@@ -203,16 +203,16 @@ FileHelper::Finish()
     }
   }
 
-  NS_ASSERTION(gCurrentLockedFile == mLockedFile, "Should be unchanged!");
-  gCurrentLockedFile = oldLockedFile;
+  MOZ_ASSERT(gCurrentFileHandle == mFileHandle, "Should be unchanged!");
+  gCurrentFileHandle = oldFileHandle;
 
-  mLockedFile->OnRequestFinished();
+  mFileHandle->OnRequestFinished();
 
   mListener->OnFileHelperComplete(this);
 
   ReleaseObjects();
 
-  MOZ_ASSERT(!(mFileHandle || mLockedFile || mFileRequest || mListener ||
+  MOZ_ASSERT(!(mMutableFile || mFileHandle || mFileRequest || mListener ||
                mRequest), "Subclass didn't call FileHelper::ReleaseObjects!");
 
 }

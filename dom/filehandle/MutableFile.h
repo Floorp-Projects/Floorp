@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_FileHandle_h
-#define mozilla_dom_FileHandle_h
+#ifndef mozilla_dom_MutableFile_h
+#define mozilla_dom_MutableFile_h
 
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
@@ -26,8 +26,8 @@ class ErrorResult;
 namespace dom {
 
 class DOMRequest;
+class FileHandle;
 class FileService;
-class LockedFile;
 class FinishHelper;
 class FileHelper;
 
@@ -36,16 +36,16 @@ class FileInfo;
 } // namespace indexedDB
 
 /**
- * This class provides a default FileHandle implementation, but it can be also
+ * This class provides a default MutableFile implementation, but it can be also
  * subclassed. The subclass can override implementation of GetFileId,
  * GetFileInfo, IsShuttingDown, IsInvalid, CreateStream, SetThreadLocals,
  * UnsetThreadLocals and CreateFileObject.
- * (for example IDBFileHandle provides IndexedDB specific implementation).
+ * (for example IDBMutableFile provides IndexedDB specific implementation).
  */
-class FileHandle : public DOMEventTargetHelper
+class MutableFile : public DOMEventTargetHelper
 {
+  friend class FileHandle;
   friend class FileService;
-  friend class LockedFile;
   friend class FinishHelper;
   friend class FileHelper;
 
@@ -102,7 +102,7 @@ public:
   }
 
   virtual already_AddRefed<nsIDOMFile>
-  CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize);
+  CreateFileObject(FileHandle* aFileHandle, uint32_t aFileSize);
 
   // nsWrapperCache
   virtual JSObject*
@@ -127,7 +127,7 @@ public:
     aType = mType;
   }
 
-  already_AddRefed<LockedFile>
+  already_AddRefed<FileHandle>
   Open(FileMode aMode, ErrorResult& aError);
 
   already_AddRefed<DOMRequest>
@@ -137,11 +137,11 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 protected:
-  FileHandle(nsPIDOMWindow* aWindow);
+  MutableFile(nsPIDOMWindow* aWindow);
 
-  FileHandle(DOMEventTargetHelper* aOwner);
+  MutableFile(DOMEventTargetHelper* aOwner);
 
-  virtual ~FileHandle();
+  virtual ~MutableFile();
 
   nsString mName;
   nsString mType;
@@ -155,4 +155,4 @@ protected:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_FileHandle_h
+#endif // mozilla_dom_MutableFile_h

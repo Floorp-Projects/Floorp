@@ -4,15 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "FileHandle.h"
+#include "MutableFile.h"
 
 #include "File.h"
+#include "FileHandle.h"
 #include "FileRequest.h"
 #include "FileService.h"
-#include "LockedFile.h"
 #include "MetadataHelper.h"
 #include "mozilla/Assertions.h"
-#include "mozilla/dom/FileHandleBinding.h"
+#include "mozilla/dom/MutableFileBinding.h"
 #include "mozilla/ErrorResult.h"
 #include "nsAutoPtr.h"
 #include "nsContentUtils.h"
@@ -30,12 +30,12 @@ namespace {
 class GetFileHelper : public MetadataHelper
 {
 public:
-  GetFileHelper(LockedFile* aLockedFile,
+  GetFileHelper(FileHandle* aFileHandle,
                 FileRequest* aFileRequest,
                 MetadataParameters* aParams,
-                FileHandle* aFileHandle)
-  : MetadataHelper(aLockedFile, aFileRequest, aParams),
-    mFileHandle(aFileHandle)
+                MutableFile* aMutableFile)
+  : MetadataHelper(aFileHandle, aFileRequest, aParams),
+    mMutableFile(aMutableFile)
   { }
 
   virtual nsresult
@@ -45,40 +45,40 @@ public:
   virtual void
   ReleaseObjects() MOZ_OVERRIDE
   {
-    mFileHandle = nullptr;
+    mMutableFile = nullptr;
 
     MetadataHelper::ReleaseObjects();
   }
 
 private:
-  nsRefPtr<FileHandle> mFileHandle;
+  nsRefPtr<MutableFile> mMutableFile;
 };
 
 } // anonymous namespace
 
-FileHandle::FileHandle(nsPIDOMWindow* aWindow)
+MutableFile::MutableFile(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
 {
 }
 
-FileHandle::FileHandle(DOMEventTargetHelper* aOwner)
+MutableFile::MutableFile(DOMEventTargetHelper* aOwner)
   : DOMEventTargetHelper(aOwner)
 {
 }
 
-FileHandle::~FileHandle()
+MutableFile::~MutableFile()
 {
 }
 
 bool
-FileHandle::IsShuttingDown()
+MutableFile::IsShuttingDown()
 {
   return FileService::IsShuttingDown();
 }
 
 // virtual
 already_AddRefed<nsISupports>
-FileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
+MutableFile::CreateStream(nsIFile* aFile, bool aReadOnly)
 {
   nsresult rv;
 
@@ -103,23 +103,23 @@ FileHandle::CreateStream(nsIFile* aFile, bool aReadOnly)
 
 // virtual
 already_AddRefed<nsIDOMFile>
-FileHandle::CreateFileObject(LockedFile* aLockedFile, uint32_t aFileSize)
+MutableFile::CreateFileObject(FileHandle* aFileHandle, uint32_t aFileSize)
 {
   nsCOMPtr<nsIDOMFile> file =
-    new File(mName, mType, aFileSize, mFile, aLockedFile);
+    new File(mName, mType, aFileSize, mFile, aFileHandle);
 
   return file.forget();
 }
 
 // virtual
 JSObject*
-FileHandle::WrapObject(JSContext* aCx)
+MutableFile::WrapObject(JSContext* aCx)
 {
-  return FileHandleBinding::Wrap(aCx, this);
+  return MutableFileBinding::Wrap(aCx, this);
 }
 
-already_AddRefed<LockedFile>
-FileHandle::Open(FileMode aMode, ErrorResult& aError)
+already_AddRefed<FileHandle>
+MutableFile::Open(FileMode aMode, ErrorResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -128,17 +128,17 @@ FileHandle::Open(FileMode aMode, ErrorResult& aError)
     return nullptr;
   }
 
-  nsRefPtr<LockedFile> lockedFile = LockedFile::Create(this, aMode);
-  if (!lockedFile) {
+  nsRefPtr<FileHandle> fileHandle = FileHandle::Create(this, aMode);
+  if (!fileHandle) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
 
-  return lockedFile.forget();
+  return fileHandle.forget();
 }
 
 already_AddRefed<DOMRequest>
-FileHandle::GetFile(ErrorResult& aError)
+MutableFile::GetFile(ErrorResult& aError)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -147,20 +147,20 @@ FileHandle::GetFile(ErrorResult& aError)
     return nullptr;
   }
 
-  nsRefPtr<LockedFile> lockedFile =
-    LockedFile::Create(this, FileMode::Readonly, LockedFile::PARALLEL);
-  if (!lockedFile) {
+  nsRefPtr<FileHandle> fileHandle =
+    FileHandle::Create(this, FileMode::Readonly, FileHandle::PARALLEL);
+  if (!fileHandle) {
     aError.Throw(NS_ERROR_DOM_FILEHANDLE_UNKNOWN_ERR);
     return nullptr;
   }
 
   nsRefPtr<FileRequest> request =
-    FileRequest::Create(GetOwner(), lockedFile, /* aWrapAsDOMRequest */ true);
+    FileRequest::Create(GetOwner(), fileHandle, /* aWrapAsDOMRequest */ true);
 
   nsRefPtr<MetadataParameters> params = new MetadataParameters(true, false);
 
   nsRefPtr<GetFileHelper> helper =
-    new GetFileHelper(lockedFile, request, params, this);
+    new GetFileHelper(fileHandle, request, params, this);
 
   nsresult rv = helper->Enqueue();
   if (NS_FAILED(rv)) {
@@ -176,7 +176,7 @@ GetFileHelper::GetSuccessResult(JSContext* aCx,
                                 JS::MutableHandle<JS::Value> aVal)
 {
   nsCOMPtr<nsIDOMFile> domFile =
-    mFileHandle->CreateFileObject(mLockedFile, mParams->Size());
+    mMutableFile->CreateFileObject(mFileHandle, mParams->Size());
 
   nsresult rv =
     nsContentUtils::WrapNative(aCx, domFile, &NS_GET_IID(nsIDOMFile), aVal);
