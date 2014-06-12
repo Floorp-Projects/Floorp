@@ -916,13 +916,14 @@ MediaStreamGraphImpl::PlayAudio(MediaStream* aStream,
 
     // offset and audioOutput.mLastTickWritten can differ by at most one sample,
     // because of the rounding issue. We track that to ensure we don't skip a
-    // sample, or play a sample twice.
+    // sample. One sample may be played twice, but this should not happen
+    // again during an unblocked sequence of track samples.
     TrackTicks offset = track->TimeToTicksRoundDown(GraphTimeToStreamTime(aStream, aFrom));
     if (audioOutput.mLastTickWritten &&
         audioOutput.mLastTickWritten != offset) {
       // If there is a global underrun of the MSG, this property won't hold, and
       // we reset the sample count tracking.
-      if (mozilla::Abs(audioOutput.mLastTickWritten - offset) == 1) {
+      if (offset - audioOutput.mLastTickWritten == 1) {
         offset = audioOutput.mLastTickWritten;
       }
     }
