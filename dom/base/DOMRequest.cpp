@@ -83,7 +83,7 @@ DOMRequest::GetReadyState(nsAString& aReadyState)
 NS_IMETHODIMP
 DOMRequest::GetResult(JS::MutableHandle<JS::Value> aResult)
 {
-  aResult.set(Result());
+  GetResult(nullptr, aResult);
   return NS_OK;
 }
 

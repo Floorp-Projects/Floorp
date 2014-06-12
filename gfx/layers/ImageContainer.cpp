@@ -641,13 +641,15 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
     return nullptr;
   }
 
+  TextureClientAutoUnlock autoUnolck(textureClient);
   {
     // We must not keep a reference to the DrawTarget after it has been unlocked.
-    RefPtr<DrawTarget> dt = textureClient->GetAsDrawTarget();
+    DrawTarget* dt = textureClient->BorrowDrawTarget();
+    if (!dt) {
+      return nullptr;
+    }
     dt->CopySurface(surface, IntRect(IntPoint(), surface->GetSize()), IntPoint());
   }
-
-  textureClient->Unlock();
 
   mTextureClients.Put(forwarder->GetSerial(), textureClient);
   return textureClient;

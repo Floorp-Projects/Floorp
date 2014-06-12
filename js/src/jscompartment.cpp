@@ -612,7 +612,7 @@ JSCompartment::sweep(FreeOp *fop, bool releaseTypes)
 
 #ifdef JS_ION
         if (jitCompartment_)
-            jitCompartment_->sweep(fop);
+            jitCompartment_->sweep(fop, this);
 #endif
 
         /*

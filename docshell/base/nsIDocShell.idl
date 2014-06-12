@@ -114,6 +114,7 @@ interface nsIDocShell : nsIDocShellTreeItem
   const long INTERNAL_LOAD_FLAGS_IS_SRCDOC               = 0x40;
 
   const long INTERNAL_LOAD_FLAGS_FIXUP_SCHEME_TYPOS      = 0x80;
+  const long INTERNAL_LOAD_FLAGS_NO_OPENER               = 0x100;
 
   /**
    * Loads the given URI.  This method is identical to loadURI(...) except

@@ -337,7 +337,7 @@ private:
    */
   already_AddRefed<nsIContent> CreateGenConTextNode(nsFrameConstructorState& aState,
                                                     const nsString& aString,
-                                                    nsCOMPtr<nsIDOMCharacterData>* aText,
+                                                    nsRefPtr<nsTextNode>* aText,
                                                     nsGenConInitializer* aInitializer);
 
   /**
