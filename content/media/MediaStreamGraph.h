@@ -494,15 +494,15 @@ public:
   }
   TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
   {
-    return mozilla::TimeToTicksRoundUp(aRate, aTime);
+    return RateConvertTicksRoundUp(aRate, mBuffer.GraphRate(), aTime);
   }
   TrackTicks TimeToTicksRoundDown(TrackRate aRate, StreamTime aTime)
   {
-    return mozilla::TimeToTicksRoundDown(aRate, aTime);
+    return RateConvertTicksRoundDown(aRate, mBuffer.GraphRate(), aTime);
   }
   StreamTime TicksToTimeRoundDown(TrackRate aRate, TrackTicks aTicks)
   {
-    return mozilla::TicksToTimeRoundDown(aRate, aTicks);
+    return RateConvertTicksRoundDown(mBuffer.GraphRate(), aRate, aTicks);
   }
   /**
    * Convert graph time to stream time. aTime must be <= mStateComputedTime
