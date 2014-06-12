@@ -14,6 +14,11 @@ function handleRequest(request, response) {
     // to avoid garbage collection
     timer = null;
     response.setStatusLine(request.httpVersion, index == 1 ? 101 : index * 100, "Meh");
+
+    response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    response.setHeader("Pragma", "no-cache");
+    response.setHeader("Expires", "0");
+
     response.setHeader("Content-Type", "text/" + index, false);
     response.write(new Array(index * 10).join(index)); // + 0.01 KB
     response.finish();

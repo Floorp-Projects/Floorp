@@ -86,10 +86,8 @@ function test() {
 
       ok(requestItem.attachment.requestHeaders,
         "There should be a requestHeaders attachment available.");
-      ok(requestItem.attachment.requestHeaders.headers.length >= 6,
+      is(requestItem.attachment.requestHeaders.headers.length, 8,
         "The requestHeaders attachment has an incorrect |headers| property.");
-      // Can't test for an exact total number of headers, because it seems to
-      // vary across pgo/non-pgo builds.
       isnot(requestItem.attachment.requestHeaders.headersSize, 0,
         "The requestHeaders attachment has an incorrect |headersSize| property.");
       // Can't test for the exact request headers size because the value may
@@ -118,9 +116,9 @@ function test() {
 
       ok(requestItem.attachment.responseHeaders,
         "There should be a responseHeaders attachment available.");
-      is(requestItem.attachment.responseHeaders.headers.length, 6,
+      is(requestItem.attachment.responseHeaders.headers.length, 9,
         "The responseHeaders attachment has an incorrect |headers| property.");
-      is(requestItem.attachment.responseHeaders.headersSize, 173,
+      is(requestItem.attachment.responseHeaders.headersSize, 255,
         "The responseHeaders attachment has an incorrect |headersSize| property.");
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS);
@@ -146,7 +144,7 @@ function test() {
         "The status attachment has an incorrect value.");
       is(requestItem.attachment.statusText, "Och Aye",
         "The statusText attachment has an incorrect value.");
-      is(requestItem.attachment.headersSize, 173,
+      is(requestItem.attachment.headersSize, 255,
         "The headersSize attachment has an incorrect value.");
 
       verifyRequestItemTarget(requestItem, "GET", SIMPLE_SJS, {

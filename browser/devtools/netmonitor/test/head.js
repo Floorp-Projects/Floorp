@@ -97,24 +97,49 @@ function removeTab(aTab, aWindow) {
   targetBrowser.removeTab(aTab);
 }
 
+function waitForNavigation(aTarget) {
+  let deferred = promise.defer();
+  aTarget.once("will-navigate", () => {
+    aTarget.once("navigate", () => {
+      deferred.resolve();
+    });
+  });
+  return deferred.promise;
+}
+
+function reconfigureTab(aTarget, aOptions) {
+  let deferred = promise.defer();
+  aTarget.activeTab.reconfigure(aOptions, deferred.resolve);
+  return deferred.promise;
+};
+
+function toggleCache(aTarget, aEnabled) {
+  let options = { cacheEnabled: aEnabled, performReload: true };
+  let navigationFinished = waitForNavigation(aTarget);
+  return reconfigureTab(aTarget, options).then(() => navigationFinished);
+}
+
 function initNetMonitor(aUrl, aWindow) {
   info("Initializing a network monitor pane.");
 
-  return addTab(aUrl).then((aTab) => {
+  return Task.spawn(function*() {
+    let tab = yield addTab(aUrl);
     info("Net tab added successfully: " + aUrl);
 
-    let deferred = promise.defer();
-    let debuggee = aTab.linkedBrowser.contentWindow.wrappedJSObject;
-    let target = TargetFactory.forTab(aTab);
+    let debuggee = tab.linkedBrowser.contentWindow.wrappedJSObject;
+    let target = TargetFactory.forTab(tab);
 
-    gDevTools.showToolbox(target, "netmonitor").then((aToolbox) => {
-      info("Netork monitor pane shown successfully.");
+    yield target.makeRemote();
+    info("Target remoted.");
 
-      let monitor = aToolbox.getCurrentPanel();
-      deferred.resolve([aTab, debuggee, monitor]);
-    });
+    yield toggleCache(target, false);
+    info("Network cache disabled");
 
-    return deferred.promise;
+    let toolbox = yield gDevTools.showToolbox(target, "netmonitor");
+    info("Netork monitor pane shown successfully.");
+
+    let monitor = toolbox.getCurrentPanel();
+    return [tab, debuggee, monitor];
   });
 }
 
