@@ -63,7 +63,7 @@ add_task(function* test_setup() {
   gPolicy = new Experiments.Policy();
   patchPolicy(gPolicy, {
     updatechannel: () => "nightly",
-    healthReportPayload: () => {},
+    healthReportPayload: () => "{}",
     oneshotTimer: (callback, timeout, thisObj, name) => gTimerScheduleOffset = timeout,
   });
 });
