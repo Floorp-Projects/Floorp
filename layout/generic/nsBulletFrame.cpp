@@ -799,7 +799,7 @@ struct CJKIdeographicData {
   uint8_t lang;
   bool informal;
 };
-static const char16_t gJapaneseNegative[] = {
+extern const char16_t gJapaneseNegative[] = {
   0x30de, 0x30a4, 0x30ca, 0x30b9, 0x0000
 };
 static const CJKIdeographicData gDataJapaneseInformal = {
@@ -824,7 +824,7 @@ static const CJKIdeographicData gDataJapaneseFormal = {
   JAPANESE,                   // lang
   false                       // informal
 };
-static const char16_t gKoreanNegative[] = {
+extern const char16_t gKoreanNegative[] = {
   0xb9c8, 0xc774, 0xb108, 0xc2a4, 0x0020, 0x0000
 };
 static const CJKIdeographicData gDataKoreanHangulFormal = {
@@ -860,7 +860,7 @@ static const CJKIdeographicData gDataKoreanHanjaFormal = {
   KOREAN,                     // lang
   false                       // informal
 };
-static const char16_t gSimpChineseNegative[] = {
+extern const char16_t gSimpChineseNegative[] = {
   0x8d1f, 0x0000
 };
 static const CJKIdeographicData gDataSimpChineseInformal = {
@@ -885,7 +885,7 @@ static const CJKIdeographicData gDataSimpChineseFormal = {
   CHINESE,                    // lang
   false                       // informal
 };
-static const char16_t gTradChineseNegative[] = {
+extern const char16_t gTradChineseNegative[] = {
   0x8ca0, 0x0000
 };
 static const CJKIdeographicData gDataTradChineseInformal = {
