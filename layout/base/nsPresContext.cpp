@@ -240,6 +240,8 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   mUserFontSet = nullptr;
   mUserFontSetDirty = true;
 
+  mCounterStylesDirty = true;
+
   // if text perf logging enabled, init stats struct
   PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textperf);
   if (log && log->level >= PR_LOG_WARNING) {
@@ -1875,6 +1877,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   mUsesRootEMUnits = false;
   mUsesViewportUnits = false;
   RebuildUserFontSet();
+  RebuildCounterStyles();
 
   RestyleManager()->RebuildAllStyleData(aExtraHint);
 }
@@ -2207,6 +2210,46 @@ nsPresContext::UserFontSetUpdated()
   //      reuse of cached data even when no style rules have changed.
 
   PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+}
+
+void
+nsPresContext::FlushCounterStyles()
+{
+  if (!mShell) {
+    return; // we've been torn down
+  }
+  if (mCounterStyleManager->IsInitial()) {
+    // Still in its initial state, no need to clean.
+    return;
+  }
+
+  if (mCounterStylesDirty) {
+    bool changed = mCounterStyleManager->NotifyRuleChanged();
+    if (changed) {
+      PresShell()->NotifyCounterStylesAreDirty();
+      PostRebuildAllStyleDataEvent(NS_STYLE_HINT_REFLOW);
+    }
+    mCounterStylesDirty = false;
+  }
+}
+
+void
+nsPresContext::RebuildCounterStyles()
+{
+  if (mCounterStyleManager->IsInitial()) {
+    // Still in its initial state, no need to reset.
+    return;
+  }
+
+  mCounterStylesDirty = true;
+  mDocument->SetNeedStyleFlush();
+  if (!mPostedFlushCounterStyles) {
+    nsCOMPtr<nsIRunnable> ev =
+      NS_NewRunnableMethod(this, &nsPresContext::HandleRebuildCounterStyles);
+    if (NS_SUCCEEDED(NS_DispatchToCurrentThread(ev))) {
+      mPostedFlushCounterStyles = true;
+    }
+  }
 }
 
 void

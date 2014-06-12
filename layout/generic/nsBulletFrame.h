@@ -88,7 +88,9 @@ public:
                                 nsString& aResult);
 
   /* get list item text, with '.' */
-  void GetListItemText(const nsStyleList& aStyleList, nsString& aResult);
+  void GetListItemText(nsAString& aResult);
+
+  void GetSpokenText(nsAString& aText);
                          
   void PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                    const nsRect& aDirtyRect, uint32_t aFlags);
