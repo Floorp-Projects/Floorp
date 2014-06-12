@@ -108,7 +108,7 @@ function loadUITourTestPage(callback, host = "https://example.com/") {
   gBrowser.selectedTab = gTestTab;
 
   gTestTab.linkedBrowser.addEventListener("load", function onLoad() {
-    gTestTab.linkedBrowser.removeEventListener("load", onLoad);
+    gTestTab.linkedBrowser.removeEventListener("load", onLoad, true);
 
     gContentWindow = Components.utils.waiveXrays(gTestTab.linkedBrowser.contentDocument.defaultView);
     gContentAPI = gContentWindow.Mozilla.UITour;
