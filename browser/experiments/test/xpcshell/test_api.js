@@ -76,7 +76,7 @@ add_task(function* test_setup() {
 
   gReporter = yield getReporter("json_payload_simple");
   yield gReporter.collectMeasurements();
-  let payload = yield gReporter.getJSONPayload(true);
+  let payload = yield gReporter.getJSONPayload(false);
   do_register_cleanup(() => gReporter._shutdown());
 
   gPolicy = new Experiments.Policy();
