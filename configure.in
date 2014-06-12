@@ -4166,14 +4166,14 @@ AC_SUBST(MOZ_B2G_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 dnl ========================================================
-dnl Check android sdk version depending on mobile target
+dnl Check Android SDK version depending on mobile target.
 dnl ========================================================
 
 if test -z "$gonkdir" ; then
     # Minimum Android SDK API Level we require.
     case "$MOZ_BUILD_APP" in
     mobile/android)
-        android_min_api_level=16
+        android_min_api_level=17
         case "$target" in
         *-android*|*-linuxandroid*)
             :
@@ -7670,19 +7670,6 @@ if test "$MOZ_CHROME_FILE_FORMAT" != "jar" &&
     test "$MOZ_CHROME_FILE_FORMAT" != "omni"; then
     AC_MSG_ERROR([--enable-chrome-format must be set to either jar, flat, or omni])
 fi
-
-dnl ========================================================
-dnl = Enable Support for devtools webide
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(devtools-webide,
-[  --enable-devtools-webide Set compile flags necessary for compiling devtools webide ],
-MOZ_DEVTOOLS_WEBIDE=1,
-MOZ_DEVTOOLS_WEBIDE= )
-
-if test -n "$MOZ_DEVTOOLS_WEBIDE"; then
-    AC_DEFINE(MOZ_DEVTOOLS_WEBIDE)
-fi
-AC_SUBST(MOZ_DEVTOOLS_WEBIDE)
 
 dnl =========================================================
 dnl Omnijar packaging (bug 552121)

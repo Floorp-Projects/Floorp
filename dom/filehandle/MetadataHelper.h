@@ -76,10 +76,10 @@ private:
 class MetadataHelper : public FileHelper
 {
 public:
-  MetadataHelper(LockedFile* aLockedFile,
+  MetadataHelper(FileHandle* aFileHandle,
                  FileRequest* aFileRequest,
                  MetadataParameters* aParams)
-  : FileHelper(aLockedFile, aFileRequest),
+  : FileHelper(aFileHandle, aFileRequest),
     mParams(aParams)
   { }
 

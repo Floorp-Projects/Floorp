@@ -37,9 +37,9 @@
 #include "mozilla/dom/IDBCursorBinding.h"
 #include "mozilla/dom/IDBDatabaseBinding.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
-#include "mozilla/dom/IDBFileHandleBinding.h"
-#include "mozilla/dom/IDBKeyRangeBinding.h"
 #include "mozilla/dom/IDBIndexBinding.h"
+#include "mozilla/dom/IDBKeyRangeBinding.h"
+#include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/IDBObjectStoreBinding.h"
 #include "mozilla/dom/IDBOpenDBRequestBinding.h"
 #include "mozilla/dom/IDBRequestBinding.h"
@@ -419,9 +419,9 @@ IndexedDatabaseManager::DefineIndexedDB(JSContext* aCx,
       !IDBCursorWithValueBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBDatabaseBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBFactoryBinding::GetConstructorObject(aCx, aGlobal) ||
-      !IDBFileHandleBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBIndexBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBKeyRangeBinding::GetConstructorObject(aCx, aGlobal) ||
+      !IDBMutableFileBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBObjectStoreBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBOpenDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||
       !IDBRequestBinding::GetConstructorObject(aCx, aGlobal) ||

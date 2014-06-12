@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.db.Tab;
 import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.db.BrowserContract.Clients;
 import org.mozilla.gecko.sync.delegates.ClientsDataDelegate;
 import org.mozilla.gecko.sync.repositories.InactiveSessionException;
 import org.mozilla.gecko.sync.repositories.NoContentProviderException;
@@ -20,6 +21,7 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecor
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionGuidsSinceDelegate;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionWipeDelegate;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 
@@ -38,7 +40,7 @@ public class FennecTabsRepository extends Repository {
   }
 
   /**
-   * Note that — unlike most repositories — this will only fetch Fennec's tabs,
+   * Note that -- unlike most repositories -- this will only fetch Fennec's tabs,
    * and only store tabs from other clients.
    *
    * It will never retrieve tabs from other clients, or store tabs for Fennec,
@@ -52,6 +54,8 @@ public class FennecTabsRepository extends Repository {
     private final ContentProviderClient clientsProvider;
 
     protected final RepoUtils.QueryHelper tabsHelper;
+
+    protected final ClientsDatabaseAccessor clientsDatabase;
 
     protected ContentProviderClient getContentProvider(final Context context, final Uri uri) throws NoContentProviderException {
       ContentProviderClient client = context.getContentResolver().acquireContentProviderClient(uri);
@@ -68,6 +72,7 @@ public class FennecTabsRepository extends Repository {
       try {
         tabsProvider.release();
       } catch (Exception e) {}
+      clientsDatabase.close();
     }
 
     public FennecTabsRepositorySession(Repository repository, Context context) throws NoContentProviderException {
@@ -85,6 +90,7 @@ public class FennecTabsRepository extends Repository {
       }
 
       tabsHelper = new RepoUtils.QueryHelper(context, BrowserContractHelpers.TABS_CONTENT_URI, LOG_TAG);
+      clientsDatabase = new ClientsDatabaseAccessor(context);
     }
 
     @Override
@@ -239,6 +245,12 @@ public class FennecTabsRepository extends Repository {
 
             // If it exists, update the client record; otherwise insert.
             final ContentValues clientsCV = tabsRecord.getClientsContentValues();
+
+            final ClientRecord clientRecord = clientsDatabase.fetchClient(tabsRecord.guid);
+            if (null != clientRecord) {
+                // Null is an acceptable device type.
+                clientsCV.put(Clients.DEVICE_TYPE, clientRecord.type);
+            }
 
             Logger.debug(LOG_TAG, "Updating clients provider.");
             final int updated = clientsProvider.update(BrowserContractHelpers.CLIENTS_CONTENT_URI,

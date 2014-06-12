@@ -480,6 +480,11 @@ radio[disabled="true"] > .radio-check {
   box-shadow: inset 4px 0 0 0 #FF9500;
 }
 
+#categories[keyboard-navigation="true"]:-moz-focusring > .category[current] {
+  border-top: 1px #ffffff dotted;
+  border-bottom: 1px #ffffff dotted;
+}
+
 .category-name {
   line-height: 22px;
   font-size: 1.25rem;
