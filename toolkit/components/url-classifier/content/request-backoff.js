@@ -21,7 +21,7 @@ const HTTP_TEMPORARY_REDIRECT    = 307;
  * @param retryIncrement Time (ms) for each retry before backing off.
  * @param maxRequests Number the number of requests needed to trigger backoff
  * @param requestPeriod Number time (ms) in which maxRequests have to occur to
- *     trigger the backoff behavior
+ *     trigger the backoff behavior (0 to disable maxRequests)
  * @param timeoutIncrement Number time (ms) the starting timeout period
  *     we double this time for consecutive errors
  * @param maxTimeout Number time (ms) maximum timeout period
@@ -45,7 +45,7 @@ function RequestBackoff(maxErrors, retryIncrement,
 }
 
 /**
- * Reset the object for reuse.
+ * Reset the object for reuse. This deliberately doesn't clear requestTimes_.
  */
 RequestBackoff.prototype.reset = function() {
   this.numErrors_ = 0;

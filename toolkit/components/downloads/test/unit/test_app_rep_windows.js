@@ -257,7 +257,6 @@ function waitForUpdates() {
 
   let streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
     .getService(Ci.nsIUrlClassifierStreamUpdater);
-  streamUpdater.updateUrl = "http://localhost:4444/downloads";
 
   // Load up some update chunks for the safebrowsing server to serve. This
   // particular chunk contains the hash of whitelisted.com/ and
@@ -280,6 +279,7 @@ function waitForUpdates() {
   streamUpdater.downloadUpdates(
     "goog-downloadwhite-digest256",
     "goog-downloadwhite-digest256;\n",
+    "http://localhost:4444/downloads",
     updateSuccess, handleError, handleError);
   return deferred.promise;
 }

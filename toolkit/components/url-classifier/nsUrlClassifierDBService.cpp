@@ -94,7 +94,7 @@ static bool gShuttingDownThread = false;
 static mozilla::Atomic<int32_t> gFreshnessGuarantee(CONFIRM_AGE_DEFAULT_SEC);
 
 // -------------------------------------------------------------------------
-// Actual worker implemenatation
+// Actual worker implementation
 class nsUrlClassifierDBServiceWorker MOZ_FINAL :
   public nsIUrlClassifierDBServiceWorker
 {
@@ -428,8 +428,9 @@ nsUrlClassifierDBServiceWorker::BeginUpdate(nsIUrlClassifierUpdateObserver *obse
 {
   LOG(("nsUrlClassifierDBServiceWorker::BeginUpdate [%s]", PromiseFlatCString(tables).get()));
 
-  if (gShuttingDownThread)
+  if (gShuttingDownThread) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   NS_ENSURE_STATE(!mUpdateObserver);
 
@@ -523,8 +524,10 @@ nsUrlClassifierDBServiceWorker::UpdateStream(const nsACString& chunk)
 NS_IMETHODIMP
 nsUrlClassifierDBServiceWorker::FinishStream()
 {
-  if (gShuttingDownThread)
+  if (gShuttingDownThread) {
+    LOG(("shutting down"));
     return NS_ERROR_NOT_INITIALIZED;
+  }
 
   NS_ENSURE_STATE(mInStream);
   NS_ENSURE_STATE(mUpdateObserver);
@@ -822,13 +825,26 @@ nsUrlClassifierLookupCallback::LookupComplete(nsTArray<LookupResult>* results)
     // We will complete partial matches and matches that are stale.
     if (!result.Confirmed()) {
       nsCOMPtr<nsIUrlClassifierHashCompleter> completer;
+      nsCString gethashUrl;
+      nsresult rv;
+      nsCOMPtr<nsIUrlListManager> listManager = do_GetService(
+        "@mozilla.org/url-classifier/listmanager;1", &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = listManager->GetGethashUrl(result.mTableName, gethashUrl);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // We only allow empty gethashUrls for test- tables
+      if (gethashUrl.IsEmpty()) {
+        MOZ_ASSERT(
+          StringBeginsWith(result.mTableName, NS_LITERAL_CSTRING("test-")),
+          "Only test tables may have empty gethash urls");
+      }
       if (mDBService->GetCompleter(result.mTableName,
                                    getter_AddRefs(completer))) {
         nsAutoCString partialHash;
         partialHash.Assign(reinterpret_cast<char*>(&result.hash.prefix),
                            PREFIX_SIZE);
 
-        nsresult rv = completer->Complete(partialHash, this);
+        nsresult rv = completer->Complete(partialHash, gethashUrl, this);
         if (NS_SUCCEEDED(rv)) {
           mPendingCompletions++;
         }
@@ -1342,8 +1358,10 @@ nsUrlClassifierDBService::BeginUpdate(nsIUrlClassifierUpdateObserver *observer,
 {
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
-  if (mInUpdate)
+  if (mInUpdate) {
+    LOG(("Already updating, not available"));
     return NS_ERROR_NOT_AVAILABLE;
+  }
 
   mInUpdate = true;
 

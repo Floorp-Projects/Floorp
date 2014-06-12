@@ -102,7 +102,6 @@ function handleError(aEvent) {
 add_test(function test_update() {
   let streamUpdater = Cc["@mozilla.org/url-classifier/streamupdater;1"]
     .getService(Ci.nsIUrlClassifierStreamUpdater);
-  streamUpdater.updateUrl = "http://localhost:4444/downloads";
 
   // Load up some update chunks for the safebrowsing server to serve.
   registerTableUpdate("goog-downloadwhite-digest256", "data/digest1.chunk");
@@ -119,6 +118,7 @@ add_test(function test_update() {
   streamUpdater.downloadUpdates(
     "goog-downloadwhite-digest256",
     "goog-downloadwhite-digest256;\n",
+    "http://localhost:4444/downloads",
     updateSuccess, handleError, handleError);
 });
 
