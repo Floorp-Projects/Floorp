@@ -98,13 +98,13 @@ nsresult
 mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObjArg,
                                  const nsAString &charset, const char *uriStr,
                                  nsIIOService *serv, nsIPrincipal *principal,
-                                 bool reuseGlobal, JSScript **scriptp,
-                                 JSFunction **functionp)
+                                 bool reuseGlobal, JS::MutableHandleScript script,
+                                 JS::MutableHandleFunction function)
 {
     RootedObject target_obj(cx, targetObjArg);
 
-    *scriptp = nullptr;
-    *functionp = nullptr;
+    script.set(nullptr);
+    function.set(nullptr);
 
     // Instead of calling NS_OpenURI, we create the channel ourselves and call
     // SetContentType, to avoid expensive MIME type lookups (bug 632490).
@@ -158,22 +158,23 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
         }
 
         if (!reuseGlobal) {
-            *scriptp = JS::Compile(cx, target_obj, options, srcBuf);
+            JS::Compile(cx, target_obj, options, srcBuf, script);
         } else {
-            *functionp = JS::CompileFunction(cx, target_obj, options,
-                                             nullptr, 0, nullptr,
-                                             srcBuf);
+            JS::CompileFunction(cx, target_obj, options,
+                                nullptr, 0, nullptr,
+                                srcBuf,
+                                function);
         }
     } else {
         // We only use lazy source when no special encoding is specified because
         // the lazy source loader doesn't know the encoding.
         if (!reuseGlobal) {
             options.setSourceIsLazy(true);
-            *scriptp = JS::Compile(cx, target_obj, options, buf.get(), len);
+            script.set(JS::Compile(cx, target_obj, options, buf.get(), len));
         } else {
-            *functionp = JS::CompileFunction(cx, target_obj, options,
+            function.set(JS::CompileFunction(cx, target_obj, options,
                                              nullptr, 0, nullptr, buf.get(),
-                                             len);
+                                             len));
         }
     }
 
@@ -336,7 +337,7 @@ mozJSSubScriptLoader::DoLoadSubScriptWithOptions(const nsAString &url,
     if (!script) {
         rv = ReadScript(uri, cx, targetObj, options.charset,
                         static_cast<const char*>(uriStr.get()), serv,
-                        principal, reusingGlobal, script.address(), function.address());
+                        principal, reusingGlobal, &script, &function);
         writeScript = !!script;
     }
 
