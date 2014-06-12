@@ -4,7 +4,7 @@
 
 from setuptools import setup
 
-PACKAGE_VERSION = '0.5'
+PACKAGE_VERSION = '0.6'
 
 dependencies = ['mozdevice >= 0.29',
                 'mozfile >= 1.0',
