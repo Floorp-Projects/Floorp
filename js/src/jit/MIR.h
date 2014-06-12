@@ -1027,8 +1027,8 @@ class MNop : public MNullaryInstruction
     }
 };
 
-// No-op instruction. This cannot be moved or eliminated, and is intended for
-// protecting the input against follow-up optimization.
+// Truncation barrier. This is intended for protecting its input against
+// follow-up truncation optimizations.
 class MLimitedTruncate : public MUnaryInstruction
 {
   public:
@@ -1043,6 +1043,7 @@ class MLimitedTruncate : public MUnaryInstruction
     {
         setResultType(input->type());
         setResultTypeSet(input->resultTypeSet());
+        setMovable();
     }
 
   public:
