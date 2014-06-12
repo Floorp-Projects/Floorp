@@ -1,5 +1,7 @@
 package org.mozilla.gecko.tests;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.Element;
 import org.mozilla.gecko.R;
@@ -7,6 +9,7 @@ import org.mozilla.gecko.R;
 public class testBookmarksPanel extends AboutHomeTest {
     public void testBookmarksPanel() {
         final String BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        JSONObject data = null;
 
         // Add a mobile bookmark
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
@@ -31,17 +34,41 @@ public class testBookmarksPanel extends AboutHomeTest {
         final int tabCountInt = Integer.parseInt(tabCount.getText());
         Actions.EventExpecter tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[0]);
-        tabEventExpecter.blockForEvent();
+        try {
+            data = new JSONObject(tabEventExpecter.blockForEventData());
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting event data", e.toString());
+        }
         tabEventExpecter.unregisterListener();
         mAsserter.ok(mSolo.searchText(StringHelper.TITLE_PLACE_HOLDER), "Checking that the tab is not changed", "The tab was not changed");
+        // extra check here on the Tab:Added message to be sure the right tab opened
+        int tabID = 0;
+        try {
+            mAsserter.is(StringHelper.ABOUT_FIREFOX_URL, data.getString("uri"), "Checking tab uri");
+            tabID = data.getInt("tabID");
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception accessing event data", e.toString());
+        }
+        // close tab so about:firefox can be selected again
+        closeTab(tabID);
 
         // Test that "Open in Private Tab" works
-        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[1]);
+        openBookmarkContextMenu(StringHelper.DEFAULT_BOOKMARKS_URLS[0]);
         tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
         mSolo.clickOnText(StringHelper.BOOKMARK_CONTEXT_MENU_ITEMS[1]);
-        tabEventExpecter.blockForEvent();
+        try {
+            data = new JSONObject(tabEventExpecter.blockForEventData());
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception getting event data", e.toString());
+        }
         tabEventExpecter.unregisterListener();
         mAsserter.ok(mSolo.searchText(StringHelper.TITLE_PLACE_HOLDER), "Checking that the tab is not changed", "The tab was not changed");
+        // extra check here on the Tab:Added message to be sure the right tab opened, again
+        try {
+            mAsserter.is(StringHelper.ABOUT_FIREFOX_URL, data.getString("uri"), "Checking tab uri");
+        } catch (JSONException e) {
+            mAsserter.ok(false, "exception accessing event data", e.toString());
+        }
 
         // Test that "Edit" works
         String[] editedBookmarkValues = new String[] { "New bookmark title", "www.NewBookmark.url", "newBookmarkKeyword" };
