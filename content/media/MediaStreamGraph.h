@@ -482,15 +482,15 @@ public:
 
   double StreamTimeToSeconds(StreamTime aTime)
   {
-    return mozilla::MediaTimeToSeconds(aTime);
+    return TrackTicksToSeconds(mBuffer.GraphRate(), aTime);
   }
   int64_t StreamTimeToMicroseconds(StreamTime aTime)
   {
-    return mozilla::MediaTimeToMicroseconds(aTime);
+    return TimeToTicksRoundDown(1000000, aTime);
   }
   StreamTime SecondsToStreamTimeRoundDown(double aS)
   {
-    return mozilla::SecondsToMediaTime(aS);
+    return SecondsToTicksRoundDown(mBuffer.GraphRate(), aS);
   }
   TrackTicks TimeToTicksRoundUp(TrackRate aRate, StreamTime aTime)
   {
