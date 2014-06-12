@@ -5,7 +5,7 @@
 import argparse
 import sys
 
-from structuredlog import StructuredLogger
+from structuredlog import StructuredLogger, set_default_logger
 import handlers
 import formatters
 
@@ -52,6 +52,9 @@ def setup_logging(suite, args, defaults):
     """
     Configure a structuredlogger based on command line arguments.
 
+    The created structuredlogger will also be set as the default logger, and
+    can be retrieved with :py:func:`get_default_logger`.
+
     :param suite: The name of the testsuite being run
     :param args: A dictionary of {argument_name:value} produced from
                  parsing the command line arguments for the application
@@ -89,5 +92,7 @@ def setup_logging(suite, args, defaults):
                 formatter_cls = log_formatters[name][0]
                 logger.add_handler(handlers.StreamHandler(stream=value,
                                                           formatter=formatter_cls()))
+
+    set_default_logger(logger)
 
     return logger
