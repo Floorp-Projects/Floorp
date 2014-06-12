@@ -394,7 +394,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx)
         masm.movePtr(ImmPtr(runtime), temp1);
 
         // Save registers before calling C function
-        RegisterSet volatileRegs = RegisterSet::Volatile();
+        GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
 #if defined(JS_CODEGEN_ARM)
         volatileRegs.add(Register::FromCode(Registers::lr));
 #elif defined(JS_CODEGEN_MIPS)
@@ -733,7 +733,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         JS_ASSERT(mode_ == JSCHAR);
 
         // Note: temp1 needs to be saved/restored if it is volatile, as it is used after the call.
-        RegisterSet volatileRegs = RegisterSet::Volatile();
+        GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
         volatileRegs.takeUnchecked(temp0);
         volatileRegs.takeUnchecked(temp2);
         masm.PushRegsInMask(volatileRegs);
