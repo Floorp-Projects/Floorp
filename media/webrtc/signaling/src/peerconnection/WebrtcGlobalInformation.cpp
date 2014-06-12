@@ -23,7 +23,6 @@
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 using sipcc::PeerConnectionImpl;
 using sipcc::PeerConnectionCtx;
@@ -234,7 +233,6 @@ WebrtcGlobalInformation::GetLogging(
 }
 
 static int32_t sLastSetLevel = 0;
-static bool sLastAECDebug = false;
 
 void
 WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLevel)
@@ -248,20 +246,6 @@ WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal)
 {
   return sLastSetLevel;
 }
-
-void
-WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal, bool aEnable)
-{
-  webrtc::Trace::set_aec_debug(aEnable);
-  sLastAECDebug = aEnable;
-}
-
-bool
-WebrtcGlobalInformation::AecDebug(const GlobalObject& aGlobal)
-{
-  return sLastAECDebug;
-}
-
 
 struct StreamResult {
   StreamResult() : candidateTypeBitpattern(0), streamSucceeded(false) {}
