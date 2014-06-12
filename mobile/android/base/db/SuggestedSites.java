@@ -10,18 +10,21 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.GeckoSharedPrefs;
@@ -30,6 +33,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.RawResource;
+import org.mozilla.gecko.util.ThreadUtils;
 
 /**
  * {@code SuggestedSites} provides API to get a list of locale-specific
@@ -47,10 +51,15 @@ import org.mozilla.gecko.util.RawResource;
  * The default list of suggested sites is stored in a raw Android
  * resource ({@code R.raw.suggestedsites}) which is dynamically
  * generated at build time for each target locale.
+ *
+ * Changes to the list of suggested sites are saved in SharedPreferences.
  */
 @RobocopTarget
 public class SuggestedSites {
     private static final String LOGTAG = "GeckoSuggestedSites";
+
+    // SharedPreference key for suggested sites that should be hidden.
+    public static final String PREF_SUGGESTED_SITES_HIDDEN = "suggestedSites.hidden";
 
     private static final String[] COLUMNS = new String[] {
         BrowserContract.SuggestedSites._ID,
@@ -88,6 +97,7 @@ public class SuggestedSites {
     private final Context context;
     private Map<String, Site> cachedSites;
     private Locale cachedLocale;
+    private Set<String> cachedBlacklist;
 
     public SuggestedSites(Context appContext) {
         context = appContext;
@@ -155,7 +165,7 @@ public class SuggestedSites {
         return prefs.getBoolean(GeckoPreferences.PREFS_SUGGESTED_SITES, true);
     }
 
-    private Site getSiteForUrl(String url) {
+    private synchronized Site getSiteForUrl(String url) {
         if (cachedSites == null) {
             return null;
         }
@@ -199,7 +209,7 @@ public class SuggestedSites {
      * @param locale the target locale.
      * @param excludeUrls list of URLs to be excluded from the list.
      */
-    public Cursor get(int limit, Locale locale, List<String> excludeUrls) {
+    public synchronized Cursor get(int limit, Locale locale, List<String> excludeUrls) {
         final MatrixCursor cursor = new MatrixCursor(COLUMNS);
 
         // Return an empty cursor if suggested sites have been
@@ -218,6 +228,8 @@ public class SuggestedSites {
         if (cachedSites == null || cachedSites.isEmpty()) {
             return cursor;
         }
+
+        excludeUrls = includeBlacklist(excludeUrls);
 
         final int sitesCount = cachedSites.size();
         Log.d(LOGTAG, "Number of suggested sites: " + sitesCount);
@@ -256,5 +268,84 @@ public class SuggestedSites {
     public String getBackgroundColorForUrl(String url) {
         final Site site = getSiteForUrl(url);
         return (site != null ? site.bgColor : null);
+    }
+
+    private Set<String> loadBlacklist() {
+        Log.d(LOGTAG, "Loading blacklisted suggested sites from SharedPreferences.");
+        final Set<String> blacklist = new HashSet<String>();
+
+        final SharedPreferences preferences = GeckoSharedPrefs.forProfile(context);
+        final String sitesString = preferences.getString(PREF_SUGGESTED_SITES_HIDDEN, null);
+
+        if (sitesString != null) {
+            for (String site : sitesString.trim().split(" ")) {
+                blacklist.add(Uri.decode(site));
+            }
+        }
+
+        return blacklist;
+    }
+
+    private List<String> includeBlacklist(List<String> originalList) {
+        if (cachedBlacklist == null) {
+            cachedBlacklist = loadBlacklist();
+        }
+
+        if (cachedBlacklist.isEmpty()) {
+            return originalList;
+        }
+
+        if (originalList == null) {
+            originalList = new ArrayList<String>();
+        }
+
+        originalList.addAll(cachedBlacklist);
+        return originalList;
+    }
+
+    /**
+     * Blacklist a suggested site so it will no longer be returned as a suggested site.
+     * This method should only be called from a background thread because it may write
+     * to SharedPreferences.
+     *
+     * Urls that are not Suggested Sites are ignored.
+     *
+     * @param url String url of site to blacklist
+     * @return true is blacklisted, false otherwise
+     */
+    public synchronized boolean hideSite(String url) {
+        ThreadUtils.assertNotOnUiThread();
+
+        if (cachedSites == null) {
+            refresh();
+            if (cachedSites == null) {
+                Log.w(LOGTAG, "Could not load suggested sites!");
+                return false;
+            }
+        }
+
+        if (cachedSites.containsKey(url)) {
+            if (cachedBlacklist == null) {
+                cachedBlacklist = loadBlacklist();
+            }
+
+            // Check if site has already been blacklisted, just in case.
+            if (!cachedBlacklist.contains(url)) {
+
+                saveToBlacklist(url);
+                cachedBlacklist.add(url);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void saveToBlacklist(String url) {
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+        final String prefString = prefs.getString(PREF_SUGGESTED_SITES_HIDDEN, "");
+        final String siteString = prefString.concat(" " + Uri.encode(url));
+        prefs.edit().putString(PREF_SUGGESTED_SITES_HIDDEN, siteString).commit();
     }
 }

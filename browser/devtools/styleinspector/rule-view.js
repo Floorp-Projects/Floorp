@@ -1079,6 +1079,7 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this._contextMenuUpdate = this._contextMenuUpdate.bind(this);
   this._onSelectAll = this._onSelectAll.bind(this);
   this._onCopy = this._onCopy.bind(this);
+  this._onCopyColor = this._onCopyColor.bind(this);
   this._onToggleOrigSources = this._onToggleOrigSources.bind(this);
 
   this.element.addEventListener("copy", this._onCopy);
@@ -1137,6 +1138,11 @@ CssRuleView.prototype = {
       label: "ruleView.contextmenu.copy",
       accesskey: "ruleView.contextmenu.copy.accessKey",
       command: this._onCopy
+    });
+    this.menuitemCopyColor = createMenuItem(this._contextmenu, {
+      label: "ruleView.contextmenu.copyColor",
+      accesskey: "ruleView.contextmenu.copyColor.accessKey",
+      command: this._onCopyColor
     });
     this.menuitemSources= createMenuItem(this._contextmenu, {
       label: "ruleView.contextmenu.showOrigSources",
@@ -1261,6 +1267,7 @@ CssRuleView.prototype = {
       copy = false;
     }
 
+    this.menuitemCopyColor.hidden = !this._isColorPopup();
     this.menuitemCopy.disabled = !copy;
 
     let label = "ruleView.contextmenu.showOrigSources";
@@ -1273,6 +1280,37 @@ CssRuleView.prototype = {
     let accessKey = label + ".accessKey";
     this.menuitemSources.setAttribute("accesskey",
                                       _strings.GetStringFromName(accessKey));
+  },
+
+  /**
+   * A helper that determines if the popup was opened with a click to a color
+   * value and saves the color to this._colorToCopy.
+   *
+   * @return {Boolean}
+   *         true if click on color opened the popup, false otherwise.
+   */
+  _isColorPopup: function () {
+    this._colorToCopy = "";
+
+    let trigger = this.doc.popupNode;
+    if (!trigger) {
+      return false;
+    }
+
+    let container = (trigger.nodeType == trigger.TEXT_NODE) ?
+                     trigger.parentElement : trigger;
+
+    let isColorNode = el => el.dataset && "color" in el.dataset;
+
+    while (!isColorNode(container)) {
+      container = container.parentNode;
+      if (!container) {
+        return false;
+      }
+    }
+
+    this._colorToCopy = container.dataset["color"];
+    return true;
   },
 
   /**
@@ -1325,6 +1363,13 @@ CssRuleView.prototype = {
     } catch(e) {
       console.error(e);
     }
+  },
+
+  /**
+   * Copy the most recently selected color value to clipboard.
+   */
+  _onCopyColor: function() {
+    clipboardHelper.copyString(this._colorToCopy, this.styleDocument);
   },
 
   /**
@@ -1399,6 +1444,10 @@ CssRuleView.prototype = {
       // Destroy the Copy menuitem.
       this.menuitemCopy.removeEventListener("command", this._onCopy);
       this.menuitemCopy = null;
+
+      // Destroy Copy Color menuitem.
+      this.menuitemCopyColor.removeEventListener("command", this._onCopyColor);
+      this.menuitemCopyColor = null;
 
       this.menuitemSources.removeEventListener("command", this._onToggleOrigSources);
       this.menuitemSources = null;
