@@ -13,22 +13,22 @@
   function testSteps()
   {
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open();
+      let fileHandle = mutableFile.open();
 
-      lockedFile.oncomplete = unexpectedSuccessHandler;
-      lockedFile.onabort = grabEventAndContinueHandler;
+      fileHandle.oncomplete = unexpectedSuccessHandler;
+      fileHandle.onabort = grabEventAndContinueHandler;
 
       let sawError = false;
 
-      request = lockedFile.getMetadata({ size: true });
+      request = fileHandle.getMetadata({ size: true });
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = function(event) {
         is(event.target.error.name, "AbortError", "Good error");
@@ -36,7 +36,7 @@
         event.stopPropagation();
       }
 
-      lockedFile.abort();
+      fileHandle.abort();
 
       event = yield undefined;
 

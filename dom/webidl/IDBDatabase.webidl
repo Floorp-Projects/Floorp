@@ -45,5 +45,9 @@ partial interface IDBDatabase {
     readonly    attribute StorageType        storage;
 
     [Throws]
-    IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type);
+    IDBRequest createMutableFile (DOMString name, optional DOMString type);
+
+    // this is deprecated due to renaming in the spec
+    [Throws]
+    IDBRequest mozCreateFileHandle (DOMString name, optional DOMString type); // now createMutableFile
 };

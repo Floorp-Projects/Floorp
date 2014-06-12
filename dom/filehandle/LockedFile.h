@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_LockedFile_h
-#define mozilla_dom_LockedFile_h
+#ifndef mozilla_dom_FileHandle_h
+#define mozilla_dom_FileHandle_h
 
 #include "js/TypeDecls.h"
 #include "MainThreadUtils.h"
@@ -35,14 +35,14 @@ class EventChainPreVisitor;
 namespace dom {
 
 class DOMFileMetadataParameters;
-class FileHandle;
 class FileHelper;
 class FileRequest;
 class FileService;
 class FinishHelper;
 class MetadataHelper;
+class MutableFile;
 
-class LockedFile : public DOMEventTargetHelper,
+class FileHandle : public DOMEventTargetHelper,
                    public nsIRunnable
 {
   friend class FileHelper;
@@ -54,7 +54,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIRUNNABLE
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(LockedFile, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileHandle, DOMEventTargetHelper)
 
   enum RequestMode
   {
@@ -70,8 +70,8 @@ public:
     DONE
   };
 
-  static already_AddRefed<LockedFile>
-  Create(FileHandle* aFileHandle,
+  static already_AddRefed<FileHandle>
+  Create(MutableFile* aMutableFile,
          FileMode aMode,
          RequestMode aRequestMode = NORMAL);
 
@@ -94,10 +94,10 @@ public:
     return mAborted;
   }
 
-  FileHandle*
-  Handle() const
+  MutableFile*
+  File() const
   {
-    return mFileHandle;
+    return mMutableFile;
   }
 
   nsresult
@@ -115,12 +115,18 @@ public:
     return GetOwner();
   }
 
-  FileHandle*
-  GetFileHandle() const
+  MutableFile*
+  GetMutableFile() const
   {
     MOZ_ASSERT(NS_IsMainThread(), "Wrong thread!");
 
-    return Handle();
+    return File();
+  }
+
+  MutableFile*
+  GetFileHandle() const
+  {
+    return GetMutableFile();
   }
 
   FileMode
@@ -205,8 +211,8 @@ public:
   IMPL_EVENT_HANDLER(error)
 
 private:
-  LockedFile();
-  ~LockedFile();
+  FileHandle();
+  ~FileHandle();
 
   void
   OnNewRequest();
@@ -279,14 +285,14 @@ private:
   GetInputStream(const nsAString& aValue, uint64_t* aInputLength,
                  ErrorResult& aRv);
 
-  nsRefPtr<FileHandle> mFileHandle;
+  nsRefPtr<MutableFile> mMutableFile;
   ReadyState mReadyState;
   FileMode mMode;
   RequestMode mRequestMode;
   uint64_t mLocation;
   uint32_t mPendingRequests;
 
-  nsTArray<nsCOMPtr<nsISupports> > mParallelStreams;
+  nsTArray<nsCOMPtr<nsISupports>> mParallelStreams;
   nsCOMPtr<nsISupports> mStream;
 
   bool mAborted;
@@ -295,19 +301,19 @@ private:
 
 class FinishHelper MOZ_FINAL : public nsIRunnable
 {
-  friend class LockedFile;
+  friend class FileHandle;
 
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIRUNNABLE
 
 private:
-  FinishHelper(LockedFile* aLockedFile);
+  FinishHelper(FileHandle* aFileHandle);
   ~FinishHelper()
   { }
 
-  nsRefPtr<LockedFile> mLockedFile;
-  nsTArray<nsCOMPtr<nsISupports> > mParallelStreams;
+  nsRefPtr<FileHandle> mFileHandle;
+  nsTArray<nsCOMPtr<nsISupports>> mParallelStreams;
   nsCOMPtr<nsISupports> mStream;
 
   bool mAborted;
@@ -316,4 +322,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_LockedFile_h
+#endif // mozilla_dom_FileHandle_h

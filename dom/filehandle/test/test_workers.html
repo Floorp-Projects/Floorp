@@ -15,21 +15,21 @@
     var testBuffer = getRandomBuffer(100000);
 
     for each (let fileStorage in fileStorages) {
-      let request = getFileHandle(fileStorage.key, "test.txt");
+      let request = getMutableFile(fileStorage.key, "test.txt");
       request.onerror = errorHandler;
       request.onsuccess = grabEventAndContinueHandler;
       let event = yield undefined;
 
-      let fileHandle = event.target.result;
-      fileHandle.onerror = errorHandler;
+      let mutableFile = event.target.result;
+      mutableFile.onerror = errorHandler;
 
-      let lockedFile = fileHandle.open("readwrite");
+      let fileHandle = mutableFile.open("readwrite");
 
-      request = lockedFile.write(testBuffer);
+      request = fileHandle.write(testBuffer);
       request.onsuccess = grabEventAndContinueHandler;
       event = yield undefined;
 
-      request = fileHandle.getFile();
+      request = mutableFile.getFile();
       request.onsuccess = grabEventAndContinueHandler;
       event = yield undefined;
 
