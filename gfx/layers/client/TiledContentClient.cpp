@@ -120,8 +120,6 @@ TiledContentClient::UseTiledLayerBuffer(TiledBufferType aType)
 }
 
 SharedFrameMetricsHelper::SharedFrameMetricsHelper()
-  : mLastProgressiveUpdateWasLowPrecision(false)
-  , mProgressiveUpdateWasInDanger(false)
 {
   MOZ_COUNT_CTOR(SharedFrameMetricsHelper);
 }
@@ -165,17 +163,6 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   aCompositionBounds = ParentLayerRect(compositorMetrics.mCompositionBounds);
   aZoom = compositorMetrics.GetZoomToParent();
 
-  // Reset the checkerboard risk flag when switching to low precision
-  // rendering.
-  if (aLowPrecision && !mLastProgressiveUpdateWasLowPrecision) {
-    // Skip low precision rendering until we're at risk of checkerboarding.
-    if (!mProgressiveUpdateWasInDanger) {
-      return true;
-    }
-    mProgressiveUpdateWasInDanger = false;
-  }
-  mLastProgressiveUpdateWasLowPrecision = aLowPrecision;
-
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
   if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
@@ -197,11 +184,8 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
   // When not a low precision pass and the page is in danger of checker boarding
   // abort update.
-  if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
-    if (AboutToCheckerboard(contentMetrics, compositorMetrics)) {
-      mProgressiveUpdateWasInDanger = true;
-      return true;
-    }
+  if (!aLowPrecision && AboutToCheckerboard(contentMetrics, compositorMetrics)) {
+    return true;
   }
 
   // Abort drawing stale low-precision content if there's a more recent

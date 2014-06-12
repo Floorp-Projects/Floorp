@@ -220,6 +220,9 @@ public:
   void EndUpdate();
   void RecalcQuotesAndCounters();
 
+  // Called when any counter style is changed.
+  void NotifyCounterStylesAreDirty();
+
   // Gets called when the presshell is destroying itself and also
   // when we tear down our frame tree to reconstruct it
   void WillDestroyFrameTree();
