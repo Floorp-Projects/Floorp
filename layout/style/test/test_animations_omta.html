@@ -185,7 +185,7 @@ runOMTATest(function() {
 addAsyncAnimTest(function *() {
   new_div("animation: transform-anim linear 300s");
 
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
 
   advance_clock(200000);
   omta_is("transform", { tx: 100 * 2 / 3 }, RunningOn.Compositor,
@@ -209,7 +209,7 @@ function *testFillMode(fillMode, fillsBackwards, fillsForwards)
   // Currently backwards fill is not performed on the compositor thread but we
   // should wait for paints so we can test that transform values are *not* being
   // set on the compositor thread.
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
 
   if (fillsBackwards)
     omta_is("transform", { tx: 0 }, RunningOn.MainThread,
@@ -307,7 +307,7 @@ addAsyncAnimTest(function() { return testFillMode("both", true, true); });
 // Append to list
 addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
             "just anim1, translate at start");
   advance_clock(1000);
@@ -331,7 +331,7 @@ addAsyncAnimTest(function *() {
 // Prepend to list; delete from list
 addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
             "just anim1, translate at start");
   advance_clock(1000);
@@ -365,7 +365,7 @@ addAsyncAnimTest(function *() {
 // Swap elements
 addAsyncAnimTest(function *() {
   new_div("animation: anim1 linear 10s, anim2 linear 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
     omta_is("transform", { tx: 0 }, RunningOn.Either,
             "anim1 + anim2, translate at start");
     omta_is("opacity", 0, RunningOn.Compositor,
@@ -475,8 +475,7 @@ addAsyncAnimTest(function *() {
   // 100px at 0%, 50px at 50%, 150px at 100%
   new_div("transform: translate(100px); " +
           "animation: kf1 ease 1s alternate infinite");
-  advance_clock(0);
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 100 }, RunningOn.Compositor, "no-0% at 0.0s");
   advance_clock(100);
   omta_is_approx("transform", { tx: 100 - 50 * gTF.ease(0.2) },
@@ -513,7 +512,7 @@ addAsyncAnimTest(function *() {
   // 150px at 0%, 50px at 50%, 100px at 100%
   new_div("transform: translate(100px); " +
           "animation: kf2 ease-in 1s alternate infinite");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 150 }, RunningOn.Compositor, "no-100% at 0.0s");
   advance_clock(100);
   omta_is_approx("transform", { tx: 150 - 100 * gTF.ease_in(0.2) },
@@ -550,7 +549,7 @@ addAsyncAnimTest(function *() {
   // 50px at 0%, 100px at 25%, 50px at 100%
   new_div("transform: translate(50px); " +
           "animation: kf3 ease-out 1s alternate infinite");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 50 }, RunningOn.Compositor,
           "no-0%-no-100% at 0.0s");
   advance_clock(50);
@@ -593,7 +592,7 @@ addAsyncAnimTest(function *() {
   // we still override the value when two consecutive keyframes have
   // the same value.
   new_div("animation: kf4 ease 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   var cs = window.getComputedStyle(gDiv);
   is(cs.display, "block",
      "non-animatable properties should be ignored (linear, 0s)");
@@ -606,7 +605,7 @@ addAsyncAnimTest(function *() {
           "animatable properties should still apply (linear, 1s)");
   done_div();
   new_div("animation: kf4 step-start 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   cs = window.getComputedStyle(gDiv);
   is(cs.display, "block",
      "non-animatable properties should be ignored (step-start, 0s)");
@@ -621,7 +620,7 @@ addAsyncAnimTest(function *() {
 
   // Test cascading of the keyframes within an @keyframes rule.
   new_div("animation: kf_cascade1 linear 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   //    0%: 30px
   //   50%: 20px
   //   75%: 20px
@@ -652,7 +651,7 @@ addAsyncAnimTest(function *() {
 
   // Test cascading of the @keyframes rules themselves.
   new_div("animation: kf_cascade2 linear 10s");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 1, RunningOn.MainThread,
           "last @keyframes rule with transform should win");
   omta_is("transform", { tx: 100 }, RunningOn.Compositor,
@@ -667,7 +666,7 @@ addAsyncAnimTest(function *() {
 
 addAsyncAnimTest(function *() {
   new_div("animation: kf_tf1 ease-in 10s alternate infinite");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 20 }, RunningOn.Compositor,
           "keyframe timing functions test at 0s (test needed for flush)");
   advance_clock(1000);
@@ -753,7 +752,7 @@ addAsyncAnimTest(function *() {
 
   // spot-check the same thing without alternate
   new_div("animation: kf_tf1 ease-in 10s infinite");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 20 }, RunningOn.Compositor,
           "keyframe timing functions test at 0s (test needed for flush)");
   advance_clock(11000);
@@ -784,12 +783,11 @@ addAsyncAnimTest(function *() {
 // 2, particularly the tests that "Test that animations continue running
 // when the animation name list is changed."
 
-// Test that 'animation-name: none' steps the animation, and setting
+// Test that 'animation-name: none' stops the animation, and setting
 // it again starts a new one.
 
 addAsyncAnimTest(function *() {
-  new_div("");
-  gDiv.style.animation = "anim2 ease-in-out 10s";
+  new_div("animation: anim2 ease-in-out 10s");
   yield waitForPaintsFlushed();
   omta_is("opacity", 0, RunningOn.Compositor,
           "after setting animation-name to anim2");
@@ -844,7 +842,7 @@ addAsyncAnimTest(function *() {
  */
 addAsyncAnimTest(function *() {
   new_div("animation: anim2 ease-in 10s 0.3 forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0, RunningOn.Compositor,
           "animation-iteration-count test 1 at 0s");
   advance_clock(2000);
@@ -884,7 +882,7 @@ addAsyncAnimTest(function *() {
   // this time and no additive animation we split this test into two parts.
   new_div("animation: anim2 ease-in 10s 0.3, " +
           "anim4 ease-out 20s 1.2 alternate forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0, RunningOn.Compositor,
           "animation-iteration-count test 2 at 0s");
   omta_is("transform", { ty: 0 }, RunningOn.Compositor,
@@ -933,7 +931,7 @@ addAsyncAnimTest(function *() {
   done_div();
 
   new_div("animation: anim4 ease-in-out 5s 1.6 forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { ty: 0 }, RunningOn.Compositor,
           "animation-iteration-count test 4 at 0s");
   advance_clock(2000);
@@ -1285,7 +1283,7 @@ addAsyncAnimTest(function *() {
 addAsyncAnimTest(function *() {
   // test positive delay
   new_div("animation: anim2 1s 0.5s ease-out");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 1, RunningOn.Either, "positive delay test at 0ms");
   advance_clock(400);
   omta_is("opacity", 1, RunningOn.Either, "positive delay test at 400ms");
@@ -1300,7 +1298,7 @@ addAsyncAnimTest(function *() {
   // test dynamic changes to delay (i.e., that we preserve the start time
   // that's before the delay)
   new_div("animation: anim2 1s 0.5s ease-out both");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0, RunningOn.Either, "dynamic delay delay test at 0ms");
   advance_clock(400);
   omta_is("opacity", 0, RunningOn.Either, 
@@ -1333,7 +1331,7 @@ addAsyncAnimTest(function *() {
 
   // test delay and play-state interaction
   new_div("animation: anim2 1s 0.5s ease-out");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 1, RunningOn.Either,
           "delay and play-state delay test at 0ms");
   advance_clock(400);
@@ -1365,6 +1363,7 @@ addAsyncAnimTest(function *() {
 
   // test negative delay and implicit starting values
   new_div("transform: translate(1000px)");
+  yield waitForPaintsFlushed();
   advance_clock(300);
   gDiv.style.transform = "translate(100px)";
   gDiv.style.animation = "kf1 1s -0.1s ease-in";
@@ -1376,9 +1375,8 @@ addAsyncAnimTest(function *() {
 
   // test large negative delay that causes the animation to start
   // in the fourth iteration
-  new_div("");
+  new_div("animation: anim2 1s -3.6s ease-in 5 alternate forwards");
   listen();
-  gDiv.style.animation = "anim2 1s -3.6s ease-in 5 alternate forwards";
   yield waitForPaintsFlushed();
   omta_is_approx("opacity", gTF.ease_in(0.4), RunningOn.Compositor, 0.01,
                  "large negative delay test at 0ms");
@@ -1432,7 +1430,7 @@ addAsyncAnimTest(function *() {
  */
 addAsyncAnimTest(function *() {
   new_div("animation: multiprop 1s ease-in-out alternate infinite");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 10 }, RunningOn.Compositor,
           "multiprop transform at 0ms");
   omta_is("opacity", 0.3, RunningOn.Compositor, "multiprop opacity at 0ms");
@@ -1484,7 +1482,7 @@ addAsyncAnimTest(function *() {
 // refreshes with the same timestamp.
 addAsyncAnimTest(function *() {
   new_div("animation: anim2 1s linear");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0, RunningOn.Compositor, "bug 651456 at 0ms");
   advance_clock(100);
   omta_is("opacity", 0.1, RunningOn.Compositor, "bug 651456 at 100ms (1)");
@@ -1506,13 +1504,13 @@ addAsyncAnimTest(function *() {
 addAsyncAnimTest(function *() {
   new_div("animation: always_fifty 1s linear infinite; " +
           "transform: translate(200px)");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 50 }, RunningOn.Compositor,
           "animations override regular author rules");
   done_div();
   new_div("animation: always_fifty 1s linear infinite; " +
           "transform: translate(200px) ! important;");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   // Bug 847287 - off main thread animations don't cascade correctly
   omta_todo_is("transform", { tx: 200 }, RunningOn.TodoMainThread,
                "important author rules override animations");
@@ -1525,7 +1523,7 @@ addAsyncAnimTest(function *() {
 // isn't rebuilt when the restyles happen.
 addAsyncAnimTest(function *() {
   new_div("animation: kf3 1s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
           "bug 686656 test 1 at 0ms");
   advance_clock(250);
@@ -1558,7 +1556,7 @@ addAsyncAnimTest(function *() {
     SimpleTest.expectAssertions(2);
   }
   new_div("animation: kf3 1s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
           "bug 686656 test 2 at 0ms");
   advance_clock(250);
@@ -1582,7 +1580,7 @@ addAsyncAnimTest(function *() {
 // rule that's skipped.  (Bug 738003)
 addAsyncAnimTest(function *() {
   new_div("animation: cascade 1s linear forwards; position: relative");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
           "cascade test (transform) at 0ms");
   omta_is("opacity", 0, RunningOn.Compositor,
@@ -1633,7 +1631,7 @@ addAsyncAnimTest(function *() {
 
 addAsyncAnimTest(function *() {
   new_div("animation: cascade2 8s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor, "cascade2 test at 0s");
   advance_clock(1000);
   omta_is("transform", { tx: 25 }, RunningOn.Compositor, "cascade2 test at 1s");
@@ -1654,7 +1652,7 @@ addAsyncAnimTest(function *() {
 
 addAsyncAnimTest(function *() {
   new_div("animation: primitives1 2s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { }, RunningOn.Compositor, "primitives1 at 0s");
   advance_clock(1000);
   omta_is("transform", [ -0.707107, 0.707107, -0.707107, -0.707107, 0, 0 ],
@@ -1668,7 +1666,7 @@ addAsyncAnimTest(function *() {
 
 addAsyncAnimTest(function *() {
   new_div("animation: important1 1s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0.5, RunningOn.Compositor, "important1 test at 0s");
   advance_clock(500);
   omta_is("opacity", 0.65, RunningOn.Compositor, "important1 test at 0.5s");
@@ -1680,7 +1678,7 @@ addAsyncAnimTest(function *() {
 
 addAsyncAnimTest(function *() {
   new_div("animation: important2 1s linear forwards");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0.5, RunningOn.Compositor,
           "important2 (opacity) test at 0s");
   omta_is("transform", { tx: 100 }, RunningOn.Compositor,
@@ -1703,7 +1701,7 @@ addAsyncAnimTest(function *() {
           "animation-duration: 1s; " +
           "animation-timing-function: linear; " +
           "animation-delay: -250ms, -250ms, -750ms, -500ms;");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("opacity", 0.25, RunningOn.Compositor,
           "animation-name list length is the length that matters");
   omta_is("transform", { ty: 25 }, RunningOn.Compositor,
@@ -1713,7 +1711,7 @@ addAsyncAnimTest(function *() {
           "animation-duration: 1s; " +
           "animation-timing-function: linear; " +
           "animation-delay: -250ms, -250ms, -750ms, -500ms;");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   // Bug 980769 -  off main thread animations incorrectly handle multiple
   // animations of the same property and element
   omta_todo_is("opacity", 0.75, RunningOn.Compositor,
@@ -1738,7 +1736,7 @@ addAsyncAnimTest(function *() {
   var dyn1 = dyn_sheet.cssRules[0];
   var dyn2 = dyn_sheet.cssRules[1];
   new_div("animation: dyn1 1s linear");
-  yield waitForPaints();
+  yield waitForPaintsFlushed();
   omta_is("transform", { tx: 0 }, RunningOn.Compositor,
           "dynamic rule change test, initial state");
   advance_clock(250);
@@ -1799,8 +1797,7 @@ addAsyncAnimTest(function *() {
 addAsyncAnimTest(function *() {
   new_div("animation: anim2 1s 0.1s");
   listen();
-  yield waitForPaints();
-  advance_clock(0); // Trigger animation
+  yield waitForPaintsFlushed();
   advance_clock(1200); // Skip past end of animation's entire active duration
   check_events([{ type: 'animationstart', target: gDiv,
                   animationName: 'anim2', elapsedTime: 0,
@@ -1830,10 +1827,12 @@ addAsyncAnimTest(function *() {
 addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
   listen();
+  yield waitForPaintsFlushed();
   advance_clock(0);
   omta_is("transform", { ty: 0 }, RunningOn.MainThread,
           "transform during backwards fill of zero-duration animation");
   advance_clock(2000); // Skip over animation
+  yield waitForPaints();
   omta_is("transform", { ty: 100 }, RunningOn.MainThread,
           "transform during backwards fill of zero-duration animation");
   check_events([{ type: 'animationstart', target: gDiv,
@@ -1849,9 +1848,11 @@ addAsyncAnimTest(function *() {
 addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); animation: anim4 0s 1s both");
   listen();
+  yield waitForPaintsFlushed();
   advance_clock(0);
   // Seek to exactly the point where the animation starts and stops
   advance_clock(1000);
+  yield waitForPaints();
   omta_is("transform", { ty: 100 }, RunningOn.MainThread,
           "transform during backwards fill of zero-duration animation");
   check_events([{ type: 'animationstart', target: gDiv,
@@ -1881,11 +1882,13 @@ addAsyncAnimTest(function *() {
   new_div("transform: translate(0, 200px); " +
           "animation: anim4 0s 1s both infinite");
   listen();
+  yield waitForPaintsFlushed();
   advance_clock(0);
   omta_is("transform", { ty: 0 }, RunningOn.MainThread,
           "transform during backwards fill of infinitely repeating " +
           "zero-duration animation");
   advance_clock(2000);
+  yield waitForPaints();
   omta_is("transform", { ty: 100 }, RunningOn.MainThread,
           "transform during forwards fill of infinitely repeating " +
           "zero-duration animation");
@@ -1902,9 +1905,10 @@ addAsyncAnimTest(function *() {
 
 // Test with negative delay
 addAsyncAnimTest(function *() {
-  new_div("transform: translate(0, 200px)");
+  new_div("transform: translate(0, 200px); " +
+          "animation: anim4 0s -1s both reverse 12.7 linear");
   listen();
-  gDiv.style.animation = "anim4 0s -1s both reverse 12.7 linear";
+  yield waitForPaintsFlushed();
   advance_clock(0);
   omta_is("transform", { ty: 30 }, RunningOn.MainThread,
           "transform during forwards fill of reversed and repeated " +
@@ -1937,7 +1941,6 @@ function new_div(style) {
   gDiv.classList.add("target");
   gDiv.setAttribute("style", style);
   gDisplay.appendChild(gDiv);
-  gDiv.clientTop;
 }
 
 function done_div() {
