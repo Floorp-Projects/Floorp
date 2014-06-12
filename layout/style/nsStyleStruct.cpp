@@ -25,6 +25,7 @@
 
 #include "imgIRequest.h"
 #include "imgIContainer.h"
+#include "CounterStyleManager.h"
 
 #include "mozilla/Likely.h"
 #include "nsIURI.h"
@@ -651,9 +652,11 @@ nsChangeHint nsStyleOutline::CalcDifference(const nsStyleOutline& aOther) const
 // --------------------
 // nsStyleList
 //
-nsStyleList::nsStyleList() 
-  : mListStyleType(NS_STYLE_LIST_STYLE_DISC),
-    mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE)
+nsStyleList::nsStyleList(nsPresContext* aPresContext) 
+  : mListStylePosition(NS_STYLE_LIST_STYLE_POSITION_OUTSIDE),
+    mListStyleType(NS_LITERAL_STRING("disc")),
+    mCounterStyle(aPresContext->CounterStyleManager()->
+                  BuildCounterStyle(mListStyleType))
 {
   MOZ_COUNT_CTOR(nsStyleList);
 }
@@ -664,8 +667,9 @@ nsStyleList::~nsStyleList()
 }
 
 nsStyleList::nsStyleList(const nsStyleList& aSource)
-  : mListStyleType(aSource.mListStyleType),
-    mListStylePosition(aSource.mListStylePosition),
+  : mListStylePosition(aSource.mListStylePosition),
+    mListStyleType(aSource.mListStyleType),
+    mCounterStyle(aSource.mCounterStyle),
     mImageRegion(aSource.mImageRegion)
 {
   SetListStyleImage(aSource.GetListStyleImage());
@@ -2988,17 +2992,11 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
     uint8_t otherLineStyle = aOther.GetDecorationStyle();
     if (mTextDecorationLine != aOther.mTextDecorationLine ||
         lineStyle != otherLineStyle) {
-      // Reflow for decoration line style changes only to or from double or
-      // wave because that may cause overflow area changes
-      if (lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
-          lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY ||
-          otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||
-          otherLineStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
-        return NS_STYLE_HINT_REFLOW;
-      }
       // Repaint for other style decoration lines because they must be in
       // default overflow rect
-      return NS_STYLE_HINT_VISUAL;
+      nsChangeHint hint = NS_STYLE_HINT_VISUAL;
+      NS_UpdateHint(hint, nsChangeHint_UpdateSubtreeOverflow);
+      return hint;
     }
 
     // Repaint for decoration color changes
