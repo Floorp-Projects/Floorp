@@ -48,12 +48,6 @@ PRLogModuleInfo* gMediaStreamGraphLog;
 #endif
 
 /**
- * We make the initial mCurrentTime nonzero so that zero times can have
- * special meaning if necessary.
- */
-static const int32_t INITIAL_CURRENT_TIME = 1;
-
-/**
  * The singleton graph instance.
  */
 static MediaStreamGraphImpl* gGraph;
@@ -359,7 +353,7 @@ MediaStreamGraphImpl::UpdateCurrentTime()
   if (mRealtime) {
     TimeStamp now = TimeStamp::Now();
     prevCurrentTime = mCurrentTime;
-    nextCurrentTime = INITIAL_CURRENT_TIME +
+    nextCurrentTime =
       SecondsToMediaTime((now - mInitialTimeStamp).ToSeconds());
 
     mCurrentTimeStamp = now;
@@ -2645,8 +2639,8 @@ ProcessedMediaStream::DestroyImpl()
 }
 
 MediaStreamGraphImpl::MediaStreamGraphImpl(bool aRealtime, TrackRate aSampleRate)
-  : mCurrentTime(INITIAL_CURRENT_TIME)
-  , mStateComputedTime(INITIAL_CURRENT_TIME)
+  : mCurrentTime(0)
+  , mStateComputedTime(0)
   , mProcessingGraphUpdateIndex(0)
   , mPortCount(0)
   , mMonitor("MediaStreamGraphImpl")
