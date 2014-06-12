@@ -310,9 +310,18 @@ public:
   static nsCSSFontDesc LookupFontDesc(const nsAString& aProperty);
   static nsCSSFontDesc LookupFontDesc(const nsACString& aProperty);
 
+  // For @counter-style descriptors
+  static nsCSSCounterDesc LookupCounterDesc(const nsAString& aProperty);
+  static nsCSSCounterDesc LookupCounterDesc(const nsACString& aProperty);
+
+  // For predefined counter styles which need to be lower-cased during parse
+  static bool IsPredefinedCounterStyle(const nsAString& aStyle);
+  static bool IsPredefinedCounterStyle(const nsACString& aStyle);
+
   // Given a property enum, get the string value
   static const nsAFlatCString& GetStringValue(nsCSSProperty aProperty);
   static const nsAFlatCString& GetStringValue(nsCSSFontDesc aFontDesc);
+  static const nsAFlatCString& GetStringValue(nsCSSCounterDesc aCounterDesc);
 
   // Get the property to report the computed value of aProperty as being
   // the computed value of.  aProperty must have the
@@ -641,6 +650,9 @@ public:
   static const KTableValue kWordWrapKTable[];
   static const KTableValue kWritingModeKTable[];
   static const KTableValue kHyphensKTable[];
+  static const KTableValue kCounterSystemKTable[];
+  static const KTableValue kCounterRangeKTable[];
+  static const KTableValue kCounterSpeakAsKTable[];
 };
 
 inline nsCSSProps::EnabledState operator|(nsCSSProps::EnabledState a,

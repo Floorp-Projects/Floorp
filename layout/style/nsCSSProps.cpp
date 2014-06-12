@@ -51,6 +51,8 @@ using namespace mozilla;
 static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
+static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
+static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
 
 /* static */ nsCSSProperty *
   nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
@@ -60,6 +62,25 @@ static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
 #include "nsCSSFontDescList.h"
 #undef CSS_FONT_DESC
+};
+
+static const char* const kCSSRawCounterDescs[] = {
+#define CSS_COUNTER_DESC(name_, method_) #name_,
+#include "nsCSSCounterDescList.h"
+#undef CSS_COUNTER_DESC
+};
+
+static const char* const kCSSRawPredefinedCounterStyles[] = {
+  "none", "decimal", "decimal-leading-zero", "cjk-decimal",
+  "lower-roman", "upper-roman", "armenian", "georgian", "hebrew",
+  "lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
+  "lower-greek", "hiragana", "hiragana-iroha", "katakana", "katakana-iroha",
+  "disc", "circle", "square", "disclosure-open", "disclosure-closed",
+  "japanese-informal", "japanese-formal",
+  "korean-hangul-formal", "korean-hanja-informal", "korean-hanja-formal",
+  "simp-chinese-informal", "simp-chinese-formal",
+  "trad-chinese-informal", "trad-chinese-formal", "cjk-ideographic",
+  "ethiopic-numeric"
 };
 
 struct PropertyAndCount {
@@ -121,10 +142,17 @@ nsCSSProps::AddRefTable(void)
   if (0 == gPropertyTableRefCount++) {
     NS_ABORT_IF_FALSE(!gPropertyTable, "pre existing array!");
     NS_ABORT_IF_FALSE(!gFontDescTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gCounterDescTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gPredefinedCounterStyleTable, "pre existing array!");
 
     gPropertyTable = CreateStaticTable(
         kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
     gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
+    gCounterDescTable = CreateStaticTable(
+        kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
+    gPredefinedCounterStyleTable = CreateStaticTable(
+        kCSSRawPredefinedCounterStyles,
+        ArrayLength(kCSSRawPredefinedCounterStyles));
 
     BuildShorthandsContainingTable();
 
@@ -333,6 +361,12 @@ nsCSSProps::ReleaseTable(void)
     delete gFontDescTable;
     gFontDescTable = nullptr;
 
+    delete gCounterDescTable;
+    gCounterDescTable = nullptr;
+
+    delete gPredefinedCounterStyleTable;
+    gPredefinedCounterStyleTable = nullptr;
+
     delete [] gShorthandsContainingPool;
     gShorthandsContainingPool = nullptr;
   }
@@ -456,6 +490,38 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   return which;
 }
 
+nsCSSCounterDesc
+nsCSSProps::LookupCounterDesc(const nsAString& aProperty)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
+}
+
+nsCSSCounterDesc
+nsCSSProps::LookupCounterDesc(const nsACString& aProperty)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
+}
+
+bool
+nsCSSProps::IsPredefinedCounterStyle(const nsAString& aStyle)
+{
+  NS_ABORT_IF_FALSE(gPredefinedCounterStyleTable,
+                    "no lookup table, needs addref");
+  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
+    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+}
+
+bool
+nsCSSProps::IsPredefinedCounterStyle(const nsACString& aStyle)
+{
+  NS_ABORT_IF_FALSE(gPredefinedCounterStyleTable,
+                    "no lookup table, needs addref");
+  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
+    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+}
+
 const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
@@ -474,6 +540,18 @@ nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
   NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   if (gFontDescTable) {
     return gFontDescTable->GetStringValue(int32_t(aFontDescID));
+  } else {
+    static nsDependentCString sNullStr("");
+    return sNullStr;
+  }
+}
+
+const nsAFlatCString&
+nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  if (gCounterDescTable) {
+    return gCounterDescTable->GetStringValue(int32_t(aCounterDesc));
   } else {
     static nsDependentCString sNullStr("");
     return sNullStr;
@@ -1907,6 +1985,30 @@ const KTableValue nsCSSProps::kColorInterpolationKTable[] = {
 const KTableValue nsCSSProps::kColumnFillKTable[] = {
   eCSSKeyword_auto, NS_STYLE_COLUMN_FILL_AUTO,
   eCSSKeyword_balance, NS_STYLE_COLUMN_FILL_BALANCE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterSystemKTable[] = {
+  eCSSKeyword_cyclic, NS_STYLE_COUNTER_SYSTEM_CYCLIC,
+  eCSSKeyword_numeric, NS_STYLE_COUNTER_SYSTEM_NUMERIC,
+  eCSSKeyword_alphabetic, NS_STYLE_COUNTER_SYSTEM_ALPHABETIC,
+  eCSSKeyword_symbolic, NS_STYLE_COUNTER_SYSTEM_SYMBOLIC,
+  eCSSKeyword_additive, NS_STYLE_COUNTER_SYSTEM_ADDITIVE,
+  eCSSKeyword_fixed, NS_STYLE_COUNTER_SYSTEM_FIXED,
+  eCSSKeyword_extends, NS_STYLE_COUNTER_SYSTEM_EXTENDS,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterRangeKTable[] = {
+  eCSSKeyword_infinite, NS_STYLE_COUNTER_RANGE_INFINITE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterSpeakAsKTable[] = {
+  eCSSKeyword_bullets, NS_STYLE_COUNTER_SPEAKAS_BULLETS,
+  eCSSKeyword_numbers, NS_STYLE_COUNTER_SPEAKAS_NUMBERS,
+  eCSSKeyword_words, NS_STYLE_COUNTER_SPEAKAS_WORDS,
+  eCSSKeyword_spell_out, NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT,
   eCSSKeyword_UNKNOWN, -1
 };
 
