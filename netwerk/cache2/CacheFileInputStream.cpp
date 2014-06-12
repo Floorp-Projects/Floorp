@@ -278,6 +278,7 @@ CacheFileInputStream::AsyncWait(nsIInputStreamCallback *aCallback,
 
   mCallback = aCallback;
   mCallbackFlags = aFlags;
+  mCallbackTarget = aEventTarget;
 
   if (!mCallback) {
     if (mWaitingForUpdate) {
