@@ -69,6 +69,7 @@ class nsDeviceContext;
 namespace mozilla {
 class EventStateManager;
 class RestyleManager;
+class CounterStyleManager;
 namespace dom {
 class MediaQueryList;
 }
@@ -242,6 +243,10 @@ public:
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 
   mozilla::RestyleManager* RestyleManager() { return mRestyleManager; }
+
+  mozilla::CounterStyleManager* CounterStyleManager() {
+    return mCounterStyleManager;
+  }
 #endif
 
   /**
@@ -1182,6 +1187,7 @@ protected:
   nsRefPtr<nsTransitionManager> mTransitionManager;
   nsRefPtr<nsAnimationManager> mAnimationManager;
   nsRefPtr<mozilla::RestyleManager> mRestyleManager;
+  nsRefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
   nsCOMPtr<nsIAtom> mMediaEmulated;
