@@ -15,8 +15,20 @@ void LogLatency(AsyncLatencyLogger::LatencyLogIndex index, uint64_t b, int64_t c
 
 static const int AUDIO_BUFFER_SIZE = 1600;
 static const int NUM_CHANNELS      = 2;
+static const int GRAPH_RATE        = 16000;
 
 NS_IMPL_ISUPPORTS(Fake_DOMMediaStream, nsIDOMMediaStream)
+
+// Fake_MediaStream
+double Fake_MediaStream::StreamTimeToSeconds(mozilla::StreamTime aTime) {
+  return static_cast<double>(aTime)/GRAPH_RATE;
+}
+
+mozilla::StreamTime
+Fake_MediaStream::TicksToTimeRoundDown(mozilla::TrackRate aRate,
+                                       mozilla::TrackTicks aTicks) {
+  return aTicks * GRAPH_RATE / aRate;
+}
 
 // Fake_SourceMediaStream
 nsresult Fake_SourceMediaStream::Start() {
@@ -48,7 +60,8 @@ void Fake_SourceMediaStream::Periodic() {
     mDesiredTime += 100;
     for (std::set<Fake_MediaStreamListener *>::iterator it =
              mListeners.begin(); it != mListeners.end(); ++it) {
-      (*it)->NotifyPull(nullptr, mozilla::MillisecondsToMediaTime(mDesiredTime));
+      (*it)->NotifyPull(nullptr, TicksToTimeRoundDown(1000 /* ms per s */,
+                                                      mDesiredTime));
     }
   }
 }
@@ -101,7 +114,7 @@ void Fake_AudioStreamSource::Periodic() {
        it != mListeners.end(); ++it) {
     (*it)->NotifyQueuedTrackChanges(nullptr, // Graph
                                     0, // TrackID
-                                    16000, // Rate (hz)
+                                    GRAPH_RATE, // Rate (hz)
                                     0, // Offset TODO(ekr@rtfm.com) fix
                                     0, // ???
                                     segment);
