@@ -499,3 +499,23 @@ const ExpectComparisonTo = {
            matrix[3][2] === 0 && matrix[3][3] === 1;
   }
 })();
+
+//----------------------------------------------------------------------
+//
+// Promise wrappers for paint_listener.js
+//
+//----------------------------------------------------------------------
+
+// Returns a Promise that resolves once all paints have completed
+function waitForPaints() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaints(resolve);
+  });
+}
+
+// As with waitForPaints but also flushes pending style changes before waiting
+function waitForPaintsFlushed() {
+  return new Promise(function(resolve, reject) {
+    waitForAllPaintsFlushed(resolve);
+  });
+}
