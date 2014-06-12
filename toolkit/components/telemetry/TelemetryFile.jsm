@@ -31,6 +31,9 @@ const MAX_PING_FILE_AGE = 14 * 24 * 60 * 60 * 1000; // 2 weeks
 // MAX_PING_FILE_AGE indicate that we need to send all of our pings ASAP.
 const OVERDUE_PING_FILE_AGE = 7 * 24 * 60 * 60 * 1000; // 1 week
 
+// Maximum number of pings to save.
+const MAX_LRU_PINGS = 17;
+
 // The number of outstanding saved pings that we have issued loading
 // requests for.
 let pingsLoaded = 0;
@@ -56,6 +59,10 @@ this.TelemetryFile = {
 
   get OVERDUE_PING_FILE_AGE() {
     return OVERDUE_PING_FILE_AGE;
+  },
+
+  get MAX_LRU_PINGS() {
+    return MAX_LRU_PINGS;
   },
 
   get pingDirectoryPath() {
@@ -142,12 +149,36 @@ this.TelemetryFile = {
 
       if (exists) {
         let entries = yield iter.nextBatch();
-        yield iter.close();
+        let sortedEntries = [];
 
-        let p = [e for (e of entries) if (!e.isDir)].
-            map((e) => this.loadHistograms(e.path));
+        for (let entry of entries) {
+          if (entry.isDir) {
+            continue;
+          }
 
-        yield Promise.all(p);
+          let info = yield OS.File.stat(entry.path);
+          sortedEntries.push({entry:entry, lastModificationDate: info.lastModificationDate});
+        }
+
+        sortedEntries.sort(function compare(a, b) {
+          return b.lastModificationDate - a.lastModificationDate;
+        });
+
+        let count = 0;
+        let result = [];
+
+        // Keep only the last MAX_LRU_PINGS entries to avoid that the backlog overgrows.
+        for (let i = 0; i < MAX_LRU_PINGS && i < sortedEntries.length; i++) {
+          let entry = sortedEntries[i].entry;
+          result.push(this.loadHistograms(entry.path))
+        }
+
+        for (let i = MAX_LRU_PINGS; i < sortedEntries.length; i++) {
+          let entry = sortedEntries[i].entry;
+          OS.File.remove(entry.path);
+        }
+
+        yield Promise.all(result);
       }
 
       yield iter.close();
