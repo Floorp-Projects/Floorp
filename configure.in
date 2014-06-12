@@ -4166,14 +4166,14 @@ AC_SUBST(MOZ_B2G_VERSION)
 AC_DEFINE_UNQUOTED(MOZ_BUILD_APP,$MOZ_BUILD_APP)
 
 dnl ========================================================
-dnl Check Android SDK version depending on mobile target.
+dnl Check android sdk version depending on mobile target
 dnl ========================================================
 
 if test -z "$gonkdir" ; then
     # Minimum Android SDK API Level we require.
     case "$MOZ_BUILD_APP" in
     mobile/android)
-        android_min_api_level=19
+        android_min_api_level=16
         case "$target" in
         *-android*|*-linuxandroid*)
             :
