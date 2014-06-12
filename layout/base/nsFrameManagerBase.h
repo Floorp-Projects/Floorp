@@ -30,8 +30,13 @@ class nsFrameManagerBase
 {
 public:
   nsFrameManagerBase()
+    : mPresShell(nullptr)
+    , mStyleSet(nullptr)
+    , mRootFrame(nullptr)
+    , mUndisplayedMap(nullptr)
+    , mIsDestroyingFrames(false)
   {
-    memset(this, '\0', sizeof(nsFrameManagerBase));
+    mPlaceholderMap.ops = nullptr;
   }
 
   bool IsDestroyingFrames() { return mIsDestroyingFrames; }
