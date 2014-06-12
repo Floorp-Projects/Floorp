@@ -265,20 +265,9 @@
                 <checkbox label="&engine.bookmarks.label;"
                           accesskey="&engine.bookmarks.accesskey;"
                           preference="engine.bookmarks"/>
-                <hbox>
-                  <checkbox id="fxa-pweng-chk"
-                            label="&engine.passwords.label;"
-                            accesskey="&engine.passwords.accesskey;"
-                            preference="engine.passwords"/>
-
-                  <vbox id="fxa-pweng-help">
-                    <spacer flex="1"/>
-                    <hbox id="fxa-pweng-help-link">
-                      <image onclick="gSyncUtils.openMPInfoPage(event);" />
-                    </hbox>
-                    <spacer flex="1"/>
-                  </vbox>
-                </hbox>
+                <checkbox label="&engine.passwords.label;"
+                          accesskey="&engine.passwords.accesskey;"
+                          preference="engine.passwords"/>
                 <checkbox label="&engine.history.label;"
                           accesskey="&engine.history.accesskey;"
                           preference="engine.history"/>
