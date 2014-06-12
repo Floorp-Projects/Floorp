@@ -285,7 +285,9 @@ public:
     void GetContextAttributes(dom::Nullable<dom::WebGLContextAttributes>& retval);
     bool IsContextLost() const { return mContextStatus != ContextNotLost; }
     void GetSupportedExtensions(JSContext *cx, dom::Nullable< nsTArray<nsString> > &retval);
-    JSObject* GetExtension(JSContext* cx, const nsAString& aName, ErrorResult& rv);
+    void GetExtension(JSContext* cx, const nsAString& aName,
+                      JS::MutableHandle<JSObject*> aRetval,
+                      ErrorResult& rv);
     void ActiveTexture(GLenum texture);
     void AttachShader(WebGLProgram* program, WebGLShader* shader);
     void BindAttribLocation(WebGLProgram* program, GLuint location,
@@ -357,9 +359,10 @@ public:
                             dom::Nullable< nsTArray<WebGLShader*> > &retval);
     GLint GetAttribLocation(WebGLProgram* prog, const nsAString& name);
     JS::Value GetBufferParameter(GLenum target, GLenum pname);
-    JS::Value GetBufferParameter(JSContext* /* unused */, GLenum target,
-                                 GLenum pname) {
-        return GetBufferParameter(target, pname);
+    void GetBufferParameter(JSContext* /* unused */, GLenum target,
+                            GLenum pname,
+                            JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetBufferParameter(target, pname));
     }
     GLenum GetError();
     JS::Value GetFramebufferAttachmentParameter(JSContext* cx,
@@ -367,22 +370,34 @@ public:
                                                 GLenum attachment,
                                                 GLenum pname,
                                                 ErrorResult& rv);
+    void GetFramebufferAttachmentParameter(JSContext* cx,
+                                           GLenum target,
+                                           GLenum attachment,
+                                           GLenum pname,
+                                           JS::MutableHandle<JS::Value> retval,
+                                           ErrorResult& rv) {
+        retval.set(GetFramebufferAttachmentParameter(cx, target, attachment,
+                                                     pname, rv));
+    }
     JS::Value GetProgramParameter(WebGLProgram *prog, GLenum pname);
-    JS::Value GetProgramParameter(JSContext* /* unused */, WebGLProgram *prog,
-                                  GLenum pname) {
-        return GetProgramParameter(prog, pname);
+    void  GetProgramParameter(JSContext* /* unused */, WebGLProgram *prog,
+                              GLenum pname,
+                              JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetProgramParameter(prog, pname));
     }
     void GetProgramInfoLog(WebGLProgram *prog, nsACString& retval);
     void GetProgramInfoLog(WebGLProgram *prog, nsAString& retval);
     JS::Value GetRenderbufferParameter(GLenum target, GLenum pname);
-    JS::Value GetRenderbufferParameter(JSContext* /* unused */,
-                                       GLenum target, GLenum pname) {
-        return GetRenderbufferParameter(target, pname);
+    void GetRenderbufferParameter(JSContext* /* unused */,
+                                  GLenum target, GLenum pname,
+                                  JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetRenderbufferParameter(target, pname));
     }
     JS::Value GetShaderParameter(WebGLShader *shader, GLenum pname);
-    JS::Value GetShaderParameter(JSContext* /* unused */, WebGLShader *shader,
-                                 GLenum pname) {
-        return GetShaderParameter(shader, pname);
+    void GetShaderParameter(JSContext* /* unused */, WebGLShader *shader,
+                            GLenum pname,
+                            JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetShaderParameter(shader, pname));
     }
     already_AddRefed<WebGLShaderPrecisionFormat>
       GetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype);
@@ -391,12 +406,18 @@ public:
     void GetShaderSource(WebGLShader *shader, nsAString& retval);
     void GetShaderTranslatedSource(WebGLShader *shader, nsAString& retval);
     JS::Value GetTexParameter(GLenum target, GLenum pname);
-    JS::Value GetTexParameter(JSContext * /* unused */, GLenum target,
-                              GLenum pname) {
-        return GetTexParameter(target, pname);
+    void GetTexParameter(JSContext * /* unused */, GLenum target,
+                         GLenum pname,
+                         JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetTexParameter(target, pname));
     }
     JS::Value GetUniform(JSContext* cx, WebGLProgram *prog,
                          WebGLUniformLocation *location);
+    void GetUniform(JSContext* cx, WebGLProgram *prog,
+                    WebGLUniformLocation *location,
+                    JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetUniform(cx, prog, location));
+    }
     already_AddRefed<WebGLUniformLocation>
       GetUniformLocation(WebGLProgram *prog, const nsAString& name);
     void Hint(GLenum target, GLenum mode);
@@ -691,6 +712,10 @@ public:
     bool IsQuery(WebGLQuery *query);
     already_AddRefed<WebGLQuery> GetQuery(GLenum target, GLenum pname);
     JS::Value GetQueryObject(JSContext* cx, WebGLQuery *query, GLenum pname);
+    void GetQueryObject(JSContext* cx, WebGLQuery *query, GLenum pname,
+                        JS::MutableHandle<JS::Value> retval) {
+        retval.set(GetQueryObject(cx, query, pname));
+    }
 
 private:
     // ANY_SAMPLES_PASSED(_CONSERVATIVE) slot
@@ -740,7 +765,12 @@ public:
     void Disable(GLenum cap);
     void Enable(GLenum cap);
     JS::Value GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv);
-    JS::Value GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index);
+    void GetParameter(JSContext* cx, GLenum pname,
+                      JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
+        retval.set(GetParameter(cx, pname, rv));
+    }
+    void GetParameterIndexed(JSContext* cx, GLenum pname, GLuint index,
+                             JS::MutableHandle<JS::Value> retval);
     bool IsEnabled(GLenum cap);
 
 private:
@@ -766,6 +796,11 @@ public:
 
     JS::Value GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
                               ErrorResult& rv);
+    void GetVertexAttrib(JSContext* cx, GLuint index, GLenum pname,
+                         JS::MutableHandle<JS::Value> retval,
+                         ErrorResult& rv) {
+        retval.set(GetVertexAttrib(cx, index, pname, rv));
+    }
     WebGLsizeiptr GetVertexAttribOffset(GLuint index, GLenum pname);
 
     void VertexAttrib1f(GLuint index, GLfloat x0);

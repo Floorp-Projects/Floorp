@@ -124,11 +124,13 @@ public:
     return GetTokenList(nsGkAtoms::itemprop);
   }
   mozilla::dom::HTMLPropertiesCollection* Properties();
-  JS::Value GetItemValue(JSContext* aCx, JSObject* aScope,
-                         mozilla::ErrorResult& aError);
-  JS::Value GetItemValue(JSContext* aCx, mozilla::ErrorResult& aError)
+  void GetItemValue(JSContext* aCx, JSObject* aScope,
+                    JS::MutableHandle<JS::Value> aRetval,
+                    mozilla::ErrorResult& aError);
+  void GetItemValue(JSContext* aCx, JS::MutableHandle<JS::Value> aRetval,
+                    mozilla::ErrorResult& aError)
   {
-    return GetItemValue(aCx, GetWrapperPreserveColor(), aError);
+    GetItemValue(aCx, GetWrapperPreserveColor(), aRetval, aError);
   }
   void SetItemValue(JSContext* aCx, JS::Value aValue,
                     mozilla::ErrorResult& aError);

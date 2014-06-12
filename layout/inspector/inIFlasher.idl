@@ -1,0 +1,46 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIDOMElement;
+
+/**
+ * This class will be removed in gecko v33. See comments below for alternatives.
+ *
+ * @status DEPRECATED - see comments below.
+ */
+[scriptable, uuid(7B4A099F-6F6E-4565-977B-FB622ADBFF49)]
+interface inIFlasher : nsISupports 
+{
+  attribute DOMString       color;
+  attribute boolean         invert;
+  attribute unsigned short  thickness;
+
+  /**
+   * This function now does nothing at all. Use the :-moz-devtools-highlighted
+   * pseudo-class instead. For example, see the "HIGHLIGHTED_PSEUDO_CLASS" and
+   * "INVERT" lines in:
+   * https://hg.mozilla.org/dom-inspector/file/tip/resources/content/Flasher.js
+   *
+   * @status DEPRECATED
+   */
+  void drawElementOutline(in nsIDOMElement aElement);
+
+  /**
+   * This function now does nothing at all.
+   *
+   * @status DEPRECATED
+   */
+  void repaintElement(in nsIDOMElement aElement);
+
+  /**
+   * As of gecko v33 you should use inIDOMUtils::scrollElementIntoView instead
+   * of this function.
+   *
+   * @status DEPRECATED
+   */
+  void scrollElementIntoView(in nsIDOMElement aElement);
+};
+

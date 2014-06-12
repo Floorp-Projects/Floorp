@@ -96,3 +96,13 @@ assertThrowsValue(function() { f(1,2.4) }, 2.4+8);
 assertThrowsValue(function() { f(8,2.4) }, 2.4+36);
 
 assertEq(asmLink(asmCompile('glob', 'imp', USE_ASM + 'var identity=imp.identity; function g(x) { x=+x; return +identity(x) } return g'), null, imp)(13.37), 13.37);
+
+setJitCompilerOption("ion.usecount.trigger", 20);
+function ffiInt(a,b,c,d,e,f,g,h,i,j) { return j+1 }
+var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function f(i) { i=i|0; return ffi(i|0,(i+1)|0,(i+2)|0,(i+3)|0,(i+4)|0,(i+5)|0,(i+6)|0,(i+7)|0,(i+8)|0,(i+9)|0)|0 } return f'), null, {ffi:ffiInt});
+for (var i = 0; i < 40; i++)
+    assertEq(f(i), i+10);
+function ffiDouble(a,b,c,d,e,f,g,h,i,j) { return j+1 }
+var f = asmLink(asmCompile('glob', 'imp', USE_ASM + 'var ffi=imp.ffi; function f(i) { i=+i; return +ffi(i,i+1.0,i+2.0,i+3.0,i+4.0,i+5.0,i+6.0,i+7.0,i+8.0,i+9.0) } return f'), null, {ffi:ffiDouble});
+for (var i = 0; i < 40; i++)
+    assertEq(f(i), i+10);

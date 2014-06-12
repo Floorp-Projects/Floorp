@@ -99,8 +99,10 @@ MediaKeyMessageEvent::Constructor(const GlobalObject& aGlobal,
   return e.forget();
 }
 
-JSObject*
-MediaKeyMessageEvent::GetMessage(JSContext* cx, ErrorResult& aRv)
+void
+MediaKeyMessageEvent::GetMessage(JSContext* cx,
+                                 JS::MutableHandle<JSObject*> aMessage,
+                                 ErrorResult& aRv)
 {
   if (!mMessage) {
     mMessage = Uint8Array::Create(cx,
@@ -109,12 +111,12 @@ MediaKeyMessageEvent::GetMessage(JSContext* cx, ErrorResult& aRv)
                                   mRawMessage.Elements());
     if (!mMessage) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-      return nullptr;
+      return;
     }
     mRawMessage.Clear();
   }
   JS::ExposeObjectToActiveJS(mMessage);
-  return mMessage;
+  aMessage.set(mMessage);
 }
 
 void

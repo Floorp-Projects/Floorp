@@ -38,6 +38,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/InspectorUtilsBinding.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsCSSProps.h"
 #include "nsColor.h"
 #include "nsStyleSet.h"
@@ -651,7 +652,7 @@ inDOMUtils::ColorNameToRGB(const nsAString& aColorName, JSContext* aCx,
   triple.mG = NS_GET_G(color);
   triple.mB = NS_GET_B(color);
 
-  if (!triple.ToObject(aCx, aValue)) {
+  if (!ToJSValue(aCx, triple, aValue)) {
     return NS_ERROR_FAILURE;
   }
 

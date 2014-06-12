@@ -15,6 +15,7 @@
 #include "BrowserElementParent.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsIDOMCustomEvent.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsVariant.h"
@@ -160,7 +161,7 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   JSAutoCompartment ac(cx, global);
-  if (!detail.ToObject(cx, &val)) {
+  if (!ToJSValue(cx, detail, &val)) {
     MOZ_CRASH("Failed to convert dictionary to JS::Value due to OOM.");
     return BrowserElementParent::OPEN_WINDOW_IGNORED;
   }
@@ -332,7 +333,7 @@ NS_IMETHODIMP DispatchAsyncScrollEventRunnable::Run()
   JSAutoCompartment ac(cx, globalJSObject);
   JS::Rooted<JS::Value> val(cx);
 
-  if (!detail.ToObject(cx, &val)) {
+  if (!ToJSValue(cx, detail, &val)) {
     MOZ_CRASH("Failed to convert dictionary to JS::Value due to OOM.");
     return NS_ERROR_FAILURE;
   }

@@ -10,40 +10,24 @@
 #include "nsDOMClassInfoID.h"
 #include "nsDOMFile.h"
 #include "nsError.h"
-#include "nsIConverterInputStream.h"
-#include "nsIDocument.h"
 #include "nsIFile.h"
-#include "nsIFileStreams.h"
-#include "nsIInputStream.h"
-#include "nsIMIMEService.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 
-#include "nsLayoutCID.h"
-#include "nsXPIDLString.h"
-#include "nsReadableUtils.h"
-#include "nsIURI.h"
-#include "nsStreamUtils.h"
 #include "nsXPCOM.h"
 #include "nsIDOMEventListener.h"
 #include "nsJSEnvironment.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsCExternalHandlerService.h"
-#include "nsIStreamConverterService.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsIScriptObjectPrincipal.h"
-#include "nsHostObjectProtocolHandler.h"
 #include "mozilla/Base64.h"
-#include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/FileReaderBinding.h"
 #include "xpcpublic.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsDOMJSUtils.h"
 
 #include "jsfriendapi.h"
+
+#include "nsITransport.h"
+#include "nsIStreamTransportService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -52,19 +36,19 @@ using namespace mozilla::dom;
 #define LOADSTART_STR "loadstart"
 #define LOADEND_STR "loadend"
 
+static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   FileIOObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFile)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrincipal)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMFileReader,
                                                 FileIOObject)
   tmp->mResultArrayBuffer = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFile)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPrincipal)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 
@@ -76,7 +60,6 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsDOMFileReader)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFileReader)
-  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(FileIOObject)
 
@@ -121,14 +104,6 @@ nsDOMFileReader::~nsDOMFileReader()
 nsresult
 nsDOMFileReader::Init()
 {
-  nsIScriptSecurityManager* secMan = nsContentUtils::GetSecurityManager();
-  nsCOMPtr<nsIPrincipal> principal;
-  if (secMan) {
-    secMan->GetSystemPrincipal(getter_AddRefs(principal));
-  }
-  NS_ENSURE_STATE(principal);
-  mPrincipal.swap(principal);
-
   // Instead of grabbing some random global from the context stack,
   // let's use the default one (junk scope) for now.
   // We should move away from this Init...
@@ -151,15 +126,6 @@ nsDOMFileReader::Constructor(const GlobalObject& aGlobal, ErrorResult& aRv)
   }
 
   fileReader->BindToOwner(owner);
-
-  // This object is bound to a |window|,
-  // so reset the principal.
-  nsCOMPtr<nsIScriptObjectPrincipal> scriptPrincipal = do_QueryInterface(owner);
-  if (!scriptPrincipal) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-  fileReader->mPrincipal = scriptPrincipal->GetPrincipal();
   return fileReader.forget();
 }
 
@@ -180,12 +146,11 @@ nsDOMFileReader::GetReadyState(uint16_t *aReadyState)
   return NS_OK;
 }
 
-JS::Value
-nsDOMFileReader::GetResult(JSContext* aCx, ErrorResult& aRv)
+void
+nsDOMFileReader::GetResult(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+                           ErrorResult& aRv)
 {
-  JS::Rooted<JS::Value> result(aCx);
-  aRv = GetResult(aCx, &result);
-  return result;
+  aRv = GetResult(aCx, aResult);
 }
 
 NS_IMETHODIMP
@@ -270,12 +235,9 @@ nsDOMFileReader::DoAbort(nsAString& aEvent)
   // Revert status and result attributes
   SetDOMStringToNull(mResult);
   mResultArrayBuffer = nullptr;
-    
-  // Non-null channel indicates a read is currently active
-  if (mChannel) {
-    // Cancel request requires an error status
-    mChannel->Cancel(NS_ERROR_FAILURE);
-    mChannel = nullptr;
+
+  if (mAsyncStream) {
+    mAsyncStream = nullptr;
   }
   mFile = nullptr;
 
@@ -309,65 +271,14 @@ ReadFuncBinaryString(nsIInputStream* in,
 }
 
 nsresult
-nsDOMFileReader::DoOnDataAvailable(nsIRequest *aRequest,
-                                   nsISupports *aContext,
-                                   nsIInputStream *aInputStream,
-                                   uint64_t aOffset,
-                                   uint32_t aCount)
+nsDOMFileReader::DoOnLoadEnd(nsresult aStatus,
+                             nsAString& aSuccessEvent,
+                             nsAString& aTerminationEvent)
 {
-  if (mDataFormat == FILE_AS_BINARY) {
-    //Continuously update our binary string as data comes in
-    NS_ASSERTION(mResult.Length() == aOffset,
-                 "unexpected mResult length");
-    uint32_t oldLen = mResult.Length();
-    if (uint64_t(oldLen) + aCount > UINT32_MAX)
-      return NS_ERROR_OUT_OF_MEMORY;
 
-    char16_t *buf = nullptr;
-    mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
-    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
-
-    uint32_t bytesRead = 0;
-    aInputStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
-                               &bytesRead);
-    NS_ASSERTION(bytesRead == aCount, "failed to read data");
-  }
-  else if (mDataFormat == FILE_AS_ARRAYBUFFER) {
-    uint32_t bytesRead = 0;
-    aInputStream->Read((char*)JS_GetArrayBufferData(mResultArrayBuffer) + aOffset,
-                       aCount, &bytesRead);
-    NS_ASSERTION(bytesRead == aCount, "failed to read data");
-  }
-  else {
-    //Update memory buffer to reflect the contents of the file
-    if (aOffset + aCount > UINT32_MAX) {
-      // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mFileData = (char *)moz_realloc(mFileData, aOffset + aCount);
-    NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
-
-    uint32_t bytesRead = 0;
-    aInputStream->Read(mFileData + aOffset, aCount, &bytesRead);
-    NS_ASSERTION(bytesRead == aCount, "failed to read data");
-
-    mDataLen += aCount;
-  }
-
-  return NS_OK;
-}
-
-nsresult
-nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
-                                 nsISupports *aContext,
-                                 nsresult aStatus,
-                                 nsAString& aSuccessEvent,
-                                 nsAString& aTerminationEvent)
-{
   // Make sure we drop all the objects that could hold files open now.
-  nsCOMPtr<nsIChannel> channel;
-  mChannel.swap(channel);
-
+  nsCOMPtr<nsIAsyncInputStream> stream;
+  mAsyncStream.swap(stream);
   nsCOMPtr<nsIDOMBlob> file;
   mFile.swap(file);
 
@@ -401,12 +312,57 @@ nsDOMFileReader::DoOnStopRequest(nsIRequest *aRequest,
       rv = GetAsDataURL(file, mFileData, mDataLen, mResult);
       break;
   }
-  
+
   mResult.SetIsVoid(false);
 
   FreeFileData();
 
   return rv;
+}
+
+nsresult
+nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
+{
+  MOZ_ASSERT(aStream);
+
+  if (mDataFormat == FILE_AS_BINARY) {
+    //Continuously update our binary string as data comes in
+    uint32_t oldLen = mResult.Length();
+    NS_ASSERTION(mResult.Length() == mDataLen,
+                 "unexpected mResult length");
+    if (uint64_t(oldLen) + aCount > UINT32_MAX)
+      return NS_ERROR_OUT_OF_MEMORY;
+    char16_t *buf = nullptr;
+    mResult.GetMutableData(&buf, oldLen + aCount, fallible_t());
+    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
+
+    uint32_t bytesRead = 0;
+    aStream->ReadSegments(ReadFuncBinaryString, buf + oldLen, aCount,
+                          &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
+  }
+  else if (mDataFormat == FILE_AS_ARRAYBUFFER) {
+    uint32_t bytesRead = 0;
+    aStream->Read((char*) JS_GetArrayBufferData(mResultArrayBuffer) + mDataLen,
+                  aCount, &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
+  }
+  else {
+    //Update memory buffer to reflect the contents of the file
+    if (mDataLen + aCount > UINT32_MAX) {
+      // PR_Realloc doesn't support over 4GB memory size even if 64-bit OS
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    mFileData = (char *) moz_realloc(mFileData, mDataLen + aCount);
+    NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
+
+    uint32_t bytesRead = 0;
+    aStream->Read(mFileData + mDataLen, aCount, &bytesRead);
+    NS_ASSERTION(bytesRead == aCount, "failed to read data");
+  }
+
+  mDataLen += aCount;
+  return NS_OK;
 }
 
 // Helper methods
@@ -433,40 +389,55 @@ nsDOMFileReader::ReadFileContent(JSContext* aCx,
   mDataFormat = aDataFormat;
   CopyUTF16toUTF8(aCharset, mCharset);
 
-  //Establish a channel with our file
-  {
-    // Hold the internal URL alive only as long as necessary
-    // After the channel is created it will own whatever is backing
-    // the DOMFile.
-    nsDOMFileInternalUrlHolder urlHolder(mFile, mPrincipal);
+  nsresult rv;
 
-    nsCOMPtr<nsIURI> uri;
-    aRv = NS_NewURI(getter_AddRefs(uri), urlHolder.mUrl);
-    NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
-
-    nsCOMPtr<nsILoadGroup> loadGroup;
-    if (HasOrHasHadOwner()) {
-      if (!GetOwner()) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return;
-      }
-      nsIDocument* doc = GetOwner()->GetExtantDoc();
-      if (doc) {
-        loadGroup = doc->GetDocumentLoadGroup();
-      }
-    }
-
-    aRv = NS_NewChannel(getter_AddRefs(mChannel), uri, nullptr, loadGroup,
-                        nullptr, nsIRequest::LOAD_BACKGROUND);
-    NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
+  nsCOMPtr<nsIStreamTransportService> sts =
+    do_GetService(kStreamTransportServiceCID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
   }
 
-  //Obtain the total size of the file before reading
+  nsCOMPtr<nsIInputStream> stream;
+  rv = mFile->GetInternalStream(getter_AddRefs(stream));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  nsCOMPtr<nsITransport> transport;
+  rv = sts->CreateInputTransport(stream,
+                                 /* aStartOffset */ 0,
+                                 /* aReadLimit */ -1,
+                                 /* aCloseWhenDone */ true,
+                                 getter_AddRefs(transport));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  nsCOMPtr<nsIInputStream> wrapper;
+  rv = transport->OpenInputStream(/* aFlags */ 0,
+                                  /* aSegmentSize */ 0,
+                                  /* aSegmentCount */ 0,
+                                  getter_AddRefs(wrapper));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+
+  MOZ_ASSERT(!mAsyncStream);
+  mAsyncStream = do_QueryInterface(wrapper);
+  MOZ_ASSERT(mAsyncStream);
+
   mTotal = mozilla::dom::kUnknownSize;
   mFile->GetSize(&mTotal);
 
-  aRv = mChannel->AsyncOpen(this, nullptr);
-  NS_ENSURE_SUCCESS_VOID(aRv.ErrorCode());
+  rv = DoAsyncWait(mAsyncStream);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
 
   //FileReader should be in loading state here
   mReadyState = nsIDOMFileReader::LOADING;
