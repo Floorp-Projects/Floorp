@@ -214,7 +214,7 @@ class ReftestRunner(MozbuildObject):
 
     def run_desktop_test(self, test_file=None, filter=None, suite=None,
             debugger=None, parallel=False, shuffle=False,
-            e10s=False, this_chunk=None, total_chunks=None):
+            e10s=False, extraPrefs=None, this_chunk=None, total_chunks=None):
         """Runs a reftest.
 
         test_file is a path to a test file. It can be a relative path from the
@@ -264,6 +264,10 @@ class ReftestRunner(MozbuildObject):
         if e10s:
             extra_args.append('--e10s')
 
+        if extraPrefs:
+            for pref in extraPrefs:
+                extra_args.extend(['--setpref', pref])
+
         if this_chunk:
             extra_args.append('--this-chunk=%s' % this_chunk)
 
@@ -308,6 +312,11 @@ def ReftestCommand(func):
     e10s = CommandArgument('--e10s', action='store_true',
         help='Use content processes.')
     func = e10s(func)
+
+    extraPrefs = CommandArgument('--setpref', action='append',
+        default=[], dest='extraPrefs', metavar='PREF=VALUE',
+        help='Set prefs in the reftest profile.')
+    func = extraPrefs(func)
 
     totalChunks = CommandArgument('--total-chunks',
         help = 'How many chunks to split the tests up into.')

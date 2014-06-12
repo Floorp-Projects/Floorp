@@ -28,7 +28,8 @@ MOZ_BEGIN_ENUM_CLASS(SurfaceType, int8_t)
   SKIA, /* Surface wrapping a Skia bitmap */
   DUAL_DT, /* Snapshot of a dual drawtarget */
   D2D1_1_IMAGE, /* A D2D 1.1 ID2D1Image SourceSurface */
-  RECORDING /* Surface used for recording */
+  RECORDING, /* Surface used for recording */
+  TILED /* Surface from a tiled DrawTarget */
 MOZ_END_ENUM_CLASS(SurfaceType)
 
 MOZ_BEGIN_ENUM_CLASS(SurfaceFormat, int8_t)

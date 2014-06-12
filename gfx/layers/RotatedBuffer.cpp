@@ -332,7 +332,7 @@ RotatedContentBuffer::EnsureBuffer()
   NS_ASSERTION(!mLoanedDrawTarget, "Loaned draw target must be returned");
   if (!mDTBuffer) {
     if (mBufferProvider) {
-      mDTBuffer = mBufferProvider->GetAsDrawTarget();
+      mDTBuffer = mBufferProvider->BorrowDrawTarget();
     }
   }
 
@@ -347,7 +347,7 @@ RotatedContentBuffer::EnsureBufferOnWhite()
   if (!mDTBufferOnWhite) {
     if (mBufferProviderOnWhite) {
       mDTBufferOnWhite =
-        mBufferProviderOnWhite->GetAsDrawTarget();
+        mBufferProviderOnWhite->BorrowDrawTarget();
     }
   }
 

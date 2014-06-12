@@ -9,7 +9,6 @@ let Ci = Components.interfaces;
 let Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 this.EXPORTED_SYMBOLS = ["SettingsDB", "SETTINGSDB_NAME", "SETTINGSSTORE_NAME"];
 
@@ -17,6 +16,18 @@ const DEBUG = false;
 function debug(s) {
   if (DEBUG) dump("-*- SettingsDB: " + s + "\n");
 }
+
+const TYPED_ARRAY_THINGS = new Set([
+  "Int8Array",
+  "Uint8Array",
+  "Uint8ClampedArray",
+  "Int16Array",
+  "Uint16Array",
+  "Int32Array",
+  "Uint32Array",
+  "Float32Array",
+  "Float64Array",
+]);
 
 this.SETTINGSDB_NAME = "settings";
 this.SETTINGSDB_VERSION = 4;
@@ -176,9 +187,29 @@ SettingsDB.prototype = {
     return aValue
   },
 
+  getObjectKind: function(aObject) {
+    if (aObject === null || aObject === undefined) {
+      return "primitive";
+    } else if (Array.isArray(aObject)) {
+      return "array";
+    } else if (aObject instanceof Ci.nsIDOMFile) {
+      return "file";
+    } else if (aObject instanceof Ci.nsIDOMBlob) {
+      return "blob";
+    } else if (aObject.constructor.name == "Date") {
+      return "date";
+    } else if (TYPED_ARRAY_THINGS.has(aObject.constructor.name)) {
+      return aObject.constructor.name;
+    } else if (typeof aObject == "object") {
+      return "object";
+    } else {
+      return "primitive";
+    }
+  },
+
   // Makes sure any property that is a data: uri gets converted to a Blob.
   prepareValue: function(aObject) {
-    let kind = ObjectWrapper.getObjectKind(aObject);
+    let kind = this.getObjectKind(aObject);
     if (kind == "array") {
       let res = [];
       aObject.forEach(function(aObj) {

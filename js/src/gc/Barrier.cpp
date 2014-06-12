@@ -16,6 +16,7 @@ namespace js {
 void
 ValueReadBarrier(const Value &value)
 {
+    JS_ASSERT(!CurrentThreadIsIonCompiling());
     if (value.isObject())
         JSObject::readBarrier(&value.toObject());
     else if (value.isString())
@@ -54,6 +55,12 @@ bool
 RuntimeFromMainThreadIsHeapMajorCollecting(JS::shadow::Zone *shadowZone)
 {
     return shadowZone->runtimeFromMainThread()->isHeapMajorCollecting();
+}
+
+bool
+CurrentThreadIsIonCompiling()
+{
+    return TlsPerThreadData.get()->ionCompiling;
 }
 #endif // DEBUG
 

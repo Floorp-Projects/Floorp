@@ -6,6 +6,7 @@
 #include "nsServiceManagerUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsXULAppAPI.h"
 #include "WifiUtils.h"
 #include "nsCxPusher.h"
@@ -291,7 +292,7 @@ WifiProxyService::DispatchWifiResult(const WifiResultOptions& aOptions, const ns
   mozilla::AutoSafeJSContext cx;
   JS::Rooted<JS::Value> val(cx);
 
-  if (!aOptions.ToObject(cx, &val)) {
+  if (!ToJSValue(cx, aOptions, &val)) {
     return;
   }
 

@@ -176,8 +176,9 @@ public:
     return mObjectStore;
   }
 
-  JS::Value
-  GetKeyPath(JSContext* aCx, ErrorResult& aRv);
+  void
+  GetKeyPath(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
+             ErrorResult& aRv);
 
   bool
   MultiEntry() const

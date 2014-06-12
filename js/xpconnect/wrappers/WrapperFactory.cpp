@@ -122,14 +122,16 @@ WrapperFactory::DoubleWrap(JSContext *cx, HandleObject obj, unsigned flags)
 
 // In general, we're trying to deprecate COWs incrementally as we introduce
 // Xrays to the corresponding object types. But switching off COWs for Object
-// instances would be too tumultuous at present, so we punt on that for later.
+// and Array instances would be too tumultuous at present, so we punt on that
+// for later.
 static bool
 ForceCOWBehavior(JSObject *obj)
 {
-    if (IdentifyStandardInstanceOrPrototype(obj) == JSProto_Object) {
+    JSProtoKey key = IdentifyStandardInstanceOrPrototype(obj);
+    if (key == JSProto_Object || key == JSProto_Array) {
         MOZ_ASSERT(GetXrayType(obj) == XrayForJSObject,
-                   "We should use XrayWrappers for standard ES Object instances "
-                   "modulo this hack");
+                   "We should use XrayWrappers for standard ES Object and Array "
+                   "instances modulo this hack");
         return true;
     }
     return false;

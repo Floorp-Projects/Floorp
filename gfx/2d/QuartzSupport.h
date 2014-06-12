@@ -53,7 +53,7 @@ public:
    * is attached then an internal pixel buffer will be
    * used.
    */
-  void AttachIOSurface(mozilla::RefPtr<MacIOSurface> aSurface);
+  void AttachIOSurface(MacIOSurface *aSurface);
   IOSurfaceID GetIOSurfaceID();
   // aX, aY, aWidth and aHeight are in "display pixels".  Multiply by
   // surf->GetContentsScaleFactor() to get device pixels.

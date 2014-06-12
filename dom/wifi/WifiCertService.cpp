@@ -8,6 +8,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "cert.h"
 #include "certdb.h"
 #include "CryptoTask.h"
@@ -255,7 +256,7 @@ WifiCertService::DispatchResult(const WifiCertServiceResultOptions& aOptions)
   JS::RootedValue val(cx);
   nsCString dummyInterface;
 
-  if (!aOptions.ToObject(cx, &val)) {
+  if (!ToJSValue(cx, aOptions, &val)) {
     return;
   }
 

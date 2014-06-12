@@ -450,7 +450,7 @@ public:
   void PassMozMapOfNullableArrayBuffers(const MozMap<Nullable<ArrayBuffer> >&);
   void PassVariadicTypedArray(const Sequence<Float32Array>&);
   void PassVariadicNullableTypedArray(const Sequence<Nullable<Float32Array> >&);
-  JSObject* ReceiveUint8Array(JSContext*);
+  void ReceiveUint8Array(JSContext*, JS::MutableHandle<JSObject*>);
 
   // DOMString types
   void PassString(const nsAString&);
@@ -523,7 +523,7 @@ public:
   void PassOptionalNullableMozMapOfNullableMozMapOfAny(JSContext*, const Optional<Nullable<MozMap<Nullable<MozMap<JS::Value>>>>>&);
   void PassOptionalNullableMozMapOfNullableSequenceOfAny(JSContext*, const Optional<Nullable<MozMap<Nullable<Sequence<JS::Value>>>>>&);
   void PassOptionalNullableSequenceOfNullableMozMapOfAny(JSContext*, const Optional<Nullable<Sequence<Nullable<MozMap<JS::Value>>>>>&);
-  JS::Value ReceiveAny(JSContext*);
+  void ReceiveAny(JSContext*, JS::MutableHandle<JS::Value>);
 
   // object types
   void PassObject(JSContext*, JS::Handle<JSObject*>);
@@ -539,8 +539,8 @@ public:
   void PassOptionalNullableSequenceOfNullableSequenceOfObject(JSContext*, const Optional<Nullable<Sequence<Nullable<Sequence<JSObject*> > > > >&);
   void PassOptionalNullableSequenceOfNullableSequenceOfNullableObject(JSContext*, const Optional<Nullable<Sequence<Nullable<Sequence<JSObject*> > > > >&);
   void PassMozMapOfObject(JSContext*, const MozMap<JSObject*>&);
-  JSObject* ReceiveObject(JSContext*);
-  JSObject* ReceiveNullableObject(JSContext*);
+  void ReceiveObject(JSContext*, JS::MutableHandle<JSObject*>);
+  void ReceiveNullableObject(JSContext*, JS::MutableHandle<JSObject*>);
 
   // Union types
   void PassUnion(JSContext*, const ObjectOrLong& arg);
@@ -767,7 +767,7 @@ public:
   TestInterface* PutForwardsAttr();
   TestInterface* PutForwardsAttr2();
   TestInterface* PutForwardsAttr3();
-  JS::Value JsonifierShouldSkipThis(JSContext*);
+  void GetJsonifierShouldSkipThis(JSContext*, JS::MutableHandle<JS::Value>);
   void SetJsonifierShouldSkipThis(JSContext*, JS::Rooted<JS::Value>&);
   TestParentInterface* JsonifierShouldSkipThis2();
   void SetJsonifierShouldSkipThis2(TestParentInterface&);

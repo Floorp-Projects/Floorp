@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/SettingsQueue.jsm");
 Cu.import("resource://gre/modules/SettingsDB.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/ObjectWrapper.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
@@ -197,6 +196,13 @@ SettingsLock.prototype = {
   },
 
   _serializePreservingBinaries: function _serializePreservingBinaries(aObject) {
+    function needsUUID(aValue) {
+      if (!aValue || !aValue.constructor) {
+        return false;
+      }
+      return (aValue.constructor.name == "Date") || (aValue instanceof Ci.nsIDOMFile) ||
+             (aValue instanceof Ci.nsIDOMBlob);
+    }
     // We need to serialize settings objects, otherwise they can change between
     // the set() call and the enqueued request being processed. We can't simply
     // parse(stringify(obj)) because that breaks things like Blobs, Files and
@@ -206,8 +212,7 @@ SettingsLock.prototype = {
     let binaries = Object.create(null);
     let stringified = JSON.stringify(aObject, function(key, value) {
       value = manager._settingsDB.prepareValue(value);
-      let kind = ObjectWrapper.getObjectKind(value);
-      if (kind == "file" || kind == "blob" || kind == "date") {
+      if (needsUUID(value)) {
         let uuid = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator)
                                                       .generateUUID().toString();
         binaries[uuid] = value;

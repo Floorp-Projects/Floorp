@@ -115,6 +115,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testObject();
 
+    testArray();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -145,6 +147,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     ["constructor", "toSource", "toString", "toLocaleString", "valueOf", "watch",
      "unwatch", "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable",
      "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__"];
+  gPrototypeProperties['Array'] =
+    ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
+      "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
+      "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "mapPar",
+      "reducePar", "scanPar", "scatterPar", "filterPar", "find", "findIndex", "copyWithin",
+      "fill", "@@iterator", "entries", "keys", "constructor"];
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
@@ -225,14 +233,70 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
                    set getterSetterProp(x) { }, \
                    callableProp: function() { }, \
                    nonXrayableProp: new WeakMap() })');
+    testTrickyObject(trickyObject);
+
+  }
+
+function testArray() {
+    // The |length| property is generally very weird, especially with respect
+    // to its behavior on the prototype. Array.prototype is actually an Array
+    // instance, and therefore has a vestigial .length. But we don't want to
+    // show that over Xrays, and generally want .length to just appear as an
+    // |own| data property. So we add it to the ignore list here, and check it
+    // separately.
+    let propsToSkip = ['length'];
+    testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip);
+
+    var trickyArray =
+      iwin.eval("var trickyArray = []; \
+                 trickyArray.primitiveProp = 42; \
+                 trickyArray.objectProp = { foo: 2 }; \
+                 trickyArray.xoProp = top.location; \
+                 trickyArray.hasOwnProperty = 10; \
+                 Object.defineProperty(trickyArray, 'getterProp', { get: function() { return 2; }}); \
+                 Object.defineProperty(trickyArray, 'setterProp', { set: function(x) {}}); \
+                 Object.defineProperty(trickyArray, 'getterSetterProp', { get: function() { return 3; }, set: function(x) {}}); \
+                 trickyArray.callableProp = function() {}; \
+                 trickyArray.nonXrayableProp = new WeakMap(); \
+                 trickyArray;");
+
+    // Test indexed access.
+    trickyArray.wrappedJSObject[9] = "some indexed property";
+    is(trickyArray[9], "some indexed property", "indexed properties work correctly over Xrays");
+    is(trickyArray.length, 10, "Length works correctly over Xrays");
+    checkThrows(function() { "use strict"; delete trickyArray.length; }, /config/, "Can't delete non-configurable 'length' property");
+    delete trickyArray[9];
+    is(trickyArray[9], undefined, "Delete works correctly over Xrays");
+    is(trickyArray.wrappedJSObject[9], undefined, "Delete works correctly over Xrays (viewed via waiver)");
+    is(trickyArray.length, 10, "length doesn't change");
+    trickyArray[11] = "some other indexed property";
+    is(trickyArray.length, 12, "length now changes");
+    is(trickyArray.wrappedJSObject[11], "some other indexed property");
+    trickyArray.length = 0;
+    is(trickyArray.length, 0, "Setting length works over Xray");
+    is(trickyArray[11], undefined, "Setting length truncates over Xray");
+    Object.defineProperty(trickyArray, 'length', { configurable: false, enumerable: false, writable: false, value: 0 });
+    trickyArray[1] = "hi";
+    is(trickyArray.length, 0, "Length remains non-writable");
+    is(trickyArray[1], undefined, "Frozen length forbids new properties");
+
+    testTrickyObject(trickyArray);
+}
+
+// Parts of this function are kind of specific to testing Object, but we factor
+// it out so that we can re-use the trickyObject stuff on Arrays.
+function testTrickyObject(trickyObject) {
 
     // Make sure it looks right under the hood.
     is(trickyObject.wrappedJSObject.getterProp, 2, "Underlying object has getter");
     is(Cu.unwaiveXrays(trickyObject.wrappedJSObject.xoProp), top.location, "Underlying object has xo property");
 
     // Test getOwnPropertyNames.
+    var expectedNames = ['objectProp', 'primitiveProp'];
+    if (trickyObject instanceof iwin.Array)
+      expectedNames.push('length');
     is(Object.getOwnPropertyNames(trickyObject).sort().toSource(),
-       ['objectProp', 'primitiveProp'].toSource(), "getOwnPropertyNames should be filtered correctly");
+       expectedNames.sort().toSource(), "getOwnPropertyNames should be filtered correctly");
 
     // Test iteration and in-place modification. Beware of 'expando', which is the property
     // we placed on the xray proto.
