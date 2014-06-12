@@ -133,6 +133,7 @@ struct AecCore {
   FILE* nearFile;
   FILE* outFile;
   FILE* outLinearFile;
+  uint32_t debugWritten;
 #endif
 };
 
