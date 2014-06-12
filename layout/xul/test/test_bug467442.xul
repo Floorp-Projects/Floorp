@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=467442
+-->
+<window title="Mozilla Bug 467442"
+        onload="onload()"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test code goes here -->
+  <popupset>
+    <panel id="panel">
+      Hello.
+    </panel>
+  </popupset>
+  <hbox>
+    <button id="anchor" label="Anchor hello on here" style="transform: translate(100px, 0)"/>
+  </hbox>
+  <script type="application/javascript">
+  <![CDATA[
+
+  SimpleTest.waitForExplicitFinish();
+
+  function onload() {
+    /** Test for Bug 467442 **/
+    let panel = document.getElementById("panel");
+    let anchor = document.getElementById("anchor");
+
+    panel.addEventListener("popupshown", function onpopupshown() {
+      panel.removeEventListener("popupshown", onpopupshown);
+      let panelRect = panel.getBoundingClientRect();
+      let anchorRect = anchor.getBoundingClientRect();
+      is(panelRect.left, anchorRect.left, "Panel should be anchored to the button");
+      panel.addEventListener("popuphidden", function onpopuphidden() {
+        panel.removeEventListener("popuphidden", onpopuphidden);
+        SimpleTest.finish();
+      });
+      panel.hidePopup();
+    });
+
+    panel.openPopup(anchor, "after_start", 0, 0, false, false);
+  }
+
+  ]]>
+  </script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=467442"
+     target="_blank">Mozilla Bug 467442</a>
+  </body>
+</window>

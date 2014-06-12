@@ -2254,10 +2254,11 @@ CSS_PROP_LIST(
     list-style-type,
     list_style_type,
     ListStyleType,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
     "",
-    VARIANT_HK,
-    kListStyleKTable,
+    0,
+    nullptr,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
