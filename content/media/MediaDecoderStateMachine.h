@@ -732,7 +732,7 @@ protected:
   // When we start writing decoded data to a new DecodedDataStream, or we
   // restart writing due to PlaybackStarted(), we record where we are in the
   // MediaStream and what that corresponds to in the media.
-  StreamTime mSyncPointInMediaStream;
+  int64_t mSyncPointInMediaStream; // microseconds
   int64_t mSyncPointInDecodedStream; // microseconds
 
   // When the playbackRate changes, and there is no audio clock, it is necessary

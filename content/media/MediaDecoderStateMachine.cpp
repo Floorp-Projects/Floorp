@@ -1411,8 +1411,8 @@ int64_t MediaDecoderStateMachine::GetCurrentTimeViaMediaStreamSync()
   AssertCurrentThreadInMonitor();
   NS_ASSERTION(mSyncPointInDecodedStream >= 0, "Should have set up sync point");
   DecodedStreamData* stream = mDecoder->GetDecodedStream();
-  StreamTime streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
-  return mSyncPointInDecodedStream + MediaTimeToMicroseconds(streamDelta);
+  int64_t streamDelta = stream->GetLastOutputTime() - mSyncPointInMediaStream;
+  return mSyncPointInDecodedStream + streamDelta;
 }
 
 void MediaDecoderStateMachine::StartPlayback()
