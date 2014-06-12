@@ -23,7 +23,11 @@ IonBailoutIterator::IonBailoutIterator(const JitActivationIterator &activations,
     current_ = fp;
     type_ = JitFrame_IonJS;
     topFrameSize_ = current_ - sp;
-    topIonScript_ = script()->ionScript();
+    switch (mode_) {
+      case SequentialExecution: topIonScript_ = script()->ionScript(); break;
+      case ParallelExecution: topIonScript_ = script()->parallelIonScript(); break;
+      default: MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
 
     if (bailout->frameClass() == FrameSizeClass::None()) {
         snapshotOffset_ = bailout->snapshotOffset();
