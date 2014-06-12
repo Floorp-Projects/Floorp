@@ -5,7 +5,9 @@
 
 /* MSVC doesn't define _Bool or bool in C, but does have BOOL */
 /* Note this doesn't pass autoconf's test because (bool) 0.5 != true */
+#ifndef __clang__
 typedef BOOL _Bool;
+#endif
 
 #define bool _Bool
 #define true 1
