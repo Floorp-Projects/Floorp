@@ -5,7 +5,7 @@
  * Tests that the eventListeners request works.
  */
 
-const TAB_URL = EXAMPLE_URL + "doc_event-listeners.html";
+const TAB_URL = EXAMPLE_URL + "doc_event-listeners-01.html";
 
 let gClient;
 
@@ -87,6 +87,7 @@ function testEventListeners(aThreadClient) {
       let types = [];
 
       for (let l of listeners) {
+        info("Listener for the "+l.type+" event.");
         let node = l.node;
         ok(node, "There is a node property.");
         ok(node.object, "There is a node object property.");
