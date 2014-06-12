@@ -741,6 +741,7 @@ function openConnection(options) {
     if (!connection) {
       log.warn("Could not open connection: " + status);
       deferred.reject(new Error("Could not open connection: " + status));
+      return;
     }
     log.info("Connection opened");
     try {
