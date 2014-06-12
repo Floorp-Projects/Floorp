@@ -23,6 +23,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816720
   #test-font { font: 16px UnlikelyFontName, serif }
 </style>
 
+<p><span id=control-decimal></span></p>
+<p><span id=control-cjk-decimal></span></p>
+<p><span id=test-counter-style></span></p>
+
+<style>
+  #control-decimal::before { content: counter(a, decimal); }
+  #control-cjk-decimal::before { content: counter(a, cjk-decimal); }
+  #test-counter-style::before { content: counter(a, unlikely-counter-style); }
+</style>
+
 <script type="application/javascript">
 
 // Monospace fonts available on all the platforms we're testing on.
@@ -48,6 +58,13 @@ otherStyles.sheet.insertRule("#control-monospace { font: 16px " +
 
 var monospaceWidth = controlMonospace.getBoundingClientRect().width;
 var serifWidth = controlSerif.getBoundingClientRect().width;
+
+var controlDecimal = document.getElementById("control-decimal");
+var controlCJKDecimal = document.getElementById("control-cjk-decimal");
+var testCounterStyle = document.getElementById("test-counter-style");
+
+var decimalWidth = controlDecimal.getBoundingClientRect().width;
+var cjkDecimalWidth = controlCJKDecimal.getBoundingClientRect().width;
 
 // [at-rule type, passing condition, failing condition]
 var outerRuleInfo = [
@@ -105,6 +122,14 @@ var innerRuleInfo = [
      // just test whether it threw
      return aParent instanceof CSSRule ? aException : !aException;
    }],
+  ["@counter-style unlikely-counter-style { system: extends cjk-decimal; }",
+   function (aApplied, aParent, aException) {
+     var width = testCounterStyle.getBoundingClientRect().width;
+     if (aException) {
+       return false;
+     }
+     return width == (aApplied ? cjkDecimalWidth : decimalWidth);
+   }],
 ];
 
 function runTest()
@@ -118,6 +143,13 @@ function runTest()
   // And that the #test-font element starts off using the "serif" font.
   var initialFontTestWidth = testFont.getBoundingClientRect().width;
   is(initialFontTestWidth, serifWidth);
+
+  ok(decimalWidth > 0, "decimal counter has width");
+  ok(cjkDecimalWidth > 0, "cjk-decimal counter has width");
+  ok(decimalWidth != cjkDecimalWidth, "decimal and cjk-decimal counter have different width")
+
+  var initialCounterStyleWidth = testCounterStyle.getBoundingClientRect().width;
+  is(initialCounterStyleWidth, decimalWidth);
 
   // We construct a style sheet with zero, one or two levels of conditional
   // grouping rules (taken from outerRuleInfo), with one of the inner rules
