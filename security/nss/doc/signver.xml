@@ -163,7 +163,7 @@ Using the SQLite databases must be manually specified by using the <command>sql:
 <para>To set the shared database type as the default type for the tools, set the <envar>NSS_DEFAULT_DB_TYPE</envar> environment variable to <envar>sql</envar>:</para>
 <programlisting>export NSS_DEFAULT_DB_TYPE="sql"</programlisting>
 
-<para>This line can be set added to the <filename>~/.bashrc</filename> file to make the change permanent.</para>
+<para>This line can be added to the <filename>~/.bashrc</filename> file to make the change permanent for the user.</para>
 
 <para>Most applications do not use the shared database by default, but they can be configured to use them. For example, this how-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:</para>
 <itemizedlist>

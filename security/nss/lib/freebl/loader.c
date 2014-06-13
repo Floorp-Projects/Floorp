@@ -214,7 +214,7 @@ RSA_PrivateKeyOpDoubleChecked(RSAPrivateKey *key,
 }
 
 SECStatus
-RSA_PrivateKeyCheck(RSAPrivateKey *key)
+RSA_PrivateKeyCheck(const RSAPrivateKey *key)
 {
   if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
       return SECFailure;
