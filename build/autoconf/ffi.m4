@@ -49,7 +49,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
       ac_configure_args="$ac_configure_args LD=link CPP=\"$CC -nologo -EP\" \
                          CXXCPP=\"$CXX -nologo -EP\" SHELL=sh.exe"
       flags=
-      if test -z "$MOZ_NO_DEBUG_flags" -a -n "$MOZ_DEBUG"; then
+      if test -z "$MOZ_NO_DEBUG_RTL" -a -n "$MOZ_DEBUG"; then
         flags=" -DUSE_DEBUG_RTL"
       fi
       if test -n "$CLANG_CL"; then
