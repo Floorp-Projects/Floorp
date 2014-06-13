@@ -139,6 +139,9 @@ SECU_GetClientAuthData(void *arg, PRFileDesc *fd,
 extern PRBool SECU_GetWrapEnabled(void);
 extern void SECU_EnableWrap(PRBool enable);
 
+extern PRBool SECU_GetUtf8DisplayEnabled(void);
+extern void SECU_EnableUtf8Display(PRBool enable);
+
 /* revalidate the cert and print information about cert verification
  * failure at time == now */
 extern void

@@ -37,7 +37,7 @@ SGN_NewContext(SECOidTag alg, SECKEYPrivateKey *key)
      * PKCS #7 algTag if we were just going to change here you might
      * ask. Well the answer is for some cards we may have to do the
      * hashing on card. It may not support CKM_RSA_PKCS sign algorithm,
-     * it may just support CKM_RSA_PKCS_WITH_SHA1 and/or CKM_RSA_PKCS_WITH_MD5.
+     * it may just support CKM_SHA1_RSA_PKCS and/or CKM_MD5_RSA_PKCS.
      */
     /* we have a private key, not a public key, so don't pass it in */
     rv =  sec_DecodeSigAlg(NULL, alg, NULL, &signalg, &hashalg);

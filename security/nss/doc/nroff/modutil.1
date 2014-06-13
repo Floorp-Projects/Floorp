@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: MODUTIL
 .\"    Author: [see the "Authors" section]
-.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
-.\"      Date: 15 February 2013
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "MODUTIL" "1" "15 February 2013" "nss-tools" "NSS Security Tools"
+.TH "MODUTIL" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -109,6 +109,8 @@ Delete the named module\&. The default NSS PKCS #11 module cannot be deleted\&.
 Disable all slots on the named module\&. Use the
 \fB\-slot\fR
 argument to disable a specific slot\&.
+.sp
+The internal NSS PKCS #11 module cannot be disabled\&.
 .RE
 .PP
 \-enable modulename
@@ -1248,7 +1250,7 @@ group write:              0020
 group execute:            0010
 other read:               0004
 other write:              0002
-other execute:       0001
+other execute:            0001
 .fi
 .if n \{\
 .RE
@@ -1366,9 +1368,9 @@ export NSS_DEFAULT_DB_TYPE="sql"
 .RE
 .\}
 .PP
-This line can be set added to the
+This line can be added to the
 ~/\&.bashrc
-file to make the change permanent\&.
+file to make the change permanent for the user\&.
 .PP
 Most applications do not use the shared database by default, but they can be configured to use them\&. For example, this how\-to article covers how to configure Firefox and Thunderbird to use the new shared NSS databases:
 .sp
@@ -1436,12 +1438,12 @@ Mailing lists: https://lists\&.mozilla\&.org/listinfo/dev\-tech\-crypto
 IRC: Freenode at #dogtag\-pki
 .SH "AUTHORS"
 .PP
-The NSS tools were written and maintained by developers with Netscape, Red Hat, and Sun\&.
+The NSS tools were written and maintained by developers with Netscape, Red Hat, Sun, Oracle, Mozilla, and Google\&.
 .PP
 Authors: Elio Maldonado <emaldona@redhat\&.com>, Deon Lackey <dlackey@redhat\&.com>\&.
 .SH "LICENSE"
 .PP
-Licensed under the Mozilla Public License, version 1\&.1, and/or the GNU General Public License, version 2 or later, and/or the GNU Lesser General Public License, version 2\&.1 or later\&.
+Licensed under the Mozilla Public License, v\&. 2\&.0\&. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla\&.org/MPL/2\&.0/\&.
 .SH "NOTES"
 .IP " 1." 4
 Mozilla NSS bug 836477
