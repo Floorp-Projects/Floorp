@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1014547 - CSS transforms highlighter
+Test that the highlighter elements created have the right size and coordinates.
+
+Note that instead of hard-coding values here, the assertions are made by
+comparing with the result of LayoutHelpers.getAdjustedQuads.
+
+There's a separate test for checking that getAdjustedQuads actually returns
+sensible values
+(browser/devtools/shared/test/browser_layoutHelpers-getBoxQuads.js),
+so the present test doesn't care about that, it just verifies that the css
+transform highlighter applies those values correctly to the SVG elements
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style type="text/css">
+    #test-node {
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      width: 300px;
+      height: 300px;
+
+      transform: rotate(90deg) skew(13deg) scale(.8) translateX(50px);
+      transform-origin: 50%;
+
+      background: linear-gradient(green, yellow);
+    }
+  </style>
+</head>
+<body>
+  <div id="test-node"></div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      var form = response.tabs[response.selected];
+      var front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        let walker = yield front.getWalker();
+        let highlighter = yield front.getHighlighterByType(
+          "CssTransformHighlighter");
+
+        let browser = Services.wm.getMostRecentWindow("navigator:browser")
+          .gBrowser.selectedBrowser;
+
+        let container = browser.parentNode.querySelector(".highlighter-container");
+
+        let node = document.querySelector("#test-node");
+        let helper = new LayoutHelpers(browser.docShell
+          .QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindow));
+
+        info("Displaying the transform highlighter on test node " +
+          node.tagName);
+        yield highlighter.show(walker.frontForRawNode(node));
+
+        let expected = helper.getAdjustedQuads(node, "border");
+        let polygon = container.querySelector(".css-transform-transformed");
+        let polygonPoints = polygon.getAttribute("points").split(" ").map(p => {
+          return {
+            x: +p.substring(0, p.indexOf(",")),
+            y: +p.substring(p.indexOf(",")+1)
+          };
+        });
+
+        for (let i = 1; i < 5; i ++) {
+          is(polygonPoints[i - 1].x, expected["p" + i].x,
+            "p" + i + " x coordinate is correct");
+          is(polygonPoints[i - 1].y, expected["p" + i].y,
+            "p" + i + " y coordinate is correct");
+        }
+
+        info("Hiding the transform highlighter");
+        yield highlighter.hide();
+
+        yield highlighter.finalize();
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+
+}
+</script>
+</pre>
+</body>
+</html>

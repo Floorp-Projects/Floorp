@@ -1,0 +1,113 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1014547 - CSS transforms highlighter
+Test the high level API of the highlighters
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      var form = response.tabs[response.selected];
+      var front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        yield onlyOneInstanceOfMainHighlighter(front);
+        yield manyInstancesOfCustomHighlighters(front);
+        yield showHideMethodsAreAvailable(front);
+        yield unknownHighlighterTypeShouldntBeAccepted(front);
+        yield rootActorTraitsShouldContainKnownTypes(client);
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+
+  function* onlyOneInstanceOfMainHighlighter(inspectorFront) {
+    info("Check that the inspector always sends back the same main highlighter");
+
+    let h1 = yield inspectorFront.getHighlighter(false);
+    let h2 = yield inspectorFront.getHighlighter(false);
+    is(h1, h2, "The same highlighter front was returned");
+
+    is(h1.typeName, "highlighter", "The right front type was returned");
+  }
+
+  function* manyInstancesOfCustomHighlighters(inspectorFront) {
+    let h1 = yield inspectorFront.getHighlighterByType("BoxModelHighlighter");
+    let h2 = yield inspectorFront.getHighlighterByType("BoxModelHighlighter");
+    ok(h1 !== h2, "getHighlighterByType returns new instances every time (1)");
+
+    let h3 = yield inspectorFront.getHighlighterByType("CssTransformHighlighter");
+    let h4 = yield inspectorFront.getHighlighterByType("CssTransformHighlighter");
+    ok(h3 !== h4, "getHighlighterByType returns new instances every time (2)");
+    ok(h3 !== h1 && h3 !== h2,
+      "getHighlighterByType returns new instances every time (3)");
+    ok(h4 !== h1 && h4 !== h2,
+      "getHighlighterByType returns new instances every time (4)");
+
+    yield h1.finalize();
+    yield h2.finalize();
+    yield h3.finalize();
+    yield h4.finalize();
+  }
+
+  function* showHideMethodsAreAvailable(inspectorFront) {
+    let h1 = yield inspectorFront.getHighlighterByType("BoxModelHighlighter");
+    let h2 = yield inspectorFront.getHighlighterByType("CssTransformHighlighter");
+
+    ok("show" in h1, "Show method is present on the front API");
+    ok("show" in h2, "Show method is present on the front API");
+    ok("hide" in h1, "Hide method is present on the front API");
+    ok("hide" in h2, "Hide method is present on the front API");
+
+    yield h1.finalize();
+    yield h2.finalize();
+  }
+
+  function* unknownHighlighterTypeShouldntBeAccepted(inspectorFront) {
+    let h = yield inspectorFront.getHighlighterByType("whatever");
+    ok(!h, "No highlighter was returned for the invalid type");
+  }
+
+  function* rootActorTraitsShouldContainKnownTypes(client) {
+    ok(client.traits.customHighlighters.indexOf("BoxModelHighlighter") !== -1,
+      "The root actor's trait contains BoxModelHighlighter as a known type");
+    ok(client.traits.customHighlighters.indexOf("CssTransformHighlighter") !== -1,
+      "The root actor's trait contains CssTransformHighlighter as a known type");
+  }
+}
+</script>
+</pre>
+</body>
+</html>

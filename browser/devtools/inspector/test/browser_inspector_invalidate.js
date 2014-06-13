@@ -18,14 +18,18 @@ function test() {
   }
 
   function runTest() {
+    info("Checking that the highlighter has the right size");
     let rect = getSimpleBorderRect();
     is(rect.width, 100, "outline has the right width");
 
+    waitForBoxModelUpdate().then(testRectWidth);
+
+    info("Changing the test element's size");
     div.style.width = "200px";
-    inspector.toolbox.once("highlighter-ready", testRectWidth);
   }
 
   function testRectWidth() {
+    info("Checking that the highlighter has the right size after update");
     let rect = getSimpleBorderRect();
     is(rect.width, 200, "outline updated");
     finishUp();
