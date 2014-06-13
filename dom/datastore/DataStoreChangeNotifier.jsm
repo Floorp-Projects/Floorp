@@ -113,7 +113,6 @@ this.DataStoreChangeNotifier = {
               debug("Unregister delete index: " + i);
               this.children.splice(i, 1);
             }
-            break;
           } else {
             ++i;
           }
