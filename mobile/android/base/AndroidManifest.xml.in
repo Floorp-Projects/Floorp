@@ -78,8 +78,10 @@
                  android:name="org.mozilla.gecko.GeckoApplication"
                  android:hardwareAccelerated="true"
 #if !defined(MOZILLA_OFFICIAL) || defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG)
+                 android:allowBackup="true"
                  android:debuggable="true">
 #else
+                 android:allowBackup="false"
                  android:debuggable="false">
 #endif
 
