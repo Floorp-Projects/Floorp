@@ -2321,12 +2321,19 @@ let BrowserOnClick = {
     let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
     let isTopFrame = (aOwnerDoc.defaultView.parent === aOwnerDoc.defaultView);
 
+    let docshell = aOwnerDoc.defaultView.QueryInterface(Ci.nsIInterfaceRequestor)
+                                        .getInterface(Ci.nsIWebNavigation)
+                                        .QueryInterface(Ci.nsIDocShell);
+    let securityInfo = docshell.failedChannel.securityInfo;
+    let sslStatus = securityInfo.QueryInterface(Ci.nsISSLStatusProvider).SSLStatus;
+
     switch (elmId) {
       case "exceptionDialogButton":
         if (isTopFrame) {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CLICK_ADD_EXCEPTION);
         }
-        let params = { exceptionAdded : false };
+        let params = { exceptionAdded : false,
+                       sslStatus : sslStatus };
 
         try {
           switch (Services.prefs.getIntPref("browser.ssl_override_behavior")) {
