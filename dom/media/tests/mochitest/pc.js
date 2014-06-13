@@ -363,7 +363,7 @@ function isNetworkReady() {
 
       for (var j = 0; j < length; j++) {
         var ip = ips.value[j];
-        // skip IPv6 address
+        // skip IPv6 address until bug 797262 is implemented
         if (ip.indexOf(":") < 0) {
           info("Network interface is ready with address: " + ip);
           return true;
@@ -393,12 +393,12 @@ function getNetworkUtils() {
      *
      * @param aCallback callback after data connection is ready.
      */
-    prepareNetwork: function(aCallback) {
+    prepareNetwork: function(onSuccess) {
       script.addMessageListener('network-ready', function (message) {
         info("Network interface is ready");
-        aCallback();
+        onSuccess();
       });
-      info("Setup network interface");
+      info("Setting up network interface");
       script.sendAsyncMessage("prepare-network", true);
     },
     /**
@@ -406,17 +406,59 @@ function getNetworkUtils() {
      *
      * @param aCallback callback after data connection is closed.
      */
-    tearDownNetwork: function(aCallback) {
-      script.addMessageListener('network-disabled', function (message) {
-        ok(true, 'network-disabled');
-        script.destroy();
-        aCallback();
-      });
-      script.sendAsyncMessage("network-cleanup", true);
+    tearDownNetwork: function(onSuccess, onFailure) {
+      if (isNetworkReady()) {
+        script.addMessageListener('network-disabled', function (message) {
+          info("Network interface torn down");
+          script.destroy();
+          onSuccess();
+        });
+        info("Tearing down network interface");
+        script.sendAsyncMessage("network-cleanup", true);
+      } else {
+        info("No network to tear down");
+        onFailure();
+      }
     }
   };
 
   return utils;
+}
+
+/**
+ * Setup network on Gonk if needed and execute test once network is up
+ *
+ */
+function startNetworkAndTest(onSuccess) {
+  if (!isNetworkReady()) {
+    SimpleTest.waitForExplicitFinish();
+    var utils = getNetworkUtils();
+    // Trigger network setup to obtain IP address before creating any PeerConnection.
+    utils.prepareNetwork(onSuccess);
+  } else {
+    onSuccess();
+  }
+}
+
+/**
+ * A wrapper around SimpleTest.finish() to handle B2G network teardown
+ */
+function networkTestFinished() {
+  if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
+    var utils = getNetworkUtils();
+    utils.tearDownNetwork(SimpleTest.finish, SimpleTest.finish);
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+/**
+ * A wrapper around runTest() which handles B2G network setup and teardown
+ */
+function runNetworkTest(testFunction) {
+  startNetworkAndTest(function() {
+    runTest(testFunction);
+  });
 }
 
 /**
@@ -463,27 +505,6 @@ function PeerConnectionTest(options) {
     }
   }
 
-  var netTeardownCommand = null;
-  if (!isNetworkReady()) {
-    var utils = getNetworkUtils();
-    // Trigger network setup to obtain IP address before creating any PeerConnection.
-    utils.prepareNetwork(function() {
-      ok(isNetworkReady(),'setup network connection successfully');
-    });
-
-    netTeardownCommand = [
-      [
-        'TEARDOWN_NETWORK',
-        function(test) {
-          utils.tearDownNetwork(function() {
-            info('teardown network connection');
-            test.next();
-          });
-        }
-      ]
-    ];
-  }
-
   if (options.is_local)
     this.pcLocal = new PeerConnectionWrapper('pcLocal', options.config_local);
   else
@@ -501,11 +522,6 @@ function PeerConnectionTest(options) {
   }
   if (!options.is_remote) {
     this.chain.filterOut(/^PC_REMOTE/);
-  }
-
-  // Insert network teardown after testcase execution.
-  if (netTeardownCommand) {
-    this.chain.append(netTeardownCommand);
   }
 
   var self = this;
@@ -774,7 +790,7 @@ PeerConnectionTest.prototype.teardown = function PCT_teardown() {
   this.close(function () {
     info("Test finished");
     if (window.SimpleTest)
-      SimpleTest.finish();
+      networkTestFinished();
     else
       finish();
   });
