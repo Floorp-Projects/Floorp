@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 1022766</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="camera_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<video id="viewfinder" width="200" height="200" autoplay></video>
+<img src="#" alt="This image is going to load" id="testimage"/>
+<script class="testbody" type="text/javascript;version=1.7">
+
+var whichCamera = navigator.mozCameras.getListOfCameras()[0];
+var config = {
+  mode: 'picture',
+  recorderProfile: 'cif',
+  previewSize: {
+    width: 352,
+    height: 288
+  }
+};
+
+function onError(e) {
+  ok(false, "Error" + JSON.stringify(e));
+}
+
+var Camera = {
+  cameraObj: null,
+  _otherPictureSize: null,
+  get viewfinder() {
+    return document.getElementById('viewfinder');
+  },
+
+  firstCallFailed: false,
+  secondCallSucceeded: false,
+  checkForDone: function test_checkForDone() {
+    if (Camera.firstCallFailed && Camera.secondCallSucceeded) {
+      Camera.cameraObj.release();
+      Camera.cameraObj = null;
+      CameraTest.end();
+    }
+  },
+
+  successOne: function test_successOne(focused) {
+    ok(false, "First call to autoFocus() succeeded unexpectedly");
+  },
+  failureOne: function test_failureOne(error) {
+    ok(error == "AutoFocusInterrupted", "First call to autoFocus() failed with: "
+      + error);
+    Camera.firstCallFailed = true;
+    Camera.checkForDone();
+  },
+  successTwo: function test_successTwo(focused) {
+    ok(true, "Second call to autoFocus() succeeded");
+    Camera.secondCallSucceeded = true;
+    Camera.checkForDone();
+  },
+  failureTwo: function test_failureTwo(error) {
+    ok(false, "Second call to autoFocus() failed unexpectedly with: " + error);
+  },
+
+  start: function test_start() {
+    function onSuccess(camera, config) {
+      Camera.cameraObj = camera;
+      Camera.viewfinder.mozSrcObject = camera;
+      Camera.viewfinder.play();
+
+      // It doesn't matter if the emulator supports focus or not;
+      // this is just testing the sequencing.
+      camera.autoFocus(Camera.successOne, Camera.failureOne);
+      camera.autoFocus(Camera.successTwo, Camera.failureTwo);
+    };
+
+    navigator.mozCameras.getCamera(whichCamera, config, onSuccess, onError);
+  }
+}
+
+window.addEventListener('beforeunload', function() {
+  Camera.viewfinder.mozSrcObject = null;
+  if (Camera.cameraObj) {
+    Camera.cameraObj.release();
+    Camera.cameraObj = null;
+  }
+});
+
+CameraTest.begin("hardware", function(test) {
+  test.set("auto-focus-process-failure", function() {
+    Camera.start();
+  })
+});
+
+</script>
+</body>
+
+</html>
