@@ -9,24 +9,35 @@
 %define solidSeparatorDark linear-gradient(#2d5b7d, #2d5b7d)
 %define solidSeparatorLight linear-gradient(#aaa, #aaa)
 
-
-.devtools-toolbar {
+/* Toolbars */
+.devtools-toolbar,
+.devtools-sidebar-tabs > tabs {
   -moz-appearance: none;
-  padding: 4px 3px;
+  padding: 0;
   border-bottom-width: 1px;
   border-bottom-style: solid;
+  height: 24px;
+  line-height: 24px;
+  box-sizing: border-box;
 }
 
+.devtools-toolbar {
+  padding: 0 3px;
+}
+
+/* Toolbar buttons */
 .devtools-menulist,
 .devtools-toolbarbutton {
   -moz-appearance: none;
   -moz-box-align: center;
+  background: transparent;
   min-width: 78px;
-  min-height: 22px;
+  min-height: 18px;
+  padding: 1px;
   text-shadow: none;
-  border: 1px solid hsla(210,8%,5%,.45);
-  border-radius: 3px;
-  margin: 0 3px;
+  border: none;
+  border-radius: 0;
+  margin: 2px 3px;
 }
 
 .devtools-menulist:-moz-focusring,
@@ -35,11 +46,17 @@
   outline-offset: -4px;
 }
 
-.devtools-toolbarbutton > .toolbarbutton-icon {
-  margin: 0;
+.devtools-toolbarbutton[standalone] {
+  -moz-margin-end: 5px;
+  border-width: 1px;
+  border-style: solid;
+}
+.devtools-toolbarbutton[label][standalone] {
+  min-height: 2em;
 }
 
-.devtools-toolbarbutton:not([label]) {
+.devtools-toolbarbutton:not([label]),
+.devtools-toolbarbutton[text-as-image] {
   min-width: 32px;
 }
 
@@ -47,74 +64,104 @@
   display: none;
 }
 
+.devtools-toolbar .devtools-toolbarbutton {
+  border-width: 0;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-icon {
+  margin: 0;
+}
+
 .devtools-toolbarbutton > .toolbarbutton-menubutton-button {
   -moz-box-orient: horizontal;
+  padding: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
+  -moz-appearance: none;
+  color: inherit;
+  border-width: 0;
+}
+
+.devtools-toolbarbutton[type=menu-button] {
+  padding: 0 1px;
+  -moz-box-align: stretch;
+}
+
+.devtools-menulist > .menulist-dropmarker {
+  -moz-appearance: none;
+  display: -moz-box;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
+  -moz-box-align: center;
+  min-width: 16px;
+}
+
+.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
+.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
+  -moz-appearance: none !important;
+  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
+  -moz-box-align: center;
+  padding: 0 3px;
 }
 
 .theme-dark .devtools-menulist,
 .theme-dark .devtools-toolbarbutton {
-  background: linear-gradient(hsla(212,7%,57%,.35), hsla(212,7%,57%,.1)) padding-box;
+  color: #a9bacb; /* Body text - high contrast */
+  background-color: #343c45; /* Toolbars */
+  border-color: rgba(0, 0, 0, .4); /* Splitters */
   color: inherit;
-  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset, 0 0 0 1px hsla(210,16%,76%,.15) inset, 0 1px 0 hsla(210,16%,76%,.15);
 }
-
 .theme-light .devtools-menulist,
 .theme-light .devtools-toolbarbutton {
-  background: #f7f7f7;
-  color: #18191a;
-  border-color: #bbb;
+  color: #292e33; /* Body text - high contrast */
+  background-color: #f0f1f2; /* Toolbars */
+  border-color: rgba(170, 170, 170, .5); /* Splitters */
 }
 
+/* Text-only buttons */
+.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]) {
+  background-color: rgba(170, 170, 170, .2); /* Splitter */
+}
+.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]) {
+  background-color: rgba(0, 0, 0, .2); /* Splitter */
+}
+
+/* Button States */
+.theme-dark .devtools-toolbarbutton:hover,
+.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover {
+  background: rgba(0, 0, 0, .3); /* Splitters */
+}
+.theme-light .devtools-toolbarbutton:hover,
+.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover {
+  background: rgba(170, 170, 170, .3); /* Splitters */
+}
+
+.theme-dark .devtools-toolbarbutton:hover:active,
+.theme-dark .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+  background: rgba(0, 0, 0, .4); /* Splitters */
+}
+.theme-light .devtools-toolbarbutton:hover:active,
+.theme-light .devtools-toolbarbutton[label]:not([text-as-image]):not([type=menu-button]):hover:active {
+  background: rgba(170, 170, 170, .4); /* Splitters */
+}
+
+/* Menu type buttons and checked states */
+.theme-dark .devtools-menulist[open=true],
+.theme-dark .devtools-toolbarbutton[open=true],
+.theme-dark .devtools-toolbarbutton[open=true]:hover,
+.theme-dark .devtools-toolbarbutton[open=true]:hover:active,
+.theme-dark .devtools-toolbarbutton[checked=true],
+.theme-dark .devtools-toolbarbutton[checked=true]:hover {
+  background: rgba(29, 79, 115, .7); /* Select highlight blue */
+  color: #f5f7fa;
+}
 .theme-light .devtools-menulist[open=true],
 .theme-light .devtools-toolbarbutton[open=true],
 .theme-light .devtools-toolbarbutton[open=true]:hover,
 .theme-light .devtools-toolbarbutton[open=true]:hover:active,
 .theme-light .devtools-toolbarbutton[checked=true],
-.theme-light .devtools-toolbarbutton[checked=true]:hover  {
-  background: #ddd;
-}
-
-.theme-light .devtools-toolbarbutton:hover {
-  background: #eee;
-}
-
-.theme-light .devtools-toolbarbutton:hover:active,
-.theme-light .devtools-toolbarbutton[checked=true]:hover:active {
-  background: #e8e8e8;
-}
-
-.theme-light .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  color: #667380;
-}
-
-.theme-light .devtools-toolbarbutton[type=menu-button][checked=true] > .toolbarbutton-menubutton-button {
-  color: #18191a;
-}
-
-.theme-dark .devtools-toolbarbutton:not([checked]):hover:active {
-  border-color: hsla(210,8%,5%,.6);
-  background: linear-gradient(hsla(220,6%,10%,.3), hsla(212,7%,57%,.15) 65%, hsla(212,7%,57%,.3));
-  box-shadow: 0 0 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
-}
-
-.theme-dark .devtools-menulist[open=true],
-.theme-dark .devtools-toolbarbutton[open=true],
-.theme-dark .devtools-toolbarbutton[checked=true] {
-  border-color: hsla(210,8%,5%,.6) !important;
-  background: linear-gradient(hsla(220,6%,10%,.6), hsla(210,11%,18%,.45) 75%, hsla(210,11%,30%,.4));
-  box-shadow: 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 3px hsla(210,8%,5%,.25) inset, 0 1px 0 hsla(210,16%,76%,.15);
-}
-
-.theme-dark .devtools-toolbarbutton[checked=true] {
-  color: hsl(208,100%,60%);
-}
-
-.theme-dark .devtools-toolbarbutton[checked=true]:hover {
-  background-color: transparent !important;
-}
-
-.theme-dark .devtools-toolbarbutton[checked=true]:hover:active {
-  background-color: hsla(210,8%,5%,.2) !important;
+.theme-light .devtools-toolbarbutton[checked=true]:hover {
+  background: rgba(76, 158, 217, .2); /* Select highlight blue */
 }
 
 .devtools-option-toolbarbutton {
@@ -129,79 +176,24 @@
   opacity: 1;
 }
 
-.devtools-menulist > .menulist-label-box {
-  text-align: center;
-}
-
-.devtools-menulist > .menulist-dropmarker {
-  -moz-appearance: none;
-  display: -moz-box;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
-  -moz-box-align: center;
-  min-width: 16px;
-}
-
-.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  -moz-appearance: none;
-  color: inherit;
-  border-width: 0;
-}
-
-.theme-dark .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  -moz-border-end: 1px solid hsla(210,8%,5%,.45);
-  box-shadow: -1px 0 0 hsla(210,16%,76%,.15) inset, 1px 0 0 hsla(210,16%,76%,.15);
-}
-
-.theme-dark .devtools-toolbarbutton[type=menu-button]:-moz-locale-dir(rtl) > .toolbarbutton-menubutton-button {
-  box-shadow: 1px 0 0 hsla(210,16%,76%,.15) inset, -1px 0 0 hsla(210,16%,76%,.15);
-}
-
-.theme-light .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
-  -moz-border-end: 1px solid #bbb;
-}
-
-.devtools-toolbarbutton[type=menu-button] {
-  padding: 0 1px;
-  -moz-box-align: stretch;
-}
-
-.devtools-toolbarbutton[type=menu] > .toolbarbutton-menu-dropmarker,
-.devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-dropmarker {
-  -moz-appearance: none !important;
-  list-style-image: url("chrome://browser/skin/devtools/dropmarker.svg");
-  -moz-box-align: center;
-  padding: 0 3px;
-}
-
 /* Toolbar button groups */
-.theme-light .devtools-toolbarbutton-group > .devtools-toolbarbutton,
-.theme-dark .devtools-toolbarbutton-group > .devtools-toolbarbutton {
-  margin: 0;
-  box-shadow: none;
-  border-radius: 0;
-  border-width: 0;
-  -moz-border-end-width: 1px;
+.devtools-toolbarbutton-group > .devtools-toolbarbutton {
+  margin-left: 1px;
+  margin-right: 1px;
   outline-offset: -3px;
+  box-shadow: none;
 }
 
-.devtools-toolbarbutton-group > .devtools-toolbarbutton:last-of-type {
-  -moz-border-end-width: 0;
+.devtools-toolbarbutton-group > .devtools-toolbarbutton:last-child {
+  -moz-margin-end: 0;
 }
 
-.devtools-toolbarbutton-group {
-  border-radius: 3px;
-  margin: 0 3px;
+.devtools-toolbarbutton-group + .devtools-toolbarbutton {
+  -moz-margin-start: 3px;
 }
 
-.theme-dark .devtools-toolbarbutton-group {
-  box-shadow: 0 1px 0 hsla(210,16%,76%,.15) inset,
-              0 0 0 1px hsla(210,16%,76%,.15) inset,
-              0 1px 0 hsla(210,16%,76%,.15);
-  border: 1px solid hsla(210,8%,5%,.45);
-}
-
-.theme-light .devtools-toolbarbutton-group {
-  border: 1px solid #bbb;
+.devtools-separator + .devtools-toolbarbutton {
+  -moz-margin-start: 1px;
 }
 
 /* Text input */
@@ -230,8 +222,9 @@
 }
 
 .devtools-searchinput {
-  padding-top: 3px;
-  padding-bottom: 3px;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  padding: 0;
   -moz-padding-start: 22px;
   -moz-padding-end: 12px;
   background-position: 8px center;
@@ -325,13 +318,9 @@
 }
 
 .devtools-sidebar-tabs > tabs {
-  -moz-appearance: none;
   position: static;
   font: inherit;
   margin-bottom: 0;
-  padding: 0;
-  border-width: 0 0 1px 0;
-  border-style: solid;
   overflow: hidden;
 }
 
@@ -346,14 +335,10 @@
    * First, we need to replicated the padding of toolbar (4px),
    * then we need to take the border of the buttons into account (1px).
    */
-  padding: 5px 3px;
+  padding: 0 3px;
   -moz-padding-start: 6px;
   margin: 0;
   min-width: 78px;
-  /* toolbar's min-height is button min-height (25px) + padding (2 * 4px): 33px.
-   * -1px because the parent element (<tabs>) comes with a 1px bottom border.
-   */
-  min-height: 32px;
   text-align: center;
   color: inherit;
   -moz-box-flex: 1;
@@ -501,7 +486,8 @@
   opacity: 1;
 }
 
-#toolbox-controls-separator {
+.devtools-separator {
+  margin: 0 2px;
   width: 2px;
   background-image: linear-gradient(hsla(204,45%,98%,0), hsla(204,45%,98%,.1), hsla(204,45%,98%,0)),
                     linear-gradient(hsla(206,37%,4%,0), hsla(206,37%,4%,.6), hsla(206,37%,4%,0)),
@@ -511,9 +497,13 @@
   background-position: 0, 1px, 2px;
 }
 
-#toolbox-buttons:empty + #toolbox-controls-separator,
-#toolbox-controls-separator[invisible] {
+#toolbox-buttons:empty + .devtools-separator,
+.devtools-separator[invisible] {
   visibility: hidden;
+}
+
+#toolbox-controls-separator {
+  margin: 0;
 }
 
 /* Command buttons */
