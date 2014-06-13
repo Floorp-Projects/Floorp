@@ -22,6 +22,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
 
 #include <ctype.h>
@@ -71,6 +72,7 @@ using mozilla::IsNegativeZero;
 using mozilla::IsSame;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
+using mozilla::Range;
 using mozilla::SafeCast;
 
 using JS::AutoCheckCannotGC;
@@ -1699,16 +1701,6 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     }
 
     args.rval().setInt32(res);
-    return true;
-}
-
-static bool
-EqualCharsLatin1TwoByte(const Latin1Char *s1, const jschar *s2, size_t len)
-{
-    for (const Latin1Char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
-        if (jschar(*s1) != *s2)
-            return false;
-    }
     return true;
 }
 
@@ -4279,51 +4271,90 @@ js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t len
     return JSDependentString::new_(cx, base, start, length);
 }
 
-template <AllowGC allowGC>
-JSFlatString *
-js_NewStringCopyN(ExclusiveContext *cx, const jschar *s, size_t n)
-{
-    if (JSFatInlineString::twoByteLengthFits(n))
-        return NewFatInlineString<allowGC>(cx, TwoByteChars(s, n));
+template <typename CharT>
+static void
+CopyCharsMaybeInflate(jschar *dest, const CharT *src, size_t len);
 
-    jschar *news = cx->pod_malloc<jschar>(n + 1);
+template <>
+void
+CopyCharsMaybeInflate(jschar *dest, const jschar *src, size_t len)
+{
+    PodCopy(dest, src, len);
+}
+
+template <>
+void
+CopyCharsMaybeInflate(jschar *dest, const Latin1Char *src, size_t len)
+{
+    CopyAndInflateChars(dest, src, len);
+}
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString *
+js_NewStringCopyN(ThreadSafeContext *cx, const CharT *s, size_t n)
+{
+    if (EnableLatin1Strings) {
+        if (JSFatInlineString::lengthFits<CharT>(n))
+            return NewFatInlineString<allowGC>(cx, Range<const CharT>(s, n));
+
+        ScopedJSFreePtr<CharT> news(cx->pod_malloc<CharT>(n + 1));
+        if (!news)
+            return nullptr;
+
+        PodCopy(news.get(), s, n);
+        news[n] = 0;
+
+        JSFlatString *str = js_NewString<allowGC>(cx, news.get(), n);
+        if (!str)
+            return nullptr;
+
+        news.forget();
+        return str;
+    }
+
+    if (JSFatInlineString::twoByteLengthFits(n))
+        return NewFatInlineString<allowGC>(cx, Range<const CharT>(s, n));
+
+    ScopedJSFreePtr<jschar> news(cx->pod_malloc<jschar>(n + 1));
     if (!news)
         return nullptr;
-    js_strncpy(news, s, n);
+
+    CopyCharsMaybeInflate(news.get(), s, n);
     news[n] = 0;
-    JSFlatString *str = js_NewString<allowGC>(cx, news, n);
+
+    JSFlatString *str = js_NewString<allowGC>(cx, news.get(), n);
     if (!str)
-        js_free(news);
-    return str;
-}
-
-template JSFlatString *
-js_NewStringCopyN<CanGC>(ExclusiveContext *cx, const jschar *s, size_t n);
-
-template JSFlatString *
-js_NewStringCopyN<NoGC>(ExclusiveContext *cx, const jschar *s, size_t n);
-
-template <AllowGC allowGC>
-JSFlatString *
-js_NewStringCopyN(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    if (JSFatInlineString::twoByteLengthFits(n))
-        return NewFatInlineString<allowGC>(cx, JS::Latin1Chars(s, n));
-
-    jschar *chars = InflateString(cx, s, &n);
-    if (!chars)
         return nullptr;
-    JSFlatString *str = js_NewString<allowGC>(cx, chars, n);
-    if (!str)
-        js_free(chars);
+
+    news.forget();
     return str;
 }
 
 template JSFlatString *
-js_NewStringCopyN<CanGC>(ThreadSafeContext *cx, const char *s, size_t n);
+js_NewStringCopyN<CanGC>(ThreadSafeContext *cx, const jschar *s, size_t n);
 
 template JSFlatString *
-js_NewStringCopyN<NoGC>(ThreadSafeContext *cx, const char *s, size_t n);
+js_NewStringCopyN<NoGC>(ThreadSafeContext *cx, const jschar *s, size_t n);
+
+template JSFlatString *
+js_NewStringCopyN<CanGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
+
+template JSFlatString *
+js_NewStringCopyN<NoGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
+
+template <>
+JSFlatString *
+js_NewStringCopyN<CanGC>(ThreadSafeContext *cx, const char *s, size_t n)
+{
+    return js_NewStringCopyN<CanGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
+}
+
+template <>
+JSFlatString *
+js_NewStringCopyN<NoGC>(ThreadSafeContext *cx, const char *s, size_t n)
+{
+    return js_NewStringCopyN<NoGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
+}
 
 template <AllowGC allowGC>
 JSFlatString *
@@ -4331,7 +4362,7 @@ js_NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
 {
     size_t n = js_strlen(s);
     if (JSFatInlineString::twoByteLengthFits(n))
-        return NewFatInlineString<allowGC>(cx, TwoByteChars(s, n));
+        return NewFatInlineString<allowGC>(cx, Range<const jschar>(s, n));
 
     size_t m = (n + 1) * sizeof(jschar);
     jschar *news = (jschar *) cx->malloc_(m);

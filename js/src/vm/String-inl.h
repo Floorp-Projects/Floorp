@@ -10,6 +10,7 @@
 #include "vm/String.h"
 
 #include "mozilla/PodOperations.h"
+#include "mozilla/Range.h"
 
 #include "jscntxt.h"
 
@@ -42,7 +43,7 @@ AllocateFatInlineString(ThreadSafeContext *cx, size_t len, CharT **chars)
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewFatInlineString(ThreadSafeContext *cx, JS::Latin1Chars chars)
+NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const Latin1Char> chars)
 {
     size_t len = chars.length();
 
@@ -70,7 +71,7 @@ NewFatInlineString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 
 template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewFatInlineString(ExclusiveContext *cx, JS::TwoByteChars chars)
+NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const jschar> chars)
 {
     /*
      * Don't bother trying to find a static atom; measurement shows that not
