@@ -655,10 +655,9 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL 17
 #define NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL   18
 #define NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC      19
-#define NS_STYLE_LIST_STYLE_MOZ_TAMIL             20
-#define NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED     21
-#define NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN       22
-#define NS_STYLE_LIST_STYLE__MAX                  23
+#define NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED     20
+#define NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN       21
+#define NS_STYLE_LIST_STYLE__MAX                  22
 
 // See nsStyleList
 #define NS_STYLE_LIST_STYLE_POSITION_INSIDE     0
