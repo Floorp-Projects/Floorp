@@ -24,7 +24,8 @@
     class="devtools-responsive-container theme-body">
     <vbox class="profiler-sidebar theme-sidebar">
       <toolbar class="devtools-toolbar">
-        <hbox id="profiler-controls">
+        <hbox id="profiler-controls"
+              class="devtools-toolbarbutton-group">
           <toolbarbutton id="profiler-start"
             tooltiptext="&startProfiler.tooltip;"
             class="devtools-toolbarbutton"
