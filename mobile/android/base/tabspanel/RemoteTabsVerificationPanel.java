@@ -37,7 +37,7 @@ class RemoteTabsVerificationPanel extends ScrollView implements PanelView {
     protected void onFinishInflate() {
         super.onFinishInflate();
 
-        containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_setup_containing_layout);
+        containingLayout = (LinearLayout) findViewById(R.id.remote_tabs_verification_containing_layout);
 
         final View resendLink = containingLayout.findViewById(R.id.remote_tabs_confirm_resend);
         resendLink.setOnClickListener(new OnClickListener() {
