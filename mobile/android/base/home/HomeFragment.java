@@ -191,26 +191,13 @@ abstract class HomeFragment extends Fragment {
             // Some pinned site items have "user-entered" urls. URLs entered in the PinSiteDialog are wrapped in
             // a special URI until we can get a valid URL. If the url is a user-entered url, decode the URL before loading it.
             final Tab newTab = Tabs.getInstance().loadUrl(decodeUserEnteredUrl(url), flags);
-            final int newTabId = newTab.getId(); // We don't want to hold a reference to the Tab.
-
             final String message = isPrivate ?
                     getResources().getString(R.string.new_private_tab_opened) :
                     getResources().getString(R.string.new_tab_opened);
-            final String buttonMessage = getResources().getString(R.string.switch_button_message);
-            final GeckoApp geckoApp = (GeckoApp) context;
-            geckoApp.getButtonToast().show(false,
-                    message,
-                    buttonMessage,
-                    R.drawable.switch_button_icon,
-                    new ButtonToast.ToastListener() {
-                        @Override
-                        public void onButtonClicked() {
-                            Tabs.getInstance().selectTab(newTabId);
-                        }
-
-                        @Override
-                        public void onToastHidden(ButtonToast.ReasonHidden reason) { }
-                    });
+            // Bug 1023407: ButtonToasts interact badly with touch events, blocking interaction with
+            // the rest of the system until the ButtonToast expires or is otherwise dismissed (Bug
+            // 1019735). Until this is fixed, we'll just use regular system Toasts.
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
             return true;
         }
 
