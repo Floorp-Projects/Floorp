@@ -788,18 +788,12 @@ nsDOMCameraControl::AutoFocus(CameraAutoFocusCallback& aOnSuccess,
 {
   MOZ_ASSERT(mCameraControl);
 
-  nsRefPtr<CameraAutoFocusCallback> cb = mAutoFocusOnSuccessCb;
-  if (cb) {
-    if (aOnError.WasPassed()) {
-      // There is already a call to AutoFocus() in progress, abort this new one
-      // and invoke the error callback (if one was passed in).
-      NS_DispatchToMainThread(new ImmediateErrorCallback(&aOnError.Value(),
-                              NS_LITERAL_STRING("AutoFocusAlreadyInProgress")));
-    } else {
-      // Only throw if no error callback was passed in.
-      aRv = NS_ERROR_FAILURE;
-    }
-    return;
+  nsRefPtr<CameraErrorCallback> ecb = mAutoFocusOnErrorCb.forget();
+  if (ecb) {
+    // There is already a call to AutoFocus() in progress, cancel it and
+    // invoke the error callback (if one was passed in).
+    NS_DispatchToMainThread(new ImmediateErrorCallback(ecb,
+                            NS_LITERAL_STRING("AutoFocusInterrupted")));
   }
 
   mAutoFocusOnSuccessCb = &aOnSuccess;
