@@ -216,24 +216,6 @@ DecimalToText(CounterValue aOrdinal, nsSubstring& aResult)
   return true;
 }
 
-static bool
-TamilToText(CounterValue aOrdinal, nsSubstring& aResult)
-{
-  if (aOrdinal < 1 || aOrdinal > 9999) {
-    return false;
-  }
-  char16_t diff = 0x0BE6 - char16_t('0');
-  // We're going to be appending to whatever is in "result" already, so make
-  // sure to only munge the new bits.  Note that we can't just grab the pointer
-  // to the new stuff here, since appending to the string can realloc.
-  DecimalToText(aOrdinal, aResult);
-  char16_t* p = aResult.BeginWriting();
-  for(; '\0' != *p ; p++) 
-    if(*p != char16_t('0'))
-      *p += diff;
-  return true;
-}
-
 // We know cjk-ideographic need 31 characters to display 99,999,999,999,999,999
 // georgian needs 6 at most
 // armenian needs 12 at most
@@ -776,10 +758,6 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     // use HebrewToText
     case NS_STYLE_LIST_STYLE_HEBREW:
       return aOrdinal >= 1 && aOrdinal <= 999999;
-
-    // use TamilToText
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-      return aOrdinal >= 1 && aOrdinal <= 9999;
   }
 }
 
@@ -813,7 +791,6 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
       return IsOrdinalInRange(aOrdinal);
 
     default:
@@ -945,9 +922,6 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       aIsRTL = true;
       return HebrewToText(aOrdinal, aResult);
  
-    case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
-      return TamilToText(aOrdinal, aResult);
-
     case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
       return EthiopicToText(aOrdinal, aResult);
 
