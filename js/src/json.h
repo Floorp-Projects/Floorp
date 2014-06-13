@@ -7,6 +7,8 @@
 #ifndef json_h
 #define json_h
 
+#include "mozilla/Range.h"
+
 #include "NamespaceImports.h"
 
 #include "js/RootingAPI.h"
@@ -24,8 +26,9 @@ js_Stringify(JSContext *cx, js::MutableHandleValue vp, JSObject *replacer,
 
 namespace js {
 
+template <typename CharT>
 extern bool
-ParseJSONWithReviver(JSContext *cx, JS::ConstTwoByteChars chars, size_t length,
+ParseJSONWithReviver(JSContext *cx, mozilla::Range<const CharT> chars,
                      HandleValue reviver, MutableHandleValue vp);
 
 } // namespace js
