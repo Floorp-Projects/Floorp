@@ -6,6 +6,7 @@
 
 #include "jsonparser.h"
 
+#include "mozilla/Range.h"
 #include "mozilla/RangedPtr.h"
 
 #include <ctype.h>
@@ -21,6 +22,7 @@
 
 using namespace js;
 
+using mozilla::Range;
 using mozilla::RangedPtr;
 
 JSONParserBase::~JSONParserBase()
@@ -126,7 +128,7 @@ JSONParser<CharT>::readString()
      * Optimization: if the source contains no escaped characters, create the
      * string directly from the source text.
      */
-    RangedPtr<const jschar> start = current;
+    CharPtr start = current;
     for (; current < end; current++) {
         if (*current == '"') {
             size_t length = current - start;
@@ -259,7 +261,7 @@ JSONParser<CharT>::readNumber()
         return token(Error);
     }
 
-    const RangedPtr<const jschar> digitStart = current;
+    const CharPtr digitStart = current;
 
     /* 0|[1-9][0-9]+ */
     if (!JS7_ISDEC(*current)) {
@@ -275,7 +277,7 @@ JSONParser<CharT>::readNumber()
 
     /* Fast path: no fractional or exponent part. */
     if (current == end || (*current != '.' && *current != 'e' && *current != 'E')) {
-        TwoByteChars chars(digitStart.get(), current - digitStart);
+        Range<const CharT> chars(digitStart.get(), current - digitStart);
         if (chars.length() < strlen("9007199254740992")) {
             // If the decimal number is shorter than the length of 2**53, (the
             // largest number a double can represent with integral precision),
@@ -286,7 +288,7 @@ JSONParser<CharT>::readNumber()
         }
 
         double d;
-        const jschar *dummy;
+        const CharT *dummy;
         if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
         JS_ASSERT(current == dummy);
@@ -332,7 +334,7 @@ JSONParser<CharT>::readNumber()
     }
 
     double d;
-    const jschar *finish;
+    const CharT *finish;
     if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);
     JS_ASSERT(current == finish);
@@ -452,8 +454,9 @@ JSONParser<CharT>::advanceAfterObjectOpen()
     return token(Error);
 }
 
+template <typename CharT>
 static inline void
-AssertPastValue(const RangedPtr<const jschar> current)
+AssertPastValue(const RangedPtr<const CharT> current)
 {
     /*
      * We're past an arbitrary JSON value, so the previous character is
@@ -827,4 +830,5 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
     return true;
 }
 
+template class js::JSONParser<Latin1Char>;
 template class js::JSONParser<jschar>;
