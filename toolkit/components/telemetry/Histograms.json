@@ -5709,6 +5709,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's Shader Editor been opened?"
   },
+  "DEVTOOLS_WEBAUDIOEDITOR_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Web Audio Editor been opened?"
+  },
   "DEVTOOLS_CANVASDEBUGGER_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -5818,6 +5823,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's Shader Editor?"
+  },
+  "DEVTOOLS_WEBAUDIOEDITOR_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Web Audio Editor?"
   },
   "DEVTOOLS_CANVASDEBUGGER_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -5954,6 +5964,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the Shader Editor been active (seconds)"
+  },
+  "DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the Web Audio Editor been active (seconds)"
   },
   "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
