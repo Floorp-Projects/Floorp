@@ -51,6 +51,8 @@ public:
                const nsAString& aText, HTMLTrackElement* aTrackElement,
                ErrorResult& aRv);
 
+  ~TextTrackCue();
+
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
   TextTrack* GetTrack() const

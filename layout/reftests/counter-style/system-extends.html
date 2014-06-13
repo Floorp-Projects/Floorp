@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: extends upper-roman;
+    prefix: "Chapter ";
+    range: 1 5;
+  }
+  @counter-style b {
+    system: extends a;
+    prefix: "Section ";
+    range: 1 6;
+  }
+</style>
+<ol start="-2" style="list-style-type: a">
+  <li><li><li><li><li>
+  <li><li><li><li><li>
+</ol>
+<ol start="-2" style="list-style-type: b">
+  <li><li><li><li><li>
+  <li><li><li><li><li>
+</ol>

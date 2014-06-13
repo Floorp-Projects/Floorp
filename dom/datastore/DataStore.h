@@ -27,6 +27,7 @@ public:
                                            DOMEventTargetHelper)
 
   explicit DataStore(nsPIDOMWindow* aWindow);
+  ~DataStore();
 
   // WebIDL (internal functions)
 
