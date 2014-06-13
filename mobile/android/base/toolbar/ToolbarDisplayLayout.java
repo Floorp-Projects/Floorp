@@ -260,12 +260,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
-        // Several parts of ToolbarDisplayLayout's state depends
-        // on the views being attached to the view tree.
-        if (!isAttachedToWindow()) {
-            return;
-        }
-
         if (flags.contains(UpdateFlags.TITLE)) {
             updateTitle(tab);
         }
