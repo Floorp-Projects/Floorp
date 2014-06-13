@@ -17,7 +17,7 @@
   });
 
   var test;
-  runTest(function (options) {
+  runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     var sld = test.chain.remove("PC_REMOTE_SET_LOCAL_DESCRIPTION");
     test.chain.insertAfter("PC_LOCAL_SET_REMOTE_DESCRIPTION", sld);
