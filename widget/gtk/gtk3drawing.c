@@ -1723,7 +1723,7 @@ moz_gtk_arrow_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GdkRectangle arrow_rect;
-    gdouble arrow_angle = ARROW_UP;
+    gdouble arrow_angle;
 
     ensure_button_arrow_widget();
     style = gtk_widget_get_style_context(gButtonArrowWidget);
@@ -1735,12 +1735,22 @@ moz_gtk_arrow_paint(cairo_t *cr, GdkRectangle* rect,
                          direction);
 
     if (direction == GTK_TEXT_DIR_RTL) {
-        if (arrow_type == GTK_ARROW_LEFT)
-            arrow_angle = ARROW_RIGHT;
-        else if (arrow_type == GTK_ARROW_RIGHT)
-            arrow_angle = ARROW_LEFT;
-    } else if (arrow_type == GTK_ARROW_DOWN) {
+        arrow_type = (arrow_type == GTK_ARROW_LEFT) ?
+                         GTK_ARROW_RIGHT : GTK_ARROW_LEFT;
+    }
+    switch (arrow_type) {
+    case GTK_ARROW_LEFT:
+        arrow_angle = ARROW_LEFT;
+        break;
+    case GTK_ARROW_RIGHT:
+        arrow_angle = ARROW_RIGHT;
+        break;
+    case GTK_ARROW_DOWN:
         arrow_angle = ARROW_DOWN;
+        break;
+    default:
+        arrow_angle = ARROW_UP;
+        break;
     }
     if (arrow_type != GTK_ARROW_NONE)
         gtk_render_arrow(style, cr, arrow_angle,
