@@ -1,5 +1,5 @@
 /*
- * Various and sundry protocol constants. DON'T CHANGE THESE. These values 
+ * Various and sundry protocol constants. DON'T CHANGE THESE. These values
  * are mostly defined by the SSL2, SSL3, or TLS protocol specifications.
  * Cipher kinds and ciphersuites are part of the public API.
  *
@@ -11,75 +11,77 @@
 #define __sslproto_h_
 
 /* All versions less than 3_0 are treated as SSL version 2 */
-#define SSL_LIBRARY_VERSION_2			0x0002
-#define SSL_LIBRARY_VERSION_3_0			0x0300
-#define SSL_LIBRARY_VERSION_TLS_1_0		0x0301
-#define SSL_LIBRARY_VERSION_TLS_1_1		0x0302
-#define SSL_LIBRARY_VERSION_TLS_1_2		0x0303
+#define SSL_LIBRARY_VERSION_2                   0x0002
+#define SSL_LIBRARY_VERSION_3_0                 0x0300
+#define SSL_LIBRARY_VERSION_TLS_1_0             0x0301
+#define SSL_LIBRARY_VERSION_TLS_1_1             0x0302
+#define SSL_LIBRARY_VERSION_TLS_1_2             0x0303
 /* Note: this is the internal format, not the wire format */
-#define SSL_LIBRARY_VERSION_DTLS_1_0		0x0302
+#define SSL_LIBRARY_VERSION_DTLS_1_0            0x0302
+#define SSL_LIBRARY_VERSION_DTLS_1_2            0x0303
 
 /* deprecated old name */
-#define SSL_LIBRARY_VERSION_3_1_TLS SSL_LIBRARY_VERSION_TLS_1_0 
+#define SSL_LIBRARY_VERSION_3_1_TLS SSL_LIBRARY_VERSION_TLS_1_0
 
-/* The DTLS version used in the spec */
+/* The DTLS versions used in the spec */
 #define SSL_LIBRARY_VERSION_DTLS_1_0_WIRE       ((~0x0100) & 0xffff)
+#define SSL_LIBRARY_VERSION_DTLS_1_2_WIRE       ((~0x0102) & 0xffff)
 
 /* Header lengths of some of the messages */
-#define SSL_HL_ERROR_HBYTES			3
-#define SSL_HL_CLIENT_HELLO_HBYTES		9
-#define SSL_HL_CLIENT_MASTER_KEY_HBYTES		10
-#define SSL_HL_CLIENT_FINISHED_HBYTES		1
-#define SSL_HL_SERVER_HELLO_HBYTES		11
-#define SSL_HL_SERVER_VERIFY_HBYTES		1
-#define SSL_HL_SERVER_FINISHED_HBYTES		1
-#define SSL_HL_REQUEST_CERTIFICATE_HBYTES	2
-#define SSL_HL_CLIENT_CERTIFICATE_HBYTES	6
+#define SSL_HL_ERROR_HBYTES                     3
+#define SSL_HL_CLIENT_HELLO_HBYTES              9
+#define SSL_HL_CLIENT_MASTER_KEY_HBYTES         10
+#define SSL_HL_CLIENT_FINISHED_HBYTES           1
+#define SSL_HL_SERVER_HELLO_HBYTES              11
+#define SSL_HL_SERVER_VERIFY_HBYTES             1
+#define SSL_HL_SERVER_FINISHED_HBYTES           1
+#define SSL_HL_REQUEST_CERTIFICATE_HBYTES       2
+#define SSL_HL_CLIENT_CERTIFICATE_HBYTES        6
 
 /* Security handshake protocol codes */
-#define SSL_MT_ERROR				0
-#define SSL_MT_CLIENT_HELLO			1
-#define SSL_MT_CLIENT_MASTER_KEY		2
-#define SSL_MT_CLIENT_FINISHED			3
-#define SSL_MT_SERVER_HELLO			4
-#define SSL_MT_SERVER_VERIFY			5
-#define SSL_MT_SERVER_FINISHED			6
-#define SSL_MT_REQUEST_CERTIFICATE		7
-#define SSL_MT_CLIENT_CERTIFICATE		8
+#define SSL_MT_ERROR                            0
+#define SSL_MT_CLIENT_HELLO                     1
+#define SSL_MT_CLIENT_MASTER_KEY                2
+#define SSL_MT_CLIENT_FINISHED                  3
+#define SSL_MT_SERVER_HELLO                     4
+#define SSL_MT_SERVER_VERIFY                    5
+#define SSL_MT_SERVER_FINISHED                  6
+#define SSL_MT_REQUEST_CERTIFICATE              7
+#define SSL_MT_CLIENT_CERTIFICATE               8
 
 /* Certificate types */
-#define SSL_CT_X509_CERTIFICATE			0x01
+#define SSL_CT_X509_CERTIFICATE                 0x01
 #if 0 /* XXX Not implemented yet */
-#define SSL_PKCS6_CERTIFICATE			0x02
+#define SSL_PKCS6_CERTIFICATE                   0x02
 #endif
-#define SSL_AT_MD5_WITH_RSA_ENCRYPTION		0x01
+#define SSL_AT_MD5_WITH_RSA_ENCRYPTION          0x01
 
 /* Error codes */
-#define SSL_PE_NO_CYPHERS			0x0001
-#define SSL_PE_NO_CERTIFICATE			0x0002
-#define SSL_PE_BAD_CERTIFICATE			0x0004
-#define SSL_PE_UNSUPPORTED_CERTIFICATE_TYPE	0x0006
+#define SSL_PE_NO_CYPHERS                       0x0001
+#define SSL_PE_NO_CERTIFICATE                   0x0002
+#define SSL_PE_BAD_CERTIFICATE                  0x0004
+#define SSL_PE_UNSUPPORTED_CERTIFICATE_TYPE     0x0006
 
 /* Cypher kinds (not the spec version!) */
-#define SSL_CK_RC4_128_WITH_MD5			0x01
-#define SSL_CK_RC4_128_EXPORT40_WITH_MD5	0x02
-#define SSL_CK_RC2_128_CBC_WITH_MD5		0x03
-#define SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5	0x04
-#define SSL_CK_IDEA_128_CBC_WITH_MD5		0x05
-#define SSL_CK_DES_64_CBC_WITH_MD5		0x06
-#define SSL_CK_DES_192_EDE3_CBC_WITH_MD5	0x07
+#define SSL_CK_RC4_128_WITH_MD5                 0x01
+#define SSL_CK_RC4_128_EXPORT40_WITH_MD5        0x02
+#define SSL_CK_RC2_128_CBC_WITH_MD5             0x03
+#define SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5    0x04
+#define SSL_CK_IDEA_128_CBC_WITH_MD5            0x05
+#define SSL_CK_DES_64_CBC_WITH_MD5              0x06
+#define SSL_CK_DES_192_EDE3_CBC_WITH_MD5        0x07
 
-/* Cipher enables.  These are used only for SSL_EnableCipher 
- * These values define the SSL2 suites, and do not colide with the 
+/* Cipher enables.  These are used only for SSL_EnableCipher
+ * These values define the SSL2 suites, and do not colide with the
  * SSL3 Cipher suites defined below.
  */
-#define SSL_EN_RC4_128_WITH_MD5			0xFF01
-#define SSL_EN_RC4_128_EXPORT40_WITH_MD5	0xFF02
-#define SSL_EN_RC2_128_CBC_WITH_MD5		0xFF03
-#define SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5	0xFF04
-#define SSL_EN_IDEA_128_CBC_WITH_MD5		0xFF05
-#define SSL_EN_DES_64_CBC_WITH_MD5		0xFF06
-#define SSL_EN_DES_192_EDE3_CBC_WITH_MD5	0xFF07
+#define SSL_EN_RC4_128_WITH_MD5                 0xFF01
+#define SSL_EN_RC4_128_EXPORT40_WITH_MD5        0xFF02
+#define SSL_EN_RC2_128_CBC_WITH_MD5             0xFF03
+#define SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5    0xFF04
+#define SSL_EN_IDEA_128_CBC_WITH_MD5            0xFF05
+#define SSL_EN_DES_64_CBC_WITH_MD5              0xFF06
+#define SSL_EN_DES_192_EDE3_CBC_WITH_MD5        0xFF07
 
 /* Deprecated SSL 3.0 & libssl names replaced by IANA-registered TLS names. */
 #ifndef SSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES
@@ -117,66 +119,66 @@
 #define TLS_DH_ANON_WITH_CAMELLIA_256_CBC_SHA  TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA
 #endif
 
-#define TLS_NULL_WITH_NULL_NULL			0x0000
+#define TLS_NULL_WITH_NULL_NULL                 0x0000
 
-#define TLS_RSA_WITH_NULL_MD5			0x0001
-#define TLS_RSA_WITH_NULL_SHA			0x0002
-#define TLS_RSA_EXPORT_WITH_RC4_40_MD5		0x0003
-#define TLS_RSA_WITH_RC4_128_MD5		0x0004
-#define TLS_RSA_WITH_RC4_128_SHA		0x0005
-#define TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5	0x0006
-#define TLS_RSA_WITH_IDEA_CBC_SHA		0x0007
-#define TLS_RSA_EXPORT_WITH_DES40_CBC_SHA	0x0008
-#define TLS_RSA_WITH_DES_CBC_SHA		0x0009
-#define TLS_RSA_WITH_3DES_EDE_CBC_SHA		0x000a
+#define TLS_RSA_WITH_NULL_MD5                   0x0001
+#define TLS_RSA_WITH_NULL_SHA                   0x0002
+#define TLS_RSA_EXPORT_WITH_RC4_40_MD5          0x0003
+#define TLS_RSA_WITH_RC4_128_MD5                0x0004
+#define TLS_RSA_WITH_RC4_128_SHA                0x0005
+#define TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5      0x0006
+#define TLS_RSA_WITH_IDEA_CBC_SHA               0x0007
+#define TLS_RSA_EXPORT_WITH_DES40_CBC_SHA       0x0008
+#define TLS_RSA_WITH_DES_CBC_SHA                0x0009
+#define TLS_RSA_WITH_3DES_EDE_CBC_SHA           0x000a
 
-#define TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA	0x000b
-#define TLS_DH_DSS_WITH_DES_CBC_SHA		0x000c
-#define TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA	0x000d
-#define TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA	0x000e
-#define TLS_DH_RSA_WITH_DES_CBC_SHA		0x000f
-#define TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA	0x0010
+#define TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA    0x000b
+#define TLS_DH_DSS_WITH_DES_CBC_SHA             0x000c
+#define TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA        0x000d
+#define TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA    0x000e
+#define TLS_DH_RSA_WITH_DES_CBC_SHA             0x000f
+#define TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA        0x0010
 
-#define TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA	0x0011
-#define TLS_DHE_DSS_WITH_DES_CBC_SHA		0x0012
-#define TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA	0x0013
-#define TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA	0x0014
-#define TLS_DHE_RSA_WITH_DES_CBC_SHA		0x0015
-#define TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA	0x0016
+#define TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA   0x0011
+#define TLS_DHE_DSS_WITH_DES_CBC_SHA            0x0012
+#define TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA       0x0013
+#define TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA   0x0014
+#define TLS_DHE_RSA_WITH_DES_CBC_SHA            0x0015
+#define TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA       0x0016
 
-#define TLS_DH_anon_EXPORT_WITH_RC4_40_MD5	0x0017
-#define TLS_DH_anon_WITH_RC4_128_MD5		0x0018
-#define TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA	0x0019
-#define TLS_DH_anon_WITH_DES_CBC_SHA		0x001a
-#define TLS_DH_anon_WITH_3DES_EDE_CBC_SHA	0x001b
+#define TLS_DH_anon_EXPORT_WITH_RC4_40_MD5      0x0017
+#define TLS_DH_anon_WITH_RC4_128_MD5            0x0018
+#define TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA   0x0019
+#define TLS_DH_anon_WITH_DES_CBC_SHA            0x001a
+#define TLS_DH_anon_WITH_3DES_EDE_CBC_SHA       0x001b
 
-#define SSL_FORTEZZA_DMS_WITH_NULL_SHA		0x001c /* deprecated */
-#define SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA	0x001d /* deprecated */
-#define SSL_FORTEZZA_DMS_WITH_RC4_128_SHA	0x001e /* deprecated */
+#define SSL_FORTEZZA_DMS_WITH_NULL_SHA          0x001c /* deprecated */
+#define SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA  0x001d /* deprecated */
+#define SSL_FORTEZZA_DMS_WITH_RC4_128_SHA       0x001e /* deprecated */
 
-#define TLS_RSA_WITH_AES_128_CBC_SHA      	0x002F
-#define TLS_DH_DSS_WITH_AES_128_CBC_SHA   	0x0030
-#define TLS_DH_RSA_WITH_AES_128_CBC_SHA   	0x0031
-#define TLS_DHE_DSS_WITH_AES_128_CBC_SHA  	0x0032
-#define TLS_DHE_RSA_WITH_AES_128_CBC_SHA  	0x0033
-#define TLS_DH_anon_WITH_AES_128_CBC_SHA  	0x0034
+#define TLS_RSA_WITH_AES_128_CBC_SHA            0x002F
+#define TLS_DH_DSS_WITH_AES_128_CBC_SHA         0x0030
+#define TLS_DH_RSA_WITH_AES_128_CBC_SHA         0x0031
+#define TLS_DHE_DSS_WITH_AES_128_CBC_SHA        0x0032
+#define TLS_DHE_RSA_WITH_AES_128_CBC_SHA        0x0033
+#define TLS_DH_anon_WITH_AES_128_CBC_SHA        0x0034
 
-#define TLS_RSA_WITH_AES_256_CBC_SHA      	0x0035
-#define TLS_DH_DSS_WITH_AES_256_CBC_SHA   	0x0036
-#define TLS_DH_RSA_WITH_AES_256_CBC_SHA   	0x0037
-#define TLS_DHE_DSS_WITH_AES_256_CBC_SHA  	0x0038
-#define TLS_DHE_RSA_WITH_AES_256_CBC_SHA  	0x0039
-#define TLS_DH_anon_WITH_AES_256_CBC_SHA  	0x003A
-#define TLS_RSA_WITH_NULL_SHA256		0x003B
-#define TLS_RSA_WITH_AES_128_CBC_SHA256  	0x003C
-#define TLS_RSA_WITH_AES_256_CBC_SHA256  	0x003D
+#define TLS_RSA_WITH_AES_256_CBC_SHA            0x0035
+#define TLS_DH_DSS_WITH_AES_256_CBC_SHA         0x0036
+#define TLS_DH_RSA_WITH_AES_256_CBC_SHA         0x0037
+#define TLS_DHE_DSS_WITH_AES_256_CBC_SHA        0x0038
+#define TLS_DHE_RSA_WITH_AES_256_CBC_SHA        0x0039
+#define TLS_DH_anon_WITH_AES_256_CBC_SHA        0x003A
+#define TLS_RSA_WITH_NULL_SHA256                0x003B
+#define TLS_RSA_WITH_AES_128_CBC_SHA256         0x003C
+#define TLS_RSA_WITH_AES_256_CBC_SHA256         0x003D
 
-#define TLS_RSA_WITH_CAMELLIA_128_CBC_SHA      	0x0041
-#define TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA   	0x0042
-#define TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA   	0x0043
-#define TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA  	0x0044
-#define TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA  	0x0045
-#define TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA  	0x0046
+#define TLS_RSA_WITH_CAMELLIA_128_CBC_SHA       0x0041
+#define TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA    0x0042
+#define TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA    0x0043
+#define TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA   0x0044
+#define TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA   0x0045
+#define TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA   0x0046
 
 #define TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA     0x0062
 #define TLS_RSA_EXPORT1024_WITH_RC4_56_SHA      0x0064
@@ -187,14 +189,14 @@
 #define TLS_DHE_RSA_WITH_AES_128_CBC_SHA256     0x0067
 #define TLS_DHE_RSA_WITH_AES_256_CBC_SHA256     0x006B
 
-#define TLS_RSA_WITH_CAMELLIA_256_CBC_SHA      	0x0084
-#define TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA   	0x0085
-#define TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA   	0x0086
-#define TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA  	0x0087
-#define TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA  	0x0088
-#define TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA  	0x0089
+#define TLS_RSA_WITH_CAMELLIA_256_CBC_SHA       0x0084
+#define TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA    0x0085
+#define TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA    0x0086
+#define TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA   0x0087
+#define TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA   0x0088
+#define TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA   0x0089
 
-#define TLS_RSA_WITH_SEED_CBC_SHA		0x0096
+#define TLS_RSA_WITH_SEED_CBC_SHA               0x0096
 
 #define TLS_RSA_WITH_AES_128_GCM_SHA256         0x009C
 #define TLS_DHE_RSA_WITH_AES_128_GCM_SHA256     0x009E
@@ -204,7 +206,7 @@
  * Must NEVER be chosen by server.  SSL 3.0 server acknowledges by sending
  * back an empty Renegotiation Info (RI) server hello extension.
  */
-#define TLS_EMPTY_RENEGOTIATION_INFO_SCSV	0x00FF
+#define TLS_EMPTY_RENEGOTIATION_INFO_SCSV       0x00FF
 
 /* Cipher Suite Values starting with 0xC000 are defined in informational
  * RFCs.
@@ -248,18 +250,18 @@
 #define TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256    0xC031
 
 /* Netscape "experimental" cipher suites. */
-#define SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA	0xffe0
-#define SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA	0xffe1
+#define SSL_RSA_OLDFIPS_WITH_3DES_EDE_CBC_SHA   0xffe0
+#define SSL_RSA_OLDFIPS_WITH_DES_CBC_SHA        0xffe1
 
 /* New non-experimental openly spec'ed versions of those cipher suites. */
-#define SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA 	0xfeff
-#define SSL_RSA_FIPS_WITH_DES_CBC_SHA      	0xfefe
+#define SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA      0xfeff
+#define SSL_RSA_FIPS_WITH_DES_CBC_SHA           0xfefe
 
 /* DTLS-SRTP cipher suites from RFC 5764 */
 /* If you modify this, also modify MAX_DTLS_SRTP_CIPHER_SUITES in sslimpl.h */
-#define SRTP_AES128_CM_HMAC_SHA1_80		0x0001
-#define SRTP_AES128_CM_HMAC_SHA1_32		0x0002
-#define SRTP_NULL_HMAC_SHA1_80			0x0005
-#define SRTP_NULL_HMAC_SHA1_32			0x0006
+#define SRTP_AES128_CM_HMAC_SHA1_80             0x0001
+#define SRTP_AES128_CM_HMAC_SHA1_32             0x0002
+#define SRTP_NULL_HMAC_SHA1_80                  0x0005
+#define SRTP_NULL_HMAC_SHA1_32                  0x0006
 
 #endif /* __sslproto_h_ */
