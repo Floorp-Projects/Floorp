@@ -182,6 +182,10 @@ a {
   -moz-user-focus: normal;
 }
 
+.webconsole-filter-button[checked] {
+  color: white !important;
+}
+
 .webconsole-filter-button > .toolbarbutton-menubutton-button:before {
   content: "";
   display: inline-block;
@@ -531,7 +535,7 @@ a {
   .message > .timestamp {
     display: none;
   }
-  .hud-console-filter-toolbar .webconsole-filter-button .toolbarbutton-text {
+  .toolbarbutton-text {
     display: none;
   }
   .hud-console-filter-toolbar .webconsole-filter-button {
@@ -541,8 +545,8 @@ a {
     min-width: 25px;
   }
   .webconsole-filter-button > .toolbarbutton-menubutton-button:before {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
     margin-left: 1px;
   }
   .toolbarbutton-menubutton-dropmarker {

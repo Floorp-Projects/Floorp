@@ -34,6 +34,10 @@
   -moz-margin-end: 6px;
 }
 
+#requests-menu-reload-notice-button {
+  min-height: 2em;
+}
+
 /* Context Graph */
 svg {
   overflow: hidden;
