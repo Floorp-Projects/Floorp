@@ -1369,6 +1369,8 @@ const KTableValue nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC,
   eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE,
   eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE,
+  eCSSKeyword_disclosure_closed, NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED,
+  eCSSKeyword_disclosure_open, NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN,
   // {lower,upper}-{roman,alpha} are also used by html attribute map.
   eCSSKeyword_lower_roman, NS_STYLE_LIST_STYLE_LOWER_ROMAN,
   eCSSKeyword_upper_roman, NS_STYLE_LIST_STYLE_UPPER_ROMAN,
