@@ -190,33 +190,33 @@ TestAreIdentical()
 static void
 TestDoubleExponentComponent()
 {
-  MOZ_RELEASE_ASSERT(ExponentComponent(0.0) == -int_fast16_t(FloatingPoint<double>::ExponentBias));
-  MOZ_RELEASE_ASSERT(ExponentComponent(-0.0) == -int_fast16_t(FloatingPoint<double>::ExponentBias));
+  MOZ_RELEASE_ASSERT(ExponentComponent(0.0) == -int_fast16_t(FloatingPoint<double>::kExponentBias));
+  MOZ_RELEASE_ASSERT(ExponentComponent(-0.0) == -int_fast16_t(FloatingPoint<double>::kExponentBias));
   MOZ_RELEASE_ASSERT(ExponentComponent(0.125) == -3);
   MOZ_RELEASE_ASSERT(ExponentComponent(0.5) == -1);
   MOZ_RELEASE_ASSERT(ExponentComponent(1.0) == 0);
   MOZ_RELEASE_ASSERT(ExponentComponent(1.5) == 0);
   MOZ_RELEASE_ASSERT(ExponentComponent(2.0) == 1);
   MOZ_RELEASE_ASSERT(ExponentComponent(7.0) == 2);
-  MOZ_RELEASE_ASSERT(ExponentComponent(PositiveInfinity<double>()) == FloatingPoint<double>::ExponentBias + 1);
-  MOZ_RELEASE_ASSERT(ExponentComponent(NegativeInfinity<double>()) == FloatingPoint<double>::ExponentBias + 1);
-  MOZ_RELEASE_ASSERT(ExponentComponent(UnspecifiedNaN<double>()) == FloatingPoint<double>::ExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(PositiveInfinity<double>()) == FloatingPoint<double>::kExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(NegativeInfinity<double>()) == FloatingPoint<double>::kExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(UnspecifiedNaN<double>()) == FloatingPoint<double>::kExponentBias + 1);
 }
 
 static void
 TestFloatExponentComponent()
 {
-  MOZ_RELEASE_ASSERT(ExponentComponent(0.0f) == -int_fast16_t(FloatingPoint<float>::ExponentBias));
-  MOZ_RELEASE_ASSERT(ExponentComponent(-0.0f) == -int_fast16_t(FloatingPoint<float>::ExponentBias));
+  MOZ_RELEASE_ASSERT(ExponentComponent(0.0f) == -int_fast16_t(FloatingPoint<float>::kExponentBias));
+  MOZ_RELEASE_ASSERT(ExponentComponent(-0.0f) == -int_fast16_t(FloatingPoint<float>::kExponentBias));
   MOZ_RELEASE_ASSERT(ExponentComponent(0.125f) == -3);
   MOZ_RELEASE_ASSERT(ExponentComponent(0.5f) == -1);
   MOZ_RELEASE_ASSERT(ExponentComponent(1.0f) == 0);
   MOZ_RELEASE_ASSERT(ExponentComponent(1.5f) == 0);
   MOZ_RELEASE_ASSERT(ExponentComponent(2.0f) == 1);
   MOZ_RELEASE_ASSERT(ExponentComponent(7.0f) == 2);
-  MOZ_RELEASE_ASSERT(ExponentComponent(PositiveInfinity<float>()) == FloatingPoint<float>::ExponentBias + 1);
-  MOZ_RELEASE_ASSERT(ExponentComponent(NegativeInfinity<float>()) == FloatingPoint<float>::ExponentBias + 1);
-  MOZ_RELEASE_ASSERT(ExponentComponent(UnspecifiedNaN<float>()) == FloatingPoint<float>::ExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(PositiveInfinity<float>()) == FloatingPoint<float>::kExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(NegativeInfinity<float>()) == FloatingPoint<float>::kExponentBias + 1);
+  MOZ_RELEASE_ASSERT(ExponentComponent(UnspecifiedNaN<float>()) == FloatingPoint<float>::kExponentBias + 1);
 }
 
 static void

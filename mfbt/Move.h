@@ -210,9 +210,9 @@ namespace mozilla {
  */
 template<typename T>
 inline typename RemoveReference<T>::Type&&
-Move(T&& a)
+Move(T&& aX)
 {
-  return static_cast<typename RemoveReference<T>::Type&&>(a);
+  return static_cast<typename RemoveReference<T>::Type&&>(aX);
 }
 
 /**
@@ -221,28 +221,28 @@ Move(T&& a)
  */
 template<typename T>
 inline T&&
-Forward(typename RemoveReference<T>::Type& a)
+Forward(typename RemoveReference<T>::Type& aX)
 {
-  return static_cast<T&&>(a);
+  return static_cast<T&&>(aX);
 }
 
 template<typename T>
 inline T&&
-Forward(typename RemoveReference<T>::Type&& t)
+Forward(typename RemoveReference<T>::Type&& aX)
 {
   static_assert(!IsLvalueReference<T>::value,
                 "misuse of Forward detected!  try the other overload");
-  return static_cast<T&&>(t);
+  return static_cast<T&&>(aX);
 }
 
-/** Swap |t| and |u| using move-construction if possible. */
+/** Swap |aX| and |aY| using move-construction if possible. */
 template<typename T>
 inline void
-Swap(T& t, T& u)
+Swap(T& aX, T& aY)
 {
-  T tmp(Move(t));
-  t = Move(u);
-  u = Move(tmp);
+  T tmp(Move(aX));
+  aX = Move(aY);
+  aY = Move(tmp);
 }
 
 } // namespace mozilla

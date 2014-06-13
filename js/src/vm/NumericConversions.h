@@ -39,13 +39,13 @@ ToUintWidth(double d)
                   "ResultType must be an unsigned type");
 
     uint64_t bits = mozilla::BitwiseCast<uint64_t>(d);
-    unsigned DoubleExponentShift = mozilla::FloatingPoint<double>::ExponentShift;
+    unsigned DoubleExponentShift = mozilla::FloatingPoint<double>::kExponentShift;
 
     // Extract the exponent component.  (Be careful here!  It's not technically
     // the exponent in NaN, infinities, and subnormals.)
     int_fast16_t exp =
-        int_fast16_t((bits & mozilla::FloatingPoint<double>::ExponentBits) >> DoubleExponentShift) -
-        int_fast16_t(mozilla::FloatingPoint<double>::ExponentBias);
+        int_fast16_t((bits & mozilla::FloatingPoint<double>::kExponentBits) >> DoubleExponentShift) -
+        int_fast16_t(mozilla::FloatingPoint<double>::kExponentBias);
 
     // If the exponent's less than zero, abs(d) < 1, so the result is 0.  (This
     // also handles subnormals.)
@@ -104,7 +104,7 @@ ToUintWidth(double d)
     }
 
     // Compute the congruent value in the signed range.
-    return (bits & mozilla::FloatingPoint<double>::SignBit) ? ~result + 1 : result;
+    return (bits & mozilla::FloatingPoint<double>::kSignBit) ? ~result + 1 : result;
 }
 
 template<typename ResultType>
