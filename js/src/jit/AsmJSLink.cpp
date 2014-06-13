@@ -941,15 +941,15 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
             return nullptr;
 
         if (PropertyName *argName = module.globalArgumentName()) {
-            if (!out.append(argName->chars(), argName->length()))
+            if (!out.append(argName))
                 return nullptr;
         }
         if (PropertyName *argName = module.importArgumentName()) {
-            if (!out.append(", ") || !out.append(argName->chars(), argName->length()))
+            if (!out.append(", ") || !out.append(argName))
                 return nullptr;
         }
         if (PropertyName *argName = module.bufferArgumentName()) {
-            if (!out.append(", ") || !out.append(argName->chars(), argName->length()))
+            if (!out.append(", ") || !out.append(argName))
                 return nullptr;
         }
 
@@ -965,7 +965,7 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
         if (!AppendUseStrictSource(cx, fun, src, out))
             return nullptr;
     } else {
-        if (!out.append(src->chars(), src->length()))
+        if (!out.append(src))
             return nullptr;
     }
 
@@ -1048,7 +1048,7 @@ js::AsmJSFunctionToString(JSContext *cx, HandleFunction fun)
         Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
         if (!src)
             return nullptr;
-        if (!out.append(src->chars(), src->length()))
+        if (!out.append(src))
             return nullptr;
     }
 

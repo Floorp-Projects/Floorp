@@ -77,7 +77,7 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
                 break;
         } while (++i < len);
         if (i > mark) {
-            if (!sb.append(&buf[mark], i - mark))
+            if (!sb.appendSubstring(str, mark, i - mark))
                 return false;
             if (i == len)
                 break;
@@ -105,8 +105,11 @@ Quote(JSContext *cx, StringBuffer &sb, JSString *str)
                 return false;
             JS_ASSERT((c >> 4) < 10);
             uint8_t x = c >> 4, y = c % 16;
-            if (!sb.append('0' + x) || !sb.append(y < 10 ? '0' + y : 'a' + (y - 10)))
+            if (!sb.append(Latin1Char('0' + x)) ||
+                !sb.append(Latin1Char(y < 10 ? '0' + y : 'a' + (y - 10))))
+            {
                 return false;
+            }
         }
     }
 
@@ -146,7 +149,7 @@ WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
         if (!scx->sb.append('\n'))
             return false;
         for (uint32_t i = 0; i < limit; i++) {
-            if (!scx->sb.append(scx->gap.begin(), scx->gap.end()))
+            if (!scx->sb.append(scx->gap.rawTwoByteBegin(), scx->gap.rawTwoByteEnd()))
                 return false;
         }
     }
@@ -475,11 +478,7 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
                 return scx->sb.append("null");
         }
 
-        StringBuffer sb(cx);
-        if (!NumberValueToStringBuffer(cx, v, sb))
-            return false;
-
-        return scx->sb.append(sb.begin(), sb.length());
+        return NumberValueToStringBuffer(cx, v, scx->sb);
     }
 
     /* Step 10. */
@@ -632,8 +631,8 @@ js_Stringify(JSContext *cx, MutableHandleValue vp, JSObject *replacer_, Value sp
         if (!str)
             return false;
         JS::Anchor<JSString *> anchor(str);
-        size_t len = Min(size_t(10), space.toString()->length());
-        if (!gap.append(str->chars(), len))
+        size_t len = Min(size_t(10), str->length());
+        if (!gap.appendSubstring(str, 0, len))
             return false;
     } else {
         /* Step 8. */
