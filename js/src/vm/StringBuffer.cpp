@@ -6,11 +6,15 @@
 
 #include "vm/StringBuffer.h"
 
+#include "mozilla/Range.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
 
 using namespace js;
+
+using mozilla::Range;
 
 template <typename CharT, class Buffer>
 static CharT *
@@ -96,10 +100,10 @@ StringBuffer::finishString()
 
     if (isLatin1()) {
         if (JSFatInlineString::latin1LengthFits(len))
-            return NewFatInlineString<CanGC>(cx, Latin1Chars(latin1Chars().begin(), len));
+            return NewFatInlineString<CanGC>(cx, Range<const Latin1Char>(latin1Chars().begin(), len));
     } else {
         if (JSFatInlineString::twoByteLengthFits(len))
-            return NewFatInlineString<CanGC>(cx, TwoByteChars(twoByteChars().begin(), len));
+            return NewFatInlineString<CanGC>(cx, Range<const jschar>(twoByteChars().begin(), len));
     }
 
     return isLatin1()
