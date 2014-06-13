@@ -80,14 +80,14 @@ protected:
    * to, if we find any visibility:collapse children, and Reflow() does
    * everything before that point.)
    */
-  nsresult DoFlexLayout(nsPresContext*           aPresContext,
-                        nsHTMLReflowMetrics&     aDesiredSize,
-                        const nsHTMLReflowState& aReflowState,
-                        nsReflowStatus&          aStatus,
-                        nscoord aContentBoxMainSize,
-                        nscoord aAvailableHeightForContent,
-                        nsTArray<StrutInfo>& aStruts,
-                        const FlexboxAxisTracker& aAxisTracker);
+  void DoFlexLayout(nsPresContext*           aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus,
+                    nscoord aContentBoxMainSize,
+                    nscoord aAvailableHeightForContent,
+                    nsTArray<StrutInfo>& aStruts,
+                    const FlexboxAxisTracker& aAxisTracker);
 
   /**
    * Checks whether our child-frame list "mFrames" is sorted, using the given
@@ -113,25 +113,22 @@ protected:
                                      const nsHTMLReflowState& aParentReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
 
-  // Returns nsresult because we might have to reflow aFlexItem.Frame() (to
-  // get its vertical intrinsic size in a vertical flexbox), and if that
-  // reflow fails (returns a failure nsresult), we want to bail out.
-  nsresult ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
-                                           FlexItem& aFlexItem,
-                                           const nsHTMLReflowState& aParentReflowState,
-                                           const FlexboxAxisTracker& aAxisTracker);
+  void ResolveFlexItemMaxContentSizing(nsPresContext* aPresContext,
+                                       FlexItem& aFlexItem,
+                                       const nsHTMLReflowState& aParentReflowState,
+                                       const FlexboxAxisTracker& aAxisTracker);
 
   // Creates FlexItems for all of our child frames, arranged in a list of
   // FlexLines.  These are returned by reference in |aLines|. Our actual
   // return value has to be |nsresult|, in case we have to reflow a child
   // to establish its flex base size and that reflow fails.
-  nsresult GenerateFlexLines(nsPresContext* aPresContext,
-                             const nsHTMLReflowState& aReflowState,
-                             nscoord aContentBoxMainSize,
-                             nscoord aAvailableHeightForContent,
-                             const nsTArray<StrutInfo>& aStruts,
-                             const FlexboxAxisTracker& aAxisTracker,
-                             mozilla::LinkedList<FlexLine>& aLines);
+  void GenerateFlexLines(nsPresContext* aPresContext,
+                         const nsHTMLReflowState& aReflowState,
+                         nscoord aContentBoxMainSize,
+                         nscoord aAvailableHeightForContent,
+                         const nsTArray<StrutInfo>& aStruts,
+                         const FlexboxAxisTracker& aAxisTracker,
+                         mozilla::LinkedList<FlexLine>& aLines);
 
   nscoord GetMainSizeFromReflowState(const nsHTMLReflowState& aReflowState,
                                      const FlexboxAxisTracker& aAxisTracker);
@@ -143,10 +140,10 @@ protected:
                            bool* aIsDefinite,
                            nsReflowStatus& aStatus);
 
-  nsresult SizeItemInCrossAxis(nsPresContext* aPresContext,
-                               const FlexboxAxisTracker& aAxisTracker,
-                               nsHTMLReflowState& aChildReflowState,
-                               FlexItem& aItem);
+  void SizeItemInCrossAxis(nsPresContext* aPresContext,
+                           const FlexboxAxisTracker& aAxisTracker,
+                           nsHTMLReflowState& aChildReflowState,
+                           FlexItem& aItem);
 
   bool mChildrenHaveBeenReordered; // Have we ever had to reorder our kids
                                    // to satisfy their 'order' values?
