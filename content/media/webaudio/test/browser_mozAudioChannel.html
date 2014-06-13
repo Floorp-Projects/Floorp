@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<meta charset="utf-8">
+<title>Test for mozinterruptbegin/end in AudioContext</title>
+
+mozAudioChannelTest = <span id="mozAudioChannelTest">FAIL</span>
+
+<script type="application/javascript">
+
+  var ac = new AudioContext();
+
+  var buffer = ac.createBuffer(1, 2048, ac.sampleRate);
+  for (var i = 0; i < 2048; ++i) {
+    buffer.getChannelData(0)[i] = Math.sin(440 * 2 * Math.PI * i / ac.sampleRate);
+  }
+
+  var source = ac.createBufferSource();
+  source.buffer = buffer;
+  source.connect(ac.destination);
+  source.start(0);
+
+  ac.onmozinterruptbegin = function(evt) {
+    document.getElementById("mozAudioChannelTest").innerHTML = "mozinterruptbegin";
+  }
+
+  ac.addEventListener('mozinterruptend', function() {
+    document.getElementById("mozAudioChannelTest").innerHTML = "mozinterruptend";
+  }, false);
+
+  document.getElementById("mozAudioChannelTest").innerHTML = "READY";
+
+</script>
