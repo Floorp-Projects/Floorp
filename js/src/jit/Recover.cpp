@@ -164,6 +164,33 @@ RBitNot::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MBitAnd::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_BitAnd));
+    return true;
+}
+
+RBitAnd::RBitAnd(CompactBufferReader &reader)
+{ }
+
+bool
+RBitAnd::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    int32_t result;
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+
+    if (!js::BitAnd(cx, lhs, rhs, &result))
+        return false;
+
+    RootedValue rootedResult(cx, js::Int32Value(result));
+    iter.storeInstructionResult(rootedResult);
+    return true;
+}
+
+bool
 MBitOr::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

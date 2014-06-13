@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=597650
+-->
+<head>
+  <title>Test for Bug 597650</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=597650">Mozilla Bug 597650</a>
+  <p id="display"></p>
+  <div id="content">
+    <label id="l">
+      <input id="h"></input>
+      <input type="text" id="i"></input>
+    </label>
+    <label id="lh" for="h"></label>
+  </div>
+  <pre id="test">
+    <script class="testbody" type="text/javascript">
+    /** Test for Bug 597650 **/
+      label = document.getElementById("l");
+      labelForH = document.getElementById("lh");
+      inputI = document.getElementById("i");
+      inputH = document.getElementById("h");
+
+      var labelableTypes = ["text", "search", "tel", "url", "email", "password",
+                            "datetime", "date", "month", "week", "time",
+                            "number", "range", "color", "checkbox", "radio",
+                            "file", "submit", "image", "reset", "button"];
+      var nonLabelableTypes = ["hidden"];
+
+      for (var i in labelableTypes) {
+        test(labelableTypes[i], true);
+      }
+
+      for (var i in nonLabelableTypes) {
+        test(nonLabelableTypes[i], false);
+      }
+
+      function test(type, isLabelable) {
+        inputH.type = type;
+        if (isLabelable) {
+          testControl(label,     inputH, type, true);
+          testControl(labelForH, inputH, type, true);
+        } else {
+          testControl(label,     inputI,    type, false);
+          testControl(labelForH, undefined, type, false);
+
+          inputH.type = "text";
+          testControl(label,     inputH, "text", true);
+          testControl(labelForH, inputH, "text", true);
+
+          inputH.type = type;
+          testControl(label,     inputI,    type, false);
+          testControl(labelForH, undefined, type, false);
+
+          label.removeChild(inputH);
+          testControl(label, inputI, "text", true);
+
+          var element = document.createElement('input');
+          element.type = type;
+          label.insertBefore(element, inputI);
+          testControl(label, inputI, "text", true);
+        }
+      }
+
+      function testControl(label, control, type, labelable) {
+        if (labelable) {
+          is(label.control, control, "Input controls of type " + type
+                                   + " should be labeled");
+        } else {
+          is(label.control, control, "Input controls of type " + type
+                                  + " should be ignored by <label>");
+        }
+      }
+    </script>
+  </pre>
+  </body>
+</html>
+

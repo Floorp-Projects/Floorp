@@ -614,12 +614,12 @@ nsChromeRegistryChrome::kTableOps = {
 nsChromeRegistryChrome::ProviderEntry*
 nsChromeRegistryChrome::nsProviderArray::GetProvider(const nsACString& aPreferred, MatchType aType)
 {
-  int32_t i = mArray.Length();
+  size_t i = mArray.Length();
   if (!i)
     return nullptr;
 
   ProviderEntry* found = nullptr;  // Only set if we find a partial-match locale
-  ProviderEntry* entry;
+  ProviderEntry* entry = nullptr;
 
   while (i--) {
     entry = &mArray[i];

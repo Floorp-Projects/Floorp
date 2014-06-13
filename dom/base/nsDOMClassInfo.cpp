@@ -98,6 +98,7 @@
 #include "nsIDOMCSSSupportsRule.h"
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
+#include "nsIDOMCSSCounterStyleRule.h"
 #include "nsIDOMCSSPageRule.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMXULCommandDispatcher.h"
@@ -409,6 +410,9 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframesRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(CSSCounterStyleRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(CSSPageRule, nsDOMGenericSH,
@@ -1034,6 +1038,10 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframesRule, nsIDOMMozCSSKeyframesRule)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CSSCounterStyleRule, nsIDOMCSSCounterStyleRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(CSSPageRule, nsIDOMCSSPageRule)

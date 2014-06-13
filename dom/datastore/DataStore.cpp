@@ -29,6 +29,10 @@ DataStore::DataStore(nsPIDOMWindow* aWindow)
 {
 }
 
+DataStore::~DataStore()
+{
+}
+
 already_AddRefed<DataStore>
 DataStore::Constructor(GlobalObject& aGlobal, ErrorResult& aRv)
 {

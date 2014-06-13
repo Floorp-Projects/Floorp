@@ -1570,7 +1570,7 @@ class LIRGraph
     }
     void setEntrySnapshot(LSnapshot *snapshot) {
         JS_ASSERT(!entrySnapshot_);
-        JS_ASSERT(snapshot->bailoutKind() == Bailout_Normal);
+        JS_ASSERT(snapshot->bailoutKind() == Bailout_InitialState);
         snapshot->setBailoutKind(Bailout_ArgumentCheck);
         entrySnapshot_ = snapshot;
     }

@@ -140,6 +140,9 @@ include ../../content/test/reftest/reftest.list
 # counters/
 include counters/reftest.list
 
+# counter-style/
+include counter-style/reftest.list
+
 # datalist
 include datalist/reftest.list
 

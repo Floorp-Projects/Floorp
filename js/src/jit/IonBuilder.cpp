@@ -9899,7 +9899,8 @@ IonBuilder::jsop_iternext()
         return false;
 
     if (!nonStringIteration_ && !inspector->hasSeenNonStringIterNext(pc)) {
-        ins = MUnbox::New(alloc(), ins, MIRType_String, MUnbox::Fallible, Bailout_BaselineInfo);
+        ins = MUnbox::New(alloc(), ins, MIRType_String, MUnbox::Fallible,
+                          Bailout_NonStringInputInvalidate);
         current->add(ins);
         current->rewriteAtDepth(-1, ins);
     }

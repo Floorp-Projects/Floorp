@@ -38,7 +38,7 @@ public:
 
     cairo_pattern_t *CairoPattern();
     void AddColorStop(gfxFloat offset, const gfxRGBA& c);
-    void SetColorStops(mozilla::RefPtr<mozilla::gfx::GradientStops> aStops);
+    void SetColorStops(mozilla::gfx::GradientStops* aStops);
 
     // This should only be called on a cairo pattern that we want to use with
     // Azure. We will read back the color stops from cairo and try to look

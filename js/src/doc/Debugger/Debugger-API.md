@@ -41,7 +41,7 @@ of the additional attack surface.
 ## Debugger Instances and Shadow Objects
 
 `Debugger` reflects every aspect of the debuggee's state as a JavaScript
-value&mdash;not just actual JavaScript values like objects and primitives,
+value---not just actual JavaScript values like objects and primitives,
 but also stack frames, environments, scripts, and compilation units, which
 are not normally accessible as objects in their own right.
 
@@ -57,7 +57,7 @@ Debugger API (which all follow some [general conventions][conventions]):
   invoking getters, setters, proxy traps, and so on.
 
 - A [`Debugger.Script`][script] represents a block of JavaScript
-  code&mdash;either a function body or a top-level script. Given a
+  code---either a function body or a top-level script. Given a
   `Debugger.Script`, one can set breakpoints, translate between source
   positions and bytecode offsets (a deviation from the "source level"
   design principle), and find other static characteristics of the code.
@@ -154,7 +154,7 @@ You can try out `Debugger` yourself in Firefox's Scratchpad.
     ![The Debugger callback displaying an alert][img-example-alert]
 
 7)  Press "Run" in the Scratchpad again. Now, clicking on the "Click me!"
-    text causes *two* alerts to show&mdash;one for each `Debugger`
+    text causes *two* alerts to show---one for each `Debugger`
     instance.
 
     Multiple `Debugger` instances can observe the same debuggee. Re-running
@@ -163,7 +163,7 @@ You can try out `Debugger` yourself in Firefox's Scratchpad.
     `debugger;` statement handler with the new instance. When you clicked
     on the `div` element, both of them ran. This shows how any number of
     `Debugger`-based tools can observe a single web page
-    simultaneously&mdash;although, since the order in which their handlers
+    simultaneously---although, since the order in which their handlers
     run is not specified, such tools should probably only observe, and not
     influence, the debuggee's behavior.
 
@@ -185,6 +185,6 @@ While the `Debugger` core API deals only with concepts common to any
 JavaScript implementation, it also includes some Gecko-specific features:
 
 - [Global tracking][global] supports debugging all the code running in a
-  Gecko instance at once&mdash;the 'chrome debugging' model.
+  Gecko instance at once---the 'chrome debugging' model.
 - [Object wrapper][wrapper] functions help manipulate object references
   that cross privilege boundaries.
