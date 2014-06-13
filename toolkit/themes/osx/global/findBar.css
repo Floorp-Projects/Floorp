@@ -79,7 +79,11 @@ label.findbar-find-fast:-moz-lwtheme,
 .findbar-highlight,
 .findbar-case-sensitive {
   -moz-margin-end: 5px;
-  padding: 0 3px;
+  padding: 2px 9px;
+}
+
+.findbar-highlight {
+  -moz-margin-start: 8px;
 }
 
 .findbar-container > toolbarbutton:-moz-focusring,
@@ -109,10 +113,6 @@ label.findbar-find-fast:-moz-lwtheme,
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;
   box-shadow: @focusRingShadow@, @roundButtonPressedShadow@;
-}
-
-.findbar-closebutton > .toolbarbutton-text {
-  display: none;
 }
 
 /* Search field */
@@ -164,13 +164,6 @@ label.findbar-find-fast:-moz-lwtheme,
   padding: 2px 6px;
 }
 
-.findbar-find-previous > .toolbarbutton-text,
-.findbar-find-next > .toolbarbutton-text {
-  margin: 0 !important;
-  padding: 0;
-  width: 0;
-}
-
 .findbar-find-previous > .toolbarbutton-icon,
 .findbar-find-next > .toolbarbutton-icon {
   margin: 0;
@@ -216,10 +209,4 @@ label.findbar-find-fast:-moz-lwtheme,
   margin: 0 !important;
   -moz-margin-start: 12px !important;
   text-shadow: 0 1px rgba(255,255,255,.4);
-}
-
-/* Highlight and Case Sensitive toggles */
-
-.findbar-highlight {
-  -moz-margin-start: 8px;
 }

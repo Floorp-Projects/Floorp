@@ -68,10 +68,6 @@ notification[type="critical"] {
   border: none;
 }
 
-.messageCloseButton > .toolbarbutton-text {
-  display: none;
-}
-
 .messageCloseButton:-moz-focusring > .toolbarbutton-icon {
   border-radius: 10000px;
   box-shadow: 0 0 2px 1px -moz-mac-focusring,
