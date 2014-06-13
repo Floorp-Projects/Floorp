@@ -965,13 +965,13 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
 
   // colon headers first
   if (!connectForm) {
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false, false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":path"), path), true, false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false, false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":scheme"), scheme), false, false);
   } else {
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false);
-    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":method"), method), false, false);
+    ProcessHeader(nvPair(NS_LITERAL_CSTRING(":authority"), host), false, false);
   }
 
   // now the non colon headers
@@ -1062,12 +1062,13 @@ Http2Compressor::EncodeHeaderBlock(const nsCString &nvInput,
         nsDependentCSubstring cookie = Substring(beginBuffer + nextCookie,
                                                  beginBuffer + semiSpaceIndex);
         // cookies less than 20 bytes are not indexed
-        ProcessHeader(nvPair(name, cookie), name.Length() < 20);
+        ProcessHeader(nvPair(name, cookie), false, name.Length() < 20);
         nextCookie = semiSpaceIndex + 2;
       }
     } else {
       // allow indexing of every non-cookie except authorization
-      ProcessHeader(nvPair(name, value), name.EqualsLiteral("authorization"));
+      ProcessHeader(nvPair(name, value), false,
+                    name.EqualsLiteral("authorization"));
     }
   }
 
@@ -1400,7 +1401,8 @@ Http2Compressor::DumpState()
 }
 
 void
-Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
+Http2Compressor::ProcessHeader(const nvPair inputPair, bool noLocalIndex,
+                               bool neverIndex)
 {
   uint32_t newSize = inputPair.Size();
   uint32_t headerTableSize = mHeaderTable.Length();
@@ -1423,7 +1425,7 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
   }
 
   // We need to emit a new literal
-  if (!match || neverIndex) {
+  if (!match || noLocalIndex || neverIndex) {
     if (neverIndex) {
       DoOutput(kNeverIndexedLiteral, &inputPair, nameReference);
       LOG(("Compressor state after literal never index"));
@@ -1431,7 +1433,7 @@ Http2Compressor::ProcessHeader(const nvPair inputPair, bool neverIndex)
       return;
     }
 
-    if ((newSize > (mMaxBuffer / 2)) || (mMaxBuffer < 128)) {
+    if (noLocalIndex || (newSize > (mMaxBuffer / 2)) || (mMaxBuffer < 128)) {
       DoOutput(kPlainLiteral, &inputPair, nameReference);
       LOG(("Compressor state after literal without index"));
       DumpState();
