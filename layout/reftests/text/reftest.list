@@ -101,7 +101,7 @@ HTTP(..) == synthetic-bold-papyrus-01.html synthetic-bold-papyrus-01-ref.html
 != text-align-justify-last-end.html text-align-justify-last-center.html
 != text-align-justify-last-end.html text-align-justify-last-justify.html
 != text-align-justify-last-center.html text-align-justify-last-justify.html
-fails-if(B2G&&browserIsRemote) == text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
+random-if(B2G&&browserIsRemote) == text-align-left-in-rtl-block.html text-align-left-in-rtl-block-ref.html
 HTTP(..) == variation-selector-unsupported-1.html variation-selector-unsupported-1-ref.html
 == white-space-1a.html white-space-1-ref.html
 == white-space-1b.html white-space-1-ref.html
@@ -163,7 +163,7 @@ fails-if(!cocoaWidget&&!Android&&!B2G) HTTP(..) != arabic-fallback-4.html arabic
 == arabic-marks-1.html arabic-marks-1-ref.html
 
 == 726392-1.html 726392-1-ref.html
-fails-if(B2G&&browserIsRemote) == 726392-2.html 726392-2-ref.html
+random-if(B2G&&browserIsRemote) == 726392-2.html 726392-2-ref.html
 skip-if(B2G) == 726392-3.html 726392-3-ref.html
 == 745555-1.html 745555-1-ref.html
 == 745555-2.html 745555-2-ref.html
