@@ -287,7 +287,7 @@ void
 SharedBufferManagerChild::DeallocGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& aBuffer)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  NS_ASSERTION(aBuffer.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle, "We shouldn't trying to do IPC with real buffer");
+  NS_ASSERTION(aBuffer.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle, "We shouldn't try to do IPC with real buffer");
   if (aBuffer.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TGrallocBufferRef) {
     return;
   }
@@ -305,7 +305,7 @@ void
 SharedBufferManagerChild::DeallocGrallocBufferNow(const mozilla::layers::MaybeMagicGrallocBufferHandle& aBuffer)
 {
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  NS_ASSERTION(aBuffer.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle, "We shouldn't trying to do IPC with real buffer");
+  NS_ASSERTION(aBuffer.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle, "We shouldn't try to do IPC with real buffer");
 
   {
     MutexAutoLock lock(mBufferMutex);
@@ -325,7 +325,7 @@ bool SharedBufferManagerChild::RecvDropGrallocBuffer(const mozilla::layers::Mayb
 
   {
     MutexAutoLock lock(mBufferMutex);
-    NS_ASSERTION(mBuffers.count(bufferKey) != 0, "Not my buffer");
+    NS_ASSERTION(mBuffers.count(bufferKey) != 0, "No such buffer");
     mBuffers.erase(bufferKey);
   }
 #endif

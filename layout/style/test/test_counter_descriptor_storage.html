@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test for parsing, storage and serialization of CSS @counter-style descriptor values</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=966166">Mozilla Bug 966166</a>
+<div id="display"></div>
+<pre id="test">
+<script type="application/javascript">
+var gStyleElement = document.createElement("style");
+gStyleElement.setAttribute("type", "text/css");
+document.getElementsByTagName("head")[0].appendChild(gStyleElement);
+var gSheet = gStyleElement.sheet;
+gSheet.insertRule(
+  "@counter-style test { system: extends decimal }", 0);
+var gRule = gSheet.cssRules[0];
+
+function set_rule(ruleText) {
+  gSheet.deleteRule(0);
+  gSheet.insertRule("@counter-style test { " + ruleText + " }", 0);
+  gRule = gSheet.cssRules[0];
+}
+
+function run_tests(tests) {
+  for (var desc in tests) {
+    var items = tests[desc];
+    for (var i in items) {
+      var item = items[i];
+      var ref = item[0];
+      if (ref === null) {
+        ref = gRule[desc];
+      }
+      for (var j in item) {
+        if (item[j] !== null) {
+          gRule[desc] = item[j];
+          is(gRule[desc], ref,
+             "setting '" + item[j] + "' on '" + desc + "'");
+        }
+      }
+    }
+  }
+}
+
+function test_system_dep_desc() {
+  // for system requires at least one symbol
+  var oneSymbolTests = [
+    [null, "", "0"],
+    ["x y", "x   y"],
+    ["\"x\"", "'x'"],
+    ["\\-", "\\2D"],
+    ["\\*", "\\2A"],
+  ];
+  // for system requires at least two symbols
+  var twoSymbolsTests = [
+    [null, "", "0", "x", "\"x\""],
+    ["x y", "x   y"],
+    ["\"x\" \"y\"", "'x' 'y'"],
+  ];
+  var info = [
+    {
+      system: "cyclic", 
+      base: "symbols: x",
+      base_tests: {
+        system: "cyclic",
+        symbols: "x"
+      },
+      tests: {
+        system: [
+          [null, "", "symbolic"],
+          ["cyclic", "Cyclic"],
+        ],
+        symbols: oneSymbolTests
+      }
+    },
+    {
+      system: "fixed",
+      base: "symbols: x",
+      base_tests: {
+        system: "fixed 1",
+        symbols: "x"
+      },
+      tests: {
+        system: [
+          [null, "", "symbolic"],
+          ["fixed 0"],
+          ["fixed 1", "fixed", "FixeD"],
+          ["fixed -1"],
+          [null, "fixed a", "fixed \"0\"", "fixed 0 1"],
+        ],
+        symbols: oneSymbolTests
+      }
+    },
+    {
+      system: "symbolic",
+      base: "symbols: x",
+      base_tests: {
+        system: "symbolic",
+        symbols: "x"
+      },
+      tests: {
+        system: [
+          [null, "", "cyclic"],
+          ["symbolic", "SymBolic"],
+        ],
+        symbols: oneSymbolTests
+      }
+    },
+    {
+      system: "alphabetic",
+      base: "symbols: x y",
+      base_tests: {
+        system: "alphabetic",
+        symbols: "x y"
+      },
+      tests: {
+        system: [
+          [null, "", "cyclic"],
+          ["alphabetic", "AlphaBetic"],
+        ],
+        symbols: twoSymbolsTests
+      }
+    },
+    {
+      system: "numeric",
+      base: "symbols: x y",
+      base_tests: {
+        system: "numeric",
+        symbols: "x y"
+      },
+      tests: {
+        system: [
+          [null, "", "cyclic"],
+          ["numeric", "NumEric"],
+        ],
+        symbols: twoSymbolsTests
+      }
+    },
+    {
+      system: "additive",
+      base: "additive-symbols: 0 x",
+      base_tests: {
+        system: "additive",
+        additiveSymbols: "0 x"
+      },
+      tests: {
+        system: [
+          [null, "", "cyclic"],
+        ],
+        additiveSymbols: [
+          [null, "", "x", "0", "\"x\"", "1 x, 0", "0 x, 1 y"],
+          ["0 x", "x 0"],
+          ["1 y, 0 x", "y 1, 0 x", "1 y, x 0", "y 1, x 0"],
+          ["1 \"0\"", "\"0\" 1", "1 '0'"],
+        ]
+      }
+    },
+    {
+      system: "extends decimal",
+      base: "",
+      base_tests: {
+        system: "extends decimal",
+        symbols: "",
+        additiveSymbols: ""
+      },
+      tests: {
+        system: [
+          [null, "extends", "fixed", "cyclic"],
+          ["extends cjk-decimal", "ExTends cjk-decimal", "extends CJK-decimal"],
+        ],
+        symbols: [
+          [null, "x", "x y"],
+        ],
+        additiveSymbols: [
+          [null, "0 x", "1 y, 0 x"],
+        ]
+      }
+    }
+  ];
+  for (var i = 0; i < info.length; i++) {
+    var item = info[i];
+    set_rule("system: " + item.system + "; " + item.base);
+    for (var desc in item.base_tests) {
+      is(gRule[desc], item.base_tests[desc],
+         "checking base value of '" + desc + "' " +
+         "for system '" + item.system + "'");
+    }
+    run_tests(item.tests);
+  }
+}
+
+function test_system_indep_desc() {
+  var tests = {
+    name: [
+      [null, "", "-", " ", "a b"],
+      [null, "decimal", "none", "Decimal", "NONE"],
+      ["cjk-decimal", "CJK-Decimal", "cjk-Decimal"],
+      ["X"],
+      ["x", "\\78"],
+      ["\\-", "\\2D"],
+    ],
+    negative: [
+      [null, "-", "", "0", "a b c"],
+      ["\"-\"", "'-'", "\"\\2D\""],
+      ["\\-", "\\2D"],
+      ["a b"],
+      ["\"(\" \")\"", "'(' ')'"],
+    ],
+    prefix: [
+      [null, "0", "-", " ", "a b"],
+      ["a"],
+      ["\"a\""],
+    ],
+    suffix: [
+      [null, "0", "-", " ", "a b"],
+      ["a"],
+      ["\"a\""],
+    ],
+    range: [
+      ["auto", "auTO"],
+      ["infinite infinite", "INFinite inFinite"],
+      ["0 infinite", "0 INFINITE"],
+      ["infinite 100"],
+      ["1 1"],
+      ["0 100", "0   100"],
+      ["0 100, 2 300, -1 1, infinite -100"],
+      [null, "0", "0 a", "a 0"],
+      [null, "1 -1", "1 -1, 0 100", "-1 1, 100 0"],
+    ],
+    pad: [
+      ["0 \"\"", "\"\" 0"],
+      ["1 a", "a 1", "1    a", "\\61  1"],
+      [null, "0", "\"\"", "0 0", "a a", "0 a a"],
+    ],
+    fallback: [
+      [null, "", "-", "0", "a b"],
+      ["a"],
+      ["A"],
+      ["decimal", "Decimal"],
+    ],
+    speakAs: [
+      [null, "", "-", "0", "a b"],
+      ["auto", "AuTo"],
+      ["bullets", "BULLETs"],
+      ["numbers", "NumBers"],
+      ["words", "WordS"],
+      // Currently spell-out is not supported, so it should be treated
+      // as an invalid value.
+      [null, "spell-out", "Spell-Out"],
+      ["a"],
+      ["A"],
+      ["decimal", "Decimal"],
+    ],
+  };
+  set_rule("system: extends decimal");
+  run_tests(tests);
+}
+
+test_system_dep_desc();
+test_system_indep_desc();
+
+</script>
+</pre>
+</body>
+</html>

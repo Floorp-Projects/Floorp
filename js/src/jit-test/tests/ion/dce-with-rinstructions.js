@@ -31,6 +31,25 @@ function rbitnot_object(i) {
     return i;
 }
 
+var uceFault_bitand_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitand_number'));
+function rbitand_number(i) {
+    var x = 1 & i;
+    if (uceFault_bitand_number(i) || uceFault_bitand_number(i))
+        assertEq(x, 1  /* = 1 & 99 */);
+    return i;
+}
+
+var uceFault_bitand_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitand_object'));
+function rbitand_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = o & i; /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_bitand_object(i) || uceFault_bitand_object(i))
+        assertEq(x, 99);
+    return i;
+}
+
 var uceFault_bitor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_bitor_number'));
 function rbitor_number(i) {
     var x = i | -100; /* -100 == ~99 */
@@ -280,6 +299,8 @@ function rconcat_number(i) {
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
+    rbitand_number(i);
+    rbitand_object(i);
     rbitor_number(i);
     rbitor_object(i);
     rbitxor_number(i);

@@ -51,6 +51,8 @@ using namespace mozilla;
 static int32_t gPropertyTableRefCount;
 static nsStaticCaseInsensitiveNameTable* gPropertyTable;
 static nsStaticCaseInsensitiveNameTable* gFontDescTable;
+static nsStaticCaseInsensitiveNameTable* gCounterDescTable;
+static nsStaticCaseInsensitiveNameTable* gPredefinedCounterStyleTable;
 
 /* static */ nsCSSProperty *
   nsCSSProps::gShorthandsContainingTable[eCSSProperty_COUNT_no_shorthands];
@@ -60,6 +62,25 @@ static const char* const kCSSRawFontDescs[] = {
 #define CSS_FONT_DESC(name_, method_) #name_,
 #include "nsCSSFontDescList.h"
 #undef CSS_FONT_DESC
+};
+
+static const char* const kCSSRawCounterDescs[] = {
+#define CSS_COUNTER_DESC(name_, method_) #name_,
+#include "nsCSSCounterDescList.h"
+#undef CSS_COUNTER_DESC
+};
+
+static const char* const kCSSRawPredefinedCounterStyles[] = {
+  "none", "decimal", "decimal-leading-zero", "cjk-decimal",
+  "lower-roman", "upper-roman", "armenian", "georgian", "hebrew",
+  "lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
+  "lower-greek", "hiragana", "hiragana-iroha", "katakana", "katakana-iroha",
+  "disc", "circle", "square", "disclosure-open", "disclosure-closed",
+  "japanese-informal", "japanese-formal",
+  "korean-hangul-formal", "korean-hanja-informal", "korean-hanja-formal",
+  "simp-chinese-informal", "simp-chinese-formal",
+  "trad-chinese-informal", "trad-chinese-formal", "cjk-ideographic",
+  "ethiopic-numeric"
 };
 
 struct PropertyAndCount {
@@ -121,10 +142,17 @@ nsCSSProps::AddRefTable(void)
   if (0 == gPropertyTableRefCount++) {
     NS_ABORT_IF_FALSE(!gPropertyTable, "pre existing array!");
     NS_ABORT_IF_FALSE(!gFontDescTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gCounterDescTable, "pre existing array!");
+    NS_ABORT_IF_FALSE(!gPredefinedCounterStyleTable, "pre existing array!");
 
     gPropertyTable = CreateStaticTable(
         kCSSRawProperties, eCSSProperty_COUNT_with_aliases);
     gFontDescTable = CreateStaticTable(kCSSRawFontDescs, eCSSFontDesc_COUNT);
+    gCounterDescTable = CreateStaticTable(
+        kCSSRawCounterDescs, eCSSCounterDesc_COUNT);
+    gPredefinedCounterStyleTable = CreateStaticTable(
+        kCSSRawPredefinedCounterStyles,
+        ArrayLength(kCSSRawPredefinedCounterStyles));
 
     BuildShorthandsContainingTable();
 
@@ -333,6 +361,12 @@ nsCSSProps::ReleaseTable(void)
     delete gFontDescTable;
     gFontDescTable = nullptr;
 
+    delete gCounterDescTable;
+    gCounterDescTable = nullptr;
+
+    delete gPredefinedCounterStyleTable;
+    gPredefinedCounterStyleTable = nullptr;
+
     delete [] gShorthandsContainingPool;
     gShorthandsContainingPool = nullptr;
   }
@@ -456,6 +490,38 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   return which;
 }
 
+nsCSSCounterDesc
+nsCSSProps::LookupCounterDesc(const nsAString& aProperty)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
+}
+
+nsCSSCounterDesc
+nsCSSProps::LookupCounterDesc(const nsACString& aProperty)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  return nsCSSCounterDesc(gCounterDescTable->Lookup(aProperty));
+}
+
+bool
+nsCSSProps::IsPredefinedCounterStyle(const nsAString& aStyle)
+{
+  NS_ABORT_IF_FALSE(gPredefinedCounterStyleTable,
+                    "no lookup table, needs addref");
+  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
+    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+}
+
+bool
+nsCSSProps::IsPredefinedCounterStyle(const nsACString& aStyle)
+{
+  NS_ABORT_IF_FALSE(gPredefinedCounterStyleTable,
+                    "no lookup table, needs addref");
+  return gPredefinedCounterStyleTable->Lookup(aStyle) !=
+    nsStaticCaseInsensitiveNameTable::NOT_FOUND;
+}
+
 const nsAFlatCString&
 nsCSSProps::GetStringValue(nsCSSProperty aProperty)
 {
@@ -474,6 +540,18 @@ nsCSSProps::GetStringValue(nsCSSFontDesc aFontDescID)
   NS_ABORT_IF_FALSE(gFontDescTable, "no lookup table, needs addref");
   if (gFontDescTable) {
     return gFontDescTable->GetStringValue(int32_t(aFontDescID));
+  } else {
+    static nsDependentCString sNullStr("");
+    return sNullStr;
+  }
+}
+
+const nsAFlatCString&
+nsCSSProps::GetStringValue(nsCSSCounterDesc aCounterDesc)
+{
+  NS_ABORT_IF_FALSE(gCounterDescTable, "no lookup table, needs addref");
+  if (gCounterDescTable) {
+    return gCounterDescTable->GetStringValue(int32_t(aCounterDesc));
   } else {
     static nsDependentCString sNullStr("");
     return sNullStr;
@@ -1284,28 +1362,20 @@ const KTableValue nsCSSProps::kListStylePositionKTable[] = {
 };
 
 const KTableValue nsCSSProps::kListStyleKTable[] = {
+  // none and decimal are not redefinable, so they should not be moved.
   eCSSKeyword_none, NS_STYLE_LIST_STYLE_NONE,
+  eCSSKeyword_decimal, NS_STYLE_LIST_STYLE_DECIMAL,
+  // the following graphic styles are processed in a different way.
   eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC,
   eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE,
   eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE,
-  eCSSKeyword_decimal, NS_STYLE_LIST_STYLE_DECIMAL,
-  eCSSKeyword_decimal_leading_zero, NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO,
+  // {lower,upper}-{roman,alpha} are also used by html attribute map.
   eCSSKeyword_lower_roman, NS_STYLE_LIST_STYLE_LOWER_ROMAN,
   eCSSKeyword_upper_roman, NS_STYLE_LIST_STYLE_UPPER_ROMAN,
-  eCSSKeyword_lower_greek, NS_STYLE_LIST_STYLE_LOWER_GREEK,
   eCSSKeyword_lower_alpha, NS_STYLE_LIST_STYLE_LOWER_ALPHA,
-  eCSSKeyword_lower_latin, NS_STYLE_LIST_STYLE_LOWER_LATIN,
   eCSSKeyword_upper_alpha, NS_STYLE_LIST_STYLE_UPPER_ALPHA,
-  eCSSKeyword_upper_latin, NS_STYLE_LIST_STYLE_UPPER_LATIN,
+  // the following counter styles require specific algorithms to generate.
   eCSSKeyword_hebrew, NS_STYLE_LIST_STYLE_HEBREW,
-  eCSSKeyword_armenian, NS_STYLE_LIST_STYLE_ARMENIAN,
-  eCSSKeyword_georgian, NS_STYLE_LIST_STYLE_GEORGIAN,
-  eCSSKeyword_cjk_decimal, NS_STYLE_LIST_STYLE_CJK_DECIMAL,
-  eCSSKeyword_cjk_ideographic, NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC,
-  eCSSKeyword_hiragana, NS_STYLE_LIST_STYLE_HIRAGANA,
-  eCSSKeyword_katakana, NS_STYLE_LIST_STYLE_KATAKANA,
-  eCSSKeyword_hiragana_iroha, NS_STYLE_LIST_STYLE_HIRAGANA_IROHA,
-  eCSSKeyword_katakana_iroha, NS_STYLE_LIST_STYLE_KATAKANA_IROHA,
   eCSSKeyword_japanese_informal, NS_STYLE_LIST_STYLE_JAPANESE_INFORMAL,
   eCSSKeyword_japanese_formal, NS_STYLE_LIST_STYLE_JAPANESE_FORMAL,
   eCSSKeyword_korean_hangul_formal, NS_STYLE_LIST_STYLE_KOREAN_HANGUL_FORMAL,
@@ -1315,37 +1385,8 @@ const KTableValue nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword_simp_chinese_formal, NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL,
   eCSSKeyword_trad_chinese_informal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL,
   eCSSKeyword_trad_chinese_formal, NS_STYLE_LIST_STYLE_TRAD_CHINESE_FORMAL,
-  eCSSKeyword__moz_cjk_heavenly_stem, NS_STYLE_LIST_STYLE_MOZ_CJK_HEAVENLY_STEM,
-  eCSSKeyword__moz_cjk_earthly_branch, NS_STYLE_LIST_STYLE_MOZ_CJK_EARTHLY_BRANCH,
-  eCSSKeyword__moz_trad_chinese_informal, NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_INFORMAL,
-  eCSSKeyword__moz_trad_chinese_formal, NS_STYLE_LIST_STYLE_MOZ_TRAD_CHINESE_FORMAL,
-  eCSSKeyword__moz_simp_chinese_informal, NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_INFORMAL,
-  eCSSKeyword__moz_simp_chinese_formal, NS_STYLE_LIST_STYLE_MOZ_SIMP_CHINESE_FORMAL,
-  eCSSKeyword__moz_japanese_informal, NS_STYLE_LIST_STYLE_MOZ_JAPANESE_INFORMAL,
-  eCSSKeyword__moz_japanese_formal, NS_STYLE_LIST_STYLE_MOZ_JAPANESE_FORMAL,
-  eCSSKeyword__moz_arabic_indic, NS_STYLE_LIST_STYLE_MOZ_ARABIC_INDIC,
-  eCSSKeyword__moz_persian, NS_STYLE_LIST_STYLE_MOZ_PERSIAN,
-  eCSSKeyword__moz_urdu, NS_STYLE_LIST_STYLE_MOZ_URDU,
-  eCSSKeyword__moz_devanagari, NS_STYLE_LIST_STYLE_MOZ_DEVANAGARI,
-  eCSSKeyword__moz_gurmukhi, NS_STYLE_LIST_STYLE_MOZ_GURMUKHI,
-  eCSSKeyword__moz_gujarati, NS_STYLE_LIST_STYLE_MOZ_GUJARATI,
-  eCSSKeyword__moz_oriya, NS_STYLE_LIST_STYLE_MOZ_ORIYA,
-  eCSSKeyword__moz_kannada, NS_STYLE_LIST_STYLE_MOZ_KANNADA,
-  eCSSKeyword__moz_malayalam, NS_STYLE_LIST_STYLE_MOZ_MALAYALAM,
-  eCSSKeyword__moz_bengali, NS_STYLE_LIST_STYLE_MOZ_BENGALI,
   eCSSKeyword__moz_tamil, NS_STYLE_LIST_STYLE_MOZ_TAMIL,
-  eCSSKeyword__moz_telugu, NS_STYLE_LIST_STYLE_MOZ_TELUGU,
-  eCSSKeyword__moz_thai, NS_STYLE_LIST_STYLE_MOZ_THAI,
-  eCSSKeyword__moz_lao, NS_STYLE_LIST_STYLE_MOZ_LAO,
-  eCSSKeyword__moz_myanmar, NS_STYLE_LIST_STYLE_MOZ_MYANMAR,
-  eCSSKeyword__moz_khmer, NS_STYLE_LIST_STYLE_MOZ_KHMER,
-  eCSSKeyword__moz_hangul, NS_STYLE_LIST_STYLE_MOZ_HANGUL,
-  eCSSKeyword__moz_hangul_consonant, NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT,
-  eCSSKeyword__moz_ethiopic_halehame, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME,
   eCSSKeyword__moz_ethiopic_numeric, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC,
-  eCSSKeyword__moz_ethiopic_halehame_am, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_AM,
-  eCSSKeyword__moz_ethiopic_halehame_ti_er, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER,
-  eCSSKeyword__moz_ethiopic_halehame_ti_et, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET,
   eCSSKeyword_UNKNOWN,-1
 };
 
@@ -1907,6 +1948,30 @@ const KTableValue nsCSSProps::kColorInterpolationKTable[] = {
 const KTableValue nsCSSProps::kColumnFillKTable[] = {
   eCSSKeyword_auto, NS_STYLE_COLUMN_FILL_AUTO,
   eCSSKeyword_balance, NS_STYLE_COLUMN_FILL_BALANCE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterSystemKTable[] = {
+  eCSSKeyword_cyclic, NS_STYLE_COUNTER_SYSTEM_CYCLIC,
+  eCSSKeyword_numeric, NS_STYLE_COUNTER_SYSTEM_NUMERIC,
+  eCSSKeyword_alphabetic, NS_STYLE_COUNTER_SYSTEM_ALPHABETIC,
+  eCSSKeyword_symbolic, NS_STYLE_COUNTER_SYSTEM_SYMBOLIC,
+  eCSSKeyword_additive, NS_STYLE_COUNTER_SYSTEM_ADDITIVE,
+  eCSSKeyword_fixed, NS_STYLE_COUNTER_SYSTEM_FIXED,
+  eCSSKeyword_extends, NS_STYLE_COUNTER_SYSTEM_EXTENDS,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterRangeKTable[] = {
+  eCSSKeyword_infinite, NS_STYLE_COUNTER_RANGE_INFINITE,
+  eCSSKeyword_UNKNOWN, -1
+};
+
+const KTableValue nsCSSProps::kCounterSpeakAsKTable[] = {
+  eCSSKeyword_bullets, NS_STYLE_COUNTER_SPEAKAS_BULLETS,
+  eCSSKeyword_numbers, NS_STYLE_COUNTER_SPEAKAS_NUMBERS,
+  eCSSKeyword_words, NS_STYLE_COUNTER_SPEAKAS_WORDS,
+  eCSSKeyword_spell_out, NS_STYLE_COUNTER_SPEAKAS_SPELL_OUT,
   eCSSKeyword_UNKNOWN, -1
 };
 

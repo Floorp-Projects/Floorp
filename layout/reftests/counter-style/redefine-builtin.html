@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style none {
+    system: extends lower-roman;
+  }
+  @counter-style decimal {
+    system: extends upper-roman;
+  }
+  @counter-style hebrew {
+    system: extends cjk-decimal;
+  }
+</style>
+<ol>
+  <li style="list-style-type: none">foo
+  <li style="list-style-type: decimal">bar
+  <li style="list-style-type: hebrew">
+</ol>

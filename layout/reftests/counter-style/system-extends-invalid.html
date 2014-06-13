@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: extends b;
+    prefix: a;
+  }
+  @counter-style b {
+    system: extends c;
+    suffix: b;
+  }
+  @counter-style c {
+    system: extends b;
+    pad: 2 c;
+  }
+  @counter-style d {
+    system: extends d;
+    prefix: d;
+  }
+  @counter-style e {
+    system: extends unknown;
+    prefix: e;
+  }
+  @counter-style f {
+    system: extends decimal;
+    symbols: a;
+  }
+  @counter-style g {
+    system: extends decimal;
+    additive-symbols: 1 a;
+  }
+</style>
+<ol>
+  <li style="list-style-type: a;">
+  <li style="list-style-type: b;">
+  <li style="list-style-type: c;">
+  <li style="list-style-type: d;">
+  <li style="list-style-type: e;">
+  <li style="list-style-type: f;">foo
+  <li style="list-style-type: g;">bar
+</ol>

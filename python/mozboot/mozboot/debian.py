@@ -26,6 +26,7 @@ class DebianBootstrapper(BaseBootstrapper):
         'mercurial',
         'mesa-common-dev',
         'python-dev',
+        'python-setuptools',
         'unzip',
         'uuid',
         'yasm',

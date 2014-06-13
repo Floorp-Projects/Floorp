@@ -1674,7 +1674,8 @@ nsCSSFrameConstructor::CreateGeneratedContent(nsFrameConstructorState& aState,
         return nullptr;
 
       nsCounterUseNode* node =
-        new nsCounterUseNode(counters, aContentIndex,
+        new nsCounterUseNode(mPresShell->GetPresContext(),
+                             counters, aContentIndex,
                              type == eStyleContentType_Counters);
 
       nsGenConInitializer* initializer =
@@ -8006,6 +8007,14 @@ nsCSSFrameConstructor::RecalcQuotesAndCounters()
 
   NS_ASSERTION(!mQuotesDirty, "Quotes updates will be lost");
   NS_ASSERTION(!mCountersDirty, "Counter updates will be lost");
+}
+
+void
+nsCSSFrameConstructor::NotifyCounterStylesAreDirty()
+{
+  NS_PRECONDITION(mUpdateCount != 0, "Should be in an update");
+  mCounterManager.SetAllCounterStylesDirty();
+  CountersDirty();
 }
 
 void

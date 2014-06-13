@@ -864,7 +864,12 @@ function ArrayScanPar(func, mode) {
   if (length === 0)
     ThrowError(JSMSG_EMPTY_ARRAY_REDUCE);
 
+  // We need two buffers because phase2() will read an intermediate result and
+  // write a final result; that is safe against bailout-and-restart only if
+  // the intermediate and final buffers are distinct.  (Bug 1023755)
+  // Obviously paying for a second buffer is undesirable.
   var buffer = NewDenseArray(length);
+  var buffer2 = NewDenseArray(length);
 
   parallel: for (;;) { // see ArrayMapPar() to explain why for(;;) etc
     if (ShouldForceSequential())
@@ -889,11 +894,12 @@ function ArrayScanPar(func, mode) {
 
     // Complete each slice using intermediates array (see comment on phase2()).
     //
-    // We start from slice 1 instead of 0 since there is no work to be done
-    // for slice 0.
-    if (numSlices > 1)
-      ForkJoin(phase2, 1, numSlices, ForkJoinMode(mode), buffer);
-    return buffer;
+    // Slice 0 must be handled specially - it's just a copy - since we don't
+    // have an identity value for the operation.
+    for ( var k=0, limit=finalElement(0) ; k <= limit ; k++ )
+      buffer2[k] = buffer[k];
+    ForkJoin(phase2, 1, numSlices, ForkJoinMode(mode), buffer2);
+    return buffer2;
   }
 
   // Sequential fallback:
@@ -986,7 +992,7 @@ function ArrayScanPar(func, mode) {
       var indexEnd = SLICE_END_INDEX(sliceShift, indexPos, length);
       var intermediate = intermediates[sliceId - 1];
       for (; indexPos < indexEnd; indexPos++)
-        UnsafePutElements(buffer, indexPos, func(intermediate, buffer[indexPos]));
+        UnsafePutElements(buffer2, indexPos, func(intermediate, buffer[indexPos]));
     }
     return sliceId;
   }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: numeric;
+    suffix: ":";
+  }
+  @counter-style b {
+    system: numeric;
+    symbols: A;
+    suffix: ":";
+  }
+</style>
+<ol start="-2" style="list-style-type: a">
+  <li>foo<li>bar<li>foo<li>bar
+</ol>
+<ol start="-2" style="list-style-type: b">
+  <li>foo<li>bar<li>foo<li>bar
+</ol>

@@ -1,0 +1,77 @@
+<!DOCTYPE HTML>
+<title>Canvas Tests</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+const Cc = SpecialPowers.Cc;
+const Cr = SpecialPowers.Cr;
+SpecialPowers.setBoolPref("canvas.path.enabled", true);
+
+function isPixel(ctx, x,y, r,g,b,a, d) {
+	var pos = x + "," + y;
+	var colour = r + "," + g + "," + b + "," + a;
+    var pixel = ctx.getImageData(x, y, 1, 1);
+    var pr = pixel.data[0],
+        pg = pixel.data[1],
+        pb = pixel.data[2],
+        pa = pixel.data[3];
+    ok(r-d <= pr && pr <= r+d &&
+       g-d <= pg && pg <= g+d &&
+       b-d <= pb && pb <= b+d &&
+       a-d <= pa && pa <= a+d,
+       "pixel "+pos+" of "+ctx.canvas.id+" is "+pr+","+pg+","+pb+","+pa+"; expected "+colour+" +/- "+d);
+}
+</script>
+
+<p>Canvas test: 2d.composite.canvaspattern.setTransform</p>
+<canvas id="ctx" width="100" height="50"><p class="fallback">FAIL
+(fallback content)</p></canvas>
+<svg id="svg1"></svg>
+<img src="image_rgrg-256x256.png" id="rgrg-256x256.png" width="32"
+height="32" class="resource">
+
+<script>
+
+function test_2d_canvaspattern_setTransform() {
+
+  var canvas = document.getElementById('ctx');
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  var img = document.getElementById("rgrg-256x256.png");
+  var pat = ctx.createPattern(img,"repeat");
+
+  var svg = document.getElementById("svg1");
+  var mtx = svg1.createSVGMatrix();
+  pat.setTransform(mtx.rotate(-45).scale(0.1));
+  ctx.fillStyle = pat;
+  ctx.fillRect(0, 0, 100, 50);
+
+  // If the pattern doesn't get transformed, or only gets rotated or
+  // scaled, but not both, this will not be green and will fail.
+  isPixel(ctx, 90,14, 0,255,0,255, 0);
+}
+</script>
+
+<script>
+
+function runTests() {
+ try {
+  test_2d_canvaspattern_setTransform();
+ } catch(e) {
+  throw e;
+  ok(false, "unexpected exception thrown in: test_2d_canvaspattern_setTransform");
+ }
+ SimpleTest.finish();
+}
+
+addLoadEvent(runTests);
+
+// Don't leak the world via the Path2D reference to its window.
+document.all;
+window.p = new Path2D();
+
+</script>
+

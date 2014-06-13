@@ -2279,21 +2279,33 @@ class MApplyArgs
 class MBail : public MNullaryInstruction
 {
   protected:
-    MBail()
+    MBail(BailoutKind kind)
     {
+        bailoutKind_ = kind;
         setGuard();
     }
+
+  private:
+    BailoutKind bailoutKind_;
 
   public:
     INSTRUCTION_HEADER(Bail)
 
     static MBail *
+    New(TempAllocator &alloc, BailoutKind kind) {
+        return new(alloc) MBail(kind);
+    }
+    static MBail *
     New(TempAllocator &alloc) {
-        return new(alloc) MBail();
+        return new(alloc) MBail(Bailout_Inevitable);
     }
 
     AliasSet getAliasSet() const {
         return AliasSet::None();
+    }
+
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
     }
 };
 
@@ -2693,7 +2705,30 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
     INSTRUCTION_HEADER(Unbox)
     static MUnbox *New(TempAllocator &alloc, MDefinition *ins, MIRType type, Mode mode)
     {
-        return new(alloc) MUnbox(ins, type, mode, Bailout_Normal);
+        // Unless we were given a specific BailoutKind, pick a default based on
+        // the type we expect.
+        BailoutKind kind;
+        switch(type){
+          case MIRType_Boolean:
+            kind = Bailout_NonBooleanInput;
+            break;
+          case MIRType_Int32:
+            kind = Bailout_NonInt32Input;
+            break;
+          case MIRType_Double:
+            kind = Bailout_NonNumericInput; // Int32s are fine too
+            break;
+          case MIRType_String:
+            kind = Bailout_NonStringInput;
+            break;
+          case MIRType_Object:
+            kind = Bailout_NonObjectInput;
+            break;
+          default:
+            MOZ_ASSUME_UNREACHABLE("Given MIRType cannot be unboxed.");
+        }
+
+        return new(alloc) MUnbox(ins, type, mode, kind);
     }
 
     static MUnbox *New(TempAllocator &alloc, MDefinition *ins, MIRType type, Mode mode,
@@ -3617,6 +3652,11 @@ class MBitAnd : public MBinaryBitwiseInstruction
         return getOperand(0); // x & x => x;
     }
     void computeRange(TempAllocator &alloc);
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return specialization_ != MIRType_None;
+    }
 };
 
 class MBitOr : public MBinaryBitwiseInstruction
@@ -9439,7 +9479,7 @@ class MGuardThreadExclusive
         return getOperand(1);
     }
     BailoutKind bailoutKind() const {
-        return Bailout_Normal;
+        return Bailout_GuardThreadExclusive;
     }
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);

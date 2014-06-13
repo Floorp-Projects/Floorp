@@ -19,24 +19,24 @@
 #ifndef _nsFrameManagerBase_h_
 #define _nsFrameManagerBase_h_
 
+#include "nsDebug.h"
 #include "pldhash.h"
 
+class nsIFrame;
 class nsIPresShell;
 class nsStyleSet;
-class nsIContent;
-class nsPlaceholderFrame;
-class nsIFrame;
-class nsStyleContext;
-class nsIAtom;
-class nsStyleChangeList;
-class nsILayoutHistoryState;
 
 class nsFrameManagerBase
 {
 public:
   nsFrameManagerBase()
+    : mPresShell(nullptr)
+    , mStyleSet(nullptr)
+    , mRootFrame(nullptr)
+    , mUndisplayedMap(nullptr)
+    , mIsDestroyingFrames(false)
   {
-    memset(this, '\0', sizeof(nsFrameManagerBase));
+    mPlaceholderMap.ops = nullptr;
   }
 
   bool IsDestroyingFrames() { return mIsDestroyingFrames; }

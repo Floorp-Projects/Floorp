@@ -1672,22 +1672,50 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo *bailoutInfo)
             (unsigned) bailoutKind);
 
     switch (bailoutKind) {
-      case Bailout_Normal:
+      // Normal bailouts.
+      case Bailout_Inevitable:
+      case Bailout_DuringVMCall:
+      case Bailout_NonJSFunctionCallee:
+      case Bailout_DynamicNameNotFound:
+      case Bailout_StringArgumentsEval:
+      case Bailout_Overflow:
+      case Bailout_Round:
+      case Bailout_NonPrimitiveInput:
+      case Bailout_PrecisionLoss:
+      case Bailout_TypeBarrierO:
+      case Bailout_TypeBarrierV:
+      case Bailout_MonitorTypes:
+      case Bailout_Hole:
+      case Bailout_NegativeIndex:
+      case Bailout_ObjectIdentityOrTypeGuard:
+      case Bailout_NonInt32Input:
+      case Bailout_NonNumericInput:
+      case Bailout_NonBooleanInput:
+      case Bailout_NonObjectInput:
+      case Bailout_NonStringInput:
+      case Bailout_GuardThreadExclusive:
+      case Bailout_InitialState:
         // Do nothing.
         break;
+
+      // Invalid assumption based on baseline code.
+      case Bailout_OverflowInvalidate:
+      case Bailout_NonStringInputInvalidate:
+      case Bailout_DoubleOutput:
+        if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
+            return false;
+        break;
+
       case Bailout_ArgumentCheck:
         // Do nothing, bailout will resume before the argument monitor ICs.
         break;
       case Bailout_BoundsCheck:
+      case Bailout_Neutered:
         if (!HandleBoundsCheckFailure(cx, outerScript, innerScript))
             return false;
         break;
       case Bailout_ShapeGuard:
         if (!HandleShapeGuardFailure(cx, outerScript, innerScript))
-            return false;
-        break;
-      case Bailout_BaselineInfo:
-        if (!HandleBaselineInfoBailout(cx, outerScript, innerScript))
             return false;
         break;
       case Bailout_IonExceptionDebugMode:

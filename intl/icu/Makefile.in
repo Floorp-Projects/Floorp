@@ -34,7 +34,7 @@ ifdef ENABLE_INTL_API
     else # !MOZ_SHARED_ICU
       ifeq ($(OS_ARCH),WINNT)
         ICU_LIB_RENAME = $(foreach libname,$(ICU_LIB_NAMES),\
-                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(MOZ_ICU_DBG_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname).lib;)
+                             cp -p $(DEPTH)/intl/icu/target/lib/s$(libname)$(MOZ_ICU_DBG_SUFFIX).lib $(DEPTH)/intl/icu/target/lib/$(libname)$(MOZ_ICU_DBG_SUFFIX).lib;)
       endif
     endif # MOZ_SHARED_ICU
   endif # !MOZ_NATIVE_ICU
