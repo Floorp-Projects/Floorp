@@ -93,7 +93,7 @@
 # Cross-time container dependencies
 == cross-container-1.xhtml green-box-ref.xhtml
 == cross-container-2.xhtml green-box-ref.xhtml
-random-if(B2G&&browserIsRemote) == cross-container-3.xhtml green-box-ref.xhtml
+== cross-container-3.xhtml green-box-ref.xhtml
 
 # Filtering
 == filtered-interval-1.svg green-box-ref.svg

@@ -1,4 +1,4 @@
-skip-if(B2G&&browserIsRemote) == box-ordinal-with-out-of-flow-1.html box-ordinal-with-out-of-flow-1-ref.html
+== box-ordinal-with-out-of-flow-1.html box-ordinal-with-out-of-flow-1-ref.html
 skip-if(B2G&&browserIsRemote) == dynamic-1-remove-to-none-grouped.xul dynamic-1-ref.xul
 skip-if(B2G&&browserIsRemote) == dynamic-1-add-to-one-grouped.xul dynamic-1-ref.xul
 skip-if(B2G&&browserIsRemote) == dynamic-1-remove-to-one-grouped-1.xul dynamic-1-ref.xul
