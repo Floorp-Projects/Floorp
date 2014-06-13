@@ -27,10 +27,6 @@
   color: #585959; /* Grey foreground text */
 }
 
-#reload-notice > button {
-  min-height: 2em;
-}
-
 #empty-notice > button {
   min-width: 30px;
   min-height: 28px;
