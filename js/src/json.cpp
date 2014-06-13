@@ -772,12 +772,13 @@ Revive(JSContext *cx, HandleValue reviver, MutableHandleValue vp)
     return Walk(cx, obj, id, reviver, vp);
 }
 
+template <typename CharT>
 bool
-js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
+js::ParseJSONWithReviver(JSContext *cx, mozilla::Range<const CharT> chars,
                          HandleValue reviver, MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
-    JSONParser<jschar> parser(cx, chars, length);
+    JSONParser<CharT> parser(cx, chars.start(), chars.length());
     if (!parser.parse(vp))
         return false;
 
@@ -786,6 +787,14 @@ js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
         return Revive(cx, reviver, vp);
     return true;
 }
+
+template bool
+js::ParseJSONWithReviver(JSContext *cx, mozilla::Range<const Latin1Char> chars,
+                         HandleValue reviver, MutableHandleValue vp);
+
+template bool
+js::ParseJSONWithReviver(JSContext *cx, mozilla::Range<const jschar> chars,
+                         HandleValue reviver, MutableHandleValue vp);
 
 #if JS_HAS_TOSOURCE
 static bool
@@ -810,17 +819,26 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
     if (!str)
         return false;
 
-    Rooted<JSFlatString*> flat(cx, str->ensureFlat(cx));
+    JSFlatString *flat = str->ensureFlat(cx);
     if (!flat)
         return false;
 
     JS::Anchor<JSString *> anchor(flat);
 
+    AutoStableStringChars flatChars(cx, flat);
+    if (!flatChars.init())
+        return false;
+
     RootedValue reviver(cx, args.get(1));
 
     /* Steps 2-5. */
-    return ParseJSONWithReviver(cx, ConstTwoByteChars(flat->chars(), flat->length()),
-                                flat->length(), reviver, args.rval());
+    if (flatChars.isLatin1()) {
+        mozilla::Range<const Latin1Char> chars(flatChars.latin1Chars(), flat->length());
+        return ParseJSONWithReviver(cx, chars, reviver, args.rval());
+    }
+
+    mozilla::Range<const jschar> chars(flatChars.twoByteChars(), flat->length());
+    return ParseJSONWithReviver(cx, chars, reviver, args.rval());
 }
 
 /* ES5 15.12.3. */
