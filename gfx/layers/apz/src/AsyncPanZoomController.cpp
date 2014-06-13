@@ -1974,8 +1974,8 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
   return false;
 }
 
-void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) const {
-  // The overscroll effect applied here is a combination of a translation in
+void AsyncPanZoomController::GetOverscrollTransform(ViewTransform* aTransform) const {
+  // The overscroll effect is a combination of a translation in
   // the direction of overscroll, and shrinking in both directions.
   // With the effect applied, we can think of the composited region as being
   // made up of the following subregions.
@@ -2066,8 +2066,9 @@ void AsyncPanZoomController::ApplyOverscrollEffect(ViewTransform* aTransform) co
 }
 
 bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                                            ViewTransform* aNewTransform,
-                                                            ScreenPoint& aScrollOffset) {
+                                                            ViewTransform* aOutTransform,
+                                                            ScreenPoint& aScrollOffset,
+                                                            ViewTransform* aOutOverscrollTransform) {
   // The eventual return value of this function. The compositor needs to know
   // whether or not to advance by a frame as soon as it can. For example, if a
   // fling is happening, it has to keep compositing so that the animation is
@@ -2082,12 +2083,22 @@ bool AsyncPanZoomController::SampleContentTransformForFrame(const TimeStamp& aSa
     requestAnimationFrame = UpdateAnimation(aSampleTime, &deferredTasks);
 
     aScrollOffset = mFrameMetrics.GetScrollOffset() * mFrameMetrics.GetZoom();
-    *aNewTransform = GetCurrentAsyncTransform();
+    *aOutTransform = GetCurrentAsyncTransform();
 
-    if (IsOverscrolled()) {
-      // GetCurrentAsyncTransform() does not consider any overscroll we may have.
-      // Adjust the transform to account for that.
-      ApplyOverscrollEffect(aNewTransform);
+    // If we are overscrolled, we would like the compositor to apply an
+    // additional transform that produces an overscroll effect.
+    if (aOutOverscrollTransform && IsOverscrolled()) {
+      GetOverscrollTransform(aOutOverscrollTransform);
+
+      // Since the caller will apply aOverscrollTransform after aNewTransform,
+      // aOverscrollTransform's translation will be not be scaled by
+      // aNewTransform's scale. Since the resulting transform is then
+      // multiplied by the CSS transform, which cancels out the non-transient
+      // part of aNewTransform->mScale, this results in an overscroll
+      // translation whose magnitude varies with the zoom. To avoid this,
+      // we adjust for that here.
+      aOutOverscrollTransform->mTranslation.x *= aOutTransform->mScale.scale;
+      aOutOverscrollTransform->mTranslation.y *= aOutTransform->mScale.scale;
     }
 
     LogRendertraceRect(GetGuid(), "viewport", "red",

@@ -154,21 +154,26 @@ public:
                        Vector<Task*>* aOutDeferredTasks);
 
   /**
-   * The compositor calls this when it's about to draw pannable/zoomable content
-   * and is setting up transforms for compositing the layer tree. This is not
-   * idempotent. For example, a fling transform can be applied each time this is
-   * called (though not necessarily). |aSampleTime| is the time that this is
-   * sampled at; this is used for interpolating animations. Calling this sets a
-   * new transform in |aNewTransform| which should be multiplied to the transform
-   * in the shadow layer corresponding to this APZC.
+   * RQuery the transforms that should be applied to the layer corresponding
+   * to this APZC due to asynchronous panning and zooming.
+   * |aSampleTime| is the time that this is sampled at; this is used for
+   * interpolating animations.
+   * This function returns two transforms via out parameters:
+   *   |aOutTransform| is the transform due to regular panning and zooming
+   *   |aOverscrollTransform| is the transform due to overscrolling
+   * The two are separated because some clients want to ignore the overscroll
+   * transform for some purposes (and for convenience to these clients, the
+   * overscroll transform parameter may be nullptr). Clients who do not want
+   * to ignore the overscroll transform should multiply the two transforms
+   * together.
    *
-   * Return value indicates whether or not any currently running animation
-   * should continue. That is, if true, the compositor should schedule another
-   * composite.
+   * The return value indicates whether or not any currently running animation
+   * should continue. If true, the compositor should schedule another composite.
    */
   bool SampleContentTransformForFrame(const TimeStamp& aSampleTime,
-                                      ViewTransform* aNewTransform,
-                                      ScreenPoint& aScrollOffset);
+                                      ViewTransform* aOutTransform,
+                                      ScreenPoint& aScrollOffset,
+                                      ViewTransform* aOutOverscrollTransform = nullptr);
 
   /**
    * A shadow layer update has arrived. |aLayerMetrics| is the new FrameMetrics
@@ -643,10 +648,10 @@ private:
   bool IsPanningState(PanZoomState mState);
 
   /**
-   * Apply to |aTransform| a visual effect that reflects this apzc's
+   * Return in |aTransform| a visual effect that reflects this apzc's
    * overscrolled state, if any.
    */
-  void ApplyOverscrollEffect(ViewTransform* aTransform) const;
+  void GetOverscrollTransform(ViewTransform* aTransform) const;
 
   enum AxisLockMode {
     FREE,     /* No locking at all */
