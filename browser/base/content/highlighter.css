@@ -71,3 +71,10 @@ html|*.highlighter-nodeinfobar-tagname {
 html|*.highlighter-nodeinfobar-tagname {
   text-transform: lowercase;
 }
+
+/*
+ * Css transform highlighter
+ */
+svg|svg.css-transform-root[hidden] {
+  display: none;
+}

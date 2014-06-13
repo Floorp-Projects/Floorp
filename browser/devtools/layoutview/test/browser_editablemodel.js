@@ -24,8 +24,7 @@ let test = asyncTest(function*() {
   let {toolbox, inspector, view} = yield openLayoutView();
 
   yield runTests(inspector, view);
-  // TODO: Closing the toolbox in this test leaks - bug 994314
-  // yield destroyToolbox(inspector);
+  yield destroyToolbox(inspector);
 });
 
 addTest("Test that editing margin dynamically updates the document, pressing escape cancels the changes",

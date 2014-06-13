@@ -12,7 +12,6 @@ const {Spectrum} = require("devtools/shared/widgets/Spectrum");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {colorUtils} = require("devtools/css-color");
 const Heritage = require("sdk/core/heritage");
-const {CSSTransformPreviewer} = require("devtools/shared/widgets/CSSTransformPreviewer");
 const {Eyedropper} = require("devtools/eyedropper/eyedropper");
 
 Cu.import("resource://gre/modules/Services.jsm");
@@ -736,45 +735,6 @@ Tooltip.prototype = {
 
     return def.promise;
   },
-
-  /**
-   * Set the content of the tooltip to be the result of CSSTransformPreviewer.
-   * Meaning a canvas previewing a css transformation.
-   *
-   * @param {String} transform
-   *        The CSS transform value (e.g. "rotate(45deg) translateX(50px)")
-   * @param {PageStyleActor} pageStyle
-   *        An instance of the PageStyleActor that will be used to retrieve
-   *        computed styles
-   * @param {NodeActor} node
-   *        The NodeActor for the currently selected node
-   * @return A promise that resolves when the tooltip content is ready, or
-   *         rejects if no transform is provided or the transform is invalid
-   */
-  setCssTransformContent: Task.async(function*(transform, pageStyle, node) {
-    if (!transform) {
-      throw "Missing transform";
-    }
-
-    // Look into the computed styles to find the width and height and possibly
-    // the origin if it hadn't been provided
-    let styles = yield pageStyle.getComputed(node, {
-      filter: "user",
-      markMatched: false,
-      onlyMatched: false
-    });
-
-    let origin = styles["transform-origin"].value;
-    let width = parseInt(styles["width"].value);
-    let height = parseInt(styles["height"].value);
-
-    let root = this.doc.createElementNS(XHTML_NS, "div");
-    let previewer = new CSSTransformPreviewer(root);
-    this.content = root;
-    if (!previewer.preview(transform, origin, width, height)) {
-      throw "Invalid transform";
-    }
-  }),
 
   /**
    * Set the content of the tooltip to display a font family preview.
