@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsUnicodeProperties.h"
+#include "WritingModes.h"
 
 namespace mozilla {
 
@@ -580,6 +581,7 @@ public:
   virtual void GetPrefix(nsSubstring& aResult) MOZ_OVERRIDE;
   virtual void GetSuffix(nsSubstring& aResult) MOZ_OVERRIDE;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
+                                    WritingMode aWritingMode,
                                     nsSubstring& aResult,
                                     bool& aIsBullet) MOZ_OVERRIDE;
   virtual bool IsBullet() MOZ_OVERRIDE;
@@ -593,9 +595,11 @@ public:
   virtual bool UseNegativeSign() MOZ_OVERRIDE;
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
+                                 WritingMode aWritingMode,
                                  nsSubstring& aResult,
                                  bool& aIsRTL) MOZ_OVERRIDE;
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
+                                     WritingMode aWritingMode,
                                      nsSubstring& aResult,
                                      bool& aIsRTL) MOZ_OVERRIDE;
 
@@ -621,6 +625,8 @@ BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
       aResult = ' ';
       break;
 
@@ -645,36 +651,35 @@ BuiltinCounterStyle::GetSuffix(nsSubstring& aResult)
   }
 }
 
-// XXX stolen from nsBlockFrame.cpp
 static const char16_t kDiscCharacter = 0x2022;
 static const char16_t kCircleCharacter = 0x25e6;
 static const char16_t kSquareCharacter = 0x25fe;
+static const char16_t kRightPointingCharacter = 0x25b8;
+static const char16_t kLeftPointingCharacter = 0x25c2;
+static const char16_t kDownPointingCharacter = 0x25be;
 
 /* virtual */ void
 BuiltinCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
+                                          WritingMode aWritingMode,
                                           nsSubstring& aResult,
                                           bool& aIsBullet)
 {
   switch (mStyle) {
     case NS_STYLE_LIST_STYLE_NONE:
-      aResult.Truncate();
-      aIsBullet = true;
-      break;
     case NS_STYLE_LIST_STYLE_DISC:
-      aResult.Assign(kDiscCharacter);
-      aIsBullet = true;
-      break;
     case NS_STYLE_LIST_STYLE_CIRCLE:
-      aResult.Assign(kCircleCharacter);
-      aIsBullet = true;
-      break;
     case NS_STYLE_LIST_STYLE_SQUARE:
-      aResult.Assign(kSquareCharacter);
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN: {
+      // Same as the initial representation
+      bool isRTL;
+      GetInitialCounterText(aOrdinal, aWritingMode, aResult, isRTL);
       aIsBullet = true;
       break;
+    }
     default:
-      CounterStyle::GetSpokenCounterText(aOrdinal, aResult, aIsBullet);
-      aIsBullet = false;
+      CounterStyle::GetSpokenCounterText(
+          aOrdinal, aWritingMode, aResult, aIsBullet);
       break;
   }
 }
@@ -686,6 +691,8 @@ BuiltinCounterStyle::IsBullet()
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
       return true;
     default:
       return false;
@@ -746,6 +753,8 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
     // use DecimalToText
     case NS_STYLE_LIST_STYLE_DECIMAL:
     // use CJKIdeographicToText
@@ -783,6 +792,8 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
     // numeric:
     case NS_STYLE_LIST_STYLE_DECIMAL:
       return true;
@@ -834,6 +845,8 @@ BuiltinCounterStyle::GetSpeakAs()
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
       return NS_STYLE_COUNTER_SPEAKAS_BULLETS;
     default:
       return NS_STYLE_COUNTER_SPEAKAS_NUMBERS;
@@ -848,6 +861,8 @@ BuiltinCounterStyle::UseNegativeSign()
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
       return false;
     default:
       return true;
@@ -856,14 +871,16 @@ BuiltinCounterStyle::UseNegativeSign()
 
 /* virtual */ void
 BuiltinCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
+                                       WritingMode aWritingMode,
                                        nsSubstring& aResult,
                                        bool& aIsRTL)
 {
-  GetFallback()->GetCounterText(aOrdinal, aResult, aIsRTL);
+  GetFallback()->GetCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
 }
 
 /* virtual */ bool
 BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
+                                           WritingMode aWritingMode,
                                            nsSubstring& aResult,
                                            bool& aIsRTL)
 {
@@ -882,6 +899,24 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       return true;
     case NS_STYLE_LIST_STYLE_SQUARE:
       aResult.Assign(kSquareCharacter);
+      return true;
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+      if (aWritingMode.IsVertical()) {
+        aResult.Assign(kDownPointingCharacter);
+      } else if (aWritingMode.IsBidiLTR()) {
+        aResult.Assign(kRightPointingCharacter);
+      } else {
+        aResult.Assign(kLeftPointingCharacter);
+      }
+      return true;
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+      if (!aWritingMode.IsVertical()) {
+        aResult.Assign(kDownPointingCharacter);
+      } else if (aWritingMode.IsVerticalLR()) {
+        aResult.Assign(kRightPointingCharacter);
+      } else {
+        aResult.Assign(kLeftPointingCharacter);
+      }
       return true;
 
     case NS_STYLE_LIST_STYLE_DECIMAL:
@@ -1003,6 +1038,7 @@ public:
   virtual void GetPrefix(nsSubstring& aResult) MOZ_OVERRIDE;
   virtual void GetSuffix(nsSubstring& aResult) MOZ_OVERRIDE;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
+                                    WritingMode aWritingMode,
                                     nsSubstring& aResult,
                                     bool& aIsBullet) MOZ_OVERRIDE;
   virtual bool IsBullet() MOZ_OVERRIDE;
@@ -1016,9 +1052,11 @@ public:
   virtual bool UseNegativeSign() MOZ_OVERRIDE;
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
+                                 WritingMode aWritingMode,
                                  nsSubstring& aResult,
                                  bool& aIsRTL) MOZ_OVERRIDE;
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
+                                     WritingMode aWritingMode,
                                      nsSubstring& aResult,
                                      bool& aIsRTL) MOZ_OVERRIDE;
 
@@ -1178,15 +1216,18 @@ CustomCounterStyle::GetSuffix(nsSubstring& aResult)
 
 /* virtual */ void
 CustomCounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
+                                         WritingMode aWritingMode,
                                          nsSubstring& aResult,
                                          bool& aIsBullet)
 {
   if (GetSpeakAs() != NS_STYLE_COUNTER_SPEAKAS_OTHER) {
-    CounterStyle::GetSpokenCounterText(aOrdinal, aResult, aIsBullet);
+    CounterStyle::GetSpokenCounterText(
+        aOrdinal, aWritingMode, aResult, aIsBullet);
   } else {
     NS_ABORT_IF_FALSE(mSpeakAsCounter,
                       "mSpeakAsCounter should have been initialized.");
-    mSpeakAsCounter->GetSpokenCounterText(aOrdinal, aResult, aIsBullet);
+    mSpeakAsCounter->GetSpokenCounterText(
+        aOrdinal, aWritingMode, aResult, aIsBullet);
   }
 }
 
@@ -1351,6 +1392,7 @@ CustomCounterStyle::UseNegativeSign()
 
 /* virtual */ void
 CustomCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
+                                      WritingMode aWritingMode,
                                       nsSubstring& aResult,
                                       bool& aIsRTL)
 {
@@ -1358,12 +1400,13 @@ CustomCounterStyle::CallFallbackStyle(CounterValue aOrdinal,
   // If it recursively falls back to this counter style again,
   // it will then fallback to decimal to break the loop.
   mFallback = CounterStyleManager::GetDecimalStyle();
-  fallback->GetCounterText(aOrdinal, aResult, aIsRTL);
+  fallback->GetCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
   mFallback = fallback;
 }
 
 /* virtual */ bool
 CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
+                                          WritingMode aWritingMode,
                                           nsSubstring& aResult,
                                           bool& aIsRTL)
 {
@@ -1384,7 +1427,7 @@ CustomCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
       return GetAdditiveCounterText(aOrdinal, aResult, GetAdditiveSymbols());
     case NS_STYLE_COUNTER_SYSTEM_EXTENDS:
       return GetExtendsRoot()->
-        GetInitialCounterText(aOrdinal, aResult, aIsRTL);
+        GetInitialCounterText(aOrdinal, aWritingMode, aResult, aIsRTL);
     default:
       NS_NOTREACHED("Invalid system.");
       return false;
@@ -1669,6 +1712,7 @@ CountGraphemeClusters(const nsSubstring& aText)
 
 void
 CounterStyle::GetCounterText(CounterValue aOrdinal,
+                             WritingMode aWritingMode,
                              nsSubstring& aResult,
                              bool& aIsRTL)
 {
@@ -1687,7 +1731,8 @@ CounterStyle::GetCounterText(CounterValue aOrdinal,
       ordinal = absolute.isValid() ?
         absolute.value() : std::numeric_limits<CounterValue>::max();
     }
-    success = GetInitialCounterText(ordinal, initialText, aIsRTL);
+    success = GetInitialCounterText(
+        ordinal, aWritingMode, initialText, aIsRTL);
 
     // add pad & negative, build the final result
     if (success) {
@@ -1723,12 +1768,13 @@ CounterStyle::GetCounterText(CounterValue aOrdinal,
   }
 
   if (!success) {
-    CallFallbackStyle(aOrdinal, aResult, aIsRTL);
+    CallFallbackStyle(aOrdinal, aWritingMode, aResult, aIsRTL);
   }
 }
 
 /* virtual */ void
 CounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
+                                   WritingMode aWritingMode,
                                    nsSubstring& aResult,
                                    bool& aIsBullet)
 {
@@ -1746,7 +1792,7 @@ CounterStyle::GetSpokenCounterText(CounterValue aOrdinal,
       // we currently do not actually support 'spell-out',
       // so 'words' is used instead.
     case NS_STYLE_COUNTER_SPEAKAS_WORDS:
-      GetCounterText(aOrdinal, aResult, isRTL);
+      GetCounterText(aOrdinal, WritingMode(), aResult, isRTL);
       break;
     case NS_STYLE_COUNTER_SPEAKAS_OTHER:
       // This should be processed by CustomCounterStyle

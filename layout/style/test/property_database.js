@@ -2661,6 +2661,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "disc" ],
     other_values: [ "none", "circle", "square",
+      "disclosure-closed", "disclosure-open",
       "decimal", "decimal-leading-zero",
       "lower-roman", "upper-roman", "lower-greek",
       "lower-alpha", "lower-latin", "upper-alpha", "upper-latin",
