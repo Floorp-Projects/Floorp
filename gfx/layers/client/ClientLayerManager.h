@@ -73,6 +73,8 @@ public:
 
   virtual void Mutated(Layer* aLayer);
 
+  virtual bool IsOptimizedFor(ThebesLayer* aLayer, ThebesLayerCreationHint aHint);
+
   virtual already_AddRefed<ThebesLayer> CreateThebesLayer();
   virtual already_AddRefed<ThebesLayer> CreateThebesLayerWithHint(ThebesLayerCreationHint aHint);
   virtual already_AddRefed<ContainerLayer> CreateContainerLayer();

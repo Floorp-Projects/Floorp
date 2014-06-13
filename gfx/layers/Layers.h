@@ -358,6 +358,13 @@ public:
   };
 
   /**
+   * Returns true if aLayer is optimized for the given ThebesLayerCreationHint.
+   */
+  virtual bool IsOptimizedFor(ThebesLayer* aLayer,
+                              ThebesLayerCreationHint aCreationHint)
+  { return true; }
+
+  /**
    * CONSTRUCTION PHASE ONLY
    * Create a ThebesLayer for this manager's layer tree.
    */
@@ -1549,6 +1556,8 @@ public:
     ComputeEffectiveTransformForMaskLayer(aTransformToSurface);
   }
 
+  LayerManager::ThebesLayerCreationHint GetCreationHint() const { return mCreationHint; }
+
   bool UsedForReadback() { return mUsedForReadback; }
   void SetUsedForReadback(bool aUsed) { mUsedForReadback = aUsed; }
   /**
@@ -1562,9 +1571,11 @@ public:
   gfxPoint GetResidualTranslation() const { return mResidualTranslation; }
 
 protected:
-  ThebesLayer(LayerManager* aManager, void* aImplData)
+  ThebesLayer(LayerManager* aManager, void* aImplData,
+              LayerManager::ThebesLayerCreationHint aCreationHint = LayerManager::NONE)
     : Layer(aManager, aImplData)
     , mValidRegion()
+    , mCreationHint(aCreationHint)
     , mUsedForReadback(false)
     , mAllowResidualTranslation(false)
   {
@@ -1580,6 +1591,10 @@ protected:
    */
   gfxPoint mResidualTranslation;
   nsIntRegion mValidRegion;
+  /**
+   * The creation hint that was used when constructing this layer.
+   */
+  const LayerManager::ThebesLayerCreationHint mCreationHint;
   /**
    * Set when this ThebesLayer is participating in readback, i.e. some
    * ReadbackLayer (may) be getting its background from this layer.
