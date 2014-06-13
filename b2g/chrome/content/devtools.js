@@ -508,6 +508,8 @@ let memoryWatcher = {
   _fronts: new Map(),
   _timers: new Map(),
   _watching: {
+    uss: false,
+    appmemory: false,
     jsobjects: false,
     jsstrings: false,
     jsother: false,
@@ -525,60 +527,72 @@ let memoryWatcher = {
       let category = key;
       SettingsListener.observe('hud.' + category, false, watch => {
         watching[category] = watch;
+        this.update();
       });
     }
+  },
 
-    SettingsListener.observe('hud.appmemory', false, enabled => {
-      if (this._active = enabled) {
-        for (let target of this._fronts.keys()) {
-          this.measure(target);
-        }
-      } else {
-        for (let target of this._fronts.keys()) {
-          clearTimeout(this._timers.get(target));
-          target.clear({name: 'memory'});
-        }
+  update: function mw_update() {
+    let watching = this._watching;
+    let active = watching.memory || watching.uss;
+
+    if (this._active) {
+      for (let target of this._fronts.keys()) {
+        if (!watching.appmemory) target.clear({name: 'memory'});
+        if (!watching.uss) target.clear({name: 'uss'});
+        if (!active) clearTimeout(this._timers.get(target));
       }
-    });
+    } else if (active) {
+      for (let target of this._fronts.keys()) {
+        this.measure(target);
+      }
+    }
+    this._active = active;
   },
 
   measure: function mw_measure(target) {
-
-    // TODO Also track USS (bug #976024).
-
     let watch = this._watching;
     let front = this._fronts.get(target);
 
-    front.measure().then((data) => {
+    if (watch.uss) {
+      front.residentUnique().then(value => {
+        target.update({name: 'uss', value: value});
+      }, err => {
+        console.error(err);
+      });
+    }
 
-      let total = 0;
-      if (watch.jsobjects) {
-        total += parseInt(data.jsObjectsSize);
-      }
-      if (watch.jsstrings) {
-        total += parseInt(data.jsStringsSize);
-      }
-      if (watch.jsother) {
-        total += parseInt(data.jsOtherSize);
-      }
-      if (watch.dom) {
-        total += parseInt(data.domSize);
-      }
-      if (watch.style) {
-        total += parseInt(data.styleSize);
-      }
-      if (watch.other) {
-        total += parseInt(data.otherSize);
-      }
-      // TODO Also count images size (bug #976007).
+    if (watch.appmemory) {
+      front.measure().then(data => {
+        let total = 0;
+        if (watch.jsobjects) {
+          total += parseInt(data.jsObjectsSize);
+        }
+        if (watch.jsstrings) {
+          total += parseInt(data.jsStringsSize);
+        }
+        if (watch.jsother) {
+          total += parseInt(data.jsOtherSize);
+        }
+        if (watch.dom) {
+          total += parseInt(data.domSize);
+        }
+        if (watch.style) {
+          total += parseInt(data.styleSize);
+        }
+        if (watch.other) {
+          total += parseInt(data.otherSize);
+        }
+        // TODO Also count images size (bug #976007).
 
-      target.update({name: 'memory', value: total});
-      let duration = parseInt(data.jsMilliseconds) + parseInt(data.nonJSMilliseconds);
-      let timer = setTimeout(() => this.measure(target), 100 * duration);
-      this._timers.set(target, timer);
-    }, (err) => {
-      console.error(err);
-    });
+        target.update({name: 'memory', value: total});
+      }, err => {
+        console.error(err);
+      });
+    }
+
+    let timer = setTimeout(() => this.measure(target), 300);
+    this._timers.set(target, timer);
   },
 
   trackTarget: function mw_trackTarget(target) {
