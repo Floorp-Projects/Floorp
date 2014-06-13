@@ -43,7 +43,7 @@ gyp_vars = {
     # (for vp8) chromium sets to 0 also
     'use_temporal_layers': 0,
     # Creates AEC internal sample dump files in current directory
-    # 'aec_debug_dump': 1,
+    'aec_debug_dump': 1,
 
     # codec enable/disables:
     'include_g711': 1,

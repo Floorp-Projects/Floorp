@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: extends decimal;
+    negative: \207B;
+  }
+  @counter-style b {
+    system: extends decimal;
+    negative: '(' ')';
+  }
+</style>
+<ol start="-2" style="list-style-type: a">
+  <li><li><li><li><li>
+</ol>
+<ol start="-2" style="list-style-type: b">
+  <li><li><li><li><li>
+</ol>
