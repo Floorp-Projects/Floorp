@@ -15,7 +15,7 @@
 
 var evalScriptsThatRan = 0;
 var evalScriptsBlocked = 0;
-var evalScriptsTotal = 16;
+var evalScriptsTotal = 17;
 
 // called by scripts that run
 var scriptRan = function(shouldrun, testname, data) {
@@ -31,6 +31,9 @@ var scriptBlocked = function(shouldrun, testname, data) {
   checkTestResults();
 }
 
+var verifyZeroRetVal = function(val, testname) {
+  ok(val === 0, 'RETURN VALUE SHOULD BE ZERO, was ' + val + ': ' + testname);
+}
 
 // Check to see if all the tests have run
 var checkTestResults = function() {
