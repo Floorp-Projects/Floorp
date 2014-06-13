@@ -77,6 +77,9 @@
                  android:icon="@drawable/icon"
                  android:name="org.mozilla.gecko.GeckoApplication"
                  android:hardwareAccelerated="true"
+# The preprocessor does not yet support arbitrary parentheses, so this cannot
+# be parenthesized thus to clarify that the logical AND operator has precedence:
+#   !defined(MOZILLA_OFFICIAL) || (defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG))
 #if !defined(MOZILLA_OFFICIAL) || defined(NIGHTLY_BUILD) && defined(MOZ_DEBUG)
                  android:debuggable="true">
 #else
