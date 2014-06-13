@@ -73,26 +73,14 @@ let FunctionCallActor = protocol.ActorClass({
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.details = {
+      window: window,
+      caller: caller,
       type: type,
       name: name,
       stack: stack,
+      args: args,
+      result: result
     };
-
-    // Store a weak reference to all objects so we don't
-    // prevent natural GC.
-    let weakRefs = {
-      window: Cu.getWeakReference(window),
-      caller: Cu.getWeakReference(caller),
-      result: Cu.getWeakReference(result),
-      args: Cu.getWeakReference(args)
-    };
-
-    Object.defineProperties(this.details, {
-      window: { get: () => weakRefs.window.get() },
-      caller: { get: () => weakRefs.caller.get() },
-      result: { get: () => weakRefs.result.get() },
-      args: { get: () => weakRefs.args.get() }
-    });
 
     this.meta = {
       global: -1,
