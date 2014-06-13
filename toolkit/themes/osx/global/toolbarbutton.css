@@ -21,7 +21,7 @@ toolbarbutton:not([disabled="true"]):active:hover {
 }
 
 .toolbarbutton-text {
-  margin: 0px;
+  margin: 0 !important; /* !important for overriding global.css */
   padding: 0px;
   text-align: center;
   vertical-align: middle;
