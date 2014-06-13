@@ -1811,3 +1811,4 @@ fails-if(B2G&&browserIsRemote) == 983084-3.html 983084-1-ref.html
 fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,24) == 991046-1.html 991046-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 992447.html 992447-ref.html
 pref(layout.css.sticky.enabled,true) == 1005405-1.html 1005405-1-ref.html
+pref(browser.display.use_document_fonts,0) == 1022481-1.html 1022481-1-ref.html
