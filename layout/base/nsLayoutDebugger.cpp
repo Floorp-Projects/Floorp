@@ -164,11 +164,26 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           component.x, component.y, component.width, component.height,
           clip.ToString().get(),
           aItem->IsUniform(aBuilder, &color) ? " uniform" : "");
+
   nsRegionRectIterator iter(opaque);
   for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
     str += nsPrintfCString(" (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
   }
+
+  if (aItem->Frame()->StyleDisplay()->mWillChange.Length() > 0) {
+    str += nsPrintfCString(" (will-change=");
+    for (size_t i = 0; i < aItem->Frame()->StyleDisplay()->mWillChange.Length(); i++) {
+      if (i > 0) {
+        str += ",";
+      }
+      str += NS_LossyConvertUTF16toASCII(aItem->Frame()->StyleDisplay()->mWillChange[i]);
+    }
+    str += nsPrintfCString(")");
+  }
+
+  // Display item specific debug info
   aItem->WriteDebugInfo(str);
+
   if (aDumpHtml && aItem->Painted()) {
     str += "</a>";
   }
