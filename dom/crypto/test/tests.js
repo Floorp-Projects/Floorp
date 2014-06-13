@@ -460,6 +460,36 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "AES-CBC encrypt with wrong IV size",
+  function () {
+    var that = this;
+
+    function encrypt(x, iv) {
+      console.log(x);
+      return crypto.subtle.encrypt(
+        { name: "AES-CBC", iv: iv },
+        x, tv.aes_cbc_enc.data);
+    }
+
+    function doEncrypt(x) {
+      return encrypt(x, new Uint8Array(15))
+        .then(
+          null,
+          function () { return encrypt(new Uint8Array(17)); }
+        );
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_cbc_enc.key, "AES-CBC", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(
+        error(that),
+        complete(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "AES-CBC decrypt",
   function () {
     var that = this;
@@ -475,6 +505,35 @@ TestArray.addTest(
       .then(
         memcmp_complete(that, tv.aes_cbc_dec.result),
         error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-CBC decrypt with wrong IV size",
+  function () {
+    var that = this;
+
+    function decrypt(x, iv) {
+      return crypto.subtle.decrypt(
+        { name: "AES-CBC", iv: iv },
+        x, tv.aes_cbc_dec.data);
+    }
+
+    function doDecrypt(x) {
+      return decrypt(x, new Uint8Array(15))
+        .then(
+          null,
+          function () { return decrypt(x, new Uint8Array(17)); }
+        );
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_cbc_dec.key, "AES-CBC", false, ['decrypt'])
+      .then(doDecrypt)
+      .then(
+        error(that),
+        complete(that)
       );
   }
 );
@@ -502,6 +561,35 @@ TestArray.addTest(
 
 // -----------------------------------------------------------------------------
 TestArray.addTest(
+  "AES-CTR encryption with wrong IV size",
+  function () {
+    var that = this;
+
+    function encrypt(x, iv) {
+      return crypto.subtle.encrypt(
+        { name: "AES-CTR", counter: iv, length: 32 },
+        x, tv.aes_ctr_enc.data);
+    }
+
+    function doEncrypt(x) {
+      return encrypt(x, new Uint8Array(15))
+        .then(
+          null,
+          function () { return encrypt(x, new Uint8Array(17)); }
+        );
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_ctr_enc.key, "AES-CTR", false, ['encrypt'])
+      .then(doEncrypt)
+      .then(
+        error(that),
+        complete(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
   "AES-CTR decryption",
   function () {
     var that = this;
@@ -517,6 +605,35 @@ TestArray.addTest(
       .then(
         memcmp_complete(that, tv.aes_ctr_dec.result),
         error(that)
+      );
+  }
+);
+
+// -----------------------------------------------------------------------------
+TestArray.addTest(
+  "AES-CTR decryption with wrong IV size",
+  function () {
+    var that = this;
+
+    function doDecrypt(x, iv) {
+      return crypto.subtle.decrypt(
+        { name: "AES-CTR", counter: iv, length: 32 },
+        x, tv.aes_ctr_dec.data);
+    }
+
+    function decrypt(x) {
+      return decrypt(x, new Uint8Array(15))
+        .then(
+          null,
+          function () { return decrypt(x, new Uint8Array(17)); }
+        );
+    }
+
+    crypto.subtle.importKey("raw", tv.aes_ctr_dec.key, "AES-CTR", false, ['decrypt'])
+      .then(doDecrypt)
+      .then(
+        error(that),
+        complete(that)
       );
   }
 );
