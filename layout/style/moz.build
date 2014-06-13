@@ -9,10 +9,12 @@ TEST_TOOL_DIRS += ['test']
 
 EXPORTS += [
     'AnimationCommon.h',
+    'CounterStyleManager.h',
     'nsAnimationManager.h',
     'nsComputedDOMStylePropertyList.h',
     'nsCSSAnonBoxes.h',
     'nsCSSAnonBoxList.h',
+    'nsCSSCounterDescList.h',
     'nsCSSFontDescList.h',
     'nsCSSKeywordList.h',
     'nsCSSKeywords.h',
@@ -83,6 +85,7 @@ EXPORTS.mozilla.css += [
 
 UNIFIED_SOURCES += [
     'AnimationCommon.cpp',
+    'CounterStyleManager.cpp',
     'CSS.cpp',
     'CSSRuleList.cpp',
     'CSSVariableDeclarations.cpp',

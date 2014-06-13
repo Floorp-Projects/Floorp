@@ -1613,6 +1613,27 @@ nsStyleSet::KeyframesRuleForName(nsPresContext* aPresContext,
   return nullptr;
 }
 
+nsCSSCounterStyleRule*
+nsStyleSet::CounterStyleRuleForName(nsPresContext* aPresContext,
+                                    const nsAString& aName)
+{
+  NS_ENSURE_FALSE(mInShutdown, nullptr);
+
+  for (uint32_t i = ArrayLength(gCSSSheetTypes); i-- != 0; ) {
+    if (gCSSSheetTypes[i] == eScopedDocSheet)
+      continue;
+    nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
+                                    (mRuleProcessors[gCSSSheetTypes[i]].get());
+    if (!ruleProc)
+      continue;
+    nsCSSCounterStyleRule *result =
+      ruleProc->CounterStyleRuleForName(aPresContext, aName);
+    if (result)
+      return result;
+  }
+  return nullptr;
+}
+
 bool
 nsStyleSet::AppendFontFeatureValuesRules(nsPresContext* aPresContext,
                                  nsTArray<nsCSSFontFeatureValuesRule*>& aArray)

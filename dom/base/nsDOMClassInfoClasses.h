@@ -76,6 +76,9 @@ DOMCI_CLASS(ChromeMessageSender)
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
 
+// @counter-style in CSS
+DOMCI_CLASS(CSSCounterStyleRule)
+
 DOMCI_CLASS(CSSPageRule)
 
 DOMCI_CLASS(CSSFontFeatureValuesRule)

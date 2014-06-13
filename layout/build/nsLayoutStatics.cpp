@@ -63,6 +63,7 @@
 #include "CacheObserver.h"
 #include "DisplayItemClip.h"
 #include "ActiveLayerTracker.h"
+#include "CounterStyleManager.h"
 
 #include "AudioChannelService.h"
 #include "mozilla/dom/DataStoreService.h"
@@ -292,6 +293,8 @@ nsLayoutStatics::Initialize()
 #endif
 
   CacheObserver::Init();
+
+  CounterStyleManager::InitializeBuiltinCounterStyles();
 
   return NS_OK;
 }

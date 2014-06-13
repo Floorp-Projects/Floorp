@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    /* system: symbolic; */
+    symbols: '*' \2051  \2020  \2021;
+    suffix: '';
+  }
+  @counter-style b {
+    symbols: \10300;
+  }
+</style>
+<ol start="-2" style="list-style-type: a">
+  <li><li><li><li><li>
+  <li><li><li><li><li>
+  <li value="240"><!-- 60 code points -->
+  <li value="1000"><!-- too long -->
+</ol>
+<ol style="list-style-type: b">
+  <li value="60"><!-- 60 code points -->
+  <li value="100"><!-- too long -->
+</ol>

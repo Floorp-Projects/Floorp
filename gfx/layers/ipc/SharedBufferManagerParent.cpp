@@ -197,7 +197,7 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
   sp<GraphicBuffer> buf = GetGraphicBuffer(bufferKey);
   MOZ_ASSERT(buf.get());
   MutexAutoLock lock(mBuffersMutex);
-  NS_ASSERTION(mBuffers.count(bufferKey) == 1, "How can you drop others buffer");
+  NS_ASSERTION(mBuffers.count(bufferKey) == 1, "No such buffer");
   mBuffers.erase(bufferKey);
 
   if(!buf.get()) {
@@ -252,7 +252,7 @@ void SharedBufferManagerParent::DropGrallocBufferImpl(mozilla::layers::SurfaceDe
     key = handle.get_MagicGrallocBufferHandle().mRef.mKey;
 
   NS_ASSERTION(key != -1, "Invalid buffer key");
-  NS_ASSERTION(mBuffers.count(key) == 1, "How can you drop others buffer");
+  NS_ASSERTION(mBuffers.count(key) == 1, "No such buffer");
   mBuffers.erase(key);
   SendDropGrallocBuffer(handle);
 #endif
@@ -275,8 +275,13 @@ android::sp<android::GraphicBuffer>
 SharedBufferManagerParent::GetGraphicBuffer(int key)
 {
   MutexAutoLock lock(mBuffersMutex);
-  NS_ASSERTION(mBuffers.count(key) == 1, "No such buffer, or the buffer is belongs to other session");
-  return mBuffers[key];
+  if (mBuffers.count(key) == 1) {
+    return mBuffers[key];
+  }
+  else {
+    // The buffer can be dropped, or invalid
+    return nullptr;
+  }
 }
 
 android::sp<android::GraphicBuffer>
