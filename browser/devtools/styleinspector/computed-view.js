@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 const FILTER_CHANGED_TIMEOUT = 300;
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const TRANSFORM_HIGHLIGHTER_TYPE = "CssTransformHighlighter";
 
 /**
  * Helper for long-running processes that should yield occasionally to
@@ -187,6 +188,12 @@ function CssHtmlTree(aStyleInspector, aPageStyle)
 
   this._buildContextMenu();
   this.createStyleViews();
+
+  // Initialize the css transform highlighter if the target supports it
+  let hUtils = this.styleInspector.inspector.toolbox.highlighterUtils;
+  if (hUtils.hasCustomHighlighter(TRANSFORM_HIGHLIGHTER_TYPE)) {
+    this._initTransformHighlighter();
+  }
 }
 
 /**
@@ -514,6 +521,65 @@ CssHtmlTree.prototype = {
   },
 
   /**
+   * Get the css transform highlighter front, initializing it if needed
+   * @param a promise that resolves to the highlighter
+   */
+  getTransformHighlighter: function() {
+    if (this.transformHighlighterPromise) {
+      return this.transformHighlighterPromise;
+    }
+
+    let utils = this.styleInspector.inspector.toolbox.highlighterUtils;
+    this.transformHighlighterPromise =
+      utils.getHighlighterByType(TRANSFORM_HIGHLIGHTER_TYPE).then(highlighter => {
+        this.transformHighlighter = highlighter;
+        return this.transformHighlighter;
+      });
+
+    return this.transformHighlighterPromise;
+  },
+
+  _initTransformHighlighter: function() {
+    this.isTransformHighlighterShown = false;
+
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onMouseLeave = this._onMouseLeave.bind(this);
+
+    this.propertyContainer.addEventListener("mousemove", this._onMouseMove, false);
+    this.propertyContainer.addEventListener("mouseleave", this._onMouseLeave, false);
+  },
+
+  _onMouseMove: function(event) {
+    if (event.target === this._lastHovered) {
+      return;
+    }
+
+    if (this.isTransformHighlighterShown) {
+      this.isTransformHighlighterShown = false;
+      this.getTransformHighlighter().then(highlighter => highlighter.hide());
+    }
+
+    this._lastHovered = event.target;
+    if (this._lastHovered.classList.contains("property-value")) {
+      let propName = this._lastHovered.parentNode.querySelector(".property-name");
+
+      if (propName.textContent === "transform") {
+        this.isTransformHighlighterShown = true;
+        let node = this.styleInspector.inspector.selection.nodeFront;
+        this.getTransformHighlighter().then(highlighter => highlighter.show(node));
+      }
+    }
+  },
+
+  _onMouseLeave: function(event) {
+    this._lastHovered = null;
+    if (this.isTransformHighlighterShown) {
+      this.isTransformHighlighterShown = false;
+      this.getTransformHighlighter().then(highlighter => highlighter.hide());
+    }
+  },
+
+  /**
    * Executed by the tooltip when the pointer hovers over an element of the view.
    * Used to decide whether the tooltip should be shown or not and to actually
    * put content in it.
@@ -537,12 +603,6 @@ CssHtmlTree.prototype = {
     if (target.classList.contains("property-value")) {
       let propValue = target;
       let propName = target.parentNode.querySelector(".property-name");
-
-      // Test for css transform
-      if (propName.textContent === "transform") {
-        return this.tooltip.setCssTransformContent(propValue.textContent,
-          this.pageStyle, this.viewedElement);
-      }
 
       // Test for font family
       if (propName.textContent === "font-family") {
@@ -811,6 +871,16 @@ CssHtmlTree.prototype = {
 
     this.tooltip.stopTogglingOnHover(this.propertyContainer);
     this.tooltip.destroy();
+
+    if (this.transformHighlighter) {
+      this.transformHighlighter.finalize();
+      this.transformHighlighter = null;
+
+      this.propertyContainer.removeEventListener("mousemove", this._onMouseMove, false);
+      this.propertyContainer.removeEventListener("mouseleave", this._onMouseLeave, false);
+
+      this._lastHovered = null;
+    }
 
     // Remove bound listeners
     this.styleDocument.removeEventListener("contextmenu", this._onContextMenu);

@@ -5,6 +5,7 @@
 %endif
 
 /* Box model highlighter */
+
 svg|g.box-model-container {
   opacity: 0.4;
 }
@@ -106,4 +107,24 @@ html|*.highlighter-nodeinfobar-dimensions {
 
 .highlighter-nodeinfobar-container[hide-arrow] > .highlighter-nodeinfobar {
   margin: 7px 0;
+}
+
+/* Css transform highlighter */
+
+svg|polygon.css-transform-transformed {
+  fill: #80d4ff;
+  opacity: 0.8;
+}
+
+svg|polygon.css-transform-untransformed {
+  fill: #66cc52;
+  opacity: 0.8;
+}
+
+svg|polygon.css-transform-transformed,
+svg|polygon.css-transform-untransformed,
+svg|line.css-transform-line {
+  stroke: #08C;
+  stroke-dasharray: 5 3;
+  stroke-width: 2;
 }

@@ -23,8 +23,7 @@ let test = asyncTest(function*() {
   let {toolbox, inspector, view} = yield openLayoutView();
 
   yield runTests(inspector, view);
-  // TODO: Closing the toolbox in this test leaks - bug 994314
-  // yield destroyToolbox(inspector);
+  yield destroyToolbox(inspector);
 });
 
 addTest("Test that adding a border applies a border style when necessary",

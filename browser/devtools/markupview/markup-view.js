@@ -175,10 +175,26 @@ MarkupView.prototype = {
     this._hoveredNode = null;
   },
 
+  /**
+   * Show the box model highlighter on a given node front
+   * @param {NodeFront} nodeFront The node to show the highlighter for
+   * @param {Object} options Options for the highlighter
+   * @return a promise that resolves when the highlighter for this nodeFront is
+   * shown, taking into account that there could already be highlighter requests
+   * queued up
+   */
   _showBoxModel: function(nodeFront, options={}) {
-    this._inspector.toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
+    return this._inspector.toolbox.highlighterUtils.highlightNodeFront(nodeFront, options);
   },
 
+  /**
+   * Hide the box model highlighter on a given node front
+   * @param {NodeFront} nodeFront The node to hide the highlighter for
+   * @param {Boolean} forceHide See toolbox-highlighter-utils/unhighlight
+   * @return a promise that resolves when the highlighter for this nodeFront is
+   * hidden, taking into account that there could already be highlighter requests
+   * queued up
+   */
   _hideBoxModel: function(forceHide) {
     return this._inspector.toolbox.highlighterUtils.unhighlight(forceHide);
   },
