@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+include $(topsrcdir)/config/rules.mk
 
 ifdef GNU_AS
 ifeq ($(CPU_ARCH),arm)
@@ -10,21 +11,15 @@ ifeq ($(CPU_ARCH),arm)
 # opcodes; actual arch detection is done at runtime.
 ASFLAGS = -march=armv7-a -mfpu=neon
 
-celt_pitch_xcorr_arm-gnu.$(ASM_SUFFIX): celt_arm_dir celt/arm/armopts-gnu.S
-
-# we need to throw this here because upstream has this path hardcoded
-celt_arm_dir:
-	mkdir -p celt/arm
+celt_pitch_xcorr_arm-gnu.$(ASM_SUFFIX): celt/arm/armopts-gnu.S
 
 # armopts needs a specific rule, because arm2gnu.pl will always add the .S
 # suffix when translating the files that include it.
-celt/arm/armopts-gnu.S: celt/arm/armopts.s
+celt/arm/armopts-gnu.S: celt/arm/armopts.s $(call mkdir_deps,celt/arm) $(GLOBAL_DEPS)
 	$(PERL) $(srcdir)/celt/arm/arm2gnu.pl < $< > $@
 # For all others, we can use an implicit rule with the configured $(ASM_SUFFIX).
-%-gnu.$(ASM_SUFFIX): celt/arm/%.s
+%-gnu.$(ASM_SUFFIX): celt/arm/%.s $(GLOBAL_DEPS)
 	$(PERL) $(srcdir)/celt/arm/arm2gnu.pl < $< > $@
 
 endif
 endif
-
-include $(topsrcdir)/config/rules.mk
