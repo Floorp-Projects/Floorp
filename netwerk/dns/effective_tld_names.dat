@@ -180,6 +180,7 @@ ar
 com.ar
 edu.ar
 gob.ar
+gov.ar
 int.ar
 mil.ar
 net.ar
@@ -222,7 +223,6 @@ edu.au
 gov.au
 asn.au
 id.au
-csiro.au
 // Historic 2LDs (closed to new registration, but sites still exist)
 info.au
 conf.au
@@ -245,7 +245,7 @@ sa.edu.au
 tas.edu.au
 vic.edu.au
 wa.edu.au
-act.gov.au
+// act.gov.au  Bug 984824 - Removed at request of Greg Tankard
 // nsw.gov.au  Bug 547985 - Removed at request of <Shae.Donelan@services.nsw.gov.au>
 // nt.gov.au  Bug 940478 - Removed at request of Greg Connors <Greg.Connors@nt.gov.au>
 qld.gov.au
@@ -292,6 +292,7 @@ rs.ba
 // bb : http://en.wikipedia.org/wiki/.bb
 bb
 biz.bb
+co.bb
 com.bb
 edu.bb
 gov.bb
@@ -299,6 +300,7 @@ info.bb
 net.bb
 org.bb
 store.bb
+tv.bb
 
 // bd : http://en.wikipedia.org/wiki/.bd
 *.bd
@@ -596,9 +598,12 @@ gob.cl
 co.cl
 mil.cl
 
-// cm : http://en.wikipedia.org/wiki/.cm
+// cm : http://en.wikipedia.org/wiki/.cm plus bug 981927
 cm
+co.cm
+com.cm
 gov.cm
+net.cm
 
 // cn : http://en.wikipedia.org/wiki/.cn
 // Submitted by registry <tanyaling@cnnic.cn> 2008-06-11
@@ -5146,7 +5151,24 @@ com.nr
 nu
 
 // nz : http://en.wikipedia.org/wiki/.nz
-*.nz
+// Confirmed by registry <jay@nzrs.net.nz> 2014-05-19
+nz
+ac.nz
+co.nz
+cri.nz
+geek.nz
+gen.nz
+govt.nz
+health.nz
+iwi.nz
+kiwi.nz
+maori.nz
+mil.nz
+māori.nz
+net.nz
+org.nz
+parliament.nz
+school.nz
 
 // om : http://en.wikipedia.org/wiki/.om
 om
@@ -5613,7 +5635,6 @@ oryol.ru
 palana.ru
 penza.ru
 perm.ru
-pskov.ru
 ptz.ru
 rnd.ru
 ryazan.ru
@@ -6150,19 +6171,19 @@ com.ug
 org.ug
 
 // uk : http://en.wikipedia.org/wiki/.uk
-// Submitted by registry <noc@nominet.org.uk> 2012-10-02
-// and tweaked by us pending further consultation.
-*.uk
+// Submitted by registry <Michael.Daly@nominet.org.uk>
+uk
+ac.uk
+co.uk
+gov.uk
+ltd.uk
+me.uk
+net.uk
+nhs.uk
+org.uk
+plc.uk
+police.uk
 *.sch.uk
-!bl.uk
-!british-library.uk
-!jet.uk
-!mod.uk
-!national-library-scotland.uk
-!nel.uk
-!nic.uk
-!nls.uk
-!parliament.uk
 
 // us : http://en.wikipedia.org/wiki/.us
 us
@@ -6440,16 +6461,24 @@ edu.vc
 
 // ve : https://registro.nic.ve/
 // Confirmed by registry 2012-10-04
+// Updated 2014-05-20 - Bug 940478
 ve
+arts.ve
 co.ve
 com.ve
 e12.ve
 edu.ve
+firm.ve
+gob.ve
 gov.ve
 info.ve
+int.ve
 mil.ve
 net.ve
 org.ve
+rec.ve
+store.ve
+tec.ve
 web.ve
 
 // vg : http://en.wikipedia.org/wiki/.vg
@@ -6482,8 +6511,12 @@ pro.vn
 health.vn
 
 // vu : http://en.wikipedia.org/wiki/.vu
-// list of 2nd level tlds ?
+// http://www.vunic.vu/
 vu
+com.vu
+edu.vu
+net.vu
+org.vu
 
 // wf : http://www.afnic.fr/medias/documents/AFNIC-naming-policy2012.pdf
 wf
@@ -6609,7 +6642,14 @@ yt
 فلسطين
 
 // xn--90a3ac ("srb" Cyrillic) : RS
+// http://www.rnids.rs/en/the-.срб-domain
 срб
+пр.срб
+орг.срб
+обр.срб
+од.срб
+упр.срб
+ак.срб
 
 // xn--p1ai ("rf" Russian-Cyrillic) : RU
 // http://www.cctld.ru/en/docs/rulesrf.php
@@ -7633,8 +7673,8 @@ pictures
 // gripe : 2014-03-07 Corn Sunset, LLC
 gripe
 
-// engineering : 2014-03-07 United TLD Holdco Ltd.
-engineering
+// engineer : 2014-03-07 United TLD Holdco Ltd.
+engineer
 
 // associates : 2014-03-07 Baxter Hill, LLC
 associates
@@ -7651,9 +7691,302 @@ hiv
 // sca : 2014-03-13 SVENSKA CELLULOSA AKTIEBOLAGET SCA (publ)
 sca
 
-// reise : 2014-03-13 dotreise GmbH
+// reise : 2014-03-13 dotreise GmbH 
 reise
 
+// accountants : 2014-03-20 Knob Town, LLC 
+accountants
+
+// clinic : 2014-03-20 Goose Park, LLC 
+clinic
+
+// versicherung : 2014-03-20 dotversicherung-registry GmbH 
+versicherung
+
+// top : 2014-03-20 Jiangsu Bangning Science & Technology Co.,Ltd. 
+top
+
+// furniture : 2014-03-20 Lone Fields, LLC 
+furniture
+
+// dental : 2014-03-20 Tin Birch, LLC 
+dental
+
+// fund : 2014-03-20 John Castle, LLC 
+fund
+
+// creditcard : 2014-03-20 Binky Frostbite, LLC 
+creditcard
+
+// insure : 2014-03-20 Pioneer Willow, LLC 
+insure
+
+// audio : 2014-03-20 Uniregistry, Corp. 
+audio
+
+// claims : 2014-03-20 Black Corner, LLC 
+claims
+
+// loans : 2014-03-20 June Woods, LLC 
+loans
+
+// auction : 2014-03-20 Sand Galley, LLC 
+auction
+
+// attorney : 2014-03-20 Victor North, LLC 
+attorney
+
+// finance : 2014-03-20 Cotton Cypress, LLC 
+finance
+
+// investments : 2014-03-20 Holly Glen, LLC 
+investments
+
+// juegos : 2014-03-20 Uniregistry, Corp. 
+juegos
+
+// dentist : 2014-03-20 Outer Lake, LLC 
+dentist
+
+// lds : 2014-03-20 IRI Domain Management, LLC 
+lds
+
+// lawyer : 2014-03-20 Atomic Station, LLC 
+lawyer
+
+// surgery : 2014-03-20 Tin Avenue, LLC 
+surgery
+
+// gratis : 2014-03-20 Pioneer Tigers, LLC 
+gratis
+
+// software : 2014-03-20 Over Birch, LLC 
+software
+
+// mortgage : 2014-03-20 Outer Gardens, LLC 
+mortgage
+
+// republican : 2014-03-20 United TLD Holdco Ltd. 
+republican
+
+// credit : 2014-03-20 Snow Shadow, LLC 
+credit
+
+// tax : 2014-03-20 Storm Orchard, LLC 
+tax
+
+// africa : 2014-03-24 ZA Central Registry NPC trading as Registry.Africa 
+africa
+
+// joburg : 2014-03-24 ZA Central Registry NPC trading as ZA Central Registry 
+joburg
+
+// durban : 2014-03-24 ZA Central Registry NPC trading as ZA Central Registry 
+durban
+
+// capetown : 2014-03-24 ZA Central Registry NPC trading as ZA Central Registry 
+capetown
+
+// sap : 2014-03-27 SAP AG 
+sap
+
+// datsun : 2014-03-27 NISSAN MOTOR CO., LTD. 
+datsun
+
+// infiniti : 2014-03-27 NISSAN MOTOR CO., LTD. 
+infiniti
+
+// firmdale : 2014-03-27 Firmdale Holdings Limited 
+firmdale
+
+// organic : 2014-03-27 Afilias Limited 
+organic
+
+// nissan : 2014-03-27 NISSAN MOTOR CO., LTD. 
+nissan
+
+// website : 2014-04-03 DotWebsite Inc. 
+website
+
+// space : 2014-04-03 DotSpace Inc. 
+space
+
+// schmidt : 2014-04-03 SALM S.A.S. 
+schmidt
+
+// cuisinella : 2014-04-03 SALM S.A.S. 
+cuisinella
+
+// samsung : 2014-04-03 SAMSUNG SDS CO., LTD 
+samsung
+
+// crs : 2014-04-03 Federated Co operatives Limited 
+crs
+
+// doosan : 2014-04-03 Doosan Corporation 
+doosan
+
+// press : 2014-04-03 DotPress Inc. 
+press
+
+// emerck : 2014-04-03 Merck KGaA 
+emerck
+
+// erni : 2014-04-03 ERNI Group Holding AG 
+erni
+
+// direct : 2014-04-10 Half Trail, LLC 
+direct
+
+// yandex : 2014-04-10 YANDEX, LLC 
+yandex
+
+// lotto : 2014-04-10 Afilias Limited 
+lotto
+
+// toshiba : 2014-04-10 TOSHIBA Corporation 
+toshiba
+
+// bauhaus : 2014-04-17 Werkhaus GmbH 
+bauhaus
+
+// host : 2014-04-17 DotHost Inc. 
+host
+
+// ltda : 2014-04-17 DOMAIN ROBOT SERVICOS DE HOSPEDAGEM NA INTERNET LTDA 
+ltda
+
+// global : 2014-04-17 Dot GLOBAL AS 
+global
+
+// abogado : 2014-04-24 Top Level Domain Holdings Limited 
+abogado
+
+// place : 2014-04-24 Snow Galley, LLC 
+place
+
+// tirol : 2014-04-24 punkt Tirol GmbH 
+tirol
+
+// gmx : 2014-04-24 1&1 Mail & Media GmbH 
+gmx
+
+// tatar : 2014-04-24 Limited Liability Company "Coordination Center of Regional Domain of Tatarstan Republic" 
+tatar
+
+// scholarships : 2014-04-24 Scholarships.com, LLC 
+scholarships
+
+// eurovision : 2014-04-24 European Broadcasting Union (EBU) 
+eurovision
+
+// wedding : 2014-04-24 Top Level Domain Holdings Limited 
+wedding
+
+// active : 2014-05-01 The Active Network, Inc 
+active
+
+// madrid : 2014-05-01 Comunidad de Madrid 
+madrid
+
+// youtube : 2014-05-01 Charleston Road Registry Inc. 
+youtube
+
+// sharp : 2014-05-01 Sharp Corporation 
+sharp
+
+// uol : 2014-05-01 UBN INTERNET LTDA. 
+uol
+
+// physio : 2014-05-01 PhysBiz Pty Ltd 
+physio
+
+// gmail : 2014-05-01 Charleston Road Registry Inc. 
+gmail
+
+// channel : 2014-05-08 Charleston Road Registry Inc. 
+channel
+
+// fly : 2014-05-08 Charleston Road Registry Inc. 
+fly
+
+// zip : 2014-05-08 Charleston Road Registry Inc. 
+zip
+
+// esq : 2014-05-08 Charleston Road Registry Inc. 
+esq
+
+// rsvp : 2014-05-08 Charleston Road Registry Inc. 
+rsvp
+
+// wales : 2014-05-08 Nominet UK 
+wales
+
+// cymru : 2014-05-08 Nominet UK 
+cymru
+
+// green : 2014-05-08 Afilias Limited 
+green
+
+// lgbt : 2014-05-08 Afilias Limited 
+lgbt
+
+// xn--hxt814e : 2014-05-15 Zodiac Libra Limited 
+网店
+
+// cancerresearch : 2014-05-15 Australian Cancer Research Foundation 
+cancerresearch
+
+// everbank : 2014-05-15 EverBank 
+everbank
+
+// frl : 2014-05-15 FRLregistry B.V. 
+frl
+
+// property : 2014-05-22 Uniregistry, Corp. 
+property
+
+// forsale : 2014-05-22 Sea Oaks, LLC 
+forsale
+
+// seat : 2014-05-22 SEAT, S.A. (Sociedad Unipersonal) 
+seat
+
+// deals : 2014-05-22 Sand Sunset, LLC 
+deals
+
+// nra : 2014-05-22 NRA Holdings Company, INC. 
+nra
+
+// xn--fjq720a : 2014-05-22 Will Bloom, LLC 
+娱乐
+
+// realtor : 2014-05-29 Real Estate Domains LLC 
+realtor
+
+// bnpparibas : 2014-05-29 BNP Paribas 
+bnpparibas
+
+// melbourne : 2014-05-29 The Crown in right of the State of Victoria, represented by its Department of State Development, Business and Innovation 
+melbourne
+
+// hosting : 2014-05-29 Uniregistry, Corp. 
+hosting
+
+// yoga : 2014-05-29 Top Level Domain Holdings Limited 
+yoga
+
+// city : 2014-05-29 Snow Sky, LLC 
+city
+
+// bond : 2014-06-05 Bond University Limited 
+bond
+
+// click : 2014-06-05 Uniregistry, Corp. 
+click
+
+// cern : 2014-06-05 European Organization for Nuclear Research ("CERN") 
+cern
 
 // ===END ICANN DOMAINS===
 // ===BEGIN PRIVATE DOMAINS===
@@ -7663,20 +7996,22 @@ reise
 cloudfront.net
 
 // Amazon Elastic Compute Cloud: https://aws.amazon.com/ec2/
-// Submitted by Osman Surkatty <osmans@amazon.com> 2013-04-02
-compute.amazonaws.com
-us-east-1.amazonaws.com
-compute-1.amazonaws.com
-z-1.compute-1.amazonaws.com
-z-2.compute-1.amazonaws.com
+// Submitted by Osman Surkatty <osmans@amazon.com> 2014-05-20
 ap-northeast-1.compute.amazonaws.com
 ap-southeast-1.compute.amazonaws.com
 ap-southeast-2.compute.amazonaws.com
+cn-north-1.compute.amazonaws.cn
+compute.amazonaws.cn
+compute.amazonaws.com
+compute-1.amazonaws.com
 eu-west-1.compute.amazonaws.com
 sa-east-1.compute.amazonaws.com
+us-east-1.amazonaws.com
 us-gov-west-1.compute.amazonaws.com
 us-west-1.compute.amazonaws.com
 us-west-2.compute.amazonaws.com
+z-1.compute-1.amazonaws.com
+z-2.compute-1.amazonaws.com
 
 // Amazon Elastic Beanstalk : https://aws.amazon.com/elasticbeanstalk/
 // Submitted by Adam Stein <astein@amazon.com> 2013-04-02
@@ -7719,6 +8054,7 @@ ar.com
 br.com
 cn.com
 com.de
+com.se
 de.com
 eu.com
 gb.com
@@ -8074,6 +8410,10 @@ global.ssl.fastly.net
 a.prod.fastly.net
 global.prod.fastly.net
 
+// Firebase, Inc.
+// Submitted by Chris Raynor <chris@firebase.com> 2014-01-21
+firebaseapp.com
+
 // GitHub, Inc.
 // Submitted by Ben Toews <btoews@github.com> 2014-02-06
 github.io
@@ -8153,9 +8493,17 @@ azurewebsites.net
 azure-mobile.net
 cloudapp.net
 
+// NFSN, Inc. : https://www.NearlyFreeSpeech.NET/
+// Submitted by Jeff Wheelhouse <support@nearlyfreespeech.net> 2014-02-02
+nfshost.com
+
 // NYC.mn : http://www.information.nyc.mn
 // Submitted by Matthew Brown <mattbrown@nyc.mn> 2013-03-11
 nyc.mn
+
+// One Fold Media : http://www.onefoldmedia.com/
+// Submitted by Eddie Jones <eddie@onefoldmedia.com> 2014-06-10
+nid.io
 
 // Opera Software, A.S.A.
 // Submitted by Yngve Pettersen <yngve@opera.com> 2009-11-26
