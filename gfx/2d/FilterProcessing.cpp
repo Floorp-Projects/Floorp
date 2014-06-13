@@ -26,7 +26,7 @@ FilterProcessing::ExtractAlpha(DataSourceSurface* aSource)
     ExtractAlpha_Scalar(size, sourceData, sourceStride, alphaData, alphaStride);
   }
 
-  return alpha;
+  return alpha.forget();
 }
 
 TemporaryRef<DataSourceSurface>
@@ -162,7 +162,7 @@ FilterProcessing::CombineColorChannels(DataSourceSurface* aChannel0, DataSourceS
     CombineColorChannels_Scalar(size, resultStride, resultData, channelStride, channel0Data, channel1Data, channel2Data, channel3Data);
   }
 
-  return result;
+  return result.forget();
 }
 
 void

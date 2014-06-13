@@ -76,7 +76,7 @@ public:
     }
     surf->Unmap();
 
-    return surf;
+    return surf.forget();
   }
 private:
   vector<RefPtr<SourceSurface>> mSnapshots;

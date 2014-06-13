@@ -43,9 +43,7 @@ SourceSurfaceCG::GetDataSurface()
 
   // We also need to make sure that the returned surface has
   // surface->GetType() == SurfaceType::DATA.
-  dataSurf = new DataSourceSurfaceWrapper(dataSurf);
-
-  return dataSurf;
+  return new DataSourceSurfaceWrapper(dataSurf);
 }
 
 static void releaseCallback(void *info, const void *data, size_t size) {

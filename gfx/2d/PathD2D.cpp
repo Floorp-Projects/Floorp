@@ -353,7 +353,7 @@ PathD2D::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) 
     pathBuilder->mFigureActive = true;
   }
 
-  return pathBuilder;
+  return pathBuilder.forget();
 }
 
 void

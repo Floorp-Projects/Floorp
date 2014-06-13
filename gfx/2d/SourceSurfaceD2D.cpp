@@ -45,7 +45,7 @@ SourceSurfaceD2D::GetDataSurface()
 {
   RefPtr<DataSourceSurfaceD2D> result = new DataSourceSurfaceD2D(this);
   if (result->IsValid()) {
-    return result;
+    return result.forget();
   }
   return nullptr;
 }

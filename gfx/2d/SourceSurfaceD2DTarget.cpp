@@ -72,7 +72,7 @@ SourceSurfaceD2DTarget::GetDataSurface()
   }
   Factory::GetDirect3D10Device()->CopyResource(dataSurf->mTexture, mTexture);
 
-  return dataSurf;
+  return dataSurf.forget();
 }
 
 void*

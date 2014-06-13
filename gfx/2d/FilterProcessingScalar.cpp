@@ -85,7 +85,7 @@ ApplyBlending_Scalar(DataSourceSurface* aInput1, DataSourceSurface* aInput2)
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 TemporaryRef<DataSourceSurface>
