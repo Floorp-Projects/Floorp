@@ -65,7 +65,7 @@ add_task(function() {
 
 add_task(function () {
   const FRAME_SCRIPT = "data:," +
-    "docShell.QueryInterface%28Ci.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
+    "docShell.QueryInterface%28Components.interfaces.nsILoadContext%29.usePrivateBrowsing%3Dtrue";
 
   // Clear the list of closed windows.
   while (ss.getClosedWindowCount()) {
