@@ -178,17 +178,20 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     void operator=(const JSONParserBase &other) MOZ_DELETE;
 };
 
+template <typename CharT>
 class MOZ_STACK_CLASS JSONParser : public JSONParserBase
 {
   private:
-    JS::ConstTwoByteChars current;
-    const JS::ConstTwoByteChars begin, end;
+    typedef mozilla::RangedPtr<const CharT> CharPtr;
+
+    CharPtr current;
+    const CharPtr begin, end;
 
   public:
     /* Public API */
 
     /* Create a parser for the provided JSON data. */
-    JSONParser(JSContext *cx, JS::ConstTwoByteChars data, size_t length,
+    JSONParser(JSContext *cx, CharPtr data, size_t length,
                ErrorHandling errorHandling = RaiseError)
       : JSONParserBase(cx, errorHandling),
         current(data),
