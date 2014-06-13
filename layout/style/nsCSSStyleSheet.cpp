@@ -2042,6 +2042,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
     case css::Rule::FONT_FACE_RULE:
     case css::Rule::PAGE_RULE:
     case css::Rule::KEYFRAMES_RULE:
+    case css::Rule::COUNTER_STYLE_RULE:
     case css::Rule::DOCUMENT_RULE:
     case css::Rule::SUPPORTS_RULE:
       // these types are OK to insert into a group

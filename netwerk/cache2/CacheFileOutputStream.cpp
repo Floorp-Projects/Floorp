@@ -213,6 +213,7 @@ CacheFileOutputStream::AsyncWait(nsIOutputStreamCallback *aCallback,
 
   mCallback = aCallback;
   mCallbackFlags = aFlags;
+  mCallbackTarget = aEventTarget;
 
   if (!mCallback)
     return NS_OK;

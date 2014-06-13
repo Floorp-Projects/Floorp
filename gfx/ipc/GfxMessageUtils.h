@@ -771,31 +771,38 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return (ReadParam(aMsg, aIter, &aResult->mScrollableRect) &&
-            ReadParam(aMsg, aIter, &aResult->mViewport) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
-            ReadParam(aMsg, aIter, &aResult->mUseDisplayPortMargins) &&
-            ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&
-            ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
-            ReadParam(aMsg, aIter, &aResult->mRootCompositionSize) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollId) &&
-            ReadParam(aMsg, aIter, &aResult->mResolution) &&
-            ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
-            ReadParam(aMsg, aIter, &aResult->mZoom) &&
-            ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
-            ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners) &&
-            ReadParam(aMsg, aIter, &aResult->mMayHaveTouchCaret) &&
-            ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
-            ReadParam(aMsg, aIter, &aResult->mIsRoot) &&
-            ReadParam(aMsg, aIter, &aResult->mHasScrollgrab) &&
-            ReadParam(aMsg, aIter, &aResult->mUpdateScrollOffset) &&
-            ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
-            aMsg->ReadBytes(aIter,
-                            reinterpret_cast<const char**>(&aResult->mContentDescription),
-                            sizeof(aResult->mContentDescription)) &&
-            ReadParam(aMsg, aIter, &aResult->mTransformScale));
+    const char* contentDescription;
+    if (!(ReadParam(aMsg, aIter, &aResult->mScrollableRect) &&
+          ReadParam(aMsg, aIter, &aResult->mViewport) &&
+          ReadParam(aMsg, aIter, &aResult->mScrollOffset) &&
+          ReadParam(aMsg, aIter, &aResult->mDisplayPort) &&
+          ReadParam(aMsg, aIter, &aResult->mDisplayPortMargins) &&
+          ReadParam(aMsg, aIter, &aResult->mUseDisplayPortMargins) &&
+          ReadParam(aMsg, aIter, &aResult->mCriticalDisplayPort) &&
+          ReadParam(aMsg, aIter, &aResult->mCompositionBounds) &&
+          ReadParam(aMsg, aIter, &aResult->mRootCompositionSize) &&
+          ReadParam(aMsg, aIter, &aResult->mScrollId) &&
+          ReadParam(aMsg, aIter, &aResult->mResolution) &&
+          ReadParam(aMsg, aIter, &aResult->mCumulativeResolution) &&
+          ReadParam(aMsg, aIter, &aResult->mZoom) &&
+          ReadParam(aMsg, aIter, &aResult->mDevPixelsPerCSSPixel) &&
+          ReadParam(aMsg, aIter, &aResult->mMayHaveTouchListeners) &&
+          ReadParam(aMsg, aIter, &aResult->mMayHaveTouchCaret) &&
+          ReadParam(aMsg, aIter, &aResult->mPresShellId) &&
+          ReadParam(aMsg, aIter, &aResult->mIsRoot) &&
+          ReadParam(aMsg, aIter, &aResult->mHasScrollgrab) &&
+          ReadParam(aMsg, aIter, &aResult->mUpdateScrollOffset) &&
+          ReadParam(aMsg, aIter, &aResult->mScrollGeneration) &&
+          aMsg->ReadBytes(aIter, &contentDescription,
+                          sizeof(aResult->mContentDescription)) &&
+          ReadParam(aMsg, aIter, &aResult->mTransformScale))) {
+      return false;
+    }
+    // ReadBytes() doesn't actually copy the string, it only points
+    // a pointer to the string in its internal buffer.
+    strncpy(aResult->mContentDescription, contentDescription,
+            sizeof(aResult->mContentDescription));
+    return true;
   }
 };
 

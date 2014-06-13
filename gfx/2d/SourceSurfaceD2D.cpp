@@ -69,10 +69,17 @@ SourceSurfaceD2D::InitFromData(unsigned char *aData,
   }
 
   D2D1_BITMAP_PROPERTIES props = D2D1::BitmapProperties(D2DPixelFormat(aFormat));
-  hr = aRT->CreateBitmap(D2DIntSize(aSize), aData, aStride, props, byRef(mBitmap));
+  hr = aRT->CreateBitmap(D2DIntSize(aSize), props, byRef(mBitmap));
 
   if (FAILED(hr)) {
     gfxWarning() << "Failed to create D2D Bitmap for data. Code: " << hr;
+    return false;
+  }
+
+  hr = mBitmap->CopyFromMemory(nullptr, aData, aStride);
+
+  if (FAILED(hr)) {
+    gfxWarning() << "Failed to copy data to D2D bitmap. Code: " << hr;
     return false;
   }
 

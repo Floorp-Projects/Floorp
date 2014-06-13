@@ -2135,16 +2135,19 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (gfxPlatform::GetPlatform()->
             SupportsAzureContentForType(BackendType::CAIRO)) {
         IntSize intSize(surf->GetSize().width, surf->GetSize().height);
-        ctx = new gfxContext(gfxPlatform::GetPlatform()->
-            CreateDrawTargetForSurface(surf, intSize));
+        RefPtr<DrawTarget> dt =
+          gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf, intSize);
+        ctx = new gfxContext(dt);
     } else if (gfxPlatform::GetPlatform()->
                    SupportsAzureContentForType(BackendType::SKIA) &&
                surf->GetType() == gfxSurfaceType::Image) {
        gfxImageSurface* imgSurf = static_cast<gfxImageSurface*>(surf);
        SurfaceFormat format = ImageFormatToSurfaceFormat(imgSurf->Format());
        IntSize intSize(surf->GetSize().width, surf->GetSize().height);
-       ctx = new gfxContext(gfxPlatform::GetPlatform()->CreateDrawTargetForData(
-           imgSurf->Data(), intSize, imgSurf->Stride(), format));
+       RefPtr<DrawTarget> dt =
+         gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+                        imgSurf->Data(), intSize, imgSurf->Stride(), format);
+       ctx = new gfxContext(dt);
     }  else {
         ctx = new gfxContext(surf);
     }

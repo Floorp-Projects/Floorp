@@ -1,0 +1,153 @@
+<html>
+
+<head>
+  <title>nsIAccessible::name calculation for @counter-style</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+
+  <style id="counterstyles" type="text/css">
+    @counter-style system-alphabetic {
+      system: alphabetic;
+      symbols: x y z;
+    }
+    @counter-style system-cyclic {
+      system: cyclic;
+      symbols: x y z;
+    }
+    @counter-style system-numeric {
+      system: numeric;
+      symbols: x y z;
+    }
+    @counter-style speak-as-bullets {
+      system: extends decimal;
+      speak-as: bullets;
+    }
+    @counter-style speak-as-numbers {
+      system: extends system-alphabetic;
+      speak-as: numbers;
+    }
+    @counter-style speak-as-words {
+      system: additive;
+      additive-symbols: 20 "twenty ", 9 "nine", 7 "seven", 1 "one";
+      speak-as: words;
+    }
+    @counter-style speak-as-spell-out {
+      system: extends system-alphabetic;
+      speak-as: spell-out;
+    }
+    @counter-style speak-as-other {
+      system: extends decimal;
+      speak-as: speak-as-words;
+    }
+    @counter-style speak-as-loop {
+      system: extends upper-latin;
+      speak-as: speak-as-loop0;
+    }
+    @counter-style speak-as-loop0 {
+      system: extends disc;
+      speak-as: speak-as-loop1;
+    }
+    @counter-style speak-as-loop1 {
+      system: extends decimal;
+      speak-as: speak-as-loop0;
+    }
+    @counter-style speak-as-extended0 {
+      system: extends decimal;
+      speak-as: speak-as-extended1;
+    }
+    @counter-style speak-as-extended1 {
+      system: extends speak-as-extended0;
+      speak-as: disc;
+    }
+    @counter-style speak-as-extended2 {
+      system: extends decimal;
+      speak-as: speak-as-extended3;
+    }
+    @counter-style speak-as-extended3 {
+      system: extends speak-as-extended2;
+    }
+  </style>
+
+  <script type="application/javascript">
+
+    function doTest()
+    {
+      function testRule(aRule, aNames, aTodo)
+      {
+        testName(aRule + "-1", aNames[0], null, aTodo);
+        testName(aRule + "-7", aNames[1], null, aTodo);
+        testName(aRule + "-29", aNames[2], null, aTodo);
+      }
+
+      var spellOutNames = ["X. 1", "Y X. 7", "Y Z Y. 29"];
+      var bulletsNames = [kDiscBulletText + "1",
+                          kDiscBulletText + "7",
+                          kDiscBulletText + "29"];
+      var numbersNames = ["1. 1", "7. 7", "29. 29"];
+      var wordsNames = ["one. 1", "seven. 7", "twenty nine. 29"];
+
+      testRule("system-alphabetic", spellOutNames, true); // bug 1024178
+      testRule("system-cyclic", bulletsNames);
+      testRule("system-numeric", numbersNames);
+
+      testRule("speak-as-bullets", bulletsNames);
+      testRule("speak-as-numbers", numbersNames);
+      testRule("speak-as-words", wordsNames);
+      testRule("speak-as-spell-out", spellOutNames, true); // bug 1024178
+      testRule("speak-as-other", wordsNames);
+
+      testRule("speak-as-loop", bulletsNames);
+      testRule("speak-as-loop0", bulletsNames);
+      testRule("speak-as-loop1", numbersNames);
+
+      testRule("speak-as-extended0", bulletsNames);
+      testRule("speak-as-extended1", bulletsNames);
+      testRule("speak-as-extended2", numbersNames);
+      testRule("speak-as-extended3", numbersNames);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=966166"
+     title="Bug 966166 - Implement @counter-style rule">
+    Bug 966166
+  </a>
+
+  <ol id="list"></ol>
+
+  <script type="application/javascript">
+    var list = getNode("list");
+    var rules = getNode("counterstyles").sheet.cssRules;
+    var values = [1, 7, 29];
+    for (var i = 0; i < rules.length; i++) {
+      var rule = rules[i];
+      for (var j = 0; j < values.length; j++) {
+        var item = document.createElement("li");
+        item.id = rule.name + '-' + values[j];
+        item.value = values[j];
+        item.textContent = values[j];
+        item.setAttribute("style", "list-style-type: " + rule.name);
+        list.appendChild(item);
+      }
+    }
+  </script>
+
+</body>
+</html>

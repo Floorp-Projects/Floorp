@@ -83,7 +83,11 @@ markdown() {
     local output_file=$outputdir/${INPUT_FILE/md/html}
 
     mkdir -p $(dirname "$output_file")
-    pandoc $standalone_arg -f markdown "$file" <("$lib/make-bibliography.sh" $mdn_arg "$config" "$URL") -t html -o "$output_file"
+    pandoc $standalone_arg                                              \
+           -f markdown --smart -t html                                  \
+           "$file"                                                      \
+           <("$lib/make-bibliography.sh" $mdn_arg "$config" "$URL")     \
+           -o "$output_file"
 
     "$lib/make-watermark.sh" "$output_file" "$hg_relative_sourcedir/$INPUT_FILE" >> "$output_file"
 }

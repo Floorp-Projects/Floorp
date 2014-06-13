@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: fixed;
+    symbols: a "b" \63;
+  }
+  @counter-style b {
+    system: additive;
+    additive-symbols: \66  6, 'e' 5, d 4, 3 \63, 2 "b", 1 a;
+  }
+</style>
+<ol style="list-style-type: a">
+  <li><li><li>
+</ol>
+<ol style="list-style-type: b">
+  <li><li><li><li><li><li>
+</ol>

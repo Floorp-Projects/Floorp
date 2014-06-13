@@ -20,6 +20,7 @@ class SourceSurface;
 }
 
 namespace dom {
+class SVGMatrix;
 
 class CanvasPattern MOZ_FINAL : public nsWrapperCache
 {
@@ -43,6 +44,7 @@ public:
     : mContext(aContext)
     , mSurface(aSurface)
     , mPrincipal(principalForSecurityCheck)
+    , mTransform()
     , mForceWriteOnly(forceWriteOnly)
     , mCORSUsed(CORSUsed)
     , mRepeat(aRepeat)
@@ -60,9 +62,13 @@ public:
     return mContext;
   }
 
+  // WebIDL
+  void SetTransform(SVGMatrix& matrix);
+
   nsRefPtr<CanvasRenderingContext2D> mContext;
   RefPtr<gfx::SourceSurface> mSurface;
   nsCOMPtr<nsIPrincipal> mPrincipal;
+  mozilla::gfx::Matrix mTransform;
   const bool mForceWriteOnly;
   const bool mCORSUsed;
   const RepeatMode mRepeat;

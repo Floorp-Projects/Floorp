@@ -715,15 +715,15 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       break;
     }
     case eCSSProperty_list_style:
-      if (AppendValueToString(eCSSProperty_list_style_type, aValue,
-                              aSerialization)) {
-        aValue.Append(char16_t(' '));
-      }
       if (AppendValueToString(eCSSProperty_list_style_position, aValue,
                               aSerialization)) {
         aValue.Append(char16_t(' '));
       }
-      AppendValueToString(eCSSProperty_list_style_image, aValue,
+      if (AppendValueToString(eCSSProperty_list_style_image, aValue,
+                              aSerialization)) {
+        aValue.Append(char16_t(' '));
+      }
+      AppendValueToString(eCSSProperty_list_style_type, aValue,
                           aSerialization);
       break;
     case eCSSProperty_overflow: {

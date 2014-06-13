@@ -17,6 +17,9 @@ class TbplFormatter(BaseMachFormatter):
         return getattr(self, data["action"])(data)
 
     def log(self, data):
+        if data.get('component'):
+            return "%s %s\n" % (data["component"], data["message"])
+
         return "%s\n" % (data["message"])
 
     def process_output(self, data):

@@ -60,10 +60,10 @@ fails-if(B2G&&browserIsRemote) == t1204-reset-02-c-o-test.html t1204-reset-02-c-
 == text-boundaries-subpixel.html text-boundaries-subpixel-ref.html
 == counter-hebrew-test.html counter-hebrew-reference.html
 == counters-hebrew-test.html counters-hebrew-reference.html
-== counter-reset-integer-range.html counter-reset-integer-range-ref.html
+fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-reset-integer-range.html counter-reset-integer-range-ref.html # bug 989718
 == counter-ua-limits-00.html counter-ua-limits-00-ref.html
 == counter-ua-limits-01.html counter-ua-limits-01-ref.html
-== counter-ua-limits-02.html counter-ua-limits-02-ref.html
+fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-ua-limits-02.html counter-ua-limits-02-ref.html # bug 989718
 == counter-ua-limits-03.html counter-ua-limits-03-ref.html
 == counter-ua-limits-list-00.html counter-ua-limits-list-00-ref.html
 == counter-ua-limits-list-01.html counter-ua-limits-list-01-ref.html

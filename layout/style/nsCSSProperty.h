@@ -72,4 +72,14 @@ enum nsCSSFontDesc {
   eCSSFontDesc_COUNT
 };
 
+// The "descriptors" that can appear in a @counter-style rule.
+// They have the syntax of properties but different value rules.
+enum nsCSSCounterDesc {
+  eCSSCounterDesc_UNKNOWN = -1,
+#define CSS_COUNTER_DESC(name_, method_) eCSSCounterDesc_##method_,
+#include "nsCSSCounterDescList.h"
+#undef CSS_COUNTER_DESC
+  eCSSCounterDesc_COUNT
+};
+
 #endif /* nsCSSProperty_h___ */

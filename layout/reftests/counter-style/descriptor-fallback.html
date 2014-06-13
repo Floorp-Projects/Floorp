@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="test-common.css">
+<style type="text/css">
+  @counter-style a {
+    system: fixed;
+    symbols: a b c;
+    fallback: b;
+  }
+  @counter-style b {
+    system: fixed 4;
+    symbols: d e f;
+    fallback: a;
+  }
+  @counter-style c {
+    system: fixed 7;
+    symbols: g h i;
+    fallback: a;
+  }
+</style>
+<ol style="list-style-type: a">
+  <li><li><li>
+  <li><li><li>
+  <li><li><li>
+</ol>
+<ol style="list-style-type: b">
+  <li><li><li>
+  <li><li><li>
+  <li><li><li>
+</ol>
+<ol style="list-style-type: c">
+  <li><li><li>
+  <li><li><li>
+  <li><li><li>
+</ol>

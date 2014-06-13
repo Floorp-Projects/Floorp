@@ -52,8 +52,34 @@ Subfields for all messages:
       thread - name for the thread emitting the message
       pid - id of the python process in which the logger is running
       source - name for the source emitting the message
+      component - name of the subcomponent emitting the message
 """
 
+_default_logger_name = None
+
+def get_default_logger(component=None):
+    """Gets the default logger if available, optionally tagged with component
+    name. Will return None if not yet set
+
+    :param component: The component name to tag log messages with
+    """
+    global _default_logger_name
+
+    if not _default_logger_name:
+        return None
+
+    return StructuredLogger(_default_logger_name, component=component)
+
+def set_default_logger(default_logger):
+    """Sets the default logger to logger.
+
+    It can then be retrieved with :py:func:`get_default_logger`
+
+    :param default_logger: The logger to set to default.
+    """
+    global _default_logger_name
+
+    _default_logger_name = default_logger.name
 
 log_levels = dict((k.upper(), v) for v, k in
                   enumerate(["critical", "error", "warning", "info", "debug"]))
@@ -67,8 +93,9 @@ class StructuredLogger(object):
     :param name: The name of the logger.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, component=None):
         self.name = name
+        self.component = component
 
     def add_handler(self, handler):
         """Add a handler to the current logger"""
@@ -101,6 +128,8 @@ class StructuredLogger(object):
                     "thread": current_thread().name,
                     "pid": current_process().pid,
                     "source": self.name}
+        if self.component:
+            all_data['component'] = self.component
         all_data.update(data)
         return all_data
 
