@@ -46,7 +46,7 @@ class MaybeOneOf
     return *(T*)storage.addr();
   }
 
- public:
+public:
   MaybeOneOf() : state(None) {}
   ~MaybeOneOf() { destroyIfConstructed(); }
 
@@ -56,60 +56,70 @@ class MaybeOneOf
   bool constructed() const { return state == Type2State<T>::result; }
 
   template <class T>
-  void construct() {
+  void construct()
+  {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
     ::new (storage.addr()) T();
   }
 
   template <class T, class U>
-  void construct(U&& u) {
+  void construct(U&& aU)
+  {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
-    ::new (storage.addr()) T(Move(u));
+    ::new (storage.addr()) T(Move(aU));
   }
 
   template <class T, class U1>
-  void construct(const U1& u1) {
+  void construct(const U1& aU1)
+  {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
-    ::new (storage.addr()) T(u1);
+    ::new (storage.addr()) T(aU1);
   }
 
   template <class T, class U1, class U2>
-  void construct(const U1& u1, const U2& u2) {
+  void construct(const U1& aU1, const U2& aU2)
+  {
     MOZ_ASSERT(state == None);
     state = Type2State<T>::result;
-    ::new (storage.addr()) T(u1, u2);
+    ::new (storage.addr()) T(aU1, aU2);
   }
 
   template <class T>
-  T& ref() {
+  T& ref()
+  {
     return as<T>();
   }
 
   template <class T>
-  const T& ref() const {
+  const T& ref() const
+  {
     return as<T>();
   }
 
-  void destroy() {
+  void destroy()
+  {
     MOZ_ASSERT(state == SomeT1 || state == SomeT2);
-    if (state == SomeT1)
+    if (state == SomeT1) {
       as<T1>().~T1();
-    else if (state == SomeT2)
+    } else if (state == SomeT2) {
       as<T2>().~T2();
+    }
     state = None;
   }
 
-  void destroyIfConstructed() {
-    if (!empty())
+  void destroyIfConstructed()
+  {
+    if (!empty()) {
       destroy();
+    }
   }
 
-  private:
-    MaybeOneOf(const MaybeOneOf& other) MOZ_DELETE;
-    const MaybeOneOf& operator=(const MaybeOneOf& other) MOZ_DELETE;
+private:
+  MaybeOneOf(const MaybeOneOf& aOther) MOZ_DELETE;
+  const MaybeOneOf& operator=(const MaybeOneOf& aOther) MOZ_DELETE;
 };
 
 template <class T1, class T2>

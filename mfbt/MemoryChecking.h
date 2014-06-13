@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Provides a common interface to the ASan (AddressSanitizer) and Valgrind 
+ * Provides a common interface to the ASan (AddressSanitizer) and Valgrind
  * functions used to mark memory in certain ways. In detail, the following
  * three macros are provided:
  *
@@ -35,13 +35,13 @@
 #include <stddef.h>
 
 extern "C" {
-  /* These definitions are usually provided through the 
-   * sanitizer/asan_interface.h header installed by ASan.
-   */
-  void __asan_poison_memory_region(void const volatile *addr, size_t size)
-    __attribute__((visibility("default")));
-  void __asan_unpoison_memory_region(void const volatile *addr, size_t size)
-    __attribute__((visibility("default")));
+/* These definitions are usually provided through the
+ * sanitizer/asan_interface.h header installed by ASan.
+ */
+void __asan_poison_memory_region(void const volatile *addr, size_t size)
+  __attribute__((visibility("default")));
+void __asan_unpoison_memory_region(void const volatile *addr, size_t size)
+  __attribute__((visibility("default")));
 
 #define MOZ_MAKE_MEM_NOACCESS(addr, size) \
   __asan_poison_memory_region((addr), (size))

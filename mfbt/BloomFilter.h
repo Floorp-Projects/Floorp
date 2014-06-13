@@ -197,8 +197,8 @@ BloomFilter<KeySize, T>::add(uint32_t aHash)
   if (MOZ_LIKELY(!full(slot1))) {
     ++slot1;
   }
-  uint8_t& slot2 = secondSlot(aHash); {
-  if (MOZ_LIKELY(!full(slot2)))
+  uint8_t& slot2 = secondSlot(aHash);
+  if (MOZ_LIKELY(!full(slot2))) {
     ++slot2;
   }
 }
