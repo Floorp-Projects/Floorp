@@ -23,7 +23,7 @@ using namespace js;
 
 using mozilla::RangedPtr;
 
-JSONParser::~JSONParser()
+JSONParserBase::~JSONParserBase()
 {
     for (size_t i = 0; i < stack.length(); i++) {
         if (stack[i].state == FinishArrayElement)
@@ -40,7 +40,7 @@ JSONParser::~JSONParser()
 }
 
 void
-JSONParser::trace(JSTracer *trc)
+JSONParserBase::trace(JSTracer *trc)
 {
     for (size_t i = 0; i < stack.length(); i++) {
         if (stack[i].state == FinishArrayElement) {
@@ -97,13 +97,13 @@ JSONParser::error(const char *msg)
 }
 
 bool
-JSONParser::errorReturn()
+JSONParserBase::errorReturn()
 {
     return errorHandling == NoError;
 }
 
-template<JSONParser::StringType ST>
-JSONParser::Token
+template<JSONParserBase::StringType ST>
+JSONParserBase::Token
 JSONParser::readString()
 {
     JS_ASSERT(current < end);
@@ -236,7 +236,7 @@ JSONParser::readString()
     return token(Error);
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::readNumber()
 {
     JS_ASSERT(current < end);
@@ -341,7 +341,7 @@ IsJSONWhitespace(jschar c)
     return c == '\t' || c == '\r' || c == '\n' || c == ' ';
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advance()
 {
     while (current < end && IsJSONWhitespace(*current))
@@ -422,7 +422,7 @@ JSONParser::advance()
     }
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advanceAfterObjectOpen()
 {
     JS_ASSERT(current[-1] == '{');
@@ -473,7 +473,7 @@ AssertPastValue(const RangedPtr<const jschar> current)
               JS7_ISDEC(current[-1]));
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advanceAfterArrayElement()
 {
     AssertPastValue(current);
@@ -499,7 +499,7 @@ JSONParser::advanceAfterArrayElement()
     return token(Error);
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advancePropertyName()
 {
     JS_ASSERT(current[-1] == ',');
@@ -518,7 +518,7 @@ JSONParser::advancePropertyName()
     return token(Error);
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advancePropertyColon()
 {
     JS_ASSERT(current[-1] == '"');
@@ -539,7 +539,7 @@ JSONParser::advancePropertyColon()
     return token(Error);
 }
 
-JSONParser::Token
+JSONParserBase::Token
 JSONParser::advanceAfterProperty()
 {
     AssertPastValue(current);
@@ -566,7 +566,7 @@ JSONParser::advanceAfterProperty()
 }
 
 JSObject *
-JSONParser::createFinishedObject(PropertyVector &properties)
+JSONParserBase::createFinishedObject(PropertyVector &properties)
 {
     /*
      * Look for an existing cached type and shape for objects with this set of
@@ -611,7 +611,7 @@ JSONParser::createFinishedObject(PropertyVector &properties)
 }
 
 inline bool
-JSONParser::finishObject(MutableHandleValue vp, PropertyVector &properties)
+JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
 {
     JS_ASSERT(&properties == &stack.back().properties());
 
@@ -627,7 +627,7 @@ JSONParser::finishObject(MutableHandleValue vp, PropertyVector &properties)
 }
 
 inline bool
-JSONParser::finishArray(MutableHandleValue vp, ElementVector &elements)
+JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
 {
     JS_ASSERT(&elements == &stack.back().elements());
 
