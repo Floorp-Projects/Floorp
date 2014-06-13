@@ -71,7 +71,7 @@ user_pref("extensions.installDistroAddons", false);
 user_pref("extensions.defaultProviders.enabled", true);
 
 user_pref("geo.wifi.uri", "http://%(server)s/tests/dom/tests/mochitest/geolocation/network_geolocation.sjs");
-user_pref("geo.wifi.timeToWaitBeforeSending", 200);
+user_pref("geo.wifi.timeToWaitBeforeSending", 2000);
 user_pref("geo.wifi.scan", false);
 user_pref("geo.wifi.logging.enabled", true);
 
