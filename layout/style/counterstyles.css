@@ -263,3 +263,7 @@
 @counter-style -moz-japanese-formal {
   system: extends japanese-formal;
 }
+
+@counter-style -moz-ethiopic-numeric {
+  system: extends ethiopic-numeric;
+}
