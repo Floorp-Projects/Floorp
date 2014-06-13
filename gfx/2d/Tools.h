@@ -6,6 +6,8 @@
 #ifndef MOZILLA_GFX_TOOLS_H_
 #define MOZILLA_GFX_TOOLS_H_
 
+#include "mozilla/CheckedInt.h"
+#include "mozilla/TypeTraits.h"
 #include "Types.h"
 #include "Point.h"
 #include <math.h>
@@ -93,40 +95,75 @@ BytesPerPixel(SurfaceFormat aFormat)
 template<typename T, int alignment = 16>
 struct AlignedArray
 {
+  typedef T value_type;
+
   AlignedArray()
-    : mStorage(nullptr)
-    , mPtr(nullptr)
+    : mPtr(nullptr)
+    , mStorage(nullptr)
   {
   }
 
-  MOZ_ALWAYS_INLINE AlignedArray(size_t aSize)
+  MOZ_ALWAYS_INLINE AlignedArray(size_t aCount)
     : mStorage(nullptr)
+    , mCount(0)
   {
-    Realloc(aSize);
+    Realloc(aCount);
   }
 
   MOZ_ALWAYS_INLINE ~AlignedArray()
   {
-    delete [] mStorage;
+    Dealloc();
   }
 
   void Dealloc()
   {
+    // If we fail this assert we'll need to uncomment the loop below to make
+    // sure dtors are properly invoked. If we do that, we should check that the
+    // comment about compiler dead code elimination is in fact true for all the
+    // compilers that we care about.
+    static_assert(mozilla::IsPod<T>::value,
+                  "Destructors must be invoked for this type");
+#if 0
+    for (size_t i = 0; i < mCount; ++i) {
+      // Since we used the placement |operator new| function to construct the
+      // elements of this array we need to invoke their destructors manually.
+      // For types where the destructor does nothing the compiler's dead code
+      // elimination step should optimize this loop away.
+      mPtr[i].~T();
+    }
+#endif
+
     delete [] mStorage;
-    mStorage = mPtr = nullptr;
+    mStorage = nullptr;
+    mPtr = nullptr;
   }
 
-  MOZ_ALWAYS_INLINE void Realloc(size_t aSize)
+  MOZ_ALWAYS_INLINE void Realloc(size_t aCount)
   {
     delete [] mStorage;
-    mStorage = new (std::nothrow) T[aSize + (alignment - 1)];
-    if (uintptr_t(mStorage) % alignment) {
-      // Our storage does not start at a <alignment>-byte boundary. Make sure mData does!
-      mPtr = (T*)(uintptr_t(mStorage) +
-        (alignment - (uintptr_t(mStorage) % alignment)));
-    } else {
-      mPtr = mStorage;
+    CheckedInt32 storageByteCount =
+      CheckedInt32(sizeof(T)) * aCount + (alignment - 1);
+    if (!storageByteCount.isValid()) {
+      mStorage = nullptr;
+      mPtr = nullptr;
+      mCount = 0;
+      return;
     }
+    // We don't create an array of T here, since we don't want ctors to be
+    // invoked at the wrong places if we realign below.
+    mStorage = new (std::nothrow) uint8_t[storageByteCount.value()];
+    if (uintptr_t(mStorage) % alignment) {
+      // Our storage does not start at a <alignment>-byte boundary. Make sure mPtr does!
+      mPtr = (T*)(uintptr_t(mStorage) + alignment - (uintptr_t(mStorage) % alignment));
+    } else {
+      mPtr = (T*)(mStorage);
+    }
+    // Now that mPtr is pointing to the aligned position we can use placement
+    // |operator new| to invoke any ctors at the correct positions. For types
+    // that have a no-op default constructor the compiler's dead code
+    // elimination step should optimize this away.
+    mPtr = new (mPtr) T[aCount];
+    mCount = aCount;
   }
 
   MOZ_ALWAYS_INLINE operator T*()
@@ -134,8 +171,11 @@ struct AlignedArray
     return mPtr;
   }
 
-  T *mStorage;
   T *mPtr;
+
+private:
+  uint8_t *mStorage;
+  size_t mCount;
 };
 
 /**
