@@ -81,3 +81,14 @@ partial interface AudioContext {
   [Pref="media.useAudioChannelService", SetterThrows]
   attribute AudioChannel mozAudioChannelType;
 };
+
+partial interface AudioContext {
+  // These 2 events are dispatched when the AudioContext object is muted by
+  // the AudioChannelService. It's call 'interrupt' because when this event is
+  // dispatched on a HTMLMediaElement, the audio stream is paused.
+  [Pref="media.useAudioChannelService"]
+  attribute EventHandler onmozinterruptbegin;
+
+  [Pref="media.useAudioChannelService"]
+  attribute EventHandler onmozinterruptend;
+};

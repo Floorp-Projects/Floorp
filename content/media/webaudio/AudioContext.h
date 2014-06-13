@@ -67,7 +67,7 @@ class AudioContext MOZ_FINAL : public DOMEventTargetHelper,
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
                bool aIsOffline,
-               AudioChannel aChannel = AudioChannel::Normal,
+               AudioChannel aChannel,
                uint32_t aNumberOfChannels = 0,
                uint32_t aLength = 0,
                float aSampleRate = 0.0f);
@@ -230,6 +230,9 @@ public:
   {
     return aTime - ExtraCurrentTime();
   }
+
+  IMPL_EVENT_HANDLER(mozinterruptbegin)
+  IMPL_EVENT_HANDLER(mozinterruptend)
 
 private:
   /**
