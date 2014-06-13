@@ -20,11 +20,11 @@ var gData = [
   {
     perm: ["alarms"],
     // AlarmsManager is not enabled on Android yet
-    // exception on accessing Ci.nsIDOMMozAlarmsManager
+    // exception on accessing AlarmsManager
     // See bug 863557
     skip: ["Android"],
     obj: "mozAlarms",
-    idl: "nsIDOMMozAlarmsManager",
+    webidl: "AlarmsManager",
     settings: [["dom.mozAlarms.enabled", true]],
   },
 ]

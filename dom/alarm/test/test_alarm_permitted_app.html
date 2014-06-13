@@ -18,14 +18,21 @@ SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPrefEnv({"set": [["dom.mozAlarms.enabled", true]]}, function() {
   SpecialPowers.addPermission("alarms", true, document);
 
-  // mozAlarms is intalled on all platforms except Android for the moment.
+  // mozAlarms is installed on all platforms except Android for the moment.
   if (navigator.appVersion.indexOf("Android") != -1) {
-    ok(!('mozAlarms' in navigator), "navigator.mozAlarms should not exist");
+    ok('AlarmsManager' in window, "Interface AlarmsManager should exist");
+    try {
+      todo('mozAlarms' in navigator,
+           "mozAlarms is not allowed on Android for now. TODO Bug 863557.");
+    } catch (e) {
+      todo(!e, "('mozAlarms' in navigator) should not throw exceptions once " +
+               "mozAlarms is installed on Android. TODO Bug 863557. " +
+               "Caught exception: " + e);
+    }
   } else {
     ok('mozAlarms' in navigator, "navigator.mozAlarms should exist");
-    ok(navigator.mozAlarms, "navigator.mozAlarms should return an object");
-    ok(navigator.mozAlarms instanceof SpecialPowers.Ci.nsIDOMMozAlarmsManager,
-      "navigator.mozAlarms should be an nsIDOMMozAlarmsManager object");
+    ok(navigator.mozAlarms instanceof AlarmsManager,
+       "navigator.mozAlarms should be an instance of AlarmsManager");
   }
 
   SimpleTest.finish();

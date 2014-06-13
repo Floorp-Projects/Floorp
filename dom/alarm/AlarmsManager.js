@@ -18,11 +18,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
-const ALARMSMANAGER_CONTRACTID = "@mozilla.org/alarmsManager;1";
-const ALARMSMANAGER_CID        = Components.ID("{fea1e884-9b05-11e1-9b64-87a7016c3860}");
-const nsIDOMMozAlarmsManager   = Ci.nsIDOMMozAlarmsManager;
-const nsIClassInfo             = Ci.nsIClassInfo;
-
 function AlarmsManager()
 {
   debug("Constructor");
@@ -32,18 +27,13 @@ AlarmsManager.prototype = {
 
   __proto__: DOMRequestIpcHelper.prototype,
 
-  classID : ALARMSMANAGER_CID,
+  contractID : "@mozilla.org/alarmsManager;1",
 
-  QueryInterface : XPCOMUtils.generateQI([nsIDOMMozAlarmsManager,
-                                          Ci.nsIDOMGlobalPropertyInitializer,
+  classID : Components.ID("{fea1e884-9b05-11e1-9b64-87a7016c3860}"),
+
+  QueryInterface : XPCOMUtils.generateQI([Ci.nsIDOMGlobalPropertyInitializer,
                                           Ci.nsISupportsWeakReference,
                                           Ci.nsIObserver]),
-
-  classInfo : XPCOMUtils.generateCI({ classID: ALARMSMANAGER_CID,
-                                      contractID: ALARMSMANAGER_CONTRACTID,
-                                      classDescription: "AlarmsManager",
-                                      interfaces: [nsIDOMMozAlarmsManager],
-                                      flags: nsIClassInfo.DOM_OBJECT }),
 
   add: function add(aDate, aRespectTimezone, aData) {
     debug("add()");
@@ -155,25 +145,6 @@ AlarmsManager.prototype = {
   init: function init(aWindow) {
     debug("init()");
 
-    // Set navigator.mozAlarms to null.
-    if (!Services.prefs.getBoolPref("dom.mozAlarms.enabled")) {
-      return null;
-    }
-
-    // Only pages with perm set can use the alarms.
-    let principal = aWindow.document.nodePrincipal;
-    let perm =
-      Services.perms.testExactPermissionFromPrincipal(principal, "alarms");
-    if (perm != Ci.nsIPermissionManager.ALLOW_ACTION) {
-      return null;
-    }
-
-    // SystemPrincipal documents do not have any origin.
-    // Reject them for now.
-    if (!principal.URI) {
-      return null;
-    }
-
     this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                    .getService(Ci.nsISyncMessageSender);
 
@@ -186,6 +157,7 @@ AlarmsManager.prototype = {
     // Get the manifest URL if this is an installed app
     let appsService = Cc["@mozilla.org/AppsService;1"]
                         .getService(Ci.nsIAppsService);
+    let principal = aWindow.document.nodePrincipal;
     this._pageURL = principal.URI.spec;
     this._manifestURL = appsService.getManifestURLByLocalId(principal.appId);
     this._window = aWindow;
