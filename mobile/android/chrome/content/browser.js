@@ -490,14 +490,11 @@ var BrowserApp = {
 
         let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-        let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
-          button: {
-            icon: "drawable://switch_button_icon",
-            label: buttonLabel,
-            callback: () => { BrowserApp.selectTab(tab); },
-          }
-        });
+        // Bug 1023407: ButtonToasts interact badly with touch events, blocking
+        // interaction with the rest of the system until the ButtonToast expires
+        // or is otherwise dismissed (Bug 1019735). Until this is fixed, we'll
+        // just use regular system Toasts.
+        NativeWindow.toast.show(label, "short");
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
@@ -509,14 +506,11 @@ var BrowserApp = {
 
         let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
-        let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
-          button: {
-            icon: "drawable://switch_button_icon",
-            label: buttonLabel,
-            callback: () => { BrowserApp.selectTab(tab); },
-          }
-        });
+        // Bug 1023407: ButtonToasts interact badly with touch events, blocking
+        // interaction with the rest of the system until the ButtonToast expires
+        // or is otherwise dismissed (Bug 1019735). Until this is fixed, we'll
+        // just use regular system Toasts.
+        NativeWindow.toast.show(label, "short");
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
