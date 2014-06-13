@@ -205,6 +205,8 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             const jschar *vchars = valstr->getChars(cx);
             if (!vchars)
                 return nullptr;
+
+            const jschar *start = vchars;
             size_t vlength = valstr->length();
 
             /*
@@ -212,7 +214,6 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
              * end so that we can put "get" in front of the function definition.
              */
             if (gsop[j] && IsFunctionObject(val[j])) {
-                const jschar *start = vchars;
                 const jschar *end = vchars + vlength;
 
                 uint8_t parenChomp = 0;
@@ -255,7 +256,7 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             if (!buf.append(gsop[j] ? ' ' : ':'))
                 return nullptr;
 
-            if (!buf.append(vchars, vlength))
+            if (!buf.appendSubstring(valstr, vchars - start, vlength))
                 return nullptr;
         }
     }
@@ -291,7 +292,7 @@ JS_BasicObjectToString(JSContext *cx, HandleObject obj)
         return cx->names().objectWindow;
 
     StringBuffer sb(cx);
-    if (!sb.append("[object ") || !sb.appendInflated(className, strlen(className)) ||
+    if (!sb.append("[object ") || !sb.append(className, strlen(className)) ||
         !sb.append("]"))
     {
         return nullptr;

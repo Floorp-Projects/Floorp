@@ -176,8 +176,12 @@ EscapeNakedForwardSlashes(JSContext *cx, HandleAtom unescaped)
             /* There's a forward slash that needs escaping. */
             if (sb.empty()) {
                 /* This is the first one we've seen, copy everything up to this point. */
+                if (unescaped->hasTwoByteChars() && !sb.ensureTwoByteChars())
+                    return nullptr;
+
                 if (!sb.reserve(oldLen + 1))
                     return nullptr;
+
                 sb.infallibleAppend(oldChars, size_t(it - oldChars));
             }
             if (!sb.append('\\'))

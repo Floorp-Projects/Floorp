@@ -233,7 +233,7 @@ js::ComputeStackString(JSContext *cx)
             const char *cfilename = i.scriptFilename();
             if (!cfilename)
                 cfilename = "";
-            if (!sb.appendInflated(cfilename, strlen(cfilename)))
+            if (!sb.append(cfilename, strlen(cfilename)))
                 return nullptr;
 
             uint32_t column = 0;
