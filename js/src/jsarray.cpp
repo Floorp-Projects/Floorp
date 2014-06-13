@@ -1528,8 +1528,10 @@ struct SortComparatorStringifiedElements
       : cx(cx), sb(sb) {}
 
     bool operator()(const StringifiedElement &a, const StringifiedElement &b, bool *lessOrEqualp) {
-        return CompareSubStringValues(cx, sb.begin() + a.charsBegin, a.charsEnd - a.charsBegin,
-                                      sb.begin() + b.charsBegin, b.charsEnd - b.charsBegin,
+        return CompareSubStringValues(cx, sb.rawTwoByteBegin() + a.charsBegin,
+                                      a.charsEnd - a.charsBegin,
+                                      sb.rawTwoByteBegin() + b.charsBegin,
+                                      b.charsEnd - b.charsBegin,
                                       lessOrEqualp);
     }
 };

@@ -46,6 +46,17 @@ NewFatInlineString(ThreadSafeContext *cx, JS::Latin1Chars chars)
 {
     size_t len = chars.length();
 
+    if (EnableLatin1Strings) {
+        Latin1Char *p;
+        JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
+        if (!str)
+            return nullptr;
+
+        mozilla::PodCopy(p, chars.start().get(), len);
+        p[len] = '\0';
+        return str;
+    }
+
     jschar *p;
     JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &p);
     if (!str)
