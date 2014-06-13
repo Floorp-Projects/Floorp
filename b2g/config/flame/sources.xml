@@ -17,7 +17,7 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="90777363ed0a4e6d32612074a12fb2c73c353a25"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5b4b4fc17a8e4a513a977f7062ea3e65d26ce268"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="27b2c2ef9a50d5dc79b6a771b3a3c775a888d13b"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="08b7f6a625f23e48a9cb0c8f63ee131009754f7c"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="cabebb87fcd32f8596af08e6b5e80764ee0157dd"/>
@@ -119,7 +119,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
   <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="b8ff7901a20aab3041aaca4eb73abd6d57f4bb8a"/>
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="6d29b672b039612c08c40e92d8051a4cfbd38162"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="bfd01320fba192812c0ffef18d06d5af2b9d9a54"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
