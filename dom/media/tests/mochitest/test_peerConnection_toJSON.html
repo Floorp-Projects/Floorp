@@ -9,6 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872377
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -18,7 +19,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872377
     title: "test toJSON() on mozRTCSessionDescription and mozRTCIceCandidate"
   });
 
-  runTest(function () {
+  runNetworkTest(function () {
     /** Test for Bug 872377 **/
 
     var rtcSession = new mozRTCSessionDescription({ sdp: "Picklechips!",
@@ -39,7 +40,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=872377
       if (typeof(rtcIceCandidate[key]) == "function") continue;
       is(rtcIceCandidate[key], jsonCopy[key], "key " + key + " should match.");
     }
-    SimpleTest.finish();
+    networkTestFinished();
   });
 </script>
 </pre>

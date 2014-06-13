@@ -17,11 +17,11 @@
   });
 
   var test;
-  runTest(function () {
+  runNetworkTest(function () {
     test = new DataChannelTest();
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
     test.run();
-  }, true);
+  });
 
 </script>
 </pre>
