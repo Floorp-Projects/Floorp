@@ -266,6 +266,10 @@ public:
       }
 
       ATTEMPT_BUFFER_INIT(mIv, params.mIv.Value())
+      if (mIv.Length() != 16) {
+        mEarlyRv = NS_ERROR_DOM_DATA_ERR;
+        return;
+      }
     } else if (algName.EqualsLiteral(WEBCRYPTO_ALG_AES_CTR)) {
       mMechanism = CKM_AES_CTR;
       telemetryAlg = TA_AES_CTR;
