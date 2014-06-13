@@ -70,7 +70,7 @@
       <hbox id="toolbox-picker-container" />
       <hbox id="toolbox-tabs" flex="1" />
       <hbox id="toolbox-buttons" pack="end"/>
-      <vbox id="toolbox-controls-separator"/>
+      <vbox id="toolbox-controls-separator" class="devtools-separator"/>
       <hbox id="toolbox-option-container"/>
       <hbox id="toolbox-controls">
         <hbox id="toolbox-dock-buttons"/>
