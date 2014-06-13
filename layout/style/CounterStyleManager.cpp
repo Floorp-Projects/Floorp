@@ -770,7 +770,7 @@ BuiltinCounterStyle::IsOrdinalInRange(CounterValue aOrdinal)
       return true;
 
     // use EthiopicToText
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
       return aOrdinal >= 1;
 
     // use HebrewToText
@@ -812,7 +812,7 @@ BuiltinCounterStyle::IsOrdinalInAutoRange(CounterValue aOrdinal)
     case NS_STYLE_LIST_STYLE_TRAD_CHINESE_INFORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_FORMAL:
     case NS_STYLE_LIST_STYLE_SIMP_CHINESE_INFORMAL:
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
     case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
       return IsOrdinalInRange(aOrdinal);
 
@@ -948,7 +948,7 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
     case NS_STYLE_LIST_STYLE_MOZ_TAMIL:
       return TamilToText(aOrdinal, aResult);
 
-    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+    case NS_STYLE_LIST_STYLE_ETHIOPIC_NUMERIC:
       return EthiopicToText(aOrdinal, aResult);
 
     default:
