@@ -10,11 +10,11 @@
 namespace mozilla {
 
 bool
-IsFloat32Representable(double x)
+IsFloat32Representable(double aFloat32)
 {
-    float asFloat = static_cast<float>(x);
-    double floatAsDouble = static_cast<double>(asFloat);
-    return floatAsDouble == x;
+  float asFloat = static_cast<float>(aFloat32);
+  double floatAsDouble = static_cast<double>(asFloat);
+  return floatAsDouble == aFloat32;
 }
 
 } /* namespace mozilla */

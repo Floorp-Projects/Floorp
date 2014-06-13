@@ -27,16 +27,17 @@
  *
  *  class ComplexObject
  *  {
- *      char* str;
- *      uint32_t uint1, uint2;
- *      void (*callbackFn)();
+ *    char* mStr;
+ *    uint32_t mUint1, mUint2;
+ *    void (*mCallbackFn)();
  *
- *    public:
- *      uint32_t hash() {
- *        uint32_t hash = HashString(str);
- *        hash = AddToHash(hash, uint1, uint2);
- *        return AddToHash(hash, callbackFn);
- *      }
+ *  public:
+ *    uint32_t hash()
+ *    {
+ *      uint32_t hash = HashString(mStr);
+ *      hash = AddToHash(hash, mUint1, mUint2);
+ *      return AddToHash(hash, mCallbackFn);
+ *    }
  *  };
  *
  * If you want to hash an nsAString or nsACString, use the HashString functions
@@ -59,19 +60,19 @@ namespace mozilla {
 /**
  * The golden ratio as a 32-bit fixed-point value.
  */
-static const uint32_t GoldenRatioU32 = 0x9E3779B9U;
+static const uint32_t kGoldenRatioU32 = 0x9E3779B9U;
 
 inline uint32_t
-RotateBitsLeft32(uint32_t value, uint8_t bits)
+RotateBitsLeft32(uint32_t aValue, uint8_t aBits)
 {
-  MOZ_ASSERT(bits < 32);
-  return (value << bits) | (value >> (32 - bits));
+  MOZ_ASSERT(aBits < 32);
+  return (aValue << aBits) | (aValue >> (32 - aBits));
 }
 
 namespace detail {
 
 inline uint32_t
-AddU32ToHash(uint32_t hash, uint32_t value)
+AddU32ToHash(uint32_t aHash, uint32_t aValue)
 {
   /*
    * This is the meat of all our hash routines.  This hash function is not
@@ -91,12 +92,12 @@ AddU32ToHash(uint32_t hash, uint32_t value)
    * preferable so our hash explores the whole universe of possible rotations.
    *
    * Finally, we multiply by the golden ratio *after* xor'ing, not before.
-   * Otherwise, if |hash| is 0 (as it often is for the beginning of a message),
-   * the expression
+   * Otherwise, if |aHash| is 0 (as it often is for the beginning of a
+   * message), the expression
    *
-   *   (GoldenRatioU32 * RotateBitsLeft(hash, 5)) |xor| value
+   *   (kGoldenRatioU32 * RotateBitsLeft(aHash, 5)) |xor| aValue
    *
-   * evaluates to |value|.
+   * evaluates to |aValue|.
    *
    * (Number-theoretic aside: Because any odd number |m| is relatively prime to
    * our modulus (2^32), the list
@@ -112,7 +113,7 @@ AddU32ToHash(uint32_t hash, uint32_t value)
    * multiplicative effect.  Our golden ratio constant has order 2^29, which is
    * more than enough for our purposes.)
    */
-  return GoldenRatioU32 * (RotateBitsLeft32(hash, 5) ^ value);
+  return kGoldenRatioU32 * (RotateBitsLeft32(aHash, 5) ^ aValue);
 }
 
 /**
@@ -120,29 +121,29 @@ AddU32ToHash(uint32_t hash, uint32_t value)
  */
 template<size_t PtrSize>
 inline uint32_t
-AddUintptrToHash(uint32_t hash, uintptr_t value);
+AddUintptrToHash(uint32_t aHash, uintptr_t aValue);
 
 template<>
 inline uint32_t
-AddUintptrToHash<4>(uint32_t hash, uintptr_t value)
+AddUintptrToHash<4>(uint32_t aHash, uintptr_t aValue)
 {
-  return AddU32ToHash(hash, static_cast<uint32_t>(value));
+  return AddU32ToHash(aHash, static_cast<uint32_t>(aValue));
 }
 
 template<>
 inline uint32_t
-AddUintptrToHash<8>(uint32_t hash, uintptr_t value)
+AddUintptrToHash<8>(uint32_t aHash, uintptr_t aValue)
 {
   /*
    * The static cast to uint64_t below is necessary because this function
    * sometimes gets compiled on 32-bit platforms (yes, even though it's a
    * template and we never call this particular override in a 32-bit build).  If
-   * we do value >> 32 on a 32-bit machine, we're shifting a 32-bit uintptr_t
+   * we do aValue >> 32 on a 32-bit machine, we're shifting a 32-bit uintptr_t
    * right 32 bits, and the compiler throws an error.
    */
-  uint32_t v1 = static_cast<uint32_t>(value);
-  uint32_t v2 = static_cast<uint32_t>(static_cast<uint64_t>(value) >> 32);
-  return AddU32ToHash(AddU32ToHash(hash, v1), v2);
+  uint32_t v1 = static_cast<uint32_t>(aValue);
+  uint32_t v2 = static_cast<uint32_t>(static_cast<uint64_t>(aValue) >> 32);
+  return AddU32ToHash(AddU32ToHash(aHash, v1), v2);
 }
 
 } /* namespace detail */
@@ -155,71 +156,63 @@ AddUintptrToHash<8>(uint32_t hash, uintptr_t value)
  * convert to uint32_t, data pointers, and function pointers.
  */
 template<typename A>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-AddToHash(uint32_t hash, A a)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+AddToHash(uint32_t aHash, A aA)
 {
   /*
    * Try to convert |A| to uint32_t implicitly.  If this works, great.  If not,
    * we'll error out.
    */
-  return detail::AddU32ToHash(hash, a);
+  return detail::AddU32ToHash(aHash, aA);
 }
 
 template<typename A>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-AddToHash(uint32_t hash, A* a)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+AddToHash(uint32_t aHash, A* aA)
 {
   /*
    * You might think this function should just take a void*.  But then we'd only
    * catch data pointers and couldn't handle function pointers.
    */
 
-  static_assert(sizeof(a) == sizeof(uintptr_t),
-                "Strange pointer!");
+  static_assert(sizeof(aA) == sizeof(uintptr_t), "Strange pointer!");
 
-  return detail::AddUintptrToHash<sizeof(uintptr_t)>(hash, uintptr_t(a));
+  return detail::AddUintptrToHash<sizeof(uintptr_t)>(aHash, uintptr_t(aA));
 }
 
 template<>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-AddToHash(uint32_t hash, uintptr_t a)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+AddToHash(uint32_t aHash, uintptr_t aA)
 {
-  return detail::AddUintptrToHash<sizeof(uintptr_t)>(hash, a);
+  return detail::AddUintptrToHash<sizeof(uintptr_t)>(aHash, aA);
 }
 
 template<typename A, typename B>
-MOZ_WARN_UNUSED_RESULT
-uint32_t
-AddToHash(uint32_t hash, A a, B b)
+MOZ_WARN_UNUSED_RESULT uint32_t
+AddToHash(uint32_t aHash, A aA, B aB)
 {
-  return AddToHash(AddToHash(hash, a), b);
+  return AddToHash(AddToHash(aHash, aA), aB);
 }
 
 template<typename A, typename B, typename C>
-MOZ_WARN_UNUSED_RESULT
-uint32_t
-AddToHash(uint32_t hash, A a, B b, C c)
+MOZ_WARN_UNUSED_RESULT uint32_t
+AddToHash(uint32_t aHash, A aA, B aB, C aC)
 {
-  return AddToHash(AddToHash(hash, a, b), c);
+  return AddToHash(AddToHash(aHash, aA, aB), aC);
 }
 
 template<typename A, typename B, typename C, typename D>
-MOZ_WARN_UNUSED_RESULT
-uint32_t
-AddToHash(uint32_t hash, A a, B b, C c, D d)
+MOZ_WARN_UNUSED_RESULT uint32_t
+AddToHash(uint32_t aHash, A aA, B aB, C aC, D aD)
 {
-  return AddToHash(AddToHash(hash, a, b, c), d);
+  return AddToHash(AddToHash(aHash, aA, aB, aC), aD);
 }
 
 template<typename A, typename B, typename C, typename D, typename E>
-MOZ_WARN_UNUSED_RESULT
-uint32_t
-AddToHash(uint32_t hash, A a, B b, C c, D d, E e)
+MOZ_WARN_UNUSED_RESULT uint32_t
+AddToHash(uint32_t aHash, A aA, B aB, C aC, D aD, E aE)
 {
-  return AddToHash(AddToHash(hash, a, b, c, d), e);
+  return AddToHash(AddToHash(aHash, aA, aB, aC, aD), aE);
 }
 
 /**
@@ -230,64 +223,61 @@ AddToHash(uint32_t hash, A a, B b, C c, D d, E e)
  * that x has already been hashed.
  */
 template<typename A>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashGeneric(A a)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashGeneric(A aA)
 {
-  return AddToHash(0, a);
+  return AddToHash(0, aA);
 }
 
 template<typename A, typename B>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashGeneric(A a, B b)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashGeneric(A aA, B aB)
 {
-  return AddToHash(0, a, b);
+  return AddToHash(0, aA, aB);
 }
 
 template<typename A, typename B, typename C>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashGeneric(A a, B b, C c)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashGeneric(A aA, B aB, C aC)
 {
-  return AddToHash(0, a, b, c);
+  return AddToHash(0, aA, aB, aC);
 }
 
 template<typename A, typename B, typename C, typename D>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashGeneric(A a, B b, C c, D d)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashGeneric(A aA, B aB, C aC, D aD)
 {
-  return AddToHash(0, a, b, c, d);
+  return AddToHash(0, aA, aB, aC, aD);
 }
 
 template<typename A, typename B, typename C, typename D, typename E>
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashGeneric(A a, B b, C c, D d, E e)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashGeneric(A aA, B aB, C aC, D aD, E aE)
 {
-  return AddToHash(0, a, b, c, d, e);
+  return AddToHash(0, aA, aB, aC, aD, aE);
 }
 
 namespace detail {
 
 template<typename T>
 uint32_t
-HashUntilZero(const T* str)
+HashUntilZero(const T* aStr)
 {
   uint32_t hash = 0;
-  for (T c; (c = *str); str++)
+  for (T c; (c = *aStr); aStr++) {
     hash = AddToHash(hash, c);
+  }
   return hash;
 }
 
 template<typename T>
 uint32_t
-HashKnownLength(const T* str, size_t length)
+HashKnownLength(const T* aStr, size_t aLength)
 {
   uint32_t hash = 0;
-  for (size_t i = 0; i < length; i++)
-    hash = AddToHash(hash, str[i]);
+  for (size_t i = 0; i < aLength; i++) {
+    hash = AddToHash(hash, aStr[i]);
+  }
   return hash;
 }
 
@@ -299,54 +289,48 @@ HashKnownLength(const T* str, size_t length)
  * If you have the string's length, you might as well call the overload which
  * includes the length.  It may be marginally faster.
  */
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const char* str)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const char* aStr)
 {
-  return detail::HashUntilZero(str);
+  return detail::HashUntilZero(aStr);
+}
+
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const char* aStr, size_t aLength)
+{
+  return detail::HashKnownLength(aStr, aLength);
 }
 
 MOZ_WARN_UNUSED_RESULT
 inline uint32_t
-HashString(const char* str, size_t length)
+HashString(const unsigned char* aStr, size_t aLength)
 {
-  return detail::HashKnownLength(str, length);
+  return detail::HashKnownLength(aStr, aLength);
 }
 
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const unsigned char* str, size_t length)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const uint16_t* aStr)
 {
-  return detail::HashKnownLength(str, length);
+  return detail::HashUntilZero(aStr);
 }
 
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const uint16_t* str)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const uint16_t* aStr, size_t aLength)
 {
-  return detail::HashUntilZero(str);
-}
-
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const uint16_t* str, size_t length)
-{
-  return detail::HashKnownLength(str, length);
+  return detail::HashKnownLength(aStr, aLength);
 }
 
 #ifdef MOZ_CHAR16_IS_NOT_WCHAR
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const char16_t* str)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const char16_t* aStr)
 {
-  return detail::HashUntilZero(str);
+  return detail::HashUntilZero(aStr);
 }
 
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const char16_t* str, size_t length)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const char16_t* aStr, size_t aLength)
 {
-  return detail::HashKnownLength(str, length);
+  return detail::HashKnownLength(aStr, aLength);
 }
 #endif
 
@@ -355,18 +339,16 @@ HashString(const char16_t* str, size_t length)
  * the same width!
  */
 #ifdef WIN32
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const wchar_t* str)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const wchar_t* aStr)
 {
-  return detail::HashUntilZero(str);
+  return detail::HashUntilZero(aStr);
 }
 
-MOZ_WARN_UNUSED_RESULT
-inline uint32_t
-HashString(const wchar_t* str, size_t length)
+MOZ_WARN_UNUSED_RESULT inline uint32_t
+HashString(const wchar_t* aStr, size_t aLength)
 {
-  return detail::HashKnownLength(str, length);
+  return detail::HashKnownLength(aStr, aLength);
 }
 #endif
 
@@ -376,9 +358,8 @@ HashString(const wchar_t* str, size_t length)
  * This hash walks word-by-word, rather than byte-by-byte, so you won't get the
  * same result out of HashBytes as you would out of HashString.
  */
-MOZ_WARN_UNUSED_RESULT
-extern MFBT_API uint32_t
-HashBytes(const void* bytes, size_t length);
+MOZ_WARN_UNUSED_RESULT extern MFBT_API uint32_t
+HashBytes(const void* bytes, size_t aLength);
 
 } /* namespace mozilla */
 #endif /* __cplusplus */

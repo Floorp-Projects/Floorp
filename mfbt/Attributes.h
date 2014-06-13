@@ -273,8 +273,8 @@
  *   struct NonCopyable
  *   {
  *   private:
- *     NonCopyable(const NonCopyable& other) MOZ_DELETE;
- *     void operator=(const NonCopyable& other) MOZ_DELETE;
+ *     NonCopyable(const NonCopyable& aOther) MOZ_DELETE;
+ *     void operator=(const NonCopyable& aOther) MOZ_DELETE;
  *   };
  *
  * If MOZ_DELETE can't be implemented for the current compiler, use of the

@@ -120,10 +120,10 @@ class Range : public TempObject {
     // Maximal exponenent under which we have no precission loss on double
     // operations. Double has 52 bits of mantissa, so 2^52+1 cannot be
     // represented without loss.
-    static const uint16_t MaxTruncatableExponent = mozilla::FloatingPoint<double>::ExponentShift;
+    static const uint16_t MaxTruncatableExponent = mozilla::FloatingPoint<double>::kExponentShift;
 
     // Maximum exponent for finite values.
-    static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::ExponentBias;
+    static const uint16_t MaxFiniteExponent = mozilla::FloatingPoint<double>::kExponentBias;
 
     // An special exponent value representing all non-NaN values. This
     // includes finite values and the infinities.
