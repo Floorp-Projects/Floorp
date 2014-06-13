@@ -744,6 +744,57 @@ StaticStrings::isStatic(JSAtom *atom)
     }
 }
 
+AutoStableStringChars::~AutoStableStringChars()
+{
+    if (ownsChars_) {
+        MOZ_ASSERT(state_ == Latin1 || state_ == TwoByte);
+        if (state_ == Latin1)
+            js_free(const_cast<Latin1Char*>(latin1Chars_));
+        else
+            js_free(const_cast<jschar*>(twoByteChars_));
+    }
+}
+
+bool
+AutoStableStringChars::init()
+{
+    MOZ_ASSERT(state_ == Uninitialized);
+
+    if (s_->hasLatin1Chars()) {
+        state_ = Latin1;
+        latin1Chars_ = s_->rawLatin1Chars();
+    } else {
+        state_ = TwoByte;
+        twoByteChars_ = s_->rawTwoByteChars();
+    }
+
+    return true;
+}
+
+bool
+AutoStableStringChars::initTwoByte(JSContext *cx)
+{
+    MOZ_ASSERT(state_ == Uninitialized);
+
+    if (s_->hasTwoByteChars()) {
+        state_ = TwoByte;
+        twoByteChars_ = s_->rawTwoByteChars();
+        return true;
+    }
+
+    jschar *chars = cx->pod_malloc<jschar>(s_->length() + 1);
+    if (!chars)
+        return false;
+
+    CopyAndInflateChars(chars, s_->rawLatin1Chars(), s_->length());
+    chars[s_->length()] = 0;
+
+    state_ = TwoByte;
+    ownsChars_ = true;
+    twoByteChars_ = chars;
+    return true;
+}
+
 #ifdef DEBUG
 void
 JSAtom::dump()
