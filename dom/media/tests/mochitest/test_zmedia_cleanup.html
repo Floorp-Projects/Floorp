@@ -3,6 +3,7 @@
   <head>
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="pc.js"></script>
   </head>
 <body>
 <pre id="test">
@@ -10,16 +11,16 @@
 SimpleTest.waitForExplicitFinish();
 
 if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
-  var url = SimpleTest.getTestFileURL("NetworkPreparationChromeScript.js");
-  var script = SpecialPowers.loadChromeScript(url);
-  script.addMessageListener('network-disabled', function (message) {
-    ok(true, 'network-disabled');
-    script.destroy();
+  var utils = getNetworkUtils();
+  utils.tearDownNetwork(function() {
+    ok(true, 'Successfully teared down network interface');
+    SimpleTest.finish();
+  }, function() {
+    ok(true, 'Network interface was in down state already');
     SimpleTest.finish();
   });
-  script.sendAsyncMessage("network-cleanup", true);
 } else {
-  ok(true, 'no need to cleanup network interface');
+  ok(true, 'No need to cleanup network interface');
   SimpleTest.finish();
 }
 

@@ -19,7 +19,7 @@
   });
 
   var test;
-  runTest(function (options) {
+  runNetworkTest(function (options) {
     test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}, {video: true}],
                              [{audio: true}, {video: true}]);

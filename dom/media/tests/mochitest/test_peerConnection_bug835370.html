@@ -4,6 +4,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -13,7 +14,7 @@
     title: "PeerConnection.createOffer valid/invalid constraints permutations"
   });
 
-  runTest(function () {
+  runNetworkTest(function () {
     var pconnect  = new mozRTCPeerConnection();
     var pconnects = new mozRTCPeerConnection();
 
@@ -53,7 +54,7 @@
     pconnects.close();
     pconnect = null;
     pconnects = null;
-    SimpleTest.finish();
+    networkTestFinished();
   });
 </script>
 </pre>
