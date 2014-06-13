@@ -7,6 +7,8 @@ var HAVE_LOCAL_OFFER = "have-local-offer";
 var HAVE_REMOTE_OFFER = "have-remote-offer";
 var CLOSED = "closed";
 
+const ICE_NEW = "new";
+
 function deltaSeconds(date1, date2) {
   return (date2.getTime() - date1.getTime())/1000;
 }
@@ -45,6 +47,34 @@ function dumpSdp(test) {
 
 var commandsPeerConnection = [
   [
+    'PC_LOCAL_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcLocal.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcRemote.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
+    'PC_LOCAL_SETUP_SIGNALING_LOGGER',
+    function (test) {
+      test.pcLocal.logSignalingState();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_SIGNALING_LOGGER',
+    function (test) {
+      test.pcRemote.logSignalingState();
+      test.next();
+    }
+  ],
+  [
     'PC_LOCAL_GUM',
     function (test) {
       test.pcLocal.getAllUserMedia(function () {
@@ -77,16 +107,18 @@ var commandsPeerConnection = [
     }
   ],
   [
-    'PC_LOCAL_SETUP_ICE_LOGGER',
+    'PC_LOCAL_CHECK_INITIAL_ICE_STATE',
     function (test) {
-      test.pcLocal.logIceConnectionState();
+      is(test.pcLocal.iceConnectionState, ICE_NEW,
+        "Initial local ICE connection state is 'new'");
       test.next();
     }
   ],
   [
-    'PC_REMOTE_SETUP_ICE_LOGGER',
+    'PC_REMOTE_CHECK_INITIAL_ICE_STATE',
     function (test) {
-      test.pcRemote.logIceConnectionState();
+      is(test.pcRemote.iceConnectionState, ICE_NEW,
+        "Initial remote ICE connection state is 'new'");
       test.next();
     }
   ],
@@ -310,6 +342,34 @@ var commandsPeerConnection = [
  */
 var commandsDataChannel = [
   [
+    'PC_LOCAL_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcLocal.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_ICE_LOGGER',
+    function (test) {
+      test.pcRemote.logIceConnectionState();
+      test.next();
+    }
+  ],
+  [
+    'PC_LOCAL_SETUP_SIGNALING_LOGGER',
+    function (test) {
+      test.pcLocal.logSignalingState();
+      test.next();
+    }
+  ],
+  [
+    'PC_REMOTE_SETUP_SIGNALING_LOGGER',
+    function (test) {
+      test.pcRemote.logSignalingState();
+      test.next();
+    }
+  ],
+  [
     'PC_LOCAL_GUM',
     function (test) {
       test.pcLocal.getAllUserMedia(function () {
@@ -326,9 +386,10 @@ var commandsDataChannel = [
     }
   ],
   [
-    'PC_LOCAL_SETUP_ICE_LOGGER',
+    'PC_LOCAL_CHECK_INITIAL_ICE_STATE',
     function (test) {
-      test.pcLocal.logIceConnectionState();
+      is(test.pcLocal.iceConnectionState, ICE_NEW,
+        "Initial local ICE connection state is 'new'");
       test.next();
     }
   ],
@@ -349,9 +410,10 @@ var commandsDataChannel = [
     }
   ],
   [
-    'PC_REMOTE_SETUP_ICE_LOGGER',
+    'PC_REMOTE_CHECK_INITIAL_ICE_STATE',
     function (test) {
-      test.pcRemote.logIceConnectionState();
+      is(test.pcRemote.iceConnectionState, ICE_NEW,
+        "Initial remote ICE connection state is 'new'");
       test.next();
     }
   ],
