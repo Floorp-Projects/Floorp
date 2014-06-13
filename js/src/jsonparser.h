@@ -8,6 +8,7 @@
 #define jsonparser_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Range.h"
 
 #include "jspubtd.h"
 
@@ -191,12 +192,12 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
     /* Public API */
 
     /* Create a parser for the provided JSON data. */
-    JSONParser(JSContext *cx, CharPtr data, size_t length,
+    JSONParser(JSContext *cx, mozilla::Range<const CharT> data,
                ErrorHandling errorHandling = RaiseError)
       : JSONParserBase(cx, errorHandling),
-        current(data),
-        begin(data),
-        end((data + length).get(), data.get(), length)
+        current(data.start()),
+        begin(current),
+        end(data.end())
     {
         JS_ASSERT(current <= end);
     }

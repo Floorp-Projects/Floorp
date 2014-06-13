@@ -778,7 +778,7 @@ js::ParseJSONWithReviver(JSContext *cx, mozilla::Range<const CharT> chars,
                          HandleValue reviver, MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
-    JSONParser<CharT> parser(cx, chars.start(), chars.length());
+    JSONParser<CharT> parser(cx, chars);
     if (!parser.parse(vp))
         return false;
 
@@ -832,13 +832,9 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
     RootedValue reviver(cx, args.get(1));
 
     /* Steps 2-5. */
-    if (flatChars.isLatin1()) {
-        mozilla::Range<const Latin1Char> chars(flatChars.latin1Chars(), flat->length());
-        return ParseJSONWithReviver(cx, chars, reviver, args.rval());
-    }
-
-    mozilla::Range<const jschar> chars(flatChars.twoByteChars(), flat->length());
-    return ParseJSONWithReviver(cx, chars, reviver, args.rval());
+    return flatChars.isLatin1()
+           ? ParseJSONWithReviver(cx, flatChars.latin1Range(), reviver, args.rval())
+           : ParseJSONWithReviver(cx, flatChars.twoByteRange(), reviver, args.rval());
 }
 
 /* ES5 15.12.3. */
