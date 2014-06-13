@@ -57,10 +57,11 @@ JSONParserBase::trace(JSTracer *trc)
     }
 }
 
+template <typename CharT>
 void
-JSONParser::getTextPosition(uint32_t *column, uint32_t *line)
+JSONParser<CharT>::getTextPosition(uint32_t *column, uint32_t *line)
 {
-    ConstTwoByteChars ptr = begin;
+    CharPtr ptr = begin;
     uint32_t col = 1;
     uint32_t row = 1;
     for (; ptr < current; ptr++) {
@@ -78,8 +79,9 @@ JSONParser::getTextPosition(uint32_t *column, uint32_t *line)
     *line = row;
 }
 
+template <typename CharT>
 void
-JSONParser::error(const char *msg)
+JSONParser<CharT>::error(const char *msg)
 {
     if (errorHandling == RaiseError) {
         uint32_t column = 1, line = 1;
@@ -102,9 +104,10 @@ JSONParserBase::errorReturn()
     return errorHandling == NoError;
 }
 
-template<JSONParserBase::StringType ST>
+template <typename CharT>
+template <JSONParserBase::StringType ST>
 JSONParserBase::Token
-JSONParser::readString()
+JSONParser<CharT>::readString()
 {
     JS_ASSERT(current < end);
     JS_ASSERT(*current == '"');
@@ -236,8 +239,9 @@ JSONParser::readString()
     return token(Error);
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::readNumber()
+JSONParser<CharT>::readNumber()
 {
     JS_ASSERT(current < end);
     JS_ASSERT(JS7_ISDEC(*current) || *current == '-');
@@ -341,8 +345,9 @@ IsJSONWhitespace(jschar c)
     return c == '\t' || c == '\r' || c == '\n' || c == ' ';
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advance()
+JSONParser<CharT>::advance()
 {
     while (current < end && IsJSONWhitespace(*current))
         current++;
@@ -422,8 +427,9 @@ JSONParser::advance()
     }
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advanceAfterObjectOpen()
+JSONParser<CharT>::advanceAfterObjectOpen()
 {
     JS_ASSERT(current[-1] == '{');
 
@@ -473,8 +479,9 @@ AssertPastValue(const RangedPtr<const jschar> current)
               JS7_ISDEC(current[-1]));
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advanceAfterArrayElement()
+JSONParser<CharT>::advanceAfterArrayElement()
 {
     AssertPastValue(current);
 
@@ -499,8 +506,9 @@ JSONParser::advanceAfterArrayElement()
     return token(Error);
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advancePropertyName()
+JSONParser<CharT>::advancePropertyName()
 {
     JS_ASSERT(current[-1] == ',');
 
@@ -518,8 +526,9 @@ JSONParser::advancePropertyName()
     return token(Error);
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advancePropertyColon()
+JSONParser<CharT>::advancePropertyColon()
 {
     JS_ASSERT(current[-1] == '"');
 
@@ -539,8 +548,9 @@ JSONParser::advancePropertyColon()
     return token(Error);
 }
 
+template <typename CharT>
 JSONParserBase::Token
-JSONParser::advanceAfterProperty()
+JSONParser<CharT>::advanceAfterProperty()
 {
     AssertPastValue(current);
 
@@ -645,8 +655,9 @@ JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
     return true;
 }
 
+template <typename CharT>
 bool
-JSONParser::parse(MutableHandleValue vp)
+JSONParser<CharT>::parse(MutableHandleValue vp)
 {
     RootedValue value(cx);
     JS_ASSERT(stack.empty());
@@ -815,3 +826,5 @@ JSONParser::parse(MutableHandleValue vp)
     vp.set(value);
     return true;
 }
+
+template class js::JSONParser<jschar>;

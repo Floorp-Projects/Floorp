@@ -777,7 +777,7 @@ js::ParseJSONWithReviver(JSContext *cx, ConstTwoByteChars chars, size_t length,
                          HandleValue reviver, MutableHandleValue vp)
 {
     /* 15.12.2 steps 2-3. */
-    JSONParser parser(cx, chars, length);
+    JSONParser<jschar> parser(cx, chars, length);
     if (!parser.parse(vp))
         return false;
 
