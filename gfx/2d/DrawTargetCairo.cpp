@@ -976,9 +976,7 @@ DrawTargetCairo::PopClip()
 TemporaryRef<PathBuilder>
 DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FillRule::FILL_WINDING */) const
 {
-  RefPtr<PathBuilderCairo> builder = new PathBuilderCairo(aFillRule);
-
-  return builder;
+  return new PathBuilderCairo(aFillRule);
 }
 
 void
@@ -998,9 +996,7 @@ TemporaryRef<GradientStops>
 DrawTargetCairo::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops,
                                      ExtendMode aExtendMode) const
 {
-  RefPtr<GradientStopsCairo> stops = new GradientStopsCairo(aStops, aNumStops,
-                                                            aExtendMode);
-  return stops;
+  return new GradientStopsCairo(aStops, aNumStops, aExtendMode);
 }
 
 TemporaryRef<FilterNode>
@@ -1059,7 +1055,7 @@ DrawTargetCairo::CreateSourceSurfaceFromData(unsigned char *aData,
   RefPtr<SourceSurfaceCairo> source_surf = new SourceSurfaceCairo(surf, aSize, aFormat);
   cairo_surface_destroy(surf);
 
-  return source_surf;
+  return source_surf.forget();
 }
 
 #ifdef CAIRO_HAS_XLIB_SURFACE
@@ -1156,10 +1152,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
                   IntPoint(0, 0));
   dt->Flush();
 
-  RefPtr<SourceSurface> surf =
-    new SourceSurfaceCairo(csurf, size, format);
-
-  return surf;
+  return new SourceSurfaceCairo(csurf, size, format);
 #endif
 
   return aSurface;
@@ -1175,9 +1168,7 @@ DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurf
       return nullptr;
     }
     cairo_surface_t* surf = static_cast<cairo_surface_t*>(aSurface.mSurface);
-    RefPtr<SourceSurfaceCairo> source =
-      new SourceSurfaceCairo(surf, aSurface.mSize, aSurface.mFormat);
-    return source;
+    return new SourceSurfaceCairo(surf, aSurface.mSize, aSurface.mFormat);
   }
 
   return nullptr;
@@ -1193,7 +1184,7 @@ DrawTargetCairo::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFo
   if (!cairo_surface_status(similar)) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
     target->InitAlreadyReferenced(similar, aSize);
-    return target;
+    return target.forget();
   }
 
   return nullptr;
@@ -1234,7 +1225,7 @@ DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFor
   if (aSigma == 0.0F) {
     RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
     target->InitAlreadyReferenced(similar, aSize);
-    return target;
+    return target.forget();
   }
 
   cairo_surface_t* blursurf = cairo_image_surface_create(CAIRO_FORMAT_A8,
@@ -1257,7 +1248,7 @@ DrawTargetCairo::CreateShadowDrawTarget(const IntSize &aSize, SurfaceFormat aFor
 
   RefPtr<DrawTargetCairo> target = new DrawTargetCairo();
   target->InitAlreadyReferenced(tee, aSize);
-  return target;
+  return target.forget();
 }
 
 bool

@@ -355,7 +355,7 @@ GetTransformedGeometry(ID2D1Geometry *aGeometry, const D2D1_MATRIX_3X2_F &aTrans
   aGeometry->Simplify(D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES,
                       aTransform, currentSink);
   currentSink->Close();
-  return tmpGeometry;
+  return tmpGeometry.forget();
 }
 
 static TemporaryRef<ID2D1Geometry>
@@ -368,7 +368,7 @@ IntersectGeometry(ID2D1Geometry *aGeometryA, ID2D1Geometry *aGeometryB)
   aGeometryA->CombineWithGeometry(aGeometryB, D2D1_COMBINE_MODE_INTERSECT, nullptr, sink);
   sink->Close();
 
-  return pathGeom;
+  return pathGeom.forget();
 }
 
 static TemporaryRef<ID2D1StrokeStyle>
@@ -442,7 +442,7 @@ CreateStrokeStyleForOptions(const StrokeOptions &aStrokeOptions)
     gfxWarning() << "Failed to create Direct2D stroke style.";
   }
 
-  return style;
+  return style.forget();
 }
 
 // This creates a (partially) uploaded bitmap for a DataSourceSurface. It
@@ -525,7 +525,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
 
     aSourceTransform.Translate(uploadRect.x, uploadRect.y);
 
-    return bitmap;
+    return bitmap.forget();
   } else {
     int Bpp = BytesPerPixel(aSurface->GetFormat());
 
@@ -571,7 +571,7 @@ CreatePartialBitmapForSurface(DataSourceSurface *aSurface, const Matrix &aDestin
 
     aSourceTransform.Scale(Float(size.width / newSize.width),
                            Float(size.height / newSize.height));
-    return bitmap;
+    return bitmap.forget();
   }
 }
 
