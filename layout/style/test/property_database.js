@@ -2672,6 +2672,7 @@ var gCSSProperties = {
       "korean-hanja-informal", "korean-hanja-formal",
       "simp-chinese-informal", "simp-chinese-formal",
       "trad-chinese-informal", "trad-chinese-formal",
+      "ethiopic-numeric",
       "-moz-cjk-heavenly-stem", "-moz-cjk-earthly-branch",
       "-moz-trad-chinese-informal", "-moz-trad-chinese-formal",
       "-moz-simp-chinese-informal", "-moz-simp-chinese-formal",
