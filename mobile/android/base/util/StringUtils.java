@@ -157,7 +157,7 @@ public class StringUtils {
 
     public static boolean isShareableUrl(final String url) {
         final String scheme = Uri.parse(url).getScheme();
-        return !(scheme.equals("about") || scheme.equals("chrome") ||
-                scheme.equals("file") || scheme.equals("resource"));
+        return !("about".equals(scheme) || "chrome".equals(scheme) ||
+                "file".equals(scheme) || "resource".equals(scheme));
     }
 }
