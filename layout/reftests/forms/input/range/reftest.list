@@ -4,8 +4,8 @@
 != not-other-type-unthemed-1.html not-other-type-unthemed-1c-notref.html
 
 # dynamic type changes:
-fails-if(B2G&&browserIsRemote) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
-fails-if(B2G&&browserIsRemote) == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
+random-if(B2G&&browserIsRemote) == to-range-from-other-type-unthemed-1.html to-range-from-other-type-unthemed-1-ref.html
+random-if(B2G&&browserIsRemote) == from-range-to-other-type-unthemed-1.html from-range-to-other-type-unthemed-1-ref.html
 
 # for different values:
 != different-fraction-of-range-unthemed-1.html different-fraction-of-range-unthemed-1-notref.html
@@ -20,7 +20,7 @@ random-if(B2G&&browserIsRemote) == stepDown-unthemed.html 75pct-unthemed-common-
 random-if(B2G&&browserIsRemote) == stepDown.html 75pct-common-ref.html # Bug 878916
 random-if(B2G&&browserIsRemote) == stepUp-unthemed.html 75pct-unthemed-common-ref.html # Bug 969256
 random-if(B2G&&browserIsRemote) == stepUp.html 75pct-common-ref.html # Bug 969256
-fuzzy-if(B2G,1,1) fails-if(B2G&&browserIsRemote) == max-prop.html 100pct-common-ref.html
+fuzzy-if(B2G,1,1) random-if(B2G&&browserIsRemote) == max-prop.html 100pct-common-ref.html
 
 # 'direction' property:
 == direction-unthemed-1.html direction-unthemed-1-ref.html
