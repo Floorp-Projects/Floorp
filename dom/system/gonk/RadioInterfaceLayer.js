@@ -1815,8 +1815,20 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   // Set "time.timezone.automatic-update.available" to false when starting up.
   this.setTimezoneAutoUpdateAvailable(false);
 
-  // Read the Cell Broadcast Search List setting, string of integers or integer
-  // ranges separated by comma, to set listening channels.
+  /**
+   * Read the Cell Broadcast Search List setting to set listening channels:
+   *
+   * Simple Format:
+   *   String of integers or integer ranges separated by comma.
+   *   For example, "1, 2, 4-6"
+   * Enhanced Format:
+   *   Array of Objects with search lists specified in gsm/cdma network.
+   *   For example, [{'gsm' : "1, 2, 4-6", 'cdma' : "1, 50, 99"},
+   *                 {'cdma' : "3, 6, 8-9"}]
+   *   This provides the possibility to
+   *   1. set gsm/cdma search list individually for CDMA+LTE device.
+   *   2. set search list per RadioInterface.
+   */
   lock.get(kSettingsCellBroadcastSearchList, this);
 
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
@@ -2493,11 +2505,18 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCellBroadcastSearchList: function(newSearchList) {
-    if ((newSearchList == this._cellBroadcastSearchList) ||
-          (newSearchList && this._cellBroadcastSearchList &&
-            newSearchList.gsm == this._cellBroadcastSearchList.gsm &&
-            newSearchList.cdma == this._cellBroadcastSearchList.cdma)) {
+  setCellBroadcastSearchList: function(settings) {
+    let newSearchList =
+      Array.isArray(settings) ? settings[this.clientId] : settings;
+    let oldSearchList =
+      Array.isArray(this._cellBroadcastSearchList) ?
+        this._cellBroadcastSearchList[this.clientId] :
+        this._cellBroadcastSearchList;
+
+    if ((newSearchList == oldSearchList) ||
+          (newSearchList && oldSearchList &&
+            newSearchList.gsm == oldSearchList.gsm &&
+            newSearchList.cdma == oldSearchList.cdma)) {
       return;
     }
 
@@ -2509,7 +2528,7 @@ RadioInterface.prototype = {
         lock.set(kSettingsCellBroadcastSearchList,
                  this._cellBroadcastSearchList, null);
       } else {
-        this._cellBroadcastSearchList = response.searchList;
+        this._cellBroadcastSearchList = settings;
       }
 
       return false;
@@ -3475,9 +3494,8 @@ RadioInterface.prototype = {
           this.debug("'" + kSettingsCellBroadcastSearchList +
             "' is now " + JSON.stringify(aResult));
         }
-        // TODO: Set searchlist for Multi-SIM. See Bug 921326.
-        let result = Array.isArray(aResult) ? aResult[0] : aResult;
-        this.setCellBroadcastSearchList(result);
+
+        this.setCellBroadcastSearchList(aResult);
         break;
     }
   },
