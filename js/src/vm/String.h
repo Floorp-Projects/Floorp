@@ -9,6 +9,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/Range.h"
 
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -1086,14 +1087,14 @@ class MOZ_STACK_CLASS AutoStableStringChars
     bool isLatin1() const { return state_ == Latin1; }
     bool isTwoByte() const { return state_ == TwoByte; }
 
-    const JS::Latin1Char *latin1Chars() const {
+    mozilla::Range<const Latin1Char> latin1Range() const {
         MOZ_ASSERT(state_ == Latin1);
-        return latin1Chars_;
+        return mozilla::Range<const Latin1Char>(latin1Chars_, s_->length());
     }
 
-    const jschar *twoByteChars() const {
+    mozilla::Range<const jschar> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
-        return twoByteChars_;
+        return mozilla::Range<const jschar>(twoByteChars_, s_->length());
     }
 
   private:
