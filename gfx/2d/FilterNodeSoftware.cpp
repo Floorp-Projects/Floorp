@@ -282,7 +282,7 @@ CloneAligned(DataSourceSurface* aSource)
   if (copy) {
     CopyRect(aSource, copy, IntRect(IntPoint(), aSource->GetSize()), IntPoint());
   }
-  return copy;
+  return copy.forget();
 }
 
 static void
@@ -518,7 +518,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
   }
 
   if (!aSurface) {
-    return target;
+    return target.forget();
   }
 
   RefPtr<DataSourceSurface> dataSource = aSurface->GetDataSurface();
@@ -526,7 +526,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
 
   if (aEdgeMode == EDGE_MODE_WRAP) {
     TileSurface(dataSource, target, intersectInDestSpace.TopLeft());
-    return target;
+    return target.forget();
   }
 
   CopyRect(dataSource, target, intersectInSourceSpace,
@@ -536,7 +536,7 @@ GetDataSurfaceInRect(SourceSurface *aSurface,
     DuplicateEdges(target, intersectInDestSpace);
   }
 
-  return target;
+  return target.forget();
 }
 
 /* static */ TemporaryRef<FilterNode>
@@ -623,7 +623,7 @@ FilterNodeSoftware::Create(FilterType aType)
       filter = new FilterNodeLightingSoftware<DistantLightSoftware, SpecularLightingSoftware>("FilterNodeLightingSoftware<DistantLight, SpecularLighting>");
       break;
   }
-  return filter;
+  return filter.forget();
 }
 
 void
@@ -857,7 +857,7 @@ FilterNodeSoftware::GetInputDataSourceSurface(uint32_t aInputEnumIndex,
 
   MOZ_ASSERT(!result || result->GetSize() == aRect.Size(), "wrong surface size");
 
-  return result;
+  return result.forget();
 }
 
 IntRect
@@ -1022,7 +1022,7 @@ FilterNodeBlendSoftware::Render(const IntRect& aRect)
   }
 
   // Third case: one of them is transparent. Return the non-transparent one.
-  return input1 ? input1 : input2;
+  return input1 ? input1.forget() : input2.forget();
 }
 
 void
@@ -1104,7 +1104,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
   Matrix transform = Matrix::Translation(srcRect.x, srcRect.y) * mMatrix *
                      Matrix::Translation(-aRect.x, -aRect.y);
   if (transform.IsIdentity() && srcRect.Size() == aRect.Size()) {
-    return input;
+    return input.forget();
   }
 
   RefPtr<DrawTarget> dt =
@@ -1119,7 +1119,7 @@ FilterNodeTransformSoftware::Render(const IntRect& aRect)
 
   RefPtr<SourceSurface> result = dt->Snapshot();
   RefPtr<DataSourceSurface> resultData = result->GetDataSurface();
-  return resultData;
+  return resultData.forget();
 }
 
 void
@@ -1229,7 +1229,7 @@ ApplyMorphology(const IntRect& aSourceRect, DataSourceSurface* aInput,
       tmpData, tmpStride, destData, destStride, destRect, ry, aOperator);
   }
 
-  return dest;
+  return dest.forget();
 }
 
 TemporaryRef<DataSourceSurface>
@@ -1248,7 +1248,7 @@ FilterNodeMorphologySoftware::Render(const IntRect& aRect)
   int32_t ry = mRadii.height;
 
   if (rx == 0 && ry == 0) {
-    return input;
+    return input.forget();
   }
 
   return ApplyMorphology(srcRect, input, aRect, rx, ry, mOperator);
@@ -1325,7 +1325,7 @@ Premultiply(DataSourceSurface* aSurface)
   FilterProcessing::DoPremultiplicationCalculation(
     size, targetData, targetStride, inputData, inputStride);
 
-  return target;
+  return target.forget();
 }
 
 static TemporaryRef<DataSourceSurface>
@@ -1350,7 +1350,7 @@ Unpremultiply(DataSourceSurface* aSurface)
   FilterProcessing::DoUnpremultiplicationCalculation(
     size, targetData, targetStride, inputData, inputStride);
 
-  return target;
+  return target.forget();
 }
 
 TemporaryRef<DataSourceSurface>
@@ -1373,7 +1373,7 @@ FilterNodeColorMatrixSoftware::Render(const IntRect& aRect)
     result = Premultiply(result);
   }
 
-  return result;
+  return result.forget();
 }
 
 void
@@ -1452,7 +1452,7 @@ FilterNodeFloodSoftware::Render(const IntRect& aRect)
     MOZ_CRASH();
   }
 
-  return target;
+  return target.forget();
 }
 
 // Override GetOutput to get around caching. Rendering simple floods is
@@ -1564,7 +1564,7 @@ FilterNodeTileSoftware::Render(const IntRect& aRect)
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 void
@@ -1706,7 +1706,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
 
   SurfaceFormat format = input->GetFormat();
   if (format == SurfaceFormat::A8 && mDisableA) {
-    return input;
+    return input.forget();
   }
 
   RefPtr<DataSourceSurface> target =
@@ -1721,7 +1721,7 @@ FilterNodeComponentTransferSoftware::Render(const IntRect& aRect)
     TransferComponents<4>(input, target, lookupTables);
   }
 
-  return target;
+  return target.forget();
 }
 
 void
@@ -2426,7 +2426,7 @@ FilterNodeConvolveMatrixSoftware::DoRender(const IntRect& aRect,
   }
   delete[] intKernel;
 
-  return target;
+  return target.forget();
 }
 
 void
@@ -2567,7 +2567,7 @@ FilterNodeDisplacementMapSoftware::Render(const IntRect& aRect)
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 void
@@ -2824,7 +2824,7 @@ FilterNodeCompositeSoftware::Render(const IntRect& aRect)
       }
     }
   }
-  return dest;
+  return dest.forget();
 }
 
 void
@@ -3429,7 +3429,7 @@ FilterNodeLightingSoftware<LightType, LightingType>::DoRender(const IntRect& aRe
     }
   }
 
-  return target;
+  return target.forget();
 }
 
 DiffuseLightingSoftware::DiffuseLightingSoftware()
