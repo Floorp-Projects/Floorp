@@ -4,6 +4,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -13,7 +14,7 @@
     title: "Basic RTCPeerConnection.close() tests"
   });
 
-  runTest(function () {
+  runNetworkTest(function () {
     var pc = new mozRTCPeerConnection();
     var signalStateChanged = false;
     var exception = null;
@@ -84,7 +85,7 @@
       // in case we are ending the test from within here
       if(pc !== null) {
         pc = null;
-        SimpleTest.finish();
+        networkTestFinished();
       }
     }
 
@@ -96,7 +97,7 @@
       // in case we are ending the test in this timeout
       if (pc !== null) {
         pc = null;
-        SimpleTest.finish();
+        networkTestFinished();
       }
     }, 60000);
 
@@ -116,7 +117,7 @@
       // in case we are ending the test outside the even handler
       if (pc !== null) {
         pc = null;
-        SimpleTest.finish();
+        networkTestFinished();
       }
     }
 
