@@ -593,6 +593,9 @@ let gTests = [
         yield promiseMessage(expectedMessage, gum);
 
         if (expectedMessage == "ok") {
+          expectObserverCalled("getUserMedia:request");
+          yield promiseNoPopupNotification("webRTC-shareDevices");
+          expectObserverCalled("getUserMedia:response:allow");
           expectObserverCalled("recording-device-events");
 
           // Check what's actually shared.
@@ -687,6 +690,8 @@ let gTests = [
       yield promiseMessage("ok", () => {
         content.wrappedJSObject.requestDevice(aRequestAudio, aRequestVideo);
       });
+      expectObserverCalled("getUserMedia:request");
+      expectObserverCalled("getUserMedia:response:allow");
       expectObserverCalled("recording-device-events");
       yield checkSharingUI();
 
