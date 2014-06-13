@@ -42,7 +42,6 @@ public class ButtonToast {
 
     public enum ReasonHidden {
         CLICKED,
-        TOUCH_OUTSIDE,
         TIMEOUT,
         REPLACED,
         STARTUP
