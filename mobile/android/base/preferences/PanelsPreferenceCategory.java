@@ -98,11 +98,13 @@ public class PanelsPreferenceCategory extends CustomListCategory {
     private void displayHomeConfig(HomeConfig.State configState, String animatePanelId) {
         int index = 0;
         for (PanelConfig panelConfig : configState) {
+            final boolean isRemovable = panelConfig.isDynamic();
+
             // Create and add the pref.
             final String panelId = panelConfig.getId();
             final boolean animate = TextUtils.equals(animatePanelId, panelId);
 
-            final PanelsPreference pref = new PanelsPreference(getContext(), PanelsPreferenceCategory.this, index, animate);
+            final PanelsPreference pref = new PanelsPreference(getContext(), PanelsPreferenceCategory.this, isRemovable, index, animate);
             pref.setTitle(panelConfig.getTitle());
             pref.setKey(panelConfig.getId());
             // XXX: Pull icon from PanelInfo.
