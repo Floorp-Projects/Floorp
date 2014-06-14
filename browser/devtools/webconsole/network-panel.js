@@ -286,7 +286,7 @@ NetworkPanel.prototype =
       return a.name.toLowerCase() < b.name.toLowerCase();
     });
 
-    aList.forEach(function(aItem) {
+    aList.forEach((aItem) => {
       let name = aItem.name;
       if (aIgnoreCookie && (name == "Cookie" || name == "Set-Cookie")) {
         return;
@@ -332,7 +332,7 @@ NetworkPanel.prototype =
       row.appendChild(td);
 
       parent.appendChild(row);
-    }.bind(this));
+    });
   },
 
   /**
@@ -612,7 +612,7 @@ NetworkPanel.prototype =
     let content = this.httpActivity.response.content;
     let longString = this.webconsole.webConsoleClient.longString(content.text);
     longString.substring(longString.initial.length, longString.length,
-      function NP__onLongStringSubstring(aResponse)
+      (aResponse) =>
       {
         if (aResponse.error) {
           Cu.reportError("NP__onLongStringSubstring error: " + aResponse.error);
@@ -632,7 +632,7 @@ NetworkPanel.prototype =
           this._appendTextNode("responseBody" + cached + "Content",
                                aResponse.substring);
         }
-      }.bind(this));
+      });
   },
 
   /**
@@ -779,7 +779,7 @@ NetworkPanel.prototype =
     let postData = this.httpActivity.request.postData;
     let longString = this.webconsole.webConsoleClient.longString(postData.text);
     longString.substring(longString.initial.length, longString.length,
-      function NP__onLongStringSubstring(aResponse)
+       (aResponse) =>
       {
         if (aResponse.error) {
           Cu.reportError("NP__onLongStringSubstring error: " + aResponse.error);
@@ -788,7 +788,7 @@ NetworkPanel.prototype =
 
         postData.text = postData.text.initial + aResponse.substring;
         this._updateRequestBody();
-      }.bind(this));
+      });
   },
 };
 
