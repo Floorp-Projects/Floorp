@@ -74,13 +74,13 @@ EventEmitter.prototype = {
   once: function EventEmitter_once(aEvent, aListener) {
     let deferred = promise.defer();
 
-    let handler = function(aEvent, aFirstArg) {
+    let handler = (aEvent, aFirstArg) => {
       this.off(aEvent, handler);
       if (aListener) {
         aListener.apply(null, arguments);
       }
       deferred.resolve(aFirstArg);
-    }.bind(this);
+    };
 
     handler._originalListener = aListener;
     this.on(aEvent, handler);

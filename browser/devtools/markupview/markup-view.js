@@ -231,12 +231,12 @@ MarkupView.prototype = {
   },
 
   update: function() {
-    let updateChildren = function(node) {
+    let updateChildren = (node) => {
       this.getContainer(node).update();
       for (let child of node.treeChildren()) {
         updateChildren(child);
       }
-    }.bind(this);
+    };
 
     // Start with the documentElement
     let documentElement;
@@ -1244,10 +1244,10 @@ MarkupView.prototype = {
     this._previewBar.classList.add("hide");
     win.clearTimeout(this._resizePreviewTimeout);
 
-    win.setTimeout(function() {
+    win.setTimeout(() => {
       this._updatePreview();
       this._previewBar.classList.remove("hide");
-    }.bind(this), 1000);
+    }, 1000);
   }
 };
 
