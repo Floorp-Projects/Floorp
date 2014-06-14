@@ -22,10 +22,6 @@ function run_test() {
   do_test_pending();
 
   do_timeout(1000, function wait() {
-    // Check responsiveness
-    var resp = profiler.GetResponsivenessTimes({});
-    do_check_true(resp.length > 10);
-
     // Check text profile format
     var profileStr = profiler.GetProfile();
     do_check_true(profileStr.length > 10);

@@ -220,26 +220,6 @@ nsProfiler::IsActive(bool *aIsActive)
 }
 
 NS_IMETHODIMP
-nsProfiler::GetResponsivenessTimes(uint32_t *aCount, double **aResult)
-{
-  unsigned int len = 100;
-  const double* times = profiler_get_responsiveness();
-  if (!times) {
-    *aCount = 0;
-    *aResult = nullptr;
-    return NS_OK;
-  }
-
-  double *fs = static_cast<double *>
-                       (nsMemory::Clone(times, len * sizeof(double)));
-
-  *aCount = len;
-  *aResult = fs;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
 {
   uint32_t len = 0;
