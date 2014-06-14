@@ -1692,8 +1692,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
         payloads[i].audio.frequency,
         payloads[i].audio.packet_size,
         payloads[i].audio.channels,
-        payloads[i].audio.bitrate,
-        pc.impl()->load_manager());
+        payloads[i].audio.bitrate);
       configs.push_back(config_raw);
     }
 
@@ -1750,8 +1749,7 @@ static int vcmRxStartICE_m(cc_mcapid_t mcap_id,
       config_raw = new mozilla::VideoCodecConfig(
         payloads[i].remote_rtp_pt,
         ccsdpCodecName(payloads[i].codec_type),
-        payloads[i].video.rtcp_fb_types,
-        pc.impl()->load_manager());
+        payloads[i].video.rtcp_fb_types);
       if (vcmEnsureExternalCodec(conduit, config_raw, false)) {
         continue;
       }
@@ -2350,8 +2348,7 @@ static int vcmTxCreateAudioConduit(int level,
       payload->audio.frequency,
       payload->audio.packet_size,
       payload->audio.channels,
-      payload->audio.bitrate,
-      pc.impl()->load_manager());
+      payload->audio.bitrate);
 
   // Take possession of this pointer
   mozilla::ScopedDeletePtr<mozilla::AudioCodecConfig> config(config_raw);
@@ -2398,8 +2395,7 @@ static int vcmTxCreateVideoConduit(int level,
     ccsdpCodecName(payload->codec_type),
     payload->video.rtcp_fb_types,
     payload->video.max_fs,
-    payload->video.max_fr,
-    pc.impl()->load_manager());
+    payload->video.max_fr);
 
   // Take possession of this pointer
   mozilla::ScopedDeletePtr<mozilla::VideoCodecConfig> config(config_raw);
