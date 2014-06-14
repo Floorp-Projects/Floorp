@@ -18,22 +18,22 @@ Zip::Create(const char *filename)
   /* Open and map the file in memory */
   AutoCloseFD fd(open(filename, O_RDONLY));
   if (fd == -1) {
-    LOG("Error opening %s: %s", filename, strerror(errno));
+    ERROR("Error opening %s: %s", filename, strerror(errno));
     return nullptr;
   }
   struct stat st;
   if (fstat(fd, &st) == -1) {
-    LOG("Error stating %s: %s", filename, strerror(errno));
+    ERROR("Error stating %s: %s", filename, strerror(errno));
     return nullptr;
   }
   size_t size = st.st_size;
   if (size <= sizeof(CentralDirectoryEnd)) {
-    LOG("Error reading %s: too short", filename);
+    ERROR("Error reading %s: too short", filename);
     return nullptr;
   }
   void *mapped = mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
   if (mapped == MAP_FAILED) {
-    LOG("Error mmapping %s: %s", filename, strerror(errno));
+    ERROR("Error mmapping %s: %s", filename, strerror(errno));
     return nullptr;
   }
   DEBUG_LOG("Mapped %s @%p", filename, mapped);
@@ -49,7 +49,7 @@ Zip::Create(const char *filename, void *mapped, size_t size)
   // If neither the first Local File entry nor central directory entries
   // have been found, the zip was invalid.
   if (!zip->nextFile && !zip->entries) {
-    LOG("%s - Invalid zip", filename);
+    ERROR("%s - Invalid zip", filename);
     return nullptr;
   }
 
@@ -136,7 +136,7 @@ Zip::GetStream(const char *path, Zip::Stream *out) const
   nextFile = LocalFile::validate(static_cast<const char *>(mapped)
                              + nextDir->offset);
   if (!nextFile) {
-    LOG("%s - Couldn't find the Local File header for %s", name, path);
+    ERROR("%s - Couldn't find the Local File header for %s", name, path);
     return false;
   }
 
@@ -167,14 +167,14 @@ Zip::GetFirstEntry() const
   for (; _end > mapped && !end; _end--)
     end = CentralDirectoryEnd::validate(_end);
   if (!end) {
-    LOG("%s - Couldn't find end of central directory record", name);
+    ERROR("%s - Couldn't find end of central directory record", name);
     return nullptr;
   }
 
   entries = DirectoryEntry::validate(static_cast<const char *>(mapped)
                                  + end->offset);
   if (!entries) {
-    LOG("%s - Couldn't find central directory record", name);
+    ERROR("%s - Couldn't find central directory record", name);
   }
   return entries;
 }

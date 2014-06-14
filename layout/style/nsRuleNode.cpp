@@ -3958,6 +3958,7 @@ nsRuleNode::ComputeFontData(void* aStartStruct,
         case eFamily_moz_fixed:
           fl = FontFamilyList(eFamily_moz_fixed);
           generic = kGenericFont_moz_fixed;
+          break;
         default:
           fl.Clear();
           generic = kGenericFont_NONE;

@@ -473,6 +473,9 @@ case "$target" in
         INCREMENTAL_LINKER=1
 
         unset _MSVC_VER_FILTER
+
+        CFLAGS="$CFLAGS -D_HAS_EXCEPTIONS=0"
+        CXXFLAGS="$CXXFLAGS -D_HAS_EXCEPTIONS=0"
     elif test -z "$CLANG_CC"; then
         # Check w32api version
         _W32API_MAJOR_VERSION=`echo $W32API_VERSION | $AWK -F\. '{ print $1 }'`

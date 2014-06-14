@@ -197,7 +197,11 @@
 #define unlikely(expr) (expr)
 #endif
 
-#ifndef __GNUC__
+/*
+ * clang-cl supports __attribute__, but MSVC doesn't, so we need to make sure
+ * we do this if not GNUC but also if not clang either.
+ */
+#if !defined(__GNUC__) && !defined(__clang__)
 #undef __attribute__
 #define __attribute__(x)
 #endif

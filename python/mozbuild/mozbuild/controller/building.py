@@ -65,7 +65,7 @@ class TierStatus(object):
     def __init__(self, resources):
         """Accepts a SystemResourceMonitor to record results against."""
         self.tiers = OrderedDict()
-        self.active_tier = None
+        self.active_tiers = set()
         self.resources = resources
 
     def set_tiers(self, tiers):
@@ -84,17 +84,18 @@ class TierStatus(object):
         # have one until Python 3.
         t['begin_time'] = time.time()
         self.resources.begin_phase(tier)
-        self.active_tier = tier
+        self.active_tiers.add(tier)
 
     def finish_tier(self, tier):
         """Record that execution of a tier has finished."""
         t = self.tiers[tier]
         t['finish_time'] = time.time()
         t['duration'] = self.resources.finish_phase(tier)
+        self.active_tiers.remove(tier)
 
     def tier_status(self):
         for tier, state in self.tiers.items():
-            active = self.active_tier == tier
+            active = tier in self.active_tiers
             finished = state['finish_time'] is not None
 
             yield tier, active, finished

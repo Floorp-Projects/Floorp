@@ -316,6 +316,15 @@ class InlineList : protected InlineListNode<T>
     bool empty() const {
         return begin() == end();
     }
+    void takeElements(InlineList &l) {
+        MOZ_ASSERT(&l != this, "cannot takeElements from this");
+        Node *lprev = l.prev;
+        static_cast<Node *>(l.next)->prev = this;
+        lprev->next = this->next;
+        static_cast<Node *>(this->next)->prev = l.prev;
+        this->next = l.next;
+        l.clear();
+    }
 };
 
 template <typename T>

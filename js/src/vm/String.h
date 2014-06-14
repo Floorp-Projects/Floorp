@@ -528,6 +528,9 @@ class JSString : public js::gc::BarrieredCell<JSString>
     void operator=(const JSString &other) MOZ_DELETE;
 };
 
+/* Temporary flag to enable Latin1 strings (bug 998392). */
+static const bool EnableLatin1Strings = false;
+
 class JSRope : public JSString
 {
     bool copyNonPureCharsInternal(js::ThreadSafeContext *cx,

@@ -765,7 +765,7 @@ ArrayBufferObject::stealContents(JSContext *cx, Handle<ArrayBufferObject*> buffe
 }
 
 /* static */ void
-ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf, JS::ClassInfo *info)
+ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf, JS::ObjectsExtraSizes *sizes)
 {
     ArrayBufferObject &buffer = AsArrayBuffer(obj);
 
@@ -776,14 +776,14 @@ ArrayBufferObject::addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf m
 #if defined (JS_CPU_X64)
         // On x64, ArrayBufferObject::prepareForAsmJS switches the
         // ArrayBufferObject to use mmap'd storage.
-        info->objectsNonHeapElementsAsmJS += buffer.byteLength();
+        sizes->nonHeapElementsAsmJS += buffer.byteLength();
 #else
-        info->objectsMallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
+        sizes->mallocHeapElementsAsmJS += mallocSizeOf(buffer.dataPointer());
 #endif
     } else if (MOZ_UNLIKELY(buffer.isMappedArrayBuffer())) {
-        info->objectsNonHeapElementsMapped += buffer.byteLength();
+        sizes->nonHeapElementsMapped += buffer.byteLength();
     } else if (buffer.dataPointer()) {
-        info->objectsMallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
+        sizes->mallocHeapElementsNonAsmJS += mallocSizeOf(buffer.dataPointer());
     }
 }
 

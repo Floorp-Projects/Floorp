@@ -105,8 +105,7 @@ PathBuilderSkia::CurrentPoint() const
 TemporaryRef<Path>
 PathBuilderSkia::Finish()
 {
-  RefPtr<PathSkia> path = new PathSkia(mPath, mFillRule);
-  return path;
+  return new PathSkia(mPath, mFillRule);
 }
 
 void
@@ -124,8 +123,7 @@ PathSkia::CopyToBuilder(FillRule aFillRule) const
 TemporaryRef<PathBuilder>
 PathSkia::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFillRule) const
 {
-  RefPtr<PathBuilderSkia> builder = new PathBuilderSkia(aTransform, mPath, aFillRule);
-  return builder;
+  return new PathBuilderSkia(aTransform, mPath, aFillRule);
 }
 
 bool
