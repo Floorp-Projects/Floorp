@@ -150,19 +150,7 @@ public class ToolbarComponent extends BaseComponent {
     public ToolbarComponent dismissEditingMode() {
         assertIsEditing();
 
-        // Cancel Button not implemeneted in tablet.
-        if (DeviceHelper.isTablet()) {
-            if (getUrlEditText().isInputMethodTarget()) {
-                // Drop the soft keyboard.
-                // TODO: Solo.hideSoftKeyboard() does not clear focus, causing unexpected
-                // behavior, but we may want to use it over goBack().
-                mSolo.goBack();
-            }
-
-            mSolo.goBack();
-        } else {
-            mSolo.clickOnView(getEditCancelButton());
-        }
+        mSolo.clickOnView(getEditCancelButton());
 
         waitForNotEditing();
 
