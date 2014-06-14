@@ -81,8 +81,6 @@ namespace WTF { class BumpPointerAllocator; }
 
 namespace js {
 
-typedef Rooted<JSLinearString*> RootedLinearString;
-
 class Activation;
 class ActivationIterator;
 class AsmJSActivation;

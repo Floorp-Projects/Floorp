@@ -1805,7 +1805,7 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
             return nullptr;
     }
 
-    Rooted<JSLinearString *> linear(cx, fallback->ensureLinear(cx));
+    RootedLinearString linear(cx, fallback->ensureLinear(cx));
     if (!linear)
         return nullptr;
     TwoByteChars tbchars(linear->chars(), linear->length());
@@ -1892,7 +1892,7 @@ js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
     if (!fallback)
         return nullptr;
 
-    Rooted<JSLinearString *> linear(cx, fallback->ensureLinear(cx));
+    RootedLinearString linear(cx, fallback->ensureLinear(cx));
     if (!linear)
         return nullptr;
     return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
