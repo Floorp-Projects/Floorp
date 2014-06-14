@@ -2914,7 +2914,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     // XXX Should 'hidden' be the same as initial?
     initial_values: [ "none" ],
-    other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge" ],
+    other_values: [ "solid", "dashed", "dotted", "double", "outset", "inset", "groove", "ridge", "auto" ],
     invalid_values: []
   },
   "outline-width": {
