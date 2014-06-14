@@ -6418,5 +6418,10 @@
     "kind": "enumerated",
     "n_values": 30,
     "description": "Algorithms used with WebCrypto (see table in WebCryptoTask.cpp)"
+  },
+  "MASTER_PASSWORD_ENABLED": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "If a master-password is enabled for this profile"
   }
 }
