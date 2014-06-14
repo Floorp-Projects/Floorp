@@ -985,7 +985,7 @@ TabParent::RecvSyncMessage(const nsString& aMessage,
   // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
   ContentParent* parent = Manager()->AsContentParent();
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+  if (!ContentParent::IgnoreIPCPrincipal() &&
       parent && principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }
@@ -1005,7 +1005,7 @@ TabParent::AnswerRpcMessage(const nsString& aMessage,
   // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
   ContentParent* parent = Manager()->AsContentParent();
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+  if (!ContentParent::IgnoreIPCPrincipal() &&
       parent && principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }
@@ -1024,7 +1024,7 @@ TabParent::RecvAsyncMessage(const nsString& aMessage,
   // FIXME Permission check for TabParent in Content process
   nsIPrincipal* principal = aPrincipal;
   ContentParent* parent = Manager()->AsContentParent();
-  if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false) &&
+  if (!ContentParent::IgnoreIPCPrincipal() &&
       parent && principal && !AssertAppPrincipal(parent, principal)) {
     return false;
   }

@@ -55,6 +55,11 @@ static const CK_C_INITIALIZE_ARGS secmodLockFunctions = {
 	CKF_OS_LOCKING_OK
     ,NULL
 };
+static const CK_C_INITIALIZE_ARGS secmodNoLockArgs = {
+    NULL, NULL, NULL, NULL,
+    CKF_LIBRARY_CANT_CREATE_OS_THREADS
+    ,NULL
+};
 
 static PRBool loadSingleThreadedModules = PR_TRUE;
 static PRBool enforceAlreadyInitializedError = PR_TRUE;
@@ -209,12 +214,18 @@ secmod_ModuleInit(SECMODModule *mod, SECMODModule **reload,
         return SECFailure;
     }
 
-    if (mod->isThreadSafe == PR_FALSE) {
-	pInitArgs = NULL;
-    } else if (mod->libraryParams == NULL) {
-	pInitArgs = (void *) &secmodLockFunctions;
+    if (mod->libraryParams == NULL) {
+	if (mod->isThreadSafe) {
+	    pInitArgs = (void *) &secmodLockFunctions;
+	} else {
+	    pInitArgs = NULL;
+	}
     } else {
-	moduleArgs = secmodLockFunctions;
+	if (mod->isThreadSafe) {
+	    moduleArgs = secmodLockFunctions;
+	} else {
+	    moduleArgs = secmodNoLockArgs;
+	}
 	moduleArgs.LibraryParameters = (void *) mod->libraryParams;
 	pInitArgs = &moduleArgs;
     }
@@ -251,18 +262,30 @@ secmod_ModuleInit(SECMODModule *mod, SECMODModule **reload,
 	}
     }
     if (crv != CKR_OK) {
-	if (pInitArgs == NULL ||
+	if (!mod->isThreadSafe ||
 		crv == CKR_NETSCAPE_CERTDB_FAILED ||
 		crv == CKR_NETSCAPE_KEYDB_FAILED) {
 	    PORT_SetError(PK11_MapError(crv));
 	    return SECFailure;
 	}
+	/* If we had attempted to init a single threaded module "with"
+	 * parameters and it failed, should we retry "without" parameters?
+	 * (currently we don't retry in this scenario) */
+
 	if (!loadSingleThreadedModules) {
 	    PORT_SetError(SEC_ERROR_INCOMPATIBLE_PKCS11);
 	    return SECFailure;
 	}
+	/* If we arrive here, the module failed a ThreadSafe init. */
 	mod->isThreadSafe = PR_FALSE;
-    	crv = PK11_GETTAB(mod)->C_Initialize(NULL);
+	if (!mod->libraryParams) {
+	    pInitArgs = NULL;
+	} else {
+	    moduleArgs = secmodNoLockArgs;
+	    moduleArgs.LibraryParameters = (void *) mod->libraryParams;
+	    pInitArgs = &moduleArgs;
+	}
+    	crv = PK11_GETTAB(mod)->C_Initialize(pInitArgs);
 	if ((CKR_CRYPTOKI_ALREADY_INITIALIZED == crv) &&
 	    (!enforceAlreadyInitializedError)) {
 	    *alreadyLoaded = PR_TRUE;

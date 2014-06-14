@@ -2,12 +2,12 @@
 .\"     Title: SSLTAP
 .\"    Author: [see the "Authors" section]
 .\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
-.\"      Date: 12 November 2013
+.\"      Date:  5 June 2014
 .\"    Manual: NSS Security Tools
 .\"    Source: nss-tools
 .\"  Language: English
 .\"
-.TH "SSLTAP" "1" "12 November 2013" "nss-tools" "NSS Security Tools"
+.TH "SSLTAP" "1" "5 June 2014" "nss-tools" "NSS Security Tools"
 .\" -----------------------------------------------------------------
 .\" * Define some portability stuff
 .\" -----------------------------------------------------------------
@@ -30,8 +30,8 @@
 .SH "NAME"
 ssltap \- Tap into SSL connections and display the data going by
 .SH "SYNOPSIS"
-.HP \w'\fBlibssltap\fR\ 'u
-\fBlibssltap\fR [\-vhfsxl] [\-p\ port] [hostname:port]
+.HP \w'\fBssltap\fR\ 'u
+\fBssltap\fR [\-fhlsvx] [\-p\ port] [hostname:port]
 .SH "STATUS"
 .PP
 This documentation is still work in progress\&. Please contribute to the initial review in
@@ -43,33 +43,14 @@ The SSL Debugging Tool
 is an SSL\-aware command\-line proxy\&. It watches TCP connections and displays the data going by\&. If a connection is SSL, the data display includes interpreted SSL records and handshaking
 .SH "OPTIONS"
 .PP
-\-v
-.RS 4
-Print a version string for the tool\&.
-.RE
-.PP
-\-h
-.RS 4
-Turn on hex/ASCII printing\&. Instead of outputting raw data, the command interprets each record as a numbered line of hex values, followed by the same data as ASCII characters\&. The two parts are separated by a vertical bar\&. Nonprinting characters are replaced by dots\&.
-.RE
-.PP
 \-f
 .RS 4
 Turn on fancy printing\&. Output is printed in colored HTML\&. Data sent from the client to the server is in blue; the server\*(Aqs reply is in red\&. When used with looping mode, the different connections are separated with horizontal lines\&. You can use this option to upload the output into a browser\&.
 .RE
 .PP
-\-s
+\-h
 .RS 4
-Turn on SSL parsing and decoding\&. The tool does not automatically detect SSL sessions\&. If you are intercepting an SSL connection, use this option so that the tool can detect and decode SSL structures\&.
-.sp
-If the tool detects a certificate chain, it saves the DER\-encoded certificates into files in the current directory\&. The files are named cert\&.0x, where x is the sequence number of the certificate\&.
-.sp
-If the \-s option is used with \-h, two separate parts are printed for each record: the plain hex/ASCII output, and the parsed SSL output\&.
-.RE
-.PP
-\-x
-.RS 4
-Turn on hex/ASCII printing of undecoded data inside parsed SSL records\&. Used only with the \-s option\&. This option uses the same output format as the \-h option\&.
+Turn on hex/ASCII printing\&. Instead of outputting raw data, the command interprets each record as a numbered line of hex values, followed by the same data as ASCII characters\&. The two parts are separated by a vertical bar\&. Nonprinting characters are replaced by dots\&.
 .RE
 .PP
 \-l prefix
@@ -98,6 +79,25 @@ The following are well\-known port numbers:
 * NNTP 119
 .sp
 * NNTPS 563 (NNTP over SSL)
+.RE
+.PP
+\-s
+.RS 4
+Turn on SSL parsing and decoding\&. The tool does not automatically detect SSL sessions\&. If you are intercepting an SSL connection, use this option so that the tool can detect and decode SSL structures\&.
+.sp
+If the tool detects a certificate chain, it saves the DER\-encoded certificates into files in the current directory\&. The files are named cert\&.0x, where x is the sequence number of the certificate\&.
+.sp
+If the \-s option is used with \-h, two separate parts are printed for each record: the plain hex/ASCII output, and the parsed SSL output\&.
+.RE
+.PP
+\-v
+.RS 4
+Print a version string for the tool\&.
+.RE
+.PP
+\-x
+.RS 4
+Turn on extra SSL hex dumps\&.
 .RE
 .SH "USAGE AND EXAMPLES"
 .PP
