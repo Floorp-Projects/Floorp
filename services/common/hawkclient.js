@@ -188,7 +188,7 @@ this.HawkClient.prototype = {
     let uri = this.host + path;
     let self = this;
 
-    function onComplete(error) {
+    function _onComplete(error) {
       let restResponse = this.response;
       let status = restResponse.status;
 
@@ -242,6 +242,18 @@ this.HawkClient.prototype = {
       // We just return the raw text.
       deferred.resolve(this.response.body);
     };
+
+    function onComplete(error) {
+      try {
+        // |this| is the RESTRequest object and we need to ensure _onComplete
+        // gets the same one.
+        _onComplete.call(this, error);
+      } catch (ex) {
+        log.error("Unhandled exception processing response:" +
+                  CommonUtils.exceptionStr(ex));
+        deferred.reject(ex);
+      }
+    }
 
     let extra = {
       now: this.now(),
