@@ -4598,9 +4598,12 @@ nsslowcert_OpenCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
     }
 
     return (SECSuccess);
-    
-loser:
 
+loser:
+    if (handle->dbMon) {
+        PZ_DestroyMonitor(handle->dbMon);
+        handle->dbMon = NULL;
+    }
     PORT_SetError(SEC_ERROR_BAD_DATABASE);
     return(SECFailure);
 }
