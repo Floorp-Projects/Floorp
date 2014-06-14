@@ -146,6 +146,7 @@ MOZ_END_ENUM_CLASS(WebGLTexImageFunc)
 // Please keep extensions in alphabetic order.
 MOZ_BEGIN_ENUM_CLASS(WebGLExtensionID, uint8_t)
     ANGLE_instanced_arrays,
+    EXT_blend_minmax,
     EXT_color_buffer_half_float,
     EXT_frag_depth,
     EXT_sRGB,

@@ -309,6 +309,18 @@ public:
     DECL_WEBGL_EXTENSION_GOOP
 };
 
+class WebGLExtensionBlendMinMax
+    : public WebGLExtensionBase
+{
+public:
+    WebGLExtensionBlendMinMax(WebGLContext*);
+    virtual ~WebGLExtensionBlendMinMax();
+
+    static bool IsSupported(const WebGLContext*);
+
+    DECL_WEBGL_EXTENSION_GOOP
+};
+
 } // namespace mozilla
 
 #endif // WEBGLEXTENSIONS_H_
