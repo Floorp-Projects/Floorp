@@ -3,9 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-// explicitly turn on js181
-// XXX: The browser currently only supports up to version 1.8
+// NOTE: This only turns on 1.8.1 in shell builds.  The browser requires the
+//       futzing in js/src/tests/browser.js (which only turns on 1.8, the most
+//       the browser supports).
 if (typeof version != 'undefined')
 {
   version(181);
