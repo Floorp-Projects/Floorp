@@ -527,6 +527,8 @@ class Automation(object):
       if os.path.isfile(llvmsym):
         env["ASAN_SYMBOLIZER_PATH"] = llvmsym
         self.log.info("INFO | automation.py | ASan using symbolizer at %s", llvmsym)
+      else:
+        self.log.info("TEST-UNEXPECTED-FAIL | automation.py | Failed to find ASan symbolizer at %s", llvmsym)
 
       try:
         totalMemory = int(os.popen("free").readlines()[1].split()[1])
