@@ -206,106 +206,89 @@ CopyRow(pixman_box32_t *dest_it, pixman_box32_t *src_start, pixman_box32_t *src_
     return dest_it;
 }
 
+
+#define WRITE_RECT(x1, x2, y1, y2) \
+    do {                    \
+         tmpRect->x1 = x1;  \
+         tmpRect->x2 = x2;  \
+         tmpRect->y1 = y1;  \
+         tmpRect->y2 = y2;  \
+         tmpRect++;         \
+    } while (0)
+
+/* If 'r' overlaps the current rect, then expand the current rect to include
+ * it. Otherwise write the current rect out to tmpRect, and set r as the
+ * updated current rect. */
+#define MERGE_RECT(r)                 \
+    do {                              \
+      if (r->x1 <= x2) {              \
+          if (x2 < r->x2)             \
+              x2 = r->x2;             \
+      } else {                        \
+          WRITE_RECT(x1, x2, y1, y2); \
+          x1 = r->x1;                 \
+          x2 = r->x2;                 \
+      }                               \
+      r++;                            \
+    } while (0)
+
+
+/* Can we merge two sets of rects without extra space?
+ * Yes, but not easily. We can even do it stably
+ * but we don't need that property.
+ *
+ * This is written in the style of pixman_region_union_o */
 static pixman_box32_t *
-MergeRects(pixman_box32_t *topRects, pixman_box32_t *topRectsEnd,
-           pixman_box32_t *bottomRects, pixman_box32_t *bottomRectsEnd,
+MergeRects(pixman_box32_t *r1,
+           pixman_box32_t *r1_end,
+           pixman_box32_t *r2,
+           pixman_box32_t *r2_end,
            pixman_box32_t *tmpRect)
 {
-    struct pt {
-        int32_t x, y;
-    };
+    /* This routine works by maintaining the current
+     * rectangle in x1,x2,y1,y2 and either merging
+     * in the left most rectangle if it overlaps or
+     * outputing the current rectangle and setting
+     * it to the the left most one */
+    const int y1 = r1->y1;
+    const int y2 = r2->y2;
+    int x1;
+    int x2;
 
-    pixman_box32_t *rect;
-      // merge the two spans of rects
-      pt *i = (pt*)topRects;
-      pt *end_i = (pt*)topRectsEnd;
-      pt *j = (pt*)bottomRects;
-      pt *end_j = (pt*)bottomRectsEnd;
-      bool top;
-      bool bottom;
+    /* Find the left-most edge */
+    if (r1->x1 < r2->x1) {
+        x1 = r1->x1;
+        x2 = r1->x2;
+        r1++;
+    } else {
+        x1 = r2->x1;
+        x2 = r2->x2;
+        r2++;
+    }
 
-      int cur_x = i->x;
-      int32_t y1 = topRects->y1;
-      int32_t y2 = bottomRects->y2;
-      if (j->x < cur_x) {
-        top = false;
-        bottom = true;
-        cur_x = j->x;
-        j++;
-      } else if (j->x == cur_x) {
-        top = true;
-        bottom = true;
-        i++;
-        j++;
-      } else {
-        top = true;
-        bottom = false;
-        i++;
-      }
+    while (r1 != r1_end && r2 != r2_end) {
+        /* Find and merge the left-most rectangle */
+        if (r1->x1 < r2->x1)
+            MERGE_RECT (r1);
+        else
+            MERGE_RECT (r2);
+    }
 
-      rect = tmpRect;
-      bool started = false;
-      do {
-        if (started && !top && !bottom) {
-          rect->x2 = cur_x;
-          rect->y2 = y2;
-          rect++;
-          started = false;
-        } else if (!started) {
-          rect->x1 = cur_x;
-          rect->y1 = y1;
-          started = true;
-        }
+    /* Finish up any left overs */
+    if (r1 != r1_end) {
+        do {
+            MERGE_RECT (r1);
+        } while (r1 != r1_end);
+    } else if (r2 != r2_end) {
+        do {
+            MERGE_RECT(r2);
+        } while (r2 != r2_end);
+    }
 
-        if (i >= end_i || j >= end_j)
-          break;
+    /* Finish up the last rectangle */
+    WRITE_RECT(x1, x2, y1, y2);
 
-        if (i->x < j->x) {
-          top = !top;
-          cur_x = i->x;
-          i++;
-        } else if (j->x < i->x) {
-          bottom = !bottom;
-          cur_x = j->x;
-          j++;
-        } else { // i->x == j->x
-          top = !top;
-          bottom = !bottom;
-          cur_x = i->x;
-          i++;
-          j++;
-        }
-      } while (true);
-
-      // handle any remaining rects
-      while (i < end_i) {
-        top = !top;
-        cur_x = i->x;
-        i++;
-        if (!top) {
-          rect->x2 = cur_x;
-          rect->y2 = y2;
-          rect++;
-        } else {
-          rect->x1 = cur_x;
-          rect->y1 = y1;
-        }
-      }
-
-      while (j < end_j) {
-        bottom = !bottom;
-        cur_x = j->x;
-        j++;
-        if (!bottom) {
-          rect->x2 = cur_x;
-          rect->y2 = y2;
-          rect++;
-        } else {
-          rect->x1 = cur_x;
-          rect->y1 = y1;
-        }
-      }
-      return rect;
+    return tmpRect;
 }
 
 void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
