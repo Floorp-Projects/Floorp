@@ -745,18 +745,26 @@ TouchCaret::HandleTouchDownEvent(WidgetTouchEvent* aEvent)
         // If touch caret is invisible, bypass event.
         status = nsEventStatus_eIgnore;
       } else {
-        nsPoint point = GetEventPosition(aEvent, 0);
-        if (IsOnTouchCaret(point)) {
-          // Touch start position is contained in touch caret.
-          mActiveTouchId = aEvent->touches[0]->mIdentifier;
-          // Cache distance of the event point to the center of touch caret.
-          mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - point.y;
-          // Enter TOUCHCARET_TOUCHDRAG_ACTIVE state and cancel the timer.
-          SetState(TOUCHCARET_TOUCHDRAG_ACTIVE);
-          CancelExpirationTimer();
-          status = nsEventStatus_eConsumeNoDefault;
-        } else {
-          // Set touch caret invisible if HisTest fails. Bypass event.
+        // Loop over all the touches and see if any of them is on the touch
+        // caret.
+        for (size_t i = 0; i < aEvent->touches.Length(); ++i) {
+          int32_t touchId = aEvent->touches[i]->Identifier();
+          nsPoint point = GetEventPosition(aEvent, touchId);
+          if (IsOnTouchCaret(point)) {
+            // Touch start position is contained in touch caret.
+            mActiveTouchId = touchId;
+            // Cache distance of the event point to the center of touch caret.
+            mCaretCenterToDownPointOffsetY = GetCaretYCenterPosition() - point.y;
+            // Enter TOUCHCARET_TOUCHDRAG_ACTIVE state and cancel the timer.
+            SetState(TOUCHCARET_TOUCHDRAG_ACTIVE);
+            CancelExpirationTimer();
+            status = nsEventStatus_eConsumeNoDefault;
+            break;
+          }
+        }
+        // No touch is on the touch caret. Set touch caret invisible, and bypass
+        // the event.
+        if (mActiveTouchId == -1) {
           SetVisibility(false);
           status = nsEventStatus_eIgnore;
         }

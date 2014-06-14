@@ -1,0 +1,63 @@
+commit fb25cd08ed5a87640b02f0feeb10a09b37cfddbe (HEAD, origin/clang-cl, clang-cl)
+Author: Ehsan Akhgari <ehsan@mozilla.com>
+Date:   Wed Jun 11 12:07:24 2014 -0400
+
+    Add support for building with clang-cl
+
+diff --git a/README b/README
+index 7aee5b4..9cba257 100644
+--- a/README
++++ b/README
+@@ -146,12 +146,17 @@ It's also possible to build libffi on Windows platforms with
+ Microsoft's Visual C++ compiler.  In this case, use the msvcc.sh
+ wrapper script during configuration like so:
+ 
+-path/to/configure CC=path/to/msvcc.sh CXX=path/to/msvcc.sh LD=link CPP=\"cl -nologo -EP\"
++path/to/configure CC=path/to/msvcc.sh CXX=path/to/msvcc.sh LD=link CPP="cl -nologo -EP"
+ 
+ For 64-bit Windows builds, use CC="path/to/msvcc.sh -m64" and
+ CXX="path/to/msvcc.sh -m64".  You may also need to specify --build
+ appropriately.
+ 
++It is also possible to build libffi on Windows platforms with the LLVM
++project's clang-cl compiler, like below:
++
++path/to/configure CC="path/to/msvcc.sh -clang-cl" CXX="path/to/msvcc.sh -clang-cl" LD=link CPP="clang-cl -EP"
++
+ When building with MSVC under a MingW environment, you may need to
+ remove the line in configure that sets 'fix_srcfile_path' to a 'cygpath'
+ command.  ('cygpath' is not present in MingW, and is not required when
+diff --git a/include/ffi.h.in b/include/ffi.h.in
+index 70c6179..ebed0aa 100644
+--- a/include/ffi.h.in
++++ b/include/ffi.h.in
+@@ -68,7 +68,7 @@ extern "C" {
+ 
+ #ifndef LIBFFI_ASM
+ 
+-#ifdef _MSC_VER
++#if defined(_MSC_VER) && !defined(__clang__)
+ #define __attribute__(X)
+ #endif
+ 
+diff --git a/msvcc.sh b/msvcc.sh
+index 9208076..4a65b0b 100755
+--- a/msvcc.sh
++++ b/msvcc.sh
+@@ -63,11 +63,15 @@ do
+       shift 1
+     ;;
+     -m64)
+-      cl="cl"   # "$MSVC/x86_amd64/cl"
+       ml="ml64" # "$MSVC/x86_amd64/ml64"
+       safeseh=
+       shift 1
+     ;;
++    -clang-cl)
++      cl="clang-cl"
++      safeseh=
++      shift 1
++    ;;
+     -O0)
+       args="$args -Od"
+       shift 1

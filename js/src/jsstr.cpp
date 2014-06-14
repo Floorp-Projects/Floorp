@@ -260,6 +260,8 @@ str_unescape(JSContext *cx, unsigned argc, Value *vp)
 
     /* Step 3. */
     StringBuffer sb(cx);
+    if (str->hasTwoByteChars() && !sb.ensureTwoByteChars())
+        return false;
 
     /*
      * Note that the spec algorithm has been optimized to avoid building
@@ -307,7 +309,7 @@ str_unescape(JSContext *cx, unsigned argc, Value *vp)
             building = true;                        \
             if (!sb.reserve(length))                \
                 return false;                       \
-            sb.infallibleAppend(chars, chars + k);  \
+            sb.infallibleAppend(chars, k);          \
         }                                           \
     JS_END_MACRO
 
@@ -698,8 +700,7 @@ ToLowerCase(JSContext *cx, JSLinearString *str)
         const CharT *chars = str->chars<CharT>(nogc);
         for (size_t i = 0; i < length; i++) {
             jschar c = unicode::ToLowerCase(chars[i]);
-            if (IsSame<CharT, Latin1Char>::value)
-                MOZ_ASSERT(c <= 0xff);
+            MOZ_ASSERT_IF((IsSame<CharT, Latin1Char>::value), c <= 0xff);
             newChars[i] = c;
         }
         newChars[length] = 0;
@@ -928,7 +929,7 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         return false;
     UErrorCode status = U_ZERO_ERROR;
     int32_t size = unorm_normalize(srcChars, srcLen, form, 0,
-                                   JSCharToUChar(chars.begin()), SB_LENGTH,
+                                   JSCharToUChar(chars.rawTwoByteBegin()), SB_LENGTH,
                                    &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
@@ -938,7 +939,7 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         int32_t finalSize =
 #endif
         unorm_normalize(srcChars, srcLen, form, 0,
-                        JSCharToUChar(chars.begin()), size,
+                        JSCharToUChar(chars.rawTwoByteBegin()), size,
                         &status);
         MOZ_ASSERT(size == finalSize || U_FAILURE(status), "unorm_normalize behaved inconsistently");
     }
@@ -2763,7 +2764,8 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
 
 /*
  * Precondition: |rdata.sb| already has necessary growth space reserved (as
- * derived from FindReplaceLength).
+ * derived from FindReplaceLength), and has been inflated to TwoByte if
+ * necessary.
  */
 static void
 DoReplace(RegExpStatics *res, ReplaceData &rdata)
@@ -2785,8 +2787,7 @@ DoReplace(RegExpStatics *res, ReplaceData &rdata)
             JSSubString sub;
             size_t skip;
             if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
-                len = sub.length;
-                rdata.sb.infallibleAppend(sub.chars, len);
+                rdata.sb.infallibleAppend(sub.chars, sub.length);
                 cp += skip;
                 dp += skip;
             } else {
@@ -2823,13 +2824,24 @@ ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata)
         js_ReportAllocationOverflow(cx);
         return false;
     }
+
+    /*
+     * Inflate the buffer now if needed, to avoid (fallible) Latin1 to TwoByte
+     * inflation later on.
+     */
+    JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
+    if (str.hasTwoByteChars() || rdata.repstr->hasTwoByteChars()) {
+        if (!rdata.sb.ensureTwoByteChars())
+            return false;
+    }
+
     if (!rdata.sb.reserve(newlen.value()))
         return false;
 
-    JSLinearString &str = rdata.str->asLinear();  /* flattened for regexp */
+    /* Append skipped-over portion of the search value. */
     const jschar *left = str.chars() + leftoff;
+    rdata.sb.infallibleAppend(left, leftlen);
 
-    rdata.sb.infallibleAppend(left, leftlen); /* skipped-over portion of the search value */
     DoReplace(res, rdata);
     return true;
 }
@@ -2937,19 +2949,21 @@ BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *reps
      * Note that dollar vars _could_ make the resulting text smaller than this.
      */
     StringBuffer newReplaceChars(cx);
+    if (repstr->hasTwoByteChars() && !newReplaceChars.ensureTwoByteChars())
+        return false;
+
     if (!newReplaceChars.reserve(textstr->length() - fm.patternLength() + repstr->length()))
         return false;
 
     JS_ASSERT(firstDollarIndex < repstr->length());
-    const jschar *firstDollar = repstr->chars() + firstDollarIndex;
 
     /* Move the pre-dollar chunk in bulk. */
-    newReplaceChars.infallibleAppend(repstr->chars(), firstDollar);
+    newReplaceChars.infallibleAppend(repstr->chars(), firstDollarIndex);
 
     /* Move the rest char-by-char, interpreting dollars as we encounter them. */
     const jschar *textchars = textstr->chars();
     const jschar *repstrLimit = repstr->chars() + repstr->length();
-    for (const jschar *it = firstDollar; it < repstrLimit; ++it) {
+    for (const jschar *it = repstr->chars() + firstDollarIndex; it < repstrLimit; ++it) {
         if (*it != '$' || it == repstrLimit - 1) {
             if (!newReplaceChars.append(*it))
                 return false;
@@ -4230,6 +4244,12 @@ js_NewString<CanGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
 
 template JSFlatString *
 js_NewString<NoGC>(ThreadSafeContext *cx, jschar *chars, size_t length);
+
+template JSFlatString *
+js_NewString<CanGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
+
+template JSFlatString *
+js_NewString<NoGC>(ThreadSafeContext *cx, Latin1Char *chars, size_t length);
 
 JSLinearString *
 js_NewDependentString(JSContext *cx, JSString *baseArg, size_t start, size_t length)
