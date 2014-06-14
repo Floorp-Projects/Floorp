@@ -352,9 +352,10 @@ AtomizeAndtake(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehav
 }
 
 /* |tbchars| must not point into an inline or short string. */
+template <typename CharT>
 MOZ_ALWAYS_INLINE
 static JSAtom *
-AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, InternBehavior ib)
+AtomizeAndCopyChars(ExclusiveContext *cx, const CharT *tbchars, size_t length, InternBehavior ib)
 {
     if (JSAtom *s = cx->staticStrings().lookup(tbchars, length))
          return s;
@@ -395,6 +396,12 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, 
 
     return atom;
 }
+
+template JSAtom *
+AtomizeAndCopyChars(ExclusiveContext *cx, const jschar *tbchars, size_t length, InternBehavior ib);
+
+template JSAtom *
+AtomizeAndCopyChars(ExclusiveContext *cx, const Latin1Char *tbchars, size_t length, InternBehavior ib);
 
 JSAtom *
 js::AtomizeString(ExclusiveContext *cx, JSString *str,
@@ -458,8 +465,9 @@ js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavi
     return AtomizeAndtake(cx, tbcharsZ, length, ib);
 }
 
+template <typename CharT>
 JSAtom *
-js::AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length, InternBehavior ib)
+js::AtomizeChars(ExclusiveContext *cx, const CharT *chars, size_t length, InternBehavior ib)
 {
     CHECK_REQUEST(cx);
 
@@ -468,6 +476,12 @@ js::AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length, Inter
 
     return AtomizeAndCopyChars(cx, chars, length, ib);
 }
+
+template JSAtom *
+js::AtomizeChars(ExclusiveContext *cx, const Latin1Char *chars, size_t length, InternBehavior ib);
+
+template JSAtom *
+js::AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length, InternBehavior ib);
 
 bool
 js::IndexToIdSlow(ExclusiveContext *cx, uint32_t index, MutableHandleId idp)

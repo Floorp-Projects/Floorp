@@ -59,7 +59,7 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
 {
   const char *cachePath = getenv("MOZ_LINKER_CACHE");
   if (!cachePath || !*cachePath) {
-    LOG("Warning: MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
+    WARN("MOZ_LINKER_EXTRACT is set, but not MOZ_LINKER_CACHE; "
         "not extracting");
     return nullptr;
   }
@@ -80,21 +80,21 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
   fd = open(path, O_TRUNC | O_RDWR | O_CREAT | O_NOATIME,
                   S_IRUSR | S_IWUSR);
   if (fd == -1) {
-    LOG("Couldn't open %s to decompress library", path.get());
+    ERROR("Couldn't open %s to decompress library", path.get());
     return nullptr;
   }
   AutoUnlinkFile file;
   file = path.forget();
   if (stream->GetType() == Zip::Stream::DEFLATE) {
     if (ftruncate(fd, stream->GetUncompressedSize()) == -1) {
-      LOG("Couldn't ftruncate %s to decompress library", file.get());
+      ERROR("Couldn't ftruncate %s to decompress library", file.get());
       return nullptr;
     }
     /* Map the temporary file for use as inflate buffer */
     MappedPtr buffer(MemoryRange::mmap(nullptr, stream->GetUncompressedSize(),
                                        PROT_WRITE, MAP_SHARED, fd, 0));
     if (buffer == MAP_FAILED) {
-      LOG("Couldn't map %s to decompress library", file.get());
+      ERROR("Couldn't map %s to decompress library", file.get());
       return nullptr;
     }
 
@@ -102,41 +102,41 @@ MappableExtractFile::Create(const char *name, Zip *zip, Zip::Stream *stream)
 
     /* Decompress */
     if (inflateInit2(&zStream, -MAX_WBITS) != Z_OK) {
-      LOG("inflateInit failed: %s", zStream.msg);
+      ERROR("inflateInit failed: %s", zStream.msg);
       return nullptr;
     }
     if (inflate(&zStream, Z_FINISH) != Z_STREAM_END) {
-      LOG("inflate failed: %s", zStream.msg);
+      ERROR("inflate failed: %s", zStream.msg);
       return nullptr;
     }
     if (inflateEnd(&zStream) != Z_OK) {
-      LOG("inflateEnd failed: %s", zStream.msg);
+      ERROR("inflateEnd failed: %s", zStream.msg);
       return nullptr;
     }
     if (zStream.total_out != stream->GetUncompressedSize()) {
-      LOG("File not fully uncompressed! %ld / %d", zStream.total_out,
+      ERROR("File not fully uncompressed! %ld / %d", zStream.total_out,
           static_cast<unsigned int>(stream->GetUncompressedSize()));
       return nullptr;
     }
   } else if (stream->GetType() == Zip::Stream::STORE) {
     SeekableZStream zStream;
     if (!zStream.Init(stream->GetBuffer(), stream->GetSize())) {
-      LOG("Couldn't initialize SeekableZStream for %s", name);
+      ERROR("Couldn't initialize SeekableZStream for %s", name);
       return nullptr;
     }
     if (ftruncate(fd, zStream.GetUncompressedSize()) == -1) {
-      LOG("Couldn't ftruncate %s to decompress library", file.get());
+      ERROR("Couldn't ftruncate %s to decompress library", file.get());
       return nullptr;
     }
     MappedPtr buffer(MemoryRange::mmap(nullptr, zStream.GetUncompressedSize(),
                                        PROT_WRITE, MAP_SHARED, fd, 0));
     if (buffer == MAP_FAILED) {
-      LOG("Couldn't map %s to decompress library", file.get());
+      ERROR("Couldn't map %s to decompress library", file.get());
       return nullptr;
     }
 
     if (!zStream.Decompress(buffer, 0, zStream.GetUncompressedSize())) {
-      LOG("%s: failed to decompress", name);
+      ERROR("%s: failed to decompress", name);
       return nullptr;
     }
   } else {
@@ -312,26 +312,26 @@ MappableDeflate::mmap(const void *addr, size_t length, int prot, int flags, off_
     zStream.avail_out = missing;
     if ((*buffer == zStream.next_out) &&
         (inflateInit2(&zStream, -MAX_WBITS) != Z_OK)) {
-      LOG("inflateInit failed: %s", zStream.msg);
+      ERROR("inflateInit failed: %s", zStream.msg);
       return MemoryRange(MAP_FAILED, 0);
     }
     int ret = inflate(&zStream, Z_SYNC_FLUSH);
     if (ret < 0) {
-      LOG("inflate failed: %s", zStream.msg);
+      ERROR("inflate failed: %s", zStream.msg);
       return MemoryRange(MAP_FAILED, 0);
     }
     if (ret == Z_NEED_DICT) {
-      LOG("zstream requires a dictionary. %s", zStream.msg);
+      ERROR("zstream requires a dictionary. %s", zStream.msg);
       return MemoryRange(MAP_FAILED, 0);
     }
     zStream.avail_out = avail_out - missing + zStream.avail_out;
     if (ret == Z_STREAM_END) {
       if (inflateEnd(&zStream) != Z_OK) {
-        LOG("inflateEnd failed: %s", zStream.msg);
+        ERROR("inflateEnd failed: %s", zStream.msg);
         return MemoryRange(MAP_FAILED, 0);
       }
       if (zStream.total_out != buffer->GetLength()) {
-        LOG("File not fully uncompressed! %ld / %d", zStream.total_out,
+        ERROR("File not fully uncompressed! %ld / %d", zStream.total_out,
             static_cast<unsigned int>(buffer->GetLength()));
         return MemoryRange(MAP_FAILED, 0);
       }
@@ -562,9 +562,8 @@ MappableSeekableZStream::ensure(const void *addr)
     return true;
   }
 
-  LOG("mprotect @%p, 0x%" PRIxSize ", 0x%x failed with errno %d",
+  ERROR("mprotect @%p, 0x%" PRIxSize ", 0x%x failed with errno %d",
       start, length, map->prot, errno);
-  LOG("mprotect failed");
   return false;
 }
 
