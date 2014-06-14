@@ -10,6 +10,13 @@ function logResult(str, passed) {
 
 window._testResults = {};
 
+// check values for return values from blocked timeout or intervals
+var verifyZeroRetVal = (function(window) {
+  return function(val, details) {
+    logResult((val === 0 ? "PASS: " : "FAIL: ") + "Blocked interval/timeout should have zero return value; " + details, val === 0);
+    window.parent.verifyZeroRetVal(val, details);
+  };})(window);
+
 // callback for when stuff is allowed by CSP
 var onevalexecuted = (function(window) {
     return function(shouldrun, what, data) {
@@ -41,7 +48,28 @@ addEventListener('load', function() {
       }
     }
     setTimeout(fcn_setTimeoutWithStringCheck.bind(window), 10);
-    setTimeout(str_setTimeoutWithStringRan, 10);
+    var res = setTimeout(str_setTimeoutWithStringRan, 10);
+    verifyZeroRetVal(res, "setTimeout(String)");
+  }
+
+  // setInterval(String) test -- mutate something in the window._testResults
+  // obj, then check it.
+  {
+    var str_setIntervalWithStringRan = 'onevalexecuted(false, "setInterval(String)", "setInterval with a string was enabled.");';
+    function fcn_setIntervalWithStringCheck() {
+      if (this._testResults["setInterval(String)"] !== "ran") {
+        onevalblocked(false, "setInterval(String)",
+                      "setInterval with a string was blocked");
+      }
+    }
+    setTimeout(fcn_setIntervalWithStringCheck.bind(window), 10);
+    var res = setInterval(str_setIntervalWithStringRan, 10);
+    verifyZeroRetVal(res, "setInterval(String)");
+
+    // emergency cleanup, just in case.
+    if (res != 0) {
+      setTimeout(function () { clearInterval(res); }, 15);
+    }
   }
 
   // setTimeout(function) test -- mutate something in the window._testResults
