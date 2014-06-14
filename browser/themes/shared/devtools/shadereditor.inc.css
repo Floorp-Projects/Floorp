@@ -35,10 +35,6 @@
   -moz-margin-end: 6px;
 }
 
-#requests-menu-reload-notice-button {
-  min-height: 2em;
-}
-
 /* Shaders pane */
 
 #shaders-pane {

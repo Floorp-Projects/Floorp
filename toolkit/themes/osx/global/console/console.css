@@ -133,10 +133,6 @@
   box-shadow: @roundButtonShadow@;
 }
 
-#ButtonEval > .toolbarbutton-text {
-  margin: 0 !important;
-}
-
 #ButtonEval:hover:active {
   text-shadow: @loweredShadow@;
   background: @roundButtonPressedBackground@;

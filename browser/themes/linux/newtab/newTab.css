@@ -57,10 +57,6 @@
   width: 16px;
 }
 
-#newtab-undo-close-button > .toolbarbutton-text {
-  display: none;
-}
-
 #newtab-undo-close-button:-moz-focusring {
   outline: 1px dotted;
 }

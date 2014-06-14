@@ -5,11 +5,6 @@
 
 %ifdef XP_MACOSX
 
-#inspector-toolbar {
-  padding-top: 4px;
-  padding-bottom: 4px;
-}
-
 #inspector-toolbar:-moz-locale-dir(ltr) {
   padding-left: 2px;
   padding-right: 16px; /* use -moz-padding-end when/if bug 631729 gets fixed */
