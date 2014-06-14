@@ -1719,7 +1719,7 @@ skip-if(B2G) == 751012-1a.html 751012-1-ref.html
 skip-if(B2G) == 751012-1b.html 751012-1-ref.html
 random-if(Android||(B2G&&browserIsRemote)) == 753329-1.html about:blank
 == 758561-1.html 758561-1-ref.html
-fuzzy-if(true,1,19) fails-if(d2d) random-if(Android&&AndroidVersion<15) == 759036-1.html 759036-1-ref.html
+fuzzy-if(true,1,90) random-if(Android&&AndroidVersion<15) == 759036-1.html 759036-1-ref.html
 fuzzy-if(true,17,5879) random-if(Android&&AndroidVersion<15) == 759036-2.html 759036-2-ref.html
 random-if(Android&&AndroidVersion<15) == 776265-1a.html 776265-1-ref.html
 == 776265-1b.html 776265-1-ref.html
@@ -1778,7 +1778,7 @@ skip-if(B2G&&browserIsRemote) == 858803-1.html 858803-1-ref.html # bug 974780
 random-if(B2G&&browserIsRemote) == 894931-1.html 894931-1-ref.html
 == 897491-1.html 897491-1-ref.html
 == 897491-2.html 897491-2-ref.html
-fuzzy(1,10000) fuzzy-if(Android&&AndroidVersion>=15,5,10000) == 902330-1.html 902330-1-ref.html
+fuzzy(2,10000) fuzzy-if(Android&&AndroidVersion>=15,5,10000) == 902330-1.html 902330-1-ref.html
 fuzzy-if(Android,8,400) == 906199-1.html 906199-1-ref.html
 == 921716-1.html 921716-1-ref.html
 test-pref(layout.css.sticky.enabled,true) random-if(B2G&&browserIsRemote) == 926155-1.html 926155-1-ref.html
