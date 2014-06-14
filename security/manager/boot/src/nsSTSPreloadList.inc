@@ -8,7 +8,7 @@
 /*****************************************************************************/
 
 #include <stdint.h>
-const PRTime gPreloadListExpirationTime = INT64_C(1413022251299000);
+const PRTime gPreloadListExpirationTime = INT64_C(1413626820110000);
 
 class nsSTSPreload
 {
@@ -32,7 +32,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "app.recurly.com", false },
   { "app.yinxiang.com", false },
   { "appengine.google.com", true },
-  { "appseccalifornia.org", true },
   { "arivo.com.br", true },
   { "bank.simple.com", false },
   { "bccx.com", true },
@@ -42,7 +41,6 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "blog.lookout.com", false },
   { "blog.torproject.org", false },
   { "boxcryptor.com", true },
-  { "braintreepayments.com", false },
   { "bugzilla.mozilla.org", true },
   { "business.lookout.com", false },
   { "carezone.com", false },
@@ -117,6 +115,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "hostedtalkgadget.google.com", true },
   { "howrandom.org", true },
   { "id.mayfirst.org", false },
+  { "imouto.my", false },
   { "inertianetworks.com", true },
   { "intercom.io", false },
   { "itriskltd.com", true },
@@ -155,6 +154,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "mega.co.nz", false },
   { "members.mayfirst.org", false },
   { "members.nearlyfreespeech.net", false },
+  { "miku.hatsune.my", true },
   { "mnsure.org", true },
   { "mobile.usaa.com", false },
   { "mudcrab.us", true },
@@ -192,10 +192,11 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "pult.co", true },
   { "pypi.python.org", true },
   { "python.org", false },
-  { "riseup.net", true },
+  { "reviews.anime.my", true },
   { "roddis.net", false },
   { "romab.com", true },
   { "roundcube.mayfirst.org", false },
+  { "sakaki.anime.my", true },
   { "sandbox.mydigipass.com", false },
   { "script.google.com", true },
   { "security.google.com", true },
@@ -210,6 +211,7 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "spreadsheets.google.com", true },
   { "squareup.com", false },
   { "ssl.google-analytics.com", true },
+  { "stage.wepay.com", false },
   { "stocktrade.de", false },
   { "stripe.com", true },
   { "strongest-privacy.com", true },
@@ -227,8 +229,10 @@ static const nsSTSPreload kSTSPreloadList[] = {
   { "ubertt.org", true },
   { "usaa.com", false },
   { "vmoagents.com", false },
+  { "vocaloid.my", true },
   { "w-spotlight.appspot.com", true },
   { "wallet.google.com", true },
+  { "webcollect.org.uk", true },
   { "webfilings-eu-mirror.appspot.com", true },
   { "webfilings-eu.appspot.com", true },
   { "webfilings-mirror-hrd.appspot.com", true },
