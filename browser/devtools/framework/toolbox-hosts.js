@@ -60,10 +60,10 @@ BottomHost.prototype = {
     this._nbox.appendChild(this._splitter);
     this._nbox.appendChild(this.frame);
 
-    let frameLoad = function() {
+    let frameLoad = () => {
       this.emit("ready", this.frame);
       deferred.resolve(this.frame);
-    }.bind(this);
+    };
 
     this.frame.tooltip = "aHTMLTooltip";
 
@@ -143,10 +143,10 @@ SidebarHost.prototype = {
     this._sidebar.appendChild(this._splitter);
     this._sidebar.appendChild(this.frame);
 
-    let frameLoad = function() {
+    let frameLoad = () => {
       this.emit("ready", this.frame);
       deferred.resolve(this.frame);
-    }.bind(this);
+    };
 
     this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
@@ -213,14 +213,14 @@ WindowHost.prototype = {
     let win = Services.ww.openWindow(null, this.WINDOW_URL, "_blank",
                                      flags, null);
 
-    let frameLoad = function(event) {
+    let frameLoad = (event) => {
       win.removeEventListener("load", frameLoad, true);
       win.focus();
       this.frame = win.document.getElementById("toolbox-iframe");
       this.emit("ready", this.frame);
 
       deferred.resolve(this.frame);
-    }.bind(this);
+    };
 
     win.addEventListener("load", frameLoad, true);
     win.addEventListener("unload", this._boundUnload);
