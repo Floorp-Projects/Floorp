@@ -29,7 +29,7 @@ toolbarbutton:-moz-lwtheme {
 }
 
 .toolbarbutton-text {
-  margin: 0 !important;
+  margin: 0 !important; /* !important for overriding global.css */
   text-align: center;
 }
 

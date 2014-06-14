@@ -120,7 +120,7 @@ class ArrayBufferObject : public JSObject
     }
 
     static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
-                                       JS::ClassInfo *info);
+                                       JS::ObjectsExtraSizes *sizes);
 
     void addView(ArrayBufferViewObject *view);
 

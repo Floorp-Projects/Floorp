@@ -135,14 +135,20 @@
 
           <vbox id="requests-menu-empty-notice"
                 class="side-menu-widget-empty-text">
+            <hbox id="notice-reload-message" align="center">
+              <label value="&netmonitorUI.reloadNotice1;"/>
+              <button id="requests-menu-reload-notice-button"
+                      class="devtools-toolbarbutton"
+                      standalone="true"
+                      label="&netmonitorUI.reloadNotice2;"/>
+              <label value="&netmonitorUI.reloadNotice3;"/>
+            </hbox>
             <hbox id="notice-perf-message" align="center">
               <label value="&netmonitorUI.perfNotice1;"/>
               <button id="requests-menu-perf-notice-button"
+                      standalone="true"
                       class="devtools-toolbarbutton"/>
               <label value="&netmonitorUI.perfNotice2;"/>
-            </hbox>
-            <hbox id="notice-reload-message" align="center">
-              <label value="&netmonitorUI.emptyNotice3;"/>
             </hbox>
           </vbox>
 
@@ -193,7 +199,8 @@
               <label value="&netmonitorUI.custom.newRequest;"
                      class="plain tabpanel-summary-label
                             custom-header"/>
-              <hbox flex="1" pack="end">
+              <hbox flex="1" pack="end"
+                    class="devtools-toolbarbutton-group">
                 <button id="custom-request-send-button"
                         class="devtools-toolbarbutton"
                         label="&netmonitorUI.custom.send;"/>

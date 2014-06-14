@@ -342,4 +342,7 @@ void ProxyReleaseMainThread(nsCOMPtr<T> &object)
 #define NS_CACHE_STORAGE_SERVICE_CONTRACTID \
   "@mozilla.org/netwerk/cache-storage-service;1"
 
+#define NS_CACHE_STORAGE_SERVICE_CONTRACTID2 \
+  "@mozilla.org/network/cache-storage-service;1"
+
 #endif

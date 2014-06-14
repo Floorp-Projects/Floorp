@@ -4,8 +4,7 @@
 // Tests that the developer toolbar errors count works properly.
 
 function test() {
-  const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/" +
-                   "browser_toolbar_webconsole_errors_count.html";
+  const TEST_URI = TEST_URI_ROOT + "browser_toolbar_webconsole_errors_count.html";
 
   let gDevTools = Cu.import("resource:///modules/devtools/gDevTools.jsm",
                              {}).gDevTools;

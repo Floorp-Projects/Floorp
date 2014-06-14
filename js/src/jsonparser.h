@@ -8,6 +8,7 @@
 #define jsonparser_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Range.h"
 
 #include "jspubtd.h"
 
@@ -16,19 +17,20 @@
 
 namespace js {
 
-class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
+// JSONParser base class. JSONParser is templatized to work on either Latin1
+// or TwoByte input strings, JSONParserBase holds all state and methods that
+// can be shared between the two encodings.
+class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
 {
   public:
     enum ErrorHandling { RaiseError, NoError };
 
   private:
     /* Data members */
-
-    JSContext * const cx;
-    JS::ConstTwoByteChars current;
-    const JS::ConstTwoByteChars begin, end;
-
     Value v;
+
+  protected:
+    JSContext * const cx;
 
     const ErrorHandling errorHandling;
 
@@ -105,17 +107,9 @@ class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
     Token lastToken;
 #endif
 
-  public:
-    /* Public API */
-
-    /* Create a parser for the provided JSON data. */
-    JSONParser(JSContext *cx, JS::ConstTwoByteChars data, size_t length,
-               ErrorHandling errorHandling = RaiseError)
-      : AutoGCRooter(cx, JSONPARSER),
+    JSONParserBase(JSContext *cx, ErrorHandling errorHandling)
+      : JS::AutoGCRooter(cx, JSONPARSER),
         cx(cx),
-        current(data),
-        begin(data),
-        end((data + length).get(), data.get(), length),
         errorHandling(errorHandling),
         stack(cx),
         freeElements(cx),
@@ -123,25 +117,9 @@ class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
 #ifdef DEBUG
       , lastToken(Error)
 #endif
-    {
-        JS_ASSERT(current <= end);
-    }
+    {}
+    ~JSONParserBase();
 
-    ~JSONParser();
-
-    /*
-     * Parse the JSON data specified at construction time.  If it parses
-     * successfully, store the prescribed value in *vp and return true.  If an
-     * internal error (e.g. OOM) occurs during parsing, return false.
-     * Otherwise, if invalid input was specifed but no internal error occurred,
-     * behavior depends upon the error handling specified at construction: if
-     * error handling is RaiseError then throw a SyntaxError and return false,
-     * otherwise return true and set *vp to |undefined|.  (JSON syntax can't
-     * represent |undefined|, so the JSON data couldn't have specified it.)
-     */
-    bool parse(MutableHandleValue vp);
-
-  private:
     Value numberValue() const {
         JS_ASSERT(lastToken == Number);
         JS_ASSERT(v.isNumber());
@@ -185,6 +163,58 @@ class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
     }
 
     enum StringType { PropertyName, LiteralValue };
+
+    bool errorReturn();
+
+    bool finishObject(MutableHandleValue vp, PropertyVector &properties);
+    bool finishArray(MutableHandleValue vp, ElementVector &elements);
+
+  private:
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    void trace(JSTracer *trc);
+
+    JSObject *createFinishedObject(PropertyVector &properties);
+
+    JSONParserBase(const JSONParserBase &other) MOZ_DELETE;
+    void operator=(const JSONParserBase &other) MOZ_DELETE;
+};
+
+template <typename CharT>
+class MOZ_STACK_CLASS JSONParser : public JSONParserBase
+{
+  private:
+    typedef mozilla::RangedPtr<const CharT> CharPtr;
+
+    CharPtr current;
+    const CharPtr begin, end;
+
+  public:
+    /* Public API */
+
+    /* Create a parser for the provided JSON data. */
+    JSONParser(JSContext *cx, mozilla::Range<const CharT> data,
+               ErrorHandling errorHandling = RaiseError)
+      : JSONParserBase(cx, errorHandling),
+        current(data.start()),
+        begin(current),
+        end(data.end())
+    {
+        JS_ASSERT(current <= end);
+    }
+
+    /*
+     * Parse the JSON data specified at construction time.  If it parses
+     * successfully, store the prescribed value in *vp and return true.  If an
+     * internal error (e.g. OOM) occurs during parsing, return false.
+     * Otherwise, if invalid input was specifed but no internal error occurred,
+     * behavior depends upon the error handling specified at construction: if
+     * error handling is RaiseError then throw a SyntaxError and return false,
+     * otherwise return true and set *vp to |undefined|.  (JSON syntax can't
+     * represent |undefined|, so the JSON data couldn't have specified it.)
+     */
+    bool parse(MutableHandleValue vp);
+
+  private:
     template<StringType ST> Token readString();
 
     Token readNumber();
@@ -197,16 +227,8 @@ class MOZ_STACK_CLASS JSONParser : private JS::AutoGCRooter
     Token advanceAfterArrayElement();
 
     void error(const char *msg);
-    bool errorReturn();
-
-    JSObject *createFinishedObject(PropertyVector &properties);
-    bool finishObject(MutableHandleValue vp, PropertyVector &properties);
-    bool finishArray(MutableHandleValue vp, ElementVector &elements);
 
     void getTextPosition(uint32_t *column, uint32_t *line);
-
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    void trace(JSTracer *trc);
 
   private:
     JSONParser(const JSONParser &other) MOZ_DELETE;

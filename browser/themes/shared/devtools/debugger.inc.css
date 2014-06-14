@@ -599,11 +599,6 @@
 
 /* Toolbar controls */
 
-.devtools-sidebar-tabs > tabs > tab {
-  min-height: 24px !important;
-  padding: 0 !important;
-}
-
 #debugger-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon,
 #sources-toolbar .devtools-toolbarbutton:not([label]) > .toolbarbutton-icon {
   width: 16px;

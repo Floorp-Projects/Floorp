@@ -41,6 +41,7 @@ EXPORTS.mozilla = [
     'MacroForEach.h',
     'MathAlgorithms.h',
     'Maybe.h',
+    'MaybeOneOf.h',
     'MemoryChecking.h',
     'MemoryReporting.h',
     'Move.h',

@@ -12,7 +12,6 @@ const TEST_PAGE = [
   '<style type="text/css">',
   '  div {',
   '    width: 300px;height: 300px;border-radius: 50%;',
-  '    transform: skew(45deg);',
   '    background: red url(chrome://global/skin/icons/warning-64.png);',
   '  }',
   '</style>',
@@ -25,41 +24,9 @@ let test = asyncTest(function*() {
 
   yield selectNode("div", inspector);
 
-  yield testTransformDimension(view);
   yield testImageDimension(view);
   yield testPickerDimension(view);
 });
-
-function* testTransformDimension(ruleView) {
-  info("Testing css transform tooltip dimensions");
-
-  let tooltip = ruleView.previewTooltip;
-  let panel = tooltip.panel;
-  let {valueSpan} = getRuleViewProperty(ruleView, "div", "transform");
-
-  // Make sure there is a hover tooltip for this property, this also will fill
-  // the tooltip with its content
-  yield assertHoverTooltipOn(tooltip, valueSpan);
-
-  info("Showing the tooltip");
-  let onShown = tooltip.once("shown");
-  tooltip.show();
-  yield onShown;
-
-  // Let's not test for a specific size, but instead let's make sure it's at
-  // least as big as the preview canvas
-  let canvas = panel.querySelector("canvas");
-  let w = canvas.width;
-  let h = canvas.height;
-  let panelRect = panel.getBoundingClientRect();
-
-  ok(panelRect.width >= w, "The panel is wide enough to show the canvas");
-  ok(panelRect.height >= h, "The panel is high enough to show the canvas");
-
-  let onHidden = tooltip.once("hidden");
-  tooltip.hide();
-  yield onHidden;
-}
 
 function* testImageDimension(ruleView) {
   info("Testing background-image tooltip dimensions");
