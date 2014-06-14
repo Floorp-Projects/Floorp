@@ -639,6 +639,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     csp_report.AppendASCII(reportBlockedURI.get());
   }
   else {
+    // this can happen for frame-ancestors violation where the violating
+    // ancestor is cross-origin.
     NS_WARNING("No blocked URI (null aBlockedContentSource) for CSP violation report.");
   }
   csp_report.AppendASCII("\", ");
@@ -1036,6 +1038,13 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
   // Now that we've got the ancestry chain in ancestorsArray, time to check
   // them against any CSP.
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+
+    // According to the W3C CSP spec, frame-ancestors checks are ignored for
+    // report-only policies (when "monitoring").
+    if (mPolicies[i]->getReportOnlyFlag()) {
+      continue;
+    }
+
     for (uint32_t a = 0; a < ancestorsArray.Length(); a++) {
       // TODO(sid) the mapping from frame-ancestors context to TYPE_DOCUMENT is
       // forced. while this works for now, we will implement something in
@@ -1052,7 +1061,11 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
                                  EmptyString(), // no nonce
                                  violatedDirective)) {
         // Policy is violated
-        this->AsyncReportViolation(ancestorsArray[a],
+        // Send reports, but omit the ancestor URI if cross-origin as per spec
+        // (it is a violation of the same-origin policy).
+        bool okToSendAncestor = NS_SecurityCompareURIs(ancestorsArray[a], mSelfURI, true);
+
+        this->AsyncReportViolation((okToSendAncestor ? ancestorsArray[a] : nullptr),
                                    mSelfURI,
                                    violatedDirective,
                                    i,             /* policy index        */
@@ -1060,9 +1073,7 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell, bool* outPermitsAncestry)
                                    EmptyString(), /* no source file      */
                                    EmptyString(), /* no script sample    */
                                    0);            /* no line number      */
-        if (!mPolicies[i]->getReportOnlyFlag()) {
-          *outPermitsAncestry = false;
-        }
+        *outPermitsAncestry = false;
       }
     }
   }

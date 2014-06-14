@@ -3616,7 +3616,11 @@ nsGlobalWindow::GetPerformance(ErrorResult& aError)
 {
   FORWARD_TO_INNER_OR_THROW(GetPerformance, (aError), aError, nullptr);
 
-  return nsPIDOMWindow::GetPerformance();
+  nsPerformance* p = nsPIDOMWindow::GetPerformance();
+  if (!p) {
+    aError.Throw(NS_ERROR_FAILURE);
+  }
+  return p;
 }
 
 NS_IMETHODIMP

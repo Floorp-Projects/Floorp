@@ -13,6 +13,7 @@
 
 #include "gc/Barrier.h"
 #include "gc/Rooting.h"
+#include "js/GCAPI.h"
 #include "vm/CommonPropertyNames.h"
 
 class JSAtom;
@@ -85,14 +86,24 @@ struct AtomHasher
 {
     struct Lookup
     {
-        const jschar    *chars;
-        size_t          length;
-        const JSAtom    *atom; /* Optional. */
+        union {
+            const JS::Latin1Char *latin1Chars;
+            const jschar *twoByteChars;
+        };
+        bool isLatin1;
+        size_t length;
+        const JSAtom *atom; /* Optional. */
+        JS::AutoCheckCannotGC nogc;
 
         HashNumber hash;
 
         Lookup(const jschar *chars, size_t length)
-          : chars(chars), length(length), atom(nullptr)
+          : twoByteChars(chars), isLatin1(false), length(length), atom(nullptr)
+        {
+            hash = mozilla::HashString(chars, length);
+        }
+        Lookup(const JS::Latin1Char *chars, size_t length)
+          : latin1Chars(chars), isLatin1(true), length(length), atom(nullptr)
         {
             hash = mozilla::HashString(chars, length);
         }
@@ -187,8 +198,9 @@ extern JSAtom *
 Atomize(ExclusiveContext *cx, const char *bytes, size_t length,
         js::InternBehavior ib = js::DoNotInternAtom);
 
+template <typename CharT>
 extern JSAtom *
-AtomizeChars(ExclusiveContext *cx, const jschar *chars, size_t length,
+AtomizeChars(ExclusiveContext *cx, const CharT *chars, size_t length,
              js::InternBehavior ib = js::DoNotInternAtom);
 
 extern JSAtom *
