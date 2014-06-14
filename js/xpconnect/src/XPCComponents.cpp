@@ -2817,6 +2817,22 @@ nsXPCComponents_Utils::CcSlice(int64_t budget)
     return NS_OK;
 }
 
+/* long getMaxCCSliceTimeSinceClear(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::GetMaxCCSliceTimeSinceClear(int32_t *out)
+{
+    *out = nsJSContext::GetMaxCCSliceTimeSinceClear();
+    return NS_OK;
+}
+
+/* void clearMaxCCTime(); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::ClearMaxCCTime()
+{
+    nsJSContext::ClearMaxCCSliceTime();
+    return NS_OK;
+}
+
 /* void forceShrinkingGC (); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::ForceShrinkingGC()
