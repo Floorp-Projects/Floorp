@@ -7,4 +7,4 @@ skip-if(B2G&&browserIsRemote) include relative/reftest.list
 random-if(B2G&&browserIsRemote) == multiple-changes.html multiple-changes-ref.html
 random-if(B2G&&browserIsRemote) == shrink-wrap.html shrink-wrap-ref.html
 random-if(B2G&&browserIsRemote) == max-width.html max-width-ref.html
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) fails-if(B2G&&browserIsRemote) == min-width.html min-width-ref.html # Bug 761770
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) random-if(B2G&&browserIsRemote) == min-width.html min-width-ref.html # Bug 761770

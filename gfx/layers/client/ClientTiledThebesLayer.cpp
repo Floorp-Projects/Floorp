@@ -29,9 +29,11 @@ namespace mozilla {
 namespace layers {
 
 
-ClientTiledThebesLayer::ClientTiledThebesLayer(ClientLayerManager* const aManager)
+ClientTiledThebesLayer::ClientTiledThebesLayer(ClientLayerManager* const aManager,
+                                               ClientLayerManager::ThebesLayerCreationHint aCreationHint)
   : ThebesLayer(aManager,
-                static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()))
+                static_cast<ClientLayer*>(MOZ_THIS_IN_INITIALIZER_LIST()),
+                aCreationHint)
   , mContentClient()
 {
   MOZ_COUNT_CTOR(ClientTiledThebesLayer);

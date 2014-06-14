@@ -420,18 +420,6 @@ void SetScreenBrightness(double aBrightness)
   PROXY_IF_SANDBOXED(SetScreenBrightness(clamped(aBrightness, 0.0, 1.0)));
 }
 
-bool SetLight(LightType light, const LightConfiguration& aConfig)
-{
-  AssertMainThread();
-  RETURN_PROXY_IF_SANDBOXED(SetLight(light, aConfig), false);
-}
-
-bool GetLight(LightType light, LightConfiguration* aConfig)
-{
-  AssertMainThread();
-  RETURN_PROXY_IF_SANDBOXED(GetLight(light, aConfig), false);
-}
-
 class SystemClockChangeObserversManager : public ObserversManager<int64_t>
 {
 protected:

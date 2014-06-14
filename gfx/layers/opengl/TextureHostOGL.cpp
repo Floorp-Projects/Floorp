@@ -229,9 +229,12 @@ TextureHostOGL::SetAcquireFence(const android::sp<android::Fence>& aAcquireFence
 }
 
 android::sp<android::Fence>
-TextureHostOGL::GetAcquireFence()
+TextureHostOGL::GetAndResetAcquireFence()
 {
-  return mAcquireFence;
+  android::sp<android::Fence> fence = mAcquireFence;
+  // Reset current AcquireFence.
+  mAcquireFence = android::Fence::NO_FENCE;
+  return fence;
 }
 
 void
