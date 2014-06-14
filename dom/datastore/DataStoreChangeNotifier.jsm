@@ -91,7 +91,7 @@ this.DataStoreChangeNotifier = {
               this.children[i].store == aMessage.data.store &&
               this.children[i].owner == aMessage.data.owner) {
             debug("Register on existing index: " + i);
-            ++this.children[i].count;
+            this.children[i].windows.push(aMessage.data.innerWindowID);
             return;
           }
         }
@@ -99,23 +99,40 @@ this.DataStoreChangeNotifier = {
         this.children.push({ mm: aMessage.target,
                              store: aMessage.data.store,
                              owner: aMessage.data.owner,
-                             count: 1 });
+                             windows: [ aMessage.data.innerWindowID ]});
         break;
 
-      case "child-process-shutdown":
       case "DataStore:UnregisterForMessages":
         debug("Unregister");
 
-        for (let i = 0; i < this.children.length;) {
+        for (let i = 0; i < this.children.length; ++i) {
           if (this.children[i].mm == aMessage.target) {
             debug("Unregister index: " + i);
-            if (!--this.children[i].count) {
-              debug("Unregister delete index: " + i);
-              this.children.splice(i, 1);
+
+            var pos = this.children[i].windows.indexOf(aMessage.data.innerWindowID);
+            if (pos != -1) {
+              this.children[i].windows.splice(pos, 1);
             }
-            break;
-          } else {
-            ++i;
+
+            if (this.children[i].window.length) {
+              continue;
+            }
+
+            debug("Unregister delete index: " + i);
+            this.children.splice(i, 1);
+            --i;
+          }
+        }
+        break;
+
+      case "child-process-shutdown":
+        debug("Child process shutdown");
+
+        for (let i = 0; i < this.children.length; ++i) {
+          if (this.children[i].mm == aMessage.target) {
+            debug("Unregister index: " + i);
+            this.children.splice(i, 1);
+            --i;
           }
         }
         break;
