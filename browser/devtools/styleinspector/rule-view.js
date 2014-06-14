@@ -24,6 +24,7 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
+const TRANSFORM_HIGHLIGHTER_TYPE = "CssTransformHighlighter";
 
 /**
  * These regular expressions are adapted from firebug's css.js, and are
@@ -1030,7 +1031,6 @@ TextProperty.prototype = {
   }
 };
 
-
 /**
  * View hierarchy mostly follows the model hierarchy.
  *
@@ -1111,6 +1111,12 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
 
   this._buildContextMenu();
   this._showEmpty();
+
+  // Initialize the css transform highlighter if the target supports it
+  let hUtils = this.inspector.toolbox.highlighterUtils;
+  if (hUtils.hasCustomHighlighter(TRANSFORM_HIGHLIGHTER_TYPE)) {
+    this._initTransformHighlighter();
+  }
 }
 
 exports.CssRuleView = CssRuleView;
@@ -1160,19 +1166,73 @@ CssRuleView.prototype = {
   },
 
   /**
+   * Get the css transform highlighter front, initializing it if needed
+   * @param a promise that resolves to the highlighter
+   */
+  getTransformHighlighter: function() {
+    if (this.transformHighlighterPromise) {
+      return this.transformHighlighterPromise;
+    }
+
+    let utils = this.inspector.toolbox.highlighterUtils;
+    this.transformHighlighterPromise =
+    utils.getHighlighterByType(TRANSFORM_HIGHLIGHTER_TYPE).then(highlighter => {
+      this.transformHighlighter = highlighter;
+      return this.transformHighlighter;
+    });
+
+    return this.transformHighlighterPromise;
+  },
+
+  _initTransformHighlighter: function() {
+    this.isTransformHighlighterShown = false;
+
+    this._onMouseMove = this._onMouseMove.bind(this);
+    this._onMouseLeave = this._onMouseLeave.bind(this);
+
+    this.element.addEventListener("mousemove", this._onMouseMove, false);
+    this.element.addEventListener("mouseleave", this._onMouseLeave, false);
+  },
+
+  _onMouseMove: function(event) {
+    if (event.target === this._lastHovered) {
+      return;
+    }
+
+    if (this.isTransformHighlighterShown) {
+      this.isTransformHighlighterShown = false;
+      this.getTransformHighlighter().then(highlighter => highlighter.hide());
+    }
+
+    this._lastHovered = event.target;
+    let prop = event.target.textProperty;
+    let isHighlightable = prop && prop.name === "transform" &&
+                          prop.enabled && !prop.overridden &&
+                          !prop.rule.pseudoElement;
+
+    if (isHighlightable) {
+      this.isTransformHighlighterShown = true;
+      let node = this.inspector.selection.nodeFront;
+      this.getTransformHighlighter().then(highlighter => highlighter.show(node));
+    }
+  },
+
+  _onMouseLeave: function(event) {
+    this._lastHovered = null;
+    if (this.isTransformHighlighterShown) {
+      this.isTransformHighlighterShown = false;
+      this.getTransformHighlighter().then(highlighter => highlighter.hide());
+    }
+  },
+
+  /**
    * Which type of hover-tooltip should be shown for the given element?
-   * This depends on the element: does it contain an image URL, a CSS transform,
-   * a font-family, ...
+   * This depends on the element: does it contain a URL, a font-family, ...
    * @param {DOMNode} el The element to test
    * @return {String} The type of hover-tooltip
    */
   _getHoverTooltipTypeForTarget: function(el) {
     let prop = el.textProperty;
-
-    // Test for css transform
-    if (prop && prop.name === "transform") {
-      return "transform";
-    }
 
     // Test for image
     let isUrl = el.classList.contains("theme-link") &&
@@ -1218,10 +1278,6 @@ CssRuleView.prototype = {
       this.colorPicker.hide();
     }
 
-    if (tooltipType === "transform") {
-      return this.previewTooltip.setCssTransformContent(target.textProperty.value,
-        this.pageStyle, this._viewedElement);
-    }
     if (tooltipType === "image") {
       let prop = target.parentNode.textProperty;
       let dim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
@@ -1464,6 +1520,16 @@ CssRuleView.prototype = {
     this.previewTooltip.stopTogglingOnHover(this.element);
     this.previewTooltip.destroy();
     this.colorPicker.destroy();
+
+    if (this.transformHighlighter) {
+      this.transformHighlighter.finalize();
+      this.transformHighlighter = null;
+
+      this.element.removeEventListener("mousemove", this._onMouseMove, false);
+      this.element.removeEventListener("mouseleave", this._onMouseLeave, false);
+
+      this._lastHovered = null;
+    }
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);

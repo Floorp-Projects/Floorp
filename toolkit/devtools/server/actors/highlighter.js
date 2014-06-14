@@ -9,6 +9,7 @@ const Services = require("Services");
 const protocol = require("devtools/server/protocol");
 const {Arg, Option, method} = protocol;
 const events = require("sdk/event/core");
+const Heritage = require("sdk/core/heritage");
 
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const GUIDE_STROKE_WIDTH = 1;
@@ -28,18 +29,42 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 const SVG_NS = "http://www.w3.org/2000/svg";
 const HIGHLIGHTER_PICKED_TIMER = 1000;
 const INFO_BAR_OFFSET = 5;
+// The minimum distance a line should be before it has an arrow marker-end
+const ARROW_LINE_MIN_DISTANCE = 10;
+
+// All possible highlighter classes
+let HIGHLIGHTER_CLASSES = exports.HIGHLIGHTER_CLASSES = {
+  "BoxModelHighlighter": BoxModelHighlighter,
+  "CssTransformHighlighter": CssTransformHighlighter
+};
 
 /**
- * The HighlighterActor is the server-side entry points for any tool that wishes
- * to highlight elements in the content document.
+ * The Highlighter is the server-side entry points for any tool that wishes to
+ * highlight elements in some way in the content document.
  *
- * The highlighter can be retrieved via the inspector's getHighlighter method.
+ * A little bit of vocabulary:
+ * - <something>HighlighterActor classes are the actors that can be used from
+ *   the client. They do very little else than instantiate a given
+ *   <something>Highlighter and use it to highlight elements.
+ * - <something>Highlighter classes aren't actors, they're just JS classes that
+ *   know how to create and attach the actual highlighter elements on top of the
+ *   content
+ *
+ * The most used highlighter actor is the HighlighterActor which can be
+ * conveniently retrieved via the InspectorActor's 'getHighlighter' method.
+ * The InspectorActor will always return the same instance of
+ * HighlighterActor if asked several times and this instance is used in the
+ * toolbox to highlighter elements's box-model from the markup-view, layout-view,
+ * console, debugger, ... as well as select elements with the pointer (pick).
+ *
+ * Other types of highlighter actors exist and can be accessed via the
+ * InspectorActor's 'getHighlighterByType' method.
  */
 
 /**
  * The HighlighterActor class
  */
-let HighlighterActor = protocol.ActorClass({
+let HighlighterActor = exports.HighlighterActor = protocol.ActorClass({
   typeName: "highlighter",
 
   initialize: function(inspector, autohide) {
@@ -53,7 +78,7 @@ let HighlighterActor = protocol.ActorClass({
     this._highlighterReady = this._highlighterReady.bind(this);
     this._highlighterHidden = this._highlighterHidden.bind(this);
 
-    if (this._supportsBoxModelHighlighter()) {
+    if (supportXULBasedHighlighter(this._tabActor)) {
       this._boxModelHighlighter =
         new BoxModelHighlighter(this._tabActor, this._inspector);
 
@@ -65,18 +90,6 @@ let HighlighterActor = protocol.ActorClass({
   },
 
   get conn() this._inspector && this._inspector.conn,
-
-  /**
-   * Can the host support the box model highlighter which requires a parent
-   * XUL node to attach itself.
-   */
-  _supportsBoxModelHighlighter: function() {
-    // Note that <browser>s on Fennec also have a XUL parentNode but the box
-    // model highlighter doesn't display correctly on Fennec (bug 993190)
-    return this._tabActor.browser &&
-           !!this._tabActor.browser.parentNode &&
-           Services.appinfo.ID !== "{aa3c5121-dab2-40e2-81ca-7ea25febc110}";
-  },
 
   destroy: function() {
     protocol.Actor.prototype.destroy.call(this);
@@ -103,7 +116,7 @@ let HighlighterActor = protocol.ActorClass({
    * all options may be supported by all types of highlighters.
    */
   showBoxModel: method(function(node, options={}) {
-    if (node && this._isNodeValidForHighlighting(node.rawNode)) {
+    if (node && isNodeValid(node.rawNode)) {
       this._boxModelHighlighter.show(node.rawNode, options);
     } else {
       this._boxModelHighlighter.hide();
@@ -114,25 +127,6 @@ let HighlighterActor = protocol.ActorClass({
       region: Option(1)
     }
   }),
-
-  _isNodeValidForHighlighting: function(node) {
-    // Is it null or dead?
-    let isNotDead = node && !Cu.isDeadWrapper(node);
-
-    // Is it connected to the document?
-    let isConnected = false;
-    try {
-      let doc = node.ownerDocument;
-      isConnected = (doc && doc.defaultView && doc.documentElement.contains(node));
-    } catch (e) {
-      // "can't access dead object" error
-    }
-
-    // Is it an element node
-    let isElementNode = node.nodeType === Ci.nsIDOMNode.ELEMENT_NODE;
-
-    return isNotDead && isConnected && isElementNode;
-  },
 
   /**
    * Hide the box model highlighting if it was shown before
@@ -258,12 +252,190 @@ let HighlighterActor = protocol.ActorClass({
   })
 });
 
-exports.HighlighterActor = HighlighterActor;
+let HighlighterFront = protocol.FrontClass(HighlighterActor, {});
 
 /**
- * The HighlighterFront class
+ * A generic highlighter actor class that instantiate a highlighter given its
+ * type name and allows to show/hide it.
  */
-let HighlighterFront = protocol.FrontClass(HighlighterActor, {});
+let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClass({
+  typeName: "customhighlighter",
+
+  /**
+   * Create a highlighter instance given its typename
+   * The typename must be one of HIGHLIGHTER_CLASSES and the class must
+   * implement constructor(tab, inspector), show(node), hide(), destroy()
+   */
+  initialize: function(inspector, typeName) {
+    protocol.Actor.prototype.initialize.call(this, null);
+
+    this._inspector = inspector;
+
+    let constructor = HIGHLIGHTER_CLASSES[typeName];
+    if (!constructor) {
+      throw new Error(typeName + " isn't a valid highlighter class (" +
+        Object.keys(HIGHLIGHTER_CLASSES) + ")");
+      return;
+    }
+
+    // The assumption is that all custom highlighters need a XUL parent in the
+    // browser to append their elements
+    if (supportXULBasedHighlighter(inspector.tabActor)) {
+      this._highlighter = new constructor(inspector.tabActor, inspector);
+    }
+  },
+
+  get conn() this._inspector && this._inspector.conn,
+
+  destroy: function() {
+    protocol.Actor.prototype.destroy.call(this);
+    this.finalize();
+  },
+
+  /**
+   * Display the highlighter on a given NodeActor.
+   * @param NodeActor The node to be highlighted
+   */
+  show: method(function(node) {
+    if (!node || !isNodeValid(node.rawNode) || !this._highlighter) {
+      return;
+    }
+
+    this._highlighter.show(node.rawNode);
+  }, {
+    request: {
+      node: Arg(0, "domnode")
+    }
+  }),
+
+  /**
+   * Hide the highlighter if it was shown before
+   */
+  hide: method(function() {
+    if (this._highlighter) {
+      this._highlighter.hide();
+    }
+  }, {
+    request: {}
+  }),
+
+  /**
+   * Kill this actor. This method is called automatically just before the actor
+   * is destroyed.
+   */
+  finalize: method(function() {
+    if (this._highlighter) {
+      this._highlighter.destroy();
+      this._highlighter = null;
+    }
+  }, {
+    oneway: true
+  })
+});
+
+let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
+
+/**
+ * Parent class for XUL-based complex highlighter that are inserted in the
+ * parent browser structure
+ */
+function XULBasedHighlighter(tabActor, inspector) {
+  this._inspector = inspector;
+
+  this.browser = tabActor.browser;
+  this.win = tabActor.window;
+  this.chromeDoc = this.browser.ownerDocument;
+  this.currentNode = null;
+
+  this.update = this.update.bind(this);
+}
+
+XULBasedHighlighter.prototype = {
+  /**
+   * Show the highlighter on a given node
+   * @param {DOMNode} node
+   */
+  show: function(node) {
+    if (!isNodeValid(node) || node === this.currentNode) {
+      return;
+    }
+
+    this._detachPageListeners();
+    this.currentNode = node;
+    this._attachPageListeners();
+    this._show();
+  },
+
+  /**
+   * Hide the highlighter
+   */
+  hide: function() {
+    if (!isNodeValid(this.currentNode)) {
+      return;
+    }
+
+    this._hide();
+    this._detachPageListeners();
+    this.currentNode = null;
+  },
+
+  /**
+   * Update the highlighter while shown
+   */
+  update: function() {
+    if (isNodeValid(this.currentNode)) {
+      this._update();
+    }
+  },
+
+  _show: function() {
+    // To be implemented by sub classes
+    // When called, sub classes should actually show the highlighter for
+    // this.currentNode
+  },
+
+  _update: function() {
+    // To be implemented by sub classes
+    // When called, sub classes should update the highlighter shown for
+    // this.currentNode
+    // This is called as a result of a page scroll, zoom or repaint
+  },
+
+  _hide: function() {
+    // To be implemented by sub classes
+    // When called, sub classes should actually hide the highlighter
+  },
+
+  /**
+   * Listen to changes on the content page to update the highlighter
+   */
+  _attachPageListeners: function() {
+    if (isNodeValid(this.currentNode)) {
+      let win = this.currentNode.ownerDocument.defaultView;
+      this.browser.addEventListener("MozAfterPaint", this.update);
+    }
+  },
+
+  /**
+   * Stop listening to page changes
+   */
+  _detachPageListeners: function() {
+    if (isNodeValid(this.currentNode)) {
+      let win = this.currentNode.ownerDocument.defaultView;
+      this.browser.removeEventListener("MozAfterPaint", this.update);
+    }
+  },
+
+  destroy: function() {
+    this.hide();
+
+    this.win = null;
+    this.browser = null;
+    this.chromeDoc = null;
+    this._inspector = null;
+    this.currentNode = null;
+  }
+};
 
 /**
  * The BoxModelHighlighter is the class that actually draws the the box model
@@ -308,26 +480,13 @@ let HighlighterFront = protocol.FrontClass(HighlighterActor, {});
  * </stack>
  */
 function BoxModelHighlighter(tabActor, inspector) {
-  this.browser = tabActor.browser;
-  this.win = tabActor.window;
-  this.chromeDoc = this.browser.ownerDocument;
-  this.chromeWin = this.chromeDoc.defaultView;
-  this._inspector = inspector;
-
+  XULBasedHighlighter.call(this, tabActor, inspector);
   this.layoutHelpers = new LayoutHelpers(this.win);
-  this.chromeLayoutHelper = new LayoutHelpers(this.chromeWin);
-
-  this.transitionDisabler = null;
-  this.pageEventsMuter = null;
-  this._update = this._update.bind(this);
-  this.handleEvent = this.handleEvent.bind(this);
-  this.currentNode = null;
-
-  EventEmitter.decorate(this);
   this._initMarkup();
+  EventEmitter.decorate(this);
 }
 
-BoxModelHighlighter.prototype = {
+BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   get zoom() {
     return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
@@ -450,61 +609,42 @@ BoxModelHighlighter.prototype = {
    * Destroy the nodes. Remove listeners.
    */
   destroy: function() {
-    this.hide();
-
-    this.chromeWin.clearTimeout(this.transitionDisabler);
-    this.chromeWin.clearTimeout(this.pageEventsMuter);
-
-    this.nodeInfo = null;
+    XULBasedHighlighter.prototype.destroy.call(this);
 
     this._highlighterContainer.remove();
     this._highlighterContainer = null;
 
+    this.nodeInfo = null;
     this.rect = null;
-    this.win = null;
-    this.browser = null;
-    this.chromeDoc = null;
-    this.chromeWin = null;
-    this.currentNode = null;
   },
 
   /**
    * Show the highlighter on a given node
-   *
-   * @param {DOMNode} node
    * @param {Object} options
    *        Object used for passing options
    */
-  show: function(node, options={}) {
-    this.currentNode = node;
-
-    this._showInfobar();
-    this._detachPageListeners();
-    this._attachPageListeners();
+  _show: function(options={}) {
     this._update();
     this._trackMutations();
+    this.emit("ready");
   },
 
+  /**
+   * Track the current node markup mutations so that the node info bar can be
+   * updated to reflects the node's attributes
+   */
   _trackMutations: function() {
-    if (this.currentNode) {
+    if (isNodeValid(this.currentNode)) {
       let win = this.currentNode.ownerDocument.defaultView;
-      this.currentNodeObserver = new win.MutationObserver(() => {
-        this._update();
-      });
+      this.currentNodeObserver = new win.MutationObserver(this.update);
       this.currentNodeObserver.observe(this.currentNode, {attributes: true});
     }
   },
 
   _untrackMutations: function() {
-    if (this.currentNode) {
-      if (this.currentNodeObserver) {
-        // The following may fail with a "can't access dead object" exception
-        // when the actor is being destroyed
-        try {
-          this.currentNodeObserver.disconnect();
-        } catch (e) {}
-        this.currentNodeObserver = null;
-      }
+    if (isNodeValid(this.currentNode) && this.currentNodeObserver) {
+      this.currentNodeObserver.disconnect();
+      this.currentNodeObserver = null;
     }
   },
 
@@ -518,29 +658,22 @@ BoxModelHighlighter.prototype = {
    *            the box that the guides should outline. Default is content.
    */
   _update: function(options={}) {
-    if (this.currentNode) {
-      if (this._highlightBoxModel(options)) {
-        this._showInfobar();
-      } else {
-        // Nothing to highlight (0px rectangle like a <script> tag for instance)
-        this.hide();
-      }
-      this.emit("ready");
+    if (this._updateBoxModel(options)) {
+      this._showInfobar();
+      this._showBoxModel();
+    } else {
+      // Nothing to highlight (0px rectangle like a <script> tag for instance)
+      this._hide();
     }
   },
 
   /**
    * Hide the highlighter, the outline and the infobar.
    */
-  hide: function() {
-    if (this.currentNode) {
-      this._untrackMutations();
-      this.currentNode = null;
-      this._hideBoxModel();
-      this._hideInfobar();
-      this._detachPageListeners();
-    }
-    this.emit("hide");
+  _hide: function() {
+    this._untrackMutations();
+    this._hideBoxModel();
+    this._hideInfobar();
   },
 
   /**
@@ -573,55 +706,40 @@ BoxModelHighlighter.prototype = {
   },
 
   /**
-   * Highlight the box model.
+   * Update the box model as per the current node.
    *
    * @param {Object} options
    *        Object used for passing options. Valid options are:
    *          - region: "content", "padding", "border" or "margin." This specifies
    *            the region that the guides should outline. Default is content.
    * @return {boolean}
-   *         True if the rectangle was highlighted, false otherwise.
+   *         True if the current node has a box model to be highlighted
    */
-  _highlightBoxModel: function(options) {
-    let isShown = false;
-
+  _updateBoxModel: function(options) {
     options.region = options.region || "content";
-
     this.rect = this.layoutHelpers.getAdjustedQuads(this.currentNode, "margin");
 
-    if (!this.rect) {
-      return null;
+    if (!this.rect || (this.rect.bounds.width <= 0 && this.rect.bounds.height <= 0)) {
+      return false;
     }
 
-    if (this.rect.bounds.width > 0 && this.rect.bounds.height > 0) {
-      for (let boxType in this._boxModelNodes) {
-        let {p1, p2, p3, p4} = boxType === "margin" ? this.rect :
-          this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
+    for (let boxType in this._boxModelNodes) {
+      let {p1, p2, p3, p4} = boxType === "margin" ? this.rect :
+        this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
 
-        let boxNode = this._boxModelNodes[boxType];
-        boxNode.setAttribute("points",
-                             p1.x + "," + p1.y + " " +
-                             p2.x + "," + p2.y + " " +
-                             p3.x + "," + p3.y + " " +
-                             p4.x + "," + p4.y);
+      let boxNode = this._boxModelNodes[boxType];
+      boxNode.setAttribute("points",
+                           p1.x + "," + p1.y + " " +
+                           p2.x + "," + p2.y + " " +
+                           p3.x + "," + p3.y + " " +
+                           p4.x + "," + p4.y);
 
-        if (boxType === options.region) {
-          this._showGuides(p1, p2, p3, p4);
-        }
-      }
-
-      isShown = true;
-      this._showBoxModel();
-    } else {
-      // Only return false if the element really is invisible.
-      // A height of 0 and a non-0 width corresponds to a visible element that
-      // is below the fold for instance
-      if (this.rect.width > 0 || this.rect.height > 0) {
-        isShown = true;
-        this._hideBoxModel();
+      if (boxType === options.region) {
+        this._showGuides(p1, p2, p3, p4);
       }
     }
-    return isShown;
+
+    return true;
   },
 
   /**
@@ -711,31 +829,40 @@ BoxModelHighlighter.prototype = {
       return;
     }
 
-    // Tag name
-    this.nodeInfo.tagNameLabel.textContent = this.currentNode.tagName;
+    let node = this.currentNode;
+    let info = this.nodeInfo;
 
-    // ID
-    this.nodeInfo.idLabel.textContent = this.currentNode.id ? "#" + this.currentNode.id : "";
+    // Update the tag, id, classes, pseudo-classes and dimensions only if they
+    // changed to avoid triggering paint events
 
-    // Classes
-    let classes = this.nodeInfo.classesBox;
+    let tagName = node.tagName;
+    if (info.tagNameLabel.textContent !== tagName) {
+      info.tagNameLabel.textContent = tagName;
+    }
 
-    classes.textContent = this.currentNode.classList.length ?
-                            "." + Array.join(this.currentNode.classList, ".") : "";
+    let id = node.id ? "#" + node.id : "";
+    if (info.idLabel.textContent !== id) {
+      info.idLabel.textContent = id;
+    }
 
-    // Pseudo-classes
+    let classList = node.classList.length ? "." + [...node.classList].join(".") : "";
+    if (info.classesBox.textContent !== classList) {
+      info.classesBox.textContent = classList;
+    }
+
     let pseudos = PSEUDO_CLASSES.filter(pseudo => {
-      return DOMUtils.hasPseudoClassLock(this.currentNode, pseudo);
-    }, this);
+      return DOMUtils.hasPseudoClassLock(node, pseudo);
+    }, this).join("");
+    if (info.pseudoClassesBox.textContent !== pseudos) {
+      info.pseudoClassesBox.textContent = pseudos;
+    }
 
-    let pseudoBox = this.nodeInfo.pseudoClassesBox;
-    pseudoBox.textContent = pseudos.join("");
+    let rect = node.getBoundingClientRect();
+    let dim = Math.ceil(rect.width) + " x " + Math.ceil(rect.height);
+    if (info.dimensionBox.textContent !== dim) {
+      info.dimensionBox.textContent = dim;
+    }
 
-    // Dimensions
-    let dimensionBox = this.nodeInfo.dimensionBox;
-    let rect = this.currentNode.getBoundingClientRect();
-    dimensionBox.textContent = Math.ceil(rect.width) + " x " +
-                               Math.ceil(rect.height);
     this._moveInfobar();
   },
 
@@ -790,44 +917,173 @@ BoxModelHighlighter.prototype = {
       this.nodeInfo.positioner.setAttribute("position", "top");
       this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
     }
-  },
+  }
+});
 
-  _attachPageListeners: function() {
-    if (this.currentNode) {
-      let win = this.currentNode.ownerGlobal;
+/**
+ * The CssTransformHighlighter is the class that draws an outline around a
+ * transformed element and an outline around where it would be if untransformed
+ * as well as arrows connecting the 2 outlines' corners.
+ */
+function CssTransformHighlighter(tabActor, inspector) {
+  XULBasedHighlighter.call(this, tabActor, inspector);
 
-      win.addEventListener("scroll", this, false);
-      win.addEventListener("resize", this, false);
-      win.addEventListener("MozAfterPaint", this, false);
+  this.layoutHelpers = new LayoutHelpers(tabActor.window);
+  this._initMarkup();
+}
+
+let MARKER_COUNTER = 1;
+
+CssTransformHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
+  _initMarkup: function() {
+    let stack = this.browser.parentNode;
+
+    this._container = this.chromeDoc.createElement("stack");
+    this._container.className = "highlighter-container";
+
+    this._svgRoot = this._createSVGNode("root", "svg", this._container);
+    this._svgRoot.setAttribute("hidden", "true");
+
+    // Add a marker tag to the svg root for the arrow tip
+    let marker = this.chromeDoc.createElementNS(SVG_NS, "marker");
+    this.markerId = "css-transform-arrow-marker-" + MARKER_COUNTER;
+    MARKER_COUNTER ++;
+    marker.setAttribute("id", this.markerId);
+    marker.setAttribute("markerWidth", "10");
+    marker.setAttribute("markerHeight", "5");
+    marker.setAttribute("orient", "auto");
+    marker.setAttribute("markerUnits", "strokeWidth");
+    marker.setAttribute("refX", "10");
+    marker.setAttribute("refY", "5");
+    marker.setAttribute("viewBox", "0 0 10 10");
+    let path = this.chromeDoc.createElementNS(SVG_NS, "path");
+    path.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
+    path.setAttribute("fill", "#08C");
+    marker.appendChild(path);
+    this._svgRoot.appendChild(marker);
+
+    // Create the 2 polygons (transformed and untransformed)
+    let shapesGroup = this._createSVGNode("container", "g", this._svgRoot);
+    this._shapes = {
+      untransformed: this._createSVGNode("untransformed", "polygon", shapesGroup),
+      transformed: this._createSVGNode("transformed", "polygon", shapesGroup)
+    };
+
+    // Create the arrows
+    for (let nb of ["1", "2", "3", "4"]) {
+      let line = this._createSVGNode("line", "line", shapesGroup);
+      line.setAttribute("marker-end", "url(#" + this.markerId + ")");
+      this._shapes["line" + nb] = line;
     }
+
+    this._container.appendChild(this._svgRoot);
+
+    // Insert the highlighter right after the browser
+    stack.insertBefore(this._container, stack.childNodes[1]);
   },
 
-  _detachPageListeners: function() {
-    if (this.currentNode) {
-      let win = this.currentNode.ownerGlobal;
+  _createSVGNode: function(classPostfix, nodeType, parent) {
+    let node = this.chromeDoc.createElementNS(SVG_NS, nodeType);
+    node.setAttribute("class", "css-transform-" + classPostfix);
 
-      win.removeEventListener("scroll", this, false);
-      win.removeEventListener("resize", this, false);
-      win.removeEventListener("MozAfterPaint", this, false);
+    parent.appendChild(node);
+    return node;
+  },
+
+  /**
+   * Destroy the nodes. Remove listeners.
+   */
+  destroy: function() {
+    XULBasedHighlighter.prototype.destroy.call(this);
+
+    this._container.remove();
+    this._container = null;
+  },
+
+  /**
+   * Show the highlighter on a given node
+   * @param {DOMNode} node
+   */
+  _show: function() {
+    if (!this._isTransformed(this.currentNode)) {
+      this.hide();
+      return;
+    }
+
+    this._update();
+  },
+
+  /**
+   * Checks if the supplied node is transformed and not inline
+   */
+  _isTransformed: function(node) {
+    let style = node.ownerDocument.defaultView.getComputedStyle(node);
+    return style.transform !== "none" && style.display !== "inline";
+  },
+
+  _setPolygonPoints: function(quad, poly) {
+    let points = [];
+    for (let point of ["p1","p2", "p3", "p4"]) {
+      points.push(quad[point].x + "," + quad[point].y);
+    }
+    poly.setAttribute("points", points.join(" "));
+  },
+
+  _setLinePoints: function(p1, p2, line) {
+    line.setAttribute("x1", p1.x);
+    line.setAttribute("y1", p1.y);
+    line.setAttribute("x2", p2.x);
+    line.setAttribute("y2", p2.y);
+
+    let dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+    if (dist < ARROW_LINE_MIN_DISTANCE) {
+      line.removeAttribute("marker-end");
+    } else {
+      line.setAttribute("marker-end", "url(#" + this.markerId + ")");
     }
   },
 
   /**
-   * Generic event handler.
-   *
-   * @param nsIDOMEvent aEvent
-   *        The DOM event object.
+   * Update the highlighter on the current highlighted node (the one that was
+   * passed as an argument to show(node)).
+   * Should be called whenever node size or attributes change
    */
-  handleEvent: function(event) {
-    switch (event.type) {
-      case "resize":
-      case "MozAfterPaint":
-      case "scroll":
-        this._update();
-        break;
+  _update: function() {
+    // Getting the points for the transformed shape
+    let quad = this.layoutHelpers.getAdjustedQuads(this.currentNode, "border");
+    if (!quad || quad.bounds.width <= 0 || quad.bounds.height <= 0) {
+      this._hideShapes();
+      return null;
     }
+
+    // Getting the points for the untransformed shape
+    let untransformedQuad = this.layoutHelpers.getNodeBounds(this.currentNode);
+
+    this._setPolygonPoints(quad, this._shapes.transformed);
+    this._setPolygonPoints(untransformedQuad, this._shapes.untransformed);
+    for (let nb of ["1", "2", "3", "4"]) {
+      this._setLinePoints(untransformedQuad["p" + nb], quad["p" + nb],
+        this._shapes["line" + nb]);
+    }
+
+    this._showShapes();
   },
-};
+
+  /**
+   * Hide the highlighter, the outline and the infobar.
+   */
+  _hide: function() {
+    this._hideShapes();
+  },
+
+  _hideShapes: function() {
+    this._svgRoot.setAttribute("hidden", "true");
+  },
+
+  _showShapes: function() {
+    this._svgRoot.removeAttribute("hidden");
+  }
+});
 
 /**
  * The SimpleOutlineHighlighter is a class that has the same API than the
@@ -890,6 +1146,40 @@ SimpleOutlineHighlighter.prototype = {
     }
   }
 };
+
+/**
+ * Can the host support the XUL-based highlighters which require a parent
+ * XUL node to get attached.
+ * @param {TabActor}
+ * @return {Boolean}
+ */
+function supportXULBasedHighlighter(tabActor) {
+  // Note that <browser>s on Fennec also have a XUL parentNode but the box
+  // model highlighter doesn't display correctly on Fennec (bug 993190)
+  return tabActor.browser &&
+         !!tabActor.browser.parentNode &&
+         Services.appinfo.ID !== "{aa3c5121-dab2-40e2-81ca-7ea25febc110}";
+}
+
+function isNodeValid(node) {
+  // Is it null or dead?
+  if(!node || Cu.isDeadWrapper(node)) {
+    return false;
+  }
+
+  // Is it an element node
+  if (node.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+    return false;
+  }
+
+  // Is it connected to the document?
+  let doc = node.ownerDocument;
+  if (!doc || !doc.defaultView || !doc.documentElement.contains(node)) {
+    return false;
+  }
+
+  return true;
+}
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)

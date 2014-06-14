@@ -1414,13 +1414,13 @@ intl_FormatNumber(JSContext *cx, UNumberFormat *nf, double x, MutableHandleValue
     if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = unum_formatDouble(nf, x, JSCharToUChar(chars.begin()),
+    int size = unum_formatDouble(nf, x, JSCharToUChar(chars.rawTwoByteBegin()),
                                  INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        unum_formatDouble(nf, x, JSCharToUChar(chars.begin()),
+        unum_formatDouble(nf, x, JSCharToUChar(chars.rawTwoByteBegin()),
                           size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
@@ -1902,12 +1902,13 @@ intl_FormatDateTime(JSContext *cx, UDateFormat *df, double x, MutableHandleValue
     if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = udat_format(df, x, JSCharToUChar(chars.begin()), INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
+    int size = udat_format(df, x, JSCharToUChar(chars.rawTwoByteBegin()), INITIAL_STRING_BUFFER_SIZE,
+                           nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        udat_format(df, x, JSCharToUChar(chars.begin()), size, nullptr, &status);
+        udat_format(df, x, JSCharToUChar(chars.rawTwoByteBegin()), size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);

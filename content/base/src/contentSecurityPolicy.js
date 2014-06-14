@@ -638,7 +638,7 @@ ContentSecurityPolicy.prototype = {
         break;
     }
     var violationMessage = null;
-    if (blockedUri["asciiSpec"]) {
+    if (blockedUri && blockedUri["asciiSpec"]) {
       let localizeString = policy._reportOnlyMode ? "CSPROViolationWithURI" : "CSPViolationWithURI";
       violationMessage = CSPLocalizer.getFormatStr(localizeString, [violatedDirective, blockedUri.asciiSpec]);
     } else {
@@ -666,6 +666,10 @@ ContentSecurityPolicy.prototype = {
     // to be triggered if any policy wants it.
     var permitted = true;
     for (let i = 0; i < this._policies.length; i++) {
+      // spec says don't check the policies that are report-only (monitored)
+      if (this._policies[i]._reportOnlyMode) {
+        continue;
+      }
       if (!this._permitsAncestryInternal(docShell, this._policies[i], i)) {
         permitted = false;
       }
@@ -715,7 +719,20 @@ ContentSecurityPolicy.prototype = {
         let directive = policy._directives[cspContext];
         let violatedPolicy = 'frame-ancestors ' + directive.toString();
 
-        this._asyncReportViolation(ancestors[i], null, violatedPolicy,
+        // spec says don't report ancestors for cross-origin violations (it is
+        // a violation of same-origin)
+        let ssm = Services.scriptSecurityManager;
+        let blockedURI = null;
+        try {
+          if (Services.scriptSecurityManager
+                      .checkSameOriginURI(ancestors[i], this._requestOrigin, false)) {
+            blockedURI = ancestors[i];
+          }
+        } catch (ex) {
+          // cross-origin, don't send the ancestor
+        }
+
+        this._asyncReportViolation(blockedURI, null, violatedPolicy,
                                    policyIndex);
 
         // need to lie if we are testing in report-only mode

@@ -299,9 +299,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT;
-    recordDT = new DrawTargetRecording(mRecorder, retVal);
-    return recordDT;
+    return new DrawTargetRecording(mRecorder, retVal);
   }
 
   if (!retVal) {
@@ -309,7 +307,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
     gfxDebug() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
   }
   
-  return retVal;
+  return retVal.forget();
 }
 
 TemporaryRef<DrawTarget>
@@ -347,7 +345,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
     {
       RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
       if (newTarget->Init(aBackend, aData, aSize, aStride, aFormat))
-        return newTarget;
+        return newTarget.forget();
       break;
     }
 #endif
@@ -357,7 +355,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
       RefPtr<DrawTargetCairo> newTarget;
       newTarget = new DrawTargetCairo();
       if (newTarget->Init(aData, aSize, aStride, aFormat)) {
-        retVal = newTarget;
+        retVal = newTarget.forget();
       }
       break;
     }
@@ -368,15 +366,14 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
-    return recordDT;
+    return new DrawTargetRecording(mRecorder, retVal, true);
   }
 
   if (!retVal) {
     gfxDebug() << "Failed to create DrawTarget, Type: " << int(aBackend) << " Size: " << aSize;
   }
 
-  return retVal;
+  return retVal.forget();
 }
 
 TemporaryRef<DrawTarget>
@@ -388,7 +385,7 @@ Factory::CreateTiledDrawTarget(const TileSet& aTileSet)
     return nullptr;
   }
 
-  return dt;
+  return dt.forget();
 }
 
 TemporaryRef<ScaledFont>
@@ -453,7 +450,7 @@ Factory::CreateScaledFontWithCairo(const NativeFont& aNativeFont, Float aSize, c
   // Therefore, we just reuse CreateScaledFontForNativeFont's implementation.
   RefPtr<ScaledFont> font = CreateScaledFontForNativeFont(aNativeFont, aSize);
   static_cast<ScaledFontBase*>(font.get())->SetCairoScaledFont(aScaledFont);
-  return font;
+  return font.forget();
 #else
   return nullptr;
 #endif
@@ -471,7 +468,7 @@ Factory::CreateDualDrawTarget(DrawTarget *targetA, DrawTarget *targetB)
     retVal = new DrawTargetRecording(mRecorder, retVal);
   }
 
-  return retVal;
+  return retVal.forget();
 }
 
 
@@ -489,7 +486,7 @@ Factory::CreateDrawTargetForD3D10Texture(ID3D10Texture2D *aTexture, SurfaceForma
       retVal = new DrawTargetRecording(mRecorder, retVal, true);
     }
 
-    return retVal;
+    return retVal.forget();
   }
 
   gfxWarning() << "Failed to create draw target for D3D10 texture.";
@@ -527,7 +524,7 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
     retVal = new DrawTargetRecording(mRecorder, retVal);
   }
 
-  return retVal;
+  return retVal.forget();
 }
 
 void
@@ -571,10 +568,7 @@ Factory::GetD2D1Device()
 TemporaryRef<GlyphRenderingOptions>
 Factory::CreateDWriteGlyphRenderingOptions(IDWriteRenderingParams *aParams)
 {
-  RefPtr<GlyphRenderingOptions> options =
-    new GlyphRenderingOptionsDWrite(aParams);
-
-  return options;
+  return new GlyphRenderingOptionsDWrite(aParams);
 }
 
 uint64_t
@@ -607,7 +601,7 @@ Factory::CreateDrawTargetSkiaWithGrContext(GrContext* aGrContext,
   if (!newTarget->InitWithGrContext(aGrContext, aSize, aFormat)) {
     return nullptr;
   }
-  return newTarget;
+  return newTarget.forget();
 }
 
 #endif // USE_SKIA_GPU
@@ -626,7 +620,7 @@ Factory::CreateCairoGlyphRenderingOptions(FontHinting aHinting, bool aAutoHintin
 
   options->SetHinting(aHinting);
   options->SetAutoHinting(aAutoHinting);
-  return options;
+  return options.forget();
 }
 #endif
 
@@ -644,10 +638,10 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
 
   if (mRecorder && retVal) {
     RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal, true);
-    return recordDT;
+    return recordDT.forget();
   }
 #endif
-  return retVal;
+  return retVal.forget();
 }
 
 #ifdef XP_MACOSX
@@ -663,10 +657,9 @@ Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize
   }
 
   if (mRecorder && retVal) {
-    RefPtr<DrawTarget> recordDT = new DrawTargetRecording(mRecorder, retVal);
-    return recordDT;
+    return new DrawTargetRecording(mRecorder, retVal);
   }
-  return retVal;
+  return retVal.forget();
 }
 #endif
 
@@ -682,7 +675,7 @@ Factory::CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
   RefPtr<SourceSurfaceRawData> newSurf = new SourceSurfaceRawData();
 
   if (newSurf->InitWrappingData(aData, aSize, aStride, aFormat, false)) {
-    return newSurf;
+    return newSurf.forget();
   }
 
   return nullptr;
@@ -698,7 +691,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
 
   RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
   if (newSurf->Init(aSize, aFormat)) {
-    return newSurf;
+    return newSurf.forget();
   }
 
   return nullptr;
@@ -715,7 +708,7 @@ Factory::CreateDataSourceSurfaceWithStride(const IntSize &aSize,
 
   RefPtr<SourceSurfaceAlignedRawData> newSurf = new SourceSurfaceAlignedRawData();
   if (newSurf->InitWithStride(aSize, aFormat, aStride)) {
-    return newSurf;
+    return newSurf.forget();
   }
 
   return nullptr;

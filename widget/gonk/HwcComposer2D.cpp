@@ -682,6 +682,25 @@ HwcComposer2D::Commit()
     hwc_display_contents_1_t *displays[HWC_NUM_DISPLAY_TYPES] = { nullptr };
     displays[HWC_DISPLAY_PRIMARY] = mList;
 
+    for (uint32_t j=0; j < (mList->numHwLayers - 1); j++) {
+        if (!mHwcLayerMap[j] ||
+            (mList->hwLayers[j].compositionType == HWC_FRAMEBUFFER)) {
+            continue;
+        }
+        LayerRenderState state = mHwcLayerMap[j]->GetLayer()->GetRenderState();
+        if (!state.mTexture) {
+            continue;
+        }
+        TextureHostOGL* texture = state.mTexture->AsHostOGL();
+        if (!texture) {
+            continue;
+        }
+        sp<Fence> fence = texture->GetAndResetAcquireFence();
+        if (fence.get() && fence->isValid()) {
+            mList->hwLayers[j].acquireFenceFd = fence->dup();
+        }
+    }
+
     int err = mHwc->set(mHwc, HWC_NUM_DISPLAY_TYPES, displays);
 
     mPrevDisplayFence = mPrevRetireFence;

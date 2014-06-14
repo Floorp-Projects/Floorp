@@ -576,7 +576,7 @@ AutoGCRooter::trace(JSTracer *trc)
       }
 
       case JSONPARSER:
-        static_cast<js::JSONParser *>(this)->trace(trc);
+        static_cast<js::JSONParserBase *>(this)->trace(trc);
         return;
 
       case CUSTOM:

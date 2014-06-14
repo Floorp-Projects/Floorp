@@ -38,7 +38,7 @@
 #  endif
 #endif
 
-#ifdef MOZ_HAVE_IS_LITERAL
+#if defined(MOZ_HAVE_IS_LITERAL) && defined(MOZ_HAVE_CXX11_CONSTEXPR)
 #include <type_traits>
 template<typename T>
 void

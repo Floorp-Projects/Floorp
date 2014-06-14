@@ -5034,6 +5034,7 @@ nsEditor::DetermineCurrentDirection()
 {
   // Get the current root direction from its frame
   nsIContent* rootElement = GetExposedRoot();
+  NS_ENSURE_TRUE(rootElement, NS_ERROR_FAILURE);
 
   // If we don't have an explicit direction, determine our direction
   // from the content's direction

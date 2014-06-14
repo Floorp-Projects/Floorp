@@ -90,14 +90,16 @@
       <xul:box class="splitview-controller">
         <xul:box class="splitview-main">
           <xul:toolbar class="devtools-toolbar">
-            <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
-                        accesskey="&newButton.accesskey;"
-                        tooltiptext="&newButton.tooltip;"
-                        label="&newButton.label;"/>
-            <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
-                        accesskey="&importButton.accesskey;"
-                        tooltiptext="&importButton.tooltip;"
-                        label="&importButton.label;"/>
+             <xul:hbox class="devtools-toolbarbutton-group">
+              <xul:toolbarbutton class="style-editor-newButton devtools-toolbarbutton"
+                          accesskey="&newButton.accesskey;"
+                          tooltiptext="&newButton.tooltip;"
+                          label="&newButton.label;"/>
+              <xul:toolbarbutton class="style-editor-importButton devtools-toolbarbutton"
+                          accesskey="&importButton.accesskey;"
+                          tooltiptext="&importButton.tooltip;"
+                          label="&importButton.label;"/>
+            </xul:hbox>
             <xul:spacer/>
             <xul:toolbarbutton id="style-editor-options"
                         class="devtools-option-toolbarbutton"
@@ -150,7 +152,9 @@
               <xul:toolbar class="devtools-toolbar">
                 &mediaRules.label;
               </xul:toolbar>
-              <xul:vbox class="stylesheet-media-list"/>
+              <xul:vbox class="stylesheet-media-container" flex="1">
+                <div class="stylesheet-media-list" />
+              </xul:vbox>
             </xul:vbox>
           </xul:hbox>
         </xul:box>

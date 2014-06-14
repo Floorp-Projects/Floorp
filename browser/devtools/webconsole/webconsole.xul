@@ -84,81 +84,82 @@ function goUpdateConsoleCommands() {
   <box class="hud-outer-wrapper devtools-responsive-container theme-body" flex="1">
     <vbox class="hud-console-wrapper" flex="1">
       <toolbar class="hud-console-filter-toolbar devtools-toolbar" mode="full">
-        <toolbarbutton label="&btnPageNet.label;" type="menu-button"
-                       category="net" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageNet.tooltip;"
-                       accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
-                       accesskey="&btnPageNet.accesskey;"
-                       tabindex="3">
-          <menupopup>
-            <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
-                      prefKey="network"/>
-            <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
-                      prefKey="netwarn"/>
-            <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
-                      prefKey="networkinfo"/>
-            <menuseparator id="saveBodiesSeparator" />
-            <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
-                      accesskey="&saveBodies.accesskey;"/>
-          </menupopup>
-        </toolbarbutton>
-        <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
-                       category="css" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageCSS.tooltip2;"
-                       accesskey="&btnPageCSS.accesskey;"
-                       tabindex="4">
-          <menupopup>
-            <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
-                      prefKey="csserror"/>
-            <menuitem label="&btnConsoleWarnings;" type="checkbox"
-                      autocheck="false" prefKey="cssparser"/>
-            <menuitem label="&btnConsoleReflows;" type="checkbox"
-                      autocheck="false" prefKey="csslog"/>
-          </menupopup>
-        </toolbarbutton>
-        <toolbarbutton label="&btnPageJS.label;" type="menu-button"
-                       category="js" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageJS.tooltip;"
-                       accesskey="&btnPageJS.accesskey;"
-                       tabindex="5">
-          <menupopup>
-            <menuitem label="&btnConsoleErrors;" type="checkbox"
-                      autocheck="false" prefKey="exception"/>
-            <menuitem label="&btnConsoleWarnings;" type="checkbox"
-                      autocheck="false" prefKey="jswarn"/>
-            <menuitem label="&btnConsoleLog;" type="checkbox"
-                      autocheck="false" prefKey="jslog"/>
-          </menupopup>
-        </toolbarbutton>
-        <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
-                       category="security" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageSecurity.tooltip;"
-                       accesskey="&btnPageSecurity.accesskey;"
-                       tabindex="6">
-          <menupopup>
-            <menuitem label="&btnConsoleErrors;" type="checkbox"
-                      autocheck="false" prefKey="secerror"/>
-            <menuitem label="&btnConsoleWarnings;" type="checkbox"
-                      autocheck="false" prefKey="secwarn"/>
-          </menupopup>
-        </toolbarbutton>
-        <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
-                       category="logging" class="devtools-toolbarbutton webconsole-filter-button"
-                       tooltiptext="&btnPageLogging.tooltip;"
-                       accesskey="&btnPageLogging.accesskey3;"
-                       tabindex="7">
-          <menupopup>
-            <menuitem label="&btnConsoleErrors;" type="checkbox"
-                      autocheck="false" prefKey="error"/>
-            <menuitem label="&btnConsoleWarnings;" type="checkbox"
-                      autocheck="false" prefKey="warn"/>
-            <menuitem label="&btnConsoleInfo;" type="checkbox" autocheck="false"
-                      prefKey="info"/>
-            <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
-                      prefKey="log"/>
-          </menupopup>
-        </toolbarbutton>
-
+        <hbox class="devtools-toolbarbutton-group">
+          <toolbarbutton label="&btnPageNet.label;" type="menu-button"
+                         category="net" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageNet.tooltip;"
+                         accesskeyMacOSX="&btnPageNet.accesskeyMacOSX;"
+                         accesskey="&btnPageNet.accesskey;"
+                         tabindex="3">
+            <menupopup>
+              <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                        prefKey="network"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox" autocheck="false"
+                        prefKey="netwarn"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                        prefKey="networkinfo"/>
+              <menuseparator id="saveBodiesSeparator" />
+              <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
+                        accesskey="&saveBodies.accesskey;"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageCSS.label;" type="menu-button"
+                         category="css" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageCSS.tooltip2;"
+                         accesskey="&btnPageCSS.accesskey;"
+                         tabindex="4">
+            <menupopup>
+              <menuitem label="&btnConsoleErrors;" type="checkbox" autocheck="false"
+                        prefKey="csserror"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="cssparser"/>
+              <menuitem label="&btnConsoleReflows;" type="checkbox"
+                        autocheck="false" prefKey="csslog"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageJS.label;" type="menu-button"
+                         category="js" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageJS.tooltip;"
+                         accesskey="&btnPageJS.accesskey;"
+                         tabindex="5">
+            <menupopup>
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="exception"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="jswarn"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox"
+                        autocheck="false" prefKey="jslog"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageSecurity.label;" type="menu-button"
+                         category="security" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageSecurity.tooltip;"
+                         accesskey="&btnPageSecurity.accesskey;"
+                         tabindex="6">
+            <menupopup>
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="secerror"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="secwarn"/>
+            </menupopup>
+          </toolbarbutton>
+          <toolbarbutton label="&btnPageLogging.label;" type="menu-button"
+                         category="logging" class="devtools-toolbarbutton webconsole-filter-button"
+                         tooltiptext="&btnPageLogging.tooltip;"
+                         accesskey="&btnPageLogging.accesskey3;"
+                         tabindex="7">
+            <menupopup>
+              <menuitem label="&btnConsoleErrors;" type="checkbox"
+                        autocheck="false" prefKey="error"/>
+              <menuitem label="&btnConsoleWarnings;" type="checkbox"
+                        autocheck="false" prefKey="warn"/>
+              <menuitem label="&btnConsoleInfo;" type="checkbox" autocheck="false"
+                        prefKey="info"/>
+              <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
+                        prefKey="log"/>
+            </menupopup>
+          </toolbarbutton>
+        </hbox>
         <toolbarbutton class="webconsole-clear-console-button devtools-toolbarbutton"
                        label="&btnClear.label;" tooltiptext="&btnClear.tooltip;"
                        accesskey="&btnClear.accesskey;"

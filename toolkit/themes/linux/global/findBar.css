@@ -115,13 +115,6 @@ findbar[hidden] {
   margin: 0;
 }
 
-.findbar-find-previous > .toolbarbutton-text,
-.findbar-find-next > .toolbarbutton-text {
-  margin: 0;
-  padding: 0;
-  width: 0;
-}
-
 .findbar-find-previous[disabled="true"] > .toolbarbutton-icon,
 .findbar-find-next[disabled="true"] > .toolbarbutton-icon {
   opacity: .5;

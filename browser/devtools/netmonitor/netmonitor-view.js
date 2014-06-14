@@ -229,6 +229,10 @@ let NetMonitorView = {
     });
   },
 
+  reloadPage: function() {
+    NetMonitorController.triggerActivity(ACTIVITY_TYPE.RELOAD.WITH_CACHE_DEFAULT);
+  },
+
   /**
    * Lazily initializes and returns a promise for a Editor instance.
    *
@@ -362,6 +366,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     this._onContextCopyImageAsDataUriCommand = this.copyImageAsDataUri.bind(this);
     this._onContextResendCommand = this.cloneSelectedRequest.bind(this);
     this._onContextPerfCommand = () => NetMonitorView.toggleFrontendMode();
+    this._onReloadCommand = () => NetMonitorView.reloadPage();
 
     this.sendCustomRequestEvent = this.sendCustomRequest.bind(this);
     this.closeCustomRequestEvent = this.closeCustomRequest.bind(this);
@@ -379,6 +384,8 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   _onConnect: function() {
+    $("#requests-menu-reload-notice-button").addEventListener("command", this._onReloadCommand, false);
+
     if (NetMonitorController.supportsCustomRequest) {
       $("#request-menu-context-resend").addEventListener("command", this._onContextResendCommand, false);
       $("#custom-request-send-button").addEventListener("click", this.sendCustomRequestEvent, false);
@@ -426,6 +433,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     $("#request-menu-context-resend").removeEventListener("command", this._onContextResendCommand, false);
     $("#request-menu-context-perf").removeEventListener("command", this._onContextPerfCommand, false);
 
+    $("#requests-menu-reload-notice-button").removeEventListener("command", this._onReloadCommand, false);
     $("#requests-menu-perf-notice-button").removeEventListener("command", this._onContextPerfCommand, false);
     $("#requests-menu-network-summary-button").removeEventListener("command", this._onContextPerfCommand, false);
     $("#requests-menu-network-summary-label").removeEventListener("click", this._onContextPerfCommand, false);
