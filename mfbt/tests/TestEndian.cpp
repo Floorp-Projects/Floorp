@@ -335,9 +335,9 @@ main()
   MOZ_RELEASE_ASSERT(LittleEndian::readInt64(&signed_bytes[0]) == int64_t(0xf8f7f6f5f4f3f2f1LL));
   MOZ_RELEASE_ASSERT(BigEndian::readInt64(&signed_bytes[0]) == int64_t(0xf1f2f3f4f5f6f7f8LL));
 
-  LittleEndian::writeInt16(&buffer[0], 0xf2f1);
+  LittleEndian::writeInt16(&buffer[0], int16_t(0xf2f1));
   MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
-  BigEndian::writeInt16(&buffer[0], 0xf1f2);
+  BigEndian::writeInt16(&buffer[0], int16_t(0xf1f2));
   MOZ_RELEASE_ASSERT(memcmp(&signed_bytes[0], &buffer[0], sizeof(int16_t)) == 0);
 
   LittleEndian::writeInt32(&buffer[0], 0xf4f3f2f1);
