@@ -1396,18 +1396,27 @@ ContentParent::ProcessingError(Result what)
 }
 
 typedef std::pair<ContentParent*, std::set<uint64_t> > IDPair;
-static std::map<ContentParent*, std::set<uint64_t> > sNestedBrowserIds;
+
+namespace {
+std::map<ContentParent*, std::set<uint64_t> >&
+NestedBrowserLayerIds()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  static std::map<ContentParent*, std::set<uint64_t> > sNestedBrowserIds;
+  return sNestedBrowserIds;
+}
+} // anonymous namespace
 
 bool
 ContentParent::RecvAllocateLayerTreeId(uint64_t* aId)
 {
     *aId = CompositorParent::AllocateLayerTreeId();
 
-    auto iter = sNestedBrowserIds.find(this);
-    if (iter == sNestedBrowserIds.end()) {
+    auto iter = NestedBrowserLayerIds().find(this);
+    if (iter == NestedBrowserLayerIds().end()) {
         std::set<uint64_t> ids;
         ids.insert(*aId);
-        sNestedBrowserIds.insert(IDPair(this, ids));
+        NestedBrowserLayerIds().insert(IDPair(this, ids));
     } else {
         iter->second.insert(*aId);
     }
@@ -1417,8 +1426,8 @@ ContentParent::RecvAllocateLayerTreeId(uint64_t* aId)
 bool
 ContentParent::RecvDeallocateLayerTreeId(const uint64_t& aId)
 {
-    auto iter = sNestedBrowserIds.find(this);
-    if (iter != sNestedBrowserIds.end() &&
+    auto iter = NestedBrowserLayerIds().find(this);
+    if (iter != NestedBrowserLayerIds().end() &&
         iter->second.find(aId) != iter->second.end()) {
         CompositorParent::DeallocateLayerTreeId(aId);
     } else {
