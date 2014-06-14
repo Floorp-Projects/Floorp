@@ -3270,7 +3270,7 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
                                           const bool& aHighAccuracy)
 {
 #ifdef MOZ_CHILD_PERMISSIONS
-    if (!Preferences::GetBool("dom.testing.ignore_ipc_principal", false)) {
+    if (!ContentParent::IgnoreIPCPrincipal()) {
         uint32_t permission = mozilla::CheckPermission(this, aPrincipal,
                                                        "geolocation");
         if (permission != nsIPermissionManager::ALLOW_ACTION) {
@@ -3640,6 +3640,19 @@ ContentParent::DeallocPFileDescriptorSetParent(PFileDescriptorSetParent* aActor)
 {
     delete static_cast<FileDescriptorSetParent*>(aActor);
     return true;
+}
+
+bool
+ContentParent::IgnoreIPCPrincipal()
+{
+  static bool sDidAddVarCache = false;
+  static bool sIgnoreIPCPrincipal = false;
+  if (!sDidAddVarCache) {
+    sDidAddVarCache = true;
+    Preferences::AddBoolVarCache(&sIgnoreIPCPrincipal,
+                                 "dom.testing.ignore_ipc_principal", false);
+  }
+  return sIgnoreIPCPrincipal;
 }
 
 } // namespace dom

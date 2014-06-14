@@ -137,6 +137,39 @@ const SEC_ASN1Template CERT_GeneralNamesTemplate[] = {
 };
 
 
+static struct {
+    CERTGeneralNameType type;
+    char *name;
+} typesArray[] = {
+    { certOtherName, "other" },
+    { certRFC822Name, "email" },
+    { certRFC822Name, "rfc822" },
+    { certDNSName, "dns" },
+    { certX400Address, "x400" },
+    { certX400Address, "x400addr" },
+    { certDirectoryName, "directory" },
+    { certDirectoryName, "dn" },
+    { certEDIPartyName, "edi" },
+    { certEDIPartyName, "ediparty" },
+    { certURI, "uri" },
+    { certIPAddress, "ip" },
+    { certIPAddress, "ipaddr" },
+    { certRegisterID, "registerid" }
+};
+
+CERTGeneralNameType
+CERT_GetGeneralNameTypeFromString(const char *string)
+{
+    int types_count = sizeof(typesArray)/sizeof(typesArray[0]);
+    int i;
+
+    for (i=0; i < types_count; i++) {
+        if (PORT_Strcasecmp(string, typesArray[i].name) == 0) {
+            return typesArray[i].type;
+        }
+    }
+    return 0;
+}
 
 CERTGeneralName *
 CERT_NewGeneralName(PLArenaPool *arena, CERTGeneralNameType type)
@@ -1578,9 +1611,9 @@ getNameExtensionsBuiltIn(CERTCertificate  *cert,
                                  "\x73\x67\x64\x6E\x2E\x70\x6D\x2E\x67\x6F\x75"
                                  "\x76\x2E\x66\x72";
 
-  const SECItem anssi_subject = {0, (char *) rawANSSISubject,
+  const SECItem anssi_subject = {0, (unsigned char *) rawANSSISubject,
                                  sizeof(rawANSSISubject)-1};
-  const SECItem permitFranceGovNC = {0, (char *) constraintFranceGov,
+  const SECItem permitFranceGovNC = {0, (unsigned char *) constraintFranceGov,
                                      sizeof(constraintFranceGov)-1};
 
   if (SECITEM_ItemsAreEqual(&cert->derSubject, &anssi_subject)) {

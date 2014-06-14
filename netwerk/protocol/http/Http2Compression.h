@@ -192,7 +192,8 @@ private:
   void DoOutput(Http2Compressor::outputCode code,
                 const class nvPair *pair, uint32_t index);
   void EncodeInteger(uint32_t prefixLen, uint32_t val);
-  void ProcessHeader(const nvPair inputPair, bool neverIndex);
+  void ProcessHeader(const nvPair inputPair, bool noLocalIndex,
+                     bool neverIndex);
   void HuffmanAppend(const nsCString &value);
   void EncodeTableSizeChange(uint32_t newMaxSize);
 
