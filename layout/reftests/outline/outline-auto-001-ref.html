@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html><head>
+    <title>Testcase for outline:auto</title>
+    <style type="text/css">
+
+        html,body {
+            color:black; background-color:white; padding:10px; margin:0;
+        }
+
+	.a { outline:auto; width:190px; height:10px; background:black; }
+        .w { border:solid black; border-width:5px; margin:20px; width:190px; }
+    </style>
+</head>
+<body>
+
+<div class="w"><div class="a" style="outline-width:10px; outline-offset:5px;"></div></div>
+<div class="w"><div class="a" style="outline-width:10px; outline-offset:10px;"></div></div>
+<div class="w"><div class="a" style="outline-width:10px; outline-offset:0px;"></div></div>
+<div class="w"><div class="a" style="outline-width:15px; outline-offset:6px;"></div></div>
+<div class="w"><div class="a" style="outline-width:15px; outline-offset:4px;"></div></div>
+<div class="w"><div class="a" style="outline-width:11px; outline-offset:5px;"></div></div>
+<div class="w"><div class="a" style="outline-width:11px; outline-offset:10px;"></div></div>
+<div class="w"><div class="a" style="outline-width:11px; outline-offset:0px;"></div></div>
+
+</body>
+</html>
