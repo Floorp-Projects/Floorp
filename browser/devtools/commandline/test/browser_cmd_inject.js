@@ -69,30 +69,7 @@ function test() {
         exec: {
           output: [ /Failed to load notauri - Invalid URI/ ]
         }
-      },
-      {
-        setup: 'inject jQuery',
-        check: {
-          input:  'inject jQuery',
-          hints:  '',
-          markup: 'VVVVVVVVVVVVV',
-          status: 'VALID',
-          args: {
-            library: {
-              value: function(library) {
-                is(library.type, 'selection', 'inject type name');
-                is(library.selection.name, 'jQuery', 'inject jquery name');
-                is(library.selection.src, 'http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js',
-                  'inject jquery src');
-              },
-              status: 'VALID'
-            }
-          }
-        },
-        exec: {
-          output: [ /jQuery loaded/ ]
-        }
-      },
+      }
     ]);
   }).then(finish, helpers.handleError);
 }

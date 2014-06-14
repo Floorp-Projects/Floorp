@@ -336,7 +336,7 @@
                      tooltiptext="&debuggerUI.panesButton.tooltip;"
                      tabindex="0"/>
       <toolbarbutton id="debugger-options"
-                     class="devtools-option-toolbarbutton"
+                     class="devtools-toolbarbutton devtools-option-toolbarbutton"
                      tooltiptext="&debuggerUI.optsButton.tooltip;"
                      popup="debuggerPrefsContextMenu"
                      tabindex="0"/>
@@ -363,11 +363,13 @@
                                command="blackBoxCommand"/>
                 <toolbarbutton id="pretty-print"
                                class="devtools-toolbarbutton devtools-monospace"
+                               text-as-image="true"
                                label="{}"
                                tooltiptext="&debuggerUI.sources.prettyPrint;"
                                command="prettyPrintCommand"
                                hidden="true"/>
               </hbox>
+              <vbox class="devtools-separator"/>
               <toolbarbutton id="toggle-breakpoints"
                              class="devtools-toolbarbutton"
                              tooltiptext="&debuggerUI.sources.toggleBreakpoints;"

@@ -90,7 +90,3 @@ label {
   margin: 2px;
   border: none;
 }
-
-.alertCloseButton > .toolbarbutton-text {
-  display: none;
-}
