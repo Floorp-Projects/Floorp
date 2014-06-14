@@ -82,9 +82,9 @@ let NotificationDB = {
     var promise = OS.File.read(NOTIFICATION_STORE_PATH, { encoding: "utf-8"});
     return promise.then(
       function onSuccess(data) {
-        // JSON parsing failure will get handled by a later catch in the promise
-        // chain
-        this.notifications = JSON.parse(data);
+        if (data.length > 0) {
+          this.notifications = JSON.parse(data);
+        }
         // populate the list of notifications by tag
         if (this.notifications) {
           for (var origin in this.notifications) {
