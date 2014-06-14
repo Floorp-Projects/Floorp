@@ -7,6 +7,7 @@
 #include "builtin/Eval.h"
 
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Range.h"
 
 #include "jscntxt.h"
 #include "jsonparser.h"
@@ -20,6 +21,7 @@ using namespace js;
 
 using mozilla::AddToHash;
 using mozilla::HashString;
+using mozilla::Range;
 
 // We should be able to assert this for *any* fp->scopeChain().
 static void
@@ -173,9 +175,10 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
 
             if (cp == end) {
                 bool isArray = (chars[0] == '[');
-                JSONParser<jschar> parser(cx, isArray ? chars : chars + 1U,
-                                          isArray ? length : length - 2,
-                                          JSONParserBase::NoError);
+                auto jsonChars = isArray
+                                 ? Range<const jschar>(chars.get(), length)
+                                 : Range<const jschar>(chars.get() + 1U, length - 2);
+                JSONParser<jschar> parser(cx, jsonChars, JSONParserBase::NoError);
                 RootedValue tmp(cx);
                 if (!parser.parse(&tmp))
                     return EvalJSON_Failure;

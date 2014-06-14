@@ -15,6 +15,7 @@
 #include "nsThreadUtils.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
+#include "nsIObserverService.h"
 
 // NSPR_LOG_MODULES=LoadManager:5
 PRLogModuleInfo *gLoadManagerLog = nullptr;
@@ -30,10 +31,15 @@ PRLogModuleInfo *gLoadManagerLog = nullptr;
 
 namespace mozilla {
 
-LoadManager::LoadManager(int aLoadMeasurementInterval,
-                         int aAveragingMeasurements,
-                         float aHighLoadThreshold,
-                         float aLowLoadThreshold)
+/* static */ StaticRefPtr<LoadManagerSingleton> LoadManagerSingleton::sSingleton;
+
+NS_IMPL_ISUPPORTS(LoadManagerSingleton, nsIObserver)
+
+
+LoadManagerSingleton::LoadManagerSingleton(int aLoadMeasurementInterval,
+                                           int aAveragingMeasurements,
+                                           float aHighLoadThreshold,
+                                           float aLowLoadThreshold)
   : mLoadSum(0.0f),
     mLoadSumMeasurements(0),
     mOveruseActive(false),
@@ -41,7 +47,8 @@ LoadManager::LoadManager(int aLoadMeasurementInterval,
     mAveragingMeasurements(aAveragingMeasurements),
     mHighLoadThreshold(aHighLoadThreshold),
     mLowLoadThreshold(aLowLoadThreshold),
-    mCurrentState(webrtc::kLoadNormal)
+    mCurrentState(webrtc::kLoadNormal),
+    mLock("LoadManager")
 {
 #if defined(PR_LOGGING)
   if (!gLoadManagerLog)
@@ -56,15 +63,44 @@ LoadManager::LoadManager(int aLoadMeasurementInterval,
   mLoadMonitor->SetLoadChangeCallback(this);
 }
 
-LoadManager::~LoadManager()
+LoadManagerSingleton::~LoadManagerSingleton()
 {
   LOG(("LoadManager: shutting down LoadMonitor"));
-  mLoadMonitor->Shutdown();
+  MOZ_ASSERT(!mLoadMonitor, "why wasn't the LoadMonitor shut down in xpcom-shutdown?");
+  if (mLoadMonitor) {
+    mLoadMonitor->Shutdown();
+  }
+}
+
+nsresult
+LoadManagerSingleton::Observe(nsISupports* aSubject, const char* aTopic,
+                     const char16_t* aData)
+{
+  NS_ASSERTION(NS_IsMainThread(), "Observer invoked off the main thread");
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+
+  if (!strcmp(aTopic, "xpcom-shutdown")) {
+    obs->RemoveObserver(this, "xpcom-shutdown");
+    {
+      MutexAutoLock lock(mLock);
+      mObservers.Clear();
+    }
+    if (mLoadMonitor) {
+      mLoadMonitor->Shutdown();
+      mLoadMonitor = nullptr;
+    }
+
+    LOG(("Releasing LoadManager singleton and thread"));
+    // Note: won't be released immediately as the Observer has a ref to us
+    sSingleton = nullptr;
+  }
+  return NS_OK;
 }
 
 void
-LoadManager::LoadChanged(float aSystemLoad, float aProcesLoad)
+LoadManagerSingleton::LoadChanged(float aSystemLoad, float aProcesLoad)
 {
+  MutexAutoLock lock(mLock);
   // Update total load, and total amount of measured seconds.
   mLoadSum += aSystemLoad;
   mLoadSumMeasurements++;
@@ -94,9 +130,10 @@ LoadManager::LoadChanged(float aSystemLoad, float aProcesLoad)
 }
 
 void
-LoadManager::OveruseDetected()
+LoadManagerSingleton::OveruseDetected()
 {
   LOG(("LoadManager - Overuse Detected"));
+  MutexAutoLock lock(mLock);
   mOveruseActive = true;
   if (mCurrentState != webrtc::kLoadStressed) {
     mCurrentState = webrtc::kLoadStressed;
@@ -105,15 +142,17 @@ LoadManager::OveruseDetected()
 }
 
 void
-LoadManager::NormalUsage()
+LoadManagerSingleton::NormalUsage()
 {
   LOG(("LoadManager - Overuse finished"));
+  MutexAutoLock lock(mLock);
   mOveruseActive = false;
 }
 
 void
-LoadManager::LoadHasChanged()
+LoadManagerSingleton::LoadHasChanged()
 {
+  mLock.AssertCurrentThreadOwns();
   LOG(("LoadManager - Signaling LoadHasChanged to %d listeners", mObservers.Length()));
   for (size_t i = 0; i < mObservers.Length(); i++) {
     mObservers.ElementAt(i)->onLoadStateChanged(mCurrentState);
@@ -121,18 +160,36 @@ LoadManager::LoadHasChanged()
 }
 
 void
-LoadManager::AddObserver(webrtc::CPULoadStateObserver * aObserver)
+LoadManagerSingleton::AddObserver(webrtc::CPULoadStateObserver * aObserver)
 {
   LOG(("LoadManager - Adding Observer"));
+  MutexAutoLock lock(mLock);
   mObservers.AppendElement(aObserver);
+  if (mObservers.Length() == 1) {
+    if (!mLoadMonitor) {
+      mLoadMonitor = new LoadMonitor(mLoadMeasurementInterval);
+      mLoadMonitor->Init(mLoadMonitor);
+      mLoadMonitor->SetLoadChangeCallback(this);
+    }
+  }
 }
 
 void
-LoadManager::RemoveObserver(webrtc::CPULoadStateObserver * aObserver)
+LoadManagerSingleton::RemoveObserver(webrtc::CPULoadStateObserver * aObserver)
 {
   LOG(("LoadManager - Removing Observer"));
+  MutexAutoLock lock(mLock);
   if (!mObservers.RemoveElement(aObserver)) {
-    LOG(("LOadManager - Element to remove not found"));
+    LOG(("LoadManager - Element to remove not found"));
+  }
+  if (mObservers.Length() == 0) {
+    if (mLoadMonitor) {
+      // Dance to avoid deadlock on mLock!
+      nsRefPtr<LoadMonitor> loadMonitor = mLoadMonitor.forget();
+      MutexAutoUnlock unlock(mLock);
+
+      loadMonitor->Shutdown();
+    }
   }
 }
 
