@@ -746,6 +746,27 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
 }
 
 gint
+moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
+{
+    ensure_entry_widget();
+    GtkWidget* w = gEntryWidget;
+    gboolean interior_focus;
+    gint focus_width = 0;
+    gtk_widget_style_get(w,
+                         "interior-focus", &interior_focus,
+                         "focus-line-width", &focus_width,
+                         NULL);
+    if (interior_focus) {
+        *focus_h_width = XTHICKNESS(w->style) + focus_width;
+        *focus_v_width = YTHICKNESS(w->style) + focus_width;
+    } else {
+        *focus_h_width = focus_width;
+        *focus_v_width = focus_width;
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
 moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
                          gint* focus_width, gint* focus_pad) 
 {
@@ -1415,6 +1436,7 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     gboolean interior_focus;
     gint focus_width;
+    int draw_focus_outline_only = state->depressed; // NS_THEME_FOCUS_OUTLINE
 
     gtk_widget_set_direction(widget, direction);
 
@@ -1424,6 +1446,18 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
                          "interior-focus", &interior_focus,
                          "focus-line-width", &focus_width,
                          NULL);
+
+    if (draw_focus_outline_only) {
+        // Inflate the given 'rect' with the focus outline size.
+        gint h, v;
+        moz_gtk_get_focus_outline_size(&h, &v);
+        rect->x -= h;
+        rect->width += 2 * h;
+        rect->y -= v;
+        rect->height += 2 * v;
+        width = rect->width;
+        height = rect->height;
+    }
 
     /* gtkentry.c uses two windows, one for the entire widget and one for the
      * text area inside it. The background of both windows is set to the "base"
@@ -1458,7 +1492,9 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
         gtk_style_context_set_state(style, GTK_STATE_FLAG_INSENSITIVE);
     }
 
-    gtk_render_background(style, cr, x, y, width, height);
+    if (!draw_focus_outline_only) {
+        gtk_render_background(style, cr, x, y, width, height);
+    }
     gtk_render_frame(style, cr, x, y, width, height);
 
     if (state->focused && !state->disabled) {
