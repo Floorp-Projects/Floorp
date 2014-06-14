@@ -12,13 +12,7 @@ namespace gfx {
 TemporaryRef<DataSourceSurface>
 DataSourceSurface::GetDataSurface()
 {
-  RefPtr<DataSourceSurface> temp;
-  if (GetType() == SurfaceType::DATA) {
-    temp = this;
-  } else {
-    temp = new DataSourceSurfaceWrapper(this);
-  }
-  return temp;
+  return (GetType() == SurfaceType::DATA) ? this : new DataSourceSurfaceWrapper(this);
 }
 
 }

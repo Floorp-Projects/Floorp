@@ -151,7 +151,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         'fallback/FallbackDiskSpaceWatcher.cpp',
         'fallback/FallbackFactoryReset.cpp',
         'fallback/FallbackFMRadio.cpp',
-        'fallback/FallbackLights.cpp',
         'fallback/FallbackProcessPriority.cpp',
         'fallback/FallbackScreenPower.cpp',
         'fallback/FallbackSwitch.cpp',

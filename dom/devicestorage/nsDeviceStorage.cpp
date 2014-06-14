@@ -20,6 +20,7 @@
 #include "mozilla/dom/PContentPermissionRequestChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/LazyIdleThread.h"
@@ -28,6 +29,7 @@
 #include "mozilla/Services.h"
 
 #include "nsAutoPtr.h"
+#include "nsGlobalWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"
 #include "nsIDirectoryEnumerator.h"
@@ -1695,20 +1697,15 @@ JS::Value StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
-  if (!sgo) {
+  JSObject* global =
+    static_cast<nsGlobalWindow*>(aWindow)->GetWrapperPreserveColor();
+  if (NS_WARN_IF(!global)) {
     return JSVAL_NULL;
   }
 
-  nsIScriptContext *scriptContext = sgo->GetScriptContext();
-  if (!scriptContext) {
-    return JSVAL_NULL;
-  }
-
-  AutoPushJSContext cx(scriptContext->GetNativeContext());
-  if (!cx) {
-    return JSVAL_NULL;
-  }
+  AutoJSAPI jsapi;
+  JSContext* cx = jsapi.cx();
+  JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JS::Value> result(cx);
   if (!xpc::StringToJsval(cx, aString, &result)) {

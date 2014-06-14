@@ -262,9 +262,14 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
     return;
   }
 
+  hal::FMRadioOperationInformation info;
+  info.operation() = hal::FM_RADIO_OPERATION_ENABLE;
+  info.status() = hal::FM_RADIO_OPERATION_STATUS_FAIL;
+
   mozilla::ScopedClose fd(open("/dev/radio0", O_RDWR));
   if (fd < 0) {
     HAL_LOG(("Unable to open radio device"));
+    hal::NotifyFMRadioStatus(info);
     return;
   }
 
@@ -272,6 +277,7 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   int rc = ioctl(fd, VIDIOC_QUERYCAP, &cap);
   if (rc < 0) {
     HAL_LOG(("Unable to query radio device"));
+    hal::NotifyFMRadioStatus(info);
     return;
   }
 
@@ -281,11 +287,13 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
 
   if (!(cap.capabilities & V4L2_CAP_RADIO)) {
     HAL_LOG(("/dev/radio0 isn't a radio"));
+    hal::NotifyFMRadioStatus(info);
     return;
   }
 
   if (!(cap.capabilities & V4L2_CAP_TUNER)) {
     HAL_LOG(("/dev/radio0 doesn't support the tuner interface"));
+    hal::NotifyFMRadioStatus(info);
     return;
   }
   sRadioSettings = aInfo;
@@ -293,7 +301,10 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   if (sMsmFMMode) {
     sRadioFD = fd.forget();
     sMsmFMVersion = cap.version;
-    pthread_create(&sRadioThread, nullptr, runMsmFMRadio, nullptr);
+    if (pthread_create(&sRadioThread, nullptr, runMsmFMRadio, nullptr)) {
+      HAL_LOG(("Couldn't create radio thread"));
+      hal::NotifyFMRadioStatus(info);
+    }
     return;
   }
 
@@ -310,8 +321,6 @@ EnableFMRadio(const hal::FMRadioSettings& aInfo)
   sRadioFD = fd.forget();
   sRadioEnabled = true;
 
-  hal::FMRadioOperationInformation info;
-  info.operation() = hal::FM_RADIO_OPERATION_ENABLE;
   info.status() = hal::FM_RADIO_OPERATION_STATUS_SUCCESS;
   hal::NotifyFMRadioStatus(info);
 }

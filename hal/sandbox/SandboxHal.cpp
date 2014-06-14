@@ -190,22 +190,6 @@ SetScreenBrightness(double aBrightness)
   Hal()->SendSetScreenBrightness(aBrightness);
 }
 
-bool
-SetLight(hal::LightType light, const hal::LightConfiguration& aConfig)
-{
-  bool status;
-  Hal()->SendSetLight(light, aConfig, &status);
-  return status;
-}
-
-bool
-GetLight(hal::LightType light, hal::LightConfiguration* aConfig)
-{
-  bool status;
-  Hal()->SendGetLight(light, aConfig, &status);
-  return status;
-}
-
 void 
 AdjustSystemClock(int64_t aDeltaMilliseconds)
 {
@@ -683,30 +667,6 @@ public:
       return false;
     }
     hal::SetScreenBrightness(aBrightness);
-    return true;
-  }
-
-  virtual bool
-  RecvSetLight(const LightType& aLight,  const hal::LightConfiguration& aConfig, bool *status) MOZ_OVERRIDE
-  {
-    // XXX currently, the hardware key light and screen backlight are
-    // controlled as a unit.  Those are set through the power API, and
-    // there's no other way to poke lights currently, so we require
-    // "power" privileges here.
-    if (!AssertAppProcessPermission(this, "power")) {
-      return false;
-    }
-    *status = hal::SetLight(aLight, aConfig);
-    return true;
-  }
-
-  virtual bool
-  RecvGetLight(const LightType& aLight, LightConfiguration* aConfig, bool* status) MOZ_OVERRIDE
-  {
-    if (!AssertAppProcessPermission(this, "power")) {
-      return false;
-    }
-    *status = hal::GetLight(aLight, aConfig);
     return true;
   }
 
