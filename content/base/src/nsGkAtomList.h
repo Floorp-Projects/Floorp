@@ -1817,6 +1817,10 @@ GK_ATOM(onuserproximity, "onuserproximity")
 // light sensor support
 GK_ATOM(ondevicelight, "ondevicelight")
 
+// Audio channel events
+GK_ATOM(onmozinterruptbegin, "onmozinterruptbegin")
+GK_ATOM(onmozinterruptend, "onmozinterruptbegin")
+
 //---------------------------------------------------------------------------
 // Special atoms
 //---------------------------------------------------------------------------

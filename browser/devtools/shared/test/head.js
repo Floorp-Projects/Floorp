@@ -11,6 +11,8 @@ SimpleTest.registerCleanupFunction(() => {
   gDevTools.testing = false;
 });
 
+const TEST_URI_ROOT = "http://example.com/browser/browser/devtools/shared/test/";
+
 /**
  * Open a new tab at a URL and call a callback on load
  */

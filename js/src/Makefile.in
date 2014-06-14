@@ -401,7 +401,8 @@ endif
 
 selfhosted.out.h: $(selfhosted_out_h_deps)
 	$(PYTHON) $(srcdir)/builtin/embedjs.py $(SELFHOSTED_DEFINES) \
-	  -p '$(CPP)' -m $(srcdir)/js.msg -o $@ $(selfhosting_srcs)
+	  -c '$(CCC)' -p '$(PREPROCESS_OPTION)' -m $(srcdir)/js.msg \
+	  -o $@ $(selfhosting_srcs)
 
 ###############################################
 # Generating source package tarballs

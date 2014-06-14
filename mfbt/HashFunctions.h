@@ -315,6 +315,13 @@ HashString(const char* str, size_t length)
 
 MOZ_WARN_UNUSED_RESULT
 inline uint32_t
+HashString(const unsigned char* str, size_t length)
+{
+  return detail::HashKnownLength(str, length);
+}
+
+MOZ_WARN_UNUSED_RESULT
+inline uint32_t
 HashString(const uint16_t* str)
 {
   return detail::HashUntilZero(str);

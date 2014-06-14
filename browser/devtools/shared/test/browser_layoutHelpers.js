@@ -12,7 +12,7 @@ registerCleanupFunction(function () {
 
 let LayoutHelpers = imported.LayoutHelpers;
 
-const TEST_URI = "http://example.com/browser/browser/devtools/shared/test/browser_layoutHelpers.html";
+const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers.html";
 
 function test() {
   addTab(TEST_URI, function(browser, tab) {

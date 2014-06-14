@@ -78,13 +78,12 @@
   margin-bottom: 0;
 }
 
-.subviewbutton > .toolbarbutton-text,
-.subviewbutton > .menu-iconic-text {
-  margin: 2px 0px;
+.subviewbutton > .toolbarbutton-text {
+  margin: 2px 0 !important; /* !important for overriding toolbarbutton.css */
 }
 
 .subviewbutton:-moz-any([image],[targetURI],.cui-withicon, .bookmark-item) > .toolbarbutton-text {
-  margin: 2px 6px;
+  margin: 2px 6px !important; /* !important for overriding toolbarbutton.css */
 }
 
 .restoreallitem > .toolbarbutton-icon {

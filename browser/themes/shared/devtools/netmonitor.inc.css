@@ -17,15 +17,24 @@
   color: #585959; /* Grey foreground text */
 }
 
+#notice-perf-message {
+  margin-top: 2px;
+}
+
 #requests-menu-perf-notice-button {
   min-width: 30px;
-  min-height: 28px;
+  min-height: 26px;
   margin: 0;
   list-style-image: url(profiler-stopwatch.svg);
 }
 
 #requests-menu-perf-notice-button .button-text {
   display: none;
+}
+
+#requests-menu-reload-notice-button {
+  min-height: 26px;
+  margin: 0;
 }
 
 %filter substitution
@@ -75,7 +84,7 @@
   -moz-appearance: none;
   background: none;
   min-width: 1px;
-  min-height: 32px;
+  min-height: 24px;
   margin: 0;
   border: none;
   padding: 0;
