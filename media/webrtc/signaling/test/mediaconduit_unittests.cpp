@@ -812,7 +812,7 @@ class TransportConduitTest : public ::testing::Test
       ASSERT_NE(mVideoSession, (void*)nullptr);
 
     // Configure send codecs on the conduit.
-    mozilla::VideoCodecConfig cinst1(120, "VP8", 0, max_fs, 0);
+    mozilla::VideoCodecConfig cinst1(120, "VP8", 0, max_fs);
 
     err = mVideoSession->ConfigureSendMediaCodec(&cinst1);
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
