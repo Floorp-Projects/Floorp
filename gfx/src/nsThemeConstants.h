@@ -18,6 +18,9 @@
 // like images (e.g. HTML <button> elements)
 #define NS_THEME_BUTTON_BEVEL                              7
 
+// A themed focus outline (for outline:auto)
+#define NS_THEME_FOCUS_OUTLINE                             8
+
 // The toolbox that contains the toolbars.
 #define NS_THEME_TOOLBOX                                   11
 
