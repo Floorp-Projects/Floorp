@@ -90,7 +90,7 @@ PathRecording::CopyToBuilder(FillRule aFillRule) const
   RefPtr<PathBuilder> pathBuilder = mPath->CopyToBuilder(aFillRule);
   RefPtr<PathBuilderRecording> recording = new PathBuilderRecording(pathBuilder, aFillRule);
   recording->mPathOps = mPathOps;
-  return recording;
+  return recording.forget();
 }
 
 TemporaryRef<PathBuilder>
@@ -113,7 +113,7 @@ PathRecording::TransformedCopyToBuilder(const Matrix &aTransform, FillRule aFill
     }
     recording->mPathOps.push_back(newPathOp);
   }
-  return recording;
+  return recording.forget();
 }
 
 }

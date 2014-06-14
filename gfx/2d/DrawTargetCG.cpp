@@ -170,9 +170,8 @@ DrawTargetCG::Snapshot()
   if (!mSnapshot) {
     if (GetContextType(mCg) == CG_CONTEXT_TYPE_IOSURFACE) {
       return new SourceSurfaceCGIOSurfaceContext(this);
-    } else {
-      mSnapshot = new SourceSurfaceCGBitmapContext(this);
     }
+    mSnapshot = new SourceSurfaceCGBitmapContext(this);
   }
 
   return mSnapshot;
@@ -185,10 +184,9 @@ DrawTargetCG::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aForma
   // to add that in somehow, but at a higher level
   RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
   if (newTarget->Init(GetType(), aSize, aFormat)) {
-    return newTarget;
-  } else {
-    return nullptr;
+    return newTarget.forget();
   }
+  return nullptr;
 }
 
 TemporaryRef<SourceSurface>
@@ -199,11 +197,11 @@ DrawTargetCG::CreateSourceSurfaceFromData(unsigned char *aData,
 {
   RefPtr<SourceSurfaceCG> newSurf = new SourceSurfaceCG();
 
- if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
+  if (!newSurf->InitFromData(aData, aSize, aStride, aFormat)) {
     return nullptr;
   }
 
-  return newSurf;
+  return newSurf.forget();
 }
 
 // This function returns a retained CGImage that needs to be released after
@@ -1447,8 +1445,7 @@ DrawTargetCG::Init(BackendType aType, const IntSize &aSize, SurfaceFormat &aForm
 TemporaryRef<PathBuilder>
 DrawTargetCG::CreatePathBuilder(FillRule aFillRule) const
 {
-  RefPtr<PathBuilderCG> pb = new PathBuilderCG(aFillRule);
-  return pb;
+  return new PathBuilderCG(aFillRule);
 }
 
 void*

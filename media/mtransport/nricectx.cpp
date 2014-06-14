@@ -723,6 +723,15 @@ void NrIceCtx::SetConnectionState(ConnectionState state) {
             connection_state_ << "->" << state);
   connection_state_ = state;
 
+  if (connection_state_ == ICE_CTX_FAILED) {
+    MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): dumping r_log ringbuffer... ");
+    std::deque<std::string> logs;
+    RLogRingBuffer::GetInstance()->GetAny(0, &logs);
+    for (auto l = logs.begin(); l != logs.end(); ++l) {
+      MOZ_MTLOG(ML_INFO, *l);
+    }
+  }
+
   SignalConnectionStateChange(this, state);
 }
 

@@ -5674,7 +5674,7 @@ JS_Stringify(JSContext *cx, MutableHandleValue vp, HandleObject replacer,
         HandlePropertyName null = cx->names().null;
         return callback(null->chars(), null->length(), data);
     }
-    return callback(sb.begin(), sb.length(), data);
+    return callback(sb.rawTwoByteBegin(), sb.length(), data);
 }
 
 JS_PUBLIC_API(bool)

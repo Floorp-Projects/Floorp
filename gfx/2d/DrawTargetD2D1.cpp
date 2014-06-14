@@ -533,7 +533,7 @@ DrawTargetD2D1::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFor
     return nullptr;
   }
 
-  return dt;
+  return dt.forget();
 }
 
 TemporaryRef<PathBuilder>
@@ -797,7 +797,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
   if (!IsPatternSupportedByD2D(aPattern)) {
     RefPtr<ID2D1SolidColorBrush> colBrush;
     mDC->CreateSolidColorBrush(D2D1::ColorF(1.0f, 1.0f, 1.0f, 1.0f), byRef(colBrush));
-    return colBrush;
+    return colBrush.forget();
   }
 
   if (aPattern.GetType() == PatternType::COLOR) {
@@ -807,8 +807,9 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                             color.b, color.a),
                                D2D1::BrushProperties(aAlpha),
                                byRef(colBrush));
-    return colBrush;
-  } else if (aPattern.GetType() == PatternType::LINEAR_GRADIENT) {
+    return colBrush.forget();
+  }
+  if (aPattern.GetType() == PatternType::LINEAR_GRADIENT) {
     RefPtr<ID2D1LinearGradientBrush> gradBrush;
     const LinearGradientPattern *pat =
       static_cast<const LinearGradientPattern*>(&aPattern);
@@ -828,7 +829,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       mDC->CreateSolidColorBrush(d2dStops.back().color,
                                  D2D1::BrushProperties(aAlpha),
                                  byRef(colBrush));
-      return colBrush;
+      return colBrush.forget();
     }
 
     mDC->CreateLinearGradientBrush(D2D1::LinearGradientBrushProperties(D2DPoint(pat->mBegin),
@@ -836,8 +837,9 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                    D2D1::BrushProperties(aAlpha, D2DMatrix(pat->mMatrix)),
                                    stops->mStopCollection,
                                    byRef(gradBrush));
-    return gradBrush;
-  } else if (aPattern.GetType() == PatternType::RADIAL_GRADIENT) {
+    return gradBrush.forget();
+  }
+  if (aPattern.GetType() == PatternType::RADIAL_GRADIENT) {
     RefPtr<ID2D1RadialGradientBrush> gradBrush;
     const RadialGradientPattern *pat =
       static_cast<const RadialGradientPattern*>(&aPattern);
@@ -855,11 +857,12 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                           D2DPoint(pat->mCenter1 - pat->mCenter2),
                                           pat->mRadius2, pat->mRadius2),
       D2D1::BrushProperties(aAlpha, D2DMatrix(pat->mMatrix)),
-      stops->mStopCollection,
-      byRef(gradBrush));
+                            stops->mStopCollection,
+                            byRef(gradBrush));
 
-    return gradBrush;
-  } else if (aPattern.GetType() == PatternType::SURFACE) {
+    return gradBrush.forget();
+  }
+  if (aPattern.GetType() == PatternType::SURFACE) {
     const SurfacePattern *pat =
       static_cast<const SurfacePattern*>(&aPattern);
 
@@ -881,7 +884,7 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
                                   D2DInterpolationMode(pat->mFilter)),
                           D2D1::BrushProperties(aAlpha, D2DMatrix(mat)),
                           byRef(imageBrush));
-    return imageBrush;
+    return imageBrush.forget();
   }
 
   gfxWarning() << "Invalid pattern type detected.";
@@ -909,16 +912,13 @@ DrawTargetD2D1::GetImageForSurface(SourceSurface *aSurface, Matrix &aSourceTrans
         gfxWarning() << "Invalid surface type.";
         return nullptr;
       }
-
-      image = CreatePartialBitmapForSurface(dataSurf, mTransform, mSize, aExtendMode,
-                                            aSourceTransform, mDC); 
-
-      return image;
+      return CreatePartialBitmapForSurface(dataSurf, mTransform, mSize, aExtendMode,
+                                           aSourceTransform, mDC);
     }
     break;
   }
 
-  return image;
+  return image.forget();
 }
 
 TemporaryRef<SourceSurface>
@@ -943,7 +943,7 @@ DrawTargetD2D1::OptimizeSourceSurface(SourceSurface* aSurface) const
   data->Unmap();
 
   if (!bitmap) {
-    return data;
+    return data.forget();
   }
 
   return new SourceSurfaceD2D1(bitmap.get(), mDC, data->GetFormat(), data->GetSize());
