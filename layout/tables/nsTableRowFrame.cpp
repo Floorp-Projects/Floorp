@@ -276,7 +276,6 @@ GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
                                  nsTableFrame&     aTableFrame)
 {
   nscoord height = 0;
-  nscoord cellSpacingY = aTableFrame.GetCellSpacingY();
   int32_t rowSpan = aTableFrame.GetEffectiveRowSpan(aTableCellFrame);
   // add in height of rows spanned beyond the 1st one
   nsIFrame* nextRow = aTableCellFrame.GetParent()->GetNextSibling();
@@ -285,7 +284,7 @@ GetHeightOfRowsSpannedBelowFirst(nsTableCellFrame& aTableCellFrame,
       height += nextRow->GetSize().height;
       rowX++;
     }
-    height += cellSpacingY;
+    height += aTableFrame.GetCellSpacingY(rowX);
     nextRow = nextRow->GetNextSibling();
   }
   return height;
@@ -682,8 +681,7 @@ nsTableRowFrame::CalculateCellActualHeight(nsTableCellFrame* aCellFrame,
 // column widths taking into account column spans and column spacing
 static nscoord
 CalcAvailWidth(nsTableFrame&     aTableFrame,
-               nsTableCellFrame& aCellFrame,
-               nscoord           aCellSpacingX)
+               nsTableCellFrame& aCellFrame)
 {
   nscoord cellAvailWidth = 0;
   int32_t colIndex;
@@ -695,7 +693,7 @@ CalcAvailWidth(nsTableFrame&     aTableFrame,
     cellAvailWidth += aTableFrame.GetColumnWidth(colIndex + spanX);
     if (spanX > 0 &&
         aTableFrame.ColumnHasCellSpacingBefore(colIndex + spanX)) {
-      cellAvailWidth += aCellSpacingX;
+      cellAvailWidth += aTableFrame.GetCellSpacingX(colIndex + spanX - 1);
     }
   }
   return cellAvailWidth;
@@ -706,7 +704,6 @@ GetSpaceBetween(int32_t       aPrevColIndex,
                 int32_t       aColIndex,
                 int32_t       aColSpan,
                 nsTableFrame& aTableFrame,
-                nscoord       aCellSpacingX,
                 bool          aIsLeftToRight,
                 bool          aCheckVisibility)
 {
@@ -731,7 +728,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
           space += aTableFrame.GetColumnWidth(colX);
       }
       if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
-        space += aCellSpacingX;
+        space += aTableFrame.GetCellSpacingX(colX - 1);
       }
     }
   } 
@@ -755,7 +752,7 @@ GetSpaceBetween(int32_t       aPrevColIndex,
           space += aTableFrame.GetColumnWidth(colX);
       }
       if (!isCollapsed && aTableFrame.ColumnHasCellSpacingBefore(colX)) {
-        space += aCellSpacingX;
+        space += aTableFrame.GetCellSpacingX(colX - 1);
       }
     }
   }
@@ -793,7 +790,6 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
   const bool isPaginated = aPresContext->IsPaginated();
   const bool borderCollapse = aTableFrame.IsBorderCollapse();
 
-  nscoord cellSpacingX = aTableFrame.GetCellSpacingX();
   int32_t cellColSpan = 1;  // must be defined here so it's set properly for non-cell kids
   
   nsTableIterator iter(*this);
@@ -855,7 +851,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     if ((iter.IsLeftToRight() && (prevColIndex != (cellColIndex - 1))) ||
         (!iter.IsLeftToRight() && (prevColIndex != cellColIndex + cellColSpan))) {
       x += GetSpaceBetween(prevColIndex, cellColIndex, cellColSpan, aTableFrame, 
-                           cellSpacingX, iter.IsLeftToRight(), false);
+                           iter.IsLeftToRight(), false);
     }
 
     // remember the rightmost (ltr) or leftmost (rtl) column this cell spans into
@@ -870,7 +866,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
     if (doReflowChild) {
       // Calculate the available width for the table cell using the known column widths
       nscoord availCellWidth =
-        CalcAvailWidth(aTableFrame, *cellFrame, cellSpacingX);
+        CalcAvailWidth(aTableFrame, *cellFrame);
 
       nsHTMLReflowMetrics desiredSize(aReflowState);
 
@@ -979,7 +975,7 @@ nsTableRowFrame::ReflowChildren(nsPresContext*          aPresContext,
       }
     }
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
-    x += cellSpacingX;
+    x += aTableFrame.GetCellSpacingX(cellColIndex);
   }
 
   // just set our width to what was available. The table will calculate the width and not use our value.
@@ -1144,13 +1140,13 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
   rowRect.width  = aWidth;
   nsOverflowAreas overflow;
   nscoord shift = 0;
-  nscoord cellSpacingX = tableFrame->GetCellSpacingX();
-  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
   if (aCollapseGroup || collapseRow) {
     nsTableCellFrame* cellFrame = GetFirstCell();
     aDidCollapse = true;
-    shift = rowRect.height + cellSpacingY;
+    int32_t rowIndex;
+    cellFrame->GetRowIndex(rowIndex);
+    shift = rowRect.height + tableFrame->GetCellSpacingY(rowIndex);
     while (cellFrame) {
       nsRect cRect = cellFrame->GetRect();
       // If aRowOffset != 0, there's no point in invalidating the cells, since
@@ -1177,8 +1173,6 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
 
     int32_t colIncrement = iter.IsLeftToRight() ? 1 : -1;
 
-    //nscoord x = cellSpacingX;
-
     nsIFrame* kidFrame = iter.First();
     while (kidFrame) {
       nsTableCellFrame *cellFrame = do_QueryFrame(kidFrame);
@@ -1193,7 +1187,7 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
             (!iter.IsLeftToRight() &&
              (prevColIndex != cellColIndex + cellColSpan))) {
           x += GetSpaceBetween(prevColIndex, cellColIndex, cellColSpan,
-                               *tableFrame, cellSpacingX, iter.IsLeftToRight(),
+                               *tableFrame, iter.IsLeftToRight(),
                                true);
         }
         nsRect cRect(x, 0, 0, rowRect.height);
@@ -1228,14 +1222,14 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
               nextColFrame->StyleVisibility();
               if ( (NS_STYLE_VISIBILITY_COLLAPSE != nextColVis->mVisible) &&
                   tableFrame->ColumnHasCellSpacingBefore(colX + colIncrement)) {
-                cRect.width += cellSpacingX;
+                cRect.width += tableFrame->GetCellSpacingX(cellColIndex);
               }
             }
           }
         }
         x += cRect.width;
         if (isVisible)
-          x += cellSpacingX;
+          x += tableFrame->GetCellSpacingX(cellColIndex);
         int32_t actualRowSpan = tableFrame->GetEffectiveRowSpan(*cellFrame);
         nsTableRowFrame* rowFrame = GetNextRow();
         for (actualRowSpan--; actualRowSpan > 0 && rowFrame; actualRowSpan--) {
@@ -1244,7 +1238,8 @@ nsTableRowFrame::CollapseRowIfNecessary(nscoord aRowOffset,
                                     nextRowVis->mVisible);
           if (!collapseNextRow) {
             nsRect nextRect = rowFrame->GetRect();
-            cRect.height += nextRect.height + cellSpacingY;
+            cRect.height += nextRect.height +
+                            tableFrame->GetCellSpacingY(rowFrame->GetRowIndex());
           }
           rowFrame = rowFrame->GetNextRow();
         }
