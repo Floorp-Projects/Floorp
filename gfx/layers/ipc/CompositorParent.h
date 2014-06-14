@@ -119,7 +119,7 @@ public:
   void ForceIsFirstPaint();
   void Destroy();
 
-  void NotifyChildCreated(uint64_t aChild);
+  void NotifyChildCreated(const uint64_t& aChild);
 
   void AsyncRender();
 
