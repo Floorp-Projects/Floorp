@@ -2593,9 +2593,21 @@ nsDisplayThemedBackground::GetBoundsInternal() {
   return r + ToReferenceFrame();
 }
 
+bool
+nsDisplayBackgroundColor::ApplyOpacity(nsDisplayListBuilder* aBuilder,
+                                       float aOpacity,
+                                       const DisplayItemClip* aClip)
+{
+  mColor.a = mColor.a * aOpacity;
+  if (aClip) {
+    IntersectClip(aBuilder, *aClip);
+  }
+  return true;
+}
+
 void
 nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
-                                nsRenderingContext* aCtx) 
+                                nsRenderingContext* aCtx)
 {
   if (mColor == NS_RGBA(0, 0, 0, 0)) {
     return;
@@ -2604,7 +2616,7 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   uint32_t flags = aBuilder->GetBackgroundPaintFlags();
   CheckForBorderItem(this, flags);
-  nsCSSRendering::PaintBackgroundColor(mFrame->PresContext(), *aCtx, mFrame,
+  nsCSSRendering::PaintBackgroundColor(mColor, mFrame->PresContext(), *aCtx, mFrame,
                                        mVisibleRect,
                                        nsRect(offset, mFrame->GetSize()),
                                        flags);
@@ -2612,9 +2624,9 @@ nsDisplayBackgroundColor::Paint(nsDisplayListBuilder* aBuilder,
 
 nsRegion
 nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                                          bool* aSnap) 
+                                          bool* aSnap)
 {
-  if (NS_GET_A(mColor) != 255) {
+  if (mColor.a != 1) {
     return nsRegion();
   }
 
@@ -2630,9 +2642,9 @@ nsDisplayBackgroundColor::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
 }
 
 bool
-nsDisplayBackgroundColor::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) 
+nsDisplayBackgroundColor::IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor)
 {
-  *aColor = mColor;
+  *aColor = NS_RGBA_FROM_GFXRGBA(mColor);
 
   if (!mBackgroundStyle)
     return true;
@@ -2659,9 +2671,9 @@ nsDisplayBackgroundColor::HitTest(nsDisplayListBuilder* aBuilder,
 void
 nsDisplayBackgroundColor::WriteDebugInfo(nsACString& aTo)
 {
-  aTo += nsPrintfCString(" (rgba %d,%d,%d,%d)", 
-          NS_GET_R(mColor), NS_GET_G(mColor),
-          NS_GET_B(mColor), NS_GET_A(mColor));
+  aTo += nsPrintfCString(" (rgba %f,%f,%f,%f)",
+          mColor.r, mColor.g,
+          mColor.b, mColor.a);
 }
 #endif
 
