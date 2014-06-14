@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Bug 1014547 - CSS transforms highlighter
+Test the creation of the SVG highlighter elements in the browser
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Framerate actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="transformed" style="border:1px solid red;width:100px;height:100px;transform:skew(13deg);"></div>
+  <div id="untransformed" style="border:1px solid blue;width:100px;height:100px;"></div>
+  <span id="inline" style="transform:rotate(90deg);">this is an inline transformed element</span>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      var form = response.tabs[response.selected];
+      var front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        let walkerFront = yield front.getWalker();
+        let highlighterFront = yield front.getHighlighterByType(
+          "CssTransformHighlighter");
+
+        let gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+        let container =
+          gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
+        ok(container, "The highlighter container was found");
+
+        yield isHiddenByDefault(container);
+        yield has2PolygonsAnd4Lines(container);
+        yield isNotShownForUntransformed(highlighterFront, walkerFront, container);
+        yield isNotShownForInline(highlighterFront, walkerFront, container);
+        yield isVisibleWhenShown(highlighterFront, walkerFront, container);
+        yield linesLinkThePolygons(highlighterFront, walkerFront, container);
+
+        yield highlighterFront.finalize();
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+
+  function* isHiddenByDefault(container) {
+    let svg = container.querySelector("svg");
+    ok(svg.hasAttribute("hidden"), "The highlighter is hidden by default");
+  }
+
+  function* has2PolygonsAnd4Lines(container) {
+    is(container.querySelectorAll("polygon").length, 2, "Found 2 polygons");
+    is(container.querySelectorAll("line").length, 4, "Found 4 lines");
+  }
+
+  function* isNotShownForUntransformed(highlighterFront, walkerFront, container) {
+    let rawNode = document.getElementById("untransformed");
+    let node = walkerFront.frontForRawNode(rawNode);
+
+    info("Asking to show the highlighter on the untransformed test node");
+    yield highlighterFront.show(node);
+    let svg = container.querySelector("svg");
+    ok(svg.hasAttribute("hidden"), "The highlighter is still hidden");
+  }
+
+  function* isNotShownForInline(highlighterFront, walkerFront, container) {
+    let rawNode = document.getElementById("inline");
+    let node = walkerFront.frontForRawNode(rawNode);
+
+    info("Asking to show the highlighter on the inline test node");
+    yield highlighterFront.show(node);
+    let svg = container.querySelector("svg");
+    ok(svg.hasAttribute("hidden"), "The highlighter is still hidden");
+  }
+
+  function* isVisibleWhenShown(highlighterFront, walkerFront, container) {
+    let rawNode = document.getElementById("transformed");
+    let node = walkerFront.frontForRawNode(rawNode);
+
+    info("Asking to show the highlighter on the test node");
+    yield highlighterFront.show(node);
+    let svg = container.querySelector("svg");
+    ok(!svg.hasAttribute("hidden"), "The highlighter is visible");
+
+    info("Hiding the highlighter");
+    yield highlighterFront.hide();
+    ok(svg.hasAttribute("hidden"), "The highlighter is hidden");
+  }
+
+  function* linesLinkThePolygons(highlighterFront, walkerFront, container) {
+    let rawNode = document.getElementById("transformed");
+    let node = walkerFront.frontForRawNode(rawNode);
+
+    info("Showing the highlighter on the transformed node");
+    yield highlighterFront.show(node);
+
+    info("Checking that the 4 lines do link the 2 shape's corners");
+    let lines = [...container.querySelectorAll("line")];
+
+    let polygon1 = container.querySelector(".css-transform-untransformed");
+    let points1 = polygon1.getAttribute("points").split(" ");
+
+    let polygon2 = container.querySelector(".css-transform-transformed");
+    let points2 = polygon2.getAttribute("points").split(" ");
+
+    for (let i = 0; i < lines.length; i++) {
+      info("Checking line nb " + i);
+      let line = lines[i];
+
+      let p1 = points1[i].split(",");
+      let x1 = line.getAttribute("x1");
+      let y1 = line.getAttribute("y1");
+      is(p1[0], x1, "line " + i + "'s first point matches the untransformed x coordinate");
+      is(p1[1], y1, "line " + i + "'s first point matches the untransformed y coordinate");
+
+      let p2 = points2[i].split(",");
+      let x2 = line.getAttribute("x2");
+      let y2 = line.getAttribute("y2");
+      is(p2[0], x2, "line " + i + "'s first point matches the transformed x coordinate");
+      is(p2[1], y2, "line " + i + "'s first point matches the transformed y coordinate");
+    }
+
+    yield highlighterFront.hide();
+  }
+
+}
+</script>
+</pre>
+</body>
+</html>

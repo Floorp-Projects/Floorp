@@ -774,11 +774,6 @@ abstract public class BrowserApp extends GeckoApp
             return true;
         }
 
-        if (itemId == R.id.share) {
-            shareCurrentUrl();
-            return true;
-        }
-
         if (itemId == R.id.subscribe) {
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null && tab.hasFeeds()) {
@@ -2342,10 +2337,9 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
-        String scheme = Uri.parse(url).getScheme();
-        share.setVisible(!GeckoProfile.get(this).inGuestMode());
-        share.setEnabled(!(scheme.equals("about") || scheme.equals("chrome") ||
-                           scheme.equals("file") || scheme.equals("resource")));
+        final boolean inGuestMode = GeckoProfile.get(this).inGuestMode();
+        share.setVisible(!inGuestMode);
+        share.setEnabled(StringUtils.isShareableUrl(url) && !inGuestMode);
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
         // be on the BrowserToolbar context menu
