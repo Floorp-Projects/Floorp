@@ -32,24 +32,20 @@ function test_profiler_actor(aClient, aProfiler)
       for (var i = 0; i < features.length; i++)
         do_check_eq(aResponse.features[i], features[i]);
 
-      aClient.request({ to: aProfiler, type: "startProfiler", features: ['jank', 'js'] }, function (aResponse) {
+      aClient.request({ to: aProfiler, type: "startProfiler", features: ['js'] }, function (aResponse) {
         do_check_eq(typeof aResponse.msg, "string");
         aClient.request({ to: aProfiler, type: "isActive" }, function (aResponse) {
           do_check_true(aResponse.isActive);
 
-          aClient.request({ to: aProfiler, type: "getResponsivenessTimes" }, function (aResponse) {
-            do_check_eq(typeof aResponse.responsivenessTimes, "object");
+          aClient.request({ to: aProfiler, type: "getSharedLibraryInformation" }, function (aResponse) {
+            do_check_eq(typeof aResponse.sharedLibraryInformation, "string");
+            try {
+              JSON.parse(aResponse.sharedLibraryInformation);
+            } catch(e) {
+              do_throw(e.toString(), Components.stack.caller);
+            }
 
-            aClient.request({ to: aProfiler, type: "getSharedLibraryInformation" }, function (aResponse) {
-              do_check_eq(typeof aResponse.sharedLibraryInformation, "string");
-              try {
-                JSON.parse(aResponse.sharedLibraryInformation);
-              } catch(e) {
-                do_throw(e.toString(), Components.stack.caller);
-              }
-
-              test_event_notifications(aClient, aProfiler);
-            });
+            test_event_notifications(aClient, aProfiler);
           });
         });
       });

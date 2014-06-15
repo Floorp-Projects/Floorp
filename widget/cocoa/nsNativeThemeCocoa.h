@@ -102,6 +102,9 @@ protected:
                   const HIRect& inBoxRect, bool inIsDefault, 
                   ThemeButtonValue inValue, ThemeButtonAdornment inAdornment,
                   mozilla::EventStates inState, nsIFrame* aFrame);
+  void DrawFocusOutline(CGContextRef cgContext, const HIRect& inBoxRect,
+                        mozilla::EventStates inState, uint8_t aWidgetType,
+                        nsIFrame* aFrame);
   void DrawDropdown(CGContextRef context, const HIRect& inBoxRect,
                     mozilla::EventStates inState, uint8_t aWidgetType,
                     nsIFrame* aFrame);

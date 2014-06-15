@@ -41,11 +41,12 @@
 
 #include <stdint.h>
 #include <math.h>
+#include "MainThreadUtils.h"
 #include "mozilla/unused.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Mutex.h"
-#include "MainThreadUtils.h"
 #include "PlatformMacros.h"
+#include "ThreadResponsiveness.h"
 #include "v8-support.h"
 #include <vector>
 
@@ -392,14 +393,7 @@ class Sampler {
 
 class ThreadInfo {
  public:
-  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop)
-    : mName(strdup(aName))
-    , mThreadId(aThreadId)
-    , mIsMainThread(aIsMainThread)
-    , mPseudoStack(aPseudoStack)
-    , mPlatformData(Sampler::AllocPlatformData(aThreadId))
-    , mProfile(NULL)
-    , mStackTop(aStackTop) {}
+  ThreadInfo(const char* aName, int aThreadId, bool aIsMainThread, PseudoStack* aPseudoStack, void* aStackTop);
 
   virtual ~ThreadInfo();
 
@@ -414,6 +408,11 @@ class ThreadInfo {
 
   PlatformData* GetPlatformData() const { return mPlatformData; }
   void* StackTop() const { return mStackTop; }
+
+  /**
+   * May be null for the main thread if the profiler was started during startup
+   */
+  nsIThread* GetThread() const { return mThread.get(); }
  private:
   char* mName;
   int mThreadId;
@@ -422,6 +421,7 @@ class ThreadInfo {
   PlatformData* mPlatformData;
   ThreadProfile* mProfile;
   void* const mStackTop;
+  nsCOMPtr<nsIThread> mThread;
 };
 
 #endif /* ndef TOOLS_PLATFORM_H_ */

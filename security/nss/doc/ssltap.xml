@@ -26,8 +26,8 @@
 
   <refsynopsisdiv>
     <cmdsynopsis>
-      <command>libssltap</command>
-      <arg choice="opt">-vhfsxl</arg>
+      <command>ssltap</command>
+      <arg choice="opt">-fhlsvx</arg>
       <arg choice="opt">-p port</arg>
       <arg choice="opt">hostname:port</arg>
     </cmdsynopsis>
@@ -48,42 +48,16 @@
     <title>Options</title>
     <variablelist>
       <varlistentry>
-        <term>-v </term>
-        <listitem><para>Print a version string for the tool.</para></listitem>
+        <term>-f </term>
+        <listitem><para>
+Turn on fancy printing. Output is printed in colored HTML. Data sent from the client to the server is in blue; the server's reply is in red. When used with looping mode, the different connections are separated with horizontal lines. You can use this option to upload the output into a browser. 
+        </para></listitem>
       </varlistentry>
       <varlistentry>
         <term>-h </term>
         <listitem><para>
 Turn on hex/ASCII printing. Instead of outputting raw data, the command interprets each record as a numbered line of hex values, followed by the same data as ASCII characters. The two parts are separated by a vertical bar. Nonprinting characters are replaced by dots. 
         </para></listitem>
-      </varlistentry>
-      <varlistentry>
-        <term>-f </term>
-        <listitem><para>
-Turn on fancy printing. Output is printed in colored HTML. Data sent from the client to the server is in blue; the server's reply is in red. When used with looping mode, the different connections are separated with horizontal lines. You can use this option to upload the output into a browser. 
-        </para></listitem>
-      </varlistentry>
-             <varlistentry><term>-s </term>
-        <listitem>
-          <para>
-Turn on SSL parsing and decoding. The tool does not automatically detect SSL sessions. If you are intercepting an SSL connection, use this option so that the tool can detect and decode SSL structures.
-	  </para>
-	  <para>
-If the tool detects a certificate chain, it saves the DER-encoded certificates into files in the current directory. The files are named cert.0x, where x is the sequence number of the certificate.
-	  </para>
-	  <para>
-If the -s option is used with -h, two separate parts are printed for each record: the plain hex/ASCII output, and the parsed SSL output.
-          </para>
-        </listitem>
-      </varlistentry>
-        <varlistentry>
-        <term>-x  </term>
-          <listitem>
-            <para>
-Turn on hex/ASCII printing of undecoded data inside parsed SSL records. Used only with the -s option. 
-This option uses the same output format as the -h option.
-            </para>
-        </listitem>
       </varlistentry>
       <varlistentry>
         <term>-l  prefix</term>
@@ -123,6 +97,28 @@ Turn on looping; that is, continue to accept connections rather than stopping af
           * NNTPS  563 (NNTP over SSL) 
           </para>
         </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-s </term>
+        <listitem>
+          <para>
+Turn on SSL parsing and decoding. The tool does not automatically detect SSL sessions. If you are intercepting an SSL connection, use this option so that the tool can detect and decode SSL structures.
+	  </para>
+	  <para>
+If the tool detects a certificate chain, it saves the DER-encoded certificates into files in the current directory. The files are named cert.0x, where x is the sequence number of the certificate.
+	  </para>
+	  <para>
+If the -s option is used with -h, two separate parts are printed for each record: the plain hex/ASCII output, and the parsed SSL output.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-v </term>
+        <listitem><para>Print a version string for the tool.</para></listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>-x </term>
+        <listitem><para>Turn on extra SSL hex dumps.</para></listitem>
       </varlistentry>
     </variablelist>
   </refsection>

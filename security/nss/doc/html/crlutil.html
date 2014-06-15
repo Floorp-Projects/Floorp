@@ -1,6 +1,6 @@
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>CRLUTIL</title><meta name="generator" content="DocBook XSL Stylesheets V1.78.1"><link rel="home" href="index.html" title="CRLUTIL"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">CRLUTIL</th></tr></table><hr></div><div class="refentry"><a name="crlutil"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>crlutil — 
 List, generate, modify, or delete CRLs within the NSS security database file(s) and list, create, modify or delete certificates entries in a particular CRL.
-    </p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">crlutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idm207693223392"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
+    </p></div><div class="refsynopsisdiv"><h2>Synopsis</h2><div class="cmdsynopsis"><p><code class="command">crlutil</code>  [<em class="replaceable"><code>options</code></em>] [[<em class="replaceable"><code>arguments</code></em>]]</p></div></div><div class="refsection"><a name="idm233261315520"></a><h2>STATUS</h2><p>This documentation is still work in progress. Please contribute to the initial review in <a class="ulink" href="https://bugzilla.mozilla.org/show_bug.cgi?id=836477" target="_top">Mozilla NSS bug 836477</a>
     </p></div><div class="refsection"><a name="description"></a><h2>Description</h2><p>The Certificate Revocation List (CRL) Management Tool, <span class="command"><strong>crlutil</strong></span>, is a command-line utility that can list, generate, modify, or delete CRLs within the NSS security database file(s) and list, create, modify or delete certificates entries in a particular CRL.
     </p><p>
 The key and certificate management process generally begins with creating keys in the key database, then generating and managing certificates in the certificate database(see certutil tool) and continues with certificates expiration or revocation.
@@ -16,44 +16,42 @@ where options and arguments are combinations of the options and arguments listed
 	</p><p><span class="command"><strong>Options</strong></span></p><p>
 Options specify an action. Option arguments modify an action. 
 The options and arguments for the crlutil command are defined as follows:
-    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-G </span></dt><dd><p>
-Create new Certificate Revocation List(CRL).
-          </p></dd><dt><span class="term">-D </span></dt><dd><p>
+    </p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-D </span></dt><dd><p>
 Delete Certificate Revocation List from cert database.
-          </p></dd><dt><span class="term">-I </span></dt><dd><p>
-Import a CRL to the cert database
           </p></dd><dt><span class="term">-E </span></dt><dd><p>
 Erase all CRLs of specified type from the cert database
+          </p></dd><dt><span class="term">-G </span></dt><dd><p>
+Create new Certificate Revocation List (CRL).
+          </p></dd><dt><span class="term">-I </span></dt><dd><p>
+Import a CRL to the cert database
           </p></dd><dt><span class="term">-L </span></dt><dd><p>
 List existing CRL located in cert database file.
-          </p></dd><dt><span class="term">-S </span></dt><dd><p>
-Show contents of a CRL file which isn't stored in the database.
           </p></dd><dt><span class="term">-M </span></dt><dd><p>
 Modify existing CRL which can be located in cert db or in arbitrary file. If located in file it should be encoded in ASN.1 encode format.
-          </p></dd><dt><span class="term">-G </span></dt><dd><p>
-
-          </p></dd></dl></div><p><span class="command"><strong>Arguments</strong></span></p><p>Option arguments modify an action and are lowercase.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-B </span></dt><dd><p>
-Bypass CA signature checks.
-          </p></dd><dt><span class="term">-P dbprefix </span></dt><dd><p>
-Specify the prefix used on the NSS security database files (for example, my_cert8.db and my_key3.db). This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.
-          </p></dd><dt><span class="term">-a </span></dt><dd><p>
+          </p></dd><dt><span class="term">-S </span></dt><dd><p>
+Show contents of a CRL file which isn't stored in the database.
+          </p></dd></dl></div><p><span class="command"><strong>Arguments</strong></span></p><p>Option arguments modify an action.</p><div class="variablelist"><dl class="variablelist"><dt><span class="term">-a </span></dt><dd><p>
 Use ASCII format or allow the use of ASCII format for input and output. This formatting follows RFC #1113.
+          </p></dd><dt><span class="term">-B </span></dt><dd><p>
+Bypass CA signature checks.
           </p></dd><dt><span class="term">-c crl-gen-file </span></dt><dd><p>
 Specify script file that will be used to control crl generation/modification. See crl-cript-file format below. If options -M|-G is used and -c crl-script-file is not specified, crlutil will read script data from standard input.
           </p></dd><dt><span class="term">-d directory </span></dt><dd><p>
 Specify the database directory containing the certificate and key database files. On Unix the Certificate Database Tool defaults to $HOME/.netscape (that is, ~/.netscape). On Windows NT the default is the current directory.
           </p><p>
 The NSS database files must reside in the same directory.
-          </p></dd><dt><span class="term">-i crl-file </span></dt><dd><p>
-Specify the file which contains the CRL to import or show.
           </p></dd><dt><span class="term">-f password-file </span></dt><dd><p>
 Specify a file that will automatically supply the password to include in a certificate or to access a certificate database. This is a plain-text file containing one password. Be sure to prevent unauthorized access to this file.
+          </p></dd><dt><span class="term">-i crl-file </span></dt><dd><p>
+Specify the file which contains the CRL to import or show.
           </p></dd><dt><span class="term">-l algorithm-name </span></dt><dd><p>
 Specify a specific signature algorithm. List of possible algorithms: MD2 | MD4 | MD5 | SHA1 | SHA256 | SHA384 | SHA512
           </p></dd><dt><span class="term">-n nickname </span></dt><dd><p>
 Specify the nickname of a certificate or key to list, create, add to a database, modify, or validate. Bracket the nickname string with quotation marks if it contains spaces.
           </p></dd><dt><span class="term">-o output-file </span></dt><dd><p>
 Specify the output file name for new CRL. Bracket the output-file string with quotation marks if it contains spaces. If this argument is not used the output destination defaults to standard output.
+          </p></dd><dt><span class="term">-P dbprefix </span></dt><dd><p>
+Specify the prefix used on the NSS security database files (for example, my_cert8.db and my_key3.db). This option is provided as a special case. Changing the names of the certificate and key databases is not recommended.
           </p></dd><dt><span class="term">-t crl-type </span></dt><dd><p>
 Specify type of CRL. possible types are: 0 - SEC_KRL_TYPE, 1 - SEC_CRL_TYPE. This option is obsolete
           </p></dd><dt><span class="term">-u url </span></dt><dd><p>
@@ -103,7 +101,7 @@ Implemented Extensions
      </p><p>
     * Add The Authority Key Identifier extension:
      </p><p>
-      The authority key identifier extension provides a means of identifying the public key corresponding to the private key used to sign a CRL.
+The authority key identifier extension provides a means of identifying the public key corresponding to the private key used to sign a CRL.
      </p><p>
           authKeyId critical [key-id | dn cert-serial]
      </p><p>
@@ -200,10 +198,7 @@ crlutil -G|-M -c crl-gen-file -n nickname [-i crl] [-u url] [-d keydir] [-P dbpr
     * Import CRL from file:
     </p><pre class="programlisting">
           crlutil -I -i crl [-t crlType] [-u url] [-d keydir] [-P dbprefix] [-B] 
-    </pre></div><div class="refsection"><a name="idm207692123648"></a><h2>See also</h2><p>certutil(1)</p></div><div class="refsection"><a name="seealso"></a><h2>See Also</h2><p></p><p>
-	</p><p>
-	</p><p>
-	</p></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</p><p>
+    </pre></div><div class="refsection"><a name="seealso"></a><h2>See Also</h2><p>certutil(1)</p></div><div class="refsection"><a name="resources"></a><h2>Additional Resources</h2><p>For information about NSS and other tools related to NSS (like JSS), check out the NSS project wiki at <a class="ulink" href="http://www.mozilla.org/projects/security/pki/nss/" target="_top">http://www.mozilla.org/projects/security/pki/nss/</a>. The NSS site relates directly to NSS code changes and releases.</p><p>Mailing lists: https://lists.mozilla.org/listinfo/dev-tech-crypto</p><p>IRC: Freenode at #dogtag-pki</p></div><div class="refsection"><a name="authors"></a><h2>Authors</h2><p>The NSS tools were written and maintained by developers with Netscape, Red Hat,  Sun, Oracle, Mozilla, and Google.</p><p>
 	Authors: Elio Maldonado &lt;emaldona@redhat.com&gt;, Deon Lackey &lt;dlackey@redhat.com&gt;.
     </p></div><div class="refsection"><a name="license"></a><h2>LICENSE</h2><p>Licensed under the Mozilla Public License, v. 2.0.  If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </p></div></div><div class="navfooter"><hr></div></body></html>

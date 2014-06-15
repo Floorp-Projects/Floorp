@@ -811,6 +811,27 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
 }
 
 gint
+moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
+{
+    gboolean interior_focus;
+    gint focus_width = 0;
+
+    ensure_entry_widget();
+    gtk_widget_style_get(gEntryWidget,
+                         "interior-focus", &interior_focus,
+                         "focus-line-width", &focus_width,
+                         NULL);
+    if (interior_focus) {
+        *focus_h_width = XTHICKNESS(gEntryWidget->style) + focus_width;
+        *focus_v_width = YTHICKNESS(gEntryWidget->style) + focus_width;
+    } else {
+        *focus_h_width = focus_width;
+        *focus_v_width = focus_width;
+    }
+    return MOZ_GTK_SUCCESS;
+}
+
+gint
 moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
                          gint* focus_width, gint* focus_pad) 
 {
@@ -1555,6 +1576,7 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
     gboolean interior_focus;
     gboolean theme_honors_transparency = FALSE;
     gint focus_width;
+    int draw_focus_outline_only = state->depressed; // NS_THEME_FOCUS_OUTLINE
 
     gtk_widget_set_direction(widget, direction);
 
@@ -1565,6 +1587,18 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
                          "focus-line-width", &focus_width,
                          "honors-transparent-bg-hint", &theme_honors_transparency,
                          NULL);
+
+    if (draw_focus_outline_only) {
+        // Inflate the given 'rect' with the focus outline size.
+        gint h, v;
+        moz_gtk_get_focus_outline_size(&h, &v);
+        rect->x -= h;
+        rect->width += 2 * h;
+        rect->y -= v;
+        rect->height += 2 * v;
+        width = rect->width;
+        height = rect->height;
+    }
 
     /* gtkentry.c uses two windows, one for the entire widget and one for the
      * text area inside it. The background of both windows is set to the "base"
@@ -1596,19 +1630,21 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
         g_object_set_data(G_OBJECT(widget), "transparent-bg-hint", GINT_TO_POINTER(FALSE));
     }
 
-    /* Get the position of the inner window, see _gtk_entry_get_borders */
-    x = XTHICKNESS(style);
-    y = YTHICKNESS(style);
+    if (!draw_focus_outline_only) {
+        /* Get the position of the inner window, see _gtk_entry_get_borders */
+        x = XTHICKNESS(style);
+        y = YTHICKNESS(style);
 
-    if (!interior_focus) {
-        x += focus_width;
-        y += focus_width;
+        if (!interior_focus) {
+            x += focus_width;
+            y += focus_width;
+        }
+
+        /* Simulate an expose of the inner window */
+        gtk_paint_flat_box(style, drawable, bg_state, GTK_SHADOW_NONE,
+                           cliprect, widget, "entry_bg",  rect->x + x,
+                           rect->y + y, rect->width - 2*x, rect->height - 2*y);
     }
-
-    /* Simulate an expose of the inner window */
-    gtk_paint_flat_box(style, drawable, bg_state, GTK_SHADOW_NONE,
-                       cliprect, widget, "entry_bg",  rect->x + x,
-                       rect->y + y, rect->width - 2*x, rect->height - 2*y);
 
     /* Now paint the shadow and focus border.
      * We do like in gtk_entry_draw_frame, we first draw the shadow, a tad
@@ -1631,8 +1667,10 @@ moz_gtk_entry_paint(GdkDrawable* drawable, GdkRectangle* rect,
         }
     }
 
-    gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
-                     cliprect, widget, "entry", x, y, width, height);
+    if (!draw_focus_outline_only || interior_focus) {
+        gtk_paint_shadow(style, drawable, GTK_STATE_NORMAL, GTK_SHADOW_IN,
+                         cliprect, widget, "entry", x, y, width, height);
+    }
 
     if (state->focused && !state->disabled) {
         if (!interior_focus) {

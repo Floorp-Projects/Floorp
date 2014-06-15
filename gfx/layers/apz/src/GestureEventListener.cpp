@@ -106,6 +106,16 @@ nsEventStatus GestureEventListener::HandleInputEvent(const MultiTouchInput& aEve
   return rv;
 }
 
+int32_t GestureEventListener::GetLastTouchIdentifier() const
+{
+  if (mTouches.Length() != 1) {
+    NS_WARNING("GetLastTouchIdentifier() called when last touch event "
+               "did not have one touch");
+  }
+  return mTouches.IsEmpty() ? -1 : mTouches[0].mIdentifier;
+}
+
+
 nsEventStatus GestureEventListener::HandleInputTouchSingleStart()
 {
   switch (mState) {

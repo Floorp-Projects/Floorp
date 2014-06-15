@@ -5,6 +5,7 @@
 
 #include "gfxUtils.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxDrawable.h"
 #include "mozilla/gfx/2D.h"

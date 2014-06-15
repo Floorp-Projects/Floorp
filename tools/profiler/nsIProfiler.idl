@@ -5,7 +5,7 @@
  
 #include "nsISupports.idl"
 
-[scriptable, uuid(d64e01e1-603f-4478-bb9e-47d502f23f7b)]
+[scriptable, uuid(f7f3709c-04a9-45c6-8e34-40f762654a78)]
 interface nsIProfiler : nsISupports
 {
   void StartProfiler(in uint32_t aEntries, in double aInterval,
@@ -22,7 +22,6 @@ interface nsIProfiler : nsISupports
   [implicit_jscontext]
   jsval getProfileData();
   boolean IsActive();
-  void GetResponsivenessTimes(out uint32_t aCount, [retval, array, size_is(aCount)] out double aResult);
   void GetFeatures(out uint32_t aCount, [retval, array, size_is(aCount)] out string aFeatures);
 
   /**

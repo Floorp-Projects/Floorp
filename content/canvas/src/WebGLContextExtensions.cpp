@@ -31,6 +31,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         sExtensionNamesEnumeratedArray[WebGLExtensionID::x] = #x;
 
         WEBGL_EXTENSION_IDENTIFIER(ANGLE_instanced_arrays)
+        WEBGL_EXTENSION_IDENTIFIER(EXT_blend_minmax)
         WEBGL_EXTENSION_IDENTIFIER(EXT_color_buffer_half_float)
         WEBGL_EXTENSION_IDENTIFIER(EXT_frag_depth)
         WEBGL_EXTENSION_IDENTIFIER(EXT_sRGB)
@@ -162,16 +163,16 @@ bool WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             // For warnings-as-errors.
             break;
     }
-// Uncomment this switch for any new extensions
-#if 0
+
     if (Preferences::GetBool("webgl.enable-draft-extensions", false) || IsWebGL2()) {
         switch (ext) {
+            case WebGLExtensionID::EXT_blend_minmax:
+                return WebGLExtensionBlendMinMax::IsSupported(this);
             default:
                 // For warnings-as-errors.
                 break;
         }
     }
-#endif
 
     return false;
 }
@@ -329,6 +330,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
             break;
         case WebGLExtensionID::EXT_frag_depth:
             obj = new WebGLExtensionFragDepth(this);
+            break;
+        case WebGLExtensionID::EXT_blend_minmax:
+            obj = new WebGLExtensionBlendMinMax(this);
             break;
         default:
             MOZ_ASSERT(false, "should not get there.");

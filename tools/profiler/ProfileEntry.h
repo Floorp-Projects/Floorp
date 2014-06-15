@@ -74,9 +74,7 @@ typedef void (*IterateTagsCallback)(const ProfileEntry& entry, const char* tagSt
 class ThreadProfile
 {
 public:
-  ThreadProfile(const char* aName, int aEntrySize, PseudoStack *aStack,
-                Thread::tid_t aThreadId, PlatformData* aPlatformData,
-                bool aIsMainThread, void *aStackTop);
+  ThreadProfile(ThreadInfo* aThreadInfo, int aEntrySize);
   virtual ~ThreadProfile();
   void addTag(ProfileEntry aTag);
   void flush();
@@ -95,22 +93,26 @@ public:
   virtual SyncProfile* AsSyncProfile() { return nullptr; }
 
   bool IsMainThread() const { return mIsMainThread; }
-  const char* Name() const { return mName; }
+  const char* Name() const { return mThreadInfo->Name(); }
   Thread::tid_t ThreadId() const { return mThreadId; }
 
-  PlatformData* GetPlatformData() { return mPlatformData; }
+  PlatformData* GetPlatformData() const { return mPlatformData; }
   int GetGenerationID() const { return mGeneration; }
-  bool HasGenerationExpired(int aGenID) {
+  bool HasGenerationExpired(int aGenID) const {
     return aGenID + 2 <= mGeneration;
   }
   void* GetStackTop() const { return mStackTop; }
   void DuplicateLastSample();
+
+  ThreadInfo* GetThreadInfo() const { return mThreadInfo; }
+  ThreadResponsiveness* GetThreadResponsiveness() { return &mRespInfo; }
 private:
   FRIEND_TEST(ThreadProfile, InsertOneTag);
   FRIEND_TEST(ThreadProfile, InsertOneTagWithTinyBuffer);
   FRIEND_TEST(ThreadProfile, InsertTagsNoWrap);
   FRIEND_TEST(ThreadProfile, InsertTagsWrap);
   FRIEND_TEST(ThreadProfile, MemoryMeasure);
+  ThreadInfo* mThreadInfo;
   // Circular buffer 'Keep One Slot Open' implementation
   // for simplicity
   ProfileEntry*  mEntries;
@@ -120,13 +122,13 @@ private:
   int            mEntrySize;
   PseudoStack*   mPseudoStack;
   mozilla::Mutex mMutex;
-  char*          mName;
   Thread::tid_t  mThreadId;
   bool           mIsMainThread;
   PlatformData*  mPlatformData;  // Platform specific data.
   int            mGeneration;
   int            mPendingGenerationFlush;
   void* const    mStackTop;
+  ThreadResponsiveness mRespInfo;
 
   // Only Linux is using a signal sender, instead of stopping the thread, so we
   // need some space to store the data which cannot be collected in the signal
