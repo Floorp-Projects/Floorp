@@ -165,30 +165,23 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   uint32_t width = aDragRect->width;
   uint32_t height = aDragRect->height;
 
-
-
-  RefPtr<DataSourceSurface> dataSurface =
-    Factory::CreateDataSourceSurface(IntSize(width, height),
-                                     SurfaceFormat::B8G8R8A8);
-  DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::READ_WRITE, &map)) {
+  nsRefPtr<gfxImageSurface> imgSurface = new gfxImageSurface(
+    gfxIntSize(width, height), gfxImageFormat::ARGB32);
+  if (!imgSurface)
     return nil;
-  }
 
   RefPtr<DrawTarget> dt =
-    Factory::CreateDrawTargetForData(BackendType::CAIRO,
-                                     map.mData,
-                                     dataSurface->GetSize(),
-                                     map.mStride,
-                                     dataSurface->GetFormat());
-  if (!dt) {
-    dataSurface->Unmap();
+    gfxPlatform::GetPlatform()->
+      CreateDrawTargetForSurface(imgSurface, IntSize(width, height));
+  if (!dt)
     return nil;
-  }
 
   dt->FillRect(gfx::Rect(0, 0, width, height),
                SurfacePattern(surface, ExtendMode::CLAMP),
                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+
+  uint32_t* imageData = (uint32_t*)imgSurface->Data();
+  int32_t stride = imgSurface->Stride();
 
   NSBitmapImageRep* imageRep =
     [[NSBitmapImageRep alloc] initWithBitmapDataPlanes:NULL
@@ -204,7 +197,7 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
 
   uint8_t* dest = [imageRep bitmapData];
   for (uint32_t i = 0; i < height; ++i) {
-    uint8_t* src = map.mData + i * map.mStride;
+    uint8_t* src = (uint8_t *)imageData + i * stride;
     for (uint32_t j = 0; j < width; ++j) {
       // Reduce transparency overall by multipying by a factor. Remember, Alpha
       // is premultipled here. Also, Quartz likes RGBA, so do that translation as well.
@@ -223,7 +216,6 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
       dest += 4;
     }
   }
-  dataSurface->Unmap();
 
   NSImage* image =
     [[NSImage alloc] initWithSize:NSMakeSize(width / scaleFactor,
