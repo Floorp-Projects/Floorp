@@ -57,3 +57,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 FINAL_LIBRARY = 'gklayout'
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['NOMINMAX'] = True
+
+
+if CONFIG['_MSC_VER']:
+  CXXFLAGS += [
+    '-wd4275', # non dll-interface class used as base for dll-interface class
+  ]
+
+FAIL_ON_WARNINGS = True
