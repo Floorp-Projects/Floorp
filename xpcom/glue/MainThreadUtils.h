@@ -21,6 +21,14 @@ class nsIThread;
 extern NS_COM_GLUE NS_METHOD
 NS_GetMainThread(nsIThread **result);
 
+#ifdef MOZILLA_INTERNAL_API
+// Fast access to the current thread.  Do not release the returned pointer!  If
+// you want to use this pointer from some other thread, then you will need to
+// AddRef it.  Otherwise, you should only consider this pointer valid from code
+// running on the current thread.
+extern NS_COM_GLUE nsIThread *NS_GetCurrentThread();
+#endif
+
 #if defined(MOZILLA_INTERNAL_API) && defined(XP_WIN)
 bool NS_IsMainThread();
 #elif defined(MOZILLA_INTERNAL_API) && defined(NS_TLS)

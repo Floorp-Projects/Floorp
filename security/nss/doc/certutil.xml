@@ -196,10 +196,10 @@ If this option is not used, the validity check defaults to the current system ti
           <para><command>certutil</command> supports two types of databases: the legacy security databases (<filename>cert8.db</filename>, <filename>key3.db</filename>, and <filename>secmod.db</filename>) and new SQLite databases (<filename>cert9.db</filename>, <filename>key4.db</filename>, and <filename>pkcs11.txt</filename>). </para>
           <para>NSS recognizes the following prefixes:</para>
           <itemizedlist>
-            <listitem><para><command>sql: requests the newer database</command></para></listitem>
-	    <listitem><para><command>dbm: requests the legacy database</command></para></listitem>
+            <listitem><para><command>sql:</command> requests the newer database</para></listitem>
+	    <listitem><para><command>dbm:</command> requests the legacy database</para></listitem>
           </itemizedlist>
-          <para>If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE. If NSS_DEFAULT_DB_TYPE is not set then dbm: is the default.</para>
+          <para>If no prefix is specified the default type is retrieved from NSS_DEFAULT_DB_TYPE. If NSS_DEFAULT_DB_TYPE is not set then <command>dbm:</command> is the default.</para>
         </listitem>
       </varlistentry>
 
@@ -432,11 +432,11 @@ of the attribute codes:
 
       <varlistentry>
         <term>-1 | --keyUsage keyword,keyword</term>
-        <listitem><para>Set a Netscape Certificate Type Extension in the certificate. There are several available keywords:</para>
+        <listitem><para>Set an X.509 V3 Certificate Type Extension in the certificate. There are several available keywords:</para>
 	<itemizedlist>
 	<listitem>
 	<para>
-		digital signature
+		digitalSignature
 	</para>
 	</listitem>
 	<listitem>
@@ -498,7 +498,7 @@ of the attribute codes:
 
       <varlistentry>
         <term>-5 | --nsCertType keyword,keyword</term>
-        <listitem><para>Add a Netscape certificate type extension to a certificate that is being created or added to the database. There are several available keywords:</para>
+        <listitem><para>Add an X.509 V3 certificate type extension to a certificate that is being created or added to the database. There are several available keywords:</para>
 	<itemizedlist>
 	<listitem>
 	<para>

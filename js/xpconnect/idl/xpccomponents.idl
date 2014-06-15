@@ -121,7 +121,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(a485ba50-e208-11e3-8b68-0800200c9a66)]
+[scriptable, uuid(76ef3a80-f24d-11e3-ac10-0800200c9a66)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -287,6 +287,22 @@ interface nsIXPCComponents_Utils : nsISupports
      * For testing.
      */
     void ccSlice(in long long budget);
+
+    /*
+     * To be called from JS only.
+     *
+     * Return the longest cycle collector slice time since the last
+     * time clearMaxCCTime() was called.
+     */
+    long getMaxCCSliceTimeSinceClear();
+
+    /*
+     * To be called from JS only.
+     *
+     * Reset the internal max slice time value used for
+     * getMaxCCSliceTimeSinceClear().
+     */
+    void clearMaxCCTime();
 
     /*
      * To be called from JS only.

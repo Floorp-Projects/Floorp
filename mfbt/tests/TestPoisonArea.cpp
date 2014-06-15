@@ -198,15 +198,18 @@ StrW32Error(DWORD errcode)
 
 // Because we use VirtualAlloc in MEM_RESERVE mode, the "page size" we want
 // is the allocation granularity.
-static SYSTEM_INFO _sinfo;
-#undef PAGESIZE
-#define PAGESIZE (_sinfo.dwAllocationGranularity)
+static SYSTEM_INFO sInfo_;
 
+static inline uint32_t
+PageSize()
+{
+  return sInfo_.dwAllocationGranularity;
+}
 
 static void *
 ReserveRegion(uintptr_t request, bool accessible)
 {
-  return VirtualAlloc((void *)request, PAGESIZE,
+  return VirtualAlloc((void *)request, PageSize(),
                       accessible ? MEM_RESERVE|MEM_COMMIT : MEM_RESERVE,
                       accessible ? PAGE_EXECUTE_READWRITE : PAGE_NOACCESS);
 }
@@ -214,14 +217,14 @@ ReserveRegion(uintptr_t request, bool accessible)
 static void
 ReleaseRegion(void *page)
 {
-  VirtualFree(page, PAGESIZE, MEM_RELEASE);
+  VirtualFree(page, PageSize(), MEM_RELEASE);
 }
 
 static bool
 ProbeRegion(uintptr_t page)
 {
-  if (page >= (uintptr_t)_sinfo.lpMaximumApplicationAddress &&
-      page + PAGESIZE >= (uintptr_t)_sinfo.lpMaximumApplicationAddress) {
+  if (page >= (uintptr_t)sInfo_.lpMaximumApplicationAddress &&
+      page + PageSize() >= (uintptr_t)sInfo_.lpMaximumApplicationAddress) {
     return true;
   } else {
     return false;
@@ -241,13 +244,18 @@ MakeRegionExecutable(void *)
 
 #define LastErrMsg() (strerror(errno))
 
-static unsigned long _pagesize;
-#define PAGESIZE _pagesize
+static unsigned long unixPageSize;
+
+static inline unsigned long
+PageSize()
+{
+  return unixPageSize;
+}
 
 static void *
 ReserveRegion(uintptr_t request, bool accessible)
 {
-  return mmap(reinterpret_cast<void*>(request), PAGESIZE,
+  return mmap(reinterpret_cast<void*>(request), PageSize(),
               accessible ? PROT_READ|PROT_WRITE : PROT_NONE,
               MAP_PRIVATE|MAP_ANON, -1, 0);
 }
@@ -255,13 +263,13 @@ ReserveRegion(uintptr_t request, bool accessible)
 static void
 ReleaseRegion(void *page)
 {
-  munmap(page, PAGESIZE);
+  munmap(page, PageSize());
 }
 
 static bool
 ProbeRegion(uintptr_t page)
 {
-  if (madvise(reinterpret_cast<void*>(page), PAGESIZE, MADV_NORMAL)) {
+  if (madvise(reinterpret_cast<void*>(page), PageSize(), MADV_NORMAL)) {
     return true;
   } else {
     return false;
@@ -271,7 +279,7 @@ ProbeRegion(uintptr_t page)
 static int
 MakeRegionExecutable(void *page)
 {
-  return mprotect((caddr_t)page, PAGESIZE, PROT_READ|PROT_WRITE|PROT_EXEC);
+  return mprotect((caddr_t)page, PageSize(), PROT_READ|PROT_WRITE|PROT_EXEC);
 }
 
 #endif
@@ -285,12 +293,12 @@ ReservePoisonArea()
     // code is compiled in 32-bit mode, although it is never executed there.
     uintptr_t result = (((uintptr_t(0x7FFFFFFFu) << 31) << 1 |
                          uintptr_t(0xF0DEAFFFu)) &
-                        ~uintptr_t(PAGESIZE-1));
+                        ~uintptr_t(PageSize()-1));
     printf("INFO | poison area assumed at 0x%.*" PRIxPTR "\n", SIZxPTR, result);
     return result;
   } else {
     // First see if we can allocate the preferred poison address from the OS.
-    uintptr_t candidate = (0xF0DEAFFF & ~(PAGESIZE-1));
+    uintptr_t candidate = (0xF0DEAFFF & ~(PageSize()-1));
     void *result = ReserveRegion(candidate, false);
     if (result == (void *)candidate) {
       // success - inaccessible page allocated
@@ -363,7 +371,7 @@ ReserveNegativeControl()
 
   // Fill the page with return instructions.
   RETURN_INSTR_TYPE *p = (RETURN_INSTR_TYPE *)result;
-  RETURN_INSTR_TYPE *limit = (RETURN_INSTR_TYPE *)(((char *)result) + PAGESIZE);
+  RETURN_INSTR_TYPE *limit = (RETURN_INSTR_TYPE *)(((char *)result) + PageSize());
   while (p < limit)
     *p++ = RETURN_INSTR;
 
@@ -427,9 +435,9 @@ TestPage(const char *pagelabel, uintptr_t pageaddr, int should_succeed)
     switch (test) {
       // The execute test must be done before the write test, because the
       // write test will clobber memory at the target address.
-    case 0: oplabel = "reading"; opaddr = pageaddr + PAGESIZE/2 - 1; break;
-    case 1: oplabel = "executing"; opaddr = pageaddr + PAGESIZE/2; break;
-    case 2: oplabel = "writing"; opaddr = pageaddr + PAGESIZE/2 - 1; break;
+    case 0: oplabel = "reading"; opaddr = pageaddr + PageSize()/2 - 1; break;
+    case 1: oplabel = "executing"; opaddr = pageaddr + PageSize()/2; break;
+    case 2: oplabel = "writing"; opaddr = pageaddr + PageSize()/2 - 1; break;
     default: abort();
     }
 
@@ -519,9 +527,9 @@ int
 main()
 {
 #ifdef _WIN32
-  GetSystemInfo(&_sinfo);
+  GetSystemInfo(&sInfo_);
 #else
-  _pagesize = sysconf(_SC_PAGESIZE);
+  unixPageSize = sysconf(_SC_PAGESIZE);
 #endif
 
   uintptr_t ncontrol = ReserveNegativeControl();

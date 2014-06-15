@@ -89,7 +89,7 @@ class EvalScriptGuard
     EvalCacheLookup lookup_;
     EvalCache::AddPtr p_;
 
-    Rooted<JSLinearString*> lookupStr_;
+    RootedLinearString lookupStr_;
 
   public:
     explicit EvalScriptGuard(JSContext *cx)

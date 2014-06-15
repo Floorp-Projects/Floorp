@@ -57,6 +57,7 @@ public:
             TextTrackMode aMode,
             TextTrackReadyState aReadyState,
             TextTrackSource aTextTrackSource);
+  ~TextTrack();
 
   void SetDefaultSettings();
 

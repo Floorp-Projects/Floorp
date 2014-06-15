@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <math.h>
 
+#include "ThreadResponsiveness.h"
 #include "nsThreadUtils.h"
 
 #include "platform.h"
@@ -220,6 +221,8 @@ class SamplerThread : public Thread {
             info->Profile()->flush();
             continue;
           }
+
+          info->Profile()->GetThreadResponsiveness()->Update();
 
           ThreadProfile* thread_profile = info->Profile();
 
