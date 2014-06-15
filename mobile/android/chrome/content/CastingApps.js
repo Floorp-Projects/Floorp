@@ -30,7 +30,7 @@ var CastingApps = {
     this._castMenuId = NativeWindow.contextmenus.add(
       Strings.browser.GetStringFromName("contextmenu.castToScreen"),
       this.filterCast,
-      this.openExternal.bind(this)
+      this.handleContextMenu.bind(this)
     );
 
     Services.obs.addObserver(this, "Casting:Play", false);
@@ -142,6 +142,7 @@ var CastingApps = {
     this.closeExternal();
 
     // Start the new session
+    UITelemetry.addEvent("cast.1", "button", null);
     this.openExternal(video, 0, 0);
   },
 
@@ -251,6 +252,7 @@ var CastingApps = {
       for (let video of videos) {
         let unwrappedVideo = XPCNativeWrapper.unwrap(video);
         if (!video.paused && unwrappedVideo.mozAllowCasting) {
+          UITelemetry.addEvent("cast.1", "pageaction", null);
           CastingApps.openExternal(video, 0, 0);
           return;
         }
@@ -358,6 +360,11 @@ var CastingApps = {
       if (aCallback)
         aCallback(service);
     });
+  },
+
+  handleContextMenu: function(aElement, aX, aY) {
+    UITelemetry.addEvent("cast.1", "contextmenu", null);
+    this.openExternal(aElement, aX, aY);
   },
 
   openExternal: function(aElement, aX, aY) {
