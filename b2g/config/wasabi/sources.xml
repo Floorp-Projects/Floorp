@@ -17,12 +17,12 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="526d768a21e8d6179e151e3ba4a27f30c55798e2"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="dfc4703bb81d1fa4f2087a1a6124b47a80a5d1de"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="27b2c2ef9a50d5dc79b6a771b3a3c775a888d13b"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="c510babaf88dfa2cfe2c202afb2649ee124569af"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="f01ceeb8a6d58bb0982b89a22d77a406712fe021"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="c9cc24ebbfa5427defcc4c99d4d08c2ee6cbcea8"/>
   <project name="gonk-patches" path="patches" remote="b2g" revision="223a2421006e8f5da33f516f6891c87cae86b0f6"/>
   <!-- Stock Android things -->
   <project name="platform/abi/cpp" path="abi/cpp" revision="6426040f1be4a844082c9769171ce7f5341a5528"/>
