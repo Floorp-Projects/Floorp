@@ -7,6 +7,7 @@
 #ifndef SharedBufferManagerPARENT_H_
 #define SharedBufferManagerPARENT_H_
 
+#include "mozilla/Atomics.h"          // for Atomic
 #include "mozilla/layers/PSharedBufferManagerParent.h"
 #include "mozilla/StaticPtr.h"
 
@@ -32,6 +33,7 @@ namespace layers {
 
 class SharedBufferManagerParent : public PSharedBufferManagerParent
 {
+friend class GrallocReporter;
 public:
   /**
    * Create a SharedBufferManagerParent for child process, and link to the child side before leaving
@@ -100,7 +102,8 @@ protected:
   Transport* mTransport;
   base::ProcessId mOwner;
   base::Thread* mThread;
-  static int sBufferKey;
+  static mozilla::Atomic<uint32_t> sBufferKey;
+
   static StaticAutoPtr<Monitor> sManagerMonitor;
 };
 
