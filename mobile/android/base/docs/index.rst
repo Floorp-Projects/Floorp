@@ -96,6 +96,9 @@ Events
 ``cancel.1``
   Cancel a state, action, etc.
 
+``cast.1``
+  Start casting a video.
+
 ``edit.1``
   Sent when the user edits a top site.
 
@@ -137,9 +140,6 @@ Events
 
 ``share.1``
   Sharing content.
-
-``setdefault.1``
-  Sent when the user makes a choice of default home panel.
 
 Methods
 -------
