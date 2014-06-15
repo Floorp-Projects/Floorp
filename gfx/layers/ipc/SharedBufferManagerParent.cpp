@@ -18,6 +18,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include "ui/PixelFormat.h"
 #endif
+#include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 
 using namespace mozilla::ipc;
@@ -29,49 +30,66 @@ using std::map;
 namespace mozilla {
 namespace layers {
 
+map<base::ProcessId, SharedBufferManagerParent* > SharedBufferManagerParent::sManagers;
+StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
+Atomic<uint32_t> SharedBufferManagerParent::sBufferKey(0);
+
+#ifdef MOZ_WIDGET_GONK
 class GrallocReporter MOZ_FINAL : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
 
-  GrallocReporter()
-  {
-#ifdef DEBUG
-    // There must be only one instance of this class, due to |sAmount|
-    // being static.  Assert this.
-    static bool hasRun = false;
-    MOZ_ASSERT(!hasRun);
-    hasRun = true;
-#endif
-  }
-
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
                             nsISupports* aData)
   {
-    return MOZ_COLLECT_REPORT(
-      "gralloc", KIND_OTHER, UNITS_BYTES, sAmount,
-"Special RAM that can be shared between processes and directly accessed by "
-"both the CPU and GPU. Gralloc memory is usually a relatively precious "
-"resource, with much less available than generic RAM. When it's exhausted, "
-"graphics performance can suffer. This value can be incorrect because of race "
-"conditions.");
+    map<base::ProcessId, SharedBufferManagerParent*>::iterator it;
+    for (it = SharedBufferManagerParent::sManagers.begin(); it != SharedBufferManagerParent::sManagers.end(); it++) {
+      base::ProcessId pid = it->first;
+      SharedBufferManagerParent *mgr = it->second;
+
+      std::map<int, android::sp<android::GraphicBuffer> >::iterator buf_it;
+      for (buf_it = mgr->mBuffers.begin(); buf_it != mgr->mBuffers.end(); buf_it++) {
+        nsresult rv;
+        android::sp<android::GraphicBuffer> gb = buf_it->second;
+        int bpp = android::bytesPerPixel(gb->getPixelFormat());
+        int stride = gb->getStride();
+        int height = gb->getHeight();
+        int amount = bpp > 0
+          ? (stride * height * bpp)
+          // Special case for BSP specific formats (mainly YUV formats, count it as normal YUV buffer).
+          : (stride * height * 3 / 2);
+
+        nsPrintfCString gpath("gralloc/pid(%d)/buffer(width=%d, height=%d, bpp=%d)",
+            pid, gb->getWidth(), height, bpp);
+
+        rv = aHandleReport->Callback(EmptyCString(), gpath, KIND_OTHER, UNITS_BYTES, amount,
+            NS_LITERAL_CSTRING(
+              "Special RAM that can be shared between processes and directly accessed by "
+              "both the CPU and GPU. Gralloc memory is usually a relatively precious "
+              "resource, with much less available than generic RAM. When it's exhausted, "
+              "graphics performance can suffer. This value can be incorrect because of race "
+              "conditions."),
+            aData);
+        if (rv != NS_OK) {
+          return rv;
+        }
+      }
+    }
+    return NS_OK;
   }
 
-  static int64_t sAmount;
 };
 
 NS_IMPL_ISUPPORTS(GrallocReporter, nsIMemoryReporter)
-
-int64_t GrallocReporter::sAmount = 0;
+#endif
 
 void InitGralloc() {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+#ifdef MOZ_WIDGET_GONK
   RegisterStrongMemoryReporter(new GrallocReporter());
+#endif
 }
-
-map<base::ProcessId, SharedBufferManagerParent* > SharedBufferManagerParent::sManagers;
-StaticAutoPtr<Monitor> SharedBufferManagerParent::sManagerMonitor;
-int SharedBufferManagerParent::sBufferKey = 0;
 
 SharedBufferManagerParent::SharedBufferManagerParent(Transport* aTransport, base::ProcessId aOwner, base::Thread* aThread)
   : mTransport(aTransport)
@@ -174,13 +192,6 @@ bool SharedBufferManagerParent::RecvAllocateGrallocBuffer(const IntSize& aSize, 
   ref.mKey = ++sBufferKey;
   *aHandle = MagicGrallocBufferHandle(outgoingBuffer, ref);
 
-  int bpp = 0;
-  bpp = android::bytesPerPixel(outgoingBuffer->getPixelFormat());
-  if (bpp > 0)
-    GrallocReporter::sAmount += outgoingBuffer->getStride() * outgoingBuffer->getHeight() * bpp;
-  else // Specical case for BSP specific formats(mainly YUV formats, count it as normal YUV buffer)
-    GrallocReporter::sAmount += outgoingBuffer->getStride() * outgoingBuffer->getHeight() * 3 / 2;
-
   {
     MutexAutoLock lock(mBuffersMutex);
     mBuffers[sBufferKey] = outgoingBuffer;
@@ -204,13 +215,6 @@ bool SharedBufferManagerParent::RecvDropGrallocBuffer(const mozilla::layers::May
     printf_stderr("SharedBufferManagerParent::RecvDropGrallocBuffer -- invalid buffer key.");
     return true;
   }
-
-  int bpp = 0;
-  bpp = android::bytesPerPixel(buf->getPixelFormat());
-  if (bpp > 0)
-    GrallocReporter::sAmount -= buf->getStride() * buf->getHeight() * bpp;
-  else // Specical case for BSP specific formats(mainly YUV formats, count it as normal YUV buffer)
-    GrallocReporter::sAmount -= buf->getStride() * buf->getHeight() * 3 / 2;
 
 #endif
   return true;
