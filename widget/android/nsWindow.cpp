@@ -38,6 +38,7 @@ using mozilla::unused;
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 
+#include "gfxImageSurface.h"
 #include "gfxContext.h"
 
 #include "Layers.h"
