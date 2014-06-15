@@ -326,6 +326,9 @@ function jsTestDriverBrowserInit()
     // Otherwise adjust the version to match the suite version for 1.6,
     // and later due to the use of for-each, let, yield, etc.
     //
+    // The logic to upgrade the JS version in the shell lives in the
+    // corresponding shell.js.
+    //
     // Note that js1_8, js1_8_1, and js1_8_5 are treated identically in
     // the browser.
     if (properties.test.match(/^js1_6/))
@@ -337,6 +340,10 @@ function jsTestDriverBrowserInit()
       properties.version = '1.7';
     }
     else if (properties.test.match(/^js1_8/))
+    {
+      properties.version = '1.8';
+    }
+    else if (properties.test.match(/^ecma_6\/LexicalEnvironment/))
     {
       properties.version = '1.8';
     }

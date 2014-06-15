@@ -606,14 +606,14 @@ AsyncPanZoomController::GetSharedFrameMetricsCompositor()
 }
 
 already_AddRefed<GeckoContentController>
-AsyncPanZoomController::GetGeckoContentController() {
+AsyncPanZoomController::GetGeckoContentController() const {
   MonitorAutoLock lock(mRefPtrMonitor);
   nsRefPtr<GeckoContentController> controller = mGeckoContentController;
   return controller.forget();
 }
 
 already_AddRefed<GestureEventListener>
-AsyncPanZoomController::GetGestureEventListener() {
+AsyncPanZoomController::GetGestureEventListener() const {
   MonitorAutoLock lock(mRefPtrMonitor);
   nsRefPtr<GestureEventListener> listener = mGestureEventListener;
   return listener.forget();
@@ -1840,6 +1840,11 @@ void AsyncPanZoomController::FlushRepaintForOverscrollHandoff() {
 bool AsyncPanZoomController::IsPannable() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
   return mX.CanScroll() || mY.CanScroll();
+}
+
+int32_t AsyncPanZoomController::GetLastTouchIdentifier() const {
+  nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+  return listener ? listener->GetLastTouchIdentifier() : -1;
 }
 
 void AsyncPanZoomController::RequestContentRepaint() {

@@ -318,6 +318,13 @@ public:
    */
   bool IsPannable() const;
 
+  /**
+   * Returns the identifier of the touch in the last touch event processed by
+   * this APZC. This should only be called when the last touch event contained
+   * only one touch.
+   */
+  int32_t GetLastTouchIdentifier() const;
+
 protected:
   enum PanZoomState {
     NOTHING,                  /* no touch-start events received */
@@ -674,11 +681,11 @@ private:
      compositor thread. */
   nsRefPtr<GeckoContentController> mGeckoContentController;
   nsRefPtr<GestureEventListener> mGestureEventListener;
-  Monitor mRefPtrMonitor;
+  mutable Monitor mRefPtrMonitor;
 
   /* Utility functions that return a addrefed pointer to the corresponding fields. */
-  already_AddRefed<GeckoContentController> GetGeckoContentController();
-  already_AddRefed<GestureEventListener> GetGestureEventListener();
+  already_AddRefed<GeckoContentController> GetGeckoContentController() const;
+  already_AddRefed<GestureEventListener> GetGestureEventListener() const;
 
   // If we are sharing our frame metrics with content across processes
   bool mSharingFrameMetricsAcrossProcesses;

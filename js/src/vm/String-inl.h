@@ -91,7 +91,7 @@ NewFatInlineString(ThreadSafeContext *cx, mozilla::Range<const jschar> chars)
 
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSInlineString *
-NewFatInlineString(ExclusiveContext *cx, Handle<JSLinearString*> base, size_t start, size_t length)
+NewFatInlineString(ExclusiveContext *cx, HandleLinearString base, size_t start, size_t length)
 {
     MOZ_ASSERT(JSFatInlineString::lengthFits<CharT>(length));
 
@@ -206,7 +206,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
                         ? JSFatInlineString::twoByteLengthFits(length)
                         : JSFatInlineString::latin1LengthFits(length);
     if (useFatInline) {
-        JS::Rooted<JSLinearString*> base(cx, baseArg);
+        js::RootedLinearString base(cx, baseArg);
         if (baseArg->hasLatin1Chars())
             return js::NewFatInlineString<JS::Latin1Char>(cx, base, start, length);
         return js::NewFatInlineString<jschar>(cx, base, start, length);
@@ -218,7 +218,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
         return str;
     }
 
-    JS::Rooted<JSLinearString*> base(cx, baseArg);
+    js::RootedLinearString base(cx, baseArg);
 
     str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
     if (!str)

@@ -106,6 +106,10 @@ MediaSource::Constructor(const GlobalObject& aGlobal,
   return mediaSource.forget();
 }
 
+MediaSource::~MediaSource()
+{
+}
+
 SourceBufferList*
 MediaSource::SourceBuffers()
 {

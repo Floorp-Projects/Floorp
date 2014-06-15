@@ -290,6 +290,16 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing);
 gint
 moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border);
 
+/** Get the extra size for the focus ring for outline:auto.
+ * widget:             [IN]  the widget to get the focus metrics for    
+ * focus_h_width:      [OUT] the horizontal width
+ * focus_v_width:      [OUT] the vertical width
+ *
+ * returns:    MOZ_GTK_SUCCESS
+ */
+gint
+moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width);
+
 /** Get the focus metrics for a treeheadercell, button, checkbox, or radio button.
  * widget:             [IN]  the widget to get the focus metrics for    
  * interior_focus:     [OUT] whether the focus is drawn around the

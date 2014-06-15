@@ -7,18 +7,17 @@
 #include "SyncProfile.h"
 #include "UnwinderThread2.h"
 
-SyncProfile::SyncProfile(const char* aName, int aEntrySize, PseudoStack *aStack,
-                         Thread::tid_t aThreadId, bool aIsMainThread)
-  : ThreadProfile(aName, aEntrySize, aStack, aThreadId,
-                 Sampler::AllocPlatformData(aThreadId), aIsMainThread,
-                 tlsStackTop.get()),
-    mOwnerState(REFERENCED),
-    mUtb(nullptr)
+SyncProfile::SyncProfile(ThreadInfo* aInfo, int aEntrySize)
+  : ThreadProfile(aInfo, aEntrySize)
+  , mOwnerState(REFERENCED)
+  , mUtb(nullptr)
 {
+  MOZ_COUNT_CTOR(SyncProfile);
 }
 
 SyncProfile::~SyncProfile()
 {
+  MOZ_COUNT_DTOR(SyncProfile);
   if (mUtb) {
     utb__release_sync_buffer(mUtb);
   }

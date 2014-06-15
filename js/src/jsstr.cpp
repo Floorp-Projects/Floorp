@@ -77,8 +77,6 @@ using mozilla::SafeCast;
 
 using JS::AutoCheckCannotGC;
 
-typedef Handle<JSLinearString*> HandleLinearString;
-
 static JSLinearString *
 ArgToRootedString(JSContext *cx, CallArgs &args, unsigned argno)
 {
@@ -900,7 +898,7 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         form = UNORM_NFC;
     } else {
         // Steps 5-6.
-        Rooted<JSLinearString*> formStr(cx, ArgToRootedString(cx, args, 0));
+        RootedLinearString formStr(cx, ArgToRootedString(cx, args, 0));
         if (!formStr)
             return false;
 
@@ -1340,7 +1338,7 @@ class StringSegmentRange
     // If malloc() shows up in any profiles from this vector, we can add a new
     // StackAllocPolicy which stashes a reusable freed-at-gc buffer in the cx.
     AutoStringVector stack;
-    Rooted<JSLinearString*> cur;
+    RootedLinearString cur;
 
     bool settle(JSString *str) {
         while (str->isRope()) {
@@ -1527,7 +1525,7 @@ str_contains(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     // Steps 4 and 5
-    Rooted<JSLinearString*> searchStr(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
@@ -1572,7 +1570,7 @@ str_indexOf(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     // Steps 4 and 5
-    Rooted<JSLinearString*> searchStr(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
@@ -1642,7 +1640,7 @@ str_lastIndexOf(JSContext *cx, unsigned argc, Value *vp)
     if (!textstr)
         return false;
 
-    Rooted<JSLinearString*> pat(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString pat(cx, ArgToRootedString(cx, args, 0));
     if (!pat)
         return false;
 
@@ -1746,7 +1744,7 @@ str_startsWith(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Steps 5 and 6
-    Rooted<JSLinearString*> searchStr(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
@@ -1807,7 +1805,7 @@ str_endsWith(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Steps 5 and 6
-    Rooted<JSLinearString *> searchStr(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString searchStr(cx, ArgToRootedString(cx, args, 0));
     if (!searchStr)
         return false;
 
@@ -2176,7 +2174,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
 } /* anonymous namespace */
 
 static bool
-DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearString*> input,
+DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, HandleLinearString input,
              RegExpShared &re)
 {
     size_t charsLen = input->length();
@@ -2206,7 +2204,7 @@ DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearSt
 
 /* ES5 15.5.4.10 step 8. */
 static bool
-DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, Handle<JSLinearString*> input,
+DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, HandleLinearString input,
               StringRegExpGuard &g)
 {
     // Step 8a.
@@ -2379,7 +2377,7 @@ js::str_match(JSContext *cx, unsigned argc, Value *vp)
     if (!res)
         return false;
 
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
@@ -2413,7 +2411,7 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     if (!g.normalizeRegExp(cx, false, 1, args))
         return false;
 
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
@@ -2506,7 +2504,7 @@ struct ReplaceData
     StringRegExpGuard  g;              /* regexp parameter object and private data */
     RootedObject       lambda;         /* replacement function object or null */
     RootedObject       elembase;       /* object for function(a){return b[a]} replace */
-    Rooted<JSLinearString*> repstr;    /* replacement string */
+    RootedLinearString repstr;         /* replacement string */
     uint32_t           dollarIndex;    /* index of first $ in repstr, or UINT32_MAX */
     int                leftIndex;      /* left context index in str->chars */
     JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
@@ -2521,7 +2519,7 @@ static bool
 ReplaceRegExp(JSContext *cx, RegExpStatics *res, ReplaceData &rdata);
 
 static bool
-DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
+DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, HandleLinearString linearStr,
                        RegExpShared &re, ReplaceData &rdata)
 {
     size_t charsLen = linearStr->length();
@@ -2541,7 +2539,7 @@ DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*
 }
 
 static bool
-DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, Handle<JSLinearString*> linearStr,
+DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, HandleLinearString linearStr,
                         RegExpShared &re, ReplaceData &rdata)
 {
     size_t charsLen = linearStr->length();
@@ -2926,7 +2924,7 @@ static inline bool
 BuildDollarReplacement(JSContext *cx, JSString *textstrArg, JSLinearString *repstr,
                        uint32_t firstDollarIndex, const FlatMatch &fm, MutableHandleValue rval)
 {
-    Rooted<JSLinearString*> textstr(cx, textstrArg->ensureLinear(cx));
+    RootedLinearString textstr(cx, textstrArg->ensureLinear(cx));
     if (!textstr)
         return false;
 
@@ -3215,7 +3213,7 @@ StrReplaceRegExp(JSContext *cx, ReplaceData &rdata, MutableHandleValue rval)
         return StrReplaceRegexpRemove(cx, rdata.str, re, rval);
     }
 
-    Rooted<JSLinearString*> linearStr(cx, rdata.str->ensureLinear(cx));
+    RootedLinearString linearStr(cx, rdata.str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
@@ -3524,7 +3522,7 @@ class SplitMatchResult {
 
 template<class Matcher>
 static ArrayObject *
-SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Matcher &splitMatch,
+SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher &splitMatch,
             Handle<TypeObject*> type)
 {
     size_t strLength = str->length();
@@ -3655,7 +3653,7 @@ SplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit, const Ma
 
 // Fast-path for splitting a string into a character array via split("").
 static ArrayObject *
-CharSplitHelper(JSContext *cx, Handle<JSLinearString*> str, uint32_t limit)
+CharSplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit)
 {
     size_t strLength = str->length();
     if (strLength == 0)
@@ -3697,7 +3695,7 @@ class SplitRegExpMatcher
 
     static const bool returnsCaptures = true;
 
-    bool operator()(JSContext *cx, Handle<JSLinearString*> str, size_t index,
+    bool operator()(JSContext *cx, HandleLinearString str, size_t index,
                     SplitMatchResult *result) const
     {
         const jschar *chars = str->chars();
@@ -3726,7 +3724,7 @@ class SplitRegExpMatcher
 
 class SplitStringMatcher
 {
-    Rooted<JSLinearString*> sep;
+    RootedLinearString sep;
 
   public:
     SplitStringMatcher(JSContext *cx, HandleLinearString sep)
@@ -3814,7 +3812,7 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
         args.rval().setObject(*aobj);
         return true;
     }
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return false;
 
@@ -3846,11 +3844,11 @@ js::str_split(JSContext *cx, unsigned argc, Value *vp)
 JSObject *
 js::str_split_string(JSContext *cx, HandleTypeObject type, HandleString str, HandleString sep)
 {
-    Rooted<JSLinearString*> linearStr(cx, str->ensureLinear(cx));
+    RootedLinearString linearStr(cx, str->ensureLinear(cx));
     if (!linearStr)
         return nullptr;
 
-    Rooted<JSLinearString*> linearSep(cx, sep->ensureLinear(cx));
+    RootedLinearString linearSep(cx, sep->ensureLinear(cx));
     if (!linearSep)
         return nullptr;
 
@@ -4854,7 +4852,7 @@ TransferBufferToString(StringBuffer &sb, MutableHandleValue rval)
  * 'Encode' and 'Decode'.
  */
 static bool
-Encode(JSContext *cx, Handle<JSLinearString*> str, const bool *unescapedSet,
+Encode(JSContext *cx, HandleLinearString str, const bool *unescapedSet,
        const bool *unescapedSet2, MutableHandleValue rval)
 {
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
@@ -4915,7 +4913,7 @@ Encode(JSContext *cx, Handle<JSLinearString*> str, const bool *unescapedSet,
 }
 
 static bool
-Decode(JSContext *cx, Handle<JSLinearString*> str, const bool *reservedSet, MutableHandleValue rval)
+Decode(JSContext *cx, HandleLinearString str, const bool *reservedSet, MutableHandleValue rval)
 {
     size_t length = str->length();
     if (length == 0) {
@@ -4998,7 +4996,7 @@ static bool
 str_decodeURI(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -5009,7 +5007,7 @@ static bool
 str_decodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -5020,7 +5018,7 @@ static bool
 str_encodeURI(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 
@@ -5031,7 +5029,7 @@ static bool
 str_encodeURI_Component(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    Rooted<JSLinearString*> str(cx, ArgToRootedString(cx, args, 0));
+    RootedLinearString str(cx, ArgToRootedString(cx, args, 0));
     if (!str)
         return false;
 

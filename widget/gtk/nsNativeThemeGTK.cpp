@@ -232,6 +232,17 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
       aState->canDefault = FALSE; // XXX fix me
       aState->depressed = FALSE;
 
+      if (aWidgetType == NS_THEME_FOCUS_OUTLINE) {
+        aState->disabled = FALSE;
+        aState->active  = FALSE;
+        aState->inHover = FALSE;
+        aState->isDefault = FALSE;
+        aState->canDefault = FALSE;
+
+        aState->focused = TRUE;
+        aState->depressed = TRUE; // see moz_gtk_entry_paint()
+      }
+
       if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
         // For these widget types, some element (either a child or parent)
         // actually has element focus, so we check the focused attribute
@@ -356,6 +367,9 @@ nsNativeThemeGTK::GetGtkWidgetAndState(uint8_t aWidgetType, nsIFrame* aFrame,
     if (aWidgetFlags)
       *aWidgetFlags = (aWidgetType == NS_THEME_BUTTON) ? GTK_RELIEF_NORMAL : GTK_RELIEF_NONE;
     aGtkWidgetType = MOZ_GTK_BUTTON;
+    break;
+  case NS_THEME_FOCUS_OUTLINE:
+    aGtkWidgetType = MOZ_GTK_ENTRY;
     break;
   case NS_THEME_CHECKBOX:
   case NS_THEME_RADIO:
@@ -728,6 +742,13 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, uint8_t aWidgetType,
         aExtra->left = left;
         return true;
       }
+    }
+  case NS_THEME_FOCUS_OUTLINE:
+    {
+      moz_gtk_get_focus_outline_size(&aExtra->left, &aExtra->top);
+      aExtra->right = aExtra->left;
+      aExtra->bottom = aExtra->top;
+      return true;
     }
   case NS_THEME_TAB :
     {
@@ -1427,6 +1448,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
     return (!aFrame || IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) &&
            !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
 
+  case NS_THEME_FOCUS_OUTLINE:
+    return true;
   }
 
   return false;

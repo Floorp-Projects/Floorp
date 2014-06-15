@@ -173,7 +173,8 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
         JSString *s = ToString<CanGC>(cx, idv);
         if (!s)
             return nullptr;
-        Rooted<JSLinearString*> idstr(cx, s->ensureLinear(cx));
+
+        RootedLinearString idstr(cx, s->ensureLinear(cx));
         if (!idstr)
             return nullptr;
 

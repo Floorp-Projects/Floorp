@@ -887,7 +887,7 @@ class XPCShellTests(object):
                 self.env["ASAN_SYMBOLIZER_PATH"] = llvmsym
                 self.log.info("INFO | runxpcshelltests.py | ASan using symbolizer at %s", llvmsym)
             else:
-                self.log.info("INFO | runxpcshelltests.py | ASan symbolizer binary not found: %s", llvmsym)
+                self.log.info("TEST-UNEXPECTED-FAIL | runxpcshelltests.py | Failed to find ASan symbolizer at %s", llvmsym)
 
         return self.env
 

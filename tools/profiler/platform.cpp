@@ -99,6 +99,20 @@ void Sampler::Shutdown() {
   sRegisteredThreads = nullptr;
 }
 
+ThreadInfo::ThreadInfo(const char* aName, int aThreadId,
+                       bool aIsMainThread, PseudoStack* aPseudoStack,
+                       void* aStackTop)
+  : mName(strdup(aName))
+  , mThreadId(aThreadId)
+  , mIsMainThread(aIsMainThread)
+  , mPseudoStack(aPseudoStack)
+  , mPlatformData(Sampler::AllocPlatformData(aThreadId))
+  , mProfile(nullptr)
+  , mStackTop(aStackTop)
+{
+  mThread = NS_GetCurrentThread();
+}
+
 ThreadInfo::~ThreadInfo() {
   free(mName);
 
@@ -830,28 +844,11 @@ bool mozilla_sampler_is_active()
   return sIsProfiling;
 }
 
-static double sResponsivenessTimes[100];
-static unsigned int sResponsivenessLoc = 0;
 void mozilla_sampler_responsiveness(const TimeStamp& aTime)
 {
-  if (!sLastTracerEvent.IsNull()) {
-    if (sResponsivenessLoc == 100) {
-      for(size_t i = 0; i < 100-1; i++) {
-        sResponsivenessTimes[i] = sResponsivenessTimes[i+1];
-      }
-      sResponsivenessLoc--;
-    }
-    TimeDuration delta = aTime - sLastTracerEvent;
-    sResponsivenessTimes[sResponsivenessLoc++] = delta.ToMilliseconds();
-  }
   sCurrentEventGeneration++;
 
   sLastTracerEvent = aTime;
-}
-
-const double* mozilla_sampler_get_responsiveness()
-{
-  return sResponsivenessTimes;
 }
 
 void mozilla_sampler_frame_number(int frameNumber)

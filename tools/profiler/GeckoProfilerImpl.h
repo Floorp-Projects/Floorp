@@ -130,12 +130,6 @@ void profiler_responsiveness(const mozilla::TimeStamp& aTime)
 }
 
 static inline
-const double* profiler_get_responsiveness()
-{
-  return mozilla_sampler_get_responsiveness();
-}
-
-static inline
 void profiler_set_frame_number(int frameNumber)
 {
   return mozilla_sampler_frame_number(frameNumber);
