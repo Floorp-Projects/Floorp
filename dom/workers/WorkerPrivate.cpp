@@ -5771,7 +5771,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
   ErrorResult rv;
 
   nsRefPtr<MessageEvent> event =
-    MessageEvent::Constructor(globalObject, aCx,
+    MessageEvent::Constructor(globalObject,
                               NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);

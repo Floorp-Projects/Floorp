@@ -165,8 +165,6 @@ def print_class_declaration(eventname, iface, fd, conf):
             hasVariant = True
             break;
     fd.write("  static already_AddRefed<%s> Constructor(const GlobalObject& aGlobal, " % eventname)
-    if hasVariant:
-        fd.write("JSContext* aCx, ")
     fd.write("const nsAString& aType, ")
     fd.write("const %sInit& aParam, " % eventname)
     fd.write("ErrorResult& aRv);\n\n")
@@ -404,8 +402,6 @@ def write_cpp(eventname, iface, fd, conf):
 
     fd.write("already_AddRefed<%s>\n" % eventname)
     fd.write("%s::Constructor(const GlobalObject& aGlobal, " % eventname)
-    if hasVariant:
-        fd.write("JSContext* aCx, ");
     fd.write("const nsAString& aType, ")
     fd.write("const %sInit& aParam, " % eventname)
     fd.write("ErrorResult& aRv)\n")
@@ -415,7 +411,7 @@ def write_cpp(eventname, iface, fd, conf):
     fd.write("  bool trusted = e->Init(t);\n")
     fd.write("  e->Init%s(" % eventname)
     if hasVariant:
-        fd.write("aCx, ");
+        fd.write("aGlobal.Context(), ");
     fd.write("aType, aParam.mBubbles, aParam.mCancelable")
     for a in allattributes:
         fd.write(", aParam.m%s" % firstCap(a.name))

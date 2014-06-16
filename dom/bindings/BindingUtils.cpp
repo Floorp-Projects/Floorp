@@ -2438,7 +2438,7 @@ ConvertExceptionToPromise(JSContext* cx,
 
   JS_ClearPendingException(cx);
   ErrorResult rv;
-  nsRefPtr<Promise> promise = Promise::Reject(global, cx, exn, rv);
+  nsRefPtr<Promise> promise = Promise::Reject(global, exn, rv);
   if (rv.Failed()) {
     // We just give up.  Make sure to not leak memory on the
     // ErrorResult, but then just put the original exception back.
