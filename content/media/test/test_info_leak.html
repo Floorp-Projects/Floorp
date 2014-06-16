@@ -58,8 +58,13 @@ function log(msg) {
 
 function finish(v) {
   log("finish: " + v.name);
-  v.parentNode.removeChild(v);
   clearInterval(v.checkStateInterval);
+
+  for (var i=0; i<gEventTypes.length; i++) {
+    v.removeEventListener(gEventTypes[i], listener, false);
+  }
+  removeNodeAndSource(v);
+
   manager.finished(v.token);
   v = null;
 }
@@ -86,6 +91,7 @@ function createMedia(type, src, token) {
   for (var i=0; i<gEventTypes.length; i++) {
     v.addEventListener(gEventTypes[i], listener, false);
   }
+  v.preload = "metadata";
   v.src = src;
   v.name = src;
   document.body.appendChild(v);
