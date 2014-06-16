@@ -747,11 +747,17 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     JS_AbortIfWrongThread(rt);
 
-    if (!isEnabled())
+    StoreBuffer &sb = rt->gc.storeBuffer;
+    if (!isEnabled() || isEmpty()) {
+        /*
+         * Our barriers are not always exact, and there may be entries in the
+         * storebuffer even when the nursery is disabled or empty. It's not
+         * safe to keep these entries as they may refer to tenured cells which
+         * may be freed after this point.
+         */
+        sb.clear();
         return;
-
-    if (isEmpty())
-        return;
+    }
 
     rt->gc.stats.count(gcstats::STAT_MINOR_GC);
 
@@ -763,7 +769,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     MinorCollectionTracer trc(rt, this);
 
     // Mark the store buffer. This must happen first.
-    StoreBuffer &sb = rt->gc.storeBuffer;
     TIME_START(markValues);
     sb.markValues(&trc);
     TIME_END(markValues);
