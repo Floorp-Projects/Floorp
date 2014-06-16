@@ -887,46 +887,25 @@ GCDescription::formatJSON(JSRuntime *rt, uint64_t timestamp) const
 JS_FRIEND_API(void)
 JS::NotifyDidPaint(JSRuntime *rt)
 {
-    if (rt->gcZeal() == gc::ZealFrameVerifierPreValue) {
-        gc::VerifyBarriers(rt, gc::PreBarrierVerifier);
-        return;
-    }
-
-    if (rt->gcZeal() == gc::ZealFrameVerifierPostValue) {
-        gc::VerifyBarriers(rt, gc::PostBarrierVerifier);
-        return;
-    }
-
-    if (rt->gcZeal() == gc::ZealFrameGCValue) {
-        PrepareForFullGC(rt);
-        GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
-        return;
-    }
-
-    if (JS::IsIncrementalGCInProgress(rt) && !rt->gc.interFrameGC) {
-        JS::PrepareForIncrementalGC(rt);
-        GCSlice(rt, GC_NORMAL, gcreason::REFRESH_FRAME);
-    }
-
-    rt->gc.interFrameGC = false;
+    rt->gc.notifyDidPaint();
 }
 
 JS_FRIEND_API(bool)
 JS::IsIncrementalGCEnabled(JSRuntime *rt)
 {
-    return rt->gc.incrementalEnabled && rt->gcMode() == JSGC_MODE_INCREMENTAL;
+    return rt->gc.isIncrementalGCEnabled() && rt->gcMode() == JSGC_MODE_INCREMENTAL;
 }
 
 JS_FRIEND_API(bool)
 JS::IsIncrementalGCInProgress(JSRuntime *rt)
 {
-    return rt->gc.incrementalState != gc::NO_INCREMENTAL && !rt->gc.verifyPreData;
+    return rt->gc.state() != gc::NO_INCREMENTAL && !rt->gc.verifyPreData;
 }
 
 JS_FRIEND_API(void)
 JS::DisableIncrementalGC(JSRuntime *rt)
 {
-    rt->gc.incrementalEnabled = false;
+    rt->gc.disableIncrementalGC();
 }
 
 JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSRuntime *rt)
@@ -961,7 +940,7 @@ JS::IsGenerationalGCEnabled(JSRuntime *rt)
 JS_FRIEND_API(bool)
 JS::IsIncrementalBarrierNeeded(JSRuntime *rt)
 {
-    return rt->gc.incrementalState == gc::MARK && !rt->isHeapBusy();
+    return rt->gc.state() == gc::MARK && !rt->isHeapBusy();
 }
 
 JS_FRIEND_API(bool)
@@ -1194,7 +1173,7 @@ js_DefineOwnProperty(JSContext *cx, JSObject *objArg, jsid idArg,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    JS_ASSERT(cx->runtime()->gc.heapState == js::Idle);
+    js::AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id, descriptor.value());
     if (descriptor.hasGetterObject())
