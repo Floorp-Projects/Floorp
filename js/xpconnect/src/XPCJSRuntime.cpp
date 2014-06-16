@@ -2323,12 +2323,6 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
         "Transient data (mostly parse nodes) held by the JSRuntime during "
         "compilation.");
 
-#ifdef JS_YARR
-    RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/regexp-data"),
-        KIND_NONHEAP, rtStats.runtime.regexpData,
-        "Regexp JIT data.");
-#endif
-
     RREPORT_BYTES(rtPath + NS_LITERAL_CSTRING("runtime/interpreter-stack"),
         KIND_HEAP, rtStats.runtime.interpreterStack,
         "JS interpreter frames.");
