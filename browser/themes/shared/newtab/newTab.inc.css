@@ -1,0 +1,196 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:root {
+  -moz-appearance: none;
+  font-size: 75%;
+  background-color: transparent;
+}
+
+/* SCROLLBOX */
+#newtab-scrollbox:not([page-disabled]),
+#newtab-scrollbox:not([page-disabled]) #newtab-margin-bottom {
+  color: rgb(0,0,0);
+  background-color: hsl(0,0%,95%);
+}
+
+/* UNDO */
+#newtab-undo-container {
+  padding: 4px 3px;
+  border: 1px solid;
+  border-color: rgba(8,22,37,.12) rgba(8,22,37,.14) rgba(8,22,37,.16);
+  background-color: rgba(255,255,255,.4);
+  color: #525e69;
+}
+
+#newtab-undo-label {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.newtab-undo-button {
+  -moz-appearance: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 4px;
+  border: 0;
+  background: transparent;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.newtab-undo-button:hover {
+  text-decoration: underline;
+}
+
+.newtab-undo-button:-moz-focusring {
+  outline: 1px dotted;
+}
+
+#newtab-undo-close-button {
+  -moz-appearance: none;
+  padding: 0;
+  border: none;
+}
+
+#newtab-undo-close-button:-moz-focusring {
+  outline: 1px dotted;
+}
+
+/* TOGGLE */
+#newtab-toggle {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  background: -216px 0 transparent url(chrome://browser/skin/newtab/controls.png);
+}
+
+#newtab-toggle[page-disabled] {
+  background-position: -232px 0;
+}
+
+@media (min-resolution: 2dppx) {
+  #newtab-toggle {
+    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
+    background-size: 296px;
+  }
+}
+
+/* CELLS */
+.newtab-cell {
+  background-color: rgba(255,255,255,.2);
+  border: 1px solid #dee0e1;
+  transition: border-color 100ms ease-out;
+}
+
+.newtab-cell:empty {
+  border: 1px dashed;
+  border-color: rgba(8,22,37,.15) rgba(8,22,37,.17) rgba(8,22,37,.19);
+}
+
+.newtab-cell:hover:not(:empty):not([dragged]):not([ignorehover]) {
+  border-color: rgba(8,22,37,.25) rgba(8,22,37,.27) rgba(8,22,37,.3);
+}
+
+/* SITES */
+.newtab-site {
+  text-decoration: none;
+  transition-property: top, left, opacity, box-shadow, background-color;
+}
+
+.newtab-cell:not([ignorehover]) > .newtab-site:hover,
+.newtab-site[dragged] {
+  box-shadow: 0 0 10px rgba(8,22,37,.3);
+}
+
+.newtab-site[dragged] {
+  transition-property: box-shadow, background-color;
+  background-color: rgb(242,242,242);
+}
+
+/* THUMBNAILS */
+.newtab-thumbnail {
+  background-origin: padding-box;
+  background-clip: padding-box;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.newtab-site[type=affiliate] .newtab-thumbnail,
+.newtab-site[type=organic] .newtab-thumbnail,
+.newtab-site[type=sponsored] .newtab-thumbnail {
+  background-position: center center;
+  background-size: auto;
+}
+
+/* TITLES */
+.newtab-title {
+  color: #525c66;
+  font-size: 13px;
+}
+
+.newtab-site[type=sponsored] .newtab-title {
+  -moz-padding-end: 24px;
+}
+
+/* CONTROLS */
+.newtab-control {
+  width: 24px;
+  height: 24px;
+  padding: 1px 2px 3px;
+  border: none;
+  background: transparent url(chrome://browser/skin/newtab/controls.png);
+}
+
+@media (min-resolution: 2dppx) {
+  .newtab-control {
+    background-image: url(chrome://browser/skin/newtab/controls@2x.png);
+    background-size: 296px;
+  }
+}
+
+.newtab-control-pin:hover {
+  background-position: -24px 0;
+}
+
+.newtab-control-pin:active {
+  background-position: -48px 0;
+}
+
+.newtab-control-pin[pinned] {
+  background-position: -72px 0;
+}
+
+.newtab-control-pin[pinned]:hover {
+  background-position: -96px 0;
+}
+
+.newtab-control-pin[pinned]:active {
+  background-position: -120px 0;
+}
+
+.newtab-control-block {
+  background-position: -144px 0;
+}
+
+.newtab-control-block:hover {
+  background-position: -168px 0;
+}
+
+.newtab-control-block:active {
+  background-position: -192px 0;
+}
+
+.newtab-control-sponsored {
+  background-position: -249px -1px;
+}
+
+.newtab-control-sponsored:hover {
+  background-position: -265px -1px;
+}
+
+.newtab-control-sponsored[panelShown] {
+  background-position: -281px -1px;
+}
