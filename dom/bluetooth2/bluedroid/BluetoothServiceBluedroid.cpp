@@ -127,14 +127,6 @@ public:
       BT_LOGR("Fail to set: BT_SCAN_MODE_CONNECTABLE");
     }
 
-    // Try to fire event 'AdapterAdded' to fit the original behaviour when
-    // we used BlueZ as backend.
-    BluetoothService* bs = BluetoothService::Get();
-    NS_ENSURE_TRUE(bs, NS_ERROR_FAILURE);
-
-    bs->AdapterAddedReceived();
-    bs->TryFiringAdapterAdded();
-
     // Trigger BluetoothOppManager to listen
     BluetoothOppManager* opp = BluetoothOppManager::Get();
     if (!opp || !opp->Listen()) {
