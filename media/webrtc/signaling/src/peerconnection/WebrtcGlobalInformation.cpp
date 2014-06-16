@@ -252,6 +252,7 @@ WebrtcGlobalInformation::DebugLevel(const GlobalObject& aGlobal)
 void
 WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal, bool aEnable)
 {
+  StartWebRtcLog(sLastSetLevel); // to make it read the aec path
   webrtc::Trace::set_aec_debug(aEnable);
   sLastAECDebug = aEnable;
 }
