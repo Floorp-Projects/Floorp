@@ -1062,40 +1062,76 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj_)
     return res;
 }
 
+static bool
+HandleRegExpFlag(RegExpFlag flag, RegExpFlag *flags)
+{
+    if (*flags & flag)
+        return false;
+    *flags = RegExpFlag(*flags | flag);
+    return true;
+}
+
+template <typename CharT>
+static size_t
+ParseRegExpFlags(const CharT *chars, size_t length, RegExpFlag *flagsOut, jschar *lastParsedOut)
+{
+    *flagsOut = RegExpFlag(0);
+
+    for (size_t i = 0; i < length; i++) {
+        *lastParsedOut = chars[i];
+        switch (chars[i]) {
+          case 'i':
+            if (!HandleRegExpFlag(IgnoreCaseFlag, flagsOut))
+                return false;
+            break;
+          case 'g':
+            if (!HandleRegExpFlag(GlobalFlag, flagsOut))
+                return false;
+            break;
+          case 'm':
+            if (!HandleRegExpFlag(MultilineFlag, flagsOut))
+                return false;
+            break;
+          case 'y':
+            if (!HandleRegExpFlag(StickyFlag, flagsOut))
+                return false;
+            break;
+          default:
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool
 js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
 {
-    size_t n = flagStr->length();
-    const jschar *s = flagStr->getChars(cx);
-    if (!s)
+    JSLinearString *linear = flagStr->ensureLinear(cx);
+    if (!linear)
         return false;
 
-    *flagsOut = RegExpFlag(0);
-    for (size_t i = 0; i < n; i++) {
-#define HANDLE_FLAG(name_)                                                    \
-        JS_BEGIN_MACRO                                                        \
-            if (*flagsOut & (name_))                                          \
-                goto bad_flag;                                                \
-            *flagsOut = RegExpFlag(*flagsOut | (name_));                      \
-        JS_END_MACRO
-        switch (s[i]) {
-          case 'i': HANDLE_FLAG(IgnoreCaseFlag); break;
-          case 'g': HANDLE_FLAG(GlobalFlag); break;
-          case 'm': HANDLE_FLAG(MultilineFlag); break;
-          case 'y': HANDLE_FLAG(StickyFlag); break;
-          default:
-          bad_flag:
-          {
-            char charBuf[2];
-            charBuf[0] = char(s[i]);
-            charBuf[1] = '\0';
-            JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
-                                         JSMSG_BAD_REGEXP_FLAG, charBuf);
-            return false;
-          }
-        }
-#undef HANDLE_FLAG
+    size_t len = linear->length();
+
+    bool ok;
+    jschar lastParsed;
+    if (linear->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        ok = ::ParseRegExpFlags(linear->latin1Chars(nogc), len, flagsOut, &lastParsed);
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        ok = ::ParseRegExpFlags(linear->twoByteChars(nogc), len, flagsOut, &lastParsed);
     }
+
+    if (!ok) {
+        char charBuf[2];
+        charBuf[0] = char(lastParsed);
+        charBuf[1] = '\0';
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+                                     JSMSG_BAD_REGEXP_FLAG, charBuf);
+        return false;
+    }
+
     return true;
 }
 
