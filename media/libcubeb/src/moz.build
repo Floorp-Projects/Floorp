@@ -38,6 +38,7 @@ if CONFIG['OS_TARGET'] == 'Darwin':
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [
+        'cubeb_resampler.cpp',
         'cubeb_wasapi.cpp',
         'cubeb_winmm.c',
     ]
