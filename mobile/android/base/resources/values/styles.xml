@@ -448,46 +448,46 @@
          <item name="android:groupIndicator">@android:color/transparent</item>
     </style>
 
-    <!-- Remote tabs panel -->
-    <style name="RemoteTabsPanelChildBase">
+    <!-- Tabs panel -->
+    <style name="TabsPanelFrameBase">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
         <item name="android:paddingTop">32dp</item>
         <item name="android:orientation">vertical</item>
     </style>
 
-    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <!-- We set values in landscape. -->
     </style>
 
-    <style name="RemoteTabsSectionBase">
+    <style name="TabsPanelSectionBase">
         <item name="android:orientation">vertical</item>
         <item name="android:layout_marginLeft">16dp</item>
         <item name="android:layout_marginRight">16dp</item>
     </style>
 
-    <style name="RemoteTabsSection" parent="RemoteTabsSectionBase">
+    <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <!-- We set values in landscape. -->
     </style>
 
-    <style name="RemoteTabsItemBase">
+    <style name="TabsPanelItemBase">
         <item name="android:layout_marginBottom">28dp</item>
         <item name="android:layout_gravity">center</item>
         <item name="android:gravity">center</item>
     </style>
 
-    <style name="RemoteTabsItem" parent="RemoteTabsItemBase">
+    <style name="TabsPanelItem" parent="TabsPanelItemBase">
         <!-- We set values in landscape. -->
     </style>
 
-    <style name="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.ButtonBase">
         <item name="android:background">@drawable/remote_tabs_setup_button_background</item>
         <item name="android:textColor">#FFFEFF</item>
         <item name="android:textSize">20sp</item>
         <item name="android:gravity">center</item>
     </style>
 
-    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
         <item name="android:paddingTop">18dp</item>
         <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">9dp</item>
@@ -496,26 +496,26 @@
         <item name="android:layout_marginRight">24dp</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance">
+    <style name="TabsPanelItem.TextAppearance">
         <item name="android:textColor">#C0C9D0</item>
         <item name="android:textSize">16sp</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Header">
+    <style name="TabsPanelItem.TextAppearance.Header">
         <item name="android:textSize">20sp</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Header.FXAccounts">
+    <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
         <!-- We change these values on landscape. -->
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Linkified">
+    <style name="TabsPanelItem.TextAppearance.Linkified">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textColor">#0292D6</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Linkified.Resend">
+    <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
         <item name="android:layout_height">wrap_content</item>
     </style>
 
