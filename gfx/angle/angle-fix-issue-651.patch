@@ -1,0 +1,27 @@
+Fix for https://code.google.com/p/angleproject/issues/detail?id=651
+
+See https://bugzilla.mozilla.org/show_bug.cgi?id=1025576 for details.
+
+diff --git a/gfx/angle/src/compiler/SymbolTable.cpp b/gfx/angle/src/compiler/SymbolTable.cpp
+--- a/gfx/angle/src/compiler/SymbolTable.cpp
++++ b/gfx/angle/src/compiler/SymbolTable.cpp
+@@ -166,17 +166,18 @@ TFunction::~TFunction()
+ }
+ 
+ //
+ // Symbol table levels are a map of pointers to symbols that have to be deleted.
+ //
+ TSymbolTableLevel::~TSymbolTableLevel()
+ {
+     for (tLevel::iterator it = level.begin(); it != level.end(); ++it)
+-        delete (*it).second;
++        if ((*it).first == (*it).second->getMangledName())
++            delete (*it).second;
+ }
+ 
+ //
+ // Change all function entries in the table with the non-mangled name
+ // to be related to the provided built-in operation.  This is a low
+ // performance operation, and only intended for symbol tables that
+ // live across a large number of compiles.
+ //
