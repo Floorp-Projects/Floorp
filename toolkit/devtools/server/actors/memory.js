@@ -70,6 +70,13 @@ let MemoryActor = protocol.ActorClass({
   }, {
     request: {},
     response: RetVal("json"),
+  }),
+
+  residentUnique: method(function() {
+    return this._mgr.residentUnique;
+  }, {
+    request: {},
+    response: { value: RetVal("number") }
   })
 });
 
