@@ -4620,40 +4620,6 @@ PaintSelectionBackground(gfxContext* aCtx, nsPresContext* aPresContext,
   }
 }
 
-// Attempt to get the LineBaselineOffset property of aChildFrame
-// If not set, calculate this value for all child frames of aBlockFrame
-static nscoord
-LazyGetLineBaselineOffset(nsIFrame* aChildFrame, nsBlockFrame* aBlockFrame)
-{
-  bool offsetFound;
-  nscoord offset = NS_PTR_TO_INT32(
-    aChildFrame->Properties().Get(nsIFrame::LineBaselineOffset(), &offsetFound)
-    );
-
-  if (!offsetFound) {
-    for (nsBlockFrame::line_iterator line = aBlockFrame->begin_lines(),
-        line_end = aBlockFrame->end_lines();
-        line != line_end; line++) {
-      if (line->IsInline()) {
-        int32_t n = line->GetChildCount();
-        nscoord lineBaseline = line->BStart() + line->GetAscent();
-        for (nsIFrame* lineFrame = line->mFirstChild;
-             n > 0; lineFrame = lineFrame->GetNextSibling(), --n) {
-          offset = lineBaseline - lineFrame->GetNormalPosition().y;
-          lineFrame->Properties().Set(nsIFrame::LineBaselineOffset(),
-                                      NS_INT32_TO_PTR(offset));
-        }
-      }
-    }
-    return NS_PTR_TO_INT32(
-    aChildFrame->Properties().Get(nsIFrame::LineBaselineOffset(), &offsetFound)
-    );
-
-  } else {
-    return offset;
-  }
-}
-
 void
 nsTextFrame::GetTextDecorations(
                     nsPresContext* aPresContext,
@@ -4697,8 +4663,7 @@ nsTextFrame::GetTextDecorations(
         nsLayoutUtils::GetColor(f, eCSSProperty_text_decoration_color);
     }
 
-    nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
-    const bool firstBlock = !nearestBlockFound && fBlock;
+    const bool firstBlock = !nearestBlockFound && nsLayoutUtils::GetAsBlock(f);
 
     // Not updating positions once we hit a parent block is equivalent to
     // the CSS 2.1 spec that blocks should propagate decorations down to their
@@ -4709,15 +4674,13 @@ nsTextFrame::GetTextDecorations(
     if (firstBlock) {
       // At this point, fChild can't be null since TextFrames can't be blocks
       if (fChild->VerticalAlignEnum() != NS_STYLE_VERTICAL_ALIGN_BASELINE) {
-
         // Since offset is the offset in the child's coordinate space, we have
         // to undo the accumulation to bring the transform out of the block's
         // coordinate space
-        const nscoord lineBaselineOffset = LazyGetLineBaselineOffset(fChild,
-                                                                     fBlock);
-
         baselineOffset =
-          frameTopOffset - fChild->GetNormalPosition().y - lineBaselineOffset;
+          frameTopOffset - fChild->GetNormalPosition().y
+          - NS_PTR_TO_INT32(
+              fChild->Properties().Get(nsIFrame::LineBaselineOffset()));
       }
     }
     else if (!nearestBlockFound) {
@@ -4801,7 +4764,7 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
 
 void
 nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
-                                     nsIFrame* aBlock,
+                                     const nsHTMLReflowState& aBlockReflowState,
                                      PropertyProvider& aProvider,
                                      nsRect* aVisualOverflowRect,
                                      bool aIncludeTextDecorations)
@@ -4814,8 +4777,8 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
-    // In this case, aBlock is the ::first-letter frame.
-    uint8_t decorationStyle = aBlock->StyleContext()->
+    nsIFrame* firstLetterFrame = aBlockReflowState.frame;
+    uint8_t decorationStyle = firstLetterFrame->StyleContext()->
                                 StyleTextReset()->GetDecorationStyle();
     // If the style is none, let's include decoration line rect as solid style
     // since changing the style from none to solid/dotted/dashed doesn't cause
@@ -4859,7 +4822,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     GetTextDecorations(aPresContext, eResolvedColors, textDecs);
     if (textDecs.HasDecorationLines()) {
       nscoord inflationMinFontSize =
-        nsLayoutUtils::InflationMinFontSizeFor(aBlock);
+        nsLayoutUtils::InflationMinFontSizeFor(aBlockReflowState.frame);
 
       const nscoord width = GetSize().width;
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
@@ -8044,7 +8007,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
-  UnionAdditionalOverflow(presContext, aLineLayout.LineContainerRS()->frame,
+  UnionAdditionalOverflow(presContext, *aLineLayout.LineContainerRS(),
                           provider, &aMetrics.VisualOverflow(), false);
 
   /////////////////////////////////////////////////////////////////////
@@ -8286,7 +8249,7 @@ nsTextFrame::RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState)
                           &provider);
   nsRect &vis = result.VisualOverflow();
   vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
-  UnionAdditionalOverflow(PresContext(), aBlockReflowState.frame, provider,
+  UnionAdditionalOverflow(PresContext(), aBlockReflowState, provider,
                           &vis, true);
   return result;
 }
@@ -8576,37 +8539,4 @@ nsTextFrame::HasAnyNoncollapsedCharacters()
   int32_t skippedOffset = iter.ConvertOriginalToSkipped(offset);
   int32_t skippedOffsetEnd = iter.ConvertOriginalToSkipped(offsetEnd);
   return skippedOffset != skippedOffsetEnd;
-}
-
-bool
-nsTextFrame::UpdateOverflow() 
-{
-  nsRect rect(nsPoint(0, 0), GetSize());
-  nsOverflowAreas overflowAreas(rect, rect);
-
-  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    return false;
-  }
-  gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
-  if (!mTextRun) {
-    return false;
-  }
-  PropertyProvider provider(this, iter, nsTextFrame::eInflated);
-  provider.InitializeForDisplay(true);
-
-  nsIFrame*decorationsBlock;
-  if (IsFloatingFirstLetterChild()) {
-    decorationsBlock = GetParent();
-  } else {
-    for (nsIFrame* f = this; f; f = f->GetParent()) {
-      nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
-      if (fBlock) {
-        decorationsBlock = fBlock;
-        break;
-      }
-    }
-  }
-  UnionAdditionalOverflow(PresContext(), decorationsBlock, provider,
-                          &overflowAreas.VisualOverflow(), true);
-  return FinishAndStoreOverflow(overflowAreas, GetSize());
 }
