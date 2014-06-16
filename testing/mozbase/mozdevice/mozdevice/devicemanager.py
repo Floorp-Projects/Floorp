@@ -6,7 +6,6 @@ import hashlib
 import mozlog
 import socket
 import os
-import ntpath
 import posixpath
 import re
 import struct
@@ -53,13 +52,6 @@ class DeviceManager(object):
         self._logger = mozlog.getLogger("DeviceManager")
         self._logLevel = logLevel
         self._logger.setLevel(logLevel)
-        self._remoteIsWin = None
-
-    @property
-    def remoteIsWin(self):
-        if self._remoteIsWin is None:
-            self._remoteIsWin = self.getInfo("os")["os"][0] == "windows"
-        return self._remoteIsWin
 
     @property
     def logLevel(self):
@@ -251,7 +243,7 @@ class DeviceManager(object):
         containing = posixpath.dirname(filename)
         if not self.dirExists(containing):
             parts = filename.split('/')
-            name = "/" if not self.remoteIsWin else parts.pop(0)
+            name = "/"
             for part in parts[:-1]:
                 if part != "":
                     name = posixpath.join(name, part)
