@@ -28,6 +28,9 @@ this.Translation = {
   STATE_TRANSLATING: 1,
   STATE_TRANSLATED: 2,
   STATE_ERROR: 3,
+  STATE_UNAVAILABLE: 4,
+
+  serviceUnavailable: false,
 
   supportedSourceLanguages: ["en", "zh", "ja", "es", "de", "fr", "ru", "ar", "ko", "pt"],
   supportedTargetLanguages: ["en", "pl", "tr", "vi"],
@@ -171,6 +174,11 @@ TranslationUI.prototype = {
   },
 
   shouldShowInfoBar: function(aURI) {
+    // Never show the infobar automatically while the translation
+    // service is temporarily unavailable.
+    if (Translation.serviceUnavailable)
+      return false;
+
     // Check if we should never show the infobar for this language.
     let neverForLangs =
       Services.prefs.getCharPref("browser.translation.neverForLanguages");
@@ -210,6 +218,9 @@ TranslationUI.prototype = {
           // Record the number of characters translated.
           TranslationHealthReport.recordTranslation(msg.data.from, msg.data.to,
                                                     msg.data.characterCount);
+        } else if (msg.data.unavailable) {
+          Translation.serviceUnavailable = true;
+          this.state = Translation.STATE_UNAVAILABLE;
         } else {
           this.state = Translation.STATE_ERROR;
         }
