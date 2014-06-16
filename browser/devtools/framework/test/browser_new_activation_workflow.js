@@ -14,7 +14,7 @@ function test() {
     target = TargetFactory.forTab(gBrowser.selectedTab);
     loadWebConsole(aTab).then(function() {
       console.log('loaded');
-    }, console.error);
+    });
   });
 }
 
@@ -24,7 +24,7 @@ function loadWebConsole(aTab) {
   return gDevTools.showToolbox(target, "webconsole").then(function(aToolbox) {
     toolbox = aToolbox;
     checkToolLoading();
-  }, console.error);
+  });
 }
 
 function checkToolLoading() {
@@ -35,7 +35,7 @@ function checkToolLoading() {
     selectAndCheckById("styleeditor").then(function() {
       testToggle();
     });
-  }, console.error);
+  });
 }
 
 function selectAndCheckById(id) {
@@ -53,8 +53,10 @@ function testToggle() {
     target = TargetFactory.forTab(gBrowser.selectedTab);
     gDevTools.showToolbox(target, "styleeditor").then(function(aToolbox) {
       toolbox = aToolbox;
-      is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
-      finishUp();
+      aToolbox.once("styleeditor-selected", () => {
+        is(toolbox.currentToolId, "styleeditor", "The style editor is selected");
+        finishUp();
+      });
     });
   }.bind(this));
 

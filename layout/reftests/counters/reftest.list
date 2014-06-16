@@ -79,3 +79,4 @@ fails-if(xulRuntime.XPCOMABI.match(/arm/)) == counter-ua-limits-02.html counter-
 == counter-simp-chinese-formal.html counter-simp-chinese-formal-ref.html
 == counter-trad-chinese-informal.html counter-trad-chinese-informal-ref.html
 == counter-trad-chinese-formal.html counter-trad-chinese-formal-ref.html
+== counter-ethiopic-numeric.html counter-ethiopic-numeric-ref.html

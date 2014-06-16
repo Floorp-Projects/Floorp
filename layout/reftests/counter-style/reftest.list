@@ -30,3 +30,4 @@ fails-if(B2G) == descriptor-suffix.html   descriptor-suffix-ref.html # B2G kerni
 == dependent-builtin.html           dependent-builtin-ref.html
 == redefine-builtin.html            redefine-builtin-ref.html
 == redefine-attr-mapping.html       redefine-attr-mapping-ref.html
+== disclosure-styles.html           disclosure-styles-ref.html

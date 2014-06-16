@@ -32,6 +32,7 @@ typedef Vector<JS::Zone *, 4, SystemAllocPolicy> ZoneVector;
 
 class MarkingValidator;
 class AutoPrepareForTracing;
+class AutoTraceSession;
 
 struct ConservativeGCData
 {
@@ -104,10 +105,22 @@ class GCRuntime
     void removeRoot(void *rp);
     void setMarkStackLimit(size_t limit);
 
+    void setParameter(JSGCParamKey key, uint32_t value);
+    uint32_t getParameter(JSGCParamKey key);
+
     bool isHeapBusy() { return heapState != js::Idle; }
     bool isHeapMajorCollecting() { return heapState == js::MajorCollecting; }
     bool isHeapMinorCollecting() { return heapState == js::MinorCollecting; }
     bool isHeapCollecting() { return isHeapMajorCollecting() || isHeapMinorCollecting(); }
+
+    // Performance note: if isFJMinorCollecting turns out to be slow because
+    // reading the counter is slow then we may be able to augment the counter
+    // with a volatile flag that is set iff the counter is greater than
+    // zero. (It will require some care to make sure the two variables stay in
+    // sync.)
+    bool isFJMinorCollecting() { return fjCollectionCounter > 0; }
+    void incFJMinorCollecting() { fjCollectionCounter++; }
+    void decFJMinorCollecting() { fjCollectionCounter--; }
 
     bool triggerGC(JS::gcreason::Reason reason);
     bool triggerZoneGC(Zone *zone, JS::gcreason::Reason reason);
@@ -117,11 +130,14 @@ class GCRuntime
     void gcIfNeeded(JSContext *cx);
     void collect(bool incremental, int64_t budget, JSGCInvocationKind gckind,
                  JS::gcreason::Reason reason);
-    void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis);
+    void gcSlice(JSGCInvocationKind gckind, JS::gcreason::Reason reason, int64_t millis = 0);
     void runDebugGC();
     inline void poke();
 
     void markRuntime(JSTracer *trc, bool useSavedRoots = false);
+
+    void notifyDidPaint();
+    void shrinkBuffers();
 
 #ifdef JS_GC_ZEAL
     const void *addressOfZealMode() { return &zealMode; }
@@ -138,6 +154,7 @@ class GCRuntime
 
   public:
     // Internal public interface
+    js::gc::State state() { return incrementalState; }
     void recordNativeStackTop();
 #ifdef JS_THREADSAFE
     void notifyRequestEnd() { conservativeGC.updateForRequestEnd(); }
@@ -145,7 +162,6 @@ class GCRuntime
     bool isBackgroundSweeping() { return helperState.isBackgroundSweeping(); }
     void waitBackgroundSweepEnd() { helperState.waitBackgroundSweepEnd(); }
     void waitBackgroundSweepOrAllocEnd() { helperState.waitBackgroundSweepOrAllocEnd(); }
-    void startBackgroundShrink() { helperState.startBackgroundShrink(); }
     void startBackgroundAllocationIfIdle() { helperState.startBackgroundAllocationIfIdle(); }
     void freeLater(void *p) { helperState.freeLater(p); }
 
@@ -205,6 +221,9 @@ class GCRuntime
 
     void setAlwaysPreserveCode() { alwaysPreserveCode = true; }
 
+    bool isIncrementalGCEnabled() { return incrementalEnabled; }
+    void disableIncrementalGC() { incrementalEnabled = false; }
+
     bool isGenerationalGCEnabled() { return generationalDisabled == 0; }
     void disableGenerationalGC();
     void enableGenerationalGC();
@@ -227,6 +246,17 @@ class GCRuntime
     void setValidate(bool enable);
     void setFullCompartmentChecks(bool enable);
 
+    bool isManipulatingDeadZones() { return manipulatingDeadZones; }
+    void setManipulatingDeadZones(bool value) { manipulatingDeadZones = value; }
+    unsigned objectsMarkedInDeadZonesCount() { return objectsMarkedInDeadZones; }
+    void incObjectsMarkedInDeadZone() {
+        JS_ASSERT(manipulatingDeadZones);
+        ++objectsMarkedInDeadZones;
+    }
+
+    JS::Zone *getCurrentZoneGroup() { return currentZoneGroup; }
+    void setFoundBlackGrayEdges() { foundBlackGrayEdges = true; }
+
 #ifdef JS_GC_ZEAL
     void startVerifyPreBarriers();
     bool endVerifyPreBarriers();
@@ -239,6 +269,7 @@ class GCRuntime
     // For ArenaLists::allocateFromArenaInline()
     friend class ArenaLists;
     Chunk *pickChunk(Zone *zone, AutoMaybeStartBackgroundAllocation &maybeStartBackgroundAllocation);
+    inline void arenaAllocatedDuringGC(JS::Zone *zone, ArenaHeader *arena);
 
     inline bool wantBackgroundAllocation() const;
 
@@ -270,6 +301,11 @@ class GCRuntime
     bool sweepPhase(SliceBudget &sliceBudget);
     void endSweepPhase(JSGCInvocationKind gckind, bool lastGC);
     void sweepZones(FreeOp *fop, bool lastGC);
+    void decommitArenasFromAvailableList(Chunk **availableListHeadp);
+    void decommitArenas();
+    void expireChunksAndArenas(bool shouldShrink);
+    void sweepBackgroundThings(bool onBackgroundThread);
+    void assertBackgroundSweepingFinished();
 
     void computeNonIncrementalMarkingForValidation();
     void validateIncrementalMarking();
@@ -311,6 +347,11 @@ class GCRuntime
     js::gc::Chunk         *systemAvailableChunkListHead;
     js::gc::Chunk         *userAvailableChunkListHead;
     js::gc::ChunkPool     chunkPool;
+
+#ifdef JSGC_GENERATIONAL
+    js::Nursery           nursery;
+    js::gc::StoreBuffer   storeBuffer;
+#endif
 
     js::RootedValueMap    rootsHash;
 
@@ -397,6 +438,7 @@ class GCRuntime
     uintptr_t             unused1;
 #endif
 
+  private:
     /*
      * The current incremental GC phase. This is also used internally in
      * non-incremental GC.
@@ -479,11 +521,6 @@ class GCRuntime
 
     volatile js::HeapState heapState;
 
-#ifdef JSGC_GENERATIONAL
-    js::Nursery           nursery;
-    js::gc::StoreBuffer   storeBuffer;
-#endif
-
     /*
      * ForkJoin workers enter and leave GC independently; this counter
      * tracks the number that are currently in GC.
@@ -494,7 +531,6 @@ class GCRuntime
      */
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> fjCollectionCounter;
 
-  private:
     /*
      * These options control the zealousness of the GC. The fundamental values
      * are   nextScheduled and gcDebugCompartmentGC. At every allocation,
@@ -583,6 +619,7 @@ class GCRuntime
 
     friend class js::GCHelperState;
     friend class js::gc::MarkingValidator;
+    friend class js::gc::AutoTraceSession;
 };
 
 #ifdef JS_GC_ZEAL
@@ -615,7 +652,6 @@ inline int GCRuntime::zeal() { return 0; }
 inline bool GCRuntime::upcomingZealousGC() { return false; }
 inline bool GCRuntime::needZealousGC() { return false; }
 #endif
-
 
 } /* namespace gc */
 } /* namespace js */

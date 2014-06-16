@@ -304,9 +304,6 @@ var SelectionHandler = {
 
     this._initTargetInfo(aElement, this.TYPE_SELECTION);
 
-    // Clear any existing selection from the document
-    this._contentWindow.getSelection().removeAllRanges();
-
     // Perform the appropriate selection method, if we can't determine method, or it fails, return
     if (!this._performSelection(aOptions)) {
       this._deactivate();
@@ -404,7 +401,12 @@ var SelectionHandler = {
     }
 
     // Else default to selectALL Document
-    this._getSelectionController().selectAll();
+    let editor = this._getEditor();
+    if (editor) {
+      editor.selectAll();
+    } else {
+      this._getSelectionController().selectAll();
+    }
 
     // Selection is entire HTMLHtmlElement, remove any trailing document whitespace
     let selection = this._getSelection();
@@ -713,6 +715,17 @@ var SelectionHandler = {
     }
 
     return selection.toString().trim();
+  },
+
+  _getEditor: function sh_getEditor() {
+    if (this._targetElement instanceof Ci.nsIDOMNSEditableElement) {
+      return this._targetElement.QueryInterface(Ci.nsIDOMNSEditableElement).editor;
+    }
+    return this._contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIWebNavigation)
+                              .QueryInterface(Ci.nsIInterfaceRequestor)
+                              .getInterface(Ci.nsIEditingSession)
+                              .getEditorForWindow(this._contentWindow);
   },
 
   _getSelectionController: function sh_getSelectionController() {

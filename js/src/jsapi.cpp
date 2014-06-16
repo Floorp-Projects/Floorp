@@ -154,7 +154,7 @@ namespace js {
 void
 AssertHeapIsIdle(JSRuntime *rt)
 {
-    JS_ASSERT(rt->gc.heapState == js::Idle);
+    JS_ASSERT(!rt->isHeapBusy());
 }
 
 void
@@ -1926,106 +1926,13 @@ JS_IsAboutToBeFinalizedUnbarriered(JSObject **objp)
 JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32_t value)
 {
-    switch (key) {
-      case JSGC_MAX_BYTES: {
-        JS_ASSERT(value >= rt->gc.bytes);
-        rt->gc.maxBytes = value;
-        break;
-      }
-      case JSGC_MAX_MALLOC_BYTES:
-        rt->gc.setMaxMallocBytes(value);
-        break;
-      case JSGC_SLICE_TIME_BUDGET:
-        rt->gc.sliceBudget = SliceBudget::TimeBudget(value);
-        break;
-      case JSGC_MARK_STACK_LIMIT:
-        js::SetMarkStackLimit(rt, value);
-        break;
-      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        rt->gc.highFrequencyTimeThreshold = value;
-        break;
-      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        rt->gc.highFrequencyLowLimitBytes = value * 1024 * 1024;
-        break;
-      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        rt->gc.highFrequencyHighLimitBytes = value * 1024 * 1024;
-        break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        rt->gc.highFrequencyHeapGrowthMax = value / 100.0;
-        MOZ_ASSERT(rt->gc.highFrequencyHeapGrowthMax / 0.85 > 1.0);
-        break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        rt->gc.highFrequencyHeapGrowthMin = value / 100.0;
-        MOZ_ASSERT(rt->gc.highFrequencyHeapGrowthMin / 0.85 > 1.0);
-        break;
-      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        rt->gc.lowFrequencyHeapGrowth = value / 100.0;
-        MOZ_ASSERT(rt->gc.lowFrequencyHeapGrowth / 0.9 > 1.0);
-        break;
-      case JSGC_DYNAMIC_HEAP_GROWTH:
-        rt->gc.dynamicHeapGrowth = value;
-        break;
-      case JSGC_DYNAMIC_MARK_SLICE:
-        rt->gc.dynamicMarkSlice = value;
-        break;
-      case JSGC_ALLOCATION_THRESHOLD:
-        rt->gc.allocationThreshold = value * 1024 * 1024;
-        break;
-      case JSGC_DECOMMIT_THRESHOLD:
-        rt->gc.decommitThreshold = value * 1024 * 1024;
-        break;
-      default:
-        JS_ASSERT(key == JSGC_MODE);
-        rt->setGCMode(JSGCMode(value));
-        JS_ASSERT(rt->gcMode() == JSGC_MODE_GLOBAL ||
-                  rt->gcMode() == JSGC_MODE_COMPARTMENT ||
-                  rt->gcMode() == JSGC_MODE_INCREMENTAL);
-        return;
-    }
+    rt->gc.setParameter(key, value);
 }
 
 JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
 {
-    switch (key) {
-      case JSGC_MAX_BYTES:
-        return uint32_t(rt->gc.maxBytes);
-      case JSGC_MAX_MALLOC_BYTES:
-        return rt->gc.maxMallocBytes;
-      case JSGC_BYTES:
-        return uint32_t(rt->gc.bytes);
-      case JSGC_MODE:
-        return uint32_t(rt->gcMode());
-      case JSGC_UNUSED_CHUNKS:
-        return uint32_t(rt->gc.chunkPool.getEmptyCount());
-      case JSGC_TOTAL_CHUNKS:
-        return uint32_t(rt->gc.chunkSet.count() + rt->gc.chunkPool.getEmptyCount());
-      case JSGC_SLICE_TIME_BUDGET:
-        return uint32_t(rt->gc.sliceBudget > 0 ? rt->gc.sliceBudget / PRMJ_USEC_PER_MSEC : 0);
-      case JSGC_MARK_STACK_LIMIT:
-        return rt->gc.marker.maxCapacity();
-      case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
-        return rt->gc.highFrequencyTimeThreshold;
-      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        return rt->gc.highFrequencyLowLimitBytes / 1024 / 1024;
-      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        return rt->gc.highFrequencyHighLimitBytes / 1024 / 1024;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        return uint32_t(rt->gc.highFrequencyHeapGrowthMax * 100);
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        return uint32_t(rt->gc.highFrequencyHeapGrowthMin * 100);
-      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        return uint32_t(rt->gc.lowFrequencyHeapGrowth * 100);
-      case JSGC_DYNAMIC_HEAP_GROWTH:
-        return rt->gc.dynamicHeapGrowth;
-      case JSGC_DYNAMIC_MARK_SLICE:
-        return rt->gc.dynamicMarkSlice;
-      case JSGC_ALLOCATION_THRESHOLD:
-        return rt->gc.allocationThreshold / 1024 / 1024;
-      default:
-        JS_ASSERT(key == JSGC_NUMBER);
-        return uint32_t(rt->gc.number);
-    }
+    return rt->gc.getParameter(key);
 }
 
 JS_PUBLIC_API(void)
@@ -6227,10 +6134,10 @@ JS_SetParallelParsingEnabled(JSRuntime *rt, bool enabled)
 }
 
 JS_PUBLIC_API(void)
-JS_SetParallelIonCompilationEnabled(JSRuntime *rt, bool enabled)
+JS_SetOffthreadIonCompilationEnabled(JSRuntime *rt, bool enabled)
 {
 #ifdef JS_ION
-    rt->setParallelIonCompilationEnabled(enabled);
+    rt->setOffthreadIonCompilationEnabled(enabled);
 #endif
 }
 
@@ -6274,13 +6181,13 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
             IonSpew(js::jit::IonSpew_BaselineScripts, "Disable baseline");
         }
         break;
-      case JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE:
+      case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         if (value == 1) {
-            rt->setParallelIonCompilationEnabled(true);
-            IonSpew(js::jit::IonSpew_Scripts, "Enable parallel compilation");
+            rt->setOffthreadIonCompilationEnabled(true);
+            IonSpew(js::jit::IonSpew_Scripts, "Enable offthread compilation");
         } else if (value == 0) {
-            rt->setParallelIonCompilationEnabled(false);
-            IonSpew(js::jit::IonSpew_Scripts, "Disable parallel compilation");
+            rt->setOffthreadIonCompilationEnabled(false);
+            IonSpew(js::jit::IonSpew_Scripts, "Disable offthread compilation");
         }
         break;
       default:
@@ -6302,8 +6209,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
         return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:
         return JS::RuntimeOptionsRef(rt).baseline();
-      case JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE:
-        return rt->canUseParallelIonCompilation();
+      case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
+        return rt->canUseOffthreadIonCompilation();
       default:
         break;
     }

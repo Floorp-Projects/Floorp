@@ -105,7 +105,7 @@ test_flags[3] = CL_ALLOW_UNKNOWN_CL;
 
 function handler3(metadata, response)
 {
-  var body = "c junkafter\r\ndata reached";
+  var body = "c junkafter\r\ndata reached\r\n0\r\n\r\n";
 
   response.seizePower();
   response.write("HTTP/1.1 200 OK\r\n");
@@ -129,7 +129,7 @@ test_flags[4] = CL_ALLOW_UNKNOWN_CL;
 
 function handler4(metadata, response)
 {
-  var body = "c\r\ndata reached\r\n\0\r\n\r\n";
+  var body = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n\r\n";
 
   response.seizePower();
   response.write("HTTP/1.1 200 OK\r\n");

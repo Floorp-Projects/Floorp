@@ -36,8 +36,69 @@
 #include "pratom.h"
 
 #include "npapi.h"
+#include <IOKit/pwr_mgt/IOPMLib.h>
+#include "nsIDOMWakeLockListener.h"
+#include "nsIPowerManagerService.h"
 
 using namespace mozilla::widget;
+
+// A wake lock listener that disables screen saver when requested by
+// Gecko. For example when we're playing video in a foreground tab we
+// don't want the screen saver to turn on.
+
+class MacWakeLockListener : public nsIDOMMozWakeLockListener {
+public:
+  NS_DECL_ISUPPORTS;
+
+private:
+  IOPMAssertionID mAssertionID = kIOPMNullAssertionID;
+
+  NS_IMETHOD Callback(const nsAString& aTopic, const nsAString& aState) {
+    bool isLocked = mLockedTopics.Contains(aTopic);
+    bool shouldLock = aState.EqualsLiteral("locked-foreground");
+    if (isLocked == shouldLock) {
+      return NS_OK;
+    }
+    if (shouldLock) {
+      if (!mLockedTopics.Count()) {
+        // This is the first topic to request the screen saver be disabled.
+        // Prevent screen saver.
+        CFStringRef cf_topic =
+          ::CFStringCreateWithCharacters(kCFAllocatorDefault,
+                                         reinterpret_cast<const UniChar*>
+                                           (aTopic.Data()),
+                                         aTopic.Length());
+        IOReturn success =
+          ::IOPMAssertionCreateWithName(kIOPMAssertionTypeNoDisplaySleep,
+                                        kIOPMAssertionLevelOn,
+                                        cf_topic,
+                                        &mAssertionID);
+        CFRelease(cf_topic);
+        if (success != kIOReturnSuccess) {
+          NS_WARNING("fail to disable screensaver");
+        }
+      }
+      mLockedTopics.PutEntry(aTopic);
+    } else {
+      mLockedTopics.RemoveEntry(aTopic);
+      if (!mLockedTopics.Count()) {
+        // No other outstanding topics have requested screen saver be disabled.
+        // Re-enable screen saver.
+        if (mAssertionID != kIOPMNullAssertionID) {
+          IOReturn result = ::IOPMAssertionRelease(mAssertionID);
+          if (result != kIOReturnSuccess) {
+            NS_WARNING("fail to release screensaver");
+          }
+        }
+      }
+    }
+    return NS_OK;
+  }
+  // Keep track of all the topics that have requested a wake lock. When the
+  // number of topics in the hashtable reaches zero, we can uninhibit the
+  // screensaver again.
+  nsTHashtable<nsStringHashKey> mLockedTopics;
+};
 
 // defined in nsCocoaWindow.mm
 extern int32_t             gXULModalLevel;
@@ -144,6 +205,33 @@ nsAppShell::~nsAppShell()
   NS_OBJC_END_TRY_ABORT_BLOCK
 }
 
+NS_IMPL_ISUPPORTS(MacWakeLockListener, nsIDOMMozWakeLockListener)
+mozilla::StaticRefPtr<MacWakeLockListener> sWakeLockListener;
+
+static void
+AddScreenWakeLockListener()
+{
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(
+                                                          POWERMANAGERSERVICE_CONTRACTID);
+  if (sPowerManagerService) {
+    sWakeLockListener = new MacWakeLockListener();
+    sPowerManagerService->AddWakeLockListener(sWakeLockListener);
+  } else {
+    NS_WARNING("Failed to retrieve PowerManagerService, wakelocks will be broken!");
+  }
+}
+
+static void
+RemoveScreenWakeLockListener()
+{
+  nsCOMPtr<nsIPowerManagerService> sPowerManagerService = do_GetService(
+                                                          POWERMANAGERSERVICE_CONTRACTID);
+  if (sPowerManagerService) {
+    sPowerManagerService->RemoveWakeLockListener(sWakeLockListener);
+    sPowerManagerService = nullptr;
+    sWakeLockListener = nullptr;
+  }
+}
 // Init
 //
 // Loads the nib (see bug 316076c21) and sets up the CFRunLoopSource used to
@@ -552,7 +640,12 @@ nsAppShell::Run(void)
     return NS_OK;
 
   mStarted = true;
+
+  AddScreenWakeLockListener();
+
   NS_OBJC_TRY_ABORT([NSApp run]);
+
+  RemoveScreenWakeLockListener();
 
   return NS_OK;
 }

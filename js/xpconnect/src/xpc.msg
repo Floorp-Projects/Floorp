@@ -150,6 +150,7 @@ XPC_MSG_DEF(NS_ERROR_OFFLINE                        , "The requested action coul
 XPC_MSG_DEF(NS_ERROR_PORT_ACCESS_NOT_ALLOWED        , "Establishing a connection to an unsafe or otherwise banned port was prohibited")
 XPC_MSG_DEF(NS_ERROR_NET_RESET                      , "The connection was established, but no data was ever received")
 XPC_MSG_DEF(NS_ERROR_NET_INTERRUPT                  , "The connection was established, but the data transfer was interrupted")
+XPC_MSG_DEF(NS_ERROR_NET_PARTIAL_TRANSFER           , "A transfer was only partially done when it completed")
 XPC_MSG_DEF(NS_ERROR_NOT_RESUMABLE                  , "This request is not resumable, but it was tried to resume it, or to request resume-specific data")
 XPC_MSG_DEF(NS_ERROR_ENTITY_CHANGED                 , "It was attempted to resume the request, but the entity has changed in the meantime")
 XPC_MSG_DEF(NS_ERROR_REDIRECT_LOOP                  , "The request failed as a result of a detected redirection loop")

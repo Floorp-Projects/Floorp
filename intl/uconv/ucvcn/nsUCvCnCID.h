@@ -12,11 +12,6 @@
 #define NS_GB2312TOUNICODE_CID \
   { 0x379c2774, 0xec77, 0x11d2, {0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36}}
 
-// Class ID for our ISO2022CNToUnicode charset converter
-// {BA615199-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_ISO2022CNTOUNICODE_CID \
-  { 0xba615199, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
- 
 // Class ID for our HZToUnicode charset converter
 // {BA61519A-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_HZTOUNICODE_CID \
@@ -36,11 +31,6 @@
 // {BA61519B-1DFA-11d3-B3BF-00805F8A6670}
 #define NS_UNICODETOGBK_CID \
   { 0xba61519b, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToISO2022CN charset converter
-// {BA61519C-1DFA-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOISO2022CN_CID \
-  { 0xba61519c, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
 // Class ID for our UnicodeToHZ charset converter
 // {BA61519D-1DFA-11d3-B3BF-00805F8A6670}

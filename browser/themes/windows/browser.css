@@ -2417,13 +2417,6 @@ notification[value="translation"] {
   notification[value="translation"] button:not([type="menu"]) > .button-box {
     -moz-margin-end: 3ch;
   }
-
-  @media (min-resolution: 1.25dppx) {
-    notification[value="translation"] button[type="menu"] > .button-box > .button-menu-dropmarker,
-    notification[value="translation"] menulist > .menulist-dropmarker {
-      list-style-image: url("chrome://browser/skin/toolbarbutton-dropdown-arrow@2x.png");
-    }
-  }
 }
 
 .translate-notification-icon,
