@@ -6134,7 +6134,7 @@ JS_SetParallelParsingEnabled(JSRuntime *rt, bool enabled)
 }
 
 JS_PUBLIC_API(void)
-JS_SetOffthreadIonCompilation(JSRuntime *rt, bool enabled)
+JS_SetOffthreadIonCompilationEnabled(JSRuntime *rt, bool enabled)
 {
 #ifdef JS_ION
     rt->setOffthreadIonCompilationEnabled(enabled);
