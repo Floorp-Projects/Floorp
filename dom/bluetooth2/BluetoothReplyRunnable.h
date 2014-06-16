@@ -30,7 +30,8 @@ public:
   NS_DECL_NSIRUNNABLE
 
   BluetoothReplyRunnable(nsIDOMDOMRequest* aReq,
-                         Promise* aPromise = nullptr);
+                         Promise* aPromise = nullptr,
+                         const nsAString& aName = EmptyString());
 
   void SetReply(BluetoothReply* aReply);
 
@@ -67,13 +68,15 @@ private:
   nsRefPtr<Promise> mPromise;
 
   nsString mErrorString;
+  nsString mName; // for debugging
 };
 
 class BluetoothVoidReplyRunnable : public BluetoothReplyRunnable
 {
 public:
   BluetoothVoidReplyRunnable(nsIDOMDOMRequest* aReq,
-                             Promise* aPromise = nullptr);
+                             Promise* aPromise = nullptr,
+                             const nsAString& aName = EmptyString());
  ~BluetoothVoidReplyRunnable();
 
 protected:
