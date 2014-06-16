@@ -69,22 +69,6 @@ void nsCertVerificationJob::Run()
   NS_DispatchToMainThread(r);
 }
 
-void nsSMimeVerificationJob::Run()
-{
-  if (!mMessage || !mListener)
-    return;
-  
-  nsresult rv;
-  
-  if (digest_data)
-    rv = mMessage->VerifyDetachedSignature(digest_data, digest_len);
-  else
-    rv = mMessage->VerifySignature();
-  
-  nsCOMPtr<nsICMSMessage2> m2 = do_QueryInterface(mMessage);
-  mListener->Notify(m2, rv);
-}
-
 nsCertVerificationThread::nsCertVerificationThread()
 : mJobQ(nullptr)
 {
