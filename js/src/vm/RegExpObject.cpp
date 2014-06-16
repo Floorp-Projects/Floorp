@@ -320,7 +320,7 @@ RegExpObject::createNoStatics(ExclusiveContext *cx, HandleAtom source, RegExpFla
         tokenStream = dummyTokenStream.addr();
     }
 
-    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source->chars(), source->length()))
+    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source))
         return nullptr;
 #endif
 
@@ -614,11 +614,8 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const j
 
     /* Parse the pattern. */
     irregexp::RegExpCompileData data;
-    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(),
-                                pattern->chars(), pattern->length(), multiline(), &data))
-    {
+    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(), pattern, multiline(), &data))
         return false;
-    }
 
     this->parenCount = data.capture_count;
 
