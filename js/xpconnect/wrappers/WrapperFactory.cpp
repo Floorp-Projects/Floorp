@@ -396,8 +396,7 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
 
 JSObject *
 WrapperFactory::Rewrap(JSContext *cx, HandleObject existing, HandleObject obj,
-                       HandleObject wrappedProto, HandleObject parent,
-                       unsigned flags)
+                       HandleObject parent, unsigned flags)
 {
     MOZ_ASSERT(!IsWrapper(obj) ||
                GetProxyHandler(obj) == &XrayWaiver ||
