@@ -330,6 +330,21 @@ nsLayoutUtils::HasAnimations(nsIContent* aContent,
             (aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
+bool
+nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
+                                    nsIAtom* aAnimationProperty,
+                                    nsPresContext* aPresContext)
+{
+  if (!aContent->MayHaveAnimations())
+    return false;
+
+  TimeStamp now = aPresContext->RefreshDriver()->MostRecentRefresh();
+
+  CommonElementAnimationData* animations =
+    static_cast<CommonElementAnimationData*>(aContent->GetProperty(aAnimationProperty));
+  return (animations && animations->HasCurrentAnimationsAt(now));
+}
+
 static gfxSize
 GetScaleForValue(const nsStyleAnimation::Value& aValue,
                  nsIFrame* aFrame)
