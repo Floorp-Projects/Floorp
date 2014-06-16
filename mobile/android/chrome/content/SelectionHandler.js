@@ -304,9 +304,6 @@ var SelectionHandler = {
 
     this._initTargetInfo(aElement, this.TYPE_SELECTION);
 
-    // Clear any existing selection from the document
-    this._contentWindow.getSelection().removeAllRanges();
-
     // Perform the appropriate selection method, if we can't determine method, or it fails, return
     if (!this._performSelection(aOptions)) {
       this._deactivate();
