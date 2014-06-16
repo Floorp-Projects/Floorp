@@ -13,30 +13,34 @@
 <script class="testbody" type="text/javascript">
 
 var manager = new MediaTestManager;
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({
+        'set': [
+        ["media.fragmented-mp4.ffmpeg.enabled", true],
+        ["media.fragmented-mp4.exposed", true]
+        ]
+}, beginTest);
 
-function startTest(test, token) {
-  var a = document.createElement('audio');
-  a.preload = "auto";
-  a.token = token;
-  manager.started(token);
+function isMP4(value) {
+  return value === "mp4" || value === "x-m4a";
+}
 
-  a.src = test.name;
-  a.name = test.name;
+// Returns true if mp4 metadata reporting shall not be tested on the current platform
+function MP4isNotTested() {
+  return !(
+  navigator.userAgent.indexOf("Linux") != -1 || // Linux
+  navigator.userAgent.indexOf("Windows NT 6.1") != -1 || // Windows 7
+  navigator.userAgent.indexOf("Windows NT 6.2") != -1 // Windows 8
+  );
+}
 
-  // Tags should not be available immediately.
-  var exception_fired = false;
-  try {
-    var m = a.mozGetMetadata();
-  } catch (e) {
-    is(e.name, 'InvalidStateError',
-       "early mozGetMetadata() should throw InvalidStateError");
-    exception_fired = true;
-  }
-  ok(exception_fired,
-     "mozGetMetadata() should throw an exception before HAVE_METADATA");
+function beginTest() {
+  manager.runTests(gMetadataTests, startTest);
+}
 
-  // Wait until metadata has loaded.
-  a.addEventListener('loadedmetadata', function() {
+function checkTags(event) {
+    var a = event.target;
+    var test = a.value;
     // read decoded tags
     tags = a.mozGetMetadata();
     ok(tags, "mozGetMetadata() should return a truthy value");
@@ -68,11 +72,41 @@ function startTest(test, token) {
     for (tag in test.tags) {
       is(tags[tag], test.tags[tag], "Tag '"+tag+"' should match");
     }
-    manager.finished(token);
-  }, false);
+    manager.finished(a.token);
+
 }
 
-manager.runTests(gMetadataTests, startTest);
+function startTest(test, token) {
+
+  // Tests on MP4 are restricted to certain platforms
+  var format = test.type.split('/')[1];
+  if (isMP4(format) && MP4isNotTested()) {
+    return;
+  }
+
+  var a = document.createElement(getMajorMimeType(test.type));
+  a.preload = "auto";
+  a.token = token;
+  manager.started(token);
+  a.src = test.name;
+  a.name = test.name;
+  a.value = test;
+
+  // Tags should not be available immediately.
+  var exception_fired = false;
+  try {
+    var m = a.mozGetMetadata();
+  } catch (e) {
+    is(e.name, 'InvalidStateError',
+       "early mozGetMetadata() should throw InvalidStateError");
+    exception_fired = true;
+  }
+  ok(exception_fired,
+     "mozGetMetadata() should throw an exception before HAVE_METADATA");
+
+  // Wait until metadata has loaded.
+  a.addEventListener('loadedmetadata', checkTags, false);
+}
 
 </script>
 </pre>
