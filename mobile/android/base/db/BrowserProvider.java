@@ -12,12 +12,10 @@ import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
-import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.sync.Utils;
 
@@ -1100,8 +1098,8 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
     long insertFavicon(SQLiteDatabase db, ContentValues values) {
-        // This method is a dupicate of BrowserDatabaseHelper.insertFavicon.
-        // If changes are needed, please update both
+        // This method is a duplicate of BrowserDatabaseHelper.insertFavicon.
+        // If changes are needed, please update both.
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
 
