@@ -114,7 +114,7 @@ MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const
 
 /* static */ already_AddRefed<MessageEvent>
 MessageEvent::Constructor(const GlobalObject& aGlobal,
-                          JSContext* aCx, const nsAString& aType,
+                          const nsAString& aType,
                           const MessageEventInit& aParam,
                           ErrorResult& aRv)
 {

@@ -121,7 +121,7 @@ public:
               ErrorResult& aRv);
 
   static already_AddRefed<Promise>
-  Resolve(const GlobalObject& aGlobal, JSContext* aCx,
+  Resolve(const GlobalObject& aGlobal,
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
@@ -129,7 +129,7 @@ public:
           JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
-  Reject(const GlobalObject& aGlobal, JSContext* aCx,
+  Reject(const GlobalObject& aGlobal,
          JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
@@ -144,11 +144,11 @@ public:
   Catch(JSContext* aCx, AnyCallback* aRejectCallback);
 
   static already_AddRefed<Promise>
-  All(const GlobalObject& aGlobal, JSContext* aCx,
+  All(const GlobalObject& aGlobal,
       const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
   static already_AddRefed<Promise>
-  Race(const GlobalObject& aGlobal, JSContext* aCx,
+  Race(const GlobalObject& aGlobal,
        const Sequence<JS::Value>& aIterable, ErrorResult& aRv);
 
   void AppendNativeHandler(PromiseNativeHandler* aRunnable);
