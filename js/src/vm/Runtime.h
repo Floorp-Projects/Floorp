@@ -958,14 +958,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
     bool isHeapCollecting() { return gc.isHeapCollecting(); }
 
-    // Performance note: if isFJMinorCollecting turns out to be slow
-    // because reading the counter is slow then we may be able to
-    // augment the counter with a volatile flag that is set iff the
-    // counter is greater than zero.  (It will require some care to
-    // make sure the two variables stay in sync.)
-    bool isFJMinorCollecting() { return gc.fjCollectionCounter > 0; }
-    void incFJMinorCollecting() { gc.fjCollectionCounter++; }
-    void decFJMinorCollecting() { gc.fjCollectionCounter--; }
+    bool isFJMinorCollecting() { return gc.isFJMinorCollecting(); }
 
     int gcZeal() { return gc.zeal(); }
 
@@ -1318,19 +1311,19 @@ struct JSRuntime : public JS::shadow::Runtime,
     JS::RuntimeOptions options_;
 
     // Settings for how helper threads can be used.
-    bool parallelIonCompilationEnabled_;
+    bool offthreadIonCompilationEnabled_;
     bool parallelParsingEnabled_;
 
   public:
 
     // Note: these values may be toggled dynamically (in response to about:config
     // prefs changing).
-    void setParallelIonCompilationEnabled(bool value) {
-        parallelIonCompilationEnabled_ = value;
+    void setOffthreadIonCompilationEnabled(bool value) {
+        offthreadIonCompilationEnabled_ = value;
     }
-    bool canUseParallelIonCompilation() const {
+    bool canUseOffthreadIonCompilation() const {
 #ifdef JS_THREADSAFE
-        return parallelIonCompilationEnabled_;
+        return offthreadIonCompilationEnabled_;
 #else
         return false;
 #endif

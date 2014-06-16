@@ -501,12 +501,14 @@ let gDevToolsBrowser = {
       } else {
         toolbox.destroy();
       }
+      gDevTools.emit("select-tool-command", toolId);
     } else {
       gDevTools.showToolbox(target, toolId).then(() => {
         let target = devtools.TargetFactory.forTab(gBrowser.selectedTab);
         let toolbox = gDevTools.getToolbox(target);
 
         toolbox.fireCustomKey(toolId);
+        gDevTools.emit("select-tool-command", toolId);
       });
     }
   },

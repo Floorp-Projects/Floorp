@@ -653,7 +653,10 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
     text.Append(local.get());
     return NS_OK;
   }
-  unsigned char keyUsage = decoded.data[0];
+  unsigned char keyUsage = 0;
+  if (decoded.len) {
+    keyUsage = decoded.data[0];
+  }
   nsMemory::Free(decoded.data);  
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);

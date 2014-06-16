@@ -29,7 +29,8 @@
 function expectInitialContent(e) {
   info("expectInitialContent",
        "First response received: should have partial content");
-  var frameWindow = document.getElementById('contentFrame').contentWindow;
+  var frameElement = document.getElementById('contentFrame');
+  var frameWindow = frameElement.contentWindow;
 
   // Expect "First response" in received HTML.
   var firstResponse = frameWindow.document.getElementById('firstResponse');
@@ -44,11 +45,11 @@ function expectInitialContent(e) {
   ok(!secondResponse, "Should not get text for second response in first.");
 
   // Set up listener for second load.
-  e.target.removeEventListener("load", expectInitialContent, false);
-  e.target.addEventListener("load", expectFullContent, false);
+  removeEventListener("load", expectInitialContent, false);
+  frameElement.addEventListener("load", expectFullContent, false);
 
   // Reload.
-  e.target.src="partial_content.sjs";
+  frameElement.src="partial_content.sjs";
 }
 
 /* Check that the iframe has all the content after the second load.
@@ -79,8 +80,9 @@ function expectFullContent(e)
 }
 
 // Set listener for first load to expect partial content.
-document.getElementById('contentFrame')
-  .addEventListener("load", expectInitialContent, false);
+// Note: Set listener on the global object/window since 'load' should not fire
+// for partially loaded content in an iframe.
+addEventListener("load", expectInitialContent, false);
 
 SimpleTest.waitForExplicitFinish();
 

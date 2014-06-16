@@ -227,7 +227,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     defaultJSContextCallback(nullptr),
     ctypesActivityCallback(nullptr),
     forkJoinWarmup(0),
-    parallelIonCompilationEnabled_(true),
+    offthreadIonCompilationEnabled_(true),
     parallelParsingEnabled_(true),
 #ifdef DEBUG
     enteredPolicy(nullptr),

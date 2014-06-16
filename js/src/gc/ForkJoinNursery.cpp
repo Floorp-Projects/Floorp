@@ -232,7 +232,7 @@ ForkJoinNursery::pjsCollection(int op)
 
     TIME_START(pjsCollection);
 
-    rt->incFJMinorCollecting();
+    rt->gc.incFJMinorCollecting();
     if (evacuate) {
         isEvacuating_ = true;
         evacuationZone_ = shared_->zone();
@@ -265,7 +265,7 @@ ForkJoinNursery::pjsCollection(int op)
     tail_ = &head_;
     movedSize_ = 0;
 
-    rt->decFJMinorCollecting();
+    rt->gc.decFJMinorCollecting();
 
     TIME_END(pjsCollection);
 
