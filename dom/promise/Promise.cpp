@@ -593,7 +593,7 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
 Promise::Constructor(const GlobalObject& aGlobal,
                      PromiseInit& aInit, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
 
   nsCOMPtr<nsIGlobalObject> global;
   global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -744,9 +744,9 @@ public:
     : mPromise(aPromise), mCountdown(aCountdown)
   {
     MOZ_ASSERT(aCountdown != 0);
-    JSContext* cx = aGlobal.GetContext();
+    JSContext* cx = aGlobal.Context();
 
-    // The only time aGlobal.GetContext() and aGlobal.Get() are not
+    // The only time aGlobal.Context() and aGlobal.Get() are not
     // same-compartment is when we're called via Xrays, and in that situation we
     // in fact want to create the array in the callee compartment
 

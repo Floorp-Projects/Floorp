@@ -3629,7 +3629,7 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
                            const nsACString& aSharedWorkerName,
                            LoadInfo* aLoadInfo, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   return Constructor(cx, aScriptURL, aIsChromeWorker, aWorkerType,
                      aSharedWorkerName, aLoadInfo, aRv);
 }

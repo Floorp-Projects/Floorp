@@ -2123,7 +2123,7 @@ RuntimeService::CreateSharedWorkerInternal(const GlobalObject& aGlobal,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
 
   WorkerPrivate::LoadInfo loadInfo;
   nsresult rv = WorkerPrivate::GetLoadInfo(cx, window, nullptr, aScriptURL,
