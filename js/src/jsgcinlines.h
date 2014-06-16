@@ -27,9 +27,9 @@ struct AutoMarkInDeadZone
       : zone(zone),
         scheduled(zone->scheduledForDestruction)
     {
-        JSRuntime *rt = zone->runtimeFromMainThread();
-        if (rt->gc.manipulatingDeadZones && zone->scheduledForDestruction) {
-            rt->gc.objectsMarkedInDeadZones++;
+        gc::GCRuntime &gc = zone->runtimeFromMainThread()->gc;
+        if (gc.isManipulatingDeadZones() && zone->scheduledForDestruction) {
+            gc.incObjectsMarkedInDeadZone();
             zone->scheduledForDestruction = false;
         }
     }
@@ -453,7 +453,7 @@ class GCZoneGroupIter {
   public:
     explicit GCZoneGroupIter(JSRuntime *rt) {
         JS_ASSERT(rt->isHeapBusy());
-        current = rt->gc.currentZoneGroup;
+        current = rt->gc.getCurrentZoneGroup();
     }
 
     bool done() const { return !current; }

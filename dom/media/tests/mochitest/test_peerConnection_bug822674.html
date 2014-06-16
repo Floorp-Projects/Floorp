@@ -4,6 +4,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -13,7 +14,7 @@
     title: "mozRTCPeerConnection isn't a true javascript object as it should be"
   });
 
-  runTest(function () {
+  runNetworkTest(function () {
     var pc = new mozRTCPeerConnection();
 
     pc.thereIsNeverGoingToBeAPropertyWithThisNameOnThisInterface = 1;
@@ -21,7 +22,7 @@
        "Can set expandos on an RTCPeerConnection");
 
     pc = null;
-    SimpleTest.finish();
+    networkTestFinished();
   });
 </script>
 </pre>

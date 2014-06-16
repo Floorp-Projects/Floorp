@@ -82,11 +82,32 @@ private:
   void BeginPaint();
 
   /**
-   * When a paint ends, updates any data necessary to persist until the next
-   * paint. If aFinish is true, this will cause the paint to be marked as
-   * finished.
+   * Determine if we can use a fast path to just do a single high-precision,
+   * non-progressive paint.
    */
-  void EndPaint(bool aFinish);
+  bool UseFastPath();
+
+  /**
+   * Helper function to do the high-precision paint.
+   * This function returns true if it updated the paint buffer.
+   */
+  bool RenderHighPrecision(nsIntRegion& aInvalidRegion,
+                           LayerManager::DrawThebesLayerCallback aCallback,
+                           void* aCallbackData);
+
+  /**
+   * Helper function to do the low-precision paint.
+   * This function returns true if it updated the paint buffer.
+   */
+  bool RenderLowPrecision(nsIntRegion& aInvalidRegion,
+                          LayerManager::DrawThebesLayerCallback aCallback,
+                          void* aCallbackData);
+
+  /**
+   * This causes the paint to be marked as finished, and updates any data
+   * necessary to persist until the next paint.
+   */
+  void EndPaint();
 
   RefPtr<TiledContentClient> mContentClient;
   nsIntRegion mLowPrecisionValidRegion;

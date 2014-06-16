@@ -258,6 +258,7 @@ GetKeyUsagesString(CERTCertificate* cert, nsINSSComponent* nssComponent,
 
   SECItem keyUsageItem;
   keyUsageItem.data = nullptr;
+  keyUsageItem.len = 0;
 
   SECStatus srv;
 
@@ -273,8 +274,11 @@ GetKeyUsagesString(CERTCertificate* cert, nsINSSComponent* nssComponent,
     else
       return NS_ERROR_FAILURE;
   }
+  unsigned char keyUsage = 0;
+  if (keyUsageItem.len) {
+    keyUsage = keyUsageItem.data[0];
+  }
 
-  unsigned char keyUsage = keyUsageItem.data[0];
   nsAutoString local;
   nsresult rv;
   const char16_t comma = ',';
@@ -1359,63 +1363,11 @@ nsNSSCertificate::GetUsagesString(bool localOnly, uint32_t* _verified,
   return NS_OK;
 }
 
-#if defined(DEBUG_javi) || defined(DEBUG_jgmyers)
-void
-DumpASN1Object(nsIASN1Object* object, unsigned int level)
-{
-  nsAutoString dispNameU, dispValU;
-  unsigned int i;
-  nsCOMPtr<nsIMutableArray> asn1Objects;
-  nsCOMPtr<nsISupports> isupports;
-  nsCOMPtr<nsIASN1Object> currObject;
-  bool processObjects;
-  uint32_t numObjects;
-
-  for (i=0; i<level; i++)
-    printf ("  ");
-
-  object->GetDisplayName(dispNameU);
-  nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(object));
-  if (sequence) {
-    printf ("%s ", NS_ConvertUTF16toUTF8(dispNameU).get());
-    sequence->GetIsValidContainer(&processObjects);
-    if (processObjects) {
-      printf("\n");
-      sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
-      asn1Objects->GetLength(&numObjects);
-      for (i=0; i<numObjects;i++) {
-        asn1Objects->QueryElementAt(i, NS_GET_IID(nsISupports),
-                                    getter_AddRefs(currObject));
-        DumpASN1Object(currObject, level+1);
-      }
-    } else {
-      object->GetDisplayValue(dispValU);
-      printf("= %s\n", NS_ConvertUTF16toUTF8(dispValU).get());
-    }
-  } else {
-    object->GetDisplayValue(dispValU);
-    printf("%s = %s\n",NS_ConvertUTF16toUTF8(dispNameU).get(),
-                       NS_ConvertUTF16toUTF8(dispValU).get());
-  }
-}
-#endif
-
 NS_IMETHODIMP
 nsNSSCertificate::GetASN1Structure(nsIASN1Object** aASN1Structure)
 {
-  nsNSSShutDownPreventionLock locker;
-  nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aASN1Structure);
-  // First create the recursive structure os ASN1Objects
-  // which tells us the layout of the cert.
-  rv = CreateASN1Struct(aASN1Structure);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-#ifdef DEBUG_javi
-  DumpASN1Object(*aASN1Structure, 0);
-#endif
-  return rv;
+  return CreateASN1Struct(aASN1Structure);
 }
 
 NS_IMETHODIMP

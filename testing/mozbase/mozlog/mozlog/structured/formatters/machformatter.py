@@ -170,8 +170,3 @@ class MachTerminalFormatter(BaseMachFormatter):
             result = s
 
         return result
-
-if __name__ == "__main__":
-    base.format_file(sys.stdin,
-                     handlers.StreamHandler(stream=sys.stdout,
-                                            formatter=MachFormatter()))
