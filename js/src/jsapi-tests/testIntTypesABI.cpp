@@ -34,6 +34,7 @@
 #include "js/StructuredClone.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
+#include "js/UbiNode.h"
 #include "js/Utility.h"
 #include "js/Value.h"
 #include "js/Vector.h"
