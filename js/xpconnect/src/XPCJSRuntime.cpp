@@ -1571,8 +1571,8 @@ ReloadPrefsCallback(const char *pref, void *data)
     bool useNativeRegExp = Preferences::GetBool(JS_OPTIONS_DOT_STR "native_regexp") && !safeMode;
 
     bool parallelParsing = Preferences::GetBool(JS_OPTIONS_DOT_STR "parallel_parsing");
-    bool parallelIonCompilation = Preferences::GetBool(JS_OPTIONS_DOT_STR
-                                                       "ion.parallel_compilation");
+    bool offthreadIonCompilation = Preferences::GetBool(JS_OPTIONS_DOT_STR
+                                                       "ion.offthread_compilation");
     bool useBaselineEager = Preferences::GetBool(JS_OPTIONS_DOT_STR
                                                  "baselinejit.unsafe_eager_compilation");
     bool useIonEager = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
@@ -1585,7 +1585,7 @@ ReloadPrefsCallback(const char *pref, void *data)
                              .setNativeRegExp(useNativeRegExp);
 
     JS_SetParallelParsingEnabled(rt, parallelParsing);
-    JS_SetParallelIonCompilationEnabled(rt, parallelIonCompilation);
+    JS_SetOffthreadIonCompilationEnabled(rt, offthreadIonCompilation);
     JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_BASELINE_USECOUNT_TRIGGER,
                                   useBaselineEager ? 0 : -1);
     JS_SetGlobalJitCompilerOption(rt, JSJITCOMPILER_ION_USECOUNT_TRIGGER,
