@@ -153,6 +153,8 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     canvas.className = name + "-widget-canvas graph-widget-canvas";
 
     let bounds = parent.getBoundingClientRect();
+    bounds.width = this.fixedWidth || bounds.width;
+    bounds.height = this.fixedHeight || bounds.height;
     iframe.setAttribute("width", bounds.width);
     iframe.setAttribute("height", bounds.height);
 
@@ -244,6 +246,13 @@ AbstractCanvasGraph.prototype = {
   selectionStripesColor: "transparent",
   regionBackgroundColor: "transparent",
   regionStripesColor: "transparent",
+
+  /**
+   * Makes sure the canvas graph is of the specified width or height, and
+   * doesn't flex to fit all the available space.
+   */
+  fixedWidth: null,
+  fixedHeight: null,
 
   /**
    * Builds and caches a graph image, based on the data source supplied
@@ -493,6 +502,8 @@ AbstractCanvasGraph.prototype = {
    */
   refresh: function() {
     let bounds = this._parent.getBoundingClientRect();
+    bounds.width = this.fixedWidth || bounds.width;
+    bounds.height = this.fixedHeight || bounds.height;
     this._iframe.setAttribute("width", bounds.width);
     this._iframe.setAttribute("height", bounds.height);
     this._width = this._canvas.width = bounds.width * this._pixelRatio;
