@@ -31,7 +31,7 @@ cc_string_t lineLabels[MAX_CONFIG_LINES+1] = {0};
 void ccsnap_set_line_label(int btn, cc_string_t label) {
 
    CCAPP_DEBUG(DEB_F_PREFIX"btn=%d label=%s", DEB_F_PREFIX_ARGS(SIP_CC_PROV, "ccsnap_set_line_label"), btn, label);
-   if ( btn > 0 && btn <= MAX_CONFIG_LINES+1 ) {
+   if ( btn > 0 && btn < MAX_CONFIG_LINES+1 ) {
        if ( label == NULL ) {
          label = strlib_empty();
        }
@@ -43,7 +43,7 @@ void ccsnap_set_line_label(int btn, cc_string_t label) {
 }
 
 cc_string_t ccsnap_get_line_label(int btn) {
-   if ( btn > 0 && btn <= MAX_CONFIG_LINES+1 ) {
+   if ( btn > 0 && btn < MAX_CONFIG_LINES+1 ) {
      return lineLabels[btn];
    }
    return strlib_empty();
