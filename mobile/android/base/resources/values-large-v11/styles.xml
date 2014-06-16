@@ -94,12 +94,12 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:paddingLeft">84dp</item>
         <item name="android:paddingRight">84dp</item>
     </style>
 
-    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
         <item name="android:paddingTop">18dp</item>
         <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">9dp</item>
