@@ -159,9 +159,3 @@ class HTMLFormatter(base.BaseFormatter):
                         html.tbody(self.result_rows, id='results-table-body')], id='results-table'))))
 
         return doc.unicode(indent=2)
-
-
-if __name__ == "__main__":
-    base.format_file(sys.stdin,
-                     handlers.StreamHandler(stream=sys.stdout,
-                                            formatter=HTMLFormatter()))

@@ -2013,9 +2013,6 @@ nsCrypto::GenerateCRMFRequest(JSContext* aContext,
                                                  const_cast<char*>(aRegToken.get()),
                                                  const_cast<char*>(aAuthenticator.get()),
                                                  escrowCert);
-#ifdef DEBUG_javi
-  printf ("Created the folloing CRMF request:\n%s\n", encodedRequest);
-#endif
   if (!encodedRequest) {
     nsFreeKeyPairInfo(keyids, numRequests);
     aRv.Throw(NS_ERROR_FAILURE);

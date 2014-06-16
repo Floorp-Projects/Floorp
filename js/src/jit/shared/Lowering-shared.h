@@ -66,6 +66,20 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
 
     // These all create a use of a virtual register, with an optional
     // allocation policy.
+    //
+    // Some of these use functions have atStart variants.
+    // - non-atStart variants will tell the register allocator that the input
+    // allocation must be different from any Temp or Definition also needed for
+    // this LInstruction.
+    // - atStart variants relax that restriction and allow the input to be in
+    // the same register as any Temp or output Definition used by the
+    // LInstruction. Note that it doesn't *imply* this will actually happen,
+    // but gives a hint to the register allocator that it can do it.
+    //
+    // TL;DR: Use non-atStart variants only if you need the input value after
+    // writing to any temp or definitions, during code generation of this
+    // LInstruction. Otherwise, use atStart variants, which will lower register
+    // pressure.
     inline LUse use(MDefinition *mir, LUse policy);
     inline LUse use(MDefinition *mir);
     inline LUse useAtStart(MDefinition *mir);
@@ -77,13 +91,13 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     inline LUse useFixedAtStart(MDefinition *mir, Register reg);
     inline LAllocation useOrConstant(MDefinition *mir);
     inline LAllocation useOrConstantAtStart(MDefinition *mir);
-    // "Any" is architecture dependent, and will include registers and stack slots on X86,
-    // and only registers on ARM.
+    // "Any" is architecture dependent, and will include registers and stack
+    // slots on X86, and only registers on ARM.
     inline LAllocation useAny(MDefinition *mir);
     inline LAllocation useAnyOrConstant(MDefinition *mir);
-    // "Storable" is architecture dependend, and will include registers and constants on X86
-    // and only registers on ARM.
-    // this is a generic "things we can expect to write into memory in 1 instruction"
+    // "Storable" is architecture dependend, and will include registers and
+    // constants on X86 and only registers on ARM.  This is a generic "things
+    // we can expect to write into memory in 1 instruction".
     inline LAllocation useStorable(MDefinition *mir);
     inline LAllocation useStorableAtStart(MDefinition *mir);
     inline LAllocation useKeepaliveOrConstant(MDefinition *mir);

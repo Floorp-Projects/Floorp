@@ -95,8 +95,3 @@ class XUnitFormatter(base.BaseFormatter):
                                  "time":   "%.2f" % (
                                      (data["time"] - self.suite_start_time) / 1000)})
         return ElementTree.tostring(self.root, encoding="utf8")
-
-if __name__ == "__main__":
-    base.format_file(sys.stdin,
-                     handlers.StreamHandler(stream=sys.stdout,
-                                            formatter=XUnitFormatter()))

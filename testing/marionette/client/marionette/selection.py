@@ -186,3 +186,10 @@ class SelectionManager(object):
             return self.element.get_attribute('value')
         else:
             return self.element.text
+
+    @property
+    def selected_content(self):
+        '''Return the selected portion of the content in the element.'''
+        cmd = self.js_selection_cmd() +\
+            '''return sel.toString();'''
+        return self.element.marionette.execute_script(cmd, script_args=[self.element])

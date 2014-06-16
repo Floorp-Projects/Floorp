@@ -17,7 +17,7 @@ interface nsISimpleEnumerator;
  * reporter.
  */
 
-[scriptable, function, uuid(3a61be3b-b93b-461a-a4f8-388214f558b1)]
+[scriptable, function, uuid(62ef0e1c-dbd6-11e3-aa75-3c970e9f4238)]
 interface nsIMemoryReporterCallback : nsISupports
 {
   /*
@@ -311,6 +311,8 @@ interface nsIMemoryReporterManager : nsISupports
    * |residentFast|, and so |resident| and |residentFast| should not be used
    * together.
    *
+   * |residentUnique| (UNITS_BYTES)  The unique set size (a.k.a. USS).
+   *
    * |heapAllocated| (UNITS_BYTES)  Memory mapped by the heap allocator.
    *
    * |heapOverheadRatio| (UNITS_PERCENTAGE)  In the heap allocator, this is the
@@ -346,6 +348,7 @@ interface nsIMemoryReporterManager : nsISupports
   readonly attribute int64_t vsizeMaxContiguous;
   readonly attribute int64_t resident;
   readonly attribute int64_t residentFast;
+  readonly attribute int64_t residentUnique;
 
   readonly attribute int64_t heapAllocated;
   readonly attribute int64_t heapOverheadRatio;
