@@ -18,22 +18,22 @@
     </style>
 
     <!-- Remote tabs panel -->
-    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:orientation">horizontal</item>
         <item name="android:paddingTop">24dp</item>
     </style>
 
-    <style name="RemoteTabsSection" parent="RemoteTabsSectionBase">
+    <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <item name="android:layout_weight">1</item>
     </style>
 
-    <style name="RemoteTabsItem">
+    <style name="TabsPanelItem">
         <item name="android:layout_marginBottom">20dp</item>
         <item name="android:layout_gravity">left</item>
         <item name="android:gravity">left</item>
     </style>
 
-    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
         <item name="android:paddingTop">12dp</item>
         <item name="android:paddingBottom">12dp</item>
         <item name="android:paddingLeft">6dp</item>
@@ -42,11 +42,11 @@
         <item name="android:layout_marginRight">24dp</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Header.FXAccounts">
+    <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
         <item name="android:visibility">gone</item>
     </style>
 
-    <style name="RemoteTabsItem.TextAppearance.Linkified.Resend">
+    <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
         <item name="android:layout_height">match_parent</item>
         <item name="android:gravity">center</item>
         <item name="android:layout_gravity">center</item>
