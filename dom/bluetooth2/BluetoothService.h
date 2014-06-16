@@ -308,13 +308,6 @@ public:
   bool
   IsToggling() const;
 
-  /**
-   * Below 2 function/variable are used for ensuring event 'AdapterAdded' will
-   * be fired after event 'Enabled'.
-   */
-  void TryFiringAdapterAdded();
-  void AdapterAddedReceived();
-
   void FireAdapterStateChanged(bool aEnable);
   nsresult EnableDisable(bool aEnable,
                          BluetoothReplyRunnable* aRunnable);
@@ -339,9 +332,7 @@ public:
 
 protected:
   BluetoothService() : mEnabled(false)
-                     , mAdapterAddedReceived(false)
-  {
-  }
+  { }
 
   virtual ~BluetoothService();
 
@@ -400,9 +391,6 @@ protected:
   BluetoothSignalObserverTable mBluetoothSignalObserverTable;
 
   bool mEnabled;
-
-private:
-  bool mAdapterAddedReceived;
 };
 
 END_BLUETOOTH_NAMESPACE
