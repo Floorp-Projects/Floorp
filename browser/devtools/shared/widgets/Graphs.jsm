@@ -502,8 +502,18 @@ AbstractCanvasGraph.prototype = {
    */
   refresh: function() {
     let bounds = this._parent.getBoundingClientRect();
-    bounds.width = this.fixedWidth || bounds.width;
-    bounds.height = this.fixedHeight || bounds.height;
+    let newWidth = this.fixedWidth || bounds.width;
+    let newHeight = this.fixedHeight || bounds.height;
+
+    // Prevent redrawing everything if the graph's width & height won't change.
+    if (this._width == newWidth * this._pixelRatio &&
+        this._height == newHeight * this._pixelRatio) {
+      this.emit("refresh-cancelled");
+      return;
+    }
+
+    bounds.width = newWidth;
+    bounds.height = newHeight;
     this._iframe.setAttribute("width", bounds.width);
     this._iframe.setAttribute("height", bounds.height);
     this._width = this._canvas.width = bounds.width * this._pixelRatio;
