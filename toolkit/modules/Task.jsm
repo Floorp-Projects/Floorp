@@ -241,6 +241,9 @@ function createAsyncFunction(aTask) {
  * that is fulfilled when the task terminates.
  */
 function TaskImpl(iterator) {
+  if (Task.Debugging.maintainStack) {
+    this._stack = (new Error()).stack;
+  }
   this.deferred = Promise.defer();
   this._iterator = iterator;
   this._isStarGenerator = !("send" in iterator);
@@ -346,23 +349,74 @@ TaskImpl.prototype = {
    *        The uncaught exception to handle.
    */
   _handleException: function TaskImpl_handleException(aException) {
-    if (aException && typeof aException == "object" && "name" in aException &&
-        ERRORS_TO_REPORT.indexOf(aException.name) != -1) {
+    if (aException && typeof aException == "object" && "stack" in aException) {
 
-      // We suspect that the exception is a programmer error, so we now
-      // display it using dump().  Note that we do not use Cu.reportError as
-      // we assume that this is a programming error, so we do not want end
-      // users to see it. Also, if the programmer handles errors correctly,
-      // they will either treat the error or log them somewhere.
+      let stack = aException.stack;
 
-      let stack = ("stack" in aException) ? aException.stack : "not available";
-      dump("*************************\n");
-      dump("A coding exception was thrown and uncaught in a Task.\n\n");
-      dump("Full message: " + aException + "\n");
-      dump("Full stack: " + stack + "\n");
-      dump("*************************\n");
+      if (Task.Debugging.maintainStack &&
+          aException._capturedTaskStack != this._stack &&
+          typeof stack == "string") {
+
+        // Rewrite the stack for more readability.
+
+        let bottomStack = this._stack;
+        let topStack = aException.stack;
+
+        // Cut `topStack` at the first line that contains Task.jsm, keep the head.
+        let reLine = /([^\r\n])+/g;
+        let match;
+        let lines = [];
+        while ((match = reLine.exec(topStack))) {
+          let line = match[0];
+          if (line.indexOf("/Task.jsm:") != -1) {
+            break;
+          }
+          lines.push(line);
+        }
+
+        // Cut `bottomStack` at the last line of the first block that contains Task.jsm
+        reLine = /([^\r\n])+/g;
+        while ((match = reLine.exec(bottomStack))) {
+          let line = match[0];
+          if (line.indexOf("/Task.jsm:") == -1) {
+            let tail = bottomStack.substring(match.index);
+            lines.push(tail);
+            break;
+          }
+        }
+
+        stack = lines.join("\n");
+
+        aException.stack = stack;
+
+        // If aException is reinjected in the same task and rethrown,
+        // we don't want to perform the rewrite again.
+        aException._capturedTaskStack = bottomStack;
+      } else if (!stack) {
+        stack = "Not available";
+      }
+
+      if ("name" in aException &&
+          ERRORS_TO_REPORT.indexOf(aException.name) != -1) {
+
+        // We suspect that the exception is a programmer error, so we now
+        // display it using dump().  Note that we do not use Cu.reportError as
+        // we assume that this is a programming error, so we do not want end
+        // users to see it. Also, if the programmer handles errors correctly,
+        // they will either treat the error or log them somewhere.
+
+        dump("*************************\n");
+        dump("A coding exception was thrown and uncaught in a Task.\n\n");
+        dump("Full message: " + aException + "\n");
+        dump("Full stack: " + aException.stack + "\n");
+        dump("*************************\n");
+      }
     }
 
     this.deferred.reject(aException);
   }
+};
+
+Task.Debugging = {
+  maintainStack: false
 };

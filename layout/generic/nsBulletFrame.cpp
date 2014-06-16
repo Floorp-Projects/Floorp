@@ -352,6 +352,52 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     }
     break;
 
+  case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+  case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+    {
+      nsRect rect(aPt, mRect.Size());
+      rect.Deflate(mPadding);
+
+      WritingMode wm = GetWritingMode();
+      bool isVertical = wm.IsVertical();
+      bool isClosed =
+        listStyleType->GetStyle() == NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED;
+      bool isDown = (!isVertical && !isClosed) || (isVertical && isClosed);
+      nscoord diff = NSToCoordRound(0.1f * rect.height);
+      if (isDown) {
+        rect.y += diff * 2;
+        rect.height -= diff * 2;
+      } else {
+        rect.Deflate(diff, 0);
+      }
+      nsPresContext *pc = PresContext();
+      rect.x = pc->RoundAppUnitsToNearestDevPixels(rect.x);
+      rect.y = pc->RoundAppUnitsToNearestDevPixels(rect.y);
+
+      nsPoint points[3];
+      if (isDown) {
+        // to bottom
+        points[0] = rect.TopLeft();
+        points[1] = rect.TopRight();
+        points[2] = (rect.BottomLeft() + rect.BottomRight()) / 2;
+      } else {
+        bool isLR = isVertical ? wm.IsVerticalLR() : wm.IsBidiLTR();
+        if (isLR) {
+          // to right
+          points[0] = rect.TopLeft();
+          points[1] = (rect.TopRight() + rect.BottomRight()) / 2;
+          points[2] = rect.BottomLeft();
+        } else {
+          // to left
+          points[0] = rect.TopRight();
+          points[1] = rect.BottomRight();
+          points[2] = (rect.TopLeft() + rect.BottomLeft()) / 2;
+        }
+      }
+      aRenderingContext.FillPolygon(points, 3);
+    }
+    break;
+
   default:
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm),
                                           GetFontSizeInflation());
@@ -411,14 +457,16 @@ nsBulletFrame::GetListItemText(nsAString& aResult)
   NS_ASSERTION(style->GetStyle() != NS_STYLE_LIST_STYLE_NONE &&
                style->GetStyle() != NS_STYLE_LIST_STYLE_DISC &&
                style->GetStyle() != NS_STYLE_LIST_STYLE_CIRCLE &&
-               style->GetStyle() != NS_STYLE_LIST_STYLE_SQUARE,
+               style->GetStyle() != NS_STYLE_LIST_STYLE_SQUARE &&
+               style->GetStyle() != NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED &&
+               style->GetStyle() != NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN,
                "we should be using specialized code for these types");
 
   bool isRTL;
   nsAutoString counter, prefix, suffix;
   style->GetPrefix(prefix);
   style->GetSuffix(suffix);
-  style->GetCounterText(mOrdinal, counter, isRTL);
+  style->GetCounterText(mOrdinal, GetWritingMode(), counter, isRTL);
 
   aResult.Truncate();
   aResult.Append(prefix);
@@ -436,6 +484,19 @@ nsBulletFrame::GetListItemText(nsAString& aResult)
 
 #define MIN_BULLET_SIZE 1
 
+void
+nsBulletFrame::AppendSpacingToPadding(nsFontMetrics* aFontMetrics)
+{
+  nscoord halfEm = aFontMetrics->EmHeight() / 2;
+  WritingMode wm = GetWritingMode();
+  if (wm.IsVertical()) {
+    mPadding.bottom += halfEm;
+  } else if (wm.IsBidiLTR()) {
+    mPadding.right += halfEm;
+  } else {
+    mPadding.left += halfEm;
+  }
+}
 
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
@@ -463,16 +524,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       aMetrics.Width() = mIntrinsicSize.width;
       aMetrics.SetBlockStartAscent(aMetrics.Height() = mIntrinsicSize.height);
 
-      // Add spacing to the padding.
-      nscoord halfEm = fm->EmHeight() / 2;
-      WritingMode wm = GetWritingMode();
-      if (wm.IsVertical()) {
-        mPadding.bottom += halfEm;
-      } else if (wm.IsBidiLTR()) {
-        mPadding.right += halfEm;
-      } else {
-        mPadding.left += halfEm;
-      }
+      AppendSpacingToPadding(fm);
 
       AddStateBits(BULLET_FRAME_IMAGE_LOADING);
 
@@ -506,19 +558,23 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
       aMetrics.Width() = aMetrics.Height() = bulletSize;
       aMetrics.SetBlockStartAscent(bulletSize + mPadding.bottom);
-
-      // Add spacing to the padding.
-      nscoord halfEm = fm->EmHeight() / 2;
-      WritingMode wm = GetWritingMode();
-      if (wm.IsVertical()) {
-        mPadding.bottom += halfEm;
-      } else if (wm.IsBidiLTR()) {
-        mPadding.right += halfEm;
-      } else {
-        mPadding.left += halfEm;
-      }
+      AppendSpacingToPadding(fm);
       break;
     }
+
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+    case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+      ascent = fm->EmAscent();
+      bulletSize = std::max(
+          nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+          NSToCoordRound(0.75f * ascent));
+      mPadding.bottom = NSToCoordRound(0.125f * ascent);
+      aMetrics.Width() = aMetrics.Height() = bulletSize;
+      if (!GetWritingMode().IsVertical()) {
+        aMetrics.SetBlockStartAscent(bulletSize + mPadding.bottom);
+      }
+      AppendSpacingToPadding(fm);
+      break;
 
     default:
       GetListItemText(text);
@@ -749,6 +805,16 @@ nsBulletFrame::GetBaseline() const
         ascent += bottomPadding;
         break;
 
+      case NS_STYLE_LIST_STYLE_DISCLOSURE_CLOSED:
+      case NS_STYLE_LIST_STYLE_DISCLOSURE_OPEN:
+        ascent = fm->EmAscent();
+        bottomPadding = NSToCoordRound(0.125f * ascent);
+        ascent = std::max(
+            nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
+            NSToCoordRound(0.75f * ascent));
+        ascent += bottomPadding;
+        break;
+
       default:
         ascent = fm->MaxAscent();
         break;
@@ -762,7 +828,7 @@ nsBulletFrame::GetSpokenText(nsAString& aText)
 {
   CounterStyle* style = StyleList()->GetCounterStyle();
   bool isBullet;
-  style->GetSpokenCounterText(mOrdinal, aText, isBullet);
+  style->GetSpokenCounterText(mOrdinal, GetWritingMode(), aText, isBullet);
   if (isBullet) {
     aText.Append(' ');
   } else {

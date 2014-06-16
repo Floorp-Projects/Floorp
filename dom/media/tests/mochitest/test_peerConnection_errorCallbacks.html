@@ -4,6 +4,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="head.js"></script>
+  <script type="application/javascript" src="pc.js"></script>
 </head>
 <body>
 <pre id="test">
@@ -54,13 +55,13 @@
                                                 sdpMid: "whee",
                                                 sdpMLineIndex: 1 }),
       generateErrorCallback("addIceCandidate with nonsense candidate should fail"),
-      errorCallback(SimpleTest.finish));
+      errorCallback(networkTestFinished));
   };
 
   // No test for createOffer errors -- there's nothing we can do at this
   // level to evoke an error in createOffer.
 
-  runTest(function () {
+  runNetworkTest(function () {
     testCreateAnswerError();
   });
 </script>

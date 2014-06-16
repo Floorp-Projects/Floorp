@@ -75,6 +75,9 @@ public:
   // Called or dispatched by cancel for main thread only execution.
   void ContinueCancel(nsresult aStatus);
 
+  // Called or dispatched by EvictFromCache for main thread only execution.
+  void ContinueEvict();
+
   // Methods that get forwarded to the Image, or deferred until it's
   // instantiated.
   nsresult LockImage();
@@ -145,6 +148,7 @@ private:
     mLoadId = aLoadId;
   }
   void Cancel(nsresult aStatus);
+  void EvictFromCache();
   void RemoveFromCache();
 
   nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
