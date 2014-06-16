@@ -189,7 +189,7 @@ class HTMLReportingTestRunnerMixin(object):
                 html.script(raw(pkg_resources.resource_string(
                     __name__, os.path.sep.join(['resources', 'htmlreport', 'main.js']))),
                     type='text/javascript'),
-                html.p('Report generated on %s at %s by %s %s' % (
+                html.p('Report generated on %s at %s by %s version %s' % (
                     generated.strftime('%d-%b-%Y'),
                     generated.strftime('%H:%M:%S'),
                     self.html_name, self.html_version)),
