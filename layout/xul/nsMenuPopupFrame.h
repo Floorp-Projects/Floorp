@@ -118,6 +118,28 @@ class nsViewManager;
 class nsView;
 class nsMenuPopupFrame;
 
+// this class is used for dispatching popupshown events asynchronously.
+class nsXULPopupShownEvent : public nsRunnable, public nsIDOMEventListener
+{
+public:
+  nsXULPopupShownEvent(nsIContent *aPopup, nsPresContext* aPresContext)
+    : mPopup(aPopup), mPresContext(aPresContext)
+  {
+  }
+
+  virtual ~nsXULPopupShownEvent() { }
+
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIRUNNABLE
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  void CancelListener();
+
+private:
+  nsCOMPtr<nsIContent> mPopup;
+  nsRefPtr<nsPresContext> mPresContext;
+};
+
 class nsMenuPopupFrame : public nsBoxFrame, public nsMenuParent
 {
 public:
@@ -345,6 +367,20 @@ public:
 
   // Return the offset applied to the alignment of the popup
   nscoord GetAlignmentOffset() const { return mAlignmentOffset; }
+
+  // Clear the mPopupShownDispatcher, remove the listener and return true if
+  // mPopupShownDispatcher was non-null.
+  bool ClearPopupShownDispatcher()
+  {
+    if (mPopupShownDispatcher) {
+      mPopupShownDispatcher->CancelListener();
+      mPopupShownDispatcher = nullptr;
+      return true;
+    }
+
+    return false;
+  }
+
 protected:
 
   // returns the popup's level.
@@ -433,6 +469,8 @@ protected:
   nsCOMPtr<nsIContent> mTriggerContent;
 
   nsMenuFrame* mCurrentMenu; // The current menu that is active.
+
+  nsRefPtr<nsXULPopupShownEvent> mPopupShownDispatcher;
 
   // A popup's preferred size may be different than its actual size stored in
   // mRect in the case where the popup was resized because it was too large
