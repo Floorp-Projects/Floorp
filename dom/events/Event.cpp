@@ -523,6 +523,7 @@ void
 Event::SetEventType(const nsAString& aEventTypeArg)
 {
   if (mIsMainThreadEvent) {
+    mEvent->typeString.Truncate();
     mEvent->userType =
       nsContentUtils::GetEventIdAndAtom(aEventTypeArg, mEvent->eventStructType,
                                         &(mEvent->message));
