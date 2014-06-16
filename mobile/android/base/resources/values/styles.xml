@@ -460,6 +460,10 @@
         <!-- We set values in landscape. -->
     </style>
 
+    <style name="TabsPanelFrame.PrivateTabs">
+        <!-- We set values on tablet. -->
+    </style>
+
     <style name="TabsPanelSectionBase">
         <item name="android:orientation">vertical</item>
         <item name="android:layout_marginLeft">16dp</item>
@@ -468,6 +472,14 @@
 
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <!-- We set values in landscape. -->
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs">
+        <!-- We set values on tablet. -->
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs.Header">
+        <!-- We set values on landscape and tablet. -->
     </style>
 
     <style name="TabsPanelItemBase">
@@ -509,10 +521,18 @@
         <!-- We change these values on landscape. -->
     </style>
 
+    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
+        <!-- We change these values on landscape and tablet. -->
+    </style>
+
     <style name="TabsPanelItem.TextAppearance.Linkified">
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
         <item name="android:textColor">#0292D6</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.Resend">

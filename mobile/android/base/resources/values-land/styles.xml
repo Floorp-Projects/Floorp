@@ -17,14 +17,22 @@
          <item name="android:nextFocusUp">@+id/info</item>
     </style>
 
-    <!-- Remote tabs panel -->
+    <!-- Tabs panel -->
     <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:orientation">horizontal</item>
         <item name="android:paddingTop">24dp</item>
     </style>
 
+    <style name="TabsPanelFrame.PrivateTabs">
+        <item name="android:paddingTop">0dp</item>
+    </style>
+
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs.Header">
+        <item name="android:paddingTop">18dp</item>
     </style>
 
     <style name="TabsPanelItem">
@@ -44,6 +52,16 @@
 
     <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
         <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
