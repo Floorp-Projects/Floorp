@@ -266,7 +266,7 @@ MarkIfGCThingWord(JSTracer *trc, uintptr_t w)
     JS_ASSERT(tmp == thing);
 
 #ifdef DEBUG
-    if (trc->runtime()->gc.incrementalState == MARK_ROOTS)
+    if (trc->runtime()->gc.state() == MARK_ROOTS)
         trc->runtime()->mainThread.gcSavedRoots.append(
             PerThreadData::SavedGCRoot(thing, traceKind));
 #endif
