@@ -10,6 +10,7 @@ class MkDirsTest(unittest.TestCase):
 
     def test_mkdirs(self):
         subTests = [{'cmds': [('isdir /mnt/sdcard/baz/boop', 'FALSE'),
+                              ('info os', 'android'),
                               ('isdir /mnt', 'TRUE'),
                               ('isdir /mnt/sdcard', 'TRUE'),
                               ('isdir /mnt/sdcard/baz', 'FALSE'),
@@ -20,6 +21,7 @@ class MkDirsTest(unittest.TestCase):
                                '/mnt/sdcard/baz/boop successfully created')],
                      'expectException': False},
                     {'cmds': [('isdir /mnt/sdcard/baz/boop', 'FALSE'),
+                              ('info os', 'android'),
                               ('isdir /mnt', 'TRUE'),
                               ('isdir /mnt/sdcard', 'TRUE'),
                               ('isdir /mnt/sdcard/baz', 'FALSE'),
@@ -48,6 +50,7 @@ class MkDirsTest(unittest.TestCase):
         """
 
         cmds = [('isdir /mnt/sdcard/foo', 'FALSE'),
+                ('info os', 'android'),
                 ('isdir /mnt', 'TRUE'),
                 ('isdir /mnt/sdcard', 'TRUE'),
                 ('isdir /mnt/sdcard/foo', 'FALSE'),
