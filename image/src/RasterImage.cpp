@@ -346,9 +346,9 @@ public:
     ScaleRequest* request = mScaleRequest;
 
     if (!request->stopped) {
-      request->done = mozilla::gfx::Scale(request->srcData, request->srcRect.width, request->srcRect.height, request->srcStride,
-                                          request->dstData, request->dstSize.width, request->dstSize.height, request->dstStride,
-                                          request->srcFormat);
+      request->done = gfx::Scale(request->srcData, request->srcRect.width, request->srcRect.height, request->srcStride,
+                                 request->dstData, request->dstSize.width, request->dstSize.height, request->dstStride,
+                                 request->srcFormat);
     } else {
       request->done = false;
     }
@@ -535,7 +535,7 @@ RasterImage::Init(const char* aMimeType,
 //******************************************************************************
 // [notxpcom] void requestRefresh ([const] in TimeStamp aTime);
 NS_IMETHODIMP_(void)
-RasterImage::RequestRefresh(const mozilla::TimeStamp& aTime)
+RasterImage::RequestRefresh(const TimeStamp& aTime)
 {
   if (HadRecentRefresh(aTime)) {
     return;
@@ -1568,7 +1568,7 @@ RasterImage::ResetAnimation()
 //******************************************************************************
 // [notxpcom] void setAnimationStartTime ([const] in TimeStamp aTime);
 NS_IMETHODIMP_(void)
-RasterImage::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
+RasterImage::SetAnimationStartTime(const TimeStamp& aTime)
 {
   if (mError || mAnimationMode == kDontAnimMode || mAnimating || !mAnim)
     return;
@@ -3232,7 +3232,7 @@ RasterImage::DecodePool::DecodePool()
       }
 #endif
 
-      nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
+      nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
       if (obsSvc) {
         obsSvc->AddObserver(this, "xpcom-shutdown-threads", false);
       }
