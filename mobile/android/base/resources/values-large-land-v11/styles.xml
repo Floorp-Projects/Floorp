@@ -51,7 +51,7 @@
         <item name="android:paddingTop">30dp</item>
     </style>
 
-    <!-- Remote tabs panel -->
+    <!-- Tabs panel -->
     <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:paddingTop">32dp</item>
         <!-- Additional spacing set via margins on TabsPanelSection. -->
@@ -59,9 +59,22 @@
         <item name="android:paddingRight">0dp</item>
     </style>
 
+    <style name="TabsPanelFrame.PrivateTabs">
+        <!-- We set values in tablet portrait. -->
+    </style>
+
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <!-- To override the values-land style. -->
     </style>
+
+    <style name="TabsPanelSection.PrivateTabs">
+        <!-- We set values in tablet portrait. -->
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs.Header">
+        <!-- We set values in tablet portrait. -->
+    </style>
+
 
     <style name="TabsPanelItem" parent="TabsPanelItemBase">
         <!-- To override the values-land style. -->
@@ -79,6 +92,14 @@
 
     <style name="TabsPanelItem.TextAppearance.Header.FXAccounts">
         <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
+        <item name="android:visibility">visible</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
+        <item name="android:layout_height">wrap_content</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.Resend">
