@@ -299,6 +299,15 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     	fi
         fi
 
+        if test -z "$MOZ_SHARED_ICU"; then
+          ICU_CXXFLAGS="$ICU_CXXFLAGS -DU_STATIC_IMPLEMENTATION"
+          ICU_CFLAGS="$ICU_CFLAGS -DU_STATIC_IMPLEMENTATION"
+          if test "$GNU_CC"; then
+            ICU_CFLAGS="$ICU_CFLAGS -fvisibility=hidden"
+            ICU_CXXFLAGS="$ICU_CXXFLAGS -fvisibility=hidden"
+          fi
+        fi
+
         # We cannot use AC_OUTPUT_SUBDIRS since ICU tree is out of spidermonkey.
         # When using AC_OUTPUT_SUBDIRS, objdir of ICU is out of objdir
         # due to relative path.
