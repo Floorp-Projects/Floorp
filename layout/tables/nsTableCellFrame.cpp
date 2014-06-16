@@ -828,7 +828,7 @@ CalcUnpaginagedHeight(nsPresContext*        aPresContext,
   int32_t rowIndex;
   firstCellInFlow->GetRowIndex(rowIndex);
   int32_t rowSpan = aTableFrame.GetEffectiveRowSpan(*firstCellInFlow);
-  nscoord cellSpacing = firstTableInFlow->GetCellSpacingY();
+  nscoord cellSpacing = firstTableInFlow->GetCellSpacingX();
 
   nscoord computedHeight = ((rowSpan - 1) * cellSpacing) - aVerticalBorderPadding;
   int32_t rowX;
