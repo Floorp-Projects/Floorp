@@ -10,11 +10,14 @@
 #include "nsISupportsImpl.h"
 
 class inIDOMUtils;
-class nsIDOMEventTarget;
-class nsIDOMElement;
 class CancelableTask;
 
 namespace mozilla {
+namespace dom {
+class Element;
+class EventTarget;
+}
+
 namespace layers {
 
 /**
@@ -35,7 +38,7 @@ public:
    * HandleTouchStart().
    * |aTarget| may be nullptr.
    */
-  void SetTargetElement(nsIDOMEventTarget* aTarget);
+  void SetTargetElement(dom::EventTarget* aTarget);
   /**
    * Handle a touch-start event.
    * @param aCanBePan whether the touch can be a pan
@@ -55,7 +58,7 @@ private:
   /**
    * The target of the first touch point in the current touch block.
    */
-  nsCOMPtr<nsIDOMElement> mTarget;
+  nsCOMPtr<dom::Element> mTarget;
   /**
    * Whether the current touch block can be a pan. Set in HandleTouchStart().
    */
@@ -73,10 +76,10 @@ private:
 
   // Helpers
   void TriggerElementActivation();
-  void SetActive(nsIDOMElement* aTarget);
+  void SetActive(dom::Element* aTarget);
   void ResetActive();
   void ResetTouchBlockState();
-  void SetActiveTask(nsIDOMElement* aTarget);
+  void SetActiveTask(dom::Element* aTarget);
   void CancelTask();
 };
 
