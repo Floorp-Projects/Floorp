@@ -30,6 +30,7 @@
 extern int AECDebug();
 extern uint32_t AECDebugMaxSize();
 extern void AECDebugEnable(uint32_t enable);
+extern void AECDebugFilenameBase(char *buffer, size_t size);
 static void OpenDebugFiles(aecpc_t* aecpc, int *instance_count);
 
 // Measured delays [ms]
@@ -985,13 +986,31 @@ OpenDebugFiles(aecpc_t* aecpc,
   // XXX  If this impacts performance (opening files here), move file open
   // to Trace::set_aec_debug(), and just grab them here
   if (AECDebug() && !aecpc->bufFile) {
-    char filename[128];
+    char path[1024];
+    char *filename;
+    path[0] = '\0';
+    AECDebugFilenameBase(path, sizeof(path));
+    filename = path + strlen(path);
+    if (&path[sizeof(path)] - filename < 128) {
+      return; // avoid a lot of snprintf's and checks lower
+    }
+    if (filename > path) {
+#ifdef XP_WIN
+      if (*(filename-1) != '\\') {
+        *filename++ = '\\';
+      }
+#else
+      if (*(filename-1) != '/') {
+        *filename++ = '/';
+      }
+#endif
+    }
     sprintf(filename, "aec_buf%d.dat", *instance_count);
-    aecpc->bufFile = fopen(filename, "wb");
+    aecpc->bufFile = fopen(path, "wb");
     sprintf(filename, "aec_skew%d.dat", *instance_count);
-    aecpc->skewFile = fopen(filename, "wb");
+    aecpc->skewFile = fopen(path, "wb");
     sprintf(filename, "aec_delay%d.dat", *instance_count);
-    aecpc->delayFile = fopen(filename, "wb");
+    aecpc->delayFile = fopen(path, "wb");
 
     if (!aecpc->bufFile || !aecpc->skewFile || !aecpc->delayFile) {
       error = 1;
