@@ -37,7 +37,7 @@ function testFrameImpl(jitopts, assertFrameImpl) {
   function (f) { assertEq(f.implementation, "baseline"); }],
  // Note that the Ion case *depends* on CCW scripted functions being opaque to
  // Ion optimization and not deoptimizing the frames below the call to toggle.
- [Opts_Ion2NoParallelCompilation,
+ [Opts_Ion2NoOffthreadCompilation,
   function (f) { assertEq(f.implementation, "ion"); }],
  [Opts_NoJits,
   function (f) { assertEq(f.implementation, "interpreter"); }]].forEach(function ([opts, fn]) {

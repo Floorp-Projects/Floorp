@@ -42,13 +42,11 @@ namespace frontend {
 namespace irregexp {
 
 bool
-ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc,
-             const jschar *chars, size_t length, bool multiline,
+ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str, bool multiline,
              RegExpCompileData *data);
 
 bool
-ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc,
-                   const jschar *chars, size_t length);
+ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str);
 
 // A BufferedVector is an automatically growing list, just like (and backed
 // by) a Vector, that is optimized for the case of adding and removing
@@ -170,11 +168,12 @@ class RegExpBuilder
 // Characters parsed by RegExpParser can be either jschars or kEndMarker.
 typedef uint32_t widechar;
 
+template <typename CharT>
 class RegExpParser
 {
   public:
     RegExpParser(frontend::TokenStream &ts, LifoAlloc *alloc,
-                 const jschar *chars, const jschar *end, bool multiline_mode);
+                 const CharT *chars, const CharT *end, bool multiline_mode);
 
     RegExpTree* ParsePattern();
     RegExpTree* ParseDisjunction();
@@ -209,7 +208,7 @@ class RegExpParser
         Advance();
     }
 
-    void Reset(const jschar *pos) {
+    void Reset(const CharT *pos) {
         next_pos_ = pos;
         has_more_ = (pos < end_);
         Advance();
@@ -221,7 +220,7 @@ class RegExpParser
     bool contains_anchor() { return contains_anchor_; }
     void set_contains_anchor() { contains_anchor_ = true; }
     int captures_started() { return captures_ == nullptr ? 0 : captures_->length(); }
-    const jschar *position() { return next_pos_ - 1; }
+    const CharT *position() { return next_pos_ - 1; }
 
     static const int kMaxCaptures = 1 << 16;
     static const widechar kEndMarker = (1 << 21);
@@ -282,7 +281,7 @@ class RegExpParser
     frontend::TokenStream &ts;
     LifoAlloc *alloc;
     RegExpCaptureVector *captures_;
-    const jschar *next_pos_, *end_;
+    const CharT *next_pos_, *end_;
     widechar current_;
     // The capture count is only valid after we have scanned for captures.
     int capture_count_;

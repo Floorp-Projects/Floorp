@@ -889,6 +889,10 @@
 
 /* Canvas graphs */
 
+.graph-widget-container {
+  position: relative;
+}
+
 .graph-widget-canvas {
   width: 100%;
   height: 100%;
@@ -921,10 +925,6 @@
 }
 
 /* Line graph widget */
-
-.line-graph-widget-container {
-  position: relative;
-}
 
 .line-graph-widget-canvas {
   background: #0088cc;
@@ -1033,6 +1033,46 @@
 
 .line-graph-widget-tooltip[type=average] > [text=value] {
   color: #d97e00;
+}
+
+/* Bar graph widget */
+
+.bar-graph-widget-canvas {
+  background: #f7f7f7;
+}
+
+.bar-graph-widget-legend {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  color: #292e33;
+  font-size: 80%;
+}
+
+.bar-graph-widget-legend-item {
+  float: left;
+  -moz-margin-end: 8px;
+}
+
+.bar-graph-widget-legend-item > [view="color"],
+.bar-graph-widget-legend-item > [view="label"] {
+  vertical-align: middle;
+}
+
+.bar-graph-widget-legend-item > [view="color"] {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #fff;
+  border-radius: 1px;
+  -moz-margin-end: 4px;
+}
+
+.bar-graph-widget-legend-item > [view="label"] {
+  text-shadow: 1px  0px rgba(255,255,255,0.8),
+              -1px  0px rgba(255,255,255,0.8),
+               0px -1px rgba(255,255,255,0.8),
+               0px  1px rgba(255,255,255,0.8);
 }
 
 /* Charts */

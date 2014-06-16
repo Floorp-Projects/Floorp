@@ -156,6 +156,11 @@
   symbols: \B66  \B67  \B68  \B69  \B6A  \B6B  \B6C  \B6D  \B6F  \B70;
 }
 
+@counter-style -moz-tamil {
+  system: numeric;
+  symbols: \BE6  \BE7  \BE8  \BE9  \BEA  \BEB  \BEC  \BED  \BEE  \BEF;
+}
+
 @counter-style -moz-telugu {
   system: numeric;
   symbols: \C66  \C67  \C68  \C69  \C6A  \C6B  \C6C  \C6D  \C6F  \C70;
@@ -262,4 +267,8 @@
 
 @counter-style -moz-japanese-formal {
   system: extends japanese-formal;
+}
+
+@counter-style -moz-ethiopic-numeric {
+  system: extends ethiopic-numeric;
 }

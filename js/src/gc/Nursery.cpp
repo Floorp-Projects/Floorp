@@ -350,7 +350,7 @@ class MinorCollectionTracer : public JSTracer
          * sweep their dead views. Incremental collection also use these lists,
          * so we may need to save and restore their contents here.
          */
-        if (rt->gc.incrementalState != NO_INCREMENTAL) {
+        if (rt->gc.state() != NO_INCREMENTAL) {
             for (GCCompartmentsIter c(rt); !c.done(); c.next()) {
                 if (!ArrayBufferObject::saveArrayBufferList(c, liveArrayBuffers))
                     CrashAtUnhandlableOOM("OOM while saving live array buffers");
@@ -361,7 +361,7 @@ class MinorCollectionTracer : public JSTracer
 
     ~MinorCollectionTracer() {
         runtime()->setNeedsBarrier(savedRuntimeNeedBarrier);
-        if (runtime()->gc.incrementalState != NO_INCREMENTAL)
+        if (runtime()->gc.state() != NO_INCREMENTAL)
             ArrayBufferObject::restoreArrayBufferLists(liveArrayBuffers);
     }
 };
@@ -747,11 +747,17 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
 
     JS_AbortIfWrongThread(rt);
 
-    if (!isEnabled())
+    StoreBuffer &sb = rt->gc.storeBuffer;
+    if (!isEnabled() || isEmpty()) {
+        /*
+         * Our barriers are not always exact, and there may be entries in the
+         * storebuffer even when the nursery is disabled or empty. It's not
+         * safe to keep these entries as they may refer to tenured cells which
+         * may be freed after this point.
+         */
+        sb.clear();
         return;
-
-    if (isEmpty())
-        return;
+    }
 
     rt->gc.stats.count(gcstats::STAT_MINOR_GC);
 
@@ -763,7 +769,6 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     MinorCollectionTracer trc(rt, this);
 
     // Mark the store buffer. This must happen first.
-    StoreBuffer &sb = rt->gc.storeBuffer;
     TIME_START(markValues);
     sb.markValues(&trc);
     TIME_END(markValues);

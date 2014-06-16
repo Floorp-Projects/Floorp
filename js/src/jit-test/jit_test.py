@@ -187,7 +187,7 @@ def main(argv):
                 new_test.jitflags.extend(variant)
                 job_list.append(new_test)
     elif options.ion:
-        flags = [['--baseline-eager'], ['--ion-eager', '--ion-parallel-compile=off']]
+        flags = [['--baseline-eager'], ['--ion-eager', '--ion-offthread-compile=off']]
         for test in test_list:
             for variant in flags:
                 new_test = test.copy()

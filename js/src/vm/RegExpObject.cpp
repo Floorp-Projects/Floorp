@@ -320,7 +320,7 @@ RegExpObject::createNoStatics(ExclusiveContext *cx, HandleAtom source, RegExpFla
         tokenStream = dummyTokenStream.addr();
     }
 
-    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source->chars(), source->length()))
+    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source))
         return nullptr;
 #endif
 
@@ -436,8 +436,8 @@ RegExpObject::toString(JSContext *cx) const
 
 /* RegExpShared */
 
-RegExpShared::RegExpShared(JSCompartment *comp, JSAtom *source, RegExpFlag flags)
-  : source(source), flags(flags), parenCount(0), canStringMatch(false), marked_(false), comp(comp)
+RegExpShared::RegExpShared(JSAtom *source, RegExpFlag flags)
+  : source(source), flags(flags), parenCount(0), canStringMatch(false), marked_(false)
 {
 #ifdef JS_YARR
     bytecode = nullptr;
@@ -560,9 +560,6 @@ RegExpShared::compile(JSContext *cx, bool matchOnly, const jschar *sampleChars, 
 bool
 RegExpShared::compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const jschar *sampleChars, size_t sampleLength)
 {
-    if (cx->compartment() != comp)
-        MOZ_CRASH();
-
     if (!ignoreCase() && !StringHasRegExpMetaChars(pattern->chars(), pattern->length())) {
         canStringMatch = true;
         parenCount = 0;
@@ -617,11 +614,8 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const j
 
     /* Parse the pattern. */
     irregexp::RegExpCompileData data;
-    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(),
-                                pattern->chars(), pattern->length(), multiline(), &data))
-    {
+    if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(), pattern, multiline(), &data))
         return false;
-    }
 
     this->parenCount = data.capture_count;
 
@@ -634,9 +628,6 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, bool matchOnly, const j
 #ifdef JS_ION
     JS_ASSERT(!code.jitCode || !code.byteCode);
     jitCode = code.jitCode;
-
-    if (jitCode && jitCode->tenuredZone() != comp->zone())
-        MOZ_CRASH();
 #endif
 
     byteCode = code.byteCode;
@@ -978,9 +969,6 @@ RegExpCompartment::sweep(JSRuntime *rt)
     for (Set::Enum e(set_); !e.empty(); e.popFront()) {
         RegExpShared *shared = e.front();
 
-        if (this != &shared->compartment()->regExps)
-            MOZ_CRASH();
-
         // Sometimes RegExpShared instances are marked without the
         // compartment being subsequently cleared. This can happen if a GC is
         // restarted while in progress (i.e. performing a full GC in the
@@ -1013,9 +1001,6 @@ RegExpCompartment::sweep(JSRuntime *rt)
 bool
 RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGuard *g)
 {
-    if (this != &cx->compartment()->regExps)
-        MOZ_CRASH();
-
     Key key(source, flags);
     Set::AddPtr p = set_.lookupForAdd(key);
     if (p) {
@@ -1023,14 +1008,11 @@ RegExpCompartment::get(JSContext *cx, JSAtom *source, RegExpFlag flags, RegExpGu
         // from the table (which only holds weak references).
         MaybeTraceRegExpShared(cx, *p);
 
-        if ((*p)->compartment() != cx->compartment())
-            MOZ_CRASH();
-
         g->init(**p);
         return true;
     }
 
-    ScopedJSDeletePtr<RegExpShared> shared(cx->new_<RegExpShared>(cx->compartment(), source, flags));
+    ScopedJSDeletePtr<RegExpShared> shared(cx->new_<RegExpShared>(source, flags));
     if (!shared)
         return false;
 
@@ -1080,40 +1062,76 @@ js::CloneRegExpObject(JSContext *cx, JSObject *obj_)
     return res;
 }
 
+static bool
+HandleRegExpFlag(RegExpFlag flag, RegExpFlag *flags)
+{
+    if (*flags & flag)
+        return false;
+    *flags = RegExpFlag(*flags | flag);
+    return true;
+}
+
+template <typename CharT>
+static size_t
+ParseRegExpFlags(const CharT *chars, size_t length, RegExpFlag *flagsOut, jschar *lastParsedOut)
+{
+    *flagsOut = RegExpFlag(0);
+
+    for (size_t i = 0; i < length; i++) {
+        *lastParsedOut = chars[i];
+        switch (chars[i]) {
+          case 'i':
+            if (!HandleRegExpFlag(IgnoreCaseFlag, flagsOut))
+                return false;
+            break;
+          case 'g':
+            if (!HandleRegExpFlag(GlobalFlag, flagsOut))
+                return false;
+            break;
+          case 'm':
+            if (!HandleRegExpFlag(MultilineFlag, flagsOut))
+                return false;
+            break;
+          case 'y':
+            if (!HandleRegExpFlag(StickyFlag, flagsOut))
+                return false;
+            break;
+          default:
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool
 js::ParseRegExpFlags(JSContext *cx, JSString *flagStr, RegExpFlag *flagsOut)
 {
-    size_t n = flagStr->length();
-    const jschar *s = flagStr->getChars(cx);
-    if (!s)
+    JSLinearString *linear = flagStr->ensureLinear(cx);
+    if (!linear)
         return false;
 
-    *flagsOut = RegExpFlag(0);
-    for (size_t i = 0; i < n; i++) {
-#define HANDLE_FLAG(name_)                                                    \
-        JS_BEGIN_MACRO                                                        \
-            if (*flagsOut & (name_))                                          \
-                goto bad_flag;                                                \
-            *flagsOut = RegExpFlag(*flagsOut | (name_));                      \
-        JS_END_MACRO
-        switch (s[i]) {
-          case 'i': HANDLE_FLAG(IgnoreCaseFlag); break;
-          case 'g': HANDLE_FLAG(GlobalFlag); break;
-          case 'm': HANDLE_FLAG(MultilineFlag); break;
-          case 'y': HANDLE_FLAG(StickyFlag); break;
-          default:
-          bad_flag:
-          {
-            char charBuf[2];
-            charBuf[0] = char(s[i]);
-            charBuf[1] = '\0';
-            JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
-                                         JSMSG_BAD_REGEXP_FLAG, charBuf);
-            return false;
-          }
-        }
-#undef HANDLE_FLAG
+    size_t len = linear->length();
+
+    bool ok;
+    jschar lastParsed;
+    if (linear->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        ok = ::ParseRegExpFlags(linear->latin1Chars(nogc), len, flagsOut, &lastParsed);
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        ok = ::ParseRegExpFlags(linear->twoByteChars(nogc), len, flagsOut, &lastParsed);
     }
+
+    if (!ok) {
+        char charBuf[2];
+        charBuf[0] = char(lastParsed);
+        charBuf[1] = '\0';
+        JS_ReportErrorFlagsAndNumber(cx, JSREPORT_ERROR, js_GetErrorMessage, nullptr,
+                                     JSMSG_BAD_REGEXP_FLAG, charBuf);
+        return false;
+    }
+
     return true;
 }
 

@@ -1231,9 +1231,6 @@ function add_test(func) {
   return func;
 }
 
-// We lazy import Task.jsm so we don't incur a run-time penalty for all tests.
-let _Task;
-
 /**
  * Add a test function which is a Task function.
  *
@@ -1272,13 +1269,11 @@ let _Task;
  * });
  */
 function add_task(func) {
-  if (!_Task) {
-    let ns = {};
-    _Task = Components.utils.import("resource://gre/modules/Task.jsm", ns).Task;
-  }
-
   _gTests.push([true, func]);
 }
+let _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
+_Task.Debugging.maintainStack = true;
+
 
 /**
  * Runs the next test function from the list of async tests.

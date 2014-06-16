@@ -204,8 +204,9 @@ RegExpBuilder::AddQuantifierToAtom(int min, int max,
 // ----------------------------------------------------------------------------
 // RegExpParser
 
-RegExpParser::RegExpParser(frontend::TokenStream &ts, LifoAlloc *alloc,
-                           const jschar *chars, const jschar *end, bool multiline_mode)
+template <typename CharT>
+RegExpParser<CharT>::RegExpParser(frontend::TokenStream &ts, LifoAlloc *alloc,
+                                  const CharT *chars, const CharT *end, bool multiline_mode)
   : ts(ts),
     alloc(alloc),
     captures_(nullptr),
@@ -222,15 +223,18 @@ RegExpParser::RegExpParser(frontend::TokenStream &ts, LifoAlloc *alloc,
     Advance();
 }
 
+template <typename CharT>
 RegExpTree *
-RegExpParser::ReportError(unsigned errorNumber)
+RegExpParser<CharT>::ReportError(unsigned errorNumber)
 {
+    gc::AutoSuppressGC suppressGC(ts.context());
     ts.reportError(errorNumber);
     return nullptr;
 }
 
+template <typename CharT>
 void
-RegExpParser::Advance()
+RegExpParser<CharT>::Advance()
 {
     if (next_pos_ < end_) {
         current_ = *next_pos_;
@@ -253,8 +257,9 @@ HexValue(uint32_t c)
     return -1;
 }
 
+template <typename CharT>
 size_t
-RegExpParser::ParseOctalLiteral()
+RegExpParser<CharT>::ParseOctalLiteral()
 {
     JS_ASSERT('0' <= current() && current() <= '7');
     // For compatibility with some other browsers (not all), we parse
@@ -272,10 +277,11 @@ RegExpParser::ParseOctalLiteral()
     return value;
 }
 
+template <typename CharT>
 bool
-RegExpParser::ParseHexEscape(int length, size_t *value)
+RegExpParser<CharT>::ParseHexEscape(int length, size_t *value)
 {
-    const jschar *start = position();
+    const CharT *start = position();
     uint32_t val = 0;
     bool done = false;
     for (int i = 0; !done; i++) {
@@ -311,8 +317,9 @@ IsSpecialClassEscape(widechar c)
 }
 #endif
 
+template <typename CharT>
 widechar
-RegExpParser::ParseClassCharacterEscape()
+RegExpParser<CharT>::ParseClassCharacterEscape()
 {
     JS_ASSERT(current() == '\\');
     JS_ASSERT(has_next() && !IsSpecialClassEscape(Next()));
@@ -408,8 +415,9 @@ AddRangeOrEscape(LifoAlloc *alloc,
         ranges->append(range);
 }
 
+template <typename CharT>
 RegExpTree*
-RegExpParser::ParseCharacterClass()
+RegExpParser<CharT>::ParseCharacterClass()
 {
     JS_ASSERT(current() == '[');
     Advance();
@@ -463,8 +471,9 @@ RegExpParser::ParseCharacterClass()
     return alloc->newInfallible<RegExpCharacterClass>(ranges, is_negated);
 }
 
+template <typename CharT>
 bool
-RegExpParser::ParseClassAtom(jschar* char_class, CharacterRange *char_range)
+RegExpParser<CharT>::ParseClassAtom(jschar* char_class, CharacterRange *char_range)
 {
     JS_ASSERT(*char_class == kNoCharClass);
     widechar first = current();
@@ -495,8 +504,9 @@ RegExpParser::ParseClassAtom(jschar* char_class, CharacterRange *char_range)
 // is called when needed.  It can see the difference between capturing and
 // noncapturing parentheses and can skip character classes and backslash-escaped
 // characters.
+template <typename CharT>
 void
-RegExpParser::ScanForCaptures()
+RegExpParser<CharT>::ScanForCaptures()
 {
     // Start with captures started previous to current position
     int capture_count = captures_started();
@@ -544,15 +554,16 @@ IsDecimalDigit(widechar c)
     return IsInRange(c, '0', '9');
 }
 
+template <typename CharT>
 bool
-RegExpParser::ParseBackReferenceIndex(int* index_out)
+RegExpParser<CharT>::ParseBackReferenceIndex(int* index_out)
 {
     JS_ASSERT('\\' == current());
     JS_ASSERT('1' <= Next() && Next() <= '9');
 
     // Try to parse a decimal literal that is no greater than the total number
     // of left capturing parentheses in the input.
-    const jschar *start = position();
+    const CharT *start = position();
     int value = Next() - '0';
     Advance(2);
     while (true) {
@@ -570,7 +581,7 @@ RegExpParser::ParseBackReferenceIndex(int* index_out)
     }
     if (value > captures_started()) {
         if (!is_scanned_for_captures_) {
-            const jschar *saved_position = position();
+            const CharT *saved_position = position();
             ScanForCaptures();
             Reset(saved_position);
         }
@@ -590,11 +601,12 @@ RegExpParser::ParseBackReferenceIndex(int* index_out)
 //
 // Returns true if parsing succeeds, and set the min_out and max_out
 // values. Values are truncated to RegExpTree::kInfinity if they overflow.
+template <typename CharT>
 bool
-RegExpParser::ParseIntervalQuantifier(int* min_out, int* max_out)
+RegExpParser<CharT>::ParseIntervalQuantifier(int* min_out, int* max_out)
 {
     JS_ASSERT(current() == '{');
-    const jschar *start = position();
+    const CharT *start = position();
     Advance();
     int min = 0;
     if (!IsDecimalDigit(current())) {
@@ -653,8 +665,9 @@ RegExpParser::ParseIntervalQuantifier(int* min_out, int* max_out)
 
 // Pattern ::
 //   Disjunction
+template <typename CharT>
 RegExpTree *
-RegExpParser::ParsePattern()
+RegExpParser<CharT>::ParsePattern()
 {
     RegExpTree* result = ParseDisjunction();
     JS_ASSERT_IF(result, !has_more());
@@ -671,7 +684,9 @@ RegExpParser::ParsePattern()
 //   Assertion
 //   Atom
 //   Atom Quantifier
-RegExpTree* RegExpParser::ParseDisjunction()
+template <typename CharT>
+RegExpTree*
+RegExpParser<CharT>::ParseDisjunction()
 {
     // Used to store current state while parsing subexpressions.
     RegExpParserState initial_state(alloc, nullptr, INITIAL, 0);
@@ -982,12 +997,15 @@ RegExpTree* RegExpParser::ParseDisjunction()
     }
 }
 
-bool
-irregexp::ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc,
-                       const jschar *chars, size_t length, bool multiline,
-                       RegExpCompileData *data)
+template class irregexp::RegExpParser<Latin1Char>;
+template class irregexp::RegExpParser<jschar>;
+
+template <typename CharT>
+static bool
+ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, const CharT *chars, size_t length,
+             bool multiline, RegExpCompileData *data)
 {
-    RegExpParser parser(ts, &alloc, chars, chars + length, multiline);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline);
     data->tree = parser.ParsePattern();
     if (!data->tree)
         return false;
@@ -999,11 +1017,30 @@ irregexp::ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc,
 }
 
 bool
-irregexp::ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc,
-                             const jschar *chars, size_t length)
+irregexp::ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str, bool multiline,
+                       RegExpCompileData *data)
+{
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? ::ParsePattern(ts, alloc, str->latin1Chars(nogc), str->length(), multiline, data)
+           : ::ParsePattern(ts, alloc, str->twoByteChars(nogc), str->length(), multiline, data);
+}
+
+template <typename CharT>
+static bool
+ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc, const CharT *chars, size_t length)
 {
     LifoAllocScope scope(&alloc);
 
-    RegExpParser parser(ts, &alloc, chars, chars + length, false);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false);
     return parser.ParsePattern() != nullptr;
+}
+
+bool
+irregexp::ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str)
+{
+    JS::AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length())
+           : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length());
 }
