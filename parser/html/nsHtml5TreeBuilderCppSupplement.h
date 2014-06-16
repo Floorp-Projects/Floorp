@@ -639,16 +639,6 @@ nsHtml5TreeBuilder::elementPushed(int32_t aNamespace, nsIAtom* aName, nsIContent
   }
   if (aName == nsHtml5Atoms::input ||
       aName == nsHtml5Atoms::button) {
-    if (!formPointer) {
-      // If form inputs don't belong to a form, their state preservation
-      // won't work right without an append notification flush at this
-      // point. See bug 497861.
-      if (mBuilder) {
-        mBuilder->FlushPendingAppendNotifications();
-      } else {
-        mOpQueue.AppendElement()->Init(eTreeOpFlushPendingAppendNotifications);
-      }
-    }
     if (mBuilder) {
       nsHtml5TreeOperation::DoneCreatingElement(static_cast<nsIContent*>(aElement));
     } else {
@@ -710,7 +700,7 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   }
   if (aName == nsHtml5Atoms::title) {
     if (mBuilder) {
-      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
+      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement));
       return;
     }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
@@ -722,7 +712,6 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
     if (mBuilder) {
       MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
         "Scripts must be blocked.");
-      mBuilder->FlushPendingAppendNotifications();
       mBuilder->UpdateStyleSheet(static_cast<nsIContent*>(aElement));
       return;
     }
@@ -748,32 +737,12 @@ nsHtml5TreeBuilder::elementPopped(int32_t aNamespace, nsIAtom* aName, nsIContent
   // properly (e.g. form state restoration).
   // XXX expose ElementName group here and do switch
   if (aName == nsHtml5Atoms::object ||
-      aName == nsHtml5Atoms::applet) {
+      aName == nsHtml5Atoms::applet ||
+      aName == nsHtml5Atoms::select || 
+      aName == nsHtml5Atoms::textarea ||
+      aName == nsHtml5Atoms::output) {
     if (mBuilder) {
-      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
-      return;
-    }
-    nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-    NS_ASSERTION(treeOp, "Tree op allocation failed.");
-    treeOp->Init(eTreeOpDoneAddingChildren, aElement);
-    return;
-  }
-  if (aName == nsHtml5Atoms::select || 
-      aName == nsHtml5Atoms::textarea) {
-    if (!formPointer) {
-      // If form inputs don't belong to a form, their state preservation
-      // won't work right without an append notification flush at this 
-      // point. See bug 497861 and bug 539895.
-      if (mBuilder) {
-        mBuilder->FlushPendingAppendNotifications();
-      } else {
-        nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-        NS_ASSERTION(treeOp, "Tree op allocation failed.");
-        treeOp->Init(eTreeOpFlushPendingAppendNotifications);
-      }
-    }
-    if (mBuilder) {
-      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement), mBuilder);
+      nsHtml5TreeOperation::DoneAddingChildren(static_cast<nsIContent*>(aElement));
       return;
     }
     nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
