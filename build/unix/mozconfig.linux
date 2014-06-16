@@ -1,3 +1,8 @@
+if [ "x$IS_NIGHTLY" = "xyes" ]; then
+  MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
+  MOZ_AUTOMATION_UPDATE_PACKAGING=1
+fi
+
 . "$topsrcdir/build/mozconfig.common"
 
 # some b2g desktop builds still happen on i686 machines, and the tooltool

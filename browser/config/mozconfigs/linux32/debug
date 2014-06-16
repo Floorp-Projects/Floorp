@@ -4,6 +4,9 @@ ac_add_options --enable-signmar
 
 ac_add_options --disable-unified-compilation
 
+MOZ_AUTOMATION_TALOS_SENDCHANGE=0
+MOZ_AUTOMATION_L10N_CHECK=0
+
 . $topsrcdir/build/unix/mozconfig.linux32
 
 # Needed to enable breakpad in application.ini
