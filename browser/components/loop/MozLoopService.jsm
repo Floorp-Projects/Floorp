@@ -27,132 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "HAWKAuthenticatedRESTRequest",
                                   "resource://services-common/hawkrequest.js");
 
-/**
- * We don't have push notifications on desktop currently, so this is a
- * workaround to get them going for us.
- *
- * XXX Handle auto-reconnections if connection fails for whatever reason
- * (bug 1013248).
- */
-let PushHandlerHack = {
-  // This is the uri of the push server.
-  pushServerUri: Services.prefs.getCharPref("services.push.serverURL"),
-  // This is the channel id we're using for notifications
-  channelID: "8b1081ce-9b35-42b5-b8f5-3ff8cb813a50",
-  // Stores the push url if we're registered and we have one.
-  pushUrl: undefined,
-
-  /**
-   * Call to start the connection to the push socket server. On
-   * connection, it will automatically say hello and register the channel
-   * id with the server.
-   *
-   * Register callback parameters:
-   * - {String|null} err: Encountered error, if any
-   * - {String} url: The push url obtained from the server
-   *
-   * @param {Function} registerCallback Callback to be called once we are
-   *                     registered.
-   * @param {Function} notificationCallback Callback to be called when a
-   *                     push notification is received.
-   */
-  initialize: function(registerCallback, notificationCallback) {
-    if (Services.io.offline) {
-      registerCallback("offline");
-      return;
-    }
-
-    this._registerCallback = registerCallback;
-    this._notificationCallback = notificationCallback;
-
-    this.websocket = Cc["@mozilla.org/network/protocol;1?name=wss"]
-                       .createInstance(Ci.nsIWebSocketChannel);
-
-    this.websocket.protocol = "push-notification";
-
-    var pushURI = Services.io.newURI(this.pushServerUri, null, null);
-    this.websocket.asyncOpen(pushURI, this.pushServerUri, this, null);
-  },
-
-  /**
-   * Listener method, handles the start of the websocket stream.
-   * Sends a hello message to the server.
-   *
-   * @param {nsISupports} aContext Not used
-   */
-  onStart: function() {
-    var helloMsg = { messageType: "hello", uaid: "", channelIDs: [] };
-    this.websocket.sendMsg(JSON.stringify(helloMsg));
-  },
-
-  /**
-   * Listener method, called when the websocket is closed.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {nsresult} aStatusCode Reason for stopping (NS_OK = successful)
-   */
-  onStop: function(aContext, aStatusCode) {
-    // XXX We really should be handling auto-reconnect here, this will be
-    // implemented in bug 994151. For now, just log a warning, so that a
-    // developer can find out it has happened and not get too confused.
-    Cu.reportError("Loop Push server web socket closed! Code: " + aStatusCode);
-    this.pushUrl = undefined;
-  },
-
-  /**
-   * Listener method, called when the websocket is closed by the server.
-   * If there are errors, onStop may be called without ever calling this
-   * method.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {integer} aCode the websocket closing handshake close code
-   * @param {String} aReason the websocket closing handshake close reason
-   */
-  onServerClose: function(aContext, aCode) {
-    // XXX We really should be handling auto-reconnect here, this will be
-    // implemented in bug 994151. For now, just log a warning, so that a
-    // developer can find out it has happened and not get too confused.
-    Cu.reportError("Loop Push server web socket closed (server)! Code: " + aCode);
-    this.pushUrl = undefined;
-  },
-
-  /**
-   * Listener method, called when the websocket receives a message.
-   *
-   * @param {nsISupports} aContext Not used
-   * @param {String} aMsg The message data
-   */
-  onMessageAvailable: function(aContext, aMsg) {
-    var msg = JSON.parse(aMsg);
-
-    switch(msg.messageType) {
-      case "hello":
-        this._registerChannel();
-        break;
-      case "register":
-        this.pushUrl = msg.pushEndpoint;
-        this._registerCallback(null, this.pushUrl);
-        break;
-      case "notification":
-        msg.updates.forEach(function(update) {
-          if (update.channelID === this.channelID) {
-            this._notificationCallback(update.version);
-          }
-        }.bind(this));
-        break;
-    }
-  },
-
-  /**
-   * Handles registering a service
-   */
-  _registerChannel: function() {
-    this.websocket.sendMsg(JSON.stringify({
-      messageType: "register",
-      channelID: this.channelID
-    }));
-  }
-};
+XPCOMUtils.defineLazyModuleGetter(this, "MozLoopPushHandler",
+                                  "resource:///modules/loop/MozLoopPushHandler.jsm");
 
 /**
  * Internal helper methods and state
@@ -238,10 +114,12 @@ let MozLoopServiceInternal = {
    * Starts registration of Loop with the push server, and then will register
    * with the Loop server. It will return early if already registered.
    *
+   * @param {Object} mockPushHandler Optional, test-only mock push handler. Used
+   *                                 to allow mocking of the MozLoopPushHandler.
    * @returns {Promise} a promise that is resolved with no params on completion, or
    *          rejected with an error code or string.
    */
-  promiseRegisteredWithServers: function() {
+  promiseRegisteredWithServers: function(mockPushHandler) {
     if (this._registeredDeferred) {
       return this._registeredDeferred.promise;
     }
@@ -251,8 +129,10 @@ let MozLoopServiceInternal = {
     // it back to null on error.
     let result = this._registeredDeferred.promise;
 
-    PushHandlerHack.initialize(this.onPushRegistered.bind(this),
-                               this.onHandleNotification.bind(this));
+    this._pushHandler = mockPushHandler || MozLoopPushHandler;
+
+    this._pushHandler.initialize(this.onPushRegistered.bind(this),
+      this.onHandleNotification.bind(this));
 
     return result;
   },
@@ -282,7 +162,7 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Callback from PushHandlerHack - The push server has been registered
+   * Callback from MozLoopPushHandler - The push server has been registered
    * and has given us a push url.
    *
    * @param {String} pushUrl The push url given by the push server.
@@ -340,7 +220,7 @@ let MozLoopServiceInternal = {
   },
 
   /**
-   * Callback from PushHandlerHack - A push notification has been received from
+   * Callback from MozLoopPushHandler - A push notification has been received from
    * the server.
    *
    * @param {String} version The version information from the server.
@@ -495,11 +375,13 @@ this.MozLoopService = {
    * Starts registration of Loop with the push server, and then will register
    * with the Loop server. It will return early if already registered.
    *
+   * @param {Object} mockPushHandler Optional, test-only mock push handler. Used
+   *                                 to allow mocking of the MozLoopPushHandler.
    * @returns {Promise} a promise that is resolved with no params on completion, or
    *          rejected with an error code or string.
    */
-  register: function() {
-    return MozLoopServiceInternal.promiseRegisteredWithServers();
+  register: function(mockPushHandler) {
+    return MozLoopServiceInternal.promiseRegisteredWithServers(mockPushHandler);
   },
 
   /**

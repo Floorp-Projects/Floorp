@@ -24,7 +24,7 @@ add_test(function test_registration_uses_hawk_session_token() {
     response.finish();
   });
 
-  MozLoopService.register().then(() => {
+  MozLoopService.register(mockPushHandler).then(() => {
     run_next_test();
   }, err => {
     do_throw("shouldn't error on a succesful request");
@@ -36,11 +36,7 @@ function run_test()
 {
   setupFakeLoopServer();
 
-  // Registrations and pref settings.
-  gMockWebSocketChannelFactory.register();
-
   do_register_cleanup(function() {
-    gMockWebSocketChannelFactory.unregister();
     Services.prefs.clearUserPref("loop.hawk-session-token");
   });
 

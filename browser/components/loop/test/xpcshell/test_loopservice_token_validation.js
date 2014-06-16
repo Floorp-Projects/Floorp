@@ -16,7 +16,7 @@ add_test(function test_registration_handles_bogus_hawk_token() {
     response.finish();
   });
 
-  MozLoopService.register().then(() => {
+  MozLoopService.register(mockPushHandler).then(() => {
     do_throw("should not succeed with a bogus token");
   }, err => {
 
@@ -40,11 +40,7 @@ function run_test()
 {
   setupFakeLoopServer();
 
-  // Registrations and pref settings.
-  gMockWebSocketChannelFactory.register();
-
   do_register_cleanup(function() {
-    gMockWebSocketChannelFactory.unregister();
     Services.prefs.clearUserPref("loop.hawk-session-token");
   });
 
