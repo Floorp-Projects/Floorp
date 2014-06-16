@@ -117,6 +117,12 @@ public class AnnouncementsService extends BackgroundService implements Announcem
   @Override
   public void onHandleIntent(Intent intent) {
     Logger.setThreadLogTag(AnnouncementsConstants.GLOBAL_LOG_TAG);
+
+    // Intent can be null. Bug 1025937.
+    if (intent == null) {
+        Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+    }
+
     Logger.debug(LOG_TAG, "Running AnnouncementsService.");
 
     if (AnnouncementsConstants.DISABLED) {
