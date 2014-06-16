@@ -31,6 +31,7 @@
 extern int AECDebug();
 extern uint32_t AECDebugMaxSize();
 extern void AECDebugEnable(uint32_t enable);
+extern void AECDebugFilenameBase(char *buffer, size_t size);
 static void OpenCoreDebugFiles(AecCore* aec, int *instance_count);
 
 // Buffer size (samples)
@@ -1730,16 +1731,34 @@ OpenCoreDebugFiles(AecCore* aec,
   // XXX  If this impacts performance (opening files here), move file open
   // to Trace::set_aec_debug(), and just grab them here
   if (AECDebug() && !aec->farFile) {
-    char filename[128];
     if (!aec->farFile) {
+      char path[1024];
+      char *filename;
+      path[0] = '\0';
+      AECDebugFilenameBase(path, sizeof(path));
+      filename = path + strlen(path);
+      if (&path[sizeof(path)] - filename < 128) {
+        return; // avoid a lot of snprintf's and checks lower
+      }
+      if (filename > path) {
+#ifdef XP_WIN
+        if (*(filename-1) != '\\') {
+          *filename++ = '\\';
+        }
+#else
+        if (*(filename-1) != '/') {
+          *filename++ = '/';
+        }
+#endif
+      }
       sprintf(filename, "aec_far%d.pcm", webrtc_aec_instance_count);
-      aec->farFile = fopen(filename, "wb");
+      aec->farFile = fopen(path, "wb");
       sprintf(filename, "aec_near%d.pcm", webrtc_aec_instance_count);
-      aec->nearFile = fopen(filename, "wb");
+      aec->nearFile = fopen(path, "wb");
       sprintf(filename, "aec_out%d.pcm", webrtc_aec_instance_count);
-      aec->outFile = fopen(filename, "wb");
+      aec->outFile = fopen(path, "wb");
       sprintf(filename, "aec_out_linear%d.pcm", webrtc_aec_instance_count);
-      aec->outLinearFile = fopen(filename, "wb");
+      aec->outLinearFile = fopen(path, "wb");
       aec->debugWritten = 0;
       if (!aec->outLinearFile || !aec->outFile || !aec->nearFile || !aec->farFile) {
         error = 1;
