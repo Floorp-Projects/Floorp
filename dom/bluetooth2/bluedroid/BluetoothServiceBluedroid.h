@@ -74,13 +74,6 @@ public:
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable);
 
-  virtual bool
-  SetAuthorizationInternal(const nsAString& aDeviceAddress, bool aAllow,
-                           BluetoothReplyRunnable* aRunnable);
-
-  virtual nsresult
-  PrepareAdapterInternal();
-
   virtual void
   Connect(const nsAString& aDeviceAddress,
           uint32_t aCod,
