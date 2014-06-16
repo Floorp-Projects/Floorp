@@ -16,7 +16,6 @@
 
 static bool gDisableOptimize = false;
 
-#include "cairo.h"
 #include "GeckoProfiler.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MemoryReporting.h"
