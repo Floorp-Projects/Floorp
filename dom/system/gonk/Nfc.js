@@ -494,7 +494,7 @@ Nfc.prototype = {
     debug("Received message from NFC worker: " + JSON.stringify(message));
 
     // mapping error code to error message
-    if(message.status !== NFC.NFC_SUCCESS) {
+    if (message.status !== undefined && message.status !== NFC.NFC_SUCCESS) {
       message.errorMsg = this.getErrorMessage(message.status);
     }
 
