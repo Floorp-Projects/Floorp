@@ -227,7 +227,7 @@ ResponsiveImageSelector::GetBestCandidateIndex()
     return -1;
   }
 
-  double displayDensity = pctx->CSSPixelsToDevPixels(1);
+  double displayDensity = pctx->CSSPixelsToDevPixels(1.0f);
 
   // Per spec, "In a UA-specific manner, choose one image source"
   // - For now, select the lowest density greater than displayDensity, otherwise
