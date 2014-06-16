@@ -686,12 +686,14 @@ BluetoothAdapter::EnableDisable(bool aEnable)
     return promise.forget();
   }
 
+  nsString methodName;
   if (aEnable) {
     // Enable local adapter
     if (mState != BluetoothAdapterState::Disabled) {
       promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
       return promise.forget();
     }
+    methodName.AssignLiteral("Enable");
     mState = BluetoothAdapterState::Enabling;
   } else {
     // Disable local adapter
@@ -699,12 +701,15 @@ BluetoothAdapter::EnableDisable(bool aEnable)
       promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
       return promise.forget();
     }
+    methodName.AssignLiteral("Disable");
     mState = BluetoothAdapterState::Disabling;
   }
   // TODO: Fire attr changed event for this state change
 
   nsRefPtr<BluetoothReplyRunnable> result =
-    new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */, promise);
+    new BluetoothVoidReplyRunnable(nullptr, /* DOMRequest */
+                                   promise,
+                                   methodName);
 
   if(NS_FAILED(bs->EnableDisable(aEnable, result))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
