@@ -63,11 +63,14 @@ function checkProviderPrefsEmpty(isError) {
 }
 
 function defaultFinishChecks() {
+  PopupNotifications.transitionsEnabled = true;
   checkProviderPrefsEmpty(true);
   finish();
 }
 
 function runSocialTestWithProvider(manifest, callback, finishcallback) {
+  PopupNotifications.transitionsEnabled = false;
+
   let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
 
   let manifests = Array.isArray(manifest) ? manifest : [manifest];
@@ -157,6 +160,8 @@ function runSocialTests(tests, cbPreTest, cbPostTest, cbFinish) {
   let testIter = Iterator(tests);
   let providersAtStart = Social.providers.length;
   info("runSocialTests: start test run with " + providersAtStart + " providers");
+
+  PopupNotifications.transitionsEnabled = false;
 
   if (cbPreTest === undefined) {
     cbPreTest = function(cb) {cb()};
