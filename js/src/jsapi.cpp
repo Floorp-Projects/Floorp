@@ -6134,10 +6134,10 @@ JS_SetParallelParsingEnabled(JSRuntime *rt, bool enabled)
 }
 
 JS_PUBLIC_API(void)
-JS_SetParallelIonCompilationEnabled(JSRuntime *rt, bool enabled)
+JS_SetOffthreadIonCompilation(JSRuntime *rt, bool enabled)
 {
 #ifdef JS_ION
-    rt->setParallelIonCompilationEnabled(enabled);
+    rt->setOffthreadIonCompilationEnabled(enabled);
 #endif
 }
 
@@ -6181,13 +6181,13 @@ JS_SetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt, uint32_t v
             IonSpew(js::jit::IonSpew_BaselineScripts, "Disable baseline");
         }
         break;
-      case JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE:
+      case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
         if (value == 1) {
-            rt->setParallelIonCompilationEnabled(true);
-            IonSpew(js::jit::IonSpew_Scripts, "Enable parallel compilation");
+            rt->setOffthreadIonCompilationEnabled(true);
+            IonSpew(js::jit::IonSpew_Scripts, "Enable offthread compilation");
         } else if (value == 0) {
-            rt->setParallelIonCompilationEnabled(false);
-            IonSpew(js::jit::IonSpew_Scripts, "Disable parallel compilation");
+            rt->setOffthreadIonCompilationEnabled(false);
+            IonSpew(js::jit::IonSpew_Scripts, "Disable offthread compilation");
         }
         break;
       default:
@@ -6209,8 +6209,8 @@ JS_GetGlobalJitCompilerOption(JSRuntime *rt, JSJitCompilerOption opt)
         return JS::RuntimeOptionsRef(rt).ion();
       case JSJITCOMPILER_BASELINE_ENABLE:
         return JS::RuntimeOptionsRef(rt).baseline();
-      case JSJITCOMPILER_PARALLEL_COMPILATION_ENABLE:
-        return rt->canUseParallelIonCompilation();
+      case JSJITCOMPILER_OFFTHREAD_COMPILATION_ENABLE:
+        return rt->canUseOffthreadIonCompilation();
       default:
         break;
     }
