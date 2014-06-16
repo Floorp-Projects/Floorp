@@ -26,7 +26,6 @@ UNIFIED_SOURCES += [
     '../ucvcn/nsGBKConvUtil.cpp',
     '../ucvcn/nsGBKToUnicode.cpp',
     '../ucvcn/nsHZToUnicode.cpp',
-    '../ucvcn/nsISO2022CNToUnicode.cpp',
     '../ucvcn/nsUnicodeToGB2312V2.cpp',
     '../ucvcn/nsUnicodeToGBK.cpp',
     '../ucvcn/nsUnicodeToHZ.cpp',
@@ -57,7 +56,6 @@ UNIFIED_SOURCES += [
 
 UNIFIED_SOURCES += [
     '../ucvko/nsCP949ToUnicode.cpp',
-    '../ucvko/nsISO2022KRToUnicode.cpp',
     '../ucvko/nsUnicodeToCP949.cpp',
 ]
 
