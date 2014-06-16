@@ -1,0 +1,21 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Common mozconfig for automation builds.
+#
+# We export MOZ_AUTOMATION_* variables here to trigger various steps in
+# automation builds.  For example, if MOZ_AUTOMATION_PACKAGE is set, then the
+# package step will run.  This file contains the default settings, which can be
+# overridden by setting them earlier in the appropriate mozconfig.
+
+mk_add_options "export MOZ_AUTOMATION_BUILD_SYMBOLS=${MOZ_AUTOMATION_BUILD_SYMBOLS-1}"
+mk_add_options "export MOZ_AUTOMATION_CHECK=${MOZ_AUTOMATION_CHECK-1}"
+mk_add_options "export MOZ_AUTOMATION_L10N_CHECK=${MOZ_AUTOMATION_L10N_CHECK-1}"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE=${MOZ_AUTOMATION_PACKAGE-1}"
+mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=${MOZ_AUTOMATION_PACKAGE_TESTS-1}"
+mk_add_options "export MOZ_AUTOMATION_TALOS_SENDCHANGE=${MOZ_AUTOMATION_TALOS_SENDCHANGE-1}"
+mk_add_options "export MOZ_AUTOMATION_UNITTEST_SENDCHANGE=${MOZ_AUTOMATION_UNITTEST_SENDCHANGE-1}"
+mk_add_options "export MOZ_AUTOMATION_UPDATE_PACKAGING=${MOZ_AUTOMATION_UPDATE_PACKAGING-0}"
+mk_add_options "export MOZ_AUTOMATION_UPLOAD=${MOZ_AUTOMATION_UPLOAD-1}"
+mk_add_options "export MOZ_AUTOMATION_UPLOAD_SYMBOLS=${MOZ_AUTOMATION_UPLOAD_SYMBOLS-0}"
