@@ -6,6 +6,9 @@
 
 #include "builtin/TestingFunctions.h"
 
+#include "mozilla/Move.h"
+#include "mozilla/Scoped.h"
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
@@ -18,7 +21,11 @@
 
 #include "jit/AsmJS.h"
 #include "jit/AsmJSLink.h"
+#include "js/HashTable.h"
 #include "js/StructuredClone.h"
+#include "js/UbiNode.h"
+#include "js/UbiNodeTraverse.h"
+#include "js/Vector.h"
 #include "vm/ForkJoin.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -33,6 +40,8 @@ using namespace js;
 using namespace JS;
 
 using mozilla::ArrayLength;
+using mozilla::Move;
+using mozilla::ScopedFreePtr;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
@@ -1651,6 +1660,214 @@ ReportLargeAllocationFailure(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+namespace heaptools {
+
+// An edge to a node from its predecessor in a path through the graph.
+class BackEdge {
+    // The node from which this edge starts.
+    JS::ubi::Node predecessor_;
+
+    // The name of this edge. We own this storage.
+    ScopedFreePtr<jschar> name_;
+
+  public:
+    BackEdge() : name_(nullptr) { }
+    // Construct an initialized back edge. Take ownership of |name|.
+    BackEdge(JS::ubi::Node predecessor, jschar *name)
+        : predecessor_(predecessor), name_(name) { }
+    BackEdge(BackEdge &&rhs) : predecessor_(rhs.predecessor_), name_(rhs.name_.forget()) { }
+    BackEdge &operator=(BackEdge &&rhs) {
+        MOZ_ASSERT(&rhs != this);
+        this->~BackEdge();
+        new(this) BackEdge(Move(rhs));
+        return *this;
+    }
+
+    jschar *forgetName() { return name_.forget(); }
+    JS::ubi::Node predecessor() const { return predecessor_; }
+
+  private:
+    // No copy constructor or copying assignment.
+    BackEdge(const BackEdge &) MOZ_DELETE;
+    BackEdge &operator=(const BackEdge &) MOZ_DELETE;
+};
+
+// A path-finding handler class for use with JS::ubi::BreadthFirst.
+struct FindPathHandler {
+    typedef BackEdge NodeData;
+    typedef JS::ubi::BreadthFirst<FindPathHandler> Traversal;
+
+    FindPathHandler(JS::ubi::Node start, JS::ubi::Node target,
+                    AutoValueVector &nodes, Vector<ScopedFreePtr<jschar> > &edges)
+      : start(start), target(target), foundPath(false),
+        nodes(nodes), edges(edges) { }
+
+    bool
+    operator()(Traversal &traversal, JS::ubi::Node origin, const JS::ubi::Edge &edge,
+               BackEdge *backEdge, bool first)
+    {
+        // We take care of each node the first time we visit it, so there's
+        // nothing to be done on subsequent visits.
+        if (!first)
+            return true;
+
+        // Record how we reached this node. This is the last edge on a
+        // shortest path to this node.
+        jschar *edgeName = js_strdup(traversal.cx, edge.name);
+        if (!edgeName)
+            return false;
+        *backEdge = mozilla::Move(BackEdge(origin, edgeName));
+
+        // Have we reached our final target node?
+        if (edge.referent == target) {
+            // Record the path that got us here, which must be a shortest path.
+            if (!recordPath(traversal))
+                return false;
+            foundPath = true;
+            traversal.stop();
+        }
+
+        return true;
+    }
+
+    // We've found a path to our target. Walk the backlinks to produce the
+    // (reversed) path, saving the path in |nodes| and |edges|. |nodes| is
+    // rooted, so it can hold the path's nodes as we leave the scope of
+    // the AutoCheckCannotGC.
+    bool recordPath(Traversal &traversal) {
+        JS::ubi::Node here = target;
+
+        do {
+            Traversal::NodeMap::Ptr p = traversal.visited.lookup(here);
+            MOZ_ASSERT(p);
+            JS::ubi::Node predecessor = p->value().predecessor();
+            if (!nodes.append(predecessor.exposeToJS()) ||
+                !edges.append(p->value().forgetName()))
+                return false;
+            here = predecessor;
+        } while (here != start);
+
+        return true;
+    }
+
+    // The node we're starting from.
+    JS::ubi::Node start;
+
+    // The node we're looking for.
+    JS::ubi::Node target;
+
+    // True if we found a path to target, false if we didn't.
+    bool foundPath;
+
+    // The nodes and edges of the path --- should we find one. The path is
+    // stored in reverse order, because that's how it's easiest for us to
+    // construct it:
+    // - edges[i] is the name of the edge from nodes[i] to nodes[i-1].
+    // - edges[0] is the name of the edge from nodes[0] to the target.
+    // - The last node, nodes[n-1], is the start node.
+    AutoValueVector &nodes;
+    Vector<ScopedFreePtr<jschar> > &edges;
+};
+
+} // namespace heaptools
+
+static bool
+FindPath(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (argc < 2) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
+                             "findPath", "1", "");
+        return false;
+    }
+
+    // We don't ToString non-objects given as 'start' or 'target'. We can't
+    // see edges to non-string primitive values, and it doesn't make much
+    // sense to ask for paths to or from a freshly allocated string, so
+    // if a non-string primitive appears here it's probably a mistake.
+    if (!args[0].isObject() && !args[0].isString()) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                 JSDVG_SEARCH_STACK, args[0], JS::NullPtr(),
+                                 "neither an object nor a string", NULL);
+        return false;
+    }
+
+    if (!args[1].isObject() && !args[1].isString()) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE,
+                                 JSDVG_SEARCH_STACK, args[0], JS::NullPtr(),
+                                 "neither an object nor a string", NULL);
+        return false;
+    }
+
+    AutoValueVector nodes(cx);
+    Vector<ScopedFreePtr<jschar> > edges(cx);
+
+    {
+        // We can't tolerate the GC moving things around while we're searching
+        // the heap. Check that nothing we do causes a GC.
+        JS::AutoCheckCannotGC autoCannotGC;
+
+        JS::ubi::Node start(args[0]), target(args[1]);
+
+        heaptools::FindPathHandler handler(start, target, nodes, edges);
+        heaptools::FindPathHandler::Traversal traversal(cx, handler, autoCannotGC);
+        if (!traversal.init() || !traversal.addStart(start))
+            return false;
+
+        if (!traversal.traverse())
+            return false;
+
+        if (!handler.foundPath) {
+            // We didn't find any paths from the start to the target.
+            args.rval().setUndefined();
+            return true;
+        }
+    }
+
+    // |nodes| and |edges| contain the path from |start| to |target|, reversed.
+    // Construct a JavaScript array describing the path from the start to the
+    // target. Each element has the form:
+    //
+    //   { node: <object or string>, edge: <string describing outgoing edge from node> }
+    //
+    // or, if the node is some internal thing, that isn't a proper
+    // JavaScript value:
+    //
+    //   { node: undefined, edge: <string> }
+    size_t length = nodes.length();
+    RootedObject result(cx, NewDenseAllocatedArray(cx, length));
+    if (!result)
+        return false;
+    result->ensureDenseInitializedLength(cx, 0, length);
+
+    // Walk |nodes| and |edges| in the stored order, and construct the result
+    // array in start-to-target order.
+    for (size_t i = 0; i < length; i++) {
+        // Build an object describing the node and edge.
+        RootedObject obj(cx, NewBuiltinClassInstance<JSObject>(cx));
+        if (!obj)
+            return false;
+
+        if (!JS_DefineProperty(cx, obj, "node", nodes[i],
+                               JSPROP_ENUMERATE, nullptr, nullptr))
+            return false;
+
+        RootedString edge(cx, js_NewString<CanGC>(cx, edges[i].get(), js_strlen(edges[i])));
+        if (!edge)
+            return false;
+        edges[i].forget();
+        RootedValue edgeString(cx, StringValue(edge));
+        if (!JS_DefineProperty(cx, obj, "edge", edgeString,
+                               JSPROP_ENUMERATE, nullptr, nullptr))
+            return false;
+
+        result->setDenseElement(length - i - 1, ObjectValue(*obj));
+    }
+
+    args.rval().setObject(*result);
+    return true;
+}
+
 static const JSFunctionSpecWithHelp TestingFunctions[] = {
     JS_FN_HELP("gc", ::GC, 0, 0,
 "gc([obj] | 'compartment')",
@@ -1930,6 +2147,19 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 "  Call the large allocation failure callback, as though a large malloc call failed,\n"
 "  then return undefined. In Gecko, this sends a memory pressure notification, which\n"
 "  can free up some memory."),
+
+    JS_FN_HELP("findPath", FindPath, 2, 0,
+"findPath(start, target)",
+"  Return an array describing one of the shortest paths of GC heap edges from\n"
+"  |start| to |target|, or |undefined| if |target| is unreachable from |start|.\n"
+"  Each element of the array is either of the form:\n"
+"    { node: <object or string>, edge: <string describing edge from node> }\n"
+"  if the node is a JavaScript object or value; or of the form:\n"
+"    { type: <string describing node>, edge: <string describing edge> }\n"
+"  if the node is some internal thing that is not a proper JavaScript value\n"
+"  (like a shape or a scope chain element). The destination of the i'th array\n"
+"  element's edge is the node of the i+1'th array element; the destination of\n"
+"  the last array element is implicitly |target|.\n"),
 
 #ifdef DEBUG
     JS_FN_HELP("dumpObject", DumpObject, 1, 0,
