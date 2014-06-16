@@ -9911,6 +9911,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
       : MBinaryInstruction(cx, length),
         templateObject_(templateObject)
     {
+        JS_ASSERT(length->type() == MIRType_Int32);
         setResultType(MIRType_Object);
     }
 
