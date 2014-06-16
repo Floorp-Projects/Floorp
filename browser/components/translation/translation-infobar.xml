@@ -85,6 +85,12 @@
                           oncommand="document.getBindingParent(this).translate();"/>
             </xul:hbox>
 
+            <!-- unavailable -->
+            <xul:vbox class="translation-unavailable" pack="center">
+              <xul:label class="translate-infobar-element"
+                         value="&translation.serviceUnavailable.label;"/>
+            </xul:vbox>
+
           </xul:deck>
           <xul:spacer flex="1"/>
 
@@ -146,6 +152,11 @@
         <parameter name="aTranslation"/>
         <body>
           <![CDATA[
+            if (Translation.serviceUnavailable) {
+              this.state = Translation.STATE_UNAVAILABLE;
+              return;
+            }
+
             this.translation = aTranslation;
             let bundle = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
