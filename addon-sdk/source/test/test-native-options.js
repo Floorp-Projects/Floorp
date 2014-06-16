@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { setDefaults, injectOptions, validate } = require('sdk/preferences/native-options');
+const { setDefaults, injectOptions: inject, validate } = require('sdk/preferences/native-options');
 const { activeBrowserWindow: { document } } = require("sdk/deprecated/window-utils");
 const { preferencesBranch, id } = require('sdk/self');
 const { get } = require('sdk/preferences/service');
@@ -11,6 +11,19 @@ const { setTimeout } = require('sdk/timers');
 const simple = require('sdk/simple-prefs');
 const fixtures = require('./fixtures');
 const { Cc, Ci } = require('chrome');
+
+const prefsrv = Cc['@mozilla.org/preferences-service;1'].
+                    getService(Ci.nsIPrefService);
+
+function injectOptions(preferences, preferencesBranch, document, parent) {
+  inject({
+    id: id,
+    preferences: preferences,
+    preferencesBranch: preferencesBranch,
+    document: document,
+    parent: parent
+  });
+}
 
 exports.testValidate = function(assert) {
   let { preferences } = packageJSON('simple-prefs');
@@ -56,35 +69,45 @@ exports.testNoPrefs = function(assert, done) {
 
 exports.testCurlyID = function(assert) {
   let { preferences, id } = packageJSON('curly-id');
+  let branch = prefsrv.getDefaultBranch('extensions.' + id);
 
   let parent = document.createDocumentFragment();
   injectOptions(preferences, id, document, parent);
   assert.equal(parent.children.length, 1, "One setting elements injected");
-  assert.equal(parent.firstElementChild.attributes.pref.value, 
+  assert.equal(parent.firstElementChild.attributes.pref.value,
                "extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13",
                "Setting pref attribute is set properly");
 
   setDefaults(preferences, id);
-  assert.equal(get('extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13'), 
+  assert.equal(get('extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13'),
                26, "test13 is 26");
+
+  branch.deleteBranch('');
+  assert.equal(get('extensions.{34a1eae1-c20a-464f-9b0e-000000000000}.test13'),
+               undefined, "test13 is undefined");
 }
 
 exports.testPreferencesBranch = function(assert) {
   let { preferences, 'preferences-branch': prefsBranch } = packageJSON('preferences-branch');
+  let branch = prefsrv.getDefaultBranch('extensions.' + prefsBranch);
 
   let parent = document.createDocumentFragment();
   injectOptions(preferences, prefsBranch, document, parent);
   assert.equal(parent.children.length, 1, "One setting elements injected");
-  assert.equal(parent.firstElementChild.attributes.pref.value, 
+  assert.equal(parent.firstElementChild.attributes.pref.value,
                "extensions.human-readable.test42",
                "Setting pref attribute is set properly");
 
   setDefaults(preferences, prefsBranch);
   assert.equal(get('extensions.human-readable.test42'), true, "test42 is true");
+
+  branch.deleteBranch('');
+  assert.equal(get('extensions.human-readable.test42'), undefined, "test42 is undefined");
 }
 
 exports.testSimplePrefs = function(assert) {
   let { preferences } = packageJSON('simple-prefs');
+  let branch = prefsrv.getDefaultBranch('extensions.' + preferencesBranch);
 
   function assertPref(setting, name, type, title) {
     assert.equal(setting.getAttribute('data-jetpack-id'), id,
@@ -128,13 +151,15 @@ exports.testSimplePrefs = function(assert) {
 
   setDefaults(preferences, preferencesBranch);
   assert.strictEqual(simple.prefs.test, false, "test is false");
-  assert.strictEqual(simple.prefs.test2, "\u00FCnic\u00F8d\u00E9", "test2 is unicode"); 
+  assert.strictEqual(simple.prefs.test2, "\u00FCnic\u00F8d\u00E9", "test2 is unicode");
   assert.strictEqual(simple.prefs.test3, "1", "test3 is '1'");
   assert.strictEqual(simple.prefs.test4, "red", "test4 is 'red'");
 
-  // default pref branch can't be "reset", bug 1012231
-  Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).
-    getDefaultBranch('extensions.' + preferencesBranch).deleteBranch('');
+  branch.deleteBranch('');
+  assert.strictEqual(simple.prefs.test, undefined, "test is undefined");
+  assert.strictEqual(simple.prefs.test2, undefined, "test2 is undefined");
+  assert.strictEqual(simple.prefs.test3, undefined, "test3 is undefined");
+  assert.strictEqual(simple.prefs.test4, undefined, "test4 is undefined");
 }
 
 function packageJSON(dir) {
