@@ -44,8 +44,9 @@ version = re.sub(r'[ab]\d+$', '', release)
 exclude_patterns = ['_build']
 pygments_style = 'sphinx'
 
-html_theme_path = [mdn_theme.get_theme_dir()]
-html_theme = 'mdn'
+# TODO MDN theme is busted (bug 987332)
+#html_theme_path = [mdn_theme.get_theme_dir()]
+#html_theme = 'mdn'
 
 html_static_path = ['_static']
 htmlhelp_basename = 'MozillaTreeDocs'
