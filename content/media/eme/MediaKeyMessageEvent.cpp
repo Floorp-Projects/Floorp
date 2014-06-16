@@ -86,9 +86,9 @@ MediaKeyMessageEvent::Constructor(const GlobalObject& aGlobal,
   if (aEventInitDict.mMessage.WasPassed()) {
     const auto& a = aEventInitDict.mMessage.Value();
     a.ComputeLengthAndData();
-    e->mMessage = Uint8Array::Create(aGlobal.GetContext(), owner, a.Length(), a.Data());
+    e->mMessage = Uint8Array::Create(aGlobal.Context(), owner, a.Length(), a.Data());
   } else {
-    e->mMessage = Uint8Array::Create(aGlobal.GetContext(), owner, 0, nullptr);
+    e->mMessage = Uint8Array::Create(aGlobal.Context(), owner, 0, nullptr);
   }
   if (!e->mMessage) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
