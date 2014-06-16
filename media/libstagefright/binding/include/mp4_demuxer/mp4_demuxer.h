@@ -8,6 +8,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/gfx/Rect.h"
 #include "mp4_demuxer/DecoderData.h"
+#include "AbstractMediaDecoder.h"
 
 namespace mp4_demuxer
 {
@@ -38,6 +39,7 @@ public:
   Microseconds Duration();
   bool CanSeek();
 
+  mozilla::MetadataTags* GetTags();
   bool HasValidAudio();
   bool HasValidVideo();
 
