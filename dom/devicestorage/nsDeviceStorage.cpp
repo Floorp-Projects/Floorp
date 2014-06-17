@@ -3546,6 +3546,23 @@ already_AddRefed<DOMRequest>
 nsDOMDeviceStorage::AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
                              ErrorResult& aRv)
 {
+  return AddOrAppendNamed(aBlob, aPath,
+                          DEVICE_STORAGE_REQUEST_CREATE, aRv);
+}
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::AppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
+                                ErrorResult& aRv)
+{
+  return AddOrAppendNamed(aBlob, aPath,
+                          DEVICE_STORAGE_REQUEST_APPEND, aRv);
+}
+
+
+already_AddRefed<DOMRequest>
+nsDOMDeviceStorage::AddOrAppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
+                                     const int32_t aRequestType, ErrorResult& aRv)
+{
   MOZ_ASSERT(NS_IsMainThread());
 
   // if the blob is null here, bail
@@ -3581,7 +3598,9 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
       }
       return request.forget();
     }
-    return ds->AddNamed(aBlob, storagePath, aRv);
+
+    return ds->AddOrAppendNamed(aBlob, storagePath,
+                                aRequestType, aRv);
   }
 
   nsRefPtr<DOMRequest> request = new DOMRequest(win);
@@ -3594,9 +3613,13 @@ nsDOMDeviceStorage::AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
   } else if (!typeChecker->Check(mStorageType, dsf->mFile) ||
       !typeChecker->Check(mStorageType, aBlob)) {
     r = new PostErrorEvent(request, POST_ERROR_EVENT_ILLEGAL_TYPE);
-  } else {
-    r = new DeviceStorageRequest(DEVICE_STORAGE_REQUEST_CREATE,
+  } else if (aRequestType == DEVICE_STORAGE_REQUEST_APPEND ||
+             aRequestType == DEVICE_STORAGE_REQUEST_CREATE) {
+    r = new DeviceStorageRequest(DeviceStorageRequestType(aRequestType),
                                  win, mPrincipal, dsf, request, aBlob);
+  } else {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
   }
 
   rv = NS_DispatchToCurrentThread(r);
