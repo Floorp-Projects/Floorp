@@ -28,9 +28,10 @@ INFINITY = float('1e66666')
 FLOAT_REPR = repr
 
 def floatstr(o, allow_nan=True):
-    # Check for specials.  Note that this type of test is processor- and/or
-    # platform-specific, so do tests which don't depend on the internals.
-
+    """
+    Check for specials.  Note that this type of test is processor- and/or
+    platform-specific, so do tests which don't depend on the internals.
+    """
     if o != o:
         text = 'NaN'
     elif o == INFINITY:
@@ -174,9 +175,15 @@ class JSONEncoder(object):
         self.encoding = encoding
 
     def _newline_indent(self):
+        """
+        Indent lines by level
+        """
         return '\n' + (' ' * (self.indent * self.current_indent_level))
 
     def _iterencode_list(self, lst, markers=None):
+        """
+        Encoding lists, yielding by level
+        """
         if not lst:
             yield '[]'
             return
@@ -210,6 +217,9 @@ class JSONEncoder(object):
             del markers[markerid]
 
     def _iterencode_dict(self, dct, markers=None):
+        """
+        Encoding dictionaries, yielding by level
+        """
         if not dct:
             yield '{}'
             return

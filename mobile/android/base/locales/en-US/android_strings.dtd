@@ -371,6 +371,10 @@ size. -->
      previous location in the navigation, such as the previous folder -->
 <!ENTITY home_move_up_to_filter "Up to &formatS;">
 
+<!ENTITY private_browsing_title "Private Browsing">
+<!ENTITY private_tabs_panel_description "Your private tabs will show up here. While we don\'t keep any form of your browsing history or cookies, files that you download will still be saved on your device.">
+<!ENTITY private_tabs_panel_learn_more "Want to learn more?">
+
 <!ENTITY pin_site_dialog_hint "Enter a search keyword">
 
 <!ENTITY filepicker_title "Choose File">

@@ -18,6 +18,8 @@ const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devt
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const STRINGS_URI = "chrome://browser/locale/devtools/webaudioeditor.properties"
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
+const Telemetry = require("devtools/shared/telemetry");
+const telemetry = new Telemetry();
 
 let { console } = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
@@ -144,6 +146,7 @@ let WebAudioEditorController = {
    * Listen for events emitted by the current tab target.
    */
   initialize: function() {
+    telemetry.toolOpened("webaudioeditor");
     this._onTabNavigated = this._onTabNavigated.bind(this);
     this._onThemeChange = this._onThemeChange.bind(this);
     gTarget.on("will-navigate", this._onTabNavigated);
@@ -169,6 +172,7 @@ let WebAudioEditorController = {
    * Remove events emitted by the current tab target.
    */
   destroy: function() {
+    telemetry.toolClosed("webaudioeditor");
     gTarget.off("will-navigate", this._onTabNavigated);
     gTarget.off("navigate", this._onTabNavigated);
     gFront.off("start-context", this._onStartContext);
