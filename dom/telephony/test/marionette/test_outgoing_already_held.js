@@ -16,7 +16,7 @@ function simulateIncoming() {
     log("Received 'incoming' call event.");
     incomingCall = event.call;
     ok(incomingCall);
-    is(incomingCall.id.number, inNumber);
+    is(incomingCall.number, inNumber);
     is(incomingCall.state, "incoming");
 
     is(telephony.calls.length, 1);
@@ -112,7 +112,7 @@ function dial() {
   telephony.dial(outNumber).then(call => {
     outgoingCall = call;
     ok(outgoingCall);
-    is(outgoingCall.id.number, outNumber);
+    is(outgoingCall.number, outNumber);
     is(outgoingCall.state, "dialing");
 
     is(outgoingCall, telephony.active);
