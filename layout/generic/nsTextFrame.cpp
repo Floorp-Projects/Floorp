@@ -4803,7 +4803,7 @@ GetInflationForTextDecorations(nsIFrame* aFrame, nscoord aInflationMinFontSize)
 
 void
 nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
-                                     const nsHTMLReflowState& aBlockReflowState,
+                                     nsIFrame* aBlock,
                                      PropertyProvider& aProvider,
                                      nsRect* aVisualOverflowRect,
                                      bool aIncludeTextDecorations)
@@ -4816,8 +4816,8 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
-    nsIFrame* firstLetterFrame = aBlockReflowState.frame;
-    uint8_t decorationStyle = firstLetterFrame->StyleContext()->
+    // In this case, aBlock is the ::first-letter frame.
+    uint8_t decorationStyle = aBlock->StyleContext()->
                                 StyleTextReset()->GetDecorationStyle();
     // If the style is none, let's include decoration line rect as solid style
     // since changing the style from none to solid/dotted/dashed doesn't cause
@@ -4861,7 +4861,7 @@ nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     GetTextDecorations(aPresContext, eResolvedColors, textDecs);
     if (textDecs.HasDecorationLines()) {
       nscoord inflationMinFontSize =
-        nsLayoutUtils::InflationMinFontSizeFor(aBlockReflowState.frame);
+        nsLayoutUtils::InflationMinFontSizeFor(aBlock);
 
       const nscoord width = GetSize().width;
       const gfxFloat appUnitsPerDevUnit = aPresContext->AppUnitsPerDevPixel(),
@@ -8046,7 +8046,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // When we have text decorations, we don't need to compute their overflow now
   // because we're guaranteed to do it later
   // (see nsLineLayout::RelativePositionFrames)
-  UnionAdditionalOverflow(presContext, *aLineLayout.LineContainerRS(),
+  UnionAdditionalOverflow(presContext, aLineLayout.LineContainerRS()->frame,
                           provider, &aMetrics.VisualOverflow(), false);
 
   /////////////////////////////////////////////////////////////////////
@@ -8288,7 +8288,7 @@ nsTextFrame::RecomputeOverflow(const nsHTMLReflowState& aBlockReflowState)
                           &provider);
   nsRect &vis = result.VisualOverflow();
   vis.UnionRect(vis, RoundOut(textMetrics.mBoundingBox) + nsPoint(0, mAscent));
-  UnionAdditionalOverflow(PresContext(), aBlockReflowState, provider,
+  UnionAdditionalOverflow(PresContext(), aBlockReflowState.frame, provider,
                           &vis, true);
   return result;
 }
@@ -8578,4 +8578,37 @@ nsTextFrame::HasAnyNoncollapsedCharacters()
   int32_t skippedOffset = iter.ConvertOriginalToSkipped(offset);
   int32_t skippedOffsetEnd = iter.ConvertOriginalToSkipped(offsetEnd);
   return skippedOffset != skippedOffsetEnd;
+}
+
+bool
+nsTextFrame::UpdateOverflow() 
+{
+  nsRect rect(nsPoint(0, 0), GetSize());
+  nsOverflowAreas overflowAreas(rect, rect);
+
+  if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
+    return false;
+  }
+  gfxSkipCharsIterator iter = EnsureTextRun(nsTextFrame::eInflated);
+  if (!mTextRun) {
+    return false;
+  }
+  PropertyProvider provider(this, iter, nsTextFrame::eInflated);
+  provider.InitializeForDisplay(true);
+
+  nsIFrame*decorationsBlock;
+  if (IsFloatingFirstLetterChild()) {
+    decorationsBlock = GetParent();
+  } else {
+    for (nsIFrame* f = this; f; f = f->GetParent()) {
+      nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
+      if (fBlock) {
+        decorationsBlock = fBlock;
+        break;
+      }
+    }
+  }
+  UnionAdditionalOverflow(PresContext(), decorationsBlock, provider,
+                          &overflowAreas.VisualOverflow(), true);
+  return FinishAndStoreOverflow(overflowAreas, GetSize());
 }
