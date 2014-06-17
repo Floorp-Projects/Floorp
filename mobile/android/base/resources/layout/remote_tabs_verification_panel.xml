@@ -10,40 +10,40 @@
         android:visibility="gone">
 
     <LinearLayout android:id="@+id/remote_tabs_verification_containing_layout"
-                  style="@style/RemoteTabsPanelChild"
+                  style="@style/TabsPanelFrame"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent">
 
-        <LinearLayout style="@style/RemoteTabsSection"
+        <LinearLayout style="@style/TabsPanelSection"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content">
 
-            <TextView style="@style/RemoteTabsItem.TextAppearance.Header.FXAccounts"
+            <TextView style="@style/TabsPanelItem.TextAppearance.Header.FXAccounts"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:text="@string/fxaccount_full_label"
                       android:layout_marginBottom="0dp"/>
 
-            <TextView style="@style/RemoteTabsItem.TextAppearance.Header"
+            <TextView style="@style/TabsPanelItem.TextAppearance.Header"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:text="@string/fxaccount_confirm_account_header"
                       android:layout_marginTop="0dp"/>
 
             <TextView android:id="@+id/remote_tabs_confirm_verification"
-                      style="@style/RemoteTabsItem.TextAppearance"
+                      style="@style/TabsPanelItem.TextAppearance"
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:text="@string/fxaccount_confirm_account_verification_link"/>
 
         </LinearLayout>
 
-        <LinearLayout style="@style/RemoteTabsSection"
+        <LinearLayout style="@style/TabsPanelSection"
                       android:layout_width="match_parent"
                       android:layout_height="match_parent">
 
             <TextView android:id="@+id/remote_tabs_confirm_resend"
-                      style="@style/RemoteTabsItem.TextAppearance.Linkified.Resend"
+                      style="@style/TabsPanelItem.TextAppearance.Linkified.Resend"
                       android:layout_width="match_parent"
                       android:text="@string/fxaccount_confirm_account_resend_email"/>
 

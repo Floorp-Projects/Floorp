@@ -39,13 +39,11 @@
                                               android:visibility="gone"
                                               gecko:tabs="tabs_normal"/>
 
-        <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/private_tabs"
-                                              style="@style/TabsList"
-                                              android:layout_width="fill_parent"
-                                              android:layout_height="fill_parent"
-                                              android:choiceMode="singleChoice"
-                                              android:visibility="gone"
-                                              gecko:tabs="tabs_private"/>
+        <org.mozilla.gecko.tabspanel.PrivateTabsPanel
+                android:id="@+id/private_tabs_panel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"/>
 
         <org.mozilla.gecko.tabspanel.RemoteTabsPanel
                 android:id="@+id/remote_tabs"

@@ -712,10 +712,10 @@ var LoginManagerContent = {
                        usernameField.value.toLowerCase() == selectedLogin.username.toLowerCase());
     
                 if (!disabledOrReadOnly && !userEnteredDifferentCase) {
-                    usernameField.value = selectedLogin.username;
+                    usernameField.setUserInput(selectedLogin.username);
                 }
             }
-            passwordField.value = selectedLogin.password;
+            passwordField.setUserInput(selectedLogin.password);
             didFillForm = true;
         } else if (selectedLogin && !autofillForm) {
             // For when autofillForm is false, but we still have the information

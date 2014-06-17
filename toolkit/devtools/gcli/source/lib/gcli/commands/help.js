@@ -314,7 +314,7 @@ exports.items = [
           '</span>\n' +
           '</loop>\n' +
           '\n' +
-          '<span if="${command.isParent}"># ${l10n.subCommands}:\n' +
+          '<span if="${command.isParent}"># ${l10n.subCommands}:</span>\n' +
           '\n' +
           '<span if="${subcommands.length === 0}">${l10n.subcommandsNone}</span>\n' +
           '<loop foreach="subcommand in ${subcommands}">* ${subcommand.name}: ${subcommand.description}\n' +
@@ -368,9 +368,7 @@ exports.items = [
     exec: function(commandsData, context) {
       return {
         html:
-          '<pre><span if="${includeIntro}">## ${l10n.helpIntro1}\n' +
-          '\n' +
-          '${l10n.helpIntro}\n' +
+          '<pre><span if="${includeIntro}">## ${l10n.helpIntro}</span>\n' +
           '\n' +
           '# ${heading}\n' +
           '\n' +

@@ -134,13 +134,13 @@ StyleEditorUI.prototype = {
 
     this._view = new SplitView(viewRoot);
 
-    wire(this._view.rootElement, ".style-editor-newButton", function onNew() {
+    wire(this._view.rootElement, ".style-editor-newButton", () =>{
       this._debuggee.addStyleSheet(null).then(this._onStyleSheetCreated);
-    }.bind(this));
+    });
 
-    wire(this._view.rootElement, ".style-editor-importButton", function onImport() {
+    wire(this._view.rootElement, ".style-editor-importButton", ()=> {
       this._importFromFile(this._mockImportFile || null, this._window);
-    }.bind(this));
+    });
 
     this._optionsMenu = this._panelDoc.getElementById("style-editor-options-popup");
     this._optionsMenu.addEventListener("popupshowing",
@@ -300,7 +300,7 @@ StyleEditorUI.prototype = {
    *        Optional parent window for the file picker.
    */
   _importFromFile: function(file, parentWindow) {
-    let onFileSelected = function(file) {
+    let onFileSelected = (file) => {
       if (!file) {
         // nothing selected
         return;
@@ -318,7 +318,7 @@ StyleEditorUI.prototype = {
         });
       });
 
-    }.bind(this);
+    };
 
     showFilePicker(file, false, parentWindow, onFileSelected);
   },
@@ -430,11 +430,11 @@ StyleEditorUI.prototype = {
 
         wire(summary, ".stylesheet-name", {
           events: {
-            "keypress": function onStylesheetNameActivate(aEvent) {
+            "keypress": (aEvent) => {
               if (aEvent.keyCode == aEvent.DOM_VK_RETURN) {
                 this._view.activeSummary = summary;
               }
-            }.bind(this)
+            }
           }
         });
 
@@ -494,7 +494,7 @@ StyleEditorUI.prototype = {
               return;
             }
 
-            let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
+            let href = csscoverage.sheetToUrl(editor.styleSheet);
             usage.createEditorReport(href).then(data => {
               editor.removeAllUnusedRegions();
 
