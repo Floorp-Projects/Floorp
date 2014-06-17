@@ -12,15 +12,15 @@ const { worker } = Cu.import("resource://gre/modules/devtools/worker-loader.js",
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 const Services = devtools.require("Services");
-const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
-const { DebuggerServer } = devtools.require("devtools/server/main");
-const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
-
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
 Services.prefs.setBoolPref("devtools.debugger.log", true);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
+
+const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
+const { DebuggerServer } = devtools.require("devtools/server/main");
+const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 
 function tryImport(url) {
   try {
