@@ -6,11 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const Services = require("Services");
-
-const promise = require("resource://gre/modules/Promise.jsm").Promise;
-const { getRuleLocation } = require("devtools/server/actors/stylesheets");
 
 const protocol = require("devtools/server/protocol");
 const { method, custom, RetVal, Arg } = protocol;
@@ -20,6 +16,12 @@ loader.lazyGetter(this, "gDevTools", () => {
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils)
+});
+loader.lazyGetter(this, "stylesheets", () => {
+  return require("devtools/server/actors/stylesheets");
+});
+loader.lazyGetter(this, "CssLogic", () => {
+  return require("devtools/styleinspector/css-logic").CssLogic;
 });
 
 const CSSRule = Ci.nsIDOMCSSRule;
@@ -438,9 +440,17 @@ let UsageReportActor = protocol.ActorClass({
   _testOnly_isRunning: method(function() {
     return this._running;
   }, {
-    response: { value: RetVal("boolean")}
+    response: { value: RetVal("boolean") }
   }),
 
+  /**
+   * For testing only. What pages did we visit.
+   */
+  _testOnly_visitedPages: method(function() {
+    return [...this._visitedPages];
+  }, {
+    response: { value: RetVal("array:string") }
+  }),
 });
 
 exports.UsageReportActor = UsageReportActor;
@@ -512,7 +522,7 @@ function getImportedSheets(stylesheet) {
  * @see deconstructRuleId(ruleId)
  */
 function ruleToId(rule) {
-  let loc = getRuleLocation(rule);
+  let loc = stylesheets.getRuleLocation(rule);
   return sheetToUrl(rule.parentStyleSheet) + "|" + loc.line + "|" + loc.column;
 }
 
@@ -669,11 +679,17 @@ exports.SEL_ALL = [
  * Find a URL for a given stylesheet
  */
 const sheetToUrl = exports.sheetToUrl = function(stylesheet) {
+  // For <link> elements
   if (stylesheet.href) {
     return stylesheet.href;
   }
-  if (stylesheet.ownerNode && stylesheet.ownerNode.baseURI) {
-    return stylesheet.ownerNode.baseURI;
+
+  // For <style> elements
+  if (stylesheet.ownerNode) {
+    let document = stylesheet.ownerNode.ownerDocument;
+    let sheets = [...document.querySelectorAll("style")];
+    let index = sheets.indexOf(stylesheet.ownerNode);
+    return getURL(document) + ' → <style> index ' + index;
   }
 
   throw new Error("Unknown sheet source");
