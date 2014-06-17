@@ -46,11 +46,12 @@ function run_test() {
   /* Typed arrays. */
   function testForTypedArray(t) {
     sb.curr = t;
-    do_check_eq(Cu.evalInSandbox("this[curr.constructor.name].prototype.subarray.call(curr, 0)[0]", sb), t[0]);
-    do_check_eq(Cu.evalInSandbox("(new this[curr.constructor.name]).__lookupGetter__('length').call(curr)", sb), t.length);
-    do_check_eq(Cu.evalInSandbox("(new this[curr.constructor.name]).__lookupGetter__('buffer').call(curr)", sb), sb.ab);
-    do_check_eq(Cu.evalInSandbox("(new this[curr.constructor.name]).__lookupGetter__('byteOffset').call(curr)", sb), t.byteOffset);
-    do_check_eq(Cu.evalInSandbox("(new this[curr.constructor.name]).__lookupGetter__('byteLength').call(curr)", sb), t.byteLength);
+    sb.currName = t.constructor.name;
+    checkThrows("this[currName].prototype.subarray.call(curr, 0)[0]", sb);
+    checkThrows("(new this[currName]).__lookupGetter__('length').call(curr)", sb);
+    checkThrows("(new this[currName]).__lookupGetter__('buffer').call(curr)", sb);
+    checkThrows("(new this[currName]).__lookupGetter__('byteOffset').call(curr)", sb);
+    checkThrows("(new this[currName]).__lookupGetter__('byteLength').call(curr)", sb);
   }
   sb.ta.forEach(testForTypedArray);
 }

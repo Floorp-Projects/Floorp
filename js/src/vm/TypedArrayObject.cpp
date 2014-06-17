@@ -2273,23 +2273,6 @@ const Class TypedArrayObject::protoClasses[ScalarTypeDescr::TYPE_MAX] = {
     IMPL_TYPED_ARRAY_PROTO_CLASS(Uint8ClampedArray)
 };
 
-#define CHECK(t, a) { if (t == a::IsThisClass) return true; }
-JS_FRIEND_API(bool)
-js::IsTypedArrayThisCheck(JS::IsAcceptableThis test)
-{
-    CHECK(test, Int8ArrayObject);
-    CHECK(test, Uint8ArrayObject);
-    CHECK(test, Int16ArrayObject);
-    CHECK(test, Uint16ArrayObject);
-    CHECK(test, Int32ArrayObject);
-    CHECK(test, Uint32ArrayObject);
-    CHECK(test, Float32ArrayObject);
-    CHECK(test, Float64ArrayObject);
-    CHECK(test, Uint8ClampedArrayObject);
-    return false;
-}
-#undef CHECK
-
 JSObject *
 js_InitArrayBufferClass(JSContext *cx, HandleObject obj)
 {
