@@ -5,10 +5,6 @@ function runTests() {
   yield setLinks("0");
   yield addNewTabPageTab();
 
-  // When gSearch modifies the DOM as it sets itself up, it can prevent the
-  // popup from opening, depending on the timing.  Wait until that's done.
-  yield whenSearchInitDone();
-
   let site = getCell(0).node.querySelector(".newtab-site");
   site.setAttribute("type", "sponsored");
 
