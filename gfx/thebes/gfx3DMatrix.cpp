@@ -162,12 +162,12 @@ gfx3DMatrix
 gfx3DMatrix::From2D(const gfxMatrix &aMatrix)
 {
   gfx3DMatrix matrix;
-  matrix._11 = (float)aMatrix.xx;
-  matrix._12 = (float)aMatrix.yx;
-  matrix._21 = (float)aMatrix.xy;
-  matrix._22 = (float)aMatrix.yy;
-  matrix._41 = (float)aMatrix.x0;
-  matrix._42 = (float)aMatrix.y0;
+  matrix._11 = (float)aMatrix._11;
+  matrix._12 = (float)aMatrix._12;
+  matrix._21 = (float)aMatrix._21;
+  matrix._22 = (float)aMatrix._22;
+  matrix._41 = (float)aMatrix._31;
+  matrix._42 = (float)aMatrix._32;
   return matrix;
 }
 
@@ -369,22 +369,22 @@ void
 gfx3DMatrix::PreMultiply(const gfxMatrix& aOther)
 {
   gfx3DMatrix temp;
-  temp._11 = aOther.xx * _11 + aOther.yx * _21;
-  temp._21 = aOther.xy * _11 + aOther.yy * _21;
+  temp._11 = aOther._11 * _11 + aOther._12 * _21;
+  temp._21 = aOther._21 * _11 + aOther._22 * _21;
   temp._31 = _31;
-  temp._41 = aOther.x0 * _11 + aOther.y0 * _21 + _41;
-  temp._12 = aOther.xx * _12 + aOther.yx * _22;
-  temp._22 = aOther.xy * _12 + aOther.yy * _22;
+  temp._41 = aOther._31 * _11 + aOther._32 * _21 + _41;
+  temp._12 = aOther._11 * _12 + aOther._12 * _22;
+  temp._22 = aOther._21 * _12 + aOther._22 * _22;
   temp._32 = _32;
-  temp._42 = aOther.x0 * _12 + aOther.y0 * _22 + _42;
-  temp._13 = aOther.xx * _13 + aOther.yx * _23;
-  temp._23 = aOther.xy * _13 + aOther.yy * _23;
+  temp._42 = aOther._31 * _12 + aOther._32 * _22 + _42;
+  temp._13 = aOther._11 * _13 + aOther._12 * _23;
+  temp._23 = aOther._21 * _13 + aOther._22 * _23;
   temp._33 = _33;
-  temp._43 = aOther.x0 * _13 + aOther.y0 * _23 + _43;
-  temp._14 = aOther.xx * _14 + aOther.yx * _24;
-  temp._24 = aOther.xy * _14 + aOther.yy * _24;
+  temp._43 = aOther._31 * _13 + aOther._32 * _23 + _43;
+  temp._14 = aOther._11 * _14 + aOther._12 * _24;
+  temp._24 = aOther._21 * _14 + aOther._22 * _24;
   temp._34 = _34;
-  temp._44 = aOther.x0 * _14 + aOther.y0 * _24 + _44;
+  temp._44 = aOther._31 * _14 + aOther._32 * _24 + _44;
 
   *this = temp;
 }
@@ -711,12 +711,12 @@ gfx3DMatrix::Is2D(gfxMatrix* aMatrix) const
     return false;
   }
   if (aMatrix) {
-    aMatrix->xx = _11;
-    aMatrix->yx = _12;
-    aMatrix->xy = _21;
-    aMatrix->yy = _22;
-    aMatrix->x0 = _41;
-    aMatrix->y0 = _42;
+    aMatrix->_11 = _11;
+    aMatrix->_12 = _12;
+    aMatrix->_21 = _21;
+    aMatrix->_22 = _22;
+    aMatrix->_31 = _41;
+    aMatrix->_32 = _42;
   }
   return true;
 }
@@ -730,12 +730,12 @@ gfx3DMatrix::CanDraw2D(gfxMatrix* aMatrix) const
     return false;
   }
   if (aMatrix) {
-    aMatrix->xx = _11;
-    aMatrix->yx = _12;
-    aMatrix->xy = _21;
-    aMatrix->yy = _22;
-    aMatrix->x0 = _41;
-    aMatrix->y0 = _42;
+    aMatrix->_11 = _11;
+    aMatrix->_12 = _12;
+    aMatrix->_21 = _21;
+    aMatrix->_22 = _22;
+    aMatrix->_31 = _41;
+    aMatrix->_32 = _42;
   }
   return true;
 }

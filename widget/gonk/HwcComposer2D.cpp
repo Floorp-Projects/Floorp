@@ -377,9 +377,9 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
         // Reflection is applied before rotation
         gfxMatrix rotation = transform * aGLWorldTransform;
         // Compute fuzzy zero like PreservesAxisAlignedRectangles()
-        if (fabs(rotation.xx) < 1e-6) {
-            if (rotation.xy < 0) {
-                if (rotation.yx > 0) {
+        if (fabs(rotation._11) < 1e-6) {
+            if (rotation._21 < 0) {
+                if (rotation._12 > 0) {
                     // 90 degree rotation
                     //
                     // |  0  -1  |
@@ -403,7 +403,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
                     LOGD("Layer vertically reflected then rotated 270 degrees");
                 }
             } else {
-                if (rotation.yx < 0) {
+                if (rotation._12 < 0) {
                     // 270 degree rotation
                     //
                     // |  0   1  |
@@ -427,8 +427,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
                     LOGD("Layer horizontally reflected then rotated 270 degrees");
                 }
             }
-        } else if (rotation.xx < 0) {
-            if (rotation.yy > 0) {
+        } else if (rotation._11 < 0) {
+            if (rotation._22 > 0) {
                 // Horizontal reflection
                 //
                 // | -1   0  |
@@ -452,7 +452,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
                 LOGD("Layer rotated 180 degrees");
             }
         } else {
-            if (rotation.yy < 0) {
+            if (rotation._22 < 0) {
                 // Vertical reflection
                 //
                 // |  1   0  |

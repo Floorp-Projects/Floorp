@@ -31,9 +31,9 @@
  *
  */
 struct gfxMatrix {
-    double xx; double yx;
-    double xy; double yy;
-    double x0; double y0;
+    double _11; double _12;
+    double _21; double _22;
+    double _31; double _32;
 
 public:
     /**
@@ -46,9 +46,9 @@ public:
      * description for the layout of the matrix.
      */
     gfxMatrix(gfxFloat a, gfxFloat b, gfxFloat c, gfxFloat d, gfxFloat tx, gfxFloat ty) :
-        xx(a),  yx(b),
-        xy(c),  yy(d),
-        x0(tx), y0(ty) { }
+        _11(a),  _12(b),
+        _21(c),  _22(d),
+        _31(tx), _32(ty) { }
 
     /**
      * Post-multiplies m onto the matrix.
@@ -69,9 +69,9 @@ public:
      */
     bool operator==(const gfxMatrix& other) const
     {
-      return FuzzyEqual(xx, other.xx) && FuzzyEqual(yx, other.yx) &&
-             FuzzyEqual(xy, other.xy) && FuzzyEqual(yy, other.yy) &&
-             FuzzyEqual(x0, other.x0) && FuzzyEqual(y0, other.y0);
+      return FuzzyEqual(_11, other._11) && FuzzyEqual(_12, other._12) &&
+             FuzzyEqual(_21, other._21) && FuzzyEqual(_22, other._22) &&
+             FuzzyEqual(_31, other._31) && FuzzyEqual(_32, other._32);
     }
 
     bool operator!=(const gfxMatrix& other) const
@@ -86,9 +86,9 @@ public:
     const gfxMatrix& Reset();
 
     bool IsIdentity() const {
-       return xx == 1.0 && yx == 0.0 &&
-              xy == 0.0 && yy == 1.0 &&
-              x0 == 0.0 && y0 == 0.0;
+       return _11 == 1.0 && _12 == 0.0 &&
+              _21 == 0.0 && _22 == 1.0 &&
+              _31 == 0.0 && _32 == 0.0;
     }
 
     /**
@@ -105,7 +105,7 @@ public:
      */
     bool IsSingular() const {
         // if the determinant (ad - bc) is zero it's singular
-        return (xx * yy) == (yx * xy);
+        return (_11 * _22) == (_12 * _21);
     }
 
     /**
@@ -167,7 +167,7 @@ public:
      * Returns the translation component of this matrix.
      */
     gfxPoint GetTranslation() const {
-        return gfxPoint(x0, y0);
+        return gfxPoint(_31, _32);
     }
 
     /**
@@ -176,8 +176,8 @@ public:
      */
     bool HasNonIntegerTranslation() const {
         return HasNonTranslation() ||
-            !FuzzyEqual(x0, floor(x0 + 0.5)) ||
-            !FuzzyEqual(y0, floor(y0 + 0.5));
+            !FuzzyEqual(_31, floor(_31 + 0.5)) ||
+            !FuzzyEqual(_32, floor(_32 + 0.5));
     }
 
     /**
@@ -185,8 +185,8 @@ public:
      * than a straight translation
      */
     bool HasNonTranslation() const {
-        return !FuzzyEqual(xx, 1.0) || !FuzzyEqual(yy, 1.0) ||
-               !FuzzyEqual(xy, 0.0) || !FuzzyEqual(yx, 0.0);
+        return !FuzzyEqual(_11, 1.0) || !FuzzyEqual(_22, 1.0) ||
+               !FuzzyEqual(_21, 0.0) || !FuzzyEqual(_12, 0.0);
     }
 
     /**
@@ -201,9 +201,9 @@ public:
      * than a translation or a -1 y scale (y axis flip)
      */
     bool HasNonTranslationOrFlip() const {
-        return !FuzzyEqual(xx, 1.0) ||
-               (!FuzzyEqual(yy, 1.0) && !FuzzyEqual(yy, -1.0)) ||
-               !FuzzyEqual(xy, 0.0) || !FuzzyEqual(yx, 0.0);
+        return !FuzzyEqual(_11, 1.0) ||
+               (!FuzzyEqual(_22, 1.0) && !FuzzyEqual(_22, -1.0)) ||
+               !FuzzyEqual(_21, 0.0) || !FuzzyEqual(_12, 0.0);
     }
 
     /**
@@ -212,14 +212,14 @@ public:
      * no rotation.
      */
     bool HasNonAxisAlignedTransform() const {
-        return !FuzzyEqual(xy, 0.0) || !FuzzyEqual(yx, 0.0);
+        return !FuzzyEqual(_21, 0.0) || !FuzzyEqual(_12, 0.0);
     }
 
     /**
      * Computes the determinant of this matrix.
      */
     double Determinant() const {
-        return xx*yy - yx*xy;
+        return _11*_22 - _12*_21;
     }
 
     /* Computes the scale factors of this matrix; that is,
@@ -264,16 +264,16 @@ public:
      * scaling and translation.
      */
     bool PreservesAxisAlignedRectangles() const {
-        return ((FuzzyEqual(xx, 0.0) && FuzzyEqual(yy, 0.0))
-            || (FuzzyEqual(xy, 0.0) && FuzzyEqual(yx, 0.0)));
+        return ((FuzzyEqual(_11, 0.0) && FuzzyEqual(_22, 0.0))
+            || (FuzzyEqual(_21, 0.0) && FuzzyEqual(_12, 0.0)));
     }
 
     /**
      * Returns true if the matrix has non-integer scale
      */
     bool HasNonIntegerScale() const {
-        return !FuzzyEqual(xx, floor(xx + 0.5)) ||
-               !FuzzyEqual(yy, floor(yy + 0.5));
+        return !FuzzyEqual(_11, floor(_11 + 0.5)) ||
+               !FuzzyEqual(_22, floor(_22 + 0.5));
     }
 
 private:
