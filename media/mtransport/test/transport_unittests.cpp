@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
+#include "databuffer.h"
 #include "dtlsidentity.h"
 #include "nricectx.h"
 #include "nricemediastream.h"
@@ -41,6 +42,20 @@ using namespace mozilla;
 MOZ_MTLOG_MODULE("mtransport")
 
 MtransportTestUtils *test_utils;
+
+
+const uint8_t kTlsChangeCipherSpecType = 0x14;
+const uint8_t kTlsHandshakeType =        0x16;
+
+const uint8_t kTlsHandshakeCertificate = 0x0b;
+
+const uint8_t kTlsFakeChangeCipherSpec[] = {
+  kTlsChangeCipherSpecType,  // Type
+  0xfe, 0xff, // Version
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, // Fictitious sequence #
+  0x00, 0x01, // Length
+  0x01 // Value
+};
 
 // Layer class which can't be initialized.
 class TransportLayerDummy : public TransportLayer {
@@ -71,10 +86,20 @@ class TransportLayerDummy : public TransportLayer {
   bool *destroyed_;
 };
 
+class TransportLayerLossy;
+
+class Inspector {
+ public:
+  virtual ~Inspector() {}
+
+  virtual void Inspect(TransportLayer* layer,
+                       const unsigned char *data, size_t len) = 0;
+};
+
 // Class to simulate various kinds of network lossage
 class TransportLayerLossy : public TransportLayer {
  public:
-  TransportLayerLossy() : loss_mask_(0), packet_(0) {}
+  TransportLayerLossy() : loss_mask_(0), packet_(0), inspector_(nullptr) {}
   ~TransportLayerLossy () {}
 
   virtual TransportResult SendPacket(const unsigned char *data, size_t len) {
@@ -85,6 +110,9 @@ class TransportLayerLossy : public TransportLayer {
       ++packet_;
       return len;
     }
+    if (inspector_) {
+      inspector_->Inspect(this, data, len);
+    }
 
     ++packet_;
 
@@ -93,6 +121,10 @@ class TransportLayerLossy : public TransportLayer {
 
   void SetLoss(uint32_t packet) {
     loss_mask_ |= (1 << (packet & 32));
+  }
+
+  void SetInspector(Inspector* inspector) {
+    inspector_ = inspector;
   }
 
   void StateChange(TransportLayer *layer, State state) {
@@ -121,6 +153,123 @@ class TransportLayerLossy : public TransportLayer {
  private:
   uint32_t loss_mask_;
   uint32_t packet_;
+  ScopedDeletePtr<Inspector> inspector_;
+};
+
+// Process DTLS Records
+#define CHECK_LENGTH(expected) \
+  do { \
+    EXPECT_GE(remaining(), expected); \
+    if (remaining() < expected) return false; \
+  } while(0)
+
+class DtlsRecordParser {
+ public:
+  DtlsRecordParser(const unsigned char *data, size_t len)
+      : buffer_(data, len), offset_(0) {}
+
+  bool NextRecord(uint8_t* ct, RefPtr<DataBuffer>* buffer) {
+    if (!remaining())
+      return false;
+
+    CHECK_LENGTH(13U);
+    const uint8_t *ctp = reinterpret_cast<const uint8_t *>(ptr());
+    consume(11); // ct + version + length
+
+    const uint16_t *tmp = reinterpret_cast<const uint16_t*>(ptr());
+    size_t length = ntohs(*tmp);
+    consume(2);
+
+    CHECK_LENGTH(length);
+    DataBuffer* db = new DataBuffer(ptr(), length);
+    consume(length);
+
+    *ct = *ctp;
+    *buffer = db;
+
+    return true;
+  }
+
+ private:
+  size_t remaining() const { return buffer_.len() - offset_; }
+  const uint8_t *ptr() const { return buffer_.data() + offset_; }
+  void consume(size_t len) { offset_ += len; }
+
+
+  DataBuffer buffer_;
+  size_t offset_;
+};
+
+
+// Inspector that parses out DTLS records and passes
+// them on.
+class DtlsRecordInspector : public Inspector {
+ public:
+  virtual void Inspect(TransportLayer* layer,
+                       const unsigned char *data, size_t len) {
+    DtlsRecordParser parser(data, len);
+
+    uint8_t ct;
+    RefPtr<DataBuffer> buf;
+    while(parser.NextRecord(&ct, &buf)) {
+      OnRecord(layer, ct, buf->data(), buf->len());
+    }
+  }
+
+  virtual void OnRecord(TransportLayer* layer,
+                        uint8_t content_type,
+                        const unsigned char *record,
+                        size_t len) = 0;
+};
+
+// Inspector that injects arbitrary packets based on
+// DTLS records of various types.
+class DtlsInspectorInjector : public DtlsRecordInspector {
+ public:
+  DtlsInspectorInjector(uint8_t packet_type, uint8_t handshake_type,
+                    const unsigned char *data, size_t len) :
+      packet_type_(packet_type),
+      handshake_type_(handshake_type),
+      injected_(false) {
+    data_ = new unsigned char[len];
+    memcpy(data_, data, len);
+    len_ = len;
+  }
+
+  virtual void OnRecord(TransportLayer* layer,
+                        uint8_t content_type,
+                        const unsigned char *data, size_t len) {
+    // Only inject once.
+    if (injected_) {
+      return;
+    }
+
+    // Check that the first byte is as requested.
+    if (content_type != packet_type_) {
+      return;
+    }
+
+    if (handshake_type_ != 0xff) {
+      // Check that the packet is plausibly long enough.
+      if (len < 1) {
+        return;
+      }
+
+      // Check that the handshake type is as requested.
+      if (data[0] != handshake_type_) {
+        return;
+      }
+    }
+
+    layer->SendPacket(data_, len_);
+  }
+
+ private:
+  uint8_t packet_type_;
+  uint8_t handshake_type_;
+  bool injected_;
+  ScopedDeleteArray<unsigned char> data_;
+  size_t len_;
 };
 
 namespace {
@@ -362,6 +511,10 @@ class TransportTestPeer : public sigslot::has_slots<> {
     lossy_->SetLoss(loss);
   }
 
+  void SetInspector(Inspector* inspector) {
+    lossy_->SetInspector(inspector);
+  }
+
   TransportLayer::State state() {
     TransportLayer::State tstate;
 
@@ -548,6 +701,17 @@ TEST_F(TransportTest, TestConnectTwoDigestsBothBad) {
   SetDtlsPeer(2, 3);
 
   ConnectSocketExpectFail();
+}
+
+TEST_F(TransportTest, TestConnectInjectCCS) {
+  SetDtlsPeer();
+  p2_->SetInspector(new DtlsInspectorInjector(
+      kTlsHandshakeType,
+      kTlsHandshakeCertificate,
+      kTlsFakeChangeCipherSpec,
+      sizeof(kTlsFakeChangeCipherSpec)));
+
+  ConnectSocket();
 }
 
 TEST_F(TransportTest, TestTransfer) {
