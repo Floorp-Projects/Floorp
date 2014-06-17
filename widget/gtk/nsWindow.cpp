@@ -2148,8 +2148,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
          gfxPlatform::GetPlatform()->CreateDrawTargetForData(
                         imgSurf->Data(), intSize, imgSurf->Stride(), format);
        ctx = new gfxContext(dt);
-    }  else {
-        ctx = new gfxContext(surf);
+    } else {
+        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected content type");
     }
 
 #ifdef MOZ_X11
