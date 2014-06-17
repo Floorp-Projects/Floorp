@@ -48,16 +48,17 @@ SkipSpace(const CharT *s, const CharT *end)
 
 // Return less than, equal to, or greater than zero depending on whether
 // s1 is less than, equal to, or greater than s2.
+template <typename Char1, typename Char2>
 inline int32_t
-CompareChars(const jschar *s1, size_t l1, const jschar *s2, size_t l2)
+CompareChars(const Char1 *s1, size_t len1, const Char2 *s2, size_t len2)
 {
-    size_t n = Min(l1, l2);
+    size_t n = Min(len1, len2);
     for (size_t i = 0; i < n; i++) {
         if (int32_t cmp = s1[i] - s2[i])
             return cmp;
     }
 
-    return (int32_t)(l1 - l2);
+    return int32_t(len1 - len2);
 }
 
 }  /* namespace js */
