@@ -488,12 +488,12 @@ nsBlockFrame::InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItem
 }
 
 nscoord
-nsBlockFrame::GetBaseline() const
+nsBlockFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nscoord result;
-  if (nsLayoutUtils::GetLastLineBaseline(this, &result))
+  if (nsLayoutUtils::GetLastLineBaseline(aWritingMode, this, &result))
     return result;
-  return nsFrame::GetBaseline();
+  return nsFrame::GetLogicalBaseline(aWritingMode);
 }
 
 nscoord
@@ -1187,12 +1187,14 @@ nsBlockFrame::Reflow(nsPresContext*           aPresContext,
     // XXX Use the entire line when we fix bug 25888.
     nsLayoutUtils::LinePosition position;
     WritingMode wm = aReflowState.GetWritingMode();
-    bool havePosition = nsLayoutUtils::GetFirstLinePosition(this, &position);
-    nscoord lineTop = havePosition ? position.mTop
-                                   : reflowState->ComputedPhysicalBorderPadding().top;
+    bool havePosition = nsLayoutUtils::GetFirstLinePosition(wm, this,
+                                                            &position);
+    nscoord lineTop = havePosition ?
+      position.mBStart :
+      reflowState->ComputedLogicalBorderPadding().BStart(wm);
     nsIFrame* bullet = GetOutsideBullet();
     ReflowBullet(bullet, state, metrics, lineTop);
-    NS_ASSERTION(!BulletIsEmpty() || metrics.Height() == 0,
+    NS_ASSERTION(!BulletIsEmpty() || metrics.BSize(wm) == 0,
                  "empty bullet took up space");
 
     if (havePosition && !BulletIsEmpty()) {
@@ -2461,7 +2463,8 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       if (metrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
         nscoord ascent;
-        if (nsLayoutUtils::GetFirstLineBaseline(bullet, &ascent)) {
+        WritingMode wm = aState.mReflowState.GetWritingMode();
+        if (nsLayoutUtils::GetFirstLineBaseline(wm, bullet, &ascent)) {
           metrics.SetBlockStartAscent(ascent);
         } else {
           metrics.SetBlockStartAscent(metrics.BSize(wm));
