@@ -293,7 +293,7 @@ MarkupView.prototype = {
    */
   _shouldNewSelectionBeHighlighted: function() {
     let reason = this._inspector.selection.reason;
-    let unwantedReasons = ["inspector-open", "navigateaway", "test"];
+    let unwantedReasons = ["inspector-open", "navigateaway", "nodeselected", "test"];
     let isHighlitNode = this._hoveredNode === this._inspector.selection.nodeFront;
     return !isHighlitNode && reason && unwantedReasons.indexOf(reason) === -1;
   },
