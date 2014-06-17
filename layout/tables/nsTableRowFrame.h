@@ -122,7 +122,7 @@ public:
 
   /* return the row ascent
    */
-  nscoord GetRowBaseline();
+  nscoord GetRowBaseline(mozilla::WritingMode aWritingMode);
  
   /** returns the ordinal position of this row in its table */
   virtual int32_t GetRowIndex() const;

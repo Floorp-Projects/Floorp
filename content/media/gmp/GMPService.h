@@ -15,7 +15,7 @@
 #include "nsIThread.h"
 
 class nsIFile;
-template <class> class already_AddRefed;
+template <class> struct already_AddRefed;
 
 namespace mozilla {
 namespace gmp {

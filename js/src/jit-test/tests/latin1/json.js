@@ -32,3 +32,33 @@ function testErrorPos() {
     }
 }
 testErrorPos();
+
+function testEvalHack() {
+    // Latin1
+    var arr = eval(toLatin1("[1, 2, 3, \"abc\"]"));
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc"]');
+
+    // TwoByte
+    arr = eval("[1, 2, 3, \"abc\u1200\"]");
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc\u1200"]');
+}
+testEvalHack();
+
+function testEvalHackNotJSON() {
+    // Latin1
+    var arr = eval(toLatin1("[]; var q; [1, 2, 3, \"abc\"]"));
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc"]');
+
+    // TwoByte
+    arr = eval("[]; var z; [1, 2, 3, \"abc\u1200\"]");
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc\u1200"]');
+
+    try {
+	eval("[1, 2, 3, \"abc\u2028\"]");
+	throw new Error("U+2028 shouldn't eval");
+    } catch (e) {
+	assertEq(e instanceof SyntaxError, true,
+		 "should have thrown a SyntaxError, instead got " + e);
+    }
+}
+testEvalHackNotJSON();
