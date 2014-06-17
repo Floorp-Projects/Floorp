@@ -4658,6 +4658,17 @@
     "n_buckets": 20,
     "description": "The PDF document size (KB)"
   },
+  "PDF_VIEWER_FONT_TYPES": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 19,
+    "description": "The PDF document font types used"
+  },
+  "PDF_VIEWER_EMBED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "A PDF document was embedded: true using OBJECT/EMBED and false using IFRAME"
+  },
   "PDF_VIEWER_FORM": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -4666,7 +4677,7 @@
   "PDF_VIEWER_STREAM_TYPES": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 9,
+    "n_values": 19,
     "description": "The PDF document compression stream types used"
   },
   "PDF_VIEWER_TIME_TO_VIEW_MS": {
