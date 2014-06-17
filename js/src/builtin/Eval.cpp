@@ -24,6 +24,8 @@ using mozilla::HashString;
 using mozilla::Range;
 using mozilla::RangedPtr;
 
+using JS::AutoCheckCannotGC;
+
 // We should be able to assert this for *any* fp->scopeChain().
 static void
 AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
@@ -50,10 +52,11 @@ IsEvalCacheCandidate(JSScript *script)
 /* static */ HashNumber
 EvalCacheHashPolicy::hash(const EvalCacheLookup &l)
 {
-    return AddToHash(HashString(l.str->chars(), l.str->length()),
-                     l.callerScript.get(),
-                     l.version,
-                     l.pc);
+    AutoCheckCannotGC nogc;
+    uint32_t hash = l.str->hasLatin1Chars()
+                    ? HashString(l.str->latin1Chars(nogc), l.str->length())
+                    : HashString(l.str->twoByteChars(nogc), l.str->length());
+    return AddToHash(hash, l.callerScript.get(), l.version, l.pc);
 }
 
 /* static */ bool
@@ -183,7 +186,7 @@ EvalStringMightBeJSON(const Range<const CharT> chars)
 
 template <typename CharT>
 static EvalJSONResult
-ParseEvalStringAsJSON(JSContext *cx, Range<const CharT> chars, MutableHandleValue rval)
+ParseEvalStringAsJSON(JSContext *cx, const Range<const CharT> chars, MutableHandleValue rval)
 {
     size_t len = chars.length();
     MOZ_ASSERT((chars[0] == '(' && chars[len - 1] == ')') ||
@@ -211,11 +214,11 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript, JSFlatString *str, MutableHan
         return EvalJSON_NotJSON;
 
     if (str->hasLatin1Chars()) {
-        JS::AutoCheckCannotGC nogc;
+        AutoCheckCannotGC nogc;
         if (!EvalStringMightBeJSON(str->latin1Range(nogc)))
             return EvalJSON_NotJSON;
     } else {
-        JS::AutoCheckCannotGC nogc;
+        AutoCheckCannotGC nogc;
         if (!EvalStringMightBeJSON(str->twoByteRange(nogc)))
             return EvalJSON_NotJSON;
     }
@@ -303,9 +306,6 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     if (ejr != EvalJSON_NotJSON)
         return ejr == EvalJSON_Success;
 
-    size_t length = flatStr->length();
-    ConstTwoByteChars chars(flatStr->chars(), length);
-
     EvalScriptGuard esg(cx);
 
     if (evalType == DIRECT_EVAL && caller.isNonEvalFunctionFrame())
@@ -334,7 +334,16 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setNoScriptRval(false)
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
-        SourceBufferHolder srcBuf(chars.get(), length, SourceBufferHolder::NoOwnership);
+
+        AutoStableStringChars flatChars(cx, flatStr);
+        if (!flatChars.initTwoByte(cx))
+            return false;
+
+        const jschar *chars = flatChars.twoByteRange().start().get();
+        SourceBufferHolder::Ownership ownership = flatChars.maybeGiveOwnershipToCaller()
+                                                  ? SourceBufferHolder::GiveOwnership
+                                                  : SourceBufferHolder::NoOwnership;
+        SourceBufferHolder srcBuf(chars, flatStr->length(), ownership);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      srcBuf, flatStr, staticLevel);
@@ -374,9 +383,6 @@ js::DirectEvalStringFromIon(JSContext *cx,
     if (ejr != EvalJSON_NotJSON)
         return ejr == EvalJSON_Success;
 
-    size_t length = flatStr->length();
-    ConstTwoByteChars chars(flatStr->chars(), length);
-
     EvalScriptGuard esg(cx);
 
     esg.lookupInEvalCache(flatStr, callerScript, pc);
@@ -401,7 +407,16 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setNoScriptRval(false)
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
-        SourceBufferHolder srcBuf(chars.get(), length, SourceBufferHolder::NoOwnership);
+
+        AutoStableStringChars flatChars(cx, flatStr);
+        if (!flatChars.initTwoByte(cx))
+            return false;
+
+        const jschar *chars = flatChars.twoByteRange().start().get();
+        SourceBufferHolder::Ownership ownership = flatChars.maybeGiveOwnershipToCaller()
+                                                  ? SourceBufferHolder::GiveOwnership
+                                                  : SourceBufferHolder::NoOwnership;
+        SourceBufferHolder srcBuf(chars, flatStr->length(), ownership);
         JSScript *compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                      scopeobj, callerScript, options,
                                                      srcBuf, flatStr, staticLevel);

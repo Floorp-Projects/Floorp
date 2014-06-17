@@ -1436,13 +1436,16 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     if (!filename)
         return false;
 
-    const jschar *ucbuf = nullptr;
-    size_t buflen;
     str = FileAsString(cx, filename.ptr());
-    if (str)
-        ucbuf = JS_GetStringCharsAndLength(cx, str, &buflen);
-    if (!ucbuf)
+    if (!str)
         return false;
+
+    AutoStableStringChars chars(cx, &str->asLinear());
+    if (!chars.initTwoByte(cx))
+        return false;
+
+    const jschar *ucbuf = chars.twoByteRange().start().get();
+    size_t buflen = str->length();
 
     JS::Anchor<JSString *> a_str(str);
 

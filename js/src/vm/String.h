@@ -1068,7 +1068,7 @@ class ScopedThreadSafeStringInspector
 class MOZ_STACK_CLASS AutoStableStringChars
 {
     /* Ensure the string is kept alive while we're using its chars. */
-    Rooted<JSLinearString*> s_;
+    RootedLinearString s_;
     union {
         const jschar *twoByteChars_;
         const JS::Latin1Char *latin1Chars_;
@@ -1099,6 +1099,16 @@ class MOZ_STACK_CLASS AutoStableStringChars
     mozilla::Range<const jschar> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
         return mozilla::Range<const jschar>(twoByteChars_, s_->length());
+    }
+
+    /* If we own the chars, transfer ownership to the caller. */
+    bool maybeGiveOwnershipToCaller() {
+        MOZ_ASSERT(state_ != Uninitialized);
+        if (!ownsChars_)
+            return false;
+        state_ = Uninitialized;
+        ownsChars_ = false;
+        return true;
     }
 
   private:
