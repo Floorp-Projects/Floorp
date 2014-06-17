@@ -68,6 +68,15 @@ this.ContentSearch = {
   },
 
   receiveMessage: function (msg) {
+    // Add a temporary event handler that exists only while the message is in
+    // the event queue.  If the message's source docshell changes browsers in
+    // the meantime, then we need to update msg.target.  event.detail will be
+    // the docshell's new parent <xul:browser> element.
+    msg.handleEvent = function (event) {
+      this.target = event.detail;
+    };
+    msg.target.addEventListener("SwapDocShells", msg, true);
+
     this._eventQueue.push({
       type: "Message",
       data: msg,
@@ -106,6 +115,7 @@ this.ContentSearch = {
     if (methodName in this) {
       yield this._initService();
       yield this[methodName](msg, msg.data.data);
+      msg.target.removeEventListener("SwapDocShells", msg, true);
     }
   }),
 
