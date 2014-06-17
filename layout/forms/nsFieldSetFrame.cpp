@@ -585,8 +585,9 @@ nsFieldSetFrame::AccessibleType()
 #endif
 
 nscoord
-nsFieldSetFrame::GetBaseline() const
+nsFieldSetFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nsIFrame* inner = GetInner();
-  return inner->GetPosition().y + inner->GetBaseline();
+  return inner->BStart(aWritingMode, GetParent()->GetSize().width) +
+    inner->GetLogicalBaseline(aWritingMode);
 }

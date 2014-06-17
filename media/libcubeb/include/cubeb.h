@@ -256,7 +256,7 @@ int cubeb_stream_get_position(cubeb_stream * stream, uint64_t * position);
     between the time cubeb acquires the data in the callback and the listener
     can hear the sound.
     @param stream
-    @param latency Current approximate stream latency in ms
+    @param latency Current approximate stream latency in frames.
     @retval CUBEB_OK
     @retval CUBEB_ERROR */
 int cubeb_stream_get_latency(cubeb_stream * stream, uint32_t * latency);

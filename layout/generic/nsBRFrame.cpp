@@ -46,7 +46,7 @@ public:
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
   virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
+  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
 
   virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
   {
@@ -193,7 +193,7 @@ BRFrame::GetType() const
 }
 
 nscoord
-BRFrame::GetBaseline() const
+BRFrame::GetLogicalBaseline(mozilla::WritingMode aWritingMode) const
 {
   return mAscent;
 }

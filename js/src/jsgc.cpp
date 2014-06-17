@@ -1051,6 +1051,10 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     systemZone(nullptr),
     systemAvailableChunkListHead(nullptr),
     userAvailableChunkListHead(nullptr),
+#ifdef JSGC_GENERATIONAL
+    nursery(rt),
+    storeBuffer(rt, nursery),
+#endif
     bytes(0),
     maxBytes(0),
     maxMallocBytes(0),
@@ -1108,10 +1112,6 @@ GCRuntime::GCRuntime(JSRuntime *rt) :
     objectsMarkedInDeadZones(0),
     poked(false),
     heapState(Idle),
-#ifdef JSGC_GENERATIONAL
-    nursery(rt),
-    storeBuffer(rt, nursery),
-#endif
 #ifdef JS_GC_ZEAL
     zealMode(0),
     zealFrequency(0),

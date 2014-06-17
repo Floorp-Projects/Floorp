@@ -5525,7 +5525,10 @@ JS_EncodeStringToUTF8(JSContext *cx, HandleString str)
     if (!linear)
         return nullptr;
 
-    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
+    JS::AutoCheckCannotGC nogc;
+    return linear->hasLatin1Chars()
+           ? JS::CharsToNewUTF8CharsZ(cx, linear->latin1Range(nogc)).c_str()
+           : JS::CharsToNewUTF8CharsZ(cx, linear->twoByteRange(nogc)).c_str();
 }
 
 JS_PUBLIC_API(size_t)

@@ -258,6 +258,8 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     static const uint32_t MAX_LENGTH            = JS_BIT(28) - 1;
 
+    static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
+
     /*
      * Helper function to validate that a string of a given length is
      * representable by a JSString. An allocation overflow is reported if false
@@ -655,14 +657,14 @@ class JSLinearString : public JSString
         return JS::TwoByteChars(chars(), length());
     }
 
-    JS::Latin1Chars latin1Range(const JS::AutoCheckCannotGC &nogc) const {
+    mozilla::Range<const JS::Latin1Char> latin1Range(const JS::AutoCheckCannotGC &nogc) const {
         JS_ASSERT(JSString::isLinear());
-        return JS::Latin1Chars(latin1Chars(nogc), length());
+        return mozilla::Range<const JS::Latin1Char>(latin1Chars(nogc), length());
     }
 
-    JS::TwoByteChars twoByteRange(const JS::AutoCheckCannotGC &nogc) const {
+    mozilla::Range<const jschar> twoByteRange(const JS::AutoCheckCannotGC &nogc) const {
         JS_ASSERT(JSString::isLinear());
-        return JS::TwoByteChars(twoByteChars(nogc), length());
+        return mozilla::Range<const jschar>(twoByteChars(nogc), length());
     }
 
     MOZ_ALWAYS_INLINE
@@ -1046,9 +1048,13 @@ class ScopedThreadSafeStringInspector
         return latin1Chars_;
     }
 
-    JS::TwoByteChars twoByteRange() const {
+    mozilla::Range<const Latin1Char> latin1Range() const {
+        MOZ_ASSERT(state_ == Latin1);
+        return mozilla::Range<const Latin1Char>(latin1Chars_, str_->length());
+    }
+    mozilla::Range<const jschar> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
-        return JS::TwoByteChars(twoByteChars_, str_->length());
+        return mozilla::Range<const jschar>(twoByteChars_, str_->length());
     }
 };
 
@@ -1064,7 +1070,7 @@ class ScopedThreadSafeStringInspector
 class MOZ_STACK_CLASS AutoStableStringChars
 {
     /* Ensure the string is kept alive while we're using its chars. */
-    Rooted<JSLinearString*> s_;
+    RootedLinearString s_;
     union {
         const jschar *twoByteChars_;
         const JS::Latin1Char *latin1Chars_;
@@ -1095,6 +1101,16 @@ class MOZ_STACK_CLASS AutoStableStringChars
     mozilla::Range<const jschar> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
         return mozilla::Range<const jschar>(twoByteChars_, s_->length());
+    }
+
+    /* If we own the chars, transfer ownership to the caller. */
+    bool maybeGiveOwnershipToCaller() {
+        MOZ_ASSERT(state_ != Uninitialized);
+        if (!ownsChars_)
+            return false;
+        state_ = Uninitialized;
+        ownsChars_ = false;
+        return true;
     }
 
   private:

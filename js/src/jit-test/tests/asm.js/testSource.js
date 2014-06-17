@@ -366,3 +366,35 @@ if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
 }
 
 })();
+
+/* Implicit "use strict" context in functions with dynamic linking failure */
+(function () {
+
+var funcCode = 'function g(x) {\n\
+    x=x|0;\n\
+    return x + 1 | 0;}';
+var moduleCode = 'function (glob) {\n\
+    "use asm";\n\
+    var fround = glob.Math.fround;\n\
+    ' + funcCode + '\n\
+    return g;\n\
+    }',
+    useStrict = '"use strict";';
+
+var f6 = eval(useStrict + ";\n(" + moduleCode + "({Math:{}}))");
+
+var expectedToString = funcCode.replace('{', '{\n' + useStrict + '\n')
+var expectedToSource = expectedToString
+
+assertEq(f6.toString(), expectedToString);
+assertEq(f6.toSource(), expectedToSource);
+
+if (isAsmJSCompilationAvailable() && isCachingEnabled()) {
+    var mf6 = eval("\"use strict\";\n(" + moduleCode + ")");
+    assertEq(isAsmJSModuleLoadedFromCache(mf6), true);
+    var f6 = mf6({Math:{}});
+    assertEq(f6.toString(), expectedToString);
+    assertEq(f6.toSource(), expectedToSource);
+}
+
+})();
