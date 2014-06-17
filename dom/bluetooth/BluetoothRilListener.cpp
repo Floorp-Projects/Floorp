@@ -181,9 +181,6 @@ TelephonyListener::CallStateChanged(uint32_t aServiceId,
                                     uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
-                                    uint16_t aNumberPresentation,
-                                    const nsAString& aName,
-                                    uint16_t aNamePresentation,
                                     bool aIsOutgoing,
                                     bool aIsEmergency,
                                     bool aIsConference,
@@ -203,9 +200,6 @@ TelephonyListener::EnumerateCallState(uint32_t aServiceId,
                                       uint32_t aCallIndex,
                                       uint16_t aCallState,
                                       const nsAString_internal& aNumber,
-                                      uint16_t aNumberPresentation,
-                                      const nsAString& aName,
-                                      uint16_t aNamePresentation,
                                       bool aIsOutgoing,
                                       bool aIsEmergency,
                                       bool aIsConference,
@@ -276,10 +270,7 @@ TelephonyListener::NotifyConferenceError(const nsAString& aName,
 
 NS_IMETHODIMP
 TelephonyListener::NotifyCdmaCallWaiting(uint32_t aServiceId,
-                                         const nsAString& aNumber,
-                                         uint16_t aNumberPresentation,
-                                         const nsAString& aName,
-                                         uint16_t aNamePresentation)
+                                         const nsAString& aNumber)
 {
   BluetoothHfpManager* hfp = BluetoothHfpManager::Get();
   NS_ENSURE_TRUE(hfp, NS_ERROR_FAILURE);
