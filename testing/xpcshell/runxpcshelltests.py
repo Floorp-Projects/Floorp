@@ -857,6 +857,8 @@ class XPCShellTests(object):
         # Capturing backtraces is very slow on some platforms, and it's
         # disabled by automation.py too
         self.env["NS_TRACE_MALLOC_DISABLE_STACKS"] = "1"
+        # Don't permit remote connections.
+        self.env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"
 
     def buildEnvironment(self):
         """
