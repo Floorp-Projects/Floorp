@@ -276,6 +276,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 '.mm': 'CMMSRCS',
                 '.cc': 'CPPSRCS',
                 '.cpp': 'CPPSRCS',
+                '.cxx': 'CPPSRCS',
                 '.S': 'SSRCS',
             },
             HOST_SOURCES={
@@ -283,12 +284,14 @@ class TreeMetadataEmitter(LoggingMixin):
                 '.mm': 'HOST_CMMSRCS',
                 '.cc': 'HOST_CPPSRCS',
                 '.cpp': 'HOST_CPPSRCS',
+                '.cxx': 'HOST_CPPSRCS',
             },
             UNIFIED_SOURCES={
                 '.c': 'UNIFIED_CSRCS',
                 '.mm': 'UNIFIED_CMMSRCS',
                 '.cc': 'UNIFIED_CPPSRCS',
                 '.cpp': 'UNIFIED_CPPSRCS',
+                '.cxx': 'UNIFIED_CPPSRCS',
             }
         )
         varmap.update(dict(('GENERATED_%s' % k, v) for k, v in varmap.items()
