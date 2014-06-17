@@ -59,6 +59,7 @@ EXPORTS.mozilla = [
     'Scoped.h',
     'SHA1.h',
     'SplayTree.h',
+    'TaggedAnonymousMemory.h',
     'TemplateLib.h',
     'ThreadLocal.h',
     'ToString.h',
@@ -89,6 +90,7 @@ UNIFIED_SOURCES = [
     'HashFunctions.cpp',
     'Poison.cpp',
     'SHA1.cpp',
+    'TaggedAnonymousMemory.cpp',
 ]
 
 DEFINES['IMPL_MFBT'] = True
