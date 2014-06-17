@@ -14,6 +14,7 @@
 
 #include "mozilla/Compression.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TaggedAnonymousMemory.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -81,9 +82,9 @@ AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
         return nullptr;
     }
 #else  // assume Unix
-    void *p = mmap(nullptr, totalBytes,
-                   PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
-                   -1, 0);
+    void *p = MozTaggedAnonymousMmap(nullptr, totalBytes,
+                                     PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
+                                     -1, 0, "asm-js-code");
     if (p == MAP_FAILED) {
         js_ReportOutOfMemory(cx);
         return nullptr;
