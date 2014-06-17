@@ -339,6 +339,13 @@ public:
                 nsFontMetrics*      aFontMetrics,
                 nscoord&             aAxisHeight);
 
+  static void
+  GetRadicalParameters(nsFontMetrics* aFontMetrics,
+                       bool aDisplayStyle,
+                       nscoord& aRadicalRuleThickness,
+                       nscoord& aRadicalExtraAscender,
+                       nscoord& aRadicalVerticalGap);
+
 protected:
 #if defined(DEBUG) && defined(SHOW_BOUNDING_BOX)
   nsresult DisplayBoundingMetrics(nsDisplayListBuilder* aBuilder,
