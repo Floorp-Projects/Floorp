@@ -2294,6 +2294,30 @@
       "n_buckets": 50,
       "description": "Number of times startup count overflowed"
   },
+  "HTTPCONNMGR_TOTAL_SPECULATIVE_CONN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many speculative http connections are created"
+  },
+  "HTTPCONNMGR_USED_SPECULATIVE_CONN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many speculative http connections are actually used"
+  },
+  "HTTPCONNMGR_UNUSED_SPECULATIVE_CONN": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "1000 * 1000",
+    "n_buckets": 50,
+    "extended_statistics_ok": true,
+    "description": "How many speculative connections are made needlessly"
+  },
   "FIND_PLUGINS": {
     "expires_in_version": "never",
     "kind": "exponential",
