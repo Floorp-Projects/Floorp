@@ -1046,9 +1046,13 @@ class ScopedThreadSafeStringInspector
         return latin1Chars_;
     }
 
-    JS::TwoByteChars twoByteRange() const {
+    mozilla::Range<const Latin1Char> latin1Range() const {
+        MOZ_ASSERT(state_ == Latin1);
+        return mozilla::Range<const Latin1Char>(latin1Chars_, str_->length());
+    }
+    mozilla::Range<const jschar> twoByteRange() const {
         MOZ_ASSERT(state_ == TwoByte);
-        return JS::TwoByteChars(twoByteChars_, str_->length());
+        return mozilla::Range<const jschar>(twoByteChars_, str_->length());
     }
 };
 
