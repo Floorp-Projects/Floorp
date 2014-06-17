@@ -379,13 +379,6 @@ CertVerifier::MozillaPKIXVerifyCert(
                                                   : ocsp_get_disabled;
 
   SECStatus rv;
-  // TODO(bug 970750): anyExtendedKeyUsage
-  // TODO: encipherOnly/decipherOnly
-  // S/MIME Key Usage: http://tools.ietf.org/html/rfc3850#section-4.4.2
-  // S/MIME EKU:       http://tools.ietf.org/html/rfc3850#section-4.4.4
-
-  // TODO(bug 915931): Pass in stapled OCSP response in all calls to
-  //                   BuildCertChain.
 
   mozilla::pkix::ScopedCERTCertList builtChain;
   switch (usage) {
