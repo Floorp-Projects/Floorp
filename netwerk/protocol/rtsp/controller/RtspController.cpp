@@ -369,5 +369,18 @@ RtspController::Init(nsIURI *aURI)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+RtspController::PlaybackEnded()
+{
+  LOG(("RtspController::PlaybackEnded()"));
+  if (!mRtspSource.get()) {
+    MOZ_ASSERT(mRtspSource.get(), "mRtspSource should not be null!");
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  mRtspSource->playbackEnded();
+  return NS_OK;
+}
+
 } // namespace mozilla::net
 } // namespace mozilla
