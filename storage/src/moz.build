@@ -50,11 +50,14 @@ FINAL_LIBRARY = 'storagecomps'
 # (such as NSS) might trigger an initialization of sqlite and allocation
 # of memory using the default allocator, prior to the storage service
 # registering its allocator, causing memory management failures (bug 938730).
+# However, this is not an issue if both the jemalloc allocator and the default
+# allocator are the same thing.
 #
 # Note: On Windows our sqlite build assumes we use jemalloc.  If you disable
 # MOZ_STORAGE_MEMORY on Windows, you will also need to change the "ifdef
 # MOZ_MEMORY" options in db/sqlite3/src/Makefile.in.
-if CONFIG['MOZ_MEMORY'] and not CONFIG['MOZ_NATIVE_SQLITE']:
+if CONFIG['MOZ_MEMORY'] and (not CONFIG['MOZ_NATIVE_SQLITE']
+                             or CONFIG['MOZ_NATIVE_JEMALLOC']):
     if CONFIG['OS_TARGET'] != 'Android':
         DEFINES['MOZ_STORAGE_MEMORY'] = True
 
