@@ -22,6 +22,7 @@ using namespace js;
 using mozilla::AddToHash;
 using mozilla::HashString;
 using mozilla::Range;
+using mozilla::RangedPtr;
 
 // We should be able to assert this for *any* fp->scopeChain().
 static void
@@ -145,23 +146,18 @@ enum EvalJSONResult {
     EvalJSON_NotJSON
 };
 
-static EvalJSONResult
-TryEvalJSON(JSContext *cx, JSScript *callerScript,
-            ConstTwoByteChars chars, size_t length, MutableHandleValue rval)
+template <typename CharT>
+static bool
+EvalStringMightBeJSON(const Range<const CharT> chars)
 {
     // If the eval string starts with '(' or '[' and ends with ')' or ']', it may be JSON.
     // Try the JSON parser first because it's much faster.  If the eval string
     // isn't JSON, JSON parsing will probably fail quickly, so little time
     // will be lost.
-    //
-    // Don't use the JSON parser if the caller is strict mode code, because in
-    // strict mode object literals must not have repeated properties, and the
-    // JSON parser cheerfully (and correctly) accepts them.  If you're parsing
-    // JSON with eval and using strict mode, you deserve to be slow.
+    size_t length = chars.length();
     if (length > 2 &&
         ((chars[0] == '[' && chars[length - 1] == ']') ||
-        (chars[0] == '(' && chars[length - 1] == ')')) &&
-        (!callerScript || !callerScript->strict()))
+         (chars[0] == '(' && chars[length - 1] == ')')))
     {
         // Remarkably, JavaScript syntax is not a superset of JSON syntax:
         // strings in JavaScript cannot contain the Unicode line and paragraph
@@ -169,27 +165,68 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript,
         // Rather than force the JSON parser to handle this quirk when used by
         // eval, we simply don't use the JSON parser when either character
         // appears in the provided string.  See bug 657367.
-        for (const jschar *cp = &chars[1], *end = &chars[length - 2]; ; cp++) {
-            if (*cp == 0x2028 || *cp == 0x2029)
-                break;
-
-            if (cp == end) {
-                bool isArray = (chars[0] == '[');
-                auto jsonChars = isArray
-                                 ? Range<const jschar>(chars.get(), length)
-                                 : Range<const jschar>(chars.get() + 1U, length - 2);
-                JSONParser<jschar> parser(cx, jsonChars, JSONParserBase::NoError);
-                RootedValue tmp(cx);
-                if (!parser.parse(&tmp))
-                    return EvalJSON_Failure;
-                if (tmp.isUndefined())
-                    return EvalJSON_NotJSON;
-                rval.set(tmp);
-                return EvalJSON_Success;
+        if (sizeof(CharT) > 1) {
+            for (RangedPtr<const CharT> cp = chars.start() + 1, end = chars.end() - 1;
+                 cp < end;
+                 cp++)
+            {
+                jschar c = *cp;
+                if (c == 0x2028 || c == 0x2029)
+                    return false;
             }
         }
+
+        return true;
     }
-    return EvalJSON_NotJSON;
+    return false;
+}
+
+template <typename CharT>
+static EvalJSONResult
+ParseEvalStringAsJSON(JSContext *cx, Range<const CharT> chars, MutableHandleValue rval)
+{
+    size_t len = chars.length();
+    MOZ_ASSERT((chars[0] == '(' && chars[len - 1] == ')') ||
+               (chars[0] == '[' && chars[len - 1] == ']'));
+
+    auto jsonChars = (chars[0] == '[')
+                     ? chars
+                     : Range<const CharT>(chars.start().get() + 1U, len - 2);
+
+    JSONParser<CharT> parser(cx, jsonChars, JSONParserBase::NoError);
+    if (!parser.parse(rval))
+        return EvalJSON_Failure;
+
+    return rval.isUndefined() ? EvalJSON_NotJSON : EvalJSON_Success;
+}
+
+static EvalJSONResult
+TryEvalJSON(JSContext *cx, JSScript *callerScript, JSFlatString *str, MutableHandleValue rval)
+{
+    // Don't use the JSON parser if the caller is strict mode code, because in
+    // strict mode object literals must not have repeated properties, and the
+    // JSON parser cheerfully (and correctly) accepts them.  If you're parsing
+    // JSON with eval and using strict mode, you deserve to be slow.
+    if (callerScript && callerScript->strict())
+        return EvalJSON_NotJSON;
+
+    if (str->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        if (!EvalStringMightBeJSON(str->latin1Range(nogc)))
+            return EvalJSON_NotJSON;
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        if (!EvalStringMightBeJSON(str->twoByteRange(nogc)))
+            return EvalJSON_NotJSON;
+    }
+
+    AutoStableStringChars flatChars(cx, str);
+    if (!flatChars.init())
+        return EvalJSON_Failure;
+
+    return flatChars.isLatin1()
+           ? ParseEvalStringAsJSON(cx, flatChars.latin1Range(), rval)
+           : ParseEvalStringAsJSON(cx, flatChars.twoByteRange(), rval);
 }
 
 // Define subset of ExecuteType so that casting performs the injection.
@@ -261,13 +298,13 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
     if (!flatStr)
         return false;
 
-    size_t length = flatStr->length();
-    ConstTwoByteChars chars(flatStr->chars(), length);
-
     RootedScript callerScript(cx, caller ? caller.script() : nullptr);
-    EvalJSONResult ejr = TryEvalJSON(cx, callerScript, chars, length, args.rval());
+    EvalJSONResult ejr = TryEvalJSON(cx, callerScript, flatStr, args.rval());
     if (ejr != EvalJSON_NotJSON)
         return ejr == EvalJSON_Success;
+
+    size_t length = flatStr->length();
+    ConstTwoByteChars chars(flatStr->chars(), length);
 
     EvalScriptGuard esg(cx);
 
@@ -333,12 +370,12 @@ js::DirectEvalStringFromIon(JSContext *cx,
     if (!flatStr)
         return false;
 
-    size_t length = flatStr->length();
-    ConstTwoByteChars chars(flatStr->chars(), length);
-
-    EvalJSONResult ejr = TryEvalJSON(cx, callerScript, chars, length, vp);
+    EvalJSONResult ejr = TryEvalJSON(cx, callerScript, flatStr, vp);
     if (ejr != EvalJSON_NotJSON)
         return ejr == EvalJSON_Success;
+
+    size_t length = flatStr->length();
+    ConstTwoByteChars chars(flatStr->chars(), length);
 
     EvalScriptGuard esg(cx);
 

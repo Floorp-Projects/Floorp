@@ -655,14 +655,14 @@ class JSLinearString : public JSString
         return JS::TwoByteChars(chars(), length());
     }
 
-    JS::Latin1Chars latin1Range(const JS::AutoCheckCannotGC &nogc) const {
+    mozilla::Range<const JS::Latin1Char> latin1Range(const JS::AutoCheckCannotGC &nogc) const {
         JS_ASSERT(JSString::isLinear());
-        return JS::Latin1Chars(latin1Chars(nogc), length());
+        return mozilla::Range<const JS::Latin1Char>(latin1Chars(nogc), length());
     }
 
-    JS::TwoByteChars twoByteRange(const JS::AutoCheckCannotGC &nogc) const {
+    mozilla::Range<const jschar> twoByteRange(const JS::AutoCheckCannotGC &nogc) const {
         JS_ASSERT(JSString::isLinear());
-        return JS::TwoByteChars(twoByteChars(nogc), length());
+        return mozilla::Range<const jschar>(twoByteChars(nogc), length());
     }
 
     MOZ_ALWAYS_INLINE
