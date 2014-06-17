@@ -287,29 +287,25 @@ nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
   if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(mEmbellishData.flags) &&
       StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_INLINE) {
     //place like sub sup or subsup
-    nscoord scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f);
     if (tag == nsGkAtoms::munderover_) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     } else if (tag == nsGkAtoms::munder_) {
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     } else {
       NS_ASSERTION(tag == nsGkAtoms::mover_, "mContent->Tag() not recognized");
       return nsMathMLmmultiscriptsFrame::PlaceMultiScript(PresContext(),
                                                           aRenderingContext,
                                                           aPlaceOrigin,
                                                           aDesiredSize,
-                                                          this, 0, 0,
-                                                          scriptSpace);
+                                                          this, 0, 0);
     }
     
   }
