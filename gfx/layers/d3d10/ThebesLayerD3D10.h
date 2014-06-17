@@ -51,13 +51,7 @@ private:
   /* Checks if our D2D surface has the right content type */
   void VerifyContentType(SurfaceMode aMode);
 
-  /* This contains the thebes surface */
-  nsRefPtr<gfxASurface> mD2DSurface;
-
   mozilla::RefPtr<mozilla::gfx::DrawTarget> mDrawTarget;
-
-  /* This contains the thebes surface for our render-on-white texture */
-  nsRefPtr<gfxASurface> mD2DSurfaceOnWhite;
 
   /* Have a region of our layer drawn */
   void DrawRegion(nsIntRegion &aRegion, SurfaceMode aMode);
