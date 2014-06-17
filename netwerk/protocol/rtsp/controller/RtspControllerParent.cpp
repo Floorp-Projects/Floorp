@@ -167,6 +167,17 @@ RtspControllerParent::RecvStop()
   return true;
 }
 
+bool
+RtspControllerParent::RecvPlaybackEnded()
+{
+  LOG(("RtspControllerParent::RecvPlaybackEnded()"));
+  NS_ENSURE_TRUE(mController, true);
+
+  nsresult rv = mController->PlaybackEnded();
+  SEND_DISCONNECT_IF_ERROR(rv)
+  return true;
+}
+
 NS_IMETHODIMP
 RtspControllerParent::OnMediaDataAvailable(uint8_t index,
                                            const nsACString & data,
