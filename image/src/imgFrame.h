@@ -25,7 +25,7 @@ public:
   imgFrame();
   ~imgFrame();
 
-  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, mozilla::gfx::SurfaceFormat aFormat, uint8_t aPaletteDepth = 0);
+  nsresult Init(int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight, SurfaceFormat aFormat, uint8_t aPaletteDepth = 0);
   nsresult Optimize();
 
   bool Draw(gfxContext *aContext, GraphicsFilter aFilter,
@@ -36,7 +36,7 @@ public:
   nsresult ImageUpdated(const nsIntRect &aUpdateRect);
 
   nsIntRect GetRect() const;
-  mozilla::gfx::SurfaceFormat GetFormat() const;
+  SurfaceFormat GetFormat() const;
   bool GetNeedsBackground() const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;

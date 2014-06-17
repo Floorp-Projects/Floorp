@@ -5,6 +5,8 @@
 
 LIB_IS_C_ONLY    = 1
 
+include $(topsrcdir)/config/config.mk
+
 ifeq ($(OS_ARCH),WINNT)
 DEFFILE = $(CURDIR)/sqlite-processed.def
 
@@ -20,10 +22,25 @@ sqlite-version.h: sqlite-version.py sqlite3.h
 # We have to preprocess our def file because we need different symbols in debug
 # builds exposed that are not built in non-debug builds.
 $(DEFFILE): sqlite.def
-	@$(call py_action,preprocessor,$(DEFINES) \
+	@$(call py_action,preprocessor,$(DEFINES) $(XULPPFLAGS) \
 	  $(srcdir)/sqlite.def -o $(DEFFILE))
 
 export:: sqlite-version.h
+else
+ifndef MOZ_FOLD_LIBS
+ifdef GCC_USE_GNU_LD
+
+GARBAGE += \
+  $(LD_VERSION_SCRIPT) \
+  $(NULL)
+
+# Convert to the format we need for ld.
+$(LD_VERSION_SCRIPT): $(srcdir)/sqlite.def
+	@$(call py_action,convert_def_file, \
+	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ $^)
+
+endif
+endif
 endif
 
 ifeq (Darwin,$(OS_TARGET))

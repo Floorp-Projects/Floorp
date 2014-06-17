@@ -220,6 +220,10 @@ GrallocImage::GetAsSourceSurface()
 
   RefPtr<gfx::DataSourceSurface> surface
     = gfx::Factory::CreateDataSourceSurface(GetSize(), gfx::SurfaceFormat::R5G6B5);
+  if (!surface) {
+    NS_WARNING("Failed to create SourceSurface.");
+    return nullptr;
+  }
 
   uint32_t width = GetSize().width;
   uint32_t height = GetSize().height;

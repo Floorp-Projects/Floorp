@@ -112,6 +112,11 @@ var tests = {
       iconURL: "chrome://browser/skin/Info.png",
       counter: 1
     };
+
+    // Disable the transition
+    let panel = document.getElementById("social-notification-panel");
+    panel.setAttribute("animate", "false");
+
     // click on panel to open and wait for visibility
     let provider = Social._getProviderFromOrigin(manifest2.origin);
     let id = SocialStatus._toolbarHelper.idFromOrigin(manifest2.origin);
@@ -131,8 +136,8 @@ var tests = {
         case "got-social-panel-visibility":
           ok(true, "got the panel message " + e.data.result);
           if (e.data.result == "shown") {
-            let panel = document.getElementById("social-notification-panel");
             panel.hidePopup();
+            panel.removeAttribute("animate");
           } else {
             port.postMessage({topic: "test-ambient-notification", data: icon});
             port.close();

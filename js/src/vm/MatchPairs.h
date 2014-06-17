@@ -150,28 +150,6 @@ class VectorMatchPairs : public MatchPairs
     bool allocOrExpandArray(size_t pairCount);
 };
 
-/*
- * Passes either MatchPair or MatchPairs through ExecuteRegExp()
- * to avoid duplication of generic code.
- */
-struct MatchConduit
-{
-    union {
-        MatchPair  *pair;
-        MatchPairs *pairs;
-    } u;
-    bool isPair;
-
-    explicit MatchConduit(MatchPair *pair) {
-        isPair = true;
-        u.pair = pair;
-    }
-    explicit MatchConduit(MatchPairs *pairs) {
-        isPair = false;
-        u.pairs = pairs;
-    }
-};
-
 } /* namespace js */
 
 #endif /* vm_MatchPairs_h */
