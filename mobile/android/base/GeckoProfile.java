@@ -5,6 +5,17 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
+import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.util.INIParser;
+import org.mozilla.gecko.util.INISection;
+
+import android.content.Context;
+import android.text.TextUtils;
+import android.util.Log;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -14,18 +25,6 @@ import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
-
-import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
-import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
-import org.mozilla.gecko.db.BrowserDB;
-import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.util.INIParser;
-import org.mozilla.gecko.util.INISection;
-
-import android.content.ContentResolver;
-import android.content.Context;
-import android.text.TextUtils;
-import android.util.Log;
 
 public final class GeckoProfile {
     private static final String LOGTAG = "GeckoProfile";
@@ -38,24 +37,10 @@ public final class GeckoProfile {
     private static HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
     private static String sDefaultProfileName = null;
 
-    // Caches the guest profile dir.
-    private static File sGuestDir = null;
-    private static GeckoProfile sGuestProfile = null;
-
     public static boolean sIsUsingCustomProfile = false;
-
     private final String mName;
     private final File mMozillaDir;
-    private final boolean mIsWebAppProfile;
-    private final Context mApplicationContext;
-
     private File mProfileDir;             // Not final because this is lazily computed.
-
-    // Caches whether or not a profile is "locked".
-    // Only used by the guest profile to determine if it should be reused or
-    // deleted on startup
-    private LockState mLocked = LockState.UNDEFINED;
-    private boolean mInGuestMode = false;
 
     // Constants to cache whether or not a profile is "locked".
     private enum LockState {
@@ -63,6 +48,17 @@ public final class GeckoProfile {
         UNLOCKED,
         UNDEFINED
     };
+
+    // Caches whether or not a profile is "locked". Only used by the guest profile to determine if it should
+    // be reused or deleted on startup
+    private LockState mLocked = LockState.UNDEFINED;
+
+    // Caches the guest profile dir.
+    private static File sGuestDir = null;
+    private static GeckoProfile sGuestProfile = null;
+
+    private boolean mInGuestMode = false;
+
 
     public static GeckoProfile get(Context context) {
         boolean isGeckoApp = false;
@@ -159,11 +155,6 @@ public final class GeckoProfile {
     }
 
     public static boolean removeProfile(Context context, String profileName) {
-        if (profileName == null) {
-            Log.w(LOGTAG, "Unable to remove profile: null profile name.");
-            return false;
-        }
-
         final boolean success;
         try {
             success = new GeckoProfile(context, profileName).remove();
@@ -275,13 +266,7 @@ public final class GeckoProfile {
     }
 
     private GeckoProfile(Context context, String profileName) throws NoMozillaDirectoryException {
-        if (TextUtils.isEmpty(profileName)) {
-            throw new IllegalArgumentException("Unable to create GeckoProfile for empty profile name.");
-        }
-
-        mApplicationContext = context.getApplicationContext();
         mName = profileName;
-        mIsWebAppProfile = profileName.startsWith("webapp");
         mMozillaDir = GeckoProfileDirectories.getMozillaDirectory(context);
     }
 
@@ -591,7 +576,7 @@ public final class GeckoProfile {
             parser.addSection(generalSection);
         }
 
-        if (!isDefaultSet && !mIsWebAppProfile) {
+        if (!isDefaultSet && !mName.startsWith("webapp")) {
             // only set as default if this is the first non-webapp
             // profile we're creating
             profileSection.setProperty("Default", 1);
@@ -604,11 +589,6 @@ public final class GeckoProfile {
 
         parser.addSection(profileSection);
         parser.write();
-
-        // Trigger init for non-webapp profiles.
-        if (!mIsWebAppProfile) {
-            enqueueInitialization();
-        }
 
         // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
         try {
@@ -625,30 +605,5 @@ public final class GeckoProfile {
         }
 
         return profileDir;
-    }
-
-    /**
-     * This method is called once, immediately before creation of the profile
-     * directory completes.
-     *
-     * It queues up work to be done in the background to prepare the profile,
-     * such as adding default bookmarks.
-     */
-    private void enqueueInitialization() {
-        final Context context = mApplicationContext;
-
-        // Add everything when we're done loading the distribution.
-        final Distribution distribution = Distribution.getInstance(context);
-        distribution.addOnDistributionReadyCallback(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(LOGTAG, "Running post-distribution task: bookmarks.");
-
-                final ContentResolver cr = context.getContentResolver();
-
-                final int offset = BrowserDB.addDistributionBookmarks(cr, distribution, 0);
-                BrowserDB.addDefaultBookmarks(context, cr, offset);
-            }
-        });
     }
 }
