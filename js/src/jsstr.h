@@ -64,12 +64,22 @@ CompareChars(const Char1 *s1, size_t len1, const Char2 *s2, size_t len2)
 }  /* namespace js */
 
 struct JSSubString {
+    JSLinearString  *base;
+    size_t          offset;
     size_t          length;
-    const jschar    *chars;
-};
 
-extern const jschar js_empty_ucstr[];
-extern const JSSubString js_EmptySubString;
+    JSSubString() { mozilla::PodZero(this); }
+
+    void initEmpty(JSLinearString *base) {
+        this->base = base;
+        offset = length = 0;
+    }
+    void init(JSLinearString *base, size_t offset, size_t length) {
+        this->base = base;
+        this->offset = offset;
+        this->length = length;
+    }
+};
 
 /*
  * Shorthands for ASCII (7-bit) decimal and hex conversion.
