@@ -2694,8 +2694,33 @@ void
 MDiv::collectRangeInfoPreTrunc()
 {
     Range lhsRange(lhs());
+    Range rhsRange(rhs());
+
+    // Test if Dividend is non-negative.
     if (lhsRange.isFiniteNonNegative())
         canBeNegativeDividend_ = false;
+
+    // Try removing divide by zero check.
+    if (!rhsRange.canBeZero())
+        canBeDivideByZero_ = false;
+
+    // If lhsRange does not contain INT32_MIN in its range,
+    // negative overflow check can be skipped.
+    if (!lhsRange.contains(INT32_MIN))
+        canBeNegativeOverflow_ = false;
+
+    // If rhsRange does not contain -1 likewise.
+    if (!rhsRange.contains(-1))
+        canBeNegativeOverflow_ = false;
+
+    // If lhsRange does not contain a zero,
+    // negative zero check can be skipped.
+    if (!lhsRange.canBeZero())
+        canBeNegativeZero_ = false;
+
+    // If rhsRange >= 0 negative zero check can be skipped.
+    if (rhsRange.isFiniteNonNegative())
+        canBeNegativeZero_ = false;
 }
 
 void
