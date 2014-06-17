@@ -510,6 +510,9 @@ class Automation(object):
     else:
       env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
+    # Crash on non-local network connections.
+    env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+
     env['GNOME_DISABLE_CRASH_DIALOG'] = '1'
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
     env['NS_TRACE_MALLOC_DISABLE_STACKS'] = '1'

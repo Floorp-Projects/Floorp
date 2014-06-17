@@ -494,6 +494,9 @@ def environment(xrePath, env=None, crashreporter=True, debugger=False, dmdPath=N
   else:
     env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
+  # Crash on non-local network connections.
+  env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+
   # Set WebRTC logging in case it is not set yet
   env.setdefault('NSPR_LOG_MODULES', 'signaling:5,mtransport:5,datachannel:5')
   env.setdefault('R_LOG_LEVEL', '6')
