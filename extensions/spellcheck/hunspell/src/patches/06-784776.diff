@@ -1,0 +1,43 @@
+Bug 784776 - Don't assume NULL is numeric in Hunspell code.
+
+diff --git a/extensions/spellcheck/hunspell/src/affentry.hxx b/extensions/spellcheck/hunspell/src/affentry.hxx
+--- a/extensions/spellcheck/hunspell/src/affentry.hxx
++++ b/extensions/spellcheck/hunspell/src/affentry.hxx
+@@ -26,17 +26,17 @@ public:
+ 
+   PfxEntry(AffixMgr* pmgr, affentry* dp );
+   ~PfxEntry();
+ 
+   inline bool          allowCross() { return ((opts & aeXPRODUCT) != 0); }
+   struct hentry *      checkword(const char * word, int len, char in_compound, 
+                             const FLAG needflag = FLAG_NULL);
+ 
+-  struct hentry *      check_twosfx(const char * word, int len, char in_compound, const FLAG needflag = NULL);
++  struct hentry *      check_twosfx(const char * word, int len, char in_compound, const FLAG needflag = FLAG_NULL);
+ 
+   char *      check_morph(const char * word, int len, char in_compound,
+                             const FLAG needflag = FLAG_NULL);
+ 
+   char *      check_twosfx_morph(const char * word, int len,
+                   char in_compound, const FLAG needflag = FLAG_NULL);
+ 
+   inline FLAG getFlag()   { return aflag;   }
+@@ -93,17 +93,17 @@ public:
+   ~SfxEntry();
+ 
+   inline bool          allowCross() { return ((opts & aeXPRODUCT) != 0); }
+   struct hentry *   checkword(const char * word, int len, int optflags, 
+                     PfxEntry* ppfx, char ** wlst, int maxSug, int * ns,
+ //                    const FLAG cclass = FLAG_NULL, const FLAG needflag = FLAG_NULL, char in_compound=IN_CPD_NOT);
+                     const FLAG cclass = FLAG_NULL, const FLAG needflag = FLAG_NULL, const FLAG badflag = 0);
+ 
+-  struct hentry *   check_twosfx(const char * word, int len, int optflags, PfxEntry* ppfx, const FLAG needflag = NULL);
++  struct hentry *   check_twosfx(const char * word, int len, int optflags, PfxEntry* ppfx, const FLAG needflag = FLAG_NULL);
+ 
+   char *      check_twosfx_morph(const char * word, int len, int optflags,
+                  PfxEntry* ppfx, const FLAG needflag = FLAG_NULL);
+   struct hentry * get_next_homonym(struct hentry * he);
+   struct hentry * get_next_homonym(struct hentry * word, int optflags, PfxEntry* ppfx, 
+     const FLAG cclass, const FLAG needflag);
+ 
+ 
