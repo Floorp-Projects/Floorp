@@ -4521,8 +4521,28 @@ js::EqualStrings(JSLinearString *str1, JSLinearString *str2)
     return EqualChars(str1, str2);
 }
 
-static bool
-CompareStringsImpl(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
+static int32_t
+CompareStringsImpl(JSLinearString *str1, JSLinearString *str2)
+{
+    size_t len1 = str1->length();
+    size_t len2 = str2->length();
+
+    AutoCheckCannotGC nogc;
+    if (str1->hasLatin1Chars()) {
+        const Latin1Char *chars1 = str1->latin1Chars(nogc);
+        return str2->hasLatin1Chars()
+               ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+               : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+    }
+
+    const jschar *chars1 = str1->twoByteChars(nogc);
+    return str2->hasLatin1Chars()
+           ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+           : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+}
+
+bool
+js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
 {
     JS_ASSERT(str1);
     JS_ASSERT(str2);
@@ -4532,28 +4552,22 @@ CompareStringsImpl(JSContext *cx, JSString *str1, JSString *str2, int32_t *resul
         return true;
     }
 
-    const jschar *s1 = str1->getChars(cx);
-    if (!s1)
+    JSLinearString *linear1 = str1->ensureLinear(cx);
+    if (!linear1)
         return false;
 
-    const jschar *s2 = str2->getChars(cx);
-    if (!s2)
+    JSLinearString *linear2 = str2->ensureLinear(cx);
+    if (!linear2)
         return false;
 
-    *result = CompareChars(s1, str1->length(), s2, str2->length());
+    *result = CompareStringsImpl(linear1, linear2);
     return true;
-}
-
-bool
-js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
-{
-    return CompareStringsImpl(cx, str1, str2, result);
 }
 
 int32_t
 js::CompareAtoms(JSAtom *atom1, JSAtom *atom2)
 {
-    return CompareChars(atom1->chars(), atom1->length(), atom2->chars(), atom2->length());
+    return CompareStringsImpl(atom1, atom2);
 }
 
 bool
