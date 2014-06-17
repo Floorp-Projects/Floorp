@@ -4105,7 +4105,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aLineLayout.AddBulletFrame(bullet, metrics);
     addedBullet = true;
   }
-  aLineLayout.BlockDirAlignLine();
+  aLineLayout.VerticalAlignLine();
 
   // We want to compare to the available space that we would have had in
   // the line's height *before* we placed any floats in the line itself.
@@ -4167,7 +4167,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
      (aLineLayout.GetLineEndsInBR() ||
       IsLastLine(aState, aLine)));
 
-  aLineLayout.InlineDirAlignFrames(aLine, isLastLine);
+  aLineLayout.TextAlignLine(aLine, isLastLine);
 
   // From here on, pfd->mBounds rectangles are incorrect because bidi
   // might have moved frames around!
