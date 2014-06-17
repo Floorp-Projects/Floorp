@@ -268,6 +268,12 @@
            position="topcenter topright"/>
 
 #ifdef MOZ_LOOP
+    <panel id="loop-notification-panel"
+           class="loop-panel social-panel"
+           type="arrow"
+           hidden="true"
+           noautofocus="true"/>
+
     <panel id="loop-panel"
            class="loop-panel social-panel"
            type="arrow"
@@ -782,9 +788,13 @@
 
 #ifdef MOZ_LOOP
         <!-- XXX Bug 1013989 will provide a label for the button -->
+        <!-- This uses badged to be compatible with the social api code it shares.
+             We may also want it to be badged in the future, for notification
+             purposes. -->
         <toolbarbutton id="loop-call-button"
                        class="toolbarbutton-1 chromeclass-toolbar-additional"
                        persist="class"
+                       type="badged"
                        removable="true"
                        tooltiptext="&loopCallButton.tooltip;"
                        oncommand="LoopUI.openCallPanel(event);"
