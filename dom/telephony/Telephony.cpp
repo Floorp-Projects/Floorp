@@ -25,7 +25,6 @@
 #include "CallsList.h"
 #include "TelephonyCall.h"
 #include "TelephonyCallGroup.h"
-#include "TelephonyCallId.h"
 
 using namespace mozilla::dom;
 using mozilla::ErrorResult;
@@ -277,9 +276,6 @@ Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber,
 {
   nsRefPtr<TelephonyCall> call =
     TelephonyCall::Create(this, aServiceId, aNumber,
-                          nsITelephonyService::CALL_PRESENTATION_ALLOWED,
-                          EmptyString(),
-                          nsITelephonyService::CALL_PRESENTATION_ALLOWED,
                           nsITelephonyService::CALL_STATE_DIALING, aCallIndex);
   NS_ASSERTION(call, "This should never fail!");
 
@@ -478,10 +474,8 @@ Telephony::EventListenerAdded(nsIAtom* aType)
 NS_IMETHODIMP
 Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
                             uint16_t aCallState, const nsAString& aNumber,
-                            uint16_t aNumberPresentation, const nsAString& aName,
-                            uint16_t aNamePresentation, bool aIsOutgoing,
-                            bool aIsEmergency, bool aIsConference,
-                            bool aIsSwitchable, bool aIsMergeable)
+                            bool aIsOutgoing, bool aIsEmergency,
+                            bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   nsRefPtr<TelephonyCall> modifiedCall
       = GetCallFromEverywhere(aServiceId, aCallIndex);
@@ -526,10 +520,9 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
 
   // Didn't find this call in mCalls or mGroup. Create a new call.
   nsRefPtr<TelephonyCall> call =
-    TelephonyCall::Create(this, aServiceId, aNumber, aNumberPresentation,
-                          aName, aNamePresentation, aCallState, aCallIndex,
-                          aIsEmergency, aIsConference, aIsSwitchable,
-                          aIsMergeable);
+      TelephonyCall::Create(this, aServiceId, aNumber, aCallState, aCallIndex,
+                            aIsEmergency, aIsConference, aIsSwitchable,
+                            aIsMergeable);
   NS_ASSERTION(call, "This should never fail!");
 
   NS_ASSERTION(aIsConference ? mGroup->CallsArray().Contains(call) :
@@ -571,10 +564,8 @@ Telephony::EnumerateCallStateComplete()
 NS_IMETHODIMP
 Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
                               uint16_t aCallState, const nsAString& aNumber,
-                              uint16_t aNumberPresentation, const nsAString& aName,
-                              uint16_t aNamePresentation, bool aIsOutgoing,
-                              bool aIsEmergency, bool aIsConference,
-                              bool aIsSwitchable, bool aIsMergeable)
+                              bool aIsOutgoing, bool aIsEmergency,
+                              bool aIsConference, bool aIsSwitchable, bool aIsMergeable)
 {
   nsRefPtr<TelephonyCall> call;
 
@@ -589,8 +580,7 @@ Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
   }
 
   // Didn't know anything about this call before now.
-  call = TelephonyCall::Create(this, aServiceId, aNumber, aNumberPresentation,
-                               aName, aNamePresentation, aCallState,
+  call = TelephonyCall::Create(this, aServiceId, aNumber, aCallState,
                                aCallIndex, aIsEmergency, aIsConference,
                                aIsSwitchable, aIsMergeable);
   NS_ASSERTION(call, "This should never fail!");
@@ -652,20 +642,14 @@ Telephony::NotifyError(uint32_t aServiceId,
 }
 
 NS_IMETHODIMP
-Telephony::NotifyCdmaCallWaiting(uint32_t aServiceId, const nsAString& aNumber,
-                                 uint16_t aNumberPresentation,
-                                 const nsAString& aName,
-                                 uint16_t aNamePresentation)
+Telephony::NotifyCdmaCallWaiting(uint32_t aServiceId, const nsAString& aNumber)
 {
   MOZ_ASSERT(mCalls.Length() == 1);
 
   nsRefPtr<TelephonyCall> callToNotify = mCalls[0];
   MOZ_ASSERT(callToNotify && callToNotify->ServiceId() == aServiceId);
 
-  nsRefPtr<TelephonyCallId> id =
-    new TelephonyCallId(GetOwner(), aNumber, aNumberPresentation, aName,
-                        aNamePresentation);
-  callToNotify->UpdateSecondId(id);
+  callToNotify->UpdateSecondNumber(aNumber);
   DispatchCallEvent(NS_LITERAL_STRING("callschanged"), callToNotify);
   return NS_OK;
 }
