@@ -9,7 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ipc/Transport.h"
 
-template <class> class already_AddRefed;
+template <class> struct already_AddRefed;
 
 namespace mozilla {
 namespace dom {

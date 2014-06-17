@@ -15,7 +15,7 @@
 #include "nsStringFwd.h"
 
 class nsPresState;
-template<typename> class already_AddRefed;
+template<typename> struct already_AddRefed;
 
 #define NS_ILAYOUTHISTORYSTATE_IID \
 { 0x5208993e, 0xd812, 0x431e, \

@@ -49,7 +49,31 @@ DeviceStorageRequestParent::Dispatch()
       nsCOMPtr<nsIInputStream> stream;
       blob->GetInternalStream(getter_AddRefs(stream));
 
-      nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream);
+      nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
+                                                          DEVICE_STORAGE_REQUEST_CREATE);
+
+      nsCOMPtr<nsIEventTarget> target
+        = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+      MOZ_ASSERT(target);
+      target->Dispatch(r, NS_DISPATCH_NORMAL);
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageAppendParams:
+    {
+      DeviceStorageAppendParams p = mParams;
+
+      nsRefPtr<DeviceStorageFile> dsf =
+        new DeviceStorageFile(p.type(), p.storageName(), p.relpath());
+
+      BlobParent* bp = static_cast<BlobParent*>(p.blobParent());
+      nsCOMPtr<nsIDOMBlob> blob = bp->GetBlob();
+
+      nsCOMPtr<nsIInputStream> stream;
+      blob->GetInternalStream(getter_AddRefs(stream));
+
+      nsRefPtr<CancelableRunnable> r = new WriteFileEvent(this, dsf, stream,
+                                                          DEVICE_STORAGE_REQUEST_APPEND);
 
       nsCOMPtr<nsIEventTarget> target
         = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
@@ -241,6 +265,14 @@ DeviceStorageRequestParent::EnsureRequiredPermissions(
       DeviceStorageAddParams p = mParams;
       type = p.type();
       requestType = DEVICE_STORAGE_REQUEST_CREATE;
+      break;
+    }
+
+    case DeviceStorageParams::TDeviceStorageAppendParams:
+    {
+      DeviceStorageAppendParams p = mParams;
+      type = p.type();
+      requestType = DEVICE_STORAGE_REQUEST_APPEND;
       break;
     }
 
@@ -576,10 +608,12 @@ DeviceStorageRequestParent::CreateFdEvent::CancelableRun()
 DeviceStorageRequestParent::WriteFileEvent::
   WriteFileEvent(DeviceStorageRequestParent* aParent,
                  DeviceStorageFile* aFile,
-                 nsIInputStream* aInputStream)
+                 nsIInputStream* aInputStream,
+                 int32_t aRequestType)
   : CancelableRunnable(aParent)
   , mFile(aFile)
   , mInputStream(aInputStream)
+  , mRequestType(aRequestType)
 {
 }
 
@@ -600,13 +634,25 @@ DeviceStorageRequestParent::WriteFileEvent::CancelableRun()
   }
 
   bool check = false;
+  nsresult rv;
   mFile->mFile->Exists(&check);
-  if (check) {
-    r = new PostErrorEvent(mParent, POST_ERROR_EVENT_FILE_EXISTS);
+
+  if (mRequestType == DEVICE_STORAGE_REQUEST_CREATE) {
+    if (check) {
+      r = new PostErrorEvent(mParent, POST_ERROR_EVENT_FILE_EXISTS);
+      return NS_DispatchToMainThread(r);
+    }
+    rv = mFile->Write(mInputStream);
+  } else if (mRequestType == DEVICE_STORAGE_REQUEST_APPEND) {
+    if (!check) {
+      r = new PostErrorEvent(mParent, POST_ERROR_EVENT_FILE_DOES_NOT_EXIST);
+      return NS_DispatchToMainThread(r);
+    }
+    rv = mFile->Append(mInputStream);
+  } else {
+    r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
     return NS_DispatchToMainThread(r);
   }
-
-  nsresult rv = mFile->Write(mInputStream);
 
   if (NS_FAILED(rv)) {
     r = new PostErrorEvent(mParent, POST_ERROR_EVENT_UNKNOWN);
