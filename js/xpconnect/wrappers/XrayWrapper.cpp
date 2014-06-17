@@ -770,13 +770,15 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
                     return false;
                 // Loop over the properties, and only pass along the ones that
                 // we determine to be safe.
+                if (!props.reserve(targetProps.length()))
+                    return false;
                 for (size_t i = 0; i < targetProps.length(); ++i) {
                     Rooted<JSPropertyDescriptor> desc(cx);
                     RootedId id(cx, targetProps[i]);
                     if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, &desc))
                         return false;
                     if (desc.object())
-                        props.append(id);
+                        props.infallibleAppend(id);
                 }
             }
             return JS_WrapAutoIdVector(cx, props);
@@ -1645,13 +1647,15 @@ XPCWrappedNativeXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, 
         return false;
 
     // Go through the properties we got and enumerate all native ones.
+    if (!props.reserve(wnProps.length()))
+        return false;
     for (size_t n = 0; n < wnProps.length(); ++n) {
         RootedId id(cx, wnProps[n]);
         bool hasProp;
         if (!JS_HasPropertyById(cx, wrapper, id, &hasProp))
             return false;
         if (hasProp)
-            props.append(id);
+            props.infallibleAppend(id);
     }
     return true;
 }
