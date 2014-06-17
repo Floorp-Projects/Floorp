@@ -70,6 +70,9 @@ class RemoteAutomation(Automation):
         else:
             env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
+        # Crash on non-local network connections.
+        env['MOZ_DISABLE_NONLOCAL_CONNECTIONS'] = '1'
+
         return env
 
     def waitForFinish(self, proc, utilityPath, timeout, maxTime, startTime, debuggerInfo, symbolsPath):
