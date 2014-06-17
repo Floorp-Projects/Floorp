@@ -543,7 +543,7 @@ CssLogic.prototype = {
     this._matchedRules.some(function(aValue) {
       let rule = aValue[0];
       let status = aValue[1];
-      aProperties = aProperties.filter(function(aProperty) {
+      aProperties = aProperties.filter((aProperty) => {
         // We just need to find if a rule has this property while it matches
         // the viewedElement (or its parents).
         if (rule.getPropertyValue(aProperty) &&
@@ -554,7 +554,7 @@ CssLogic.prototype = {
           return false;
         }
         return true; // Keep the property for the next rule.
-      }.bind(this));
+      });
       return aProperties.length == 0;
     }, this);
 
