@@ -14,7 +14,6 @@
 #include "certdb.h"
 #include "mozilla/Telemetry.h"
 #include "nss.h"
-#include "ocsp.h"
 #include "pk11pub.h"
 #include "pkix/pkix.h"
 #include "prerror.h"
@@ -694,32 +693,6 @@ UnloadLoadableRoots(const char* modNameUTF8)
   if (rootsModule) {
     SECMOD_UnloadUserModule(rootsModule.get());
   }
-}
-
-void
-SetClassicOCSPBehavior(CertVerifier::ocsp_download_config enabled,
-                       CertVerifier::ocsp_strict_config strict,
-                       CertVerifier::ocsp_get_config get)
-{
-  CERT_DisableOCSPDefaultResponder(CERT_GetDefaultCertDB());
-  if (enabled == CertVerifier::ocsp_off) {
-    CERT_DisableOCSPChecking(CERT_GetDefaultCertDB());
-  } else {
-    CERT_EnableOCSPChecking(CERT_GetDefaultCertDB());
-  }
-
-  SEC_OcspFailureMode failureMode = strict == CertVerifier::ocsp_strict
-                                  ? ocspMode_FailureIsVerificationFailure
-                                  : ocspMode_FailureIsNotAVerificationFailure;
-  (void) CERT_SetOCSPFailureMode(failureMode);
-
-  CERT_ForcePostMethodForOCSP(get != CertVerifier::ocsp_get_enabled);
-
-  uint32_t OCSPTimeoutSeconds = 3u;
-  if (strict == CertVerifier::ocsp_strict) {
-    OCSPTimeoutSeconds = 10u;
-  }
-  CERT_SetOCSPTimeout(OCSPTimeoutSeconds);
 }
 
 char*

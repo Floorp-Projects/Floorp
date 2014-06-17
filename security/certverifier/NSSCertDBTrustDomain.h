@@ -32,14 +32,6 @@ SECStatus LoadLoadableRoots(/*optional*/ const char* dir,
 
 void UnloadLoadableRoots(const char* modNameUTF8);
 
-// Controls the OCSP fetching behavior of the classic verification mode. In the
-// classic mode, the OCSP fetching behavior is set globally instead of per
-// validation.
-void
-SetClassicOCSPBehavior(CertVerifier::ocsp_download_config enabled,
-                       CertVerifier::ocsp_strict_config strict,
-                       CertVerifier::ocsp_get_config get);
-
 // Caller must free the result with PR_Free
 char* DefaultServerNicknameForCert(CERTCertificate* cert);
 

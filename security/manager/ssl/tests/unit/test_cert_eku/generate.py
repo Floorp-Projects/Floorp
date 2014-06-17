@@ -69,7 +69,6 @@ function load_cert(cert_name, trust_string) {
 
 function run_test() {
   load_cert("ca", "CT,CT,CT");
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", true);
 """
 
 js_file_footer = """}
