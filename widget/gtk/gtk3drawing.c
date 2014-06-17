@@ -757,8 +757,11 @@ moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
                          "focus-line-width", &focus_width,
                          NULL);
     if (interior_focus) {
-        *focus_h_width = XTHICKNESS(w->style) + focus_width;
-        *focus_v_width = YTHICKNESS(w->style) + focus_width;
+        GtkBorder border;
+        GtkStyleContext *style = gtk_widget_get_style_context(w);
+        gtk_style_context_get_border(style, 0, &border);
+        *focus_h_width = border.left + focus_width;
+        *focus_v_width = border.top + focus_width;
     } else {
         *focus_h_width = focus_width;
         *focus_v_width = focus_width;

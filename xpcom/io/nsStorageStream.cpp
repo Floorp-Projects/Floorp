@@ -18,11 +18,16 @@
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIInputStream.h"
+#include "nsIIPCSerializableInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/ipc/InputStreamUtils.h"
+
+using mozilla::ipc::InputStreamParams;
+using mozilla::ipc::StringInputStreamParams;
 
 #if defined(PR_LOGGING)
 //
@@ -339,6 +344,7 @@ nsStorageStream::Seek(int32_t aPosition)
 class nsStorageInputStream MOZ_FINAL
   : public nsIInputStream
   , public nsISeekableStream
+  , public nsIIPCSerializableInputStream
 {
 public:
   nsStorageInputStream(nsStorageStream* aStorageStream, uint32_t aSegmentSize)
@@ -353,6 +359,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
   NS_DECL_NSISEEKABLESTREAM
+  NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM
 
 private:
   ~nsStorageInputStream()
@@ -386,7 +393,8 @@ private:
 
 NS_IMPL_ISUPPORTS(nsStorageInputStream,
                   nsIInputStream,
-                  nsISeekableStream)
+                  nsISeekableStream,
+                  nsIIPCSerializableInputStream)
 
 NS_IMETHODIMP
 nsStorageStream::NewInputStream(int32_t aStartingOffset,
@@ -570,6 +578,41 @@ nsStorageInputStream::Seek(uint32_t aPosition)
   mSegmentEnd = mReadCursor + XPCOM_MIN(mSegmentSize - mReadCursor, available);
   mLogicalCursor = aPosition;
   return NS_OK;
+}
+
+void
+nsStorageInputStream::Serialize(InputStreamParams& aParams, FileDescriptorArray&)
+{
+  nsCString combined;
+  int64_t offset;
+  mozilla::DebugOnly<nsresult> rv = Tell(&offset);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  uint64_t remaining;
+  rv = Available(&remaining);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  combined.SetCapacity(remaining);
+  uint32_t numRead = 0;
+
+  rv = Read(combined.BeginWriting(), remaining, &numRead);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  MOZ_ASSERT(numRead == remaining);
+  combined.SetLength(numRead);
+
+  rv = Seek(NS_SEEK_SET, offset);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  StringInputStreamParams params;
+  params.data() = combined;
+  aParams = params;
+}
+
+bool
+nsStorageInputStream::Deserialize(const InputStreamParams& aParams, const FileDescriptorArray&)
+{
+  NS_NOTREACHED("We should never attempt to deserialize a storage input stream.");
+  return false;
 }
 
 nsresult

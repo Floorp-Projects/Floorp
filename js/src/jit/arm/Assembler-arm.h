@@ -1482,14 +1482,14 @@ class Assembler : public AssemblerShared
     //overwrite a pool entry with new data.
     void as_WritePoolEntry(Instruction *addr, Condition c, uint32_t data);
     // load a 32 bit immediate from a pool into a register
-    BufferOffset as_Imm32Pool(Register dest, uint32_t value, ARMBuffer::PoolEntry *pe = nullptr, Condition c = Always);
+    BufferOffset as_Imm32Pool(Register dest, uint32_t value, Condition c = Always);
     // make a patchable jump that can target the entire 32 bit address space.
     BufferOffset as_BranchPool(uint32_t value, RepatchLabel *label, ARMBuffer::PoolEntry *pe = nullptr, Condition c = Always);
 
     // load a 64 bit floating point immediate from a pool into a register
-    BufferOffset as_FImm64Pool(VFPRegister dest, double value, ARMBuffer::PoolEntry *pe = nullptr, Condition c = Always);
+    BufferOffset as_FImm64Pool(VFPRegister dest, double value, Condition c = Always);
     // load a 32 bit floating point immediate from a pool into a register
-    BufferOffset as_FImm32Pool(VFPRegister dest, float value, ARMBuffer::PoolEntry *pe = nullptr, Condition c = Always);
+    BufferOffset as_FImm32Pool(VFPRegister dest, float value, Condition c = Always);
 
     // Control flow stuff:
 
