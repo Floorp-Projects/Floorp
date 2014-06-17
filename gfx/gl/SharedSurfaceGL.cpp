@@ -7,7 +7,6 @@
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "ScopedGLHelpers.h"
-#include "gfxImageSurface.h"
 #include "mozilla/gfx/2D.h"
 #include "GLReadTexImageHelper.h"
 
