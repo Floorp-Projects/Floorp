@@ -349,6 +349,9 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
 bool
 SavedStacks::init()
 {
+    if (!pcLocationMap.init())
+        return false;
+
     return frames.init();
 }
 
@@ -393,6 +396,8 @@ SavedStacks::sweep(JSRuntime *rt)
             }
         }
     }
+
+    sweepPCLocationMap();
 
     if (savedFrameProto && IsObjectAboutToBeFinalized(&savedFrameProto)) {
         savedFrameProto = nullptr;
@@ -439,20 +444,14 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
     if (!insertFrames(cx, ++iter, &parentFrame))
         return false;
 
-    RootedScript script(cx, thisFrame.script());
-    RootedFunction callee(cx, thisFrame.maybeCallee());
-    const char *filename = script->filename();
-    if (!filename)
-        filename = "";
-    RootedAtom source(cx, Atomize(cx, filename, strlen(filename)));
-    if (!source)
+    LocationValue location;
+    if (!getLocation(cx, thisFrame.script(), thisFrame.pc(), &location))
         return false;
-    uint32_t column;
-    uint32_t line = PCToLineNumber(script, thisFrame.pc(), &column);
 
-    SavedFrame::Lookup lookup(source,
-                              line,
-                              column,
+    JSFunction *callee = thisFrame.maybeCallee();
+    SavedFrame::Lookup lookup(location.source,
+                              location.line,
+                              location.column,
                               callee ? callee->displayAtom() : nullptr,
                               parentFrame,
                               thisFrame.compartment()->principals);
@@ -526,6 +525,49 @@ SavedStacks::createFrameFromLookup(JSContext *cx, SavedFrame::Lookup &lookup)
     f.initFromLookup(lookup);
 
     return &f;
+}
+
+/*
+ * Remove entries from the table whose JSScript is being collected.
+ */
+void
+SavedStacks::sweepPCLocationMap()
+{
+    for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
+        PCKey key = e.front().key();
+        JSScript *script = key.script.get();
+        if (IsScriptAboutToBeFinalized(&script)) {
+            e.removeFront();
+        } else if (script != key.script.get()) {
+            key.script = script;
+            e.rekeyFront(key);
+        }
+    }
+}
+
+bool
+SavedStacks::getLocation(JSContext *cx, JSScript *script, jsbytecode *pc,
+                         LocationValue *locationp)
+{
+    PCKey key(script, pc);
+    PCLocationMap::AddPtr p = pcLocationMap.lookupForAdd(key);
+
+    if (!p) {
+        const char *filename = script->filename() ? script->filename() : "";
+        RootedAtom source(cx, Atomize(cx, filename, strlen(filename)));
+        if (!source)
+            return false;
+
+        uint32_t column;
+        uint32_t line = PCToLineNumber(script, pc, &column);
+
+        LocationValue value(source, line, column);
+        if (!pcLocationMap.add(p, key, value))
+            return false;
+    }
+
+    *locationp = p->value();
+    return true;
 }
 
 bool
