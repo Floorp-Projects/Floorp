@@ -14,6 +14,7 @@
 #include "nsThreadUtils.h"
 #include "prinrval.h"
 #include "prmon.h"
+#include "prthread.h"
 #include "mozilla/Attributes.h"
 
 #include "mozilla/ReentrantMonitor.h"
@@ -78,6 +79,7 @@ public:
   : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
 
   NS_IMETHOD Notify(nsITimer* aTimer) {
+    NS_ASSERTION(mThreadPtr, "Callback was not supposed to be called!");
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 
     ReentrantMonitorAutoEnter mon(*mReentrantMonitor);
@@ -133,13 +135,45 @@ TestTargetedTimers()
   return NS_OK;
 }
 
+nsresult
+TestTimerWithStoppedTarget()
+{
+  AutoTestThread testThread;
+  NS_ENSURE_TRUE(testThread, NS_ERROR_OUT_OF_MEMORY);
+
+  nsresult rv;
+  nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsIEventTarget* target = static_cast<nsIEventTarget*>(testThread);
+
+  rv = timer->SetTarget(target);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If this is called, we'll assert
+  nsCOMPtr<nsITimerCallback> callback =
+    new TimerCallback(nullptr, nullptr);
+  NS_ENSURE_TRUE(callback, NS_ERROR_OUT_OF_MEMORY);
+
+  rv = timer->InitWithCallback(callback, PR_MillisecondsToInterval(100),
+                               nsITimer::TYPE_ONE_SHOT);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  testThread->Shutdown();
+
+  PR_Sleep(400);
+
+  return NS_OK;
+}
+
 int main(int argc, char** argv)
 {
   ScopedXPCOM xpcom("TestTimers");
   NS_ENSURE_FALSE(xpcom.failed(), 1);
 
   static TestFuncPtr testsToRun[] = {
-    TestTargetedTimers
+    TestTargetedTimers,
+    TestTimerWithStoppedTarget
   };
   static uint32_t testCount = sizeof(testsToRun) / sizeof(testsToRun[0]);
 
