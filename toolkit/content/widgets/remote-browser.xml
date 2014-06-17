@@ -226,7 +226,7 @@
             case "Browser:Init":
               let result = {};
               result.useGlobalHistory = !this.hasAttribute("disableglobalhistory");
-              result.initPopup = this.autoCompletePopup;
+              result.initPopup = this.autoCompletePopup != null;
               return result;
               break;
             case "DOMTitleChanged":
