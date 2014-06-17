@@ -184,6 +184,9 @@ EqualStrings(JSContext *cx, JSLinearString *str1, JSLinearString *str2, bool *re
 extern bool
 EqualStrings(JSLinearString *str1, JSLinearString *str2);
 
+extern bool
+EqualChars(JSLinearString *str1, JSLinearString *str2);
+
 /*
  * Return less than, equal to, or greater than zero depending on whether
  * str1 is less than, equal to, or greater than str2.
