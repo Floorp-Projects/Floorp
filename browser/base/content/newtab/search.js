@@ -64,8 +64,17 @@ let gSearch = {
     this._initWhenInitalStateReceived();
   },
 
+  onCurrentState: function (data) {
+    if (this._initialStateReceived) {
+      this._makePanel(data.engines);
+      this._setCurrentEngine(data.currentEngine);
+    }
+  },
+
   onCurrentEngine: function (engineName) {
-    this._setCurrentEngine(engineName);
+    if (this._initialStateReceived) {
+      this._setCurrentEngine(engineName);
+    }
   },
 
   _nodeIDSuffixes: [
@@ -82,6 +91,7 @@ let gSearch = {
     this._nodes.form.addEventListener("submit", e => this.search(e));
     this._nodes.logo.addEventListener("click", e => this.showPanel());
     this._nodes.manage.addEventListener("click", e => this.manageEngines());
+    this._initialStateReceived = true;
     this._initWhenInitalStateReceived = function () {};
   },
 
@@ -128,8 +138,9 @@ let gSearch = {
     });
 
     let image = document.createElementNS(XUL_NAMESPACE, "image");
-    if (engine.iconURI) {
-      image.setAttribute("src", engine.iconURI);
+    if (engine.iconBuffer) {
+      let blob = new Blob([engine.iconBuffer]);
+      image.setAttribute("src", URL.createObjectURL(blob));
     }
     box.appendChild(image);
 
@@ -144,11 +155,12 @@ let gSearch = {
     this.currentEngineName = engine.name;
 
     // Set the logo.
-    let logoURI = window.devicePixelRatio == 2 ? engine.logo2xURI :
-                  engine.logoURI || engine.logo2xURI;
-    if (logoURI) {
+    let logoBuf = window.devicePixelRatio == 2 ? engine.logo2xBuffer :
+                  engine.logoBuffer || engine.logo2xBuffer;
+    if (logoBuf) {
       this._nodes.logo.hidden = false;
-      this._nodes.logo.style.backgroundImage = "url(" + logoURI + ")";
+      let uri = URL.createObjectURL(new Blob([logoBuf]));
+      this._nodes.logo.style.backgroundImage = "url(" + uri + ")";
       this._nodes.text.placeholder = "";
     }
     else {
