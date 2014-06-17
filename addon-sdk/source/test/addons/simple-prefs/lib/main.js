@@ -7,8 +7,11 @@ const { Cu } = require('chrome');
 const sp = require('sdk/simple-prefs');
 const app = require('sdk/system/xul-app');
 const self = require('sdk/self');
-const tabs = require('sdk/tabs');
-const { preferencesBranch } = require('sdk/self');
+const { preferencesBranch } = self;
+const { open } = require('sdk/preferences/utils');
+const { getTabForId } = require('sdk/tabs/utils');
+const { Tab } = require('sdk/tabs/tab');
+require('sdk/tabs');
 
 const { AddonManager } = Cu.import('resource://gre/modules/AddonManager.jsm', {});
 
@@ -26,112 +29,75 @@ exports.testOptionsType = function(assert, done) {
 }
 
 exports.testButton = function(assert, done) {
-  tabs.open({
-    url: 'about:addons',
-    onReady: function(tab) {
-      sp.once('sayHello', function() {
-        assert.pass('The button was pressed!');
-        tab.close(done)
-      });
+  open(self).then(({ tabId, document }) => {
+    let tab = Tab({ tab: getTabForId(tabId) });
+    sp.once('sayHello', _ => {
+      assert.pass('The button was pressed!');
+      tab.close(done);
+    });
 
-      tab.attach({
-        contentScriptWhen: 'end',
-        contentScript: 'function onLoad() {\n' +
-                         'unsafeWindow.removeEventListener("load", onLoad, false);\n' +
-                         'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
-                           'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
-                             'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
-                             'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
-                               'unsafeWindow.document.querySelector("button[label=\'Click me!\']").click()\n' +
-                             '}, 250);\n' +
-                           '}, false);\n' +
-                           'unsafeWindow.gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);\n' +
-                         '});\n' +
-                       '}\n' +
-                       // Wait for the load event ?
-                       'if (document.readyState == "complete") {\n' +
-                         'onLoad()\n' +
-                       '} else {\n' +
-                         'unsafeWindow.addEventListener("load", onLoad, false);\n' +
-                       '}\n',
-      });
-    }
+    tab.attach({
+      contentScript: 'unsafeWindow.document.querySelector("button[label=\'Click me!\']").click();'
+    });
   });
 }
 
 if (app.is('Firefox')) {
   exports.testAOM = function(assert, done) {
-      tabs.open({
-      	url: 'about:addons',
-      	onReady: function(tab) {
-          tab.attach({
-            contentScriptWhen: 'end',
-          	contentScript: 'function onLoad() {\n' +
-                             'unsafeWindow.removeEventListener("load", onLoad, false);\n' +
-                             'AddonManager.getAddonByID("' + self.id + '", function(aAddon) {\n' +
-                               'unsafeWindow.gViewController.viewObjects.detail.node.addEventListener("ViewChanged", function whenViewChanges() {\n' +
-                                 'unsafeWindow.gViewController.viewObjects.detail.node.removeEventListener("ViewChanged", whenViewChanges, false);\n' +
-                                 'setTimeout(function() {\n' + // TODO: figure out why this is necessary..
-                                     'self.postMessage({\n' +
-                                       'someCount: unsafeWindow.document.querySelectorAll("setting[title=\'some-title\']").length,\n' +
-                                       'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
-                                       'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
-                                       'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']")),\n' +
-                                       'sayHello: getAttributes(unsafeWindow.document.querySelector("button[label=\'Click me!\']"))\n' +
-                                     '});\n' +
-                                 '}, 250);\n' +
-                               '}, false);\n' +
-                               'unsafeWindow.gViewController.commands.cmd_showItemDetails.doCommand(aAddon, true);\n' +
-                             '});\n' +
-                             'function getAttributes(ele) {\n' +
-                               'if (!ele) return {};\n' +
-                               'return {\n' +
-                                 'pref: ele.getAttribute("pref"),\n' +
-                                 'type: ele.getAttribute("type"),\n' +
-                                 'title: ele.getAttribute("title"),\n' +
-                                 'desc: ele.getAttribute("desc"),\n' +
-                                 '"data-jetpack-id": ele.getAttribute(\'data-jetpack-id\')\n' +
-                               '}\n' +
-                             '}\n' +
-                           '}\n' +
-                           // Wait for the load event ?
-                           'if (document.readyState == "complete") {\n' +
-                             'onLoad()\n' +
-                           '} else {\n' +
-                             'unsafeWindow.addEventListener("load", onLoad, false);\n' +
-                           '}\n',
-            onMessage: function(msg) {
-              // test against doc caching
-              assert.equal(msg.someCount, 1, 'there is exactly one <setting> node for somePreference');
+    open(self).then(({ tabId }) => {
+      let tab = Tab({ tab: getTabForId(tabId) });
+      assert.pass('the add-on prefs page was opened.');
 
-              // test somePreference
-              assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
-              assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
-              assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
-              assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
-              assert.equal(msg.somePreference['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+      tab.attach({
+        contentScriptWhen: "end",
+        contentScript: 'self.postMessage({\n' +
+                         'someCount: unsafeWindow.document.querySelectorAll("setting[title=\'some-title\']").length,\n' +
+                         'somePreference: getAttributes(unsafeWindow.document.querySelector("setting[title=\'some-title\']")),\n' +
+                         'myInteger: getAttributes(unsafeWindow.document.querySelector("setting[title=\'my-int\']")),\n' +
+                         'myHiddenInt: getAttributes(unsafeWindow.document.querySelector("setting[title=\'hidden-int\']")),\n' +
+                         'sayHello: getAttributes(unsafeWindow.document.querySelector("button[label=\'Click me!\']"))\n' +
+                       '});\n' +
+                       'function getAttributes(ele) {\n' +
+                         'if (!ele) return {};\n' +
+                         'return {\n' +
+                           'pref: ele.getAttribute("pref"),\n' +
+                           'type: ele.getAttribute("type"),\n' +
+                           'title: ele.getAttribute("title"),\n' +
+                           'desc: ele.getAttribute("desc"),\n' +
+                           '"data-jetpack-id": ele.getAttribute(\'data-jetpack-id\')\n' +
+                         '}\n' +
+                       '}\n',
+        onMessage: msg => {
+          // test against doc caching
+          assert.equal(msg.someCount, 1, 'there is exactly one <setting> node for somePreference');
 
-              // test myInteger
-              assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
-              assert.equal(msg.myInteger.pref, 'extensions.'+self.id+'.myInteger', 'extensions.test-simple-prefs.myInteger');
-              assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
-              assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
-              assert.equal(msg.myInteger['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+          // test somePreference
+          assert.equal(msg.somePreference.type, 'string', 'some pref is a string');
+          assert.equal(msg.somePreference.pref, 'extensions.'+self.id+'.somePreference', 'somePreference path is correct');
+          assert.equal(msg.somePreference.title, 'some-title', 'somePreference title is correct');
+          assert.equal(msg.somePreference.desc, 'Some short description for the preference', 'somePreference description is correct');
+          assert.equal(msg.somePreference['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
 
-              // test myHiddenInt
-              assert.equal(msg.myHiddenInt.type, undefined, 'myHiddenInt was not displayed');
-              assert.equal(msg.myHiddenInt.pref, undefined, 'myHiddenInt was not displayed');
-              assert.equal(msg.myHiddenInt.title, undefined, 'myHiddenInt was not displayed');
-              assert.equal(msg.myHiddenInt.desc, undefined, 'myHiddenInt was not displayed');
+          // test myInteger
+          assert.equal(msg.myInteger.type, 'integer', 'myInteger is a int');
+          assert.equal(msg.myInteger.pref, 'extensions.'+self.id+'.myInteger', 'extensions.test-simple-prefs.myInteger');
+          assert.equal(msg.myInteger.title, 'my-int', 'myInteger title is correct');
+          assert.equal(msg.myInteger.desc, 'How many of them we have.', 'myInteger desc is correct');
+          assert.equal(msg.myInteger['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
 
-              // test sayHello
-              assert.equal(msg.sayHello['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+          // test myHiddenInt
+          assert.equal(msg.myHiddenInt.type, undefined, 'myHiddenInt was not displayed');
+          assert.equal(msg.myHiddenInt.pref, undefined, 'myHiddenInt was not displayed');
+          assert.equal(msg.myHiddenInt.title, undefined, 'myHiddenInt was not displayed');
+          assert.equal(msg.myHiddenInt.desc, undefined, 'myHiddenInt was not displayed');
 
-              tab.close(done);
-            }
-          });
-      	}
+          // test sayHello
+          assert.equal(msg.sayHello['data-jetpack-id'], self.id, 'data-jetpack-id attribute value is correct');
+
+          tab.close(done);
+        }
       });
+    })
   }
 
   // run it again, to test against inline options document caching

@@ -475,7 +475,7 @@ URL*
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
                  URL& aBase, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
   nsRefPtr<ConstructorRunnable> runnable =
@@ -499,7 +499,7 @@ URL*
 URL::Constructor(const GlobalObject& aGlobal, const nsAString& aUrl,
                  const nsAString& aBase, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
   nsRefPtr<ConstructorRunnable> runnable =
@@ -844,7 +844,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject* aBlob,
                      const mozilla::dom::objectURLOptions& aOptions,
                      nsString& aResult, mozilla::ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
   nsCOMPtr<nsIDOMBlob> blob = file::GetDOMBlobFromJSObject(aBlob);
@@ -878,7 +878,7 @@ URL::CreateObjectURL(const GlobalObject& aGlobal, JSObject& aBlob,
 void
 URL::RevokeObjectURL(const GlobalObject& aGlobal, const nsAString& aUrl)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
 
   nsRefPtr<RevokeURLRunnable> runnable =

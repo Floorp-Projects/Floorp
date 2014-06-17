@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for input events in Login Manager</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="onNewEvent(event)">
+Login Manager test: input events should fire.
+
+<script>
+commonInit();
+SimpleTest.waitForExplicitFinish();
+
+/** Test for Login Manager: form fill, should get input events. **/
+
+var usernameInputFired = false;
+var passwordInputFired = false;
+var onloadFired = false;
+
+function onNewEvent(e) {
+  info("Got " + e.type + " event.");
+  if (e.type == "load") {
+    onloadFired = true;
+  } else if (e.target.name == "uname") {
+    ise(e.target.value, "testuser", "Should get 'testuser' as username");
+    ok(!usernameInputFired, "Should not have gotten an input event for the username field yet.");
+    usernameInputFired = true;
+  } else if (e.target.name == "pword") {
+    ise(e.target.value, "testpass", "Should get 'testpass' as password");
+    ok(!passwordInputFired, "Should not have gotten an input event for the password field yet.");
+    passwordInputFired = true;
+  }
+  if (onloadFired && usernameInputFired && passwordInputFired) {
+    ok(true, "All events fired as expected, we're done.");
+    SimpleTest.finish();
+  }
+}
+
+SimpleTest.registerCleanupFunction(function cleanup() {
+  clearTimeout(timeout);
+  $_(1, "uname").removeAttribute("oninput");
+  $_(1, "pword").removeAttribute("oninput");
+  document.body.removeAttribute("onload");
+});
+
+var timeout = setTimeout(function() {
+  ok(usernameInputFired, "Username input event should have fired by now.");
+  ok(passwordInputFired, "Password input event should have fired by now.");
+  ok(onloadFired, "Window load event should have fired by now.");
+  ok(false, "Not all events fired yet.");
+  SimpleTest.finish();
+}, 10000);
+
+</script>
+
+<p id="display"></p>
+
+<div id="content" style="display: none">
+
+  <form id="form1" action="formtest.js">
+    <p>This is form 1.</p>
+    <input  type="text"       name="uname" oninput="onNewEvent(event)">
+    <input  type="password"   name="pword" oninput="onNewEvent(event)">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+<pre id="test"></pre>
+</body>
+</html>

@@ -593,7 +593,7 @@ Promise::CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTas
 Promise::Constructor(const GlobalObject& aGlobal,
                      PromiseInit& aInit, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
 
   nsCOMPtr<nsIGlobalObject> global;
   global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -641,12 +641,12 @@ Promise::Constructor(const GlobalObject& aGlobal,
 }
 
 /* static */ already_AddRefed<Promise>
-Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
+Promise::Resolve(const GlobalObject& aGlobal,
                  JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
   // If a Promise was passed, just return it.
   if (aValue.isObject()) {
-    JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
+    JS::Rooted<JSObject*> valueObj(aGlobal.Context(), &aValue.toObject());
     Promise* nextPromise;
     nsresult rv = UNWRAP_OBJECT(Promise, valueObj, nextPromise);
 
@@ -663,7 +663,7 @@ Promise::Resolve(const GlobalObject& aGlobal, JSContext* aCx,
     return nullptr;
   }
 
-  return Resolve(global, aCx, aValue, aRv);
+  return Resolve(global, aGlobal.Context(), aValue, aRv);
 }
 
 /* static */ already_AddRefed<Promise>
@@ -677,7 +677,7 @@ Promise::Resolve(nsIGlobalObject* aGlobal, JSContext* aCx,
 }
 
 /* static */ already_AddRefed<Promise>
-Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
+Promise::Reject(const GlobalObject& aGlobal,
                 JS::Handle<JS::Value> aValue, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global =
@@ -687,7 +687,7 @@ Promise::Reject(const GlobalObject& aGlobal, JSContext* aCx,
     return nullptr;
   }
 
-  return Reject(global, aCx, aValue, aRv);
+  return Reject(global, aGlobal.Context(), aValue, aRv);
 }
 
 /* static */ already_AddRefed<Promise>
@@ -744,9 +744,9 @@ public:
     : mPromise(aPromise), mCountdown(aCountdown)
   {
     MOZ_ASSERT(aCountdown != 0);
-    JSContext* cx = aGlobal.GetContext();
+    JSContext* cx = aGlobal.Context();
 
-    // The only time aGlobal.GetContext() and aGlobal.Get() are not
+    // The only time aGlobal.Context() and aGlobal.Get() are not
     // same-compartment is when we're called via Xrays, and in that situation we
     // in fact want to create the array in the callee compartment
 
@@ -864,7 +864,7 @@ NS_INTERFACE_MAP_END_INHERITING(PromiseNativeHandler)
 NS_IMPL_CYCLE_COLLECTION(AllResolveHandler, mCountdownHolder)
 
 /* static */ already_AddRefed<Promise>
-Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
+Promise::All(const GlobalObject& aGlobal,
              const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global =
@@ -874,21 +874,23 @@ Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
     return nullptr;
   }
 
+  JSContext* cx = aGlobal.Context();
+
   if (aIterable.Length() == 0) {
-    JS::Rooted<JSObject*> empty(aCx, JS_NewArrayObject(aCx, 0));
+    JS::Rooted<JSObject*> empty(cx, JS_NewArrayObject(cx, 0));
     if (!empty) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return nullptr;
     }
-    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*empty));
-    return Promise::Resolve(aGlobal, aCx, value, aRv);
+    JS::Rooted<JS::Value> value(cx, JS::ObjectValue(*empty));
+    return Promise::Resolve(aGlobal, value, aRv);
   }
 
   nsRefPtr<Promise> promise = new Promise(global);
   nsRefPtr<CountdownHolder> holder =
     new CountdownHolder(aGlobal, promise, aIterable.Length());
 
-  JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
+  JS::Rooted<JSObject*> obj(cx, JS::CurrentGlobalOrNull(cx));
   if (!obj) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -897,8 +899,8 @@ Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
 
   for (uint32_t i = 0; i < aIterable.Length(); ++i) {
-    JS::Rooted<JS::Value> value(aCx, aIterable.ElementAt(i));
-    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, aCx, value, aRv);
+    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
+    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
 
     MOZ_ASSERT(!aRv.Failed());
 
@@ -916,7 +918,7 @@ Promise::All(const GlobalObject& aGlobal, JSContext* aCx,
 }
 
 /* static */ already_AddRefed<Promise>
-Promise::Race(const GlobalObject& aGlobal, JSContext* aCx,
+Promise::Race(const GlobalObject& aGlobal,
               const Sequence<JS::Value>& aIterable, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global =
@@ -926,7 +928,9 @@ Promise::Race(const GlobalObject& aGlobal, JSContext* aCx,
     return nullptr;
   }
 
-  JS::Rooted<JSObject*> obj(aCx, JS::CurrentGlobalOrNull(aCx));
+  JSContext* cx = aGlobal.Context();
+
+  JS::Rooted<JSObject*> obj(cx, JS::CurrentGlobalOrNull(cx));
   if (!obj) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
@@ -940,8 +944,8 @@ Promise::Race(const GlobalObject& aGlobal, JSContext* aCx,
   nsRefPtr<PromiseCallback> rejectCb = new RejectPromiseCallback(promise, obj);
 
   for (uint32_t i = 0; i < aIterable.Length(); ++i) {
-    JS::Rooted<JS::Value> value(aCx, aIterable.ElementAt(i));
-    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, aCx, value, aRv);
+    JS::Rooted<JS::Value> value(cx, aIterable.ElementAt(i));
+    nsRefPtr<Promise> nextPromise = Promise::Resolve(aGlobal, value, aRv);
     // According to spec, Resolve can throw, but our implementation never does.
     // Well it does when window isn't passed on the main thread, but that is an
     // implementation detail which should never be reached since we are checking

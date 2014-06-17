@@ -120,7 +120,9 @@ def hash_file(fn):
     return hashlib.sha256(open(fn,"rb").read()).hexdigest()
 
 def get_datafiles(datadir):
-    # yields pathnames relative to DATADIR, ignoring some files
+    """
+    yields pathnames relative to DATADIR, ignoring some files
+    """
     for dirpath, dirnames, filenames in os.walk(datadir):
         filenames = list(filter_filenames(filenames))
         # this tells os.walk to prune the search
@@ -193,8 +195,9 @@ class ManifestBuilder:
         self.test_modules = [] # for runtime
 
     def build(self, scan_tests, test_filter_re):
-        # process the top module, which recurses to process everything it
-        # reaches
+        """
+        process the top module, which recurses to process everything it reaches
+        """
         if "main" in self.target_cfg:
             top_mi = self.find_top(self.target_cfg)
             top_me = self.process_module(top_mi)
@@ -261,9 +264,11 @@ class ManifestBuilder:
         return sorted(used)
 
     def get_used_files(self, bundle_sdk_modules):
-        # returns all .js files that we reference, plus data/ files. You will
-        # need to add the loader, off-manifest files that it needs, and
-        # generated metadata.
+        """
+        returns all .js files that we reference, plus data/ files. You will
+        need to add the loader, off-manifest files that it needs, and
+        generated metadata.
+        """
         for datamap in self.datamaps.values():
             for (zipname, absname) in datamap.files_to_copy:
                 yield absname

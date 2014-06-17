@@ -529,11 +529,11 @@ let StyleSheetActor = protocol.ActorClass({
 
     let deferred = promise.defer();
 
-    let onSheetLoaded = function(event) {
+    let onSheetLoaded = (event) => {
       ownerNode.removeEventListener("load", onSheetLoaded, false);
 
       deferred.resolve(this.rawSheet.cssRules);
-    }.bind(this);
+    };
 
     ownerNode.addEventListener("load", onSheetLoaded, false);
 
