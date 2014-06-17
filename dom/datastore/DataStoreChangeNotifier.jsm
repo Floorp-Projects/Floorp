@@ -114,7 +114,7 @@ this.DataStoreChangeNotifier = {
               this.children[i].windows.splice(pos, 1);
             }
 
-            if (this.children[i].window.length) {
+            if (this.children[i].windows.length) {
               continue;
             }
 
