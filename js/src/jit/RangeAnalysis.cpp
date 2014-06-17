@@ -2751,8 +2751,12 @@ void
 MMod::collectRangeInfoPreTrunc()
 {
     Range lhsRange(lhs());
+    Range rhsRange(rhs());
     if (lhsRange.isFiniteNonNegative())
         canBeNegativeDividend_ = false;
+    if (!rhsRange.canBeZero())
+        canBeDivideByZero_ = false;
+
 }
 
 void
