@@ -939,7 +939,7 @@ nsInlineFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState) const
 }
 
 nscoord
-nsInlineFrame::GetBaseline() const
+nsInlineFrame::GetLogicalBaseline(mozilla::WritingMode aWritingMode) const
 {
   return mBaseline;
 }

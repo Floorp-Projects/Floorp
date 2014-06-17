@@ -1317,10 +1317,12 @@ StringMatch(JSLinearString *text, JSLinearString *pat, uint32_t start = 0)
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 bool
-js::StringHasPattern(const jschar *text, uint32_t textLen,
-                     const jschar *pat, uint32_t patLen)
+js::StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patLen)
 {
-    return StringMatch(text, textLen, pat, patLen) != -1;
+    AutoCheckCannotGC nogc;
+    return text->hasLatin1Chars()
+           ? StringMatch(text->latin1Chars(nogc), text->length(), pat, patLen) != -1
+           : StringMatch(text->twoByteChars(nogc), text->length(), pat, patLen) != -1;
 }
 
 int
@@ -3704,13 +3706,11 @@ class SplitStringMatcher
     bool operator()(JSContext *cx, JSLinearString *str, size_t index, SplitMatchResult *res) const
     {
         JS_ASSERT(index == 0 || index < str->length());
-        const jschar *chars = str->chars();
-        int match = StringMatch(chars + index, str->length() - index,
-                                sep->chars(), sep->length());
+        int match = StringMatch(str, sep, index);
         if (match == -1)
             res->setFailure();
         else
-            res->setResult(sep->length(), index + match + sep->length());
+            res->setResult(sep->length(), match + sep->length());
         return true;
     }
 };
@@ -4464,8 +4464,8 @@ js::StringToSource(JSContext *cx, JSString *str)
     return js_QuoteString(cx, str, '"');
 }
 
-static bool
-EqualChars(JSLinearString *str1, JSLinearString *str2)
+bool
+js::EqualChars(JSLinearString *str1, JSLinearString *str2)
 {
     MOZ_ASSERT(str1->length() == str2->length());
 
@@ -4523,8 +4523,28 @@ js::EqualStrings(JSLinearString *str1, JSLinearString *str2)
     return EqualChars(str1, str2);
 }
 
-static bool
-CompareStringsImpl(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
+static int32_t
+CompareStringsImpl(JSLinearString *str1, JSLinearString *str2)
+{
+    size_t len1 = str1->length();
+    size_t len2 = str2->length();
+
+    AutoCheckCannotGC nogc;
+    if (str1->hasLatin1Chars()) {
+        const Latin1Char *chars1 = str1->latin1Chars(nogc);
+        return str2->hasLatin1Chars()
+               ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+               : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+    }
+
+    const jschar *chars1 = str1->twoByteChars(nogc);
+    return str2->hasLatin1Chars()
+           ? CompareChars(chars1, len1, str2->latin1Chars(nogc), len2)
+           : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
+}
+
+bool
+js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
 {
     JS_ASSERT(str1);
     JS_ASSERT(str2);
@@ -4534,28 +4554,22 @@ CompareStringsImpl(JSContext *cx, JSString *str1, JSString *str2, int32_t *resul
         return true;
     }
 
-    const jschar *s1 = str1->getChars(cx);
-    if (!s1)
+    JSLinearString *linear1 = str1->ensureLinear(cx);
+    if (!linear1)
         return false;
 
-    const jschar *s2 = str2->getChars(cx);
-    if (!s2)
+    JSLinearString *linear2 = str2->ensureLinear(cx);
+    if (!linear2)
         return false;
 
-    *result = CompareChars(s1, str1->length(), s2, str2->length());
+    *result = CompareStringsImpl(linear1, linear2);
     return true;
-}
-
-bool
-js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
-{
-    return CompareStringsImpl(cx, str1, str2, result);
 }
 
 int32_t
 js::CompareAtoms(JSAtom *atom1, JSAtom *atom2)
 {
-    return CompareChars(atom1->chars(), atom1->length(), atom2->chars(), atom2->length());
+    return CompareStringsImpl(atom1, atom2);
 }
 
 bool
@@ -4568,12 +4582,13 @@ js::StringEqualsAscii(JSLinearString *str, const char *asciiBytes)
 #endif
     if (length != str->length())
         return false;
-    const jschar *chars = str->chars();
-    for (size_t i = 0; i != length; ++i) {
-        if (unsigned(asciiBytes[i]) != unsigned(chars[i]))
-            return false;
-    }
-    return true;
+
+    const Latin1Char *latin1 = reinterpret_cast<const Latin1Char *>(asciiBytes);
+
+    AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? PodEqual(latin1, str->latin1Chars(nogc), length)
+           : EqualCharsLatin1TwoByte(latin1, str->twoByteChars(nogc), length);
 }
 
 size_t
