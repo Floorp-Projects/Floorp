@@ -18,6 +18,7 @@ RtspChannelParent::RtspChannelParent(nsIURI *aUri)
   : mIPCClosed(false)
 {
   nsBaseChannel::SetURI(aUri);
+  DisallowThreadRetargeting();
 }
 
 RtspChannelParent::~RtspChannelParent()
