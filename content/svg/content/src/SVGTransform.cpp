@@ -206,7 +206,7 @@ SVGTransform::SetTranslate(float tx, float ty, ErrorResult& rv)
   }
 
   if (Transform().Type() == SVG_TRANSFORM_TRANSLATE &&
-      Matrixgfx().x0 == tx && Matrixgfx().y0 == ty) {
+      Matrixgfx()._31 == tx && Matrixgfx()._32 == ty) {
     return;
   }
 
@@ -223,7 +223,7 @@ SVGTransform::SetScale(float sx, float sy, ErrorResult& rv)
   }
 
   if (Transform().Type() == SVG_TRANSFORM_SCALE &&
-      Matrixgfx().xx == sx && Matrixgfx().yy == sy) {
+      Matrixgfx()._11 == sx && Matrixgfx()._22 == sy) {
     return;
   }
   AutoChangeTransformNotifier notifier(this);

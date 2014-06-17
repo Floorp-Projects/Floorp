@@ -266,17 +266,17 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
         if (!aSurface || aSurface->GetType() == gfxSurfaceType::Quartz)
             return;
 
-        if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xx) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.xy) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.yx) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.yy)) {
+        if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._11) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._21) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._12) ||
+            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._22)) {
             NS_WARNING("Scaling up too much, bailing out");
             mSucceeded = false;
             return;
         }
 
-        if (IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.x0) &&
-            IsSafeImageTransformComponent(aDeviceSpaceToImageSpace.y0))
+        if (IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._31) &&
+            IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._32))
             return;
 
         // We'll push a group, which will hopefully reduce our transform's
@@ -438,9 +438,9 @@ gfxUtils::DrawPixelSnapped(gfxContext*      aContext,
     // we know we have the pixman limits. 16384.0 is a somewhat arbitrary
     // large number to make sure we avoid the expensive fmod when we can, but
     // still maintain a safe margin from the actual limit
-    if (doTile && (userSpaceToImageSpace.y0 > 16384.0 || userSpaceToImageSpace.x0 > 16384.0)) {
-        userSpaceToImageSpace.x0 = fmod(userSpaceToImageSpace.x0, aImageRect.width);
-        userSpaceToImageSpace.y0 = fmod(userSpaceToImageSpace.y0, aImageRect.height);
+    if (doTile && (userSpaceToImageSpace._32 > 16384.0 || userSpaceToImageSpace._31 > 16384.0)) {
+        userSpaceToImageSpace._31 = fmod(userSpaceToImageSpace._31, aImageRect.width);
+        userSpaceToImageSpace._32 = fmod(userSpaceToImageSpace._32, aImageRect.height);
     }
 #else
     // OK now, the hard part left is to account for the subimage sampling
@@ -641,19 +641,19 @@ gfxUtils::TransformRectToRect(const gfxRect& aFrom, const gfxPoint& aToTopLeft,
   gfxMatrix m;
   if (aToTopRight.y == aToTopLeft.y && aToTopRight.x == aToBottomRight.x) {
     // Not a rotation, so xy and yx are zero
-    m.xy = m.yx = 0.0;
-    m.xx = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
-    m.yy = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
-    m.x0 = aToTopLeft.x - m.xx*aFrom.x;
-    m.y0 = aToTopLeft.y - m.yy*aFrom.y;
+    m._21 = m._12 = 0.0;
+    m._11 = (aToBottomRight.x - aToTopLeft.x)/aFrom.width;
+    m._22 = (aToBottomRight.y - aToTopLeft.y)/aFrom.height;
+    m._31 = aToTopLeft.x - m._11*aFrom.x;
+    m._32 = aToTopLeft.y - m._22*aFrom.y;
   } else {
     NS_ASSERTION(aToTopRight.y == aToBottomRight.y && aToTopRight.x == aToTopLeft.x,
                  "Destination rectangle not axis-aligned");
-    m.xx = m.yy = 0.0;
-    m.xy = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
-    m.yx = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
-    m.x0 = aToTopLeft.x - m.xy*aFrom.y;
-    m.y0 = aToTopLeft.y - m.yx*aFrom.x;
+    m._11 = m._22 = 0.0;
+    m._21 = (aToBottomRight.x - aToTopLeft.x)/aFrom.height;
+    m._12 = (aToBottomRight.y - aToTopLeft.y)/aFrom.width;
+    m._31 = aToTopLeft.x - m._21*aFrom.y;
+    m._32 = aToTopLeft.y - m._12*aFrom.x;
   }
   return m;
 }

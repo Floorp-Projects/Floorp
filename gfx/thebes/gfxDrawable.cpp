@@ -97,8 +97,8 @@ PreparePatternForUntiledDrawing(gfxPattern* aPattern,
             // enough X server.
             if (static_cast<gfxXlibSurface*>(currentTarget)->IsPadSlow()) {
                 bool isDownscale =
-                    aDeviceToImage.xx >= 1.0 && aDeviceToImage.yy >= 1.0 &&
-                    aDeviceToImage.xy == 0.0 && aDeviceToImage.yx == 0.0;
+                    aDeviceToImage._11 >= 1.0 && aDeviceToImage._22 >= 1.0 &&
+                    aDeviceToImage._21 == 0.0 && aDeviceToImage._12 == 0.0;
 
                 GraphicsFilter filter =
                     isDownscale ? aDefaultFilter : (const GraphicsFilter)GraphicsFilter::FILTER_FAST;
