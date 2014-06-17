@@ -890,8 +890,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         if (lhs.getTag() == Operand::OP2) {
             branch32(cond, lhs.toReg(), rhs, label);
         } else {
-            ma_ldr(lhs, ScratchRegister);
-            branch32(cond, ScratchRegister, rhs, label);
+            // branch32 will use ScratchRegister.
+            ma_ldr(lhs, secondScratchReg_);
+            branch32(cond, secondScratchReg_, rhs, label);
         }
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
@@ -899,8 +900,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
-        load32(lhs, ScratchRegister);
-        branch32(cond, ScratchRegister, rhs, label);
+        // branch32 will use ScratchRegister.
+        load32(lhs, secondScratchReg_);
+        branch32(cond, secondScratchReg_, rhs, label);
     }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
@@ -994,8 +996,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
-        branchTest32(cond, ScratchRegister, imm, label);
+        // branchTest32 will use ScratchRegister.
+        load32(address, secondScratchReg_);
+        branchTest32(cond, secondScratchReg_, imm, label);
     }
     void branchTestPtr(Condition cond, const Register &lhs, const Register &rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);
