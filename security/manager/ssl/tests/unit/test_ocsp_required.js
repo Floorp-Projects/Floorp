@@ -32,22 +32,15 @@ function run_test() {
   });
   ocspResponder.start(8080);
 
-  add_tests_in_mode(true);
-  add_tests_in_mode(false);
+  add_tests();
 
   add_test(function () { ocspResponder.stop(run_next_test); });
 
   run_next_test();
 }
 
-function add_tests_in_mode(useMozillaPKIX)
+function add_tests()
 {
-  add_test(function () {
-    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
-                               useMozillaPKIX);
-    run_next_test();
-  });
-
   add_connection_test("ocsp-stapling-none.example.com",
                       getXPCOMStatusFromNSS(SEC_ERROR_OCSP_BAD_SIGNATURE));
   add_connection_test("ocsp-stapling-none.example.com",

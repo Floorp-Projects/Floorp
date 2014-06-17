@@ -23,7 +23,6 @@ function load_cert(cert_name, trust_string) {
 
 function run_test() {
   load_cert("ca", "CT,CT,CT");
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", true);
 
   checkCertErrorGeneric(certdb, load_cert('int-EKU-CA', ',,'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), 0, certificateUsageSSLClient);

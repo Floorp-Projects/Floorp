@@ -19,19 +19,10 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedCertVerifier)
 
-  SharedCertVerifier(implementation_config ic,
-#ifndef NSS_NO_LIBPKIX
-                     missing_cert_download_config ac, crl_download_config cdc,
-#endif
-                     ocsp_download_config odc, ocsp_strict_config osc,
+  SharedCertVerifier(ocsp_download_config odc, ocsp_strict_config osc,
                      ocsp_get_config ogc,
                      pinning_enforcement_config pinningEnforcementLevel)
-    : mozilla::psm::CertVerifier(ic,
-#ifndef NSS_NO_LIBPKIX
-                                 ac, cdc,
-#endif
-                                 odc, osc, ogc,
-                                 pinningEnforcementLevel)
+    : mozilla::psm::CertVerifier(odc, osc, ogc, pinningEnforcementLevel)
   {
   }
 };

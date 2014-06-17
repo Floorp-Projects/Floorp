@@ -38,19 +38,6 @@ function run_test() {
   Services.prefs.setCharPref("network.dns.localDomains",
                              "www.example.com");
 
-  add_tests_in_mode(true);
-  add_tests_in_mode(false);
-  run_next_test();
-}
-
-function add_tests_in_mode(useMozillaPKIX)
-{
-  add_test(function() {
-    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
-                               useMozillaPKIX);
-    run_next_test();
-  });
-
   add_test(function() {
     clearOCSPCache();
     Services.prefs.setBoolPref("security.OCSP.GET.enabled", false);
@@ -72,13 +59,11 @@ function add_tests_in_mode(useMozillaPKIX)
     clearOCSPCache();
     Services.prefs.setBoolPref("security.OCSP.GET.enabled", true);
     // Bug 1016681 mozilla::pkix does not support fallback yet.
-    if (!useMozillaPKIX) {
-      let ocspResponder = start_ocsp_responder(["b", "a"], [], ["GET", "POST"]);
-      check_cert_err("a", 0);
-      ocspResponder.stop(run_next_test);
-    } else {
-      run_next_test();
-    }
+    // let ocspResponder = start_ocsp_responder(["b", "a"], [], ["GET", "POST"]);
+    // check_cert_err("a", 0);
+    // ocspResponder.stop(run_next_test);
+    run_next_test();
   });
 
+  run_next_test();
 }

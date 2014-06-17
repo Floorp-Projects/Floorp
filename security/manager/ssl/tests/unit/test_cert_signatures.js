@@ -45,12 +45,6 @@ function run_test() {
   load_ca("ca-p384");
   load_ca("ca-dsa");
 
-  run_test_in_mode(true);
-  run_test_in_mode(false);
-}
-
-function run_test_in_mode(useMozillaPKIX) {
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
   clearOCSPCache();
   clearSessionCache();
 
@@ -60,14 +54,10 @@ function run_test_in_mode(useMozillaPKIX) {
 
   // mozilla::pkix does not allow CA certs to be validated for end-entity
   // usages.
-  let int_usage = useMozillaPKIX
-                ? 'SSL CA'
-                : 'Client,Server,Sign,Encrypt,SSL CA,Status Responder';
+  const int_usage = 'SSL CA';
 
   // mozilla::pkix doesn't implement the Netscape Object Signer restriction.
-  const ee_usage = useMozillaPKIX
-                 ? 'Client,Server,Sign,Encrypt,Object Signer'
-                 : 'Client,Server,Sign,Encrypt';
+  const ee_usage = 'Client,Server,Sign,Encrypt,Object Signer';
 
   let cert2usage = {
     // certs without the "int" prefix are end entity certs.
