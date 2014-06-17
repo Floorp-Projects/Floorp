@@ -6,11 +6,11 @@
 /* globals log, is, ok, runTests, toggleNFC, runNextTest,
    SpecialPowers, nfc, enableRE0, MozNDEFRecord */
 
-const MARIONETTE_TIMEOUT = 30000;
+const MARIONETTE_TIMEOUT = 60000;
 const MARIONETTE_HEAD_JS = 'head.js';
 
 const MANIFEST_URL = 'app://system.gaiamobile.org/manifest.webapp';
-const NDEF_MESSAGE = [new MozNDEFRecord(new Uint8Array(0x01),
+const NDEF_MESSAGE = [new MozNDEFRecord(0x01,
                                         new Uint8Array(0x84),
                                         new Uint8Array(0),
                                         new Uint8Array(0x20))];
@@ -72,6 +72,21 @@ function testNfcConnectError() {
                                          'NDEF',
                                          'NfcConnectError'))
   .then(() => toggleNFC(false))
+  .then(endTest)
+  .catch(handleRejectedPromise);
+}
+
+/**
+ * Enables nfc and RE0, registers tech-discovered msg handler, once it's
+ * fired set tech-lost handler and disables nfc. In both handlers checks
+ * if error message is not present.
+ */
+function testNoErrorInTechMsg() {
+  log('testNoErrorInTechMsg');
+  toggleNFC(true)
+  .then(enableRE0)
+  .then(setTechDiscoveredHandler)
+  .then(setAndFireTechLostHandler)
   .then(endTest)
   .catch(handleRejectedPromise);
 }
@@ -155,10 +170,47 @@ function connectToNFCTagExpectError(sessionToken, tech, errorMsg) {
   return deferred.promise;
 }
 
+function setTechDiscoveredHandler() {
+  let deferred = Promise.defer();
+
+  let techDiscoveredHandler = function(msg) {
+    ok('Message handler for nfc-manager-tech-discovered');
+    is(msg.type, 'techDiscovered');
+    is(msg.errorMsg, undefined, 'Should not get error msg in tech discovered');
+
+    window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered', null);
+    deferred.resolve();
+  };
+
+  window.navigator.mozSetMessageHandler('nfc-manager-tech-discovered',
+                                        techDiscoveredHandler);
+  return deferred.promise;
+}
+
+function setAndFireTechLostHandler() {
+  let deferred = Promise.defer();
+
+  let techLostHandler = function(msg) {
+    ok('Message handler for nfc-manager-tech-lost');
+    is(msg.type, 'techLost');
+    is(msg.errorMsg, undefined, 'Should not get error msg in tech lost');
+
+    window.navigator.mozSetMessageHandler('nfc-manager-tech-lost', null);
+    deferred.resolve();
+  };
+
+  window.navigator.mozSetMessageHandler('nfc-manager-tech-lost',
+                                        techLostHandler);
+  // TODO should be refactored once Bug 1023079 lands
+  toggleNFC(false);
+  return deferred.promise;
+}
+
 let tests = [
   testNfcNotEnabledError,
   testNfcBadSessionIdError,
-  testNfcConnectError
+  testNfcConnectError,
+  testNoErrorInTechMsg
 ];
 
 /**
