@@ -449,6 +449,9 @@ sp<MetaData> MPEG4Extractor::getTrackMetaData(
                         && track->sampleTable->getMetaDataForSample(
                             sampleIndex, NULL /* offset */, NULL /* size */,
                             &sampleTime) == OK) {
+                    if (!track->timescale) {
+                        return NULL;
+                    }
                     track->meta->setInt64(
                             kKeyThumbnailTime,
                             ((int64_t)sampleTime * 1000000) / track->timescale);
@@ -1137,6 +1140,9 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
                     duration = ntohl(duration32);
                 }
             }
+            if (!mLastTrack->timescale) {
+                return ERROR_MALFORMED;
+            }
             mLastTrack->meta->setInt64(
                     kKeyDuration, (duration * 1000000) / mLastTrack->timescale);
 
@@ -1805,6 +1811,9 @@ status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {
 
     uint32_t timeScale;
     if (!mDataSource->getUInt32(offset + 8, &timeScale)) {
+        return ERROR_MALFORMED;
+    }
+    if (!timeScale) {
         return ERROR_MALFORMED;
     }
     ALOGV("sidx refid/timescale: %d/%d", referenceId, timeScale);
@@ -3111,6 +3120,9 @@ status_t MPEG4Source::read(
         }
 
         if (mode == ReadOptions::SEEK_CLOSEST) {
+            if (!mTimescale) {
+                return ERROR_MALFORMED;
+            }
             targetSampleTimeUs = (sampleTime * 1000000ll) / mTimescale;
         }
 
@@ -3177,6 +3189,9 @@ status_t MPEG4Source::read(
             mBuffer->set_range(0, size);
             mBuffer->meta_data()->clear();
             mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
+            if (!mTimescale) {
+                return ERROR_MALFORMED;
+            }
             mBuffer->meta_data()->setInt64(
                     kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
             mBuffer->meta_data()->setInt64(
@@ -3302,6 +3317,9 @@ status_t MPEG4Source::read(
 
         mBuffer->meta_data()->clear();
         mBuffer->meta_data()->setInt64(kKey64BitFileOffset, offset);
+        if (!mTimescale) {
+            return ERROR_MALFORMED;
+        }
         mBuffer->meta_data()->setInt64(
                 kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
         mBuffer->meta_data()->setInt64(
@@ -3457,6 +3475,9 @@ status_t MPEG4Source::fragmentedRead(
 
             CHECK(mBuffer != NULL);
             mBuffer->set_range(0, size);
+            if (!mTimescale) {
+                return ERROR_MALFORMED;
+            }
             mBuffer->meta_data()->setInt64(
                     kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
             mBuffer->meta_data()->setInt64(
@@ -3582,6 +3603,9 @@ status_t MPEG4Source::fragmentedRead(
             mBuffer->set_range(0, dstOffset);
         }
 
+        if (!mTimescale) {
+            return ERROR_MALFORMED;
+        }
         mBuffer->meta_data()->setInt64(
                 kKeyTime, ((int64_t)cts * 1000000) / mTimescale);
         mBuffer->meta_data()->setInt64(
