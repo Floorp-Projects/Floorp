@@ -99,6 +99,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
     private UIMode mUiMode;
 
+    private boolean mIsAttached;
+
     private ThemedTextView mTitle;
     private int mTitlePadding;
     private ToolbarTitlePrefs mTitlePrefs;
@@ -167,6 +169,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
     @Override
     public void onAttachedToWindow() {
+        mIsAttached = true;
         mTitlePrefs = new ToolbarTitlePrefs();
 
         Button.OnClickListener faviconListener = new Button.OnClickListener() {
@@ -220,6 +223,7 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
 
     @Override
     public void onDetachedFromWindow() {
+        mIsAttached = false;
         mTitlePrefs.close();
     }
 
@@ -260,6 +264,12 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     }
 
     void updateFromTab(Tab tab, EnumSet<UpdateFlags> flags) {
+        // Several parts of ToolbarDisplayLayout's state depends
+        // on the views being attached to the view tree.
+        if (!mIsAttached) {
+            return;
+        }
+
         if (flags.contains(UpdateFlags.TITLE)) {
             updateTitle(tab);
         }
