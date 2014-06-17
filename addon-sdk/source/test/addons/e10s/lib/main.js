@@ -6,9 +6,10 @@
 const { get: getPref } = require('sdk/preferences/service');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 const { openTab, closeTab, getBrowserForTab } = require('sdk/tabs/utils');
+const tabs = require('sdk/tabs');
 
 exports.testRemotePrefIsSet = function(assert) {
-  assert.ok(getPref('browser.tabs.remote.autostart'), 
+  assert.ok(getPref('browser.tabs.remote.autostart'),
             "Electrolysis remote tabs pref should be set");
 }
 
@@ -19,11 +20,12 @@ exports.testTabIsRemote = function(assert, done) {
 
   // can't simply close a remote tab before it is loaded, bug 1006043
   let mm = getBrowserForTab(tab).messageManager;
-  mm.addMessageListener(7, function() {
+  mm.addMessageListener('7', function listener() {
+    mm.removeMessageListener('7', listener);
+    tabs.once('close', done);
     closeTab(tab);
-    done();
   })
-  mm.loadFrameScript('data:,sendAsyncMessage(7)', false);
+  mm.loadFrameScript('data:,sendAsyncMessage("7")', true);
 }
 
 require('sdk/test/runner').runTestsFromModule(module);

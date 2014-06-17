@@ -39,6 +39,12 @@ public class HealthReportPruneService extends BackgroundService {
   @Override
   public void onHandleIntent(Intent intent) {
     Logger.setThreadLogTag(HealthReportConstants.GLOBAL_LOG_TAG);
+
+    // Intent can be null. Bug 1025937.
+    if (intent == null) {
+        Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+    }
+
     Logger.debug(LOG_TAG, "Handling prune intent.");
 
     if (!isIntentValid(intent)) {
@@ -59,7 +65,11 @@ public class HealthReportPruneService extends BackgroundService {
     return new PrunePolicy(storage, getSharedPreferences());
   }
 
-  protected boolean isIntentValid(final Intent intent) {
+  /**
+   * @param intent must be non-null.
+   * @return true if the supplied intent contains both profileName and profilePath.
+   */
+  private static boolean isIntentValid(final Intent intent) {
     boolean isValid = true;
 
     final String profileName = intent.getStringExtra("profileName");

@@ -26,6 +26,7 @@ static const char *cc_src_names[] = {
     "UI",
     "SIP",
     "MISC_APP",
+    "RCC",
     "CCAPP"
 };
 

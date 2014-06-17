@@ -74,6 +74,11 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     RCFILE  = 'sqlite.rc'
     RESFILE = 'sqlite.res'
 
+if CONFIG['OS_ARCH'] == 'Linux' and \
+   not CONFIG['MOZ_FOLD_LIBS'] and \
+   CONFIG['GCC_USE_GNU_LD']:
+    LD_VERSION_SCRIPT = 'sqlite-processed.def'
+
 # Suppress warnings in third-party code.
 if CONFIG['GNU_CC']:
     CFLAGS += [

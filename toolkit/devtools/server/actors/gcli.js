@@ -81,9 +81,9 @@ var GcliActor = protocol.ActorClass({
    * Get the state of an input string. i.e. requisition.getStateData()
    */
   state: method(function(typed, start, rank) {
-    return this.requisition.update(typed).then(function() {
+    return this.requisition.update(typed).then(() => {
       return this.requisition.getStateData(start, rank);
-    }.bind(this));
+    });
   }, {
     request: {
       typed: Arg(0, "string"), // The command string

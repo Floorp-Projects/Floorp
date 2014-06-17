@@ -88,8 +88,9 @@ MP4Demuxer::Init()
     sp<MetaData> metaData = e->getTrackMetaData(i);
 
     const char* mimeType;
-    if (!metaData->findCString(kKeyMIMEType, &mimeType))
+    if (metaData == nullptr || !metaData->findCString(kKeyMIMEType, &mimeType)) {
       continue;
+    }
 
     if (!mPrivate->mAudio.get() && !strncmp(mimeType, "audio/", 6)) {
       mPrivate->mAudio = e->getTrack(i);

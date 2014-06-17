@@ -125,6 +125,16 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_SHADEREDITOR_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_SHADEREDITOR_TIME_ACTIVE_SECONDS"
     },
+    webaudioeditor: {
+      histogram: "DEVTOOLS_WEBAUDIOEDITOR_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_WEBAUDIOEDITOR_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_WEBAUDIOEDITOR_TIME_ACTIVE_SECONDS"
+    },
+    canvasdebugger: {
+      histogram: "DEVTOOLS_CANVASDEBUGGER_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_CANVASDEBUGGER_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS"
+    },
     jsprofiler: {
       histogram: "DEVTOOLS_JSPROFILER_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_JSPROFILER_OPENED_PER_USER_FLAG",

@@ -31,7 +31,7 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
         <item name="android:paddingTop">18dp</item>
         <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">9dp</item>

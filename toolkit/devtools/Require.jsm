@@ -148,7 +148,7 @@ Domain.prototype.lookup = function(moduleName) {
 
     var exports = {};
     try {
-      var params = module.deps.map(function(dep) {
+      var params = module.deps.map((dep) => {
         if (dep === "require") {
           return this.require.bind(this);
         }
@@ -159,7 +159,7 @@ Domain.prototype.lookup = function(moduleName) {
           return { id: moduleName, uri: "" };
         }
         return this.lookup(dep);
-      }.bind(this));
+      });
 
       var reply = module.apply(null, params);
       module = (reply !== undefined) ? reply : exports;

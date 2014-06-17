@@ -126,6 +126,9 @@ public interface TelemetryContract {
         // Action occurred via an intent.
         INTENT("intent"),
 
+        // Action occurred via a homescreen launcher.
+        HOMESCREEN("homescreen"),
+
         // Action triggered from a list.
         LIST("list"),
 

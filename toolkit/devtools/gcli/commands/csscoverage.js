@@ -29,7 +29,7 @@ exports.items = [
   {
     name: "csscoverage start",
     hidden: true,
-    description: l10n.lookup("csscoverageStartDesc"),
+    description: l10n.lookup("csscoverageStartDesc2"),
     exec: function*(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {
@@ -42,7 +42,7 @@ exports.items = [
   {
     name: "csscoverage stop",
     hidden: true,
-    description: l10n.lookup("csscoverageStopDesc"),
+    description: l10n.lookup("csscoverageStopDesc2"),
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
@@ -56,7 +56,7 @@ exports.items = [
   {
     name: "csscoverage oneshot",
     hidden: true,
-    description: l10n.lookup("csscoverageOneShotDesc"),
+    description: l10n.lookup("csscoverageOneShotDesc2"),
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
@@ -70,7 +70,7 @@ exports.items = [
   {
     name: "csscoverage toggle",
     hidden: true,
-    description: l10n.lookup("csscoverageToggleDesc"),
+    description: l10n.lookup("csscoverageToggleDesc2"),
     exec: function*(args, context) {
       let target = context.environment.target;
       let usage = yield csscoverage.getUsage(target);
@@ -90,7 +90,7 @@ exports.items = [
   {
     name: "csscoverage report",
     hidden: true,
-    description: l10n.lookup("csscoverageReportDesc"),
+    description: l10n.lookup("csscoverageReportDesc2"),
     exec: function*(args, context) {
       let usage = yield csscoverage.getUsage(context.environment.target);
       if (usage == null) {

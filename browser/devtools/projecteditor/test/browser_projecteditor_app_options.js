@@ -47,12 +47,7 @@ let test = asyncTest(function*() {
     validationStatus: "error"
   });
 
-  ok (!nameLabel.parentNode, "The old elements have been removed");
-
   info ("Getting ahold of and validating the project header DOM");
-  let image = header.querySelector(".project-image");
-  let nameLabel = header.querySelector(".project-name-label");
-  let statusElement = header.querySelector(".project-status");
   is (statusElement.getAttribute("status"), "error", "The status has been set correctly.");
   is (nameLabel.textContent, "Test2", "The name label has been set correctly");
   is (image.getAttribute("src"), "chrome://browser/skin/devtools/tool-inspector.svg", "The icon has been set correctly");
@@ -65,12 +60,7 @@ let test = asyncTest(function*() {
     validationStatus: "warning"
   });
 
-  ok (!nameLabel.parentNode, "The old elements have been removed");
-
   info ("Getting ahold of and validating the project header DOM");
-  let image = header.querySelector(".project-image");
-  let nameLabel = header.querySelector(".project-name-label");
-  let statusElement = header.querySelector(".project-status");
   is (statusElement.getAttribute("status"), "warning", "The status has been set correctly.");
   is (nameLabel.textContent, "Test3", "The name label has been set correctly");
   is (image.getAttribute("src"), "chrome://browser/skin/devtools/tool-webconsole.svg", "The icon has been set correctly");
@@ -83,12 +73,7 @@ let test = asyncTest(function*() {
     validationStatus: "valid"
   });
 
-  ok (!nameLabel.parentNode, "The old elements have been removed");
-
   info ("Getting ahold of and validating the project header DOM");
-  let image = header.querySelector(".project-image");
-  let nameLabel = header.querySelector(".project-name-label");
-  let statusElement = header.querySelector(".project-status");
   is (statusElement.getAttribute("status"), "valid", "The status has been set correctly.");
   is (nameLabel.textContent, "Test4", "The name label has been set correctly");
   is (image.getAttribute("src"), "chrome://browser/skin/devtools/tool-debugger.svg", "The icon has been set correctly");
