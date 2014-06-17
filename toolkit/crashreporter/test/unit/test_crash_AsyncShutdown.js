@@ -40,18 +40,20 @@ function after_crash(mdump, extra) {
 function setup_osfile_crash_noerror() {
   Components.utils.import("resource://gre/modules/Services.jsm", this);
   Components.utils.import("resource://gre/modules/osfile.jsm", this);
+  Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-  Services.prefs.setBoolPref("toolkit.osfile.debug.failshutdown", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
+  OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
   OS.File.getCurrentDirectory();
+
   Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
 };
 
 function after_osfile_crash_noerror(mdump, extra) {
-  do_print("after OS.File crash: " + JSON.stringify(extra.AsyncShutdownTimeout));
+  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
   do_print("Keys: " + Object.keys(state).join(", "));
@@ -69,18 +71,20 @@ function after_osfile_crash_noerror(mdump, extra) {
 function setup_osfile_crash_exn() {
   Components.utils.import("resource://gre/modules/Services.jsm", this);
   Components.utils.import("resource://gre/modules/osfile.jsm", this);
+  Components.utils.import("resource://gre/modules/Promise.jsm", this);
 
-  Services.prefs.setBoolPref("toolkit.osfile.debug.failshutdown", true);
   Services.prefs.setIntPref("toolkit.asyncshutdown.crash_timeout", 1);
   Services.prefs.setBoolPref("toolkit.osfile.native", false);
 
+  OS.File.profileBeforeChange.addBlocker("Adding a blocker that will never be resolved", () => Promise.defer().promise);
   OS.File.read("I do not exist");
+
   Services.obs.notifyObservers(null, "profile-before-change", null);
   dump("Waiting for crash\n");
 };
 
 function after_osfile_crash_exn(mdump, extra) {
-  do_print("after OS.File crash: " + JSON.stringify(extra.AsyncShutdownTimeout));
+  do_print("after OS.File crash: " + extra.AsyncShutdownTimeout);
   let info = JSON.parse(extra.AsyncShutdownTimeout);
   let state = info.conditions[0].state;
   do_print("Keys: " + Object.keys(state).join(", "));
