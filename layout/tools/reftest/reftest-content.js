@@ -329,11 +329,13 @@ function FlushRendering() {
                     .getInterface(CI.nsIDOMWindowUtils);
         var afterPaintWasPending = utils.isMozAfterPaintPending;
 
-        try {
-            // Flush pending restyles and reflows for this window
-            win.document.documentElement.getBoundingClientRect();
-        } catch (e) {
-            LogWarning("flushWindow failed: " + e + "\n");
+        if (win.document.documentElement) {
+            try {
+                // Flush pending restyles and reflows for this window
+                win.document.documentElement.getBoundingClientRect();
+            } catch (e) {
+                LogWarning("flushWindow failed: " + e + "\n");
+            }
         }
 
         if (!afterPaintWasPending && utils.isMozAfterPaintPending) {
