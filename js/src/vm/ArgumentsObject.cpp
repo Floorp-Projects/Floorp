@@ -156,7 +156,7 @@ struct CopyScriptFrameIterArgs
      * invalid.
      */
     void maybeForwardToCallObject(JSObject *obj, ArgumentsData *data) {
-        if (!iter_.isJit())
+        if (!iter_.isIon())
             ArgumentsObject::MaybeForwardToCallObject(iter_.abstractFramePtr(), obj, data);
     }
 };
