@@ -7198,7 +7198,7 @@ Parser<ParseHandler>::objectLiteral()
                 if (!abortIfSyntaxParser())
                     return null();
                 tokenStream.ungetToken();
-                if (!tokenStream.checkForKeyword(atom->charsZ(), atom->length(), nullptr))
+                if (!tokenStream.checkForKeyword(atom, nullptr))
                     return null();
                 PropertyName *name = handler.isName(propname);
                 JS_ASSERT(atom);

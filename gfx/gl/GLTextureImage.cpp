@@ -6,6 +6,7 @@
 #include "GLTextureImage.h"
 #include "GLContext.h"
 #include "gfxContext.h"
+#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
 #include "gfx2DGlue.h"

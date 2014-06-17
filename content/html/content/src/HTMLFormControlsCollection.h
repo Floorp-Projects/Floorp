@@ -21,7 +21,7 @@ namespace dom {
 class HTMLFormElement;
 class HTMLImageElement;
 class OwningNodeListOrElement;
-template<typename> class Nullable;
+template<typename> struct Nullable;
 
 class HTMLFormControlsCollection : public nsIHTMLCollection
                                  , public nsWrapperCache

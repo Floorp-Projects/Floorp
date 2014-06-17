@@ -25,16 +25,13 @@ JS::LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx, TwoByteChars t
     return Latin1CharsZ(latin1, len);
 }
 
+template <typename CharT>
 static size_t
-GetDeflatedUTF8StringLength(const jschar *chars, size_t nchars)
+GetDeflatedUTF8StringLength(const CharT *chars, size_t nchars)
 {
-    size_t nbytes;
-    const jschar *end;
-    unsigned c, c2;
-
-    nbytes = nchars;
-    for (end = chars + nchars; chars != end; chars++) {
-        c = *chars;
+    size_t nbytes = nchars;
+    for (const CharT *end = chars + nchars; chars < end; chars++) {
+        jschar c = *chars;
         if (c < 0x80)
             continue;
         if (0xD800 <= c && c <= 0xDFFF) {
@@ -43,7 +40,7 @@ GetDeflatedUTF8StringLength(const jschar *chars, size_t nchars)
                 nbytes += 2; /* Bad Surrogate */
                 continue;
             }
-            c2 = chars[1];
+            jschar c2 = chars[1];
             if (c2 < 0xDC00 || c2 > 0xDFFF) {
                 nbytes += 2; /* Bad Surrogate */
                 continue;
@@ -77,8 +74,9 @@ PutUTF8ReplacementCharacter(char **dst, size_t *dstlenp) {
  * Write up to |*dstlenp| bytes into |dst|.  Writes the number of bytes used
  * into |*dstlenp| on success.  Returns false on failure.
  */
+template <typename CharT>
 static bool
-DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const jschar *src, size_t srclen,
+DeflateStringToUTF8Buffer(js::ThreadSafeContext *cx, const CharT *src, size_t srclen,
                           char *dst, size_t *dstlenp)
 {
     size_t dstlen = *dstlenp;
@@ -140,27 +138,33 @@ bufferTooSmall:
     return false;
 }
 
-
+template <typename CharT>
 UTF8CharsZ
-JS::TwoByteCharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars)
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars)
 {
     JS_ASSERT(cx);
 
     /* Get required buffer size. */
-    jschar *str = tbchars.start().get();
-    size_t len = GetDeflatedUTF8StringLength(str, tbchars.length());
+    const CharT *str = chars.start().get();
+    size_t len = GetDeflatedUTF8StringLength(str, chars.length());
 
     /* Allocate buffer. */
-    unsigned char *utf8 = cx->pod_malloc<unsigned char>(len + 1);
+    char *utf8 = cx->pod_malloc<char>(len + 1);
     if (!utf8)
         return UTF8CharsZ();
 
     /* Encode to UTF8. */
-    DeflateStringToUTF8Buffer(cx, str, tbchars.length(), (char *)utf8, &len);
+    DeflateStringToUTF8Buffer(cx, str, chars.length(), utf8, &len);
     utf8[len] = '\0';
 
     return UTF8CharsZ(utf8, len);
 }
+
+template UTF8CharsZ
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, mozilla::Range<const Latin1Char> chars);
+
+template UTF8CharsZ
+JS::CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, mozilla::Range<const jschar> chars);
 
 static const uint32_t INVALID_UTF8 = UINT32_MAX;
 
