@@ -520,6 +520,7 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
 
     RootedObject target(cx, getTargetObject(wrapper));
     if (!isPrototype(holder)) {
+        JSProtoKey key = getProtoKey(holder);
         // For Object and Array instances, we expose some properties from the
         // underlying object, but only after filtering them carefully.
         //
@@ -529,19 +530,13 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
         // it's tempting to try to impose some sort of structure on what Arrays
         // "should" look like over Xrays, the underlying object is squishy enough
         // that it makes sense to just treat them like Objects for Xray purposes.
-        switch (getProtoKey(holder)) {
-          case JSProto_Object:
-          case JSProto_Array:
+        if (key == JSProto_Object || key == JSProto_Array) {
             {
                 JSAutoCompartment ac(cx, target);
                 if (!getOwnPropertyFromTargetIfSafe(cx, target, wrapper, id, desc))
                     return false;
             }
             return JS_WrapPropertyDescriptor(cx, desc);
-
-          default:
-            // Most instance (non-prototypes) Xrays don't have anything on them.
-            break;
         }
 
         // The rest of this function applies only to prototypes.
@@ -763,11 +758,10 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
         return false;
 
     if (!isPrototype(holder)) {
+        JSProtoKey key = getProtoKey(holder);
         // For Object and Array instances, we expose some properties from the underlying
         // object, but only after filtering them carefully.
-        switch (getProtoKey(holder)) {
-          case JSProto_Object:
-          case JSProto_Array:
+        if (key == JSProto_Object || key == JSProto_Array) {
             MOZ_ASSERT(props.empty());
             {
                 JSAutoCompartment ac(cx, target);
@@ -786,9 +780,6 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
                 }
             }
             return JS_WrapAutoIdVector(cx, props);
-          default:
-            // Most instance (non-prototypes) Xrays don't have anything on them.
-            break;
         }
 
         // The rest of this function applies only to prototypes.
