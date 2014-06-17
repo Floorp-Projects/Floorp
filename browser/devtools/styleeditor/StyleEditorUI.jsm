@@ -494,7 +494,7 @@ StyleEditorUI.prototype = {
               return;
             }
 
-            let href = editor.styleSheet.href || editor.styleSheet.nodeHref;
+            let href = csscoverage.sheetToUrl(editor.styleSheet);
             usage.createEditorReport(href).then(data => {
               editor.removeAllUnusedRegions();
 

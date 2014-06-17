@@ -32,31 +32,44 @@ let test = asyncTest(function*() {
   running = yield usage._testOnly_isRunning();
   ok(!running, "csscoverage not is running");
 
+  // Pages visited
+  let expectedVisited = [ '', PAGE_3 ]; // '' is for the initial location
+  let actualVisited = yield usage._testOnly_visitedPages();
+  isEqualJson(actualVisited, expectedVisited, 'Visited');
+
   // Page1
   let expectedPage1 = { reports: [] };
-  let actualPage1 = yield usage.createEditorReport(PAGE_1);
+  let actualPage1 = yield usage.createEditorReport(PAGE_1 + " \u2192 <style> index 0");
   isEqualJson(actualPage1, expectedPage1, 'Page1');
 
   // Page2
   let expectedPage2 = { reports: [] };
-  let actualPage2 = yield usage.createEditorReport(PAGE_2);
+  let actualPage2 = yield usage.createEditorReport(PAGE_2 + " \u2192 <style> index 0");
   isEqualJson(actualPage2, expectedPage2, 'Page2');
 
-  // Page3
-  let expectedPage3 = {
+  // Page3a
+  let expectedPage3a = {
     reports: [
       {
         selectorText: ".page3-test2",
         start: { line: 9, column: 5 },
-      },
+      }
+    ]
+  };
+  let actualPage3a = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 0");
+  isEqualJson(actualPage3a, expectedPage3a, 'Page3a');
+
+  // Page3b
+  let expectedPage3b = {
+    reports: [
       {
         selectorText: ".page3-test3",
         start: { line: 3, column: 5 },
       }
     ]
   };
-  let actualPage3 = yield usage.createEditorReport(PAGE_3);
-  isEqualJson(actualPage3, expectedPage3, 'Page3');
+  let actualPage3b = yield usage.createEditorReport(PAGE_3 + " \u2192 <style> index 1");
+  isEqualJson(actualPage3b, expectedPage3b, 'Page3b');
 
   // SheetA
   let expectedSheetA = {
