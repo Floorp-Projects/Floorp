@@ -1,0 +1,24 @@
+Bug 690892 - Replace PR_TRUE/PR_FALSE with true/false.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -5549,17 +5549,17 @@ struct cs_info * get_current_cs(const ch
+ 
+       uniCased = ToUpperCase(uni);
+       rv = encoder->Convert(&uniCased, &uniLength, &upper, &charLength);
+       // Explicitly check NS_OK because we don't want to allow
+       // NS_OK_UDEC_MOREOUTPUT or NS_OK_UDEC_MOREINPUT.
+       if (rv != NS_OK || charLength != 1 || uniLength != 1)
+         break;
+ 
+-      success = PR_TRUE;
++      success = true;
+     } while (0);
+ 
+     if (success) {
+       ccs[i].cupper = upper;
+       ccs[i].clower = lower;
+     } else {
+       ccs[i].cupper = i;
+       ccs[i].clower = i;

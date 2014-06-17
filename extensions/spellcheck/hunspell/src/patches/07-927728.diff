@@ -1,0 +1,62 @@
+Bug 927728 - Replace PRUnichar with char16_t.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -5527,17 +5527,17 @@ struct cs_info * get_current_cs(const ch
+     // in this 1-byte character encoding.  Call our encoding/decoding
+     // APIs separately for each byte since they may reject some of the
+     // bytes, and we want to handle errors separately for each byte.
+     char lower, upper;
+     do {
+       if (i == 0)
+         break;
+       const char source = char(i);
+-      PRUnichar uni, uniCased;
++      char16_t uni, uniCased;
+       int32_t charLength = 1, uniLength = 1;
+ 
+       rv = decoder->Convert(&source, &charLength, &uni, &uniLength);
+       // Explicitly check NS_OK because we don't want to allow
+       // NS_OK_UDEC_MOREOUTPUT or NS_OK_UDEC_MOREINPUT.
+       if (rv != NS_OK || charLength != 1 || uniLength != 1)
+         break;
+       uniCased = ToLowerCase(uni);
+@@ -5680,17 +5680,17 @@ unsigned short unicodetoupper(unsigned s
+   // There are a dotless lower case i pair of upper `I',
+   // and an upper I with dot pair of lower `i'. 
+   if (c == 0x0069 && ((langnum == LANG_az) || (langnum == LANG_tr)))
+     return 0x0130;
+ #ifdef OPENOFFICEORG
+   return static_cast<unsigned short>(u_toupper(c));
+ #else
+ #ifdef MOZILLA_CLIENT
+-  return ToUpperCase((PRUnichar) c);
++  return ToUpperCase((char16_t) c);
+ #else
+   return (utf_tbl) ? utf_tbl[c].cupper : c;
+ #endif
+ #endif
+ }
+ 
+ unsigned short unicodetolower(unsigned short c, int langnum)
+ {
+@@ -5698,17 +5698,17 @@ unsigned short unicodetolower(unsigned s
+   // There are a dotless lower case i pair of upper `I',
+   // and an upper I with dot pair of lower `i'. 
+   if (c == 0x0049 && ((langnum == LANG_az) || (langnum == LANG_tr)))
+     return 0x0131;
+ #ifdef OPENOFFICEORG
+   return static_cast<unsigned short>(u_tolower(c));
+ #else
+ #ifdef MOZILLA_CLIENT
+-  return ToLowerCase((PRUnichar) c);
++  return ToLowerCase((char16_t) c);
+ #else
+   return (utf_tbl) ? utf_tbl[c].clower : c;
+ #endif
+ #endif
+ }
+ 
+ int unicodeisalpha(unsigned short c)
+ {
