@@ -320,7 +320,7 @@ JSRope::flattenInternal(ExclusiveContext *maybecx)
                 }
                 JSString *child = str->d.s.u2.left;
                 JS_ASSERT(child->isRope());
-                str->d.s.u2.nonInlineCharsTwoByte = left.nonInlineChars();
+                str->setNonInlineChars(left.nonInlineChars<CharT>(nogc));
                 child->d.u1.flattenData = uintptr_t(str) | Tag_VisitRightChild;
                 str = child;
             }
