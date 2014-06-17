@@ -2760,6 +2760,14 @@ MMod::collectRangeInfoPreTrunc()
 }
 
 void
+MToInt32::collectRangeInfoPreTrunc()
+{
+    Range inputRange(input());
+    if (!inputRange.canBeZero())
+        canBeNegativeZero_ = false;
+}
+
+void
 MBoundsCheckLower::collectRangeInfoPreTrunc()
 {
     Range indexRange(index());
