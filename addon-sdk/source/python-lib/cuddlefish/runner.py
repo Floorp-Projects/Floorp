@@ -715,7 +715,7 @@ def run_app(harness_root_dir, manifest_rdf, harness_options,
 
     done = False
     result = None
-    test_name = "unknown"
+    test_name = "Jetpack startup"
 
     def Timeout(message, test_name, parseable):
         if parseable:
