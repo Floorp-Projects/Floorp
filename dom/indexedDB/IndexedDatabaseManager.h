@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIndexedDatabaseManager.h"
 #include "nsIObserver.h"
 
 #include "js/TypeDecls.h"
@@ -38,15 +37,13 @@ BEGIN_INDEXEDDB_NAMESPACE
 class FileManager;
 class FileManagerInfo;
 
-class IndexedDatabaseManager MOZ_FINAL : public nsIIndexedDatabaseManager,
-                                         public nsIObserver
+class IndexedDatabaseManager MOZ_FINAL : public nsIObserver
 {
   typedef mozilla::dom::quota::OriginOrPatternString OriginOrPatternString;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIINDEXEDDATABASEMANAGER
   NS_DECL_NSIOBSERVER
 
   // Returns a non-owning reference.
