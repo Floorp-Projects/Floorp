@@ -1,0 +1,44 @@
+load(libdir + "match.js")
+
+// At the moment, findPath just returns the names as provided by ubi::Node,
+// which just uses JS_TraceChildren for now. However, we have various plans
+// to improve the quality of ubi::Node's metadata, to improve the precision
+// and clarity of the results here.
+
+var o = { w: { x: { y: { z: {} } } } };
+Match.Pattern([{node: {}, edge: "w"},
+               {node: {}, edge: "x"},
+               {node: {}, edge: "y"},
+               {node: {}, edge: "z"}])
+  .assert(findPath(o, o.w.x.y.z));
+print(uneval(findPath(o, o.w.x.y.z)));
+
+var a = [ , o ];
+Match.Pattern([{node: {}, edge: "objectElements[1]"}])
+  .assert(findPath(a, o));
+print(uneval(findPath(a, o)));
+
+function C() {}
+C.prototype.obj = {};
+var c = new C;
+Match.Pattern([{node: {}, edge: "type"},
+               {node: Match.Pattern.ANY, edge: "type_proto"},
+               {node: { constructor: Match.Pattern.ANY }, edge: "obj"}])
+  .assert(findPath(c, c.obj));
+print(uneval(findPath(c, c.obj)));
+
+function f(x) { return function g(y) { return x+y; }; }
+var o = {}
+var gc = f(o);
+Match.Pattern([{node: gc, edge: "fun_callscope"},
+               {node: Match.Pattern.ANY, edge: "x"}])
+  .assert(findPath(gc, o));
+print(uneval(findPath(gc, o)));
+
+Match.Pattern([{node: {}, edge: "shape"},
+               {node: Match.Pattern.ANY, edge: "base"},
+               {node: Match.Pattern.ANY, edge: "parent"},
+               {node: {}, edge: "o"}])
+  .assert(findPath(o, o));
+print(findPath(o, o).map((e) => e.edge).toString());
+

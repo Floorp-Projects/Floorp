@@ -16,7 +16,7 @@
 #define BUFSIZE 2048 // What Xlib uses with XGetErrorDatabaseText
 
 extern "C" {
-static int
+int
 X11Error(Display *display, XErrorEvent *event) {
   // Get an indication of how long ago the request that caused the error was
   // made.
@@ -159,6 +159,7 @@ X11Error(Display *display, XErrorEvent *event) {
 }
 }
 
+#if (MOZ_WIDGET_GTK == 2)
 void
 InstallX11ErrorHandler()
 {
@@ -170,3 +171,4 @@ InstallX11ErrorHandler()
     XSynchronize(display, True);
   }
 }
+#endif

@@ -1,3 +1,4 @@
+skip-if(B2G) load 0-timescale.html
 skip-if(B2G) load 459439-1.html # bug 888557
 load 466607-1.html
 load 466945-1.html

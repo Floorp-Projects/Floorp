@@ -3,6 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// XXX: This must be done prior to including cert.h (directly or indirectly).
+// CERT_AddTempCertToPerm is exposed as __CERT_AddTempCertToPerm.
+#define CERT_AddTempCertToPerm __CERT_AddTempCertToPerm
+
 #include "WifiCertService.h"
 
 #include "mozilla/ClearOnShutdown.h"

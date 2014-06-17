@@ -48,6 +48,7 @@
 #include "chrome/common/mach_ipc_mac.h"
 #endif
 #include "nsX11ErrorHandler.h"
+#include "nsGDKErrorHandler.h"
 #include "base/at_exit.h"
 #include "base/command_line.h"
 #include "base/message_loop.h"
@@ -789,7 +790,11 @@ XRE_ShutdownTestShell()
 void
 XRE_InstallX11ErrorHandler()
 {
+#if (MOZ_WIDGET_GTK == 3)
+  InstallGdkErrorHandler();
+#else
   InstallX11ErrorHandler();
+#endif
 }
 #endif
 

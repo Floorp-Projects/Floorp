@@ -86,6 +86,8 @@ EXPORTS.js += [
     '../public/StructuredClone.h',
     '../public/TracingAPI.h',
     '../public/TypeDecls.h',
+    '../public/UbiNode.h',
+    '../public/UbiNodeTraverse.h',
     '../public/Utility.h',
     '../public/Value.h',
     '../public/Vector.h',
@@ -123,6 +125,12 @@ UNIFIED_SOURCES += [
     'gc/Tracer.cpp',
     'gc/Verifier.cpp',
     'gc/Zone.cpp',
+    'irregexp/RegExpAST.cpp',
+    'irregexp/RegExpEngine.cpp',
+    'irregexp/RegExpInterpreter.cpp',
+    'irregexp/RegExpMacroAssembler.cpp',
+    'irregexp/RegExpParser.cpp',
+    'irregexp/RegExpStack.cpp',
     'jsalloc.cpp',
     'jsapi.cpp',
     'jsbool.cpp',
@@ -191,6 +199,7 @@ UNIFIED_SOURCES += [
     'vm/StructuredClone.cpp',
     'vm/ThreadPool.cpp',
     'vm/TypedArrayObject.cpp',
+    'vm/UbiNode.cpp',
     'vm/Unicode.cpp',
     'vm/Value.cpp',
     'vm/WeakMapPtr.cpp',
@@ -231,42 +240,9 @@ if CONFIG['ENABLE_TRACE_LOGGING']:
         'vm/TraceLogging.cpp',
     ]
 
-if CONFIG['ENABLE_YARR']:
-    UNIFIED_SOURCES += [
-        'yarr/PageBlock.cpp',
-        'yarr/YarrCanonicalizeUCS2.cpp',
-        'yarr/YarrInterpreter.cpp',
-        'yarr/YarrPattern.cpp',
-        'yarr/YarrSyntaxChecker.cpp',
-    ]
-    if CONFIG['OS_ARCH'] == 'WINNT':
-        SOURCES += [
-            'yarr/OSAllocatorWin.cpp',
-        ]
-    else:
-        SOURCES += [
-            'yarr/OSAllocatorPosix.cpp',
-        ]
-    if CONFIG['ENABLE_ION']:
-        SOURCES += [
-            'yarr/YarrJIT.cpp'
-        ]
-else:
-    UNIFIED_SOURCES += [
-        'irregexp/RegExpAST.cpp',
-        'irregexp/RegExpEngine.cpp',
-        'irregexp/RegExpInterpreter.cpp',
-        'irregexp/RegExpMacroAssembler.cpp',
-        'irregexp/RegExpParser.cpp',
-        'irregexp/RegExpStack.cpp',
-    ]
-    if CONFIG['ENABLE_ION']:
-        UNIFIED_SOURCES += [
-            'irregexp/NativeRegExpMacroAssembler.cpp',
-        ]
-
 if CONFIG['ENABLE_ION']:
     UNIFIED_SOURCES += [
+        'irregexp/NativeRegExpMacroAssembler.cpp',
         'jit/AliasAnalysis.cpp',
         'jit/AsmJS.cpp',
         'jit/AsmJSLink.cpp',

@@ -15,7 +15,6 @@ EXPORTS.mozilla.dom += [
     'Telephony.h',
     'TelephonyCall.h',
     'TelephonyCallGroup.h',
-    'TelephonyCallId.h',
 ]
 
 EXPORTS.mozilla.dom.telephony += [
@@ -33,7 +32,6 @@ UNIFIED_SOURCES += [
     'Telephony.cpp',
     'TelephonyCall.cpp',
     'TelephonyCallGroup.cpp',
-    'TelephonyCallId.cpp',
     'TelephonyFactory.cpp',
 ]
 

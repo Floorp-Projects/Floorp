@@ -35,7 +35,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
                                nsIAtom* aPseudoTag,
                                nsCSSPseudoElements::Type aPseudoType,
                                nsRuleNode* aRuleNode,
-                               bool aSkipFlexOrGridItemStyleFixup)
+                               bool aSkipParentDisplayBasedStyleFixup)
   : mParent(aParent),
     mChild(nullptr),
     mEmptyChild(nullptr),
@@ -71,7 +71,7 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
   mRuleNode->AddRef();
   mRuleNode->SetUsedDirectly(); // before ApplyStyleFixups()!
 
-  ApplyStyleFixups(aSkipFlexOrGridItemStyleFixup);
+  ApplyStyleFixups(aSkipParentDisplayBasedStyleFixup);
 
   #define eStyleStruct_LastItem (nsStyleStructID_Length - 1)
   NS_ASSERTION(NS_STYLE_INHERIT_MASK & NS_STYLE_INHERIT_BIT(LastItem),
@@ -294,7 +294,7 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
 }
 
 void
-nsStyleContext::ApplyStyleFixups(bool aSkipFlexOrGridItemStyleFixup)
+nsStyleContext::ApplyStyleFixups(bool aSkipParentDisplayBasedStyleFixup)
 {
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
@@ -359,7 +359,7 @@ nsStyleContext::ApplyStyleFixups(bool aSkipFlexOrGridItemStyleFixup)
   //   # The computed 'display' of a flex item is determined
   //   # by applying the table in CSS 2.1 Chapter 9.7.
   // ...which converts inline-level elements to their block-level equivalents.
-  if (!aSkipFlexOrGridItemStyleFixup && mParent) {
+  if (!aSkipParentDisplayBasedStyleFixup && mParent) {
     const nsStyleDisplay* parentDisp = mParent->StyleDisplay();
     if ((parentDisp->mDisplay == NS_STYLE_DISPLAY_FLEX ||
          parentDisp->mDisplay == NS_STYLE_DISPLAY_INLINE_FLEX ||
@@ -737,12 +737,12 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
                    nsIAtom* aPseudoTag,
                    nsCSSPseudoElements::Type aPseudoType,
                    nsRuleNode* aRuleNode,
-                   bool aSkipFlexOrGridItemStyleFixup)
+                   bool aSkipParentDisplayBasedStyleFixup)
 {
   nsRefPtr<nsStyleContext> context =
     new (aRuleNode->PresContext())
     nsStyleContext(aParentContext, aPseudoTag, aPseudoType, aRuleNode,
-                   aSkipFlexOrGridItemStyleFixup);
+                   aSkipParentDisplayBasedStyleFixup);
   return context.forget();
 }
 

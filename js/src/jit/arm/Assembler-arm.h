@@ -1242,18 +1242,10 @@ class Assembler : public AssemblerShared
     // gets moved (executable copy, gc, etc.)
     struct RelativePatch
     {
-        // the offset within the code buffer where the value is loaded that
-        // we want to fix-up
-        BufferOffset offset;
         void *target;
         Relocation::Kind kind;
-        void fixOffset(ARMBuffer &m_buffer) {
-            offset = BufferOffset(offset.getOffset() + m_buffer.poolSizeBefore(offset.getOffset()));
-        }
-        RelativePatch(BufferOffset offset, void *target, Relocation::Kind kind)
-          : offset(offset),
-            target(target),
-            kind(kind)
+        RelativePatch(void *target, Relocation::Kind kind)
+            : target(target), kind(kind)
         { }
     };
 
@@ -1652,7 +1644,7 @@ class Assembler : public AssemblerShared
 
   protected:
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
-        enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
+        enoughMemory_ &= jumps_.append(RelativePatch(target.value, kind));
         if (kind == Relocation::JITCODE)
             writeRelocation(src);
     }
