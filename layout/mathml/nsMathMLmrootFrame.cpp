@@ -9,17 +9,8 @@
 #include <algorithm>
 
 //
-// <msqrt> and <mroot> -- form a radical - implementation
+// <mroot> -- form a radical - implementation
 //
-
-//NOTE:
-//  The code assumes that TeX fonts are picked.
-//  There is no fall-back to draw the branches of the sqrt explicitly
-//  in the case where TeX fonts are not there. In general, there are no
-//  fall-back(s) in MathML when some (freely-downloadable) fonts are missing.
-//  Otherwise, this will add much work and unnecessary complexity to the core
-//  MathML  engine. Assuming that authors have the free fonts is part of the
-//  deal. We are not responsible for cases of misconfigurations out there.
 
 // additional style context to be used by our MathMLChar.
 #define NS_SQR_CHAR_STYLE_CONTEXT_INDEX   0
@@ -108,16 +99,25 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   }
 }
 
-static void
-GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
-                   nsFontMetrics* aFontMetrics,
-                   nscoord* aIndexOffset, nscoord* aSqrOffset)
+void
+nsMathMLmrootFrame::GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
+                                       nsFontMetrics* aFontMetrics,
+                                       nscoord* aIndexOffset,
+                                       nscoord* aSqrOffset)
 {
   // The index is tucked in closer to the radical while making sure
   // that the kern does not make the index and radical collide
   nscoord dxIndex, dxSqr;
   nscoord xHeight = aFontMetrics->XHeight();
   nscoord indexRadicalKern = NSToCoordRound(1.35f * xHeight);
+  nscoord oneDevPixel = aFontMetrics->AppUnitsPerDevPixel();
+  gfxFont* mathFont = aFontMetrics->GetThebesFontGroup()->GetFirstMathFont();
+  if (mathFont) {
+    indexRadicalKern =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalKernAfterDegree,
+                                oneDevPixel);
+    indexRadicalKern = -indexRadicalKern;
+  }
   if (indexRadicalKern > aIndexWidth) {
     dxIndex = indexRadicalKern - aIndexWidth;
     dxSqr = 0;
@@ -126,16 +126,27 @@ GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
     dxIndex = 0;
     dxSqr = aIndexWidth - indexRadicalKern;
   }
-  // avoid collision by leaving a minimum space between index and radical
-  nscoord minimumClearance = aSqrWidth/2;
-  if (dxIndex + aIndexWidth + minimumClearance > dxSqr + aSqrWidth) {
-    if (aIndexWidth + minimumClearance < aSqrWidth) {
-      dxIndex = aSqrWidth - (aIndexWidth + minimumClearance);
-      dxSqr = 0;
-    }
-    else {
-      dxIndex = 0;
-      dxSqr = (aIndexWidth + minimumClearance) - aSqrWidth;
+
+  if (mathFont) {
+    // add some kern before the radical index
+    nscoord indexRadicalKernBefore = 0;
+    indexRadicalKernBefore =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalKernBeforeDegree,
+                                oneDevPixel);
+    dxIndex += indexRadicalKernBefore;
+    dxSqr += indexRadicalKernBefore;
+  } else {
+    // avoid collision by leaving a minimum space between index and radical
+    nscoord minimumClearance = aSqrWidth / 2;
+    if (dxIndex + aIndexWidth + minimumClearance > dxSqr + aSqrWidth) {
+      if (aIndexWidth + minimumClearance < aSqrWidth) {
+        dxIndex = aSqrWidth - (aIndexWidth + minimumClearance);
+        dxSqr = 0;
+      }
+      else {
+        dxIndex = 0;
+        dxSqr = (aIndexWidth + minimumClearance) - aSqrWidth;
+      }
     }
   }
 
@@ -212,31 +223,14 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   renderingContext.SetFont(fm);
 
-  // For radical glyphs from TeX fonts and some of the radical glyphs from
-  // Mathematica fonts, the thickness of the overline can be obtained from the
-  // ascent of the glyph.  Most fonts however have radical glyphs above the
-  // baseline so no assumption can be made about the meaning of the ascent.
-  nscoord ruleThickness, leading, em;
-  GetRuleThickness(renderingContext, fm, ruleThickness);
-
-  char16_t one = '1';
-  nsBoundingMetrics bmOne = renderingContext.GetBoundingMetrics(&one, 1);
-
-  // get the leading to be left at the top of the resulting frame
-  // this seems more reliable than using fm->GetLeading() on suspicious fonts
-  GetEmHeight(fm, em);
-  leading = nscoord(0.2f * em); 
-
-  // Rule 11, App. G, TeXbook
-  // psi = clearance between rule and content
-  nscoord phi = 0, psi = 0;
-  if (StyleFont()->mMathDisplay == NS_MATHML_DISPLAYSTYLE_BLOCK)
-    phi = fm->XHeight();
-  else
-    phi = ruleThickness;
-  psi = ruleThickness + phi/4;
+  nscoord ruleThickness, leading, psi;
+  GetRadicalParameters(fm, StyleFont()->mMathDisplay ==
+                       NS_MATHML_DISPLAYSTYLE_BLOCK,
+                       ruleThickness, leading, psi);
 
   // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook, p.131)
+  char16_t one = '1';
+  nsBoundingMetrics bmOne = renderingContext.GetBoundingMetrics(&one, 1);
   if (bmOne.ascent > bmBase.ascent)
     psi += bmOne.ascent - bmBase.ascent;
 
@@ -290,7 +284,14 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   
   // the index is raised by some fraction of the height
   // of the radical, see \mroot macro in App. B, TexBook
-  nscoord raiseIndexDelta = NSToCoordRound(0.6f * (bmSqr.ascent + bmSqr.descent));
+  float raiseIndexPercent = 0.6f;
+  gfxFont* mathFont = fm->GetThebesFontGroup()->GetFirstMathFont();
+  if (mathFont) {
+    raiseIndexPercent =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalDegreeBottomRaisePercent);
+  }
+  nscoord raiseIndexDelta = NSToCoordRound(raiseIndexPercent *
+                                           (bmSqr.ascent + bmSqr.descent));
   nscoord indexRaisedAscent = mBoundingMetrics.ascent // top of radical 
     - (bmSqr.ascent + bmSqr.descent) // to bottom of radical
     + raiseIndexDelta + bmIndex.ascent + bmIndex.descent; // to top of raised index

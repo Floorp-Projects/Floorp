@@ -359,3 +359,49 @@ nsMathMLFrame::DisplayBar(nsDisplayListBuilder* aBuilder,
   aLists.Content()->AppendNewToTop(new (aBuilder)
     nsDisplayMathMLBar(aBuilder, aFrame, aRect));
 }
+
+void
+nsMathMLFrame::GetRadicalParameters(nsFontMetrics* aFontMetrics,
+                                    bool aDisplayStyle,
+                                    nscoord& aRadicalRuleThickness,
+                                    nscoord& aRadicalExtraAscender,
+                                    nscoord& aRadicalVerticalGap)
+{
+  nscoord oneDevPixel = aFontMetrics->AppUnitsPerDevPixel();
+  gfxFont* mathFont = aFontMetrics->GetThebesFontGroup()->GetFirstMathFont();
+
+  // get the radical rulethickness
+  if (mathFont) {
+    aRadicalRuleThickness =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalRuleThickness,
+                                oneDevPixel);
+  } else {
+    GetRuleThickness(aFontMetrics, aRadicalRuleThickness);
+  }
+
+  // get the leading to be left at the top of the resulting frame
+  if (mathFont) {
+    aRadicalExtraAscender =
+      mathFont->GetMathConstant(gfxFontEntry::RadicalExtraAscender,
+                                oneDevPixel);
+  } else {
+    // This seems more reliable than using aFontMetrics->GetLeading() on
+    // suspicious fonts.
+    nscoord em;
+    GetEmHeight(aFontMetrics, em);
+    aRadicalExtraAscender = nscoord(0.2f * em);
+  }
+
+  // get the clearance between rule and content
+  if (mathFont) {
+    aRadicalVerticalGap =
+      mathFont->GetMathConstant(aDisplayStyle ?
+                                gfxFontEntry::RadicalDisplayStyleVerticalGap :
+                                gfxFontEntry::RadicalVerticalGap,
+                                oneDevPixel);
+  } else {
+    // Rule 11, App. G, TeXbook
+    aRadicalVerticalGap = aRadicalRuleThickness +
+      (aDisplayStyle ? aFontMetrics->XHeight() : aRadicalRuleThickness) / 4;
+  }
+}
