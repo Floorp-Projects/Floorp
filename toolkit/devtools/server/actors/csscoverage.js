@@ -179,7 +179,8 @@ let UsageReportActor = protocol.ActorClass({
     observer.observe(document, {
       attributes: true,
       childList: true,
-      characterData: false
+      characterData: false,
+      subtree: true
     });
   },
 
@@ -363,7 +364,7 @@ let UsageReportActor = protocol.ActorClass({
     const ruleToRuleReport = function(rule, ruleData) {
       return {
         url: rule.url,
-        shortUrl: rule.url.split("/").slice(-1),
+        shortUrl: rule.url.split("/").slice(-1)[0],
         start: { line: rule.line, column: rule.column },
         selectorText: ruleData.selectorText,
         formattedCssText: CssLogic.prettifyCSS(ruleData.cssText)
@@ -646,10 +647,11 @@ const SEL_MEDIA = [ "blank", "first", "left", "right" ];
  * we think should not have to match in order for the selector to be relevant.
  */
 function getTestSelector(selector) {
+  let replacement = selector;
   let replaceSelector = pseudo => {
-    selector = selector.replace(" :" + selector, " *")
-                       .replace("(:" + selector, "(*")
-                       .replace(":" + selector, "");
+    replacement = replacement.replace(" :" + pseudo, " *")
+                             .replace("(:" + pseudo, "(*")
+                             .replace(":" + pseudo, "");
   };
 
   SEL_EXTERNAL.forEach(replaceSelector);
@@ -658,10 +660,10 @@ function getTestSelector(selector) {
 
   // Pseudo elements work in : and :: forms
   SEL_ELEMENT.forEach(pseudo => {
-    selector = selector.replace("::" + selector, "");
+    replacement = replacement.replace("::" + pseudo, "");
   });
 
-  return selector;
+  return replacement;
 }
 
 /**
