@@ -23,5 +23,25 @@ MediaDecoderStateMachine* RtspOmxDecoder::CreateStateMachine()
                                       mResource->IsRealTime());
 }
 
+void RtspOmxDecoder::ApplyStateToStateMachine(PlayState aState)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  MediaDecoder::ApplyStateToStateMachine(aState);
+
+  // Notify RTSP controller if the play state is ended.
+  // This is necessary for RTSP controller to transit its own state.
+  if (aState == PLAY_STATE_ENDED) {
+    nsRefPtr<RtspMediaResource> resource = mResource->GetRtspPointer();
+    if (resource) {
+      nsIStreamingProtocolController* controller =
+        resource->GetMediaStreamController();
+      if (controller) {
+        controller->PlaybackEnded();
+      }
+    }
+  }
+}
+
 } // namespace mozilla
 
