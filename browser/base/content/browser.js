@@ -1239,7 +1239,9 @@ var gBrowserInit = {
         let mpEnabled = slot &&
                         slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
                         slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
-        Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
+        if (mpEnabled) {
+          Services.telemetry.getHistogramById("MASTER_PASSWORD_ENABLED").add(mpEnabled);
+        }
       }, 5000);
     });
     this.delayedStartupFinished = true;
