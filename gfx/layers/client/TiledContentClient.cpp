@@ -1006,11 +1006,6 @@ ClientTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& aInval
 
   TILING_PRLOG_OBJ(("TILING 0x%p: Progressive update intersected coherency rect %s\n", mThebesLayer, tmpstr.get()), typedCoherentUpdateRect);
 
-  // Offset by the viewport origin, as the composition bounds are stored in
-  // Layer space and not LayoutDevice space.
-  // TODO(kats): does this make sense?
-  typedCoherentUpdateRect.MoveBy(aPaintData->mViewport.TopLeft());
-
   // Convert to untyped to intersect with the invalid region.
   nsIntRect untypedCoherentUpdateRect(LayerIntRect::ToUntyped(
     RoundedOut(typedCoherentUpdateRect)));
