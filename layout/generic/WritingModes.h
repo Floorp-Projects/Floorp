@@ -1257,6 +1257,19 @@ public:
     }
   }
 
+  nsPoint GetPhysicalPosition(WritingMode aWritingMode,
+                              nscoord aContainerWidth) const
+  {
+    CHECK_WRITING_MODE(aWritingMode);
+    if (aWritingMode.IsVertical()) {
+      return nsPoint(aWritingMode.IsVerticalLR() ? BStart() : aContainerWidth - BEnd(),
+                     IStart());
+    } else {
+      return nsPoint(aWritingMode.IsBidiLTR() ? IStart() : aContainerWidth - IEnd(),
+                     BStart());
+    }
+  }
+
 #if 0 // XXX this would require aContainerWidth as well
   /**
    * Return a LogicalRect representing this rect in a different writing mode

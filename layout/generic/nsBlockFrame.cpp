@@ -3019,8 +3019,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       
       // Now compute the collapsed margin-top value into aState.mPrevBottomMargin, assuming
       // that all child margins collapse down to clearanceFrame.
-      nsBlockReflowContext::ComputeCollapsedTopMargin(reflowState,
-                                                      &aState.mPrevBottomMargin, clearanceFrame, &mayNeedRetry);
+      nsBlockReflowContext::ComputeCollapsedBStartMargin(reflowState,
+                                                         &aState.mPrevBottomMargin,
+                                                         clearanceFrame,
+                                                         &mayNeedRetry);
       
       // XXX optimization; we could check the collapsing children to see if they are sure
       // to require clearance, and so avoid retrying them
@@ -3053,8 +3055,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           
           // Compute the collapsed margin again, ignoring the incoming margin this time
           mayNeedRetry = false;
-          nsBlockReflowContext::ComputeCollapsedTopMargin(reflowState,
-                                                          &aState.mPrevBottomMargin, clearanceFrame, &mayNeedRetry);
+          nsBlockReflowContext::ComputeCollapsedBStartMargin(reflowState,
+                                                             &aState.mPrevBottomMargin,
+                                                             clearanceFrame,
+                                                             &mayNeedRetry);
         }
       }
       
@@ -3210,8 +3214,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       *aKeepReflowGoing = brc.PlaceBlock(blockHtmlRS, forceFit, aLine.get(),
                                          collapsedBottomMargin,
                                          overflowAreas,
-                                         frameReflowStatus,
-                                         aState.mContainerWidth);
+                                         frameReflowStatus);
       if (!NS_FRAME_IS_FULLY_COMPLETE(frameReflowStatus) &&
           ShouldAvoidBreakInside(aState.mReflowState)) {
         *aKeepReflowGoing = false;
@@ -3300,7 +3303,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             // flow block. Since we just continued the child block frame,
             // we know that line->mFirstChild is not the last flow block
             // therefore zero out the running margin value.
-#ifdef NOISY_VERTICAL_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
             ListTag(stdout);
             printf(": reflow incomplete, frame=");
             nsFrame::ListTag(stdout, frame);
@@ -3328,7 +3331,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
             aState.mOverflowTracker->Insert(nextFrame, frameReflowStatus);
             NS_MergeReflowStatusInto(&aState.mReflowStatus, frameReflowStatus);
 
-#ifdef NOISY_VERTICAL_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
             ListTag(stdout);
             printf(": reflow complete but overflow incomplete for ");
             nsFrame::ListTag(stdout, frame);
@@ -3339,7 +3342,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
           }
         }
         else { // frame is fully complete
-#ifdef NOISY_VERTICAL_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
           ListTag(stdout);
           printf(": reflow complete for ");
           nsFrame::ListTag(stdout, frame);
@@ -3348,12 +3351,12 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #endif
           aState.mPrevBottomMargin = collapsedBottomMargin;
         }
-#ifdef NOISY_VERTICAL_MARGINS
+#ifdef NOISY_BLOCK_DIR_MARGINS
         ListTag(stdout);
         printf(": frame=");
         nsFrame::ListTag(stdout, frame);
-        printf(" carriedOutBottomMargin=%d collapsedBottomMargin=%d => %d\n",
-               brc.GetCarriedOutBottomMargin(), collapsedBottomMargin.get(),
+        printf(" carriedOutBEndMargin=%d collapsedBottomMargin=%d => %d\n",
+               brc.GetCarriedOutBEndMargin(), collapsedBottomMargin.get(),
                aState.mPrevBottomMargin);
 #endif
       } else {
@@ -5788,8 +5791,9 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     floatRS.mDiscoveredClearance = nullptr;
     // Only first in flow gets a top margin.
     if (!aFloat->GetPrevInFlow()) {
-      nsBlockReflowContext::ComputeCollapsedTopMargin(floatRS, &margin,
-                                                      clearanceFrame, &mayNeedRetry);
+      nsBlockReflowContext::ComputeCollapsedBStartMargin(floatRS, &margin,
+                                                         clearanceFrame,
+                                                         &mayNeedRetry);
 
       if (mayNeedRetry && !clearanceFrame) {
         floatRS.mDiscoveredClearance = &clearanceFrame;
