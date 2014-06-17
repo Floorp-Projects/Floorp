@@ -510,6 +510,10 @@ ifeq ($(OS_ARCH),Linux)
 ifdef IS_COMPONENT
 EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
 endif
+ifdef LD_VERSION_SCRIPT
+EXTRA_DSO_LDOPTS += -Wl,--version-script,$(LD_VERSION_SCRIPT)
+EXTRA_DEPS += $(LD_VERSION_SCRIPT)
+endif
 endif
 
 #
@@ -1020,6 +1024,10 @@ $(filter %.s,$(CPPSRCS:%.cc=%.s)): %.s: %.cc $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
+$(filter %.s,$(CPPSRCS:%.cxx=%.s)): %.s: %.cpp $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
+	$(CCC) -S $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
+
 $(filter %.s,$(CSRCS:%.c=%.s)): %.s: %.c $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(CC) -S $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
@@ -1035,6 +1043,7 @@ ifneq (,$(filter %.i,$(MAKECMDGOALS)))
 _group_srcs = $(sort $(patsubst %.$1,%.i,$(filter %.$1,$2 $(notdir $2))))
 _PREPROCESSED_CPP_FILES := $(call _group_srcs,cpp,$(CPPSRCS))
 _PREPROCESSED_CC_FILES := $(call _group_srcs,cc,$(CPPSRCS))
+_PREPROCESSED_CXX_FILES := $(call _group_srcs,cxx,$(CPPSRCS))
 _PREPROCESSED_C_FILES := $(call _group_srcs,c,$(CSRCS))
 _PREPROCESSED_CMM_FILES := $(call _group_srcs,mm,$(CMMSRCS))
 
@@ -1044,7 +1053,7 @@ VPATH += $(addprefix $(srcdir)/,$(sort $(dir $(CPPSRCS) $(CSRCS) $(CMMSRCS))))
 
 # Make preprocessed files PHONY so they are always executed, since they are
 # manual targets and we don't necessarily write to $@.
-.PHONY: $(_PREPROCESSED_CPP_FILES) $(_PREPROCESSED_CC_FILES) $(_PREPROCESSED_C_FILES) $(_PREPROCESSED_CMM_FILES)
+.PHONY: $(_PREPROCESSED_CPP_FILES) $(_PREPROCESSED_CC_FILES) $(_PREPROCESSED_CXX_FILES) $(_PREPROCESSED_C_FILES) $(_PREPROCESSED_CMM_FILES)
 
 $(_PREPROCESSED_CPP_FILES): %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
@@ -1052,6 +1061,11 @@ $(_PREPROCESSED_CPP_FILES): %.i: %.cpp $(call mkdir_deps,$(MDDEPDIR))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
 
 $(_PREPROCESSED_CC_FILES): %.i: %.cc $(call mkdir_deps,$(MDDEPDIR))
+	$(REPORT_BUILD)
+	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
+	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
+
+$(_PREPROCESSED_CXX_FILES): %.i: %.cxx $(call mkdir_deps,$(MDDEPDIR))
 	$(REPORT_BUILD)
 	$(addprefix $(MKDIR) -p ,$(filter-out .,$(@D)))
 	$(CCC) -C $(PREPROCESS_OPTION)$@ $(COMPILE_CXXFLAGS) $($(notdir $<)_FLAGS) $(TARGET_LOCAL_INCLUDES) $(_VPATH_SRCS)
@@ -1074,7 +1088,7 @@ PP_UNIFIED ?= 1
 # infinite loop if the filename doesn't exist in the unified source files.
 ifndef PP_REINVOKE
 
-MATCH_cpp = \(cpp\|cc\)
+MATCH_cpp = \(cpp\|cc|cxx\)
 UPPER_c = C
 UPPER_cpp = CPP
 UPPER_mm = CMM

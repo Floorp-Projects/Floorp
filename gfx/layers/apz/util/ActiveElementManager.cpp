@@ -8,11 +8,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "inIDOMUtils.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEventTarget.h"
 #include "base/message_loop.h"
 #include "base/task.h"
+#include "mozilla/dom/Element.h"
 
 #define AEM_LOG(...)
 // #define AEM_LOG(...) printf_stderr("AEM: " __VA_ARGS__)
@@ -40,7 +38,7 @@ ActiveElementManager::ActiveElementManager()
 ActiveElementManager::~ActiveElementManager() {}
 
 void
-ActiveElementManager::SetTargetElement(nsIDOMEventTarget* aTarget)
+ActiveElementManager::SetTargetElement(dom::EventTarget* aTarget)
 {
   if (mTarget) {
     // Multiple fingers on screen (since HandleTouchEnd clears mTarget).
@@ -126,11 +124,12 @@ ActiveElementManager::HandleTouchEnd(bool aWasClick)
 }
 
 void
-ActiveElementManager::SetActive(nsIDOMElement* aTarget)
+ActiveElementManager::SetActive(dom::Element* aTarget)
 {
   AEM_LOG("Setting active %p\n", aTarget);
   if (mDomUtils) {
-    mDomUtils->SetContentState(aTarget, NS_EVENT_STATE_ACTIVE.GetInternalValue());
+    nsCOMPtr<nsIDOMElement> target = do_QueryInterface(aTarget);
+    mDomUtils->SetContentState(target, NS_EVENT_STATE_ACTIVE.GetInternalValue());
   }
 }
 
@@ -141,15 +140,10 @@ ActiveElementManager::ResetActive()
 
   // Clear the :active flag from mTarget by setting it on the document root.
   if (mTarget) {
-    nsCOMPtr<nsIDOMDocument> doc;
-    mTarget->GetOwnerDocument(getter_AddRefs(doc));
-    if (doc) {
-      nsCOMPtr<nsIDOMElement> root;
-      doc->GetDocumentElement(getter_AddRefs(root));
-      if (root) {
-        AEM_LOG("Found root %p, making active\n", root.get());
-        SetActive(root);
-      }
+    dom::Element* root = mTarget->OwnerDoc()->GetDocumentElement();
+    if (root) {
+      AEM_LOG("Found root %p, making active\n", root.get());
+      SetActive(root);
     }
   }
 }
@@ -162,7 +156,7 @@ ActiveElementManager::ResetTouchBlockState()
 }
 
 void
-ActiveElementManager::SetActiveTask(nsIDOMElement* aTarget)
+ActiveElementManager::SetActiveTask(dom::Element* aTarget)
 {
   AEM_LOG("mSetActiveTask %p running\n", mSetActiveTask);
 

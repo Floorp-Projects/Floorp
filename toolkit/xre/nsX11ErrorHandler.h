@@ -4,5 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef MOZ_X11
+#include <X11/Xlib.h>
+#if (MOZ_WIDGET_GTK == 2)
 void InstallX11ErrorHandler();
+#endif
+extern "C" int X11Error(Display *display, XErrorEvent *event);
 #endif

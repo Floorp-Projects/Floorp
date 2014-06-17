@@ -3005,20 +3005,6 @@ if test "$ENABLE_TRACE_LOGGING"; then
 fi
 
 dnl ========================================================
-dnl = Enable yarr regexp engine
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(yarr,
-[  --enable-yarr   Enable yarr regexp engine],
-    ENABLE_YARR=1,
-    ENABLE_YARR= )
-
-AC_SUBST(ENABLE_YARR)
-
-if test "$ENABLE_YARR"; then
-    AC_DEFINE(JS_YARR)
-fi
-
-dnl ========================================================
 dnl = Enable any treating of compile warnings as errors
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(warnings-as-errors,
