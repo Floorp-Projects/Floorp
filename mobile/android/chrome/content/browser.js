@@ -482,6 +482,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewTab"),
       NativeWindow.contextmenus.linkOpenableNonPrivateContext,
       function(aTarget) {
+        UITelemetry.addEvent("loadurl.1", "contextmenu", null);
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
         let tab = BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id });
@@ -501,6 +503,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
       NativeWindow.contextmenus.linkOpenableContext,
       function(aTarget) {
+        UITelemetry.addEvent("loadurl.1", "contextmenu", null);
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         ContentAreaUtils.urlSecurityCheck(url, aTarget.ownerDocument.nodePrincipal);
         let tab = BrowserApp.addTab(url, { selected: false, parentId: BrowserApp.selectedTab.id, isPrivate: true });
