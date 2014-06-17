@@ -512,7 +512,7 @@ gfxPlatform::InitLayersIPC()
     if (UsesOffMainThreadCompositing() &&
         XRE_GetProcessType() == GeckoProcessType_Default)
     {
-        mozilla::layers::CompositorParent::StartUpCompositorThread();
+        mozilla::layers::CompositorParent::StartUp();
         if (gfxPrefs::AsyncVideoEnabled()) {
             mozilla::layers::ImageBridgeChild::StartUp();
         }
@@ -540,7 +540,7 @@ gfxPlatform::ShutdownLayersIPC()
         layers::SharedBufferManagerChild::ShutDown();
 #endif
 
-        layers::CompositorParent::ShutDownCompositorThreadWhenCompositorParentsGone();
+        layers::CompositorParent::ShutDown();
     }
 }
 
