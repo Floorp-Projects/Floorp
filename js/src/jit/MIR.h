@@ -4449,6 +4449,7 @@ class MMul : public MBinaryArithInstruction
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
     void analyzeEdgeCasesForward();
     void analyzeEdgeCasesBackward();
+    void collectRangeInfoPreTrunc();
 
     double getIdentity() {
         return 1;
