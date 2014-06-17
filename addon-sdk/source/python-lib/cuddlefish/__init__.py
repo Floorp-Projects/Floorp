@@ -266,7 +266,7 @@ parser_groups = (
                                help="enable remote windows",
                                action="store_true",
                                default=False,
-                               cmds=['test', 'run', 'testex', 'testpkgs', 
+                               cmds=['test', 'run', 'testex', 'testpkgs',
                                      'testaddons', 'testcfx', 'testall'])),
         (("", "--logfile",), dict(dest="logfile",
                                   help="log console output to file",
@@ -421,13 +421,14 @@ def test_all_testaddons(env_root, defaults):
     addons.sort()
     fail = False
     for dirname in addons:
+        # apply the filter
         if (not defaults['filter'].split(":")[0] in dirname):
             continue
 
         print >>sys.stderr, "Testing %s..." % dirname
         sys.stderr.flush()
         try:
-            run(arguments=["run",
+            run(arguments=["testrun",
                            "--pkgdir",
                            os.path.join(addons_dir, dirname)],
                 defaults=defaults,
@@ -619,7 +620,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
             return
         test_cfx(env_root, options.verbose)
         return
-    elif command not in ["xpi", "test", "run"]:
+    elif command not in ["xpi", "test", "run", "testrun"]:
         print >>sys.stderr, "Unknown command: %s" % command
         print >>sys.stderr, "Try using '--help' for assistance."
         sys.exit(1)
@@ -663,6 +664,9 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
         enforce_timeouts = True
     elif command == "run":
         use_main = True
+    elif command == "testrun":
+        use_main = True
+        enforce_timeouts = True
     else:
         assert 0, "shouldn't get here"
 
@@ -681,7 +685,7 @@ def run(arguments=sys.argv[1:], target_cfg=None, pkg_cfg=None,
     # TODO: Consider keeping a cache of dynamic UUIDs, based
     # on absolute filesystem pathname, in the root directory
     # or something.
-    if command in ('xpi', 'run'):
+    if command in ('xpi', 'run', 'testrun'):
         from cuddlefish.preflight import preflight_config
         if target_cfg_json:
             config_was_ok, modified = preflight_config(target_cfg,

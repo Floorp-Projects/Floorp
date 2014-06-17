@@ -58,10 +58,10 @@ function runTest(index) {
     var ais = is.bind(this);
 
     function createTester(holder, options) {
-      return function() {
+      return () => {
         ais(holder.innerHTML, options.later, options.name + ' later');
         runNextTest();
-      }.bind(this);
+      };
     }
 
     executeSoon(createTester(holder, options));

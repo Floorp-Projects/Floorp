@@ -30,7 +30,7 @@ function test() {
     isTargetSupported: function() true,
     build: function(iframeWindow, toolbox) {
       let deferred = promise.defer();
-      executeSoon(function() {
+      executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
           toolbox: toolbox,
@@ -38,7 +38,7 @@ function test() {
           destroy: function(){},
           panelDoc: iframeWindow.document,
         });
-      }.bind(this));
+      });
       return deferred.promise;
     },
   };

@@ -283,9 +283,6 @@ TelephonyParent::CallStateChanged(uint32_t aClientId,
                                   uint32_t aCallIndex,
                                   uint16_t aCallState,
                                   const nsAString& aNumber,
-                                  uint16_t aNumberPresentation,
-                                  const nsAString& aName,
-                                  uint16_t aNamePresentation,
                                   bool aIsOutgoing,
                                   bool aIsEmergency,
                                   bool aIsConference,
@@ -295,7 +292,6 @@ TelephonyParent::CallStateChanged(uint32_t aClientId,
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
   IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
-                        aNumberPresentation, nsString(aName), aNamePresentation,
                         aIsOutgoing, aIsEmergency, aIsConference,
                         aIsSwitchable, aIsMergeable);
   return SendNotifyCallStateChanged(aClientId, data) ? NS_OK : NS_ERROR_FAILURE;
@@ -321,9 +317,6 @@ TelephonyParent::EnumerateCallState(uint32_t aClientId,
                                     uint32_t aCallIndex,
                                     uint16_t aCallState,
                                     const nsAString& aNumber,
-                                    uint16_t aNumberPresentation,
-                                    const nsAString& aName,
-                                    uint16_t aNamePresentation,
                                     bool aIsOutgoing,
                                     bool aIsEmergency,
                                     bool aIsConference,
@@ -335,16 +328,12 @@ TelephonyParent::EnumerateCallState(uint32_t aClientId,
 
 NS_IMETHODIMP
 TelephonyParent::NotifyCdmaCallWaiting(uint32_t aClientId,
-                                       const nsAString& aNumber,
-                                       uint16_t aNumberPresentation,
-                                       const nsAString& aName,
-                                       uint16_t aNamePresentation)
+                                       const nsAString& aNumber)
 {
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
-  IPCCdmaWaitingCallData data(nsString(aNumber), aNumberPresentation,
-                              nsString(aName), aNamePresentation);
-  return SendNotifyCdmaCallWaiting(aClientId, data) ? NS_OK : NS_ERROR_FAILURE;
+  return SendNotifyCdmaCallWaiting(aClientId, nsString(aNumber))
+      ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -441,9 +430,6 @@ TelephonyRequestParent::CallStateChanged(uint32_t aClientId,
                                          uint32_t aCallIndex,
                                          uint16_t aCallState,
                                          const nsAString& aNumber,
-                                         uint16_t aNumberPresentation,
-                                         const nsAString& aName,
-                                         uint16_t aNamePresentation,
                                          bool aIsOutgoing,
                                          bool aIsEmergency,
                                          bool aIsConference,
@@ -472,9 +458,6 @@ TelephonyRequestParent::EnumerateCallState(uint32_t aClientId,
                                            uint32_t aCallIndex,
                                            uint16_t aCallState,
                                            const nsAString& aNumber,
-                                           uint16_t aNumberPresentation,
-                                           const nsAString& aName,
-                                           uint16_t aNamePresentation,
                                            bool aIsOutgoing,
                                            bool aIsEmergency,
                                            bool aIsConference,
@@ -484,7 +467,6 @@ TelephonyRequestParent::EnumerateCallState(uint32_t aClientId,
   NS_ENSURE_TRUE(!mActorDestroyed, NS_ERROR_FAILURE);
 
   IPCCallStateData data(aCallIndex, aCallState, nsString(aNumber),
-                        aNumberPresentation, nsString(aName), aNamePresentation,
                         aIsOutgoing, aIsEmergency, aIsConference,
                         aIsSwitchable, aIsMergeable);
   return SendNotifyEnumerateCallState(aClientId, data) ? NS_OK
@@ -493,10 +475,7 @@ TelephonyRequestParent::EnumerateCallState(uint32_t aClientId,
 
 NS_IMETHODIMP
 TelephonyRequestParent::NotifyCdmaCallWaiting(uint32_t aClientId,
-                                              const nsAString& aNumber,
-                                              uint16_t aNumberPresentation,
-                                              const nsAString& aName,
-                                              uint16_t aNamePresentation)
+                                              const nsAString& aNumber)
 {
   MOZ_CRASH("Not a TelephonyParent!");
 }
