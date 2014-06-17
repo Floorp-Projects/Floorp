@@ -30,7 +30,6 @@ function runTests() {
   let oldCurrentEngine = Services.search.currentEngine;
 
   yield addNewTabPageTab();
-  yield whenSearchInitDone();
 
   // The tab is removed at the end of the test, so there's no need to remove
   // this listener at the end of the test.
@@ -149,7 +148,7 @@ function runTests() {
   let events = [];
   for (let engine of gNewEngines) {
     Services.search.removeEngine(engine);
-    events.push("State");
+    events.push("CurrentState");
   }
   yield promiseSearchEvents(events).then(TestRunner.next);
 }
@@ -194,10 +193,10 @@ function promiseNewSearchEngine(basename, numLogos) {
 
   // Wait for the search events triggered by adding the new engine.
   // engine-added engine-loaded
-  let expectedSearchEvents = ["State", "State"];
+  let expectedSearchEvents = ["CurrentState", "CurrentState"];
   // engine-changed for each of the logos
   for (let i = 0; i < numLogos; i++) {
-    expectedSearchEvents.push("State");
+    expectedSearchEvents.push("CurrentState");
   }
   let eventPromise = promiseSearchEvents(expectedSearchEvents);
 
@@ -260,7 +259,9 @@ function checkCurrentEngine(basename, has1xLogo, has2xLogo) {
   is(logo.hidden, !logoURI,
      "Logo should be visible iff engine has a logo: " + engine.name);
   if (logoURI) {
-    is(logo.style.backgroundImage, 'url("' + logoURI + '")', "Logo URI");
+    // The URLs of blobs created with the same ArrayBuffer are different, so
+    // just check that the URI is a blob URI.
+    ok(/^url\("blob:/.test(logo.style.backgroundImage), "Logo URI"); //"
   }
 
   // "selected" attributes of engines in the panel
