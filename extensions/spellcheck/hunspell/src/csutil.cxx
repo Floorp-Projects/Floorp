@@ -1,60 +1,5 @@
-/******* BEGIN LICENSE BLOCK *******
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- * 
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- * 
- * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
- * and László Németh (Hunspell). Portions created by the Initial Developers
- * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
- * 
- * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
- *                 David Einstein (deinst@world.std.com)
- *                 László Németh (nemethl@gyorsposta.hu)
- *                 L. David Baron (dbaron@dbaron.org)
- *                 Caolan McNamara (caolanm@redhat.com)
- *                 Davide Prina
- *                 Giuseppe Modugno
- *                 Gianluca Turconi
- *                 Simon Brouwer
- *                 Noll Janos
- *                 Biro Arpad
- *                 Goldman Eleonora
- *                 Sarlos Tamas
- *                 Bencsath Boldizsar
- *                 Halacsy Peter
- *                 Dvornik Laszlo
- *                 Gefferth Andras
- *                 Nagy Viktor
- *                 Varga Daniel
- *                 Chris Halls
- *                 Rene Engelhard
- *                 Bram Moolenaar
- *                 Dafydd Jones
- *                 Harri Pitkanen
- *                 Andras Timar
- *                 Tor Lillqvist
- * 
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- ******* END LICENSE BLOCK *******/
+#include "license.hunspell"
+#include "license.myspell"
 
 #include <stdlib.h> 
 #include <string.h>
@@ -71,6 +16,11 @@ struct unicode_info {
   unsigned short cupper;
   unsigned short clower;
 };
+
+#ifdef _WIN32
+#include <windows.h>
+#include <wchar.h>
+#endif
 
 #ifdef OPENOFFICEORG
 #  include <unicode/uchar.h>
@@ -99,6 +49,21 @@ struct unicode_info2 {
 
 static struct unicode_info2 * utf_tbl = NULL;
 static int utf_tbl_count = 0; // utf_tbl can be used by multiple Hunspell instances
+
+FILE * myfopen(const char * path, const char * mode) {
+#ifdef _WIN32
+#define WIN32_LONG_PATH_PREFIX "\\\\?\\"
+    if (strncmp(path, WIN32_LONG_PATH_PREFIX, 4) == 0) {
+        int len = MultiByteToWideChar(CP_UTF8, 0, path, -1, NULL, 0);
+        wchar_t *buff = (wchar_t *) malloc(len * sizeof(wchar_t));
+        MultiByteToWideChar(CP_UTF8, 0, path, -1, buff, len);
+        FILE * f = _wfopen(buff, (strcmp(mode, "r") == 0) ? L"r" : L"rb");
+        free(buff);
+        return f;
+    }
+#endif
+    return fopen(path, mode);
+}
 
 /* only UTF-16 (BMP) implementation */
 char * u16_u8(char * dest, int size, const w_char * src, int srclen) {
@@ -396,7 +361,10 @@ char * line_uniq(char * text, char breakchar) {
     for ( i = 1; i < linenum; i++ ) {
         int dup = 0;
         for (int j = 0; j < i; j++) {
-            if (strcmp(lines[i], lines[j]) == 0) dup = 1;
+            if (strcmp(lines[i], lines[j]) == 0) {
+              dup = 1;
+              break;
+            }
         }
         if (!dup) {
             if ((i > 1) || (*(lines[0]) != '\0')) {
@@ -5531,6 +5499,7 @@ struct cs_info * get_current_cs(const char * es) {
     ccs[i].cupper = i;
   }
 
+
   nsCOMPtr<nsIUnicodeEncoder> encoder; 
   nsCOMPtr<nsIUnicodeDecoder> decoder; 
 
@@ -5707,7 +5676,7 @@ unsigned short unicodetoupper(unsigned short c, int langnum)
   if (c == 0x0069 && ((langnum == LANG_az) || (langnum == LANG_tr)))
     return 0x0130;
 #ifdef OPENOFFICEORG
-  return u_toupper(c);
+  return static_cast<unsigned short>(u_toupper(c));
 #else
 #ifdef MOZILLA_CLIENT
   return ToUpperCase((char16_t) c);
@@ -5725,7 +5694,7 @@ unsigned short unicodetolower(unsigned short c, int langnum)
   if (c == 0x0049 && ((langnum == LANG_az) || (langnum == LANG_tr)))
     return 0x0131;
 #ifdef OPENOFFICEORG
-  return u_tolower(c);
+  return static_cast<unsigned short>(u_tolower(c));
 #else
 #ifdef MOZILLA_CLIENT
   return ToLowerCase((char16_t) c);

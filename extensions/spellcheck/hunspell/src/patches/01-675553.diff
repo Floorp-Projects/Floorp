@@ -1,0 +1,24 @@
+Bug 675553 - Switch from PRBool to bool.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -5517,17 +5517,17 @@ struct cs_info * get_current_cs(const ch
+   if (NS_FAILED(rv))
+     return ccs;
+   decoder->SetInputErrorBehavior(decoder->kOnError_Signal);
+ 
+   if (NS_FAILED(rv))
+     return ccs;
+ 
+   for (unsigned int i = 0; i <= 0xff; ++i) {
+-    PRBool success = PR_FALSE;
++    bool success = false;
+     // We want to find the upper/lowercase equivalents of each byte
+     // in this 1-byte character encoding.  Call our encoding/decoding
+     // APIs separately for each byte since they may reject some of the
+     // bytes, and we want to handle errors separately for each byte.
+     char lower, upper;
+     do {
+       if (i == 0)
+         break;
