@@ -252,17 +252,6 @@ IndexedDatabaseManager::Get()
   return gDBManager;
 }
 
-// static
-IndexedDatabaseManager*
-IndexedDatabaseManager::FactoryCreate()
-{
-  // Returns a raw pointer that carries an owning reference! Lame, but the
-  // singleton factory macros force this.
-  IndexedDatabaseManager* mgr = GetOrCreate();
-  NS_IF_ADDREF(mgr);
-  return mgr;
-}
-
 nsresult
 IndexedDatabaseManager::Init()
 {

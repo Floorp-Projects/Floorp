@@ -18,8 +18,6 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 
-#define INDEXEDDB_MANAGER_CONTRACTID "@mozilla.org/dom/indexeddb/manager;1"
-
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -53,10 +51,6 @@ public:
   // Returns a non-owning reference.
   static IndexedDatabaseManager*
   Get();
-
-  // Returns an owning reference! No one should call this but the factory.
-  static IndexedDatabaseManager*
-  FactoryCreate();
 
   static bool
   IsClosed();
