@@ -45,7 +45,6 @@
 #include "nsHtml5Parser.h"
 #include "nsHtml5Atoms.h"
 #include "nsHtml5TreeOperation.h"
-#include "nsHtml5PendingNotification.h"
 #include "nsHtml5StateSnapshot.h"
 #include "nsHtml5StackNode.h"
 #include "nsHtml5TreeOpExecutor.h"

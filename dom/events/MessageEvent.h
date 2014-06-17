@@ -70,7 +70,7 @@ public:
   }
 
   static already_AddRefed<MessageEvent>
-  Constructor(const GlobalObject& aGlobal, JSContext* aCx,
+  Constructor(const GlobalObject& aGlobal,
               const nsAString& aType,
               const MessageEventInit& aEventInit,
               ErrorResult& aRv);

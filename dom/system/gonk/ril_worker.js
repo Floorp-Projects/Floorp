@@ -5529,7 +5529,7 @@ RilObject.prototype[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CA
     if (RILQUIRKS_CALLSTATE_EXTRA_UINT32) {
       Buf.readInt32();
     }
-    call.number             = Buf.readString();
+    call.number             = Buf.readString(); //TODO munge with TOA
     call.numberPresentation = Buf.readInt32(); // CALL_PRESENTATION_*
     call.name               = Buf.readString();
     call.namePresentation   = Buf.readInt32();
@@ -6860,7 +6860,7 @@ RilObject.prototype[UNSOLICITED_CDMA_CALL_WAITING] = function UNSOLICITED_CDMA_C
   call.alertPitch          = Buf.readInt32();
   call.signal              = Buf.readInt32();
   this.sendChromeMessage({rilMessageType: "cdmaCallWaiting",
-                          waitingCall: call});
+                          number: call.number});
 };
 RilObject.prototype[UNSOLICITED_CDMA_OTA_PROVISION_STATUS] = function UNSOLICITED_CDMA_OTA_PROVISION_STATUS() {
   let status = this.context.Buf.readInt32List()[0];

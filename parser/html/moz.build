@@ -33,7 +33,6 @@ EXPORTS += [
     'nsHtml5OplessBuilder.h',
     'nsHtml5OwningUTF16Buffer.h',
     'nsHtml5Parser.h',
-    'nsHtml5PendingNotification.h',
     'nsHtml5PlainTextUtils.h',
     'nsHtml5RefPtr.h',
     'nsHtml5Speculation.h',

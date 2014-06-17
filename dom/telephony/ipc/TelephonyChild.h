@@ -42,7 +42,7 @@ protected:
 
   virtual bool
   RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
-                            const IPCCdmaWaitingCallData& aData) MOZ_OVERRIDE;
+                            const nsString& aNumber) MOZ_OVERRIDE;
 
   virtual bool
   RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState) MOZ_OVERRIDE;
