@@ -10,15 +10,6 @@
 // <msqrt> -- form a radical - implementation
 //
 
-//NOTE:
-//  The code assumes that TeX fonts are picked.
-//  There is no fall-back to draw the branches of the sqrt explicitly
-//  in the case where TeX fonts are not there. In general, there are no
-//  fall-back(s) in MathML when some (freely-downloadable) fonts are missing.
-//  Otherwise, this will add much work and unnecessary complexity to the core
-//  MathML  engine. Assuming that authors have the free fonts is part of the
-//  deal. We are not responsible for cases of misconfigurations out there.
-
 nsIFrame*
 NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
