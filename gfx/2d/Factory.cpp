@@ -530,12 +530,20 @@ Factory::CreateDualDrawTargetForD3D10Textures(ID3D10Texture2D *aTextureA,
 void
 Factory::SetDirect3D10Device(ID3D10Device1 *aDevice)
 {
+  // do not throw on failure; return error codes and disconnect the device
+  // On Windows 8 error codes are the default, but on Windows 7 the
+  // default is to throw (or perhaps only with some drivers?)
+  aDevice->SetExceptionMode(0);
   mD3D10Device = aDevice;
 }
 
 ID3D10Device1*
 Factory::GetDirect3D10Device()
 {
+#ifdef DEBUG
+  UINT mode = mD3D10Device->GetExceptionMode();
+  MOZ_ASSERT(0 == mode);
+#endif
   return mD3D10Device;
 }
 
