@@ -171,7 +171,7 @@ public:
   
   virtual bool IsEmpty() MOZ_OVERRIDE;
   virtual bool IsSelfEmpty() MOZ_OVERRIDE { return IsEmpty(); }
-  virtual nscoord GetBaseline() const MOZ_OVERRIDE;
+  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
   
   virtual bool HasSignificantTerminalNewline() const MOZ_OVERRIDE;
 

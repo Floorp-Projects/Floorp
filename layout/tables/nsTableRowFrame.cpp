@@ -366,7 +366,7 @@ nscoord nsTableRowFrame::GetMaxCellAscent() const
   return mMaxCellAscent;
 }
 
-nscoord nsTableRowFrame::GetRowBaseline()
+nscoord nsTableRowFrame::GetRowBaseline(WritingMode aWritingMode)
 {
   if(mMaxCellAscent)
     return mMaxCellAscent;

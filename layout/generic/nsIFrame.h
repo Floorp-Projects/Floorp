@@ -980,7 +980,7 @@ public:
    * the frame (its top border edge).  Only valid when Reflow is not
    * needed.
    */
-  virtual nscoord GetBaseline() const = 0;
+  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const = 0;
 
   /**
    * Get the position of the baseline on which the caret needs to be placed,
@@ -989,7 +989,7 @@ public:
    * caret positioning.
    */
   virtual nscoord GetCaretBaseline() const {
-    return GetBaseline();
+    return GetLogicalBaseline(GetWritingMode());
   }
 
   /**

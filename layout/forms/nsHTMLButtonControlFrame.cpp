@@ -333,7 +333,8 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // Make sure we have a useful 'ascent' value for the child
   if (contentsDesiredSize.BlockStartAscent() ==
       nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    contentsDesiredSize.SetBlockStartAscent(aFirstKid->GetBaseline());
+    WritingMode wm = aButtonReflowState.GetWritingMode();
+    contentsDesiredSize.SetBlockStartAscent(aFirstKid->GetLogicalBaseline(wm));
   }
 
   // OK, we're done with the child frame.
