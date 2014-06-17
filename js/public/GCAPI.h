@@ -10,8 +10,6 @@
 #include "mozilla/NullPtr.h"
 
 #include "js/HeapAPI.h"
-#include "js/RootingAPI.h"
-#include "js/Value.h"
 
 namespace js {
 namespace gc {
@@ -432,47 +430,6 @@ class JS_PUBLIC_API(AutoCheckCannotGC) : public AutoAssertOnGC
     explicit AutoCheckCannotGC(JSRuntime *rt) : AutoAssertOnGC(rt) {}
 };
 
-class JS_PUBLIC_API(ObjectPtr)
-{
-    Heap<JSObject *> value;
-
-  public:
-    ObjectPtr() : value(nullptr) {}
-
-    explicit ObjectPtr(JSObject *obj) : value(obj) {}
-
-    /* Always call finalize before the destructor. */
-    ~ObjectPtr() { MOZ_ASSERT(!value); }
-
-    void finalize(JSRuntime *rt) {
-        if (IsIncrementalBarrierNeeded(rt))
-            IncrementalObjectBarrier(value);
-        value = nullptr;
-    }
-
-    void init(JSObject *obj) { value = obj; }
-
-    JSObject *get() const { return value; }
-
-    void writeBarrierPre(JSRuntime *rt) {
-        IncrementalObjectBarrier(value);
-    }
-
-    bool isAboutToBeFinalized();
-
-    ObjectPtr &operator=(JSObject *obj) {
-        IncrementalObjectBarrier(value);
-        value = obj;
-        return *this;
-    }
-
-    void trace(JSTracer *trc, const char *name);
-
-    JSObject &operator*() const { return *value; }
-    JSObject *operator->() const { return value; }
-    operator JSObject *() const { return value; }
-};
-
 /*
  * Unsets the gray bit for anything reachable from |thing|. |kind| should not be
  * JSTRACE_SHAPE. |thing| should be non-null.
@@ -505,13 +462,6 @@ ExposeGCThingToActiveJS(void *thing, JSGCTraceKind kind)
         IncrementalReferenceBarrier(thing, kind);
     else if (GCThingIsMarkedGray(thing))
         UnmarkGrayGCThingRecursively(thing, kind);
-}
-
-static MOZ_ALWAYS_INLINE void
-ExposeValueToActiveJS(const Value &v)
-{
-    if (v.isMarkable())
-        ExposeGCThingToActiveJS(v.toGCThing(), v.gcKind());
 }
 
 static MOZ_ALWAYS_INLINE void

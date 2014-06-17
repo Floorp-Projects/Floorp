@@ -44,7 +44,6 @@ enum eHtml5TreeOperation {
   eTreeOpPreventScriptExecution,
   eTreeOpDoneAddingChildren,
   eTreeOpDoneCreatingElement,
-  eTreeOpFlushPendingAppendNotifications,
   eTreeOpSetDocumentCharset,
   eTreeOpNeedsCharsetSwitchTo,
   eTreeOpUpdateStyleSheet,
@@ -182,8 +181,7 @@ class nsHtml5TreeOperation {
 
     static void PreventScriptExecution(nsIContent* aNode);
 
-    static void DoneAddingChildren(nsIContent* aNode,
-                                   nsHtml5DocumentBuilder* aBuilder);
+    static void DoneAddingChildren(nsIContent* aNode);
 
     static void DoneCreatingElement(nsIContent* aNode);
 

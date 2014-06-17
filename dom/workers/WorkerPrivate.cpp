@@ -3629,7 +3629,7 @@ WorkerPrivate::Constructor(const GlobalObject& aGlobal,
                            const nsACString& aSharedWorkerName,
                            LoadInfo* aLoadInfo, ErrorResult& aRv)
 {
-  JSContext* cx = aGlobal.GetContext();
+  JSContext* cx = aGlobal.Context();
   return Constructor(cx, aScriptURL, aIsChromeWorker, aWorkerType,
                      aSharedWorkerName, aLoadInfo, aRv);
 }
@@ -5771,7 +5771,7 @@ WorkerPrivate::ConnectMessagePort(JSContext* aCx, uint64_t aMessagePortSerial)
   ErrorResult rv;
 
   nsRefPtr<MessageEvent> event =
-    MessageEvent::Constructor(globalObject, aCx,
+    MessageEvent::Constructor(globalObject,
                               NS_LITERAL_STRING("connect"), init, rv);
 
   event->SetTrusted(true);

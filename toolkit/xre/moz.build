@@ -56,6 +56,11 @@ else:
         'nsNativeAppSupportDefault.cpp',
     ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gtk3':
+    UNIFIED_SOURCES += [
+        'nsGDKErrorHandler.cpp',
+    ]
+
 if CONFIG['MOZ_X11']:
     UNIFIED_SOURCES += [
         'nsX11ErrorHandler.cpp',
