@@ -55,7 +55,7 @@ function runTests() {
      "Sanity check: engine should not have 2x logo");
   Services.search.currentEngine = noLogoEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  checkCurrentEngine(ENGINE_NO_LOGO, false, false);
+  yield checkCurrentEngine(ENGINE_NO_LOGO, false, false);
 
   // Add the engine with a 1x-DPI logo and switch to it.
   let logo1xEngine = null;
@@ -69,7 +69,7 @@ function runTests() {
      "Sanity check: engine should not have 2x logo");
   Services.search.currentEngine = logo1xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  checkCurrentEngine(ENGINE_1X_LOGO, true, false);
+  yield checkCurrentEngine(ENGINE_1X_LOGO, true, false);
 
   // Add the engine with a 2x-DPI logo and switch to it.
   let logo2xEngine = null;
@@ -83,7 +83,7 @@ function runTests() {
      "Sanity check: engine should have 2x logo");
   Services.search.currentEngine = logo2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  checkCurrentEngine(ENGINE_2X_LOGO, false, true);
+  yield checkCurrentEngine(ENGINE_2X_LOGO, false, true);
 
   // Add the engine with 1x- and 2x-DPI logos and switch to it.
   let logo1x2xEngine = null;
@@ -97,7 +97,7 @@ function runTests() {
      "Sanity check: engine should have 2x logo");
   Services.search.currentEngine = logo1x2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
+  yield checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
 
   // Click the logo to open the search panel.
   yield Promise.all([
@@ -120,12 +120,12 @@ function runTests() {
     promiseClick(noLogoBox),
   ]).then(TestRunner.next);
 
-  checkCurrentEngine(ENGINE_NO_LOGO, false, false);
+  yield checkCurrentEngine(ENGINE_NO_LOGO, false, false);
 
   // Switch back to the 1x-and-2x logo engine.
   Services.search.currentEngine = logo1x2xEngine;
   yield promiseSearchEvents(["CurrentEngine"]).then(TestRunner.next);
-  checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
+  yield checkCurrentEngine(ENGINE_1X_2X_LOGO, true, true);
 
   // Open the panel again.
   yield Promise.all([
@@ -266,19 +266,24 @@ function checkCurrentEngine(basename, has1xLogo, has2xLogo) {
 
   // "selected" attributes of engines in the panel
   let panel = searchPanel();
-  for (let engineBox of panel.childNodes) {
-    let engineName = engineBox.getAttribute("engine");
-    if (engineName == engine.name) {
-      is(engineBox.getAttribute("selected"), "true",
-         "Engine box's selected attribute should be true for " +
-         "selected engine: " + engineName);
+  promisePanelShown(panel).then(() => {
+    panel.hidePopup();
+    for (let engineBox of panel.childNodes) {
+      let engineName = engineBox.getAttribute("engine");
+      if (engineName == engine.name) {
+        is(engineBox.getAttribute("selected"), "true",
+           "Engine box's selected attribute should be true for " +
+           "selected engine: " + engineName);
+      }
+      else {
+        ok(!engineBox.hasAttribute("selected"),
+           "Engine box's selected attribute should be absent for " +
+           "non-selected engine: " + engineName);
+      }
     }
-    else {
-      ok(!engineBox.hasAttribute("selected"),
-         "Engine box's selected attribute should be absent for " +
-         "non-selected engine: " + engineName);
-    }
-  }
+    TestRunner.next();
+  });
+  panel.openPopup(logoImg());
 }
 
 function promisePanelShown(panel) {
