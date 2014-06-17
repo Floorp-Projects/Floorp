@@ -32,3 +32,14 @@ function testErrorPos() {
     }
 }
 testErrorPos();
+
+function testEvalHack() {
+    // Latin1
+    var arr = eval(toLatin1("[1, 2, 3, \"abc\"]"));
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc"]');
+
+    // TwoByte
+    arr = eval("[1, 2, 3, \"abc\u1200\"]");
+    assertEq(JSON.stringify(arr), '[1,2,3,"abc\u1200"]');
+}
+testEvalHack();
