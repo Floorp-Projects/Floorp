@@ -223,6 +223,13 @@ public:
   AddNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
+  AppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest>
+  AddOrAppendNamed(nsIDOMBlob* aBlob, const nsAString& aPath,
+                   const int32_t aRequestType, ErrorResult& aRv);
+
+  already_AddRefed<DOMRequest>
   Get(const nsAString& aPath, ErrorResult& aRv)
   {
     return GetInternal(aPath, false, aRv);
