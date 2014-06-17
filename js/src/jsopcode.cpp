@@ -1198,21 +1198,24 @@ Sprinter::putString(JSString *s)
     InvariantChecker ic(this);
 
     size_t length = s->length();
-    const jschar *chars = s->getChars(context);
-    if (!chars)
-        return -1;
-
     size_t size = length;
-    if (size == (size_t) -1)
-        return -1;
 
     ptrdiff_t oldOffset = offset;
     char *buffer = reserve(size);
     if (!buffer)
         return -1;
-    DeflateStringToBuffer(nullptr, chars, length, buffer, &size);
-    buffer[size] = 0;
 
+    JSLinearString *linear = s->ensureLinear(context);
+    if (!linear)
+        return -1;
+
+    AutoCheckCannotGC nogc;
+    if (linear->hasLatin1Chars())
+        mozilla::PodCopy(reinterpret_cast<Latin1Char*>(buffer), linear->latin1Chars(nogc), length);
+    else
+        DeflateStringToBuffer(nullptr, linear->twoByteChars(nogc), length, buffer, &size);
+
+    buffer[size] = 0;
     return oldOffset;
 }
 

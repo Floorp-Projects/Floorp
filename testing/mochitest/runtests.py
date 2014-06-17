@@ -421,18 +421,24 @@ class MochitestUtilsMixin(object):
     else:
       return options.testPath
 
-  def getTestRoot(self, options):
-    if options.browserChrome:
-      if options.immersiveMode:
-        return 'metro'
-      return 'browser'
-    elif options.a11y:
-      return 'a11y'
-    elif options.webapprtChrome:
-      return 'webapprtChrome'
-    elif options.chrome:
-      return 'chrome'
-    return self.TEST_PATH
+  def setTestRoot(self, options):
+    if hasattr(self, "testRoot"):
+      return self.testRoot, self.testRootAbs
+    else:
+      if options.browserChrome:
+        if options.immersiveMode:
+          self.testRoot = 'metro'
+        else:
+          self.testRoot = 'browser'
+      elif options.a11y:
+        self.testRoot = 'a11y'
+      elif options.webapprtChrome:
+        self.testRoot = 'webapprtChrome'
+      elif options.chrome:
+        self.testRoot = 'chrome'
+      else:
+        self.testRoot = self.TEST_PATH
+      self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
 
   def buildTestURL(self, options):
     testHost = "http://mochi.test:8888"
@@ -453,10 +459,7 @@ class MochitestUtilsMixin(object):
         disabled -- This allows to add all disabled tests on the build side
                     and then on the run side to only run the enabled ones
     """
-    # This would normally get set in runTests() but b2g mochitests
-    # call this function first
-    self.testRoot = self.getTestRoot(options)
-    self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
+    self.setTestRoot(options)
     manifest = self.getTestManifest(options)
 
     if manifest:
@@ -1336,8 +1339,7 @@ class Mochitest(MochitestUtilsMixin):
     self.countfail = 0
     self.counttodo = 0
 
-    self.testRoot = self.getTestRoot(options)
-    self.testRootAbs = os.path.join(SCRIPT_DIR, self.testRoot)
+    self.setTestRoot(options)
 
     if not options.runByDir:
       return self.doTests(options, onLaunch)

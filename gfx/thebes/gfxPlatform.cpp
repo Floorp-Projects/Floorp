@@ -127,6 +127,7 @@ static int gCMSIntent = QCMS_INTENT_DEFAULT;
 static void ShutdownCMS();
 
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/SourceSurfaceCairo.h"
 using namespace mozilla::gfx;
 
 /* Class to listen for pref changes so that chrome code can dynamically
@@ -629,54 +630,10 @@ void SourceSurfaceDestroyed(void *aData)
   delete static_cast<DependentSourceSurfaceUserData*>(aData);
 }
 
-#if MOZ_TREE_CAIRO
-void SourceSnapshotDetached(cairo_surface_t *nullSurf)
-{
-  gfxImageSurface* origSurf =
-    static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
-
-  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
-}
-#else
-void SourceSnapshotDetached(void *nullSurf)
-{
-  gfxImageSurface* origSurf = static_cast<gfxImageSurface*>(nullSurf);
-  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
-}
-#endif
-
 void
 gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
 {
   aSurface->SetData(&kSourceSurface, nullptr, nullptr);
-}
-
-static TemporaryRef<DataSourceSurface>
-CopySurface(gfxASurface* aSurface)
-{
-  const nsIntSize size = aSurface->GetSize();
-  gfxImageFormat format = gfxPlatform::GetPlatform()->OptimalFormatForContent(aSurface->GetContentType());
-  RefPtr<DataSourceSurface> data =
-    Factory::CreateDataSourceSurface(ToIntSize(size),
-                                     ImageFormatToSurfaceFormat(format));
-  if (!data) {
-    return nullptr;
-  }
-
-  DataSourceSurface::MappedSurface map;
-  DebugOnly<bool> result = data->Map(DataSourceSurface::WRITE, &map);
-  MOZ_ASSERT(result, "Should always succeed mapping raw data surfaces!");
-
-  nsRefPtr<gfxImageSurface> image = new gfxImageSurface(map.mData, size, map.mStride, format);
-  nsRefPtr<gfxContext> ctx = new gfxContext(image);
-
-  ctx->SetSource(aSurface);
-  ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-  ctx->Paint();
-
-  data->Unmap();
-
-  return data;
 }
 
 /* static */ TemporaryRef<SourceSurface>
@@ -687,9 +644,8 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   }
 
   if (!aTarget) {
-    if (gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()) {
-      aTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
-    } else {
+    aTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+    if (!aTarget) {
       return nullptr;
     }
   }
@@ -715,6 +671,33 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     format = SurfaceFormat::B8G8R8A8;
   }
 
+  if (aTarget->GetType() == BackendType::CAIRO) {
+    // If we're going to be used with a CAIRO DrawTarget, then just create a
+    // SourceSurfaceCairo since we don't know the underlying type of the CAIRO
+    // DrawTarget and can't pick a better surface type. Doing this also avoids
+    // readback of aSurface's surface into memory if, for example, aSurface
+    // wraps an xlib cairo surface (which can be important to avoid a major
+    // slowdown).
+    NativeSurface surf;
+    surf.mFormat = format;
+    surf.mType = NativeSurfaceType::CAIRO_SURFACE;
+    surf.mSurface = aSurface->CairoSurface();
+    surf.mSize = ToIntSize(aSurface->GetSize());
+    // We return here regardless of whether CreateSourceSurfaceFromNativeSurface
+    // succeeds or not since we don't expect to be able to do any better below
+    // if it fails.
+    //
+    // Note that the returned SourceSurfaceCairo holds a strong reference to
+    // the cairo_surface_t* that it wraps, which essencially means it holds a
+    // strong reference to aSurface since aSurface shares its
+    // cairo_surface_t*'s reference count variable. As a result we can't cache
+    // srcBuffer on aSurface (see below) since aSurface would then hold a
+    // strong reference back to srcBuffer, creating a reference loop and a
+    // memory leak. Not caching is fine since wrapping is cheap enough (no
+    // copying) so we can just wrap again next time we're called.
+    return aTarget->CreateSourceSurfaceFromNativeSurface(surf);
+  }
+
   RefPtr<SourceSurface> srcBuffer;
 
 #ifdef XP_WIN
@@ -730,48 +713,69 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
       dt->Flush();
     }
     srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
-  } else
+  }
 #endif
-  if (aSurface->CairoSurface() && aTarget->GetType() == BackendType::CAIRO) {
-    // If this is an xlib cairo surface we don't want to fetch it into memory
-    // because this is a major slow down.
+  // Currently no other DrawTarget types implement CreateSourceSurfaceFromNativeSurface
+
+  if (!srcBuffer) {
+    // If aSurface wraps data, we can create a SourceSurfaceRawData that wraps
+    // the same data, then optimize it for aTarget:
+    RefPtr<DataSourceSurface> surf = GetWrappedDataSourceSurface(aSurface);
+    if (surf) {
+      srcBuffer = aTarget->OptimizeSourceSurface(surf);
+      if (srcBuffer == surf) {
+        // GetWrappedDataSourceSurface returns a SourceSurface that holds a
+        // strong reference to aSurface since it wraps aSurface's data and
+        // needs it to stay alive. As a result we can't cache srcBuffer on
+        // aSurface (below) since aSurface would then hold a strong reference
+        // back to srcBuffer, creating a reference loop and a memory leak. Not
+        // caching is fine since wrapping is cheap enough (no copying) so we
+        // can just wrap again next time we're called.
+        //
+        // Note that the check below doesn't catch this since srcBuffer will be a
+        // SourceSurfaceRawData object (even if aSurface is not a gfxImageSurface
+        // object), which is why we need this separate check.
+        return srcBuffer.forget();
+      }
+    }
+  }
+
+  if (!srcBuffer) {
+    MOZ_ASSERT(aTarget->GetType() != BackendType::CAIRO,
+               "We already tried CreateSourceSurfaceFromNativeSurface with a "
+               "DrawTargetCairo above");
+    // We've run out of performant options. We now try creating a SourceSurface
+    // using a temporary DrawTargetCairo and then optimizing it to aTarget's
+    // actual type. The CreateSourceSurfaceFromNativeSurface() call will
+    // likely create a DataSourceSurface (possibly involving copying and/or
+    // readback), and the OptimizeSourceSurface may well copy again and upload
+    // to the GPU. So, while this code path is rarely hit, hitting it may be
+    // very slow.
     NativeSurface surf;
     surf.mFormat = format;
     surf.mType = NativeSurfaceType::CAIRO_SURFACE;
     surf.mSurface = aSurface->CairoSurface();
     surf.mSize = ToIntSize(aSurface->GetSize());
-    srcBuffer = aTarget->CreateSourceSurfaceFromNativeSurface(surf);
-
+    RefPtr<DrawTarget> drawTarget =
+      Factory::CreateDrawTarget(BackendType::CAIRO, IntSize(1, 1), format);
+    srcBuffer = drawTarget->CreateSourceSurfaceFromNativeSurface(surf);
     if (srcBuffer) {
-      // It's cheap enough to make a new one so we won't keep it around and
-      // keeping it creates a cycle.
-      return srcBuffer.forget();
+      srcBuffer = aTarget->OptimizeSourceSurface(srcBuffer);
     }
   }
 
   if (!srcBuffer) {
-    nsRefPtr<gfxImageSurface> imgSurface = aSurface->GetAsImageSurface();
+    return nullptr;
+  }
 
-    RefPtr<DataSourceSurface> dataSurf;
-
-    if (imgSurface) {
-      dataSurf = GetWrappedDataSourceSurface(aSurface);
-    } else {
-      dataSurf = CopySurface(aSurface);
-    }
-
-    if (!dataSurf) {
-      return nullptr;
-    }
-
-    srcBuffer = aTarget->OptimizeSourceSurface(dataSurf);
-
-    if (imgSurface && srcBuffer == dataSurf) {
-      // Our wrapping surface will hold a reference to its image surface. We cause
-      // a reference cycle if we add it to the cache. And caching it is pretty
-      // pointless since we'll just wrap it again next use.
-     return srcBuffer.forget();
-    }
+  if ((srcBuffer->GetType() == SurfaceType::CAIRO &&
+       static_cast<SourceSurfaceCairo*>(srcBuffer.get())->GetSurface() ==
+         aSurface->CairoSurface()) ||
+      (srcBuffer->GetType() == SurfaceType::CAIRO_IMAGE &&
+       static_cast<DataSourceSurfaceCairo*>(srcBuffer.get())->GetSurface() ==
+         aSurface->CairoSurface())) {
+    // See the "Note that the returned SourceSurfaceCairo..." comment above.
+    return srcBuffer.forget();
   }
 
   // Add user data to aSurface so we can cache lookups in the future.

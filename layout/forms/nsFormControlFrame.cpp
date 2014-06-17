@@ -63,14 +63,15 @@ nsFormControlFrame::GetIntrinsicHeight()
 }
 
 nscoord
-nsFormControlFrame::GetBaseline() const
+nsFormControlFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   NS_ASSERTION(!NS_SUBTREE_DIRTY(this),
                "frame must not be dirty");
   // Treat radio buttons and checkboxes as having an intrinsic baseline
   // at the bottom of the control (use the bottom content edge rather
   // than the bottom margin edge).
-  return mRect.height - GetUsedBorderAndPadding().bottom;
+  return BSize(aWritingMode) -
+         GetLogicalUsedBorderAndPadding(aWritingMode).BEnd(aWritingMode);
 }
 
 void
