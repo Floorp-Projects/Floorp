@@ -68,29 +68,29 @@ TEST_SUITES = {
         'kwargs': {'valgrind': False},
     },
     'mochitest-a11y': {
-        'mach_command': 'mochitest-a11y',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'a11y', 'test_paths': None},
     },
     'mochitest-browser': {
         'aliases': ('bc', 'BC', 'Bc'),
         'mach_command': 'mochitest-browser',
-        'kwargs': {'test_file': None},
+        'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
     },
     'mochitest-chrome': {
-        'mach_command': 'mochitest-chrome',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'test_paths': None},
     },
     'mochitest-devtools': {
         'aliases': ('dt', 'DT', 'Dt'),
-        'mach_command': 'mochitest-browser --subsuite=devtools',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest-browser',
+        'kwargs': {'subsuite': 'devtools', 'test_paths': None},
     },
     'mochitest-ipcplugins': {
         'make_target': 'mochitest-ipcplugins',
     },
     'mochitest-plain': {
-        'mach_command': 'mochitest-plain',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'mochitest', 'test_paths': None},
     },
     'reftest': {
         'aliases': ('RR', 'rr', 'Rr'),
@@ -117,12 +117,13 @@ TEST_SUITES = {
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
     TEST_SUITES['mochitest-%d' %i] = {
         'aliases': ('M%d' % i, 'm%d' % i),
-        'mach_command': 'mochitest-plain',
+        'mach_command': 'mochitest',
         'kwargs': {
+            'flavor': 'mochitest',
             'chunk_by_dir': MOCHITEST_CHUNK_BY_DIR,
             'total_chunks': MOCHITEST_TOTAL_CHUNKS,
             'this_chunk': i,
-            'test_file': None,
+            'test_paths': None,
         },
     }
 
