@@ -483,6 +483,9 @@ private:
 
       NS_IMETHOD Run();
 
+    protected:
+      virtual ~DecodeJob();
+
     private:
       nsRefPtr<DecodeRequest> mRequest;
       nsRefPtr<RasterImage> mImage;
