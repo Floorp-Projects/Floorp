@@ -488,15 +488,15 @@ public:
   }
 
   /**
-   * The ascent (distance from top to baseline) of the linebox is the
-   * ascent of the anonymous inline box (for which we don't actually
-   * create a frame) that wraps all the consecutive inline children of a
-   * block.
+   * The logical ascent (distance from block-start to baseline) of the
+   * linebox is the logical ascent of the anonymous inline box (for
+   * which we don't actually create a frame) that wraps all the
+   * consecutive inline children of a block.
    *
    * This is currently unused for block lines.
    */
-  nscoord GetAscent() const { return mAscent; }
-  void SetAscent(nscoord aAscent) { mAscent = aAscent; }
+  nscoord GetLogicalAscent() const { return mAscent; }
+  void SetLogicalAscent(nscoord aAscent) { mAscent = aAscent; }
 
   nscoord BStart() const {
     return mBounds.BStart(mWritingMode);

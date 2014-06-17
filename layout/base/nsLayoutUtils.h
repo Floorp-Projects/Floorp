@@ -65,6 +65,7 @@ namespace mozilla {
 class SVGImageContext;
 struct IntrinsicSize;
 struct ContainerLayerParameters;
+class WritingMode;
 namespace dom {
 class DOMRectList;
 class Element;
@@ -1360,7 +1361,8 @@ public:
    * Returns true if a baseline was found (and fills in aResult).
    * Otherwise returns false.
    */
-  static bool GetFirstLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
+  static bool GetFirstLineBaseline(mozilla::WritingMode aWritingMode,
+                                   const nsIFrame* aFrame, nscoord* aResult);
 
   /**
    * Just like GetFirstLineBaseline, except also returns the top and
@@ -1370,17 +1372,18 @@ public:
    * Otherwise returns false.
    */
   struct LinePosition {
-    nscoord mTop, mBaseline, mBottom;
+    nscoord mBStart, mBaseline, mBEnd;
 
     LinePosition operator+(nscoord aOffset) const {
       LinePosition result;
-      result.mTop = mTop + aOffset;
+      result.mBStart = mBStart + aOffset;
       result.mBaseline = mBaseline + aOffset;
-      result.mBottom = mBottom + aOffset;
+      result.mBEnd = mBEnd + aOffset;
       return result;
     }
   };
-  static bool GetFirstLinePosition(const nsIFrame* aFrame,
+  static bool GetFirstLinePosition(mozilla::WritingMode aWritingMode,
+                                   const nsIFrame* aFrame,
                                    LinePosition* aResult);
 
 
@@ -1392,17 +1395,20 @@ public:
    * Returns true if a baseline was found (and fills in aResult).
    * Otherwise returns false.
    */
-  static bool GetLastLineBaseline(const nsIFrame* aFrame, nscoord* aResult);
+  static bool GetLastLineBaseline(mozilla::WritingMode aWritingMode,
+                                  const nsIFrame* aFrame, nscoord* aResult);
 
   /**
-   * Returns a y coordinate relative to this frame's origin that represents
-   * the logical bottom of the frame or its visible content, whichever is lower.
+   * Returns a block-dir coordinate relative to this frame's origin that
+   * represents the logical block-end of the frame or its visible content,
+   * whichever is further from the origin.
    * Relative positioning is ignored and margins and glyph bounds are not
    * considered.
-   * This value will be >= mRect.height() and <= overflowRect.YMost() unless
+   * This value will be >= mRect.BSize() and <= overflowRect.BEnd() unless
    * relative positioning is applied.
    */
-  static nscoord CalculateContentBottom(nsIFrame* aFrame);
+  static nscoord CalculateContentBEnd(mozilla::WritingMode aWritingMode,
+                                      nsIFrame* aFrame);
 
   /**
    * Gets the closest frame (the frame passed in or one of its parents) that

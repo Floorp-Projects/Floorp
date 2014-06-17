@@ -3411,6 +3411,22 @@ RasterImage::DecodePool::DecodeJob::Run()
   return NS_OK;
 }
 
+RasterImage::DecodePool::DecodeJob::~DecodeJob()
+{
+  if (gMultithreadedDecoding) {
+    // Dispatch mImage to main thread to prevent mImage from being destructed by decode thread.
+    nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+    NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
+    if (mainThread) {
+      // Handle ambiguous nsISupports inheritance
+      RasterImage* rawImg = nullptr;
+      mImage.swap(rawImg);
+      DebugOnly<nsresult> rv = NS_ProxyRelease(mainThread, NS_ISUPPORTS_CAST(ImageResource*, rawImg));
+      MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to proxy release to main thread");
+    }
+  }
+}
+
 nsresult
 RasterImage::DecodePool::DecodeUntilSizeAvailable(RasterImage* aImg)
 {
