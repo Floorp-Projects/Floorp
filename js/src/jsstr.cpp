@@ -1317,10 +1317,12 @@ StringMatch(JSLinearString *text, JSLinearString *pat, uint32_t start = 0)
 static const size_t sRopeMatchThresholdRatioLog2 = 5;
 
 bool
-js::StringHasPattern(const jschar *text, uint32_t textLen,
-                     const jschar *pat, uint32_t patLen)
+js::StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patLen)
 {
-    return StringMatch(text, textLen, pat, patLen) != -1;
+    AutoCheckCannotGC nogc;
+    return text->hasLatin1Chars()
+           ? StringMatch(text->latin1Chars(nogc), text->length(), pat, patLen) != -1
+           : StringMatch(text->twoByteChars(nogc), text->length(), pat, patLen) != -1;
 }
 
 int
