@@ -155,15 +155,6 @@ ClientTiledThebesLayer::BeginPaint()
     ApplyParentLayerToLayerTransform(mPaintData.mTransformDisplayPortToLayer, criticalDisplayPort));
   TILING_PRLOG_OBJ(("TILING 0x%p: Critical displayport %s\n", this, tmpstr.get()), mPaintData.mCriticalDisplayPort);
 
-  // Compute the viewport that applies to this layer in the LayoutDevice
-  // space of this layer.
-  ParentLayerRect viewport =
-    (displayportMetrics.mViewport * displayportMetrics.GetZoomToParent())
-    + displayportMetrics.mCompositionBounds.TopLeft();
-  mPaintData.mViewport = ApplyParentLayerToLayerTransform(
-    mPaintData.mTransformDisplayPortToLayer, viewport);
-  TILING_PRLOG_OBJ(("TILING 0x%p: Viewport %s\n", this, tmpstr.get()), mPaintData.mViewport);
-
   // Store the resolution from the displayport ancestor layer. Because this is Gecko-side,
   // before any async transforms have occurred, we can use the zoom for this.
   mPaintData.mResolution = displayportMetrics.GetZoomToParent();
