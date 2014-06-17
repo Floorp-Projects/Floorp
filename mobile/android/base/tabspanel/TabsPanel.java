@@ -120,7 +120,7 @@ public class TabsPanel extends LinearLayout
         mPanelNormal = (PanelView) findViewById(R.id.normal_tabs);
         mPanelNormal.setTabsPanel(this);
 
-        mPanelPrivate = (PanelView) findViewById(R.id.private_tabs);
+        mPanelPrivate = (PanelView) findViewById(R.id.private_tabs_panel);
         mPanelPrivate.setTabsPanel(this);
 
         mPanelRemote = (PanelView) findViewById(R.id.remote_tabs);

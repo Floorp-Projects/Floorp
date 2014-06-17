@@ -318,7 +318,8 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     this._callWatcher.setup({
       tracedGlobals: AUDIO_GLOBALS,
       startRecording: true,
-      performReload: reload
+      performReload: reload,
+      holdWeak: true
     });
   }, {
     request: { reload: Option(0, "boolean") },

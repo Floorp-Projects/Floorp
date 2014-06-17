@@ -13,6 +13,18 @@ var rokuTarget = {
   }
 };
 
+var fireflyTarget = {
+  target: "urn:dial-multiscreen-org:service:dial:1",
+  filters: {
+    server: null,
+    modelName: "Eureka Dongle"
+  },
+  factory: function(aService) {
+    Cu.import("resource://gre/modules/FireflyApp.jsm");
+    return new FireflyApp(aService);
+  }
+};
+
 var CastingApps = {
   _castMenuId: -1,
 
@@ -23,6 +35,7 @@ var CastingApps = {
 
     // Register targets
     SimpleServiceDiscovery.registerTarget(rokuTarget);
+    SimpleServiceDiscovery.registerTarget(fireflyTarget);
 
     // Search for devices continuously every 120 seconds
     SimpleServiceDiscovery.search(120 * 1000);
@@ -250,8 +263,7 @@ var CastingApps = {
       // Look for a castable <video> that is playing, and start casting it
       let videos = browser.contentDocument.querySelectorAll("video");
       for (let video of videos) {
-        let unwrappedVideo = XPCNativeWrapper.unwrap(video);
-        if (!video.paused && unwrappedVideo.mozAllowCasting) {
+        if (!video.paused && video.mozAllowCasting) {
           UITelemetry.addEvent("cast.1", "pageaction", null);
           CastingApps.openExternal(video, 0, 0);
           return;
@@ -270,13 +282,12 @@ var CastingApps = {
       let castableVideo = null;
       let videos = aBrowser.contentDocument.querySelectorAll("video");
       for (let video of videos) {
-        let unwrappedVideo = XPCNativeWrapper.unwrap(video);
-        if (unwrappedVideo.mozIsCasting) {
+        if (video.mozIsCasting) {
           // This <video> is cast-active. Break out of loop.
           return video;
         }
 
-        if (!video.paused && unwrappedVideo.mozAllowCasting) {
+        if (!video.paused && video.mozAllowCasting) {
           // This <video> is cast-ready. Keep looking so cast-active could be found.
           castableVideo = video;
         }
@@ -324,15 +335,14 @@ var CastingApps = {
     // 1. The video is actively being cast
     // 2. The video is allowed to be cast and is currently playing
     // Both states have the same action: Show the cast page action
-    let unwrappedVideo = XPCNativeWrapper.unwrap(aVideo);
-    if (unwrappedVideo.mozIsCasting) {
+    if (aVideo.mozIsCasting) {
       this.pageAction.id = NativeWindow.pageactions.add({
         title: Strings.browser.GetStringFromName("contextmenu.castToScreen"),
         icon: "drawable://casting_active",
         clickCallback: this.pageAction.click,
         important: true
       });
-    } else if (unwrappedVideo.mozAllowCasting) {
+    } else if (aVideo.mozAllowCasting) {
       this.pageAction.id = NativeWindow.pageactions.add({
         title: Strings.browser.GetStringFromName("contextmenu.castToScreen"),
         icon: "drawable://casting",
@@ -363,6 +373,7 @@ var CastingApps = {
   },
 
   handleContextMenu: function(aElement, aX, aY) {
+    UITelemetry.addEvent("action.1", "contextmenu", null, "web_cast");
     UITelemetry.addEvent("cast.1", "contextmenu", null);
     this.openExternal(aElement, aX, aY);
   },

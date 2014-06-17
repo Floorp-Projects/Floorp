@@ -26,11 +26,13 @@
   /* How quickly do we rush through this? */
   let delay = 500;
   window.addEventListener("load", () => {
+    dump('TEST-INFO | load from browser_cmd_csscoverage_page2.html\n');
     setTimeout(() => {
+      dump('TEST-INFO | timeout from browser_cmd_csscoverage_page2.html\n');
       /* This adds <div class=page2-test3></div> */
       let parent = document.querySelector("#page2-test3-holder");
       let child = document.createElement("div");
-      child.classList.add("class=page2-test3");
+      child.classList.add("page2-test3");
       parent.appendChild(child);
     }, delay);
   });
@@ -41,7 +43,6 @@
 <h2>Page 2</h2>
 
 <div class=page2-test1>.page2-test1</div>
-<div class=page2-test3>.page2-test3</div>
 
 <div id=page2-test3-holder></div>
 

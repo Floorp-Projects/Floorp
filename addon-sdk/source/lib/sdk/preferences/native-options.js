@@ -12,29 +12,41 @@ const { on } = require('../system/events');
 const { id, preferencesBranch } = require('../self');
 const { localizeInlineOptions } = require('../l10n/prefs');
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm");
+const { defer } = require("sdk/core/promise");
 
 const DEFAULT_OPTIONS_URL = 'data:text/xml,<placeholder/>';
 
-const VALID_PREF_TYPES = ['bool', 'boolint', 'integer', 'string', 'color', 
+const VALID_PREF_TYPES = ['bool', 'boolint', 'integer', 'string', 'color',
                           'file', 'directory', 'control', 'menulist', 'radio'];
 
-function enable(preferences) {
+function enable({ preferences, id }) {
+  let enabled = defer();
+
   validate(preferences);
+
   setDefaults(preferences, preferencesBranch);
 
   // allow the use of custom options.xul
   AddonManager.getAddonByID(id, (addon) => {
-    if (addon.optionsURL === DEFAULT_OPTIONS_URL) 
-      on('addon-options-displayed', onAddonOptionsDisplayed, true);
-  })
+    on('addon-options-displayed', onAddonOptionsDisplayed, true);
+    enabled.resolve({ id: id });
+  });
 
   function onAddonOptionsDisplayed({ subject: doc, data }) {
     if (data === id) {
       let parent = doc.getElementById('detail-downloads').parentNode;
-      injectOptions(preferences, preferencesBranch, doc, parent);
+      injectOptions({
+        preferences: preferences,
+        preferencesBranch: preferencesBranch,
+        document: doc,
+        parent: parent,
+        id: id
+      });
       localizeInlineOptions(doc);
     }
   }
+
+  return enabled.promise;
 }
 exports.enable = enable;
 
@@ -75,18 +87,18 @@ function setDefaults(preferences, preferencesBranch) {
   const branch = Cc['@mozilla.org/preferences-service;1'].
                  getService(Ci.nsIPrefService).
                  getDefaultBranch('extensions.' + preferencesBranch + '.');
-  for (let {name, value} of preferences) {
+  for (let { name, value } of preferences) {
     switch (typeof value) {
       case 'boolean':
         branch.setBoolPref(name, value);
         break;
-      case 'number': 
+      case 'number':
         // must be integer, ignore otherwise
-        if (value % 1 === 0) 
+        if (value % 1 === 0) {
           branch.setIntPref(name, value);
+        }
         break;
       case 'string':
-        // ∵ 
         let str = Cc["@mozilla.org/supports-string;1"].
                   createInstance(Ci.nsISupportsString);
         str.data = value;
@@ -98,11 +110,12 @@ function setDefaults(preferences, preferencesBranch) {
 exports.setDefaults = setDefaults;
 
 // dynamically injects inline options into about:addons page at runtime
-function injectOptions(preferences, preferencesBranch, document, parent) {
+function injectOptions({ preferences, preferencesBranch, document, parent, id }) {
   for (let { name, type, hidden, title, description, label, options, on, off } of preferences) {
 
-    if (hidden) 
+    if (hidden) {
       continue;
+    }
 
     let setting = document.createElement('setting');
     setting.setAttribute('pref-name', name);
@@ -114,7 +127,7 @@ function injectOptions(preferences, preferencesBranch, document, parent) {
 
     if (type === 'file' || type === 'directory') {
       setting.setAttribute('fullpath', 'true');
-    } 
+    }
     else if (type === 'control') {
       let button = document.createElement('button');
       button.setAttribute('pref-name', name);
@@ -123,11 +136,11 @@ function injectOptions(preferences, preferencesBranch, document, parent) {
       button.setAttribute('oncommand', "Services.obs.notifyObservers(null, '" +
                                         id + "-cmdPressed', '" + name + "');");
       setting.appendChild(button);
-    } 
+    }
     else if (type === 'boolint') {
       setting.setAttribute('on', on);
       setting.setAttribute('off', off);
-    } 
+    }
     else if (type === 'menulist') {
       let menulist = document.createElement('menulist');
       let menupopup = document.createElement('menupopup');
@@ -139,7 +152,7 @@ function injectOptions(preferences, preferencesBranch, document, parent) {
       }
       menulist.appendChild(menupopup);
       setting.appendChild(menulist);
-    } 
+    }
     else if (type === 'radio') {
       let radiogroup = document.createElement('radiogroup');
       for (let { value, label } of options) {
