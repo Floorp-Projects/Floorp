@@ -65,7 +65,9 @@ JSCompartment::JSCompartment(Zone *zone, const JS::CompartmentOptions &options =
     debugScopes(nullptr),
     enumerators(nullptr),
     compartmentStats(nullptr),
-    jitCompartment_(nullptr)
+    jitCompartment_(nullptr),
+    scheduledForDestruction(false),
+    maybeAlive(true)
 {
     runtime_->numCompartments++;
     JS_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
