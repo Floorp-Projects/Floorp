@@ -37,10 +37,12 @@ import re
 import os.path
 
 def get_expanded_variables(versionfile_source):
-    # the code embedded in _version.py can just fetch the value of these
-    # variables. When used from setup.py, we don't want to import
-    # _version.py, so we do it with a regexp instead. This function is not
-    # used from _version.py.
+    """
+    the code embedded in _version.py can just fetch the value of these
+    variables. When used from setup.py, we don't want to import
+    _version.py, so we do it with a regexp instead. This function is not
+    used from _version.py.
+    """
     variables = {}
     try:
         for line in open(versionfile_source,"r").readlines():
@@ -81,15 +83,16 @@ def versions_from_expanded_variables(variables, tag_prefix):
              "full": variables["full"].strip() }
 
 def versions_from_vcs(tag_prefix, versionfile_source, verbose=False):
-    # this runs 'git' from the root of the source tree. That either means
-    # someone ran a setup.py command (and this code is in versioneer.py, thus
-    # the containing directory is the root of the source tree), or someone
-    # ran a project-specific entry point (and this code is in _version.py,
-    # thus the containing directory is somewhere deeper in the source tree).
-    # This only gets called if the git-archive 'subst' variables were *not*
-    # expanded, and _version.py hasn't already been rewritten with a short
-    # version string, meaning we're inside a checked out source tree.
-
+    """
+    this runs 'git' from the root of the source tree. That either means
+    someone ran a setup.py command (and this code is in versioneer.py, thus
+    the containing directory is the root of the source tree), or someone
+    ran a project-specific entry point (and this code is in _version.py,
+    thus the containing directory is somewhere deeper in the source tree).
+    This only gets called if the git-archive 'subst' variables were *not*
+    expanded, and _version.py hasn't already been rewritten with a short
+    version string, meaning we're inside a checked out source tree.
+    """
     try:
         here = os.path.abspath(__file__)
     except NameError:
