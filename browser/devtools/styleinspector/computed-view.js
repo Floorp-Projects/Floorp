@@ -429,10 +429,10 @@ CssHtmlTree.prototype = {
       win.clearTimeout(this._filterChangedTimeout);
     }
 
-    this._filterChangedTimeout = win.setTimeout(function() {
+    this._filterChangedTimeout = win.setTimeout(() => {
       this.refreshPanel();
       this._filterChangeTimeout = null;
-    }.bind(this), FILTER_CHANGED_TIMEOUT);
+    }, FILTER_CHANGED_TIMEOUT);
   },
 
   /**

@@ -94,12 +94,36 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="RemoteTabsPanelChild" parent="RemoteTabsPanelChildBase">
+    <style name="TabsPanelFrame.PrivateTabs">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingTop">0dp</item>
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs">
+        <item name="android:layout_weight">1</item>
+    </style>
+
+    <style name="TabsPanelSection.PrivateTabs.Header">
+        <item name="android:paddingTop">32dp</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
+        <item name="android:visibility">gone</item>
+    </style>
+
+    <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
+    <!-- Tabs panel -->
+    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
         <item name="android:paddingLeft">84dp</item>
         <item name="android:paddingRight">84dp</item>
     </style>
 
-    <style name="RemoteTabsItem.Button" parent="RemoteTabsItem.ButtonBase">
+    <style name="TabsPanelItem.Button" parent="TabsPanelItem.ButtonBase">
         <item name="android:paddingTop">18dp</item>
         <item name="android:paddingBottom">18dp</item>
         <item name="android:paddingLeft">9dp</item>

@@ -29,6 +29,12 @@ add_task(function() {
   let newWin = yield openAndLoadWindow({}, true);
 
   info("Waiting for panel in new window to open");
+  let hideTrace = function() {
+    info(new Error().stack);
+    info("Panel was hidden.");
+  };
+  newWin.PanelUI.panel.addEventListener("popuphidden", hideTrace);
+
   yield newWin.PanelUI.show();
   let newWinBookmarksToolbarPlaceholder = newWin.document.getElementById(buttonId);
   ok(newWinBookmarksToolbarPlaceholder.classList.contains("toolbarbutton-1"),
@@ -36,6 +42,7 @@ add_task(function() {
   is(newWinBookmarksToolbarPlaceholder.getAttribute("wrap"), "true",
      "Button in new window should have 'wrap' attribute");
 
+  newWin.PanelUI.panel.removeEventListener("popuphidden", hideTrace);
   //XXXgijs on Linux, we're sometimes seeing the panel being hidden early
   // in the newly created window, probably because something else steals focus.
   if (newWin.PanelUI.panel.state != "closed") {

@@ -65,9 +65,6 @@ TelephonyChild::RecvNotifyCallStateChanged(const uint32_t& aClientId,
                               aData.callIndex(),
                               aData.callState(),
                               aData.number(),
-                              aData.numberPresentation(),
-                              aData.name(),
-                              aData.namePresentation(),
                               aData.isOutGoing(),
                               aData.isEmergency(),
                               aData.isConference(),
@@ -78,15 +75,11 @@ TelephonyChild::RecvNotifyCallStateChanged(const uint32_t& aClientId,
 
 bool
 TelephonyChild::RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
-                                          const IPCCdmaWaitingCallData& aData)
+                                          const nsString& aNumber)
 {
   MOZ_ASSERT(mService);
 
-  mService->NotifyCdmaCallWaiting(aClientId,
-                                  aData.number(),
-                                  aData.numberPresentation(),
-                                  aData.name(),
-                                  aData.namePresentation());
+  mService->NotifyCdmaCallWaiting(aClientId, aNumber);
   return true;
 }
 
@@ -165,9 +158,6 @@ TelephonyRequestChild::RecvNotifyEnumerateCallState(const uint32_t& aClientId,
                                 aData.callIndex(),
                                 aData.callState(),
                                 aData.number(),
-                                aData.numberPresentation(),
-                                aData.name(),
-                                aData.namePresentation(),
                                 aData.isOutGoing(),
                                 aData.isEmergency(),
                                 aData.isConference(),

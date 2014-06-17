@@ -101,12 +101,12 @@ HTMLBreadcrumbs.prototype = {
     this.container._scrollButtonUp.collapsed = true;
     this.container._scrollButtonDown.collapsed = true;
 
-    this.onscrollboxreflow = function() {
+    this.onscrollboxreflow = () => {
       if (this.container._scrollButtonDown.collapsed)
         this.container.removeAttribute("overflows");
       else
         this.container.setAttribute("overflows", true);
-    }.bind(this);
+    };
 
     this.container.addEventListener("underflow", this.onscrollboxreflow, false);
     this.container.addEventListener("overflow", this.onscrollboxreflow, false);
@@ -480,9 +480,9 @@ HTMLBreadcrumbs.prototype = {
         button.click();
     }
 
-    button.onBreadcrumbsClick = function onBreadcrumbsClick() {
+    button.onBreadcrumbsClick = () => {
       this.selection.setNodeFront(aNode, "breadcrumbs");
-    }.bind(this);
+    };
 
     button.onclick = (function _onBreadcrumbsRightClick(event) {
       button.focus();

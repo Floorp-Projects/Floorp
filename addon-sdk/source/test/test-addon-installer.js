@@ -9,7 +9,6 @@ const { on, off } = require("sdk/system/events");
 const { setTimeout } = require("sdk/timers");
 const tmp = require("sdk/test/tmp-file");
 const system = require("sdk/system");
-const fixtures = require("./fixtures");
 
 const testFolderURL = module.uri.split('test-addon-installer.js')[0];
 const ADDON_URL = testFolderURL + "fixtures/addon-install-unit-test@mozilla.com.xpi";
