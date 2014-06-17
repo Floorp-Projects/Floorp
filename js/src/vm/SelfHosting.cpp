@@ -292,7 +292,7 @@ intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
     if (!inspector.ensureChars(cx, nogc))
         return false;
 
-    ScopedJSFreePtr<char> bytes(TwoByteCharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str());
+    ScopedJSFreePtr<char> bytes(JS::CharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str());
     parallel::Spew(parallel::SpewOps, bytes);
 
     args.rval().setUndefined();

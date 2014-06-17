@@ -320,16 +320,6 @@ GetLine(FILE *file, const char * prompt)
     return nullptr;
 }
 
-static char *
-JSStringToUTF8(JSContext *cx, JSString *str)
-{
-    JSLinearString *linear = str->ensureLinear(cx);
-    if (!linear)
-        return nullptr;
-
-    return TwoByteCharsToNewUTF8CharsZ(cx, linear->range()).c_str();
-}
-
 /* State to store as JSContext private. */
 struct JSShellContextData {
     /* Creation timestamp, used by the elapsed() shell builtin. */
@@ -492,7 +482,7 @@ EvalAndPrint(JSContext *cx, Handle<JSObject*> global, const char *bytes, size_t 
         if (!str)
             return false;
 
-        char *utf8chars = JSStringToUTF8(cx, str);
+        char *utf8chars = JS_EncodeStringToUTF8(cx, str);
         if (!utf8chars)
             return false;
         fprintf(out, "%s\n", utf8chars);
@@ -1564,10 +1554,10 @@ PutStr(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     if (args.length() != 0) {
-        JSString *str = JS::ToString(cx, args[0]);
+        RootedString str(cx, JS::ToString(cx, args[0]));
         if (!str)
             return false;
-        char *bytes = JSStringToUTF8(cx, str);
+        char *bytes = JS_EncodeStringToUTF8(cx, str);
         if (!bytes)
             return false;
         fputs(bytes, gOutFile);
@@ -1592,10 +1582,10 @@ static bool
 PrintInternal(JSContext *cx, const CallArgs &args, FILE *file)
 {
     for (unsigned i = 0; i < args.length(); i++) {
-        JSString *str = JS::ToString(cx, args[i]);
+        RootedString str(cx, JS::ToString(cx, args[i]));
         if (!str)
             return false;
-        char *bytes = JSStringToUTF8(cx, str);
+        char *bytes = JS_EncodeStringToUTF8(cx, str);
         if (!bytes)
             return false;
         fprintf(file, "%s%s", i ? " " : "", bytes);

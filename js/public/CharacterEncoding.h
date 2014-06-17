@@ -177,8 +177,9 @@ class ConstTwoByteChars : public mozilla::RangedPtr<const jschar>
 extern Latin1CharsZ
 LossyTwoByteCharsToNewLatin1CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars);
 
+template <typename CharT>
 extern UTF8CharsZ
-TwoByteCharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, TwoByteChars tbchars);
+CharsToNewUTF8CharsZ(js::ThreadSafeContext *cx, const mozilla::Range<const CharT> chars);
 
 uint32_t
 Utf8ToOneUcs4Char(const uint8_t *utf8Buffer, int utf8Length);
