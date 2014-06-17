@@ -670,7 +670,9 @@ class MachCommands(MachCommandBase):
         conditions=[conditions.is_firefox],
         description='Run any flavor of mochitest.')
     @MochitestCommand
-    def run_mochitest_general(self, test_paths, **kwargs):
+    @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
+        help='Only run tests of this flavor.')
+    def run_mochitest_general(self, test_paths, flavor=None, **kwargs):
         self._preruntest()
 
         from mozbuild.testing import TestResolver
@@ -691,7 +693,11 @@ class MachCommands(MachCommandBase):
 
         suites = {}
         for test in tests:
+            # Filter out non-mochitests.
             if test['flavor'] not in FLAVORS:
+                continue
+
+            if flavor and test['flavor'] != flavor:
                 continue
 
             suite = FLAVORS[test['flavor']]
