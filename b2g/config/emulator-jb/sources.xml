@@ -112,7 +112,7 @@
   <project name="platform/ndk" path="ndk" revision="7666b97bbaf1d645cdd6b4430a367b7a2bb53369"/>
   <project name="platform/prebuilts/misc" path="prebuilts/misc" revision="f6ab40b3257abc07741188fd173ac392575cc8d2"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="e52099755d0bd3a579130eefe8e58066cc6c0cb6"/>
-  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="431afac2ebfdd9c1c8402b413ff5914ed448e961"/>
+  <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="bce69473f3d63ab927442f4301f5fb4833d20008"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="842e33e43a55ea44833b9e23e4d180fa17c843af"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="5db24726f0f42124304195a6bdea129039eeeaeb"/>
   <project name="platform/system/bluetooth" path="system/bluetooth" revision="930ae098543881f47eac054677726ee4b998b2f8"/>
@@ -128,7 +128,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0e31f35a2a77301e91baa8a237aa9e9fa4076084"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="cba8ebe395652e62a911d885cd6ac1bb4ad3ed57"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="ab6da65e9642e66b3a4cebc9d733975f8a318de7"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="832f4acaf481a19031e479a40b03d9ce5370ddee"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d0aa65b140a45016975ed0ecf35f280dd336e1d3"/>
