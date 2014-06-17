@@ -15,7 +15,7 @@
   <project name="platform_build" path="build" remote="b2g" revision="276ce45e78b09c4a4ee643646f691d22804754c1">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="3f719ec512a3b0b788b469d6a67b4464e9a187b2"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="2cb9af38a933d531aaf27ffc19910f17e5931d2d"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="44b04243e31cd16f3baf54fcd4b5fecf9deb8b94"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
