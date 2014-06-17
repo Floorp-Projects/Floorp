@@ -2724,6 +2724,30 @@ MDiv::collectRangeInfoPreTrunc()
 }
 
 void
+MMul::collectRangeInfoPreTrunc()
+{
+    Range lhsRange(lhs());
+    Range rhsRange(rhs());
+
+    // If lhsRange contains only positive then we can skip negative zero check.
+    if (lhsRange.isFiniteNonNegative() && !lhsRange.canBeZero())
+        setCanBeNegativeZero(false);
+
+    // Likewise rhsRange.
+    if (rhsRange.isFiniteNonNegative() && !rhsRange.canBeZero())
+        setCanBeNegativeZero(false);
+
+    // If rhsRange and lhsRange contain Non-negative integers only,
+    // We skip negative zero check.
+    if (rhsRange.isFiniteNonNegative() && lhsRange.isFiniteNonNegative())
+        setCanBeNegativeZero(false);
+
+    //If rhsRange and lhsRange < 0. Then we skip negative zero check.
+    if (rhsRange.isFiniteNegative() && lhsRange.isFiniteNegative())
+        setCanBeNegativeZero(false);
+}
+
+void
 MMod::collectRangeInfoPreTrunc()
 {
     Range lhsRange(lhs());
