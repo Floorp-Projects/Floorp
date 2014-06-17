@@ -630,22 +630,6 @@ void SourceSurfaceDestroyed(void *aData)
   delete static_cast<DependentSourceSurfaceUserData*>(aData);
 }
 
-#if MOZ_TREE_CAIRO
-void SourceSnapshotDetached(cairo_surface_t *nullSurf)
-{
-  gfxImageSurface* origSurf =
-    static_cast<gfxImageSurface*>(cairo_surface_get_user_data(nullSurf, &kSourceSurface));
-
-  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
-}
-#else
-void SourceSnapshotDetached(void *nullSurf)
-{
-  gfxImageSurface* origSurf = static_cast<gfxImageSurface*>(nullSurf);
-  origSurf->SetData(&kSourceSurface, nullptr, nullptr);
-}
-#endif
-
 void
 gfxPlatform::ClearSourceSurfaceForSurface(gfxASurface *aSurface)
 {
