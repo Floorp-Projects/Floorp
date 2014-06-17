@@ -4,90 +4,88 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let doc;
-let div;
-let rotated;
-let inspector;
-let contentViewer;
+"use strict";
 
-function createDocument() {
-  div = doc.createElement("div");
+// Test that the highlighter is correctly displayed over a variety of elements
+
+waitForExplicitFinish();
+
+let test = asyncTest(function*() {
+  info("Adding the test tab and creating the document");
+  yield addTab("data:text/html;charset=utf-8,browser_inspector_highlighter.js");
+  createDocument(content.document);
+
+  info("Opening the inspector");
+  let {toolbox, inspector} = yield openInspector();
+
+  info("Selecting the simple, non-transformed DIV");
+  let div = getNode(".simple-div");
+  yield selectNode(div, inspector, "highlight");
+
+  testSimpleDivHighlighted(div);
+  yield zoomTo(2);
+  testZoomedSimpleDivHighlighted(div);
+  yield zoomTo(1);
+
+  info("Selecting the rotated DIV");
+  let rotated = getNode(".rotated-div");
+  let onBoxModelUpdate = waitForBoxModelUpdate();
+  yield selectNode(rotated, inspector, "highlight");
+  yield onBoxModelUpdate;
+
+  testMouseOverRotatedHighlights(rotated);
+
+  gBrowser.removeCurrentTab();
+});
+
+function createDocument(doc) {
+  info("Creating the test document");
+
+  let div = doc.createElement("div");
+  div.className = "simple-div";
   div.setAttribute("style",
                    "padding:5px; border:7px solid red; margin: 9px; " +
                    "position:absolute; top:30px; left:150px;");
-  let textNode = doc.createTextNode("Gort! Klaatu barada nikto!");
-  rotated = doc.createElement("div");
-  rotated.setAttribute("style",
+  div.appendChild(doc.createTextNode("Gort! Klaatu barada nikto!"));
+  doc.body.appendChild(div);
+
+  let rotatedDiv = doc.createElement("div");
+  rotatedDiv.className = "rotated-div";
+  rotatedDiv.setAttribute("style",
                        "padding:5px; border:7px solid red; margin: 9px; " +
                        "transform:rotate(45deg); " +
                        "position:absolute; top:30px; left:80px;");
-  div.appendChild(textNode);
-  doc.body.appendChild(div);
-  doc.body.appendChild(rotated);
-
-  openInspector(aInspector => {
-    inspector = aInspector;
-    inspector.selection.setNode(div, null);
-    inspector.once("inspector-updated", testMouseOverDivHighlights);
-  });
+  doc.body.appendChild(rotatedDiv);
 }
 
-function testMouseOverDivHighlights() {
-  ok(isHighlighting(), "Highlighter is shown");
-  is(getHighlitNode(), div, "Highlighter's outline correspond to the non-rotated div");
-  testNonTransformedBoxModelDimensionsNoZoom();
-}
+function testSimpleDivHighlighted(div) {
+  ok(isHighlighting(), "The highlighter is shown");
+  is(getHighlitNode(), div, "The highlighter's outline corresponds to the simple div");
 
-function testNonTransformedBoxModelDimensionsNoZoom() {
-  info("Highlighted the non-rotated div");
+  info("Checking that the simple div is correctly highlighted");
   isNodeCorrectlyHighlighted(div, "non-zoomed");
-
-  waitForBoxModelUpdate().then(testNonTransformedBoxModelDimensionsZoomed);
-  contentViewer = gBrowser.selectedBrowser.docShell.contentViewer
-                          .QueryInterface(Ci.nsIMarkupDocumentViewer);
-  contentViewer.fullZoom = 2;
 }
 
-function testNonTransformedBoxModelDimensionsZoomed() {
-  info("Highlighted the zoomed, non-rotated div");
+function testZoomedSimpleDivHighlighted(div) {
+  info("Checking that the simple div is correctly highlighted, " +
+    "even when the page is zoomed");
   isNodeCorrectlyHighlighted(div, "zoomed");
-
-  waitForBoxModelUpdate().then(testMouseOverRotatedHighlights);
-  contentViewer.fullZoom = 1;
 }
 
-function testMouseOverRotatedHighlights() {
-  let onBoxModelUpdate = waitForBoxModelUpdate();
-  inspector.selection.setNode(rotated);
-  inspector.once("inspector-updated", () => {
-    onBoxModelUpdate.then(() => {
-      ok(isHighlighting(), "Highlighter is shown");
-      info("Highlighted the rotated div");
-      isNodeCorrectlyHighlighted(rotated, "rotated");
+function zoomTo(level) {
+  info("Zooming page to " + level);
+  let def = promise.defer();
 
-      executeSoon(finishUp);
-    });
-  });
+  waitForBoxModelUpdate().then(def.resolve);
+  let contentViewer = gBrowser.selectedBrowser.docShell.contentViewer
+                              .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  contentViewer.fullZoom = level;
+
+  return def.promise;
 }
 
-function finishUp() {
-  inspector.toolbox.highlighterUtils.stopPicker().then(() => {
-    doc = div = rotated = inspector = contentViewer = null;
-    let target = TargetFactory.forTab(gBrowser.selectedTab);
-    gDevTools.closeToolbox(target);
-    gBrowser.removeCurrentTab();
-    finish();
-  });
-}
-
-function test() {
-  waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-    doc = content.document;
-    waitForFocus(createDocument, content);
-  }, true);
-
-  content.location = "data:text/html;charset=utf-8,browser_inspector_highlighter.js";
+function testMouseOverRotatedHighlights(rotated) {
+  ok(isHighlighting(), "The highlighter is shown");
+  info("Checking that the rotated div is correctly highlighted");
+  isNodeCorrectlyHighlighted(rotated, "rotated");
 }
