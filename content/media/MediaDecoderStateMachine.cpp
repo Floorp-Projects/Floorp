@@ -1966,6 +1966,25 @@ void MediaDecoderStateMachine::DecodeSeek()
         video = mReader->FindStartTime(nextSampleStartTime);
       }
 
+      if (seekTime > mediaTime &&
+          nextSampleStartTime < mediaTime &&
+          mSeekTarget.mType == SeekTarget::PrevSyncPoint) {
+        // We are doing a fastSeek, but we ended up *before* the previous
+        // playback position. This is surprising UX, so switch to an accurate
+        // seek and decode to the seek target. This is not conformant to the
+        // spec, fastSeek should always be fast, but until we get the time to
+        // change all Readers to seek to the keyframe after the currentTime
+        // in this case, we'll just decode forward. Bug 1026330.
+        ResetPlayback();
+        {
+          ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
+          res = mReader->DecodeToTarget(seekTime);
+          if (NS_SUCCEEDED(res)) {
+            video = mReader->FindStartTime(nextSampleStartTime);
+          }
+        }
+      }
+
       // Setup timestamp state.
       if (seekTime == mEndTime) {
         newCurrentTime = mAudioStartTime = seekTime;

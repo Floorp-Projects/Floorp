@@ -174,7 +174,11 @@
             'aec/aec_rdft_sse2.c',
           ],
           'cflags': ['-msse2',],
-          'cflags_mozilla': [ '-msse2', ],
+          'conditions': [
+            [ 'os_posix == 1', {
+              'cflags_mozilla': ['-msse2',],
+            }],
+          ],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },

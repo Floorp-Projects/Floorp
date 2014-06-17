@@ -60,6 +60,9 @@ In this order:
   angle-d3dcc47.patch:
     Tell ANGLE about d3dcompiler_47.dll from WinSDK 8.1.
 
+  angle-fix-issue-651.patch:
+    Fixes crash in TSymbolTableLevel::~TSymbolTableLevel with GCC 4.9
+
 In addition to these patches, the Makefile.in and moz.build build files are ours,
 they're not present in upsteam ANGLE. Therefore, changes made to the build files
 should not be stored in the local .patch files.

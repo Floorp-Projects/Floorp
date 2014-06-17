@@ -7,12 +7,10 @@
 #include "nsISupports.idl"
 
 %{C++
-#include "gfxImageSurface.h"
 #include "gfxContext.h"
 #include "gfxMatrix.h"
 #include "gfxRect.h"
 #include "GraphicsFilter.h"
-#include "gfxASurface.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
 #include "nsRect.h"
@@ -41,9 +39,6 @@ class Orientation;
 
 %}
 
-[ptr] native gfxImageSurface(gfxImageSurface);
-[ptr] native gfxASurface(gfxASurface);
-native gfxImageFormat(gfxASurface::gfxImageFormat);
 [ptr] native gfxContext(gfxContext);
 [ref] native gfxMatrix(gfxMatrix);
 [ref] native gfxRect(gfxRect);
@@ -176,8 +171,7 @@ interface imgIContainer : nsISupports
   /**
    * Get a surface for the given frame. This may be a platform-native,
    * optimized surface, so you cannot inspect its pixel data. If you
-   * need that, use gfxASurface::GetAsReadableARGB32ImageSurface or
-   * gfxASurface::CopyToARGB32ImageSurface.
+   * need that, use SourceSurface::GetDataSurface.
    *
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
    * @param aFlags Flags of the FLAG_* variety

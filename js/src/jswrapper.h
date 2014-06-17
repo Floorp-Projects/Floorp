@@ -245,8 +245,7 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
 
 extern JSObject *
 TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj,
-                         HandleObject wrappedProto, HandleObject parent,
-                         unsigned flags);
+                         HandleObject parent, unsigned flags);
 
 // Proxy family for wrappers. Public so that IsWrapper() can be fully inlined by
 // jsfriendapi users.

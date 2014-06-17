@@ -514,19 +514,9 @@ struct AtomicIntrinsics<T*, Order> : public IntrinsicMemoryOps<T*, Order>,
  * version of Windows we support.  Therefore, we only provide operations
  * on 32-bit datatypes for 32-bit Windows versions; for 64-bit Windows
  * versions, we support 64-bit datatypes as well.
- *
- * To avoid namespace pollution issues, we declare whatever functions we
- * need ourselves.
  */
 
-extern "C" {
-long __cdecl _InterlockedExchangeAdd(long volatile* aDst, long aVal);
-long __cdecl _InterlockedOr(long volatile* aDst, long aVal);
-long __cdecl _InterlockedXor(long volatile* aDst, long aVal);
-long __cdecl _InterlockedAnd(long volatile* aDst, long aVal);
-long __cdecl _InterlockedExchange(long volatile *aDst, long aVal);
-long __cdecl _InterlockedCompareExchange(long volatile *aDst, long aNewVal, long aOldVal);
-}
+#  include <intrin.h>
 
 #  pragma intrinsic(_InterlockedExchangeAdd)
 #  pragma intrinsic(_InterlockedOr)
@@ -639,22 +629,6 @@ struct PrimitiveIntrinsics<4>
 
 #  if defined(_M_X64)
 
-extern "C" {
-long long __cdecl _InterlockedExchangeAdd64(long long volatile* aDst,
-                                            long long aVal);
-long long __cdecl _InterlockedOr64(long long volatile* aDst,
-                                   long long aVal);
-long long __cdecl _InterlockedXor64(long long volatile* aDst,
-                                    long long aVal);
-long long __cdecl _InterlockedAnd64(long long volatile* aDst,
-                                    long long aVal);
-long long __cdecl _InterlockedExchange64(long long volatile* aDst,
-                                         long long aVal);
-long long __cdecl _InterlockedCompareExchange64(long long volatile* aDst,
-                                                long long aNewVal,
-                                                long long aOldVal);
-}
-
 #    pragma intrinsic(_InterlockedExchangeAdd64)
 #    pragma intrinsic(_InterlockedOr64)
 #    pragma intrinsic(_InterlockedXor64)
@@ -712,8 +686,6 @@ struct PrimitiveIntrinsics<8>
 };
 
 #  endif
-
-extern "C" { void _ReadWriteBarrier(); }
 
 #  pragma intrinsic(_ReadWriteBarrier)
 

@@ -66,6 +66,7 @@ public:
             off64_t *offset,
             size_t *size,
             uint32_t *compositionTime,
+            uint32_t *duration = NULL,
             bool *isSyncSample = NULL);
 
     enum {

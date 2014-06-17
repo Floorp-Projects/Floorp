@@ -382,6 +382,22 @@ ElementAnimation::IsRunningAt(TimeStamp aTime) const
 }
 
 bool
+ElementAnimation::IsCurrentAt(TimeStamp aTime) const
+{
+  if (!mStartTime.IsNull()) {
+    TimeDuration elapsedDuration = ElapsedDurationAt(aTime);
+    ComputedTiming computedTiming =
+      ElementAnimation::GetComputedTimingAt(elapsedDuration, mTiming);
+    if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
+        computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
 ElementAnimation::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t propIdx = 0, propEnd = mProperties.Length();
@@ -673,6 +689,18 @@ CommonElementAnimationData::UpdateAnimationGeneration(nsPresContext* aPresContex
 {
   mAnimationGeneration =
     aPresContext->RestyleManager()->GetAnimationGeneration();
+}
+
+bool
+CommonElementAnimationData::HasCurrentAnimationsAt(TimeStamp aTime)
+{
+  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    if (mAnimations[animIdx]->IsCurrentAt(aTime)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 }

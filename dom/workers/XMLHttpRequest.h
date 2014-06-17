@@ -88,7 +88,7 @@ public:
   {
     // Pretend like someone passed null, so we can pick up the default values
     MozXMLHttpRequestParameters params;
-    if (!params.Init(aGlobal.GetContext(), JS::NullHandleValue)) {
+    if (!params.Init(aGlobal.Context(), JS::NullHandleValue)) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }

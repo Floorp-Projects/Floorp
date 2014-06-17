@@ -42,6 +42,7 @@ public class ButtonToast {
 
     public enum ReasonHidden {
         CLICKED,
+        TOUCH_OUTSIDE,
         TIMEOUT,
         REPLACED,
         STARTUP
@@ -129,6 +130,11 @@ public class ButtonToast {
     }
 
     public void hide(boolean immediate, ReasonHidden reason) {
+        // There's nothing to do if the view is already hidden.
+        if (mView.getVisibility() == View.GONE) {
+            return;
+        }
+
         if (mCurrentToast != null && mCurrentToast.listener != null) {
             mCurrentToast.listener.onToastHidden(reason);
         }
