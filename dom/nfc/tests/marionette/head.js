@@ -69,11 +69,27 @@ let emulator = (function() {
     return deferred.promise;
   };
 
+  function snepPutNdef(dsap, ssap, flags, tnf, type, payload, id) {
+    let deferred = Promise.defer();
+    let cmd = "nfc snep put " + dsap + " " + ssap + " [" + flags + "," +
+                                                           tnf + "," +
+                                                           type + "," +
+                                                           payload + "," +
+                                                           id + "]";
+    this.run(cmd, function(result) {
+      is(result.pop(), "OK", "send SNEP PUT");
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
+
   return {
     run: run,
     activateRE: activateRE,
     notifyDiscoverRE: notifyDiscoverRE,
     setTagData: setTagData,
+    snepPutNdef: snepPutNdef
   };
 }());
 
