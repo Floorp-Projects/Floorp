@@ -4462,8 +4462,8 @@ js::StringToSource(JSContext *cx, JSString *str)
     return js_QuoteString(cx, str, '"');
 }
 
-static bool
-EqualChars(JSLinearString *str1, JSLinearString *str2)
+bool
+js::EqualChars(JSLinearString *str1, JSLinearString *str2)
 {
     MOZ_ASSERT(str1->length() == str2->length());
 
@@ -4580,12 +4580,13 @@ js::StringEqualsAscii(JSLinearString *str, const char *asciiBytes)
 #endif
     if (length != str->length())
         return false;
-    const jschar *chars = str->chars();
-    for (size_t i = 0; i != length; ++i) {
-        if (unsigned(asciiBytes[i]) != unsigned(chars[i]))
-            return false;
-    }
-    return true;
+
+    const Latin1Char *latin1 = reinterpret_cast<const Latin1Char *>(asciiBytes);
+
+    AutoCheckCannotGC nogc;
+    return str->hasLatin1Chars()
+           ? PodEqual(latin1, str->latin1Chars(nogc), length)
+           : EqualCharsLatin1TwoByte(latin1, str->twoByteChars(nogc), length);
 }
 
 size_t
