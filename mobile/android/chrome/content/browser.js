@@ -8092,12 +8092,12 @@ var Tabs = {
       case "Session:Prefetch":
         if (aData) {
           let uri = Services.io.newURI(aData, null, null);
-          try {
-            if (uri && !this._domains.has(uri.host)) {
+          if (uri && !this._domains.has(uri.host)) {
+            try {
               Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
               this._domains.add(uri.host);
-            }
-          } catch (e) {}
+            } catch (e) {}
+          }
         }
         break;
     }
