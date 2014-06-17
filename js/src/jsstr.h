@@ -205,8 +205,7 @@ StringEqualsAscii(JSLinearString *str, const char *asciiBytes);
 
 /* Return true if the string contains a pattern anywhere inside it. */
 extern bool
-StringHasPattern(const jschar *text, uint32_t textlen,
-                 const jschar *pat, uint32_t patlen);
+StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patlen);
 
 extern int
 StringFindPattern(const jschar *text, uint32_t textlen,
