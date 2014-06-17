@@ -482,6 +482,7 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInNewTab"),
       NativeWindow.contextmenus.linkOpenableNonPrivateContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_new_tab");
         UITelemetry.addEvent("loadurl.1", "contextmenu", null);
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
@@ -503,6 +504,7 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.openInPrivateTab"),
       NativeWindow.contextmenus.linkOpenableContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_open_private_tab");
         UITelemetry.addEvent("loadurl.1", "contextmenu", null);
 
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
@@ -524,6 +526,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyLink"),
       NativeWindow.contextmenus.linkCopyableContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_link");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
@@ -531,6 +535,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyEmailAddress"),
       NativeWindow.contextmenus.emailLinkContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_email");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let emailAddr = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(emailAddr);
@@ -539,6 +545,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyPhoneNumber"),
       NativeWindow.contextmenus.phoneNumberLinkContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_phone");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let phoneNumber = NativeWindow.contextmenus._stripScheme(url);
         NativeWindow.contextmenus._copyStringToDefaultClipboard(phoneNumber);
@@ -555,7 +563,9 @@ var BrowserApp = {
         };
       },
       icon: "drawable://ic_menu_share",
-      callback: function(aTarget) { }
+      callback: function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_share_link");
+      }
     });
 
     NativeWindow.contextmenus.add({
@@ -572,7 +582,9 @@ var BrowserApp = {
         };
       },
       icon: "drawable://ic_menu_share",
-      callback: function(aTarget) { }
+      callback: function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_share_email");
+      }
     });
 
     NativeWindow.contextmenus.add({
@@ -589,12 +601,16 @@ var BrowserApp = {
         };
       },
       icon: "drawable://ic_menu_share",
-      callback: function(aTarget) { }
+      callback: function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_share_phone");
+      }
     });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToContacts"),
       NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.emailLinkContext),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_contact_email");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         sendMessageToJava({
           type: "Contact:Add",
@@ -605,6 +621,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.addToContacts"),
       NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.phoneNumberLinkContext),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_contact_phone");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         sendMessageToJava({
           type: "Contact:Add",
@@ -615,6 +633,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.bookmarkLink"),
       NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.linkBookmarkableContext),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_bookmark");
+
         let url = NativeWindow.contextmenus._getLinkURL(aTarget);
         let title = aTarget.textContent || aTarget.title || url;
         sendMessageToJava({
@@ -627,18 +647,21 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.playMedia"),
       NativeWindow.contextmenus.mediaContext("media-paused"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_play");
         aTarget.play();
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.pauseMedia"),
       NativeWindow.contextmenus.mediaContext("media-playing"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_pause");
         aTarget.pause();
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.showControls2"),
       NativeWindow.contextmenus.mediaContext("media-hidingcontrols"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_controls_media");
         aTarget.setAttribute("controls", true);
       });
 
@@ -657,30 +680,36 @@ var BrowserApp = {
       },
       icon: "drawable://ic_menu_share",
       callback: function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_share_media");
       }
     });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.fullScreen"),
       NativeWindow.contextmenus.SelectorContext("video:not(:-moz-full-screen)"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_fullscreen");
         aTarget.mozRequestFullScreen();
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.mute"),
       NativeWindow.contextmenus.mediaContext("media-unmuted"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_mute");
         aTarget.muted = true;
       });
   
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.unmute"),
       NativeWindow.contextmenus.mediaContext("media-muted"),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_unmute");
         aTarget.muted = false;
       });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.copyImageLocation"),
       NativeWindow.contextmenus.imageLocationCopyableContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_copy_image");
+
         let url = aTarget.src;
         NativeWindow.contextmenus._copyStringToDefaultClipboard(url);
       });
@@ -703,12 +732,16 @@ var BrowserApp = {
       },
       icon: "drawable://ic_menu_share",
       menu: true,
-      callback: function(aTarget) { }
+      callback: function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_share_image");
+      }
     });
 
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.saveImage"),
       NativeWindow.contextmenus.imageSaveableContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_save_image");
+
         ContentAreaUtils.saveImageURL(aTarget.currentURI.spec, null, "SaveImageTitle",
                                       false, true, aTarget.ownerDocument.documentURIObject,
                                       aTarget.ownerDocument);
@@ -717,6 +750,8 @@ var BrowserApp = {
     NativeWindow.contextmenus.add(Strings.browser.GetStringFromName("contextmenu.setImageAs"),
       NativeWindow.contextmenus._disableInGuest(NativeWindow.contextmenus.imageSaveableContext),
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_background_image");
+
         let src = aTarget.src;
         sendMessageToJava({
           type: "Image:SetAs",
@@ -738,6 +773,8 @@ var BrowserApp = {
         return Strings.browser.GetStringFromName("contextmenu.saveVideo");
       }, NativeWindow.contextmenus.mediaSaveableContext,
       function(aTarget) {
+        UITelemetry.addEvent("action.1", "contextmenu", null, "web_save_media");
+
         let url = aTarget.currentSrc || aTarget.src;
         let filePickerTitleKey = (aTarget instanceof HTMLVideoElement &&
                                   (aTarget.videoWidth != 0 && aTarget.videoHeight != 0))

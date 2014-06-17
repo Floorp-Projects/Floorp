@@ -373,6 +373,7 @@ var CastingApps = {
   },
 
   handleContextMenu: function(aElement, aX, aY) {
+    UITelemetry.addEvent("action.1", "contextmenu", null, "web_cast");
     UITelemetry.addEvent("cast.1", "contextmenu", null);
     this.openExternal(aElement, aX, aY);
   },
