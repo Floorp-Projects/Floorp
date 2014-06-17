@@ -910,7 +910,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
 
       ErrorResult rv;
       nsRefPtr<nsPerformance> performance = win->GetPerformance(rv);
-      if (rv.Failed()) {
+      if (rv.Failed() || !performance) {
         return;
       }
 

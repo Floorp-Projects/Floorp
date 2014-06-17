@@ -46,7 +46,7 @@ public:
   {
     MOZ_ASSERT(aWindow);
     MOZ_ASSERT(aPromise);
-    JSContext* cx = aGlobal.GetContext();
+    JSContext* cx = aGlobal.Context();
     JSAutoCompartment ac(cx, mGlobal);
     mNotifications = JS_NewArrayObject(cx, 0);
     HoldData();

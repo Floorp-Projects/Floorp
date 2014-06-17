@@ -70,7 +70,7 @@ public:
   // The context that this returns is not guaranteed to be in the compartment of
   // the object returned from Get(), in fact it's generally in the caller's
   // compartment.
-  JSContext* GetContext() const
+  JSContext* Context() const
   {
     return mCx;
   }

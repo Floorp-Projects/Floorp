@@ -1878,6 +1878,15 @@ public:
   static bool HasAnimations(nsIContent* aContent, nsCSSProperty aProperty);
 
   /**
+   * Returns true if the content node has any current animations or transitions.
+   * A current animation is any animation that has not yet finished playing
+   * including paused animations.
+   */
+  static bool HasCurrentAnimations(nsIContent* aContent,
+                                   nsIAtom* aAnimationProperty,
+                                   nsPresContext* aPresContext);
+
+  /**
    * Checks if off-main-thread animations are enabled.
    */
   static bool AreAsyncAnimationsEnabled();

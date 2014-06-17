@@ -559,7 +559,7 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<WebSocket> webSocket = new WebSocket(ownerWindow);
-  nsresult rv = webSocket->Init(aGlobal.GetContext(), principal,
+  nsresult rv = webSocket->Init(aGlobal.Context(), principal,
                                 aUrl, protocolArray);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

@@ -177,19 +177,19 @@ public:
   }
 
   static already_AddRefed<IDBKeyRange>
-  Only(const GlobalObject& aGlobal, JSContext* aCx,
+  Only(const GlobalObject& aGlobal,
        JS::Handle<JS::Value> aValue, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
-  LowerBound(const GlobalObject& aGlobal, JSContext* aCx,
+  LowerBound(const GlobalObject& aGlobal,
              JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
-  UpperBound(const GlobalObject& aGlobal, JSContext* aCx,
+  UpperBound(const GlobalObject& aGlobal,
              JS::Handle<JS::Value> aValue, bool aOpen, ErrorResult& aRv);
 
   static already_AddRefed<IDBKeyRange>
-  Bound(const GlobalObject& aGlobal, JSContext* aCx,
+  Bound(const GlobalObject& aGlobal,
         JS::Handle<JS::Value> aLower, JS::Handle<JS::Value> aUpper,
         bool aLowerOpen, bool aUpperOpen, ErrorResult& aRv);
 

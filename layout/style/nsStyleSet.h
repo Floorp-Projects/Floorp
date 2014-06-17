@@ -407,7 +407,7 @@ class nsStyleSet
     // or "display: grid" but we can tell we're not going to honor that (e.g. if
     // it's the outer frame of a button widget, and we're the inline frame for
     // the button's label).
-    eSkipFlexOrGridItemStyleFixup = 1 << 3
+    eSkipParentDisplayBasedStyleFixup = 1 << 3
   };
 
   already_AddRefed<nsStyleContext>

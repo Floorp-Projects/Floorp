@@ -15,6 +15,7 @@
 
 #include "jspubtd.h"
 
+#include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TypeDecls.h"
 #include "js/Utility.h"
@@ -1163,6 +1164,47 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T> 
 
   private:
     T ptr;
+};
+
+class JS_PUBLIC_API(ObjectPtr)
+{
+    Heap<JSObject *> value;
+
+  public:
+    ObjectPtr() : value(nullptr) {}
+
+    explicit ObjectPtr(JSObject *obj) : value(obj) {}
+
+    /* Always call finalize before the destructor. */
+    ~ObjectPtr() { MOZ_ASSERT(!value); }
+
+    void finalize(JSRuntime *rt) {
+        if (IsIncrementalBarrierNeeded(rt))
+            IncrementalObjectBarrier(value);
+        value = nullptr;
+    }
+
+    void init(JSObject *obj) { value = obj; }
+
+    JSObject *get() const { return value; }
+
+    void writeBarrierPre(JSRuntime *rt) {
+        IncrementalObjectBarrier(value);
+    }
+
+    bool isAboutToBeFinalized();
+
+    ObjectPtr &operator=(JSObject *obj) {
+        IncrementalObjectBarrier(value);
+        value = obj;
+        return *this;
+    }
+
+    void trace(JSTracer *trc, const char *name);
+
+    JSObject &operator*() const { return *value; }
+    JSObject *operator->() const { return value; }
+    operator JSObject *() const { return value; }
 };
 
 } /* namespace JS */
