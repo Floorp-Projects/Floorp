@@ -115,7 +115,7 @@ interface nsIStreamingProtocolListener : nsISupports
 /**
  * Media stream controller API: control and retrieve meta data from media stream.
  */
-[uuid(a9bdd4b0-8559-11e2-9e96-0800200c9a66)]
+[uuid(4ce040f0-c50d-461f-94e2-af5a77fe13a5)]
 interface nsIStreamingProtocolController : nsISupports
 {
     /**
@@ -172,6 +172,12 @@ interface nsIStreamingProtocolController : nsISupports
      * media stream and close the connection.
      */
     void stop();
+
+    /*
+     * Notify the streaming controller that the playback has ended.
+     * The controller might have to perform certain internal state transition.
+     */
+    void playbackEnded();
 
     /**
      * Total number of audio/video tracks.
