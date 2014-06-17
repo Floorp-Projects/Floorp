@@ -7,6 +7,7 @@ let LoopUI;
 
 XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PanelFrame", "resource:///modules/PanelFrame.jsm");
 
 
 (function() {
@@ -19,41 +20,24 @@ XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/l
      *                      the panel to the button which triggers it.
      */
     openCallPanel: function(event) {
-      let panel = document.getElementById("loop-panel");
-      let anchor = event.target;
-      let iframe = document.getElementById("loop-panel-frame");
+      let callback = iframe => {
+        iframe.addEventListener("DOMContentLoaded", function documentDOMLoaded() {
+          iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
+          injectLoopAPI(iframe.contentWindow);
 
-      if (!iframe) {
-        // XXX This should be using SharedFrame (bug 1011392 may do this).
-        iframe = document.createElement("iframe");
-        iframe.setAttribute("id", "loop-panel-frame");
-        iframe.setAttribute("type", "content");
-        iframe.setAttribute("class", "loop-frame social-panel-frame");
-        iframe.setAttribute("flex", "1");
-        panel.appendChild(iframe);
-      }
+          // We use loopPanelInitialized so that we know we've finished localising before
+          // sizing the panel.
+          iframe.contentWindow.addEventListener("loopPanelInitialized",
+            function documentLoaded() {
+              iframe.contentWindow.removeEventListener("loopPanelInitialized",
+                                                       documentLoaded, true);
+            }, true);
 
-      // We inject in DOMContentLoaded as that is before any scripts have tun.
-      iframe.addEventListener("DOMContentLoaded", function documentDOMLoaded() {
-        iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
-        injectLoopAPI(iframe.contentWindow);
+        }, true);
+      };
 
-        // We use loopPanelInitialized so that we know we've finished localising before
-        // sizing the panel.
-        iframe.contentWindow.addEventListener("loopPanelInitialized",
-          function documentLoaded() {
-            iframe.contentWindow.removeEventListener("loopPanelInitialized",
-                                                     documentLoaded, true);
-            // XXX We end up with the wrong size here, so this
-            // needs further investigation (bug 1011394).
-            sizeSocialPanelToContent(panel, iframe);
-          }, true);
-
-      }, true);
-
-      iframe.setAttribute("src", "about:looppanel");
-      panel.hidden = false;
-      panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
+      PanelFrame.showPopup(window, PanelUI, event.target, "loop", null,
+                           "about:looppanel", null, callback);
     },
 
     /**
@@ -63,6 +47,5 @@ XPCOMUtils.defineLazyModuleGetter(this, "MozLoopService", "resource:///modules/l
     initialize: function() {
       MozLoopService.initialize();
     },
-
   };
 })();
