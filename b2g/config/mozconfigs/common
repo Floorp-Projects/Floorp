@@ -8,5 +8,3 @@ no_sccache=1
 # This file is included at the top of all b2g mozconfigs
 
 . "$topsrcdir/build/mozconfig.common"
-
-ac_add_options --disable-unified-compilation
