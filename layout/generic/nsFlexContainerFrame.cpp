@@ -2911,14 +2911,15 @@ static void
 ResolveReflowedChildAscent(nsIFrame* aFrame,
                            nsHTMLReflowMetrics& aChildDesiredSize)
 {
+  WritingMode wm = aChildDesiredSize.GetWritingMode();
   if (aChildDesiredSize.BlockStartAscent() ==
       nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
     // Use GetFirstLineBaseline(), or just GetBaseline() if that fails.
     nscoord ascent;
-    if (nsLayoutUtils::GetFirstLineBaseline(aFrame, &ascent)) {
+    if (nsLayoutUtils::GetFirstLineBaseline(wm, aFrame, &ascent)) {
       aChildDesiredSize.SetBlockStartAscent(ascent);
     } else {
-      aChildDesiredSize.SetBlockStartAscent(aFrame->GetBaseline());
+      aChildDesiredSize.SetBlockStartAscent(aFrame->GetLogicalBaseline(wm));
     }
   }
 }

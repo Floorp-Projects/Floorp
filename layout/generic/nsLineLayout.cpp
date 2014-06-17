@@ -348,7 +348,7 @@ nsLineLayout::UpdateBand(const nsRect& aNewAvailSpace,
     }
   }
 
-  mBStartEdge = aNewAvailSpace.y;
+  mBStartEdge = availSpace.BStart(lineWM);
   mImpactedByFloats = true;
 
   mLastFloatWasLetterFrame = nsGkAtoms::letterFrame == aFloatFrame->GetType();
@@ -1292,7 +1292,7 @@ nsLineLayout::PlaceFrame(PerFrameData* pfd, nsHTMLReflowMetrics& aMetrics)
 
   // Record ascent and update max-ascent and max-descent values
   if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    pfd->mAscent = pfd->mFrame->GetBaseline();
+    pfd->mAscent = pfd->mFrame->GetLogicalBaseline(lineWM);
   } else {
     pfd->mAscent = aMetrics.BlockStartAscent();
   }
@@ -1333,7 +1333,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
   mRootSpan->AppendFrame(pfd);
   pfd->SetFlag(PFD_ISBULLET, true);
   if (aMetrics.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
-    pfd->mAscent = aFrame->GetBaseline();
+    pfd->mAscent = aFrame->GetLogicalBaseline(lineWM);
   } else {
     pfd->mAscent = aMetrics.BlockStartAscent();
   }
@@ -1475,13 +1475,13 @@ nsLineLayout::BlockDirAlignLine()
                       mContainerWidth);
 
   mFinalLineBSize = lineBSize;
-  mLineBox->SetAscent(baselineBCoord - mBStartEdge);
+  mLineBox->SetLogicalAscent(baselineBCoord - mBStartEdge);
 #ifdef NOISY_BLOCKDIR_ALIGN
   printf(
     "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d\n",
     mLineBox->GetBounds().IStart(lineWM), mLineBox->GetBounds().BStart(lineWM),
     mLineBox->GetBounds().ISize(lineWM), mLineBox->GetBounds().BSize(lineWM),
-    mFinalLineBSize, mLineBox->GetAscent());
+    mFinalLineBSize, mLineBox->GetLogicalAscent());
 #endif
 
   // Undo root-span mFrame pointer to prevent brane damage later on...
@@ -1913,6 +1913,8 @@ nsLineLayout::BlockDirAlignFrames(PerSpanData* psd)
         {
           // The top of the logical box is aligned with the top of
           // the parent element's text.
+          // XXX For vertical text we will need a new API to get the logical
+          //     max-ascent here
           nscoord parentAscent = fm->MaxAscent();
           if (frameSpan) {
             pfd->mBounds.BStart(lineWM) = baselineBCoord - parentAscent -

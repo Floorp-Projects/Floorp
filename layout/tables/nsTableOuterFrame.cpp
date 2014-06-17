@@ -47,15 +47,16 @@ nsTableCaptionFrame::GetType() const
 }
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetBaseline() const
+nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid) {
     NS_NOTREACHED("no inner table");
-    return nsContainerFrame::GetBaseline();
+    return nsContainerFrame::GetLogicalBaseline(aWritingMode);
   }
 
-  return kid->GetBaseline() + kid->GetPosition().y;
+  return kid->GetLogicalBaseline(aWritingMode) +
+         kid->BStart(aWritingMode, mRect.width);
 }
 
 /* virtual */ nsSize
