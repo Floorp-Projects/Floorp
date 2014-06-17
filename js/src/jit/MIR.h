@@ -3398,6 +3398,7 @@ class MToInt32
         return AliasSet::None();
     }
     void computeRange(TempAllocator &alloc);
+    void collectRangeInfoPreTrunc();
 
 #ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const { return true; }
