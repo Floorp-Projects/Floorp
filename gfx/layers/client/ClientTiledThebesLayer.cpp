@@ -273,13 +273,15 @@ ClientTiledThebesLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
     aInvalidRegion.Sub(aInvalidRegion, mValidRegion);
 
     TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision invalid region is %s\n", this, tmpstr.get()), aInvalidRegion);
-    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision new valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision old valid region is %s\n", this, tmpstr.get()), oldValidRegion);
 
     if (!aInvalidRegion.IsEmpty()) {
       updatedBuffer = mContentClient->mLowPrecisionTiledBuffer.ProgressiveUpdate(
                             mLowPrecisionValidRegion, aInvalidRegion, oldValidRegion,
                             &mPaintData, aCallback, aCallbackData);
     }
+
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision new valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
     return updatedBuffer;
   }
   if (!mLowPrecisionValidRegion.IsEmpty()) {
