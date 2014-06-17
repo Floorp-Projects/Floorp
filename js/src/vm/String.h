@@ -258,6 +258,8 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
     static const uint32_t MAX_LENGTH            = JS_BIT(28) - 1;
 
+    static const JS::Latin1Char MAX_LATIN1_CHAR = 0xff;
+
     /*
      * Helper function to validate that a string of a given length is
      * representable by a JSString. An allocation overflow is reported if false
