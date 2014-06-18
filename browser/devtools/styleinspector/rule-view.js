@@ -12,10 +12,10 @@ const {CssLogic} = require("devtools/styleinspector/css-logic");
 const {InplaceEditor, editableField, editableItem} = require("devtools/shared/inplace-editor");
 const {ELEMENT_STYLE, PSEUDO_ELEMENTS} = require("devtools/server/actors/styles");
 const {gDevTools} = Cu.import("resource:///modules/devtools/gDevTools.jsm", {});
-const {Tooltip, SwatchColorPickerTooltip} = require("devtools/shared/widgets/Tooltip");
 const {OutputParser} = require("devtools/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
 const {parseSingleValue, parseDeclarations} = require("devtools/styleinspector/css-parsing-utils");
+const overlays = require("devtools/styleinspector/style-inspector-overlays");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -24,7 +24,6 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const PREF_DEFAULT_COLOR_UNIT = "devtools.defaultColorUnit";
-const TRANSFORM_HIGHLIGHTER_TYPE = "CssTransformHighlighter";
 
 /**
  * These regular expressions are adapted from firebug's css.js, and are
@@ -1100,23 +1099,14 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   };
   this.popup = new AutocompletePopup(aDoc.defaultView.parent.document, options);
 
-  // Create a tooltip for previewing things in the rule view (images for now)
-  this.previewTooltip = new Tooltip(this.inspector.panelDoc);
-  this.previewTooltip.startTogglingOnHover(this.element,
-    this._onTooltipTargetHover.bind(this));
-
-  // Also create a more complex tooltip for editing colors with the spectrum
-  // color picker
-  this.colorPicker = new SwatchColorPickerTooltip(this.inspector.panelDoc);
-
   this._buildContextMenu();
   this._showEmpty();
 
-  // Initialize the css transform highlighter if the target supports it
-  let hUtils = this.inspector.toolbox.highlighterUtils;
-  if (hUtils.hasCustomHighlighter(TRANSFORM_HIGHLIGHTER_TYPE)) {
-    this._initTransformHighlighter();
-  }
+  // Add the tooltips and highlighters to the view
+  this.tooltips = new overlays.TooltipsOverlay(this);
+  this.tooltips.addToView();
+  this.highlighters = new overlays.HighlightersOverlay(this);
+  this.highlighters.addToView();
 }
 
 exports.CssRuleView = CssRuleView;
@@ -1166,137 +1156,6 @@ CssRuleView.prototype = {
   },
 
   /**
-   * Get the css transform highlighter front, initializing it if needed
-   * @param a promise that resolves to the highlighter
-   */
-  getTransformHighlighter: function() {
-    if (this.transformHighlighterPromise) {
-      return this.transformHighlighterPromise;
-    }
-
-    let utils = this.inspector.toolbox.highlighterUtils;
-    this.transformHighlighterPromise =
-    utils.getHighlighterByType(TRANSFORM_HIGHLIGHTER_TYPE).then(highlighter => {
-      this.transformHighlighter = highlighter;
-      return this.transformHighlighter;
-    });
-
-    return this.transformHighlighterPromise;
-  },
-
-  _initTransformHighlighter: function() {
-    this.isTransformHighlighterShown = false;
-
-    this._onMouseMove = this._onMouseMove.bind(this);
-    this._onMouseLeave = this._onMouseLeave.bind(this);
-
-    this.element.addEventListener("mousemove", this._onMouseMove, false);
-    this.element.addEventListener("mouseleave", this._onMouseLeave, false);
-  },
-
-  _onMouseMove: function(event) {
-    if (event.target === this._lastHovered) {
-      return;
-    }
-
-    if (this.isTransformHighlighterShown) {
-      this.isTransformHighlighterShown = false;
-      this.getTransformHighlighter().then(highlighter => highlighter.hide());
-    }
-
-    this._lastHovered = event.target;
-    let prop = event.target.textProperty;
-    let isHighlightable = prop && prop.name === "transform" &&
-                          prop.enabled && !prop.overridden &&
-                          !prop.rule.pseudoElement;
-
-    if (isHighlightable) {
-      this.isTransformHighlighterShown = true;
-      let node = this.inspector.selection.nodeFront;
-      this.getTransformHighlighter().then(highlighter => highlighter.show(node));
-    }
-  },
-
-  _onMouseLeave: function(event) {
-    this._lastHovered = null;
-    if (this.isTransformHighlighterShown) {
-      this.isTransformHighlighterShown = false;
-      this.getTransformHighlighter().then(highlighter => highlighter.hide());
-    }
-  },
-
-  /**
-   * Which type of hover-tooltip should be shown for the given element?
-   * This depends on the element: does it contain a URL, a font-family, ...
-   * @param {DOMNode} el The element to test
-   * @return {String} The type of hover-tooltip
-   */
-  _getHoverTooltipTypeForTarget: function(el) {
-    let prop = el.textProperty;
-
-    // Test for image
-    let isUrl = el.classList.contains("theme-link") &&
-                el.parentNode.classList.contains("ruleview-propertyvalue");
-    if (this.inspector.hasUrlToImageDataResolver && isUrl) {
-      return "image";
-    }
-
-    // Test for font-family
-    let propertyRoot = el.parentNode;
-    let propertyNameNode = propertyRoot.querySelector(".ruleview-propertyname");
-    if (!propertyNameNode) {
-      propertyRoot = propertyRoot.parentNode;
-      propertyNameNode = propertyRoot.querySelector(".ruleview-propertyname");
-    }
-    let propertyName;
-    if (propertyNameNode) {
-      propertyName = propertyNameNode.textContent;
-    }
-    if (propertyName === "font-family" && el.classList.contains("ruleview-propertyvalue")) {
-      return "font";
-    }
-  },
-
-  /**
-   * Executed by the tooltip when the pointer hovers over an element of the view.
-   * Used to decide whether the tooltip should be shown or not and to actually
-   * put content in it.
-   * Checks if the hovered target is a css value we support tooltips for.
-   * @param {DOMNode} target
-   * @return {Boolean|Promise} Either a boolean or a promise, used by the
-   * Tooltip class to wait for the content to be put in the tooltip and finally
-   * decide whether or not the tooltip should be shown.
-   */
-  _onTooltipTargetHover: function(target) {
-    let tooltipType = this._getHoverTooltipTypeForTarget(target);
-    if (!tooltipType) {
-      return false;
-    }
-
-    if (this.colorPicker.tooltip.isShown()) {
-      this.colorPicker.revert();
-      this.colorPicker.hide();
-    }
-
-    if (tooltipType === "image") {
-      let prop = target.parentNode.textProperty;
-      let dim = Services.prefs.getIntPref("devtools.inspector.imagePreviewTooltipSize");
-      let uri = CssLogic.getBackgroundImageUriFromProperty(prop.value, prop.rule.domRule.href);
-      return this.previewTooltip.setRelativeImageContent(uri, this.inspector.inspector, dim);
-    }
-    if (tooltipType === "font") {
-      let prop = target.textContent.toLowerCase();
-
-      if (prop !== "inherit" && prop !== "unset" && prop !== "initial") {
-        return this.previewTooltip.setFontFamilyContent(target.textContent,
-          this.inspector.selection.nodeFront);
-      }
-    }
-
-    return false;
-  },
-
-  /**
    * Update the context menu. This means enabling or disabling menuitems as
    * appropriate.
    */
@@ -1336,6 +1195,65 @@ CssRuleView.prototype = {
     let accessKey = label + ".accessKey";
     this.menuitemSources.setAttribute("accesskey",
                                       _strings.GetStringFromName(accessKey));
+  },
+
+  /**
+   * Get the type of a given node in the rule-view
+   * @param {DOMNode} node The node which we want information about
+   * @return {Object} The type information object contains the following props:
+   * - type {String} One of the VIEW_NODE_XXX_TYPE const in
+   *   style-inspector-overlays
+   * - value {Object} Depends on the type of the node
+   * returns null of the node isn't anything we care about
+   */
+  getNodeInfo: function(node) {
+    let type, value;
+    let classes = node.classList;
+    let prop = getParentTextProperty(node);
+
+    if (classes.contains("ruleview-propertyname") && prop) {
+      type = overlays.VIEW_NODE_PROPERTY_TYPE;
+      value = {
+        property: node.textContent,
+        value: getPropertyNameAndValue(node).value,
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        pseudoElement: prop.rule.pseudoElement,
+        sheetHref: prop.rule.domRule.href
+      };
+    } else if (classes.contains("ruleview-propertyvalue") && prop) {
+      type = overlays.VIEW_NODE_VALUE_TYPE;
+      value = {
+        property: getPropertyNameAndValue(node).name,
+        value: node.textContent,
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        pseudoElement: prop.rule.pseudoElement,
+        sheetHref: prop.rule.domRule.href
+      };
+    } else if (classes.contains("theme-link") && prop) {
+      type = overlays.VIEW_NODE_IMAGE_URL_TYPE;
+      value = {
+        property: getPropertyNameAndValue(node).name,
+        value: node.parentNode.textContent,
+        url: node.textContent,
+        enabled: prop.enabled,
+        overridden: prop.overridden,
+        pseudoElement: prop.rule.pseudoElement,
+        sheetHref: prop.rule.domRule.href
+      };
+    } else if (classes.contains("ruleview-selector-unmatched") ||
+               classes.contains("ruleview-selector-matched")) {
+      type = overlays.VIEW_NODE_SELECTOR_TYPE;
+      value = node.textContent;
+    } else {
+      return null;
+    }
+
+    return {
+      type: type,
+      value: value
+    };
   },
 
   /**
@@ -1445,7 +1363,7 @@ CssRuleView.prototype = {
    */
   get isEditing() {
     return this.element.querySelectorAll(".styleinspector-propertyeditor").length > 0
-      || this.colorPicker.tooltip.isShown();
+      || this.tooltips.colorPicker.tooltip.isShown();
   },
 
   _handlePrefChange: function(pref) {
@@ -1517,19 +1435,8 @@ CssRuleView.prototype = {
     // We manage the popupNode ourselves so we also need to destroy it.
     this.doc.popupNode = null;
 
-    this.previewTooltip.stopTogglingOnHover(this.element);
-    this.previewTooltip.destroy();
-    this.colorPicker.destroy();
-
-    if (this.transformHighlighter) {
-      this.transformHighlighter.finalize();
-      this.transformHighlighter = null;
-
-      this.element.removeEventListener("mousemove", this._onMouseMove, false);
-      this.element.removeEventListener("mouseleave", this._onMouseLeave, false);
-
-      this._lastHovered = null;
-    }
+    this.tooltips.destroy();
+    this.highlighters.destroy();
 
     if (this.element.parentNode) {
       this.element.parentNode.removeChild(this.element);
@@ -1640,9 +1547,6 @@ CssRuleView.prototype = {
     this._clearRules();
     this._viewedElement = null;
     this._elementStyle = null;
-
-    this.previewTooltip.hide();
-    this.colorPicker.hide();
   },
 
   /**
@@ -2154,8 +2058,8 @@ TextPropertyEditor.prototype = {
    */
   get editing() {
     return !!(this.nameSpan.inplaceEditor || this.valueSpan.inplaceEditor ||
-      this.ruleEditor.ruleView.colorPicker.tooltip.isShown() ||
-      this.ruleEditor.ruleView.colorPicker.eyedropperOpen) ||
+      this.ruleEditor.ruleView.tooltips.colorPicker.tooltip.isShown() ||
+      this.ruleEditor.ruleView.tooltips.colorPicker.eyedropperOpen) ||
       this.popup.isOpen;
   },
 
@@ -2207,9 +2111,10 @@ TextPropertyEditor.prototype = {
       tabindex: this.ruleEditor.isEditable ? "0" : "-1",
     });
 
-    // Storing the TextProperty on the valuespan for easy access
+    // Storing the TextProperty on the elements for easy access
     // (for instance by the tooltip)
     this.valueSpan.textProperty = this.prop;
+    this.nameSpan.textProperty = this.prop;
 
     // Save the initial value as the last committed value,
     // for restoring after pressing escape.
@@ -2405,7 +2310,7 @@ TextPropertyEditor.prototype = {
         // Capture the original declaration value to be able to revert later
         let originalValue = this.valueSpan.textContent;
         // Adding this swatch to the list of swatches our colorpicker knows about
-        this.ruleEditor.ruleView.colorPicker.addSwatch(span, {
+        this.ruleEditor.ruleView.tooltips.colorPicker.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._applyNewValue(this.valueSpan.textContent),
           onRevert: () => this._applyNewValue(originalValue)
@@ -2546,12 +2451,13 @@ TextPropertyEditor.prototype = {
   remove: function() {
     if (this._swatchSpans && this._swatchSpans.length) {
       for (let span of this._swatchSpans) {
-        this.ruleEditor.ruleView.colorPicker.removeSwatch(span);
+        this.ruleEditor.ruleView.tooltips.colorPicker.removeSwatch(span);
       }
     }
 
     this.element.parentNode.removeChild(this.element);
     this.ruleEditor.rule.editClosestTextProperty(this.prop);
+    this.nameSpan.textProperty = null;
     this.valueSpan.textProperty = null;
     this.prop.remove();
   },
@@ -2868,6 +2774,63 @@ function blurOnMultipleProperties(e) {
  */
 function appendText(aParent, aText) {
   aParent.appendChild(aParent.ownerDocument.createTextNode(aText));
+}
+
+/**
+ * Walk up the DOM from a given node until a parent property holder is found.
+ * For elements inside the computed property list, the non-computed parent
+ * property holder will be returned
+ * @param {DOMNode} node The node to start from
+ * @return {DOMNode} The parent property holder node, or null if not found
+ */
+function getParentTextPropertyHolder(node) {
+  while (true) {
+    if (!node || !node.classList) {
+      return null;
+    }
+    if (node.classList.contains("ruleview-property")) {
+      return node;
+    }
+    node = node.parentNode;
+  }
+}
+
+/**
+ * For any given node, find the TextProperty it is in if any
+ * @param {DOMNode} node The node to start from
+ * @return {TextProperty}
+ */
+function getParentTextProperty(node) {
+  let parent = getParentTextPropertyHolder(node);
+  if (!parent) {
+    return null;
+  }
+  return parent.querySelector(".ruleview-propertyvalue").textProperty;
+}
+
+/**
+ * Walker up the DOM from a given node until a parent property holder is found,
+ * and return the textContent for the name and value nodes.
+ * Stops at the first property found, so if node is inside the computed property
+ * list, the computed property will be returned
+ * @param {DOMNode} node The node to start from
+ * @return {Object} {name, value}
+ */
+function getPropertyNameAndValue(node) {
+  while (true) {
+    if (!node || !node.classList) {
+      return null;
+    }
+    // Check first for ruleview-computed since it's the deepest
+    if (node.classList.contains("ruleview-computed") ||
+        node.classList.contains("ruleview-property")) {
+      return {
+        name: node.querySelector(".ruleview-propertyname").textContent,
+        value: node.querySelector(".ruleview-propertyvalue").textContent
+      };
+    }
+    node = node.parentNode;
+  }
 }
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
