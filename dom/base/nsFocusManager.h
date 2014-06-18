@@ -77,11 +77,12 @@ public:
   /**
    * Called when mouse button event handling is started and finished.
    */
-  void SetMouseButtonHandlingDocument(nsIDocument* aDocument)
+  already_AddRefed<nsIDocument>
+    SetMouseButtonHandlingDocument(nsIDocument* aDocument)
   {
-    NS_ASSERTION(!aDocument || !mMouseButtonEventHandlingDocument,
-                 "Some mouse button down events are nested?");
+    nsCOMPtr<nsIDocument> handlingDocument = mMouseButtonEventHandlingDocument;
     mMouseButtonEventHandlingDocument = aDocument;
+    return handlingDocument.forget();
   }
 
   /**

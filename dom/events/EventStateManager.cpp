@@ -5563,7 +5563,12 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
   if (mResetFMMouseButtonHandlingState) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ENSURE_TRUE_VOID(fm);
-    fm->SetMouseButtonHandlingDocument(aDocument);
+    // If it's in modal state, mouse button event handling may be nested.
+    // E.g., a modal dialog is opened at mousedown or mouseup event handler
+    // and the dialog is clicked.  Therefore, we should store current
+    // mouse button event handling document if nsFocusManager already has it.
+    mMouseButtonEventHandlingDocument =
+      fm->SetMouseButtonHandlingDocument(aDocument);
   }
 }
 
@@ -5579,7 +5584,8 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher()
   if (mResetFMMouseButtonHandlingState) {
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     NS_ENSURE_TRUE_VOID(fm);
-    fm->SetMouseButtonHandlingDocument(nullptr);
+    nsCOMPtr<nsIDocument> handlingDocument =
+      fm->SetMouseButtonHandlingDocument(mMouseButtonEventHandlingDocument);
   }
 }
 
