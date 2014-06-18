@@ -6,7 +6,6 @@
 
 #include "jit/AsmJSLink.h"
 
-#include "mozilla/BinarySearch.h"
 #include "mozilla/PodOperations.h"
 
 #ifdef MOZ_VTUNE
@@ -32,7 +31,6 @@
 using namespace js;
 using namespace js::jit;
 
-using mozilla::BinarySearch;
 using mozilla::IsNaN;
 using mozilla::PodZero;
 
@@ -93,29 +91,14 @@ AsmJSFrameIterator::operator++()
     settle(ReturnAddressForJitCall(sp_));
 }
 
-struct GetCallSite
-{
-    const AsmJSModule &module;
-    explicit GetCallSite(const AsmJSModule &module) : module(module) {}
-    uint32_t operator[](size_t index) const {
-        return module.callSite(index).returnAddressOffset();
-    }
-};
-
 void
 AsmJSFrameIterator::settle(uint8_t *returnAddress)
 {
-    uint32_t target = returnAddress - module_->codeBase();
-    size_t lowerBound = 0;
-    size_t upperBound = module_->numCallSites();
-
-    size_t match;
-    if (!BinarySearch(GetCallSite(*module_), lowerBound, upperBound, target, &match)) {
+    callsite_ = module_->lookupCallSite(returnAddress);
+    if (!callsite_ || callsite_->isEntry()) {
         module_ = nullptr;
         return;
     }
-
-    callsite_ = &module_->callSite(match);
 
     if (callsite_->isEntry()) {
         module_ = nullptr;
