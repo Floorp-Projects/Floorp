@@ -175,11 +175,6 @@ UNIFIED_SOURCES += [
 ]
 
 UNIFIED_SOURCES += [
-    '../ucvtw2/nsEUCTWToUnicode.cpp',
-    '../ucvtw2/nsUnicodeToEUCTW.cpp',
-]
-
-UNIFIED_SOURCES += [
     '../util/nsUCConstructors.cpp',
     '../util/nsUCSupport.cpp',
     '../util/nsUnicodeDecodeHelper.cpp',
@@ -202,7 +197,6 @@ LOCAL_INCLUDES += [
     '../ucvko',
     '../ucvlatin',
     '../ucvtw',
-    '../ucvtw2',
     '../util',
 ]
 
