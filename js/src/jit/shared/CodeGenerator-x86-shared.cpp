@@ -2389,6 +2389,30 @@ CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4 *ins)
 }
 
 bool
+CodeGeneratorX86Shared::visitSimdSwizzleI(LSimdSwizzleI *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    uint32_t mask = MacroAssembler::ComputeShuffleMask(ins->laneX(), ins->laneY(), ins->laneZ(),
+                                                       ins->laneW());
+    masm.shuffleInt32(mask, input, output);
+    return true;
+}
+
+bool
+CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF *ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    uint32_t mask = MacroAssembler::ComputeShuffleMask(ins->laneX(), ins->laneY(), ins->laneZ(),
+                                                       ins->laneW());
+    masm.shuffleFloat32(mask, input, output);
+    return true;
+}
+
+bool
 CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4 *ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
