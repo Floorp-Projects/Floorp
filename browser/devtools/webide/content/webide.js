@@ -399,8 +399,6 @@ let UI = {
 
   /********** DECK **********/
 
-  _lastSelectedPanels: [],
-
   resetFocus: function() {
     document.commandDispatcher.focusedElement = document.documentElement;
   },
@@ -410,24 +408,12 @@ let UI = {
     this.resetFocus();
     let deck = document.querySelector("#deck");
     let panel = deck.querySelector("#deck-panel-" + id);
-    this._lastSelectedPanels.push(deck.selectedIndex);
     deck.selectedPanel = panel;
-  },
-
-  closeLastDeckPanel: function() {
-    this.resetFocus();
-    let deck = document.querySelector("#deck");
-    if (this._lastSelectedPanels.length > 0) {
-      deck.selectedIndex = this._lastSelectedPanels.pop();
-    } else {
-      this.resetDeck();
-    }
   },
 
   resetDeck: function() {
     this.resetFocus();
     let deck = document.querySelector("#deck");
-    this._lastSelectedPanels = [];
     deck.selectedPanel = null;
   },
 
@@ -794,81 +780,11 @@ let Cmds = {
   },
 
   showPermissionsTable: function() {
-    return UI.busyUntil(AppManager.deviceFront.getRawPermissionsTable().then(json => {
-      let styleContent = "";
-      styleContent += "body {background:white; font-family: monospace}";
-      styleContent += "table {border-collapse: collapse}";
-      styleContent += "th, td {padding: 5px; border: 1px solid #EEE}";
-      styleContent += "th {min-width: 130px}";
-      styleContent += "td {text-align: center}";
-      styleContent += "th:first-of-type, td:first-of-type {text-align:left}";
-      styleContent += ".permallow  {color:rgb(152, 207, 57)}";
-      styleContent += ".permprompt {color:rgb(0,158,237)}";
-      styleContent += ".permdeny   {color:rgb(204,73,8)}";
-      let style = document.createElementNS(HTML, "style");
-      style.textContent = styleContent;
-      let table = document.createElementNS(HTML, "table");
-      table.innerHTML = "<tr><th>Name</th><th>type:web</th><th>type:privileged</th><th>type:certified</th></tr>";
-      let permissionsTable = json.rawPermissionsTable;
-      for (let name in permissionsTable) {
-        let tr = document.createElementNS(HTML, "tr");
-        let td = document.createElementNS(HTML, "td");
-        td.textContent = name;
-        tr.appendChild(td);
-        for (let type of ["app","privileged","certified"]) {
-          let td = document.createElementNS(HTML, "td");
-          if (permissionsTable[name][type] == json.ALLOW_ACTION) {
-            td.textContent = "✓";
-            td.className = "permallow";
-          }
-          if (permissionsTable[name][type] == json.PROMPT_ACTION) {
-            td.textContent = "!";
-            td.className = "permprompt";
-          }
-          if (permissionsTable[name][type] == json.DENY_ACTION) {
-            td.textContent = "✕";
-            td.className = "permdeny"
-          }
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-      let body = document.createElementNS(HTML, "body");
-      body.appendChild(style);
-      body.appendChild(table);
-      let url = "data:text/html;charset=utf-8,";
-      url += encodeURIComponent(body.outerHTML);
-      UI.openInBrowser(url);
-    }), "showing permission table");
+    UI.selectDeckPanel("permissionstable");
   },
 
   showRuntimeDetails: function() {
-    return UI.busyUntil(AppManager.deviceFront.getDescription().then(json => {
-      let styleContent = "";
-      styleContent += "body {background:white; font-family: monospace}";
-      styleContent += "table {border-collapse: collapse}";
-      styleContent += "th, td {padding: 5px; border: 1px solid #EEE}";
-      let style = document.createElementNS(HTML, "style");
-      style.textContent = styleContent;
-      let table = document.createElementNS(HTML, "table");
-      for (let name in json) {
-        let tr = document.createElementNS(HTML, "tr");
-        let td = document.createElementNS(HTML, "td");
-        td.textContent = name;
-        tr.appendChild(td);
-        td = document.createElementNS(HTML, "td");
-        td.textContent = json[name];
-        tr.appendChild(td);
-        table.appendChild(tr);
-      }
-      let body = document.createElementNS(HTML, "body");
-      body.appendChild(style);
-      body.appendChild(table);
-      let url = "data:text/html;charset=utf-8,";
-      url += encodeURIComponent(body.outerHTML);
-      UI.openInBrowser(url);
-    }), "showing runtime details");
-
+    UI.selectDeckPanel("runtimedetails");
   },
 
   play: function() {
