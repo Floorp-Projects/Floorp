@@ -64,6 +64,7 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
         'signaling/src/media-conduit/AudioConduit.cpp',
         'signaling/src/media-conduit/CodecStatistics.cpp',
         'signaling/src/media-conduit/VideoConduit.cpp',
+        'signaling/src/media-conduit/WebrtcOMXH264VideoCodec.cpp',
         'signaling/src/media/CSFAudioControlWrapper.cpp',
         'signaling/src/media/CSFVideoControlWrapper.cpp',
         'signaling/src/media/VcmSIPCCBinding.cpp',

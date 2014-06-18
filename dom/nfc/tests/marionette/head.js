@@ -22,6 +22,7 @@ let emulator = (function() {
   };
 
   function run(cmd, callback) {
+    log("Executing emulator command '" + cmd + "'");
     pendingCmdCount++;
     originalRunEmulatorCmd(cmd, function(result) {
       pendingCmdCount--;
@@ -29,10 +30,66 @@ let emulator = (function() {
         callback(result);
       }
     });
-  }
+  };
+
+  function activateRE(re) {
+    let deferred = Promise.defer();
+    let cmd = 'nfc nci rf_intf_activated_ntf ' + re;
+
+    this.run(cmd, function(result) {
+      is(result.pop(), 'OK', 'check activation of RE' + re);
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
+
+  function notifyDiscoverRE(re, type) {
+    let deferred = Promise.defer();
+    let cmd = 'nfc nci rf_discover_ntf ' + re + ' ' + type;
+
+    this.run(cmd, function(result) {
+      is(result.pop(), 'OK', 'check discovery of RE' + re);
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
+
+  function setTagData(re, flag, tnf, type, payload) {
+    let deferred = Promise.defer();
+    let cmd = "nfc tag set " + re +
+              " [" + flag + "," + tnf + "," + type + "," + payload + ",]";
+
+    this.run(cmd, function(result) {
+      is(result.pop(), "OK", "set NDEF data of tag" + re);
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
+
+  function snepPutNdef(dsap, ssap, flags, tnf, type, payload, id) {
+    let deferred = Promise.defer();
+    let cmd = "nfc snep put " + dsap + " " + ssap + " [" + flags + "," +
+                                                           tnf + "," +
+                                                           type + "," +
+                                                           payload + "," +
+                                                           id + "]";
+    this.run(cmd, function(result) {
+      is(result.pop(), "OK", "send SNEP PUT");
+      deferred.resolve();
+    });
+
+    return deferred.promise;
+  };
 
   return {
-    run: run
+    run: run,
+    activateRE: activateRE,
+    notifyDiscoverRE: notifyDiscoverRE,
+    setTagData: setTagData,
+    snepPutNdef: snepPutNdef
   };
 }());
 
