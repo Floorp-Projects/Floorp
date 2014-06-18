@@ -10,7 +10,6 @@
 // on the main thread, and false if we are running on a worker thread.
 var { Ci, Cu } = require("chrome");
 var Services = require("Services");
-var { setTimeout } = require("Timer");
 
 /**
  * Turn the error |aError| into a string, without fail.
@@ -122,9 +121,13 @@ exports.zip = function zip(a, b) {
  * Waits for the next tick in the event loop to execute a callback.
  */
 exports.executeSoon = function executeSoon(aFn) {
-  Services.tm.mainThread.dispatch({
-    run: exports.makeInfallible(aFn)
-  }, Ci.nsIThread.DISPATCH_NORMAL);
+  if (isWorker) {
+    setTimeout(aFn, 0);
+  } else {
+    Services.tm.mainThread.dispatch({
+      run: exports.makeInfallible(aFn)
+    }, Ci.nsIThread.DISPATCH_NORMAL);
+  }
 };
 
 /**
@@ -292,7 +295,7 @@ exports.hasSafeGetter = function hasSafeGetter(aDesc) {
 exports.isSafeJSObject = function isSafeJSObject(aObj) {
   // If we are running on a worker thread, Cu is not available. In this case,
   // we always return false, just to be on the safe side.
-  if (!Cu) {
+  if (isWorker) {
     return false;
   }
 

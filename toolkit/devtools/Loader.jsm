@@ -23,8 +23,6 @@ let Debugger = sandbox.Debugger;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-let Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
-
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
@@ -42,10 +40,21 @@ this.EXPORTED_SYMBOLS = ["DevToolsLoader", "devtools", "BuiltinProvider",
  * Providers are different strategies for loading the devtools.
  */
 
+let Timer = Cu.import("resource://gre/modules/Timer.jsm", {});
+
 let loaderGlobals = {
+  isWorker: false,
+  Debugger: Debugger,
+  promise: promise,
+  reportError: Cu.reportError,
+  setInterval: Timer.setInterval,
+  setTimeout: Timer.setTimeout,
+  clearInterval: Timer.clearInterval,
+  clearTimeout: Timer.clearTimeout,
+  xpcInspector: xpcInspector,
+
   btoa: btoa,
   console: console,
-  promise: promise,
   _Iterator: Iterator,
   ChromeWorker: ChromeWorker,
   loader: {
@@ -53,7 +62,6 @@ let loaderGlobals = {
     lazyImporter: XPCOMUtils.defineLazyModuleGetter.bind(XPCOMUtils),
     lazyServiceGetter: XPCOMUtils.defineLazyServiceGetter.bind(XPCOMUtils)
   },
-  reportError: Cu.reportError,
 };
 
 // Used when the tools should be loaded from the Firefox package itself (the default)
@@ -63,11 +71,8 @@ BuiltinProvider.prototype = {
     this.loader = new loader.Loader({
       id: "fx-devtools",
       modules: {
-        "Debugger": Debugger,
         "Services": Object.create(Services),
-        "Timer": Object.create(Timer),
         "toolkit/loader": loader,
-        "xpcInspector": xpcInspector,
       },
       paths: {
         // When you add a line to this mapping, don't forget to make a
@@ -149,11 +154,8 @@ SrcdirProvider.prototype = {
     this.loader = new loader.Loader({
       id: "fx-devtools",
       modules: {
-        "Debugger": Debugger,
         "Services": Object.create(Services),
-        "Timer": Object.create(Timer),
         "toolkit/loader": loader,
-        "xpcInspector": xpcInspector,
       },
       paths: {
         "": "resource://gre/modules/commonjs/",
