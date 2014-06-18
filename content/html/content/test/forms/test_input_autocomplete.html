@@ -13,7 +13,8 @@ Test @autocomplete on <input>
 <p id="display"></p>
 <div id="content" style="display: none">
   <form>
-    <input id="field" />
+    <input id="input-field" />
+    <select id="select-field" />
   </form>
 </div>
 <pre id="test">
@@ -69,9 +70,8 @@ var values = [
 ];
 
 var types = [undefined, "hidden", "text", "search"]; // Valid types for all non-multiline hints.
-var field = document.getElementById("field");
 
-function checkAutocompleteValues(type) {
+function checkAutocompleteValues(field, type) {
   for (var test of values) {
     if (typeof(test[0]) === "undefined")
       field.removeAttribute("autocomplete");
@@ -83,14 +83,18 @@ function checkAutocompleteValues(type) {
 }
 
 function start() {
+  var inputField = document.getElementById("input-field");
   for (var type of types) {
     // Switch the input type
     if (typeof(type) === "undefined")
-      field.removeAttribute("type");
+      inputField.removeAttribute("type");
     else
-      field.type = type;
-    checkAutocompleteValues(type || "");
+      inputField.type = type;
+    checkAutocompleteValues(inputField, type || "");
   }
+
+  var selectField = document.getElementById("select-field");
+  checkAutocompleteValues(selectField, "select");
   SimpleTest.finish();
 }
 

@@ -20,6 +20,7 @@
 #include "nsThreadUtils.h"
 #include "prtime.h"
 #include "AudioSampleFormat.h"
+#include "mozilla/RefPtr.h"
 
 using mozilla::CheckedInt64;
 using mozilla::CheckedUint64;
@@ -207,6 +208,12 @@ private:
   T& mVar;
   const T mValue;
 };
+
+class SharedThreadPool;
+
+// Returns the thread pool that is shared amongst all decoder state machines
+// for decoding streams.
+TemporaryRef<SharedThreadPool> GetMediaDecodeThreadPool();
 
 } // end namespace mozilla
 
