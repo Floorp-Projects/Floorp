@@ -75,13 +75,14 @@ public:
   nsresult ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
 
   /**
-   * Called when mouse button down event handling is started and finished.
+   * Called when mouse button event handling is started and finished.
    */
-  void SetMouseButtonDownHandlingDocument(nsIDocument* aDocument)
+  already_AddRefed<nsIDocument>
+    SetMouseButtonHandlingDocument(nsIDocument* aDocument)
   {
-    NS_ASSERTION(!aDocument || !mMouseDownEventHandlingDocument,
-                 "Some mouse button down events are nested?");
-    mMouseDownEventHandlingDocument = aDocument;
+    nsCOMPtr<nsIDocument> handlingDocument = mMouseButtonEventHandlingDocument;
+    mMouseButtonEventHandlingDocument = aDocument;
+    return handlingDocument.forget();
   }
 
   /**
@@ -515,13 +516,15 @@ private:
   // and fire them later.
   nsTArray<nsDelayedBlurOrFocusEvent> mDelayedBlurFocusEvents;
 
-  // A document which is handling a mouse button down event.
+  // A document which is handling a mouse button event.
   // When a mouse down event process is finished, ESM sets focus to the target
-  // content.  Therefore, while DOM event handlers are handling mouse down
-  // events, the handlers should be able to steal focus from any elements even
-  // if focus is in chrome content.  So, if this isn't nullptr and the caller
-  // can access the document node, the caller should succeed in moving focus.
-  nsCOMPtr<nsIDocument> mMouseDownEventHandlingDocument;
+  // content if it's not consumed.  Therefore, while DOM event handlers are
+  // handling mouse down events or preceding mosue down event is consumed but
+  // handling mouse up events, they should be able to steal focus from any
+  // elements even if focus is in chrome content.  So, if this isn't nullptr
+  // and the caller can access the document node, the caller should succeed in
+  // moving focus.
+  nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
 
   static bool sTestMode;
 

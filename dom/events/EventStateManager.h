@@ -912,7 +912,9 @@ public:
 protected:
   bool mIsHandlingUserInput;
   bool mIsMouseDown;
-  bool mResetFMMouseDownState;
+  bool mResetFMMouseButtonHandlingState;
+
+  nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
 
 private:
   // Hide so that this class can only be stack-allocated

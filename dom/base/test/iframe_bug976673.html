@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 976673</title>
+</head>
+<body>
+  <input id="input" onfocus="event.target.value = event.type;"
+                    onblur="event.target.value = event.type;">
+  <script>
+    var input = document.getElementById("input");
+    window.addEventListener("message", function (aEvent) {
+        switch (aEvent.data) {
+          case "init":
+            input.blur();
+            input.value = "";
+            input.focus();
+          case "check":
+            aEvent.source.postMessage("input-value: " + input.value, "*");
+            break;
+        }
+      }, false);
+  </script>
+</body>
+</html>

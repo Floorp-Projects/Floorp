@@ -1372,7 +1372,7 @@ function PeerConnectionWrapper(label, configuration) {
     self.attachMedia(event.stream, type, 'remote');
 
     Object.keys(self.addStreamCallbacks).forEach(function(name) {
-      info(this + " calling addStreamCallback " + name);
+      info(self + " calling addStreamCallback " + name);
       self.addStreamCallbacks[name]();
     });
    };
@@ -1911,8 +1911,8 @@ PeerConnectionWrapper.prototype = {
     var addStreamTimeout = null;
 
     function _checkMediaTracks(constraintsRemote, onSuccess) {
-      if (self.addStreamTimeout !== null) {
-        clearTimeout(self.addStreamTimeout);
+      if (addStreamTimeout !== null) {
+        clearTimeout(addStreamTimeout);
       }
 
       var localConstraintAudioTracks =
@@ -1961,8 +1961,10 @@ PeerConnectionWrapper.prototype = {
         _checkMediaTracks(constraintsRemote, onSuccess);
       };
       addStreamTimeout = setTimeout(function () {
-        ok(false, self + " checkMediaTracks() timed out waiting for onaddstream event to fire");
-        onSuccess();
+        ok(self.onAddStreamFired, self + " checkMediaTracks() timed out waiting for onaddstream event to fire");
+        if (!self.onAddStreamFired) {
+          onSuccess();
+        }
       }, 60000);
     }
   },
