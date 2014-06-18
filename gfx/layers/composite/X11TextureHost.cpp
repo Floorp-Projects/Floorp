@@ -25,9 +25,9 @@ X11TextureHost::X11TextureHost(TextureFlags aFlags,
   nsRefPtr<gfxXlibSurface> surface = aDescriptor.OpenForeign();
   mSurface = surface.get();
 
-  // The host always frees the pixmap.
-  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
-  mSurface->TakePixmap();
+  if (!(aFlags & TextureFlags::DEALLOCATE_CLIENT)) {
+    mSurface->TakePixmap();
+  }
 }
 
 bool
