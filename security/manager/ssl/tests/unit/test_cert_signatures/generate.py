@@ -16,16 +16,8 @@ srcdir = os.getcwd()
 db = tempfile.mkdtemp()
 
 CA_basic_constraints = "basicConstraints=critical,CA:TRUE\n"
-CA_limited_basic_constraints = "basicConstraints=critical,CA:TRUE, pathlen:0\n"
-EE_basic_constraints = "basicConstraints=CA:FALSE\n"
 
 CA_min_ku = "keyUsage=critical, keyCertSign\n"
-CA_bad_ku = ("keyUsage=digitalSignature, nonRepudiation, keyEncipherment," +
-                     " dataEncipherment, keyAgreement, cRLSign\n")
-EE_full_ku = ("keyUsage=digitalSignature, nonRepudiation, keyEncipherment," +
-                      " dataEncipherment, keyAgreement, keyCertSign, cRLSign\n")
-
-Server_eku= "extendedKeyUsage=critical,serverAuth,clientAuth\n"
 
 pk_name = {'rsa': 'rsa', 'dsa': 'dsa', 'p384': 'secp384r1'}
 
@@ -49,7 +41,7 @@ def tamper_cert(cert_name):
 def generate_certs():
 
     CertUtils.init_dsa(db)
-    ee_ext_text = EE_basic_constraints + EE_full_ku
+    ee_ext_text = ""
     for name, key_type in pk_name.iteritems():
         ca_name = "ca-" + name
         [ca_key, ca_cert] = CertUtils.generate_cert_generic(db,
