@@ -44,6 +44,8 @@ Wrapper::New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
 {
     JS_ASSERT(parent);
 
+    AutoMarkInDeadZone amd(cx->zone());
+
     RootedValue priv(cx, ObjectValue(*obj));
     mozilla::Maybe<WrapperOptions> opts;
     if (!options) {
@@ -1041,6 +1043,8 @@ JS_FRIEND_API(bool)
 js::RecomputeWrappers(JSContext *cx, const CompartmentFilter &sourceFilter,
                       const CompartmentFilter &targetFilter)
 {
+    AutoMaybeTouchDeadZones agc(cx);
+
     AutoWrapperVector toRecompute(cx);
 
     for (CompartmentsIter c(cx->runtime(), SkipAtoms); !c.done(); c.next()) {

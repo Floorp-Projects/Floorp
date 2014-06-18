@@ -33,6 +33,8 @@
 #include "mozilla/ChaosMode.h"
 #include "mozilla/unused.h"
 
+#include "mozilla/Telemetry.h"
+
 // defined by the socket transport service while active
 extern PRThread *gSocketThread;
 
@@ -1373,6 +1375,8 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
                  "Found a speculative half open connection\n",
                  ent->mConnInfo->HashKey().get()));
             ent->mHalfOpens[i]->SetSpeculative(false);
+            Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_USED_SPECULATIVE_CONN> usedSpeculativeConn;
+            ++usedSpeculativeConn;
 
             // return OK because we have essentially opened a new connection
             // by converting a speculative half-open to general use
@@ -2028,8 +2032,12 @@ nsHttpConnectionMgr::CreateTransport(nsConnectionEntry *ent,
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
 
     nsRefPtr<nsHalfOpenSocket> sock = new nsHalfOpenSocket(ent, trans, caps);
-    if (speculative)
+    if (speculative) {
         sock->SetSpeculative(true);
+        Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_TOTAL_SPECULATIVE_CONN> totalSpeculativeConn;
+        ++totalSpeculativeConn;
+    }
+
     nsresult rv = sock->SetupPrimaryStreams();
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3003,6 +3011,11 @@ nsHttpConnectionMgr::nsHalfOpenSocket::CancelBackupTimer()
 void
 nsHttpConnectionMgr::nsHalfOpenSocket::Abandon()
 {
+    if (IsSpeculative()) {
+      Telemetry::AutoCounter<Telemetry::HTTPCONNMGR_UNUSED_SPECULATIVE_CONN> unusedSpeculativeConn;
+      ++unusedSpeculativeConn;
+    }
+
     LOG(("nsHalfOpenSocket::Abandon [this=%p ent=%s]",
          this, mEnt->mConnInfo->Host()));
 

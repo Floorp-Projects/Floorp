@@ -78,6 +78,7 @@ namespace layers {
 class Animation;
 class AnimationData;
 class AsyncPanZoomController;
+class ClientLayerManager;
 class CommonLayerAttributes;
 class Layer;
 class ThebesLayer;
@@ -201,6 +202,9 @@ public:
   { return nullptr; }
 
   virtual LayerManagerComposite* AsLayerManagerComposite()
+  { return nullptr; }
+
+  virtual ClientLayerManager* AsClientLayerManager()
   { return nullptr; }
 
   /**

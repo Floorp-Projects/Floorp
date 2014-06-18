@@ -10,6 +10,8 @@
 interface HTMLSelectElement : HTMLElement {
   [SetterThrows, Pure]
            attribute boolean autofocus;
+  [Pref="dom.forms.autocomplete.experimental", SetterThrows, Pure]
+           attribute DOMString autocomplete;
   [SetterThrows, Pure]
            attribute boolean disabled;
   [Pure]

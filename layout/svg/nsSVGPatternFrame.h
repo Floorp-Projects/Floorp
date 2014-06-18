@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/RefPtr.h"
 #include "nsSVGPaintServerFrame.h"
 
 class gfxASurface;
@@ -32,6 +33,8 @@ typedef nsSVGPaintServerFrame  nsSVGPatternFrameBase;
  */
 class nsSVGPatternFrame : public nsSVGPatternFrameBase
 {
+  typedef mozilla::gfx::SourceSurface SourceSurface;
+
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -109,13 +112,13 @@ protected:
     return GetLengthValue(aIndex, mContent);
   }
 
-  nsresult PaintPattern(gfxASurface **surface,
-                        gfxMatrix *patternMatrix,
-                        const gfxMatrix &aContextMatrix,
-                        nsIFrame *aSource,
-                        nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
-                        float aGraphicOpacity,
-                        const gfxRect *aOverrideBounds);
+  mozilla::TemporaryRef<SourceSurface>
+  PaintPattern(Matrix *patternMatrix,
+               const Matrix &aContextMatrix,
+               nsIFrame *aSource,
+               nsStyleSVGPaint nsStyleSVG::*aFillOrStroke,
+               float aGraphicOpacity,
+               const gfxRect *aOverrideBounds);
   nsIFrame*  GetPatternFirstChild();
   gfxRect    GetPatternRect(uint16_t aPatternUnits,
                             const gfxRect &bbox,

@@ -551,6 +551,7 @@ CairoTextureClientD3D9::CairoTextureClientD3D9(gfx::SurfaceFormat aFormat, Textu
   , mFormat(aFormat)
   , mIsLocked(false)
   , mNeedsClear(false)
+  , mNeedsClearWhite(false)
   , mLockRect(false)
 {
   MOZ_COUNT_CTOR(CairoTextureClientD3D9);
@@ -590,6 +591,11 @@ CairoTextureClientD3D9::Lock(OpenMode)
     mDrawTarget = BorrowDrawTarget();
     mDrawTarget->ClearRect(Rect(0, 0, GetSize().width, GetSize().height));
     mNeedsClear = false;
+  }
+  if (mNeedsClearWhite) {
+    mDrawTarget = BorrowDrawTarget();
+    mDrawTarget->FillRect(Rect(0, 0, GetSize().width, GetSize().height), ColorPattern(Color(1.0, 1.0, 1.0, 1.0)));
+    mNeedsClearWhite = false;
   }
 
   return true;
@@ -675,6 +681,7 @@ CairoTextureClientD3D9::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
   }
 
   mNeedsClear = aFlags & ALLOC_CLEAR_BUFFER;
+  mNeedsClearWhite = aFlags & ALLOC_CLEAR_BUFFER_WHITE;
 
   MOZ_ASSERT(mTexture);
   return true;
