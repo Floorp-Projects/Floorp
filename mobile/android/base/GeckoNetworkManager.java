@@ -23,10 +23,10 @@ import android.util.Log;
  * type based on the current connection. According to spec of NetworkInformation
  * API version 3, connection types include: bluetooth, cellular, ethernet, none,
  * wifi and other. The objective of providing such general connection is due to
- * some securtiy concerns. In short, we don't want to expose the information of
+ * some security concerns. In short, we don't want to expose the information of
  * exact network type, especially the cellular network type.
  *
- * Currnet connection is firstly obtained from Android's ConnectivityManager,
+ * Current connection is firstly obtained from Android's ConnectivityManager,
  * which is represented by the constant, and then will be mapped into the
  * connection type defined in Network Information API version 3.
  */
@@ -57,14 +57,6 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         MNC
     }
 
-    static private final ConnectionType kDefaultConnectionType = ConnectionType.NONE;
-
-    private static Context getApplicationContext() {
-        Context context = GeckoAppShell.getContext();
-        if (null == context)
-            return null;
-        return context.getApplicationContext();
-    }
     private ConnectionType mConnectionType = ConnectionType.NONE;
     private final IntentFilter mNetworkFilter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 
@@ -74,6 +66,10 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     // Whether the manager should notify Gecko that a change in Network
     // Information happened.
     private boolean mShouldNotify = false;
+
+    // The application context used for registering receivers, so
+    // we can unregister them again later.
+    private volatile Context mApplicationContext;
 
     public static GeckoNetworkManager getInstance() {
         return sInstance;
@@ -86,6 +82,7 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
     public void start(final Context context) {
         // Note that this initialization clause only runs once.
+        mApplicationContext = context.getApplicationContext();
         if (mConnectionType == ConnectionType.NONE) {
             mConnectionType = getConnectionType();
         }
@@ -99,8 +96,14 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void startListening() {
-        if (null !=getApplicationContext())
-            getApplicationContext().registerReceiver(sInstance, mNetworkFilter);
+        final Context appContext = mApplicationContext;
+        if (appContext == null) {
+            Log.w(LOGTAG, "Not registering receiver: no context!");
+            return;
+        }
+
+        Log.v(LOGTAG, "Registering receiver.");
+        appContext.registerReceiver(this, mNetworkFilter);
     }
 
     public void stop() {
@@ -112,8 +115,11 @@ public class GeckoNetworkManager extends BroadcastReceiver {
     }
 
     private void stopListening() {
-        if (null != getApplicationContext())
-            getApplicationContext().unregisterReceiver(sInstance);
+        if (null == mApplicationContext) {
+            return;
+        }
+
+        mApplicationContext.unregisterReceiver(this);
     }
 
     private int wifiDhcpGatewayAddress() {
@@ -121,12 +127,12 @@ public class GeckoNetworkManager extends BroadcastReceiver {
             return 0;
         }
 
-        if (null == getApplicationContext()) {
+        if (null == mApplicationContext) {
             return 0;
         }
 
         try {
-            WifiManager mgr = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiManager mgr = (WifiManager) mApplicationContext.getSystemService(Context.WIFI_SERVICE);
             DhcpInfo d = mgr.getDhcpInfo();
             if (d == null) {
                 return 0;
@@ -136,8 +142,8 @@ public class GeckoNetworkManager extends BroadcastReceiver {
 
         } catch (Exception ex) {
             // getDhcpInfo() is not documented to require any permissions, but on some devices
-            // requires android.permission.ACCESS_WIFI_STATE. Just catching the generic exeption
-            // here and returning 0. Not logging because this could be noisy
+            // requires android.permission.ACCESS_WIFI_STATE. Just catch the generic exception
+            // here and returning 0. Not logging because this could be noisy.
             return 0;
         }
     }
@@ -182,13 +188,14 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         }
     }
 
-    private static ConnectionType getConnectionType() {
-        if (null == getApplicationContext()) {
+    private ConnectionType getConnectionType() {
+        final Context appContext = mApplicationContext;
+
+        if (null == appContext) {
             return ConnectionType.NONE;
         }
 
-        ConnectivityManager cm =
-            (ConnectivityManager)getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
             Log.e(LOGTAG, "Connectivity service does not exist");
             return ConnectionType.NONE;
@@ -219,11 +226,12 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         }
     }
 
-    private static int getNetworkOperator(InfoType type) {
-        if (null == getApplicationContext())
+    private static int getNetworkOperator(InfoType type, Context context) {
+        if (null == context) {
             return -1;
+        }
 
-        TelephonyManager tel = (TelephonyManager)getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
+        TelephonyManager tel = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (tel == null) {
             Log.e(LOGTAG, "Telephony service does not exist");
             return -1;
@@ -242,14 +250,19 @@ public class GeckoNetworkManager extends BroadcastReceiver {
         return -1;
     }
 
-    /* These are called from javascript c-types. Avoid letting pro-guard delete them */
+    /**
+     * These are called from JavaScript ctypes. Avoid letting ProGuard delete them.
+     *
+     * Note that these methods must only be called after GeckoAppShell has been
+     * initialized: they depend on access to the context.
+     */
     @JNITarget
     public static int getMCC() {
-        return getNetworkOperator(InfoType.MCC);
+        return getNetworkOperator(InfoType.MCC, GeckoAppShell.getContext().getApplicationContext());
     }
 
     @JNITarget
     public static int getMNC() {
-        return getNetworkOperator(InfoType.MNC);
+        return getNetworkOperator(InfoType.MNC, GeckoAppShell.getContext().getApplicationContext());
     }
 }
