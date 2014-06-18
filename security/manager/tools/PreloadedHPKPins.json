@@ -45,8 +45,12 @@
       "oauth.twitter.com",
       "platform.twitter.com",
       "twimg.com",
-      "twitter.com",
       "www.twitter.com"
+    ],
+    "exclude_domains" : [
+      // Chrome's entry for twitter.com doesn't include subdomains, so replace
+      // it with our own entry below which also uses an expanded pinset.
+      "twitter.com"
     ]
    },
   "pinsets": [
@@ -200,6 +204,11 @@
       "include_subdomains": false, "pins": "mozilla_test",
       "test_mode": false, "id": 0 },
     { "name": "test-mode.pinning.example.com", "include_subdomains": true,
-      "pins": "mozilla_test", "test_mode": true }
+      "pins": "mozilla_test", "test_mode": true },
+    // Expand twitter's pinset to include all of *.twitter.com and use
+    // twitterCDN. More specific rules take precedence because we search for
+    // exact domain name first.
+    { "name": "twitter.com", "include_subdomains": true,
+      "pins": "twitterCDN", "test_mode": true }
   ]
 }

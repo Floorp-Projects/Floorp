@@ -967,7 +967,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "torproject.org", false, true, false, -1, &kPinset_tor },
   { "translate.googleapis.com", true, false, false, -1, &kPinset_google_root_pems },
   { "twimg.com", true, false, false, -1, &kPinset_twitterCDN },
-  { "twitter.com", false, false, false, -1, &kPinset_twitterCom },
+  { "twitter.com", true, true, false, -1, &kPinset_twitterCDN },
   { "urchin.com", true, false, false, -1, &kPinset_google_root_pems },
   { "w-spotlight.appspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "wallet.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -998,4 +998,4 @@ static const int kPublicKeyPinningPreloadListLength = 322;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1413412335521000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1414009276397000);
