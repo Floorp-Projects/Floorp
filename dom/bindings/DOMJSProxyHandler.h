@@ -18,8 +18,6 @@
 namespace mozilla {
 namespace dom {
 
-class DOMClass;
-
 enum {
   JSPROXYSLOT_EXPANDO = 0
 };

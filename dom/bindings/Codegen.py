@@ -315,14 +315,12 @@ def DOMClass(descriptor):
 
     return fill(
         """
-        {
           { ${protoChain} },
           IsBaseOf<nsISupports, ${nativeType} >::value,
           ${hooks},
           GetParentObject<${nativeType}>::Get,
           GetProtoObject,
           GetCCParticipant<${nativeType}>::Get()
-        }
         """,
         protoChain=', '.join(protoList),
         nativeType=descriptor.nativeType,
@@ -1737,7 +1735,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 
         hasInstanceCode = dedent("""
 
-            const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
+            const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
             *bp = false;
             if (!domClass) {
               // Not a DOM object, so certainly not an instance of this interface
