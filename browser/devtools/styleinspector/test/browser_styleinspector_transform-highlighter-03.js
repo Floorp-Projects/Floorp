@@ -23,6 +23,8 @@ const PAGE_CONTENT = [
   'Test the css transform highlighter'
 ].join("\n");
 
+const TYPE = "CssTransformHighlighter";
+
 let test = asyncTest(function*() {
   yield addTab("data:text/html," + PAGE_CONTENT);
 
@@ -45,7 +47,7 @@ let test = asyncTest(function*() {
   };
 
   // Inject the mock highlighter in the rule-view
-  rView.transformHighlighterPromise = {
+  rView.highlighters.promises[TYPE] = {
     then: function(cb) {
       cb(HighlighterFront);
     }
@@ -54,36 +56,36 @@ let test = asyncTest(function*() {
   let {valueSpan} = getRuleViewProperty(rView, "body", "transform");
 
   info("Checking that the HighlighterFront's show/hide methods are called");
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   ok(HighlighterFront.isShown, "The highlighter is shown");
-  rView._onMouseLeave();
+  rView.highlighters._onMouseLeave();
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 
   info("Checking that hovering several times over the same property doesn't" +
     " show the highlighter several times");
   let nb = HighlighterFront.nbOfTimesShown;
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   is(HighlighterFront.nbOfTimesShown, nb + 1, "The highlighter was shown once");
-  rView._onMouseMove({target: valueSpan});
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   is(HighlighterFront.nbOfTimesShown, nb + 1,
     "The highlighter was shown once, after several mousemove");
 
   info("Checking that the right NodeFront reference is passed");
   yield selectNode(content.document.documentElement, inspector);
   let {valueSpan} = getRuleViewProperty(rView, "html", "transform");
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   is(HighlighterFront.nodeFront.tagName, "HTML",
     "The right NodeFront is passed to the highlighter (1)");
 
   yield selectNode("body", inspector);
   let {valueSpan} = getRuleViewProperty(rView, "body", "transform");
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   is(HighlighterFront.nodeFront.tagName, "BODY",
     "The right NodeFront is passed to the highlighter (2)");
 
   info("Checking that the highlighter gets hidden when hovering a non-transform property");
   let {valueSpan} = getRuleViewProperty(rView, "body", "color");
-  rView._onMouseMove({target: valueSpan});
+  rView.highlighters._onMouseMove({target: valueSpan});
   ok(!HighlighterFront.isShown, "The highlighter is hidden");
 });

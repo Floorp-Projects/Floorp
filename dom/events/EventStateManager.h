@@ -294,6 +294,10 @@ protected:
                                         nsIContent* aTargetContent,
                                         nsIContent* aRelatedContent);
   /**
+   * Synthesize DOM pointerover and pointerout events
+   */
+  void GeneratePointerEnterExit(uint32_t aMessage, WidgetMouseEvent* aEvent);
+  /**
    * Synthesize DOM and frame mouseover and mouseout events from this
    * MOUSE_MOVE or MOUSE_EXIT event.
    */

@@ -12,8 +12,10 @@
 # include <sys/mman.h>
 #endif
 
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Compression.h"
 #include "mozilla/PodOperations.h"
+#include "mozilla/TaggedAnonymousMemory.h"
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -34,40 +36,10 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
+using mozilla::BinarySearch;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
-
-void
-AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
-{
-    JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
-    JS_ASSERT(dynamicallyLinked_);
-    JS_ASSERT(!maybeHeap_);
-
-    maybeHeap_ = heap;
-    heapDatum() = heap->dataPointer();
-
-#if defined(JS_CODEGEN_X86)
-    uint8_t *heapOffset = heap->dataPointer();
-    void *heapLength = (void*)heap->byteLength();
-    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-        const jit::AsmJSHeapAccess &access = heapAccesses_[i];
-        if (access.hasLengthCheck())
-            JSC::X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
-        void *addr = access.patchOffsetAt(code_);
-        uint32_t disp = reinterpret_cast<uint32_t>(JSC::X86Assembler::getPointer(addr));
-        JS_ASSERT(disp <= INT32_MAX);
-        JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
-    }
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
-    uint32_t heapLength = heap->byteLength();
-    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-        jit::Assembler::updateBoundsCheck(heapLength,
-                                          (jit::Instruction*)(heapAccesses_[i].offset() + code_));
-    }
-#endif
-}
 
 static uint8_t *
 AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
@@ -81,9 +53,9 @@ AllocateExecutableMemory(ExclusiveContext *cx, size_t totalBytes)
         return nullptr;
     }
 #else  // assume Unix
-    void *p = mmap(nullptr, totalBytes,
-                   PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
-                   -1, 0);
+    void *p = MozTaggedAnonymousMmap(nullptr, totalBytes,
+                                     PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANON,
+                                     -1, 0, "asm-js-code");
     if (p == MAP_FAILED) {
         js_ReportOutOfMemory(cx);
         return nullptr;
@@ -103,10 +75,173 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 #endif
 }
 
-bool
-AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
+AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t funcStart,
+                         uint32_t offsetToEndOfUseAsm, bool strict)
+  : funcStart_(funcStart),
+    offsetToEndOfUseAsm_(offsetToEndOfUseAsm),
+    scriptSource_(scriptSource),
+    globalArgumentName_(nullptr),
+    importArgumentName_(nullptr),
+    bufferArgumentName_(nullptr),
+    code_(nullptr),
+    interruptExit_(nullptr),
+    dynamicallyLinked_(false),
+    loadedFromCache_(false),
+    codeIsProtected_(false)
 {
-    JS_ASSERT(!code_);
+    mozilla::PodZero(&pod);
+    pod.funcPtrTableAndExitBytes_ = SIZE_MAX;
+    pod.functionBytes_ = UINT32_MAX;
+    pod.minHeapLength_ = AsmJSAllocationGranularity;
+    pod.strict_ = strict;
+
+    scriptSource_->incref();
+}
+
+AsmJSModule::~AsmJSModule()
+{
+    scriptSource_->decref();
+
+    if (code_) {
+        for (unsigned i = 0; i < numExits(); i++) {
+            AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
+            if (!exitDatum.fun)
+                continue;
+
+            if (!exitDatum.fun->hasScript())
+                continue;
+
+            JSScript *script = exitDatum.fun->nonLazyScript();
+            if (!script->hasIonScript())
+                continue;
+
+            jit::DependentAsmJSModuleExit exit(this, i);
+            script->ionScript()->removeDependentAsmJSModule(exit);
+        }
+
+        DeallocateExecutableMemory(code_, pod.totalBytes_);
+    }
+
+    for (size_t i = 0; i < numFunctionCounts(); i++)
+        js_delete(functionCounts(i));
+}
+
+void
+AsmJSModule::trace(JSTracer *trc)
+{
+    for (unsigned i = 0; i < globals_.length(); i++)
+        globals_[i].trace(trc);
+    for (unsigned i = 0; i < exits_.length(); i++) {
+        if (exitIndexToGlobalDatum(i).fun)
+            MarkObject(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
+    }
+    for (unsigned i = 0; i < exports_.length(); i++)
+        exports_[i].trace(trc);
+    for (unsigned i = 0; i < functionNames_.length(); i++)
+        MarkStringUnbarriered(trc, &functionNames_[i].name(), "asm.js module function name");
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    for (unsigned i = 0; i < profiledFunctions_.length(); i++)
+        profiledFunctions_[i].trace(trc);
+#endif
+#if defined(JS_ION_PERF)
+    for (unsigned i = 0; i < perfProfiledBlocksFunctions_.length(); i++)
+        perfProfiledBlocksFunctions_[i].trace(trc);
+#endif
+    if (globalArgumentName_)
+        MarkStringUnbarriered(trc, &globalArgumentName_, "asm.js global argument name");
+    if (importArgumentName_)
+        MarkStringUnbarriered(trc, &importArgumentName_, "asm.js import argument name");
+    if (bufferArgumentName_)
+        MarkStringUnbarriered(trc, &bufferArgumentName_, "asm.js buffer argument name");
+    if (maybeHeap_)
+        gc::MarkObject(trc, &maybeHeap_, "asm.js heap");
+}
+
+void
+AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
+                           size_t *asmJSModuleData)
+{
+    *asmJSModuleCode += pod.totalBytes_;
+    *asmJSModuleData += mallocSizeOf(this) +
+                        globals_.sizeOfExcludingThis(mallocSizeOf) +
+                        exits_.sizeOfExcludingThis(mallocSizeOf) +
+                        exports_.sizeOfExcludingThis(mallocSizeOf) +
+                        callSites_.sizeOfExcludingThis(mallocSizeOf) +
+                        functionNames_.sizeOfExcludingThis(mallocSizeOf) +
+                        heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
+                        functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+#endif
+#if defined(JS_ION_PERF)
+                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+#endif
+                        staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
+}
+
+struct CallSiteRetAddrOffset
+{
+    const CallSiteVector &callSites;
+    explicit CallSiteRetAddrOffset(const CallSiteVector &callSites) : callSites(callSites) {}
+    uint32_t operator[](size_t index) const {
+        return callSites[index].returnAddressOffset();
+    }
+};
+
+const CallSite *
+AsmJSModule::lookupCallSite(uint8_t *returnAddress) const
+{
+    JS_ASSERT(isFinished());
+
+    uint32_t target = returnAddress - code_;
+    size_t lowerBound = 0;
+    size_t upperBound = callSites_.length();
+
+    size_t match;
+    if (!BinarySearch(CallSiteRetAddrOffset(callSites_), lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &callSites_[match];
+}
+
+struct HeapAccessOffset
+{
+    const AsmJSHeapAccessVector &accesses;
+    explicit HeapAccessOffset(const AsmJSHeapAccessVector &accesses) : accesses(accesses) {}
+    uintptr_t operator[](size_t index) const {
+        return accesses[index].offset();
+    }
+};
+
+const AsmJSHeapAccess *
+AsmJSModule::lookupHeapAccess(uint8_t *pc) const
+{
+    JS_ASSERT(isFinished());
+    JS_ASSERT(containsPC(pc));
+
+    uint32_t target = pc - code_;
+    size_t lowerBound = 0;
+    size_t upperBound = heapAccesses_.length();
+
+    size_t match;
+    if (!BinarySearch(HeapAccessOffset(heapAccesses_), lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &heapAccesses_[match];
+}
+
+bool
+AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembler &masm,
+                    const Label &interruptLabel)
+{
+    JS_ASSERT(isFinishedWithFunctionBodies() && !isFinished());
+
+    uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
+    uint32_t endAfterCurly = tokenStream.peekTokenPos().end;
+    JS_ASSERT(endBeforeCurly >= offsetToEndOfUseAsm_);
+    JS_ASSERT(endAfterCurly >= offsetToEndOfUseAsm_);
+    pod.funcLength_ = endBeforeCurly - funcStart_;
+    pod.funcLengthWithRightBrace_ = endAfterCurly - funcStart_;
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
@@ -117,13 +252,146 @@ AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
     // units of pages.
     pod.totalBytes_ = AlignBytes(pod.codeBytes_ + globalDataBytes(), AsmJSPageSize);
 
+    JS_ASSERT(!code_);
     code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
     if (!code_)
         return false;
 
+    // Copy the code from the MacroAssembler into its final resting place in the
+    // AsmJSModule.
     JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
     masm.executableCopy(code_);
+
+    // c.f. JitCode::copyFrom
+    JS_ASSERT(masm.jumpRelocationTableBytes() == 0);
+    JS_ASSERT(masm.dataRelocationTableBytes() == 0);
+    JS_ASSERT(masm.preBarrierTableBytes() == 0);
+    JS_ASSERT(!masm.hasEnteredExitFrame());
+
+    // Copy over metadata, making sure to update all offsets on ARM.
+
+    staticLinkData_.interruptExitOffset = masm.actualOffset(interruptLabel.offset());
+
+    // Heap-access metadata used for link-time patching and fault-handling.
+    heapAccesses_ = masm.extractAsmJSHeapAccesses();
+
+    // Call-site metadata used for stack unwinding.
+    callSites_ = masm.extractCallSites();
+
+#if defined(JS_CODEGEN_ARM)
+    // ARM requires the offsets to be updated.
+    for (size_t i = 0; i < heapAccesses_.length(); i++) {
+        AsmJSHeapAccess &a = heapAccesses_[i];
+        a.setOffset(masm.actualOffset(a.offset()));
+    }
+    for (size_t i = 0; i < callSites_.length(); i++) {
+        CallSite &c = callSites_[i];
+        c.setReturnAddressOffset(masm.actualOffset(c.returnAddressOffset()));
+    }
+#endif
+
+    // Absolute link metadata: absolute addresses that refer to some fixed
+    // address in the address space.
+    for (size_t i = 0; i < masm.numAsmJSAbsoluteLinks(); i++) {
+        AsmJSAbsoluteLink src = masm.asmJSAbsoluteLink(i);
+        AbsoluteLink link;
+        link.patchAt = CodeOffsetLabel(masm.actualOffset(src.patchAt.offset()));
+        link.target = src.target;
+        if (!staticLinkData_.absoluteLinks.append(link))
+            return false;
+    }
+
+    // Relative link metadata: absolute addresses that refer to another point within
+    // the asm.js module.
+
+    // CodeLabels are used for switch cases and loads from doubles in the
+    // constant pool.
+    for (size_t i = 0; i < masm.numCodeLabels(); i++) {
+        CodeLabel src = masm.codeLabel(i);
+        int32_t labelOffset = src.dest()->offset();
+        int32_t targetOffset = masm.actualOffset(src.src()->offset());
+        // The patched uses of a label embed a linked list where the
+        // to-be-patched immediate is the offset of the next to-be-patched
+        // instruction.
+        while (labelOffset != LabelBase::INVALID_OFFSET) {
+            size_t patchAtOffset = masm.labelOffsetToPatchOffset(labelOffset);
+            RelativeLink link(RelativeLink::CodeLabel);
+            link.patchAtOffset = patchAtOffset;
+            link.targetOffset = targetOffset;
+            if (!staticLinkData_.relativeLinks.append(link))
+                return false;
+
+            labelOffset = Assembler::extractCodeLabelOffset(code_ + patchAtOffset);
+        }
+    }
+
+#if defined(JS_CODEGEN_X86)
+    // Global data accesses in x86 need to be patched with the absolute
+    // address of the global. Globals are allocated sequentially after the
+    // code section so we can just use an RelativeLink.
+    for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
+        RelativeLink link(RelativeLink::InstructionImmediate);
+        link.patchAtOffset = masm.labelOffsetToPatchOffset(a.patchAt.offset());
+        link.targetOffset = offsetOfGlobalData() + a.globalDataOffset;
+        if (!staticLinkData_.relativeLinks.append(link))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_MIPS)
+    // On MIPS we need to update all the long jumps because they contain an
+    // absolute adress.
+    for (size_t i = 0; i < masm.numLongJumps(); i++) {
+        RelativeLink link(RelativeLink::InstructionImmediate);
+        link.patchAtOffset = masm.longJump(i);
+        InstImm *inst = (InstImm *)(code_ + masm.longJump(i));
+        link.targetOffset = Assembler::extractLuiOriValue(inst, inst->next()) - (uint32_t)code_;
+        if (!staticLinkData_.relativeLinks.append(link))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_X64)
+    // Global data accesses on x64 use rip-relative addressing and thus do
+    // not need patching after deserialization.
+    for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
+        masm.patchAsmJSGlobalAccess(a.patchAt, code_, globalData(), a.globalDataOffset);
+    }
+#endif
+
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    // Fix up the code offsets.  Note the endCodeOffset should not be
+    // filtered through 'actualOffset' as it is generated using 'size()'
+    // rather than a label.
+    for (size_t i = 0; i < profiledFunctions_.length(); i++) {
+        ProfiledFunction &pf = profiledFunctions_[i];
+        pf.pod.startCodeOffset = masm.actualOffset(pf.pod.startCodeOffset);
+    }
+#endif
+#ifdef JS_ION_PERF
+    for (size_t i = 0; i < perfProfiledBlocksFunctions_.length(); i++) {
+        ProfiledBlocksFunction &pbf = perfProfiledBlocksFunctions_[i];
+        pbf.pod.startCodeOffset = masm.actualOffset(pbf.pod.startCodeOffset);
+        pbf.endInlineCodeOffset = masm.actualOffset(pbf.endInlineCodeOffset);
+        BasicBlocksVector &basicBlocks = pbf.blocks;
+        for (uint32_t i = 0; i < basicBlocks.length(); i++) {
+            Record &r = basicBlocks[i];
+            r.startOffset = masm.actualOffset(r.startOffset);
+            r.endOffset = masm.actualOffset(r.endOffset);
+        }
+    }
+#endif
+
     return true;
+}
+
+void
+AsmJSModule::setAutoFlushICacheRange()
+{
+    JS_ASSERT(isFinished());
+    AutoFlushICache::setRange(uintptr_t(code_), pod.codeBytes_);
 }
 
 static int32_t
@@ -272,43 +540,11 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext *cx)
 }
 
 void
-AsmJSModule::restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx)
-{
-#ifdef DEBUG
-    // Put the absolute links back to -1 so patchDataWithValueCheck assertions
-    // in staticallyLink are valid.
-    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
-        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
-        Assembler::patchDataWithValueCheck(CodeLocationLabel(code_ + link.patchAt.offset()),
-                                           PatchedImmPtr((void*)-1),
-                                           PatchedImmPtr(AddressOf(link.target, cx)));
-    }
-#endif
-
-    if (maybePrevBuffer) {
-#if defined(JS_CODEGEN_X86)
-        // Subtract out the base-pointer added by AsmJSModule::initHeap.
-        uint8_t *ptrBase = maybePrevBuffer->dataPointer();
-        for (unsigned i = 0; i < heapAccesses_.length(); i++) {
-            const jit::AsmJSHeapAccess &access = heapAccesses_[i];
-            void *addr = access.patchOffsetAt(code_);
-            uint8_t *ptr = reinterpret_cast<uint8_t*>(JSC::X86Assembler::getPointer(addr));
-            JS_ASSERT(ptr >= ptrBase);
-            JSC::X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
-        }
-#endif
-    }
-}
-
-void
-AsmJSModule::setAutoFlushICacheRange()
-{
-    AutoFlushICache::setRange(uintptr_t(code_), pod.codeBytes_);
-}
-
-void
 AsmJSModule::staticallyLink(ExclusiveContext *cx)
 {
+    JS_ASSERT(isFinished());
+    JS_ASSERT(!isStaticallyLinked());
+
     // Process staticLinkData_
 
     interruptExit_ = code_ + staticLinkData_.interruptExitOffset;
@@ -336,76 +572,68 @@ AsmJSModule::staticallyLink(ExclusiveContext *cx)
         exitIndexToGlobalDatum(i).exit = interpExitTrampoline(exits_[i]);
         exitIndexToGlobalDatum(i).fun = nullptr;
     }
-}
 
-AsmJSModule::AsmJSModule(ScriptSource *scriptSource, uint32_t funcStart,
-                         uint32_t offsetToEndOfUseAsm, bool strict)
-  : globalArgumentName_(nullptr),
-    importArgumentName_(nullptr),
-    bufferArgumentName_(nullptr),
-    code_(nullptr),
-    interruptExit_(nullptr),
-    dynamicallyLinked_(false),
-    loadedFromCache_(false),
-    funcStart_(funcStart),
-    offsetToEndOfUseAsm_(offsetToEndOfUseAsm),
-    scriptSource_(scriptSource),
-    codeIsProtected_(false)
-{
-    mozilla::PodZero(&pod);
-    scriptSource_->incref();
-    pod.minHeapLength_ = AsmJSAllocationGranularity;
-    pod.strict_ = strict;
-}
-
-AsmJSModule::~AsmJSModule()
-{
-    scriptSource_->decref();
-
-    if (code_) {
-        for (unsigned i = 0; i < numExits(); i++) {
-            AsmJSModule::ExitDatum &exitDatum = exitIndexToGlobalDatum(i);
-            if (!exitDatum.fun)
-                continue;
-
-            if (!exitDatum.fun->hasScript())
-                continue;
-
-            JSScript *script = exitDatum.fun->nonLazyScript();
-            if (!script->hasIonScript())
-                continue;
-
-            jit::DependentAsmJSModuleExit exit(this, i);
-            script->ionScript()->removeDependentAsmJSModule(exit);
-        }
-
-        DeallocateExecutableMemory(code_, pod.totalBytes_);
-    }
-
-    for (size_t i = 0; i < numFunctionCounts(); i++)
-        js_delete(functionCounts(i));
+    JS_ASSERT(isStaticallyLinked());
 }
 
 void
-AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t *asmJSModuleCode,
-                           size_t *asmJSModuleData)
+AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
 {
-    *asmJSModuleCode += pod.totalBytes_;
-    *asmJSModuleData += mallocSizeOf(this) +
-                        globals_.sizeOfExcludingThis(mallocSizeOf) +
-                        exits_.sizeOfExcludingThis(mallocSizeOf) +
-                        exports_.sizeOfExcludingThis(mallocSizeOf) +
-                        callSites_.sizeOfExcludingThis(mallocSizeOf) +
-                        functionNames_.sizeOfExcludingThis(mallocSizeOf) +
-                        heapAccesses_.sizeOfExcludingThis(mallocSizeOf) +
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-                        profiledFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+    JS_ASSERT(IsValidAsmJSHeapLength(heap->byteLength()));
+    JS_ASSERT(dynamicallyLinked_);
+    JS_ASSERT(!maybeHeap_);
+
+    maybeHeap_ = heap;
+    heapDatum() = heap->dataPointer();
+
+#if defined(JS_CODEGEN_X86)
+    uint8_t *heapOffset = heap->dataPointer();
+    void *heapLength = (void*)heap->byteLength();
+    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+        const jit::AsmJSHeapAccess &access = heapAccesses_[i];
+        if (access.hasLengthCheck())
+            JSC::X86Assembler::setPointer(access.patchLengthAt(code_), heapLength);
+        void *addr = access.patchOffsetAt(code_);
+        uint32_t disp = reinterpret_cast<uint32_t>(JSC::X86Assembler::getPointer(addr));
+        JS_ASSERT(disp <= INT32_MAX);
+        JSC::X86Assembler::setPointer(addr, (void *)(heapOffset + disp));
+    }
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+    uint32_t heapLength = heap->byteLength();
+    for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+        jit::Assembler::updateBoundsCheck(heapLength,
+                                          (jit::Instruction*)(heapAccesses_[i].offset() + code_));
+    }
 #endif
-#if defined(JS_ION_PERF)
-                        perfProfiledBlocksFunctions_.sizeOfExcludingThis(mallocSizeOf) +
+}
+
+void
+AsmJSModule::restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx)
+{
+#ifdef DEBUG
+    // Put the absolute links back to -1 so patchDataWithValueCheck assertions
+    // in staticallyLink are valid.
+    for (size_t i = 0; i < staticLinkData_.absoluteLinks.length(); i++) {
+        AbsoluteLink link = staticLinkData_.absoluteLinks[i];
+        Assembler::patchDataWithValueCheck(CodeLocationLabel(code_ + link.patchAt.offset()),
+                                           PatchedImmPtr((void*)-1),
+                                           PatchedImmPtr(AddressOf(link.target, cx)));
+    }
 #endif
-                        functionCounts_.sizeOfExcludingThis(mallocSizeOf) +
-                        staticLinkData_.sizeOfExcludingThis(mallocSizeOf);
+
+    if (maybePrevBuffer) {
+#if defined(JS_CODEGEN_X86)
+        // Subtract out the base-pointer added by AsmJSModule::initHeap.
+        uint8_t *ptrBase = maybePrevBuffer->dataPointer();
+        for (unsigned i = 0; i < heapAccesses_.length(); i++) {
+            const jit::AsmJSHeapAccess &access = heapAccesses_[i];
+            void *addr = access.patchOffsetAt(code_);
+            uint8_t *ptr = reinterpret_cast<uint8_t*>(JSC::X86Assembler::getPointer(addr));
+            JS_ASSERT(ptr >= ptrBase);
+            JSC::X86Assembler::setPointer(addr, (void *)(ptr - ptrBase));
+        }
+#endif
+    }
 }
 
 static void
@@ -966,6 +1194,7 @@ AsmJSModule::clone(JSContext *cx, ScopedJSDeletePtr<AsmJSModule> *moduleOut) con
 void
 AsmJSModule::protectCode(JSRuntime *rt) const
 {
+    JS_ASSERT(isDynamicallyLinked());
     JS_ASSERT(rt->currentThreadOwnsInterruptLock());
 
     codeIsProtected_ = true;
@@ -989,6 +1218,7 @@ AsmJSModule::protectCode(JSRuntime *rt) const
 void
 AsmJSModule::unprotectCode(JSRuntime *rt) const
 {
+    JS_ASSERT(isDynamicallyLinked());
     JS_ASSERT(rt->currentThreadOwnsInterruptLock());
 
     codeIsProtected_ = false;
@@ -1009,6 +1239,7 @@ AsmJSModule::unprotectCode(JSRuntime *rt) const
 bool
 AsmJSModule::codeIsProtected(JSRuntime *rt) const
 {
+    JS_ASSERT(isDynamicallyLinked());
     JS_ASSERT(rt->currentThreadOwnsInterruptLock());
     return codeIsProtected_;
 }

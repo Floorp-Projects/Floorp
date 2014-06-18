@@ -65,7 +65,7 @@
 }
 
 .stylesheet-sidebar {
-  width: 230px;
+  width: 237px;
   -moz-border-start: 1px solid;
 }
 
@@ -89,6 +89,10 @@
   padding: 4px;
   cursor: pointer;
   border-bottom: 1px solid;
+}
+
+.media-rule-line {
+  -moz-padding-start: 4px;
 }
 
 .theme-light .media-condition-unmatched {
