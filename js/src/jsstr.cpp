@@ -118,14 +118,17 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    static const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                                  '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
     JSLinearString *str = ArgToRootedString(cx, args, 0);
     if (!str)
         return false;
 
-    uint32_t length = str->length();
+    size_t length = str->length();
     const jschar *chars = str->chars();
 
-    static const uint8_t shouldPassThrough[128] = {
+    static const uint8_t shouldPassThrough[256] = {
          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
          0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
          0,0,0,0,0,0,0,0,0,0,1,1,0,1,1,1,       /*    !"#$%&'()*+,-./  */
@@ -133,11 +136,23 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
          1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,       /*   @ABCDEFGHIJKLMNO  */
          1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,1,       /*   PQRSTUVWXYZ[\]^_  */
          0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,       /*   `abcdefghijklmno  */
-         1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,       /*   pqrstuvwxyz{\}~  DEL */
+         1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,     /*   pqrstuvwxyz{\}~  DEL */
     };
 
+    /* In step 7, exactly 69 characters should pass through unencoded. */
+#ifdef DEBUG
+    size_t count = 0;
+    for (size_t i = 0; i < sizeof(shouldPassThrough); i++) {
+        if (shouldPassThrough[i]) {
+            count++;
+        }
+    }
+    JS_ASSERT(count == 69);
+#endif
+
+
     /* Take a first pass and see how big the result string will need to be. */
-    uint32_t newlength = length;
+    size_t newlength = length;
     for (size_t i = 0; i < length; i++) {
         jschar ch = chars[i];
         if (ch < 128 && shouldPassThrough[ch])
@@ -147,19 +162,23 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
         newlength += (ch < 256) ? 2 : 5;
 
         /*
-         * newlength is incremented by at most 5 on each iteration, so worst
-         * case newlength == length * 6. This can't overflow.
+         * This overflow test works because newlength is incremented by at
+         * most 5 on each iteration.
          */
-        static_assert(JSString::MAX_LENGTH < UINT32_MAX / 6,
-                      "newlength must not overflow");
+        if (newlength < length) {
+            js_ReportAllocationOverflow(cx);
+            return false;
+        }
     }
 
-    ScopedJSFreePtr<jschar> newchars(cx->pod_malloc<jschar>(newlength + 1));
+    if (newlength >= ~(size_t)0 / sizeof(jschar)) {
+        js_ReportAllocationOverflow(cx);
+        return false;
+    }
+
+    jschar *newchars = cx->pod_malloc<jschar>(newlength + 1);
     if (!newchars)
         return false;
-
-    static const char digits[] = "0123456789ABCDEF";
-
     size_t i, ni;
     for (i = 0, ni = 0; i < length; i++) {
         jschar ch = chars[i];
@@ -181,11 +200,12 @@ str_escape(JSContext *cx, unsigned argc, Value *vp)
     JS_ASSERT(ni == newlength);
     newchars[newlength] = 0;
 
-    JSString *retstr = js_NewString<CanGC>(cx, newchars.get(), newlength);
-    if (!retstr)
+    JSString *retstr = js_NewString<CanGC>(cx, newchars, newlength);
+    if (!retstr) {
+        js_free(newchars);
         return false;
+    }
 
-    newchars.forget();
     args.rval().setString(retstr);
     return true;
 }
