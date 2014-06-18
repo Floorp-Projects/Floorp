@@ -565,23 +565,15 @@ function promiseRacePromiseArray() {
   }
 
   var arr = [
-    new Promise(function(resolve) {
-      resolve("first");
-    }),
-    Promise.resolve("second"),
-    new Promise(function() {}),
-    new Promise(function(resolve) {
-      setTimeout(function() {
-        setTimeout(function() {
-          resolve("fourth");
-        }, 0);
-      }, 0);
-    }),
+    timeoutPromise(50),
+    timeoutPromise(20),
+    timeoutPromise(30),
+    timeoutPromise(100)
   ];
 
   var p = Promise.race(arr);
   p.then(function(winner) {
-    is(winner, "first", "First queued resolution should win the race.");
+    is(winner, 20, "Fastest timeout should win.");
     runTest();
   });
 }
