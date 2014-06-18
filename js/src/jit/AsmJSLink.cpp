@@ -710,8 +710,8 @@ SendModuleToAttachedProfiler(JSContext *cx, AsmJSModule &module)
 
 #if defined(JS_ION_PERF)
     if (module.numExportedFunctions() > 0) {
-        size_t firstEntryCode = (size_t) module.entryTrampoline(module.exportedFunction(0));
-        writePerfSpewerAsmJSEntriesAndExits(firstEntryCode, (size_t) module.globalData() - firstEntryCode);
+        size_t firstEntryCode = size_t(module.codeBase() + module.functionBytes());
+        writePerfSpewerAsmJSEntriesAndExits(firstEntryCode, module.codeBytes() - module.functionBytes());
     }
     if (!SendBlocksToPerf(cx, module))
         return false;
