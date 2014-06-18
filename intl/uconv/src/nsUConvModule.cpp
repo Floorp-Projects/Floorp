@@ -158,12 +158,6 @@
 #include "nsUnicodeToISO2022JP.h"
 #include "nsUnicodeToJISx0201.h"
 
-// ucvtw2
-#include "nsUCvTW2CID.h"
-#include "nsUCvTW2Dll.h"
-#include "nsEUCTWToUnicode.h"
-#include "nsUnicodeToEUCTW.h"
-
 // ucvtw
 #include "nsUCvTWCID.h"
 #include "nsUCvTWDll.h"
@@ -267,9 +261,6 @@ NS_UCONV_REG_UNREG("EUC-JP", NS_EUCJPTOUNICODE_CID, NS_UNICODETOEUCJP_CID)
   
 NS_UCONV_REG_UNREG_ENCODER("jis_0201" , NS_UNICODETOJISX0201_CID)
 
-    // ucvtw2
-NS_UCONV_REG_UNREG("x-euc-tw", NS_EUCTWTOUNICODE_CID, NS_UNICODETOEUCTW_CID)
-
     // ucvtw
 NS_UCONV_REG_UNREG("Big5", NS_BIG5TOUNICODE_CID, NS_UNICODETOBIG5_CID)
 NS_UCONV_REG_UNREG("Big5-HKSCS", NS_BIG5HKSCSTOUNICODE_CID, NS_UNICODETOBIG5HKSCS_CID)
@@ -307,8 +298,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsEUCJPToUnicodeV2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsISO2022JPToUnicodeV2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToISO2022JP)
 
-// ucvtw2
-
 // ucvtw
 
 // ucvko
@@ -340,63 +329,6 @@ const uint16_t g_uf0208Mapping[] = {
 
 const uint16_t g_uf0208extMapping[] = {
 #include "jis0208ext.uf"
-};
-
-// ucvtw2
-const uint16_t g_ufCNS1MappingTable[] = {
-#include "cns_1.uf"
-};
-
-const uint16_t g_ufCNS2MappingTable[] = {
-#include "cns_2.uf"
-};
-
-const uint16_t g_ufCNS3MappingTable[] = {
-#include "cns3.uf"
-};
-
-const uint16_t g_ufCNS4MappingTable[] = {
-#include "cns4.uf"
-};
-
-const uint16_t g_ufCNS5MappingTable[] = {
-#include "cns5.uf"
-};
-
-const uint16_t g_ufCNS6MappingTable[] = {
-#include "cns6.uf"
-};
-
-const uint16_t g_ufCNS7MappingTable[] = {
-#include "cns7.uf"
-};
-
-const uint16_t g_utCNS1MappingTable[] = {
-#include "cns_1.ut"
-};
-
-const uint16_t g_utCNS2MappingTable[] = {
-#include "cns_2.ut"
-};
-
-const uint16_t g_utCNS3MappingTable[] = {
-#include "cns3.ut"
-};
-
-const uint16_t g_utCNS4MappingTable[] = {
-#include "cns4.ut"
-};
-
-const uint16_t g_utCNS5MappingTable[] = {
-#include "cns5.ut"
-};
-
-const uint16_t g_utCNS6MappingTable[] = {
-#include "cns6.ut"
-};
-
-const uint16_t g_utCNS7MappingTable[] = {
-#include "cns7.ut"
 };
 
 const uint16_t g_ASCIIMappingTable[] = {
@@ -580,8 +512,6 @@ NS_DEFINE_NAMED_CID(NS_UNICODETOSJIS_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOEUCJP_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOISO2022JP_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOJISX0201_CID);
-NS_DEFINE_NAMED_CID(NS_EUCTWTOUNICODE_CID);
-NS_DEFINE_NAMED_CID(NS_UNICODETOEUCTW_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOBIG5_CID);
 NS_DEFINE_NAMED_CID(NS_BIG5TOUNICODE_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOBIG5HKSCS_CID);
@@ -740,8 +670,6 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_UNICODETOEUCJP_CID, false, nullptr, nsUnicodeToEUCJPConstructor },
   { &kNS_UNICODETOISO2022JP_CID, false, nullptr, nsUnicodeToISO2022JPConstructor },
   { &kNS_UNICODETOJISX0201_CID, false, nullptr, nsUnicodeToJISx0201Constructor },
-  { &kNS_EUCTWTOUNICODE_CID, false, nullptr, nsEUCTWToUnicodeConstructor },
-  { &kNS_UNICODETOEUCTW_CID, false, nullptr, nsUnicodeToEUCTWConstructor },
   { &kNS_UNICODETOBIG5_CID, false, nullptr, nsUnicodeToBIG5Constructor },
   { &kNS_BIG5TOUNICODE_CID, false, nullptr, nsBIG5ToUnicodeConstructor },
   { &kNS_UNICODETOBIG5HKSCS_CID, false, nullptr, nsUnicodeToBIG5HKSCSConstructor },
@@ -902,8 +830,6 @@ static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
   { NS_UNICODEENCODER_CONTRACTID_BASE "EUC-JP", &kNS_UNICODETOEUCJP_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "ISO-2022-JP", &kNS_UNICODETOISO2022JP_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "jis_0201", &kNS_UNICODETOJISX0201_CID },
-  { NS_UNICODEDECODER_CONTRACTID_BASE "x-euc-tw", &kNS_EUCTWTOUNICODE_CID },
-  { NS_UNICODEENCODER_CONTRACTID_BASE "x-euc-tw", &kNS_UNICODETOEUCTW_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "Big5", &kNS_UNICODETOBIG5_CID },
   { NS_UNICODEDECODER_CONTRACTID_BASE "Big5", &kNS_BIG5TOUNICODE_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "Big5-HKSCS", &kNS_UNICODETOBIG5HKSCS_CID },
