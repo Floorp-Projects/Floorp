@@ -229,6 +229,42 @@ class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Base class for both int32x4 and float32x4 shuffle instructions.
+class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LSimdSwizzleBase(const LAllocation &base)
+    {
+        setOperand(0, base);
+    }
+
+    const LAllocation *getBase() {
+        return getOperand(0);
+    }
+
+    SimdLane laneX() const { return mir_->toSimdSwizzle()->laneX(); }
+    SimdLane laneY() const { return mir_->toSimdSwizzle()->laneY(); }
+    SimdLane laneZ() const { return mir_->toSimdSwizzle()->laneZ(); }
+    SimdLane laneW() const { return mir_->toSimdSwizzle()->laneW(); }
+};
+
+// Shuffles a int32x4 into another int32x4 vector.
+class LSimdSwizzleI : public LSimdSwizzleBase
+{
+  public:
+    LIR_HEADER(SimdSwizzleI);
+    LSimdSwizzleI(const LAllocation &base) : LSimdSwizzleBase(base)
+    {}
+};
+// Shuffles a float32x4 into another float32x4 vector.
+class LSimdSwizzleF : public LSimdSwizzleBase
+{
+  public:
+    LIR_HEADER(SimdSwizzleF);
+    LSimdSwizzleF(const LAllocation &base) : LSimdSwizzleBase(base)
+    {}
+};
+
 // Binary SIMD comparison operation between two SIMD operands
 class LSimdBinaryComp: public LInstructionHelper<1, 2, 0>
 {
