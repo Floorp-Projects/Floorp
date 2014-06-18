@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ShadowRoot tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    SpecialPowers.setBoolPref("dom.webcomponents.enabled", true);
+    function doTest()
+    {
+      testElm("component", {
+        role: ROLE_GROUPING,
+        children: [
+        {
+          role: ROLE_PUSHBUTTON,
+        },
+        {
+          role: ROLE_LINK,
+        },
+        ]
+      });
+
+      SpecialPowers.clearUserPref("dom.webcomponents.enabled");
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+    title="Ensure accessible objects are created for shadow root"
+    href="https://bugzilla.mozilla.org/show_bug.cgi?id=1026125">
+     Mozilla Bug 1026125
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="group" id="component"></div>
+  <script>
+    var component = document.getElementById('component');
+    var shadow = component.createShadowRoot();
+
+    shadow.innerHTML = '<button>Hello</button>' +
+      '<a href="#"> World</a>';
+  </script>
+
+</body>
+</html>
