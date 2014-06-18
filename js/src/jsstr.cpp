@@ -369,9 +369,6 @@ static const JSFunctionSpec string_functions[] = {
     JS_FS_END
 };
 
-const jschar      js_empty_ucstr[]  = {0};
-const JSSubString js_EmptySubString = {0, js_empty_ucstr};
-
 static const unsigned STRING_ELEMENT_ATTRS = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
 
 static bool
@@ -2488,7 +2485,6 @@ struct ReplaceData
     RootedLinearString repstr;         /* replacement string */
     uint32_t           dollarIndex;    /* index of first $ in repstr, or UINT32_MAX */
     int                leftIndex;      /* left context index in str->chars */
-    JSSubString        dollarStr;      /* for "$$" InterpretDollar result */
     bool               calledBack;     /* record whether callback has been called */
     FastInvokeGuard    fig;            /* used for lambda calls, also holds arguments */
     StringBuffer       sb;             /* buffer built during DoMatch */
@@ -2592,9 +2588,7 @@ InterpretDollar(RegExpStatics *res, const jschar *dp, const jschar *ep,
     *skip = 2;
     switch (dc) {
       case '$':
-        rdata.dollarStr.chars = dp;
-        rdata.dollarStr.length = 1;
-        *out = rdata.dollarStr;
+        out->init(rdata.repstr, dp - rdata.repstr->chars(), 1);
         return true;
       case '&':
         res->getLastMatch(out);
@@ -2758,7 +2752,7 @@ DoReplace(RegExpStatics *res, ReplaceData &rdata)
             JSSubString sub;
             size_t skip;
             if (InterpretDollar(res, dp, ep, rdata, &sub, &skip)) {
-                rdata.sb.infallibleAppend(sub.chars, sub.length);
+                rdata.sb.infallibleAppendSubstring(sub.base, sub.offset, sub.length);
                 cp += skip;
                 dp += skip;
             } else {
@@ -3203,7 +3197,7 @@ StrReplaceRegExp(JSContext *cx, ReplaceData &rdata, MutableHandleValue rval)
 
     JSSubString sub;
     res->getRightContext(&sub);
-    if (!rdata.sb.append(sub.chars, sub.length))
+    if (!rdata.sb.appendSubstring(sub.base, sub.offset, sub.length))
         return false;
 
     JSString *retstr = rdata.sb.finishString();
@@ -3592,7 +3586,8 @@ SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher
                 if (!matches[i + 1].isUndefined()) {
                     JSSubString parsub;
                     res->getParen(i + 1, &parsub);
-                    sub = js_NewStringCopyN<CanGC>(cx, parsub.chars, parsub.length);
+                    sub = js_NewStringCopyN<CanGC>(cx, parsub.base->chars() + parsub.offset,
+                                                   parsub.length);
                     if (!sub || !splits.append(StringValue(sub)))
                         return nullptr;
                 } else {

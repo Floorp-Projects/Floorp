@@ -30,12 +30,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 PromiseCallback::PromiseCallback()
 {
-  MOZ_COUNT_CTOR(PromiseCallback);
 }
 
 PromiseCallback::~PromiseCallback()
 {
-  MOZ_COUNT_DTOR(PromiseCallback);
 }
 
 // ResolvePromiseCallback
@@ -71,13 +69,11 @@ ResolvePromiseCallback::ResolvePromiseCallback(Promise* aPromise,
 {
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(aGlobal);
-  MOZ_COUNT_CTOR(ResolvePromiseCallback);
   HoldJSObjects(this);
 }
 
 ResolvePromiseCallback::~ResolvePromiseCallback()
 {
-  MOZ_COUNT_DTOR(ResolvePromiseCallback);
   DropJSObjects(this);
 }
 
@@ -131,13 +127,11 @@ RejectPromiseCallback::RejectPromiseCallback(Promise* aPromise,
 {
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(mGlobal);
-  MOZ_COUNT_CTOR(RejectPromiseCallback);
   HoldJSObjects(this);
 }
 
 RejectPromiseCallback::~RejectPromiseCallback()
 {
-  MOZ_COUNT_DTOR(RejectPromiseCallback);
   DropJSObjects(this);
 }
 
@@ -194,13 +188,11 @@ WrapperPromiseCallback::WrapperPromiseCallback(Promise* aNextPromise,
 {
   MOZ_ASSERT(aNextPromise);
   MOZ_ASSERT(aGlobal);
-  MOZ_COUNT_CTOR(WrapperPromiseCallback);
   HoldJSObjects(this);
 }
 
 WrapperPromiseCallback::~WrapperPromiseCallback()
 {
-  MOZ_COUNT_DTOR(WrapperPromiseCallback);
   DropJSObjects(this);
 }
 
@@ -325,12 +317,10 @@ NativePromiseCallback::NativePromiseCallback(PromiseNativeHandler* aHandler,
   , mState(aState)
 {
   MOZ_ASSERT(aHandler);
-  MOZ_COUNT_CTOR(NativePromiseCallback);
 }
 
 NativePromiseCallback::~NativePromiseCallback()
 {
-  MOZ_COUNT_DTOR(NativePromiseCallback);
 }
 
 void

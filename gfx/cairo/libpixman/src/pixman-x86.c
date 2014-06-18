@@ -106,6 +106,10 @@ have_cpuid (void)
 #endif
 }
 
+#ifdef _MSC_VER
+#include <intrin.h> /* for __cpuid */
+#endif
+
 static void
 pixman_cpuid (uint32_t feature,
 	      uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d)

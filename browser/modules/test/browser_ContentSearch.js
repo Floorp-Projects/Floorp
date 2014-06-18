@@ -6,55 +6,22 @@ const TEST_MSG = "ContentSearchTest";
 const CONTENT_SEARCH_MSG = "ContentSearch";
 const TEST_CONTENT_SCRIPT_BASENAME = "contentSearch.js";
 
-function generatorTest() {
-  // nextStep() drives the iterator returned by this function.  This function's
-  // iterator in turn drives the iterator of each test below.
-  let currentTestIter = yield startNextTest();
-  let arg = undefined;
-  while (currentTestIter) {
-    try {
-      currentTestIter.send(arg);
-      arg = yield null;
-    }
-    catch (err if err instanceof StopIteration) {
-      currentTestIter = yield startNextTest();
-      arg = undefined;
-    }
-  }
-}
-
-function startNextTest() {
-  if (!gTests.length) {
-    setTimeout(() => nextStep(null), 0);
-    return;
-  }
-  let nextTestGen = gTests.shift();
-  let nextTestIter = nextTestGen();
-  addTab(() => {
-    info("Starting test " + nextTestGen.name);
-    nextStep(nextTestIter);
-  });
-}
-
-function addTest(testGen) {
-  gTests.push(testGen);
-}
-
-var gTests = [];
 var gMsgMan;
 
-addTest(function GetState() {
+add_task(function* GetState() {
+  yield addTab();
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "GetState",
   });
   let msg = yield waitForTestMsg("State");
   checkMsg(msg, {
     type: "State",
-    data: currentStateObj(),
+    data: yield currentStateObj(),
   });
 });
 
-addTest(function SetCurrentEngine() {
+add_task(function* SetCurrentEngine() {
+  yield addTab();
   let newCurrentEngine = null;
   let oldCurrentEngine = Services.search.currentEngine;
   let engines = Services.search.getVisibleEngines();
@@ -73,39 +40,38 @@ addTest(function SetCurrentEngine() {
     type: "SetCurrentEngine",
     data: newCurrentEngine.name,
   });
+  let deferred = Promise.defer();
   Services.obs.addObserver(function obs(subj, topic, data) {
     info("Test observed " + data);
     if (data == "engine-current") {
       ok(true, "Test observed engine-current");
       Services.obs.removeObserver(obs, "browser-search-engine-modified", false);
-      nextStep();
+      deferred.resolve();
     }
   }, "browser-search-engine-modified", false);
+  let searchPromise = waitForTestMsg("CurrentEngine");
   info("Waiting for test to observe engine-current...");
-  waitForTestMsg("CurrentEngine");
-  let maybeMsg1 = yield null;
-  let maybeMsg2 = yield null;
-  let msg = maybeMsg1 || maybeMsg2;
-  ok(!!msg,
-     "Sanity check: One of the yields is for waitForTestMsg and should have " +
-     "therefore produced a message object");
+  yield deferred.promise;
+  let msg = yield searchPromise;
   checkMsg(msg, {
     type: "CurrentEngine",
-    data: currentEngineObj(newCurrentEngine),
+    data: yield currentEngineObj(newCurrentEngine),
   });
 
   Services.search.currentEngine = oldCurrentEngine;
   let msg = yield waitForTestMsg("CurrentEngine");
   checkMsg(msg, {
     type: "CurrentEngine",
-    data: currentEngineObj(oldCurrentEngine),
+    data: yield currentEngineObj(oldCurrentEngine),
   });
 });
 
-addTest(function ManageEngines() {
+add_task(function* ManageEngines() {
+  yield addTab();
   gMsgMan.sendAsyncMessage(TEST_MSG, {
     type: "ManageEngines",
   });
+  let deferred = Promise.defer();
   let winWatcher = Cc["@mozilla.org/embedcomp/window-watcher;1"].
                    getService(Ci.nsIWindowWatcher);
   winWatcher.registerNotification(function onOpen(subj, topic, data) {
@@ -119,33 +85,35 @@ addTest(function ManageEngines() {
           is(subj.opener, window,
              "Search engine manager opener should be this chrome window");
           subj.close();
-          nextStep();
+          deferred.resolve();
         }
       });
     }
   });
   info("Waiting for search engine manager window to open...");
-  yield null;
+  yield deferred.promise;
 });
 
-addTest(function modifyEngine() {
+add_task(function* modifyEngine() {
+  yield addTab();
   let engine = Services.search.currentEngine;
   let oldAlias = engine.alias;
   engine.alias = "ContentSearchTest";
-  let msg = yield waitForTestMsg("State");
+  let msg = yield waitForTestMsg("CurrentState");
   checkMsg(msg, {
-    type: "State",
-    data: currentStateObj(),
+    type: "CurrentState",
+    data: yield currentStateObj(),
   });
   engine.alias = oldAlias;
-  msg = yield waitForTestMsg("State");
+  msg = yield waitForTestMsg("CurrentState");
   checkMsg(msg, {
-    type: "State",
-    data: currentStateObj(),
+    type: "CurrentState",
+    data: yield currentStateObj(),
   });
 });
 
-addTest(function search() {
+add_task(function* search() {
+  yield addTab();
   let engine = Services.search.currentEngine;
   let data = {
     engineName: engine.name,
@@ -158,6 +126,7 @@ addTest(function search() {
   });
   let submissionURL =
     engine.getSubmission(data.searchString, "", data.whence).uri.spec;
+  let deferred = Promise.defer();
   let listener = {
     onStateChange: function (webProg, req, flags, status) {
       let url = req.originalURI.spec;
@@ -168,35 +137,38 @@ addTest(function search() {
         gBrowser.removeProgressListener(listener);
         ok(true, "Search URL loaded");
         req.cancel(Components.results.NS_ERROR_FAILURE);
-        nextStep();
+        deferred.resolve();
       }
     }
   };
   gBrowser.addProgressListener(listener);
   info("Waiting for search URL to load: " + submissionURL);
-  yield null;
+  yield deferred.promise;
 });
 
 function checkMsg(actualMsg, expectedMsgData) {
   SimpleTest.isDeeply(actualMsg.data, expectedMsgData, "Checking message");
 }
 
-function waitForMsg(name, type, callback) {
+function waitForMsg(name, type) {
+  let deferred = Promise.defer();
   info("Waiting for " + name + " message " + type + "...");
   gMsgMan.addMessageListener(name, function onMsg(msg) {
     info("Received " + name + " message " + msg.data.type + "\n");
     if (msg.data.type == type) {
       gMsgMan.removeMessageListener(name, onMsg);
-      (callback || nextStep)(msg);
+      deferred.resolve(msg);
     }
   });
+  return deferred.promise;
 }
 
-function waitForTestMsg(type, callback) {
-  waitForMsg(TEST_MSG, type, callback);
+function waitForTestMsg(type) {
+  return waitForMsg(TEST_MSG, type);
 }
 
-function addTab(onLoad) {
+function addTab() {
+  let deferred = Promise.defer();
   let tab = gBrowser.addTab();
   gBrowser.selectedTab = tab;
   tab.linkedBrowser.addEventListener("load", function load() {
@@ -207,34 +179,57 @@ function addTab(onLoad) {
       type: "AddToWhitelist",
       data: ["about:blank"],
     });
-    waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck", () => {
+    waitForMsg(CONTENT_SEARCH_MSG, "AddToWhitelistAck").then(() => {
       gMsgMan.loadFrameScript(url, false);
-      onLoad();
+      deferred.resolve();
     });
   }, true);
   registerCleanupFunction(() => gBrowser.removeTab(tab));
+  return deferred.promise;
 }
 
 function currentStateObj() {
-  return {
-    engines: Services.search.getVisibleEngines().map(engine => {
-      return {
+  return Task.spawn(function* () {
+    let state = {
+      engines: [],
+      currentEngine: yield currentEngineObj(),
+    };
+    for (let engine of Services.search.getVisibleEngines()) {
+      let uri = engine.getIconURLBySize(16, 16);
+      state.engines.push({
         name: engine.name,
-        iconURI: engine.getIconURLBySize(16, 16),
-      };
-    }),
-    currentEngine: currentEngineObj(),
-  };
+        iconBuffer: yield arrayBufferFromDataURI(uri),
+      });
+    }
+    return state;
+  }.bind(this));
 }
 
-function currentEngineObj(expectedCurrentEngine) {
-  if (expectedCurrentEngine) {
-    is(Services.search.currentEngine.name, expectedCurrentEngine.name,
-       "Sanity check: expected current engine");
+function currentEngineObj() {
+  return Task.spawn(function* () {
+    let engine = Services.search.currentEngine;
+    let uri1x = engine.getIconURLBySize(65, 26);
+    let uri2x = engine.getIconURLBySize(130, 52);
+    return {
+      name: engine.name,
+      logoBuffer: yield arrayBufferFromDataURI(uri1x),
+      logo2xBuffer: yield arrayBufferFromDataURI(uri2x),
+    };
+  }.bind(this));
+}
+
+function arrayBufferFromDataURI(uri) {
+  if (!uri) {
+    return Promise.resolve(null);
   }
-  return {
-    name: Services.search.currentEngine.name,
-    logoURI: Services.search.currentEngine.getIconURLBySize(65, 26),
-    logo2xURI: Services.search.currentEngine.getIconURLBySize(130, 52),
+  let deferred = Promise.defer();
+  let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+            createInstance(Ci.nsIXMLHttpRequest);
+  xhr.open("GET", uri, true);
+  xhr.responseType = "arraybuffer";
+  xhr.onloadend = () => {
+    deferred.resolve(xhr.response);
   };
+  xhr.send();
+  return deferred.promise;
 }

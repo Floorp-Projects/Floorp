@@ -1,59 +1,5 @@
-/******* BEGIN LICENSE BLOCK *******
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- * 
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- * 
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- * 
- * The Initial Developers of the Original Code are Kevin Hendricks (MySpell)
- * and László Németh (Hunspell). Portions created by the Initial Developers
- * are Copyright (C) 2002-2005 the Initial Developers. All Rights Reserved.
- * 
- * Contributor(s): Kevin Hendricks (kevin.hendricks@sympatico.ca)
- *                 David Einstein (deinst@world.std.com)
- *                 László Németh (nemethl@gyorsposta.hu)
- *                 Caolan McNamara (caolanm@redhat.com)
- *                 Davide Prina
- *                 Giuseppe Modugno
- *                 Gianluca Turconi
- *                 Simon Brouwer
- *                 Noll Janos
- *                 Biro Arpad
- *                 Goldman Eleonora
- *                 Sarlos Tamas
- *                 Bencsath Boldizsar
- *                 Halacsy Peter
- *                 Dvornik Laszlo
- *                 Gefferth Andras
- *                 Nagy Viktor
- *                 Varga Daniel
- *                 Chris Halls
- *                 Rene Engelhard
- *                 Bram Moolenaar
- *                 Dafydd Jones
- *                 Harri Pitkanen
- *                 Andras Timar
- *                 Tor Lillqvist
- * 
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- ******* END LICENSE BLOCK *******/
+#include "license.hunspell"
+#include "license.myspell"
 
 #include <stdlib.h> 
 #include <string.h>
@@ -161,7 +107,10 @@ int SuggestMgr::testsug(char** wlst, const char * candidate, int wl, int ns, int
       int cwrd = 1;
       if (ns == maxSug) return maxSug;
       for (int k=0; k < ns; k++) {
-        if (strcmp(candidate,wlst[k]) == 0) cwrd = 0;
+        if (strcmp(candidate,wlst[k]) == 0) {
+            cwrd = 0;
+            break;
+        }
       }
       if ((cwrd) && checkword(candidate, wl, cpdsuggest, timer, timelimit)) {
         wlst[ns] = mystrdup(candidate);
@@ -418,8 +367,12 @@ int SuggestMgr::map_related(const char * word, char * candidate, int wn, int cn,
       int cwrd = 1;
       *(candidate + cn) = '\0';
       int wl = strlen(candidate);
-      for (int m=0; m < ns; m++)
-          if (strcmp(candidate, wlst[m]) == 0) cwrd = 0;
+      for (int m=0; m < ns; m++) {
+          if (strcmp(candidate, wlst[m]) == 0) {
+              cwrd = 0;
+              break;
+          }
+      }
       if ((cwrd) && checkword(candidate, wl, cpdsuggest, timer, timelimit)) {
           if (ns < maxSug) {
               wlst[ns] = mystrdup(candidate);
@@ -732,7 +685,7 @@ int SuggestMgr::extrachar(char** wlst, const char * word, int ns, int cpdsuggest
 // error is missing a letter it needs
 int SuggestMgr::forgotchar(char ** wlst, const char * word, int ns, int cpdsuggest)
 {
-   char candidate[MAXSWUTF8L];
+   char candidate[MAXSWUTF8L + 4];
    char * p;
    clock_t timelimit = clock();
    int timer = MINTIMER;
@@ -754,8 +707,8 @@ int SuggestMgr::forgotchar(char ** wlst, const char * word, int ns, int cpdsugge
 // error is missing a letter it needs
 int SuggestMgr::forgotchar_utf(char ** wlst, const w_char * word, int wl, int ns, int cpdsuggest)
 {
-   w_char  candidate_utf[MAXSWL];
-   char    candidate[MAXSWUTF8L];
+   w_char  candidate_utf[MAXSWL + 1];
+   char    candidate[MAXSWUTF8L + 4];
    w_char * p;
    clock_t timelimit = clock();
    int timer = MINTIMER;
@@ -815,8 +768,12 @@ int SuggestMgr::twowords(char ** wlst, const char * word, int ns, int cpdsuggest
                 ((c1 == 3) && (c2 >= 2)))) *p = '-';
 
             cwrd = 1;
-            for (int k=0; k < ns; k++)
-                if (strcmp(candidate,wlst[k]) == 0) cwrd = 0;
+            for (int k=0; k < ns; k++) {
+                if (strcmp(candidate,wlst[k]) == 0) {
+                    cwrd = 0;
+                    break;
+                }
+            }
             if (ns < maxSug) {
                 if (cwrd) {
                     wlst[ns] = mystrdup(candidate);
@@ -831,8 +788,12 @@ int SuggestMgr::twowords(char ** wlst, const char * word, int ns, int cpdsuggest
                 mystrlen(p + 1) > 1 &&
                 mystrlen(candidate) - mystrlen(p) > 1) {
                 *p = '-'; 
-                for (int k=0; k < ns; k++)
-                    if (strcmp(candidate,wlst[k]) == 0) cwrd = 0;
+                for (int k=0; k < ns; k++) {
+                    if (strcmp(candidate,wlst[k]) == 0) {
+                        cwrd = 0;
+                        break;
+                    }
+                }
                 if (ns < maxSug) {
                     if (cwrd) {
                         wlst[ns] = mystrdup(candidate);
@@ -1387,7 +1348,10 @@ int SuggestMgr::ngsuggest(char** wlst, char * w, int ns, HashMgr** pHMgr, int md
           if ((!guessorig[i] && strstr(guess[i], wlst[j])) ||
 	     (guessorig[i] && strstr(guessorig[i], wlst[j])) ||
             // check forbidden words
-            !checkword(guess[i], strlen(guess[i]), 0, NULL, NULL)) unique = 0;
+            !checkword(guess[i], strlen(guess[i]), 0, NULL, NULL)) {
+            unique = 0;
+            break;
+          }
         }
         if (unique) {
     	    wlst[ns++] = guess[i];
@@ -1415,7 +1379,10 @@ int SuggestMgr::ngsuggest(char** wlst, char * w, int ns, HashMgr** pHMgr, int md
           // don't suggest previous suggestions or a previous suggestion with prefixes or affixes
           if (strstr(rootsphon[i], wlst[j]) || 
             // check forbidden words
-            !checkword(rootsphon[i], strlen(rootsphon[i]), 0, NULL, NULL)) unique = 0;
+            !checkword(rootsphon[i], strlen(rootsphon[i]), 0, NULL, NULL)) {
+            unique = 0;
+            break;
+          }
         }
         if (unique) {
             wlst[ns++] = mystrdup(rootsphon[i]);
@@ -1909,6 +1876,10 @@ int SuggestMgr::commoncharacterpositions(char * s1, const char * s2, int * is_sw
     w_char su2[MAXSWL];
     int l1 = u8_u16(su1, MAXSWL, s1);
     int l2 = u8_u16(su2, MAXSWL, s2);
+
+    if (l1 <= 0 || l2 <= 0)
+        return 0;
+
     // decapitalize dictionary word
     if (complexprefixes) {
       mkallsmall_utf(su2+l2-1, 1, langnum);
