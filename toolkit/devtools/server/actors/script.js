@@ -6,7 +6,6 @@
 
 "use strict";
 
-const Debugger = require("Debugger");
 const Services = require("Services");
 const { Cc, Ci, Cu, components } = require("chrome");
 const { ActorPool } = require("devtools/server/actors/common");
@@ -326,9 +325,6 @@ exports.BreakpointStore = BreakpointStore;
  * Manages pushing event loops and automatically pops and exits them in the
  * correct order as they are resolved.
  *
- * @param nsIJSInspector inspector
- *        The underlying JS inspector we use to enter and exit nested event
- *        loops.
  * @param ThreadActor thread
  *        The thread actor instance that owns this EventLoopStack.
  * @param DebuggerServerConnection connection
@@ -340,8 +336,7 @@ exports.BreakpointStore = BreakpointStore;
  *          - preNest: function called before entering a nested event loop
  *          - postNest: function called after exiting a nested event loop
  */
-function EventLoopStack({ inspector, thread, connection, hooks }) {
-  this._inspector = inspector;
+function EventLoopStack({ thread, connection, hooks }) {
   this._hooks = hooks;
   this._thread = thread;
   this._connection = connection;
@@ -352,7 +347,7 @@ EventLoopStack.prototype = {
    * The number of nested event loops on the stack.
    */
   get size() {
-    return this._inspector.eventLoopNestLevel;
+    return xpcInspector.eventLoopNestLevel;
   },
 
   /**
@@ -362,7 +357,7 @@ EventLoopStack.prototype = {
     let url = null;
     if (this.size > 0) {
       try {
-        url = this._inspector.lastNestRequestor.url
+        url = xpcInspector.lastNestRequestor.url
       } catch (e) {
         // The tab's URL getter may throw if the tab is destroyed by the time
         // this code runs, but we don't really care at this point.
@@ -377,7 +372,7 @@ EventLoopStack.prototype = {
    * top of the stack
    */
   get lastConnection() {
-    return this._inspector.lastNestRequestor._connection;
+    return xpcInspector.lastNestRequestor._connection;
   },
 
   /**
@@ -387,7 +382,6 @@ EventLoopStack.prototype = {
    */
   push: function () {
     return new EventLoop({
-      inspector: this._inspector,
       thread: this._thread,
       connection: this._connection,
       hooks: this._hooks
@@ -399,8 +393,6 @@ EventLoopStack.prototype = {
  * An object that represents a nested event loop. It is used as the nest
  * requestor with nsIJSInspector instances.
  *
- * @param nsIJSInspector inspector
- *        The JS Inspector that runs nested event loops.
  * @param ThreadActor thread
  *        The thread actor that is creating this nested event loop.
  * @param DebuggerServerConnection connection
@@ -409,8 +401,7 @@ EventLoopStack.prototype = {
  *        The same hooks object passed into EventLoopStack during its
  *        initialization.
  */
-function EventLoop({ inspector, thread, connection, hooks }) {
-  this._inspector = inspector;
+function EventLoop({ thread, connection, hooks }) {
   this._thread = thread;
   this._hooks = hooks;
   this._connection = connection;
@@ -433,13 +424,13 @@ EventLoop.prototype = {
       : null;
 
     this.entered = true;
-    this._inspector.enterNestedEventLoop(this);
+    xpcInspector.enterNestedEventLoop(this);
 
     // Keep exiting nested event loops while the last requestor is resolved.
-    if (this._inspector.eventLoopNestLevel > 0) {
-      const { resolved } = this._inspector.lastNestRequestor;
+    if (xpcInspector.eventLoopNestLevel > 0) {
+      const { resolved } = xpcInspector.lastNestRequestor;
       if (resolved) {
-        this._inspector.exitNestedEventLoop();
+        xpcInspector.exitNestedEventLoop();
       }
     }
 
@@ -467,8 +458,8 @@ EventLoop.prototype = {
       throw new Error("Already resolved this nested event loop!");
     }
     this.resolved = true;
-    if (this === this._inspector.lastNestRequestor) {
-      this._inspector.exitNestedEventLoop();
+    if (this === xpcInspector.lastNestRequestor) {
+      xpcInspector.exitNestedEventLoop();
       return true;
     }
     return false;
@@ -788,7 +779,6 @@ ThreadActor.prototype = {
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
     this._nestedEventLoops = new EventLoopStack({
-      inspector: DebuggerServer.xpcInspector,
       hooks: this._hooks,
       connection: this.conn,
       thread: this
@@ -3859,7 +3849,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSMediaRule({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSMediaRule)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSMediaRule)) {
       return false;
     }
     aGrip.preview = {
@@ -3870,7 +3860,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function CSSStyleRule({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSStyleRule)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleRule)) {
       return false;
     }
     aGrip.preview = {
@@ -3881,16 +3871,15 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function ObjectWithURL({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj ||
-        Ci && !(aRawObj instanceof Ci.nsIDOMCSSImportRule ||
-                aRawObj instanceof Ci.nsIDOMCSSStyleSheet ||
-                aRawObj instanceof Ci.nsIDOMLocation ||
-                aRawObj instanceof Ci.nsIDOMWindow)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSImportRule ||
+                                  aRawObj instanceof Ci.nsIDOMCSSStyleSheet ||
+                                  aRawObj instanceof Ci.nsIDOMLocation ||
+                                  aRawObj instanceof Ci.nsIDOMWindow)) {
       return false;
     }
 
     let url;
-    if (Ci && (aRawObj instanceof Ci.nsIDOMWindow) && aRawObj.location) {
+    if (aRawObj instanceof Ci.nsIDOMWindow && aRawObj.location) {
       url = aRawObj.location.href;
     } else if (aRawObj.href) {
       url = aRawObj.href;
@@ -3907,17 +3896,17 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function ArrayLike({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj ||
+    if (isWorker || !aRawObj ||
         obj.class != "DOMStringList" &&
         obj.class != "DOMTokenList" &&
-        Ci && !(aRawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
-                aRawObj instanceof Ci.nsIDOMCSSRuleList ||
-                aRawObj instanceof Ci.nsIDOMCSSValueList ||
-                aRawObj instanceof Ci.nsIDOMFileList ||
-                aRawObj instanceof Ci.nsIDOMFontFaceList ||
-                aRawObj instanceof Ci.nsIDOMMediaList ||
-                aRawObj instanceof Ci.nsIDOMNodeList ||
-                aRawObj instanceof Ci.nsIDOMStyleSheetList)) {
+        !(aRawObj instanceof Ci.nsIDOMMozNamedAttrMap ||
+          aRawObj instanceof Ci.nsIDOMCSSRuleList ||
+          aRawObj instanceof Ci.nsIDOMCSSValueList ||
+          aRawObj instanceof Ci.nsIDOMFileList ||
+          aRawObj instanceof Ci.nsIDOMFontFaceList ||
+          aRawObj instanceof Ci.nsIDOMMediaList ||
+          aRawObj instanceof Ci.nsIDOMNodeList ||
+          aRawObj instanceof Ci.nsIDOMStyleSheetList)) {
       return false;
     }
 
@@ -3946,7 +3935,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // ArrayLike
 
   function CSSStyleDeclaration({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMCSSStyleDeclaration)) {
       return false;
     }
 
@@ -3968,7 +3957,8 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   },
 
   function DOMNode({obj, threadActor}, aGrip, aRawObj) {
-    if (obj.class == "Object" || !aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMNode)) {
+    if (isWorker || obj.class == "Object" || !aRawObj ||
+        !(aRawObj instanceof Ci.nsIDOMNode)) {
       return false;
     }
 
@@ -3978,9 +3968,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       nodeName: aRawObj.nodeName,
     };
 
-    if (Ci && (aRawObj instanceof Ci.nsIDOMDocument) && aRawObj.location) {
+    if (aRawObj instanceof Ci.nsIDOMDocument && aRawObj.location) {
       preview.location = threadActor.createValueGrip(aRawObj.location.href);
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMDocumentFragment)) {
+    } else if (aRawObj instanceof Ci.nsIDOMDocumentFragment) {
       preview.childNodesLength = aRawObj.childNodes.length;
 
       if (threadActor._gripDepth < 2) {
@@ -3993,7 +3983,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           }
         }
       }
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMElement)) {
+    } else if (aRawObj instanceof Ci.nsIDOMElement) {
       // Add preview for DOM element attributes.
       if (aRawObj instanceof Ci.nsIDOMHTMLElement) {
         preview.nodeName = preview.nodeName.toLowerCase();
@@ -4008,10 +3998,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
           break;
         }
       }
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMAttr)) {
+    } else if (aRawObj instanceof Ci.nsIDOMAttr) {
       preview.value = threadActor.createValueGrip(aRawObj.value);
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMText) ||
-               Ci && (aRawObj instanceof Ci.nsIDOMComment)) {
+    } else if (aRawObj instanceof Ci.nsIDOMText ||
+               aRawObj instanceof Ci.nsIDOMComment) {
       preview.textContent = threadActor.createValueGrip(aRawObj.textContent);
     }
 
@@ -4019,7 +4009,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // DOMNode
 
   function DOMEvent({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMEvent)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMEvent)) {
       return false;
     }
 
@@ -4035,9 +4025,9 @@ DebuggerServer.ObjectActorPreviewers.Object = [
     }
 
     let props = [];
-    if (Ci && (aRawObj instanceof Ci.nsIDOMMouseEvent)) {
+    if (aRawObj instanceof Ci.nsIDOMMouseEvent) {
       props.push("buttons", "clientX", "clientY", "layerX", "layerY");
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMKeyEvent)) {
+    } else if (aRawObj instanceof Ci.nsIDOMKeyEvent) {
       let modifiers = [];
       if (aRawObj.altKey) {
         modifiers.push("Alt");
@@ -4055,10 +4045,10 @@ DebuggerServer.ObjectActorPreviewers.Object = [
       preview.modifiers = modifiers;
 
       props.push("key", "charCode", "keyCode");
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMTransitionEvent) ||
-               Ci && (aRawObj instanceof Ci.nsIDOMAnimationEvent)) {
+    } else if (aRawObj instanceof Ci.nsIDOMTransitionEvent ||
+               aRawObj instanceof Ci.nsIDOMAnimationEvent) {
       props.push("animationName", "pseudoElement");
-    } else if (Ci && (aRawObj instanceof Ci.nsIDOMClipboardEvent)) {
+    } else if (aRawObj instanceof Ci.nsIDOMClipboardEvent) {
       props.push("clipboardData");
     }
 
@@ -4101,7 +4091,7 @@ DebuggerServer.ObjectActorPreviewers.Object = [
   }, // DOMEvent
 
   function DOMException({obj, threadActor}, aGrip, aRawObj) {
-    if (!aRawObj || Ci && !(aRawObj instanceof Ci.nsIDOMDOMException)) {
+    if (isWorker || !aRawObj || !(aRawObj instanceof Ci.nsIDOMDOMException)) {
       return false;
     }
 

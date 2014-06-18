@@ -118,7 +118,7 @@
         this.inputField.removeEventListener("underflow", this, false);
       ]]></destructor>
 
-      <field name="_value"></field>
+      <field name="_value">""</field>
 
       <!--
         onBeforeValueGet is called by the base-binding's .value getter.
