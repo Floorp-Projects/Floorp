@@ -768,7 +768,7 @@ TryPreserveWrapper(JSObject* obj)
   // If this DOMClass is not cycle collected, then it isn't wrappercached,
   // so it does not need to be preserved. If it is cycle collected, then
   // we can't tell if it is wrappercached or not, so we just return false.
-  const DOMClass* domClass = GetDOMClass(obj);
+  const DOMJSClass* domClass = GetDOMClass(obj);
   return domClass && !domClass->mParticipant;
 }
 
@@ -777,8 +777,8 @@ bool
 InstanceClassHasProtoAtDepth(const js::Class* clasp,
                              uint32_t protoID, uint32_t depth)
 {
-  const DOMClass& domClass = DOMJSClass::FromJSClass(clasp)->mClass;
-  return static_cast<uint32_t>(domClass.mInterfaceChain[depth]) == protoID;
+  const DOMJSClass* domClass = DOMJSClass::FromJSClass(clasp);
+  return static_cast<uint32_t>(domClass->mInterfaceChain[depth]) == protoID;
 }
 
 // Only set allowNativeWrapper to false if you really know you need it, if in
@@ -918,7 +918,7 @@ inline const NativePropertyHooks*
 GetNativePropertyHooks(JSContext *cx, JS::Handle<JSObject*> obj,
                        DOMObjectType& type)
 {
-  const DOMClass* domClass = GetDOMClass(obj);
+  const DOMJSClass* domClass = GetDOMClass(obj);
   if (domClass) {
     type = eInstance;
     return domClass->mNativeHooks;
@@ -1686,7 +1686,7 @@ ReparentWrapper(JSContext* aCx, JS::Handle<JSObject*> aObjArg)
   JS_CHECK_RECURSION(aCx, return NS_ERROR_FAILURE);
 
   JS::Rooted<JSObject*> aObj(aCx, aObjArg);
-  const DOMClass* domClass = GetDOMClass(aObj);
+  const DOMJSClass* domClass = GetDOMClass(aObj);
 
   JS::Rooted<JSObject*> oldParent(aCx, JS_GetParent(aObj));
   JS::Rooted<JSObject*> newParent(aCx, domClass->mGetParent(aCx, aObj));
@@ -1889,7 +1889,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
   const DOMIfaceAndProtoJSClass* clasp =
     DOMIfaceAndProtoJSClass::FromJSClass(js::GetObjectClass(obj));
 
-  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
+  const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
 
   MOZ_ASSERT(!domClass || clasp->mPrototypeID != prototypes::id::_ID_Count,
              "Why do we have a hasInstance hook if we don't have a prototype "
@@ -1958,7 +1958,7 @@ InterfaceHasInstance(JSContext* cx, int prototypeID, int depth,
                      JS::Handle<JSObject*> instance,
                      bool* bp)
 {
-  const DOMClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
+  const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance));
 
   MOZ_ASSERT(!domClass || prototypeID != prototypes::id::_ID_Count,
              "Why do we have a hasInstance hook if we don't have a prototype "
