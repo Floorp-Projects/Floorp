@@ -1614,30 +1614,27 @@ AppUnitsPerDevPixel(nsDisplayItem* aItem)
  * parent's coordinate system
  */
 static void
-SetVisibleRegionForLayer(Layer* aLayer, const nsIntRegion& aLayerVisibleRegion,
-                         const nsIntRect& aRestrictToRect)
+SetVisibleRegionForLayer(Layer* aLayer, const nsIntRect* aLayerVisibleRect,
+                         const nsIntRect& aOuterVisibleRect)
 {
   gfx3DMatrix transform;
   To3DMatrix(aLayer->GetTransform(), transform);
 
   // if 'transform' is not invertible, then nothing will be displayed
   // for the layer, so it doesn't really matter what we do here
-  gfxRect itemVisible(aRestrictToRect.x, aRestrictToRect.y,
-                      aRestrictToRect.width, aRestrictToRect.height);
-  nsIntRect childBounds = aLayerVisibleRegion.GetBounds();
-  gfxRect childGfxBounds(childBounds.x, childBounds.y,
-                         childBounds.width, childBounds.height);
-  gfxRect layerVisible = transform.Inverse().ProjectRectBounds(itemVisible);
-  layerVisible = layerVisible.Intersect(childGfxBounds);
+  gfxRect outerVisible(aOuterVisibleRect.x, aOuterVisibleRect.y,
+                       aOuterVisibleRect.width, aOuterVisibleRect.height);
+  gfxRect layerVisible = transform.Inverse().ProjectRectBounds(outerVisible);
   layerVisible.RoundOut();
 
   nsIntRect visibleRect;
   if (!gfxUtils::GfxRectToIntRect(layerVisible, &visibleRect)) {
     aLayer->SetVisibleRegion(nsIntRegion());
   } else {
-    nsIntRegion rgn;
-    rgn.And(aLayerVisibleRegion, visibleRect);
-    aLayer->SetVisibleRegion(rgn);
+    if (aLayerVisibleRect) {
+      visibleRect.IntersectRect(visibleRect, *aLayerVisibleRect);
+    }
+    aLayer->SetVisibleRegion(nsIntRegion(visibleRect));
   }
 }
 
@@ -2655,7 +2652,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList,
       }
       itemVisibleRect.MoveBy(mParameters.mOffset);
       if (item->SetVisibleRegionOnLayer()) {
-        SetVisibleRegionForLayer(ownLayer, ownLayer->GetVisibleRegion(), itemVisibleRect);
+        SetVisibleRegionForLayer(ownLayer, nullptr, itemVisibleRect);
       }
 
       // rounded rectangle clipping using mask layers
@@ -3522,7 +3519,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
 
   pixBounds.MoveBy(nsIntPoint(scaleParameters.mOffset.x, scaleParameters.mOffset.y));
   if (aParameters.mAncestorClipRect && !(aFlags & CONTAINER_NOT_CLIPPED_BY_ANCESTORS)) {
-    SetVisibleRegionForLayer(containerLayer, nsIntRegion(pixBounds),
+    SetVisibleRegionForLayer(containerLayer, &pixBounds,
                              *aParameters.mAncestorClipRect);
   } else {
     containerLayer->SetVisibleRegion(pixBounds);
