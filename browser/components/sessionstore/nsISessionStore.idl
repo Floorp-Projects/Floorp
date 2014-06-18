@@ -25,7 +25,7 @@ interface nsIDOMNode;
  * |gBrowser.tabContainer| such as e.g. |gBrowser.selectedTab|.
  */
 
-[scriptable, uuid(0c99811f-6c5f-4a78-9c31-2d266d714175)]
+[scriptable, uuid(4580f5eb-693d-423d-b0ce-2cb20a962e4d)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -165,7 +165,7 @@ interface nsISessionStore : nsISupports
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
-  void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in AString aStringValue);
+  void setWindowValue(in nsIDOMWindow aWindow, in AString aKey, in jsval aStringValue);
 
   /**
    * @param aWindow is the browser window to get the value for.
@@ -186,7 +186,7 @@ interface nsISessionStore : nsISupports
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
-  void setTabValue(in nsIDOMNode aTab, in AString aKey, in AString aStringValue);
+  void setTabValue(in nsIDOMNode aTab, in AString aKey, in jsval aStringValue);
 
   /**
    * @param aTab is the tabbrowser tab to get the value for.
@@ -205,7 +205,7 @@ interface nsISessionStore : nsISupports
    * @param aKey         is the value's name.
    * @param aStringValue is the value itself (use JSON.stringify/parse before setting JS objects).
    */
-  void setGlobalValue(in AString aKey, in AString aStringValue);
+  void setGlobalValue(in AString aKey, in jsval aStringValue);
 
   /**
    * @param aTab is the browser tab to get the value for.
