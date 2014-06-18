@@ -2029,7 +2029,6 @@ nsDisplayBackgroundImage::ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& a
   transform.Scale(mDestRect.width/imageSize.width,
                   mDestRect.height/imageSize.height);
   aLayer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
-  aLayer->SetVisibleRegion(nsIntRect(0, 0, imageSize.width, imageSize.height));
 }
 
 void
