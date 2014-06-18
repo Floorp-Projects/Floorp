@@ -672,14 +672,18 @@ class MachCommands(MachCommandBase):
     @MochitestCommand
     @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
         help='Only run tests of this flavor.')
-    def run_mochitest_general(self, test_paths, flavor=None, **kwargs):
+    def run_mochitest_general(self, test_paths, flavor=None, test_objects=None,
+            **kwargs):
         self._preruntest()
 
         from mozbuild.testing import TestResolver
 
-        resolver = self._spawn(TestResolver)
-        tests = list(resolver.resolve_tests(paths=test_paths,
-            cwd=self._mach_context.cwd))
+        if test_objects:
+            tests = test_objects
+        else:
+            resolver = self._spawn(TestResolver)
+            tests = list(resolver.resolve_tests(paths=test_paths,
+                cwd=self._mach_context.cwd))
 
         # Our current approach is to group the tests by suite and then perform
         # an invocation for each suite. Ideally, this would be done
