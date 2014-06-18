@@ -366,6 +366,7 @@ NetworkManager.prototype = {
 
   getNetworkId: function(network) {
     let id = "device";
+#ifdef MOZ_B2G_RIL
     if (this.isNetworkTypeMobile(network.type)) {
       if (!(network instanceof Ci.nsIRilNetworkInterface)) {
         throw Components.Exception("Mobile network not an nsIRilNetworkInterface",
@@ -373,6 +374,7 @@ NetworkManager.prototype = {
       }
       id = "ril" + network.serviceId;
     }
+#endif
 
     return id + "-" + network.type;
   },

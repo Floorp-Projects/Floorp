@@ -32,7 +32,7 @@ let test = asyncTest(function*() {
 function* testColorPickerHidesWhenImageTooltipAppears(view, swatch) {
   let bgImageSpan = getRuleViewProperty(view, "body", "background-image").valueSpan;
   let uriSpan = bgImageSpan.querySelector(".theme-link");
-  let tooltip = view.colorPicker.tooltip;
+  let tooltip = view.tooltips.colorPicker.tooltip;
 
   info("Showing the color picker tooltip by clicking on the color swatch");
   let onShown = tooltip.once("shown");
@@ -41,7 +41,7 @@ function* testColorPickerHidesWhenImageTooltipAppears(view, swatch) {
 
   info("Now showing the image preview tooltip to hide the color picker");
   let onHidden = tooltip.once("hidden");
-  yield assertHoverTooltipOn(view.previewTooltip, uriSpan);
+  yield assertHoverTooltipOn(view.tooltips.previewTooltip, uriSpan);
   yield onHidden;
 
   ok(true, "The color picker closed when the image preview tooltip appeared");
