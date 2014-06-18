@@ -455,14 +455,14 @@ RegExpShared::trace(JSTracer *trc)
 }
 
 bool
-RegExpShared::compile(JSContext *cx, const jschar *sampleChars, size_t sampleLength)
+RegExpShared::compile(JSContext *cx, HandleLinearString sample)
 {
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
     AutoTraceLog logCompile(logger, TraceLogger::IrregexpCompile);
 
     if (!sticky()) {
         RootedAtom pattern(cx, source);
-        return compile(cx, pattern, sampleChars, sampleLength);
+        return compile(cx, pattern, sample);
     }
 
     /*
@@ -485,11 +485,11 @@ RegExpShared::compile(JSContext *cx, const jschar *sampleChars, size_t sampleLen
     if (!fakeySource)
         return false;
 
-    return compile(cx, fakeySource, sampleChars, sampleLength);
+    return compile(cx, fakeySource, sample);
 }
 
 bool
-RegExpShared::compile(JSContext *cx, HandleAtom pattern, const jschar *sampleChars, size_t sampleLength)
+RegExpShared::compile(JSContext *cx, HandleAtom pattern, HandleLinearString sample)
 {
     if (!ignoreCase() && !StringHasRegExpMetaChars(pattern->chars(), pattern->length())) {
         canStringMatch = true;
@@ -509,7 +509,7 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, const jschar *sampleCha
 
     this->parenCount = data.capture_count;
 
-    irregexp::RegExpCode code = irregexp::CompilePattern(cx, this, &data, sampleChars, sampleLength,
+    irregexp::RegExpCode code = irregexp::CompilePattern(cx, this, &data, sample,
                                                          false /* global() */,
                                                          ignoreCase());
     if (code.empty())
@@ -526,21 +526,21 @@ RegExpShared::compile(JSContext *cx, HandleAtom pattern, const jschar *sampleCha
 }
 
 bool
-RegExpShared::compileIfNecessary(JSContext *cx, const jschar *sampleChars, size_t sampleLength)
+RegExpShared::compileIfNecessary(JSContext *cx, HandleLinearString sample)
 {
     if (isCompiled() || canStringMatch)
         return true;
-    return compile(cx, sampleChars, sampleLength);
+    return compile(cx, sample);
 }
 
 RegExpRunStatus
-RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
-                      size_t *lastIndex, MatchPairs &matches)
+RegExpShared::execute(JSContext *cx, HandleLinearString str, size_t *lastIndex,
+                      MatchPairs &matches)
 {
     TraceLogger *logger = TraceLoggerForMainThread(cx->runtime());
 
     /* Compile the code at point-of-use. */
-    if (!compileIfNecessary(cx, chars, length))
+    if (!compileIfNecessary(cx, str))
         return RegExpRunStatus_Error;
 
     /* Ensure sufficient memory for output vector. */
@@ -551,13 +551,15 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
      * |displacement| emulates sticky mode by matching from this offset
      * into the char buffer and subtracting the delta off at the end.
      */
+    size_t charsOffset = 0;
+    size_t length = str->length();
     size_t origLength = length;
     size_t start = *lastIndex;
     size_t displacement = 0;
 
     if (sticky()) {
         displacement = start;
-        chars += displacement;
+        charsOffset += displacement;
         length -= displacement;
         start = 0;
     }
@@ -566,7 +568,9 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
     irregexp::RegExpStackScope stackScope(cx->runtime());
 
     if (canStringMatch) {
-        int res = StringFindPattern(chars+start, length-start, source->chars(), source->length());
+        const jschar *chars = str->chars() + charsOffset;
+        int res = StringFindPattern(chars + start, length - start, source->chars(),
+                                    source->length());
         if (res == -1)
             return RegExpRunStatus_Success_NotFound;
 
@@ -581,6 +585,7 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
 
     if (hasByteCode()) {
         AutoTraceLog logInterpreter(logger, TraceLogger::IrregexpExecute);
+        const jschar *chars = str->chars() + charsOffset;
         RegExpRunStatus result =
             irregexp::InterpretCode(cx, byteCode, chars, start, length, &matches);
         if (result == RegExpRunStatus_Success) {
@@ -596,6 +601,7 @@ RegExpShared::execute(JSContext *cx, const jschar *chars, size_t length,
         RegExpRunStatus result;
         {
             AutoTraceLog logJIT(logger, TraceLogger::IrregexpExecute);
+            const jschar *chars = str->chars() + charsOffset;
             result = irregexp::ExecuteCode(cx, jitCode, chars, start, length, &matches);
         }
 

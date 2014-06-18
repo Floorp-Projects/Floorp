@@ -1193,7 +1193,7 @@ nsSocketTransport::InitiateSocket()
                            "attempt to %s (%s) was made.  You should only access hostnames "
                            "available via the test networking proxy (if running mochitests) "
                            "or from a test-specific httpd.js server (if running xpcshell tests)."
-                           "  Browser services should be disabled or redirected to a local server.",
+                           " Browser services should be disabled or redirected to a local server.\n",
                            mHost.get(), ipaddr.get());
             MOZ_CRASH("Attempting to connect to non-local address!");
         }
