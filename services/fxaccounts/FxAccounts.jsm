@@ -1030,7 +1030,30 @@ LoginManagerStorage.prototype = {
     // if we have encryption keys it must have been saved before we
     // used the login manager, so re-save it.
     if (data.accountData.kA || data.accountData.kB || data.keyFetchToken) {
-      log.info("account data needs migration to the login manager.");
+      // We need to migrate, but the MP might be locked (eg, on the first run
+      // with this enabled, we will get here very soon after startup, so will
+      // certainly be locked.)  This means we can't actually store the data in
+      // the login manager (and thus might lose it if we migrated now)
+      // So if the MP is locked, we *don't* migrate, but still just return
+      // the subset of data we now store in the JSON.
+      // This will cause sync to notice the lack of keys, force an unlock then
+      // re-fetch the account data to see if the keys are there.  At *that*
+      // point we will end up back here, but because the MP is now unlocked
+      // we can actually perform the migration.
+      if (!this._isLoggedIn) {
+        // return the "safe" subset but leave the storage alone.
+        log.info("account data needs migration to the login manager but the MP is locked.");
+        let result = {
+          version: data.version,
+          accountData: {},
+        };
+        for (let fieldName of FXA_PWDMGR_PLAINTEXT_FIELDS) {
+          result.accountData[fieldName] = data.accountData[fieldName];
+        }
+        return result;
+      }
+      // actually migrate - just calling .set() will split everything up.
+      log.info("account data is being migrated to the login manager.");
       yield this.set(data);
     }
 
