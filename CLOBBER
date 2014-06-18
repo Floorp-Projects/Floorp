@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Clobber for bug 1022262.
+Clobber to make sure any residual damage from bug 975011 is gone.
