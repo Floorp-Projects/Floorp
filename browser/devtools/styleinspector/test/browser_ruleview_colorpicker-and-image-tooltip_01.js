@@ -30,12 +30,12 @@ let test = asyncTest(function*() {
 
 function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   info("First, verify that the image preview tooltip works");
-  let anchor = yield isHoverTooltipTarget(ruleView.previewTooltip, url);
+  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");
 
   info("Open the color picker tooltip and change the color");
-  let picker = ruleView.colorPicker;
+  let picker = ruleView.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;
@@ -54,7 +54,7 @@ function* testImageTooltipAfterColorChange(swatch, url, ruleView) {
   // After a color change, the property is re-populated, we need to get the new
   // dom node
   url = getRuleViewProperty(ruleView, "body", "background").valueSpan.querySelector(".theme-link");
-  let anchor = yield isHoverTooltipTarget(ruleView.previewTooltip, url);
+  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
   ok(anchor, "The image preview tooltip is shown on the url span");
   is(anchor, url, "The anchor returned by the showOnHover callback is correct");
 }
