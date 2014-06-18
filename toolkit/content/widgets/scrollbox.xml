@@ -27,23 +27,30 @@
     <content>
       <xul:autorepeatbutton class="autorepeatbutton-up"
                             anonid="scrollbutton-up"
-                            collapsed="true"
-                            xbl:inherits="orient"
+                            xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
                             oncommand="_autorepeatbuttonScroll(event);"/>
+      <xul:spacer class="arrowscrollbox-overflow-start-indicator"
+                  xbl:inherits="collapsed=scrolledtostart"/>
       <xul:scrollbox class="arrowscrollbox-scrollbox"
                      anonid="scrollbox"
                      flex="1"
                      xbl:inherits="orient,align,pack,dir">
         <children/>
       </xul:scrollbox>
+      <xul:spacer class="arrowscrollbox-overflow-end-indicator"
+                  xbl:inherits="collapsed=scrolledtoend"/>
       <xul:autorepeatbutton class="autorepeatbutton-down"
                             anonid="scrollbutton-down"
-                            collapsed="true"
-                            xbl:inherits="orient"
+                            xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
                             oncommand="_autorepeatbuttonScroll(event);"/>
     </content>
 
     <implementation>
+      <constructor><![CDATA[
+        this.setAttribute("notoverflowing", "true");
+        this._updateScrollButtonsDisabledState();
+      ]]></constructor>
+
       <destructor><![CDATA[
         this._stopSmoothScroll();
       ]]></destructor>
@@ -454,28 +461,39 @@
 
       <method name="_updateScrollButtonsDisabledState">
         <body><![CDATA[
-          var disableUpButton = false;
-          var disableDownButton = false;
+          var scrolledToStart = false;
+          var scrolledToEnd = false;
 
-          if (this.scrollPosition == 0) {
+          if (this.hasAttribute("notoverflowing")) {
+            scrolledToStart = true;
+            scrolledToEnd = true;
+          }
+          else if (this.scrollPosition == 0) {
             // In the RTL case, this means the _last_ element in the
             // scrollbox is visible
             if (this._isRTLScrollbox) 
-              disableDownButton = true;
+              scrolledToEnd = true;
             else
-              disableUpButton = true;
+              scrolledToStart = true;
           }
           else if (this.scrollClientSize + this.scrollPosition == this.scrollSize) {
             // In the RTL case, this means the _first_ element in the
             // scrollbox is visible
             if (this._isRTLScrollbox)
-              disableUpButton = true;
+              scrolledToStart = true;
             else
-              disableDownButton = true;
+              scrolledToEnd = true;
           }
 
-          this._scrollButtonUp.disabled = disableUpButton;
-          this._scrollButtonDown.disabled = disableDownButton;
+          if (scrolledToEnd)
+            this.setAttribute("scrolledtoend", "true");
+          else
+            this.removeAttribute("scrolledtoend");
+
+          if (scrolledToStart)
+            this.setAttribute("scrolledtostart", "true");
+          else
+            this.removeAttribute("scrolledtostart");
         ]]></body>
       </method>
     </implementation>
@@ -535,18 +553,19 @@
             return;
         }
 
-        this._scrollButtonUp.collapsed = true;
-        this._scrollButtonDown.collapsed = true;
+        this.setAttribute("notoverflowing", "true");
+
         try {
           // See bug 341047 and comments in overflow handler as to why 
           // try..catch is needed here
+          this._updateScrollButtonsDisabledState();
+
           let childNodes = this._getScrollableElements();
           if (childNodes && childNodes.length)
             this.ensureElementIsVisible(childNodes[0], false);
         }
         catch(e) {
-          this._scrollButtonUp.collapsed = false;
-          this._scrollButtonDown.collapsed = false;
+          this.removeAttribute("notoverflowing");
         }
       ]]></handler>
 
@@ -569,20 +588,18 @@
             return;
         }
 
-        this._scrollButtonUp.collapsed = false;
-        this._scrollButtonDown.collapsed = false;
+        this.removeAttribute("notoverflowing");
+
         try {
           // See bug 341047, the overflow event is dispatched when the 
           // scrollbox already is mostly destroyed. This causes some code in
           // _updateScrollButtonsDisabledState() to throw an error. It also
-          // means that the scrollbarbuttons were uncollapsed when that should
-          // not be happening, because the whole overflow event should not be
-          // happening in that case.
+          // means that the notoverflowing attribute was removed erroneously,
+          // as the whole overflow event should not be happening in that case.
           this._updateScrollButtonsDisabledState();
         } 
         catch(e) {
-          this._scrollButtonUp.collapsed = true;
-          this._scrollButtonDown.collapsed = true;
+          this.setAttribute("notoverflowing", "true");
         }
       ]]></handler>
 
@@ -598,22 +615,26 @@
 
   <binding id="arrowscrollbox-clicktoscroll" extends="chrome://global/content/bindings/scrollbox.xml#arrowscrollbox">
     <content>
-      <xul:toolbarbutton class="scrollbutton-up" collapsed="true"
-                         xbl:inherits="orient"
+      <xul:toolbarbutton class="scrollbutton-up"
+                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtostart"
                          anonid="scrollbutton-up"
                          onclick="_distanceScroll(event);"
                          onmousedown="if (event.button == 0) _startScroll(-1);"
                          onmouseup="if (event.button == 0) _stopScroll();"
                          onmouseover="_continueScroll(-1);"
                          onmouseout="_pauseScroll();"/>
+      <xul:spacer class="arrowscrollbox-overflow-start-indicator"
+                  xbl:inherits="collapsed=scrolledtostart"/>
       <xul:scrollbox class="arrowscrollbox-scrollbox"
                      anonid="scrollbox"
                      flex="1"
                      xbl:inherits="orient,align,pack,dir">
         <children/>
       </xul:scrollbox>
-      <xul:toolbarbutton class="scrollbutton-down" collapsed="true"
-                         xbl:inherits="orient"
+      <xul:spacer class="arrowscrollbox-overflow-end-indicator"
+                  xbl:inherits="collapsed=scrolledtoend"/>
+      <xul:toolbarbutton class="scrollbutton-down"
+                         xbl:inherits="orient,collapsed=notoverflowing,disabled=scrolledtoend"
                          anonid="scrollbutton-down"
                          onclick="_distanceScroll(event);"
                          onmousedown="if (event.button == 0) _startScroll(1);"

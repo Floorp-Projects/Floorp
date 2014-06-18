@@ -277,6 +277,7 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-background-middle@2x.png           (tabbrowser/tab-background-middle@2x.png)
   skin/classic/browser/tabbrowser/tab-background-start.png               (tabbrowser/tab-background-start.png)
   skin/classic/browser/tabbrowser/tab-background-start@2x.png            (tabbrowser/tab-background-start@2x.png)
+  skin/classic/browser/tabbrowser/tab-overflow-indicator.png             (../shared/tabbrowser/tab-overflow-indicator.png)
 
 # NOTE: The following two files (tab-selected-end.svg, tab-selected-start.svg) get pre-processed in
 #       Makefile.in with a non-default marker of "%" and the result of that gets packaged.
@@ -287,7 +288,6 @@ browser.jar:
   skin/classic/browser/tabbrowser/tab-stroke-end@2x.png                  (tabbrowser/tab-stroke-end@2x.png)
   skin/classic/browser/tabbrowser/tab-stroke-start.png                   (tabbrowser/tab-stroke-start.png)
   skin/classic/browser/tabbrowser/tab-stroke-start@2x.png                (tabbrowser/tab-stroke-start@2x.png)
-  skin/classic/browser/tabbrowser/tab-overflow-border.png                (tabbrowser/tab-overflow-border.png)
   skin/classic/browser/tabbrowser/tabDragIndicator.png                   (tabbrowser/tabDragIndicator.png)
   skin/classic/browser/tabbrowser/tabDragIndicator@2x.png                (tabbrowser/tabDragIndicator@2x.png)
   skin/classic/browser/tabbrowser/tab-separator.png                      (tabbrowser/tab-separator.png)
