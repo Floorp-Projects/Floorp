@@ -6,8 +6,6 @@
 
 #include "jit/AsmJSSignalHandlers.h"
 
-#include "mozilla/BinarySearch.h"
-
 #include "assembler/assembler/MacroAssembler.h"
 #include "jit/AsmJSModule.h"
 
@@ -212,31 +210,6 @@ SetXMMRegToNaN(bool isFloat32, T *xmm_reg)
         dbls[0] = GenericNaN();
         dbls[1] = 0;
     }
-}
-
-struct GetHeapAccessOffset
-{
-    const AsmJSModule &module;
-    explicit GetHeapAccessOffset(const AsmJSModule &module) : module(module) {}
-    uintptr_t operator[](size_t index) const {
-        return module.heapAccess(index).offset();
-    }
-};
-
-// Perform a binary search on the projected offsets of the known heap accesses
-// in the module.
-static const AsmJSHeapAccess *
-LookupHeapAccess(const AsmJSModule &module, uint8_t *pc)
-{
-    JS_ASSERT(module.containsPC(pc));
-
-    uintptr_t pcOff = pc - module.codeBase();
-
-    size_t match;
-    if (!BinarySearch(GetHeapAccessOffset(module), 0, module.numHeapAccesses(), pcOff, &match))
-        return nullptr;
-
-    return &module.heapAccess(match);
 }
 #endif
 
@@ -507,7 +480,7 @@ HandleException(PEXCEPTION_POINTERS exception)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = LookupHeapAccess(module, pc);
+    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -713,7 +686,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = LookupHeapAccess(module, pc);
+    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -960,7 +933,7 @@ HandleSignal(int signum, siginfo_t *info, void *ctx)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = LookupHeapAccess(module, pc);
+    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 

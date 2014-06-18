@@ -25,6 +25,8 @@
 
 namespace js {
 
+namespace frontend { class TokenStream; }
+
 // These EcmaScript-defined coercions form the basis of the asm.js type system.
 enum AsmJSCoercion
 {
@@ -544,23 +546,15 @@ class AsmJSModule
         return scriptSource_;
     }
 
-    /*
-     * funcStart() refers to the offset in the ScriptSource to the beginning
-     * of the function. If the function has been created with the Function
-     * constructor, this will be the first character in the function source.
-     * Otherwise, it will be the opening parenthesis of the arguments list.
-     */
+    // funcStart() refers to the offset in the ScriptSource to the beginning
+    // of the function. If the function has been created with the Function
+    // constructor, this will be the first character in the function source.
+    // Otherwise, it will be the opening parenthesis of the arguments list.
     uint32_t funcStart() const {
         return funcStart_;
     }
     uint32_t offsetToEndOfUseAsm() const {
         return offsetToEndOfUseAsm_;
-    }
-    void initFuncEnd(uint32_t endBeforeCurly, uint32_t endAfterCurly) {
-        JS_ASSERT(endBeforeCurly >= offsetToEndOfUseAsm_);
-        JS_ASSERT(endAfterCurly >= offsetToEndOfUseAsm_);
-        pod.funcLength_ = endBeforeCurly - funcStart_;
-        pod.funcLengthWithRightBrace_ = endAfterCurly - funcStart_;
     }
     uint32_t funcEndBeforeCurly() const {
         return funcStart_ + pod.funcLength_;
@@ -817,31 +811,8 @@ class AsmJSModule
         return pc >= code_ && pc < (code_ + functionBytes());
     }
 
-    void assignHeapAccesses(jit::AsmJSHeapAccessVector &&accesses) {
-        heapAccesses_ = Move(accesses);
-    }
-    unsigned numHeapAccesses() const {
-        return heapAccesses_.length();
-    }
-    const jit::AsmJSHeapAccess &heapAccess(unsigned i) const {
-        return heapAccesses_[i];
-    }
-    jit::AsmJSHeapAccess &heapAccess(unsigned i) {
-        return heapAccesses_[i];
-    }
-
-    void assignCallSites(jit::CallSiteVector &&callsites) {
-        callSites_ = Move(callsites);
-    }
-    unsigned numCallSites() const {
-        return callSites_.length();
-    }
-    const jit::CallSite &callSite(unsigned i) const {
-        return callSites_[i];
-    }
-    jit::CallSite &callSite(unsigned i) {
-        return callSites_[i];
-    }
+    const jit::CallSite *lookupCallSite(uint8_t *returnAddress) const;
+    const jit::AsmJSHeapAccess *lookupHeapAccess(uint8_t *pc) const;
 
     void initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx);
 
@@ -853,18 +824,11 @@ class AsmJSModule
         return pod.minHeapLength_;
     }
 
-    bool allocateAndCopyCode(ExclusiveContext *cx, jit::MacroAssembler &masm);
+    bool finish(ExclusiveContext *cx, frontend::TokenStream &tokenStream, jit::MacroAssembler &masm,
+                const jit::Label &interruptLabel);
 
-    // StaticLinkData setters (called after finishing compilation, before
-    // staticLink).
     bool addRelativeLink(RelativeLink link) {
         return staticLinkData_.relativeLinks.append(link);
-    }
-    bool addAbsoluteLink(AbsoluteLink link) {
-        return staticLinkData_.absoluteLinks.append(link);
-    }
-    void setInterruptOffset(uint32_t offset) {
-        staticLinkData_.interruptExitOffset = offset;
     }
 
     void restoreToInitialState(ArrayBufferObject *maybePrevBuffer, ExclusiveContext *cx);

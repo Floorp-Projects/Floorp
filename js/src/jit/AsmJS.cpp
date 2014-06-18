@@ -1506,86 +1506,15 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     bool finish(ScopedJSDeletePtr<AsmJSModule> *module)
     {
-        module_->initFuncEnd(tokenStream().currentToken().pos.end,
-                             tokenStream().peekTokenPos().end);
         masm_.finish();
         if (masm_.oom())
             return false;
 
-        module_->assignCallSites(masm_.extractCallSites());
-        module_->assignHeapAccesses(masm_.extractAsmJSHeapAccesses());
-
-#if defined(JS_CODEGEN_ARM)
-        // Now that compilation has finished, we need to update offsets to
-        // reflect actual offsets (an ARM distinction).
-        for (unsigned i = 0; i < module_->numHeapAccesses(); i++) {
-            AsmJSHeapAccess &a = module_->heapAccess(i);
-            a.setOffset(masm_.actualOffset(a.offset()));
-        }
-        for (unsigned i = 0; i < module_->numCallSites(); i++) {
-            CallSite &c = module_->callSite(i);
-            c.setReturnAddressOffset(masm_.actualOffset(c.returnAddressOffset()));
-        }
-#endif
-
-        // The returned memory is owned by module_.
-        if (!module_->allocateAndCopyCode(cx_, masm_))
+        if (!module_->finish(cx_, tokenStream(), masm_, interruptLabel_))
             return false;
 
-        // c.f. JitCode::copyFrom
-        JS_ASSERT(masm_.jumpRelocationTableBytes() == 0);
-        JS_ASSERT(masm_.dataRelocationTableBytes() == 0);
-        JS_ASSERT(masm_.preBarrierTableBytes() == 0);
-        JS_ASSERT(!masm_.hasEnteredExitFrame());
-
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        // Fix up the code offsets.  Note the endCodeOffset should not be
-        // filtered through 'actualOffset' as it is generated using 'size()'
-        // rather than a label.
-        for (unsigned i = 0; i < module_->numProfiledFunctions(); i++) {
-            AsmJSModule::ProfiledFunction &func = module_->profiledFunction(i);
-            func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
-        }
-#endif
-
-#ifdef JS_ION_PERF
-        for (unsigned i = 0; i < module_->numPerfBlocksFunctions(); i++) {
-            AsmJSModule::ProfiledBlocksFunction &func = module_->perfProfiledBlocksFunction(i);
-            func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
-            func.endInlineCodeOffset = masm_.actualOffset(func.endInlineCodeOffset);
-            BasicBlocksVector &basicBlocks = func.blocks;
-            for (uint32_t i = 0; i < basicBlocks.length(); i++) {
-                Record &r = basicBlocks[i];
-                r.startOffset = masm_.actualOffset(r.startOffset);
-                r.endOffset = masm_.actualOffset(r.endOffset);
-            }
-        }
-#endif
-
-        module_->setInterruptOffset(masm_.actualOffset(interruptLabel_.offset()));
-
-        // CodeLabels produced during codegen
-        for (size_t i = 0; i < masm_.numCodeLabels(); i++) {
-            CodeLabel src = masm_.codeLabel(i);
-            int32_t labelOffset = src.dest()->offset();
-            int32_t targetOffset = masm_.actualOffset(src.src()->offset());
-            // The patched uses of a label embed a linked list where the
-            // to-be-patched immediate is the offset of the next to-be-patched
-            // instruction.
-            while (labelOffset != LabelBase::INVALID_OFFSET) {
-                size_t patchAtOffset = masm_.labelOffsetToPatchOffset(labelOffset);
-                AsmJSModule::RelativeLink link(AsmJSModule::RelativeLink::CodeLabel);
-                link.patchAtOffset = patchAtOffset;
-                link.targetOffset = targetOffset;
-                if (!module_->addRelativeLink(link))
-                    return false;
-
-                labelOffset = Assembler::extractCodeLabelOffset(module_->codeBase() +
-                                                                patchAtOffset);
-            }
-        }
-
-        // Function-pointer-table entries
+        // Finally, convert all the function-pointer table elements into
+        // RelativeLinks that will be patched by AsmJSModule::staticallyLink.
         for (unsigned tableIndex = 0; tableIndex < funcPtrTables_.length(); tableIndex++) {
             FuncPtrTable &table = funcPtrTables_[tableIndex];
             unsigned tableBaseOffset = module_->offsetOfGlobalData() + table.globalDataOffset();
@@ -1596,58 +1525,6 @@ class MOZ_STACK_CLASS ModuleCompiler
                 if (!module_->addRelativeLink(link))
                     return false;
             }
-        }
-
-#if defined(JS_CODEGEN_X86)
-        // Global data accesses in x86 need to be patched with the absolute
-        // address of the global. Globals are allocated sequentially after the
-        // code section so we can just use an RelativeLink.
-        for (unsigned i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
-            AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
-            AsmJSModule::RelativeLink link(AsmJSModule::RelativeLink::InstructionImmediate);
-            link.patchAtOffset = masm_.labelOffsetToPatchOffset(a.patchAt.offset());
-            link.targetOffset = module_->offsetOfGlobalData() + a.globalDataOffset;
-            if (!module_->addRelativeLink(link))
-                return false;
-        }
-#endif
-
-#if defined(JS_CODEGEN_X64)
-        // Global data accesses on x64 use rip-relative addressing and thus do
-        // not need patching after deserialization.
-        uint8_t *code = module_->codeBase();
-        for (unsigned i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
-            AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
-            masm_.patchAsmJSGlobalAccess(a.patchAt, code, module_->globalData(), a.globalDataOffset);
-        }
-#endif
-
-#if defined(JS_CODEGEN_MIPS)
-        // On MIPS we need to update all the long jumps because they contain an
-        // absolute adress.
-        for (size_t i = 0; i < masm_.numLongJumps(); i++) {
-            uint32_t patchAtOffset = masm_.longJump(i);
-
-            AsmJSModule::RelativeLink link(AsmJSModule::RelativeLink::InstructionImmediate);
-            link.patchAtOffset = patchAtOffset;
-
-            InstImm *inst = (InstImm *)(module_->codeBase() + patchAtOffset);
-            link.targetOffset = Assembler::extractLuiOriValue(inst, inst->next()) -
-                                (uint32_t)module_->codeBase();
-
-            if (!module_->addRelativeLink(link))
-                return false;
-        }
-#endif
-
-        // Absolute links
-        for (size_t i = 0; i < masm_.numAsmJSAbsoluteLinks(); i++) {
-            AsmJSAbsoluteLink src = masm_.asmJSAbsoluteLink(i);
-            AsmJSModule::AbsoluteLink link;
-            link.patchAt = CodeOffsetLabel(masm_.actualOffset(src.patchAt.offset()));
-            link.target = src.target;
-            if (!module_->addAbsoluteLink(link))
-                return false;
         }
 
         *module = module_.forget();
