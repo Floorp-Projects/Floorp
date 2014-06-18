@@ -8,7 +8,6 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'nsIAlarmHalService.idl',
-    'nsIDOMAlarmsManager.idl',
 ]
 
 XPIDL_MODULE = 'dom_alarm'

@@ -40,7 +40,7 @@ let test = asyncTest(function*() {
 
   let dropper = yield openEyedropper(view, swatch);
 
-  let tooltip = view.colorPicker.tooltip;
+  let tooltip = view.tooltips.colorPicker.tooltip;
   ok(tooltip.isHidden(),
      "color picker tooltip is closed after opening eyedropper");
 
@@ -98,7 +98,7 @@ function testSelect(swatch, dropper) {
 function openEyedropper(view, swatch) {
   let deferred = promise.defer();
 
-  let tooltip = view.colorPicker.tooltip;
+  let tooltip = view.tooltips.colorPicker.tooltip;
 
   tooltip.once("shown", () => {
     let tooltipDoc = tooltip.content.contentDocument;
