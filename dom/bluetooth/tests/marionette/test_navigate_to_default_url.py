@@ -5,8 +5,14 @@
 from marionette_test import MarionetteTestCase
 
 class testNavigateToDefault(MarionetteTestCase):
+    def setUp(self):
+        MarionetteTestCase.setUp(self)
+        # Sets an appropriate timeout for this test.
+        # P.S. The timeout of next test wouldn't be affected by this statement.
+        self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 90000)
+
     def test_navigate_to_default_url(self):
         try:
             self.marionette.navigate("app://system.gaiamobile.org/index.html")
         except:
-            self.assertTrue(Flase, "Can not navigate to system app.")
+            self.assertTrue(False, "Can not navigate to system app.")
