@@ -3,15 +3,15 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 
 PACKAGE_NAME = 'mozrunner'
-PACKAGE_VERSION = '6.0'
+PACKAGE_VERSION = '5.37'
 
 desc = """Reliable start/stop/configuration of Mozilla Applications (Firefox, Thunderbird, etc.)"""
 
 deps = ['mozcrash >= 0.11',
-        'mozdevice >= 0.37',
+        'mozdevice >= 0.30',
         'mozfile >= 1.0',
         'mozinfo >= 0.7',
         'mozlog >= 1.5',
@@ -39,7 +39,7 @@ setup(name=PACKAGE_NAME,
       author_email='tools@lists.mozilla.org',
       url='https://wiki.mozilla.org/Auto-tools/Projects/Mozbase',
       license='MPL 2.0',
-      packages=find_packages(),
+      packages=['mozrunner'],
       package_data={'mozrunner': [
             'resources/metrotestharness.exe'
       ]},

@@ -62,8 +62,6 @@ class EmulatorScreen(object):
                             SO_LANDSCAPE_PRIMARY - system buttons at the right
                             SO_LANDSCAPE_SECONDARY - system buttons at the left
         """
-        orientation = SCREEN_ORIENTATIONS[orientation]
-
         if orientation == self.SO_PORTRAIT_PRIMARY:
             data = '0:-90:0'
         elif orientation == self.SO_PORTRAIT_SECONDARY:
@@ -78,12 +76,3 @@ class EmulatorScreen(object):
         self._set_raw_orientation(data)
 
     orientation = property(get_orientation, set_orientation)
-
-
-SCREEN_ORIENTATIONS = {"portrait": EmulatorScreen.SO_PORTRAIT_PRIMARY,
-                       "landscape": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
-                       "portrait-primary": EmulatorScreen.SO_PORTRAIT_PRIMARY,
-                       "landscape-primary": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
-                       "portrait-secondary": EmulatorScreen.SO_PORTRAIT_SECONDARY,
-                       "landscape-secondary": EmulatorScreen.SO_LANDSCAPE_SECONDARY}
-
