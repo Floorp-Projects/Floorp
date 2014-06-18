@@ -1528,7 +1528,7 @@ int64_t MediaDecoder::GetEndMediaTime() const {
 }
 
 // Drop reference to state machine.  Only called during shutdown dance.
-void MediaDecoder::ReleaseStateMachine() {
+void MediaDecoder::BreakCycles() {
   mDecoderStateMachine = nullptr;
 }
 

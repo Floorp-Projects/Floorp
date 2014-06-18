@@ -554,6 +554,8 @@ AudioContext::Shutdown()
     Mute();
   }
 
+  mDecoder.Shutdown();
+
   // Release references to active nodes.
   // Active AudioNodes don't unregister in destructors, at which point the
   // Node is already unregistered.

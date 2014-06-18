@@ -6,9 +6,9 @@
 /*
 Each video element based on MediaDecoder has a state machine to manage
 its play state and keep the current frame up to date. All state machines
-share time in a single shared thread. Each decoder also has one thread
-dedicated to decoding audio and video data. This thread is shutdown when
-playback is paused. Each decoder also has a thread to push decoded audio
+share time in a single shared thread. Each decoder also has a MediaTaskQueue
+running in a SharedThreadPool to decode audio and video data.
+Each decoder also has a thread to push decoded audio
 to the hardware. This thread is not created until playback starts, but
 currently is not destroyed when paused, only when playback ends.
 
@@ -232,6 +232,11 @@ struct SeekTarget {
   SeekTarget(int64_t aTimeUsecs, Type aType)
     : mTime(aTimeUsecs)
     , mType(aType)
+  {
+  }
+  SeekTarget(const SeekTarget& aOther)
+    : mTime(aOther.mTime)
+    , mType(aOther.mType)
   {
   }
   bool IsValid() const {
@@ -824,7 +829,7 @@ public:
   MediaDecoderStateMachine* GetStateMachine() const;
 
   // Drop reference to state machine.  Only called during shutdown dance.
-  virtual void ReleaseStateMachine();
+  virtual void BreakCycles();
 
   // Notifies the element that decoding has failed.
   virtual void DecodeError();

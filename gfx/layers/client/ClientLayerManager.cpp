@@ -284,6 +284,15 @@ ClientLayerManager::GetRemoteRenderer()
   return mWidget->GetRemoteRenderer();
 }
 
+CompositorChild*
+ClientLayerManager::GetCompositorChild()
+{
+  if (XRE_GetProcessType() != GeckoProcessType_Default) {
+    return CompositorChild::Get();
+  }
+  return GetRemoteRenderer();
+}
+
 void
 ClientLayerManager::Composite()
 {
