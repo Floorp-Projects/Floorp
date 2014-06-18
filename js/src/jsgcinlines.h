@@ -16,6 +16,33 @@ namespace js {
 
 class Shape;
 
+/*
+ * This auto class should be used around any code that might cause a mark bit to
+ * be set on an object in a dead zone. See AutoMaybeTouchDeadZones
+ * for more details.
+ */
+struct AutoMarkInDeadZone
+{
+    explicit AutoMarkInDeadZone(JS::Zone *zone)
+      : zone(zone),
+        scheduled(zone->scheduledForDestruction)
+    {
+        gc::GCRuntime &gc = zone->runtimeFromMainThread()->gc;
+        if (gc.isManipulatingDeadZones() && zone->scheduledForDestruction) {
+            gc.incObjectsMarkedInDeadZone();
+            zone->scheduledForDestruction = false;
+        }
+    }
+
+    ~AutoMarkInDeadZone() {
+        zone->scheduledForDestruction = scheduled;
+    }
+
+  private:
+    JS::Zone *zone;
+    bool scheduled;
+};
+
 inline Allocator *
 ThreadSafeContext::allocator() const
 {
@@ -677,6 +704,23 @@ AllocateObjectForCacheHit(JSContext *cx, AllocKind kind, InitialHeap heap)
     }
 
     return obj;
+}
+
+inline bool
+IsInsideGGCNursery(const js::gc::Cell *cell)
+{
+#ifdef JSGC_GENERATIONAL
+    if (!cell)
+        return false;
+    uintptr_t addr = uintptr_t(cell);
+    addr &= ~js::gc::ChunkMask;
+    addr |= js::gc::ChunkLocationOffset;
+    uint32_t location = *reinterpret_cast<uint32_t *>(addr);
+    JS_ASSERT(location != 0);
+    return location & js::gc::ChunkLocationBitNursery;
+#else
+    return false;
+#endif
 }
 
 } /* namespace gc */

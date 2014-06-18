@@ -567,6 +567,9 @@ BufferTextureClient::AllocateForSurface(gfx::IntSize aSize, TextureAllocationFla
   if (aFlags & ALLOC_CLEAR_BUFFER) {
     memset(GetBuffer(), 0, bufSize);
   }
+  if (aFlags & ALLOC_CLEAR_BUFFER_WHITE) {
+    memset(GetBuffer(), 0xFF, bufSize);
+  }
 
   ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
   serializer.InitializeBufferInfo(aSize, mFormat);
