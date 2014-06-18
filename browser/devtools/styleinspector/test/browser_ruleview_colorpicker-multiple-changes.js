@@ -42,7 +42,7 @@ function* testSimpleMultipleColorChanges(inspector, ruleView) {
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = ruleView.colorPicker;
+  let picker = ruleView.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;
@@ -70,7 +70,7 @@ function* testComplexMultipleColorChanges(inspector, ruleView) {
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = ruleView.colorPicker;
+  let picker = ruleView.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;
@@ -103,7 +103,7 @@ function* testOverriddenMultipleColorChanges(inspector, ruleView) {
     .querySelector(".ruleview-colorswatch");
 
   info("Opening the color picker");
-  let picker = ruleView.colorPicker;
+  let picker = ruleView.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;

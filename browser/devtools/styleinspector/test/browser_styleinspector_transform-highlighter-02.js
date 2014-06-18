@@ -17,38 +17,47 @@ const PAGE_CONTENT = [
   'Test the css transform highlighter'
 ].join("\n");
 
+let TYPE = "CssTransformHighlighter";
+
 let test = asyncTest(function*() {
   yield addTab("data:text/html," + PAGE_CONTENT);
 
+
   let {view: rView} = yield openRuleView();
-  ok(!rView.transformHighlighter, "No highlighter exists in the rule-view (1)");
+  let hs = rView.highlighters;
+
+  ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
+  ok(!hs.promises[TYPE], "No highlighter is being created in the rule-view (1)");
 
   info("Faking a mousemove on a non-transform property");
   let {valueSpan} = getRuleViewProperty(rView, "body", "color");
-  rView._onMouseMove({target: valueSpan});
-  ok(!rView.transformHighlighter, "No highlighter exists in the rule-view (2)");
-  ok(!rView.transformHighlighterPromise, "No highlighter is being initialized");
+  hs._onMouseMove({target: valueSpan});
+  ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (2)");
+  ok(!hs.promises[TYPE], "No highlighter is being created in the rule-view (2)");
 
   info("Faking a mousemove on a transform property");
   let {valueSpan} = getRuleViewProperty(rView, "body", "transform");
-  rView._onMouseMove({target: valueSpan});
-  ok(rView.transformHighlighterPromise, "The highlighter is being initialized");
-  let h = yield rView.transformHighlighterPromise;
-  is(h, rView.transformHighlighter, "The initialized highlighter is the right one");
+  hs._onMouseMove({target: valueSpan});
+  ok(hs.promises[TYPE], "The highlighter is being initialized");
+  let h = yield hs.promises[TYPE];
+  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 
   let {view: cView} = yield openComputedView();
-  ok(!cView.transformHighlighter, "No highlighter exists in the computed-view (1)");
+  let hs = cView.highlighters;
+
+  ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (1)");
+  ok(!hs.promises[TYPE], "No highlighter is being created in the computed-view (1)");
 
   info("Faking a mousemove on a non-transform property");
   let {valueSpan} = getComputedViewProperty(cView, "color");
-  cView._onMouseMove({target: valueSpan});
-  ok(!cView.transformHighlighter, "No highlighter exists in the computed-view (2)");
-  ok(!cView.transformHighlighterPromise, "No highlighter is being initialized");
+  hs._onMouseMove({target: valueSpan});
+  ok(!hs.highlighters[TYPE], "No highlighter exists in the computed-view (2)");
+  ok(!hs.promises[TYPE], "No highlighter is being created in the computed-view (2)");
 
   info("Faking a mousemove on a transform property");
   let {valueSpan} = getComputedViewProperty(cView, "transform");
-  cView._onMouseMove({target: valueSpan});
-  ok(cView.transformHighlighterPromise, "The highlighter is being initialized");
-  let h = yield cView.transformHighlighterPromise;
-  is(h, cView.transformHighlighter, "The initialized highlighter is the right one");
+  hs._onMouseMove({target: valueSpan});
+  ok(hs.promises[TYPE], "The highlighter is being initialized");
+  let h = yield hs.promises[TYPE];
+  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
 });
