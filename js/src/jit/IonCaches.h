@@ -1004,8 +1004,8 @@ class NameIC : public RepatchIonCache
                         HandleObject holder, HandleShape shape);
 
     bool attachCallGetter(JSContext *cx, HandleScript outerScript, IonScript *ion,
-                          HandleObject obj, HandleObject holder, HandleShape shape,
-                          void *returnAddr);
+                          HandleObject scopeChain, HandleObject obj, HandleObject holder,
+                          HandleShape shape, void *returnAddr);
 
     static bool
     update(JSContext *cx, size_t cacheIndex, HandleObject scopeChain, MutableHandleValue vp);
