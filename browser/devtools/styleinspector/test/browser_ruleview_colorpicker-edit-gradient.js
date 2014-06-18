@@ -57,7 +57,7 @@ function* testPickingNewColor(view) {
   let colorEl = ruleEl.valueSpan.querySelector(".ruleview-color");
 
   info("Getting the color picker tooltip and clicking on the swatch to show it");
-  let cPicker = view.colorPicker;
+  let cPicker = view.tooltips.colorPicker;
   let onShown = cPicker.tooltip.once("shown");
   swatchEl.click();
   yield onShown;
