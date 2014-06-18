@@ -4461,13 +4461,8 @@ RilObject.prototype = {
       }
 
       let state = strings[i + 3];
-      if (state === NETWORK_STATE_UNKNOWN) {
-        // TODO: looks like this might conflict in style with
-        // GECKO_NETWORK_STYLE_UNKNOWN / nsINetworkManager
-        state = GECKO_QAN_STATE_UNKNOWN;
-      }
+      network.state = RIL_QAN_STATE_TO_GECKO_STATE[state];
 
-      network.state = state;
       networks.push(network);
     }
     return networks;
