@@ -74,9 +74,6 @@ let StyleSheetsActor = protocol.ActorClass({
 
     this.parentActor = tabActor;
 
-    // so we can get events when stylesheets and rules are added
-    this.document.styleSheetChangeEventsEnabled = true;
-
     // keep a map of sheets-to-actors so we don't create two actors for one sheet
     this._sheets = new Map();
   },
@@ -479,24 +476,6 @@ let StyleSheetActor = protocol.ActorClass({
     this._styleSheetIndex = -1;
 
     this._transitionRefCount = 0;
-
-    this._onRuleAddedOrRemoved = this._onRuleAddedOrRemoved.bind(this);
-
-    if (this.browser) {
-      this.browser.addEventListener("StyleRuleAdded", this._onRuleAddedOrRemoved, true);
-      this.browser.addEventListener("StyleRuleRemoved", this._onRuleAddedOrRemoved, true);
-    }
-  },
-
-  _onRuleAddedOrRemoved: function(event) {
-    if (event.target != this.document || event.stylesheet != this.rawSheet) {
-      return;
-    }
-    if (event.rule && event.rule.type == Ci.nsIDOMCSSRule.MEDIA_RULE) {
-      this._getMediaRules().then((rules) => {
-        events.emit(this, "media-rules-changed", rules);
-      });
-    }
   },
 
   /**
@@ -921,6 +900,10 @@ let StyleSheetActor = protocol.ActorClass({
     else {
       this._notifyStyleApplied();
     }
+
+    this._getMediaRules().then((rules) => {
+      events.emit(this, "media-rules-changed", rules);
+    });
   }, {
     request: {
       text: Arg(0, "string"),

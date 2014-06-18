@@ -26,7 +26,7 @@ let test = asyncTest(function*() {
 });
 
 function* testPressingEnterCommitsChanges(swatch, ruleView) {
-  let cPicker = ruleView.colorPicker;
+  let cPicker = ruleView.tooltips.colorPicker;
 
   let onShown = cPicker.tooltip.once("shown");
   swatch.click();

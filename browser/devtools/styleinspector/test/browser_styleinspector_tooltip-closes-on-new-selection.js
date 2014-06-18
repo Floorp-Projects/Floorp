@@ -22,7 +22,7 @@ let test = asyncTest(function*() {
 
 function* testRuleView(ruleView, inspector) {
   info("Showing the tooltip");
-  let tooltip = ruleView.previewTooltip;
+  let tooltip = ruleView.tooltips.previewTooltip;
   let onShown = tooltip.once("shown");
   tooltip.show();
   yield onShown;
@@ -36,7 +36,7 @@ function* testRuleView(ruleView, inspector) {
 
 function* testComputedView(computedView, inspector) {
   info("Showing the tooltip");
-  let tooltip = computedView.tooltip;
+  let tooltip = computedView.tooltips.previewTooltip;
   let onShown = tooltip.once("shown");
   tooltip.show();
   yield onShown;
