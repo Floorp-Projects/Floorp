@@ -201,7 +201,7 @@ class ReftestRunner(MozbuildObject):
             raise Exception(ADB_NOT_FOUND % ('%s-remote' % suite, b2g_home))
 
         options.b2gPath = b2g_home
-        options.logdir = self.reftest_dir
+        options.logcat_dir = self.reftest_dir
         options.httpdPath = os.path.join(self.topsrcdir, 'netwerk', 'test', 'httpserver')
         options.xrePath = xre_path
         options.ignoreWindowSize = True
@@ -335,9 +335,9 @@ def B2GCommand(func):
         help='Path to busybox binary to install on device')
     func = busybox(func)
 
-    logdir = CommandArgument('--logdir', default=None,
-        help='directory to store log files')
-    func = logdir(func)
+    logcatdir = CommandArgument('--logcat-dir', default=None,
+        help='directory to store logcat dump files')
+    func = logcatdir(func)
 
     sdcard = CommandArgument('--sdcard', default="10MB",
         help='Define size of sdcard: 1MB, 50MB...etc')

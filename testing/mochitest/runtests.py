@@ -1255,9 +1255,9 @@ class Mochitest(MochitestUtilsMixin):
       self.lastTestSeen = self.test_name
       startTime = datetime.now()
 
-      # b2g desktop requires Runner even though appname is b2g
+      # b2g desktop requires FirefoxRunner even though appname is b2g
       if mozinfo.info.get('appname') == 'b2g' and mozinfo.info.get('toolkit') != 'gonk':
-          runner_cls = mozrunner.Runner
+          runner_cls = mozrunner.FirefoxRunner
       else:
           runner_cls = mozrunner.runners.get(mozinfo.info.get('appname', 'firefox'),
                                              mozrunner.Runner)
@@ -1266,7 +1266,12 @@ class Mochitest(MochitestUtilsMixin):
                           cmdargs=args,
                           env=env,
                           process_class=mozprocess.ProcessHandlerMixin,
-                          process_args=kp_kwargs)
+                          kp_kwargs=kp_kwargs,
+                          )
+
+      # XXX work around bug 898379 until mozrunner is updated for m-c; see
+      # https://bugzilla.mozilla.org/show_bug.cgi?id=746243#c49
+      runner.kp_kwargs = kp_kwargs
 
       # start the runner
       runner.start(debug_args=debug_args,

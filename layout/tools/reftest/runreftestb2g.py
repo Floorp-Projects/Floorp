@@ -58,9 +58,9 @@ class B2GOptions(ReftestOptions):
         defaults["noWindow"] = False
 
         self.add_option("--adbpath", action="store",
-                    type = "string", dest = "adb_path",
+                    type = "string", dest = "adbPath",
                     help = "path to adb")
-        defaults["adb_path"] = "adb"
+        defaults["adbPath"] = "adb"
 
         self.add_option("--deviceIP", action="store",
                     type = "string", dest = "deviceIP",
@@ -101,10 +101,10 @@ class B2GOptions(ReftestOptions):
                         help="the path to a gecko distribution that should "
                         "be installed on the emulator prior to test")
         defaults["geckoPath"] = None
-        self.add_option("--logdir", action="store",
-                        type="string", dest="logdir",
-                        help="directory to store log files")
-        defaults["logdir"] = None
+        self.add_option("--logcat-dir", action="store",
+                        type="string", dest="logcat_dir",
+                        help="directory to store logcat dump files")
+        defaults["logcat_dir"] = None
         self.add_option('--busybox', action='store',
                         type='string', dest='busybox',
                         help="Path to busybox binary to install on device")
@@ -166,8 +166,8 @@ class B2GOptions(ReftestOptions):
         if options.geckoPath and not options.emulator:
             self.error("You must specify --emulator if you specify --gecko-path")
 
-        if options.logdir and not options.emulator:
-            self.error("You must specify --emulator if you specify --logdir")
+        if options.logcat_dir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logcat-dir")
 
         #if not options.emulator and not options.deviceIP:
         #    print "ERROR: you must provide a device IP"
@@ -497,8 +497,8 @@ def run_remote_reftests(parser, options, args):
             kwargs['noWindow'] = True
         if options.geckoPath:
             kwargs['gecko_path'] = options.geckoPath
-        if options.logdir:
-            kwargs['logdir'] = options.logdir
+        if options.logcat_dir:
+            kwargs['logcat_dir'] = options.logcat_dir
         if options.busybox:
             kwargs['busybox'] = options.busybox
         if options.symbolsPath:
@@ -511,21 +511,19 @@ def run_remote_reftests(parser, options, args):
         host,port = options.marionette.split(':')
         kwargs['host'] = host
         kwargs['port'] = int(port)
-    if options.adb_path:
-        kwargs['adb_path'] = options.adb_path
-    marionette = Marionette(**kwargs)
+    marionette = Marionette.getMarionetteOrExit(**kwargs)
     auto.marionette = marionette
 
     if options.emulator:
         dm = marionette.emulator.dm
     else:
         # create the DeviceManager
-        kwargs = {'adbPath': options.adb_path,
+        kwargs = {'adbPath': options.adbPath,
                   'deviceRoot': options.remoteTestRoot}
         if options.deviceIP:
             kwargs.update({'host': options.deviceIP,
                            'port': options.devicePort})
-        dm = DeviceManagerADB(**kwargs)
+        dm = DeviagerADB(**kwargs)
     auto.setDeviceManager(dm)
 
     options = parser.verifyRemoteOptions(options, auto)
