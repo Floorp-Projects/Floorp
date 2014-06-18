@@ -96,8 +96,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         parent.removeEventListener("mousemove", startMouseTests);
         parent.addEventListener("DOMMouseScroll", parentScrollTest);
         child.addEventListener("DOMMouseScroll", childScrollTest);
-        synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
-                                      'deltaMode': WheelEvent.DOM_DELTA_LINE});
+        SimpleTest.executeSoon(function () {
+          synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
+                                        'deltaMode': WheelEvent.DOM_DELTA_LINE});
+        });
       };
 
       var parentScrollTest = function (e) {
@@ -106,8 +108,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("DOMMouseScroll", childScrollTest);
         parent.addEventListener("wheel", parentWheelTest);
         child.addEventListener("wheel", childWheelTest);
-        synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
-                                      'deltaMode': WheelEvent.DOM_DELTA_LINE});
+        SimpleTest.executeSoon(function () {
+          synthesizeWheel(child, 5, 5, {'deltaY': 10, 'lineOrPageDeltaY': 10,
+                                        'deltaMode': WheelEvent.DOM_DELTA_LINE});
+        });
       };
 
       var parentWheelTest = function (e) {
@@ -116,7 +120,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("wheel", childWheelTest);
         parent.addEventListener("mousedown", parentDownTest);
         child.addEventListener("mousedown", childDownTest);
-        synthesizeMouseAtCenter(child, {type: "mousedown"}, window);
+        SimpleTest.executeSoon(function () {
+          synthesizeMouseAtCenter(child, {type: "mousedown"}, window);
+        });
       };
 
       var parentDownTest = function (e) {
@@ -125,7 +131,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("mousedown", childDownTest);
         parent.addEventListener("mouseup", parentUpTest);
         child.addEventListener("mouseup", childUpTest);
-        synthesizeMouseAtCenter(child, {type: "mouseup"}, window);
+        SimpleTest.executeSoon(function () {
+          synthesizeMouseAtCenter(child, {type: "mouseup"}, window);
+        });
       };
 
       var parentUpTest = function (e) {
@@ -134,7 +142,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("mouseup", childUpTest);
         parent.addEventListener("click", parentClickTest);
         child.addEventListener("click", childClickTest);
-        synthesizeMouseAtCenter(child, {type: "click"}, window);
+        SimpleTest.executeSoon(function () {
+          synthesizeMouseAtCenter(child, {type: "click"}, window);
+        });
       };
 
       var parentClickTest = function (e) {
@@ -143,21 +153,27 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         child.removeEventListener("click", childClickTest);
         parent.addEventListener("mousemove", parentMoveTest);
         child.addEventListener("mousemove", childMoveTest);
-        synthesizeMouseAtCenter(child, {type: "mousemove"}, window);
+        SimpleTest.executeSoon(function () {
+          synthesizeMouseAtCenter(child, {type: "mousemove"}, window);
+        });
       };
 
       var parentMoveTest = function (e) {
         parentStats.mouseMove = true;
         parent.removeEventListener("mousemove", parentMoveTest);
         child.removeEventListener("mousemove", childMoveTest);
-        document.mozCancelFullScreen();
+        SimpleTest.executeSoon(function () {
+          document.mozCancelFullScreen();
+        });
       }
 
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === parent) {
           parent.addEventListener("mousemove", startMouseTests);
           child.addEventListener("mousemove", childMoveTest);
-          synthesizeMouseAtCenter(parent, {type: "mousemove"}, window);
+          SimpleTest.executeSoon(function () {
+            synthesizeMouseAtCenter(parent, {type: "mousemove"}, window);
+          });
         }
       }, false);
 

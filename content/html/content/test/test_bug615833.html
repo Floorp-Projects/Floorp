@@ -60,7 +60,9 @@ selectMultiple.addEventListener("change", function(aEvent) {
 
 selectMultiple.addEventListener("focus", function() {
   selectMultiple.removeEventListener("focus", arguments.callee, false);
-  synthesizeMouseAtCenter(selectMultiple, {});
+  SimpleTest.executeSoon(function () {
+    synthesizeMouseAtCenter(selectMultiple, {});
+  });
 }, false);
 
 select.addEventListener("change", function(aEvent) {
@@ -76,7 +78,9 @@ select.addEventListener("keyup", function() {
 
 select.addEventListener("focus", function() {
   select.removeEventListener("focus", arguments.callee, false);
-  synthesizeKey("VK_DOWN", {});
+  SimpleTest.executeSoon(function () {
+    synthesizeKey("VK_DOWN", {});
+  });
 }, false);
 
 checkbox.addEventListener("change", function(aEvent) {
@@ -87,7 +91,9 @@ checkbox.addEventListener("change", function(aEvent) {
 
 checkbox.addEventListener("focus", function() {
   checkbox.removeEventListener("focus", arguments.callee, false);
-  synthesizeMouseAtCenter(checkbox, {});
+  SimpleTest.executeSoon(function () {
+    synthesizeMouseAtCenter(checkbox, {});
+  });
 }, false);
 
 radio.addEventListener("change", function(aEvent) {
@@ -98,7 +104,9 @@ radio.addEventListener("change", function(aEvent) {
 
 radio.addEventListener("focus", function() {
   radio.removeEventListener("focus", arguments.callee, false);
-  synthesizeMouseAtCenter(radio, {});
+  SimpleTest.executeSoon(function () {
+    synthesizeMouseAtCenter(radio, {});
+  });
 }, false);
 
 textarea.addEventListener("change", function(aEvent) {
@@ -114,7 +122,9 @@ textarea.addEventListener("input", function() {
 
 textarea.addEventListener("focus", function() {
   textarea.removeEventListener("focus", arguments.callee, false);
-  synthesizeKey('f', {});
+  SimpleTest.executeSoon(function () {
+    synthesizeKey('f', {});
+  });
 }, false);
 
 input.addEventListener("change", function(aEvent) {
@@ -130,7 +140,9 @@ input.addEventListener("input", function() {
 
 input.addEventListener("focus", function() {
   input.removeEventListener("focus", arguments.callee, false);
-  synthesizeKey('f', {});
+  SimpleTest.executeSoon(function () {
+    synthesizeKey('f', {});
+  });
 }, false);
 
 SimpleTest.waitForExplicitFinish();
