@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1027221
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1027221</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1027221 **/
+    // Set up a permanent atom
+    SimpleTest.waitForExplicitFinish();
+    var x = "x";
+    // Trigger some incremental gc
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(0);
+
+    // Kick off a worker that uses this same atom
+    var w = new Worker("data:text/plain,Promise.resolve('x').then(function() { postMessage(1); });");
+    // Maybe trigger some more incremental gc
+    SpecialPowers.Cu.getJSTestingFunctions().gcslice(0);
+
+    w.onmessage = function() {
+      ok(true, "Got here");
+      SimpleTest.finish();
+    };
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1027221">Mozilla Bug 1027221</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
