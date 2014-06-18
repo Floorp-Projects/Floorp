@@ -11,6 +11,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-common/hawkclient.js");
+Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/Credentials.jsm");
@@ -157,7 +158,7 @@ this.FxAccountsClient.prototype = {
    */
   signOut: function (sessionTokenHex) {
     return this._request("/session/destroy", "POST",
-      this._deriveHawkCredentials(sessionTokenHex, "sessionToken"));
+      deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
 
   /**
@@ -169,7 +170,7 @@ this.FxAccountsClient.prototype = {
    */
   recoveryEmailStatus: function (sessionTokenHex) {
     return this._request("/recovery_email/status", "GET",
-      this._deriveHawkCredentials(sessionTokenHex, "sessionToken"));
+      deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
 
   /**
@@ -181,7 +182,7 @@ this.FxAccountsClient.prototype = {
    */
   resendVerificationEmail: function(sessionTokenHex) {
     return this._request("/recovery_email/resend_code", "POST",
-      this._deriveHawkCredentials(sessionTokenHex, "sessionToken"));
+      deriveHawkCredentials(sessionTokenHex, "sessionToken"));
   },
 
   /**
@@ -198,7 +199,7 @@ this.FxAccountsClient.prototype = {
    *        }
    */
   accountKeys: function (keyFetchTokenHex) {
-    let creds = this._deriveHawkCredentials(keyFetchTokenHex, "keyFetchToken");
+    let creds = deriveHawkCredentials(keyFetchTokenHex, "keyFetchToken");
     let keyRequestKey = creds.extra.slice(0, 32);
     let morecreds = CryptoUtils.hkdf(keyRequestKey, undefined,
                                      Credentials.keyWord("account/keys"), 3 * 32);
@@ -247,7 +248,7 @@ this.FxAccountsClient.prototype = {
    *           https://github.com/mozilla/fxa-auth-server/blob/master/docs/api.md#response-12
    */
   signCertificate: function (sessionTokenHex, serializedPublicKey, lifetime) {
-    let creds = this._deriveHawkCredentials(sessionTokenHex, "sessionToken");
+    let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
 
     let body = { publicKey: serializedPublicKey,
                  duration: lifetime };
@@ -309,38 +310,6 @@ this.FxAccountsClient.prototype = {
     );
   },
 
-  /**
-   * The FxA auth server expects requests to certain endpoints to be authorized using Hawk.
-   * Hawk credentials are derived using shared secrets, which depend on the context
-   * (e.g. sessionToken vs. keyFetchToken).
-   *
-   * @param tokenHex
-   *        The current session token encoded in hex
-   * @param context
-   *        A context for the credentials
-   * @param size
-   *        The size in bytes of the expected derived buffer
-   * @return credentials
-   *        Returns an object:
-   *        {
-   *          algorithm: sha256
-   *          id: the Hawk id (from the first 32 bytes derived)
-   *          key: the Hawk key (from bytes 32 to 64)
-   *          extra: size - 64 extra bytes
-   *        }
-   */
-  _deriveHawkCredentials: function (tokenHex, context, size) {
-    let token = CommonUtils.hexToBytes(tokenHex);
-    let out = CryptoUtils.hkdf(token, undefined, Credentials.keyWord(context), size || 3 * 32);
-
-    return {
-      algorithm: "sha256",
-      key: out.slice(32, 64),
-      extra: out.slice(64),
-      id: CommonUtils.bytesAsHex(out.slice(0, 32))
-    };
-  },
-
   _clearBackoff: function() {
       this.backoffError = null;
   },
@@ -379,12 +348,12 @@ this.FxAccountsClient.prototype = {
     }
 
     this.hawk.request(path, method, credentials, jsonPayload).then(
-      (responseText) => {
+      (response) => {
         try {
-          let response = JSON.parse(responseText);
-          deferred.resolve(response);
+          let responseObj = JSON.parse(response.body);
+          deferred.resolve(responseObj);
         } catch (err) {
-          log.error("json parse error on response: " + responseText);
+          log.error("json parse error on response: " + response.body);
           deferred.reject({error: err});
         }
       },
