@@ -4880,6 +4880,84 @@ Encode(JSContext *cx, HandleLinearString str, const bool *unescapedSet,
     return TransferBufferToString(sb, rval);
 }
 
+enum DecodeResult { Decode_Failure, Decode_BadUri, Decode_Success };
+
+template <typename CharT>
+static DecodeResult
+Decode(StringBuffer &sb, const CharT *chars, size_t length, const bool *reservedSet)
+{
+    for (size_t k = 0; k < length; k++) {
+        jschar c = chars[k];
+        if (c == '%') {
+            size_t start = k;
+            if ((k + 2) >= length)
+                return Decode_BadUri;
+
+            if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
+                return Decode_BadUri;
+
+            uint32_t B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
+            k += 2;
+            if (!(B & 0x80)) {
+                c = jschar(B);
+            } else {
+                int n = 1;
+                while (B & (0x80 >> n))
+                    n++;
+
+                if (n == 1 || n > 4)
+                    return Decode_BadUri;
+
+                uint8_t octets[4];
+                octets[0] = (uint8_t)B;
+                if (k + 3 * (n - 1) >= length)
+                    return Decode_BadUri;
+
+                for (int j = 1; j < n; j++) {
+                    k++;
+                    if (chars[k] != '%')
+                        return Decode_BadUri;
+
+                    if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
+                        return Decode_BadUri;
+
+                    B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
+                    if ((B & 0xC0) != 0x80)
+                        return Decode_BadUri;
+
+                    k += 2;
+                    octets[j] = char(B);
+                }
+                uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
+                if (v >= 0x10000) {
+                    v -= 0x10000;
+                    if (v > 0xFFFFF)
+                        return Decode_BadUri;
+
+                    c = jschar((v & 0x3FF) + 0xDC00);
+                    jschar H = jschar((v >> 10) + 0xD800);
+                    if (!sb.append(H))
+                        return Decode_Failure;
+                } else {
+                    c = jschar(v);
+                }
+            }
+            if (c < 128 && reservedSet && reservedSet[c]) {
+                if (!sb.append(chars + start, k - start + 1))
+                    return Decode_Failure;
+            } else {
+                if (!sb.append(c))
+                    return Decode_Failure;
+            }
+        } else {
+            if (!sb.append(c))
+                return Decode_Failure;
+        }
+    }
+
+    return Decode_Success;
+}
+
 static bool
 Decode(JSContext *cx, HandleLinearString str, const bool *reservedSet, MutableHandleValue rval)
 {
@@ -4889,75 +4967,27 @@ Decode(JSContext *cx, HandleLinearString str, const bool *reservedSet, MutableHa
         return true;
     }
 
-    const jschar *chars = str->chars();
     StringBuffer sb(cx);
-    for (size_t k = 0; k < length; k++) {
-        jschar c = chars[k];
-        if (c == '%') {
-            size_t start = k;
-            if ((k + 2) >= length)
-                goto report_bad_uri;
-            if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
-                goto report_bad_uri;
-            uint32_t B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
-            k += 2;
-            if (!(B & 0x80)) {
-                c = (jschar)B;
-            } else {
-                int n = 1;
-                while (B & (0x80 >> n))
-                    n++;
-                if (n == 1 || n > 4)
-                    goto report_bad_uri;
-                uint8_t octets[4];
-                octets[0] = (uint8_t)B;
-                if (k + 3 * (n - 1) >= length)
-                    goto report_bad_uri;
-                for (int j = 1; j < n; j++) {
-                    k++;
-                    if (chars[k] != '%')
-                        goto report_bad_uri;
-                    if (!JS7_ISHEX(chars[k+1]) || !JS7_ISHEX(chars[k+2]))
-                        goto report_bad_uri;
-                    B = JS7_UNHEX(chars[k+1]) * 16 + JS7_UNHEX(chars[k+2]);
-                    if ((B & 0xC0) != 0x80)
-                        goto report_bad_uri;
-                    k += 2;
-                    octets[j] = (char)B;
-                }
-                uint32_t v = JS::Utf8ToOneUcs4Char(octets, n);
-                if (v >= 0x10000) {
-                    v -= 0x10000;
-                    if (v > 0xFFFFF)
-                        goto report_bad_uri;
-                    c = (jschar)((v & 0x3FF) + 0xDC00);
-                    jschar H = (jschar)((v >> 10) + 0xD800);
-                    if (!sb.append(H))
-                        return false;
-                } else {
-                    c = (jschar)v;
-                }
-            }
-            if (c < 128 && reservedSet && reservedSet[c]) {
-                if (!sb.append(chars + start, k - start + 1))
-                    return false;
-            } else {
-                if (!sb.append(c))
-                    return false;
-            }
-        } else {
-            if (!sb.append(c))
-                return false;
-        }
+
+    DecodeResult res;
+    if (str->hasLatin1Chars()) {
+        AutoCheckCannotGC nogc;
+        res = Decode(sb, str->latin1Chars(nogc), str->length(), reservedSet);
+    } else {
+        AutoCheckCannotGC nogc;
+        res = Decode(sb, str->twoByteChars(nogc), str->length(), reservedSet);
     }
 
+    if (res == Decode_Failure)
+        return false;
+
+    if (res == Decode_BadUri) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_URI);
+        return false;
+    }
+
+    MOZ_ASSERT(res == Decode_Success);
     return TransferBufferToString(sb, rval);
-
-  report_bad_uri:
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_URI);
-    /* FALL THROUGH */
-
-    return false;
 }
 
 static bool
