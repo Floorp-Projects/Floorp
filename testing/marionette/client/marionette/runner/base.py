@@ -367,11 +367,11 @@ class BaseMarionetteOptions(OptionParser):
                              'specify which architecture to emulate for both cases')
         self.add_option('--emulator-binary',
                         action='store',
-                        dest='emulator_binary',
+                        dest='emulatorBinary',
                         help='launch a specific emulator binary rather than launching from the B2G built emulator')
         self.add_option('--emulator-img',
                         action='store',
-                        dest='emulator_img',
+                        dest='emulatorImg',
                         help='use a specific image file instead of a fresh one')
         self.add_option('--emulator-res',
                         action='store',
@@ -385,11 +385,11 @@ class BaseMarionetteOptions(OptionParser):
                         help='size of sdcard to create for the emulator')
         self.add_option('--no-window',
                         action='store_true',
-                        dest='no_window',
+                        dest='noWindow',
                         default=False,
                         help='when Marionette launches an emulator, start it with the -no-window argument')
         self.add_option('--logcat-dir',
-                        dest='logdir',
+                        dest='logcat_dir',
                         action='store',
                         help='directory to store logcat dump files')
         self.add_option('--address',
@@ -441,6 +441,10 @@ class BaseMarionetteOptions(OptionParser):
                         action='store',
                         dest='xml_output',
                         help='xml output')
+        self.add_option('--gecko-path',
+                        dest='gecko_path',
+                        action='store',
+                        help='path to b2g gecko binaries that should be installed on the device or emulator')
         self.add_option('--testvars',
                         dest='testvars',
                         action='store',
@@ -521,8 +525,8 @@ class BaseMarionetteOptions(OptionParser):
                                   'elasticsearch-zlb.webapp.scl3.mozilla.com:9200']
 
         # default to storing logcat output for emulator runs
-        if options.emulator and not options.logdir:
-            options.logdir = 'logcat'
+        if options.emulator and not options.logcat_dir:
+            options.logcat_dir = 'logcat'
 
         # check for valid resolution string, strip whitespaces
         try:
@@ -558,11 +562,11 @@ class BaseMarionetteTestRunner(object):
 
     textrunnerclass = MarionetteTextTestRunner
 
-    def __init__(self, address=None, emulator=None, emulator_binary=None,
-                 emulator_img=None, emulator_res='480x800', homedir=None,
+    def __init__(self, address=None, emulator=None, emulatorBinary=None,
+                 emulatorImg=None, emulator_res='480x800', homedir=None,
                  app=None, app_args=None, bin=None, profile=None, autolog=False,
-                 revision=None, logger=None, testgroup="marionette", no_window=False,
-                 logdir=None, xml_output=None, repeat=0,
+                 revision=None, logger=None, testgroup="marionette", noWindow=False,
+                 logcat_dir=None, xml_output=None, repeat=0, gecko_path=None,
                  testvars=None, tree=None, type=None, device_serial=None,
                  symbols_path=None, timeout=None, es_servers=None, shuffle=False,
                  shuffle_seed=random.randint(0, sys.maxint), sdcard=None,
@@ -571,8 +575,8 @@ class BaseMarionetteTestRunner(object):
                  **kwargs):
         self.address = address
         self.emulator = emulator
-        self.emulator_binary = emulator_binary
-        self.emulator_img = emulator_img
+        self.emulatorBinary = emulatorBinary
+        self.emulatorImg = emulatorImg
         self.emulator_res = emulator_res
         self.homedir = homedir
         self.app = app
@@ -583,12 +587,13 @@ class BaseMarionetteTestRunner(object):
         self.testgroup = testgroup
         self.revision = revision
         self.logger = logger
-        self.no_window = no_window
+        self.noWindow = noWindow
         self.httpd = None
         self.marionette = None
-        self.logdir = logdir
+        self.logcat_dir = logcat_dir
         self.xml_output = xml_output
         self.repeat = repeat
+        self.gecko_path = gecko_path
         self.testvars = {}
         self.test_kwargs = kwargs
         self.tree = tree
@@ -635,9 +640,9 @@ class BaseMarionetteTestRunner(object):
             self.logger.setLevel(logging.INFO)
             self.logger.addHandler(logging.StreamHandler())
 
-        if self.logdir:
-            if not os.access(self.logdir, os.F_OK):
-                os.mkdir(self.logdir)
+        if self.logcat_dir:
+            if not os.access(self.logcat_dir, os.F_OK):
+                os.mkdir(self.logcat_dir)
 
         # for XML output
         self.testvars['xml_output'] = self.xml_output
@@ -712,7 +717,8 @@ class BaseMarionetteTestRunner(object):
         if self.emulator:
             kwargs.update({
                 'homedir': self.homedir,
-                'logdir': self.logdir,
+                'logcat_dir': self.logcat_dir,
+                'gecko_path': self.gecko_path,
             })
 
         if self.address:
@@ -735,10 +741,10 @@ class BaseMarionetteTestRunner(object):
         elif self.emulator:
             kwargs.update({
                 'emulator': self.emulator,
-                'emulator_binary': self.emulator_binary,
-                'emulator_img': self.emulator_img,
+                'emulatorBinary': self.emulatorBinary,
+                'emulatorImg': self.emulatorImg,
                 'emulator_res': self.emulator_res,
-                'no_window': self.no_window,
+                'noWindow': self.noWindow,
                 'sdcard': self.sdcard,
             })
         return kwargs
@@ -751,7 +757,7 @@ class BaseMarionetteTestRunner(object):
 
         logfile = None
         if self.emulator:
-            filename = os.path.join(os.path.abspath(self.logdir),
+            filename = os.path.join(os.path.abspath(self.logcat_dir),
                                     "emulator-%d.log" % self.marionette.emulator.port)
             if os.access(filename, os.F_OK):
                 logfile = filename
