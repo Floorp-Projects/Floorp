@@ -273,10 +273,10 @@ random-if(B2G&&browserIsRemote) == munderover-accentunder-dynamic.html munderove
 == tablespacing-1.html tablespacing-1-ref.html
 == tablespacing-2.html tablespacing-2-ref.html
 == tablespacing-3.html tablespacing-3-ref.html
-== tablespacing-4.html tablespacing-4-ref.html
-== tablespacing-5.html tablespacing-5-ref.html
-== tablespacing-5a.html tablespacing-5a-ref.html
-== tablespacing-6.html tablespacing-6-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-4.html tablespacing-4-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-5.html tablespacing-5-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-5a.html tablespacing-5a-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-6.html tablespacing-6-ref.html
 == tablespacing-7.html tablespacing-7-ref.html
 != tablespacing-8a.html tablespacing-8-ref.html
 != tablespacing-8b.html tablespacing-8-ref.html
