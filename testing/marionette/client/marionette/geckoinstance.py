@@ -25,21 +25,20 @@ class GeckoInstance(object):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
-        self.profile = profile
+        self.profile_path = profile
         self.app_args = app_args or []
         self.runner = None
         self.symbols_path = symbols_path
         self.gecko_log = gecko_log
 
     def start(self):
-        profile_path = self.profile
         profile_args = {"preferences": self.required_prefs}
-        if not profile_path:
-            runner_class = Runner
+        if not self.profile_path:
             profile_args["restore"] = False
+            profile = Profile(**profile_args)
         else:
-            runner_class = CloneRunner
-            profile_args["path_from"] = profile_path
+            profile_args["path_from"] = self.profile_path
+            profile = Profile.clone(**profile_args)
 
         if self.gecko_log is None:
             self.gecko_log = 'gecko.log'
@@ -57,13 +56,13 @@ class GeckoInstance(object):
         # https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
         env.update({ 'MOZ_CRASHREPORTER': '1',
                      'MOZ_CRASHREPORTER_NO_REPORT': '1', })
-        self.runner = runner_class.create(
+        self.runner = Runner(
             binary=self.bin,
-            profile_args=profile_args,
+            profile=profile,
             cmdargs=['-no-remote', '-marionette'] + self.app_args,
             env=env,
             symbols_path=self.symbols_path,
-            kp_kwargs={
+            process_args={
                 'processOutputLine': [NullOutput()],
                 'logfile': self.gecko_log})
         self.runner.start()
@@ -72,24 +71,19 @@ class GeckoInstance(object):
         return self.runner.check_for_crashes()
 
     def close(self):
-        self.runner.stop()
-        self.runner.cleanup()
+        if self.runner:
+            self.runner.stop()
+            self.runner.cleanup()
 
 
 class B2GDesktopInstance(GeckoInstance):
-
     required_prefs = {"focusmanager.testmode": True}
-
-apps = {'b2g': B2GDesktopInstance,
-        'b2gdesktop': B2GDesktopInstance}
-
-
-class CloneRunner(Runner):
-
-    profile_class = Profile.clone
 
 
 class NullOutput(object):
-
     def __call__(self, line):
         pass
+
+
+apps = {'b2g': B2GDesktopInstance,
+        'b2gdesktop': B2GDesktopInstance}
