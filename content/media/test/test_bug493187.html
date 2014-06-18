@@ -20,22 +20,37 @@ SimpleTest.expectAssertions(0, 2);
 var manager = new MediaTestManager;
 
 function start(e) {
+  var v = e.target;
+  info("[" + v._name + "] start");
   e.target.currentTime = e.target.duration / 4;
 }
 
 function startSeeking(e) {
+  var v = e.target;
+  info("[" + v._name + "] seeking");
   e.target._seeked = true;
 }
 
 function canPlayThrough(e) {
   var v = e.target;
+  info("[" + v._name + "] canPlayThrough");
   if (v._seeked && !v._finished) {
-    ok(true, "Got canplaythrough after seek for " + v._name);
+    ok(true, "[" + v._name + "] got canplaythrough after seek");
     v._finished = true;
     v.parentNode.removeChild(v);
     v.src = "";
     manager.finished(v.token);
   }
+}
+
+function seeked(e) {
+  var v = e.target;
+  info("[" + v._name + "] seeked");
+}
+
+function error(e) {
+  var v = e.target;
+  info("[" + v._name + "] error");
 }
 
 function startTest(test, token) {
@@ -58,6 +73,8 @@ function startTest(test, token) {
   v.addEventListener("loadedmetadata", start, false);
   v.addEventListener("canplaythrough", canPlayThrough, false);
   v.addEventListener("seeking", startSeeking, false);
+  v.addEventListener("seeked", seeked, false);
+  v.addEventListener("error", error, false);
   document.body.appendChild(v);
 }
 

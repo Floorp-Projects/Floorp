@@ -43,11 +43,13 @@ template <class T> class MediaQueue : private nsDeque {
 
   inline void Push(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    MOZ_ASSERT(aItem);
     nsDeque::Push(aItem);
   }
 
   inline void PushFront(T* aItem) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    MOZ_ASSERT(aItem);
     nsDeque::PushFront(aItem);
   }
 
@@ -73,11 +75,6 @@ template <class T> class MediaQueue : private nsDeque {
   inline void Empty() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     nsDeque::Empty();
-  }
-
-  inline void Erase() {
-    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    nsDeque::Erase();
   }
 
   void Reset() {
