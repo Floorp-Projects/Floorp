@@ -5,6 +5,10 @@
 'use strict';
 
 const { Promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
+const { devtools } = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
+const { BrowserTabActor, BrowserTabList, allAppShellDOMWindows,
+        sendShutdownEvent } = devtools.require("devtools/server/actors/webbrowser");
+const { RootActor } = devtools.require("devtools/server/actors/root");
 
 /**
  * WebappRT-specific actors.

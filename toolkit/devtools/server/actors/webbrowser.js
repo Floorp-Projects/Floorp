@@ -48,6 +48,8 @@ function allAppShellDOMWindows(aWindowType)
   }
 }
 
+exports.allAppShellDOMWindows = allAppShellDOMWindows;
+
 /**
  * Retrieve the window type of the top-level window |aWindow|.
  */
