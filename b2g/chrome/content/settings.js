@@ -664,6 +664,7 @@ let settingsToObserve = {
     defaultValue: false
   },
   'devtools.eventlooplag.threshold': 100,
+  'dom.mozApps.use_reviewer_certs': false,
   'layers.draw-borders': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,
