@@ -31,7 +31,7 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
     .querySelector(".ruleview-colorswatch");
 
   info("Open the color picker tooltip and change the color");
-  let picker = ruleView.colorPicker;
+  let picker = ruleView.tooltips.colorPicker;
   let onShown = picker.tooltip.once("shown");
   swatch.click();
   yield onShown;
@@ -49,9 +49,9 @@ function* testColorChangeIsntRevertedWhenOtherTooltipIsShown(ruleView) {
   info("Open the image preview tooltip");
   let value = getRuleViewProperty(ruleView, "body", "background").valueSpan;
   let url = value.querySelector(".theme-link");
-  let onShown = ruleView.previewTooltip.once("shown");
-  let anchor = yield isHoverTooltipTarget(ruleView.previewTooltip, url);
-  ruleView.previewTooltip.show(anchor);
+  let onShown = ruleView.tooltips.previewTooltip.once("shown");
+  let anchor = yield isHoverTooltipTarget(ruleView.tooltips.previewTooltip, url);
+  ruleView.tooltips.previewTooltip.show(anchor);
   yield onShown;
 
   info("Image tooltip is shown, verify that the swatch is still correct");

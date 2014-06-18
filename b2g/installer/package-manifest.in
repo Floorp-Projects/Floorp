@@ -803,7 +803,7 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/DirectoryProvider.js
 @BINPATH@/components/ActivitiesGlue.js
 @BINPATH@/components/ProcessGlobal.js
-@BINPATH@/components/ContentHandler.js
+@BINPATH@/components/OMAContentHandler.js
 @BINPATH@/components/PaymentGlue.js
 @BINPATH@/components/YoutubeProtocolHandler.js
 @BINPATH@/components/RecoveryService.js
