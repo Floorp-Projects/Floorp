@@ -482,12 +482,24 @@ bool
 MediaBufferDecoder::EnsureThreadPoolInitialized()
 {
   if (!mThreadPool) {
-    mThreadPool = SharedThreadPool::Get(NS_LITERAL_CSTRING("MediaBufferDecoder"));
+    mThreadPool = do_CreateInstance(NS_THREADPOOL_CONTRACTID);
     if (!mThreadPool) {
       return false;
     }
+    mThreadPool->SetName(NS_LITERAL_CSTRING("MediaBufferDecoder"));
   }
   return true;
+}
+
+void
+MediaBufferDecoder::Shutdown() {
+  if (mThreadPool) {
+    // Setting threadLimit to 0 causes threads to exit when all events have
+    // been run, like nsIThreadPool::Shutdown(), but doesn't run a nested event
+    // loop nor wait until this has happened.
+    mThreadPool->SetThreadLimit(0);
+    mThreadPool = nullptr;
+  }
 }
 
 WebAudioDecodeJob::WebAudioDecodeJob(const nsACString& aContentType,
