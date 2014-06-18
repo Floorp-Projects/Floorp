@@ -831,7 +831,7 @@ nsAccessibilityService::GetOrCreateAccessible(nsINode* aNode,
   }
 
   // We have a content node.
-  if (!aNode->IsInDoc()) {
+  if (!aNode->GetCrossShadowCurrentDoc()) {
     NS_WARNING("Creating accessible for node with no document");
     return nullptr;
   }
