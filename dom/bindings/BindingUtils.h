@@ -179,12 +179,12 @@ UnwrapDOMObject(JSObject* obj)
   return static_cast<T*>(val.toPrivate());
 }
 
-inline const DOMClass*
+inline const DOMJSClass*
 GetDOMClass(JSObject* obj)
 {
   const js::Class* clasp = js::GetObjectClass(obj);
   if (IsDOMClass(clasp)) {
-    return &DOMJSClass::FromJSClass(clasp)->mClass;
+    return DOMJSClass::FromJSClass(clasp);
   }
   return nullptr;
 }
@@ -192,11 +192,11 @@ GetDOMClass(JSObject* obj)
 inline nsISupports*
 UnwrapDOMObjectToISupports(JSObject* aObject)
 {
-  const DOMClass* clasp = GetDOMClass(aObject);
+  const DOMJSClass* clasp = GetDOMClass(aObject);
   if (!clasp || !clasp->mDOMObjectIsISupports) {
     return nullptr;
   }
- 
+
   return UnwrapDOMObject<nsISupports>(aObject);
 }
 
@@ -220,7 +220,7 @@ UnwrapObject(JSObject* obj, U& value, prototypes::ID protoID,
              uint32_t protoDepth)
 {
   /* First check to see whether we have a DOM object */
-  const DOMClass* domClass = GetDOMClass(obj);
+  const DOMJSClass* domClass = GetDOMClass(obj);
   if (!domClass) {
     /* Maybe we have a security wrapper or outer window? */
     if (!js::IsWrapper(obj)) {
@@ -860,7 +860,7 @@ WrapNewBindingObject(JSContext* cx, T* value, JS::MutableHandle<JS::Value> rval)
   }
 
 #ifdef DEBUG
-  const DOMClass* clasp = GetDOMClass(obj);
+  const DOMJSClass* clasp = GetDOMClass(obj);
   // clasp can be null if the cache contained a non-DOM object.
   if (clasp) {
     // Some sanity asserts about our object.  Specifically:
