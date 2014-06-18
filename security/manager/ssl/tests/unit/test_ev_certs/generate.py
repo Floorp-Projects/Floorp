@@ -15,17 +15,8 @@ import CertUtils
 srcdir = os.getcwd()
 db = tempfile.mkdtemp()
 
-CA_basic_constraints = "basicConstraints = critical, CA:TRUE\n"
-EE_basic_constraints = "basicConstraints = CA:FALSE\n"
-
-EE_full_ku = ("keyUsage = digitalSignature, nonRepudiation, keyEncipherment, " +
-              " dataEncipherment, keyAgreement, keyCertSign, cRLSign\n")
-
-CA_eku = ("extendedKeyUsage = critical, serverAuth, clientAuth\n")
-Server_eku = "extendedKeyUsage = critical, serverAuth, clientAuth\n"
-
-authority_key_ident = "authorityKeyIdentifier = keyid, issuer\n"
-subject_key_ident = "subjectKeyIdentifier = hash\n"
+CA_extensions  = ("basicConstraints = critical, CA:TRUE\n"
+                  "keyUsage = keyCertSign, cRLSign\n")
 
 aia_prefix = "authorityInfoAccess = OCSP;URI:http://www.example.com:8888/"
 aia_suffix ="/\n"
@@ -80,12 +71,9 @@ def generate_certs():
     ca_key = 'evroot.key'
     prefix = "ev-valid"
     key_type = 'rsa'
-    ee_ext_text = (EE_basic_constraints + EE_full_ku + Server_eku +
-                   authority_key_ident + aia_prefix + prefix + aia_suffix +
+    ee_ext_text = (aia_prefix + prefix + aia_suffix +
                    endentity_crl + mozilla_testing_ev_policy)
-    int_ext_text = (CA_basic_constraints + EE_full_ku + CA_eku +
-                    authority_key_ident + subject_key_ident +
-                    aia_prefix + "int-" + prefix + aia_suffix +
+    int_ext_text = (CA_extensions + aia_prefix + "int-" + prefix + aia_suffix +
                     intermediate_crl + mozilla_testing_ev_policy)
     [int_key, int_cert, ee_key, ee_cert] = CertUtils.generate_int_and_ee(db,
                                              srcdir,
@@ -108,8 +96,6 @@ def generate_certs():
                                       random.randint(100, 40000000),
                                       key_type,
                                       'no-ocsp-url-cert',
-                                      EE_basic_constraints + EE_full_ku +
-                                      Server_eku + authority_key_ident +
                                       no_ocsp_url_ext_aia + endentity_crl +
                                       mozilla_testing_ev_policy,
                                       int_key, int_cert);
@@ -117,12 +103,9 @@ def generate_certs():
 
     # add an ev cert whose intermediate has a anypolicy oid
     prefix = "ev-valid-anypolicy-int"
-    ee_ext_text = (EE_basic_constraints + EE_full_ku + Server_eku +
-                   authority_key_ident + aia_prefix + prefix + aia_suffix +
+    ee_ext_text = (aia_prefix + prefix + aia_suffix +
                    endentity_crl + mozilla_testing_ev_policy)
-    int_ext_text = (CA_basic_constraints + EE_full_ku + CA_eku +
-                    authority_key_ident + subject_key_ident +
-                    aia_prefix + "int-" + prefix + aia_suffix +
+    int_ext_text = (CA_extensions + aia_prefix + "int-" + prefix + aia_suffix +
                     intermediate_crl + anypolicy_policy)
 
     [int_key, int_cert, ee_key, ee_cert] = CertUtils.generate_int_and_ee(db,
@@ -144,19 +127,15 @@ def generate_certs():
                                       1,
                                       'rsa',
                                       'non-evroot-ca',
-                                      CA_basic_constraints + EE_full_ku +
-                                        authority_key_ident)
+                                      CA_extensions)
     pk12file =  CertUtils.generate_pkcs12(db, srcdir, bad_ca_cert, bad_ca_key,
                                           "non-evroot-ca")
     import_cert_and_pkcs12(bad_ca_cert, pk12file, "non-evroot-ca", "C,C,C")
     prefix = "non-ev-root"
-    ee_ext_text = (EE_basic_constraints + EE_full_ku + Server_eku +
-                  authority_key_ident + aia_prefix + prefix  + aia_suffix +
-                  endentity_crl + mozilla_testing_ev_policy)
-    int_ext_text = (CA_basic_constraints + EE_full_ku + CA_eku +
-                   authority_key_ident + aia_prefix + "int-" + prefix +
-                   aia_suffix + intermediate_crl + subject_key_ident +
-                   mozilla_testing_ev_policy)
+    ee_ext_text = (aia_prefix + prefix  + aia_suffix +
+                   endentity_crl + mozilla_testing_ev_policy)
+    int_ext_text = (CA_extensions + aia_prefix + "int-" + prefix + aia_suffix +
+                    intermediate_crl + mozilla_testing_ev_policy)
     [int_key, int_cert, ee_key, ee_cert] = CertUtils.generate_int_and_ee(db,
                                       srcdir,
                                       bad_ca_key,
