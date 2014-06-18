@@ -258,6 +258,7 @@ NS_INTERFACE_MAP_END
 /******************************************************************/
 
 static uint32_t sESMInstanceCount = 0;
+static bool sPointerEventEnabled = false;
 
 int32_t EventStateManager::sUserInputEventDepth = 0;
 bool EventStateManager::sNormalLMouseEventInProcess = false;
@@ -300,6 +301,13 @@ EventStateManager::EventStateManager()
     UpdateUserActivityTimer();
   }
   ++sESMInstanceCount;
+
+  static bool sAddedPointerEventEnabled = false;
+  if (!sAddedPointerEventEnabled) {
+    Preferences::AddBoolVarCache(&sPointerEventEnabled,
+                                 "dom.w3c_pointer_events.enabled", false);
+    sAddedPointerEventEnabled = true;
+  }
 }
 
 nsresult
@@ -580,6 +588,10 @@ EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       mouseEvent->reason = WidgetMouseEvent::eSynthesized;
       // then fall through...
     } else {
+      if (sPointerEventEnabled) {
+        // We should synthetize corresponding pointer events
+        GeneratePointerEnterExit(NS_POINTER_LEAVE, mouseEvent);
+      }
       GenerateMouseEnterExit(mouseEvent);
       //This is a window level mouse exit event and should stop here
       aEvent->message = 0;
@@ -2884,8 +2896,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
     // Mouse/Pen pointers are valid all the time (not only between down/up)
     if (pointerEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
       mPointersEnterLeaveHelper.Remove(pointerEvent->pointerId);
-    }
-    if (pointerEvent->inputSource != nsIDOMMouseEvent::MOZ_SOURCE_MOUSE) {
       GenerateMouseEnterExit(pointerEvent);
     }
     break;
@@ -3916,6 +3926,14 @@ GetWindowInnerRectCenter(nsPIDOMWindow* aWindow,
   return LayoutDeviceIntPoint(
     aContext->CSSPixelsToDevPixels(innerX - cssScreenX + innerWidth / 2),
     aContext->CSSPixelsToDevPixels(innerY - cssScreenY + innerHeight / 2));
+}
+
+void
+EventStateManager::GeneratePointerEnterExit(uint32_t aMessage, WidgetMouseEvent* aEvent)
+{
+  WidgetPointerEvent pointerEvent(*aEvent);
+  pointerEvent.message = aMessage;
+  GenerateMouseEnterExit(&pointerEvent);
 }
 
 void

@@ -153,11 +153,10 @@ mlabeledtr > mtd:first-child {
 }
 
 /**********************************************************************/
-/* rules to achieve the default spacing between cells. The back-end code
+/* rules to achieve the default spacing between cells. When rowspacing,
+   columnspacing and framespacing aren't set on mtable.  The back-end code
    will set the internal attributes depending on the cell's position.
-   These rules are hard-coded, the comments indicate what would be
-   desirable if the style data could be changed on the fly to pick
-   the values that users may set with the attributes of <mtable> */
+   When they are set, the spacing behaviour is handled outside of CSS */
 mtd {
   padding-right: 0.4em;  /* half of columnspacing[colindex] */
   padding-left: 0.4em;   /* half of columnspacing[colindex-1] */
@@ -193,6 +192,13 @@ mtable[frame="dashed"] > mtr > mtd:first-child {
 mtable[frame="solid"] > mtr > mtd:last-child,
 mtable[frame="dashed"] > mtr > mtd:last-child {
   -moz-padding-end: 0.4em; /* framespacing.right (or left in rtl)*/
+}
+
+mtable[rowspacing] > mtr > mtd,
+mtable[columnspacing] > mtr > mtd,
+mtable[framespacing] > mtr > mtd {
+  /* Spacing handled outside of CSS */
+  padding: 0px;
 }
 
 /**************************************************************************/

@@ -388,7 +388,7 @@ SavedStacks::sweep(JSRuntime *rt)
                                                     frame->getFunctionDisplayName(),
                                                     parent,
                                                     frame->getPrincipals()),
-                                 frame);
+                                 ReadBarriered<SavedFrame *>(frame));
                 }
             }
         }
