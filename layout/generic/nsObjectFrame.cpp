@@ -1612,7 +1612,6 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   transform.Translate(p.x, p.y);
 
   layer->SetBaseTransform(Matrix4x4::From2D(transform));
-  layer->SetVisibleRegion(ThebesIntRect(IntRect(IntPoint(0, 0), size)));
   return layer.forget();
 }
 
