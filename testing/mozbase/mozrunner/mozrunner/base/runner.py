@@ -3,78 +3,87 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from abc import ABCMeta, abstractproperty
 import os
 import subprocess
 import traceback
 
-from mozprocess.processhandler import ProcessHandler
+from mozprocess import ProcessHandler
 import mozcrash
-import mozlog
 
-from .errors import RunnerNotStartedError
-
-
-# we can replace these methods with 'abc'
-# (http://docs.python.org/library/abc.html) when we require Python 2.6+
-def abstractmethod(method):
-    line = method.func_code.co_firstlineno
-    filename = method.func_code.co_filename
-
-    def not_implemented(*args, **kwargs):
-        raise NotImplementedError('Abstract method %s at File "%s", line %s '
-                                  'should be implemented by a concrete class' %
-                                  (repr(method), filename, line))
-    return not_implemented
+from ..application import DefaultContext
+from ..errors import RunnerNotStartedError
 
 
-class Runner(object):
+class BaseRunner(object):
+    """
+    The base runner class for all mozrunner objects, both local and remote.
+    """
+    __metaclass__ = ABCMeta
+    last_test = 'automation'
+    process_handler = None
+    timeout = None
+    output_timeout = None
 
-    def __init__(self, profile, clean_profile=True, process_class=None,
-                 kp_kwargs=None, env=None, symbols_path=None):
+    def __init__(self, app_ctx=None, profile=None, clean_profile=True, env=None,
+                 process_class=None, process_args=None, symbols_path=None):
+        self.app_ctx = app_ctx or DefaultContext()
+
+        if isinstance(profile, basestring):
+            self.profile = self.app_ctx.profile_class(profile=profile)
+        else:
+            self.profile = profile or self.app_ctx.profile_class(**getattr(self.app_ctx, 'profile_args', {}))
+
+        # process environment
+        if env is None:
+            self.env = os.environ.copy()
+        else:
+            self.env = env.copy()
+
         self.clean_profile = clean_profile
-        self.env = env or {}
-        self.kp_kwargs = kp_kwargs or {}
         self.process_class = process_class or ProcessHandler
-        self.process_handler = None
-        self.profile = profile
-        self.log = mozlog.getLogger('MozRunner')
+        self.process_args = process_args or {}
         self.symbols_path = symbols_path
 
     def __del__(self):
         self.cleanup()
 
-    # Once we can use 'abc' it should become an abstract property
-    @property
+    @abstractproperty
     def command(self):
+        """Returns the command list to run."""
         pass
 
     @property
     def returncode(self):
+        """
+        The returncode of the process_handler. A value of None
+        indicates the process is still running. A negative
+        value indicates the process was killed with the
+        specified signal.
+
+        :raises: RunnerNotStartedError
+        """
         if self.process_handler:
             return self.process_handler.poll()
         else:
-            raise RunnerNotStartedError("returncode retrieved before process started")
+            raise RunnerNotStartedError("returncode accessed before runner started")
 
     def start(self, debug_args=None, interactive=False, timeout=None, outputTimeout=None):
-        """Run self.command in the proper environment
+        """
+        Run self.command in the proper environment.
 
-        returns the process id
-
-        :param debug_args: arguments for the debugger
+        :param debug_args: arguments for a debugger
         :param interactive: uses subprocess.Popen directly
         :param timeout: see process_handler.run()
         :param outputTimeout: see process_handler.run()
-
+        :returns: the process id
         """
+        self.timeout = timeout
+        self.output_timeout = outputTimeout
+        cmd = self.command
+
         # ensure the runner is stopped
         self.stop()
-
-        # ensure the profile exists
-        if not self.profile.exists():
-            self.profile.reset()
-            assert self.profile.exists(), "%s : failure to reset profile" % self.__class__.__name__
-
-        cmd = self.command
 
         # attach a debugger, if specified
         if debug_args:
@@ -85,23 +94,21 @@ class Runner(object):
             # TODO: other arguments
         else:
             # this run uses the managed processhandler
-            self.process_handler = self.process_class(cmd, env=self.env, **self.kp_kwargs)
-            self.process_handler.run(timeout, outputTimeout)
+            self.process_handler = self.process_class(cmd, env=self.env, **self.process_args)
+            self.process_handler.run(self.timeout, self.output_timeout)
 
         return self.process_handler.pid
 
     def wait(self, timeout=None):
-        """Wait for the process to exit
-
-        returns the process return code if the process exited,
-        returns -<signal> if the process was killed (Unix only)
-        returns None if the process is still running.
+        """
+        Wait for the process to exit.
 
         :param timeout: if not None, will return after timeout seconds.
-                        Use is_running() to determine whether or not a
-                        timeout occured. Timeout is ignored if
-                        interactive was set to True.
-
+                        Timeout is ignored if interactive was set to True.
+        :returns: the process return code if process exited normally,
+                  -<signal> if process was killed (Unix only),
+                  None if timeout was reached and the process is still running.
+        :raises: RunnerNotStartedError
         """
         if self.is_running():
             # The interactive mode uses directly a Popen process instance. It's
@@ -117,28 +124,28 @@ class Runner(object):
         return self.returncode
 
     def is_running(self):
-        """Checks if the process is running
+        """
+        Checks if the process is running.
 
-        returns True if the process is active
-
+        :returns: True if the process is active
         """
         return self.returncode is None
 
     def stop(self, sig=None):
-        """Kill the process
-
-        returns -<signal> when the process got killed (Unix only)
+        """
+        Kill the process.
 
         :param sig: Signal used to kill the process, defaults to SIGKILL
                     (has no effect on Windows).
-
+        :returns: the process return code if process was already stopped,
+                  -<signal> if process was killed (Unix only)
+        :raises: RunnerNotStartedError
         """
         try:
             if not self.is_running():
-                return
+                return self.returncode
         except RunnerNotStartedError:
             return
-
 
         # The interactive mode uses directly a Popen process instance. It's
         # kill() method doesn't have any parameters. So handle it separately.
@@ -150,19 +157,22 @@ class Runner(object):
         return self.returncode
 
     def reset(self):
-        """Reset the runner to its default state"""
-        if getattr(self, 'profile', False):
-            self.profile.reset()
+        """
+        Reset the runner to its default state.
+        """
+        self.stop()
+        self.process_handler = None
 
     def check_for_crashes(self, dump_directory=None, dump_save_path=None,
                           test_name=None, quiet=False):
-        """Check for a possible crash and output stack trace
+        """
+        Check for a possible crash and output stack trace.
 
         :param dump_directory: Directory to search for minidump files
         :param dump_save_path: Directory to save the minidump files to
         :param test_name: Name to use in the crash output
         :param quiet: If `True` don't print the PROCESS-CRASH message to stdout
-
+        :returns: True if a crash was detected, otherwise False
         """
         if not dump_directory:
             dump_directory = os.path.join(self.profile.profile, 'minidumps')
@@ -180,8 +190,7 @@ class Runner(object):
         return crashed
 
     def cleanup(self):
-        """Cleanup all runner state"""
+        """
+        Cleanup all runner state
+        """
         self.stop()
-
-        if getattr(self, 'profile', False) and self.clean_profile:
-            self.profile.cleanup()

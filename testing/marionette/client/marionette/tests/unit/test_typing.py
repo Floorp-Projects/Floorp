@@ -4,7 +4,7 @@
 
 from marionette_test import MarionetteTestCase
 from keys import Keys
-from marionette import ElementNotVisibleException
+from errors import ElementNotVisibleException
 
 
 class TestTyping(MarionetteTestCase):

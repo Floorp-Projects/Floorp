@@ -22,16 +22,19 @@ import mozlog
 log = mozlog.getLogger('REFTEST')
 
 class B2GDesktopReftest(RefTest):
-    def __init__(self, marionette):
+    marionette = None
+
+    def __init__(self, marionette_args):
         RefTest.__init__(self)
         self.last_test = os.path.basename(__file__)
-        self.marionette = marionette
+        self.marionette_args = marionette_args
         self.profile = None
         self.runner = None
         self.test_script = os.path.join(here, 'b2g_start_script.js')
         self.timeout = None
 
     def run_marionette_script(self):
+        self.marionette = Marionette(**self.marionette_args)
         assert(self.marionette.wait_for_port())
         self.marionette.start_session()
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
@@ -71,8 +74,8 @@ class B2GDesktopReftest(RefTest):
                                     cmdargs=args,
                                     env=env,
                                     process_class=ProcessHandler,
-                                    symbols_path=options.symbolsPath,
-                                    kp_kwargs=kp_kwargs)
+                                    process_args=kp_kwargs,
+                                    symbols_path=options.symbolsPath)
 
         status = 0
         try:
@@ -151,14 +154,13 @@ class B2GDesktopReftest(RefTest):
 
 
 def run_desktop_reftests(parser, options, args):
-    kwargs = {}
+    marionette_args = {}
     if options.marionette:
         host, port = options.marionette.split(':')
-        kwargs['host'] = host
-        kwargs['port'] = int(port)
-    marionette = Marionette.getMarionetteOrExit(**kwargs)
+        marionette_args['host'] = host
+        marionette_args['port'] = int(port)
 
-    reftest = B2GDesktopReftest(marionette)
+    reftest = B2GDesktopReftest(marionette_args)
 
     options = ReftestOptions.verifyCommonOptions(parser, options, reftest)
     if options == None:
