@@ -15,23 +15,26 @@ interface ServiceWorkerContainer {
   // and discussion at https://etherpad.mozilla.org/serviceworker07apr
   [Unforgeable] readonly attribute ServiceWorker? installing;
   [Unforgeable] readonly attribute ServiceWorker? waiting;
-  [Unforgeable] readonly attribute ServiceWorker? current;
+  [Unforgeable] readonly attribute ServiceWorker? active;
+  [Unforgeable] readonly attribute ServiceWorker? controller;
 
+  // Promise<ServiceWorker>
+  readonly attribute Promise ready;
+
+  // Promise<sequence<ServiceWorker>?>
   [Throws]
   Promise getAll();
 
+  // Promise<ServiceWorker>
   [Throws]
   Promise register(DOMString url, optional RegistrationOptionList options);
 
+  // Promise<any>
   [Throws]
   Promise unregister(DOMString? scope);
 
-  // Promise<ServiceWorker>
-  [Throws]
-  Promise whenReady();
-
   attribute EventHandler onupdatefound;
-  attribute EventHandler oncurrentchange;
+  attribute EventHandler oncontrollerchange;
   attribute EventHandler onreloadpage;
   attribute EventHandler onerror;
 };
@@ -46,5 +49,5 @@ partial interface ServiceWorkerContainer {
 };
 
 dictionary RegistrationOptionList {
-  DOMString scope = "*";
+  DOMString scope = "/*";
 };

@@ -172,6 +172,8 @@ class StringBuffer
         infallibleAppend(reinterpret_cast<const Latin1Char *>(chars), len);
     }
 
+    void infallibleAppendSubstring(JSLinearString *base, size_t off, size_t len);
+
     /*
      * Because inflation is fallible, these methods should only be used after
      * calling ensureTwoByteChars().
@@ -247,6 +249,19 @@ StringBuffer::append(JSLinearString *str)
     return str->hasLatin1Chars()
            ? twoByteChars().append(str->latin1Chars(nogc), str->length())
            : twoByteChars().append(str->twoByteChars(nogc), str->length());
+}
+
+inline void
+StringBuffer::infallibleAppendSubstring(JSLinearString *base, size_t off, size_t len)
+{
+    MOZ_ASSERT(off + len <= base->length());
+    MOZ_ASSERT(base->hasLatin1Chars() == isLatin1());
+
+    JS::AutoCheckCannotGC nogc;
+    if (base->hasLatin1Chars())
+        infallibleAppend(base->latin1Chars(nogc) + off, len);
+    else
+        infallibleAppend(base->twoByteChars(nogc) + off, len);
 }
 
 inline bool

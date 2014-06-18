@@ -4990,10 +4990,10 @@ nsIFrame::TryUpdateTransformOnly(Layer** aLayerResult)
  static const gfx::Float kError = 0.0001f;
   if (!transform3d.Is2D(&transform) ||
       !layer->GetBaseTransform().Is2D(&previousTransform) ||
-      !gfx::FuzzyEqual(transform.xx, previousTransform._11, kError) ||
-      !gfx::FuzzyEqual(transform.yy, previousTransform._22, kError) ||
-      !gfx::FuzzyEqual(transform.xy, previousTransform._21, kError) ||
-      !gfx::FuzzyEqual(transform.yx, previousTransform._12, kError)) {
+      !gfx::FuzzyEqual(transform._11, previousTransform._11, kError) ||
+      !gfx::FuzzyEqual(transform._22, previousTransform._22, kError) ||
+      !gfx::FuzzyEqual(transform._21, previousTransform._21, kError) ||
+      !gfx::FuzzyEqual(transform._12, previousTransform._12, kError)) {
     return false;
   }
   gfx::Matrix4x4 matrix;

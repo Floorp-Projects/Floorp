@@ -97,7 +97,14 @@ ServiceWorkerContainer::GetWaiting()
 }
 
 already_AddRefed<workers::ServiceWorker>
-ServiceWorkerContainer::GetCurrent()
+ServiceWorkerContainer::GetActive()
+{
+  // FIXME(nsm): Bug 1002570
+  return nullptr;
+}
+
+already_AddRefed<workers::ServiceWorker>
+ServiceWorkerContainer::GetController()
 {
   // FIXME(nsm): Bug 1002570
   return nullptr;
@@ -112,11 +119,12 @@ ServiceWorkerContainer::GetAll(ErrorResult& aRv)
 }
 
 already_AddRefed<Promise>
-ServiceWorkerContainer::WhenReady(ErrorResult& aRv)
+ServiceWorkerContainer::Ready()
 {
-  // FIXME(nsm): Bug 984048
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  // FIXME(nsm): Bug 1025077
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+  nsRefPtr<Promise> promise = new Promise(global);
+  return promise.forget();
 }
 
 // Testing only.
