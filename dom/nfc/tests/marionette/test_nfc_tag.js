@@ -10,32 +10,6 @@ let url = "http://www.mozilla.org";
 const T1T_RE_INDEX = 2;
 const T2T_RE_INDEX = 3;
 
-function activateRE(re) {
-  let deferred = Promise.defer();
-  let cmd = "nfc nci rf_intf_activated_ntf " + re;
-
-  emulator.run(cmd, function(result) {
-    is(result.pop(), "OK", "check activation of RE" + re);
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
-function setTagData(re, flag, tnf, type, payload) {
-  let deferred = Promise.defer();
-  let cmd = "nfc tag set " + re +
-            " [" + flag + "," + tnf + "," + type + "," + payload + ",]";
-
-  log("Executing \'" + cmd + "\'");
-  emulator.run(cmd, function(result) {
-    is(result.pop(), "OK", "set NDEF data of tag" + re);
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
 function testUrlTagDiscover(re) {
   log("Running \'testUrlTagDiscover\'");
   // TODO : Make flag value readable.

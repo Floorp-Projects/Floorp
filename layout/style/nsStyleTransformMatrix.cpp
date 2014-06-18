@@ -97,18 +97,18 @@ ProcessMatrix(gfx3DMatrix& aMatrix,
   /* Take the first four elements out of the array as floats and store
    * them.
    */
-  result.xx = aData->Item(1).GetFloatValue();
-  result.yx = aData->Item(2).GetFloatValue();
-  result.xy = aData->Item(3).GetFloatValue();
-  result.yy = aData->Item(4).GetFloatValue();
+  result._11 = aData->Item(1).GetFloatValue();
+  result._12 = aData->Item(2).GetFloatValue();
+  result._21 = aData->Item(3).GetFloatValue();
+  result._22 = aData->Item(4).GetFloatValue();
 
   /* The last two elements have their length parts stored in aDelta
    * and their percent parts stored in aX[0] and aY[1].
    */
-  result.x0 = ProcessTranslatePart(aData->Item(5),
+  result._31 = ProcessTranslatePart(aData->Item(5),
                                    aContext, aPresContext, aCanStoreInRuleTree,
                                    aBounds.Width());
-  result.y0 = ProcessTranslatePart(aData->Item(6),
+  result._32 = ProcessTranslatePart(aData->Item(6),
                                    aContext, aPresContext, aCanStoreInRuleTree,
                                    aBounds.Height());
 

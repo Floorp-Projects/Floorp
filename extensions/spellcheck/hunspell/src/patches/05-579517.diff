@@ -1,0 +1,24 @@
+Bug 579517 - Convert NSPR numeric types to stdint types.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -5528,17 +5528,17 @@ struct cs_info * get_current_cs(const ch
+     // APIs separately for each byte since they may reject some of the
+     // bytes, and we want to handle errors separately for each byte.
+     char lower, upper;
+     do {
+       if (i == 0)
+         break;
+       const char source = char(i);
+       PRUnichar uni, uniCased;
+-      PRInt32 charLength = 1, uniLength = 1;
++      int32_t charLength = 1, uniLength = 1;
+ 
+       rv = decoder->Convert(&source, &charLength, &uni, &uniLength);
+       // Explicitly check NS_OK because we don't want to allow
+       // NS_OK_UDEC_MOREOUTPUT or NS_OK_UDEC_MOREINPUT.
+       if (rv != NS_OK || charLength != 1 || uniLength != 1)
+         break;
+       uniCased = ToLowerCase(uni);
+       rv = encoder->Convert(&uniCased, &uniLength, &lower, &charLength);

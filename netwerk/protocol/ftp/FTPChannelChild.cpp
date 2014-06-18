@@ -43,6 +43,10 @@ FTPChannelChild::FTPChannelChild(nsIURI* uri)
   NS_ADDREF(gFtpHandler);
   SetURI(uri);
   mEventQ = new ChannelEventQueue(static_cast<nsIFTPChannel*>(this));
+
+  // We could support thread retargeting, but as long as we're being driven by
+  // IPDL on the main thread it doesn't buy us anything.
+  DisallowThreadRetargeting();
 }
 
 FTPChannelChild::~FTPChannelChild()

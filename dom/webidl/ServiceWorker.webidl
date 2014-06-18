@@ -22,7 +22,6 @@ interface ServiceWorker : EventTarget {
 ServiceWorker implements AbstractWorker;
 
 enum ServiceWorkerState {
-  "parsed",
   "installing",
   "installed",
   "activating",

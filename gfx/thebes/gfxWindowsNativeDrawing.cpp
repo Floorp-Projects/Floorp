@@ -79,12 +79,12 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
                             && (mNativeDrawFlags & CAN_AXIS_ALIGNED_SCALE)) ||
                            (mNativeDrawFlags & CAN_COMPLEX_TRANSFORM))
                 {
-                    mWorldTransform.eM11 = (FLOAT) m.xx;
-                    mWorldTransform.eM12 = (FLOAT) m.yx;
-                    mWorldTransform.eM21 = (FLOAT) m.xy;
-                    mWorldTransform.eM22 = (FLOAT) m.yy;
-                    mWorldTransform.eDx  = (FLOAT) m.x0;
-                    mWorldTransform.eDy  = (FLOAT) m.y0;
+                    mWorldTransform.eM11 = (FLOAT) m._11;
+                    mWorldTransform.eM12 = (FLOAT) m._12;
+                    mWorldTransform.eM21 = (FLOAT) m._21;
+                    mWorldTransform.eM22 = (FLOAT) m._22;
+                    mWorldTransform.eDx  = (FLOAT) m._31;
+                    mWorldTransform.eDy  = (FLOAT) m._32;
 
                     mRenderState = RENDER_STATE_NATIVE_DRAWING;
                 }

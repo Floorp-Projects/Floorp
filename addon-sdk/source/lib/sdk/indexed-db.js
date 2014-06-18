@@ -27,18 +27,6 @@ let sanitizeId = function(id){
 
 const PSEUDOURI = "indexeddb://" + sanitizeId(id) // https://bugzilla.mozilla.org/show_bug.cgi?id=779197
 
-// Firefox 26 and earlier releases don't support `indexedDB` in sandboxes
-// automatically, so we need to inject `indexedDB` to `this` scope ourselves.
-if (typeof(indexedDB) === "undefined") {
-  Cc["@mozilla.org/dom/indexeddb/manager;1"].
-    getService(Ci.nsIIndexedDatabaseManager).
-    initWindowless(this);
-
-  // Firefox 14 gets this with a prefix
-  if (typeof(indexedDB) === "undefined")
-    this.indexedDB = mozIndexedDB;
-}
-
 // Use XPCOM because `require("./url").URL` doesn't expose the raw uri object.
 let principaluri = Cc["@mozilla.org/network/io-service;1"].
               getService(Ci.nsIIOService).
@@ -50,8 +38,9 @@ let principal = Cc["@mozilla.org/scriptsecuritymanager;1"].
 
 exports.indexedDB = Object.freeze({
   open: indexedDB.openForPrincipal.bind(indexedDB, principal),
+  openForPrincipal: indexedDB.openForPrincipal.bind(indexedDB),
   deleteDatabase: indexedDB.deleteForPrincipal.bind(indexedDB, principal),
-  cmp: indexedDB.cmp
+  cmp: indexedDB.cmp.bind(indexedDB)
 });
 
 exports.IDBKeyRange = IDBKeyRange;

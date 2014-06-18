@@ -75,12 +75,12 @@ public:
 
   static bool MatricesEqual(const gfxMatrix& a, const gfxMatrix& b)
   {
-    return a.xx == b.xx &&
-           a.yx == b.yx &&
-           a.xy == b.xy &&
-           a.yy == b.yy &&
-           a.x0 == b.x0 &&
-           a.y0 == b.y0;
+    return a._11 == b._11 &&
+           a._12 == b._12 &&
+           a._21 == b._21 &&
+           a._22 == b._22 &&
+           a._31 == b._31 &&
+           a._32 == b._32;
   }
 
 protected:

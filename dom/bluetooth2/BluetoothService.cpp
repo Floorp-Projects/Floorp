@@ -167,7 +167,7 @@ BluetoothService::ToggleBtAck::Run()
   return NS_OK;
 }
 
-class BluetoothService::StartupTask : public nsISettingsServiceCallback
+class BluetoothService::StartupTask MOZ_FINAL : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS

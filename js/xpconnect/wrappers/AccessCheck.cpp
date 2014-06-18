@@ -333,11 +333,4 @@ ExposedPropertiesOnly::check(JSContext *cx, JSObject *wrapperArg, jsid idArg, Wr
     return true;
 }
 
-bool
-ExposedPropertiesOnly::allowNativeCall(JSContext *cx, JS::IsAcceptableThis test,
-                                       JS::NativeImpl impl)
-{
-    return js::IsTypedArrayThisCheck(test);
-}
-
 }

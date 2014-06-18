@@ -252,17 +252,6 @@ IndexedDatabaseManager::Get()
   return gDBManager;
 }
 
-// static
-IndexedDatabaseManager*
-IndexedDatabaseManager::FactoryCreate()
-{
-  // Returns a raw pointer that carries an owning reference! Lame, but the
-  // singleton factory macros force this.
-  IndexedDatabaseManager* mgr = GetOrCreate();
-  NS_IF_ADDREF(mgr);
-  return mgr;
-}
-
 nsresult
 IndexedDatabaseManager::Init()
 {
@@ -646,36 +635,7 @@ IndexedDatabaseManager::BlockAndGetFileReferences(
 
 NS_IMPL_ADDREF(IndexedDatabaseManager)
 NS_IMPL_RELEASE_WITH_DESTROY(IndexedDatabaseManager, Destroy())
-NS_IMPL_QUERY_INTERFACE(IndexedDatabaseManager, nsIIndexedDatabaseManager,
-                        nsIObserver)
-
-NS_IMETHODIMP
-IndexedDatabaseManager::InitWindowless(JS::Handle<JS::Value> aGlobal, JSContext* aCx)
-{
-  NS_ENSURE_TRUE(nsContentUtils::IsCallerChrome(), NS_ERROR_NOT_AVAILABLE);
-
-  JS::Rooted<JSObject*> global(aCx, aGlobal.toObjectOrNull());
-  if (!(js::GetObjectClass(global)->flags & JSCLASS_DOM_GLOBAL)) {
-    NS_WARNING("Passed object is not a global object!");
-    return NS_ERROR_FAILURE;
-  }
-
-  bool hasIndexedDB;
-  if (!JS_HasProperty(aCx, global, IDB_STR, &hasIndexedDB)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  if (hasIndexedDB) {
-    NS_WARNING("Passed object already has an 'indexedDB' property!");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (!DefineIndexedDB(aCx, global)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
-}
+NS_IMPL_QUERY_INTERFACE(IndexedDatabaseManager, nsIObserver)
 
 NS_IMETHODIMP
 IndexedDatabaseManager::Observe(nsISupports* aSubject, const char* aTopic,

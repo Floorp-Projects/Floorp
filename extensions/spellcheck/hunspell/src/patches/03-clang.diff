@@ -1,0 +1,25 @@
+Silence the warning about empty while body loop in clang.
+
+diff --git a/extensions/spellcheck/hunspell/src/affentry.cxx b/extensions/spellcheck/hunspell/src/affentry.cxx
+--- a/extensions/spellcheck/hunspell/src/affentry.cxx
++++ b/extensions/spellcheck/hunspell/src/affentry.cxx
+@@ -571,17 +571,18 @@ inline int SfxEntry::test_condition(cons
+                             while (p && *p != ']' && ((p = nextchar(p)) != NULL));
+ 			    st--;
+                         }
+                         if (p && *p != ']') p = nextchar(p);
+                     } else if (pos) {
+                         if (neg) return 0;
+                         else if (i == numconds) return 1;
+                         ingroup = true;
+-			while (p && *p != ']' && ((p = nextchar(p)) != NULL));
++			while (p && *p != ']' && ((p = nextchar(p)) != NULL))
++                           ;
+ //			if (p && *p != ']') p = nextchar(p);
+                         st--;
+                     }
+                     if (!pos) {
+                         i++;
+                         st--;
+                     }
+                     if (st < beg && p && *p != ']') return 0; // word <= condition

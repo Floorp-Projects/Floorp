@@ -177,17 +177,10 @@ public:
     VolumeManager::RegisterStateObserver(&mVolumeManagerStateObserver);
     Volume::RegisterObserver(&mVolumeEventObserver);
 
-    VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
-    VolumeManager::VolumeArray::index_type i;
-    for (i = 0; i < numVolumes; i++) {
-      RefPtr<Volume> vol = VolumeManager::GetVolume(i);
-      if (vol) {
-        vol->RegisterObserver(&mVolumeEventObserver);
-        // We need to pick up the intial value of the
-        // ums.volume.NAME.enabled setting.
-        AutoMounterSetting::CheckVolumeSettings(vol->Name());
-      }
-    }
+    // It's possible that the VolumeManager is already in the READY state,
+    // so we call CheckVolumeSettings here to cover that case. Otherwise,
+    // we'll pick it up when the VolumeManage state changes to VOLUMES_READY.
+    CheckVolumeSettings();
 
     DBG("Calling UpdateState from constructor");
     UpdateState();
@@ -205,6 +198,35 @@ public:
     }
     Volume::UnregisterObserver(&mVolumeEventObserver);
     VolumeManager::UnregisterStateObserver(&mVolumeManagerStateObserver);
+  }
+
+  void CheckVolumeSettings()
+  {
+    if (VolumeManager::State() != VolumeManager::VOLUMES_READY) {
+      DBG("CheckVolumeSettings: VolumeManager is NOT READY yet");
+      return;
+    }
+    DBG("CheckVolumeSettings: VolumeManager is READY");
+
+    // The VolumeManager knows about all of the volumes from vold. We now
+    // know the names of all of the volumes, so we can find out what the
+    // initial sharing settings are set to.
+
+    VolumeManager::VolumeArray::size_type numVolumes = VolumeManager::NumVolumes();
+    VolumeManager::VolumeArray::index_type i;
+    for (i = 0; i < numVolumes; i++) {
+      RefPtr<Volume> vol = VolumeManager::GetVolume(i);
+      if (vol) {
+        vol->RegisterObserver(&mVolumeEventObserver);
+        // We need to pick up the intial value of the
+        // ums.volume.NAME.enabled setting.
+        AutoMounterSetting::CheckVolumeSettings(vol->Name());
+
+        // Note: eventually CheckVolumeSettings will call
+        //       AutoMounter::SetSharingMode, which will in turn call
+        //       UpdateState if needed.
+      }
+    }
   }
 
   void UpdateState();
@@ -262,7 +284,7 @@ public:
     vol->SetUnmountRequested(false);
     vol->SetMountRequested(false);
     vol->SetSharingEnabled(aAllowSharing);
-    DBG("Calling UpdateState due to volume %s shareing set to %d",
+    DBG("Calling UpdateState due to volume %s sharing set to %d",
         vol->NameStr(), (int)aAllowSharing);
     UpdateState();
   }
@@ -336,6 +358,13 @@ AutoVolumeManagerStateObserver::Notify(const VolumeManager::StateChangedEvent &)
   if (!sAutoMounter) {
     return;
   }
+
+  // In the event that the VolumeManager just entered the VOLUMES_READY state,
+  // we call CheckVolumeSettings here (it's possible that this method never
+  // gets called if the VolumeManager was already in the VOLUMES_READY state
+  // by the time the AutoMounter was constructed).
+  sAutoMounter->CheckVolumeSettings();
+
   DBG("Calling UpdateState due to VolumeManagerStateObserver");
   sAutoMounter->UpdateState();
 }

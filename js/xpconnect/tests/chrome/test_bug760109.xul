@@ -59,10 +59,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
     chromeArray.sort();
     is(chromeArray.join(''), 'abz', "Able to call sort");
 
-    // Make sure we can see the data on the typed array
-    is(chromeTypedArray.length, 3, "Able to check typed array length");
-    is(chromeTypedArray[0], 10, "Able to access typed array data");
-
     // We should be able to .hasOwnProperty on the Object, and have
     // it filter the objects we can see.
     ok(chromeObject.hasOwnProperty('foo'), "Should see r property");
@@ -85,7 +81,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=760109
   var sb = new Cu.Sandbox('http://www.example.org');
   sb.chromeArray = ['a', 'b', 'z'];
   sb.chromeArray.__exposedProps__ = {};
-  sb.chromeTypedArray = new Uint8Array([10, 20, 30]);
   sb.chromeObject = new SomeConstructor();
   sb.ok = ok;
   sb.is = is;
