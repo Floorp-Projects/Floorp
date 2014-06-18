@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 this.EXPORTED_SYMBOLS = [
   "HAWKAuthenticatedRESTRequest",
+  "deriveHawkCredentials"
 ];
 
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -15,6 +16,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
+Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/Credentials.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "CryptoUtils",
                                   "resource://services-crypto/utils.js");
@@ -89,6 +92,46 @@ HAWKAuthenticatedRESTRequest.prototype = {
     );
   }
 };
+
+
+/**
+  * Generic function to derive Hawk credentials.
+  *
+  * Hawk credentials are derived using shared secrets, which depend on the token
+  * in use.
+  *
+  * @param tokenHex
+  *        The current session token encoded in hex
+  * @param context
+  *        A context for the credentials. A protocol version will be prepended
+  *        to the context, see Credentials.keyWord for more information.
+  * @param size
+  *        The size in bytes of the expected derived buffer,
+  *        defaults to 3 * 32.
+  * @return credentials
+  *        Returns an object:
+  *        {
+  *          algorithm: sha256
+  *          id: the Hawk id (from the first 32 bytes derived)
+  *          key: the Hawk key (from bytes 32 to 64)
+  *          extra: size - 64 extra bytes (if size > 64)
+  *        }
+  */
+function deriveHawkCredentials(tokenHex, context, size=96) {
+  let token = CommonUtils.hexToBytes(tokenHex);
+  let out = CryptoUtils.hkdf(token, undefined, Credentials.keyWord(context), size);
+
+  let result = {
+    algorithm: "sha256",
+    key: out.slice(32, 64),
+    id: CommonUtils.bytesAsHex(out.slice(0, 32))
+  };
+  if (size > 64) {
+    result.extra = out.slice(64);
+  }
+
+  return result;
+}
 
 // With hawk request, we send the user's accepted-languages with each request.
 // To keep the number of times we read this pref at a minimum, maintain the

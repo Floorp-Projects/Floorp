@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=8 sts=4 et sw=4 tw=99:
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -45,7 +44,7 @@ class SavedFrame : public JSObject {
     struct Lookup;
     struct HashPolicy;
 
-    typedef HashSet<SavedFrame *,
+    typedef HashSet<js::ReadBarriered<SavedFrame *>,
                     HashPolicy,
                     SystemAllocPolicy> Set;
 
@@ -110,7 +109,7 @@ struct SavedFrame::HashPolicy
     static HashNumber hash(const Lookup &lookup);
     static bool       match(SavedFrame *existing, const Lookup &lookup);
 
-    typedef SavedFrame* Key;
+    typedef ReadBarriered<SavedFrame*> Key;
     static void rekey(Key &key, const Key &newKey);
 };
 
