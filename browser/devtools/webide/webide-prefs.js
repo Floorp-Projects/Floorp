@@ -5,5 +5,11 @@
 
 pref("devtools.webide.showProjectEditor", true);
 pref("devtools.webide.templatesURL", "http://people.mozilla.org/~prouget/webidetemplates/template.json"); // See bug 1021504
+pref("devtools.webide.autoinstallADBHelper", true);
 pref("devtools.webide.lastprojectlocation", "");
 pref("devtools.webide.enableLocalRuntime", false);
+pref("devtools.webide.addonsURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/index.json");
+pref("devtools.webide.simulatorAddonsURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/#VERSION#/#OS#/fxos_#SLASHED_VERSION#_simulator-#OS#-latest.xpi");
+pref("devtools.webide.simulatorAddonID", "fxos_#SLASHED_VERSION#_simulator@mozilla.org");
+pref("devtools.webide.adbAddonURL", "https://ftp.mozilla.org/pub/mozilla.org/labs/fxos-simulator/adb-helper/#OS#/adbhelper-#OS#-latest.xpi");
+pref("devtools.webide.adbAddonID", "adbhelper@mozilla.org");
