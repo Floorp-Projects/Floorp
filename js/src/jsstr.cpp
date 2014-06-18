@@ -4819,51 +4819,40 @@ TransferBufferToString(StringBuffer &sb, MutableHandleValue rval)
  * given in the ECMA specification for the hidden functions
  * 'Encode' and 'Decode'.
  */
-static bool
-Encode(JSContext *cx, HandleLinearString str, const bool *unescapedSet,
-       const bool *unescapedSet2, MutableHandleValue rval)
+enum EncodeResult { Encode_Failure, Encode_BadUri, Encode_Success };
+
+template <typename CharT>
+static EncodeResult
+Encode(StringBuffer &sb, const CharT *chars, size_t length,
+       const bool *unescapedSet, const bool *unescapedSet2)
 {
     static const char HexDigits[] = "0123456789ABCDEF"; /* NB: uppercase */
 
-    size_t length = str->length();
-    if (length == 0) {
-        rval.setString(cx->runtime()->emptyString);
-        return true;
-    }
-
-    const jschar *chars = str->chars();
-    StringBuffer sb(cx);
-    if (!sb.reserve(length))
-        return false;
     jschar hexBuf[4];
     hexBuf[0] = '%';
     hexBuf[3] = 0;
+
     for (size_t k = 0; k < length; k++) {
         jschar c = chars[k];
         if (c < 128 && (unescapedSet[c] || (unescapedSet2 && unescapedSet2[c]))) {
             if (!sb.append(c))
-                return false;
+                return Encode_Failure;
         } else {
-            if ((c >= 0xDC00) && (c <= 0xDFFF)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_URI, nullptr);
-                return false;
-            }
+            if (c >= 0xDC00 && c <= 0xDFFF)
+                return Encode_BadUri;
+
             uint32_t v;
             if (c < 0xD800 || c > 0xDBFF) {
                 v = c;
             } else {
                 k++;
-                if (k == length) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                                     JSMSG_BAD_URI, nullptr);
-                    return false;
-                }
+                if (k == length)
+                    return Encode_BadUri;
+
                 jschar c2 = chars[k];
-                if ((c2 < 0xDC00) || (c2 > 0xDFFF)) {
-                    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr,
-                                     JSMSG_BAD_URI, nullptr);
-                    return false;
-                }
+                if (c2 < 0xDC00 || c2 > 0xDFFF)
+                    return Encode_BadUri;
+
                 v = ((c - 0xD800) << 10) + (c2 - 0xDC00) + 0x10000;
             }
             uint8_t utf8buf[4];
@@ -4872,11 +4861,46 @@ Encode(JSContext *cx, HandleLinearString str, const bool *unescapedSet,
                 hexBuf[1] = HexDigits[utf8buf[j] >> 4];
                 hexBuf[2] = HexDigits[utf8buf[j] & 0xf];
                 if (!sb.append(hexBuf, 3))
-                    return false;
+                    return Encode_Failure;
             }
         }
     }
 
+    return Encode_Success;
+}
+
+static bool
+Encode(JSContext *cx, HandleLinearString str, const bool *unescapedSet,
+       const bool *unescapedSet2, MutableHandleValue rval)
+{
+    size_t length = str->length();
+    if (length == 0) {
+        rval.setString(cx->runtime()->emptyString);
+        return true;
+    }
+
+    StringBuffer sb(cx);
+    if (!sb.reserve(length))
+        return false;
+
+    EncodeResult res;
+    if (str->hasLatin1Chars()) {
+        AutoCheckCannotGC nogc;
+        res = Encode(sb, str->latin1Chars(nogc), str->length(), unescapedSet, unescapedSet2);
+    } else {
+        AutoCheckCannotGC nogc;
+        res = Encode(sb, str->twoByteChars(nogc), str->length(), unescapedSet, unescapedSet2);
+    }
+
+    if (res == Encode_Failure)
+        return false;
+
+    if (res == Encode_BadUri) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_BAD_URI, nullptr);
+        return false;
+    }
+
+    MOZ_ASSERT(res == Encode_Success);
     return TransferBufferToString(sb, rval);
 }
 
