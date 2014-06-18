@@ -10,10 +10,10 @@ pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectfill-so
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectstroke-solid.svg svg-glyph-objectstroke-solid-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,6) == svg-glyph-objectgradient.svg svg-glyph-objectgradient-ref.svg # see bug 871961#c5
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectgradient-zoom.svg svg-glyph-objectgradient-zoom-ref.svg
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectpattern.svg svg-glyph-objectpattern-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(gtk2Widget,1,1438) fuzzy-if(winWidget,1,1954) fuzzy-if(Android||B2G,8,3795) == svg-glyph-objectpattern.svg svg-glyph-objectpattern-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == clip.html clip-ref.html
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy(1,12) == svg-glyph-objectopacity.svg svg-glyph-objectopacity-ref.svg # see bug 871961#c5
-pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-objectopacity2.svg svg-glyph-objectopacity2-ref.svg
+pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(gtk2Widget,1,2268) fuzzy-if(winWidget,1,3074) fuzzy-if(Android||B2G,5,4715) == svg-glyph-objectopacity2.svg svg-glyph-objectopacity2-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-paintnone.svg svg-glyph-paintnone-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    == svg-glyph-cachedopacity.svg svg-glyph-cachedopacity-ref.svg
 pref(gfx.font_rendering.opentype_svg.enabled,true)    fuzzy-if(cocoaWidget,255,100) == svg-glyph-objectvalue.svg svg-glyph-objectvalue-ref.svg
