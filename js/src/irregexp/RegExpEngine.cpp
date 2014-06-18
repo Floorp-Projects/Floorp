@@ -1535,8 +1535,8 @@ RegExpCompiler::Assemble(JSContext *cx,
 
 RegExpCode
 irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
-                         const jschar *sampleChars, size_t sampleLength,
-                         bool is_global, bool ignore_case, bool is_ascii)
+                         HandleLinearString sample, bool is_global, bool ignore_case,
+                         bool is_ascii)
 {
     if ((data->capture_count + 1) * 2 - 1 > RegExpMacroAssembler::kMaxRegister) {
         JS_ReportError(cx, "regexp too big");
@@ -1549,13 +1549,14 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     // Sample some characters from the middle of the string.
     static const int kSampleSize = 128;
 
+    size_t sampleLength = sample->length();
     int chars_sampled = 0;
-    int half_way = (sampleLength - kSampleSize) / 2;
+    int half_way = (int(sampleLength) - kSampleSize) / 2;
     for (size_t i = Max(0, half_way);
          i < sampleLength && chars_sampled < kSampleSize;
          i++, chars_sampled++)
     {
-        compiler.frequency_collator()->CountCharacter(sampleChars[i]);
+        compiler.frequency_collator()->CountCharacter(sample->chars()[i]);
     }
 
     // Wrap the body of the regexp in capture #0.

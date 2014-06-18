@@ -2190,12 +2190,9 @@ static bool
 DoMatchLocal(JSContext *cx, CallArgs args, RegExpStatics *res, HandleLinearString input,
              RegExpShared &re)
 {
-    size_t charsLen = input->length();
-    const jschar *chars = input->chars();
-
     size_t i = 0;
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    RegExpRunStatus status = re.execute(cx, chars, charsLen, &i, matches);
+    RegExpRunStatus status = re.execute(cx, input, &i, matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
@@ -2269,7 +2266,6 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, HandleLinearStri
     // Step 8f.
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
     size_t charsLen = input->length();
-    const jschar *chars = input->chars();
     RegExpShared &re = g.regExp();
     for (size_t searchIndex = 0; searchIndex <= charsLen; ) {
         if (!CheckForInterrupt(cx))
@@ -2277,7 +2273,7 @@ DoMatchGlobal(JSContext *cx, CallArgs args, RegExpStatics *res, HandleLinearStri
 
         // Steps 8f(i-ii), minus "lastIndex" updates (see above).
         size_t nextSearchIndex = searchIndex;
-        RegExpRunStatus status = re.execute(cx, chars, charsLen, &nextSearchIndex, matches);
+        RegExpRunStatus status = re.execute(cx, input, &nextSearchIndex, matches);
         if (status == RegExpRunStatus_Error)
             return false;
 
@@ -2417,8 +2413,6 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     if (!linearStr)
         return false;
 
-    const jschar *chars = linearStr->chars();
-    size_t length = linearStr->length();
     RegExpStatics *res = cx->global()->getRegExpStatics(cx);
     if (!res)
         return false;
@@ -2426,7 +2420,7 @@ js::str_search(JSContext *cx, unsigned argc, Value *vp)
     /* Per ECMAv5 15.5.4.12 (5) The last index property is ignored and left unchanged. */
     size_t i = 0;
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    RegExpRunStatus status = g.regExp().execute(cx, chars, length, &i, matches);
+    RegExpRunStatus status = g.regExp().execute(cx, linearStr, &i, matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
@@ -2513,10 +2507,9 @@ static bool
 DoMatchForReplaceLocal(JSContext *cx, RegExpStatics *res, HandleLinearString linearStr,
                        RegExpShared &re, ReplaceData &rdata)
 {
-    size_t charsLen = linearStr->length();
     size_t i = 0;
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
-    RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
+    RegExpRunStatus status = re.execute(cx, linearStr, &i, matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
@@ -2539,7 +2532,7 @@ DoMatchForReplaceGlobal(JSContext *cx, RegExpStatics *res, HandleLinearString li
         if (!CheckForInterrupt(cx))
             return false;
 
-        RegExpRunStatus status = re.execute(cx, linearStr->chars(), charsLen, &i, matches);
+        RegExpRunStatus status = re.execute(cx, linearStr, &i, matches);
         if (status == RegExpRunStatus_Error)
             return false;
 
@@ -3099,7 +3092,7 @@ StrReplaceRegexpRemove(JSContext *cx, HandleString str, RegExpShared &re, Mutabl
         if (!CheckForInterrupt(cx))
             return false;
 
-        RegExpRunStatus status = re.execute(cx, flatStr->chars(), charsLen, &startIndex, matches);
+        RegExpRunStatus status = re.execute(cx, flatStr, &startIndex, matches);
         if (status == RegExpRunStatus_Error)
             return false;
         if (status == RegExpRunStatus_Success_NotFound)
@@ -3677,11 +3670,8 @@ class SplitRegExpMatcher
     bool operator()(JSContext *cx, HandleLinearString str, size_t index,
                     SplitMatchResult *result) const
     {
-        const jschar *chars = str->chars();
-        size_t length = str->length();
-
         ScopedMatchPairs matches(&cx->tempLifoAlloc());
-        RegExpRunStatus status = re.execute(cx, chars, length, &index, matches);
+        RegExpRunStatus status = re.execute(cx, str, &index, matches);
         if (status == RegExpRunStatus_Error)
             return false;
 
