@@ -24,6 +24,8 @@
     _(SimdInsertElementI)           \
     _(SimdInsertElementF)           \
     _(SimdSignMaskX4)               \
+    _(SimdSwizzleI)                 \
+    _(SimdSwizzleF)                 \
     _(SimdUnaryArithIx4)            \
     _(SimdUnaryArithFx4)            \
     _(SimdBinaryCompIx4)            \

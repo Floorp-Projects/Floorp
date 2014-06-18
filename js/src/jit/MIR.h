@@ -1575,6 +1575,72 @@ class MSimdSignMask : public MUnaryInstruction
     ALLOW_CLONE(MSimdSignMask)
 };
 
+// Applies a shuffle operation to the input, putting the input lanes as
+// indicated in the output register's lanes. This implements the SIMD.js
+// "shuffle" function, that takes one vector and one mask.
+class MSimdSwizzle : public MUnaryInstruction
+{
+  protected:
+    // As of now, there are at most 4 lanes.
+    SimdLane laneX_;
+    SimdLane laneY_;
+    SimdLane laneZ_;
+    SimdLane laneW_;
+
+    MSimdSwizzle(MDefinition *obj, MIRType type,
+                 SimdLane laneX, SimdLane laneY, SimdLane laneZ, SimdLane laneW)
+      : MUnaryInstruction(obj),
+        laneX_(laneX), laneY_(laneY), laneZ_(laneZ), laneW_(laneW)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        // Returned value needs to be in a vector too
+        MOZ_ASSERT(IsSimdType(type));
+        MOZ_ASSERT(SimdTypeToScalarType(obj->type()) == type);
+
+        mozilla::DebugOnly<uint32_t> expectedLength = SimdTypeToLength(obj->type());
+        MOZ_ASSERT(uint32_t(laneX_) < expectedLength);
+        MOZ_ASSERT(uint32_t(laneY_) < expectedLength);
+        MOZ_ASSERT(uint32_t(laneZ_) < expectedLength);
+        MOZ_ASSERT(uint32_t(laneW_) < expectedLength);
+
+        setResultType(type);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdSwizzle);
+
+    static MSimdSwizzle *NewAsmJS(TempAllocator &alloc, MDefinition *obj, MIRType type,
+                                  SimdLane laneX, SimdLane laneY, SimdLane laneZ, SimdLane laneW)
+    {
+        return new(alloc) MSimdSwizzle(obj, type, laneX, laneY, laneZ, laneW);
+    }
+
+    SimdLane laneX() const { return laneX_; }
+    SimdLane laneY() const { return laneY_; }
+    SimdLane laneZ() const { return laneZ_; }
+    SimdLane laneW() const { return laneW_; }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition *ins) const {
+        if (!ins->isSimdSwizzle())
+            return false;
+        const MSimdSwizzle *other = ins->toSimdSwizzle();
+        if (other->laneX_ != laneX_ ||
+            other->laneY_ != laneY_ ||
+            other->laneZ_ != laneZ_ ||
+            other->laneW_ != laneW_)
+        {
+            return false;
+        }
+        return congruentIfOperandsEqual(other);
+    }
+
+    ALLOW_CLONE(MSimdSwizzle)
+};
+
 class MSimdUnaryArith : public MUnaryInstruction
 {
   public:

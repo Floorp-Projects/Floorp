@@ -3809,6 +3809,28 @@ LIRGenerator::visitSimdSignMask(MSimdSignMask *ins)
 }
 
 bool
+LIRGenerator::visitSimdSwizzle(MSimdSwizzle *ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (ins->input()->type() == MIRType_Int32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleI *lir = new (alloc()) LSimdSwizzleI(use);
+        return define(lir, ins);
+    }
+
+    if (ins->input()->type() == MIRType_Float32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleF *lir = new (alloc()) LSimdSwizzleF(use);
+        return define(lir, ins);
+    }
+
+    MOZ_CRASH("Unknown SIMD kind when getting lane");
+    return false;
+}
+
+bool
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith *ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
