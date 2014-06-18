@@ -145,7 +145,7 @@ RootActor.prototype = {
   /**
    * The (chrome) window, for use by child actors
    */
-  get window() Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
+  get window() isWorker ? null : Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType),
 
   /**
    * The list of all windows

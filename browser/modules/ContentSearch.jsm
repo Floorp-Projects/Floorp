@@ -10,12 +10,9 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Promise",
-  "resource://gre/modules/Promise.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 
 const INBOUND_MESSAGE = "ContentSearch";
 const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
@@ -47,12 +44,21 @@ const OUTBOUND_MESSAGE = INBOUND_MESSAGE;
  *   CurrentEngine
  *     Sent when the current engine changes.
  *     data: see _currentEngineObj
+ *   CurrentState
+ *     Sent when the current search state changes.
+ *     data: see _currentStateObj
  *   State
- *     Sent in reply to GetState and when the state changes.
+ *     Sent in reply to GetState.
  *     data: see _currentStateObj
  */
 
 this.ContentSearch = {
+
+  // Inbound events are queued and processed in FIFO order instead of handling
+  // them immediately, which would result in non-FIFO responses due to the
+  // asynchrononicity added by converting image data URIs to ArrayBuffers.
+  _eventQueue: [],
+  _currentEvent: null,
 
   init: function () {
     Cc["@mozilla.org/globalmessagemanager;1"].
@@ -62,19 +68,64 @@ this.ContentSearch = {
   },
 
   receiveMessage: function (msg) {
-    let methodName = "on" + msg.data.type;
-    if (methodName in this) {
-      this._initService().then(() => {
-        this[methodName](msg, msg.data.data);
+    // Add a temporary event handler that exists only while the message is in
+    // the event queue.  If the message's source docshell changes browsers in
+    // the meantime, then we need to update msg.target.  event.detail will be
+    // the docshell's new parent <xul:browser> element.
+    msg.handleEvent = function (event) {
+      this.target = event.detail;
+    };
+    msg.target.addEventListener("SwapDocShells", msg, true);
+
+    this._eventQueue.push({
+      type: "Message",
+      data: msg,
+    });
+    this._processEventQueue();
+  },
+
+  observe: function (subj, topic, data) {
+    switch (topic) {
+    case "browser-search-engine-modified":
+      this._eventQueue.push({
+        type: "Observe",
+        data: data,
       });
+      this._processEventQueue();
+      break;
     }
   },
 
-  onGetState: function (msg, data) {
-    this._reply(msg, "State", this._currentStateObj());
+  _processEventQueue: Task.async(function* () {
+    if (this._currentEvent || !this._eventQueue.length) {
+      return;
+    }
+    this._currentEvent = this._eventQueue.shift();
+    try {
+      yield this["_on" + this._currentEvent.type](this._currentEvent.data);
+    }
+    finally {
+      this._currentEvent = null;
+      this._processEventQueue();
+    }
+  }),
+
+  _onMessage: Task.async(function* (msg) {
+    let methodName = "_onMessage" + msg.data.type;
+    if (methodName in this) {
+      yield this._initService();
+      yield this[methodName](msg, msg.data.data);
+      msg.target.removeEventListener("SwapDocShells", msg, true);
+    }
+  }),
+
+  _onMessageGetState: function (msg, data) {
+    return this._currentStateObj().then(state => {
+      this._reply(msg, "State", state);
+    });
   },
 
-  onSearch: function (msg, data) {
+  _onMessageSearch: function (msg, data) {
     let expectedDataProps = [
       "engineName",
       "searchString",
@@ -83,7 +134,7 @@ this.ContentSearch = {
     for (let prop of expectedDataProps) {
       if (!(prop in data)) {
         Cu.reportError("Message data missing required property: " + prop);
-        return;
+        return Promise.resolve();
       }
     }
     let browserWin = msg.target.ownerDocument.defaultView;
@@ -91,38 +142,36 @@ this.ContentSearch = {
     browserWin.BrowserSearch.recordSearchInHealthReport(engine, data.whence);
     let submission = engine.getSubmission(data.searchString, "", data.whence);
     browserWin.loadURI(submission.uri.spec, null, submission.postData);
+    return Promise.resolve();
   },
 
-  onSetCurrentEngine: function (msg, data) {
+  _onMessageSetCurrentEngine: function (msg, data) {
     Services.search.currentEngine = Services.search.getEngineByName(data);
+    return Promise.resolve();
   },
 
-  onManageEngines: function (msg, data) {
+  _onMessageManageEngines: function (msg, data) {
     let browserWin = msg.target.ownerDocument.defaultView;
     browserWin.BrowserSearch.searchBar.openManager(null);
+    return Promise.resolve();
   },
 
-  observe: function (subj, topic, data) {
-    this._initService().then(() => {
-      switch (topic) {
-      case "browser-search-engine-modified":
-        if (data == "engine-current") {
-          this._broadcast("CurrentEngine", this._currentEngineObj());
-        }
-        else if (data != "engine-default") {
-          // engine-default is always sent with engine-current and isn't
-          // otherwise relevant to content searches.
-          this._broadcast("State", this._currentStateObj());
-        }
-        break;
-      }
-    });
-  },
+  _onObserve: Task.async(function* (data) {
+    if (data == "engine-current") {
+      let engine = yield this._currentEngineObj();
+      this._broadcast("CurrentEngine", engine);
+    }
+    else if (data != "engine-default") {
+      // engine-default is always sent with engine-current and isn't otherwise
+      // relevant to content searches.
+      let state = yield this._currentStateObj();
+      this._broadcast("CurrentState", state);
+    }
+  }),
 
   _reply: function (msg, type, data) {
-    // Due to _initService, we reply asyncly to messages, and by the time we
-    // reply the browser we're responding to may have been destroyed.  In that
-    // case messageManager is null.
+    // We reply asyncly to messages, and by the time we reply the browser we're
+    // responding to may have been destroyed.  messageManager is null then.
     if (msg.target.messageManager) {
       msg.target.messageManager.sendAsyncMessage(...this._msgArgs(type, data));
     }
@@ -141,24 +190,47 @@ this.ContentSearch = {
     }];
   },
 
-  _currentStateObj: function () {
-    return {
-      engines: Services.search.getVisibleEngines().map(engine => {
-        return {
-          name: engine.name,
-          iconURI: engine.getIconURLBySize(16, 16),
-        };
-      }),
-      currentEngine: this._currentEngineObj(),
+  _currentStateObj: Task.async(function* () {
+    let state = {
+      engines: [],
+      currentEngine: yield this._currentEngineObj(),
     };
-  },
+    for (let engine of Services.search.getVisibleEngines()) {
+      let uri = engine.getIconURLBySize(16, 16);
+      state.engines.push({
+        name: engine.name,
+        iconBuffer: yield this._arrayBufferFromDataURI(uri),
+      });
+    }
+    return state;
+  }),
 
-  _currentEngineObj: function () {
-    return {
-      name: Services.search.currentEngine.name,
-      logoURI: Services.search.currentEngine.getIconURLBySize(65, 26),
-      logo2xURI: Services.search.currentEngine.getIconURLBySize(130, 52),
+  _currentEngineObj: Task.async(function* () {
+    let engine = Services.search.currentEngine;
+    let uri1x = engine.getIconURLBySize(65, 26);
+    let uri2x = engine.getIconURLBySize(130, 52);
+    let obj = {
+      name: engine.name,
+      logoBuffer: yield this._arrayBufferFromDataURI(uri1x),
+      logo2xBuffer: yield this._arrayBufferFromDataURI(uri2x),
     };
+    return obj;
+  }),
+
+  _arrayBufferFromDataURI: function (uri) {
+    if (!uri) {
+      return Promise.resolve(null);
+    }
+    let deferred = Promise.defer();
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+              createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open("GET", uri, true);
+    xhr.responseType = "arraybuffer";
+    xhr.onloadend = () => {
+      deferred.resolve(xhr.response);
+    };
+    xhr.send();
+    return deferred.promise;
   },
 
   _initService: function () {

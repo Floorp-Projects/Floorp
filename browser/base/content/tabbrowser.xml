@@ -2273,6 +2273,8 @@
             // Give others a chance to swap state.
             let event = new CustomEvent("SwapDocShells", {"detail": aOtherBrowser});
             ourBrowser.dispatchEvent(event);
+            event = new CustomEvent("SwapDocShells", {"detail": ourBrowser});
+            aOtherBrowser.dispatchEvent(event);
 
             // Swap the docshells
             ourBrowser.swapDocShells(aOtherBrowser);
