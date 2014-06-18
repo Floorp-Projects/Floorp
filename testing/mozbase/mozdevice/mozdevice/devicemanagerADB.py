@@ -29,11 +29,12 @@ class DeviceManagerADB(DeviceManager):
     _pollingInterval = 0.01
     _packageName = None
     _tempDir = None
+    connected = False
     default_timeout = 300
 
     def __init__(self, host=None, port=5555, retryLimit=5, packageName='fennec',
                  adbPath='adb', deviceSerial=None, deviceRoot=None,
-                 logLevel=mozlog.ERROR, **kwargs):
+                 logLevel=mozlog.ERROR, autoconnect=True, **kwargs):
         DeviceManager.__init__(self, logLevel)
         self.host = host
         self.port = port
@@ -58,28 +59,33 @@ class DeviceManagerADB(DeviceManager):
         # verify that we can run the adb command. can't continue otherwise
         self._verifyADB()
 
-        # try to connect to the device over tcp/ip if we have a hostname
-        if self.host:
-            self._connectRemoteADB()
+        if autoconnect:
+            self.connect()
 
-        # verify that we can connect to the device. can't continue
-        self._verifyDevice()
+    def connect(self):
+        if not self.connected:
+            # try to connect to the device over tcp/ip if we have a hostname
+            if self.host:
+                self._connectRemoteADB()
 
-        # set up device root
-        self._setupDeviceRoot()
+            # verify that we can connect to the device. can't continue
+            self._verifyDevice()
 
-        # Some commands require root to work properly, even with ADB (e.g.
-        # grabbing APKs out of /data). For these cases, we check whether
-        # we're running as root. If that isn't true, check for the
-        # existence of an su binary
-        self._checkForRoot()
+            # set up device root
+            self._setupDeviceRoot()
 
-        # can we use zip to speed up some file operations? (currently not
-        # required)
-        try:
-            self._verifyZip()
-        except DMError:
-            pass
+            # Some commands require root to work properly, even with ADB (e.g.
+            # grabbing APKs out of /data). For these cases, we check whether
+            # we're running as root. If that isn't true, check for the
+            # existence of an su binary
+            self._checkForRoot()
+
+            # can we use zip to speed up some file operations? (currently not
+            # required)
+            try:
+                self._verifyZip()
+            except DMError:
+                pass
 
     def __del__(self):
         if self.host:

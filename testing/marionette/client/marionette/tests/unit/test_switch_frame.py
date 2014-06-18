@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from marionette import JavascriptException
+from errors import JavascriptException
 
 
 class TestSwitchFrame(MarionetteTestCase):

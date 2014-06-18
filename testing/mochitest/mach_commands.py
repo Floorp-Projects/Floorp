@@ -178,7 +178,7 @@ class MochitestRunner(MozbuildObject):
             return 1
 
         options.b2gPath = b2g_home
-        options.logcat_dir = self.mochitest_dir
+        options.logdir = self.mochitest_dir
         options.httpdPath = self.mochitest_dir
         options.xrePath = xre_path
         return mochitest.run_remote_mochitests(parser, options)
@@ -555,9 +555,9 @@ def B2GCommand(func):
         help='Path to busybox binary to install on device')
     func = busybox(func)
 
-    logcatdir = CommandArgument('--logcat-dir', default=None,
-        help='directory to store logcat dump files')
-    func = logcatdir(func)
+    logdir = CommandArgument('--logdir', default=None,
+        help='directory to store log files')
+    func = logdir(func)
 
     profile = CommandArgument('--profile', default=None,
         help='for desktop testing, the path to the \

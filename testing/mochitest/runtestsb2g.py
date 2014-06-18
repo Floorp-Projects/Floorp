@@ -9,7 +9,6 @@ import shutil
 import sys
 import tempfile
 import threading
-import time
 import traceback
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -17,7 +16,6 @@ sys.path.insert(0, here)
 
 from runtests import Mochitest
 from runtests import MochitestUtilsMixin
-from runtests import MochitestOptions
 from runtests import MochitestServer
 from mochitest_options import B2GOptions, MochitestOptions
 
@@ -25,20 +23,20 @@ from marionette import Marionette
 
 from mozdevice import DeviceManagerADB
 from mozprofile import Profile, Preferences
-from mozrunner import B2GRunner
 import mozlog
 import mozinfo
-import moznetwork
 
 log = mozlog.getLogger('Mochitest')
 
 class B2GMochitest(MochitestUtilsMixin):
-    def __init__(self, marionette,
+    marionette = None
+
+    def __init__(self, marionette_args,
                        out_of_process=True,
                        profile_data_dir=None,
                        locations=os.path.join(here, 'server-locations.txt')):
         super(B2GMochitest, self).__init__()
-        self.marionette = marionette
+        self.marionette_args = marionette_args
         self.out_of_process = out_of_process
         self.locations_file = locations
         self.preferences = []
@@ -121,11 +119,6 @@ class B2GMochitest(MochitestUtilsMixin):
         self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
         manifest = self.build_profile(options)
 
-        self.startServers(options, None)
-        self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
-        self.test_script_args.append(not options.emulator)
-        self.test_script_args.append(options.wifi)
-
         if options.debugger or not options.autorun:
             timeout = None
         else:
@@ -139,15 +132,44 @@ class B2GMochitest(MochitestUtilsMixin):
         log.info("runtestsb2g.py | Running tests: start.")
         status = 0
         try:
-            runner_args = { 'profile': self.profile,
-                            'devicemanager': self._dm,
-                            'marionette': self.marionette,
-                            'remote_test_root': self.remote_test_root,
-                            'symbols_path': options.symbolsPath,
-                            'test_script': self.test_script,
-                            'test_script_args': self.test_script_args }
-            self.runner = B2GRunner(**runner_args)
+            self.marionette_args['profile'] = self.profile
+            self.marionette = Marionette(**self.marionette_args)
+            self.runner = self.marionette.runner
+            self.app_ctx = self.runner.app_ctx
+
+            self.remote_log = posixpath.join(self.app_ctx.remote_test_root,
+                                             'log', 'mochitest.log')
+            if not self.app_ctx.dm.dirExists(posixpath.dirname(self.remote_log)):
+                self.app_ctx.dm.mkDirs(self.remote_log)
+
+            self.startServers(options, None)
+            self.buildURLOptions(options, {'MOZ_HIDE_RESULTS_TABLE': '1'})
+            self.test_script_args.append(not options.emulator)
+            self.test_script_args.append(options.wifi)
+
+
             self.runner.start(outputTimeout=timeout)
+
+            self.marionette.wait_for_port()
+            self.marionette.start_session()
+            self.marionette.set_context(self.marionette.CONTEXT_CHROME)
+
+            # Disable offline status management (bug 777145), otherwise the network
+            # will be 'offline' when the mochitests start.  Presumably, the network
+            # won't be offline on a real device, so we only do this for emulators.
+            self.marionette.execute_script("""
+                Components.utils.import("resource://gre/modules/Services.jsm");
+                Services.io.manageOfflineStatus = false;
+                Services.io.offline = false;
+                """)
+
+            if os.path.isfile(self.test_script):
+                with open(self.test_script, 'r') as script:
+                    self.marionette.execute_script(script.read(),
+                                                   script_args=self.test_script_args)
+            else:
+                self.marionette.execute_script(self.test_script,
+                                               script_args=self.test_script_args)
             status = self.runner.wait()
             if status is None:
                 # the runner has timed out
@@ -158,7 +180,8 @@ class B2GMochitest(MochitestUtilsMixin):
         except:
             traceback.print_exc()
             log.error("Automation Error: Received unexpected exception while running application\n")
-            self.runner.check_for_crashes()
+            if hasattr(self, 'runner'):
+                self.runner.check_for_crashes()
             status = 1
 
         self.stopServers()
@@ -171,22 +194,13 @@ class B2GMochitest(MochitestUtilsMixin):
 
 
 class B2GDeviceMochitest(B2GMochitest, Mochitest):
+    remote_log = None
 
-    _dm = None
-
-    def __init__(self, marionette, devicemanager, profile_data_dir,
+    def __init__(self, marionette_args, profile_data_dir,
                  local_binary_dir, remote_test_root=None, remote_log_file=None):
-        B2GMochitest.__init__(self, marionette, out_of_process=True, profile_data_dir=profile_data_dir)
-        Mochitest.__init__(self)
-        self._dm = devicemanager
-        self.remote_test_root = remote_test_root or self._dm.getDeviceRoot()
-        self.remote_profile = posixpath.join(self.remote_test_root, 'profile')
-        self.remote_log = remote_log_file or posixpath.join(self.remote_test_root, 'log', 'mochitest.log')
+        B2GMochitest.__init__(self, marionette_args, out_of_process=True, profile_data_dir=profile_data_dir)
         self.local_log = None
         self.local_binary_dir = local_binary_dir
-
-        if not self._dm.dirExists(posixpath.dirname(self.remote_log)):
-            self._dm.mkDirs(self.remote_log)
 
     def cleanup(self, manifest, options):
         if self.local_log:
@@ -202,6 +216,10 @@ class B2GDeviceMochitest(B2GMochitest, Mochitest):
 
         # stop and clean up the runner
         if getattr(self, 'runner', False):
+            if self.local_log:
+                self.app_ctx.dm.getFile(self.remote_log, self.local_log)
+                self.app_ctx.dm.removeFile(self.remote_log)
+
             self.runner.cleanup()
             self.runner = None
 
@@ -228,14 +246,14 @@ class B2GDeviceMochitest(B2GMochitest, Mochitest):
 
         self.setup_common_options(options)
 
-        options.profilePath = self.remote_profile
+        options.profilePath = self.app_ctx.remote_profile
         options.logFile = self.local_log
 
 
 class B2GDesktopMochitest(B2GMochitest, Mochitest):
 
-    def __init__(self, marionette, profile_data_dir):
-        B2GMochitest.__init__(self, marionette, out_of_process=False, profile_data_dir=profile_data_dir)
+    def __init__(self, marionette_args, profile_data_dir):
+        B2GMochitest.__init__(self, marionette_args, out_of_process=False, profile_data_dir=profile_data_dir)
         Mochitest.__init__(self)
         self.certdbNew = True
 
@@ -255,6 +273,7 @@ class B2GDesktopMochitest(B2GMochitest, Mochitest):
         # This is run in a separate thread because otherwise, the app's
         # stdout buffer gets filled (which gets drained only after this
         # function returns, by waitForFinish), which causes the app to hang.
+        self.marionette = Marionette(**self.marionette_args)
         thread = threading.Thread(target=self.runMarionetteScript,
                                   args=(self.marionette,
                                         self.test_script,
@@ -282,49 +301,27 @@ class B2GDesktopMochitest(B2GMochitest, Mochitest):
 
 def run_remote_mochitests(parser, options):
     # create our Marionette instance
-    kwargs = {}
-    if options.emulator:
-        kwargs['emulator'] = options.emulator
-        if options.noWindow:
-            kwargs['noWindow'] = True
-        if options.geckoPath:
-            kwargs['gecko_path'] = options.geckoPath
-        if options.logcat_dir:
-            kwargs['logcat_dir'] = options.logcat_dir
-        if options.busybox:
-            kwargs['busybox'] = options.busybox
-        if options.symbolsPath:
-            kwargs['symbols_path'] = options.symbolsPath
-    # needless to say sdcard is only valid if using an emulator
-    if options.sdcard:
-        kwargs['sdcard'] = options.sdcard
-    if options.b2gPath:
-        kwargs['homedir'] = options.b2gPath
+    marionette_args = {
+        'adb_path': options.adbPath,
+        'emulator': options.emulator,
+        'no_window': options.noWindow,
+        'logdir': options.logdir,
+        'busybox': options.busybox,
+        'symbols_path': options.symbolsPath,
+        'sdcard': options.sdcard,
+        'homedir': options.b2gPath,
+    }
     if options.marionette:
         host, port = options.marionette.split(':')
-        kwargs['host'] = host
-        kwargs['port'] = int(port)
-
-    marionette = Marionette.getMarionetteOrExit(**kwargs)
-
-    if options.emulator:
-        dm = marionette.emulator.dm
-    else:
-        # create the DeviceManager
-        kwargs = {'adbPath': options.adbPath,
-                  'deviceRoot': options.remoteTestRoot}
-        if options.deviceIP:
-            kwargs.update({'host': options.deviceIP,
-                           'port': options.devicePort})
-        dm = DeviceManagerADB(**kwargs)
+        marionette_args['host'] = host
+        marionette_args['port'] = int(port)
 
     options = parser.verifyRemoteOptions(options)
     if (options == None):
         print "ERROR: Invalid options specified, use --help for a list of valid options"
         sys.exit(1)
 
-    mochitest = B2GDeviceMochitest(marionette, dm, options.profile_data_dir, options.xrePath,
-                                   remote_test_root=options.remoteTestRoot,
+    mochitest = B2GDeviceMochitest(marionette_args, options.profile_data_dir, options.xrePath,
                                    remote_log_file=options.remoteLogFile)
 
     options = parser.verifyOptions(options, mochitest)
@@ -349,13 +346,12 @@ def run_remote_mochitests(parser, options):
 
 def run_desktop_mochitests(parser, options):
     # create our Marionette instance
-    kwargs = {}
+    marionette_args = {}
     if options.marionette:
         host, port = options.marionette.split(':')
-        kwargs['host'] = host
-        kwargs['port'] = int(port)
-    marionette = Marionette.getMarionetteOrExit(**kwargs)
-    mochitest = B2GDesktopMochitest(marionette, options.profile_data_dir)
+        marionette_args['host'] = host
+        marionette_args['port'] = int(port)
+    mochitest = B2GDesktopMochitest(marionette_args, options.profile_data_dir)
 
     # add a -bin suffix if b2g-bin exists, but just b2g was specified
     if options.app[-4:] != '-bin':
