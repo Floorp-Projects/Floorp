@@ -456,9 +456,14 @@ class Range : public TempObject {
         return canHaveFractionalPart() || max_exponent_ >= MaxTruncatableExponent;
     }
 
+    // Test if an integer x belongs to the range.
+    bool contains(int32_t x) const {
+        return x >= lower_ && x <= upper_;
+    }
+
     // Test whether the range contains zero.
     bool canBeZero() const {
-        return lower_ <= 0 && upper_ >= 0;
+        return contains(0);
     }
 
     // Test whether the range contains NaN values.

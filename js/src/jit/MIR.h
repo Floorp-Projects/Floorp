@@ -3398,6 +3398,7 @@ class MToInt32
         return AliasSet::None();
     }
     void computeRange(TempAllocator &alloc);
+    void collectRangeInfoPreTrunc();
 
 #ifdef DEBUG
     bool isConsistentFloat32Use(MUse *use) const { return true; }
@@ -4449,6 +4450,7 @@ class MMul : public MBinaryArithInstruction
     MDefinition *foldsTo(TempAllocator &alloc, bool useValueNumbers);
     void analyzeEdgeCasesForward();
     void analyzeEdgeCasesBackward();
+    void collectRangeInfoPreTrunc();
 
     double getIdentity() {
         return 1;
@@ -4606,11 +4608,15 @@ class MMod : public MBinaryArithInstruction
 {
     bool unsigned_;
     bool canBeNegativeDividend_;
+    bool canBePowerOfTwoDivisor_;
+    bool canBeDivideByZero_;
 
     MMod(MDefinition *left, MDefinition *right, MIRType type)
       : MBinaryArithInstruction(left, right),
         unsigned_(false),
-        canBeNegativeDividend_(true)
+        canBeNegativeDividend_(true),
+        canBePowerOfTwoDivisor_(true),
+        canBeDivideByZero_(true)
     {
         if (type != MIRType_Value)
             specialization_ = type;
@@ -4642,8 +4648,18 @@ class MMod : public MBinaryArithInstruction
         JS_ASSERT(specialization_ == MIRType_Int32);
         return canBeNegativeDividend_;
     }
-    bool canBeDivideByZero() const;
-    bool canBePowerOfTwoDivisor() const;
+
+    bool canBeDivideByZero() const {
+        JS_ASSERT(specialization_ == MIRType_Int32);
+        return canBeDivideByZero_;
+    }
+
+    bool canBePowerOfTwoDivisor() const {
+        JS_ASSERT(specialization_ == MIRType_Int32);
+        return canBePowerOfTwoDivisor_;
+    }
+
+    void analyzeEdgeCasesForward();
 
     bool isUnsigned() const {
         return unsigned_;
@@ -9895,6 +9911,7 @@ class MNewDenseArrayPar : public MBinaryInstruction
       : MBinaryInstruction(cx, length),
         templateObject_(templateObject)
     {
+        JS_ASSERT(length->type() == MIRType_Int32);
         setResultType(MIRType_Object);
     }
 

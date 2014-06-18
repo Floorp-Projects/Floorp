@@ -1,0 +1,24 @@
+Bug 777292 - Change nsnull to nullptr.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -5507,17 +5507,17 @@ struct cs_info * get_current_cs(const ch
+   nsresult rv;
+   nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+   if (NS_FAILED(rv))
+     return ccs;
+ 
+   rv = ccm->GetUnicodeEncoder(es, getter_AddRefs(encoder));
+   if (NS_FAILED(rv))
+     return ccs;
+-  encoder->SetOutputErrorBehavior(encoder->kOnError_Signal, nsnull, '?');
++  encoder->SetOutputErrorBehavior(encoder->kOnError_Signal, nullptr, '?');
+   rv = ccm->GetUnicodeDecoder(es, getter_AddRefs(decoder));
+   if (NS_FAILED(rv))
+     return ccs;
+   decoder->SetInputErrorBehavior(decoder->kOnError_Signal);
+ 
+   if (NS_FAILED(rv))
+     return ccs;
+ 

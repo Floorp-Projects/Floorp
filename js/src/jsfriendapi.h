@@ -2064,9 +2064,6 @@ IdToValue(jsid id)
     return JS::UndefinedValue();
 }
 
-extern JS_FRIEND_API(bool)
-IsTypedArrayThisCheck(JS::IsAcceptableThis test);
-
 /*
  * If the embedder has registered a default JSContext callback, returns the
  * result of the callback. Otherwise, asserts that |rt| has exactly one

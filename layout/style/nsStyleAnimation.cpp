@@ -1339,10 +1339,10 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
                   float aShear[3], gfxQuaternion &aRotate,
                   gfxPoint3D &aTranslate)
 {
-  float A = aMatrix.xx,
-        B = aMatrix.yx,
-        C = aMatrix.xy,
-        D = aMatrix.yy;
+  float A = aMatrix._11,
+        B = aMatrix._12,
+        C = aMatrix._21,
+        D = aMatrix._22;
   if (A * D == B * C) {
     // singular matrix
     return false;
@@ -1378,8 +1378,8 @@ Decompose2DMatrix(const gfxMatrix &aMatrix, gfxPoint3D &aScale,
   aShear[XYSHEAR] = XYshear;
   aScale.x = scaleX;
   aScale.y = scaleY;
-  aTranslate.x = aMatrix.x0;
-  aTranslate.y = aMatrix.y0;
+  aTranslate.x = aMatrix._31;
+  aTranslate.y = aMatrix._32;
   return true;
 }
 

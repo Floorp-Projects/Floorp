@@ -155,15 +155,6 @@ ClientTiledThebesLayer::BeginPaint()
     ApplyParentLayerToLayerTransform(mPaintData.mTransformDisplayPortToLayer, criticalDisplayPort));
   TILING_PRLOG_OBJ(("TILING 0x%p: Critical displayport %s\n", this, tmpstr.get()), mPaintData.mCriticalDisplayPort);
 
-  // Compute the viewport that applies to this layer in the LayoutDevice
-  // space of this layer.
-  ParentLayerRect viewport =
-    (displayportMetrics.mViewport * displayportMetrics.GetZoomToParent())
-    + displayportMetrics.mCompositionBounds.TopLeft();
-  mPaintData.mViewport = ApplyParentLayerToLayerTransform(
-    mPaintData.mTransformDisplayPortToLayer, viewport);
-  TILING_PRLOG_OBJ(("TILING 0x%p: Viewport %s\n", this, tmpstr.get()), mPaintData.mViewport);
-
   // Store the resolution from the displayport ancestor layer. Because this is Gecko-side,
   // before any async transforms have occurred, we can use the zoom for this.
   mPaintData.mResolution = displayportMetrics.GetZoomToParent();
@@ -273,13 +264,15 @@ ClientTiledThebesLayer::RenderLowPrecision(nsIntRegion& aInvalidRegion,
     aInvalidRegion.Sub(aInvalidRegion, mValidRegion);
 
     TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision invalid region is %s\n", this, tmpstr.get()), aInvalidRegion);
-    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision new valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision old valid region is %s\n", this, tmpstr.get()), oldValidRegion);
 
     if (!aInvalidRegion.IsEmpty()) {
       updatedBuffer = mContentClient->mLowPrecisionTiledBuffer.ProgressiveUpdate(
                             mLowPrecisionValidRegion, aInvalidRegion, oldValidRegion,
                             &mPaintData, aCallback, aCallbackData);
     }
+
+    TILING_PRLOG_OBJ(("TILING 0x%p: Progressive paint: low-precision new valid region is %s\n", this, tmpstr.get()), mLowPrecisionValidRegion);
     return updatedBuffer;
   }
   if (!mLowPrecisionValidRegion.IsEmpty()) {

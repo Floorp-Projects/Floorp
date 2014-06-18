@@ -56,8 +56,8 @@ inline gfxRGBA ThebesColor(Color &aColor)
 
 inline Matrix ToMatrix(const gfxMatrix &aMatrix)
 {
-  return Matrix(Float(aMatrix.xx), Float(aMatrix.yx), Float(aMatrix.xy),
-                Float(aMatrix.yy), Float(aMatrix.x0), Float(aMatrix.y0));
+  return Matrix(Float(aMatrix._11), Float(aMatrix._12), Float(aMatrix._21),
+                Float(aMatrix._22), Float(aMatrix._31), Float(aMatrix._32));
 }
 
 inline gfxMatrix ThebesMatrix(const Matrix &aMatrix)

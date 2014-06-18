@@ -11,17 +11,17 @@ UNIFIED_SOURCES += [
 
 if not CONFIG['MOZ_NATIVE_HUNSPELL']:
     SOURCES += [
-        'affentry.cpp',
-        'affixmgr.cpp',
-        'csutil.cpp',
-        'dictmgr.cpp',
-        'filemgr.cpp',
-        'hashmgr.cpp',
-        'hunspell.cpp',
-        'hunzip.cpp',
-        'phonet.cpp',
-        'replist.cpp',
-        'suggestmgr.cpp',
+        'affentry.cxx',
+        'affixmgr.cxx',
+        'csutil.cxx',
+        'dictmgr.cxx',
+        'filemgr.cxx',
+        'hashmgr.cxx',
+        'hunspell.cxx',
+        'hunzip.cxx',
+        'phonet.cxx',
+        'replist.cxx',
+        'suggestmgr.cxx',
     ]
     # This variable is referenced in configure.in.  Make sure to change that file
     # too if you need to change this variable.
