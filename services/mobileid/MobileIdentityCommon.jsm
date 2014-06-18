@@ -52,7 +52,7 @@ this.UNREGISTER       = "/unregister";
 
 // Server consts.
 this.SERVER_URL = Services.prefs.getCharPref("services.mobileid.server.uri");
-this.CREDENTIALS_DERIVATION_INFO = "identity.mozilla.com/picl/v1/sessionToken";
+this.CREDENTIALS_DERIVATION_INFO = "sessionToken";
 this.CREDENTIALS_DERIVATION_SIZE = 2 * 32;
 
 this.SILENT_SMS_RECEIVED_TOPIC = "silent-sms-received";

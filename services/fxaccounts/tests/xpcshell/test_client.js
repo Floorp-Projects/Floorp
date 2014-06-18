@@ -6,6 +6,7 @@
 Cu.import("resource://gre/modules/FxAccountsClient.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://services-crypto/utils.js");
 
 const FAKE_SESSION_TOKEN = "a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf";
@@ -31,18 +32,6 @@ let ACCOUNT_KEYS = {
 
   wrapKB:       h("4041424344454647 48494a4b4c4d4e4f"+
                   "5051525354555657 58595a5b5c5d5e5f"),
-};
-
-// https://github.com/mozilla/fxa-auth-server/wiki/onepw-protocol#wiki-use-session-certificatesign-etc
-let SESSION_KEYS = {
-  sessionToken: h("a0a1a2a3a4a5a6a7 a8a9aaabacadaeaf"+
-                  "b0b1b2b3b4b5b6b7 b8b9babbbcbdbebf"),
-
-  tokenID:      h("c0a29dcf46174973 da1378696e4c82ae"+
-                  "10f723cf4f4d9f75 e39f4ae3851595ab"),
-
-  reqHMACkey:   h("9d8f22998ee7f579 8b887042466b72d5"+
-                  "3e56ab0c094388bf 65831f702d2febc0"),
 };
 
 function deferredStop(server) {
@@ -668,17 +657,6 @@ add_task(function test_email_case() {
   do_check_eq(attempts, 2);
 
   yield deferredStop(server);
-});
-
-add_task(function test__deriveHawkCredentials() {
-  let client = new FxAccountsClient("https://example.org");
-
-  let credentials = client._deriveHawkCredentials(
-    SESSION_KEYS.sessionToken, "sessionToken");
-
-  do_check_eq(credentials.algorithm, "sha256");
-  do_check_eq(credentials.id, SESSION_KEYS.tokenID);
-  do_check_eq(CommonUtils.bytesAsHex(credentials.key), SESSION_KEYS.reqHMACkey);
 });
 
 // turn formatted test vectors into normal hex strings
