@@ -4,29 +4,36 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /*
-Each video element for a media file has two threads:
 
-  1) The Audio thread writes the decoded audio data to the audio
-     hardware. This is done in a separate thread to ensure that the
-     audio hardware gets a constant stream of data without
-     interruption due to decoding or display. At some point
-     AudioStream will be refactored to have a callback interface
-     where it asks for data and an extra thread will no longer be
-     needed.
+Each media element for a media file has one thread called the "audio thread".
 
-  2) The decode thread. This thread reads from the media stream and
-     decodes the Theora and Vorbis data. It places the decoded data into
-     queues for the other threads to pull from.
+The audio thread  writes the decoded audio data to the audio
+hardware. This is done in a separate thread to ensure that the
+audio hardware gets a constant stream of data without
+interruption due to decoding or display. At some point
+AudioStream will be refactored to have a callback interface
+where it asks for data and this thread will no longer be
+needed.
 
-All file reads, seeks, and all decoding must occur on the decode thread.
+The element/state machine also has a MediaTaskQueue which runs in a
+SharedThreadPool that is shared with all other elements/decoders. The state
+machine dispatches tasks to this to call into the MediaDecoderReader to
+request decoded audio or video data. The Reader will callback with decoded
+sampled when it has them available, and the state machine places the decoded
+samples into its queues for the consuming threads to pull from.
+
+The MediaDecoderReader can choose to decode asynchronously, or synchronously
+and return requested samples synchronously inside it's Request*Data()
+functions via callback. Asynchronous decoding is preferred, and should be
+used for any new readers.
+
 Synchronisation of state between the thread is done via a monitor owned
 by MediaDecoder.
 
-The lifetime of the decode and audio threads is controlled by the state
-machine when it runs on the shared state machine thread. When playback
-needs to occur they are created and events dispatched to them to run
-them. These events exit when decoding/audio playback is completed or
-no longer required.
+The lifetime of the audio thread is controlled by the state machine when
+it runs on the shared state machine thread. When playback needs to occur
+the audio thread is created and an event dispatched to run it. The audio
+thread exits when audio playback is completed or no longer required.
 
 A/V synchronisation is handled by the state machine. It examines the audio
 playback time and compares this to the next frame in the queue of video
@@ -39,7 +46,7 @@ Frame skipping is done in the following ways:
      display time is less than the current audio time. This ensures
      the correct frame for the current time is always displayed.
 
-  2) The decode thread will stop decoding interframes and read to the
+  2) The decode tasks will stop decoding interframes and read to the
      next keyframe if it determines that decoding the remaining
      interframes will cause playback issues. It detects this by:
        a) If the amount of audio data in the audio queue drops
@@ -47,11 +54,13 @@ Frame skipping is done in the following ways:
        b) If the video queue drops below a threshold where it
           will be decoding video data that won't be displayed due
           to the decode thread dropping the frame immediately.
+     TODO: In future we should only do this when the Reader is decoding
+           synchronously.
 
 When hardware accelerated graphics is not available, YCbCr conversion
-is done on the decode thread when video frames are decoded.
+is done on the decode task queue when video frames are decoded.
 
-The decode thread pushes decoded audio and videos frames into two
+The decode task queue pushes decoded audio and videos frames into two
 separate queues - one for audio and one for video. These are kept
 separate to make it easy to constantly feed audio data to the audio
 hardware while allowing frame skipping of video data. These queues are
@@ -59,13 +68,10 @@ threadsafe, and neither the decode, audio, or state machine should
 be able to monopolize them, and cause starvation of the other threads.
 
 Both queues are bounded by a maximum size. When this size is reached
-the decode thread will no longer decode video or audio depending on the
-queue that has reached the threshold. If both queues are full, the decode
-thread will wait on the decoder monitor.
-
-When the decode queues are full (they've reaced their maximum size) and
-the decoder is not in PLAYING play state, the state machine may opt
-to shut down the decode thread in order to conserve resources.
+the decode tasks will no longer request video or audio depending on the
+queue that has reached the threshold. If both queues are full, no more
+decode tasks will be dispatched to the decode task queue, so other
+decoders will have an opportunity to run.
 
 During playback the audio thread will be idle (via a Wait() on the
 monitor) if the audio queue is empty. Otherwise it constantly pops
@@ -83,6 +89,7 @@ hardware (via AudioStream).
 #include "MediaDecoderReader.h"
 #include "MediaDecoderOwner.h"
 #include "MediaMetadataManager.h"
+#include "MediaDataDecodedListener.h"
 
 class nsITimer;
 
@@ -102,7 +109,7 @@ class SharedThreadPool;
 
 /*
   The state machine class. This manages the decoding and seeking in the
-  MediaDecoderReader on the decode thread, and A/V sync on the shared
+  MediaDecoderReader on the decode task queue, and A/V sync on the shared
   state machine thread, and controls the audio "push" thread.
 
   All internal state is synchronised via the decoder monitor. State changes
@@ -312,10 +319,9 @@ public:
   void SetFragmentEndTime(int64_t aEndTime);
 
   // Drop reference to decoder.  Only called during shutdown dance.
-  void ReleaseDecoder() {
-    MOZ_ASSERT(mReader);
+  void BreakCycles() {
     if (mReader) {
-      mReader->ReleaseDecoder();
+      mReader->BreakCycles();
     }
     mDecoder = nullptr;
   }
@@ -357,10 +363,21 @@ public:
   // samples in advance of when they're needed for playback.
   void SetMinimizePrerollUntilPlaybackStarts();
 
+  void OnAudioDecoded(AudioData* aSample);
+  void OnAudioEOS();
+  void OnVideoDecoded(VideoData* aSample);
+  void OnVideoEOS();
+  void OnDecodeError();
+
 protected:
   virtual ~MediaDecoderStateMachine();
 
   void AssertCurrentThreadInMonitor() const { mDecoder->GetReentrantMonitor().AssertCurrentThreadIn(); }
+
+  // Inserts MediaData* samples into their respective MediaQueues.
+  // aSample must not be null.
+  void Push(AudioData* aSample);
+  void Push(VideoData* aSample);
 
   class WakeDecoderRunnable : public nsRunnable {
   public:
@@ -397,8 +414,14 @@ protected:
   };
   WakeDecoderRunnable* GetWakeDecoderRunnable();
 
-  MediaQueue<AudioData>& AudioQueue() { return mReader->AudioQueue(); }
-  MediaQueue<VideoData>& VideoQueue() { return mReader->VideoQueue(); }
+  MediaQueue<AudioData>& AudioQueue() { return mAudioQueue; }
+  MediaQueue<VideoData>& VideoQueue() { return mVideoQueue; }
+
+  nsresult FinishDecodeMetadata();
+
+  RefPtr<MediaDataDecodedListener<MediaDecoderStateMachine>> mMediaDecodedListener;
+
+  nsAutoPtr<MetadataTags> mMetadataTags;
 
   // True if our buffers of decoded audio are not full, and we should
   // decode more.
@@ -468,11 +491,10 @@ protected:
   // Called on the state machine thread.
   int64_t GetClock();
 
-  // Returns the presentation time of the first audio or video frame in the
-  // media.  If the media has video, it returns the first video frame. The
-  // decoder monitor must be held with exactly one lock count. Called on the
-  // state machine thread.
-  VideoData* FindStartTime();
+  nsresult DropAudioUpToSeekTarget(AudioData* aSample);
+  nsresult DropVideoUpToSeekTarget(VideoData* aSample);
+
+  void SetStartTime(int64_t aStartTimeUsecs);
 
   // Update only the state machine's current playback position (and duration,
   // if unknown).  Does not update the playback position on the decoder or
@@ -544,6 +566,10 @@ protected:
   // The decoder monitor must be held.
   nsresult EnqueueDecodeMetadataTask();
 
+  // Dispatches a task to the decode task queue to seek the decoder.
+  // The decoder monitor must be held.
+  nsresult EnqueueDecodeSeekTask();
+
   nsresult DispatchAudioDecodeTaskIfNeeded();
 
   // Ensures a to decode audio has been dispatched to the decode task queue.
@@ -561,10 +587,6 @@ protected:
   // The decoder monitor must be held.
   nsresult EnsureVideoDecodeTaskQueued();
 
-  // Dispatches a task to the decode task queue to seek the decoder.
-  // The decoder monitor must be held.
-  nsresult EnqueueDecodeSeekTask();
-
   // Calls the reader's SetIdle(). This is only called in a task dispatched to
   // the decode task queue, don't call it directly.
   void SetReaderIdle();
@@ -574,12 +596,6 @@ protected:
   // to idle mode. This is threadsafe, and can be called from any thread.
   // The decoder monitor must be held.
   void DispatchDecodeTasksIfNeeded();
-
-  // Queries our state to see whether the decode has finished for all streams.
-  // If so, we move into DECODER_STATE_COMPLETED and schedule the state machine
-  // to run.
-  // The decoder monitor must be held.
-  void CheckIfDecodeComplete();
 
   // Returns the "media time". This is the absolute time which the media
   // playback has reached. i.e. this returns values in the range
@@ -604,15 +620,29 @@ protected:
   // must be held with exactly one lock count.
   nsresult DecodeMetadata();
 
+  // Wraps the call to DecodeMetadata(), signals a DecodeError() on failure.
+  void CallDecodeMetadata();
+
+  // Checks whether we're finished decoding metadata, and switches to DECODING
+  // state if so.
+  void MaybeFinishDecodeMetadata();
+
   // Seeks to mSeekTarget. Called on the decode thread. The decoder monitor
   // must be held with exactly one lock count.
   void DecodeSeek();
 
-  // Decode loop, decodes data until EOF or shutdown.
-  // Called on the decode thread.
-  void DecodeLoop();
+  void CheckIfSeekComplete();
+  bool IsAudioSeekComplete();
+  bool IsVideoSeekComplete();
 
-  void CallDecodeMetadata();
+  // Completes the seek operation, moves onto the next appropriate state.
+  void SeekCompleted();
+
+  // Queries our state to see whether the decode has finished for all streams.
+  // If so, we move into DECODER_STATE_COMPLETED and schedule the state machine
+  // to run.
+  // The decoder monitor must be held.
+  void CheckIfDecodeComplete();
 
   // Copy audio from an AudioData packet to aOutput. This may require
   // inserting silence depending on the timing of the audio packet.
@@ -637,6 +667,11 @@ protected:
   // case as it may not be needed again.
   bool IsPausedAndDecoderWaiting();
 
+  // These return true if the respective stream's decode has not yet reached
+  // the end of stream.
+  bool IsAudioDecoding();
+  bool IsVideoDecoding();
+
   // The decoder object that created this state machine. The state machine
   // holds a strong reference to the decoder to ensure that the decoder stays
   // alive once media element has started the decoder shutdown process, and has
@@ -647,6 +682,19 @@ protected:
   // causing the decoder to be destroyed. This is accessed on the decode,
   // state machine, audio and main threads.
   nsRefPtr<MediaDecoder> mDecoder;
+
+  // Time at which the last video sample was requested. If it takes too long
+  // before the sample arrives, we will increase the amount of audio we buffer.
+  // This is necessary for legacy synchronous decoders to prevent underruns.
+  TimeStamp mVideoDecodeStartTime;
+
+  // Queue of audio frames. This queue is threadsafe, and is accessed from
+  // the audio, decoder, state machine, and main threads.
+  MediaQueue<AudioData> mAudioQueue;
+
+  // Queue of video frames. This queue is threadsafe, and is accessed from
+  // the decoder, state machine, and main threads.
+  MediaQueue<VideoData> mVideoQueue;
 
   // The decoder monitor must be obtained before modifying this state.
   // NotifyAll on the monitor must be called when the state is changed so
@@ -719,6 +767,14 @@ protected:
   // this value. Accessed on main and decode thread.
   SeekTarget mSeekTarget;
 
+  // The position that we're currently seeking to. This differs from
+  // mSeekTarget, as mSeekTarget is the target we'll seek to next, whereas
+  // mCurrentSeekTarget is the position that the decode is in the process
+  // of seeking to.
+  // The decoder monitor lock must be obtained before reading or writing
+  // this value.
+  SeekTarget mCurrentSeekTarget;
+
   // Media Fragment end time in microseconds. Access controlled by decoder monitor.
   int64_t mFragmentEndTime;
 
@@ -729,9 +785,8 @@ protected:
   RefPtr<AudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.
-  // This is created in the play state machine's constructor, and destroyed
-  // in the play state machine's destructor.
-  nsAutoPtr<MediaDecoderReader> mReader;
+  // This is created in the state machine's constructor.
+  nsRefPtr<MediaDecoderReader> mReader;
 
   // Accessed only on the state machine thread.
   // Not an nsRevocableEventPtr since we must Revoke() it well before
@@ -817,6 +872,12 @@ protected:
   uint32_t mAudioPrerollUsecs;
   uint32_t mVideoPrerollFrames;
 
+  // This temporarily stores the first frame we decode after we seek.
+  // This is so that if we hit end of stream while we're decoding to reach
+  // the seek target, we will still have a frame that we can display as the
+  // last frame in the media.
+  nsAutoPtr<VideoData> mFirstVideoFrameAfterSeek;
+
   // When we start decoding (either for the first time, or after a pause)
   // we may be low on decoded data. We don't want our "low data" logic to
   // kick in and decide that we're low on decoded data because the download
@@ -836,19 +897,11 @@ protected:
   // yet decoded to end of stream.
   bool mIsVideoDecoding;
 
-  // True when we have dispatched a task to the decode task queue to run
-  // the audio decode.
-  bool mDispatchedAudioDecodeTask;
-
-  // True when we have dispatched a task to the decode task queue to run
-  // the video decode.
-  bool mDispatchedVideoDecodeTask;
-
-  // If the video decode is falling behind the audio, we'll start dropping the
-  // inter-frames up until the next keyframe which is at or before the current
-  // playback position. skipToNextKeyframe is true if we're currently
-  // skipping up to the next keyframe.
-  bool mSkipToNextKeyFrame;
+  // True when we have dispatched a task to the decode task queue to request
+  // decoded audio/video, and/or we are waiting for the requested sample to be
+  // returned by callback from the Reader.
+  bool mAudioRequestPending;
+  bool mVideoRequestPending;
 
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, mStopAudioThread is always true and
@@ -924,10 +977,21 @@ protected:
   // dispatch multiple tasks to re-do the metadata loading.
   bool mDispatchedDecodeMetadataTask;
 
-  // True if we've dispatched a task to the decode task queue to call
-  // Seek on the reader. We maintain a flag to ensure that we don't
-  // dispatch multiple tasks to re-do the seek.
-  bool mDispatchedDecodeSeekTask;
+  // These two flags are true when we need to drop decoded samples that
+  // we receive up to the next discontinuity. We do this when we seek;
+  // the first sample in each stream after the seek is marked as being
+  // a "discontinuity".
+  bool mDropAudioUntilNextDiscontinuity;
+  bool mDropVideoUntilNextDiscontinuity;
+
+  // True if we need to decode forwards to the seek target inside
+  // mCurrentSeekTarget.
+  bool mDecodeToSeekTarget;
+
+  // We record the playback position before we seek in order to
+  // determine where the seek terminated relative to the playback position
+  // we were at before the seek.
+  int64_t mCurrentTimeBeforeSeek;
 
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.

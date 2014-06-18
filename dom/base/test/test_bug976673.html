@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=976673
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 976673</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=976673">Mozilla Bug 976673</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+<input id="input" onfocus="event.target.value = event.type;"
+                  onblur="event.target.value = event.type;">
+<button id="button">set focus</button>
+<iframe id="iframe" src="http://example.org:80/tests/dom/base/test/iframe_bug976673.html"></iframe>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("mousedown", function (aEvent) { aEvent.preventDefault(); }, false);
+
+function testSetFocus(aEventType, aCallback)
+{
+  var description = "Setting focus from " + aEventType + " handler: ";
+
+  var iframe = document.getElementById("iframe");
+  iframe.contentWindow.focus();
+
+  window.addEventListener("message", function (aEvent) {
+    window.removeEventListener("message", arguments.callee, false);
+    is(aEvent.data, "input-value: focus",
+       description + "<input> in the iframe should get focus");
+
+
+    var input = document.getElementById("input");
+    input.value = "";
+
+    var button = document.getElementById("button");
+
+    var movingFocus = false;
+    button.addEventListener(aEventType,
+                            function (aEvent) {
+                              movingFocus = true;
+                              input.focus();
+                              aEvent.preventDefault();
+                              button.removeEventListener(aEventType, arguments.callee, true);
+                            }, true);
+
+    synthesizeMouseAtCenter(button, {});
+
+    window.addEventListener("message", function (aEvent) {
+      window.removeEventListener("message", arguments.callee, false);
+      if (movingFocus) {
+        is(aEvent.data, "input-value: blur",
+           description + "<input> in the iframe should get blur");
+        is(input.value, "focus",
+           description + "<input> in the parent should get focus");
+      } else {
+        is(aEvent.data, "input-value: focus",
+           description + "<input> in the iframe should keep having focus");
+      }
+
+      setTimeout(aCallback, 0);
+    }, false);
+
+    iframe.contentWindow.postMessage("check", "*");
+  }, false);
+
+  iframe.contentWindow.postMessage("init", "*");
+}
+
+function runTests()
+{
+  testSetFocus("mousedown",
+    function () {
+      testSetFocus("mouseup",
+        function () {
+          testSetFocus("click",
+            function () {
+              testSetFocus("DoNothing", // testing wihout moving focus by script
+                function () {
+                  SimpleTest.finish();
+                });
+            });
+        });
+    });
+}
+
+SimpleTest.waitForFocus(runTests);
+
+</script>
+</body>
+</html>

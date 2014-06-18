@@ -203,7 +203,7 @@ AccountState.prototype = {
     if (!this.isCurrent) {
       log.info("An accountState promise was rejected, but we are ignoring that" +
                "reason and rejecting it due to a different user being signed in." +
-               "Originally rejected with: " + reason);
+               "Originally rejected with: " + error);
       return Promise.reject(new Error("A different user signed in"));
     }
     return Promise.reject(error);

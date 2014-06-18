@@ -43,7 +43,6 @@ class MediaPluginReader : public MediaDecoderReader
 public:
   MediaPluginReader(AbstractMediaDecoder* aDecoder,
                     const nsACString& aContentType);
-  ~MediaPluginReader();
 
   virtual nsresult Init(MediaDecoderReader* aCloneDonor);
   virtual nsresult ResetDecode();
@@ -65,6 +64,8 @@ public:
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
                                 MetadataTags** aTags);
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
+
+  virtual void Shutdown() MOZ_OVERRIDE;
 
   class ImageBufferCallback : public MPAPI::BufferCallback {
     typedef mozilla::layers::Image Image;

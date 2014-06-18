@@ -198,6 +198,9 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
 
     DebugOnly<JSRuntime *> rt = trc->runtime();
 
+    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gc.isManipulatingDeadZones(),
+                 !thing->zone()->scheduledForDestruction);
+
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
     JS_ASSERT_IF(thing->zone()->requireGCTracer(),
@@ -226,33 +229,6 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
                  !InFreeList(thing->arenaHeader(), thing));
 #endif
 
-}
-
-/*
- * We only set the maybeAlive flag for objects and scripts. It's assumed that,
- * if a compartment is alive, then it will have at least some live object or
- * script it in. Even if we get this wrong, the worst that will happen is that
- * scheduledForDestruction will be set on the compartment, which will cause some
- * extra GC activity to try to free the compartment.
- */
-template<typename T>
-static inline void
-SetMaybeAliveFlag(T *thing)
-{
-}
-
-template<>
-void
-SetMaybeAliveFlag(JSObject *thing)
-{
-    thing->compartment()->maybeAlive = true;
-}
-
-template<>
-void
-SetMaybeAliveFlag(JSScript *thing)
-{
-    thing->compartment()->maybeAlive = true;
 }
 
 template<typename T>
@@ -298,7 +274,7 @@ MarkInternal(JSTracer *trc, T **thingp)
             return;
 
         PushMarkStack(AsGCMarker(trc), thing);
-        SetMaybeAliveFlag(thing);
+        thing->zone()->maybeAlive = true;
     } else {
         trc->callback(trc, (void **)thingp, MapTypeToTraceKind<T>::kind);
         trc->unsetTracingLocation();

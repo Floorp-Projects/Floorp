@@ -152,7 +152,11 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 {
   MOZ_ASSERT(aLayer);
 
-  CompositorChild* compositor = CompositorChild::Get();
+  CompositorChild* compositor = nullptr;
+  if(aLayer->Manager() &&
+     aLayer->Manager()->AsClientLayerManager()) {
+    compositor = aLayer->Manager()->AsClientLayerManager()->GetCompositorChild();
+  }
 
   if (!compositor) {
     FindFallbackContentFrameMetrics(aLayer, aCompositionBounds, aZoom);

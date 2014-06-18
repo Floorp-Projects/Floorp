@@ -31,7 +31,7 @@ function test_sendMouseEventDefaults() {
     is(evt.mozInputSource, SpecialPowers.Ci.nsIDOMMouseEvent.MOZ_SOURCE_MOUSE, "check input source");
     is(evt.isSynthesized, undefined, "check isSynthesized is undefined in content");
     is(SpecialPowers.wrap(evt).isSynthesized, true, "check isSynthesized is true from chrome");
-    next();
+    SimpleTest.executeSoon(next);
   });
 
   // Only pass mandatory arguments and check default values
@@ -48,7 +48,7 @@ function test_sendMouseEventOptionals() {
     window.removeEventListener("mouseup", listener);
     is(evt.mozInputSource, source, "explicit input source is valid");
     is(SpecialPowers.wrap(evt).isSynthesized, false, "we can dispatch event that don't look synthesized");
-    next();
+    SimpleTest.executeSoon(next);
   });
 
   // Check explicit value for optional args
