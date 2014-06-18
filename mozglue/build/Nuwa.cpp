@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/TaggedAnonymousMemory.h"
 #include "Nuwa.h"
 
 using namespace mozilla;
@@ -152,15 +153,6 @@ static size_t getPageSize(void) {
   #warning "Hard-coding page size to 4096 bytes"
   return 4096
 #endif
-}
-
-/**
- * Align the pointer to the next page boundary unless it's already aligned
- */
-static uintptr_t ceilToPage(uintptr_t aPtr) {
-  size_t pageSize = getPageSize();
-
-  return ((aPtr + pageSize - 1) / pageSize) * pageSize;
 }
 
 /**
@@ -517,13 +509,18 @@ thread_info_new(void) {
   tinfo->recreatedThreadID = 0;
   tinfo->recreatedNativeThreadID = 0;
   tinfo->reacquireMutex = nullptr;
-  tinfo->stk = malloc(NUWA_STACK_SIZE + getPageSize());
+  tinfo->stk = MozTaggedAnonymousMmap(nullptr,
+                                      NUWA_STACK_SIZE + getPageSize(),
+                                      PROT_READ | PROT_WRITE,
+                                      MAP_PRIVATE | MAP_ANONYMOUS,
+                                      /* fd */ -1,
+                                      /* offset */ 0,
+                                      "nuwa-thread-stack");
 
   // We use a smaller stack size. Add protection to stack overflow: mprotect()
   // stack top (the page at the lowest address) so we crash instead of corrupt
   // other content that is malloc()'d.
-  uintptr_t pageGuard = ceilToPage((uintptr_t)tinfo->stk);
-  mprotect((void*)pageGuard, getPageSize(), PROT_READ);
+  mprotect(tinfo->stk, getPageSize(), PROT_NONE);
 
   pthread_attr_init(&tinfo->threadAttr);
 
@@ -548,9 +545,7 @@ thread_info_cleanup(void *arg) {
   thread_info_t *tinfo = (thread_info_t *)arg;
   pthread_attr_destroy(&tinfo->threadAttr);
 
-  uintptr_t pageGuard = ceilToPage((uintptr_t)tinfo->stk);
-  mprotect((void*)pageGuard, getPageSize(), PROT_READ | PROT_WRITE);
-  free(tinfo->stk);
+  munmap(tinfo->stk, NUWA_STACK_SIZE + getPageSize());
 
   REAL(pthread_mutex_lock)(&sThreadCountLock);
   /* unlink tinfo from sAllThreads */
@@ -665,7 +660,9 @@ __wrap_pthread_create(pthread_t *thread,
   thread_info_t *tinfo = thread_info_new();
   tinfo->startupFunc = start_routine;
   tinfo->startupArg = arg;
-  pthread_attr_setstack(&tinfo->threadAttr, tinfo->stk, NUWA_STACK_SIZE);
+  pthread_attr_setstack(&tinfo->threadAttr,
+                        (char*)tinfo->stk + getPageSize(),
+                        NUWA_STACK_SIZE);
 
   int rv = REAL(pthread_create)(thread,
                                 &tinfo->threadAttr,
