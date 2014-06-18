@@ -89,11 +89,10 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
 }
 
 static RegExpRunStatus
-ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
-                  HandleLinearString input, const jschar *chars, size_t length,
+ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re, HandleLinearString input,
                   size_t *lastIndex, MatchPairs &matches)
 {
-    RegExpRunStatus status = re.execute(cx, chars, length, lastIndex, matches);
+    RegExpRunStatus status = re.execute(cx, input, lastIndex, matches);
     if (status == RegExpRunStatus_Success && res) {
         if (!res->updateFromMatchPairs(cx, input, matches))
             return RegExpRunStatus_Error;
@@ -104,8 +103,8 @@ ExecuteRegExpImpl(JSContext *cx, RegExpStatics *res, RegExpShared &re,
 /* Legacy ExecuteRegExp behavior is baked into the JSAPI. */
 bool
 js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-                        HandleLinearString input_, const jschar *chars, size_t length,
-                        size_t *lastIndex, bool test, MutableHandleValue rval)
+                        HandleLinearString input, size_t *lastIndex, bool test,
+                        MutableHandleValue rval)
 {
     RegExpGuard shared(cx);
     if (!reobj.getShared(cx, &shared))
@@ -113,9 +112,7 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
 
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
-    RegExpRunStatus status =
-        ExecuteRegExpImpl(cx, res, *shared, input_, chars, length, lastIndex, matches);
-
+    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, *shared, input, lastIndex, matches);
     if (status == RegExpRunStatus_Error)
         return false;
 
@@ -129,13 +126,6 @@ js::ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
         /* Forbid an array, as an optimization. */
         rval.setBoolean(true);
         return true;
-    }
-
-    RootedString input(cx, input_);
-    if (!input) {
-        input = js_NewStringCopyN<CanGC>(cx, chars, length);
-        if (!input)
-            return false;
     }
 
     return CreateRegExpMatchResult(cx, input, matches, rval);
@@ -589,11 +579,8 @@ js::ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
     }
 
     /* Steps 8-21. */
-    const jschar *chars = input->chars();
     size_t lastIndexInt(i);
-    RegExpRunStatus status =
-        ExecuteRegExpImpl(cx, res, *re, input, chars, length, &lastIndexInt, matches);
-
+    RegExpRunStatus status = ExecuteRegExpImpl(cx, res, *re, input, &lastIndexInt, matches);
     if (status == RegExpRunStatus_Error)
         return RegExpRunStatus_Error;
 
@@ -630,7 +617,6 @@ regexp_exec_impl(JSContext *cx, HandleObject regexp, HandleString string,
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
 
     RegExpRunStatus status = ExecuteRegExp(cx, regexp, string, matches, staticsUpdate);
-
     if (status == RegExpRunStatus_Error)
         return false;
 
