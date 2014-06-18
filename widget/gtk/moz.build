@@ -32,6 +32,7 @@ UNIFIED_SOURCES += [
     'nsScreenManagerGtk.cpp',
     'nsSound.cpp',
     'nsToolkit.cpp',
+    'WakeLockListener.cpp',
     'WidgetTraceEvent.cpp',
 ]
 
