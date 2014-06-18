@@ -5,8 +5,8 @@
 enum MobileNetworkState {"available", "connected", "forbidden"};
 
 [Pref="dom.mobileconnection.enabled",
- ChromeConstructor(DOMString shortName, DOMString longName, DOMString mcc,
-                   DOMString mnc, DOMString state)]
+ ChromeConstructor(DOMString? shortName, DOMString? longName, DOMString? mcc,
+                   DOMString? mnc, DOMString? state)]
 interface MozMobileNetworkInfo
 {
   /**
