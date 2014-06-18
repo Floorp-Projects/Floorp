@@ -602,23 +602,28 @@ ContentParent::MaybeTakePreallocatedAppProcess(const nsAString& aAppManifestURL,
 /*static*/ void
 ContentParent::StartUp()
 {
+    // We could launch sub processes from content process
+    // FIXME Bug 1023701 - Stop using ContentParent static methods in
+    // child process
+    sCanLaunchSubprocesses = true;
+
+    if (XRE_GetProcessType() != GeckoProcessType_Default) {
+        return;
+    }
+
     // Note: This reporter measures all ContentParents.
     RegisterStrongMemoryReporter(new ContentParentsMemoryReporter());
 
     mozilla::dom::time::InitializeDateCacheCleaner();
 
-    sCanLaunchSubprocesses = true;
+    BackgroundChild::Startup();
 
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        BackgroundChild::Startup();
+    // Try to preallocate a process that we can transform into an app later.
+    PreallocatedProcessManager::AllocateAfterDelay();
 
-        // Try to preallocate a process that we can transform into an app later.
-        PreallocatedProcessManager::AllocateAfterDelay();
-
-        // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
-        // testing preference is set.
-        MaybeTestPBackground();
-    }
+    // Test the PBackground infrastructure on ENABLE_TESTS builds when a special
+    // testing preference is set.
+    MaybeTestPBackground();
 }
 
 /*static*/ void

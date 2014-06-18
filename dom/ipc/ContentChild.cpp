@@ -482,8 +482,17 @@ ContentChild* ContentChild::sSingleton;
 // Performs initialization that is not fork-safe, i.e. that must be done after
 // forking from the Nuwa process.
 static void
-InitOnContentProcessCreated()
+InitOnContentProcessCreated(bool aAfterNuwaFork)
 {
+#ifdef MOZ_NUWA_PROCESS
+    // Wait until we are forked from Nuwa
+    if (!aAfterNuwaFork &&
+        Preferences::GetBool("dom.ipc.processPrelaunch.enabled", false)) {
+        return;
+    }
+#else
+    unused << aAfterNuwaFork;
+#endif
     // This will register cross-process observer.
     mozilla::dom::time::InitializeDateCacheCleaner();
 }
@@ -670,9 +679,7 @@ ContentChild::InitXPCOM()
         new SystemMessageHandledObserver();
     sysMsgObserver->Init();
 
-#ifndef MOZ_NUWA_PROCESS
-    InitOnContentProcessCreated();
-#endif
+    InitOnContentProcessCreated(/* aAfterNuwaFork = */false);
 }
 
 PMemoryReportRequestChild*
@@ -1843,7 +1850,7 @@ public:
         }
 
         // Perform other after-fork initializations.
-        InitOnContentProcessCreated();
+        InitOnContentProcessCreated(/* aAfterNuwaFork = */true);
 
         return NS_OK;
     }
