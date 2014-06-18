@@ -36,8 +36,8 @@ ExecuteRegExp(JSContext *cx, HandleObject regexp, HandleString string,
  */
 bool
 ExecuteRegExpLegacy(JSContext *cx, RegExpStatics *res, RegExpObject &reobj,
-                    HandleLinearString input, const jschar *chars, size_t length,
-                    size_t *lastIndex, bool test, MutableHandleValue rval);
+                    HandleLinearString input, size_t *lastIndex, bool test,
+                    MutableHandleValue rval);
 
 /* Translation from MatchPairs to a JS array in regexp_exec()'s output format. */
 bool

@@ -103,8 +103,8 @@ struct RegExpCode
 
 RegExpCode
 CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
-               const jschar *sampleChars, size_t sampleLength,
-               bool is_global, bool ignore_case = false, bool is_ascii = false);
+               HandleLinearString sample,  bool is_global, bool ignore_case = false,
+               bool is_ascii = false);
 
 // Note: this may return RegExpRunStatus_Error if an interrupt was requested
 // while the code was executing.

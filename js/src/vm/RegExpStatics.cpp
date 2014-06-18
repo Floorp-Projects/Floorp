@@ -99,11 +99,9 @@ RegExpStatics::executeLazy(JSContext *cx)
      * implicit copies is safe.
      */
 
-    size_t length = matchesInput->length();
-    const jschar *chars = matchesInput->chars();
-
     /* Execute the full regular expression. */
-    RegExpRunStatus status = g->execute(cx, chars, length, &this->lazyIndex, this->matches);
+    RootedLinearString input(cx, matchesInput);
+    RegExpRunStatus status = g->execute(cx, input, &this->lazyIndex, this->matches);
     if (status == RegExpRunStatus_Error)
         return false;
 

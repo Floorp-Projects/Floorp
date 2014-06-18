@@ -4,6 +4,7 @@
 == dir-4.html dir-4-ref.html
 == dir-5.html dir-5-ref.html
 == dir-6.html dir-6-ref.html
+== dir-6a.html dir-6a-ref.html
 == dir-7.html dir-7-ref.html
 fails == dir-8.html dir-8-ref.html
 fails == dir-9.html dir-9-ref.html # Bug 787215
@@ -269,6 +270,16 @@ random-if(B2G&&browserIsRemote) == munderover-accentunder-dynamic.html munderove
 == rowlines-2b.html rowlines-2-ref.html
 != rowlines-3-1.html rowlines-3-1-ref.html
 == rowlines-3-2.html rowlines-3-2-ref.html
+== tablespacing-1.html tablespacing-1-ref.html
+== tablespacing-2.html tablespacing-2-ref.html
+== tablespacing-3.html tablespacing-3-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-4.html tablespacing-4-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-5.html tablespacing-5-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-5a.html tablespacing-5a-ref.html
+fails-if(B2G&&browserIsRemote) == tablespacing-6.html tablespacing-6-ref.html
+== tablespacing-7.html tablespacing-7-ref.html
+!= tablespacing-8a.html tablespacing-8-ref.html
+!= tablespacing-8b.html tablespacing-8-ref.html
 != op-dict-1.html op-dict-1-ref.html
 == op-dict-2.html op-dict-2-ref.html
 != op-dict-3.html op-dict-3-ref.html
