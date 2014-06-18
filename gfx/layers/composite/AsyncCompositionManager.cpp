@@ -239,6 +239,7 @@ void
 AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    Layer* aTransformedSubtreeRoot,
                                                    const Matrix4x4& aPreviousTransformForRoot,
+                                                   const Matrix4x4& aCurrentTransformForRoot,
                                                    const LayerMargin& aFixedLayerMargins)
 {
   bool isRootFixed = aLayer->GetIsFixedPosition() &&
@@ -262,7 +263,7 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     Matrix oldRootTransform;
     Matrix newRootTransform;
     if (!aPreviousTransformForRoot.Is2D(&oldRootTransform) ||
-        !aTransformedSubtreeRoot->GetLocalTransform().Is2D(&newRootTransform)) {
+        !aCurrentTransformForRoot.Is2D(&newRootTransform)) {
       return;
     }
 
@@ -335,19 +336,20 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
   }
 
   // Fixed layers are relative to their nearest scrollable layer, so when we
-  // encounter a scrollable layer, reset the transform to that layer and remove
-  // the fixed margins.
+  // encounter a scrollable layer, bail. ApplyAsyncContentTransformToTree will
+  // have already recursed on this layer and called AlignFixedAndStickyLayers
+  // on it with its own transforms.
   if (aLayer->AsContainerLayer() &&
       aLayer->AsContainerLayer()->GetFrameMetrics().IsScrollable() &&
       aLayer != aTransformedSubtreeRoot) {
-    AlignFixedAndStickyLayers(aLayer, aLayer, aLayer->GetTransform(), LayerMargin(0, 0, 0, 0));
     return;
   }
 
   for (Layer* child = aLayer->GetFirstChild();
        child; child = child->GetNextSibling()) {
     AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot,
-                              aPreviousTransformForRoot, aFixedLayerMargins);
+                              aPreviousTransformForRoot,
+                              aCurrentTransformForRoot, aFixedLayerMargins);
   }
 }
 
@@ -498,6 +500,15 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
   return activeAnimations;
 }
 
+Matrix4x4
+CombineWithCSSTransform(const gfx3DMatrix& treeTransform, Layer* aLayer)
+{
+  Matrix4x4 result;
+  ToMatrix4x4(treeTransform, result);
+  result = result * aLayer->GetTransform();
+  return result;
+}
+
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFrame,
                                                           Layer *aLayer,
@@ -519,12 +530,13 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     LayerComposite* layerComposite = aLayer->AsLayerComposite();
     Matrix4x4 oldTransform = aLayer->GetTransform();
 
-    ViewTransform treeTransform;
+    ViewTransform treeTransformWithoutOverscroll, overscrollTransform;
     ScreenPoint scrollOffset;
     *aWantNextFrame |=
       controller->SampleContentTransformForFrame(aCurrentFrame,
-                                                 &treeTransform,
-                                                 scrollOffset);
+                                                 &treeTransformWithoutOverscroll,
+                                                 scrollOffset,
+                                                 &overscrollTransform);
 
     const FrameMetrics& metrics = container->GetFrameMetrics();
     CSSToLayerScale paintScale = metrics.LayersPixelsPerCSSPixel();
@@ -532,9 +544,9 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
                         metrics.mDisplayPort : metrics.mCriticalDisplayPort);
     LayerMargin fixedLayerMargins(0, 0, 0, 0);
     ScreenPoint offset(0, 0);
-    SyncFrameMetrics(scrollOffset, treeTransform.mScale.scale, metrics.mScrollableRect,
-                     mLayersUpdated, displayPort, paintScale,
-                     mIsFirstPaint, fixedLayerMargins, offset);
+    SyncFrameMetrics(scrollOffset, treeTransformWithoutOverscroll.mScale.scale,
+                     metrics.mScrollableRect, mLayersUpdated, displayPort,
+                     paintScale, mIsFirstPaint, fixedLayerMargins, offset);
 
     mIsFirstPaint = false;
     mLayersUpdated = false;
@@ -542,9 +554,8 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     // Apply the render offset
     mLayerManager->GetCompositor()->SetScreenRenderOffset(offset);
 
-    Matrix4x4 transform;
-    ToMatrix4x4(gfx3DMatrix(treeTransform), transform);
-    transform = transform * aLayer->GetTransform();
+    Matrix4x4 transform = CombineWithCSSTransform(
+        treeTransformWithoutOverscroll * overscrollTransform, aLayer);
 
     // GetTransform already takes the pre- and post-scale into account.  Since we
     // will apply the pre- and post-scale again when computing the effective
@@ -564,7 +575,14 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(TimeStamp aCurrentFram
     LayoutDeviceToLayerScale resolution = metrics.mCumulativeResolution;
     oldTransform.Scale(resolution.scale, resolution.scale, 1);
 
-    AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform, fixedLayerMargins);
+    // For the purpose of aligning fixed and sticky layers, we disregard
+    // the overscroll transform when computing the 'aCurrentTransformForRoot'
+    // parameter. This ensures that the overscroll transform is not unapplied,
+    // and therefore that the visual effect applies to fixed and sticky layers.
+    Matrix4x4 transformWithoutOverscroll = CombineWithCSSTransform(
+        treeTransformWithoutOverscroll, aLayer);
+    AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform,
+                              transformWithoutOverscroll, fixedLayerMargins);
 
     appliedTransform = true;
   }
@@ -867,7 +885,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
-  AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform, fixedLayerMargins);
+  AlignFixedAndStickyLayers(aLayer, aLayer, oldTransform,
+                            aLayer->GetLocalTransform(), fixedLayerMargins);
 }
 
 bool

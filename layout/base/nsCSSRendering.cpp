@@ -5164,11 +5164,11 @@ nsContextBoxBlur::Init(const nsRect& aRect, nscoord aSpreadRadius,
   // and will sometimes get incorrect results (e.g. rotated blurs)
   gfxMatrix transform = aDestinationCtx->CurrentMatrix();
   // XXX: we could probably handle negative scales but for now it's easier just to fallback
-  if (transform.HasNonAxisAlignedTransform() || transform.xx <= 0.0 || transform.yy <= 0.0) {
+  if (transform.HasNonAxisAlignedTransform() || transform._11 <= 0.0 || transform._22 <= 0.0) {
     transform = gfxMatrix();
   } else {
-    scaleX = transform.xx;
-    scaleY = transform.yy;
+    scaleX = transform._11;
+    scaleY = transform._22;
   }
 
   // compute a large or smaller blur radius
@@ -5288,9 +5288,9 @@ nsContextBoxBlur::BlurRectangle(gfxContext* aDestinationCtx,
   // and will sometimes get incorrect results (e.g. rotated blurs)
   gfxMatrix transform = aDestinationCtx->CurrentMatrix();
   // XXX: we could probably handle negative scales but for now it's easier just to fallback
-  if (!transform.HasNonAxisAlignedTransform() && transform.xx > 0.0 && transform.yy > 0.0) {
-    scaleX = transform.xx;
-    scaleY = transform.yy;
+  if (!transform.HasNonAxisAlignedTransform() && transform._11 > 0.0 && transform._22 > 0.0) {
+    scaleX = transform._11;
+    scaleY = transform._22;
     aDestinationCtx->IdentityMatrix();
   } else {
     transform = gfxMatrix();

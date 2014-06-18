@@ -5,7 +5,6 @@
 
 #include "ImageDataSerializer.h"
 #include "gfx2DGlue.h"                  // for SurfaceFormatToImageFormat
-#include "gfxImageSurface.h"            // for gfxImageSurface
 #include "gfxPoint.h"                   // for gfxIntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
@@ -125,17 +124,6 @@ ImageDataSerializerBase::GetFormat() const
 {
   MOZ_ASSERT(IsValid());
   return GetBufferInfo(mData, mDataSize)->format;
-}
-
-TemporaryRef<gfxImageSurface>
-ImageDataSerializerBase::GetAsThebesSurface()
-{
-  MOZ_ASSERT(IsValid());
-  IntSize size = GetSize();
-  return new gfxImageSurface(GetData(),
-                             gfxIntSize(size.width, size.height),
-                             GetStride(),
-                             SurfaceFormatToImageFormat(GetFormat()));
 }
 
 TemporaryRef<DrawTarget>

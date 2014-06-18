@@ -1534,28 +1534,6 @@ MDiv::fallible() const
     return !isTruncated();
 }
 
-bool
-MMod::canBeDivideByZero() const
-{
-    JS_ASSERT(specialization_ == MIRType_Int32);
-    return !rhs()->isConstant() || rhs()->toConstant()->value().toInt32() == 0;
-}
-
-bool
-MMod::canBePowerOfTwoDivisor() const
-{
-    JS_ASSERT(specialization_ == MIRType_Int32);
-
-    if (!rhs()->isConstant())
-        return true;
-
-    int32_t i = rhs()->toConstant()->value().toInt32();
-    if (i <= 0 || !IsPowerOfTwo(i))
-        return false;
-
-    return true;
-}
-
 MDefinition *
 MMod::foldsTo(TempAllocator &alloc, bool useValueNumbers)
 {
@@ -1566,6 +1544,23 @@ MMod::foldsTo(TempAllocator &alloc, bool useValueNumbers)
         return folded;
 
     return this;
+}
+
+void
+MMod::analyzeEdgeCasesForward()
+{
+    // These optimizations make sense only for integer division
+    if (specialization_ != MIRType_Int32)
+        return;
+
+    if (rhs()->isConstant() && !rhs()->toConstant()->value().isInt32(0))
+        canBeDivideByZero_ = false;
+
+    if (rhs()->isConstant()) {
+        int32_t n = rhs()->toConstant()->value().toInt32();
+        if (n > 0 && !IsPowerOfTwo(n))
+            canBePowerOfTwoDivisor_ = false;
+    }
 }
 
 bool

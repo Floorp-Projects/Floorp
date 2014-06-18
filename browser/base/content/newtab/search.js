@@ -15,9 +15,6 @@ let gSearch = {
     }
 
     window.addEventListener("ContentSearchService", this);
-  },
-
-  setUpInitialState: function () {
     this._send("GetState");
   },
 
@@ -59,13 +56,23 @@ let gSearch = {
   },
 
   onState: function (data) {
-    this._makePanel(data.engines);
+    this._newEngines = data.engines;
     this._setCurrentEngine(data.currentEngine);
     this._initWhenInitalStateReceived();
   },
 
+  onCurrentState: function (data) {
+    if (this._initialStateReceived) {
+      this._newEngines = data.engines;
+      this._setCurrentEngine(data.currentEngine);
+    }
+  },
+
   onCurrentEngine: function (engineName) {
-    this._setCurrentEngine(engineName);
+    if (this._initialStateReceived) {
+      this._nodes.panel.hidePopup();
+      this._setCurrentEngine(engineName);
+    }
   },
 
   _nodeIDSuffixes: [
@@ -82,6 +89,8 @@ let gSearch = {
     this._nodes.form.addEventListener("submit", e => this.search(e));
     this._nodes.logo.addEventListener("click", e => this.showPanel());
     this._nodes.manage.addEventListener("click", e => this.manageEngines());
+    this._nodes.panel.addEventListener("popupshowing", e => this._setUpPanel());
+    this._initialStateReceived = true;
     this._initWhenInitalStateReceived = function () {};
   },
 
@@ -94,7 +103,26 @@ let gSearch = {
     }));
   },
 
-  _makePanel: function (engines) {
+  _setUpPanel: function () {
+    // Build the panel if necessary.
+    if (this._newEngines) {
+      this._buildPanel(this._newEngines);
+      delete this._newEngines;
+    }
+
+    // Set the selected states of the engines.
+    let panel = this._nodes.panel;
+    for (let box of panel.childNodes) {
+      if (box.getAttribute("engine") == this.currentEngineName) {
+        box.setAttribute("selected", "true");
+      }
+      else {
+        box.removeAttribute("selected");
+      }
+    }
+  },
+
+  _buildPanel: function (engines) {
     let panel = this._nodes.panel;
 
     // Empty the panel except for the Manage Engines row.
@@ -128,8 +156,9 @@ let gSearch = {
     });
 
     let image = document.createElementNS(XUL_NAMESPACE, "image");
-    if (engine.iconURI) {
-      image.setAttribute("src", engine.iconURI);
+    if (engine.iconBuffer) {
+      let blob = new Blob([engine.iconBuffer]);
+      image.setAttribute("src", URL.createObjectURL(blob));
     }
     box.appendChild(image);
 
@@ -144,26 +173,17 @@ let gSearch = {
     this.currentEngineName = engine.name;
 
     // Set the logo.
-    let logoURI = window.devicePixelRatio == 2 ? engine.logo2xURI :
-                  engine.logoURI || engine.logo2xURI;
-    if (logoURI) {
+    let logoBuf = window.devicePixelRatio == 2 ? engine.logo2xBuffer :
+                  engine.logoBuffer || engine.logo2xBuffer;
+    if (logoBuf) {
       this._nodes.logo.hidden = false;
-      this._nodes.logo.style.backgroundImage = "url(" + logoURI + ")";
+      let uri = URL.createObjectURL(new Blob([logoBuf]));
+      this._nodes.logo.style.backgroundImage = "url(" + uri + ")";
       this._nodes.text.placeholder = "";
     }
     else {
       this._nodes.logo.hidden = true;
       this._nodes.text.placeholder = engine.name;
-    }
-
-    // Set the selected state of all the engines in the panel.
-    for (let box of this._nodes.panel.childNodes) {
-      if (box.getAttribute("engine") == engine.name) {
-        box.setAttribute("selected", "true");
-      }
-      else {
-        box.removeAttribute("selected");
-      }
     }
   },
 };

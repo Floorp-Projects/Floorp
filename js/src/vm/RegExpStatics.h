@@ -343,11 +343,10 @@ RegExpStatics::getParen(size_t pairNum, JSSubString *out) const
     JS_ASSERT(pairNum >= 1 && pairNum < matches.pairCount());
     const MatchPair &pair = matches[pairNum];
     if (pair.isUndefined()) {
-        *out = js_EmptySubString;
+        out->initEmpty(matchesInput);
         return;
     }
-    out->chars  = matchesInput->chars() + pair.start;
-    out->length = pair.length();
+    out->init(matchesInput, pair.start, pair.length());
 }
 
 inline void
@@ -356,13 +355,12 @@ RegExpStatics::getLastMatch(JSSubString *out) const
     JS_ASSERT(!pendingLazyEvaluation);
 
     if (matches.empty()) {
-        *out = js_EmptySubString;
+        out->initEmpty(matchesInput);
         return;
     }
     JS_ASSERT(matchesInput);
-    out->chars = matchesInput->chars() + matches[0].start;
     JS_ASSERT(matches[0].limit >= matches[0].start);
-    out->length = matches[0].length();
+    out->init(matchesInput, matches[0].start, matches[0].length());
 }
 
 inline void
@@ -372,7 +370,7 @@ RegExpStatics::getLastParen(JSSubString *out) const
 
     /* Note: the first pair is the whole match. */
     if (matches.empty() || matches.pairCount() == 1) {
-        *out = js_EmptySubString;
+        out->initEmpty(matchesInput);
         return;
     }
     getParen(matches.parenCount(), out);
@@ -384,11 +382,10 @@ RegExpStatics::getLeftContext(JSSubString *out) const
     JS_ASSERT(!pendingLazyEvaluation);
 
     if (matches.empty()) {
-        *out = js_EmptySubString;
+        out->initEmpty(matchesInput);
         return;
     }
-    out->chars = matchesInput->chars();
-    out->length = matches[0].start;
+    out->init(matchesInput, 0, matches[0].start);
 }
 
 inline void
@@ -397,12 +394,12 @@ RegExpStatics::getRightContext(JSSubString *out) const
     JS_ASSERT(!pendingLazyEvaluation);
 
     if (matches.empty()) {
-        *out = js_EmptySubString;
+        out->initEmpty(matchesInput);
         return;
     }
-    out->chars = matchesInput->chars() + matches[0].limit;
     JS_ASSERT(matches[0].limit <= int(matchesInput->length()));
-    out->length = matchesInput->length() - matches[0].limit;
+    size_t length = matchesInput->length() - matches[0].limit;
+    out->init(matchesInput, matches[0].limit, length);
 }
 
 inline void

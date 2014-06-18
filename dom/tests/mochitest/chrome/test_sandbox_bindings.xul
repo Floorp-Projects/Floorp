@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
   <![CDATA[
 
   /** Test for Bug 741267 **/
+    const Cu = Components.utils;
     function isXrayWrapper(x) {
       return Components.utils.isXrayWrapper(x);
     }
@@ -163,16 +164,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         for (var i = 0; i < data.data.length; ++i) {
           // Watch out for premultiplied bits... just set all the alphas to 255
           if (i % 4 == 3) {
-            data.data[i] = 255;
+            // Note - We need to waive Xrays here because indexed access on Typed
+            // Arrays is forbidden over Xrays for performance reasons.
+            Cu.waiveXrays(data.data)[i] = 255;
           } else {
-            data.data[i] = i;
+            Cu.waiveXrays(data.data)[i] = i;
           }
         }
         ctx.putImageData(data, 0, 0);
         var data2 = ctx.getImageData(0, 0, 1, 1);
         is(data2.data.length, data.data.length, "Lengths must match");
         for (i = 0; i < data.data.length; ++i)
-          is(data.data[i], data2.data[i], "Data at " + i + " should match");
+          is(Cu.waiveXrays(data.data)[i], Cu.waiveXrays(data2.data)[i], "Data at " + i + " should match");
       } catch (e) {
         ok(false, "Imagedata manipulation via an Xray shouldn't throw " + e);
       }

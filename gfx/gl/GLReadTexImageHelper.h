@@ -14,8 +14,6 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Types.h"
 
-class gfxImageSurface;
-
 namespace mozilla {
 
 namespace gfx {
