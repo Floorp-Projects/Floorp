@@ -912,7 +912,7 @@ public:
 protected:
   bool mIsHandlingUserInput;
   bool mIsMouseDown;
-  bool mResetFMMouseDownState;
+  bool mResetFMMouseButtonHandlingState;
 
 private:
   // Hide so that this class can only be stack-allocated

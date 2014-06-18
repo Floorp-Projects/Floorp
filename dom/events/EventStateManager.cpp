@@ -5545,24 +5545,26 @@ AutoHandlingUserInputStatePusher::AutoHandlingUserInputStatePusher(
                                     nsIDocument* aDocument) :
   mIsHandlingUserInput(aIsHandlingUserInput),
   mIsMouseDown(aEvent && aEvent->message == NS_MOUSE_BUTTON_DOWN),
-  mResetFMMouseDownState(false)
+  mResetFMMouseButtonHandlingState(false)
 {
   if (!aIsHandlingUserInput) {
     return;
   }
   EventStateManager::StartHandlingUserInput();
-  if (!mIsMouseDown) {
+  if (mIsMouseDown) {
+    nsIPresShell::SetCapturingContent(nullptr, 0);
+    nsIPresShell::AllowMouseCapture(true);
+  }
+  if (!aDocument || !aEvent || !aEvent->mFlags.mIsTrusted) {
     return;
   }
-  nsIPresShell::SetCapturingContent(nullptr, 0);
-  nsIPresShell::AllowMouseCapture(true);
-  if (!aDocument || !aEvent->mFlags.mIsTrusted) {
-    return;
+  mResetFMMouseButtonHandlingState = (aEvent->message == NS_MOUSE_BUTTON_DOWN ||
+                                      aEvent->message == NS_MOUSE_BUTTON_UP);
+  if (mResetFMMouseButtonHandlingState) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    NS_ENSURE_TRUE_VOID(fm);
+    fm->SetMouseButtonHandlingDocument(aDocument);
   }
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE_VOID(fm);
-  fm->SetMouseButtonDownHandlingDocument(aDocument);
-  mResetFMMouseDownState = true;
 }
 
 AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher()
@@ -5571,16 +5573,14 @@ AutoHandlingUserInputStatePusher::~AutoHandlingUserInputStatePusher()
     return;
   }
   EventStateManager::StopHandlingUserInput();
-  if (!mIsMouseDown) {
-    return;
+  if (mIsMouseDown) {
+    nsIPresShell::AllowMouseCapture(false);
   }
-  nsIPresShell::AllowMouseCapture(false);
-  if (!mResetFMMouseDownState) {
-    return;
+  if (mResetFMMouseButtonHandlingState) {
+    nsFocusManager* fm = nsFocusManager::GetFocusManager();
+    NS_ENSURE_TRUE_VOID(fm);
+    fm->SetMouseButtonHandlingDocument(nullptr);
   }
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  NS_ENSURE_TRUE_VOID(fm);
-  fm->SetMouseButtonDownHandlingDocument(nullptr);
 }
 
 } // namespace mozilla
