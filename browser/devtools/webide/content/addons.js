@@ -13,14 +13,16 @@ window.addEventListener("load", function onLoad() {
   document.querySelector("#aboutaddons").onclick = function() {
     window.parent.UI.openInBrowser("about:addons");
   }
-  document.querySelector("#close").onclick = function() {
-    window.parent.UI.closeLastDeckPanel();
-  }
+  document.querySelector("#close").onclick = CloseUI;
   GetAvailableAddons().then(BuildUI, (e) => {
     console.error(e);
     window.alert(Strings.formatStringFromName("error_cantFetchAddonsJSON", [e], 1));
   });
 }, true);
+
+function CloseUI() {
+  window.parent.UI.openProject();
+}
 
 function BuildUI(addons) {
   BuildItem(addons.adb, true /* is adb */);

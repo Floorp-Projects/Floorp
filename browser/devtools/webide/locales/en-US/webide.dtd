@@ -82,7 +82,18 @@
 <!ENTITY newAppLoadingTemplate "Loading templates…">
 <!ENTITY newAppProjectName "Project Name:">
 
+
+<!-- Decks -->
+
+<!ENTITY deck_close "close">
+
 <!-- Addons -->
 <!ENTITY addons_title "Extra Components:">
-<!ENTITY addons_close "close">
 <!ENTITY addons_aboutaddons "Open Addons Manager">
+
+<!-- Permissions Table -->
+<!ENTITY permissionstable_title "Permissions Table">
+<!ENTITY permissionstable_name_header "Name">
+
+<!-- Runtime Details -->
+<!ENTITY runtimedetails_title "Runtime Info">
