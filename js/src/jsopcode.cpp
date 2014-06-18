@@ -230,8 +230,7 @@ js::DumpIonScriptCounts(Sprinter *sp, jit::IonScriptCounts *ionCounts)
         Sprint(sp, "BB #%lu [%05u]", block.id(), block.offset());
         for (size_t j = 0; j < block.numSuccessors(); j++)
             Sprint(sp, " -> #%lu", block.successor(j));
-        Sprint(sp, " :: %llu hits %u instruction bytes %u spill bytes\n",
-               block.hitCount(), block.instructionBytes(), block.spillBytes());
+        Sprint(sp, " :: %llu hits\n", block.hitCount());
         Sprint(sp, "%s\n", block.code());
     }
 }
@@ -2317,13 +2316,6 @@ GetPCCountJSON(JSContext *cx, const ScriptAndCounts &sac, StringBuffer &buf)
                 if (!str || !(str = StringToSource(cx, str)))
                     return false;
                 buf.append(str);
-
-                AppendJSONProperty(buf, "instructionBytes");
-                NumberValueToStringBuffer(cx, Int32Value(block.instructionBytes()), buf);
-
-                AppendJSONProperty(buf, "spillBytes");
-                NumberValueToStringBuffer(cx, Int32Value(block.spillBytes()), buf);
-
                 buf.append('}');
             }
             buf.append(']');
