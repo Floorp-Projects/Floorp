@@ -341,7 +341,13 @@ Spinner.prototype = {
     promise.then(() => satisfied = true); // This promise cannot reject
     let thread = Services.tm.mainThread;
     while (!satisfied) {
-      thread.processNextEvent(true);
+      try {
+        thread.processNextEvent(true);
+      } catch (ex) {
+        // An uncaught error should not stop us, but it should still
+        // be reported and cause tests to fail.
+        Promise.reject(ex);
+      }
     }
   }
 };
@@ -590,6 +596,10 @@ Barrier.prototype = Object.freeze({
               " Phase: " + topic +
               " State: " + safeGetState(fetchState);
 	    warn(msg, error);
+
+            // The error should remain uncaught, to ensure that it
+            // still causes tests to fail.
+            Promise.reject(error);
 	  });
           condition.then(() => indirection.resolve());
 
