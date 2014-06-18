@@ -95,3 +95,18 @@ function nextTick() {
 
   return deferred.promise;
 }
+
+function documentIsLoaded(doc) {
+  let deferred = promise.defer();
+  if (doc.readyState == "complete") {
+    deferred.resolve();
+  } else {
+    doc.addEventListener("readystatechange", function onChange() {
+      if (doc.readyState == "complete") {
+        doc.removeEventListener("readystatechange", onChange);
+        deferred.resolve();
+      }
+    });
+  }
+  return deferred.promise;
+}

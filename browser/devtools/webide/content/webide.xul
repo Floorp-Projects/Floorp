@@ -162,6 +162,8 @@
       <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
       <iframe id="deck-panel-projecteditor" flex="1"/>
       <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
+      <iframe id="deck-panel-permissionstable" flex="1" src="permissionstable.xhtml"/>
+      <iframe id="deck-panel-runtimedetails" flex="1" src="runtimedetails.xhtml"/>
     </deck>
   </notificationbox>
 
