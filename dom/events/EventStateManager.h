@@ -914,6 +914,8 @@ protected:
   bool mIsMouseDown;
   bool mResetFMMouseButtonHandlingState;
 
+  nsCOMPtr<nsIDocument> mMouseButtonEventHandlingDocument;
+
 private:
   // Hide so that this class can only be stack-allocated
   static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nullptr; }
