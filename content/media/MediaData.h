@@ -37,6 +37,7 @@ public:
     , mOffset(aOffset)
     , mTime(aTimestamp)
     , mDuration(aDuration)
+    , mDiscontinuity(false)
   {}
 
   virtual ~MediaData() {}
@@ -52,6 +53,10 @@ public:
 
   // Duration of sample, in microseconds.
   const int64_t mDuration;
+
+  // True if this is the first sample after a gap or discontinuity in
+  // the stream. This is true for the first sample in a stream after a seek.
+  bool mDiscontinuity;
 
   int64_t GetEndTime() const { return mTime + mDuration; }
 
@@ -207,7 +212,7 @@ public:
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
   static void SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
-                                  VideoInfo& aInfo,                  
+                                  VideoInfo& aInfo,
                                   const YCbCrBuffer &aBuffer,
                                   const IntRect& aPicture,
                                   bool aCopyData);
