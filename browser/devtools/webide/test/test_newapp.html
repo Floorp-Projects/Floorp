@@ -18,8 +18,6 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
-        Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
-
         Task.spawn(function* () {
             let win = yield openWebIDE();
             let tmpDir = FileUtils.getDir("TmpD", []);
@@ -37,7 +35,6 @@
 
             // Clean up
             tmpDir.remove(true);
-            Services.prefs.clearUserPref("devtools.webide.templatesURL");
             yield closeWebIDE(win);
             yield removeAllProjects();
             SimpleTest.finish();

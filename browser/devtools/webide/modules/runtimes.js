@@ -56,7 +56,7 @@ SimulatorRuntime.prototype = {
     return this.version;
   },
   getName: function() {
-    return this.version;
+    return Simulator.getByVersion(this.version).appinfo.label;
   },
 }
 
