@@ -1533,6 +1533,23 @@ RegExpCompiler::Assemble(JSContext *cx,
     return code;
 }
 
+template <typename CharT>
+static void
+SampleChars(FrequencyCollator *collator, const CharT *chars, size_t length)
+{
+    // Sample some characters from the middle of the string.
+    static const int kSampleSize = 128;
+
+    int chars_sampled = 0;
+    int half_way = (int(length) - kSampleSize) / 2;
+    for (size_t i = Max(0, half_way);
+         i < length && chars_sampled < kSampleSize;
+         i++, chars_sampled++)
+    {
+        collator->CountCharacter(chars[i]);
+    }
+}
+
 RegExpCode
 irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
                          HandleLinearString sample, bool is_global, bool ignore_case,
@@ -1547,16 +1564,12 @@ irregexp::CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData 
     RegExpCompiler compiler(&alloc, data->capture_count, ignore_case, is_ascii);
 
     // Sample some characters from the middle of the string.
-    static const int kSampleSize = 128;
-
-    size_t sampleLength = sample->length();
-    int chars_sampled = 0;
-    int half_way = (int(sampleLength) - kSampleSize) / 2;
-    for (size_t i = Max(0, half_way);
-         i < sampleLength && chars_sampled < kSampleSize;
-         i++, chars_sampled++)
-    {
-        compiler.frequency_collator()->CountCharacter(sample->chars()[i]);
+    if (sample->hasLatin1Chars()) {
+        JS::AutoCheckCannotGC nogc;
+        SampleChars(compiler.frequency_collator(), sample->latin1Chars(nogc), sample->length());
+    } else {
+        JS::AutoCheckCannotGC nogc;
+        SampleChars(compiler.frequency_collator(), sample->twoByteChars(nogc), sample->length());
     }
 
     // Wrap the body of the regexp in capture #0.
