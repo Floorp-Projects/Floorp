@@ -268,12 +268,6 @@ struct BasicTiledLayerPaintData {
   LayerIntRect mCriticalDisplayPort;
 
   /*
-   * The viewport of the content from the nearest ancestor layer that
-   * represents scrollable content with a display port set.
-   */
-  LayerRect mViewport;
-
-  /*
    * The render resolution of the document that the content this layer
    * represents is in.
    */

@@ -53,8 +53,7 @@ class MemoryTextureHost;
 enum BufferCapabilities {
   DEFAULT_BUFFER_CAPS = 0,
   /**
-   * The allocated buffer must be efficiently mappable as a
-   * gfxImageSurface.
+   * The allocated buffer must be efficiently mappable as a DataSourceSurface.
    */
   MAP_AS_IMAGE_SURFACE = 1 << 0,
   /**

@@ -9,7 +9,6 @@
 
 #include "mozilla/dom/indexedDB/IndexedDatabase.h"
 
-#include "nsIIndexedDatabaseManager.h"
 #include "nsIObserver.h"
 
 #include "js/TypeDecls.h"
@@ -18,8 +17,6 @@
 #include "mozilla/Mutex.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-
-#define INDEXEDDB_MANAGER_CONTRACTID "@mozilla.org/dom/indexeddb/manager;1"
 
 class nsPIDOMWindow;
 
@@ -38,15 +35,13 @@ BEGIN_INDEXEDDB_NAMESPACE
 class FileManager;
 class FileManagerInfo;
 
-class IndexedDatabaseManager MOZ_FINAL : public nsIIndexedDatabaseManager,
-                                         public nsIObserver
+class IndexedDatabaseManager MOZ_FINAL : public nsIObserver
 {
   typedef mozilla::dom::quota::OriginOrPatternString OriginOrPatternString;
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
 
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIINDEXEDDATABASEMANAGER
   NS_DECL_NSIOBSERVER
 
   // Returns a non-owning reference.
@@ -56,10 +51,6 @@ public:
   // Returns a non-owning reference.
   static IndexedDatabaseManager*
   Get();
-
-  // Returns an owning reference! No one should call this but the factory.
-  static IndexedDatabaseManager*
-  FactoryCreate();
 
   static bool
   IsClosed();

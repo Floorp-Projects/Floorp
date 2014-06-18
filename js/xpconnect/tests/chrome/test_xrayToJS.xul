@@ -20,6 +20,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   /** Test for ES constructors on Xrayed globals. **/
   SimpleTest.waitForExplicitFinish();
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
   const Cu = Components.utils;
   let global = Cu.getGlobalForObject.bind(Cu);
 
@@ -33,13 +35,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     }
   }
 
+  typedArrayClasses = ['Uint8Array', 'Int8Array', 'Uint16Array', 'Int16Array',
+                       'Uint32Array', 'Int32Array', 'Float32Array', 'Float64Array',
+                       'Uint8ClampedArray'];
   simpleConstructors = ['Object', 'Function', 'Array', 'Boolean', 'Date', 'Number',
                         'String', 'RegExp', 'Error', 'InternalError', 'EvalError',
                         'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError',
-                        'URIError', 'ArrayBuffer', 'Int8Array', 'Uint8Array',
-                        'Int16Array', 'Uint16Array', 'Int32Array', 'Uint32Array',
-                        'Float32Array', 'Float64Array', 'Uint8ClampedArray',
-                        'WeakMap', 'Map', 'Set'];
+                        'URIError', 'ArrayBuffer', 'WeakMap', 'Map', 'Set'].concat(typedArrayClasses);
 
   function go() {
     window.iwin = document.getElementById('ifr').contentWindow;
@@ -117,6 +119,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
     testArray();
 
+    testTypedArrays();
+
     // We could also test DataView and Iterator here for completeness, but it's
     // more trouble than it's worth.
 
@@ -129,6 +133,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   // Xray-safe.
   //
   // DO NOT CHANGE WTIHOUT REVIEW FROM AN XPCONNECT PEER.
+  var isReleaseBuild = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).isReleaseBuild;
   var gPrototypeProperties = {};
   gPrototypeProperties['Date'] =
     ["getTime", "getTimezoneOffset", "getYear", "getFullYear", "getUTCFullYear",
@@ -153,6 +158,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
       "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "mapPar",
       "reducePar", "scanPar", "scatterPar", "filterPar", "find", "findIndex", "copyWithin",
       "fill", "@@iterator", "entries", "keys", "constructor"];
+  for (var c of typedArrayClasses) {
+    gPrototypeProperties[c] = ["constructor", "BYTES_PER_ELEMENT", "length", "buffer",
+                               "byteLength", "byteOffset", "@@iterator", "subarray", "set"];
+    if (!isReleaseBuild)
+      gPrototypeProperties[c].push("move");
+  }
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
@@ -168,29 +179,40 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        " prototype has been added! You need a security audit from an XPConnect peer");
 
     let protoProps = filterOut(Object.getOwnPropertyNames(localProto), propsToSkip).sort();
-    let protoMethods = protoProps.filter(name => typeof localProto[name] == 'function' &&
-                                         name != 'constructor');
-    ok(protoMethods.length > 0, "Need something to test");
+    let protoCallables = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get ||
+                                                   typeof localProto[name] == 'function' &&
+                                                   name != 'constructor');
+    let protoGetters = protoProps.filter(name => Object.getOwnPropertyDescriptor(localProto, name).get);
+    ok(protoCallables.length > 0, "Need something to test");
     is(xrayProto, iwin[classname].prototype, "Xray proto is correct");
     is(xrayProto, xray.__proto__, "Proto accessors agree");
     var protoProto = classname == "Object" ? null : iwin.Object.prototype;
     is(Object.getPrototypeOf(xrayProto), protoProto, "proto proto is correct");
-    for (let name of protoMethods) {
+    for (let name of protoCallables) {
       info("Running tests for property: " + name);
+      // Test both methods and getter properties.
+      function lookupCallable(obj) {
+        let desc = null;
+        do {
+          desc = Object.getOwnPropertyDescriptor(obj, name);
+          obj = Object.getPrototypeOf(obj);
+        } while (!desc);
+        return desc.get || desc.value;
+      };
       ok(xrayProto.hasOwnProperty(name), "proto should have the property as own");
       ok(!xray.hasOwnProperty(name), "instance should not have the property as own");
-      let method = xrayProto[name];
+      let method = lookupCallable(xrayProto);
       is(typeof method, 'function', "Methods from Xrays are functions");
       is(global(method), window, "Methods from Xrays are local");
       ok(method instanceof Function, "instanceof works on methods from Xrays");
-      is(xrayProto[name], method, "Holder caching works properly");
-      is(xray[name], method, "Proto props resolve on the instance");
-      let local = localProto[name];
+      is(lookupCallable(xrayProto), method, "Holder caching works properly");
+      is(lookupCallable(xray), method, "Proto props resolve on the instance");
+      let local = lookupCallable(localProto);
       is(method.length, local.length, "Function.length identical");
       if (method.length == 0) {
-        is(xray[name]() + "", local.call(xray) + "",
+        is(method.call(xray) + "", local.call(xray) + "",
            "Xray and local method results stringify identically");
-         is(xray[name]() + "", xray.wrappedJSObject[name]() + "",
+         is(method.call(xray) + "", lookupCallable(xray.wrappedJSObject).call(xray.wrappedJSObject) + "",
             "Xray and waived method results stringify identically");
       }
     }
@@ -358,6 +380,28 @@ function testTrickyObject(trickyObject) {
 
     checkThrows(function() { Object.defineProperty(trickyObject, 'rejectedProp', { get: function() {}}); },
                 /accessor property/, "Should reject accessor property definition");
+  }
+
+  function testTypedArrays() {
+    for (var c of typedArrayClasses) {
+      testXray(c, new iwin[c](4), new iwin[c](), ['BYTES_PER_ELEMENT']);
+
+      var t = new iwin[c](10);
+      checkThrows(function() { t[2]; }, /performant/, "direct property-wise reading of typed arrays forbidden over Xrays");
+      checkThrows(function() { t[2] = 3; }, /performant/, "direct property-wise writing of typed arrays forbidden over Xrays");
+      t.wrappedJSObject[2] = 3;
+      is(t.wrappedJSObject[2], 3, "accessing elements over waivers works");
+      t.wrappedJSObject.expando = 'hi';
+      is(t.wrappedJSObject.expando, 'hi', "access expandos over waivers works");
+      is(Cu.cloneInto(t, window)[2], 3, "cloneInto works");
+      is(Cu.cloneInto(t, window).expando, undefined, "cloneInto does not copy expandos");
+      is(Object.getOwnPropertyNames(t).sort().toSource(), Array.apply(null, Array(10)).map(function (_, i) {return i + "";}).toSource(),
+         "Only indexed properties visible over Xrays");
+      Object.defineProperty(t.wrappedJSObject, 'length', {value: 42});
+      is(t.wrappedJSObject.length, 42, "Set tricky expando")
+      is(t.length, 10, "Length accessor works over Xrays")
+      is(t.byteLength, t.length * window[c].prototype.BYTES_PER_ELEMENT, "byteLength accessor works over Xrays")
+    }
   }
 
   ]]>

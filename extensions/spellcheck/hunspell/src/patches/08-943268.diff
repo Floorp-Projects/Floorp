@@ -1,0 +1,71 @@
+Bug 943268 - Remove nsCharsetAlias and nsCharsetConverterManager.
+
+diff --git a/extensions/spellcheck/hunspell/src/csutil.cxx b/extensions/spellcheck/hunspell/src/csutil.cxx
+--- a/extensions/spellcheck/hunspell/src/csutil.cxx
++++ b/extensions/spellcheck/hunspell/src/csutil.cxx
+@@ -28,23 +28,22 @@ struct unicode_info {
+ #  ifndef MOZILLA_CLIENT
+ #    include "utf_info.cxx"
+ #    define UTF_LST_LEN (sizeof(utf_lst) / (sizeof(unicode_info)))
+ #  endif
+ #endif
+ 
+ #ifdef MOZILLA_CLIENT
+ #include "nsCOMPtr.h"
+-#include "nsServiceManagerUtils.h"
+ #include "nsIUnicodeEncoder.h"
+ #include "nsIUnicodeDecoder.h"
+ #include "nsUnicharUtils.h"
+-#include "nsICharsetConverterManager.h"
++#include "mozilla/dom/EncodingUtils.h"
+ 
+-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
++using mozilla::dom::EncodingUtils;
+ #endif
+ 
+ struct unicode_info2 {
+   char cletter;
+   unsigned short cupper;
+   unsigned short clower;
+ };
+ 
+@@ -5500,32 +5499,27 @@ struct cs_info * get_current_cs(const ch
+     ccs[i].cupper = i;
+   }
+ 
+ 
+   nsCOMPtr<nsIUnicodeEncoder> encoder; 
+   nsCOMPtr<nsIUnicodeDecoder> decoder; 
+ 
+   nsresult rv;
+-  nsCOMPtr<nsICharsetConverterManager> ccm = do_GetService(kCharsetConverterManagerCID, &rv);
+-  if (NS_FAILED(rv))
++
++  nsAutoCString label(es);
++  nsAutoCString encoding;
++  if (!EncodingUtils::FindEncodingForLabelNoReplacement(label, encoding)) {
+     return ccs;
+-
+-  rv = ccm->GetUnicodeEncoder(es, getter_AddRefs(encoder));
+-  if (NS_FAILED(rv))
+-    return ccs;
++  }
++  encoder = EncodingUtils::EncoderForEncoding(encoding);
++  decoder = EncodingUtils::DecoderForEncoding(encoding);
+   encoder->SetOutputErrorBehavior(encoder->kOnError_Signal, nullptr, '?');
+-  rv = ccm->GetUnicodeDecoder(es, getter_AddRefs(decoder));
+-  if (NS_FAILED(rv))
+-    return ccs;
+   decoder->SetInputErrorBehavior(decoder->kOnError_Signal);
+ 
+-  if (NS_FAILED(rv))
+-    return ccs;
+-
+   for (unsigned int i = 0; i <= 0xff; ++i) {
+     bool success = false;
+     // We want to find the upper/lowercase equivalents of each byte
+     // in this 1-byte character encoding.  Call our encoding/decoding
+     // APIs separately for each byte since they may reject some of the
+     // bytes, and we want to handle errors separately for each byte.
+     char lower, upper;
+     do {

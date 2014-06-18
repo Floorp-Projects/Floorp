@@ -135,10 +135,10 @@ static void NudgeToInteger(double *aVal)
 void
 gfxMatrix::NudgeToIntegers(void)
 {
-    NudgeToInteger(&xx);
-    NudgeToInteger(&xy);
-    NudgeToInteger(&yx);
-    NudgeToInteger(&yy);
-    NudgeToInteger(&x0);
-    NudgeToInteger(&y0);
+    NudgeToInteger(&_11);
+    NudgeToInteger(&_21);
+    NudgeToInteger(&_12);
+    NudgeToInteger(&_22);
+    NudgeToInteger(&_31);
+    NudgeToInteger(&_32);
 }

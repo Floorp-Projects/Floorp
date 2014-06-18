@@ -1598,8 +1598,8 @@ nsCSSBorderRenderer::DrawBorders()
       mAvoidStroke = true;
     }
   } else {
-    mat.x0 = floor(mat.x0 + 0.5);
-    mat.y0 = floor(mat.y0 + 0.5);
+    mat._31 = floor(mat._31 + 0.5);
+    mat._32 = floor(mat._32 + 0.5);
     mContext->SetMatrix(mat);
 
     // round mOuterRect and mInnerRect; they're already an integer

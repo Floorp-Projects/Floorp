@@ -23,14 +23,14 @@ nsSVGTransform::GetValueAsString(nsAString& aValue) const
   switch (mType) {
     case SVG_TRANSFORM_TRANSLATE:
       // The spec say that if Y is not provided, it is assumed to be zero.
-      if (mMatrix.y0 != 0)
+      if (mMatrix._32 != 0)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
             MOZ_UTF16("translate(%g, %g)"),
-            mMatrix.x0, mMatrix.y0);
+            mMatrix._31, mMatrix._32);
       else
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
             MOZ_UTF16("translate(%g)"),
-            mMatrix.x0);
+            mMatrix._31);
       break;
     case SVG_TRANSFORM_ROTATE:
       if (mOriginX != 0.0f || mOriginY != 0.0f)
@@ -42,12 +42,12 @@ nsSVGTransform::GetValueAsString(nsAString& aValue) const
             MOZ_UTF16("rotate(%g)"), mAngle);
       break;
     case SVG_TRANSFORM_SCALE:
-      if (mMatrix.xx != mMatrix.yy)
+      if (mMatrix._11 != mMatrix._22)
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
-            MOZ_UTF16("scale(%g, %g)"), mMatrix.xx, mMatrix.yy);
+            MOZ_UTF16("scale(%g, %g)"), mMatrix._11, mMatrix._22);
       else
         nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
-            MOZ_UTF16("scale(%g)"), mMatrix.xx);
+            MOZ_UTF16("scale(%g)"), mMatrix._11);
       break;
     case SVG_TRANSFORM_SKEWX:
       nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
@@ -60,9 +60,9 @@ nsSVGTransform::GetValueAsString(nsAString& aValue) const
     case SVG_TRANSFORM_MATRIX:
       nsTextFormatter::snprintf(buf, sizeof(buf)/sizeof(char16_t),
           MOZ_UTF16("matrix(%g, %g, %g, %g, %g, %g)"),
-                            mMatrix.xx, mMatrix.yx,
-                            mMatrix.xy, mMatrix.yy,
-                            mMatrix.x0, mMatrix.y0);
+                            mMatrix._11, mMatrix._12,
+                            mMatrix._21, mMatrix._22,
+                            mMatrix._31, mMatrix._32);
       break;
     default:
       buf[0] = '\0';
@@ -90,8 +90,8 @@ nsSVGTransform::SetTranslate(float aTx, float aTy)
 {
   mType    = SVG_TRANSFORM_TRANSLATE;
   mMatrix.Reset();
-  mMatrix.x0 = aTx;
-  mMatrix.y0 = aTy;
+  mMatrix._31 = aTx;
+  mMatrix._32 = aTy;
   mAngle   = 0.f;
   mOriginX = 0.f;
   mOriginY = 0.f;
@@ -102,8 +102,8 @@ nsSVGTransform::SetScale(float aSx, float aSy)
 {
   mType    = SVG_TRANSFORM_SCALE;
   mMatrix.Reset();
-  mMatrix.xx = aSx;
-  mMatrix.yy = aSy;
+  mMatrix._11 = aSx;
+  mMatrix._22 = aSy;
   mAngle   = 0.f;
   mOriginX = 0.f;
   mOriginY = 0.f;
@@ -130,7 +130,7 @@ nsSVGTransform::SetSkewX(float aAngle)
 
   mType    = SVG_TRANSFORM_SKEWX;
   mMatrix.Reset();
-  mMatrix.xy = ta;
+  mMatrix._21 = ta;
   mAngle   = aAngle;
   mOriginX = 0.f;
   mOriginY = 0.f;
@@ -145,7 +145,7 @@ nsSVGTransform::SetSkewY(float aAngle)
 
   mType    = SVG_TRANSFORM_SKEWY;
   mMatrix.Reset();
-  mMatrix.yx = ta;
+  mMatrix._12 = ta;
   mAngle   = aAngle;
   mOriginX = 0.f;
   mOriginY = 0.f;
@@ -167,24 +167,24 @@ SVGTransformSMILData::SVGTransformSMILData(const nsSVGTransform& aTransform)
   switch (mTransformType) {
     case SVG_TRANSFORM_MATRIX: {
       const gfxMatrix& mx = aTransform.GetMatrix();
-      mParams[0] = static_cast<float>(mx.xx);
-      mParams[1] = static_cast<float>(mx.yx);
-      mParams[2] = static_cast<float>(mx.xy);
-      mParams[3] = static_cast<float>(mx.yy);
-      mParams[4] = static_cast<float>(mx.x0);
-      mParams[5] = static_cast<float>(mx.y0);
+      mParams[0] = static_cast<float>(mx._11);
+      mParams[1] = static_cast<float>(mx._12);
+      mParams[2] = static_cast<float>(mx._21);
+      mParams[3] = static_cast<float>(mx._22);
+      mParams[4] = static_cast<float>(mx._31);
+      mParams[5] = static_cast<float>(mx._32);
       break;
     }
     case SVG_TRANSFORM_TRANSLATE: {
       const gfxMatrix& mx = aTransform.GetMatrix();
-      mParams[0] = static_cast<float>(mx.x0);
-      mParams[1] = static_cast<float>(mx.y0);
+      mParams[0] = static_cast<float>(mx._31);
+      mParams[1] = static_cast<float>(mx._32);
       break;
     }
     case SVG_TRANSFORM_SCALE: {
       const gfxMatrix& mx = aTransform.GetMatrix();
-      mParams[0] = static_cast<float>(mx.xx);
-      mParams[1] = static_cast<float>(mx.yy);
+      mParams[0] = static_cast<float>(mx._11);
+      mParams[1] = static_cast<float>(mx._22);
       break;
     }
     case SVG_TRANSFORM_ROTATE:

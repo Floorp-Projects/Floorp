@@ -29,7 +29,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerContainer, DOMEventTargetHelper)
 
   IMPL_EVENT_HANDLER(updatefound)
-  IMPL_EVENT_HANDLER(currentchange)
+  IMPL_EVENT_HANDLER(controllerchange)
   IMPL_EVENT_HANDLER(reloadpage)
   IMPL_EVENT_HANDLER(error)
 
@@ -64,13 +64,16 @@ public:
   GetWaiting();
 
   already_AddRefed<ServiceWorker>
-  GetCurrent();
+  GetActive();
+
+  already_AddRefed<ServiceWorker>
+  GetController();
 
   already_AddRefed<Promise>
   GetAll(ErrorResult& aRv);
 
   already_AddRefed<Promise>
-  WhenReady(ErrorResult& aRv);
+  Ready();
 
   // Testing only.
   already_AddRefed<Promise>

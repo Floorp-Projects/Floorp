@@ -54,6 +54,7 @@ nsBaseChannel::nsBaseChannel()
   : mLoadFlags(LOAD_NORMAL)
   , mQueriedProgressSink(true)
   , mSynthProgressEvents(false)
+  , mAllowThreadRetargeting(true)
   , mWasOpened(false)
   , mWaitingOnAsyncRedirect(false)
   , mStatus(NS_OK)
@@ -289,10 +290,12 @@ NS_IMPL_ISUPPORTS_INHERITED(nsBaseChannel,
                             nsHashPropertyBag,
                             nsIRequest,
                             nsIChannel,
+                            nsIThreadRetargetableRequest,
                             nsIInterfaceRequestor,
                             nsITransportEventSink,
                             nsIRequestObserver,
                             nsIStreamListener,
+                            nsIThreadRetargetableStreamListener,
                             nsIAsyncVerifyRedirectCallback,
                             nsIPrivateBrowsingChannel)
 
@@ -693,6 +696,8 @@ CallUnknownTypeSniffer(void *aClosure, const uint8_t *aData, uint32_t aCount)
 NS_IMETHODIMP
 nsBaseChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 {
+  MOZ_ASSERT(request == mPump);
+
   // If our content type is unknown or if the content type is
   // application/octet-stream and the caller requested it, use the content type
   // sniffer. If the sniffer is not available for some reason, then we just keep
@@ -759,7 +764,34 @@ nsBaseChannel::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                            offset, count);
   if (mSynthProgressEvents && NS_SUCCEEDED(rv)) {
     uint64_t prog = offset + count;
-    OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
+    if (NS_IsMainThread()) {
+      OnTransportStatus(nullptr, NS_NET_STATUS_READING, prog, mContentLength);
+    } else {
+      class OnTransportStatusAsyncEvent : public nsRunnable
+      {
+        nsRefPtr<nsBaseChannel> mChannel;
+        uint64_t mProgress;
+        uint64_t mContentLength;
+      public:
+        OnTransportStatusAsyncEvent(nsBaseChannel* aChannel,
+                                    uint64_t aProgress,
+                                    uint64_t aContentLength)
+          : mChannel(aChannel),
+            mProgress(aProgress),
+            mContentLength(aContentLength)
+        { }
+
+        NS_IMETHOD Run() MOZ_OVERRIDE
+        {
+          return mChannel->OnTransportStatus(nullptr, NS_NET_STATUS_READING,
+                                             mProgress, mContentLength);
+        }
+      };
+
+      nsCOMPtr<nsIRunnable> runnable =
+        new OnTransportStatusAsyncEvent(this, prog, mContentLength);
+      NS_DispatchToMainThread(runnable);
+    }
   }
 
   return rv;
@@ -781,4 +813,36 @@ nsBaseChannel::OnRedirectVerifyCallback(nsresult result)
     ContinueHandleAsyncRedirect(result);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::RetargetDeliveryTo(nsIEventTarget* aEventTarget)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  NS_ENSURE_TRUE(mPump, NS_ERROR_NOT_INITIALIZED);
+
+  if (!mAllowThreadRetargeting) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  return mPump->RetargetDeliveryTo(aEventTarget);
+}
+
+NS_IMETHODIMP
+nsBaseChannel::CheckListenerChain()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!mAllowThreadRetargeting) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsCOMPtr<nsIThreadRetargetableStreamListener> listener =
+    do_QueryInterface(mListener);
+  if (!listener) {
+    return NS_ERROR_NO_INTERFACE;
+  }
+
+  return listener->CheckListenerChain();
 }
