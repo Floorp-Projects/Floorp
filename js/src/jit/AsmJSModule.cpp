@@ -12,6 +12,7 @@
 # include <sys/mman.h>
 #endif
 
+#include "mozilla/BinarySearch.h"
 #include "mozilla/Compression.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/TaggedAnonymousMemory.h"
@@ -35,6 +36,7 @@
 using namespace js;
 using namespace jit;
 using namespace frontend;
+using mozilla::BinarySearch;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::Compression::LZ4;
@@ -68,6 +70,54 @@ AsmJSModule::initHeap(Handle<ArrayBufferObject*> heap, JSContext *cx)
                                           (jit::Instruction*)(heapAccesses_[i].offset() + code_));
     }
 #endif
+}
+
+struct CallSiteRetAddrOffset
+{
+    const CallSiteVector &callSites;
+    explicit CallSiteRetAddrOffset(const CallSiteVector &callSites) : callSites(callSites) {}
+    uint32_t operator[](size_t index) const {
+        return callSites[index].returnAddressOffset();
+    }
+};
+
+const CallSite *
+AsmJSModule::lookupCallSite(uint8_t *returnAddress) const
+{
+    uint32_t target = returnAddress - code_;
+    size_t lowerBound = 0;
+    size_t upperBound = callSites_.length();
+
+    size_t match;
+    if (!BinarySearch(CallSiteRetAddrOffset(callSites_), lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &callSites_[match];
+}
+
+struct HeapAccessOffset
+{
+    const AsmJSHeapAccessVector &accesses;
+    explicit HeapAccessOffset(const AsmJSHeapAccessVector &accesses) : accesses(accesses) {}
+    uintptr_t operator[](size_t index) const {
+        return accesses[index].offset();
+    }
+};
+
+const AsmJSHeapAccess *
+AsmJSModule::lookupHeapAccess(uint8_t *pc) const
+{
+    JS_ASSERT(containsPC(pc));
+
+    uint32_t target = pc - code_;
+    size_t lowerBound = 0;
+    size_t upperBound = heapAccesses_.length();
+
+    size_t match;
+    if (!BinarySearch(HeapAccessOffset(heapAccesses_), lowerBound, upperBound, target, &match))
+        return nullptr;
+
+    return &heapAccesses_[match];
 }
 
 static uint8_t *
@@ -105,9 +155,15 @@ DeallocateExecutableMemory(uint8_t *code, size_t totalBytes)
 }
 
 bool
-AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
+AsmJSModule::finish(ExclusiveContext *cx, TokenStream &tokenStream, MacroAssembler &masm,
+                    const Label &interruptLabel)
 {
-    JS_ASSERT(!code_);
+    uint32_t endBeforeCurly = tokenStream.currentToken().pos.end;
+    uint32_t endAfterCurly = tokenStream.peekTokenPos().end;
+    JS_ASSERT(endBeforeCurly >= offsetToEndOfUseAsm_);
+    JS_ASSERT(endAfterCurly >= offsetToEndOfUseAsm_);
+    pod.funcLength_ = endBeforeCurly - funcStart_;
+    pod.funcLengthWithRightBrace_ = endAfterCurly - funcStart_;
 
     // The global data section sits immediately after the executable (and
     // other) data allocated by the MacroAssembler, so ensure it is
@@ -118,12 +174,138 @@ AsmJSModule::allocateAndCopyCode(ExclusiveContext *cx, MacroAssembler &masm)
     // units of pages.
     pod.totalBytes_ = AlignBytes(pod.codeBytes_ + globalDataBytes(), AsmJSPageSize);
 
+    JS_ASSERT(!code_);
     code_ = AllocateExecutableMemory(cx, pod.totalBytes_);
     if (!code_)
         return false;
 
+    // Copy the code from the MacroAssembler into its final resting place in the
+    // AsmJSModule.
     JS_ASSERT(uintptr_t(code_) % AsmJSPageSize == 0);
     masm.executableCopy(code_);
+
+    // c.f. JitCode::copyFrom
+    JS_ASSERT(masm.jumpRelocationTableBytes() == 0);
+    JS_ASSERT(masm.dataRelocationTableBytes() == 0);
+    JS_ASSERT(masm.preBarrierTableBytes() == 0);
+    JS_ASSERT(!masm.hasEnteredExitFrame());
+
+    // Copy over metadata, making sure to update all offsets on ARM.
+
+    staticLinkData_.interruptExitOffset = masm.actualOffset(interruptLabel.offset());
+
+    // Heap-access metadata used for link-time patching and fault-handling.
+    heapAccesses_ = masm.extractAsmJSHeapAccesses();
+
+    // Call-site metadata used for stack unwinding.
+    callSites_ = masm.extractCallSites();
+
+#if defined(JS_CODEGEN_ARM)
+    // ARM requires the offsets to be updated.
+    for (size_t i = 0; i < heapAccesses_.length(); i++) {
+        AsmJSHeapAccess &a = heapAccesses_[i];
+        a.setOffset(masm.actualOffset(a.offset()));
+    }
+    for (size_t i = 0; i < callSites_.length(); i++) {
+        CallSite &c = callSites_[i];
+        c.setReturnAddressOffset(masm.actualOffset(c.returnAddressOffset()));
+    }
+#endif
+
+    // Absolute link metadata: absolute addresses that refer to some fixed
+    // address in the address space.
+    for (size_t i = 0; i < masm.numAsmJSAbsoluteLinks(); i++) {
+        AsmJSAbsoluteLink src = masm.asmJSAbsoluteLink(i);
+        AbsoluteLink link;
+        link.patchAt = CodeOffsetLabel(masm.actualOffset(src.patchAt.offset()));
+        link.target = src.target;
+        if (!staticLinkData_.absoluteLinks.append(link))
+            return false;
+    }
+
+    // Relative link metadata: absolute addresses that refer to another point within
+    // the asm.js module.
+
+    // CodeLabels are used for switch cases and loads from doubles in the
+    // constant pool.
+    for (size_t i = 0; i < masm.numCodeLabels(); i++) {
+        CodeLabel src = masm.codeLabel(i);
+        int32_t labelOffset = src.dest()->offset();
+        int32_t targetOffset = masm.actualOffset(src.src()->offset());
+        // The patched uses of a label embed a linked list where the
+        // to-be-patched immediate is the offset of the next to-be-patched
+        // instruction.
+        while (labelOffset != LabelBase::INVALID_OFFSET) {
+            size_t patchAtOffset = masm.labelOffsetToPatchOffset(labelOffset);
+            RelativeLink link(RelativeLink::CodeLabel);
+            link.patchAtOffset = patchAtOffset;
+            link.targetOffset = targetOffset;
+            if (!staticLinkData_.relativeLinks.append(link))
+                return false;
+
+            labelOffset = Assembler::extractCodeLabelOffset(code_ + patchAtOffset);
+        }
+    }
+
+#if defined(JS_CODEGEN_X86)
+    // Global data accesses in x86 need to be patched with the absolute
+    // address of the global. Globals are allocated sequentially after the
+    // code section so we can just use an RelativeLink.
+    for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
+        RelativeLink link(RelativeLink::InstructionImmediate);
+        link.patchAtOffset = masm.labelOffsetToPatchOffset(a.patchAt.offset());
+        link.targetOffset = offsetOfGlobalData() + a.globalDataOffset;
+        if (!staticLinkData_.relativeLinks.append(link))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_MIPS)
+    // On MIPS we need to update all the long jumps because they contain an
+    // absolute adress.
+    for (size_t i = 0; i < masm.numLongJumps(); i++) {
+        RelativeLink link(RelativeLink::InstructionImmediate);
+        link.patchAtOffset = masm.longJump(i);
+        InstImm *inst = (InstImm *)(code_ + masm.longJump(i));
+        link.targetOffset = Assembler::extractLuiOriValue(inst, inst->next()) - (uint32_t)code_;
+        if (!staticLinkData_.relativeLinks.append(link))
+            return false;
+    }
+#endif
+
+#if defined(JS_CODEGEN_X64)
+    // Global data accesses on x64 use rip-relative addressing and thus do
+    // not need patching after deserialization.
+    for (size_t i = 0; i < masm.numAsmJSGlobalAccesses(); i++) {
+        AsmJSGlobalAccess a = masm.asmJSGlobalAccess(i);
+        masm.patchAsmJSGlobalAccess(a.patchAt, code_, globalData(), a.globalDataOffset);
+    }
+#endif
+
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+    // Fix up the code offsets.  Note the endCodeOffset should not be
+    // filtered through 'actualOffset' as it is generated using 'size()'
+    // rather than a label.
+    for (size_t i = 0; i < profiledFunctions_.length(); i++) {
+        ProfiledFunction &pf = profiledFunctions_[i];
+        pf.pod.startCodeOffset = masm.actualOffset(pf.pod.startCodeOffset);
+    }
+#endif
+#ifdef JS_ION_PERF
+    for (size_t i = 0; i < perfProfiledBlocksFunctions_.length(); i++) {
+        ProfiledBlocksFunction &pbf = perfProfiledBlocksFunctions_[i];
+        pbf.pod.startCodeOffset = masm.actualOffset(pbf.pod.startCodeOffset);
+        pbf.endInlineCodeOffset = masm.actualOffset(pbf.endInlineCodeOffset);
+        BasicBlocksVector &basicBlocks = pbf.blocks;
+        for (uint32_t i = 0; i < basicBlocks.length(); i++) {
+            Record &r = basicBlocks[i];
+            r.startOffset = masm.actualOffset(r.startOffset);
+            r.endOffset = masm.actualOffset(r.endOffset);
+        }
+    }
+#endif
+
     return true;
 }
 
