@@ -35,12 +35,13 @@
 using namespace js;
 using namespace js::irregexp;
 
+template <typename CharT>
 int
-irregexp::CaseInsensitiveCompareStrings(const jschar *substring1, const jschar *substring2,
+irregexp::CaseInsensitiveCompareStrings(const CharT *substring1, const CharT *substring2,
 					size_t byteLength)
 {
-    JS_ASSERT(byteLength % 2 == 0);
-    size_t length = byteLength >> 1;
+    JS_ASSERT(byteLength % sizeof(CharT) == 0);
+    size_t length = byteLength / sizeof(CharT);
 
     for (size_t i = 0; i < length; i++) {
         jschar c1 = substring1[i];
@@ -55,6 +56,14 @@ irregexp::CaseInsensitiveCompareStrings(const jschar *substring1, const jschar *
 
     return 1;
 }
+
+template int
+irregexp::CaseInsensitiveCompareStrings(const Latin1Char *substring1, const Latin1Char *substring2,
+					size_t byteLength);
+
+template int
+irregexp::CaseInsensitiveCompareStrings(const jschar *substring1, const jschar *substring2,
+					size_t byteLength);
 
 InterpretedRegExpMacroAssembler::InterpretedRegExpMacroAssembler(LifoAlloc *alloc, RegExpShared *shared,
                                                                  size_t numSavedRegisters)
