@@ -122,6 +122,7 @@
     macro(minimumFractionDigits, minimumFractionDigits, "minimumFractionDigits") \
     macro(minimumIntegerDigits, minimumIntegerDigits, "minimumIntegerDigits") \
     macro(minimumSignificantDigits, minimumSignificantDigits, "minimumSignificantDigits") \
+    macro(missingArguments, missingArguments, "missingArguments") \
     macro(module, module, "module") \
     macro(multiline, multiline, "multiline") \
     macro(name, name, "name") \
@@ -146,8 +147,8 @@
     macro(of, of, "of") \
     macro(offset, offset, "offset") \
     macro(optimizedOut, optimizedOut, "optimizedOut") \
-    macro(missingArguments, missingArguments, "missingArguments") \
     macro(outOfMemory, outOfMemory, "out of memory") \
+    macro(ownKeys, ownKeys, "ownKeys") \
     macro(parseFloat, parseFloat, "parseFloat") \
     macro(parseInt, parseInt, "parseInt") \
     macro(pattern, pattern, "pattern") \
