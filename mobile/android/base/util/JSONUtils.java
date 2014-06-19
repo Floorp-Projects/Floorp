@@ -4,16 +4,15 @@
 
 package org.mozilla.gecko.util;
 
-import java.util.UUID;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.os.Bundle;
 import android.util.Log;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 public final class JSONUtils {
@@ -51,4 +50,20 @@ public final class JSONUtils {
 
         return json;
     }
+
+    // Handles conversions between a JSONArray and a Set<String>
+    public static Set<String> parseStringSet(JSONArray json) {
+        final Set<String> ret = new HashSet<String>();
+
+        for (int i = 0; i < json.length(); i++) {
+            try {
+                ret.add(json.getString(i));
+            } catch(JSONException ex) {
+                Log.i(LOGTAG, "Error parsing json", ex);
+            }
+        }
+
+        return ret;
+    }
+
 }

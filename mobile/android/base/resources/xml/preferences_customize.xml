@@ -41,8 +41,9 @@
     <org.mozilla.gecko.preferences.AndroidImportPreference
                   android:key="android.not_a_preference.import_android"
                   gecko:entries="@array/pref_import_android_entries"
+                  gecko:entryValues="@array/pref_import_android_values"
+                  gecko:initialValues="@array/pref_import_android_defaults"
                   gecko:entryKeys="@array/pref_import_android_keys"
-                  gecko:initialValues="@array/pref_import_android_values"
                   android:title="@string/pref_import_android"
                   android:positiveButtonText="@string/bookmarkhistory_button_import"
                   android:negativeButtonText="@string/button_cancel"
