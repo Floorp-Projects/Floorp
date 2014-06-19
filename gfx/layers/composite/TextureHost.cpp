@@ -947,19 +947,10 @@ StreamTextureHost::Lock()
                                            surf->Size());
         break;
       }
-#ifdef MOZ_WIDGET_GONK
       case gfx::SharedSurfaceType::Gralloc: {
-        gl::SharedSurface_Gralloc* surf = gl::SharedSurface_Gralloc::Cast(abstractSurf);
-        GrallocTextureClientOGL* client = surf->GetTextureClient();
-        android::GraphicBuffer* graphicBuffer = client->GetGraphicBuffer().get();
-
-        MOZ_ASSERT(mCompositor->GetBackendType() == LayersBackend::LAYERS_OPENGL);
-        CompositorOGL* compositorOGL = static_cast<CompositorOGL*>(mCompositor);
-
-        newTexSource = new GrallocTextureSourceOGL(compositorOGL, nullptr, graphicBuffer, format);
+        MOZ_ASSERT(false, "WebGL in the Host process? Gralloc without E10S? Not yet supported.");
         break;
       }
-#endif
 #ifdef XP_MACOSX
       case gfx::SharedSurfaceType::IOSurface: {
         gl::SharedSurface_IOSurface* surf = gl::SharedSurface_IOSurface::Cast(abstractSurf);
