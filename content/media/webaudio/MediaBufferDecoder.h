@@ -78,6 +78,7 @@ public:
   void AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
                         uint32_t aLength, WebAudioDecodeJob& aDecodeJob);
 
+  ~MediaBufferDecoder() { Shutdown(); }
   void Shutdown();
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
