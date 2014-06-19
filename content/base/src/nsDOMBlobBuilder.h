@@ -123,6 +123,11 @@ public:
     : mData(nullptr), mDataLen(0), mDataBufferLen(0)
   {}
 
+  ~BlobSet()
+  {
+    moz_free(mData);
+  }
+
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
   nsresult AppendString(JSString* aString, bool nativeEOL, JSContext* aCx);
   nsresult AppendBlob(nsIDOMBlob* aBlob);
