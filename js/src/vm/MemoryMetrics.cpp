@@ -196,7 +196,14 @@ struct StatsClosure
     RuntimeStats *rtStats;
     ObjectPrivateVisitor *opv;
     SourceSet seenSources;
-    StatsClosure(RuntimeStats *rt, ObjectPrivateVisitor *v) : rtStats(rt), opv(v) {}
+    bool anonymize;
+
+    StatsClosure(RuntimeStats *rt, ObjectPrivateVisitor *v, bool anon)
+      : rtStats(rt),
+        opv(v),
+        anonymize(anon)
+    {}
+
     bool init() {
         return seenSources.init();
     }
@@ -287,9 +294,13 @@ GetCompartmentStats(JSCompartment *comp)
     return static_cast<CompartmentStats *>(comp->compartmentStats);
 }
 
+// FineGrained is used for normal memory reporting.  CoarseGrained is used by
+// AddSizeOfTab(), which aggregates all the measurements into a handful of
+// high-level numbers, which means that fine-grained reporting would be a waste
+// of effort.
 enum Granularity {
-    FineGrained,    // Corresponds to CollectRuntimeStats()
-    CoarseGrained   // Corresponds to AddSizeOfTab()
+    FineGrained,
+    CoarseGrained
 };
 
 // The various kinds of hashing are expensive, and the results are unused when
@@ -336,7 +347,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
 
         zStats->stringInfo.add(info);
 
-        if (granularity == FineGrained) {
+        // The primary use case for anonymization is automated crash submission
+        // (to help detect OOM crashes). In that case, we don't want to pay the
+        // memory cost required to do notable string detection.
+        if (granularity == FineGrained && !closure->anonymize) {
             ZoneStats::StringsHashMap::AddPtr p = zStats->allStrings->lookupForAdd(str);
             if (!p) {
                 // Ignore failure -- we just won't record the string as notable.
@@ -532,7 +546,8 @@ FindNotableScriptSources(JS::RuntimeSizes &runtime)
 }
 
 JS_PUBLIC_API(bool)
-JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv)
+JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv,
+                        bool anonymize)
 {
     if (!rtStats->compartmentStatsVector.reserve(rt->numCompartments))
         return false;
@@ -550,11 +565,14 @@ JS::CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisit
                   DecommittedArenasChunkCallback);
 
     // Take the per-compartment measurements.
-    StatsClosure closure(rtStats, opv);
+    StatsClosure closure(rtStats, opv, anonymize);
     if (!closure.init())
         return false;
-    IterateZonesCompartmentsArenasCells(rt, &closure, StatsZoneCallback, StatsCompartmentCallback,
-                                        StatsArenaCallback, StatsCellCallback<FineGrained>);
+    IterateZonesCompartmentsArenasCells(rt, &closure,
+                                        StatsZoneCallback,
+                                        StatsCompartmentCallback,
+                                        StatsArenaCallback,
+                                        StatsCellCallback<FineGrained>);
 
     // Take the "explicit/js/runtime/" measurements.
     rt->addSizeOfIncludingThis(rtStats->mallocSizeOf_, &rtStats->runtime);
@@ -674,8 +692,9 @@ AddSizeOfTab(JSRuntime *rt, HandleObject obj, MallocSizeOf mallocSizeOf, ObjectP
     if (!rtStats.zoneStatsVector.reserve(1))
         return false;
 
-    // Take the per-compartment measurements.
-    StatsClosure closure(&rtStats, opv);
+    // Take the per-compartment measurements. No need to anonymize because
+    // these measurements will be aggregated.
+    StatsClosure closure(&rtStats, opv, /* anonymize = */ false);
     if (!closure.init())
         return false;
     IterateZoneCompartmentsArenasCells(rt, zone, &closure, StatsZoneCallback,

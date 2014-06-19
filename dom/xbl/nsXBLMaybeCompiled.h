@@ -78,7 +78,7 @@ private:
     JSObject* mCompiled;
   };
 
-  friend class js::GCMethods<nsXBLMaybeCompiled<UncompiledT> >;
+  friend struct js::GCMethods<nsXBLMaybeCompiled<UncompiledT>>;
 };
 
 /* Add support for JS::Heap<nsXBLMaybeCompiled>. */

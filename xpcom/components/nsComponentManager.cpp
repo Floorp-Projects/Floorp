@@ -1689,7 +1689,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(ComponentManagerMallocSizeOf)
 
 NS_IMETHODIMP
 nsComponentManagerImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                       nsISupports* aData)
+                                       nsISupports* aData, bool aAnonymize)
 {
     return MOZ_COLLECT_REPORT(
         "explicit/xpcom/component-manager", KIND_HEAP, UNITS_BYTES,

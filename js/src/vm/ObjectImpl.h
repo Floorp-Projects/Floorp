@@ -261,7 +261,7 @@ class ObjectElements
 extern HeapSlot *const emptyObjectElements;
 
 struct Class;
-struct GCMarker;
+class GCMarker;
 struct ObjectOps;
 class Shape;
 
@@ -491,7 +491,7 @@ class ObjectImpl : public gc::BarrieredCell<ObjectImpl>
     }
 
   protected:
-    friend struct GCMarker;
+    friend class GCMarker;
     friend class Shape;
     friend class NewObjectCache;
 

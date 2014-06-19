@@ -33,6 +33,7 @@ using namespace mozilla::gl;
 CopyableCanvasLayer::CopyableCanvasLayer(LayerManager* aLayerManager, void *aImplData) :
   CanvasLayer(aLayerManager, aImplData)
   , mStream(nullptr)
+  , mIsAlphaPremultiplied(true)
 {
   MOZ_COUNT_CTOR(CopyableCanvasLayer);
 }
@@ -50,7 +51,7 @@ CopyableCanvasLayer::Initialize(const Data& aData)
   if (aData.mGLContext) {
     mGLContext = aData.mGLContext;
     mStream = aData.mStream;
-    mIsGLAlphaPremult = aData.mIsGLAlphaPremult;
+    mIsAlphaPremultiplied = aData.mIsGLAlphaPremult;
     mNeedsYFlip = true;
     MOZ_ASSERT(mGLContext->IsOffscreen(), "canvas gl context isn't offscreen");
 
@@ -113,7 +114,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
     SurfaceFormat format = (GetContentFlags() & CONTENT_OPAQUE)
                             ? SurfaceFormat::B8G8R8X8
                             : SurfaceFormat::B8G8R8A8;
-    bool needsPremult = sharedSurf->HasAlpha() && !mIsGLAlphaPremult;
+    bool needsPremult = sharedSurf->HasAlpha() && !mIsAlphaPremultiplied;
 
     // Try to read back directly into aDestTarget's output buffer
     if (aDestTarget) {
@@ -127,7 +128,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
             Factory::CreateWrappingDataSourceSurface(destData, destStride, destSize, destFormat);
           mGLContext->Screen()->Readback(sharedSurf, data);
           if (needsPremult) {
-              gfxUtils::PremultiplyDataSurface(data);
+              gfxUtils::PremultiplyDataSurface(data, data);
           }
           aDestTarget->ReleaseBits(destData);
           return;
@@ -145,7 +146,7 @@ CopyableCanvasLayer::UpdateTarget(DrawTarget* aDestTarget)
       // Readback handles Flush/MarkDirty.
       mGLContext->Screen()->Readback(sharedSurf, data);
       if (needsPremult) {
-        gfxUtils::PremultiplyDataSurface(data);
+        gfxUtils::PremultiplyDataSurface(data, data);
       }
       resultSurf = data;
     }

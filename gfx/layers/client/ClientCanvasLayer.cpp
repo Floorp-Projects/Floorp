@@ -19,13 +19,19 @@
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsRect.h"                     // for nsIntRect
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
+#include "gfxPrefs.h"                   // for WebGLForceLayersReadback
+
+#ifdef XP_WIN
+#include "SharedSurfaceANGLE.h"         // for SurfaceFactory_ANGLEShareHandle
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 #include "SharedSurfaceGralloc.h"
 #endif
+
 #ifdef XP_MACOSX
 #include "SharedSurfaceIO.h"
 #endif
-#include "gfxPrefs.h"                   // for WebGLForceLayersReadback
 
 using namespace mozilla::gfx;
 using namespace mozilla::gl;
@@ -69,31 +75,45 @@ ClientCanvasLayer::Initialize(const Data& aData)
                                           screen->PreserveBuffer());
     SurfaceFactory_GL* factory = nullptr;
     if (!gfxPrefs::WebGLForceLayersReadback()) {
-      if (ClientManager()->AsShadowForwarder()->GetCompositorBackendType() == mozilla::layers::LayersBackend::LAYERS_OPENGL) {
-        if (mGLContext->GetContextType() == GLContextType::EGL) {
-          bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
+      switch (ClientManager()->AsShadowForwarder()->GetCompositorBackendType()) {
+        case mozilla::layers::LayersBackend::LAYERS_OPENGL: {
+          if (mGLContext->GetContextType() == GLContextType::EGL) {
+            bool isCrossProcess = !(XRE_GetProcessType() == GeckoProcessType_Default);
 
-          if (!isCrossProcess) {
-            // [Basic/OGL Layers, OMTC] WebGL layer init.
-            factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
-          } else {
-            // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
+            if (!isCrossProcess) {
+              // [Basic/OGL Layers, OMTC] WebGL layer init.
+              factory = SurfaceFactory_EGLImage::Create(mGLContext, caps);
+            } else {
+              // [Basic/OGL Layers, OOPC] WebGL layer init. (Out Of Process Compositing)
 #ifdef MOZ_WIDGET_GONK
-            factory = new SurfaceFactory_Gralloc(mGLContext, caps, ClientManager()->AsShadowForwarder());
+              factory = new SurfaceFactory_Gralloc(mGLContext, caps, ClientManager()->AsShadowForwarder());
 #else
-            // we could do readback here maybe
-            NS_NOTREACHED("isCrossProcess but not on native B2G!");
+              // we could do readback here maybe
+              NS_NOTREACHED("isCrossProcess but not on native B2G!");
+#endif
+            }
+          } else {
+            // [Basic Layers, OMTC] WebGL layer init.
+            // Well, this *should* work...
+#ifdef XP_MACOSX
+            factory = new SurfaceFactory_IOSurface(mGLContext, caps);
+#else
+            factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
 #endif
           }
-        } else {
-          // [Basic Layers, OMTC] WebGL layer init.
-          // Well, this *should* work...
-#ifdef XP_MACOSX
-          factory = new SurfaceFactory_IOSurface(mGLContext, caps);
-#else
-          factory = new SurfaceFactory_GLTexture(mGLContext, nullptr, caps);
-#endif
+          break;
         }
+        case mozilla::layers::LayersBackend::LAYERS_D3D10:
+        case mozilla::layers::LayersBackend::LAYERS_D3D11: {
+#ifdef XP_WIN
+          if (mGLContext->IsANGLE()) {
+            factory = SurfaceFactory_ANGLEShareHandle::Create(mGLContext, caps);
+          }
+#endif
+          break;
+        }
+        default:
+          break;
       }
     }
 
@@ -136,7 +156,7 @@ ClientCanvasLayer::RenderLayer()
   if (GetMaskLayer()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();
   }
-  
+
   if (!mCanvasClient) {
     TextureFlags flags = TextureFlags::IMMEDIATE_UPLOAD;
     if (mNeedsYFlip) {
@@ -151,8 +171,14 @@ ClientCanvasLayer::RenderLayer()
       // and doesn't require layers to do any deallocation.
       flags |= TextureFlags::DEALLOCATE_CLIENT;
     }
+
+    if (!mIsAlphaPremultiplied) {
+      flags |= TextureFlags::NON_PREMULTIPLIED;
+    }
+
     mCanvasClient = CanvasClient::CreateCanvasClient(GetCanvasClientType(),
-                                                     ClientManager()->AsShadowForwarder(), flags);
+                                                     ClientManager()->AsShadowForwarder(),
+                                                     flags);
     if (!mCanvasClient) {
       return;
     }
@@ -161,7 +187,7 @@ ClientCanvasLayer::RenderLayer()
       ClientManager()->AsShadowForwarder()->Attach(mCanvasClient, this);
     }
   }
-  
+
   FirePreTransactionCallback();
   mCanvasClient->Update(gfx::IntSize(mBounds.width, mBounds.height), this);
 

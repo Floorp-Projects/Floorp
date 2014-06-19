@@ -17,10 +17,10 @@
 namespace mozilla {
 
 /**
- * The NumericLimits class provides a compatibility layer with std::numeric_limits
- * for char16_t, otherwise it is exactly the same as std::numeric_limits.
- * Code which does not need std::numeric_limits<char16_t> should avoid using
- * NumericLimits.
+ * The NumericLimits class provides a compatibility layer with
+ * std::numeric_limits for char16_t, otherwise it is exactly the same as
+ * std::numeric_limits.  Code which does not need std::numeric_limits<char16_t>
+ * should avoid using NumericLimits.
  */
 template<typename T>
 class NumericLimits : public std::numeric_limits<T>

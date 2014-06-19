@@ -138,6 +138,9 @@ CreateTextureHostD3D11(const SurfaceDescriptor& aDesc,
                                         aDesc.get_SurfaceDescriptorD3D10());
       break;
     }
+    case SurfaceDescriptor::TSurfaceStreamDescriptor: {
+      MOZ_CRASH("Should never hit this.");
+    }
     default: {
       NS_WARNING("Unsupported SurfaceDescriptor type");
     }

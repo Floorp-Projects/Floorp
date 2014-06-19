@@ -114,6 +114,9 @@ WebVTTListener::OnStopRequest(nsIRequest* aRequest,
   if (mElement->ReadyState() != TextTrackReadyState::FailedToLoad) {
     mElement->SetReadyState(TextTrackReadyState::Loaded);
   }
+
+  mElement->DropChannel();
+
   return aStatus;
 }
 

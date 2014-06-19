@@ -92,19 +92,19 @@ struct IsNullPointer { static const bool value = false; };
  * (Currently b2g is the only impediment to this.)
  */
 #ifdef MOZ_HAVE_CXX11_NULLPTR
-  // decltype does the right thing for actual nullptr.
-  namespace mozilla {
-  typedef decltype(nullptr) NullptrT;
-  template<>
-  struct IsNullPointer<decltype(nullptr)> { static const bool value = true; };
-  }
+// decltype does the right thing for actual nullptr.
+namespace mozilla {
+typedef decltype(nullptr) NullptrT;
+template<>
+struct IsNullPointer<decltype(nullptr)> { static const bool value = true; };
+}
 #  undef MOZ_HAVE_CXX11_NULLPTR
 #elif MOZ_IS_GCC
 #  define nullptr __null
-  // void* sweeps up more than just nullptr, but compilers supporting true
-  // nullptr are the majority now, so they should detect mistakes.  If you're
-  // feeling paranoid, check/assert that your NullptrT equals nullptr.
-  namespace mozilla { typedef void* NullptrT; }
+// void* sweeps up more than just nullptr, but compilers supporting true
+// nullptr are the majority now, so they should detect mistakes.  If you're
+// feeling paranoid, check/assert that your NullptrT equals nullptr.
+namespace mozilla { typedef void* NullptrT; }
 #else
 #  error "No compiler support for nullptr or its emulation."
 #endif

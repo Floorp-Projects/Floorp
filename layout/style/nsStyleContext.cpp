@@ -41,7 +41,6 @@ nsStyleContext::nsStyleContext(nsStyleContext* aParent,
     mEmptyChild(nullptr),
     mPseudoTag(aPseudoTag),
     mRuleNode(aRuleNode),
-    mAllocations(nullptr),
     mCachedResetData(nullptr),
     mBits(((uint64_t)aPseudoType) << NS_STYLE_CONTEXT_TYPE_SHIFT),
     mRefCnt(0)
@@ -100,8 +99,6 @@ nsStyleContext::~nsStyleContext()
   if (mCachedResetData) {
     mCachedResetData->Destroy(mBits, presContext);
   }
-
-  FreeAllocations(presContext);
 }
 
 void nsStyleContext::AddChild(nsStyleContext* aChild)
@@ -839,34 +836,6 @@ nsStyleContext::CombineVisitedColors(nscolor *aColors, bool aLinkIsVisited)
   nscolor alphaColor = aColors[set.alphaIndex];
   return NS_RGBA(NS_GET_R(colorColor), NS_GET_G(colorColor),
                  NS_GET_B(colorColor), NS_GET_A(alphaColor));
-}
-
-void*
-nsStyleContext::Alloc(size_t aSize)
-{
-  nsIPresShell *shell = PresContext()->PresShell();
-
-  aSize += offsetof(AllocationHeader, mStorageStart);
-  AllocationHeader *alloc =
-    static_cast<AllocationHeader*>(shell->AllocateMisc(aSize));
-
-  alloc->mSize = aSize; // NOTE: inflated by header
-
-  alloc->mNext = mAllocations;
-  mAllocations = alloc;
-
-  return static_cast<void*>(&alloc->mStorageStart);
-}
-
-void
-nsStyleContext::FreeAllocations(nsPresContext *aPresContext)
-{
-  nsIPresShell *shell = aPresContext->PresShell();
-
-  for (AllocationHeader *alloc = mAllocations, *next; alloc; alloc = next) {
-    next = alloc->mNext;
-    shell->FreeMisc(alloc->mSize, alloc);
-  }
 }
 
 #ifdef DEBUG

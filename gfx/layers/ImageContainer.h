@@ -198,7 +198,7 @@ protected:
  * its active image.
  */
 class BufferRecycleBin MOZ_FINAL {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RecycleBin)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BufferRecycleBin)
 
   //typedef mozilla::gl::GLContext GLContext;
 

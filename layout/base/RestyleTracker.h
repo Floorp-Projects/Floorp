@@ -230,7 +230,7 @@ class RestyleTracker {
 public:
   typedef mozilla::dom::Element Element;
 
-  RestyleTracker(uint32_t aRestyleBits) :
+  RestyleTracker(Element::FlagsType aRestyleBits) :
     mRestyleBits(aRestyleBits),
     mHaveLaterSiblingRestyles(false)
   {
@@ -280,7 +280,7 @@ public:
   }
 
   // Return our ELEMENT_IS_POTENTIAL_(ANIMATION_)RESTYLE_ROOT bit
-  uint32_t RootBit() const {
+  Element::FlagsType RootBit() const {
     return mRestyleBits & ~ELEMENT_PENDING_RESTYLE_FLAGS;
   }
   
@@ -331,7 +331,7 @@ private:
   // Our restyle bits.  These will be a subset of ELEMENT_ALL_RESTYLE_FLAGS, and
   // will include one flag from ELEMENT_PENDING_RESTYLE_FLAGS and one flag
   // that's not in ELEMENT_PENDING_RESTYLE_FLAGS.
-  uint32_t mRestyleBits;
+  Element::FlagsType mRestyleBits;
   RestyleManager* mRestyleManager; // Owns us
   // A hashtable that maps elements to RestyleData structs.  The
   // values only make sense if the element's current document is our

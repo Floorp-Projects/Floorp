@@ -33,7 +33,7 @@ struct ObjectsExtraSizes;
 namespace js {
 
 class AutoPropDescVector;
-struct GCMarker;
+class GCMarker;
 struct NativeIterator;
 class Nursery;
 struct StackShape;
@@ -207,8 +207,8 @@ class JSObject : public js::ObjectImpl
 {
   private:
     friend class js::Shape;
-    friend struct js::GCMarker;
-    friend class  js::NewObjectCache;
+    friend class js::GCMarker;
+    friend class js::NewObjectCache;
     friend class js::Nursery;
     friend class js::gc::ForkJoinNursery;
 

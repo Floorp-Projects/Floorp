@@ -37,8 +37,8 @@ namespace mozilla {
 class DataChannel;
 class PeerIdentity;
 namespace dom {
-class RTCInboundRTPStreamStats;
-class RTCOutboundRTPStreamStats;
+struct RTCInboundRTPStreamStats;
+struct RTCOutboundRTPStreamStats;
 }
 }
 

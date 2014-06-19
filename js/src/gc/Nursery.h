@@ -33,7 +33,7 @@ class HeapSlot;
 void SetGCZeal(JSRuntime *, uint8_t, uint32_t);
 
 namespace gc {
-class Cell;
+struct Cell;
 class Collector;
 class MinorCollectionTracer;
 class ForkJoinNursery;

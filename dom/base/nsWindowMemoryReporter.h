@@ -173,7 +173,8 @@ private:
     static int64_t DistinguishedAmount();
 
     NS_IMETHOD
-    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+    CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                   bool aAnonymize)
     {
       return MOZ_COLLECT_REPORT(
         "ghost-windows", KIND_OTHER, UNITS_COUNT, DistinguishedAmount(),

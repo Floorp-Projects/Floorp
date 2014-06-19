@@ -3,6 +3,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+ifneq (,$(filter automation/%,$(MAKECMDGOALS)))
+ifeq (4.0,$(firstword $(sort 4.0 $(MAKE_VERSION))))
+MAKEFLAGS += --output-sync=target
+else
+.NOTPARALLEL:
+endif
+endif
+
 include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 
 # Log file from the 'make upload' step. We need this to parse out the URLs of

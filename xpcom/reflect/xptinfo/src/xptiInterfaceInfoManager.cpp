@@ -45,7 +45,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(XPTIMallocSizeOf)
 
 NS_IMETHODIMP
 XPTInterfaceInfoManager::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                        nsISupports* aData)
+                                        nsISupports* aData, bool aAnonymize)
 {
     size_t amount = SizeOfIncludingThis(XPTIMallocSizeOf);
 

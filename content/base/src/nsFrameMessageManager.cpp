@@ -1330,7 +1330,7 @@ ReportReferentCount(const char* aManagerType,
 
 NS_IMETHODIMP
 MessageManagerReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                       nsISupports* aClosure)
+                                       nsISupports* aClosure, bool aAnonymize)
 {
   nsresult rv;
 

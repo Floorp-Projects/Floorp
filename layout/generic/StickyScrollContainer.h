@@ -16,7 +16,7 @@
 #include "nsTArray.h"
 #include "nsIScrollPositionListener.h"
 
-class nsRect;
+struct nsRect;
 class nsIFrame;
 class nsIScrollableFrame;
 

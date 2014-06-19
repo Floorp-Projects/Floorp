@@ -293,7 +293,8 @@ MOZ_DEFINE_MALLOC_SIZE_OF(PreferenceServiceMallocSizeOf)
 
 NS_IMETHODIMP
 PreferenceServiceReporter::CollectReports(nsIMemoryReporterCallback* aCb,
-                                          nsISupports* aClosure)
+                                          nsISupports* aClosure,
+                                          bool aAnonymize)
 {
 #define REPORT(_path, _kind, _units, _amount, _desc)                          \
     do {                                                                      \

@@ -26,6 +26,8 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/TextureClientOGL.h"
 #include "mozilla/layers/PTextureChild.h"
+#include "SurfaceStream.h"
+#include "GLContext.h"
 
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
@@ -78,6 +80,7 @@ using namespace mozilla::gfx;
  */
 class TextureChild MOZ_FINAL : public PTextureChild
 {
+  ~TextureChild() {}
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
 
@@ -397,7 +400,7 @@ TextureClient::Finalize()
   RefPtr<TextureChild> actor = mActor;
 
   if (actor) {
-    // The actor has a raw pointer to us, actor->mTextureClient. 
+    // The actor has a raw pointer to us, actor->mTextureClient.
     // Null it before RemoveTexture calls to avoid invalid actor->mTextureClient
     // when calling TextureChild::ActorDestroy()
     actor->mTextureClient = nullptr;
@@ -676,6 +679,64 @@ BufferTextureClient::AllocateForYCbCr(gfx::IntSize aYSize,
   mSize = aYSize;
   return true;
 }
+
+////////////////////////////////////////////////////////////////////////
+// StreamTextureClient
+StreamTextureClient::StreamTextureClient(TextureFlags aFlags)
+  : TextureClient(aFlags)
+  , mIsLocked(false)
+{
+}
+
+StreamTextureClient::~StreamTextureClient()
+{
+  // the data is owned externally.
+}
+
+bool
+StreamTextureClient::Lock(OpenMode mode)
+{
+  MOZ_ASSERT(!mIsLocked);
+  if (!IsValid() || !IsAllocated()) {
+    return false;
+  }
+  mIsLocked = true;
+  return true;
+}
+
+void
+StreamTextureClient::Unlock()
+{
+  MOZ_ASSERT(mIsLocked);
+  mIsLocked = false;
+}
+
+bool
+StreamTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
+{
+  if (!IsAllocated()) {
+    return false;
+  }
+
+  gfx::SurfaceStreamHandle handle = mStream->GetShareHandle();
+  aOutDescriptor = SurfaceStreamDescriptor(handle, false);
+  return true;
+}
+
+void
+StreamTextureClient::InitWith(gfx::SurfaceStream* aStream)
+{
+  MOZ_ASSERT(!IsAllocated());
+  mStream = aStream;
+  mGL = mStream->GLContext();
+}
+
+bool
+StreamTextureClient::IsAllocated() const
+{
+  return mStream != 0;
+}
+
 
 }
 }
