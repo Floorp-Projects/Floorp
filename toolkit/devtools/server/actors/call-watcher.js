@@ -68,11 +68,8 @@ let FunctionCallActor = protocol.ActorClass({
    *        The called function's arguments.
    * @param any result
    *        The value returned by the function call.
-   * @param boolean holdWeak
-   *        Determines whether or not FunctionCallActor stores a weak reference
-   *        to the underlying objects.
    */
-  initialize: function(conn, [window, global, caller, type, name, stack, args, result], holdWeak) {
+  initialize: function(conn, [window, global, caller, type, name, stack, args, result]) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
     this.details = {
@@ -84,7 +81,7 @@ let FunctionCallActor = protocol.ActorClass({
     // Store a weak reference to all objects so we don't
     // prevent natural GC if `holdWeak` was passed into
     // setup as truthy. Used in the Web Audio Editor.
-    if (holdWeak) {
+    if (this._holdWeak) {
       let weakRefs = {
         window: Cu.getWeakReference(window),
         caller: Cu.getWeakReference(caller),
@@ -529,7 +526,7 @@ let CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
    * Invoked whenever an instrumented function is called.
    */
   _onContentFunctionCall: function(...details) {
-    let functionCall = new FunctionCallActor(this.conn, details, this._holdWeak);
+    let functionCall = new FunctionCallActor(this.conn, details);
     this._functionCalls.push(functionCall);
     this.onCall(functionCall);
   }
