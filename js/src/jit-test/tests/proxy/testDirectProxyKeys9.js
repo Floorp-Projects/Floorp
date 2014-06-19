@@ -1,4 +1,4 @@
-// Return the names returned by the trap
+// Cull non-existent names returned by the trap.
 var names = Object.keys(new Proxy(Object.create(Object.create(null, {
     a: {
         enumerable: true,
@@ -22,5 +22,4 @@ var names = Object.keys(new Proxy(Object.create(Object.create(null, {
         return [ 'e' ];
     }
 }));
-assertEq(names.length, 1);
-assertEq(names[0], 'e');
+assertEq(names.length, 0);
