@@ -131,7 +131,7 @@ class MachCommands(MachCommandBase):
                                        binary=self.get_binary_path(),
                                        cmdargs=firefox_args,
                                        env=env,
-                                       kp_kwargs=kp_kwargs)
+                                       process_args=kp_kwargs)
                 runner.start(debug_args=valgrind_args)
                 exitcode = runner.wait()
 
