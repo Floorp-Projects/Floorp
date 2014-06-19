@@ -38,7 +38,7 @@ class CompositorParent;
 class GestureEventListener;
 class ContainerLayer;
 class PCompositorParent;
-class ViewTransform;
+struct ViewTransform;
 class AsyncPanZoomAnimation;
 class FlingAnimation;
 

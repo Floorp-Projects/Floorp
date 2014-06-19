@@ -30,7 +30,7 @@
 namespace mozilla {
 namespace dom {
 
-class CreateFileOptions;
+struct CreateFileOptions;
 class FileSystemBase;
 class Promise;
 class StringOrFileOrDirectory;

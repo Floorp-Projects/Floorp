@@ -11,7 +11,7 @@
 
 #include "jit/Snapshots.h"
 
-class JSContext;
+struct JSContext;
 
 namespace js {
 namespace jit {

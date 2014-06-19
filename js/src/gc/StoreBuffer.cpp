@@ -376,11 +376,11 @@ JS::HeapValueRelocate(JS::Value *valuep)
     runtime->gc.storeBuffer.removeRelocatableValueFromAnyThread(valuep);
 }
 
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
-template class StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>;
-template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::ValueEdge>;
-template class StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::CellPtrEdge>;
+template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>;
+template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::CellPtrEdge>;
+template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>;
+template struct StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>;
+template struct StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::ValueEdge>;
+template struct StoreBuffer::RelocatableMonoTypeBuffer<StoreBuffer::CellPtrEdge>;
 
 #endif /* JSGC_GENERATIONAL */

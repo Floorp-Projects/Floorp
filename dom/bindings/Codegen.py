@@ -11256,7 +11256,7 @@ class CGForwardDeclarations(CGWrapper):
             builder.add(d.nativeType)
 
         # We just about always need NativePropertyHooks
-        builder.addInMozillaDom("NativePropertyHooks")
+        builder.addInMozillaDom("NativePropertyHooks", isStruct=True)
         builder.addInMozillaDom("ProtoAndIfaceCache")
         # Add the atoms cache type, even if we don't need it.
         for d in descriptors:

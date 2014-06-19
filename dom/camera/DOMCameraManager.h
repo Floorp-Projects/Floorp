@@ -24,7 +24,7 @@ namespace mozilla {
   class ErrorResult;
   class nsDOMCameraControl;
   namespace dom {
-    class CameraConfiguration;
+    struct CameraConfiguration;
     class GetCameraCallback;
     class CameraErrorCallback;
   }

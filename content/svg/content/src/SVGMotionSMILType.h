@@ -17,7 +17,7 @@ class nsSMILValue;
 namespace mozilla {
 
 namespace gfx {
-struct Matrix;
+class Matrix;
 }
 
 /**

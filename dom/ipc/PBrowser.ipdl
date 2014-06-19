@@ -22,7 +22,7 @@ include PContentPermission;
 
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
-using struct mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
+using class mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
 using struct gfxSize from "gfxPoint.h";
 using CSSRect from "Units.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";

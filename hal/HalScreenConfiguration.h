@@ -11,7 +11,7 @@
 
 namespace mozilla {
 namespace hal {
-struct ScreenConfiguration;
+class ScreenConfiguration;
 typedef Observer<ScreenConfiguration> ScreenConfigurationObserver;
 } // namespace hal
 } // namespace mozilla

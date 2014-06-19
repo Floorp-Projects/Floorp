@@ -19,7 +19,7 @@
 
 class nsRenderingContext;
 class nsCalculatedBoxInfo;
-struct nsHTMLReflowMetrics;
+class nsHTMLReflowMetrics;
 struct nsHTMLReflowState;
 class nsString;
 class nsHTMLReflowCommand;
