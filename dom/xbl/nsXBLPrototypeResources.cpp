@@ -17,6 +17,7 @@
 #include "nsCSSRuleProcessor.h"
 #include "nsStyleSet.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/DebugOnly.h"
 
 using mozilla::dom::IsChromeURI;
 
