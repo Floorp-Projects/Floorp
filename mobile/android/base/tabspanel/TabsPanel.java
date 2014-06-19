@@ -13,6 +13,8 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -151,11 +153,13 @@ public class TabsPanel extends LinearLayout
         mTabWidget.setTabSelectionListener(this);
     }
 
-    public void addTab() {
+    private void addTab() {
         if (mCurrentPanel == Panel.NORMAL_TABS) {
-           mActivity.addTab();
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_tab");
+            mActivity.addTab();
         } else {
-           mActivity.addPrivateTab();
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_private_tab");
+            mActivity.addPrivateTab();
         }
 
         mActivity.autoHideTabs();
