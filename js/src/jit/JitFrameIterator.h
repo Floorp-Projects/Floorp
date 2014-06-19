@@ -191,6 +191,10 @@ class JitFrameIterator
         return returnAddressToFp_;
     }
 
+    // Returns the resume address. As above, except taking
+    // BaselineDebugModeOSRInfo into account, if present.
+    uint8_t *resumeAddressToFp() const;
+
     // Previous frame information extracted from the current frame.
     inline size_t prevFrameLocalSize() const;
     inline FrameType prevType() const;
