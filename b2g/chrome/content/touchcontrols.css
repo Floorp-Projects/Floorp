@@ -13,6 +13,12 @@
   -moz-box-orient: horizontal;
 }
 
+.controlsOverlay[scaled] {
+  /* scaled attribute in videocontrols.css causes conflict
+     due to different -moz-box-orient values */
+  -moz-box-align: end;
+}
+
 .controlBar {
   -moz-box-flex: 1;
   font-size: 16pt;
