@@ -2455,6 +2455,18 @@ class RopeBuilder {
 
 namespace {
 
+template <typename CharT>
+static uint32_t
+FindDollarIndex(const CharT *chars, size_t length)
+{
+    if (const CharT *p = js_strchr_limit(chars, '$', chars + length)) {
+        uint32_t dollarIndex = p - chars;
+        MOZ_ASSERT(dollarIndex < length);
+        return dollarIndex;
+    }
+    return UINT32_MAX;
+}
+
 struct ReplaceData
 {
     explicit ReplaceData(JSContext *cx)
@@ -2468,13 +2480,10 @@ struct ReplaceData
         elembase = nullptr;
         repstr = string;
 
-        const jschar *chars = repstr->chars();
-        if (const jschar *p = js_strchr_limit(chars, '$', chars + repstr->length())) {
-            dollarIndex = p - chars;
-            MOZ_ASSERT(dollarIndex < repstr->length());
-        } else {
-            dollarIndex = UINT32_MAX;
-        }
+        AutoCheckCannotGC nogc;
+        dollarIndex = string->hasLatin1Chars()
+                      ? FindDollarIndex(string->latin1Chars(nogc), string->length())
+                      : FindDollarIndex(string->twoByteChars(nogc), string->length());
     }
 
     inline void setReplacementFunction(JSObject *func) {
@@ -4623,16 +4632,23 @@ js_strdup(js::ThreadSafeContext *cx, const jschar *s)
     return ret;
 }
 
-jschar *
-js_strchr_limit(const jschar *s, jschar c, const jschar *limit)
+template <typename CharT>
+const CharT *
+js_strchr_limit(const CharT *s, jschar c, const CharT *limit)
 {
     while (s < limit) {
         if (*s == c)
-            return (jschar *)s;
+            return s;
         s++;
     }
     return nullptr;
 }
+
+template const Latin1Char *
+js_strchr_limit(const Latin1Char *s, jschar c, const Latin1Char *limit);
+
+template const jschar *
+js_strchr_limit(const jschar *s, jschar c, const jschar *limit);
 
 jschar *
 js::InflateString(ThreadSafeContext *cx, const char *bytes, size_t *lengthp)
