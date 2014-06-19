@@ -36,7 +36,7 @@ Result CheckIssuerIndependentProperties(
           BackCert& cert,
           PRTime time,
           EndEntityOrCA endEntityOrCA,
-          KeyUsages requiredKeyUsagesIfPresent,
+          KeyUsage requiredKeyUsageIfPresent,
           KeyPurposeId requiredEKUIfPresent,
           const CertPolicyId& requiredPolicy,
           unsigned int subCACount,

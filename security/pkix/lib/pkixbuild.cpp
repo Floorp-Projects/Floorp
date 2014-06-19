@@ -134,7 +134,7 @@ static Result BuildForward(TrustDomain& trustDomain,
                            BackCert& subject,
                            PRTime time,
                            EndEntityOrCA endEntityOrCA,
-                           KeyUsages requiredKeyUsagesIfPresent,
+                           KeyUsage requiredKeyUsageIfPresent,
                            KeyPurposeId requiredEKUIfPresent,
                            const CertPolicyId& requiredPolicy,
                            /*optional*/ const SECItem* stapledOCSPResponse,
@@ -150,7 +150,7 @@ BuildForwardInner(TrustDomain& trustDomain,
                   const CertPolicyId& requiredPolicy,
                   const SECItem& potentialIssuerDER,
                   unsigned int subCACount,
-                  ScopedCERTCertList& results)
+                  /*out*/ ScopedCERTCertList& results)
 {
   BackCert potentialIssuer(&subject, BackCert::IncludeCN::No);
   Result rv = potentialIssuer.Init(potentialIssuerDER);
@@ -180,9 +180,12 @@ BuildForwardInner(TrustDomain& trustDomain,
     return rv;
   }
 
+  // RFC 5280, Section 4.2.1.3: "If the keyUsage extension is present, then the
+  // subject public key MUST NOT be used to verify signatures on certificates
+  // or CRLs unless the corresponding keyCertSign or cRLSign bit is set."
   rv = BuildForward(trustDomain, potentialIssuer, time, EndEntityOrCA::MustBeCA,
-                    KU_KEY_CERT_SIGN, requiredEKUIfPresent, requiredPolicy,
-                    nullptr, subCACount, results);
+                    KeyUsage::keyCertSign, requiredEKUIfPresent,
+                    requiredPolicy, nullptr, subCACount, results);
   if (rv != Success) {
     return rv;
   }
@@ -202,7 +205,7 @@ BuildForward(TrustDomain& trustDomain,
              BackCert& subject,
              PRTime time,
              EndEntityOrCA endEntityOrCA,
-             KeyUsages requiredKeyUsagesIfPresent,
+             KeyUsage requiredKeyUsageIfPresent,
              KeyPurposeId requiredEKUIfPresent,
              const CertPolicyId& requiredPolicy,
              /*optional*/ const SECItem* stapledOCSPResponse,
@@ -217,7 +220,7 @@ BuildForward(TrustDomain& trustDomain,
   // See the explanation of error prioritization in pkix.h.
   rv = CheckIssuerIndependentProperties(trustDomain, subject, time,
                                         endEntityOrCA,
-                                        requiredKeyUsagesIfPresent,
+                                        requiredKeyUsageIfPresent,
                                         requiredEKUIfPresent, requiredPolicy,
                                         subCACount, &trustLevel);
   PRErrorCode deferredEndEntityError = 0;
@@ -340,8 +343,8 @@ BuildCertChain(TrustDomain& trustDomain,
                const CERTCertificate* nssCert,
                PRTime time,
                EndEntityOrCA endEntityOrCA,
-               /*optional*/ KeyUsages requiredKeyUsagesIfPresent,
-               /*optional*/ KeyPurposeId requiredEKUIfPresent,
+               KeyUsage requiredKeyUsageIfPresent,
+               KeyPurposeId requiredEKUIfPresent,
                const CertPolicyId& requiredPolicy,
                /*optional*/ const SECItem* stapledOCSPResponse,
                /*out*/ ScopedCERTCertList& results)
@@ -367,7 +370,7 @@ BuildCertChain(TrustDomain& trustDomain,
   }
 
   rv = BuildForward(trustDomain, cert, time, endEntityOrCA,
-                    requiredKeyUsagesIfPresent, requiredEKUIfPresent,
+                    requiredKeyUsageIfPresent, requiredEKUIfPresent,
                     requiredPolicy, stapledOCSPResponse, 0, results);
   if (rv != Success) {
     results = nullptr;
