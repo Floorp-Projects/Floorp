@@ -118,6 +118,7 @@ public:
     NS_IF_ADDREF(mRawPtr = ptr);
   }
 
+private:
   // We can be released on any thread.
   ~nsMainThreadPtrHolder() {
     if (NS_IsMainThread()) {
@@ -133,6 +134,7 @@ public:
     }
   }
 
+public:
   T* get() {
     // Nobody should be touching the raw pointer off-main-thread.
     if (mStrict && MOZ_UNLIKELY(!NS_IsMainThread())) {
