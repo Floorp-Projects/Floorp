@@ -2020,25 +2020,40 @@ class MOZ_STACK_CLASS StringRegExpGuard
      */
     static const size_t MAX_FLAT_PAT_LEN = 256;
 
-    static JSAtom *
-    flattenPattern(JSContext *cx, JSAtom *patstr)
+    template <typename CharT>
+    static bool
+    flattenPattern(StringBuffer &sb, const CharT *chars, size_t len)
     {
-        StringBuffer sb(cx);
-        if (!sb.reserve(patstr->length()))
-            return nullptr;
-
-        static const jschar ESCAPE_CHAR = '\\';
-        const jschar *chars = patstr->chars();
-        size_t len = patstr->length();
-        for (const jschar *it = chars; it != chars + len; ++it) {
+        static const char ESCAPE_CHAR = '\\';
+        for (const CharT *it = chars; it < chars + len; ++it) {
             if (IsRegExpMetaChar(*it)) {
                 if (!sb.append(ESCAPE_CHAR) || !sb.append(*it))
-                    return nullptr;
+                    return false;
             } else {
                 if (!sb.append(*it))
-                    return nullptr;
+                    return false;
             }
         }
+        return true;
+    }
+
+    static JSAtom *
+    flattenPattern(JSContext *cx, JSAtom *pat)
+    {
+        StringBuffer sb(cx);
+        if (!sb.reserve(pat->length()))
+            return nullptr;
+
+        if (pat->hasLatin1Chars()) {
+            AutoCheckCannotGC nogc;
+            if (!flattenPattern(sb, pat->latin1Chars(nogc), pat->length()))
+                return nullptr;
+        } else {
+            AutoCheckCannotGC nogc;
+            if (!flattenPattern(sb, pat->twoByteChars(nogc), pat->length()))
+                return nullptr;
+        }
+
         return sb.finishAtom();
     }
 
