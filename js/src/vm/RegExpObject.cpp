@@ -578,16 +578,13 @@ RegExpShared::execute(JSContext *cx, HandleLinearString input, size_t *lastIndex
     irregexp::RegExpStackScope stackScope(cx->runtime());
 
     if (canStringMatch) {
-        const jschar *chars = input->chars() + charsOffset;
-        int res = StringFindPattern(chars + start, length - start, source->chars(),
-                                    source->length());
+        int res = StringFindPattern(input, source, start + charsOffset);
         if (res == -1)
             return RegExpRunStatus_Success_NotFound;
 
-        matches[0].start = res + start;
-        matches[0].limit = res + start + source->length();
+        matches[0].start = res;
+        matches[0].limit = res + source->length();
 
-        matches.displace(displacement);
         matches.checkAgainst(origLength);
         *lastIndex = matches[0].limit;
         return RegExpRunStatus_Success;

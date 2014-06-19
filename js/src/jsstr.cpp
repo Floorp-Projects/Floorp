@@ -1337,10 +1337,9 @@ js::StringHasPattern(JSLinearString *text, const jschar *pat, uint32_t patLen)
 }
 
 int
-js::StringFindPattern(const jschar *text, uint32_t textLen,
-                      const jschar *pat, uint32_t patLen)
+js::StringFindPattern(JSLinearString *text, JSLinearString *pat, size_t start)
 {
-    return StringMatch(text, textLen, pat, patLen);
+    return StringMatch(text, pat, start);
 }
 
 // When an algorithm does not need a string represented as a single linear
