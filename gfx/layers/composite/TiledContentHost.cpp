@@ -478,40 +478,36 @@ TiledContentHost::RenderLayerBuffer(TiledLayerBufferComposite& aLayerBuffer,
 }
 
 void
-TiledContentHost::PrintInfo(nsACString& aTo, const char* aPrefix)
+TiledContentHost::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  aTo += aPrefix;
-  aTo += nsPrintfCString("TiledContentHost (0x%p)", this);
+  aStream << aPrefix;
+  aStream << nsPrintfCString("TiledContentHost (0x%p)", this).get();
 
 }
 
 #ifdef MOZ_DUMP_PAINTING
 void
-TiledContentHost::Dump(FILE* aFile,
+TiledContentHost::Dump(std::stringstream& aStream,
                        const char* aPrefix,
                        bool aDumpHtml)
 {
-  if (!aFile) {
-    aFile = stderr;
-  }
-
   TiledLayerBufferComposite::Iterator it = mTiledBuffer.TilesBegin();
   TiledLayerBufferComposite::Iterator stop = mTiledBuffer.TilesEnd();
   if (aDumpHtml) {
-    fprintf_stderr(aFile, "<ul>");
+    aStream << "<ul>";
   }
   for (;it != stop; ++it) {
-    fprintf_stderr(aFile, "%s", aPrefix);
-    fprintf_stderr(aFile, aDumpHtml ? "<li> <a href=" : "Tile ");
+    aStream << aPrefix;
+    aStream << (aDumpHtml ? "<li> <a href=" : "Tile ");
     if (it->IsPlaceholderTile()) {
-      fprintf_stderr(aFile, "empty tile");
+      aStream << "empty tile";
     } else {
-      DumpTextureHost(aFile, it->mTextureHost);
+      DumpTextureHost(aStream, it->mTextureHost);
     }
-    fprintf_stderr(aFile, aDumpHtml ? " >Tile</a></li>" : " ");
+    aStream << (aDumpHtml ? " >Tile</a></li>" : " ");
   }
-    if (aDumpHtml) {
-    fprintf_stderr(aFile, "</ul>");
+  if (aDumpHtml) {
+    aStream << "</ul>";
   }
 }
 #endif

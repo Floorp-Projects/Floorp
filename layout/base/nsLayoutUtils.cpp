@@ -2620,7 +2620,10 @@ nsLayoutUtils::GetFramesForArea(nsIFrame* aFrame, const nsRect& aRect,
 #ifdef MOZ_DUMP_PAINTING
   if (gDumpEventList) {
     fprintf_stderr(stderr, "Event handling --- (%d,%d):\n", aRect.x, aRect.y);
-    nsFrame::PrintDisplayList(&builder, list);
+
+    std::stringstream ss;
+    nsFrame::PrintDisplayList(&builder, list, ss);
+    fprintf_stderr(stderr, "%s", ss.str().c_str());
   }
 #endif
 
@@ -2924,6 +2927,8 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
 #ifdef MOZ_DUMP_PAINTING
   FILE* savedDumpFile = gfxUtils::sDumpPaintFile;
+
+  std::stringstream ss;
   if (gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
       nsCString string("dump-");
@@ -2934,13 +2939,13 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
       gfxUtils::sDumpPaintFile = stderr;
     }
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf_stderr(gfxUtils::sDumpPaintFile, "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>");
+      ss << "<html><head><script>var array = {}; function ViewImage(index) { window.location = array[index]; }</script></head><body>";
     }
-    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- before optimization (dirty %d,%d,%d,%d):\n",
-            dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
-    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
+    ss << nsPrintfCString("Painting --- before optimization (dirty %d,%d,%d,%d):\n",
+            dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height).get();
+    nsFrame::PrintDisplayList(&builder, list, ss, gfxUtils::sDumpPaintingToFile);
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf_stderr(gfxUtils::sDumpPaintFile, "<script>");
+      ss << "<script>";
     }
   }
 #endif
@@ -2985,22 +2990,27 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 #ifdef MOZ_DUMP_PAINTING
   if (gfxUtils::DumpPaintList() || gfxUtils::sDumpPainting) {
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf_stderr(gfxUtils::sDumpPaintFile, "</script>");
+      ss << "</script>";
     }
-    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- after optimization:\n");
-    nsFrame::PrintDisplayList(&builder, list, gfxUtils::sDumpPaintFile, gfxUtils::sDumpPaintingToFile);
+    ss << "Painting --- after optimization:\n";
+    nsFrame::PrintDisplayList(&builder, list, ss, gfxUtils::sDumpPaintingToFile);
 
-    fprintf_stderr(gfxUtils::sDumpPaintFile, "Painting --- retained layer tree:\n");
+    ss << "Painting --- retained layer tree:\n";
     nsIWidget* widget = aFrame->GetNearestWidget();
     if (widget) {
       nsRefPtr<LayerManager> layerManager = widget->GetLayerManager();
       if (layerManager) {
-        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, gfxUtils::sDumpPaintFile,
+        FrameLayerBuilder::DumpRetainedLayerTree(layerManager, ss,
                                                  gfxUtils::sDumpPaintingToFile);
       }
     }
     if (gfxUtils::sDumpPaintingToFile) {
-      fprintf(gfxUtils::sDumpPaintFile, "</body></html>");
+      ss << "</body></html>";
+    }
+
+    fprintf(gfxUtils::sDumpPaintFile, "%s", ss.str().c_str());
+
+    if (gfxUtils::sDumpPaintingToFile) {
       fclose(gfxUtils::sDumpPaintFile);
     }
     gfxUtils::sDumpPaintFile = savedDumpFile;
