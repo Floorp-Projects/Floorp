@@ -1697,10 +1697,17 @@ public:
    */
   bool IsActive() const { return mDocumentContainer && !mRemovedFromDocShell; }
 
-  void RegisterFreezableElement(nsIContent* aContent);
-  bool UnregisterFreezableElement(nsIContent* aContent);
-  typedef void (* FreezableElementEnumerator)(nsIContent*, void*);
-  void EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
+  /**
+   * Register/Unregister the ActivityObserver into mActivityObservers to listen
+   * the document's activity changes such as OnPageHide, visibility, activity.
+   * The ActivityObserver objects can be nsIObjectLoadingContent or
+   * nsIDocumentActivity or HTMLMEdiaElement.
+   */
+  void RegisterActivityObserver(nsISupports* aSupports);
+  bool UnregisterActivityObserver(nsISupports* aSupports);
+  // Enumerate all the observers in mActivityObservers by the aEnumerator.
+  typedef void (* ActivityObserverEnumerator)(nsISupports*, void*);
+  void EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
                                   void* aData);
 
   // Indicates whether mAnimationController has been (lazily) initialized.
@@ -2385,11 +2392,12 @@ protected:
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;
   nsRefPtr<nsHTMLCSSStyleSheet> mStyleAttrStyleSheet;
 
-  // The set of all object, embed, applet, video and audio elements for
-  // which this is the owner document. (They might not be in the document.)
+  // The set of all object, embed, applet, video/audio elements or
+  // nsIObjectLoadingContent or nsIDocumentActivity for which this is the
+  // owner document. (They might not be in the document.)
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
-  nsAutoPtr<nsTHashtable<nsPtrHashKey<nsIContent> > > mFreezableElements;
+  nsAutoPtr<nsTHashtable<nsPtrHashKey<nsISupports> > > mActivityObservers;
 
   // The set of all links that need their status resolved.  Links must add themselves
   // to this set by calling RegisterPendingLinkUpdate when added to a document and must

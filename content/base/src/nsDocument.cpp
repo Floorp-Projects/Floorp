@@ -219,6 +219,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIDocumentActivity.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIMutableArray.h"
 #include "nsContentPermissionHelper.h"
@@ -4357,17 +4358,23 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
 }
 
 static void
-NotifyActivityChanged(nsIContent *aContent, void *aUnused)
+NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
 {
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
   if (domMediaElem) {
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(aContent);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
+    MOZ_ASSERT(content, "aSupports is not a content");
+    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
-  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aContent));
+  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aSupports));
   if (objectLoadingContent) {
     nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
     olc->NotifyOwnerDocumentActivityChanged();
+  }
+  nsCOMPtr<nsIDocumentActivity> objectDocumentActivity(do_QueryInterface(aSupports));
+  if (objectDocumentActivity) {
+    objectDocumentActivity->NotifyOwnerDocumentActivityChanged();
   }
 }
 
@@ -4380,7 +4387,7 @@ nsIDocument::SetContainer(nsDocShell* aContainer)
     mDocumentContainer = WeakPtr<nsDocShell>();
   }
 
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   if (!aContainer) {
     return;
   }
@@ -8511,7 +8518,7 @@ nsDocument::RemovedFromDocShell()
     return;
 
   mRemovedFromDocShell = true;
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
   uint32_t i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -8763,7 +8770,7 @@ nsDocument::OnPageShow(bool aPersisted,
 {
   mVisible = true;
 
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
   Element* root = GetRootElement();
@@ -8892,7 +8899,7 @@ nsDocument::OnPageHide(bool aPersisted,
   UpdateVisibilityState();
 
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
   if (IsFullScreenDoc()) {
     // If this document was fullscreen, we should exit fullscreen in this
@@ -9589,48 +9596,48 @@ nsDocument::SetChangeScrollPosWhenScrollingToRef(bool aValue)
 }
 
 void
-nsIDocument::RegisterFreezableElement(nsIContent* aContent)
+nsIDocument::RegisterActivityObserver(nsISupports* aSupports)
 {
-  if (!mFreezableElements) {
-    mFreezableElements = new nsTHashtable<nsPtrHashKey<nsIContent> >();
-    if (!mFreezableElements)
+  if (!mActivityObservers) {
+    mActivityObservers = new nsTHashtable<nsPtrHashKey<nsISupports> >();
+    if (!mActivityObservers)
       return;
   }
-  mFreezableElements->PutEntry(aContent);
+  mActivityObservers->PutEntry(aSupports);
 }
 
 bool
-nsIDocument::UnregisterFreezableElement(nsIContent* aContent)
+nsIDocument::UnregisterActivityObserver(nsISupports* aSupports)
 {
-  if (!mFreezableElements)
+  if (!mActivityObservers)
     return false;
-  if (!mFreezableElements->GetEntry(aContent))
+  if (!mActivityObservers->GetEntry(aSupports))
     return false;
-  mFreezableElements->RemoveEntry(aContent);
+  mActivityObservers->RemoveEntry(aSupports);
   return true;
 }
 
-struct EnumerateFreezablesData {
-  nsIDocument::FreezableElementEnumerator mEnumerator;
+struct EnumerateActivityObserversData {
+  nsIDocument::ActivityObserverEnumerator mEnumerator;
   void* mData;
 };
 
 static PLDHashOperator
-EnumerateFreezables(nsPtrHashKey<nsIContent>* aEntry, void* aData)
+EnumerateObservers(nsPtrHashKey<nsISupports>* aEntry, void* aData)
 {
-  EnumerateFreezablesData* data = static_cast<EnumerateFreezablesData*>(aData);
+  EnumerateActivityObserversData* data = static_cast<EnumerateActivityObserversData*>(aData);
   data->mEnumerator(aEntry->GetKey(), data->mData);
   return PL_DHASH_NEXT;
 }
 
 void
-nsIDocument::EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
+nsIDocument::EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
                                         void* aData)
 {
-  if (!mFreezableElements)
+  if (!mActivityObservers)
     return;
-  EnumerateFreezablesData data = { aEnumerator, aData };
-  mFreezableElements->EnumerateEntries(EnumerateFreezables, &data);
+  EnumerateActivityObserversData data = { aEnumerator, aData };
+  mActivityObservers->EnumerateEntries(EnumerateObservers, &data);
 }
 
 void
@@ -11826,7 +11833,7 @@ nsDocument::UpdateVisibilityState()
                                          /* bubbles = */ true,
                                          /* cancelable = */ false);
 
-    EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+    EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   }
 }
 
