@@ -68,7 +68,8 @@ extern bool gBluetoothDebugFlag;
  * and append it to the array.
  */
 #define BT_APPEND_NAMED_VALUE(array, name, value)                    \
-  array.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING(name), value))
+  array.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING(name),   \
+                                          BluetoothValue(value)))
 
 /**
  * Ensure success of system message broadcast with void return.
