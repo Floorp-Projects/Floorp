@@ -592,11 +592,7 @@ SpecifiedCalcToComputedCalc(const nsCSSValue& aValue, nsStyleCoord& aCoord,
                                aCanStoreInRuleTree);
   nsRuleNode::ComputedCalc vals = ComputeCalc(aValue, ops);
 
-  nsStyleCoord::Calc *calcObj =
-    new (aStyleContext->Alloc(sizeof(nsStyleCoord::Calc))) nsStyleCoord::Calc;
-  // Because we use aStyleContext->Alloc(), we have to store the result
-  // on the style context and not in the rule tree.
-  aCanStoreInRuleTree = false;
+  nsStyleCoord::Calc* calcObj = new nsStyleCoord::Calc;
 
   calcObj->mLength = vals.mLength;
   calcObj->mPercent = vals.mPercent;
@@ -622,7 +618,7 @@ nsRuleNode::SpecifiedCalcToComputedCalc(const nsCSSValue& aValue,
 nsRuleNode::ComputeComputedCalc(const nsStyleCoord& aValue,
                                 nscoord aPercentageBasis)
 {
-  nsStyleCoord::Calc *calc = aValue.GetCalcValue();
+  nsStyleCoord::Calc* calc = aValue.GetCalcValue();
   return calc->mLength +
          NSToCoordFloorClamped(aPercentageBasis * calc->mPercent);
 }
