@@ -325,7 +325,7 @@ public:
   static void AssertStyleStructMaxDifferenceValid();
 #endif
 
-protected:
+private:
   void AddChild(nsStyleContext* aChild);
   void RemoveChild(nsStyleContext* aChild);
 
