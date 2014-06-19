@@ -9,3 +9,5 @@ webide.jar:
   skin/details.css        (details.css)
   skin/newapp.css         (newapp.css)
   skin/throbber.svg       (throbber.svg)
+  skin/addons.css         (addons.css)
+  skin/tabledoc.css       (tabledoc.css)
