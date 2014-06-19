@@ -165,6 +165,14 @@ operator==(const FontFamilyName& a, const FontFamilyName& b) {
     return a.mType == b.mType && a.mName == b.mName;
 }
 
+class FontFamilyList;
+
+template<>
+struct HasDangerousPublicDestructor<FontFamilyList>
+{
+  static const bool value = true;
+};
+
 /**
  * font family list, array of font families and a default font type.
  * font family names are either named strings or generics. the default

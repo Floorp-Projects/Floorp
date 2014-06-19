@@ -70,6 +70,9 @@ struct ViewTransform {
 class AsyncCompositionManager MOZ_FINAL
 {
   friend class AutoResolveRefLayers;
+  ~AsyncCompositionManager()
+  {
+  }
 public:
   NS_INLINE_DECL_REFCOUNTING(AsyncCompositionManager)
 
@@ -78,9 +81,6 @@ public:
     , mIsFirstPaint(false)
     , mLayersUpdated(false)
     , mReadyForCompose(true)
-  {
-  }
-  ~AsyncCompositionManager()
   {
   }
 
