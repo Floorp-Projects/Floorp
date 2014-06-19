@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
+import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -58,8 +59,39 @@ public abstract class ArrowPopup extends PopupWindow {
         setWindowLayoutMode(widthSpec, ViewGroup.LayoutParams.WRAP_CONTENT);
 
         final LayoutInflater inflater = LayoutInflater.from(mContext);
-        final RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.arrow_popup, null);
+        final ArrowPopupLayout layout = (ArrowPopupLayout) inflater.inflate(R.layout.arrow_popup, null);
         setContentView(layout);
+
+        layout.mListener = new ArrowPopupLayout.OnSizeChangedListener() {
+            @Override
+            public void onSizeChanged() {
+                if (mAnchor == null) {
+                    return;
+                }
+
+                // Remove padding from the width of the anchor when calculating the arrow offset.
+                final int anchorWidth = mAnchor.getWidth() - mAnchor.getPaddingLeft() - mAnchor.getPaddingRight();
+
+                // This is the difference between the edge of the anchor view and the edge of the arrow view.
+                // We're making an assumption here that the anchor view is wider than the arrow view.
+                final int arrowOffset = (anchorWidth - mArrowWidth) / 2 + mAnchor.getPaddingLeft();
+
+                // Calculate the distance between the left edge of the PopupWindow and the anchor.
+                final int[] location = new int[2];
+                mAnchor.getLocationOnScreen(location);
+                final int anchorX = location[0];
+                layout.getLocationOnScreen(location);
+                final int popupX = location[0];
+                final int leftMargin = anchorX - popupX + arrowOffset;
+
+                // Offset the arrow by that amount to make the arrow align with the anchor. The
+                // arrow is already offset by the PopupWindow position, so the total arrow offset
+                // will be the compounded offset of the PopupWindow itself and the arrow's offset
+                // within that window.
+                final RelativeLayout.LayoutParams arrowLayoutParams = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
+                arrowLayoutParams.setMargins(leftMargin, 0, 0, 0);
+            }
+        };
 
         mArrow = (ImageView) layout.findViewById(R.id.arrow);
         mContent = (LinearLayout) layout.findViewById(R.id.content);
@@ -102,37 +134,44 @@ public abstract class ArrowPopup extends PopupWindow {
                 setHeight(decorView.getHeight());
             }
 
-            showAtLocation(decorView, Gravity.TOP, anchorLocation[0], 0);
+            showAtLocation(decorView, Gravity.NO_GRAVITY, anchorLocation[0] - mArrowWidth, 0);
             return;
         }
 
-        // Remove padding from the width of the anchor when calculating the arrow offset.
-        int anchorWidth = mAnchor.getWidth() - mAnchor.getPaddingLeft() - mAnchor.getPaddingRight();
-        // This is the difference between the edge of the anchor view and the edge of the arrow view.
-        // We're making an assumption here that the anchor view is wider than the arrow view.
-        int arrowOffset = (anchorWidth - mArrowWidth)/2 + mAnchor.getPaddingLeft();
-
-        // The horizontal offset of the popup window, relative to the left side of the anchor view.
-        int offset = 0;
-
-        RelativeLayout.LayoutParams arrowLayoutParams = (RelativeLayout.LayoutParams) mArrow.getLayoutParams();
-
-        if (HardwareUtils.isTablet()) {
-            // On tablets, the popup has a fixed width, so we use a horizontal offset to position it.
-            // The arrow's left margin is set by the arrow_popup.xml layout file.
-            // This assumes that anchor is not too close to the right side of the screen.
-            offset = arrowOffset - arrowLayoutParams.leftMargin;
+        // By default, the left edge of the window is aligned directly underneath the anchor. The
+        // arrow needs to be directly under the anchor, and since we want some space between the
+        // edge of the popup window and the arrow, we offset the window by -mArrowWidth. This is
+        // just an arbitrary value chosen to create some space.
+        if (isShowing()) {
+            update(mAnchor, -mArrowWidth, -mYOffset, -1, -1);
         } else {
-            // On phones, the popup takes up the width of the screen, so we set the arrow's left
-            // margin to make it line up with the anchor.
-            int leftMargin = anchorLocation[0] + arrowOffset;
-            arrowLayoutParams.setMargins(leftMargin, 0, 0, 0);
+            showAsDropDown(mAnchor, -mArrowWidth, -mYOffset);
+        }
+    }
+
+    private static class ArrowPopupLayout extends RelativeLayout {
+        public interface OnSizeChangedListener {
+            public void onSizeChanged();
         }
 
-        if (isShowing()) {
-            update(mAnchor, offset, -mYOffset, -1, -1);
-        } else {
-            showAsDropDown(mAnchor, offset, -mYOffset);
+        private OnSizeChangedListener mListener;
+
+        public ArrowPopupLayout(Context context, AttributeSet attrs, int defStyle) {
+            super(context, attrs, defStyle);
+        }
+
+        public ArrowPopupLayout(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        public ArrowPopupLayout(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            mListener.onSizeChanged();
         }
     }
 }
