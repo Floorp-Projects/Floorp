@@ -84,6 +84,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     is(global(factoryFun), iwin, "proper global for factoryFun");
     is(factoryFun().foo, 32, "factoryFun invokable");
     is(global(factoryFun()), iwin, "minted objects live in the content scope");
+    testXray('Function', factoryFun, new iwin.Function(), ['caller', 'arguments', 'length', 'name']);
+    var echoThis = new iwin.Function('return this;');
+    echoThis.wrappedJSObject.bind = 42;
+    var boundEchoThis = echoThis.bind(document);
+    is(boundEchoThis(), document, "bind() works correctly over Xrays");
+    is(global(boundEchoThis), window, "bound functions live in the caller's scope");
+    ok(/return this/.test(echoThis.toSource()), 'toSource works: ' + echoThis.toSource());
+    ok(/return this/.test(echoThis.toString()), 'toString works: ' + echoThis.toString());
+    is(iwin.Function.prototype, Object.getPrototypeOf(echoThis), "Function.prototype works for standard classes");
+    is(echoThis.prototype, undefined, "Function.prototype not visible for non standard constructors");
+    iwin.eval('var foopyFunction = function namedFoopyFunction(a, b, c) {}');
+    var foopyFunction = Cu.unwaiveXrays(Cu.waiveXrays(iwin).foopyFunction);
+    ok(Cu.isXrayWrapper(foopyFunction), "Should be Xrays");
+    is(foopyFunction.name, "namedFoopyFunction", ".name works over Xrays");
+    is(foopyFunction.length, 3, ".length works over Xrays");
+    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('length') >= 0, "Should list length");
+    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('name') >= 0, "Should list name");
+    ok(Object.getOwnPropertyNames(foopyFunction).indexOf('prototype') == -1, "Should not list prototype");
+    ok(Object.getOwnPropertyNames(iwin.Array).indexOf('prototype') >= 0, "Should list prototype for standard constructor");
 
     // Test interface objects that don't actually construct things.
     is(iwin.Math.tan(4.5), Math.tan(4.5), "Math.tan works");
@@ -163,6 +182,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     if (!isReleaseBuild)
       gPrototypeProperties[c].push("move");
   }
+  gPrototypeProperties['Function'] =
+    ["constructor", "toSource", "toString", "apply", "call", "bind",
+     "isGenerator", "length", "name", "arguments", "caller"];
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
