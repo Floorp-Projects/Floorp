@@ -13,6 +13,8 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.LightweightTheme;
 import org.mozilla.gecko.LightweightThemeDrawable;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.GeckoPopupMenu;
@@ -207,6 +209,9 @@ public class TabsPanel extends LinearLayout
 
         if (itemId == R.id.close_all_tabs) {
             if (mCurrentPanel == Panel.NORMAL_TABS) {
+                final String extras = getResources().getResourceEntryName(itemId);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
+
                 // Disable the menu button so that the menu won't interfere with the tab close animation.
                 mMenuButton.setEnabled(false);
                 ((CloseAllPanelView) mPanelNormal).closeAll();
@@ -218,6 +223,9 @@ public class TabsPanel extends LinearLayout
 
         if (itemId == R.id.close_private_tabs) {
             if (mCurrentPanel == Panel.PRIVATE_TABS) {
+                final String extras = getResources().getResourceEntryName(itemId);
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, extras);
+
                 ((CloseAllPanelView) mPanelPrivate).closeAll();
             } else {
                 Log.e(LOGTAG, "Close private tabs menu item should only be visible for private tabs panel");
