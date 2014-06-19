@@ -152,11 +152,6 @@
         <parameter name="aTranslation"/>
         <body>
           <![CDATA[
-            if (Translation.serviceUnavailable) {
-              this.state = Translation.STATE_UNAVAILABLE;
-              return;
-            }
-
             this.translation = aTranslation;
             let bundle = Cc["@mozilla.org/intl/stringbundle;1"]
                            .getService(Ci.nsIStringBundleService)
