@@ -108,13 +108,15 @@ CompilePattern(JSContext *cx, RegExpShared *shared, RegExpCompileData *data,
 
 // Note: this may return RegExpRunStatus_Error if an interrupt was requested
 // while the code was executing.
+template <typename CharT>
 RegExpRunStatus
-ExecuteCode(JSContext *cx, jit::JitCode *codeBlock,
-            const jschar *chars, size_t start, size_t length, MatchPairs *matches);
+ExecuteCode(JSContext *cx, jit::JitCode *codeBlock, const CharT *chars, size_t start,
+            size_t length, MatchPairs *matches);
 
+template <typename CharT>
 RegExpRunStatus
-InterpretCode(JSContext *cx, const uint8_t *byteCode,
-              const jschar *chars, size_t start, size_t length, MatchPairs *matches);
+InterpretCode(JSContext *cx, const uint8_t *byteCode, const CharT *chars, size_t start,
+              size_t length, MatchPairs *matches);
 
 #define FOR_EACH_NODE_TYPE(VISIT)                                    \
   VISIT(End)                                                         \
