@@ -6207,7 +6207,7 @@ gfxFontStyle::gfxFontStyle() :
     languageOverride(NO_FONT_LANGUAGE_OVERRIDE),
     weight(NS_FONT_WEIGHT_NORMAL), stretch(NS_FONT_STRETCH_NORMAL),
     systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
-    smallCaps(false),
+    smallCaps(false), allowSyntheticWeight(true), allowSyntheticStyle(true),
     style(NS_FONT_STYLE_NORMAL)
 {
 }
@@ -6216,6 +6216,8 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, bool aSystemFont,
                            bool aPrinterFont, bool aSmallCaps,
+                           bool aAllowWeightSynthesis,
+                           bool aAllowStyleSynthesis,
                            const nsString& aLanguageOverride):
     language(aLanguage),
     size(aSize), sizeAdjust(aSizeAdjust),
@@ -6224,6 +6226,8 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     systemFont(aSystemFont), printerFont(aPrinterFont),
     useGrayscaleAntialiasing(false),
     smallCaps(aSmallCaps),
+    allowSyntheticWeight(aAllowWeightSynthesis),
+    allowSyntheticStyle(aAllowStyleSynthesis),
     style(aStyle)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
@@ -6257,6 +6261,8 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     systemFont(aStyle.systemFont), printerFont(aStyle.printerFont),
     useGrayscaleAntialiasing(aStyle.useGrayscaleAntialiasing),
     smallCaps(aStyle.smallCaps),
+    allowSyntheticWeight(aStyle.allowSyntheticWeight),
+    allowSyntheticStyle(aStyle.allowSyntheticStyle),
     style(aStyle.style)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
