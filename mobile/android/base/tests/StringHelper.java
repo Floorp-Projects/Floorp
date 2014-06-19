@@ -105,7 +105,6 @@ public class StringHelper {
     // Option labels
     // Customize
     public static final String SYNC_LABEL = "Sync";
-    public static final String SEARCH_SETTINGS_LABEL = "Search settings";
     public static final String IMPORT_FROM_ANDROID_LABEL = "Import from Android";
     public static final String TABS_LABEL = "Tabs";
 
@@ -125,7 +124,7 @@ public class StringHelper {
     public static final String COOKIES_LABEL = "Cookies";
     public static final String REMEMBER_PASSWORDS_LABEL = "Remember passwords";
     public static final String MASTER_PASWSWORD_LABEL = "Use master password";
-    public static final String CLEAR_PRIVATE_DATA_LABEL = "Clear private data";
+    public static final String CLEAR_PRIVATE_DATA_LABEL = "Clear now";
 
     // Mozilla
     public static final String ABOUT_LABEL = "About (Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
