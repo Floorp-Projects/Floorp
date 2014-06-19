@@ -3873,7 +3873,8 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
                              entry->mCommonClipCount);
   }
 
-  if (presContext->GetPaintFlashing()) {
+  if (presContext->GetPaintFlashing() &&
+    aLayer->Manager()->IsWidgetLayerManager()) {
     gfxContextAutoSaveRestore save(aContext);
     if (shouldDrawRectsSeparately) {
       if (aClip == DrawRegionClip::DRAW_SNAPPED) {
