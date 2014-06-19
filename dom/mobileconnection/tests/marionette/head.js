@@ -579,6 +579,23 @@ function sendMMI(aMmi) {
 }
 
 /**
+ * Queries current call barring status.
+ *
+ * Fulfill params:
+ *   An object contains call barring status.
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', 'InvalidParameter' or
+ *   'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function getCallBarringOption(aOptions) {
+  let request = mobileConnection.getCallBarringOption(aOptions);
+  return wrapDomRequestAsPromise(request)
+    .then(() => request.result, () => { throw request.error });
+}
+
+/**
  * Change call barring facility password.
  *
  * Fulfill params: (none)
