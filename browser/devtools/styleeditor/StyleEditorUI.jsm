@@ -34,6 +34,8 @@ const console = require("resource://gre/modules/devtools/Console.jsm").console;
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
 const PREF_MEDIA_SIDEBAR = "devtools.styleeditor.showMediaSidebar";
+const PREF_SIDEBAR_WIDTH = "devtools.styleeditor.mediaSidebarWidth";
+const PREF_NAV_WIDTH = "devtools.styleeditor.navSidebarWidth";
 
 /**
  * StyleEditorUI is controls and builds the UI of the Style Editor, including
@@ -152,6 +154,9 @@ StyleEditorUI.prototype = {
     this._mediaItem = this._panelDoc.getElementById("options-show-media");
     this._mediaItem.addEventListener("command",
                                      this._toggleMediaSidebar);
+
+    let nav = this._panelDoc.querySelector(".splitview-controller");
+    nav.setAttribute("width", Services.prefs.getIntPref(PREF_NAV_WIDTH));
   },
 
   /**
@@ -453,6 +458,22 @@ StyleEditorUI.prototype = {
             summary.querySelector(".stylesheet-name").focus();
           }
         }, false);
+
+        let sidebar = details.querySelector(".stylesheet-sidebar");
+        sidebar.setAttribute("width",
+            Services.prefs.getIntPref(PREF_SIDEBAR_WIDTH));
+
+        let splitter = details.querySelector(".devtools-side-splitter");
+        splitter.addEventListener("mousemove", () => {
+          let sidebarWidth = sidebar.getAttribute("width");
+          Services.prefs.setIntPref(PREF_SIDEBAR_WIDTH, sidebarWidth);
+
+          // update all @media sidebars for consistency
+          let sidebars = [...this._panelDoc.querySelectorAll(".stylesheet-sidebar")];
+          for (let mediaSidebar of sidebars) {
+            mediaSidebar.setAttribute("width", sidebarWidth);
+          }
+        });
 
         // autofocus if it's a new user-created stylesheet
         if (editor.isNew) {
@@ -787,6 +808,10 @@ StyleEditorUI.prototype = {
 
   destroy: function() {
     this._clearStyleSheetEditors();
+
+    let sidebar = this._panelDoc.querySelector(".splitview-controller");
+    let sidebarWidth = sidebar.getAttribute("width");
+    Services.prefs.setIntPref(PREF_NAV_WIDTH, sidebarWidth);
 
     this._optionsMenu.removeEventListener("popupshowing",
                                           this._updateOptionsMenu);

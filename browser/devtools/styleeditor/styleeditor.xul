@@ -148,6 +148,7 @@
           <xul:hbox class="stylesheet-details-container">
             <xul:box class="stylesheet-editor-input textbox"
                      data-placeholder="&editorTextbox.placeholder;"/>
+            <xul:splitter class="devtools-side-splitter"/>
             <xul:vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
               <xul:toolbar class="devtools-toolbar">
                 &mediaRules.label;
