@@ -190,7 +190,7 @@ TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
   ScopedCERTCertList results;
   ASSERT_SECSuccess(BuildCertChain(trustDomain, trustDomain.GetLeafeCACert(),
                                    now, EndEntityOrCA::MustBeCA,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -205,7 +205,7 @@ TEST_F(pkix_cert_chain_length, MaxAcceptableCertChainLength)
                          trustDomain.leafCAKey.get(), privateKey, cert));
   ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(), now,
                                    EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -227,7 +227,7 @@ TEST_F(pkix_cert_chain_length, BeyondMaxAcceptableCertChainLength)
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
                     BuildCertChain(trustDomain, caCert.get(), now,
                                    EndEntityOrCA::MustBeCA,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -243,7 +243,7 @@ TEST_F(pkix_cert_chain_length, BeyondMaxAcceptableCertChainLength)
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_ISSUER,
                     BuildCertChain(trustDomain, cert.get(), now,
                                    EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::id_kp_serverAuth,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
