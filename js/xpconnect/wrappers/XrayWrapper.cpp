@@ -71,6 +71,7 @@ IsJSXraySupported(JSProtoKey key)
       case JSProto_Date:
       case JSProto_Object:
       case JSProto_Array:
+      case JSProto_Function:
         return true;
       default:
         return false;
@@ -171,6 +172,8 @@ public:
 class XrayTraits
 {
 public:
+    XrayTraits() {}
+
     static JSObject* getTargetObject(JSObject *wrapper) {
         return js::UncheckedUnwrap(wrapper, /* stopAtOuter = */ false);
     }
@@ -224,6 +227,9 @@ private:
     JSObject* attachExpandoObject(JSContext *cx, HandleObject target,
                                   nsIPrincipal *origin,
                                   HandleObject exclusiveGlobal);
+
+    XrayTraits(XrayTraits &) MOZ_DELETE;
+    const XrayTraits& operator=(XrayTraits &) MOZ_DELETE;
 };
 
 class XPCWrappedNativeXrayTraits : public XrayTraits
@@ -349,7 +355,11 @@ public:
     static bool call(JSContext *cx, HandleObject wrapper,
                      const JS::CallArgs &args, js::Wrapper& baseInstance)
     {
-        // We'll handle this when we start supporting Functions.
+        JSXrayTraits &self = JSXrayTraits::singleton;
+        RootedObject holder(cx, self.ensureHolder(cx, wrapper));
+        if (self.getProtoKey(holder) == JSProto_Function)
+            return baseInstance.call(cx, wrapper, args);
+
         RootedValue v(cx, ObjectValue(*wrapper));
         js_ReportIsNotFunction(cx, v);
         return false;
@@ -358,7 +368,11 @@ public:
     static bool construct(JSContext *cx, HandleObject wrapper,
                           const JS::CallArgs &args, js::Wrapper& baseInstance)
     {
-        // We'll handle this when we start supporting Functions.
+        JSXrayTraits &self = JSXrayTraits::singleton;
+        RootedObject holder(cx, self.ensureHolder(cx, wrapper));
+        if (self.getProtoKey(holder) == JSProto_Function)
+            return baseInstance.construct(cx, wrapper, args);
+
         RootedValue v(cx, ObjectValue(*wrapper));
         js_ReportIsNotFunction(cx, v);
         return false;
