@@ -584,7 +584,7 @@ nsIStyleRuleProcessor*
 nsXBLPrototypeBinding::GetRuleProcessor()
 {
   if (mResources) {
-    return mResources->mRuleProcessor;
+    return mResources->GetRuleProcessor();
   }
 
   return nullptr;
