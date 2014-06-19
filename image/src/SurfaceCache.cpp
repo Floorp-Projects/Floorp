@@ -111,6 +111,7 @@ private:
  */
 class CachedSurface
 {
+  ~CachedSurface() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(CachedSurface)
 
@@ -158,6 +159,7 @@ private:
  */
 class ImageSurfaceCache
 {
+  ~ImageSurfaceCache() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(ImageSurfaceCache)
 
