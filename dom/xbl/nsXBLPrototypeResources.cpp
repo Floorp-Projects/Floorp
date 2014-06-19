@@ -100,9 +100,8 @@ nsXBLPrototypeResources::FlushSkinSheets()
 
     mStyleSheetList.AppendElement(newSheet);
   }
-  mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList,
-                                          nsStyleSet::eDocSheet,
-                                          nullptr);
+
+  GatherRuleProcessor();
 
   return NS_OK;
 }
@@ -126,4 +125,12 @@ void
 nsXBLPrototypeResources::ClearLoader()
 {
   mLoader = nullptr;
+}
+
+void
+nsXBLPrototypeResources::GatherRuleProcessor()
+{
+  mRuleProcessor = new nsCSSRuleProcessor(mStyleSheetList,
+                                          nsStyleSet::eDocSheet,
+                                          nullptr);
 }
