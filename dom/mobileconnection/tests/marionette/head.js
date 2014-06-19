@@ -1007,6 +1007,94 @@ function setEmulatorOperatorNamesAndWait(aOperator, aLongName, aShortName,
   return Promise.all(promises);
 }
 
+/**
+ * Set GSM signal strength.
+ *
+ * Fulfill params: (none)
+ * Reject params: (none)
+ *
+ * @param aRssi
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorGsmSignalStrength(aRssi) {
+  let cmd = "gsm signal " + aRssi;
+  return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Set emulator GSM signal strength and wait for voice and/or data state change.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aRssi
+ * @param aWaitVoice [optional]
+ *        A boolean value.  Default true.
+ * @param aWaitData [optional]
+ *        A boolean value.  Default false.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorGsmSignalStrengthAndWait(aRssi,
+                                             aWaitVoice = true,
+                                             aWaitData = false) {
+  let promises = [];
+  if (aWaitVoice) {
+    promises.push(waitForManagerEvent("voicechange"));
+  }
+  if (aWaitData) {
+    promises.push(waitForManagerEvent("datachange"));
+  }
+  promises.push(setEmulatorGsmSignalStrength(aRssi));
+  return Promise.all(promises);
+}
+
+/**
+ * Set LTE signal strength.
+ *
+ * Fulfill params: (none)
+ * Reject params: (none)
+ *
+ * @param aRxlev
+ * @param aRsrp
+ * @param aRssnr
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorLteSignalStrength(aRxlev, aRsrp, aRssnr) {
+  let cmd = "gsm lte_signal " + aRxlev + " " + aRsrp + " " + aRssnr;
+  return runEmulatorCmdSafe(cmd);
+}
+
+/**
+ * Set emulator LTE signal strength and wait for voice and/or data state change.
+ *
+ * Fulfill params: (none)
+ *
+ * @param aRxlev
+ * @param aRsrp
+ * @param aRssnr
+ * @param aWaitVoice [optional]
+ *        A boolean value.  Default true.
+ * @param aWaitData [optional]
+ *        A boolean value.  Default false.
+ *
+ * @return A deferred promise.
+ */
+function setEmulatorLteSignalStrengthAndWait(aRxlev, aRsrp, aRssnr,
+                                             aWaitVoice = true,
+                                             aWaitData = false) {
+  let promises = [];
+  if (aWaitVoice) {
+    promises.push(waitForManagerEvent("voicechange"));
+  }
+  if (aWaitData) {
+    promises.push(waitForManagerEvent("datachange"));
+  }
+  promises.push(setEmulatorLteSignalStrength(aRxlev, aRsrp, aRssnr));
+  return Promise.all(promises);
+}
+
 let _networkManager;
 
 /**
