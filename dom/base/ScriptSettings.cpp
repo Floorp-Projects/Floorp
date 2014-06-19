@@ -14,6 +14,8 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
 #include "nsContentUtils.h"
+#include "nsGlobalWindow.h"
+#include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 #include "nsJSUtils.h"
 
@@ -221,47 +223,100 @@ FindJSContext(nsIGlobalObject* aGlobalObject)
 }
 
 AutoJSAPI::AutoJSAPI()
-  : mCx(nsContentUtils::GetDefaultJSContextForThread())
+  : mCx(nullptr)
 {
-  if (NS_IsMainThread()) {
-    mCxPusher.construct(mCx);
-  }
-
-  // Leave the cx in a null compartment.
-  mNullAc.construct(mCx);
 }
 
-AutoJSAPI::AutoJSAPI(JSContext *aCx, bool aIsMainThread, bool aSkipNullAc)
-  : mCx(aCx)
+void
+AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
 {
-  MOZ_ASSERT_IF(aIsMainThread, NS_IsMainThread());
+  mCx = aCx;
   if (aIsMainThread) {
     mCxPusher.construct(mCx);
   }
 
-  // In general we want to leave the cx in a null compartment, but we let
-  // subclasses skip this if they plan to immediately enter a compartment.
-  if (!aSkipNullAc) {
-    mNullAc.construct(mCx);
+  mAutoNullableCompartment.construct(mCx, aGlobal);
+}
+
+AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
+                     bool aIsMainThread,
+                     JSContext* aCx)
+{
+  MOZ_ASSERT(aGlobalObject);
+  MOZ_ASSERT(aGlobalObject->GetGlobalJSObject(), "Must have a JS global");
+  MOZ_ASSERT(aCx);
+  MOZ_ASSERT_IF(aIsMainThread, NS_IsMainThread());
+
+  InitInternal(aGlobalObject->GetGlobalJSObject(), aCx, aIsMainThread);
+}
+
+void
+AutoJSAPI::Init()
+{
+  MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
+
+  InitInternal(/* aGlobal */ nullptr,
+               nsContentUtils::GetDefaultJSContextForThread(),
+               NS_IsMainThread());
+}
+
+bool
+AutoJSAPI::Init(nsIGlobalObject* aGlobalObject, JSContext* aCx)
+{
+  MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
+  MOZ_ASSERT(aCx);
+
+  if (NS_WARN_IF(!aGlobalObject)) {
+    return false;
   }
+
+  JSObject* global = aGlobalObject->GetGlobalJSObject();
+  if (NS_WARN_IF(!global)) {
+    return false;
+  }
+
+  InitInternal(global, aCx, NS_IsMainThread());
+  return true;
 }
 
-AutoJSAPIWithErrorsReportedToWindow::AutoJSAPIWithErrorsReportedToWindow(nsIScriptContext* aScx)
-  : AutoJSAPI(aScx->GetNativeContext(), /* aIsMainThread = */ true)
+bool
+AutoJSAPI::Init(nsIGlobalObject* aGlobalObject)
 {
+  return Init(aGlobalObject, nsContentUtils::GetDefaultJSContextForThread());
 }
 
-AutoJSAPIWithErrorsReportedToWindow::AutoJSAPIWithErrorsReportedToWindow(nsIGlobalObject* aGlobalObject)
-  : AutoJSAPI(FindJSContext(aGlobalObject), /* aIsMainThread = */ true)
+bool
+AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  return Init(aGlobalObject, FindJSContext(aGlobalObject));
+}
+
+bool
+AutoJSAPI::InitUsingWin(nsPIDOMWindow* aWindow, JSContext* aCx)
+{
+  return Init(static_cast<nsGlobalWindow*>(aWindow), aCx);
+}
+
+bool
+AutoJSAPI::InitUsingWin(nsPIDOMWindow* aWindow)
+{
+  return Init(static_cast<nsGlobalWindow*>(aWindow));
+}
+
+bool
+AutoJSAPI::InitWithLegacyErrorReportingUsingWin(nsPIDOMWindow* aWindow)
+{
+  return InitWithLegacyErrorReporting(static_cast<nsGlobalWindow*>(aWindow));
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
-  : AutoJSAPI(aCx ? aCx : FindJSContext(aGlobalObject), aIsMainThread, /* aSkipNullAc = */ true)
+  : AutoJSAPI(aGlobalObject, aIsMainThread,
+              aCx ? aCx : FindJSContext(aGlobalObject))
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
-  , mAc(cx(), aGlobalObject->GetGlobalJSObject())
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
