@@ -166,8 +166,7 @@ BluetoothAdapter::BluetoothAdapter(nsPIDOMWindow* aWindow,
   , BluetoothPropertyContainer(BluetoothObjectType::TYPE_ADAPTER)
   , mJsUuids(nullptr)
   , mJsDeviceAddresses(nullptr)
-  // TODO: Change to Disabled after Bug 1006309 landed
-  , mState(BluetoothAdapterState::Enabled)
+  , mState(BluetoothAdapterState::Disabled)
   , mDiscoverable(false)
   , mDiscovering(false)
   , mPairable(false)
