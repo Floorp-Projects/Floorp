@@ -56,8 +56,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     static mozJSComponentLoader* Get() { return sSelf; }
 
-    void NoteSubScript(JS::HandleScript aScript, JS::HandleObject aThisObject);
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
  protected:
@@ -158,7 +156,6 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     nsClassHashtable<nsCStringHashKey, ModuleEntry> mImports;
     nsDataHashtable<nsCStringHashKey, ModuleEntry*> mInProgressImports;
-    nsDataHashtable<nsPtrHashKey<JSScript>, JSObject*> mThisObjects;
 
     bool mInitialized;
     bool mReuseLoaderGlobal;

@@ -124,6 +124,14 @@ StaticScopeIter<allowGC>::funScript() const
     return obj->template as<JSFunction>().nonLazyScript();
 }
 
+template <AllowGC allowGC>
+inline JSFunction &
+StaticScopeIter<allowGC>::fun() const
+{
+    JS_ASSERT(type() == FUNCTION);
+    return obj->template as<JSFunction>();
+}
+
 }  /* namespace js */
 
 #endif /* vm_ScopeObject_inl_h */
