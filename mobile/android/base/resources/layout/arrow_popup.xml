@@ -3,9 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="?attr/arrowPopupWidth"
-                android:layout_height="wrap_content">
+<view class="org.mozilla.gecko.widget.ArrowPopup$ArrowPopupLayout"
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content">
 
     <ScrollView android:layout_width="?attr/arrowPopupWidth"
                 android:layout_height="wrap_content"
@@ -27,4 +28,4 @@
                android:src="@drawable/menu_popup_arrow_top"
                android:scaleType="fitXY"/>
 
-</RelativeLayout>
+</view>
