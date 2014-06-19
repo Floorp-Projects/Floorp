@@ -486,9 +486,7 @@ var gAspectRatioTests = [
 // Used by test_metadata.html.
 var gMetadataTests = [
   // Ogg Vorbis files
-  { name:"short-video.ogv",
-    type:"video/ogg",
-    tags: {
+  { name:"short-video.ogv", tags: {
       TITLE:"Lepidoptera",
       ARTIST:"Epoq",
       ALBUM:"Kahvi Collective",
@@ -496,9 +494,7 @@ var gMetadataTests = [
       COMMENT:"http://www.kahvi.org",
     }
   },
-  { name:"bug516323.ogv",
-    type:"video/ogg",
-    tags: {
+  { name:"bug516323.ogv", tags: {
       GENRE:"Open Movie",
       ENCODER:"Audacity",
       TITLE:"Elephants Dream",
@@ -506,9 +502,7 @@ var gMetadataTests = [
       COMMENTS:"Audio Description"
     }
   },
-  { name:"bug516323.indexed.ogv",
-    type:"video/ogg",
-    tags: {
+  { name:"bug516323.indexed.ogv", tags: {
       GENRE:"Open Movie",
       ENCODER:"Audacity",
       TITLE:"Elephants Dream",
@@ -516,26 +510,17 @@ var gMetadataTests = [
       COMMENTS:"Audio Description"
     }
   },
-  { name:"detodos.opus",
-    type:"audio/ogg; codecs=opus",
-    tags: {
+  { name:"detodos.opus", tags: {
       title:"De todos. Para todos.",
       artist:"Mozilla.org"
     }
   },
-  { name:"sound.ogg",
-    type:"audio/ogg",
-    tags: { }
-  },
-  { name:"small-shot.ogg",
-    type:"video/ogg",
-    tags: {
+  { name:"sound.ogg", tags: { } },
+  { name:"small-shot.ogg", tags: {
       title:"Pew SFX"
     }
   },
-  { name:"badtags.ogg",
-    type:"audio/ogg",
-    tags: {
+  { name:"badtags.ogg", tags: {
       // We list only the valid tags here, and verify
       // the invalid ones are filtered out.
       title:"Invalid comments test file",
@@ -550,70 +535,41 @@ var gMetadataTests = [
       // "not-utf-8":"invalid sequences: \xff\xfe\xfa\xfb\0eol"
     }
   },
-  { name:"wave_metadata.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata.wav", tags: {
       name:"Track Title",
       artist:"Artist Name",
       comments:"Comments",
     }
   },
-  { name:"wave_metadata_utf8.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata_utf8.wav", tags: {
       name:"歌曲名稱",
       artist:"作曲者",
       comments:"註解",
     }
   },
-  { name:"wave_metadata_unknown_tag.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata_unknown_tag.wav", tags: {
       name:"Track Title",
       comments:"Comments",
     }
   },
-  { name:"wave_metadata_bad_len.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata_bad_len.wav", tags: {
       name:"Track Title",
       artist:"Artist Name",
     }
   },
-  { name:"wave_metadata_bad_no_null.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata_bad_no_null.wav", tags: {
       name:"Track Title",
       artist:"Artist Name",
       comments:"Comments!!",
     }
   },
-  { name:"wave_metadata_bad_utf8.wav",
-    type:"audio/x-wav",
-    tags: {
+  { name:"wave_metadata_bad_utf8.wav", tags: {
       name:"歌曲名稱",
       comments:"註解",
     }
   },
-  { name:"wavedata_u8.wav",
-    type:"audio/x-wav",
-    tags: { }
+  { name:"wavedata_u8.wav", tags: { }
   },
-  { name:"gizmo.metadata.mp4",
-    type:"video/mp4",
-    tags: {
-      artist:"Artist name",
-      title:"Title name",
-      album:"Album name",
-      albumArtist:"Album Artist name",
-      genre:"Genre name",
-      date:"20140326T002053.000Z",
-      year:"2014",
-      writer:"Composer name",
-      discNumber:"1/0",
-      cdTrackNumber:"1/0"
-    }
-  }
 ];
 
 function checkMetadata(msg, e, test) {
