@@ -358,7 +358,7 @@ struct nsStyleBackground {
   struct Position;
   friend struct Position;
   struct Position {
-    typedef nsStyleCoord::Calc PositionCoord;
+    typedef nsStyleCoord::CalcValue PositionCoord;
     PositionCoord mXPosition, mYPosition;
 
     // Initialize nothing
@@ -385,7 +385,7 @@ struct nsStyleBackground {
   struct Size;
   friend struct Size;
   struct Size {
-    struct Dimension : public nsStyleCoord::Calc {
+    struct Dimension : public nsStyleCoord::CalcValue {
       nscoord ResolveLengthPercentage(nscoord aAvailable) const {
         double d = double(mPercent) * double(aAvailable) + double(mLength);
         if (d < 0.0)

@@ -7,6 +7,7 @@
 
 #include "nsStyleCoord.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/PodOperations.h"
 
 nsStyleCoord::nsStyleCoord(nsStyleUnit aUnit)
   : mUnit(aUnit)
@@ -40,7 +41,8 @@ nsStyleCoord::nsStyleCoord(float aValue, nsStyleUnit aUnit)
 {
   if (aUnit < eStyleUnit_Percent || aUnit >= eStyleUnit_Coord) {
     NS_NOTREACHED("not a float value");
-    Reset();
+    mUnit = eStyleUnit_Null;
+    mValue.mInt = 0;
   } else {
     mValue.mFloat = aValue;
   }
@@ -112,12 +114,12 @@ uint32_t nsStyleCoord::HashValue(uint32_t aHash = 0) const
 
 void nsStyleCoord::Reset()
 {
-  mUnit = eStyleUnit_Null;
-  mValue.mInt = 0;
+  Reset(mUnit, mValue);
 }
 
 void nsStyleCoord::SetCoordValue(nscoord aValue)
 {
+  Reset();
   mUnit = eStyleUnit_Coord;
   mValue.mInt = aValue;
 }
@@ -126,30 +128,31 @@ void nsStyleCoord::SetIntValue(int32_t aValue, nsStyleUnit aUnit)
 {
   NS_ASSERTION((aUnit == eStyleUnit_Enumerated) ||
                (aUnit == eStyleUnit_Integer), "not an int value");
+  Reset();
   if ((aUnit == eStyleUnit_Enumerated) ||
       (aUnit == eStyleUnit_Integer)) {
     mUnit = aUnit;
     mValue.mInt = aValue;
   }
-  else {
-    Reset();
-  }
 }
 
 void nsStyleCoord::SetPercentValue(float aValue)
 {
+  Reset();
   mUnit = eStyleUnit_Percent;
   mValue.mFloat = aValue;
 }
 
 void nsStyleCoord::SetFactorValue(float aValue)
 {
+  Reset();
   mUnit = eStyleUnit_Factor;
   mValue.mFloat = aValue;
 }
 
 void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
 {
+  Reset();
   if (aUnit == eStyleUnit_Degree ||
       aUnit == eStyleUnit_Grad ||
       aUnit == eStyleUnit_Radian ||
@@ -158,36 +161,41 @@ void nsStyleCoord::SetAngleValue(float aValue, nsStyleUnit aUnit)
     mValue.mFloat = aValue;
   } else {
     NS_NOTREACHED("not an angle value");
-    Reset();
   }
 }
 
 void nsStyleCoord::SetFlexFractionValue(float aValue)
 {
+  Reset();
   mUnit = eStyleUnit_FlexFraction;
   mValue.mFloat = aValue;
 }
 
 void nsStyleCoord::SetCalcValue(Calc* aValue)
 {
+  Reset();
   mUnit = eStyleUnit_Calc;
   mValue.mPointer = aValue;
+  aValue->AddRef();
 }
 
 void nsStyleCoord::SetNormalValue()
 {
+  Reset();
   mUnit = eStyleUnit_Normal;
   mValue.mInt = 0;
 }
 
 void nsStyleCoord::SetAutoValue()
 {
+  Reset();
   mUnit = eStyleUnit_Auto;
   mValue.mInt = 0;
 }
 
 void nsStyleCoord::SetNoneValue()
 {
+  Reset();
   mUnit = eStyleUnit_None;
   mValue.mInt = 0;
 }
@@ -213,7 +221,35 @@ nsStyleCoord::GetAngleValueInRadians() const
 
 nsStyleSides::nsStyleSides()
 {
-  memset(this, 0x00, sizeof(nsStyleSides));
+  NS_FOR_CSS_SIDES(i) {
+    mUnits[i] = eStyleUnit_Null;
+  }
+  mozilla::PodArrayZero(mValues);
+}
+
+nsStyleSides::nsStyleSides(const nsStyleSides& aOther)
+{
+  NS_FOR_CSS_SIDES(i) {
+    mUnits[i] = eStyleUnit_Null;
+  }
+  *this = aOther;
+}
+
+nsStyleSides::~nsStyleSides()
+{
+  Reset();
+}
+
+nsStyleSides&
+nsStyleSides::operator=(const nsStyleSides& aCopy)
+{
+  if (this != &aCopy) {
+    NS_FOR_CSS_SIDES(i) {
+      nsStyleCoord::SetValue(mUnits[i], mValues[i],
+                             aCopy.mUnits[i], aCopy.mValues[i]);
+    }
+  }
+  return *this;
 }
 
 bool nsStyleSides::operator==(const nsStyleSides& aOther) const
@@ -229,12 +265,42 @@ bool nsStyleSides::operator==(const nsStyleSides& aOther) const
 
 void nsStyleSides::Reset()
 {
-  memset(this, 0x00, sizeof(nsStyleSides));
+  NS_FOR_CSS_SIDES(i) {
+    nsStyleCoord::Reset(mUnits[i], mValues[i]);
+  }
 }
 
 nsStyleCorners::nsStyleCorners()
 {
-  memset(this, 0x00, sizeof(nsStyleCorners));
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    mUnits[i] = eStyleUnit_Null;
+  }
+  mozilla::PodArrayZero(mValues);
+}
+
+nsStyleCorners::nsStyleCorners(const nsStyleCorners& aOther)
+{
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    mUnits[i] = eStyleUnit_Null;
+  }
+  *this = aOther;
+}
+
+nsStyleCorners::~nsStyleCorners()
+{
+  Reset();
+}
+
+nsStyleCorners&
+nsStyleCorners::operator=(const nsStyleCorners& aCopy)
+{
+  if (this != &aCopy) {
+    NS_FOR_CSS_HALF_CORNERS(i) {
+      nsStyleCoord::SetValue(mUnits[i], mValues[i],
+                             aCopy.mUnits[i], aCopy.mValues[i]);
+    }
+  }
+  return *this;
 }
 
 bool
@@ -251,7 +317,9 @@ nsStyleCorners::operator==(const nsStyleCorners& aOther) const
 
 void nsStyleCorners::Reset()
 {
-  memset(this, 0x00, sizeof(nsStyleCorners));
+  NS_FOR_CSS_HALF_CORNERS(i) {
+    nsStyleCoord::Reset(mUnits[i], mValues[i]);
+  }
 }
 
 // Validation of NS_SIDE_IS_VERTICAL and NS_HALF_CORNER_IS_X.

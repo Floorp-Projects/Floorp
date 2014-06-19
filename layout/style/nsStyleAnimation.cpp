@@ -277,7 +277,8 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
   aResultTail = &resultItem->mNext;
 }
 
-// Like nsStyleCoord::Calc, but with length in float pixels instead of nscoord.
+// Like nsStyleCoord::CalcValue, but with length in float pixels instead
+// of nscoord.
 struct PixelCalcValue {
   float mLength, mPercent;
   bool mHasPercent;
@@ -357,7 +358,7 @@ ExtractCalcValue(const nsCSSValue& aValue)
 }
 
 static void
-SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
+SetCalcValue(const nsStyleCoord::CalcValue* aCalc, nsCSSValue& aValue)
 {
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
   if (!aCalc->mHasPercent) {
@@ -2791,7 +2792,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
       nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
                                               aStyleContext->PresContext(),
                                               canStoreInRuleTree);
-    nsStyleCoord::Calc c2;
+    nsStyleCoord::CalcValue c2;
     c2.mLength = c.mLength;
     c2.mPercent = c.mPercent;
     c2.mHasPercent = true; // doesn't matter for transform translate
