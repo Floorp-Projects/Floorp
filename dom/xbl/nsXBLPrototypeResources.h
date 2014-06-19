@@ -38,6 +38,15 @@ public:
 
   typedef nsTArray<nsRefPtr<nsCSSStyleSheet> > sheet_array_type;
 
+  /**
+   * Recreates mRuleProcessor to represent the current list of style sheets
+   * stored in mStyleSheetList.  (Named GatherRuleProcessor to parallel
+   * nsStyleSet::GatherRuleProcessors.)
+   */
+  void GatherRuleProcessor();
+
+  nsCSSRuleProcessor* GetRuleProcessor() const { return mRuleProcessor; }
+
 private:
   // A loader object. Exists only long enough to load resources, and then it dies.
   nsRefPtr<nsXBLResourceLoader> mLoader;
@@ -46,9 +55,9 @@ public:
   // A list of loaded stylesheets for this binding.
   sheet_array_type mStyleSheetList;
 
+private:
   // The list of stylesheets converted to a rule processor.
   nsRefPtr<nsCSSRuleProcessor> mRuleProcessor;
 };
 
 #endif
-
