@@ -1968,6 +1968,13 @@ nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
       if (!container) {
         break;
       }
+      if (container->IsRefCounted() && container->mValue.mRefCount > 1) {
+        // We don't report this MiscContainer at all in order to avoid
+        // twice-reporting it.
+        // TODO DMD, bug 1027551 - figure out how to report this ref-counted
+        // object just once.
+        break;
+      }
       n += aMallocSizeOf(container);
 
       void* otherPtr = MISC_STR_PTR(container);
