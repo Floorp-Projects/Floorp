@@ -37,7 +37,7 @@ function test() {
 function runTest(win) {
   win.gotoPref("applications");
   var sel = win.history.state;
-  ok(sel == "applications", "Specified pane was opened");
+  is(sel, "paneApplications", "Specified pane was opened");
 
   var rbox = win.document.getElementById("handlersView");
   ok(rbox, "handlersView is present");

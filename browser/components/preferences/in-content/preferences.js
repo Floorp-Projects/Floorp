@@ -12,6 +12,8 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+let gLastHash = "";
+
 addEventListener("DOMContentLoaded", function onLoad() {
   removeEventListener("DOMContentLoaded", onLoad);
   init_all();
@@ -42,21 +44,45 @@ function init_all() {
     this.removeAttribute("keyboard-navigation");
   });
 
-  if (document.getElementById("category-general").selected) {
-    gotoPref("paneGeneral");
-  }
+  window.addEventListener("hashchange", onHashChange);
+  gotoPref();
+
+  // Wait until initialization of all preferences are complete before
+  // notifying observers that the UI is now ready.
+  Services.obs.notifyObservers(window, "advanced-pane-loaded", null);
 }
 
-function selectCategory(name) {
+function onHashChange() {
+  gotoPref();
+}
+
+function gotoPref(aCategory) {
   let categories = document.getElementById("categories");
-  let item = categories.querySelector(".category[value=" + name + "]");
-  categories.selectedItem = item;
-  gotoPref(name);
-}
+  const kDefaultCategoryInternalName = categories.firstElementChild.value;
+  let hash = document.location.hash;
+  let category = aCategory || hash.substr(1) || kDefaultCategoryInternalName;
+  category = friendlyPrefCategoryNameToInternalName(category);
 
-function gotoPref(page) {
-  window.history.replaceState(page, document.title);
-  search(page, "data-category");
+  // Updating the hash (below) or changing the selected category
+  // will re-enter gotoPref.
+  if (gLastHash == category)
+    return;
+  let item = categories.querySelector(".category[value=" + category + "]");
+  if (!item) {
+    category = kDefaultCategoryInternalName;
+    item = categories.querySelector(".category[value=" + category + "]");
+  }
+
+  let newHash = internalPrefCategoryNameToFriendlyName(category);
+  if (gLastHash || category != kDefaultCategoryInternalName) {
+    document.location.hash = newHash;
+  }
+  // Need to set the gLastHash before setting categories.selectedItem since
+  // the categories 'select' event will re-enter the gotoPref codepath.
+  gLastHash = category;
+  categories.selectedItem = item;
+  window.history.replaceState(category, document.title);
+  search(category, "data-category");
 }
 
 function search(aQuery, aAttribute) {
@@ -73,4 +99,15 @@ function helpButtonCommand() {
   let helpTopic = categories.querySelector(".category[value=" + pane + "]")
                             .getAttribute("helpTopic");
   openHelpLink(helpTopic);
+}
+
+function friendlyPrefCategoryNameToInternalName(aName) {
+  if (aName.startsWith("pane"))
+    return aName;
+  return "pane" + aName.substring(0,1).toUpperCase() + aName.substr(1);
+}
+
+// This function is duplicated inside of utilityOverlay.js's openPreferences.
+function internalPrefCategoryNameToFriendlyName(aName) {
+  return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
 }
