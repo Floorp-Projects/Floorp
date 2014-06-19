@@ -49,7 +49,7 @@
 namespace js {
 
 class PerThreadData;
-class ThreadSafeContext;
+struct ThreadSafeContext;
 class AutoKeepAtoms;
 #ifdef JS_TRACE_LOGGING
 class TraceLogger;
@@ -86,7 +86,7 @@ class JitActivation;
 struct PcScriptCache;
 class Simulator;
 class SimulatorRuntime;
-class AutoFlushICache;
+struct AutoFlushICache;
 }
 
 /*

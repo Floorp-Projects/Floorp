@@ -34,7 +34,7 @@ class EventChainPreVisitor;
 
 namespace dom {
 
-class DOMFileMetadataParameters;
+struct DOMFileMetadataParameters;
 class FileHelper;
 class FileRequest;
 class FileService;

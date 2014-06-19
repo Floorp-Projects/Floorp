@@ -26,7 +26,7 @@ class nsIPrincipal;
 namespace mozilla {
 namespace css {
 
-class ImageValue;
+struct ImageValue;
 
 class ImageLoader MOZ_FINAL : public imgINotificationObserver,
                               public imgIOnloadBlocker {

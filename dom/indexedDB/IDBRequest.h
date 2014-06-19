@@ -27,7 +27,7 @@ class EventChainPostVisitor;
 class EventChainPreVisitor;
 namespace dom {
 class OwningIDBObjectStoreOrIDBIndexOrIDBCursor;
-class ErrorEventInit;
+struct ErrorEventInit;
 }
 }
 

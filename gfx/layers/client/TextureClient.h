@@ -47,7 +47,7 @@ class CompositableForwarder;
 class ISurfaceAllocator;
 class CompositableClient;
 class PlanarYCbCrImage;
-class PlanarYCbCrData;
+struct PlanarYCbCrData;
 class Image;
 class PTextureChild;
 class TextureChild;

@@ -23,7 +23,7 @@
 class nsIFrame;
 class nsPresContext;
 class nsStyleChangeList;
-class ElementPropertyTransition;
+struct ElementPropertyTransition;
 
 
 namespace mozilla {

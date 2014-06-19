@@ -22,7 +22,7 @@
 class gfxASurface;
 class gfxTextPerfMetrics;
 class gfxUserFontSet;
-class nsFont;
+struct nsFont;
 class nsFontCache;
 class nsFontMetrics;
 class nsIAtom;
@@ -30,7 +30,7 @@ class nsIDeviceContextSpec;
 class nsIScreen;
 class nsIScreenManager;
 class nsIWidget;
-class nsRect;
+struct nsRect;
 class nsRenderingContext;
 
 class nsDeviceContext MOZ_FINAL

@@ -15,7 +15,7 @@ namespace js {
 
 class AsmJSActivation;
 class AsmJSModule;
-namespace jit { class CallSite; }
+namespace jit { struct CallSite; }
 
 // Iterates over the frames of a single AsmJSActivation.
 class AsmJSFrameIterator

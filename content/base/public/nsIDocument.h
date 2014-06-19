@@ -80,7 +80,7 @@ class nsSmallVoidArray;
 class nsDOMCaretPosition;
 class nsViewportInfo;
 class nsIGlobalObject;
-class nsCSSSelectorList;
+struct nsCSSSelectorList;
 
 namespace mozilla {
 class ErrorResult;

@@ -457,7 +457,7 @@ OffThreadParsingMustWaitForGC(JSRuntime *rt);
 struct SourceCompressionTask
 {
     friend class ScriptSource;
-    friend class HelperThread;
+    friend struct HelperThread;
 
 #ifdef JS_THREADSAFE
     // Thread performing the compression.

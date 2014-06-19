@@ -37,7 +37,7 @@
  */
 namespace js {
 
-class MatchPair;
+struct MatchPair;
 class MatchPairs;
 class RegExpShared;
 
