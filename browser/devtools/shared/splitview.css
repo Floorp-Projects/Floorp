@@ -26,6 +26,7 @@ box,
   min-height: 3em;
   max-height: 14em;
   max-width: 400px;
+  min-width: 180px;
 }
 
 .splitview-nav {
