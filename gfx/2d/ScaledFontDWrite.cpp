@@ -309,7 +309,7 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
 TemporaryRef<Path>
 ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget *aTarget)
 {
-  if (aTarget->GetType() != BackendType::DIRECT2D) {
+  if (aTarget->GetBackendType() != BackendType::DIRECT2D) {
     return ScaledFontBase::GetPathForGlyphs(aBuffer, aTarget);
   }
 

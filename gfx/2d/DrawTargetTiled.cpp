@@ -26,7 +26,7 @@ DrawTargetTiled::Init(const TileSet& aTiles)
 
   for (size_t i = 0; i < mTiles.size(); i++) {
     if (mTiles[0].mDrawTarget->GetFormat() != mTiles[i].mDrawTarget->GetFormat() ||
-        mTiles[0].mDrawTarget->GetType() != mTiles[i].mDrawTarget->GetType()) {
+        mTiles[0].mDrawTarget->GetBackendType() != mTiles[i].mDrawTarget->GetBackendType()) {
       return false;
     }
     uint32_t newXMost = max(mRect.XMost(),
