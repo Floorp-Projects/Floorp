@@ -131,18 +131,11 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
 
   nsresult rv;
 
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(GetOwner());
-  if (NS_WARN_IF(!globalObject)) {
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitUsingWin(GetOwner()))) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  AutoJSAPI jsapi;
   JSContext* cx = jsapi.cx();
-
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
-  NS_ASSERTION(global, "Failed to get global object!");
-
-  JSAutoCompartment ac(cx, global);
 
   JS::Rooted<JS::Value> result(cx);
   switch (mOperation) {
