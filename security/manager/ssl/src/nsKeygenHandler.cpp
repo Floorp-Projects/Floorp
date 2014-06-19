@@ -67,9 +67,6 @@ const SEC_ASN1Template SECKEY_PQGParamsTemplate[] = {
     { 0, }
 };
 
-
-static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
-
 static PQGParams *
 decode_pqg_params(char *aStr)
 {
