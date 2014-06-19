@@ -14,4 +14,4 @@ else
 no_as_needed = -Wl,--no-as-needed $1 -Wl,--as-needed
 endif
 
-EXTRA_DSO_LDOPTS += $(call no_as_needed,-lgtk-3 -lgdk-3)
+EXTRA_DSO_LDOPTS += $(filter -L%,$(MOZ_GTK3_LIBS)) $(call no_as_needed,-lgtk-3 -lgdk-3)
