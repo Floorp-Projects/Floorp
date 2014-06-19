@@ -53,8 +53,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
          "we end up with the appropriate constructor: " + c);
       is(Cu.unwaiveXrays(Cu.waiveXrays(new iwin[c]).constructor), iwin[c],
          "constructor property is set up right: " + c);
-      is(Object.getPrototypeOf(new iwin[c]),
-         Cu.unwaiveXrays(Cu.waiveXrays(iwin[c]).prototype),
+      is(Object.getPrototypeOf(new iwin[c]), iwin[c].prototype,
          "prototype is correct: " + c);
       is(global(new iwin[c]), iwin, "Got the right global: " + c);
     }
