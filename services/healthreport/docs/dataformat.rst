@@ -1542,6 +1542,10 @@ Daily counts are reported in the following properties:
 
 translationOpportunityCount
     Integer count of the number of opportunities there were to translate a page.
+missedTranslationOpportunityCount
+    Integer count of the number of missed opportunities there were to translate a page.
+    A missed opportunity is when the page language is not supported by the translation
+    provider.
 pageTranslatedCount
     Integer count of the number of pages translated.
 charactersTranslatedCount
@@ -1558,6 +1562,9 @@ properties:
 
 translationOpportunityCountsByLanguage
     A mapping from language to count of opportunities to translate that
+    language.
+missedTranslationOpportunityCountsByLanguage
+    A mapping from language to count of missed opportunities to translate that
     language.
 pageTranslatedCountsByLanguage
     A mapping from language to the counts of pages translated from that
