@@ -243,10 +243,15 @@ WifiGeoPositionProvider.prototype = {
         let radio = radioService.getRadioInterface(i);
         let iccInfo = radio.rilContext.iccInfo;
         let cell = radio.rilContext.voice.cell;
+        let type = radio.rilContext.voice.type;
 
-        if (iccInfo && cell) {
-          // TODO type and signal strength
-          result.push({ radio: "gsm",
+        if (iccInfo && cell && type) {
+          if (type === "gsm" || type === "gprs" || type === "edge") {
+            type = "gsm";
+          } else {
+            type = "wcdma";
+          }
+          result.push({ radio: type,
                       mobileCountryCode: iccInfo.mcc,
                       mobileNetworkCode: iccInfo.mnc,
                       locationAreaCode: cell.gsmLocationAreaCode,
