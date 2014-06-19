@@ -655,7 +655,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   if (userData) {
     SourceSurfaceUserData *surf = static_cast<SourceSurfaceUserData*>(userData);
 
-    if (surf->mSrcSurface->IsValid() && surf->mBackendType == aTarget->GetType()) {
+    if (surf->mSrcSurface->IsValid() && surf->mBackendType == aTarget->GetBackendType()) {
       return surf->mSrcSurface;
     }
     // We can just continue here as when setting new user data the destroy
@@ -671,7 +671,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
     format = SurfaceFormat::B8G8R8A8;
   }
 
-  if (aTarget->GetType() == BackendType::CAIRO) {
+  if (aTarget->GetBackendType() == BackendType::CAIRO) {
     // If we're going to be used with a CAIRO DrawTarget, then just create a
     // SourceSurfaceCairo since we don't know the underlying type of the CAIRO
     // DrawTarget and can't pick a better surface type. Doing this also avoids
@@ -741,7 +741,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
   }
 
   if (!srcBuffer) {
-    MOZ_ASSERT(aTarget->GetType() != BackendType::CAIRO,
+    MOZ_ASSERT(aTarget->GetBackendType() != BackendType::CAIRO,
                "We already tried CreateSourceSurfaceFromNativeSurface with a "
                "DrawTargetCairo above");
     // We've run out of performant options. We now try creating a SourceSurface
@@ -780,7 +780,7 @@ gfxPlatform::GetSourceSurfaceForSurface(DrawTarget *aTarget, gfxASurface *aSurfa
 
   // Add user data to aSurface so we can cache lookups in the future.
   SourceSurfaceUserData *srcSurfUD = new SourceSurfaceUserData;
-  srcSurfUD->mBackendType = aTarget->GetType();
+  srcSurfUD->mBackendType = aTarget->GetBackendType();
   srcSurfUD->mSrcSurface = srcBuffer;
   aSurface->SetData(&kSourceSurface, srcSurfUD, SourceBufferDestroy);
 
@@ -846,7 +846,7 @@ gfxPlatform::SupportsAzureContentForDrawTarget(DrawTarget* aTarget)
     return false;
   }
 
-  return SupportsAzureContentForType(aTarget->GetType());
+  return SupportsAzureContentForType(aTarget->GetBackendType());
 }
 
 bool
@@ -927,7 +927,7 @@ gfxPlatform::PurgeSkiaCache()
 already_AddRefed<gfxASurface>
 gfxPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BackendType::CAIRO) {
+  if (aTarget->GetBackendType() == BackendType::CAIRO) {
     cairo_surface_t* csurf =
       static_cast<cairo_surface_t*>(aTarget->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE));
     if (csurf) {
@@ -2072,7 +2072,7 @@ TemporaryRef<ScaledFont>
 gfxPlatform::GetScaledFontForFontWithCairoSkia(DrawTarget* aTarget, gfxFont* aFont)
 {
     NativeFont nativeFont;
-    if (aTarget->GetType() == BackendType::CAIRO || aTarget->GetType() == BackendType::SKIA) {
+    if (aTarget->GetBackendType() == BackendType::CAIRO || aTarget->GetBackendType() == BackendType::SKIA) {
         nativeFont.mType = NativeFontType::CAIRO_FONT_FACE;
         nativeFont.mFont = aFont->GetCairoScaledFont();
         return Factory::CreateScaledFontForNativeFont(nativeFont, aFont->GetAdjustedSize());

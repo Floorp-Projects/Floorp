@@ -383,7 +383,7 @@ gfxPlatformMac::ReadAntiAliasingThreshold()
 already_AddRefed<gfxASurface>
 gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
-  if (aTarget->GetType() == BackendType::COREGRAPHICS_ACCELERATED) {
+  if (aTarget->GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED) {
     RefPtr<SourceSurface> source = aTarget->Snapshot();
     RefPtr<DataSourceSurface> sourceData = source->GetDataSurface();
     unsigned char* data = sourceData->GetData();
@@ -393,7 +393,7 @@ gfxPlatformMac::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
     nsRefPtr<gfxImageSurface> cpy = new gfxImageSurface(ThebesIntSize(sourceData->GetSize()), gfxImageFormat::ARGB32);
     cpy->CopyFrom(surf);
     return cpy.forget();
-  } else if (aTarget->GetType() == BackendType::COREGRAPHICS) {
+  } else if (aTarget->GetBackendType() == BackendType::COREGRAPHICS) {
     CGContextRef cg = static_cast<CGContextRef>(aTarget->GetNativeSurface(NativeSurfaceType::CGCONTEXT));
 
     //XXX: it would be nice to have an implicit conversion from IntSize to gfxIntSize
