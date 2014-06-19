@@ -4,7 +4,7 @@ Object.defineProperty(target, 'foo', {
     configurable: true
 });
 var names = Object.getOwnPropertyNames(new Proxy(target, {
-    getOwnPropertyNames : function (target) {
+    ownKeys: function (target) {
         return [ 'bar' ];
     }
 }));
@@ -30,7 +30,7 @@ var names = Object.getOwnPropertyNames(new Proxy(Object.create(Object.create(nul
         configurable: true
     }
 }), {
-    getOwnPropertyNames: function (target) {
+    ownKeys: function (target) {
         return [ 'c', 'e' ];
     }
 }));
