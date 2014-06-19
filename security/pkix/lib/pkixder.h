@@ -622,30 +622,35 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-enum Version { v1 = 0, v2 = 1, v3 = 2 };
+MOZILLA_PKIX_ENUM_CLASS Version { v1 = 0, v2 = 1, v3 = 2 };
 
 // X.509 Certificate and OCSP ResponseData both use this
 // "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
 // different default versions.
 inline Result
-OptionalVersion(Input& input, /*out*/ uint8_t& version)
+OptionalVersion(Input& input, /*out*/ Version& version)
 {
-  const uint8_t tag = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
-  if (!input.Peek(tag)) {
-    version = v1;
+  static const uint8_t TAG = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
+  if (!input.Peek(TAG)) {
+    version = Version::v1;
     return Success;
   }
-  if (ExpectTagAndLength(input, tag, 3) != Success) {
+  Input value;
+  if (ExpectTagAndGetValue(input, TAG, value) != Success) {
     return Failure;
   }
-  if (ExpectTagAndLength(input, INTEGER, 1) != Success) {
+  uint8_t integerValue;
+  if (Integer(value, integerValue) != Success) {
     return Failure;
   }
-  if (input.Read(version) != Success) {
+  if (End(value) != Success) {
     return Failure;
   }
-  if (version & 0x80) { // negative
-    return Fail(SEC_ERROR_BAD_DER);
+  switch (integerValue) {
+    case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
+    case static_cast<uint8_t>(Version::v2): version = Version::v2; break;
+    default:
+      return Fail(SEC_ERROR_BAD_DER);
   }
   return Success;
 }

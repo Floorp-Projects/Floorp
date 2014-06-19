@@ -312,7 +312,7 @@ DecodeBasicConstraints(der::Input& input, /*out*/ bool& isCA,
 Result
 CheckBasicConstraints(EndEntityOrCA endEntityOrCA,
                       const SECItem* encodedBasicConstraints,
-                      const der::Version version, TrustLevel trustLevel,
+                      der::Version version, TrustLevel trustLevel,
                       unsigned int subCACount)
 {
   bool isCA = false;
@@ -635,14 +635,6 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
     *trustLevelOut = trustLevel;
   }
 
-  // XXX: Good enough for now. There could be an illegal explicit version
-  // number or one we don't support, but we can safely treat those all as v3
-  // for now since processing of v3 certificates is strictly more strict than
-  // processing of v1 certificates.
-  der::Version version = (!cert.GetNSSCert()->version.data &&
-                          !cert.GetNSSCert()->version.len) ? der::Version::v1
-                                                           : der::Version::v3;
-
   // 4.2.1.1. Authority Key Identifier is ignored (see bug 965136).
 
   // 4.2.1.2. Subject Key Identifier is ignored (see bug 965136).
@@ -675,7 +667,7 @@ CheckIssuerIndependentProperties(TrustDomain& trustDomain,
 
   // 4.2.1.9. Basic Constraints.
   rv = CheckBasicConstraints(endEntityOrCA, cert.encodedBasicConstraints,
-                             version, trustLevel, subCACount);
+                             cert.version, trustLevel, subCACount);
   if (rv != Success) {
     return rv;
   }
