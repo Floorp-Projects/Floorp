@@ -107,7 +107,7 @@ random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?_
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-                                             
+
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
