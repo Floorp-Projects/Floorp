@@ -25,7 +25,7 @@ const float EPSILON = 0.0001f;
 // isn't too large.
 const float COORDINATE_EPSILON = 0.01f;
 
-class FrameMetrics;
+struct FrameMetrics;
 class AsyncPanZoomController;
 
 /**

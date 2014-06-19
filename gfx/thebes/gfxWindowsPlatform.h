@@ -48,9 +48,9 @@ namespace layers {
 class DeviceManagerD3D9;
 }
 }
-class IDirect3DDevice9;
-class ID3D11Device;
-class IDXGIAdapter1;
+struct IDirect3DDevice9;
+struct ID3D11Device;
+struct IDXGIAdapter1;
 
 class nsIMemoryReporter;
 

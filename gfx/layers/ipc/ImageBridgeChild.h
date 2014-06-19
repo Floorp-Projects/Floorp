@@ -38,7 +38,7 @@ class ImageClient;
 class ImageContainer;
 class ImageBridgeParent;
 class CompositableClient;
-class CompositableTransaction;
+struct CompositableTransaction;
 class Image;
 class TextureClient;
 

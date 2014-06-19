@@ -18,7 +18,7 @@ struct nsIntRect;
 
 namespace mozilla {
 namespace layers {
-class PlanarYCbCrData;
+struct PlanarYCbCrData;
 }
 }
 

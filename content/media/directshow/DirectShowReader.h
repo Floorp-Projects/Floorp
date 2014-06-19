@@ -12,10 +12,10 @@
 #include "mozilla/RefPtr.h"
 #include "MP3FrameParser.h"
 
-class IGraphBuilder;
-class IMediaControl;
-class IMediaSeeking;
-class IMediaEventEx;
+struct IGraphBuilder;
+struct IMediaControl;
+struct IMediaSeeking;
+struct IMediaEventEx;
 
 namespace mozilla {
 

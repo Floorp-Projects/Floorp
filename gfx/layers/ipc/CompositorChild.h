@@ -25,7 +25,7 @@ namespace layers {
 
 class ClientLayerManager;
 class CompositorParent;
-class FrameMetrics;
+struct FrameMetrics;
 
 class CompositorChild MOZ_FINAL : public PCompositorChild
 {
