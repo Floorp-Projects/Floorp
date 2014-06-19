@@ -6,7 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
-this.EXPORTED_SYMBOLS = [ "BingTranslation" ];
+this.EXPORTED_SYMBOLS = [ "BingTranslator" ];
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
@@ -40,7 +40,7 @@ const MAX_REQUESTS = 15;
  * @returns {Promise}          A promise that will resolve when the translation
  *                             task is finished.
  */
-this.BingTranslation = function(translationDocument, sourceLanguage, targetLanguage) {
+this.BingTranslator = function(translationDocument, sourceLanguage, targetLanguage) {
   this.translationDocument = translationDocument;
   this.sourceLanguage = sourceLanguage;
   this.targetLanguage = targetLanguage;
@@ -50,7 +50,7 @@ this.BingTranslation = function(translationDocument, sourceLanguage, targetLangu
   this._translatedCharacterCount = 0;
 };
 
-this.BingTranslation.prototype = {
+this.BingTranslator.prototype = {
   /**
    * Performs the translation, splitting the document into several chunks
    * respecting the data limits of the API.
@@ -282,7 +282,10 @@ BingRequest.prototype = {
     return Task.spawn(function *(){
       let token = yield BingTokenManager.getToken();
       let auth = "Bearer " + token;
-      let request = new RESTRequest("https://api.microsofttranslator.com/v2/Http.svc/TranslateArray");
+      let url = getUrlParam("https://api.microsofttranslator.com/v2/Http.svc/TranslateArray",
+                            "browser.translation.bing.translateArrayURL",
+                            false);
+      let request = new RESTRequest(url);
       request.setHeader("Content-type", "text/xml");
       request.setHeader("Authorization", auth);
 
@@ -358,15 +361,18 @@ let BingTokenManager = {
    *                     string once it is obtained.
    */
   _getNewToken: function() {
-    let request = new RESTRequest("https://datamarket.accesscontrol.windows.net/v2/OAuth2-13");
+    let url = getUrlParam("https://datamarket.accesscontrol.windows.net/v2/OAuth2-13",
+                          "browser.translation.bing.authURL",
+                          false);
+    let request = new RESTRequest(url);
     request.setHeader("Content-type", "application/x-www-form-urlencoded");
     let params = [
       "grant_type=client_credentials",
       "scope=" + encodeURIComponent("http://api.microsofttranslator.com"),
       "client_id=" +
-      getAuthTokenParam("%BING_API_CLIENTID%", "browser.translation.bing.clientIdOverride"),
+      getUrlParam("%BING_API_CLIENTID%", "browser.translation.bing.clientIdOverride"),
       "client_secret=" +
-      getAuthTokenParam("%BING_API_KEY%", "browser.translation.bing.apiKeyOverride")
+      getUrlParam("%BING_API_KEY%", "browser.translation.bing.apiKeyOverride")
     ];
 
     let deferred = Promise.defer();
@@ -416,11 +422,10 @@ function escapeXML(aStr) {
  * Fetch an auth token (clientID or client secret), which may be overridden by
  * a pref if it's set.
  */
-function getAuthTokenParam(key, prefName) {
-  let val;
-  try {
-    val = Services.prefs.getCharPref(prefName);
-  } catch(ex) {}
+function getUrlParam(paramValue, prefName, encode = true) {
+  if (Services.prefs.getPrefType(prefName))
+    paramValue = Services.prefs.getCharPref(prefName);
+  paramValue = Services.urlFormatter.formatURL(paramValue);
 
-  return encodeURIComponent(Services.urlFormatter.formatURL(val || key));
+  return encode ? encodeURIComponent(paramValue) : paramValue;
 }
