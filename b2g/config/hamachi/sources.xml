@@ -17,7 +17,7 @@
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-dalvik" path="dalvik" remote="b2g" revision="ca1f327d5acc198bb4be62fa51db2c039032c9ce"/>
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="51d57b364cee312a828b2ee1cefa909f52476f9e"/>
+  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="c2c92e7be95dd0b65ee44113e1d17592dd0e20c6"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="44b04243e31cd16f3baf54fcd4b5fecf9deb8b94"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
@@ -96,7 +96,7 @@
   <project name="platform/system/netd" path="system/netd" revision="2e226e6e636ca0a8cc4c51093e46f4baba1ffcce"/>
   <project name="platform/system/vold" path="system/vold" revision="8ac5eef8ea3a456b96d52ce2091bf6d814782d8c"/>
   <!-- hamachi specific things -->
-  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="ccd8b858242c099cb4bc725daf22896ab4a4b325"/>
+  <project name="quic/lf/b2g/build" path="device/qcom/b2g_common" revision="e000be5f0a08054b7dad7b67ebbc782f952b6a6c"/>
   <project name="quic/lf/b2g/external/jsmin" path="external/jsmin" revision="cec896f0affaa0226c02605ad28d42df1bc0e393"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="d13aaf080177b7c48f243d51827db5c7a7873cd0"/>
   <project name="platform/vendor/qcom/msm7627a" path="device/qcom/msm7627a" revision="f06bcacc6f13cec895dc5d4c2385c076396194ec"/>
