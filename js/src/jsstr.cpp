@@ -3063,25 +3063,35 @@ struct StringRange
     { }
 };
 
-static inline JSFatInlineString *
-FlattenSubstrings(JSContext *cx, const jschar *chars,
-                  const StringRange *ranges, size_t rangesLen, size_t outputLen)
+template <typename CharT>
+static void
+CopySubstringsToFatInline(JSFatInlineString *dest, const CharT *src, const StringRange *ranges,
+                          size_t rangesLen, size_t outputLen)
 {
-    JS_ASSERT(JSFatInlineString::twoByteLengthFits(outputLen));
+    CharT *buf = dest->init<CharT>(outputLen);
+    size_t pos = 0;
+    for (size_t i = 0; i < rangesLen; i++) {
+        PodCopy(buf + pos, src + ranges[i].start, ranges[i].length);
+        pos += ranges[i].length;
+    }
 
+    MOZ_ASSERT(pos == outputLen);
+    buf[outputLen] = 0;
+}
+
+static inline JSFatInlineString *
+FlattenSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr, const StringRange *ranges,
+                  size_t rangesLen, size_t outputLen)
+{
     JSFatInlineString *str = js_NewGCFatInlineString<CanGC>(cx);
     if (!str)
         return nullptr;
 
-    jschar *buf = str->initTwoByte(outputLen);
-    size_t pos = 0;
-    for (size_t i = 0; i < rangesLen; i++) {
-        PodCopy(buf + pos, chars + ranges[i].start, ranges[i].length);
-        pos += ranges[i].length;
-    }
-    JS_ASSERT(pos == outputLen);
-
-    buf[outputLen] = 0;
+    AutoCheckCannotGC nogc;
+    if (flatStr->hasLatin1Chars())
+        CopySubstringsToFatInline(str, flatStr->latin1Chars(nogc), ranges, rangesLen, outputLen);
+    else
+        CopySubstringsToFatInline(str, flatStr->twoByteChars(nogc), ranges, rangesLen, outputLen);
     return str;
 }
 
@@ -3095,9 +3105,10 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
     if (rangesLen == 1)
         return js_NewDependentString(cx, flatStr, ranges[0].start, ranges[0].length);
 
-    const jschar *chars = flatStr->getChars(cx);
-    if (!chars)
-        return nullptr;
+    bool isLatin1 = flatStr->hasLatin1Chars();
+    uint32_t fatInlineMaxLength = isLatin1
+                                  ? JSFatInlineString::MAX_LENGTH_LATIN1
+                                  : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
 
     /* Collect substrings into a rope */
     size_t i = 0;
@@ -3109,7 +3120,7 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
         size_t substrLen = 0;
         size_t end = i;
         for (; end < rangesLen; end++) {
-            if (substrLen + ranges[end].length > JSFatInlineString::MAX_LENGTH_TWO_BYTE)
+            if (substrLen + ranges[end].length > fatInlineMaxLength)
                 break;
             substrLen += ranges[end].length;
         }
@@ -3120,7 +3131,7 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
             part = js_NewDependentString(cx, flatStr, sr.start, sr.length);
         } else {
             /* Copy the ranges (linearly) into a JSFatInlineString */
-            part = FlattenSubstrings(cx, chars, ranges + i, end - i, substrLen);
+            part = FlattenSubstrings(cx, flatStr, ranges + i, end - i, substrLen);
             i = end;
         }
 
