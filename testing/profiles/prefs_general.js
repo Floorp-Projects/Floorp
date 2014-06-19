@@ -200,3 +200,7 @@ user_pref('identity.fxaccounts.auth.uri', 'https://%(server)s/fxa-dummy/');
 
 // Enable logging of APZ test data (see bug 961289).
 user_pref('apz.test.logging_enabled', true);
+
+// Make sure Translation won't hit the network.
+user_pref("browser.translation.bing.authURL", "http://%(server)s/browser/browser/components/translation/test/bing.sjs");
+user_pref("browser.translation.bing.translateArrayURL", "http://%(server)s/browser/browser/components/translation/test/bing.sjs");
