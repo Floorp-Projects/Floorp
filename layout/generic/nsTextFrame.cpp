@@ -8581,9 +8581,9 @@ nsTextFrame::HasAnyNoncollapsedCharacters()
 }
 
 bool
-nsTextFrame::UpdateOverflow() 
+nsTextFrame::UpdateOverflow()
 {
-  nsRect rect(nsPoint(0, 0), GetSize());
+  const nsRect rect(nsPoint(0, 0), GetSize());
   nsOverflowAreas overflowAreas(rect, rect);
 
   if (GetStateBits() & NS_FRAME_FIRST_REFLOW) {
@@ -8596,18 +8596,26 @@ nsTextFrame::UpdateOverflow()
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
   provider.InitializeForDisplay(true);
 
-  nsIFrame*decorationsBlock;
+  nsIFrame* decorationsBlock;
   if (IsFloatingFirstLetterChild()) {
     decorationsBlock = GetParent();
   } else {
-    for (nsIFrame* f = this; f; f = f->GetParent()) {
+    nsIFrame* f = this;
+    for (;;) {
       nsBlockFrame* fBlock = nsLayoutUtils::GetAsBlock(f);
       if (fBlock) {
         decorationsBlock = fBlock;
         break;
       }
+
+      f = f->GetParent();
+      if (!f) {
+        NS_ERROR("Couldn't find any block ancestor (for text decorations)");
+        return false;
+      }
     }
   }
+
   UnionAdditionalOverflow(PresContext(), decorationsBlock, provider,
                           &overflowAreas.VisualOverflow(), true);
   return FinishAndStoreOverflow(overflowAreas, GetSize());
