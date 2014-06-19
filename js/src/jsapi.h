@@ -2215,7 +2215,7 @@ extern JS_PUBLIC_API(int)
 JS_IdArrayLength(JSContext *cx, JSIdArray *ida);
 
 extern JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index);
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, unsigned index);
 
 extern JS_PUBLIC_API(void)
 JS_DestroyIdArray(JSContext *cx, JSIdArray *ida);
@@ -2240,7 +2240,7 @@ class AutoIdArray : private AutoGCRooter
     }
     jsid operator[](size_t i) const {
         JS_ASSERT(idArray);
-        return JS_IdArrayGet(context, idArray, i);
+        return JS_IdArrayGet(context, idArray, unsigned(i));
     }
     size_t length() const {
         return JS_IdArrayLength(context, idArray);

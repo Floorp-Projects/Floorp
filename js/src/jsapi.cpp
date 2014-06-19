@@ -2099,9 +2099,9 @@ JS_IdArrayLength(JSContext *cx, JSIdArray *ida)
 }
 
 JS_PUBLIC_API(jsid)
-JS_IdArrayGet(JSContext *cx, JSIdArray *ida, int index)
+JS_IdArrayGet(JSContext *cx, JSIdArray *ida, unsigned index)
 {
-    JS_ASSERT(index >= 0 && index < ida->length);
+    JS_ASSERT(index < unsigned(ida->length));
     return ida->vector[index];
 }
 
