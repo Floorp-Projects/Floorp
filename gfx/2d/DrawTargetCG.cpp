@@ -156,7 +156,7 @@ DrawTargetCG::~DrawTargetCG()
 }
 
 BackendType
-DrawTargetCG::GetType() const
+DrawTargetCG::GetBackendType() const
 {
   // It may be worth spliting Bitmap and IOSurface DrawTarget
   // into seperate classes.
@@ -186,7 +186,7 @@ DrawTargetCG::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aForma
   // XXX: in thebes we use CGLayers to do this kind of thing. It probably makes sense
   // to add that in somehow, but at a higher level
   RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
-  if (newTarget->Init(GetType(), aSize, aFormat)) {
+  if (newTarget->Init(GetBackendType(), aSize, aFormat)) {
     return newTarget.forget();
   }
   return nullptr;
@@ -1573,7 +1573,8 @@ DrawTargetCG::MarkChanged()
 CGContextRef
 BorrowedCGContext::BorrowCGContextFromDrawTarget(DrawTarget *aDT)
 {
-  if (aDT->GetType() == BackendType::COREGRAPHICS || aDT->GetType() == BackendType::COREGRAPHICS_ACCELERATED) {
+  if (aDT->GetBackendType() == BackendType::COREGRAPHICS ||
+      aDT->GetBackendType() == BackendType::COREGRAPHICS_ACCELERATED) {
     DrawTargetCG* cgDT = static_cast<DrawTargetCG*>(aDT);
     cgDT->MarkChanged();
 
