@@ -13,6 +13,8 @@
 #include "MFTDecoder.h"
 #include "mozilla/RefPtr.h"
 
+class mp4_demuxer::MP4Sample;
+
 namespace mozilla {
 
 // Encapsulates the initialization of the MFTDecoder appropriate for decoding
@@ -25,6 +27,11 @@ public:
   // Creates an initializs the MFTDecoder.
   // Returns nullptr on failure.
   virtual TemporaryRef<MFTDecoder> Init() = 0;
+
+  // Submit a compressed sample for decoding.
+  // This should forward to the MFTDecoder after performing
+  // any required sample formatting.
+  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) = 0;
 
   // Produces decoded output, if possible. Blocks until output can be produced,
   // or until no more is able to be produced.
