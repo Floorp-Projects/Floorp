@@ -5779,6 +5779,19 @@ nsDocShell::SetMixedContentChannel(nsIChannel* aMixedContentChannel)
 }
 
 NS_IMETHODIMP
+nsDocShell::GetFailedChannel(nsIChannel** aFailedChannel)
+{
+    NS_ENSURE_ARG_POINTER(aFailedChannel);
+    nsIDocument* doc = GetDocument();
+    if (!doc) {
+        *aFailedChannel = nullptr;
+        return NS_OK;
+    }
+    NS_IF_ADDREF(*aFailedChannel = doc->GetFailedChannel());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetMixedContentChannel(nsIChannel **aMixedContentChannel)
 {
     NS_ENSURE_ARG_POINTER(aMixedContentChannel);
@@ -8294,6 +8307,11 @@ nsDocShell::CreateContentViewer(const char *aContentType,
         mLoadType = mFailedLoadType;
 
         nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
+
+        nsIDocument* doc = viewer->GetDocument();
+        if (doc) {
+            doc->SetFailedChannel(failedChannel);
+        }
 
         // Make sure we have a URI to set currentURI.
         nsCOMPtr<nsIURI> failedURI;
