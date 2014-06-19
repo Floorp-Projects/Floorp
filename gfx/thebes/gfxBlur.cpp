@@ -322,7 +322,9 @@ GetCachedBlur(DrawTarget *aDT,
   if (!gBlurCache) {
     gBlurCache = new BlurCache();
   }
-  BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect, aDT->GetType(), &aDirtyRect);
+  BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect,
+                                             aDT->GetBackendType(),
+                                             &aDirtyRect);
   if (cached) {
     *aTopLeft = cached->mTopLeft;
     return cached->mBlur;
@@ -341,14 +343,16 @@ CacheBlur(DrawTarget *aDT,
 {
   // If we already had a cached value with this key, but an incorrect dirty region then just update
   // the existing entry
-  if (BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect, aDT->GetType(), nullptr)) {
+  if (BlurCacheData* cached = gBlurCache->Lookup(aRect, aBlurRadius, aSkipRect,
+                                                 aDT->GetBackendType(),
+                                                 nullptr)) {
     cached->mBlur = aBlur;
     cached->mTopLeft = aTopLeft;
     cached->mDirtyRect = aDirtyRect;
     return;
   }
 
-  BlurCacheKey key(aRect, aBlurRadius, aSkipRect, aDT->GetType());
+  BlurCacheKey key(aRect, aBlurRadius, aSkipRect, aDT->GetBackendType());
   BlurCacheData* data = new BlurCacheData(aBlur, aTopLeft, aDirtyRect, key);
   if (!gBlurCache->RegisterEntry(data)) {
     delete data;
