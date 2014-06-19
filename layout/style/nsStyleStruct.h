@@ -1323,10 +1323,6 @@ struct nsStylePosition {
   float         mFlexGrow;              // [reset] float
   float         mFlexShrink;            // [reset] float
   nsStyleCoord  mZIndex;                // [reset] integer, auto
-  // NOTE: Fields so far can be memcpy()'ed, while following fields
-  // need to have their copy constructor called when we're being copied.
-  // See nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
-  // in nsStyleStruct.cpp
   nsStyleGridTemplate mGridTemplateColumns;
   nsStyleGridTemplate mGridTemplateRows;
 
