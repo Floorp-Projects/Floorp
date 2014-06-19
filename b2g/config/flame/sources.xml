@@ -118,10 +118,10 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="3f58e19523d0435d214db49475f95c73a2036525"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="243b6f3d219592a84c7318e9446cde397233ae39"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="30a441fb7275fc5bc347f84ccb29e977a7eca34e"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
+  <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="e81502511cda303c803e63f049574634bc96f9f2"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
   <project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="dd925f76e4f149c3d5571b80e12f7e24bbe89c59"/>
