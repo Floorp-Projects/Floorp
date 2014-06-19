@@ -538,7 +538,10 @@ abstract class BaseTest extends BaseRobocopTest {
             }
         }, MAX_WAIT_MS);
         mAsserter.ok(success, "waiting for add tab view", "add tab view available");
+        Actions.EventExpecter pageShowExpecter = mActions.expectGeckoEvent("Content:PageShow");
         mSolo.clickOnView(mSolo.getView(R.id.add_tab));
+        pageShowExpecter.blockForEvent();
+        pageShowExpecter.unregisterListener();
     }
 
     public void addTab(String url) {
