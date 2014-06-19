@@ -32,8 +32,8 @@ this.Translation = {
 
   serviceUnavailable: false,
 
-  supportedSourceLanguages: ["en", "zh", "ja", "es", "de", "fr", "ru", "ar", "ko", "pt"],
-  supportedTargetLanguages: ["en", "pl", "tr", "vi"],
+  supportedSourceLanguages: ["zh", "de", "en", "fr", "ja", "ko", "pt", "ru", "es"],
+  supportedTargetLanguages: ["zh", "de", "en", "fr", "ja", "ko", "pt", "ru", "es"],
 
   _defaultTargetLanguage: "",
   get defaultTargetLanguage() {
