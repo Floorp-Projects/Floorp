@@ -10,6 +10,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const DBG_STRINGS_URI = "chrome://browser/locale/devtools/debugger.properties";
 const NEW_SOURCE_IGNORED_URLS = ["debugger eval code", "self-hosted", "XStringBundle"];
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
+const EDITOR_BREAKPOINTS_UPDATE_DELAY = 200; // ms
 const FETCH_SOURCE_RESPONSE_DELAY = 200; // ms
 const FETCH_EVENT_LISTENERS_DELAY = 200; // ms
 const FRAME_STEP_CLEAR_DELAY = 100; // ms
@@ -1167,8 +1168,10 @@ SourceScripts.prototype = {
 
     // If there are any stored breakpoints for this source, display them again,
     // both in the editor and the breakpoints pane.
-    DebuggerController.Breakpoints.updateEditorBreakpoints();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
+    setNamedTimeout("update-editor-bp", EDITOR_BREAKPOINTS_UPDATE_DELAY, () => {
+      DebuggerController.Breakpoints.updateEditorBreakpoints();
+    });
 
     // Make sure the events listeners are up to date.
     if (DebuggerView.instrumentsPaneTab == "events-tab") {
@@ -1219,8 +1222,8 @@ SourceScripts.prototype = {
 
     // If there are any stored breakpoints for the sources, display them again,
     // both in the editor and the breakpoints pane.
-    DebuggerController.Breakpoints.updateEditorBreakpoints();
     DebuggerController.Breakpoints.updatePaneBreakpoints();
+    DebuggerController.Breakpoints.updateEditorBreakpoints();
 
     // Signal that sources have been added.
     window.emit(EVENTS.SOURCES_ADDED);
