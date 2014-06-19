@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
+#include "mozilla/IntegerPrintfMacros.h"
 #include "nsThreadUtils.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransport.h"
@@ -228,7 +229,7 @@ ServeResourceEvent::Run() {
       start = strtoll(s+byteRange.Length(), nullptr, 10);
 
       // Clamp 'start' to be between 0 and the resource length.
-      start = std::max(0ll, std::min(resource->GetLength(), start));
+      start = std::max(int64_t(0), std::min(resource->GetLength(), start));
     }
   }
 
@@ -268,7 +269,7 @@ ServeResourceEvent::Run() {
     static_assert (buffer_size > 1024,
                    "buffer_size must be large enough "
                    "to hold response headers");
-    snprintf(b, buffer_size, "Content-Length: %lld\r\n", contentlength);
+    snprintf(b, buffer_size, "Content-Length: %" PRId64 "\r\n", contentlength);
     rv = WriteAll(b, strlen(b));
     if (NS_FAILED(rv)) { Shutdown(); return NS_OK; }
   }
@@ -279,7 +280,8 @@ ServeResourceEvent::Run() {
     static_assert (buffer_size > 1024,
                    "buffer_size must be large enough "
                    "to hold response headers");
-    snprintf(b, buffer_size, "Content-Range: bytes %lld-%lld/%lld\r\n",
+    snprintf(b, buffer_size, "Content-Range: "
+             "bytes %" PRId64 "-%" PRId64 "/%" PRId64 "\r\n",
              start, resource->GetLength() - 1, resource->GetLength());
     rv = WriteAll(b, strlen(b));
     if (NS_FAILED(rv)) { Shutdown(); return NS_OK; }
