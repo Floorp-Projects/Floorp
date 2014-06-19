@@ -600,7 +600,13 @@ var ViewHistory = (function ViewHistoryClosure() {
     }).bind(this);
 
 
-    resolvePromise(sessionStorage.getItem('pdfjsHistory'));
+    var sessionHistory;
+    try {
+      // Workaround for security error when the preference
+      // network.cookie.lifetimePolicy is set to 1, see Mozilla Bug 365772.
+      sessionHistory = sessionStorage.getItem('pdfjsHistory');
+    } catch (ex) {}
+    resolvePromise(sessionHistory);
 
   }
 
@@ -637,7 +643,10 @@ var ViewHistory = (function ViewHistoryClosure() {
       var database = JSON.stringify(this.database);
 
 
-      sessionStorage.setItem('pdfjsHistory',database);
+      try {
+        // See comment in try-catch block above.
+        sessionStorage.setItem('pdfjsHistory', database);
+      } catch (ex) {}
 
     },
 
