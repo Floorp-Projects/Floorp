@@ -14,7 +14,8 @@ enum ConnectionType {
     "ethernet",
     "wifi",
     "other",
-    "none"
+    "none",
+    "unknown"
 };
 
 [Pref="dom.netinfo.enabled"]
