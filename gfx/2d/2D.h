@@ -620,9 +620,6 @@ public:
   DrawTarget() : mTransformDirty(false), mPermitSubpixelAA(false) {}
   virtual ~DrawTarget() {}
 
-  // Temporary - to be removed after Mozilla code uses GetBackendType()
-  BackendType GetType() const { return GetBackendType(); }
-
   virtual BackendType GetBackendType() const = 0;
   /**
    * Returns a SourceSurface which is a snapshot of the current contents of the DrawTarget.
