@@ -9,17 +9,13 @@
              optional BluetoothAttributeEventInit eventInitDict)]
 interface BluetoothAttributeEvent : Event
 {
-  readonly attribute unsigned short   attr;
-  readonly attribute any              value;
-  // We don't support sequences in unions yet (Bug 767924)
-  /* readonly attribute (BluetoothAdapter or BluetoothAdapterState or
-   *                     BluetoothClassOfDevice or boolean or
-   *                     DOMString or sequence<DOMString>) value;
-   */
+  readonly attribute any attrs;
+  // We don't support sequence in event codegen yet (Bug 1023762)
+  // Bug 1015796:
+  // readonly attribute sequence<DOMString> attrs;
 };
 
 dictionary BluetoothAttributeEventInit : EventInit
 {
-  unsigned short attr  = 0;
-  any            value = null;
+  any attrs = null;
 };
