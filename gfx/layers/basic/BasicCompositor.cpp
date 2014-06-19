@@ -474,7 +474,7 @@ BasicCompositor::EndFrame()
   RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
   nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
-  
+
   // The source DrawTarget is clipped to the invalidation region, so we have
   // to copy the individual rectangles in the region or else we'll draw blank
   // pixels.
