@@ -36,7 +36,13 @@ public:
 
   void ClearLoader();
 
-  typedef nsTArray<nsRefPtr<nsCSSStyleSheet> > sheet_array_type;
+  void AppendStyleSheet(nsCSSStyleSheet* aSheet);
+  void RemoveStyleSheet(nsCSSStyleSheet* aSheet);
+  void InsertStyleSheetAt(size_t aIndex, nsCSSStyleSheet* aSheet);
+  nsCSSStyleSheet* StyleSheetAt(size_t aIndex) const;
+  size_t SheetCount() const;
+  bool HasStyleSheets() const;
+  void AppendStyleSheetsTo(nsTArray<nsCSSStyleSheet*>& aResult) const;
 
   /**
    * Recreates mRuleProcessor to represent the current list of style sheets
@@ -51,11 +57,9 @@ private:
   // A loader object. Exists only long enough to load resources, and then it dies.
   nsRefPtr<nsXBLResourceLoader> mLoader;
 
-public:
   // A list of loaded stylesheets for this binding.
-  sheet_array_type mStyleSheetList;
+  nsTArray<nsRefPtr<nsCSSStyleSheet>> mStyleSheetList;
 
-private:
   // The list of stylesheets converted to a rule processor.
   nsRefPtr<nsCSSRuleProcessor> mRuleProcessor;
 };

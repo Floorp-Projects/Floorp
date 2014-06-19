@@ -173,7 +173,7 @@ nsXBLResourceLoader::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
     return NS_OK;
   }
    
-  mResources->mStyleSheetList.AppendElement(aSheet);
+  mResources->AppendStyleSheet(aSheet);
 
   if (!mInLoadResourcesFunc)
     mPendingSheets--;
