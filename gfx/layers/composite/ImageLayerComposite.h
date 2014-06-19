@@ -56,7 +56,7 @@ public:
   virtual const char* Name() const { return "ImageLayerComposite"; }
 
 protected:
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
 
 private:
   RefPtr<CompositableHost> mImageHost;

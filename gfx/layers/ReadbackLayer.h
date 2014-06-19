@@ -170,9 +170,7 @@ protected:
     mBackgroundColor(gfxRGBA(0,0,0,0))
   {}
 
-  // Print interesting information about this into aTo.  Internally
-  // used to implement Dump*() and Log*().
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   uint64_t mSequenceCounter;
   nsAutoPtr<ReadbackSink> mSink;

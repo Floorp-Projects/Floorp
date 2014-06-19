@@ -706,17 +706,25 @@ public:
 
   static void PrintDisplayItem(nsDisplayListBuilder* aBuilder,
                                nsDisplayItem* aItem,
-                               FILE* aFile = stdout,
+                               std::stringstream& aStream,
                                bool aDumpSublist = false,
                                bool aDumpHtml = false);
 
   static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
                                const nsDisplayList& aList,
-                               FILE* aFile = stdout,
+                               bool aDumpHtml = false)
+  {
+    std::stringstream ss;
+    PrintDisplayList(aBuilder, aList, ss, aDumpHtml);
+    fprintf_stderr(stderr, "%s", ss.str().c_str());
+  }
+  static void PrintDisplayList(nsDisplayListBuilder* aBuilder,
+                               const nsDisplayList& aList,
+                               std::stringstream& aStream,
                                bool aDumpHtml = false);
   static void PrintDisplayListSet(nsDisplayListBuilder* aBuilder,
                                   const nsDisplayListSet& aList,
-                                  FILE* aFile = stdout,
+                                  std::stringstream& aStream,
                                   bool aDumpHtml = false);
 
 #endif
