@@ -1389,7 +1389,9 @@ nsRefreshDriver::FinishedWaitingForTransaction()
   if (mSkippedPaints &&
       !IsInRefresh() &&
       (ObserverCount() || ImageRequestCount())) {
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
     DoRefresh();
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
   }
   mSkippedPaints = 0;
 }
