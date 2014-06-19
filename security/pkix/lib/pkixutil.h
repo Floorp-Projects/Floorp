@@ -27,6 +27,7 @@
 
 #include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
+#include "pkixder.h"
 #include "prerror.h"
 #include "seccomon.h"
 #include "secerr.h"
@@ -122,6 +123,8 @@ public:
 
   Result VerifyOwnSignatureWithKey(TrustDomain& trustDomain,
                                    const SECItem& subjectPublicKeyInfo) const;
+
+  der::Version version;
 
   const SECItem* encodedAuthorityInfoAccess;
   const SECItem* encodedBasicConstraints;

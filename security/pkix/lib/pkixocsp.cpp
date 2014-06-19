@@ -486,11 +486,11 @@ ResponseData(der::Input& input, Context& context,
              const CERTSignedData& signedResponseData,
              /*const*/ SECItem* certs, size_t numCerts)
 {
-  uint8_t version;
+  der::Version version;
   if (der::OptionalVersion(input, version) != der::Success) {
     return der::Failure;
   }
-  if (version != der::v1) {
+  if (version != der::Version::v1) {
     // TODO: more specific error code for bad version?
     return der::Fail(SEC_ERROR_BAD_DER);
   }
