@@ -64,16 +64,20 @@ Sanitizer.prototype = {
     cache: {
       clear: function ()
       {
-        var cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
-        try {
-          cache.clear();
-        } catch(er) {}
+        return new Promise(function(resolve, reject) {
+          var cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
+          try {
+            cache.clear();
+          } catch(er) {}
 
-        let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
-                                                         .getImgCacheForDocument(null);
-        try {
-          imageCache.clearCache(false); // true=chrome, false=content
-        } catch(er) {}
+          let imageCache = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
+                                                           .getImgCacheForDocument(null);
+          try {
+            imageCache.clearCache(false); // true=chrome, false=content
+          } catch(er) {}
+
+          resolve();
+        });
       },
 
       get canClear()
@@ -85,7 +89,10 @@ Sanitizer.prototype = {
     cookies: {
       clear: function ()
       {
-        Services.cookies.removeAll();
+        return new Promise(function(resolve, reject) {
+          Services.cookies.removeAll();
+          resolve();
+        });
       },
 
       get canClear()
@@ -97,20 +104,24 @@ Sanitizer.prototype = {
     siteSettings: {
       clear: function ()
       {
-        // Clear site-specific permissions like "Allow this site to open popups"
-        Services.perms.removeAll();
+        return new Promise(function(resolve, reject) {
+          // Clear site-specific permissions like "Allow this site to open popups"
+          Services.perms.removeAll();
 
-        // Clear site-specific settings like page-zoom level
-        Cc["@mozilla.org/content-pref/service;1"]
-          .getService(Ci.nsIContentPrefService2)
-          .removeAllDomains(null);
+          // Clear site-specific settings like page-zoom level
+          Cc["@mozilla.org/content-pref/service;1"]
+            .getService(Ci.nsIContentPrefService2)
+            .removeAllDomains(null);
 
-        // Clear "Never remember passwords for this site", which is not handled by
-        // the permission manager
-        var hosts = Services.logins.getAllDisabledHosts({})
-        for (var host of hosts) {
-          Services.logins.setLoginSavingEnabled(host, true);
-        }
+          // Clear "Never remember passwords for this site", which is not handled by
+          // the permission manager
+          var hosts = Services.logins.getAllDisabledHosts({})
+          for (var host of hosts) {
+            Services.logins.setLoginSavingEnabled(host, true);
+          }
+
+          resolve();
+        });
       },
 
       get canClear()
@@ -122,11 +133,15 @@ Sanitizer.prototype = {
     offlineApps: {
       clear: function ()
       {
-        var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
-        var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
-        try {
-          appCacheStorage.asyncEvictStorage(null);
-        } catch(er) {}
+        return new Promise(function(resolve, reject) {
+          var cacheService = Cc["@mozilla.org/netwerk/cache-storage-service;1"].getService(Ci.nsICacheStorageService);
+          var appCacheStorage = cacheService.appCacheStorage(LoadContextInfo.default, null);
+          try {
+            appCacheStorage.asyncEvictStorage(null);
+          } catch(er) {}
+
+          resolve();
+        });
       },
 
       get canClear()
@@ -138,17 +153,21 @@ Sanitizer.prototype = {
     history: {
       clear: function ()
       {
-        sendMessageToJava({ type: "Sanitize:ClearHistory" });
+        return new Promise(function(resolve, reject) {
+          sendMessageToJava({ type: "Sanitize:ClearHistory" }, function() {
+            try {
+              Services.obs.notifyObservers(null, "browser:purge-session-history", "");
+            }
+            catch (e) { }
 
-        try {
-          Services.obs.notifyObservers(null, "browser:purge-session-history", "");
-        }
-        catch (e) { }
+            try {
+              var predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
+              predictor.reset();
+            } catch (e) { }
 
-        try {
-          var predictor = Cc["@mozilla.org/network/predictor;1"].getService(Ci.nsINetworkPredictor);
-          predictor.reset();
-        } catch (e) { }
+            resolve();
+          });
+        });
       },
 
       get canClear()
@@ -162,7 +181,10 @@ Sanitizer.prototype = {
     formdata: {
       clear: function ()
       {
-        FormHistory.update({ op: "remove" });
+        return new Promise(function(resolve, reject) {
+          FormHistory.update({ op: "remove" });
+          resolve();
+        });
       },
 
       canClear: function (aCallback)
@@ -180,15 +202,18 @@ Sanitizer.prototype = {
     downloadFiles: {
       clear: function ()
       {
-        downloads.iterate(function (dl) {
-          // Delete the downloaded files themselves
-          let f = dl.targetFile;
-          if (f.exists()) {
-            f.remove(false);
-          }
+        return new Promise(function(resolve, reject) {
+          downloads.iterate(function (dl) {
+            // Delete the downloaded files themselves
+            let f = dl.targetFile;
+            if (f.exists()) {
+              f.remove(false);
+            }
 
-          // Also delete downloads from history
-          dl.remove();
+            // Also delete downloads from history
+            dl.remove();
+          });
+          resolve();
         });
       },
 
@@ -201,7 +226,10 @@ Sanitizer.prototype = {
     passwords: {
       clear: function ()
       {
-        Services.logins.removeAllLogins();
+        return new Promise(function(resolve, reject) {
+          Services.logins.removeAllLogins();
+          resolve();
+        });
       },
 
       get canClear()
@@ -214,12 +242,16 @@ Sanitizer.prototype = {
     sessions: {
       clear: function ()
       {
-        // clear all auth tokens
-        var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
-        sdr.logoutAndTeardown();
+        return new Promise(function(resolve, reject) {
+          // clear all auth tokens
+          var sdr = Cc["@mozilla.org/security/sdr;1"].getService(Ci.nsISecretDecoderRing);
+          sdr.logoutAndTeardown();
 
-        // clear FTP and plain HTTP auth sessions
-        Services.obs.notifyObservers(null, "net:clear-active-logins", null);
+          // clear FTP and plain HTTP auth sessions
+          Services.obs.notifyObservers(null, "net:clear-active-logins", null);
+
+          resolve();
+        });
       },
 
       get canClear()
