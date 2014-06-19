@@ -187,6 +187,13 @@ private:
   already_AddRefed<mozilla::dom::DOMRequest>
     PairUnpair(bool aPair, const nsAString& aDeviceAddress, ErrorResult& aRv);
 
+  bool IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
+                                 const BluetoothValue& aValue);
+  void HandlePropertyChanged(const BluetoothValue& aValue);
+  void DispatchAttributeEvent(const nsTArray<nsString>& aTypes);
+  BluetoothAdapterAttribute
+    ConvertStringToAdapterAttribute(const nsAString& aString);
+
   JS::Heap<JSObject*> mJsUuids;
   JS::Heap<JSObject*> mJsDeviceAddresses;
   BluetoothAdapterState mState;
