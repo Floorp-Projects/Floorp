@@ -17,14 +17,7 @@ if test -z "$SCCACHE_DISABLE" -a -z "$no_sccache"; then
     try)
         case "${master}" in
         *scl1.mozilla.com*|*.scl3.mozilla.com*)
-            case "$platform" in
-            win*)
-                bucket=mozilla-releng-ceph-cache-scl3-try
-                ;;
-            *)
-                bucket=mozilla-releng-s3-cache-us-west-2-try
-                ;;
-            esac
+            bucket=mozilla-releng-s3-cache-us-west-1-try
             ;;
         *use1.mozilla.com*)
             bucket=mozilla-releng-s3-cache-us-east-1-try

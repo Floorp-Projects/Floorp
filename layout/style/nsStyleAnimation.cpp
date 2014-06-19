@@ -277,14 +277,15 @@ AppendCSSShadowValue(const nsCSSShadowItem *aShadow,
   aResultTail = &resultItem->mNext;
 }
 
-// Like nsStyleCoord::Calc, but with length in float pixels instead of nscoord.
-struct CalcValue {
+// Like nsStyleCoord::CalcValue, but with length in float pixels instead
+// of nscoord.
+struct PixelCalcValue {
   float mLength, mPercent;
   bool mHasPercent;
 };
 
 // Requires a canonical calc() value that we generated.
-static CalcValue
+static PixelCalcValue
 ExtractCalcValueInternal(const nsCSSValue& aValue)
 {
   NS_ABORT_IF_FALSE(aValue.GetUnit() == eCSSUnit_Calc, "unexpected unit");
@@ -292,7 +293,7 @@ ExtractCalcValueInternal(const nsCSSValue& aValue)
   NS_ABORT_IF_FALSE(arr->Count() == 1, "unexpected length");
 
   const nsCSSValue &topval = arr->Item(0);
-  CalcValue result;
+  PixelCalcValue result;
   if (topval.GetUnit() == eCSSUnit_Pixel) {
     result.mLength = topval.GetFloatValue();
     result.mPercent = 0.0f;
@@ -314,10 +315,10 @@ ExtractCalcValueInternal(const nsCSSValue& aValue)
 }
 
 // Requires a canonical calc() value that we generated.
-static CalcValue
+static PixelCalcValue
 ExtractCalcValue(const nsStyleAnimation::Value& aValue)
 {
-  CalcValue result;
+  PixelCalcValue result;
   if (aValue.GetUnit() == nsStyleAnimation::eUnit_Coord) {
     result.mLength =
       nsPresContext::AppUnitsToFloatCSSPixels(aValue.GetCoordValue());
@@ -337,10 +338,10 @@ ExtractCalcValue(const nsStyleAnimation::Value& aValue)
   return ExtractCalcValueInternal(*val);
 }
 
-static CalcValue
+static PixelCalcValue
 ExtractCalcValue(const nsCSSValue& aValue)
 {
-  CalcValue result;
+  PixelCalcValue result;
   if (aValue.GetUnit() == eCSSUnit_Pixel) {
     result.mLength = aValue.GetFloatValue();
     result.mPercent = 0.0f;
@@ -357,7 +358,7 @@ ExtractCalcValue(const nsCSSValue& aValue)
 }
 
 static void
-SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
+SetCalcValue(const nsStyleCoord::CalcValue* aCalc, nsCSSValue& aValue)
 {
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
   if (!aCalc->mHasPercent) {
@@ -373,7 +374,7 @@ SetCalcValue(const nsStyleCoord::Calc* aCalc, nsCSSValue& aValue)
 }
 
 static void
-SetCalcValue(const CalcValue& aCalc, nsCSSValue& aValue)
+SetCalcValue(const PixelCalcValue& aCalc, nsCSSValue& aValue)
 {
   nsRefPtr<nsCSSValue::Array> arr = nsCSSValue::Array::Create(1);
   if (!aCalc.mHasPercent) {
@@ -506,8 +507,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_Calc: {
-      CalcValue v1 = ExtractCalcValue(aStartValue);
-      CalcValue v2 = ExtractCalcValue(aEndValue);
+      PixelCalcValue v1 = ExtractCalcValue(aStartValue);
+      PixelCalcValue v2 = ExtractCalcValue(aEndValue);
       float difflen = v2.mLength - v1.mLength;
       float diffpct = v2.mPercent - v1.mPercent;
       aDistance = sqrt(difflen * difflen + diffpct * diffpct);
@@ -547,8 +548,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
             break;
           }
           case eCSSUnit_Calc: {
-            CalcValue v1 = ExtractCalcValue(pair1->*member);
-            CalcValue v2 = ExtractCalcValue(pair2->*member);
+            PixelCalcValue v1 = ExtractCalcValue(pair1->*member);
+            PixelCalcValue v2 = ExtractCalcValue(pair2->*member);
             float difflen = v2.mLength - v1.mLength;
             float diffpct = v2.mPercent - v1.mPercent;
             diffsquared = difflen * difflen + diffpct * diffpct;
@@ -600,8 +601,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
              break;
           }
           case eCSSUnit_Calc: {
-            CalcValue v1 = ExtractCalcValue(triplet1->*member);
-            CalcValue v2 = ExtractCalcValue(triplet2->*member);
+            PixelCalcValue v1 = ExtractCalcValue(triplet1->*member);
+            PixelCalcValue v2 = ExtractCalcValue(triplet2->*member);
             float difflen = v2.mLength - v1.mLength;
             float diffpct = v2.mPercent - v1.mPercent;
             diffsquared = difflen * difflen + diffpct * diffpct;
@@ -791,7 +792,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
                      position2->mValue.GetUnit() == eCSSUnit_Array,
                      "Expected two arrays");
 
-        CalcValue calcVal[4];
+        PixelCalcValue calcVal[4];
 
         nsCSSValue::Array* bgArray = position1->mValue.GetArrayValue();
         NS_ABORT_IF_FALSE(bgArray->Count() == 4, "Invalid background-position");
@@ -862,8 +863,8 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
               break;
             }
             case eCSSUnit_Calc: {
-              CalcValue val1 = ExtractCalcValue(v1);
-              CalcValue val2 = ExtractCalcValue(v2);
+              PixelCalcValue val1 = ExtractCalcValue(v1);
+              PixelCalcValue val2 = ExtractCalcValue(v2);
               float difflen = val2.mLength - val1.mLength;
               float diffpct = val2.mPercent - val1.mPercent;
               diffsquared = difflen * difflen + diffpct * diffpct;
@@ -1004,9 +1005,9 @@ AddCSSValueCanonicalCalc(double aCoeff1, const nsCSSValue &aValue1,
                          double aCoeff2, const nsCSSValue &aValue2,
                          nsCSSValue &aResult)
 {
-  CalcValue v1 = ExtractCalcValue(aValue1);
-  CalcValue v2 = ExtractCalcValue(aValue2);
-  CalcValue result;
+  PixelCalcValue v1 = ExtractCalcValue(aValue1);
+  PixelCalcValue v2 = ExtractCalcValue(aValue2);
+  PixelCalcValue result;
   result.mLength = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
   result.mPercent = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
   result.mHasPercent = v1.mHasPercent || v2.mHasPercent;
@@ -1980,8 +1981,8 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
       return true;
     }
     case eUnit_Calc: {
-      CalcValue v1 = ExtractCalcValue(aValue1);
-      CalcValue v2 = ExtractCalcValue(aValue2);
+      PixelCalcValue v1 = ExtractCalcValue(aValue1);
+      PixelCalcValue v2 = ExtractCalcValue(aValue2);
       double len = aCoeff1 * v1.mLength + aCoeff2 * v2.mLength;
       double pct = aCoeff1 * v1.mPercent + aCoeff2 * v2.mPercent;
       bool hasPct = (aCoeff1 != 0.0 && v1.mHasPercent) ||
@@ -2791,7 +2792,7 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
       nsRuleNode::SpecifiedCalcToComputedCalc(aInput, aStyleContext,
                                               aStyleContext->PresContext(),
                                               canStoreInRuleTree);
-    nsStyleCoord::Calc c2;
+    nsStyleCoord::CalcValue c2;
     c2.mLength = c.mLength;
     c2.mPercent = c.mPercent;
     c2.mHasPercent = true; // doesn't matter for transform translate

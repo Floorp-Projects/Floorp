@@ -16,7 +16,7 @@
 namespace mp4_demuxer {
 class VideoDecoderConfig;
 class AudioDecoderConfig;
-struct MP4Sample;
+class MP4Sample;
 }
 
 class nsIThreadPool;

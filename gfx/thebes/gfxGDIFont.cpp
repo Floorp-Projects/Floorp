@@ -184,7 +184,7 @@ gfxGDIFont::Initialize()
     GDIFontEntry* fe = static_cast<GDIFontEntry*>(GetFontEntry());
     bool wantFakeItalic =
         (mStyle.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE)) &&
-        !fe->IsItalic();
+        !fe->IsItalic() && mStyle.allowSyntheticStyle;
 
     // If the font's family has an actual italic face (but font matching
     // didn't choose it), we have to use a cairo transform instead of asking
@@ -485,8 +485,9 @@ gfxGDIFont::GetGlyphWidth(gfxContext *aCtx, uint16_t aGID)
 
     int devWidth;
     if (GetCharWidthI(dc, aGID, 1, nullptr, &devWidth)) {
-        // ensure width is positive, 16.16 fixed-point value
-        width = (devWidth & 0x7fff) << 16;
+        // clamp value to range [0..0x7fff], and convert to 16.16 fixed-point
+        devWidth = std::min(std::max(0, devWidth), 0x7fff);
+        width = devWidth << 16;
         mGlyphWidths->Put(aGID, width);
         return width;
     }

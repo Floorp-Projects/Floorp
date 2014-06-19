@@ -20,7 +20,7 @@ class nsCycleCollectionNoteRootCallback;
 class nsIException;
 
 namespace js {
-class Class;
+struct Class;
 }
 
 namespace mozilla {

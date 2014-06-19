@@ -10,7 +10,7 @@ interface nsIDOMGeoPositionErrorCallback;
 %{C++
 namespace mozilla {
 namespace dom {
-class PositionOptions;
+struct PositionOptions;
 }
 }
 %}

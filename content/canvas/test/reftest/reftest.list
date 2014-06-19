@@ -107,7 +107,7 @@ random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?_
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&alpha&depth&premult&________&stencil  wrapper.html?colors.png # Bug 844439
-                                             
+
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?aa&_____&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
 random-if(gtk2Widget) random-if(B2G) random-if(Android&&AndroidVersion<15)  == webgl-color-test.html?__&alpha&_____&_______&preserve&stencil  wrapper.html?colors.png # Bug 844439
@@ -149,10 +149,12 @@ fuzzy(1,65536) fuzzy-if(B2G,256,83) fuzzy-if(Android||B2G,9,65536) random-if(And
 
 # Test premult:
 # random-if(B2G) from bug 983650
-fuzzy(1,65536) random-if(gtk2Widget) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
-fuzzy(1,65536) random-if(gtk2Widget) fails-if(B2G) fuzzy-if(Android,9,65536) fails-if(cocoaWidget||Android) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
+# Mark as failing on WinXP (winWidget&&!d2d), because Try said so. WFM outside of Try.
+# This might work on WinXP again if OMTC is disabled.
+fuzzy(1,65536) random-if(gtk2Widget) random-if(winWidget&&!d2d) random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=1.0&alphaVal=0.5&alpha          wrapper.html?colors-half-alpha.png
+fuzzy(1,65536) random-if(gtk2Widget) fails-if(winWidget&&!d2d)                 fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha          wrapper.html?half-colors-half-alpha.png
 # random-if(B2G) from bug 983650
-fuzzy(1,65536) random-if(B2G) fuzzy-if(Android,9,65536)                                random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
+fuzzy(1,65536)                       random-if(B2G) fuzzy-if(Android,9,65536) random-if(Android&&AndroidVersion<15)  == webgl-color-alpha-test.html?colorVal=0.5&alphaVal=0.5&alpha&premult  wrapper.html?colors-half-alpha.png
 
 # Check for hanging framebuffer bindings:
                                        random-if(Android&&AndroidVersion<15)  == webgl-hanging-fb-test.html?__&________  wrapper.html?green.png

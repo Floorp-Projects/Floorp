@@ -538,7 +538,7 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Load a value which is all ones except for the sign bit.
-    masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::SignificandBits),
+    masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits),
                             ScratchFloatReg);
     masm.andpd(ScratchFloatReg, input);
     return true;
@@ -550,7 +550,7 @@ CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
     FloatRegister input = ToFloatRegister(ins->input());
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Same trick as visitAbsD above.
-    masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::SignificandBits),
+    masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits),
                              ScratchFloatReg);
     masm.andps(ScratchFloatReg, input);
     return true;

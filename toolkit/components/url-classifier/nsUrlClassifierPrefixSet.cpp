@@ -249,7 +249,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(UrlClassifierMallocSizeOf)
 
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                         nsISupports* aData)
+                                         nsISupports* aData, bool aAnonymize)
 {
   return aHandleReport->Callback(
     EmptyCString(), mMemoryReportPath, KIND_HEAP, UNITS_BYTES,

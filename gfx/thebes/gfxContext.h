@@ -23,6 +23,16 @@ typedef struct _cairo cairo_t;
 struct GlyphBufferAzure;
 template <typename T> class FallibleTArray;
 
+class gfxContext;
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<gfxContext>
+{
+  static const bool value = true;
+};
+}
+
 /**
  * This is the main class for doing actual drawing. It is initialized using
  * a surface and can be drawn on. It manages various state information like

@@ -32,7 +32,7 @@
 class imgINotificationObserver;
 class imgRequestNotifyRunnable;
 class imgStatusNotifyRunnable;
-class nsIntRect;
+struct nsIntRect;
 class ProxyBehaviour;
 
 namespace mozilla {

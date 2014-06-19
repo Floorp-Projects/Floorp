@@ -705,8 +705,8 @@ CodeGeneratorX86::visitOutOfLineTruncate(OutOfLineTruncate *ool)
         masm.storeDouble(input, Operand(esp, 0));
 
         static const uint32_t EXPONENT_MASK = 0x7ff00000;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<double>::ExponentShift - 32;
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<double>::ExponentBias + 63)
+        static const uint32_t EXPONENT_SHIFT = FloatingPoint<double>::kExponentShift - 32;
+        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<double>::kExponentBias + 63)
                                                  << EXPONENT_SHIFT;
 
         // Check exponent to avoid fp exceptions.
@@ -793,10 +793,10 @@ CodeGeneratorX86::visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool)
         masm.subl(Imm32(sizeof(uint64_t)), esp);
         masm.storeFloat32(input, Operand(esp, 0));
 
-        static const uint32_t EXPONENT_MASK = FloatingPoint<float>::ExponentBits;
-        static const uint32_t EXPONENT_SHIFT = FloatingPoint<float>::ExponentShift;
+        static const uint32_t EXPONENT_MASK = FloatingPoint<float>::kExponentBits;
+        static const uint32_t EXPONENT_SHIFT = FloatingPoint<float>::kExponentShift;
         // Integers are still 64 bits long, so we can still test for an exponent > 63.
-        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<float>::ExponentBias + 63)
+        static const uint32_t TOO_BIG_EXPONENT = (FloatingPoint<float>::kExponentBias + 63)
                                                  << EXPONENT_SHIFT;
 
         // Check exponent to avoid fp exceptions.

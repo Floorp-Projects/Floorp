@@ -15,7 +15,7 @@ class nsDisplayList;
 class nsDisplayListBuilder;
 class nsPresContext;
 class nsRenderingContext;
-class nsRect;
+struct nsRect;
 class nsStyleContext;
 
 

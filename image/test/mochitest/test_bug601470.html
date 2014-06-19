@@ -30,7 +30,7 @@ window.onload = function() {
     amount += aAmount;
   }
 
-  mgr.getReportsForThisProcess(handleReport, null);
+  mgr.getReportsForThisProcess(handleReport, null, /* anonymize = */ false);
 
   ok(amount > 0, "we should be using a nonzero amount of memory");
   ok(true, "yay, didn't crash!");

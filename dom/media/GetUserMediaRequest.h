@@ -14,7 +14,8 @@
 
 namespace mozilla {
 namespace dom {
-class MediaStreamConstraints;
+
+struct MediaStreamConstraints;
 
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache
 {

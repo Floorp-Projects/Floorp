@@ -16,7 +16,7 @@ namespace mozilla {
 namespace image {
 
 class Image;
-class Orientation;
+struct Orientation;
 
 class ImageOps
 {

@@ -16,8 +16,8 @@ class nsGlobalWindow;
 class nsIPresShell;
 class nsIWidget;
 class nsPresContext;
-class nsPoint;
 class nsIDocument;
+struct nsPoint;
 
 namespace mozilla {
   namespace layers {

@@ -79,7 +79,7 @@ ContentHostBase::Composite(EffectChain& aEffectChain,
     return;
   }
   RefPtr<TexturedEffect> effect =
-    CreateTexturedEffect(source, sourceOnWhite, aFilter);
+    CreateTexturedEffect(source, sourceOnWhite, aFilter, true);
 
   if (!effect) {
     return;

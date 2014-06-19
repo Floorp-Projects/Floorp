@@ -14,7 +14,7 @@
 #include "nsISupportsImpl.h"
 #include "nsThreadUtils.h" /* nsRunnable */
 
-class JSContext;
+struct JSContext;
 class nsIEventTarget;
 
 BEGIN_WORKERS_NAMESPACE

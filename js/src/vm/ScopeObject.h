@@ -92,6 +92,7 @@ class StaticScopeIter
     StaticBlockObject &block() const;
     StaticWithObject &staticWith() const;
     JSScript *funScript() const;
+    JSFunction &fun() const;
 };
 
 /*****************************************************************************/

@@ -1149,6 +1149,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSStyleSheet)
   tmp->DropRuleCollection();
   tmp->UnlinkInner();
   tmp->mScopeElement = nullptr;
+  tmp->ClearRuleCascades();
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSStyleSheet)

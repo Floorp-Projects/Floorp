@@ -248,7 +248,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(LayoutStylesheetCacheMallocSizeOf)
 
 NS_IMETHODIMP
 nsLayoutStylesheetCache::CollectReports(nsIHandleReportCallback* aHandleReport,
-                                        nsISupports* aData)
+                                        nsISupports* aData, bool aAnonymize)
 {
   return MOZ_COLLECT_REPORT(
     "explicit/layout/style-sheet-cache", KIND_HEAP, UNITS_BYTES,

@@ -24,7 +24,7 @@ namespace layers {
 
 class CompositableClient;
 class AsyncTransactionTracker;
-class TextureFactoryIdentifier;
+struct TextureFactoryIdentifier;
 class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;

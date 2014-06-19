@@ -635,7 +635,7 @@ class ObjectPrivateVisitor
 };
 
 extern JS_PUBLIC_API(bool)
-CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv);
+CollectRuntimeStats(JSRuntime *rt, RuntimeStats *rtStats, ObjectPrivateVisitor *opv, bool anonymize);
 
 extern JS_PUBLIC_API(size_t)
 SystemCompartmentCount(JSRuntime *rt);

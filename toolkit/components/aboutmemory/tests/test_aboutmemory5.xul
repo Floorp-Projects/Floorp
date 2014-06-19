@@ -85,7 +85,8 @@
 
     let dumper = Cc["@mozilla.org/memory-info-dumper;1"].
                     getService(Ci.nsIMemoryInfoDumper);
-    dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null);
+    dumper.dumpMemoryReportsToNamedFile(filePath, loadAndCheck, null,
+                                        /* anonymize = */ false);
 
     function loadAndCheck() {
       // Load the file.

@@ -19,7 +19,6 @@
 #include "nsNSSCertificateFakeTransport.h"
 #include "nsNSSCertificateDB.h"
 #include "nsNSSCertCache.h"
-#include "nsCMS.h"
 #ifdef MOZ_XUL
 #include "nsCertTree.h"
 #endif
@@ -28,7 +27,6 @@
 //For the NS_CRYPTO_CONTRACTID define
 #include "nsDOMCID.h"
 #include "nsNetCID.h"
-#include "nsCMSSecureMessage.h"
 #include "nsCertPicker.h"
 #include "nsCURILoader.h"
 #include "nsICategoryManager.h"
@@ -194,10 +192,6 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertTree)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCrypto)
 #endif
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPkcs11)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSSecureMessage)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSDecoder)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSEncoder)
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCMSMessage)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCertPicker)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, nsNTLMAuthModule, InitTest)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsCryptoHash)
@@ -234,10 +228,6 @@ NS_DEFINE_NAMED_CID(NS_PKCS11_CID);
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
 NS_DEFINE_NAMED_CID(NS_CRYPTO_CID);
 #endif
-NS_DEFINE_NAMED_CID(NS_CMSSECUREMESSAGE_CID);
-NS_DEFINE_NAMED_CID(NS_CMSDECODER_CID);
-NS_DEFINE_NAMED_CID(NS_CMSENCODER_CID);
-NS_DEFINE_NAMED_CID(NS_CMSMESSAGE_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HASH_CID);
 NS_DEFINE_NAMED_CID(NS_CRYPTO_HMAC_CID);
 NS_DEFINE_NAMED_CID(NS_CERT_PICKER_CID);
@@ -273,10 +263,6 @@ static const mozilla::Module::CIDEntry kNSSCIDs[] = {
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   { &kNS_CRYPTO_CID, false, nullptr, nsCryptoConstructor },
 #endif
-  { &kNS_CMSSECUREMESSAGE_CID, false, nullptr, nsCMSSecureMessageConstructor },
-  { &kNS_CMSDECODER_CID, false, nullptr, nsCMSDecoderConstructor },
-  { &kNS_CMSENCODER_CID, false, nullptr, nsCMSEncoderConstructor },
-  { &kNS_CMSMESSAGE_CID, false, nullptr, nsCMSMessageConstructor },
   { &kNS_CRYPTO_HASH_CID, false, nullptr, nsCryptoHashConstructor },
   { &kNS_CRYPTO_HMAC_CID, false, nullptr, nsCryptoHMACConstructor },
   { &kNS_CERT_PICKER_CID, false, nullptr, nsCertPickerConstructor },
@@ -315,10 +301,6 @@ static const mozilla::Module::ContractIDEntry kNSSContracts[] = {
 #ifndef MOZ_DISABLE_CRYPTOLEGACY
   { NS_CRYPTO_CONTRACTID, &kNS_CRYPTO_CID },
 #endif
-  { NS_CMSSECUREMESSAGE_CONTRACTID, &kNS_CMSSECUREMESSAGE_CID },
-  { NS_CMSDECODER_CONTRACTID, &kNS_CMSDECODER_CID },
-  { NS_CMSENCODER_CONTRACTID, &kNS_CMSENCODER_CID },
-  { NS_CMSMESSAGE_CONTRACTID, &kNS_CMSMESSAGE_CID },
   { NS_CRYPTO_HASH_CONTRACTID, &kNS_CRYPTO_HASH_CID },
   { NS_CRYPTO_HMAC_CONTRACTID, &kNS_CRYPTO_HMAC_CID },
   { NS_CERT_PICKER_CONTRACTID, &kNS_CERT_PICKER_CID },

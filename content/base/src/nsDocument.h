@@ -102,7 +102,7 @@ namespace mozilla {
 class EventChainPreVisitor;
 namespace dom {
 class UndoManager;
-class LifecycleCallbacks;
+struct LifecycleCallbacks;
 class CallbackFunction;
 }
 }

@@ -12,7 +12,6 @@
 #include "nsIX509CertDB.h"
 #include "nsIX509CertList.h"
 #include "nsIASN1Object.h"
-#include "nsISMimeCert.h"
 #include "nsIIdentityInfo.h"
 #include "nsCOMPtr.h"
 #include "nsNSSShutDown.h"
@@ -28,7 +27,6 @@ class nsIASN1Sequence;
 
 class nsNSSCertificate : public nsIX509Cert3,
                          public nsIIdentityInfo,
-                         public nsISMimeCert,
                          public nsISerializable,
                          public nsIClassInfo,
                          public nsNSSShutDownObject
@@ -39,7 +37,6 @@ public:
   NS_DECL_NSIX509CERT2
   NS_DECL_NSIX509CERT3
   NS_DECL_NSIIDENTITYINFO
-  NS_DECL_NSISMIMECERT
   NS_DECL_NSISERIALIZABLE
   NS_DECL_NSICLASSINFO
 

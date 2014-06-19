@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace dom {
 
-struct IPCTabContext;
+class IPCTabContext;
 
 /**
  * TabContext encapsulates information about an iframe that may be a mozbrowser
