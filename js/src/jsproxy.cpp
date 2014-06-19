@@ -1078,7 +1078,11 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                      MutableHandleValue vp) MOZ_OVERRIDE;
     virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                      bool strict, MutableHandleValue vp) MOZ_OVERRIDE;
-    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
+    // Kick keys out to getOwnPropertyName and then filter. [[GetOwnProperty]] could potentially
+    // change the enumerability of the target's properties.
+    virtual bool keys(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE {
+        return BaseProxyHandler::keys(cx, proxy, props);
+    }
     virtual bool iterate(JSContext *cx, HandleObject proxy, unsigned flags,
                          MutableHandleValue vp) MOZ_OVERRIDE;
 
@@ -1644,26 +1648,30 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
     return true;
 }
 
+// This is secretly [[OwnPropertyKeys]]. SM uses the old wiki name, internally.
+// ES6 (5 April 2014) Proxy.[[OwnPropertyKeys]](O)
 bool
 ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
                                                 AutoIdVector &props)
 {
-    // step a
+    // step 1
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
 
-    // step b
+    // TODO: step 2: Implement revocation semantics
+
+    // step 3
     RootedObject target(cx, proxy->as<ProxyObject>().target());
 
-    // step c
+    // step 4-5
     RootedValue trap(cx);
-    if (!JSObject::getProperty(cx, handler, handler, cx->names().getOwnPropertyNames, &trap))
+    if (!JSObject::getProperty(cx, handler, handler, cx->names().ownKeys, &trap))
         return false;
 
-    // step d
+    // step 6
     if (trap.isUndefined())
         return DirectProxyHandler::getOwnPropertyNames(cx, proxy, props);
 
-    // step e
+    // step 7-8
     Value argv[] = {
         ObjectValue(*target)
     };
@@ -1671,13 +1679,14 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
         return false;
 
-    // step f
+    // step 9
     if (trapResult.isPrimitive()) {
-        ReportInvalidTrapResult(cx, proxy, cx->names().getOwnPropertyNames);
+        ReportInvalidTrapResult(cx, proxy, cx->names().ownKeys);
         return false;
     }
 
-    // steps g to n are shared
+    // Here we add a bunch of extra sanity checks. It is unclear if they will also appear in
+    // the spec. See step 10-11
     return ArrayToIdVector(cx, proxy, target, trapResult, props, JSITER_OWNONLY | JSITER_HIDDEN,
                            cx->names().getOwnPropertyNames);
 }
@@ -1970,48 +1979,6 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     // step 8
     vp.set(BooleanValue(success));
     return true;
-}
-
-// 15.2.3.14 Object.keys (O), step 2
-bool
-ScriptedDirectProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
-{
-    // step a
-    RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
-
-    // step b
-    RootedObject target(cx, proxy->as<ProxyObject>().target());
-
-    // step c
-    RootedValue trap(cx);
-    if (!JSObject::getProperty(cx, handler, handler, cx->names().keys, &trap))
-        return false;
-
-    // step d
-    if (trap.isUndefined())
-        return DirectProxyHandler::keys(cx, proxy, props);
-
-    // step e
-    Value argv[] = {
-        ObjectOrNullValue(target)
-    };
-    RootedValue trapResult(cx);
-    if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
-        return false;
-
-    // step f
-    if (trapResult.isPrimitive()) {
-        JSAutoByteString bytes;
-        if (!AtomToPrintableString(cx, cx->names().keys, &bytes))
-            return false;
-        RootedValue v(cx, ObjectOrNullValue(proxy));
-        js_ReportValueError2(cx, JSMSG_INVALID_TRAP_RESULT, JSDVG_IGNORE_STACK,
-                             v, js::NullPtr(), bytes.ptr());
-        return false;
-    }
-
-    // steps g-n are shared
-    return ArrayToIdVector(cx, proxy, target, trapResult, props, JSITER_OWNONLY, cx->names().keys);
 }
 
 // ES6 (5 April, 2014) 9.5.3 Proxy.[[IsExtensible]](P)

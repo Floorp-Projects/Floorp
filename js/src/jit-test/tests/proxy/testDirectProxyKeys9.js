@@ -18,7 +18,7 @@ var names = Object.keys(new Proxy(Object.create(Object.create(null, {
         configurable: true
     }
 }), {
-    keys: function (target) {
+    ownKeys: function (target) {
         return [ 'e' ];
     }
 }));
