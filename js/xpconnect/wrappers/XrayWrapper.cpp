@@ -573,8 +573,15 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, Wrapper &jsWrapper,
                 return false;
             }
         } else if (key == JSProto_Function) {
-            // Handle the 'prototype' property to make xrayedGlobal.StandardClass.prototype work.
-            if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE)) {
+            if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LENGTH)) {
+                FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
+                                       NumberValue(JS_GetFunctionArity(JS_GetObjectFunction(target))));
+                return true;
+            } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)) {
+                FillPropertyDescriptor(desc, wrapper, JSPROP_PERMANENT | JSPROP_READONLY,
+                                       StringValue(JS_GetFunctionId(JS_GetObjectFunction(target))));
+            } else if (id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE)) {
+                // Handle the 'prototype' property to make xrayedGlobal.StandardClass.prototype work.
                 JSProtoKey standardConstructor = constructorFor(holder);
                 if (standardConstructor != JSProto_Null) {
                     RootedObject standardProto(cx);
@@ -845,6 +852,10 @@ JSXrayTraits::enumerateNames(JSContext *cx, HandleObject wrapper, unsigned flags
             for (int32_t i = 0; i <= int32_t(length - 1); ++i)
                 props.infallibleAppend(INT_TO_JSID(i));
         } else if (key == JSProto_Function) {
+            if (!props.append(GetRTIdByIndex(cx, XPCJSRuntime::IDX_LENGTH)))
+                return false;
+            if (!props.append(GetRTIdByIndex(cx, XPCJSRuntime::IDX_NAME)))
+                return false;
             // Handle the .prototype property on standard constructors.
             if (constructorFor(holder) != JSProto_Null) {
                 if (!props.append(GetRTIdByIndex(cx, XPCJSRuntime::IDX_PROTOTYPE)))
