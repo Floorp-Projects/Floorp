@@ -19,6 +19,7 @@
 #include "mozilla/dom/URL.h"
 #include "mozilla/DebugOnly.h"
 
+using namespace mozilla;
 using mozilla::dom::IsChromeURI;
 
 nsXBLPrototypeResources::nsXBLPrototypeResources(nsXBLPrototypeBinding* aBinding)
