@@ -90,7 +90,7 @@ MemoryStats.dump = function (dumpFn,
                                          "nsIMemoryInfoDumper");
         md.dumpMemoryReportsToNamedFile(dumpfile, function () {
             dumpFn("TEST-INFO | " + testURL + " | MEMDUMP-END");
-        }, null);
+        }, null, /* anonymize = */ false);
 
     }
 

@@ -646,7 +646,7 @@ castNativeFromWrapper(JSContext *cx,
             native = nullptr;
         }
     } else if (cur && protoDepth >= 0) {
-        const mozilla::dom::DOMClass* domClass =
+        const mozilla::dom::DOMJSClass* domClass =
             mozilla::dom::GetDOMClass(cur);
         native = mozilla::dom::UnwrapDOMObject<nsISupports>(cur);
         if (native &&

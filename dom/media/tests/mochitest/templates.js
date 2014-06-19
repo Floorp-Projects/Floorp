@@ -480,10 +480,9 @@ var commandsDataChannel = [
     function (test) {
       test.waitForInitialDataChannel(test.pcLocal, function () {
         ok(true, test.pcLocal + " dataChannels[0] switched to 'open'");
-      }, function () {
-        ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
-        unexpectedEventAndFinish(this, 'timeout')
-      });
+      },
+      // At this point a timeout failure will be of no value
+      null);
       test.next();
     }
   ],
@@ -492,10 +491,9 @@ var commandsDataChannel = [
     function (test) {
       test.waitForInitialDataChannel(test.pcRemote, function () {
         ok(true, test.pcRemote + " dataChannels[0] switched to 'open'");
-      }, function () {
-        ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
-        unexpectedEventAndFinish(this, 'timeout');
-      });
+      },
+      // At this point a timeout failure will be of no value
+      null);
       test.next();
     }
   ],
@@ -589,7 +587,10 @@ var commandsDataChannel = [
         test.next();
       }, function() {
         ok(false, test.pcLocal + " initial dataChannels[0] failed to switch to 'open'");
+        //TODO: use stopAndExit() once bug 1019323 has landed
         unexpectedEventAndFinish(this, 'timeout')
+        // to prevent test framework timeouts
+        test.next();
       });
     }
   ],
@@ -600,7 +601,10 @@ var commandsDataChannel = [
         test.next();
       }, function() {
         ok(false, test.pcRemote + " initial dataChannels[0] failed to switch to 'open'");
+        //TODO: use stopAndExit() once bug 1019323 has landed
         unexpectedEventAndFinish(this, 'timeout');
+        // to prevent test framework timeouts
+        test.next();
       });
     }
   ],
@@ -789,3 +793,4 @@ var commandsDataChannel = [
     }
   ]
 ];
+

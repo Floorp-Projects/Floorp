@@ -65,7 +65,7 @@ class WebGLContextBoundObject;
 class WebGLActiveInfo;
 class WebGLExtensionBase;
 class WebGLBuffer;
-class WebGLVertexAttribData;
+struct WebGLVertexAttribData;
 class WebGLShader;
 class WebGLProgram;
 class WebGLQuery;

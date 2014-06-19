@@ -208,7 +208,7 @@ public:
      * etc.  So please don't use this name to make any decisions about the
      * ContentParent based on the value returned here.
      */
-    void FriendlyName(nsAString& aName);
+    void FriendlyName(nsAString& aName, bool aAnonymize = false);
 
     virtual void OnChannelError() MOZ_OVERRIDE;
 
@@ -418,8 +418,9 @@ private:
     virtual bool DeallocPIndexedDBParent(PIndexedDBParent* aActor) MOZ_OVERRIDE;
 
     virtual PMemoryReportRequestParent*
-    AllocPMemoryReportRequestParent(const uint32_t& generation,
-                                    const bool &minimizeMemoryUsage,
+    AllocPMemoryReportRequestParent(const uint32_t& aGeneration,
+                                    const bool &aAnonymize,
+                                    const bool &aMinimizeMemoryUsage,
                                     const nsString &aDMDDumpIdent) MOZ_OVERRIDE;
     virtual bool DeallocPMemoryReportRequestParent(PMemoryReportRequestParent* actor) MOZ_OVERRIDE;
 

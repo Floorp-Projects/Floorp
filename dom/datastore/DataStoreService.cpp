@@ -476,6 +476,8 @@ public:
 class RevisionAddedEnableStoreCallback MOZ_FINAL :
   public DataStoreRevisionCallback
 {
+private:
+  ~RevisionAddedEnableStoreCallback() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(RevisionAddedEnableStoreCallback);
 
@@ -640,6 +642,8 @@ NS_IMPL_ISUPPORTS(FirstRevisionIdCallback, nsIDOMEventListener)
 // created, but they don't know its value yet.
 class RetrieveRevisionsCounter
 {
+private:
+  ~RetrieveRevisionsCounter() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(RetrieveRevisionsCounter);
 

@@ -51,7 +51,7 @@ class WatchpointMap;
 class NestedScopeObject;
 
 namespace frontend {
-    class BytecodeEmitter;
+    struct BytecodeEmitter;
 }
 
 }
@@ -384,7 +384,7 @@ class SourceDataCache
 
 class ScriptSource
 {
-    friend class SourceCompressionTask;
+    friend struct SourceCompressionTask;
 
     uint32_t refs;
 

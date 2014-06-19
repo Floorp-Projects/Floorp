@@ -642,7 +642,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
-                            nsISupports *aClosure)
+                            nsISupports *aClosure, bool aAnonymize)
   {
     typedef nsDOMMemoryFile::DataOwner DataOwner;
 
@@ -662,8 +662,7 @@ public:
 
       if (size < LARGE_OBJECT_MIN_SIZE) {
         smallObjectsTotal += size;
-      }
-      else {
+      } else {
         SHA1Sum sha1;
         sha1.update(owner->mData, owner->mLength);
         uint8_t digest[SHA1Sum::HashSize]; // SHA1 digests are 20 bytes long.
@@ -678,7 +677,7 @@ public:
           /* process */ NS_LITERAL_CSTRING(""),
           nsPrintfCString(
             "explicit/dom/memory-file-data/large/file(length=%llu, sha1=%s)",
-            owner->mLength, digestString.get()),
+            owner->mLength, aAnonymize ? "<anonymized>" : digestString.get()),
           KIND_HEAP, UNITS_BYTES, size,
           nsPrintfCString(
             "Memory used to back a memory file of length %llu bytes.  The file "

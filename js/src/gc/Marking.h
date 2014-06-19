@@ -20,7 +20,7 @@ class ArrayBufferViewObject;
 class SharedArrayBufferObject;
 class BaseShape;
 class DebugScopeObject;
-struct GCMarker;
+class GCMarker;
 class GlobalObject;
 class LazyScript;
 class ScopeObject;
@@ -31,8 +31,8 @@ template<class> class HeapPtr;
 
 namespace jit {
 class JitCode;
-class IonScript;
-class VMFunction;
+struct IonScript;
+struct VMFunction;
 }
 
 namespace types {

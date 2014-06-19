@@ -111,6 +111,7 @@ private:
  */
 class CachedSurface
 {
+  ~CachedSurface() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(CachedSurface)
 
@@ -158,6 +159,7 @@ private:
  */
 class ImageSurfaceCache
 {
+  ~ImageSurfaceCache() {}
 public:
   NS_INLINE_DECL_REFCOUNTING(ImageSurfaceCache)
 
@@ -366,7 +368,8 @@ public:
   }
 
   NS_IMETHOD
-  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+  CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData,
+                 bool aAnonymize)
   {
     return MOZ_COLLECT_REPORT(
       "imagelib-surface-cache", KIND_OTHER, UNITS_BYTES,

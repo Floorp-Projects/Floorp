@@ -67,7 +67,7 @@
       // won't be used.)
       mgr.getReports(
         () => ok(false, "handleReport called for nested getReports() call"),
-        null, null, null
+        null, null, null, /* anonymize = */ false
       );
 
       // Close the remote processes.
@@ -97,7 +97,8 @@
       SimpleTest.finish();
     }
 
-    mgr.getReports(handleReport, null, processReports, null);
+    mgr.getReports(handleReport, null, processReports, null,
+                   /* anonymize = */ false);
   }
 
   ]]></script>

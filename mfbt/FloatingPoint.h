@@ -36,26 +36,26 @@ namespace mozilla {
 
 struct FloatTypeTraits
 {
-    typedef uint32_t Bits;
+  typedef uint32_t Bits;
 
-    static const unsigned ExponentBias = 127;
-    static const unsigned ExponentShift = 23;
+  static const unsigned kExponentBias = 127;
+  static const unsigned kExponentShift = 23;
 
-    static const Bits SignBit         = 0x80000000UL;
-    static const Bits ExponentBits    = 0x7F800000UL;
-    static const Bits SignificandBits = 0x007FFFFFUL;
+  static const Bits kSignBit         = 0x80000000UL;
+  static const Bits kExponentBits    = 0x7F800000UL;
+  static const Bits kSignificandBits = 0x007FFFFFUL;
 };
 
 struct DoubleTypeTraits
 {
-    typedef uint64_t Bits;
+  typedef uint64_t Bits;
 
-    static const unsigned ExponentBias = 1023;
-    static const unsigned ExponentShift = 52;
+  static const unsigned kExponentBias = 1023;
+  static const unsigned kExponentShift = 52;
 
-    static const Bits SignBit         = 0x8000000000000000ULL;
-    static const Bits ExponentBits    = 0x7ff0000000000000ULL;
-    static const Bits SignificandBits = 0x000fffffffffffffULL;
+  static const Bits kSignBit         = 0x8000000000000000ULL;
+  static const Bits kExponentBits    = 0x7ff0000000000000ULL;
+  static const Bits kSignificandBits = 0x000fffffffffffffULL;
 };
 
 template<typename T> struct SelectTrait;
@@ -71,139 +71,141 @@ template<> struct SelectTrait<double> : public DoubleTypeTraits {};
  *  as T: uint32_t for float and uint64_t for double (static assertions
  *  double-check these assumptions).
  *
- *  ExponentBias is the offset that is subtracted from the exponent when
+ *  kExponentBias is the offset that is subtracted from the exponent when
  *  computing the value, i.e. one plus the opposite of the mininum possible
  *  exponent.
- *  ExponentShift is the shift that one needs to apply to retrieve the exponent
- *  component of the value.
+ *  kExponentShift is the shift that one needs to apply to retrieve the
+ *  exponent component of the value.
  *
- *  SignBit contains a bits mask. Bit-and-ing with this mask will result in
+ *  kSignBit contains a bits mask. Bit-and-ing with this mask will result in
  *  obtaining the sign bit.
- *  ExponentBits contains the mask needed for obtaining the exponent bits and
- *  SignificandBits contains the mask needed for obtaining the significand bits.
+ *  kExponentBits contains the mask needed for obtaining the exponent bits and
+ *  kSignificandBits contains the mask needed for obtaining the significand
+ *  bits.
  *
- *  Full details of how floating point number formats are encoded are beyond the
- *  scope of this comment. For more information, see
+ *  Full details of how floating point number formats are encoded are beyond
+ *  the scope of this comment. For more information, see
  *  http://en.wikipedia.org/wiki/IEEE_floating_point
  *  http://en.wikipedia.org/wiki/Floating_point#IEEE_754:_floating_point_in_modern_computers
  */
 template<typename T>
 struct FloatingPoint : public SelectTrait<T>
 {
-    typedef SelectTrait<T> Base;
-    typedef typename Base::Bits Bits;
+  typedef SelectTrait<T> Base;
+  typedef typename Base::Bits Bits;
 
-    static_assert((Base::SignBit & Base::ExponentBits) == 0,
-                  "sign bit shouldn't overlap exponent bits");
-    static_assert((Base::SignBit & Base::SignificandBits) == 0,
-                  "sign bit shouldn't overlap significand bits");
-    static_assert((Base::ExponentBits & Base::SignificandBits) == 0,
-                  "exponent bits shouldn't overlap significand bits");
+  static_assert((Base::kSignBit & Base::kExponentBits) == 0,
+                "sign bit shouldn't overlap exponent bits");
+  static_assert((Base::kSignBit & Base::kSignificandBits) == 0,
+                "sign bit shouldn't overlap significand bits");
+  static_assert((Base::kExponentBits & Base::kSignificandBits) == 0,
+                "exponent bits shouldn't overlap significand bits");
 
-    static_assert((Base::SignBit | Base::ExponentBits | Base::SignificandBits) ==
-                  ~Bits(0),
-                  "all bits accounted for");
+  static_assert((Base::kSignBit | Base::kExponentBits | Base::kSignificandBits) ==
+                ~Bits(0),
+                "all bits accounted for");
 
-    /*
-     * These implementations assume float/double are 32/64-bit single/double format
-     * number types compatible with the IEEE-754 standard.  C++ don't require this
-     * to be the case.  But we required this in implementations of these algorithms
-     * that preceded this header, so we shouldn't break anything if we keep doing so.
-     */
-    static_assert(sizeof(T) == sizeof(Bits), "Bits must be same size as T");
+  /*
+   * These implementations assume float/double are 32/64-bit single/double
+   * format number types compatible with the IEEE-754 standard.  C++ don't
+   * require this to be the case.  But we required this in implementations of
+   * these algorithms that preceded this header, so we shouldn't break anything
+   * if we keep doing so.
+   */
+  static_assert(sizeof(T) == sizeof(Bits), "Bits must be same size as T");
 };
 
 /** Determines whether a double is NaN. */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-IsNaN(T t)
+IsNaN(T aValue)
 {
   /*
-   * A float/double is NaN if all exponent bits are 1 and the significand contains at
-   * least one non-zero bit.
+   * A float/double is NaN if all exponent bits are 1 and the significand
+   * contains at least one non-zero bit.
    */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return (bits & Traits::ExponentBits) == Traits::ExponentBits &&
-         (bits & Traits::SignificandBits) != 0;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & Traits::kExponentBits) == Traits::kExponentBits &&
+         (bits & Traits::kSignificandBits) != 0;
 }
 
 /** Determines whether a float/double is +Infinity or -Infinity. */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-IsInfinite(T t)
+IsInfinite(T aValue)
 {
   /* Infinities have all exponent bits set to 1 and an all-0 significand. */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return (bits & ~Traits::SignBit) == Traits::ExponentBits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & ~Traits::kSignBit) == Traits::kExponentBits;
 }
 
 /** Determines whether a float/double is not NaN or infinite. */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-IsFinite(T t)
+IsFinite(T aValue)
 {
   /*
-   * NaN and Infinities are the only non-finite floats/doubles, and both have all
-   * exponent bits set to 1.
+   * NaN and Infinities are the only non-finite floats/doubles, and both have
+   * all exponent bits set to 1.
    */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return (bits & Traits::ExponentBits) != Traits::ExponentBits;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & Traits::kExponentBits) != Traits::kExponentBits;
 }
 
 /**
- * Determines whether a float/double is negative.  It is an error to call this method
- * on a float/double which is NaN.
+ * Determines whether a float/double is negative.  It is an error to call this
+ * method on a float/double which is NaN.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-IsNegative(T t)
+IsNegative(T aValue)
 {
-  MOZ_ASSERT(!IsNaN(t), "NaN does not have a sign");
+  MOZ_ASSERT(!IsNaN(aValue), "NaN does not have a sign");
 
   /* The sign bit is set if the double is negative. */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return (bits & Traits::SignBit) != 0;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return (bits & Traits::kSignBit) != 0;
 }
 
 /** Determines whether a float/double represents -0. */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-IsNegativeZero(T t)
+IsNegativeZero(T aValue)
 {
   /* Only the sign bit is set if the value is -0. */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return bits == Traits::SignBit;
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return bits == Traits::kSignBit;
 }
 
 /**
  * Returns the exponent portion of the float/double.
  *
  * Zero is not special-cased, so ExponentComponent(0.0) is
- * -int_fast16_t(Traits::ExponentBias).
+ * -int_fast16_t(Traits::kExponentBias).
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE int_fast16_t
-ExponentComponent(T t)
+ExponentComponent(T aValue)
 {
   /*
-   * The exponent component of a float/double is an unsigned number, biased from its
-   * actual value.  Subtract the bias to retrieve the actual exponent.
+   * The exponent component of a float/double is an unsigned number, biased
+   * from its actual value.  Subtract the bias to retrieve the actual exponent.
    */
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  Bits bits = BitwiseCast<Bits>(t);
-  return int_fast16_t((bits & Traits::ExponentBits) >> Traits::ExponentShift) -
-         int_fast16_t(Traits::ExponentBias);
+  Bits bits = BitwiseCast<Bits>(aValue);
+  return int_fast16_t((bits & Traits::kExponentBits) >> Traits::kExponentShift) -
+         int_fast16_t(Traits::kExponentBias);
 }
 
 /** Returns +Infinity. */
@@ -216,7 +218,7 @@ PositiveInfinity()
    * significand.
    */
   typedef FloatingPoint<T> Traits;
-  return BitwiseCast<T>(Traits::ExponentBits);
+  return BitwiseCast<T>(Traits::kExponentBits);
 }
 
 /** Returns -Infinity. */
@@ -229,7 +231,7 @@ NegativeInfinity()
    * significand.
    */
   typedef FloatingPoint<T> Traits;
-  return BitwiseCast<T>(Traits::SignBit | Traits::ExponentBits);
+  return BitwiseCast<T>(Traits::kSignBit | Traits::kExponentBits);
 }
 
 
@@ -240,11 +242,11 @@ SpecificNaN(int signbit, typename FloatingPoint<T>::Bits significand)
 {
   typedef FloatingPoint<T> Traits;
   MOZ_ASSERT(signbit == 0 || signbit == 1);
-  MOZ_ASSERT((significand & ~Traits::SignificandBits) == 0);
-  MOZ_ASSERT(significand & Traits::SignificandBits);
+  MOZ_ASSERT((significand & ~Traits::kSignificandBits) == 0);
+  MOZ_ASSERT(significand & Traits::kSignificandBits);
 
-  T t = BitwiseCast<T>((signbit ? Traits::SignBit : 0) |
-                       Traits::ExponentBits |
+  T t = BitwiseCast<T>((signbit ? Traits::kSignBit : 0) |
+                       Traits::kExponentBits |
                        significand);
   MOZ_ASSERT(IsNaN(t));
   return t;
@@ -261,15 +263,15 @@ MinNumberValue()
 }
 
 /**
- * If t is equal to some int32_t value, set *i to that value and return true;
- * otherwise return false.
+ * If aValue is equal to some int32_t value, set *aInt32 to that value and
+ * return true; otherwise return false.
  *
  * Note that negative zero is "equal" to zero here. To test whether a value can
  * be losslessly converted to int32_t and back, use NumberIsInt32 instead.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-NumberEqualsInt32(T t, int32_t* i)
+NumberEqualsInt32(T aValue, int32_t* aInt32)
 {
   /*
    * XXX Casting a floating-point value that doesn't truncate to int32_t, to
@@ -277,21 +279,21 @@ NumberEqualsInt32(T t, int32_t* i)
    *     (bug 744965), but as apparently it "works" in practice, it's not a
    *     pressing concern now.
    */
-  return t == (*i = int32_t(t));
+  return aValue == (*aInt32 = int32_t(aValue));
 }
 
 /**
  * If d can be converted to int32_t and back to an identical double value,
- * set *i to that value and return true; otherwise return false.
+ * set *aInt32 to that value and return true; otherwise return false.
  *
  * The difference between this and NumberEqualsInt32 is that this method returns
  * false for negative zero.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-NumberIsInt32(T t, int32_t* i)
+NumberIsInt32(T aValue, int32_t* aInt32)
 {
-  return !IsNegativeZero(t) && NumberEqualsInt32(t, i);
+  return !IsNegativeZero(aValue) && NumberEqualsInt32(aValue, aInt32);
 }
 
 /**
@@ -309,7 +311,7 @@ UnspecifiedNaN()
    * it to be stored to memory in a single instruction).
    */
   typedef FloatingPoint<T> Traits;
-  return SpecificNaN<T>(1, Traits::SignificandBits);
+  return SpecificNaN<T>(1, Traits::kSignificandBits);
 }
 
 /**
@@ -319,13 +321,14 @@ UnspecifiedNaN()
  */
 template<typename T>
 static inline bool
-NumbersAreIdentical(T t1, T t2)
+NumbersAreIdentical(T aValue1, T aValue2)
 {
   typedef FloatingPoint<T> Traits;
   typedef typename Traits::Bits Bits;
-  if (IsNaN(t1))
-    return IsNaN(t2);
-  return BitwiseCast<Bits>(t1) == BitwiseCast<Bits>(t2);
+  if (IsNaN(aValue1)) {
+    return IsNaN(aValue2);
+  }
+  return BitwiseCast<Bits>(aValue1) == BitwiseCast<Bits>(aValue2);
 }
 
 namespace detail {
@@ -336,16 +339,14 @@ struct FuzzyEqualsEpsilon;
 template<>
 struct FuzzyEqualsEpsilon<float>
 {
-  // A number near 1e-5 that is exactly representable in
-  // floating point
+  // A number near 1e-5 that is exactly representable in a float.
   static float value() { return 1.0f / (1 << 17); }
 };
 
 template<>
 struct FuzzyEqualsEpsilon<double>
 {
-  // A number near 1e-12 that is exactly representable in
-  // a double
+  // A number near 1e-12 that is exactly representable in a double.
   static double value() { return 1.0 / (1LL << 40); }
 };
 
@@ -354,42 +355,45 @@ struct FuzzyEqualsEpsilon<double>
 /**
  * Compare two floating point values for equality, modulo rounding error. That
  * is, the two values are considered equal if they are both not NaN and if they
- * are less than or equal to epsilon apart. The default value of epsilon is near
- * 1e-5.
+ * are less than or equal to aEpsilon apart. The default value of aEpsilon is
+ * near 1e-5.
  *
  * For most scenarios you will want to use FuzzyEqualsMultiplicative instead,
  * as it is more reasonable over the entire range of floating point numbers.
- * This additive version should only be used if you know the range of the numbers
- * you are dealing with is bounded and stays around the same order of magnitude.
+ * This additive version should only be used if you know the range of the
+ * numbers you are dealing with is bounded and stays around the same order of
+ * magnitude.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-FuzzyEqualsAdditive(T val1, T val2, T epsilon = detail::FuzzyEqualsEpsilon<T>::value())
+FuzzyEqualsAdditive(T aValue1, T aValue2,
+                    T aEpsilon = detail::FuzzyEqualsEpsilon<T>::value())
 {
   static_assert(IsFloatingPoint<T>::value, "floating point type required");
-  return Abs(val1 - val2) <= epsilon;
+  return Abs(aValue1 - aValue2) <= aEpsilon;
 }
 
 /**
  * Compare two floating point values for equality, allowing for rounding error
  * relative to the magnitude of the values. That is, the two values are
  * considered equal if they are both not NaN and they are less than or equal to
- * some epsilon apart, where the epsilon is scaled by the smaller of the two
+ * some aEpsilon apart, where the aEpsilon is scaled by the smaller of the two
  * argument values.
  *
  * In most cases you will want to use this rather than FuzzyEqualsAdditive, as
  * this function effectively masks out differences in the bottom few bits of
- * the floating point numbers being compared, regardless of what order of magnitude
- * those numbers are at.
+ * the floating point numbers being compared, regardless of what order of
+ * magnitude those numbers are at.
  */
 template<typename T>
 static MOZ_ALWAYS_INLINE bool
-FuzzyEqualsMultiplicative(T val1, T val2, T epsilon = detail::FuzzyEqualsEpsilon<T>::value())
+FuzzyEqualsMultiplicative(T aValue1, T aValue2,
+                          T aEpsilon = detail::FuzzyEqualsEpsilon<T>::value())
 {
   static_assert(IsFloatingPoint<T>::value, "floating point type required");
   // can't use std::min because of bug 965340
-  T smaller = Abs(val1) < Abs(val2) ? Abs(val1) : Abs(val2);
-  return Abs(val1 - val2) <= epsilon * smaller;
+  T smaller = Abs(aValue1) < Abs(aValue2) ? Abs(aValue1) : Abs(aValue2);
+  return Abs(aValue1 - aValue2) <= aEpsilon * smaller;
 }
 
 /**
@@ -402,7 +406,7 @@ FuzzyEqualsMultiplicative(T val1, T val2, T epsilon = detail::FuzzyEqualsEpsilon
  */
 MOZ_WARN_UNUSED_RESULT
 extern MFBT_API bool
-IsFloat32Representable(double x);
+IsFloat32Representable(double aFloat32);
 
 } /* namespace mozilla */
 

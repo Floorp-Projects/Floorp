@@ -35,6 +35,9 @@ class RefCountedMonitor : public Monitor
     {}
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefCountedMonitor)
+
+  private:
+    ~RefCountedMonitor() {}
 };
 
 class MessageChannel : HasResultCodes
@@ -381,7 +384,9 @@ class MessageChannel : HasResultCodes
         RefCountedTask(CancelableTask* aTask)
           : mTask(aTask)
         { }
+      private:
         ~RefCountedTask() { delete mTask; }
+      public:
         void Run() { mTask->Run(); }
         void Cancel() { mTask->Cancel(); }
 

@@ -67,7 +67,7 @@ if CONFIG['MOZ_X11']:
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     EXPORTS += [
         'GLContextWGL.h',
-        'SharedSurfaceANGLE.h',
+        'SharedSurfaceANGLE.h', # Needs <windows.h> for `HANDLE`.
         'WGLLibrary.h',
     ]
     UNIFIED_SOURCES += [

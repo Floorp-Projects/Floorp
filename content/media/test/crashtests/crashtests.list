@@ -70,4 +70,5 @@ load offline-buffer-source-ended-1.html
 HTTP load media-element-source-seek-1.html
 skip-if(B2G) load oscillator-ended-1.html # intermittent B2G timeouts, bug 920338
 skip-if(B2G) load oscillator-ended-2.html # intermittent B2G timeouts, bug 920338
+load 1015662.html
 include ../../mediasource/test/crashtests/crashtests.list

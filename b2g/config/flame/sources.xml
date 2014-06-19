@@ -17,10 +17,10 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="82e957160ca017087bd374cd051339e55b641e68"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="135a13ea0ee333314b6a12cb19f18617308a3b46"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="44b04243e31cd16f3baf54fcd4b5fecf9deb8b94"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="c510babaf88dfa2cfe2c202afb2649ee124569af"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="4a7d860ef54cf6e119238b247522a85c13d17dd6"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="26e84ee3e9ef5df2ca28b16aa6719c6e77b5f24f"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -118,10 +118,10 @@
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="b8ff7901a20aab3041aaca4eb73abd6d57f4bb8a"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="243b6f3d219592a84c7318e9446cde397233ae39"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="30a441fb7275fc5bc347f84ccb29e977a7eca34e"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
-  <project name="platform/bootable/recovery" path="bootable/recovery" revision="f2914eacee9120680a41463708bb6ee8291749fc"/>
+  <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="e81502511cda303c803e63f049574634bc96f9f2"/>
   <project name="platform/external/bluetooth/bluedroid" path="external/bluetooth/bluedroid" revision="81c4a859d75d413ad688067829d21b7ba9205f81"/>
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
   <project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="dd925f76e4f149c3d5571b80e12f7e24bbe89c59"/>

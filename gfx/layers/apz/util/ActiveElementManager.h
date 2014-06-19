@@ -25,11 +25,11 @@ namespace layers {
  * of touch input.
  */
 class ActiveElementManager {
+  ~ActiveElementManager();
 public:
   NS_INLINE_DECL_REFCOUNTING(ActiveElementManager)
 
   ActiveElementManager();
-  ~ActiveElementManager();
 
   /**
    * Specify the target of a touch. Typically this should be called right

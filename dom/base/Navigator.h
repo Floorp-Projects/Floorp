@@ -33,7 +33,7 @@ namespace mozilla {
 namespace dom {
 class Geolocation;
 class systemMessageCallback;
-class MediaStreamConstraints;
+struct MediaStreamConstraints;
 class WakeLock;
 class ArrayBufferViewOrBlobOrStringOrFormData;
 }

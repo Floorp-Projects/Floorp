@@ -54,7 +54,7 @@ class ColorLayerComposite;
 class CompositableHost;
 class Compositor;
 class ContainerLayerComposite;
-class EffectChain;
+struct EffectChain;
 class ImageLayer;
 class ImageLayerComposite;
 class LayerComposite;

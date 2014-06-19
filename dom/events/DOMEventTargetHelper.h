@@ -17,7 +17,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/EventTarget.h"
 
-class JSCompartment;
+struct JSCompartment;
 
 namespace mozilla {
 

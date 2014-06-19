@@ -4,6 +4,10 @@ skip-if(B2G) == complex-decoration-style-standards.html complex-decoration-style
 == decoration-color-standards.html decoration-color-standards-ref.html
 == decoration-style-quirks.html decoration-style-quirks-ref.html
 == decoration-style-standards.html decoration-style-standards-ref.html
+fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-1.html dynamic-underline-vertical-align-quirks-1-ref.html
+fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-1.html dynamic-underline-vertical-align-standards-1-ref.html
+fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-quirks-2.html dynamic-underline-vertical-align-quirks-2-ref.html
+fuzzy-if(B2G,255,1) == dynamic-underline-vertical-align-standards-2.html dynamic-underline-vertical-align-standards-2-ref.html
 == line-through-style-block-solid-quirks.html line-through-style-block-quirks-ref.html
 != line-through-style-block-dotted-quirks.html line-through-style-block-quirks-ref.html
 != line-through-style-block-dashed-quirks.html line-through-style-block-quirks-ref.html

@@ -155,17 +155,19 @@ class RefCounted
 };
 
 #ifdef MOZ_REFCOUNTED_LEAK_CHECKING
-#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T) \
-  const char* typeName() const { return #T; } \
-  size_t typeSize() const { return sizeof(*this); }
-
 #define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T) \
   virtual const char* typeName() const { return #T; } \
   virtual size_t typeSize() const { return sizeof(*this); }
 #else
-#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T)
 #define MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(T)
 #endif
+
+// Note that this macro is expanded unconditionally because it declares only
+// two small inline functions which will hopefully get eliminated by the linker
+// in non-leak-checking builds.
+#define MOZ_DECLARE_REFCOUNTED_TYPENAME(T) \
+  const char* typeName() const { return #T; } \
+  size_t typeSize() const { return sizeof(*this); }
 
 }
 

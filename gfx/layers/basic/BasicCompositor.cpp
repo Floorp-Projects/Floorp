@@ -319,11 +319,25 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
       TextureSourceBasic* source = texturedEffect->mTexture->AsSourceBasic();
 
-      DrawSurfaceWithTextureCoords(dest, aRect,
-                                   source->GetSurface(dest),
-                                   texturedEffect->mTextureCoords,
-                                   texturedEffect->mFilter,
-                                   aOpacity, sourceMask, &maskTransform);
+      if (texturedEffect->mPremultiplied) {
+          DrawSurfaceWithTextureCoords(dest, aRect,
+                                       source->GetSurface(dest),
+                                       texturedEffect->mTextureCoords,
+                                       texturedEffect->mFilter,
+                                       aOpacity, sourceMask, &maskTransform);
+      } else {
+          RefPtr<DataSourceSurface> srcData = source->GetSurface(dest)->GetDataSurface();
+
+          // Yes, we re-create the premultiplied data every time.
+          // This might be better with a cache, eventually.
+          RefPtr<DataSourceSurface> premultData = gfxUtils::CreatePremultipliedDataSurface(srcData);
+
+          DrawSurfaceWithTextureCoords(dest, aRect,
+                                       premultData,
+                                       texturedEffect->mTextureCoords,
+                                       texturedEffect->mFilter,
+                                       aOpacity, sourceMask, &maskTransform);
+      }
       break;
     }
     case EffectTypes::YCBCR: {
@@ -474,7 +488,7 @@ BasicCompositor::EndFrame()
   RefPtr<DrawTarget> dest(mTarget ? mTarget : mDrawTarget);
 
   nsIntPoint offset = mTarget ? mTargetBounds.TopLeft() : nsIntPoint();
-  
+
   // The source DrawTarget is clipped to the invalidation region, so we have
   // to copy the individual rectangles in the region or else we'll draw blank
   // pixels.

@@ -147,24 +147,47 @@ interface nsIMemoryReporterCallback : nsISupports
  * sentences (i.e. start with a capital letter and end with a period, or
  * similar).
  */
-[scriptable, uuid(0884cd0f-5829-4381-979b-0f53904030ed)]
+[scriptable, uuid(92a36db1-46bd-4fe6-988e-47db47236d8b)]
 interface nsIMemoryReporter : nsISupports
 {
   /*
    * Run the reporter.
+   *
+   * If |anonymize| is true, the memory reporter should anonymize any
+   * privacy-sensitive details in memory report paths, by replacing them with a
+   * string such as "<anonymized>". Anonymized memory reports may be sent
+   * automatically via crash reports or telemetry.
+   *
+   * The following things are considered privacy-sensitive.
+   *
+   * - Content domains and URLs, and information derived from them.
+   * - Content data, such as strings.
+   * - Details about content code, such as filenames, function names or stack
+   *   traces.
+   * - Details about or data from the user's system, such as filenames.
+   * - Running apps.
+   *
+   * In short, anything that could identify parts of the user's browsing
+   * history is considered privacy-sensitive.
+   *
+   * The following thing are not considered privacy-sensitive.
+   *
+   * - Chrome domains and URLs.
+   * - Information about installed extensions.
    */
   void collectReports(in nsIMemoryReporterCallback callback,
-                      in nsISupports data);
+                      in nsISupports data,
+                      in boolean anonymize);
 
   /*
-   * Kinds.  See the |kind| comment in nsIMemoryReporterCallback.
+   * Kinds. See the |kind| comment in nsIMemoryReporterCallback.
    */
   const int32_t KIND_NONHEAP = 0;
   const int32_t KIND_HEAP    = 1;
   const int32_t KIND_OTHER   = 2;
 
   /*
-   * Units.  See the |units| comment in nsIMemoryReporterCallback.
+   * Units. See the |units| comment in nsIMemoryReporterCallback.
    */
   const int32_t UNITS_BYTES = 0;
   const int32_t UNITS_COUNT = 1;
@@ -236,11 +259,15 @@ interface nsIMemoryReporterManager : nsISupports
    * finished invoking |finishReporting|.  The silent abort is because the
    * in-flight request will finish soon, and the caller would very likely just
    * catch and ignore any error anyway.
+   *
+   * If |anonymize| is true, it indicates that the memory reporters should
+   * anonymize any privacy-sensitive data (see above).
    */
   void getReports(in nsIMemoryReporterCallback handleReport,
                   in nsISupports handleReportData,
                   in nsIFinishReportingCallback finishReporting,
-                  in nsISupports finishReportingData);
+                  in nsISupports finishReportingData,
+                  in boolean anonymize);
 
   /*
    * As above, but: If |minimizeMemoryUsage| is true, then each process will
@@ -254,6 +281,7 @@ interface nsIMemoryReporterManager : nsISupports
                        in nsISupports handleReportData,
                        in nsIFinishReportingCallback finishReporting,
                        in nsISupports finishReportingData,
+                       in boolean anonymize,
                        in boolean minimizeMemoryUsage,
                        in AString DMDDumpIdent);
 
@@ -262,7 +290,8 @@ interface nsIMemoryReporterManager : nsISupports
    * for each report.
    */
   void getReportsForThisProcess(in nsIMemoryReporterCallback handleReport,
-                                in nsISupports handleReportData);
+                                in nsISupports handleReportData,
+                                in boolean anonymize);
 
   /*
    * As above, but if DMD is enabled and |DMDDumpIdent| is non-empty
@@ -272,6 +301,7 @@ interface nsIMemoryReporterManager : nsISupports
   [noscript] void
     getReportsForThisProcessExtended(in nsIMemoryReporterCallback handleReport,
                                      in nsISupports handleReportData,
+                                     in boolean anonymize,
                                      in AString DMDDumpIdent);
 
   /*
@@ -552,9 +582,10 @@ namespace mozilla {
 //   {
 //     ...
 //     NS_IMETHODIMP
-//     CollectReports(nsIHandleReportCallback* aHandleReport, nsISupports* aData)
+//     CollectReports(nsIHandleReportCallback* aHandleReport,
+//                    nsISupports* aData, bool aAnonymize)
 //     {
-//        return MOZ_COLLECT_REPORTER(
+//        return MOZ_COLLECT_REPORT(
 //          "explicit/path/to/somewhere", KIND_HEAP, UNITS_BYTES,
 //          MemoryAllocated(),
 //          "A description of what we are reporting."

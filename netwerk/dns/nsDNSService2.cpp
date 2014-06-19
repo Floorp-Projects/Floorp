@@ -963,7 +963,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF(DNSServiceMallocSizeOf)
 
 NS_IMETHODIMP
 nsDNSService::CollectReports(nsIHandleReportCallback* aHandleReport,
-                             nsISupports* aData)
+                             nsISupports* aData, bool aAnonymize)
 {
     return MOZ_COLLECT_REPORT(
         "explicit/network/dns-service", KIND_HEAP, UNITS_BYTES,

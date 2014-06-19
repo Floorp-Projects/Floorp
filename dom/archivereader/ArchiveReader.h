@@ -18,7 +18,7 @@
 
 namespace mozilla {
 namespace dom {
-class ArchiveReaderOptions;
+struct ArchiveReaderOptions;
 class GlobalObject;
 } // namespace dom
 } // namespace mozilla
