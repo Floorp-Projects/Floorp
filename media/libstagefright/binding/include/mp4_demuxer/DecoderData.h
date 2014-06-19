@@ -67,7 +67,8 @@ public:
   int32_t display_width;
   int32_t display_height;
 
-  mozilla::Vector<uint8_t> annex_b;
+  mozilla::Vector<uint8_t> extra_data; // Unparsed AVCDecoderConfig payload.
+  mozilla::Vector<uint8_t> annex_b;    // Parsed version for sample prepend.
 
   void Update(stagefright::sp<stagefright::MetaData>& aMetaData, const char* aMimeType);
   bool IsValid();
