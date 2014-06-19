@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.Telemetry;
+import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.widget.IconTabWidget;
@@ -119,11 +121,14 @@ public class TabsPanel extends LinearLayout
         mTabWidget.setTabSelectionListener(this);
     }
 
-    public void addTab() {
-        if (mCurrentPanel == Panel.NORMAL_TABS)
-           mActivity.addTab();
-        else
-           mActivity.addPrivateTab();
+    private void addTab() {
+        if (mCurrentPanel == Panel.NORMAL_TABS) {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_tab");
+            mActivity.addTab();
+        } else {
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_private_tab");
+            mActivity.addPrivateTab();
+        }
 
         mActivity.autoHideTabs();
     }
