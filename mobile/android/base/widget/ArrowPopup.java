@@ -5,10 +5,11 @@
 
 package org.mozilla.gecko.widget;
 
-import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.util.HardwareUtils;
 
+import android.app.Activity;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
@@ -21,9 +22,7 @@ import android.widget.LinearLayout;
 import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 
-public class ArrowPopup extends PopupWindow {
-    protected final GeckoApp mActivity;
-
+public abstract class ArrowPopup extends PopupWindow {
     private View mAnchor;
     private ImageView mArrow;
 
@@ -33,37 +32,33 @@ public class ArrowPopup extends PopupWindow {
     protected LinearLayout mContent;
     protected boolean mInflated;
 
-    public ArrowPopup(GeckoApp aActivity) {
-        this(aActivity, null);
-    }
+    protected final Context mContext;
 
-    public ArrowPopup(GeckoApp activity, View anchor) {
-        super(activity);
-        mActivity = activity;
-        mAnchor = anchor;
+    public ArrowPopup(Context context) {
+        super(context);
 
-        mInflated = false;
+        mContext = context;
 
-        final Resources res = activity.getResources();
-        mArrowWidth = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_width);
-        mYOffset = res.getDimensionPixelSize(R.dimen.menu_popup_arrow_offset);
+        final Resources res = context.getResources();
+        mArrowWidth = res.getDimensionPixelSize(R.dimen.arrow_popup_arrow_width);
+        mYOffset = res.getDimensionPixelSize(R.dimen.arrow_popup_arrow_offset);
 
         setAnimationStyle(R.style.PopupAnimation);
     }
 
-    public void setAnchor(View anchor) {
-        mAnchor = anchor;
-    }
-
     protected void init() {
-        setBackgroundDrawable(new BitmapDrawable());
+        // Hide the default window background. Passing null prevents the below setOutTouchable()
+        // call from working, so use an empty BitmapDrawable instead.
+        setBackgroundDrawable(new BitmapDrawable(mContext.getResources()));
+
+        // Allow the popup to be dismissed when touching outside.
         setOutsideTouchable(true);
 
-        setWindowLayoutMode(HardwareUtils.isTablet() ? ViewGroup.LayoutParams.WRAP_CONTENT : ViewGroup.LayoutParams.FILL_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT);
+        final int widthSpec = HardwareUtils.isTablet() ? ViewGroup.LayoutParams.WRAP_CONTENT : ViewGroup.LayoutParams.MATCH_PARENT;
+        setWindowLayoutMode(widthSpec, ViewGroup.LayoutParams.WRAP_CONTENT);
 
-        LayoutInflater inflater = LayoutInflater.from(mActivity);
-        RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.arrow_popup, null);
+        final LayoutInflater inflater = LayoutInflater.from(mContext);
+        final RelativeLayout layout = (RelativeLayout) inflater.inflate(R.layout.arrow_popup, null);
         setContentView(layout);
 
         mArrow = (ImageView) layout.findViewById(R.id.arrow);
@@ -72,28 +67,42 @@ public class ArrowPopup extends PopupWindow {
         mInflated = true;
     }
 
-    /*
-     * Shows the popup with the arrow pointing to the center of the anchor view. If an anchor hasn't
-     * been set or isn't visible, the popup will just be shown at the top of the gecko app view.
+    /**
+     * Sets the anchor for this popup.
+     *
+     * @param anchor Anchor view for positioning the arrow.
+     */
+    public void setAnchor(View anchor) {
+        mAnchor = anchor;
+    }
+
+    /**
+     * Shows the popup with the arrow pointing to the center of the anchor view. If the anchor
+     * isn't visible, the popup will just be shown at the top of the root view.
      */
     public void show() {
-        int[] anchorLocation = new int[2];
-        if (mAnchor != null)
-            mAnchor.getLocationInWindow(anchorLocation);
+        if (!mInflated) {
+            throw new IllegalStateException("ArrowPopup#init() must be called before ArrowPopup#show()");
+        }
 
-        // If there's no anchor or the anchor is out of the window bounds,
-        // just show the popup at the top of the gecko app view.
+        final int[] anchorLocation = new int[2];
+        if (mAnchor != null) {
+            mAnchor.getLocationInWindow(anchorLocation);
+        }
+
+        // If the anchor is null or out of the window bounds, just show the popup at the top of the
+        // root view, keeping the correct X coordinate.
         if (mAnchor == null || anchorLocation[1] < 0) {
-            final View view = mActivity.getView();
+            final View decorView = ((Activity) mContext).getWindow().getDecorView();
 
             // Bug in android code causes the window layout parameters to be ignored
             // when using showAtLocation() in Gingerbread phones.
             if (Build.VERSION.SDK_INT < 11) {
-                setWidth(view.getWidth());
-                setHeight(view.getHeight());
+                setWidth(decorView.getWidth());
+                setHeight(decorView.getHeight());
             }
 
-            showAtLocation(view, Gravity.TOP, 0, 0);
+            showAtLocation(decorView, Gravity.TOP, anchorLocation[0], 0);
             return;
         }
 
