@@ -175,7 +175,6 @@ public abstract class GeckoApp
 
     protected RelativeLayout mMainLayout;
     protected RelativeLayout mGeckoLayout;
-    public View getView() { return mGeckoLayout; }
     private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners;

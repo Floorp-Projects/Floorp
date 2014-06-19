@@ -13,7 +13,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="arrowPopupWidth">@dimen/arrow_popup_width</item>
+        <item name="arrowPopupWidth">400dp</item>
     </style>
     
 </resources>
