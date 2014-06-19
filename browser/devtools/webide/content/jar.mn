@@ -11,6 +11,12 @@ webide.jar:
     content/details.xhtml             (details.xhtml)
     content/details.js                (details.js)
     content/cli.js                    (cli.js)
+    content/addons.js                 (addons.js)
+    content/addons.xhtml              (addons.xhtml)
+    content/permissionstable.js       (permissionstable.js)
+    content/permissionstable.xhtml    (permissionstable.xhtml)
+    content/runtimedetails.js         (runtimedetails.js)
+    content/runtimedetails.xhtml      (runtimedetails.xhtml)
 
 # Temporarily include locales in content, until we're ready
 # to localize webide
