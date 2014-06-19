@@ -14,15 +14,15 @@ namespace mozilla {
 namespace dom {
 
 inline void
-Element::RegisterFreezableElement()
+Element::RegisterActivityObserver()
 {
-  OwnerDoc()->RegisterFreezableElement(this);
+  OwnerDoc()->RegisterActivityObserver(this);
 }
 
 inline void
-Element::UnregisterFreezableElement()
+Element::UnregisterActivityObserver()
 {
-  OwnerDoc()->UnregisterFreezableElement(this);
+  OwnerDoc()->UnregisterActivityObserver(this);
 }
 
 }

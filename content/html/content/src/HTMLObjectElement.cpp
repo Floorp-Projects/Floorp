@@ -29,7 +29,7 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)
 {
-  RegisterFreezableElement();
+  RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 
   // <object> is always barred from constraint validation.
@@ -41,7 +41,7 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
 
 HTMLObjectElement::~HTMLObjectElement()
 {
-  UnregisterFreezableElement();
+  UnregisterActivityObserver();
   DestroyImageLoadingContent();
 }
 
