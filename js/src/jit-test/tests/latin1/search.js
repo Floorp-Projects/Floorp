@@ -58,3 +58,16 @@ function testSearchRope() {
     assertEq(ropeTwoByte.search("def\u1200"), 203);
 }
 testSearchRope();
+
+function testSearchStringMatch() {
+    var re = /bar/;
+
+    // Latin1
+    assertEq(toLatin1("foobar1234").search(re), 3);
+    assertEq(toLatin1("foo1234").search(re), -1);
+
+    // TwoByte
+    assertEq("\u1200bar".search(re), 1);
+    assertEq("\u12001234".search(re), -1);
+}
+testSearchStringMatch();
