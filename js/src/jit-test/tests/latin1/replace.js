@@ -95,3 +95,15 @@ function testRegExpDollar() {
     assertEq(s.replace(re2, "\ueeee**$'$$**"), "Foo\ueeee**3bar2345\u1200$**3\ueeee**45\u1200$**45\u1200");
 }
 testRegExpDollar();
+
+function testFlattenPattern() {
+    var s = "abcdef[g]abc";
+
+    // Latin1 pattern
+    assertEq(s.replace(toLatin1("def[g]"), "--$&--", "gi"), "abc--def[g]--abc");
+
+    // TwoByte pattern
+    s = "abcdef[g]\u1200abc";
+    assertEq(s.replace("def[g]\u1200", "++$&++", "gi"), "abc++def[g]\u1200++abc");
+}
+testFlattenPattern();
