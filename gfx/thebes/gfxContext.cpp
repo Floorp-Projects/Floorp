@@ -155,7 +155,7 @@ gfxContext::OriginalSurface()
         return mSurface;
     }
 
-    if (mOriginalDT && mOriginalDT->GetType() == BackendType::CAIRO) {
+    if (mOriginalDT && mOriginalDT->GetBackendType() == BackendType::CAIRO) {
         cairo_surface_t *s =
             (cairo_surface_t*)mOriginalDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
         if (s) {
@@ -182,7 +182,7 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
         cairo_surface_get_device_offset(s, dx, dy);
     return gfxASurface::Wrap(s);
   } else {
-    if (mDT->GetType() == BackendType::CAIRO) {
+    if (mDT->GetBackendType() == BackendType::CAIRO) {
         cairo_surface_t *s =
             (cairo_surface_t*)mDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
         if (s) {
@@ -209,7 +209,7 @@ gfxContext::GetCairo()
     return mCairo;
   }
 
-  if (mDT->GetType() == BackendType::CAIRO) {
+  if (mDT->GetBackendType() == BackendType::CAIRO) {
     cairo_t *ctx =
       (cairo_t*)mDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT);
     if (ctx) {
@@ -308,7 +308,7 @@ void gfxContext::SetPath(gfxPath* path)
         cairo_append_path(mCairo, path->mPath);
   } else {
     MOZ_ASSERT(path->mMoz2DPath, "Can't mix cairo and azure paths!");
-    MOZ_ASSERT(path->mMoz2DPath->GetBackendType() == mDT->GetType());
+    MOZ_ASSERT(path->mMoz2DPath->GetBackendType() == mDT->GetBackendType());
     mPath = path->mMoz2DPath;
     mPathBuilder = nullptr;
     mPathIsRect = false;
