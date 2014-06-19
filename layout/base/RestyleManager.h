@@ -107,7 +107,7 @@ public:
                           nsStyleChangeList* aChangeList,
                           nsChangeHint aMinChange,
                           RestyleTracker& aRestyleTracker,
-                          bool aRestyleDescendants);
+                          nsRestyleHint aRestyleHint);
 
 #ifdef DEBUG
   /**
@@ -241,7 +241,7 @@ private:
                       nsIFrame*       aPrimaryFrame,
                       nsChangeHint    aMinHint,
                       RestyleTracker& aRestyleTracker,
-                      bool            aRestyleDescendants);
+                      nsRestyleHint   aRestyleHint);
 
   void StyleChangeReflow(nsIFrame* aFrame, nsChangeHint aHint);
 
