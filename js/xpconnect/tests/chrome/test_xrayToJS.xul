@@ -150,9 +150,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties['Array'] =
     ["length", "toSource", "toString", "toLocaleString", "join", "reverse", "sort", "push",
       "pop", "shift", "unshift", "splice", "concat", "slice", "lastIndexOf", "indexOf",
-      "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "mapPar",
-      "reducePar", "scanPar", "scatterPar", "filterPar", "find", "findIndex", "copyWithin",
-      "fill", "@@iterator", "entries", "keys", "constructor"];
+      "forEach", "map", "reduce", "reduceRight", "filter", "some", "every", "find",
+      "findIndex", "copyWithin", "fill", "@@iterator", "entries", "keys", "constructor"];
 
   function filterOut(array, props) {
     return array.filter(p => props.indexOf(p) == -1);
