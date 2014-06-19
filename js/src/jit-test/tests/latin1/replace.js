@@ -107,3 +107,20 @@ function testFlattenPattern() {
     assertEq(s.replace("def[g]\u1200", "++$&++", "gi"), "abc++def[g]\u1200++abc");
 }
 testFlattenPattern();
+
+function testReplaceEmpty() {
+    // Latin1
+    var s = toLatin1("--abcdefghijkl--abcdefghijkl--abcdefghijkl--abcdefghijkl");
+    assertEq(s.replace(/abcd[eE]/g, ""), "--fghijkl--fghijkl--fghijkl--fghijkl");
+
+    s = "--abcdEf--";
+    assertEq(s.replace(/abcd[eE]/g, ""), "--f--");
+
+    // TwoByte
+    s = "--abcdefghijkl--abcdefghijkl--abcdefghijkl--abcdefghijkl\u1200";
+    assertEq(s.replace(/abcd[eE]/g, ""), "--fghijkl--fghijkl--fghijkl--fghijkl\u1200");
+
+    s = "--abcdEf--\u1200";
+    assertEq(s.replace(/abcd[eE]/g, ""), "--f--\u1200");
+}
+testReplaceEmpty();
