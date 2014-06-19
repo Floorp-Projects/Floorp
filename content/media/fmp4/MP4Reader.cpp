@@ -250,7 +250,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   }
 
   *aInfo = mInfo;
-  *aTags = mDemuxer->GetTags();
+  *aTags = nullptr;
 
   return NS_OK;
 }
