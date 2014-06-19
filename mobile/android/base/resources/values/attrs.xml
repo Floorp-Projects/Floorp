@@ -84,8 +84,12 @@
 
     <declare-styleable name="MultiChoicePreference">
         <attr name="entries" format="string"/>
-        <attr name="entryKeys" format="string"/>
+        <attr name="entryValues" format="string"/>
         <attr name="initialValues" format="string"/>
+    </declare-styleable>
+
+    <declare-styleable name="MultiPrefMultiChoicePreference">
+        <attr name="entryKeys" format="string"/>
     </declare-styleable>
 
     <declare-styleable name="BrowserToolbarCurve">
