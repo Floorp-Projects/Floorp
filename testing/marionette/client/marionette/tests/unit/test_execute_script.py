@@ -5,7 +5,7 @@
 import urllib
 
 from by import By
-from marionette import JavascriptException, MarionetteException
+from errors import JavascriptException, MarionetteException
 from marionette_test import MarionetteTestCase
 
 def inline(doc):
