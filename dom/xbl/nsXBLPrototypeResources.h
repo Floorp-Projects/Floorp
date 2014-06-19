@@ -8,13 +8,13 @@
 
 #include "nsAutoPtr.h"
 #include "nsICSSLoaderObserver.h"
-#include "nsIStyleRuleProcessor.h"
 
-class nsIContent;
-class nsIAtom;
-class nsXBLResourceLoader;
-class nsXBLPrototypeBinding;
+class nsCSSRuleProcessor;
 class nsCSSStyleSheet;
+class nsIAtom;
+class nsIContent;
+class nsXBLPrototypeBinding;
+class nsXBLResourceLoader;
 
 // *********************************************************************/
 // The XBLPrototypeResources class
@@ -47,7 +47,7 @@ public:
   sheet_array_type mStyleSheetList;
 
   // The list of stylesheets converted to a rule processor.
-  nsCOMPtr<nsIStyleRuleProcessor> mRuleProcessor;
+  nsRefPtr<nsCSSRuleProcessor> mRuleProcessor;
 };
 
 #endif
