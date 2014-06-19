@@ -5273,7 +5273,9 @@ nsDisplayTransform::WriteDebugInfo(nsACString& aTo)
 {
   gfx::Matrix4x4 transform;
   gfx::ToMatrix4x4(GetTransform(), transform);
-  AppendToString(aTo, transform);
+  std::stringstream ss;
+  AppendToString(ss, transform);
+  aTo += ss.str().c_str();
 }
 #endif
 

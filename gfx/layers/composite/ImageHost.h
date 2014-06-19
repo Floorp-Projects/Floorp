@@ -69,10 +69,10 @@ public:
 
   virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual void Dump(FILE* aFile = nullptr,
+  virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix = "",
                     bool aDumpHtml = false) MOZ_OVERRIDE;
 
