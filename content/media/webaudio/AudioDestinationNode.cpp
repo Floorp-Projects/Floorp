@@ -126,15 +126,11 @@ public:
     // which is strongly referenced by the runnable that called
     // AudioDestinationNode::FireOfflineCompletionEvent.
 
-    // We need the global for the context so that we can enter its compartment.
-    JSObject* global = context->GetGlobalJSObject();
-    if (NS_WARN_IF(!global)) {
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.InitUsingWin(aNode->GetOwner()))) {
       return;
     }
-
-    AutoJSAPI jsapi;
     JSContext* cx = jsapi.cx();
-    JSAutoCompartment ac(cx, global);
 
     // Create the input buffer
     ErrorResult rv;

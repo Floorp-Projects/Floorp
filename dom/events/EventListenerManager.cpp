@@ -775,12 +775,12 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
     GetScriptGlobalAndDocument(getter_AddRefs(doc));
   NS_ENSURE_STATE(global);
 
-  nsIScriptContext* context = global->GetScriptContext();
-  NS_ENSURE_STATE(context);
-
   // Activate JSAPI, and make sure that exceptions are reported on the right
   // Window.
-  AutoJSAPIWithErrorsReportedToWindow jsapi(context);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(global))) {
+    return NS_ERROR_UNEXPECTED;
+  }
   JSContext* cx = jsapi.cx();
 
   nsCOMPtr<nsIAtom> typeAtom = aListener->mTypeAtom;
@@ -851,7 +851,7 @@ EventListenerManager::CompileEventHandlerInternal(Listener* aListener,
   //
   // The wrapScope doesn't really matter here, because the target will create
   // its reflector in the proper scope, and then we'll enter that compartment.
-  JS::Rooted<JSObject*> wrapScope(cx, context->GetWindowProxy());
+  JS::Rooted<JSObject*> wrapScope(cx, global->GetGlobalJSObject());
   JS::Rooted<JS::Value> v(cx);
   {
     JSAutoCompartment ac(cx, wrapScope);
