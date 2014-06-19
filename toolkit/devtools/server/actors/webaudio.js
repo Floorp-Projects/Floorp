@@ -9,7 +9,6 @@ const Services = require("Services");
 
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const events = require("sdk/event/core");
-const { on: systemOn, off: systemOff } = require("sdk/system/events");
 const protocol = require("devtools/server/protocol");
 const { CallWatcherActor, CallWatcherFront } = require("devtools/server/actors/call-watcher");
 const { ThreadActor } = require("devtools/server/actors/script");
@@ -290,9 +289,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     // to the associated actorID, so we don't have to expose `nativeID`
     // to the client in any way.
     this._nativeToActorID = new Map();
-
-    this._onDestroyNode = this._onDestroyNode.bind(this);
-    this._onGlobalDestroyed = this._onGlobalDestroyed.bind(this);
   },
 
   destroy: function(conn) {
@@ -330,11 +326,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
       performReload: reload,
       holdWeak: true
     });
-    // Bind to the `global-destroyed` event on the content observer so we can
-    // unbind events between the global destruction and the `finalize` cleanup
-    // method on the actor.
-    // TODO expose these events on CallWatcherActor itself, bug 1021321
-    on(this._callWatcher._contentObserver, "global-destroyed", this._onGlobalDestroyed);
   }, {
     request: { reload: Option(0, "boolean") },
     oneway: true
@@ -404,7 +395,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     }
     this.tabActor = null;
     this._initialized = false;
-    off(this._callWatcher._contentObserver, "global-destroyed", this._onGlobalDestroyed);
     this._nativeToActorID = null;
     this._callWatcher.eraseRecording();
     this._callWatcher.finalize();
@@ -442,10 +432,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
     },
     "create-node": {
       type: "createNode",
-      source: Arg(0, "audionode")
-    },
-    "destroy-node": {
-      type: "destroyNode",
       source: Arg(0, "audionode")
     }
   },
@@ -485,7 +471,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
    * Called on first audio node creation, signifying audio context usage
    */
   _onStartContext: function () {
-    systemOn("webaudio-node-demise", this._onDestroyNode);
     emit(this, "start-context");
   },
 
@@ -535,40 +520,6 @@ let WebAudioActor = exports.WebAudioActor = protocol.ActorClass({
   _onCreateNode: function (node) {
     let actor = this._constructAudioNode(node);
     emit(this, "create-node", actor);
-  },
-
-  /** Called when `webaudio-node-demise` is triggered,
-   * and emits the associated actor to the front if found.
-   */
-  _onDestroyNode: function ({data}) {
-    // Cast to integer.
-    let nativeID = ~~data;
-
-    let actor = this._getActorByNativeID(nativeID);
-
-    // If actorID exists, emit; in the case where we get demise
-    // notifications for a document that no longer exists,
-    // the mapping should not be found, so we do not emit an event.
-    if (actor) {
-      this._nativeToActorID.delete(nativeID);
-      emit(this, "destroy-node", actor);
-    }
-  },
-
-  /**
-   * Called when the underlying ContentObserver fires `global-destroyed`
-   * so we can cleanup some things between the global being destroyed and
-   * when the actor's `finalize` method gets called.
-   */
-  _onGlobalDestroyed: function (id) {
-    if (this._callWatcher._tracedWindowId !== id) {
-      return;
-    }
-
-    if (this._nativeToActorID) {
-      this._nativeToActorID.clear();
-    }
-    systemOff("webaudio-node-demise", this._onDestroyNode);
   }
 });
 
