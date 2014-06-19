@@ -1740,6 +1740,26 @@ gfxFcFont::GetOrMakeFont(FcPattern *aRequestedPattern, FcPattern *aFontPattern,
 {
     nsAutoRef<FcPattern> renderPattern
         (FcFontRenderPrepare(nullptr, aRequestedPattern, aFontPattern));
+
+    // If synthetic bold/italic is not allowed by the style, adjust the
+    // resulting pattern to match the actual properties of the font.
+    if (!aFontStyle->allowSyntheticWeight) {
+        int weight;
+        if (FcPatternGetInteger(aFontPattern, FC_WEIGHT, 0,
+                                &weight) == FcResultMatch) {
+            FcPatternDel(renderPattern, FC_WEIGHT);
+            FcPatternAddInteger(renderPattern, FC_WEIGHT, weight);
+        }
+    }
+    if (!aFontStyle->allowSyntheticStyle) {
+        int slant;
+        if (FcPatternGetInteger(aFontPattern, FC_SLANT, 0,
+                                &slant) == FcResultMatch) {
+            FcPatternDel(renderPattern, FC_SLANT);
+            FcPatternAddInteger(renderPattern, FC_SLANT, slant);
+        }
+    }
+
     cairo_font_face_t *face =
         cairo_ft_font_face_create_for_pattern(renderPattern);
 
