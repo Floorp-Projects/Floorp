@@ -15,6 +15,17 @@
 #include "mozilla/Telemetry.h"
 
 namespace mozilla {
+
+namespace image {
+class Decoder;
+}
+
+template<>
+struct HasDangerousPublicDestructor<image::Decoder>
+{
+  static const bool value = true;
+};
+
 namespace image {
 
 class Decoder

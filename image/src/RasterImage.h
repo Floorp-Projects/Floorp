@@ -390,6 +390,9 @@ private:
     /* True if a new frame has been allocated, but DecodeSomeData hasn't yet
      * been called to flush data to it */
     bool mAllocatedNewFrame;
+
+  private:
+    ~DecodeRequest() {}
   };
 
   /*
