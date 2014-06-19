@@ -8196,13 +8196,16 @@ class CGUnionStruct(CGThing):
                     body=body % uninit))
                 if self.ownsMembers:
                     methods.append(vars["setter"])
-                    if t.isString():
+                    # Provide a SetStringData() method to support string defaults.
+                    # Exclude ByteString here because it does not support defaults
+                    # and only supports narrow nsCString.
+                    if t.isString() and not t.isByteString():
                         methods.append(
                             ClassMethod("SetStringData", "void",
                                         [Argument("const nsString::char_type*", "aData"),
                                          Argument("nsString::size_type", "aLength")],
                                         inline=True, bodyInHeader=True,
-                                        body="RawSetAsString().Assign(aData, aLength);\n"))
+                                        body="RawSetAs%s().Assign(aData, aLength);\n" % t.name))
 
             body = fill(
                 """
@@ -8432,13 +8435,16 @@ class CGUnionConversionStruct(CGThing):
                                            bodyInHeader=True,
                                            body=body,
                                            visibility="private"))
-                if t.isString():
+                # Provide a SetStringData() method to support string defaults.
+                # Exclude ByteString here because it does not support defaults
+                # and only supports narrow nsCString.
+                if t.isString() and not t.isByteString():
                     methods.append(
                         ClassMethod("SetStringData", "void",
                                     [Argument("const nsDependentString::char_type*", "aData"),
                                      Argument("nsDependentString::size_type", "aLength")],
                                     inline=True, bodyInHeader=True,
-                                    body="RawSetAsString().SetData(aData, aLength);\n"))
+                                    body="RawSetAs%s().SetData(aData, aLength);\n" % t.name))
 
             if vars["holderType"] is not None:
                 members.append(ClassMember("m%sHolder" % vars["name"],
