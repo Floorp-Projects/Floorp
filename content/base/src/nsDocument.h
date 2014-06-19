@@ -810,6 +810,13 @@ public:
     return mChannel;
   }
 
+  virtual nsIChannel* GetFailedChannel() const MOZ_OVERRIDE {
+    return mFailedChannel;
+  }
+  virtual void SetFailedChannel(nsIChannel* aChannel) MOZ_OVERRIDE {
+    mFailedChannel = aChannel;
+  }
+
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) MOZ_OVERRIDE;
