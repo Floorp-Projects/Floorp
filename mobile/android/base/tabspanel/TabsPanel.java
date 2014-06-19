@@ -182,11 +182,13 @@ public class TabsPanel extends LinearLayout
         mPopupMenu.setAnchor(mMenuButton);
     }
 
-    public void addTab() {
+    private void addTab() {
         if (mCurrentPanel == Panel.NORMAL_TABS) {
-           mActivity.addTab();
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_tab");
+            mActivity.addTab();
         } else {
-           mActivity.addPrivateTab();
+            Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.ACTIONBAR, "new_private_tab");
+            mActivity.addPrivateTab();
         }
 
         mActivity.autoHideTabs();
