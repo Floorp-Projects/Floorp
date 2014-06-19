@@ -10,8 +10,6 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 var manager = new MediaTestManager;
-// Need to clarify why declare mediaRecorder in startTest cause timeout.;
-var mediaRecorder;
 
 /**
  * Starts a test on every media recorder file included to check that a
@@ -28,7 +26,7 @@ function startTest(test, token) {
   element.test = test;
   element.stream = element.mozCaptureStreamUntilEnded();
 
-  mediaRecorder = new MediaRecorder(element.stream);
+  var mediaRecorder = new MediaRecorder(element.stream);
   var onStopFired = false;
   var onDataAvailableFired = false;
 
