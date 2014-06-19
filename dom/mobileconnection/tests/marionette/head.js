@@ -566,7 +566,7 @@ function sendMMI(aMmi) {
  * Query current voice privacy mode.
  *
  * Fulfill params:
-     A boolean indicates the current voice privacy mode.
+ *   A boolean indicates the current voice privacy mode.
  * Reject params:
  *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
  *
@@ -576,6 +576,21 @@ function sendMMI(aMmi) {
   let request = mobileConnection.getVoicePrivacyMode();
   return wrapDomRequestAsPromise(request)
     .then(() => request.result, () => { throw request.error });
+}
+
+/**
+ * Change call barring facility password.
+ *
+ * Fulfill params: (none)
+ * Reject params:
+ *   'RadioNotAvailable', 'RequestNotSupported', or 'GenericFailure'.
+ *
+ * @return A deferred promise.
+ */
+ function changeCallBarringPassword(aOptions) {
+  let request = mobileConnection.changeCallBarringPassword(aOptions);
+  return wrapDomRequestAsPromise(request)
+    .then(null, () => { throw request.error });
 }
 
 /**

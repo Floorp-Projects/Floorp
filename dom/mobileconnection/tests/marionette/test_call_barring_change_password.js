@@ -2,62 +2,49 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "head.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
+const TEST_DATA = [
+  // [<pin>, <new pin>, <expected error>]
 
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
-let connection;
-ifr.onload = function() {
-  connection = ifr.contentWindow.navigator.mozMobileConnections[0];
+  // Test passing an invalid pin or newPin.
+  [null, "0000", "InvalidPassword"],
+  ["0000", null, "InvalidPassword"],
+  [null, null, "InvalidPassword"],
 
-  ok(connection instanceof ifr.contentWindow.MozMobileConnection,
-     "connection is instanceof " + connection.constructor);
+  // Test passing mismatched newPin.
+  ["000", "0000", "InvalidPassword"],
+  ["00000", "1111", "InvalidPassword"],
+  ["abcd", "efgh", "InvalidPassword"],
 
-  setTimeout(testChangeCallBarringPasswordWithFailure, 0);
-};
-document.body.appendChild(ifr);
+  // TODO: Bug 906603 - B2G RIL: Support Change Call Barring Password on Emulator.
+  // Currently emulator doesn't support REQUEST_CHANGE_BARRING_PASSWORD, so we
+  // expect to get a 'RequestNotSupported' error here.
+  ["1234", "1234", "RequestNotSupported"]
+];
 
-function testChangeCallBarringPasswordWithFailure() {
-  // Incorrect parameters, expect onerror callback.
-  let options = [
-    {pin: null, newPin: '0000'},
-    {pin: '0000', newPin: null},
-    {pin: null, newPin: null},
-    {pin: '000', newPin: '0000'},
-    {pin: '00000', newPin: '1111'},
-    {pin: 'abcd', newPin: 'efgh'},
-  ];
+function testChangeCallBarringPassword(aPin, aNewPin, aExpectedError) {
+  log("Test changing call barring password to " + aPin + "/" + aNewPin);
 
-  function do_test() {
-    for (let i = 0; i < options.length; i++) {
-      let request = connection.changeCallBarringPassword(options[i]);
+  let options = {
+    pin: aPin,
+    newPin: aNewPin
+  };
+  return changeCallBarringPassword(options)
+    .then(function resolve() {
+      ok(!aExpectedError, "changeCallBarringPassword success");
+    }, function reject(aError) {
+      is(aError.name, aExpectedError, "failed to changeCallBarringPassword");
+    });
+}
 
-      request.onsuccess = function() {
-        ok(false, 'Unexpected result.');
-        setTimeout(cleanUp , 0);
-      };
-
-      request.onerror = function() {
-        ok(request.error.name === 'InvalidPassword', 'InvalidPassword');
-        if (i >= options.length) {
-          setTimeout(testChangeCallBarringPasswordWithSuccess, 0);
-        }
-      };
-    }
+// Start tests
+startTestCommon(function() {
+  let promise = Promise.resolve();
+  for (let i = 0; i < TEST_DATA.length; i++) {
+    let data = TEST_DATA[i];
+    promise =
+      promise.then(() => testChangeCallBarringPassword(data[0], data[1], data[2]));
   }
-
-  do_test();
-}
-
-function testChangeCallBarringPasswordWithSuccess() {
-  // TODO: Bug 906603 - B2G RIL: Support Change Call Barring Password on
-  // Emulator.
-  setTimeout(cleanUp , 0);
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
+  return promise;
+});
