@@ -131,8 +131,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x0300e2e0, 0x24c9, 0x4ecf, \
-  { 0x81, 0xec, 0x64, 0x26, 0x9a, 0x4b, 0xef, 0x18 } }
+{ 0xc9e11955, 0xaa55, 0x49a1, \
+  { 0x94, 0x29, 0x58, 0xe9, 0xbe, 0xf6, 0x79, 0x54 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -1270,6 +1270,18 @@ public:
   {
     return mSecurityInfo;
   }
+
+  /**
+   * Get the channel that failed to load and resulted in an error page, if it
+   * exists. This is only relevant to error pages.
+   */
+  virtual nsIChannel* GetFailedChannel() const = 0;
+
+  /**
+   * Set the channel that failed to load and resulted in an error page.
+   * This is only relevant to error pages.
+   */
+  virtual void SetFailedChannel(nsIChannel* aChannel) = 0;
 
   /**
    * Returns the default namespace ID used for elements created in this
@@ -2566,6 +2578,10 @@ protected:
 
   // The document's security info
   nsCOMPtr<nsISupports> mSecurityInfo;
+
+  // The channel that failed to load and resulted in an error page.
+  // This only applies to error pages. Might be null.
+  nsCOMPtr<nsIChannel> mFailedChannel;
 
   // if this document is part of a multipart document,
   // the ID can be used to distinguish it from the other parts.

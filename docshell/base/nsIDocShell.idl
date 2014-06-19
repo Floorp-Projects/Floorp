@@ -46,7 +46,7 @@ interface nsITabParent;
  
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(9c65a466-9814-48f8-a4ca-c4600b03b15d)]
+[scriptable, builtinclass, uuid(2a099e83-44df-415a-be76-c145966074e7)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -449,6 +449,11 @@ interface nsIDocShell : nsIDocShellTreeItem
                         in wstring aURL,
                         [optional] in nsIChannel aFailedChannel);
 
+  /**
+   * The channel that failed to load and resulted in an error page.
+   * May be null. Relevant only to error pages.
+   */
+  readonly attribute nsIChannel failedChannel;
 
   /**
    * Keeps track of the previous SHTransaction index and the current
