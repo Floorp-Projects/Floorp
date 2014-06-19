@@ -8,17 +8,24 @@ Components.utils.import("resource://gre/modules/devtools/event-emitter.js");
 
 const EXPORTED_SYMBOLS = ["Simulator"];
 
+function getVersionNumber(fullVersion) {
+  return fullVersion.match(/(\d+\.\d+)/)[0];
+}
+
 const Simulator = {
   _simulators: {},
 
-  register: function (version, simulator) {
-    this._simulators[version] = simulator;
-    this.emit("register");
+  register: function (label, simulator) {
+    // simulators register themselves as "Firefox OS X.Y"
+    let versionNumber = getVersionNumber(label);
+    this._simulators[versionNumber] = simulator;
+    this.emit("register", versionNumber);
   },
 
-  unregister: function (version) {
-    delete this._simulators[version];
-    this.emit("unregister");
+  unregister: function (label) {
+    let versionNumber = getVersionNumber(label);
+    delete this._simulators[versionNumber];
+    this.emit("unregister", versionNumber);
   },
 
   availableVersions: function () {
