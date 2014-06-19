@@ -208,7 +208,17 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   // When not a low precision pass and the page is in danger of checker boarding
   // abort update.
   if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
-    if (AboutToCheckerboard(contentMetrics, compositorMetrics)) {
+    bool scrollUpdatePending = contentMetrics.GetScrollOffsetUpdated() &&
+        contentMetrics.GetScrollGeneration() != compositorMetrics.GetScrollGeneration();
+    // If scrollUpdatePending is true, then that means the content-side
+    // metrics has a new scroll offset that is going to be forced into the
+    // compositor but it hasn't gotten there yet.
+    // Even though right now comparing the metrics might indicate we're
+    // about to checkerboard (and that's true), the checkerboarding will
+    // disappear as soon as the new scroll offset update is processed
+    // on the compositor side. To avoid leaving things in a low-precision
+    // paint, we need to detect and handle this case (bug 1026756).
+    if (!scrollUpdatePending && AboutToCheckerboard(contentMetrics, compositorMetrics)) {
       mProgressiveUpdateWasInDanger = true;
       return true;
     }
