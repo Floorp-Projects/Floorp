@@ -8,37 +8,13 @@
 #include "media/stagefright/MetaData.h"
 #include "mp4_demuxer/Adts.h"
 #include "mp4_demuxer/mp4_demuxer.h"
-#include "mozilla/ArrayUtils.h"
+
 #include <stdint.h>
 
 using namespace stagefright;
 
 namespace mp4_demuxer
 {
-
-struct tagmap {
-  const uint32_t key;
-  const char* name;
-};
-
-const struct tagmap keys[] = {
-  { kKeyAlbum, "album" },
-  { kKeyArtist, "artist" },
-  { kKeyAlbumArtist, "albumArtist" },
-  { kKeyComposer, "composer" },
-  { kKeyGenre, "genre" },
-  { kKeyTitle, "title" },
-  { kKeyYear, "year" },
-  { kKeyAlbumArt, "albumArt" },
-  { kKeyAlbumArtMIME, "albumArtMIME" },
-  { kKeyAuthor, "author" },
-  { kKeyCDTrackNumber, "cdTrackNumber" },
-  { kKeyDiscNumber, "discNumber" },
-  { kKeyDate, "date" },
-  { kKeyWriter, "writer" },
-  { kKeyCompilation, "compilation" },
-  { kKeyLocation, "location" },
-};
 
 struct StageFrightPrivate
 {
@@ -102,28 +78,6 @@ MP4Demuxer::~MP4Demuxer()
   if (mPrivate->mVideo.get()) {
     mPrivate->mVideo->stop();
   }
-}
-
-mozilla::MetadataTags*
-MP4Demuxer::GetTags()
-{
-  mozilla::MetadataTags* tags = new mozilla::MetadataTags;
-  sp<MetaData> metaData = mPrivate->mExtractor->getMetaData();
-  const char* value = nullptr;
-  nsCString cstringValue;
-  size_t key_count = mozilla::ArrayLength(keys);
-
-  for (size_t i = 0; i < key_count; i++) {
-    if (metaData->findCString(keys[i].key, &value)) {
-      MOZ_ASSERT(value);
-      cstringValue = nsCString(value);
-      if (IsUTF8(cstringValue)) {
-        tags->Put(nsCString(keys[i].name), cstringValue);
-      }
-    }
-  }
-
-  return tags;
 }
 
 bool
