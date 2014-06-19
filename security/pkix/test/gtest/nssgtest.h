@@ -44,7 +44,7 @@ public:
   {
   }
 
-  SECStatusWithPRErrorCode(SECStatus rv)
+  explicit SECStatusWithPRErrorCode(SECStatus rv)
     : mRv(rv)
     , mErrorCode(rv == SECSuccess ? 0 : PR_GetError())
   {
@@ -62,7 +62,7 @@ private:
   friend std::ostream& operator<<(std::ostream& os,
                                   SECStatusWithPRErrorCode const& value);
 
-  void operator=(const SECStatusWithPRErrorCode&) /*delete*/;
+  void operator=(const SECStatusWithPRErrorCode&) /*= delete*/;
 };
 
 ::std::ostream& operator<<(::std::ostream&,
