@@ -48,38 +48,32 @@ ElementTransitions::ElementTransitions(mozilla::dom::Element *aElement,
 double
 ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
 {
-  // Set |timePortion| to the portion of the way we are through the time
-  // input to the transition's timing function (always within the range
-  // 0-1).
-  double duration = mTiming.mIterationDuration.ToSeconds();
-  NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
-  double timePortion;
-  if (IsFinishedTransition()) {
-    // The transition is being removed, but we still want an update so that any
-    // new transitions start in the right place.
-    timePortion = 1.0;
-  } else if (duration == 0.0) {
-    // When duration is zero, we can still have a transition when delay
-    // is nonzero.
-    if (aRefreshTime >= mStartTime + mTiming.mDelay) {
-      timePortion = 1.0;
-    } else {
-      timePortion = 0.0;
-    }
-  } else {
-    timePortion =
-      (aRefreshTime - (mStartTime + mTiming.mDelay)).ToSeconds() / duration;
-    if (timePortion < 0.0)
-      timePortion = 0.0; // use start value during transition-delay
-    if (timePortion > 1.0)
-      timePortion = 1.0; // we might be behind on flushing
-  }
+  // It would be easy enough to handle finished transitions by using a time
+  // fraction of 1 but currently we should not be called for finished
+  // transitions.
+  MOZ_ASSERT(!IsFinishedTransition(),
+             "Getting the value portion of a finished transition");
+
+  TimeDuration localTime = GetLocalTimeAt(aRefreshTime);
+
+  // Transitions use a fill mode of 'backwards' so GetComputedTimingAt will
+  // never return a null time fraction due to being *before* the animation
+  // interval. However, it might be possible that we're behind on flushing
+  // causing us to get called *after* the animation interval. So, just in
+  // case, we override the fill mode to 'both' to ensure the time fraction
+  // is never null.
+  AnimationTiming timingToUse = mTiming;
+  timingToUse.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BOTH;
+  ComputedTiming computedTiming = GetComputedTimingAt(localTime, timingToUse);
+
+  MOZ_ASSERT(computedTiming.mTimeFraction != ComputedTiming::kNullTimeFraction,
+             "Got a null time fraction for a fill mode of 'both'");
   MOZ_ASSERT(mProperties.Length() == 1,
              "Should have one animation property for a transition");
   MOZ_ASSERT(mProperties[0].mSegments.Length() == 1,
              "Animation property should have one segment for a transition");
-
-  return mProperties[0].mSegments[0].mTimingFunction.GetValue(timePortion);
+  return mProperties[0].mSegments[0].mTimingFunction
+         .GetValue(computedTiming.mTimeFraction);
 }
 
 static void
