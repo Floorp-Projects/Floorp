@@ -182,6 +182,7 @@ struct nr_udp_message {
   nsAutoPtr<DataBuffer> data;
 
 private:
+  ~nr_udp_message() {}
   DISALLOW_COPY_ASSIGN(nr_udp_message);
 };
 
