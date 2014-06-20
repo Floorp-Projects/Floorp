@@ -73,11 +73,11 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         continue;
       }
 
-      // The ElapsedDurationAt() call here handles pausing.  But:
+      // The GetLocalTimeAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
       ComputedTiming computedTiming =
-        ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
+        ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
       // XXX We shouldn't really be using mLastNotification as a general
       // indicator that the animation has finished, it should be reserved for
@@ -113,11 +113,11 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
-      // The ElapsedDurationAt() call here handles pausing.  But:
+      // The GetLocalTimeAt() call here handles pausing.  But:
       // FIXME: avoid recalculating every time when paused.
-      TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+      TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
       ComputedTiming computedTiming =
-        ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
+        ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
       if ((computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
            computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) &&
@@ -213,9 +213,9 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     ElementAnimation* anim = mAnimations[animIdx];
 
-    TimeDuration elapsedDuration = anim->ElapsedDurationAt(aRefreshTime);
+    TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
     ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(elapsedDuration, anim->mTiming);
+      ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
 
     switch (computedTiming.mPhase) {
       case ComputedTiming::AnimationPhase_Before:

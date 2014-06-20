@@ -321,12 +321,14 @@ public:
   bool IsRunningAt(mozilla::TimeStamp aTime) const;
   bool IsCurrentAt(mozilla::TimeStamp aTime) const;
 
-  // Return the duration, at aTime (or, if paused, mPauseStart), since
-  // the *end* of the delay period.  May be negative.
-  mozilla::TimeDuration ElapsedDurationAt(mozilla::TimeStamp aTime) const {
-    NS_ABORT_IF_FALSE(!IsPaused() || aTime >= mPauseStart,
-                      "if paused, aTime must be at least mPauseStart");
-    return (IsPaused() ? mPauseStart : aTime) - mStartTime - mTiming.mDelay;
+  // Return the duration at aTime (or, if paused, mPauseStart) since
+  // the start of the delay period.  May be negative.
+  mozilla::TimeDuration GetLocalTimeAt(mozilla::TimeStamp aTime) const {
+    MOZ_ASSERT(!IsPaused() || aTime >= mPauseStart,
+               "if paused, aTime must be at least mPauseStart");
+    MOZ_ASSERT(!IsFinishedTransition(),
+               "GetLocalTimeAt should not be called on a finished transition");
+    return (IsPaused() ? mPauseStart : aTime) - mStartTime;
   }
 
   // Return the duration of the active interval for the given timing parameters.
@@ -357,7 +359,7 @@ public:
   // This function returns ComputedTiming::kNullTimeFraction for the
   // mTimeFraction member of the return value if the animation should not be
   // run (because it is not currently active and is not filling at this time).
-  static ComputedTiming GetComputedTimingAt(TimeDuration aElapsedDuration,
+  static ComputedTiming GetComputedTimingAt(TimeDuration aLocalTime,
                                             const AnimationTiming& aTiming);
 
   nsString mName; // empty string for 'none'
