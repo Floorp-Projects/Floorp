@@ -14,7 +14,7 @@
 
     <TextView android:id="@+id/title"
               style="@style/Widget.PanelItemView.Title"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:paddingTop="5dip"
               android:paddingBottom="5dip"

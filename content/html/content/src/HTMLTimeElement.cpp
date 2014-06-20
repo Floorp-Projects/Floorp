@@ -14,7 +14,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Time)
 namespace mozilla {
 namespace dom {
 
-HTMLTimeElement::HTMLTimeElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLTimeElement::HTMLTimeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

@@ -49,6 +49,27 @@ typedef IntegralConstant<bool, false> FalseType;
 
 namespace detail {
 
+template<typename T>
+struct IsVoidHelper : FalseType {};
+
+template<>
+struct IsVoidHelper<void> : TrueType {};
+
+} // namespace detail
+
+/**
+ * IsVoid determines whether a type is void.
+ *
+ * mozilla::IsVoid<int>::value is false;
+ * mozilla::IsVoid<void>::value is true;
+ * mozilla::IsVoid<void*>::value is false;
+ * mozilla::IsVoid<volatile void>::value is true.
+ */
+template<typename T>
+struct IsVoid : detail::IsVoidHelper<typename RemoveCV<T>::Type> {};
+
+namespace detail {
+
 template <typename T>
 struct IsIntegralHelper : FalseType {};
 
@@ -688,13 +709,53 @@ struct RemoveReference<T&&>
     typedef T Type;
 };
 
+template<bool Condition, typename A, typename B>
+struct Conditional;
+
+namespace detail {
+
+enum Voidness { TIsVoid, TIsNotVoid };
+
+template<typename T, Voidness V = IsVoid<T>::value ? TIsVoid : TIsNotVoid>
+struct AddLvalueReferenceHelper;
+
+template<typename T>
+struct AddLvalueReferenceHelper<T, TIsVoid>
+{
+    typedef void Type;
+};
+
+template<typename T>
+struct AddLvalueReferenceHelper<T, TIsNotVoid>
+{
+    typedef T& Type;
+};
+
+} // namespace detail
+
+/**
+ * AddLvalueReference adds an lvalue & reference to T if one isn't already
+ * present.  (Note: adding an lvalue reference to an rvalue && reference in
+ * essence replaces the && with a &&, per C+11 reference collapsing rules.  For
+ * example, int&& would become int&.)
+ *
+ * The final computed type will only *not* be an lvalue reference if T is void.
+ *
+ * mozilla::AddLvalueReference<int>::Type is int&;
+ * mozilla::AddLvalueRference<volatile int&>::Type is volatile int&;
+ * mozilla::AddLvalueReference<void*>::Type is void*&;
+ * mozilla::AddLvalueReference<void>::Type is void;
+ * mozilla::AddLvalueReference<struct S&&>::Type is struct S&.
+ */
+template<typename T>
+struct AddLvalueReference
+  : detail::AddLvalueReferenceHelper<T>
+{};
+
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 
 template<bool B, typename T = void>
 struct EnableIf;
-
-template<bool Condition, typename A, typename B>
-struct Conditional;
 
 namespace detail {
 
@@ -845,6 +906,33 @@ struct MakeUnsigned
 {};
 
 /* 20.9.7.4 Array modifications [meta.trans.arr] */
+
+/**
+ * RemoveExtent produces either the type of the elements of the array T, or T
+ * itself.
+ *
+ * mozilla::RemoveExtent<int>::Type is int;
+ * mozilla::RemoveExtent<const int[]>::Type is const int;
+ * mozilla::RemoveExtent<volatile int[5]>::Type is volatile int;
+ * mozilla::RemoveExtent<long[][17]>::Type is long[17].
+ */
+template<typename T>
+struct RemoveExtent
+{
+    typedef T Type;
+};
+
+template<typename T>
+struct RemoveExtent<T[]>
+{
+    typedef T Type;
+};
+
+template<typename T, decltype(sizeof(1)) N>
+struct RemoveExtent<T[N]>
+{
+    typedef T Type;
+};
 
 /* 20.9.7.5 Pointer modifications [meta.trans.ptr] */
 

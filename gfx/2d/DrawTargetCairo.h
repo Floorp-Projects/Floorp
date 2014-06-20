@@ -58,7 +58,7 @@ public:
   DrawTargetCairo();
   virtual ~DrawTargetCairo();
 
-  virtual BackendType GetType() const { return BackendType::CAIRO; }
+  virtual BackendType GetBackendType() const { return BackendType::CAIRO; }
   virtual TemporaryRef<SourceSurface> Snapshot();
   virtual IntSize GetSize();
 

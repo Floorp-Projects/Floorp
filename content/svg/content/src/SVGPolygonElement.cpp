@@ -22,7 +22,7 @@ SVGPolygonElement::WrapNode(JSContext *aCx)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPolygonElement::SVGPolygonElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGPolygonElement::SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGPolygonElementBase(aNodeInfo)
 {
 }

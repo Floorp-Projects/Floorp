@@ -48,7 +48,7 @@ static PRLogModuleInfo* gTrackElementLog;
 // Replace the usual NS_IMPL_NS_NEW_HTML_ELEMENT(Track) so
 // we can return an UnknownElement instead when pref'd off.
 nsGenericHTMLElement*
-NS_NewHTMLTrackElement(already_AddRefed<nsINodeInfo>&& aNodeInfo,
+NS_NewHTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                        mozilla::dom::FromParser aFromParser)
 {
   if (!mozilla::dom::HTMLTrackElement::IsWebVTTEnabled()) {
@@ -75,7 +75,7 @@ static MOZ_CONSTEXPR nsAttrValue::EnumTable kKindTable[] = {
 static MOZ_CONSTEXPR const char* kKindTableDefaultString = kKindTable->tag;
 
 /** HTMLTrackElement */
-HTMLTrackElement::HTMLTrackElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLTrackElement::HTMLTrackElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 #ifdef PR_LOGGING

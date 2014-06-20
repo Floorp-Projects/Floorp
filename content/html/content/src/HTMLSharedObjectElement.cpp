@@ -23,12 +23,12 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 namespace mozilla {
 namespace dom {
 
-HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                                  FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)
 {
-  RegisterFreezableElement();
+  RegisterActivityObserver();
   SetIsNetworkCreated(aFromParser == FROM_PARSER_NETWORK);
 
   // By default we're in the loading state
@@ -57,7 +57,7 @@ HTMLSharedObjectElement::SetItemValueText(const nsAString& aValue)
 
 HTMLSharedObjectElement::~HTMLSharedObjectElement()
 {
-  UnregisterFreezableElement();
+  UnregisterActivityObserver();
   DestroyImageLoadingContent();
 }
 

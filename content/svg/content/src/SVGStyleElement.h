@@ -12,7 +12,7 @@
 #include "nsStubMutationObserver.h"
 
 nsresult NS_NewSVGStyleElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGStyleElementBase;
 
@@ -25,8 +25,8 @@ class SVGStyleElement MOZ_FINAL : public SVGStyleElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGStyleElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGStyleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGStyleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
@@ -57,7 +57,7 @@ public:
                               const nsAString& aValue,
                               nsAttrValue& aResult) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

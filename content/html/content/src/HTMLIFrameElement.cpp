@@ -17,7 +17,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(IFrame)
 namespace mozilla {
 namespace dom {
 
-HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+HTMLIFrameElement::HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFrameElement(aNodeInfo, aFromParser)
 {

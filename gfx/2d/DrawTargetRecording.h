@@ -19,7 +19,7 @@ public:
   DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarget *aDT, bool aHasData = false);
   ~DrawTargetRecording();
 
-  virtual BackendType GetType() const { return mFinalDT->GetType(); }
+  virtual BackendType GetBackendType() const { return mFinalDT->GetBackendType(); }
 
   virtual TemporaryRef<SourceSurface> Snapshot();
 

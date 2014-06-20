@@ -22,7 +22,6 @@
 #include "nsISelectControlFrame.h"
 #include "nsContentUtils.h"
 #include "nsIDocument.h"
-#include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
 #include "nsListControlFrame.h"
 #include "nsAutoPtr.h"

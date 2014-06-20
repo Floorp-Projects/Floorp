@@ -30,8 +30,11 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CacheFileContextEvictor)
 
   CacheFileContextEvictor();
+
+private:
   virtual ~CacheFileContextEvictor();
 
+public:
   nsresult Init(nsIFile *aCacheDirectory);
 
   // Returns number of contexts that are being evicted.

@@ -283,6 +283,19 @@ AbstractCanvasGraph.prototype = {
   },
 
   /**
+   * Same as `setData`, but waits for this graph to finish initializing first.
+   *
+   * @param object data
+   *        The data source. The actual format is specified by subclasses.
+   * @return promise
+   *         A promise resolved once the data is set.
+   */
+  setDataWhenReady: Task.async(function*(data) {
+    yield this.ready();
+    this.setData(data);
+  }),
+
+  /**
    * Adds regions to this graph.
    *
    * See the "Language" section in the constructor documentation
@@ -293,7 +306,7 @@ AbstractCanvasGraph.prototype = {
    */
   setRegions: function(regions) {
     if (!this._cachedGraphImage) {
-      throw "Can't highlighted regions on a graph with no data displayed.";
+      throw "Can't highlight regions on a graph with no data displayed.";
     }
     if (this._regions) {
       throw "Regions were already highlighted on the graph.";
@@ -829,6 +842,7 @@ AbstractCanvasGraph.prototype = {
     }
 
     this._shouldRedraw = true;
+    this.emit("mousedown");
   },
 
   /**
@@ -870,6 +884,7 @@ AbstractCanvasGraph.prototype = {
     }
 
     this._shouldRedraw = true;
+    this.emit("mouseup");
   },
 
   /**
@@ -938,6 +953,7 @@ AbstractCanvasGraph.prototype = {
 
     this._shouldRedraw = true;
     this.emit("selecting");
+    this.emit("scroll");
   },
 
   /**
@@ -1547,6 +1563,9 @@ this.CanvasGraphUtils = {
    * Merges the animation loop of two graphs.
    */
   linkAnimation: Task.async(function*(graph1, graph2) {
+    if (!graph1 || !graph2) {
+      return;
+    }
     yield graph1.ready();
     yield graph2.ready();
 
@@ -1567,6 +1586,9 @@ this.CanvasGraphUtils = {
    * Makes sure selections in one graph are reflected in another.
    */
   linkSelection: function(graph1, graph2) {
+    if (!graph1 || !graph2) {
+      return;
+    }
     graph1.on("selecting", () => {
       graph2.setSelection(graph1.getSelection());
     });

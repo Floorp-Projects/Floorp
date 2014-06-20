@@ -12,7 +12,7 @@
 #include "nsReferencedElement.h"
 
 nsresult NS_NewSVGMPathElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGMPathElementBase;
 
@@ -25,8 +25,8 @@ class SVGMPathElement MOZ_FINAL : public SVGMPathElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGMPathElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGMPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGMPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   ~SVGMPathElement();
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
@@ -41,7 +41,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
 
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
                               bool aCompileEventHandlers) MOZ_OVERRIDE;

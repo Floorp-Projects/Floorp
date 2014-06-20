@@ -92,6 +92,7 @@ EXPORTS += [
     'MediaStreamGraph.h',
     'MediaTaskQueue.h',
     'MP3FrameParser.h',
+    'nsIDocumentActivity.h',
     'RtspMediaResource.h',
     'SharedBuffer.h',
     'SharedThreadPool.h',

@@ -12,7 +12,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Mod)
 namespace mozilla {
 namespace dom {
 
-HTMLModElement::HTMLModElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLModElement::HTMLModElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

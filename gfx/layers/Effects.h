@@ -46,7 +46,7 @@ struct Effect
 
   EffectTypes mType;
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix) = 0;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
 protected:
   virtual ~Effect() {}
@@ -67,7 +67,7 @@ struct TexturedEffect : public Effect
   {}
 
   virtual const char* Name() = 0;
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   gfx::Rect mTextureCoords;
   TextureSource* mTexture;
@@ -88,7 +88,7 @@ struct EffectMask : public Effect
     , mMaskTransform(aMaskTransform)
   {}
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   TextureSource* mMaskTexture;
   bool mIs3D;
@@ -104,7 +104,7 @@ struct EffectBlendMode : public Effect
   { }
 
   virtual const char* Name() { return "EffectBlendMode"; }
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   gfx::CompositionOp mBlendMode;
 };
@@ -118,7 +118,7 @@ struct EffectRenderTarget : public TexturedEffect
   {}
 
   virtual const char* Name() { return "EffectRenderTarget"; }
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   RefPtr<CompositingRenderTarget> mRenderTarget;
 };
@@ -167,7 +167,7 @@ struct EffectSolidColor : public Effect
     , mColor(aColor)
   {}
 
-  virtual void PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   gfx::Color mColor;
 };

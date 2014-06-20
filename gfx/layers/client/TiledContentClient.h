@@ -170,6 +170,11 @@ struct TileClient
     mManager = aManager;
   }
 
+  void SetCompositableClient(CompositableClient* aCompositableClient)
+  {
+    mCompositableClient = aCompositableClient;
+  }
+
   bool IsPlaceholderTile()
   {
     return mBackBuffer == nullptr && mFrontBuffer == nullptr;
@@ -224,6 +229,7 @@ struct TileClient
   RefPtr<gfxSharedReadLock> mBackLock;
   RefPtr<gfxSharedReadLock> mFrontLock;
   RefPtr<ClientLayerManager> mManager;
+  CompositableClient* mCompositableClient;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   TimeStamp        mLastUpdate;
 #endif

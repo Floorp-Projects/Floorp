@@ -22,7 +22,7 @@ class HTMLTableElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsIDOMHTMLTableElement
 {
 public:
-  HTMLTableElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLTableElement();
 
   NS_IMPL_FROMCONTENT_HTML_WITH_TAG(HTMLTableElement, table)
@@ -177,7 +177,7 @@ public:
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

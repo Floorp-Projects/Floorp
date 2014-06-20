@@ -219,6 +219,7 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIDocumentActivity.h"
 #include "nsIStructuredCloneContainer.h"
 #include "nsIMutableArray.h"
 #include "nsContentPermissionHelper.h"
@@ -1513,7 +1514,7 @@ struct nsIDocument::FrameRequest
   int32_t mHandle;
 };
 
-static already_AddRefed<nsINodeInfo> nullNodeInfo(nullptr);
+static already_AddRefed<mozilla::dom::NodeInfo> nullNodeInfo(nullptr);
 
 // ==================================================================
 // =
@@ -4357,17 +4358,23 @@ nsDocument::SetScopeObject(nsIGlobalObject* aGlobal)
 }
 
 static void
-NotifyActivityChanged(nsIContent *aContent, void *aUnused)
+NotifyActivityChanged(nsISupports *aSupports, void *aUnused)
 {
-  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aContent));
+  nsCOMPtr<nsIDOMHTMLMediaElement> domMediaElem(do_QueryInterface(aSupports));
   if (domMediaElem) {
-    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(aContent);
+    nsCOMPtr<nsIContent> content(do_QueryInterface(domMediaElem));
+    MOZ_ASSERT(content, "aSupports is not a content");
+    HTMLMediaElement* mediaElem = static_cast<HTMLMediaElement*>(content.get());
     mediaElem->NotifyOwnerDocumentActivityChanged();
   }
-  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aContent));
+  nsCOMPtr<nsIObjectLoadingContent> objectLoadingContent(do_QueryInterface(aSupports));
   if (objectLoadingContent) {
     nsObjectLoadingContent* olc = static_cast<nsObjectLoadingContent*>(objectLoadingContent.get());
     olc->NotifyOwnerDocumentActivityChanged();
+  }
+  nsCOMPtr<nsIDocumentActivity> objectDocumentActivity(do_QueryInterface(aSupports));
+  if (objectDocumentActivity) {
+    objectDocumentActivity->NotifyOwnerDocumentActivityChanged();
   }
 }
 
@@ -4380,7 +4387,7 @@ nsIDocument::SetContainer(nsDocShell* aContainer)
     mDocumentContainer = WeakPtr<nsDocShell>();
   }
 
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   if (!aContainer) {
     return;
   }
@@ -5220,7 +5227,7 @@ nsIDocument::CreateElementNS(const nsAString& aNamespaceURI,
                              const nsAString& aQualifiedName,
                              ErrorResult& rv)
 {
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
@@ -5407,7 +5414,7 @@ nsIDocument::CreateAttribute(const nsAString& aName, ErrorResult& rv)
     return nullptr;
   }
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   res = mNodeInfoManager->GetNodeInfo(aName, nullptr, kNameSpaceID_None,
                                       nsIDOMNode::ATTRIBUTE_NODE,
                                       getter_AddRefs(nodeInfo));
@@ -5439,7 +5446,7 @@ nsIDocument::CreateAttributeNS(const nsAString& aNamespaceURI,
 {
   WarnOnceAbout(eCreateAttributeNS);
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   rv = nsContentUtils::GetNodeInfoFromQName(aNamespaceURI,
                                             aQualifiedName,
                                             mNodeInfoManager,
@@ -5519,7 +5526,7 @@ nsDocument::RegisterUnresolvedElement(Element* aElement, nsIAtom* aTypeName)
     return NS_OK;
   }
 
-  nsINodeInfo* info = aElement->NodeInfo();
+  mozilla::dom::NodeInfo* info = aElement->NodeInfo();
 
   // Candidate may be a custom element through extension,
   // in which case the custom element type name will not
@@ -5587,7 +5594,7 @@ nsDocument::EnqueueLifecycleCallback(nsIDocument::ElementCallbackType aType,
   // Let DEFINITION be ELEMENT's definition
   CustomElementDefinition* definition = aDefinition;
   if (!definition) {
-    nsINodeInfo* info = aCustomElement->NodeInfo();
+    mozilla::dom::NodeInfo* info = aCustomElement->NodeInfo();
 
     // Make sure we get the correct definition in case the element
     // is a extended custom element e.g. <button is="x-button">.
@@ -6729,7 +6736,7 @@ nsDocument::SetTitle(const nsAString& aTitle)
       return NS_OK;
 
     {
-      nsCOMPtr<nsINodeInfo> titleInfo;
+      nsRefPtr<mozilla::dom::NodeInfo> titleInfo;
       titleInfo = mNodeInfoManager->GetNodeInfo(nsGkAtoms::title, nullptr,
                                                 kNameSpaceID_XHTML,
                                                 nsIDOMNode::ELEMENT_NODE);
@@ -8251,7 +8258,7 @@ nsDocument::CreateElem(const nsAString& aName, nsIAtom *aPrefix, int32_t aNamesp
 
   *aResult = nullptr;
 
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   mNodeInfoManager->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                 nsIDOMNode::ELEMENT_NODE,
                                 getter_AddRefs(nodeInfo));
@@ -8511,7 +8518,7 @@ nsDocument::RemovedFromDocShell()
     return;
 
   mRemovedFromDocShell = true;
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
   uint32_t i, count = mChildren.ChildCount();
   for (i = 0; i < count; ++i) {
@@ -8763,7 +8770,7 @@ nsDocument::OnPageShow(bool aPersisted,
 {
   mVisible = true;
 
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   EnumerateExternalResources(NotifyPageShow, &aPersisted);
 
   Element* root = GetRootElement();
@@ -8892,7 +8899,7 @@ nsDocument::OnPageHide(bool aPersisted,
   UpdateVisibilityState();
 
   EnumerateExternalResources(NotifyPageHide, &aPersisted);
-  EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+  EnumerateActivityObservers(NotifyActivityChanged, nullptr);
 
   if (IsFullScreenDoc()) {
     // If this document was fullscreen, we should exit fullscreen in this
@@ -9589,48 +9596,48 @@ nsDocument::SetChangeScrollPosWhenScrollingToRef(bool aValue)
 }
 
 void
-nsIDocument::RegisterFreezableElement(nsIContent* aContent)
+nsIDocument::RegisterActivityObserver(nsISupports* aSupports)
 {
-  if (!mFreezableElements) {
-    mFreezableElements = new nsTHashtable<nsPtrHashKey<nsIContent> >();
-    if (!mFreezableElements)
+  if (!mActivityObservers) {
+    mActivityObservers = new nsTHashtable<nsPtrHashKey<nsISupports> >();
+    if (!mActivityObservers)
       return;
   }
-  mFreezableElements->PutEntry(aContent);
+  mActivityObservers->PutEntry(aSupports);
 }
 
 bool
-nsIDocument::UnregisterFreezableElement(nsIContent* aContent)
+nsIDocument::UnregisterActivityObserver(nsISupports* aSupports)
 {
-  if (!mFreezableElements)
+  if (!mActivityObservers)
     return false;
-  if (!mFreezableElements->GetEntry(aContent))
+  if (!mActivityObservers->GetEntry(aSupports))
     return false;
-  mFreezableElements->RemoveEntry(aContent);
+  mActivityObservers->RemoveEntry(aSupports);
   return true;
 }
 
-struct EnumerateFreezablesData {
-  nsIDocument::FreezableElementEnumerator mEnumerator;
+struct EnumerateActivityObserversData {
+  nsIDocument::ActivityObserverEnumerator mEnumerator;
   void* mData;
 };
 
 static PLDHashOperator
-EnumerateFreezables(nsPtrHashKey<nsIContent>* aEntry, void* aData)
+EnumerateObservers(nsPtrHashKey<nsISupports>* aEntry, void* aData)
 {
-  EnumerateFreezablesData* data = static_cast<EnumerateFreezablesData*>(aData);
+  EnumerateActivityObserversData* data = static_cast<EnumerateActivityObserversData*>(aData);
   data->mEnumerator(aEntry->GetKey(), data->mData);
   return PL_DHASH_NEXT;
 }
 
 void
-nsIDocument::EnumerateFreezableElements(FreezableElementEnumerator aEnumerator,
+nsIDocument::EnumerateActivityObservers(ActivityObserverEnumerator aEnumerator,
                                         void* aData)
 {
-  if (!mFreezableElements)
+  if (!mActivityObservers)
     return;
-  EnumerateFreezablesData data = { aEnumerator, aData };
-  mFreezableElements->EnumerateEntries(EnumerateFreezables, &data);
+  EnumerateActivityObserversData data = { aEnumerator, aData };
+  mActivityObservers->EnumerateEntries(EnumerateObservers, &data);
 }
 
 void
@@ -11826,7 +11833,7 @@ nsDocument::UpdateVisibilityState()
                                          /* bubbles = */ true,
                                          /* cancelable = */ false);
 
-    EnumerateFreezableElements(NotifyActivityChanged, nullptr);
+    EnumerateActivityObservers(NotifyActivityChanged, nullptr);
   }
 }
 
@@ -12228,7 +12235,7 @@ nsIDocument::SetStateObject(nsIStructuredCloneContainer *scContainer)
 already_AddRefed<Element>
 nsIDocument::CreateHTMLElement(nsIAtom* aTag)
 {
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(aTag, nullptr, kNameSpaceID_XHTML,
                                            nsIDOMNode::ELEMENT_NODE);
   MOZ_ASSERT(nodeInfo, "GetNodeInfo should never fail");

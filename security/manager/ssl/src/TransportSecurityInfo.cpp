@@ -601,22 +601,24 @@ GetSubjectAltNames(CERTCertificate *nssCert,
   allNames.Truncate();
   nameCount = 0;
 
-  PLArenaPool *san_arena = nullptr;
   SECItem altNameExtension = {siBuffer, nullptr, 0 };
   CERTGeneralName *sanNameList = nullptr;
 
   SECStatus rv = CERT_FindCertExtension(nssCert, SEC_OID_X509_SUBJECT_ALT_NAME,
                                         &altNameExtension);
-  if (rv != SECSuccess)
+  if (rv != SECSuccess) {
     return false;
+  }
 
-  san_arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  if (!san_arena)
+  mozilla::pkix::ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
+  if (!arena) {
     return false;
+  }
 
-  sanNameList = CERT_DecodeAltNameExtension(san_arena, &altNameExtension);
-  if (!sanNameList)
+  sanNameList = CERT_DecodeAltNameExtension(arena.get(), &altNameExtension);
+  if (!sanNameList) {
     return false;
+  }
 
   SECITEM_FreeItem(&altNameExtension, false);
 
@@ -675,7 +677,6 @@ GetSubjectAltNames(CERTCertificate *nssCert,
     current = CERT_GetNextGeneralName(current);
   } while (current != sanNameList); // double linked
 
-  PORT_FreeArena(san_arena, false);
   return true;
 }
 

@@ -10,7 +10,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,8 +21,8 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGFEDisplacementMapElement(nsIContent **aResult,
-                                                       already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGFEDisplacementMapElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+                                                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGFEDisplacementMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEDisplacementMapElementBase(aNodeInfo)
   {
   }
@@ -39,7 +39,7 @@ public:
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

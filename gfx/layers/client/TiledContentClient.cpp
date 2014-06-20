@@ -377,6 +377,7 @@ TileClient::TileClient()
   , mFrontBuffer(nullptr)
   , mBackLock(nullptr)
   , mFrontLock(nullptr)
+  , mCompositableClient(nullptr)
 {
 }
 
@@ -386,6 +387,7 @@ TileClient::TileClient(const TileClient& o)
   mFrontBuffer = o.mFrontBuffer;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
+  mCompositableClient = nullptr;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
@@ -402,6 +404,7 @@ TileClient::operator=(const TileClient& o)
   mFrontBuffer = o.mFrontBuffer;
   mBackLock = o.mBackLock;
   mFrontLock = o.mFrontLock;
+  mCompositableClient = nullptr;
 #ifdef GFX_TILEDLAYER_DEBUG_OVERLAY
   mLastUpdate = o.mLastUpdate;
 #endif
@@ -415,6 +418,20 @@ TileClient::operator=(const TileClient& o)
 void
 TileClient::Flip()
 {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+  if (mFrontBuffer && mFrontBuffer->GetIPDLActor() &&
+      mCompositableClient && mCompositableClient->GetIPDLActor()) {
+    // remove old buffer from CompositableHost
+    RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
+    // Hold TextureClient until transaction complete.
+    tracker->SetTextureClient(mFrontBuffer);
+    mFrontBuffer->SetRemoveFromCompositableTracker(tracker);
+    // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+    mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
+                                                                      mCompositableClient,
+                                                                      mFrontBuffer);
+  }
+#endif
   RefPtr<TextureClient> frontBuffer = mFrontBuffer;
   mFrontBuffer = mBackBuffer;
   mBackBuffer = frontBuffer;
@@ -481,6 +498,20 @@ TileClient::DiscardFrontBuffer()
 {
   if (mFrontBuffer) {
     MOZ_ASSERT(mFrontLock);
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+    if (mFrontBuffer->GetIPDLActor() &&
+        mCompositableClient && mCompositableClient->GetIPDLActor()) {
+      // remove old buffer from CompositableHost
+      RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
+      // Hold TextureClient until transaction complete.
+      tracker->SetTextureClient(mFrontBuffer);
+      mFrontBuffer->SetRemoveFromCompositableTracker(tracker);
+      // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+      mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
+                                                                        mCompositableClient,
+                                                                        mFrontBuffer);
+    }
+#endif
     mManager->GetTexturePool(mFrontBuffer->GetFormat())->ReturnTextureClientDeferred(mFrontBuffer);
     mFrontLock->ReadUnlock();
     mFrontBuffer = nullptr;
@@ -499,7 +530,25 @@ TileClient::DiscardBackBuffer()
       // this case we just want to drop it and not return it to the pool.
       mManager->GetTexturePool(mBackBuffer->GetFormat())->ReportClientLost();
     } else {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+      if (mBackBuffer->GetIPDLActor() &&
+          mCompositableClient && mCompositableClient->GetIPDLActor()) {
+        // remove old buffer from CompositableHost
+        RefPtr<AsyncTransactionTracker> tracker = new RemoveTextureFromCompositableTracker();
+        // Hold TextureClient until transaction complete.
+        tracker->SetTextureClient(mBackBuffer);
+        mBackBuffer->SetRemoveFromCompositableTracker(tracker);
+        // RemoveTextureFromCompositableAsync() expects CompositorChild's presence.
+        mManager->AsShadowForwarder()->RemoveTextureFromCompositableAsync(tracker,
+                                                                          mCompositableClient,
+                                                                          mBackBuffer);
+      }
+      // TextureClient can be reused after transaction complete,
+      // when RemoveTextureFromCompositableTracker is used.
+      mManager->GetTexturePool(mBackBuffer->GetFormat())->ReturnTextureClientDeferred(mBackBuffer);
+#else
       mManager->GetTexturePool(mBackBuffer->GetFormat())->ReturnTextureClient(mBackBuffer);
+#endif
     }
     mBackLock->ReadUnlock();
     mBackBuffer = nullptr;
@@ -751,6 +800,7 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
   if (aTile.IsPlaceholderTile()) {
     aTile.SetLayerManager(mManager);
   }
+  aTile.SetCompositableClient(mCompositableClient);
 
   // Discard our front and backbuffers if our contents changed. In this case
   // the calling code will already have taken care of invalidating the entire
@@ -873,8 +923,6 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
 
   backBuffer->Unlock();
 
-  aTile.Flip();
-
   if (createdTextureClient) {
     if (!mCompositableClient->AddTextureClient(backBuffer)) {
       NS_WARNING("Failed to add tile TextureClient.");
@@ -883,6 +931,8 @@ ClientTiledLayerBuffer::ValidateTile(TileClient aTile,
       return aTile;
     }
   }
+
+  aTile.Flip();
 
   // Note, we don't call UpdatedTexture. The Updated function is called manually
   // by the TiledContentHost before composition.

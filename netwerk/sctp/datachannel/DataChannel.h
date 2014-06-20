@@ -331,7 +331,10 @@ public:
       NS_ASSERTION(mConnection,"NULL connection");
     }
 
+private:
   ~DataChannel();
+
+public:
   void Destroy(); // when we disconnect from the connection after stream RESET
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannel)

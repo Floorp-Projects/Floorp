@@ -150,7 +150,7 @@ TEST_F(pkix_cert_extensions, UnknownCriticalExtension)
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
                     BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -182,7 +182,7 @@ TEST_F(pkix_cert_extensions, UnknownNonCriticalExtension)
   ScopedCERTCertList results;
   ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -216,7 +216,7 @@ TEST_F(pkix_cert_extensions, WrongOIDCriticalExtension)
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
                     BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -248,7 +248,7 @@ TEST_F(pkix_cert_extensions, CriticalAIAExtension)
   ScopedCERTCertList results;
   ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -281,7 +281,7 @@ TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
   ASSERT_SECFailure(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION,
                     BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response
@@ -311,7 +311,7 @@ TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
   ScopedCERTCertList results;
   ASSERT_SECSuccess(BuildCertChain(trustDomain, cert.get(),
                                    now, EndEntityOrCA::MustBeEndEntity,
-                                   0, // key usage
+                                   KeyUsage::noParticularKeyUsageRequired,
                                    KeyPurposeId::anyExtendedKeyUsage,
                                    CertPolicyId::anyPolicy,
                                    nullptr, // stapled OCSP response

@@ -13362,24 +13362,6 @@ class GlobalGenRoots():
                                   [0, '_ID_Start'])
         idEnum = CGList([idEnum])
 
-        # This is only used by DOM worker code, once there are no more consumers
-        # of INTERFACE_CHAIN_* this code should be removed.
-        def ifaceChainMacro(ifaceCount):
-            supplied = [CGGeneric(declare="_iface_" + str(i + 1)) for i in range(ifaceCount)]
-            remaining = [CGGeneric(declare="prototypes::id::_ID_Count")] * (config.maxProtoChainLength - ifaceCount)
-            macro = CGWrapper(CGList(supplied, ", "),
-                              pre="#define INTERFACE_CHAIN_" + str(ifaceCount) + "(",
-                              post=") \\\n",
-                              declareOnly=True)
-            macroContent = CGIndenter(CGList(supplied + remaining, ", \\\n"))
-            macroContent = CGIndenter(CGWrapper(macroContent, pre="{ \\\n",
-                                                post=" \\\n}",
-                                                declareOnly=True))
-            return CGWrapper(CGList([macro, macroContent]), post="\n\n",
-                             declareOnly=True)
-
-        idEnum.append(ifaceChainMacro(1))
-
         def fieldSizeAssert(amount, jitInfoField, message):
             maxFieldValue = "(uint64_t(1) << (sizeof(((JSJitInfo*)nullptr)->%s) * 8))" % jitInfoField
             return CGGeneric(declare="static_assert(%s < %s, \"%s\");\n\n"

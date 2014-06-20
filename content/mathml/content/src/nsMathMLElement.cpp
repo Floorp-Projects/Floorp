@@ -74,14 +74,14 @@ ReportParseErrorNoTag(const nsString& aValue,
                          "AttributeParsingErrorNoTag", argv, 2);
 }
 
-nsMathMLElement::nsMathMLElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+nsMathMLElement::nsMathMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
 : nsMathMLElementBase(aNodeInfo),
   ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
   mIncrementScriptLevel(false)
 {
 }
 
-nsMathMLElement::nsMathMLElement(already_AddRefed<nsINodeInfo>&& aNodeInfo)
+nsMathMLElement::nsMathMLElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 : nsMathMLElementBase(aNodeInfo),
   ALLOW_THIS_IN_INITIALIZER_LIST(Link(this)),
   mIncrementScriptLevel(false)

@@ -20,9 +20,9 @@ namespace CSF
     protected:
         CC_Line () { }
 
-    public:
         virtual ~CC_Line () {};
 
+    public:
         virtual std::string toString() = 0;
 
         virtual cc_lineid_t getID() = 0;

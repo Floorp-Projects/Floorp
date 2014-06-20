@@ -20,7 +20,7 @@ if toolkit == 'cocoa':
     UNIFIED_SOURCES += [
         relative_path + '/nptest_macosx.mm'
     ]
-elif toolkit == 'gtk2':
+elif toolkit in ('gtk2', 'gtk3'):
     UNIFIED_SOURCES += [
         relative_path + '/nptest_gtk2.cpp',
     ]

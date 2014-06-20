@@ -118,6 +118,12 @@ StringBuffer::finishAtom()
     if (len == 0)
         return cx->names().empty;
 
+    if (isLatin1()) {
+        JSAtom *atom = AtomizeChars(cx, latin1Chars().begin(), len);
+        latin1Chars().clear();
+        return atom;
+    }
+
     JSAtom *atom = AtomizeChars(cx, twoByteChars().begin(), len);
     twoByteChars().clear();
     return atom;
