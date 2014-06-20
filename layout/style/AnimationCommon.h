@@ -398,6 +398,7 @@ struct CommonElementAnimationData : public PRCList
     , mManager(aManager)
     , mAnimationGeneration(0)
     , mFlushGeneration(aNow)
+    , mNeedsRefreshes(true)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -419,6 +420,12 @@ struct CommonElementAnimationData : public PRCList
     // This will call our destructor.
     mElement->DeleteProperty(mElementProperty);
   }
+
+  // This updates mNeedsRefreshes so the caller may need to check
+  // for changes to values (for example, nsAnimationManager provides
+  // CheckNeedsRefresh to register or unregister from observing the refresh
+  // driver when this value changes).
+  void EnsureStyleRuleFor(TimeStamp aRefreshTime, bool aIsThrottled);
 
   bool CanThrottleTransformChanges(mozilla::TimeStamp aTime);
 
@@ -488,6 +495,11 @@ struct CommonElementAnimationData : public PRCList
   // Used to prevent updating the styles twice for a given element during
   // UpdateAllThrottledStyles.
   TimeStamp mFlushGeneration;
+
+  // False when we know that our current style rule is valid
+  // indefinitely into the future (because all of our animations are
+  // either completed or paused).  May be invalidated by a style change.
+  bool mNeedsRefreshes;
 
 #ifdef DEBUG
   bool mCalledPropertyDtor;
