@@ -14,7 +14,6 @@
           src="../role.js"></script>
 
   <script type="application/javascript">
-    SpecialPowers.setBoolPref("dom.webcomponents.enabled", true);
     function doTest()
     {
       testElm("component", {
@@ -29,7 +28,6 @@
         ]
       });
 
-      SpecialPowers.clearUserPref("dom.webcomponents.enabled");
       SimpleTest.finish();
     }
 
