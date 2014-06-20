@@ -23,7 +23,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "nsFrameManager.h"
 #include "nsINetworkLinkService.h"
 
 #include "mozilla/Services.h"
