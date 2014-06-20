@@ -428,10 +428,6 @@ struct HasDangerousPublicDestructor
 #  elif MOZ_GCC_VERSION_AT_LEAST(4, 8, 2)
 #    define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
 #  endif
-#elif defined(_MSC_VER)
-#  if _MSC_VER >= 1700
-#    define MOZ_HAVE_STD_IS_DESTRUCTIBLE
-#  endif
 #endif
 
 #ifdef MOZ_HAVE_STD_IS_DESTRUCTIBLE
