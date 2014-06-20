@@ -31,9 +31,9 @@ public class Divider extends View {
             mOrientation = orientation;
 
             if (mOrientation == Orientation.HORIZONTAL)
-                setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, mDensity));
+                setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, mDensity));
             else
-                setLayoutParams(new LayoutParams(mDensity, LayoutParams.FILL_PARENT));
+                setLayoutParams(new LayoutParams(mDensity, LayoutParams.MATCH_PARENT));
         }
     }
 }

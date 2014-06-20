@@ -4,12 +4,12 @@
    - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:orientation="vertical"> 
 
     <ScrollView android:id="@+id/scrolling_container"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="350dp"
                 android:layout_margin="8dp"
                 android:padding="8dp"
@@ -19,7 +19,7 @@
                 android:requiresFadingEdge="vertical">
 
             <TextView android:id="@+id/preview"
-                      android:layout_width="fill_parent"
+                      android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:text="@string/pref_font_size_preview_text"
                       android:textColor="#ff000000"/>
@@ -27,7 +27,7 @@
     </ScrollView>
 
     <LinearLayout android:id="@+id/button_container"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:layout_marginLeft="4dp"
                   android:layout_marginRight="4dp"
@@ -35,14 +35,14 @@
 
         <Button android:id="@+id/decrease_preview_font_button"
                 android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/pref_font_size_adjust_char"
                 android:textSize="8sp"/>
 
         <Button android:id="@+id/increase_preview_font_button"
                 android:layout_width="0dp"
-                android:layout_height="fill_parent"
+                android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:text="@string/pref_font_size_adjust_char"
                 android:textSize="16sp"/>

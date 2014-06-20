@@ -44,7 +44,7 @@ public class TabMenuStrip extends HorizontalScrollView
         titleOffset = (int) (TITLE_OFFSET_DIPS * getResources().getDisplayMetrics().density);
 
         layout = new TabMenuStripLayout(context, attrs);
-        addView(layout, LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
+        addView(layout, LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
     }
 
     @Override
