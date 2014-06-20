@@ -83,9 +83,11 @@ DOMRequestIpcHelper.prototype = {
     aMessages.forEach((aMsg) => {
       let name = aMsg.name || aMsg;
       // If the listener is already set and it is of the same type we just
-      // bail out. If it is not of the same type, we throw an exception.
+      // increase the count and bail out. If it is not of the same type,
+      // we throw an exception.
       if (this._listeners[name] != undefined) {
-        if (!!aMsg.weakRef == this._listeners[name]) {
+        if (!!aMsg.weakRef == this._listeners[name].weakRef) {
+          this._listeners[name].count++;
           return;
         } else {
           throw Cr.NS_ERROR_FAILURE;
@@ -94,7 +96,10 @@ DOMRequestIpcHelper.prototype = {
 
       aMsg.weakRef ? cpmm.addWeakMessageListener(name, this)
                    : cpmm.addMessageListener(name, this);
-      this._listeners[name] = !!aMsg.weakRef;
+      this._listeners[name] = {
+        weakRef: !!aMsg.weakRef,
+        count: 1
+      };
     });
   },
 
@@ -116,9 +121,14 @@ DOMRequestIpcHelper.prototype = {
         return;
       }
 
-      this._listeners[aName] ? cpmm.removeWeakMessageListener(aName, this)
-                             : cpmm.removeMessageListener(aName, this);
-      delete this._listeners[aName];
+      // Only remove the listener really when we don't have anybody that could
+      // be waiting on a message.
+      if (!--this._listeners[aName].count) {
+        this._listeners[aName].weakRef ?
+            cpmm.removeWeakMessageListener(aName, this)
+          : cpmm.removeMessageListener(aName, this);
+        delete this._listeners[aName];
+      }
     });
   },
 
