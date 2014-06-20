@@ -236,6 +236,7 @@ class ForkJoinNursery
     void forwardFromUpdatable(ForkJoinNurseryCollectionTracer *trc);
     void forwardFromStack(ForkJoinNurseryCollectionTracer *trc);
     void forwardFromTenured(ForkJoinNurseryCollectionTracer *trc);
+    void forwardFromRematerializedFrames(ForkJoinNurseryCollectionTracer *trc);
     void collectToFixedPoint(ForkJoinNurseryCollectionTracer *trc);
     void freeFromspace();
     void computeNurserySizeAfterGC(size_t live, const char **msg);

@@ -61,6 +61,9 @@ class RematerializedFrame
     // destructor. Also clears the vector.
     static void FreeInVector(Vector<RematerializedFrame *> &frames);
 
+    // Mark a vector of RematerializedFrames.
+    static void MarkInVector(JSTracer *trc, Vector<RematerializedFrame *> &frames);
+
     bool prevUpToDate() const {
         return prevUpToDate_;
     }
