@@ -28,7 +28,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.os.Build;
-import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -1510,7 +1509,7 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
-    static final String qualifyColumn(String table, String column) {
+    private static final String qualifyColumn(String table, String column) {
         return DBUtils.qualifyColumn(table, column);
     }
 
@@ -1548,49 +1547,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             if (c != null)
                 c.close();
         }
-    }
-
-    private long insertFavicon(SQLiteDatabase db, ContentValues values) {
-        // This method is a dupicate of BrowserProvider.insertFavicon.
-        // If changes are needed, please update both
-        String faviconUrl = values.getAsString(Favicons.URL);
-        String pageUrl = null;
-        long faviconId;
-
-        trace("Inserting favicon for URL: " + faviconUrl);
-
-        DBUtils.stripEmptyByteArray(values, Favicons.DATA);
-
-        // Extract the page URL from the ContentValues
-        if (values.containsKey(Favicons.PAGE_URL)) {
-            pageUrl = values.getAsString(Favicons.PAGE_URL);
-            values.remove(Favicons.PAGE_URL);
-        }
-
-        // If no URL is provided, insert using the default one.
-        if (TextUtils.isEmpty(faviconUrl) && !TextUtils.isEmpty(pageUrl)) {
-            values.put(Favicons.URL, org.mozilla.gecko.favicons.Favicons.guessDefaultFaviconURL(pageUrl));
-        }
-
-        long now = System.currentTimeMillis();
-        values.put(Favicons.DATE_CREATED, now);
-        values.put(Favicons.DATE_MODIFIED, now);
-        faviconId = db.insertOrThrow(TABLE_FAVICONS, null, values);
-
-        if (pageUrl != null) {
-            ContentValues updateValues = new ContentValues(1);
-            updateValues.put(FaviconColumns.FAVICON_ID, faviconId);
-            db.update(TABLE_HISTORY,
-                      updateValues,
-                      History.URL + " = ?",
-                      new String[] { pageUrl });
-            db.update(TABLE_BOOKMARKS,
-                      updateValues,
-                      Bookmarks.URL + " = ?",
-                      new String[] { pageUrl });
-        }
-
-        return faviconId;
     }
 
     private interface BookmarkMigrator {
