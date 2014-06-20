@@ -268,7 +268,7 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
         EnsureStyleRule_IsNotThrottled);
       curRule.mRule = ea->mStyleRule;
     } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
-      ElementTransitions *et =
+      CommonElementAnimationData* et =
         mPresContext->TransitionManager()->GetElementTransitions(
           aElement,
           oldStyle->GetPseudoType(),

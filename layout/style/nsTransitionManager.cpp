@@ -36,15 +36,6 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::css;
 
-ElementTransitions::ElementTransitions(mozilla::dom::Element *aElement,
-                                       nsIAtom *aElementProperty,
-                                       nsTransitionManager *aTransitionManager,
-                                       TimeStamp aNow)
-  : CommonElementAnimationData(aElement, aElementProperty,
-                               aTransitionManager, aNow)
-{
-}
-
 double
 ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
 {
@@ -82,7 +73,8 @@ ElementTransitionsPropertyDtor(void           *aObject,
                                void           *aPropertyValue,
                                void           *aData)
 {
-  ElementTransitions *et = static_cast<ElementTransitions*>(aPropertyValue);
+  CommonElementAnimationData* et =
+    static_cast<CommonElementAnimationData*>(aPropertyValue);
 #ifdef DEBUG
   NS_ABORT_IF_FALSE(!et->mCalledPropertyDtor, "can't call dtor twice");
   et->mCalledPropertyDtor = true;
@@ -108,7 +100,7 @@ nsTransitionManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
 
   nsRefPtr<nsStyleContext> newStyle;
 
-  ElementTransitions* et;
+  CommonElementAnimationData* et;
   if (element &&
       (et = GetElementTransitions(element,
                                   nsCSSPseudoElements::ePseudo_NotPseudoElement,
@@ -219,8 +211,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     aElement = aElement->GetParent()->AsElement();
   }
 
-  ElementTransitions *et =
-      GetElementTransitions(aElement, pseudoType, false);
+  CommonElementAnimationData* et =
+    GetElementTransitions(aElement, pseudoType, false);
   if (!et &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetDelay() == 0.0f &&
@@ -402,7 +394,7 @@ void
 nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
                                                 const nsTransition& aTransition,
                                                 dom::Element* aElement,
-                                                ElementTransitions*& aElementTransitions,
+                                                CommonElementAnimationData*& aElementTransitions,
                                                 nsStyleContext* aOldStyleContext,
                                                 nsStyleContext* aNewStyleContext,
                                                 bool* aStartedAny,
@@ -581,7 +573,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
       GetElementTransitions(aElement, aNewStyleContext->GetPseudoType(),
                             true);
     if (!aElementTransitions) {
-      NS_WARNING("allocating ElementTransitions failed");
+      NS_WARNING("allocating CommonAnimationManager failed");
       return;
     }
   }
@@ -616,7 +608,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   aWhichStarted->AddProperty(aProperty);
 }
 
-ElementTransitions*
+CommonElementAnimationData*
 nsTransitionManager::GetElementTransitions(dom::Element *aElement,
                                            nsCSSPseudoElements::Type aPseudoType,
                                            bool aCreateIfNeeded)
@@ -639,11 +631,11 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
                  "other than :before or :after");
     return nullptr;
   }
-  ElementTransitions *et = static_cast<ElementTransitions*>(
-                             aElement->GetProperty(propName));
+  CommonElementAnimationData* et =
+    static_cast<CommonElementAnimationData*>(aElement->GetProperty(propName));
   if (!et && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    et = new ElementTransitions(aElement, propName, this,
+    et = new CommonElementAnimationData(aElement, propName, this,
       mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv = aElement->SetProperty(propName, et,
                                         ElementTransitionsPropertyDtor, false);
@@ -670,7 +662,7 @@ void
 nsTransitionManager::WalkTransitionRule(ElementDependentRuleProcessorData* aData,
                                         nsCSSPseudoElements::Type aPseudoType)
 {
-  ElementTransitions *et =
+  CommonElementAnimationData* et =
     GetElementTransitions(aData->mElement, aPseudoType, false);
   if (!et) {
     return;
@@ -812,7 +804,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
   {
     PRCList *next = PR_LIST_HEAD(&mElementData);
     while (next != &mElementData) {
-      ElementTransitions *et = static_cast<ElementTransitions*>(next);
+      CommonElementAnimationData* et =
+        static_cast<CommonElementAnimationData*>(next);
       next = PR_NEXT_LINK(next);
 
       bool canThrottleTick = aFlags == Can_Throttle &&
