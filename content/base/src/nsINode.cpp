@@ -41,7 +41,6 @@
 #include "nsDOMString.h"
 #include "nsDOMTokenList.h"
 #include "nsFocusManager.h"
-#include "nsFrameManager.h"
 #include "nsFrameSelection.h"
 #include "nsGenericHTMLElement.h"
 #include "nsGkAtoms.h"

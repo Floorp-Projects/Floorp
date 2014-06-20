@@ -12,7 +12,6 @@
 #include "nsContainerFrame.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
-#include "nsFrameManager.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMMozNamedAttrMap.h"
 #include "nsIDOMAttr.h"

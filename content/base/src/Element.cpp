@@ -67,7 +67,6 @@
 #include "nsXULElement.h"
 #endif /* MOZ_XUL */
 #include "nsSVGElement.h"
-#include "nsFrameManager.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #include "nsRange.h"

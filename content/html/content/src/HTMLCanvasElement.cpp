@@ -25,7 +25,6 @@
 #include "nsDisplayList.h"
 #include "nsDOMFile.h"
 #include "nsDOMJSUtils.h"
-#include "nsFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
 #include "nsIWritablePropertyBag2.h"
