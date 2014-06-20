@@ -597,6 +597,20 @@ CommonElementAnimationData::IsCompositorAnimationDisabledForFrame(nsIFrame* aFra
   return bool(reinterpret_cast<intptr_t>(prop));
 }
 
+bool
+CommonElementAnimationData::HasAnimationOfProperty(
+  nsCSSProperty aProperty) const
+{
+  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+    const ElementAnimation* anim = mAnimations[animIdx];
+    if (anim->HasAnimationOfProperty(aProperty) &&
+        !anim->IsFinishedTransition()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /* static */ void
 CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
                                                      const nsIContent* aContent)

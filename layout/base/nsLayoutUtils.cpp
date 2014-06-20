@@ -289,34 +289,22 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
             (aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
-template <class AnimationsOrTransitions>
-AnimationsOrTransitions*
-mozilla::HasAnimationOrTransition(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty)
+static CommonElementAnimationData*
+GetAnimationsOrTransitions(nsIContent* aContent,
+                           nsIAtom* aAnimationProperty,
+                           nsCSSProperty aProperty)
 {
-  AnimationsOrTransitions* animations =
-    static_cast<AnimationsOrTransitions*>(aContent->GetProperty(aAnimationProperty));
+  CommonElementAnimationData* animations =
+    static_cast<CommonElementAnimationData*>(aContent->GetProperty(
+        aAnimationProperty));
   if (animations) {
     bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
     if (propertyMatches) {
       return animations;
     }
   }
-
   return nullptr;
 }
-
-template ElementAnimations*
-mozilla::HasAnimationOrTransition<ElementAnimations>(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty);
-
-template ElementTransitions*
-mozilla::HasAnimationOrTransition<ElementTransitions>(nsIContent* aContent,
-                         nsIAtom* aAnimationProperty,
-                         nsCSSProperty aProperty);
-
 
 bool
 nsLayoutUtils::HasAnimations(nsIContent* aContent,
@@ -324,10 +312,10 @@ nsLayoutUtils::HasAnimations(nsIContent* aContent,
 {
   if (!aContent->MayHaveAnimations())
     return false;
-  return HasAnimationOrTransition<ElementAnimations>
-            (aContent, nsGkAtoms::animationsProperty, aProperty) ||
-         HasAnimationOrTransition<ElementTransitions>
-            (aContent, nsGkAtoms::transitionsProperty, aProperty);
+  return GetAnimationsOrTransitions(aContent, nsGkAtoms::animationsProperty,
+                                    aProperty) ||
+         GetAnimationsOrTransitions(aContent, nsGkAtoms::transitionsProperty,
+                                    aProperty);
 }
 
 bool
@@ -341,7 +329,8 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
   TimeStamp now = aPresContext->RefreshDriver()->MostRecentRefresh();
 
   CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(aContent->GetProperty(aAnimationProperty));
+    static_cast<CommonElementAnimationData*>(
+      aContent->GetProperty(aAnimationProperty));
   return (animations && animations->HasCurrentAnimationsAt(now));
 }
 
