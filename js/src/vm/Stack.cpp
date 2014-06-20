@@ -1671,11 +1671,8 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 {
     if (!rematerializedFrames_)
         return;
-    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
-        RematerializedFrameVector &frames = e.front().value();
-        for (size_t i = 0; i < frames.length(); i++)
-            frames[i]->mark(trc);
-    }
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront())
+        RematerializedFrame::MarkInVector(trc, e.front().value());
 }
 
 #endif // JS_ION
