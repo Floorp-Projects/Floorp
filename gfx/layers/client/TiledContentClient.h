@@ -336,9 +336,6 @@ public:
    */
   bool AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                            const FrameMetrics& aCompositorMetrics);
-private:
-  bool mLastProgressiveUpdateWasLowPrecision;
-  bool mProgressiveUpdateWasInDanger;
 };
 
 /**

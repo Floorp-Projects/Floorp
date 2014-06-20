@@ -80,8 +80,10 @@ const char* const XPCJSRuntime::mStrings[] = {
     "__iterator__",         // IDX_ITERATOR
     "__exposedProps__",     // IDX_EXPOSEDPROPS
     "eval",                 // IDX_EVAL
-    "controllers",           // IDX_CONTROLLERS
+    "controllers",          // IDX_CONTROLLERS
     "realFrameElement",     // IDX_REALFRAMEELEMENT
+    "length",               // IDX_LENGTH
+    "name",                 // IDX_NAME
 };
 
 /***************************************************************************/

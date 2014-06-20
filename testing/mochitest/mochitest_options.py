@@ -705,11 +705,11 @@ class B2GOptions(MochitestOptions):
                    gaia profile to use",
           "default": None,
         }],
-        [["--logcat-dir"],
+        [["--logdir"],
         { "action": "store",
           "type": "string",
-          "dest": "logcat_dir",
-          "help": "directory to store logcat dump files",
+          "dest": "logdir",
+          "help": "directory to store log files",
           "default": None,
         }],
         [['--busybox'],
@@ -738,7 +738,6 @@ class B2GOptions(MochitestOptions):
         defaults = {}
         defaults["httpPort"] = DEFAULT_PORTS['http']
         defaults["sslPort"] = DEFAULT_PORTS['https']
-        defaults["remoteTestRoot"] = "/data/local/tests"
         defaults["logFile"] = "mochitest.log"
         defaults["autorun"] = True
         defaults["closeWhenDone"] = True
@@ -757,8 +756,8 @@ class B2GOptions(MochitestOptions):
         if options.geckoPath and not options.emulator:
             self.error("You must specify --emulator if you specify --gecko-path")
 
-        if options.logcat_dir and not options.emulator:
-            self.error("You must specify --emulator if you specify --logcat-dir")
+        if options.logdir and not options.emulator:
+            self.error("You must specify --emulator if you specify --logdir")
 
         if not os.path.isdir(options.xrePath):
             self.error("--xre-path '%s' is not a directory" % options.xrePath)

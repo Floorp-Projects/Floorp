@@ -1491,8 +1491,8 @@ Simulator::setCallResult(int64_t res)
 int
 Simulator::readW(int32_t addr, SimInstruction *instr)
 {
-    // The regexp engines emit unaligned loads, so we don't check for them here
-    // like the other methods below.
+    // The regexp engine emits unaligned loads, so we don't check for them here
+    // like most of the other methods do.
     intptr_t *ptr = reinterpret_cast<intptr_t*>(addr);
     return *ptr;
 }
@@ -1512,13 +1512,10 @@ Simulator::writeW(int32_t addr, int value, SimInstruction *instr)
 uint16_t
 Simulator::readHU(int32_t addr, SimInstruction *instr)
 {
-    if ((addr & 1) == 0) {
-        uint16_t *ptr = reinterpret_cast<uint16_t*>(addr);
-        return *ptr;
-    }
-    printf("Unaligned unsigned halfword read at 0x%08x, pc=%p\n", addr, instr);
-    MOZ_CRASH();
-    return 0;
+    // The regexp engine emits unaligned loads, so we don't check for them here
+    // like most of the other methods do.
+    uint16_t *ptr = reinterpret_cast<uint16_t*>(addr);
+    return *ptr;
 }
 
 int16_t
