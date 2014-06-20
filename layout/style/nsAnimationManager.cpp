@@ -250,7 +250,7 @@ void
 nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aEA)
 {
   TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
-  aEA->EnsureStyleRuleFor(refreshTime, false);
+  aEA->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
   aEA->GetEventsAt(refreshTime, mPendingEvents);
   CheckNeedsRefresh();
 }
@@ -414,7 +414,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
 
-    ea->EnsureStyleRuleFor(refreshTime, false);
+    ea->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
     ea->GetEventsAt(refreshTime, mPendingEvents);
     CheckNeedsRefresh();
     // We don't actually dispatch the mPendingEvents now.  We'll either
@@ -844,7 +844,9 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
       ea->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
-    ea->EnsureStyleRuleFor(now, canThrottleTick);
+    ea->EnsureStyleRuleFor(now, canThrottleTick
+                                ? EnsureStyleRule_IsThrottled
+                                : EnsureStyleRule_IsNotThrottled);
     ea->GetEventsAt(now, mPendingEvents);
     CheckNeedsRefresh();
     if (oldStyleRule != ea->mStyleRule) {

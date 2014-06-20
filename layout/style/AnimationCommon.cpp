@@ -243,7 +243,8 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
         "Rule has level eTransitionSheet without transition on manager");
 
       et->EnsureStyleRuleFor(
-        mPresContext->RefreshDriver()->MostRecentRefresh(), false);
+        mPresContext->RefreshDriver()->MostRecentRefresh(),
+        EnsureStyleRule_IsNotThrottled);
       curRule.mRule = et->mStyleRule;
     } else {
       curRule.mRule = ruleNode->GetRule();
@@ -616,7 +617,7 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
 
 void
 CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
-                                               bool aIsThrottled)
+                                               EnsureStyleRuleFlags aFlags)
 {
   if (!mNeedsRefreshes) {
     mStyleRuleRefreshTime = aRefreshTime;
@@ -629,7 +630,7 @@ CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // of animation behaviour (the styles of the animation disappear, or the fill
   // mode behaviour). This loop checks for any finishing animations and forces
   // the style recalculation if we find any.
-  if (aIsThrottled) {
+  if (aFlags == EnsureStyleRule_IsThrottled) {
     for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
       ElementAnimation* anim = mAnimations[animIdx];
 
@@ -653,13 +654,13 @@ CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
           (computedTiming.mPhase == ComputedTiming::AnimationPhase_After &&
            anim->mLastNotification != ElementAnimation::LAST_NOTIFICATION_END))
       {
-        aIsThrottled = false;
+        aFlags = EnsureStyleRule_IsNotThrottled;
         break;
       }
     }
   }
 
-  if (aIsThrottled) {
+  if (aFlags == EnsureStyleRule_IsThrottled) {
     return;
   }
 
