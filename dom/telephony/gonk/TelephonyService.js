@@ -799,11 +799,11 @@ TelephonyService.prototype = {
                          aCall.isMergeable : true;
 
       call.numberPresentation = aCall.numberPresentation != null ?
-                                aCall.numberPresentation : nsITelephonyProvider.CALL_PRESENTATION_ALLOWED;
+                                aCall.numberPresentation : nsITelephonyService.CALL_PRESENTATION_ALLOWED;
       call.name = aCall.name != null ?
                   aCall.name : "";
       call.namePresentation = aCall.namePresentation != null ?
-                              aCall.namePresentation : nsITelephonyProvider.CALL_PRESENTATION_ALLOWED;
+                              aCall.namePresentation : nsITelephonyService.CALL_PRESENTATION_ALLOWED;
 
       this._currentCalls[aClientId][aCall.callIndex] = call;
     }
