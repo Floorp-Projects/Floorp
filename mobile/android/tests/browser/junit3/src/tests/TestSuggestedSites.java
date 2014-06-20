@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.test.mock.MockResources;
 import android.test.RenamingDelegatingContext;
 
@@ -20,7 +21,6 @@ import java.util.Locale;
 import java.util.Set;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.R;
@@ -28,7 +28,6 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
-import org.mozilla.gecko.util.RawResource;
 
 public class TestSuggestedSites extends BrowserTestCase {
     private static class TestContext extends RenamingDelegatingContext {
@@ -187,6 +186,44 @@ public class TestSuggestedSites extends BrowserTestCase {
             String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
             assertFalse(excludedUrls.contains(url));
             assertTrue(includedUrls.contains(url));
+        }
+
+        c.close();
+    }
+
+    public void testHiddenSites() {
+        resources.setSuggestedSitesResource(generateSites(6));
+
+        List<String> visibleUrls = new ArrayList<String>(3);
+        visibleUrls.add("url3");
+        visibleUrls.add("url4");
+        visibleUrls.add("url5");
+
+        List<String> hiddenUrls = new ArrayList<String>(3);
+        hiddenUrls.add("url0");
+        hiddenUrls.add("url1");
+        hiddenUrls.add("url2");
+
+        // Add mocked hidden sites to SharedPreferences.
+        StringBuilder hiddenUrlBuilder = new StringBuilder();
+        for (String s : hiddenUrls) {
+            hiddenUrlBuilder.append(" ");
+            hiddenUrlBuilder.append(Uri.encode(s));
+        }
+
+        final String hiddenPref = hiddenUrlBuilder.toString();
+        GeckoSharedPrefs.forProfile(context).edit()
+                                        .putString(SuggestedSites.PREF_SUGGESTED_SITES_HIDDEN, hiddenPref)
+                                        .commit();
+
+        Cursor c = new SuggestedSites(context).get(DEFAULT_LIMIT);
+        assertEquals(Math.min(3, DEFAULT_LIMIT), c.getCount());
+
+        c.moveToPosition(-1);
+        while (c.moveToNext()) {
+            String url = c.getString(c.getColumnIndexOrThrow(BrowserContract.SuggestedSites.URL));
+            assertFalse(hiddenUrls.contains(url));
+            assertTrue(visibleUrls.contains(url));
         }
 
         c.close();
