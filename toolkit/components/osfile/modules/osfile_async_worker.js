@@ -297,6 +297,9 @@ const EXCEPTION_NAMES = {
      return exports.OS.File.Info.toMsg(
        exports.OS.File.stat(Type.path.fromMsg(path), options));
    },
+   setPermissions: function setPermissions(path, options = {}) {
+     return exports.OS.File.setPermissions(Type.path.fromMsg(path), options);
+   },
    setDates: function setDates(path, accessDate, modificationDate) {
      return exports.OS.File.setDates(Type.path.fromMsg(path), accessDate,
                                      modificationDate);
@@ -403,6 +406,12 @@ const EXCEPTION_NAMES = {
      return withFile(fd,
        function do_stat() {
          return exports.OS.File.Info.toMsg(this.stat());
+       });
+   },
+   File_prototype_setPermissions: function setPermissions(fd, options = {}) {
+     return withFile(fd,
+       function do_setPermissions() {
+         return this.setPermissions(options);
        });
    },
    File_prototype_setDates: function setDates(fd, accessTime, modificationTime) {
