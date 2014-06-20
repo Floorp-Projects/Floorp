@@ -204,16 +204,15 @@ protected:
 // TODO(ekr@rtfm.com): Refactor {Local,Remote}SourceStreamInfo
 // bug 837539.
 class LocalSourceStreamInfo : public SourceStreamInfo {
+  ~LocalSourceStreamInfo() {
+    mMediaStream = nullptr;
+  }
 public:
   typedef mozilla::DOMMediaStream DOMMediaStream;
 
   LocalSourceStreamInfo(DOMMediaStream *aMediaStream,
                         PeerConnectionMedia *aParent)
       : SourceStreamInfo(aMediaStream, aParent) {}
-
-  ~LocalSourceStreamInfo() {
-    mMediaStream = nullptr;
-  }
 
   DOMMediaStream* GetMediaStream() {
     return mMediaStream;
@@ -239,6 +238,7 @@ private:
 };
 
 class RemoteSourceStreamInfo : public SourceStreamInfo {
+  ~RemoteSourceStreamInfo() {}
  public:
   typedef mozilla::DOMMediaStream DOMMediaStream;
 
@@ -271,9 +271,10 @@ public:
 };
 
 class PeerConnectionMedia : public sigslot::has_slots<> {
+  ~PeerConnectionMedia() {}
+
  public:
   PeerConnectionMedia(PeerConnectionImpl *parent);
-  ~PeerConnectionMedia() {}
 
   nsresult Init(const std::vector<mozilla::NrIceStunServer>& stun_servers,
                 const std::vector<mozilla::NrIceTurnServer>& turn_servers);

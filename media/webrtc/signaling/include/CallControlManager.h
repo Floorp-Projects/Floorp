@@ -47,6 +47,9 @@ namespace CSF
 	 */
     class ECC_API CallControlManager
     {
+    protected:
+        virtual ~CallControlManager();
+
     public:
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CallControlManager)
 		/**
@@ -58,8 +61,6 @@ namespace CSF
 		 */
         static CallControlManagerPtr create();
         virtual bool destroy() = 0;
-
-        virtual ~CallControlManager();
 
         /**
            CC_Observer is for core call control events (on CC_Device, CC_Line and CC_Call).

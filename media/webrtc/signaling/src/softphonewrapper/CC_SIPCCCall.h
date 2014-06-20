@@ -33,8 +33,9 @@ namespace CSF
 
     class CC_SIPCCCallMediaData
 	{
+          ~CC_SIPCCCallMediaData() {}
 	public:
-        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_SipCCCAllMediaData)
+        NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_SIPCCCallMediaData)
 		CC_SIPCCCallMediaData():
           remoteWindow(nullptr),
           streamMapMutex("CC_SIPCCCallMediaData"),

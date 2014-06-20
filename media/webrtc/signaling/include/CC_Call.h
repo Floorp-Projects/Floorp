@@ -29,9 +29,9 @@ namespace CSF
     protected:
         CC_Call () { }
 
-    public:
         virtual ~CC_Call () {}
 
+    public:
 		virtual void setRemoteWindow (VideoWindowHandle window) = 0;
 
 		virtual int setExternalRenderer(VideoFormat videoFormat, ExternalRendererHandle renderer) = 0;
