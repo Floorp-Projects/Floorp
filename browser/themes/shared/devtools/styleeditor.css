@@ -65,8 +65,8 @@
 }
 
 .stylesheet-sidebar {
-  width: 237px;
-  -moz-border-start: 1px solid;
+  max-width: 400px;
+  min-width: 100px;
 }
 
 .theme-light .stylesheet-sidebar {
@@ -123,11 +123,6 @@
 
 .disabled > .stylesheet-enabled {
   background-position: -24px 8px;
-}
-
-#style-editor-options {
-  width: 20px;
-  overflow: hidden;
 }
 
 /* Invert all toggle icons but the one in the active row for light theme */

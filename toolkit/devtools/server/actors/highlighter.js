@@ -264,7 +264,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
-   * implement constructor(tab, inspector), show(node), hide(), destroy()
+   * implement constructor(tabActor), show(node), hide(), destroy()
    */
   initialize: function(inspector, typeName) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -281,7 +281,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     // The assumption is that all custom highlighters need a XUL parent in the
     // browser to append their elements
     if (supportXULBasedHighlighter(inspector.tabActor)) {
-      this._highlighter = new constructor(inspector.tabActor, inspector);
+      this._highlighter = new constructor(inspector.tabActor);
     }
   },
 
@@ -339,9 +339,7 @@ let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
  * Parent class for XUL-based complex highlighter that are inserted in the
  * parent browser structure
  */
-function XULBasedHighlighter(tabActor, inspector) {
-  this._inspector = inspector;
-
+function XULBasedHighlighter(tabActor) {
   this.browser = tabActor.browser;
   this.win = tabActor.window;
   this.chromeDoc = this.browser.ownerDocument;
@@ -432,7 +430,6 @@ XULBasedHighlighter.prototype = {
     this.win = null;
     this.browser = null;
     this.chromeDoc = null;
-    this._inspector = null;
     this.currentNode = null;
   }
 };
@@ -479,17 +476,28 @@ XULBasedHighlighter.prototype = {
  *   </box>
  * </stack>
  */
-function BoxModelHighlighter(tabActor, inspector) {
-  XULBasedHighlighter.call(this, tabActor, inspector);
+function BoxModelHighlighter(tabActor) {
+  XULBasedHighlighter.call(this, tabActor);
   this.layoutHelpers = new LayoutHelpers(this.win);
   this._initMarkup();
   EventEmitter.decorate(this);
+
+  this._currentNode = null;
 }
 
 BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   get zoom() {
     return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
+  },
+
+  get currentNode() {
+    return this._currentNode;
+  },
+
+  set currentNode(node) {
+    this._currentNode = node;
+    this._computedStyle = null;
   },
 
   _initMarkup: function() {
@@ -499,6 +507,10 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this._highlighterContainer.className = "highlighter-container";
 
     this._svgRoot = this._createSVGNode("root", "svg", this._highlighterContainer);
+
+    // Set the SVG canvas height to 0 to stop content jumping around on small
+    // screens.
+    this._svgRoot.setAttribute("height", "0");
 
     this._boxModelContainer = this._createSVGNode("container", "g", this._svgRoot);
 
@@ -615,7 +627,7 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this._highlighterContainer = null;
 
     this.nodeInfo = null;
-    this.rect = null;
+    this._currentNode = null;
   },
 
   /**
@@ -717,29 +729,75 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    */
   _updateBoxModel: function(options) {
     options.region = options.region || "content";
-    this.rect = this.layoutHelpers.getAdjustedQuads(this.currentNode, "margin");
 
-    if (!this.rect || (this.rect.bounds.width <= 0 && this.rect.bounds.height <= 0)) {
+    if (this._nodeNeedsHighlighting()) {
+      for (let boxType in this._boxModelNodes) {
+        let {p1, p2, p3, p4} =
+          this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
+
+        let boxNode = this._boxModelNodes[boxType];
+        boxNode.setAttribute("points",
+                             p1.x + "," + p1.y + " " +
+                             p2.x + "," + p2.y + " " +
+                             p3.x + "," + p3.y + " " +
+                             p4.x + "," + p4.y);
+
+        if (boxType === options.region) {
+          this._showGuides(p1, p2, p3, p4);
+        }
+      }
+
+      return true;
+    }
+
+    this._hideBoxModel();
+    return false;
+  },
+
+  _nodeNeedsHighlighting: function() {
+    if (!this.currentNode) {
       return false;
     }
 
-    for (let boxType in this._boxModelNodes) {
-      let {p1, p2, p3, p4} = boxType === "margin" ? this.rect :
-        this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
+    if (!this._computedStyle) {
+      this._computedStyle =
+        this.currentNode.ownerDocument.defaultView.getComputedStyle(this.currentNode);
+    }
 
-      let boxNode = this._boxModelNodes[boxType];
-      boxNode.setAttribute("points",
-                           p1.x + "," + p1.y + " " +
-                           p2.x + "," + p2.y + " " +
-                           p3.x + "," + p3.y + " " +
-                           p4.x + "," + p4.y);
+    return this._computedStyle.getPropertyValue("display") !== "none";
+  },
 
-      if (boxType === options.region) {
-        this._showGuides(p1, p2, p3, p4);
+  _getOuterBounds: function() {
+    for (let region of ["margin", "border", "padding", "content"]) {
+      let quads = this.layoutHelpers.getAdjustedQuads(this.currentNode, region);
+
+      if (!quads) {
+        // Invisible element such as a script tag.
+        break;
+      }
+
+      let {bottom, height, left, right, top, width, x, y} = quads.bounds;
+
+      if (width > 0 || height > 0) {
+        return this._boundsHelper(bottom, height, left, right, top, width, x, y);
       }
     }
 
-    return true;
+    return this._boundsHelper();
+  },
+
+  _boundsHelper: function(bottom=0, height=0, left=0, right=0,
+                          top=0, width=0, x=0, y=0) {
+    return {
+      bottom: bottom,
+      height: height,
+      left: left,
+      right: right,
+      top: top,
+      width: width,
+      x: x,
+      y: y
+    };
   },
 
   /**
@@ -870,53 +928,64 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Move the Infobar to the right place in the highlighter.
    */
   _moveInfobar: function() {
-    if (this.rect) {
-      let bounds = this.rect.bounds;
-      let winHeight = this.win.innerHeight * this.zoom;
-      let winWidth = this.win.innerWidth * this.zoom;
+    let bounds = this._getOuterBounds();
+    let winHeight = this.win.innerHeight * this.zoom;
+    let winWidth = this.win.innerWidth * this.zoom;
 
-      this.nodeInfo.positioner.removeAttribute("disabled");
-      // Can the bar be above the node?
-      if (bounds.top < this.nodeInfo.barHeight) {
-        // No. Can we move the toolbar under the node?
-        if (bounds.bottom + this.nodeInfo.barHeight > winHeight) {
-          // No. Let's move it inside.
-          this.nodeInfo.positioner.style.top = bounds.top + "px";
-          this.nodeInfo.positioner.setAttribute("position", "overlap");
-        } else {
-          // Yes. Let's move it under the node.
-          this.nodeInfo.positioner.style.top = bounds.bottom - INFO_BAR_OFFSET + "px";
-          this.nodeInfo.positioner.setAttribute("position", "bottom");
-        }
+    // Ensure that positionerBottom and positionerTop are at least zero to avoid
+    // showing tooltips outside the viewport.
+    let positionerBottom = Math.max(0, bounds.bottom);
+    let positionerTop = Math.max(0, bounds.top);
+
+    // Avoid showing the nodeInfoBar on top of the findbar or awesomebar.
+    if (this.chromeDoc.defaultView.gBrowser) {
+      // Get the y co-ordinate of the top of the viewport
+      let viewportTop = this.browser.getBoundingClientRect().top;
+
+      // Get the offset to the top of the findbar
+      let findbar = this.chromeDoc.defaultView.gBrowser.getFindBar();
+      let findTop = findbar.getBoundingClientRect().top - viewportTop;
+
+      // Either show the positioner where it is or move it above the findbar.
+      positionerTop = Math.min(positionerTop, findTop);
+    }
+
+    this.nodeInfo.positioner.removeAttribute("disabled");
+    // Can the bar be above the node?
+    if (positionerTop < this.nodeInfo.barHeight) {
+      // No. Can we move the toolbar under the node?
+      if (positionerBottom + this.nodeInfo.barHeight > winHeight) {
+        // No. Let's move it inside.
+        this.nodeInfo.positioner.style.top = positionerTop + "px";
+        this.nodeInfo.positioner.setAttribute("position", "overlap");
       } else {
-        // Yes. Let's move it on top of the node.
-        this.nodeInfo.positioner.style.top =
-          bounds.top + INFO_BAR_OFFSET - this.nodeInfo.barHeight + "px";
-        this.nodeInfo.positioner.setAttribute("position", "top");
+        // Yes. Let's move it under the node.
+        this.nodeInfo.positioner.style.top = positionerBottom - INFO_BAR_OFFSET + "px";
+        this.nodeInfo.positioner.setAttribute("position", "bottom");
       }
+    } else {
+      // Yes. Let's move it on top of the node.
+      this.nodeInfo.positioner.style.top =
+        positionerTop + INFO_BAR_OFFSET - this.nodeInfo.barHeight + "px";
+      this.nodeInfo.positioner.setAttribute("position", "top");
+    }
 
-      let barWidth = this.nodeInfo.positioner.getBoundingClientRect().width;
-      let left = bounds.right - bounds.width / 2 - barWidth / 2;
+    let barWidth = this.nodeInfo.positioner.getBoundingClientRect().width;
+    let left = bounds.right - bounds.width / 2 - barWidth / 2;
 
-      // Make sure the whole infobar is visible
-      if (left < 0) {
-        left = 0;
+    // Make sure the whole infobar is visible
+    if (left < 0) {
+      left = 0;
+      this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
+    } else {
+      if (left + barWidth > winWidth) {
+        left = winWidth - barWidth;
         this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
       } else {
-        if (left + barWidth > winWidth) {
-          left = winWidth - barWidth;
-          this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
-        } else {
-          this.nodeInfo.positioner.removeAttribute("hide-arrow");
-        }
+        this.nodeInfo.positioner.removeAttribute("hide-arrow");
       }
-      this.nodeInfo.positioner.style.left = left + "px";
-    } else {
-      this.nodeInfo.positioner.style.left = "0";
-      this.nodeInfo.positioner.style.top = "0";
-      this.nodeInfo.positioner.setAttribute("position", "top");
-      this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
     }
+    this.nodeInfo.positioner.style.left = left + "px";
   }
 });
 
@@ -925,8 +994,8 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
  * transformed element and an outline around where it would be if untransformed
  * as well as arrows connecting the 2 outlines' corners.
  */
-function CssTransformHighlighter(tabActor, inspector) {
-  XULBasedHighlighter.call(this, tabActor, inspector);
+function CssTransformHighlighter(tabActor) {
+  XULBasedHighlighter.call(this, tabActor);
 
   this.layoutHelpers = new LayoutHelpers(tabActor.window);
   this._initMarkup();

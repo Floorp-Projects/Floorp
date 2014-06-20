@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ArrowPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.prompts.PromptInput;
@@ -14,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
@@ -35,8 +37,8 @@ public class DoorHangerPopup extends ArrowPopup
     // Whether or not the doorhanger popup is disabled.
     private boolean mDisabled;
 
-    DoorHangerPopup(GeckoApp activity) {
-        super(activity);
+    public DoorHangerPopup(Context context) {
+        super(context);
 
         mDoorHangers = new HashSet<DoorHanger>();
 
@@ -81,7 +83,7 @@ public class DoorHangerPopup extends ArrowPopup
                 final JSONArray buttons = geckoObject.getJSONArray("buttons");
                 final JSONObject options = geckoObject.getJSONObject("options");
 
-                mActivity.runOnUiThread(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         addDoorHanger(tabId, value, message, buttons, options);
@@ -91,7 +93,7 @@ public class DoorHangerPopup extends ArrowPopup
                 final int tabId = geckoObject.getInt("tabID");
                 final String value = geckoObject.getString("value");
 
-                mActivity.runOnUiThread(new Runnable() {
+                ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
                         DoorHanger doorHanger = getDoorHanger(tabId, value);
@@ -165,7 +167,7 @@ public class DoorHangerPopup extends ArrowPopup
             init();
         }
 
-        final DoorHanger newDoorHanger = new DoorHanger(mActivity, tabId, value);
+        final DoorHanger newDoorHanger = new DoorHanger(mContext, tabId, value);
         newDoorHanger.setMessage(message);
         newDoorHanger.setOptions(options);
 

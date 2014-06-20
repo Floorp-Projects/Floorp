@@ -3,8 +3,6 @@
 
 function test()
 {
-  waitForExplicitFinish();
-
   let inspector, searchBox, state, popup;
 
   // The various states of the inspector: [key, suggestions array]
