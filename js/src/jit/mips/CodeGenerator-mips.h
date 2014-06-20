@@ -93,6 +93,11 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
         masm.branchTestPtr(c, lhs, rhs, &bail);
         return bailoutFrom(&bail, snapshot);
     }
+    bool bailoutIfFalseBool(Register reg, LSnapshot *snapshot) {
+        Label bail;
+        masm.branchTest32(Assembler::Zero, reg, Imm32(0xFF), &bail);
+        return bailoutFrom(&bail, snapshot);
+    }
 
     bool bailoutFrom(Label *label, LSnapshot *snapshot);
     bool bailout(LSnapshot *snapshot);
