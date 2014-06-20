@@ -94,7 +94,8 @@ function getNode(nodeOrSelector) {
  * loaded in the toolbox
  * @param {String} reason Defaults to "test" which instructs the inspector not
  * to highlight the node upon selection
- * @param {String} reason Defaults to "test" which instructs the inspector not to highlight the node upon selection
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
