@@ -34,6 +34,7 @@
 #include "nsIExternalURLHandlerService.h"
 #include "nsIMIMEInfo.h"
 #include "nsIWidget.h"
+#include "nsWindowWatcher.h"
 #include "mozilla/BrowserElementParent.h"
 
 #include "nsIDOMDocument.h"
@@ -869,63 +870,14 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     }
   }
 
-  // the parent window is fullscreen mode or not.
-  bool isFullScreen = false;
-  if (aParent) {
-    aParent->GetFullScreen(&isFullScreen);
-  }
+  int32_t openLocation =
+    nsWindowWatcher::GetWindowOpenLocation(aParent, aChromeFlags, aCalledFromJS,
+                                           aPositionSpecified, aSizeSpecified);
 
-  // Where should we open this?
-  int32_t containerPref;
-  if (NS_FAILED(Preferences::GetInt("browser.link.open_newwindow",
-                                    &containerPref))) {
-    return NS_OK;
-  }
-
-  bool isDisabledOpenNewWindow =
-    isFullScreen &&
-    Preferences::GetBool("browser.link.open_newwindow.disabled_in_fullscreen");
-
-  if (isDisabledOpenNewWindow && (containerPref == nsIBrowserDOMWindow::OPEN_NEWWINDOW)) {
-    containerPref = nsIBrowserDOMWindow::OPEN_NEWTAB;
-  }
-
-  if (containerPref != nsIBrowserDOMWindow::OPEN_NEWTAB &&
-      containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+  if (openLocation != nsIBrowserDOMWindow::OPEN_NEWTAB &&
+      openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
     // Just open a window normally
     return NS_OK;
-  }
-
-  if (aCalledFromJS) {
-    /* Now check our restriction pref.  The restriction pref is a power-user's
-       fine-tuning pref. values:     
-       0: no restrictions - divert everything
-       1: don't divert window.open at all
-       2: don't divert window.open with features
-    */
-    int32_t restrictionPref =
-      Preferences::GetInt("browser.link.open_newwindow.restriction", 2);
-    if (restrictionPref < 0 || restrictionPref > 2) {
-      restrictionPref = 2; // Sane default behavior
-    }
-
-    if (isDisabledOpenNewWindow) {
-      // In browser fullscreen, the window should be opened
-      // in the current window with no features (see bug 803675)
-      restrictionPref = 0;
-    }
-
-    if (restrictionPref == 1) {
-      return NS_OK;
-    }
-
-    if (restrictionPref == 2 &&
-        // Only continue if there are no size/position features and no special
-        // chrome flags.
-        (aChromeFlags != nsIWebBrowserChrome::CHROME_ALL ||
-         aPositionSpecified || aSizeSpecified)) {
-      return NS_OK;
-    }
   }
 
   nsCOMPtr<nsIDOMWindow> domWin;
@@ -936,21 +888,21 @@ nsContentTreeOwner::ProvideWindow(nsIDOMWindow* aParent,
     NS_WARNING("nsXULWindow's DOMWindow is not a chrome window");
     return NS_OK;
   }
-  
+
   nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
   chromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
   if (!browserDOMWin) {
     return NS_OK;
   }
 
-  *aWindowIsNew = (containerPref != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
+  *aWindowIsNew = (openLocation != nsIBrowserDOMWindow::OPEN_CURRENTWINDOW);
 
   {
     dom::AutoNoJSAPI nojsapi;
 
     // Get a new rendering area from the browserDOMWin.  We don't want
     // to be starting any loads here, so get it with a null URI.
-    return browserDOMWin->OpenURI(nullptr, aParent, containerPref,
+    return browserDOMWin->OpenURI(nullptr, aParent, openLocation,
                                   nsIBrowserDOMWindow::OPEN_NEW, aReturn);
   }
 }
