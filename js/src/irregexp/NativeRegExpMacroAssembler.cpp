@@ -755,7 +755,8 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         masm.passABIArg(current_character);
         masm.passABIArg(current_position);
         masm.passABIArg(temp1);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CaseInsensitiveCompareStrings));
+        int (*fun)(const jschar*, const jschar*, size_t) = CaseInsensitiveCompareStrings;
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
         masm.storeCallResult(temp0);
 
         masm.PopRegsInMask(volatileRegs);
@@ -812,9 +813,12 @@ NativeRegExpMacroAssembler::CheckBitInTable(uint8_t *table, Label *on_bit_set)
 {
     IonSpew(SPEW_PREFIX "CheckBitInTable");
 
-    JS_ASSERT(mode_ != ASCII); // Ascii case not handled here.
-
     masm.movePtr(ImmPtr(table), temp0);
+
+    // kTableMask is currently 127, so we need to mask even if the input is
+    // Latin1. V8 has the same issue.
+    static_assert(JSString::MAX_LATIN1_CHAR > kTableMask,
+                  "No need to mask if MAX_LATIN1_CHAR <= kTableMask");
     masm.move32(Imm32(kTableSize - 1), temp1);
     masm.and32(current_character, temp1);
 
@@ -875,7 +879,15 @@ NativeRegExpMacroAssembler::LoadCurrentCharacterUnchecked(int cp_offset, int cha
     IonSpew(SPEW_PREFIX "LoadCurrentCharacterUnchecked(%d, %d)", cp_offset, characters);
 
     if (mode_ == ASCII) {
-        MOZ_ASSUME_UNREACHABLE("Ascii loading not implemented");
+        BaseIndex address(input_end_pointer, current_position, TimesOne, cp_offset);
+        if (characters == 4) {
+            masm.load32(address, current_character);
+        } else if (characters == 2) {
+            masm.load16ZeroExtend(address, current_character);
+        } else {
+            JS_ASSERT(characters = 1);
+            masm.load8ZeroExtend(address, current_character);
+        }
     } else {
         JS_ASSERT(mode_ == JSCHAR);
         JS_ASSERT(characters <= 2);

@@ -50,23 +50,21 @@ struct DebugModeOSREntry
 #ifdef DEBUG
         MOZ_ASSERT(pcOffset == icEntry.pcOffset());
         MOZ_ASSERT(frameKind == icEntry.kind());
+#endif
+    }
 
-        // Assert that if we have a NonOp ICEntry, that there are no unsynced
-        // slots, since such a recompile could have only been triggered from
-        // either an interrupt check or a debug trap handler.
-        //
-        // If triggered from an interrupt check, the stack should be fully
-        // synced.
-        //
-        // If triggered from a debug trap handler, we must be recompiling for
-        // toggling debug mode on->off, in which case the old baseline script
-        // should have fully synced stack at every bytecode.
-        if (frameKind == ICEntry::Kind_NonOp) {
-            PCMappingSlotInfo slotInfo;
-            jsbytecode *pc = script->offsetToPC(pcOffset);
-            oldBaselineScript->nativeCodeForPC(script, pc, &slotInfo);
-            MOZ_ASSERT(slotInfo.numUnsynced() == 0);
-        }
+    DebugModeOSREntry(JSScript *script, BaselineDebugModeOSRInfo *info)
+      : script(script),
+        oldBaselineScript(script->baselineScript()),
+        oldStub(nullptr),
+        newStub(nullptr),
+        recompInfo(nullptr),
+        pcOffset(script->pcToOffset(info->pc)),
+        frameKind(info->frameKind)
+    {
+#ifdef DEBUG
+        MOZ_ASSERT(pcOffset == script->pcToOffset(info->pc));
+        MOZ_ASSERT(frameKind == info->frameKind);
 #endif
     }
 
@@ -99,7 +97,7 @@ struct DebugModeOSREntry
     }
 
     BaselineDebugModeOSRInfo *takeRecompInfo() {
-        MOZ_ASSERT(recompInfo);
+        MOZ_ASSERT(needsRecompileInfo() && recompInfo);
         BaselineDebugModeOSRInfo *tmp = recompInfo;
         recompInfo = nullptr;
         return tmp;
@@ -175,11 +173,24 @@ CollectOnStackScripts(JSContext *cx, const JitActivationIterator &activation,
         switch (iter.type()) {
           case JitFrame_BaselineJS: {
             JSScript *script = iter.script();
-            uint8_t *retAddr = iter.returnAddressToFp();
-            ICEntry &entry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
 
-            if (!entries.append(DebugModeOSREntry(script, entry)))
-                return false;
+            if (BaselineDebugModeOSRInfo *info = iter.baselineFrame()->getDebugModeOSRInfo()) {
+                // If patching a previously patched yet unpopped frame, we can
+                // use the BaselineDebugModeOSRInfo on the frame directly to
+                // patch. Indeed, we cannot use iter.returnAddressToFp(), as
+                // it points into the debug mode OSR handler and cannot be
+                // used to look up a corresponding ICEntry.
+                //
+                // See cases F and G in PatchBaselineFrameForDebugMode.
+                if (!entries.append(DebugModeOSREntry(script, info)))
+                    return false;
+            } else {
+                // Otherwise, use the return address to look up the ICEntry.
+                uint8_t *retAddr = iter.returnAddressToFp();
+                ICEntry &entry = script->baselineScript()->icEntryFromReturnAddress(retAddr);
+                if (!entries.append(DebugModeOSREntry(script, entry)))
+                    return false;
+            }
 
             if (entries.back().needsRecompileInfo()) {
                 if (!entries.back().allocateRecompileInfo(cx))
@@ -284,6 +295,13 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const JitActivationIterator &acti
     //  D. From the debug prologue.
     //  E. From the debug epilogue.
     //
+    // Off to On to Off:
+    //  F. Undo case B above on previously patched yet unpopped frames.
+    //
+    // On to Off to On:
+    //  G. Undo cases B, C, D, or E above on previously patched yet unpopped
+    //     frames.
+    //
     // In general, we patch the return address from the VM call to return to a
     // "continuation fixer" to fix up machine state (registers and stack
     // state). Specifics on what need to be done are documented below.
@@ -291,7 +309,7 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const JitActivationIterator &acti
 
     IonCommonFrameLayout *prev = nullptr;
     size_t entryIndex = *start;
-    DebugOnly<bool> expectedDebugMode = cx->compartment()->debugMode();
+    bool expectedDebugMode = cx->compartment()->debugMode();
 
     for (JitFrameIterator iter(activation); !iter.done(); ++iter) {
         DebugModeOSREntry &entry = entries[entryIndex];
@@ -332,12 +350,33 @@ PatchBaselineFramesForDebugMode(JSContext *cx, const JitActivationIterator &acti
                 break;
             }
 
-            bool popFrameReg;
+            // Cases F and G above.
+            //
+            // We undo a previous recompile by handling cases B, C, D, and E
+            // like normal, except that we retrieved the pc information via
+            // the previous OSR debug info stashed on the frame.
+            if (BaselineDebugModeOSRInfo *info = iter.baselineFrame()->getDebugModeOSRInfo()) {
+                MOZ_ASSERT(info->pc == pc);
+                MOZ_ASSERT(info->frameKind == kind);
+
+                // Case G, might need to undo B, C, D, or E.
+                MOZ_ASSERT_IF(expectedDebugMode, (kind == ICEntry::Kind_CallVM ||
+                                                  kind == ICEntry::Kind_DebugTrap ||
+                                                  kind == ICEntry::Kind_DebugPrologue ||
+                                                  kind == ICEntry::Kind_DebugEpilogue));
+                // Case F, should only need to undo case B.
+                MOZ_ASSERT_IF(!expectedDebugMode, kind == ICEntry::Kind_CallVM);
+
+                // We will have allocated a new recompile info, so delete the
+                // existing one.
+                iter.baselineFrame()->deleteDebugModeOSRInfo();
+            }
 
             // The RecompileInfo must already be allocated so that this
             // function may be infallible.
             BaselineDebugModeOSRInfo *recompInfo = entry.takeRecompInfo();
 
+            bool popFrameReg;
             switch (kind) {
               case ICEntry::Kind_CallVM:
                 // Case B above.

@@ -616,12 +616,13 @@ this.DOMApplicationRegistry = {
     }.bind(this)).then(null, Cu.reportError);
   },
 
-  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest, aAppStatus) {
-    // Just Certified Apps can use DataStores
-    let prefName = "dom.testing.datastore_enabled_for_hosted_apps";
-    if (aAppStatus != Ci.nsIPrincipal.APP_STATUS_CERTIFIED &&
-        (Services.prefs.getPrefType(prefName) == Services.prefs.PREF_INVALID ||
-         !Services.prefs.getBoolPref(prefName))) {
+  updateDataStore: function(aId, aOrigin, aManifestURL, aManifest) {
+    let uri = Services.io.newURI(aOrigin, null, null);
+    let secMan = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(Ci.nsIScriptSecurityManager);
+    let principal = secMan.getAppCodebasePrincipal(uri, aId,
+                                                   /*mozbrowser*/ false);
+    if (!dataStoreService.checkPermission(principal)) {
       return;
     }
 
@@ -1543,7 +1544,7 @@ this.DOMApplicationRegistry = {
         true);
     }
     this.updateDataStore(this.webapps[id].localId, app.origin,
-                         app.manifestURL, newManifest, app.appStatus);
+                         app.manifestURL, newManifest);
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,
       manifest: newManifest,
@@ -1961,7 +1962,7 @@ this.DOMApplicationRegistry = {
       }
 
       this.updateDataStore(this.webapps[aId].localId, aApp.origin,
-                           aApp.manifestURL, aApp.manifest, aApp.appStatus);
+                           aApp.manifestURL, aApp.manifest);
 
       aApp.name = manifest.name;
       aApp.csp = manifest.csp || "";
@@ -2494,8 +2495,7 @@ this.DOMApplicationRegistry = {
       }
 
       this.updateDataStore(this.webapps[id].localId,  this.webapps[id].origin,
-                           this.webapps[id].manifestURL, jsonManifest,
-                           this.webapps[id].appStatus);
+                           this.webapps[id].manifestURL, jsonManifest);
     }
 
     for each (let prop in ["installState", "downloadAvailable", "downloading",
@@ -2631,7 +2631,7 @@ this.DOMApplicationRegistry = {
     }
 
     this.updateDataStore(this.webapps[aId].localId, aNewApp.origin,
-                         aNewApp.manifestURL, aManifest, aNewApp.appStatus);
+                         aNewApp.manifestURL, aManifest);
 
     this.broadcastMessage("Webapps:UpdateState", {
       app: app,

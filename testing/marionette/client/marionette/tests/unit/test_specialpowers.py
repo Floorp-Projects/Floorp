@@ -3,7 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_test import MarionetteTestCase
-from marionette import JavascriptException, MarionetteException
+from errors import JavascriptException, MarionetteException
 
 class TestSpecialPowersContent(MarionetteTestCase):
 

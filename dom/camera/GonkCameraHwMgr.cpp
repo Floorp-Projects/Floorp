@@ -23,7 +23,7 @@
 #include "base/basictypes.h"
 #include "nsDebug.h"
 #include "mozilla/layers/TextureClient.h"
-#include "mozilla/Preferences.h"
+#include "CameraPreferences.h"
 #include "mozilla/RefPtr.h"
 #include "GonkCameraControl.h"
 #include "GonkNativeWindow.h"
@@ -212,8 +212,8 @@ GonkCameraHardware::Connect(mozilla::nsGonkCameraControl* aTarget, uint32_t aCam
     return nullptr;
   }
 
-  const nsAdoptingCString& test =
-    mozilla::Preferences::GetCString("camera.control.test.enabled");
+  nsCString test;
+  CameraPreferences::GetPref("camera.control.test.enabled", test);
   sp<GonkCameraHardware> cameraHardware;
   if (test.EqualsASCII("hardware")) {
     NS_WARNING("Using test Gonk hardware layer");

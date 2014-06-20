@@ -1764,7 +1764,7 @@ JS_GetClassPrototype(JSContext *cx, JSProtoKey key, JS::MutableHandle<JSObject*>
 namespace JS {
 
 /*
- * Determine if the given object is an instance or prototype for a standard
+ * Determine if the given object is an instance/prototype/constructor for a standard
  * class. If so, return the associated JSProtoKey. If not, return JSProto_Null.
  */
 
@@ -1776,6 +1776,9 @@ IdentifyStandardPrototype(JSObject *obj);
 
 extern JS_PUBLIC_API(JSProtoKey)
 IdentifyStandardInstanceOrPrototype(JSObject *obj);
+
+extern JS_PUBLIC_API(JSProtoKey)
+IdentifyStandardConstructor(JSObject *obj);
 
 } /* namespace JS */
 

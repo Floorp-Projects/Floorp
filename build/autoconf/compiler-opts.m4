@@ -197,11 +197,7 @@ if test "$CLANG_CXX"; then
     ## returned by C functions. This is possible because we use knowledge about the ABI
     ## to typedef it to a C type with the same layout when the headers are included
     ## from C.
-    ##
-    ## mismatched-tags is disabled (bug 780474) mostly because it's useless.
-    ## Worse, it's not supported by gcc, so it will cause tryserver bustage
-    ## without any easy way for non-Clang users to check for it.
-    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage -Wno-mismatched-tags"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wno-unknown-warning-option -Wno-return-type-c-linkage"
 fi
 
 AC_MSG_CHECKING([whether the C++ compiler ($CXX $CXXFLAGS $LDFLAGS) actually is a C++ compiler])
@@ -215,15 +211,6 @@ AC_TRY_LINK([#include <new>], [int *foo = new int;],,
 LIBS=$_SAVE_LIBS
 AC_LANG_RESTORE
 AC_MSG_RESULT([yes])
-
-if test -z "$GNU_CC"; then
-    case "$target" in
-    *-mingw*)
-        ## Warning 4099 (equivalent of mismatched-tags) is disabled (bug 780474)
-        ## for the same reasons as above.
-        _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -wd4099"
-    esac
-fi
 
 if test -n "$DEVELOPER_OPTIONS"; then
     MOZ_FORCE_GOLD=1
