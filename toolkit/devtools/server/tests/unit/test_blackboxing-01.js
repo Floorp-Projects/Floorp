@@ -17,7 +17,7 @@ function run_test()
   gClient.connect(function() {
     attachTestTabAndResume(gClient, "test-black-box", function(aResponse, aTabClient, aThreadClient) {
       gThreadClient = aThreadClient;
-      test_black_box();
+      testBlackBox();
     });
   });
   do_test_pending();
@@ -26,18 +26,71 @@ function run_test()
 const BLACK_BOXED_URL = "http://example.com/blackboxme.js";
 const SOURCE_URL = "http://example.com/source.js";
 
-function test_black_box()
-{
-  gClient.addOneTimeListener("paused", function () {
-    gThreadClient.setBreakpoint({
-      url: SOURCE_URL,
-      line: 2
-    }, function (aResponse) {
-      do_check_true(!aResponse.error, "Should be able to set breakpoint.");
-      gThreadClient.resume(test_black_box_default);
-    });
-  });
+const testBlackBox = Task.async(function* () {
+  yield executeOnNextTickAndWaitForPause(evalCode, gClient);
 
+  yield setBreakpoint(gThreadClient, {
+    url: SOURCE_URL,
+    line: 2
+  });
+  yield resume(gThreadClient);
+
+  const sourcesResponse = yield getSources(gThreadClient);
+  let sourceClient = gThreadClient.source(
+    sourcesResponse.sources.filter(s => s.url == BLACK_BOXED_URL)[0]);
+  do_check_true(!sourceClient.isBlackBoxed,
+                "By default the source is not black boxed.");
+
+  // Test that we can step into `doStuff` when we are not black boxed.
+  yield runTest(
+    function onSteppedLocation(aLocation) {
+      do_check_eq(aLocation.url, BLACK_BOXED_URL);
+      do_check_eq(aLocation.line, 2);
+    },
+    function onDebuggerStatementFrames(aFrames) {
+      do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
+    }
+  );
+
+  let blackBoxResponse = yield blackBox(sourceClient);
+  do_check_true(sourceClient.isBlackBoxed);
+
+  // Test that we step through `doStuff` when we are black boxed and its frame
+  // doesn't show up.
+  yield runTest(
+    function onSteppedLocation(aLocation) {
+      do_check_eq(aLocation.url, SOURCE_URL);
+      do_check_eq(aLocation.line, 3);
+    },
+    function onDebuggerStatementFrames(aFrames) {
+      for (let f of aFrames) {
+        if (f.where.url == BLACK_BOXED_URL) {
+          do_check_true(f.source.isBlackBoxed);
+        } else {
+          do_check_true(!f.source.isBlackBoxed)
+        }
+      }
+    }
+  );
+
+  let unBlackBoxResponse = yield unBlackBox(sourceClient);
+  do_check_true(!sourceClient.isBlackBoxed);
+
+  // Test that we can step into `doStuff` again.
+  yield runTest(
+    function onSteppedLocation(aLocation) {
+      do_check_eq(aLocation.url, BLACK_BOXED_URL);
+      do_check_eq(aLocation.line, 2);
+    },
+    function onDebuggerStatementFrames(aFrames) {
+      do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
+    }
+  );
+
+  finishClient(gClient);
+});
+
+function evalCode() {
   Components.utils.evalInSandbox(
     "" + function doStuff(k) { // line 1
       let arg = 15;            // line 2 - Step in here
@@ -53,11 +106,11 @@ function test_black_box()
     "" + function runTest() { // line 1
       doStuff(                // line 2 - Break here
         function (n) {        // line 3 - Step through `doStuff` to here
-          debugger;           // line 5
-        }                     // line 6
-      );                      // line 7
-    }                         // line 8
-    + "\n debugger;",         // line 9
+          debugger;           // line 4
+        }                     // line 5
+      );                      // line 6
+    } + "\n"                  // line 7
+    + "debugger;",            // line 8
     gDebuggee,
     "1.8",
     SOURCE_URL,
@@ -65,110 +118,28 @@ function test_black_box()
   );
 }
 
-function test_black_box_default() {
-  gThreadClient.getSources(function (aResponse) {
-    do_check_true(!aResponse.error, "Should be able to get sources.");
+const runTest = Task.async(function* (onSteppedLocation, onDebuggerStatementFrames) {
+  let packet = yield executeOnNextTickAndWaitForPause(gDebuggee.runTest,
+                                                      gClient);
+  do_check_eq(packet.why.type, "breakpoint");
 
-    let sourceClient = gThreadClient.source(
-      aResponse.sources.filter(s => s.url == BLACK_BOXED_URL)[0]);
-    do_check_true(!sourceClient.isBlackBoxed,
-                  "By default the source is not black boxed.");
+  yield stepIn(gClient, gThreadClient);
+  yield stepIn(gClient, gThreadClient);
+  yield stepIn(gClient, gThreadClient);
 
-    // Test that we can step into `doStuff` when we are not black boxed.
-    runTest(
-      function onSteppedLocation(aLocation) {
-        do_check_eq(aLocation.url, BLACK_BOXED_URL,
-                    "Should step into `doStuff`.");
-        do_check_eq(aLocation.line, 2,
-                    "Should step into `doStuff`.");
-      },
-      function onDebuggerStatementFrames(aFrames) {
-        do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
-      },
-      test_black_boxing.bind(null, sourceClient)
-    );
-  });
-}
+  const location = yield getCurrentLocation();
+  onSteppedLocation(location);
 
-function test_black_boxing(aSourceClient) {
-  aSourceClient.blackBox(function (aResponse) {
-    do_check_true(!aResponse.error, "Should not get an error black boxing.");
-    do_check_true(aSourceClient.isBlackBoxed,
-       "The source client should report itself as black boxed correctly.");
+  packet = yield resumeAndWaitForPause(gClient, gThreadClient);
+  do_check_eq(packet.why.type, "debuggerStatement");
 
-    // Test that we step through `doStuff` when we are black boxed and its frame
-    // doesn't show up.
-    runTest(
-      function onSteppedLocation(aLocation) {
-        do_check_eq(aLocation.url, SOURCE_URL,
-                    "Should step through `doStuff`.");
-        do_check_eq(aLocation.line, 3,
-                    "Should step through `doStuff`.");
-      },
-      function onDebuggerStatementFrames(aFrames) {
-        for (let f of aFrames) {
-          if (f.where.url == BLACK_BOXED_URL) {
-            do_check_true(f.source.isBlackBoxed, "Should be black boxed");
-          } else {
-            do_check_true(!f.source.isBlackBoxed, "Should not be black boxed")
-          }
-        }
-      },
-      test_unblack_boxing.bind(null, aSourceClient)
-    );
-  });
-}
+  let { frames } = yield getFrames(gThreadClient, 0, 100);
+  onDebuggerStatementFrames(frames);
 
-function test_unblack_boxing(aSourceClient) {
-  aSourceClient.unblackBox(function (aResponse) {
-    do_check_true(!aResponse.error, "Should not get an error un-black boxing");
-    do_check_true(!aSourceClient.isBlackBoxed, "The source is not black boxed.");
+  return resume(gThreadClient);
+});
 
-    // Test that we can step into `doStuff` again.
-    runTest(
-      function onSteppedLocation(aLocation) {
-        do_check_eq(aLocation.url, BLACK_BOXED_URL,
-                    "Should step into `doStuff`.");
-        do_check_eq(aLocation.line, 2,
-                    "Should step into `doStuff`.");
-      },
-      function onDebuggerStatementFrames(aFrames) {
-        do_check_true(!aFrames.some(f => f.source.isBlackBoxed));
-      },
-      finishClient.bind(null, gClient)
-    );
-  });
-}
-
-function runTest(aOnSteppedLocation, aOnDebuggerStatementFrames, aFinishedCallback) {
-  gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-    do_check_eq(aPacket.why.type, "breakpoint");
-    gClient.addOneTimeListener("paused", function () {
-      gClient.addOneTimeListener("paused", function () {
-        getCurrentLocation(function (aLocation) {
-          aOnSteppedLocation(aLocation);
-          gClient.addOneTimeListener("paused", function (aEvent, aPacket) {
-            do_check_eq(aPacket.why.type, "debuggerStatement");
-            gThreadClient.getFrames(0, 100, function ({frames}) {
-              aOnDebuggerStatementFrames(frames);
-              gThreadClient.resume(aFinishedCallback);
-            });
-          });
-          gThreadClient.resume();
-        });
-      });
-      gThreadClient.stepIn();
-    });
-    gThreadClient.stepIn();
-  });
-
-  gDebuggee.runTest();
-}
-
-function getCurrentLocation(aCallback) {
-  gThreadClient.getFrames(0, 1, function ({frames, error}) {
-    do_check_true(!error, "Should not get an error: " + error);
-    let [{where}] = frames;
-    aCallback(where);
-  });
-}
+const getCurrentLocation = Task.async(function* () {
+  const response = yield getFrames(gThreadClient, 0, 1);
+  return response.frames[0].where;
+});
