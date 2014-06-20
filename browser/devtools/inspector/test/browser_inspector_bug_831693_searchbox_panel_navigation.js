@@ -3,7 +3,6 @@
 
 function test()
 {
-  waitForExplicitFinish();
   requestLongerTimeout(2);
 
   let inspector, searchBox, state, panel;

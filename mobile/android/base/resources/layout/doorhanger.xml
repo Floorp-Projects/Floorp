@@ -18,7 +18,7 @@
 
         <TextView android:id="@+id/doorhanger_title"
                   android:focusable="true"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:textAppearance="?android:attr/textAppearanceMedium"
                   android:textColor="@color/doorhanger_text"
@@ -34,25 +34,25 @@
               android:visibility="gone"/>
 
     <CheckBox android:id="@+id/doorhanger_checkbox"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:checked="true"
               android:textColor="@color/doorhanger_text"
               android:visibility="gone"/>
 
     <View android:id="@+id/divider_choices"
-          android:layout_width="fill_parent"
+          android:layout_width="match_parent"
           android:layout_height="1dp"
           android:visibility="gone"/>
 
     <LinearLayout android:id="@+id/doorhanger_choices"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal"
                   android:visibility="gone"/>
 
     <View android:id="@+id/divider_doorhanger"
-          android:layout_width="fill_parent"
+          android:layout_width="match_parent"
           android:layout_height="1dp"
           android:background="#FFFF9500"
           android:visibility="gone"/>

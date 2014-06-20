@@ -8,8 +8,6 @@ let doc;
 let toolbox;
 
 function test() {
-  waitForExplicitFinish();
-
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload(evt) {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);

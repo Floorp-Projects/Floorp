@@ -6,8 +6,8 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:fillViewport="true" >
 
     <LinearLayout
@@ -33,13 +33,13 @@
         <ViewFlipper
             android:id="@+id/connection_status_view"
             style="@style/FxAccountTextItem"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" >
 
             <TextView
                 android:id="@+id/needs_upgrade_view"
                 style="@style/FxAccountTextItem"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:background="#fad4d2"
@@ -53,7 +53,7 @@
             <TextView
                 android:id="@+id/sign_in_view"
                 style="@style/FxAccountTextItem"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:background="#fad4d2"
@@ -67,7 +67,7 @@
             <TextView
                 android:id="@+id/unverified_view"
                 style="@style/FxAccountTextItem"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:background="#fad4d2"

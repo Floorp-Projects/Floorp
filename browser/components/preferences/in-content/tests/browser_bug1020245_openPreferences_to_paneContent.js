@@ -1,25 +1,59 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-add_task(function test() {
-  waitForExplicitFinish();
+add_task(function() {
+  let prefs = yield openPreferencesViaOpenPreferencesAPI("paneContent");
+  is(prefs.selectedPane, "paneContent", "Content pane was selected");
+  prefs = yield openPreferencesViaOpenPreferencesAPI("advanced", "updateTab");
+  is(prefs.selectedPane, "paneAdvanced", "Advanced pane was selected");
+  is(prefs.selectedAdvancedTab, "updateTab", "The update tab within the advanced prefs should be selected");
+  prefs = yield openPreferencesViaHash("privacy");
+  is(prefs.selectedPane, "panePrivacy", "Privacy pane is selected when hash is 'privacy'");
+  prefs = yield openPreferencesViaOpenPreferencesAPI("nonexistant-category");
+  is(prefs.selectedPane, "paneGeneral", "General pane is selected by default when a nonexistant-category is requested");
+  prefs = yield openPreferencesViaHash("nonexistant-category");
+  is(prefs.selectedPane, "paneGeneral", "General pane is selected when hash is a nonexistant-category");
+  prefs = yield openPreferencesViaHash();
+  is(prefs.selectedPane, "paneGeneral", "General pane is selected by default");
+});
+
+function openPreferencesViaOpenPreferencesAPI(aPane, aAdvancedTab) {
   let deferred = Promise.defer();
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  openPreferences("paneContent");
-  let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
+  openPreferences(aPane, aAdvancedTab ? {advancedTab: aAdvancedTab} : undefined);
+  let newTabBrowser = gBrowser.selectedBrowser;
 
   newTabBrowser.addEventListener("Initialized", function PrefInit() {
     newTabBrowser.removeEventListener("Initialized", PrefInit, true);
     newTabBrowser.contentWindow.addEventListener("load", function prefLoad() {
       newTabBrowser.contentWindow.removeEventListener("load", prefLoad);
-      let sel = gBrowser.contentWindow.history.state;
-      is(sel, "paneContent", "Content pane was selected");
-      deferred.resolve();
+      let win = gBrowser.contentWindow;
+      let selectedPane = win.history.state;
+      let doc = win.document;
+      let selectedAdvancedTab = aAdvancedTab && doc.getElementById("advancedPrefs").selectedTab.id;
       gBrowser.removeCurrentTab();
+      deferred.resolve({selectedPane: selectedPane, selectedAdvancedTab: selectedAdvancedTab});
     });
   }, true);
 
-  yield deferred.promise;
+  return deferred.promise;
+}
 
-  finish();
-});
+function openPreferencesViaHash(aPane) {
+  let deferred = Promise.defer();
+  gBrowser.selectedTab = gBrowser.addTab("about:preferences" + (aPane ? "#" + aPane : ""));
+  let newTabBrowser = gBrowser.selectedBrowser;
+
+  newTabBrowser.addEventListener("Initialized", function PrefInit() {
+    newTabBrowser.removeEventListener("Initialized", PrefInit, true);
+    newTabBrowser.contentWindow.addEventListener("load", function prefLoad() {
+      newTabBrowser.contentWindow.removeEventListener("load", prefLoad);
+      let win = gBrowser.contentWindow;
+      let selectedPane = win.history.state;
+      gBrowser.removeCurrentTab();
+      deferred.resolve({selectedPane: selectedPane});
+    });
+  }, true);
+
+  return deferred.promise;
+}

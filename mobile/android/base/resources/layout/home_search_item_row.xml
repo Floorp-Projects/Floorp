@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <org.mozilla.gecko.home.SearchEngineRow xmlns:android="http://schemas.android.com/apk/res/android"
-                                        android:layout_width="fill_parent"
+                                        android:layout_width="match_parent"
                                         android:layout_height="wrap_content"
                                         android:minHeight="@dimen/search_row_height"
                                         android:duplicateParentState="true"

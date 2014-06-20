@@ -6,11 +6,22 @@
 package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
@@ -21,12 +32,17 @@ import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
+import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -62,7 +78,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mHistoryUriWithProfile;
     private final Uri mHistoryExpireUriWithProfile;
     private final Uri mCombinedUriWithProfile;
-    private final Uri mDeletedHistoryUriWithProfile;
     private final Uri mUpdateHistoryUriWithProfile;
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
@@ -91,12 +106,279 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mThumbnailsUriWithProfile = appendProfile(Thumbnails.CONTENT_URI);
         mReadingListUriWithProfile = appendProfile(ReadingListItems.CONTENT_URI);
 
-        mDeletedHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
-            appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
-
         mUpdateHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
             appendQueryParameter(BrowserContract.PARAM_INCREMENT_VISITS, "true").
             appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
+    }
+
+    /**
+     * Add default bookmarks to the database.
+     * Takes an offset; returns a new offset.
+     */
+    @Override
+    public int addDefaultBookmarks(Context context, ContentResolver cr, final int offset) {
+        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        if (folderId == -1L) {
+            Log.e(LOGTAG, "No mobile folder: cannot add default bookmarks.");
+            return offset;
+        }
+
+        // Use reflection to walk the set of bookmark defaults.
+        // This is horrible.
+        final Class<?> stringsClass = R.string.class;
+        final Field[] fields = stringsClass.getFields();
+        final Pattern p = Pattern.compile("^bookmarkdefaults_title_");
+
+        int pos = offset;
+        final long now = System.currentTimeMillis();
+
+        final ArrayList<ContentValues> bookmarkValues = new ArrayList<ContentValues>();
+        final ArrayList<ContentValues> faviconValues = new ArrayList<ContentValues>();
+        for (int i = 0; i < fields.length; i++) {
+            final String name = fields[i].getName();
+            final Matcher m = p.matcher(name);
+            if (!m.find()) {
+                continue;
+            }
+
+            try {
+                final int titleid = fields[i].getInt(null);
+                final String title = context.getString(titleid);
+
+                final Field urlField = stringsClass.getField(name.replace("_title_", "_url_"));
+                final int urlId = urlField.getInt(null);
+                final String url = context.getString(urlId);
+
+                bookmarkValues.add(createBookmark(now, title, url, pos++, folderId));
+
+                Bitmap icon = getDefaultFaviconFromPath(context, name);
+                if (icon == null) {
+                    icon = getDefaultFaviconFromDrawable(context, name);
+                }
+                if (icon == null) {
+                    continue;
+                }
+
+                final ContentValues iconValue = createFavicon(url, icon);
+                if (iconValue != null) {
+                    faviconValues.add(iconValue);
+                }
+            } catch (IllegalAccessException e) {
+                Log.wtf(LOGTAG, "Reflection failure.", e);
+            } catch (IllegalArgumentException e) {
+                Log.wtf(LOGTAG, "Reflection failure.", e);
+            } catch (NoSuchFieldException e) {
+                Log.wtf(LOGTAG, "Reflection failure.", e);
+            }
+        }
+
+        if (!faviconValues.isEmpty()) {
+            try {
+                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting default favicons.", e);
+            }
+        }
+
+        if (!bookmarkValues.isEmpty()) {
+            try {
+                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
+                return offset + inserted;
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting default bookmarks.", e);
+            }
+        }
+
+        return offset;
+    }
+
+    /**
+     * Add bookmarks from the provided distribution.
+     * Takes an offset; returns a new offset.
+     */
+    @Override
+    public int addDistributionBookmarks(ContentResolver cr, Distribution distribution, int offset) {
+        if (!distribution.exists()) {
+            Log.d(LOGTAG, "No distribution from which to add bookmarks.");
+            return offset;
+        }
+
+        final JSONArray bookmarks = distribution.getBookmarks();
+        if (bookmarks == null) {
+            Log.d(LOGTAG, "No distribution bookmarks.");
+            return offset;
+        }
+
+        long folderId = getFolderIdFromGuid(cr, Bookmarks.MOBILE_FOLDER_GUID);
+        if (folderId == -1L) {
+            Log.e(LOGTAG, "No mobile folder: cannot add distribution bookmarks.");
+            return offset;
+        }
+
+        final Locale locale = Locale.getDefault();
+        final long now = System.currentTimeMillis();
+        int mobilePos = offset;
+        int pinnedPos = 0;        // Assume nobody has pinned anything yet.
+
+        final ArrayList<ContentValues> bookmarkValues = new ArrayList<ContentValues>();
+        final ArrayList<ContentValues> faviconValues = new ArrayList<ContentValues>();
+        for (int i = 0; i < bookmarks.length(); i++) {
+            try {
+                final JSONObject bookmark = bookmarks.getJSONObject(i);
+
+                final String title = getLocalizedProperty(bookmark, "title", locale);
+                final String url = getLocalizedProperty(bookmark, "url", locale);
+                final long parent;
+                final int pos;
+                if (bookmark.has("pinned")) {
+                    parent = Bookmarks.FIXED_PINNED_LIST_ID;
+                    pos = pinnedPos++;
+                } else {
+                    parent = folderId;
+                    pos = mobilePos++;
+                }
+
+                bookmarkValues.add(createBookmark(now, title, url, pos, parent));
+
+                // Return early if there is no icon for this bookmark.
+                if (!bookmark.has("icon")) {
+                    continue;
+                }
+
+                try {
+                    final String iconData = bookmark.getString("icon");
+                    final Bitmap icon = BitmapUtils.getBitmapFromDataURI(iconData);
+                    if (icon == null) {
+                        continue;
+                    }
+                    final ContentValues iconValue = createFavicon(url, icon);
+                    if (iconValue != null) {
+                        faviconValues.add(iconValue);
+                    }
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error creating distribution bookmark icon.", e);
+                }
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error creating distribution bookmark.", e);
+            }
+        }
+
+        if (!faviconValues.isEmpty()) {
+            try {
+                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting distribution favicons.", e);
+            }
+        }
+
+        if (!bookmarkValues.isEmpty()) {
+            try {
+                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
+                return offset + inserted;
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting distribution bookmarks.", e);
+            }
+        }
+
+        return offset;
+    }
+
+    private static ContentValues createBookmark(final long timestamp, final String title, final String url, final int pos, final long parent) {
+        final ContentValues v = new ContentValues();
+
+        v.put(Bookmarks.DATE_CREATED, timestamp);
+        v.put(Bookmarks.DATE_MODIFIED, timestamp);
+        v.put(Bookmarks.GUID, Utils.generateGuid());
+
+        v.put(Bookmarks.PARENT, parent);
+        v.put(Bookmarks.POSITION, pos);
+        v.put(Bookmarks.TITLE, title);
+        v.put(Bookmarks.URL, url);
+        return v;
+    }
+
+    private static ContentValues createFavicon(final String url, final Bitmap icon) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+
+        ContentValues iconValues = new ContentValues();
+        iconValues.put(Favicons.PAGE_URL, url);
+
+        byte[] data = null;
+        if (icon.compress(Bitmap.CompressFormat.PNG, 100, stream)) {
+            data = stream.toByteArray();
+        } else {
+            Log.w(LOGTAG, "Favicon compression failed.");
+            return null;
+        }
+
+        iconValues.put(Favicons.DATA, data);
+        return iconValues;
+    }
+
+    private static String getLocalizedProperty(final JSONObject bookmark, final String property, final Locale locale) throws JSONException {
+        // Try the full locale.
+        final String fullLocale = property + "." + locale.toString();
+        if (bookmark.has(fullLocale)) {
+            return bookmark.getString(fullLocale);
+        }
+
+        // Try without a variant.
+        if (!TextUtils.isEmpty(locale.getVariant())) {
+            String noVariant = fullLocale.substring(0, fullLocale.lastIndexOf("_"));
+            if (bookmark.has(noVariant)) {
+                return bookmark.getString(noVariant);
+            }
+        }
+
+        // Try just the language.
+        String lang = property + "." + locale.getLanguage();
+        if (bookmark.has(lang)) {
+            return bookmark.getString(lang);
+        }
+
+        // Default to the non-localized property name.
+        return bookmark.getString(property);
+    }
+
+    private static Bitmap getDefaultFaviconFromPath(Context context, String name) {
+        Class<?> stringClass = R.string.class;
+        try {
+            // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+            Field faviconField = stringClass.getField(name.replace("_title_", "_favicon_"));
+            if (faviconField == null) {
+                return null;
+            }
+            int faviconId = faviconField.getInt(null);
+            String path = context.getString(faviconId);
+
+            String apkPath = context.getPackageResourcePath();
+            File apkFile = new File(apkPath);
+            String bitmapPath = "jar:jar:" + apkFile.toURI() + "!/" + AppConstants.OMNIJAR_NAME + "!/" + path;
+            return GeckoJarReader.getBitmap(context.getResources(), bitmapPath);
+        } catch (java.lang.IllegalAccessException ex) {
+            Log.e(LOGTAG, "[Path] Can't create favicon " + name, ex);
+        } catch (java.lang.NoSuchFieldException ex) {
+            // If the field does not exist, that means we intend to load via a drawable.
+        }
+        return null;
+    }
+
+    private static Bitmap getDefaultFaviconFromDrawable(Context context, String name) {
+        Class<?> drawablesClass = R.drawable.class;
+        try {
+            // Look for a drawable with the id R.drawable.bookmarkdefaults_favicon_*
+            Field faviconField = drawablesClass.getField(name.replace("_title_", "_favicon_"));
+            if (faviconField == null) {
+                return null;
+            }
+            int faviconId = faviconField.getInt(null);
+            return BitmapUtils.decodeResource(context, faviconId);
+        } catch (java.lang.IllegalAccessException ex) {
+            Log.e(LOGTAG, "[Drawable] Can't create favicon " + name, ex);
+        } catch (java.lang.NoSuchFieldException ex) {
+            Log.wtf(LOGTAG, "No field, and presumably no drawable, for " + name);
+        }
+        return null;
     }
 
     // Invalidate cached data
@@ -368,7 +650,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public void removeHistoryEntry(ContentResolver cr, String url) {
-        int deleted = cr.delete(mHistoryUriWithProfile,
+        cr.delete(mHistoryUriWithProfile,
                   History.URL + " = ?",
                   new String[] { url });
     }
@@ -577,29 +859,28 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         return null;
     }
 
-    private synchronized long getFolderIdFromGuid(ContentResolver cr, String guid) {
-        if (mFolderIdMap.containsKey(guid))
+    private synchronized long getFolderIdFromGuid(final ContentResolver cr, final String guid) {
+        if (mFolderIdMap.containsKey(guid)) {
             return mFolderIdMap.get(guid);
-
-        long folderId = -1;
-        Cursor c = null;
-
-        try {
-            c = cr.query(mBookmarksUriWithProfile,
-                         new String[] { Bookmarks._ID },
-                         Bookmarks.GUID + " = ?",
-                         new String[] { guid },
-                         null);
-
-            if (c.moveToFirst())
-                folderId = c.getLong(c.getColumnIndexOrThrow(Bookmarks._ID));
-        } finally {
-            if (c != null)
-                c.close();
         }
 
-        mFolderIdMap.put(guid, folderId);
-        return folderId;
+        final Cursor c = cr.query(mBookmarksUriWithProfile,
+                                  new String[] { Bookmarks._ID },
+                                  Bookmarks.GUID + " = ?",
+                                  new String[] { guid },
+                                  null);
+        try {
+            final int col = c.getColumnIndexOrThrow(Bookmarks._ID);
+            if (!c.moveToFirst() || c.isNull(col)) {
+                return -1;
+            }
+
+            final long id = c.getLong(col);
+            mFolderIdMap.put(guid, id);
+            return id;
+        } finally {
+            c.close();
+        }
     }
 
     /**

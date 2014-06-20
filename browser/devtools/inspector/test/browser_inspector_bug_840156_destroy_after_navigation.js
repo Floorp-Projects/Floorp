@@ -6,8 +6,6 @@ let Toolbox = devtools.Toolbox;
 let TargetFactory = devtools.TargetFactory;
 
 function test() {
-  waitForExplicitFinish();
-
   const URL_1 = "data:text/plain;charset=UTF-8,abcde";
   const URL_2 = "data:text/plain;charset=UTF-8,12345";
 
