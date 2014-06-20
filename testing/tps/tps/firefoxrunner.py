@@ -79,17 +79,7 @@ class TPSFirefoxRunner(object):
             self.binary = self.download_build()
 
         if self.runner is None:
-            self.runner = FirefoxRunner(self.profile, binary=self.binary)
+            self.runner = FirefoxRunner(profile=self.profile, binary=self.binary, env=env, cmdargs=args)
 
-        self.runner.profile = self.profile
-
-        if env is not None:
-            self.runner.env.update(env)
-
-        if args is not None:
-            self.runner.cmdargs = copy.copy(args)
-
-        self.runner.start()
-        returncode = self.runner.wait(timeout)
-
-        return returncode
+        self.runner.start(timeout=timeout)
+        return self.runner.wait()

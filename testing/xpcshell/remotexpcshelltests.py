@@ -126,13 +126,13 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             self.log.error("TEST-UNEXPECTED-FAIL | %s | Test timed out" % test_file)
         self.kill(proc)
 
-    def launchProcess(self, cmd, stdout, stderr, env, cwd):
+    def launchProcess(self, cmd, stdout, stderr, env, cwd, timeout=None):
         self.timedout = False
         cmd.insert(1, self.remoteHere)
         outputFile = "xpcshelloutput"
         with open(outputFile, 'w+') as f:
             try:
-                self.shellReturnCode = self.device.shell(cmd, f)
+                self.shellReturnCode = self.device.shell(cmd, f, timeout=timeout+10)
             except devicemanager.DMError as e:
                 if self.timedout:
                     # If the test timed out, there is a good chance the SUTagent also
