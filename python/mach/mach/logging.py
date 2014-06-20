@@ -110,6 +110,10 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
 
         result = s
 
+        reftest = s.startswith('REFTEST ')
+        if reftest:
+            s = s[8:]
+
         if s.startswith('TEST-PASS'):
             result = self.terminal.green(s[0:9]) + s[9:]
         elif s.startswith('TEST-UNEXPECTED'):
@@ -118,6 +122,9 @@ class StructuredTerminalFormatter(StructuredHumanFormatter):
             result = self.terminal.yellow(s[0:10]) + s[10:]
         elif s.startswith('TEST-INFO'):
             result = self.terminal.yellow(s[0:9]) + s[9:]
+
+        if reftest:
+            result = 'REFTEST ' + result
 
         return result
 
