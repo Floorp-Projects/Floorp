@@ -5,7 +5,7 @@
 #include "gfxASurface.h"
 #include "gfxImageSurface.h"
 
-#include "cairo/cairo.h"
+#include "cairo.h"
 
 int
 GetASurfaceRefCount(gfxASurface *s) {
