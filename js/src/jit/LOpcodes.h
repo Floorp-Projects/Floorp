@@ -34,7 +34,6 @@
     _(NewDenseArrayPar)             \
     _(NewCallObjectPar)             \
     _(NewDerivedTypedObject)        \
-    _(AbortPar)                     \
     _(InitElem)                     \
     _(InitElemGetterSetter)         \
     _(MutateProto)                  \
