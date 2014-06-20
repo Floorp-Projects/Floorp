@@ -53,6 +53,12 @@ label.small {
   margin: 6px;
 }
 
+/* Content Pane */
+#translationAttributionImage {
+  width: 70px;
+  cursor: pointer;
+}
+
 /* Applications Pane */
 #BrowserPreferences[animated="true"] #handlersView {
   height: 25em;
