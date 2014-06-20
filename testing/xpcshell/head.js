@@ -622,16 +622,17 @@ function do_throw(error, stack) {
 }
 
 function _format_stack(stack) {
+  let normalized;
   if (stack instanceof Components.interfaces.nsIStackFrame) {
-    let stack_msg = "";
-    let frame = stack;
-    while (frame != null) {
-      stack_msg += frame + "\n";
-      frame = frame.caller;
+    let frames = [];
+    for (let frame = stack; frame; frame = frame.caller) {
+      frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
     }
-    return stack_msg;
+    normalized = frames.join("\n");
+  } else {
+    normalized = "" + stack;
   }
-  return "" + stack;
+  return _Task.Debugging.generateReadableStack(normalized, "    ");
 }
 
 function do_throw_todo(text, stack) {

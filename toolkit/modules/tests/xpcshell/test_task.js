@@ -539,6 +539,31 @@ add_test(function test_async_method_yield_reject_stack() {
   });
 });
 
+// Test that two tasks whose execution takes place interleaved do not capture each other's stack.
+add_test(function test_throw_stack_do_not_capture_the_wrong_task() {
+  for (let iter_a of [3, 4, 5]) { // Vary the interleaving
+    for (let iter_b of [3, 4, 5]) {
+      Task.spawn(function* task_a() {
+        for (let i = 0; i < iter_a; ++i) {
+          yield Promise.resolve();
+        }
+        throw new Error("BOOM");
+      }).then(do_throw, function(ex) {
+        do_check_rewritten_stack(["task_a",
+                                  "test_throw_stack_do_not_capture_the_wrong_task"],
+                                  ex);
+        do_check_true(!ex.stack.contains("task_b"));
+        run_next_test();
+      });
+      Task.spawn(function* task_b() {
+        for (let i = 0; i < iter_b; ++i) {
+          yield Promise.resolve();
+        }
+      });
+    }
+  }
+});
+
 // Put things together
 add_test(function test_throw_complex_stack()
 {
@@ -594,7 +619,24 @@ add_test(function test_throw_complex_stack()
     });
 });
 
-add_test(function exit_stack_tests() {
+add_test(function test_without_maintainStack() {
+  do_print("Calling generateReadableStack without a Task");
+  Task.Debugging.generateReadableStack(new Error("Not a real error"));
+
   Task.Debugging.maintainStack = false;
+
+  do_print("Calling generateReadableStack with neither a Task nor maintainStack");
+  Task.Debugging.generateReadableStack(new Error("Not a real error"));
+
+  do_print("Calling generateReadableStack without maintainStack");
+  Task.spawn(function*() {
+    Task.Debugging.generateReadableStack(new Error("Not a real error"));
+    run_next_test();
+  });
+});
+
+add_test(function exit_stack_tests() {
+  Task.Debugging.maintainStack = maintainStack;
   run_next_test();
 });
+
