@@ -6,27 +6,20 @@ import ConfigParser
 import datetime
 import os
 import socket
-import sys
+import StringIO
 import time
 import traceback
 import base64
 
 from application_cache import ApplicationCache
 from decorators import do_crash_check
-from emulator import Emulator
-from emulator_screen import EmulatorScreen
-from errors import (
-        ErrorCodes, MarionetteException, InstallGeckoError, TimeoutException, InvalidResponseException,
-        JavascriptException, NoSuchElementException, XPathLookupException, NoSuchWindowException,
-        StaleElementException, ScriptTimeoutException, ElementNotVisibleException,
-        NoSuchFrameException, InvalidElementStateException, NoAlertPresentException,
-        InvalidCookieDomainException, UnableToSetCookieException, InvalidSelectorException,
-        MoveTargetOutOfBoundsException, FrameSendNotInitializedError, FrameSendFailureError
-        )
 from keys import Keys
 from marionette_transport import MarionetteTransport
 
+from mozrunner import B2GEmulatorRunner
+
 import geckoinstance
+import errors
 
 class HTMLElement(object):
     """
@@ -451,32 +444,24 @@ class Marionette(object):
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
-    SCREEN_ORIENTATIONS = {"portrait": EmulatorScreen.SO_PORTRAIT_PRIMARY,
-                           "landscape": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
-                           "portrait-primary": EmulatorScreen.SO_PORTRAIT_PRIMARY,
-                           "landscape-primary": EmulatorScreen.SO_LANDSCAPE_PRIMARY,
-                           "portrait-secondary": EmulatorScreen.SO_PORTRAIT_SECONDARY,
-                           "landscape-secondary": EmulatorScreen.SO_LANDSCAPE_SECONDARY}
 
     def __init__(self, host='localhost', port=2828, app=None, app_args=None, bin=None,
-                 profile=None, emulator=None, sdcard=None, emulatorBinary=None,
-                 emulatorImg=None, emulator_res=None, gecko_path=None,
-                 connectToRunningEmulator=False, homedir=None, baseurl=None,
-                 noWindow=False, logcat_dir=None, busybox=None, symbols_path=None,
-                 timeout=None, device_serial=None, gecko_log=None):
+                 profile=None, emulator=None, sdcard=None, emulator_img=None,
+                 emulator_binary=None, emulator_res=None, connect_to_running_emulator=False,
+                 gecko_log=None, homedir=None, baseurl=None, no_window=False, logdir=None,
+                 busybox=None, symbols_path=None, timeout=None, device_serial=None,
+                 adb_path=None):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
         self.instance = None
-        self.profile = profile
         self.session = None
         self.window = None
+        self.runner = None
         self.emulator = None
         self.extra_emulators = []
-        self.homedir = homedir
         self.baseurl = baseurl
-        self.noWindow = noWindow
-        self.logcat_dir = logcat_dir
+        self.no_window = no_window
         self._test_name = None
         self.timeout = timeout
         self.device_serial = device_serial
@@ -485,7 +470,7 @@ class Marionette(object):
             port = int(self.port)
             if not Marionette.is_port_available(port, host=self.host):
                 ex_msg = "%s:%d is unavailable." % (self.host, port)
-                raise MarionetteException(message=ex_msg)
+                raise errors.MarionetteException(message=ex_msg)
             if app:
                 # select instance class for the given app
                 try:
@@ -504,52 +489,56 @@ class Marionette(object):
                         KeyError):
                     instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
-                                           bin=self.bin, profile=self.profile,
+                                           bin=self.bin, profile=profile,
                                            app_args=app_args, symbols_path=symbols_path,
                                            gecko_log=gecko_log)
             self.instance.start()
             assert(self.wait_for_port()), "Timed out waiting for port!"
 
         if emulator:
-            self.emulator = Emulator(homedir=homedir,
-                                     noWindow=self.noWindow,
-                                     logcat_dir=self.logcat_dir,
-                                     arch=emulator,
-                                     sdcard=sdcard,
-                                     symbols_path=symbols_path,
-                                     emulatorBinary=emulatorBinary,
-                                     userdata=emulatorImg,
-                                     res=emulator_res)
+            self.runner = B2GEmulatorRunner(b2g_home=homedir,
+                                            no_window=self.no_window,
+                                            logdir=logdir,
+                                            arch=emulator,
+                                            sdcard=sdcard,
+                                            symbols_path=symbols_path,
+                                            binary=emulator_binary,
+                                            userdata=emulator_img,
+                                            resolution=emulator_res,
+                                            profile=profile,
+                                            adb_path=adb_path)
+            self.emulator = self.runner.device
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(self.port)
-            assert(self.emulator.wait_for_port()), "Timed out waiting for port!"
+            assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
-        if connectToRunningEmulator:
-            self.emulator = Emulator(homedir=homedir,
-                                     logcat_dir=self.logcat_dir)
+        if connect_to_running_emulator:
+            self.runner = B2GEmulatorRunner(b2g_home=homedir,
+                                            logdir=logdir)
+            self.emulator = self.runner.device
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(self.port)
-            assert(self.emulator.wait_for_port()), "Timed out waiting for port!"
+            assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
 
         self.client = MarionetteTransport(self.host, self.port)
 
         if emulator:
-            self.emulator.setup(self,
-                                gecko_path=gecko_path,
-                                busybox=busybox)
+            if busybox:
+                self.emulator.install_busybox(busybox=busybox)
+            self.emulator.wait_for_system_message(self)
 
     def cleanup(self):
         if self.session:
             try:
                 self.delete_session()
-            except (MarionetteException, socket.error, IOError):
+            except (errors.MarionetteException, socket.error, IOError):
                 # These exceptions get thrown if the Marionette server
                 # hit an exception/died or the connection died. We can
                 # do no further server-side cleanup in this case.
                 pass
             self.session = None
-        if self.emulator:
-            self.emulator.close()
+        if self.runner:
+            self.runner.cleanup()
         if self.instance:
             self.instance.close()
         for qemu in self.extra_emulators:
@@ -570,26 +559,6 @@ class Marionette(object):
         finally:
             s.close()
 
-    @classmethod
-    def getMarionetteOrExit(cls, *args, **kwargs):
-        try:
-            m = cls(*args, **kwargs)
-            return m
-        except InstallGeckoError:
-            # Bug 812395 - the process of installing gecko into the emulator
-            # and then restarting B2G tickles some bug in the emulator/b2g
-            # that intermittently causes B2G to fail to restart.  To work
-            # around this in TBPL runs, we will fail gracefully from this
-            # error so that the mozharness script can try the run again.
-
-            # This string will get caught by mozharness and will cause it
-            # to retry the tests.
-            print "Error installing gecko!"
-
-            # Exit without a normal exception to prevent mozharness from
-            # flagging the error.
-            sys.exit()
-
     def wait_for_port(self, timeout=60):
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
@@ -609,7 +578,7 @@ class Marionette(object):
     @do_crash_check
     def _send_message(self, command, response_key="ok", **kwargs):
         if not self.session and command != "newSession":
-            raise MarionetteException("Please start a session")
+            raise errors.MarionetteException("Please start a session")
 
         message = {"name": command}
         if self.session:
@@ -623,8 +592,8 @@ class Marionette(object):
             self.session = None
             self.window = None
             self.client.close()
-            raise TimeoutException(
-                "Connection timed out", status=ErrorCodes.TIMEOUT)
+            raise errors.TimeoutException(
+                "Connection timed out", status=errors.ErrorCodes.TIMEOUT)
 
         # Process any emulator commands that are sent from a script
         # while it's executing.
@@ -646,7 +615,7 @@ class Marionette(object):
     def _handle_emulator_cmd(self, response):
         cmd = response.get("emulator_cmd")
         if not cmd or not self.emulator:
-            raise MarionetteException(
+            raise errors.MarionetteException(
                 "No emulator in this test to run command against")
         cmd = cmd.encode("ascii")
         result = self.emulator._run_telnet(cmd)
@@ -657,9 +626,12 @@ class Marionette(object):
     def _handle_emulator_shell(self, response):
         args = response.get("emulator_shell")
         if not isinstance(args, list) or not self.emulator:
-            raise MarionetteException(
+            raise errors.MarionetteException(
                 "No emulator in this test to run shell command against")
-        result = self.emulator._run_shell(args)
+        buf = StringIO.StringIO()
+        self.emulator.dm.shell(args, buf)
+        result = str(buf.getvalue()[0:-1]).rstrip().splitlines()
+        buf.close()
         return self.client.send({"name": "emulatorCmdResult",
                                  "id": response.get("id"),
                                  "result": result})
@@ -671,61 +643,58 @@ class Marionette(object):
             stacktrace = response['error'].get('stacktrace')
             # status numbers come from
             # http://code.google.com/p/selenium/wiki/JsonWireProtocol#Response_Status_Codes
-            if status == ErrorCodes.NO_SUCH_ELEMENT:
-                raise NoSuchElementException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.NO_SUCH_FRAME:
-                raise NoSuchFrameException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.STALE_ELEMENT_REFERENCE:
-                raise StaleElementException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.ELEMENT_NOT_VISIBLE:
-                raise ElementNotVisibleException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.INVALID_ELEMENT_STATE:
-                raise InvalidElementStateException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.UNKNOWN_ERROR:
-                raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.ELEMENT_IS_NOT_SELECTABLE:
-                raise ElementNotSelectableException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.JAVASCRIPT_ERROR:
-                raise JavascriptException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.XPATH_LOOKUP_ERROR:
-                raise XPathLookupException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.TIMEOUT:
-                raise TimeoutException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.NO_SUCH_WINDOW:
-                raise NoSuchWindowException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.INVALID_COOKIE_DOMAIN:
-                raise InvalidCookieDomainException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.UNABLE_TO_SET_COOKIE:
-                raise UnableToSetCookieException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.NO_ALERT_OPEN:
-                raise NoAlertPresentException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.SCRIPT_TIMEOUT:
-                raise ScriptTimeoutException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.INVALID_SELECTOR \
-                 or status == ErrorCodes.INVALID_XPATH_SELECTOR \
-                 or status == ErrorCodes.INVALID_XPATH_SELECTOR_RETURN_TYPER:
-                raise InvalidSelectorException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.MOVE_TARGET_OUT_OF_BOUNDS:
-                raise MoveTargetOutOfBoundsException(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.FRAME_SEND_NOT_INITIALIZED_ERROR:
-                raise FrameSendNotInitializedError(message=message, status=status, stacktrace=stacktrace)
-            elif status == ErrorCodes.FRAME_SEND_FAILURE_ERROR:
-                raise FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
+            if status == errors.ErrorCodes.NO_SUCH_ELEMENT:
+                raise errors.NoSuchElementException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.NO_SUCH_FRAME:
+                raise errors.NoSuchFrameException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.STALE_ELEMENT_REFERENCE:
+                raise errors.StaleElementException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.ELEMENT_NOT_VISIBLE:
+                raise errors.ElementNotVisibleException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.INVALID_ELEMENT_STATE:
+                raise errors.InvalidElementStateException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.UNKNOWN_ERROR:
+                raise errors.MarionetteException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.ELEMENT_IS_NOT_SELECTABLE:
+                raise errors.ElementNotSelectableException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.JAVASCRIPT_ERROR:
+                raise errors.JavascriptException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.XPATH_LOOKUP_ERROR:
+                raise errors.XPathLookupException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.TIMEOUT:
+                raise errors.TimeoutException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.NO_SUCH_WINDOW:
+                raise errors.NoSuchWindowException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.INVALID_COOKIE_DOMAIN:
+                raise errors.InvalidCookieDomainException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.UNABLE_TO_SET_COOKIE:
+                raise errors.UnableToSetCookieException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.NO_ALERT_OPEN:
+                raise errors.NoAlertPresentException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.SCRIPT_TIMEOUT:
+                raise errors.ScriptTimeoutException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.INVALID_SELECTOR \
+                 or status == errors.ErrorCodes.INVALID_XPATH_SELECTOR \
+                 or status == errors.ErrorCodes.INVALID_XPATH_SELECTOR_RETURN_TYPER:
+                raise errors.InvalidSelectorException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.MOVE_TARGET_OUT_OF_BOUNDS:
+                raise errors.MoveTargetOutOfBoundsException(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.FRAME_SEND_NOT_INITIALIZED_ERROR:
+                raise errors.FrameSendNotInitializedError(message=message, status=status, stacktrace=stacktrace)
+            elif status == errors.ErrorCodes.FRAME_SEND_FAILURE_ERROR:
+                raise errors.FrameSendFailureError(message=message, status=status, stacktrace=stacktrace)
             else:
-                raise MarionetteException(message=message, status=status, stacktrace=stacktrace)
-        raise MarionetteException(message=response, status=500)
+                raise errors.MarionetteException(message=message, status=status, stacktrace=stacktrace)
+        raise errors.MarionetteException(message=response, status=500)
 
     def check_for_crash(self):
         returncode = None
         name = None
         crashed = False
-        if self.emulator:
-            if self.emulator.check_for_crash():
+        if self.runner:
+            if self.runner.check_for_crashes():
                 returncode = self.emulator.proc.returncode
                 name = 'emulator'
-                crashed = True
-
-            if self.emulator.check_for_minidumps():
                 crashed = True
         elif self.instance:
             if self.instance.check_for_crashes():
@@ -1459,4 +1428,4 @@ class Marionette(object):
         """
         self._send_message("setScreenOrientation", "ok", orientation=orientation)
         if self.emulator:
-            self.emulator.screen.orientation = self.SCREEN_ORIENTATIONS[orientation.lower()]
+            self.emulator.screen.orientation = orientation.lower()

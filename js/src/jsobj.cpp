@@ -3439,6 +3439,26 @@ JS::IdentifyStandardInstanceOrPrototype(JSObject *obj)
     return JSCLASS_CACHED_PROTO_KEY(obj->getClass());
 }
 
+JSProtoKey
+JS::IdentifyStandardConstructor(JSObject *obj)
+{
+    // Note that NATIVE_CTOR does not imply that we are a standard constructor,
+    // but the converse is true (at least until we start having self-hosted
+    // constructors for standard classes). This lets us avoid a costly loop for
+    // many functions (which, depending on the call site, may be the common case).
+    if (!obj->is<JSFunction>() || !(obj->as<JSFunction>().flags() & JSFunction::NATIVE_CTOR))
+        return JSProto_Null;
+
+    GlobalObject &global = obj->global();
+    for (size_t k = 0; k < JSProto_LIMIT; ++k) {
+        JSProtoKey key = static_cast<JSProtoKey>(k);
+        if (global.getConstructor(key) == ObjectValue(*obj))
+            return key;
+    }
+
+    return JSProto_Null;
+}
+
 bool
 js::FindClassObject(ExclusiveContext *cx, MutableHandleObject protop, const Class *clasp)
 {
