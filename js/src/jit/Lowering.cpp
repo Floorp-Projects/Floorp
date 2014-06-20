@@ -118,13 +118,7 @@ bool
 LIRGenerator::visitCheckOverRecursed(MCheckOverRecursed *ins)
 {
     LCheckOverRecursed *lir = new(alloc()) LCheckOverRecursed();
-
-    if (!add(lir, ins))
-        return false;
-    if (!assignSafepoint(lir, ins))
-        return false;
-
-    return true;
+    return add(lir, ins) && assignSafepoint(lir, ins);
 }
 
 bool
@@ -235,13 +229,6 @@ LIRGenerator::visitNewStringObject(MNewStringObject *ins)
 
     LNewStringObject *lir = new(alloc()) LNewStringObject(useRegister(ins->input()), temp());
     return define(lir, ins) && assignSafepoint(lir, ins);
-}
-
-bool
-LIRGenerator::visitAbortPar(MAbortPar *ins)
-{
-    LAbortPar *lir = new(alloc()) LAbortPar();
-    return add(lir, ins);
 }
 
 bool
@@ -2179,7 +2166,7 @@ LIRGenerator::visitGuardThreadExclusive(MGuardThreadExclusive *ins)
                                            useFixed(ins->object(), CallTempReg1),
                                            tempFixed(CallTempReg2));
     lir->setMir(ins);
-    return add(lir, ins);
+    return assignSnapshot(lir, Bailout_GuardThreadExclusive) && add(lir, ins);
 }
 
 bool
