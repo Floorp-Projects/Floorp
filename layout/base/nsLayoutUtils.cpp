@@ -372,7 +372,7 @@ GetScaleForValue(const nsStyleAnimation::Value& aValue,
   return transform2d.ScaleFactors(true);
 }
 
-float
+static float
 GetSuitableScale(float aMaxScale, float aMinScale)
 {
   // If the minimum scale >= 1.0f, use it; if the maximum <= 1.0f, use it;
@@ -387,77 +387,59 @@ GetSuitableScale(float aMaxScale, float aMinScale)
   return 1.0f;
 }
 
+static void
+GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
+                                      nsIAtom* aAnimationProperty,
+                                      gfxSize& aMaxScale,
+                                      gfxSize& aMinScale)
+{
+  CommonElementAnimationData* animations =
+    GetAnimationsOrTransitionsForCompositor(aContent, aAnimationProperty,
+                                            eCSSProperty_transform);
+  if (!animations)
+    return;
+
+  for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
+    mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
+    if (anim->IsFinishedTransition()) {
+      continue;
+    }
+    for (uint32_t propIdx = anim->mProperties.Length(); propIdx-- != 0; ) {
+      AnimationProperty& prop = anim->mProperties[propIdx];
+      if (prop.mProperty == eCSSProperty_transform) {
+        for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
+          AnimationPropertySegment& segment = prop.mSegments[segIdx];
+          gfxSize from = GetScaleForValue(segment.mFromValue,
+                                          aContent->GetPrimaryFrame());
+          aMaxScale.width = std::max<float>(aMaxScale.width, from.width);
+          aMaxScale.height = std::max<float>(aMaxScale.height, from.height);
+          aMinScale.width = std::min<float>(aMinScale.width, from.width);
+          aMinScale.height = std::min<float>(aMinScale.height, from.height);
+          gfxSize to = GetScaleForValue(segment.mToValue,
+                                        aContent->GetPrimaryFrame());
+          aMaxScale.width = std::max<float>(aMaxScale.width, to.width);
+          aMaxScale.height = std::max<float>(aMaxScale.height, to.height);
+          aMinScale.width = std::min<float>(aMinScale.width, to.width);
+          aMinScale.height = std::min<float>(aMinScale.height, to.height);
+        }
+      }
+    }
+  }
+}
+
 gfxSize
 nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
 {
   gfxSize maxScale(1.0f, 1.0f);
   gfxSize minScale(1.0f, 1.0f);
 
-  CommonElementAnimationData* animations =
-    GetAnimationsOrTransitionsForCompositor(aContent,
-      nsGkAtoms::animationsProperty, eCSSProperty_transform);
-  if (animations) {
-    for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
-      mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
-      for (uint32_t propIdx = anim->mProperties.Length(); propIdx-- != 0; ) {
-        AnimationProperty& prop = anim->mProperties[propIdx];
-        if (prop.mProperty == eCSSProperty_transform) {
-          for (uint32_t segIdx = prop.mSegments.Length(); segIdx-- != 0; ) {
-            AnimationPropertySegment& segment = prop.mSegments[segIdx];
-            gfxSize from = GetScaleForValue(segment.mFromValue,
-                                            aContent->GetPrimaryFrame());
-            maxScale.width = std::max<float>(maxScale.width, from.width);
-            maxScale.height = std::max<float>(maxScale.height, from.height);
-            minScale.width = std::min<float>(minScale.width, from.width);
-            minScale.height = std::min<float>(minScale.height, from.height);
-            gfxSize to = GetScaleForValue(segment.mToValue,
-                                          aContent->GetPrimaryFrame());
-            maxScale.width = std::max<float>(maxScale.width, to.width);
-            maxScale.height = std::max<float>(maxScale.height, to.height);
-            minScale.width = std::min<float>(minScale.width, to.width);
-            minScale.height = std::min<float>(minScale.height, to.height);
-          }
-        }
-      }
-    }
-  }
-
-  CommonElementAnimationData* transitions =
-    GetAnimationsOrTransitionsForCompositor(aContent,
-      nsGkAtoms::transitionsProperty, eCSSProperty_transform);
-  if (transitions) {
-    for (uint32_t i = 0, i_end = transitions->mAnimations.Length();
-         i < i_end; ++i){
-      ElementAnimation* anim = transitions->mAnimations[i];
-      if (anim->IsFinishedTransition()) {
-        continue;
-      }
-      MOZ_ASSERT(anim->mProperties.Length() == 1,
-        "Should have one animation property for a transition");
-      MOZ_ASSERT(anim->mProperties[0].mSegments.Length() == 1,
-        "Animation property should have one segment for a transition");
-      const AnimationPropertySegment& segment =
-        anim->mProperties[0].mSegments[0];
-
-      if (anim->mProperties[0].mProperty == eCSSProperty_transform) {
-        gfxSize start = GetScaleForValue(segment.mFromValue,
-                                         aContent->GetPrimaryFrame());
-        maxScale.width = std::max<float>(maxScale.width, start.width);
-        maxScale.height = std::max<float>(maxScale.height, start.height);
-        minScale.width = std::min<float>(minScale.width, start.width);
-        minScale.height = std::min<float>(minScale.height, start.height);
-        gfxSize end = GetScaleForValue(segment.mToValue,
-                                       aContent->GetPrimaryFrame());
-        maxScale.width = std::max<float>(maxScale.width, end.width);
-        maxScale.height = std::max<float>(maxScale.height, end.height);
-        minScale.width = std::min<float>(minScale.width, end.width);
-        minScale.height = std::min<float>(minScale.height, end.height);
-      }
-    }
-  }
+  GetMinAndMaxScaleForAnimationProperty(aContent,
+    nsGkAtoms::animationsProperty, maxScale, minScale);
+  GetMinAndMaxScaleForAnimationProperty(aContent,
+    nsGkAtoms::transitionsProperty, maxScale, minScale);
 
   return gfxSize(GetSuitableScale(maxScale.width, minScale.width),
-      GetSuitableScale(maxScale.height, minScale.height));
+                 GetSuitableScale(maxScale.height, minScale.height));
 }
 
 bool
