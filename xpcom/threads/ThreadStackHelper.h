@@ -37,7 +37,7 @@ namespace mozilla {
 class ThreadStackHelper
 {
 public:
-  typedef Telemetry::HangHistogram::Stack Stack;
+  typedef Telemetry::HangStack Stack;
 
 private:
 #ifdef MOZ_ENABLE_PROFILER_SPS
