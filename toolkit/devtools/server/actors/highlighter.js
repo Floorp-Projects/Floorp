@@ -925,53 +925,63 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    */
   _moveInfobar: function() {
     let bounds = this._getOuterBounds();
+    let winHeight = this.win.innerHeight * this.zoom;
+    let winWidth = this.win.innerWidth * this.zoom;
 
-    if (bounds.width > 0 || bounds.height > 0) {
-      let winHeight = this.win.innerHeight * this.zoom;
-      let winWidth = this.win.innerWidth * this.zoom;
+    // Ensure that positionerBottom and positionerTop are at least zero to avoid
+    // showing tooltips outside the viewport.
+    let positionerBottom = Math.max(0, bounds.bottom);
+    let positionerTop = Math.max(0, bounds.top);
 
-      this.nodeInfo.positioner.removeAttribute("disabled");
-      // Can the bar be above the node?
-      if (bounds.top < this.nodeInfo.barHeight) {
-        // No. Can we move the toolbar under the node?
-        if (bounds.bottom + this.nodeInfo.barHeight > winHeight) {
-          // No. Let's move it inside.
-          this.nodeInfo.positioner.style.top = bounds.top + "px";
-          this.nodeInfo.positioner.setAttribute("position", "overlap");
-        } else {
-          // Yes. Let's move it under the node.
-          this.nodeInfo.positioner.style.top = bounds.bottom - INFO_BAR_OFFSET + "px";
-          this.nodeInfo.positioner.setAttribute("position", "bottom");
-        }
+    // Avoid showing the nodeInfoBar on top of the findbar or awesomebar.
+    if (this.chromeDoc.defaultView.gBrowser) {
+      // Get the y co-ordinate of the top of the viewport
+      let viewportTop = this.browser.getBoundingClientRect().top;
+
+      // Get the offset to the top of the findbar
+      let findbar = this.chromeDoc.defaultView.gBrowser.getFindBar();
+      let findTop = findbar.getBoundingClientRect().top - viewportTop;
+
+      // Either show the positioner where it is or move it above the findbar.
+      positionerTop = Math.min(positionerTop, findTop);
+    }
+
+    this.nodeInfo.positioner.removeAttribute("disabled");
+    // Can the bar be above the node?
+    if (positionerTop < this.nodeInfo.barHeight) {
+      // No. Can we move the toolbar under the node?
+      if (positionerBottom + this.nodeInfo.barHeight > winHeight) {
+        // No. Let's move it inside.
+        this.nodeInfo.positioner.style.top = positionerTop + "px";
+        this.nodeInfo.positioner.setAttribute("position", "overlap");
       } else {
-        // Yes. Let's move it on top of the node.
-        this.nodeInfo.positioner.style.top =
-          bounds.top + INFO_BAR_OFFSET - this.nodeInfo.barHeight + "px";
-        this.nodeInfo.positioner.setAttribute("position", "top");
+        // Yes. Let's move it under the node.
+        this.nodeInfo.positioner.style.top = positionerBottom - INFO_BAR_OFFSET + "px";
+        this.nodeInfo.positioner.setAttribute("position", "bottom");
       }
+    } else {
+      // Yes. Let's move it on top of the node.
+      this.nodeInfo.positioner.style.top =
+        positionerTop + INFO_BAR_OFFSET - this.nodeInfo.barHeight + "px";
+      this.nodeInfo.positioner.setAttribute("position", "top");
+    }
 
-      let barWidth = this.nodeInfo.positioner.getBoundingClientRect().width;
-      let left = bounds.right - bounds.width / 2 - barWidth / 2;
+    let barWidth = this.nodeInfo.positioner.getBoundingClientRect().width;
+    let left = bounds.right - bounds.width / 2 - barWidth / 2;
 
-      // Make sure the whole infobar is visible
-      if (left < 0) {
-        left = 0;
+    // Make sure the whole infobar is visible
+    if (left < 0) {
+      left = 0;
+      this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
+    } else {
+      if (left + barWidth > winWidth) {
+        left = winWidth - barWidth;
         this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
       } else {
-        if (left + barWidth > winWidth) {
-          left = winWidth - barWidth;
-          this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
-        } else {
-          this.nodeInfo.positioner.removeAttribute("hide-arrow");
-        }
+        this.nodeInfo.positioner.removeAttribute("hide-arrow");
       }
-      this.nodeInfo.positioner.style.left = left + "px";
-    } else {
-      this.nodeInfo.positioner.style.left = "0";
-      this.nodeInfo.positioner.style.top = "0";
-      this.nodeInfo.positioner.setAttribute("position", "top");
-      this.nodeInfo.positioner.setAttribute("hide-arrow", "true");
     }
+    this.nodeInfo.positioner.style.left = left + "px";
   }
 });
 
