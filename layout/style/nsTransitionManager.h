@@ -86,21 +86,11 @@ public:
 
   typedef mozilla::css::CommonElementAnimationData CommonElementAnimationData;
 
-  static ElementTransitions*
-    GetTransitionsForCompositor(nsIContent* aContent,
-                                nsCSSProperty aProperty)
+  static CommonElementAnimationData*
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
-    if (!aContent->MayHaveAnimations()) {
-      return nullptr;
-    }
-    ElementTransitions* transitions = GetTransitions(aContent);
-    if (!transitions ||
-        !transitions->HasAnimationOfProperty(aProperty) ||
-        !transitions->CanPerformOnCompositorThread(
-          CommonElementAnimationData::CanAnimate_AllowPartial)) {
-      return nullptr;
-    }
-    return transitions;
+    return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
+      aContent, nsGkAtoms::transitionsProperty, aProperty);
   }
 
   /**
