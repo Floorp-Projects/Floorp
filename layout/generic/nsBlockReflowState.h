@@ -17,10 +17,10 @@ class nsFrameList;
 class nsOverflowContinuationTracker;
 
   // block reflow state flags
-#define BRS_UNCONSTRAINEDHEIGHT   0x00000001
-#define BRS_ISTOPMARGINROOT       0x00000002  // Is this frame a root for top/bottom margin collapsing?
-#define BRS_ISBOTTOMMARGINROOT    0x00000004
-#define BRS_APPLYTOPMARGIN        0x00000008  // See ShouldApplyTopMargin
+#define BRS_UNCONSTRAINEDBSIZE    0x00000001
+#define BRS_ISBSTARTMARGINROOT    0x00000002  // Is this frame a root for block
+#define BRS_ISBENDMARGINROOT      0x00000004  //  direction start/end margin collapsing?
+#define BRS_APPLYBSTARTMARGIN     0x00000008  // See ShouldApplyTopMargin
 #define BRS_ISFIRSTINFLOW         0x00000010
 // Set when mLineAdjacentToTop is valid
 #define BRS_HAVELINEADJACENTTOTOP 0x00000020
@@ -39,9 +39,9 @@ public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
-                     bool aTopMarginRoot, bool aBottomMarginRoot,
+                     bool aBStartMarginRoot, bool aBEndMarginRoot,
                      bool aBlockNeedsFloatManager,
-                     nscoord aConsumedHeight = NS_INTRINSICSIZE);
+                     nscoord aConsumedBSize = NS_INTRINSICSIZE);
 
   /**
    * Get the available reflow space (the area not occupied by floats)
@@ -49,19 +49,19 @@ public:
    * our coordinate system, which is the content box, with (0, 0) in the
    * upper left.
    *
-   * Returns whether there are floats present at the given vertical
-   * coordinate and within the width of the content rect.
+   * Returns whether there are floats present at the given block-direction
+   * coordinate and within the inline size of the content rect.
    */
   nsFlowAreaRect GetFloatAvailableSpace() const
-    { return GetFloatAvailableSpace(mY); }
-  nsFlowAreaRect GetFloatAvailableSpace(nscoord aY) const
-    { return GetFloatAvailableSpaceWithState(aY, nullptr); }
+    { return GetFloatAvailableSpace(mBCoord); }
+  nsFlowAreaRect GetFloatAvailableSpace(nscoord aBCoord) const
+    { return GetFloatAvailableSpaceWithState(aBCoord, nullptr); }
   nsFlowAreaRect
-    GetFloatAvailableSpaceWithState(nscoord aY,
+    GetFloatAvailableSpaceWithState(nscoord aBCoord,
                                     nsFloatManager::SavedState *aState) const;
   nsFlowAreaRect
-    GetFloatAvailableSpaceForHeight(nscoord aY, nscoord aHeight,
-                                    nsFloatManager::SavedState *aState) const;
+    GetFloatAvailableSpaceForBSize(nscoord aBCoord, nscoord aBSize,
+                                   nsFloatManager::SavedState *aState) const;
 
   /*
    * The following functions all return true if they were able to
@@ -71,11 +71,11 @@ public:
    * they are not associated with a line box).
    */
   bool AddFloat(nsLineLayout*       aLineLayout,
-                  nsIFrame*           aFloat,
-                  nscoord             aAvailableWidth);
+                nsIFrame*           aFloat,
+                nscoord             aAvailableISize);
 private:
-  bool CanPlaceFloat(nscoord aFloatWidth,
-                       const nsFlowAreaRect& aFloatAvailableSpace);
+  bool CanPlaceFloat(nscoord aFloatISize,
+                     const nsFlowAreaRect& aFloatAvailableSpace);
 public:
   bool FlowAndPlaceFloat(nsIFrame* aFloat);
 private:
@@ -84,40 +84,40 @@ public:
   void PlaceBelowCurrentLineFloats(nsFloatCacheFreeList& aFloats,
                                    nsLineBox* aLine);
 
-  // Returns the first coordinate >= aY that clears the
-  // floats indicated by aBreakType and has enough width between floats
+  // Returns the first coordinate >= aBCoord that clears the
+  // floats indicated by aBreakType and has enough inline size between floats
   // (or no floats remaining) to accomodate aReplacedBlock.
-  nscoord ClearFloats(nscoord aY, uint8_t aBreakType,
+  nscoord ClearFloats(nscoord aBCoord, uint8_t aBreakType,
                       nsIFrame *aReplacedBlock = nullptr,
                       uint32_t aFlags = 0);
 
   bool IsAdjacentWithTop() const {
-    return mY == mBorderPadding.top;
+    return mBCoord == mBorderPadding.BStart(mReflowState.GetWritingMode());
   }
 
   /**
    * Return mBlock's computed physical border+padding with GetSkipSides applied.
    */
-  const nsMargin& BorderPadding() const {
+  const mozilla::LogicalMargin& BorderPadding() const {
     return mBorderPadding;
   }
 
   /**
-   * Retrieve the height "consumed" by any previous-in-flows.
+   * Retrieve the block-direction size "consumed" by any previous-in-flows.
    */
-  nscoord GetConsumedHeight();
+  nscoord GetConsumedBSize();
 
-  // Reconstruct the previous bottom margin that goes above |aLine|.
-  void ReconstructMarginAbove(nsLineList::iterator aLine);
+  // Reconstruct the previous block-end margin that goes before |aLine|.
+  void ReconstructMarginBefore(nsLineList::iterator aLine);
 
   // Caller must have called GetAvailableSpace for the correct position
-  // (which need not be the current mY).
+  // (which need not be the current mBCoord).
   void ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
                                             const nsRect& aFloatAvailableSpace,
                                             nscoord& aLeftResult,
                                             nscoord& aRightResult);
 
-  // Caller must have called GetAvailableSpace for the current mY
+  // Caller must have called GetAvailableSpace for the current mBCoord
   void ComputeBlockAvailSpace(nsIFrame* aFrame,
                               const nsStyleDisplay* aDisplay,
                               const nsFlowAreaRect& aFloatAvailableSpace,
@@ -125,10 +125,10 @@ public:
                               nsRect& aResult);
 
 protected:
-  void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaY);
+  void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
 public:
-  void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaY);
+  void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaBCoord);
 
   void AdvanceToNextLine() {
     if (GetFlag(BRS_LINE_LAYOUT_EMPTY)) {
@@ -168,17 +168,36 @@ public:
   // block, not floats inside of it.
   nsFloatManager::SavedState mFloatManagerStateBefore;
 
-  nscoord mBottomEdge;
+  nscoord mBEndEdge;
 
   // The content area to reflow child frames within.  This is within
-  // this frame's coordinate system, which means mContentArea.x ==
-  // BorderPadding().left and mContentArea.y == BorderPadding().top.
-  // The height may be NS_UNCONSTRAINEDSIZE, which indicates that there
+  // this frame's coordinate system and writing mode, which means
+  // mContentArea.IStart == BorderPadding().IStart and
+  // mContentArea.BStart == BorderPadding().BStart.
+  // The block size may be NS_UNCONSTRAINEDSIZE, which indicates that there
   // is no page/column boundary below (the common case).
-  // mContentArea.YMost() should only be called after checking that
-  // mContentArea.height is not NS_UNCONSTRAINEDSIZE; otherwise
+  // mContentArea.BEnd() should only be called after checking that
+  // mContentArea.BSize is not NS_UNCONSTRAINEDSIZE; otherwise
   // coordinate overflow may occur.
-  nsRect mContentArea;
+  mozilla::LogicalRect mContentArea;
+  nscoord ContentIStart() {
+    return mContentArea.IStart(mReflowState.GetWritingMode());
+  }
+  nscoord ContentISize() {
+    return mContentArea.ISize(mReflowState.GetWritingMode());
+  }
+  nscoord ContentIEnd() {
+    return mContentArea.IEnd(mReflowState.GetWritingMode());
+  }
+  nscoord ContentBStart() {
+    return mContentArea.BStart(mReflowState.GetWritingMode());
+  }
+  nscoord ContentBSize() {
+    return mContentArea.BSize(mReflowState.GetWritingMode());
+  }
+  nscoord ContentBEnd() {
+    return mContentArea.BEnd(mReflowState.GetWritingMode());
+  }
   nscoord mContainerWidth;
 
   // Continuation out-of-flow float frames that need to move to our
@@ -210,11 +229,11 @@ public:
   // always before the current line.
   nsLineList::iterator mLineAdjacentToTop;
 
-  // The current Y coordinate in the block
-  nscoord mY;
+  // The current block-direction coordinate in the block
+  nscoord mBCoord;
 
   // mBlock's computed physical border+padding with GetSkipSides applied.
-  nsMargin mBorderPadding;
+  mozilla::LogicalMargin mBorderPadding;
 
   // The overflow areas of all floats placed so far
   nsOverflowAreas mFloatOverflowAreas;
@@ -226,7 +245,7 @@ public:
   nsIFrame* mPrevChild;
 
   // The previous child frames collapsed bottom margin value.
-  nsCollapsingMargin mPrevBottomMargin;
+  nsCollapsingMargin mPrevBEndMargin;
 
   // The current next-in-flow for the block. When lines are pulled
   // from a next-in-flow, this is used to know which next-in-flow to
@@ -258,8 +277,8 @@ public:
  
   uint8_t mFloatBreakType;
 
-  // The amount of computed height "consumed" by previous-in-flows.
-  nscoord mConsumedHeight;
+  // The amount of computed block-direction size "consumed" by previous-in-flows.
+  nscoord mConsumedBSize;
 
   void SetFlag(uint32_t aFlag, bool aValue)
   {

@@ -240,6 +240,15 @@ public:
     return mBSize;
   }
 
+  // Set inline and block size from a LogicalSize, converting to our
+  // writing mode as necessary.
+  void SetSize(mozilla::WritingMode aWM, mozilla::LogicalSize aSize)
+  {
+    mozilla::LogicalSize convertedSize = aSize.ConvertTo(mWritingMode, aWM);
+    mBSize = convertedSize.BSize(mWritingMode);
+    mISize = convertedSize.ISize(mWritingMode);
+  }
+
   // Width and Height are physical dimensions, independent of writing mode.
   // Accessing these is slightly more expensive than accessing the logical
   // dimensions (once vertical writing mode support is enabled); as far as
