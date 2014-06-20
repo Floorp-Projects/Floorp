@@ -42,6 +42,16 @@ static uint8_t kStunMessage[] = {
 };
 static size_t kStunMessageLen = sizeof(kStunMessage);
 
+class DummySocket;
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<DummySocket>
+{
+  static const bool value = true;
+};
+}
+
 class DummySocket : public NrSocketBase {
  public:
   DummySocket()
