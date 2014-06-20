@@ -109,7 +109,8 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (aORT == ORTSkipResponseBytes) {
     context.skipResponseBytes = true;
   }
-  if (aORT == ORTExpired || aORT == ORTExpiredFreshCA) {
+  if (aORT == ORTExpired || aORT == ORTExpiredFreshCA ||
+      aORT == ORTRevokedOld || aORT == ORTUnknownOld) {
     context.thisUpdate = oldNow;
     context.nextUpdate = oldNow + 10 * PR_USEC_PER_SEC;
   }
@@ -119,10 +120,10 @@ GetOCSPResponseForType(OCSPResponseType aORT, CERTCertificate *aCert,
   if (aORT == ORTAncientAlmostExpired) {
     context.thisUpdate = now - (640 * oneDay);
   }
-  if (aORT == ORTRevoked) {
+  if (aORT == ORTRevoked || aORT == ORTRevokedOld) {
     context.certStatus = 1;
   }
-  if (aORT == ORTUnknown) {
+  if (aORT == ORTUnknown || aORT == ORTUnknownOld) {
     context.certStatus = 2;
   }
   if (aORT == ORTBadSignature) {

@@ -91,7 +91,7 @@ private:
   SECStatus VerifyAndMaybeCacheEncodedOCSPResponse(
     const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
     uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
-    EncodedResponseSource responseSource);
+    EncodedResponseSource responseSource, /*out*/ bool& expired);
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;
