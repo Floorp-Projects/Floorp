@@ -1822,19 +1822,39 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 }
 
 /* Tabbrowser arrowscrollbox arrows */
+.tabbrowser-arrowscrollbox > .scrollbutton-up > .toolbarbutton-icon,
+.tabbrowser-arrowscrollbox > .scrollbutton-down > .toolbarbutton-icon {
+  -moz-appearance: none;
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-up,
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
   -moz-appearance: none;
+  list-style-image: url("chrome://browser/skin/tabbrowser/tab-arrow-left.png");
   margin: 0 0 @tabToolbarNavbarOverlap@;
 }
 
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-up,
+#TabsToolbar[brighttext] > #tabbrowser-tabs > .tabbrowser-arrowscrollbox > .scrollbutton-down {
+  list-style-image: url(chrome://browser/skin/tabbrowser/tab-arrow-left-inverted.png);
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up[disabled],
+.tabbrowser-arrowscrollbox > .scrollbutton-down[disabled] {
+  opacity: .4;
+}
+
+.tabbrowser-arrowscrollbox > .scrollbutton-up:-moz-locale-dir(rtl),
+.tabbrowser-arrowscrollbox > .scrollbutton-down:-moz-locale-dir(ltr) {
+  transform: scaleX(-1);
+}
+
 .tabbrowser-arrowscrollbox > .scrollbutton-down {
-  transition: 1s box-shadow ease-out;
-  border-radius: 4px;
+  transition: 1s background-color ease-out;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down[notifybgtab] {
-  box-shadow: 0 0 5px 5px Highlight inset;
+  background-color: Highlight;
   transition: none;
 }
 

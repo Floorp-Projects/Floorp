@@ -19,13 +19,28 @@ const TEST_BASE = "chrome://mochitests/content/chrome/browser/devtools/webide/te
 Services.prefs.setBoolPref("devtools.webide.enabled", true);
 Services.prefs.setBoolPref("devtools.webide.enableLocalRuntime", true);
 
+Services.prefs.setCharPref("devtools.webide.addonsURL", TEST_BASE + "addons/simulators.json");
+Services.prefs.setCharPref("devtools.webide.simulatorAddonsURL", TEST_BASE + "addons/fxos_#SLASHED_VERSION#_simulator-#OS#.xpi");
+Services.prefs.setCharPref("devtools.webide.adbAddonURL", TEST_BASE + "addons/adbhelper-#OS#.xpi");
+Services.prefs.setCharPref("devtools.webide.templatesURL", TEST_BASE + "templates.json");
+
+
 SimpleTest.registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("devtools.webide.templatesURL");
   Services.prefs.clearUserPref("devtools.webide.enabled");
   Services.prefs.clearUserPref("devtools.webide.enableLocalRuntime");
+  Services.prefs.clearUserPref("devtools.webide.addonsURL");
+  Services.prefs.clearUserPref("devtools.webide.simulatorAddonsURL");
+  Services.prefs.clearUserPref("devtools.webide.adbAddonURL");
+  Services.prefs.clearUserPref("devtools.webide.autoInstallADBHelper", false);
 });
 
-function openWebIDE() {
+function openWebIDE(autoInstallADBHelper) {
   info("opening WebIDE");
+
+  if (!autoInstallADBHelper) {
+    Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
+  }
 
   let deferred = promise.defer();
 
@@ -78,5 +93,20 @@ function nextTick() {
     deferred.resolve();
   });
 
+  return deferred.promise;
+}
+
+function documentIsLoaded(doc) {
+  let deferred = promise.defer();
+  if (doc.readyState == "complete") {
+    deferred.resolve();
+  } else {
+    doc.addEventListener("readystatechange", function onChange() {
+      if (doc.readyState == "complete") {
+        doc.removeEventListener("readystatechange", onChange);
+        deferred.resolve();
+      }
+    });
+  }
   return deferred.promise;
 }

@@ -53,3 +53,7 @@ if CONFIG['GNU_CXX']:
         '-Wno-null-conversion',
         '-Wno-sign-compare',
     ]
+elif CONFIG['_MSC_VER']:
+    CXXFLAGS += [
+        '-wd4099', # mismatched class/struct tags
+    ]

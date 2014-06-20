@@ -48,9 +48,16 @@ this.Translation = {
 
   documentStateReceived: function(aBrowser, aData) {
     if (aData.state == this.STATE_OFFER) {
-      if (this.supportedSourceLanguages.indexOf(aData.detectedLanguage) == -1 ||
-          aData.detectedLanguage == this.defaultTargetLanguage)
+      if (aData.detectedLanguage == this.defaultTargetLanguage) {
+        // Detected language is the same as the user's locale.
         return;
+      }
+
+      if (this.supportedSourceLanguages.indexOf(aData.detectedLanguage) == -1) {
+        // Detected language is not part of the supported languages.
+        TranslationHealthReport.recordMissedTranslationOpportunity(aData.detectedLanguage);
+        return;
+      }
 
       TranslationHealthReport.recordTranslationOpportunity(aData.detectedLanguage);
     }
@@ -93,10 +100,16 @@ this.Translation = {
  */
 function TranslationUI(aBrowser) {
   this.browser = aBrowser;
-  aBrowser.messageManager.addMessageListener("Translation:Finished", this);
 }
 
 TranslationUI.prototype = {
+  get browser() this._browser,
+  set browser(aBrowser) {
+    if (this._browser)
+      this._browser.messageManager.removeMessageListener("Translation:Finished", this);
+    aBrowser.messageManager.addMessageListener("Translation:Finished", this);
+    this._browser = aBrowser;
+  },
   translate: function(aFrom, aTo) {
     if (aFrom == aTo ||
         (this.state == Translation.STATE_TRANSLATED &&
@@ -124,7 +137,17 @@ TranslationUI.prototype = {
     if (notification)
       PopupNotifications.remove(notification);
 
-    let callback = aTopic => {
+    let callback = (aTopic, aNewBrowser) => {
+      if (aTopic == "swapping") {
+        let infoBarVisible =
+          this.notificationBox.getNotificationWithValue("translation");
+        aNewBrowser.translationUI = this;
+        this.browser = aNewBrowser;
+        if (infoBarVisible)
+          this.showTranslationInfoBar();
+        return true;
+      }
+
       if (aTopic != "showing")
         return false;
       let notification = this.notificationBox.getNotificationWithValue("translation");
@@ -242,6 +265,17 @@ let TranslationHealthReport = {
     this._withProvider(provider => provider.recordTranslationOpportunity(language));
    },
 
+  /**
+   * Record a missed translation opportunity in the health report.
+   * A missed opportunity is when the language detected is not part
+   * of the supported languages.
+   * @param language
+   *        The language of the page.
+   */
+  recordMissedTranslationOpportunity: function (language) {
+    this._withProvider(provider => provider.recordMissedTranslationOpportunity(language));
+  },
+
    /**
    * Record a translation in the health report.
    * @param langFrom
@@ -321,9 +355,11 @@ TranslationMeasurement1.prototype = Object.freeze({
 
   fields: {
     translationOpportunityCount: DAILY_COUNTER_FIELD,
+    missedTranslationOpportunityCount: DAILY_COUNTER_FIELD,
     pageTranslatedCount: DAILY_COUNTER_FIELD,
     charactersTranslatedCount: DAILY_COUNTER_FIELD,
     translationOpportunityCountsByLanguage: DAILY_LAST_TEXT_FIELD,
+    missedTranslationOpportunityCountsByLanguage: DAILY_LAST_TEXT_FIELD,
     pageTranslatedCountsByLanguage: DAILY_LAST_TEXT_FIELD,
     detectedLanguageChangedBefore: DAILY_COUNTER_FIELD,
     detectedLanguageChangedAfter: DAILY_COUNTER_FIELD,
@@ -368,6 +404,7 @@ TranslationMeasurement1.prototype = Object.freeze({
       // Special case the serialization of these fields so that
       // they are sent as objects, not stringified objects.
       _parseInPlace(result, "translationOpportunityCountsByLanguage");
+      _parseInPlace(result, "missedTranslationOpportunityCountsByLanguage");
       _parseInPlace(result, "pageTranslatedCountsByLanguage");
 
       return result;
@@ -402,6 +439,25 @@ TranslationProvider.prototype = Object.freeze({
       langCounts = JSON.stringify(langCounts);
 
       yield m.setDailyLastText("translationOpportunityCountsByLanguage",
+                               langCounts, date);
+
+    }.bind(this));
+  },
+
+  recordMissedTranslationOpportunity: function (language, date=new Date()) {
+    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
+                                TranslationMeasurement1.prototype.version);
+
+    return this._enqueueTelemetryStorageTask(function* recordTask() {
+      yield m.incrementDailyCounter("missedTranslationOpportunityCount", date);
+
+      let langCounts = yield m._getDailyLastTextFieldAsJSON(
+        "missedTranslationOpportunityCountsByLanguage", date);
+
+      langCounts[language] = (langCounts[language] || 0) + 1;
+      langCounts = JSON.stringify(langCounts);
+
+      yield m.setDailyLastText("missedTranslationOpportunityCountsByLanguage",
                                langCounts, date);
 
     }.bind(this));

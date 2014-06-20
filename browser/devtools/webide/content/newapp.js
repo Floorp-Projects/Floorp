@@ -17,6 +17,7 @@ const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {AppProjects} = require("devtools/app-manager/app-projects");
 const APP_CREATOR_LIST = "devtools.webide.templatesURL";
 const {AppManager} = require("devtools/webide/app-manager");
+const {GetTemplatesJSON} = require("devtools/webide/remote-resources");
 
 let gTemplateList = null;
 
@@ -33,20 +34,12 @@ window.addEventListener("load", function onLoad() {
 }, true);
 
 function getJSON() {
-  let xhr = new XMLHttpRequest();
-  xhr.overrideMimeType('text/plain');
-  xhr.onload = function() {
-    let list;
-    try {
-      list = JSON.parse(this.responseText);
-      if (!Array.isArray(list)) {
-        throw new Error("JSON response not an array");
-      }
-      if (list.length == 0) {
-        throw new Error("JSON response is an empty array");
-      }
-    } catch(e) {
-      return failAndBail("Invalid response from server");
+  GetTemplatesJSON().then(list => {
+    if (!Array.isArray(list)) {
+      throw new Error("JSON response not an array");
+    }
+    if (list.length == 0) {
+      throw new Error("JSON response is an empty array");
     }
     gTemplateList = list;
     let templatelistNode = document.querySelector("#templatelist");
@@ -76,13 +69,9 @@ function getJSON() {
       document.querySelector("#project-name").value = testOptions.name;
       doOK();
     }
-  };
-  xhr.onerror = function() {
-    failAndBail("Can't download app templates");
-  };
-  let url = Services.prefs.getCharPref(APP_CREATOR_LIST);
-  xhr.open("get", url);
-  xhr.send();
+  }, (e) => {
+    failAndBail("Can't download app templates: " + e);
+  });
 }
 
 function failAndBail(msg) {

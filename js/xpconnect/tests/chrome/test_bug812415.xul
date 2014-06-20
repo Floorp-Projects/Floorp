@@ -56,7 +56,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812415
     is(Cu.evalInSandbox('regFun.name', expanded), 'reg', "Expanded can see regular function's name");
     checkThrows('expFun.name', regular, "Regular can't see expanded function's name");
     Cu.evalInSandbox('regFun.expando = 30', expanded);
-    is(expanded.regFun.expando, 30, "Expanded can set expandos");
+    is(Cu.evalInSandbox('regFun.expando', expanded), 30, "Expanded can set expandos");
     checkThrows('expFun.expando = 29', regular, "Regular can't set expandos");
 
     // Check __proto__ stuff.

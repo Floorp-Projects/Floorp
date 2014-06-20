@@ -40,7 +40,7 @@ window:not(.busy) #action-busy {
 .panel-button-anchor {
   list-style-image: url('icons.png');
   -moz-image-region: rect(43px, 563px, 61px, 535px);
-  width: 12;
+  width: 12px;
   height: 7px;
   margin-bottom: -5px;
 }
@@ -118,13 +118,19 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   width: 180px;
 }
 
-.panel-item {
+.panel-item,
+.panel-item-help {
   padding: 3px 12px;
   margin: 0;
   -moz-appearance: none;
 }
 
-.panel-item:hover {
+.panel-item-help {
+  font-size: 0.9em;
+}
+
+.panel-item:hover,
+.panel-item-help:hover {
   background: #CBF0FE;
 }
 
@@ -151,7 +157,8 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
   height: 18px;
 }
 
-.panel-item > .toolbarbutton-text {
+.panel-item > .toolbarbutton-text,
+.panel-item-help > .toolbarbutton-text {
   text-align: start;
 }
 
@@ -214,7 +221,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 
 /* Main view */
 
-#body {
+#deck {
   background-color: rgb(225, 225, 225);
   background-image: url('chrome://browser/skin/devtools/app-manager/rocket.svg'), url('chrome://browser/skin/devtools/app-manager/noise.png');
   background-repeat: no-repeat, repeat;

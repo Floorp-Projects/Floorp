@@ -41,6 +41,8 @@
       <command id="cmd_showRuntimeDetails" oncommand="Cmds.showRuntimeDetails()" label="&runtimeMenu_showDetails_label;"/>
       <command id="cmd_takeScreenshot" oncommand="Cmds.takeScreenshot()" label="&runtimeMenu_takeScreenshot_label;"/>
       <command id="cmd_toggleEditor" oncommand="Cmds.toggleEditors()" label="&viewMenu_toggleEditor_label;"/>
+      <command id="cmd_showAddons" oncommand="Cmds.showAddons()"/>
+      <command id="cmd_showTroubleShooting" oncommand="Cmds.showTroubleShooting()"/>
       <command id="cmd_play" oncommand="Cmds.play()"/>
       <command id="cmd_stop" oncommand="Cmds.stop()"/>
       <command id="cmd_toggleToolbox" oncommand="Cmds.toggleToolbox()"/>
@@ -76,6 +78,7 @@
     <menu id="menu-view" label="&viewMenu_label;" accesskey="&viewMenu_accesskey;">
       <menupopup id="menu-ViewPopup">
         <menuitem command="cmd_toggleEditor" key="key_toggleEditor" accesskey="&viewMenu_toggleEditor_accesskey;"/>
+        <menuitem command="cmd_showAddons" label="&viewMenu_showAddons_label;" accesskey="&viewMenu_showAddons_accesskey;"/>
       </menupopup>
     </menu>
 
@@ -136,8 +139,11 @@
     <panel id="runtime-panel" type="arrow" position="bottomcenter topright" consumeoutsideclicks="true" animate="false">
       <vbox flex="1">
         <label class="panel-header">&runtimePanel_USBDevices;</label>
+        <toolbarbutton class="panel-item-help" label="&runtimePanel_nousbdevice;" id="runtime-panel-nousbdevice" command="cmd_showTroubleShooting"/>
+        <toolbarbutton class="panel-item-help" label="&runtimePanel_noadbhelper;" id="runtime-panel-noadbhelper" command="cmd_showAddons"/>
         <vbox id="runtime-panel-usbruntime"></vbox>
         <label class="panel-header">&runtimePanel_simulators;</label>
+        <toolbarbutton class="panel-item-help" label="&runtimePanel_nosimulator;" id="runtime-panel-nosimulator" command="cmd_showAddons"/>
         <vbox id="runtime-panel-simulators"></vbox>
         <label class="panel-header">&runtimePanel_custom;</label>
         <vbox id="runtime-panel-custom"></vbox>
@@ -151,9 +157,14 @@
 
   </popupset>
 
-  <notificationbox flex="1" id="body">
-    <iframe id="details" flex="1" hidden="true" src="details.xhtml"/>
-    <iframe id="projecteditor" flex="1" hidden="true"/>
+  <notificationbox flex="1" id="notificationbox">
+    <deck flex="1" id="deck" selectedIndex="-1">
+      <iframe id="deck-panel-details" flex="1" src="details.xhtml"/>
+      <iframe id="deck-panel-projecteditor" flex="1"/>
+      <iframe id="deck-panel-addons" flex="1" src="addons.xhtml"/>
+      <iframe id="deck-panel-permissionstable" flex="1" src="permissionstable.xhtml"/>
+      <iframe id="deck-panel-runtimedetails" flex="1" src="runtimedetails.xhtml"/>
+    </deck>
   </notificationbox>
 
   <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
