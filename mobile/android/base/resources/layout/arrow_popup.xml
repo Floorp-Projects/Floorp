@@ -14,7 +14,7 @@
                 android:background="@drawable/arrow_popup_bg">
 
         <LinearLayout android:id="@+id/content"
-                      android:layout_width="fill_parent"
+                      android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:orientation="vertical"/>
 
