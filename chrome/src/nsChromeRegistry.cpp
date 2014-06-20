@@ -298,7 +298,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult)
   if (!baseURI) {
     LogMessage("No chrome package registered for chrome://%s/%s/%s",
                package.get(), provider.get(), path.get());
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FILE_NOT_FOUND;
   }
 
   return NS_NewURI(aResult, path, nullptr, baseURI);
