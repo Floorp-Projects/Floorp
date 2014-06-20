@@ -502,7 +502,7 @@ function openPreferences(paneID, extraArgs)
     let friendlyCategoryName = internalPrefCategoryNameToFriendlyName(paneID);
     let preferencesURL = "about:preferences" +
                          (friendlyCategoryName ? "#" + friendlyCategoryName : "");
-    let newLoad = !win.switchToTabHavingURI(preferencesURL, true, undefined, true);
+    let newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
     let browser = win.gBrowser.selectedBrowser;
 
     if (newLoad) {
