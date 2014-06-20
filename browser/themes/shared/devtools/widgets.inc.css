@@ -203,6 +203,12 @@
   color: hsl(210,30%,85%);
 }
 
+.breadcrumbs-widget-item > .button-box {
+  border: none;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .breadcrumbs-widget-item:not([checked]) {
   background: -moz-element(#breadcrumb-separator-normal) no-repeat center left;
 }

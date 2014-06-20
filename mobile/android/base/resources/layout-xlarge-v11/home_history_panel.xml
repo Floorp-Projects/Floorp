@@ -5,8 +5,8 @@
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               xmlns:gecko="http://schemas.android.com/apk/res-auto"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
     <org.mozilla.gecko.widget.IconTabWidget android:id="@+id/tab_icon_widget"
                                             style="@style/Widget.Home.HistoryTabWidget"
@@ -18,7 +18,7 @@
 
     <FrameLayout android:id="@+id/history_panel_container"
                  android:layout_width="0dp"
-                 android:layout_height="fill_parent"
+                 android:layout_height="match_parent"
                  android:layout_weight="1" />
 
 </LinearLayout>

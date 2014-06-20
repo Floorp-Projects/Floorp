@@ -34,8 +34,8 @@
     <!-- In editing mode, the toolbar shrinks by changing to
          dynamically constructed LayoutParams. -->
     <ImageView android:id="@+id/url_bar_entry"
-               android:layout_width="fill_parent"
-               android:layout_height="fill_parent"
+               android:layout_width="match_parent"
+               android:layout_height="match_parent"
                android:layout_toRightOf="@id/tabs"
                android:layout_toLeftOf="@id/menu_items"
                android:layout_marginLeft="-18dp"
@@ -78,7 +78,7 @@
 
     <LinearLayout android:id="@+id/menu_items"
                   android:layout_width="wrap_content"
-                  android:layout_height="fill_parent"
+                  android:layout_height="match_parent"
                   android:layout_marginLeft="3dp"
                   android:orientation="horizontal"
                   android:layout_toLeftOf="@id/menu"
@@ -101,7 +101,7 @@
                                               android:visibility="gone"/>
 
     <ImageView android:id="@+id/shadow"
-               android:layout_width="fill_parent"
+               android:layout_width="match_parent"
                android:layout_height="2dp"
                android:layout_alignParentBottom="true"
                android:background="@color/url_bar_shadow"

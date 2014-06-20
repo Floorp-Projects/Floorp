@@ -4,15 +4,15 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/home_empty_view"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:orientation="vertical"
               android:gravity="center"
               android:paddingLeft="50dp"
               android:paddingRight="50dp">
 
     <!-- Empty spacer view -->
-    <View android:layout_width="fill_parent"
+    <View android:layout_width="match_parent"
           android:layout_height="0dip"
           android:layout_weight="1"/>
 
@@ -23,7 +23,7 @@
                android:scaleType="fitCenter"/>
 
     <TextView android:id="@+id/home_empty_text"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="0dip"
               android:gravity="top|center"
               android:textAppearance="@style/TextAppearance.EmptyMessage"

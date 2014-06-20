@@ -21,6 +21,7 @@ import org.mozilla.gecko.FennecNativeActions;
 import org.mozilla.gecko.FennecNativeDriver;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.GeckoThread.LaunchState;
 import org.mozilla.gecko.R;
@@ -108,7 +109,8 @@ abstract class BaseTest extends BaseRobocopTest {
                 i.putExtra("env" + iter, envStrings[iter]);
             }
         }
-        // Start the activity
+
+        // Start the activity.
         setActivityIntent(i);
         mActivity = getActivity();
         // Set up Robotium.solo and Driver objects
@@ -118,6 +120,19 @@ abstract class BaseTest extends BaseRobocopTest {
         mDevice = new Device();
         mDatabaseHelper = new DatabaseHelper(mActivity, mAsserter);
         mStringHelper = new StringHelper();
+    }
+
+    protected void initializeProfile() {
+        final GeckoProfile profile;
+        if (mProfile.startsWith("/")) {
+            profile = GeckoProfile.get(getActivity(), "default", mProfile);
+        } else {
+            profile = GeckoProfile.get(getActivity(), mProfile);
+        }
+
+        // In Robocop tests, we typically don't get initialized correctly, because
+        // GeckoProfile doesn't create the profile directory.
+        profile.enqueueInitialization();
     }
 
     @Override

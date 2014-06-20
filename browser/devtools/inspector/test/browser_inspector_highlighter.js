@@ -8,18 +8,18 @@
 
 // Test that the highlighter is correctly displayed over a variety of elements
 
-waitForExplicitFinish();
-
 let test = asyncTest(function*() {
-  info("Adding the test tab and creating the document");
-  yield addTab("data:text/html;charset=utf-8,browser_inspector_highlighter.js");
-  createDocument(content.document);
+  const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
+                   "test/browser_inspector_highlighter.html";
+
+  info("Opening the document");
+  yield addTab(TEST_URI);
 
   info("Opening the inspector");
   let {toolbox, inspector} = yield openInspector();
 
   info("Selecting the simple, non-transformed DIV");
-  let div = getNode(".simple-div");
+  let div = getNode("#simple-div");
   yield selectNode(div, inspector, "highlight");
 
   testSimpleDivHighlighted(div);
@@ -28,35 +28,23 @@ let test = asyncTest(function*() {
   yield zoomTo(1);
 
   info("Selecting the rotated DIV");
-  let rotated = getNode(".rotated-div");
+  let rotated = getNode("#rotated-div");
   let onBoxModelUpdate = waitForBoxModelUpdate();
   yield selectNode(rotated, inspector, "highlight");
   yield onBoxModelUpdate;
 
   testMouseOverRotatedHighlights(rotated);
 
+  info("Selecting the zero width height DIV");
+  let zeroWidthHeight = getNode("#widthHeightZero-div");
+  let onBoxModelUpdate = waitForBoxModelUpdate();
+  yield selectNode(zeroWidthHeight, inspector, "highlight");
+  yield onBoxModelUpdate;
+
+  testMouseOverWidthHeightZeroDiv(zeroWidthHeight);
+
   gBrowser.removeCurrentTab();
 });
-
-function createDocument(doc) {
-  info("Creating the test document");
-
-  let div = doc.createElement("div");
-  div.className = "simple-div";
-  div.setAttribute("style",
-                   "padding:5px; border:7px solid red; margin: 9px; " +
-                   "position:absolute; top:30px; left:150px;");
-  div.appendChild(doc.createTextNode("Gort! Klaatu barada nikto!"));
-  doc.body.appendChild(div);
-
-  let rotatedDiv = doc.createElement("div");
-  rotatedDiv.className = "rotated-div";
-  rotatedDiv.setAttribute("style",
-                       "padding:5px; border:7px solid red; margin: 9px; " +
-                       "transform:rotate(45deg); " +
-                       "position:absolute; top:30px; left:80px;");
-  doc.body.appendChild(rotatedDiv);
-}
 
 function testSimpleDivHighlighted(div) {
   ok(isHighlighting(), "The highlighter is shown");
@@ -88,4 +76,11 @@ function testMouseOverRotatedHighlights(rotated) {
   ok(isHighlighting(), "The highlighter is shown");
   info("Checking that the rotated div is correctly highlighted");
   isNodeCorrectlyHighlighted(rotated, "rotated");
+}
+
+function testMouseOverWidthHeightZeroDiv(zeroHeightWidthDiv) {
+  ok(isHighlighting(), "The highlighter is shown");
+  info("Checking that the zero width height div is correctly highlighted");
+  isNodeCorrectlyHighlighted(zeroHeightWidthDiv, "zero width height");
+
 }

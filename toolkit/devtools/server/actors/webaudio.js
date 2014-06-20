@@ -104,7 +104,12 @@ const NODE_PROPERTIES = {
   },
   "AudioDestinationNode": {},
   "ChannelSplitterNode": {},
-  "ChannelMergerNode": {}
+  "ChannelMergerNode": {},
+  "MediaElementAudioSourceNode": {},
+  "MediaStreamAudioSourceNode": {},
+  "MediaStreamAudioDestinationNode": {
+    "stream": { "MediaStream": true }
+  }
 };
 
 /**

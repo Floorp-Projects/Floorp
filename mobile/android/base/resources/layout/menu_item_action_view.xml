@@ -13,8 +13,8 @@
 
         <org.mozilla.gecko.menu.MenuItemDefault
                 android:id="@+id/menu_item"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:background="@drawable/action_bar_button"
                 android:clickable="true"
                 android:focusable="true"/>
@@ -22,8 +22,8 @@
         <org.mozilla.gecko.menu.MenuItemActionBar
                 style="@style/Widget.MenuItemSecondaryActionBar"
                 android:id="@+id/menu_item_button"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:background="@drawable/action_bar_button"
                 android:layout_gravity="center_vertical"
                 android:visibility="gone"/>

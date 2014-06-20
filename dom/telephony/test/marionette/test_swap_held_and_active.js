@@ -17,7 +17,7 @@ function dial() {
   telephony.dial(outNumber).then(call => {
     outgoingCall = call;
     ok(outgoingCall);
-    is(outgoingCall.number, outNumber);
+    is(outgoingCall.id.number, outNumber);
     is(outgoingCall.state, "dialing");
 
     outgoingCall.onalerting = function onalerting(event) {
@@ -107,7 +107,7 @@ function simulateIncoming() {
     log("Received 'incoming' call event.");
     incomingCall = event.call;
     ok(incomingCall);
-    is(incomingCall.number, inNumber);
+    is(incomingCall.id.number, inNumber);
     is(incomingCall.state, "incoming");
 
     // Should be two calls now

@@ -12,12 +12,10 @@ import java.util.Map;
 
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
-import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.FaviconColumns;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
-import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.sync.Utils;
 
@@ -231,10 +229,6 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         map.put(SearchManager.SUGGEST_COLUMN_INTENT_DATA,
                 Combined.URL + " AS " + SearchManager.SUGGEST_COLUMN_INTENT_DATA);
         SEARCH_SUGGEST_PROJECTION_MAP = Collections.unmodifiableMap(map);
-    }
-
-    static final String qualifyColumn(String table, String column) {
-        return table + "." + column;
     }
 
     private static boolean hasFaviconsInProjection(String[] projection) {
@@ -820,7 +814,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      *
      * @see #updateBookmarkPositionsInTransaction(SQLiteDatabase, String[], int, int)
      */
-    int updateBookmarkPositions(Uri uri, String[] guids) {
+    private int updateBookmarkPositions(Uri uri, String[] guids) {
         if (guids == null) {
             return 0;
         }
@@ -919,7 +913,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.update(TABLE_BOOKMARKS, values, where, selectionArgs);
     }
 
-    long insertBookmark(Uri uri, ContentValues values) {
+    private long insertBookmark(Uri uri, ContentValues values) {
         // Generate values if not specified. Don't overwrite
         // if specified by caller.
         long now = System.currentTimeMillis();
@@ -950,7 +944,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
     }
 
 
-    int updateOrInsertBookmark(Uri uri, ContentValues values, String selection,
+    private int updateOrInsertBookmark(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         int updated = updateBookmarks(uri, values, selection, selectionArgs);
         if (updated > 0) {
@@ -967,7 +961,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return 0;
     }
 
-    int updateBookmarks(Uri uri, ContentValues values, String selection,
+    private int updateBookmarks(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         trace("Updating bookmarks on URI: " + uri);
 
@@ -998,7 +992,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.update(TABLE_BOOKMARKS, values, inClause, null);
     }
 
-    long insertHistory(Uri uri, ContentValues values) {
+    private long insertHistory(Uri uri, ContentValues values) {
         final long now = System.currentTimeMillis();
         values.put(History.DATE_CREATED, now);
         values.put(History.DATE_MODIFIED, now);
@@ -1016,7 +1010,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.insertOrThrow(TABLE_HISTORY, History.VISITS, values);
     }
 
-    int updateOrInsertHistory(Uri uri, ContentValues values, String selection,
+    private int updateOrInsertHistory(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         final int updated = updateHistory(uri, values, selection, selectionArgs);
         if (updated > 0) {
@@ -1038,7 +1032,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return 0;
     }
 
-    int updateHistory(Uri uri, ContentValues values, String selection,
+    private int updateHistory(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         trace("Updating history on URI: " + uri);
 
@@ -1095,13 +1089,11 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
                   new String[] { pageUrl });
     }
 
-    long insertFavicon(Uri uri, ContentValues values) {
+    private long insertFavicon(Uri uri, ContentValues values) {
         return insertFavicon(getWritableDatabase(uri), values);
     }
 
-    long insertFavicon(SQLiteDatabase db, ContentValues values) {
-        // This method is a dupicate of BrowserDatabaseHelper.insertFavicon.
-        // If changes are needed, please update both
+    private long insertFavicon(SQLiteDatabase db, ContentValues values) {
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
 
@@ -1133,19 +1125,19 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return faviconId;
     }
 
-    int updateOrInsertFavicon(Uri uri, ContentValues values, String selection,
+    private int updateOrInsertFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         return updateFavicon(uri, values, selection, selectionArgs,
                 true /* insert if needed */);
     }
 
-    int updateExistingFavicon(Uri uri, ContentValues values, String selection,
+    private int updateExistingFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs) {
         return updateFavicon(uri, values, selection, selectionArgs,
                 false /* only update, no insert */);
     }
 
-    int updateFavicon(Uri uri, ContentValues values, String selection,
+    private int updateFavicon(Uri uri, ContentValues values, String selection,
             String[] selectionArgs, boolean insertIfNeeded) {
         String faviconUrl = values.getAsString(Favicons.URL);
         String pageUrl = null;
@@ -1258,7 +1250,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
      * transaction will guarantee that a read does not need to be upgraded to
      * a write.
      */
-    int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
+    private int deleteHistory(Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting history entry for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
@@ -1296,7 +1288,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
-    int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
+    private int deleteBookmarks(Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting bookmarks for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
@@ -1325,7 +1317,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return updated;
     }
 
-    int deleteFavicons(Uri uri, String selection, String[] selectionArgs) {
+    private int deleteFavicons(Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting favicons for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
@@ -1333,7 +1325,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.delete(TABLE_FAVICONS, selection, selectionArgs);
     }
 
-    int deleteThumbnails(Uri uri, String selection, String[] selectionArgs) {
+    private int deleteThumbnails(Uri uri, String selection, String[] selectionArgs) {
         debug("Deleting thumbnails for URI: " + uri);
 
         final SQLiteDatabase db = getWritableDatabase(uri);
@@ -1341,7 +1333,7 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
         return db.delete(TABLE_THUMBNAILS, selection, selectionArgs);
     }
 
-    int deleteUnusedImages(Uri uri) {
+    private int deleteUnusedImages(Uri uri) {
         debug("Deleting all unused favicons and thumbnails for URI: " + uri);
 
         String faviconSelection = Favicons._ID + " NOT IN "

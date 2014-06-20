@@ -9,8 +9,8 @@
     <org.mozilla.gecko.toolbar.ToolbarEditText
           android:id="@+id/url_edit_text"
           style="@style/UrlBar.Button"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
           android:layout_weight="1.0"
           android:hint="@string/url_bar_default_text"
           android:textColor="@color/url_bar_title"
