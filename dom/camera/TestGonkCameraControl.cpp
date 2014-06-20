@@ -15,12 +15,9 @@
  */
 
 #include "TestGonkCameraControl.h"
-#include "mozilla/Preferences.h"
+#include "CameraPreferences.h"
 
 using namespace mozilla;
-
-static const char* sMethodErrorOverride = "camera.control.test.method.error";
-static const char* sAsyncErrorOverride = "camera.control.test.async.error";
 
 TestGonkCameraControl::TestGonkCameraControl(uint32_t aCameraId)
   : nsGonkCameraControl(aCameraId)
@@ -37,9 +34,8 @@ TestGonkCameraControl::~TestGonkCameraControl()
 nsresult
 TestGonkCameraControl::ForceMethodFailWithCodeInternal(const char* aFile, int aLine)
 {
-  nsresult rv =
-    static_cast<nsresult>(Preferences::GetInt(sMethodErrorOverride,
-                                              static_cast<int32_t>(NS_OK)));
+  nsresult rv = NS_OK;
+  CameraPreferences::GetPref("camera.control.test.method.error", rv);
   if (NS_FAILED(rv)) {
     DOM_CAMERA_LOGI("[%s:%d] CameraControl method error override: 0x%x\n",
       aFile, aLine, rv);
@@ -50,9 +46,8 @@ TestGonkCameraControl::ForceMethodFailWithCodeInternal(const char* aFile, int aL
 nsresult
 TestGonkCameraControl::ForceAsyncFailWithCodeInternal(const char* aFile, int aLine)
 {
-  nsresult rv =
-    static_cast<nsresult>(Preferences::GetInt(sAsyncErrorOverride,
-                                              static_cast<int32_t>(NS_OK)));
+  nsresult rv = NS_OK;
+  CameraPreferences::GetPref("camera.control.test.async.error", rv);
   if (NS_FAILED(rv)) {
     DOM_CAMERA_LOGI("[%s:%d] CameraControl async error override: 0x%x\n",
       aFile, aLine, rv);

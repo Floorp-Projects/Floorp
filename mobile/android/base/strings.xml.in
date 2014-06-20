@@ -246,6 +246,7 @@
   <string name="new_tab">&new_tab;</string>
   <string name="new_private_tab">&new_private_tab;</string>
   <string name="close_all_tabs">&close_all_tabs;</string>
+  <string name="close_private_tabs">&close_private_tabs;</string>
   <string name="tabs_normal">&tabs_normal;</string>
   <string name="tabs_private">&tabs_private;</string>
   <string name="tabs_synced">&tabs_synced;</string>

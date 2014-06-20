@@ -56,12 +56,11 @@ SimulatorRuntime.prototype = {
     return this.version;
   },
   getName: function() {
-    return this.version;
+    return Simulator.getByVersion(this.version).appinfo.label;
   },
 }
 
 let gLocalRuntime = {
-  supportApps: false, // Temporary static value
   connect: function(connection) {
     if (!DebuggerServer.initialized) {
       DebuggerServer.init();
