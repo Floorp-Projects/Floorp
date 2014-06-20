@@ -562,7 +562,7 @@ RuleHash::~RuleHash()
         uint32_t lineNumber = value->mRule->GetLineNumber();
         nsCOMPtr<nsIStyleSheet> sheet;
         value->mRule->GetStyleSheet(*getter_AddRefs(sheet));
-        nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheet);
+        nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheet);
         value->mSelector->ToString(selectorText, cssSheet);
 
         printf("    line %d, %s\n",
@@ -3399,12 +3399,12 @@ CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
 }
 
 /* static */ bool
-nsCSSRuleProcessor::CascadeSheet(CSSStyleSheet* aSheet, CascadeEnumData* aData)
+nsCSSRuleProcessor::CascadeSheet(nsCSSStyleSheet* aSheet, CascadeEnumData* aData)
 {
   if (aSheet->IsApplicable() &&
       aSheet->UseForPresentation(aData->mPresContext, aData->mCacheKey) &&
       aSheet->mInner) {
-    CSSStyleSheet* child = aSheet->mInner->mFirstChild;
+    nsCSSStyleSheet* child = aSheet->mInner->mFirstChild;
     while (child) {
       CascadeSheet(child, aData);
       child = child->mNext;

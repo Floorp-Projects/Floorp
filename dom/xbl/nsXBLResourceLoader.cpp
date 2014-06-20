@@ -5,6 +5,7 @@
 
 #include "nsTArray.h"
 #include "nsString.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
@@ -16,7 +17,6 @@
 #include "nsIDocumentObserver.h"
 #include "imgILoader.h"
 #include "imgRequestProxy.h"
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -28,8 +28,6 @@
 #include "nsContentUtils.h"
 #include "nsStyleSet.h"
 #include "nsIScriptSecurityManager.h"
-
-using namespace mozilla;
 
 NS_IMPL_CYCLE_COLLECTION(nsXBLResourceLoader, mBoundElements)
 
@@ -137,7 +135,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
           CheckLoadURIWithPrincipal(docPrincipal, url,
                                     nsIScriptSecurityManager::ALLOW_CHROME);
         if (NS_SUCCEEDED(rv)) {
-          nsRefPtr<CSSStyleSheet> sheet;
+          nsRefPtr<nsCSSStyleSheet> sheet;
           rv = cssLoader->LoadSheetSync(url, getter_AddRefs(sheet));
           NS_ASSERTION(NS_SUCCEEDED(rv), "Load failed!!!");
           if (NS_SUCCEEDED(rv))
@@ -166,7 +164,7 @@ nsXBLResourceLoader::LoadResources(bool* aResult)
 
 // nsICSSLoaderObserver
 NS_IMETHODIMP
-nsXBLResourceLoader::StyleSheetLoaded(CSSStyleSheet* aSheet,
+nsXBLResourceLoader::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                       bool aWasAlternate,
                                       nsresult aStatus)
 {

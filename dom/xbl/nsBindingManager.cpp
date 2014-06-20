@@ -813,8 +813,8 @@ static PLDHashOperator
 EnumAppendAllSheets(nsRefPtrHashKey<nsIContent> *aKey, void* aClosure)
 {
   nsIContent *boundContent = aKey->GetKey();
-  nsTArray<CSSStyleSheet*>* array =
-    static_cast<nsTArray<CSSStyleSheet*>*>(aClosure);
+  nsTArray<nsCSSStyleSheet*>* array =
+    static_cast<nsTArray<nsCSSStyleSheet*>*>(aClosure);
   for (nsXBLBinding *binding = boundContent->GetXBLBinding(); binding;
        binding = binding->GetBaseBinding()) {
     binding->PrototypeBinding()->AppendStyleSheetsTo(*array);
@@ -823,7 +823,7 @@ EnumAppendAllSheets(nsRefPtrHashKey<nsIContent> *aKey, void* aClosure)
 }
 
 void
-nsBindingManager::AppendAllSheets(nsTArray<CSSStyleSheet*>& aArray)
+nsBindingManager::AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray)
 {
   if (mBoundContentSet) {
     mBoundContentSet->EnumerateEntries(EnumAppendAllSheets, &aArray);

@@ -143,7 +143,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
             nsCOMPtr<nsIURI> uri;
             NS_NewURI(getter_AddRefs(uri), spec);
             if (uri) {
-              nsRefPtr<CSSStyleSheet> cssSheet;
+              nsRefPtr<nsCSSStyleSheet> cssSheet;
               cssLoader->LoadSheetSync(uri, true, true, getter_AddRefs(cssSheet));
               if (cssSheet) {
                 EnsureOnDemandBuiltInUASheet(cssSheet);
@@ -155,7 +155,7 @@ SVGDocument::EnsureNonSVGUserAgentStyleSheetsLoaded()
     }
   }
 
-  CSSStyleSheet* sheet = nsLayoutStylesheetCache::NumberControlSheet();
+  nsCSSStyleSheet* sheet = nsLayoutStylesheetCache::NumberControlSheet();
   if (sheet) {
     // number-control.css can be behind a pref
     EnsureOnDemandBuiltInUASheet(sheet);

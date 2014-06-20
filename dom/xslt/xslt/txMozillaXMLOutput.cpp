@@ -23,12 +23,12 @@
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsNameSpaceManager.h"
+#include "nsCSSStyleSheet.h"
 #include "txStringUtils.h"
 #include "txURIUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EncodingUtils.h"
@@ -981,7 +981,7 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 }
 
 NS_IMETHODIMP 
-txTransformNotifier::StyleSheetLoaded(CSSStyleSheet* aSheet,
+txTransformNotifier::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
                                       bool aWasAlternate,
                                       nsresult aStatus)
 {
