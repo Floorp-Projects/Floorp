@@ -58,8 +58,6 @@ struct ElementTransitions MOZ_FINAL
                      nsTransitionManager *aTransitionManager,
                      mozilla::TimeStamp aNow);
 
-  virtual bool HasAnimationOfProperty(nsCSSProperty aProperty) const MOZ_OVERRIDE;
-
   // If aFlags contains CanAnimate_AllowPartial, returns whether the
   // state of this element's transitions at the current refresh driver
   // time contains transition data that can be done on the compositor
