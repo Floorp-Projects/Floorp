@@ -676,6 +676,23 @@ struct GCMethods<JSObject *>
 #endif
 };
 
+template <>
+struct GCMethods<JSFunction *>
+{
+    static JSFunction *initial() { return nullptr; }
+    static ThingRootKind kind() { return RootKind<JSObject *>::rootKind(); }
+    static bool poisoned(JSFunction *v) { return JS::IsPoisonedPtr(v); }
+    static bool needsPostBarrier(JSFunction *v) { return v; }
+#ifdef JSGC_GENERATIONAL
+    static void postBarrier(JSFunction **vp) {
+        JS::HeapCellPostBarrier(reinterpret_cast<js::gc::Cell **>(vp));
+    }
+    static void relocate(JSFunction **vp) {
+        JS::HeapCellRelocate(reinterpret_cast<js::gc::Cell **>(vp));
+    }
+#endif
+};
+
 #ifdef JS_DEBUG
 /* This helper allows us to assert that Rooted<T> is scoped within a request. */
 extern JS_PUBLIC_API(bool)
