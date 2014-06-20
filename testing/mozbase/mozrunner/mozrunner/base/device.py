@@ -92,7 +92,7 @@ class DeviceRunner(BaseRunner):
         else:
             print("timed out waiting for '%s' process to exit" % self.app_ctx.remote_process)
 
-        msg = "TEST-UNEXPECTED-FAIL | %s | application timed out after %s seconds"
+        msg = "DeviceRunner TEST-UNEXPECTED-FAIL | %s | application timed out after %s seconds"
         if self.timeout:
             timeout = self.timeout
         else:
