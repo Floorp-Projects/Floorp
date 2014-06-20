@@ -831,7 +831,8 @@ ContentParent::AnswerBridgeToChildProcess(const uint64_t& id)
 
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
-                                  Element* aFrameElement)
+                                  Element* aFrameElement,
+                                  ContentParent* aOpenerContentParent)
 {
     if (!sCanLaunchSubprocesses) {
         return nullptr;
@@ -863,9 +864,12 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
             parent->SetIsForApp(isForApp);
             parent->SetIsForBrowser(isForBrowser);
             constructorSender = parent;
-        } else if (nsRefPtr<ContentParent> cp =
-                   GetNewOrUsed(aContext.IsBrowserElement(), initialPriority)) {
-            constructorSender = cp;
+        } else {
+          if (aOpenerContentParent) {
+            constructorSender = aOpenerContentParent;
+          } else {
+            constructorSender = GetNewOrUsed(aContext.IsBrowserElement(), initialPriority);
+          }
         }
         if (constructorSender) {
             uint32_t chromeFlags = 0;
