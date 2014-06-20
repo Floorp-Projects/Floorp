@@ -40,6 +40,7 @@ category app-startup ProcessGlobal service,@mozilla.org/b2g-process-global;1
 # OMAContentHandler.js
 component {a6b2ab13-9037-423a-9897-dde1081be323} OMAContentHandler.js
 contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.oma.drm.message {a6b2ab13-9037-423a-9897-dde1081be323}
+contract @mozilla.org/uriloader/content-handler;1?type=application/vnd.oma.dd+xml {a6b2ab13-9037-423a-9897-dde1081be323}
 
 # PaymentGlue.js
 component {8b83eabc-7929-47f4-8b48-4dea8d887e4b} PaymentGlue.js
