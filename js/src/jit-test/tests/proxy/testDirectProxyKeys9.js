@@ -1,5 +1,5 @@
 // Cull non-existent names returned by the trap.
-var names = Object.keys(new Proxy(Object.create(Object.create(null, {
+var nullProtoAB = Object.create(null, {
     a: {
         enumerable: true,
         configurable: true
@@ -8,7 +8,8 @@ var names = Object.keys(new Proxy(Object.create(Object.create(null, {
         enumerable: false,
         configurable: true
     }
-}), {
+});
+var protoABWithCD = Object.create(nullProtoAB, {
     c: {
         enumerable: true,
         configurable: true
@@ -17,9 +18,20 @@ var names = Object.keys(new Proxy(Object.create(Object.create(null, {
         enumerable: false,
         configurable: true
     }
-}), {
+});
+
+var returnedNames;
+var proxyTargetingCDWithKeys = new Proxy(protoABWithCD, {
     ownKeys: function (target) {
-        return [ 'e' ];
+        return returnedNames;
     }
-}));
+});
+
+returnedNames = [ 'e' ];
+var names = Object.keys(proxyTargetingCDWithKeys);
 assertEq(names.length, 0);
+
+returnedNames = [ 'c' ];
+names = Object.keys(proxyTargetingCDWithKeys);
+assertEq(names.length, 1);
+assertEq(names[0], 'c');
