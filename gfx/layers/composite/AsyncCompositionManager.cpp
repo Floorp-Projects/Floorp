@@ -435,6 +435,9 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
     AnimationTiming timing;
     timing.mIterationDuration = animation.duration();
+    // Currently animations run on the compositor have their delay factored
+    // into their start time, hence the delay is effectively zero.
+    timing.mDelay = TimeDuration(0);
     timing.mIterationCount = animation.iterationCount();
     timing.mDirection = animation.direction();
     // Animations typically only run on the compositor during their active

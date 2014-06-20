@@ -231,6 +231,7 @@ struct AnimationProperty
 struct AnimationTiming
 {
   mozilla::TimeDuration mIterationDuration;
+  mozilla::TimeDuration mDelay;
   float mIterationCount; // mozilla::PositiveInfinity<float>() means infinite
   uint8_t mDirection;
   uint8_t mFillMode;
@@ -313,7 +314,7 @@ public:
   mozilla::TimeDuration ElapsedDurationAt(mozilla::TimeStamp aTime) const {
     NS_ABORT_IF_FALSE(!IsPaused() || aTime >= mPauseStart,
                       "if paused, aTime must be at least mPauseStart");
-    return (IsPaused() ? mPauseStart : aTime) - mStartTime - mDelay;
+    return (IsPaused() ? mPauseStart : aTime) - mStartTime - mTiming.mDelay;
   }
 
   // Return the duration of the active interval for the given timing parameters.
@@ -335,7 +336,7 @@ public:
   // a negative delay in which case it is the absolute value of the delay.
   // This is used for setting the elapsedTime member of AnimationEvents.
   mozilla::TimeDuration InitialAdvance() const {
-    return std::max(TimeDuration(), mDelay * -1);
+    return std::max(TimeDuration(), mTiming.mDelay * -1);
   }
 
   // This function takes as input the timing parameters of an animation and
@@ -354,7 +355,6 @@ public:
   // SetRemovedSentinel methods.
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
-  mozilla::TimeDuration mDelay;
   uint8_t mPlayState;
   bool mIsRunningOnCompositor;
 
