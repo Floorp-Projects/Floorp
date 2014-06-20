@@ -28,7 +28,7 @@ namespace js {
 
 template <typename CharT>
 extern bool
-ParseJSONWithReviver(JSContext *cx, mozilla::Range<const CharT> chars,
+ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const CharT> chars,
                      HandleValue reviver, MutableHandleValue vp);
 
 } // namespace js
