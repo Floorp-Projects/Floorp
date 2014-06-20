@@ -22,13 +22,13 @@
  * limitations under the License.
  */
 
-#include "pkix/pkix.h"
-
 #include <limits>
 #include <stdint.h>
 
 #include "cert.h"
 #include "cryptohi.h"
+#include "keyhi.h"
+#include "pkix/pkix.h"
 #include "prerror.h"
 #include "secerr.h"
 

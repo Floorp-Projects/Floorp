@@ -105,9 +105,7 @@ SECStatus VerifySignedData(const CERTSignedData* sd,
                            void* pkcs11PinArg);
 
 // The return value, if non-null, is owned by the arena and MUST NOT be freed.
-SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
-                                  const CERTCertificate* cert,
-                                  const CERTCertificate* issuerCert);
+SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena, const CertID& certID);
 
 // The out parameter expired will be true if the response has expired. If the
 // response also indicates a revoked or unknown certificate, that error
@@ -121,14 +119,12 @@ SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
 // which the encoded response is considered trustworthy (that is, if a response had a
 // thisUpdate time of validThrough, it would be considered trustworthy).
 SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
-                                    const CERTCertificate* cert,
-                                    CERTCertificate* issuerCert,
-                                    PRTime time,
+                                    const CertID& certID, PRTime time,
                                     uint16_t maxLifetimeInDays,
-                                    const SECItem* encodedResponse,
+                                    const SECItem& encodedResponse,
                           /* out */ bool& expired,
-                 /* optional out */ PRTime* thisUpdate,
-                 /* optional out */ PRTime* validThrough);
+                 /* optional out */ PRTime* thisUpdate = nullptr,
+                 /* optional out */ PRTime* validThrough = nullptr);
 
 } } // namespace mozilla::pkix
 
