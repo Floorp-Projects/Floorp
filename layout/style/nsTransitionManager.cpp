@@ -62,13 +62,14 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   } else if (duration == 0.0) {
     // When duration is zero, we can still have a transition when delay
     // is nonzero.
-    if (aRefreshTime >= mStartTime + mDelay) {
+    if (aRefreshTime >= mStartTime + mTiming.mDelay) {
       timePortion = 1.0;
     } else {
       timePortion = 0.0;
     }
   } else {
-    timePortion = (aRefreshTime - (mStartTime + mDelay)).ToSeconds() / duration;
+    timePortion =
+      (aRefreshTime - (mStartTime + mTiming.mDelay)).ToSeconds() / duration;
     if (timePortion < 0.0)
       timePortion = 0.0; // use start value during transition-delay
     if (timePortion > 1.0)
@@ -695,8 +696,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   segment.mTimingFunction.Init(tf);
 
   pt->mStartTime = mostRecentRefresh;
-  pt->mDelay = TimeDuration::FromMilliseconds(delay);
   pt->mTiming.mIterationDuration = TimeDuration::FromMilliseconds(duration);
+  pt->mTiming.mDelay = TimeDuration::FromMilliseconds(delay);
   pt->mTiming.mIterationCount = 1;
   pt->mTiming.mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
   pt->mTiming.mFillMode = NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS;
@@ -963,7 +964,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           if (aFlags == Can_Throttle) {
             et->mAnimations.RemoveElementAt(i);
           }
-        } else if (pt->mStartTime + pt->mDelay +
+        } else if (pt->mStartTime + pt->mTiming.mDelay +
                    pt->mTiming.mIterationDuration <= now) {
           MOZ_ASSERT(pt->mProperties.Length() == 1,
                      "Should have one animation property for a transition");
@@ -994,7 +995,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           pt->SetRemovedSentinel();
           et->UpdateAnimationGeneration(mPresContext);
           transitionStartedOrEnded = true;
-        } else if (pt->mStartTime + pt->mDelay <= now && canThrottleTick &&
+        } else if (pt->mStartTime + pt->mTiming.mDelay <= now &&
+                   canThrottleTick &&
                    !pt->mIsRunningOnCompositor) {
           // Start a transition with a delay where we should start the
           // transition proper.
