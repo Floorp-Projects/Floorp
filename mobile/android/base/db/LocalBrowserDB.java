@@ -78,7 +78,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
     private final Uri mHistoryUriWithProfile;
     private final Uri mHistoryExpireUriWithProfile;
     private final Uri mCombinedUriWithProfile;
-    private final Uri mDeletedHistoryUriWithProfile;
     private final Uri mUpdateHistoryUriWithProfile;
     private final Uri mFaviconsUriWithProfile;
     private final Uri mThumbnailsUriWithProfile;
@@ -106,9 +105,6 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
         mFaviconsUriWithProfile = appendProfile(Favicons.CONTENT_URI);
         mThumbnailsUriWithProfile = appendProfile(Thumbnails.CONTENT_URI);
         mReadingListUriWithProfile = appendProfile(ReadingListItems.CONTENT_URI);
-
-        mDeletedHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
-            appendQueryParameter(BrowserContract.PARAM_SHOW_DELETED, "1").build();
 
         mUpdateHistoryUriWithProfile = mHistoryUriWithProfile.buildUpon().
             appendQueryParameter(BrowserContract.PARAM_INCREMENT_VISITS, "true").
@@ -624,7 +620,7 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
 
     @Override
     public void removeHistoryEntry(ContentResolver cr, String url) {
-        int deleted = cr.delete(mHistoryUriWithProfile,
+        cr.delete(mHistoryUriWithProfile,
                   History.URL + " = ?",
                   new String[] { url });
     }
