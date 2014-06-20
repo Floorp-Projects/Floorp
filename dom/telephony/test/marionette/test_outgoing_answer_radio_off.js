@@ -32,7 +32,7 @@ function dial(number) {
   let deferred = Promise.defer();
   telephony.dial(number).then(call => {
     ok(call);
-    is(call.number, number);
+    is(call.id.number, number);
     is(call.state, "dialing");
 
     call.onalerting = function(event) {
@@ -59,7 +59,7 @@ function remoteAnswer(call) {
     is(call.state, "connected");
     deferred.resolve(call);
   };
-  emulator.run("gsm accept " + call.number);
+  emulator.run("gsm accept " + call.id.number);
 
   return deferred.promise;
 }
