@@ -163,6 +163,8 @@ struct TextRange
  ******************************************************************************/
 class TextRangeArray MOZ_FINAL : public nsAutoTArray<TextRange, 10>
 {
+  ~TextRangeArray() {}
+
   NS_INLINE_DECL_REFCOUNTING(TextRangeArray)
 
 public:
