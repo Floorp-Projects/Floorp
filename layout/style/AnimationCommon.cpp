@@ -76,6 +76,25 @@ CommonAnimationManager::RemoveAllElementData()
   }
 }
 
+CommonElementAnimationData*
+CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
+                                                   nsIAtom* aElementProperty,
+                                                   nsCSSProperty aProperty)
+{
+  if (!aContent->MayHaveAnimations())
+    return nullptr;
+  CommonElementAnimationData* animations =
+    static_cast<CommonElementAnimationData*>(
+      aContent->GetProperty(aElementProperty));
+  if (!animations ||
+      !animations->HasAnimationOfProperty(aProperty) ||
+      !animations->CanPerformOnCompositorThread(
+        CommonElementAnimationData::CanAnimate_AllowPartial)) {
+    return nullptr;
+  }
+  return animations;
+}
+
 /*
  * nsISupports implementation
  */

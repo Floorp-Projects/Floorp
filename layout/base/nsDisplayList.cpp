@@ -415,10 +415,9 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   if (!content) {
     return;
   }
-  ElementTransitions* et =
-    nsTransitionManager::GetTransitionsForCompositor(content, aProperty);
-
-  ElementAnimations* ea =
+  CommonElementAnimationData* et =
+    nsTransitionManager::GetAnimationsForCompositor(content, aProperty);
+  CommonElementAnimationData* ea =
     nsAnimationManager::GetAnimationsForCompositor(content, aProperty);
 
   if (!ea && !et) {
