@@ -756,8 +756,12 @@ AutoStableStringChars::~AutoStableStringChars()
 }
 
 bool
-AutoStableStringChars::init()
+AutoStableStringChars::init(JSContext *cx, JSString *s)
 {
+    s_ = s->ensureLinear(cx);
+    if (!s_)
+        return false;
+
     MOZ_ASSERT(state_ == Uninitialized);
 
     if (s_->hasLatin1Chars()) {
@@ -772,8 +776,12 @@ AutoStableStringChars::init()
 }
 
 bool
-AutoStableStringChars::initTwoByte(JSContext *cx)
+AutoStableStringChars::initTwoByte(JSContext *cx, JSString *s)
 {
+    s_ = s->ensureLinear(cx);
+    if (!s_)
+        return false;
+
     MOZ_ASSERT(state_ == Uninitialized);
 
     if (s_->hasTwoByteChars()) {
