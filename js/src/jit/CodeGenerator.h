@@ -152,6 +152,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitNewPar(LNewPar *lir);
     bool visitNewDenseArrayPar(LNewDenseArrayPar *lir);
     bool visitNewDerivedTypedObject(LNewDerivedTypedObject *lir);
+    bool visitAbortPar(LAbortPar *lir);
     bool visitInitElem(LInitElem *lir);
     bool visitInitElemGetterSetter(LInitElemGetterSetter *lir);
     bool visitMutateProto(LMutateProto *lir);
@@ -300,6 +301,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool);
 
     bool visitCheckOverRecursedPar(LCheckOverRecursedPar *lir);
+    bool visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool);
 
     bool visitInterruptCheckPar(LInterruptCheckPar *lir);
     bool visitOutOfLineInterruptCheckPar(OutOfLineInterruptCheckPar *ool);
@@ -312,6 +314,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool visitOutOfLineStoreElementHole(OutOfLineStoreElementHole *ool);
 
     bool visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool);
+    bool visitOutOfLineAbortPar(OutOfLineAbortPar *ool);
+    bool visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool);
     void loadJSScriptForBlock(MBasicBlock *block, Register reg);
     void loadOutermostJSScript(Register reg);
 
@@ -370,6 +374,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     bool addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex, Register temp,
                             FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
                             bool strict, bool guardHoles, jsbytecode *profilerLeavePc);
+    bool checkForAbortPar(LInstruction *lir);
 
     bool generateBranchV(const ValueOperand &value, Label *ifTrue, Label *ifFalse, FloatRegister fr);
 

@@ -340,13 +340,6 @@ CodeGeneratorShared::assignBailoutId(LSnapshot *snapshot)
     if (!deoptTable_)
         return false;
 
-    // We do not generate a bailout table for parallel code.
-    switch (gen->info().executionMode()) {
-      case SequentialExecution: break;
-      case ParallelExecution: return false;
-      default: MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
-
     JS_ASSERT(frameClass_ != FrameSizeClass::None());
 
     if (snapshot->bailoutId() != INVALID_BAILOUT_ID)
@@ -826,6 +819,123 @@ CodeGeneratorShared::markArgumentSlots(LSafepoint *safepoint)
         if (!safepoint->addValueSlot(pushedArgumentSlots_[i]))
             return false;
     }
+    return true;
+}
+
+OutOfLineAbortPar *
+CodeGeneratorShared::oolAbortPar(ParallelBailoutCause cause, MBasicBlock *basicBlock,
+                                 jsbytecode *bytecode)
+{
+    OutOfLineAbortPar *ool = new(alloc()) OutOfLineAbortPar(cause, basicBlock, bytecode);
+    if (!ool || !addOutOfLineCode(ool))
+        return nullptr;
+    return ool;
+}
+
+OutOfLineAbortPar *
+CodeGeneratorShared::oolAbortPar(ParallelBailoutCause cause, LInstruction *lir)
+{
+    MDefinition *mir = lir->mirRaw();
+    MBasicBlock *block = mir->block();
+    jsbytecode *pc = mir->trackedPc();
+    if (!pc) {
+        if (lir->snapshot())
+            pc = lir->snapshot()->mir()->pc();
+        else
+            pc = block->pc();
+    }
+    return oolAbortPar(cause, block, pc);
+}
+
+OutOfLinePropagateAbortPar *
+CodeGeneratorShared::oolPropagateAbortPar(LInstruction *lir)
+{
+    OutOfLinePropagateAbortPar *ool = new(alloc()) OutOfLinePropagateAbortPar(lir);
+    if (!ool || !addOutOfLineCode(ool))
+        return nullptr;
+    return ool;
+}
+
+bool
+OutOfLineAbortPar::generate(CodeGeneratorShared *codegen)
+{
+    codegen->callTraceLIR(0xDEADBEEF, nullptr, "AbortPar");
+    return codegen->visitOutOfLineAbortPar(this);
+}
+
+bool
+OutOfLinePropagateAbortPar::generate(CodeGeneratorShared *codegen)
+{
+    codegen->callTraceLIR(0xDEADBEEF, nullptr, "AbortPar");
+    return codegen->visitOutOfLinePropagateAbortPar(this);
+}
+
+bool
+CodeGeneratorShared::callTraceLIR(uint32_t blockIndex, LInstruction *lir,
+                                  const char *bailoutName)
+{
+    JS_ASSERT_IF(!lir, bailoutName);
+
+    if (!IonSpewEnabled(IonSpew_Trace))
+        return true;
+
+    uint32_t execMode = (uint32_t) gen->info().executionMode();
+    uint32_t lirIndex;
+    const char *lirOpName;
+    const char *mirOpName;
+    JSScript *script;
+    jsbytecode *pc;
+
+    masm.PushRegsInMask(RegisterSet::Volatile());
+    masm.reserveStack(sizeof(IonLIRTraceData));
+
+    // This first move is here so that when you scan the disassembly,
+    // you can easily pick out where each instruction begins.  The
+    // next few items indicate to you the Basic Block / LIR.
+    masm.move32(Imm32(0xDEADBEEF), CallTempReg0);
+
+    if (lir) {
+        lirIndex = lir->id();
+        lirOpName = lir->opName();
+        if (MDefinition *mir = lir->mirRaw()) {
+            mirOpName = mir->opName();
+            script = mir->block()->info().script();
+            pc = mir->trackedPc();
+        } else {
+            mirOpName = nullptr;
+            script = nullptr;
+            pc = nullptr;
+        }
+    } else {
+        blockIndex = lirIndex = 0xDEADBEEF;
+        lirOpName = mirOpName = bailoutName;
+        script = nullptr;
+        pc = nullptr;
+    }
+
+    masm.store32(Imm32(blockIndex),
+                 Address(StackPointer, offsetof(IonLIRTraceData, blockIndex)));
+    masm.store32(Imm32(lirIndex),
+                 Address(StackPointer, offsetof(IonLIRTraceData, lirIndex)));
+    masm.store32(Imm32(execMode),
+                 Address(StackPointer, offsetof(IonLIRTraceData, execModeInt)));
+    masm.storePtr(ImmPtr(lirOpName),
+                  Address(StackPointer, offsetof(IonLIRTraceData, lirOpName)));
+    masm.storePtr(ImmPtr(mirOpName),
+                  Address(StackPointer, offsetof(IonLIRTraceData, mirOpName)));
+    masm.storePtr(ImmGCPtr(script),
+                  Address(StackPointer, offsetof(IonLIRTraceData, script)));
+    masm.storePtr(ImmPtr(pc),
+                  Address(StackPointer, offsetof(IonLIRTraceData, pc)));
+
+    masm.movePtr(StackPointer, CallTempReg0);
+    masm.setupUnalignedABICall(1, CallTempReg1);
+    masm.passABIArg(CallTempReg0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, TraceLIR));
+
+    masm.freeStack(sizeof(IonLIRTraceData));
+    masm.PopRegsInMask(RegisterSet::Volatile());
+
     return true;
 }
 

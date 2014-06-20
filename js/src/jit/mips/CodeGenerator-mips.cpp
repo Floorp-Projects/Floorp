@@ -213,6 +213,22 @@ CodeGeneratorMIPS::bailoutFrom(Label *label, LSnapshot *snapshot)
     MOZ_ASSERT(label->used());
     MOZ_ASSERT(!label->bound());
 
+    CompileInfo &info = snapshot->mir()->block()->info();
+    switch (info.executionMode()) {
+      case ParallelExecution: {
+        // in parallel mode, make no attempt to recover, just signal an error.
+        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
+                                             snapshot->mir()->block(),
+                                             snapshot->mir()->pc());
+        masm.retarget(label, ool->entry());
+        return true;
+      }
+      case SequentialExecution:
+        break;
+      default:
+        MOZ_ASSUME_UNREACHABLE("No such execution mode");
+    }
+
     if (!encode(snapshot))
         return false;
 

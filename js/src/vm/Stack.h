@@ -1338,10 +1338,11 @@ class JitActivation : public Activation
     // inline frames associated with that frame.
     //
     // This table is lazily initialized by calling getRematerializedFrame.
-    typedef Vector<RematerializedFrame *> RematerializedFrameVector;
+    typedef Vector<RematerializedFrame *, 1> RematerializedFrameVector;
     typedef HashMap<uint8_t *, RematerializedFrameVector> RematerializedFrameTable;
     RematerializedFrameTable *rematerializedFrames_;
 
+    void freeRematerializedFramesInVector(RematerializedFrameVector &frames);
     void clearRematerializedFrames();
 #endif
 
@@ -1398,11 +1399,8 @@ class JitActivation : public Activation
     // if an IonFrameIterator pointing to the nearest uninlined frame can be
     // provided, as values need to be read out of snapshots.
     //
-    // T is either JitFrameIterator or IonBailoutIterator.
-    //
     // The inlineDepth must be within bounds of the frame pointed to by iter.
-    template <class T>
-    RematerializedFrame *getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
+    RematerializedFrame *getRematerializedFrame(ThreadSafeContext *cx, JitFrameIterator &iter,
                                                 size_t inlineDepth = 0);
 
     // Look up a rematerialized frame by the fp. If inlineDepth is out of

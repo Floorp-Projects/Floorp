@@ -272,29 +272,21 @@ class ForkJoinContext;
 
 bool ForkJoin(JSContext *cx, CallArgs &args);
 
+struct IonLIRTraceData {
+    uint32_t blockIndex;
+    uint32_t lirIndex;
+    uint32_t execModeInt;
+    const char *lirOpName;
+    const char *mirOpName;
+    JSScript *script;
+    jsbytecode *pc;
+};
+
 ///////////////////////////////////////////////////////////////////////////
 // Bailout tracking
 
-//
-// The lattice of causes goes:
-//
-//       { everything else }
-//               |
-//           Interrupt
-//           /       \
-//   Unsupported   UnsupportedVM
-//           \       /
-//              None
-//
 enum ParallelBailoutCause {
-    ParallelBailoutNone = 0,
-
-    ParallelBailoutUnsupported,
-    ParallelBailoutUnsupportedVM,
-
-    // The periodic interrupt failed, which can mean that either
-    // another thread canceled, the user interrupted us, etc
-    ParallelBailoutInterrupt,
+    ParallelBailoutNone,
 
     // Compiler returned Method_Skipped
     ParallelBailoutCompilationSkipped,
@@ -302,9 +294,9 @@ enum ParallelBailoutCause {
     // Compiler returned Method_CantCompile
     ParallelBailoutCompilationFailure,
 
-    // Propagating a failure, i.e., another thread requested the computation
-    // be aborted.
-    ParallelBailoutPropagate,
+    // The periodic interrupt failed, which can mean that either
+    // another thread canceled, the user interrupted us, etc
+    ParallelBailoutInterrupt,
 
     // An IC update failed
     ParallelBailoutFailedIC,
@@ -318,49 +310,41 @@ enum ParallelBailoutCause {
     ParallelBailoutAccessToIntrinsic,
     ParallelBailoutOverRecursed,
     ParallelBailoutOutOfMemory,
+    ParallelBailoutUnsupported,
+    ParallelBailoutUnsupportedVM,
     ParallelBailoutUnsupportedStringComparison,
     ParallelBailoutRequestedGC,
-    ParallelBailoutRequestedZoneGC
+    ParallelBailoutRequestedZoneGC,
 };
 
-namespace jit {
-class BailoutStack;
-class JitFrameIterator;
-class RematerializedFrame;
-}
+struct ParallelBailoutTrace {
+    JSScript *script;
+    jsbytecode *bytecode;
+};
 
 // See "Bailouts" section in comment above.
-struct ParallelBailoutRecord
-{
-    // Captured Ion frames at the point of bailout. Stored younger-to-older,
-    // i.e., the 0th frame is the youngest frame.
-    Vector<jit::RematerializedFrame *> *frames_;
+struct ParallelBailoutRecord {
+    JSScript *topScript;
     ParallelBailoutCause cause;
 
-    ParallelBailoutRecord()
-      : frames_(nullptr),
-        cause(ParallelBailoutNone)
-    { }
+    // Eventually we will support deeper traces,
+    // but for now we gather at most a single frame.
+    static const uint32_t MaxDepth = 1;
+    uint32_t depth;
+    ParallelBailoutTrace trace[MaxDepth];
 
-    ~ParallelBailoutRecord();
-
-    bool init(JSContext *cx);
-    void reset();
-
-    Vector<jit::RematerializedFrame *> &frames() { MOZ_ASSERT(frames_); return *frames_; }
-    bool hasFrames() const { return frames_ && !frames_->empty(); }
-    bool bailedOut() const { return cause != ParallelBailoutNone; }
-
-    void joinCause(ParallelBailoutCause cause) {
-        if (this->cause <= ParallelBailoutInterrupt &&
-            (cause > ParallelBailoutInterrupt || cause > this->cause))
-        {
-            this->cause = cause;
-        }
-    }
-
-    void rematerializeFrames(ForkJoinContext *cx, jit::JitFrameIterator &frameIter);
-    void rematerializeFrames(ForkJoinContext *cx, jit::IonBailoutIterator &frameIter);
+    void init(JSContext *cx);
+    void reset(JSContext *cx);
+    void setCause(ParallelBailoutCause cause,
+                  JSScript *outermostScript = nullptr,   // inliner (if applicable)
+                  JSScript *currentScript = nullptr,     // inlinee (if applicable)
+                  jsbytecode *currentPc = nullptr);
+    void updateCause(ParallelBailoutCause cause,
+                     JSScript *outermostScript,
+                     JSScript *currentScript,
+                     jsbytecode *currentPc);
+    void addTrace(JSScript *script,
+                  jsbytecode *pc);
 };
 
 class ForkJoinShared;
@@ -372,6 +356,9 @@ class ForkJoinContext : public ThreadSafeContext
     ParallelBailoutRecord *const bailoutRecord;
 
 #ifdef FORKJOIN_SPEW
+    // Records the last instr. to execute on this thread.
+    IonLIRTraceData traceData;
+
     // The maximum worker id.
     uint32_t maxWorkerId;
 #endif
@@ -592,6 +579,7 @@ ExecutionStatus SpewEndOp(ExecutionStatus status);
 void SpewBeginCompile(HandleScript script);
 jit::MethodStatus SpewEndCompile(jit::MethodStatus status);
 void SpewMIR(jit::MDefinition *mir, const char *fmt, ...);
+void SpewBailoutIR(IonLIRTraceData *data);
 
 #else
 
@@ -607,6 +595,7 @@ static inline void SpewBeginCompile(HandleScript script) { }
 static inline jit::MethodStatus SpewEndCompile(jit::MethodStatus status) { return status; }
 static inline void SpewMIR(jit::MDefinition *mir, const char *fmt, ...) { }
 #endif
+static inline void SpewBailoutIR(IonLIRTraceData *data) { }
 
 #endif // FORKJOIN_SPEW && JS_THREADSAFE && JS_ION
 
