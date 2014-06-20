@@ -12,7 +12,7 @@
                                           android:layout_marginLeft="10dip"
                                           android:layout_marginRight="10dip"/>
 
-    <LinearLayout android:layout_width="fill_parent"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:layout_marginRight="10dip"
                   android:orientation="vertical">
@@ -20,13 +20,13 @@
         <org.mozilla.gecko.home.FadedTextView
                 android:id="@+id/title"
                 style="@style/Widget.TwoLinePageRow.Title"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 gecko:fadeWidth="30dp"/>
 
         <TextView android:id="@+id/url"
                   style="@style/Widget.TwoLinePageRow.Url"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:drawablePadding="5dp"
                   android:maxLength="1024"/>

@@ -5,14 +5,14 @@
 
 <org.mozilla.gecko.tabspanel.RemoteTabsContainerPanel
         xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="gone">
 
     <org.mozilla.gecko.tabspanel.RemoteTabsList
             style="@style/RemoteTabsList"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:paddingLeft="@dimen/tabs_panel_list_padding"
             android:paddingRight="@dimen/tabs_panel_list_padding"
             android:scrollbarStyle="outsideOverlay"/>
