@@ -474,7 +474,7 @@ class Automation(object):
     os.unlink(pwfilePath)
     return 0
 
-  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, dmdPath=None):
+  def environment(self, env=None, xrePath=None, crashreporter=True, debugger=False, dmdPath=None, lsanPath=None):
     if xrePath == None:
       xrePath = self.DIST_BIN
     if env == None:
