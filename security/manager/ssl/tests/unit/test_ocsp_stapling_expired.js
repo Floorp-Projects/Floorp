@@ -136,6 +136,34 @@ function add_tests_in_mode(useMozillaPKIX)
                 ocspResponseUnknown);
 
   if (useMozillaPKIX) {
+    // If the response is expired but indicates Revoked or Unknown and a
+    // newer status can't be fetched, the Revoked or Unknown status will
+    // be returned.
+    add_ocsp_test("ocsp-stapling-revoked-old.example.com",
+                  getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE),
+                  null);
+    add_ocsp_test("ocsp-stapling-unknown-old.example.com",
+                  getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT),
+                  null);
+    // If the response is expired but indicates Revoked or Unknown and
+    // a newer status can be fetched and successfully verified, this
+    // should result in a successful certificate verification.
+    add_ocsp_test("ocsp-stapling-revoked-old.example.com", Cr.NS_OK,
+                  ocspResponseGood);
+    add_ocsp_test("ocsp-stapling-unknown-old.example.com", Cr.NS_OK,
+                  ocspResponseGood);
+    // If a newer status can be fetched but it fails to verify, the
+    // Revoked or Unknown status of the expired stapled response
+    // should be returned.
+    add_ocsp_test("ocsp-stapling-revoked-old.example.com",
+                  getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE),
+                  expiredOCSPResponseGood);
+    add_ocsp_test("ocsp-stapling-unknown-old.example.com",
+                  getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT),
+                  expiredOCSPResponseGood);
+  }
+
+  if (useMozillaPKIX) {
     // These tests are verifying that an valid but very old response
     // is rejected as a valid stapled response, requiring a fetch
     // from the ocsp responder.
@@ -158,8 +186,8 @@ function check_ocsp_stapling_telemetry() {
   do_check_eq(histogram.counts[0], 2 * 0); // histogram bucket 0 is unused
   do_check_eq(histogram.counts[1], 2 * 0); // 0 connections with a good response
   do_check_eq(histogram.counts[2], 2 * 0); // 0 connections with no stapled resp.
-  do_check_eq(histogram.counts[3], 2 * 12 + 3); // 12 connections with an expired response
-                                                // +3 more mozilla::pkix-only expired responses
+  do_check_eq(histogram.counts[3], 2 * 12 + 9); // 12 connections with an expired response
+                                                // +9 more mozilla::pkix-only expired responses
   do_check_eq(histogram.counts[4], 2 * 0); // 0 connections with bad responses
   run_next_test();
 }
