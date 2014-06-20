@@ -97,42 +97,6 @@ ElementTransitionsPropertyDtor(void           *aObject,
   delete et;
 }
 
-void
-ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
-{
-  if (!mStyleRule || mStyleRuleRefreshTime != aRefreshTime) {
-    mStyleRule = new css::AnimValuesStyleRule();
-    mStyleRuleRefreshTime = aRefreshTime;
-
-    for (uint32_t i = 0, i_end = mAnimations.Length(); i < i_end; ++i)
-    {
-      ElementPropertyTransition* pt = mAnimations[i]->AsTransition();
-      if (pt->IsFinishedTransition()) {
-        continue;
-      }
-
-      MOZ_ASSERT(pt->mProperties.Length() == 1,
-                 "Should have one animation property for a transition");
-      const AnimationProperty &prop = pt->mProperties[0];
-
-      nsStyleAnimation::Value *val = mStyleRule->AddEmptyValue(prop.mProperty);
-
-      double valuePortion = pt->ValuePortionFor(aRefreshTime);
-
-      MOZ_ASSERT(prop.mSegments.Length() == 1,
-                 "Animation property should have one segment for a transition");
-#ifdef DEBUG
-      bool ok =
-#endif
-        nsStyleAnimation::Interpolate(prop.mProperty,
-                                      prop.mSegments[0].mFromValue,
-                                      prop.mSegments[0].mToValue,
-                                      valuePortion, *val);
-      NS_ABORT_IF_FALSE(ok, "could not interpolate values");
-    }
-  }
-}
-
 bool
 ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
@@ -826,10 +790,14 @@ nsTransitionManager::WalkTransitionRule(ElementDependentRuleProcessorData* aData
     return;
   }
 
+  et->mNeedsRefreshes = true;
   et->EnsureStyleRuleFor(
-    aData->mPresContext->RefreshDriver()->MostRecentRefresh());
+    aData->mPresContext->RefreshDriver()->MostRecentRefresh(),
+    false);
 
-  aData->mRuleWalker->Forward(et->mStyleRule);
+  if (et->mStyleRule) {
+    aData->mRuleWalker->Forward(et->mStyleRule);
+  }
 }
 
 /* virtual */ void
