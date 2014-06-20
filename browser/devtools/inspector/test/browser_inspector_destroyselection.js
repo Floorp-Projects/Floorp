@@ -3,8 +3,6 @@
 
 function test()
 {
-  waitForExplicitFinish();
-
   let node, iframe, inspector;
 
   gBrowser.selectedTab = gBrowser.addTab();
