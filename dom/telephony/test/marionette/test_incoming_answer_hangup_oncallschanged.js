@@ -22,7 +22,7 @@ function simulateIncoming() {
 
     incoming = event.call;
     ok(incoming);
-    is(incoming.number, number);
+    is(incoming.id.number, number);
     is(incoming.state, "incoming");
 
     is(telephony.calls.length, 1);

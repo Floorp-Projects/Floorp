@@ -14,7 +14,7 @@ function simulateIncoming() {
     log("Received 'incoming' call event.");
     incomingCall = event.call;
     ok(incomingCall);
-    is(incomingCall.number, inNumber);
+    is(incomingCall.id.number, inNumber);
     is(incomingCall.state, "incoming");
 
     is(telephony.calls.length, 1);
