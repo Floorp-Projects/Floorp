@@ -66,7 +66,8 @@ function StyleEditorUI(debuggee, target, panelDoc) {
   this.selectedEditor = null;
   this.savedLocations = {};
 
-  this._updateOptionsMenu = this._updateOptionsMenu.bind(this);
+  this._onOptionsPopupShowing = this._onOptionsPopupShowing.bind(this);
+  this._onOptionsPopupHiding = this._onOptionsPopupHiding.bind(this);
   this._onStyleSheetCreated = this._onStyleSheetCreated.bind(this);
   this._onNewDocument = this._onNewDocument.bind(this);
   this._onMediaPrefChanged = this._onMediaPrefChanged.bind(this);
@@ -144,9 +145,12 @@ StyleEditorUI.prototype = {
       this._importFromFile(this._mockImportFile || null, this._window);
     });
 
+    this._optionsButton = this._panelDoc.getElementById("style-editor-options");
     this._optionsMenu = this._panelDoc.getElementById("style-editor-options-popup");
     this._optionsMenu.addEventListener("popupshowing",
-                                       this._updateOptionsMenu);
+                                       this._onOptionsPopupShowing);
+    this._optionsMenu.addEventListener("popuphiding",
+                                       this._onOptionsPopupHiding);
 
     this._sourcesItem = this._panelDoc.getElementById("options-origsources");
     this._sourcesItem.addEventListener("command",
@@ -160,13 +164,22 @@ StyleEditorUI.prototype = {
   },
 
   /**
+   * Listener handling the 'gear menu' popup showing event.
    * Update options menu items to reflect current preference settings.
    */
-  _updateOptionsMenu: function() {
+  _onOptionsPopupShowing: function() {
+    this._optionsButton.setAttribute("open", "true");
     this._sourcesItem.setAttribute("checked",
       Services.prefs.getBoolPref(PREF_ORIG_SOURCES));
     this._mediaItem.setAttribute("checked",
       Services.prefs.getBoolPref(PREF_MEDIA_SIDEBAR));
+  },
+
+  /**
+   * Listener handling the 'gear menu' popup hiding event.
+   */
+  _onOptionsPopupHiding: function() {
+    this._optionsButton.removeAttribute("open");
   },
 
   /**
@@ -814,7 +827,9 @@ StyleEditorUI.prototype = {
     Services.prefs.setIntPref(PREF_NAV_WIDTH, sidebarWidth);
 
     this._optionsMenu.removeEventListener("popupshowing",
-                                          this._updateOptionsMenu);
+                                          this._onOptionsPopupShowing);
+    this._optionsMenu.removeEventListener("popuphiding",
+                                          this._onOptionsPopupHiding);
 
     this._prefObserver.off(PREF_ORIG_SOURCES, this._onNewDocument);
     this._prefObserver.off(PREF_MEDIA_SIDEBAR, this._onMediaPrefChanged);
