@@ -19,6 +19,7 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
 
@@ -120,6 +121,7 @@ public final class GeckoProfile {
         return get(context, profileName, (File)null);
     }
 
+    @RobocopTarget
     public static GeckoProfile get(Context context, String profileName, String profilePath) {
         File dir = null;
         if (!TextUtils.isEmpty(profilePath)) {
@@ -131,6 +133,7 @@ public final class GeckoProfile {
         return get(context, profileName, dir);
     }
 
+    @RobocopTarget
     public static GeckoProfile get(Context context, String profileName, File profileDir) {
         if (context == null) {
             throw new IllegalArgumentException("context must be non-null");
@@ -655,8 +658,12 @@ public final class GeckoProfile {
      *
      * It queues up work to be done in the background to prepare the profile,
      * such as adding default bookmarks.
+     *
+     * This is public for use *from tests only*!
      */
-    private void enqueueInitialization() {
+    @RobocopTarget
+    public void enqueueInitialization() {
+        Log.i(LOGTAG, "Enqueuing profile init.");
         final Context context = mApplicationContext;
 
         // Add everything when we're done loading the distribution.
