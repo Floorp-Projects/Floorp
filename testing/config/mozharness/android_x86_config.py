@@ -18,7 +18,7 @@ config = {
         "reftest": {
             "run_filename": "remotereftest.py",
             "options": [ "--app=%(app)s", "--ignore-window-size",
-                "--bootstrap", "--enable-privilege",
+                "--bootstrap",
                 "--remote-webserver=%(remote_webserver)s", "--xre-path=%(xre_path)s",
                 "--utility-path=%(utility_path)s", "--deviceIP=%(device_ip)s",
                 "--devicePort=%(device_port)s", "--http-port=%(http_port)s",
