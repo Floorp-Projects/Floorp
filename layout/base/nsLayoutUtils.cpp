@@ -257,14 +257,14 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
 }
 
-template <class AnimationsOrTransitions>
-static AnimationsOrTransitions*
-HasAnimationOrTransitionForCompositor(nsIContent* aContent,
-                                      nsIAtom* aAnimationProperty,
-                                      nsCSSProperty aProperty)
+static CommonElementAnimationData*
+GetAnimationsOrTransitionsForCompositor(nsIContent* aContent,
+                                        nsIAtom* aAnimationProperty,
+                                        nsCSSProperty aProperty)
 {
-  AnimationsOrTransitions* animations =
-    static_cast<AnimationsOrTransitions*>(aContent->GetProperty(aAnimationProperty));
+  CommonElementAnimationData* animations =
+    static_cast<CommonElementAnimationData*>(
+      aContent->GetProperty(aAnimationProperty));
   if (animations) {
     bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
     if (propertyMatches &&
@@ -283,10 +283,10 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
 {
   if (!aContent->MayHaveAnimations())
     return false;
-  return HasAnimationOrTransitionForCompositor<ElementAnimations>
-            (aContent, nsGkAtoms::animationsProperty, aProperty) ||
-         HasAnimationOrTransitionForCompositor<ElementTransitions>
-            (aContent, nsGkAtoms::transitionsProperty, aProperty);
+  return GetAnimationsOrTransitionsForCompositor(
+           aContent, nsGkAtoms::animationsProperty, aProperty) ||
+         GetAnimationsOrTransitionsForCompositor(
+           aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
 static CommonElementAnimationData*
@@ -393,8 +393,9 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   gfxSize maxScale(1.0f, 1.0f);
   gfxSize minScale(1.0f, 1.0f);
 
-  ElementAnimations* animations = HasAnimationOrTransitionForCompositor<ElementAnimations>
-    (aContent, nsGkAtoms::animationsProperty, eCSSProperty_transform);
+  CommonElementAnimationData* animations =
+    GetAnimationsOrTransitionsForCompositor(aContent,
+      nsGkAtoms::animationsProperty, eCSSProperty_transform);
   if (animations) {
     for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
       mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
@@ -421,8 +422,9 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
     }
   }
 
-  ElementTransitions* transitions = HasAnimationOrTransitionForCompositor<ElementTransitions>
-    (aContent, nsGkAtoms::transitionsProperty, eCSSProperty_transform);
+  CommonElementAnimationData* transitions =
+    GetAnimationsOrTransitionsForCompositor(aContent,
+      nsGkAtoms::transitionsProperty, eCSSProperty_transform);
   if (transitions) {
     for (uint32_t i = 0, i_end = transitions->mAnimations.Length();
          i < i_end; ++i){
