@@ -262,6 +262,16 @@ public:
 private:
   pixman_region32_t mImpl;
 
+#ifndef MOZ_TREE_PIXMAN
+  // For compatibility with pixman versions older than 0.25.2.
+  static inline void
+  pixman_region32_clear(pixman_region32_t *region)
+  {
+    pixman_region32_fini(region);
+    pixman_region32_init(region);
+  }
+#endif
+
   nsIntRegion ToPixels(nscoord aAppUnitsPerPixel, bool aOutsidePixels) const;
 
   nsRegion& Copy (const nsRegion& aRegion)
