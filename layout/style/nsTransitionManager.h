@@ -51,14 +51,6 @@ struct ElementPropertyTransition : public mozilla::ElementAnimation
   double ValuePortionFor(mozilla::TimeStamp aRefreshTime) const;
 };
 
-struct ElementTransitions MOZ_FINAL
-  : public mozilla::css::CommonElementAnimationData 
-{
-  ElementTransitions(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
-                     nsTransitionManager *aTransitionManager,
-                     mozilla::TimeStamp aNow);
-};
-
 class nsTransitionManager MOZ_FINAL
   : public mozilla::css::CommonAnimationManager
 {
@@ -68,8 +60,9 @@ public:
   {
   }
 
-  static ElementTransitions* GetTransitions(nsIContent* aContent) {
-    return static_cast<ElementTransitions*>
+  static mozilla::css::CommonElementAnimationData*
+  GetTransitions(nsIContent* aContent) {
+    return static_cast<CommonElementAnimationData*>
       (aContent->GetProperty(nsGkAtoms::transitionsProperty));
   }
 
@@ -152,9 +145,10 @@ public:
   // other than primary frames.
   void UpdateAllThrottledStyles();
 
-  ElementTransitions* GetElementTransitions(mozilla::dom::Element *aElement,
-                                          nsCSSPseudoElements::Type aPseudoType,
-                                          bool aCreateIfNeeded);
+  CommonElementAnimationData* GetElementTransitions(
+    mozilla::dom::Element *aElement,
+    nsCSSPseudoElements::Type aPseudoType,
+    bool aCreateIfNeeded);
 
 protected:
   virtual void ElementDataRemoved() MOZ_OVERRIDE;
@@ -163,12 +157,12 @@ protected:
 private:
   void ConsiderStartingTransition(nsCSSProperty aProperty,
                                   const nsTransition& aTransition,
-                                  mozilla::dom::Element *aElement,
-                                  ElementTransitions *&aElementTransitions,
-                                  nsStyleContext *aOldStyleContext,
-                                  nsStyleContext *aNewStyleContext,
-                                  bool *aStartedAny,
-                                  nsCSSPropertySet *aWhichStarted);
+                                  mozilla::dom::Element* aElement,
+                                  CommonElementAnimationData*& aElementTransitions,
+                                  nsStyleContext* aOldStyleContext,
+                                  nsStyleContext* aNewStyleContext,
+                                  bool* aStartedAny,
+                                  nsCSSPropertySet* aWhichStarted);
   void WalkTransitionRule(ElementDependentRuleProcessorData* aData,
                           nsCSSPseudoElements::Type aPseudoType);
   // Update the animated styles of an element and its descendants.
