@@ -136,7 +136,9 @@ public:
     return false;
   }
 
-  void EnsureStyleRuleFor(ElementAnimations* aET);
+  void UpdateStyleAndEvents(ElementAnimations* aEA,
+                            TimeStamp aRefreshTime,
+                            mozilla::EnsureStyleRuleFlags aFlags);
 
   // nsIStyleRuleProcessor (parts)
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;

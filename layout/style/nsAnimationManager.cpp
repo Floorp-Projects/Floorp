@@ -245,13 +245,13 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
   return ea;
 }
 
-
 void
-nsAnimationManager::EnsureStyleRuleFor(ElementAnimations* aEA)
+nsAnimationManager::UpdateStyleAndEvents(ElementAnimations* aEA,
+                                         TimeStamp aRefreshTime,
+                                         EnsureStyleRuleFlags aFlags)
 {
-  TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
-  aEA->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
-  aEA->GetEventsAt(refreshTime, mPendingEvents);
+  aEA->EnsureStyleRuleFor(aRefreshTime, aFlags);
+  aEA->GetEventsAt(aRefreshTime, mPendingEvents);
   CheckNeedsRefresh();
 }
 
@@ -414,9 +414,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
 
-    ea->EnsureStyleRuleFor(refreshTime, EnsureStyleRule_IsNotThrottled);
-    ea->GetEventsAt(refreshTime, mPendingEvents);
-    CheckNeedsRefresh();
+    UpdateStyleAndEvents(ea, refreshTime, EnsureStyleRule_IsNotThrottled);
     // We don't actually dispatch the mPendingEvents now.  We'll either
     // dispatch them the next time we get a refresh driver notification
     // or the next time somebody calls
@@ -844,11 +842,9 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
       ea->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
-    ea->EnsureStyleRuleFor(now, canThrottleTick
-                                ? EnsureStyleRule_IsThrottled
-                                : EnsureStyleRule_IsNotThrottled);
-    ea->GetEventsAt(now, mPendingEvents);
-    CheckNeedsRefresh();
+    UpdateStyleAndEvents(ea, now, canThrottleTick
+                                  ? EnsureStyleRule_IsThrottled
+                                  : EnsureStyleRule_IsNotThrottled);
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);
     } else {
