@@ -842,6 +842,7 @@ AbstractCanvasGraph.prototype = {
     }
 
     this._shouldRedraw = true;
+    this.emit("mousedown");
   },
 
   /**
@@ -883,6 +884,7 @@ AbstractCanvasGraph.prototype = {
     }
 
     this._shouldRedraw = true;
+    this.emit("mouseup");
   },
 
   /**
@@ -951,6 +953,7 @@ AbstractCanvasGraph.prototype = {
 
     this._shouldRedraw = true;
     this.emit("selecting");
+    this.emit("scroll");
   },
 
   /**
