@@ -6,8 +6,6 @@
 
 package org.mozilla.gecko;
 
-import android.app.Activity;
-
 import org.mozilla.gecko.mozglue.RobocopTarget;
 
 /**
