@@ -437,18 +437,18 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   if (transitions) {
     for (uint32_t i = 0, i_end = transitions->mAnimations.Length();
          i < i_end; ++i){
-      ElementPropertyTransition* pt =
-        transitions->mAnimations[i]->AsTransition();
-      if (pt->IsRemovedSentinel()) {
+      ElementAnimation* anim = transitions->mAnimations[i];
+      if (anim->IsFinishedTransition()) {
         continue;
       }
-      MOZ_ASSERT(pt->mProperties.Length() == 1,
+      MOZ_ASSERT(anim->mProperties.Length() == 1,
         "Should have one animation property for a transition");
-      MOZ_ASSERT(pt->mProperties[0].mSegments.Length() == 1,
+      MOZ_ASSERT(anim->mProperties[0].mSegments.Length() == 1,
         "Animation property should have one segment for a transition");
-      const AnimationPropertySegment& segment = pt->mProperties[0].mSegments[0];
+      const AnimationPropertySegment& segment =
+        anim->mProperties[0].mSegments[0];
 
-      if (pt->mProperties[0].mProperty == eCSSProperty_transform) {
+      if (anim->mProperties[0].mProperty == eCSSProperty_transform) {
         gfxSize start = GetScaleForValue(segment.mFromValue,
                                          aContent->GetPrimaryFrame());
         maxScale.width = std::max<float>(maxScale.width, start.width);
