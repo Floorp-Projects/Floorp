@@ -49,13 +49,21 @@ public final class GeckoProfile {
     private final boolean mIsWebAppProfile;
     private final Context mApplicationContext;
 
-    private File mProfileDir;             // Not final because this is lazily computed.
+    /**
+     * Access to this member should be synchronized to avoid
+     * races during creation -- particularly between getDir and GeckoView#init.
+     *
+     * Not final because this is lazily computed. 
+     */
+    private File mProfileDir;
 
     // Caches whether or not a profile is "locked".
     // Only used by the guest profile to determine if it should be reused or
-    // deleted on startup
-    private LockState mLocked = LockState.UNDEFINED;
-    private boolean mInGuestMode = false;
+    // deleted on startup.
+    // These are volatile for an incremental improvement in thread safety,
+    // but this is not a complete solution for concurrency.
+    private volatile LockState mLocked = LockState.UNDEFINED;
+    private volatile boolean mInGuestMode = false;
 
     // Constants to cache whether or not a profile is "locked".
     private enum LockState {
@@ -291,8 +299,13 @@ public final class GeckoProfile {
             return mLocked == LockState.LOCKED;
         }
 
-        // Don't use getDir() as it will create a dir if none exists
-        if (mProfileDir != null && mProfileDir.exists()) {
+        boolean profileExists;
+        synchronized (this) {
+            profileExists = mProfileDir != null && mProfileDir.exists();
+        }
+
+        // Don't use getDir() as it will create a dir if none exists.
+        if (profileExists) {
             File lockFile = new File(mProfileDir, LOCK_FILE_NAME);
             boolean res = lockFile.exists();
             mLocked = res ? LockState.LOCKED : LockState.UNLOCKED;
@@ -306,8 +319,8 @@ public final class GeckoProfile {
     public boolean lock() {
         try {
             // If this dir doesn't exist getDir will create it for us
-            File lockFile = new File(getDir(), LOCK_FILE_NAME);
-            boolean result = lockFile.createNewFile();
+            final File lockFile = new File(getDir(), LOCK_FILE_NAME);
+            final boolean result = lockFile.createNewFile();
             if (result) {
                 mLocked = LockState.LOCKED;
             } else {
@@ -322,14 +335,19 @@ public final class GeckoProfile {
     }
 
     public boolean unlock() {
-        // Don't use getDir() as it will create a dir
-        if (mProfileDir == null || !mProfileDir.exists()) {
+        final File profileDir;
+        synchronized (this) {
+            // Don't use getDir() as it will create a dir.
+            profileDir = mProfileDir;
+        }
+
+        if (profileDir == null || !profileDir.exists()) {
             return true;
         }
 
         try {
-            File lockFile = new File(mProfileDir, LOCK_FILE_NAME);
-            boolean result = delete(lockFile);
+            final File lockFile = new File(profileDir, LOCK_FILE_NAME);
+            final boolean result = delete(lockFile);
             if (result) {
                 mLocked = LockState.UNLOCKED;
             } else {
@@ -349,7 +367,9 @@ public final class GeckoProfile {
 
     private void setDir(File dir) {
         if (dir != null && dir.exists() && dir.isDirectory()) {
-            mProfileDir = dir;
+            synchronized (this) {
+                mProfileDir = dir;
+            }
         }
     }
 
@@ -460,16 +480,18 @@ public final class GeckoProfile {
 
     private boolean remove() {
         try {
-            final File dir = getDir();
-            if (dir.exists()) {
-                delete(dir);
-            }
+            synchronized (this) {
+                final File dir = getDir();
+                if (dir.exists()) {
+                    delete(dir);
+                }
 
-            try {
-                mProfileDir = findProfileDir();
-            } catch (NoSuchProfileException noSuchProfile) {
-                // If the profile doesn't exist, there's nothing left for us to do.
-                return false;
+                try {
+                    mProfileDir = findProfileDir();
+                } catch (NoSuchProfileException noSuchProfile) {
+                    // If the profile doesn't exist, there's nothing left for us to do.
+                    return false;
+                }
             }
 
             final INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
