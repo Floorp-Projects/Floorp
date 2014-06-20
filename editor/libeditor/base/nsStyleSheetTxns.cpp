@@ -8,7 +8,7 @@
 
 #include "nsAString.h"
 #include "nsCOMPtr.h"                   // for nsCOMPtr, do_QueryInterface, etc
-#include "nsCSSStyleSheet.h"            // for nsCSSStyleSheet
+#include "mozilla/CSSStyleSheet.h"      // for mozilla::CSSStyleSheet
 #include "nsDebug.h"                    // for NS_ENSURE_TRUE
 #include "nsError.h"                    // for NS_OK, etc
 #include "nsIDOMDocument.h"             // for nsIDOMDocument
@@ -16,6 +16,8 @@
 #include "nsIDocumentObserver.h"        // for UPDATE_STYLE
 #include "nsIEditor.h"                  // for nsIEditor
 #include "nsStyleSheetTxns.h"
+
+using namespace mozilla;
 
 class nsIStyleSheet;
 
@@ -58,7 +60,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AddStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-AddStyleSheetTxn::Init(nsIEditor *aEditor, nsCSSStyleSheet *aSheet)
+AddStyleSheetTxn::Init(nsIEditor *aEditor, CSSStyleSheet *aSheet)
 {
   NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
 
@@ -108,7 +110,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RemoveStyleSheetTxn)
 NS_INTERFACE_MAP_END_INHERITING(EditTxn)
 
 NS_IMETHODIMP
-RemoveStyleSheetTxn::Init(nsIEditor *aEditor, nsCSSStyleSheet *aSheet)
+RemoveStyleSheetTxn::Init(nsIEditor *aEditor, CSSStyleSheet *aSheet)
 {
   NS_ENSURE_TRUE(aEditor && aSheet, NS_ERROR_INVALID_ARG);
 

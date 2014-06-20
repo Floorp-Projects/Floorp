@@ -39,7 +39,6 @@
 
 class nsRange;
 class nsIDragService;
-class nsCSSStyleSheet;
 
 struct RangePaintInfo;
 struct nsCallbackEventRequest;
@@ -49,6 +48,10 @@ class ReflowCountMgr;
 
 class nsPresShellEventCB;
 class nsAutoCauseReflowNotifier;
+
+namespace mozilla {
+class CSSStyleSheet;
+} // namespace mozilla
 
 // 250ms.  This is actually pref-controlled, but we use this value if we fail
 // to get the pref for any reason.
@@ -754,7 +757,7 @@ protected:
   nsPoint                   mMouseLocation;
 
   // mStyleSet owns it but we maintain a ref, may be null
-  nsRefPtr<nsCSSStyleSheet> mPrefStyleSheet;
+  nsRefPtr<mozilla::CSSStyleSheet> mPrefStyleSheet;
 
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.

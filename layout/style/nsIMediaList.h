@@ -21,9 +21,12 @@
 #include "mozilla/ErrorResult.h"
 
 class nsPresContext;
-class nsCSSStyleSheet;
 class nsAString;
 struct nsMediaFeature;
+
+namespace mozilla {
+class CSSStyleSheet;
+} // namespace mozilla
 
 struct nsMediaExpression {
   enum Range { eMin, eMax, eEqual };
@@ -173,7 +176,7 @@ public:
   bool Matches(nsPresContext* aPresContext,
                  nsMediaQueryResultCacheKey* aKey);
 
-  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(mozilla::CSSStyleSheet* aSheet);
   void AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery
     mArray.AppendElement(aQuery.forget());
@@ -208,6 +211,6 @@ protected:
   // not refcounted; sheet will let us know when it goes away
   // mStyleSheet is the sheet that needs to be dirtied when this medialist
   // changes
-  nsCSSStyleSheet*         mStyleSheet;
+  mozilla::CSSStyleSheet* mStyleSheet;
 };
 #endif /* !defined(nsIMediaList_h_) */

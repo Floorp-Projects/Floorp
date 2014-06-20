@@ -20,7 +20,7 @@
 #include "DocumentType.h"
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
-#include "nsCSSStyleSheet.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
@@ -63,6 +63,7 @@
 #include "mozilla/dom/HTMLTemplateElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 // XXX Open Issues:
@@ -414,7 +415,7 @@ nsXMLContentSink::OnTransformDone(nsresult aResult,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
+nsXMLContentSink::StyleSheetLoaded(CSSStyleSheet* aSheet,
                                    bool aWasAlternate,
                                    nsresult aStatus)
 {
