@@ -793,7 +793,7 @@ nsTransitionManager::WalkTransitionRule(ElementDependentRuleProcessorData* aData
   et->mNeedsRefreshes = true;
   et->EnsureStyleRuleFor(
     aData->mPresContext->RefreshDriver()->MostRecentRefresh(),
-    false);
+    EnsureStyleRule_IsNotThrottled);
 
   if (et->mStyleRule) {
     aData->mRuleWalker->Forward(et->mStyleRule);
