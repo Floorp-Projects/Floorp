@@ -611,6 +611,17 @@ this.DownloadIntegration = {
       }
 #endif
 
+      // Now that the file is completely downloaded, mark it
+      // accessible by other users on this system, if the user's
+      // global preferences so indicate.  (On Unix, this applies the
+      // umask.  On Windows, currently does nothing.)
+      // Errors should be reported, but are not fatal.
+      try {
+        yield OS.File.setPermissions(aDownload.target.path);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+
       gDownloadPlatform.downloadDone(NetUtil.newURI(aDownload.source.url),
                                      new FileUtils.File(aDownload.target.path),
                                      aDownload.contentType,
