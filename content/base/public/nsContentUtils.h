@@ -2040,11 +2040,8 @@ public:
    *
    * @return whether aAttr was valid and can be cached.
    */
-  static AutocompleteAttrState
-  SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
-                                 nsAString& aResult,
-                                 AutocompleteAttrState aCachedState =
-                                   eAutocompleteAttrState_Unknown);
+  static AutocompleteAttrState SerializeAutocompleteAttribute(const nsAttrValue* aAttr,
+                                                          nsAString& aResult);
 
   /**
    * This will parse aSource, to extract the value of the pseudo attribute

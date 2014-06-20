@@ -126,8 +126,6 @@ TiledContentClient::UseTiledLayerBuffer(TiledBufferType aType)
 }
 
 SharedFrameMetricsHelper::SharedFrameMetricsHelper()
-  : mLastProgressiveUpdateWasLowPrecision(false)
-  , mProgressiveUpdateWasInDanger(false)
 {
   MOZ_COUNT_CTOR(SharedFrameMetricsHelper);
 }
@@ -175,17 +173,6 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
   aCompositionBounds = ParentLayerRect(compositorMetrics.mCompositionBounds);
   aZoom = compositorMetrics.GetZoomToParent();
 
-  // Reset the checkerboard risk flag when switching to low precision
-  // rendering.
-  if (aLowPrecision && !mLastProgressiveUpdateWasLowPrecision) {
-    // Skip low precision rendering until we're at risk of checkerboarding.
-    if (!mProgressiveUpdateWasInDanger) {
-      return true;
-    }
-    mProgressiveUpdateWasInDanger = false;
-  }
-  mLastProgressiveUpdateWasLowPrecision = aLowPrecision;
-
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
   if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
@@ -205,13 +192,20 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     return false;
   }
 
-  // When not a low precision pass and the page is in danger of checker boarding
-  // abort update.
-  if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
-    if (AboutToCheckerboard(contentMetrics, compositorMetrics)) {
-      mProgressiveUpdateWasInDanger = true;
-      return true;
-    }
+  bool scrollUpdatePending = contentMetrics.GetScrollOffsetUpdated() &&
+      contentMetrics.GetScrollGeneration() != compositorMetrics.GetScrollGeneration();
+  // If scrollUpdatePending is true, then that means the content-side
+  // metrics has a new scroll offset that is going to be forced into the
+  // compositor but it hasn't gotten there yet.
+  // Even though right now comparing the metrics might indicate we're
+  // about to checkerboard (and that's true), the checkerboarding will
+  // disappear as soon as the new scroll offset update is processed
+  // on the compositor side. To avoid leaving things in a low-precision
+  // paint, we need to detect and handle this case (bug 1026756).
+  if (!aLowPrecision && !scrollUpdatePending && AboutToCheckerboard(contentMetrics, compositorMetrics)) {
+    TILING_PRLOG_OBJ(("TILING: Checkerboard abort content %s\n", tmpstr.get()), contentMetrics);
+    TILING_PRLOG_OBJ(("TILING: Checkerboard abort compositor %s\n", tmpstr.get()), compositorMetrics);
+    return true;
   }
 
   // Abort drawing stale low-precision content if there's a more recent
