@@ -10,7 +10,7 @@
 #include "nsCOMPtr.h"               // for member, local
 #include "nsGkAtoms.h"              // for nsGkAtoms::baseURIProperty
 #include "nsIDOMNode.h"
-#include "nsINodeInfo.h"            // member (in nsCOMPtr)
+#include "mozilla/dom/NodeInfo.h"            // member (in nsCOMPtr)
 #include "nsIVariant.h"             // for use in GetUserData()
 #include "nsNodeInfoManager.h"      // for use in NodePrincipal()
 #include "nsPropertyTable.h"        // for typedefs
@@ -338,7 +338,7 @@ public:
   friend class nsAttrAndChildArray;
 
 #ifdef MOZILLA_INTERNAL_API
-  nsINode(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  nsINode(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : mNodeInfo(aNodeInfo),
     mParent(nullptr),
     mBoolFlags(0),
@@ -899,7 +899,7 @@ public:
    * @param aNodeInfo the nodeinfo to use for the clone
    * @param aResult the clone
    */
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const = 0;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const = 0;
 
   // This class can be extended by subclasses that wish to store more
   // information in the slots.
@@ -1808,7 +1808,7 @@ protected:
   static bool Traverse(nsINode *tmp, nsCycleCollectionTraversalCallback &cb);
   static void Unlink(nsINode *tmp);
 
-  nsCOMPtr<nsINodeInfo> mNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
   nsINode* mParent;
 

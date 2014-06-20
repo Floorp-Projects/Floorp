@@ -24,7 +24,7 @@
 namespace mozilla {
 namespace dom {
 
-HTMLObjectElement::HTMLObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+HTMLObjectElement::HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFormElement(aNodeInfo),
     mIsDoneAddingChildren(!aFromParser)

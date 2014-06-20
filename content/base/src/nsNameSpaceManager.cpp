@@ -12,11 +12,11 @@
 
 #include "nscore.h"
 #include "nsAutoPtr.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsString.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/XBLChildrenElement.h"
 #include "mozilla/dom/Element.h"
@@ -137,10 +137,10 @@ nsNameSpaceManager::GetNameSpaceID(const nsAString& aURI)
 
 nsresult
 NS_NewElement(Element** aResult,
-              already_AddRefed<nsINodeInfo>&& aNodeInfo,
+              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
               FromParser aFromParser)
 {
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
     return NS_NewHTMLElement(aResult, ni.forget(), aFromParser);

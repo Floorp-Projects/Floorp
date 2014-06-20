@@ -29,7 +29,7 @@
 #include "nsIMutableArray.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsNameSpaceManager.h"
 #include "nsTextFormatter.h"
@@ -416,7 +416,7 @@ AccessibleWrap::get_accRole(
       if (!document)
         return E_FAIL;
 
-      nsINodeInfo *nodeInfo = content->NodeInfo();
+      dom::NodeInfo *nodeInfo = content->NodeInfo();
       nodeInfo->GetName(roleString);
 
       // Only append name space if different from that of current document.

@@ -37,7 +37,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Option)
 namespace mozilla {
 namespace dom {
 
-HTMLOptionElement::HTMLOptionElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLOptionElement::HTMLOptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mSelectedChanged(false),
     mIsSelected(false),
@@ -382,7 +382,7 @@ HTMLOptionElement::Option(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  already_AddRefed<nsINodeInfo> nodeInfo =
+  already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::option, nullptr,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);

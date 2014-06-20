@@ -23,7 +23,7 @@ class HTMLStyleElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsStubMutationObserver
 {
 public:
-  HTMLStyleElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLStyleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLStyleElement();
 
   // nsISupports
@@ -57,7 +57,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

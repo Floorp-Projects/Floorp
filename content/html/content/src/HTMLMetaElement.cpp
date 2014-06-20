@@ -14,7 +14,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 namespace mozilla {
 namespace dom {
 
-HTMLMetaElement::HTMLMetaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLMetaElement::HTMLMetaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

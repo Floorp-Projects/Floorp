@@ -593,7 +593,7 @@ XMLDocument::DocAddSizeOfExcludingThis(nsWindowSizes* aWindowSizes) const
 // nsIDOMDocument interface
 
 nsresult
-XMLDocument::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+XMLDocument::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 {
   NS_ASSERTION(aNodeInfo->NodeInfoManager() == mNodeInfoManager,
                "Can't import this document into another document!");

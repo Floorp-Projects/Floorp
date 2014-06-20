@@ -21,7 +21,7 @@ SVGTSpanElement::WrapNode(JSContext *aCx)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTSpanElement::SVGTSpanElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGTSpanElement::SVGTSpanElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGTSpanElementBase(aNodeInfo)
 {
 }

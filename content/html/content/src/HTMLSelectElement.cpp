@@ -100,7 +100,7 @@ SafeOptionListMutation::~SafeOptionListMutation()
 // construction, destruction
 
 
-HTMLSelectElement::HTMLSelectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+HTMLSelectElement::HTMLSelectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                      FromParser aFromParser)
   : nsGenericHTMLFormElementWithState(aNodeInfo),
     mOptions(new HTMLOptionsCollection(MOZ_THIS_IN_INITIALIZER_LIST())),
@@ -742,7 +742,7 @@ HTMLSelectElement::SetLength(uint32_t aLength, ErrorResult& aRv)
       return;
     }
 
-    nsCOMPtr<nsINodeInfo> nodeInfo;
+    nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
 
     nsContentUtils::NameChanged(mNodeInfo, nsGkAtoms::option,
                                 getter_AddRefs(nodeInfo));

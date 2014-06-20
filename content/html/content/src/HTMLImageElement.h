@@ -23,7 +23,7 @@ class HTMLImageElement MOZ_FINAL : public nsGenericHTMLElement,
                                    public nsIDOMHTMLImageElement
 {
 public:
-  explicit HTMLImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  explicit HTMLImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLImageElement();
 
   static already_AddRefed<HTMLImageElement>
@@ -74,7 +74,7 @@ public:
   virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
 
   virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsresult CopyInnerTo(Element* aDest);
 

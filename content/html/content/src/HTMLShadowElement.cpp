@@ -14,7 +14,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Shadow)
 
 using namespace mozilla::dom;
 
-HTMLShadowElement::HTMLShadowElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLShadowElement::HTMLShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mIsInsertionPoint(false)
 {
   SetIsDOMBinding();

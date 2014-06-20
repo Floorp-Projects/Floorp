@@ -11,7 +11,7 @@
 #include "SVGAnimatedNumberList.h"
 
 nsresult NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFE SVGFEColorMatrixElementBase;
 class SVGFEColorMatrixElement : public SVGFEColorMatrixElementBase
 {
   friend nsresult (::NS_NewSVGFEColorMatrixElement(nsIContent **aResult,
-                                                   already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEColorMatrixElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEColorMatrixElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEColorMatrixElementBase(aNodeInfo)
   {
   }
@@ -40,7 +40,7 @@ public:
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

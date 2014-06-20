@@ -57,7 +57,7 @@ static nsIContent* FindBodyElement(nsIContent* aParent)
 {
   mozilla::dom::FlattenedChildIterator iter(aParent);
   for (nsIContent* content = iter.GetNextChild(); content; content = iter.GetNextChild()) {
-    nsINodeInfo *ni = content->NodeInfo();
+    mozilla::dom::NodeInfo *ni = content->NodeInfo();
     if (ni->Equals(nsGkAtoms::treechildren, kNameSpaceID_XUL)) {
       return content;
     } else if (ni->Equals(nsGkAtoms::tree, kNameSpaceID_XUL)) {

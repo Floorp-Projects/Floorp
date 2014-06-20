@@ -23,7 +23,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(SharedObject)
 namespace mozilla {
 namespace dom {
 
-HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+HTMLSharedObjectElement::HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                                  FromParser aFromParser)
   : nsGenericHTMLElement(aNodeInfo),
     mIsDoneAddingChildren(mNodeInfo->Equals(nsGkAtoms::embed) || !aFromParser)

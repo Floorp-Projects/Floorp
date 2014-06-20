@@ -6,7 +6,7 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsIDOMElement.h"
 #include "nsILocalStore.h"
 #include "nsIBoxObject.h"

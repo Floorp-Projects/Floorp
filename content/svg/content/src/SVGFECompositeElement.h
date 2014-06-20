@@ -11,7 +11,7 @@
 #include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFECompositeElement(nsIContent **aResult,
-                                     already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFE SVGFECompositeElementBase;
 class SVGFECompositeElement : public SVGFECompositeElementBase
 {
   friend nsresult (::NS_NewSVGFECompositeElement(nsIContent **aResult,
-                                                 already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFECompositeElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFECompositeElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFECompositeElementBase(aNodeInfo)
   {
   }
@@ -41,7 +41,7 @@ public:
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

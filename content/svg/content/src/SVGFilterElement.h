@@ -18,7 +18,7 @@ class nsSVGFilterFrame;
 class nsSVGFilterInstance;
 
 nsresult NS_NewSVGFilterElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -31,13 +31,13 @@ class SVGFilterElement : public SVGFilterElementBase
 
 protected:
   friend nsresult (::NS_NewSVGFilterElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGFilterElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGFilterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   // nsIContent
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   // Invalidate users of this filter

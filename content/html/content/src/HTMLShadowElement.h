@@ -15,7 +15,7 @@ class HTMLShadowElement MOZ_FINAL : public nsGenericHTMLElement,
                                     public nsStubMutationObserver
 {
 public:
-  HTMLShadowElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLShadowElement();
 
   // nsISupports
@@ -28,7 +28,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLShadowElement,
                                            nsGenericHTMLElement)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,

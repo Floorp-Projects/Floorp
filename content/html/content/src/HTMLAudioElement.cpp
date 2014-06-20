@@ -35,7 +35,7 @@ NS_IMPL_ISUPPORTS_INHERITED(HTMLAudioElement, HTMLMediaElement,
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
 
 
-HTMLAudioElement::HTMLAudioElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLAudioElement::HTMLAudioElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
 {
 }
@@ -57,7 +57,7 @@ HTMLAudioElement::Audio(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  already_AddRefed<nsINodeInfo> nodeInfo =
+  already_AddRefed<mozilla::dom::NodeInfo> nodeInfo =
     doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::audio, nullptr,
                                         kNameSpaceID_XHTML,
                                         nsIDOMNode::ELEMENT_NODE);

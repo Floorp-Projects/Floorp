@@ -41,7 +41,7 @@ nsSVGElement::NumberInfo SVGPathElement::sNumberInfo =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGPathElement::SVGPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGPathElement::SVGPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGPathElementBase(aNodeInfo)
 {
 }

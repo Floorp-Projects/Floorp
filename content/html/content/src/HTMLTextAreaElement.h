@@ -45,7 +45,7 @@ class HTMLTextAreaElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLTextAreaElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  HTMLTextAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
 
   // nsISupports
@@ -126,7 +126,7 @@ public:
   virtual void DoneAddingChildren(bool aHaveNotified) MOZ_OVERRIDE;
   virtual bool IsDoneAddingChildren() MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsresult CopyInnerTo(Element* aDest);
 

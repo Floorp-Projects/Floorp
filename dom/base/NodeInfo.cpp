@@ -10,11 +10,12 @@
  * prefix, namespace, and localName.
  */
 
+#include "mozilla/dom/NodeInfo.h"
+#include "mozilla/dom/NodeInfoInlines.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
 
-#include "nscore.h"
-#include "nsNodeInfo.h"
 #include "nsNodeInfoManager.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -28,10 +29,12 @@
 #include "nsIDocument.h"
 #include "nsGkAtoms.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsNameSpaceManager.h"
 
 using namespace mozilla;
+using mozilla::dom::NodeInfo;
 
-nsNodeInfo::~nsNodeInfo()
+NodeInfo::~NodeInfo()
 {
   mOwnerManager->RemoveNodeInfo(this);
 
@@ -40,10 +43,9 @@ nsNodeInfo::~nsNodeInfo()
   NS_IF_RELEASE(mInner.mExtraName);
 }
 
-
-nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
-                       uint16_t aNodeType, nsIAtom* aExtraName,
-                       nsNodeInfoManager *aOwnerManager)
+NodeInfo::NodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
+                   uint16_t aNodeType, nsIAtom* aExtraName,
+                   nsNodeInfoManager *aOwnerManager)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
   NS_ABORT_IF_FALSE(aOwnerManager, "Invalid aOwnerManager");
@@ -110,9 +112,9 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
 
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_CLASS(NodeInfo)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_0(NodeInfo)
 
 static const char* kNSURIs[] = {
   " ([none])",
@@ -127,52 +129,62 @@ static const char* kNSURIs[] = {
   " (XUL)"
 };
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(NodeInfo)
   if (MOZ_UNLIKELY(cb.WantDebugInfo())) {
     char name[72];
     uint32_t nsid = tmp->NamespaceID();
     nsAtomCString localName(tmp->NameAtom());
     if (nsid < ArrayLength(kNSURIs)) {
-      PR_snprintf(name, sizeof(name), "nsNodeInfo%s %s", kNSURIs[nsid],
+      PR_snprintf(name, sizeof(name), "NodeInfo%s %s", kNSURIs[nsid],
                   localName.get());
     }
     else {
-      PR_snprintf(name, sizeof(name), "nsNodeInfo %s", localName.get());
+      PR_snprintf(name, sizeof(name), "NodeInfo %s", localName.get());
     }
 
     cb.DescribeRefCountedNode(tmp->mRefCnt.get(), name);
   }
   else {
-    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsNodeInfo, tmp->mRefCnt.get())
+    NS_IMPL_CYCLE_COLLECTION_DESCRIBE(NodeInfo, tmp->mRefCnt.get())
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwnerManager)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(NodeInfo)
   return nsCCUncollectableMarker::sGeneration && tmp->CanSkip();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_BEGIN(NodeInfo)
   return nsCCUncollectableMarker::sGeneration && tmp->CanSkip();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_IN_CC_END
 
-NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsNodeInfo)
+NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(NodeInfo)
   return nsCCUncollectableMarker::sGeneration && tmp->CanSkip();
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsNodeInfo)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsNodeInfo, LastRelease())
-NS_INTERFACE_TABLE_HEAD(nsNodeInfo)
-  NS_INTERFACE_TABLE(nsNodeInfo, nsINodeInfo)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE_CYCLE_COLLECTION(nsNodeInfo)
-NS_INTERFACE_MAP_END
-
-// nsINodeInfo
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NodeInfo, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(NodeInfo, Release)
 
 void
-nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
+NodeInfo::GetName(nsAString& aName) const
+{
+  mInner.mName->ToString(aName);
+}
+
+void
+NodeInfo::GetPrefix(nsAString& aPrefix) const
+{
+  if (mInner.mPrefix) {
+    mInner.mPrefix->ToString(aPrefix);
+  } else {
+    SetDOMStringToNull(aPrefix);
+  }
+}
+
+void
+NodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 {
   if (mInner.mNamespaceID > 0) {
     nsresult rv =
@@ -187,25 +199,24 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
   }
 }
 
-
 bool
-nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
+NodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   int32_t nsid =
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
-  return nsINodeInfo::NamespaceEquals(nsid);
+  return mozilla::dom::NodeInfo::NamespaceEquals(nsid);
 }
 
 void
-nsNodeInfo::LastRelease()
+NodeInfo::DeleteCycleCollectable()
 {
   nsRefPtr<nsNodeInfoManager> kungFuDeathGrip = mOwnerManager;
   delete this;
 }
 
 bool
-nsNodeInfo::CanSkip()
+NodeInfo::CanSkip()
 {
   return mDocument &&
     nsCCUncollectableMarker::InGeneration(mDocument->GetMarkedCCGeneration());

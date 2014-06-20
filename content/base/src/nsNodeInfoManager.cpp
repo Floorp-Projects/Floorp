@@ -11,7 +11,8 @@
 #include "nsNodeInfoManager.h"
 
 #include "mozilla/DebugOnly.h"
-#include "nsNodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
+#include "mozilla/dom/NodeInfoInlines.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIAtom.h"
@@ -26,8 +27,10 @@
 #include "nsBindingManager.h"
 #include "nsHashKeys.h"
 #include "nsCCUncollectableMarker.h"
+#include "nsNameSpaceManager.h"
 
 using namespace mozilla;
+using mozilla::dom::NodeInfo;
 
 #ifdef MOZ_LOGGING
 // so we can get logging even in release builds
@@ -42,10 +45,9 @@ static PRLogModuleInfo* gNodeInfoManagerLeakPRLog;
 PLHashNumber
 nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 {
-  NS_ASSERTION(key, "Null key passed to nsNodeInfo::GetHashValue!");
+  MOZ_ASSERT(key, "Null key passed to NodeInfo::GetHashValue!");
 
-  const nsINodeInfo::nsNodeInfoInner *node =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key);
+  auto *node = reinterpret_cast<const NodeInfo::NodeInfoInner*>(key);
 
   return node->mName ? node->mName->hash() : HashString(*(node->mNameString));
 }
@@ -54,12 +56,10 @@ nsNodeInfoManager::GetNodeInfoInnerHashValue(const void *key)
 int
 nsNodeInfoManager::NodeInfoInnerKeyCompare(const void *key1, const void *key2)
 {
-  NS_ASSERTION(key1 && key2, "Null key passed to NodeInfoInnerKeyCompare!");
+  MOZ_ASSERT(key1 && key2, "Null key passed to NodeInfoInnerKeyCompare!");
 
-  const nsINodeInfo::nsNodeInfoInner *node1 =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key1);
-  const nsINodeInfo::nsNodeInfoInner *node2 =
-    reinterpret_cast<const nsINodeInfo::nsNodeInfoInner *>(key2);
+  auto *node1 = reinterpret_cast<const NodeInfo::NodeInfoInner*>(key1);
+  auto *node2 = reinterpret_cast<const NodeInfo::NodeInfoInner*>(key2);
 
   if (node1->mPrefix != node2->mPrefix ||
       node1->mNamespaceID != node2->mNamespaceID ||
@@ -203,7 +203,7 @@ nsNodeInfoManager::Init(nsIDocument *aDocument)
 int
 nsNodeInfoManager::DropNodeInfoDocument(PLHashEntry *he, int hashIndex, void *arg)
 {
-  static_cast<nsINodeInfo*>(he->value)->mDocument = nullptr;
+  static_cast<mozilla::dom::NodeInfo*>(he->value)->mDocument = nullptr;
   return HT_ENUMERATE_NEXT;
 }
 
@@ -222,33 +222,33 @@ nsNodeInfoManager::DropDocumentReference()
 }
 
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<mozilla::dom::NodeInfo>
 nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
                                int32_t aNamespaceID, uint16_t aNodeType,
                                nsIAtom* aExtraName /* = nullptr */)
 {
   CheckValidNodeInfo(aNodeType, aName, aNamespaceID, aExtraName);
 
-  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
-                                      aExtraName);
+  NodeInfo::NodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType,
+                                 aExtraName);
 
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    nsCOMPtr<nsINodeInfo> nodeInfo = static_cast<nsINodeInfo*>(node);
+    nsRefPtr<NodeInfo> nodeInfo = static_cast<NodeInfo*>(node);
 
     return nodeInfo.forget();
   }
 
-  nsRefPtr<nsNodeInfo> newNodeInfo =
-    new nsNodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
+  nsRefPtr<NodeInfo> newNodeInfo =
+    new NodeInfo(aName, aPrefix, aNamespaceID, aNodeType, aExtraName, this);
 
   DebugOnly<PLHashEntry*> he =
     PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
   MOZ_ASSERT(he, "PL_HashTableAdd() failed");
 
   // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
-  // doesn't cast to already_AddRefed<nsINodeInfo>
+  // doesn't cast to already_AddRefed<mozilla::dom::NodeInfo>
   ++mNonDocumentNodeInfos;
   if (mNonDocumentNodeInfos == 1) {
     NS_IF_ADDREF(mDocument);
@@ -261,7 +261,7 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
 nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                int32_t aNamespaceID, uint16_t aNodeType,
-                               nsINodeInfo** aNodeInfo)
+                               NodeInfo** aNodeInfo)
 {
 #ifdef DEBUG
   {
@@ -270,12 +270,12 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   }
 #endif
 
-  nsINodeInfo::nsNodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType);
+  NodeInfo::NodeInfoInner tmpKey(aName, aPrefix, aNamespaceID, aNodeType);
 
   void *node = PL_HashTableLookup(mNodeInfoHash, &tmpKey);
 
   if (node) {
-    nsINodeInfo* nodeInfo = static_cast<nsINodeInfo *>(node);
+    NodeInfo* nodeInfo = static_cast<NodeInfo *>(node);
 
     NS_ADDREF(*aNodeInfo = nodeInfo);
 
@@ -285,8 +285,8 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
   NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
 
-  nsRefPtr<nsNodeInfo> newNodeInfo =
-    new nsNodeInfo(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr, this);
+  nsRefPtr<NodeInfo> newNodeInfo =
+    new NodeInfo(nameAtom, aPrefix, aNamespaceID, aNodeType, nullptr, this);
   NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   PLHashEntry *he;
@@ -308,7 +308,7 @@ nsresult
 nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
                                const nsAString& aNamespaceURI,
                                uint16_t aNodeType,
-                               nsINodeInfo** aNodeInfo)
+                               NodeInfo** aNodeInfo)
 {
   int32_t nsid = kNameSpaceID_None;
 
@@ -321,10 +321,10 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
   return GetNodeInfo(aName, aPrefix, nsid, aNodeType, aNodeInfo);
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<NodeInfo>
 nsNodeInfoManager::GetTextNodeInfo()
 {
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
 
   if (!mTextNodeInfo) {
     nodeInfo = GetNodeInfo(nsGkAtoms::textTagName, nullptr, kNameSpaceID_None,
@@ -338,10 +338,10 @@ nsNodeInfoManager::GetTextNodeInfo()
   return nodeInfo.forget();
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<NodeInfo>
 nsNodeInfoManager::GetCommentNodeInfo()
 {
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<NodeInfo> nodeInfo;
 
   if (!mCommentNodeInfo) {
     nodeInfo = GetNodeInfo(nsGkAtoms::commentTagName, nullptr,
@@ -357,10 +357,10 @@ nsNodeInfoManager::GetCommentNodeInfo()
   return nodeInfo.forget();
 }
 
-already_AddRefed<nsINodeInfo>
+already_AddRefed<NodeInfo>
 nsNodeInfoManager::GetDocumentNodeInfo()
 {
-  nsCOMPtr<nsINodeInfo> nodeInfo;
+  nsRefPtr<NodeInfo> nodeInfo;
 
   if (!mDocumentNodeInfo) {
     NS_ASSERTION(mDocument, "Should have mDocument!");
@@ -396,7 +396,7 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal *aPrincipal)
 }
 
 void
-nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
+nsNodeInfoManager::RemoveNodeInfo(NodeInfo *aNodeInfo)
 {
   NS_PRECONDITION(aNodeInfo, "Trying to remove null nodeinfo from manager!");
 
@@ -425,5 +425,5 @@ nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 #endif
   PL_HashTableRemove(mNodeInfoHash, &aNodeInfo->mInner);
 
-  NS_POSTCONDITION(ret, "Can't find nsINodeInfo to remove!!!");
+  NS_POSTCONDITION(ret, "Can't find mozilla::dom::NodeInfo to remove!!!");
 }

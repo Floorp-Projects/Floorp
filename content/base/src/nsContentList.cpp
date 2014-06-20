@@ -25,6 +25,7 @@
 #include "nsGenericHTMLElement.h"
 #include "jsfriendapi.h"
 #include <algorithm>
+#include "mozilla/dom/NodeInfoInlines.h"
 
 // Form related includes
 #include "nsIDOMHTMLFormElement.h"
@@ -860,7 +861,7 @@ nsContentList::Match(Element *aElement)
   if (!mXMLMatchAtom)
     return false;
 
-  nsINodeInfo *ni = aElement->NodeInfo();
+  mozilla::dom::NodeInfo *ni = aElement->NodeInfo();
  
   bool unknown = mMatchNameSpaceId == kNameSpaceID_Unknown;
   bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard;

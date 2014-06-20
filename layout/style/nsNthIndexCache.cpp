@@ -10,6 +10,7 @@
 
 #include "nsNthIndexCache.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/NodeInfoInlines.h"
 
 nsNthIndexCache::nsNthIndexCache()
 {
