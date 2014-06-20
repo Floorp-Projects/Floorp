@@ -42,7 +42,7 @@ fuzzy-if(Android,4,810) == containing-block-1.html containing-block-1-ref.html
 == overconstrained-2.html overconstrained-2-ref.html
 == overconstrained-3.html overconstrained-3-ref.html
 == inline-1.html inline-1-ref.html
-random-if(B2G&&browserIsRemote) == inline-2.html inline-2-ref.html
+== inline-2.html inline-2-ref.html
 fuzzy-if(OSX==10.6||OSX==10.7,64,100) fuzzy-if(OSX==10.8,99,210) == inline-3.html inline-3-ref.html
 fails == column-contain-1a.html column-contain-1-ref.html
 == column-contain-1b.html column-contain-1-ref.html

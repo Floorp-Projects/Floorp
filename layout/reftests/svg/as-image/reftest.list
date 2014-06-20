@@ -12,10 +12,10 @@ skip-if(B2G) == background-simple-1.html  lime100x100-ref.html # bug 773482
 == background-viewBox-1.html  lime100x100-ref.html
 
 # background tests with the background area getting resized
-random-if(B2G&&browserIsRemote) == background-resize-1.html  lime100x100-ref.html
-random-if(B2G&&browserIsRemote) == background-resize-2.html  lime100x100-ref.html
-random-if(B2G&&browserIsRemote) == background-resize-3.html  lime100x100-ref.html
-random-if(B2G&&browserIsRemote) == background-resize-4.html  lime100x100-ref.html
+== background-resize-1.html  lime100x100-ref.html
+== background-resize-2.html  lime100x100-ref.html
+== background-resize-3.html  lime100x100-ref.html
+== background-resize-4.html  lime100x100-ref.html
 
 # Test for stretching background images by different amounts in each dimension
 == background-stretch-1.html background-stretch-1-ref.html
@@ -42,11 +42,11 @@ skip-if(B2G) == canvas-drawImage-scale-1b.html lime100x100-ref.html
 skip-if(B2G) == canvas-drawImage-scale-1c.html lime100x100-ref.html
 
 # Fuzzyness and fails for scaling should be fixed by bug 941467
-fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) random-if(B2G&&browserIsRemote) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
+fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-drawImage-scale-2a.html canvas-drawImage-scale-2-ref.html
 fails == canvas-drawImage-scale-2b.html canvas-drawImage-scale-2-ref.html
 
 skip-if(B2G) == canvas-drawImage-slice-1a.html lime100x100-ref.html
-random-if(B2G&&browserIsRemote) == canvas-drawImage-slice-1b.html lime100x100-ref.html
+== canvas-drawImage-slice-1b.html lime100x100-ref.html
 
 == canvas-drawImage-origin-clean-1.html lime100x100-ref.html
 
@@ -64,7 +64,7 @@ skip-if(B2G) == img-simple-6.html  lime100x100-ref.html # bug 773482
 random == img-and-image-1.html img-and-image-1-ref.svg # bug 645267
 
 # More complex <img> tests
-random-if(B2G&&browserIsRemote) == img-blobURI-1.html lime100x100-ref.html
+== img-blobURI-1.html lime100x100-ref.html
 random == img-blobURI-2.html lime100x100-ref.html
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
 == img-display-none-1.html about:blank

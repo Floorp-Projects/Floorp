@@ -1,14 +1,14 @@
 # Tests related to SVG Animation (using SMIL), focusing on the animateMotion
 # element.
 
-random-if(B2G&&browserIsRemote) == animateMotion-by-1.svg      lime.svg
+== animateMotion-by-1.svg      lime.svg
 == animateMotion-by-2.svg      lime.svg
-fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,800) random-if(B2G&&browserIsRemote) == animateMotion-flattening-1.svg lime.svg # bug 951541
-random-if(B2G&&browserIsRemote) == animateMotion-from-to-1.svg lime.svg
+fuzzy-if(/^Windows\x20NT\x206\.2/.test(http.oscpu),1,800) == animateMotion-flattening-1.svg lime.svg # bug 951541
+== animateMotion-from-to-1.svg lime.svg
 == animateMotion-indefinite-to-1.svg lime.svg
 == animateMotion-indefinite-to-2.svg lime.svg
-random-if(B2G&&browserIsRemote) == animateMotion-rotate-1a.svg lime.svg
-random-if(B2G&&browserIsRemote) == animateMotion-rotate-1b.svg lime.svg
+== animateMotion-rotate-1a.svg lime.svg
+== animateMotion-rotate-1b.svg lime.svg
 == animateMotion-rotate-2.svg  lime.svg
 == animateMotion-to-overridden-1.svg lime.svg
 == animateMotion-values-linear-1.svg animateMotion-values-linear-1-ref.svg
@@ -16,6 +16,6 @@ random-if(B2G&&browserIsRemote) == animateMotion-rotate-1b.svg lime.svg
 == animateMotion-values-paced-1b.svg animateMotion-values-paced-1-ref.svg
 
 # Tests involving <mpath> sub-element
-random-if(B2G&&browserIsRemote) == animateMotion-mpath-pathLength-1.svg lime.svg
-random-if(B2G&&browserIsRemote) == animateMotion-mpath-targetChange-1.svg lime.svg
+== animateMotion-mpath-pathLength-1.svg lime.svg
+== animateMotion-mpath-targetChange-1.svg lime.svg
 == animateMotion-mpath-target-transform-1.svg lime.svg
