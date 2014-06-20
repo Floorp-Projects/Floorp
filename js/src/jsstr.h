@@ -221,7 +221,7 @@ extern int
 StringFindPattern(JSLinearString *text, JSLinearString *pat, size_t start);
 
 extern bool
-StringHasRegExpMetaChars(const jschar *chars, size_t length);
+StringHasRegExpMetaChars(JSLinearString *str);
 
 } /* namespace js */
 

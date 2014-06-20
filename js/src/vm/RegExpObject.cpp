@@ -496,7 +496,7 @@ RegExpShared::compile(JSContext *cx, HandleLinearString input)
 bool
 RegExpShared::compile(JSContext *cx, HandleAtom pattern, HandleLinearString input)
 {
-    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern->chars(), pattern->length())) {
+    if (!ignoreCase() && !StringHasRegExpMetaChars(pattern)) {
         canStringMatch = true;
         parenCount = 0;
         return true;
