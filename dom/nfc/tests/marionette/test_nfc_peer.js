@@ -59,30 +59,18 @@ function handleTechnologyDiscoveredRE0ForP2PRegFailure(msg) {
   }
 }
 
-function activateRE(re) {
-  let deferred = Promise.defer();
-  let cmd = "nfc nci rf_intf_activated_ntf " + re;
-
-  emulator.run(cmd, function(result) {
-    is(result.pop(), "OK", "check activation of RE" + re);
-    deferred.resolve();
-  });
-
-  return deferred.promise;
-}
-
 function testPeerReady() {
   window.navigator.mozSetMessageHandler(
     "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0);
 
-  toggleNFC(true).then(() => activateRE(0));
+  toggleNFC(true).then(() => emulator.activateRE(0));
 }
 
 function testCheckP2PRegFailure() {
   window.navigator.mozSetMessageHandler(
     "nfc-manager-tech-discovered", handleTechnologyDiscoveredRE0ForP2PRegFailure);
 
-  toggleNFC(true).then(() => activateRE(0));
+  toggleNFC(true).then(() => emulator.activateRE(0));
 }
 
 function testCheckNfcPeerObjForInvalidToken() {
