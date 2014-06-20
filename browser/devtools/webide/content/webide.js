@@ -18,11 +18,18 @@ const {Connection} = require("devtools/client/connection-manager");
 const {AppManager} = require("devtools/webide/app-manager");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const ProjectEditor = require("projecteditor/projecteditor");
+const {Devices} = Cu.import("resource://gre/modules/devtools/Devices.jsm");
+const {GetAvailableAddons} = require("devtools/webide/addons");
+const {GetTemplatesJSON, GetAddonsJSON} = require("devtools/webide/remote-resources");
 
 const Strings = Services.strings.createBundle("chrome://webide/content/webide.properties");
 
 const HTML = "http://www.w3.org/1999/xhtml";
 const HELP_URL = "https://developer.mozilla.org/Firefox_OS/Using_the_App_Manager#Troubleshooting";
+
+// download some JSON early.
+GetTemplatesJSON(true);
+GetAddonsJSON(true);
 
 // See bug 989619
 console.log = console.log.bind(console);
@@ -56,18 +63,32 @@ let UI = {
     window.addEventListener("focus", this.onfocus, true);
 
     AppProjects.load().then(() => {
-      let lastProjectLocation = Services.prefs.getCharPref("devtools.webide.lastprojectlocation");
-      if (lastProjectLocation) {
-        let lastProject = AppProjects.get(lastProjectLocation);
-        if (lastProject) {
-          AppManager.selectedProject = lastProject;
-        } else {
-          AppManager.selectedProject = null;
-        }
+      this.openLastProject();
+    });
+
+    // Auto install the ADB Addon Helper. Only once.
+    // If the user decides to uninstall the addon, we won't install it again.
+    let autoInstallADBHelper = Services.prefs.getBoolPref("devtools.webide.autoinstallADBHelper");
+    if (autoInstallADBHelper && !Devices.helperAddonInstalled) {
+      GetAvailableAddons().then(addons => {
+        addons.adb.install();
+      }, console.error);
+    }
+    Services.prefs.setBoolPref("devtools.webide.autoinstallADBHelper", false);
+  },
+
+  openLastProject: function() {
+    let lastProjectLocation = Services.prefs.getCharPref("devtools.webide.lastprojectlocation");
+    if (lastProjectLocation) {
+      let lastProject = AppProjects.get(lastProjectLocation);
+      if (lastProject) {
+        AppManager.selectedProject = lastProject;
       } else {
         AppManager.selectedProject = null;
       }
-    });
+    } else {
+      AppManager.selectedProject = null;
+    }
   },
 
   uninit: function() {
@@ -203,7 +224,7 @@ let UI = {
       }
     }];
 
-    let nbox = document.querySelector("#body");
+    let nbox = document.querySelector("#notificationbox");
     nbox.removeAllNotifications(true);
     nbox.appendNotification(text, "webide:errornotification", null,
                             nbox.PRIORITY_WARNING_LOW, buttons);
@@ -215,6 +236,28 @@ let UI = {
     let USBListNode = document.querySelector("#runtime-panel-usbruntime");
     let simulatorListNode = document.querySelector("#runtime-panel-simulators");
     let customListNode = document.querySelector("#runtime-panel-custom");
+
+    let noHelperNode = document.querySelector("#runtime-panel-noadbhelper");
+    let noUSBNode = document.querySelector("#runtime-panel-nousbdevice");
+    let noSimulatorNode = document.querySelector("#runtime-panel-nosimulator");
+
+    if (Devices.helperAddonInstalled) {
+      noHelperNode.setAttribute("hidden", "true");
+    } else {
+      noHelperNode.removeAttribute("hidden");
+    }
+
+    if (AppManager.runtimeList.usb.length == 0 && Devices.helperAddonInstalled) {
+      noUSBNode.removeAttribute("hidden");
+    } else {
+      noUSBNode.setAttribute("hidden", "true");
+    }
+
+    if (AppManager.runtimeList.simulator.length > 0) {
+      noSimulatorNode.setAttribute("hidden", "true");
+    } else {
+      noSimulatorNode.removeAttribute("hidden");
+    }
 
     for (let [type, parent] of [
       ["usb", USBListNode],
@@ -283,7 +326,7 @@ let UI = {
       return this.projecteditor.loaded;
     }
 
-    let projecteditorIframe = document.querySelector("#projecteditor");
+    let projecteditorIframe = document.querySelector("#deck-panel-projecteditor");
     this.projecteditor = ProjectEditor.ProjectEditor(projecteditorIframe);
     this.projecteditor.on("onEditorSave", (editor, resource) => {
       AppManager.validateProject(AppManager.selectedProject);
@@ -306,7 +349,7 @@ let UI = {
         iconUrl: project.icon,
         projectOverviewURL: "chrome://webide/content/details.xhtml",
         validationStatus: status
-      });
+      }).then(null, console.error);
     }, console.error);
   },
 
@@ -315,17 +358,12 @@ let UI = {
   },
 
   openProject: function() {
-    let detailsIframe = document.querySelector("#details");
-    let projecteditorIframe = document.querySelector("#projecteditor");
-
     let project = AppManager.selectedProject;
 
     // Nothing to show
 
     if (!project) {
-      detailsIframe.setAttribute("hidden", "true");
-      projecteditorIframe.setAttribute("hidden", "true");
-      document.commandDispatcher.focusedElement = document.documentElement;
+      this.resetDeck();
       return;
     }
 
@@ -342,16 +380,13 @@ let UI = {
     if (project.type != "packaged" ||
         !this.isProjectEditorEnabled() ||
         forceDetailsOnly) {
-      detailsIframe.removeAttribute("hidden");
-      projecteditorIframe.setAttribute("hidden", "true");
-      document.commandDispatcher.focusedElement = document.documentElement;
+      this.selectDeckPanel("details");
       return;
     }
 
     // Show ProjectEditor
 
-    detailsIframe.setAttribute("hidden", "true");
-    projecteditorIframe.removeAttribute("hidden");
+    this.selectDeckPanel("projecteditor");
 
     this.getProjectEditor().then(() => {
       this.updateProjectEditorHeader();
@@ -360,6 +395,26 @@ let UI = {
     if (project.location) {
       Services.prefs.setCharPref("devtools.webide.lastprojectlocation", project.location);
     }
+  },
+
+  /********** DECK **********/
+
+  resetFocus: function() {
+    document.commandDispatcher.focusedElement = document.documentElement;
+  },
+
+  selectDeckPanel: function(id) {
+    this.hidePanels();
+    this.resetFocus();
+    let deck = document.querySelector("#deck");
+    let panel = deck.querySelector("#deck-panel-" + id);
+    deck.selectedPanel = panel;
+  },
+
+  resetDeck: function() {
+    this.resetFocus();
+    let deck = document.querySelector("#deck");
+    deck.selectedPanel = null;
   },
 
   /********** COMMANDS **********/
@@ -506,9 +561,7 @@ let UI = {
   },
 
   closeToolboxUI: function() {
-    let body = document.querySelector("#body");
-    body.removeAttribute("hidden");
-
+    this.resetFocus();
     Services.prefs.setIntPref("devtools.toolbox.footer.height", this.toolboxIframe.height);
 
     // We have to destroy the iframe, otherwise, the keybindings of webide don't work
@@ -727,81 +780,11 @@ let Cmds = {
   },
 
   showPermissionsTable: function() {
-    return UI.busyUntil(AppManager.deviceFront.getRawPermissionsTable().then(json => {
-      let styleContent = "";
-      styleContent += "body {background:white; font-family: monospace}";
-      styleContent += "table {border-collapse: collapse}";
-      styleContent += "th, td {padding: 5px; border: 1px solid #EEE}";
-      styleContent += "th {min-width: 130px}";
-      styleContent += "td {text-align: center}";
-      styleContent += "th:first-of-type, td:first-of-type {text-align:left}";
-      styleContent += ".permallow  {color:rgb(152, 207, 57)}";
-      styleContent += ".permprompt {color:rgb(0,158,237)}";
-      styleContent += ".permdeny   {color:rgb(204,73,8)}";
-      let style = document.createElementNS(HTML, "style");
-      style.textContent = styleContent;
-      let table = document.createElementNS(HTML, "table");
-      table.innerHTML = "<tr><th>Name</th><th>type:web</th><th>type:privileged</th><th>type:certified</th></tr>";
-      let permissionsTable = json.rawPermissionsTable;
-      for (let name in permissionsTable) {
-        let tr = document.createElementNS(HTML, "tr");
-        let td = document.createElementNS(HTML, "td");
-        td.textContent = name;
-        tr.appendChild(td);
-        for (let type of ["app","privileged","certified"]) {
-          let td = document.createElementNS(HTML, "td");
-          if (permissionsTable[name][type] == json.ALLOW_ACTION) {
-            td.textContent = "✓";
-            td.className = "permallow";
-          }
-          if (permissionsTable[name][type] == json.PROMPT_ACTION) {
-            td.textContent = "!";
-            td.className = "permprompt";
-          }
-          if (permissionsTable[name][type] == json.DENY_ACTION) {
-            td.textContent = "✕";
-            td.className = "permdeny"
-          }
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
-      let body = document.createElementNS(HTML, "body");
-      body.appendChild(style);
-      body.appendChild(table);
-      let url = "data:text/html;charset=utf-8,";
-      url += encodeURIComponent(body.outerHTML);
-      UI.openInBrowser(url);
-    }), "showing permission table");
+    UI.selectDeckPanel("permissionstable");
   },
 
   showRuntimeDetails: function() {
-    return UI.busyUntil(AppManager.deviceFront.getDescription().then(json => {
-      let styleContent = "";
-      styleContent += "body {background:white; font-family: monospace}";
-      styleContent += "table {border-collapse: collapse}";
-      styleContent += "th, td {padding: 5px; border: 1px solid #EEE}";
-      let style = document.createElementNS(HTML, "style");
-      style.textContent = styleContent;
-      let table = document.createElementNS(HTML, "table");
-      for (let name in json) {
-        let tr = document.createElementNS(HTML, "tr");
-        let td = document.createElementNS(HTML, "td");
-        td.textContent = name;
-        tr.appendChild(td);
-        td = document.createElementNS(HTML, "td");
-        td.textContent = json[name];
-        tr.appendChild(td);
-        table.appendChild(tr);
-      }
-      let body = document.createElementNS(HTML, "body");
-      body.appendChild(style);
-      body.appendChild(table);
-      let url = "data:text/html;charset=utf-8,";
-      url += encodeURIComponent(body.outerHTML);
-      UI.openInBrowser(url);
-    }), "showing runtime details");
-
+    UI.selectDeckPanel("runtimedetails");
   },
 
   play: function() {
@@ -845,5 +828,9 @@ let Cmds = {
 
   showTroubleShooting: function() {
     UI.openInBrowser(HELP_URL);
+  },
+
+  showAddons: function() {
+    UI.selectDeckPanel("addons");
   },
 }
