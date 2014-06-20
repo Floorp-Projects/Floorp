@@ -85,6 +85,9 @@ leak:SECITEM_AllocItem_Util
 leak:GlobalPrinters::InitializeGlobalPrinters
 leak:nsPSPrinterList::GetPrinterList
 
+# Bug 1028456 - More leaks with _PR_Getfd, in nsLocalFile::CopyToNative and do_create. bc1, bc3
+leak:_PR_Getfd
+
 
 ###
 ### Leaks with system libraries in their stacks. These show up across a number of tests.
