@@ -38,8 +38,10 @@ function test() {
                    (winData.isPopup ? "all=no" : "all");
     let url = "http://example.com/?window=" + windowsToOpen.length;
 
-    promiseNewWindowLoaded().then(function (win) {
-      promiseWindowClosed(win).then(function () {
+    provideWindow(function onTestURLLoaded(win) {
+      win.close();
+      // Give it time to close
+      executeSoon(function() {
         openWindowRec(windowsToOpen, expectedResults, recCallback);
       });
     }, url, settings);
