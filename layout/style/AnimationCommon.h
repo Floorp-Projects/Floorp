@@ -75,6 +75,8 @@ protected:
   virtual void ElementDataRemoved() = 0;
   void RemoveAllElementData();
 
+  // When this returns a value other than nullptr, it also,
+  // as a side-effect, notifies the ActiveLayerTracker.
   static CommonElementAnimationData*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
@@ -469,10 +471,6 @@ struct CommonElementAnimationData : public PRCList
   // time can be fully represented by data sent to the compositor.
   // (This is useful for determining whether throttle the animation
   // (suppress main-thread style updates).)
-  //
-  // Note that when CanPerformOnCompositorThread returns true, it also,
-  // as a side-effect, notifies the ActiveLayerTracker.  FIXME:  This
-  // should probably move to the relevant callers.
   bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
 

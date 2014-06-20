@@ -92,6 +92,18 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
         CommonElementAnimationData::CanAnimate_AllowPartial)) {
     return nullptr;
   }
+
+  // This animation can be done on the compositor.
+  // Mark the frame as active, in case we are able to throttle this animation.
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(animations->mElement);
+  if (frame) {
+    if (aProperty == eCSSProperty_opacity) {
+      ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
+    } else if (aProperty == eCSSProperty_transform) {
+      ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_transform);
+    }
+  }
+
   return animations;
 }
 
@@ -654,8 +666,6 @@ CommonElementAnimationData::CanPerformOnCompositorThread(
     }
   }
 
-  bool hasOpacity = false;
-  bool hasTransform = false;
   bool existsProperty = false;
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const ElementAnimation* anim = mAnimations[animIdx];
@@ -674,11 +684,6 @@ CommonElementAnimationData::CanPerformOnCompositorThread(
           IsCompositorAnimationDisabledForFrame(frame)) {
         return false;
       }
-      if (prop.mProperty == eCSSProperty_opacity) {
-        hasOpacity = true;
-      } else if (prop.mProperty == eCSSProperty_transform) {
-        hasTransform = true;
-      }
     }
   }
 
@@ -687,14 +692,6 @@ CommonElementAnimationData::CanPerformOnCompositorThread(
     return false;
   }
 
-  // This animation can be done on the compositor.  Mark the frame as active, in
-  // case we are able to throttle this animation.
-  if (hasOpacity) {
-    ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
-  }
-  if (hasTransform) {
-    ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_transform);
-  }
   return true;
 }
 
