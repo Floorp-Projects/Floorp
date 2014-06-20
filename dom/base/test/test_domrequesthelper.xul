@@ -66,20 +66,22 @@
      * Message listeners.
      */
     function checkMessageListeners(aExpectedListeners, aCount) {
-      ok(true, "Checking message listeners\n" + "Expected listeners " +
-         JSON.stringify(aExpectedListeners) + " \nExpected count " + aCount);
+      info("Checking message listeners\n" + "Expected listeners " +
+           JSON.stringify(aExpectedListeners) + " \nExpected count " + aCount);
       let count = 0;
       Object.keys(dummy._listeners).forEach(function(name) {
         count++;
-        is(aExpectedListeners[name], dummy._listeners[name],
-           "Message found " + name + " - Same listeners");
+        is(aExpectedListeners[name].weakRef, dummy._listeners[name].weakRef,
+           "Message found " + name + " - Same weakRef");
+        is(aExpectedListeners[name].count, dummy._listeners[name].count,
+           "Message found " + name + " - Same count");
       });
       is(aCount, count, "Correct number of listeners");
     }
 
     function addMessageListenersTest(aMessages, aExpectedListeners, aCount) {
       dummy.addMessageListeners(aMessages);
-      ok(true, JSON.stringify(dummy._listeners));
+      info(JSON.stringify(dummy._listeners));
       checkMessageListeners(aExpectedListeners, aCount);
     }
 
@@ -165,39 +167,40 @@
      */
     var tests = [
       function() {
-        ok(true, "== InitDOMRequestHelper no messages");
+        info("== InitDOMRequestHelper no messages");
         initDOMRequestHelperTest(null);
         next();
       },
       function() {
-        ok(true, "== DestroyDOMRequestHelper");
+        info("== DestroyDOMRequestHelper");
         destroyDOMRequestHelperTest();
         next();
       },
       function() {
-        ok(true, "== InitDOMRequestHelper empty array");
+        info("== InitDOMRequestHelper empty array");
         initDOMRequestHelperTest([]);
         checkMessageListeners({}, 0);
         next();
       },
       function() {
-        ok(true, "== DestroyDOMRequestHelper");
+        info("== DestroyDOMRequestHelper");
         destroyDOMRequestHelperTest();
         next();
       },
       function() {
-        ok(true, "== InitDOMRequestHelper with strings array");
+        info("== InitDOMRequestHelper with strings array");
         initDOMRequestHelperTest(["name1", "nameN"]);
-        checkMessageListeners({"name1": false, "nameN": false}, 2);
+        checkMessageListeners({"name1": {weakRef: false, count: 1},
+                               "nameN": {weakRef: false, count: 1}}, 2);
         next();
       },
       function() {
-        ok(true, "== DestroyDOMRequestHelper");
+        info("== DestroyDOMRequestHelper");
         destroyDOMRequestHelperTest();
         next();
       },
       function() {
-        ok(true, "== InitDOMRequestHelper with objects array");
+        info("== InitDOMRequestHelper with objects array");
         initDOMRequestHelperTest([{
           name: "name1",
           weakRef: false
@@ -205,41 +208,50 @@
           name: "nameN",
           weakRef: true
         }]);
-        checkMessageListeners({"name1": false, "nameN": true}, 2);
+        checkMessageListeners({
+          "name1": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+        }, 2);
         next();
       },
       function() {
-        ok(true, "== AddMessageListeners empty array");
-        addMessageListenersTest([], {"name1": false, "nameN": true}, 2);
+        info("== AddMessageListeners empty array");
+        addMessageListenersTest([], {
+        "name1": {weakRef: false, count: 1},
+        "nameN": {weakRef: true,  count: 1}
+        }, 2);
         next();
       },
       function() {
-        ok(true, "== AddMessageListeners null");
-        addMessageListenersTest(null, {"name1": false, "nameN": true}, 2);
+        info("== AddMessageListeners null");
+        addMessageListenersTest(null, {
+          "name1": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
+          }, 2);
         next();
       },
       function() {
-        ok(true, "== AddMessageListeners new listener, string only");
+        info("== AddMessageListeners new listener, string only");
         addMessageListenersTest("name2", {
-          "name1": false,
-          "name2": false,
-          "nameN": true
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 3);
         next();
       },
       function() {
-        ok(true, "== AddMessageListeners new listeners, strings array");
+        info("== AddMessageListeners new listeners, strings array");
         addMessageListenersTest(["name3", "name4"], {
-          "name1": false,
-          "name2": false,
-          "name3": false,
-          "name4": false,
-          "nameN": true
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 5);
         next();
       },
       function() {
-        ok(true, "== AddMessageListeners new listeners, objects array");
+        info("== AddMessageListeners new listeners, objects array");
         addMessageListenersTest([{
           name: "name5",
           weakRef: true
@@ -247,69 +259,69 @@
           name: "name6",
           weakRef: false
         }], {
-          "name1": false,
-          "name2": false,
-          "name3": false,
-          "name4": false,
-          "name5": true,
-          "name6": false,
-          "nameN": true
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 7);
         next();
       },
       function() {
-        ok(true, "== RemoveMessageListeners, null");
+        info("== RemoveMessageListeners, null");
         removeMessageListenersTest(null, {
-          "name1": false,
-          "name2": false,
-          "name3": false,
-          "name4": false,
-          "name5": true,
-          "name6": false,
-          "nameN": true
+          "name1": {weakRef: false, count: 1},
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 7);
         next();
       },
       function() {
-        ok(true, "== RemoveMessageListeners, one message");
+        info("== RemoveMessageListeners, one message");
         removeMessageListenersTest("name1", {
-          "name2": false,
-          "name3": false,
-          "name4": false,
-          "name5": true,
-          "name6": false,
-          "nameN": true
+          "name2": {weakRef: false, count: 1},
+          "name3": {weakRef: false, count: 1},
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 6);
         next();
       },
       function() {
-        ok(true, "== RemoveMessageListeners, array of messages");
+        info("== RemoveMessageListeners, array of messages");
         removeMessageListenersTest(["name2", "name3"], {
-          "name4": false,
-          "name5": true,
-          "name6": false,
-          "nameN": true
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 4);
         next();
       },
       function() {
-        ok(true, "== RemoveMessageListeners, unknown message");
+        info("== RemoveMessageListeners, unknown message");
         removeMessageListenersTest("unknown", {
-          "name4": false,
-          "name5": true,
-          "name6": false,
-          "nameN": true
+          "name4": {weakRef: false, count: 1},
+          "name5": {weakRef: true,  count: 1},
+          "name6": {weakRef: false, count: 1},
+          "nameN": {weakRef: true,  count: 1}
         }, 4);
         next();
       },
       function() {
         try {
-          ok(true, "== AddMessageListeners, same message, same kind");
+          info("== AddMessageListeners, same message, same kind");
           addMessageListenersTest("name4", {
-            "name4": false,
-            "name5": true,
-            "name6": false,
-            "nameN": true
+            "name4": {weakRef: false, count: 2},
+            "name5": {weakRef: true,  count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
           }, 4);
           next();
         } catch (ex) {
@@ -317,13 +329,13 @@
         }
       },
       function() {
-        ok(true, "== AddMessageListeners, same message, different kind");
+        info("== AddMessageListeners, same message, different kind");
         try {
           addMessageListenersTest({name: "name4", weakRef: true}, {
-            "name4": true,
-            "name5": true,
-            "name6": false,
-            "nameN": true
+            "name4": {weakRef: false, count: 2},
+            "name5": {weakRef: true,  count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
           }, 4);
           ok(false, "Should have thrown an exception");
         } catch (ex) {
@@ -332,14 +344,27 @@
         }
       },
       function() {
-        ok(true, "== Test createRequest()");
+        info("== RemoveMessageListeners, message with two listeners");
+        try {
+          removeMessageListenersTest(["name4", "name5"], {
+            "name4": {weakRef: false, count: 1},
+            "name6": {weakRef: false, count: 1},
+            "nameN": {weakRef: true,  count: 1}
+          }, 3);
+          next();
+        } catch (ex) {
+          ok(false, "Unexpected exception " + ex);
+        }
+      },
+      function() {
+        info("== Test createRequest()");
         ok(DOMRequest, "DOMRequest object exists");
         var req = dummy.createRequest();
         ok(req instanceof DOMRequest, "Returned a DOMRequest");
         next();
       },
       function() {
-        ok(true, "== Test getRequestId(), removeRequest() and getRequest()");
+        info("== Test getRequestId(), removeRequest() and getRequest()");
         var req = dummy.createRequest();
         var id = dummy.getRequestId(req);
         is(typeof id, "string", "id is a string");
@@ -351,7 +376,7 @@
         next();
       },
       function() {
-        ok(true, "== Test createPromise()");
+        info("== Test createPromise()");
         ok(Promise, "Promise object exists");
         var promise = dummy.createPromise(function(resolve, reject) {
           resolve(true);
@@ -360,7 +385,7 @@
         promise.then(next);
       },
       function() {
-        ok(true, "== Test getResolver()");
+        info("== Test getResolver()");
         var id;
         var resolver;
         var promise = dummy.createPromise(function(resolve, reject) {
@@ -376,7 +401,7 @@
         });
       },
       function() {
-        ok(true, "== Test removeResolver");
+        info("== Test removeResolver");
         var id;
         var promise = dummy.createPromise(function(resolve, reject) {
           var r = { resolve: resolve, reject: reject };
@@ -384,7 +409,7 @@
           ok(typeof id === "string", "id is a string");
 
           var resolver = dummy.getPromiseResolver(id);
-          ok(true, "Got resolver " + JSON.stringify(resolver));
+          info("Got resolver " + JSON.stringify(resolver));
           ok(resolver === r, "Resolver get succeeded");
 
           r.resolve(true);
@@ -396,7 +421,7 @@
         });
       },
       function() {
-        ok(true, "== Test takeResolver");
+        info("== Test takeResolver");
         var id;
         var resolver;
         var promise = dummy.createPromise(function(resolve, reject) {
@@ -419,21 +444,21 @@
         });
       },
       function() {
-        ok(true, "== Test window destroyed without messages and without GC");
+        info("== Test window destroyed without messages and without GC");
         checkWindowDestruction({ gc: false }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
           next();
         });
       },
       function() {
-        ok(true, "== Test window destroyed without messages and with GC");
+        info("== Test window destroyed without messages and with GC");
         checkWindowDestruction({ gc: true }, function(uninitCalled) {
           ok(!uninitCalled, "uninit() should NOT have been called");
           next();
         });
       },
       function() {
-        ok(true, "== Test window destroyed with weak messages and without GC");
+        info("== Test window destroyed with weak messages and without GC");
         checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
                                  gc: false }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
@@ -441,7 +466,7 @@
         });
       },
       function() {
-        ok(true, "== Test window destroyed with weak messages and with GC");
+        info("== Test window destroyed with weak messages and with GC");
         checkWindowDestruction({ messages: [{ name: "foo", weakRef: true }],
                                  gc: true }, function(uninitCalled) {
           ok(!uninitCalled, "uninit() should NOT have been called");
@@ -449,7 +474,7 @@
         });
       },
       function() {
-        ok(true, "== Test window destroyed with strong messages and without GC");
+        info("== Test window destroyed with strong messages and without GC");
         checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
                                  gc: false }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
@@ -457,7 +482,7 @@
         });
       },
       function() {
-        ok(true, "== Test window destroyed with strong messages and with GC");
+        info("== Test window destroyed with strong messages and with GC");
         checkWindowDestruction({ messages: [{ name: "foo", weakRef: false }],
                                  gc: true }, function(uninitCalled) {
           ok(uninitCalled, "uninit() should have been called");
