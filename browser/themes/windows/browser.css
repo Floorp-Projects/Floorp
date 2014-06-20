@@ -2443,6 +2443,10 @@ notification[value="translation"] {
   -moz-image-region: rect(0px, 32px, 16px, 16px);
 }
 
+.translation-menupopup {
+  -moz-appearance: none;
+}
+
 /* Bookmarks roots menu-items */
 #subscribeToPageMenuitem:not([disabled]),
 #subscribeToPageMenupopup,
