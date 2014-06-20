@@ -45,11 +45,13 @@ private:
 #endif
   Stack* mStackToFill;
   size_t mMaxStackSize;
+  size_t mMaxBufferSize;
 
   bool PrepareStackBuffer(Stack& aStack);
   void FillStackBuffer();
 #ifdef MOZ_ENABLE_PROFILER_SPS
   const char* AppendJSEntry(const volatile StackEntry* aEntry,
+                            intptr_t& aAvailableBufferSize,
                             const char* aPrevLabel);
 #endif
 
