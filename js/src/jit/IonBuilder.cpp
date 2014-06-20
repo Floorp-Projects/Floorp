@@ -693,7 +693,7 @@ IonBuilder::build()
     }
 
     // Emit the start instruction, so we can begin real instructions.
-    current->makeStart(MStart::New(alloc(), MStart::StartType_Default));
+    current->add(MStart::New(alloc(), MStart::StartType_Default));
     if (instrumentedProfiling())
         current->add(MProfilerStackOp::New(alloc(), script(), MProfilerStackOp::Enter));
 
