@@ -1,13 +1,13 @@
 # Please see the comment at the beginning of reftest.list
 
-random-if(B2G&&browserIsRemote) == leftN-widthA-rightA.html?margin_abspos leftN-widthA-rightA-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftN-widthA-rightA-2.html?margin_abspos leftN-widthA-rightA-2-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftN-widthA-rightN.html?margin_abspos leftN-widthA-rightN-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftN-widthA-rightN-2.html?margin_abspos leftN-widthA-rightN-2-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftA-widthN-rightA.html?margin_abspos leftA-widthN-rightA-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftN-widthN-rightA.html?margin_abspos leftN-widthN-rightA-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftA-widthN-rightN.html?margin_abspos leftA-widthN-rightN-ref.html?margin_abspos
-random-if(B2G&&browserIsRemote) == leftA-widthA-rightN.html?margin_abspos leftA-widthA-rightN-ref.html?margin_abspos
+== leftN-widthA-rightA.html?margin_abspos leftN-widthA-rightA-ref.html?margin_abspos
+== leftN-widthA-rightA-2.html?margin_abspos leftN-widthA-rightA-2-ref.html?margin_abspos
+== leftN-widthA-rightN.html?margin_abspos leftN-widthA-rightN-ref.html?margin_abspos
+== leftN-widthA-rightN-2.html?margin_abspos leftN-widthA-rightN-2-ref.html?margin_abspos
+== leftA-widthN-rightA.html?margin_abspos leftA-widthN-rightA-ref.html?margin_abspos
+== leftN-widthN-rightA.html?margin_abspos leftN-widthN-rightA-ref.html?margin_abspos
+== leftA-widthN-rightN.html?margin_abspos leftA-widthN-rightN-ref.html?margin_abspos
+== leftA-widthA-rightN.html?margin_abspos leftA-widthA-rightN-ref.html?margin_abspos
 == toauto-leftN-widthA-rightA.html?margin_abspos toauto-leftN-widthA-rightA-ref.html?margin_abspos
 == toauto-leftN-widthA-rightA-2.html?margin_abspos toauto-leftN-widthA-rightA-2-ref.html?margin_abspos
 == toauto-leftN-widthA-rightN.html?margin_abspos toauto-leftN-widthA-rightN-ref.html?margin_abspos
