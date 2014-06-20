@@ -21,12 +21,9 @@
 #include "nsCSSPseudoClasses.h"
 
 class nsIAtom;
+class nsCSSStyleSheet;
 struct nsCSSSelectorList;
 class nsCSSCompressedDataBlock;
-
-namespace mozilla {
-class CSSStyleSheet;
-} // namespace mozilla
 
 struct nsAtomList {
 public:
@@ -157,7 +154,7 @@ public:
   // Calculate the specificity of this selector (not including its mNext!).
   int32_t CalcWeight() const;
 
-  void ToString(nsAString& aString, mozilla::CSSStyleSheet* aSheet,
+  void ToString(nsAString& aString, nsCSSStyleSheet* aSheet,
                 bool aAppend = false) const;
 
 private:
@@ -165,9 +162,9 @@ private:
   nsCSSSelector* Clone(bool aDeepNext, bool aDeepNegations) const;
 
   void AppendToStringWithoutCombinators(nsAString& aString,
-                                        mozilla::CSSStyleSheet* aSheet) const;
+                                        nsCSSStyleSheet* aSheet) const;
   void AppendToStringWithoutCombinatorsOrNegations(nsAString& aString,
-                                                   mozilla::CSSStyleSheet* aSheet,
+                                                   nsCSSStyleSheet* aSheet,
                                                    bool aIsNegated)
                                                         const;
   // Returns true if this selector can have a namespace specified (which
@@ -241,7 +238,7 @@ struct nsCSSSelectorList {
   /**
    * Should be used only on the first in the list
    */
-  void ToString(nsAString& aResult, mozilla::CSSStyleSheet* aSheet);
+  void ToString(nsAString& aResult, nsCSSStyleSheet* aSheet);
 
   /**
    * Do a deep clone.  Should be used only on the first in the list.

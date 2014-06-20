@@ -6,12 +6,11 @@
 /* diagnostic reporting for CSS style sheet parser */
 
 #include "mozilla/css/ErrorReporter.h"
-
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsCSSScanner.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIConsoleService.h"
 #include "nsIDocument.h"
 #include "nsIFactory.h"
@@ -23,7 +22,8 @@
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
-using namespace mozilla;
+using mozilla::Preferences;
+namespace services = mozilla::services;
 
 namespace {
 class ShortTermURISpecCache : public nsRunnable {
@@ -132,7 +132,7 @@ ErrorReporter::ReleaseGlobals()
 }
 
 ErrorReporter::ErrorReporter(const nsCSSScanner& aScanner,
-                             const CSSStyleSheet* aSheet,
+                             const nsCSSStyleSheet* aSheet,
                              const Loader* aLoader,
                              nsIURI* aURI)
   : mScanner(&aScanner), mSheet(aSheet), mLoader(aLoader), mURI(aURI),
