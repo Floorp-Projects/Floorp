@@ -194,7 +194,7 @@ class B2GRemoteAutomation(Automation):
         time.sleep(10)
         self._devicemanager._checkCmd(['shell', 'start', 'b2g'])
         if self._is_emulator:
-            self.marionette.emulator.wait_for_port()
+            self.marionette.emulator.wait_for_port(self.marionette.port)
 
     def rebootDevice(self):
         # find device's current status and serial number
@@ -262,7 +262,7 @@ class B2GRemoteAutomation(Automation):
                                            'tcp:%s' % self.marionette.port])
 
         if self._is_emulator:
-            self.marionette.emulator.wait_for_port()
+            self.marionette.emulator.wait_for_port(self.marionette.port)
         else:
             time.sleep(5)
 

@@ -133,7 +133,7 @@ ThebesLayerComposite::RenderLayer(const nsIntRect& aClipRect)
   LayerManagerComposite::AutoAddMaskEffect autoMaskEffect(mMaskLayer, effectChain);
   AddBlendModeEffect(effectChain);
 
-  nsIntRegion visibleRegion = GetEffectiveVisibleRegion();
+  const nsIntRegion& visibleRegion = GetEffectiveVisibleRegion();
 
   TiledLayerProperties tiledLayerProps;
   if (mRequiresTiledProperties) {

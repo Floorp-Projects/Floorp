@@ -128,9 +128,9 @@ static bool
 ForceCOWBehavior(JSObject *obj)
 {
     JSProtoKey key = IdentifyStandardInstanceOrPrototype(obj);
-    if (key == JSProto_Object || key == JSProto_Array) {
+    if (key == JSProto_Object || key == JSProto_Array || key == JSProto_Function) {
         MOZ_ASSERT(GetXrayType(obj) == XrayForJSObject,
-                   "We should use XrayWrappers for standard ES Object and Array "
+                   "We should use XrayWrappers for standard ES Object, Array, and Function "
                    "instances modulo this hack");
         return true;
     }
@@ -360,13 +360,6 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
     if (!wantXrays || xrayType == NotXray) {
         if (!securityWrapper)
             return &CrossCompartmentWrapper::singleton;
-        // In general, we don't want opaque function wrappers to be callable.
-        // But in the case of XBL, we rely on content being able to invoke
-        // functions exposed from the XBL scope. We could remove this exception,
-        // if needed, by using ExportFunction to generate the content-side
-        // representations of XBL methods.
-        else if (originIsXBLScope)
-            return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
         return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
     }
 
@@ -390,7 +383,15 @@ SelectWrapper(bool securityWrapper, bool wantXrays, XrayType xrayType,
                                  CrossOriginAccessiblePropertiesOnly>::singleton;
     // There's never any reason to expose pure JS objects to non-subsuming actors.
     // Just use an opaque wrapper in this case.
+    //
+    // In general, we don't want opaque function wrappers to be callable.
+    // But in the case of XBL, we rely on content being able to invoke
+    // functions exposed from the XBL scope. We could remove this exception,
+    // if needed, by using ExportFunction to generate the content-side
+    // representations of XBL methods.
     MOZ_ASSERT(xrayType == XrayForJSObject);
+    if (originIsXBLScope)
+        return &FilteringWrapper<CrossCompartmentSecurityWrapper, OpaqueWithCall>::singleton;
     return &FilteringWrapper<CrossCompartmentSecurityWrapper, Opaque>::singleton;
 }
 
