@@ -190,11 +190,11 @@ Section "MaintenanceService"
   ${GetParameters} $0
   ${GetOptions} "$0" "/Upgrade" $0
   ${If} ${Errors}
-    nsExec::Exec '"$INSTDIR\$TempMaintServiceName" install'
+    ExecWait '"$INSTDIR\$TempMaintServiceName" install'
   ${Else}
     ; The upgrade cmdline is the same as install except
     ; It will fail if the service isn't already installed.
-    nsExec::Exec '"$INSTDIR\$TempMaintServiceName" upgrade'
+    ExecWait '"$INSTDIR\$TempMaintServiceName" upgrade'
   ${EndIf}
 
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -255,7 +255,7 @@ FunctionEnd
 
 Section "Uninstall"
   ; Delete the service so that no updates will be attempted
-  nsExec::Exec '"$INSTDIR\maintenanceservice.exe" uninstall'
+  ExecWait '"$INSTDIR\maintenanceservice.exe" uninstall'
 
   Push "$INSTDIR\updater.ini"
   Call un.RenameDelete

@@ -1,0 +1,121 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("chrome://browser/skin/in-content/common.css");
+
+html {
+  font: message-box;
+  font-size: 15px;
+  font-weight: normal;
+  margin: 0;
+  color: #737980;
+  background-image: linear-gradient(#fff, #ededed 100px);
+  height: 100%;
+}
+
+body {
+  padding: 20px;
+}
+
+h1 {
+  font-size: 2.5em;
+  font-weight: lighter;
+  line-height: 1.2;
+  margin: 0;
+  margin-bottom: .5em;
+}
+
+button {
+  line-height: 20px;
+  font-size: 1em;
+  height: 30px;
+  max-height: 30px;
+  min-width: 120px;
+  padding: 3px;
+  color: #737980;
+  border: 1px solid rgba(23,50,77,.4);
+  border-radius: 5px;
+  background-color: #f1f1f1;
+  background-image: linear-gradient(#fff, rgba(255,255,255,.1));
+  box-shadow: 0 1px 1px 0 #fff, inset 0 2px 2px 0 #fff;
+  text-shadow: 0 1px 1px #fefffe;
+  -moz-appearance: none;
+  -moz-border-top-colors: none !important;
+  -moz-border-right-colors: none !important;
+  -moz-border-bottom-colors: none !important;
+  -moz-border-left-colors: none !important;
+}
+
+button:hover {
+  background-image: linear-gradient(#fff, rgba(255,255,255,.6));
+  cursor: pointer;
+}
+
+button:hover:active {
+  background-image: linear-gradient(rgba(255,255,255,.1), rgba(255,255,255,.6));
+}
+
+progress {
+  height: 30px;
+  vertical-align: middle;
+  padding: 0;
+  width: 120px;
+}
+
+li {
+  margin: 20px 0;
+}
+
+.name {
+  display: inline-block;
+  min-width: 280px;
+}
+
+.status {
+  display: inline-block;
+  min-width: 120px;
+}
+
+.warning {
+  color: #F06;
+  margin: 0;
+  font-size: 0.9em;
+}
+
+
+#controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+#controls > a {
+  color: #4C9ED9;
+  font-size: small;
+  cursor: pointer;
+  border-bottom: 1px dotted;
+}
+
+#close {
+  margin-left: 10px;
+}
+
+li[status="unknown"],
+li > .uninstall-button,
+li > .install-button,
+li > progress {
+  display: none;
+}
+
+li[status="installed"] > .uninstall-button,
+li[status="uninstalled"] > .install-button,
+li[status="preparing"] > progress,
+li[status="downloading"] > progress,
+li[status="installing"] > progress {
+  display: inline;
+}
+
+li:not([status="uninstalled"]) > .warning {
+  display: none;
+}

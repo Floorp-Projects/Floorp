@@ -29,7 +29,7 @@
             ok(appmgr.webAppsStore, "WebApps store ready");
 
             // test error reporting
-            let nbox = win.document.querySelector("#body");
+            let nbox = win.document.querySelector("#notificationbox");
             let notification =  nbox.getNotificationWithValue("webide:errornotification");
             ok(!notification, "No notification yet");
             let deferred = promise.defer();

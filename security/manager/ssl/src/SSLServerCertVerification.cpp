@@ -137,8 +137,6 @@ namespace mozilla { namespace psm {
 
 namespace {
 
-NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 NSSCleanupAutoPtrClass_WithParam(PLArenaPool, PORT_FreeArena, FalseParam, false)
 

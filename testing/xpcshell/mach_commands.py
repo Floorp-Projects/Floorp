@@ -356,7 +356,7 @@ class B2GXPCShellRunner(MozbuildObject):
         options.busybox = busybox or os.environ.get('BUSYBOX')
         options.localLib = self.bin_dir
         options.localBin = self.bin_dir
-        options.logcat_dir = self.xpcshell_dir
+        options.logdir = self.xpcshell_dir
         options.manifest = os.path.join(self.xpcshell_dir, 'xpcshell_b2g.ini')
         options.mozInfo = os.path.join(self.topobjdir, 'mozinfo.json')
         options.objdir = self.topobjdir
