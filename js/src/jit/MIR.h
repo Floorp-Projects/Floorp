@@ -1821,6 +1821,24 @@ class MNewDerivedTypedObject
     }
 };
 
+// Abort parallel execution.
+class MAbortPar : public MAryControlInstruction<0, 0>
+{
+    MAbortPar()
+      : MAryControlInstruction<0, 0>()
+    {
+        setResultType(MIRType_None);
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(AbortPar);
+
+    static MAbortPar *New(TempAllocator &alloc) {
+        return new(alloc) MAbortPar();
+    }
+};
+
 // Setting __proto__ in an object literal.
 class MMutateProto
   : public MAryInstruction<2>,
@@ -2274,11 +2292,10 @@ class MApplyArgs
     }
 };
 
-class MBail : public MAryControlInstruction<0, 0>
+class MBail : public MNullaryInstruction
 {
   protected:
     MBail(BailoutKind kind)
-      : MAryControlInstruction<0, 0>()
     {
         bailoutKind_ = kind;
         setGuard();
@@ -5236,6 +5253,7 @@ class MInterruptCheckPar : public MUnaryInstruction
     {
         setResultType(MIRType_None);
         setGuard();
+        setMovable();
     }
 
   public:
@@ -5247,9 +5265,6 @@ class MInterruptCheckPar : public MUnaryInstruction
 
     MDefinition *forkJoinContext() const {
         return getOperand(0);
-    }
-    AliasSet getAliasSet() const {
-        return AliasSet::None();
     }
 };
 

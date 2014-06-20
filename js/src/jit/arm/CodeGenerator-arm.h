@@ -68,10 +68,6 @@ class CodeGeneratorARM : public CodeGeneratorShared
         masm.test32(lhs, rhs);
         return bailoutIf(c, snapshot);
     }
-    bool bailoutIfFalseBool(Register reg, LSnapshot *snapshot) {
-        masm.test32(reg, Imm32(0xFF));
-        return bailoutIf(Assembler::Zero, snapshot);
-    }
 
   protected:
     bool generatePrologue();
