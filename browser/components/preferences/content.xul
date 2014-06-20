@@ -144,10 +144,16 @@
                     oncommand="gContentPane.showLanguages();"/>
           </row>
           <row id="translationBox" hidden="true">
-            <checkbox id="translate" preference="browser.translation.detectLanguage" flex="1"
-                      label="&translateWebPages.label;" accesskey="&translateWebPages.accesskey;"
-                      onsyncfrompreference="return gContentPane.updateButtons('translateButton',
-                                            'browser.translation.detectLanguage');"/>
+            <hbox align="center">
+              <checkbox id="translate" preference="browser.translation.detectLanguage"
+                        label="&translateWebPages.label;." accesskey="&translateWebPages.accesskey;"
+                        onsyncfrompreference="return gContentPane.updateButtons('translateButton',
+                                              'browser.translation.detectLanguage');"/>
+              <label>Übersetzungen von</label>
+              <image id="translationAttributionImage" aria-label="Microsoft Translator"
+                     onclick="gContentPane.openTranslationProviderAttribution()"
+                     src="chrome://browser/content/microsoft-translator-attribution.png"/>
+            </hbox>
             <button id="translateButton" label="&translateExceptions.label;"
                     oncommand="gContentPane.showTranslationExceptions();"
                     accesskey="&translateExceptions.accesskey;"/>

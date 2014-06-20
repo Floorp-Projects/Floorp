@@ -80,6 +80,12 @@ this.Translation = {
 
     if (trUI.shouldShowInfoBar(aBrowser.currentURI))
       trUI.showTranslationInfoBar();
+  },
+
+  openProviderAttribution: function() {
+    Cu.import("resource:///modules/RecentWindow.jsm");
+    RecentWindow.getMostRecentBrowserWindow().openUILinkIn(
+      "http://aka.ms/MicrosoftTranslatorAttribution", "tab");
   }
 };
 
