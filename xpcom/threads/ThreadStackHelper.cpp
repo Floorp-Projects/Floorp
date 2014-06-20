@@ -57,8 +57,8 @@ ThreadStackHelper::ThreadStackHelper()
 #ifdef MOZ_ENABLE_PROFILER_SPS
     mPseudoStack(mozilla_get_pseudo_stack()),
 #endif
-    mStackBuffer()
-  , mMaxStackSize(mStackBuffer.capacity())
+    mStackToFill(nullptr)
+  , mMaxStackSize(Stack::sMaxInlineStorage)
 {
 #if defined(XP_LINUX)
   mThreadID = ::syscall(SYS_gettid);
@@ -165,7 +165,6 @@ ThreadStackHelper::GetStack(Stack& aStack)
   MOZ_ALWAYS_TRUE(::thread_resume(mThreadID) == KERN_SUCCESS);
 
 #endif
-  aStack = Move(mStackBuffer);
 }
 
 #ifdef XP_LINUX
@@ -203,8 +202,8 @@ ThreadStackHelper::PrepareStackBuffer(Stack& aStack)
   }
 #endif
   MOZ_ASSERT(mPseudoStack);
-  mStackBuffer.clear();
-  MOZ_ALWAYS_TRUE(mStackBuffer.reserve(mMaxStackSize));
+  MOZ_ALWAYS_TRUE(aStack.reserve(mMaxStackSize));
+  mStackToFill = &aStack;
   return true;
 #else
   return false;
@@ -250,7 +249,7 @@ ThreadStackHelper::AppendJSEntry(const volatile StackEntry* aEntry,
   if (label == aPrevLabel) {
     return aPrevLabel;
   }
-  mStackBuffer.infallibleAppend(label);
+  mStackToFill->infallibleAppend(label);
   return label;
 }
 
@@ -281,7 +280,7 @@ ThreadStackHelper::FillStackBuffer()
     if (label == prevLabel) {
       continue;
     }
-    mStackBuffer.infallibleAppend(label);
+    mStackToFill->infallibleAppend(label);
     prevLabel = label;
   }
   // If we exited early due to buffer size, expand the buffer for next time
