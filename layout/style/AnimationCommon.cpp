@@ -370,24 +370,21 @@ const double ComputedTiming::kNullTimeFraction =
 bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
-  if (IsPaused() || mTiming.mIterationDuration.ToMilliseconds() <= 0.0 ||
-      IsFinishedTransition()) {
+  if (IsPaused() || IsFinishedTransition()) {
     return false;
   }
 
-  double iterationsElapsed =
-    ElapsedDurationAt(aTime) / mTiming.mIterationDuration;
-  return 0.0 <= iterationsElapsed &&
-         iterationsElapsed < mTiming.mIterationCount;
+  ComputedTiming computedTiming =
+    GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
+  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
 }
 
 bool
 ElementAnimation::IsCurrentAt(TimeStamp aTime) const
 {
   if (!IsFinishedTransition()) {
-    TimeDuration elapsedDuration = ElapsedDurationAt(aTime);
     ComputedTiming computedTiming =
-      ElementAnimation::GetComputedTimingAt(elapsedDuration, mTiming);
+      GetComputedTimingAt(GetLocalTimeAt(aTime), mTiming);
     if (computedTiming.mPhase == ComputedTiming::AnimationPhase_Before ||
         computedTiming.mPhase == ComputedTiming::AnimationPhase_Active) {
       return true;
@@ -410,7 +407,7 @@ ElementAnimation::HasAnimationOfProperty(nsCSSProperty aProperty) const
 }
 
 ComputedTiming
-ElementAnimation::GetComputedTimingAt(TimeDuration aElapsedDuration,
+ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
                                       const AnimationTiming& aTiming)
 {
   // Always return the same object to benefit from return-value optimization.
@@ -425,7 +422,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aElapsedDuration,
 
   // Get the normalized time within the active interval.
   TimeDuration activeTime;
-  if (aElapsedDuration >= activeDuration) {
+  if (aLocalTime >= aTiming.mDelay + activeDuration) {
     result.mPhase = ComputedTiming::AnimationPhase_After;
     if (!aTiming.FillsForwards()) {
       // The animation isn't active or filling at this time.
@@ -438,7 +435,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aElapsedDuration,
     isEndOfFinalIteration =
       aTiming.mIterationCount != 0.0 &&
       aTiming.mIterationCount == floor(aTiming.mIterationCount);
-  } else if (aElapsedDuration < TimeDuration()) {
+  } else if (aLocalTime < aTiming.mDelay) {
     result.mPhase = ComputedTiming::AnimationPhase_Before;
     if (!aTiming.FillsBackwards()) {
       // The animation isn't active or filling at this time.
@@ -450,7 +447,7 @@ ElementAnimation::GetComputedTimingAt(TimeDuration aElapsedDuration,
     MOZ_ASSERT(activeDuration != TimeDuration(),
                "How can we be in the middle of a zero-duration interval?");
     result.mPhase = ComputedTiming::AnimationPhase_Active;
-    activeTime = aElapsedDuration;
+    activeTime = aLocalTime - aTiming.mDelay;
   }
 
   // Get the position within the current iteration.
