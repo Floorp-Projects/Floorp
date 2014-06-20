@@ -128,7 +128,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIMIMEService.h"
 #include "nsINode.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsIObjectLoadingContent.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
@@ -2761,7 +2761,7 @@ nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                      const nsAString& aQualifiedName,
                                      nsNodeInfoManager* aNodeInfoManager,
                                      uint16_t aNodeType,
-                                     nsINodeInfo** aNodeInfo)
+                                     mozilla::dom::NodeInfo** aNodeInfo)
 {
   const nsAFlatString& qName = PromiseFlatString(aQualifiedName);
   const char16_t* colon;
@@ -3125,8 +3125,8 @@ nsContentUtils::IsDraggableLink(const nsIContent* aContent) {
 
 // static
 nsresult
-nsContentUtils::NameChanged(nsINodeInfo* aNodeInfo, nsIAtom* aName,
-                            nsINodeInfo** aResult)
+nsContentUtils::NameChanged(mozilla::dom::NodeInfo* aNodeInfo, nsIAtom* aName,
+                            mozilla::dom::NodeInfo** aResult)
 {
   nsNodeInfoManager *niMgr = aNodeInfo->NodeInfoManager();
 
@@ -4185,7 +4185,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     }
 
     if (!setDefaultNamespace) {
-      nsINodeInfo* info = content->NodeInfo();
+      mozilla::dom::NodeInfo* info = content->NodeInfo();
       if (!info->GetPrefixAtom() &&
           info->NamespaceID() != kNameSpaceID_None) {
         // We have no namespace prefix, but have a namespace ID.  Push

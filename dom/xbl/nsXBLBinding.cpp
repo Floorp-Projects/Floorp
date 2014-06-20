@@ -360,7 +360,7 @@ nsXBLBinding::GenerateAnonymousContent()
         if (point) {
           point->AppendInsertedChild(child);
         } else {
-          nsINodeInfo *ni = child->NodeInfo();
+          NodeInfo *ni = child->NodeInfo();
           if (ni->NamespaceID() != kNameSpaceID_XUL ||
               (!ni->Equals(nsGkAtoms::_template) &&
                !ni->Equals(nsGkAtoms::observes))) {

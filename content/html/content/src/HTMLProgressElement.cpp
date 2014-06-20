@@ -17,7 +17,7 @@ const double HTMLProgressElement::kDefaultValue          =  0.0;
 const double HTMLProgressElement::kDefaultMax            =  1.0;
 
 
-HTMLProgressElement::HTMLProgressElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLProgressElement::HTMLProgressElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
   // We start out indeterminate

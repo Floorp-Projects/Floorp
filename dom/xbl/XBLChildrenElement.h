@@ -24,11 +24,11 @@ class XBLChildrenElement : public nsXMLElement
 public:
   friend class mozilla::dom::ExplicitChildIterator;
   friend class nsAnonymousContentList;
-  XBLChildrenElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
-  XBLChildrenElement(already_AddRefed<nsINodeInfo>&& aNodeInfo)
+  XBLChildrenElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
   }
@@ -38,7 +38,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsINode interface methods
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual nsXPCClassInfo* GetClassInfo() { return nullptr; }
 

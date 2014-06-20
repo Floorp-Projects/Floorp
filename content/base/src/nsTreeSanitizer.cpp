@@ -1376,7 +1376,7 @@ nsTreeSanitizer::SanitizeChildren(nsINode* aRoot)
   while (node) {
     if (node->IsElement()) {
       mozilla::dom::Element* elt = node->AsElement();
-      nsINodeInfo* nodeInfo = node->NodeInfo();
+      mozilla::dom::NodeInfo* nodeInfo = node->NodeInfo();
       nsIAtom* localName = nodeInfo->NameAtom();
       int32_t ns = nodeInfo->NamespaceID();
 

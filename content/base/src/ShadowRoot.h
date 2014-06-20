@@ -16,7 +16,6 @@
 class nsIAtom;
 class nsIContent;
 class nsIDocument;
-class nsINodeInfo;
 class nsPIDOMWindow;
 class nsXBLPrototypeBinding;
 class nsTagNameMapEntry;
@@ -43,7 +42,7 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
-  ShadowRoot(nsIContent* aContent, already_AddRefed<nsINodeInfo>&& aNodeInfo,
+  ShadowRoot(nsIContent* aContent, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
              nsXBLPrototypeBinding* aProtoBinding);
   virtual ~ShadowRoot();
 

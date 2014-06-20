@@ -24,7 +24,7 @@ class HTMLSharedObjectElement MOZ_FINAL : public nsGenericHTMLElement
                                         , public nsIDOMHTMLEmbedElement
 {
 public:
-  HTMLSharedObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                           mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~HTMLSharedObjectElement();
 
@@ -72,7 +72,7 @@ public:
   // nsObjectLoadingContent
   virtual uint32_t GetCapabilities() const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsresult CopyInnerTo(Element* aDest);
 

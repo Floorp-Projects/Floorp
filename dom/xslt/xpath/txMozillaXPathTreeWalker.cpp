@@ -11,7 +11,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMProcessingInstruction.h"
-#include "nsINodeInfo.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -398,7 +397,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
 
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
-            nsINodeInfo* nodeInfo = aNode.Content()->NodeInfo();
+            mozilla::dom::NodeInfo* nodeInfo = aNode.Content()->NodeInfo();
             nodeInfo->GetName(aLocalName);
             return;
         }
@@ -693,7 +692,7 @@ txXPathNativeNode::createXPathNode(nsIDOMNode* aNode, bool aKeepRootAlive)
         nsCOMPtr<nsIAttribute> attr = do_QueryInterface(aNode);
         NS_ASSERTION(attr, "doesn't implement nsIAttribute");
 
-        nsINodeInfo *nodeInfo = attr->NodeInfo();
+        mozilla::dom::NodeInfo *nodeInfo = attr->NodeInfo();
         mozilla::dom::Element* parent =
           static_cast<Attr*>(attr.get())->GetElement();
         if (!parent) {

@@ -18,7 +18,7 @@ class HTMLPreElement MOZ_FINAL : public nsGenericHTMLElement,
                                  public nsIDOMHTMLPreElement
 {
 public:
-  HTMLPreElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  HTMLPreElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
@@ -38,7 +38,7 @@ public:
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL API
   int32_t Width() const

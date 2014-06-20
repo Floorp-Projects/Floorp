@@ -20,7 +20,6 @@
 #include "nsWrapperCache.h"
 
 class nsIAtom;
-class nsINodeInfo;
 class nsIDocument;
 
 /**
@@ -193,16 +192,16 @@ private:
   already_AddRefed<Attr>
   SetNamedItemInternal(Attr& aNode, bool aWithNS, ErrorResult& aError);
 
-  already_AddRefed<nsINodeInfo>
+  already_AddRefed<mozilla::dom::NodeInfo>
   GetAttrNodeInfo(const nsAString& aNamespaceURI,
                   const nsAString& aLocalName);
 
-  Attr* GetAttribute(nsINodeInfo* aNodeInfo, bool aNsAware);
+  Attr* GetAttribute(mozilla::dom::NodeInfo* aNodeInfo, bool aNsAware);
 
   /**
    * Remove an attribute, returns the removed node.
    */
-  already_AddRefed<Attr> RemoveAttribute(nsINodeInfo* aNodeInfo);
+  already_AddRefed<Attr> RemoveAttribute(mozilla::dom::NodeInfo* aNodeInfo);
 };
 
 // XXX khuey yes this is crazy.  The bindings code needs to see this include,

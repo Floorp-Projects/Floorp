@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGTitleElement, SVGTitleElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGTitleElement::SVGTitleElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGTitleElement::SVGTitleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGTitleElementBase(aNodeInfo)
 {
   AddMutationObserver(this);

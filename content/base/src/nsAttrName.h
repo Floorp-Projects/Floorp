@@ -12,7 +12,7 @@
 #ifndef nsAttrName_h___
 #define nsAttrName_h___
 
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsIAtom.h"
 #include "nsDOMString.h"
 
@@ -33,7 +33,7 @@ public:
     NS_ADDREF(aAtom);
   }
 
-  explicit nsAttrName(nsINodeInfo* aNodeInfo)
+  explicit nsAttrName(mozilla::dom::NodeInfo* aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
     if (aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
@@ -52,7 +52,7 @@ public:
     ReleaseInternalName();
   }
 
-  void SetTo(nsINodeInfo* aNodeInfo)
+  void SetTo(mozilla::dom::NodeInfo* aNodeInfo)
   {
     NS_ASSERTION(aNodeInfo, "null nodeinfo-name in nsAttrName");
 
@@ -82,10 +82,10 @@ public:
     return !(mBits & NS_ATTRNAME_NODEINFO_BIT);
   }
 
-  nsINodeInfo* NodeInfo() const
+  mozilla::dom::NodeInfo* NodeInfo() const
   {
     NS_ASSERTION(!IsAtom(), "getting nodeinfo-value of atom-name");
-    return reinterpret_cast<nsINodeInfo*>(mBits & ~NS_ATTRNAME_NODEINFO_BIT);
+    return reinterpret_cast<mozilla::dom::NodeInfo*>(mBits & ~NS_ATTRNAME_NODEINFO_BIT);
   }
 
   nsIAtom* Atom() const
@@ -119,7 +119,7 @@ public:
     return !IsAtom() && NodeInfo()->Equals(aLocalName, aNamespaceID);
   }
 
-  bool Equals(nsINodeInfo* aNodeInfo) const
+  bool Equals(mozilla::dom::NodeInfo* aNodeInfo) const
   {
     return Equals(aNodeInfo->NameAtom(), aNodeInfo->NamespaceID());
   }
@@ -191,22 +191,20 @@ private:
 
   void AddRefInternalName()
   {
-    // Since both nsINodeInfo and nsIAtom inherit nsISupports as its first
-    // interface we can safely assume that it's first in the vtable
-    nsISupports* name = reinterpret_cast<nsISupports *>
-                                        (mBits & ~NS_ATTRNAME_NODEINFO_BIT);
-
-    NS_ADDREF(name);
+    if (IsAtom()) {
+      NS_ADDREF(Atom());
+    } else {
+      NS_ADDREF(NodeInfo());
+    }
   }
 
   void ReleaseInternalName()
   {
-    // Since both nsINodeInfo and nsIAtom inherit nsISupports as its first
-    // interface we can safely assume that it's first in the vtable
-    nsISupports* name = reinterpret_cast<nsISupports *>
-                                        (mBits & ~NS_ATTRNAME_NODEINFO_BIT);
-
-    NS_RELEASE(name);
+    if (IsAtom()) {
+      Atom()->Release();
+    } else {
+      NodeInfo()->Release();
+    }
   }
 
   uintptr_t mBits;

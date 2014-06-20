@@ -23,10 +23,10 @@ class nsSVGRadialGradientFrame;
 
 nsresult
 NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 nsresult
 NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -42,11 +42,11 @@ class SVGGradientElement : public SVGGradientElementBase
   friend class ::nsSVGGradientFrame;
 
 protected:
-  SVGGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE = 0;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
 
   // nsIContent
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
@@ -89,14 +89,14 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase
   friend class ::nsSVGLinearGradientFrame;
   friend nsresult
     (::NS_NewSVGLinearGradientElement(nsIContent** aResult,
-                                      already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 protected:
-  SVGLinearGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGLinearGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X1();
@@ -122,14 +122,14 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase
   friend class ::nsSVGRadialGradientFrame;
   friend nsresult
     (::NS_NewSVGRadialGradientElement(nsIContent** aResult,
-                                      already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 protected:
-  SVGRadialGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGRadialGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> Cx();

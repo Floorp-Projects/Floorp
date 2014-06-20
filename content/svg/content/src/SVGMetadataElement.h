@@ -10,7 +10,7 @@
 #include "nsSVGElement.h"
 
 nsresult NS_NewSVGMetadataElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGElement SVGMetadataElementBase;
 
@@ -21,14 +21,14 @@ class SVGMetadataElement MOZ_FINAL : public SVGMetadataElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGMetadataElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGMetadataElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGMetadataElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
   nsresult Init();
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 };
 
 } // namespace dom

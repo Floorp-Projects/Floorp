@@ -153,7 +153,7 @@ public:
 
   virtual nsresult SetEditingState(EditingState aState) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual void RemovedFromDocShell() MOZ_OVERRIDE;
 

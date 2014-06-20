@@ -13,7 +13,6 @@
 #include "nsFontMetrics.h"
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
-#include "nsINodeInfo.h"
 #include "nsNameSpaceManager.h"
 #include "nsThemeConstants.h"
 #include "mozilla/BasicEvents.h"

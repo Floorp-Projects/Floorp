@@ -17,7 +17,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Area)
 namespace mozilla {
 namespace dom {
 
-HTMLAreaElement::HTMLAreaElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLAreaElement::HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
   , Link(MOZ_THIS_IN_INITIALIZER_LIST())
 {

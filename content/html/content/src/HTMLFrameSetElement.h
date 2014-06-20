@@ -46,7 +46,7 @@ class HTMLFrameSetElement MOZ_FINAL : public nsGenericHTMLElement,
                                       public nsIDOMHTMLFrameSetElement
 {
 public:
-  HTMLFrameSetElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo),
       mNumRows(0),
       mNumCols(0),
@@ -135,7 +135,7 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               int32_t aModType) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
