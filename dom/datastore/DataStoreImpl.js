@@ -100,7 +100,9 @@ DataStore.prototype = {
     cpmm.addMessageListener("DataStore:Changed:Return:OK", this);
     cpmm.sendAsyncMessage("DataStore:RegisterForMessages",
                           { store: this._name, owner: this._owner,
-                            innerWindowID: this._innerWindowID });
+                            innerWindowID: this._innerWindowID },
+                          null,
+                          this._window.document.nodePrincipal);
   },
 
   observe: function(aSubject, aTopic, aData) {
@@ -110,7 +112,9 @@ DataStore.prototype = {
 
       cpmm.removeMessageListener("DataStore:Changed:Return:OK", this);
       cpmm.sendAsyncMessage("DataStore:UnregisterForMessages",
-                            { innerWindowID: this._innerWindowID });
+                            { innerWindowID: this._innerWindowID },
+                            null,
+                            this._window.document.nodePrincipal);
       this._shuttingdown = true;
       this._db.close();
     }
@@ -336,7 +340,9 @@ DataStore.prototype = {
     cpmm.sendAsyncMessage("DataStore:Changed",
                           { store: this.name, owner: this._owner,
                             message: { revisionId: aRevisionId, id: aId,
-                                       operation: aOperation, owner: this._owner } } );
+                                       operation: aOperation, owner: this._owner } },
+                          null,
+                          this._window.document.nodePrincipal);
   },
 
   receiveMessage: function(aMessage) {

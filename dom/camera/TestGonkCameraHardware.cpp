@@ -16,7 +16,7 @@
 
 #include "TestGonkCameraHardware.h"
 
-#include "mozilla/Preferences.h"
+#include "CameraPreferences.h"
 #include "nsThreadUtils.h"
 
 using namespace android;
@@ -52,7 +52,8 @@ TestGonkCameraHardware::Init()
 const nsCString
 TestGonkCameraHardware::TestCase()
 {
-  const nsCString test = Preferences::GetCString("camera.control.test.hardware");
+  nsCString test;
+  CameraPreferences::GetPref("camera.control.test.hardware", test);
   return test;
 }
 
@@ -77,7 +78,8 @@ TestGonkCameraHardware::GetExtraParameters()
    * may contain equals signs or semicolons. We don't enforce that here
    * so that we can also test correct handling of improperly-formatted values.
    */
-  const nsCString parameters = Preferences::GetCString("camera.control.test.hardware.gonk.parameters");
+  nsCString parameters;
+  CameraPreferences::GetPref("camera.control.test.hardware.gonk.parameters", parameters);
   DOM_CAMERA_LOGA("TestGonkCameraHardware : extra-parameters '%s'\n",
     parameters.get());
   return parameters;

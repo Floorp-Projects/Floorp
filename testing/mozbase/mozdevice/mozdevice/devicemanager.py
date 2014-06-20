@@ -4,7 +4,6 @@
 
 import hashlib
 import mozlog
-import socket
 import os
 import posixpath
 import re
@@ -378,13 +377,15 @@ class DeviceManager(object):
 
     def shellCheckOutput(self, cmd, env=None, cwd=None, timeout=None, root=False):
         """
-        Executes shell command on device and returns output as a string.
+        Executes shell command on device and returns output as a string. Raises if
+        the return code is non-zero.
 
         :param cmd: Commandline list to execute
         :param env: Environment to pass to exec command
         :param cwd: Directory to execute command from
         :param timeout: specified in seconds, defaults to 'default_timeout'
         :param root: Specifies whether command requires root privileges
+        :raises: DMError
         """
         buf = StringIO.StringIO()
         retval = self.shell(cmd, buf, env=env, cwd=cwd, timeout=timeout, root=root)
