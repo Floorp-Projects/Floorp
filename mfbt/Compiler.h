@@ -9,8 +9,12 @@
 #ifndef mozilla_Compiler_h
 #define mozilla_Compiler_h
 
+#define MOZ_IS_GCC 0
+#define MOS_IS_MSVC 0
+
 #if !defined(__clang__) && defined(__GNUC__)
 
+#  undef MOZ_IS_GCC
 #  define MOZ_IS_GCC 1
    /*
     * This macro should simplify gcc version checking. For example, to check
@@ -23,9 +27,23 @@
 #    error "mfbt (and Gecko) require at least gcc 4.4 to build."
 #  endif
 
-#else
+#elif defined(_MSC_VER)
 
-#  define MOZ_IS_GCC 0
+#  undef MOZ_IS_MSVC
+#  define MOZ_IS_MSVC 1
+   /*
+    * This macro should simplify MSVC version checking. For example, to check
+    * for VC10 or later, check `#ifdef MOZ_MSVC_VERSION_AT_LEAST(10)`.
+    */
+#  define MOZ_MSVC_VERSION_AT_LEAST(version) \
+     (version == 10 ? _MSC_VER >= 1600 : \
+     (version == 11 ? _MSC_VER >= 1700 : \
+     (version == 12 ? _MSC_VER >= 1800 : \
+     (version == 13 ? _MSC_VER >= 1900 : \
+      0))))
+#  if !MOZ_MSVC_VERSION_AT_LEAST(10)
+#    error "mfbt (and Gecko) require at least MSVC 2010 RTM to build."
+#  endif
 
 #endif
 
