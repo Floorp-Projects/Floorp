@@ -55,6 +55,15 @@ BdAddressTypeToString(bt_bdaddr_t* aBdAddressType, nsAString& aRetBdAddress)
   aRetBdAddress = NS_ConvertUTF8toUTF16(bdstr);
 }
 
+uint16_t
+UuidToServiceClassInt(bt_uuid_t* p_uuid)
+{
+  // extract short UUID 0000xxxx-0000-1000-8000-00805f9b34fb
+  uint16_t shortUuid;
+  memcpy(&shortUuid, &(p_uuid->uu[2]), sizeof(uint16_t));
+  return ntohs(shortUuid);
+}
+
 bool
 SetJsObject(JSContext* aContext,
             const BluetoothValue& aValue,
