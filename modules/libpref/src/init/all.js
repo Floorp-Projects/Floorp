@@ -1049,8 +1049,8 @@ pref("network.http.pipelining.reschedule-timeout", 1500);
 // restarted without pipelining.
 pref("network.http.pipelining.read-timeout", 30000);
 
-// Prompt for redirects resulting in unsafe HTTP requests
-pref("network.http.prompt-temp-redirect", false);
+// Prompt for 307 redirects
+pref("network.http.prompt-temp-redirect", true);
 
 // If true generate CORRUPTED_CONTENT errors for entities that
 // contain an invalid Assoc-Req response header
