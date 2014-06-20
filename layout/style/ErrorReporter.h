@@ -14,12 +14,11 @@
 #include "nsString.h"
 
 struct nsCSSToken;
+class nsCSSStyleSheet;
 class nsCSSScanner;
 class nsIURI;
 
 namespace mozilla {
-class CSSStyleSheet;
-
 namespace css {
 
 class Loader;
@@ -29,7 +28,7 @@ class Loader;
 class MOZ_STACK_CLASS ErrorReporter {
 public:
   ErrorReporter(const nsCSSScanner &aScanner,
-                const CSSStyleSheet *aSheet,
+                const nsCSSStyleSheet *aSheet,
                 const Loader *aLoader,
                 nsIURI *aURI);
   ~ErrorReporter();
@@ -68,7 +67,7 @@ private:
   nsString mErrorLine;
   nsString mFileName;
   const nsCSSScanner *mScanner;
-  const CSSStyleSheet *mSheet;
+  const nsCSSStyleSheet *mSheet;
   const Loader *mLoader;
   nsIURI *mURI;
   uint64_t mInnerWindowID;
@@ -80,7 +79,7 @@ private:
 
 #ifndef CSS_REPORT_PARSE_ERRORS
 inline ErrorReporter::ErrorReporter(const nsCSSScanner&,
-                                    const CSSStyleSheet*,
+                                    const nsCSSStyleSheet*,
                                     const Loader*,
                                     nsIURI*) {}
 inline ErrorReporter::~ErrorReporter() {}

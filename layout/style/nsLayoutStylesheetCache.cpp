@@ -7,7 +7,6 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/css/Loader.h"
@@ -16,6 +15,7 @@
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIXULRuntime.h"
+#include "nsCSSStyleSheet.h"
 
 using namespace mozilla;
 
@@ -50,7 +50,7 @@ nsLayoutStylesheetCache::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::ScrollbarsSheet()
 {
   EnsureGlobal();
@@ -71,7 +71,7 @@ nsLayoutStylesheetCache::ScrollbarsSheet()
   return gStyleCache->mScrollbarsSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::FormsSheet()
 {
   EnsureGlobal();
@@ -93,7 +93,7 @@ nsLayoutStylesheetCache::FormsSheet()
   return gStyleCache->mFormsSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::NumberControlSheet()
 {
   EnsureGlobal();
@@ -118,7 +118,7 @@ nsLayoutStylesheetCache::NumberControlSheet()
   return gStyleCache->mNumberControlSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UserContentSheet()
 {
   EnsureGlobal();
@@ -128,7 +128,7 @@ nsLayoutStylesheetCache::UserContentSheet()
   return gStyleCache->mUserContentSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UserChromeSheet()
 {
   EnsureGlobal();
@@ -138,7 +138,7 @@ nsLayoutStylesheetCache::UserChromeSheet()
   return gStyleCache->mUserChromeSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::UASheet()
 {
   EnsureGlobal();
@@ -148,7 +148,7 @@ nsLayoutStylesheetCache::UASheet()
   return gStyleCache->mUASheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::HTMLSheet()
 {
   EnsureGlobal();
@@ -158,7 +158,7 @@ nsLayoutStylesheetCache::HTMLSheet()
   return gStyleCache->mHTMLSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::MinimalXULSheet()
 {
   EnsureGlobal();
@@ -168,7 +168,7 @@ nsLayoutStylesheetCache::MinimalXULSheet()
   return gStyleCache->mMinimalXULSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::XULSheet()
 {
   EnsureGlobal();
@@ -178,7 +178,7 @@ nsLayoutStylesheetCache::XULSheet()
   return gStyleCache->mXULSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::QuirkSheet()
 {
   EnsureGlobal();
@@ -188,7 +188,7 @@ nsLayoutStylesheetCache::QuirkSheet()
   return gStyleCache->mQuirkSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::FullScreenOverrideSheet()
 {
   EnsureGlobal();
@@ -198,7 +198,7 @@ nsLayoutStylesheetCache::FullScreenOverrideSheet()
   return gStyleCache->mFullScreenOverrideSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::SVGSheet()
 {
   EnsureGlobal();
@@ -208,7 +208,7 @@ nsLayoutStylesheetCache::SVGSheet()
   return gStyleCache->mSVGSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::MathMLSheet()
 {
   EnsureGlobal();
@@ -227,7 +227,7 @@ nsLayoutStylesheetCache::MathMLSheet()
   return gStyleCache->mMathMLSheet;
 }
 
-CSSStyleSheet*
+nsCSSStyleSheet*
 nsLayoutStylesheetCache::CounterStylesSheet()
 {
   EnsureGlobal();
@@ -417,7 +417,7 @@ nsLayoutStylesheetCache::InitFromProfile()
 }
 
 void
-nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<CSSStyleSheet>& aSheet)
+nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<nsCSSStyleSheet> &aSheet)
 {
   bool exists = false;
   aFile->Exists(&exists);
@@ -432,7 +432,7 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile, nsRefPtr<CSSStyleSheet>& 
 
 void
 nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
-                                   nsRefPtr<CSSStyleSheet>& aSheet,
+                                   nsRefPtr<nsCSSStyleSheet> &aSheet,
                                    bool aEnableUnsafeRules)
 {
   if (!aURI) {

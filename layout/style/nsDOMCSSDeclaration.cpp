@@ -8,7 +8,7 @@
 #include "nsDOMCSSDeclaration.h"
 
 #include "nsCSSParser.h"
-#include "mozilla/CSSStyleSheet.h"
+#include "nsCSSStyleSheet.h"
 #include "mozilla/css/Rule.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/dom/CSS2PropertiesBinding.h"
@@ -292,7 +292,7 @@ nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(css::Rule* aRule,
                                                      CSSParsingEnvironment& aCSSParseEnv)
 {
   nsIStyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nullptr;
-  nsRefPtr<CSSStyleSheet> cssSheet(do_QueryObject(sheet));
+  nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
   if (!cssSheet) {
     aCSSParseEnv.mPrincipal = nullptr;
     return;

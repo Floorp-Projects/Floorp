@@ -2255,14 +2255,14 @@ nsPresContext::RebuildCounterStyles()
 void
 nsPresContext::EnsureSafeToHandOutCSSRules()
 {
-  CSSStyleSheet::EnsureUniqueInnerResult res =
+  nsCSSStyleSheet::EnsureUniqueInnerResult res =
     mShell->StyleSet()->EnsureUniqueInnerOnCSSSheets();
-  if (res == CSSStyleSheet::eUniqueInner_AlreadyUnique) {
+  if (res == nsCSSStyleSheet::eUniqueInner_AlreadyUnique) {
     // Nothing to do.
     return;
   }
 
-  MOZ_ASSERT(res == CSSStyleSheet::eUniqueInner_ClonedInner);
+  MOZ_ASSERT(res == nsCSSStyleSheet::eUniqueInner_ClonedInner);
   RebuildAllStyleData(nsChangeHint(0));
 }
 

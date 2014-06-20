@@ -16,6 +16,7 @@
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
+class nsCSSStyleSheet;
 class nsIPrincipal;
 class nsIURI;
 struct nsCSSSelectorList;
@@ -25,7 +26,6 @@ class nsCSSValue;
 struct nsRuleData;
 
 namespace mozilla {
-class CSSStyleSheet;
 class CSSVariableValues;
 namespace css {
 class Rule;
@@ -40,7 +40,7 @@ class StyleRule;
 class MOZ_STACK_CLASS nsCSSParser {
 public:
   nsCSSParser(mozilla::css::Loader* aLoader = nullptr,
-              mozilla::CSSStyleSheet* aSheet = nullptr);
+              nsCSSStyleSheet* aSheet = nullptr);
   ~nsCSSParser();
 
   static void Shutdown();
@@ -51,9 +51,9 @@ private:
 
 public:
   // Set a style sheet for the parser to fill in. The style sheet must
-  // implement the CSSStyleSheet interface.  Null can be passed in to clear
+  // implement the nsCSSStyleSheet interface.  Null can be passed in to clear
   // out an existing stylesheet reference.
-  nsresult SetStyleSheet(mozilla::CSSStyleSheet* aSheet);
+  nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
 
   // Set whether or not to emulate Nav quirks
   nsresult SetQuirkMode(bool aQuirkMode);
@@ -260,7 +260,7 @@ public:
                                    nsIURI* aDocURL,
                                    nsIURI* aBaseURL,
                                    nsIPrincipal* aDocPrincipal,
-                                   mozilla::CSSStyleSheet* aSheet,
+                                   nsCSSStyleSheet* aSheet,
                                    uint32_t aLineNumber,
                                    uint32_t aLineOffset);
 
