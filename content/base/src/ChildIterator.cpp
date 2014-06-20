@@ -25,19 +25,19 @@ public:
   uint32_t Length() const
   {
     return mIsContentElement ? mContentElement->MatchedNodes().Length()
-                             : mChildrenElement->InsertedChildrenLength();
+                             : mChildrenElement->mInsertedChildren.Length();
   }
 
   nsIContent* operator[](int32_t aIndex) const
   {
     return mIsContentElement ? mContentElement->MatchedNodes()[aIndex]
-                             : mChildrenElement->InsertedChild(aIndex);
+                             : mChildrenElement->mInsertedChildren[aIndex];
   }
 
   bool IsEmpty() const
   {
     return mIsContentElement ? mContentElement->MatchedNodes().IsEmpty()
-                             : !mChildrenElement->HasInsertedChildren();
+                             : mChildrenElement->mInsertedChildren.IsEmpty();
   }
 protected:
   bool mIsContentElement;

@@ -702,7 +702,7 @@ UpdateInsertionParent(XBLChildrenElement* aPoint,
   }
 
   for (size_t i = 0; i < aPoint->InsertedChildrenLength(); ++i) {
-    nsIContent* child = aPoint->InsertedChild(i);
+    nsIContent* child = aPoint->mInsertedChildren[i];
 
     MOZ_ASSERT(child->GetParentNode());
 
