@@ -69,6 +69,7 @@ public:
     , certStatus(CertStatus::Unknown)
     , thisUpdate(thisUpdate)
     , validThrough(validThrough)
+    , expired(false)
   {
     if (thisUpdate) {
       *thisUpdate = 0;
@@ -87,6 +88,7 @@ public:
   CertStatus certStatus;
   PRTime* thisUpdate;
   PRTime* validThrough;
+  bool expired;
 
 private:
   Context(const Context&); // delete
@@ -318,6 +320,7 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                           CERTCertificate* issuerCert, PRTime time,
                           uint16_t maxOCSPLifetimeInDays,
                           const SECItem* encodedResponse,
+                          bool& expired,
                           PRTime* thisUpdate,
                           PRTime* validThrough)
 {
@@ -329,6 +332,9 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
     PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
     return SECFailure;
   }
+
+  // Always initialize this to something reasonable.
+  expired = false;
 
   der::Input input;
   if (input.Init(encodedResponse->data, encodedResponse->len) != der::Success) {
@@ -350,8 +356,14 @@ VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
     return SECFailure;
   }
 
+  expired = context.expired;
+
   switch (context.certStatus) {
     case CertStatus::Good:
+      if (expired) {
+        PR_SetError(SEC_ERROR_OCSP_OLD_RESPONSE, 0);
+        return SECFailure;
+      }
       return SECSuccess;
     case CertStatus::Revoked:
       PR_SetError(SEC_ERROR_REVOKED_CERTIFICATE, 0);
@@ -657,8 +669,9 @@ SingleResponse(der::Input& input, Context& context)
   if (context.time < SLOP) { // prevent underflow
     return der::Fail(SEC_ERROR_INVALID_ARGS);
   }
+
   if (context.time - SLOP > notAfter) {
-    return der::Fail(SEC_ERROR_OCSP_OLD_RESPONSE);
+    context.expired = true;
   }
 
   if (!input.AtEnd()) {
