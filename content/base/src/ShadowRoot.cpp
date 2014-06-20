@@ -137,7 +137,7 @@ ShadowRoot::StyleSheetChanged()
 }
 
 void
-ShadowRoot::InsertSheet(nsCSSStyleSheet* aSheet,
+ShadowRoot::InsertSheet(CSSStyleSheet* aSheet,
                         nsIContent* aLinkingContent)
 {
   nsCOMPtr<nsIStyleSheetLinkingElement>
@@ -168,7 +168,7 @@ ShadowRoot::InsertSheet(nsCSSStyleSheet* aSheet,
 }
 
 void
-ShadowRoot::RemoveSheet(nsCSSStyleSheet* aSheet)
+ShadowRoot::RemoveSheet(CSSStyleSheet* aSheet)
 {
   mProtoBinding->RemoveStyleSheet(aSheet);
 
@@ -719,7 +719,7 @@ ShadowRootStyleSheetList::~ShadowRootStyleSheetList()
   MOZ_COUNT_DTOR(ShadowRootStyleSheetList);
 }
 
-nsCSSStyleSheet*
+CSSStyleSheet*
 ShadowRootStyleSheetList::IndexedGetter(uint32_t aIndex, bool& aFound)
 {
   aFound = aIndex < mShadowRoot->mProtoBinding->SheetCount();

@@ -24,6 +24,7 @@
 #include "prlog.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -48,7 +49,6 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "nsIDocument.h"
-#include "nsCSSStyleSheet.h"
 #include "nsAnimationManager.h"
 #include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsFrame.h"
@@ -1384,7 +1384,7 @@ nsresult
 PresShell::CreatePreferenceStyleSheet()
 {
   NS_ASSERTION(!mPrefStyleSheet, "prefStyleSheet already exists");
-  mPrefStyleSheet = new nsCSSStyleSheet(CORS_NONE);
+  mPrefStyleSheet = new CSSStyleSheet(CORS_NONE);
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);
   if (NS_FAILED(rv)) {
@@ -4616,7 +4616,7 @@ PresShell::RecordStyleSheetChange(nsIStyleSheet* aStyleSheet)
   if (mStylesHaveChanged)
     return;
 
-  nsRefPtr<nsCSSStyleSheet> cssStyleSheet = do_QueryObject(aStyleSheet);
+  nsRefPtr<CSSStyleSheet> cssStyleSheet = do_QueryObject(aStyleSheet);
   if (cssStyleSheet) {
     Element* scopeElement = cssStyleSheet->GetScopeElement();
     if (scopeElement) {

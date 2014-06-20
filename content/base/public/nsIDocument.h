@@ -29,7 +29,6 @@
 class imgIRequest;
 class nsAString;
 class nsBindingManager;
-class nsCSSStyleSheet;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -83,6 +82,7 @@ class nsIGlobalObject;
 struct nsCSSSelectorList;
 
 namespace mozilla {
+class CSSStyleSheet;
 class ErrorResult;
 class EventStates;
 
@@ -779,7 +779,7 @@ public:
    * TODO We can get rid of the whole concept of delayed loading if we fix
    * bug 77999.
    */
-  virtual void EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet) = 0;
+  virtual void EnsureOnDemandBuiltInUASheet(mozilla::CSSStyleSheet* aSheet) = 0;
 
   /**
    * Get the number of (document) stylesheets
@@ -1836,7 +1836,7 @@ public:
    * DO NOT USE FOR UNTRUSTED CONTENT.
    */
   virtual nsresult LoadChromeSheetSync(nsIURI* aURI, bool aIsAgentSheet,
-                                       nsCSSStyleSheet** aSheet) = 0;
+                                       mozilla::CSSStyleSheet** aSheet) = 0;
 
   /**
    * Returns true if the locale used for the document specifies a direction of
