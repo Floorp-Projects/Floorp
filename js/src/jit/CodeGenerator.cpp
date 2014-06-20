@@ -1229,10 +1229,7 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
 };
 
 typedef bool (*InterruptCheckFn)(JSContext *);
-typedef bool (*InterruptCheckParFn)(ForkJoinContext *);
-static const VMFunctionsModal InterruptCheckInfo = VMFunctionsModal(
-    FunctionInfo<InterruptCheckFn>(InterruptCheck),
-    FunctionInfo<InterruptCheckParFn>(InterruptCheckPar));
+static const VMFunction InterruptCheckInfo = FunctionInfo<InterruptCheckFn>(InterruptCheck);
 
 bool
 CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit *ool)
@@ -1852,7 +1849,13 @@ CodeGenerator::visitGuardThreadExclusive(LGuardThreadExclusive *lir)
     masm.passABIArg(ToRegister(lir->object()));
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ParallelWriteGuard));
 
-    return bailoutIfFalseBool(ReturnReg, lir->snapshot());
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutIllegalWrite, lir);
+    if (!bail)
+        return false;
+
+    // branch to the OOL failure code if false is returned
+    masm.branchIfFalseBool(ReturnReg, bail->entry());
+    return true;
 }
 
 bool
@@ -2380,23 +2383,27 @@ CodeGenerator::visitCallGeneric(LCallGeneric *call)
         masm.bind(&notPrimitive);
     }
 
+    if (!checkForAbortPar(call))
+        return false;
+
     dropArguments(call->numStackArgs() + 1);
     return true;
 }
-
-typedef bool (*CallToUncompiledScriptParFn)(ForkJoinContext *, JSObject *);
-static const VMFunction CallToUncompiledScriptParInfo =
-    FunctionInfo<CallToUncompiledScriptParFn>(CallToUncompiledScriptPar);
 
 // Generates a call to CallToUncompiledScriptPar() and then bails out.
 // |calleeReg| should contain the JSFunction*.
 bool
 CodeGenerator::emitCallToUncompiledScriptPar(LInstruction *lir, Register calleeReg)
 {
-    pushArg(calleeReg);
-    if (!callVM(CallToUncompiledScriptParInfo, lir))
+    OutOfLineCode *bail = oolAbortPar(ParallelBailoutCalledToUncompiledScript, lir);
+    if (!bail)
         return false;
-    masm.assumeUnreachable("CallToUncompiledScriptParInfo always returns false.");
+
+    masm.movePtr(calleeReg, CallTempReg0);
+    masm.setupUnalignedABICall(1, CallTempReg1);
+    masm.passABIArg(CallTempReg0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CallToUncompiledScriptPar));
+    masm.jump(bail->entry());
     return true;
 }
 
@@ -2471,6 +2478,9 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
 
     masm.bind(&end);
 
+    if (!checkForAbortPar(call))
+        return false;
+
     // If the return value of the constructing function is Primitive,
     // replace the return value with the Object from CreateThis.
     if (call->mir()->isConstructing()) {
@@ -2481,6 +2491,22 @@ CodeGenerator::visitCallKnown(LCallKnown *call)
     }
 
     dropArguments(call->numStackArgs() + 1);
+    return true;
+}
+
+bool
+CodeGenerator::checkForAbortPar(LInstruction *lir)
+{
+    // In parallel mode, if we call another ion-compiled function and
+    // it returns JS_ION_ERROR, that indicates a bailout that we have
+    // to propagate up the stack.
+    ExecutionMode executionMode = gen->info().executionMode();
+    if (executionMode == ParallelExecution) {
+        OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(lir);
+        if (!bail)
+            return false;
+        masm.branchTestMagic(Assembler::Equal, JSReturnOperand, bail->entry());
+    }
     return true;
 }
 
@@ -2896,10 +2922,10 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
 // Out-of-line path to report over-recursed error and fail.
 class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
 {
-    LInstruction *lir_;
+    LCheckOverRecursed *lir_;
 
   public:
-    explicit CheckOverRecursedFailure(LInstruction *lir)
+    explicit CheckOverRecursedFailure(LCheckOverRecursed *lir)
       : lir_(lir)
     { }
 
@@ -2907,7 +2933,7 @@ class CheckOverRecursedFailure : public OutOfLineCodeBase<CodeGenerator>
         return codegen->visitCheckOverRecursedFailure(this);
     }
 
-    LInstruction *lir() const {
+    LCheckOverRecursed *lir() const {
         return lir_;
     }
 };
@@ -2977,11 +3003,9 @@ CodeGenerator::visitDefFun(LDefFun *lir)
     return callVM(DefFunOperationInfo, lir);
 }
 
-typedef bool (*CheckOverRecursedFn)(JSContext *);
-typedef bool (*CheckOverRecursedParFn)(ForkJoinContext *);
-static const VMFunctionsModal CheckOverRecursedInfo = VMFunctionsModal(
-    FunctionInfo<CheckOverRecursedFn>(CheckOverRecursed),
-    FunctionInfo<CheckOverRecursedParFn>(CheckOverRecursedPar));
+typedef bool (*ReportOverRecursedFn)(JSContext *);
+static const VMFunction CheckOverRecursedInfo =
+    FunctionInfo<ReportOverRecursedFn>(CheckOverRecursed);
 
 bool
 CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
@@ -3002,6 +3026,25 @@ CodeGenerator::visitCheckOverRecursedFailure(CheckOverRecursedFailure *ool)
     return true;
 }
 
+// Out-of-line path to report over-recursed error and fail.
+class CheckOverRecursedFailurePar : public OutOfLineCodeBase<CodeGenerator>
+{
+    LCheckOverRecursedPar *lir_;
+
+  public:
+    explicit CheckOverRecursedFailurePar(LCheckOverRecursedPar *lir)
+      : lir_(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitCheckOverRecursedFailurePar(this);
+    }
+
+    LCheckOverRecursedPar *lir() const {
+        return lir_;
+    }
+};
+
 bool
 CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
 {
@@ -3019,10 +3062,9 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
     masm.loadPtr(Address(tempReg, offsetof(PerThreadData, jitStackLimit)), tempReg);
 
     // Conditional forward (unlikely) branch to failure.
-    CheckOverRecursedFailure *ool = new(alloc()) CheckOverRecursedFailure(lir);
+    CheckOverRecursedFailurePar *ool = new(alloc()) CheckOverRecursedFailurePar(lir);
     if (!addOutOfLineCode(ool))
         return false;
-
     masm.branchPtr(Assembler::BelowOrEqual, StackPointer, tempReg, ool->entry());
     masm.checkInterruptFlagPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
@@ -3031,16 +3073,87 @@ CodeGenerator::visitCheckOverRecursedPar(LCheckOverRecursedPar *lir)
 }
 
 bool
+CodeGenerator::visitCheckOverRecursedFailurePar(CheckOverRecursedFailurePar *ool)
+{
+    OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(ool->lir());
+    if (!bail)
+        return false;
+
+    // Avoid saving/restoring the temp register since we will put the
+    // ReturnReg into it below and we don't want to clobber that
+    // during PopRegsInMask():
+    LCheckOverRecursedPar *lir = ool->lir();
+    Register tempReg = ToRegister(lir->getTempReg());
+    RegisterSet saveSet(lir->safepoint()->liveRegs());
+    saveSet.takeUnchecked(tempReg);
+
+    masm.PushRegsInMask(saveSet);
+    masm.movePtr(ToRegister(lir->forkJoinContext()), CallTempReg0);
+    masm.setupUnalignedABICall(1, CallTempReg1);
+    masm.passABIArg(CallTempReg0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, CheckOverRecursedPar));
+    masm.movePtr(ReturnReg, tempReg);
+    masm.PopRegsInMask(saveSet);
+    masm.branchIfFalseBool(tempReg, bail->entry());
+    masm.jump(ool->rejoin());
+
+    return true;
+}
+
+// Out-of-line path to report over-recursed error and fail.
+class OutOfLineInterruptCheckPar : public OutOfLineCodeBase<CodeGenerator>
+{
+  public:
+    LInterruptCheckPar *const lir;
+
+    explicit OutOfLineInterruptCheckPar(LInterruptCheckPar *lir)
+      : lir(lir)
+    { }
+
+    bool accept(CodeGenerator *codegen) {
+        return codegen->visitOutOfLineInterruptCheckPar(this);
+    }
+};
+
+bool
 CodeGenerator::visitInterruptCheckPar(LInterruptCheckPar *lir)
 {
     // First check for cx->shared->interrupt_.
-    OutOfLineCode *ool = oolCallVM(InterruptCheckInfo, lir, (ArgList()), StoreNothing());
-    if (!ool)
+    OutOfLineInterruptCheckPar *ool = new(alloc()) OutOfLineInterruptCheckPar(lir);
+    if (!addOutOfLineCode(ool))
         return false;
 
     Register tempReg = ToRegister(lir->getTempReg());
     masm.checkInterruptFlagPar(tempReg, ool->entry());
     masm.bind(ool->rejoin());
+    return true;
+}
+
+bool
+CodeGenerator::visitOutOfLineInterruptCheckPar(OutOfLineInterruptCheckPar *ool)
+{
+    OutOfLinePropagateAbortPar *bail = oolPropagateAbortPar(ool->lir);
+    if (!bail)
+        return false;
+
+    // Avoid saving/restoring the temp register since we will put the
+    // ReturnReg into it below and we don't want to clobber that
+    // during PopRegsInMask():
+    LInterruptCheckPar *lir = ool->lir;
+    Register tempReg = ToRegister(lir->getTempReg());
+    RegisterSet saveSet(lir->safepoint()->liveRegs());
+    saveSet.takeUnchecked(tempReg);
+
+    masm.PushRegsInMask(saveSet);
+    masm.movePtr(ToRegister(ool->lir->forkJoinContext()), CallTempReg0);
+    masm.setupUnalignedABICall(1, CallTempReg1);
+    masm.passABIArg(CallTempReg0);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, InterruptCheckPar));
+    masm.movePtr(ReturnReg, tempReg);
+    masm.PopRegsInMask(saveSet);
+    masm.branchIfFalseBool(tempReg, bail->entry());
+    masm.jump(ool->rejoin());
+
     return true;
 }
 
@@ -3345,6 +3458,9 @@ CodeGenerator::generateBody()
             if (iter->safepoint())
                 resetOsiPointRegs(iter->safepoint());
 #endif
+
+            if (!callTraceLIR(i, *iter))
+                return false;
 
             if (!iter->accept(this))
                 return false;
@@ -3794,6 +3910,12 @@ CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
     storeResultTo(ToRegister(lir->output()));
     restoreLive(lir);
 
+    Register resultReg = ToRegister(lir->output());
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, lir);
+    if (!bail)
+        return false;
+    masm.branchTestPtr(Assembler::Zero, resultReg, resultReg, bail->entry());
+
     return true;
 }
 
@@ -3901,9 +4023,24 @@ CodeGenerator::visitOutOfLineNewGCThingPar(OutOfLineNewGCThingPar *ool)
     masm.storeCallResult(out);
     restoreVolatile(out);
 
-    return bailoutTestPtr(Assembler::Zero, out, out, ool->lir->snapshot());
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutOutOfMemory, ool->lir);
+    if (!bail)
+        return false;
+    masm.branchTestPtr(Assembler::Zero, out, out, bail->entry());
+    masm.jump(ool->rejoin());
+    return true;
 }
 #endif // JSGC_FJGENERATIONAL
+
+bool
+CodeGenerator::visitAbortPar(LAbortPar *lir)
+{
+    OutOfLineAbortPar *bail = oolAbortPar(ParallelBailoutUnsupported, lir);
+    if (!bail)
+        return false;
+    masm.jump(bail->entry());
+    return true;
+}
 
 typedef bool(*InitElemFn)(JSContext *cx, HandleObject obj,
                           HandleValue id, HandleValue value);
@@ -8416,6 +8553,29 @@ CodeGenerator::visitProfilerStackOp(LProfilerStackOp *lir)
 }
 
 bool
+CodeGenerator::visitOutOfLineAbortPar(OutOfLineAbortPar *ool)
+{
+    ParallelBailoutCause cause = ool->cause();
+    jsbytecode *bytecode = ool->bytecode();
+
+    masm.move32(Imm32(cause), CallTempReg0);
+    loadOutermostJSScript(CallTempReg1);
+    loadJSScriptForBlock(ool->basicBlock(), CallTempReg2);
+    masm.movePtr(ImmPtr(bytecode), CallTempReg3);
+
+    masm.setupUnalignedABICall(4, CallTempReg4);
+    masm.passABIArg(CallTempReg0);
+    masm.passABIArg(CallTempReg1);
+    masm.passABIArg(CallTempReg2);
+    masm.passABIArg(CallTempReg3);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, AbortPar));
+
+    masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    masm.jump(&returnLabel_);
+    return true;
+}
+
+bool
 CodeGenerator::visitIsCallable(LIsCallable *ins)
 {
     Register object = ToRegister(ins->object());
@@ -8456,6 +8616,22 @@ CodeGenerator::loadJSScriptForBlock(MBasicBlock *block, Register reg)
 
     JSScript *script = block->info().script();
     masm.movePtr(ImmGCPtr(script), reg);
+}
+
+bool
+CodeGenerator::visitOutOfLinePropagateAbortPar(OutOfLinePropagateAbortPar *ool)
+{
+    loadOutermostJSScript(CallTempReg0);
+    loadJSScriptForBlock(ool->lir()->mirRaw()->block(), CallTempReg1);
+
+    masm.setupUnalignedABICall(2, CallTempReg2);
+    masm.passABIArg(CallTempReg0);
+    masm.passABIArg(CallTempReg1);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, PropagateAbortPar));
+
+    masm.moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
+    masm.jump(&returnLabel_);
+    return true;
 }
 
 bool

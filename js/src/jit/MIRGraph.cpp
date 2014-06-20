@@ -748,15 +748,7 @@ MBasicBlock::discardDefAt(MDefinitionIterator &old)
 void
 MBasicBlock::discardAllInstructions()
 {
-    MInstructionIterator iter = begin();
-    discardAllInstructionsStartingAt(iter);
-
-}
-
-void
-MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator &iter)
-{
-    while (iter != end()) {
+    for (MInstructionIterator iter = begin(); iter != end(); ) {
         for (size_t i = 0, e = iter->numOperands(); i < e; i++)
             iter->discardOperand(i);
         iter = instructions_.removeAt(iter);

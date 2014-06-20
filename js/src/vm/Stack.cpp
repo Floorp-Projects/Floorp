@@ -1587,13 +1587,24 @@ jit::JitActivation::setActive(JSContext *cx, bool active)
 #ifdef JS_ION
 
 void
+jit::JitActivation::freeRematerializedFramesInVector(RematerializedFrameVector &frames)
+{
+    for (size_t i = 0; i < frames.length(); i++) {
+        RematerializedFrame *f = frames[i];
+        f->RematerializedFrame::~RematerializedFrame();
+        js_free(f);
+    }
+    frames.clear();
+}
+
+void
 jit::JitActivation::removeRematerializedFrame(uint8_t *top)
 {
     if (!rematerializedFrames_)
         return;
 
     if (RematerializedFrameTable::Ptr p = rematerializedFrames_->lookup(top)) {
-        RematerializedFrame::FreeInVector(p->value());
+        freeRematerializedFramesInVector(p->value());
         rematerializedFrames_->remove(p);
     }
 }
@@ -1605,14 +1616,14 @@ jit::JitActivation::clearRematerializedFrames()
         return;
 
     for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
-        RematerializedFrame::FreeInVector(e.front().value());
+        freeRematerializedFramesInVector(e.front().value());
         e.removeFront();
     }
 }
 
-template <class T>
 jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter, size_t inlineDepth)
+jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, JitFrameIterator &iter,
+                                           size_t inlineDepth)
 {
     // Only allow rematerializing from the same thread.
     MOZ_ASSERT(cx->perThreadData == cx_->perThreadData);
@@ -1627,6 +1638,12 @@ jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
         }
     }
 
+    // The unit of rematerialization is an uninlined frame and its inlined
+    // frames. Since inlined frames do not exist outside of snapshots, it is
+    // impossible to synchronize their rematerialized copies to preserve
+    // identity. Therefore, we always rematerialize an uninlined frame and all
+    // its inlined frames at once.
+
     uint8_t *top = iter.fp();
     RematerializedFrameTable::AddPtr p = rematerializedFrames_->lookupForAdd(top);
     if (!p) {
@@ -1634,27 +1651,24 @@ jit::JitActivation::getRematerializedFrame(ThreadSafeContext *cx, const T &iter,
         if (!rematerializedFrames_->add(p, top, Move(empty)))
             return nullptr;
 
-        // The unit of rematerialization is an uninlined frame and its inlined
-        // frames. Since inlined frames do not exist outside of snapshots, it
-        // is impossible to synchronize their rematerialized copies to
-        // preserve identity. Therefore, we always rematerialize an uninlined
-        // frame and all its inlined frames at once.
         InlineFrameIterator inlineIter(cx, &iter);
-        if (!RematerializedFrame::RematerializeInlineFrames(cx, top, inlineIter, p->value()))
+        if (!p->value().resize(inlineIter.frameCount()))
             return nullptr;
+
+        while (true) {
+            size_t frameNo = inlineIter.frameNo();
+            p->value()[frameNo] = RematerializedFrame::New(cx, top, inlineIter);
+            if (!p->value()[frameNo])
+                return nullptr;
+
+            if (!inlineIter.more())
+                break;
+            ++inlineIter;
+        }
     }
 
     return p->value()[inlineDepth];
 }
-
-template jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame<jit::JitFrameIterator>(ThreadSafeContext *cx,
-                                                                  const jit::JitFrameIterator &iter,
-                                                                  size_t inlineDepth);
-template jit::RematerializedFrame *
-jit::JitActivation::getRematerializedFrame<jit::IonBailoutIterator>(ThreadSafeContext *cx,
-                                                                    const jit::IonBailoutIterator &iter,
-                                                                    size_t inlineDepth);
 
 jit::RematerializedFrame *
 jit::JitActivation::lookupRematerializedFrame(uint8_t *top, size_t inlineDepth)
@@ -1671,8 +1685,11 @@ jit::JitActivation::markRematerializedFrames(JSTracer *trc)
 {
     if (!rematerializedFrames_)
         return;
-    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront())
-        RematerializedFrame::MarkInVector(trc, e.front().value());
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty(); e.popFront()) {
+        RematerializedFrameVector &frames = e.front().value();
+        for (size_t i = 0; i < frames.length(); i++)
+            frames[i]->mark(trc);
+    }
 }
 
 #endif // JS_ION

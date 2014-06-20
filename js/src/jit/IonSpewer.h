@@ -54,6 +54,8 @@ namespace jit {
     _(Safepoints)                           \
     /* Debug info about Pools*/             \
     _(Pools)                                \
+    /* Calls to js::jit::Trace() */         \
+    _(Trace)                                \
     /* Debug info about the I$ */           \
     _(CacheFlush)                           \
                                             \

@@ -27,7 +27,6 @@
 
 #if defined(JS_THREADSAFE) && defined(JS_ION)
 # include "jit/JitCommon.h"
-# include "jit/RematerializedFrame.h"
 # ifdef FORKJOIN_SPEW
 #  include "jit/Ion.h"
 #  include "jit/JitCompartment.h"
@@ -118,13 +117,26 @@ ForkJoinContext::setPendingAbortFatal(ParallelBailoutCause cause)
 }
 
 void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
+ParallelBailoutRecord::setCause(ParallelBailoutCause cause,
+                                JSScript *outermostScript,
+                                JSScript *currentScript,
+                                jsbytecode *currentPc)
 {
     MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
 
 void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, IonBailoutIterator &frameIter)
+js::ParallelBailoutRecord::updateCause(ParallelBailoutCause cause,
+                                       JSScript *outermostScript,
+                                       JSScript *currentScript,
+                                       jsbytecode *currentPc)
+{
+    MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
+}
+
+void
+ParallelBailoutRecord::addTrace(JSScript *script,
+                                jsbytecode *pc)
 {
     MOZ_ASSUME_UNREACHABLE("Not THREADSAFE build");
 }
@@ -262,6 +274,11 @@ class ForkJoinOperation
     static const uint32_t MAX_BAILOUTS = 3;
     uint32_t bailouts;
 
+    // Information about the bailout:
+    ParallelBailoutCause bailoutCause;
+    RootedScript bailoutScript;
+    jsbytecode *bailoutBytecode;
+
     ForkJoinOperation(JSContext *cx, HandleFunction fun, uint16_t sliceStart,
                       uint16_t sliceEnd, ForkJoinMode mode, HandleObject updatable);
     ExecutionStatus apply();
@@ -305,7 +322,7 @@ class ForkJoinOperation
     HandleObject updatable_;
     uint16_t sliceStart_;
     uint16_t sliceEnd_;
-    Vector<ParallelBailoutRecord> bailoutRecords_;
+    Vector<ParallelBailoutRecord, 16> bailoutRecords_;
     AutoScriptVector worklist_;
     Vector<WorklistData, 16> worklistData_;
     ForkJoinMode mode_;
@@ -318,9 +335,7 @@ class ForkJoinOperation
     TrafficLight recoverFromBailout(ExecutionStatus *status);
     TrafficLight fatalError(ExecutionStatus *status);
     bool isInitialScript(HandleScript script);
-    void getBailoutScriptAndPc(MutableHandleScript bailoutScript, jsbytecode **bailoutPc,
-                               ParallelBailoutCause *bailoutCause);
-    bool reportBailoutWarnings();
+    void determineBailoutCause();
     bool invalidateBailedOutScripts();
     ExecutionStatus sequentialExecution(bool disqualified);
 
@@ -339,14 +354,14 @@ class ForkJoinShared : public ParallelJob, public Monitor
     /////////////////////////////////////////////////////////////////////////
     // Constant fields
 
-    JSContext *const cx_;                    // Current context
-    ThreadPool *const threadPool_;           // The thread pool
-    HandleFunction fun_;                     // The JavaScript function to execute
-    HandleObject updatable_;                 // Pre-existing object that might be updated
-    uint16_t sliceStart_;                    // The starting slice id.
-    uint16_t sliceEnd_;                      // The ending slice id + 1.
-    PRLock *cxLock_;                         // Locks cx_ for parallel VM calls
-    Vector<ParallelBailoutRecord> &records_; // Bailout records for each worker
+    JSContext *const cx_;                  // Current context
+    ThreadPool *const threadPool_;         // The thread pool
+    HandleFunction fun_;                   // The JavaScript function to execute
+    HandleObject updatable_;               // Pre-existing object that might be updated
+    uint16_t sliceStart_;                  // The starting slice id.
+    uint16_t sliceEnd_;                    // The ending slice id + 1.
+    PRLock *cxLock_;                       // Locks cx_ for parallel VM calls
+    ParallelBailoutRecord *const records_; // Bailout records for each worker
 
     /////////////////////////////////////////////////////////////////////////
     // Per-thread arenas
@@ -382,7 +397,7 @@ class ForkJoinShared : public ParallelJob, public Monitor
                    HandleObject updatable,
                    uint16_t sliceStart,
                    uint16_t sliceEnd,
-                   Vector<ParallelBailoutRecord> &records);
+                   ParallelBailoutRecord *records);
     ~ForkJoinShared();
 
     bool init();
@@ -577,6 +592,9 @@ ForkJoinModeString(ForkJoinMode mode) {
 ForkJoinOperation::ForkJoinOperation(JSContext *cx, HandleFunction fun, uint16_t sliceStart,
                                      uint16_t sliceEnd, ForkJoinMode mode, HandleObject updatable)
   : bailouts(0),
+    bailoutCause(ParallelBailoutNone),
+    bailoutScript(cx),
+    bailoutBytecode(nullptr),
     cx_(cx),
     fun_(fun),
     updatable_(updatable),
@@ -627,10 +645,8 @@ ForkJoinOperation::apply()
     if (!bailoutRecords_.resize(numWorkers))
         return SpewEndOp(ExecutionFatal);
 
-    for (uint32_t i = 0; i < numWorkers; i++) {
-        if (!bailoutRecords_[i].init(cx_))
-            return SpewEndOp(ExecutionFatal);
-    }
+    for (uint32_t i = 0; i < numWorkers; i++)
+        bailoutRecords_[i].init(cx_);
 
     if (enqueueInitialScript(&status) == RedLight)
         return SpewEndOp(status);
@@ -660,7 +676,7 @@ ForkJoinOperation::apply()
 
     while (bailouts < MAX_BAILOUTS) {
         for (uint32_t i = 0; i < numWorkers; i++)
-            bailoutRecords_[i].reset();
+            bailoutRecords_[i].reset(cx_);
 
         if (compileForParallelExecution(&status) == RedLight)
             return SpewEndOp(status);
@@ -1087,139 +1103,41 @@ ForkJoinOperation::isInitialScript(HandleScript script)
 }
 
 void
-ForkJoinOperation::getBailoutScriptAndPc(MutableHandleScript bailoutScript, jsbytecode **bailoutPc,
-                                         ParallelBailoutCause *bailoutCause)
+ForkJoinOperation::determineBailoutCause()
 {
+    bailoutCause = ParallelBailoutNone;
     for (uint32_t i = 0; i < bailoutRecords_.length(); i++) {
-        switch (bailoutRecords_[i].cause) {
-          case ParallelBailoutNone:
-          case ParallelBailoutInterrupt:
-            continue;
-          default:
-            break;
-        }
-
-        if (bailoutRecords_[i].hasFrames()) {
-            RematerializedFrame *frame = bailoutRecords_[i].frames()[0];
-            bailoutScript.set(frame->script());
-            *bailoutPc = frame->pc();
-            *bailoutCause = bailoutRecords_[i].cause;
-            return;
-        }
-    }
-}
-
-static const char *
-ValueToChar(JSContext *cx, HandleValue val, JSAutoByteString &bytes)
-{
-    if (val.isMagic()) {
-        switch (val.whyMagic()) {
-          case JS_OPTIMIZED_OUT: return "<optimized out>";
-          default: return "<unknown magic?>";
-        }
-    }
-
-    RootedString str(cx, ToString<CanGC>(cx, val));
-    if (!str)
-        return nullptr;
-    return bytes.encodeUtf8(cx, str);
-}
-
-bool
-ForkJoinOperation::reportBailoutWarnings()
-{
-    Sprinter sp(cx_);
-    if (SpewEnabled(SpewBailouts)) {
-        sp.init();
-        sp.printf("Bailed out of parallel operation");
-    }
-
-    for (uint32_t threadId = 0; threadId < bailoutRecords_.length(); threadId++) {
-        ParallelBailoutCause cause = bailoutRecords_[threadId].cause;
-        if (cause == ParallelBailoutNone)
+        if (bailoutRecords_[i].cause == ParallelBailoutNone)
             continue;
 
-        if (bailoutRecords_[threadId].hasFrames()) {
-            Vector<RematerializedFrame *> &frames = bailoutRecords_[threadId].frames();
+        if (bailoutRecords_[i].cause == ParallelBailoutInterrupt)
+            continue;
 
-            if (!SpewEnabled(SpewBailouts)) {
-                RematerializedFrame *frame = frames[0];
-                RootedScript bailoutScript(cx_, frame->script());
-                SpewBailout(bailouts, bailoutScript, frame->pc(), cause);
-                JS_ReportWarning(cx_, "Bailed out of parallel operation: %s at %s:%u",
-                                 BailoutExplanation(cause), bailoutScript->filename(),
-                                 PCToLineNumber(bailoutScript, frame->pc()));
-                return true;
-            }
+        bailoutCause = bailoutRecords_[i].cause;
+        const char *causeStr = BailoutExplanation(bailoutCause);
+        if (bailoutRecords_[i].depth) {
+            bailoutScript = bailoutRecords_[i].trace[0].script;
+            bailoutBytecode = bailoutRecords_[i].trace[0].bytecode;
 
-            sp.printf("\n  in thread %d due to %s", threadId, BailoutExplanation(cause));
+            const char *filename = bailoutScript->filename();
+            int line = JS_PCToLineNumber(cx_, bailoutScript, bailoutBytecode);
+            JS_ReportWarning(cx_, "Bailed out of parallel operation: %s at %s:%d",
+                             causeStr, filename, line);
 
-            for (uint32_t frameIndex = 0; frameIndex < frames.length(); frameIndex++) {
-                RematerializedFrame *frame = frames[frameIndex];
-                RootedScript script(cx_, frame->script());
+            Spew(SpewBailouts, "Bailout from thread %d: cause %d at loc %s:%d",
+                 i,
+                 bailoutCause,
+                 bailoutScript->filename(),
+                 PCToLineNumber(bailoutScript, bailoutBytecode));
+        } else {
+            JS_ReportWarning(cx_, "Bailed out of parallel operation: %s",
+                             causeStr);
 
-                // Format the frame's location.
-                sp.printf("\n    at ");
-                if (JSFunction *fun = frame->maybeFun()) {
-                    if (fun->displayAtom()) {
-                        JSAutoByteString displayBytes;
-                        RootedString displayAtom(cx_, fun->displayAtom());
-                        const char *displayChars = displayBytes.encodeUtf8(cx_, displayAtom);
-                        if (!displayChars)
-                            return false;
-                        sp.printf("%s", displayChars);
-                    } else {
-                        sp.printf("<anonymous>");
-                    }
-                } else {
-                    sp.printf("<global>");
-                }
-                sp.printf(" (%s:%u)", script->filename(), PCToLineNumber(script, frame->pc()));
-
-                // Format bindings.
-                BindingVector bindings(cx_);
-                if (!FillBindingVector(script, &bindings))
-                    return false;
-
-                unsigned scopeSlot = 0;
-                for (unsigned i = 0; i < bindings.length(); i++) {
-                    JSAutoByteString nameBytes;
-                    const char *nameChars = nullptr;
-                    RootedPropertyName bindingName(cx_, bindings[i].name());
-                    nameChars = nameBytes.encodeUtf8(cx_, bindingName);
-                    if (!nameChars)
-                        return false;
-
-                    RootedValue arg(cx_);
-                    if (bindings[i].aliased()) {
-                        arg = frame->callObj().getSlot(scopeSlot);
-                        scopeSlot++;
-                    } else if (i < frame->numFormalArgs()) {
-                        if (script->argsObjAliasesFormals() && frame->hasArgsObj())
-                            arg = frame->argsObj().arg(i);
-                        else
-                            arg = frame->unaliasedActual(i, DONT_CHECK_ALIASING);
-                    } else {
-                        arg = frame->unaliasedLocal(i - frame->numFormalArgs(), DONT_CHECK_ALIASING);
-                    }
-
-                    JSAutoByteString valueBytes;
-                    const char *valueChars = ValueToChar(cx_, arg, valueBytes);
-                    if (!valueChars)
-                        return false;
-
-                    sp.printf("\n      %s %s = %s",
-                              bindings[i].kind() == Binding::ARGUMENT ? "arg" : "var",
-                              nameChars, valueChars);
-                }
-            }
+            Spew(SpewBailouts, "Bailout from thread %d: cause %d, unknown loc",
+                 i,
+                 bailoutCause);
         }
     }
-
-    if (SpewEnabled(SpewBailouts))
-        JS_ReportWarning(cx_, "%s", sp.string());
-
-    return true;
 }
 
 bool
@@ -1227,33 +1145,32 @@ ForkJoinOperation::invalidateBailedOutScripts()
 {
     Vector<types::RecompileInfo> invalid(cx_);
     for (uint32_t i = 0; i < bailoutRecords_.length(); i++) {
-        switch (bailoutRecords_[i].cause) {
-          // No bailout.
-          case ParallelBailoutNone:
+        RootedScript script(cx_, bailoutRecords_[i].topScript);
+
+        // No script to invalidate.
+        if (!script || !script->hasParallelIonScript())
             continue;
 
+        Spew(SpewBailouts,
+             "Bailout from thread %d: cause %d, topScript %p:%s:%d",
+             i,
+             bailoutRecords_[i].cause,
+             script.get(), script->filename(), script->lineno());
+
+        switch (bailoutRecords_[i].cause) {
           // An interrupt is not the fault of the script, so don't
           // invalidate it.
-          case ParallelBailoutInterrupt:
-            continue;
+          case ParallelBailoutInterrupt: continue;
 
           // An illegal write will not be made legal by invalidation.
-          case ParallelBailoutIllegalWrite:
-            continue;
+          case ParallelBailoutIllegalWrite: continue;
 
           // For other cases, consider invalidation.
-          default:
-            break;
+          default: break;
         }
 
-        if (!bailoutRecords_[i].hasFrames())
-            continue;
-
-        // Get the script of the youngest frame.
-        RootedScript script(cx_, bailoutRecords_[i].frames()[0]->script());
-
         // Already invalidated.
-        if (!script->hasParallelIonScript() || hasScript(invalid, script))
+        if (hasScript(invalid, script))
             continue;
 
         Spew(SpewBailouts, "Invalidating script %p:%s:%d due to cause %d",
@@ -1265,7 +1182,7 @@ ForkJoinOperation::invalidateBailedOutScripts()
         if (!invalid.append(co))
             return false;
 
-        // Any script that we have marked for invalidation will need
+        // any script that we have marked for invalidation will need
         // to be recompiled
         if (!addToWorklist(script))
             return false;
@@ -1334,7 +1251,7 @@ ForkJoinOperation::parallelExecution(ExecutionStatus *status)
     ForkJoinActivation activation(cx_);
     ThreadPool *threadPool = &cx_->runtime()->threadPool;
     ForkJoinShared shared(cx_, threadPool, fun_, updatable_, sliceStart_, sliceEnd_,
-                          bailoutRecords_);
+                          &bailoutRecords_[0]);
     if (!shared.init()) {
         *status = ExecutionFatal;
         return RedLight;
@@ -1364,9 +1281,9 @@ ForkJoinOperation::recoverFromBailout(ExecutionStatus *status)
     // RedLight: fatal error
 
     bailouts += 1;
+    determineBailoutCause();
 
-    if (!reportBailoutWarnings())
-        return fatalError(status);
+    SpewBailout(bailouts, bailoutScript, bailoutBytecode, bailoutCause);
 
     // After any bailout, we always scan over callee list of main
     // function, if nothing else
@@ -1430,7 +1347,8 @@ class ParallelIonInvoke
 
     bool invoke(ForkJoinContext *cx) {
         JitActivation activation(cx);
-        Value result = Int32Value(argc_);
+        // In-out parameter: on input it denotes the number of values to preserve after the call.
+        Value result = Int32Value(0);
         CALL_GENERATED_CODE(enter_, jitcode_, argc_ + 1, argv_ + 1, nullptr, calleeToken_,
                             nullptr, 0, &result);
         return !result.isMagic();
@@ -1447,7 +1365,7 @@ ForkJoinShared::ForkJoinShared(JSContext *cx,
                                HandleObject updatable,
                                uint16_t sliceStart,
                                uint16_t sliceEnd,
-                               Vector<ParallelBailoutRecord> &records)
+                               ParallelBailoutRecord *records)
   : cx_(cx),
     threadPool_(threadPool),
     fun_(fun),
@@ -1648,7 +1566,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
                    CompileCompartment::get(cx_->compartment()),
                    nullptr);
 
-    JS_ASSERT(!cx.bailoutRecord->bailedOut());
+    JS_ASSERT(cx.bailoutRecord->topScript == nullptr);
 
     if (!fun_->nonLazyScript()->hasParallelIonScript()) {
         // Sometimes, particularly with GCZeal, the parallel ion
@@ -1656,7 +1574,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         // op and reaching this point.  In that case, we just fail
         // and fallback.
         Spew(SpewOps, "Down (Script no longer present)");
-        cx.bailoutRecord->joinCause(ParallelBailoutMainScriptNotPresent);
+        cx.bailoutRecord->setCause(ParallelBailoutMainScriptNotPresent);
         setAbortFlagAndRequestInterrupt(false);
     } else {
         ParallelIonInvoke<3> fii(runtime(), fun_, 3);
@@ -1666,7 +1584,7 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
         fii.args[2] = Int32Value(sliceEnd_);
 
         bool ok = fii.invoke(&cx);
-        JS_ASSERT(ok == !cx.bailoutRecord->bailedOut());
+        JS_ASSERT(ok == !cx.bailoutRecord->topScript);
         if (!ok) {
             setAbortFlagAndRequestInterrupt(false);
 #ifdef JSGC_FJGENERATIONAL
@@ -1712,7 +1630,7 @@ ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
     JS_ASSERT(!cx_->runtime()->gc.isNeeded);
 
     if (!abort_) {
-        cx.bailoutRecord->joinCause(ParallelBailoutInterrupt);
+        cx.bailoutRecord->setCause(ParallelBailoutInterrupt);
         setAbortFlagAndRequestInterrupt(false);
     }
 }
@@ -1886,7 +1804,7 @@ void
 ForkJoinContext::requestGC(JS::gcreason::Reason reason)
 {
     shared_->requestGC(reason);
-    bailoutRecord->joinCause(ParallelBailoutRequestedGC);
+    bailoutRecord->setCause(ParallelBailoutRequestedGC);
     shared_->setAbortFlagAndRequestInterrupt(false);
 }
 
@@ -1894,7 +1812,7 @@ void
 ForkJoinContext::requestZoneGC(JS::Zone *zone, JS::gcreason::Reason reason)
 {
     shared_->requestZoneGC(zone, reason);
-    bailoutRecord->joinCause(ParallelBailoutRequestedZoneGC);
+    bailoutRecord->setCause(ParallelBailoutRequestedZoneGC);
     shared_->setAbortFlagAndRequestInterrupt(false);
 }
 
@@ -1902,82 +1820,73 @@ bool
 ForkJoinContext::setPendingAbortFatal(ParallelBailoutCause cause)
 {
     shared_->setPendingAbortFatal();
-    bailoutRecord->joinCause(cause);
+    bailoutRecord->setCause(cause);
     return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 // ParallelBailoutRecord
 
-ParallelBailoutRecord::~ParallelBailoutRecord()
+void
+js::ParallelBailoutRecord::init(JSContext *cx)
 {
-    reset();
-    js_delete(frames_);
-}
-
-bool
-ParallelBailoutRecord::init(JSContext *cx)
-{
-    MOZ_ASSERT(!frames_);
-    frames_ = cx->new_<Vector<RematerializedFrame *> >(cx);
-    return !!frames_;
+    reset(cx);
 }
 
 void
-ParallelBailoutRecord::reset()
+js::ParallelBailoutRecord::reset(JSContext *cx)
 {
-    RematerializedFrame::FreeInVector(frames());
+    topScript = nullptr;
     cause = ParallelBailoutNone;
+    depth = 0;
 }
 
-template <class T>
-static void
-RematerializeFramesWithIter(ForkJoinContext *cx, T &frameIter,
-                            Vector<RematerializedFrame *> &frames)
+void
+js::ParallelBailoutRecord::setCause(ParallelBailoutCause cause,
+                                    JSScript *outermostScript,
+                                    JSScript *currentScript,
+                                    jsbytecode *currentPc)
 {
-    // This function as well as |rematerializeFrames| methods below are
-    // infallible. These are only called when we are already erroring out. If
-    // we OOM here, free what we've allocated and return. Error reporting is
-    // then unable to give the user detailed stack information.
+    this->cause = cause;
+    updateCause(cause, outermostScript, currentScript, currentPc);
+}
 
-    MOZ_ASSERT(frames.empty());
+void
+js::ParallelBailoutRecord::updateCause(ParallelBailoutCause cause,
+                                       JSScript *outermostScript,
+                                       JSScript *currentScript,
+                                       jsbytecode *currentPc)
+{
+    JS_ASSERT_IF(outermostScript, currentScript);
+    JS_ASSERT_IF(outermostScript, outermostScript->hasParallelIonScript());
+    JS_ASSERT_IF(currentScript, outermostScript);
+    JS_ASSERT_IF(!currentScript, !currentPc);
 
-    for (; !frameIter.done(); ++frameIter) {
-        if (!frameIter.isIonJS())
-            continue;
+    if (this->cause == ParallelBailoutNone)
+        this->cause = cause;
 
-        InlineFrameIterator inlineIter(cx, &frameIter);
-        Vector<RematerializedFrame *> inlineFrames(cx);
+    if (outermostScript)
+        this->topScript = outermostScript;
 
-        if (!RematerializedFrame::RematerializeInlineFrames(cx, frameIter.fp(),
-                                                            inlineIter, inlineFrames))
-        {
-            RematerializedFrame::FreeInVector(inlineFrames);
-            RematerializedFrame::FreeInVector(frames);
-            return;
-        }
+    if (currentScript)
+        addTrace(currentScript, currentPc);
+}
 
-        // Reverse the inline frames into the main vector.
-        while (!inlineFrames.empty()) {
-            if (!frames.append(inlineFrames.popCopy())) {
-                RematerializedFrame::FreeInVector(inlineFrames);
-                RematerializedFrame::FreeInVector(frames);
-                return;
-            }
-        }
+void
+js::ParallelBailoutRecord::addTrace(JSScript *script,
+                                    jsbytecode *pc)
+{
+    // Ideally, this should never occur, because we should always have
+    // a script when we invoke setCause, but I havent' fully
+    // refactored things to that point yet:
+    if (topScript == nullptr && script != nullptr)
+        topScript = script;
+
+    if (depth < MaxDepth) {
+        trace[depth].script = script;
+        trace[depth].bytecode = pc;
+        depth += 1;
     }
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, JitFrameIterator &frameIter)
-{
-    RematerializeFramesWithIter(cx, frameIter, frames());
-}
-
-void
-ParallelBailoutRecord::rematerializeFrames(ForkJoinContext *cx, IonBailoutIterator &frameIter)
-{
-    RematerializeFramesWithIter(cx, frameIter, frames());
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2251,6 +2160,21 @@ class ParallelSpewer
         spew(SpewCompile, "%s%s%s: %s (%s:%u)", cyan(), mir->opName(), reset(), buf,
              script->filename(), PCToLineNumber(script, mir->trackedPc()));
     }
+
+    void spewBailoutIR(IonLIRTraceData *data) {
+        if (!active[SpewBailouts])
+            return;
+
+        // If we didn't bail from a LIR/MIR but from a propagated parallel
+        // bailout, don't bother printing anything since we've printed it
+        // elsewhere.
+        if (data->mirOpName && data->script) {
+            spew(SpewBailouts, "%sBailout%s: %s / %s%s%s (block %d lir %d) (%s:%u)", yellow(), reset(),
+                 data->lirOpName, cyan(), data->mirOpName, reset(),
+                 data->blockIndex, data->lirIndex, data->script->filename(),
+                 PCToLineNumber(data->script, data->pc));
+        }
+    }
 };
 
 // Singleton instance of the spewer.
@@ -2317,6 +2241,12 @@ parallel::SpewMIR(MDefinition *mir, const char *fmt, ...)
     va_start(ap, fmt);
     spewer.spewMIR(mir, fmt, ap);
     va_end(ap);
+}
+
+void
+parallel::SpewBailoutIR(IonLIRTraceData *data)
+{
+    spewer.spewBailoutIR(data);
 }
 
 #endif // FORKJOIN_SPEW

@@ -72,8 +72,13 @@ JSObject *InitRestParameterPar(ForkJoinContext *cx, uint32_t length, Value *rest
                                HandleObject templateObj, HandleObject res);
 
 // Abort and debug tracing functions.
-void BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer);
-bool CallToUncompiledScriptPar(ForkJoinContext *cx, JSObject *obj);
+void AbortPar(ParallelBailoutCause cause, JSScript *outermostScript, JSScript *currentScript,
+              jsbytecode *bytecode);
+void PropagateAbortPar(JSScript *outermostScript, JSScript *currentScript);
+
+void TraceLIR(IonLIRTraceData *current);
+
+void CallToUncompiledScriptPar(JSObject *obj);
 
 } // namespace jit
 } // namespace js
