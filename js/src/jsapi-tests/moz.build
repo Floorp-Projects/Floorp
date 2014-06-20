@@ -34,6 +34,7 @@ UNIFIED_SOURCES += [
     'testFunctionProperties.cpp',
     'testGCExactRooting.cpp',
     'testGCFinalizeCallback.cpp',
+    'testGCHeapPostBarriers.cpp',
     'testGCOutOfMemory.cpp',
     'testGCStoreBufferRemoval.cpp',
     'testHashTable.cpp',
