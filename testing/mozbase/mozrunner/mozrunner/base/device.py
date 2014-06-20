@@ -81,8 +81,8 @@ class DeviceRunner(BaseRunner):
         if match:
             self.last_test = match[-1]
 
-    def on_timeout(self, line):
-        self.dm.killProcess(self.app_ctx.remote_process, sig=signal.SIGABRT)
+    def on_timeout(self):
+        self.app_ctx.dm.killProcess(self.app_ctx.remote_process, sig=signal.SIGABRT)
         timeout = 10 # seconds
         starttime = datetime.datetime.now()
         while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
@@ -92,14 +92,14 @@ class DeviceRunner(BaseRunner):
         else:
             print("timed out waiting for '%s' process to exit" % self.app_ctx.remote_process)
 
-        msg = "%s | application timed out after %s seconds"
+        msg = "TEST-UNEXPECTED-FAIL | %s | application timed out after %s seconds"
         if self.timeout:
             timeout = self.timeout
         else:
             timeout = self.output_timeout
             msg = "%s with no output" % msg
 
-        self.log.testFail(msg % (self.last_test, timeout))
+        print(msg % (self.last_test, timeout))
         self.check_for_crashes()
 
     def check_for_crashes(self):
