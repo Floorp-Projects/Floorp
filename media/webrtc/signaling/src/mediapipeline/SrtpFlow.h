@@ -28,8 +28,8 @@ namespace mozilla {
 
 
 class SrtpFlow {
- public:
   ~SrtpFlow();
+ public:
 
 
   static mozilla::RefPtr<SrtpFlow> Create(int cipher_suite,

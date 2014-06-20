@@ -10,6 +10,18 @@
 #include <string>
 #include <vector>
 
+namespace CSF {
+class VideoControl;
+}
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<CSF::VideoControl>
+{
+  static const bool value = true;
+};
+}
+
 namespace CSF
 {
 	DECLARE_NS_PTR(VideoControl)
