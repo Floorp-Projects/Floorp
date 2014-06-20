@@ -1,0 +1,105 @@
+### !!! Please do not add suppressions for new leaks in Gecko code, unless they are intentional !!!
+
+###
+### Some of these leak in every test run.
+###
+
+# LSan runs with a shallow stack depth and no debug symbols, so some small intentional
+# leaks in system libraries show up with this.  You do not want this enabled
+# when running locally with a deep stack, as it can catch too much.
+leak:libc.so
+
+# nsComponentManagerImpl intentionally leaks factory entries, and probably some other stuff.
+leak:nsComponentManagerImpl
+# These two variants are needed when fast unwind is disabled and stack depth is limited.
+leak:mozJSComponentLoader::LoadModule
+leak:nsNativeModuleLoader::LoadModule
+
+# Bug 980109 - Freeing this properly on shutdown is hard.
+leak:profiler_init
+
+# Bug 981220 - Pixman fails to free TLS memory.
+leak:pixman_implementation_lookup_composite
+
+# Bug 987918 - Font shutdown leaks when CLEANUP_MEMORY is not enabled.
+leak:libfontconfig.so
+leak:GI___strdup
+# The symbol is really __GI___strdup, but if you have the leading _, it doesn't suppress it.
+
+
+###
+### Many leaks only affect some test suites.  The suite annotations are not checked.
+###
+
+# Bug 800200 - JSD1 is leaking, but it is about to be removed, so ignore it. m4
+leak:jsd_CreateLock
+leak:jsdScript::GetExecutableLines
+leak:jsdService::ActivateDebugger
+
+# Bug 979928 - WebRTC is leaky. m2, m3
+leak:/media/mtransport/
+leak:/media/webrtc/signaling/
+
+# Bug 981195 - Small leak in the parser. m4
+leak:TypeCompartment::fixObjectType
+
+# Bug 982111 - WebM is leaking. m1
+leak:nestegg_read_packet
+
+# Bug 987385 - Various plugin leaks. m3
+leak:mozilla::plugins::PPluginInstanceParent::CallNPP_HandleEvent
+leak:mozilla::plugins::PPluginModuleParent::OnCallReceived
+
+# Bug 987925 - Small leak under PK11_ChangePW. m5
+leak:sec_asn1e_allocate_item
+leak:PORT_Strdup_Util
+
+# Bug 1021302 - Leak of fds allocated in nsSocketTransport::BuildSocket(). m1, m5, dt, oth
+leak:nsSocketTransport::BuildSocket
+leak:nsServerSocket::OnSocketReady
+
+# Bug 1021350 - Small leak under event_base_once. m1, m4, bc3
+leak:event_base_once
+
+# Bug 1021854 - nsFileStreamBase::DoOpen() leaking fds. bc1, oth
+leak:nsLocalFile::OpenNSPRFileDesc
+
+# Bug 1021932 - AllocateArrayBufferContents leaks. m1
+# Bug 1023583 - Leak of array buffer data involving web audio and XHR::OnStopRequest(). m1
+# Bug 1023585 - Leak of array buffer in JSStructuredCloneWriter::transferOwnership(). m1
+leak:AllocateArrayBufferContents
+
+# Bug 1022010 - Small leak under _render_glyph_outline. bc1
+leak:_render_glyph_outline
+
+# Bug 1022042 - compareVariants in the test plugin leaks identifiers. oth
+leak:compareVariants(_NPP*,
+
+# Bug 1022954 - ScriptSource leaks sourceMapURL_ sometimes. dt
+leak:ScriptSource::setSourceMapURL
+
+# Bug 1023548 - Small leak under SECITEM_AllocItem_Util. bc1, bc3
+leak:SECITEM_AllocItem_Util
+
+# This is a one-time leak, so it is probably okay to ignore. bc1, oth
+leak:GlobalPrinters::InitializeGlobalPrinters
+leak:nsPSPrinterList::GetPrinterList
+
+
+###
+### Leaks with system libraries in their stacks. These show up across a number of tests.
+### Better symbols and disabling fast stackwalking may help diagnose these.
+###
+
+leak:libcairo.so
+leak:libdricore.so
+leak:libGL.so
+leak:libglib-2.0.so
+leak:libp11-kit.so
+leak:libpulse.so
+leak:libpulsecommon-1.1.so
+leak:libresolv.so
+leak:libstdc++.so
+leak:libXrandr.so
+leak:pthread_setspecific_internal
+leak:swrast_dri.so
