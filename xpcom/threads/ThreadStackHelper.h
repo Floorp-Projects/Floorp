@@ -43,7 +43,7 @@ private:
 #ifdef MOZ_ENABLE_PROFILER_SPS
   const PseudoStack* const mPseudoStack;
 #endif
-  Stack mStackBuffer;
+  Stack* mStackToFill;
   size_t mMaxStackSize;
 
   bool PrepareStackBuffer(Stack& aStack);
