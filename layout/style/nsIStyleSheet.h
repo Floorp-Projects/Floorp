@@ -30,7 +30,7 @@ class nsIDocument;
  * rules.  Those style rules can be reached in one of two ways, depending
  * on which level of the nsStyleSet it is in:
  *   1) It can be |QueryInterface|d to nsIStyleRuleProcessor
- *   2) It can be |QueryInterface|d to nsCSSStyleSheet, with which the
+ *   2) It can be |QueryInterface|d to CSSStyleSheet, with which the
  *      |nsStyleSet| uses an |nsCSSRuleProcessor| to access the rules.
  */
 class nsIStyleSheet : public nsISupports {

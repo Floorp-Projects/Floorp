@@ -80,18 +80,18 @@ nsXBLPrototypeResources::FlushSkinSheets()
   // they'll still be in the chrome cache.
   mRuleProcessor = nullptr;
 
-  nsTArray<nsRefPtr<nsCSSStyleSheet>> oldSheets;
+  nsTArray<nsRefPtr<CSSStyleSheet>> oldSheets;
 
   oldSheets.SwapElements(mStyleSheetList);
 
   mozilla::css::Loader* cssLoader = doc->CSSLoader();
 
   for (size_t i = 0, count = oldSheets.Length(); i < count; ++i) {
-    nsCSSStyleSheet* oldSheet = oldSheets[i];
+    CSSStyleSheet* oldSheet = oldSheets[i];
 
     nsIURI* uri = oldSheet->GetSheetURI();
 
-    nsRefPtr<nsCSSStyleSheet> newSheet;
+    nsRefPtr<CSSStyleSheet> newSheet;
     if (IsChromeURI(uri)) {
       if (NS_FAILED(cssLoader->LoadSheetSync(uri, getter_AddRefs(newSheet))))
         continue;
@@ -138,25 +138,25 @@ nsXBLPrototypeResources::GatherRuleProcessor()
 }
 
 void
-nsXBLPrototypeResources::AppendStyleSheet(nsCSSStyleSheet* aSheet)
+nsXBLPrototypeResources::AppendStyleSheet(CSSStyleSheet* aSheet)
 {
   mStyleSheetList.AppendElement(aSheet);
 }
 
 void
-nsXBLPrototypeResources::RemoveStyleSheet(nsCSSStyleSheet* aSheet)
+nsXBLPrototypeResources::RemoveStyleSheet(CSSStyleSheet* aSheet)
 {
   DebugOnly<bool> found = mStyleSheetList.RemoveElement(aSheet);
   MOZ_ASSERT(found, "Trying to remove a sheet that does not exist.");
 }
 
 void
-nsXBLPrototypeResources::InsertStyleSheetAt(size_t aIndex, nsCSSStyleSheet* aSheet)
+nsXBLPrototypeResources::InsertStyleSheetAt(size_t aIndex, CSSStyleSheet* aSheet)
 {
   mStyleSheetList.InsertElementAt(aIndex, aSheet);
 }
 
-nsCSSStyleSheet*
+CSSStyleSheet*
 nsXBLPrototypeResources::StyleSheetAt(size_t aIndex) const
 {
   return mStyleSheetList[aIndex];
@@ -176,7 +176,7 @@ nsXBLPrototypeResources::HasStyleSheets() const
 
 void
 nsXBLPrototypeResources::AppendStyleSheetsTo(
-                                      nsTArray<nsCSSStyleSheet*>& aResult) const
+                                      nsTArray<CSSStyleSheet*>& aResult) const
 {
   aResult.AppendElements(mStyleSheetList);
 }
