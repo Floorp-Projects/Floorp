@@ -2,35 +2,35 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/main_layout"
               android:orientation="vertical"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent">
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
 
     <LinearLayout android:id="@+id/webapp_titlebar"
                   android:visibility="gone"
                   style="@style/WebView.Titlebar"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal">
     
         <TextView android:id="@+id/webapp_title"
                   style="@style/WebView.Titlebar.Title"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:singleLine="true"/>
 
     </LinearLayout>
 
     <RelativeLayout android:id="@+id/gecko_layout"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:layout_below="@+id/webapp_titlebar">
 
         <include layout="@layout/shared_ui_components"/>
 
         <RelativeLayout android:id="@+id/splashscreen"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent" >
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" >
 
             <ImageView android:id="@+id/splashscreen_icon"
                       android:minWidth="128dip"

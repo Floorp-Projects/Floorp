@@ -23,7 +23,6 @@
 #include "nsIDOMClientRect.h"
 #include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
-#include "nsFrameManager.h"
 #include "nsINetworkLinkService.h"
 
 #include "mozilla/Services.h"
@@ -422,7 +421,7 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
     }
 
     case AndroidGeckoEvent::TELEMETRY_UI_EVENT: {
-        if (curEvent->Characters().Length() == 0)
+        if (curEvent->Data().Length() == 0)
             break;
 
         nsCOMPtr<nsIUITelemetryObserver> obs;

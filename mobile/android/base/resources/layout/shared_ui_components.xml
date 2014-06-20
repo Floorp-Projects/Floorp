@@ -11,17 +11,17 @@
 
     <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
                                  gecko:doinit="false"
-                                 android:layout_width="fill_parent"
-                                 android:layout_height="fill_parent"/>
+                                 android:layout_width="match_parent"
+                                 android:layout_height="match_parent"/>
 
     <AbsoluteLayout android:id="@+id/plugin_container"
                     android:background="@android:color/transparent"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"/>
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
 
     <org.mozilla.gecko.FormAssistPopup android:id="@+id/form_assist_popup"
-                                       android:layout_width="fill_parent"
-                                       android:layout_height="fill_parent"
+                                       android:layout_width="match_parent"
+                                       android:layout_height="match_parent"
                                        android:visibility="gone"/>
 
     <include layout="@layout/text_selection_handles"/>

@@ -193,17 +193,16 @@ ThebesLayerComposite::GetEffectiveResolution()
   return CSSToScreenScale(1.0);
 }
 
-nsACString&
-ThebesLayerComposite::PrintInfo(nsACString& aTo, const char* aPrefix)
+void
+ThebesLayerComposite::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  ThebesLayer::PrintInfo(aTo, aPrefix);
+  ThebesLayer::PrintInfo(aStream, aPrefix);
   if (mBuffer && mBuffer->IsAttached()) {
-    aTo += "\n";
+    aStream << "\n";
     nsAutoCString pfx(aPrefix);
     pfx += "  ";
-    mBuffer->PrintInfo(aTo, pfx.get());
+    mBuffer->PrintInfo(aStream, pfx.get());
   }
-  return aTo;
 }
 
 } /* layers */

@@ -12,52 +12,52 @@
 using namespace mozilla::layers;
 
 void
-TexturedEffect::PrintInfo(nsACString& aTo, const char* aPrefix)
+TexturedEffect::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  aTo += aPrefix;
-  aTo += nsPrintfCString("%s (0x%p)", Name(), this);
-  AppendToString(aTo, mTextureCoords, " [texture-coords=", "]");
+  aStream << aPrefix;
+  aStream << nsPrintfCString("%s (0x%p)", Name(), this).get();
+  AppendToString(aStream, mTextureCoords, " [texture-coords=", "]");
 
   if (mPremultiplied) {
-    aTo += " [premultiplied]";
+    aStream << " [premultiplied]";
   } else {
-    aTo += " [not-premultiplied]";
+    aStream << " [not-premultiplied]";
   }
 
-  AppendToString(aTo, mFilter, " [filter=", "]");
+  AppendToString(aStream, mFilter, " [filter=", "]");
 }
 
 void
-EffectMask::PrintInfo(nsACString& aTo, const char* aPrefix)
+EffectMask::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  aTo += aPrefix;
-  aTo += nsPrintfCString("EffectMask (0x%p)", this);
-  AppendToString(aTo, mSize, " [size=", "]");
-  AppendToString(aTo, mMaskTransform, " [mask-transform=", "]");
+  aStream << aPrefix;
+  aStream << nsPrintfCString("EffectMask (0x%p)", this).get();
+  AppendToString(aStream, mSize, " [size=", "]");
+  AppendToString(aStream, mMaskTransform, " [mask-transform=", "]");
 
   if (mIs3D) {
-    aTo += " [is-3d]";
+    aStream << " [is-3d]";
   }
 }
 
 void
-EffectRenderTarget::PrintInfo(nsACString& aTo, const char* aPrefix)
+EffectRenderTarget::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  TexturedEffect::PrintInfo(aTo, aPrefix);
-  aTo += nsPrintfCString(" [render-target=%p]", mRenderTarget.get());
+  TexturedEffect::PrintInfo(aStream, aPrefix);
+  aStream << nsPrintfCString(" [render-target=%p]", mRenderTarget.get()).get();
 }
 
 void
-EffectSolidColor::PrintInfo(nsACString& aTo, const char* aPrefix)
+EffectSolidColor::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  aTo += aPrefix;
-  aTo += nsPrintfCString("EffectSolidColor (0x%p) [color=%x]", this, mColor.ToABGR());
+  aStream << aPrefix;
+  aStream << nsPrintfCString("EffectSolidColor (0x%p) [color=%x]", this, mColor.ToABGR()).get();
 }
 
 void
-EffectBlendMode::PrintInfo(nsACString& aTo, const char* aPrefix)
+EffectBlendMode::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
-  aTo += aPrefix;
-  aTo += nsPrintfCString("EffectBlendMode (0x%p) [blendmode=%i]", this, (int)mBlendMode);
+  aStream << aPrefix;
+  aStream << nsPrintfCString("EffectBlendMode (0x%p) [blendmode=%i]", this, (int)mBlendMode).get();
 }
 

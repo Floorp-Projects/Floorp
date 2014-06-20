@@ -42,7 +42,7 @@ class HTMLFormElement MOZ_FINAL : public nsGenericHTMLElement,
   friend class HTMLFormControlsCollection;
 
 public:
-  HTMLFormElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLFormElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLFormElement();
 
   nsresult Init();
@@ -119,7 +119,7 @@ public:
    */
   void ForgetCurrentSubmission();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(HTMLFormElement,
                                                          nsGenericHTMLElement)

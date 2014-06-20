@@ -13,7 +13,7 @@ Object.preventExtensions(target);
 var caught = false;
 assertThrowsInstanceOf(function () {
     Object.keys(new Proxy(target, {
-        keys: function (target) {
+        ownKeys: function (target) {
             return [];
         }
     }));

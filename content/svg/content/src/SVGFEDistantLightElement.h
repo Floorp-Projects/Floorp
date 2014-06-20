@@ -10,7 +10,7 @@
 #include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFEDistantLightElement(nsIContent **aResult,
-                                        already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -20,9 +20,9 @@ typedef SVGFELightElement SVGFEDistantLightElementBase;
 class SVGFEDistantLightElement : public SVGFEDistantLightElementBase
 {
   friend nsresult (::NS_NewSVGFEDistantLightElement(nsIContent **aResult,
-                                                    already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                    already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEDistantLightElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEDistantLightElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEDistantLightElementBase(aNodeInfo)
   {
   }
@@ -33,7 +33,7 @@ public:
   virtual bool AttributeAffectsRendering(
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> Azimuth();

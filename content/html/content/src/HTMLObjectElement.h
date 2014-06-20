@@ -22,7 +22,7 @@ class HTMLObjectElement MOZ_FINAL : public nsGenericHTMLFormElement
                                   , public nsIConstraintValidation
 {
 public:
-  HTMLObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                     FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLObjectElement();
 
@@ -74,7 +74,7 @@ public:
   // nsObjectLoadingContent
   virtual uint32_t GetCapabilities() const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsresult CopyInnerTo(Element* aDest);
 

@@ -7,19 +7,19 @@
        xmlns:gecko="http://schemas.android.com/apk/res-auto">
 
     <RelativeLayout android:id="@+id/tabs_panel_header"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="@dimen/browser_toolbar_height">
 
         <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsPanelToolbar"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:background="@color/background_tabs">
 
             <include layout="@layout/tabs_panel_header"/>
 
         </view>
 
-        <View android:layout_width="fill_parent"
+        <View android:layout_width="match_parent"
               android:layout_height="2dp"
               android:layout_alignParentBottom="true"
               android:background="#1A000000"/>
@@ -28,13 +28,13 @@
 
     <view class="org.mozilla.gecko.tabspanel.TabsPanel$TabsListContainer"
           android:id="@+id/tabs_container"
-          android:layout_width="fill_parent"
+          android:layout_width="match_parent"
           android:layout_height="wrap_content">
 
         <org.mozilla.gecko.tabspanel.TabsTray android:id="@+id/normal_tabs"
                                               style="@style/TabsList"
-                                              android:layout_width="fill_parent"
-                                              android:layout_height="fill_parent"
+                                              android:layout_width="match_parent"
+                                              android:layout_height="match_parent"
                                               android:choiceMode="singleChoice"
                                               android:visibility="gone"
                                               gecko:tabs="tabs_normal"/>

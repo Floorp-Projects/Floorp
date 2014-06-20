@@ -57,6 +57,14 @@ If you do not have a non-debug gaia profile, you can build one:
 The profile should be generated in a directory called 'profile'.
 '''.lstrip()
 
+# Maps test flavors to mochitest suite type.
+FLAVORS = {
+    'mochitest': 'plain',
+    'chrome': 'chrome',
+    'browser-chrome': 'browser',
+    'a11y': 'a11y',
+    'webapprt-chrome': 'webapprt-chrome',
+}
 
 class UnexpectedFilter(logging.Filter):
     def filter(self, record):
@@ -658,13 +666,68 @@ class MachCommands(MachCommandBase):
     def run_mochitest_webapprt_content(self, test_paths, **kwargs):
         return self.run_mochitest(test_paths, 'webapprt-content', **kwargs)
 
-    def run_mochitest(self, test_paths, flavor, **kwargs):
+    @Command('mochitest', category='testing',
+        conditions=[conditions.is_firefox],
+        description='Run any flavor of mochitest.')
+    @MochitestCommand
+    @CommandArgument('-f', '--flavor', choices=FLAVORS.keys(),
+        help='Only run tests of this flavor.')
+    def run_mochitest_general(self, test_paths, flavor=None, test_objects=None,
+            **kwargs):
+        self._preruntest()
+
+        from mozbuild.testing import TestResolver
+
+        if test_objects:
+            tests = test_objects
+        else:
+            resolver = self._spawn(TestResolver)
+            tests = list(resolver.resolve_tests(paths=test_paths,
+                cwd=self._mach_context.cwd))
+
+        # Our current approach is to group the tests by suite and then perform
+        # an invocation for each suite. Ideally, this would be done
+        # automatically inside of core mochitest code. But it wasn't designed
+        # to do that.
+        #
+        # This does mean our output is less than ideal. When running tests from
+        # multiple suites, we see redundant summary lines. Hopefully once we
+        # have better machine readable output coming from mochitest land we can
+        # aggregate that here and improve the output formatting.
+
+        suites = {}
+        for test in tests:
+            # Filter out non-mochitests.
+            if test['flavor'] not in FLAVORS:
+                continue
+
+            if flavor and test['flavor'] != flavor:
+                continue
+
+            suite = FLAVORS[test['flavor']]
+            suites.setdefault(suite, []).append(test)
+
+        mochitest = self._spawn(MochitestRunner)
+        overall = None
+        for suite, tests in sorted(suites.items()):
+            result = mochitest.run_desktop_test(self._mach_context,
+                test_paths=[test['file_relpath'] for test in tests], suite=suite,
+                **kwargs)
+            if result:
+                overall = result
+
+        return overall
+
+    def _preruntest(self):
         from mozbuild.controller.building import BuildDriver
 
         self._ensure_state_subdir_exists('.')
 
         driver = self._spawn(BuildDriver)
         driver.install_tests(remove=False)
+
+    def run_mochitest(self, test_paths, flavor, **kwargs):
+        self._preruntest()
 
         mochitest = self._spawn(MochitestRunner)
 

@@ -10,7 +10,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGAltGlyphElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,15 +21,15 @@ class SVGAltGlyphElement MOZ_FINAL : public SVGAltGlyphElementBase
 {
 protected:
   friend nsresult (::NS_NewSVGAltGlyphElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGAltGlyphElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGAltGlyphElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> Href();

@@ -18,7 +18,7 @@
 #include "mozilla/Attributes.h"
 
 nsresult NS_NewSVGSVGElement(nsIContent **aResult,
-                             already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                              mozilla::dom::FromParser aFromParser);
 
 class nsSMILTimeContainer;
@@ -91,12 +91,12 @@ class SVGSVGElement MOZ_FINAL : public SVGSVGElementBase
   friend class mozilla::SVGFragmentIdentifier;
   friend class mozilla::AutoSVGRenderingState;
 
-  SVGSVGElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  SVGSVGElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                 FromParser aFromParser);
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
   friend nsresult (::NS_NewSVGSVGElement(nsIContent **aResult,
-                                         already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                          mozilla::dom::FromParser aFromParser));
 
 public:
@@ -198,7 +198,7 @@ public:
   // SVG-as-an-image documents.)
   virtual void FlushImageTransformInvalidation();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // Returns true IFF our attributes are currently overridden by a <view>
   // element and that element's ID matches the passed-in string.

@@ -23,7 +23,7 @@ class HTMLButtonElement MOZ_FINAL : public nsGenericHTMLFormElementWithState,
 public:
   using nsIConstraintValidation::GetValidationMessage;
 
-  HTMLButtonElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  HTMLButtonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                       FromParser aFromParser = NOT_FROM_PARSER);
   virtual ~HTMLButtonElement();
 
@@ -56,7 +56,7 @@ public:
                      EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
 
   // nsINode
-  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
   // nsIContent

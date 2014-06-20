@@ -45,7 +45,7 @@ enum SeparatorType
 
 
 
-HTMLMenuElement::HTMLMenuElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLMenuElement::HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mType(MENU_TYPE_LIST)
 {
 }

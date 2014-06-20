@@ -22,10 +22,10 @@ namespace CSF
     protected:
         CC_DeviceInfo() { }
 
-    public:
         //Base class needs dtor to be declared as virtual
         virtual ~CC_DeviceInfo() {};
 
+    public:
         /**
            gets the device name
            @returns - the device name as an std::string

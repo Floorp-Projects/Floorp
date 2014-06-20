@@ -21,7 +21,7 @@ class HTMLAudioElement MOZ_FINAL : public HTMLMediaElement,
                                    public nsIDOMHTMLAudioElement
 {
 public:
-  HTMLAudioElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLAudioElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLAudioElement();
 
   // nsISupports
@@ -31,7 +31,7 @@ public:
   using HTMLMediaElement::GetPaused;
   NS_FORWARD_NSIDOMHTMLMEDIAELEMENT(HTMLMediaElement::)
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
   virtual nsresult SetAcceptHeader(nsIHttpChannel* aChannel);
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }

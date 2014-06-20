@@ -7,8 +7,8 @@
 
     <ViewStub android:id="@+id/home_empty_view_stub"
               android:layout="@layout/home_empty_panel"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"/>
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"/>
 
     <TextView android:id="@+id/title"
               style="@style/Widget.Home.HistoryPanelTitle"
@@ -17,7 +17,7 @@
     <org.mozilla.gecko.home.HomeListView
             android:id="@+id/list"
             style="@style/Widget.Home.HistoryListView"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"/>
 

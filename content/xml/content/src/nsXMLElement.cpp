@@ -12,7 +12,7 @@ using namespace mozilla::dom;
 
 nsresult
 NS_NewXMLElement(Element** aInstancePtrResult,
-                 already_AddRefed<nsINodeInfo>&& aNodeInfo)
+                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
 {
   nsXMLElement* it = new nsXMLElement(aNodeInfo);
   NS_ADDREF(*aInstancePtrResult = it);

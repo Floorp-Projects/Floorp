@@ -182,12 +182,12 @@ XMLStylesheetProcessingInstruction::GetStyleSheetInfo(nsAString& aTitle,
 }
 
 nsGenericDOMDataNode*
-XMLStylesheetProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
+XMLStylesheetProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                                   bool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new XMLStylesheetProcessingInstruction(ni.forget(), data);
 }
 

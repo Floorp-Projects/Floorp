@@ -38,7 +38,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGScriptElement, SVGScriptElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGScriptElement::SVGScriptElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+SVGScriptElement::SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                                    FromParser aFromParser)
   : SVGScriptElementBase(aNodeInfo)
   , nsScriptElement(aFromParser)
@@ -50,11 +50,11 @@ SVGScriptElement::SVGScriptElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
 // nsIDOMNode methods
 
 nsresult
-SVGScriptElement::Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const
+SVGScriptElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
 {
   *aResult = nullptr;
 
-  already_AddRefed<nsINodeInfo> ni = nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   SVGScriptElement* it = new SVGScriptElement(ni, NOT_FROM_PARSER);
 
   nsCOMPtr<nsINode> kungFuDeathGrip = it;

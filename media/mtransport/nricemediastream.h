@@ -125,8 +125,6 @@ class NrIceMediaStream {
   static RefPtr<NrIceMediaStream> Create(NrIceCtx *ctx,
                                          const std::string& name,
                                          int components);
-  ~NrIceMediaStream();
-
   enum State { ICE_CONNECTING, ICE_OPEN, ICE_CLOSED};
 
   State state() const { return state_; }
@@ -205,6 +203,8 @@ class NrIceMediaStream {
       components_(components),
       stream_(nullptr),
       opaque_(nullptr) {}
+
+  ~NrIceMediaStream();
 
   DISALLOW_COPY_ASSIGN(NrIceMediaStream);
 

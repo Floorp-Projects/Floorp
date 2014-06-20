@@ -310,7 +310,7 @@ XULSortServiceImpl::SortContainer(nsIContent *aContainer, nsSortState* aSortStat
       for (nsIContent* grandchild = child->GetFirstChild();
            grandchild;
            grandchild = grandchild->GetNextSibling()) {
-        nsINodeInfo *ni = grandchild->NodeInfo();
+        mozilla::dom::NodeInfo *ni = grandchild->NodeInfo();
         nsIAtom *localName = ni->NameAtom();
         if (ni->NamespaceID() == kNameSpaceID_XUL &&
             (localName == nsGkAtoms::treechildren ||

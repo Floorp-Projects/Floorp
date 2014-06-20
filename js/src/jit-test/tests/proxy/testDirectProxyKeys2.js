@@ -5,7 +5,7 @@
 var target = {};
 var called = false;
 var handler = {
-    keys: function (target1) {
+    ownKeys: function (target1) {
         assertEq(this, handler);
         assertEq(target1, target);
         called = true;

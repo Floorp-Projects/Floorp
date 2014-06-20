@@ -28,7 +28,6 @@
 #include "nsIPrincipal.h"
 #include "nsIParser.h"
 #include "nsBindingManager.h"
-#include "nsINodeInfo.h"
 #include "nsInterfaceHashtable.h"
 #include "nsJSThingHashtable.h"
 #include "nsIBoxObject.h"
@@ -810,6 +809,13 @@ public:
     return mChannel;
   }
 
+  virtual nsIChannel* GetFailedChannel() const MOZ_OVERRIDE {
+    return mFailedChannel;
+  }
+  virtual void SetFailedChannel(nsIChannel* aChannel) MOZ_OVERRIDE {
+    mFailedChannel = aChannel;
+  }
+
   virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
 
   virtual void SetScriptHandlingObject(nsIScriptGlobalObject* aScriptObject) MOZ_OVERRIDE;
@@ -890,7 +896,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify) MOZ_OVERRIDE;
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }

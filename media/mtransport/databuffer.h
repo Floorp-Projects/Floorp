@@ -15,6 +15,14 @@
 
 namespace mozilla {
 
+class DataBuffer;
+
+template<>
+struct HasDangerousPublicDestructor<DataBuffer>
+{
+  static const bool value = true;
+};
+
 class DataBuffer {
  public:
   DataBuffer() : data_(nullptr), len_(0) {}

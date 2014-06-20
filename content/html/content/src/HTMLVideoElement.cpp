@@ -64,7 +64,7 @@ NS_IMETHODIMP HTMLVideoElement::GetVideoHeight(uint32_t *aVideoHeight)
   return NS_OK;
 }
 
-HTMLVideoElement::HTMLVideoElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLVideoElement::HTMLVideoElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
 {
 }

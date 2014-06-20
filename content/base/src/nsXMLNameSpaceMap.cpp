@@ -11,6 +11,7 @@
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 
 template <>
 class nsDefaultComparator <nsNameSpaceEntry, nsIAtom*> {

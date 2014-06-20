@@ -619,7 +619,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
         nativeFont.mType = NativeFontType::DWRITE_FONT_FACE;
         nativeFont.mFont = font->GetFontFace();
 
-        if (aTarget->GetType() == BackendType::CAIRO) {
+        if (aTarget->GetBackendType() == BackendType::CAIRO) {
           return Factory::CreateScaledFontWithCairo(nativeFont,
                                                     font->GetAdjustedSize(),
                                                     font->GetCairoScaledFont());
@@ -638,7 +638,7 @@ gfxWindowsPlatform::GetScaledFontForFont(DrawTarget* aTarget, gfxFont *aFont)
     GetObject(static_cast<gfxGDIFont*>(aFont)->GetHFONT(), sizeof(LOGFONT), &lf);
     nativeFont.mFont = &lf;
 
-    if (aTarget->GetType() == BackendType::CAIRO) {
+    if (aTarget->GetBackendType() == BackendType::CAIRO) {
       return Factory::CreateScaledFontWithCairo(nativeFont,
                                                 aFont->GetAdjustedSize(),
                                                 aFont->GetCairoScaledFont());
@@ -651,7 +651,7 @@ already_AddRefed<gfxASurface>
 gfxWindowsPlatform::GetThebesSurfaceForDrawTarget(DrawTarget *aTarget)
 {
 #ifdef XP_WIN
-  if (aTarget->GetType() == BackendType::DIRECT2D) {
+  if (aTarget->GetBackendType() == BackendType::DIRECT2D) {
     if (!GetD2DDevice()) {
       // We no longer have a D2D device, can't do this.
       return nullptr;

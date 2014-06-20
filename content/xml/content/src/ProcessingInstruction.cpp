@@ -30,7 +30,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
     return pi.forget();
   }
 
-  nsCOMPtr<nsINodeInfo> ni;
+  nsRefPtr<mozilla::dom::NodeInfo> ni;
   ni = aNodeInfoManager->GetNodeInfo(nsGkAtoms::processingInstructionTagName,
                                      nullptr, kNameSpaceID_None,
                                      nsIDOMNode::PROCESSING_INSTRUCTION_NODE,
@@ -45,7 +45,7 @@ NS_NewXMLProcessingInstruction(nsNodeInfoManager *aNodeInfoManager,
 namespace mozilla {
 namespace dom {
 
-ProcessingInstruction::ProcessingInstruction(already_AddRefed<nsINodeInfo>&& aNodeInfo,
+ProcessingInstruction::ProcessingInstruction(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                              const nsAString& aData)
   : nsGenericDOMDataNode(Move(aNodeInfo))
 {
@@ -96,12 +96,12 @@ ProcessingInstruction::IsNodeOfType(uint32_t aFlags) const
 }
 
 nsGenericDOMDataNode*
-ProcessingInstruction::CloneDataNode(nsINodeInfo *aNodeInfo,
+ProcessingInstruction::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo,
                                      bool aCloneText) const
 {
   nsAutoString data;
   nsGenericDOMDataNode::GetData(data);
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   return new ProcessingInstruction(ni.forget(), data);
 }
 

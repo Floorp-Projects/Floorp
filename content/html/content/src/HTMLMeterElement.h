@@ -19,12 +19,12 @@ namespace dom {
 class HTMLMeterElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLMeterElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  HTMLMeterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~HTMLMeterElement();
 
   virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
 
-  nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
   bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
                       const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;

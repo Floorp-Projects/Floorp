@@ -120,6 +120,7 @@ class TransportLayerDtls : public TransportLayer {
     unsigned char value_[kMaxDigestLength];
 
    private:
+    ~VerificationDigest() {}
     DISALLOW_COPY_ASSIGN(VerificationDigest);
   };
 

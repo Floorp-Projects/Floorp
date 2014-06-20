@@ -263,7 +263,7 @@ public:
    * Dumps this FrameLayerBuilder's retained layer manager's retained
    * layer tree. Defaults to dumping to stdout in non-HTML format.
    */
-  static void DumpRetainedLayerTree(LayerManager* aManager, FILE* aFile = stdout, bool aDumpHtml = false);
+  static void DumpRetainedLayerTree(LayerManager* aManager, std::stringstream& aStream, bool aDumpHtml = false);
 #endif
 
   /******* PRIVATE METHODS to FrameLayerBuilder.cpp ********/

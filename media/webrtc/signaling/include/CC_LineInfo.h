@@ -23,10 +23,10 @@ namespace CSF
     protected:
         CC_LineInfo() { }
 
-    public:
         //Base class needs dtor to be declared as virtual
         virtual ~CC_LineInfo() {};
 
+    public:
         /**
            Get the line Name
 

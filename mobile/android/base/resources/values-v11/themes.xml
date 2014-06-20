@@ -13,7 +13,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
-        <item name="arrowPopupWidth">fill_parent</item>
+        <item name="arrowPopupWidth">match_parent</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Holo.Light.Dialog">

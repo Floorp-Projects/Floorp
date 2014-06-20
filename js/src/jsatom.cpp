@@ -430,11 +430,14 @@ js::AtomizeString(ExclusiveContext *cx, JSString *str,
         return &atom;
     }
 
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return nullptr;
 
-    return AtomizeAndCopyChars(cx, chars, str->length(), ib);
+    JS::AutoCheckCannotGC nogc;
+    return linear->hasLatin1Chars()
+           ? AtomizeAndCopyChars(cx, linear->latin1Chars(nogc), linear->length(), ib)
+           : AtomizeAndCopyChars(cx, linear->twoByteChars(nogc), linear->length(), ib);
 }
 
 JSAtom *

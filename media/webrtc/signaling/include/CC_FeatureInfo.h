@@ -20,10 +20,10 @@ namespace CSF
     protected:
         CC_FeatureInfo() { }
 
-    public:
         //Base class needs dtor to be declared as virtual
         virtual ~CC_FeatureInfo() {};
 
+    public:
         /**
            Get the physical button number on which this feature is configured
 

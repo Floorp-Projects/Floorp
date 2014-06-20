@@ -9,7 +9,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,16 +21,16 @@ typedef nsSVGFELightingElement SVGFESpecularLightingElementBase;
 class SVGFESpecularLightingElement : public SVGFESpecularLightingElementBase
 {
   friend nsresult (::NS_NewSVGFESpecularLightingElement(nsIContent **aResult,
-                                                        already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFESpecularLightingElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFESpecularLightingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFESpecularLightingElementBase(aNodeInfo)
   {
   }
   virtual JSObject* WrapNode(JSContext* aCx) MOZ_OVERRIDE;
 
 public:
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
 
   virtual FilterPrimitiveDescription
     GetPrimitiveDescription(nsSVGFilterInstance* aInstance,

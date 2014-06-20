@@ -557,14 +557,18 @@ public:
 
   /**
    * Dump information about this layer manager and its managed tree to
-   * aFile, which defaults to stderr.
+   * aStream.
    */
-  void Dump(FILE* aFile=nullptr, const char* aPrefix="", bool aDumpHtml=false);
+  void Dump(std::stringstream& aStream, const char* aPrefix="", bool aDumpHtml=false);
   /**
-   * Dump information about just this layer manager itself to aFile,
-   * which defaults to stderr.
+   * Dump information about just this layer manager itself to aStream
    */
-  void DumpSelf(FILE* aFile=nullptr, const char* aPrefix="");
+  void DumpSelf(std::stringstream& aStream, const char* aPrefix="");
+  void Dump() {
+    std::stringstream ss;
+    Dump(ss);
+    printf_stderr("%s", ss.str().c_str());
+  }
 
   /**
    * Log information about this layer manager and its managed tree to
@@ -650,9 +654,9 @@ protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~LayerManager() {}
 
-  // Print interesting information about this into aTo.  Internally
+  // Print interesting information about this into aStreamo.  Internally
   // used to implement Dump*() and Log*().
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   static void InitLog();
   static PRLogModuleInfo* sLog;
@@ -1327,14 +1331,13 @@ public:
 
   /**
    * Dump information about this layer manager and its managed tree to
-   * aFile, which defaults to stderr.
+   * aStream.
    */
-  void Dump(FILE* aFile=nullptr, const char* aPrefix="", bool aDumpHtml=false);
+  void Dump(std::stringstream& aStream, const char* aPrefix="", bool aDumpHtml=false);
   /**
-   * Dump information about just this layer manager itself to aFile,
-   * which defaults to stderr.
+   * Dump information about just this layer manager itself to aStream.
    */
-  void DumpSelf(FILE* aFile=nullptr, const char* aPrefix="");
+  void DumpSelf(std::stringstream& aStream, const char* aPrefix="");
 
   /**
    * Log information about this layer manager and its managed tree to
@@ -1347,12 +1350,12 @@ public:
    */
   void LogSelf(const char* aPrefix="");
 
-  // Print interesting information about this into aTo.  Internally
-  // used to implement Dump*() and Log*().  If subclasses have
+  // Print interesting information about this into aStream. Internally
+  // used to implement Dump*() and Log*(). If subclasses have
   // additional interesting properties, they should override this with
   // an implementation that first calls the base implementation then
   // appends additional info to aTo.
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   static bool IsLogEnabled() { return LayerManager::IsLogEnabled(); }
 
@@ -1586,7 +1589,7 @@ protected:
     mContentFlags = 0; // Clear NO_TEXT, NO_TEXT_OVER_TRANSPARENT
   }
 
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   /**
    * ComputeEffectiveTransforms snaps the ideal transform to get mEffectiveTransform.
@@ -1805,7 +1808,7 @@ protected:
    */
   void ComputeEffectiveTransformsForChildren(const gfx::Matrix4x4& aTransformToSurface);
 
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   Layer* mFirstChild;
   Layer* mLastChild;
@@ -1880,7 +1883,7 @@ protected:
       mColor(0.0, 0.0, 0.0, 0.0)
   {}
 
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   nsIntRect mBounds;
   gfxRGBA mColor;
@@ -2039,7 +2042,7 @@ protected:
     , mDirty(false)
   {}
 
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   void FireDidTransactionCallback()
   {
@@ -2156,7 +2159,7 @@ protected:
     : ContainerLayer(aManager, aImplData) , mId(0)
   {}
 
-  virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 
   Layer* mTempReferent;
   // 0 is a special value that means "no ID".

@@ -33,9 +33,6 @@
     <!-- Search Engine Row height -->
     <dimen name="search_row_height">48dp</dimen>
 
-    <!-- Max width of arrow popups on tablets -->
-    <dimen name="arrow_popup_width">400dp</dimen>
-
     <!-- Padding at the top of the site identity popup, when no identity data is available. -->
     <dimen name="identity_padding_top">5dp</dimen>
 
@@ -54,9 +51,6 @@
     <dimen name="menu_item_row_height">64dip</dimen>
     <dimen name="menu_item_row_width">240dp</dimen>
     <dimen name="menu_item_more_offset">5dp</dimen>
-    <dimen name="menu_popup_arrow_offset">8dp</dimen>
-    <dimen name="menu_popup_arrow_margin">5dip</dimen>
-    <dimen name="menu_popup_arrow_width">40dip</dimen>
     <dimen name="menu_popup_offset">12dp</dimen>
     <dimen name="menu_popup_width">256dp</dimen>
     <dimen name="nav_button_border_width">0.75dp</dimen>
@@ -112,4 +106,9 @@
 
     <!-- Button toast dimenstions. -->
     <dimen name="toast_button_corner_radius">2dp</dimen>
+
+    <!-- ArrowPopup dimensions. -->
+    <dimen name="arrow_popup_arrow_width">40dip</dimen>
+    <dimen name="arrow_popup_arrow_height">12dip</dimen>
+    <dimen name="arrow_popup_arrow_offset">8dp</dimen>
 </resources>

@@ -16,7 +16,7 @@ namespace dom {
 class HTMLLegendElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLLegendElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  HTMLLegendElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
   }
@@ -53,7 +53,7 @@ public:
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttribute,
                              bool aNotify) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo* aNodeInfo, nsINode** aResult) const MOZ_OVERRIDE;
 
   Element* GetFormElement()
   {

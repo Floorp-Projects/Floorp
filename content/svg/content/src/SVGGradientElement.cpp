@@ -48,7 +48,7 @@ nsSVGElement::StringInfo SVGGradientElement::sStringInfo[1] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGGradientElement::SVGGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGGradientElement::SVGGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGGradientElementBase(aNodeInfo)
 {
 }
@@ -132,7 +132,7 @@ nsSVGElement::LengthInfo SVGLinearGradientElement::sLengthInfo[4] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGLinearGradientElement::SVGLinearGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGLinearGradientElement::SVGLinearGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGLinearGradientElementBase(aNodeInfo)
 {
 }
@@ -207,7 +207,7 @@ nsSVGElement::LengthInfo SVGRadialGradientElement::sLengthInfo[5] =
 //----------------------------------------------------------------------
 // Implementation
 
-SVGRadialGradientElement::SVGRadialGradientElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGRadialGradientElement::SVGRadialGradientElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGRadialGradientElementBase(aNodeInfo)
 {
 }

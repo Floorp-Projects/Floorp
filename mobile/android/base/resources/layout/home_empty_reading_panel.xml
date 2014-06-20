@@ -4,24 +4,24 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/home_empty_view"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:orientation="vertical"
               android:gravity="center">
 
     <!-- Empty spacer view -->
-    <View android:layout_width="fill_parent"
+    <View android:layout_width="match_parent"
           android:layout_height="0dip"
           android:layout_weight="1"/>
 
-    <ImageView android:layout_width="fill_parent"
+    <ImageView android:layout_width="match_parent"
                android:layout_height="wrap_content"
                android:gravity="top|center"
                android:scaleType="center"
                android:src="@drawable/icon_reading_list_empty"
                android:paddingBottom="10dp"/>
 
-    <TextView android:layout_width="fill_parent"
+    <TextView android:layout_width="match_parent"
               android:layout_height="0dip"
               android:gravity="top|center"
               android:text="@string/home_reading_list_empty"
@@ -31,13 +31,13 @@
               android:layout_weight="3"/>
 
     <ImageView android:src="@drawable/divider_horizontal"
-               android:layout_width="fill_parent"
+               android:layout_width="match_parent"
                android:layout_height="1dip"
                android:paddingLeft="25dp"
                android:paddingRight="25dp"/>
 
     <TextView android:id="@+id/home_empty_hint"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:gravity="bottom"
               android:text="@string/home_reading_list_hint"

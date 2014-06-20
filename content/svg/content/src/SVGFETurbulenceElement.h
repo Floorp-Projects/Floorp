@@ -13,7 +13,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFETurbulenceElement(nsIContent **aResult,
-                                      already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -23,9 +23,9 @@ typedef nsSVGFE SVGFETurbulenceElementBase;
 class SVGFETurbulenceElement : public SVGFETurbulenceElementBase
 {
   friend nsresult (::NS_NewSVGFETurbulenceElement(nsIContent **aResult,
-                                                  already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFETurbulenceElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFETurbulenceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFETurbulenceElementBase(aNodeInfo)
   {
   }
@@ -43,7 +43,7 @@ public:
           int32_t aNameSpaceID, nsIAtom* aAttribute) const MOZ_OVERRIDE;
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedNumber> BaseFrequencyX();

@@ -7,7 +7,6 @@
 #include "nsIRootBox.h"
 #include "nsBoxObject.h"
 #include "nsIPresShell.h"
-#include "nsFrameManager.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsNameSpaceManager.h"

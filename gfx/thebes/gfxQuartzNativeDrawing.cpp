@@ -35,7 +35,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
   }
 
   DrawTarget *dt = mContext->GetDrawTarget();
-  if (dt->GetType() != BackendType::COREGRAPHICS || dt->IsDualDrawTarget()) {
+  if (dt->GetBackendType() != BackendType::COREGRAPHICS || dt->IsDualDrawTarget()) {
     IntSize backingSize(NSToIntFloor(mNativeRect.width * mBackingScale),
                         NSToIntFloor(mNativeRect.height * mBackingScale));
 

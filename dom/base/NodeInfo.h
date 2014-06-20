@@ -5,53 +5,39 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * nsINodeInfo is an interface to node info, such as name, prefix, namespace
- * ID and possibly other data that is shared between nodes (elements
- * and attributes) that have the same name, prefix and namespace ID within
- * the same document.
+ * Class that represents a prefix/namespace/localName triple; a single
+ * nodeinfo is shared by all elements in a document that have that
+ * prefix, namespace, and localName.
  *
- * nsNodeInfoManager's are internal objects that manage a list of
- * nsINodeInfo's, every document object should hold a strong reference to
- * a nsNodeInfoManager and every nsINodeInfo also holds a strong reference
- * to their owning manager. When a nsINodeInfo is no longer used it will
+ * nsNodeInfoManagers are internal objects that manage a list of
+ * NodeInfos, every document object should hold a strong reference to
+ * a nsNodeInfoManager and every NodeInfo also holds a strong reference
+ * to their owning manager. When a NodeInfo is no longer used it will
  * automatically remove itself from its owner manager, and when all
- * nsINodeInfo's have been removed from a nsNodeInfoManager and all external
+ * NodeInfos have been removed from a nsNodeInfoManager and all external
  * references are released the nsNodeInfoManager deletes itself.
- *
- * -- jst@netscape.com
  */
 
-#ifndef nsINodeInfo_h___
-#define nsINodeInfo_h___
+#ifndef mozilla_dom_NodeInfo_h___
+#define mozilla_dom_NodeInfo_h___
 
-#include "nsCOMPtr.h"            // for member
-#include "nsIAtom.h"             // for member (in nsCOMPtr)
-#include "nsISupports.h"         // for base class
-#include "nsNameSpaceManager.h"  // for kNameSpaceID_*
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/NameSpaceConstants.h"
+#include "nsStringGlue.h"
 
-#ifdef MOZILLA_INTERNAL_API
-#include "nsDOMString.h"
-#endif
-
+class nsIAtom;
 class nsIDocument;
-class nsIURI;
-class nsIPrincipal;
 class nsNodeInfoManager;
 
-// IID for the nsINodeInfo interface
-#define NS_INODEINFO_IID      \
-{ 0xc5188ea1, 0x0a9c, 0x43e6, \
- { 0x95, 0x90, 0xcc, 0x43, 0x6b, 0xe9, 0xcf, 0xa0 } }
+namespace mozilla {
+namespace dom {
 
-class nsINodeInfo : public nsISupports
+class NodeInfo MOZ_FINAL
 {
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_INODEINFO_IID)
-
-  nsINodeInfo()
-    : mInner(nullptr, nullptr, kNameSpaceID_None, 0, nullptr)
-  {
-  }
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(NodeInfo)
+  NS_DECL_CYCLE_COLLECTION_SKIPPABLE_NATIVE_CLASS_WITH_CUSTOM_DELETE(NodeInfo)
 
   /*
    * Get the name from this node as a string, this does not include the prefix.
@@ -59,10 +45,7 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "body".
    */
-  void GetName(nsAString& aName) const
-  {
-    mInner.mName->ToString(aName);
-  }
+  void GetName(nsAString& aName) const;
 
   /*
    * Get the name from this node as an atom, this does not include the prefix.
@@ -101,22 +84,13 @@ public:
     return mLocalName;
   }
 
-#ifdef MOZILLA_INTERNAL_API
   /*
    * Get the prefix from this node as a string.
    *
    * For the HTML element "<body>" this will return a null string and for
    * the XML element "<html:body>" this will return the string "html".
    */
-  void GetPrefix(nsAString& aPrefix) const
-  {
-    if (mInner.mPrefix) {
-      mInner.mPrefix->ToString(aPrefix);
-    } else {
-      SetDOMStringToNull(aPrefix);
-    }
-  }
-#endif
+  void GetPrefix(nsAString& aPrefix) const;
 
   /*
    * Get the prefix from this node as an atom.
@@ -132,7 +106,7 @@ public:
   /*
    * Get the namespace URI for a node, if the node has a namespace URI.
    */
-  virtual void GetNamespaceURI(nsAString& aNameSpaceURI) const = 0;
+  void GetNamespaceURI(nsAString& aNameSpaceURI) const;
 
   /*
    * Get the namespace ID for a node if the node has a namespace, if not this
@@ -164,7 +138,7 @@ public:
    * Get the owning node info manager. Only to be used inside Gecko, you can't
    * really do anything with the pointer outside Gecko anyway.
    */
-  nsNodeInfoManager *NodeInfoManager() const
+  nsNodeInfoManager* NodeInfoManager() const
   {
     return mOwnerManager;
   }
@@ -174,36 +148,27 @@ public:
    * name, name and prefix, name and prefix and namespace ID, or just
    * namespace ID.
    */
-  bool Equals(nsINodeInfo *aNodeInfo) const
-  {
-    return aNodeInfo == this || aNodeInfo->Equals(mInner.mName, mInner.mPrefix,
-                                                  mInner.mNamespaceID);
-  }
+  inline bool Equals(NodeInfo* aNodeInfo) const;
 
-  bool NameAndNamespaceEquals(nsINodeInfo *aNodeInfo) const
-  {
-    return aNodeInfo == this || aNodeInfo->Equals(mInner.mName,
-                                                  mInner.mNamespaceID);
-  }
+  bool NameAndNamespaceEquals(NodeInfo* aNodeInfo) const;
 
-  bool Equals(nsIAtom *aNameAtom) const
+  bool Equals(nsIAtom* aNameAtom) const
   {
     return mInner.mName == aNameAtom;
   }
 
-  bool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom) const
+  bool Equals(nsIAtom* aNameAtom, nsIAtom* aPrefixAtom) const
   {
     return (mInner.mName == aNameAtom) && (mInner.mPrefix == aPrefixAtom);
   }
 
-  bool Equals(nsIAtom *aNameAtom, int32_t aNamespaceID) const
+  bool Equals(nsIAtom* aNameAtom, int32_t aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
             (mInner.mNamespaceID == aNamespaceID));
   }
 
-  bool Equals(nsIAtom *aNameAtom, nsIAtom *aPrefixAtom,
-                int32_t aNamespaceID) const
+  bool Equals(nsIAtom* aNameAtom, nsIAtom* aPrefixAtom, int32_t aNamespaceID) const
   {
     return ((mInner.mName == aNameAtom) &&
             (mInner.mPrefix == aPrefixAtom) &&
@@ -215,40 +180,17 @@ public:
     return mInner.mNamespaceID == aNamespaceID;
   }
 
-  bool Equals(const nsAString& aName) const
-  {
-    return mInner.mName->Equals(aName);
-  }
+  inline bool Equals(const nsAString& aName) const;
 
-  bool Equals(const nsAString& aName, const nsAString& aPrefix) const
-  {
-    return mInner.mName->Equals(aName) &&
-      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
-  }
+  inline bool Equals(const nsAString& aName, const nsAString& aPrefix) const;
 
-  bool Equals(const nsAString& aName, int32_t aNamespaceID) const
-  {
-    return mInner.mNamespaceID == aNamespaceID &&
-      mInner.mName->Equals(aName);
-  }
+  inline bool Equals(const nsAString& aName, int32_t aNamespaceID) const;
 
-  bool Equals(const nsAString& aName, const nsAString& aPrefix,
-                int32_t aNamespaceID) const
-  {
-    return mInner.mName->Equals(aName) && mInner.mNamespaceID == aNamespaceID &&
-      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
-  }
+  inline bool Equals(const nsAString& aName, const nsAString& aPrefix, int32_t aNamespaceID) const;
 
-  virtual bool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
+  bool NamespaceEquals(const nsAString& aNamespaceURI) const;
 
-  bool QualifiedNameEquals(nsIAtom* aNameAtom) const
-  {
-    NS_PRECONDITION(aNameAtom, "Must have name atom");
-    if (!GetPrefixAtom())
-      return Equals(aNameAtom);
-
-    return aNameAtom->Equals(mQualifiedName);
-  }
+  inline bool QualifiedNameEquals(nsIAtom* aNameAtom) const;
 
   bool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {
@@ -263,36 +205,57 @@ public:
     return mDocument;
   }
 
+private:
+  NodeInfo() MOZ_DELETE; 
+  NodeInfo(const NodeInfo& aOther) MOZ_DELETE;
+
+  // NodeInfo is only constructed by nsNodeInfoManager which is a friend class.
+  // aName and aOwnerManager may not be null.
+  NodeInfo(nsIAtom* aName, nsIAtom* aPrefix, int32_t aNamespaceID,
+           uint16_t aNodeType, nsIAtom* aExtraName,
+           nsNodeInfoManager* aOwnerManager);
+
+  ~NodeInfo();
+
+public:
+  bool CanSkip();
+
+  /**
+   * This method gets called by the cycle collector when it's time to delete
+   * this object.
+   */
+  void DeleteCycleCollectable();
+
 protected:
   /*
-   * nsNodeInfoInner is used for two things:
+   * NodeInfoInner is used for two things:
    *
    *   1. as a member in nsNodeInfo for holding the name, prefix and
    *      namespace ID
    *   2. as the hash key in the hash table in nsNodeInfoManager
    *
-   * nsNodeInfoInner does not do any kind of reference counting,
-   * that's up to the user of this class. Since nsNodeInfoInner is
-   * typically used as a member of nsNodeInfo, the hash table doesn't
-   * need to delete the keys. When the value (nsNodeInfo) is deleted
+   * NodeInfoInner does not do any kind of reference counting,
+   * that's up to the user of this class. Since NodeInfoInner is
+   * typically used as a member of NodeInfo, the hash table doesn't
+   * need to delete the keys. When the value (NodeInfo) is deleted
    * the key is automatically deleted.
    */
 
-  class nsNodeInfoInner
+  class NodeInfoInner
   {
   public:
-    nsNodeInfoInner()
+    NodeInfoInner()
       : mName(nullptr), mPrefix(nullptr), mNamespaceID(kNameSpaceID_Unknown),
         mNodeType(0), mNameString(nullptr), mExtraName(nullptr)
     {
     }
-    nsNodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
+    NodeInfoInner(nsIAtom *aName, nsIAtom *aPrefix, int32_t aNamespaceID,
                     uint16_t aNodeType, nsIAtom* aExtraName)
       : mName(aName), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
         mNodeType(aNodeType), mNameString(nullptr), mExtraName(aExtraName)
     {
     }
-    nsNodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix,
+    NodeInfoInner(const nsAString& aTmpName, nsIAtom *aPrefix,
                     int32_t aNamespaceID, uint16_t aNodeType)
       : mName(nullptr), mPrefix(aPrefix), mNamespaceID(aNamespaceID),
         mNodeType(aNodeType), mNameString(&aTmpName), mExtraName(nullptr)
@@ -308,11 +271,11 @@ protected:
   };
 
   // nsNodeInfoManager needs to pass mInner to the hash table.
-  friend class nsNodeInfoManager;
+  friend class ::nsNodeInfoManager;
 
   nsIDocument* mDocument; // Weak. Cache of mOwnerManager->mDocument
 
-  nsNodeInfoInner mInner;
+  NodeInfoInner mInner;
 
   nsRefPtr<nsNodeInfoManager> mOwnerManager;
 
@@ -332,6 +295,7 @@ protected:
   nsString mLocalName;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeInfo, NS_INODEINFO_IID)
+} // namespace dom
+} // namespace mozilla
 
-#endif /* nsINodeInfo_h___ */
+#endif /* mozilla_dom_NodeInfo_h___ */

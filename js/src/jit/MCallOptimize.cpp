@@ -1449,23 +1449,17 @@ IonBuilder::elementAccessIsTypedObjectArrayOfScalarType(MDefinition* obj, MDefin
     if (id->type() != MIRType_Int32 && id->type() != MIRType_Double)
         return false;
 
-    TypeDescrSet objDescrs;
-    if (!lookupTypeDescrSet(obj, &objDescrs))
+    TypedObjectPrediction prediction = typedObjectPrediction(obj);
+    if (prediction.isUseless() || !prediction.ofArrayKind())
         return false;
 
-    if (!objDescrs.allOfArrayKind())
+    TypedObjectPrediction elemPrediction = prediction.arrayElementType();
+    if (elemPrediction.isUseless() || elemPrediction.kind() != type::Scalar)
         return false;
 
-    TypeDescrSet elemDescrs;
-    if (!objDescrs.arrayElementType(*this, &elemDescrs))
-        return false;
-
-    if (elemDescrs.empty() || elemDescrs.kind() != type::Scalar)
-        return false;
-
-    JS_ASSERT(TypeDescr::isSized(elemDescrs.kind()));
-
-    return elemDescrs.scalarType(arrayType);
+    JS_ASSERT(type::isSized(elemPrediction.kind()));
+    *arrayType = elemPrediction.scalarType();
+    return true;
 }
 
 bool

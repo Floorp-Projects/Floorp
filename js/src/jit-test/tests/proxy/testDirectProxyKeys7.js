@@ -12,7 +12,7 @@ Object.defineProperty(target, 'foo', {
 Object.preventExtensions(target);
 assertThrowsInstanceOf(function () {
     Object.keys(new Proxy(target, {
-        keys: function (target) {
+        ownKeys: function (target) {
             return [];
         }
     }));

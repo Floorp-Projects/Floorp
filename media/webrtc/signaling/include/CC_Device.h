@@ -21,9 +21,9 @@ namespace CSF
     protected:
         CC_Device() {}
 
-    public:
         virtual ~CC_Device() {}
 
+    public:
         virtual std::string toString() = 0;
 
         virtual CC_DeviceInfoPtr getDeviceInfo () = 0;
