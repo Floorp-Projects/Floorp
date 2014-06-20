@@ -6,9 +6,6 @@
 
 // Test that hovering over nodes in the markup-view shows the highlighter over
 // those nodes
-
-waitForExplicitFinish();
-
 let test = asyncTest(function*() {
   info("Loading the test document and opening the inspector");
   yield addTab("data:text/html;charset=utf-8,<h1>foo</h1><span>bar</span>");

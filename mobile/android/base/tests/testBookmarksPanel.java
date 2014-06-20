@@ -12,12 +12,18 @@ public class testBookmarksPanel extends AboutHomeTest {
         final String BOOKMARK_URL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         JSONObject data = null;
 
-        // Add a mobile bookmark
+        // Make sure our default bookmarks are loaded.
+        // Technically this will race with the check below.
+        initializeProfile();
+
+        // Add a mobile bookmark.
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE, BOOKMARK_URL);
 
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
-        // Check that the default bookmarks are displayed
+        // Check that the default bookmarks are displayed.
+        // We need to wait for the distribution to have been processed
+        // before this will succeed.
         for (String url : StringHelper.DEFAULT_BOOKMARKS_URLS) {
             isBookmarkDisplayed(url);
         }

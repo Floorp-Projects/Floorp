@@ -65,8 +65,6 @@ function test() {
     });
   }
 
-  waitForExplicitFinish();
-
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onBrowserLoad() {
     gBrowser.selectedBrowser.removeEventListener("load", onBrowserLoad, true);

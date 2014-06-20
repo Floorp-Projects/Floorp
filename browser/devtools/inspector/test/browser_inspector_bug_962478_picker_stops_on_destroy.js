@@ -8,8 +8,6 @@
 function test() {
   let {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
-  waitForExplicitFinish();
-
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {
     gBrowser.selectedBrowser.removeEventListener("load", onload, true);

@@ -38,11 +38,11 @@ function checkPreferences(prefsWin) {
 }
 // Same as the other one, but for in-content preferences
 function checkInContentPreferences(win) {
-  let sel = win.history.state;
   let doc = win.document;
+  let sel = doc.getElementById("categories").selectedItems[0].id;
   let tab = doc.getElementById("advancedPrefs").selectedTab.id;
-  is(gBrowser.currentURI.spec, "about:preferences", "about:preferences loaded");
-  is(sel, "paneAdvanced", "Advanced pane was selected");
+  is(gBrowser.currentURI.spec, "about:preferences#advanced", "about:preferences loaded");
+  is(sel, "category-advanced", "Advanced pane was selected");
   is(tab, "networkTab", "Network tab is selected");
   // all good, we are done.
   win.close();
@@ -75,7 +75,9 @@ function test() {
           let newTabBrowser = gBrowser.getBrowserForTab(gBrowser.selectedTab);
           newTabBrowser.addEventListener("Initialized", function PrefInit() {
             newTabBrowser.removeEventListener("Initialized", PrefInit, true);
-            checkInContentPreferences(newTabBrowser.contentWindow);
+            executeSoon(function() {
+              checkInContentPreferences(newTabBrowser.contentWindow);
+            })
           }, true);
         }
       });

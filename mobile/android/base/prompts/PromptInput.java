@@ -141,7 +141,7 @@ public class PromptInput {
 
         public View getView(Context context) throws UnsupportedOperationException {
             CheckBox checkbox = new CheckBox(context);
-            checkbox.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.WRAP_CONTENT));
+            checkbox.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
             checkbox.setText(mLabel);
             checkbox.setChecked(mChecked);
             mView = (View)checkbox;

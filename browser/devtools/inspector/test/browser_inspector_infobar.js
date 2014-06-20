@@ -1,141 +1,150 @@
-/* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  waitForExplicitFinish();
-  ignoreAllUncaughtExceptions();
+"use strict";
 
-  let doc;
-  let nodes;
-  let cursor;
-  let inspector;
+const TEST_URI = "http://example.com/browser/browser/devtools/inspector/" +
+                 "test/browser_inspector_infobar.html";
+const DOORHANGER_ARROW_HEIGHT = 5;
 
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    doc = content.document;
-    waitForFocus(setupInfobarTest, content);
-  }, true);
+// Test that hovering over nodes in the markup-view shows the highlighter over
+// those nodes
+let test = asyncTest(function*() {
+  info("Loading the test document and opening the inspector");
 
-  let style = "body{width:100%;height: 100%} div {position: absolute;" +
-              "height: 100px;width: 500px}#bottom {bottom: 0px}#vertical {"+
-              "height: 100%}#farbottom{bottom: -200px}";
-  let html = "<style>" + style + "</style><div id=vertical></div>" +
-             "<div id=top class='class1 class2'></div><div id=bottom></div>" +
-             "<div id=farbottom></div>"
+  yield addTab(TEST_URI);
 
-  content.location = "data:text/html;charset=utf-8," + encodeURIComponent(html);
+  let {inspector} = yield openInspector();
 
-  function setupInfobarTest() {
-    nodes = [
-      {
-        node: doc.querySelector("#top"),
-        position: "bottom",
-        tag: "DIV",
-        id: "#top",
-        classes: ".class1.class2",
-        dims: "500 x 100"
-      },
-      {
-        node: doc.querySelector("#vertical"),
-        position: "overlap",
-        tag: "DIV",
-        id: "#vertical",
-        classes: ""
-        // No dims as they will vary between computers
-      },
-      {
-        node: doc.querySelector("#bottom"),
-        position: "top",
-        tag: "DIV",
-        id: "#bottom",
-        classes: "",
-        dims: "500 x 100"
-      },
-      {
-        node: doc.querySelector("body"),
-        position: "overlap",
-        tag: "BODY",
-        id: "",
-        classes: ""
-        // No dims as they will vary between computers
-      },
-      {
-        node: doc.querySelector("#farbottom"),
-        position: "top",
-        tag: "DIV",
-        id: "#farbottom",
-        classes: "",
-        dims: "500 x 100"
-      },
-    ];
+  let doc = content.document;
+  let testData = [
+    {
+      node: doc.querySelector("#top"),
+      position: "bottom",
+      tag: "DIV",
+      id: "#top",
+      classes: ".class1.class2",
+      dims: "500 x 100"
+    },
+    {
+      node: doc.querySelector("#vertical"),
+      position: "overlap",
+      tag: "DIV",
+      id: "#vertical",
+      classes: ""
+      // No dims as they will vary between computers
+    },
+    {
+      node: doc.querySelector("#bottom"),
+      position: "top",
+      tag: "DIV",
+      id: "#bottom",
+      classes: "",
+      dims: "500 x 100"
+    },
+    {
+      node: doc.querySelector("body"),
+      position: "bottom",
+      tag: "BODY",
+      id: "",
+      classes: ""
+      // No dims as they will vary between computers
+    },
+    {
+      node: doc.querySelector("#farbottom"),
+      position: "top",
+      tag: "DIV",
+      id: "#farbottom",
+      classes: "",
+      dims: "500 x 100"
+    },
+  ];
 
-    for (let i = 0; i < nodes.length; i++) {
-      ok(nodes[i].node, "node " + i + " found");
-    }
-
-    openInspector(runTests);
+  for (let currTest of testData) {
+    yield testPosition(currTest, inspector);
   }
 
-  function mouseOverContainerToShowHighlighter(node, cb) {
-    let container = getContainerForRawNode(inspector.markup, node);
-    EventUtils.synthesizeMouse(container.tagLine, 2, 2, {type: "mousemove"},
-      inspector.markup.doc.defaultView);
-    executeSoon(cb);
-  }
+  yield checkInfoBarAboveTop(inspector);
+  yield checkInfoBarBelowFindbar(inspector);
 
-  function runTests(aInspector) {
-    inspector = aInspector;
-    inspector.selection.setNode(content.document.querySelector("body"));
-    inspector.once("inspector-updated", () => {
-      cursor = 0;
-      executeSoon(function() {
-        mouseOverContainerToShowHighlighter(nodes[0].node, nodeSelected);
-      });
-    });
-  }
+  gBrowser.removeCurrentTab();
+});
 
-  function nodeSelected() {
-    executeSoon(function() {
-      performTest();
-      cursor++;
-      if (cursor >= nodes.length) {
-        finishUp();
-      } else {
-        let node = nodes[cursor].node;
-        mouseOverContainerToShowHighlighter(node, nodeSelected);
-      }
-    });
-  }
+function* testPosition(currTest, inspector) {
+  let browser = gBrowser.selectedBrowser;
+  let stack = browser.parentNode;
 
-  function performTest() {
-    let browser = gBrowser.selectedBrowser;
-    let stack = browser.parentNode;
+  info("Testing " + currTest.id);
 
-    let container = stack.querySelector(".highlighter-nodeinfobar-positioner");
-    is(container.getAttribute("position"),
-      nodes[cursor].position, "node " + cursor + ": position matches.");
+  yield selectNode(currTest.node, inspector, "highlight");
 
-    let tagNameLabel = stack.querySelector(".highlighter-nodeinfobar-tagname");
-    is(tagNameLabel.textContent, nodes[cursor].tag,
-      "node " + cursor  + ": tagName matches.");
+  let container = stack.querySelector(".highlighter-nodeinfobar-positioner");
+  is(container.getAttribute("position"),
+    currTest.position, "node " + currTest.id + ": position matches.");
 
+  let tagNameLabel = stack.querySelector(".highlighter-nodeinfobar-tagname");
+  is(tagNameLabel.textContent, currTest.tag,
+    "node " + currTest.id + ": tagName matches.");
+
+  if (currTest.id) {
     let idLabel = stack.querySelector(".highlighter-nodeinfobar-id");
-    is(idLabel.textContent, nodes[cursor].id, "node " + cursor  + ": id matches.");
-
-    let classesBox = stack.querySelector(".highlighter-nodeinfobar-classes");
-    is(classesBox.textContent, nodes[cursor].classes,
-      "node " + cursor  + ": classes match.");
-
-    if (nodes[cursor].dims) {
-      let dimBox = stack.querySelector(".highlighter-nodeinfobar-dimensions");
-      is(dimBox.textContent, nodes[cursor].dims, "node " + cursor  + ": dims match.");
-    }
+    is(idLabel.textContent, currTest.id, "node " + currTest.id  + ": id matches.");
   }
 
-  function finishUp() {
-    doc = nodes = null;
-    gBrowser.removeCurrentTab();
-    finish();
+  let classesBox = stack.querySelector(".highlighter-nodeinfobar-classes");
+  is(classesBox.textContent, currTest.classes,
+    "node " + currTest.id  + ": classes match.");
+
+  if (currTest.dims) {
+    let dimBox = stack.querySelector(".highlighter-nodeinfobar-dimensions");
+    is(dimBox.textContent, currTest.dims, "node " + currTest.id  + ": dims match.");
   }
+}
+
+function* checkInfoBarAboveTop(inspector) {
+  yield selectNode("#abovetop", inspector);
+
+  let positioner = getPositioner();
+  let insideContent = parseInt(positioner.style.top, 10) >= -DOORHANGER_ARROW_HEIGHT;
+
+  ok(insideContent, "Infobar is inside the content window (top = " +
+                    parseInt(positioner.style.top, 10) + ", content = '" +
+                    positioner.textContent +"')");
+}
+
+function* checkInfoBarBelowFindbar(inspector) {
+  gFindBar.open();
+
+  let body = content.document.body;
+  let farBottom = body.querySelector("#farbottom");
+  farBottom.scrollIntoView();
+
+  // Wait for scrollIntoView
+  yield waitForTick();
+
+  body.scrollTop -= 130;
+  yield selectNode(farBottom, inspector);
+
+  let positioner = getPositioner();
+  let insideContent = parseInt(positioner.style.top, 10) >= -DOORHANGER_ARROW_HEIGHT;
+
+  ok(insideContent, "Infobar does not overlap the findbar (top = " +
+                    parseInt(positioner.style.top, 10) + ", content = '" +
+                    positioner.textContent +"')");
+
+  gFindBar.close();
+}
+
+function getPositioner() {
+  let browser = gBrowser.selectedBrowser;
+  let stack = browser.parentNode;
+
+  return stack.querySelector(".highlighter-nodeinfobar-positioner");
+}
+
+function waitForTick() {
+  let deferred = promise.defer();
+  executeSoon(deferred.resolve);
+  return deferred.promise;
 }

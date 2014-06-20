@@ -5,7 +5,7 @@
 
 <org.mozilla.gecko.home.BookmarkFolderView xmlns:android="http://schemas.android.com/apk/res/android"
                                            style="@style/Widget.BookmarkFolderView"
-                                           android:layout_width="fill_parent"
+                                           android:layout_width="match_parent"
                                            android:layout_height="@dimen/page_row_height"
                                            android:minHeight="@dimen/page_row_height"
                                            android:gravity="center_vertical"/>

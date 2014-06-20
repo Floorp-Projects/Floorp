@@ -229,7 +229,13 @@ this.ContentSearch = {
     xhr.onloadend = () => {
       deferred.resolve(xhr.response);
     };
-    xhr.send();
+    try {
+      // This throws if the URI is erroneously encoded.
+      xhr.send();
+    }
+    catch (err) {
+      return Promise.resolve(null);
+    }
     return deferred.promise;
   },
 

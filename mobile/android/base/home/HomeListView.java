@@ -64,7 +64,7 @@ public class HomeListView extends ListView
         if (mShowTopDivider && divider != null) {
             final int dividerHeight = getDividerHeight();
             final View view = new View(getContext());
-            view.setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT, dividerHeight));
+            view.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, dividerHeight));
             addHeaderView(view);
         }
     }

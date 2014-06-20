@@ -11,7 +11,7 @@
                android:scaleType="centerCrop"/>
 
     <LinearLayout android:id="@+id/title_desc_container"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="@dimen/panel_article_item_height"
                   android:paddingLeft="15dip"
                   android:paddingRight="15dip"
@@ -20,12 +20,12 @@
 
         <TextView android:id="@+id/title"
                   style="@style/Widget.PanelItemView.Title"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"/>
 
         <TextView android:id="@+id/description"
                   style="@style/Widget.PanelItemView.Description"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:layout_marginTop="1dp"
                   android:maxLength="1024"/>

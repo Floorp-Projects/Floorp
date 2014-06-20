@@ -5,40 +5,40 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 xmlns:gecko="http://schemas.android.com/apk/res-auto"
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent">
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
     <ViewStub android:id="@+id/tabs_panel"
               android:layout="@layout/tabs_panel_view"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"/>
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"/>
 
    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
          android:id="@+id/main_layout"
-         android:layout_width="fill_parent"
-         android:layout_height="fill_parent"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
          android:background="@android:color/transparent">
 
         <RelativeLayout android:id="@+id/gecko_layout"
-                        android:layout_width="fill_parent"
-                        android:layout_height="fill_parent"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
                         android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
 
             <FrameLayout android:id="@+id/home_pager_container"
-                         android:layout_width="fill_parent"
-                         android:layout_height="fill_parent"
+                         android:layout_width="match_parent"
+                         android:layout_height="match_parent"
                          android:visibility="gone">
 
                 <ViewStub android:id="@+id/home_pager_stub"
                           android:layout="@layout/home_pager"
-                          android:layout_width="fill_parent"
-                          android:layout_height="fill_parent"/>
+                          android:layout_width="match_parent"
+                          android:layout_height="match_parent"/>
 
                 <ViewStub android:id="@+id/home_banner_stub"
                           android:layout="@layout/home_banner"
-                          android:layout_width="fill_parent"
+                          android:layout_width="match_parent"
                           android:layout_height="@dimen/home_banner_height"
                           android:layout_gravity="bottom"/>
 
@@ -47,22 +47,22 @@
         </RelativeLayout>
 
         <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
-                                         android:layout_width="fill_parent"
+                                         android:layout_width="match_parent"
                                          android:layout_height="wrap_content"
                                          android:layout_alignParentBottom="true"
                                          style="@style/FindBar"
                                          android:visibility="gone"/>
 
         <org.mozilla.gecko.MediaCastingBar android:id="@+id/media_casting"
-                                           android:layout_width="fill_parent"
+                                           android:layout_width="match_parent"
                                            android:layout_height="wrap_content"
                                            android:layout_alignParentBottom="true"
                                            style="@style/FindBar"
                                            android:visibility="gone"/>
 
         <FrameLayout android:id="@+id/search_container"
-                     android:layout_width="fill_parent"
-                     android:layout_height="fill_parent"
+                     android:layout_width="match_parent"
+                     android:layout_height="match_parent"
                      android:layout_below="@+id/browser_actionbar"
                      android:background="@android:color/white"
                      android:visibility="invisible"/>
@@ -74,7 +74,7 @@
              view hierarchy as possible. -->
 
         <org.mozilla.gecko.widget.GeckoViewFlipper android:id="@id/browser_actionbar"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
                 android:focusable="true">
@@ -82,21 +82,21 @@
             <org.mozilla.gecko.toolbar.BrowserToolbar
                 android:id="@+id/browser_toolbar"
                 style="@style/BrowserToolbar"
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="@dimen/browser_toolbar_height"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="@drawable/url_bar_bg"/>
 
             <org.mozilla.gecko.ActionModeCompatView android:id="@+id/actionbar"
-                                                    android:layout_height="fill_parent"
-                                                    android:layout_width="fill_parent"
+                                                    android:layout_height="match_parent"
+                                                    android:layout_width="match_parent"
                                                     style="@style/GeckoActionBar"/>
 
         </org.mozilla.gecko.widget.GeckoViewFlipper>
 
         <org.mozilla.gecko.toolbar.ToolbarProgressView android:id="@+id/progress"
-                                                       android:layout_width="fill_parent"
+                                                       android:layout_width="match_parent"
                                                        android:layout_height="14dp"
                                                        android:layout_marginTop="-8dp"
                                                        android:layout_below="@id/browser_actionbar"

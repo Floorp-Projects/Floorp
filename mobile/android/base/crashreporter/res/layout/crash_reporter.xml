@@ -4,16 +4,16 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:fillViewport="true">
 
-    <LinearLayout android:layout_width="fill_parent"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="vertical"
                   android:background="@color/background_normal">
         
-        <LinearLayout android:layout_width="fill_parent"
+        <LinearLayout android:layout_width="match_parent"
                       android:layout_height="0dp"
                       android:orientation="vertical"
                       android:padding="10dp"
@@ -44,7 +44,7 @@
 
             <EditText android:id="@+id/comment"
                       style="@style/CrashReporter.EditText"
-                      android:layout_width="fill_parent"
+                      android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:ems="10"
                       android:inputType="textMultiLine"
@@ -74,7 +74,7 @@
             <org.mozilla.gecko.widget.ClickableWhenDisabledEditText
                     android:id="@+id/email"
                     style="@style/CrashReporter.EditText"
-                    android:layout_width="fill_parent"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:ems="10"
                     android:inputType="textEmailAddress"
@@ -86,11 +86,11 @@
 
         </LinearLayout>
         
-        <View android:layout_width="fill_parent"
+        <View android:layout_width="match_parent"
               android:layout_height="1dp"
               android:background="#999" />
 
-        <LinearLayout android:layout_width="fill_parent"
+        <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:orientation="horizontal"
                       android:layout_gravity="bottom">
@@ -106,7 +106,7 @@
                     android:background="@drawable/action_bar_button"/>
 
             <View android:layout_width="1dp"
-                  android:layout_height="fill_parent"
+                  android:layout_height="match_parent"
                   android:background="#999" />
         
             <Button android:id="@+id/restart"

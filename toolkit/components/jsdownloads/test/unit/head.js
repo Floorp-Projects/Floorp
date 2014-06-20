@@ -783,6 +783,17 @@ add_task(function test_common_initialize()
                          TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length);
     });
 
+  gHttpServer.registerPathHandler("/shorter-than-content-length-http-1-1.txt",
+    function (aRequest, aResponse) {
+      aResponse.processAsync();
+      aResponse.setStatusLine("1.1", 200, "OK");
+      aResponse.setHeader("Content-Type", "text/plain", false);
+      aResponse.setHeader("Content-Length", "" + (TEST_DATA_SHORT.length * 2),
+                          false);
+      aResponse.write(TEST_DATA_SHORT);
+      aResponse.finish();
+    });
+
   // This URL will emulate being blocked by Windows Parental controls
   gHttpServer.registerPathHandler("/parentalblocked.zip",
     function (aRequest, aResponse) {
