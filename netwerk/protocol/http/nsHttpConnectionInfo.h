@@ -37,11 +37,13 @@ public:
                          nsProxyInfo* proxyInfo,
                          bool endToEndSSL = false);
 
+private:
     virtual ~nsHttpConnectionInfo()
     {
         PR_LOG(gHttpLog, 4, ("Destroying nsHttpConnectionInfo @%x\n", this));
     }
 
+public:
     const nsAFlatCString &HashKey() const { return mHashKey; }
 
     void SetOriginServer(const nsACString &host, int32_t port);

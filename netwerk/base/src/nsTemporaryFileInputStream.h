@@ -26,10 +26,12 @@ public:
     {
       MOZ_ASSERT(aFD);
     }
+  private:
     ~FileDescOwner()
     {
       PR_Close(mFD);
     }
+  public:
     mozilla::Mutex& FileMutex() { return mMutex; }
 
   private:
