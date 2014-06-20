@@ -28,7 +28,7 @@ function run_test() {
 
   test_BrokenFile("chrome://test/content/test.jsm",
                   true,
-                  "NS_ERROR_NOT_AVAILABLE");
+                  "NS_ERROR_FILE_NOT_FOUND");
 
   // check that we can access modules' global objects even if
   // EXPORTED_SYMBOLS is missing or ill-formed:
