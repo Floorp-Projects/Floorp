@@ -3896,10 +3896,8 @@ CodeGenerator::visitNewDenseArrayPar(LNewDenseArrayPar *lir)
     Register tempReg2 = ToRegister(lir->getTemp2());
     JSObject *templateObj = lir->mir()->templateObject();
 
-    masm.Push(lengthReg);
     if (!emitAllocateGCThingPar(lir, tempReg2, cxReg, tempReg0, tempReg1, templateObj))
         return false;
-    masm.Pop(lengthReg);
 
     // Invoke a C helper to allocate the elements.  The helper returns
     // nullptr on allocation error or the array object.
@@ -6582,10 +6580,8 @@ CodeGenerator::visitRestPar(LRestPar *lir)
     unsigned numFormals = lir->mir()->numFormals();
     JSObject *templateObject = lir->mir()->templateObject();
 
-    masm.Push(numActuals);
     if (!emitAllocateGCThingPar(lir, temp2, cx, temp0, temp1, templateObject))
         return false;
-    masm.Pop(numActuals);
 
     return emitRest(lir, temp2, numActuals, temp0, temp1, numFormals, templateObject, true, ToRegister(lir->output()));
 }
