@@ -153,6 +153,10 @@ public class BrowserDB {
         sSuggestedSites = suggestedSites;
     }
 
+    public static boolean hideSuggestedSite(String url) {
+        return sSuggestedSites.hideSite(url);
+    }
+
     public static void invalidateCachedState() {
         sDb.invalidateCachedState();
     }
