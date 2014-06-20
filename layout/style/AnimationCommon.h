@@ -305,6 +305,18 @@ public:
     return mPlayState == NS_STYLE_ANIMATION_PLAY_STATE_PAUSED;
   }
 
+  // After transitions finish they need to be retained for one throttle-able
+  // cycle (for reasons see explanation in nsTransitionManager.cpp). In the
+  // meantime, however, they should be ignored.
+  bool IsFinishedTransition() const {
+    return mStartTime.IsNull();
+  }
+  void SetFinishedTransition() {
+    MOZ_ASSERT(AsTransition(),
+               "Calling SetFinishedTransition but it's not a transition");
+    mStartTime = mozilla::TimeStamp();
+  }
+
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
   bool IsRunningAt(mozilla::TimeStamp aTime) const;
   bool IsCurrentAt(mozilla::TimeStamp aTime) const;
@@ -350,9 +362,9 @@ public:
 
   nsString mName; // empty string for 'none'
   AnimationTiming mTiming;
-  // The beginning of the delay period.  This is also used by
-  // ElementPropertyTransition in its IsRemovedSentinel and
-  // SetRemovedSentinel methods.
+  // The beginning of the delay period.  This is also set to a null
+  // timestamp to mark transitions that have finished and are due to
+  // be removed on the next throttle-able cycle.
   mozilla::TimeStamp mStartTime;
   mozilla::TimeStamp mPauseStart;
   uint8_t mPlayState;
