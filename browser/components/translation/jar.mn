@@ -3,3 +3,4 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 browser.jar:
        content/browser/translation-infobar.xml
+       content/browser/microsoft-translator-attribution.png
