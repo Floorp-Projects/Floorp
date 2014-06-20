@@ -63,11 +63,6 @@ TiledLayerBufferComposite::TiledLayerBufferComposite(ISurfaceAllocator* aAllocat
     switch (tileDesc.type()) {
       case TileDescriptor::TTexturedTileDescriptor : {
         texture = TextureHost::AsTextureHost(tileDesc.get_TexturedTileDescriptor().textureParent());
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-        if (!gfxPrefs::LayersUseSimpleTiles()) {
-          texture->SetRecycleCallback(RecycleCallback, nullptr);
-        }
-#endif
         const TileLock& ipcLock = tileDesc.get_TexturedTileDescriptor().sharedLock();
         nsRefPtr<gfxSharedReadLock> sharedLock;
         if (ipcLock.type() == TileLock::TShmemSection) {
