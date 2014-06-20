@@ -7,7 +7,9 @@ package org.mozilla.gecko.preferences;
 import java.text.Collator;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 
 import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.R;
@@ -86,9 +88,23 @@ public class LocaleListPreference extends ListPreference {
             // We sort by name, so we use Collator.
             return COLLATOR.compare(this.nativeName, another.nativeName);
         }
+
+        /**
+         * @return true if this locale can be used for displaying UI
+         *         on this device without known issues.
+         */
+        public boolean isUsable() {
+            return true;
+        }
     }
 
-    private LocaleDescriptor[] getShippingLocales() {
+    /**
+     * Not every locale we ship can be used on every device, due to
+     * font or rendering constraints.
+     *
+     * This method filters down the list before generating the descriptor array.
+     */
+    private LocaleDescriptor[] getUsableLocales() {
         Collection<String> shippingLocales = BrowserLocaleManager.getPackagedLocaleTags(getContext());
 
         // Future: single-locale builds should be specified, too.
@@ -97,15 +113,22 @@ public class LocaleListPreference extends ListPreference {
             return new LocaleDescriptor[] { new LocaleDescriptor(fallbackTag) };
         }
 
-        final int count = shippingLocales.size();
-        final LocaleDescriptor[] descriptors = new LocaleDescriptor[count];
-
-        int i = 0;
+        final int initialCount = shippingLocales.size();
+        final Set<LocaleDescriptor> locales = new HashSet<LocaleDescriptor>(initialCount);
         for (String tag : shippingLocales) {
-            descriptors[i++] = new LocaleDescriptor(tag);
+            final LocaleDescriptor descriptor = new LocaleDescriptor(tag);
+
+            if (!descriptor.isUsable()) {
+                Log.w(LOG_TAG, "Skipping locale " + tag + " on this device.");
+                continue;
+            }
+
+            locales.add(descriptor);
         }
 
-        Arrays.sort(descriptors, 0, count);
+        final int usableCount = locales.size();
+        final LocaleDescriptor[] descriptors = locales.toArray(new LocaleDescriptor[usableCount]);
+        Arrays.sort(descriptors, 0, usableCount);
         return descriptors;
     }
 
@@ -154,7 +177,7 @@ public class LocaleListPreference extends ListPreference {
             return;
         }
 
-        final LocaleDescriptor[] descriptors = getShippingLocales();
+        final LocaleDescriptor[] descriptors = getUsableLocales();
         final int count = descriptors.length;
 
         this.entriesLocale = currentLocale;
