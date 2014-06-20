@@ -109,6 +109,10 @@ SECItem* CreateEncodedOCSPRequest(PLArenaPool* arena,
                                   const CERTCertificate* cert,
                                   const CERTCertificate* issuerCert);
 
+// The out parameter expired will be true if the response has expired. If the
+// response also indicates a revoked or unknown certificate, that error
+// will be returned by PR_GetError(). Otherwise, SEC_ERROR_OCSP_OLD_RESPONSE
+// will be returned by PR_GetError() for an expired response.
 // The optional parameter thisUpdate will be the thisUpdate value of
 // the encoded response if it is considered trustworthy. Only
 // good, unknown, or revoked responses that verify correctly are considered
@@ -122,6 +126,7 @@ SECStatus VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
                                     PRTime time,
                                     uint16_t maxLifetimeInDays,
                                     const SECItem* encodedResponse,
+                          /* out */ bool& expired,
                  /* optional out */ PRTime* thisUpdate,
                  /* optional out */ PRTime* validThrough);
 
