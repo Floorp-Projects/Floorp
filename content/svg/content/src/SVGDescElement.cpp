@@ -20,7 +20,7 @@ SVGDescElement::WrapNode(JSContext* aCx)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGDescElement::SVGDescElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGDescElement::SVGDescElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGDescElementBase(aNodeInfo)
 {
 }

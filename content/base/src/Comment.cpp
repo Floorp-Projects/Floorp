@@ -32,9 +32,9 @@ Comment::IsNodeOfType(uint32_t aFlags) const
 }
 
 nsGenericDOMDataNode*
-Comment::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+Comment::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   Comment *it = new Comment(ni.forget());
   if (it && aCloneText) {
     it->mText = mText;

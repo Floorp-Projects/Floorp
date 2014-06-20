@@ -3,8 +3,6 @@
 
 function test()
 {
-  waitForExplicitFinish();
-
   let doc;
   let iframeNode, iframeBodyNode;
   let inspector;

@@ -102,7 +102,7 @@
             </xul:hbox>
             <xul:spacer/>
             <xul:toolbarbutton id="style-editor-options"
-                        class="devtools-option-toolbarbutton"
+                        class="devtools-toolbarbutton devtools-option-toolbarbutton"
                         tooltiptext="&optionsButton.tooltip;"
                         popup="style-editor-options-popup"/>
           </xul:toolbar>
@@ -148,6 +148,7 @@
           <xul:hbox class="stylesheet-details-container">
             <xul:box class="stylesheet-editor-input textbox"
                      data-placeholder="&editorTextbox.placeholder;"/>
+            <xul:splitter class="devtools-side-splitter"/>
             <xul:vbox class="stylesheet-sidebar theme-sidebar" hidden="true">
               <xul:toolbar class="devtools-toolbar">
                 &mediaRules.label;

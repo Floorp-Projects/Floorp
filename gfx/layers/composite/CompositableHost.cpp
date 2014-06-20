@@ -213,7 +213,7 @@ CompositableHost::Create(const TextureInfo& aTextureInfo)
 
 #ifdef MOZ_DUMP_PAINTING
 void
-CompositableHost::DumpTextureHost(FILE* aFile, TextureHost* aTexture)
+CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aTexture)
 {
   if (!aTexture) {
     return;
@@ -231,7 +231,8 @@ CompositableHost::DumpTextureHost(FILE* aFile, TextureHost* aTexture)
   if (!surf) {
     return;
   }
-  surf->DumpAsDataURL(aFile ? aFile : stderr);
+  // TODO stream surface
+  surf->DumpAsDataURL(stderr);
 }
 #endif
 

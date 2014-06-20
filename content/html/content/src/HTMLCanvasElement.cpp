@@ -25,7 +25,6 @@
 #include "nsDisplayList.h"
 #include "nsDOMFile.h"
 #include "nsDOMJSUtils.h"
-#include "nsFrameManager.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsITimer.h"
 #include "nsIWritablePropertyBag2.h"
@@ -116,7 +115,7 @@ HTMLCanvasPrintState::NotifyDone()
 
 // ---------------------------------------------------------------------------
 
-HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
     mWriteOnly(false)
 {

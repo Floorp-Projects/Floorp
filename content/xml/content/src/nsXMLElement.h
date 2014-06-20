@@ -15,7 +15,7 @@ class nsXMLElement : public mozilla::dom::Element,
                      public nsIDOMElement
 {
 public:
-  nsXMLElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  nsXMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : mozilla::dom::Element(aNodeInfo)
   {
   }
@@ -30,7 +30,7 @@ public:
   NS_FORWARD_NSIDOMELEMENT_TO_GENERIC
 
   // nsINode interface methods
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual nsIDOMNode* AsDOMNode() MOZ_OVERRIDE { return this; }
 

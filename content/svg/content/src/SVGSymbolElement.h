@@ -12,7 +12,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGSymbolElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -24,8 +24,8 @@ class SVGSymbolElement MOZ_FINAL : public SVGSymbolElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGSymbolElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGSymbolElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
@@ -36,7 +36,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
 
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();

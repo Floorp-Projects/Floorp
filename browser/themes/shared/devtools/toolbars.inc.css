@@ -25,6 +25,19 @@
   padding: 0 3px;
 }
 
+.devtools-toolbar checkbox {
+  margin: 0 2px;
+  padding: 0;
+}
+.devtools-toolbar checkbox .checkbox-check {
+  margin: 0;
+  padding: 0;
+}
+.devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
+  margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
+  padding: 0;
+}
+
 /* Toolbar buttons */
 .devtools-menulist,
 .devtools-toolbarbutton {
@@ -38,6 +51,7 @@
   border: none;
   border-radius: 0;
   margin: 2px 3px;
+  color: inherit;
 }
 
 .devtools-menulist:-moz-focusring,
@@ -72,20 +86,21 @@
   margin: 0;
 }
 
-.devtools-toolbarbutton > .toolbarbutton-menubutton-button {
-  -moz-box-orient: horizontal;
-  padding: 0;
-}
-
 .devtools-toolbarbutton[type=menu-button] > .toolbarbutton-menubutton-button {
   -moz-appearance: none;
   color: inherit;
   border-width: 0;
+  -moz-box-orient: horizontal;
+  padding: 0;
 }
 
 .devtools-toolbarbutton[type=menu-button] {
   padding: 0 1px;
   -moz-box-align: stretch;
+}
+
+.devtools-toolbarbutton > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  -moz-margin-end: 4px;
 }
 
 .devtools-menulist > .menulist-dropmarker {

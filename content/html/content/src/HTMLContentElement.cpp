@@ -21,7 +21,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Content)
 
 using namespace mozilla::dom;
 
-HTMLContentElement::HTMLContentElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLContentElement::HTMLContentElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo), mValidSelector(true), mIsInsertionPoint(false)
 {
   SetIsDOMBinding();

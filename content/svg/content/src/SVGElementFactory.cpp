@@ -6,7 +6,7 @@
 #include "SVGElementFactory.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
-#include "nsINodeInfo.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FromParser.h"
 
@@ -24,11 +24,11 @@ static PLHashTable* sTagAtomTable = nullptr;
 #define SVG_TAG(_tag, _classname) \
 nsresult \
 NS_NewSVG##_classname##Element(nsIContent** aResult, \
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo); \
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo); \
 \
 static inline nsresult \
 Create##_classname##Element(nsIContent** aResult, \
-                            already_AddRefed<nsINodeInfo>&& aNodeInfo, \
+                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, \
                             FromParser aFromParser) \
 { \
   return NS_NewSVG##_classname##Element(aResult, mozilla::Move(aNodeInfo)); \
@@ -37,7 +37,7 @@ Create##_classname##Element(nsIContent** aResult, \
 #define SVG_FROM_PARSER_TAG(_tag, _classname) \
 nsresult \
 NS_NewSVG##_classname##Element(nsIContent** aResult, \
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo, \
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo, \
                                FromParser aFromParser);
 #include "SVGTagList.h"
 #undef SVG_TAG
@@ -45,11 +45,11 @@ NS_NewSVG##_classname##Element(nsIContent** aResult, \
 
 nsresult
 NS_NewSVGElement(Element** aResult,
-                 already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsresult
   (*contentCreatorCallback)(nsIContent** aResult,
-                            already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                             FromParser aFromParser);
 
 static const contentCreatorCallback sContentCreatorCallbacks[] = {
@@ -112,12 +112,12 @@ SVGElementFactory::Exists(nsIAtom *aTag)
 }
 
 nsresult
-NS_NewSVGElement(Element** aResult, already_AddRefed<nsINodeInfo>&& aNodeInfo,
+NS_NewSVGElement(Element** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                  FromParser aFromParser)
 {
   NS_ASSERTION(sTagAtomTable, "no lookup table, needs SVGElementFactory::Init");
 
-  nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
+  nsRefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   nsIAtom* name = ni->NameAtom();
 
   NS_ASSERTION(ni->NamespaceEquals(kNameSpaceID_SVG),

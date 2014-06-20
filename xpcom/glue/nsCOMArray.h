@@ -271,7 +271,7 @@ class nsCOMArray : public nsCOMArray_base
     int32_t IndexOf(T* aObject, uint32_t aStartIndex = 0) const {
         return nsCOMArray_base::IndexOf(aObject, aStartIndex);
     }
-    bool Contains(nsISupports* aObject) const {
+    bool Contains(T* aObject) const {
         return nsCOMArray_base::Contains(aObject);
     }
 

@@ -57,8 +57,6 @@ DevTools.prototype = {
       // testing/profiles/prefs_general.js so lets set it to the same as it is
       // in a default browser profile for the duration of the test.
       Services.prefs.setBoolPref("dom.send_after_paint_to_content", false);
-    } else {
-      Services.prefs.setBoolPref("dom.send_after_paint_to_content", true);
     }
   },
 

@@ -1984,20 +1984,14 @@ HasRegExpMetaChars(const CharT *chars, size_t length)
     return false;
 }
 
-static inline bool
-HasRegExpMetaChars(JSLinearString *str)
+bool
+js::StringHasRegExpMetaChars(JSLinearString *str)
 {
     AutoCheckCannotGC nogc;
     if (str->hasLatin1Chars())
         return HasRegExpMetaChars(str->latin1Chars(nogc), str->length());
 
     return HasRegExpMetaChars(str->twoByteChars(nogc), str->length());
-}
-
-bool
-js::StringHasRegExpMetaChars(const jschar *chars, size_t length)
-{
-    return HasRegExpMetaChars(chars, length);
 }
 
 namespace {
@@ -2123,7 +2117,7 @@ class MOZ_STACK_CLASS StringRegExpGuard
             return nullptr;
 
         size_t patLen = fm.pat_->length();
-        if (checkMetaChars && (patLen > MAX_FLAT_PAT_LEN || HasRegExpMetaChars(fm.pat_)))
+        if (checkMetaChars && (patLen > MAX_FLAT_PAT_LEN || StringHasRegExpMetaChars(fm.pat_)))
             return nullptr;
 
         /*

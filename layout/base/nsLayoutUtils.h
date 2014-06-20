@@ -105,11 +105,6 @@ struct DisplayPortMarginsPropertyData {
   uint32_t mPriority;
 };
 
-template <class AnimationsOrTransitions>
-extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
-                                                         nsIAtom* aAnimationProperty,
-                                                         nsCSSProperty aProperty);
-
 } // namespace mozilla
 
 /**
@@ -1450,6 +1445,7 @@ public:
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
   static nsresult DrawBackgroundImage(nsRenderingContext* aRenderingContext,
+                                      nsPresContext*      aPresContext,
                                       imgIContainer*      aImage,
                                       const nsIntSize&    aImageSize,
                                       GraphicsFilter      aGraphicsFilter,
@@ -1475,6 +1471,7 @@ public:
    *   @param aImageFlags       Image flags of the imgIContainer::FLAG_* variety
    */
   static nsresult DrawImage(nsRenderingContext* aRenderingContext,
+                            nsPresContext*       aPresContext,
                             imgIContainer*       aImage,
                             GraphicsFilter       aGraphicsFilter,
                             const nsRect&        aDest,
@@ -1505,6 +1502,7 @@ public:
    *   @param aDirty            Pixels outside this area may be skipped.
    */
   static void DrawPixelSnapped(nsRenderingContext* aRenderingContext,
+                               nsPresContext*       aPresContext,
                                gfxDrawable*         aDrawable,
                                GraphicsFilter       aFilter,
                                const nsRect&        aDest,
@@ -1529,6 +1527,7 @@ public:
    *                            be aligned with image pixels.
    */
   static nsresult DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
+                                          nsPresContext*       aPresContext,
                                           imgIContainer*       aImage,
                                           GraphicsFilter       aGraphicsFilter,
                                           const nsPoint&       aDest,
@@ -1557,6 +1556,7 @@ public:
    *                            be aligned with image pixels.
    */
   static nsresult DrawSingleImage(nsRenderingContext*    aRenderingContext,
+                                  nsPresContext*         aPresContext,
                                   imgIContainer*         aImage,
                                   GraphicsFilter         aGraphicsFilter,
                                   const nsRect&          aDest,

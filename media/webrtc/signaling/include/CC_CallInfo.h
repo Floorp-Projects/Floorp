@@ -33,10 +33,10 @@ namespace CSF
     protected:
         CC_CallInfo() { }
 
-    public:
         //Base class needs dtor to be declared as virtual
         virtual ~CC_CallInfo() {};
 
+    public:
         /**
            Get the line object associated with this call.
 

@@ -685,6 +685,25 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   };                                                                           \
   static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
+#define NS_DECL_CYCLE_COLLECTION_SKIPPABLE_NATIVE_CLASS_WITH_CUSTOM_DELETE(_class) \
+class NS_CYCLE_COLLECTION_INNERCLASS                                           \
+ : public nsCycleCollectionParticipant                                         \
+{                                                                              \
+public:                                                                        \
+  MOZ_CONSTEXPR NS_CYCLE_COLLECTION_INNERCLASS ()                              \
+  : nsCycleCollectionParticipant(true) {}                                      \
+private:                                                                       \
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                           \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed);               \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p);                                  \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p);                                  \
+  static nsCycleCollectionParticipant* GetParticipant()                        \
+  {                                                                            \
+    return &_class::NS_CYCLE_COLLECTION_INNERNAME;                             \
+  }                                                                            \
+};                                                                             \
+static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
+
 #define NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(_class)            \
   void DeleteCycleCollectable(void)                                            \
   {                                                                            \

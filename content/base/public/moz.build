@@ -55,7 +55,6 @@ EXPORTS += [
     'nsIDocumentObserver.h',
     'nsIMutationObserver.h',
     'nsINode.h',
-    'nsINodeInfo.h',
     'nsINodeList.h',
     'nsIScriptElement.h',
     'nsIStyleSheetLinkingElement.h',

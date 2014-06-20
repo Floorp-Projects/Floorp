@@ -17,7 +17,7 @@ const double HTMLMeterElement::kDefaultMin   =  0.0;
 const double HTMLMeterElement::kDefaultMax   =  1.0;
 
 
-HTMLMeterElement::HTMLMeterElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+HTMLMeterElement::HTMLMeterElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo)
 {
 }

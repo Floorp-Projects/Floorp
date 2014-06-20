@@ -20,7 +20,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGIFrameElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                 mozilla::dom::FromParser aFromParser);
 
 typedef mozilla::dom::SVGGraphicsElement SVGIFrameElementBase;
@@ -36,10 +36,10 @@ class SVGIFrameElement MOZ_FINAL : public SVGIFrameElementBase,
 {
   friend class ::nsSVGIFrameFrame;
   friend nsresult (::NS_NewSVGIFrameElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                   mozilla::dom::FromParser aFromParser));
 
-  SVGIFrameElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  SVGIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                    mozilla::dom::FromParser aFromParser);
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
 
@@ -72,7 +72,7 @@ public:
 
   virtual void DestroyContent() MOZ_OVERRIDE;
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X();

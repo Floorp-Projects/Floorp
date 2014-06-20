@@ -7,14 +7,14 @@
 
     <org.mozilla.gecko.widget.SquaredImageView
         android:id="@+id/image"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="centerCrop"
         android:adjustViewBounds="true"
         android:background="@color/panel_image_item_background"/>
 
     <LinearLayout android:id="@+id/title_desc_container"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="@dimen/page_row_height"
                   android:paddingTop="7dip"
                   android:paddingBottom="7dip"
@@ -24,7 +24,7 @@
 
         <TextView android:id="@+id/title"
                   style="@style/Widget.PanelItemView.Title"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="0dp"
                   android:layout_weight="1"
                   android:gravity="center_vertical"
@@ -32,7 +32,7 @@
 
         <TextView android:id="@+id/description"
                   style="@style/Widget.PanelItemView.Description"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="0dp"
                   android:layout_weight="1"
                   android:gravity="center_vertical"

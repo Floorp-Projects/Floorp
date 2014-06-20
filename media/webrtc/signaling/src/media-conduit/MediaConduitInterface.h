@@ -25,9 +25,10 @@ namespace mozilla {
  */
 class TransportInterface
 {
-public:
+protected:
   virtual ~TransportInterface() {}
 
+public:
   /**
    * RTP Transport Function to be implemented by concrete transport implementation
    * @param data : RTP Packet (audio/video) to be transported
@@ -71,9 +72,10 @@ private:
  */
 class VideoRenderer
 {
- public:
+protected:
   virtual ~VideoRenderer() {}
 
+public:
   /**
    * Callback Function reportng any change in the video-frame dimensions
    * @param width:  current width of the video @ decoder
@@ -122,10 +124,11 @@ class VideoRenderer
  */
 class MediaSessionConduit
 {
+protected:
+  virtual ~MediaSessionConduit() {}
+
 public:
   enum Type { AUDIO, VIDEO } ;
-
-  virtual ~MediaSessionConduit() {}
 
   virtual Type type() const = 0;
 

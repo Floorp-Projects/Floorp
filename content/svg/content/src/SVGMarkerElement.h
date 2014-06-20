@@ -18,7 +18,7 @@
 class nsSVGMarkerFrame;
 
 nsresult NS_NewSVGMarkerElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -104,8 +104,8 @@ class SVGMarkerElement : public SVGMarkerElementBase
 
 protected:
   friend nsresult (::NS_NewSVGMarkerElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGMarkerElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGMarkerElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
@@ -125,7 +125,7 @@ public:
   nsSVGViewBoxRect GetViewBoxRect();
   gfx::Matrix GetViewBoxTransform();
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsSVGOrientType* GetOrientType() { return &mOrientType; }
 

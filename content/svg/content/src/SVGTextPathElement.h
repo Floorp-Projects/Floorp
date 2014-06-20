@@ -13,10 +13,9 @@
 
 class nsIAtom;
 class nsIContent;
-class nsINodeInfo;
 
 nsresult NS_NewSVGTextPathElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -38,15 +37,15 @@ friend class ::SVGTextFrame;
 
 protected:
   friend nsresult (::NS_NewSVGTextPathElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGTextPathElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGTextPathElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> StartOffset();

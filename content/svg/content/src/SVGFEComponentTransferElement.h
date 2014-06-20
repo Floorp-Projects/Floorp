@@ -11,7 +11,7 @@
 typedef nsSVGFE SVGFEComponentTransferElementBase;
 
 nsresult NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ namespace dom {
 class SVGFEComponentTransferElement : public SVGFEComponentTransferElementBase
 {
   friend nsresult (::NS_NewSVGFEComponentTransferElement(nsIContent **aResult,
-                                                         already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                         already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEComponentTransferElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEComponentTransferElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEComponentTransferElementBase(aNodeInfo)
   {
   }
@@ -39,7 +39,7 @@ public:
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
   // nsIContent
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

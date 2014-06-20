@@ -6,6 +6,18 @@
 
 #include "CC_Common.h"
 
+namespace CSF {
+class AudioControl;
+}
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<CSF::AudioControl>
+{
+  static const bool value = true;
+};
+}
+
 namespace CSF
 {
         DECLARE_NS_PTR(AudioControl)

@@ -11,7 +11,7 @@
 #include "mozilla/dom/SVGGraphicsElement.h"
 
 nsresult NS_NewSVGAElement(nsIContent **aResult,
-                           already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 
@@ -26,9 +26,9 @@ class SVGAElement MOZ_FINAL : public SVGAElementBase,
                               public Link
 {
 protected:
-  SVGAElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   friend nsresult (::NS_NewSVGAElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
@@ -39,7 +39,7 @@ public:
   virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE;
   virtual nsresult PostHandleEvent(
                      EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument *aDocument, nsIContent *aParent,

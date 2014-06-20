@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf-8">
     <title>Test 911547</title>
   </head>
 <body>
@@ -12,7 +13,7 @@
   -->
   <input type="text" id="test_id" value="ok">
 
-  <a id="test_data_link" href="data:text/html,<input type='text' id='test_id2' value='ok'/> <script>document.getElementById('test_id2').value = 'fail';</script>">Test Link</a>
+  <a id="test_data_link" href="data:text/html;charset=utf-8,<input type='text' id='test_id2' value='ok'/> <script>document.getElementById('test_id2').value = 'fail';</script>">Test Link</a>
 
 </body>
 </html>

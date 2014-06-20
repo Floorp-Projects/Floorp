@@ -124,15 +124,15 @@ static void DrawLayerInfo(const nsIntRect& aClipRect,
     return;
   }
 
-  nsAutoCString layerInfo;
-  aLayer->PrintInfo(layerInfo, "");
+  std::stringstream ss;
+  aLayer->PrintInfo(ss, "");
 
   nsIntRegion visibleRegion = aLayer->GetVisibleRegion();
 
   uint32_t maxWidth = std::min<uint32_t>(visibleRegion.GetBounds().width, 500);
 
   nsIntPoint topLeft = visibleRegion.GetBounds().TopLeft();
-  aManager->GetTextRenderer()->RenderText(layerInfo.get(), gfx::IntPoint(topLeft.x, topLeft.y),
+  aManager->GetTextRenderer()->RenderText(ss.str().c_str(), gfx::IntPoint(topLeft.x, topLeft.y),
                                           aLayer->GetEffectiveTransform(), 16,
                                           maxWidth);
 

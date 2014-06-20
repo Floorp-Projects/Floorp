@@ -13,7 +13,7 @@
 #include "SVGAnimatedPreserveAspectRatio.h"
 
 nsresult NS_NewSVGImageElement(nsIContent **aResult,
-                               already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGPathGeometryElement SVGImageElementBase;
 
@@ -29,11 +29,11 @@ class SVGImageElement : public SVGImageElementBase,
   friend class ::nsSVGImageFrame;
 
 protected:
-  SVGImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual ~SVGImageElement();
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGImageElement(nsIContent **aResult,
-                                           already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 public:
   // interfaces:
@@ -59,7 +59,7 @@ public:
   // nsSVGSVGElement methods:
   virtual bool HasValidDimensions() const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   nsresult CopyInnerTo(mozilla::dom::Element* aDest);
 

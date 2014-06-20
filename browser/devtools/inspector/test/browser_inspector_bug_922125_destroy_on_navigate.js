@@ -5,8 +5,6 @@ let Toolbox = devtools.Toolbox;
 let TargetFactory = devtools.TargetFactory;
 
 function test() {
-  waitForExplicitFinish();
-
   const URL_1 = "data:text/html;charset=UTF-8,<div id='one' style='color:red;'>ONE</div>";
   const URL_2 = "data:text/html;charset=UTF-8,<div id='two' style='color:green;'>TWO</div>";
 

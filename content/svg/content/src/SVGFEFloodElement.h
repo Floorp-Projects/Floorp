@@ -9,7 +9,7 @@
 #include "nsSVGFilters.h"
 
 nsresult NS_NewSVGFEFloodElement(nsIContent **aResult,
-                                 already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +19,9 @@ typedef nsSVGFE SVGFEFloodElementBase;
 class SVGFEFloodElement : public SVGFEFloodElementBase
 {
   friend nsresult (::NS_NewSVGFEFloodElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEFloodElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEFloodElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEFloodElementBase(aNodeInfo)
   {
   }
@@ -40,7 +40,7 @@ public:
   // nsIContent interface
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
 protected:
   virtual bool ProducesSRGB() MOZ_OVERRIDE { return true; }

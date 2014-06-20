@@ -54,7 +54,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SVGImageElement, SVGImageElementBase,
 //----------------------------------------------------------------------
 // Implementation
 
-SVGImageElement::SVGImageElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGImageElement::SVGImageElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGImageElementBase(aNodeInfo)
 {
   // We start out broken

@@ -89,7 +89,7 @@ protected:
     bool NotifyForDocElement() MOZ_OVERRIDE { return false; }
 
     nsresult CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
-                           nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
+                           mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
                            nsIContent** aResult, bool* aAppendContent,
                            mozilla::dom::FromParser aFromParser) MOZ_OVERRIDE;
     

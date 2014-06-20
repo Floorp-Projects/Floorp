@@ -45,7 +45,7 @@ NS_NewDOMDocumentType(nsNodeInfoManager* aNodeInfoManager,
     return nullptr;
   }
 
-  already_AddRefed<nsINodeInfo> ni =
+  already_AddRefed<mozilla::dom::NodeInfo> ni =
     aNodeInfoManager->GetNodeInfo(nsGkAtoms::documentTypeNodeName, nullptr,
                                   kNameSpaceID_None,
                                   nsIDOMNode::DOCUMENT_TYPE_NODE,
@@ -65,7 +65,7 @@ DocumentType::WrapNode(JSContext *cx)
   return DocumentTypeBinding::Wrap(cx, this);
 }
 
-DocumentType::DocumentType(already_AddRefed<nsINodeInfo>& aNodeInfo,
+DocumentType::DocumentType(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                            const nsAString& aPublicId,
                            const nsAString& aSystemId,
                            const nsAString& aInternalSubset) :
@@ -139,9 +139,9 @@ DocumentType::MozRemove()
 }
 
 nsGenericDOMDataNode*
-DocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, bool aCloneText) const
+DocumentType::CloneDataNode(mozilla::dom::NodeInfo *aNodeInfo, bool aCloneText) const
 {
-  already_AddRefed<nsINodeInfo> ni = nsCOMPtr<nsINodeInfo>(aNodeInfo).forget();
+  already_AddRefed<mozilla::dom::NodeInfo> ni = nsRefPtr<mozilla::dom::NodeInfo>(aNodeInfo).forget();
   return new DocumentType(ni, mPublicId, mSystemId, mInternalSubset);
 }
 

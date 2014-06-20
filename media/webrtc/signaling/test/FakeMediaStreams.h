@@ -36,9 +36,10 @@ static const int64_t USECS_PER_S = 1000000;
 
 class Fake_MediaStreamListener
 {
- public:
+ protected:
   virtual ~Fake_MediaStreamListener() {}
 
+ public:
   virtual void NotifyQueuedTrackChanges(mozilla::MediaStreamGraph* aGraph, mozilla::TrackID aID,
                                         mozilla::TrackRate aTrackRate,
                                         mozilla::TrackTicks aTrackOffset,
@@ -51,9 +52,10 @@ class Fake_MediaStreamListener
 
 class Fake_MediaStreamDirectListener : public Fake_MediaStreamListener
 {
- public:
+ protected:
   virtual ~Fake_MediaStreamDirectListener() {}
 
+ public:
   virtual void NotifyRealtimeData(mozilla::MediaStreamGraph* graph, mozilla::TrackID tid,
                                   mozilla::TrackRate rate,
                                   mozilla::TrackTicks offset,
@@ -63,9 +65,11 @@ class Fake_MediaStreamDirectListener : public Fake_MediaStreamListener
 
 // Note: only one listener supported
 class Fake_MediaStream {
+ protected:
+  virtual ~Fake_MediaStream() { Stop(); }
+
  public:
   Fake_MediaStream () : mListeners(), mMutex("Fake MediaStream") {}
-  virtual ~Fake_MediaStream() { Stop(); }
 
   void AddListener(Fake_MediaStreamListener *aListener) {
     mozilla::MutexAutoLock lock(mMutex);

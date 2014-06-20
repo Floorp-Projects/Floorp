@@ -1104,14 +1104,37 @@ nsCSSRuleProcessor::nsCSSRuleProcessor(const sheet_array_type& aSheets,
 
 nsCSSRuleProcessor::~nsCSSRuleProcessor()
 {
+  ClearSheets();
+  ClearRuleCascades();
+}
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSRuleProcessor)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRuleProcessor)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCSSRuleProcessor)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCSSRuleProcessor)
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCSSRuleProcessor)
+  tmp->ClearSheets();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mScopeElement)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCSSRuleProcessor)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheets)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScopeElement)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+void
+nsCSSRuleProcessor::ClearSheets()
+{
   for (sheet_array_type::size_type i = mSheets.Length(); i-- != 0; ) {
     mSheets[i]->DropRuleProcessor(this);
   }
   mSheets.Clear();
-  ClearRuleCascades();
 }
-
-NS_IMPL_ISUPPORTS(nsCSSRuleProcessor, nsIStyleRuleProcessor)
 
 /* static */ nsresult
 nsCSSRuleProcessor::Startup()
