@@ -282,14 +282,7 @@ ActiveLayerTracker::IsStyleAnimated(nsIFrame* aFrame, nsCSSProperty aProperty)
   }
   nsIContent* content = aFrame->GetContent();
   if (content) {
-    if (mozilla::HasAnimationOrTransition<ElementAnimations>(
-          content, nsGkAtoms::animationsProperty, aProperty)) {
-      return true;
-    }
-    if (mozilla::HasAnimationOrTransition<ElementTransitions>(
-          content, nsGkAtoms::transitionsProperty, aProperty)) {
-      return true;
-    }
+    return nsLayoutUtils::HasAnimations(content, aProperty);
   }
 
   return false;

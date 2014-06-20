@@ -105,11 +105,6 @@ struct DisplayPortMarginsPropertyData {
   uint32_t mPriority;
 };
 
-template <class AnimationsOrTransitions>
-extern AnimationsOrTransitions* HasAnimationOrTransition(nsIContent* aContent,
-                                                         nsIAtom* aAnimationProperty,
-                                                         nsCSSProperty aProperty);
-
 } // namespace mozilla
 
 /**

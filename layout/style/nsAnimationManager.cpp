@@ -120,18 +120,6 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
 }
 
 bool
-ElementAnimations::HasAnimationOfProperty(nsCSSProperty aProperty) const
-{
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const ElementAnimation* anim = mAnimations[animIdx];
-    if (anim->HasAnimationOfProperty(aProperty)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-bool
 ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
 {
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
