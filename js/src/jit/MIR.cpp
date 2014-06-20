@@ -378,10 +378,14 @@ MDefinition::hasLiveDefUses() const
 {
     for (MUseIterator i(uses_.begin()); i != uses_.end(); i++) {
         MNode *ins = (*i)->consumer();
-        if (!ins->isDefinition())
-            continue;
-        if (!ins->toDefinition()->isRecoveredOnBailout())
-            return true;
+        if (ins->isDefinition()) {
+            if (!ins->toDefinition()->isRecoveredOnBailout())
+                return true;
+        } else {
+            MOZ_ASSERT(ins->isResumePoint());
+            if (ins->toResumePoint()->isObservableOperand(*i))
+                return true;
+        }
     }
 
     return false;
