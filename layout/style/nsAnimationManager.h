@@ -91,21 +91,11 @@ public:
   {
   }
 
-  static ElementAnimations* GetAnimationsForCompositor(nsIContent* aContent,
-                                                       nsCSSProperty aProperty)
+  static mozilla::css::CommonElementAnimationData*
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
-    if (!aContent->MayHaveAnimations())
-      return nullptr;
-    ElementAnimations* animations = static_cast<ElementAnimations*>(
-      aContent->GetProperty(nsGkAtoms::animationsProperty));
-    if (!animations)
-      return nullptr;
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
-    return (propertyMatches &&
-            animations->CanPerformOnCompositorThread(
-              mozilla::css::CommonElementAnimationData::CanAnimate_AllowPartial))
-           ? animations
-           : nullptr;
+    return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
+      aContent, nsGkAtoms::animationsProperty, aProperty);
   }
 
   // Returns true if aContent or any of its ancestors has an animation.

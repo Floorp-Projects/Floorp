@@ -75,6 +75,11 @@ protected:
   virtual void ElementDataRemoved() = 0;
   void RemoveAllElementData();
 
+  static CommonElementAnimationData*
+  GetAnimationsForCompositor(nsIContent* aContent,
+                             nsIAtom* aElementProperty,
+                             nsCSSProperty aProperty);
+
   // Update the style on aElement from the transition stored in this manager and
   // the new parent style - aParentStyle. aElement must be transitioning or
   // animated. Returns the updated style.
