@@ -19,7 +19,6 @@
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"
-#include "ActiveLayerTracker.h"
 #include <math.h>
 
 using namespace mozilla;
@@ -117,74 +116,6 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
         break;
     }
   }
-}
-
-bool
-ElementAnimations::CanPerformOnCompositorThread(CanAnimateFlags aFlags) const
-{
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(mElement);
-  if (!frame) {
-    return false;
-  }
-
-  if (mElementProperty != nsGkAtoms::animationsProperty) {
-    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
-      nsCString message;
-      message.AppendLiteral("Gecko bug: Async animation of pseudoelements not supported.  See bug 771367 (");
-      message.Append(nsAtomCString(mElementProperty));
-      message.Append(')');
-      LogAsyncAnimationFailure(message, mElement);
-    }
-    return false;
-  }
-
-  TimeStamp now = frame->PresContext()->RefreshDriver()->MostRecentRefresh();
-
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const ElementAnimation* anim = mAnimations[animIdx];
-    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
-         propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(anim->mProperties[propIdx].mProperty) &&
-          anim->IsRunningAt(now)) {
-        aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
-        break;
-      }
-    }
-  }
-
-  bool hasOpacity = false;
-  bool hasTransform = false;
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const ElementAnimation* anim = mAnimations[animIdx];
-    if (!anim->IsRunningAt(now)) {
-      continue;
-    }
-
-    for (uint32_t propIdx = 0, propEnd = anim->mProperties.Length();
-         propIdx != propEnd; ++propIdx) {
-      const AnimationProperty& prop = anim->mProperties[propIdx];
-      if (!CanAnimatePropertyOnCompositor(mElement,
-                                          prop.mProperty,
-                                          aFlags) ||
-          IsCompositorAnimationDisabledForFrame(frame)) {
-        return false;
-      }
-      if (prop.mProperty == eCSSProperty_opacity) {
-        hasOpacity = true;
-      } else if (prop.mProperty == eCSSProperty_transform) {
-        hasTransform = true;
-      }
-    }
-  }
-  // This animation can be done on the compositor.  Mark the frame as active, in
-  // case we are able to throttle this animation.
-  if (hasOpacity) {
-    ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
-  }
-  if (hasTransform) {
-    ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_transform);
-  }
-  return true;
 }
 
 ElementAnimations*

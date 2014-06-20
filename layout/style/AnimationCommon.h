@@ -452,9 +452,23 @@ struct CommonElementAnimationData : public PRCList
   static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
 
   // True if this animation can be performed on the compositor thread.
-  // Do not pass CanAnimate_AllowPartial to make sure that all properties of this
-  // animation are supported by the compositor.
-  virtual bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const = 0;
+  //
+  // If aFlags contains CanAnimate_AllowPartial, returns whether the
+  // state of this element's animations at the current refresh driver
+  // time contains animation data that can be done on the compositor
+  // thread.  (This is useful for determining whether a layer should be
+  // active, or whether to send data to the layer.)
+  //
+  // If aFlags does not contain CanAnimate_AllowPartial, returns whether
+  // the state of this element's animations at the current refresh driver
+  // time can be fully represented by data sent to the compositor.
+  // (This is useful for determining whether throttle the animation
+  // (suppress main-thread style updates).)
+  //
+  // Note that when CanPerformOnCompositorThread returns true, it also,
+  // as a side-effect, notifies the ActiveLayerTracker.  FIXME:  This
+  // should probably move to the relevant callers.
+  bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
 
   static void LogAsyncAnimationFailure(nsCString& aMessage,
