@@ -55,7 +55,7 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
   double duration = mTiming.mIterationDuration.ToSeconds();
   NS_ABORT_IF_FALSE(duration >= 0.0, "negative duration forbidden");
   double timePortion;
-  if (IsRemovedSentinel()) {
+  if (IsFinishedTransition()) {
     // The transition is being removed, but we still want an update so that any
     // new transitions start in the right place.
     timePortion = 1.0;
@@ -107,7 +107,7 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
     for (uint32_t i = 0, i_end = mAnimations.Length(); i < i_end; ++i)
     {
       ElementPropertyTransition* pt = mAnimations[i]->AsTransition();
-      if (pt->IsRemovedSentinel()) {
+      if (pt->IsFinishedTransition()) {
         continue;
       }
 
@@ -137,8 +137,9 @@ bool
 ElementTransitions::HasAnimationOfProperty(nsCSSProperty aProperty) const
 {
   for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const ElementPropertyTransition* pt = mAnimations[animIdx]->AsTransition();
-    if (pt->HasAnimationOfProperty(aProperty) && !pt->IsRemovedSentinel()) {
+    const ElementAnimation* anim = mAnimations[animIdx];
+    if (anim->HasAnimationOfProperty(aProperty) &&
+        !anim->IsFinishedTransition()) {
       return true;
     }
   }
@@ -649,7 +650,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   // If the new transition reverses an existing one, we'll need to
   // handle the timing differently.
   if (haveCurrentTransition &&
-      !oldPT->IsRemovedSentinel() &&
+      !oldPT->IsFinishedTransition() &&
       oldPT->mStartForReversingTest == endValue) {
     // Compute the appropriate negative transition-delay such that right
     // now we'd end up at the current position.
@@ -954,8 +955,8 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
       bool transitionStartedOrEnded = false;
       do {
         --i;
-        ElementPropertyTransition* pt = et->mAnimations[i]->AsTransition();
-        if (pt->IsRemovedSentinel()) {
+        ElementAnimation* anim = et->mAnimations[i];
+        if (anim->IsFinishedTransition()) {
           // Actually remove transitions one throttle-able cycle after their
           // completion. We only clear on a throttle-able cycle because that
           // means it is a regular restyle tick and thus it is safe to discard
@@ -964,11 +965,11 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           if (aFlags == Can_Throttle) {
             et->mAnimations.RemoveElementAt(i);
           }
-        } else if (pt->mStartTime + pt->mTiming.mDelay +
-                   pt->mTiming.mIterationDuration <= now) {
-          MOZ_ASSERT(pt->mProperties.Length() == 1,
+        } else if (anim->mStartTime + anim->mTiming.mDelay +
+                   anim->mTiming.mIterationDuration <= now) {
+          MOZ_ASSERT(anim->mProperties.Length() == 1,
                      "Should have one animation property for a transition");
-          nsCSSProperty prop = pt->mProperties[0].mProperty;
+          nsCSSProperty prop = anim->mProperties[0].mProperty;
           if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
           {
             prop = nsCSSProps::OtherNameFor(prop);
@@ -978,7 +979,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           NS_NAMED_LITERAL_STRING(after, "::after");
           events.AppendElement(
             TransitionEventInfo(et->mElement, prop,
-                                pt->mTiming.mIterationDuration,
+                                anim->mTiming.mIterationDuration,
                                 ep == nsGkAtoms::transitionsProperty ?
                                   EmptyString() :
                                   ep == nsGkAtoms::transitionsOfBeforeProperty ?
@@ -992,12 +993,12 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           // a non-animation style change that would affect it, we need
           // to know not to start a new transition for the transition
           // from the almost-completed value to the final value.
-          pt->SetRemovedSentinel();
+          anim->SetFinishedTransition();
           et->UpdateAnimationGeneration(mPresContext);
           transitionStartedOrEnded = true;
-        } else if (pt->mStartTime + pt->mTiming.mDelay <= now &&
+        } else if (anim->mStartTime + anim->mTiming.mDelay <= now &&
                    canThrottleTick &&
-                   !pt->mIsRunningOnCompositor) {
+                   !anim->mIsRunningOnCompositor) {
           // Start a transition with a delay where we should start the
           // transition proper.
           et->UpdateAnimationGeneration(mPresContext);

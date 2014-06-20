@@ -371,7 +371,7 @@ bool
 ElementAnimation::IsRunningAt(TimeStamp aTime) const
 {
   if (IsPaused() || mTiming.mIterationDuration.ToMilliseconds() <= 0.0 ||
-      mStartTime.IsNull()) {
+      IsFinishedTransition()) {
     return false;
   }
 
@@ -384,7 +384,7 @@ ElementAnimation::IsRunningAt(TimeStamp aTime) const
 bool
 ElementAnimation::IsCurrentAt(TimeStamp aTime) const
 {
-  if (!mStartTime.IsNull()) {
+  if (!IsFinishedTransition()) {
     TimeDuration elapsedDuration = ElapsedDurationAt(aTime);
     ComputedTiming computedTiming =
       ElementAnimation::GetComputedTimingAt(elapsedDuration, mTiming);
