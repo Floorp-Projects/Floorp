@@ -48,8 +48,8 @@ public:
 
   void AddToIdTable(Element* aElement, nsIAtom* aId);
   void RemoveFromIdTable(Element* aElement, nsIAtom* aId);
-  void InsertSheet(nsCSSStyleSheet* aSheet, nsIContent* aLinkingContent);
-  void RemoveSheet(nsCSSStyleSheet* aSheet);
+  void InsertSheet(CSSStyleSheet* aSheet, nsIContent* aLinkingContent);
+  void RemoveSheet(CSSStyleSheet* aSheet);
   bool ApplyAuthorStyles();
   void SetApplyAuthorStyles(bool aApplyAuthorStyles);
   StyleSheetList* StyleSheets();
@@ -187,7 +187,7 @@ public:
   }
 
   virtual uint32_t Length() MOZ_OVERRIDE;
-  virtual nsCSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
+  virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
 
 protected:
   nsRefPtr<ShadowRoot> mShadowRoot;
