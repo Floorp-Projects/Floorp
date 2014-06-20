@@ -687,6 +687,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
     dest->mTiming.mIterationDuration =
       TimeDuration::FromMilliseconds(src.GetDuration());
+    dest->mTiming.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
     dest->mTiming.mIterationCount = src.GetIterationCount();
     dest->mTiming.mDirection = src.GetDirection();
     dest->mTiming.mFillMode = src.GetFillMode();
@@ -698,7 +699,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     } else {
       dest->mPauseStart = TimeStamp();
     }
-    dest->mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
 
     nsCSSKeyframesRule* rule =
       mPresContext->StyleSet()->KeyframesRuleForName(mPresContext,
