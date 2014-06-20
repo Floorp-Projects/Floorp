@@ -1807,11 +1807,7 @@ js::DecompileValueGenerator(JSContext *cx, int spindex, HandleValue v,
             return nullptr;
     }
 
-    RootedLinearString linear(cx, fallback->ensureLinear(cx));
-    if (!linear)
-        return nullptr;
-    TwoByteChars tbchars(linear->chars(), linear->length());
-    return LossyTwoByteCharsToNewLatin1CharsZ(cx, tbchars).c_str();
+    return JS_EncodeString(cx, fallback);
 }
 
 static bool
@@ -1890,14 +1886,12 @@ js::DecompileArgument(JSContext *cx, int formalIndex, HandleValue v)
     }
     if (v.isUndefined())
         return JS_strdup(cx, js_undefined_str); // Prevent users from seeing "(void 0)"
+
     RootedString fallback(cx, ValueToSource(cx, v));
     if (!fallback)
         return nullptr;
 
-    RootedLinearString linear(cx, fallback->ensureLinear(cx));
-    if (!linear)
-        return nullptr;
-    return LossyTwoByteCharsToNewLatin1CharsZ(cx, linear->range()).c_str();
+    return JS_EncodeString(cx, fallback);
 }
 
 bool

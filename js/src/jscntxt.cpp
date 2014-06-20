@@ -758,10 +758,10 @@ js_ExpandErrorArguments(ExclusiveContext *cx, JSErrorCallback callback,
                 JS_ASSERT(expandedArgs == argCount);
                 *out = 0;
                 js_free(buffer);
-                TwoByteChars ucmsg(reportp->ucmessage,
-                                   PointerRangeSize(static_cast<const jschar *>(reportp->ucmessage),
-                                                    static_cast<const jschar *>(out)));
-                *messagep = LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
+                size_t msgLen = PointerRangeSize(static_cast<const jschar *>(reportp->ucmessage),
+                                                 static_cast<const jschar *>(out));
+                mozilla::Range<const jschar> ucmsg(reportp->ucmessage, msgLen);
+                *messagep = JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, ucmsg).c_str();
                 if (!*messagep)
                     goto error;
             }
