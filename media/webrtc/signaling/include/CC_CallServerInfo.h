@@ -19,13 +19,13 @@ namespace CSF
     {
     public:
         NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CC_CallServerInfo)
+
     protected:
+        //Base class needs dtor to be declared as virtual
+        virtual ~CC_CallServerInfo() { }
         CC_CallServerInfo() { }
 
     public:
-        //Base class needs dtor to be declared as virtual
-        virtual ~CC_CallServerInfo() {};
-
         /**
            gets call server name
 

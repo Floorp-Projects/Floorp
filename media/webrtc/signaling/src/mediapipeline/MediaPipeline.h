@@ -67,6 +67,15 @@ class PeerIdentity;
 // For a transmitting conduit, "output" is RTP and "input" is RTCP.
 // For a receiving conduit, "input" is RTP and "output" is RTCP.
 //
+
+class MediaPipeline;
+
+template<>
+struct HasDangerousPublicDestructor<MediaPipeline>
+{
+  static const bool value = true;
+};
+
 class MediaPipeline : public sigslot::has_slots<> {
  public:
   enum Direction { TRANSMIT, RECEIVE };
