@@ -18,8 +18,8 @@ namespace mozilla {
 template <typename T>
 class Range
 {
-    RangedPtr<T> mStart;
-    RangedPtr<T> mEnd;
+    const RangedPtr<T> mStart;
+    const RangedPtr<T> mEnd;
 
     typedef void (Range::* ConvertibleToBool)();
     void nonNull() {}
@@ -35,11 +35,7 @@ class Range
     RangedPtr<T> end() const { return mEnd; }
     size_t length() const { return mEnd - mStart; }
 
-    T& operator[](size_t offset) {
-      return mStart[offset];
-    }
-
-    const T& operator[](size_t offset) const {
+    T& operator[](size_t offset) const {
       return mStart[offset];
     }
 
