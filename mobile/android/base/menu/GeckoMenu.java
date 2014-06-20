@@ -125,8 +125,8 @@ public class GeckoMenu extends ListView
     public GeckoMenu(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
-        setLayoutParams(new LayoutParams(LayoutParams.FILL_PARENT,
-                                         LayoutParams.FILL_PARENT));
+        setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT,
+                                         LayoutParams.MATCH_PARENT));
 
         // Attach an adapter.
         mAdapter = new MenuItemsAdapter();

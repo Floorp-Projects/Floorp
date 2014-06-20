@@ -488,21 +488,22 @@ function openPreferences(paneID, extraArgs)
     }
   }
 
+  // This function is duplicated from preferences.js.
+  function internalPrefCategoryNameToFriendlyName(aName) {
+    return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
+  }
+
   if (getBoolPref("browser.preferences.inContent")) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
       return;
     }
 
-    let newLoad = !win.switchToTabHavingURI("about:preferences", true);
+    let friendlyCategoryName = internalPrefCategoryNameToFriendlyName(paneID);
+    let preferencesURL = "about:preferences" +
+                         (friendlyCategoryName ? "#" + friendlyCategoryName : "");
+    let newLoad = !win.switchToTabHavingURI(preferencesURL, true, {ignoreFragment: true});
     let browser = win.gBrowser.selectedBrowser;
-
-    function switchToPane() {
-      if (paneID) {
-        browser.contentWindow.selectCategory(paneID);
-      }
-      switchToAdvancedSubPane(browser.contentDocument);
-    }
 
     if (newLoad) {
       Services.obs.addObserver(function advancedPaneLoadedObs(prefWin, topic, data) {
@@ -510,10 +511,13 @@ function openPreferences(paneID, extraArgs)
           return;
         }
         Services.obs.removeObserver(advancedPaneLoadedObs, "advanced-pane-loaded");
-        switchToPane();
+        switchToAdvancedSubPane(browser.contentDocument);
       }, "advanced-pane-loaded", false);
     } else {
-      switchToPane();
+      if (paneID) {
+        browser.contentWindow.gotoPref(paneID);
+      }
+      switchToAdvancedSubPane(browser.contentDocument);
     }
   } else {
     var instantApply = getBoolPref("browser.preferences.instantApply", false);

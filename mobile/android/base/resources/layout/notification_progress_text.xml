@@ -4,12 +4,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:orientation="vertical"
               android:paddingLeft="5dp">
 
-    <LinearLayout android:layout_width="fill_parent"
+    <LinearLayout android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:orientation="horizontal">
 
@@ -20,7 +20,7 @@
 
         <TextView android:id="@+id/notification_title"
                   android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent.Title"
-                  android:layout_width="fill_parent"
+                  android:layout_width="match_parent"
                   android:layout_height="wrap_content"
                   android:layout_weight="1"
                   android:singleLine="true"
@@ -32,7 +32,7 @@
 
     <ProgressBar android:id="@+id/notification_progressbar"
                  style="?android:attr/progressBarStyleHorizontal"
-                 android:layout_width="fill_parent"
+                 android:layout_width="match_parent"
                  android:layout_height="16dip"
                  android:layout_marginTop="1dip"
                  android:layout_marginBottom="1dip"
@@ -42,7 +42,7 @@
 
     <TextView android:id="@+id/notification_text"
               android:textAppearance="@android:style/TextAppearance.StatusBar.EventContent"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:paddingLeft="4dp"/>
 

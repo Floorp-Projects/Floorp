@@ -3,7 +3,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:layout_weight="1"
               android:orientation="vertical"
@@ -11,7 +11,7 @@
 
     <TextView android:id="@+id/title"
               style="@style/GeckoDialogTitle"
-              android:layout_width="fill_parent" 
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:paddingTop="6dip"
               android:paddingBottom="0dip"
@@ -20,7 +20,7 @@
 
     <TextView android:id="@+id/host"
               style="@style/GeckoDialogTitle.SubTitle"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:paddingTop="2dip"
               android:paddingBottom="6dip"

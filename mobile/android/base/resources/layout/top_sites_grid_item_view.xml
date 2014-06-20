@@ -8,14 +8,14 @@
 
     <org.mozilla.gecko.home.TopSitesThumbnailView
             android:id="@+id/thumbnail"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"/>
 
     <org.mozilla.gecko.home.FadedTextView
             android:id="@+id/title"
             style="@style/Widget.TopSitesGridItemTitle"
-            android:layout_width="fill_parent"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below="@id/thumbnail"
             android:duplicateParentState="true"

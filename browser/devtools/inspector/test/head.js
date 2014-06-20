@@ -16,6 +16,9 @@ const Cc = Components.classes;
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const require = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools.require;
 
+// All test are asynchronous
+waitForExplicitFinish();
+
 let tempScope = {};
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm", tempScope);
 let LayoutHelpers = tempScope.LayoutHelpers;
@@ -91,7 +94,8 @@ function getNode(nodeOrSelector) {
  * loaded in the toolbox
  * @param {String} reason Defaults to "test" which instructs the inspector not
  * to highlight the node upon selection
- * @param {String} reason Defaults to "test" which instructs the inspector not to highlight the node upon selection
+ * @param {String} reason Defaults to "test" which instructs the inspector not
+ * to highlight the node upon selection
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
@@ -507,3 +511,32 @@ SimpleTest.registerCleanupFunction(function () {
   let target = TargetFactory.forTab(gBrowser.selectedTab);
   gDevTools.closeToolbox(target);
 });
+
+/**
+ * Define an async test based on a generator function
+ */
+function asyncTest(generator) {
+  return () => Task.spawn(generator).then(null, ok.bind(null, false)).then(finish);
+}
+
+/**
+ * Add a new test tab in the browser and load the given url.
+ * @param {String} url The url to be loaded in the new tab
+ * @return a promise that resolves to the tab object when the url is loaded
+ */
+function addTab(url) {
+  info("Adding a new tab with URL: '" + url + "'");
+  let def = promise.defer();
+
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  gBrowser.selectedBrowser.addEventListener("load", function onload() {
+    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+    info("URL '" + url + "' loading complete");
+    waitForFocus(() => {
+      def.resolve(tab);
+    }, content);
+  }, true);
+  content.location = url;
+
+  return def.promise;
+}

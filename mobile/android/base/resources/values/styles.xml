@@ -153,15 +153,15 @@
     </style>
 
     <style name="Widget.TopSitesGridItemView">
-      <item name="android:layout_width">fill_parent</item>
-      <item name="android:layout_height">fill_parent</item>
+      <item name="android:layout_width">match_parent</item>
+      <item name="android:layout_height">match_parent</item>
       <item name="android:padding">5dip</item>
       <item name="android:orientation">vertical</item>
     </style>
 
     <style name="Widget.PanelGridView" parent="Widget.GridView">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
         <item name="android:paddingTop">0dp</item>
         <item name="android:stretchMode">columnWidth</item>
         <item name="android:numColumns">auto_fit</item>
@@ -208,7 +208,7 @@
     <style name="Widget.Home" />
 
     <style name="Widget.Home.HeaderItem">
-        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
         <item name="android:background">#fff5f7f9</item>
@@ -219,7 +219,7 @@
     </style>
 
     <style name="Widget.Home.PageButton">
-        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">40dip</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
         <item name="android:background">@drawable/action_bar_button</item>
@@ -234,7 +234,7 @@
     </style>
 
     <style name="Widget.Home.HistoryTabIndicator">
-        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.PageTitle</item>
         <item name="android:background">@drawable/home_panel_title_background</item>
@@ -373,7 +373,7 @@
 
     <!-- BrowserToolbar -->
     <style name="BrowserToolbar">
-        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">@dimen/browser_toolbar_height</item>
         <item name="android:orientation">horizontal</item>
     </style>
@@ -387,14 +387,14 @@
 
     <!-- URL bar -->
     <style name="UrlBar">
-        <item name="android:layout_width">fill_parent</item>
-        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
         <item name="android:orientation">horizontal</item>
     </style>
 
     <!-- URL bar - Button -->
     <style name="UrlBar.Button">
-        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_height">match_parent</item>
         <item name="android:textSize">16sp</item>
         <item name="android:background">@android:color/transparent</item>
     </style>

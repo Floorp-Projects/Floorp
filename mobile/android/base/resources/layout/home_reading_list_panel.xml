@@ -4,17 +4,17 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
               android:orientation="vertical">
 
     <ViewStub android:id="@+id/home_empty_view_stub"
               android:layout="@layout/home_empty_reading_panel"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"/>
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"/>
 
     <org.mozilla.gecko.home.HomeListView android:id="@+id/list"
                                          style="@style/Widget.ReadingListView"
-                                         android:layout_width="fill_parent"
+                                         android:layout_width="match_parent"
                                          android:layout_height="wrap_content"/>
 </LinearLayout>

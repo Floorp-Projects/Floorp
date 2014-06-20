@@ -640,12 +640,12 @@ BrowserElementParent.prototype = {
         if (aStatusCode == Cr.NS_OK) {
           // Everything looks great.
           debug('DownloadListener - Download Successful.');
-          this.services.DOMRequest.fireSuccess(this.req, aStatusCode);
+          Services.DOMRequest.fireSuccess(req, aStatusCode);
         }
         else {
           // In case of failure, we'll simply return the failure status code.
           debug('DownloadListener - Download Failed!');
-          this.services.DOMRequest.fireError(this.req, aStatusCode);
+          Services.DOMRequest.fireError(req, aStatusCode);
         }
 
         if (this.extListener) {

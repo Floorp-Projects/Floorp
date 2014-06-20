@@ -6,7 +6,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:background="@android:color/transparent"
               android:gravity="center_vertical"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="@dimen/remote_tab_child_row_height"
               android:orientation="vertical"
               android:paddingLeft="4dp"
@@ -14,13 +14,13 @@
 
     <TextView android:id="@+id/tab"
               style="@style/TabRowTextAppearance"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:textSize="18sp" />
 
     <TextView android:id="@+id/url"
               style="@style/TabRowTextAppearance.Url"
-              android:layout_width="fill_parent"
+              android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:maxLength="1024"
               android:textSize="14sp" />

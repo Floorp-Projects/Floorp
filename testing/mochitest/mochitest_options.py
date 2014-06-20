@@ -259,7 +259,7 @@ class MochitestOptions(optparse.OptionParser):
           "dest": "profilePath",
           "help": "Directory where the profile will be stored."
                  "This directory will be deleted after the tests are finished",
-          "default": tempfile.mkdtemp(),
+          "default": None,
         }],
         [["--testing-modules-dir"],
         { "action": "store",
@@ -428,6 +428,10 @@ class MochitestOptions(optparse.OptionParser):
 
         optparse.OptionParser.__init__(self, **kwargs)
         for option, value in self.mochitest_options:
+            # Allocate new lists so references to original don't get mutated.
+            # allowing multiple uses within a single process.
+            if "default" in value and isinstance(value["default"], list):
+                value["default"] = []
             self.add_option(*option, **value)
         addCommonOptions(self)
         self.set_usage(self.__doc__)
@@ -460,6 +464,9 @@ class MochitestOptions(optparse.OptionParser):
                 options.xrePath = build_obj.bindir
             else:
                 self.error("could not find xre directory, --xre-path must be specified")
+
+        if options.profilePath is None:
+            options.profilePath = tempfile.mkdtemp()
 
         # allow relative paths
         options.xrePath = mochitest.getFullPath(options.xrePath)

@@ -19,16 +19,18 @@ let test = Task.async(function*() {
 function* performTest() {
   let [host, win, doc] = yield createHost();
   let graph = new LineGraphWidget(doc.body, "fps");
-  yield graph.once("ready");
 
-  testGraph(graph);
+  yield testGraph(graph);
 
   graph.destroy();
   host.destroy();
 }
 
-function testGraph(graph) {
-  graph.setData(TEST_DATA);
+function* testGraph(graph) {
+  info("Should be able to set the grpah data before waiting for the ready event.");
+
+  yield graph.setDataWhenReady(TEST_DATA);
+  ok(graph.hasData(), "Data was set successfully.");
 
   is(graph._maxTooltip.querySelector("[text=info]").textContent, "max",
     "The maximum tooltip displays the correct info.");

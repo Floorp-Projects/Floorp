@@ -12,7 +12,7 @@
     <style name="GeckoBase" parent="@android:style/Theme.Light">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="arrowPopupWidth">fill_parent</item>
+        <item name="arrowPopupWidth">match_parent</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">

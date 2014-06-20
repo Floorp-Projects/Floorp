@@ -5,6 +5,7 @@
 from __future__ import print_function, unicode_literals
 
 import os
+import sys
 
 from mach.decorators import (
     CommandArgument,
@@ -15,27 +16,21 @@ from mach.decorators import (
 from mozbuild.base import MachCommandBase
 
 
-HANDLE_FILE_ERROR = '''
-%s is a file.
-However, I do not yet know how to run tests from files. You'll need to run
-the mach command for the test type you are trying to run. e.g.
-$ mach xpcshell-test path/to/file
-'''.strip()
-
-HANDLE_DIR_ERROR = '''
-%s is a directory.
-However, I do not yet know how to run tests from directories. You can try
-running the mach command for the tests in that directory. e.g.
-$ mach xpcshell-test path/to/directory
-'''.strip()
-
 UNKNOWN_TEST = '''
-I don't know how to run the test: %s
+I was unable to find tests in the argument(s) given.
 
-You need to specify a test suite name or abbreviation. It's possible I just
-haven't been told about this test suite yet. If you suspect that's the issue,
-please file a bug at https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=General
-and request support be added.
+You need to specify a test directory, filename, test suite name, or
+abbreviation.
+
+It's possible my little brain doesn't know about the type of test you are
+trying to execute. If you suspect this, please request support by filing
+a bug at
+https://bugzilla.mozilla.org/enter_bug.cgi?product=Testing&component=General.
+'''.strip()
+
+UNKNOWN_FLAVOR = '''
+I know you are trying to run a %s test. Unfortunately, I can't run those
+tests yet. Sorry!
 '''.strip()
 
 MOCHITEST_CHUNK_BY_DIR = 4
@@ -68,29 +63,29 @@ TEST_SUITES = {
         'kwargs': {'valgrind': False},
     },
     'mochitest-a11y': {
-        'mach_command': 'mochitest-a11y',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'a11y', 'test_paths': None},
     },
     'mochitest-browser': {
         'aliases': ('bc', 'BC', 'Bc'),
         'mach_command': 'mochitest-browser',
-        'kwargs': {'test_file': None},
+        'kwargs': {'flavor': 'browser-chrome', 'test_paths': None},
     },
     'mochitest-chrome': {
-        'mach_command': 'mochitest-chrome',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'test_paths': None},
     },
     'mochitest-devtools': {
         'aliases': ('dt', 'DT', 'Dt'),
-        'mach_command': 'mochitest-browser --subsuite=devtools',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest-browser',
+        'kwargs': {'subsuite': 'devtools', 'test_paths': None},
     },
     'mochitest-ipcplugins': {
         'make_target': 'mochitest-ipcplugins',
     },
     'mochitest-plain': {
-        'mach_command': 'mochitest-plain',
-        'kwargs': {'test_file': None},
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'mochitest', 'test_paths': None},
     },
     'reftest': {
         'aliases': ('RR', 'rr', 'Rr'),
@@ -114,20 +109,55 @@ TEST_SUITES = {
     },
 }
 
+# Maps test flavors to metadata on how to run that test.
+TEST_FLAVORS = {
+    'a11y': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'a11y', 'test_paths': []},
+    },
+    'browser-chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'browser-chrome', 'test_paths': []},
+    },
+    'chrashtest': { },
+    'chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'chrome', 'test_paths': []},
+    },
+    'mochitest': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'mochitest', 'test_paths': []},
+    },
+    'reftest': { },
+    'steeplechase': { },
+    'webapprt-chrome': {
+        'mach_command': 'mochitest',
+        'kwargs': {'flavor': 'webapprt-chrome', 'test_paths': []},
+    },
+    'xpcshell': {
+        'mach_command': 'xpcshell-test',
+        'kwargs': {'test_paths': []},
+    },
+}
+
+
 for i in range(1, MOCHITEST_TOTAL_CHUNKS + 1):
     TEST_SUITES['mochitest-%d' %i] = {
         'aliases': ('M%d' % i, 'm%d' % i),
-        'mach_command': 'mochitest-plain',
+        'mach_command': 'mochitest',
         'kwargs': {
+            'flavor': 'mochitest',
             'chunk_by_dir': MOCHITEST_CHUNK_BY_DIR,
             'total_chunks': MOCHITEST_TOTAL_CHUNKS,
             'this_chunk': i,
-            'test_file': None,
+            'test_paths': None,
         },
     }
 
 TEST_HELP = '''
-Test or tests to run. Tests can be specified by test suite name or alias.
+Test or tests to run. Tests can be specified by filename, directory, suite
+name or suite alias.
+
 The following test suites and aliases are supported: %s
 ''' % ', '.join(sorted(TEST_SUITES))
 TEST_HELP = TEST_HELP.strip()
@@ -138,47 +168,80 @@ class Test(MachCommandBase):
     @Command('test', category='testing', description='Run tests.')
     @CommandArgument('what', default=None, nargs='*', help=TEST_HELP)
     def test(self, what):
-        status = None
-        for entry in what:
-            status = self._run_test(entry)
+        from mozbuild.testing import TestResolver
 
-            if status:
-                break
+        # Parse arguments and assemble a test "plan."
+        run_suites = set()
+        run_tests = []
+        resolver = self._spawn(TestResolver)
+
+        for entry in what:
+            # If the path matches the name or alias of an entire suite, run
+            # the entire suite.
+            if entry in TEST_SUITES:
+                run_suites.add(entry)
+                continue
+            suitefound = False
+            for suite, v in TEST_SUITES.items():
+                if entry in v.get('aliases', []):
+                    run_suites.add(suite)
+                    suitefound = True
+            if suitefound:
+                continue
+
+            # Now look for file/directory matches in the TestResolver.
+            tests = list(resolver.resolve_tests(paths=[entry],
+                cwd=self._mach_context.cwd))
+            run_tests.extend(tests)
+
+            if not tests:
+                print('UNKNOWN TEST: %s' % entry, file=sys.stderr)
+
+        if not run_suites and not run_tests:
+            print(UNKNOWN_TEST)
+            return 1
+
+        status = None
+        for suite_name in run_suites:
+            suite = TEST_SUITES[suite_name]
+
+            if 'mach_command' in suite:
+                res = self._mach_context.commands.dispatch(
+                    suite['mach_command'], self._mach_context,
+                    **suite['kwargs'])
+                if res:
+                    status = res
+
+            elif 'make_target' in suite:
+                res = self._run_make(target=suite['make_target'],
+                    pass_thru=True)
+                if res:
+                    status = res
+
+        flavors = {}
+        for test in run_tests:
+            flavors.setdefault(test['flavor'], []).append(test)
+
+        for flavor, tests in sorted(flavors.items()):
+            if flavor not in TEST_FLAVORS:
+                print(UNKNOWN_FLAVOR % flavor)
+                status = 1
+                continue
+
+            m = TEST_FLAVORS[flavor]
+            if 'mach_command' not in m:
+                print(UNKNOWN_FLAVOR % flavor)
+                status = 1
+                continue
+
+            res = self._mach_context.commands.dispatch(
+                    m['mach_command'], self._mach_context,
+                    test_objects=tests, **m['kwargs'])
+            if res:
+                status = res
 
         return status
 
-    def _run_test(self, what):
-        suite = None
-        if what in TEST_SUITES:
-            suite = TEST_SUITES[what]
-        else:
-            for v in TEST_SUITES.values():
-                if what in v.get('aliases', []):
-                    suite = v
-                    break
-
-        if suite:
-            if 'mach_command' in suite:
-                return self._mach_context.commands.dispatch(
-                    suite['mach_command'], self._mach_context, **suite['kwargs'])
-
-            if 'make_target' in suite:
-                return self._run_make(target=suite['make_target'],
-                    pass_thru=True)
-
-            raise Exception('Do not know how to run suite. This is a logic '
-                'error in this mach command.')
-
-        if os.path.isfile(what):
-            print(HANDLE_FILE_ERROR % what)
-            return 1
-
-        if os.path.isdir(what):
-            print(HANDLE_DIR_ERROR % what)
-            return 1
-
-        print(UNKNOWN_TEST % what)
-        return 1
 
 @CommandProvider
 class MachCommands(MachCommandBase):

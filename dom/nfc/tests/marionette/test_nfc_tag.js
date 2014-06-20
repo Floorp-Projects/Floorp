@@ -35,8 +35,8 @@ function testUrlTagDiscover(re) {
   });
 
   toggleNFC(true)
-  .then(() => setTagData(re, flag, tnf, btoa(type), btoa(payload)))
-  .then(() => activateRE(re));
+  .then(() => emulator.setTagData(re, flag, tnf, btoa(type), btoa(payload)))
+  .then(() => emulator.activateRE(re));
 }
 
 function testUrlT1TDiscover() {

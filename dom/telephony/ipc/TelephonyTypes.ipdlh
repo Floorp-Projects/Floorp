@@ -13,11 +13,22 @@ struct IPCCallStateData
   uint32_t callIndex;
   uint16_t callState;
   nsString number;
+  uint16_t numberPresentation;
+  nsString name;
+  uint16_t namePresentation;
   bool     isOutGoing;
   bool     isEmergency;
   bool     isConference;
   bool     isSwitchable;
   bool     isMergeable;
+};
+
+struct IPCCdmaWaitingCallData
+{
+  nsString number;
+  uint16_t numberPresentation;
+  nsString name;
+  uint16_t namePresentation;
 };
 
 } /* namespace telephony */

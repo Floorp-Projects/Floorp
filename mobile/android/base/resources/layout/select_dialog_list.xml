@@ -6,8 +6,8 @@
 <!-- This is used for select lists for multiple selection enabled -->
 <ListView xmlns:android="http://schemas.android.com/apk/res/android"
           android:id="@+id/select_list"
-          android:layout_width="fill_parent"
-          android:layout_height="fill_parent"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
           android:cacheColorHint="@null"
           android:scrollbars="vertical"
           android:overScrollMode="ifContentScrolls" />
