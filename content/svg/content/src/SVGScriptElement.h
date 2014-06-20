@@ -15,7 +15,7 @@
 class nsIDocument;
 
 nsresult NS_NewSVGScriptElement(nsIContent **aResult,
-                                already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                                already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                 mozilla::dom::FromParser aFromParser);
 
 namespace mozilla {
@@ -28,9 +28,9 @@ class SVGScriptElement MOZ_FINAL : public SVGScriptElementBase,
 {
 protected:
   friend nsresult (::NS_NewSVGScriptElement(nsIContent **aResult,
-                                            already_AddRefed<nsINodeInfo>&& aNodeInfo,
+                                            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
                                             mozilla::dom::FromParser aFromParser));
-  SVGScriptElement(already_AddRefed<nsINodeInfo>& aNodeInfo,
+  SVGScriptElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
                    FromParser aFromParser);
 
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;
@@ -61,7 +61,7 @@ public:
                               const nsAString& aValue,
                               nsAttrValue& aResult) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   void GetType(nsAString & aType);

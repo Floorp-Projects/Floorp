@@ -17,7 +17,6 @@
 #include "nsIDOMNodeList.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsINodeInfo.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsStubMutationObserver.h"
 #include "nsIDocument.h"
@@ -33,7 +32,7 @@ class Attr MOZ_FINAL : public nsIAttribute,
 {
 public:
   Attr(nsDOMAttributeMap* aAttrMap,
-       already_AddRefed<nsINodeInfo>&& aNodeInfo,
+       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
        const nsAString& aValue,
        bool aNsAware);
   virtual ~Attr() {}
@@ -68,7 +67,7 @@ public:
   virtual nsresult InsertChildAt(nsIContent* aKid, uint32_t aIndex,
                                  bool aNotify) MOZ_OVERRIDE;
   virtual void RemoveChildAt(uint32_t aIndex, bool aNotify) MOZ_OVERRIDE;
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   virtual already_AddRefed<nsIURI> GetBaseURI(bool aTryUseXHRDocBaseURI = false) const MOZ_OVERRIDE;
 
   static void Initialize();

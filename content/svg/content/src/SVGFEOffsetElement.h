@@ -11,7 +11,7 @@
 #include "nsSVGString.h"
 
 nsresult NS_NewSVGFEOffsetElement(nsIContent **aResult,
-                                  already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                  already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ typedef nsSVGFE SVGFEOffsetElementBase;
 class SVGFEOffsetElement : public SVGFEOffsetElementBase
 {
   friend nsresult (::NS_NewSVGFEOffsetElement(nsIContent **aResult,
-                                              already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEOffsetElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEOffsetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEOffsetElementBase(aNodeInfo)
   {
   }
@@ -40,7 +40,7 @@ public:
   virtual nsSVGString& GetResultImageName() { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

@@ -14,7 +14,7 @@ namespace dom {
 class HTMLUnknownElement MOZ_FINAL : public nsGenericHTMLElement
 {
 public:
-  HTMLUnknownElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  HTMLUnknownElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
   {
     if (NodeInfo()->Equals(nsGkAtoms::bdi)) {
@@ -22,7 +22,7 @@ public:
     }
   }
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
 protected:
   virtual JSObject* WrapNode(JSContext *aCx) MOZ_OVERRIDE;

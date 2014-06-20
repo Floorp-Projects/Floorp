@@ -20,7 +20,7 @@ SVGAnimateMotionElement::WrapNode(JSContext *aCx)
 //----------------------------------------------------------------------
 // Implementation
 
-SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+SVGAnimateMotionElement::SVGAnimateMotionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : SVGAnimationElement(aNodeInfo)
 {
 }

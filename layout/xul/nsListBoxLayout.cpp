@@ -10,7 +10,7 @@
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsIReflowCallback.h"
-#include "nsNameSpaceManager.h"
+#include "mozilla/dom/NameSpaceConstants.h"
 #include "nsGkAtoms.h"
 #include "nsContentUtils.h"
 

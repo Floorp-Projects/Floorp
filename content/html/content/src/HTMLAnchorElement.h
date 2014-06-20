@@ -26,7 +26,7 @@ public:
   using Element::GetText;
   using Element::SetText;
 
-  HTMLAnchorElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  HTMLAnchorElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : nsGenericHTMLElement(aNodeInfo)
     , Link(MOZ_THIS_IN_INITIALIZER_LIST())
   {
@@ -78,7 +78,7 @@ public:
                                 const nsAString& aValue,
                                 nsAttrValue& aResult) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
 

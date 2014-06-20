@@ -10,7 +10,7 @@
 #include "nsSVGLength2.h"
 
 nsresult NS_NewSVGForeignObjectElement(nsIContent **aResult,
-                                       already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 class nsSVGForeignObjectFrame;
 
@@ -23,8 +23,8 @@ class SVGForeignObjectElement MOZ_FINAL : public SVGGraphicsElement
 
 protected:
   friend nsresult (::NS_NewSVGForeignObjectElement(nsIContent **aResult,
-                                                   already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGForeignObjectElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                                   already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGForeignObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
@@ -39,7 +39,7 @@ public:
                               bool aCompileEventHandlers) MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* name) const MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedLength> X();

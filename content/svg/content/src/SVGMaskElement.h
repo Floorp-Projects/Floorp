@@ -13,7 +13,7 @@
 class nsSVGMaskFrame;
 
 nsresult NS_NewSVGMaskElement(nsIContent **aResult,
-                              already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                              already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 namespace dom {
@@ -28,13 +28,13 @@ class SVGMaskElement MOZ_FINAL : public SVGMaskElementBase
 
 protected:
   friend nsresult (::NS_NewSVGMaskElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo>&& aNodeInfo));
-  SVGMaskElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
+  SVGMaskElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
 
 public:
   // nsIContent interface
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
 
   // nsSVGSVGElement methods:

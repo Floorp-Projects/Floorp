@@ -16,7 +16,7 @@
 #include "SVGAnimatedNumberList.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
-                                          already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                          already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 namespace mozilla {
 class DOMSVGAnimatedNumberList;
@@ -29,9 +29,9 @@ typedef nsSVGFE SVGFEConvolveMatrixElementBase;
 class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase
 {
   friend nsresult (::NS_NewSVGFEConvolveMatrixElement(nsIContent **aResult,
-                                                      already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                                      already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 protected:
-  SVGFEConvolveMatrixElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
+  SVGFEConvolveMatrixElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
     : SVGFEConvolveMatrixElementBase(aNodeInfo)
   {
   }
@@ -48,7 +48,7 @@ public:
   virtual nsSVGString& GetResultImageName() MOZ_OVERRIDE { return mStringAttributes[RESULT]; }
   virtual void GetSourceImageNames(nsTArray<nsSVGStringInfo>& aSources) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE;
 
   // WebIDL
   already_AddRefed<SVGAnimatedString> In1();

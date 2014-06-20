@@ -24,7 +24,6 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsNodeInfoManager.h"
-#include "nsINodeInfo.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
 
@@ -866,7 +865,7 @@ nsXBLContentSink::ConstructParameter(const char16_t **aAtts)
 
 nsresult
 nsXBLContentSink::CreateElement(const char16_t** aAtts, uint32_t aAttsCount,
-                                nsINodeInfo* aNodeInfo, uint32_t aLineNumber,
+                                mozilla::dom::NodeInfo* aNodeInfo, uint32_t aLineNumber,
                                 nsIContent** aResult, bool* aAppendContent,
                                 FromParser aFromParser)
 {
@@ -940,7 +939,7 @@ nsXBLContentSink::AddAttributesToXULPrototype(const char16_t **aAtts,
       attrs[i].mName.SetTo(localName);
     }
     else {
-      nsCOMPtr<nsINodeInfo> ni;
+      nsRefPtr<NodeInfo> ni;
       ni = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                          nsIDOMNode::ATTRIBUTE_NODE);
       attrs[i].mName.SetTo(ni);

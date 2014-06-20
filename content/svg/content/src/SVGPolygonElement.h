@@ -10,7 +10,7 @@
 #include "nsSVGPolyElement.h"
 
 nsresult NS_NewSVGPolygonElement(nsIContent **aResult,
-                                 already_AddRefed<nsINodeInfo>&& aNodeInfo);
+                                 already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
 typedef nsSVGPolyElement SVGPolygonElementBase;
 
@@ -20,17 +20,17 @@ namespace dom {
 class SVGPolygonElement MOZ_FINAL : public SVGPolygonElementBase
 {
 protected:
-  SVGPolygonElement(already_AddRefed<nsINodeInfo>& aNodeInfo);
+  SVGPolygonElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
   virtual JSObject* WrapNode(JSContext *cx) MOZ_OVERRIDE;
   friend nsresult (::NS_NewSVGPolygonElement(nsIContent **aResult,
-                                             already_AddRefed<nsINodeInfo>&& aNodeInfo));
+                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
 
 public:
   // nsSVGPathGeometryElement methods:
   virtual void GetMarkPoints(nsTArray<nsSVGMark> *aMarks) MOZ_OVERRIDE;
   virtual void ConstructPath(gfxContext *aCtx) MOZ_OVERRIDE;
 
-  virtual nsresult Clone(nsINodeInfo *aNodeInfo, nsINode **aResult) const;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const;
 };
 
 } // namespace dom
