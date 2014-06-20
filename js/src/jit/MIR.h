@@ -1020,7 +1020,9 @@ class MNop : public MNullaryInstruction
 
 // No-op instruction. This cannot be moved or eliminated, and is intended for
 // protecting the input against follow-up optimization.
-class MLimitedTruncate : public MUnaryInstruction
+class MLimitedTruncate
+  : public MUnaryInstruction,
+    public ConvertToInt32Policy<0>
 {
   public:
     TruncateKind truncate_;
@@ -1032,7 +1034,7 @@ class MLimitedTruncate : public MUnaryInstruction
         truncate_(NoTruncate),
         truncateLimit_(limit)
     {
-        setResultType(input->type());
+        setResultType(MIRType_Int32);
         setResultTypeSet(input->resultTypeSet());
     }
 
@@ -1040,6 +1042,10 @@ class MLimitedTruncate : public MUnaryInstruction
     INSTRUCTION_HEADER(LimitedTruncate)
     static MLimitedTruncate *New(TempAllocator &alloc, MDefinition *input, TruncateKind kind) {
         return new(alloc) MLimitedTruncate(input, kind);
+    }
+
+    TypePolicy *typePolicy() {
+        return this;
     }
 
     AliasSet getAliasSet() const {
