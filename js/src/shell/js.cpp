@@ -4380,11 +4380,11 @@ class ShellSourceHook: public SourceHook {
         if (!*src)
             return false;
 
-        const jschar *chars = JS_GetStringCharsZ(cx, str);
-        if (!chars)
+        JSLinearString *linear = str->ensureLinear(cx);
+        if (!linear)
             return false;
 
-        PodCopy(*src, chars, *length);
+        CopyChars(*src, *linear);
         return true;
     }
 };
@@ -4969,13 +4969,19 @@ PrintHelpString(JSContext *cx, jsval v)
 {
     JSString *str = v.toString();
     JS::Anchor<JSString *> a_str(str);
-    const jschar *chars = JS_GetStringCharsZ(cx, str);
-    if (!chars)
+
+    JSLinearString *linear = str->ensureLinear(cx);
+    if (!linear)
         return false;
 
-    for (const jschar *p = chars; *p; p++)
-        fprintf(gOutFile, "%c", char(*p));
-
+    JS::AutoCheckCannotGC nogc;
+    if (linear->hasLatin1Chars()) {
+        for (const Latin1Char *p = linear->latin1Chars(nogc); *p; p++)
+            fprintf(gOutFile, "%c", char(*p));
+    } else {
+        for (const jschar *p = linear->twoByteChars(nogc); *p; p++)
+            fprintf(gOutFile, "%c", char(*p));
+    }
     fprintf(gOutFile, "\n");
 
     return true;
