@@ -9,8 +9,6 @@ function test() {
   let page1 = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_select_last_selected.html";
   let page2 = "http://mochi.test:8888/browser/browser/devtools/inspector/test/browser_inspector_select_last_selected2.html";
 
-  waitForExplicitFinish();
-
   // Create a tab, load test HTML, wait for load and start the tests
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function onload() {

@@ -481,12 +481,23 @@ function BoxModelHighlighter(tabActor) {
   this.layoutHelpers = new LayoutHelpers(this.win);
   this._initMarkup();
   EventEmitter.decorate(this);
+
+  this._currentNode = null;
 }
 
 BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   get zoom() {
     return this.win.QueryInterface(Ci.nsIInterfaceRequestor)
                .getInterface(Ci.nsIDOMWindowUtils).fullZoom;
+  },
+
+  get currentNode() {
+    return this._currentNode;
+  },
+
+  set currentNode(node) {
+    this._currentNode = node;
+    this._computedStyle = null;
   },
 
   _initMarkup: function() {
@@ -612,7 +623,7 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this._highlighterContainer = null;
 
     this.nodeInfo = null;
-    this.rect = null;
+    this._currentNode = null;
   },
 
   /**
@@ -714,29 +725,75 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    */
   _updateBoxModel: function(options) {
     options.region = options.region || "content";
-    this.rect = this.layoutHelpers.getAdjustedQuads(this.currentNode, "margin");
 
-    if (!this.rect || (this.rect.bounds.width <= 0 && this.rect.bounds.height <= 0)) {
+    if (this._nodeNeedsHighlighting()) {
+      for (let boxType in this._boxModelNodes) {
+        let {p1, p2, p3, p4} =
+          this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
+
+        let boxNode = this._boxModelNodes[boxType];
+        boxNode.setAttribute("points",
+                             p1.x + "," + p1.y + " " +
+                             p2.x + "," + p2.y + " " +
+                             p3.x + "," + p3.y + " " +
+                             p4.x + "," + p4.y);
+
+        if (boxType === options.region) {
+          this._showGuides(p1, p2, p3, p4);
+        }
+      }
+
+      return true;
+    }
+
+    this._hideBoxModel();
+    return false;
+  },
+
+  _nodeNeedsHighlighting: function() {
+    if (!this.currentNode) {
       return false;
     }
 
-    for (let boxType in this._boxModelNodes) {
-      let {p1, p2, p3, p4} = boxType === "margin" ? this.rect :
-        this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
+    if (!this._computedStyle) {
+      this._computedStyle =
+        this.currentNode.ownerDocument.defaultView.getComputedStyle(this.currentNode);
+    }
 
-      let boxNode = this._boxModelNodes[boxType];
-      boxNode.setAttribute("points",
-                           p1.x + "," + p1.y + " " +
-                           p2.x + "," + p2.y + " " +
-                           p3.x + "," + p3.y + " " +
-                           p4.x + "," + p4.y);
+    return this._computedStyle.getPropertyValue("display") !== "none";
+  },
 
-      if (boxType === options.region) {
-        this._showGuides(p1, p2, p3, p4);
+  _getOuterBounds: function() {
+    for (let region of ["margin", "border", "padding", "content"]) {
+      let quads = this.layoutHelpers.getAdjustedQuads(this.currentNode, region);
+
+      if (!quads) {
+        // Invisible element such as a script tag.
+        break;
+      }
+
+      let {bottom, height, left, right, top, width, x, y} = quads.bounds;
+
+      if (width > 0 || height > 0) {
+        return this._boundsHelper(bottom, height, left, right, top, width, x, y);
       }
     }
 
-    return true;
+    return this._boundsHelper();
+  },
+
+  _boundsHelper: function(bottom=0, height=0, left=0, right=0,
+                          top=0, width=0, x=0, y=0) {
+    return {
+      bottom: bottom,
+      height: height,
+      left: left,
+      right: right,
+      top: top,
+      width: width,
+      x: x,
+      y: y
+    };
   },
 
   /**
@@ -867,8 +924,9 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Move the Infobar to the right place in the highlighter.
    */
   _moveInfobar: function() {
-    if (this.rect) {
-      let bounds = this.rect.bounds;
+    let bounds = this._getOuterBounds();
+
+    if (bounds.width > 0 || bounds.height > 0) {
       let winHeight = this.win.innerHeight * this.zoom;
       let winWidth = this.win.innerWidth * this.zoom;
 
