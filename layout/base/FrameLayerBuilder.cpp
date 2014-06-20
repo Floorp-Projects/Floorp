@@ -3549,12 +3549,15 @@ FrameLayerBuilder::GetThebesLayerScaleForFrame(nsIFrame* aFrame)
 }
 
 #ifdef MOZ_DUMP_PAINTING
-static void DebugPaintItem(nsRenderingContext* aDest, nsDisplayItem *aItem, nsDisplayListBuilder* aBuilder)
+static void DebugPaintItem(nsRenderingContext* aDest,
+                           nsPresContext* aPresContext,
+                           nsDisplayItem *aItem,
+                           nsDisplayListBuilder* aBuilder)
 {
   bool snap;
   nsRect appUnitBounds = aItem->GetBounds(aBuilder, &snap);
   gfxRect bounds(appUnitBounds.x, appUnitBounds.y, appUnitBounds.width, appUnitBounds.height);
-  bounds.ScaleInverse(aDest->AppUnitsPerDevPixel());
+  bounds.ScaleInverse(aPresContext->AppUnitsPerDevPixel());
 
   nsRefPtr<gfxASurface> surf =
     gfxPlatform::GetPlatform()->CreateOffscreenSurface(IntSize(bounds.width, bounds.height),
@@ -3693,7 +3696,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
 #ifdef MOZ_DUMP_PAINTING
 
       if (gfxUtils::sDumpPainting) {
-        DebugPaintItem(aRC, cdi->mItem, aBuilder);
+        DebugPaintItem(aRC, aPresContext, cdi->mItem, aBuilder);
       } else {
 #else
       {

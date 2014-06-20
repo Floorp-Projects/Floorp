@@ -53,7 +53,6 @@ public:
     gfxContext *ThebesContext() { return mThebes; }
     DrawTarget *GetDrawTarget() { return mThebes->GetDrawTarget(); }
     nsDeviceContext *DeviceContext() { return mDeviceContext; }
-    int32_t AppUnitsPerDevPixel() { return NSToIntRound(mP2A); }
 
     // Graphics state
 

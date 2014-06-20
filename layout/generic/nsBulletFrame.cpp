@@ -302,7 +302,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
         nsRect dest(mPadding.left, mPadding.top,
                     mRect.width - (mPadding.left + mPadding.right),
                     mRect.height - (mPadding.top + mPadding.bottom));
-        nsLayoutUtils::DrawSingleImage(&aRenderingContext,
+        nsLayoutUtils::DrawSingleImage(&aRenderingContext, PresContext(),
              imageCon, nsLayoutUtils::GetGraphicsFilterForFrame(this),
              dest + aPt, aDirtyRect, nullptr, aFlags);
         return;
