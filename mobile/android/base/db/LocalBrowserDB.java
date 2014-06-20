@@ -172,9 +172,24 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             }
         }
 
-        cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
-        final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
-        return offset + inserted;
+        if (!faviconValues.isEmpty()) {
+            try {
+                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting default favicons.", e);
+            }
+        }
+
+        if (!bookmarkValues.isEmpty()) {
+            try {
+                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
+                return offset + inserted;
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting default bookmarks.", e);
+            }
+        }
+
+        return offset;
     }
 
     /**
@@ -248,9 +263,24 @@ public class LocalBrowserDB implements BrowserDB.BrowserDBIface {
             }
         }
 
-        cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
-        final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
-        return offset + inserted;
+        if (!faviconValues.isEmpty()) {
+            try {
+                cr.bulkInsert(mFaviconsUriWithProfile, faviconValues.toArray(new ContentValues[faviconValues.size()]));
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting distribution favicons.", e);
+            }
+        }
+
+        if (!bookmarkValues.isEmpty()) {
+            try {
+                final int inserted = cr.bulkInsert(mBookmarksUriWithProfile, bookmarkValues.toArray(new ContentValues[bookmarkValues.size()]));
+                return offset + inserted;
+            } catch (Exception e) {
+                Log.e(LOGTAG, "Error bulk-inserting distribution bookmarks.", e);
+            }
+        }
+
+        return offset;
     }
 
     private static ContentValues createBookmark(final long timestamp, final String title, final String url, final int pos, final long parent) {
