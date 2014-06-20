@@ -25,6 +25,19 @@
   padding: 0 3px;
 }
 
+.devtools-toolbar checkbox {
+  margin: 0 2px;
+  padding: 0;
+}
+.devtools-toolbar checkbox .checkbox-check {
+  margin: 0;
+  padding: 0;
+}
+.devtools-toolbar checkbox .checkbox-label-box .checkbox-label {
+  margin: 0 6px !important; /* overrides .checkbox-label from checkbox.css */
+  padding: 0;
+}
+
 /* Toolbar buttons */
 .devtools-menulist,
 .devtools-toolbarbutton {

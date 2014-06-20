@@ -102,7 +102,7 @@
             </xul:hbox>
             <xul:spacer/>
             <xul:toolbarbutton id="style-editor-options"
-                        class="devtools-option-toolbarbutton"
+                        class="devtools-toolbarbutton devtools-option-toolbarbutton"
                         tooltiptext="&optionsButton.tooltip;"
                         popup="style-editor-options-popup"/>
           </xul:toolbar>
