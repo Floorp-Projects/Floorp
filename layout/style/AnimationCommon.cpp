@@ -231,7 +231,9 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
       NS_ASSERTION(ea,
         "Rule has level eAnimationSheet without animation on manager");
 
-      mPresContext->AnimationManager()->EnsureStyleRuleFor(ea);
+      mPresContext->AnimationManager()->UpdateStyleAndEvents(
+        ea, mPresContext->RefreshDriver()->MostRecentRefresh(),
+        EnsureStyleRule_IsNotThrottled);
       curRule.mRule = ea->mStyleRule;
     } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
       ElementTransitions *et =
