@@ -892,13 +892,12 @@ AppendUseStrictSource(JSContext *cx, HandleFunction fun, Handle<JSFlatString*> s
     // the "use strict" directive, but these functions won't validate as asm.js
     // modules.
 
-    ConstTwoByteChars chars(src->chars(), src->length());
-    if (!FindBody(cx, fun, chars, src->length(), &bodyStart, &bodyEnd))
+    if (!FindBody(cx, fun, src, &bodyStart, &bodyEnd))
         return false;
 
-    return out.append(chars, bodyStart) &&
+    return out.appendSubstring(src, 0, bodyStart) &&
            out.append("\n\"use strict\";\n") &&
-           out.append(chars + bodyStart, src->length() - bodyStart);
+           out.appendSubstring(src, bodyStart, src->length() - bodyStart);
 }
 
 JSString *
