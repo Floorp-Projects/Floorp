@@ -2748,10 +2748,10 @@ nsFlexContainerFrame::GetMainSizeFromReflowState(
   if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
     // Horizontal case is easy -- our main size is our computed width
     // (which is already resolved).
-    return aReflowState.ComputedWidth();
+    return aReflowState.ComputedISize();
   }
 
-  return GetEffectiveComputedHeight(aReflowState);
+  return GetEffectiveComputedBSize(aReflowState);
 }
 
 // Returns the largest outer hypothetical main-size of any line in |aLines|.
@@ -2837,20 +2837,20 @@ nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
     // Cross axis is horizontal: our cross size is our computed width
     // (which is already resolved).
     *aIsDefinite = true;
-    return aReflowState.ComputedWidth();
+    return aReflowState.ComputedISize();
   }
 
-  nscoord effectiveComputedHeight = GetEffectiveComputedHeight(aReflowState);
-  if (effectiveComputedHeight != NS_INTRINSICSIZE) {
+  nscoord effectiveComputedBSize = GetEffectiveComputedBSize(aReflowState);
+  if (effectiveComputedBSize != NS_INTRINSICSIZE) {
     // Cross-axis is vertical, and we have a fixed height:
     *aIsDefinite = true;
     if (aAvailableHeightForContent == NS_UNCONSTRAINEDSIZE ||
-        effectiveComputedHeight < aAvailableHeightForContent) {
+        effectiveComputedBSize < aAvailableHeightForContent) {
       // Not in a fragmenting context, OR no need to fragment because we have
       // more available height than we need. Either way, just use our fixed
       // height.  (Note that the reflow state has already done the appropriate
       // min/max-height clamping.)
-      return effectiveComputedHeight;
+      return effectiveComputedBSize;
     }
 
     // Fragmenting *and* our fixed height is too tall for available height:
@@ -2864,7 +2864,7 @@ nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
     if (aSumLineCrossSizes <= aAvailableHeightForContent) {
       return aAvailableHeightForContent;
     }
-    return std::min(effectiveComputedHeight, aSumLineCrossSizes);
+    return std::min(effectiveComputedBSize, aSumLineCrossSizes);
   }
 
   // Cross axis is vertical and we have auto-height: shrink-wrap our line(s),

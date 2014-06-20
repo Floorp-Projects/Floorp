@@ -243,8 +243,8 @@ nsLineBox::List(FILE* out, const char* aPrefix, uint32_t aFlags) const
   str += nsPrintfCString("line %p: count=%d state=%s ",
           static_cast<const void*>(this), GetChildCount(),
           StateToString(cbuf, sizeof(cbuf)));
-  if (IsBlock() && !GetCarriedOutBottomMargin().IsZero()) {
-    str += nsPrintfCString("bm=%d ", GetCarriedOutBottomMargin().get());
+  if (IsBlock() && !GetCarriedOutBEndMargin().IsZero()) {
+    str += nsPrintfCString("bm=%d ", GetCarriedOutBEndMargin().get());
   }
   nsRect bounds = GetPhysicalBounds();
   str += nsPrintfCString("{%d,%d,%d,%d} ",
@@ -430,17 +430,17 @@ nsLineBox::RFindLineContaining(nsIFrame* aFrame,
 }
 
 nsCollapsingMargin
-nsLineBox::GetCarriedOutBottomMargin() const
+nsLineBox::GetCarriedOutBEndMargin() const
 {
   NS_ASSERTION(IsBlock(),
-               "GetCarriedOutBottomMargin called on non-block line.");
+               "GetCarriedOutBEndMargin called on non-block line.");
   return (IsBlock() && mBlockData)
-    ? mBlockData->mCarriedOutBottomMargin
+    ? mBlockData->mCarriedOutBEndMargin
     : nsCollapsingMargin();
 }
 
 bool
-nsLineBox::SetCarriedOutBottomMargin(nsCollapsingMargin aValue)
+nsLineBox::SetCarriedOutBEndMargin(nsCollapsingMargin aValue)
 {
   bool changed = false;
   if (IsBlock()) {
@@ -448,12 +448,12 @@ nsLineBox::SetCarriedOutBottomMargin(nsCollapsingMargin aValue)
       if (!mBlockData) {
         mBlockData = new ExtraBlockData(GetPhysicalBounds());
       }
-      changed = aValue != mBlockData->mCarriedOutBottomMargin;
-      mBlockData->mCarriedOutBottomMargin = aValue;
+      changed = aValue != mBlockData->mCarriedOutBEndMargin;
+      mBlockData->mCarriedOutBEndMargin = aValue;
     }
     else if (mBlockData) {
-      changed = aValue != mBlockData->mCarriedOutBottomMargin;
-      mBlockData->mCarriedOutBottomMargin = aValue;
+      changed = aValue != mBlockData->mCarriedOutBEndMargin;
+      mBlockData->mCarriedOutBEndMargin = aValue;
       MaybeFreeData();
     }
   }
@@ -471,7 +471,7 @@ nsLineBox::MaybeFreeData()
         mInlineData = nullptr;
       }
     }
-    else if (mBlockData->mCarriedOutBottomMargin.IsZero()) {
+    else if (mBlockData->mCarriedOutBEndMargin.IsZero()) {
       delete mBlockData;
       mBlockData = nullptr;
     }
