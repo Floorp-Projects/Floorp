@@ -52,7 +52,6 @@
 #include "gfxBlur.h"
 #include "gfxUtils.h"
 
-#include "nsFrameManager.h"
 #include "nsFrameLoader.h"
 #include "nsBidi.h"
 #include "nsBidiPresUtils.h"
