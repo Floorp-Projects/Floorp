@@ -22,6 +22,8 @@ class ExplicitChildIterator;
 class XBLChildrenElement : public nsXMLElement
 {
 public:
+  friend class mozilla::dom::ExplicitChildIterator;
+  friend class nsAnonymousContentList;
   XBLChildrenElement(already_AddRefed<nsINodeInfo>& aNodeInfo)
     : nsXMLElement(aNodeInfo)
   {
@@ -113,7 +115,10 @@ public:
     return !mInsertedChildren.IsEmpty();
   }
 
-  int32_t IndexOfInsertedChild(nsIContent* aChild)
+  enum {
+    NoIndex = uint32_t(-1)
+  };
+  uint32_t IndexOfInsertedChild(nsIContent* aChild)
   {
     return mInsertedChildren.IndexOf(aChild);
   }
@@ -130,13 +135,9 @@ public:
     return mIncludes.IsEmpty();
   }
 
-  nsIContent* InsertedChild(uint32_t aIndex)
-  {
-    return mInsertedChildren[aIndex];
-  }
+  nsTArray<nsIContent*> mInsertedChildren;
 
 private:
-  nsCOMArray<nsIContent> mInsertedChildren;
   nsTArray<nsCOMPtr<nsIAtom> > mIncludes;
 };
 
