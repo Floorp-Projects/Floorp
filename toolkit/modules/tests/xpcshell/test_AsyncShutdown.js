@@ -291,7 +291,7 @@ add_task(function* test_state() {
   let state = barrier.state[0];
   do_print("State: " + JSON.stringify(barrier.state, null, "\t"));
   Assert.equal(state.filename, filename);
-  Assert.equal(state.lineNumber, lineNumber + 2);
+  Assert.equal(state.lineNumber, lineNumber + 1);
   Assert.equal(state.name, BLOCKER_NAME);
   
   deferred.resolve();
