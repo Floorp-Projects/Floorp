@@ -264,7 +264,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   /**
    * Create a highlighter instance given its typename
    * The typename must be one of HIGHLIGHTER_CLASSES and the class must
-   * implement constructor(tab, inspector), show(node), hide(), destroy()
+   * implement constructor(tabActor), show(node), hide(), destroy()
    */
   initialize: function(inspector, typeName) {
     protocol.Actor.prototype.initialize.call(this, null);
@@ -281,7 +281,7 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
     // The assumption is that all custom highlighters need a XUL parent in the
     // browser to append their elements
     if (supportXULBasedHighlighter(inspector.tabActor)) {
-      this._highlighter = new constructor(inspector.tabActor, inspector);
+      this._highlighter = new constructor(inspector.tabActor);
     }
   },
 
@@ -339,9 +339,7 @@ let CustomHighlighterFront = protocol.FrontClass(CustomHighlighterActor, {});
  * Parent class for XUL-based complex highlighter that are inserted in the
  * parent browser structure
  */
-function XULBasedHighlighter(tabActor, inspector) {
-  this._inspector = inspector;
-
+function XULBasedHighlighter(tabActor) {
   this.browser = tabActor.browser;
   this.win = tabActor.window;
   this.chromeDoc = this.browser.ownerDocument;
@@ -432,7 +430,6 @@ XULBasedHighlighter.prototype = {
     this.win = null;
     this.browser = null;
     this.chromeDoc = null;
-    this._inspector = null;
     this.currentNode = null;
   }
 };
@@ -479,8 +476,8 @@ XULBasedHighlighter.prototype = {
  *   </box>
  * </stack>
  */
-function BoxModelHighlighter(tabActor, inspector) {
-  XULBasedHighlighter.call(this, tabActor, inspector);
+function BoxModelHighlighter(tabActor) {
+  XULBasedHighlighter.call(this, tabActor);
   this.layoutHelpers = new LayoutHelpers(this.win);
   this._initMarkup();
   EventEmitter.decorate(this);
@@ -925,8 +922,8 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
  * transformed element and an outline around where it would be if untransformed
  * as well as arrows connecting the 2 outlines' corners.
  */
-function CssTransformHighlighter(tabActor, inspector) {
-  XULBasedHighlighter.call(this, tabActor, inspector);
+function CssTransformHighlighter(tabActor) {
+  XULBasedHighlighter.call(this, tabActor);
 
   this.layoutHelpers = new LayoutHelpers(tabActor.window);
   this._initMarkup();
