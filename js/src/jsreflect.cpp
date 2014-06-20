@@ -3294,8 +3294,8 @@ reflect_parse(JSContext *cx, uint32_t argc, jsval *vp)
     if (!flat)
         return false;
 
-    AutoStableStringChars flatChars(cx, flat);
-    if (!flatChars.initTwoByte(cx))
+    AutoStableStringChars flatChars(cx);
+    if (!flatChars.initTwoByte(cx, flat))
         return false;
 
     CompileOptions options(cx);
