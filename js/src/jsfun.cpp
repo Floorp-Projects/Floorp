@@ -761,8 +761,8 @@ js::FindBody(JSContext *cx, HandleFunction fun, HandleLinearString src, size_t *
 
     AutoKeepAtoms keepAtoms(cx->perThreadData);
 
-    AutoStableStringChars stableChars(cx, src);
-    if (!stableChars.initTwoByte(cx))
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, src))
         return false;
 
     const Range<const jschar> srcChars = stableChars.twoByteRange();
@@ -1737,12 +1737,8 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     if (hasRest)
         fun->setHasRest();
 
-    JSLinearString *linear = str->ensureLinear(cx);
-    if (!linear)
-        return false;
-
-    AutoStableStringChars stableChars(cx, linear);
-    if (!stableChars.initTwoByte(cx))
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, str))
         return false;
 
     Range<const jschar> chars = stableChars.twoByteRange();

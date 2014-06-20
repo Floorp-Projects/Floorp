@@ -223,8 +223,8 @@ TryEvalJSON(JSContext *cx, JSScript *callerScript, JSFlatString *str, MutableHan
             return EvalJSON_NotJSON;
     }
 
-    AutoStableStringChars flatChars(cx, str);
-    if (!flatChars.init())
+    AutoStableStringChars flatChars(cx);
+    if (!flatChars.init(cx, str))
         return EvalJSON_Failure;
 
     return flatChars.isLatin1()
@@ -335,8 +335,8 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
 
-        AutoStableStringChars flatChars(cx, flatStr);
-        if (!flatChars.initTwoByte(cx))
+        AutoStableStringChars flatChars(cx);
+        if (!flatChars.initTwoByte(cx, flatStr))
             return false;
 
         const jschar *chars = flatChars.twoByteRange().start().get();
@@ -408,8 +408,8 @@ js::DirectEvalStringFromIon(JSContext *cx,
                .setOriginPrincipals(originPrincipals)
                .setIntroductionInfo(introducerFilename, "eval", lineno, maybeScript, pcOffset);
 
-        AutoStableStringChars flatChars(cx, flatStr);
-        if (!flatChars.initTwoByte(cx))
+        AutoStableStringChars flatChars(cx);
+        if (!flatChars.initTwoByte(cx, flatStr))
             return false;
 
         const jschar *chars = flatChars.twoByteRange().start().get();

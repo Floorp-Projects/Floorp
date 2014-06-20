@@ -86,6 +86,7 @@ using mozilla::ArrayLength;
 using mozilla::NumberEqualsInt32;
 using mozilla::Maybe;
 using mozilla::PodCopy;
+using mozilla::Range;
 
 enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -1219,9 +1220,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         }
     }
 
-    size_t codeLength;
-    const jschar *codeChars = JS_GetStringCharsAndLength(cx, code, &codeLength);
-    if (!codeChars)
+    AutoStableStringChars codeChars(cx);
+    if (!codeChars.initTwoByte(cx, code))
         return false;
 
     AutoNewContext ancx;
@@ -1268,7 +1268,8 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
             if (loadBytecode) {
                 script = JS_DecodeScript(cx, loadBuffer, loadLength, options.originPrincipals(cx));
             } else {
-                script = JS::Compile(cx, global, options, codeChars, codeLength);
+                Range<const jschar> chars = codeChars.twoByteRange();
+                script = JS::Compile(cx, global, options, chars.start().get(), chars.length());
             }
 
             if (!script)
@@ -1440,8 +1441,8 @@ Run(JSContext *cx, unsigned argc, jsval *vp)
     if (!str)
         return false;
 
-    AutoStableStringChars chars(cx, &str->asLinear());
-    if (!chars.initTwoByte(cx))
+    AutoStableStringChars chars(cx);
+    if (!chars.initTwoByte(cx, str))
         return false;
 
     const jschar *ucbuf = chars.twoByteRange().start().get();
@@ -1793,12 +1794,12 @@ TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rvalArg,
     JSAbstractFramePtr frame(iter.abstractFramePtr().raw(), iter.pc());
     RootedScript script(cx, iter.script());
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-    if (!chars)
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, str))
         return JSTRAP_ERROR;
 
-    if (!frame.evaluateUCInStackFrame(cx, chars, length,
+    Range<const jschar> chars = stableChars.twoByteRange();
+    if (!frame.evaluateUCInStackFrame(cx, chars.start().get(), chars.length(),
                                       script->filename(),
                                       script->lineno(),
                                       &rval))
@@ -2749,10 +2750,13 @@ EvalInContext(JSContext *cx, unsigned argc, jsval *vp)
     if (!JS_ConvertArguments(cx, args, "S / o", str.address(), sobj.address()))
         return false;
 
-    size_t srclen;
-    const jschar *src = JS_GetStringCharsAndLength(cx, str, &srclen);
-    if (!src)
+    AutoStableStringChars strChars(cx);
+    if (!strChars.initTwoByte(cx, str))
         return false;
+
+    Range<const jschar> chars = strChars.twoByteRange();
+    size_t srclen = chars.length();
+    const jschar *src = chars.start().get();
 
     bool lazy = false;
     if (srclen == 4) {
@@ -2844,14 +2848,14 @@ EvalInFrame(JSContext *cx, unsigned argc, jsval *vp)
         ac.construct(cx, DefaultObjectForContextOrNull(cx));
     }
 
-    size_t length;
-    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
-    if (!chars)
-        return false;
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, str))
+        return JSTRAP_ERROR;
 
+    Range<const jschar> chars = stableChars.twoByteRange();
     JSAbstractFramePtr frame(fi.abstractFramePtr().raw(), fi.pc());
     RootedScript fpscript(cx, frame.script());
-    bool ok = !!frame.evaluateUCInStackFrame(cx, chars, length,
+    bool ok = !!frame.evaluateUCInStackFrame(cx, chars.start().get(), chars.length(),
                                              fpscript->filename(),
                                              JS_PCToLineNumber(cx, fpscript,
                                                                fi.pc()),
