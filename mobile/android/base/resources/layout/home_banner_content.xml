@@ -15,7 +15,7 @@
      <org.mozilla.gecko.widget.EllipsisTextView
          android:id="@+id/text"
          android:layout_width="0dip"
-         android:layout_height="fill_parent"
+         android:layout_height="match_parent"
          android:layout_weight="1"
          android:layout_marginLeft="10dp"
          android:paddingTop="7dp"
@@ -27,7 +27,7 @@
 
     <ImageButton android:id="@+id/close"
                  android:layout_width="34dip"
-                 android:layout_height="fill_parent"
+                 android:layout_height="match_parent"
                  android:background="@drawable/home_banner"
                  android:scaleType="center"
                  android:contentDescription="@string/close_tab"

@@ -3,7 +3,6 @@
 
 function test()
 {
-  waitForExplicitFinish();
   ignoreAllUncaughtExceptions();
 
   let nodes = [
