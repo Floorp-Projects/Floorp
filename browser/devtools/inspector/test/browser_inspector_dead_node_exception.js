@@ -4,8 +4,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 function test() {
   let contentTab, contentDoc, inspector;
 
-  waitForExplicitFinish();
-
   // Create a tab
   contentTab = gBrowser.selectedTab = gBrowser.addTab();
 
