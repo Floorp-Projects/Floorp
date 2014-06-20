@@ -2534,7 +2534,7 @@ let SessionStoreInternal = {
       // attribute so that it runs in a content process.
       let activePageData = tabData.entries[activeIndex] || null;
       let uri = activePageData ? activePageData.url || null : null;
-      tabbrowser.updateBrowserRemoteness(browser, uri);
+      tabbrowser.updateBrowserRemotenessByURL(browser, uri);
 
       // Start a new epoch and include the epoch in the restoreHistory
       // message. If a message is received that relates to a previous epoch, we
