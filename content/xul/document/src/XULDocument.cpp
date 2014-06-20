@@ -71,7 +71,7 @@
 #include "nsIParser.h"
 #include "nsCharsetSource.h"
 #include "nsIParserService.h"
-#include "nsCSSStyleSheet.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "nsIScriptError.h"
 #include "nsIStyleSheetLinkingElement.h"
@@ -3288,7 +3288,7 @@ XULDocument::DoneWalking()
 }
 
 NS_IMETHODIMP
-XULDocument::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
+XULDocument::StyleSheetLoaded(CSSStyleSheet* aSheet,
                               bool aWasAlternate,
                               nsresult aStatus)
 {
@@ -3939,7 +3939,7 @@ XULDocument::AddPrototypeSheets()
     for (int32_t i = 0; i < sheets.Count(); i++) {
         nsCOMPtr<nsIURI> uri = sheets[i];
 
-        nsRefPtr<nsCSSStyleSheet> incompleteSheet;
+        nsRefPtr<CSSStyleSheet> incompleteSheet;
         rv = CSSLoader()->LoadSheet(uri,
                                     mCurrentPrototype->DocumentPrincipal(),
                                     EmptyCString(), this,

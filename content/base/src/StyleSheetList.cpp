@@ -5,8 +5,8 @@
 
 #include "mozilla/dom/StyleSheetList.h"
 
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/dom/StyleSheetListBinding.h"
-#include "nsCSSStyleSheet.h"
 
 namespace mozilla {
 namespace dom {

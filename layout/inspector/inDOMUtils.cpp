@@ -32,8 +32,8 @@
 #include "nsIAtom.h"
 #include "nsRange.h"
 #include "nsContentList.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/dom/Element.h"
-#include "nsCSSStyleSheet.h"
 #include "nsRuleWalker.h"
 #include "nsRuleProcessorData.h"
 #include "nsCSSRuleProcessor.h"
@@ -874,7 +874,7 @@ NS_IMETHODIMP
 inDOMUtils::ParseStyleSheet(nsIDOMCSSStyleSheet *aSheet,
                             const nsAString& aInput)
 {
-  nsRefPtr<nsCSSStyleSheet> sheet = do_QueryObject(aSheet);
+  nsRefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
   NS_ENSURE_ARG_POINTER(sheet);
 
   return sheet->ParseSheet(aInput);
