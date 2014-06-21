@@ -4611,6 +4611,15 @@ CompareStringsImpl(JSLinearString *str1, JSLinearString *str2)
            : CompareChars(chars1, len1, str2->twoByteChars(nogc), len2);
 }
 
+int32_t
+js::CompareChars(const jschar *s1, size_t len1, JSLinearString *s2)
+{
+    AutoCheckCannotGC nogc;
+    return s2->hasLatin1Chars()
+           ? CompareChars(s1, len1, s2->latin1Chars(nogc), s2->length())
+           : CompareChars(s1, len1, s2->twoByteChars(nogc), s2->length());
+}
+
 bool
 js::CompareStrings(JSContext *cx, JSString *str1, JSString *str2, int32_t *result)
 {
