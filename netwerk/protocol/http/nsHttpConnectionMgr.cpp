@@ -512,6 +512,28 @@ nsHttpConnectionMgr::UpdateRequestTokenBucket(EventTokenBucket *aBucket)
     return rv;
 }
 
+PLDHashOperator
+nsHttpConnectionMgr::RemoveDeadConnections(const nsACString &key,
+                nsAutoPtr<nsConnectionEntry> &ent,
+                void *aArg)
+{
+    if (ent->mIdleConns.Length()   == 0 &&
+        ent->mActiveConns.Length() == 0 &&
+        ent->mHalfOpens.Length()   == 0 &&
+        ent->mPendingQ.Length()    == 0) {
+        return PL_DHASH_REMOVE;
+    }
+    return PL_DHASH_NEXT;
+}
+
+nsresult
+nsHttpConnectionMgr::ClearConnectionHistory()
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
+    mCT.Enumerate(RemoveDeadConnections, nullptr);
+    return NS_OK;
+}
+
 // Given a nsHttpConnectionInfo find the connection entry object that
 // contains either the nshttpconnection or nshttptransaction parameter.
 // Normally this is done by the hashkey lookup of connectioninfo,
