@@ -14,7 +14,7 @@ interface nsICacheStorageVisitor;
  * in-mem+on-disk, in-mem+on-disk+app-cache or just a specific
  * app-cache storage.
  */
-[scriptable, uuid(d983ba0c-433f-4017-abc1-93af737c82e4)]
+[scriptable, uuid(d9006881-a536-4ce3-bc48-e7f94b40a690)]
 interface nsICacheStorage : nsISupports
 {
   /**
@@ -76,6 +76,15 @@ interface nsICacheStorage : nsISupports
   void asyncOpenURI(in nsIURI aURI, in ACString aIdExtension,
                     in uint32_t aFlags,
                     in nsICacheEntryOpenCallback aCallback);
+
+  /**
+   * Synchronously check on existance of an entry.  In case of disk entries
+   * this uses information from the cache index.  When the index data are not
+   * up to date or index is still building, NS_ERROR_NOT_AVAILABLE is thrown.
+   * The same error may throw any storage implementation that cannot determine
+   * entry state without blocking the caller.
+   */
+  boolean exists(in nsIURI aURI, in ACString aIdExtension);
 
   /**
    * Asynchronously removes an entry belonging to the URI from the cache.
