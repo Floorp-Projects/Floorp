@@ -23,7 +23,7 @@ public class AndroidSyncTestCase extends ActivityInstrumentationTestCase2<Activi
   }
 
   public Context getApplicationContext() {
-    return this.getInstrumentation().getTargetContext().getApplicationContext();
+    return this.getInstrumentation().getTargetContext();
   }
 
   public static void performWait(Runnable runnable) {
