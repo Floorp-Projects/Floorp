@@ -48,6 +48,7 @@
     _(CallNative)                   \
     _(ApplyArgsGeneric)             \
     _(Bail)                         \
+    _(Unreachable)                  \
     _(GetDynamicName)               \
     _(FilterArgumentsOrEvalS)       \
     _(FilterArgumentsOrEvalV)       \

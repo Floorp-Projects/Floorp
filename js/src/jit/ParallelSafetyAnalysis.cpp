@@ -75,7 +75,6 @@ class ParallelSafetyVisitor : public MInstructionVisitor
 
     bool replaceWithNewPar(MInstruction *newInstruction, JSObject *templateObject);
     bool replace(MInstruction *oldInstruction, MInstruction *replacementInstruction);
-    bool replaceLastIns(MInstruction *oldInstruction, MControlInstruction *replacementInstruction);
 
     bool visitSpecializedInstruction(MInstruction *ins, MIRType spec, uint32_t flags);
 
@@ -141,7 +140,8 @@ class ParallelSafetyVisitor : public MInstructionVisitor
     CUSTOM_OP(Call)
     UNSAFE_OP(ApplyArgs)
     UNSAFE_OP(ArraySplice)
-    UNSAFE_OP(Bail)
+    SAFE_OP(Bail)
+    SAFE_OP(Unreachable)
     UNSAFE_OP(AssertFloat32)
     UNSAFE_OP(GetDynamicName)
     UNSAFE_OP(FilterArgumentsOrEval)
@@ -438,10 +438,11 @@ ParallelSafetyVisitor::convertToBailout(MInstructionIterator &iter)
         block->getSuccessor(i)->removePredecessor(block);
     block->discardAllInstructionsStartingAt(iter);
 
-    // End the block in the bail.
-    MBail *bailout = MBail::New(graph_.alloc());
-    TransplantResumePoint(ins, bailout);
-    block->end(bailout);
+    // End the block in a bail.
+    MBail *bail = MBail::New(graph_.alloc());
+    TransplantResumePoint(ins, bail);
+    block->add(bail);
+    block->end(MUnreachable::New(alloc()));
     return true;
 }
 
@@ -586,17 +587,6 @@ ParallelSafetyVisitor::replace(MInstruction *oldInstruction,
     }
     JS_ASSERT(oldInstruction->type() == replacementInstruction->type());
 
-    return true;
-}
-
-bool
-ParallelSafetyVisitor::replaceLastIns(MInstruction *oldInstruction,
-                                      MControlInstruction *replacementInstruction)
-{
-    TransplantResumePoint(oldInstruction, replacementInstruction);
-    MBasicBlock *block = oldInstruction->block();
-    block->discardLastIns();
-    block->end(replacementInstruction);
     return true;
 }
 
@@ -763,8 +753,12 @@ ParallelSafetyVisitor::visitSpecializedInstruction(MInstruction *ins, MIRType sp
 bool
 ParallelSafetyVisitor::visitThrow(MThrow *thr)
 {
-    JS_ASSERT(thr->block()->lastIns() == thr);
-    replaceLastIns(thr, MBail::New(alloc()));
+    MBasicBlock *block = thr->block();
+    JS_ASSERT(block->lastIns() == thr);
+    MBail *bail = MBail::New(alloc());
+    TransplantResumePoint(thr, bail);
+    block->discardLastIns();
+    block->end(MUnreachable::New(alloc()));
     return true;
 }
 
