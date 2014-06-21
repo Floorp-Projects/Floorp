@@ -511,6 +511,11 @@ public:
     mImageFactory = aFactory ? aFactory : new ImageFactory();
   }
 
+  ImageFactory* GetImageFactory() const
+  {
+    return mImageFactory;
+  }
+
   /**
    * Returns the time at which the currently contained image was first
    * painted.  This is reset every time a new image is set as the current
