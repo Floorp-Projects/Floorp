@@ -1277,16 +1277,28 @@ Evaluate(JSContext *cx, unsigned argc, jsval *vp)
         }
 
         if (displayURL && !script->scriptSource()->hasDisplayURL()) {
-            const jschar *durl = JS_GetStringCharsZ(cx, displayURL);
-            if (!durl)
+            JSFlatString *flat = displayURL->ensureFlat(cx);
+            if (!flat)
                 return false;
+
+            AutoStableStringChars chars(cx);
+            if (!chars.initTwoByte(cx, flat))
+                return false;
+
+            const jschar *durl = chars.twoByteRange().start().get();
             if (!script->scriptSource()->setDisplayURL(cx, durl))
                 return false;
         }
         if (sourceMapURL && !script->scriptSource()->hasSourceMapURL()) {
-            const jschar *smurl = JS_GetStringCharsZ(cx, sourceMapURL);
-            if (!smurl)
+            JSFlatString *flat = sourceMapURL->ensureFlat(cx);
+            if (!flat)
                 return false;
+
+            AutoStableStringChars chars(cx);
+            if (!chars.initTwoByte(cx, flat))
+                return false;
+
+            const jschar *smurl = chars.twoByteRange().start().get();
             if (!script->scriptSource()->setSourceMapURL(cx, smurl))
                 return false;
         }
