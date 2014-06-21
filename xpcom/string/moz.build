@@ -4,5 +4,60 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += ['public', 'src']
+EXPORTS += [
+    'nsAlgorithm.h',
+    'nsAString.h',
+    'nsCharTraits.h',
+    'nsDependentString.h',
+    'nsDependentSubstring.h',
+    'nsEmbedString.h',
+    'nsLiteralString.h',
+    'nsPrintfCString.h',
+    'nsPromiseFlatString.h',
+    'nsReadableUtils.h',
+    'nsString.h',
+    'nsStringBuffer.h',
+    'nsStringFwd.h',
+    'nsStringIterator.h',
+    'nsSubstring.h',
+    'nsSubstringTuple.h',
+    'nsTDependentString.h',
+    'nsTDependentSubstring.h',
+    'nsTLiteralString.h',
+    'nsTPromiseFlatString.h',
+    'nsTString.h',
+    'nsTSubstring.h',
+    'nsTSubstringTuple.h',
+    'nsUTF8Utils.h',
+    'nsXPCOMStrings.h',
+    'nsXPIDLString.h',
+    'string-template-def-char.h',
+    'string-template-def-unichar.h',
+    'string-template-undef.h',
+]
 
+UNIFIED_SOURCES += [
+    'nsDependentString.cpp',
+    'nsDependentSubstring.cpp',
+    'nsPromiseFlatString.cpp',
+    'nsReadableUtils.cpp',
+    'nsString.cpp',
+    'nsStringComparator.cpp',
+    'nsStringObsolete.cpp',
+    'nsSubstring.cpp',
+    'nsSubstringTuple.cpp',
+]
+
+# Are we targeting x86 or x86-64?  If so, compile the SSE2 functions for
+# nsUTF8Utils.cpp.
+if CONFIG['INTEL_ARCHITECTURE']:
+    SOURCES += ['nsUTF8UtilsSSE2.cpp']
+    SOURCES['nsUTF8UtilsSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+
+LOCAL_INCLUDES += [
+    '/mfbt/double-conversion',
+]
+
+MSVC_ENABLE_PGO = True
+
+FINAL_LIBRARY = 'xpcom_core'
