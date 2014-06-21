@@ -85,6 +85,7 @@ function initApp() {
     blocklistFile.remove(false);
   var source = do_get_file("blocklist.xml");
   source.copyTo(gProfD, "blocklist.xml");
+  blocklistFile.lastModifiedTime = Date.now();
 
 
   let internalManager = Cc["@mozilla.org/addons/integration;1"].
