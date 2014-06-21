@@ -117,13 +117,16 @@ HAWKAuthenticatedRESTRequest.prototype = {
   *          extra: size - 64 extra bytes (if size > 64)
   *        }
   */
-function deriveHawkCredentials(tokenHex, context, size=96) {
+this.deriveHawkCredentials = function deriveHawkCredentials(tokenHex,
+                                                            context,
+                                                            size = 96,
+                                                            hexKey = false) {
   let token = CommonUtils.hexToBytes(tokenHex);
   let out = CryptoUtils.hkdf(token, undefined, Credentials.keyWord(context), size);
 
   let result = {
     algorithm: "sha256",
-    key: out.slice(32, 64),
+    key: hexKey ? CommonUtils.bytesAsHex(out.slice(32, 64)) : out.slice(32, 64),
     id: CommonUtils.bytesAsHex(out.slice(0, 32))
   };
   if (size > 64) {
