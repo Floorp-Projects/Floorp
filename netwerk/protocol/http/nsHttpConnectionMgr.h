@@ -129,6 +129,9 @@ public:
     // to the socket thread
     nsresult UpdateRequestTokenBucket(EventTokenBucket *aBucket);
 
+    // clears the connection history mCT
+    nsresult ClearConnectionHistory();
+
     // Pipielining Interfaces and Datatypes
 
     const static uint32_t kPipelineInfoTypeMask = 0xffff0000;
@@ -661,6 +664,9 @@ private:
     static PLDHashOperator ReadConnectionEntry(const nsACString &key,
                                                nsAutoPtr<nsConnectionEntry> &ent,
                                                void *aArg);
+    static PLDHashOperator RemoveDeadConnections(const nsACString &key,
+        nsAutoPtr<nsConnectionEntry> &ent,
+        void *aArg);
 
     // Read Timeout Tick handlers
     void ActivateTimeoutTick();
