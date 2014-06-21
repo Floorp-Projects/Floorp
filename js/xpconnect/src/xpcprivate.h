@@ -482,6 +482,7 @@ public:
         IDX_REALFRAMEELEMENT        ,
         IDX_LENGTH                  ,
         IDX_NAME                    ,
+        IDX_UNDEFINED               ,
         IDX_TOTAL_COUNT // just a count of the above
     };
 
@@ -3321,6 +3322,7 @@ protected:
     bool ParseValue(const char *name, JS::MutableHandleValue prop, bool *found = nullptr);
     bool ParseBoolean(const char *name, bool *prop);
     bool ParseObject(const char *name, JS::MutableHandleObject prop);
+    bool ParseJSString(const char *name, JS::MutableHandleString prop);
     bool ParseString(const char *name, nsCString &prop);
     bool ParseString(const char *name, nsString &prop);
     bool ParseId(const char* name, JS::MutableHandleId id);
@@ -3338,6 +3340,8 @@ public:
         , wantComponents(true)
         , wantExportHelpers(false)
         , proto(cx)
+        , addonId(cx)
+        , writeToGlobalPrototype(false)
         , sameZoneAs(cx)
         , invisibleToDebugger(false)
         , discardSource(false)
@@ -3352,6 +3356,8 @@ public:
     bool wantExportHelpers;
     JS::RootedObject proto;
     nsCString sandboxName;
+    JS::RootedString addonId;
+    bool writeToGlobalPrototype;
     JS::RootedObject sameZoneAs;
     bool invisibleToDebugger;
     bool discardSource;
@@ -3476,6 +3482,8 @@ public:
 
     CompartmentPrivate(JSCompartment *c)
         : wantXrays(false)
+        , writeToGlobalPrototype(false)
+        , skipWriteToGlobalPrototype(false)
         , universalXPConnectEnabled(false)
         , adoptedNode(false)
         , donatedNode(false)
@@ -3488,6 +3496,17 @@ public:
     ~CompartmentPrivate();
 
     bool wantXrays;
+
+    // This flag is intended for a very specific use, internal to Gecko. It may
+    // go away or change behavior at any time. It should not be added to any
+    // documentation and it should not be used without consulting the XPConnect
+    // module owner.
+    bool writeToGlobalPrototype;
+
+    // When writeToGlobalPrototype is true, we use this flag to temporarily
+    // disable the writeToGlobalPrototype behavior (when resolving standard
+    // classes, for example).
+    bool skipWriteToGlobalPrototype;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

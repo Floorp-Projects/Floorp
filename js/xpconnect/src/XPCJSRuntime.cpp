@@ -84,6 +84,7 @@ const char* const XPCJSRuntime::mStrings[] = {
     "realFrameElement",     // IDX_REALFRAMEELEMENT
     "length",               // IDX_LENGTH
     "name",                 // IDX_NAME
+    "undefined",            // IDX_UNDEFINED
 };
 
 /***************************************************************************/
