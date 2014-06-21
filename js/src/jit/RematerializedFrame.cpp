@@ -91,6 +91,13 @@ RematerializedFrame::FreeInVector(Vector<RematerializedFrame *> &frames)
     frames.clear();
 }
 
+/* static */ void
+RematerializedFrame::MarkInVector(JSTracer *trc, Vector<RematerializedFrame *> &frames)
+{
+    for (size_t i = 0; i < frames.length(); i++)
+        frames[i]->mark(trc);
+}
+
 CallObject &
 RematerializedFrame::callObj() const
 {
