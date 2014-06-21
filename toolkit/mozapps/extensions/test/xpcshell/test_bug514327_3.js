@@ -125,12 +125,7 @@ function run_test() {
   startupManager();
 
   // initialize the blocklist with no entries
-  var blocklistFile = gProfD.clone();
-  blocklistFile.append("blocklist.xml");
-  if (blocklistFile.exists())
-    blocklistFile.remove(false);
-  var source = do_get_file("data/test_bug514327_3_empty.xml");
-  source.copyTo(gProfD, "blocklist.xml");
+  copyBlocklistToProfile(do_get_file("data/test_bug514327_3_empty.xml"));
   
   gPrefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
   gBlocklist = Cc["@mozilla.org/extensions/blocklist;1"].getService(nsIBLS);
