@@ -3432,6 +3432,10 @@ EvalInSandbox(JSContext *cx, JS::HandleObject sandbox, const nsAString& source,
               JSVersion jsVersion, bool returnStringOnly,
               JS::MutableHandleValue rval);
 
+nsresult
+GetSandboxAddonId(JSContext *cx, JS::HandleObject sandboxArg,
+                  JS::MutableHandleValue rval);
+
 // Helper for retrieving metadata stored in a reserved slot. The metadata
 // is set during the sandbox creation using the "metadata" option.
 nsresult
