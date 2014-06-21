@@ -4141,6 +4141,7 @@ this.XPIProvider = {
       this.bootstrapScopes[aId] =
         new Cu.Sandbox(principal, { sandboxName: aFile.path,
                                     wantGlobalProperties: ["indexedDB"],
+                                    addonId: aId,
                                     metadata: { addonID: aId } });
       logger.error("Attempted to load bootstrap scope from missing directory " + aFile.path);
       return;
@@ -4153,6 +4154,7 @@ this.XPIProvider = {
     this.bootstrapScopes[aId] =
       new Cu.Sandbox(principal, { sandboxName: uri,
                                   wantGlobalProperties: ["indexedDB"],
+                                  addonId: aId,
                                   metadata: { addonID: aId, URI: uri } });
 
     let loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].

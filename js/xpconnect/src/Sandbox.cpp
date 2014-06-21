@@ -1990,6 +1990,25 @@ xpc::NewFunctionForwarder(JSContext *cx, HandleObject callable, bool doclone,
     return NewFunctionForwarder(cx, emptyId, callable, doclone, vp);
 }
 
+nsresult
+xpc::GetSandboxAddonId(JSContext *cx, HandleObject sandbox, MutableHandleValue rval)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsSandbox(sandbox));
+
+    JSAddonId *id = JS::AddonIdOfObject(sandbox);
+    if (!id) {
+        rval.setNull();
+        return NS_OK;
+    }
+
+    JS::RootedValue idStr(cx, StringValue(JS::StringOfAddonId(id)));
+    if (!JS_WrapValue(cx, &idStr))
+        return NS_ERROR_UNEXPECTED;
+
+    rval.set(idStr);
+    return NS_OK;
+}
 
 nsresult
 xpc::GetSandboxMetadata(JSContext *cx, HandleObject sandbox, MutableHandleValue rval)
