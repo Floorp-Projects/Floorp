@@ -160,6 +160,15 @@ private:
                            CacheEntryHandle** aResult);
 
   /**
+   * Check existance of an entry.  This may throw NS_ERROR_NOT_AVAILABLE
+   * when the information cannot be obtained synchronously w/o blocking.
+   */
+  nsresult CheckStorageEntry(CacheStorage const* aStorage,
+                             nsIURI* aURI,
+                             const nsACString & aIdExtension,
+                             bool* aResult);
+
+  /**
    * Removes the entry from the related entry hash table, if still present
    * and returns it.
    */
