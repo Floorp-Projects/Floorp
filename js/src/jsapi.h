@@ -4324,6 +4324,19 @@ class JSAutoByteString
     JSAutoByteString &operator=(const JSAutoByteString &another);
 };
 
+namespace JS {
+
+extern JS_PUBLIC_API(JSAddonId *)
+NewAddonId(JSContext *cx, JS::HandleString str);
+
+extern JS_PUBLIC_API(const jschar *)
+CharsZOfAddonId(JSAddonId *id);
+
+extern JS_PUBLIC_API(JSString *)
+StringOfAddonId(JSAddonId *id);
+
+} // namespace JS
+
 /************************************************************************/
 /*
  * JSON functions
