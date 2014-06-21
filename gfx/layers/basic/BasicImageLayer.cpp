@@ -74,7 +74,6 @@ BasicImageLayer::Paint(DrawTarget* aDT,
     return;
   }
 
-  nsRefPtr<ImageFactory> originalIF = mContainer->GetImageFactory();
   mContainer->SetImageFactory(mManager->IsCompositingCheap() ? nullptr : BasicManager()->GetImageFactory());
 
   RefPtr<gfx::SourceSurface> surface;
@@ -83,7 +82,6 @@ BasicImageLayer::Paint(DrawTarget* aDT,
   gfx::IntSize size = mSize = autoLock.GetSize();
 
   if (!surface || !surface->IsValid()) {
-    mContainer->SetImageFactory(originalIF);
     return;
   }
 
@@ -92,7 +90,6 @@ BasicImageLayer::Paint(DrawTarget* aDT,
                    DrawOptions(GetEffectiveOpacity(), GetEffectiveOperator(this)),
                    aMaskLayer);
 
-  mContainer->SetImageFactory(originalIF);
   GetContainer()->NotifyPaintedImage(image);
 }
 
@@ -105,7 +102,6 @@ BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
     return;
   }
 
-  nsRefPtr<ImageFactory> originalIF = mContainer->GetImageFactory();
   mContainer->SetImageFactory(mManager->IsCompositingCheap() ?
                               nullptr :
                               BasicManager()->GetImageFactory());
@@ -115,7 +111,6 @@ BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
     mContainer->LockCurrentAsSourceSurface(&size, &image);
 
   if (!surf) {
-    mContainer->SetImageFactory(originalIF);
     return;
   }
 
@@ -130,8 +125,6 @@ BasicImageLayer::GetAndPaintCurrentImage(DrawTarget* aTarget,
 
     GetContainer()->NotifyPaintedImage(image);
   }
-
-  mContainer->SetImageFactory(originalIF);
 
   mContainer->UnlockCurrentImage();
 }
