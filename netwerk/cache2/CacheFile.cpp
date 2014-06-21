@@ -1690,18 +1690,18 @@ CacheFile::WriteMetadataIfNeededLocked(bool aFireAndForget)
     return;
   }
 
-  if (!aFireAndForget) {
-    // if aFireAndForget is set, we are called from dtor. Write
-    // scheduler hard-refers CacheFile otherwise, so we cannot be here.
-    CacheFileIOManager::UnscheduleMetadataWrite(this);
-  }
-
   if (NS_FAILED(mStatus))
     return;
 
   if (!IsDirty() || mOutput || mInputs.Length() || mChunks.Count() ||
       mWritingMetadata || mOpeningFile)
     return;
+
+  if (!aFireAndForget) {
+    // if aFireAndForget is set, we are called from dtor. Write
+    // scheduler hard-refers CacheFile otherwise, so we cannot be here.
+    CacheFileIOManager::UnscheduleMetadataWrite(this);
+  }
 
   LOG(("CacheFile::WriteMetadataIfNeededLocked() - Writing metadata [this=%p]",
        this));
