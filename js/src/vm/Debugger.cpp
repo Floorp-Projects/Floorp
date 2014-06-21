@@ -2473,8 +2473,8 @@ class Debugger::ScriptQuery {
   public:
     /* Construct a ScriptQuery to use matching scripts for |dbg|. */
     ScriptQuery(JSContext *cx, Debugger *dbg):
-        cx(cx), debugger(dbg), compartments(cx->runtime()), url(cx), displayURL(cx),
-        displayURLChars(nullptr), innermostForCompartment(cx->runtime())
+        cx(cx), debugger(dbg), compartments(cx->runtime()), url(cx), displayURLString(cx),
+        innermostForCompartment(cx->runtime())
     {}
 
     /*
@@ -2572,6 +2572,7 @@ class Debugger::ScriptQuery {
         }
 
         /* Check for a 'displayURL' property. */
+        RootedValue displayURL(cx);
         if (!JSObject::getProperty(cx, query, query, cx->names().displayURL, &displayURL))
             return false;
         if (!displayURL.isUndefined() && !displayURL.isString()) {
@@ -2579,6 +2580,12 @@ class Debugger::ScriptQuery {
                                  "query object's 'displayURL' property",
                                  "neither undefined nor a string");
             return false;
+        }
+
+        if (displayURL.isString()) {
+            displayURLString = displayURL.toString()->ensureLinear(cx);
+            if (!displayURLString)
+                return false;
         }
 
         return true;
@@ -2589,7 +2596,7 @@ class Debugger::ScriptQuery {
         url.setUndefined();
         hasLine = false;
         innermost = false;
-        displayURLChars = nullptr;
+        displayURLString = nullptr;
         return matchAllDebuggeeGlobals();
     }
 
@@ -2655,11 +2662,7 @@ class Debugger::ScriptQuery {
 
     /* If this is a string, matching scripts' sources have displayURLs equal to
      * it. */
-    RootedValue displayURL;
-
-    /* displayURL as a jschar* */
-    const jschar *displayURLChars;
-    size_t displayURLLength;
+    RootedLinearString displayURLString;
 
     /* True if the query contained a 'line' property. */
     bool hasLine;
@@ -2734,13 +2737,6 @@ class Debugger::ScriptQuery {
             if (!urlCString.encodeLatin1(cx, url.toString()))
                 return false;
         }
-        if (displayURL.isString()) {
-            JSString *s = displayURL.toString();
-            displayURLChars = s->getChars(cx);
-            displayURLLength = s->length();
-            if (!displayURLChars)
-                return false;
-        }
 
         return true;
     }
@@ -2782,13 +2778,13 @@ class Debugger::ScriptQuery {
             if (line < script->lineno() || script->lineno() + js_GetScriptLineExtent(script) < line)
                 return;
         }
-        if (displayURLChars) {
+        if (displayURLString) {
             if (!script->scriptSource() || !script->scriptSource()->hasDisplayURL())
                 return;
+
             const jschar *s = script->scriptSource()->displayURL();
-            if (CompareChars(s, js_strlen(s), displayURLChars, displayURLLength) != 0) {
+            if (CompareChars(s, js_strlen(s), displayURLString) != 0)
                 return;
-            }
         }
 
         if (innermost) {
@@ -4719,13 +4715,13 @@ DebuggerFrame_setOnPop(JSContext *cx, unsigned argc, Value *vp)
  */
 bool
 js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-                  ConstTwoByteChars chars, unsigned length, const char *filename, unsigned lineno,
+                  mozilla::Range<const jschar> chars, const char *filename, unsigned lineno,
                   MutableHandleValue rval)
 {
     assertSameCompartment(cx, env, frame);
     JS_ASSERT_IF(frame, thisv.get() == frame.thisValue());
 
-    JS_ASSERT(!IsPoisonedPtr(chars.get()));
+    JS_ASSERT(!IsPoisonedPtr(chars.start().get()));
 
     /*
      * NB: This function breaks the assumption that the compiler can see all
@@ -4740,7 +4736,7 @@ js::EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFr
            .setCanLazilyParse(false)
            .setIntroductionType("debugger eval");
     RootedScript callerScript(cx, frame ? frame.script() : nullptr);
-    SourceBufferHolder srcBuf(chars.get(), length, SourceBufferHolder::NoOwnership);
+    SourceBufferHolder srcBuf(chars.start().get(), chars.length(), SourceBufferHolder::NoOwnership);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(), env, callerScript,
                                                     options, srcBuf,
                                                     /* source = */ nullptr,
@@ -4881,9 +4877,13 @@ DebuggerGenericEval(JSContext *cx, const char *fullMethodName, const Value &code
     RootedValue rval(cx);
     JS::Anchor<JSString *> anchor(flat);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
-    bool ok = EvaluateInEnv(cx, env, thisv, frame,
-                            ConstTwoByteChars(flat->chars(), flat->length()),
-                            flat->length(), url ? url : "debugger eval code", lineNumber, &rval);
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, flat))
+        return false;
+
+    mozilla::Range<const jschar> chars = stableChars.twoByteRange();
+    bool ok = EvaluateInEnv(cx, env, thisv, frame, chars, url ? url : "debugger eval code",
+                            lineNumber, &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
