@@ -207,6 +207,16 @@ static const char16_t sHTMLTagUnicodeName_progress[] =
   {'p', 'r', 'o', 'g', 'r', 'e', 's', 's', '\0'};
 static const char16_t sHTMLTagUnicodeName_q[] =
   {'q', '\0'};
+static const char16_t sHTMLTagUnicodeName_rb[] =
+  {'r', 'b', '\0'};
+static const char16_t sHTMLTagUnicodeName_rp[] =
+  {'r', 'p', '\0'};
+static const char16_t sHTMLTagUnicodeName_rt[] =
+  {'r', 't', '\0'};
+static const char16_t sHTMLTagUnicodeName_rtc[] =
+  {'r', 't', 'c', '\0'};
+static const char16_t sHTMLTagUnicodeName_ruby[] =
+  {'r', 'u', 'b', 'y', '\0'};
 static const char16_t sHTMLTagUnicodeName_s[] =
   {'s', '\0'};
 static const char16_t sHTMLTagUnicodeName_samp[] =

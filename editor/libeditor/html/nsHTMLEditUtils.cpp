@@ -534,8 +534,8 @@ nsHTMLEditUtils::SupportsAlignAttr(nsIDOMNode* aNode)
 // b, big, i, s, small, strike, tt, u
 #define GROUP_FONTSTYLE        (1 << 3)
 
-// abbr, acronym, cite, code, datalist, del, dfn, em, ins, kbd, mark, samp,
-// strong, var
+// abbr, acronym, cite, code, datalist, del, dfn, em, ins, kbd, mark, rb, rp
+// rt, rtc, ruby, samp, strong, var
 #define GROUP_PHRASE           (1 << 4)
 
 // a, applet, basefont, bdo, br, font, iframe, img, map, meter, object, output,
@@ -739,6 +739,11 @@ static const nsElementInfo kElements[eHTMLTag_userdefined] = {
   ELEM(pre, true, true, GROUP_BLOCK, GROUP_INLINE_ELEMENT),
   ELEM(progress, true, false, GROUP_SPECIAL, GROUP_FLOW_ELEMENT),
   ELEM(q, true, true, GROUP_SPECIAL, GROUP_INLINE_ELEMENT),
+  ELEM(rb, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
+  ELEM(rp, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
+  ELEM(rt, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
+  ELEM(rtc, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
+  ELEM(ruby, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(s, true, true, GROUP_FONTSTYLE, GROUP_INLINE_ELEMENT),
   ELEM(samp, true, true, GROUP_PHRASE, GROUP_INLINE_ELEMENT),
   ELEM(script, true, false, GROUP_HEAD_CONTENT | GROUP_SPECIAL,
