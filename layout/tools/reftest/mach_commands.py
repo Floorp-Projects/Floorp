@@ -84,11 +84,10 @@ class ReftestRunner(MozbuildObject):
     def _manifest_file(self, suite):
         """Returns the manifest file used for a given test suite."""
         files = {
-            'reftest': 'reftest.list',
-            'reftest-ipc': 'reftest.list',
-            'crashtest': 'crashtests.list',
-            'crashtest-ipc': 'crashtests.list',
-            'jstestbrowser': 'jstests.list'
+          'reftest': 'reftest.list',
+          'reftest-ipc': 'reftest.list',
+          'crashtest': 'crashtests.list',
+          'crashtest-ipc': 'crashtests.list',
         }
         assert suite in files
         return files[suite]
@@ -226,7 +225,7 @@ class ReftestRunner(MozbuildObject):
         RegExp constructor) to select which reftests to run from the manifest.
 
         suite is the type of reftest to run. It can be one of ('reftest',
-        'crashtest', 'jstestbrowser').
+        'crashtest').
 
         debugger is the program name (in $PATH) or the full path of the
         debugger to run.
@@ -236,7 +235,7 @@ class ReftestRunner(MozbuildObject):
         shuffle indicates whether to run tests in random order.
         """
 
-        if suite not in ('reftest', 'reftest-ipc', 'crashtest', 'crashtest-ipc', 'jstestbrowser'):
+        if suite not in ('reftest', 'reftest-ipc', 'crashtest', 'crashtest-ipc'):
             raise Exception('None or unrecognized reftest suite type.')
 
         env = {}
@@ -380,12 +379,6 @@ class MachCommands(MachCommandBase):
     @ReftestCommand
     def run_reftest(self, test_file, **kwargs):
         return self._run_reftest(test_file, suite='reftest', **kwargs)
-
-    @Command('jstestbrowser', category='testing',
-        description='Run js/src/tests in the browser.')
-    @ReftestCommand
-    def run_jstestbrowser(self, test_file, **kwargs):
-        return self._run_reftest(test_file, suite='jstestbrowser', **kwargs)
 
     @Command('reftest-ipc', category='testing',
         description='Run IPC reftests.')
