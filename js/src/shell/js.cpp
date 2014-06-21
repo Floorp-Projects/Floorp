@@ -3651,17 +3651,17 @@ class OffThreadState {
         DONE            /* compilation done: have token and source */
     };
 
-    OffThreadState() : monitor(), state(IDLE), token() { }
+    OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
     bool init() { return monitor.init(); }
 
-    bool startIfIdle(JSContext *cx, JSString *newSource) {
+    bool startIfIdle(JSContext *cx, ScopedJSFreePtr<jschar> &newSource) {
         AutoLockMonitor alm(monitor);
         if (state != IDLE)
             return false;
 
         JS_ASSERT(!token);
 
-        source.construct(cx, newSource);
+        source = newSource.forget();
 
         state = COMPILING;
         return true;
@@ -3671,9 +3671,10 @@ class OffThreadState {
         AutoLockMonitor alm(monitor);
         JS_ASSERT(state == COMPILING);
         JS_ASSERT(!token);
-        JS_ASSERT(source.ref());
+        JS_ASSERT(source);
 
-        source.destroy();
+        js_free(source);
+        source = nullptr;
 
         state = IDLE;
     }
@@ -3682,7 +3683,7 @@ class OffThreadState {
         AutoLockMonitor alm(monitor);
         JS_ASSERT(state == COMPILING);
         JS_ASSERT(!token);
-        JS_ASSERT(source.ref());
+        JS_ASSERT(source);
         JS_ASSERT(newToken);
 
         token = newToken;
@@ -3700,8 +3701,9 @@ class OffThreadState {
                 alm.wait();
         }
 
-        JS_ASSERT(source.ref());
-        source.destroy();
+        JS_ASSERT(source);
+        js_free(source);
+        source = nullptr;
 
         JS_ASSERT(token);
         void *holdToken = token;
@@ -3714,7 +3716,7 @@ class OffThreadState {
     Monitor monitor;
     State state;
     void *token;
-    Maybe<PersistentRootedString> source;
+    jschar *source;
 };
 
 static OffThreadState offThreadState;
@@ -3766,17 +3768,34 @@ OffThreadCompileScript(JSContext *cx, unsigned argc, jsval *vp)
     options.forceAsync = true;
 
     JSString *scriptContents = args[0].toString();
-    const jschar *chars = JS_GetStringCharsZ(cx, scriptContents);
-    if (!chars)
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, scriptContents))
         return false;
-    size_t length = JS_GetStringLength(scriptContents);
+
+    size_t length = scriptContents->length();
+    const jschar *chars = stableChars.twoByteRange().start().get();
+
+    // Make sure we own the string's chars, so that they are not freed before
+    // the compilation is finished.
+    ScopedJSFreePtr<jschar> ownedChars;
+    if (stableChars.maybeGiveOwnershipToCaller()) {
+        ownedChars = const_cast<jschar*>(chars);
+    } else {
+        jschar *copy = cx->pod_malloc<jschar>(length);
+        if (!copy)
+            return false;
+
+        mozilla::PodCopy(copy, chars, length);
+        ownedChars = copy;
+        chars = copy;
+    }
 
     if (!JS::CanCompileOffThread(cx, options, length)) {
         JS_ReportError(cx, "cannot compile code on worker thread");
         return false;
     }
 
-    if (!offThreadState.startIfIdle(cx, scriptContents)) {
+    if (!offThreadState.startIfIdle(cx, ownedChars)) {
         JS_ReportError(cx, "called offThreadCompileScript without calling runOffThreadScript"
                        " to receive prior off-thread compilation");
         return false;
