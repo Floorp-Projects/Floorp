@@ -1490,55 +1490,56 @@ void CacheEntry::BackgroundOp(uint32_t aOperations, bool aForceAsync)
     return;
   }
 
-  mozilla::MutexAutoUnlock unlock(mLock);
+  {
+    mozilla::MutexAutoUnlock unlock(mLock);
 
-  MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
+    MOZ_ASSERT(CacheStorageService::IsOnManagementThread());
 
-  if (aOperations & Ops::FRECENCYUPDATE) {
-    #ifndef M_LN2
-    #define M_LN2 0.69314718055994530942
-    #endif
+    if (aOperations & Ops::FRECENCYUPDATE) {
+      #ifndef M_LN2
+      #define M_LN2 0.69314718055994530942
+      #endif
 
-    // Half-life is dynamic, in seconds.
-    static double half_life = CacheObserver::HalfLifeSeconds();
-    // Must convert from seconds to milliseconds since PR_Now() gives usecs.
-    static double const decay = (M_LN2 / half_life) / static_cast<double>(PR_USEC_PER_SEC);
+      // Half-life is dynamic, in seconds.
+      static double half_life = CacheObserver::HalfLifeSeconds();
+      // Must convert from seconds to milliseconds since PR_Now() gives usecs.
+      static double const decay = (M_LN2 / half_life) / static_cast<double>(PR_USEC_PER_SEC);
 
-    double now_decay = static_cast<double>(PR_Now()) * decay;
+      double now_decay = static_cast<double>(PR_Now()) * decay;
 
-    if (mFrecency == 0) {
-      mFrecency = now_decay;
+      if (mFrecency == 0) {
+        mFrecency = now_decay;
+      }
+      else {
+        // TODO: when C++11 enabled, use std::log1p(n) which is equal to log(n + 1) but
+        // more precise.
+        mFrecency = log(exp(mFrecency - now_decay) + 1) + now_decay;
+      }
+      LOG(("CacheEntry FRECENCYUPDATE [this=%p, frecency=%1.10f]", this, mFrecency));
+
+      // Because CacheFile::Set*() are not thread-safe to use (uses WeakReference that
+      // is not thread-safe) we must post to the main thread...
+      nsRefPtr<nsRunnableMethod<CacheEntry> > event =
+        NS_NewRunnableMethod(this, &CacheEntry::StoreFrecency);
+      NS_DispatchToMainThread(event);
     }
-    else {
-      // TODO: when C++11 enabled, use std::log1p(n) which is equal to log(n + 1) but
-      // more precise.
-      mFrecency = log(exp(mFrecency - now_decay) + 1) + now_decay;
+
+    if (aOperations & Ops::REGISTER) {
+      LOG(("CacheEntry REGISTER [this=%p]", this));
+
+      CacheStorageService::Self()->RegisterEntry(this);
     }
-    LOG(("CacheEntry FRECENCYUPDATE [this=%p, frecency=%1.10f]", this, mFrecency));
 
-    // Because CacheFile::Set*() are not thread-safe to use (uses WeakReference that
-    // is not thread-safe) we must post to the main thread...
-    nsRefPtr<nsRunnableMethod<CacheEntry> > event =
-      NS_NewRunnableMethod(this, &CacheEntry::StoreFrecency);
-    NS_DispatchToMainThread(event);
-  }
+    if (aOperations & Ops::UNREGISTER) {
+      LOG(("CacheEntry UNREGISTER [this=%p]", this));
 
-  if (aOperations & Ops::REGISTER) {
-    LOG(("CacheEntry REGISTER [this=%p]", this));
-
-    CacheStorageService::Self()->RegisterEntry(this);
-  }
-
-  if (aOperations & Ops::UNREGISTER) {
-    LOG(("CacheEntry UNREGISTER [this=%p]", this));
-
-    CacheStorageService::Self()->UnregisterEntry(this);
-  }
+      CacheStorageService::Self()->UnregisterEntry(this);
+    }
+  } // unlock
 
   if (aOperations & Ops::CALLBACKS) {
     LOG(("CacheEntry CALLBACKS (invoke) [this=%p]", this));
 
-    mozilla::MutexAutoLock lock(mLock);
     InvokeCallbacks();
   }
 }
