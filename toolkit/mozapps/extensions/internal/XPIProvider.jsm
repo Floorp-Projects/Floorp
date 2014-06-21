@@ -1682,6 +1682,9 @@ this.XPIProvider = {
   _addURIMapping: function XPI__addURIMapping(aID, aFile) {
     logger.info("Mapping " + aID + " to " + aFile.path);
     this._addonFileMap.set(aID, aFile.path);
+
+    let service = Cc["@mozilla.org/addon-path-service;1"].getService(Ci.amIAddonPathService);
+    service.insertPath(aFile.path, aID);
   },
 
   /**
