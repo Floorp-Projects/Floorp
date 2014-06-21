@@ -1138,8 +1138,9 @@
     macro(JSOP_DEFFUN,    127,"deffun",     NULL,         5,  0,  0,  JOF_OBJECT) \
     /*
      * Defines the new binding on the frame's current variables-object (the
-     * scope object on the scope chain designated to receive new variables)
-     * with 'READONLY' attribute.
+     * scope object on the scope chain designated to receive new variables) with
+     * 'READONLY' attribute. The binding is *not* JSPROP_PERMANENT. See bug
+     * 1019181 for the reason.
      *
      * This is used for global scripts and also in some cases for function
      * scripts where use of dynamic scoping inhibits optimization.
