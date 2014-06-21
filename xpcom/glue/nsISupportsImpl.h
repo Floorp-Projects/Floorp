@@ -414,11 +414,11 @@ struct HasDangerousPublicDestructor
 }
 
 #if defined(__clang__)
-#  if MOZ_USING_LIBCXX && __has_include(<type_traits>)
-#    define MOZ_HAVE_STD_IS_DESTRUCTIBLE
-#  else
-#    define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
-#  endif
+   // bug 1028428 shows that at least in FreeBSD 10.0 with Clang 3.4 and libc++ 3.4,
+   // std::is_destructible is buggy in that it returns false when it should return true
+   // on ipc::SharedMemory. On the other hand, all Clang versions currently in use
+   // seem to handle the fallback just fine.
+#  define MOZ_CAN_USE_IS_DESTRUCTIBLE_FALLBACK
 #elif defined(__GNUC__)
    // GCC 4.7 is has buggy std::is_destructible
 #  if MOZ_USING_LIBSTDCXX && MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
