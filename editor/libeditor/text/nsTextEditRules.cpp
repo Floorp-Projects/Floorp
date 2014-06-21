@@ -1247,10 +1247,20 @@ nsTextEditRules::TruncateInsertionIfNeeded(Selection* aSelection,
     }
     else
     {
-      int32_t inCount = aOutString->Length();
-      if (inCount + resultingDocLength > aMaxLength)
-      {
-        aOutString->Truncate(aMaxLength - resultingDocLength);
+      int32_t oldLength = aOutString->Length();
+      if (oldLength + resultingDocLength > aMaxLength) {
+        int32_t newLength = aMaxLength - resultingDocLength;
+        MOZ_ASSERT(newLength > 0);
+        char16_t newLastChar = aOutString->CharAt(newLength - 1);
+        char16_t removingFirstChar = aOutString->CharAt(newLength);
+        // Don't separate the string between a surrogate pair.
+        if (NS_IS_HIGH_SURROGATE(newLastChar) &&
+            NS_IS_LOW_SURROGATE(removingFirstChar)) {
+          newLength--;
+        }
+        // XXX What should we do if we're removing IVS and its preceding
+        //     character won't be removed?
+        aOutString->Truncate(newLength);
         if (aTruncated) {
           *aTruncated = true;
         }
