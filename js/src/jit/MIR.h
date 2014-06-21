@@ -2274,11 +2274,11 @@ class MApplyArgs
     }
 };
 
-class MBail : public MAryControlInstruction<0, 0>
+class MBail : public MNullaryInstruction
 {
   protected:
     MBail(BailoutKind kind)
-      : MAryControlInstruction<0, 0>()
+      : MNullaryInstruction()
     {
         bailoutKind_ = kind;
         setGuard();
@@ -2305,6 +2305,20 @@ class MBail : public MAryControlInstruction<0, 0>
 
     BailoutKind bailoutKind() const {
         return bailoutKind_;
+    }
+};
+
+class MUnreachable : public MAryControlInstruction<0, 0>
+{
+  public:
+    INSTRUCTION_HEADER(Unreachable)
+
+    static MUnreachable *New(TempAllocator &alloc) {
+        return new(alloc) MUnreachable();
+    }
+
+    AliasSet getAliasSet() const {
+        return AliasSet::None();
     }
 };
 

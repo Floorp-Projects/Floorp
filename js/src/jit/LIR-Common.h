@@ -1199,6 +1199,12 @@ class LBail : public LInstructionHelper<0, 0, 0>
     LIR_HEADER(Bail)
 };
 
+class LUnreachable : public LControlInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(Unreachable)
+};
+
 template <size_t defs, size_t ops>
 class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
 {
