@@ -1278,6 +1278,11 @@ CopyChars(CharT *dest, const JSLinearString &str);
 
 } /* namespace js */
 
+// Addon IDs are interned atoms which are never destroyed. This detail is
+// not exposed outside the API.
+class JSAddonId : public JSAtom
+{};
+
 /* Avoid requiring vm/String-inl.h just to call getChars. */
 
 MOZ_ALWAYS_INLINE const jschar *

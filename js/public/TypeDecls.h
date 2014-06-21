@@ -27,6 +27,7 @@ class JSFunction;
 class JSObject;
 class JSScript;
 class JSString;
+class JSAddonId;
 
 struct jsid;
 
