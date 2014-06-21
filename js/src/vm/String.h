@@ -688,6 +688,9 @@ class JSDependentString : public JSLinearString
     friend class JSString;
     JSFlatString *undepend(js::ExclusiveContext *cx);
 
+    template <typename CharT>
+    JSFlatString *undependInternal(js::ExclusiveContext *cx);
+
     void init(js::ThreadSafeContext *cx, JSLinearString *base, size_t start,
               size_t length);
 

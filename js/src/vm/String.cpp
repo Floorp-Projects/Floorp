@@ -507,11 +507,10 @@ JSDependentString::copyNonPureCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jsch
     return true;
 }
 
+template <typename CharT>
 JSFlatString *
-JSDependentString::undepend(ExclusiveContext *cx)
+JSDependentString::undependInternal(ExclusiveContext *cx)
 {
-    JS_ASSERT(JSString::isDependent());
-
     /*
      * We destroy the base() pointer in undepend, so we need a pre-barrier. We
      * don't need a post-barrier because there aren't any outgoing pointers
@@ -520,22 +519,34 @@ JSDependentString::undepend(ExclusiveContext *cx)
     JSString::writeBarrierPre(base());
 
     size_t n = length();
-    size_t size = (n + 1) * sizeof(jschar);
-    jschar *s = (jschar *) cx->malloc_(size);
+    CharT *s = cx->pod_malloc<CharT>(n + 1);
     if (!s)
         return nullptr;
 
-    PodCopy(s, nonInlineChars(), n);
-    s[n] = 0;
-    d.s.u2.nonInlineCharsTwoByte = s;
+    AutoCheckCannotGC nogc;
+    PodCopy(s, nonInlineChars<CharT>(nogc), n);
+    s[n] = '\0';
+    setNonInlineChars<CharT>(s);
 
     /*
      * Transform *this into an undepended string so 'base' will remain rooted
      * for the benefit of any other dependent string that depends on *this.
      */
-    d.u1.flags = UNDEPENDED_FLAGS;
+    if (IsSame<CharT, Latin1Char>::value)
+        d.u1.flags = UNDEPENDED_FLAGS | LATIN1_CHARS_BIT;
+    else
+        d.u1.flags = UNDEPENDED_FLAGS;
 
     return &this->asFlat();
+}
+
+JSFlatString *
+JSDependentString::undepend(ExclusiveContext *cx)
+{
+    JS_ASSERT(JSString::isDependent());
+    return hasLatin1Chars()
+           ? undependInternal<Latin1Char>(cx)
+           : undependInternal<jschar>(cx);
 }
 
 template <typename CharT>
