@@ -499,6 +499,13 @@ LIRGenerator::visitBail(MBail *bail)
 }
 
 bool
+LIRGenerator::visitUnreachable(MUnreachable *unreachable)
+{
+    LUnreachable *lir = new(alloc()) LUnreachable();
+    return add(lir, unreachable);
+}
+
+bool
 LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
 {
     MIRType type = assertion->input()->type();

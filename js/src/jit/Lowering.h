@@ -99,6 +99,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitApplyArgs(MApplyArgs *apply);
     bool visitArraySplice(MArraySplice *splice);
     bool visitBail(MBail *bail);
+    bool visitUnreachable(MUnreachable *unreachable);
     bool visitAssertFloat32(MAssertFloat32 *ins);
     bool visitGetDynamicName(MGetDynamicName *ins);
     bool visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins);

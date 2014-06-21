@@ -131,6 +131,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitPopArguments(LApplyArgsGeneric *apply, Register extraStackSize);
     bool visitApplyArgsGeneric(LApplyArgsGeneric *apply);
     bool visitBail(LBail *lir);
+    bool visitUnreachable(LUnreachable *unreachable);
     bool visitGetDynamicName(LGetDynamicName *lir);
     bool visitFilterArgumentsOrEvalS(LFilterArgumentsOrEvalS *lir);
     bool visitFilterArgumentsOrEvalV(LFilterArgumentsOrEvalV *lir);
