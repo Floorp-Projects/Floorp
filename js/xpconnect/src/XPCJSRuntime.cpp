@@ -523,6 +523,14 @@ IsInContentXBLScope(JSObject *obj)
 }
 
 bool
+IsInAddonScope(JSObject *obj)
+{
+    // We always eagerly create compartment privates for addon scopes.
+    XPCWrappedNativeScope *scope = GetObjectScope(obj);
+    return scope && scope->IsAddonScope();
+}
+
+bool
 IsUniversalXPConnectEnabled(JSCompartment *compartment)
 {
     CompartmentPrivate *priv = GetCompartmentPrivate(compartment);

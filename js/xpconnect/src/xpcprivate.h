@@ -1024,6 +1024,8 @@ public:
         mGlobalJSObject.trace(trc, "XPCWrappedNativeScope::mGlobalJSObject");
         if (mContentXBLScope)
             mContentXBLScope.trace(trc, "XPCWrappedNativeScope::mXBLScope");
+        for (size_t i = 0; i < mAddonScopes.Length(); i++)
+            mAddonScopes[i].trace(trc, "XPCWrappedNativeScope::mAddonScopes");
         if (mXrayExpandos.initialized())
             mXrayExpandos.trace(trc);
     }
@@ -1101,6 +1103,8 @@ public:
     // object is wrapped into the compartment of the global.
     JSObject *EnsureContentXBLScope(JSContext *cx);
 
+    JSObject *EnsureAddonScope(JSContext *cx, JSAddonId *addonId);
+
     XPCWrappedNativeScope(JSContext *cx, JS::HandleObject aGlobal);
 
     nsAutoPtr<JSObject2JSObjectMap> mWaiverWrapperMap;
@@ -1108,6 +1112,8 @@ public:
     bool IsContentXBLScope() { return mIsContentXBLScope; }
     bool AllowContentXBLScope();
     bool UseContentXBLScope() { return mUseContentXBLScope; }
+
+    bool IsAddonScope() { return mIsAddonScope; }
 
 protected:
     virtual ~XPCWrappedNativeScope();
@@ -1136,11 +1142,15 @@ private:
     // This reference is wrapped into the compartment of mGlobalJSObject.
     JS::ObjectPtr                    mContentXBLScope;
 
+    // Lazily created sandboxes for addon code.
+    nsTArray<JS::ObjectPtr>          mAddonScopes;
+
     nsAutoPtr<DOMExpandoSet> mDOMExpandoSet;
 
     JS::WeakMapPtr<JSObject*, JSObject*> mXrayExpandos;
 
     bool mIsContentXBLScope;
+    bool mIsAddonScope;
 
     // For remote XUL domains, we run all XBL in the content scope for compat
     // reasons (though we sometimes pref this off for automation). We separately
