@@ -18,6 +18,7 @@ import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.fxa.tasks.FxAccountCodeResender;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
 
@@ -152,6 +153,10 @@ public class FxAccountStatusFragment
   public boolean onPreferenceClick(Preference preference) {
     if (preference == needsPasswordPreference) {
       Intent intent = new Intent(getActivity(), FxAccountUpdateCredentialsActivity.class);
+      final Bundle extras = getExtrasForAccount();
+      if (extras != null) {
+        intent.putExtras(extras);
+      }
       // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
       // the soft keyboard not being shown for the started activity. Why, Android, why?
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
@@ -188,6 +193,17 @@ public class FxAccountStatusFragment
     }
 
     return false;
+  }
+
+  protected Bundle getExtrasForAccount() {
+    final Bundle extras = new Bundle();
+    final ExtendedJSONObject o = new ExtendedJSONObject();
+    o.put(FxAccountAbstractSetupActivity.JSON_KEY_AUTH, fxAccount.getAccountServerURI());
+    final ExtendedJSONObject services = new ExtendedJSONObject();
+    services.put(FxAccountAbstractSetupActivity.JSON_KEY_SYNC, fxAccount.getTokenServerURI());
+    o.put(FxAccountAbstractSetupActivity.JSON_KEY_SERVICES, services);
+    extras.putString(FxAccountAbstractSetupActivity.EXTRA_EXTRAS, o.toJSONString());
+    return extras;
   }
 
   protected void setCheckboxesEnabled(boolean enabled) {
