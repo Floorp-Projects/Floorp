@@ -11,20 +11,20 @@
       android:text="@string/sync_title_send_tab" />
 
   <LinearLayout
-    android:layout_width="match_parent"
+    android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="@dimen/SyncSpace" >
 
     <TextView
       android:id="@+id/title"
-      android:layout_width="match_parent"
+      android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:textAppearance="?android:attr/textAppearanceMedium"
       android:text="@string/sync_title_send_tab" />
     <TextView
       android:id="@+id/uri"
-      android:layout_width="match_parent"
+      android:layout_width="fill_parent"
       android:layout_height="wrap_content"
       android:textAppearance="?android:attr/textAppearanceSmall"
       android:text="@string/sync_title_send_tab" />
