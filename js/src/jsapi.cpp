@@ -1025,6 +1025,12 @@ JS::StringOfAddonId(JSAddonId *id)
     return id;
 }
 
+JS_PUBLIC_API(JSAddonId *)
+JS::AddonIdOfObject(JSObject *obj)
+{
+    return obj->compartment()->addonId;
+}
+
 JS_PUBLIC_API(void)
 JS_SetZoneUserData(JS::Zone *zone, void *data)
 {
