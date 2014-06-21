@@ -138,6 +138,11 @@ pref("dom.webcrypto.enabled", true);
 // Whether the UndoManager API is enabled
 pref("dom.undo_manager.enabled", false);
 
+// Whether to run add-on code in different compartments from browser code. This
+// causes a separate compartment for each (addon, global) combination, which may
+// significantly increase the number of compartments in the system.
+pref("dom.compartment_per_addon", false);
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
