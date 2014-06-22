@@ -450,6 +450,7 @@ MediaBufferDecoder::AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
       new ReportResultTask(aDecodeJob,
                            &WebAudioDecodeJob::OnFailure,
                            WebAudioDecodeJob::UnknownContent);
+    JS_free(nullptr, aBuffer);
     NS_DispatchToMainThread(event);
     return;
   }
@@ -459,6 +460,7 @@ MediaBufferDecoder::AsyncDecodeMedia(const char* aContentType, uint8_t* aBuffer,
       new ReportResultTask(aDecodeJob,
                            &WebAudioDecodeJob::OnFailure,
                            WebAudioDecodeJob::UnknownError);
+    JS_free(nullptr, aBuffer);
     NS_DispatchToMainThread(event);
     return;
   }
