@@ -510,6 +510,29 @@ RMod::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MFloor::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Floor));
+    return true;
+}
+
+RFloor::RFloor(CompactBufferReader &reader)
+{ }
+
+bool RFloor::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue v(cx, iter.read());
+    RootedValue result(cx);
+
+    if (!js::math_floor_handle(cx, v, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MRound::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
