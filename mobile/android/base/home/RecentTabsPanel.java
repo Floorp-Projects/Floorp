@@ -34,15 +34,15 @@ import android.widget.TextView;
 /**
  * Fragment that displays tabs from last session in a ListView.
  */
-public class LastTabsPanel extends HomeFragment {
+public class RecentTabsPanel extends HomeFragment {
     // Logging tag name
-    private static final String LOGTAG = "GeckoLastTabsPanel";
+    private static final String LOGTAG = "GeckoRecentTabsPanel";
 
-    // Cursor loader ID for the session parser
-    private static final int LOADER_ID_LAST_TABS = 0;
+    // Cursor loader ID for the loader that loads recent tabs
+    private static final int LOADER_ID_RECENT_TABS = 0;
 
-    // Adapter for the list of search results
-    private LastTabsAdapter mAdapter;
+    // Adapter for the list of recent tabs.
+    private RecentTabsAdapter mAdapter;
 
     // The view shown by the fragment.
     private HomeListView mList;
@@ -61,14 +61,6 @@ public class LastTabsPanel extends HomeFragment {
 
     // On new tabs listener
     private OnNewTabsListener mNewTabsListener;
-
-    public static LastTabsPanel newInstance() {
-        return new LastTabsPanel();
-    }
-
-    public LastTabsPanel() {
-        mNewTabsListener = null;
-    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -91,7 +83,7 @@ public class LastTabsPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_last_tabs_panel, container, false);
+        return inflater.inflate(R.layout.home_recent_tabs_panel, container, false);
     }
 
     @Override
@@ -154,7 +146,7 @@ public class LastTabsPanel extends HomeFragment {
         super.onActivityCreated(savedInstanceState);
 
         // Intialize adapter
-        mAdapter = new LastTabsAdapter(getActivity());
+        mAdapter = new RecentTabsAdapter(getActivity());
         mList.setAdapter(mAdapter);
 
         // Create callbacks before the initial loader is started
@@ -195,7 +187,7 @@ public class LastTabsPanel extends HomeFragment {
 
     @Override
     protected void load() {
-        getLoaderManager().initLoader(LOADER_ID_LAST_TABS, null, mCursorLoaderCallbacks);
+        getLoaderManager().initLoader(LOADER_ID_RECENT_TABS, null, mCursorLoaderCallbacks);
     }
 
     private void openAllTabs() {
@@ -215,8 +207,8 @@ public class LastTabsPanel extends HomeFragment {
         mNewTabsListener.onNewTabs(urls);
     }
 
-    private static class LastTabsCursorLoader extends SimpleCursorLoader {
-        public LastTabsCursorLoader(Context context) {
+    private static class RecentTabsCursorLoader extends SimpleCursorLoader {
+        public RecentTabsCursorLoader(Context context) {
             super(context);
         }
 
@@ -257,8 +249,8 @@ public class LastTabsPanel extends HomeFragment {
         }
     }
 
-    private static class LastTabsAdapter extends CursorAdapter {
-        public LastTabsAdapter(Context context) {
+    private static class RecentTabsAdapter extends CursorAdapter {
+        public RecentTabsAdapter(Context context) {
             super(context, null, 0);
         }
 
@@ -276,7 +268,7 @@ public class LastTabsPanel extends HomeFragment {
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new LastTabsCursorLoader(getActivity());
+            return new RecentTabsCursorLoader(getActivity());
         }
 
         @Override
