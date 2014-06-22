@@ -275,6 +275,9 @@ extern double
 math_floor_impl(double x);
 
 extern bool
+math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res);
+
+extern bool
 math_round(JSContext *cx, unsigned argc, Value *vp);
 
 extern double
