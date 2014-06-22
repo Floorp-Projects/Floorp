@@ -6,6 +6,8 @@ import org.mozilla.gecko.tests.helpers.GeckoHelper;
 
 /**
  * Tests functionality related to navigating between the various about:home panels.
+ *
+ * TODO: Update this test to account for recent tabs panel (bug 1028727).
  */
 public class testAboutHomePageNavigation extends UITest {
     // TODO: Define this test dynamically by creating dynamic representations of the Page

@@ -26,7 +26,14 @@ import com.jayway.android.robotium.solo.Condition;
  * To use any of these methods in your test make sure it extends AboutHomeTest instead of BaseTest
  */
 abstract class AboutHomeTest extends PixelTest {
-    protected enum AboutHomeTabs {HISTORY, MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST};
+    protected enum AboutHomeTabs {
+        RECENT_TABS,
+        HISTORY,
+        TOP_SITES,
+        BOOKMARKS,
+        READING_LIST
+    };
+
     private ArrayList<String> aboutHomeTabs = new ArrayList<String>() {{
                   add("TOP_SITES");
                   add("BOOKMARKS");
@@ -42,8 +49,10 @@ abstract class AboutHomeTest extends PixelTest {
             // Update it for tablets vs. phones.
             if (mDevice.type.equals("phone")) {
                 aboutHomeTabs.add(0, AboutHomeTabs.HISTORY.toString());
+                aboutHomeTabs.add(0, AboutHomeTabs.RECENT_TABS.toString());
             } else {
                 aboutHomeTabs.add(AboutHomeTabs.HISTORY.toString());
+                aboutHomeTabs.add(AboutHomeTabs.RECENT_TABS.toString());
             }
         }
     }
@@ -223,7 +232,7 @@ abstract class AboutHomeTest extends PixelTest {
     /**
      * This method can be used to open the different tabs of about:home.
      *
-     * @param AboutHomeTabs enum item {MOST_RECENT, TABS_FROM_LAST_TIME, TOP_SITES, BOOKMARKS, READING_LIST}
+     * @param AboutHomeTabs enum item
      */
     protected void openAboutHomeTab(AboutHomeTabs tab) {
         focusUrlBar();
@@ -233,71 +242,13 @@ abstract class AboutHomeTest extends PixelTest {
 
         // Handle tablets by just clicking the visible tab title.
         if (mDevice.type.equals("tablet")) {
-            if (AboutHomeTabs.MOST_RECENT == tab || AboutHomeTabs.TABS_FROM_LAST_TIME == tab) {
-                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
-                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-
-                switch (tab) {
-                    case MOST_RECENT: {
-                        mSolo.clickOnView(tabwidget.getChildAt(0));
-                        // We can determine if we are on the MOST_RECENT tab only if pages were first visited during the test
-                        mAsserter.ok(waitForText(StringHelper.TODAY_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
-                        break;
-                    }
-                    case TABS_FROM_LAST_TIME: {
-                        mSolo.clickOnView(tabwidget.getChildAt(1));
-                        mAsserter.ok(waitForText(StringHelper.TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
-                        break;
-                    }
-                }
-            } else {
-                clickAboutHomeTab(tab);
-            }
+            clickAboutHomeTab(tab);
             return;
         }
 
         // Handle phones (non-tablets).
         tabOffset = aboutHomeTabs.indexOf(tab.toString()) - currentTabIndex;
-        switch (tab) {
-            case TOP_SITES : {
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
-                break;
-            }
-            case BOOKMARKS : {
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
-                break;
-            }
-            case MOST_RECENT: {
-                // MOST_RECENT is contained in the HISTORY tab.
-                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
-                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mSolo.clickOnView(tabwidget.getChildAt(0));
-                // We can determine if we are on the MOST_RECENT tab only if pages were first visited during the test
-                mAsserter.ok(waitForText(StringHelper.TODAY_LABEL), "Checking that we are in the most recent tab of about:home", "We are in the most recent tab");
-                break;
-            }
-            case TABS_FROM_LAST_TIME: {
-                // TABS_FROM_LAST_TIME is contained in the HISTORY tab.
-                tabOffset = aboutHomeTabs.indexOf(AboutHomeTabs.HISTORY.toString()) - currentTabIndex;
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(StringHelper.HISTORY_LABEL));
-                TabWidget tabwidget = (TabWidget)mSolo.getView(TabWidget.class, 0);
-                mSolo.clickOnView(tabwidget.getChildAt(1));
-                mAsserter.ok(waitForText(StringHelper.TABS_FROM_LAST_TIME_LABEL), "Checking that we are in the Tabs from last time tab of about:home", "We are in the Tabs from last time tab");
-                break;
-            }
-            case READING_LIST: {
-                swipeAboutHome(tabOffset);
-                waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
-                break;
-            }
-
-        }
+        swipeAboutHome(tabOffset);
+        waitForAboutHomeTab(aboutHomeTabs.indexOf(tab.toString()));
     }
 }

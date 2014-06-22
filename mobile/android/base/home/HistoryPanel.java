@@ -89,7 +89,7 @@ public class HistoryPanel extends HomeFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mList = (HomeListView) view.findViewById(R.id.list);
-        mList.setTag(HomePager.LIST_TAG_MOST_RECENT);
+        mList.setTag(HomePager.LIST_TAG_HISTORY);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
