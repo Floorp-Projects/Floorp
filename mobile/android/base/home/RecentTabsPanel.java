@@ -115,7 +115,7 @@ public class RecentTabsPanel extends HomeFragment
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         mList = (HomeListView) view.findViewById(R.id.list);
-        mList.setTag(HomePager.LIST_TAG_LAST_TABS);
+        mList.setTag(HomePager.LIST_TAG_RECENT_TABS);
 
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
