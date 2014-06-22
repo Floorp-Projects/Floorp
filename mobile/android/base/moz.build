@@ -259,7 +259,6 @@ gbjar.sources += [
     'home/DynamicPanel.java',
     'home/FadedTextView.java',
     'home/FramePanelLayout.java',
-    'home/HistoryPanel.java',
     'home/HomeAdapter.java',
     'home/HomeBanner.java',
     'home/HomeConfig.java',
