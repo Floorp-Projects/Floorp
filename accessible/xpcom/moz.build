@@ -4,42 +4,46 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS += [
+    'xpcAccessibleHyperText.h',
+    'xpcAccessibleSelectable.h',
+    'xpcAccessibleValue.h',
+]
+
 UNIFIED_SOURCES += [
-    'HTMLCanvasAccessible.cpp',
-    'HTMLElementAccessibles.cpp',
-    'HTMLFormControlAccessible.cpp',
-    'HTMLImageMapAccessible.cpp',
-    'HTMLLinkAccessible.cpp',
-    'HTMLListAccessible.cpp',
-    'HTMLSelectAccessible.cpp',
-    'HTMLTableAccessible.cpp',
+    'nsAccessibleRelation.cpp',
+    'xpcAccessibleHyperText.cpp',
+    'xpcAccessibleSelectable.cpp',
+    'xpcAccessibleTable.cpp',
+    'xpcAccessibleTableCell.cpp',
+    'xpcAccessibleTextRange.cpp',
+    'xpcAccessibleValue.cpp',
+]
+
+GENERATED_SOURCES += [
+    'xpcAccEvents.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    '../../../layout/generic',
-    '../../../layout/tables',
-    '../../../layout/xul',
-    '../base',
-    '../generic',
-    '../xpcom',
+    '/accessible/base',
+    '/accessible/generic',
 ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
     LOCAL_INCLUDES += [
-        '../atk',
+        '/accessible/atk',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        '../windows/ia2',
-        '../windows/msaa',
+        '/accessible/windows/msaa',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        '../mac',
+        '/accessible/mac',
     ]
 else:
     LOCAL_INCLUDES += [
-        '../other',
+        '/accessible/other',
     ]
 
 FINAL_LIBRARY = 'xul'

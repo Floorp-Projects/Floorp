@@ -4,17 +4,21 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+EXPORTS.mozilla.a11y += [
+    'AccessibleWrap.h',
+    'HyperTextAccessibleWrap.h',
+]
+
 SOURCES += [
-    'uiaRawElmProvider.cpp',
+    'AccessibleWrap.cpp',
+    'Platform.cpp',
 ]
 
 LOCAL_INCLUDES += [
-    '../../base',
-    '../../generic',
-    '../../html',
-    '../../xpcom',
-    '../../xul',
-    '../msaa',
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/xul',
 ]
 
 FINAL_LIBRARY = 'xul'
