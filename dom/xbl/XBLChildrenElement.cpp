@@ -103,8 +103,8 @@ nsAnonymousContentList::GetLength(uint32_t* aLength)
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
-      if (!point->mInsertedChildren.IsEmpty()) {
-        count += point->mInsertedChildren.Length();
+      if (point->HasInsertedChildren()) {
+        count += point->InsertedChildrenLength();
       }
       else {
         count += point->GetChildCount();
@@ -144,11 +144,11 @@ nsAnonymousContentList::Item(uint32_t aIndex)
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
-      if (!point->mInsertedChildren.IsEmpty()) {
-        if (remIndex < point->mInsertedChildren.Length()) {
-          return point->mInsertedChildren[remIndex];
+      if (point->HasInsertedChildren()) {
+        if (remIndex < point->InsertedChildrenLength()) {
+          return point->InsertedChild(remIndex);
         }
-        remIndex -= point->mInsertedChildren.Length();
+        remIndex -= point->InsertedChildrenLength();
       }
       else {
         if (remIndex < point->GetChildCount()) {
@@ -179,23 +179,23 @@ nsAnonymousContentList::IndexOf(nsIContent* aContent)
     return -1;
   }
 
-  size_t index = 0;
+  int32_t index = 0;
   for (nsIContent* child = mParent->GetFirstChild();
        child;
        child = child->GetNextSibling()) {
     if (child->NodeInfo()->Equals(nsGkAtoms::children, kNameSpaceID_XBL)) {
       XBLChildrenElement* point = static_cast<XBLChildrenElement*>(child);
-      if (!point->mInsertedChildren.IsEmpty()) {
-        size_t insIndex = point->mInsertedChildren.IndexOf(aContent);
-        if (insIndex != point->mInsertedChildren.NoIndex) {
+      if (point->HasInsertedChildren()) {
+        int32_t insIndex = point->IndexOfInsertedChild(aContent);
+        if (insIndex != -1) {
           return index + insIndex;
         }
-        index += point->mInsertedChildren.Length();
+        index += point->InsertedChildrenLength();
       }
       else {
         int32_t insIndex = point->IndexOf(aContent);
         if (insIndex != -1) {
-          return index + (size_t)insIndex;
+          return index + insIndex;
         }
         index += point->GetChildCount();
       }
