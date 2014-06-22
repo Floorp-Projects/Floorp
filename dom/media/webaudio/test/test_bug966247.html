@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test whether an audio file played with a volume set to 0 plays silence</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<audio preload=none src="ting-48k-1ch.ogg" controls> </audio>
+<script>
+  SimpleTest.waitForExplicitFinish();
+
+  var count = 20;
+
+  function isSilent(b) {
+    for (var i = 0; i < b.length; b++) {
+      if (b[i] != 0.0) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  var a = document.getElementsByTagName("audio")[0];
+  a.volume = 0.0;
+  var ac = new AudioContext();
+  var measn = ac.createMediaElementSource(a);
+  var sp = ac.createScriptProcessor();
+
+  sp.onaudioprocess = function(e) {
+    var inputBuffer = e.inputBuffer.getChannelData(0);
+    ok(isSilent(inputBuffer), "The volume is set to 0, so all the elements of the buffer are supposed to be equal to 0.0");
+  }
+  // Connect the MediaElementAudioSourceNode to the ScriptProcessorNode to check
+  // the audio volume.
+  measn.connect(sp);
+  a.play();
+
+  a.addEventListener("ended", function() {
+    sp.onaudioprocess = null;
+    SimpleTest.finish();
+  });
+
+</script>
+</body>
+</html>
