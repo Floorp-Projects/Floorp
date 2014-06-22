@@ -163,6 +163,14 @@ function radd_float(i) {
     return i;
 }
 
+var uceFault_round = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
+function rround_number(i) {
+    var x = Math.round(i + 1.4);
+    if (uceFault_round(i) || uceFault_round(i))
+        assertEq(x, 100); /* = i + 1*/
+    return i;
+}
+
 var uceFault_add_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_object'));
 function radd_object(i) {
     var t = i;
@@ -327,6 +335,7 @@ for (i = 0; i < 100; i++) {
     rmod_object(i);
     rconcat_string(i);
     rconcat_number(i);
+    rround_number(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
