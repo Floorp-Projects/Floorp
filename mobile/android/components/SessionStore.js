@@ -43,12 +43,15 @@ SessionStore.prototype = {
   _windows: {},
   _lastSaveTime: 0,
   _interval: 10000,
-  _maxTabsUndo: 1,
+  _maxTabsUndo: 5,
   _pendingWrite: 0,
 
   // The index where the most recently closed tab was in the tabs array
   // when it was closed.
   _lastClosedTabIndex: -1,
+
+  // Whether or not to send notifications for changes to the closed tabs.
+  _notifyClosedTabs: false,
 
   init: function ss_init() {
     // Get file references
@@ -79,6 +82,8 @@ SessionStore.prototype = {
         observerService.addObserver(this, "browser:purge-session-history", true);
         observerService.addObserver(this, "Session:Restore", true);
         observerService.addObserver(this, "application-background", true);
+        observerService.addObserver(this, "ClosedTabs:StartNotifications", true);
+        observerService.addObserver(this, "ClosedTabs:StopNotifications", true);
         break;
       case "final-ui-startup":
         observerService.removeObserver(this, "final-ui-startup");
@@ -156,6 +161,13 @@ SessionStore.prototype = {
         // point without notice; therefore, we must synchronously write out any
         // pending save state to ensure that this data does not get lost.
         this.flushPendingState();
+        break;
+      case "ClosedTabs:StartNotifications":
+        this._notifyClosedTabs = true;
+        this._sendClosedTabsToJava(Services.wm.getMostRecentWindow("navigator:browser"));
+        break;
+      case "ClosedTabs:StopNotifications":
+        this._notifyClosedTabs = false;
         break;
     }
   },
@@ -291,6 +303,10 @@ SessionStore.prototype = {
         this._windows[aWindow.__SSID].closedTabs.splice(this._maxTabsUndo, length - this._maxTabsUndo);
 
       this._lastClosedTabIndex = aTabIndex;
+
+      if (this._notifyClosedTabs) {
+        this._sendClosedTabsToJava(aWindow);
+      }
     }
   },
 
@@ -864,6 +880,10 @@ SessionStore.prototype = {
     // Put back the extra data
     tab.browser.__SS_extdata = closedTab.extData;
 
+    if (this._notifyClosedTabs) {
+      this._sendClosedTabsToJava(aWindow);
+    }
+
     return tab.browser;
   },
 
@@ -885,6 +905,30 @@ SessionStore.prototype = {
     if (aIndex == 0) {
       this._lastClosedTabIndex = -1;
     }
+    if (this._notifyClosedTabs) {
+      this._sendClosedTabsToJava(aWindow);
+    }
+  },
+
+  _sendClosedTabsToJava: function ss_sendClosedTabsToJava(aWindow) {
+    if (!aWindow.__SSID)
+      throw (Components.returnCode = Cr.NS_ERROR_INVALID_ARG);
+
+    let closedTabs = this._windows[aWindow.__SSID].closedTabs;
+
+    let tabs = closedTabs.map(function (tab) {
+      // Get the url and title for the last entry in the session history.
+      let lastEntry = tab.entries[tab.entries.length - 1];
+      return {
+        url: lastEntry.url,
+        title: lastEntry.title || ""
+      };
+    });
+
+    sendMessageToJava({
+      type: "ClosedTabs:Data",
+      tabs: tabs
+    });
   },
 
   getTabValue: function ss_getTabValue(aTab, aKey) {
