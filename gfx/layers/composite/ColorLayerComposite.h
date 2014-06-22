@@ -44,6 +44,8 @@ public:
   virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
   virtual void CleanupResources() MOZ_OVERRIDE {};
 
+  virtual void GenEffectChain(EffectChain& aEffect) MOZ_OVERRIDE;
+
   CompositableHost* GetCompositableHost() MOZ_OVERRIDE { return nullptr; }
 
   virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
