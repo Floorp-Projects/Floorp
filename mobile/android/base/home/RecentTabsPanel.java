@@ -6,6 +6,9 @@
 package org.mozilla.gecko.home;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.EventDispatcher;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
@@ -14,9 +17,14 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.CommonColumns;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnNewTabsListener;
+import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.database.MatrixCursor.RowBuilder;
@@ -24,6 +32,7 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +44,8 @@ import android.widget.TextView;
 /**
  * Fragment that displays tabs from last session in a ListView.
  */
-public class RecentTabsPanel extends HomeFragment {
+public class RecentTabsPanel extends HomeFragment
+                             implements NativeEventListener {
     // Logging tag name
     private static final String LOGTAG = "GeckoRecentTabsPanel";
 
@@ -57,11 +67,25 @@ public class RecentTabsPanel extends HomeFragment {
     // On new tabs listener
     private OnNewTabsListener mNewTabsListener;
 
+    // Recently closed tabs from gecko
+    private ClosedTab[] mClosedTabs;
+
+    private static final class ClosedTab {
+        public final String url;
+        public final String title;
+
+        public ClosedTab(String url, String title) {
+            this.url = url;
+            this.title = title;
+        }
+    }
+
     public static final class RecentTabs implements URLColumns, CommonColumns {
         public static final String TYPE = "type";
 
         public static final int TYPE_HEADER = 0;
         public static final int TYPE_LAST_TIME = 1;
+        public static final int TYPE_CLOSED = 2;
     }
 
     @Override
@@ -119,6 +143,9 @@ public class RecentTabsPanel extends HomeFragment {
         });
 
         registerForContextMenu(mList);
+
+        EventDispatcher.getInstance().registerGeckoThreadListener(this, "ClosedTabs:Data");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ClosedTabs:StartNotifications", null));
     }
 
     @Override
@@ -126,6 +153,22 @@ public class RecentTabsPanel extends HomeFragment {
         super.onDestroyView();
         mList = null;
         mEmptyView = null;
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener(this, "ClosedTabs:Data");
+        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("ClosedTabs:StopNotifications", null));
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        // Detach and reattach the fragment as the layout changes.
+        if (isVisible()) {
+            getFragmentManager().beginTransaction()
+                                .detach(this)
+                                .attach(this)
+                                .commitAllowingStateLoss();
+        }
     }
 
     @Override
@@ -166,6 +209,31 @@ public class RecentTabsPanel extends HomeFragment {
         getLoaderManager().initLoader(LOADER_ID_RECENT_TABS, null, mCursorLoaderCallbacks);
     }
 
+    @Override
+    public void handleMessage(String event, NativeJSObject message, EventCallback callback) {
+        final NativeJSObject[] tabs = message.getObjectArray("tabs");
+        final int length = tabs.length;
+
+        final ClosedTab[] closedTabs = new ClosedTab[length];
+        for (int i = 0; i < length; i++) {
+            final NativeJSObject tab = tabs[i];
+            closedTabs[i] = new ClosedTab(tab.getString("url"), tab.getString("title"));
+        }
+
+        // Only modify mClosedTabs on the UI thread
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mClosedTabs = closedTabs;
+
+                // Reload the cursor to show recently closed tabs.
+                if (mClosedTabs.length > 0 && canLoad()) {
+                    getLoaderManager().restartLoader(LOADER_ID_RECENT_TABS, null, mCursorLoaderCallbacks);
+                }
+            }
+        });
+    }
+
     private void openAllTabs() {
         final Cursor c = mAdapter.getCursor();
         if (c == null || !c.moveToFirst()) {
@@ -184,8 +252,11 @@ public class RecentTabsPanel extends HomeFragment {
     }
 
     private static class RecentTabsCursorLoader extends SimpleCursorLoader {
-        public RecentTabsCursorLoader(Context context) {
+        private final ClosedTab[] closedTabs;
+
+        public RecentTabsCursorLoader(Context context, ClosedTab[] closedTabs) {
             super(context);
+            this.closedTabs = closedTabs;
         }
 
         private void addRow(MatrixCursor c, String url, String title, int type) {
@@ -200,16 +271,32 @@ public class RecentTabsPanel extends HomeFragment {
         public Cursor loadCursor() {
             final Context context = getContext();
 
-            final String jsonString = GeckoProfile.get(context).readSessionFile(true);
-            if (jsonString == null) {
-                // No previous session data
-                return null;
-            }
-
             final MatrixCursor c = new MatrixCursor(new String[] { RecentTabs._ID,
                                                                    RecentTabs.URL,
                                                                    RecentTabs.TITLE,
                                                                    RecentTabs.TYPE });
+
+            if (closedTabs != null && closedTabs.length > 0) {
+                addRow(c, null, context.getString(R.string.home_closed_tabs_title), RecentTabs.TYPE_HEADER);
+
+                final int length = closedTabs.length;
+                for (int i = 0; i < length; i++) {
+                    final String url = closedTabs[i].url;
+
+                    // Don't show recent tabs for about:home
+                    if (!AboutPages.isAboutHome(url)) {
+                        addRow(c, url, closedTabs[i].title, RecentTabs.TYPE_CLOSED);
+                    }
+                }
+            }
+
+            final String jsonString = GeckoProfile.get(context).readSessionFile(true);
+            if (jsonString == null) {
+                // No previous session data
+                return c;
+            }
+
+            final int count = c.getCount();
 
             new SessionParser() {
                 @Override
@@ -222,7 +309,7 @@ public class RecentTabsPanel extends HomeFragment {
                     }
 
                     // If this is the first tab we're reading, add a header.
-                    if (c.getCount() == 0) {
+                    if (c.getCount() == count) {
                         addRow(c, null, context.getString(R.string.home_last_tabs_title), RecentTabs.TYPE_HEADER);
                     }
 
@@ -279,7 +366,7 @@ public class RecentTabsPanel extends HomeFragment {
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            return new RecentTabsCursorLoader(getActivity());
+            return new RecentTabsCursorLoader(getActivity(), mClosedTabs);
         }
 
         @Override
