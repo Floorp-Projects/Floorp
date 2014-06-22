@@ -163,6 +163,25 @@ function radd_float(i) {
     return i;
 }
 
+var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
+function rfloor_number(i) {
+    var x = Math.floor(i + 0.1111);
+    if (uceFault_floor_number(i) || uceFault_floor_number(i))
+        assertEq(x, i);
+    return i;
+}
+
+var uceFault_floor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_object'));
+function rfloor_object(i) {
+    var t = i + 0.1111;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.floor(o);
+    t = 1000.1111;
+    if (uceFault_floor_object(i) || uceFault_floor_object(i))
+        assertEq(x, i);
+    return i;
+}
+
 var uceFault_round_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
 function rround_number(i) {
     var x = Math.round(i + 1.4);
@@ -362,6 +381,8 @@ for (i = 0; i < 100; i++) {
     rmod_object(i);
     rconcat_string(i);
     rconcat_number(i);
+    rfloor_number(i);
+    rfloor_object(i);
     rround_number(i);
     rround_double(i);
     rpow_number(i);

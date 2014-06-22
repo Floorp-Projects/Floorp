@@ -272,6 +272,9 @@ extern bool
 math_clz32(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
+math_floor_handle(JSContext *cx, HandleValue v, MutableHandleValue r);
+
+extern bool
 math_floor(JSContext *cx, unsigned argc, Value *vp);
 
 extern double
