@@ -4321,6 +4321,10 @@ class MMathFunction
     }
     void trySpecializeFloat32(TempAllocator &alloc);
     void computeRange(TempAllocator &alloc);
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return function_ == Round;
+    }
 };
 
 class MAdd : public MBinaryArithInstruction
