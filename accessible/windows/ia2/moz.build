@@ -36,12 +36,12 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../../base',
-    '../../generic',
-    '../../html',
-    '../../xpcom',
-    '../../xul',
-    '../msaa',
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/windows/msaa',
+    '/accessible/xpcom',
+    '/accessible/xul',
 ]
 
 FINAL_LIBRARY = 'xul'

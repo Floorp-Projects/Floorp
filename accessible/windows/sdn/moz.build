@@ -11,12 +11,12 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../../base',
-    '../../generic',
-    '../../html',
-    '../../xpcom',
-    '../../xul',
-    '../msaa',
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/windows/msaa',
+    '/accessible/xpcom',
+    '/accessible/xul',
 ]
 
 # The midl generated code include Windows headers which defines min and max

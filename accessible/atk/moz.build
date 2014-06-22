@@ -32,11 +32,11 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../base',
-    '../generic',
-    '../html',
-    '../xpcom',
-    '../xul',
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
     '/other-licenses/atk-1.0',
 ]
 

@@ -45,15 +45,15 @@ if CONFIG['MOZ_XUL']:
     ]
 
 LOCAL_INCLUDES += [
-    '../../../../content/base/src',
-    '../../base',
-    '../../generic',
-    '../../html',
-    '../../xpcom',
-    '../../xul',
-    '../ia2',
-    '../sdn',
-    '../uia',
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/windows/ia2',
+    '/accessible/windows/sdn',
+    '/accessible/windows/uia',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/content/base/src',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

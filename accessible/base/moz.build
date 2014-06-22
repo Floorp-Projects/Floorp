@@ -58,10 +58,10 @@ if CONFIG['A11Y_LOG']:
     ]
 
 LOCAL_INCLUDES += [
-    '../generic',
-    '../html',
-    '../xpcom',
-    '../xul',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
     '/dom/xbl',
     '/ipc/chromium/src',
     '/layout/generic',
@@ -73,20 +73,20 @@ LOCAL_INCLUDES += [
 
 if CONFIG['MOZ_ENABLE_GTK']:
     LOCAL_INCLUDES += [
-        '../atk',
+        '/accessible/atk',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        '../windows/ia2',
-        '../windows/msaa',
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        '../mac',
+        '/accessible/mac',
     ]
 else:
     LOCAL_INCLUDES += [
-        '../other',
+        '/accessible/other',
     ]
 
 FINAL_LIBRARY = 'xul'
