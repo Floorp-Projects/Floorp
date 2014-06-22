@@ -9,6 +9,7 @@
 #ifndef nsCaret_h__
 #define nsCaret_h__
 
+#include "mozilla/MemoryReporting.h"
 #include "nsCoord.h"
 #include "nsISelectionListener.h"
 #include "nsIWeakReferenceUtils.h"
@@ -164,6 +165,8 @@ class nsCaret : public nsISelectionListener
                                              int32_t* aReturnOffset);
 
     void CheckCaretDrawingState();
+
+    size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
 
