@@ -11,7 +11,8 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SessionParser;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.db.BrowserContract.Combined;
+import org.mozilla.gecko.db.BrowserContract.CommonColumns;
+import org.mozilla.gecko.db.BrowserContract.URLColumns;
 import org.mozilla.gecko.home.HomePager.OnNewTabsListener;
 
 import android.app.Activity;
@@ -47,12 +48,6 @@ public class RecentTabsPanel extends HomeFragment {
     // The view shown by the fragment.
     private HomeListView mList;
 
-    // The title for this HomeFragment panel.
-    private TextView mTitle;
-
-    // The button view for restoring tabs from last session.
-    private View mRestoreButton;
-
     // Reference to the View to display when there are no results.
     private View mEmptyView;
 
@@ -61,6 +56,13 @@ public class RecentTabsPanel extends HomeFragment {
 
     // On new tabs listener
     private OnNewTabsListener mNewTabsListener;
+
+    public static final class RecentTabs implements URLColumns, CommonColumns {
+        public static final String TYPE = "type";
+
+        public static final int TYPE_HEADER = 0;
+        public static final int TYPE_LAST_TIME = 1;
+    }
 
     @Override
     public void onAttach(Activity activity) {
@@ -88,11 +90,6 @@ public class RecentTabsPanel extends HomeFragment {
 
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
-        mTitle = (TextView) view.findViewById(R.id.title);
-        if (mTitle != null) {
-            mTitle.setText(R.string.home_last_tabs_title);
-        }
-
         mList = (HomeListView) view.findViewById(R.id.list);
         mList.setTag(HomePager.LIST_TAG_LAST_TABS);
 
@@ -106,7 +103,7 @@ public class RecentTabsPanel extends HomeFragment {
 
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
 
-                final String url = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+                final String url = c.getString(c.getColumnIndexOrThrow(RecentTabs.URL));
                 mNewTabsListener.onNewTabs(new String[] { url });
             }
         });
@@ -115,30 +112,20 @@ public class RecentTabsPanel extends HomeFragment {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
-                info.url = cursor.getString(cursor.getColumnIndexOrThrow(Combined.URL));
-                info.title = cursor.getString(cursor.getColumnIndexOrThrow(Combined.TITLE));
+                info.url = cursor.getString(cursor.getColumnIndexOrThrow(RecentTabs.URL));
+                info.title = cursor.getString(cursor.getColumnIndexOrThrow(RecentTabs.TITLE));
                 return info;
             }
         });
 
         registerForContextMenu(mList);
-
-        mRestoreButton = view.findViewById(R.id.open_all_tabs_button);
-        mRestoreButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openAllTabs();
-            }
-        });
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         mList = null;
-        mTitle = null;
         mEmptyView = null;
-        mRestoreButton = null;
     }
 
     @Override
@@ -156,19 +143,8 @@ public class RecentTabsPanel extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
-            if (mTitle != null) {
-                mTitle.setVisibility(View.VISIBLE);
-            }
-            mRestoreButton.setVisibility(View.VISIBLE);
             return;
         }
-
-        // Cursor is empty, so hide the title and set the
-        // empty view if it hasn't been set already.
-        if (mTitle != null) {
-            mTitle.setVisibility(View.GONE);
-        }
-        mRestoreButton.setVisibility(View.GONE);
 
         if (mEmptyView == null) {
             // Set empty panel view. We delay this so that the empty view won't flash.
@@ -199,7 +175,7 @@ public class RecentTabsPanel extends HomeFragment {
         final String[] urls = new String[c.getCount()];
 
         do {
-            urls[c.getPosition()] = c.getString(c.getColumnIndexOrThrow(Combined.URL));
+            urls[c.getPosition()] = c.getString(c.getColumnIndexOrThrow(RecentTabs.URL));
         } while (c.moveToNext());
 
         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON);
@@ -212,6 +188,14 @@ public class RecentTabsPanel extends HomeFragment {
             super(context);
         }
 
+        private void addRow(MatrixCursor c, String url, String title, int type) {
+            final RowBuilder row = c.newRow();
+            row.add(-1);
+            row.add(url);
+            row.add(title);
+            row.add(type);
+        }
+
         @Override
         public Cursor loadCursor() {
             final Context context = getContext();
@@ -222,9 +206,10 @@ public class RecentTabsPanel extends HomeFragment {
                 return null;
             }
 
-            final MatrixCursor c = new MatrixCursor(new String[] { Combined._ID,
-                                                                   Combined.URL,
-                                                                   Combined.TITLE });
+            final MatrixCursor c = new MatrixCursor(new String[] { RecentTabs._ID,
+                                                                   RecentTabs.URL,
+                                                                   RecentTabs.TITLE,
+                                                                   RecentTabs.TYPE });
 
             new SessionParser() {
                 @Override
@@ -236,12 +221,12 @@ public class RecentTabsPanel extends HomeFragment {
                         return;
                     }
 
-                    final RowBuilder row = c.newRow();
-                    row.add(-1);
-                    row.add(url);
+                    // If this is the first tab we're reading, add a header.
+                    if (c.getCount() == 0) {
+                        addRow(c, null, context.getString(R.string.home_last_tabs_title), RecentTabs.TYPE_HEADER);
+                    }
 
-                    final String title = tab.getTitle();
-                    row.add(title);
+                    addRow(c, url, tab.getTitle(), RecentTabs.TYPE_LAST_TIME);
                 }
             }.parse(jsonString);
 
@@ -249,20 +234,46 @@ public class RecentTabsPanel extends HomeFragment {
         }
     }
 
-    private static class RecentTabsAdapter extends CursorAdapter {
+    private static class RecentTabsAdapter extends MultiTypeCursorAdapter {
+        private static final int ROW_HEADER = 0;
+        private static final int ROW_STANDARD = 1;
+
+        private static final int[] VIEW_TYPES = new int[] { ROW_STANDARD, ROW_HEADER };
+        private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.home_header_row };
+
         public RecentTabsAdapter(Context context) {
-            super(context, null, 0);
+            super(context, null, VIEW_TYPES, LAYOUT_TYPES);
+        }
+
+        public int getItemViewType(int position) {
+            final Cursor c = getCursor(position);
+            final int type = c.getInt(c.getColumnIndexOrThrow(RecentTabs.TYPE));
+
+            if (type == RecentTabs.TYPE_HEADER) {
+                return ROW_HEADER;
+            }
+
+            return ROW_STANDARD;
+         }
+
+        public boolean isEnabled(int position) {
+            return (getItemViewType(position) != ROW_HEADER);
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor cursor) {
-            ((TwoLinePageRow) view).updateFromCursor(cursor);
-        }
+        public void bindView(View view, Context context, int position) {
+            final int itemType = getItemViewType(position);
+            final Cursor c = getCursor(position);
 
-        @Override
-        public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            return LayoutInflater.from(context).inflate(R.layout.home_item_row, parent, false);
-        }
+            if (itemType == ROW_HEADER) {
+                final String title = c.getString(c.getColumnIndexOrThrow(RecentTabs.TITLE));
+                final TextView textView = (TextView) view;
+                textView.setText(title);
+            } else if (itemType == ROW_STANDARD) {
+                final TwoLinePageRow pageRow = (TwoLinePageRow) view;
+                pageRow.updateFromCursor(c);
+            }
+         }
     }
 
     private class CursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
