@@ -148,10 +148,26 @@ nsHTMLCSSStyleSheet::MediumFeaturesChanged(nsPresContext* aPresContext)
   return false;
 }
 
+size_t
+SizeOfCachedStyleAttrsEntryExcludingThis(nsStringHashKey::KeyType& aKey,
+                                         MiscContainer* const& aData,
+                                         mozilla::MallocSizeOf aMallocSizeOf,
+                                         void* userArg)
+{
+  // We don't own the MiscContainers so we don't count them. We do care about
+  // the size of the nsString members in the keys though.
+  return aKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+}
+
 /* virtual */ size_t
 nsHTMLCSSStyleSheet::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return 0;
+  // The size of mCachedStyleAttrs's mTable member (a PLDHashTable) is
+  // significant in itself, but more significant is the size of the nsString
+  // members of the nsStringHashKeys.
+  return mCachedStyleAttrs.SizeOfExcludingThis(SizeOfCachedStyleAttrsEntryExcludingThis,
+                                               aMallocSizeOf,
+                                               nullptr);
 }
 
 /* virtual */ size_t
