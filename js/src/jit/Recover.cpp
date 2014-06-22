@@ -561,6 +561,20 @@ RPow::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    switch (function_) {
+      case Round:
+        writer.writeUnsigned(uint32_t(RInstruction::Recover_Round));
+        return true;
+      default:
+        MOZ_ASSUME_UNREACHABLE("Unknown math function.");
+        return false;
+    }
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
