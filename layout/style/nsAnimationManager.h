@@ -110,7 +110,7 @@ public:
   }
 
   void UpdateStyleAndEvents(ElementAnimations* aEA,
-                            TimeStamp aRefreshTime,
+                            mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
 
   // nsIStyleRuleProcessor (parts)
