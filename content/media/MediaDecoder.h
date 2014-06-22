@@ -718,14 +718,14 @@ public:
   // Records activity stopping on the channel. The monitor must be held.
   virtual void NotifyPlaybackStarted() {
     GetReentrantMonitor().AssertCurrentThreadIn();
-    mPlaybackStatistics.Start();
+    mPlaybackStatistics->Start();
   }
 
   // Used to estimate rates of data passing through the decoder's channel.
   // Records activity stopping on the channel. The monitor must be held.
   virtual void NotifyPlaybackStopped() {
     GetReentrantMonitor().AssertCurrentThreadIn();
-    mPlaybackStatistics.Stop();
+    mPlaybackStatistics->Stop();
   }
 
   // The actual playback rate computation. The monitor must be held.
@@ -1194,7 +1194,7 @@ protected:
   // Data needed to estimate playback data rate. The timeline used for
   // this estimate is "decode time" (where the "current time" is the
   // time of the last decoded video frame).
-  MediaChannelStatistics mPlaybackStatistics;
+  nsRefPtr<MediaChannelStatistics> mPlaybackStatistics;
 
   // True when our media stream has been pinned. We pin the stream
   // while seeking.
