@@ -38,7 +38,7 @@ public final class HomeConfig {
     public static enum PanelType implements Parcelable {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
-        HISTORY("history", MostRecentPanel.class),
+        HISTORY("history", HistoryPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
         DYNAMIC("dynamic", DynamicPanel.class);
 
