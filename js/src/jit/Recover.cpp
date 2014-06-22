@@ -535,6 +535,32 @@ RRound::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MPow::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Pow));
+    return true;
+}
+
+RPow::RPow(CompactBufferReader &reader)
+{ }
+
+bool
+RPow::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue base(cx, iter.read());
+    RootedValue power(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(base.isNumber() && power.isNumber());
+    if (!js_math_pow_handle(cx, base, power, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MNewObject::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

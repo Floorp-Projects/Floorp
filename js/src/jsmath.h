@@ -111,6 +111,9 @@ extern bool
 js_math_sqrt(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+js_math_pow_handle(JSContext *cx, js::HandleValue base, js::HandleValue power, js::MutableHandleValue result);
+
+extern bool
 js_math_pow(JSContext *cx, unsigned argc, js::Value *vp);
 
 namespace js {
