@@ -776,6 +776,18 @@ js_math_random(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+js::math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res)
+{
+    double d;
+    if (!ToNumber(cx, arg, &d))
+        return false;
+
+    d = math_round_impl(d);
+    res.setNumber(d);
+    return true;
+}
+
 double
 js::math_round_impl(double x)
 {
@@ -814,13 +826,7 @@ js::math_round(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    double z = math_round_impl(x);
-    args.rval().setNumber(z);
-    return true;
+    return js::math_round_handle(cx, args[0], args.rval());
 }
 
 double
