@@ -48,9 +48,13 @@ static int nr_stun_client_send_request(nr_stun_client_ctx *ctx);
 static void nr_stun_client_timer_expired_cb(NR_SOCKET s, int b, void *cb_arg);
 static int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **password);
 
+#define NR_STUN_TRANSPORT_ADDR_CHECK_WILDCARD 1
+#define NR_STUN_TRANSPORT_ADDR_CHECK_LOOPBACK 2
+
 int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *peer, UINT4 RTO, nr_stun_client_ctx **ctxp)
   {
     nr_stun_client_ctx *ctx=0;
+    char allow_loopback;
     int r,_status;
 
     if ((r=nr_stun_startup()))
@@ -84,6 +88,12 @@ int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *p
 
     if (NR_reg_get_uint4(NR_STUN_REG_PREF_CLNT_FINAL_RETRANSMIT_BACKOFF, &ctx->final_retransmit_backoff_ms))
         ctx->final_retransmit_backoff_ms = 16 * ctx->rto_ms;
+
+     ctx->mapped_addr_check_mask = NR_STUN_TRANSPORT_ADDR_CHECK_WILDCARD;
+     if (NR_reg_get_char(NR_STUN_REG_PREF_ALLOW_LOOPBACK_ADDRS, &allow_loopback) ||
+         !allow_loopback) {
+       ctx->mapped_addr_check_mask |= NR_STUN_TRANSPORT_ADDR_CHECK_LOOPBACK;
+     }
 
     /* If we are doing TCP, compute the maximum timeout as if
        we retransmitted and then set the maximum number of
@@ -411,12 +421,12 @@ static int nr_stun_client_get_password(void *arg, nr_stun_message *msg, Data **p
     return(0);
 }
 
-int nr_stun_transport_addr_check(nr_transport_addr* addr)
+int nr_stun_transport_addr_check(nr_transport_addr* addr, UINT4 check)
   {
-    if(nr_transport_addr_is_wildcard(addr))
+    if((check & NR_STUN_TRANSPORT_ADDR_CHECK_WILDCARD) && nr_transport_addr_is_wildcard(addr))
       return(R_BAD_DATA);
 
-    if (nr_transport_addr_is_loopback(addr))
+    if ((check & NR_STUN_TRANSPORT_ADDR_CHECK_LOOPBACK) && nr_transport_addr_is_loopback(addr))
       return(R_BAD_DATA);
 
     return(0);
@@ -644,7 +654,8 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
         if (!nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_RELAY_ADDRESS, &attr))
           ABORT(R_BAD_DATA);
 
-        if ((r=nr_stun_transport_addr_check(&attr->u.relay_address.unmasked)))
+        if ((r=nr_stun_transport_addr_check(&attr->u.relay_address.unmasked,
+                                            ctx->mapped_addr_check_mask)))
           ABORT(r);
 
         if ((r=nr_transport_addr_copy(
@@ -688,14 +699,16 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
 
     if (mapped_addr) {
         if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_XOR_MAPPED_ADDRESS, &attr)) {
-            if ((r=nr_stun_transport_addr_check(&attr->u.xor_mapped_address.unmasked)))
+            if ((r=nr_stun_transport_addr_check(&attr->u.xor_mapped_address.unmasked,
+                                                ctx->mapped_addr_check_mask)))
                 ABORT(r);
 
             if ((r=nr_transport_addr_copy(mapped_addr, &attr->u.xor_mapped_address.unmasked)))
                 ABORT(r);
         }
         else if (nr_stun_message_has_attribute(ctx->response, NR_STUN_ATTR_MAPPED_ADDRESS, &attr)) {
-            if ((r=nr_stun_transport_addr_check(&attr->u.mapped_address)))
+            if ((r=nr_stun_transport_addr_check(&attr->u.mapped_address,
+                                                ctx->mapped_addr_check_mask)))
                 ABORT(r);
 
             if ((r=nr_transport_addr_copy(mapped_addr, &attr->u.mapped_address)))
