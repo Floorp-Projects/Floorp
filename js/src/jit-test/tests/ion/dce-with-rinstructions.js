@@ -304,6 +304,25 @@ function rconcat_number(i) {
     return i;
 }
 
+var uceFault_pow_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_pow_number'));
+function rpow_number(i) {
+    var x = Math.pow(i, 3.14159);
+    if (uceFault_pow_number(i) || uceFault_pow_number(i))
+        assertEq(x, Math.pow(99, 3.14159));
+    return i;
+}
+
+var uceFault_pow_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_pow_object'));
+function rpow_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.pow(o, 3.14159); /* computed with t == i, not 1.5 */
+    t = 1.5;
+    if (uceFault_bitnot_object(i) || uceFault_bitnot_object(i))
+        assertEq(x, Math.pow(99, 3.14159));
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -336,6 +355,8 @@ for (i = 0; i < 100; i++) {
     rconcat_string(i);
     rconcat_number(i);
     rround_number(i);
+    rpow_number(i);
+    rpow_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well

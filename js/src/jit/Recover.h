@@ -32,6 +32,7 @@ namespace jit {
     _(Mod)                                      \
     _(Concat)                                   \
     _(Round)                                    \
+    _(Pow)                                      \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
 
@@ -276,6 +277,18 @@ class RRound MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RPow MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Pow)
+
+    virtual uint32_t numOperands() const {
+        return 2;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;
