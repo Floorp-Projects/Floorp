@@ -342,6 +342,7 @@ void MediaDecoderStateMachine::SendStreamAudio(AudioData* aAudio,
   VERBOSE_LOG("writing %d frames of data to MediaStream for AudioData at %lld",
               aAudio->mFrames - int32_t(offset), aAudio->mTime);
   aStream->mAudioFramesWritten += aAudio->mFrames - int32_t(offset);
+  aOutput->ApplyVolume(mVolume);
 }
 
 static void WriteVideoToMediaStream(layers::Image* aImage,
