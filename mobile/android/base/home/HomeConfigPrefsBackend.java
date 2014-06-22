@@ -68,13 +68,16 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         }
 
         final PanelConfig historyEntry = createBuiltinPanelConfig(mContext, PanelType.HISTORY);
+        final PanelConfig recentTabsEntry = createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS);
 
         // On tablets, the history panel is the last.
         // On phones, the history panel is the first one.
         if (HardwareUtils.isTablet()) {
             panelConfigs.add(historyEntry);
+            panelConfigs.add(recentTabsEntry);
         } else {
             panelConfigs.add(0, historyEntry);
+            panelConfigs.add(0, recentTabsEntry);
         }
 
         return new State(panelConfigs, true);

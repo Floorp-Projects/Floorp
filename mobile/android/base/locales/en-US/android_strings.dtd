@@ -11,6 +11,7 @@
 <!ENTITY  bookmarks_title "Bookmarks">
 <!ENTITY  history_title "History">
 <!ENTITY  reading_list_title "Reading List">
+<!ENTITY  recent_tabs_title "Recent Tabs">
 
 <!ENTITY  switch_to_tab "Switch to tab">
 
