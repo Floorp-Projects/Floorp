@@ -16,6 +16,7 @@
 #include "DecoderTraits.h"
 #include "AudioContext.h"
 #include "AudioBuffer.h"
+#include "nsAutoPtr.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptError.h"
 #include "nsMimeTypes.h"
@@ -151,7 +152,7 @@ private:
   nsCOMPtr<nsIThreadPool> mThreadPool;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   nsRefPtr<BufferDecoder> mBufferDecoder;
-  nsAutoPtr<MediaDecoderReader> mDecoderReader;
+  nsRefPtr<MediaDecoderReader> mDecoderReader;
 };
 
 NS_IMETHODIMP
