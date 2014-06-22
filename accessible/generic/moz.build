@@ -26,30 +26,30 @@ UNIFIED_SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '../../../layout/generic',
-    '../../../layout/xul',
-    '../base',
-    '../html',
-    '../xpcom',
-    '../xul',
+    '/accessible/base',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/layout/generic',
+    '/layout/xul',
 ]
 
 if CONFIG['MOZ_ENABLE_GTK']:
     LOCAL_INCLUDES += [
-        '../atk',
+        '/accessible/atk',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     LOCAL_INCLUDES += [
-        '../windows/ia2',
-        '../windows/msaa',
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     LOCAL_INCLUDES += [
-        '../mac',
+        '/accessible/mac',
     ]
 else:
     LOCAL_INCLUDES += [
-        '../other',
+        '/accessible/other',
     ]
 
 FINAL_LIBRARY = 'xul'
