@@ -48,7 +48,9 @@ function spawnTest() {
 
   click(panelWin, findGraphNode(panelWin, nodeIds[2]));
   yield once(panelWin, EVENTS.UI_INSPECTOR_NODE_SET);
-  yield setAndCheck(0, "gain", 0.005, 0.005, "sets number as number");
+  yield setAndCheck(0, "gain", "0.005", 0.005, "sets number as number");
+  yield setAndCheck(0, "gain", "0.1", 0.1, "sets float as float");
+  yield setAndCheck(0, "gain", ".2", 0.2, "sets float without leading zero as float");
 
   yield teardown(panel);
   finish();

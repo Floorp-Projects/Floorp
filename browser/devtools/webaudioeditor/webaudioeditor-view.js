@@ -466,7 +466,12 @@ let WebAudioInspectorView = {
 
     // Cast value to proper type
     try {
-      value = JSON.parse(value);
+      let number = parseFloat(value);
+      if (!isNaN(number)) {
+        value = number;
+      } else {
+        value = JSON.parse(value);
+      }
       error = yield node.actor.setParam(propName, value);
     }
     catch (e) {
