@@ -9,13 +9,11 @@
 
 #include "jsapi-tests/tests.h"
 
-using namespace JS;
-
 #ifdef JSGC_USE_EXACT_ROOTING
 
 BEGIN_TEST(testWeakMap_basicOperations)
 {
-    RootedObject map(cx, NewWeakMapObject(cx));
+    RootedObject map(cx, JS::NewWeakMapObject(cx));
     CHECK(IsWeakMapObject(map));
 
     RootedObject key(cx, newKey());
@@ -73,7 +71,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
     JS_GC(rt);
 
-    RootedObject map(cx, NewWeakMapObject(cx));
+    RootedObject map(cx, JS::NewWeakMapObject(cx));
     CHECK(map);
 
     RootedObject key(cx, newKey());
