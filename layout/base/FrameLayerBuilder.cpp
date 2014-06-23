@@ -4234,13 +4234,17 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
   // ThebesLayer
   gfxContextMatrixAutoSaveRestore saveMatrix(aContext);
   nsIntPoint offset = GetTranslationForThebesLayer(aLayer);
-
   nsPresContext* presContext = entry->mContainerLayerFrame->PresContext();
-  int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
 
-  RecomputeVisibilityForItems(entry->mItems, builder, aRegionToDraw,
-                              offset, appUnitsPerDevPixel,
-                              userData->mXScale, userData->mYScale);
+  if (!layerBuilder->GetContainingThebesLayerData()) {
+    // Recompute visibility of items in our ThebesLayer. Note that this
+    // recomputes visibility for all descendants of our display items too,
+    // so there's no need to do this for the items in inactive ThebesLayers.
+    int32_t appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
+    RecomputeVisibilityForItems(entry->mItems, builder, aRegionToDraw,
+                                offset, appUnitsPerDevPixel,
+                                userData->mXScale, userData->mYScale);
+  }
 
   nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(presContext->DeviceContext(), aContext);
