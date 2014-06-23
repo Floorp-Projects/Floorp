@@ -4711,7 +4711,8 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
     return nullptr;
   }
 
-  uint32_t flags = ShouldPrerenderTransformedContent(aBuilder, mFrame, false) ?
+  bool prerender = ShouldPrerenderTransformedContent(aBuilder, mFrame, false);
+  uint32_t flags = prerender ?
     FrameLayerBuilder::CONTAINER_NOT_CLIPPED_BY_ANCESTORS : 0;
   nsRefPtr<ContainerLayer> container = aManager->GetLayerBuilder()->
     BuildContainerLayerFor(aBuilder, aManager, mFrame, this, mStoredList.GetChildren(),
@@ -4732,7 +4733,7 @@ already_AddRefed<Layer> nsDisplayTransform::BuildLayer(nsDisplayListBuilder *aBu
   nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(container, aBuilder,
                                                            this, mFrame,
                                                            eCSSProperty_transform);
-  if (ShouldPrerenderTransformedContent(aBuilder, mFrame, false)) {
+  if (prerender) {
     container->SetUserData(nsIFrame::LayerIsPrerenderedDataKey(),
                            /*the value is irrelevant*/nullptr);
     container->SetContentFlags(container->GetContentFlags() | Layer::CONTENT_MAY_CHANGE_TRANSFORM);
