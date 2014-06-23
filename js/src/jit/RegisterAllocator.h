@@ -255,21 +255,17 @@ class InstructionData
 // Structure to track all moves inserted next to instructions in a graph.
 class InstructionDataMap
 {
-    InstructionData *insData_;
-    uint32_t numIns_;
+    FixedList<InstructionData> insData_;
 
   public:
     InstructionDataMap()
-      : insData_(nullptr),
-        numIns_(0)
+      : insData_()
     { }
 
     bool init(MIRGenerator *gen, uint32_t numInstructions) {
-        insData_ = gen->allocate<InstructionData>(numInstructions);
-        numIns_ = numInstructions;
-        if (!insData_)
+        if (!insData_.init(gen->alloc(), numInstructions))
             return false;
-        memset(insData_, 0, sizeof(InstructionData) * numInstructions);
+        memset(&insData_[0], 0, sizeof(InstructionData) * numInstructions);
         return true;
     }
 
@@ -286,11 +282,9 @@ class InstructionDataMap
         return operator[](ins->id());
     }
     InstructionData &operator[](uint32_t ins) {
-        JS_ASSERT(ins < numIns_);
         return insData_[ins];
     }
     const InstructionData &operator[](uint32_t ins) const {
-        JS_ASSERT(ins < numIns_);
         return insData_[ins];
     }
 };
