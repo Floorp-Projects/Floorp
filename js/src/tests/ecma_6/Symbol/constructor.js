@@ -26,5 +26,8 @@ assertEq(hits, 1);
 
 assertEq(Object.getPrototypeOf(Symbol.prototype), Object.prototype);
 
+// Symbol.prototype is not itself a Symbol object.
+assertThrowsInstanceOf(() => Symbol.prototype.valueOf(), TypeError);
+
 if (typeof reportCompare === "function")
     reportCompare(0, 0);

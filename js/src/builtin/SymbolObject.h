@@ -48,6 +48,8 @@ class SymbolObject : public JSObject
     // Methods defined on Symbol.prototype.
     static bool toString_impl(JSContext *cx, CallArgs args);
     static bool toString(JSContext *cx, unsigned argc, Value *vp);
+    static bool valueOf_impl(JSContext *cx, CallArgs args);
+    static bool valueOf(JSContext *cx, unsigned argc, Value *vp);
 
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
