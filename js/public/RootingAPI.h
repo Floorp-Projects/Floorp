@@ -1138,7 +1138,7 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T> 
         registerWithRuntime(rt);
     }
 
-    PersistentRooted(PersistentRooted &rhs)
+    PersistentRooted(const PersistentRooted &rhs)
       : mozilla::LinkedListElement<PersistentRooted<T> >(),
         ptr(rhs.ptr)
     {
@@ -1146,8 +1146,11 @@ class PersistentRooted : private mozilla::LinkedListElement<PersistentRooted<T> 
          * Copy construction takes advantage of the fact that the original
          * is already inserted, and simply adds itself to whatever list the
          * original was on - no JSRuntime pointer needed.
+         *
+         * This requires mutating rhs's links, but those should be 'mutable'
+         * anyway. C++ doesn't let us declare mutable base classes.
          */
-        rhs.setNext(this);
+        const_cast<PersistentRooted &>(rhs).setNext(this);
     }
 
     /*
