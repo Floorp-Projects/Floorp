@@ -339,6 +339,12 @@ class GlobalObject : public JSObject
         return &global->getPrototype(JSProto_String).toObject();
     }
 
+    static JSObject *getOrCreateSymbolPrototype(JSContext *cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_Symbol))
+            return nullptr;
+        return &global->getPrototype(JSProto_Symbol).toObject();
+    }
+
     static JSObject *getOrCreateRegExpPrototype(JSContext *cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_RegExp))
             return nullptr;

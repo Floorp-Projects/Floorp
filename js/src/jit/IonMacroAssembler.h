@@ -334,6 +334,7 @@ class MacroAssembler : public MacroAssemblerSpecific
           case MIRType_Boolean:   return branchTestBoolean(cond, val, label);
           case MIRType_Int32:     return branchTestInt32(cond, val, label);
           case MIRType_String:    return branchTestString(cond, val, label);
+          case MIRType_Symbol:    return branchTestSymbol(cond, val, label);
           case MIRType_Object:    return branchTestObject(cond, val, label);
           case MIRType_Double:    return branchTestDouble(cond, val, label);
           case MIRType_MagicOptimizedArguments: // Fall through.
@@ -646,6 +647,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void callPreBarrier(const T &address, MIRType type) {
         JS_ASSERT(type == MIRType_Value ||
                   type == MIRType_String ||
+                  type == MIRType_Symbol ||
                   type == MIRType_Object ||
                   type == MIRType_Shape);
         Label done;
@@ -671,6 +673,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void patchableCallPreBarrier(const T &address, MIRType type) {
         JS_ASSERT(type == MIRType_Value ||
                   type == MIRType_String ||
+                  type == MIRType_Symbol ||
                   type == MIRType_Object ||
                   type == MIRType_Shape);
 

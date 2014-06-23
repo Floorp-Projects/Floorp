@@ -98,6 +98,7 @@ enum BailoutKind
     Bailout_NonBooleanInput,
     Bailout_NonObjectInput,
     Bailout_NonStringInput,
+    Bailout_NonSymbolInput,
 
     Bailout_GuardThreadExclusive,
 
@@ -189,6 +190,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonObjectInput";
       case Bailout_NonStringInput:
         return "Bailout_NonStringInput";
+      case Bailout_NonSymbolInput:
+        return "Bailout_NonSymbolInput";
       case Bailout_GuardThreadExclusive:
         return "Bailout_GuardThreadExclusive";
       case Bailout_InitialState:
@@ -283,6 +286,8 @@ MIRTypeFromValueType(JSValueType type)
         return MIRType_Undefined;
       case JSVAL_TYPE_STRING:
         return MIRType_String;
+      case JSVAL_TYPE_SYMBOL:
+        return MIRType_Symbol;
       case JSVAL_TYPE_BOOLEAN:
         return MIRType_Boolean;
       case JSVAL_TYPE_NULL:
@@ -313,6 +318,8 @@ ValueTypeFromMIRType(MIRType type)
       return JSVAL_TYPE_DOUBLE;
     case MIRType_String:
       return JSVAL_TYPE_STRING;
+    case MIRType_Symbol:
+      return JSVAL_TYPE_SYMBOL;
     case MIRType_MagicOptimizedArguments:
     case MIRType_MagicOptimizedOut:
     case MIRType_MagicHole:
@@ -348,6 +355,8 @@ StringFromMIRType(MIRType type)
       return "Float32";
     case MIRType_String:
       return "String";
+    case MIRType_Symbol:
+      return "Symbol";
     case MIRType_Object:
       return "Object";
     case MIRType_MagicOptimizedArguments:
