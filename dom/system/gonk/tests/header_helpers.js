@@ -111,6 +111,28 @@ function newUint8Worker() {
 }
 
 /**
+ * Create a worker that keeps posted chrome message.
+ */
+function newInterceptWorker() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function(data) {
+    },
+    postMessage: function(message) {
+      postedMessage = message;
+    }
+  });
+  return {
+    get postedMessage() {
+      return postedMessage;
+    },
+    get worker() {
+      return worker;
+    }
+  };
+}
+
+/**
  * Create a parcel suitable for postRILMessage().
  *
  * @param fakeParcelSize
