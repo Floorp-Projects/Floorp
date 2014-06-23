@@ -3421,11 +3421,16 @@ public:
                             JSObject* options = nullptr)
         : OptionsBase(cx, options)
         , wrapReflectors(false)
+        , cloneFunctions(false)
     { }
 
-    virtual bool Parse() { return ParseBoolean("wrapReflectors", &wrapReflectors); };
+    virtual bool Parse() {
+        return ParseBoolean("wrapReflectors", &wrapReflectors) &&
+               ParseBoolean("cloneFunctions", &cloneFunctions);
+    };
 
     bool wrapReflectors;
+    bool cloneFunctions;
 };
 
 JSObject *
