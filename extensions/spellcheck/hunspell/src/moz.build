@@ -34,7 +34,7 @@ LOCAL_INCLUDES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/editor/libeditor/base',
+    '/editor/libeditor',
 ]
 
 # Suppress warnings in third-party code.

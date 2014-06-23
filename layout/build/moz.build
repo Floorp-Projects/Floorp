@@ -67,7 +67,7 @@ LOCAL_INCLUDES += [
     '/dom/xslt/xpath',
     '/dom/xslt/xslt',
     '/editor/composer',
-    '/editor/libeditor/base',
+    '/editor/libeditor',
     '/editor/libeditor/html',
     '/editor/libeditor/text',
     '/editor/txmgr',
