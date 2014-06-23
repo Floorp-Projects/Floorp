@@ -20,6 +20,9 @@ public:
   NS_DECL_NSIDOWNLOADHISTORY
 
   NS_DEFINE_STATIC_CID_ACCESSOR(NS_DOWNLOADHISTORY_CID)
+
+private:
+  ~nsDownloadHistory() {}
 };
 
 #endif // __nsDownloadHistory_h__
