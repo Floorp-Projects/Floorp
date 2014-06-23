@@ -7,7 +7,25 @@ var symbols = [
     Symbol.iterator
 ];
 
+if (Symbol.toPrimitive in Symbol.prototype) {
+    // We should test that deleting Symbol.prototype[@@toPrimitive] changes the
+    // behavior of ToPrimitive on Symbol objects, but @@toPrimitive is not
+    // implemented yet.
+    throw new Error("Congratulations on implementing @@toPrimitive! Please update this test.");
+}
+
 for (var sym of symbols) {
+    // 7.1.1 ToPrimitive
+    var symobj = Object(sym);
+    assertThrowsInstanceOf(() => Number(symobj), TypeError);
+    assertThrowsInstanceOf(() => String(symobj), TypeError);
+    assertThrowsInstanceOf(() => symobj < 0, TypeError);
+    assertThrowsInstanceOf(() => 0 < symobj, TypeError);
+    assertThrowsInstanceOf(() => symobj == 0, TypeError);
+    assertThrowsInstanceOf(() => 0 != symobj, TypeError);
+    assertThrowsInstanceOf(() => symobj + 1, TypeError);
+    assertThrowsInstanceOf(() => "" + symobj, TypeError);
+
     // 7.1.2 ToBoolean
     assertEq(Boolean(sym), true);
     assertEq(!sym, false);

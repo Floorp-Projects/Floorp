@@ -24,7 +24,7 @@ const Class SymbolObject::class_ = {
     JS_StrictPropertyStub,   /* setProperty */
     JS_EnumerateStub,
     JS_ResolveStub,
-    JS_ConvertStub
+    convert
 };
 
 SymbolObject *
@@ -119,6 +119,14 @@ SymbolObject::construct(JSContext *cx, unsigned argc, Value *vp)
         return false;
     args.rval().setSymbol(symbol);
     return true;
+}
+
+// Stand-in for Symbol.prototype[@@toPrimitive], ES6 rev 25 (2014 May 22) 19.4.3.4
+bool
+SymbolObject::convert(JSContext *cx, HandleObject obj, JSType type, MutableHandleValue vp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_SYMBOL_TO_PRIMITIVE);
+    return false;
 }
 
 // ES6 rev 24 (2014 Apr 27) 19.4.2.2
