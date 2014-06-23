@@ -610,7 +610,10 @@ interface nsIXPCComponents_Utils : nsISupports
      * The 3rd argument is an optional options object:
      * - cloneFunctions: boolean. If true, functions in the value are
      *   wrapped in a function forwarder that appears to be a native function in
-     *   the content scope.
+     *   the content scope. Defaults to false.
+     * - wrapReflectors: boolean. If true, DOM objects are passed through the
+     *   clone directly with cross-compartment wrappers. Otherwise, the clone
+     *   fails when such an object is encountered. Defaults to false.
      */
     [implicit_jscontext]
     jsval cloneInto(in jsval value, in jsval scope, [optional] in jsval options);
