@@ -4369,6 +4369,16 @@ JS_PUBLIC_API(Symbol *)
 NewSymbol(JSContext *cx, HandleString description);
 
 /*
+ * Symbol.for as specified in ES6.
+ *
+ * Get a Symbol with the description 'key' from the Runtime-wide symbol registry.
+ * If there is not already a Symbol with that description in the registry, a new
+ * Symbol is created and registered. 'key' must not be null.
+ */
+JS_PUBLIC_API(Symbol *)
+GetSymbolFor(JSContext *cx, HandleString key);
+
+/*
  * Get the [[Description]] attribute of the given symbol.
  *
  * This function is infallible. If it returns null, that means the symbol's

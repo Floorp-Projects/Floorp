@@ -17,5 +17,17 @@ m.delete(sym);
 assertEq(m.has(sym), false);
 assertEq(m.size, 0);
 
+// Symbols returned by Symbol.for() can be Map keys.
+for (var word of "that that is is that that is not is not is that not it".split(' ')) {
+    sym = Symbol.for(word);
+    m.set(sym, (m.get(sym) || 0) + 1);
+}
+assertDeepEq([...m], [
+    [Symbol.for("that"), 5],
+    [Symbol.for("is"), 5],
+    [Symbol.for("not"), 3],
+    [Symbol.for("it"), 1]
+]);
+
 if (typeof reportCompare === "function")
   reportCompare(0, 0);
