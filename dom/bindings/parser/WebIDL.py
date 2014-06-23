@@ -2634,6 +2634,26 @@ class IDLNullValue(IDLObject):
     def _getDependentObjects(self):
         return set()
 
+class IDLEmptySequenceValue(IDLObject):
+    def __init__(self, location):
+        IDLObject.__init__(self, location)
+        self.type = None
+        self.value = None
+
+    def coerceToType(self, type, location):
+        if (not type.isSequence() and
+            not (type.isUnion() and
+                 any(t.isSequence() for t in type.unroll().flatMemberTypes))):
+            raise WebIDLError("Cannot coerce empty sequence value to type %s." % type,
+                              [location])
+
+        emptySequenceValue = IDLEmptySequenceValue(self.location)
+        emptySequenceValue.type = type
+        return emptySequenceValue
+
+    def _getDependentObjects(self):
+        return set()
+
 class IDLUndefinedValue(IDLObject):
     def __init__(self, location):
         IDLObject.__init__(self, location)
@@ -3954,7 +3974,7 @@ class Parser(Tokenizer):
 
     def p_DictionaryMember(self, p):
         """
-            DictionaryMember : Type IDENTIFIER DefaultValue SEMICOLON
+            DictionaryMember : Type IDENTIFIER Default SEMICOLON
         """
         # These quack a lot like optional arguments, so just treat them that way.
         t = p[1]
@@ -3966,15 +3986,26 @@ class Parser(Tokenizer):
                            defaultValue=defaultValue, variadic=False,
                            dictionaryMember=True)
 
-    def p_DefaultValue(self, p):
+    def p_Default(self, p):
         """
-            DefaultValue : EQUALS ConstValue
-                         |
+            Default : EQUALS DefaultValue
+                    |
         """
         if len(p) > 1:
             p[0] = p[2]
         else:
             p[0] = None
+
+    def p_DefaultValue(self, p):
+        """
+            DefaultValue : ConstValue
+                         | LBRACKET RBRACKET
+        """
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            assert len(p) == 3 # Must be []
+            p[0] = IDLEmptySequenceValue(self.getLocation(p, 1))
 
     def p_Exception(self, p):
         """
@@ -4434,7 +4465,7 @@ class Parser(Tokenizer):
 
     def p_Argument(self, p):
         """
-            Argument : ExtendedAttributeList Optional Type Ellipsis ArgumentName DefaultValue
+            Argument : ExtendedAttributeList Optional Type Ellipsis ArgumentName Default
         """
         t = p[3]
         assert isinstance(t, IDLType)
