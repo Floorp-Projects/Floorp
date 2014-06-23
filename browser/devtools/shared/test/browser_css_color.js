@@ -264,6 +264,7 @@ function getTestData() {
     {authored: "plum", name: "plum", hex: "#DDA0DD", hsl: "hsl(300, 47%, 75%)", rgb: "rgb(221, 160, 221)"},
     {authored: "powderblue", name: "powderblue", hex: "#B0E0E6", hsl: "hsl(187, 52%, 80%)", rgb: "rgb(176, 224, 230)"},
     {authored: "purple", name: "purple", hex: "#800080", hsl: "hsl(300, 100%, 25%)", rgb: "rgb(128, 0, 128)"},
+    {authored: "rebeccapurple", name: "rebeccapurple", hex: "#639", hsl: "hsl(270, 50%, 40%)", rgb: "rgb(102, 51, 153)"},
     {authored: "red", name: "red", hex: "#F00", hsl: "hsl(0, 100%, 50%)", rgb: "rgb(255, 0, 0)"},
     {authored: "rosybrown", name: "rosybrown", hex: "#BC8F8F", hsl: "hsl(0, 25%, 65%)", rgb: "rgb(188, 143, 143)"},
     {authored: "royalblue", name: "royalblue", hex: "#4169E1", hsl: "hsl(225, 73%, 57%)", rgb: "rgb(65, 105, 225)"},
