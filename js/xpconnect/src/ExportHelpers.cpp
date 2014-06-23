@@ -31,12 +31,23 @@ enum StackScopedCloneTags {
     SCTAG_REFLECTOR
 };
 
+class MOZ_STACK_CLASS StackScopedCloneData {
+public:
+    StackScopedCloneData(JSContext *aCx, StackScopedCloneOptions *aOptions)
+        : mOptions(aOptions)
+        , mReflectors(aCx)
+    {}
+
+    StackScopedCloneOptions *mOptions;
+    AutoObjectVector mReflectors;
+};
+
 static JSObject *
 StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t tag,
                      uint32_t data, void *closure)
 {
     MOZ_ASSERT(closure, "Null pointer!");
-    AutoObjectVector *reflectors = static_cast<AutoObjectVector *>(closure);
+    StackScopedCloneData *cloneData = static_cast<StackScopedCloneData *>(closure);
     if (tag == SCTAG_REFLECTOR) {
         MOZ_ASSERT(!data);
 
@@ -44,7 +55,7 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
         if (!JS_ReadBytes(reader, &idx, sizeof(size_t)))
             return nullptr;
 
-        RootedObject reflector(cx, (*reflectors)[idx]);
+        RootedObject reflector(cx, cloneData->mReflectors[idx]);
         MOZ_ASSERT(reflector, "No object pointer?");
         MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
 
@@ -63,15 +74,12 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
                       Handle<JSObject *> obj, void *closure)
 {
     MOZ_ASSERT(closure, "Null pointer!");
-
-    // We need to maintain a list of reflectors to make sure all these objects
-    // are properly rooter. Only their indices will be serialized.
-    AutoObjectVector *reflectors = static_cast<AutoObjectVector *>(closure);
-    if (IsReflector(obj)) {
-        if (!reflectors->append(obj))
+    StackScopedCloneData *cloneData = static_cast<StackScopedCloneData *>(closure);
+    if (cloneData->mOptions->wrapReflectors && IsReflector(obj)) {
+        if (!cloneData->mReflectors.append(obj))
             return false;
 
-        size_t idx = reflectors->length()-1;
+        size_t idx = cloneData->mReflectors.length() - 1;
         if (!JS_WriteUint32Pair(writer, SCTAG_REFLECTOR, 0))
             return false;
         if (!JS_WriteBytes(writer, &idx, sizeof(size_t)))
@@ -107,9 +115,8 @@ bool
 StackScopedClone(JSContext *cx, StackScopedCloneOptions &options,
                  MutableHandleValue val)
 {
-    MOZ_ASSERT(options.wrapReflectors); // XXXbholley - This goes away in subsequent patches
     JSAutoStructuredCloneBuffer buffer;
-    AutoObjectVector rootedReflectors(cx);
+    StackScopedCloneData data(cx, &options);
     {
         // For parsing val we have to enter its compartment.
         // (unless it's a primitive)
@@ -120,23 +127,12 @@ StackScopedClone(JSContext *cx, StackScopedCloneOptions &options,
             return false;
         }
 
-        if (!buffer.write(cx, val,
-            &gStackScopedCloneCallbacks,
-            &rootedReflectors))
-        {
+        if (!buffer.write(cx, val, &gStackScopedCloneCallbacks, &data))
             return false;
-        }
     }
 
     // Now recreate the clones in the target compartment.
-    if (!buffer.read(cx, val,
-        &gStackScopedCloneCallbacks,
-        &rootedReflectors))
-    {
-        return false;
-    }
-
-    return true;
+    return buffer.read(cx, val, &gStackScopedCloneCallbacks, &data);
 }
 
 /*
