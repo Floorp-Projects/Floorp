@@ -47,7 +47,7 @@ function dial(number) {
     is(telephony.calls.length, 0);
     is(cause, "RadioNotAvailable");
 
-    emulator.run("gsm list", function(result) {
+    emulator.runWithCallback("gsm list", function(result) {
       log("Initial call list: " + result);
       is(result[0], "OK");
 
