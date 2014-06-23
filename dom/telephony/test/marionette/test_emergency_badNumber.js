@@ -18,7 +18,6 @@ function dial() {
 
     emulator.runWithCallback("gsm list", function(result) {
       log("Initial call list: " + result);
-      is(result[0], "OK");
       cleanUp();
     });
   });

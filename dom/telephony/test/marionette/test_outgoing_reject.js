@@ -28,7 +28,6 @@ function dial() {
       emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
         is(result[0], "outbound to  " + number + " : ringing");
-        is(result[1], "OK");
         reject();
       });
     };
@@ -55,7 +54,6 @@ function reject() {
 
   let rcvdEmulatorCallback = false;
   emulator.runWithCallback("gsm cancel " + number, function(result) {
-    is(result[0], "OK", "emulator callback");
     rcvdEmulatorCallback = true;
   });
 }
@@ -63,7 +61,6 @@ function reject() {
 function verifyCallList(){
   emulator.runWithCallback("gsm list", function(result) {
     log("Call list is now: " + result);
-    is(result[0], "OK");
     cleanUp();
   });
 }
