@@ -4,8 +4,6 @@
 
 import time
 
-import blessings
-
 import base
 
 
@@ -136,8 +134,6 @@ class MachTerminalFormatter(BaseMachFormatter):
     """
     def __init__(self, start_time=None, write_interval=False, write_times=True,
                  terminal=None):
-        if terminal is None:
-            terminal = blessings.Terminal()
         self.terminal = terminal
         BaseMachFormatter.__init__(self,
                                    start_time=start_time,
