@@ -13,6 +13,8 @@
 #include "mozilla/dom/BindingUtils.h"
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
+#include "nsIDOMFile.h"
+#include "nsIDOMFileList.h"
 
 using namespace mozilla;
 using namespace JS;
@@ -69,13 +71,40 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
     return nullptr;
 }
 
+// The HTML5 structured cloning algorithm includes a few DOM objects, notably
+// Blob and FileList. That wouldn't in itself be a reason to support them here,
+// but we've historically supported them for Cu.cloneInto (where we didn't support
+// other reflectors), so we need to continue to do so in the wrapReflectors == false
+// case to maintain compatibility.
+//
+// Blob and FileList clones are supposed to give brand new objects, rather than
+// cross-compartment wrappers. For this, our current implementation relies on the
+// fact that these objects are implemented with XPConnect and have one reflector
+// per scope. This will need to be fixed when Blob and File move to WebIDL. See
+// bug 827823 comment 6.
+bool IsBlobOrFileList(JSObject *obj)
+{
+    nsISupports *supports = UnwrapReflectorToISupports(obj);
+    if (!supports)
+        return false;
+    nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
+    if (blob)
+        return true;
+    nsCOMPtr<nsIDOMFileList> fileList = do_QueryInterface(supports);
+    if (fileList)
+        return true;
+    return false;
+}
+
 static bool
 StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
                       Handle<JSObject *> obj, void *closure)
 {
     MOZ_ASSERT(closure, "Null pointer!");
     StackScopedCloneData *cloneData = static_cast<StackScopedCloneData *>(closure);
-    if (cloneData->mOptions->wrapReflectors && IsReflector(obj)) {
+    if ((cloneData->mOptions->wrapReflectors && IsReflector(obj)) ||
+        IsBlobOrFileList(obj))
+    {
         if (!cloneData->mReflectors.append(obj))
             return false;
 
