@@ -80,9 +80,6 @@ public:
   // Set the media as being seekable or not.
   virtual void SetMediaSeekable(bool aMediaSeekable) = 0;
 
-  // Set the transport level as being seekable or not.
-  virtual void SetTransportSeekable(bool aTransportSeekable) = 0;
-
   virtual VideoFrameContainer* GetVideoFrameContainer() = 0;
   virtual mozilla::layers::ImageContainer* GetImageContainer() = 0;
 
