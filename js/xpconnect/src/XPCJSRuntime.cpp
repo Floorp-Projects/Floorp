@@ -1174,6 +1174,9 @@ class WatchdogManager : public nsIObserver
         // Register ourselves as an observer to get updates on the pref.
         mozilla::Preferences::AddStrongObserver(this, "dom.use_watchdog");
     }
+
+  protected:
+
     virtual ~WatchdogManager()
     {
         // Shutting down the watchdog requires context-switching to the watchdog
@@ -1182,6 +1185,8 @@ class WatchdogManager : public nsIObserver
         MOZ_ASSERT(!mWatchdog);
         mozilla::Preferences::RemoveObserver(this, "dom.use_watchdog");
     }
+
+  public:
 
     NS_IMETHOD Observe(nsISupports* aSubject, const char* aTopic,
                        const char16_t* aData)
@@ -1786,6 +1791,8 @@ JSMainRuntimeCompartmentsUserDistinguishedAmount()
 
 class JSMainRuntimeTemporaryPeakReporter MOZ_FINAL : public nsIMemoryReporter
 {
+    ~JSMainRuntimeTemporaryPeakReporter() {}
+
   public:
     NS_DECL_ISUPPORTS
 
@@ -2553,6 +2560,9 @@ ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats &rtStats,
 
 class JSMainRuntimeCompartmentsReporter MOZ_FINAL : public nsIMemoryReporter
 {
+
+    ~JSMainRuntimeCompartmentsReporter() {}
+
   public:
     NS_DECL_ISUPPORTS
 

@@ -47,9 +47,9 @@ public:
   {
   }
 
+private:
   virtual ~BackstagePass() { }
 
-private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
   JS::TenuredHeap<JSObject*> mGlobal;
 };
