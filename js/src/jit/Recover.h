@@ -219,18 +219,6 @@ class RSub MOZ_FINAL : public RInstruction
     bool recover(JSContext *cx, SnapshotIterator &iter) const;
 };
 
-class RMod MOZ_FINAL : public RInstruction
-{
-  public:
-    RINSTRUCTION_HEADER_(Mod)
-
-    virtual uint32_t numOperands() const {
-        return 2;
-    }
-
-    bool recover(JSContext *cx, SnapshotIterator &iter) const;
-};
-
 class RMul MOZ_FINAL : public RInstruction
 {
   private:
@@ -253,6 +241,18 @@ class RDiv MOZ_FINAL : public RInstruction
 
   public:
     RINSTRUCTION_HEADER_(Div)
+
+    virtual uint32_t numOperands() const {
+        return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RMod MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(Mod)
 
     virtual uint32_t numOperands() const {
         return 2;
