@@ -32,9 +32,10 @@ public:
 	NS_DECL_INIDEEPTREEWALKER
 
   inDeepTreeWalker();
-  virtual ~inDeepTreeWalker();
 
 protected:
+  virtual ~inDeepTreeWalker();
+
   void PushNode(nsIDOMNode* aNode);
 
   bool mShowAnonymousContent;

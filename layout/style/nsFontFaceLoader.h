@@ -106,8 +106,6 @@ public:
                    gfxProxyFontEntry* aFontToLoad, nsIURI* aFontURI, 
                    nsUserFontSet* aFontSet, nsIChannel* aChannel);
 
-  virtual ~nsFontFaceLoader();
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLOADEROBSERVER 
 
@@ -125,6 +123,9 @@ public:
   static nsresult CheckLoadAllowed(nsIPrincipal* aSourcePrincipal,
                                    nsIURI* aTargetURI,
                                    nsISupports* aContext);
+
+protected:
+  virtual ~nsFontFaceLoader();
 
 private:
   nsRefPtr<gfxMixedFontFamily> mFontFamily;

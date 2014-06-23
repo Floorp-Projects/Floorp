@@ -50,10 +50,12 @@ class Selection : public nsISelectionPrivate,
                   public nsWrapperCache,
                   public nsSupportsWeakReference
 {
+protected:
+  virtual ~Selection();
+
 public:
   Selection();
   Selection(nsFrameSelection *aList);
-  virtual ~Selection();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Selection, nsISelectionPrivate)

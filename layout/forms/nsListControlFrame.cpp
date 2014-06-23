@@ -71,6 +71,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
 private:
+  ~nsListEventListener() {}
+
   nsListControlFrame  *mFrame;
 };
 
