@@ -178,6 +178,8 @@ types::TypeString(Type type)
             return "float";
           case JSVAL_TYPE_STRING:
             return "string";
+          case JSVAL_TYPE_SYMBOL:
+            return "symbol";
           case JSVAL_TYPE_MAGIC:
             return "lazyargs";
           default:
@@ -332,6 +334,8 @@ TypeSet::mightBeMIRType(jit::MIRType type)
         return baseFlags() & TYPE_FLAG_DOUBLE;
       case jit::MIRType_String:
         return baseFlags() & TYPE_FLAG_STRING;
+      case jit::MIRType_Symbol:
+        return baseFlags() & TYPE_FLAG_SYMBOL;
       case jit::MIRType_MagicOptimizedArguments:
         return baseFlags() & TYPE_FLAG_LAZYARGS;
       case jit::MIRType_MagicHole:
@@ -1324,6 +1328,8 @@ GetMIRTypeFromTypeFlags(TypeFlags flags)
         return jit::MIRType_Double;
       case TYPE_FLAG_STRING:
         return jit::MIRType_String;
+      case TYPE_FLAG_SYMBOL:
+        return jit::MIRType_Symbol;
       case TYPE_FLAG_LAZYARGS:
         return jit::MIRType_MagicOptimizedArguments;
       case TYPE_FLAG_ANYOBJECT:
