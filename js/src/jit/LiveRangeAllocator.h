@@ -229,6 +229,8 @@ class LiveInterval
         {
             JS_ASSERT(from < to);
         }
+
+        // The beginning of this range, inclusive.
         CodePosition from;
 
         // The end of this range, exclusive.
