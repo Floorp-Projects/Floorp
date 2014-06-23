@@ -33,9 +33,9 @@ public:
   NS_DECL_NSIASYNCINPUTSTREAM
 
   nsPNGEncoder();
-  ~nsPNGEncoder();
 
 protected:
+  ~nsPNGEncoder();
   nsresult ParseOptions(const nsAString& aOptions,
                         bool* useTransparency,
                         bool* skipFirstFrame,
