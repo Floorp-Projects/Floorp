@@ -172,6 +172,13 @@ function next(msg) {
       is(value, '#0hello',
          'Failed to get correct input from the first iframe.');
 
+      let req0 = gFrames[0].setInputMethodActive(false);
+      req0.onsuccess = function() {
+        ok(true, 'setInputMethodActive succeeded (0).');
+      };
+      req0.onerror = function() {
+        ok(false, 'setInputMethodActive failed (0): ' + this.error.name);
+      };
       let req1 = gFrames[1].setInputMethodActive(true);
       req1.onsuccess = function() {
        ok(true, 'setInputMethodActive succeeded (1).');

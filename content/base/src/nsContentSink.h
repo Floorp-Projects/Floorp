@@ -86,7 +86,8 @@ class nsContentSink : public nsICSSLoaderObserver,
   NS_DECL_NSITIMERCALLBACK
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+                              bool aWasAlternate,
                               nsresult aStatus) MOZ_OVERRIDE;
 
   virtual nsresult ProcessMETATag(nsIContent* aContent);

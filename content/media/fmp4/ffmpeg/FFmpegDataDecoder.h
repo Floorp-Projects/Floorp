@@ -10,6 +10,7 @@
 #include "FFmpegDecoderModule.h"
 #include "FFmpegRuntimeLinker.h"
 #include "FFmpegCompat.h"
+#include "mozilla/Vector.h"
 
 namespace mozilla
 {
@@ -31,6 +32,7 @@ public:
 protected:
   MediaTaskQueue* mTaskQueue;
   AVCodecContext mCodecContext;
+  Vector<uint8_t> mExtraData;
 
 private:
   static bool sFFmpegInitDone;

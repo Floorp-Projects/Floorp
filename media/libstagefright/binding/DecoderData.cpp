@@ -83,7 +83,7 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   uint32_t type;
 
   if (aMetaData->findData(kKeyAVCC, &type, &data, &size)) {
-    mozilla::Vector<uint8_t> extra_data;
+    extra_data.clear();
     extra_data.append(reinterpret_cast<const uint8_t*>(data), size);
     annex_b = AnnexB::ConvertExtraDataToAnnexB(extra_data);
   }

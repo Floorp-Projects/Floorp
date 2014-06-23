@@ -127,7 +127,16 @@ public:
                                             const nsString& aName,
                                             const nsString& aFeatures,
                                             bool* aOutWindowOpened) MOZ_OVERRIDE;
-    virtual bool AnswerCreateWindow(PBrowserParent** retval) MOZ_OVERRIDE;
+    virtual bool AnswerCreateWindow(const uint32_t& aChromeFlags,
+                                    const bool& aCalledFromJS,
+                                    const bool& aPositionSpecified,
+                                    const bool& aSizeSpecified,
+                                    const nsString& aURI,
+                                    const nsString& aName,
+                                    const nsString& aFeatures,
+                                    const nsString& aBaseURI,
+                                    bool* aWindowIsNew,
+                                    PBrowserParent** aRetVal) MOZ_OVERRIDE;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  const InfallibleTArray<CpowEntry>& aCpows,

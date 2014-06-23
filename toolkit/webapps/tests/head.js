@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/WebappOSUtils.jsm");
 const LINUX = navigator.platform.startsWith("Linux");
 const MAC = navigator.platform.startsWith("Mac");
 const WIN = navigator.platform.startsWith("Win");
-const MAC_106 = navigator.userAgent.contains("Mac OS X 10.6");
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;

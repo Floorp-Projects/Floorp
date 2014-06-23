@@ -238,7 +238,7 @@ NativeApp.prototype = {
                  getService(Ci.nsIINIParserFactory).
                  createINIParser(applicationINI).
                  QueryInterface(Ci.nsIINIParserWriter);
-    writer.setString("Webapp", "Name", this.appName);
+    writer.setString("Webapp", "Name", this.appLocalizedName);
     writer.setString("Webapp", "Profile", this.uniqueName);
     writer.writeFile();
     applicationINI.permissions = PERMS_FILE;
@@ -251,7 +251,7 @@ NativeApp.prototype = {
     <key>CFBundleDevelopmentRegion</key>\n\
     <string>English</string>\n\
     <key>CFBundleDisplayName</key>\n\
-    <string>' + escapeXML(this.appName) + '</string>\n\
+    <string>' + escapeXML(this.appLocalizedName) + '</string>\n\
     <key>CFBundleExecutable</key>\n\
     <string>webapprt</string>\n\
     <key>CFBundleIconFile</key>\n\
@@ -261,7 +261,7 @@ NativeApp.prototype = {
     <key>CFBundleInfoDictionaryVersion</key>\n\
     <string>6.0</string>\n\
     <key>CFBundleName</key>\n\
-    <string>' + escapeXML(this.appName) + '</string>\n\
+    <string>' + escapeXML(this.appLocalizedName) + '</string>\n\
     <key>CFBundlePackageType</key>\n\
     <string>APPL</string>\n\
     <key>CFBundleVersion</key>\n\

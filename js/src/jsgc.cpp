@@ -2949,7 +2949,7 @@ PurgeRuntime(JSRuntime *rt)
     rt->scopeCoordinateNameCache.purge();
     rt->newObjectCache.purge();
     rt->nativeIterCache.purge();
-    rt->sourceDataCache.purge();
+    rt->uncompressedSourceCache.purge();
     rt->evalCache.clear();
 
     if (!rt->hasActiveCompilations())
@@ -5370,6 +5370,8 @@ gc::MergeCompartments(JSCompartment *source, JSCompartment *target)
     // The source compartment must be specifically flagged as mergable.  This
     // also implies that the compartment is not visible to the debugger.
     JS_ASSERT(source->options_.mergeable());
+
+    JS_ASSERT(source->addonId == target->addonId);
 
     JSRuntime *rt = source->runtimeFromMainThread();
 

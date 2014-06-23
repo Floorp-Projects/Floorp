@@ -65,7 +65,8 @@ private:
   nsAutoPtr<Stream> mSource;
 };
 
-MP4Demuxer::MP4Demuxer(Stream* source) : mPrivate(new StageFrightPrivate())
+MP4Demuxer::MP4Demuxer(Stream* source)
+  : mPrivate(new StageFrightPrivate())
 {
   mPrivate->mExtractor = new MPEG4Extractor(new DataSourceAdapter(source));
 }
@@ -180,11 +181,7 @@ MP4Demuxer::DemuxVideoSample()
 
   sample->Update();
 
-  if (sample->is_sync_point) {
-    sample->Prepend(mVideoConfig.annex_b.begin(),
-                    mVideoConfig.annex_b.length());
-  }
-
   return sample.forget();
 }
-}
+
+} // namespace mp4_demuxer

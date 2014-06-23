@@ -71,6 +71,7 @@ function initApp() {
     blocklistFile.remove(false);
   var source = do_get_file("blocklist.xml");
   source.copyTo(gProfD, "blocklist.xml");
+  blocklistFile.lastModifiedTime = Date.now();
 }
 
 function AsyncRunner() {

@@ -6,6 +6,9 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "mozilla/MemoryReporting.h"
+%}
 
 /**
  * An instance of |nsIWeakReference| is a proxy object that cooperates with
@@ -31,6 +34,10 @@ interface nsIWeakReference : nsISupports
      * that would defeat the purpose of using a non-owning |nsIWeakReference| in the first place.
      */
     void QueryReferent( in nsIIDRef uuid, [iid_is(uuid), retval] out nsQIResult result );
+
+%{C++
+    virtual size_t SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+%}
   };
 
 

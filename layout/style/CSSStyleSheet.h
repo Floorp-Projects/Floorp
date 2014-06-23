@@ -6,8 +6,8 @@
 
 /* representation of a CSS style sheet */
 
-#ifndef nsCSSStyleSheet_h_
-#define nsCSSStyleSheet_h_
+#ifndef mozilla_CSSStyleSheet_h
+#define mozilla_CSSStyleSheet_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
@@ -26,16 +26,20 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 
-class nsXMLNameSpaceMap;
+class CSSRuleListImpl;
 class nsCSSRuleProcessor;
+class nsICSSRuleList;
 class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
 class nsMediaQueryResultCacheKey;
-class nsCSSStyleSheet;
 class nsPresContext;
+class nsXMLNameSpaceMap;
 
 namespace mozilla {
+struct ChildSheetListBuilder;
+class CSSStyleSheet;
+
 namespace css {
 class Rule;
 class GroupRule;
@@ -44,48 +48,48 @@ class ImportRule;
 namespace dom {
 class CSSRuleList;
 }
-}
 
 // -------------------------------
 // CSS Style Sheet Inner Data Container
 //
 
-class nsCSSStyleSheetInner {
+class CSSStyleSheetInner
+{
 public:
-  friend class nsCSSStyleSheet;
-  friend class nsCSSRuleProcessor;
+  friend class mozilla::CSSStyleSheet;
+  friend class ::nsCSSRuleProcessor;
 private:
-  nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet,
-                       mozilla::CORSMode aCORSMode);
-  nsCSSStyleSheetInner(nsCSSStyleSheetInner& aCopy,
-                       nsCSSStyleSheet* aPrimarySheet);
-  ~nsCSSStyleSheetInner();
+  CSSStyleSheetInner(CSSStyleSheet* aPrimarySheet,
+                     CORSMode aCORSMode);
+  CSSStyleSheetInner(CSSStyleSheetInner& aCopy,
+                     CSSStyleSheet* aPrimarySheet);
+  ~CSSStyleSheetInner();
 
-  nsCSSStyleSheetInner* CloneFor(nsCSSStyleSheet* aPrimarySheet);
-  void AddSheet(nsCSSStyleSheet* aSheet);
-  void RemoveSheet(nsCSSStyleSheet* aSheet);
+  CSSStyleSheetInner* CloneFor(CSSStyleSheet* aPrimarySheet);
+  void AddSheet(CSSStyleSheet* aSheet);
+  void RemoveSheet(CSSStyleSheet* aSheet);
 
   void RebuildNameSpaces();
 
   // Create a new namespace map
   nsresult CreateNamespaceMap();
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
-  nsAutoTArray<nsCSSStyleSheet*, 8> mSheets;
+  nsAutoTArray<CSSStyleSheet*, 8> mSheets;
   nsCOMPtr<nsIURI>       mSheetURI; // for error reports, etc.
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMArray<mozilla::css::Rule> mOrderedRules;
+  nsCOMArray<css::Rule>  mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   // Linked list of child sheets.  This is al fundamentally broken, because
   // each of the child sheets has a unique parent... We can only hope (and
   // currently this is the case) that any time page JS can get ts hands on a
   // child sheet that means we've already ensured unique inners throughout its
   // parent chain and things are good.
-  nsRefPtr<nsCSSStyleSheet> mFirstChild;
-  mozilla::CORSMode      mCORSMode;
+  nsRefPtr<CSSStyleSheet> mFirstChild;
+  CORSMode               mCORSMode;
   bool                   mComplete;
 
 #ifdef DEBUG
@@ -98,25 +102,23 @@ private:
 // CSS Style Sheet
 //
 
-class CSSRuleListImpl;
-
-// CID for the nsCSSStyleSheet class
+// CID for the CSSStyleSheet class
 // ca926f30-2a7e-477e-8467-803fb32af20a
 #define NS_CSS_STYLE_SHEET_IMPL_CID     \
 { 0xca926f30, 0x2a7e, 0x477e, \
  { 0x84, 0x67, 0x80, 0x3f, 0xb3, 0x2a, 0xf2, 0x0a } }
 
 
-class nsCSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
-                                  public nsIDOMCSSStyleSheet,
-                                  public nsICSSLoaderObserver,
-                                  public nsWrapperCache
+class CSSStyleSheet MOZ_FINAL : public nsIStyleSheet,
+                                public nsIDOMCSSStyleSheet,
+                                public nsICSSLoaderObserver,
+                                public nsWrapperCache
 {
 public:
-  nsCSSStyleSheet(mozilla::CORSMode aCORSMode);
+  CSSStyleSheet(CORSMode aCORSMode);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsCSSStyleSheet,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSStyleSheet,
                                                          nsIStyleSheet)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
@@ -141,20 +143,20 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
-  void AppendStyleSheet(nsCSSStyleSheet* aSheet);
-  void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, int32_t aIndex);
+  void AppendStyleSheet(CSSStyleSheet* aSheet);
+  void InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex);
 
   // XXX do these belong here or are they generic?
-  void PrependStyleRule(mozilla::css::Rule* aRule);
-  void AppendStyleRule(mozilla::css::Rule* aRule);
-  void ReplaceStyleRule(mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
+  void PrependStyleRule(css::Rule* aRule);
+  void AppendStyleRule(css::Rule* aRule);
+  void ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew);
 
   int32_t StyleRuleCount() const;
-  mozilla::css::Rule* GetStyleRuleAt(int32_t aIndex) const;
+  css::Rule* GetStyleRuleAt(int32_t aIndex) const;
 
-  nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, uint32_t aIndex);
-  nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
-  nsresult ReplaceRuleInGroup(mozilla::css::GroupRule* aGroup, mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
+  nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule, css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
+  nsresult ReplaceRuleInGroup(css::GroupRule* aGroup, css::Rule* aOld, css::Rule* aNew);
 
   int32_t StyleSheetCount() const;
 
@@ -182,15 +184,15 @@ public:
   void SetMedia(nsMediaList* aMedia);
   void SetOwningNode(nsINode* aOwningNode) { mOwningNode = aOwningNode; /* Not ref counted */ }
 
-  void SetOwnerRule(mozilla::css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
-  mozilla::css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
+  void SetOwnerRule(css::ImportRule* aOwnerRule) { mOwnerRule = aOwnerRule; /* Not ref counted */ }
+  css::ImportRule* GetOwnerRule() const { return mOwnerRule; }
 
   nsXMLNameSpaceMap* GetNameSpaceMap() const { return mInner->mNameSpaceMap; }
 
-  already_AddRefed<nsCSSStyleSheet> Clone(nsCSSStyleSheet* aCloneParent,
-                                          mozilla::css::ImportRule* aCloneOwnerRule,
-                                          nsIDocument* aCloneDocument,
-                                          nsINode* aCloneOwningNode) const;
+  already_AddRefed<CSSStyleSheet> Clone(CSSStyleSheet* aCloneParent,
+                                        css::ImportRule* aCloneOwnerRule,
+                                        nsIDocument* aCloneDocument,
+                                        nsINode* aCloneOwningNode) const;
 
   bool IsModified() const { return mDirty; }
 
@@ -214,7 +216,7 @@ public:
   virtual nsIURI* GetOriginalURI() const;
 
   // nsICSSLoaderObserver interface
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(CSSStyleSheet* aSheet, bool aWasAlternate,
                               nsresult aStatus) MOZ_OVERRIDE;
 
   enum EnsureUniqueInnerResult {
@@ -227,7 +229,7 @@ public:
   EnsureUniqueInnerResult EnsureUniqueInner();
 
   // Append all of this sheet's child sheets to aArray.
-  void AppendAllChildSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+  void AppendAllChildSheets(nsTArray<CSSStyleSheet*>& aArray);
 
   bool UseForPresentation(nsPresContext* aPresContext,
                             nsMediaQueryResultCacheKey& aKey) const;
@@ -242,15 +244,15 @@ public:
 
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
-  static bool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
+  static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
 
-  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
 
   // Get this style sheet's CORS mode
-  mozilla::CORSMode GetCORSMode() const { return mInner->mCORSMode; }
+  CORSMode GetCORSMode() const { return mInner->mCORSMode; }
 
-  mozilla::dom::Element* GetScopeElement() const { return mScopeElement; }
-  void SetScopeElement(mozilla::dom::Element* aScopeElement)
+  dom::Element* GetScopeElement() const { return mScopeElement; }
+  void SetScopeElement(dom::Element* aScopeElement)
   {
     mScopeElement = aScopeElement;
   }
@@ -259,15 +261,15 @@ public:
   // Our nsIStyleSheet::GetType is a const method, so it ends up
   // ambiguous with with the XPCOM version.  Just disambiguate.
   void GetType(nsString& aType) {
-    const_cast<const nsCSSStyleSheet*>(this)->GetType(aType);
+    const_cast<const CSSStyleSheet*>(this)->GetType(aType);
   }
   // Our XPCOM GetHref is fine for WebIDL
   nsINode* GetOwnerNode() const { return mOwningNode; }
-  nsCSSStyleSheet* GetParentStyleSheet() const { return mParent; }
+  CSSStyleSheet* GetParentStyleSheet() const { return mParent; }
   // Our nsIStyleSheet::GetTitle is a const method, so it ends up
   // ambiguous with with the XPCOM version.  Just disambiguate.
   void GetTitle(nsString& aTitle) {
-    const_cast<const nsCSSStyleSheet*>(this)->GetTitle(aTitle);
+    const_cast<const CSSStyleSheet*>(this)->GetTitle(aTitle);
   }
   nsMediaList* Media();
   bool Disabled() const { return mDisabled; }
@@ -278,40 +280,39 @@ public:
   // called GetOwnerRule because that would be ambiguous with the ImportRule
   // version.
   nsIDOMCSSRule* GetDOMOwnerRule() const;
-  mozilla::dom::CSSRuleList* GetCssRules(mozilla::ErrorResult& aRv);
+  dom::CSSRuleList* GetCssRules(ErrorResult& aRv);
   uint32_t InsertRule(const nsAString& aRule, uint32_t aIndex,
-                      mozilla::ErrorResult& aRv) {
+                      ErrorResult& aRv) {
     uint32_t retval;
     aRv = InsertRule(aRule, aIndex, &retval);
     return retval;
   }
-  void DeleteRule(uint32_t aIndex, mozilla::ErrorResult& aRv) {
+  void DeleteRule(uint32_t aIndex, ErrorResult& aRv) {
     aRv = DeleteRule(aIndex);
   }
 
   // WebIDL miscellaneous bits
-  mozilla::dom::ParentObject GetParentObject() const {
+  dom::ParentObject GetParentObject() const {
     if (mOwningNode) {
-      return mozilla::dom::ParentObject(mOwningNode);
+      return dom::ParentObject(mOwningNode);
     }
 
-    return mozilla::dom::ParentObject(static_cast<nsIStyleSheet*>(mParent),
-                                      mParent);
+    return dom::ParentObject(static_cast<nsIStyleSheet*>(mParent), mParent);
   }
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
 private:
-  nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
-                  nsCSSStyleSheet* aParentToUse,
-                  mozilla::css::ImportRule* aOwnerRuleToUse,
-                  nsIDocument* aDocumentToUse,
-                  nsINode* aOwningNodeToUse);
+  CSSStyleSheet(const CSSStyleSheet& aCopy,
+                CSSStyleSheet* aParentToUse,
+                css::ImportRule* aOwnerRuleToUse,
+                nsIDocument* aDocumentToUse,
+                nsINode* aOwningNodeToUse);
 
-  nsCSSStyleSheet(const nsCSSStyleSheet& aCopy) MOZ_DELETE;
-  nsCSSStyleSheet& operator=(const nsCSSStyleSheet& aCopy) MOZ_DELETE;
+  CSSStyleSheet(const CSSStyleSheet& aCopy) MOZ_DELETE;
+  CSSStyleSheet& operator=(const CSSStyleSheet& aCopy) MOZ_DELETE;
 
 protected:
-  virtual ~nsCSSStyleSheet();
+  virtual ~CSSStyleSheet();
 
   void ClearRuleCascades();
 
@@ -325,7 +326,7 @@ protected:
   nsresult SubjectSubsumesInnerPrincipal();
 
   // Add the namespace mapping from this @namespace rule to our namespace map
-  nsresult RegisterNamespaceRule(mozilla::css::Rule* aRule);
+  nsresult RegisterNamespaceRule(css::Rule* aRule);
 
   // Drop our reference to mRuleCollection
   void DropRuleCollection();
@@ -341,26 +342,28 @@ protected:
 protected:
   nsString              mTitle;
   nsRefPtr<nsMediaList> mMedia;
-  nsRefPtr<nsCSSStyleSheet> mNext;
-  nsCSSStyleSheet*      mParent;    // weak ref
-  mozilla::css::ImportRule* mOwnerRule; // weak ref
+  nsRefPtr<CSSStyleSheet> mNext;
+  CSSStyleSheet*        mParent;    // weak ref
+  css::ImportRule*      mOwnerRule; // weak ref
 
   nsRefPtr<CSSRuleListImpl> mRuleCollection;
   nsIDocument*          mDocument; // weak ref; parents maintain this for their children
   nsINode*              mOwningNode; // weak ref
   bool                  mDisabled;
   bool                  mDirty; // has been modified 
-  nsRefPtr<mozilla::dom::Element> mScopeElement;
+  nsRefPtr<dom::Element> mScopeElement;
 
-  nsCSSStyleSheetInner* mInner;
+  CSSStyleSheetInner*   mInner;
 
   nsAutoTArray<nsCSSRuleProcessor*, 8>* mRuleProcessors;
 
-  friend class nsMediaList;
-  friend class nsCSSRuleProcessor;
-  friend struct ChildSheetListBuilder;
+  friend class ::nsMediaList;
+  friend class ::nsCSSRuleProcessor;
+  friend struct mozilla::ChildSheetListBuilder;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsCSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)
+NS_DEFINE_STATIC_IID_ACCESSOR(CSSStyleSheet, NS_CSS_STYLE_SHEET_IMPL_CID)
 
-#endif /* !defined(nsCSSStyleSheet_h_) */
+} // namespace mozilla
+
+#endif /* !defined(mozilla_CSSStyleSheet_h) */

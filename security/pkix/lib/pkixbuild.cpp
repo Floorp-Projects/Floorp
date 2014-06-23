@@ -69,7 +69,6 @@ BackCert::Init(const SECItem& certDER)
 
   const SECItem* dummyEncodedSubjectKeyIdentifier = nullptr;
   const SECItem* dummyEncodedAuthorityKeyIdentifier = nullptr;
-  const SECItem* dummyEncodedAuthorityInfoAccess = nullptr;
   const SECItem* dummyEncodedSubjectAltName = nullptr;
 
   for (const CERTCertExtension* ext = *exts; ext; ext = *++exts) {
@@ -104,7 +103,7 @@ BackCert::Init(const SECItem& certDER)
       // We should remember the value of the encoded AIA extension here, but
       // since our TrustDomain implementations get the OCSP URI using
       // CERT_GetOCSPAuthorityInfoAccessLocation, we currently don't need to.
-      out = &dummyEncodedAuthorityInfoAccess;
+      out = &encodedAuthorityInfoAccess;
     }
 
     // If this is an extension we don't understand and it's marked critical,
@@ -283,7 +282,7 @@ BuildForward(TrustDomain& trustDomain,
   // Find a trusted issuer.
   // TODO(bug 965136): Add SKI/AKI matching optimizations
   ScopedCERTCertList candidates;
-  if (trustDomain.FindPotentialIssuers(&subject.GetNSSCert()->derIssuer, time,
+  if (trustDomain.FindPotentialIssuers(&subject.GetIssuer(), time,
                                        candidates) != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
@@ -305,10 +304,12 @@ BuildForward(TrustDomain& trustDomain,
         return Fail(FatalError, deferredEndEntityError);
       }
 
-      SECStatus srv = trustDomain.CheckRevocation(endEntityOrCA,
-                                                  subject.GetNSSCert(),
-                                                  n->cert, time,
-                                                  stapledOCSPResponse);
+      CertID certID(subject.GetIssuer(), n->cert->derPublicKey,
+                    subject.GetSerialNumber());
+      SECStatus srv = trustDomain.CheckRevocation(
+                                    endEntityOrCA, certID, time,
+                                    stapledOCSPResponse,
+                                    subject.encodedAuthorityInfoAccess);
       if (srv != SECSuccess) {
         return MapSECStatus(SECFailure);
       }

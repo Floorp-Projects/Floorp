@@ -1595,6 +1595,7 @@ nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
 {
   JSOptionChangedCallback(js_options_dot_str, this);
   AutoJSAPI jsapi;
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   JSAutoCompartment ac(cx, aGlobalObj);
 
