@@ -29,20 +29,23 @@ BEGIN_TEST(testGCHeapPostBarriers)
 
 template <typename T>
 bool
-TestHeapPostBarriers(T initalObj)
+TestHeapPostBarriers(T initialObj)
 {
-    CHECK(initalObj != nullptr);
-    CHECK(js::gc::IsInsideNursery(initalObj));
+    CHECK(initialObj != nullptr);
+    CHECK(js::gc::IsInsideNursery(initialObj));
 
     /* Construct Heap<> wrapper. */
     JS::Heap<T> *heapData = new JS::Heap<T>();
     CHECK(heapData);
     CHECK(heapData->get() == nullptr);
-    heapData->set(initalObj);
+    heapData->set(initialObj);
+
+    /* Store the pointer as an integer so that the hazard analysis will miss it. */
+    uintptr_t initialObjAsInt = uintptr_t(initialObj);
 
     /* Perform minor GC and check heap wrapper is udated with new pointer. */
     js::MinorGC(cx, JS::gcreason::API);
-    CHECK(heapData->get() != initalObj);
+    CHECK(uintptr_t(heapData->get()) != initialObjAsInt);
     CHECK(!js::gc::IsInsideNursery(heapData->get()));
 
     /* Check object is definitely still alive. */
