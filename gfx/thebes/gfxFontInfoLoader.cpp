@@ -27,12 +27,13 @@ FontInfoData::Load()
 }
 
 class FontInfoLoadCompleteEvent : public nsRunnable {
+    virtual ~FontInfoLoadCompleteEvent() {}
+
     NS_DECL_THREADSAFE_ISUPPORTS
 
     FontInfoLoadCompleteEvent(FontInfoData *aFontInfo) :
         mFontInfo(aFontInfo)
     {}
-    virtual ~FontInfoLoadCompleteEvent() {}
 
     NS_IMETHOD Run();
 
@@ -40,6 +41,8 @@ class FontInfoLoadCompleteEvent : public nsRunnable {
 };
 
 class AsyncFontInfoLoader : public nsRunnable {
+    virtual ~AsyncFontInfoLoader() {}
+
     NS_DECL_THREADSAFE_ISUPPORTS
 
     AsyncFontInfoLoader(FontInfoData *aFontInfo) :
@@ -47,7 +50,6 @@ class AsyncFontInfoLoader : public nsRunnable {
     {
         mCompleteEvent = new FontInfoLoadCompleteEvent(aFontInfo);
     }
-    virtual ~AsyncFontInfoLoader() {}
 
     NS_IMETHOD Run();
 

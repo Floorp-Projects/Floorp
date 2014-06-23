@@ -42,6 +42,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   ObserverToDestroyFeaturesAlreadyReported() {}
+private:
   virtual ~ObserverToDestroyFeaturesAlreadyReported() {}
 };
 
