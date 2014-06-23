@@ -88,6 +88,8 @@ leak:nsPSPrinterList::GetPrinterList
 # Bug 1028456 - More leaks with _PR_Getfd, in nsLocalFile::CopyToNative and do_create. bc1, bc3
 leak:_PR_Getfd
 
+# Bug 1028483 - The XML parser sometimes leaks an object. bc3
+leak:processInternalEntity
 
 ###
 ### Leaks with system libraries in their stacks. These show up across a number of tests.
