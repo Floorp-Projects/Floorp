@@ -26,3 +26,32 @@ BEGIN_TEST(testSymbol_New)
     return true;
 }
 END_TEST(testSymbol_New)
+
+BEGIN_TEST(testSymbol_GetSymbolFor)
+{
+    using namespace JS;
+
+    RootedString desc(cx, JS_NewStringCopyZ(cx, "ponies"));
+    CHECK(desc);
+    RootedSymbol sym1(cx);
+    CHECK(sym1 = GetSymbolFor(cx, desc));
+    CHECK_SAME(StringValue(GetSymbolDescription(sym1)), StringValue(desc));
+
+    // Calling JS::GetSymbolFor again with the same arguments produces the
+    // same Symbol.
+    RootedSymbol sym2(cx);
+    CHECK(sym2 = GetSymbolFor(cx, desc));
+    CHECK_EQUAL(sym1, sym2);
+
+    // Passing a new but equal string also produces the same Symbol.
+    CHECK(desc = JS_NewStringCopyZ(cx, "ponies"));
+    CHECK(sym2 = GetSymbolFor(cx, desc));
+    CHECK_EQUAL(sym1, sym2);
+
+    // But SymbolNew always produces a new distinct Symbol.
+    CHECK(sym2 = NewSymbol(cx, desc));
+    CHECK(sym2 != sym1);
+
+    return true;
+}
+END_TEST(testSymbol_GetSymbolFor)

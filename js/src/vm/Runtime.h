@@ -39,6 +39,7 @@
 #include "vm/MallocProvider.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
+#include "vm/Symbol.h"
 #include "vm/ThreadPool.h"
 
 #ifdef _MSC_VER
@@ -1154,14 +1155,21 @@ struct JSRuntime : public JS::shadow::Runtime,
 
   private:
     // Set of all atoms other than those in permanentAtoms and staticStrings.
-    // This may be modified by threads with an ExclusiveContext and requires
-    // a lock.
+    // Reading or writing this set requires the calling thread to have an
+    // ExclusiveContext and hold a lock. Use AutoLockForExclusiveAccess.
     js::AtomSet *atoms_;
 
-    // Compartment and associated zone containing all atoms in the runtime,
-    // as well as runtime wide IonCode stubs. The contents of this compartment
-    // may be modified by threads with an ExclusiveContext and requires a lock.
+    // Compartment and associated zone containing all atoms in the runtime, as
+    // well as runtime wide IonCode stubs. Modifying the contents of this
+    // compartment requires the calling thread to have an ExclusiveContext and
+    // hold a lock. Use AutoLockForExclusiveAccess.
     JSCompartment *atomsCompartment_;
+
+    // Set of all live symbols produced by Symbol.for(). All such symbols are
+    // allocated in the atomsCompartment. Reading or writing the symbol
+    // registry requires the calling thread to have an ExclusiveContext and
+    // hold a lock. Use AutoLockForExclusiveAccess.
+    js::SymbolRegistry symbolRegistry_;
 
   public:
     bool initializeAtoms(JSContext *cx);
@@ -1186,6 +1194,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     inline bool isAtomsZone(JS::Zone *zone);
 
     bool activeGCInAtomsZone();
+
+    js::SymbolRegistry &symbolRegistry() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return symbolRegistry_;
+    }
 
     // Permanent atoms are fixed during initialization of the runtime and are
     // not modified or collected until the runtime is destroyed. These may be
