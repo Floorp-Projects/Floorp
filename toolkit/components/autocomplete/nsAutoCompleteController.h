@@ -35,9 +35,10 @@ public:
   NS_DECL_NSITIMERCALLBACK
    
   nsAutoCompleteController();
-  virtual ~nsAutoCompleteController();
   
 protected:
+  virtual ~nsAutoCompleteController();
+
   nsresult OpenPopup();
   nsresult ClosePopup();
 

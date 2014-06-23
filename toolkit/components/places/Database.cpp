@@ -218,6 +218,8 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
 class ConnectionCloseCallback MOZ_FINAL : public mozIStorageCompletionCallback {
   bool mDone;
 
+  ~ConnectionCloseCallback() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGECOMPLETIONCALLBACK
