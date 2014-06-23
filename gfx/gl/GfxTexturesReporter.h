@@ -15,6 +15,8 @@ namespace gl {
 
 class GfxTexturesReporter MOZ_FINAL : public nsIMemoryReporter
 {
+    ~GfxTexturesReporter() {}
+
 public:
     NS_DECL_ISUPPORTS
 
