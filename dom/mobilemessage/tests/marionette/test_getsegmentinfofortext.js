@@ -77,8 +77,21 @@ function addTest(text, segments, charsPerSegment, charsAvailableInLastSegment) {
   });
 }
 
-addTest(null, 1, PDU_MAX_USER_DATA_7BIT,
-        PDU_MAX_USER_DATA_7BIT - "null".length);
+function addTestThrows(text) {
+  tasks.push(function() {
+    log("Testing '" + text + "' ...");
+    try {
+      let domRequest = manager.getSegmentInfoForText(text);
+
+      ok(false, "Not thrown.");
+      tasks.finish();
+    } catch (e) {
+      tasks.next();
+    }
+  });
+}
+
+addTestThrows(null);
 
 // Testing "undefined".
 addTest(undefined, 1, PDU_MAX_USER_DATA_7BIT,
