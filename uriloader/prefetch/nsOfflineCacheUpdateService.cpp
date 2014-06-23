@@ -150,6 +150,8 @@ public:
         }
 
 private:
+    ~nsOfflineCachePendingUpdate() {}
+
     nsRefPtr<nsOfflineCacheUpdateService> mService;
     nsCOMPtr<nsIURI> mManifestURI;
     nsCOMPtr<nsIURI> mDocumentURI;
