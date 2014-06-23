@@ -430,11 +430,11 @@ public:
       mLoadGroup(loadGroup)
   {}
 
-  ~nsPingListener();
-
   nsresult StartTimeout();
 
 private:
+  ~nsPingListener();
+
   bool mRequireSameHost;
   nsCOMPtr<nsIContent> mContent;
   nsCOMPtr<nsILoadGroup> mLoadGroup;
@@ -8764,6 +8764,8 @@ public:
     }
 
 private:
+    ~nsCopyFaviconCallback() {}
+
     nsCOMPtr<nsIURI> mNewURI;
     bool mInPrivateBrowsing;
 };
