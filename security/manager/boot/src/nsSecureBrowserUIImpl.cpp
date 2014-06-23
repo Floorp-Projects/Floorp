@@ -1612,6 +1612,8 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   nsUIContext(nsIDOMWindow *window);
+
+protected:
   virtual ~nsUIContext();
 
 private:

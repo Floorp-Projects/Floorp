@@ -88,10 +88,11 @@ extern char* pk11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
 class nsTokenEventRunnable : public nsIRunnable {
 public:
   nsTokenEventRunnable(const nsAString& aType, const nsAString& aTokenName);
-  virtual ~nsTokenEventRunnable();
 
   NS_IMETHOD Run ();
   NS_DECL_THREADSAFE_ISUPPORTS
+protected:
+  virtual ~nsTokenEventRunnable();
 private:
   nsString mType;
   nsString mTokenName;
@@ -898,9 +899,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  virtual ~CipherSuiteChangeObserver() {}
   static nsresult StartObserve();
   static nsresult StopObserve();
+
+protected:
+  virtual ~CipherSuiteChangeObserver() {}
 
 private:
   static StaticRefPtr<CipherSuiteChangeObserver> sObserver;

@@ -19,9 +19,10 @@ class nsSSLSocketProvider : public nsISocketProvider
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISOCKETPROVIDER
-  
+
   // nsSSLSocketProvider methods:
   nsSSLSocketProvider();
+protected:
   virtual ~nsSSLSocketProvider();
 };
 

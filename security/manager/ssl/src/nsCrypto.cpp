@@ -168,12 +168,13 @@ typedef struct nsKeyPairInfoStr {
 class nsCryptoRunArgs : public nsISupports {
 public:
   nsCryptoRunArgs(JSContext *aCx);
-  virtual ~nsCryptoRunArgs();
   nsCOMPtr<nsISupports> m_kungFuDeathGrip;
   JSContext *m_cx;
   JS::PersistentRooted<JSObject*> m_scope;
   nsXPIDLCString m_jsCallback;
   NS_DECL_ISUPPORTS
+protected:
+  virtual ~nsCryptoRunArgs();
 };
 
 //This class is used to run the callback code
@@ -191,6 +192,13 @@ private:
   nsCryptoRunArgs *m_args;
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsCryptoRunnable>
+{
+  static const bool value = true;
+};
+}
 
 //We're going to inherit the memory passed
 //into us.
@@ -199,10 +207,11 @@ private:
 class nsP12Runnable : public nsIRunnable {
 public:
   nsP12Runnable(nsIX509Cert **certArr, int32_t numCerts, nsIPK11Token *token);
-  virtual ~nsP12Runnable();
 
   NS_IMETHOD Run();
   NS_DECL_ISUPPORTS
+protected:
+  virtual ~nsP12Runnable();
 private:
   nsCOMPtr<nsIPK11Token> mToken;
   nsIX509Cert **mCertArr;
