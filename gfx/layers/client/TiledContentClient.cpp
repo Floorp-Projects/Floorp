@@ -237,6 +237,9 @@ SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetric
   CSSRect painted =
         (aContentMetrics.mCriticalDisplayPort.IsEmpty() ? aContentMetrics.mDisplayPort : aContentMetrics.mCriticalDisplayPort)
         + aContentMetrics.GetScrollOffset();
+  // Inflate painted by some small epsilon to deal with rounding
+  // error. We should replace this with a FuzzyContains function.
+  painted.Inflate(0.01f);
   CSSRect showing = CSSRect(aCompositorMetrics.GetScrollOffset(), aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
   return !painted.Contains(showing);
 }
