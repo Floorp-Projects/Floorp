@@ -45,7 +45,7 @@ LIRGenerator::visitParameter(MParameter *param)
         offset = 1 + param->index();
 
     LParameter *ins = new(alloc()) LParameter;
-    if (!defineBox(ins, param, LDefinition::PRESET))
+    if (!defineBox(ins, param, LDefinition::FIXED))
         return false;
 
     offset *= sizeof(Value);
