@@ -10,6 +10,7 @@
 #include "nsIDOMMobileMessageManager.h"
 #include "nsIObserver.h"
 
+class nsISmsService;
 class nsIDOMMozSmsMessage;
 class nsIDOMMozMmsMessage;
 
@@ -34,21 +35,27 @@ private:
   /**
    * Internal Send() method used to send one message.
    */
-  nsresult Send(JSContext* aCx, JS::Handle<JSObject*> aGlobal,
-                uint32_t aServiceId,
-                JS::Handle<JSString*> aNumber,
-                const nsAString& aMessage,
-                JS::MutableHandle<JS::Value> aRequest);
+  nsresult
+  Send(JSContext* aCx,
+       JS::Handle<JSObject*> aGlobal,
+       nsISmsService* aSmsService,
+       uint32_t aServiceId,
+       JS::Handle<JSString*> aNumber,
+       const nsAString& aText,
+       JS::MutableHandle<JS::Value> aRequest);
 
-  nsresult DispatchTrustedSmsEventToSelf(const char* aTopic,
-                                         const nsAString& aEventName,
-                                         nsISupports* aMsg);
+  nsresult
+  DispatchTrustedSmsEventToSelf(const char* aTopic,
+                                const nsAString& aEventName,
+                                nsISupports* aMsg);
 
   /**
    * Helper to get message ID from SMS/MMS Message object
    */
-  nsresult GetMessageId(JSContext* aCx, const JS::Value& aMessage,
-                        int32_t* aId);
+  nsresult
+  GetMessageId(JSContext* aCx,
+               const JS::Value& aMessage,
+               int32_t* aId);
 };
 
 } // namespace dom
