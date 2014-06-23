@@ -111,6 +111,10 @@ assertEq(next.value, "hello world");
 // undefined
 assertEq(`${void 0}`, "undefined");
 assertEq(`${Object.doesNotHaveThisProperty}`, "undefined");
+
+// toString behavior
+assertEq("<toString>", `${{valueOf: () => "<valueOf>", toString: () => "<toString>"}}`);
+assertEq("Hi 42", Function("try {`${{toString: () => { throw 42;}}}`} catch(e) {return \"Hi \" + e;}")());
 */
 /*End func*/}
 
