@@ -2990,50 +2990,6 @@ nsXPCComponents_Utils::GetGlobalForObject(HandleValue object,
     return NS_OK;
 }
 
-/* jsval createObjectIn(in jsval vobj); */
-bool
-xpc::CreateObjectIn(JSContext *cx, HandleValue vobj, CreateObjectInOptions &options,
-                    MutableHandleValue rval)
-{
-    if (!vobj.isObject()) {
-        JS_ReportError(cx, "Expected an object as the target scope");
-        return false;
-    }
-
-    RootedObject scope(cx, js::CheckedUnwrap(&vobj.toObject()));
-    if (!scope) {
-        JS_ReportError(cx, "Permission denied to create object in the target scope");
-        return false;
-    }
-
-    bool define = !JSID_IS_VOID(options.defineAs);
-
-    if (define && js::IsScriptedProxy(scope)) {
-        JS_ReportError(cx, "Defining property on proxy object is not allowed");
-        return false;
-    }
-
-    RootedObject obj(cx);
-    {
-        JSAutoCompartment ac(cx, scope);
-        obj = JS_NewObject(cx, nullptr, JS::NullPtr(), scope);
-        if (!obj)
-            return false;
-
-        if (define) {
-            if (!JS_DefinePropertyById(cx, scope, options.defineAs, obj, JSPROP_ENUMERATE,
-                                       JS_PropertyStub, JS_StrictPropertyStub))
-                return false;
-        }
-    }
-
-    rval.setObject(*obj);
-    if (!WrapperFactory::WaiveXrayAndWrap(cx, rval))
-        return false;
-
-    return true;
-}
-
 /* boolean isProxy(in value vobj); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::IsProxy(HandleValue vobj, JSContext *cx, bool *rval)
