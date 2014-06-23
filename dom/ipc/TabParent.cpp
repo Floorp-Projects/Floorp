@@ -44,15 +44,18 @@
 #include "nsIPromptFactory.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserChrome.h"
+#include "nsIWindowCreator2.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIXULWindow.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"
 #include "nsIWindowWatcher.h"
 #include "nsPIDOMWindow.h"
+#include "nsPIWindowWatcher.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
+#include "nsWindowWatcher.h"
 #include "private/pprio.h"
 #include "PermissionMessageUtils.h"
 #include "StructuredCloneUtils.h"
@@ -388,35 +391,95 @@ TabParent::RecvEvent(const RemoteDOMEvent& aEvent)
 }
 
 bool
-TabParent::AnswerCreateWindow(PBrowserParent** retval)
+TabParent::AnswerCreateWindow(const uint32_t& aChromeFlags,
+                              const bool& aCalledFromJS,
+                              const bool& aPositionSpecified,
+                              const bool& aSizeSpecified,
+                              const nsString& aURI,
+                              const nsString& aName,
+                              const nsString& aFeatures,
+                              const nsString& aBaseURI,
+                              bool* aWindowIsNew,
+                              PBrowserParent** aRetVal)
 {
-    if (!mBrowserDOMWindow) {
-        return false;
-    }
+  if (IsBrowserOrApp()) {
+    return false;
+  }
 
-    // Only non-app, non-browser processes may call CreateWindow.
-    if (IsBrowserOrApp()) {
-        return false;
-    }
+  nsresult rv;
+  nsCOMPtr<nsPIWindowWatcher> pwwatch =
+    do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, false);
 
-    // Get a new rendering area from the browserDOMWin.  We don't want
-    // to be starting any loads here, so get it with a null URI.
+  nsCOMPtr<nsIContent> frame(do_QueryInterface(mFrameElement));
+  NS_ENSURE_TRUE(frame, false);
+
+  nsCOMPtr<nsIDOMWindow> parent = do_QueryInterface(frame->OwnerDoc()->GetWindow());
+  NS_ENSURE_TRUE(parent, false);
+
+  int32_t openLocation =
+    nsWindowWatcher::GetWindowOpenLocation(parent, aChromeFlags, aCalledFromJS,
+                                           aPositionSpecified, aSizeSpecified);
+
+  MOZ_ASSERT(openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB ||
+             openLocation == nsIBrowserDOMWindow::OPEN_NEWWINDOW);
+
+  *aWindowIsNew = true;
+
+  // Opening new tabs is the easy case...
+  if (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB) {
+    NS_ENSURE_TRUE(mBrowserDOMWindow, false);
+
     nsCOMPtr<nsIFrameLoaderOwner> frameLoaderOwner;
     mBrowserDOMWindow->OpenURIInFrame(nullptr, nullptr,
                                       nsIBrowserDOMWindow::OPEN_NEWTAB,
                                       nsIBrowserDOMWindow::OPEN_NEW,
                                       getter_AddRefs(frameLoaderOwner));
-    if (!frameLoaderOwner) {
-        return false;
-    }
+    NS_ENSURE_TRUE(frameLoaderOwner, false);
 
     nsRefPtr<nsFrameLoader> frameLoader = frameLoaderOwner->GetFrameLoader();
-    if (!frameLoader) {
-        return false;
-    }
+    NS_ENSURE_TRUE(frameLoader, false);
 
-    *retval = frameLoader->GetRemoteBrowser();
+    *aRetVal = frameLoader->GetRemoteBrowser();
     return true;
+  }
+
+  // WindowWatcher is going to expect a valid URI to open a window
+  // to. If it can't find one, it's going to attempt to figure one
+  // out on its own, which is problematic because it can't access
+  // the document for the remote browser we're opening. Luckily,
+  // TabChild has sent us a baseURI with which we can ensure that
+  // the URI we pass to WindowWatcher is valid.
+  nsCOMPtr<nsIURI> baseURI;
+  rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURI);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIURI> finalURI;
+  rv = NS_NewURI(getter_AddRefs(finalURI), NS_ConvertUTF16toUTF8(aURI).get(), baseURI);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsAutoCString finalURIString;
+  finalURI->GetSpec(finalURIString);
+
+  nsCOMPtr<nsIDOMWindow> window;
+
+  rv = pwwatch->OpenWindow2(parent, finalURIString.get(),
+                            NS_ConvertUTF16toUTF8(aName).get(),
+                            NS_ConvertUTF16toUTF8(aFeatures).get(), aCalledFromJS,
+                            false, false, this, nullptr, getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(window);
+  NS_ENSURE_TRUE(pwindow, false);
+
+  nsRefPtr<nsIDocShell> newDocShell = pwindow->GetDocShell();
+  NS_ENSURE_TRUE(newDocShell, false);
+
+  nsCOMPtr<nsITabParent> newRemoteTab = newDocShell->GetOpenedRemote();
+  NS_ENSURE_TRUE(newRemoteTab, false);
+
+  *aRetVal = static_cast<TabParent*>(newRemoteTab.get());
+  return true;
 }
 
 void

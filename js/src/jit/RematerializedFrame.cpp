@@ -29,11 +29,12 @@ struct CopyValueToRematerializedFrame
 };
 
 RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
-                                         InlineFrameIterator &iter)
+                                         unsigned numActualArgs, InlineFrameIterator &iter)
   : prevUpToDate_(false),
     top_(top),
+    pc_(iter.pc()),
     frameNo_(iter.frameNo()),
-    numActualArgs_(iter.numActualArgs()),
+    numActualArgs_(numActualArgs),
     script_(iter.script())
 {
     CopyValueToRematerializedFrame op(slots_);
@@ -45,16 +46,56 @@ RematerializedFrame::RematerializedFrame(ThreadSafeContext *cx, uint8_t *top,
 RematerializedFrame::New(ThreadSafeContext *cx, uint8_t *top, InlineFrameIterator &iter)
 {
     unsigned numFormals = iter.isFunctionFrame() ? iter.callee()->nargs() : 0;
+    unsigned numActualArgs = Max(numFormals, iter.numActualArgs());
     size_t numBytes = sizeof(RematerializedFrame) +
-        (Max(numFormals, iter.numActualArgs()) +
-         iter.script()->nfixed()) * sizeof(Value) -
+        (numActualArgs + iter.script()->nfixed()) * sizeof(Value) -
         sizeof(Value); // 1 Value included in sizeof(RematerializedFrame)
 
     void *buf = cx->calloc_(numBytes);
     if (!buf)
         return nullptr;
 
-    return new (buf) RematerializedFrame(cx, top, iter);
+    return new (buf) RematerializedFrame(cx, top, numActualArgs, iter);
+}
+
+/* static */ bool
+RematerializedFrame::RematerializeInlineFrames(ThreadSafeContext *cx, uint8_t *top,
+                                               InlineFrameIterator &iter,
+                                               Vector<RematerializedFrame *> &frames)
+{
+    if (!frames.resize(iter.frameCount()))
+        return false;
+
+    while (true) {
+        size_t frameNo = iter.frameNo();
+        frames[frameNo] = RematerializedFrame::New(cx, top, iter);
+        if (!frames[frameNo])
+            return false;
+
+        if (!iter.more())
+            break;
+        ++iter;
+    }
+
+    return true;
+}
+
+/* static */ void
+RematerializedFrame::FreeInVector(Vector<RematerializedFrame *> &frames)
+{
+    for (size_t i = 0; i < frames.length(); i++) {
+        RematerializedFrame *f = frames[i];
+        f->RematerializedFrame::~RematerializedFrame();
+        js_free(f);
+    }
+    frames.clear();
+}
+
+/* static */ void
+RematerializedFrame::MarkInVector(JSTracer *trc, Vector<RematerializedFrame *> &frames)
+{
+    for (size_t i = 0; i < frames.length(); i++)
+        frames[i]->mark(trc);
 }
 
 CallObject &
@@ -82,11 +123,11 @@ RematerializedFrame::mark(JSTracer *trc)
 void
 RematerializedFrame::dump()
 {
-    fprintf(stderr, " Rematerialized Optimized Frame%s\n", inlined() ? " (inlined)" : "");
+    fprintf(stderr, " Rematerialized Ion Frame%s\n", inlined() ? " (inlined)" : "");
     if (isFunctionFrame()) {
         fprintf(stderr, "  callee fun: ");
 #ifdef DEBUG
-        js_DumpObject(callee());
+        js_DumpValue(ObjectValue(*callee()));
 #else
         fprintf(stderr, "?\n");
 #endif
@@ -94,15 +135,16 @@ RematerializedFrame::dump()
         fprintf(stderr, "  global frame, no callee\n");
     }
 
-    fprintf(stderr, "  file %s line %u\n",
-            script()->filename(), (unsigned) script()->lineno());
+    fprintf(stderr, "  file %s line %u offset %zu\n",
+            script()->filename(), (unsigned) script()->lineno(),
+            script()->pcToOffset(pc()));
 
     fprintf(stderr, "  script = %p\n", (void*) script());
 
     if (isFunctionFrame()) {
         fprintf(stderr, "  scope chain: ");
 #ifdef DEBUG
-        js_DumpObject(scopeChain());
+        js_DumpValue(ObjectValue(*scopeChain()));
 #else
         fprintf(stderr, "?\n");
 #endif
@@ -110,7 +152,7 @@ RematerializedFrame::dump()
         if (hasArgsObj()) {
             fprintf(stderr, "  args obj: ");
 #ifdef DEBUG
-            js_DumpObject(&argsObj());
+            js_DumpValue(ObjectValue(argsObj()));
 #else
             fprintf(stderr, "?\n");
 #endif

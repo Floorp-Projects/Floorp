@@ -9,6 +9,8 @@ interface nsIObserver;
 interface nsIEventTarget;
 
 %{C++
+#include "mozilla/MemoryReporting.h"
+
 /**
  * The signature of the timer callback function passed to initWithFuncCallback.
  * This is the function that will get called when the timer expires if the
@@ -194,6 +196,10 @@ interface nsITimer : nsISupports
    * By default the target is the thread that created the timer.
    */
   attribute nsIEventTarget target;
+
+%{C++
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const = 0;
+%}
 };
 
 %{C++

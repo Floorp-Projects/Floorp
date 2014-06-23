@@ -22,6 +22,8 @@ public:
 
   virtual TemporaryRef<MFTDecoder> Init() MOZ_OVERRIDE;
 
+  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+
   // Note WMF's AAC decoder sometimes output negatively timestamped samples,
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.

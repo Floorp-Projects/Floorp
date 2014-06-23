@@ -13,6 +13,7 @@
 #include "mozilla/Telemetry.h"
 
 #include "prlog.h"
+#include "prmem.h"
 #include "prnetdb.h"
 #include "nsIPrefService.h"
 #include "nsIClientAuthDialogs.h"

@@ -26,6 +26,7 @@
 #include "nsXULTemplateResultXML.h"
 #include "nsXULSortService.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsXMLQuery, nsXMLQuery)
@@ -42,21 +43,21 @@ nsXULTemplateResultSetXML::HasMoreElements(bool *aResult)
 {
     // if GetSnapshotLength failed, then the return type was not a set of
     // nodes, so just return false in this case.
-    uint32_t length;
-    if (NS_SUCCEEDED(mResults->GetSnapshotLength(&length)))
-        *aResult = (mPosition < length);
-    else
-        *aResult = false;
-
+    ErrorResult rv;
+    uint32_t length = mResults->GetSnapshotLength(rv);
+    *aResult = !rv.Failed() && mPosition < length;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULTemplateResultSetXML::GetNext(nsISupports **aResult)
 {
-    nsCOMPtr<nsIDOMNode> node;
-    nsresult rv = mResults->SnapshotItem(mPosition, getter_AddRefs(node));
-    NS_ENSURE_SUCCESS(rv, rv);
+    ErrorResult rv;
+    nsCOMPtr<nsIDOMNode> node =
+        do_QueryInterface(mResults->SnapshotItem(mPosition, rv));
+    if (rv.Failed()) {
+        return rv.ErrorCode();
+    }
 
     nsXULTemplateResultXML* result =
         new nsXULTemplateResultXML(mQuery, node, mBindingSet);
@@ -331,13 +332,11 @@ nsXULTemplateQueryProcessorXML::GenerateResults(nsISupports* aDatasource,
 
     nsCOMPtr<nsISupports> exprsupportsresults;
     nsresult rv = expr->Evaluate(context,
-                                 nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                                 XPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
                                  nullptr, getter_AddRefs(exprsupportsresults));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMXPathResult> exprresults =
-        do_QueryInterface(exprsupportsresults);
-
+    XPathResult* exprresults = XPathResult::FromSupports(exprsupportsresults);
     nsXULTemplateResultSetXML* results =
         new nsXULTemplateResultSetXML(xmlquery, exprresults,
                                       xmlquery->GetBindingSet());

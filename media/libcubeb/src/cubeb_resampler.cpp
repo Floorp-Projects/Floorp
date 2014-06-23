@@ -13,6 +13,29 @@
 #include "cubeb-speex-resampler.h"
 
 namespace {
+
+template<typename T>
+class auto_array
+{
+public:
+  auto_array(uint32_t size)
+    : data(new T[size])
+  {}
+
+  ~auto_array()
+  {
+    delete [] data;
+  }
+
+  T * get() const
+  {
+    return data;
+  }
+
+private:
+  T * data;
+};
+
 long
 frame_count_at_rate(long frame_count, float rate)
 {
@@ -104,9 +127,9 @@ private:
   // A little buffer to store the leftover frames,
   // that is, the samples not consumed by the resampler that we will end up
   // using next time fill() is called.
-  uint8_t * leftover_frames_buffer;
+  auto_array<uint8_t> leftover_frames_buffer;
   // A buffer to store frames that will be consumed by the resampler.
-  uint8_t * resampling_src_buffer;
+  auto_array<uint8_t> resampling_src_buffer;
 };
 
 cubeb_resampler_speex::cubeb_resampler_speex(SpeexResamplerState * r,
@@ -125,21 +148,16 @@ cubeb_resampler_speex::cubeb_resampler_speex(SpeexResamplerState * r,
   , resampling_ratio(static_cast<float>(params.rate) / out_rate)
   , leftover_frame_size(static_cast<uint32_t>(ceilf(1 / resampling_ratio * 2) + 1))
   , leftover_frame_count(0)
+  , leftover_frames_buffer(auto_array<uint8_t>(frames_to_bytes(params, leftover_frame_size)))
+  , resampling_src_buffer(auto_array<uint8_t>(frames_to_bytes(params,
+        frame_count_at_rate(buffer_frame_count, resampling_ratio))))
 {
-  leftover_frames_buffer = new uint8_t[frames_to_bytes(params, leftover_frame_size)];
-  size_t frames_needed = frame_count_at_rate(buffer_frame_count, resampling_ratio);
-  resampling_src_buffer = new uint8_t[frames_to_bytes(params, frames_needed)];
-
   assert(r);
-  assert(leftover_frames_buffer);
-  assert(resampling_src_buffer);
 }
 
 cubeb_resampler_speex::~cubeb_resampler_speex()
 {
   speex_resampler_destroy(speex_resampler);
-  delete[] leftover_frames_buffer;
-  delete[] resampling_src_buffer;
 }
 
 long
@@ -154,8 +172,8 @@ cubeb_resampler_speex::fill(void * buffer, long frames_needed)
 
   // Copy the previous leftover frames to the front of the buffer.
   size_t leftover_bytes = frames_to_bytes(stream_params, leftover_frame_count);
-  memcpy(resampling_src_buffer, leftover_frames_buffer, leftover_bytes);
-  uint8_t * buffer_start = resampling_src_buffer + leftover_bytes;
+  memcpy(resampling_src_buffer.get(), leftover_frames_buffer.get(), leftover_bytes);
+  uint8_t * buffer_start = resampling_src_buffer.get() + leftover_bytes;
 
   long got = data_callback(stream, user_ptr, buffer_start, frames_requested);
   assert(got <= frames_requested);
@@ -169,12 +187,12 @@ cubeb_resampler_speex::fill(void * buffer, long frames_needed)
   uint32_t old_in_frames = in_frames;
 
   if (stream_params.format == CUBEB_SAMPLE_FLOAT32NE) {
-    float * in_buffer = reinterpret_cast<float *>(resampling_src_buffer);
+    float * in_buffer = reinterpret_cast<float *>(resampling_src_buffer.get());
     float * out_buffer = reinterpret_cast<float *>(buffer);
     speex_resampler_process_interleaved_float(speex_resampler, in_buffer, &in_frames,
                                               out_buffer, &out_frames);
   } else {
-    short * in_buffer = reinterpret_cast<short *>(resampling_src_buffer);
+    short * in_buffer = reinterpret_cast<short *>(resampling_src_buffer.get());
     short * out_buffer = reinterpret_cast<short *>(buffer);
     speex_resampler_process_interleaved_int(speex_resampler, in_buffer, &in_frames,
                                             out_buffer, &out_frames);
@@ -185,9 +203,9 @@ cubeb_resampler_speex::fill(void * buffer, long frames_needed)
   assert(leftover_frame_count <= leftover_frame_size);
 
   size_t unresampled_bytes = frames_to_bytes(stream_params, leftover_frame_count);
-  uint8_t * leftover_frames_start = resampling_src_buffer;
+  uint8_t * leftover_frames_start = resampling_src_buffer.get();
   leftover_frames_start += frames_to_bytes(stream_params, in_frames);
-  memcpy(leftover_frames_buffer, leftover_frames_start, unresampled_bytes);
+  memcpy(leftover_frames_buffer.get(), leftover_frames_start, unresampled_bytes);
 
   return out_frames;
 }

@@ -6411,15 +6411,12 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   nsIDocument* aDocument)
 {
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
-  nsCOMPtr<nsIGlobalObject> globalObject =
-    do_QueryInterface(aDocument->GetWindow());
-  if (NS_WARN_IF(!globalObject)) {
-    return true;
-  }
 
   AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitUsingWin(aDocument->GetWindow()))) {
+    return true;
+  }
   JSContext* cx = jsapi.cx();
-  JSAutoCompartment ac(cx, globalObject->GetGlobalJSObject());
 
   // The pattern has to match the entire value.
   aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);

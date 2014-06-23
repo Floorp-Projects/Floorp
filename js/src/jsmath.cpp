@@ -425,6 +425,19 @@ js::math_floor_impl(double x)
 }
 
 bool
+js::math_floor_handle(JSContext *cx, HandleValue v, MutableHandleValue r)
+{
+    double d;
+    if(!ToNumber(cx, v, &d))
+        return false;
+
+    double z = math_floor_impl(d);
+    r.setNumber(z);
+
+    return true;
+}
+
+bool
 js::math_floor(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -434,13 +447,7 @@ js::math_floor(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    double z = math_floor_impl(x);
-    args.rval().setNumber(z);
-    return true;
+    return math_floor_handle(cx, args[0], args.rval());
 }
 
 bool
@@ -663,21 +670,27 @@ js::ecmaPow(double x, double y)
 # pragma optimize("g", off)
 #endif
 bool
+js_math_pow_handle(JSContext *cx, HandleValue base, HandleValue power, MutableHandleValue result)
+{
+    double x;
+    if (!ToNumber(cx, base, &x))
+        return false;
+
+    double y;
+    if (!ToNumber(cx, power, &y))
+        return false;
+
+    double z = ecmaPow(x, y);
+    result.setNumber(z);
+    return true;
+}
+
+bool
 js_math_pow(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    double x;
-    if (!ToNumber(cx, args.get(0), &x))
-        return false;
-
-    double y;
-    if (!ToNumber(cx, args.get(1), &y))
-        return false;
-
-    double z = ecmaPow(x, y);
-    args.rval().setNumber(z);
-    return true;
+    return js_math_pow_handle(cx, args.get(0), args.get(1), args.rval());
 }
 #if defined(_MSC_VER)
 # pragma optimize("", on)
@@ -776,6 +789,18 @@ js_math_random(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
+bool
+js::math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res)
+{
+    double d;
+    if (!ToNumber(cx, arg, &d))
+        return false;
+
+    d = math_round_impl(d);
+    res.setNumber(d);
+    return true;
+}
+
 double
 js::math_round_impl(double x)
 {
@@ -814,13 +839,7 @@ js::math_round(JSContext *cx, unsigned argc, Value *vp)
         return true;
     }
 
-    double x;
-    if (!ToNumber(cx, args[0], &x))
-        return false;
-
-    double z = math_round_impl(x);
-    args.rval().setNumber(z);
-    return true;
+    return js::math_round_handle(cx, args[0], args.rval());
 }
 
 double

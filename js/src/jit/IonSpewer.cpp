@@ -249,7 +249,6 @@ jit::CheckLogging()
             "  cacheflush Instruction Cache flushes (ARM only for now)\n"
             "  range      Range Analysis\n"
             "  logs       C1 and JSON visualization logging\n"
-            "  trace      Generate calls to js::jit::Trace() for effectful instructions\n"
             "  all        Everything\n"
             "\n"
             "  bl-aborts  Baseline compiler abort messages\n"
@@ -302,8 +301,6 @@ jit::CheckLogging()
         EnableChannel(IonSpew_CacheFlush);
     if (ContainsFlag(env, "logs"))
         EnableIonDebugLogging();
-    if (ContainsFlag(env, "trace"))
-        EnableChannel(IonSpew_Trace);
     if (ContainsFlag(env, "all"))
         LoggingBits = uint32_t(-1);
 

@@ -16,7 +16,9 @@ enum OCSPResponseType
   ORTNull = 0,
   ORTGood,             // the certificate is good
   ORTRevoked,          // the certificate has been revoked
+  ORTRevokedOld,       // same, but the response is old
   ORTUnknown,          // the responder doesn't know if the cert is good
+  ORTUnknownOld,       // same, but the response is old
   ORTGoodOtherCert,    // the response references a different certificate
   ORTGoodOtherCA,      // the wrong CA has signed the response
   ORTExpired,          // the signature on the response has expired

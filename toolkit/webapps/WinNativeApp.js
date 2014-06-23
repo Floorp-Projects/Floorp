@@ -317,7 +317,7 @@ NativeApp.prototype = {
 
     let writer = factory.createINIParser(webappINIfile)
                         .QueryInterface(Ci.nsIINIParserWriter);
-    writer.setString("Webapp", "Name", this.appName);
+    writer.setString("Webapp", "Name", this.appLocalizedName);
     writer.setString("Webapp", "Profile", this.uniqueName);
     writer.setString("Webapp", "Executable", this.appNameAsFilename);
     writer.setString("WebappRT", "InstallDir", this.runtimeFolder);
@@ -365,7 +365,7 @@ NativeApp.prototype = {
       subKey = uninstallKey.createChild(this.uninstallSubkeyStr,
                                         uninstallKey.ACCESS_WRITE);
 
-      subKey.writeStringValue("DisplayName", this.appName);
+      subKey.writeStringValue("DisplayName", this.appLocalizedName);
 
       let uninstallerPath = OS.Path.join(aInstallDir, this.uninstallerFile);
 
