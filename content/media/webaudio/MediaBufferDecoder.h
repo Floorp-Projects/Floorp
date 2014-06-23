@@ -9,7 +9,6 @@
 
 #include "nsWrapperCache.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIThreadPool.h"
 #include "nsString.h"
 #include "nsTArray.h"

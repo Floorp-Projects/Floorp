@@ -2,38 +2,73 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "head.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
+const TEST_DATA = [
+  // Test passing invalid program.
+  {
+    options: {
+      program: 5, /* Invalid program */
+      serviceClass: 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      program: null,
+      serviceClass: 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      /* Undefined program */
+      serviceClass: 0
+    },
+    expectedError: "InvalidParameter"
+  },
+  // Test passing invalid serviceClass.
+  {
+    options: {
+      program: MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      serviceClass: null
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      program: MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      /* Undefined serviceClass */
+    },
+    expectedError: "InvalidParameter"
+  },
+  // TODO: Bug 1027546 - [B2G][Emulator] Support call barring
+  // Currently emulator doesn't support call barring, so we expect to get a
+  // 'RequestNotSupported' error here.
+  {
+    options: {
+      program: MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      serviceClass: 0
+    },
+    expectedError: "RequestNotSupported"
+  }
+];
 
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
-let connection;
-ifr.onload = function() {
-  connection = ifr.contentWindow.navigator.mozMobileConnections[0];
+function testGetCallBarringOption(aOptions, aExpectedError) {
+  log("Test getting call barring to " + JSON.stringify(aOptions));
 
-  ok(connection instanceof ifr.contentWindow.MozMobileConnection,
-     "connection is instanceof " + connection.constructor);
-
-  testGetCallBarringOption();
-};
-document.body.appendChild(ifr);
-
-function testGetCallBarringOption() {
-  let option = {'program': 0, 'password': '', 'serviceClass': 0};
-  let request = connection.getCallBarringOption(option);
-  request.onsuccess = function() {
-    ok(request.result);
-    ok('enabled' in request.result, 'should have "enabled" field');
-    cleanUp();
-  };
-  request.onerror = function() {
-    // Call barring is not supported by current emulator.
-    cleanUp();
-  };
+  return getCallBarringOption(aOptions)
+    .then(function resolve(aResult) {
+      ok(false, "should not success");
+    }, function reject(aError) {
+      is(aError.name, aExpectedError, "failed to getCallBarringOption");
+    });
 }
 
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
+// Start tests
+startTestCommon(function() {
+  let promise = Promise.resolve();
+  for (let i = 0; i < TEST_DATA.length; i++) {
+    let data = TEST_DATA[i];
+    promise = promise.then(() => testGetCallBarringOption(data.options,
+                                                          data.expectedError));
+  }
+  return promise;
+});

@@ -95,6 +95,9 @@
   "@mozilla.org/updates/update-processor;1"
 #endif
 
+#define NS_ADDONPATHSERVICE_CONTRACTID \
+    "@mozilla.org/addon-path-service;1"
+
 /////////////////////////////////////////////////////////////////////////////
 
 // {A0CCAAF8-09DA-44D8-B250-9AC3E93C8117}
@@ -180,3 +183,6 @@
 
 #define NS_APPLICATION_REPUTATION_SERVICE_CID \
 { 0x8576c950, 0xf4a2, 0x11e2, { 0xb7, 0x78, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }
+
+#define NS_ADDON_PATH_SERVICE_CID \
+{ 0xa39f39d0, 0xdfb6, 0x11e3, { 0x8b, 0x68, 0x08, 0x00, 0x20, 0x0c, 0x9a, 0x66 } }

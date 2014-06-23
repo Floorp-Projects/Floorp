@@ -18,7 +18,6 @@ dnl MOZ_ARG_WITH_BOOL(             NAME, HELP, IF-YES [, IF-NO [, ELSE])
 dnl MOZ_ARG_WITHOUT_BOOL(          NAME, HELP, IF-NO [, IF-YES [, ELSE])
 dnl MOZ_ARG_WITH_STRING(           NAME, HELP, IF-SET [, ELSE])
 dnl MOZ_ARG_HEADER(Comment)
-dnl MOZ_CHECK_PTHREADS(            NAME, IF-YES [, ELSE ])
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 
 
@@ -79,39 +78,6 @@ AC_DEFUN([MOZ_ARG_WITH_STRING],
 dnl MOZ_ARG_HEADER(Comment)
 dnl This is used by webconfig to group options
 define(MOZ_ARG_HEADER, [# $1])
-
-dnl
-dnl Apparently, some systems cannot properly check for the pthread
-dnl library unless <pthread.h> is included so we need to test
-dnl using it
-dnl
-dnl MOZ_CHECK_PTHREADS(lib, success, failure)
-AC_DEFUN([MOZ_CHECK_PTHREADS],
-[
-AC_MSG_CHECKING([for pthread_create in -l$1])
-echo "
-    #include <pthread.h>
-    #include <stdlib.h>
-    void *foo(void *v) { int a = 1;  } 
-    int main() { 
-        pthread_t t;
-        if (!pthread_create(&t, 0, &foo, 0)) {
-            pthread_join(t, 0);
-        }
-        exit(0);
-    }" > dummy.c ;
-    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -l[$1] $LDFLAGS $LIBS" 1>&5;
-    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -l[$1] $LDFLAGS $LIBS 2>&5;
-    _res=$? ;
-    rm -f dummy.c dummy${ac_exeext} ;
-    if test "$_res" = "0"; then
-        AC_MSG_RESULT([yes])
-        [$2]
-    else
-        AC_MSG_RESULT([no])
-        [$3]
-    fi
-])
 
 dnl MOZ_READ_MYCONFIG() - Read in 'myconfig.sh' file
 AC_DEFUN([MOZ_READ_MOZCONFIG],

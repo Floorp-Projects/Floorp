@@ -4,8 +4,8 @@
 
 #include "inCSSValueSearch.h"
 
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/dom/StyleSheetList.h"
-#include "nsCSSStyleSheet.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsReadableUtils.h"
@@ -98,7 +98,7 @@ inCSSValueSearch::SearchSync()
 
   uint32_t length = sheets->Length();
   for (uint32_t i = 0; i < length; ++i) {
-    nsRefPtr<nsCSSStyleSheet> sheet = sheets->Item(i);
+    nsRefPtr<CSSStyleSheet> sheet = sheets->Item(i);
     SearchStyleSheet(sheet, baseURI);
   }
 

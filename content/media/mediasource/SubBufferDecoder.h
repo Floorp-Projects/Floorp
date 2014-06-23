@@ -86,7 +86,7 @@ public:
 
 private:
   MediaSourceDecoder* mParentDecoder;
-  nsAutoPtr<MediaDecoderReader> mReader;
+  nsRefPtr<MediaDecoderReader> mReader;
   int64_t mMediaDuration;
   int64_t mMediaStartTime;
 };

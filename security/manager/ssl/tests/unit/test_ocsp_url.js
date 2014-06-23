@@ -40,43 +40,24 @@ function run_test() {
   Services.prefs.setCharPref("network.dns.localDomains",
                              "www.example.com");
 
-  add_tests_in_mode(true);
-  add_tests_in_mode(false);
-  run_next_test();
-}
-
-function add_tests_in_mode(useMozillaPKIX)
-{
-  add_test(function() {
-    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
-                               useMozillaPKIX);
-    run_next_test();
-  });
-
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("bad-scheme",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("bad-scheme",SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("empty-scheme-url",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("empty-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("https-url",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("https-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
@@ -90,9 +71,7 @@ function add_tests_in_mode(useMozillaPKIX)
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("negative-port",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("negative-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
@@ -114,28 +93,23 @@ function add_tests_in_mode(useMozillaPKIX)
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("no-scheme-host-port",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("no-scheme-host-port", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("no-scheme-url",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("no-scheme-url", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
   add_test(function() {
     clearOCSPCache();
     let ocspResponder = failingOCSPResponder();
-    check_cert_err("unknown-scheme",
-                   useMozillaPKIX ? SEC_ERROR_CERT_BAD_ACCESS_LOCATION
-                                  : SEC_ERROR_OCSP_MALFORMED_REQUEST);
+    check_cert_err("unknown-scheme", SEC_ERROR_CERT_BAD_ACCESS_LOCATION);
     ocspResponder.stop(run_next_test);
   });
 
+  run_next_test();
 }

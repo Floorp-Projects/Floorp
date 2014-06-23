@@ -1,84 +1,33 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-MARIONETTE_TIMEOUT = 30000;
+MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "head.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
+// The emulator's hard coded iccid value.
+const ICCID = "89014103211118510720";
 
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
-let connection;
-ifr.onload = function() {
-  connection = ifr.contentWindow.navigator.mozMobileConnections[0];
-  ok(connection instanceof ifr.contentWindow.MozMobileConnection,
-     "connection is instanceof " + connection.constructor);
+function setRadioEnabledAndWaitIccChange(aEnabled) {
+  let promises = [];
+  promises.push(waitForManagerEvent("iccchange"));
+  promises.push(setRadioEnabled(aEnabled));
 
-  // The emulator's hard coded iccid value.
-  // See it here {B2G_HOME}/external/qemu/telephony/sim_card.c.
-  is(connection.iccId, 89014103211118510720);
-
-  runNextTest();
-};
-document.body.appendChild(ifr);
-
-function waitForIccChange(callback) {
-  connection.addEventListener("iccchange", function handler() {
-    connection.removeEventListener("iccchange", handler);
-    callback();
-  });
+  return Promise.all(promises);
 }
 
-function setRadioEnabled(enabled) {
-  let request  = connection.setRadioEnabled(enabled);
+// Start tests
+startTestCommon(function() {
+  log("Test initial iccId");
+  is(mobileConnection.iccId, ICCID);
 
-  request.onsuccess = function onsuccess() {
-    log('setRadioEnabled: ' + enabled);
-  };
+  return setRadioEnabledAndWaitIccChange(false)
+    .then(() => {
+      is(mobileConnection.iccId, null);
+    })
 
-  request.onerror = function onerror() {
-    ok(false, "setRadioEnabled should be ok");
-  };
-}
-
-function testIccChangeOnRadioPowerOff() {
-  // Turn off radio
-  setRadioEnabled(false);
-
-  waitForIccChange(function() {
-    is(connection.iccId, null);
-    runNextTest();
-  });
-}
-
-function testIccChangeOnRadioPowerOn() {
-  // Turn on radio
-  setRadioEnabled(true);
-
-  waitForIccChange(function() {
-    // The emulator's hard coded iccid value.
-    is(connection.iccId, 89014103211118510720);
-    runNextTest();
-  });
-}
-
-let tests = [
-  testIccChangeOnRadioPowerOff,
-  testIccChangeOnRadioPowerOn
-];
-
-function runNextTest() {
-  let test = tests.shift();
-  if (!test) {
-    cleanUp();
-    return;
-  }
-
-  test();
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-
-  finish();
-}
+    // Restore radio state.
+    .then(() => setRadioEnabledAndWaitIccChange(true))
+    .then(() => {
+      is(mobileConnection.iccId, ICCID);
+    });
+});

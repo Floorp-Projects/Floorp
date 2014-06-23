@@ -61,6 +61,7 @@ namespace mozilla {
 
 class NrIceResolver
 {
+ private:
   ~NrIceResolver();
  public:
   NrIceResolver();
