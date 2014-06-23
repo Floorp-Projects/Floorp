@@ -23,17 +23,17 @@ class nsITimer;
 class nsCaret : public nsISelectionListener
 {
   public:
+    nsCaret();
 
-                  nsCaret();
-    virtual       ~nsCaret();
+  protected:
+    virtual ~nsCaret();
 
+  public:
     enum EViewCoordinates {
       eTopLevelWindowCoordinates,
       eRenderingViewCoordinates,
       eClosestViewCoordinates
     };
-
-  public:
 
     NS_DECL_ISUPPORTS
 

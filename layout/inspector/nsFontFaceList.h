@@ -21,12 +21,13 @@ public:
   NS_DECL_NSIDOMFONTFACELIST
 
   nsFontFaceList();
-  virtual ~nsFontFaceList();
 
   nsresult AddFontsFromTextRun(gfxTextRun* aTextRun,
                                uint32_t aOffset, uint32_t aLength);
 
 protected:
+  virtual ~nsFontFaceList();
+
   nsInterfaceHashtable<nsPtrHashKey<gfxFontEntry>,nsIDOMFontFace> mFontFaces;
 };
 

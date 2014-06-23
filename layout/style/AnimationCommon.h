@@ -37,7 +37,6 @@ class CommonAnimationManager : public nsIStyleRuleProcessor,
                                public nsARefreshObserver {
 public:
   CommonAnimationManager(nsPresContext *aPresContext);
-  virtual ~CommonAnimationManager();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -69,6 +68,8 @@ public:
                   nsStyleContext* aStyleContext,
                   nsStyleAnimation::Value& aComputedValue);
 protected:
+  virtual ~CommonAnimationManager();
+
   friend struct CommonElementAnimationData; // for ElementDataRemoved
 
   virtual void AddElementData(CommonElementAnimationData* aData) = 0;
@@ -193,6 +194,8 @@ public:
   };
 
 private:
+  ~AnimValuesStyleRule() {}
+
   InfallibleTArray<PropertyValuePair> mPropertyValuePairs;
 };
 

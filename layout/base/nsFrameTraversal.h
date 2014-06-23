@@ -24,7 +24,6 @@ class nsFrameTraversal : public nsIFrameTraversal
 {
 public:
   nsFrameTraversal();
-  virtual ~nsFrameTraversal();
 
   NS_DECL_ISUPPORTS
 
@@ -35,6 +34,9 @@ public:
                                bool aVisual,
                                bool aLockInScrollView,
                                bool aFollowOOFs) MOZ_OVERRIDE;
+
+protected:
+  virtual ~nsFrameTraversal();
 };
 
 #endif //NSFRAMETRAVERSAL_H

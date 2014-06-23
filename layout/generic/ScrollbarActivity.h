@@ -77,8 +77,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
-  virtual ~ScrollbarActivity() {}
-
   void Destroy();
 
   void ActivityOccurred();
@@ -94,6 +92,7 @@ public:
   }
 
 protected:
+  virtual ~ScrollbarActivity() {}
 
   bool IsActivityOngoing()
   { return mNestedActivityCounter > 0; }

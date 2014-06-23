@@ -44,10 +44,10 @@ public:
   static void Shutdown();
 
   NS_DECL_ISUPPORTS
-  virtual ~nsRepeatService();
 
 protected:
   nsRepeatService();
+  virtual ~nsRepeatService();
 
 private:
   Callback           mCallback;

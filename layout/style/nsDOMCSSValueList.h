@@ -69,4 +69,12 @@ private:
   InfallibleTArray<nsRefPtr<CSSValue> > mCSSValues;
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsDOMCSSValueList>
+{
+  static const bool value = true;
+};
+}
+
 #endif /* nsDOMCSSValueList_h___ */

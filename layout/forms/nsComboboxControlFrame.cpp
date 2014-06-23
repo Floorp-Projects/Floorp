@@ -74,6 +74,9 @@ class nsPresState;
  */
 class nsComboButtonListener : public nsIDOMEventListener
 {
+private:
+  virtual ~nsComboButtonListener() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -87,8 +90,6 @@ public:
   {
     mComboBox = aCombobox;
   }
-
-  virtual ~nsComboButtonListener() {}
 
   nsComboboxControlFrame* mComboBox;
 };

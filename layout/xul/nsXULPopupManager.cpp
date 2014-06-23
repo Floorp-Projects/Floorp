@@ -932,6 +932,9 @@ nsXULPopupManager::HidePopup(nsIContent* aPopup,
 // This is used to hide the popup after a transition finishes.
 class TransitionEnder : public nsIDOMEventListener
 {
+protected:
+  virtual ~TransitionEnder() { }
+
 public:
 
   nsCOMPtr<nsIContent> mContent;
@@ -944,8 +947,6 @@ public:
     : mContent(aContent), mDeselectMenu(aDeselectMenu)
   {
   }
-
-  virtual ~TransitionEnder() { }
 
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
   {
