@@ -46,8 +46,8 @@ TestHeapPostBarriers(T initalObj)
     CHECK(!js::gc::IsInsideNursery(heapData->get()));
 
     /* Check object is definitely still alive. */
-    Rooted<T> obj(cx, heapData->get());
-    RootedValue value(cx);
+    JS::Rooted<T> obj(cx, heapData->get());
+    JS::RootedValue value(cx);
     CHECK(JS_GetProperty(cx, obj, "x", &value));
     CHECK(value.isInt32());
     CHECK(value.toInt32() == 42);
@@ -58,7 +58,7 @@ TestHeapPostBarriers(T initalObj)
 
 JSObject *NurseryObject()
 {
-    RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
+    JS::RootedObject obj(cx, JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr()));
     if (!obj)
         return nullptr;
     JS_DefineProperty(cx, obj, "x", 42, 0);
