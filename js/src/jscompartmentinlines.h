@@ -56,6 +56,13 @@ JSCompartment::wrap(JSContext *cx, JS::MutableHandleValue vp, JS::HandleObject e
     if (!vp.isMarkable())
         return true;
 
+    /*
+     * Symbols are GC things, but never need to be wrapped or copied because
+     * they are always allocated in the atoms compartment.
+     */
+    if (vp.isSymbol())
+        return true;
+
     /* Handle strings. */
     if (vp.isString()) {
         JS::RootedString str(cx, vp.toString());
