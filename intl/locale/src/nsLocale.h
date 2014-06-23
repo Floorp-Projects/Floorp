@@ -30,7 +30,6 @@ class nsLocale : public nsILocale {
 
 public:
 	nsLocale(void);
-	virtual ~nsLocale(void);
 	
 	/* Declare methods from nsILocale */
 	NS_DECL_NSILOCALE
@@ -46,6 +45,7 @@ protected:
 	PLHashTable*	fHashtable;
 	uint32_t		fCategoryCount;
 
+        virtual ~nsLocale(void);
 };
 
 

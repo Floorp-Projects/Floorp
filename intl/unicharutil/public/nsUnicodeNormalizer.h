@@ -17,7 +17,6 @@ nsresult NS_NewUnicodeNormalizer(nsISupports** oResult);
 class nsUnicodeNormalizer : public nsIUnicodeNormalizer {
 public:
    nsUnicodeNormalizer();
-   virtual ~nsUnicodeNormalizer();
 
    NS_DECL_ISUPPORTS 
 
@@ -29,6 +28,9 @@ public:
    // low-level access to the composition data needed for HarfBuzz callbacks
    static bool Compose(uint32_t a, uint32_t b, uint32_t *ab);
    static bool DecomposeNonRecursively(uint32_t comp, uint32_t *c1, uint32_t *c2);
+
+private:
+   virtual ~nsUnicodeNormalizer();
 };
 
 #endif //nsUnicodeNormalizer_h__

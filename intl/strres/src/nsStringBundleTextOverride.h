@@ -24,18 +24,18 @@
 
 class nsStringBundleTextOverride : public nsIStringBundleOverride
 {
- public:
+  public:
     nsStringBundleTextOverride() { }
-    virtual ~nsStringBundleTextOverride() {}
 
     nsresult Init();
-    
+
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTRINGBUNDLEOVERRIDE
 
-private:
+  private:
     nsCOMPtr<nsIPersistentProperties> mValues;
-    
+
+    virtual ~nsStringBundleTextOverride() {}
 };
 
 #endif

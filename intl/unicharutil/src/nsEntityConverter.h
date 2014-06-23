@@ -30,7 +30,6 @@ public:
 	// implementation methods
 	//
 	nsEntityConverter();
-	virtual ~nsEntityConverter();
 
 	//
 	// nsISupports
@@ -62,6 +61,8 @@ protected:
 
   nsEntityVersionList *mVersionList;            // array of version number/name pairs
   uint32_t mVersionListLength;                  // number of supported versions
+
+  virtual ~nsEntityConverter();
 };
 
 #endif

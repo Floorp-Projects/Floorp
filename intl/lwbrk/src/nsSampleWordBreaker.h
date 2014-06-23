@@ -25,7 +25,6 @@ class nsSampleWordBreaker : public nsIWordBreaker
 public:
 
   nsSampleWordBreaker() ;
-  virtual ~nsSampleWordBreaker() ;
 
   bool BreakInBetween(const char16_t* aText1 , uint32_t aTextLen1,
                         const char16_t* aText2 , uint32_t aTextLen2);
@@ -36,6 +35,8 @@ public:
 
 protected:
   uint8_t  GetClass(char16_t aChar);
+
+  virtual ~nsSampleWordBreaker();
 };
 
 #endif  /* nsSampleWordBreaker_h__ */
