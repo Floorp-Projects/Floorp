@@ -3415,6 +3415,19 @@ public:
     JS::RootedId defineAs;
 };
 
+class MOZ_STACK_CLASS StackScopedCloneOptions : public OptionsBase {
+public:
+    StackScopedCloneOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                            JSObject* options = nullptr)
+        : OptionsBase(cx, options)
+        , wrapReflectors(false)
+    { }
+
+    virtual bool Parse() { return ParseBoolean("wrapReflectors", &wrapReflectors); };
+
+    bool wrapReflectors;
+};
+
 JSObject *
 CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
                    JS::CompartmentOptions& aOptions);
@@ -3482,6 +3495,9 @@ ExportFunction(JSContext *cx, JS::HandleValue vscope, JS::HandleValue vfunction,
 bool
 CloneInto(JSContext *cx, JS::HandleValue vobj, JS::HandleValue vscope,
           JS::HandleValue voptions, JS::MutableHandleValue rval);
+
+bool
+StackScopedClone(JSContext *cx, StackScopedCloneOptions &options, JS::MutableHandleValue val);
 
 } /* namespace xpc */
 
