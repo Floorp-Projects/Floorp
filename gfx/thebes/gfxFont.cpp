@@ -2136,7 +2136,6 @@ gfxFontShaper::MergeFontFeatures(
     if (styleRuleFeatures.IsEmpty() &&
         aFontFeatures.IsEmpty() &&
         !aDisableLigatures &&
-        !aStyle->smallCaps &&
         aStyle->variantCaps == NS_FONT_VARIANT_CAPS_NORMAL &&
         numAlts == 0) {
         return false;
@@ -5621,13 +5620,11 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
             bool syntheticLower = false;
             bool syntheticUpper = false;
 
-            if (mStyle.smallCaps ||
-                mStyle.variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
+            if (mStyle.variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
                 needsFakeSmallCaps =
                     !matchedFont->SupportsVariantCaps(aRunScript,
-                        (mStyle.smallCaps ? NS_FONT_VARIANT_CAPS_SMALLCAPS :
-                                            mStyle.variantCaps),
-                        petiteToSmallCaps, syntheticLower, syntheticUpper);
+                        mStyle.variantCaps, petiteToSmallCaps,
+                        syntheticLower, syntheticUpper);
             }
             if (needsFakeSmallCaps) {
                 if (!matchedFont->InitFakeSmallCapsRun(aContext, aTextRun,
@@ -5912,7 +5909,6 @@ gfxFont::GetSmallCapsFont()
 {
     gfxFontStyle style(*GetStyle());
     style.size *= SMALL_CAPS_SCALE_FACTOR;
-    style.smallCaps = false;
     style.variantCaps = NS_FONT_VARIANT_CAPS_NORMAL;
     gfxFontEntry* fe = GetFontEntry();
     bool needsBold = style.weight >= 600 && !fe->IsBold();
@@ -6364,7 +6360,6 @@ gfxFontStyle::gfxFontStyle() :
     systemFont(true), printerFont(false), useGrayscaleAntialiasing(false),
     style(NS_FONT_STYLE_NORMAL),
     allowSyntheticWeight(true), allowSyntheticStyle(true),
-    smallCaps(false),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL)
 {
 }
@@ -6372,7 +6367,7 @@ gfxFontStyle::gfxFontStyle() :
 gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                            gfxFloat aSize, nsIAtom *aLanguage,
                            float aSizeAdjust, bool aSystemFont,
-                           bool aPrinterFont, bool aSmallCaps,
+                           bool aPrinterFont,
                            bool aAllowWeightSynthesis,
                            bool aAllowStyleSynthesis,
                            const nsString& aLanguageOverride):
@@ -6385,7 +6380,6 @@ gfxFontStyle::gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
     style(aStyle),
     allowSyntheticWeight(aAllowWeightSynthesis),
     allowSyntheticStyle(aAllowStyleSynthesis),
-    smallCaps(aSmallCaps),
     variantCaps(NS_FONT_VARIANT_CAPS_NORMAL)
 {
     MOZ_ASSERT(!mozilla::IsNaN(size));
@@ -6421,7 +6415,6 @@ gfxFontStyle::gfxFontStyle(const gfxFontStyle& aStyle) :
     style(aStyle.style),
     allowSyntheticWeight(aStyle.allowSyntheticWeight),
     allowSyntheticStyle(aStyle.allowSyntheticStyle),
-    smallCaps(aStyle.smallCaps),
     variantCaps(aStyle.variantCaps)
 {
     featureSettings.AppendElements(aStyle.featureSettings);
