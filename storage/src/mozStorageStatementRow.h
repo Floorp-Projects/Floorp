@@ -27,6 +27,8 @@ public:
   StatementRow(Statement *aStatement);
 protected:
 
+  ~StatementRow() {}
+
   Statement *mStatement;
 
   friend class Statement;
