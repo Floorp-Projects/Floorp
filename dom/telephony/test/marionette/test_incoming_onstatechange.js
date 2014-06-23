@@ -23,7 +23,6 @@ function simulateIncoming() {
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : incoming");
-      is(result[1], "OK");
       answerIncoming();
     });
   };
@@ -49,7 +48,6 @@ function answerIncoming() {
       emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
         is(result[0], "inbound from " + inNumber + " : active");
-        is(result[1], "OK");
         hold();
       });
     }
@@ -76,7 +74,6 @@ function hold() {
       emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
         is(result[0], "inbound from " + inNumber + " : held");
-        is(result[1], "OK");
         resume();
       });
     }
@@ -103,7 +100,6 @@ function resume() {
       emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
         is(result[0], "inbound from " + inNumber + " : active");
-        is(result[1], "OK");
         hangUp();
       });
     }
@@ -128,7 +124,6 @@ function hangUp() {
 
       emulator.runWithCallback("gsm list", function(result) {
         log("Call list is now: " + result);
-        is(result[0], "OK");
         cleanUp();
       });
     }
