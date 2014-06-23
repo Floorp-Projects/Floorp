@@ -163,41 +163,6 @@ function radd_float(i) {
     return i;
 }
 
-var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
-function rfloor_number(i) {
-    var x = Math.floor(i + 0.1111);
-    if (uceFault_floor_number(i) || uceFault_floor_number(i))
-        assertEq(x, i);
-    return i;
-}
-
-var uceFault_floor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_object'));
-function rfloor_object(i) {
-    var t = i + 0.1111;
-    var o = { valueOf: function () { return t; } };
-    var x = Math.floor(o);
-    t = 1000.1111;
-    if (uceFault_floor_object(i) || uceFault_floor_object(i))
-        assertEq(x, i);
-    return i;
-}
-
-var uceFault_round_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
-function rround_number(i) {
-    var x = Math.round(i + 1.4);
-    if (uceFault_round_number(i) || uceFault_round_number(i))
-        assertEq(x, 100); /* = i + 1*/
-    return i;
-}
-
-var uceFault_round_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_round_double'));
-function rround_double(i) {
-    var x = Math.round(i + (-1 >>> 0));
-    if (uceFault_round_double(i) || uceFault_round_double(i))
-        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
-     return i;
- }
-
 var uceFault_add_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_add_object'));
 function radd_object(i) {
     var t = i;
@@ -330,6 +295,41 @@ function rconcat_number(i) {
         assertEq(x, "s99");
     return i;
 }
+
+var uceFault_floor_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_number'));
+function rfloor_number(i) {
+    var x = Math.floor(i + 0.1111);
+    if (uceFault_floor_number(i) || uceFault_floor_number(i))
+        assertEq(x, i);
+    return i;
+}
+
+var uceFault_floor_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_floor_object'));
+function rfloor_object(i) {
+    var t = i + 0.1111;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.floor(o);
+    t = 1000.1111;
+    if (uceFault_floor_object(i) || uceFault_floor_object(i))
+        assertEq(x, i);
+    return i;
+}
+
+var uceFault_round_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_round'));
+function rround_number(i) {
+    var x = Math.round(i + 1.4);
+    if (uceFault_round_number(i) || uceFault_round_number(i))
+        assertEq(x, 100); /* = i + 1*/
+    return i;
+}
+
+var uceFault_round_double = eval(uneval(uceFault).replace('uceFault', 'uceFault_round_double'));
+function rround_double(i) {
+    var x = Math.round(i + (-1 >>> 0));
+    if (uceFault_round_double(i) || uceFault_round_double(i))
+        assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
+     return i;
+ }
 
 var uceFault_from_char_code = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code'));
 function rfrom_char_code(i) {
