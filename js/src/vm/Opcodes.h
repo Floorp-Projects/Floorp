@@ -1650,14 +1650,20 @@
      *   Operands: uint8_t BITFIELD
      *   Stack: =>
      */ \
-    macro(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8)
+    macro(JSOP_LOOPENTRY,     227, "loopentry",    NULL,  2,  0,  0,  JOF_UINT8) \
+    /*
+     * Converts the value on the top of the stack to a String
+     *   Category: Other
+     *   Operands:
+     *   Stack: val => ToString(val)
+     */ \
+    macro(JSOP_TOSTRING,    228, "tostring",       NULL,  1,  1,  1,  JOF_BYTE)
 
 /*
  * In certain circumstances it may be useful to "pad out" the opcode space to
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(macro) \
-    macro(228) \
     macro(229) \
     macro(230) \
     macro(231) \
