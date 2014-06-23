@@ -47,6 +47,7 @@
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
+#include "builtin/SymbolObject.h"
 #ifdef ENABLE_BINARYDATA
 #include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"

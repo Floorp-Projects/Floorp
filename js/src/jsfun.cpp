@@ -1971,6 +1971,8 @@ js::ReportIncompatibleMethod(JSContext *cx, CallReceiver call, const Class *clas
         JS_ASSERT(clasp != &NumberObject::class_);
     } else if (thisv.isBoolean()) {
         JS_ASSERT(clasp != &BooleanObject::class_);
+    } else if (thisv.isSymbol()) {
+        JS_ASSERT(clasp != &SymbolObject::class_);
     } else {
         JS_ASSERT(thisv.isUndefined() || thisv.isNull());
     }

@@ -23,6 +23,7 @@
 #include "builtin/Object.h"
 #include "builtin/RegExp.h"
 #include "builtin/SIMD.h"
+#include "builtin/SymbolObject.h"
 #include "builtin/TypedObject.h"
 #include "vm/HelperThreads.h"
 #include "vm/PIC.h"
@@ -317,7 +318,6 @@ GlobalObject::createConstructor(JSContext *cx, Native ctor, JSAtom *nameArg, uns
 static JSObject *
 CreateBlankProto(JSContext *cx, const Class *clasp, JSObject &proto, GlobalObject &global)
 {
-    JS_ASSERT(clasp != &JSObject::class_);
     JS_ASSERT(clasp != &JSFunction::class_);
 
     RootedObject blankProto(cx, NewObjectWithGivenProto(cx, clasp, &proto, &global, SingletonObject));
