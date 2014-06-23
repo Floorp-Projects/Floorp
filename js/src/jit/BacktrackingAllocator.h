@@ -89,7 +89,7 @@ class BacktrackingVirtualRegister : public VirtualRegister
         canonicalSpillExclude_ = pos;
     }
     bool hasCanonicalSpillExclude() const {
-        return canonicalSpillExclude_.pos() != 0;
+        return canonicalSpillExclude_.bits() != 0;
     }
     CodePosition canonicalSpillExclude() const {
         JS_ASSERT(hasCanonicalSpillExclude());
