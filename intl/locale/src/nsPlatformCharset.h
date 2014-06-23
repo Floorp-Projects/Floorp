@@ -14,7 +14,6 @@ class nsPlatformCharset : public nsIPlatformCharset
 public:
 
   nsPlatformCharset();
-  virtual ~nsPlatformCharset();
 
   NS_IMETHOD Init();
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult);
@@ -27,6 +26,8 @@ private:
   nsresult MapToCharset(nsAString& inANSICodePage, nsACString& outCharset);
   nsresult InitGetCharset(nsACString& oString);
   nsresult VerifyCharset(nsCString &aCharset);
+
+  virtual ~nsPlatformCharset();
 };
 
 #endif // nsPlatformCharset_h__

@@ -47,9 +47,11 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                                                1999, 1, 1, hour, minute, second, timeString);}
 
   nsScriptableDateFormat() {}
-  virtual ~nsScriptableDateFormat() {}
+
 private:
   nsString mStringOut;   
+
+  virtual ~nsScriptableDateFormat() {}
 };
 
 NS_IMPL_ISUPPORTS(nsScriptableDateFormat, nsIScriptableDateFormat)

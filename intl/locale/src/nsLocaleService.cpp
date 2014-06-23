@@ -81,7 +81,6 @@ public:
 
 
 	nsLocaleService(void);
-	virtual ~nsLocaleService(void);
 
 protected:
 
@@ -91,6 +90,7 @@ protected:
 	nsCOMPtr<nsILocale>				mSystemLocale;
 	nsCOMPtr<nsILocale>				mApplicationLocale;
 
+        virtual ~nsLocaleService(void);
 };
 
 //
