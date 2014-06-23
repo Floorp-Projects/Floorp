@@ -525,6 +525,8 @@ interface TestInterface {
   void passUnion18((sequence<object> or long) arg);
   void passUnion19(optional (sequence<object> or long) arg);
   void passUnion20(optional (sequence<object> or long) arg = []);
+  void passUnion21((MozMap<long> or long) arg);
+  void passUnion22((MozMap<object> or long) arg);
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
 #endif

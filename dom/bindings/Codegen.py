@@ -3969,7 +3969,14 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         mozMapMemberTypes = filter(lambda t: t.isMozMap(), memberTypes)
         if len(mozMapMemberTypes) > 0:
-            raise TypeError("We don't support MozMap in unions yet")
+            assert len(mozMapMemberTypes) == 1
+            name = getUnionMemberName(mozMapMemberTypes[0])
+            mozMapObject = CGGeneric(
+                "done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n" %
+                (unionArgumentObj, name))
+            names.append(name)
+        else:
+            mozMapObject = None
 
         objectMemberTypes = filter(lambda t: t.isObject(), memberTypes)
         if len(objectMemberTypes) > 0:
@@ -3983,10 +3990,10 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         else:
             object = None
 
-        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or object
+        hasObjectTypes = interfaceObject or arrayObject or dateObject or callbackObject or object or mozMapObject
         if hasObjectTypes:
             # "object" is not distinguishable from other types
-            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject)
+            assert not object or not (interfaceObject or arrayObject or dateObject or callbackObject or mozMapObject)
             if arrayObject or dateObject or callbackObject:
                 # An object can be both an array object and a callback or
                 # dictionary, but we shouldn't have both in the union's members
@@ -4005,6 +4012,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
             if dateObject:
                 templateBody.prepend(CGGeneric("JS::Rooted<JSObject*> argObj(cx, &${val}.toObject());\n"))
+
+            if mozMapObject:
+                templateBody = CGList([templateBody,
+                                       CGIfWrapper(mozMapObject, "!done")])
+
             templateBody = CGIfWrapper(templateBody, "${val}.isObject()")
         else:
             templateBody = CGGeneric()
@@ -5866,7 +5878,7 @@ def getUnionMemberName(type):
         return type.inner.identifier.name
     if type.isEnum():
         return type.inner.identifier.name
-    if type.isArray() or type.isSequence():
+    if type.isArray() or type.isSequence() or type.isMozMap():
         return str(type)
     return type.name
 
@@ -7951,13 +7963,17 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if type.isArray():
         raise TypeError("Can't handle array arguments yet")
 
-    if type.isSequence():
+    if type.isSequence() or type.isMozMap():
+        if type.isSequence():
+            wrapperType = "Sequence"
+        else:
+            wrapperType = "MozMap"
         # We don't use the returned template here, so it's OK to just pass no
         # sourceDescription.
         elementInfo = getJSToNativeConversionInfo(type.inner,
                                                   descriptorProvider,
-                                                  isMember="Sequence")
-        return CGTemplatedType("Sequence", elementInfo.declType,
+                                                  isMember=wrapperType)
+        return CGTemplatedType(wrapperType, elementInfo.declType,
                                isConst=True, isReference=True)
 
     # Nested unions are unwrapped automatically into our flatMemberTypes.
@@ -8290,6 +8306,11 @@ class CGUnionStruct(CGThing):
                     traceCases.append(
                         CGCase("e" + vars["name"],
                                CGGeneric("DoTraceSequence(trc, mValue.m%s.Value());\n" %
+                                         vars["name"])))
+                elif t.isMozMap():
+                    traceCases.append(
+                        CGCase("e" + vars["name"],
+                               CGGeneric("TraceMozMap(trc, mValue.m%s.Value());\n" %
                                          vars["name"])))
                 else:
                     assert t.isSpiderMonkeyInterface()
