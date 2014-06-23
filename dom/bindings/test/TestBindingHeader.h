@@ -573,6 +573,11 @@ public:
   void PassUnion12(const EventInitOrLong& arg);
   void PassUnion13(JSContext*, const ObjectOrLongOrNull& arg);
   void PassUnion14(JSContext*, const ObjectOrLongOrNull& arg);
+  void PassUnion15(const LongSequenceOrLong&);
+  void PassUnion16(const Optional<LongSequenceOrLong>&);
+  void PassUnion17(const LongSequenceOrNullOrLong&);
+  void PassUnion18(JSContext*, const ObjectSequenceOrLong&);
+  void PassUnion19(JSContext*, const Optional<ObjectSequenceOrLong>&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
 #endif

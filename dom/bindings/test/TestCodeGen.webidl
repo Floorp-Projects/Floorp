@@ -519,6 +519,12 @@ interface TestInterface {
   void passUnion12(optional (EventInit or long) arg = 5);
   void passUnion13(optional (object or long?) arg = null);
   void passUnion14(optional (object or long?) arg = 5);
+  void passUnion15((sequence<long> or long) arg);
+  void passUnion16(optional (sequence<long> or long) arg);
+  void passUnion17(optional (sequence<long>? or long) arg = 5);
+  void passUnion18((sequence<object> or long) arg);
+  void passUnion19(optional (sequence<object> or long) arg);
+  //  void passUnion20(optional (sequence<object> or long) arg = []);
   void passUnionWithCallback((EventHandler or long) arg);
   void passUnionWithByteString((ByteString or long) arg);
 #endif
@@ -878,6 +884,7 @@ dictionary Dict : ParentDict {
   (CustomEventInit or long) eventInitOrLongWithDefaultValue2 = null;
   (EventInit or long) eventInitOrLongWithDefaultValue3 = 5;
   (CustomEventInit or long) eventInitOrLongWithDefaultValue4 = 5;
+  (sequence<object> or long) objectSequenceOrLong;
 #endif
 
   ArrayBuffer arrayBuffer;
