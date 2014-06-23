@@ -34,7 +34,6 @@ class nsEditorEventListener : public nsIDOMEventListener
 {
 public:
   nsEditorEventListener();
-  virtual ~nsEditorEventListener();
 
   virtual nsresult Connect(nsEditor* aEditor);
 
@@ -60,6 +59,8 @@ public:
   void SpellCheckIfNeeded();
 
 protected:
+  virtual ~nsEditorEventListener();
+
   nsresult InstallToEditor();
   void UninstallFromEditor();
 

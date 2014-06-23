@@ -33,7 +33,6 @@ public:
 
   ResizerSelectionListener(nsIHTMLEditor * aEditor);
   void Reset();
-  virtual ~ResizerSelectionListener();
 
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -41,6 +40,7 @@ public:
   NS_DECL_NSISELECTIONLISTENER
 
 protected:
+  virtual ~ResizerSelectionListener();
 
   nsWeakPtr mEditor;
 };
@@ -53,8 +53,6 @@ class ResizerMouseMotionListener : public nsIDOMEventListener
 {
 public:
   ResizerMouseMotionListener(nsIHTMLEditor * aEditor);
-  virtual ~ResizerMouseMotionListener();
-
 
 /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -62,6 +60,8 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
  protected:
+  virtual ~ResizerMouseMotionListener();
+
   nsWeakPtr mEditor;
 
 };
@@ -74,7 +74,6 @@ class DocumentResizeEventListener: public nsIDOMEventListener
 {
 public:
   DocumentResizeEventListener(nsIHTMLEditor * aEditor);
-  virtual ~DocumentResizeEventListener();
 
   /*interfaces for addref and release and queryinterface*/
   NS_DECL_ISUPPORTS
@@ -82,6 +81,7 @@ public:
   NS_DECL_NSIDOMEVENTLISTENER
 
  protected:
+  virtual ~DocumentResizeEventListener();
   nsWeakPtr mEditor;
 
 };
