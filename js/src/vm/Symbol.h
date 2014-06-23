@@ -9,6 +9,8 @@
 
 #include "mozilla/Attributes.h"
 
+#include "jsalloc.h"
+
 #include "gc/Barrier.h"
 
 #include "js/RootingAPI.h"
@@ -19,7 +21,9 @@ namespace JS {
 class Symbol : public js::gc::BarrieredCell<Symbol>
 {
   private:
-    uint32_t unused1_;  // This field will be used before long.
+    // This is only a boolean for now, but a later patch in the stack changes
+    // it to an enum.
+    uint32_t inSymbolRegistry_;
     JSAtom *description_;
 
     // The minimum allocation size is sizeof(JSString): 16 bytes on 32-bit
@@ -27,14 +31,21 @@ class Symbol : public js::gc::BarrieredCell<Symbol>
     // the minimum size on both.
     uint64_t unused2_;
 
-    explicit Symbol(JSAtom *desc) : description_(desc) {}
+    Symbol(bool inRegistry, JSAtom *desc)
+        : inSymbolRegistry_(inRegistry), description_(desc) {}
+
     Symbol(const Symbol &) MOZ_DELETE;
     void operator=(const Symbol &) MOZ_DELETE;
 
+    static Symbol *
+    newInternal(js::ExclusiveContext *cx, bool inRegistry, JSAtom *description);
+
   public:
-    static Symbol *new_(js::ExclusiveContext *cx, JSString *description);
+    static Symbol *new_(js::ExclusiveContext *cx, bool inRegistry, JSString *description);
+    static Symbol *for_(js::ExclusiveContext *cx, js::HandleString description);
 
     JSAtom *description() const { return description_; }
+    bool isInSymbolRegistry() const { return inSymbolRegistry_; }
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SYMBOL; }
     inline void markChildren(JSTracer *trc);
@@ -42,5 +53,53 @@ class Symbol : public js::gc::BarrieredCell<Symbol>
 };
 
 } /* namespace JS */
+
+namespace js {
+
+/* Hash policy used by the SymbolRegistry. */
+struct HashSymbolsByDescription
+{
+    typedef JS::Symbol *Key;
+    typedef JSAtom *Lookup;
+
+    static HashNumber hash(Lookup l) {
+        return HashNumber(reinterpret_cast<uintptr_t>(l));
+    }
+    static bool match(Key sym, Lookup l) {
+        return sym->description() == l;
+    }
+};
+
+/*
+ * Hash table that implements the symbol registry.
+ *
+ * This must be a typedef for the benefit of GCC 4.4.6 (used to build B2G for Ice
+ * Cream Sandwich).
+ */
+typedef HashSet<JS::Symbol *, HashSymbolsByDescription, SystemAllocPolicy> SymbolHashSet;
+
+/*
+ * The runtime-wide symbol registry, used to implement Symbol.for().
+ *
+ * ES6 draft rev 25 (2014 May 22) calls this the GlobalSymbolRegistry List. In
+ * our implementation, it is not global. There is one per JSRuntime. The
+ * symbols in the symbol registry, like all symbols, are allocated in the atoms
+ * compartment and can be directly referenced from any compartment. They are
+ * never shared across runtimes.
+ *
+ * The memory management strategy here is modeled after js::AtomSet. It's like
+ * a WeakSet. The registry itself does not keep any symbols alive; when a
+ * symbol in the registry is collected, the registry entry is removed. No GC
+ * nondeterminism is exposed to scripts, because there is no API for
+ * enumerating the symbol registry, querying its size, etc.
+ */
+class SymbolRegistry : public SymbolHashSet
+{
+  public:
+    SymbolRegistry() : SymbolHashSet() {}
+    void sweep();
+};
+
+} /* namespace js */
 
 #endif /* vm_Symbol_h */

@@ -21,5 +21,7 @@ assertEq(desc.configurable, true);
 assertEq(desc.enumerable, false);
 assertEq(desc.writable, true);
 
+assertEq(Symbol.for.length, 1);
+
 if (typeof reportCompare === "function")
     reportCompare(0, 0);
