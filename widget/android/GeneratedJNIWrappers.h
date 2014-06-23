@@ -380,12 +380,8 @@ public:
     void setViewport(jobject a0);
     bool getabort();
     void setabort(bool a0);
-    jfloat getheight();
-    void setheight(jfloat a0);
     jfloat getscale();
     void setscale(jfloat a0);
-    jfloat getwidth();
-    void setwidth(jfloat a0);
     jfloat getx();
     void setx(jfloat a0);
     jfloat gety();
@@ -395,9 +391,7 @@ protected:
     static jmethodID jProgressiveUpdateData;
     static jmethodID jsetViewport;
     static jfieldID jabort;
-    static jfieldID jheight;
     static jfieldID jscale;
-    static jfieldID jwidth;
     static jfieldID jx;
     static jfieldID jy;
 };
