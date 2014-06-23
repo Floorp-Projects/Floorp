@@ -249,11 +249,23 @@ js_strdup(js::ThreadSafeContext *cx, const jschar *s);
 
 namespace js {
 
+template <typename Char1, typename Char2>
 inline bool
-EqualCharsLatin1TwoByte(const Latin1Char *s1, const jschar *s2, size_t len)
+EqualChars(const Char1 *s1, const Char2 *s2, size_t len);
+
+template <typename Char1>
+inline bool
+EqualChars(const Char1 *s1, const Char1 *s2, size_t len)
 {
-    for (const Latin1Char *s1end = s1 + len; s1 < s1end; s1++, s2++) {
-        if (jschar(*s1) != *s2)
+    return mozilla::PodEqual(s1, s2, len);
+}
+
+template <typename Char1, typename Char2>
+inline bool
+EqualChars(const Char1 *s1, const Char2 *s2, size_t len)
+{
+    for (const Char1 *s1end = s1 + len; s1 < s1end; s1++, s2++) {
+        if (*s1 != *s2)
             return false;
     }
     return true;
@@ -356,8 +368,9 @@ PutEscapedString(char *buffer, size_t size, JSLinearString *str, uint32_t quote)
     return n;
 }
 
+template <typename CharT>
 inline size_t
-PutEscapedString(char *buffer, size_t bufferSize, const jschar *chars, size_t length, uint32_t quote)
+PutEscapedString(char *buffer, size_t bufferSize, const CharT *chars, size_t length, uint32_t quote)
 {
     size_t n = PutEscapedStringImpl(buffer, bufferSize, nullptr, chars, length, quote);
 
