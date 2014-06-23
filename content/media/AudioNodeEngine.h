@@ -360,8 +360,10 @@ public:
                            AudioNodeSizes& aUsage) const
   {
     aUsage.mEngine = SizeOfIncludingThis(aMallocSizeOf);
-    aUsage.mDomNode = mNode->SizeOfIncludingThis(aMallocSizeOf);
-    aUsage.mNodeType = mNode->NodeType();
+    if (HasNode()) {
+      aUsage.mDomNode = mNode->SizeOfIncludingThis(aMallocSizeOf);
+      aUsage.mNodeType = mNode->NodeType();
+    }
   }
 
 private:

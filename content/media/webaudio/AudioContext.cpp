@@ -437,6 +437,7 @@ AudioContext::DecodeAudioData(const ArrayBuffer& aBuffer,
                               const Optional<OwningNonNull<DecodeErrorCallback> >& aFailureCallback)
 {
   AutoJSAPI jsapi;
+  jsapi.Init();
   JSContext* cx = jsapi.cx();
   JSAutoCompartment ac(cx, aBuffer.Obj());
 

@@ -272,14 +272,11 @@ PostMessageRunnable::Run()
 {
   MOZ_ASSERT(mPort);
 
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(mPort->GetOwner());
-  if (NS_WARN_IF(!globalObject)) {
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mPort->GetParentObject()))) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  AutoJSAPI jsapi;
   JSContext* cx = jsapi.cx();
-  JSAutoCompartment ac(cx, globalObject->GetGlobalJSObject());
 
   // Deserialize the structured clone data
   JS::Rooted<JS::Value> messageData(cx);

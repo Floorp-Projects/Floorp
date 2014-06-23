@@ -500,6 +500,12 @@ nsNodeWeakReference::QueryReferent(const nsIID& aIID, void** aInstancePtr)
                  NS_ERROR_NULL_POINTER;
 }
 
+size_t
+nsNodeWeakReference::SizeOfOnlyThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this);
+}
+
 
 NS_IMPL_CYCLE_COLLECTION(nsNodeSupportsWeakRefTearoff, mNode)
 

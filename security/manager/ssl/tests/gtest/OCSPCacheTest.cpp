@@ -6,12 +6,15 @@
 
 #include "CertVerifier.h"
 #include "OCSPCache.h"
+#include "gtest/gtest.h"
 #include "nss.h"
+#include "pkix/pkixtypes.h"
 #include "prerr.h"
 #include "prprf.h"
 #include "secerr.h"
 
-#include "gtest/gtest.h"
+using namespace mozilla::pkix;
+using namespace mozilla::psm;
 
 const int MaxCacheEntries = 1024;
 
@@ -27,179 +30,207 @@ class OCSPCacheTest : public ::testing::Test
     mozilla::psm::OCSPCache cache;
 };
 
-// Makes a fake certificate with just the fields we need for testing here.
-// (And those values are almost entirely bogus.)
-// stackCert should be stack-allocated memory.
 static void
-MakeFakeCert(CERTCertificate* stackCert, const char* subjectValue,
-             const char* issuerValue, const char* serialNumberValue,
-             const char* publicKeyValue)
-{
-  stackCert->derSubject.data = (unsigned char*)subjectValue;
-  stackCert->derSubject.len = strlen(subjectValue);
-  stackCert->derIssuer.data = (unsigned char*)issuerValue;
-  stackCert->derIssuer.len = strlen(issuerValue);
-  stackCert->serialNumber.data = (unsigned char*)serialNumberValue;
-  stackCert->serialNumber.len = strlen(serialNumberValue);
-  stackCert->derPublicKey.data = (unsigned char*)publicKeyValue;
-  stackCert->derPublicKey.len = strlen(publicKeyValue);
-  CERTName *subject = CERT_AsciiToName(subjectValue); // TODO: this will leak...
-  ASSERT_TRUE(subject);
-  stackCert->subject.arena = subject->arena;
-  stackCert->subject.rdns = subject->rdns;
-}
-
-static void
-PutAndGet(mozilla::psm::OCSPCache& cache, CERTCertificate* subject,
-          CERTCertificate* issuer,
-          PRErrorCode error, PRTime time)
+PutAndGet(OCSPCache& cache, const CertID& certID, PRErrorCode error,
+          PRTime time)
 {
   // The first time is thisUpdate. The second is validUntil.
   // The caller is expecting the validUntil returned with Get
   // to be equal to the passed-in time. Since these values will
   // be different in practice, make thisUpdate less than validUntil.
   ASSERT_TRUE(time >= 10);
-  SECStatus rv = cache.Put(subject, issuer, error, time - 10, time);
+  SECStatus rv = cache.Put(certID, error, time - 10, time);
   ASSERT_TRUE(rv == SECSuccess);
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_TRUE(cache.Get(subject, issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, errorOut, timeOut));
   ASSERT_TRUE(error == errorOut && time == timeOut);
 }
 
+static const SECItem fakeIssuer1 = {
+  siBuffer,
+  const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("CN=issuer1")),
+  10
+};
+static const SECItem fakeKey000 = {
+  siBuffer,
+  const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("key000")),
+  6
+};
+static const SECItem fakeKey001 = {
+  siBuffer,
+  const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("key001")),
+  6
+};
+static const SECItem fakeSerial0000 = {
+  siBuffer,
+  const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("0000")),
+  4
+};
+
 TEST_F(OCSPCacheTest, TestPutAndGet)
 {
+  static const SECItem fakeSerial000 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("000")),
+    3
+  };
+  static const SECItem fakeSerial001 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("001")),
+    3
+  };
+
   SCOPED_TRACE("");
-  CERTCertificate subject;
-  MakeFakeCert(&subject, "CN=subject1", "CN=issuer1", "001", "key001");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
-  PutAndGet(cache, &subject, &issuer, 0, PR_Now());
+  PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial001), 0, PR_Now());
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_FALSE(cache.Get(&issuer, &issuer, errorOut, timeOut));
+  ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial000),
+                         errorOut, timeOut));
 }
 
 TEST_F(OCSPCacheTest, TestVariousGets)
 {
   SCOPED_TRACE("");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
   PRTime timeIn = PR_Now();
   for (int i = 0; i < MaxCacheEntries; i++) {
-    CERTCertificate subject;
-    char subjectBuf[64];
-    PR_snprintf(subjectBuf, sizeof(subjectBuf), "CN=subject%04d", i);
     char serialBuf[8];
     PR_snprintf(serialBuf, sizeof(serialBuf), "%04d", i);
-    MakeFakeCert(&subject, subjectBuf, "CN=issuer1", serialBuf, "key000");
-    PutAndGet(cache, &subject, &issuer, 0, timeIn + i);
+    const SECItem fakeSerial = {
+      siBuffer,
+      const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(serialBuf)),
+      4
+    };
+    PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial), 0, timeIn + i);
   }
-  CERTCertificate subject;
-  // This will be at the end of the list in the cache
+
   PRErrorCode errorOut;
   PRTime timeOut;
-  MakeFakeCert(&subject, "CN=subject0000", "CN=issuer1", "0000", "key000");
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+
+  // This will be at the end of the list in the cache
+  CertID cert0000(fakeIssuer1, fakeKey000, fakeSerial0000);
+  ASSERT_TRUE(cache.Get(cert0000, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == timeIn);
   // Once we access it, it goes to the front
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0000, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == timeIn);
-  MakeFakeCert(&subject, "CN=subject0512", "CN=issuer1", "0512", "key000");
+
   // This will be in the middle
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  static const SECItem fakeSerial0512 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("0512")),
+    4
+  };
+  CertID cert0512(fakeIssuer1, fakeKey000, fakeSerial0512);
+  ASSERT_TRUE(cache.Get(cert0512, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == timeIn + 512);
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(cert0512, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == timeIn + 512);
+
   // We've never seen this certificate
-  MakeFakeCert(&subject, "CN=subject1111", "CN=issuer1", "1111", "key000");
-  ASSERT_FALSE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  static const SECItem fakeSerial1111 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("1111")),
+    4
+  };
+  ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey000, fakeSerial1111),
+                         errorOut, timeOut));
 }
 
 TEST_F(OCSPCacheTest, TestEviction)
 {
   SCOPED_TRACE("");
-  CERTCertificate issuer;
   PRTime timeIn = PR_Now();
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
+
   // By putting more distinct entries in the cache than it can hold,
   // we cause the least recently used entry to be evicted.
   for (int i = 0; i < MaxCacheEntries + 1; i++) {
-    CERTCertificate subject;
-    char subjectBuf[64];
-    PR_snprintf(subjectBuf, sizeof(subjectBuf), "CN=subject%04d", i);
     char serialBuf[8];
     PR_snprintf(serialBuf, sizeof(serialBuf), "%04d", i);
-    MakeFakeCert(&subject, subjectBuf, "CN=issuer1", serialBuf, "key000");
-    PutAndGet(cache, &subject, &issuer, 0, timeIn + i);
+    const SECItem fakeSerial = {
+      siBuffer,
+      const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(serialBuf)),
+      4
+    };
+    PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial), 0, timeIn + i);
   }
-  CERTCertificate evictedSubject;
-  MakeFakeCert(&evictedSubject, "CN=subject0000", "CN=issuer1", "0000", "key000");
+
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_FALSE(cache.Get(&evictedSubject, &issuer, errorOut, timeOut));
+  ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial0000),
+                         errorOut, timeOut));
 }
 
 TEST_F(OCSPCacheTest, TestNoEvictionForRevokedResponses)
 {
   SCOPED_TRACE("");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
-  CERTCertificate notEvictedSubject;
-  MakeFakeCert(&notEvictedSubject, "CN=subject0000", "CN=issuer1", "0000", "key000");
   PRTime timeIn = PR_Now();
-  PutAndGet(cache, &notEvictedSubject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, timeIn);
+  CertID notEvicted(fakeIssuer1, fakeKey000, fakeSerial0000);
+  PutAndGet(cache, notEvicted, SEC_ERROR_REVOKED_CERTIFICATE, timeIn);
   // By putting more distinct entries in the cache than it can hold,
   // we cause the least recently used entry that isn't revoked to be evicted.
   for (int i = 1; i < MaxCacheEntries + 1; i++) {
-    CERTCertificate subject;
-    char subjectBuf[64];
-    PR_snprintf(subjectBuf, sizeof(subjectBuf), "CN=subject%04d", i);
     char serialBuf[8];
     PR_snprintf(serialBuf, sizeof(serialBuf), "%04d", i);
-    MakeFakeCert(&subject, subjectBuf, "CN=issuer1", serialBuf, "key000");
-    PutAndGet(cache, &subject, &issuer, 0, timeIn + i);
+    const SECItem fakeSerial = {
+      siBuffer,
+      reinterpret_cast<uint8_t*>(serialBuf),
+      4
+    };
+    PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial), 0, timeIn + i);
   }
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_TRUE(cache.Get(&notEvictedSubject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(notEvicted, errorOut, timeOut));
   ASSERT_TRUE(errorOut == SEC_ERROR_REVOKED_CERTIFICATE && timeOut == timeIn);
-  CERTCertificate evictedSubject;
-  MakeFakeCert(&evictedSubject, "CN=subject0001", "CN=issuer1", "0001", "key000");
-  ASSERT_FALSE(cache.Get(&evictedSubject, &issuer, errorOut, timeOut));
+
+  const SECItem fakeSerial0001 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("0001")),
+    4
+  };
+  CertID evicted(fakeIssuer1, fakeKey000, fakeSerial0001);
+  ASSERT_FALSE(cache.Get(evicted, errorOut, timeOut));
 }
 
 TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
 {
   SCOPED_TRACE("");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
   PRTime timeIn = PR_Now();
   // Fill up the cache with revoked responses.
   for (int i = 0; i < MaxCacheEntries; i++) {
-    CERTCertificate subject;
-    char subjectBuf[64];
-    PR_snprintf(subjectBuf, sizeof(subjectBuf), "CN=subject%04d", i);
     char serialBuf[8];
     PR_snprintf(serialBuf, sizeof(serialBuf), "%04d", i);
-    MakeFakeCert(&subject, subjectBuf, "CN=issuer1", serialBuf, "key000");
-    PutAndGet(cache, &subject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, timeIn + i);
+    const SECItem fakeSerial = {
+      siBuffer,
+      reinterpret_cast<uint8_t*>(serialBuf),
+      4
+    };
+    PutAndGet(cache, CertID(fakeIssuer1, fakeKey000, fakeSerial),
+              SEC_ERROR_REVOKED_CERTIFICATE, timeIn + i);
   }
-  CERTCertificate goodSubject;
-  MakeFakeCert(&goodSubject, "CN=subject1025", "CN=issuer1", "1025", "key000");
+  const SECItem fakeSerial1025 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("1025")),
+    4
+  };
+  CertID good(fakeIssuer1, fakeKey000, fakeSerial1025);
   // This will "succeed", allowing verification to continue. However,
   // nothing was actually put in the cache.
-  SECStatus result = cache.Put(&goodSubject, &issuer, 0, timeIn + 1025 - 50,
-                               timeIn + 1025);
+  SECStatus result = cache.Put(good, 0, timeIn + 1025 - 50, timeIn + 1025);
   ASSERT_TRUE(result == SECSuccess);
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_FALSE(cache.Get(&goodSubject, &issuer, errorOut, timeOut));
+  ASSERT_FALSE(cache.Get(good, errorOut, timeOut));
 
-  CERTCertificate revokedSubject;
-  MakeFakeCert(&revokedSubject, "CN=subject1026", "CN=issuer1", "1026", "key000");
+  const SECItem fakeSerial1026 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("1026")),
+    4
+  };
+  CertID revoked(fakeIssuer1, fakeKey000, fakeSerial1026);
   // This will fail, causing verification to fail.
-  result = cache.Put(&revokedSubject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE,
+  result = cache.Put(revoked, SEC_ERROR_REVOKED_CERTIFICATE,
                      timeIn + 1026 - 50, timeIn + 1026);
   PRErrorCode error = PR_GetError();
   ASSERT_TRUE(result == SECFailure);
@@ -209,75 +240,76 @@ TEST_F(OCSPCacheTest, TestEverythingIsRevoked)
 TEST_F(OCSPCacheTest, VariousIssuers)
 {
   SCOPED_TRACE("");
-  CERTCertificate issuer1;
-  MakeFakeCert(&issuer1, "CN=issuer1", "CN=issuer1", "000", "key000");
-  CERTCertificate issuer2;
-  MakeFakeCert(&issuer2, "CN=issuer2", "CN=issuer2", "000", "key001");
-  CERTCertificate issuer3;
-  // Note: same CN as issuer1
-  MakeFakeCert(&issuer3, "CN=issuer1", "CN=issuer3", "000", "key003");
-  CERTCertificate subject;
-  MakeFakeCert(&subject, "CN=subject", "CN=issuer1", "001", "key002");
+  static const SECItem fakeIssuer2 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("CN=issuer2")),
+    10
+  };
+  static const SECItem fakeSerial001 = {
+    siBuffer,
+    const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>("001")),
+    3
+  };
+
   PRTime timeIn = PR_Now();
-  PutAndGet(cache, &subject, &issuer1, 0, timeIn);
+  CertID subject(fakeIssuer1, fakeKey000, fakeSerial001);
+  PutAndGet(cache, subject, 0, timeIn);
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_TRUE(cache.Get(&subject, &issuer1, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(subject, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == timeIn);
-  ASSERT_FALSE(cache.Get(&subject, &issuer2, errorOut, timeOut));
-  ASSERT_FALSE(cache.Get(&subject, &issuer3, errorOut, timeOut));
+  // Test that we don't match a different issuer DN
+  ASSERT_FALSE(cache.Get(CertID(fakeIssuer2, fakeKey000, fakeSerial001),
+                         errorOut, timeOut));
+  // Test that we don't match a different issuer key
+  ASSERT_FALSE(cache.Get(CertID(fakeIssuer1, fakeKey001, fakeSerial001),
+                         errorOut, timeOut));
 }
 
 TEST_F(OCSPCacheTest, Times)
 {
   SCOPED_TRACE("");
-  CERTCertificate subject;
-  MakeFakeCert(&subject, "CN=subject1", "CN=issuer1", "001", "key001");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
-  PutAndGet(cache, &subject, &issuer, SEC_ERROR_OCSP_UNKNOWN_CERT, 100);
-  PutAndGet(cache, &subject, &issuer, 0, 200);
+  CertID certID(fakeIssuer1, fakeKey000, fakeSerial0000);
+  PutAndGet(cache, certID, SEC_ERROR_OCSP_UNKNOWN_CERT, 100);
+  PutAndGet(cache, certID, 0, 200);
   // This should not override the more recent entry.
-  SECStatus rv = cache.Put(&subject, &issuer, SEC_ERROR_OCSP_UNKNOWN_CERT, 100, 100);
-  ASSERT_TRUE(rv == SECSuccess);
+  ASSERT_EQ(SECSuccess, cache.Put(certID, SEC_ERROR_OCSP_UNKNOWN_CERT, 100,
+                                  100));
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, errorOut, timeOut));
   // Here we see the more recent time.
   ASSERT_TRUE(errorOut == 0 && timeOut == 200);
 
   // SEC_ERROR_REVOKED_CERTIFICATE overrides everything
-  PutAndGet(cache, &subject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, 50);
+  PutAndGet(cache, certID, SEC_ERROR_REVOKED_CERTIFICATE, 50);
 }
 
 TEST_F(OCSPCacheTest, NetworkFailure)
 {
   SCOPED_TRACE("");
-  CERTCertificate subject;
-  MakeFakeCert(&subject, "CN=subject1", "CN=issuer1", "001", "key001");
-  CERTCertificate issuer;
-  MakeFakeCert(&issuer, "CN=issuer1", "CN=issuer1", "000", "key000");
-  PutAndGet(cache, &subject, &issuer, PR_CONNECT_REFUSED_ERROR, 100);
-  PutAndGet(cache, &subject, &issuer, 0, 200);
+  CertID certID(fakeIssuer1, fakeKey000, fakeSerial0000);
+  PutAndGet(cache, certID, PR_CONNECT_REFUSED_ERROR, 100);
+  PutAndGet(cache, certID, 0, 200);
   // This should not override the already present entry.
-  SECStatus rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 300, 350);
+  SECStatus rv = cache.Put(certID, PR_CONNECT_REFUSED_ERROR, 300, 350);
   ASSERT_TRUE(rv == SECSuccess);
   PRErrorCode errorOut;
   PRTime timeOut;
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, errorOut, timeOut));
   ASSERT_TRUE(errorOut == 0 && timeOut == 200);
 
-  PutAndGet(cache, &subject, &issuer, SEC_ERROR_OCSP_UNKNOWN_CERT, 400);
+  PutAndGet(cache, certID, SEC_ERROR_OCSP_UNKNOWN_CERT, 400);
   // This should not override the already present entry.
-  rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 500, 550);
+  rv = cache.Put(certID, PR_CONNECT_REFUSED_ERROR, 500, 550);
   ASSERT_TRUE(rv == SECSuccess);
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, errorOut, timeOut));
   ASSERT_TRUE(errorOut == SEC_ERROR_OCSP_UNKNOWN_CERT && timeOut == 400);
 
-  PutAndGet(cache, &subject, &issuer, SEC_ERROR_REVOKED_CERTIFICATE, 600);
+  PutAndGet(cache, certID, SEC_ERROR_REVOKED_CERTIFICATE, 600);
   // This should not override the already present entry.
-  rv = cache.Put(&subject, &issuer, PR_CONNECT_REFUSED_ERROR, 700, 750);
+  rv = cache.Put(certID, PR_CONNECT_REFUSED_ERROR, 700, 750);
   ASSERT_TRUE(rv == SECSuccess);
-  ASSERT_TRUE(cache.Get(&subject, &issuer, errorOut, timeOut));
+  ASSERT_TRUE(cache.Get(certID, errorOut, timeOut));
   ASSERT_TRUE(errorOut == SEC_ERROR_REVOKED_CERTIFICATE && timeOut == 600);
 }

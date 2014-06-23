@@ -16,7 +16,7 @@
 
 #include "mozilla/Maybe.h"
 
-class nsIGlobalObject;
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
@@ -92,12 +92,14 @@ private:
  * must be on the stack.
  *
  * This base class should be instantiated as-is when the caller wants to use
- * JSAPI but doesn't expect to run script. Its current duties are as-follows:
+ * JSAPI but doesn't expect to run script. The caller must then call one of its
+ * Init functions before being able to access the JSContext through cx().
+ * Its current duties are as-follows (see individual Init comments for details):
  *
  * * Grabbing an appropriate JSContext, and, on the main thread, pushing it onto
  *   the JSContext stack.
- * * Entering a null compartment, so that the consumer is forced to select a
- *   compartment to enter before manipulating objects.
+ * * Entering an initial (possibly null) compartment, to ensure that the
+ *   previously entered compartment for that JSContext is not used by mistake.
  *
  * Additionally, the following duties are planned, but not yet implemented:
  *
@@ -121,37 +123,64 @@ private:
  */
 class AutoJSAPI {
 public:
-  // Public constructor for use when the base class is constructed as-is. It
-  // uses the SafeJSContext (or worker equivalent), and enters a null
-  // compartment.
+  // Trivial constructor. One of the Init functions must be called before
+  // accessing the JSContext through cx().
   AutoJSAPI();
-  JSContext* cx() const { return mCx; }
+
+  // This uses the SafeJSContext (or worker equivalent), and enters a null
+  // compartment, so that the consumer is forced to select a compartment to
+  // enter before manipulating objects.
+  void Init();
+
+  // This uses the SafeJSContext (or worker equivalent), and enters the
+  // compartment of aGlobalObject.
+  // If aGlobalObject or its associated JS global are null then it returns
+  // false and use of cx() will cause an assertion.
+  bool Init(nsIGlobalObject* aGlobalObject);
+
+  // Unsurprisingly, this uses aCx and enters the compartment of aGlobalObject.
+  // If aGlobalObject or its associated JS global are null then it returns
+  // false and use of cx() will cause an assertion.
+  // If aCx is null it will cause an assertion.
+  bool Init(nsIGlobalObject* aGlobalObject, JSContext* aCx);
+
+  // This may only be used on the main thread.
+  // This attempts to use the JSContext associated with aGlobalObject, otherwise
+  // it uses the SafeJSContext. It then enters the compartment of aGlobalObject.
+  // This means that existing error reporting mechanisms that use the JSContext
+  // to find the JSErrorReporter should still work as before.
+  // We should be able to remove this around bug 981198.
+  // If aGlobalObject or its associated JS global are null then it returns
+  // false and use of cx() will cause an assertion.
+  bool InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject);
+
+  // Convenience functions to take an nsPIDOMWindow*, when it is more easily
+  // available than an nsIGlobalObject.
+  bool InitUsingWin(nsPIDOMWindow* aWindow);
+  bool InitUsingWin(nsPIDOMWindow* aWindow, JSContext* aCx);
+  bool InitWithLegacyErrorReportingUsingWin(nsPIDOMWindow* aWindow);
+
+  JSContext* cx() const {
+    MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
+    return mCx;
+  }
 
   bool CxPusherIsStackTop() { return mCxPusher.ref().IsStackTop(); }
 
 protected:
   // Protected constructor, allowing subclasses to specify a particular cx to
-  // be used.
-  AutoJSAPI(JSContext *aCx, bool aIsMainThread, bool aSkipNullAC = false);
+  // be used. This constructor initialises the AutoJSAPI, so Init must NOT be
+  // called on subclasses that use this.
+  // If aGlobalObject, its associated JS global or aCx are null this will cause
+  // an assertion, as will setting aIsMainThread incorrectly.
+  AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx);
 
 private:
   mozilla::Maybe<AutoCxPusher> mCxPusher;
-  mozilla::Maybe<JSAutoNullCompartment> mNullAc;
+  mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
-};
 
-// Note - the ideal way to implement this is with an accessor on AutoJSAPI
-// that lets us select the error reporting target. But at present,
-// implementing it that way would require us to destroy and reconstruct
-// mCxPusher, which is pretty wasteful. So we do this for now, since it should
-// be pretty easy to switch things over later.
-//
-// This should only be used on the main thread.
-class AutoJSAPIWithErrorsReportedToWindow : public AutoJSAPI {
-  public:
-    AutoJSAPIWithErrorsReportedToWindow(nsIScriptContext* aScx);
-    // Equivalent to AutoJSAPI if aGlobal is not a Window.
-    AutoJSAPIWithErrorsReportedToWindow(nsIGlobalObject* aGlobalObject);
+  void InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread);
 };
 
 /*
@@ -170,7 +199,6 @@ public:
   }
 
 private:
-  JSAutoCompartment mAc;
   // It's safe to make this a weak pointer, since it's the subject principal
   // when we go on the stack, so can't go away until after we're gone.  In
   // particular, this is only used from the CallSetup constructor, and only in

@@ -23,7 +23,6 @@
 
 class nsIAtom;
 class nsICSSLoaderObserver;
-class nsCSSStyleSheet;
 class nsIContent;
 class nsIDocument;
 class nsCSSParser;
@@ -32,6 +31,7 @@ class nsIStyleSheetLinkingElement;
 class nsCycleCollectionTraversalCallback;
 
 namespace mozilla {
+class CSSStyleSheet;
 namespace dom {
 class Element;
 }
@@ -222,7 +222,7 @@ public:
    * @param aRule the @import rule importing this child.  This is used to
    *              properly order the child sheet list of aParentSheet.
    */
-  nsresult LoadChildSheet(nsCSSStyleSheet* aParentSheet,
+  nsresult LoadChildSheet(CSSStyleSheet* aParentSheet,
                           nsIURI* aURL,
                           nsMediaList* aMedia,
                           ImportRule* aRule);
@@ -256,12 +256,12 @@ public:
    */
   nsresult LoadSheetSync(nsIURI* aURL, bool aEnableUnsafeRules,
                          bool aUseSystemPrincipal,
-                         nsCSSStyleSheet** aSheet);
+                         CSSStyleSheet** aSheet);
 
   /**
    * As above, but aUseSystemPrincipal and aEnableUnsafeRules are assumed false.
    */
-  nsresult LoadSheetSync(nsIURI* aURL, nsCSSStyleSheet** aSheet) {
+  nsresult LoadSheetSync(nsIURI* aURL, CSSStyleSheet** aSheet) {
     return LoadSheetSync(aURL, false, false, aSheet);
   }
 
@@ -289,7 +289,7 @@ public:
                      nsIPrincipal* aOriginPrincipal,
                      const nsCString& aCharset,
                      nsICSSLoaderObserver* aObserver,
-                     nsCSSStyleSheet** aSheet);
+                     CSSStyleSheet** aSheet);
 
   /**
    * Same as above, to be used when the caller doesn't care about the
@@ -385,7 +385,7 @@ private:
 
   static PLDHashOperator
   RemoveEntriesWithURI(URIPrincipalAndCORSModeHashKey* aKey,
-                       nsRefPtr<nsCSSStyleSheet> &aSheet,
+                       nsRefPtr<CSSStyleSheet>& aSheet,
                        void* aUserData);
 
   // Note: null aSourcePrincipal indicates that the content policy and
@@ -408,24 +408,24 @@ private:
                        const nsAString& aTitle,
                        StyleSheetState& aSheetState,
                        bool *aIsAlternate,
-                       nsCSSStyleSheet** aSheet);
+                       CSSStyleSheet** aSheet);
 
   // Pass in either a media string or the nsMediaList from the
   // CSSParser.  Don't pass both.
   // This method will set the sheet's enabled state based on isAlternate
-  void PrepareSheet(nsCSSStyleSheet* aSheet,
+  void PrepareSheet(CSSStyleSheet* aSheet,
                     const nsAString& aTitle,
                     const nsAString& aMediaString,
                     nsMediaList* aMediaList,
                     dom::Element* aScopeElement,
                     bool isAlternate);
 
-  nsresult InsertSheetInDoc(nsCSSStyleSheet* aSheet,
+  nsresult InsertSheetInDoc(CSSStyleSheet* aSheet,
                             nsIContent* aLinkingContent,
                             nsIDocument* aDocument);
 
-  nsresult InsertChildSheet(nsCSSStyleSheet* aSheet,
-                            nsCSSStyleSheet* aParentSheet,
+  nsresult InsertChildSheet(CSSStyleSheet* aSheet,
+                            CSSStyleSheet* aParentSheet,
                             ImportRule* aParentRule);
 
   nsresult InternalLoadNonDocumentSheet(nsIURI* aURL,
@@ -433,7 +433,7 @@ private:
                                         bool aUseSystemPrincipal,
                                         nsIPrincipal* aOriginPrincipal,
                                         const nsCString& aCharset,
-                                        nsCSSStyleSheet** aSheet,
+                                        CSSStyleSheet** aSheet,
                                         nsICSSLoaderObserver* aObserver,
                                         CORSMode aCORSMode = CORS_NONE);
 
@@ -445,7 +445,7 @@ private:
   // sheet was loaded from (may be null for inline sheets).  aElement is the
   // owning element for this sheet.
   nsresult PostLoadEvent(nsIURI* aURI,
-                         nsCSSStyleSheet* aSheet,
+                         CSSStyleSheet* aSheet,
                          nsICSSLoaderObserver* aObserver,
                          bool aWasAlternate,
                          nsIStyleSheetLinkingElement* aElement);
@@ -479,7 +479,7 @@ private:
                        LoadDataArray& aDatasToNotify);
 
   struct Sheets {
-    nsRefPtrHashtable<URIPrincipalAndCORSModeHashKey, nsCSSStyleSheet>
+    nsRefPtrHashtable<URIPrincipalAndCORSModeHashKey, CSSStyleSheet>
                       mCompleteSheets;
     nsDataHashtable<URIPrincipalAndCORSModeHashKey, SheetLoadData*>
                       mLoadingDatas; // weak refs

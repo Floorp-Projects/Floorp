@@ -14,7 +14,6 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/MediaSourceBinding.h"
 #include "mozilla/Monitor.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"

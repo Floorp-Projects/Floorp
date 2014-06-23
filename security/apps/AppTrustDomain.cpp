@@ -170,10 +170,8 @@ AppTrustDomain::VerifySignedData(const CERTSignedData* signedData,
 }
 
 SECStatus
-AppTrustDomain::CheckRevocation(EndEntityOrCA,
-                                const CERTCertificate*,
-                                /*const*/ CERTCertificate*,
-                                PRTime time,
+AppTrustDomain::CheckRevocation(EndEntityOrCA, const CertID&, PRTime time,
+                                /*optional*/ const SECItem*,
                                 /*optional*/ const SECItem*)
 {
   // We don't currently do revocation checking. If we need to distrust an Apps

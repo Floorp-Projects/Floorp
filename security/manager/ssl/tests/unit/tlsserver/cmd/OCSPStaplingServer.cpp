@@ -23,7 +23,9 @@ const OCSPHost sOCSPHosts[] =
 {
   { "ocsp-stapling-good.example.com", ORTGood, nullptr },
   { "ocsp-stapling-revoked.example.com", ORTRevoked, nullptr },
+  { "ocsp-stapling-revoked-old.example.com", ORTRevokedOld, nullptr },
   { "ocsp-stapling-unknown.example.com", ORTUnknown, nullptr },
+  { "ocsp-stapling-unknown-old.example.com", ORTUnknownOld, nullptr },
   { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert, "ocspOtherEndEntity" },
   { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA, "otherCA" },
   { "ocsp-stapling-expired.example.com", ORTExpired, nullptr },

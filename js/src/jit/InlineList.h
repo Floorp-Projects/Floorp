@@ -86,11 +86,11 @@ class InlineForwardList : protected InlineForwardListNode<T>
         insertAfter(this, t);
     }
     void pushBack(Node *t) {
+        JS_ASSERT(t->next == nullptr);
 #ifdef DEBUG
         modifyCount_++;
 #endif
         tail_->next = t;
-        t->next = nullptr;
         tail_ = t;
     }
     T *popFront() {
@@ -104,6 +104,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
         return static_cast<T *>(tail_);
     }
     void insertAfter(Node *at, Node *item) {
+        JS_ASSERT(item->next == nullptr);
 #ifdef DEBUG
         modifyCount_++;
 #endif
@@ -120,6 +121,7 @@ class InlineForwardList : protected InlineForwardListNode<T>
             tail_ = at;
         JS_ASSERT(at->next == item);
         at->next = item->next;
+        item->next = nullptr;
     }
     void splitAfter(Node *at, InlineForwardList<T> *to) {
         JS_ASSERT(to->empty());
@@ -273,8 +275,14 @@ class InlineList : protected InlineListNode<T>
     void pushFront(Node *t) {
         insertAfter(this, t);
     }
+    void pushFrontUnchecked(Node *t) {
+        insertAfterUnchecked(this, t);
+    }
     void pushBack(Node *t) {
         insertBefore(this, t);
+    }
+    void pushBackUnchecked(Node *t) {
+        insertBeforeUnchecked(this, t);
     }
     T *popFront() {
         JS_ASSERT(!empty());
@@ -294,12 +302,22 @@ class InlineList : protected InlineListNode<T>
         return *iter;
     }
     void insertBefore(Node *at, Node *item) {
+        JS_ASSERT(item->prev == nullptr);
+        JS_ASSERT(item->next == nullptr);
+        insertBeforeUnchecked(at, item);
+    }
+    void insertBeforeUnchecked(Node *at, Node *item) {
         item->next = at;
         item->prev = at->prev;
         at->prev->next = item;
         at->prev = item;
     }
     void insertAfter(Node *at, Node *item) {
+        JS_ASSERT(item->prev == nullptr);
+        JS_ASSERT(item->next == nullptr);
+        insertAfterUnchecked(at, item);
+    }
+    void insertAfterUnchecked(Node *at, Node *item) {
         item->next = at->next;
         item->prev = at;
         static_cast<Node *>(at->next)->prev = item;

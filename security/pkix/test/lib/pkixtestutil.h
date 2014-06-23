@@ -28,6 +28,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "keyhi.h"
 #include "pkix/enumclass.h"
 #include "pkix/pkixtypes.h"
 #include "pkix/ScopedPtr.h"
@@ -128,11 +129,11 @@ public:
 class OCSPResponseContext
 {
 public:
-  OCSPResponseContext(PLArenaPool* arena, CERTCertificate* cert, PRTime time);
+  OCSPResponseContext(PLArenaPool* arena, const CertID& certID, PRTime time);
 
   PLArenaPool* arena;
+  const CertID& certID;
   // TODO(bug 980538): add a way to specify what certificates are included.
-  pkix::ScopedCERTCertificate cert; // The subject of the OCSP response
 
   // The fields below are in the order that they appear in an OCSP response.
 
@@ -160,8 +161,6 @@ public:
   bool skipResponseBytes; // If true, don't include responseBytes
 
   // responderID
-  const SECItem* issuerNameDER; // non-owning
-  const CERTSubjectPublicKeyInfo* issuerSPKI; // non-owning pointer
   const SECItem* signerNameDER; // If set, responderID will use the byName
                                 // form; otherwise responderID will use the
                                 // byKeyHash form.

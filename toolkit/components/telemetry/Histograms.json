@@ -1247,12 +1247,6 @@
     "extended_statistics_ok": true,
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
-  "CERT_VALIDATION_LIBRARY": {
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "Which certificate validation library is in use? (1=classic, 2=libpkix, 3=mozilla::pkix)"
-  },
   "SSL_KEY_EXCHANGE_ALGORITHM_FULL": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -4498,22 +4492,6 @@
     "extended_statistics_ok": true,
     "description": "Time (ms) it takes to run memory reporters when sending a telemetry ping"
   },
-  "SSL_SUCCESFUL_CERT_VALIDATION_TIME_LIBPKIX": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "60000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "Time spent on a successful cert verification in libpix mode (ms)"
-  },
-  "SSL_SUCCESFUL_CERT_VALIDATION_TIME_CLASSIC": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "60000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "Time spent on a successful cert  verification in classic mode (ms)"
-  },
   "SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX" : {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4521,22 +4499,6 @@
     "n_buckets": 50,
     "extended_statistics_ok": true,
     "description": "Time spent on a successful cert verification in mozilla::pkix mode (ms)"
-  },
-  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_LIBPKIX" : {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "60000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "Time spent on an initially failed cert verification in libpix mode (ms)"
-  },
-  "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_CLASSIC": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "60000",
-    "n_buckets": 50,
-    "extended_statistics_ok": true,
-    "description": "Time spent on an initially failed cert  verification in classic mode (ms)"
   },
   "SSL_INITIAL_FAILED_CERT_VALIDATION_TIME_MOZILLAPKIX" : {
     "expires_in_version": "never",
