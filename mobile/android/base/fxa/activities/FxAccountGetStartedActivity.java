@@ -50,13 +50,24 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     button.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        Intent intent = new Intent(FxAccountGetStartedActivity.this, FxAccountCreateAccountActivity.class);
-        // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-        // the soft keyboard not being shown for the started activity. Why, Android, why?
-        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivityForResult(intent, CHILD_REQUEST_CODE);
+        Bundle extras = null; // startFlow accepts null.
+        if (getIntent() != null) {
+          extras = getIntent().getExtras();
+        }
+        startFlow(extras);
       }
     });
+  }
+
+  protected void startFlow(Bundle extras) {
+    final Intent intent = new Intent(this, FxAccountCreateAccountActivity.class);
+    // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
+    // the soft keyboard not being shown for the started activity. Why, Android, why?
+    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+    if (extras != null) {
+        intent.putExtras(extras);
+    }
+    startActivityForResult(intent, CHILD_REQUEST_CODE);
   }
 
   @Override
@@ -78,6 +89,20 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
       intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
       this.startActivity(intent);
       this.finish();
+    }
+
+    // If we've been launched with extras (namely custom server URLs), continue
+    // past go and collect 200 dollars. If we ever get back here (for example,
+    // if the user hits the back button), forget that we had extras entirely, so
+    // that we don't enter a loop.
+    Bundle extras = null;
+    if (getIntent() != null) {
+      extras = getIntent().getExtras();
+    }
+    if (extras != null && extras.containsKey(FxAccountAbstractSetupActivity.EXTRA_EXTRAS)) {
+      getIntent().replaceExtras(Bundle.EMPTY);
+      startFlow((Bundle) extras.clone());
+      return;
     }
   }
 
