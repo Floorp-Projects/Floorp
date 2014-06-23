@@ -10,6 +10,8 @@
 
 #include "keythi.h"
 
+typedef struct CERTCertificateStr CERTCertificate;
+
 // 296d76aa-275b-4f3c-af8a-30a4026c18fc
 #define NS_DATASIGNATUREVERIFIER_CID \
     { 0x296d76aa, 0x275b, 0x4f3c, \
@@ -32,5 +34,15 @@ private:
   {
   }
 };
+
+namespace mozilla {
+
+nsresult VerifyCMSDetachedSignatureIncludingCertificate(
+  const SECItem& buffer, const SECItem& detachedDigest,
+  nsresult (*verifyCertificate)(CERTCertificate* cert, void* context,
+                                void* pinArg),
+  void* verifyCertificateContext, void* pinArg);
+
+} // namespace mozilla
 
 #endif // _NS_DATASIGNATUREVERIFIER_H_

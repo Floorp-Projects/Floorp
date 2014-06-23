@@ -6,8 +6,10 @@
 #include "nsJARInputStream.h"
 #include "nsJAR.h"
 #include "nsIFile.h"
+#include "nsICertificatePrincipal.h"
 #include "nsIConsoleService.h"
 #include "nsICryptoHash.h"
+#include "nsIDataSignatureVerifier.h"
 #include "prprf.h"
 #include "mozilla/Omnijar.h"
 
@@ -555,8 +557,8 @@ nsJAR::ParseManifest()
   }
 
   //-- Get the signature verifier service
-  nsCOMPtr<nsISignatureVerifier> verifier =
-           do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+  nsCOMPtr<nsIDataSignatureVerifier> verifier(
+    do_GetService("@mozilla.org/security/datasignatureverifier;1", &rv));
   if (NS_FAILED(rv)) // No signature verifier available
   {
     mGlobalStatus = JAR_NO_MANIFEST;
@@ -569,9 +571,9 @@ nsJAR::ParseManifest()
   rv = verifier->VerifySignature(sigBuffer, sigLen, manifestBuffer, manifestLen,
                                  &verifyError, getter_AddRefs(mPrincipal));
   if (NS_FAILED(rv)) return rv;
-  if (mPrincipal && verifyError == 0)
+  if (mPrincipal && verifyError == nsIDataSignatureVerifier::VERIFY_OK)
     mGlobalStatus = JAR_VALID_MANIFEST;
-  else if (verifyError == nsISignatureVerifier::VERIFY_ERROR_UNKNOWN_CA)
+  else if (verifyError == nsIDataSignatureVerifier::VERIFY_ERROR_UNKNOWN_ISSUER)
     mGlobalStatus = JAR_INVALID_UNKNOWN_CA;
   else
     mGlobalStatus = JAR_INVALID_SIG;
