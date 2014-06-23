@@ -30,7 +30,8 @@ IsReflector(JSObject *obj)
 
 enum StackScopedCloneTags {
     SCTAG_BASE = JS_SCTAG_USER_MIN,
-    SCTAG_REFLECTOR
+    SCTAG_REFLECTOR,
+    SCTAG_FUNCTION
 };
 
 class MOZ_STACK_CLASS StackScopedCloneData {
@@ -38,10 +39,12 @@ public:
     StackScopedCloneData(JSContext *aCx, StackScopedCloneOptions *aOptions)
         : mOptions(aOptions)
         , mReflectors(aCx)
+        , mFunctions(aCx)
     {}
 
     StackScopedCloneOptions *mOptions;
     AutoObjectVector mReflectors;
+    AutoObjectVector mFunctions;
 };
 
 static JSObject *
@@ -65,6 +68,21 @@ StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t ta
             return nullptr;
 
         return reflector;
+    }
+
+    if (tag == SCTAG_FUNCTION) {
+      MOZ_ASSERT(data < cloneData->mFunctions.length());
+
+      RootedValue functionValue(cx);
+      RootedObject obj(cx, cloneData->mFunctions[data]);
+
+      if (!JS_WrapObject(cx, &obj))
+          return nullptr;
+
+      if (!xpc::NewFunctionForwarder(cx, obj, true, &functionValue))
+          return nullptr;
+
+      return &functionValue.toObject();
     }
 
     MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
@@ -119,6 +137,11 @@ StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
         if (!JS_WriteBytes(writer, &idx, sizeof(size_t)))
             return false;
         return true;
+    }
+
+    if (cloneData->mOptions->cloneFunctions && JS_ObjectIsCallable(cx, obj)) {
+        cloneData->mFunctions.append(obj);
+        return JS_WriteUint32Pair(writer, SCTAG_FUNCTION, cloneData->mFunctions.length() - 1);
     }
 
     JS_ReportError(cx, "Encountered unsupported value type writing stack-scoped structured clone");
