@@ -69,6 +69,14 @@ public:
 
   virtual void ClearCachedResources() MOZ_OVERRIDE;
 
+  /**
+   * Helper method to find the nearest ancestor layers which
+   * scroll and have a displayport. The parameters are out-params
+   * which hold the return values; the values passed in may be null.
+   */
+  void GetAncestorLayers(ContainerLayer** aOutScrollAncestor,
+                         ContainerLayer** aOutDisplayPortAncestor);
+
 private:
   ClientLayerManager* ClientManager()
   {
