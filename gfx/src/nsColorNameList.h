@@ -23,7 +23,7 @@
 
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invarient and bad things will happen. **    
+  ** Break these invarient and bad things will happen. **
 
 
  ******/
