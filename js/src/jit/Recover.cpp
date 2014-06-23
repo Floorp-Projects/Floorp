@@ -418,6 +418,31 @@ RConcat::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MFromCharCode::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_FromCharCode));
+    return true;
+}
+
+RFromCharCode::RFromCharCode(CompactBufferReader &reader)
+{}
+
+bool
+RFromCharCode::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue operand(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!operand.isObject());
+    if (!js::str_fromCharCode_one_arg(cx, operand, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMul::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
