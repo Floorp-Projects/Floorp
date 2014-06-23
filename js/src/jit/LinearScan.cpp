@@ -95,8 +95,8 @@ LinearScanAllocator::allocateRegisters()
         const Requirement *hint = current->hint();
 
         IonSpew(IonSpew_RegAlloc, "Processing %d = [%u, %u] (pri=%d)",
-                current->hasVreg() ? current->vreg() : 0, current->start().pos(),
-                current->end().pos(), current->requirement()->priority());
+                current->hasVreg() ? current->vreg() : 0, current->start().bits(),
+                current->end().bits(), current->requirement()->priority());
 
         // Shift active intervals to the inactive or handled sets as appropriate
         if (position != prevPosition) {
@@ -668,9 +668,9 @@ LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
         return false;
 
     IonSpew(IonSpew_RegAlloc, "  Split interval to %u = [%u, %u]/[%u, %u]",
-            interval->vreg(), interval->start().pos(),
-            interval->end().pos(), newInterval->start().pos(),
-            newInterval->end().pos());
+            interval->vreg(), interval->start().bits(),
+            interval->end().bits(), newInterval->start().bits(),
+            newInterval->end().bits());
 
     // We always want to enqueue the resulting split. We always split
     // forward, and we never want to handle something forward of our
@@ -706,7 +706,7 @@ LinearScanAllocator::splitBlockingIntervals(LAllocation allocation)
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
             IonSpew(IonSpew_RegAlloc, " Splitting active interval %u = [%u, %u]",
-                    vregs[i->vreg()].ins()->id(), i->start().pos(), i->end().pos());
+                    vregs[i->vreg()].ins()->id(), i->start().bits(), i->end().bits());
 
             JS_ASSERT(i->start() != current->start());
             JS_ASSERT(i->covers(current->start()));
@@ -726,7 +726,7 @@ LinearScanAllocator::splitBlockingIntervals(LAllocation allocation)
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
         if (i->getAllocation()->isRegister() && *i->getAllocation() == allocation) {
             IonSpew(IonSpew_RegAlloc, " Splitting inactive interval %u = [%u, %u]",
-                    vregs[i->vreg()].ins()->id(), i->start().pos(), i->end().pos());
+                    vregs[i->vreg()].ins()->id(), i->start().bits(), i->end().bits());
 
             LiveInterval *it = *i;
             CodePosition nextActive = it->nextCoveredAfter(current->start());
@@ -995,7 +995,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             CodePosition pos = current->intersect(*i);
             if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
                 freeUntilPos[reg.code()] = pos;
-                IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.pos());
+                IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.bits());
             }
         }
     }
@@ -1008,7 +1008,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
                 CodePosition pos = current->intersect(*i);
                 if (pos != CodePosition::MIN && pos < freeUntilPos[reg.code()]) {
                     freeUntilPos[reg.code()] = (pos == current->start()) ? CodePosition::MIN : pos;
-                    IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.pos());
+                    IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.name(), pos.bits());
                 }
             }
         }
@@ -1085,7 +1085,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
             } else if (nextUsePos[reg.code()] != CodePosition::MIN) {
                 nextUsePos[reg.code()] = i->nextUsePosAfter(current->start());
                 IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(),
-                        nextUsePos[reg.code()].pos());
+                        nextUsePos[reg.code()].bits());
             }
         }
     }
@@ -1096,7 +1096,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
             CodePosition pos = i->nextUsePosAfter(current->start());
             if (pos < nextUsePos[reg.code()]) {
                 nextUsePos[reg.code()] = pos;
-                IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(), pos.pos());
+                IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.name(), pos.bits());
             }
         }
     }
@@ -1109,7 +1109,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
                 CodePosition pos = i->intersect(current);
                 if (pos != CodePosition::MIN && pos < nextUsePos[reg.code()]) {
                     nextUsePos[reg.code()] = (pos == current->start()) ? CodePosition::MIN : pos;
-                    IonSpew(IonSpew_RegAlloc, "   Register %s next used %u (fixed)", reg.name(), pos.pos());
+                    IonSpew(IonSpew_RegAlloc, "   Register %s next used %u (fixed)", reg.name(), pos.bits());
                 }
             }
         }
