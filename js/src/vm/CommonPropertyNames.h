@@ -209,6 +209,7 @@
     macro(string, string, "string") \
     macro(number, number, "number") \
     macro(boolean, boolean, "boolean") \
-    macro(null, null, "null")
+    macro(null, null, "null") \
+    macro(symbol, symbol, "symbol")
 
 #endif /* vm_CommonPropertyNames_h */

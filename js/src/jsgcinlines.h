@@ -547,6 +547,7 @@ CheckAllocatorState(ThreadSafeContext *cx, AllocKind kind)
     JS_ASSERT_IF(rt->isAtomsCompartment(ncx->compartment()),
                  kind == FINALIZE_STRING ||
                  kind == FINALIZE_FAT_INLINE_STRING ||
+                 kind == FINALIZE_SYMBOL ||
                  kind == FINALIZE_JITCODE);
     JS_ASSERT(!rt->isHeapBusy());
     JS_ASSERT(rt->gc.isAllocAllowed());
@@ -606,6 +607,10 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
     size_t thingSize = Arena::thingSize(kind);
 
     JS_ASSERT(thingSize == Arena::thingSize(kind));
+    JS_ASSERT(thingSize >= sizeof(JSObject));
+    static_assert(sizeof(JSObject) >= CellSize,
+                  "All allocations must be at least the allocator-imposed minimum size.");
+
     if (!CheckAllocatorState<allowGC>(cx, kind))
         return nullptr;
 
@@ -652,6 +657,9 @@ template <typename T, AllowGC allowGC>
 inline T *
 AllocateNonObject(ThreadSafeContext *cx)
 {
+    static_assert(sizeof(T) >= CellSize,
+                  "All allocations must be at least the allocator-imposed minimum size.");
+
     AllocKind kind = MapTypeToFinalizeKind<T>::kind;
     size_t thingSize = sizeof(T);
 

@@ -599,7 +599,13 @@ JSVAL_TO_GCTHING_IMPL(jsval_layout l)
 static inline uint32_t
 JSVAL_TRACE_KIND_IMPL(jsval_layout l)
 {
-    return (uint32_t)(bool)JSVAL_IS_STRING_IMPL(l);
+    static_assert((JSVAL_TAG_STRING & 0x03) == JSTRACE_STRING,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_SYMBOL & 0x03) == JSTRACE_SYMBOL,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_OBJECT & 0x03) == JSTRACE_OBJECT,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    return l.s.tag & 0x03;
 }
 
 static inline bool
@@ -834,7 +840,13 @@ JSVAL_TO_GCTHING_IMPL(jsval_layout l)
 static inline uint32_t
 JSVAL_TRACE_KIND_IMPL(jsval_layout l)
 {
-    return (uint32_t)(bool)!(JSVAL_IS_OBJECT_IMPL(l));
+    static_assert((JSVAL_TAG_STRING & 0x03) == JSTRACE_STRING,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_SYMBOL & 0x03) == JSTRACE_SYMBOL,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_OBJECT & 0x03) == JSTRACE_OBJECT,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) & 0x03;
 }
 
 static inline jsval_layout

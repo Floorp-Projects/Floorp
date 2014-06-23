@@ -126,6 +126,7 @@ MarkExactStackRoots(T context, JSTracer *trc)
     MarkExactStackRootsForType<BaseShape *, MarkBaseShapeRoot>(context, trc, "exact-baseshape");
     MarkExactStackRootsForType<types::TypeObject *, MarkTypeObjectRoot>(context, trc, "exact-typeobject");
     MarkExactStackRootsForType<JSString *, MarkStringRoot>(context, trc, "exact-string");
+    MarkExactStackRootsForType<JS::Symbol *, MarkSymbolRoot>(context, trc, "exact-symbol");
     MarkExactStackRootsForType<jit::JitCode *, MarkJitCodeRoot>(context, trc, "exact-jitcode");
     MarkExactStackRootsForType<JSScript *, MarkScriptRoot>(context, trc, "exact-script");
     MarkExactStackRootsForType<LazyScript *, MarkLazyScriptRoot>(context, trc, "exact-lazy-script");

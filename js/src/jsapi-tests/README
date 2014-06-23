@@ -89,7 +89,19 @@ tests.h:
         false, failing the test.
 
         This is like CHECK(sameValue(a, b)) but with a more detailed error
-        message. See sameValue below.
+        message on failure. See sameValue below.
+
+    CHECK_EQUAL(const T &a, const U &b);
+
+        CHECK(a == b), but with a more detailed error message.
+
+    CHECK_NULL(const T *ptr);
+
+        CHECK(ptr == nullptr), but with a more detailed error message.
+
+        (This is here because CHECK_EQUAL(ptr, nullptr) fails to compile on GCC
+        2.5 and before.)
+
 
     bool knownFail;
 
