@@ -345,7 +345,7 @@ function rpow_object(i) {
     var o = { valueOf: function () { return t; } };
     var x = Math.pow(o, 3.14159); /* computed with t == i, not 1.5 */
     t = 1.5;
-    if (uceFault_bitnot_object(i) || uceFault_bitnot_object(i))
+    if (uceFault_pow_object(i) || uceFault_pow_object(i))
         assertEq(x, Math.pow(99, 3.14159));
     return i;
 }
