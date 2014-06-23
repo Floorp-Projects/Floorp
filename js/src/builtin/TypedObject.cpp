@@ -863,7 +863,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 {
     // Obtain names of fields, which are the own properties of `fields`
     AutoIdVector ids(cx);
-    if (!GetPropertyNames(cx, fields, JSITER_OWNONLY, &ids))
+    if (!GetPropertyNames(cx, fields, JSITER_OWNONLY | JSITER_SYMBOLS, &ids))
         return nullptr;
 
     // Iterate through each field. Collect values for the various
