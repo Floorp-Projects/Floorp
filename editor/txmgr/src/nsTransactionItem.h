@@ -26,7 +26,6 @@ class nsTransactionItem
 public:
 
   nsTransactionItem(nsITransaction *aTransaction);
-  virtual ~nsTransactionItem();
   NS_METHOD_(MozExternalRefCountType) AddRef();
   NS_METHOD_(MozExternalRefCountType) Release();
 
@@ -60,6 +59,8 @@ private:
 
   void CleanUp();
 protected:
+  virtual ~nsTransactionItem();
+
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };

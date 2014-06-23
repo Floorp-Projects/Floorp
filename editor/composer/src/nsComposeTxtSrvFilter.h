@@ -31,6 +31,8 @@ public:
   void Init(bool aIsForMail) { mIsForMail = aIsForMail; }
 
 private:
+  ~nsComposeTxtSrvFilter() {}
+
   bool              mIsForMail;
 };
 

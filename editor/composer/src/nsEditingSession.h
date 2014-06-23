@@ -49,8 +49,7 @@ class nsEditingSession : public nsIEditingSession,
 {
 public:
 
-                  nsEditingSession();
-  virtual         ~nsEditingSession();
+  nsEditingSession();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -62,6 +61,7 @@ public:
   NS_DECL_NSIEDITINGSESSION
 
 protected:
+  virtual         ~nsEditingSession();
 
   nsIDocShell *   GetDocShellFromWindow(nsIDOMWindow *aWindow);
   

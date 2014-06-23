@@ -38,7 +38,6 @@ public:
 
   TypeInState();
   void Reset();
-  virtual ~TypeInState();
 
   nsresult UpdateSelState(nsISelection *aSelection);
 
@@ -72,6 +71,7 @@ public:
   static   bool FindPropInList(nsIAtom *aProp, const nsAString &aAttr, nsAString *outValue, nsTArray<PropItem*> &aList, int32_t &outIndex);
 
 protected:
+  virtual ~TypeInState();
 
   void RemovePropFromSetList(nsIAtom* aProp, const nsAString& aAttr);
   void RemovePropFromClearedList(nsIAtom* aProp, const nsAString& aAttr);

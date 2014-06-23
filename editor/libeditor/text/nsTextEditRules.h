@@ -43,9 +43,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTextEditRules, nsIEditRules)
-  
-              nsTextEditRules();
-  virtual     ~nsTextEditRules();
+
+  nsTextEditRules();
 
   // nsIEditRules methods
   NS_IMETHOD Init(nsPlaintextEditor *aEditor);
@@ -60,6 +59,9 @@ public:
   NS_IMETHOD DidDoAction(nsISelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty);
   NS_IMETHOD DocumentModified();
+
+protected:
+  virtual ~nsTextEditRules();
 
 public:
   void ResetIMETextPWBuf();
