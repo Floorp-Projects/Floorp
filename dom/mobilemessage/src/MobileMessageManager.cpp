@@ -3,28 +3,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "SmsFilter.h"
 #include "MobileMessageManager.h"
-
-#include "DOMCursor.h"
-#include "DOMRequest.h"
-#include "MobileMessageCallback.h"
-#include "MobileMessageCursorCallback.h"
-#include "mozilla/dom/mobilemessage/Constants.h" // For kSms*ObserverTopic
+#include "nsIDOMClassInfo.h"
+#include "nsISmsService.h"
+#include "nsIMmsService.h"
+#include "nsIObserverService.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 #include "mozilla/dom/MozMmsEvent.h"
+#include "mozilla/dom/MozMmsMessageBinding.h"
 #include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/dom/MozSmsEvent.h"
 #include "mozilla/dom/ToJSValue.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/Services.h"
-#include "nsIDOMMozMmsMessage.h"
 #include "nsIDOMMozSmsMessage.h"
-#include "nsIMmsService.h"
-#include "nsIMobileMessageCallback.h"
+#include "nsIDOMMozMmsMessage.h"
+#include "nsJSUtils.h"
+#include "nsContentUtils.h"
+#include "nsCxPusher.h"
 #include "nsIMobileMessageDatabaseService.h"
-#include "nsIObserverService.h"
-#include "nsISmsService.h"
-#include "nsServiceManagerUtils.h" // For do_GetService()
-#include "SmsFilter.h"
+#include "nsIXPConnect.h"
+#include "nsIPermissionManager.h"
+#include "GeneratedEvents.h"
+#include "DOMRequest.h"
+#include "nsIMobileMessageCallback.h"
+#include "MobileMessageCallback.h"
+#include "MobileMessageCursorCallback.h"
+#include "DOMCursor.h"
 
 #define RECEIVED_EVENT_NAME         NS_LITERAL_STRING("received")
 #define RETRIEVING_EVENT_NAME       NS_LITERAL_STRING("retrieving")
