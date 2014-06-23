@@ -4253,8 +4253,8 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, proto, nullptr, string_methods) ||
-        !DefinePropertiesAndBrand(cx, ctor, nullptr, string_static_methods))
+    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, string_methods) ||
+        !DefinePropertiesAndFunctions(cx, ctor, nullptr, string_static_methods))
     {
         return nullptr;
     }

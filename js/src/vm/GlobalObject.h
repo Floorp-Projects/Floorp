@@ -770,12 +770,12 @@ extern bool
 LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
 /*
- * Define properties, then functions, on the object, then brand for tracing
- * benefits.
+ * Define properties and/or functions on any object. Either ps or fs, or both,
+ * may be null.
  */
 extern bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj,
-                         const JSPropertySpec *ps, const JSFunctionSpec *fs);
+DefinePropertiesAndFunctions(JSContext *cx, HandleObject obj,
+                             const JSPropertySpec *ps, const JSFunctionSpec *fs);
 
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 
