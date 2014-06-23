@@ -1159,16 +1159,33 @@ AssertValidStringPtr(JSContext *cx, JSString *str)
 }
 
 void
+AssertValidSymbolPtr(JSContext *cx, JS::Symbol *sym)
+{
+    // We can't closely inspect symbols from another runtime.
+    if (sym->runtimeFromAnyThread() != cx->runtime())
+        return;
+
+    JS_ASSERT(cx->runtime()->isAtomsZone(sym->tenuredZone()));
+
+    JS_ASSERT(sym->runtimeFromMainThread() == cx->runtime());
+    JS_ASSERT(sym->isAligned());
+    if (JSString *desc = sym->description()) {
+        JS_ASSERT(desc->isAtom());
+        AssertValidStringPtr(cx, desc);
+    }
+
+    JS_ASSERT(sym->tenuredGetAllocKind() == gc::FINALIZE_SYMBOL);
+}
+
+void
 AssertValidValue(JSContext *cx, Value *v)
 {
-    if (v->isObject()) {
+    if (v->isObject())
         AssertValidObjectPtr(cx, &v->toObject());
-        return;
-    }
-    if (v->isString()) {
+    else if (v->isString())
         AssertValidStringPtr(cx, v->toString());
-        return;
-    }
+    else if (v->isSymbol())
+        AssertValidSymbolPtr(cx, v->toSymbol());
 }
 #endif
 
