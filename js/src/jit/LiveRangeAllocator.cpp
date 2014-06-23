@@ -422,10 +422,11 @@ LiveInterval::firstIncompatibleUse(LAllocation alloc)
 LiveInterval *
 VirtualRegister::intervalFor(CodePosition pos)
 {
+    // Intervals are sorted in ascending order by their start position.
     for (LiveInterval **i = intervals_.begin(); i != intervals_.end(); i++) {
         if ((*i)->covers(pos))
             return *i;
-        if (pos < (*i)->end())
+        if (pos < (*i)->start())
             break;
     }
     return nullptr;
