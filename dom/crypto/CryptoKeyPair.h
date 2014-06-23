@@ -4,30 +4,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_KeyPair_h
-#define mozilla_dom_KeyPair_h
+#ifndef mozilla_dom_CryptoKeyPair_h
+#define mozilla_dom_CryptoKeyPair_h
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "nsIGlobalObject.h"
-#include "mozilla/dom/Key.h"
+#include "mozilla/dom/CryptoKey.h"
 #include "js/TypeDecls.h"
 
 namespace mozilla {
 namespace dom {
 
-class KeyPair MOZ_FINAL : public nsISupports,
-                          public nsWrapperCache
+class CryptoKeyPair MOZ_FINAL : public nsISupports,
+                                public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(KeyPair)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CryptoKeyPair)
 
 public:
-  KeyPair(nsIGlobalObject* aGlobal)
+  CryptoKeyPair(nsIGlobalObject* aGlobal)
     : mGlobal(aGlobal)
-    , mPublicKey(new Key(aGlobal))
-    , mPrivateKey(new Key(aGlobal))
+    , mPublicKey(new CryptoKey(aGlobal))
+    , mPrivateKey(new CryptoKey(aGlobal))
   {
     SetIsDOMBinding();
   }
@@ -39,25 +39,25 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
-  Key* PublicKey() const
+  CryptoKey* PublicKey() const
   {
     return mPublicKey;
   }
 
-  Key* PrivateKey() const
+  CryptoKey* PrivateKey() const
   {
     return mPrivateKey;
   }
 
 private:
-  ~KeyPair() {}
+  ~CryptoKeyPair() {}
 
   nsRefPtr<nsIGlobalObject> mGlobal;
-  nsRefPtr<Key> mPublicKey;
-  nsRefPtr<Key> mPrivateKey;
+  nsRefPtr<CryptoKey> mPublicKey;
+  nsRefPtr<CryptoKey> mPrivateKey;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_KeyPair_h
+#endif // mozilla_dom_CryptoKeyPair_h
