@@ -414,6 +414,26 @@ struct JSAtomState
 
 namespace js {
 
+/*
+ * Storage for well-known symbols. It's a separate struct from the Runtime so
+ * that it can be shared across multiple runtimes. As in JSAtomState, each
+ * field is a smart pointer that's immutable once initialized.
+ * `rt->wellKnownSymbols.iterator` is convertible to Handle<Symbol*>.
+ *
+ * Well-known symbols are never GC'd. The description() of each well-known
+ * symbol is a permanent atom.
+ */
+struct WellKnownSymbols
+{
+    js::ImmutableSymbolPtr iterator;
+
+    ImmutableSymbolPtr &get(size_t i) {
+        MOZ_ASSERT(i < JS::WellKnownSymbolLimit);
+        ImmutableSymbolPtr *symbols = reinterpret_cast<ImmutableSymbolPtr *>(this);
+        return symbols[i];
+    }
+};
+
 #define NAME_OFFSET(name)       offsetof(JSAtomState, name)
 
 inline HandlePropertyName
@@ -1215,6 +1235,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AtomSet *permanentAtoms;
 
     bool transformToPermanentAtoms();
+
+    // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
+    // these are shared with the parentRuntime, if any.
+    js::WellKnownSymbols *wellKnownSymbols;
 
     const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;

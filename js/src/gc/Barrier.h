@@ -608,6 +608,8 @@ class ImmutableTenuredPtr
         JS_ASSERT(ptr->isTenured());
         value = ptr;
     }
+
+    const T * address() { return &value; }
 };
 
 /*
@@ -826,6 +828,7 @@ typedef RelocatablePtr<jsid> RelocatableId;
 typedef HeapPtr<jsid> HeapId;
 
 typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
+typedef ImmutableTenuredPtr<JS::Symbol*> ImmutableSymbolPtr;
 
 typedef ReadBarriered<DebugScopeObject*> ReadBarrieredDebugScopeObject;
 typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;

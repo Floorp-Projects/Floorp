@@ -151,6 +151,7 @@ template <> bool ThingIsPermanentAtom<JSFlatString>(JSFlatString *str) { return 
 template <> bool ThingIsPermanentAtom<JSLinearString>(JSLinearString *str) { return str->isPermanentAtom(); }
 template <> bool ThingIsPermanentAtom<JSAtom>(JSAtom *atom) { return atom->isPermanent(); }
 template <> bool ThingIsPermanentAtom<PropertyName>(PropertyName *name) { return name->isPermanent(); }
+template <> bool ThingIsPermanentAtom<JS::Symbol>(JS::Symbol *sym) { return sym->isWellKnownSymbol(); }
 
 template<typename T>
 static inline void
@@ -330,6 +331,30 @@ MarkPermanentAtom(JSTracer *trc, JSAtom *atom, const char *name)
         void *thing = atom;
         trc->callback(trc, &thing, JSTRACE_STRING);
         JS_ASSERT(thing == atom);
+        trc->unsetTracingLocation();
+    }
+
+    trc->clearTracingDetails();
+}
+
+void
+MarkWellKnownSymbol(JSTracer *trc, JS::Symbol *sym)
+{
+    if (!sym)
+        return;
+
+    trc->setTracingName("wellKnownSymbols");
+
+    MOZ_ASSERT(sym->isWellKnownSymbol());
+    CheckMarkedThing(trc, &sym);
+    if (!trc->callback) {
+        // Permanent atoms are marked before well-known symbols.
+        MOZ_ASSERT(sym->description()->isMarked());
+        sym->markIfUnmarked();
+    } else {
+        void *thing = sym;
+        trc->callback(trc, &thing, JSTRACE_SYMBOL);
+        MOZ_ASSERT(thing == sym);
         trc->unsetTracingLocation();
     }
 
@@ -1216,13 +1241,24 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
 }
 
 static inline void
+ScanSymbol(GCMarker *gcmarker, JS::Symbol *sym)
+{
+    if (JSString *desc = sym->description())
+        PushMarkStack(gcmarker, desc);
+}
+
+static inline void
 PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym)
 {
+    // Well-known symbols might not be associated with this runtime.
+    if (sym->isWellKnownSymbol())
+        return;
+
     JS_COMPARTMENT_ASSERT_SYM(gcmarker->runtime(), sym);
-    if (sym->markIfUnmarked()) {
-        if (JSString *desc = sym->description())
-            ScanString(gcmarker, desc);
-    }
+    JS_ASSERT(!IsInsideNursery(sym));
+
+    if (sym->markIfUnmarked())
+        ScanSymbol(gcmarker, sym);
 }
 
 void
@@ -1619,6 +1655,14 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
                 pushValueArray(obj, vp, end);
                 obj = obj2;
                 goto scan_obj;
+            }
+        } else if (v.isSymbol()) {
+            JS::Symbol *sym = v.toSymbol();
+            if (!sym->isWellKnownSymbol()) {
+                JS_COMPARTMENT_ASSERT_SYM(runtime(), sym);
+                MOZ_ASSERT(runtime()->isAtomsZone(sym->zone()) || sym->zone() == obj->zone());
+                if (sym->markIfUnmarked())
+                    ScanSymbol(this, sym);
             }
         }
     }

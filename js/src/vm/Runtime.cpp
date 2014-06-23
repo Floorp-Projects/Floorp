@@ -211,6 +211,7 @@ JSRuntime::JSRuntime(JSRuntime *parentRuntime)
     staticStrings(nullptr),
     commonNames(nullptr),
     permanentAtoms(nullptr),
+    wellKnownSymbols(nullptr),
     wrapObjectCallbacks(&DefaultWrapObjectCallbacks),
     preserveWrapperCallback(nullptr),
     jitSupportsFloatingPoint(false),
