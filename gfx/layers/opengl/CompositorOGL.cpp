@@ -66,10 +66,6 @@ namespace layers {
 
 using namespace mozilla::gl;
 
-static inline IntSize ns2gfxSize(const nsIntSize& s) {
-  return IntSize(s.width, s.height);
-}
-
 static void
 BindMaskForProgram(ShaderProgramOGL* aProgram, TextureSourceOGL* aSourceMask,
                    GLenum aTexUnit, const gfx::Matrix4x4& aTransform)
