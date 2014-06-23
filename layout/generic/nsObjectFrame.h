@@ -319,8 +319,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) MOZ_OVERRIDE;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion) MOZ_OVERRIDE;
+                                 nsRegion* aVisibleRegion) MOZ_OVERRIDE;
 
   NS_DISPLAY_DECL_NAME("Plugin", TYPE_PLUGIN)
 
