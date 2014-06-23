@@ -419,7 +419,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void appendCallSite(const CallSiteDesc &desc) {
         // Add an extra sizeof(void*) to include the return address that was
         // pushed by the call instruction (see CallSite::stackDepth).
-        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + AsmJSFrameSize));
     }
 
     void call(const CallSiteDesc &desc, const Register reg) {
