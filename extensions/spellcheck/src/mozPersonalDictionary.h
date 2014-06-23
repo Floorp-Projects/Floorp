@@ -37,11 +37,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(mozPersonalDictionary, mozIPersonalDictionary)
 
   mozPersonalDictionary();
-  virtual ~mozPersonalDictionary();
 
   nsresult Init();
 
 protected:
+  virtual ~mozPersonalDictionary();
+
   /* has the dictionary been modified */
   bool mDirty;
 

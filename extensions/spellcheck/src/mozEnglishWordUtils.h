@@ -23,13 +23,14 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(mozEnglishWordUtils)
 
   mozEnglishWordUtils();
-  virtual ~mozEnglishWordUtils();
   /* additional members */
   enum myspCapitalization{
     NoCap,InitCap,AllCap,HuhCap
   };  
 
 protected:
+  virtual ~mozEnglishWordUtils();
+
   mozEnglishWordUtils::myspCapitalization captype(const nsString &word);
   bool ucIsAlpha(char16_t aChar);
 
