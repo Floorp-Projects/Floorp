@@ -1994,6 +1994,12 @@ TraceMozMapValue(T* aValue, void* aClosure)
   return PL_DHASH_NEXT;
 }
 
+template<typename T>
+void TraceMozMap(JSTracer* trc, MozMap<T>& map)
+{
+  map.EnumerateValues(TraceMozMapValue<T>, trc);
+}
+
 // sequence<MozMap>
 template<typename T>
 class SequenceTracer<MozMap<T>, false, false, false>
@@ -2110,19 +2116,14 @@ private:
 
   virtual void trace(JSTracer *trc) MOZ_OVERRIDE
   {
-    MozMap<T>* mozMap;
     if (mMozMapType == eMozMap) {
-      mozMap = mMozMap;
+      TraceMozMap(trc, *mMozMap);
     } else {
       MOZ_ASSERT(mMozMapType == eNullableMozMap);
-      if (mNullableMozMap->IsNull()) {
-        // Nothing to do
-        return;
+      if (!mNullableMozMap->IsNull()) {
+        TraceMozMap(trc, mNullableMozMap->Value());
       }
-      mozMap = &mNullableMozMap->Value();
     }
-
-    mozMap->EnumerateValues(TraceMozMapValue<T>, trc);
   }
 
   union {
