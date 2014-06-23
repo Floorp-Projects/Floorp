@@ -7,47 +7,47 @@
 #include "pk11pub.h"
 #include "cryptohi.h"
 #include "ScopedNSSTypes.h"
-#include "mozilla/dom/Key.h"
+#include "mozilla/dom/CryptoKey.h"
 #include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Key, mGlobal, mAlgorithm)
-NS_IMPL_CYCLE_COLLECTING_ADDREF(Key)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(Key)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Key)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(CryptoKey, mGlobal, mAlgorithm)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(CryptoKey)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(CryptoKey)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(CryptoKey)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 nsresult
-StringToUsage(const nsString& aUsage, Key::KeyUsage& aUsageOut)
+StringToUsage(const nsString& aUsage, CryptoKey::KeyUsage& aUsageOut)
 {
   if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_ENCRYPT)) {
-    aUsageOut = Key::ENCRYPT;
+    aUsageOut = CryptoKey::ENCRYPT;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DECRYPT)) {
-    aUsageOut = Key::DECRYPT;
+    aUsageOut = CryptoKey::DECRYPT;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_SIGN)) {
-    aUsageOut = Key::SIGN;
+    aUsageOut = CryptoKey::SIGN;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_VERIFY)) {
-    aUsageOut = Key::VERIFY;
+    aUsageOut = CryptoKey::VERIFY;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEKEY)) {
-    aUsageOut = Key::DERIVEKEY;
+    aUsageOut = CryptoKey::DERIVEKEY;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_DERIVEBITS)) {
-    aUsageOut = Key::DERIVEBITS;
+    aUsageOut = CryptoKey::DERIVEBITS;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_WRAPKEY)) {
-    aUsageOut = Key::WRAPKEY;
+    aUsageOut = CryptoKey::WRAPKEY;
   } else if (aUsage.EqualsLiteral(WEBCRYPTO_KEY_USAGE_UNWRAPKEY)) {
-    aUsageOut = Key::UNWRAPKEY;
+    aUsageOut = CryptoKey::UNWRAPKEY;
   } else {
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
   return NS_OK;
 }
 
-Key::Key(nsIGlobalObject* aGlobal)
+CryptoKey::CryptoKey(nsIGlobalObject* aGlobal)
   : mGlobal(aGlobal)
   , mAttributes(0)
   , mSymKey()
@@ -57,7 +57,7 @@ Key::Key(nsIGlobalObject* aGlobal)
   SetIsDOMBinding();
 }
 
-Key::~Key()
+CryptoKey::~CryptoKey()
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -68,13 +68,13 @@ Key::~Key()
 }
 
 JSObject*
-Key::WrapObject(JSContext* aCx)
+CryptoKey::WrapObject(JSContext* aCx)
 {
-  return KeyBinding::Wrap(aCx, this);
+  return CryptoKeyBinding::Wrap(aCx, this);
 }
 
 void
-Key::GetType(nsString& aRetVal) const
+CryptoKey::GetType(nsString& aRetVal) const
 {
   uint32_t type = mAttributes & TYPE_MASK;
   switch (type) {
@@ -85,19 +85,19 @@ Key::GetType(nsString& aRetVal) const
 }
 
 bool
-Key::Extractable() const
+CryptoKey::Extractable() const
 {
   return (mAttributes & EXTRACTABLE);
 }
 
 KeyAlgorithm*
-Key::Algorithm() const
+CryptoKey::Algorithm() const
 {
   return mAlgorithm;
 }
 
 void
-Key::GetUsages(nsTArray<nsString>& aRetVal) const
+CryptoKey::GetUsages(nsTArray<nsString>& aRetVal) const
 {
   if (mAttributes & ENCRYPT) {
     aRetVal.AppendElement(NS_LITERAL_STRING(WEBCRYPTO_KEY_USAGE_ENCRYPT));
@@ -125,14 +125,14 @@ Key::GetUsages(nsTArray<nsString>& aRetVal) const
   }
 }
 
-Key::KeyType
-Key::GetKeyType() const
+CryptoKey::KeyType
+CryptoKey::GetKeyType() const
 {
-  return static_cast<Key::KeyType>(mAttributes & TYPE_MASK);
+  return static_cast<CryptoKey::KeyType>(mAttributes & TYPE_MASK);
 }
 
 nsresult
-Key::SetType(const nsString& aType)
+CryptoKey::SetType(const nsString& aType)
 {
   mAttributes &= CLEAR_TYPE;
   if (aType.EqualsLiteral(WEBCRYPTO_KEY_TYPE_SECRET)) {
@@ -150,14 +150,14 @@ Key::SetType(const nsString& aType)
 }
 
 void
-Key::SetType(Key::KeyType aType)
+CryptoKey::SetType(CryptoKey::KeyType aType)
 {
   mAttributes &= CLEAR_TYPE;
   mAttributes |= aType;
 }
 
 void
-Key::SetExtractable(bool aExtractable)
+CryptoKey::SetExtractable(bool aExtractable)
 {
   mAttributes &= CLEAR_EXTRACTABLE;
   if (aExtractable) {
@@ -166,25 +166,25 @@ Key::SetExtractable(bool aExtractable)
 }
 
 void
-Key::SetAlgorithm(KeyAlgorithm* aAlgorithm)
+CryptoKey::SetAlgorithm(KeyAlgorithm* aAlgorithm)
 {
   mAlgorithm = aAlgorithm;
 }
 
 void
-Key::ClearUsages()
+CryptoKey::ClearUsages()
 {
   mAttributes &= CLEAR_USAGES;
 }
 
 nsresult
-Key::AddUsage(const nsString& aUsage)
+CryptoKey::AddUsage(const nsString& aUsage)
 {
   return AddUsageIntersecting(aUsage, USAGES_MASK);
 }
 
 nsresult
-Key::AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask)
+CryptoKey::AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask)
 {
   KeyUsage usage;
   if (NS_FAILED(StringToUsage(aUsage, usage))) {
@@ -200,30 +200,30 @@ Key::AddUsageIntersecting(const nsString& aUsage, uint32_t aUsageMask)
 }
 
 void
-Key::AddUsage(Key::KeyUsage aUsage)
+CryptoKey::AddUsage(CryptoKey::KeyUsage aUsage)
 {
   mAttributes |= aUsage;
 }
 
 bool
-Key::HasUsage(Key::KeyUsage aUsage)
+CryptoKey::HasUsage(CryptoKey::KeyUsage aUsage)
 {
   return !!(mAttributes & aUsage);
 }
 
 bool
-Key::HasUsageOtherThan(uint32_t aUsages)
+CryptoKey::HasUsageOtherThan(uint32_t aUsages)
 {
   return !!(mAttributes & USAGES_MASK & ~aUsages);
 }
 
-void Key::SetSymKey(const CryptoBuffer& aSymKey)
+void CryptoKey::SetSymKey(const CryptoBuffer& aSymKey)
 {
   mSymKey = aSymKey;
 }
 
 void
-Key::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
+CryptoKey::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
 {
   nsNSSShutDownPreventionLock locker;
   if (!aPrivateKey || isAlreadyShutDown()) {
@@ -234,7 +234,7 @@ Key::SetPrivateKey(SECKEYPrivateKey* aPrivateKey)
 }
 
 void
-Key::SetPublicKey(SECKEYPublicKey* aPublicKey)
+CryptoKey::SetPublicKey(SECKEYPublicKey* aPublicKey)
 {
   nsNSSShutDownPreventionLock locker;
   if (!aPublicKey || isAlreadyShutDown()) {
@@ -245,13 +245,13 @@ Key::SetPublicKey(SECKEYPublicKey* aPublicKey)
 }
 
 const CryptoBuffer&
-Key::GetSymKey() const
+CryptoKey::GetSymKey() const
 {
   return mSymKey;
 }
 
 SECKEYPrivateKey*
-Key::GetPrivateKey() const
+CryptoKey::GetPrivateKey() const
 {
   nsNSSShutDownPreventionLock locker;
   if (!mPrivateKey || isAlreadyShutDown()) {
@@ -261,7 +261,7 @@ Key::GetPrivateKey() const
 }
 
 SECKEYPublicKey*
-Key::GetPublicKey() const
+CryptoKey::GetPublicKey() const
 {
   nsNSSShutDownPreventionLock locker;
   if (!mPublicKey || isAlreadyShutDown()) {
@@ -270,12 +270,12 @@ Key::GetPublicKey() const
   return SECKEY_CopyPublicKey(mPublicKey.get());
 }
 
-void Key::virtualDestroyNSSReference()
+void CryptoKey::virtualDestroyNSSReference()
 {
   destructorSafeDestroyNSSReference();
 }
 
-void Key::destructorSafeDestroyNSSReference()
+void CryptoKey::destructorSafeDestroyNSSReference()
 {
   mPrivateKey.dispose();
   mPublicKey.dispose();
@@ -285,7 +285,7 @@ void Key::destructorSafeDestroyNSSReference()
 // Serialization and deserialization convenience methods
 
 SECKEYPrivateKey*
-Key::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
+CryptoKey::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
                          const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
   SECKEYPrivateKey* privKey;
@@ -309,7 +309,7 @@ Key::PrivateKeyFromPkcs8(CryptoBuffer& aKeyData,
 }
 
 SECKEYPublicKey*
-Key::PublicKeyFromSpki(CryptoBuffer& aKeyData,
+CryptoKey::PublicKeyFromSpki(CryptoBuffer& aKeyData,
                        const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
   ScopedSECItem spkiItem(aKeyData.ToSECItem());
@@ -326,7 +326,7 @@ Key::PublicKeyFromSpki(CryptoBuffer& aKeyData,
 }
 
 nsresult
-Key::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
+CryptoKey::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
                        CryptoBuffer& aRetVal,
                        const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
@@ -339,7 +339,7 @@ Key::PrivateKeyToPkcs8(SECKEYPrivateKey* aPrivKey,
 }
 
 nsresult
-Key::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
+CryptoKey::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
                      CryptoBuffer& aRetVal,
                      const nsNSSShutDownPreventionLock& /*proofOfLock*/)
 {
@@ -353,7 +353,7 @@ Key::PublicKeyToSpki(SECKEYPublicKey* aPubKey,
 }
 
 bool
-Key::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
+CryptoKey::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -369,11 +369,11 @@ Key::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
   CryptoBuffer priv, pub;
 
   if (mPrivateKey) {
-    Key::PrivateKeyToPkcs8(mPrivateKey, priv, locker);
+    CryptoKey::PrivateKeyToPkcs8(mPrivateKey, priv, locker);
   }
 
   if (mPublicKey) {
-    Key::PublicKeyToSpki(mPublicKey, pub, locker);
+    CryptoKey::PublicKeyToSpki(mPublicKey, pub, locker);
   }
 
   return JS_WriteUint32Pair(aWriter, mAttributes, 0) &&
@@ -384,7 +384,7 @@ Key::WriteStructuredClone(JSStructuredCloneWriter* aWriter) const
 }
 
 bool
-Key::ReadStructuredClone(JSStructuredCloneReader* aReader)
+CryptoKey::ReadStructuredClone(JSStructuredCloneReader* aReader)
 {
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown()) {
@@ -408,10 +408,10 @@ Key::ReadStructuredClone(JSStructuredCloneReader* aReader)
     mSymKey = sym;
   }
   if (priv.Length() > 0) {
-    mPrivateKey = Key::PrivateKeyFromPkcs8(priv, locker);
+    mPrivateKey = CryptoKey::PrivateKeyFromPkcs8(priv, locker);
   }
   if (pub.Length() > 0)  {
-    mPublicKey = Key::PublicKeyFromSpki(pub, locker);
+    mPublicKey = CryptoKey::PublicKeyFromSpki(pub, locker);
   }
   mAlgorithm = algorithm;
 
