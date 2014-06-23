@@ -329,6 +329,9 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
             return false;
     }
 
+    // The new interval starts at reg's input position, which means it overlaps
+    // with the old interval at one position. This is what we want, because we
+    // need to copy the input before the instruction.
     LiveInterval *postInterval = LiveInterval::New(alloc(), interval->vreg(), 0);
     if (!postInterval->addRange(inputOf(reg.ins()), interval->end()))
         return false;
@@ -1181,7 +1184,8 @@ BacktrackingAllocator::populateSafepoints()
         if (firstSafepoint >= graph.numSafepoints())
             break;
 
-        // Find the furthest endpoint.
+        // Find the furthest endpoint. Intervals are sorted, but by start
+        // position, and we want the greatest end position.
         CodePosition end = reg->getInterval(0)->end();
         for (size_t j = 1; j < reg->numIntervals(); j++)
             end = Max(end, reg->getInterval(j)->end());
