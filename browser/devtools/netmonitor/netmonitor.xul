@@ -38,7 +38,7 @@
       <menuitem id="request-menu-context-resend"
                 label="&netmonitorUI.summary.editAndResend;"
                 accesskey="&netmonitorUI.summary.editAndResend.accesskey;"/>
-      <menuseparator/>
+      <menuseparator id="request-menu-context-separator"/>
       <menuitem id="request-menu-context-perf"
                 label="&netmonitorUI.context.perfTools;"
                 accesskey="&netmonitorUI.context.perfTools.accesskey;"/>
