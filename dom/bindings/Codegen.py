@@ -3911,10 +3911,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if len(interfaceMemberTypes) > 0:
             interfaceObject = []
             for memberType in interfaceMemberTypes:
-                if type.isGeckoInterface():
-                    name = memberType.inner.identifier.name
-                else:
-                    name = memberType.name
+                name = getUnionMemberName(memberType)
                 interfaceObject.append(
                     CGGeneric("(failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext" %
                               (unionArgumentObj, name)))
@@ -3926,7 +3923,12 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         arrayObjectMemberTypes = filter(lambda t: t.isArray() or t.isSequence(), memberTypes)
         if len(arrayObjectMemberTypes) > 0:
-            raise TypeError("Bug 767924: We don't support sequences in unions yet")
+            assert len(arrayObjectMemberTypes) == 1
+            name = getUnionMemberName(arrayObjectMemberTypes[0])
+            arrayObject = CGGeneric(
+                "done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n" %
+                (unionArgumentObj, name))
+            names.append(name)
         else:
             arrayObject = None
 
@@ -3934,7 +3936,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if len(dateObjectMemberTypes) > 0:
             assert len(dateObjectMemberTypes) == 1
             memberType = dateObjectMemberTypes[0]
-            name = memberType.name
+            name = getUnionMemberName(memberType)
             dateObject = CGGeneric("%s.SetTo%s(cx, ${val}, ${mutableVal});\n"
                                    "done = true;\n" % (unionArgumentObj, name))
             dateObject = CGIfWrapper(dateObject, "JS_ObjectIsDate(cx, argObj)")
@@ -3946,7 +3948,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         if len(callbackMemberTypes) > 0:
             assert len(callbackMemberTypes) == 1
             memberType = callbackMemberTypes[0]
-            name = memberType.name
+            name = getUnionMemberName(memberType)
             callbackObject = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n" %
                 (unionArgumentObj, name))
@@ -3957,7 +3959,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
         dictionaryMemberTypes = filter(lambda t: t.isDictionary(), memberTypes)
         if len(dictionaryMemberTypes) > 0:
             assert len(dictionaryMemberTypes) == 1
-            name = dictionaryMemberTypes[0].inner.identifier.name
+            name = getUnionMemberName(dictionaryMemberTypes[0])
             setDictionary = CGGeneric(
                 "done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n" %
                 (unionArgumentObj, name))
@@ -4023,10 +4025,7 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             # We will wrap all this stuff in a do { } while (0); so we
             # can use "break" for flow control.
             def getStringOrPrimitiveConversion(memberType):
-                if memberType.isEnum():
-                    name = memberType.inner.identifier.name
-                else:
-                    name = memberType.name
+                name = getUnionMemberName(memberType)
                 return CGGeneric("done = (failed = !%s.TrySetTo%s(cx, ${val}, ${mutableVal}, tryNext)) || !tryNext;\n"
                                  "break;\n" % (unionArgumentObj, name))
             other = CGList([])
@@ -7938,39 +7937,30 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     Returns the types that are used in the getter and setter signatures for
     union types
     """
+    # Flat member types have already unwrapped nullables.
+    assert not type.nullable()
+
     if type.isArray():
         raise TypeError("Can't handle array arguments yet")
 
     if type.isSequence():
-        nullable = type.nullable()
-        if nullable:
-            type = type.inner.inner
-        else:
-            type = type.inner
         # We don't use the returned template here, so it's OK to just pass no
         # sourceDescription.
-        elementInfo = getJSToNativeConversionInfo(type, descriptorProvider,
+        elementInfo = getJSToNativeConversionInfo(type.inner,
+                                                  descriptorProvider,
                                                   isMember="Sequence")
-        typeName = CGTemplatedType("Sequence", elementInfo.declType,
-                                   isReference=True)
-        if nullable:
-            typeName = CGTemplatedType("Nullable", typeName, isReference=True)
+        return CGTemplatedType("Sequence", elementInfo.declType,
+                               isConst=True, isReference=True)
 
-        return typeName
-
-    if type.isUnion():
-        typeName = CGGeneric(type.name)
-        if type.nullable():
-            typeName = CGTemplatedType("Nullable", typeName, isReference=True)
-
-        return typeName
+    # Nested unions are unwrapped automatically into our flatMemberTypes.
+    assert not type.isUnion()
 
     if type.isGeckoInterface():
         descriptor = descriptorProvider.getDescriptor(
             type.unroll().inner.identifier.name)
         typeName = CGGeneric(descriptor.nativeType)
-        # Allow null pointers for nullable types and old-binding classes
-        if type.nullable() or type.unroll().inner.isExternal():
+        # Allow null pointers for old-binding classes.
+        if type.unroll().inner.isExternal():
             typeName = CGWrapper(typeName, post="*")
         else:
             typeName = CGWrapper(typeName, post="&")
@@ -7978,8 +7968,6 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
 
     if type.isSpiderMonkeyInterface():
         typeName = CGGeneric(type.name)
-        if type.nullable():
-            typeName = CGTemplatedType("Nullable", typeName)
         return CGWrapper(typeName, post=" const &")
 
     if type.isDOMString():
@@ -7989,17 +7977,10 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         return CGGeneric("const nsCString&")
 
     if type.isEnum():
-        if type.nullable():
-            raise TypeError("We don't support nullable enumerated arguments or "
-                            "union members yet")
         return CGGeneric(type.inner.identifier.name)
 
     if type.isCallback():
-        if type.nullable():
-            typeName = "%s*"
-        else:
-            typeName = "%s&"
-        return CGGeneric(typeName % type.unroll().identifier.name)
+        return CGGeneric("%s&" % type.unroll().identifier.name)
 
     if type.isAny():
         return CGGeneric("JS::Value")
@@ -8013,21 +7994,11 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
     if not type.isPrimitive():
         raise TypeError("Need native type for argument type '%s'" % str(type))
 
-    typeName = CGGeneric(builtinNames[type.tag()])
-    if type.nullable():
-        typeName = CGTemplatedType("Nullable", typeName, isReference=True)
-    return typeName
+    return CGGeneric(builtinNames[type.tag()])
 
 
 def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
                              ownsMembers=False):
-    # For dictionaries and sequences we need to pass None as the failureCode
-    # for getJSToNativeConversionInfo.
-    # Also, for dictionaries we would need to handle conversion of
-    # null/undefined to the dictionary correctly.
-    if type.isSequence():
-        raise TypeError("Can't handle sequences in unions")
-
     name = getUnionMemberName(type)
     holderName = "m" + name + "Holder"
 
@@ -8306,6 +8277,11 @@ class CGUnionStruct(CGThing):
                     traceCases.append(
                         CGCase("e" + vars["name"],
                                CGGeneric("mValue.m%s.Value().TraceDictionary(trc);\n" %
+                                         vars["name"])))
+                elif t.isSequence():
+                    traceCases.append(
+                        CGCase("e" + vars["name"],
+                               CGGeneric("DoTraceSequence(trc, mValue.m%s.Value());\n" %
                                          vars["name"])))
                 else:
                     assert t.isSpiderMonkeyInterface()
