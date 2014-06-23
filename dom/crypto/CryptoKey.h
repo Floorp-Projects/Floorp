@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_Key_h
-#define mozilla_dom_Key_h
+#ifndef mozilla_dom_CryptoKey_h
+#define mozilla_dom_CryptoKey_h
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -49,17 +49,17 @@ In the order of a hex value for a uint32_t
 Thus, internally, a key has the following fields:
 * uint32_t - flags for extractable, usage, type
 * KeyAlgorithm - the algorithm (which must serialize/deserialize itself)
-* The actual keys (which the Key must serialize)
+* The actual keys (which the CryptoKey must serialize)
 
 */
 
-class Key MOZ_FINAL : public nsISupports,
-                      public nsWrapperCache,
-                      public nsNSSShutDownObject
+class CryptoKey MOZ_FINAL : public nsISupports,
+                            public nsWrapperCache,
+                            public nsNSSShutDownObject
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Key)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CryptoKey)
 
   static const uint32_t CLEAR_EXTRACTABLE = 0xFFFFFFE;
   static const uint32_t EXTRACTABLE = 0x00000001;
@@ -86,7 +86,7 @@ public:
     UNWRAPKEY  = 0x00800000
   };
 
-  Key(nsIGlobalObject* aWindow);
+  CryptoKey(nsIGlobalObject* aWindow);
 
   nsIGlobalObject* GetParentObject() const
   {
@@ -154,7 +154,7 @@ public:
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
 private:
-  ~Key();
+  ~CryptoKey();
 
   nsRefPtr<nsIGlobalObject> mGlobal;
   uint32_t mAttributes; // see above
@@ -169,4 +169,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_Key_h
+#endif // mozilla_dom_CryptoKey_h

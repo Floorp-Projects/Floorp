@@ -11,7 +11,7 @@
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/UnionTypes.h"
-#include "mozilla/dom/Key.h"
+#include "mozilla/dom/CryptoKey.h"
 #include "js/TypeDecls.h"
 
 namespace mozilla {
@@ -43,22 +43,22 @@ public:
 
   already_AddRefed<Promise> Encrypt(JSContext* cx,
                                     const ObjectOrString& algorithm,
-                                    Key& key,
+                                    CryptoKey& key,
                                     const CryptoOperationData& data);
 
   already_AddRefed<Promise> Decrypt(JSContext* cx,
                                     const ObjectOrString& algorithm,
-                                    Key& key,
+                                    CryptoKey& key,
                                     const CryptoOperationData& data);
 
   already_AddRefed<Promise> Sign(JSContext* cx,
                                  const ObjectOrString& algorithm,
-                                 Key& key,
+                                 CryptoKey& key,
                                  const CryptoOperationData& data);
 
   already_AddRefed<Promise> Verify(JSContext* cx,
                                    const ObjectOrString& algorithm,
-                                   Key& key,
+                                   CryptoKey& key,
                                    const CryptoOperationData& signature,
                                    const CryptoOperationData& data);
 
@@ -73,7 +73,7 @@ public:
                                       bool extractable,
                                       const Sequence<nsString>& keyUsages);
 
-  already_AddRefed<Promise> ExportKey(const nsAString& format, Key& key);
+  already_AddRefed<Promise> ExportKey(const nsAString& format, CryptoKey& key);
 
   already_AddRefed<Promise> GenerateKey(JSContext* cx,
                                         const ObjectOrString& algorithm,
@@ -82,14 +82,14 @@ public:
 
   already_AddRefed<Promise> DeriveKey(JSContext* cx,
                                       const ObjectOrString& algorithm,
-                                      Key& baseKey,
+                                      CryptoKey& baseKey,
                                       const ObjectOrString& derivedKeyType,
                                       bool extractable,
                                       const Sequence<nsString>& keyUsages);
 
   already_AddRefed<Promise> DeriveBits(JSContext* cx,
                                        const ObjectOrString& algorithm,
-                                       Key& baseKey,
+                                       CryptoKey& baseKey,
                                        uint32_t length);
 
 private:
