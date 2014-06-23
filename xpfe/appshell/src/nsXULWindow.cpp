@@ -15,7 +15,6 @@
 #include "nsString.h"
 #include "nsWidgetsCID.h"
 #include "prprf.h"
-#include "nsCRT.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
 
