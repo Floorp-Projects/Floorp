@@ -1450,26 +1450,17 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(!finishedFunctionBodies_);
         masm_.align(AsmJSPageSize);
         finishedFunctionBodies_ = true;
-        module_->initFunctionBytes(masm_.size());
+        module_->initFunctionBytes(masm_.currentOffset());
     }
 
     void setInterpExitOffset(unsigned exitIndex) {
-#if defined(JS_CODEGEN_ARM)
-        masm_.flush();
-#endif
-        module_->exit(exitIndex).initInterpOffset(masm_.size());
+        module_->exit(exitIndex).initInterpOffset(masm_.currentOffset());
     }
     void setIonExitOffset(unsigned exitIndex) {
-#if defined(JS_CODEGEN_ARM)
-        masm_.flush();
-#endif
-        module_->exit(exitIndex).initIonOffset(masm_.size());
+        module_->exit(exitIndex).initIonOffset(masm_.currentOffset());
     }
     void setEntryOffset(unsigned exportIndex) {
-#if defined(JS_CODEGEN_ARM)
-        masm_.flush();
-#endif
-        module_->exportedFunction(exportIndex).initCodeOffset(masm_.size());
+        module_->exportedFunction(exportIndex).initCodeOffset(masm_.currentOffset());
     }
 
     void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
@@ -1518,6 +1509,10 @@ class MOZ_STACK_CLASS ModuleCompiler
             AsmJSHeapAccess &a = module_->heapAccess(i);
             a.setOffset(masm_.actualOffset(a.offset()));
         }
+        for (unsigned i = 0; i < module_->numExportedFunctions(); i++)
+            module_->exportedFunction(i).updateCodeOffset(masm_);
+        for (unsigned i = 0; i < module_->numExits(); i++)
+            module_->exit(i).updateOffsets(masm_);
         for (unsigned i = 0; i < module_->numCallSites(); i++) {
             CallSite &c = module_->callSite(i);
             c.setReturnAddressOffset(masm_.actualOffset(c.returnAddressOffset()));
@@ -1528,6 +1523,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         if (!module_->allocateAndCopyCode(cx_, masm_))
             return false;
 
+        module_->updateFunctionBytes(masm_);
         // c.f. JitCode::copyFrom
         JS_ASSERT(masm_.jumpRelocationTableBytes() == 0);
         JS_ASSERT(masm_.dataRelocationTableBytes() == 0);
@@ -1535,12 +1531,11 @@ class MOZ_STACK_CLASS ModuleCompiler
         JS_ASSERT(!masm_.hasEnteredExitFrame());
 
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        // Fix up the code offsets.  Note the endCodeOffset should not be
-        // filtered through 'actualOffset' as it is generated using 'size()'
-        // rather than a label.
+        // Fix up the code offsets.
         for (unsigned i = 0; i < module_->numProfiledFunctions(); i++) {
             AsmJSModule::ProfiledFunction &func = module_->profiledFunction(i);
             func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
+            func.pod.endCodeOffset = masm_.actualOffset(func.pod.endCodeOffset);
         }
 #endif
 
@@ -1549,6 +1544,7 @@ class MOZ_STACK_CLASS ModuleCompiler
             AsmJSModule::ProfiledBlocksFunction &func = module_->perfProfiledBlocksFunction(i);
             func.pod.startCodeOffset = masm_.actualOffset(func.pod.startCodeOffset);
             func.endInlineCodeOffset = masm_.actualOffset(func.endInlineCodeOffset);
+            func.pod.endCodeOffset = masm_.actualOffset(func.pod.endCodeOffset);
             BasicBlocksVector &basicBlocks = func.blocks;
             for (uint32_t i = 0; i < basicBlocks.length(); i++) {
                 Record &r = basicBlocks[i];
@@ -5486,7 +5482,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     // after the module has been cached and reloaded from the cache). Function
     // profiling info isn't huge, so store it always (in --enable-profiling
     // builds, which is only Nightly builds, but default).
-    if (!m.trackProfiledFunction(func, m.masm().size()))
+    if (!m.trackProfiledFunction(func, m.masm().currentOffset()))
         return false;
 #endif
 
@@ -5494,7 +5490,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     // Per-block profiling info uses significantly more memory so only store
     // this information if it is actively requested.
     if (PerfBlockEnabled()) {
-        if (!m.trackPerfProfiledBlocks(mir.perfSpewer(), func, m.masm().size()))
+        if (!m.trackPerfProfiledBlocks(mir.perfSpewer(), func, m.masm().currentOffset()))
             return false;
     }
 #endif
