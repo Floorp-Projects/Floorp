@@ -41,6 +41,10 @@ class EventStates;
 
 class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 {
+private:
+  ~nsEmptyStyleRule() {}
+
+public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
@@ -50,6 +54,10 @@ class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
 
 class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
 {
+private:
+  ~nsInitialStyleRule() {}
+
+public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG
@@ -59,6 +67,10 @@ class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
 
 class nsDisableTextZoomStyleRule MOZ_FINAL : public nsIStyleRule
 {
+private:
+  ~nsDisableTextZoomStyleRule() {}
+
+public:
   NS_DECL_ISUPPORTS
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
 #ifdef DEBUG

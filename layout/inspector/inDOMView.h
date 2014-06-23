@@ -30,7 +30,6 @@ public:
   NS_DECL_NSITREEVIEW
 
   inDOMView();
-  virtual ~inDOMView();
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_ATTRIBUTECHANGED
@@ -40,6 +39,8 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
 protected:
+  virtual ~inDOMView();
+
   nsCOMPtr<nsITreeBoxObject> mTree;
   nsCOMPtr<nsITreeSelection> mSelection;
   nsCOMPtr<inIDOMUtils> mDOMUtils;

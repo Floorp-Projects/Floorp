@@ -67,6 +67,8 @@ public:
   void DestroyRequest(imgIRequest* aRequest);
 
 private:
+  ~ImageLoader() {}
+
   // We need to be able to look up the frames associated with a request (for
   // delivering notifications) and the requests associated with a frame (when
   // the frame goes away). Thus we maintain hashtables going both ways.  These

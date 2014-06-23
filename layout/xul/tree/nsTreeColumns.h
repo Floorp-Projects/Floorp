@@ -40,7 +40,6 @@ class Element;
 class nsTreeColumn MOZ_FINAL : public nsITreeColumn {
 public:
   nsTreeColumn(nsTreeColumns* aColumns, nsIContent* aContent);
-  ~nsTreeColumn();
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_TREECOLUMN_IMPL_CID)
 
@@ -52,6 +51,7 @@ public:
   friend class nsTreeColumns;
 
 protected:
+  ~nsTreeColumn();
   nsIFrame* GetFrame();
   nsIFrame* GetFrame(nsTreeBodyFrame* aBodyFrame);
   // Don't call this if GetWidthInTwips or GetRect fails
@@ -126,9 +126,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsTreeColumn, NS_TREECOLUMN_IMPL_CID)
 class nsTreeColumns MOZ_FINAL : public nsITreeColumns
                               , public nsWrapperCache
 {
+private:
+  ~nsTreeColumns();
+
 public:
   nsTreeColumns(nsTreeBodyFrame* aTree);
-  ~nsTreeColumns();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsTreeColumns)

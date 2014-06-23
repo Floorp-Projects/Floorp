@@ -15,13 +15,14 @@ class nsLayoutDebuggingTools : public nsILayoutDebuggingTools {
 
 public:
     nsLayoutDebuggingTools();
-    virtual ~nsLayoutDebuggingTools();
 
     NS_DECL_ISUPPORTS
 
     NS_DECL_NSILAYOUTDEBUGGINGTOOLS
 
 protected:
+    virtual ~nsLayoutDebuggingTools();
+
     void ForceRefresh();
     nsresult GetBoolPref(const char * aPrefName, bool *aValue);
     nsresult SetBoolPrefAndRefresh(const char * aPrefName, bool aNewValue);

@@ -27,9 +27,9 @@ public:
   NS_DECL_INICSSVALUESEARCH
 
   inCSSValueSearch();
-  virtual ~inCSSValueSearch();
 
 protected:
+  virtual ~inCSSValueSearch();
   nsCOMPtr<inISearchObserver> mObserver;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsTArray<nsAutoString *>* mResults;
