@@ -8,9 +8,7 @@ var loop = loop || {};
 loop.conversation = (function(OT, mozL10n) {
   "use strict";
 
-  var sharedViews = loop.shared.views,
-      // aliasing translation function as __ for concision
-      __ = mozL10n.get;
+  var sharedViews = loop.shared.views;
 
   /**
    * App router.
@@ -173,6 +171,8 @@ loop.conversation = (function(OT, mozL10n) {
     // Do the initial L10n setup, we do this before anything
     // else to ensure the L10n environment is setup correctly.
     mozL10n.initialize(window.navigator.mozLoop);
+
+    document.title = mozL10n.get("incoming_call_title");
 
     router = new ConversationRouter({
       conversation: new loop.shared.models.ConversationModel({}, {sdk: OT}),
