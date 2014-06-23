@@ -505,44 +505,37 @@ template <typename VREG>
 class VirtualRegisterMap
 {
   private:
-    VREG *vregs_;
-    uint32_t numVregs_;
+    FixedList<VREG> vregs_;
 
     void operator=(const VirtualRegisterMap &) MOZ_DELETE;
     VirtualRegisterMap(const VirtualRegisterMap &) MOZ_DELETE;
 
   public:
     VirtualRegisterMap()
-      : vregs_(nullptr),
-        numVregs_(0)
+      : vregs_()
     { }
 
     bool init(MIRGenerator *gen, uint32_t numVregs) {
-        vregs_ = gen->allocate<VREG>(numVregs);
-        numVregs_ = numVregs;
-        if (!vregs_)
+        if (!vregs_.init(gen->alloc(), numVregs))
             return false;
-        memset(vregs_, 0, sizeof(VREG) * numVregs);
+        memset(&vregs_[0], 0, sizeof(VREG) * numVregs);
         TempAllocator &alloc = gen->alloc();
         for (uint32_t i = 0; i < numVregs; i++)
             new(&vregs_[i]) VREG(alloc);
         return true;
     }
     VREG &operator[](unsigned int index) {
-        JS_ASSERT(index < numVregs_);
         return vregs_[index];
     }
     VREG &operator[](const LAllocation *alloc) {
         JS_ASSERT(alloc->isUse());
-        JS_ASSERT(alloc->toUse()->virtualRegister() < numVregs_);
         return vregs_[alloc->toUse()->virtualRegister()];
     }
     VREG &operator[](const LDefinition *def) {
-        JS_ASSERT(def->virtualRegister() < numVregs_);
         return vregs_[def->virtualRegister()];
     }
     uint32_t numVirtualRegisters() const {
-        return numVregs_;
+        return vregs_.length();
     }
 };
 
