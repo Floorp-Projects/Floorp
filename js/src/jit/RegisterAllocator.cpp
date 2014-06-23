@@ -234,7 +234,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
         if (info.outputs[0].virtualRegister() == vreg) {
             for (size_t j = 0, jend = phi->numOperands(); j < jend; j++) {
                 uint32_t newvreg = info.inputs[j].toUse()->virtualRegister();
-                LBlock *predecessor = graph.getBlock(block->mir()->getPredecessor(j)->id());
+                LBlock *predecessor = block->mir()->getPredecessor(j)->lir();
                 if (!addPredecessor(predecessor, newvreg, alloc))
                     return false;
             }
@@ -245,7 +245,7 @@ AllocationIntegrityState::checkIntegrity(LBlock *block, LInstruction *ins,
     // No phi which defined the vreg we are tracking, follow back through all
     // predecessors with the existing vreg.
     for (size_t i = 0, iend = block->mir()->numPredecessors(); i < iend; i++) {
-        LBlock *predecessor = graph.getBlock(block->mir()->getPredecessor(i)->id());
+        LBlock *predecessor = block->mir()->getPredecessor(i)->lir();
         if (!addPredecessor(predecessor, vreg, alloc))
             return false;
     }

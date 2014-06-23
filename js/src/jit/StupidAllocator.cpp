@@ -282,7 +282,7 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
     MBasicBlock *successor = block->mir()->successorWithPhis();
     if (successor) {
         uint32_t position = block->mir()->positionInPhiSuccessor();
-        LBlock *lirsuccessor = graph.getBlock(successor->id());
+        LBlock *lirsuccessor = successor->lir();
         for (size_t i = 0; i < lirsuccessor->numPhis(); i++) {
             LPhi *phi = lirsuccessor->getPhi(i);
 
