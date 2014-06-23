@@ -5,5 +5,5 @@
 include libeditor/html/crashtests/crashtests.list
 include libeditor/base/crashtests/crashtests.list
 include libeditor/text/crashtests/crashtests.list
-include composer/src/crashtests/crashtests.list
+include composer/crashtests/crashtests.list
 include txmgr/tests/crashtests/crashtests.list
