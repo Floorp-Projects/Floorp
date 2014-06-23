@@ -7,6 +7,8 @@ package org.mozilla.gecko;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.Class;
+import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.List;
@@ -547,6 +549,20 @@ public class BrowserApp extends GeckoApp
             "Updater:Launch");
 
         Distribution.init(this);
+
+        // Shipping Native casting is optional and dependent on whether you've downloaded the support
+        // and google play libraries
+        if (AppConstants.MOZ_MEDIA_PLAYER) {
+            try {
+                Class<?> mediaManagerClass = Class.forName("org.mozilla.gecko.MediaPlayerManager");
+                Method init = mediaManagerClass.getMethod("init", Context.class);
+                init.invoke(null, this);
+            } catch(Exception ex) {
+                // Ignore failures
+                Log.i(LOGTAG, "No native casting support", ex);
+            }
+        }
+
         JavaAddonManager.getInstance().init(getApplicationContext());
         mSharedPreferencesHelper = new SharedPreferencesHelper(getApplicationContext());
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(getApplicationContext());
@@ -582,7 +598,31 @@ public class BrowserApp extends GeckoApp
 
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
+
+        Class<?> mediaManagerClass = getMediaPlayerManager();
+        if (mediaManagerClass != null) {
+            try {
+                Method init = mediaManagerClass.getMethod("init", Context.class);
+                init.invoke(null, this);
+            } catch(Exception ex) {
+                Log.i(LOGTAG, "Error initializing media manager", ex);
+            }
+        }
     }
+
+    private Class<?> getMediaPlayerManager() {
+        if (AppConstants.MOZ_MEDIA_PLAYER) {
+            try {
+                return Class.forName("org.mozilla.gecko.MediaPlayerManager");
+            } catch(Exception ex) {
+                // Ignore failures
+                Log.i(LOGTAG, "No native casting support", ex);
+            }
+        }
+
+        return null;
+    }
+
 
     @Override
     public void onBackPressed() {
@@ -922,6 +962,16 @@ public class BrowserApp extends GeckoApp
                 // because the source code looks like it will only do this
                 // automatically on API 14+
                 nfc.setNdefPushMessageCallback(null, this);
+            }
+        }
+
+        Class<?> mediaManagerClass = getMediaPlayerManager();
+        if (mediaManagerClass != null) {
+            try {
+                Method destroy = mediaManagerClass.getMethod("onDestroy",  (Class[]) null);
+                destroy.invoke(null);
+            } catch(Exception ex) {
+                Log.i(LOGTAG, "Error destroying media manager", ex);
             }
         }
 
