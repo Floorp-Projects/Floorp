@@ -75,6 +75,10 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
         masm.test32(lhs, rhs);
         return bailoutIf(c, snapshot);
     }
+    bool bailoutIfFalseBool(Register reg, LSnapshot *snapshot) {
+        masm.test32(reg, Imm32(0xFF));
+        return bailoutIf(Assembler::Zero, snapshot);
+    }
     bool bailoutCvttsd2si(FloatRegister src, Register dest, LSnapshot *snapshot) {
         // cvttsd2si returns 0x80000000 on failure. Test for it by
         // subtracting 1 and testing overflow. The other possibility is to test

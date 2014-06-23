@@ -429,6 +429,7 @@ MediaDecoder::MediaDecoder() :
   mIgnoreProgressData(false),
   mInfiniteStream(false),
   mOwner(nullptr),
+  mPlaybackStatistics(new MediaChannelStatistics()),
   mPinnedForSeek(false),
   mShuttingDown(false),
   mPausedForPlaybackRateNull(false),
@@ -940,7 +941,7 @@ double MediaDecoder::ComputePlaybackRate(bool* aReliable)
     *aReliable = true;
     return length * static_cast<double>(USECS_PER_S) / mDuration;
   }
-  return mPlaybackStatistics.GetRateAtLastStop(aReliable);
+  return mPlaybackStatistics->GetRateAtLastStop(aReliable);
 }
 
 void MediaDecoder::UpdatePlaybackRate()
@@ -1032,7 +1033,7 @@ void MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
     return;
   }
   if (aOffset >= mDecoderPosition) {
-    mPlaybackStatistics.AddBytes(aBytes);
+    mPlaybackStatistics->AddBytes(aBytes);
   }
   mDecoderPosition = aOffset + aBytes;
 }

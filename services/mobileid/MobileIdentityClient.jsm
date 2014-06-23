@@ -106,7 +106,7 @@ this.MobileIdentityClient.prototype = {
    */
   _deriveHawkCredentials: function(aSessionToken) {
     return deriveHawkCredentials(aSessionToken, CREDENTIALS_DERIVATION_INFO,
-                          CREDENTIALS_DERIVATION_SIZE);
+                                 CREDENTIALS_DERIVATION_SIZE, true /*hexKey*/);
   },
 
   /**

@@ -13,6 +13,8 @@
 #include "nsThreadUtils.h"
 #include "Layers.h"
 #include "mozilla/layers/LayersTypes.h"
+#include "mp4_demuxer/AnnexB.h"
+#include "mp4_demuxer/DecoderData.h"
 #include "prlog.h"
 #include "gfx2DGlue.h"
 
@@ -30,12 +32,15 @@ using mozilla::layers::LayersBackend;
 
 namespace mozilla {
 
-WMFVideoOutputSource::WMFVideoOutputSource(mozilla::layers::LayersBackend aLayersBackend,
-                                 mozilla::layers::ImageContainer* aImageContainer,
-                                 bool aDXVAEnabled)
+WMFVideoOutputSource::WMFVideoOutputSource(
+                            const mp4_demuxer::VideoDecoderConfig& aConfig,
+                            mozilla::layers::LayersBackend aLayersBackend,
+                            mozilla::layers::ImageContainer* aImageContainer,
+                            bool aDXVAEnabled)
   : mVideoStride(0)
   , mVideoWidth(0)
   , mVideoHeight(0)
+  , mConfig(aConfig)
   , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mLayersBackend(aLayersBackend)
@@ -136,6 +141,17 @@ WMFVideoOutputSource::Init()
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
 
   return decoder.forget();
+}
+
+HRESULT
+WMFVideoOutputSource::Input(mp4_demuxer::MP4Sample* aSample)
+{
+  // We must prepare samples in AVC Annex B.
+  mp4_demuxer::AnnexB::ConvertSample(aSample, mConfig.annex_b);
+  // Forward sample data to the decoder.
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(aSample->data);
+  uint32_t length = aSample->size;
+  return mDecoder->Input(data, length, aSample->composition_timestamp);
 }
 
 HRESULT

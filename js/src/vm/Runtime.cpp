@@ -312,6 +312,9 @@ JSRuntime::init(uint32_t maxbytes)
     if (!evalCache.init())
         return false;
 
+    if (!compressedSourceSet.init())
+        return false;
+
     /* The garbage collector depends on everything before this point being initialized. */
     gcInitialized = true;
 
@@ -511,7 +514,9 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
 
     rtSizes->mathCache += mathCache_ ? mathCache_->sizeOfIncludingThis(mallocSizeOf) : 0;
 
-    rtSizes->sourceDataCache += sourceDataCache.sizeOfExcludingThis(mallocSizeOf);
+    rtSizes->uncompressedSourceCache += uncompressedSourceCache.sizeOfExcludingThis(mallocSizeOf);
+
+    rtSizes->compressedSourceSet += compressedSourceSet.sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->scriptData += scriptDataTable().sizeOfExcludingThis(mallocSizeOf);
     for (ScriptDataTable::Range r = scriptDataTable().all(); !r.empty(); r.popFront())

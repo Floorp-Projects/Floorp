@@ -21,12 +21,6 @@ class TimeRanges;
 class RequestSampleCallback;
 class MediaDecoderReader;
 
-template <>
-struct HasDangerousPublicDestructor<MediaDecoderReader>
-{
-  static const bool value = true;
-};
-
 // Encapsulates the decoding and reading of media data. Reading can either
 // synchronous and done on the calling "decode" thread, or asynchronous and
 // performed on a background thread, with the result being returned by
@@ -38,7 +32,6 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDecoderReader)
 
   MediaDecoderReader(AbstractMediaDecoder* aDecoder);
-  virtual ~MediaDecoderReader();
 
   // Initializes the reader, returns NS_OK on success, or NS_ERROR_FAILURE
   // on failure.
@@ -181,6 +174,7 @@ public:
   MediaInfo GetMediaInfo() { return mInfo; }
 
 protected:
+  virtual ~MediaDecoderReader();
 
   // Overrides of this function should decodes an unspecified amount of
   // audio data, enqueuing the audio data in mAudioQueue. Returns true

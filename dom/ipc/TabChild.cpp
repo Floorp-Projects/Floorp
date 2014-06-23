@@ -42,9 +42,11 @@
 #include "nsFilePickerProxy.h"
 #include "mozilla/dom/Element.h"
 #include "nsIBaseWindow.h"
+#include "nsIBrowserDOMWindow.h"
 #include "nsICachedFileDescriptorListener.h"
 #include "nsIDocumentInlines.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIDOMChromeWindow.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMWindowUtils.h"
@@ -64,6 +66,7 @@
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
+#include "nsWindowWatcher.h"
 #include "PermissionMessageUtils.h"
 #include "PCOMContentPermissionRequestChild.h"
 #include "PuppetWidget.h"
@@ -1230,13 +1233,68 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
                                        aWindowIsNew, aReturn);
     }
 
-    // Otherwise, create a new top-level window.
+    int32_t openLocation =
+      nsWindowWatcher::GetWindowOpenLocation(aParent, aChromeFlags, aCalledFromJS,
+                                             aPositionSpecified, aSizeSpecified);
+
+    // If it turns out we're opening in the current browser, just hand over the
+    // current browser's docshell.
+    if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
+      nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
+      *aWindowIsNew = false;
+      return browser->GetContentDOMWindow(aReturn);
+    }
+
+    // Otherwise, we're opening a new tab or a new window. We have to contact
+    // TabParent in order to do either.
+
     PBrowserChild* newChild;
-    if (!CallCreateWindow(&newChild)) {
+
+    nsAutoCString uriString;
+    if (aURI) {
+      aURI->GetSpec(uriString);
+    }
+
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aParent->GetDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      NS_ERROR("Could retrieve document from nsIBaseWindow");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocument> doc;
+    doc = do_QueryInterface(domDoc);
+    if (!doc) {
+      NS_ERROR("Document from nsIBaseWindow didn't QI to nsIDocument");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+    if (!baseURI) {
+      NS_ERROR("nsIDocument didn't return a base URI");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsAutoCString baseURIString;
+    baseURI->GetSpec(baseURIString);
+
+    nsAutoString nameString;
+    nameString.Assign(aName);
+    nsAutoCString features;
+
+    // We can assume that if content is requesting to open a window from a remote
+    // tab, then we want to enforce that the new window is also a remote tab.
+    features.Assign(aFeatures);
+    features.Append(",remote");
+
+    if (!CallCreateWindow(aChromeFlags, aCalledFromJS, aPositionSpecified,
+                          aSizeSpecified, NS_ConvertUTF8toUTF16(uriString),
+                          nameString, NS_ConvertUTF8toUTF16(features),
+                          NS_ConvertUTF8toUTF16(baseURIString),
+                          aWindowIsNew, &newChild)) {
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    *aWindowIsNew = true;
     nsCOMPtr<nsIDOMWindow> win =
         do_GetInterface(static_cast<TabChild*>(newChild)->WebNavigation());
     win.forget(aReturn);

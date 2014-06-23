@@ -776,6 +776,12 @@ nsTimerImpl::SetDelayInternal(uint32_t aDelay)
 #endif
 }
 
+size_t
+nsTimerImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this);
+}
+
 // NOT FOR PUBLIC CONSUMPTION!
 nsresult
 NS_NewTimer(nsITimer** aResult, nsTimerCallbackFunc aCallback, void* aClosure,

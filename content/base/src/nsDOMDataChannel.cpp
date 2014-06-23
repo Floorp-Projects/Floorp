@@ -383,14 +383,11 @@ nsDOMDataChannel::DoOnMessageAvailable(const nsACString& aData,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIGlobalObject> globalObject = do_QueryInterface(GetOwner());
-  if (NS_WARN_IF(!globalObject)) {
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.InitUsingWin(GetOwner()))) {
     return NS_ERROR_FAILURE;
   }
-
-  AutoJSAPI jsapi;
   JSContext* cx = jsapi.cx();
-  JSAutoCompartment ac(cx, globalObject->GetGlobalJSObject());
 
   JS::Rooted<JS::Value> jsData(cx);
 

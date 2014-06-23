@@ -275,38 +275,13 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle *aStyle) const
   aStyle->featureValueLookup = featureValueLookup;
 
   // -- caps
-  setting.mValue = 1;
-  switch (variantCaps) {
-    case NS_FONT_VARIANT_CAPS_ALLSMALL:
-      setting.mTag = TRUETYPE_TAG('c','2','s','c');
-      aStyle->featureSettings.AppendElement(setting);
-      // fall through to the small-caps case
-    case NS_FONT_VARIANT_CAPS_SMALLCAPS:
-      setting.mTag = TRUETYPE_TAG('s','m','c','p');
-      aStyle->featureSettings.AppendElement(setting);
-      break;
-
-    case NS_FONT_VARIANT_CAPS_ALLPETITE:
-      setting.mTag = TRUETYPE_TAG('c','2','p','c');
-      aStyle->featureSettings.AppendElement(setting);
-      // fall through to the petite-caps case
-    case NS_FONT_VARIANT_CAPS_PETITECAPS:
-      setting.mTag = TRUETYPE_TAG('p','c','a','p');
-      aStyle->featureSettings.AppendElement(setting);
-      break;
-
-    case NS_FONT_VARIANT_CAPS_TITLING:
-      setting.mTag = TRUETYPE_TAG('t','i','t','l');
-      aStyle->featureSettings.AppendElement(setting);
-      break;
-
-    case NS_FONT_VARIANT_CAPS_UNICASE:
-      setting.mTag = TRUETYPE_TAG('u','n','i','c');
-      aStyle->featureSettings.AppendElement(setting);
-      break;
-
-    default:
-      break;
+  // passed into gfxFontStyle to deal with appropriate fallback.
+  // for now, font-variant setting overrides font-variant-caps
+  // when font-variant becomes a shorthand, this will be removed
+  if (variant == NS_FONT_VARIANT_SMALL_CAPS) {
+    aStyle->variantCaps = NS_FONT_VARIANT_CAPS_SMALLCAPS;
+  } else {
+    aStyle->variantCaps = variantCaps;
   }
 
   // -- east-asian

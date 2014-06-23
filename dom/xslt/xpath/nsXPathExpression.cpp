@@ -11,10 +11,11 @@
 #include "nsIDOMCharacterData.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIDOMDocument.h"
-#include "nsXPathResult.h"
+#include "XPathResult.h"
 #include "txURIUtils.h"
 #include "txXPathTreeWalker.h"
 
+using namespace mozilla::dom;
 using mozilla::Move;
 
 NS_IMPL_CYCLE_COLLECTION(nsXPathExpression, mDocument)
@@ -115,20 +116,20 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint16_t resultType = aType;
-    if (aType == nsIDOMXPathResult::ANY_TYPE) {
+    if (aType == XPathResult::ANY_TYPE) {
         short exprResultType = exprResult->getResultType();
         switch (exprResultType) {
             case txAExprResult::NUMBER:
-                resultType = nsIDOMXPathResult::NUMBER_TYPE;
+                resultType = XPathResult::NUMBER_TYPE;
                 break;
             case txAExprResult::STRING:
-                resultType = nsIDOMXPathResult::STRING_TYPE;
+                resultType = XPathResult::STRING_TYPE;
                 break;
             case txAExprResult::BOOLEAN:
-                resultType = nsIDOMXPathResult::BOOLEAN_TYPE;
+                resultType = XPathResult::BOOLEAN_TYPE;
                 break;
             case txAExprResult::NODESET:
-                resultType = nsIDOMXPathResult::UNORDERED_NODE_ITERATOR_TYPE;
+                resultType = XPathResult::UNORDERED_NODE_ITERATOR_TYPE;
                 break;
             case txAExprResult::RESULT_TREE_FRAGMENT:
                 NS_ERROR("Can't return a tree fragment!");
@@ -140,8 +141,7 @@ nsXPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     nsCOMPtr<nsIXPathResult> xpathResult = do_QueryInterface(aInResult);
     if (!xpathResult) {
         // Either no aInResult or not one of ours.
-        xpathResult = new nsXPathResult();
-        NS_ENSURE_TRUE(xpathResult, NS_ERROR_OUT_OF_MEMORY);
+        xpathResult = new XPathResult(context);
     }
     rv = xpathResult->SetExprResult(exprResult, resultType, context);
     NS_ENSURE_SUCCESS(rv, rv);

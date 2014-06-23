@@ -38,20 +38,16 @@ function run_test() {
   socket.init(8080, true, -1);
   socket.asyncListen(gSocketListener);
 
-  add_tests_in_mode(true, true);
-  add_tests_in_mode(false, true);
-  add_tests_in_mode(true, false);
-  add_tests_in_mode(false, false);
+  add_tests_in_mode(true);
+  add_tests_in_mode(false);
 
   add_test(function() { socket.close(); run_next_test(); });
   run_next_test();
 }
 
-function add_tests_in_mode(useMozillaPKIX, useHardFail) {
+function add_tests_in_mode(useHardFail) {
   let startTime;
   add_test(function () {
-    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
-                               useMozillaPKIX);
     Services.prefs.setBoolPref("security.OCSP.require", useHardFail);
     startTime = new Date();
     run_next_test();

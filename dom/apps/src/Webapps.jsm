@@ -952,7 +952,7 @@ this.DOMApplicationRegistry = {
 
         let localeManifest = new ManifestHelper(manifest, app.origin);
 
-        app.name = localeManifest.name;
+        app.name = manifest.name;
         app.csp = manifest.csp || "";
         app.role = localeManifest.role;
         if (app.appStatus >= Ci.nsIPrincipal.APP_STATUS_PRIVILEGED) {
@@ -1964,7 +1964,7 @@ this.DOMApplicationRegistry = {
       this.updateDataStore(this.webapps[aId].localId, aApp.origin,
                            aApp.manifestURL, aApp.manifest);
 
-      aApp.name = manifest.name;
+      aApp.name = aNewManifest.name;
       aApp.csp = manifest.csp || "";
       aApp.role = manifest.role || "";
       aApp.updateTime = Date.now();
@@ -2329,22 +2329,22 @@ this.DOMApplicationRegistry = {
     return app;
   },
 
-  _cloneApp: function(aData, aNewApp, aManifest, aId, aLocalId) {
+  _cloneApp: function(aData, aNewApp, aLocaleManifest, aManifest, aId, aLocalId) {
     let appObject = AppsUtils.cloneAppObject(aNewApp);
     appObject.appStatus =
       aNewApp.appStatus || Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
-    if (aManifest.appcache_path) {
+    if (aLocaleManifest.appcache_path) {
       appObject.installState = "pending";
       appObject.downloadAvailable = true;
       appObject.downloading = true;
       appObject.downloadSize = 0;
       appObject.readyToApplyDownload = false;
-    } else if (aManifest.package_path) {
+    } else if (aLocaleManifest.package_path) {
       appObject.installState = "pending";
       appObject.downloadAvailable = true;
       appObject.downloading = true;
-      appObject.downloadSize = aManifest.size;
+      appObject.downloadSize = aLocaleManifest.size;
       appObject.readyToApplyDownload = false;
     } else {
       appObject.installState = "installed";
@@ -2356,8 +2356,8 @@ this.DOMApplicationRegistry = {
     appObject.localId = aLocalId;
     appObject.basePath = OS.Path.dirname(this.appsFile);
     appObject.name = aManifest.name;
-    appObject.csp = aManifest.csp || "";
-    appObject.role = aManifest.role || "";
+    appObject.csp = aLocaleManifest.csp || "";
+    appObject.role = aLocaleManifest.role;
     appObject.installerAppId = aData.appId;
     appObject.installerIsBrowser = aData.isBrowser;
 
@@ -2475,7 +2475,7 @@ this.DOMApplicationRegistry = {
     debug("app.origin: " + app.origin);
     let manifest = new ManifestHelper(jsonManifest, app.origin);
 
-    let appObject = this._cloneApp(aData, app, manifest, id, localId);
+    let appObject = this._cloneApp(aData, app, manifest, jsonManifest, id, localId);
 
     this.webapps[id] = appObject;
 

@@ -853,6 +853,25 @@ nsCaret::CheckCaretDrawingState()
   }
 }
 
+size_t nsCaret::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  size_t total = aMallocSizeOf(this);
+  if (mPresShell) {
+    // We only want the size of the nsWeakReference object, not the PresShell
+    // (since we don't own the PresShell).
+    total += mPresShell->SizeOfOnlyThis(aMallocSizeOf);
+  }
+  if (mDomSelectionWeak) {
+    // We only want size of the nsWeakReference object, not the selection
+    // (again, we don't own the selection).
+    total += mDomSelectionWeak->SizeOfOnlyThis(aMallocSizeOf);
+  }
+  if (mBlinkTimer) {
+    total += mBlinkTimer->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  return total;
+}
+
 /*-----------------------------------------------------------------------------
 
   MustDrawCaret

@@ -156,17 +156,10 @@ let runTest = Task.async(function*() {
   SimpleTest.finish();
 });
 
-// The test doesn't work yet on Mac OS X 10.6 machines.
-// See bug 993690.
-if (MAC_106) {
-  todo(false, "The test doesn't work on Mac OS X 10.6 machines");
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
   SimpleTest.finish();
-} else {
-  runTest().then(null, function(e) {
-    ok(false, "Error during test: " + e);
-    SimpleTest.finish();
-  });
-}
+});
 
 ]]>
 </script>

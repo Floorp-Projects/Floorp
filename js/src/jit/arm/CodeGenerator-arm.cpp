@@ -178,7 +178,7 @@ CodeGeneratorARM::generateOutOfLineCode()
         // Push the frame size, so the handler can recover the IonScript.
         masm.ma_mov(Imm32(frameSize()), lr);
 
-        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler();
+        JitCode *handler = gen->jitRuntime()->getGenericBailoutHandler(gen->info().executionMode());
         masm.branch(handler);
     }
 
@@ -188,22 +188,6 @@ CodeGeneratorARM::generateOutOfLineCode()
 bool
 CodeGeneratorARM::bailoutIf(Assembler::Condition condition, LSnapshot *snapshot)
 {
-    CompileInfo &info = snapshot->mir()->block()->info();
-    switch (info.executionMode()) {
-
-      case ParallelExecution: {
-        // in parallel mode, make no attempt to recover, just signal an error.
-        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
-                                             snapshot->mir()->block(),
-                                             snapshot->mir()->pc());
-        masm.ma_b(ool->entry(), condition);
-        return true;
-      }
-      case SequentialExecution:
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
     if (!encode(snapshot))
         return false;
 
@@ -237,23 +221,6 @@ CodeGeneratorARM::bailoutFrom(Label *label, LSnapshot *snapshot)
         return false;
     JS_ASSERT(label->used());
     JS_ASSERT(!label->bound());
-
-    CompileInfo &info = snapshot->mir()->block()->info();
-    switch (info.executionMode()) {
-
-      case ParallelExecution: {
-        // in parallel mode, make no attempt to recover, just signal an error.
-        OutOfLineAbortPar *ool = oolAbortPar(ParallelBailoutUnsupported,
-                                             snapshot->mir()->block(),
-                                             snapshot->mir()->pc());
-        masm.retarget(label, ool->entry());
-        return true;
-      }
-      case SequentialExecution:
-        break;
-      default:
-        MOZ_ASSUME_UNREACHABLE("No such execution mode");
-    }
 
     if (!encode(snapshot))
         return false;

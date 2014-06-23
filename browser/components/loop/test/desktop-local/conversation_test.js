@@ -35,6 +35,57 @@ describe("loop.conversation", function() {
     sandbox.restore();
   });
 
+  describe("#init", function() {
+    var conversation, oldTitle;
+
+    beforeEach(function() {
+      oldTitle = document.title;
+
+      sandbox.stub(document.mozL10n, "initialize");
+      sandbox.stub(document.mozL10n, "get").returns("Fake title");
+
+      sandbox.stub(loop.conversation.ConversationRouter.prototype,
+        "initialize");
+      sandbox.stub(loop.shared.models.ConversationModel.prototype,
+        "initialize");
+      sandbox.stub(loop.shared.views.NotificationListView.prototype,
+        "initialize");
+
+      sandbox.stub(Backbone.history, "start");
+    });
+
+    afterEach(function() {
+      document.title = oldTitle;
+    });
+
+    it("should initalize L10n", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(document.mozL10n.initialize);
+      sinon.assert.calledWithExactly(document.mozL10n.initialize,
+        window.navigator.mozLoop);
+    });
+
+    it("should set the document title", function() {
+      loop.conversation.init();
+
+      expect(document.title).to.be.equal("Fake title");
+    });
+
+    it("should create the router", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(
+        loop.conversation.ConversationRouter.prototype.initialize);
+    });
+
+    it("should start Backbone history", function() {
+      loop.conversation.init();
+
+      sinon.assert.calledOnce(Backbone.history.start);
+    });
+  });
+
   describe("ConversationRouter", function() {
     var conversation;
 

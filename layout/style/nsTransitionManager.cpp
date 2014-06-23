@@ -597,12 +597,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     }
   }
   aElementTransitions->UpdateAnimationGeneration(mPresContext);
-
-  nsRestyleHint hint =
-    aNewStyleContext->GetPseudoType() ==
-      nsCSSPseudoElements::ePseudo_NotPseudoElement ?
-    eRestyle_Self : eRestyle_Subtree;
-  presContext->PresShell()->RestyleForAnimation(aElement, hint);
+  aElementTransitions->PostRestyleForAnimation(presContext);
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);
@@ -682,10 +677,7 @@ nsTransitionManager::WalkTransitionRule(ElementDependentRuleProcessorData* aData
 
     // We need to immediately restyle with animation
     // after doing this.
-    nsRestyleHint hint =
-      aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ?
-      eRestyle_Self : eRestyle_Subtree;
-    mPresContext->PresShell()->RestyleForAnimation(aData->mElement, hint);
+    et->PostRestyleForAnimation(mPresContext);
     return;
   }
 
@@ -842,17 +834,10 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           {
             prop = nsCSSProps::OtherNameFor(prop);
           }
-          nsIAtom* ep = et->mElementProperty;
-          NS_NAMED_LITERAL_STRING(before, "::before");
-          NS_NAMED_LITERAL_STRING(after, "::after");
           events.AppendElement(
             TransitionEventInfo(et->mElement, prop,
                                 anim->mTiming.mIterationDuration,
-                                ep == nsGkAtoms::transitionsProperty ?
-                                  EmptyString() :
-                                  ep == nsGkAtoms::transitionsOfBeforeProperty ?
-                                    before :
-                                    after));
+                                et->PseudoElement()));
 
           // Leave this transition in the list for one more refresh
           // cycle, since we haven't yet processed its style change, and
@@ -881,9 +866,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
                    et->mElementProperty == nsGkAtoms::transitionsOfAfterProperty,
                    "Unexpected element property; might restyle too much");
       if (!canThrottleTick || transitionStartedOrEnded) {
-        nsRestyleHint hint = et->mElementProperty == nsGkAtoms::transitionsProperty ?
-          eRestyle_Self : eRestyle_Subtree;
-        mPresContext->PresShell()->RestyleForAnimation(et->mElement, hint);
+        et->PostRestyleForAnimation(mPresContext);
       } else {
         didThrottle = true;
       }

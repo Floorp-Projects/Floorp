@@ -50,8 +50,9 @@ function check_fail_ca(x) {
   return check_cert_err_generic(x, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLCA);
 }
 
-function run_test_in_mode(useMozillaPKIX) {
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
+function run_test() {
+  load_cert("ca-nc-perm-foo.com", "CTu,CTu,CTu");
+  load_cert("ca-nc", "CTu,CTu,CTu");
 
   // Note that CN is only looked at when there is NO subjectAltName!
 
@@ -268,12 +269,4 @@ function run_test_in_mode(useMozillaPKIX) {
     check_cert_err_generic(cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLServer);
     check_cert_err_generic(cert, 0, certificateUsageSSLClient);
   }
-}
-
-function run_test() {
-  load_cert("ca-nc-perm-foo.com", "CTu,CTu,CTu");
-  load_cert("ca-nc", "CTu,CTu,CTu");
-
-  run_test_in_mode(true);
-  run_test_in_mode(false);
 }
