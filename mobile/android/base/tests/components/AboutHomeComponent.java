@@ -30,13 +30,15 @@ public class AboutHomeComponent extends BaseComponent {
         HISTORY,
         TOP_SITES,
         BOOKMARKS,
-        READING_LIST
+        READING_LIST,
+        RECENT_TABS
     }
 
     // TODO: Having a specific ordering of panels is prone to fail and thus temporary.
     // Hopefully the work in bug 940565 will alleviate the need for these enums.
     // Explicit ordering of HomePager panels on a phone.
     private enum PhonePanel {
+        RECENT_TABS,
         HISTORY,
         TOP_SITES,
         BOOKMARKS,
@@ -48,7 +50,8 @@ public class AboutHomeComponent extends BaseComponent {
         TOP_SITES,
         BOOKMARKS,
         READING_LIST,
-        HISTORY
+        HISTORY,
+        RECENT_TABS
     }
 
     // The percentage of the panel to swipe between 0 and 1. This value was set through
