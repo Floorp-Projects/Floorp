@@ -75,6 +75,9 @@ this.ContentControl.prototype = {
         JSON.stringify(aMessage.json)];
     });
 
+    // If we get an explicit message, we should immediately cancel any autoMove
+    this.cancelAutoMove();
+
     try {
       let func = this['handle' + aMessage.name.slice(9)]; // 'AccessFu:'.length
       if (func) {
@@ -381,8 +384,7 @@ this.ContentControl.prototype = {
    * - moveMethod: pivot move method to use, default is 'moveNext',
    */
   autoMove: function cc_autoMove(aAnchor, aOptions = {}) {
-    let win = this.window;
-    win.clearTimeout(this._autoMove);
+    this.cancelAutoMove();
 
     let moveFunc = () => {
       let vc = this.vc;
@@ -432,10 +434,15 @@ this.ContentControl.prototype = {
     };
 
     if (aOptions.delay) {
-      this._autoMove = win.setTimeout(moveFunc, aOptions.delay);
+      this._autoMove = this.window.setTimeout(moveFunc, aOptions.delay);
     } else {
       moveFunc();
     }
+  },
+
+  cancelAutoMove: function cc_cancelAutoMove() {
+    this.window.clearTimeout(this._autoMove);
+    this._autoMove = 0;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupportsWeakReference,
