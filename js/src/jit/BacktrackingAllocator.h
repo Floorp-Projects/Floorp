@@ -151,9 +151,9 @@ class BacktrackingAllocator
 
         static int compare(const AllocatedRange &v0, const AllocatedRange &v1) {
             // LiveInterval::Range includes 'from' but excludes 'to'.
-            if (v0.range->to.pos() <= v1.range->from.pos())
+            if (v0.range->to <= v1.range->from)
                 return -1;
-            if (v0.range->from.pos() >= v1.range->to.pos())
+            if (v0.range->from >= v1.range->to)
                 return 1;
             return 0;
         }

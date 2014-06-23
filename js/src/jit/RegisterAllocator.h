@@ -202,6 +202,11 @@ class CodePosition
         return bits_ >= other.bits_;
     }
 
+    uint32_t operator -(CodePosition other) const {
+        JS_ASSERT(bits_ >= other.bits_);
+        return bits_ - other.bits_;
+    }
+
     CodePosition previous() const {
         JS_ASSERT(*this != MIN);
         return CodePosition(bits_ - 1);

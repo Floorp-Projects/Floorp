@@ -276,7 +276,7 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
         const LiveInterval::Range *range = interval->getRange(i);
         JS_ASSERT(range->from <= inputOf(reg.ins()));
 
-        CodePosition to = (range->to <= outputOf(reg.ins())) ? range->to : outputOf(reg.ins());
+        CodePosition to = Min(range->to, outputOf(reg.ins()));
         if (!preInterval->addRange(range->from, to))
             return false;
     }
@@ -1358,7 +1358,7 @@ BacktrackingAllocator::computePriority(const LiveInterval *interval)
 
     for (size_t i = 0; i < interval->numRanges(); i++) {
         const LiveInterval::Range *range = interval->getRange(i);
-        lifetimeTotal += range->to.pos() - range->from.pos();
+        lifetimeTotal += range->to - range->from;
     }
 
     return lifetimeTotal;
@@ -1625,7 +1625,7 @@ BacktrackingAllocator::splitAtAllRegisterUses(LiveInterval *interval)
     if (spillIntervalIsNew) {
         for (size_t i = 0; i < interval->numRanges(); i++) {
             const LiveInterval::Range *range = interval->getRange(i);
-            CodePosition from = range->from < spillStart ? spillStart : range->from;
+            CodePosition from = Max(range->from, spillStart);
             if (!spillInterval->addRange(from, range->to))
                 return false;
         }
@@ -1718,7 +1718,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval,
 
         for (size_t i = 0; i < interval->numRanges(); i++) {
             const LiveInterval::Range *range = interval->getRange(i);
-            CodePosition from = range->from < spillStart ? spillStart : range->from;
+            CodePosition from = Max(range->from, spillStart);
             if (!spillInterval->addRange(from, range->to))
                 return false;
         }
