@@ -33,6 +33,7 @@ namespace jit {
     _(Concat)                                   \
     _(Floor)                                    \
     _(Round)                                    \
+    _(FromCharCode)                             \
     _(Pow)                                      \
     _(PowHalf)                                  \
     _(NewObject)                                \
@@ -288,6 +289,18 @@ class RRound MOZ_FINAL : public RInstruction
 {
   public:
     RINSTRUCTION_HEADER_(Round)
+
+    virtual uint32_t numOperands() const {
+        return 1;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RFromCharCode MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(FromCharCode)
 
     virtual uint32_t numOperands() const {
         return 1;

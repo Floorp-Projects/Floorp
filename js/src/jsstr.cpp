@@ -4155,16 +4155,9 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     JS_ASSERT(args.length() <= ARGS_LENGTH_MAX);
-    if (args.length() == 1) {
-        uint16_t code;
-        if (!ToUint16(cx, args[0], &code))
-            return false;
-        if (StaticStrings::hasUnit(code)) {
-            args.rval().setString(cx->staticStrings().getUnit(code));
-            return true;
-        }
-        args[0].setInt32(code);
-    }
+    if (args.length() == 1)
+        return str_fromCharCode_one_arg(cx, args[0], args.rval());
+
     jschar *chars = cx->pod_malloc<jschar>(args.length() + 1);
     if (!chars)
         return false;
@@ -4174,7 +4167,7 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
             js_free(chars);
             return false;
         }
-        chars[i] = (jschar)code;
+        chars[i] = jschar(code);
     }
     chars[args.length()] = 0;
     JSString *str = js_NewString<CanGC>(cx, chars, args.length());
@@ -4184,6 +4177,34 @@ js::str_fromCharCode(JSContext *cx, unsigned argc, Value *vp)
     }
 
     args.rval().setString(str);
+    return true;
+}
+
+bool
+js::str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue rval)
+{
+    uint16_t ucode;
+
+    if (!ToUint16(cx, code, &ucode))
+        return false;
+
+    if (StaticStrings::hasUnit(ucode)) {
+        rval.setString(cx->staticStrings().getUnit(ucode));
+        return true;
+    }
+
+    jschar *chars = cx->pod_malloc<jschar>(2);
+    if (!chars)
+        return false;
+    chars[0] = jschar(ucode);
+    chars[1] = 0;
+    JSString *str = js_NewString<CanGC>(cx, chars, 1);
+    if (!str) {
+        js_free(chars);
+        return false;
+    }
+
+    rval.setString(str);
     return true;
 }
 
