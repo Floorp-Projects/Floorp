@@ -4141,8 +4141,16 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
             if tag in numericSuffixes or tag is IDLType.Tags.bool:
                 defaultStr = getHandleDefault(defaultValue)
                 value = declLoc + (".Value()" if nullable else "")
+                name = getUnionMemberName(defaultValue.type)
                 default = CGGeneric("%s.RawSetAs%s() = %s;\n" %
-                                    (value, defaultValue.type, defaultStr))
+                                    (value, name, defaultStr))
+            elif isinstance(defaultValue, IDLEmptySequenceValue):
+                name = getUnionMemberName(defaultValue.type)
+                value = declLoc + (".Value()" if nullable else "")
+                # It's enough to set us to the right type; that will
+                # create an empty array, which is all we need here.
+                default = CGGeneric("%s.RawSetAs%s();\n" %
+                                    (value, name))
             else:
                 default = CGGeneric(
                     handleDefaultStringValue(
@@ -8350,7 +8358,7 @@ class CGUnionStruct(CGThing):
                        disallowCopyConstruction=disallowCopyConstruction,
                        extradeclarations=friend,
                        destructor=ClassDestructor(visibility="public",
-                                                  body="Uninit();",
+                                                  body="Uninit();\n",
                                                   bodyInHeader=True),
                        enums=[ClassEnum("Type", enumValues, visibility="private")],
                        unions=[ClassUnion("Value", unionValues, visibility="private")])
