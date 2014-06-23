@@ -26,8 +26,6 @@ class DocManager : public nsIWebProgressListener,
                    public nsSupportsWeakReference
 {
 public:
-  virtual ~DocManager() { }
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIDOMEVENTLISTENER
@@ -73,6 +71,7 @@ public:
 
 protected:
   DocManager();
+  virtual ~DocManager() { }
 
   /**
    * Initialize the manager.
