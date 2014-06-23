@@ -21,9 +21,8 @@
   <script type="application/javascript" src="pippki.js" />
 
   <description id="confirm" style="width: 400px;"/>
-  <separator />
-  <vbox id="certlist" class="box-padded"/>
-  <separator />
+  <richlistbox id="certlist" class="box-padded" flex="1"
+               style="min-height: 8em; height: 8em; min-width: 35em;"/>
   <description id="impact" style="width: 400px;"/>
 
 </dialog>
