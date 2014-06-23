@@ -44,6 +44,7 @@ if (typeof assertDeepEq === 'undefined') {
         var call = Function.prototype.call,
             Map_ = Map,
             Error_ = Error,
+            Symbol_ = Symbol,
             Map_has = call.bind(Map.prototype.has),
             Map_get = call.bind(Map.prototype.get),
             Map_set = call.bind(Map.prototype.set),
@@ -71,7 +72,7 @@ if (typeof assertDeepEq === 'undefined') {
             try {
                 assertEq(a, b);
             } catch (exc) {
-                throw new Error(exc.message + (msg ? " " + msg : ""));
+                throw Error_(exc.message + (msg ? " " + msg : ""));
             }
         }
 
@@ -146,7 +147,28 @@ if (typeof assertDeepEq === 'undefined') {
             var bpath = Map_();
 
             function check(a, b, path) {
-                if (isPrimitive(a)) {
+                if (typeof a === "symbol") {
+                    // Symbols are primitives, but they have identity.
+                    // Symbol("x") !== Symbol("x") but
+                    // assertDeepEq(Symbol("x"), Symbol("x")) should pass.
+                    if (typeof b !== "symbol") {
+                        throw Error_("got " + uneval_(a) + ", expected " + uneval_(b) + " " + path);
+                    } else if (uneval_(a) !== uneval_(b)) {
+                        // We lamely use uneval_ to distinguish well-known symbols
+                        // from user-created symbols. The standard doesn't offer
+                        // a convenient way to do it.
+                        throw Error_("got " + uneval_(a) + ", expected " + uneval_(b) + " " + path);
+                    } else if (Map_has(ab, a)) {
+                        assertSameValue(Map_get(ab, a), b, path);
+                    } else if (Map_has(bpath, b)) {
+                        var bPrevPath = Map_get(bpath, b) || "_";
+                        throw Error_("got distinct symbols " + at(path, "") + " and " +
+                                     at(bPrevPath, "") + ", expected the same symbol both places");
+                    } else {
+                        Map_set(ab, a, b);
+                        Map_set(bpath, b, path);
+                    }
+                } else if (isPrimitive(a)) {
                     assertSameValue(a, b, path);
                 } else if (isPrimitive(b)) {
                     throw Error_("got " + Object_toString(a) + ", expected " + uneval_(b) + " " + path);
