@@ -33,10 +33,12 @@ class nsCertVerificationResult : public nsICertVerificationResult
 {
 public:
   nsCertVerificationResult();
-  virtual ~nsCertVerificationResult();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSICERTVERIFICATIONRESULT
+
+protected:
+  virtual ~nsCertVerificationResult();
 
 private:
   nsresult mRV;

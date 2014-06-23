@@ -114,7 +114,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsClientAuthRememberService();
-  ~nsClientAuthRememberService();
 
   nsresult Init();
 
@@ -131,6 +130,8 @@ public:
   static void ClearAllRememberedDecisions();
 
 protected:
+    ~nsClientAuthRememberService();
+
     mozilla::ReentrantMonitor monitor;
     nsTHashtable<nsClientAuthRememberEntry> mSettingsTable;
 

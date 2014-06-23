@@ -22,13 +22,13 @@ class nsPKIParamBlock : public nsIPKIParamBlock,
 public:
  
   nsPKIParamBlock();
-  virtual ~nsPKIParamBlock();
   nsresult Init();
 
   NS_DECL_NSIPKIPARAMBLOCK
   NS_DECL_NSIDIALOGPARAMBLOCK
   NS_DECL_THREADSAFE_ISUPPORTS
 private:
+  virtual ~nsPKIParamBlock();
   nsCOMPtr<nsIDialogParamBlock> mDialogParamBlock;
   nsCOMPtr<nsISupportsArray>    mSupports;
 };

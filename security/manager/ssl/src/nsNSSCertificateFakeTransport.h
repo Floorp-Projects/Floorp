@@ -23,6 +23,8 @@ public:
   NS_DECL_NSICLASSINFO
 
   nsNSSCertificateFakeTransport();
+
+protected:
   virtual ~nsNSSCertificateFakeTransport();
 
 private:

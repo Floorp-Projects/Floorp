@@ -125,7 +125,6 @@ public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID )
 
   nsNSSComponent();
-  virtual ~nsNSSComponent();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSISIGNATUREVERIFIER
@@ -167,6 +166,9 @@ public:
 
   ::mozilla::TemporaryRef<mozilla::psm::SharedCertVerifier>
     GetDefaultCertVerifier() MOZ_OVERRIDE;
+
+protected:
+  virtual ~nsNSSComponent();
 
 private:
   nsresult InitializeNSS();
