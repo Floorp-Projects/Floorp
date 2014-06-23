@@ -1847,8 +1847,6 @@ JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
     RootedId wrappedId(cx, id);
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
-    if (!cx->compartment()->wrapId(cx, wrappedId.address()))
-        return false;
 
     bool ignored;
     return DefineOwnProperty(cx, target, wrappedId, desc, &ignored);
