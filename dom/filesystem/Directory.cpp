@@ -111,11 +111,11 @@ Directory::CreateFile(const nsAString& aPath, const CreateFileOptions& aOptions)
       arrayData.AppendElements(reinterpret_cast<const uint8_t *>(str.get()),
                                str.Length());
     } else if (data.IsArrayBuffer()) {
-      ArrayBuffer& buffer = data.GetAsArrayBuffer();
+      const ArrayBuffer& buffer = data.GetAsArrayBuffer();
       buffer.ComputeLengthAndData();
       arrayData.AppendElements(buffer.Data(), buffer.Length());
     } else if (data.IsArrayBufferView()){
-      ArrayBufferView& view = data.GetAsArrayBufferView();
+      const ArrayBufferView& view = data.GetAsArrayBufferView();
       view.ComputeLengthAndData();
       arrayData.AppendElements(view.Data(), view.Length());
     } else {

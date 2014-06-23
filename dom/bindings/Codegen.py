@@ -7980,7 +7980,7 @@ def getUnionAccessorSignatureType(type, descriptorProvider):
         typeName = CGGeneric(type.name)
         if type.nullable():
             typeName = CGTemplatedType("Nullable", typeName)
-        return CGWrapper(typeName, post="&")
+        return CGWrapper(typeName, post=" const &")
 
     if type.isDOMString():
         return CGGeneric("const nsAString&")
@@ -8055,11 +8055,7 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
     ctorNeedsCx = conversionInfo.declArgs == "cx"
     ctorArgs = "cx" if ctorNeedsCx else ""
 
-    # This is ugly, but UnionMember needs to call a constructor with no
-    # arguments so the type can't be const.
     structType = conversionInfo.declType.define()
-    if structType.startswith("const "):
-        structType = structType[6:]
     externalType = getUnionAccessorSignatureType(type, descriptorProvider).define()
 
     if type.isObject():
@@ -8254,11 +8250,21 @@ class CGUnionStruct(CGThing):
             body = fill(
                 """
                 MOZ_ASSERT(Is${name}(), "Wrong type!");
-                return const_cast<${structType}&>(mValue.m${name}.Value());
+                return mValue.m${name}.Value();
                 """,
                 **vars)
+            # The non-const version of GetAs* returns our internal type
+            getterReturnType = "%s&" % vars["structType"]
+            methods.append(ClassMethod("GetAs" + vars["name"],
+                                       getterReturnType,
+                                       [],
+                                       bodyInHeader=True,
+                                       body=body))
+            # The const version of GetAs* returns our internal type
+            # for owning unions, but our external type for non-owning
+            # ones.
             if self.ownsMembers:
-                getterReturnType = "%s&" % vars["structType"]
+                getterReturnType = "%s const &" % vars["structType"]
             else:
                 getterReturnType = vars["externalType"]
             methods.append(ClassMethod("GetAs" + vars["name"],
