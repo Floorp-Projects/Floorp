@@ -4353,6 +4353,34 @@ AddonIdOfObject(JSObject *obj);
 
 /************************************************************************/
 /*
+ * Symbols
+ */
+
+namespace JS {
+
+/*
+ * Create a new Symbol with the given description. This function never returns
+ * a Symbol that is in the Runtime-wide symbol registry.
+ *
+ * If description is null, the new Symbol's [[Description]] attribute is
+ * undefined.
+ */
+JS_PUBLIC_API(Symbol *)
+NewSymbol(JSContext *cx, HandleString description);
+
+/*
+ * Get the [[Description]] attribute of the given symbol.
+ *
+ * This function is infallible. If it returns null, that means the symbol's
+ * [[Description]] is undefined.
+ */
+JS_PUBLIC_API(JSString *)
+GetSymbolDescription(HandleSymbol symbol);
+
+} /* namespace JS */
+
+/************************************************************************/
+/*
  * JSON functions
  */
 typedef bool (* JSONWriteCallback)(const jschar *buf, uint32_t len, void *data);

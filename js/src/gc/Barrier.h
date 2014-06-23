@@ -272,6 +272,13 @@ ShadowZoneOfStringFromAnyThread(JSString *str)
         reinterpret_cast<const js::gc::Cell *>(str)->tenuredZoneFromAnyThread());
 }
 
+static inline JS::shadow::Zone *
+ShadowZoneOfSymbolFromAnyThread(JS::Symbol *sym)
+{
+    return JS::shadow::Zone::asShadowZone(
+        reinterpret_cast<const js::gc::Cell *>(sym)->tenuredZoneFromAnyThread());
+}
+
 MOZ_ALWAYS_INLINE JS::Zone *
 ZoneOfValueFromAnyThread(const JS::Value &value)
 {

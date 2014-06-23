@@ -182,7 +182,7 @@ JSObject *newCCW(HandleObject sourceZone, HandleObject destZone)
     RootedObject object(cx);
     {
         JSAutoCompartment ac(cx, destZone);
-        object = JS_NewObject(cx, nullptr, NullPtr(), NullPtr());
+        object = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
         if (!object)
             return nullptr;
     }

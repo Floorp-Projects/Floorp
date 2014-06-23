@@ -1909,6 +1909,10 @@ ReportZoneStats(const JS::ZoneStats &zStats,
 
     MOZ_ASSERT(!gcTotalOut == zStats.isTotals);
 
+    ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("symbols/gc-heap"),
+        zStats.symbolsGCHeap,
+        "Symbols.");
+
     ZCREPORT_GC_BYTES(pathPrefix + NS_LITERAL_CSTRING("gc-heap-arena-admin"),
         zStats.gcHeapArenaAdmin,
         "Bookkeeping information and alignment padding within GC arenas.");

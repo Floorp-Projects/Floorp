@@ -11,6 +11,8 @@
 
 #include "gc/Zone.h"
 
+#include "vm/Symbol.h"
+
 namespace js {
 
 void
@@ -21,6 +23,8 @@ ValueReadBarrier(const Value &value)
         JSObject::readBarrier(&value.toObject());
     else if (value.isString())
         JSString::readBarrier(value.toString());
+    else if (value.isSymbol())
+        JS::Symbol::readBarrier(value.toSymbol());
     else
         JS_ASSERT(!value.isMarkable());
 }
