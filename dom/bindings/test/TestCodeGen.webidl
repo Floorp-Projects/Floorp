@@ -340,8 +340,10 @@ interface TestInterface {
   void passCastableObjectNullableSequence(sequence<TestInterface>? arg);
   void passNullableCastableObjectNullableSequence(sequence<TestInterface?>? arg);
   void passOptionalSequence(optional sequence<long> arg);
+  void passOptionalSequenceWithDefaultValue(optional sequence<long> arg = []);
   void passOptionalNullableSequence(optional sequence<long>? arg);
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
+  void passOptionalNullableSequenceWithDefaultValue2(optional sequence<long>? arg = []);
   void passOptionalObjectSequence(optional sequence<TestInterface> arg);
   void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
   void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
@@ -882,6 +884,12 @@ dictionary Dict : ParentDict {
   ArrayBuffer? nullableArrayBuffer;
   Uint8Array uint8Array;
   Float64Array? float64Array = null;
+
+  sequence<long> seq1;
+  sequence<long> seq2 = [];
+  sequence<long>? seq3;
+  sequence<long>? seq4 = null;
+  sequence<long>? seq5 = [];
 };
 
 dictionary ParentDict : GrandparentDict {
