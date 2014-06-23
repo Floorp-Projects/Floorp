@@ -5,6 +5,7 @@
 
 #include "nsString.h"
 #include "gfxContext.h"
+#include "gfxFontConstants.h"
 #include "gfxHarfBuzzShaper.h"
 #include "gfxFontUtils.h"
 #include "nsUnicodeProperties.h"
@@ -967,11 +968,27 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
     nsAutoTArray<hb_feature_t,20> features;
     nsDataHashtable<nsUint32HashKey,uint32_t> mergedFeatures;
 
+    // determine whether petite-caps falls back to small-caps
+    bool addSmallCaps = false;
+    if (style->variantCaps != NS_FONT_VARIANT_CAPS_NORMAL) {
+        switch (style->variantCaps) {
+            case NS_FONT_VARIANT_CAPS_ALLPETITE:
+            case NS_FONT_VARIANT_CAPS_PETITECAPS:
+                bool synLower, synUpper;
+                mFont->SupportsVariantCaps(aScript, style->variantCaps,
+                                           addSmallCaps, synLower, synUpper);
+                break;
+            default:
+                break;
+        }
+    }
+
     gfxFontEntry *entry = mFont->GetFontEntry();
     if (MergeFontFeatures(style,
                           entry->mFeatureSettings,
                           aShapedText->DisableLigatures(),
                           entry->FamilyName(),
+                          addSmallCaps,
                           mergedFeatures))
     {
         // enumerate result and insert into hb_feature array

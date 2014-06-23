@@ -143,16 +143,20 @@ struct gfxFontStyle {
     // Used to imitate -webkit-font-smoothing: antialiased
     bool useGrayscaleAntialiasing : 1;
 
-    // Font should render as small-caps, using OT feature if available,
-    // otherwise using a synthetic small-caps implementation
-    bool smallCaps : 1;
+    // The style of font (normal, italic, oblique)
+    uint8_t style : 2;
 
     // Whether synthetic styles are allowed
     bool allowSyntheticWeight : 1;
     bool allowSyntheticStyle : 1;
 
-    // The style of font (normal, italic, oblique)
-    uint8_t style : 2;
+    // font-variant small-caps? render with font feature or use synthetic
+    // xxx - this will be trimmed out once font-variant becomes a shorthand
+    bool smallCaps : 1;
+
+    // caps variant (small-caps, petite-caps, etc.)
+    // (note: once font features are enabled this will subsume the bool above)
+    uint8_t variantCaps;
 
     // Return the final adjusted font size for the given aspect ratio.
     // Not meant to be called when sizeAdjust = 0.
@@ -176,6 +180,7 @@ struct gfxFontStyle {
              *reinterpret_cast<const uint64_t*>(&other.size)) &&
             (style == other.style) &&
             (smallCaps == other.smallCaps) &&
+            (variantCaps == other.variantCaps) &&
             (allowSyntheticWeight == other.allowSyntheticWeight) &&
             (allowSyntheticStyle == other.allowSyntheticStyle) &&
             (systemFont == other.systemFont) &&
@@ -281,8 +286,10 @@ public:
     bool IgnoreGDEF() const { return mIgnoreGDEF; }
     bool IgnoreGSUB() const { return mIgnoreGSUB; }
 
-    bool SupportsOpenTypeSmallCaps(int32_t aScript);
-    bool SupportsGraphiteSmallCaps();
+    // whether a feature is supported by the font (limited to a small set
+    // of features for which some form of fallback needs to be implemented)
+    bool SupportsOpenTypeFeature(int32_t aScript, uint32_t aFeatureTag);
+    bool SupportsGraphiteFeature(uint32_t aFeatureTag);
 
     virtual bool IsSymbolFont();
 
@@ -552,8 +559,6 @@ public:
     bool             mSkipDefaultFeatureSpaceCheck : 1;
     bool             mHasGraphiteTables : 1;
     bool             mCheckedForGraphiteTables : 1;
-    bool             mHasGraphiteSmallCaps : 1;
-    bool             mCheckedForGraphiteSmallCaps : 1;
     bool             mHasCmapTable : 1;
     bool             mGrFaceInitialized : 1;
     bool             mCheckedForColorGlyph : 1;
@@ -575,7 +580,7 @@ public:
     nsTArray<gfxFont*> mFontsUsingSVGGlyphs;
     nsAutoPtr<gfxMathTable> mMathTable;
     nsTArray<gfxFontFeature> mFeatureSettings;
-    nsAutoPtr<nsDataHashtable<nsUint32HashKey,bool>> mSmallCapsSupport;
+    nsAutoPtr<nsDataHashtable<nsUint32HashKey,bool>> mSupportedFeatures;
     uint32_t         mLanguageOverride;
 
     // Color Layer font support
@@ -1493,6 +1498,7 @@ public:
                       const nsTArray<gfxFontFeature>& aFontFeatures,
                       bool aDisableLigatures,
                       const nsAString& aFamilyName,
+                      bool aAddSmallCaps,
                       nsDataHashtable<nsUint32HashKey,uint32_t>& aMergedFeatures);
 
 protected:
@@ -1622,8 +1628,16 @@ public:
         return mFontEntry->HasGraphiteTables();
     }
 
-    // whether the font supports "real" small caps or should fake them
-    bool SupportsSmallCaps(int32_t aScript);
+    // whether a feature is supported by the font (limited to a small set
+    // of features for which some form of fallback needs to be implemented)
+    bool SupportsFeature(int32_t aScript, uint32_t aFeatureTag);
+
+    // whether the font supports "real" small caps, petite caps etc.
+    // aFallbackToSmallCaps true when petite caps should fallback to small caps
+    bool SupportsVariantCaps(int32_t aScript, uint32_t aVariantCaps,
+                             bool& aFallbackToSmallCaps,
+                             bool& aSyntheticLowerToSmallCaps,
+                             bool& aSyntheticUpperToSmallCaps);
 
     // Subclasses may choose to look up glyph ids for characters.
     // If they do not override this, gfxHarfBuzzShaper will fetch the cmap
@@ -1831,7 +1845,9 @@ public:
                               uint32_t        aOffset,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
-                              int32_t         aScript);
+                              int32_t         aScript,
+                              bool            aSyntheticLower,
+                              bool            aSyntheticUpper);
 
     bool InitFakeSmallCapsRun(gfxContext     *aContext,
                               gfxTextRun     *aTextRun,
@@ -1839,7 +1855,9 @@ public:
                               uint32_t        aOffset,
                               uint32_t        aLength,
                               uint8_t         aMatchType,
-                              int32_t         aScript);
+                              int32_t         aScript,
+                              bool            aSyntheticLower,
+                              bool            aSyntheticUpper);
 
     // call the (virtual) InitTextRun method to do glyph generation/shaping,
     // limiting the length of text passed by processing the run in multiple
