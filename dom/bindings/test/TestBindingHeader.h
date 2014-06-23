@@ -579,6 +579,8 @@ public:
   void PassUnion18(JSContext*, const ObjectSequenceOrLong&);
   void PassUnion19(JSContext*, const Optional<ObjectSequenceOrLong>&);
   void PassUnion20(JSContext*, const ObjectSequenceOrLong&);
+  void PassUnion21(const LongMozMapOrLong&);
+  void PassUnion22(JSContext*, const ObjectMozMapOrLong&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
 #endif
