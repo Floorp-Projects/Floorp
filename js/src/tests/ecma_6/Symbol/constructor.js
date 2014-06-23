@@ -13,6 +13,8 @@ assertEq(Symbol(7).toString(), "Symbol(7)");
 assertEq(Symbol(true).toString(), "Symbol(true)");
 assertEq(Symbol(null).toString(), "Symbol(null)");
 assertEq(Symbol([1, 2]).toString(), "Symbol(1,2)");
+var symobj = Object(sym);
+assertThrowsInstanceOf(() => Symbol(symobj), TypeError);
 
 var hits = 0;
 var obj = {
