@@ -128,6 +128,9 @@ DeclMarker(TypeObject, types::TypeObject)
 void
 MarkPermanentAtom(JSTracer *trc, JSAtom *atom, const char *name);
 
+void
+MarkWellKnownSymbol(JSTracer *trc, JS::Symbol *sym);
+
 /* Return true if the pointer is nullptr, or if it is a tagged pointer to
  * nullptr.
  */

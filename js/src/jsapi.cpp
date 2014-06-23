@@ -5626,7 +5626,7 @@ JS::NewSymbol(JSContext *cx, HandleString description)
     if (description)
         assertSameCompartment(cx, description);
 
-    return Symbol::new_(cx, false, description);
+    return Symbol::new_(cx, SymbolCode::UniqueSymbol, description);
 }
 
 JS_PUBLIC_API(JS::Symbol *)
@@ -5643,6 +5643,18 @@ JS_PUBLIC_API(JSString *)
 JS::GetSymbolDescription(HandleSymbol symbol)
 {
     return symbol->description();
+}
+
+JS_PUBLIC_API(JS::SymbolCode)
+JS::GetSymbolCode(Handle<Symbol*> symbol)
+{
+    return symbol->code();
+}
+
+JS_PUBLIC_API(JS::Symbol *)
+JS::GetWellKnownSymbol(JSContext *cx, JS::SymbolCode which)
+{
+    return cx->runtime()->wellKnownSymbols->get(uint32_t(which));
 }
 
 JS_PUBLIC_API(bool)
