@@ -371,7 +371,7 @@ LinearScanAllocator::reifyAllocations()
             // following this one. See minimalDefEnd for more info.
             CodePosition defEnd = minimalDefEnd(reg->ins());
 
-            if (def->policy() == LDefinition::PRESET && def->output()->isRegister()) {
+            if (def->policy() == LDefinition::FIXED && def->output()->isRegister()) {
                 AnyRegister fixedReg = def->output()->toRegister();
                 LiveInterval *from = fixedIntervals[fixedReg.code()];
 
@@ -1033,7 +1033,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         AnyRegister hintReg = hint->allocation().toRegister();
         if (freeUntilPos[hintReg.code()] > hint->pos())
             bestCode = hintReg.code();
-    } else if (hint->kind() == Requirement::SAME_AS_OTHER) {
+    } else if (hint->kind() == Requirement::MUST_REUSE_INPUT) {
         LiveInterval *other = vregs[hint->virtualRegister()].intervalFor(hint->pos());
         if (other && other->getAllocation()->isRegister()) {
             AnyRegister hintReg = other->getAllocation()->toRegister();
@@ -1296,8 +1296,8 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
         // The first interval is the definition, so deal with any definition
         // constraints/hints
 
-        if (reg->def()->policy() == LDefinition::PRESET) {
-            // Preset policies get a FIXED requirement or hint.
+        if (reg->def()->policy() == LDefinition::FIXED) {
+            // Fixed policies get a FIXED requirement or hint.
             if (reg->def()->output()->isRegister())
                 interval->setHint(Requirement(*reg->def()->output()));
             else

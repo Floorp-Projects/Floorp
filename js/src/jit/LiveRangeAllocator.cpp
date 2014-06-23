@@ -57,7 +57,7 @@ Requirement::toString() const
       case FIXED:
         n = JS_snprintf(cursor, end - cursor, "%s", allocation().toString());
         break;
-      case SAME_AS_OTHER:
+      case MUST_REUSE_INPUT:
         n = JS_snprintf(cursor, end - cursor, "v%u", virtualRegister());
         break;
     }
@@ -644,7 +644,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     } else {
                         bool found = false;
                         for (size_t i = 0; i < ins->numDefs(); i++) {
-                            if (ins->getDef(i)->isPreset() &&
+                            if (ins->getDef(i)->isFixed() &&
                                 *ins->getDef(i)->output() == LAllocation(*iter)) {
                                 found = true;
                                 break;
@@ -661,7 +661,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     LDefinition *def = ins->getDef(i);
 
                     CodePosition from;
-                    if (def->policy() == LDefinition::PRESET && def->output()->isRegister() && forLSRA) {
+                    if (def->policy() == LDefinition::FIXED && def->output()->isRegister() && forLSRA) {
                         // The fixed range covers the current instruction so the
                         // interval for the virtual register starts at the next
                         // instruction. If the next instruction has a fixed use,
@@ -709,7 +709,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     continue;
 
                 if (forLSRA) {
-                    if (temp->policy() == LDefinition::PRESET) {
+                    if (temp->policy() == LDefinition::FIXED) {
                         if (ins->isCall())
                             continue;
                         AnyRegister reg = temp->output()->toRegister();
@@ -732,7 +732,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     // and clobbered register in the instruction, so watch for
                     // this and shorten the temp to cover only the output.
                     CodePosition from = inputOf(*ins);
-                    if (temp->policy() == LDefinition::PRESET) {
+                    if (temp->policy() == LDefinition::FIXED) {
                         AnyRegister reg = temp->output()->toRegister();
                         for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
                             if (alloc->isUse()) {
@@ -817,7 +817,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             LAllocation reg(AnyRegister::FromCode(use->registerCode()));
                             for (size_t i = 0; i < ins->numDefs(); i++) {
                                 LDefinition *def = ins->getDef(i);
-                                if (def->policy() == LDefinition::PRESET && *def->output() == reg)
+                                if (def->policy() == LDefinition::FIXED && *def->output() == reg)
                                     to = inputOf(*ins);
                             }
                         }

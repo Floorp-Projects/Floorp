@@ -380,7 +380,7 @@ class LDefinition
 
     // Before register allocation, this optionally contains a fixed policy.
     // Register allocation assigns this field to a physical policy if none is
-    // preset.
+    // fixed.
     //
     // Right now, pre-allocated outputs are limited to the following:
     //   * Physical argument stack slots.
@@ -404,15 +404,15 @@ class LDefinition
     // is a stack slot.
     enum Policy {
         // A random register of an appropriate class will be assigned.
-        DEFAULT,
+        REGISTER,
 
         // The policy is predetermined by the LAllocation attached to this
         // definition. The allocation may be:
         //   * A register, which may not appear as any fixed temporary.
         //   * A stack slot or argument.
         //
-        // Register allocation will not modify a preset allocation.
-        PRESET,
+        // Register allocation will not modify a fixed allocation.
+        FIXED,
 
         // One definition per instruction must re-use the first input
         // allocation, which (for now) must be a register.
@@ -448,24 +448,24 @@ class LDefinition
     }
 
   public:
-    LDefinition(uint32_t index, Type type, Policy policy = DEFAULT) {
+    LDefinition(uint32_t index, Type type, Policy policy = REGISTER) {
         set(index, type, policy);
     }
 
-    explicit LDefinition(Type type, Policy policy = DEFAULT) {
+    explicit LDefinition(Type type, Policy policy = REGISTER) {
         set(0, type, policy);
     }
 
     LDefinition(Type type, const LAllocation &a)
       : output_(a)
     {
-        set(0, type, PRESET);
+        set(0, type, FIXED);
     }
 
     LDefinition(uint32_t index, Type type, const LAllocation &a)
       : output_(a)
     {
-        set(index, type, PRESET);
+        set(index, type, FIXED);
     }
 
     LDefinition() : bits_(0)
@@ -493,11 +493,11 @@ class LDefinition
     const LAllocation *output() const {
         return &output_;
     }
-    bool isPreset() const {
-        return policy() == PRESET;
+    bool isFixed() const {
+        return policy() == FIXED;
     }
     bool isBogusTemp() const {
-        return isPreset() && output()->isConstantIndex();
+        return isFixed() && output()->isConstantIndex();
     }
     void setVirtualRegister(uint32_t index) {
         JS_ASSERT(index < VREG_MASK);
@@ -508,7 +508,7 @@ class LDefinition
         output_ = a;
         if (!a.isUse()) {
             bits_ &= ~(POLICY_MASK << POLICY_SHIFT);
-            bits_ |= PRESET << POLICY_SHIFT;
+            bits_ |= FIXED << POLICY_SHIFT;
         }
     }
     void setReusedInput(uint32_t operand) {
