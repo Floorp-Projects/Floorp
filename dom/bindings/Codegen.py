@@ -13721,40 +13721,7 @@ class CGEventClass(CGBindingImplClass):
                 if getattr(m, "originatingInterface",
                            descriptor.interface) != descriptor.interface:
                     continue
-                if m.type.isPrimitive() and m.type.tag() in builtinNames:
-                    nativeType = CGGeneric(builtinNames[m.type.tag()])
-                    if m.type.nullable():
-                        nativeType = CGTemplatedType("Nullable", nativeType)
-                    nativeType = nativeType.define()
-                elif m.type.isEnum():
-                    nativeType = m.type.unroll().inner.identifier.name
-                    if m.type.nullable():
-                        nativeType = CGTemplatedType("Nullable",
-                                                     CGGeneric(nativeType)).define()
-                elif m.type.isDOMString():
-                    nativeType = "nsString"
-                elif m.type.isByteString():
-                    nativeType = "nsCString"
-                elif m.type.isGeckoInterface():
-                    iface = m.type.unroll().inner
-                    nativeType = self.descriptor.getDescriptor(
-                        iface.identifier.name).nativeType
-                    # Now trim off unnecessary namespaces
-                    nativeType = nativeType.split("::")
-                    if nativeType[0] == "mozilla":
-                        nativeType.pop(0)
-                        if nativeType[0] == "dom":
-                            nativeType.pop(0)
-                    nativeType = CGWrapper(CGGeneric("::".join(nativeType)), pre="nsRefPtr<", post=">").define()
-                elif m.type.isAny():
-                    nativeType = "JS::Heap<JS::Value>"
-                elif m.type.isObject() or m.type.isSpiderMonkeyInterface():
-                    nativeType = "JS::Heap<JSObject*>"
-                elif m.type.isUnion():
-                    nativeType = CGUnionStruct.unionTypeDecl(m.type, True)
-                else:
-                    raise TypeError("Don't know how to declare member of type %s" %
-                                    m.type)
+                nativeType = self.getNativeTypeForIDLType(m.type).define()
                 members.append(ClassMember(CGDictionary.makeMemberName(m.identifier.name),
                                nativeType,
                                visibility="private",
@@ -13887,6 +13854,41 @@ class CGEventClass(CGBindingImplClass):
             trace=self.implTrace(),
             dropJS=dropJS)
         return classImpl + CGBindingImplClass.define(self)
+
+    def getNativeTypeForIDLType(self, type):
+        if type.isPrimitive() and type.tag() in builtinNames:
+            nativeType = CGGeneric(builtinNames[type.tag()])
+            if type.nullable():
+                nativeType = CGTemplatedType("Nullable", nativeType)
+        elif type.isEnum():
+            nativeType = CGGeneric(type.unroll().inner.identifier.name)
+            if type.nullable():
+                nativeType = CGTemplatedType("Nullable", nativeType)
+        elif type.isDOMString():
+            nativeType = CGGeneric("nsString")
+        elif type.isByteString():
+            nativeType = CGGeneric("nsCString")
+        elif type.isGeckoInterface():
+            iface = type.unroll().inner
+            nativeType = self.descriptor.getDescriptor(
+                iface.identifier.name).nativeType
+            # Now trim off unnecessary namespaces
+            nativeType = nativeType.split("::")
+            if nativeType[0] == "mozilla":
+                nativeType.pop(0)
+                if nativeType[0] == "dom":
+                    nativeType.pop(0)
+            nativeType = CGWrapper(CGGeneric("::".join(nativeType)), pre="nsRefPtr<", post=">")
+        elif type.isAny():
+            nativeType = CGGeneric("JS::Heap<JS::Value>")
+        elif type.isObject() or type.isSpiderMonkeyInterface():
+            nativeType = CGGeneric("JS::Heap<JSObject*>")
+        elif type.isUnion():
+            nativeType = CGGeneric(CGUnionStruct.unionTypeDecl(type, True))
+        else:
+            raise TypeError("Don't know how to declare member of type %s" %
+                            type)
+        return nativeType
 
 
 class CGEventRoot(CGThing):
