@@ -19,6 +19,8 @@ static Atomic<size_t> gShmemMapped;
 
 class ShmemReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~ShmemReporter() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
