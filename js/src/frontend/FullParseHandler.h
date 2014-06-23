@@ -117,8 +117,14 @@ class FullParseHandler
     }
 
     ParseNode *newStringLiteral(JSAtom *atom, const TokenPos &pos) {
-        return new_<NullaryNode>(PNK_STRING, JSOP_STRING, pos, atom);
+        return new_<NullaryNode>(PNK_STRING, JSOP_NOP, pos, atom);
     }
+
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    ParseNode *newTemplateStringLiteral(JSAtom *atom, const TokenPos &pos) {
+        return new_<NullaryNode>(PNK_TEMPLATE_STRING, JSOP_NOP, pos, atom);
+    }
+#endif
 
     ParseNode *newThisLiteral(const TokenPos &pos) {
         return new_<ThisLiteral>(pos);

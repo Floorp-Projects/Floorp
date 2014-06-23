@@ -629,6 +629,8 @@ class NodeBuilder
 
     bool arrayExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
 
+    bool templateLiteral(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
+
     bool spreadExpression(HandleValue expr, TokenPos *pos, MutableHandleValue dst);
 
     bool objectExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue dst);
@@ -1207,6 +1209,14 @@ NodeBuilder::arrayExpression(NodeVector &elts, TokenPos *pos, MutableHandleValue
 {
     return listNode(AST_ARRAY_EXPR, "elements", elts, pos, dst);
 }
+
+#ifdef JS_HAS_TEMPLATE_STRINGS
+bool
+NodeBuilder::templateLiteral(NodeVector &elts, TokenPos *pos, MutableHandleValue dst)
+{
+    return listNode(AST_TEMPLATE_LITERAL, "elements", elts, pos, dst);
+}
+#endif
 
 bool
 NodeBuilder::spreadExpression(HandleValue expr, TokenPos *pos, MutableHandleValue dst)
@@ -2819,6 +2829,26 @@ ASTSerializer::expression(ParseNode *pn, MutableHandleValue dst)
       case PNK_THIS:
         return builder.thisExpression(&pn->pn_pos, dst);
 
+#ifdef JS_HAS_TEMPLATE_STRINGS
+      case PNK_TEMPLATE_STRING_LIST:
+      {
+        NodeVector elts(cx);
+        if (!elts.reserve(pn->pn_count))
+            return false;
+
+        for (ParseNode *next = pn->pn_head; next; next = next->pn_next) {
+            JS_ASSERT(pn->pn_pos.encloses(next->pn_pos));
+
+            RootedValue expr(cx);
+            if (!expression(next, &expr))
+                return false;
+            elts.infallibleAppend(expr);
+        }
+
+        return builder.templateLiteral(elts, &pn->pn_pos, dst);
+      }
+      case PNK_TEMPLATE_STRING:
+#endif
       case PNK_STRING:
       case PNK_REGEXP:
       case PNK_NUMBER:
@@ -2905,6 +2935,9 @@ ASTSerializer::literal(ParseNode *pn, MutableHandleValue dst)
 {
     RootedValue val(cx);
     switch (pn->getKind()) {
+#ifdef JS_HAS_TEMPLATE_STRINGS
+      case PNK_TEMPLATE_STRING:
+#endif
       case PNK_STRING:
         val.setString(pn->pn_atom);
         break;
