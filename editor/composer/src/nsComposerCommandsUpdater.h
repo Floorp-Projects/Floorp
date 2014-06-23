@@ -32,7 +32,6 @@ class nsComposerCommandsUpdater : public nsISelectionListener,
 public:
 
                                   nsComposerCommandsUpdater();
-  virtual                         ~nsComposerCommandsUpdater();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -68,6 +67,8 @@ public:
   nsresult   Init(nsIDOMWindow* aDOMWindow);
 
 protected:
+
+  virtual ~nsComposerCommandsUpdater();
 
   enum {
     eStateUninitialized   = -1,
