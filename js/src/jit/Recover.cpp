@@ -584,6 +584,33 @@ RPow::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MPowHalf::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_PowHalf));
+    return true;
+}
+
+RPowHalf::RPowHalf(CompactBufferReader &reader)
+{ }
+
+bool
+RPowHalf::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue base(cx, iter.read());
+    RootedValue power(cx);
+    RootedValue result(cx);
+    power.setNumber(0.5);
+
+    MOZ_ASSERT(base.isNumber());
+    if (!js_math_pow_handle(cx, base, power, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MMathFunction::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
