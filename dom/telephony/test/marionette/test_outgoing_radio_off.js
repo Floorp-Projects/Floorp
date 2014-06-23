@@ -49,7 +49,6 @@ function dial(number) {
 
     emulator.runWithCallback("gsm list", function(result) {
       log("Initial call list: " + result);
-      is(result[0], "OK");
 
       setRadioEnabled(true, cleanUp);
     });

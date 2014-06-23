@@ -25,7 +25,6 @@ function simulateIncoming() {
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : incoming");
-      is(result[1], "OK");
       answerIncoming();
     });
   };
@@ -53,7 +52,6 @@ function answerIncoming() {
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : active");
-      is(result[1], "OK");
       holdCall();
     });
   };
@@ -85,7 +83,6 @@ function holdCall() {
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : held");
-      is(result[1], "OK");
       dial();
     });
   };
@@ -115,7 +112,6 @@ function dial() {
         log("Call list is now: " + result);
         is(result[0], "inbound from " + inNumber + " : held");
         is(result[1], "outbound to  " + outNumber + " : ringing");
-        is(result[2], "OK");
         answerOutgoing();
       });
     };
@@ -137,7 +133,6 @@ function answerOutgoing() {
       log("Call list is now: " + result);
       is(result[0], "inbound from " + inNumber + " : held");
       is(result[1], "outbound to  " + outNumber + " : active");
-      is(result[2], "OK");
       holdSecondCall();
     });
   };
@@ -196,7 +191,6 @@ function verifyCalls() {
     log("Call list is now: " + result);
     is(result[0], "inbound from " + inNumber + " : active");
     is(result[1], "outbound to  " + outNumber + " : held");
-    is(result[2], "OK");
     hangUpIncoming();
   });
 }
@@ -227,7 +221,6 @@ function hangUpIncoming() {
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
       is(result[0], "outbound to  " + outNumber + " : held");
-      is(result[1], "OK");
       hangUpOutgoing();
     });
   };
@@ -258,7 +251,6 @@ function hangUpOutgoing() {
 
     emulator.runWithCallback("gsm list", function(result) {
       log("Call list is now: " + result);
-      is(result[0], "OK");
       cleanUp();
     });
   };
