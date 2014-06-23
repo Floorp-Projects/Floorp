@@ -1558,7 +1558,7 @@ Navigator::RequestWakeLock(const nsAString &aTopic, ErrorResult& aRv)
   return pmService->NewWakeLock(aTopic, mWindow, aRv);
 }
 
-MobileMessageManager*
+nsIDOMMozMobileMessageManager*
 Navigator::GetMozMobileMessage()
 {
   if (!mMobileMessageManager) {
@@ -1566,8 +1566,8 @@ Navigator::GetMozMobileMessage()
     NS_ENSURE_TRUE(mWindow, nullptr);
     NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
 
-    mMobileMessageManager = new MobileMessageManager(mWindow);
-    mMobileMessageManager->Init();
+    mMobileMessageManager = new MobileMessageManager();
+    mMobileMessageManager->Init(mWindow);
   }
 
   return mMobileMessageManager;
