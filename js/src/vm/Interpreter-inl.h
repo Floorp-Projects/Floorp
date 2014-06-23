@@ -356,6 +356,16 @@ GetObjectElementOperation(JSContext *cx, JSOp op, JSObject *objArg, bool wasObje
             break;
         }
 
+        if (rref.isSymbol()) {
+            RootedObject obj(cx, objArg);
+            RootedId id(cx, SYMBOL_TO_JSID(rref.toSymbol()));
+            if (!JSObject::getGeneric(cx, obj, obj, id, res))
+                return false;
+
+            objArg = obj;
+            break;
+        }
+
         JSAtom *name = ToAtom<NoGC>(cx, rref);
         if (name) {
             if (name->isIndex(&index)) {
