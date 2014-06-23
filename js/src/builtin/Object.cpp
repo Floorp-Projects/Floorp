@@ -889,34 +889,46 @@ obj_is(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-static bool
-obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
+bool
+js::IdToStringOrSymbol(JSContext *cx, HandleId id, MutableHandleValue result)
 {
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedObject obj(cx);
-    if (!GetFirstArgumentAsObject(cx, args, "Object.getOwnPropertyNames", &obj))
+    if (JSID_IS_INT(id)) {
+        JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+        if (!str)
+            return false;
+        result.setString(str);
+    } else if (JSID_IS_ATOM(id)) {
+        result.setString(JSID_TO_STRING(id));
+    } else {
+        result.setSymbol(JSID_TO_SYMBOL(id));
+    }
+    return true;
+}
+
+/* ES6 draft rev 25 (2014 May 22) 19.1.2.8.1 */
+static bool
+GetOwnPropertyKeys(JSContext *cx, const CallArgs &args, unsigned flags, const char *fnname)
+{
+    // steps 1-2
+    RootedObject obj(cx, ToObject(cx, args.get(0)));
+    if (!obj)
         return false;
 
+    // steps 3-10
     AutoIdVector keys(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &keys))
+    if (!GetPropertyNames(cx, obj, flags, &keys))
         return false;
 
+    // step 11
     AutoValueVector vals(cx);
     if (!vals.resize(keys.length()))
         return false;
 
     for (size_t i = 0, len = keys.length(); i < len; i++) {
-         jsid id = keys[i];
-         if (JSID_IS_INT(id)) {
-             JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
-             if (!str)
-                 return false;
-             vals[i].setString(str);
-         } else if (JSID_IS_ATOM(id)) {
-             vals[i].setString(JSID_TO_STRING(id));
-         } else {
-             vals[i].setSymbol(JSID_TO_SYMBOL(id));
-         }
+        MOZ_ASSERT_IF(JSID_IS_SYMBOL(keys[i]), flags & JSITER_SYMBOLS);
+        MOZ_ASSERT_IF(!JSID_IS_SYMBOL(keys[i]), !(flags & JSITER_SYMBOLSONLY));
+        if (!IdToStringOrSymbol(cx, keys[i], vals[i]))
+            return false;
     }
 
     JSObject *aobj = NewDenseCopiedArray(cx, vals.length(), vals.begin());
@@ -925,6 +937,24 @@ obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
 
     args.rval().setObject(*aobj);
     return true;
+}
+
+static bool
+obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return GetOwnPropertyKeys(cx, args, JSITER_OWNONLY | JSITER_HIDDEN,
+                              "Object.getOwnPropertyNames");
+}
+
+/* ES6 draft rev 25 (2014 May 22) 19.1.2.8 */
+static bool
+obj_getOwnPropertySymbols(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return GetOwnPropertyKeys(cx, args,
+                              JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS | JSITER_SYMBOLSONLY,
+                              "Object.getOwnPropertySymbols");
 }
 
 /* ES5 15.2.3.6: Object.defineProperty(O, P, Attributes) */
@@ -1179,6 +1209,7 @@ const JSFunctionSpec js::object_static_methods[] = {
     JS_FN("defineProperties",          obj_defineProperties,        2,0),
     JS_FN("create",                    obj_create,                  2,0),
     JS_FN("getOwnPropertyNames",       obj_getOwnPropertyNames,     1,0),
+    JS_FN("getOwnPropertySymbols",     obj_getOwnPropertySymbols,   1,0),
     JS_FN("isExtensible",              obj_isExtensible,            1,0),
     JS_FN("preventExtensions",         obj_preventExtensions,       1,0),
     JS_FN("freeze",                    obj_freeze,                  1,0),
