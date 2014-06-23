@@ -15,6 +15,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
+#include "vm/Symbol.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jscompartmentinlines.h"
@@ -25,6 +26,7 @@
 # include "gc/Nursery-inl.h"
 #endif
 #include "vm/String-inl.h"
+#include "vm/Symbol-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -78,7 +80,10 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, Shape *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, JSString *thing);
+PushMarkStack(GCMarker *gcmarker, JSString *str);
+
+static inline void
+PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing);
@@ -87,6 +92,7 @@ namespace js {
 namespace gc {
 
 static void MarkChildren(JSTracer *trc, JSString *str);
+static void MarkChildren(JSTracer *trc, JS::Symbol *sym);
 static void MarkChildren(JSTracer *trc, JSScript *script);
 static void MarkChildren(JSTracer *trc, LazyScript *lazy);
 static void MarkChildren(JSTracer *trc, Shape *shape);
@@ -569,6 +575,7 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
+DeclMarkerImpl(Symbol, JS::Symbol)
 DeclMarkerImpl(TypeObject, js::types::TypeObject)
 
 } /* namespace gc */
@@ -589,6 +596,9 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         break;
       case JSTRACE_STRING:
         MarkInternal(trc, reinterpret_cast<JSString **>(thingp));
+        break;
+      case JSTRACE_SYMBOL:
+        MarkInternal(trc, reinterpret_cast<JS::Symbol **>(thingp));
         break;
       case JSTRACE_SCRIPT:
         MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
@@ -708,6 +718,8 @@ MarkValueInternal(JSTracer *trc, Value *v)
         MarkKind(trc, &thing, v->gcKind());
         if (v->isString())
             v->setString((JSString *)thing);
+        else if (v->isSymbol())
+            v->setSymbol((JS::Symbol *)thing);
         else
             v->setObjectOrNull((JSObject *)thing);
     } else {
@@ -928,6 +940,10 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
 #define JS_COMPARTMENT_ASSERT_STR(rt, thing)                            \
     JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
               (rt)->isAtomsZone((thing)->zone()));
+
+// Symbols can also be in the atoms zone.
+#define JS_COMPARTMENT_ASSERT_SYM(rt, sym)                              \
+    JS_COMPARTMENT_ASSERT_STR(rt, sym)
 
 static void
 PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
@@ -1199,6 +1215,16 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
         ScanString(gcmarker, str);
 }
 
+static inline void
+PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym)
+{
+    JS_COMPARTMENT_ASSERT_SYM(gcmarker->runtime(), sym);
+    if (sym->markIfUnmarked()) {
+        if (JSString *desc = sym->description())
+            ScanString(gcmarker, desc);
+    }
+}
+
 void
 gc::MarkChildren(JSTracer *trc, JSObject *obj)
 {
@@ -1212,6 +1238,12 @@ gc::MarkChildren(JSTracer *trc, JSString *str)
         str->markBase(trc);
     else if (str->isRope())
         str->asRope().markChildren(trc);
+}
+
+static void
+gc::MarkChildren(JSTracer *trc, JS::Symbol *sym)
+{
+    sym->markChildren(trc);
 }
 
 static void
@@ -1373,6 +1405,10 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
 
       case JSTRACE_STRING:
         PushArenaTyped<JSString>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_SYMBOL:
+        PushArenaTyped<JS::Symbol>(gcmarker, aheader);
         break;
 
       case JSTRACE_SCRIPT:
@@ -1703,6 +1739,10 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 
       case JSTRACE_STRING:
         MarkChildren(trc, static_cast<JSString *>(thing));
+        break;
+
+      case JSTRACE_SYMBOL:
+        MarkChildren(trc, static_cast<JS::Symbol *>(thing));
         break;
 
       case JSTRACE_SCRIPT:

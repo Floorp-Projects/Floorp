@@ -27,6 +27,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/String-inl.h"
+#include "vm/Symbol-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -380,6 +381,9 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const CharT *tbchars, size_t length, I
 
     JSFlatString *flat = js_NewStringCopyN<NoGC>(cx, tbchars, length);
     if (!flat) {
+        // Grudgingly forgo last-ditch GC. The alternative would be to release
+        // the lock, manually GC here, and retry from the top. If you fix this,
+        // please also fix or comment the similar case in Symbol::new_.
         js_ReportOutOfMemory(cx);
         return nullptr;
     }

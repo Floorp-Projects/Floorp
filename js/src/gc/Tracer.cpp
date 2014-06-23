@@ -19,6 +19,8 @@
 #include "gc/GCInternals.h"
 #include "gc/Marking.h"
 
+#include "vm/Symbol.h"
+
 #include "jsgcinlines.h"
 
 using namespace js;
@@ -152,6 +154,10 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
                : "string";
         break;
 
+      case JSTRACE_SYMBOL:
+        name = "symbol";
+        break;
+
       case JSTRACE_SCRIPT:
         name = "script";
         break;
@@ -222,9 +228,26 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
                 bufsize -= n;
 
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
-            }
-            else
+            } else {
                 JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
+            }
+            break;
+          }
+
+          case JSTRACE_SYMBOL:
+          {
+            JS::Symbol *sym = static_cast<JS::Symbol *>(thing);
+            if (JSString *desc = sym->description()) {
+                if (desc->isLinear()) {
+                    *buf++ = ' ';
+                    bufsize--;
+                    PutEscapedString(buf, bufsize, &desc->asLinear(), 0);
+                } else {
+                    JS_snprintf(buf, bufsize, "<nonlinear desc>");
+                }
+            } else {
+                JS_snprintf(buf, bufsize, "<null>");
+            }
             break;
           }
 

@@ -83,7 +83,7 @@ doResolve(JS::HandleObject obj, JS::HandleId id, JS::MutableHandleObject objp)
 {
     CHECK_EQUAL(resolveExitCount, 0);
     AutoIncrCounters incr(this);
-    CHECK_EQUAL(obj, obj1 || obj == obj2);
+    CHECK(obj == obj1 || obj == obj2);
 
     CHECK(JSID_IS_STRING(id));
 

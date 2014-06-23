@@ -125,6 +125,14 @@ AsCell(JSFlatString *flat)
 }
 
 static MOZ_ALWAYS_INLINE js::gc::Cell *
+AsCell(JS::Symbol *sym)
+{
+    js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(sym);
+    AssertGCThingHasType(cell, JSTRACE_SYMBOL);
+    return cell;
+}
+
+static MOZ_ALWAYS_INLINE js::gc::Cell *
 AsCell(JSScript *script)
 {
     js::gc::Cell *cell = reinterpret_cast<js::gc::Cell *>(script);

@@ -980,6 +980,8 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
         JSObject::writeBarrierPre(static_cast<JSObject*>(cell));
     else if (kind == JSTRACE_STRING)
         JSString::writeBarrierPre(static_cast<JSString*>(cell));
+    else if (kind == JSTRACE_SYMBOL)
+        JS::Symbol::writeBarrierPre(static_cast<JS::Symbol*>(cell));
     else if (kind == JSTRACE_SCRIPT)
         JSScript::writeBarrierPre(static_cast<JSScript*>(cell));
     else if (kind == JSTRACE_LAZY_SCRIPT)
