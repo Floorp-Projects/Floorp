@@ -24,6 +24,16 @@ for (var sym of symbols) {
     assertThrowsInstanceOf(() => sym + "", TypeError);
     assertThrowsInstanceOf(() => "" + [1, 2, Symbol()], TypeError);
     assertThrowsInstanceOf(() => ["simple", "thimble", Symbol()].join(), TypeError);
+
+    // 7.1.13 ToObject
+    var obj = Object(sym);
+    assertEq(typeof obj, "object");
+    assertEq(Object.prototype.toString.call(obj), "[object Symbol]");
+    assertEq(Object.getPrototypeOf(obj), Symbol.prototype);
+    assertEq(Object.getOwnPropertyNames(obj).length, 0);
+    assertEq(Object(sym) === Object(sym), false);  // new object each time
+    var f = function () { return this; };
+    assertEq(f.call(sym) === f.call(sym), false);  // new object each time
 }
 
 if (typeof reportCompare === "function")
