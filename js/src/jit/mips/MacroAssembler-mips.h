@@ -691,6 +691,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestString(Condition cond, Register tag, Label *label);
     void branchTestString(Condition cond, const BaseIndex &src, Label *label);
 
+    void branchTestSymbol(Condition cond, const ValueOperand &value, Label *label);
+    void branchTestSymbol(Condition cond, const Register &tag, Label *label);
+    void branchTestSymbol(Condition cond, const BaseIndex &src, Label *label);
+
     void branchTestUndefined(Condition cond, const ValueOperand &value, Label *label);
     void branchTestUndefined(Condition cond, Register tag, Label *label);
     void branchTestUndefined(Condition cond, const BaseIndex &src, Label *label);

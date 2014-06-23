@@ -1341,6 +1341,9 @@ ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(MacroAssembler &masm)
     if (flags_ & TypeToFlag(JSVAL_TYPE_STRING))
         masm.branchTestString(Assembler::Equal, R0, &success);
 
+    if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL))
+        masm.branchTestSymbol(Assembler::Equal, R0, &success);
+
     // Currently, we will never generate primitive stub checks for object.  However,
     // when we do get to the point where we want to collapse our monitor chains of
     // objects and singletons down (when they get too long) to a generic "any object"
@@ -1562,6 +1565,9 @@ ICTypeUpdate_PrimitiveSet::Compiler::generateStubCode(MacroAssembler &masm)
 
     if (flags_ & TypeToFlag(JSVAL_TYPE_STRING))
         masm.branchTestString(Assembler::Equal, R0, &success);
+
+    if (flags_ & TypeToFlag(JSVAL_TYPE_SYMBOL))
+        masm.branchTestSymbol(Assembler::Equal, R0, &success);
 
     // Currently, we will never generate primitive stub checks for object.  However,
     // when we do get to the point where we want to collapse our monitor chains of
@@ -6287,6 +6293,9 @@ TryAttachPrimitiveGetPropStub(JSContext *cx, HandleScript script, jsbytecode *pc
     if (val.isString()) {
         primitiveType = JSVAL_TYPE_STRING;
         proto = GlobalObject::getOrCreateStringPrototype(cx, global);
+    } else if (val.isSymbol()) {
+        primitiveType = JSVAL_TYPE_SYMBOL;
+        proto = GlobalObject::getOrCreateSymbolPrototype(cx, global);
     } else if (val.isNumber()) {
         primitiveType = JSVAL_TYPE_DOUBLE;
         proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
@@ -6528,6 +6537,9 @@ ICGetProp_Primitive::Compiler::generateStubCode(MacroAssembler &masm)
     switch (primitiveType_) {
       case JSVAL_TYPE_STRING:
         masm.branchTestString(Assembler::NotEqual, R0, &failure);
+        break;
+      case JSVAL_TYPE_SYMBOL:
+        masm.branchTestSymbol(Assembler::NotEqual, R0, &failure);
         break;
       case JSVAL_TYPE_DOUBLE: // Also used for int32.
         masm.branchTestNumber(Assembler::NotEqual, R0, &failure);
@@ -9752,6 +9764,10 @@ ICTypeOf_Typed::Compiler::generateStubCode(MacroAssembler &masm)
 
       case JSTYPE_BOOLEAN:
         masm.branchTestBoolean(Assembler::NotEqual, R0, &failure);
+        break;
+
+      case JSTYPE_SYMBOL:
+        masm.branchTestSymbol(Assembler::NotEqual, R0, &failure);
         break;
 
       default:

@@ -177,6 +177,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot *snapshot, MDefinition *mir,
         break;
       case MIRType_Int32:
       case MIRType_String:
+      case MIRType_Symbol:
       case MIRType_Object:
       case MIRType_Boolean:
       case MIRType_Double:

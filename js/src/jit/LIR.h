@@ -531,6 +531,7 @@ class LDefinition
             static_assert(sizeof(bool) <= sizeof(int32_t), "bool doesn't fit in an int32 slot");
             return LDefinition::INT32;
           case MIRType_String:
+          case MIRType_Symbol:
           case MIRType_Object:
             return LDefinition::OBJECT;
           case MIRType_Double:

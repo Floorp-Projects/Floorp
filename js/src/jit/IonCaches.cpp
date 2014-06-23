@@ -3367,6 +3367,7 @@ GetElementIC::attachArgumentsElement(JSContext *cx, HandleScript outerScript, Io
         JS_ASSERT(index().reg().type() == MIRType_Boolean ||
                   index().reg().type() == MIRType_Int32 ||
                   index().reg().type() == MIRType_String ||
+                  index().reg().type() == MIRType_Symbol ||
                   index().reg().type() == MIRType_Object);
         masm.branchTestMIRType(Assembler::NotEqual, elemIdx, index().reg().type(),
                                &failureRestoreIndex);
