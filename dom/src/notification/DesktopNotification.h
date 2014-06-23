@@ -56,10 +56,6 @@ public:
     SetIsDOMBinding();
   }
 
-  virtual ~DesktopNotificationCenter()
-  {
-  }
-
   void Shutdown() {
     mOwner = nullptr;
   }
@@ -77,6 +73,10 @@ public:
                      const nsAString& iconURL);
 
 private:
+  virtual ~DesktopNotificationCenter()
+  {
+  }
+
   nsCOMPtr<nsPIDOMWindow> mOwner;
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
@@ -150,8 +150,6 @@ class AlertServiceObserver: public nsIObserver
     AlertServiceObserver(DesktopNotification* notification)
     : mNotification(notification) {}
 
-  virtual ~AlertServiceObserver() {}
-
   void Disconnect() { mNotification = nullptr; }
 
   NS_IMETHODIMP
@@ -172,6 +170,8 @@ class AlertServiceObserver: public nsIObserver
   };
 
  private:
+  virtual ~AlertServiceObserver() {}
+
   DesktopNotification* mNotification;
 };
 

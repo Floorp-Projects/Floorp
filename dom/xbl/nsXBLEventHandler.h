@@ -19,13 +19,13 @@ class nsXBLEventHandler : public nsIDOMEventListener
 {
 public:
   nsXBLEventHandler(nsXBLPrototypeHandler* aHandler);
-  virtual ~nsXBLEventHandler();
 
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
+  virtual ~nsXBLEventHandler();
   nsXBLPrototypeHandler* mProtoHandler;
 
 private:
@@ -50,7 +50,6 @@ class nsXBLKeyEventHandler : public nsIDOMEventListener
 {
 public:
   nsXBLKeyEventHandler(nsIAtom* aEventType, uint8_t aPhase, uint8_t aType);
-  virtual ~nsXBLKeyEventHandler();
 
   NS_DECL_ISUPPORTS
 
@@ -93,6 +92,8 @@ public:
 
 private:
   nsXBLKeyEventHandler();
+  virtual ~nsXBLKeyEventHandler();
+
   bool ExecuteMatchedHandlers(nsIDOMKeyEvent* aEvent, uint32_t aCharCode,
                                 bool aIgnoreShiftKey);
 

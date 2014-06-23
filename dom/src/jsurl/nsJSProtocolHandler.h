@@ -45,7 +45,6 @@ public:
 
     // nsJSProtocolHandler methods:
     nsJSProtocolHandler();
-    virtual ~nsJSProtocolHandler();
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
@@ -53,6 +52,7 @@ public:
     nsresult Init();
 
 protected:
+    virtual ~nsJSProtocolHandler();
 
     nsresult EnsureUTF8Spec(const nsAFlatCString &aSpec, const char *aCharset, 
                             nsACString &aUTF8Spec);

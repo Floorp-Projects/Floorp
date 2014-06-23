@@ -92,14 +92,13 @@ const char * const sSelectBottomString = "cmd_selectBottom";
 class nsSelectionCommandsBase : public nsIControllerCommand
 {
 public:
-  virtual ~nsSelectionCommandsBase() {}
-
   NS_DECL_ISUPPORTS
   NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandContext, bool *_retval);
   NS_IMETHOD GetCommandStateParams(const char * aCommandName, nsICommandParams *aParams, nsISupports *aCommandContext);
   NS_IMETHOD DoCommandParams(const char * aCommandName, nsICommandParams *aParams, nsISupports *aCommandContext);
 
 protected:
+  virtual ~nsSelectionCommandsBase() {}
 
   static nsresult  GetPresShellFromWindow(nsPIDOMWindow *aWindow, nsIPresShell **aPresShell);
   static nsresult  GetSelectionControllerFromWindow(nsPIDOMWindow *aWindow, nsISelectionController **aSelCon);
@@ -323,6 +322,8 @@ nsSelectCommand::DoCommand(const char *aCommandName, nsISupports *aCommandContex
 
 class nsClipboardCommand MOZ_FINAL : public nsIControllerCommand
 {
+  ~nsClipboardCommand() {}
+
 public:
 
   NS_DECL_ISUPPORTS
@@ -387,12 +388,11 @@ nsClipboardCommand::DoCommandParams(const char *aCommandName, nsICommandParams* 
 class nsSelectionCommand : public nsIControllerCommand
 {
 public:
-  virtual ~nsSelectionCommand() {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSICONTROLLERCOMMAND
 
 protected:
+  virtual ~nsSelectionCommand() {}
 
   virtual nsresult    IsClipboardCommandEnabled(const char * aCommandName, nsIContentViewerEdit* aEdit, bool *outCmdEnabled) = 0;
   virtual nsresult    DoClipboardCommand(const char *aCommandName, nsIContentViewerEdit* aEdit, nsICommandParams* aParams) = 0;
@@ -722,6 +722,8 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 
 class nsClipboardDragDropHookCommand MOZ_FINAL : public nsIControllerCommand
 {
+  ~nsClipboardDragDropHookCommand() {}
+
 public:
 
   NS_DECL_ISUPPORTS

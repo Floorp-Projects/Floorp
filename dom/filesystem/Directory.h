@@ -48,7 +48,6 @@ public:
   GetRoot(FileSystemBase* aFileSystem);
 
   Directory(FileSystemBase* aFileSystem, const nsAString& aPath);
-  ~Directory();
 
   // ========= Begin WebIDL bindings. ===========
 
@@ -81,6 +80,8 @@ public:
   FileSystemBase*
   GetFileSystem() const;
 private:
+  ~Directory();
+
   static bool
   IsValidRelativePath(const nsString& aPath);
 

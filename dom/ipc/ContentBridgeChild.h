@@ -21,8 +21,6 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual ~ContentBridgeChild();
-
   static ContentBridgeChild*
   Create(Transport* aTransport, ProcessId aOtherProcess);
 
@@ -48,6 +46,8 @@ public:
                                        const bool& aIsForBrowser) MOZ_OVERRIDE;
 
 protected:
+  virtual ~ContentBridgeChild();
+
   virtual PBrowserChild* AllocPBrowserChild(const IPCTabContext& aContext,
                                             const uint32_t& aChromeFlags,
                                             const uint64_t& aID,

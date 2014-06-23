@@ -93,9 +93,10 @@ using namespace mozilla::layers;
 // same class
 class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
+  virtual ~nsPluginDOMContextMenuListener();
+
 public:
   nsPluginDOMContextMenuListener(nsIContent* aContent);
-  virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER

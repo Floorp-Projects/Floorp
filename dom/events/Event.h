@@ -45,6 +45,8 @@ public:
         nsPresContext* aPresContext,
         WidgetEvent* aEvent);
   Event(nsPIDOMWindow* aWindow);
+
+protected:
   virtual ~Event();
 
 private:

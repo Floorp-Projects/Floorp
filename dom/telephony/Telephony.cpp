@@ -34,6 +34,8 @@ class Telephony::Listener : public nsITelephonyListener
 {
   Telephony* mTelephony;
 
+  virtual ~Listener() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_FORWARD_SAFE_NSITELEPHONYLISTENER(mTelephony)
@@ -43,8 +45,6 @@ public:
   {
     MOZ_ASSERT(mTelephony);
   }
-
-  virtual ~Listener() {}
 
   void
   Disconnect()
@@ -61,6 +61,8 @@ class Telephony::Callback : public nsITelephonyCallback
   uint32_t mServiceId;
   nsString mNumber;
 
+  virtual ~Callback() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -71,8 +73,6 @@ public:
   {
     MOZ_ASSERT(mTelephony);
   }
-
-  virtual ~Callback() {}
 
   NS_IMETHODIMP
   NotifyDialError(const nsAString& aError)

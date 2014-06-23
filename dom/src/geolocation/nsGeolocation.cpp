@@ -85,8 +85,6 @@ class nsGeolocationRequest
   void NotifyErrorAndShutdown(uint16_t);
   nsIPrincipal* GetPrincipal();
 
-  ~nsGeolocationRequest();
-
   virtual bool Recv__delete__(const bool& allow,
                               const InfallibleTArray<PermissionChoice>& choices) MOZ_OVERRIDE;
   virtual void IPDLRelease() MOZ_OVERRIDE { Release(); }
@@ -94,6 +92,8 @@ class nsGeolocationRequest
   bool IsWatch() { return mIsWatchPositionRequest; }
   int32_t WatchId() { return mWatchId; }
  private:
+  ~nsGeolocationRequest();
+
   bool mIsWatchPositionRequest;
 
   nsCOMPtr<nsITimer> mTimeoutTimer;
@@ -121,15 +121,15 @@ CreatePositionOptionsCopy(const PositionOptions& aOptions)
 
 class GeolocationSettingsCallback : public nsISettingsServiceCallback
 {
+  virtual ~GeolocationSettingsCallback() {
+    MOZ_COUNT_DTOR(GeolocationSettingsCallback);
+  }
+
 public:
   NS_DECL_ISUPPORTS
 
   GeolocationSettingsCallback() {
     MOZ_COUNT_CTOR(GeolocationSettingsCallback);
-  }
-
-  virtual ~GeolocationSettingsCallback() {
-    MOZ_COUNT_DTOR(GeolocationSettingsCallback);
   }
 
   NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult)
