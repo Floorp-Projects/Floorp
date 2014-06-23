@@ -170,20 +170,33 @@ AllocChars(ThreadSafeContext *maybecx, size_t length, CharT **chars, size_t *cap
 }
 
 bool
-JSRope::copyNonPureChars(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+JSRope::copyLatin1CharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<Latin1Char> &out) const
 {
-    return copyNonPureCharsInternal(cx, out, false);
+    return copyCharsInternal<Latin1Char>(cx, out, true);
 }
 
 bool
-JSRope::copyNonPureCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+JSRope::copyTwoByteCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
 {
-    return copyNonPureCharsInternal(cx, out, true);
+    return copyCharsInternal<jschar>(cx, out, true);
 }
 
 bool
-JSRope::copyNonPureCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out,
-                                 bool nullTerminate) const
+JSRope::copyLatin1Chars(ThreadSafeContext *cx, ScopedJSFreePtr<Latin1Char> &out) const
+{
+    return copyCharsInternal<Latin1Char>(cx, out, false);
+}
+
+bool
+JSRope::copyTwoByteChars(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
+{
+    return copyCharsInternal<jschar>(cx, out, false);
+}
+
+template <typename CharT>
+bool
+JSRope::copyCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<CharT> &out,
+                          bool nullTerminate) const
 {
     /*
      * Perform non-destructive post-order traversal of the rope, splatting
@@ -192,25 +205,24 @@ JSRope::copyNonPureCharsInternal(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> 
 
     size_t n = length();
     if (cx)
-        out.reset(cx->pod_malloc<jschar>(n + 1));
+        out.reset(cx->pod_malloc<CharT>(n + 1));
     else
-        out.reset(js_pod_malloc<jschar>(n + 1));
+        out.reset(js_pod_malloc<CharT>(n + 1));
 
     if (!out)
         return false;
 
     Vector<const JSString *, 8, SystemAllocPolicy> nodeStack;
     const JSString *str = this;
-    jschar *pos = out;
+    CharT *pos = out;
     while (true) {
         if (str->isRope()) {
             if (!nodeStack.append(str->asRope().rightChild()))
                 return false;
             str = str->asRope().leftChild();
         } else {
-            size_t len = str->length();
-            PodCopy(pos, str->asLinear().chars(), len);
-            pos += len;
+            CopyChars(pos, str->asLinear());
+            pos += str->length();
             if (nodeStack.empty())
                 break;
             str = nodeStack.popCopy();
@@ -490,23 +502,6 @@ js::ConcatStrings<CanGC>(ThreadSafeContext *cx, HandleString left, HandleString 
 template JSString *
 js::ConcatStrings<NoGC>(ThreadSafeContext *cx, JSString *left, JSString *right);
 
-bool
-JSDependentString::copyNonPureCharsZ(ThreadSafeContext *cx, ScopedJSFreePtr<jschar> &out) const
-{
-    JS_ASSERT(JSString::isDependent());
-
-    size_t n = length();
-    jschar *s = cx->pod_malloc<jschar>(n + 1);
-    if (!s)
-        return false;
-
-    PodCopy(s, nonInlineChars(), n);
-    s[n] = 0;
-
-    out.reset(s);
-    return true;
-}
-
 template <typename CharT>
 JSFlatString *
 JSDependentString::undependInternal(ExclusiveContext *cx)
@@ -621,14 +616,30 @@ ScopedThreadSafeStringInspector::ensureChars(ThreadSafeContext *cx, const AutoCh
             latin1Chars_ = linear->latin1Chars(nogc);
         }
     } else {
-        if (str_->hasPureChars()) {
-            state_ = TwoByte;
-            twoByteChars_ = str_->pureChars();
+        if (str_->isLinear()) {
+            if (str_->hasLatin1Chars()) {
+                state_ = Latin1;
+                latin1Chars_ = str_->asLinear().latin1Chars(nogc);
+            } else {
+                state_ = TwoByte;
+                twoByteChars_ = str_->asLinear().twoByteChars(nogc);
+            }
         } else {
-            if (!str_->copyNonPureChars(cx, scopedChars_))
-                return false;
-            state_ = TwoByte;
-            twoByteChars_ = scopedChars_;
+            if (str_->hasLatin1Chars()) {
+                ScopedJSFreePtr<Latin1Char> chars;
+                if (!str_->asRope().copyLatin1Chars(cx, chars))
+                    return false;
+                state_ = Latin1;
+                latin1Chars_ = chars;
+                scopedChars_ = chars.forget();
+            } else {
+                ScopedJSFreePtr<jschar> chars;
+                if (!str_->asRope().copyTwoByteChars(cx, chars))
+                    return false;
+                state_ = TwoByte;
+                twoByteChars_ = chars;
+                scopedChars_ = chars.forget();
+            }
         }
     }
 
