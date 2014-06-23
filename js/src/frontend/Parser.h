@@ -642,7 +642,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     static Node null() { return ParseHandler::null(); }
 
-    bool reportRedeclaration(Node pn, bool isConst, JSAtom *atom);
+    bool reportRedeclaration(Node pn, bool isConst, HandlePropertyName name);
     bool reportBadReturn(Node pn, ParseReportKind kind, unsigned errnum, unsigned anonerrnum);
     bool checkFinalReturn(Node pn);
     DefinitionNode getOrCreateLexicalDependency(ParseContext<ParseHandler> *pc, JSAtom *atom);
