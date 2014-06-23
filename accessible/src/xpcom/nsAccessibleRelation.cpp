@@ -23,6 +23,10 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
     mTargets->AppendElement(targetAcc, false);
 }
 
+nsAccessibleRelation::~nsAccessibleRelation()
+{
+}
+
 // nsISupports
 NS_IMPL_ISUPPORTS(nsAccessibleRelation, nsIAccessibleRelation)
 

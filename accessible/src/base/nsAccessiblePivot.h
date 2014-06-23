@@ -38,6 +38,7 @@ public:
   Accessible* Position() { return mPosition; }
 
 private:
+  ~nsAccessiblePivot();
   nsAccessiblePivot() MOZ_DELETE;
   nsAccessiblePivot(const nsAccessiblePivot&) MOZ_DELETE;
   void operator = (const nsAccessiblePivot&) MOZ_DELETE;

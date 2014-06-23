@@ -64,6 +64,9 @@ private:
   xpcAccessibleTextRange(TextRange&& aRange) :
     mRange(Forward<TextRange>(aRange)) {}
   xpcAccessibleTextRange() {}
+
+  ~xpcAccessibleTextRange() {}
+
   friend class xpcAccessibleHyperText;
 
   xpcAccessibleTextRange(const xpcAccessibleTextRange&) MOZ_DELETE;

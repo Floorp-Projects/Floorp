@@ -45,6 +45,10 @@ nsAccessiblePivot::nsAccessiblePivot(Accessible* aRoot) :
   NS_ASSERTION(aRoot, "A root accessible is required");
 }
 
+nsAccessiblePivot::~nsAccessiblePivot()
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsISupports
 

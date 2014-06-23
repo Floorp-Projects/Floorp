@@ -30,6 +30,8 @@ public:
 
 private:
   nsAccessibleRelation();
+  ~nsAccessibleRelation();
+
   nsAccessibleRelation(const nsAccessibleRelation&);
   nsAccessibleRelation& operator = (const nsAccessibleRelation&);
   

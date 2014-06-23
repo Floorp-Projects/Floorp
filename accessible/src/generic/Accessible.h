@@ -129,7 +129,6 @@ class Accessible : public nsIAccessible,
 {
 public:
   Accessible(nsIContent* aContent, DocAccessible* aDoc);
-  virtual ~Accessible();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(Accessible, nsIAccessible)
@@ -822,6 +821,8 @@ public:
     { return mContextFlags & eHasNameDependentParent; }
 
 protected:
+
+  virtual ~Accessible();
 
   /**
    * Return the accessible name provided by native markup. It doesn't take

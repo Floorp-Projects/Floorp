@@ -79,7 +79,6 @@ public:
   AccEvent(uint32_t aEventType, Accessible* aAccessible,
            EIsFromUserInput aIsFromUserInput = eAutoDetect,
            EEventRule aEventRule = eRemoveDupes);
-  virtual ~AccEvent() {}
 
   // AccEvent
   uint32_t GetEventType() const { return mEventType; }
@@ -122,6 +121,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(AccEvent)
 
 protected:
+  virtual ~AccEvent() {}
+
   bool mIsFromUserInput;
   uint32_t mEventType;
   EEventRule mEventRule;
