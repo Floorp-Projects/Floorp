@@ -26,7 +26,7 @@ class Requirement
         NONE,
         REGISTER,
         FIXED,
-        SAME_AS_OTHER
+        MUST_REUSE_INPUT
     };
 
     Requirement()
@@ -37,7 +37,7 @@ class Requirement
       : kind_(kind)
     {
         // These have dedicated constructors.
-        JS_ASSERT(kind != FIXED && kind != SAME_AS_OTHER);
+        JS_ASSERT(kind != FIXED && kind != MUST_REUSE_INPUT);
     }
 
     Requirement(Kind kind, CodePosition at)
@@ -45,7 +45,7 @@ class Requirement
         position_(at)
     {
         // These have dedicated constructors.
-        JS_ASSERT(kind != FIXED && kind != SAME_AS_OTHER);
+        JS_ASSERT(kind != FIXED && kind != MUST_REUSE_INPUT);
     }
 
     explicit Requirement(LAllocation fixed)
@@ -66,7 +66,7 @@ class Requirement
     }
 
     Requirement(uint32_t vreg, CodePosition at)
-      : kind_(SAME_AS_OTHER),
+      : kind_(MUST_REUSE_INPUT),
         allocation_(LUse(vreg, LUse::ANY)),
         position_(at)
     { }
@@ -82,7 +82,7 @@ class Requirement
 
     uint32_t virtualRegister() const {
         JS_ASSERT(allocation_.isUse());
-        JS_ASSERT(kind() == SAME_AS_OTHER);
+        JS_ASSERT(kind() == MUST_REUSE_INPUT);
         return allocation_.toUse()->virtualRegister();
     }
 
@@ -95,7 +95,7 @@ class Requirement
     bool mergeRequirement(const Requirement &newRequirement) {
         // Merge newRequirement with any existing requirement, returning false
         // if the new and old requirements conflict.
-        JS_ASSERT(newRequirement.kind() != Requirement::SAME_AS_OTHER);
+        JS_ASSERT(newRequirement.kind() != Requirement::MUST_REUSE_INPUT);
 
         if (newRequirement.kind() == Requirement::FIXED) {
             if (kind() == Requirement::FIXED)
@@ -167,11 +167,11 @@ DefinitionCompatibleWith(LInstruction *ins, const LDefinition *def, LAllocation 
     }
 
     switch (def->policy()) {
-      case LDefinition::DEFAULT:
+      case LDefinition::REGISTER:
         if (!alloc.isRegister())
             return false;
         return alloc.isFloatReg() == def->isFloatReg();
-      case LDefinition::PRESET:
+      case LDefinition::FIXED:
         return alloc == *def->output();
       case LDefinition::MUST_REUSE_INPUT:
         if (!alloc.isRegister() || !ins->numOperands())
@@ -352,9 +352,9 @@ class LiveInterval
         return &requirement_;
     }
     void setRequirement(const Requirement &requirement) {
-        // A SAME_AS_OTHER requirement complicates regalloc too much; it
+        // A MUST_REUSE_INPUT requirement complicates regalloc too much; it
         // should only be used as hint.
-        JS_ASSERT(requirement.kind() != Requirement::SAME_AS_OTHER);
+        JS_ASSERT(requirement.kind() != Requirement::MUST_REUSE_INPUT);
         requirement_ = requirement;
     }
     bool addRequirement(const Requirement &newRequirement) {

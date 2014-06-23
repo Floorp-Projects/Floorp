@@ -120,7 +120,7 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
 
     // These create temporary register requests.
     inline LDefinition temp(LDefinition::Type type = LDefinition::GENERAL,
-                            LDefinition::Policy policy = LDefinition::DEFAULT);
+                            LDefinition::Policy policy = LDefinition::REGISTER);
     inline LDefinition tempFloat32();
     inline LDefinition tempDouble();
     inline LDefinition tempCopy(MDefinition *input, uint32_t reusedInput);
@@ -134,7 +134,7 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
 
     template <size_t Ops, size_t Temps>
     inline bool defineBox(LInstructionHelper<BOX_PIECES, Ops, Temps> *lir, MDefinition *mir,
-                          LDefinition::Policy policy = LDefinition::DEFAULT);
+                          LDefinition::Policy policy = LDefinition::REGISTER);
 
     inline bool defineReturn(LInstruction *lir, MDefinition *mir);
 
@@ -144,7 +144,7 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
 
     template <size_t Ops, size_t Temps>
     inline bool define(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir,
-                       LDefinition::Policy policy = LDefinition::DEFAULT);
+                       LDefinition::Policy policy = LDefinition::REGISTER);
 
     template <size_t Ops, size_t Temps>
     inline bool defineReuseInput(LInstructionHelper<1, Ops, Temps> *lir, MDefinition *mir, uint32_t operand);

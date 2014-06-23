@@ -179,7 +179,7 @@ LIRGeneratorMIPS::lowerForALU(LInstructionHelper<1, 1, 0> *ins,
 {
     ins->setOperand(0, useRegister(input));
     return define(ins, mir,
-                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 // z = x+y
@@ -190,7 +190,7 @@ LIRGeneratorMIPS::lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useRegisterOrConstant(rhs));
     return define(ins, mir,
-                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 bool
@@ -199,7 +199,7 @@ LIRGeneratorMIPS::lowerForFPU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir
 {
     ins->setOperand(0, useRegister(input));
     return define(ins, mir,
-                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 bool
@@ -209,7 +209,7 @@ LIRGeneratorMIPS::lowerForFPU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir
     ins->setOperand(0, useRegister(lhs));
     ins->setOperand(1, useRegister(rhs));
     return define(ins, mir,
-                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::DEFAULT));
+                  LDefinition(LDefinition::TypeFrom(mir->type()), LDefinition::REGISTER));
 }
 
 bool
