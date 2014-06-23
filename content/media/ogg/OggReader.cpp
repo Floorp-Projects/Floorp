@@ -378,12 +378,6 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
         LOG(PR_LOG_DEBUG, ("Got Ogg duration from seeking to end %lld", endTime));
       }
       mDecoder->GetResource()->EndSeekingForMetadata();
-    } else if (mDecoder->GetMediaDuration() == -1) {
-      // We don't have a duration, and we don't know enough about the resource
-      // to try a seek. Abort trying to get a duration. This happens for example
-      // when the server says it accepts range requests, but does not give us a
-      // Content-Length.
-      mDecoder->SetTransportSeekable(false);
     }
   } else {
     return NS_ERROR_FAILURE;
@@ -391,6 +385,15 @@ nsresult OggReader::ReadMetadata(MediaInfo* aInfo,
   *aInfo = mInfo;
 
   return NS_OK;
+}
+
+bool
+OggReader::IsMediaSeekable()
+{
+  if (mIsChained) {
+    return false;
+  }
+  return true;
 }
 
 nsresult OggReader::DecodeVorbis(ogg_packet* aPacket) {

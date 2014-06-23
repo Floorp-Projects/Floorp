@@ -51,6 +51,8 @@ public:
                                  uint32_t aLength,
                                  int64_t aOffset) MOZ_OVERRIDE;
 
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
 private:
   void SetupDecoder();
   nsresult Read(uint32_t *aNumBytes, char *aData);

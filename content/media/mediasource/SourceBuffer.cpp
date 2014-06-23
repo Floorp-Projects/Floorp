@@ -90,12 +90,6 @@ SubBufferDecoder::SetMediaSeekable(bool aMediaSeekable)
   //mParentDecoder->SetMediaSeekable(aMediaSeekable);
 }
 
-void
-SubBufferDecoder::SetTransportSeekable(bool aTransportSeekable)
-{
-  //mParentDecoder->SetTransportSeekable(aTransportSeekable);
-}
-
 layers::ImageContainer*
 SubBufferDecoder::GetImageContainer()
 {
