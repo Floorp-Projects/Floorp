@@ -75,9 +75,10 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISIMPLEENUMERATOR
     nsPrefetchQueueEnumerator(nsPrefetchService *aService);
-    ~nsPrefetchQueueEnumerator();
 
 private:
+    ~nsPrefetchQueueEnumerator();
+
     void Increment();
 
     nsRefPtr<nsPrefetchService> mService;
