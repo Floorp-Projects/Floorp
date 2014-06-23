@@ -177,6 +177,7 @@ class BaseRunner(object):
         if not dump_directory:
             dump_directory = os.path.join(self.profile.profile, 'minidumps')
 
+        test_name = test_name or self.last_test
         crashed = False
         try:
             crashed = mozcrash.check_for_crashes(dump_directory,

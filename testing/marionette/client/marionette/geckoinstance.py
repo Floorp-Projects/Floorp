@@ -63,9 +63,13 @@ class GeckoInstance(object):
             env=env,
             symbols_path=self.symbols_path,
             process_args={
-                'processOutputLine': [NullOutput()],
+                'processOutputLine': [on_output],
                 'logfile': self.gecko_log})
         self.runner.start()
+
+    def on_output(self, line):
+        if line.startswith('TEST-START'):
+            self.runner.last_test = line.split()[-1]
 
     def check_for_crashes(self):
         return self.runner.check_for_crashes()
@@ -78,11 +82,6 @@ class GeckoInstance(object):
 
 class B2GDesktopInstance(GeckoInstance):
     required_prefs = {"focusmanager.testmode": True}
-
-
-class NullOutput(object):
-    def __call__(self, line):
-        pass
 
 
 apps = {'b2g': B2GDesktopInstance,
