@@ -49,8 +49,9 @@ public:
 
   void SetAlertWindow(nsIDOMWindow* aWindow) { mAlertWindow = aWindow; }
 
-  virtual ~nsXULAlertObserver() {}
 protected:
+  virtual ~nsXULAlertObserver() {}
+
   nsXULAlerts* mXULAlerts;
   nsString mAlertName;
   nsCOMPtr<nsIDOMWindow> mAlertWindow;

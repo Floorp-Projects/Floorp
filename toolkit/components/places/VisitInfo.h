@@ -24,6 +24,7 @@ public:
             already_AddRefed<nsIURI> aReferrer);
 
 private:
+  ~VisitInfo();
   const int64_t mVisitId;
   const PRTime mVisitDate;
   const uint32_t mTransitionType;

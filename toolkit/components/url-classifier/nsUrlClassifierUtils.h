@@ -46,7 +46,6 @@ private:
 
 public:
   nsUrlClassifierUtils();
-  ~nsUrlClassifierUtils() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIURLCLASSIFIERUTILS
@@ -74,6 +73,8 @@ public:
                     nsACString & _retval);
 
 private:
+  ~nsUrlClassifierUtils() {}
+
   // Disallow copy constructor
   nsUrlClassifierUtils(const nsUrlClassifierUtils&);
 
