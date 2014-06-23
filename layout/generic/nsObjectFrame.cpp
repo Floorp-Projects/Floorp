@@ -959,8 +959,7 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 
 bool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
-                                   nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion)
+                                   nsRegion* aVisibleRegion)
 {
   if (aBuilder->IsForPluginGeometry()) {
     nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
@@ -999,8 +998,7 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
-                                          aAllowVisibleRegionExpansion);
+  return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion);
 }
 
 nsRegion
