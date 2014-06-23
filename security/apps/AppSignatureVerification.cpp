@@ -16,6 +16,7 @@
 #include "AppTrustDomain.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
+#include "nsDataSignatureVerifier.h"
 #include "nsHashKeys.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -522,85 +523,23 @@ ParseMF(const char* filebuf, nsIZipReader * zip,
   return NS_OK;
 }
 
+struct VerifyCertificateContext {
+  AppTrustedRoot trustedRoot;
+  mozilla::pkix::ScopedCERTCertList& builtChain;
+};
+
 nsresult
-VerifySignature(AppTrustedRoot trustedRoot,
-                const SECItem& buffer, const SECItem& detachedDigest,
-        /*out*/ mozilla::pkix::ScopedCERTCertList& builtChain)
+VerifyCertificate(CERTCertificate* signerCert, void* voidContext, void* pinArg)
 {
-  mozilla::pkix::ScopedPtr<NSSCMSMessage, NSS_CMSMessage_Destroy>
-    cmsMsg(NSS_CMSMessage_CreateFromDER(const_cast<SECItem*>(&buffer), nullptr,
-                                        nullptr, nullptr, nullptr, nullptr,
-                                        nullptr));
-  if (!cmsMsg) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
+  // TODO: null pinArg is tolerated.
+  if (NS_WARN_IF(!signerCert) || NS_WARN_IF(!voidContext)) {
+    return NS_ERROR_INVALID_ARG;
   }
+  const VerifyCertificateContext& context =
+    *reinterpret_cast<const VerifyCertificateContext*>(voidContext);
 
-  if (!NSS_CMSMessage_IsSigned(cmsMsg.get())) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CMS message isn't signed"));
-    return NS_ERROR_CMS_VERIFY_NOT_SIGNED;
-  }
-
-  NSSCMSContentInfo* cinfo = NSS_CMSMessage_ContentLevel(cmsMsg.get(), 0);
-  if (!cinfo) {
-    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
-  }
-
-  // signedData is non-owning
-  NSSCMSSignedData* signedData =
-    reinterpret_cast<NSSCMSSignedData*>(NSS_CMSContentInfo_GetContent(cinfo));
-  if (!signedData) {
-    return NS_ERROR_CMS_VERIFY_NO_CONTENT_INFO;
-  }
-
-  // Set digest value.
-  if (NSS_CMSSignedData_SetDigestValue(signedData, SEC_OID_SHA1,
-                                       const_cast<SECItem*>(&detachedDigest))) {
-    return NS_ERROR_CMS_VERIFY_BAD_DIGEST;
-  }
-
-  // Parse the certificates into CERTCertificate objects held in memory, so that
-  // AppTrustDomain will be able to find them during path building.
-  mozilla::pkix::ScopedCERTCertList certs(CERT_NewCertList());
-  if (!certs) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  if (signedData->rawCerts) {
-    for (size_t i = 0; signedData->rawCerts[i]; ++i) {
-      mozilla::pkix::ScopedCERTCertificate
-        cert(CERT_NewTempCertificate(CERT_GetDefaultCertDB(),
-                                     signedData->rawCerts[i], nullptr, false,
-                                     true));
-      // Skip certificates that fail to parse
-      if (cert) {
-        if (CERT_AddCertToListTail(certs.get(), cert.get()) == SECSuccess) {
-          cert.release(); // ownership transfered
-        } else {
-          return NS_ERROR_OUT_OF_MEMORY;
-        }
-      }
-    }
-  }
-
-  // Get the end-entity certificate.
-  int numSigners = NSS_CMSSignedData_SignerInfoCount(signedData);
-  if (NS_WARN_IF(numSigners != 1)) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-  // signer is non-owning.
-  NSSCMSSignerInfo* signer = NSS_CMSSignedData_GetSignerInfo(signedData, 0);
-  if (NS_WARN_IF(!signer)) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-  // cert is signerCert
-  CERTCertificate* signerCert =
-    NSS_CMSSignerInfo_GetSigningCertificate(signer, CERT_GetDefaultCertDB());
-  if (!signerCert) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
-
-  // Verify certificate.
-  AppTrustDomain trustDomain(nullptr); // TODO: null pinArg
-  if (trustDomain.SetTrustedRoot(trustedRoot) != SECSuccess) {
+  AppTrustDomain trustDomain(pinArg);
+  if (trustDomain.SetTrustedRoot(context.trustedRoot) != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
   if (BuildCertChain(trustDomain, signerCert, PR_Now(),
@@ -608,21 +547,23 @@ VerifySignature(AppTrustedRoot trustedRoot,
                      KeyUsage::digitalSignature,
                      KeyPurposeId::id_kp_codeSigning,
                      CertPolicyId::anyPolicy,
-                     nullptr, builtChain)
-        != SECSuccess) {
+                     nullptr, context.builtChain) != SECSuccess) {
     return MapSECStatus(SECFailure);
   }
 
-  // See NSS_CMSContentInfo_GetContentTypeOID, which isn't exported from NSS.
-  SECOidData* contentTypeOidData =
-    SECOID_FindOID(&signedData->contentInfo.contentType);
-  if (!contentTypeOidData) {
-    return NS_ERROR_CMS_VERIFY_ERROR_PROCESSING;
-  }
+  return NS_OK;
+}
 
-  return MapSECStatus(NSS_CMSSignerInfo_Verify(signer,
-                         const_cast<SECItem*>(&detachedDigest),
-                         &contentTypeOidData->oid));
+nsresult
+VerifySignature(AppTrustedRoot trustedRoot, const SECItem& buffer,
+                const SECItem& detachedDigest,
+                /*out*/ mozilla::pkix::ScopedCERTCertList& builtChain)
+{
+  VerifyCertificateContext context = { trustedRoot, builtChain };
+  // XXX: missing pinArg
+  return VerifyCMSDetachedSignatureIncludingCertificate(buffer, detachedDigest,
+                                                        VerifyCertificate,
+                                                        &context, nullptr);
 }
 
 NS_IMETHODIMP
