@@ -1234,10 +1234,8 @@ LinearScanAllocator::go()
 {
     IonSpew(IonSpew_RegAlloc, "Beginning register allocation");
 
-    IonSpew(IonSpew_RegAlloc, "Beginning liveness analysis");
     if (!buildLivenessInfo())
         return false;
-    IonSpew(IonSpew_RegAlloc, "Liveness analysis complete");
 
     if (mir->shouldCancel("LSRA Liveness"))
         return false;
@@ -1249,6 +1247,11 @@ LinearScanAllocator::go()
 
     if (mir->shouldCancel("LSRA Preliminary Regalloc"))
         return false;
+
+    if (IonSpewEnabled(IonSpew_RegAlloc)) {
+        fprintf(stderr, "Allocations by virtual register:\n");
+        dumpVregs();
+    }
 
     IonSpew(IonSpew_RegAlloc, "Beginning control flow resolution");
     if (!resolveControlFlow())

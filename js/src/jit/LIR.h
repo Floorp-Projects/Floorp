@@ -143,9 +143,6 @@ class LAllocation : public TempObject
     bool isConstantIndex() const {
         return kind() == CONSTANT_INDEX;
     }
-    bool isValue() const {
-        return kind() == CONSTANT_VALUE;
-    }
     bool isGeneralReg() const {
         return kind() == GPR;
     }
@@ -553,6 +550,14 @@ class LDefinition
             MOZ_ASSUME_UNREACHABLE("unexpected type");
         }
     }
+
+#ifdef DEBUG
+    const char *toString() const;
+#else
+    const char *toString() const { return "???"; }
+#endif
+
+    void dump() const;
 };
 
 // Forward declarations of LIR types.
