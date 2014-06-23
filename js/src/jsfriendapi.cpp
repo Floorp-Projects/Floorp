@@ -24,6 +24,7 @@
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/ScopeObject-inl.h"
 
