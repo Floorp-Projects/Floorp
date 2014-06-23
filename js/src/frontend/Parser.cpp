@@ -2717,11 +2717,19 @@ Parser<ParseHandler>::matchLabel(MutableHandle<PropertyName*> label)
 
 template <typename ParseHandler>
 bool
-Parser<ParseHandler>::reportRedeclaration(Node pn, bool isConst, JSAtom *atom)
+Parser<ParseHandler>::reportRedeclaration(Node pn, bool isConst, HandlePropertyName name)
 {
-    JSAutoByteString name;
-    if (AtomToPrintableString(context, atom, &name))
-        report(ParseError, false, pn, JSMSG_REDECLARED_VAR, isConst ? "const" : "variable", name.ptr());
+    JSAutoByteString printable;
+    if (!AtomToPrintableString(context, name, &printable))
+        return false;
+
+    StmtInfoPC *stmt = LexicalLookup(pc, name, nullptr, (StmtInfoPC *)nullptr);
+    if (stmt && stmt->type == STMT_CATCH) {
+        report(ParseError, false, pn, JSMSG_REDECLARED_CATCH_IDENTIFIER, printable.ptr());
+    } else {
+        report(ParseError, false, pn, JSMSG_REDECLARED_VAR, isConst ? "const" : "variable",
+               printable.ptr());
+    }
     return false;
 }
 
