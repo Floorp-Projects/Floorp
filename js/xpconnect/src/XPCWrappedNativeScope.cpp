@@ -262,13 +262,40 @@ XPCWrappedNativeScope::AllowContentXBLScope()
 }
 
 namespace xpc {
-JSObject *GetXBLScope(JSContext *cx, JSObject *contentScopeArg)
+JSObject *
+GetXBLScope(JSContext *cx, JSObject *contentScopeArg)
 {
     MOZ_ASSERT(!IsInAddonScope(contentScopeArg));
 
     JS::RootedObject contentScope(cx, contentScopeArg);
     JSAutoCompartment ac(cx, contentScope);
     JSObject *scope = EnsureCompartmentPrivate(contentScope)->scope->EnsureContentXBLScope(cx);
+    NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
+    scope = js::UncheckedUnwrap(scope);
+    JS::ExposeObjectToActiveJS(scope);
+    return scope;
+}
+
+JSObject *
+GetScopeForXBLExecution(JSContext *cx, HandleObject contentScope, JSAddonId *addonId)
+{
+    MOZ_RELEASE_ASSERT(!IsInAddonScope(contentScope));
+
+    RootedObject global(cx, js::GetGlobalForObjectCrossCompartment(contentScope));
+    if (IsInContentXBLScope(contentScope))
+        return global;
+
+    JSAutoCompartment ac(cx, contentScope);
+    XPCWrappedNativeScope *nativeScope = EnsureCompartmentPrivate(contentScope)->scope;
+
+    RootedObject scope(cx);
+    if (nativeScope->UseContentXBLScope())
+        scope = nativeScope->EnsureContentXBLScope(cx);
+    else if (addonId && CompartmentPerAddon())
+        scope = nativeScope->EnsureAddonScope(cx, addonId);
+    else
+        scope = global;
+
     NS_ENSURE_TRUE(scope, nullptr); // See bug 858642.
     scope = js::UncheckedUnwrap(scope);
     JS::ExposeObjectToActiveJS(scope);

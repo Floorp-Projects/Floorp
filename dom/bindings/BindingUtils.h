@@ -1404,7 +1404,8 @@ WrapNativeParent(JSContext* cx, T* p, nsWrapperCache* cache,
   }
 
   // If useXBLScope is true, it means that the canonical reflector for this
-  // native object should live in the XBL scope.
+  // native object should live in the content XBL scope. Note that we never put
+  // anonymous content inside an add-on scope.
   if (xpc::IsInContentXBLScope(parent)) {
     return parent;
   }
