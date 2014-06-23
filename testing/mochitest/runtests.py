@@ -1374,7 +1374,10 @@ class Mochitest(MochitestUtilsMixin):
       options.testPath = dir
       print "testpath: %s" % options.testPath
 
-      options.profilePath = tempfile.mkdtemp()
+      # If we are using --run-by-dir, we should not use the profile path (if) provided
+      # by the user, since we need to create a new directory for each run. We would face problems
+      # if we use the directory provided by the user.
+      options.profilePath = None
       self.urlOpts = []
       self.doTests(options, onLaunch)
 
@@ -1412,17 +1415,17 @@ class Mochitest(MochitestUtilsMixin):
         return 1
       self.mediaDevices = devices
 
-    self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
-
-    self.browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
-    if self.browserEnv is None:
-      return 1
-
     # buildProfile sets self.profile .
     # This relies on sideeffects and isn't very stateful:
     # https://bugzilla.mozilla.org/show_bug.cgi?id=919300
     self.manifest = self.buildProfile(options)
     if self.manifest is None:
+      return 1
+
+    self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
+
+    self.browserEnv = self.buildBrowserEnv(options, debuggerInfo is not None)
+    if self.browserEnv is None:
       return 1
 
     try:

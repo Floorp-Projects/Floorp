@@ -106,7 +106,7 @@ class Profile(object):
         self.webapps.update_manifests()
 
     def __del__(self):
-      self.cleanup()
+        self.cleanup()
 
     ### cleanup
 
