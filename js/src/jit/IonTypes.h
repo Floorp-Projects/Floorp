@@ -237,6 +237,7 @@ enum MIRType
     MIRType_Double,
     MIRType_Float32,
     MIRType_String,
+    MIRType_Symbol,
     MIRType_Object,
     MIRType_MagicOptimizedArguments, // JS_OPTIMIZED_ARGUMENTS magic value.
     MIRType_MagicOptimizedOut,       // JS_OPTIMIZED_OUT magic value.
