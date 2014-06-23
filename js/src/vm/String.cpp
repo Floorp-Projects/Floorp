@@ -65,7 +65,7 @@ JSString::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 #ifdef DEBUG
 
 void
-JSString::dumpChars(const jschar *s, size_t n)
+JSString::dumpChars(const jschar *s, size_t n, FILE *fp)
 {
     if (n == SIZE_MAX) {
         n = 0;
@@ -73,20 +73,20 @@ JSString::dumpChars(const jschar *s, size_t n)
             n++;
     }
 
-    fputc('"', stderr);
+    fputc('"', fp);
     for (size_t i = 0; i < n; i++) {
         if (s[i] == '\n')
-            fprintf(stderr, "\\n");
+            fprintf(fp, "\\n");
         else if (s[i] == '\t')
-            fprintf(stderr, "\\t");
+            fprintf(fp, "\\t");
         else if (s[i] >= 32 && s[i] < 127)
-            fputc(s[i], stderr);
+            fputc(s[i], fp);
         else if (s[i] <= 255)
-            fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
+            fprintf(fp, "\\x%02x", (unsigned int) s[i]);
         else
-            fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
+            fprintf(fp, "\\u%04x", (unsigned int) s[i]);
     }
-    fputc('"', stderr);
+    fputc('"', fp);
 }
 
 void
