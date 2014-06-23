@@ -77,7 +77,7 @@ struct gfxFontStyle {
     gfxFontStyle(uint8_t aStyle, uint16_t aWeight, int16_t aStretch,
                  gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, bool aSystemFont,
-                 bool aPrinterFont, bool aSmallCaps,
+                 bool aPrinterFont,
                  bool aWeightSynthesis, bool aStyleSynthesis,
                  const nsString& aLanguageOverride);
     gfxFontStyle(const gfxFontStyle& aStyle);
@@ -150,12 +150,7 @@ struct gfxFontStyle {
     bool allowSyntheticWeight : 1;
     bool allowSyntheticStyle : 1;
 
-    // font-variant small-caps? render with font feature or use synthetic
-    // xxx - this will be trimmed out once font-variant becomes a shorthand
-    bool smallCaps : 1;
-
     // caps variant (small-caps, petite-caps, etc.)
-    // (note: once font features are enabled this will subsume the bool above)
     uint8_t variantCaps;
 
     // Return the final adjusted font size for the given aspect ratio.
@@ -179,7 +174,6 @@ struct gfxFontStyle {
             (*reinterpret_cast<const uint64_t*>(&size) ==
              *reinterpret_cast<const uint64_t*>(&other.size)) &&
             (style == other.style) &&
-            (smallCaps == other.smallCaps) &&
             (variantCaps == other.variantCaps) &&
             (allowSyntheticWeight == other.allowSyntheticWeight) &&
             (allowSyntheticStyle == other.allowSyntheticStyle) &&
@@ -1968,7 +1962,7 @@ public:
 
 protected:
     // Return a font that is a "clone" of this one, but reduced to 80% size
-    // (and with the smallCaps style set to false).
+    // (and with variantCaps set to normal).
     // Default implementation relies on gfxFontEntry::CreateFontInstance;
     // backends that don't implement that will need to override this and use
     // an alternative technique. (gfxPangoFonts, I'm looking at you...)
