@@ -571,12 +571,6 @@ class LNewStringObject : public LInstructionHelper<1, 1, 1>
     }
 };
 
-class LAbortPar : public LInstructionHelper<0, 0, 0>
-{
-  public:
-    LIR_HEADER(AbortPar);
-};
-
 class LInitElem : public LCallInstructionHelper<0, 1 + 2*BOX_PIECES, 0>
 {
   public:
@@ -1203,6 +1197,12 @@ class LBail : public LInstructionHelper<0, 0, 0>
 {
   public:
     LIR_HEADER(Bail)
+};
+
+class LUnreachable : public LControlInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(Unreachable)
 };
 
 template <size_t defs, size_t ops>

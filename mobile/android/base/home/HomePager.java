@@ -68,8 +68,7 @@ public class HomePager extends ViewPager {
     static final String LIST_TAG_BOOKMARKS = "bookmarks";
     static final String LIST_TAG_READING_LIST = "reading_list";
     static final String LIST_TAG_TOP_SITES = "top_sites";
-    static final String LIST_TAG_MOST_RECENT = "most_recent";
-    static final String LIST_TAG_LAST_TABS = "last_tabs";
+    static final String LIST_TAG_RECENT_TABS = "recent_tabs";
     static final String LIST_TAG_BROWSER_SEARCH = "browser_search";
 
     public interface OnUrlOpenListener {

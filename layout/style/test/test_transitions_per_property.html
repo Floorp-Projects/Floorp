@@ -1944,8 +1944,12 @@ function runAsyncTests() {
   OMTAdiv.style.setProperty("transition-timing-function", "linear", "");
   addAsyncTransformTests();
   addAsyncOpacityTest();
+  addAsyncDelayTest();
 
-  runAllAsyncAnimTests().then(SimpleTest.finish);
+  runAllAsyncAnimTests().then(function() {
+    OMTAdiv.style.removeProperty("transition");
+    SimpleTest.finish();
+  });
 }
 
 function addAsyncTransformTests() {
@@ -1996,10 +2000,29 @@ function addAsyncOpacityTest() {
 
     winUtils.advanceTimeAndRefresh(200000);
 
-    omta_is_approx(OMTAdiv, "opacity", 0.00001, 2/3, RunningOn.Compositor,
+    omta_is_approx(OMTAdiv, "opacity", 2/3, 0.00001, RunningOn.Compositor,
                    "compositor opacity transition at 2/3rds duration");
+  });
+}
 
-    OMTAdiv.style.removeProperty("transition");
+function addAsyncDelayTest() {
+  addAsyncAnimTest(function *() {
+    OMTAdiv.style.setProperty("transition-property", "none", "");
+    OMTAdiv.style.setProperty("transition-delay", "100s", "");
+    OMTAdiv.style.setProperty("transition-duration", "200s", "");
+    OMTAdiv.style.setProperty("transform", "", "");
+    OMTACs.getPropertyValue("transform");
+    OMTAdiv.style.setProperty("transition-property", "transform", "");
+    OMTAdiv.style.setProperty("transform", "translate(100px)", "");
+    OMTACs.getPropertyValue("transform");
+
+    winUtils.advanceTimeAndRefresh(200000);
+    yield waitForPaints();
+
+    omta_is_approx(OMTAdiv, "transform", { tx: 50 }, 0.0001,
+                   RunningOn.Compositor,
+                   "compositor transform transition with delay at 1/2"
+                   + " duration");
   });
 }
 

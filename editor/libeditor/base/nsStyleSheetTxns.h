@@ -8,10 +8,10 @@
 
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
 #include "nsAutoPtr.h"                  // for nsRefPtr
-#include "nsCSSStyleSheet.h"            // for nsCSSStyleSheet
+#include "mozilla/CSSStyleSheet.h"      // for mozilla::CSSStyleSheet
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID
-#include "nsISupportsImpl.h"            // for nsCSSStyleSheet::Release
+#include "nsISupportsImpl.h"            // for CSSStyleSheet::Release
 #include "nscore.h"                     // for NS_IMETHOD
 
 class nsIEditor;
@@ -23,8 +23,8 @@ public:
     * @param aEditor the object providing core editing operations
     * @param aSheet   the stylesheet to add
     */
-  NS_IMETHOD Init(nsIEditor         *aEditor,
-                  nsCSSStyleSheet   *aSheet);
+  NS_IMETHOD Init(nsIEditor* aEditor,
+                  mozilla::CSSStyleSheet* aSheet);
 
   AddStyleSheetTxn();
 
@@ -35,8 +35,8 @@ public:
 
 protected:
 
-  nsIEditor*  mEditor;                  // the editor that created this transaction
-  nsRefPtr<nsCSSStyleSheet>  mSheet;    // the style sheet to add
+  nsIEditor* mEditor;                      // the editor that created this transaction
+  nsRefPtr<mozilla::CSSStyleSheet> mSheet; // the style sheet to add
 
 };
 
@@ -48,8 +48,8 @@ public:
     * @param aEditor the object providing core editing operations
     * @param aSheet   the stylesheet to remove
     */
-  NS_IMETHOD Init(nsIEditor         *aEditor,
-                  nsCSSStyleSheet   *aSheet);
+  NS_IMETHOD Init(nsIEditor* aEditor,
+                  mozilla::CSSStyleSheet* aSheet);
 
   RemoveStyleSheetTxn();
 
@@ -60,8 +60,8 @@ public:
 
 protected:
 
-  nsIEditor*  mEditor;                  // the editor that created this transaction
-  nsRefPtr<nsCSSStyleSheet>  mSheet;    // the style sheet to remove
+  nsIEditor* mEditor;                      // the editor that created this transaction
+  nsRefPtr<mozilla::CSSStyleSheet> mSheet; // the style sheet to remove
 
 };
 

@@ -10,9 +10,9 @@
 #include "nsIDOMCSSRuleList.h"
 #include "nsWrapperCache.h"
 
-class nsCSSStyleSheet;
-
 namespace mozilla {
+class CSSStyleSheet;
+
 namespace dom {
 
 // IID for the CSSRuleList interface
@@ -35,7 +35,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(CSSRuleList)
 
-  virtual nsCSSStyleSheet* GetParentObject() = 0;
+  virtual CSSStyleSheet* GetParentObject() = 0;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE MOZ_FINAL;
 
   NS_IMETHOD

@@ -52,13 +52,15 @@ const TMP_DIR = OS.Constants.Path.tmpDir;
  *
  */
 function CommonNativeApp(aApp, aManifest, aCategories, aRegistryDir) {
-  let manifest = new ManifestHelper(aManifest, aApp.origin);
-
-  aApp.name = manifest.name;
+  // Set the name property of the app object, otherwise
+  // WebappOSUtils::getUniqueName won't work.
+  aApp.name = aManifest.name;
   this.uniqueName = WebappOSUtils.getUniqueName(aApp);
 
-  this.appName = sanitize(manifest.name);
-  this.appNameAsFilename = stripStringForFilename(this.appName);
+  let localeManifest = new ManifestHelper(aManifest, aApp.origin);
+
+  this.appLocalizedName = localeManifest.name;
+  this.appNameAsFilename = stripStringForFilename(aApp.name);
 
   if (aApp.updateManifest) {
     this.isPackaged = true;
@@ -107,7 +109,7 @@ CommonNativeApp.prototype = {
 
     if (manifest.developer) {
       if (manifest.developer.name) {
-        let devName = sanitize(manifest.developer.name.substr(0, 128));
+        let devName = manifest.developer.name.substr(0, 128);
         if (devName) {
           this.developerName = devName;
         }
@@ -123,7 +125,7 @@ CommonNativeApp.prototype = {
       let shortDesc = firstLine.length <= 256
                       ? firstLine
                       : firstLine.substr(0, 253) + "…";
-      this.shortDescription = sanitize(shortDesc);
+      this.shortDescription = shortDesc;
     } else {
       this.shortDescription = this.appName;
     }
@@ -255,14 +257,6 @@ function writeToFile(aPath, aData) {
       yield file.close();
     }
   });
-}
-
-/**
- * Removes unprintable characters from a string.
- */
-function sanitize(aStr) {
-  let unprintableRE = new RegExp("[\\x00-\\x1F\\x7F]" ,"gi");
-  return aStr.replace(unprintableRE, "");
 }
 
 /**

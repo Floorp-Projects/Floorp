@@ -17,6 +17,7 @@ mozilla.pth:config
 mozilla.pth:xpcom/typelib/xpt/tools
 mozilla.pth:dom/bindings
 mozilla.pth:dom/bindings/parser
+mozilla.pth:layout/tools/reftest
 moztreedocs.pth:tools/docs
 copy:build/buildconfig.py
 packages.txt:testing/mozbase/packages.txt

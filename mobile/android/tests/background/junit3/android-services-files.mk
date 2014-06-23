@@ -47,6 +47,7 @@ BACKGROUND_TESTS_JAVA_FILES := \
   src/helpers/DBProviderTestCase.java \
   src/helpers/FakeProfileTestCase.java \
   src/nativecode/test/TestNativeCrypto.java \
+  src/sync/AndroidSyncTestCaseWithAccounts.java \
   src/sync/helpers/BookmarkHelpers.java \
   src/sync/helpers/DefaultBeginDelegate.java \
   src/sync/helpers/DefaultCleanDelegate.java \

@@ -6,6 +6,7 @@
 
 #include "PeerIdentity.h"
 
+#include "mozilla/DebugOnly.h"
 #include "nsCOMPtr.h"
 #include "nsIIDNService.h"
 #include "nsNetCID.h"
@@ -76,9 +77,9 @@ PeerIdentity::GetNormalizedHost(const nsCOMPtr<nsIIDNService>& aIdnService,
                                 const nsAString& aHost,
                                 nsACString& aNormalizedHost)
 {
-  nsCString chost = NS_ConvertUTF16toUTF8(aHost);
-  nsresult rv = aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);
-  NS_WARN_IF(NS_FAILED(rv));
+  const nsCString chost = NS_ConvertUTF16toUTF8(aHost);
+  DebugOnly<nsresult> rv = aIdnService->ConvertUTF8toACE(chost, aNormalizedHost);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to convert UTF-8 host to ASCII");
 }
 
 } /* namespace mozilla */

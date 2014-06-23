@@ -132,6 +132,10 @@ struct JSCompartment
     bool                         isSelfHosting;
     bool                         marked;
 
+    // A null add-on ID means that the compartment is not associated with an
+    // add-on.
+    JSAddonId                    *addonId;
+
 #ifdef DEBUG
     bool                         firedOnNewGlobalObject;
 #endif

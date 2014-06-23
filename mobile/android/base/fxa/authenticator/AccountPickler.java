@@ -56,18 +56,18 @@ public class AccountPickler {
 
   public static final long PICKLE_VERSION = 2;
 
-  private static final String KEY_PICKLE_VERSION = "pickle_version";
-  private static final String KEY_PICKLE_TIMESTAMP = "pickle_timestamp";
+  public static final String KEY_PICKLE_VERSION = "pickle_version";
+  public static final String KEY_PICKLE_TIMESTAMP = "pickle_timestamp";
 
-  private static final String KEY_ACCOUNT_VERSION = "account_version";
-  private static final String KEY_ACCOUNT_TYPE = "account_type";
-  private static final String KEY_EMAIL = "email";
-  private static final String KEY_PROFILE = "profile";
-  private static final String KEY_IDP_SERVER_URI = "idpServerURI";
-  private static final String KEY_TOKEN_SERVER_URI = "tokenServerURI";
-  private static final String KEY_IS_SYNCING_ENABLED = "isSyncingEnabled";
+  public static final String KEY_ACCOUNT_VERSION = "account_version";
+  public static final String KEY_ACCOUNT_TYPE = "account_type";
+  public static final String KEY_EMAIL = "email";
+  public static final String KEY_PROFILE = "profile";
+  public static final String KEY_IDP_SERVER_URI = "idpServerURI";
+  public static final String KEY_TOKEN_SERVER_URI = "tokenServerURI";
+  public static final String KEY_IS_SYNCING_ENABLED = "isSyncingEnabled";
 
-  private static final String KEY_BUNDLE = "bundle";
+  public static final String KEY_BUNDLE = "bundle";
 
   /**
    * Remove Firefox account persisted to disk.
@@ -80,16 +80,10 @@ public class AccountPickler {
     return context.deleteFile(filename);
   }
 
-  /**
-   * Persist Firefox account to disk as a JSON object.
-   *
-   * @param AndroidFxAccount the account to persist to disk
-   * @param filename name of file to persist to; must not contain path separators.
-   */
-  public static void pickle(final AndroidFxAccount account, final String filename) {
+  public static ExtendedJSONObject toJSON(final AndroidFxAccount account, final long now) {
     final ExtendedJSONObject o = new ExtendedJSONObject();
     o.put(KEY_PICKLE_VERSION, Long.valueOf(PICKLE_VERSION));
-    o.put(KEY_PICKLE_TIMESTAMP, Long.valueOf(System.currentTimeMillis()));
+    o.put(KEY_PICKLE_TIMESTAMP, Long.valueOf(now));
 
     o.put(KEY_ACCOUNT_VERSION, AndroidFxAccount.CURRENT_ACCOUNT_VERSION);
     o.put(KEY_ACCOUNT_TYPE, FxAccountConstants.ACCOUNT_TYPE);
@@ -104,10 +98,21 @@ public class AccountPickler {
     final ExtendedJSONObject bundle = account.unbundle();
     if (bundle == null) {
       Logger.warn(LOG_TAG, "Unable to obtain account bundle; aborting.");
-      return;
+      return null;
     }
     o.put(KEY_BUNDLE, bundle);
 
+    return o;
+  }
+
+  /**
+   * Persist Firefox account to disk as a JSON object.
+   *
+   * @param AndroidFxAccount the account to persist to disk
+   * @param filename name of file to persist to; must not contain path separators.
+   */
+  public static void pickle(final AndroidFxAccount account, final String filename) {
+    final ExtendedJSONObject o = toJSON(account, System.currentTimeMillis());
     writeToDisk(account.context, filename, o);
   }
 

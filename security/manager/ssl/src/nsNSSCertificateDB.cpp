@@ -47,7 +47,6 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "ssl.h"
-#include "ocsp.h"
 #include "plbase64.h"
 
 using namespace mozilla;
@@ -1816,14 +1815,6 @@ nsNSSCertificateDB::ClearOCSPCache()
 
   RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
   NS_ENSURE_TRUE(certVerifier, NS_ERROR_FAILURE);
-  if (certVerifier->mImplementation == CertVerifier::mozillapkix) {
-    certVerifier->ClearOCSPCache();
-  } else {
-    SECStatus srv = CERT_ClearOCSPCache();
-    if (srv != SECSuccess) {
-      return MapSECStatus(srv);
-    }
-  }
-
+  certVerifier->ClearOCSPCache();
   return NS_OK;
 }

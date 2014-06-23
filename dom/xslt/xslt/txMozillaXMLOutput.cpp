@@ -23,12 +23,12 @@
 #include "nsIConsoleService.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsNameSpaceManager.h"
-#include "nsCSSStyleSheet.h"
 #include "txStringUtils.h"
 #include "txURIUtils.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIDocumentTransformer.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EncodingUtils.h"
@@ -44,6 +44,7 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 #define TX_ENSURE_CURRENTNODE                           \
@@ -981,7 +982,7 @@ txTransformNotifier::ScriptEvaluated(nsresult aResult,
 }
 
 NS_IMETHODIMP 
-txTransformNotifier::StyleSheetLoaded(nsCSSStyleSheet* aSheet,
+txTransformNotifier::StyleSheetLoaded(CSSStyleSheet* aSheet,
                                       bool aWasAlternate,
                                       nsresult aStatus)
 {

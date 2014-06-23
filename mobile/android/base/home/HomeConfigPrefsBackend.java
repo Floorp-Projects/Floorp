@@ -36,7 +36,19 @@ import android.util.Log;
 class HomeConfigPrefsBackend implements HomeConfigBackend {
     private static final String LOGTAG = "GeckoHomeConfigBackend";
 
-    private static final String PREFS_CONFIG_KEY = "home_panels";
+    // Increment this to trigger a migration.
+    private static final int VERSION = 1;
+
+    // This key was originally used to store only an array of panel configs.
+    private static final String PREFS_CONFIG_KEY_OLD = "home_panels";
+
+    // This key is now used to store a version number with the array of panel configs.
+    private static final String PREFS_CONFIG_KEY = "home_panels_with_version";
+
+    // Keys used with JSON object stored in prefs.
+    private static final String JSON_KEY_PANELS = "panels";
+    private static final String JSON_KEY_VERSION = "version";
+
     private static final String PREFS_LOCALE_KEY = "home_locale";
 
     private static final String RELOAD_BROADCAST = "HomeConfigPrefsBackend:Reload";
@@ -44,6 +56,8 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     private final Context mContext;
     private ReloadBroadcastReceiver mReloadBroadcastReceiver;
     private OnReloadListener mReloadListener;
+
+    private static boolean sMigrationDone = false;
 
     public HomeConfigPrefsBackend(Context context) {
         mContext = context;
@@ -68,22 +82,109 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         }
 
         final PanelConfig historyEntry = createBuiltinPanelConfig(mContext, PanelType.HISTORY);
+        final PanelConfig recentTabsEntry = createBuiltinPanelConfig(mContext, PanelType.RECENT_TABS);
 
         // On tablets, the history panel is the last.
         // On phones, the history panel is the first one.
         if (HardwareUtils.isTablet()) {
             panelConfigs.add(historyEntry);
+            panelConfigs.add(recentTabsEntry);
         } else {
             panelConfigs.add(0, historyEntry);
+            panelConfigs.add(0, recentTabsEntry);
         }
 
         return new State(panelConfigs, true);
     }
 
+    /**
+     * Migrates JSON config data storage.
+     *
+     * @param context Context used to get shared preferences and create built-in panel.
+     * @param jsonString String currently stored in preferences.
+     *
+     * @return JSONArray array representing new set of panel configs.
+     */
+    private static synchronized JSONArray maybePerformMigration(Context context, String jsonString) throws JSONException {
+        // If the migration is already done, we're at the current version.
+        if (sMigrationDone) {
+            final JSONObject json = new JSONObject(jsonString);
+            return json.getJSONArray(JSON_KEY_PANELS);
+        }
+
+        // Make sure we only do this version check once.
+        sMigrationDone = true;
+
+        final JSONArray originalJsonPanels;
+        final int version;
+
+        final SharedPreferences prefs = GeckoSharedPrefs.forProfile(context);
+        if (prefs.contains(PREFS_CONFIG_KEY_OLD)) {
+            // Our original implementation did not contain versioning, so this is implicitly version 0.
+            originalJsonPanels = new JSONArray(jsonString);
+            version = 0;
+        } else {
+            final JSONObject json = new JSONObject(jsonString);
+            originalJsonPanels = json.getJSONArray(JSON_KEY_PANELS);
+            version = json.getInt(JSON_KEY_VERSION);
+        }
+
+        if (version == VERSION) {
+            return originalJsonPanels;
+        }
+
+        Log.d(LOGTAG, "Performing migration");
+
+        final JSONArray newJsonPanels = new JSONArray();
+        final SharedPreferences.Editor prefsEditor = prefs.edit();
+
+        for (int v = version + 1; v <= VERSION; v++) {
+            Log.d(LOGTAG, "Migrating to version = " + v);
+
+            switch (v) {
+                case 1:
+                    // Add "Recent Tabs" panel
+                    final PanelConfig recentTabsConfig = createBuiltinPanelConfig(context, PanelType.RECENT_TABS);
+                    final JSONObject jsonRecentTabsConfig = recentTabsConfig.toJSON();
+
+                    // Add the new panel to the front of the array on phones.
+                    if (!HardwareUtils.isTablet()) {
+                        newJsonPanels.put(jsonRecentTabsConfig);
+                    }
+
+                    // Copy the original panel configs.
+                    final int count = originalJsonPanels.length();
+                    for (int i = 0; i < count; i++) {
+                        final JSONObject jsonPanelConfig = originalJsonPanels.getJSONObject(i);
+                        newJsonPanels.put(jsonPanelConfig);
+                    }
+
+                    // Add the new panel to the end of the array on tablets.
+                    if (HardwareUtils.isTablet()) {
+                        newJsonPanels.put(jsonRecentTabsConfig);
+                    }
+
+                    // Remove the old pref key.
+                    prefsEditor.remove(PREFS_CONFIG_KEY_OLD);
+                    break;
+            }
+        }
+
+        // Save the new panel config and the new version number.
+        final JSONObject newJson = new JSONObject();
+        newJson.put(JSON_KEY_PANELS, newJsonPanels);
+        newJson.put(JSON_KEY_VERSION, VERSION);
+
+        prefsEditor.putString(PREFS_CONFIG_KEY, newJson.toString());
+        prefsEditor.commit();
+
+        return newJsonPanels;
+    }
+
     private State loadConfigFromString(String jsonString) {
         final JSONArray jsonPanelConfigs;
         try {
-            jsonPanelConfigs = new JSONArray(jsonString);
+            jsonPanelConfigs = maybePerformMigration(mContext, jsonString);
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error loading the list of home panels from JSON prefs", e);
 
@@ -110,7 +211,9 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
     @Override
     public State load() {
         final SharedPreferences prefs = getSharedPreferences();
-        final String jsonString = prefs.getString(PREFS_CONFIG_KEY, null);
+
+        final String key = (prefs.contains(PREFS_CONFIG_KEY_OLD) ? PREFS_CONFIG_KEY_OLD : PREFS_CONFIG_KEY);
+        final String jsonString = prefs.getString(key, null);
 
         final State configState;
         if (TextUtils.isEmpty(jsonString)) {
@@ -142,7 +245,15 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
                 }
             }
 
-            editor.putString(PREFS_CONFIG_KEY, jsonPanelConfigs.toString());
+            try {
+                final JSONObject json = new JSONObject();
+                json.put(JSON_KEY_PANELS, jsonPanelConfigs);
+                json.put(JSON_KEY_VERSION, VERSION);
+
+                editor.putString(PREFS_CONFIG_KEY, json.toString());
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Exception saving PanelConfig state", e);
+            }
         }
 
         editor.putString(PREFS_LOCALE_KEY, Locale.getDefault().toString());

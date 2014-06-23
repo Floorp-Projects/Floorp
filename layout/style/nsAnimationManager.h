@@ -61,24 +61,6 @@ struct ElementAnimations MOZ_FINAL
                     nsAnimationManager *aAnimationManager, TimeStamp aNow);
 
   void GetEventsAt(TimeStamp aRefreshTime, EventArray &aEventsToDispatch);
-
-  bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == nsGkAtoms::animationsProperty;
-  }
-
-  nsString PseudoElement()
-  {
-    return mElementProperty == nsGkAtoms::animationsProperty ?
-             EmptyString() :
-             mElementProperty == nsGkAtoms::animationsOfBeforeProperty ?
-               NS_LITERAL_STRING("::before") :
-               NS_LITERAL_STRING("::after");
-  }
-
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint styleHint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
-    aPresContext->PresShell()->RestyleForAnimation(mElement, styleHint);
-  }
 };
 
 class nsAnimationManager MOZ_FINAL
@@ -110,7 +92,7 @@ public:
   }
 
   void UpdateStyleAndEvents(ElementAnimations* aEA,
-                            TimeStamp aRefreshTime,
+                            mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
 
   // nsIStyleRuleProcessor (parts)

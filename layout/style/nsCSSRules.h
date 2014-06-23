@@ -61,7 +61,7 @@ public:
 #endif
 
   // Rule methods
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override GroupRule
+  virtual void SetStyleSheet(mozilla::CSSStyleSheet* aSheet); //override GroupRule
   virtual int32_t GetType() const;
   virtual already_AddRefed<Rule> Clone() const;
   virtual nsIDOMCSSRule* GetDOMRule()

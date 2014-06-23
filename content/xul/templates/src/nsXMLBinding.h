@@ -13,6 +13,11 @@
 
 class nsXULTemplateResultXML;
 class nsXMLBindingValues;
+namespace mozilla {
+namespace dom {
+class XPathResult;
+}
+}
 
 /**
  * Classes related to storing bindings for XML handling.
@@ -92,7 +97,7 @@ protected:
    * scan through the binding set in mBindings for the right target atom.
    * Its index will correspond to the index in this array.
    */
-  nsCOMArray<nsIDOMXPathResult> mValues;
+  nsTArray<nsRefPtr<mozilla::dom::XPathResult> > mValues;
 
 public:
 
@@ -117,14 +122,12 @@ public:
    * aBinding the binding looked up using LookupTargetIndex
    * aIndex the index of the assignment to retrieve
    * aType the type of result expected
-   * aValue the value of the assignment
    */
-  void
+  mozilla::dom::XPathResult*
   GetAssignmentFor(nsXULTemplateResultXML* aResult,
                    nsXMLBinding* aBinding,
                    int32_t idx,
-                   uint16_t type,
-                   nsIDOMXPathResult** aValue);
+                   uint16_t type);
 
   void
   GetNodeAssignmentFor(nsXULTemplateResultXML* aResult,

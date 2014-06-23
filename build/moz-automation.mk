@@ -17,49 +17,44 @@ include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
 # the uploaded files.
 AUTOMATION_UPLOAD_OUTPUT = $(DIST)/automation-upload.txt
 
+# Helper variables to convert from MOZ_AUTOMATION_* variables to the
+# corresponding the make target
+tier_BUILD_SYMBOLS = buildsymbols
+tier_CHECK = check
+tier_L10N_CHECK = l10n-check
+tier_PACKAGE = package
+tier_PACKAGE_TESTS = package-tests
+tier_UPDATE_PACKAGING = update-packaging
+tier_UPLOAD_SYMBOLS = uploadsymbols
+tier_UPLOAD = upload
+
 # Automation build steps. Everything in MOZ_AUTOMATION_TIERS also gets used in
 # TIERS for mach display. As such, the MOZ_AUTOMATION_TIERS are roughly sorted
 # here in the order that they will be executed (since mach doesn't know of the
 # dependencies between them).
-
-MOZ_AUTOMATION_TIERS += package-tests
-MOZ_AUTOMATION_TIERS += buildsymbols
-
-ifdef NIGHTLY_BUILD
-MOZ_AUTOMATION_TIERS += uploadsymbols
-endif
-
-ifdef MOZ_UPDATE_PACKAGING
-MOZ_AUTOMATION_TIERS += update-packaging
-automation/upload: automation/update-packaging
-automation/update-packaging: automation/package
-endif
-
-MOZ_AUTOMATION_TIERS += package
-MOZ_AUTOMATION_TIERS += check
-
-ifndef MOZ_ASAN
-MOZ_AUTOMATION_TIERS += l10n-check
-automation/l10n-check: automation/package
-endif
-
-MOZ_AUTOMATION_TIERS += upload
-
-automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
-	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) --upload-output $(AUTOMATION_UPLOAD_OUTPUT)
+moz_automation_symbols = PACKAGE_TESTS BUILD_SYMBOLS UPLOAD_SYMBOLS PACKAGE UPDATE_PACKAGING CHECK L10N_CHECK UPLOAD
+MOZ_AUTOMATION_TIERS := $(foreach sym,$(moz_automation_symbols),$(if $(filter 1,$(MOZ_AUTOMATION_$(sym))),$(tier_$(sym))))
 
 # Dependencies between automation build steps
 automation/uploadsymbols: automation/buildsymbols
 
+automation/update-packaging: automation/package
+
+automation/l10n-check: automation/package
+
 automation/upload: automation/package
 automation/upload: automation/package-tests
 automation/upload: automation/buildsymbols
+automation/upload: automation/update-packaging
 
 # automation/package and automation/check should depend on build (which is
 # implicit due to the way client.mk invokes automation/build), but buildsymbols
 # changes the binaries/libs, and that's what we package/test.
 automation/package: automation/buildsymbols
 automation/check: automation/buildsymbols
+
+automation/build: $(addprefix automation/,$(MOZ_AUTOMATION_TIERS))
+	$(PYTHON) $(topsrcdir)/build/gen_mach_buildprops.py --complete-mar-file $(DIST)/$(COMPLETE_MAR) --upload-output $(AUTOMATION_UPLOAD_OUTPUT)
 
 # make check runs with the keep-going flag so we can see all the failures
 AUTOMATION_EXTRA_CMDLINE-check = -k
@@ -68,7 +63,16 @@ AUTOMATION_EXTRA_CMDLINE-check = -k
 # properties.
 AUTOMATION_EXTRA_CMDLINE-upload = 2>&1 | tee $(AUTOMATION_UPLOAD_OUTPUT)
 
+# The commands only run if the corresponding MOZ_AUTOMATION_* variable is
+# enabled. This means, for example, if we enable MOZ_AUTOMATION_UPLOAD, then
+# 'buildsymbols' will only run if MOZ_AUTOMATION_BUILD_SYMBOLS is also set.
+# However, the target automation/buildsymbols will still be executed in this
+# case because it is a prerequisite of automation/upload.
+define automation_commands
+$(call BUILDSTATUS,TIER_START $1)
+@$(MAKE) $1 $(AUTOMATION_EXTRA_CMDLINE-$1)
+$(call BUILDSTATUS,TIER_FINISH $1)
+endef
+
 automation/%:
-	$(call BUILDSTATUS,TIER_START $*)
-	@$(MAKE) $* $(AUTOMATION_EXTRA_CMDLINE-$*)
-	$(call BUILDSTATUS,TIER_FINISH $*)
+	$(if $(filter $*,$(MOZ_AUTOMATION_TIERS)),$(call automation_commands,$*))

@@ -4,16 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-
 #include "nsTreeSanitizer.h"
-#include "nsCSSParser.h"
-#include "nsCSSProperty.h"
+
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Rule.h"
+#include "nsCSSParser.h"
+#include "nsCSSProperty.h"
 #include "nsUnicharInputStream.h"
-#include "nsCSSStyleSheet.h"
 #include "nsIDOMCSSRule.h"
 #include "nsAttrName.h"
 #include "nsIScriptSecurityManager.h"
@@ -1098,7 +1098,7 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
   // -moz-binding is blacklisted.
   bool didSanitize = false;
   // Create a sheet to hold the parsed CSS
-  nsRefPtr<nsCSSStyleSheet> sheet = new nsCSSStyleSheet(CORS_NONE);
+  nsRefPtr<CSSStyleSheet> sheet = new CSSStyleSheet(CORS_NONE);
   sheet->SetURIs(aDocument->GetDocumentURI(), nullptr, aBaseURI);
   sheet->SetPrincipal(aDocument->NodePrincipal());
   // Create the CSS parser, and parse the CSS text.

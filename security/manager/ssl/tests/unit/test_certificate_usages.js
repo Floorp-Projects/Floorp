@@ -31,70 +31,48 @@ function run_test() {
     var cert = certdb.findCertByNickname(null, ca_name);
   }
 
-  run_test_in_mode(true);
-  run_test_in_mode(false);
-}
-
-function run_test_in_mode(useMozillaPKIX) {
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
-  clearOCSPCache();
-  clearSessionCache();
-
-  // mozilla::pkix does not allow CA certs to be validated for non-CA usages.
-  var allCAUsages = useMozillaPKIX
-                  ? 'SSL CA'
-                  : 'Client,Server,Sign,Encrypt,SSL CA,Status Responder';
-
   // mozilla::pkix doesn't allow CA certificates to have the Status Responder
   // EKU.
-  var ca_usages = [allCAUsages,
+  var ca_usages = ['SSL CA',
                    'SSL CA',
-                   allCAUsages,
-                   useMozillaPKIX ? ''
-                                  : 'Client,Server,Sign,Encrypt,Status Responder'];
+                   'SSL CA',
+                   ''];
 
   // mozilla::pkix doesn't implement the Netscape Object Signer restriction.
-  var basicEndEntityUsages = useMozillaPKIX
-                           ? 'Client,Server,Sign,Encrypt,Object Signer'
-                           : 'Client,Server,Sign,Encrypt';
+  var basicEndEntityUsages = 'Client,Server,Sign,Encrypt,Object Signer';
   var basicEndEntityUsagesWithObjectSigner = basicEndEntityUsages + ",Object Signer"
 
-  // mozilla::pkix won't let a certificate with the "Status Responder" EKU get
+  // mozilla::pkix won't let a certificate with the 'Status Responder' EKU get
   // validated for any other usage.
-  var statusResponderUsages = (useMozillaPKIX ? "" : "Server,") + "Status Responder";
-  var statusResponderUsagesFull
-      = useMozillaPKIX ? statusResponderUsages
-                       : basicEndEntityUsages + ',Object Signer,Status Responder';
-
   var ee_usages = [
     [ basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
       '',
-      statusResponderUsagesFull,
+      'Status Responder',
       'Client,Server',
       'Sign,Encrypt,Object Signer',
-      statusResponderUsages
+      'Status Responder'
     ],
 
     [ basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
       '',
-      statusResponderUsagesFull,
+      'Status Responder',
       'Client,Server',
       'Sign,Encrypt,Object Signer',
-      statusResponderUsages
+      'Status Responder'
     ],
 
     [ basicEndEntityUsages,
       basicEndEntityUsages,
       basicEndEntityUsages,
       '',
-      statusResponderUsagesFull,
+      'Status Responder',
       'Client,Server',
       'Sign,Encrypt,Object Signer',
-      statusResponderUsages
+      'Status Responder'
     ],
 
     // The CA has isCA=true without keyCertSign.
@@ -103,14 +81,14 @@ function run_test_in_mode(useMozillaPKIX) {
     // capabilites so the cert is considered a CA.
     // mozilla::pkix and libpkix use the intersection of
     // capabilites, so the cert is NOT considered a CA.
-    [ useMozillaPKIX ? '' : basicEndEntityUsages,
-      useMozillaPKIX ? '' : basicEndEntityUsages,
-      useMozillaPKIX ? '' : basicEndEntityUsages,
+    [ '',
       '',
-      useMozillaPKIX ? '' : statusResponderUsagesFull,
-      useMozillaPKIX ? '' : 'Client,Server',
-      useMozillaPKIX ? '' : 'Sign,Encrypt,Object Signer',
-      useMozillaPKIX ? '' : 'Server,Status Responder'
+      '',
+      '',
+      '',
+      '',
+      '',
+      ''
      ]
   ];
 

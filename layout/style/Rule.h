@@ -8,10 +8,10 @@
 #ifndef mozilla_css_Rule_h___
 #define mozilla_css_Rule_h___
 
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsIStyleRule.h"
 #include "nsIDOMCSSRule.h"
-#include "nsCSSStyleSheet.h"
 
 class nsIStyleSheet;
 class nsIDocument;
@@ -52,7 +52,7 @@ public:
   // The constants in this list must maintain the following invariants:
   //   If a rule of type N must appear before a rule of type M in stylesheets
   //   then N < M
-  // Note that nsCSSStyleSheet::RebuildChildList assumes that no other kinds of
+  // Note that CSSStyleSheet::RebuildChildList assumes that no other kinds of
   // rules can come between two rules of type IMPORT_RULE.
   enum {
     UNKNOWN_RULE = 0,
@@ -73,17 +73,17 @@ public:
 
   virtual int32_t GetType() const = 0;
 
-  nsCSSStyleSheet* GetStyleSheet() const;
+  CSSStyleSheet* GetStyleSheet() const;
   nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const;
 
   // Return the document the rule lives in, if any
   nsIDocument* GetDocument() const
   {
-    nsCSSStyleSheet* sheet = GetStyleSheet();
+    CSSStyleSheet* sheet = GetStyleSheet();
     return sheet ? sheet->GetDocument() : nullptr;
   }
 
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
+  virtual void SetStyleSheet(CSSStyleSheet* aSheet);
   // This does not need to be virtual, because GroupRule and MediaRule are not
   // used for inline style.
   void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aSheet);
@@ -122,7 +122,7 @@ public:
                                                    void* aData);
 
 protected:
-  // This is either an nsCSSStyleSheet* or a nsHTMLStyleSheet*.  The former
+  // This is either a CSSStyleSheet* or an nsHTMLStyleSheet*.  The former
   // if the low bit is 0, the latter if the low bit is 1.
   uintptr_t         mSheet;
   GroupRule*        mParentRule;
