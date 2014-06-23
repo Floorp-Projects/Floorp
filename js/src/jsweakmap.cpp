@@ -579,7 +579,7 @@ js_InitWeakMapClass(JSContext *cx, HandleObject obj)
     if (!LinkConstructorAndPrototype(cx, ctor, weakMapProto))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, weakMapProto, nullptr, weak_map_methods))
+    if (!DefinePropertiesAndFunctions(cx, weakMapProto, nullptr, weak_map_methods))
         return nullptr;
 
     if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_WeakMap, ctor, weakMapProto))

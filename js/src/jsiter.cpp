@@ -2015,7 +2015,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
             return false;
         if (!LinkConstructorAndPrototype(cx, ctor, iteratorProto))
             return false;
-        if (!DefinePropertiesAndBrand(cx, iteratorProto, nullptr, iterator_methods))
+        if (!DefinePropertiesAndFunctions(cx, iteratorProto, nullptr, iterator_methods))
             return false;
         if (!GlobalObject::initBuiltinConstructor(cx, global, JSProto_Iterator,
                                                   ctor, iteratorProto))
@@ -2028,7 +2028,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     if (global->getSlot(ARRAY_ITERATOR_PROTO).isUndefined()) {
         const Class *cls = &ArrayIteratorObject::class_;
         proto = global->createBlankPrototypeInheriting(cx, cls, *iteratorProto);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, array_iterator_methods))
+        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, array_iterator_methods))
             return false;
         global->setReservedSlot(ARRAY_ITERATOR_PROTO, ObjectValue(*proto));
     }
@@ -2036,14 +2036,14 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
     if (global->getSlot(STRING_ITERATOR_PROTO).isUndefined()) {
         const Class *cls = &StringIteratorPrototypeClass;
         proto = global->createBlankPrototype(cx, cls);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, string_iterator_methods))
+        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, string_iterator_methods))
             return false;
         global->setReservedSlot(STRING_ITERATOR_PROTO, ObjectValue(*proto));
     }
 
     if (global->getSlot(LEGACY_GENERATOR_OBJECT_PROTO).isUndefined()) {
         proto = NewSingletonObjectWithObjectPrototype(cx, global);
-        if (!proto || !DefinePropertiesAndBrand(cx, proto, nullptr, legacy_generator_methods))
+        if (!proto || !DefinePropertiesAndFunctions(cx, proto, nullptr, legacy_generator_methods))
             return false;
         global->setReservedSlot(LEGACY_GENERATOR_OBJECT_PROTO, ObjectValue(*proto));
     }
@@ -2052,7 +2052,7 @@ GlobalObject::initIteratorClasses(JSContext *cx, Handle<GlobalObject *> global)
         RootedObject genObjectProto(cx, NewSingletonObjectWithObjectPrototype(cx, global));
         if (!genObjectProto)
             return false;
-        if (!DefinePropertiesAndBrand(cx, genObjectProto, nullptr, star_generator_methods))
+        if (!DefinePropertiesAndFunctions(cx, genObjectProto, nullptr, star_generator_methods))
             return false;
 
         RootedObject genFunctionProto(cx, NewSingletonObjectWithFunctionPrototype(cx, global));

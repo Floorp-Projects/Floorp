@@ -1237,10 +1237,10 @@ js_InitNumberClass(JSContext *cx, HandleObject obj)
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, ctor, nullptr, number_static_methods))
+    if (!DefinePropertiesAndFunctions(cx, ctor, nullptr, number_static_methods))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, numberProto, nullptr, number_methods))
+    if (!DefinePropertiesAndFunctions(cx, numberProto, nullptr, number_methods))
         return nullptr;
 
     if (!JS_DefineFunctions(cx, global, number_functions))
