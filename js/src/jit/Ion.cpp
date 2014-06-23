@@ -531,17 +531,14 @@ JitCompartment::notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript sc
     }
 
     if (!activeParallelEntryScripts_) {
-        ScriptSet *scripts = js_new<ScriptSet>();
-        if (!scripts || !scripts->init()) {
-            js_delete(scripts);
-            js_ReportOutOfMemory(cx);
+        activeParallelEntryScripts_ = cx->new_<ScriptSet>(cx);
+        if (!activeParallelEntryScripts_ || !activeParallelEntryScripts_->init())
             return false;
-        }
-        activeParallelEntryScripts_ = scripts;
     }
 
     script->parallelIonScript()->setIsParallelEntryScript();
-    return activeParallelEntryScripts_->put(script);
+    ScriptSet::AddPtr p = activeParallelEntryScripts_->lookupForAdd(script);
+    return p || activeParallelEntryScripts_->add(p, script);
 }
 
 void
