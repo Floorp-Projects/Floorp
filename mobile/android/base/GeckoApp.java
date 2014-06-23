@@ -175,7 +175,7 @@ public abstract class GeckoApp
     protected RelativeLayout mGeckoLayout;
     private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
-    public List<GeckoAppShell.AppStateListener> mAppStateListeners;
+    public List<GeckoAppShell.AppStateListener> mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
     protected MenuPanel mMenuPanel;
     protected Menu mMenu;
     protected GeckoProfile mProfile;
