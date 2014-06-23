@@ -50,6 +50,7 @@ const JSFunctionSpec SymbolObject::methods[] = {
 
 const JSFunctionSpec SymbolObject::staticMethods[] = {
     JS_FN("for", for_, 1, 0),
+    JS_FN("keyFor", keyFor, 1, 0),
     JS_FS_END
 };
 
@@ -145,6 +146,36 @@ SymbolObject::for_(JSContext *cx, unsigned argc, Value *vp)
     if (!symbol)
         return false;
     args.rval().setSymbol(symbol);
+    return true;
+}
+
+// ES6 rev 25 (2014 May 22) 19.4.2.7
+bool
+SymbolObject::keyFor(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // step 1
+    HandleValue arg = args.get(0);
+    if (!arg.isSymbol()) {
+        js_ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_UNEXPECTED_TYPE, JSDVG_SEARCH_STACK,
+                                 arg, js::NullPtr(), "not a symbol", nullptr);
+        return false;
+    }
+
+    // step 2
+    if (arg.toSymbol()->code() == JS::SymbolCode::InSymbolRegistry) {
+#ifdef DEBUG
+        RootedString desc(cx, arg.toSymbol()->description());
+        MOZ_ASSERT(Symbol::for_(cx, desc) == arg.toSymbol());
+#endif
+        args.rval().setString(arg.toSymbol()->description());
+        return true;
+    }
+
+    // step 3: omitted
+    // step 4
+    args.rval().setUndefined();
     return true;
 }
 
