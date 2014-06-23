@@ -74,6 +74,14 @@ private:
   nsresult getValidEVOidTag(SECOidTag& resultOidTag, bool& validEV);
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsNSSCertificate>
+{
+  static const bool value = true;
+};
+}
+
 class nsNSSCertList: public nsIX509CertList,
                      public nsNSSShutDownObject
 {

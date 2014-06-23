@@ -131,6 +131,8 @@ public:
 
   nsSiteSecurityService();
   nsresult Init();
+
+protected:
   virtual ~nsSiteSecurityService();
 
 private:

@@ -18,9 +18,9 @@ public:
   NS_DECL_NSIUSERCERTPICKER
 
   nsCertPicker();
+
+protected:
   virtual ~nsCertPicker();
-  
-private:
 };
 
 #endif //_NSCERTPICKER_H_

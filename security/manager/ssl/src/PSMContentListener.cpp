@@ -36,7 +36,6 @@ class PSMContentDownloader : public nsIStreamListener
 public:
   PSMContentDownloader() {NS_ASSERTION(false, "don't use this constructor."); }
   PSMContentDownloader(uint32_t type);
-  virtual ~PSMContentDownloader();
   void setSilentDownload(bool flag);
 
   NS_DECL_ISUPPORTS
@@ -50,6 +49,8 @@ public:
   enum {X509_SERVER_CERT  = 4};
 
 protected:
+  virtual ~PSMContentDownloader();
+
   char* mByteData;
   int32_t mBufferOffset;
   int32_t mBufferSize;
