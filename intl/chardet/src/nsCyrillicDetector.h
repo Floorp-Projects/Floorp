@@ -92,11 +92,11 @@ class nsCyrXPCOMDetector :
     nsCyrXPCOMDetector(uint8_t aItems, 
                       const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
-    virtual ~nsCyrXPCOMDetector();
     NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
     NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe);
     NS_IMETHOD Done();
   protected:
+    virtual ~nsCyrXPCOMDetector();
     virtual void Report(const char* aCharset);
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
@@ -112,10 +112,10 @@ class nsCyrXPCOMStringDetector :
     nsCyrXPCOMStringDetector(uint8_t aItems, 
                       const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
-    virtual ~nsCyrXPCOMStringDetector();
     NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
                      const char** oCharset, nsDetectionConfident &oConf);
   protected:
+    virtual ~nsCyrXPCOMStringDetector();
     virtual void Report(const char* aCharset);
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
