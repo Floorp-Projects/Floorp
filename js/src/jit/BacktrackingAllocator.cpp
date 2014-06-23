@@ -59,8 +59,8 @@ BacktrackingAllocator::init()
 
         if (block == backedge) {
             LBlock *header = block->mir()->loopHeaderOfBackedge()->lir();
-            CodePosition from = inputOf(header->firstId());
-            CodePosition to = outputOf(block->lastId()).next();
+            CodePosition from = entryOf(header);
+            CodePosition to = exitOf(block).next();
             if (!hotcodeInterval->addRange(from, to))
                 return false;
         }
@@ -251,7 +251,7 @@ BacktrackingAllocator::tryGroupReusedRegister(uint32_t def, uint32_t use)
 
     // The input's lifetime must end within the same block as the definition,
     // otherwise it could live on in phis elsewhere.
-    if (interval->end() > outputOf(block->lastId())) {
+    if (interval->end() > exitOf(block)) {
         reg.setMustCopyInput();
         return true;
     }
@@ -926,7 +926,7 @@ BacktrackingAllocator::resolveControlFlow()
 
             CodePosition start = interval->start();
             InstructionData *data = &insData[start];
-            if (interval->start() > inputOf(data->block()->firstId())) {
+            if (interval->start() > entryOf(data->block())) {
                 JS_ASSERT(start == inputOf(data->ins()) || start == outputOf(data->ins()));
 
                 LiveInterval *prevInterval = reg->intervalFor(start.previous());
@@ -956,7 +956,7 @@ BacktrackingAllocator::resolveControlFlow()
             JS_ASSERT(phi->numDefs() == 1);
             LDefinition *def = phi->getDef(0);
             VirtualRegister *vreg = &vregs[def];
-            LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
+            LiveInterval *to = vreg->intervalFor(entryOf(successor));
             JS_ASSERT(to);
 
             for (size_t k = 0; k < mSuccessor->numPredecessors(); k++) {
@@ -964,7 +964,7 @@ BacktrackingAllocator::resolveControlFlow()
                 JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
 
                 LAllocation *input = phi->getOperand(k);
-                LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
+                LiveInterval *from = vregs[input].intervalFor(exitOf(predecessor));
                 JS_ASSERT(from);
 
                 if (!moveAtExit(predecessor, from, to, def->type()))
@@ -983,12 +983,12 @@ BacktrackingAllocator::resolveControlFlow()
 
                 for (size_t k = 0; k < reg.numIntervals(); k++) {
                     LiveInterval *to = reg.getInterval(k);
-                    if (!to->covers(inputOf(successor->firstId())))
+                    if (!to->covers(entryOf(successor)))
                         continue;
-                    if (to->covers(outputOf(predecessor->lastId())))
+                    if (to->covers(exitOf(predecessor)))
                         continue;
 
-                    LiveInterval *from = reg.intervalFor(outputOf(predecessor->lastId()));
+                    LiveInterval *from = reg.intervalFor(exitOf(predecessor));
 
                     if (mSuccessor->numPredecessors() > 1) {
                         JS_ASSERT(predecessor->mir()->numSuccessors() == 1);

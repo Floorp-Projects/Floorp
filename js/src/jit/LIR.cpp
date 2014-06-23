@@ -112,7 +112,7 @@ LBlock::New(TempAllocator &alloc, MBasicBlock *from)
 }
 
 uint32_t
-LBlock::firstId()
+LBlock::firstId() const
 {
     if (phis_.length()) {
         return phis_[0].id();
@@ -125,7 +125,7 @@ LBlock::firstId()
     return 0;
 }
 uint32_t
-LBlock::lastId()
+LBlock::lastId() const
 {
     LInstruction *last = *instructions_.rbegin();
     JS_ASSERT(last->id());
