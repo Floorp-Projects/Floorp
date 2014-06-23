@@ -35,6 +35,7 @@
 #include "nsBrowserStatusFilter.h"
 #include "mozilla/FinalizationWitnessService.h"
 #include "mozilla/NativeOSFileInternals.h"
+#include "mozilla/AddonPathService.h"
 
 using namespace mozilla;
 
@@ -91,6 +92,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUpdateProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(FinalizationWitnessService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(NativeOSFileInternalsService)
 
+NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(AddonPathService, AddonPathService::GetInstance)
+
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_APPSTARTUP_CID);
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
@@ -115,6 +118,7 @@ NS_DEFINE_NAMED_CID(NS_UPDATEPROCESSOR_CID);
 #endif
 NS_DEFINE_NAMED_CID(FINALIZATIONWITNESSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NATIVE_OSFILE_INTERNALS_SERVICE_CID);
+NS_DEFINE_NAMED_CID(NS_ADDON_PATH_SERVICE_CID);
 
 static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_APPSTARTUP_CID, false, nullptr, nsAppStartupConstructor },
@@ -141,6 +145,7 @@ static const Module::CIDEntry kToolkitCIDs[] = {
 #endif
   { &kFINALIZATIONWITNESSSERVICE_CID, false, nullptr, FinalizationWitnessServiceConstructor },
   { &kNATIVE_OSFILE_INTERNALS_SERVICE_CID, false, nullptr, NativeOSFileInternalsServiceConstructor },
+  { &kNS_ADDON_PATH_SERVICE_CID, false, nullptr, AddonPathServiceConstructor },
   { nullptr }
 };
 
@@ -170,6 +175,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
 #endif
   { FINALIZATIONWITNESSSERVICE_CONTRACTID, &kFINALIZATIONWITNESSSERVICE_CID },
   { NATIVE_OSFILE_INTERNALS_SERVICE_CONTRACTID, &kNATIVE_OSFILE_INTERNALS_SERVICE_CID },
+  { NS_ADDONPATHSERVICE_CONTRACTID, &kNS_ADDON_PATH_SERVICE_CID },
   { nullptr }
 };
 

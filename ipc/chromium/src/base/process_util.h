@@ -255,6 +255,7 @@ class ProcessMetrics {
 #undef CreateEvent
 #undef GetClassName
 #undef GetBinaryType
+#undef RemoveDirectory
 #endif
 
 #endif  // BASE_PROCESS_UTIL_H_

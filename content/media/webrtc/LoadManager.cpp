@@ -40,15 +40,15 @@ LoadManagerSingleton::LoadManagerSingleton(int aLoadMeasurementInterval,
                                            int aAveragingMeasurements,
                                            float aHighLoadThreshold,
                                            float aLowLoadThreshold)
-  : mLoadSum(0.0f),
-    mLoadSumMeasurements(0),
+  : mLock("LoadManager"),
+    mCurrentState(webrtc::kLoadNormal),
     mOveruseActive(false),
+    mLoadSum(0.0f),
+    mLoadSumMeasurements(0),
     mLoadMeasurementInterval(aLoadMeasurementInterval),
     mAveragingMeasurements(aAveragingMeasurements),
     mHighLoadThreshold(aHighLoadThreshold),
-    mLowLoadThreshold(aLowLoadThreshold),
-    mCurrentState(webrtc::kLoadNormal),
-    mLock("LoadManager")
+    mLowLoadThreshold(aLowLoadThreshold)
 {
 #if defined(PR_LOGGING)
   if (!gLoadManagerLog)

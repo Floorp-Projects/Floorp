@@ -671,8 +671,8 @@ js::CheckDefineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValu
         // Steps 6-11, skipping step 10.a.ii. Prohibit redefining a permanent
         // property with different metadata, except to make a writable property
         // non-writable.
-        if (getter != desc.getter() ||
-            setter != desc.setter() ||
+        if ((getter != desc.getter() && !(getter == JS_PropertyStub && !desc.getter())) ||
+            (setter != desc.setter() && !(setter == JS_StrictPropertyStub && !desc.setter())) ||
             (attrs != desc.attributes() && attrs != (desc.attributes() | JSPROP_READONLY)))
         {
             return Throw(cx, id, JSMSG_CANT_REDEFINE_PROP);

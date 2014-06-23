@@ -49,7 +49,6 @@
 #include "secasn1.h"
 #include "secder.h"
 #include "ssl.h"
-#include "ocsp.h"
 #include "plbase64.h"
 
 using namespace mozilla;

@@ -44,8 +44,8 @@ public:
   void SeekAudio(Microseconds aTime);
   void SeekVideo(Microseconds aTime);
 
-  // DemuxAudioSample and DemuxVideoSample functions return nullptr on end of
-  // stream or error.
+  // DemuxAudioSample and DemuxVideoSample functions
+  // return nullptr on end of stream or error.
   MP4Sample* DemuxAudioSample();
   MP4Sample* DemuxVideoSample();
 

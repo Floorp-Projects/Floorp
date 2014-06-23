@@ -109,6 +109,9 @@
 
 <!ENTITY fxaccount_full_label 'Firefox Accounts'>
 
+<!ENTITY fxaccount_custom_server_account_title 'Using account on server'>
+<!ENTITY fxaccount_custom_server_sync_title 'Storing Sync data on server'>
+
 <!-- Localization note: these are shown in all screens that query the
      user for an email address and password. Hide and show are button
      labels. -->
@@ -175,7 +178,9 @@
 
 <!ENTITY fxaccount_status_header2 'Firefox Account'>
 <!ENTITY fxaccount_status_signed_in_as 'Signed in as'>
+<!ENTITY fxaccount_status_auth_server 'Account server'>
 <!ENTITY fxaccount_status_device_name 'Device name'>
+<!ENTITY fxaccount_status_sync_server 'Sync server'>
 <!ENTITY fxaccount_status_sync '&syncBrand.shortName.label;'>
 <!ENTITY fxaccount_status_sync_enabled '&syncBrand.shortName.label;: enabled'>
 <!ENTITY fxaccount_status_needs_verification2 'Your account needs to be verified. Tap to resend verification email.'>

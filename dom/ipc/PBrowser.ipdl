@@ -94,7 +94,15 @@ parent:
 
     Event(RemoteDOMEvent aEvent);
 
-    intr CreateWindow() returns (PBrowser window);
+    intr CreateWindow(uint32_t aChromeFlags,
+                      bool aCalledFromJS,
+                      bool aPositionSpecified,
+                      bool aSizeSpecified,
+                      nsString aURI,
+                      nsString aName,
+                      nsString aFeatures,
+                      nsString aBaseURI)
+      returns (bool windowIsNew, PBrowser window);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)

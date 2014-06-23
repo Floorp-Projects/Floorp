@@ -34,3 +34,6 @@ MOCHITEST_MANIFESTS += [
     'reftests/fonts/mochitest.ini',
     'reftests/fonts/mplus/mochitest.ini',
 ]
+
+REFTEST_MANIFESTS += ['reftests/reftest.list']
+CRASHTEST_MANIFESTS += ['../testing/crashtest/crashtests.list']

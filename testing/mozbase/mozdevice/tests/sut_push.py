@@ -57,6 +57,7 @@ class PushTest(unittest.TestCase):
                                   "BADHASH") ],
                        'expectException': True },
                      { 'cmds': [ ("isdir /mnt/sdcard/baz", "FALSE"),
+                                 ('info os', 'android'),
                                  ("isdir /mnt", "FALSE"),
                                  ("mkdr /mnt",
                                   "##AGENT-WARNING## Could not create the directory /mnt") ],

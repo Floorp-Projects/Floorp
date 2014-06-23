@@ -9,12 +9,12 @@
  * potentially re-creating) style contexts
  */
 
+#include "nsStyleSet.h"
+
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
-
-#include "nsStyleSet.h"
-#include "nsCSSStyleSheet.h"
 #include "nsIDocumentInlines.h"
 #include "nsRuleWalker.h"
 #include "nsStyleContext.h"
@@ -282,7 +282,7 @@ GetScopeDepth(nsINode* aScopeElement, ScopeDepthCache& aCache)
 
 struct ScopedSheetOrder
 {
-  nsCSSStyleSheet* mSheet;
+  CSSStyleSheet* mSheet;
   uint32_t mDepth;
   uint32_t mOrder;
 
@@ -305,7 +305,7 @@ struct ScopedSheetOrder
 // before those for descendant scopes, and with sheets for a single
 // scope in document order.
 static void
-SortStyleSheetsByScope(nsTArray<nsCSSStyleSheet*>& aSheets)
+SortStyleSheetsByScope(nsTArray<CSSStyleSheet*>& aSheets)
 {
   uint32_t n = aSheets.Length();
   if (n == 1) {
@@ -382,11 +382,11 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
     uint32_t count = mSheets[eScopedDocSheet].Count();
     if (count) {
       // Gather the scoped style sheets into an array as
-      // nsCSSStyleSheets, and mark all of their scope elements
+      // CSSStyleSheets, and mark all of their scope elements
       // as scoped style roots.
-      nsTArray<nsCSSStyleSheet*> sheets(count);
+      nsTArray<CSSStyleSheet*> sheets(count);
       for (uint32_t i = 0; i < count; i++) {
-        nsRefPtr<nsCSSStyleSheet> sheet =
+        nsRefPtr<CSSStyleSheet> sheet =
           do_QueryObject(mSheets[eScopedDocSheet].ObjectAt(i));
         sheets.AppendElement(sheet);
 
@@ -410,7 +410,7 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
         scope->SetIsScopedStyleRoot();
 
         // Create a rule processor for the scope.
-        nsTArray< nsRefPtr<nsCSSStyleSheet> > sheetsForScope;
+        nsTArray<nsRefPtr<CSSStyleSheet>> sheetsForScope;
         sheetsForScope.AppendElements(sheets.Elements() + start, end - start);
         mScopedDocSheetRuleProcessors.AppendElement
           (new nsCSSRuleProcessor(sheetsForScope, uint8_t(aType), scope));
@@ -428,9 +428,9 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
       case eOverrideSheet: {
         // levels containing CSS stylesheets (apart from eScopedDocSheet)
         nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
-        nsTArray<nsRefPtr<nsCSSStyleSheet> > cssSheets(sheets.Count());
+        nsTArray<nsRefPtr<CSSStyleSheet>> cssSheets(sheets.Count());
         for (int32_t i = 0, i_end = sheets.Count(); i < i_end; ++i) {
-          nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
+          nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
           NS_ASSERTION(cssSheet, "not a CSS sheet");
           cssSheets.AppendElement(cssSheet);
         }
@@ -452,8 +452,8 @@ nsStyleSet::GatherRuleProcessors(sheetType aType)
 static bool
 IsScopedStyleSheet(nsIStyleSheet* aSheet)
 {
-  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(aSheet);
-  NS_ASSERTION(cssSheet, "expected aSheet to be an nsCSSStyleSheet");
+  nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);
+  NS_ASSERTION(cssSheet, "expected aSheet to be a CSSStyleSheet");
 
   return cssSheet->GetScopeElement();
 }
@@ -602,7 +602,7 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 nsresult
 nsStyleSet::RemoveDocStyleSheet(nsIStyleSheet *aSheet)
 {
-  nsRefPtr<nsCSSStyleSheet> cssSheet = do_QueryObject(aSheet);
+  nsRefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);
   bool isScoped = cssSheet && cssSheet->GetScopeElement();
   return RemoveStyleSheet(isScoped ? eScopedDocSheet : eDocSheet, aSheet);
 }
@@ -2065,14 +2065,14 @@ nsStyleSet::MediumFeaturesChanged(nsPresContext* aPresContext)
   return stylesChanged;
 }
 
-nsCSSStyleSheet::EnsureUniqueInnerResult
+CSSStyleSheet::EnsureUniqueInnerResult
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
-  nsAutoTArray<nsCSSStyleSheet*, 32> queue;
+  nsAutoTArray<CSSStyleSheet*, 32> queue;
   for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
     nsCOMArray<nsIStyleSheet> &sheets = mSheets[gCSSSheetTypes[i]];
     for (uint32_t j = 0, j_end = sheets.Count(); j < j_end; ++j) {
-      nsCSSStyleSheet *sheet = static_cast<nsCSSStyleSheet*>(sheets[j]);
+      CSSStyleSheet* sheet = static_cast<CSSStyleSheet*>(sheets[j]);
       queue.AppendElement(sheet);
     }
   }
@@ -2081,16 +2081,16 @@ nsStyleSet::EnsureUniqueInnerOnCSSSheets()
     mBindingManager->AppendAllSheets(queue);
   }
 
-  nsCSSStyleSheet::EnsureUniqueInnerResult res =
-    nsCSSStyleSheet::eUniqueInner_AlreadyUnique;
+  CSSStyleSheet::EnsureUniqueInnerResult res =
+    CSSStyleSheet::eUniqueInner_AlreadyUnique;
   while (!queue.IsEmpty()) {
     uint32_t idx = queue.Length() - 1;
-    nsCSSStyleSheet *sheet = queue[idx];
+    CSSStyleSheet* sheet = queue[idx];
     queue.RemoveElementAt(idx);
 
-    nsCSSStyleSheet::EnsureUniqueInnerResult sheetRes =
+    CSSStyleSheet::EnsureUniqueInnerResult sheetRes =
       sheet->EnsureUniqueInner();
-    if (sheetRes == nsCSSStyleSheet::eUniqueInner_ClonedInner) {
+    if (sheetRes == CSSStyleSheet::eUniqueInner_ClonedInner) {
       res = sheetRes;
     }
 

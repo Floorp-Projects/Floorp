@@ -71,3 +71,21 @@ function testSlice() {
     assertEq(s2, "abcdefghijklmnopqrstuvwxyz123456789000A");
 }
 testSlice();
+
+function testUndepend() {
+    // Latin1
+    var s = "abcdefg".repeat(7);
+    s.indexOf("def"); // flatten
+    s = toLatin1(s);
+    var dep = s.substr(7);
+    var res = dep.replace(/abcdef/g, ""); // StrReplaceRegexpRemove undepends.
+    assertEq(res, "gggggg");
+
+    // TwoByte
+    var s = "abcdefg\u1200".repeat(6);
+    s.indexOf("def"); // flatten
+    var dep = s.substr(8);
+    var res = dep.replace(/abcdefg/g, ""); // StrReplaceRegexpRemove undepends.
+    assertEq(res, "\u1200\u1200\u1200\u1200\u1200");
+}
+testUndepend();

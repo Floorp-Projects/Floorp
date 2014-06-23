@@ -755,28 +755,18 @@ HandleException(ResumeFromException *rfe)
 void
 HandleParallelFailure(ResumeFromException *rfe)
 {
-    ForkJoinContext *cx = ForkJoinContext::current();
-    JitFrameIterator iter(cx->perThreadData->jitTop, ParallelExecution);
-
     parallel::Spew(parallel::SpewBailouts, "Bailing from VM reentry");
 
-    while (!iter.isEntry()) {
-        if (iter.isScripted()) {
-            cx->bailoutRecord->updateCause(ParallelBailoutUnsupportedVM,
-                                           iter.script(), iter.script(), nullptr);
-            break;
-        }
-        ++iter;
-    }
+    ForkJoinContext *cx = ForkJoinContext::current();
+    JitFrameIterator frameIter(cx);
 
-    while (!iter.isEntry()) {
-        if (iter.isScripted())
-            PropagateAbortPar(iter.script(), iter.script());
-        ++iter;
-    }
+    cx->bailoutRecord->joinCause(ParallelBailoutUnsupportedVM);
+    cx->bailoutRecord->rematerializeFrames(cx, frameIter);
 
     rfe->kind = ResumeFromException::RESUME_ENTRY_FRAME;
-    rfe->stackPointer = iter.fp();
+
+    MOZ_ASSERT(frameIter.done());
+    rfe->stackPointer = frameIter.fp();
 }
 
 void

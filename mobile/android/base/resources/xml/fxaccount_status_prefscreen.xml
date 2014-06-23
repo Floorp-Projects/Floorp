@@ -10,6 +10,11 @@
             android:key="email"
             android:persistent="false"
             android:title="@string/fxaccount_email_hint" />
+        <Preference
+            android:editable="false"
+            android:key="auth_server"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_auth_server" />
     </PreferenceCategory>
     <PreferenceCategory
         android:key="sync_category"
@@ -72,6 +77,13 @@
             android:key="device_name"
             android:persistent="false"
             android:title="@string/fxaccount_status_device_name" />
+
+		<Preference
+            android:editable="false"
+            android:key="sync_server"
+            android:persistent="false"
+            android:title="@string/fxaccount_status_sync_server" />
+
     </PreferenceCategory>
     <PreferenceCategory
         android:key="legal_category"

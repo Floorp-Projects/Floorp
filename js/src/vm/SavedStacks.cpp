@@ -25,7 +25,12 @@ namespace js {
 /* static */ HashNumber
 SavedFrame::HashPolicy::hash(const Lookup &lookup)
 {
-    return AddToHash(HashString(lookup.source->chars(), lookup.source->length()),
+    JSAtom *source = lookup.source;
+    JS::AutoCheckCannotGC nogc;
+    uint32_t hash = source->hasLatin1Chars()
+                    ? HashString(source->latin1Chars(nogc), source->length())
+                    : HashString(source->twoByteChars(nogc), source->length());
+    return AddToHash(hash,
                      lookup.line,
                      lookup.column,
                      lookup.functionDisplayName,

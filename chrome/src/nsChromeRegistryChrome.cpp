@@ -272,7 +272,7 @@ nsChromeRegistryChrome::GetSelectedLocale(const nsACString& aPackage,
                                                       PL_DHASH_LOOKUP));
 
   if (PL_DHASH_ENTRY_IS_FREE(entry))
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_FILE_NOT_FOUND;
 
   aLocale = entry->locales.GetSelected(mSelectedLocale, nsProviderArray::LOCALE);
   if (aLocale.IsEmpty())
@@ -560,7 +560,7 @@ nsChromeRegistryChrome::GetFlagsFromPackage(const nsCString& aPackage,
                                                       & (nsACString&) aPackage,
                                                       PL_DHASH_LOOKUP));
   if (PL_DHASH_ENTRY_IS_FREE(entry))
-    return NS_ERROR_NOT_AVAILABLE;
+    return NS_ERROR_FILE_NOT_FOUND;
 
   *aFlags = entry->flags;
   return NS_OK;

@@ -30,7 +30,10 @@ class nsXBLBinding;
 template<class E> class nsRefPtr;
 typedef nsTArray<nsRefPtr<nsXBLBinding> > nsBindingList;
 class nsIPrincipal;
-class nsCSSStyleSheet;
+
+namespace mozilla {
+class CSSStyleSheet;
+} // namespace mozilla
 
 class nsBindingManager MOZ_FINAL : public nsStubMutationObserver
 {
@@ -116,7 +119,7 @@ public:
   nsresult MediumFeaturesChanged(nsPresContext* aPresContext,
                                  bool* aRulesChanged);
 
-  void AppendAllSheets(nsTArray<nsCSSStyleSheet*>& aArray);
+  void AppendAllSheets(nsTArray<mozilla::CSSStyleSheet*>& aArray);
 
   void Traverse(nsIContent *aContent,
                             nsCycleCollectionTraversalCallback &cb);

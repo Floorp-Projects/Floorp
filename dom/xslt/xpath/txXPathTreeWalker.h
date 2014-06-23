@@ -117,12 +117,22 @@ public:
 class txXPathNativeNode
 {
 public:
-    static txXPathNode* createXPathNode(nsIDOMNode* aNode,
+    static txXPathNode* createXPathNode(nsINode* aNode,
                                         bool aKeepRootAlive = false);
+    static txXPathNode* createXPathNode(nsIDOMNode* aNode,
+                                        bool aKeepRootAlive = false)
+    {
+        nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
+        return createXPathNode(node, aKeepRootAlive);
+    }
     static txXPathNode* createXPathNode(nsIContent* aContent,
                                         bool aKeepRootAlive = false);
     static txXPathNode* createXPathNode(nsIDOMDocument* aDocument);
-    static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult);
+    static nsINode* getNode(const txXPathNode& aNode);
+    static nsresult getNode(const txXPathNode& aNode, nsIDOMNode** aResult)
+    {
+        return CallQueryInterface(getNode(aNode), aResult);
+    }
     static nsIContent* getContent(const txXPathNode& aNode);
     static nsIDocument* getDocument(const txXPathNode& aNode);
     static void addRef(const txXPathNode& aNode)

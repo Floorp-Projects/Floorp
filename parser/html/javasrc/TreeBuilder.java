@@ -173,7 +173,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
 
     final static int RUBY_OR_SPAN_OR_SUB_OR_SUP_OR_VAR = 52;
 
-    final static int RT_OR_RP = 53;
+    final static int RB_OR_RP_OR_RTC = 53;
 
     final static int PARAM_OR_SOURCE_OR_TRACK = 55;
 
@@ -202,6 +202,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     final static int TEMPLATE = 67;
 
     final static int IMG = 68;
+
+    final static int RT = 69;
 
     // start insertion modes
 
@@ -2408,7 +2410,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         attributes);
                                 attributes = null; // CPP
                                 break starttagloop;
-                            case RT_OR_RP:
+                            case RB_OR_RP_OR_RTC:
                                 eltPos = findLastInScope("ruby");
                                 if (eltPos != NOT_FOUND_ON_STACK) {
                                     generateImpliedEndTags();
@@ -2418,6 +2420,25 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         errStartTagSeenWithoutRuby(name);
                                     } else {
                                         errUnclosedChildrenInRuby();
+                                    }
+                                }
+                                appendToCurrentNodeAndPushElementMayFoster(
+                                        elementName,
+                                        attributes);
+                                attributes = null; // CPP
+                                break starttagloop;
+                            case RT:
+                                eltPos = findLastInScope("ruby");
+                                if (eltPos != NOT_FOUND_ON_STACK) {
+                                    generateImpliedEndTagsExceptFor("rtc");
+                                }
+                                if (eltPos != currentPtr) {
+                                    if (!isCurrent("rtc")) {
+                                        if (eltPos != NOT_FOUND_ON_STACK) {
+                                            errStartTagSeenWithoutRuby(name);
+                                        } else {
+                                            errUnclosedChildrenInRuby();
+                                        }
                                     }
                                 }
                                 appendToCurrentNodeAndPushElementMayFoster(
@@ -3529,7 +3550,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         case OPTGROUP:
                                         case OPTION: // is this possible?
                                         case P:
-                                        case RT_OR_RP:
+                                        case RB_OR_RP_OR_RTC:
+                                        case RT:
                                         case TD_OR_TH:
                                         case TBODY_OR_THEAD_OR_TFOOT:
                                             break;
@@ -3553,6 +3575,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                         case DD_OR_DT:
                                         case LI:
                                         case P:
+                                        case RB_OR_RP_OR_RTC:
+                                        case RT:
                                         case TBODY_OR_THEAD_OR_TFOOT:
                                         case TD_OR_TH:
                                         case BODY:
@@ -4170,7 +4194,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 case DD_OR_DT:
                 case OPTION:
                 case OPTGROUP:
-                case RT_OR_RP:
+                case RB_OR_RP_OR_RTC:
+                case RT:
                     if (node.ns == "http://www.w3.org/1999/xhtml" && node.name == name) {
                         return;
                     }
@@ -4190,7 +4215,8 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 case DD_OR_DT:
                 case OPTION:
                 case OPTGROUP:
-                case RT_OR_RP:
+                case RB_OR_RP_OR_RTC:
+                case RT:
                     pop();
                     continue;
                 default:

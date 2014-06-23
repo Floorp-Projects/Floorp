@@ -32,14 +32,6 @@ SECStatus LoadLoadableRoots(/*optional*/ const char* dir,
 
 void UnloadLoadableRoots(const char* modNameUTF8);
 
-// Controls the OCSP fetching behavior of the classic verification mode. In the
-// classic mode, the OCSP fetching behavior is set globally instead of per
-// validation.
-void
-SetClassicOCSPBehavior(CertVerifier::ocsp_download_config enabled,
-                       CertVerifier::ocsp_strict_config strict,
-                       CertVerifier::ocsp_get_config get);
-
 // Caller must free the result with PR_Free
 char* DefaultServerNicknameForCert(CERTCertificate* cert);
 
@@ -75,10 +67,10 @@ public:
                                      const SECItem& subjectPublicKeyInfo);
 
   virtual SECStatus CheckRevocation(mozilla::pkix::EndEntityOrCA endEntityOrCA,
-                                    const CERTCertificate* cert,
-                          /*const*/ CERTCertificate* issuerCert,
+                                    const mozilla::pkix::CertID& certID,
                                     PRTime time,
-                       /*optional*/ const SECItem* stapledOCSPResponse);
+                       /*optional*/ const SECItem* stapledOCSPResponse,
+                       /*optional*/ const SECItem* aiaExtension);
 
   virtual SECStatus IsChainValid(const CERTCertList* certChain);
 
@@ -89,9 +81,9 @@ private:
   };
   static const PRTime ServerFailureDelay = 5 * 60 * PR_USEC_PER_SEC;
   SECStatus VerifyAndMaybeCacheEncodedOCSPResponse(
-    const CERTCertificate* cert, CERTCertificate* issuerCert, PRTime time,
-    uint16_t maxLifetimeInDays, const SECItem* encodedResponse,
-    EncodedResponseSource responseSource);
+    const mozilla::pkix::CertID& certID, PRTime time,
+    uint16_t maxLifetimeInDays, const SECItem& encodedResponse,
+    EncodedResponseSource responseSource, /*out*/ bool& expired);
 
   const SECTrustType mCertDBTrustType;
   const OCSPFetching mOCSPFetching;

@@ -457,7 +457,8 @@ public:
   }
 
   virtual uint32_t Length() MOZ_OVERRIDE;
-  virtual nsCSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
+  virtual mozilla::CSSStyleSheet*
+  IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
 
 protected:
   int32_t       mLength;
@@ -780,7 +781,7 @@ public:
   virtual Element* FindContentForSubDocument(nsIDocument *aDocument) const MOZ_OVERRIDE;
   virtual Element* GetRootElementInternal() const MOZ_OVERRIDE;
 
-  virtual void EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet) MOZ_OVERRIDE;
+  virtual void EnsureOnDemandBuiltInUASheet(mozilla::CSSStyleSheet* aSheet) MOZ_OVERRIDE;
 
   /**
    * Get the (document) style sheets owned by this document.
@@ -932,7 +933,7 @@ public:
   virtual nsViewportInfo GetViewportInfo(const mozilla::ScreenIntSize& aDisplaySize) MOZ_OVERRIDE;
 
 private:
-  void AddOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet);
+  void AddOnDemandBuiltInUASheet(mozilla::CSSStyleSheet* aSheet);
   nsRadioGroupStruct* GetRadioGroupInternal(const nsAString& aName) const;
   void SendToConsole(nsCOMArray<nsISecurityConsoleMessage>& aMessages);
 
@@ -1080,7 +1081,7 @@ public:
                             const nsAString& aCrossOriginAttr) MOZ_OVERRIDE;
 
   virtual nsresult LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
-                                       nsCSSStyleSheet** sheet) MOZ_OVERRIDE;
+                                       mozilla::CSSStyleSheet** sheet) MOZ_OVERRIDE;
 
   virtual nsISupports* GetCurrentContentSink() MOZ_OVERRIDE;
 

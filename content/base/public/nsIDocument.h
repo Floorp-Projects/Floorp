@@ -29,7 +29,6 @@
 class imgIRequest;
 class nsAString;
 class nsBindingManager;
-class nsCSSStyleSheet;
 class nsIDocShell;
 class nsDocShell;
 class nsDOMNavigationTiming;
@@ -83,6 +82,7 @@ class nsIGlobalObject;
 struct nsCSSSelectorList;
 
 namespace mozilla {
+class CSSStyleSheet;
 class ErrorResult;
 class EventStates;
 
@@ -122,6 +122,7 @@ class TouchList;
 class TreeWalker;
 class UndoManager;
 class XPathEvaluator;
+class XPathResult;
 template<typename> class OwningNonNull;
 template<typename> class Sequence;
 
@@ -779,7 +780,7 @@ public:
    * TODO We can get rid of the whole concept of delayed loading if we fix
    * bug 77999.
    */
-  virtual void EnsureOnDemandBuiltInUASheet(nsCSSStyleSheet* aSheet) = 0;
+  virtual void EnsureOnDemandBuiltInUASheet(mozilla::CSSStyleSheet* aSheet) = 0;
 
   /**
    * Get the number of (document) stylesheets
@@ -1836,7 +1837,7 @@ public:
    * DO NOT USE FOR UNTRUSTED CONTENT.
    */
   virtual nsresult LoadChromeSheetSync(nsIURI* aURI, bool aIsAgentSheet,
-                                       nsCSSStyleSheet** aSheet) = 0;
+                                       mozilla::CSSStyleSheet** aSheet) = 0;
 
   /**
    * Returns true if the locale used for the document specifies a direction of
@@ -2274,10 +2275,10 @@ public:
                      mozilla::ErrorResult& rv);
   already_AddRefed<nsIDOMXPathNSResolver>
     CreateNSResolver(nsINode* aNodeResolver, mozilla::ErrorResult& rv);
-  already_AddRefed<nsISupports>
-    Evaluate(const nsAString& aExpression, nsINode* aContextNode,
+  already_AddRefed<mozilla::dom::XPathResult>
+    Evaluate(JSContext* aCx, const nsAString& aExpression, nsINode* aContextNode,
              nsIDOMXPathNSResolver* aResolver, uint16_t aType,
-             nsISupports* aResult, mozilla::ErrorResult& rv);
+             JS::Handle<JSObject*> aResult, mozilla::ErrorResult& rv);
   // Touch event handlers already on nsINode
   already_AddRefed<mozilla::dom::Touch>
     CreateTouch(nsIDOMWindow* aView, mozilla::dom::EventTarget* aTarget,

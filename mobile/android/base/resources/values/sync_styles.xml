@@ -5,8 +5,8 @@
 
 <resources>
   <style name="SyncLayout">
-    <item name="android:layout_width">match_parent</item>
-    <item name="android:layout_height">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:layout_height">fill_parent</item>
   </style>
   <style name="SyncLayout.Vertical" parent="@style/SyncLayout">
     <item name="android:orientation">vertical</item>
@@ -17,14 +17,14 @@
 
   <!-- TextView Styles -->
   <style name="SyncTextFrame" parent="@style/TextAppearance">
-    <item name="android:layout_width">match_parent</item>
-    <item name="android:layout_height">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
+    <item name="android:layout_height">fill_parent</item>
     <item name="android:layout_gravity">center</item>
     <item name="android:padding">@dimen/SyncSpace</item>
     <item name="android:orientation">vertical</item>
   </style>
   <style name="SyncTextItem" parent="@style/TextAppearance.Medium">
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:textSize">15dp</item>
   </style>
@@ -44,7 +44,7 @@
   </style>
   <!-- EditView Styles -->
   <style name="SyncEditItem" parent="@style/Widget.EditText">
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:singleLine">true</item>
     <item name="android:inputType">text|textNoSuggestions</item>
@@ -67,7 +67,7 @@
   <!-- Top title bar: a text view with the Sync icon to the left. -->
   <style name="SyncTop">
     <item name="android:textAppearance">@style/TextAppearance.Large</item>
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:gravity">center_vertical|left</item>
     <item name="android:drawableLeft">@drawable/icon</item>
@@ -80,7 +80,7 @@
 
   <!-- Middle scroller: a scroll view with content in it. -->
   <style name="SyncMiddle">
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">0dp</item>
     <item name="android:layout_weight">1</item>
     <item name="android:padding">@dimen/SyncSpace</item>
@@ -88,7 +88,7 @@
 
   <!-- Bottom bar: a horizontal linear layout with buttons in it. -->
   <style name="SyncBottom">
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_gravity">center</item>
     <item name="android:gravity">center</item>
@@ -104,7 +104,7 @@
   </style>
 
   <style name="SyncButton" parent="@style/Widget.Button">
-    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_width">fill_parent</item>
     <item name="android:layout_height">wrap_content</item>
     <item name="android:layout_weight">1</item>
   </style>

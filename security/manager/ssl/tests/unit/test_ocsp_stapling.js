@@ -21,13 +21,7 @@ function add_ocsp_test(aHost, aExpectedResult, aStaplingEnabled) {
     });
 }
 
-function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
-  add_test(function () {
-    Services.prefs.setBoolPref("security.use_mozillapkix_verification",
-                               useMozillaPKIX);
-    run_next_test();
-  });
-
+function add_tests(certDB, otherTestCA) {
   // In the absence of OCSP stapling, these should actually all work.
   add_ocsp_test("ocsp-stapling-good.example.com", Cr.NS_OK, false);
   add_ocsp_test("ocsp-stapling-revoked.example.com", Cr.NS_OK, false);
@@ -115,16 +109,11 @@ function add_tests_in_mode(useMozillaPKIX, certDB, otherTestCA) {
   add_ocsp_test("ocsp-stapling-empty.example.com",
                 getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
 
-  // TODO(bug 979070): NSS can't handle this yet.
-  if (useMozillaPKIX) {
-    add_ocsp_test("ocsp-stapling-skip-responseBytes.example.com",
-                  getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
-  }
+  add_ocsp_test("ocsp-stapling-skip-responseBytes.example.com",
+                getXPCOMStatusFromNSS(SEC_ERROR_OCSP_MALFORMED_RESPONSE), true);
 
   add_ocsp_test("ocsp-stapling-critical-extension.example.com",
-                useMozillaPKIX
-                  ? getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION)
-                  : Cr.NS_OK, // TODO(bug 987426): NSS doesn't handle unknown critical extensions
+                getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION),
                 true);
   add_ocsp_test("ocsp-stapling-noncritical-extension.example.com", Cr.NS_OK, true);
   // TODO(bug 997994): Disallow empty Extensions in responses
@@ -155,11 +144,11 @@ function check_ocsp_stapling_telemetry() {
                     .getService(Ci.nsITelemetry)
                     .getHistogramById("SSL_OCSP_STAPLING")
                     .snapshot();
-  do_check_eq(histogram.counts[0], 2 * 0); // histogram bucket 0 is unused
-  do_check_eq(histogram.counts[1], 5 + 6); // 5 or 6 connections with a good response (bug 987426)
-  do_check_eq(histogram.counts[2], 2 * 18); // 18 connections with no stapled resp.
-  do_check_eq(histogram.counts[3], 2 * 0); // 0 connections with an expired response
-  do_check_eq(histogram.counts[4], 19 + 17); // 19 or 17 connections with bad responses (bug 979070, bug 987426)
+  do_check_eq(histogram.counts[0], 0); // histogram bucket 0 is unused
+  do_check_eq(histogram.counts[1], 5); // 5 connections with a good response
+  do_check_eq(histogram.counts[2], 18); // 18 connections with no stapled resp.
+  do_check_eq(histogram.counts[3], 0); // 0 connections with an expired response
+  do_check_eq(histogram.counts[4], 19); // 19 connections with bad responses
   run_next_test();
 }
 
@@ -181,8 +170,7 @@ function run_test() {
 
   add_tls_server_setup("OCSPStaplingServer");
 
-  add_tests_in_mode(true, certDB, otherTestCA);
-  add_tests_in_mode(false, certDB, otherTestCA);
+  add_tests(certDB, otherTestCA);
 
   add_test(function () {
     fakeOCSPResponder.stop(check_ocsp_stapling_telemetry);

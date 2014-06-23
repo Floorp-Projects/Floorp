@@ -19,8 +19,10 @@
 #include "nsNetUtil.h"
 
 #include "nsContentCID.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
-#include "nsCSSStyleSheet.h"
+
+using namespace mozilla;
 
 static already_AddRefed<nsIURI>
 FileToURI(const char *aFilename, nsresult *aRv = 0)
@@ -41,7 +43,7 @@ static int
 ParseCSSFile(nsIURI *aSheetURI)
 {
     nsRefPtr<mozilla::css::Loader> = new mozilla::css::Loader();
-    nsRefPtr<nsCSSStyleSheet> sheet;
+    nsRefPtr<CSSStyleSheet> sheet;
     loader->LoadSheetSync(aSheetURI, getter_AddRefs(sheet));
     NS_ASSERTION(sheet, "sheet load failed");
     /* This can happen if the file can't be found (e.g. you
