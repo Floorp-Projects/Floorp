@@ -5868,24 +5868,6 @@ CheckModuleReturn(ModuleCompiler &m)
     return true;
 }
 
-// All registers except the stack pointer.
-static const RegisterSet AllRegsExceptSP =
-    RegisterSet(GeneralRegisterSet(Registers::AllMask &
-                                   ~(uint32_t(1) << Registers::StackPointer)),
-                FloatRegisterSet(FloatRegisters::AllMask));
-#if defined(JS_CODEGEN_ARM)
-// The ARM system ABI also includes d15 in the non volatile float registers.
-// Also exclude lr (a.k.a. r14) as we preserve it manually)
-static const RegisterSet NonVolatileRegs =
-    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
-                                   ~(uint32_t(1) << Registers::lr)),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
-#else
-static const RegisterSet NonVolatileRegs =
-    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask));
-#endif
-
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
@@ -5904,7 +5886,7 @@ LoadJSContextFromActivation(MacroAssembler &masm, Register activation, Register 
 static void
 AssertStackAlignment(MacroAssembler &masm)
 {
-    JS_ASSERT((AsmJSSizeOfRetAddr + masm.framePushed()) % StackAlignment == 0);
+    JS_ASSERT((AsmJSFrameSize + masm.framePushed()) % StackAlignment == 0);
 #ifdef DEBUG
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
@@ -5929,7 +5911,7 @@ StackDecrementForCall(MacroAssembler &masm, unsigned bytesToPush)
 {
     // Include extra padding so that, after pushing the bytesToPush,
     // the stack is aligned for a call instruction.
-    unsigned alreadyPushed = AsmJSSizeOfRetAddr + masm.framePushed();
+    unsigned alreadyPushed = AsmJSFrameSize + masm.framePushed();
     return AlignBytes(alreadyPushed + bytesToPush, StackAlignment) - alreadyPushed;
 }
 
@@ -5939,6 +5921,19 @@ StackDecrementForCall(MacroAssembler &masm, const VectorT &argTypes, unsigned ex
 {
     return StackDecrementForCall(masm, StackArgBytes(argTypes) + extraBytes);
 }
+
+#if defined(JS_CODEGEN_ARM)
+// The ARM system ABI also includes d15 in the non volatile float registers.
+// Also exclude lr (a.k.a. r14) as we preserve it manually)
+static const RegisterSet NonVolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
+                                   ~(uint32_t(1) << Registers::lr)),
+                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
+#else
+static const RegisterSet NonVolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
+                FloatRegisterSet(FloatRegisters::NonVolatileMask));
+#endif
 
 #if defined(JS_CODEGEN_MIPS)
 // Mips is using one more double slot due to stack alignment for double values.
@@ -5974,7 +5969,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // PushRegsInMask(NonVolatileRegs).
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif // JS_CODEGEN_ARM
@@ -6011,7 +6006,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
 #if defined(JS_CODEGEN_X86)
-    masm.loadPtr(Address(StackPointer, AsmJSSizeOfRetAddr + masm.framePushed()), argv);
+    masm.loadPtr(Address(StackPointer, AsmJSFrameSize + masm.framePushed()), argv);
 #else
     masm.movePtr(IntArgReg0, argv);
 #endif
@@ -6233,7 +6228,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     m.setInterpExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif
@@ -6258,7 +6253,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     masm.reserveStack(stackDec);
 
     // Fill the argument array.
-    unsigned offsetToCallerStackArgs = AsmJSSizeOfRetAddr + masm.framePushed();
+    unsigned offsetToCallerStackArgs = AsmJSFrameSize + masm.framePushed();
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
@@ -6407,7 +6402,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     m.setIonExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_X64)
     masm.Push(HeapReg);
 #elif defined(JS_CODEGEN_ARM)
@@ -6486,7 +6481,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = masm.framePushed() + AsmJSSizeOfRetAddr;
+    unsigned offsetToCallerStackArgs = masm.framePushed() + AsmJSFrameSize;
     FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
     argOffset += exit.sig().args().length() * sizeof(Value);
     JS_ASSERT(argOffset == offsetToArgs + argBytes);
@@ -6693,6 +6688,11 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.jump(throwLabel);
     return !masm.oom();
 }
+
+static const RegisterSet AllRegsExceptSP =
+    RegisterSet(GeneralRegisterSet(Registers::AllMask &
+                                   ~(uint32_t(1) << Registers::StackPointer)),
+                FloatRegisterSet(FloatRegisters::AllMask));
 
 // The operation-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*
