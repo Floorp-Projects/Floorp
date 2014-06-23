@@ -18,6 +18,7 @@
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory
+#include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient
 #include "mozilla/layers/CompositorTypes.h"  // for TextureInfo, etc
 #include "mozilla/layers/LayersMessages.h" // for TileDescriptor
@@ -267,6 +268,14 @@ struct BasicTiledLayerPaintData {
   gfx3DMatrix mTransformDisplayPortToLayer;
 
   /*
+   * The transform matrix to go from this layer's Layer units to
+   * the scroll ancestor's ParentLayer units. The "scroll ancestor" is
+   * the closest ancestor layer which scrolls, and is used to obtain
+   * the composition bounds that are relevant for this layer.
+   */
+  gfx3DMatrix mTransformToCompBounds;
+
+  /*
    * The critical displayport of the content from the nearest ancestor layer
    * that represents scrollable content with a display port set. Empty if a
    * critical displayport is not set.
@@ -322,17 +331,15 @@ public:
   bool UpdateFromCompositorFrameMetrics(ContainerLayer* aLayer,
                                         bool aHasPendingNewThebesContent,
                                         bool aLowPrecision,
-                                        ParentLayerRect& aCompositionBounds,
-                                        CSSToParentLayerScale& aZoom);
+                                        ViewTransform& aViewTransform);
 
   /**
-   * When a shared FrameMetrics can not be found for a given layer,
-   * this function is used to find the first non-empty composition bounds
-   * by traversing up the layer tree.
+   * Compute the APZ's async transform given the content-side and
+   * compositor-side metrics for the layer.
    */
-  void FindFallbackContentFrameMetrics(ContainerLayer* aLayer,
-                                       ParentLayerRect& aCompositionBounds,
-                                       CSSToParentLayerScale& aZoom);
+  ViewTransform ComputeViewTransform(const FrameMetrics& aContentMetrics,
+                                     const FrameMetrics& aCompositorMetrics);
+
   /**
    * Determines if the compositor's upcoming composition bounds has fallen
    * outside of the contents display port. If it has then the compositor
