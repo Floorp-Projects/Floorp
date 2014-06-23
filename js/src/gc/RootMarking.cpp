@@ -170,7 +170,7 @@ IsAddressableGCThing(JSRuntime *rt, uintptr_t w,
      * do not touch the low two bits. Thus any word with the low two bits set
      * is not a valid GC-thing.
      */
-    JS_STATIC_ASSERT(JSID_TYPE_STRING == 0 && JSID_TYPE_OBJECT == 4);
+    JS_STATIC_ASSERT(JSID_TYPE_STRING == 0 && JSID_TYPE_SYMBOL == 4);
     if (w & 0x3)
         return CGCT_LOWBITSET;
 

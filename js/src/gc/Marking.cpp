@@ -679,11 +679,11 @@ MarkIdInternal(JSTracer *trc, jsid *id)
         trc->setTracingLocation((void *)id);
         MarkInternal(trc, &str);
         *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
-    } else if (MOZ_UNLIKELY(JSID_IS_OBJECT(*id))) {
-        JSObject *obj = JSID_TO_OBJECT(*id);
+    } else if (JSID_IS_SYMBOL(*id)) {
+        JS::Symbol *sym = JSID_TO_SYMBOL(*id);
         trc->setTracingLocation((void *)id);
-        MarkInternal(trc, &obj);
-        *id = OBJECT_TO_JSID(obj);
+        MarkInternal(trc, &sym);
+        *id = SYMBOL_TO_JSID(sym);
     } else {
         /* Unset realLocation manually if we do not call MarkInternal. */
         trc->unsetTracingLocation();
@@ -1094,8 +1094,8 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
     const BarrieredBase<jsid> &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
-    else if (MOZ_UNLIKELY(JSID_IS_OBJECT(id)))
-        PushMarkStack(gcmarker, JSID_TO_OBJECT(id));
+    else if (JSID_IS_SYMBOL(id))
+        PushMarkStack(gcmarker, JSID_TO_SYMBOL(id));
 
     shape = shape->previous();
     if (shape && shape->markIfUnmarked(gcmarker->getMarkColor()))
