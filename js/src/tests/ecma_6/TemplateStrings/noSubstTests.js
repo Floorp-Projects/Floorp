@@ -33,6 +33,12 @@ syntaxError("`${}");
 syntaxError("`${1}");
 syntaxError("`${1 + 2}");
 
+// almost template substitutions
+assertEq("$", `$`);
+assertEq("$}", `$}`);
+assertEq("}", `}`);
+assertEq("{", `{`);
+
 
 // character escape sequence (single escape character)
 assertEq("\'", `\'`);
@@ -129,6 +135,16 @@ syntaxError("var obj = { `illegal`: 1}");
 assertThrowsInstanceOf(() => JSON.parse('[1, `false`]'), SyntaxError);
 
 syntaxError('({get `name`() { return 10; }});');
+
+// test for "use strict" directive
+assertEq(5, Function("`use strict`; return 05;")());
+var func = function f() {
+    `ignored string`;
+    "use strict";
+    return 06;
+}
+assertEq(6, func());
+syntaxError("\"use strict\"; return 06;");
 */
 /*End func*/}
 
