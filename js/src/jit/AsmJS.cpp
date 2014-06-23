@@ -6586,22 +6586,17 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         Register reg1 = AsmJSIonExitRegD1;
         Register reg2 = AsmJSIonExitRegD2;
 
-        LoadAsmJSActivationIntoRegister(masm, reg0);
-
         // The following is inlined:
-        //   JSContext *cx = activation->cx();
-        //   Activation *act = cx->mainThread().activation();
-        //   act.active_ = false;
-        //   cx->mainThread().jitTop = prevJitTop_;
-        //   cx->mainThread().jitJSContext = prevJitJSContext_;
+        //   rt->mainThread.activation()->active_ = false;
+        //   rt->mainThread.jitTop = prevJitTop_;
+        //   rt->mainThread.jitJSContext = prevJitJSContext_;
         // On the ARM store8() uses the secondScratchReg (lr) as a temp.
         size_t offsetOfActivation = offsetof(JSRuntime, mainThread) +
                                     PerThreadData::offsetOfActivation();
         size_t offsetOfJitTop = offsetof(JSRuntime, mainThread) + offsetof(PerThreadData, jitTop);
         size_t offsetOfJitJSContext = offsetof(JSRuntime, mainThread) +
                                       offsetof(PerThreadData, jitJSContext);
-        masm.loadPtr(Address(reg0, AsmJSActivation::offsetOfContext()), reg0);
-        masm.loadPtr(Address(reg0, JSContext::offsetOfRuntime()), reg0);
+        masm.movePtr(AsmJSImmPtr(AsmJSImm_Runtime), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
         masm.store8(Imm32(0), Address(reg1, JitActivation::offsetOfActiveUint8()));
         masm.loadPtr(Address(reg1, JitActivation::offsetOfPrevJitTop()), reg2);
