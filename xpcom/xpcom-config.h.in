@@ -34,4 +34,7 @@
 /* Define to either __attribute__((warn_unused_result)) or nothing */
 #undef NS_WARN_UNUSED_RESULT
 
+/* Define to a string describing the XPCOM ABI in use */
+#undef TARGET_XPCOM_ABI
+
 #endif /* _XPCOM_CONFIG_H_ */
