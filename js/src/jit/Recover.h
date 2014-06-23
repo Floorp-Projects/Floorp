@@ -34,6 +34,7 @@ namespace jit {
     _(Floor)                                    \
     _(Round)                                    \
     _(Pow)                                      \
+    _(PowHalf)                                  \
     _(NewObject)                                \
     _(NewDerivedTypedObject)
 
@@ -302,6 +303,18 @@ class RPow MOZ_FINAL : public RInstruction
 
     virtual uint32_t numOperands() const {
         return 2;
+    }
+
+    bool recover(JSContext *cx, SnapshotIterator &iter) const;
+};
+
+class RPowHalf MOZ_FINAL : public RInstruction
+{
+  public:
+    RINSTRUCTION_HEADER_(PowHalf)
+
+    virtual uint32_t numOperands() const {
+        return 1;
     }
 
     bool recover(JSContext *cx, SnapshotIterator &iter) const;

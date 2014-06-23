@@ -350,6 +350,25 @@ function rpow_object(i) {
     return i;
 }
 
+var uceFault_powhalf_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_powhalf_number'));
+function rpowhalf_number(i) {
+    var x = Math.pow(i, 0.5);
+    if (uceFault_powhalf_number(i) || uceFault_powhalf_number(i))
+        assertEq(x, Math.pow(99, 0.5));
+    return i;
+}
+
+var uceFault_powhalf_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_powhalf_object'));
+function rpowhalf_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.pow(o, 0.5); /* computed with t == i, not 1.5 */
+    t = 1.5;
+    if (uceFault_powhalf_object(i) || uceFault_powhalf_object(i))
+        assertEq(x, Math.pow(99, 0.5));
+    return i;
+}
+
 for (i = 0; i < 100; i++) {
     rbitnot_number(i);
     rbitnot_object(i);
@@ -387,6 +406,8 @@ for (i = 0; i < 100; i++) {
     rround_double(i);
     rpow_number(i);
     rpow_object(i);
+    rpowhalf_number(i);
+    rpowhalf_object(i);
 }
 
 // Test that we can refer multiple time to the same recover instruction, as well
