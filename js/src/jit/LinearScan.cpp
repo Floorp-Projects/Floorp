@@ -235,7 +235,7 @@ LinearScanAllocator::resolveControlFlow()
             JS_ASSERT(phi->numDefs() == 1);
             LDefinition *def = phi->getDef(0);
             LinearScanVirtualRegister *vreg = &vregs[def];
-            LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
+            LiveInterval *to = vreg->intervalFor(entryOf(successor));
             JS_ASSERT(to);
 
             for (size_t k = 0; k < mSuccessor->numPredecessors(); k++) {
@@ -243,7 +243,7 @@ LinearScanAllocator::resolveControlFlow()
                 JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
 
                 LAllocation *input = phi->getOperand(k);
-                LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
+                LiveInterval *from = vregs[input].intervalFor(exitOf(predecessor));
                 JS_ASSERT(from);
 
                 if (!moveAtExit(predecessor, from, to, def->type()))
@@ -264,12 +264,12 @@ LinearScanAllocator::resolveControlFlow()
 
         for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
             LinearScanVirtualRegister *vreg = &vregs[*liveRegId];
-            LiveInterval *to = vreg->intervalFor(inputOf(successor->firstId()));
+            LiveInterval *to = vreg->intervalFor(entryOf(successor));
             JS_ASSERT(to);
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {
                 LBlock *predecessor = mSuccessor->getPredecessor(j)->lir();
-                LiveInterval *from = vregs[*liveRegId].intervalFor(outputOf(predecessor->lastId()));
+                LiveInterval *from = vregs[*liveRegId].intervalFor(exitOf(predecessor));
                 JS_ASSERT(from);
 
                 if (*from->getAllocation() == *to->getAllocation())
@@ -424,7 +424,7 @@ LinearScanAllocator::reifyAllocations()
                     return false;
             }
         }
-        else if (interval->start() > inputOf(insData[interval->start()].block()->firstId()) &&
+        else if (interval->start() > entryOf(insData[interval->start()].block()) &&
                  (!reg->canonicalSpill() ||
                   (reg->canonicalSpill() == interval->getAllocation() &&
                    !reg->mustSpillAtDefinition()) ||
@@ -1310,7 +1310,7 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
             // first input
             LUse *use = reg->ins()->getOperand(0)->toUse();
             LBlock *predecessor = reg->block()->mir()->getPredecessor(0)->lir();
-            CodePosition predEnd = outputOf(predecessor->lastId());
+            CodePosition predEnd = exitOf(predecessor);
             interval->setHint(Requirement(use->virtualRegister(), predEnd));
         } else {
             // Non-phis get a REGISTER requirement

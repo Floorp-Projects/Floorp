@@ -790,8 +790,8 @@ class LBlock : public TempObject
         JS_ASSERT(!at->isLabel());
         instructions_.insertBefore(at, ins);
     }
-    uint32_t firstId();
-    uint32_t lastId();
+    uint32_t firstId() const;
+    uint32_t lastId() const;
 
     // Return the label to branch to when branching to this block.
     Label *label() {
