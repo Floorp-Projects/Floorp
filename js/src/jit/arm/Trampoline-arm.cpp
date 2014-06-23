@@ -326,7 +326,7 @@ JitRuntime::generateEnterJIT(JSContext *cx, EnterJitType type)
     // We're using a load-double here.  In order for that to work,
     // the data needs to be stored in two consecutive registers,
     // make sure this is the case
-    //   ASSERT(JSReturnReg_Type.code() == JSReturnReg_Data.code()+1);
+    //   JS_ASSERT(JSReturnReg_Type.code() == JSReturnReg_Data.code()+1);
     //   aasm->as_extdtr(IsStore, 64, true, Offset,
     //                   JSReturnReg_Data, EDtrAddr(r5, EDtrOffImm(0)));
 
