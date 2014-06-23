@@ -66,6 +66,9 @@ using namespace js::gc;
 using namespace js::types;
 using namespace js::unicode;
 
+using JS::Symbol;
+using JS::SymbolCode;
+
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -4519,6 +4522,30 @@ js::ToStringSlow(JSContext *cx, HandleValue v)
     return ToStringSlow<CanGC>(cx, v);
 }
 
+static JSString *
+SymbolToSource(JSContext *cx, Symbol *symbol)
+{
+    RootedString desc(cx, symbol->description());
+    SymbolCode code = symbol->code();
+    if (code != SymbolCode::InSymbolRegistry && code != SymbolCode::UniqueSymbol) {
+        // Well-known symbol.
+        MOZ_ASSERT(uint32_t(code) < JS::WellKnownSymbolLimit);
+        return desc;
+    }
+
+    StringBuffer buf(cx);
+    if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(") : !buf.append("Symbol("))
+        return nullptr;
+    if (desc) {
+        desc = StringToSource(cx, desc);
+        if (!desc || !buf.append(desc))
+            return nullptr;
+    }
+    if (!buf.append(')'))
+        return nullptr;
+    return buf.finishString();
+}
+
 JSString *
 js::ValueToSource(JSContext *cx, HandleValue v)
 {
@@ -4529,6 +4556,8 @@ js::ValueToSource(JSContext *cx, HandleValue v)
         return cx->names().void0;
     if (v.isString())
         return StringToSource(cx, v.toString());
+    if (v.isSymbol())
+        return SymbolToSource(cx, v.toSymbol());
     if (v.isPrimitive()) {
         /* Special case to preserve negative zero, _contra_ toString. */
         if (v.isDouble() && IsNegativeZero(v.toDouble())) {
