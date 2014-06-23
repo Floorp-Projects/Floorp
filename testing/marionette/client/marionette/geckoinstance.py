@@ -63,7 +63,7 @@ class GeckoInstance(object):
             env=env,
             symbols_path=self.symbols_path,
             process_args={
-                'processOutputLine': [on_output],
+                'processOutputLine': [self.on_output],
                 'logfile': self.gecko_log})
         self.runner.start()
 
