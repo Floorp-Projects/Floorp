@@ -69,9 +69,10 @@ public:
 
 public:
     nsXPCComponents_utils_Sandbox();
-    virtual ~nsXPCComponents_utils_Sandbox();
 
 private:
+    virtual ~nsXPCComponents_utils_Sandbox();
+
     static nsresult CallOrConstruct(nsIXPConnectWrappedNative *wrapper,
                                     JSContext *cx, HandleObject obj,
                                     const CallArgs &args, bool *_retval);
@@ -1767,7 +1768,6 @@ class ContextHolder : public nsIScriptObjectPrincipal
 {
 public:
     ContextHolder(JSContext *aOuterCx, HandleObject aSandbox, nsIPrincipal *aPrincipal);
-    virtual ~ContextHolder();
 
     JSContext * GetJSContext()
     {
@@ -1779,6 +1779,8 @@ public:
     NS_DECL_ISUPPORTS
 
 private:
+    virtual ~ContextHolder();
+
     JSContext* mJSContext;
     nsCOMPtr<nsIPrincipal> mPrincipal;
 };
