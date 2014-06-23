@@ -6,10 +6,13 @@
 
 #include "builtin/SymbolObject.h"
 
+#include "vm/StringBuffer.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/Symbol-inl.h"
 
+using JS::Symbol;
 using namespace js;
 
 const Class SymbolObject::class_ = {
@@ -40,6 +43,7 @@ const JSPropertySpec SymbolObject::properties[] = {
 };
 
 const JSFunctionSpec SymbolObject::methods[] = {
+    JS_FN(js_toString_str, toString, 0, 0),
     JS_FS_END
 };
 
@@ -133,6 +137,50 @@ SymbolObject::for_(JSContext *cx, unsigned argc, Value *vp)
         return false;
     args.rval().setSymbol(symbol);
     return true;
+}
+
+MOZ_ALWAYS_INLINE bool
+IsSymbol(HandleValue v)
+{
+    return v.isSymbol() || (v.isObject() && v.toObject().is<SymbolObject>());
+}
+
+//ES6 rev 24 (2014 Apr 27) 19.4.3.2
+bool
+SymbolObject::toString_impl(JSContext *cx, CallArgs args)
+{
+    // steps 1-3
+    HandleValue thisv = args.thisv();
+    JS_ASSERT(IsSymbol(thisv));
+    Rooted<Symbol*> sym(cx, thisv.isSymbol()
+                            ? thisv.toSymbol()
+                            : thisv.toObject().as<SymbolObject>().unbox());
+
+    // steps 4-7
+    StringBuffer sb(cx);
+    if (!sb.append("Symbol("))
+        return false;
+    RootedString str(cx, sym->description());
+    if (str) {
+        if (!sb.append(str))
+            return false;
+    }
+    if (!sb.append(')'))
+        return false;
+
+    // step 8
+    str = sb.finishString();
+    if (!str)
+        return false;
+    args.rval().setString(str);
+    return true;
+}
+
+bool
+SymbolObject::toString(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsSymbol, toString_impl>(cx, args);
 }
 
 JSObject *

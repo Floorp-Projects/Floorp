@@ -1,4 +1,5 @@
-// evalWithBindings to call a method of a debuggee object
+// evalWithBindings to call a method of a debuggee value
+
 var g = newGlobal();
 var dbg = new Debugger;
 var global = dbg.addDebuggee(g);
@@ -14,5 +15,7 @@ g.eval("function f(obj, expected) { debugger; }");
 
 g.eval("f(new Number(-0), '0');");
 g.eval("f(new String('ok'), 'ok');");
+g.eval("f(Symbol('still ok'), 'Symbol(still ok)');");
+g.eval("f(Object(Symbol('still ok')), 'Symbol(still ok)');");
 g.eval("f({toString: function () { return f; }}, f);");
-assertEq(hits, 3);
+assertEq(hits, 5);
