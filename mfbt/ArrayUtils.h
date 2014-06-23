@@ -18,7 +18,9 @@
 
 #ifdef __cplusplus
 
+#include "mozilla/Alignment.h"
 #include "mozilla/Array.h"
+#include "mozilla/TypeTraits.h"
 
 namespace mozilla {
 
@@ -80,6 +82,69 @@ MOZ_CONSTEXPR const T*
 ArrayEnd(const Array<T, N>& aArr)
 {
   return &aArr[0] + ArrayLength(aArr);
+}
+
+namespace detail {
+
+template<typename AlignType, typename Pointee>
+struct AlignedChecker
+{
+  static void
+  test(Pointee* aPtr)
+  {
+    MOZ_ASSERT((uintptr_t(aPtr) % MOZ_ALIGNOF(AlignType)) == 0,
+               "performing a range-check with a misaligned pointer");
+  }
+};
+
+template<typename Pointee>
+struct AlignedChecker<void, Pointee>
+{
+  static void
+  test(Pointee* aPtr)
+  {
+  }
+};
+
+} // namespace detail
+
+/**
+ * Determines whether |aPtr| points at an object in the range [aBegin, aEnd).
+ *
+ * |aPtr| must have the same alignment as |aBegin| and |aEnd|.  This usually
+ * should be achieved by ensuring |aPtr| points at a |U|, not just that it
+ * points at a |T|.
+ *
+ * It is a usage error for any argument to be misaligned.
+ *
+ * It's okay for T* to be void*, and if so U* may also be void*.  In the latter
+ * case no argument is required to be aligned (obviously, as void* implies no
+ * particular alignment).
+ */
+template<typename T, typename U>
+inline typename EnableIf<IsSame<T, U>::value ||
+                         IsBaseOf<T, U>::value ||
+                         IsVoid<T>::value,
+                         bool>::Type
+IsInRange(T* aPtr, U* aBegin, U* aEnd)
+{
+  MOZ_ASSERT(aBegin <= aEnd);
+  detail::AlignedChecker<U, T>::test(aPtr);
+  detail::AlignedChecker<U, U>::test(aBegin);
+  detail::AlignedChecker<U, U>::test(aEnd);
+  return aBegin <= static_cast<U*>(aPtr) && static_cast<U*>(aPtr) < aEnd;
+}
+
+/**
+ * Convenience version of the above method when the valid range is specified as
+ * uintptr_t values.  As above, |aPtr| must be aligned, and |aBegin| and |aEnd|
+ * must be aligned with respect to |T|.
+ */
+template<typename T>
+inline bool
+IsInRange(T* aPtr, uintptr_t aBegin, uintptr_t aEnd)
+{
+  return IsInRange(aPtr, reinterpret_cast<T*>(aBegin), reinterpret_cast<T*>(aEnd));
 }
 
 namespace detail {
