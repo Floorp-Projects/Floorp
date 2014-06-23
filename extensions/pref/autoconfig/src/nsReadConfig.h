@@ -23,12 +23,13 @@ class nsReadConfig : public nsIReadConfig,
         NS_DECL_NSIOBSERVER
 
         nsReadConfig();
-        virtual ~nsReadConfig();
 
         nsresult Init();
 
     protected:
-  
+
+        virtual ~nsReadConfig();
+
         nsresult readConfigFile();
         nsresult openAndEvaluateJSFile(const char *aFileName, int32_t obscureValue, 
                                         bool isEncoded, bool isBinDir);
