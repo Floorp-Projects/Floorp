@@ -820,10 +820,11 @@ IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
  * XDR_BYTECODE_VERSION.
  */
 #define JSITER_ENUMERATE  0x1   /* for-in compatible hidden default iterator */
-#define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
-#define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
+#define JSITER_FOREACH    0x2   /* get obj[key] for each property */
+#define JSITER_KEYVALUE   0x4   /* obsolete destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
+#define JSITER_SYMBOLS    0x20  /* also include symbol property keys */
 
 JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext *cx);

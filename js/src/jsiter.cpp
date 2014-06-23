@@ -96,36 +96,36 @@ static inline bool
 Enumerate(JSContext *cx, HandleObject pobj, jsid id,
           bool enumerable, unsigned flags, IdSet& ht, AutoIdVector *props)
 {
-    /*
-     * We implement __proto__ using a property on |Object.prototype|, but
-     * because __proto__ is highly deserving of removal, we don't want it to
-     * show up in property enumeration, even if only for |Object.prototype|
-     * (think introspection by Prototype-like frameworks that add methods to
-     * the built-in prototypes).  So exclude __proto__ if the object where the
-     * property was found has no [[Prototype]] and might be |Object.prototype|.
-     */
+    // We implement __proto__ using a property on |Object.prototype|, but
+    // because __proto__ is highly deserving of removal, we don't want it to
+    // show up in property enumeration, even if only for |Object.prototype|
+    // (think introspection by Prototype-like frameworks that add methods to
+    // the built-in prototypes).  So exclude __proto__ if the object where the
+    // property was found has no [[Prototype]] and might be |Object.prototype|.
     if (MOZ_UNLIKELY(!pobj->getTaggedProto().isObject() && JSID_IS_ATOM(id, cx->names().proto)))
         return true;
 
     if (!(flags & JSITER_OWNONLY) || pobj->is<ProxyObject>() || pobj->getOps()->enumerate) {
-        /* If we've already seen this, we definitely won't add it. */
+        // If we've already seen this, we definitely won't add it.
         IdSet::AddPtr p = ht.lookupForAdd(id);
         if (MOZ_UNLIKELY(!!p))
             return true;
 
-        /*
-         * It's not necessary to add properties to the hash table at the end of
-         * the prototype chain, but custom enumeration behaviors might return
-         * duplicated properties, so always add in such cases.
-         */
+        // It's not necessary to add properties to the hash table at the end of
+        // the prototype chain, but custom enumeration behaviors might return
+        // duplicated properties, so always add in such cases.
         if ((pobj->is<ProxyObject>() || pobj->getProto() || pobj->getOps()->enumerate) && !ht.add(p, id))
             return false;
     }
 
-    if (enumerable || (flags & JSITER_HIDDEN))
-        return props->append(id);
+    // Symbol-keyed properties and nonenumerable properties are skipped unless
+    // the caller specifically asks for them.
+    if (JSID_IS_SYMBOL(id) && !(flags & JSITER_SYMBOLS))
+        return true;
+    if (!enumerable && !(flags & JSITER_HIDDEN))
+        return true;
 
-    return true;
+    return props->append(id);
 }
 
 static bool
@@ -154,16 +154,39 @@ EnumerateNativeProperties(JSContext *cx, HandleObject pobj, unsigned flags, IdSe
 
     size_t initialLength = props->length();
 
-    /* Collect all unique properties from this object's scope. */
+    /* Collect all unique property names from this object's shape. */
     Shape::Range<NoGC> r(pobj->lastProperty());
+    bool symbolsFound = false;
     for (; !r.empty(); r.popFront()) {
         Shape &shape = r.front();
+        jsid id = shape.propid();
 
-        if (!Enumerate(cx, pobj, shape.propid(), shape.enumerable(), flags, ht, props))
+        if (JSID_IS_SYMBOL(id)) {
+            symbolsFound = true;
+            continue;
+        }
+
+        if (!Enumerate(cx, pobj, id, shape.enumerable(), flags, ht, props))
             return false;
     }
-
     ::Reverse(props->begin() + initialLength, props->end());
+
+    if (symbolsFound && (flags & JSITER_SYMBOLS)) {
+        // Do a second pass to collect symbols. ES6 draft rev 25 (2014 May 22)
+        // 9.1.12 requires that all symbols appear after all strings in the
+        // result.
+        initialLength = props->length();
+        for (Shape::Range<NoGC> r(pobj->lastProperty()); !r.empty(); r.popFront()) {
+            Shape &shape = r.front();
+            jsid id = shape.propid();
+            if (JSID_IS_SYMBOL(id)) {
+                if (!Enumerate(cx, pobj, id, shape.enumerable(), flags, ht, props))
+                    return false;
+            }
+        }
+        ::Reverse(props->begin() + initialLength, props->end());
+    }
+
     return true;
 }
 
@@ -210,7 +233,8 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
         const Class *clasp = pobj->getClass();
         if (pobj->isNative() &&
             !pobj->getOps()->enumerate &&
-            !(clasp->flags & JSCLASS_NEW_ENUMERATE)) {
+            !(clasp->flags & JSCLASS_NEW_ENUMERATE))
+        {
             if (!clasp->enumerate(cx, pobj))
                 return false;
             if (!EnumerateNativeProperties(cx, pobj, flags, ht, props))
@@ -220,6 +244,9 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
                 AutoIdVector proxyProps(cx);
                 if (flags & JSITER_OWNONLY) {
                     if (flags & JSITER_HIDDEN) {
+                        // This gets all property keys, both strings and
+                        // symbols.  The call to Enumerate in the loop below
+                        // will filter out unwanted keys, per the flags.
                         if (!Proxy::getOwnPropertyNames(cx, pobj, proxyProps))
                             return false;
                     } else {
@@ -230,11 +257,14 @@ Snapshot(JSContext *cx, JSObject *pobj_, unsigned flags, AutoIdVector *props)
                     if (!Proxy::enumerate(cx, pobj, proxyProps))
                         return false;
                 }
+
                 for (size_t n = 0, len = proxyProps.length(); n < len; n++) {
                     if (!Enumerate(cx, pobj, proxyProps[n], true, flags, ht, props))
                         return false;
                 }
-                /* Proxy objects enumerate the prototype on their own, so we are done here. */
+
+                // Proxy objects enumerate the prototype on their own, so we're
+                // done here.
                 break;
             }
             RootedValue state(cx);
@@ -318,7 +348,7 @@ js::VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap)
 JS_FRIEND_API(bool)
 js::GetPropertyNames(JSContext *cx, JSObject *obj, unsigned flags, AutoIdVector *props)
 {
-    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN), props);
+    return Snapshot(cx, obj, flags & (JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS), props);
 }
 
 size_t sCustomIteratorCount = 0;
