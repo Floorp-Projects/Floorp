@@ -76,8 +76,9 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
     JSVAL_TYPE_BOOLEAN             = 0x03,
     JSVAL_TYPE_MAGIC               = 0x04,
     JSVAL_TYPE_STRING              = 0x05,
-    JSVAL_TYPE_NULL                = 0x06,
-    JSVAL_TYPE_OBJECT              = 0x07,
+    JSVAL_TYPE_SYMBOL              = 0x06,
+    JSVAL_TYPE_NULL                = 0x07,
+    JSVAL_TYPE_OBJECT              = 0x08,
 
     /* These never appear in a jsval; they are only provided as an out-of-band value. */
     JSVAL_TYPE_UNKNOWN             = 0x20,
