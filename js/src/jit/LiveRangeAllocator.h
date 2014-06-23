@@ -92,6 +92,31 @@ class Requirement
 
     int priority() const;
 
+    bool mergeRequirement(const Requirement &newRequirement) {
+        // Merge newRequirement with any existing requirement, returning false
+        // if the new and old requirements conflict.
+        JS_ASSERT(newRequirement.kind() != Requirement::SAME_AS_OTHER);
+
+        if (newRequirement.kind() == Requirement::FIXED) {
+            if (kind() == Requirement::FIXED)
+                return newRequirement.allocation() == allocation();
+            *this = newRequirement;
+            return true;
+        }
+
+        JS_ASSERT(newRequirement.kind() == Requirement::REGISTER);
+        if (kind() == Requirement::FIXED)
+            return allocation().isRegister();
+
+        *this = newRequirement;
+        return true;
+    }
+
+    // Return a string describing this requirement. This is not re-entrant!
+    const char *toString() const;
+
+    void dump() const;
+
   private:
     Kind kind_;
     LAllocation allocation_;
@@ -219,6 +244,11 @@ class LiveInterval
         // Intersect this range with other, returning the subranges of this
         // that are before, inside, or after other.
         void intersect(const Range *other, Range *pre, Range *inside, Range *post) const;
+
+        // Return a string describing this range. This is not re-entrant!
+        const char *toString() const;
+
+        void dump() const;
     };
 
   private:
@@ -326,23 +356,7 @@ class LiveInterval
         requirement_ = requirement;
     }
     bool addRequirement(const Requirement &newRequirement) {
-        // Merge newRequirement with any existing requirement, returning false
-        // if the new and old requirements conflict.
-        JS_ASSERT(newRequirement.kind() != Requirement::SAME_AS_OTHER);
-
-        if (newRequirement.kind() == Requirement::FIXED) {
-            if (requirement_.kind() == Requirement::FIXED)
-                return newRequirement.allocation() == requirement_.allocation();
-            requirement_ = newRequirement;
-            return true;
-        }
-
-        JS_ASSERT(newRequirement.kind() == Requirement::REGISTER);
-        if (requirement_.kind() == Requirement::FIXED)
-            return requirement_.allocation().isRegister();
-
-        requirement_ = newRequirement;
-        return true;
+        return requirement_.mergeRequirement(newRequirement);
     }
     const Requirement *hint() const {
         return &hint_;
@@ -385,7 +399,10 @@ class LiveInterval
     // not re-entrant!
     const char *rangesToString() const;
 
-    void dump();
+    // Return a string describing this LiveInterval. This is not re-entrant!
+    const char *toString() const;
+
+    void dump() const;
 };
 
 /*
@@ -731,6 +748,8 @@ class LiveRangeAllocator : protected RegisterAllocator
         }
         return i;
     }
+
+    void dumpVregs();
 };
 
 } // namespace jit

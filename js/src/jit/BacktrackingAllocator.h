@@ -219,7 +219,7 @@ class BacktrackingAllocator
     bool populateSafepoints();
 
     void dumpRegisterGroups();
-    void dumpLiveness();
+    void dumpFixedRanges();
     void dumpAllocations();
 
     struct PrintLiveIntervalRange;
