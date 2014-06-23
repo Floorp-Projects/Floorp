@@ -26,14 +26,14 @@ IsReflector(JSObject *obj)
     return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);
 }
 
-enum ForwarderCloneTags {
+enum StackScopedCloneTags {
     SCTAG_BASE = JS_SCTAG_USER_MIN,
     SCTAG_REFLECTOR
 };
 
 static JSObject *
-CloneNonReflectorsRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t tag,
-                       uint32_t data, void *closure)
+StackScopedCloneRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t tag,
+                     uint32_t data, void *closure)
 {
     MOZ_ASSERT(closure, "Null pointer!");
     AutoObjectVector *reflectors = static_cast<AutoObjectVector *>(closure);
@@ -41,25 +41,26 @@ CloneNonReflectorsRead(JSContext *cx, JSStructuredCloneReader *reader, uint32_t 
         MOZ_ASSERT(!data);
 
         size_t idx;
-        if (JS_ReadBytes(reader, &idx, sizeof(size_t))) {
-            RootedObject reflector(cx, (*reflectors)[idx]);
-            MOZ_ASSERT(reflector, "No object pointer?");
-            MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
+        if (!JS_ReadBytes(reader, &idx, sizeof(size_t)))
+            return nullptr;
 
-            if (!JS_WrapObject(cx, &reflector))
-                return nullptr;
+        RootedObject reflector(cx, (*reflectors)[idx]);
+        MOZ_ASSERT(reflector, "No object pointer?");
+        MOZ_ASSERT(IsReflector(reflector), "Object pointer must be a reflector!");
 
-            return reflector;
-        }
+        if (!JS_WrapObject(cx, &reflector))
+            return nullptr;
+
+        return reflector;
     }
 
-    JS_ReportError(cx, "CloneNonReflectorsRead error");
+    MOZ_ASSERT_UNREACHABLE("Encountered garbage in the clone stream!");
     return nullptr;
 }
 
 static bool
-CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
-                        Handle<JSObject *> obj, void *closure)
+StackScopedCloneWrite(JSContext *cx, JSStructuredCloneWriter *writer,
+                      Handle<JSObject *> obj, void *closure)
 {
     MOZ_ASSERT(closure, "Null pointer!");
 
@@ -71,19 +72,20 @@ CloneNonReflectorsWrite(JSContext *cx, JSStructuredCloneWriter *writer,
             return false;
 
         size_t idx = reflectors->length()-1;
-        if (JS_WriteUint32Pair(writer, SCTAG_REFLECTOR, 0) &&
-            JS_WriteBytes(writer, &idx, sizeof(size_t))) {
-            return true;
-        }
+        if (!JS_WriteUint32Pair(writer, SCTAG_REFLECTOR, 0))
+            return false;
+        if (!JS_WriteBytes(writer, &idx, sizeof(size_t)))
+            return false;
+        return true;
     }
 
-    JS_ReportError(cx, "CloneNonReflectorsWrite error");
+    JS_ReportError(cx, "Encountered unsupported value type writing stack-scoped structured clone");
     return false;
 }
 
-static const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
-    CloneNonReflectorsRead,
-    CloneNonReflectorsWrite,
+static const JSStructuredCloneCallbacks gStackScopedCloneCallbacks = {
+    StackScopedCloneRead,
+    StackScopedCloneWrite,
     nullptr,
     nullptr,
     nullptr,
@@ -91,14 +93,21 @@ static const JSStructuredCloneCallbacks gForwarderStructuredCloneCallbacks = {
 };
 
 /*
- * This is a special structured cloning, that clones only non-reflectors.
- * The function assumes the cx is already entered the compartment we want
- * to clone to, and that if val is an object is from the compartment we
- * clone from.
+ * General-purpose structured-cloning utility for cases where the structured
+ * clone buffer is only used in stack-scope (that is to say, the buffer does
+ * not escape from this function). The stack-scoping allows us to pass
+ * references to various JSObjects directly in certain situations without
+ * worrying about lifetime issues.
+ *
+ * This function assumes that |cx| is already entered the compartment we want
+ * to clone to, and that |val| may not be same-compartment with cx. When the
+ * function returns, |val| is set to the result of the clone.
  */
-static bool
-CloneNonReflectors(JSContext *cx, MutableHandleValue val)
+bool
+StackScopedClone(JSContext *cx, StackScopedCloneOptions &options,
+                 MutableHandleValue val)
 {
+    MOZ_ASSERT(options.wrapReflectors); // XXXbholley - This goes away in subsequent patches
     JSAutoStructuredCloneBuffer buffer;
     AutoObjectVector rootedReflectors(cx);
     {
@@ -112,7 +121,7 @@ CloneNonReflectors(JSContext *cx, MutableHandleValue val)
         }
 
         if (!buffer.write(cx, val,
-            &gForwarderStructuredCloneCallbacks,
+            &gStackScopedCloneCallbacks,
             &rootedReflectors))
         {
             return false;
@@ -121,7 +130,7 @@ CloneNonReflectors(JSContext *cx, MutableHandleValue val)
 
     // Now recreate the clones in the target compartment.
     if (!buffer.read(cx, val,
-        &gForwarderStructuredCloneCallbacks,
+        &gStackScopedCloneCallbacks,
         &rootedReflectors))
     {
         return false;
@@ -146,8 +155,10 @@ CloningFunctionForwarder(JSContext *cx, unsigned argc, Value *vp)
         JSAutoCompartment ac(cx, origFunObj);
         // Note: only the arguments are cloned not the |this| or the |callee|.
         // Function forwarder does not use those.
+        StackScopedCloneOptions options;
+        options.wrapReflectors = true;
         for (unsigned i = 0; i < args.length(); i++) {
-            if (!CloneNonReflectors(cx, args[i])) {
+            if (!StackScopedClone(cx, options, args[i])) {
                 return false;
             }
         }
@@ -383,7 +394,9 @@ EvalInWindow(JSContext *cx, const nsAString &source, HandleObject scope, Mutable
 
             // Then clone the exception.
             JSAutoCompartment ac(wndCx, cxGlobal);
-            if (CloneNonReflectors(wndCx, &exn))
+            StackScopedCloneOptions cloneOptions;
+            cloneOptions.wrapReflectors = true;
+            if (StackScopedClone(wndCx, cloneOptions, &exn))
                 js::SetPendingExceptionCrossContext(cx, exn);
 
             return false;
@@ -391,7 +404,9 @@ EvalInWindow(JSContext *cx, const nsAString &source, HandleObject scope, Mutable
     }
 
     // Let's clone the return value back to the callers compartment.
-    if (!CloneNonReflectors(cx, rval)) {
+    StackScopedCloneOptions cloneOptions;
+    cloneOptions.wrapReflectors = true;
+    if (!StackScopedClone(cx, cloneOptions, rval)) {
         rval.set(UndefinedValue());
         return false;
     }
