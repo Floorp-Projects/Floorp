@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.net.URLEncoder;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Vector;
 
@@ -2746,7 +2747,7 @@ abstract public class BrowserApp extends GeckoApp
 
     // HomePager.OnNewTabsListener
     @Override
-    public void onNewTabs(String[] urls) {
+    public void onNewTabs(List<String> urls) {
         final EnumSet<OnUrlOpenListener.Flags> flags = EnumSet.of(OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB);
 
         for (String url : urls) {

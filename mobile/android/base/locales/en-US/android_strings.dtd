@@ -352,8 +352,8 @@ size. -->
 <!ENTITY home_bookmarks_empty "Bookmarks you save show up here.">
 <!ENTITY home_closed_tabs_title "Recently closed tabs">
 <!ENTITY home_last_tabs_title "Tabs from last time">
-<!ENTITY home_last_tabs_open "Open all tabs from last time">
 <!ENTITY home_last_tabs_empty "Your recent tabs show up here.">
+<!ENTITY home_open_all "Open all">
 <!ENTITY home_most_recent_empty "Websites you visited most recently show up here.">
 <!ENTITY home_reading_list_empty "Articles you save for later show up here.">
 <!-- Localization note (home_reading_list_hint): The "TIP" string is synonymous to "hint", "clue", etc. This string is displayed

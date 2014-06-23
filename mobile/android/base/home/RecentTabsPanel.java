@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.home;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
@@ -86,6 +89,8 @@ public class RecentTabsPanel extends HomeFragment
         public static final int TYPE_HEADER = 0;
         public static final int TYPE_LAST_TIME = 1;
         public static final int TYPE_CLOSED = 2;
+        public static final int TYPE_OPEN_ALL_LAST_TIME = 3;
+        public static final int TYPE_OPEN_ALL_CLOSED = 4;
     }
 
     @Override
@@ -125,16 +130,36 @@ public class RecentTabsPanel extends HomeFragment
                     return;
                 }
 
+                final int itemType = c.getInt(c.getColumnIndexOrThrow(RecentTabs.TYPE));
+
+                if (itemType == RecentTabs.TYPE_OPEN_ALL_LAST_TIME) {
+                    openTabsWithType(RecentTabs.TYPE_LAST_TIME);
+                    return;
+                }
+
+                if (itemType == RecentTabs.TYPE_OPEN_ALL_CLOSED) {
+                    openTabsWithType(RecentTabs.TYPE_CLOSED);
+                    return;
+                }
+
                 Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL);
 
-                final String url = c.getString(c.getColumnIndexOrThrow(RecentTabs.URL));
-                mNewTabsListener.onNewTabs(new String[] { url });
+                final ArrayList<String> urls = new ArrayList<String>();
+                urls.add(c.getString(c.getColumnIndexOrThrow(RecentTabs.URL)));
+
+                mNewTabsListener.onNewTabs(urls);
             }
         });
 
         mList.setContextMenuInfoFactory(new HomeContextMenuInfo.Factory() {
             @Override
             public HomeContextMenuInfo makeInfoForCursor(View view, int position, long id, Cursor cursor) {
+                // Don't show context menus for the "Open all" rows.
+                final int itemType = cursor.getInt(cursor.getColumnIndexOrThrow(RecentTabs.TYPE));
+                if (itemType == RecentTabs.TYPE_OPEN_ALL_LAST_TIME || itemType == RecentTabs.TYPE_OPEN_ALL_CLOSED) {
+                    return null;
+                }
+
                 final HomeContextMenuInfo info = new HomeContextMenuInfo(view, position, id);
                 info.url = cursor.getString(cursor.getColumnIndexOrThrow(RecentTabs.URL));
                 info.title = cursor.getString(cursor.getColumnIndexOrThrow(RecentTabs.TITLE));
@@ -234,16 +259,17 @@ public class RecentTabsPanel extends HomeFragment
         });
     }
 
-    private void openAllTabs() {
+    private void openTabsWithType(int type) {
         final Cursor c = mAdapter.getCursor();
         if (c == null || !c.moveToFirst()) {
             return;
         }
 
-        final String[] urls = new String[c.getCount()];
-
+        final List<String> urls = new ArrayList<String>();
         do {
-            urls[c.getPosition()] = c.getString(c.getColumnIndexOrThrow(RecentTabs.URL));
+            if (c.getInt(c.getColumnIndexOrThrow(RecentTabs.TYPE)) == type) {
+                urls.add(c.getString(c.getColumnIndexOrThrow(RecentTabs.URL)));
+            }
         } while (c.moveToNext());
 
         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON);
@@ -288,6 +314,11 @@ public class RecentTabsPanel extends HomeFragment
                         addRow(c, url, closedTabs[i].title, RecentTabs.TYPE_CLOSED);
                     }
                 }
+
+                // Add an "Open all" button if more than 2 tabs were added to the list.
+                if (length > 1) {
+                    addRow(c, null, null, RecentTabs.TYPE_OPEN_ALL_CLOSED);
+                }
             }
 
             final String jsonString = GeckoProfile.get(context).readSessionFile(true);
@@ -317,6 +348,11 @@ public class RecentTabsPanel extends HomeFragment
                 }
             }.parse(jsonString);
 
+            // Add an "Open all" button if more than 2 tabs were added to the list (account for the header)
+            if (c.getCount() - count > 2) {
+                addRow(c, null, null, RecentTabs.TYPE_OPEN_ALL_LAST_TIME);
+            }
+
             return c;
         }
     }
@@ -324,9 +360,11 @@ public class RecentTabsPanel extends HomeFragment
     private static class RecentTabsAdapter extends MultiTypeCursorAdapter {
         private static final int ROW_HEADER = 0;
         private static final int ROW_STANDARD = 1;
+        private static final int ROW_OPEN_ALL = 2;
 
-        private static final int[] VIEW_TYPES = new int[] { ROW_STANDARD, ROW_HEADER };
-        private static final int[] LAYOUT_TYPES = new int[] { R.layout.home_item_row, R.layout.home_header_row };
+        private static final int[] VIEW_TYPES = new int[] { ROW_STANDARD, ROW_HEADER, ROW_OPEN_ALL };
+        private static final int[] LAYOUT_TYPES =
+            new int[] { R.layout.home_item_row, R.layout.home_header_row, R.layout.home_open_all_row };
 
         public RecentTabsAdapter(Context context) {
             super(context, null, VIEW_TYPES, LAYOUT_TYPES);
@@ -340,6 +378,10 @@ public class RecentTabsPanel extends HomeFragment
                 return ROW_HEADER;
             }
 
+            if (type == RecentTabs.TYPE_OPEN_ALL_LAST_TIME || type == RecentTabs.TYPE_OPEN_ALL_CLOSED) {
+                return ROW_OPEN_ALL;
+            }
+
             return ROW_STANDARD;
          }
 
@@ -350,6 +392,10 @@ public class RecentTabsPanel extends HomeFragment
         @Override
         public void bindView(View view, Context context, int position) {
             final int itemType = getItemViewType(position);
+            if (itemType == ROW_OPEN_ALL) {
+                return;
+            }
+
             final Cursor c = getCursor(position);
 
             if (itemType == ROW_HEADER) {

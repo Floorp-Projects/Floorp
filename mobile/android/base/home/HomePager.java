@@ -81,7 +81,7 @@ public class HomePager extends ViewPager {
     }
 
     public interface OnNewTabsListener {
-        public void onNewTabs(String[] urls);
+        public void onNewTabs(List<String> urls);
     }
 
     /**
