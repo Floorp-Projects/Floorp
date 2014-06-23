@@ -648,13 +648,23 @@ Trap(JSContext *cx, HandleObject handler, HandleValue fval, unsigned argc, Value
 }
 
 static bool
+IdToExposableValue(JSContext *cx, HandleId id, MutableHandleValue value)
+{
+    value.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
+    if (value.isSymbol())
+        return true;
+    JSString *name = ToString<CanGC>(cx, value);
+    if (!name)
+        return false;
+    value.setString(name);
+    return true;
+}
+
+static bool
 Trap1(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, MutableHandleValue rval)
 {
-    rval.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *str = ToString<CanGC>(cx, rval);
-    if (!str)
+    if (!IdToExposableValue(cx, id, rval)) // Re-use out-param to avoid Rooted overhead.
         return false;
-    rval.setString(str);
     return Trap(cx, handler, fval, 1, rval.address(), rval);
 }
 
@@ -663,11 +673,8 @@ Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value 
       MutableHandleValue rval)
 {
     RootedValue v(cx, v_);
-    rval.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *str = ToString<CanGC>(cx, rval);
-    if (!str)
+    if (!IdToExposableValue(cx, id, rval)) // Re-use out-param to avoid Rooted overhead.
         return false;
-    rval.setString(str);
     JS::AutoValueArray<2> argv(cx);
     argv[0].set(rval);
     argv[1].set(v);
@@ -939,14 +946,12 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
                                   HandleId id, MutableHandleValue vp)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedValue idv(cx, IdToValue(id));
-    JSString *str = ToString<CanGC>(cx, idv);
-    if (!str)
+    RootedValue idv(cx);
+    if (!IdToExposableValue(cx, id, &idv))
         return false;
-    RootedValue value(cx, StringValue(str));
     JS::AutoValueArray<2> argv(cx);
     argv[0].setObjectOrNull(receiver);
-    argv[1].set(value);
+    argv[1].set(idv);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
@@ -960,21 +965,19 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
                                   HandleId id, bool strict, MutableHandleValue vp)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedValue idv(cx, IdToValue(id));
-    JSString *str = ToString<CanGC>(cx, idv);
-    if (!str)
+    RootedValue idv(cx);
+    if (!IdToExposableValue(cx, id, &idv))
         return false;
-    RootedValue value(cx, StringValue(str));
     JS::AutoValueArray<3> argv(cx);
     argv[0].setObjectOrNull(receiver);
-    argv[1].set(value);
+    argv[1].set(idv);
     argv[2].set(vp);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-    return Trap(cx, handler, fval, 3, argv.begin(), &value);
+    return Trap(cx, handler, fval, 3, argv.begin(), &idv);
 }
 
 bool
@@ -1235,17 +1238,6 @@ HasOwn(JSContext *cx, HandleObject obj, HandleId id, bool *bp)
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
         return false;
     *bp = (desc.object() == obj);
-    return true;
-}
-
-static bool
-IdToExposableValue(JSContext *cx, HandleId id, MutableHandleValue value)
-{
-    value.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *name = ToString<CanGC>(cx, value);
-    if (!name)
-        return false;
-    value.set(StringValue(name));
     return true;
 }
 
