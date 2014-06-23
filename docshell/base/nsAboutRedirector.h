@@ -16,12 +16,12 @@ public:
     NS_DECL_NSIABOUTMODULE
 
     nsAboutRedirector() {}
-    virtual ~nsAboutRedirector() {}
 
     static nsresult
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+    virtual ~nsAboutRedirector() {}
 };
 
 #define NS_ABOUT_REDIRECTOR_MODULE_CID               \
