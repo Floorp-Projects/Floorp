@@ -1,15 +1,2 @@
-This directory contains the patches currently applied against upstream Skia.
-The original patches are archived in archive/
-
-See the relevant bugs in bugzilla for information on these patches:
-
-0001-Bug-777614-Re-add-our-SkUserConfig.h-r-nrc.patch
-0004-Bug-777614-Re-apply-bug-719872-Fix-crash-on-Android-.patch
-0005-Bug-777614-Re-apply-bug-687188-Expand-the-gradient-c.patch
-0009-Bug-777614-Re-apply-759683-Handle-compilers-that-don.patch
-0018-Bug-817356-PPC-defines.patch
-0010-Bug-836892-Add-new-blending-modes-to-SkXfermode.patch
-0011-Bug-839347-no-anon-namespace-around-SkNO_RETURN_HINT.patch
-0012-Bug-751418-Add-our-own-GrUserConfig-r-mattwoodrow.patch
-0013-Bug-751418-Fix-compile-error-on-gcc-in-Skia-GL-r-mat.patch
-0031-Bug-945588-Add-include-guard.patch
+We no longer keep a local patch queue of patches against upstream. The protocol now
+is to upstream all patches before they are landed in mozilla-central.
