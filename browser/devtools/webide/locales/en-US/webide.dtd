@@ -46,13 +46,11 @@
 
 <!-- We try to repicate Firefox' bindings: -->
 <!-- quit app -->
-<!ENTITY key_quit "Q">
+<!ENTITY key_quit "W">
 <!-- open menu -->
 <!ENTITY key_showProjectPanel "O">
 <!-- reload app -->
 <!ENTITY key_play "R">
-<!-- close app -->
-<!ENTITY key_stop "W">
 <!-- show toolbox -->
 <!ENTITY key_toggleToolbox "VK_F12">
 <!-- toggle sidebar -->
