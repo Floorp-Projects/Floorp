@@ -201,6 +201,10 @@ class AsmJSModule
             JS_ASSERT(!ionCodeOffset_);
             ionCodeOffset_ = off;
         }
+        void updateOffsets(jit::MacroAssembler &masm) {
+            interpCodeOffset_ = masm.actualOffset(interpCodeOffset_);
+            ionCodeOffset_ = masm.actualOffset(ionCodeOffset_);
+        }
 
         size_t serializedSize() const;
         uint8_t *serialize(uint8_t *cursor) const;
@@ -259,6 +263,9 @@ class AsmJSModule
             maybeFieldName_ = rhs.maybeFieldName_;
             argCoercions_ = mozilla::Move(rhs.argCoercions_);
             pod = rhs.pod;
+        }
+        void updateCodeOffset(jit::MacroAssembler &masm) {
+            pod.codeOffset_ = masm.actualOffset(pod.codeOffset_);
         }
 
         void initCodeOffset(unsigned off) {
@@ -805,8 +812,11 @@ class AsmJSModule
 
     void initFunctionBytes(size_t functionBytes) {
         JS_ASSERT(pod.functionBytes_ == 0);
-        JS_ASSERT(functionBytes % AsmJSPageSize == 0);
         pod.functionBytes_ = functionBytes;
+    }
+    void updateFunctionBytes(jit::MacroAssembler &masm) {
+        pod.functionBytes_ = masm.actualOffset(pod.functionBytes_);
+        JS_ASSERT(pod.functionBytes_ % AsmJSPageSize == 0);
     }
     size_t functionBytes() const {
         JS_ASSERT(pod.functionBytes_);
