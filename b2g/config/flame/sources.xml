@@ -17,7 +17,7 @@
   </project>
   <project name="librecovery" path="librecovery" remote="b2g" revision="891e5069c0ad330d8191bf8c7b879c814258c89f"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="76c0f328d9c1069c187dcbbb20575c57013683bf"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="4ad629f8e50587d0095fdb8eefaf9c021efc53c3"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="bbb7659d8ea2afb396f99b3dc971ab3c42da3778"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="c510babaf88dfa2cfe2c202afb2649ee124569af"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="23db533981ee2cd04fc5d946420402aed2792381"/>
@@ -114,11 +114,13 @@
   <project name="platform/system/netd" path="system/netd" revision="ea8103eae5642621ca8202e00620f4ca954ed413"/>
   <project name="platform/system/security" path="system/security" revision="360f51f7af191316cd739f229db1c5f7233be063"/>
   <project name="platform/system/vold" path="system/vold" revision="153df4d067a4149c7d78f1c92fed2ce2bd6a272e"/>
+  <!--original fetch url was git://github.com/t2m-foxfone/-->
+  <remote fetch="https://git.mozilla.org/external/t2m-foxfone" name="t2m"/>
   <default remote="caf" revision="jb_3.2" sync-j="4"/>
   <!-- Flame specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="e8a318f7690092e639ba88891606f4183e846d3f"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="34ed8345250bb97262d70a052217a92e83444ede"/>
-  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="243b6f3d219592a84c7318e9446cde397233ae39"/>
+  <project name="device-flame" path="device/t2m/flame" remote="b2g" revision="33faca8033c6f8cda0c383ab40d69c7a45e6db38"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="30a441fb7275fc5bc347f84ccb29e977a7eca34e"/>
   <project name="kernel_lk" path="bootable/bootloader/lk" remote="b2g" revision="2b1d8b5b7a760230f4c94c02e733e3929f44253a"/>
   <project name="platform_bootable_recovery" path="bootable/recovery" remote="b2g" revision="e81502511cda303c803e63f049574634bc96f9f2"/>
@@ -126,7 +128,7 @@
   <project name="platform/external/bluetooth/bluez" path="external/bluetooth/bluez" revision="f0689ac1914cdbc59e53bdc9edd9013dc157c299"/>
   <project name="platform/external/bluetooth/glib" path="external/bluetooth/glib" revision="dd925f76e4f149c3d5571b80e12f7e24bbe89c59"/>
   <project name="platform/external/dbus" path="external/dbus" revision="ea87119c843116340f5df1d94eaf8275e1055ae8"/>
-  <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="494c177966fdc31183a5f7af82dc9130f523da4b"/>
+  <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="t2m" revision="4186bdecb4dae911b39a8202252cc2310d91b0be"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="320b05a5761eb2a4816f7529c91ea49422979b55"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="5b934dc57dae25f286b0e7210dc6ff47f3244927"/>
   <project name="platform/frameworks/base" path="frameworks/base" revision="af3e4fbdc9369643a92015ea2657361f3b1b46fe"/>
