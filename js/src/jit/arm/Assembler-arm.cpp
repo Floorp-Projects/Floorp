@@ -1214,7 +1214,7 @@ VFPRegister::sintOverlay() const
     JS_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31
-        ASSERT(_code < 16);
+        JS_ASSERT(_code < 16);
         return VFPRegister(_code << 1, Int);
     }
 
@@ -1227,7 +1227,7 @@ VFPRegister::uintOverlay() const
     JS_ASSERT(!_isInvalid);
     if (kind == Double) {
         // There are no corresponding float registers for d16-d31
-        ASSERT(_code < 16);
+        JS_ASSERT(_code < 16);
         return VFPRegister(_code << 1, UInt);
     }
 
