@@ -604,13 +604,7 @@ MobileConnection::SetCallForwardingOption(const MozCallForwardingOptions& aOptio
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
+  AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aOptions, &options)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
@@ -641,13 +635,7 @@ MobileConnection::GetCallBarringOption(const MozCallBarringOptions& aOptions,
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
+  AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aOptions, &options)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
@@ -678,13 +666,7 @@ MobileConnection::SetCallBarringOption(const MozCallBarringOptions& aOptions,
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
+  AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aOptions, &options)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
@@ -715,13 +697,7 @@ MobileConnection::ChangeCallBarringPassword(const MozCallBarringOptions& aOption
     return nullptr;
   }
 
-  AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  JSContext *cx = jsapi.cx();
+  AutoSafeJSContext cx;
   JS::Rooted<JS::Value> options(cx);
   if (!ToJSValue(cx, aOptions, &options)) {
     aRv.Throw(NS_ERROR_TYPE_ERR);
