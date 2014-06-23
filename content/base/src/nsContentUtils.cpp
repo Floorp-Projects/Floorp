@@ -253,67 +253,155 @@ bool nsContentUtils::sDOMWindowDumpEnabled;
 // Subset of http://www.whatwg.org/specs/web-apps/current-work/#autofill-field-name
 enum AutocompleteFieldName
 {
-  #define AUTOCOMPLETE_FIELD_NAME(name_, value_) \
-    eAutocompleteFieldName_##name_,
-  #define AUTOCOMPLETE_CONTACT_FIELD_NAME(name_, value_) \
-    AUTOCOMPLETE_FIELD_NAME(name_, value_)
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_NAME
-  #undef AUTOCOMPLETE_CONTACT_FIELD_NAME
+  eAutocompleteFieldName_OFF,
+  eAutocompleteFieldName_ON,
+
+  // Name types
+  eAutocompleteFieldName_NAME,
+  //eAutocompleteFieldName_HONORIFIC_PREFIX,
+  eAutocompleteFieldName_GIVEN_NAME,
+  eAutocompleteFieldName_ADDITIONAL_NAME,
+  eAutocompleteFieldName_FAMILY_NAME,
+  //eAutocompleteFieldName_HONORIFIC_SUFFIX,
+  //eAutocompleteFieldName_NICKNAME,
+  //eAutocompleteFieldName_ORGANIZATION_TITLE,
+
+  // Login types
+  eAutocompleteFieldName_USERNAME,
+  eAutocompleteFieldName_NEW_PASSWORD,
+  eAutocompleteFieldName_CURRENT_PASSWORD,
+
+  // Address types
+  eAutocompleteFieldName_ORGANIZATION,
+  eAutocompleteFieldName_STREET_ADDRESS,
+  eAutocompleteFieldName_ADDRESS_LINE1,
+  eAutocompleteFieldName_ADDRESS_LINE2,
+  eAutocompleteFieldName_ADDRESS_LINE3,
+  eAutocompleteFieldName_ADDRESS_LEVEL4,
+  eAutocompleteFieldName_ADDRESS_LEVEL3,
+  eAutocompleteFieldName_ADDRESS_LEVEL2,
+  eAutocompleteFieldName_ADDRESS_LEVEL1,
+  eAutocompleteFieldName_COUNTRY,
+  eAutocompleteFieldName_COUNTRY_NAME,
+  eAutocompleteFieldName_POSTAL_CODE,
+
+  // Credit card types
+  /*
+  eAutocompleteFieldName_CC_NAME,
+  eAutocompleteFieldName_CC_GIVEN_NAME,
+  eAutocompleteFieldName_CC_ADDITIONAL_NAME,
+  eAutocompleteFieldName_CC_FAMILY_NAME,
+  eAutocompleteFieldName_CC_NUMBER,
+  eAutocompleteFieldName_CC_EXP,
+  eAutocompleteFieldName_CC_EXP_MONTH,
+  eAutocompleteFieldName_CC_EXP_YEAR,
+  eAutocompleteFieldName_CC_CSC,
+  eAutocompleteFieldName_CC_TYPE
+  */
+
+  // Additional field types
+  /*
+  eAutocompleteFieldName_LANGUAGE,
+  eAutocompleteFieldName_BDAY,
+  eAutocompleteFieldName_BDAY_DAY,
+  eAutocompleteFieldName_BDAY_MONTH,
+  eAutocompleteFieldName_BDAY_YEAR,
+  eAutocompleteFieldName_SEX,
+  eAutocompleteFieldName_URL,
+  eAutocompleteFieldName_PHOTO,
+  */
+
+  // Contact category types
+  eAutocompleteFieldName_TEL,
+  eAutocompleteFieldName_TEL_COUNTRY_CODE,
+  eAutocompleteFieldName_TEL_NATIONAL,
+  eAutocompleteFieldName_TEL_AREA_CODE,
+  eAutocompleteFieldName_TEL_LOCAL,
+  eAutocompleteFieldName_TEL_LOCAL_PREFIX,
+  eAutocompleteFieldName_TEL_LOCAL_SUFFIX,
+  eAutocompleteFieldName_TEL_EXTENSION,
+  eAutocompleteFieldName_EMAIL,
+  //eAutocompleteFieldName_IMPP,
+
+  eAutocompleteFieldName_last, // Dummy to check table sizes
 };
 
 enum AutocompleteFieldHint
 {
-  #define AUTOCOMPLETE_FIELD_HINT(name_, value_) \
-    eAutocompleteFieldHint_##name_,
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_HINT
+  eAutocompleteFieldHint_SHIPPING,
+  eAutocompleteFieldHint_BILLING,
+  eAutocompleteFieldHint_last, // Dummy to check table sizes
 };
 
 enum AutocompleteFieldContactHint
 {
-  #define AUTOCOMPLETE_FIELD_CONTACT_HINT(name_, value_) \
-    eAutocompleteFieldContactHint_##name_,
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_CONTACT_HINT
+  eAutocompleteFieldContactHint_HOME,
+  eAutocompleteFieldContactHint_WORK,
+  eAutocompleteFieldContactHint_MOBILE,
+  eAutocompleteFieldContactHint_FAX,
+  //eAutocompleteFieldContactHint_PAGER,
+  eAutocompleteFieldContactHint_last, // Dummy to check table sizes
 };
 
 enum AutocompleteCategory
 {
-  #define AUTOCOMPLETE_CATEGORY(name_, value_) eAutocompleteCategory_##name_,
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_CATEGORY
+  eAutocompleteCategory_NORMAL,
+  eAutocompleteCategory_CONTACT,
 };
 
 static const nsAttrValue::EnumTable kAutocompleteFieldNameTable[] = {
-  #define AUTOCOMPLETE_FIELD_NAME(name_, value_) \
-    { value_, eAutocompleteFieldName_##name_ },
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_NAME
+  { "off", eAutocompleteFieldName_OFF },
+  { "on", eAutocompleteFieldName_ON },
+
+  { "name", eAutocompleteFieldName_NAME },
+  { "given-name", eAutocompleteFieldName_GIVEN_NAME },
+  { "additional-name", eAutocompleteFieldName_ADDITIONAL_NAME },
+  { "family-name", eAutocompleteFieldName_FAMILY_NAME },
+
+  { "username", eAutocompleteFieldName_USERNAME },
+  { "new-password", eAutocompleteFieldName_NEW_PASSWORD },
+  { "current-password", eAutocompleteFieldName_CURRENT_PASSWORD },
+
+  { "organization", eAutocompleteFieldName_ORGANIZATION },
+  { "street-address", eAutocompleteFieldName_STREET_ADDRESS },
+  { "address-line1", eAutocompleteFieldName_ADDRESS_LINE1 },
+  { "address-line2", eAutocompleteFieldName_ADDRESS_LINE2 },
+  { "address-line3", eAutocompleteFieldName_ADDRESS_LINE3 },
+  { "address-level4", eAutocompleteFieldName_ADDRESS_LEVEL4 },
+  { "address-level3", eAutocompleteFieldName_ADDRESS_LEVEL3 },
+  { "address-level2", eAutocompleteFieldName_ADDRESS_LEVEL2 },
+  { "address-level1", eAutocompleteFieldName_ADDRESS_LEVEL1 },
+  { "country", eAutocompleteFieldName_COUNTRY },
+  { "country-name", eAutocompleteFieldName_COUNTRY_NAME },
+  { "postal-code", eAutocompleteFieldName_POSTAL_CODE },
   { 0 }
 };
 
 static const nsAttrValue::EnumTable kAutocompleteContactFieldNameTable[] = {
-  #define AUTOCOMPLETE_CONTACT_FIELD_NAME(name_, value_) \
-    { value_, eAutocompleteFieldName_##name_ },
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_CONTACT_FIELD_NAME
+  { "tel", eAutocompleteFieldName_TEL },
+  { "tel-country-code", eAutocompleteFieldName_TEL_COUNTRY_CODE },
+  { "tel-national", eAutocompleteFieldName_TEL_NATIONAL },
+  { "tel-area-code", eAutocompleteFieldName_TEL_AREA_CODE },
+  { "tel-local", eAutocompleteFieldName_TEL_LOCAL },
+  { "tel-local-prefix", eAutocompleteFieldName_TEL_LOCAL_PREFIX },
+  { "tel-local-suffix", eAutocompleteFieldName_TEL_LOCAL_SUFFIX },
+  { "tel-extension", eAutocompleteFieldName_TEL_EXTENSION },
+
+  { "email", eAutocompleteFieldName_EMAIL },
   { 0 }
 };
 
 static const nsAttrValue::EnumTable kAutocompleteFieldHintTable[] = {
-  #define AUTOCOMPLETE_FIELD_HINT(name_, value_) \
-    { value_, eAutocompleteFieldHint_##name_ },
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_HINT
+  { "shipping", eAutocompleteFieldHint_SHIPPING },
+  { "billing", eAutocompleteFieldHint_BILLING },
   { 0 }
 };
 
 static const nsAttrValue::EnumTable kAutocompleteContactFieldHintTable[] = {
-  #define AUTOCOMPLETE_FIELD_CONTACT_HINT(name_, value_) \
-    { value_, eAutocompleteFieldContactHint_##name_ },
-  #include "AutocompleteFieldList.h"
-  #undef AUTOCOMPLETE_FIELD_CONTACT_HINT
+  { "home", eAutocompleteFieldContactHint_HOME },
+  { "work", eAutocompleteFieldContactHint_WORK },
+  { "mobile", eAutocompleteFieldContactHint_MOBILE },
+  { "fax", eAutocompleteFieldContactHint_FAX },
   { 0 }
 };
 
@@ -435,6 +523,12 @@ nsContentUtils::Init()
 
     return NS_OK;
   }
+
+  // Check that all the entries in the autocomplete enums are handled in EnumTables
+  MOZ_ASSERT(eAutocompleteFieldName_last == ArrayLength(kAutocompleteFieldNameTable)
+             + ArrayLength(kAutocompleteContactFieldNameTable) - 2);
+  MOZ_ASSERT(eAutocompleteFieldHint_last == ArrayLength(kAutocompleteFieldHintTable) - 1);
+  MOZ_ASSERT(eAutocompleteFieldContactHint_last == ArrayLength(kAutocompleteContactFieldHintTable) - 1);
 
   sNameSpaceManager = nsNameSpaceManager::GetInstance();
   NS_ENSURE_TRUE(sNameSpaceManager, NS_ERROR_OUT_OF_MEMORY);
