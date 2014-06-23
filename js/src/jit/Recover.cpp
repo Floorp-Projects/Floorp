@@ -392,57 +392,6 @@ RSub::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
-MConcat::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_Concat));
-    return true;
-}
-
-RConcat::RConcat(CompactBufferReader &reader)
-{}
-
-bool
-RConcat::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue lhs(cx, iter.read());
-    RootedValue rhs(cx, iter.read());
-    RootedValue result(cx);
-
-    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
-    if (!js::AddValues(cx, &lhs, &rhs, &result))
-        return false;
-
-    iter.storeInstructionResult(result);
-    return true;
-}
-
-bool
-MFromCharCode::writeRecoverData(CompactBufferWriter &writer) const
-{
-    MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_FromCharCode));
-    return true;
-}
-
-RFromCharCode::RFromCharCode(CompactBufferReader &reader)
-{}
-
-bool
-RFromCharCode::recover(JSContext *cx, SnapshotIterator &iter) const
-{
-    RootedValue operand(cx, iter.read());
-    RootedValue result(cx);
-
-    MOZ_ASSERT(!operand.isObject());
-    if (!js::str_fromCharCode_one_arg(cx, operand, &result))
-        return false;
-
-    iter.storeInstructionResult(result);
-    return true;
-}
-
-bool
 MMul::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -535,6 +484,32 @@ RMod::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MConcat::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_Concat));
+    return true;
+}
+
+RConcat::RConcat(CompactBufferReader &reader)
+{}
+
+bool
+RConcat::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue lhs(cx, iter.read());
+    RootedValue rhs(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!lhs.isObject() && !rhs.isObject());
+    if (!js::AddValues(cx, &lhs, &rhs, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MFloor::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
@@ -576,6 +551,31 @@ RRound::recover(JSContext *cx, SnapshotIterator &iter) const
 
     MOZ_ASSERT(!arg.isObject());
     if(!js::math_round_handle(cx, arg, &result))
+        return false;
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
+MFromCharCode::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_FromCharCode));
+    return true;
+}
+
+RFromCharCode::RFromCharCode(CompactBufferReader &reader)
+{}
+
+bool
+RFromCharCode::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue operand(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(!operand.isObject());
+    if (!js::str_fromCharCode_one_arg(cx, operand, &result))
         return false;
 
     iter.storeInstructionResult(result);
