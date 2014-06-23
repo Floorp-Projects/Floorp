@@ -208,27 +208,31 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             }
         }
 
-        /* Convert id to a linear string. */
-        RootedValue idv(cx, IdToValue(id));
-        JSString *s = ToString<CanGC>(cx, idv);
-        if (!s)
-            return nullptr;
-
-        RootedLinearString idstr(cx, s->ensureLinear(cx));
-        if (!idstr)
-            return nullptr;
-
-        /*
-         * If id is a string that's not an identifier, or if it's a negative
-         * integer, then it must be quoted.
-         */
-        if (JSID_IS_ATOM(id)
-            ? !IsIdentifier(idstr)
-            : (!JSID_IS_INT(id) || JSID_TO_INT(id) < 0))
-        {
-            s = js_QuoteString(cx, idstr, jschar('\''));
-            if (!s || !(idstr = s->ensureLinear(cx)))
+        /* Convert id to a string. */
+        RootedString idstr(cx);
+        if (JSID_IS_SYMBOL(id)) {
+            RootedValue v(cx, SymbolValue(JSID_TO_SYMBOL(id)));
+            idstr = ValueToSource(cx, v);
+            if (!idstr)
                 return nullptr;
+        } else {
+            RootedValue idv(cx, IdToValue(id));
+            idstr = ToString<CanGC>(cx, idv);
+            if (!idstr)
+                return nullptr;
+
+            /*
+             * If id is a string that's not an identifier, or if it's a negative
+             * integer, then it must be quoted.
+             */
+            if (JSID_IS_ATOM(id)
+                ? !IsIdentifier(JSID_TO_ATOM(id))
+                : JSID_TO_INT(id) < 0)
+            {
+                idstr = js_QuoteString(cx, idstr, jschar('\''));
+                if (!idstr)
+                    return nullptr;
+            }
         }
 
         for (int j = 0; j < valcnt; j++) {
@@ -273,8 +277,12 @@ js::ObjectToSource(JSContext *cx, HandleObject obj)
             if (gsop[j]) {
                 if (!buf.append(gsop[j]) || !buf.append(' '))
                     return nullptr;
-            }
+            } 
+            if (JSID_IS_SYMBOL(id) && !buf.append('['))
+                return nullptr;
             if (!buf.append(idstr))
+                return nullptr;
+            if (JSID_IS_SYMBOL(id) && !buf.append(']'))
                 return nullptr;
             if (!buf.append(gsop[j] ? ' ' : ':'))
                 return nullptr;
