@@ -1069,19 +1069,6 @@ JS_WrapValue(JSContext *cx, MutableHandleValue vp)
     return cx->compartment()->wrap(cx, vp);
 }
 
-JS_PUBLIC_API(bool)
-JS_WrapId(JSContext *cx, JS::MutableHandleId idp)
-{
-  AssertHeapIsIdle(cx);
-  CHECK_REQUEST(cx);
-  jsid id = idp.get();
-  if (JSID_IS_STRING(id))
-      JS::ExposeGCThingToActiveJS(JSID_TO_STRING(id), JSTRACE_STRING);
-  else if (JSID_IS_SYMBOL(id))
-      JS::ExposeGCThingToActiveJS(JSID_TO_STRING(id), JSTRACE_STRING);
-  return true;
-}
-
 /*
  * Identity remapping. Not for casual consumers.
  *
