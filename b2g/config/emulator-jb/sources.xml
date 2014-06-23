@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="827214fcf38d6569aeb5c6d6f31cb296d1f09272"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="bd5065ced020014df5fd45259fba1ac32d65673b"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="44b04243e31cd16f3baf54fcd4b5fecf9deb8b94"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="41cc1de26e4edbe12add0009cdc0bd292f2e94fe"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="bbb7659d8ea2afb396f99b3dc971ab3c42da3778"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="c510babaf88dfa2cfe2c202afb2649ee124569af"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8ba14125aba912707f44761f194339e6e59701b7"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="23db533981ee2cd04fc5d946420402aed2792381"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -128,7 +128,7 @@
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="0e31f35a2a77301e91baa8a237aa9e9fa4076084"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="973367035a1f2545f3dad6e40e354463dc56a7f4"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="346c7694b156a3933f3d87cbc077c657e2ce571f"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="832f4acaf481a19031e479a40b03d9ce5370ddee"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="d0aa65b140a45016975ed0ecf35f280dd336e1d3"/>

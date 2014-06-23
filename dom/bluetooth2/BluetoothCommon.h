@@ -83,6 +83,18 @@ extern bool gBluetoothDebugFlag;
     }                                                                \
   } while(0)
 
+/**
+ * Convert an enum value to string then append it to an array.
+ */
+#define BT_APPEND_ENUM_STRING(array, enumType, enumValue)            \
+  do {                                                               \
+    uint32_t index = uint32_t(enumValue);                            \
+    nsAutoString name;                                               \
+    name.AssignASCII(enumType##Values::strings[index].value,         \
+                     enumType##Values::strings[index].length);       \
+    array.AppendElement(name);                                       \
+  } while(0)                                                         \
+
 #define BEGIN_BLUETOOTH_NAMESPACE \
   namespace mozilla { namespace dom { namespace bluetooth {
 #define END_BLUETOOTH_NAMESPACE \

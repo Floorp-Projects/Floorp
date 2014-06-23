@@ -1130,6 +1130,10 @@ abstract public class BrowserApp extends GeckoApp
             // Do exactly the same thing as if you tapped 'Sync' in Settings.
             final Intent intent = new Intent(getContext(), FxAccountGetStartedActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            final NativeJSObject extras = message.optObject("extras", null);
+            if (extras != null) {
+                intent.putExtra("extras", extras.toString());
+            }
             getContext().startActivity(intent);
 
         } else if ("CharEncoding:Data".equals(event)) {

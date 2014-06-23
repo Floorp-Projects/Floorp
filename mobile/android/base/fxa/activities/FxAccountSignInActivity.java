@@ -15,7 +15,6 @@ import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.PasswordStretcher;
-import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.tasks.FxAccountSignInTask;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
@@ -65,22 +64,12 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
     createAccountInsteadLink.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View v) {
-        Intent intent = new Intent(FxAccountSignInActivity.this, FxAccountCreateAccountActivity.class);
-        intent.putExtra("email", emailEdit.getText().toString());
-        intent.putExtra("password", passwordEdit.getText().toString());
-        // Per http://stackoverflow.com/a/8992365, this triggers a known bug with
-        // the soft keyboard not being shown for the started activity. Why, Android, why?
-        intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        startActivityForResult(intent, CHILD_REQUEST_CODE);
+        final Bundle extras = makeExtrasBundle(null, null);
+        startActivityInstead(FxAccountCreateAccountActivity.class, CHILD_REQUEST_CODE, extras);
       }
     });
 
-    // Only set email/password in onCreate; we don't want to overwrite edited values onResume.
-    if (getIntent() != null && getIntent().getExtras() != null) {
-      Bundle bundle = getIntent().getExtras();
-      emailEdit.setText(bundle.getString("email"));
-      passwordEdit.setText(bundle.getString("password"));
-    }
+    updateFromIntentExtras();
 
     TextView view = (TextView) findViewById(R.id.forgot_password_link);
     ActivityUtils.linkTextView(view, R.string.fxaccount_sign_in_forgot_password, R.string.fxaccount_link_forgot_password);
@@ -102,7 +91,7 @@ public class FxAccountSignInActivity extends FxAccountAbstractSetupActivity {
   }
 
   public void signIn(String email, String password) {
-    String serverURI = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT;
+    String serverURI = getAuthServerEndpoint();
     PasswordStretcher passwordStretcher = makePasswordStretcher(password);
     // This delegate creates a new Android account on success, opens the
     // appropriate "success!" activity, and finishes this activity.

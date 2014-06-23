@@ -13,6 +13,7 @@ import types
 from collections import namedtuple
 
 import mozwebidlcodegen
+from reftest import ReftestManifest
 
 import mozbuild.makeutil as mozmakeutil
 from mozpack.copier import FilePurger
@@ -1074,6 +1075,11 @@ class RecursiveMakeBackend(CommonBackend):
         m = self._test_manifests.setdefault(obj.flavor,
             (obj.install_prefix, set()))
         m[1].add(obj.manifest_obj_relpath)
+
+        if isinstance(obj.manifest, ReftestManifest):
+            # Mark included files as part of the build backend so changes
+            # result in re-config.
+            self.backend_input_files |= obj.manifest.manifests
 
     def _process_local_include(self, local_include, backend_file):
         if local_include.startswith('/'):

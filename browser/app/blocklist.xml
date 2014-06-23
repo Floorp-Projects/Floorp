@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1402612020000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1403216209000">
   <emItems>
       <emItem  blockID="i454" id="sqlmoz@facebook.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
@@ -85,6 +85,12 @@
     </emItem>
       <emItem  blockID="i105" id="{95ff02bc-ffc6-45f0-a5c8-619b8226a9de}">
                         <versionRange  minVersion="0" maxVersion="*">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i626" id="{20AD702C-661E-4534-8CE9-BA4EC9AD6ECC}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -304,10 +310,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i496" id="{ACAA314B-EEBA-48e4-AD47-84E31C44796C}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
-                    </versionRange>
-                    <prefs>
+      <emItem  blockID="i47" id="youtube@youtube2.com">
+                          <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i360" id="ytd@mybrowserbar.com">
@@ -365,8 +369,8 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i584" id="{52b0f3db-f988-4788-b9dc-861d016f4487}">
-                        <versionRange  minVersion="0" maxVersion="0.1.9999999" severity="1">
+      <emItem  blockID="i624" id="/^({b95faac1-a3d7-4d69-8943-ddd5a487d966}|{ecce0073-a837-45a2-95b9-600420505f7e}|{2713b394-286f-4d7c-89ea-4174eeab9f5a}|{da7a20cf-bef4-4342-ad78-0240fdf87055})$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -697,7 +701,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i620" id="{21EAF666-26B3-4A3C-ABD0-CA2F5A326744}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -710,6 +714,12 @@
     </emItem>
       <emItem  blockID="i256" id="/^[0-9a-f]+@[0-9a-f]+\.info/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i584" id="{52b0f3db-f988-4788-b9dc-861d016f4487}">
+                        <versionRange  minVersion="0" maxVersion="0.1.9999999" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1211,8 +1221,10 @@
                     <prefs>
               </prefs>
     </emItem>
-      <emItem  blockID="i47" id="youtube@youtube2.com">
-                          <prefs>
+      <emItem  blockID="i622" id="/^({ebd898f8-fcf6-4694-bc3b-eabc7271eeb1}|{46008e0d-47ac-4daa-a02a-5eb69044431a}|{213c8ed6-1d78-4d8f-8729-25006aa86a76}|{fa23121f-ee7c-4bd8-8c06-123d087282c5}|{19803860-b306-423c-bbb5-f60a7d82cde5})$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
               </prefs>
     </emItem>
       <emItem  blockID="i518" id="/^({d6e79525-4524-4707-9b97-1d70df8e7e59}|{ddb4644d-1a37-4e6d-8b6e-8e35e2a8ea6c}|{e55007f4-80c5-418e-ac33-10c4d60db01e}|{e77d8ca6-3a60-4ae9-8461-53b22fa3125b}|{e89a62b7-248e-492f-9715-43bf8c507a2f}|{5ce3e0cb-aa83-45cb-a7da-a2684f05b8f3})$/">
@@ -1504,6 +1516,12 @@
     </emItem>
       <emItem  blockID="i372" id="5nc3QHFgcb@r06Ws9gvNNVRfH.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i496" id="{ACAA314B-EEBA-48e4-AD47-84E31C44796C}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
