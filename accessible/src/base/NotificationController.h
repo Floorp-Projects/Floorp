@@ -90,7 +90,6 @@ class NotificationController : public EventQueue,
 {
 public:
   NotificationController(DocAccessible* aDocument, nsIPresShell* aPresShell);
-  virtual ~NotificationController();
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -183,6 +182,8 @@ public:
 #endif
 
 protected:
+  virtual ~NotificationController();
+
   nsCycleCollectingAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 
@@ -234,13 +235,15 @@ private:
   {
   public:
     ContentInsertion(DocAccessible* aDocument, Accessible* aContainer);
-    virtual ~ContentInsertion() { mDocument = nullptr; }
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(ContentInsertion)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ContentInsertion)
 
     bool InitChildList(nsIContent* aStartChildNode, nsIContent* aEndChildNode);
     void Process();
+
+  protected:
+    virtual ~ContentInsertion() { mDocument = nullptr; }
 
   private:
     ContentInsertion();
