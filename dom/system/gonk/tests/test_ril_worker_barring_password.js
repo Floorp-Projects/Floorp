@@ -10,32 +10,6 @@ function run_test() {
 const PIN = "0000";
 const NEW_PIN = "1234";
 
-/**
- * Helper function.
- */
-function newUint8Worker() {
-  let worker = newWorker();
-  let context = worker.ContextPool._contexts[0];
-  let index = 0; // index for read
-  let buf = [];
-
-  context.Buf.writeUint8 = function(value) {
-    buf.push(value);
-  };
-
-  context.Buf.readUint8 = function() {
-    return buf[index++];
-  };
-
-  context.Buf.seekIncoming = function(offset) {
-    index += offset;
-  };
-
-  worker.debug = do_print;
-
-  return worker;
-}
-
 add_test(function test_change_call_barring_password() {
   let worker = newUint8Worker();
   let context = worker.ContextPool._contexts[0];
