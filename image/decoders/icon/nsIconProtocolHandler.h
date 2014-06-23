@@ -17,9 +17,9 @@ public:
 
     // nsIconProtocolHandler methods:
     nsIconProtocolHandler();
-    virtual ~nsIconProtocolHandler();
 
 protected:
+    virtual ~nsIconProtocolHandler();
 };
 
 #endif /* nsIconProtocolHandler_h___ */
