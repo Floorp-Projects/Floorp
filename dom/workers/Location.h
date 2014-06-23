@@ -47,6 +47,11 @@ class WorkerLocation MOZ_FINAL : public nsWrapperCache
     SetIsDOMBinding();
   }
 
+  ~WorkerLocation()
+  {
+    MOZ_COUNT_DTOR(WorkerLocation);
+  }
+
 public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerLocation)
@@ -60,11 +65,6 @@ public:
 
   nsISupports* GetParentObject() const {
     return nullptr;
-  }
-
-  ~WorkerLocation()
-  {
-    MOZ_COUNT_DTOR(WorkerLocation);
   }
 
   void Stringify(nsString& aHref) const

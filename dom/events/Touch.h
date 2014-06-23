@@ -45,8 +45,6 @@ public:
         float aRotationAngle,
         float aForce);
 
-  ~Touch();
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Touch)
 
@@ -86,6 +84,8 @@ public:
   float mRotationAngle;
   float mForce;
 protected:
+  ~Touch();
+
   bool mPointsInitialized;
 };
 

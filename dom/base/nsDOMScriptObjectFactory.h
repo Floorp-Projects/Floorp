@@ -25,6 +25,8 @@
 class nsDOMScriptObjectFactory MOZ_FINAL : public nsIDOMScriptObjectFactory,
                                            public nsIObserver
 {
+  ~nsDOMScriptObjectFactory() {}
+
 public:
   nsDOMScriptObjectFactory();
 

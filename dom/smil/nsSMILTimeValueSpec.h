@@ -111,6 +111,7 @@ protected:
 
   class EventListener MOZ_FINAL : public nsIDOMEventListener
   {
+    ~EventListener() {}
   public:
     EventListener(nsSMILTimeValueSpec* aOwner) : mSpec(aOwner) { }
     void Disconnect()

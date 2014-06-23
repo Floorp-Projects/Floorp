@@ -21,6 +21,8 @@ namespace dom {
 class MessagePortList MOZ_FINAL : public nsISupports
                                 , public nsWrapperCache
 {
+  ~MessagePortList() {}
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MessagePortList)

@@ -48,10 +48,11 @@ class XPathResult MOZ_FINAL : public nsIXPathResult,
                               public nsStubMutationObserver,
                               public nsWrapperCache
 {
+    ~XPathResult();
+
 public:
     XPathResult(nsINode* aParent);
     XPathResult(const XPathResult &aResult);
-    ~XPathResult();
 
     enum {
         ANY_TYPE = 0U,

@@ -26,8 +26,6 @@ public:
     SetIsDOMBinding();
   }
 
-  virtual ~AnimationTimeline() { }
-
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationTimeline)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(AnimationTimeline)
 
@@ -37,6 +35,8 @@ public:
   Nullable<double> GetCurrentTime() const;
 
 protected:
+  virtual ~AnimationTimeline() { }
+
   nsCOMPtr<nsIDocument> mDocument;
 };
 

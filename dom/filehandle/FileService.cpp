@@ -340,6 +340,10 @@ FileService::FileHandleQueue::FileHandleQueue(FileHandle* aFileHandle)
   MOZ_ASSERT(aFileHandle, "Null pointer!");
 }
 
+FileService::FileHandleQueue::~FileHandleQueue()
+{
+}
+
 NS_IMPL_ADDREF(FileService::FileHandleQueue)
 NS_IMPL_RELEASE(FileService::FileHandleQueue)
 

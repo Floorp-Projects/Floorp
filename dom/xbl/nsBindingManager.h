@@ -37,6 +37,8 @@ class CSSStyleSheet;
 
 class nsBindingManager MOZ_FINAL : public nsStubMutationObserver
 {
+  ~nsBindingManager();
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -45,7 +47,6 @@ public:
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   nsBindingManager(nsIDocument* aDocument);
-  ~nsBindingManager();
 
   nsXBLBinding* GetBindingWithContent(nsIContent* aContent);
 

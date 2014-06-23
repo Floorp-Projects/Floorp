@@ -148,6 +148,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 protected:
+  ~ContentListener() {}
   TabChild* mTabChild;
 };
 
@@ -184,6 +185,7 @@ public:
                                                 nsIWidget* aWidget);
 
 protected:
+    ~TabChildBase() {}
     CSSSize GetPageSize(nsCOMPtr<nsIDocument> aDocument, const CSSSize& aViewport);
 
     // Get the DOMWindowUtils for the top-level window in this tab.

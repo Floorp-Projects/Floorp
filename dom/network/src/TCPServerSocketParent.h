@@ -35,6 +35,8 @@ public:
   void ReleaseIPDLReference();
 
 private:
+  ~TCPServerSocketParent() {}
+
   virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
 
   PNeckoParent* mNeckoParent;

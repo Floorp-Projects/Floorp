@@ -33,8 +33,6 @@ public:
 public:
   MessageChannel(nsPIDOMWindow* aWindow);
 
-  ~MessageChannel();
-
   nsPIDOMWindow*
   GetParentObject() const
   {
@@ -60,6 +58,8 @@ public:
   }
 
 private:
+  ~MessageChannel();
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
 
   nsRefPtr<MessagePort> mPort1;
