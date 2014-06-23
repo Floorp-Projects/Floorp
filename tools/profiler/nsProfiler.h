@@ -14,7 +14,6 @@ class nsProfiler MOZ_FINAL : public nsIProfiler, public nsIObserver
 {
 public:
     nsProfiler();
-    ~nsProfiler();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
@@ -22,6 +21,7 @@ public:
 
     nsresult Init();
 private:
+    ~nsProfiler();
     bool mLockedForPrivateBrowsing;
 };
 

@@ -20,6 +20,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISYNCJPAKE
   nsSyncJPAKE();
+protected:
   virtual ~nsSyncJPAKE();
 private:
   enum { JPAKENotStarted, JPAKEBeforeRound2, JPAKEAfterRound2 } round;

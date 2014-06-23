@@ -26,6 +26,8 @@ public:
                                          uint32_t* writeCount);
 
 protected:
+  ~nsFeedSniffer() {}
+
   nsresult ConvertEncodedData(nsIRequest* request, const uint8_t* data,
                               uint32_t length);
 
