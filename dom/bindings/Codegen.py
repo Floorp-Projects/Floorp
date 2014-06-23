@@ -11586,7 +11586,7 @@ class CGNativeMember(ClassMethod):
                     holder = "nsRefPtr"
                 else:
                     holder = "already_AddRefed"
-                if memberReturnsNewObject(self.member):
+                if memberReturnsNewObject(self.member) or isMember:
                     warning = ""
                 else:
                     warning = "// Mark this as resultNotAddRefed to return raw pointers\n"
@@ -13553,7 +13553,8 @@ class GlobalGenRoots():
 class CGEventGetter(CGNativeMember):
     def __init__(self, descriptor, attr):
         ea = descriptor.getExtendedAttributes(attr, getter=True)
-        ea.append('resultNotAddRefed')
+        if not attr.type.isSequence():
+            ea.append('resultNotAddRefed')
         CGNativeMember.__init__(self, descriptor, attr,
                                 CGSpecializedGetter.makeNativeName(descriptor,
                                                                    attr),
@@ -13596,6 +13597,8 @@ class CGEventGetter(CGNativeMember):
                 """,
                 memberName=memberName)
         if type.isUnion():
+            return "aRetVal = " + memberName + ";\n"
+        if type.isSequence():
             return "aRetVal = " + memberName + ";\n"
         raise TypeError("Event code generator does not support this type!")
 
@@ -13762,7 +13765,8 @@ class CGEventClass(CGBindingImplClass):
     def implTraverse(self):
         retVal = ""
         for m in self.descriptor.interface.members:
-            if m.isAttr() and m.type.isGeckoInterface():
+            # Unroll the type so we pick up sequences of interfaces too.
+            if m.isAttr() and m.type.unroll().isGeckoInterface():
                 retVal += ("  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(" +
                            CGDictionary.makeMemberName(m.identifier.name) +
                            ")\n")
@@ -13773,7 +13777,8 @@ class CGEventClass(CGBindingImplClass):
         for m in self.descriptor.interface.members:
             if m.isAttr():
                 name = CGDictionary.makeMemberName(m.identifier.name)
-                if m.type.isGeckoInterface():
+                # Unroll the type so we pick up sequences of interfaces too.
+                if m.type.unroll().isGeckoInterface():
                     retVal += "  NS_IMPL_CYCLE_COLLECTION_UNLINK(" + name + ")\n"
                 elif m.type.isAny():
                     retVal += "  tmp->" + name + ".setUndefined();\n"
@@ -13885,8 +13890,24 @@ class CGEventClass(CGBindingImplClass):
             nativeType = CGGeneric("JS::Heap<JSObject*>")
         elif type.isUnion():
             nativeType = CGGeneric(CGUnionStruct.unionTypeDecl(type, True))
+        elif type.isSequence():
+            if type.nullable():
+                innerType = type.inner.inner
+            else:
+                innerType = type.inner
+            if (not innerType.isPrimitive() and not innerType.isEnum() and
+                not innerType.isDOMString() and not innerType.isByteString() and
+                not innerType.isGeckoInterface()):
+                raise TypeError("Don't know how to properly manage GC/CC for "
+                                "event member of type %s" %
+                                type)
+            nativeType = CGTemplatedType(
+                "nsTArray",
+                self.getNativeTypeForIDLType(innerType))
+            if type.nullable():
+                nativeType = CGTemplatedType("Nullable", nativeType)
         else:
-            raise TypeError("Don't know how to declare member of type %s" %
+            raise TypeError("Don't know how to declare event member of type %s" %
                             type)
         return nativeType
 
