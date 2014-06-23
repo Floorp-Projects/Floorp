@@ -806,7 +806,7 @@ pref("dom.sysmsg.enabled", false);
 // Enable pre-installed applications.
 pref("dom.webapps.useCurrentProfile", false);
 
-pref("dom.cycle_collector.incremental", true);
+pref("dom.cycle_collector.incremental", false);
 
 pref("dom.window_experimental_bindings", true);
 
