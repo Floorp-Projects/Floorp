@@ -12108,6 +12108,7 @@ class CGExampleClass(CGBindingImplClass):
                 bases.append(ClassBase("NonRefcountedDOMObject"))
 
         if self.refcounted:
+            destructorVisibility = "protected"
             if self.parentIface:
                 extradeclarations = (
                     "public:\n"
@@ -12122,6 +12123,7 @@ class CGExampleClass(CGBindingImplClass):
                     "  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(%s)\n"
                     "\n" % self.nativeLeafName(descriptor))
         else:
+            destructorVisibility = "public"
             extradeclarations = ""
 
         if descriptor.interface.hasChildInterfaces():
@@ -12133,7 +12135,7 @@ class CGExampleClass(CGBindingImplClass):
                          bases=bases,
                          constructors=[ClassConstructor([],
                                                         visibility="public")],
-                         destructor=ClassDestructor(visibility="public"),
+                         destructor=ClassDestructor(visibility=destructorVisibility),
                          methods=self.methodDecls,
                          decorators=decorators,
                          extradeclarations=extradeclarations)
@@ -12501,11 +12503,11 @@ class CGJSImplClass(CGBindingImplClass):
 
         if descriptor.interface.hasChildInterfaces():
             decorators = ""
-            # We need a public virtual destructor our subclasses can use
-            destructor = ClassDestructor(virtual=True, visibility="public")
+            # We need a protected virtual destructor our subclasses can use
+            destructor = ClassDestructor(virtual=True, visibility="protected")
         else:
             decorators = "MOZ_FINAL"
-            destructor = None
+            destructor = ClassDestructor(virtual=False, visibility="private")
 
         baseConstructors = [
             ("mImpl(new %s(aJSImplObject, /* aIncumbentGlobal = */ nullptr))" %
