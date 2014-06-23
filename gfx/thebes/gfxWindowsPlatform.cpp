@@ -1005,9 +1005,9 @@ gfxWindowsPlatform::GetPlatformCMSOutputProfile(void* &mem, size_t &mem_size)
         return;
 
 #if _MSC_VER
-    __try {
+    MOZ_SEH_TRY {
         res = GetICMProfileW(dc, &size, (LPWSTR)&str);
-    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
+    } MOZ_SEH_EXCEPT(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
         res = FALSE;
     }
 #else
