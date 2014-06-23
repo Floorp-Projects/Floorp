@@ -8029,19 +8029,28 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
         raise TypeError("Can't handle sequences in unions")
 
     name = getUnionMemberName(type)
+    holderName = "m" + name + "Holder"
 
     # By the time tryNextCode is invoked, we're guaranteed the union has been
     # constructed as some type, since we've been trying to convert into the
     # corresponding member.
     prefix = "" if ownsMembers else "mUnion."
-    tryNextCode = ("%sDestroy%s();\n"
+    tryNextCode = ("$*{destroyHolder}\n"
+                   "%sDestroy%s();\n"
                    "tryNext = true;\n"
                    "return true;\n" % (prefix, name))
+
     conversionInfo = getJSToNativeConversionInfo(
         type, descriptorProvider, failureCode=tryNextCode,
         isDefinitelyObject=not type.isDictionary(),
         isMember=("OwningUnion" if ownsMembers else None),
         sourceDescription="member of %s" % unionType)
+
+    if conversionInfo.holderType is not None:
+        assert not ownsMembers
+        destroyHolder = "%s.destroy();\n" % holderName
+    else:
+        destroyHolder = ""
 
     ctorNeedsCx = conversionInfo.declArgs == "cx"
     ctorArgs = "cx" if ctorNeedsCx else ""
@@ -8075,12 +8084,22 @@ def getUnionTypeTemplateVars(unionType, type, descriptorProvider,
     else:
         # Important: we need to not have our declName involve
         # maybe-GCing operations.
-        jsConversion = string.Template(conversionInfo.template).substitute({
-            "val": "value",
-            "mutableVal": "pvalue",
-            "declName": "memberSlot",
-            "holderName": "m" + name + "Holder",
-        })
+        if conversionInfo.holderType is not None:
+            holderArgs = conversionInfo.holderArgs
+            if holderArgs is None:
+                holderArgs = ""
+            initHolder = "%s.construct(%s);\n" % (holderName, holderArgs)
+        else:
+            initHolder = ""
+
+        jsConversion = fill(
+            initHolder + conversionInfo.template,
+            val="value",
+            mutableVal="pvalue",
+            declName="memberSlot",
+            holderName=(holderName if ownsMembers else "%s.ref()" % holderName),
+            destroyHolder=destroyHolder)
+
         jsConversion = fill(
             """
             tryNext = false;
@@ -8450,8 +8469,10 @@ class CGUnionConversionStruct(CGThing):
                                     body="RawSetAs%s().SetData(aData, aLength);\n" % t.name))
 
             if vars["holderType"] is not None:
+                holderType = CGTemplatedType("Maybe",
+                                             CGGeneric(vars["holderType"])).define()
                 members.append(ClassMember("m%sHolder" % vars["name"],
-                                           vars["holderType"]))
+                                           holderType))
 
         return CGClass(structName + "Argument",
                        members=members,
