@@ -835,23 +835,15 @@ SwatchBasedEditorTooltip.prototype = {
    *        - onPreview: will be called when one of the sub-classes calls preview
    *        - onRevert: will be called when the user ESCapes out of the tooltip
    *        - onCommit: will be called when the user presses ENTER or clicks
-   *        outside the tooltip. If the user-defined onCommit returns a value,
-   *        it will be used to replace originalValue, so that the swatch-based
-   *        tooltip always knows what is the current originalValue and can use
-   *        it when reverting
-   * @param {object} originalValue
-   *        The original value before the editor in the tooltip makes changes
-   *        This can be of any type, and will be passed, as is, in the revert
-   *        callback
+   *        outside the tooltip.
    */
-  addSwatch: function(swatchEl, callbacks={}, originalValue) {
+  addSwatch: function(swatchEl, callbacks={}) {
     if (!callbacks.onPreview) callbacks.onPreview = function() {};
     if (!callbacks.onRevert) callbacks.onRevert = function() {};
     if (!callbacks.onCommit) callbacks.onCommit = function() {};
 
     this.swatches.set(swatchEl, {
-      callbacks: callbacks,
-      originalValue: originalValue
+      callbacks: callbacks
     });
     swatchEl.addEventListener("click", this._onSwatchClick, false);
   },
@@ -892,7 +884,7 @@ SwatchBasedEditorTooltip.prototype = {
   revert: function() {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
-      swatch.callbacks.onRevert(swatch.originalValue);
+      swatch.callbacks.onRevert();
     }
   },
 
@@ -902,10 +894,7 @@ SwatchBasedEditorTooltip.prototype = {
   commit: function() {
     if (this.activeSwatch) {
       let swatch = this.swatches.get(this.activeSwatch);
-      let newValue = swatch.callbacks.onCommit();
-      if (typeof newValue !== "undefined") {
-        swatch.originalValue = newValue;
-      }
+      swatch.callbacks.onCommit();
     }
   },
 
