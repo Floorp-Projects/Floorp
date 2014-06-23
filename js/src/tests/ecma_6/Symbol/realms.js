@@ -21,6 +21,12 @@ if (typeof newGlobal === "function") {
     g.smith = smith;  // put smith into the realm
     assertEq(g.smith, smith);  // pull it back out
 
+    // Spot-check that non-generic methods can be applied to symbols and Symbol
+    // objects from other realms.
+    assertEq(Symbol.prototype.toString.call(gj), "Symbol(jones)");
+    assertEq(Symbol.prototype.toString.call(g.eval("Object(Symbol('brown'))")),
+             "Symbol(brown)");
+
     // Symbol.for functions share a symbol registry across all realms.
     assertEq(g.Symbol.for("ponies"), Symbol.for("ponies"));
     assertEq(g.eval("Symbol.for('rainbows')"), Symbol.for("rainbows"));

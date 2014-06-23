@@ -989,11 +989,14 @@ ArrayJoinKernel(JSContext *cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
             } else if (elem.isBoolean()) {
                 if (!BooleanToStringBuffer(elem.toBoolean(), sb))
                     return false;
-            } else if (elem.isObject()) {
+            } else if (elem.isObject() || elem.isSymbol()) {
                 /*
                  * Object stringifying could modify the initialized length or make
                  * the array sparse. Delegate it to a separate loop to keep this
                  * one tight.
+                 *
+                 * Symbol stringifying is a TypeError, so into the slow path
+                 * with those as well.
                  */
                 break;
             } else {
