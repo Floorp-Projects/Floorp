@@ -36,7 +36,7 @@ FAIL_ON_WARNINGS = True
 LOCAL_INCLUDES += [
     '../text',
     '/content/base/src',
-    '/editor/txmgr/src',
+    '/editor/txmgr',
     '/extensions/spellcheck/src',
     '/layout/style',
 ]
