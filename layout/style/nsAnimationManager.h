@@ -61,11 +61,6 @@ struct ElementAnimations MOZ_FINAL
                     nsAnimationManager *aAnimationManager, TimeStamp aNow);
 
   void GetEventsAt(TimeStamp aRefreshTime, EventArray &aEventsToDispatch);
-
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint styleHint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
-    aPresContext->PresShell()->RestyleForAnimation(mElement, styleHint);
-  }
 };
 
 class nsAnimationManager MOZ_FINAL
