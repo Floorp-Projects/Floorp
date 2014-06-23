@@ -378,6 +378,38 @@ AbstractCanvasGraph.prototype = {
   },
 
   /**
+   * Gets the selection bounds, scaled to correlate with the data source ranges,
+   * such that a [0, max width] selection maps to [first value, last value].
+   *
+   * @param function unpack [optional]
+   *        Invoked when retrieving the numbers in the data source representing
+   *        the first and last values, on the X axis. Currently, all graphs
+   *        store this in a "delta" property for all entries, but in the future
+   *        this may change as new graphs with different data source format
+   *        requirements are implemented.
+   * @return object
+   *         The mapped selection's { min, max } values.
+   */
+  getMappedSelection: function(unpack = e => e.delta) {
+    if (!this.hasData() || !this.hasSelection()) {
+      return { start: null, end: null };
+    }
+    let selection = this.getSelection();
+    let totalTicks = this._data.length;
+    let firstTick = unpack(this._data[0]);
+    let lastTick = unpack(this._data[totalTicks - 1]);
+
+    // The selection's start and end values are not guaranteed to be ascending.
+    // This can happen, for example, when click & dragging from right to left.
+    let min = Math.min(selection.start, selection.end);
+    let max = Math.max(selection.start, selection.end);
+    min = map(min, 0, this._width, firstTick, lastTick);
+    max = map(max, 0, this._width, firstTick, lastTick);
+
+    return { min: min, max: max };
+  },
+
+  /**
    * Removes the selection.
    */
   dropSelection: function() {
@@ -1151,13 +1183,6 @@ LineGraphWidget.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
     this._minTooltip.querySelector("[text=value]").textContent = minValue|0;
 
     /**
-     * Maps a value from one range to another.
-     */
-    function map(value, istart, istop, ostart, ostop) {
-      return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
-    }
-
-    /**
      * Constrains a value to a range.
      */
     function clamp(value, min, max) {
@@ -1603,3 +1628,10 @@ this.CanvasGraphUtils = {
     });
   }
 };
+
+/**
+ * Maps a value from one range to another.
+ */
+function map(value, istart, istop, ostart, ostop) {
+  return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
+}
