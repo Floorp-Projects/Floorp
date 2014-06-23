@@ -59,6 +59,7 @@ DOMCI_CLASS(File)
 // DOM modal content window class, almost identical to Window
 DOMCI_CLASS(ModalContentWindow)
 
+DOMCI_CLASS(MozMobileMessageManager)
 DOMCI_CLASS(MozSmsMessage)
 DOMCI_CLASS(MozMmsMessage)
 DOMCI_CLASS(MozSmsFilter)
