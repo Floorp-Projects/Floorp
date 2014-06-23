@@ -10,6 +10,7 @@
 #include "nsString.h"
 #include "mozilla/dom/mobilemessage/Types.h"
 #include "mozilla/dom/MozMmsMessageBinding.h"
+#include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/Attributes.h"
 
 namespace mozilla {
