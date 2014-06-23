@@ -173,7 +173,7 @@ LOCAL_INCLUDES += [
     '/content/xul/content/src',
     '/dom/base',
     '/dom/xbl',
-    '/editor/libeditor/base',
+    '/editor/libeditor',
     '/editor/libeditor/text',
     '/editor/txmgr',
     '/layout/forms',
