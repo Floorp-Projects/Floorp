@@ -415,6 +415,8 @@ private:
     }
 
   private:
+    ~RemoveFolderTransaction() {}
+
     int64_t mID;
     int64_t mParent;
     nsCString mTitle;

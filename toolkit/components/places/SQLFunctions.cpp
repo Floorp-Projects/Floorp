@@ -182,6 +182,10 @@ namespace places {
   //////////////////////////////////////////////////////////////////////////////
   //// MatchAutoCompleteFunction
 
+  MatchAutoCompleteFunction::~MatchAutoCompleteFunction()
+  {
+  }
+
   /* static */
   nsresult
   MatchAutoCompleteFunction::create(mozIStorageConnection *aDBConn)
@@ -416,6 +420,10 @@ namespace places {
   //////////////////////////////////////////////////////////////////////////////
   //// CalculateFrecencyFunction
 
+  CalculateFrecencyFunction::~CalculateFrecencyFunction()
+  {
+  }
+
   /* static */
   nsresult
   CalculateFrecencyFunction::create(mozIStorageConnection *aDBConn)
@@ -608,6 +616,10 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// GUID Creation Function
 
+  GenerateGUIDFunction::~GenerateGUIDFunction()
+  {
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //// GenerateGUIDFunction
 
@@ -646,6 +658,10 @@ namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Get Unreversed Host Function
+
+  GetUnreversedHostFunction::~GetUnreversedHostFunction()
+  {
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   //// GetUnreversedHostFunction
@@ -701,6 +717,10 @@ namespace places {
 ////////////////////////////////////////////////////////////////////////////////
 //// Fixup URL Function
 
+  FixupURLFunction::~FixupURLFunction()
+  {
+  }
+
   //////////////////////////////////////////////////////////////////////////////
   //// FixupURLFunction
 
@@ -751,6 +771,10 @@ namespace places {
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Frecency Changed Notification Function
+
+  FrecencyNotificationFunction::~FrecencyNotificationFunction()
+  {
+  }
 
   /* static */
   nsresult
