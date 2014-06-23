@@ -316,8 +316,8 @@
   <string name="home_bookmarks_empty">&home_bookmarks_empty;</string>
   <string name="home_closed_tabs_title">&home_closed_tabs_title;</string>
   <string name="home_last_tabs_title">&home_last_tabs_title;</string>
-  <string name="home_last_tabs_open">&home_last_tabs_open;</string>
   <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
+  <string name="home_open_all">&home_open_all;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
   <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
