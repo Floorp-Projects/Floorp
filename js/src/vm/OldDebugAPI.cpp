@@ -301,19 +301,6 @@ JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
     if (!obj)
         return false;
 
-    RootedId propid(cx);
-
-    if (JSID_IS_INT(id)) {
-        propid = id;
-    } else if (JSID_IS_OBJECT(id)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH_PROP);
-        return false;
-    } else {
-        RootedValue val(cx, IdToValue(id));
-        if (!ValueToId<CanGC>(cx, val, &propid))
-            return false;
-    }
-
     if (!obj->isNative() || obj->is<TypedArrayObject>()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
@@ -327,7 +314,7 @@ JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
     if (!JSObject::sparsifyDenseElements(cx, obj))
         return false;
 
-    types::MarkTypePropertyNonData(cx, obj, propid);
+    types::MarkTypePropertyNonData(cx, obj, id);
 
     WatchpointMap *wpmap = cx->compartment()->watchpointMap;
     if (!wpmap) {
@@ -338,7 +325,7 @@ JS_SetWatchPoint(JSContext *cx, HandleObject origobj, HandleId id,
         }
         cx->compartment()->watchpointMap = wpmap;
     }
-    return wpmap->watch(cx, obj, propid, handler, closure);
+    return wpmap->watch(cx, obj, id, handler, closure);
 }
 
 JS_PUBLIC_API(bool)
