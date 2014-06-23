@@ -279,11 +279,11 @@ public:
         // from nsICacheService.
         class Flusher : public nsIObserver
         {
+            virtual ~Flusher() {}
         public:
             NS_DECL_ISUPPORTS
             NS_DECL_NSIOBSERVER
             Flusher() {}
-            virtual ~Flusher() {}
         };
 
         // Key used to look up entries in the user-font cache.
