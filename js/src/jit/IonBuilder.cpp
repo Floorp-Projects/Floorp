@@ -8708,7 +8708,7 @@ IonBuilder::getPropTryTypedObject(bool *emitted,
                                   types::TemporaryTypeSet *resultTypes)
 {
     TypedObjectPrediction fieldPrediction;
-    int32_t fieldOffset;
+    size_t fieldOffset;
     size_t fieldIndex;
     if (!typedObjectHasField(obj, name, &fieldOffset, &fieldPrediction, &fieldIndex))
         return true;
@@ -9353,7 +9353,7 @@ IonBuilder::setPropTryTypedObject(bool *emitted, MDefinition *obj,
                                   PropertyName *name, MDefinition *value)
 {
     TypedObjectPrediction fieldPrediction;
-    int32_t fieldOffset;
+    size_t fieldOffset;
     size_t fieldIndex;
     if (!typedObjectHasField(obj, name, &fieldOffset, &fieldPrediction, &fieldIndex))
         return true;
@@ -10372,7 +10372,7 @@ IonBuilder::loadTypedObjectElements(MDefinition *typedObj,
 bool
 IonBuilder::typedObjectHasField(MDefinition *typedObj,
                                 PropertyName *name,
-                                int32_t *fieldOffset,
+                                size_t *fieldOffset,
                                 TypedObjectPrediction *fieldPrediction,
                                 size_t *fieldIndex)
 {
