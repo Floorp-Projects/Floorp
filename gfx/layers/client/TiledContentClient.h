@@ -327,13 +327,6 @@ public:
                                         ViewTransform& aViewTransform);
 
   /**
-   * Compute the APZ's async transform given the content-side and
-   * compositor-side metrics for the layer.
-   */
-  ViewTransform ComputeViewTransform(const FrameMetrics& aContentMetrics,
-                                     const FrameMetrics& aCompositorMetrics);
-
-  /**
    * Determines if the compositor's upcoming composition bounds has fallen
    * outside of the contents display port. If it has then the compositor
    * will start to checker board. Checker boarding is when the compositor
