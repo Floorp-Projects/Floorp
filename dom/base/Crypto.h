@@ -32,9 +32,11 @@ namespace dom {
 class Crypto : public nsIDOMCrypto,
                public nsWrapperCache
 {
+protected:
+  virtual ~Crypto();
+
 public:
   Crypto();
-  virtual ~Crypto();
 
   NS_DECL_NSIDOMCRYPTO
 

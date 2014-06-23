@@ -503,6 +503,8 @@ public:
   }
 
 private:
+  ~nsGlobalWindowObserver() {}
+
   nsGlobalWindow* mWindow;
 };
 

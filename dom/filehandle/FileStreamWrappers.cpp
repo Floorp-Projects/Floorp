@@ -37,6 +37,8 @@ public:
   }
 
 private:
+  ~ProgressRunnable() {}
+
   nsRefPtr<FileHelper> mFileHelper;
   uint64_t mProgress;
   uint64_t mProgressMax;
@@ -53,6 +55,8 @@ public:
   { }
 
 private:
+  ~CloseRunnable() {}
+
   nsRefPtr<FileHelper> mFileHelper;
 };
 
@@ -67,6 +71,8 @@ public:
   { }
 
 private:
+  ~DestroyRunnable() {}
+
   nsRefPtr<FileHelper> mFileHelper;
 };
 

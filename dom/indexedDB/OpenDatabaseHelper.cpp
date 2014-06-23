@@ -881,6 +881,8 @@ UpgradeSchemaFrom7To8(mozIStorageConnection* aConnection)
 
 class CompressDataBlobsFunction MOZ_FINAL : public mozIStorageFunction
 {
+  ~CompressDataBlobsFunction() {}
+
 public:
   NS_DECL_ISUPPORTS
 
@@ -1142,6 +1144,8 @@ UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
 
 class EncodeKeysFunction MOZ_FINAL : public mozIStorageFunction
 {
+  ~EncodeKeysFunction() {}
+
 public:
   NS_DECL_ISUPPORTS
 

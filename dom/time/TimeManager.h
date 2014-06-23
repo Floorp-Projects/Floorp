@@ -49,6 +49,8 @@ public:
   void Set(double aTime);
 
 private:
+  ~TimeManager() {}
+
   nsCOMPtr<nsPIDOMWindow> mWindow;
 };
 

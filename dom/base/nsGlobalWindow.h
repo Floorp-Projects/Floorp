@@ -146,10 +146,14 @@ NS_CreateJSTimeoutHandler(JSContext* aCx, nsGlobalWindow *aWindow,
  * timeout.  Holds a strong reference to an nsIScriptTimeoutHandler, which
  * abstracts the language specific cruft.
  */
-struct nsTimeout : mozilla::LinkedListElement<nsTimeout>
+struct nsTimeout MOZ_FINAL
+  : mozilla::LinkedListElement<nsTimeout>
 {
-  nsTimeout();
+private:
   ~nsTimeout();
+
+public:
+  nsTimeout();
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTimeout)
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTimeout)
@@ -290,8 +294,9 @@ public:
       aResult.setUndefined();
     }
   }
-  virtual ~DialogValueHolder() {}
 private:
+  virtual ~DialogValueHolder() {}
+
   nsCOMPtr<nsIPrincipal> mOrigin;
   nsCOMPtr<nsIVariant> mValue;
 };

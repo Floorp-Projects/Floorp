@@ -150,8 +150,6 @@ public:
 
   static void Init();
 
-  ~nsWindowMemoryReporter();
-
 #ifdef DEBUG
   /**
    * Unlink all known ghost windows, to enable investigating what caused them
@@ -161,12 +159,15 @@ public:
 #endif
 
 private:
+  ~nsWindowMemoryReporter();
+
   /**
    * nsGhostWindowReporter generates the "ghost-windows" report, which counts
    * the number of ghost windows present.
    */
   class GhostWindowsReporter MOZ_FINAL : public nsIMemoryReporter
   {
+    ~GhostWindowsReporter() {}
   public:
     NS_DECL_ISUPPORTS
 

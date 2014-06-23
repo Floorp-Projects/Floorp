@@ -55,6 +55,8 @@ public:
   const mobilemessage::SmsMessageData& GetData() const;
 
 private:
+  ~SmsMessage() {}
+
   // Don't try to use the default constructor.
   SmsMessage();
 

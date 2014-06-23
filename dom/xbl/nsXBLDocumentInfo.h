@@ -21,7 +21,6 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   nsXBLDocumentInfo(nsIDocument* aDocument);
-  virtual ~nsXBLDocumentInfo();
 
   already_AddRefed<nsIDocument> GetDocument()
     { nsCOMPtr<nsIDocument> copy = mDocument; return copy.forget(); }
@@ -52,6 +51,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsXBLDocumentInfo)
 
 private:
+  virtual ~nsXBLDocumentInfo();
+
   nsCOMPtr<nsIDocument> mDocument;
   bool mScriptAccess;
   bool mIsChrome;

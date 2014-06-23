@@ -608,12 +608,13 @@ DeviceStorageFile::Init()
 // no convenient way to restart, we use a pref watcher instead.
 class OverrideRootDir MOZ_FINAL : public nsIObserver
 {
+  ~OverrideRootDir();
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   static OverrideRootDir* GetSingleton();
-  ~OverrideRootDir();
   void Init();
 private:
   static mozilla::StaticRefPtr<OverrideRootDir> sSingleton;
@@ -1752,8 +1753,6 @@ public:
   DeviceStorageCursorRequest(nsDOMDeviceStorageCursor* aCursor)
     : mCursor(aCursor) { }
 
-  ~DeviceStorageCursorRequest() {}
-
   bool Recv__delete__(const bool& allow,
                       const InfallibleTArray<PermissionChoice>& choices)
   {
@@ -1773,6 +1772,8 @@ public:
   }
 
 private:
+  ~DeviceStorageCursorRequest() {}
+
   nsRefPtr<nsDOMDeviceStorageCursor> mCursor;
 };
 
@@ -3146,6 +3147,8 @@ public:
   }
 
 private:
+  ~DeviceStorageRequest() {}
+
   int32_t mRequestType;
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsCOMPtr<nsIPrincipal> mPrincipal;
