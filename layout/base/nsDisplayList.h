@@ -3041,6 +3041,8 @@ public:
   // after merging, all the nsDisplayScrollLayers should flatten away.
   intptr_t GetScrollLayerCount();
 
+  static bool IsConstructingScrollLayerForScrolledFrame(const nsIFrame* aScrolledFrame);
+
   virtual nsIFrame* GetScrollFrame() { return mScrollFrame; }
   virtual nsIFrame* GetScrolledFrame() { return mScrolledFrame; }
 
@@ -3048,10 +3050,16 @@ public:
   virtual void WriteDebugInfo(nsACString& aTo) MOZ_OVERRIDE;
 #endif
 
+  bool IsDisplayPortOpaque() { return mDisplayPortContentsOpaque; }
+
 protected:
+  nsRect GetScrolledContentRectToDraw(nsDisplayListBuilder* aBuilder,
+                                      nsRect* aDisplayPort);
+
   nsIFrame* mScrollFrame;
   nsIFrame* mScrolledFrame;
   ViewID mScrollParentId;
+  bool mDisplayPortContentsOpaque;
 };
 
 /**
