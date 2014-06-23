@@ -9,10 +9,11 @@
 
 class nsCookiePromptService : public nsICookiePromptService {
 
+  virtual ~nsCookiePromptService();
+
 public:
 
   nsCookiePromptService();
-  virtual ~nsCookiePromptService();
 
   NS_DECL_NSICOOKIEPROMPTSERVICE
   NS_DECL_ISUPPORTS

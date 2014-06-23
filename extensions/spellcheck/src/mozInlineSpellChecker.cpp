@@ -489,6 +489,7 @@ private:
 // Used as the nsIEditorSpellCheck::InitSpellChecker callback.
 class InitEditorSpellCheckCallback MOZ_FINAL : public nsIEditorSpellCheckCallback
 {
+  ~InitEditorSpellCheckCallback() {}
 public:
   NS_DECL_ISUPPORTS
 
@@ -2001,6 +2002,8 @@ public:
   }
 
 private:
+  ~UpdateCurrentDictionaryCallback() {}
+
   nsRefPtr<mozInlineSpellChecker> mSpellChecker;
   uint32_t mDisabledAsyncToken;
 };
