@@ -2031,9 +2031,7 @@ jclass ProgressiveUpdateData::mProgressiveUpdateDataClass = 0;
 jmethodID ProgressiveUpdateData::jProgressiveUpdateData = 0;
 jmethodID ProgressiveUpdateData::jsetViewport = 0;
 jfieldID ProgressiveUpdateData::jabort = 0;
-jfieldID ProgressiveUpdateData::jheight = 0;
 jfieldID ProgressiveUpdateData::jscale = 0;
-jfieldID ProgressiveUpdateData::jwidth = 0;
 jfieldID ProgressiveUpdateData::jx = 0;
 jfieldID ProgressiveUpdateData::jy = 0;
 void ProgressiveUpdateData::InitStubs(JNIEnv *jEnv) {
@@ -2043,9 +2041,7 @@ void ProgressiveUpdateData::InitStubs(JNIEnv *jEnv) {
     jProgressiveUpdateData = getMethod("<init>", "()V");
     jsetViewport = getMethod("setViewport", "(Lorg/mozilla/gecko/gfx/ImmutableViewportMetrics;)V");
     jabort = getField("abort", "Z");
-    jheight = getField("height", "F");
     jscale = getField("scale", "F");
-    jwidth = getField("width", "F");
     jx = getField("x", "F");
     jy = getField("y", "F");
 }
@@ -2090,16 +2086,6 @@ void ProgressiveUpdateData::setabort(bool a0) {
     env->SetBooleanField(wrapped_obj, jabort, a0);
 }
 
-jfloat ProgressiveUpdateData::getheight() {
-    JNIEnv *env = GetJNIForThread();
-    return env->GetFloatField(wrapped_obj, jheight);
-}
-
-void ProgressiveUpdateData::setheight(jfloat a0) {
-    JNIEnv *env = GetJNIForThread();
-    env->SetFloatField(wrapped_obj, jheight, a0);
-}
-
 jfloat ProgressiveUpdateData::getscale() {
     JNIEnv *env = GetJNIForThread();
     return env->GetFloatField(wrapped_obj, jscale);
@@ -2108,16 +2094,6 @@ jfloat ProgressiveUpdateData::getscale() {
 void ProgressiveUpdateData::setscale(jfloat a0) {
     JNIEnv *env = GetJNIForThread();
     env->SetFloatField(wrapped_obj, jscale, a0);
-}
-
-jfloat ProgressiveUpdateData::getwidth() {
-    JNIEnv *env = GetJNIForThread();
-    return env->GetFloatField(wrapped_obj, jwidth);
-}
-
-void ProgressiveUpdateData::setwidth(jfloat a0) {
-    JNIEnv *env = GetJNIForThread();
-    env->SetFloatField(wrapped_obj, jwidth, a0);
 }
 
 jfloat ProgressiveUpdateData::getx() {
