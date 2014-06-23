@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 
 #include "jsalloc.h"
+#include "jsapi.h"
 
 #include "gc/Barrier.h"
 
@@ -21,9 +22,7 @@ namespace JS {
 class Symbol : public js::gc::BarrieredCell<Symbol>
 {
   private:
-    // This is only a boolean for now, but a later patch in the stack changes
-    // it to an enum.
-    uint32_t inSymbolRegistry_;
+    SymbolCode code_;
     JSAtom *description_;
 
     // The minimum allocation size is sizeof(JSString): 16 bytes on 32-bit
@@ -31,21 +30,23 @@ class Symbol : public js::gc::BarrieredCell<Symbol>
     // the minimum size on both.
     uint64_t unused2_;
 
-    Symbol(bool inRegistry, JSAtom *desc)
-        : inSymbolRegistry_(inRegistry), description_(desc) {}
+    Symbol(SymbolCode code, JSAtom *desc)
+        : code_(code), description_(desc) {}
 
     Symbol(const Symbol &) MOZ_DELETE;
     void operator=(const Symbol &) MOZ_DELETE;
 
     static Symbol *
-    newInternal(js::ExclusiveContext *cx, bool inRegistry, JSAtom *description);
+    newInternal(js::ExclusiveContext *cx, SymbolCode code, JSAtom *description);
 
   public:
-    static Symbol *new_(js::ExclusiveContext *cx, bool inRegistry, JSString *description);
+    static Symbol *new_(js::ExclusiveContext *cx, SymbolCode code, JSString *description);
     static Symbol *for_(js::ExclusiveContext *cx, js::HandleString description);
 
     JSAtom *description() const { return description_; }
-    bool isInSymbolRegistry() const { return inSymbolRegistry_; }
+    SymbolCode code() const { return code_; }
+
+    bool isWellKnownSymbol() const { return uint32_t(code_) < WellKnownSymbolLimit; }
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SYMBOL; }
     inline void markChildren(JSTracer *trc);

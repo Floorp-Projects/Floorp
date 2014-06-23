@@ -12,6 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TypedEnum.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -4386,6 +4387,33 @@ GetSymbolFor(JSContext *cx, HandleString key);
  */
 JS_PUBLIC_API(JSString *)
 GetSymbolDescription(HandleSymbol symbol);
+
+/* Well-known symbols. */
+MOZ_BEGIN_ENUM_CLASS(SymbolCode, uint32_t)
+    iterator,                       // well-known Symbol.iterator
+    InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
+    UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
+MOZ_END_ENUM_CLASS(SymbolCode)
+
+/* For use in loops that iterate over the well-known symbols. */
+const size_t WellKnownSymbolLimit = 1;
+
+/*
+ * Return the SymbolCode telling what sort of symbol `symbol` is.
+ *
+ * A symbol's SymbolCode never changes once it is created.
+ */
+JS_PUBLIC_API(SymbolCode)
+GetSymbolCode(Handle<Symbol*> symbol);
+
+/*
+ * Get one of the well-known symbols defined by ES6. A single set of well-known
+ * symbols is shared by all compartments in a JSRuntime.
+ *
+ * `which` must be in the range [0, WellKnownSymbolLimit).
+ */
+JS_PUBLIC_API(Symbol *)
+GetWellKnownSymbol(JSContext *cx, SymbolCode which);
 
 } /* namespace JS */
 

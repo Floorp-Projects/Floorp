@@ -62,8 +62,21 @@ SymbolObject::initClass(JSContext *cx, HandleObject obj)
 
     RootedFunction ctor(cx, global->createConstructor(cx, construct,
                                                       ClassName(JSProto_Symbol, cx), 1));
-    if (!ctor ||
-        !LinkConstructorAndPrototype(cx, ctor, proto) ||
+    if (!ctor)
+        return nullptr;
+
+    // Define the well-known symbol properties, such as Symbol.iterator.
+    ImmutablePropertyNamePtr *names = &cx->names().iterator;
+    RootedValue value(cx);
+    unsigned attrs = JSPROP_READONLY | JSPROP_PERMANENT;
+    WellKnownSymbols *wks = cx->runtime()->wellKnownSymbols;
+    for (size_t i = 0; i < JS::WellKnownSymbolLimit; i++) {
+        value.setSymbol(wks->get(i));
+        if (!DefineNativeProperty(cx, ctor, names[i], value, nullptr, nullptr, attrs))
+            return nullptr;
+    }
+
+    if (!LinkConstructorAndPrototype(cx, ctor, proto) ||
         !DefinePropertiesAndFunctions(cx, proto, properties, methods) ||
         !DefinePropertiesAndFunctions(cx, ctor, nullptr, staticMethods) ||
         !GlobalObject::initBuiltinConstructor(cx, global, JSProto_Symbol, ctor, proto))
@@ -96,7 +109,7 @@ SymbolObject::construct(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // step 4
-    RootedSymbol symbol(cx, JS::Symbol::new_(cx, false, desc));
+    RootedSymbol symbol(cx, JS::Symbol::new_(cx, JS::SymbolCode::UniqueSymbol, desc));
     if (!symbol)
         return false;
     args.rval().setSymbol(symbol);

@@ -771,6 +771,7 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc, bool useSavedRoots)
         if (!IS_GC_MARKING_TRACER(trc) || rt->atomsCompartment()->zone()->isCollecting()) {
             MarkPermanentAtoms(trc);
             MarkAtoms(trc);
+            MarkWellKnownSymbols(trc);
 #ifdef JS_ION
             jit::JitRuntime::Mark(trc);
 #endif
