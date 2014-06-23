@@ -28,8 +28,6 @@ class OrientedImage : public ImageWrapper
 public:
   NS_DECL_ISUPPORTS
 
-  virtual ~OrientedImage() { }
-
   virtual nsIntRect FrameRect(uint32_t aWhichFrame) MOZ_OVERRIDE;
 
   NS_IMETHOD GetWidth(int32_t* aWidth) MOZ_OVERRIDE;
@@ -55,6 +53,8 @@ protected:
     : ImageWrapper(aImage)
     , mOrientation(aOrientation)
   { }
+
+  virtual ~OrientedImage() { }
 
   gfxMatrix OrientationMatrix(const nsIntSize& aViewportSize);
 
