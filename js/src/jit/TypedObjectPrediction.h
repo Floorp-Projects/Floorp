@@ -136,7 +136,7 @@ class TypedObjectPrediction {
     bool hasFieldNamedPrefix(const StructTypeDescr &descr,
                              size_t fieldCount,
                              jsid id,
-                             int32_t *offset,
+                             size_t *fieldOffset,
                              TypedObjectPrediction *out,
                              size_t *index) const;
 
@@ -222,7 +222,7 @@ class TypedObjectPrediction {
     // the offset (in bytes), type, and index of the field
     // respectively.  Otherwise returns false.
     bool hasFieldNamed(jsid id,
-                       int32_t *fieldOffset,
+                       size_t *fieldOffset,
                        TypedObjectPrediction *fieldType,
                        size_t *fieldIndex) const;
 };
