@@ -963,7 +963,7 @@ BacktrackingAllocator::resolveControlFlow()
                 LBlock *predecessor = mSuccessor->getPredecessor(k)->lir();
                 JS_ASSERT(predecessor->mir()->numSuccessors() == 1);
 
-                LAllocation *input = phi->getOperand(predecessor->mir()->positionInPhiSuccessor());
+                LAllocation *input = phi->getOperand(k);
                 LiveInterval *from = vregs[input].intervalFor(outputOf(predecessor->lastId()));
                 JS_ASSERT(from);
 
