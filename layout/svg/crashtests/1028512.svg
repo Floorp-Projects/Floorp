@@ -1,0 +1,15 @@
+<!-- {lower,upper}-{roman,alpha} in svg -->
+<svg xmlns="http://www.w3.org/2000/svg">
+<script>
+<![CDATA[
+
+function boom()
+{
+    document.documentElement.style.transition = "2s";
+    document.documentElement.style.listStyleType = "lower-roman";
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script></svg>

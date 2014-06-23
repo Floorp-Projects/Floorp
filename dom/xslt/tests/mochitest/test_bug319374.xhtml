@@ -39,8 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var result = xp.evaluate("*",
                                document.getElementById('content'),
                                null,
-                               SpecialPowers.Ci.nsIDOMXPathResult.
-                                 UNORDERED_NODE_ITERATOR_TYPE,
+                               XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                                null);
       var res = null;
       while (res = result.iterateNext()) {
@@ -69,8 +68,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var xp2 = SpecialPowers.wrap(xp).evaluate(".",
                             anonAttr1,
                             null,
-                            SpecialPowers.Ci.nsIDOMXPathResult.
-                              UNORDERED_NODE_ITERATOR_TYPE,
+                            XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in a different anonymous tree.
       anonAttr2.value = "foo";
@@ -87,8 +85,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=319374
       var xp3 = xp.evaluate(".",
                             anonAttr1,
                             null,
-                            SpecialPowers.Ci.nsIDOMXPathResult.
-                              UNORDERED_NODE_ITERATOR_TYPE,
+                            XPathResult.UNORDERED_NODE_ITERATOR_TYPE,
                             null);
       // Attribute changing in the same anonymous tree.
       anonAttr1.ownerElement.setAttribute("foo", "bar");

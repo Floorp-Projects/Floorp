@@ -19,6 +19,7 @@
 namespace mozilla {
 
 class DtlsIdentity {
+ private:
   ~DtlsIdentity();
 
  public:

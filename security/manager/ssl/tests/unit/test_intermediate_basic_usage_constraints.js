@@ -38,20 +38,14 @@ function test_cert_for_usages(certChainNicks, expected_usages_string) {
   do_check_eq(expected_usages_string, usages.value);
 }
 
-function run_test_in_mode(useMozillaPKIX) {
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
-
+function run_test() {
   // mozilla::pkix doesn't support the obsolete Netscape object signing
   // extension, but NSS does.
-  let ee_usage1 = useMozillaPKIX
-                ? 'Client,Server,Sign,Encrypt,Object Signer'
-                : 'Client,Server,Sign,Encrypt'
+  let ee_usage1 = 'Client,Server,Sign,Encrypt,Object Signer';
 
   // mozilla::pkix doesn't validate CA certificates for non-CA uses, but
   // NSS does.
-  let ca_usage1 = useMozillaPKIX
-                ? "SSL CA"
-                : 'Client,Server,Sign,Encrypt,SSL CA,Status Responder';
+  let ca_usage1 = "SSL CA";
 
   // Load the ca into mem
   let ca_name = "ca";
@@ -87,8 +81,7 @@ function run_test_in_mode(useMozillaPKIX) {
   // XXX: It seems the NSS code does not consider the path length of the
   // certificate we're validating, but mozilla::pkix does. mozilla::pkix's
   // behavior is correct.
-  test_cert_for_usages(["int-limited-depth-invalid", "int-limited-depth"],
-                       useMozillaPKIX ? "" : ca_usage1);
+  test_cert_for_usages(["int-limited-depth-invalid", "int-limited-depth"], "");
   test_cert_for_usages(["ee-int-limited-depth-invalid",
                         "int-limited-depth-invalid",
                         "int-limited-depth"],
@@ -103,10 +96,7 @@ function run_test_in_mode(useMozillaPKIX) {
   // but the KU extension is missing keyCertSign. Note that mozilla::pkix
   // doesn't validate certificates with basicConstraints.Ca==true for non-CA
   // uses, but NSS does.
-  test_cert_for_usages(["int-bad-ku-no-eku"],
-                       useMozillaPKIX
-                          ? ""
-                          : 'Client,Server,Sign,Encrypt,Status Responder');
+  test_cert_for_usages(["int-bad-ku-no-eku"], "");
   test_cert_for_usages(["ee-int-bad-ku-no-eku", "int-bad-ku-no-eku"], "");
 
   // int-no-ku-no-eku has basicConstraints.cA==true and no KU extension.
@@ -131,9 +121,4 @@ function run_test_in_mode(useMozillaPKIX) {
   test_cert_for_usages(["int-no-ku-server-eku"], "SSL CA");
   test_cert_for_usages(["ee-int-no-ku-server-eku", "int-no-ku-server-eku"],
                        "Client,Server");
-}
-
-function run_test() {
-  run_test_in_mode(true);
-  run_test_in_mode(false);
 }

@@ -114,7 +114,6 @@
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMNSXPathExpression.h"
 #include "nsIDOMXPathNSResolver.h"
-#include "nsIDOMXPathResult.h"
 
 // Storage includes
 #include "nsIDOMStorage.h"
@@ -349,8 +348,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(XPathExpression, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XPathNSResolver, nsDOMGenericSH,
-                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XPathResult, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // WhatWG Storage
@@ -956,10 +953,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(XPathNSResolver, nsIDOMXPathNSResolver)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathNSResolver)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(XPathResult, nsIDOMXPathResult)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXPathResult)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(Storage, nsIDOMStorage)

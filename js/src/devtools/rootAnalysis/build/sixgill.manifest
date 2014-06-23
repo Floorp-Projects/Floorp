@@ -3,8 +3,8 @@
 "sixgill_version": "0.9.1-177"
 },
 {
-"size": 2562168,
-"digest": "1421953d217bf084bf5da62b322f52e4735f4dbea5c663733ce558c908e268a69500b824a0973157f94915a1ec83f0473df24135de6b43dea2e12e4bdc0b091c",
+"size": 2316808,
+"digest": "e58eece57ef7688db4c999b0069b2e4607b1514f681d636969e40a19633173d3b2636fd9a624b58166c789e99c6ba67bfafbdae1d335ac4df018c9f52503f0e4",
 "algorithm": "sha512",
 "filename": "sixgill.tar.xz"
 },

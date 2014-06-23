@@ -19,7 +19,9 @@
 
 #include "mozilla/scache/StartupCache.h"
 
-class nsCSSStyleSheet;
+namespace mozilla {
+class CSSStyleSheet;
+} // namespace mozilla
 
 /**
  * The XUL prototype cache can be used to store and retrieve shared data for
@@ -72,7 +74,7 @@ public:
      * Get a style sheet by URI. If the style sheet is not in the cache,
      * returns nullptr.
      */
-    nsCSSStyleSheet* GetStyleSheet(nsIURI* aURI) {
+    mozilla::CSSStyleSheet* GetStyleSheet(nsIURI* aURI) {
         return mStyleSheetTable.GetWeak(aURI);
     }
 
@@ -80,7 +82,7 @@ public:
      * Store a style sheet in the cache. The key, style sheet's URI is obtained
      * from the style sheet itself.
      */
-    nsresult PutStyleSheet(nsCSSStyleSheet* aStyleSheet);
+    nsresult PutStyleSheet(mozilla::CSSStyleSheet* aStyleSheet);
 
     /**
      * Write the XUL prototype document to a cache file. The proto must be
@@ -121,7 +123,7 @@ protected:
     void FlushSkinFiles();
 
     nsRefPtrHashtable<nsURIHashKey,nsXULPrototypeDocument>   mPrototypeTable; // owns the prototypes
-    nsRefPtrHashtable<nsURIHashKey,nsCSSStyleSheet>          mStyleSheetTable;
+    nsRefPtrHashtable<nsURIHashKey,mozilla::CSSStyleSheet>   mStyleSheetTable;
     nsJSThingHashtable<nsURIHashKey, JSScript*>              mScriptTable;
     nsRefPtrHashtable<nsURIHashKey,nsXBLDocumentInfo>        mXBLDocTable;
 

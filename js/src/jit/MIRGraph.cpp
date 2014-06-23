@@ -280,10 +280,8 @@ MBasicBlock::MBasicBlock(MIRGraph &graph, CompileInfo &info, const BytecodeSite 
     info_(info),
     predecessors_(graph.alloc()),
     stackPosition_(info_.firstStackSlot()),
-    lastIns_(nullptr),
     pc_(site.pc()),
     lir_(nullptr),
-    start_(nullptr),
     entryResumePoint_(nullptr),
     successorWithPhis_(nullptr),
     positionInPhiSuccessor_(0),
@@ -665,9 +663,7 @@ MBasicBlock::peek(int32_t depth)
 void
 MBasicBlock::discardLastIns()
 {
-    JS_ASSERT(lastIns_);
-    discard(lastIns_);
-    lastIns_ = nullptr;
+    discard(lastIns());
 }
 
 void
@@ -752,12 +748,19 @@ MBasicBlock::discardDefAt(MDefinitionIterator &old)
 void
 MBasicBlock::discardAllInstructions()
 {
-    for (MInstructionIterator iter = begin(); iter != end(); ) {
+    MInstructionIterator iter = begin();
+    discardAllInstructionsStartingAt(iter);
+
+}
+
+void
+MBasicBlock::discardAllInstructionsStartingAt(MInstructionIterator &iter)
+{
+    while (iter != end()) {
         for (size_t i = 0, e = iter->numOperands(); i < e; i++)
             iter->discardOperand(i);
         iter = instructions_.removeAt(iter);
     }
-    lastIns_ = nullptr;
 }
 
 void
@@ -816,7 +819,7 @@ MBasicBlock::insertAfter(MInstruction *at, MInstruction *ins)
 void
 MBasicBlock::add(MInstruction *ins)
 {
-    JS_ASSERT(!lastIns_);
+    JS_ASSERT(!hasLastIns());
     ins->setBlock(this);
     graph().allocDefinitionId(ins);
     instructions_.pushBack(ins);
@@ -826,10 +829,9 @@ MBasicBlock::add(MInstruction *ins)
 void
 MBasicBlock::end(MControlInstruction *ins)
 {
-    JS_ASSERT(!lastIns_); // Existing control instructions should be removed first.
+    JS_ASSERT(!hasLastIns()); // Existing control instructions should be removed first.
     JS_ASSERT(ins);
     add(ins);
-    lastIns_ = ins;
 }
 
 void
@@ -869,7 +871,7 @@ MBasicBlock::addPredecessorPopN(TempAllocator &alloc, MBasicBlock *pred, uint32_
     JS_ASSERT(predecessors_.length() > 0);
 
     // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(pred->lastIns_);
+    JS_ASSERT(pred->hasLastIns());
     JS_ASSERT(pred->stackPosition_ == stackPosition_ + popped);
 
     for (uint32_t i = 0; i < stackPosition_; i++) {
@@ -918,7 +920,7 @@ bool
 MBasicBlock::addPredecessorWithoutPhis(MBasicBlock *pred)
 {
     // Predecessors must be finished.
-    JS_ASSERT(pred && pred->lastIns_);
+    JS_ASSERT(pred && pred->hasLastIns());
     return predecessors_.append(pred);
 }
 
@@ -951,8 +953,8 @@ AbortReason
 MBasicBlock::setBackedge(MBasicBlock *pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(lastIns_);
-    JS_ASSERT(pred->lastIns_);
+    JS_ASSERT(hasLastIns());
+    JS_ASSERT(pred->hasLastIns());
     JS_ASSERT(pred->stackDepth() == entryResumePoint()->stackDepth());
 
     // We must be a pending loop header
@@ -983,8 +985,8 @@ bool
 MBasicBlock::setBackedgeAsmJS(MBasicBlock *pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(lastIns_);
-    JS_ASSERT(pred->lastIns_);
+    JS_ASSERT(hasLastIns());
+    JS_ASSERT(pred->hasLastIns());
     JS_ASSERT(stackDepth() == pred->stackDepth());
 
     // We must be a pending loop header

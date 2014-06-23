@@ -840,8 +840,8 @@ json_parse(JSContext *cx, unsigned argc, Value *vp)
 
     JS::Anchor<JSString *> anchor(flat);
 
-    AutoStableStringChars flatChars(cx, flat);
-    if (!flatChars.init())
+    AutoStableStringChars flatChars(cx);
+    if (!flatChars.init(cx, flat))
         return false;
 
     RootedValue reviver(cx, args.get(1));

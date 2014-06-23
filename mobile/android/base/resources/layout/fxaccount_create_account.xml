@@ -6,8 +6,8 @@
 -->
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:fillViewport="true" >
 
     <LinearLayout
@@ -19,6 +19,8 @@
         <TextView
             style="@style/FxAccountHeaderItem"
             android:text="@string/fxaccount_create_account_header" />
+
+        <include layout="@layout/fxaccount_custom_server_view" />
 
         <include layout="@layout/fxaccount_email_password_view" />
 

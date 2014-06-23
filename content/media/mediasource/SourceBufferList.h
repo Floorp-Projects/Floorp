@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsISupports.h"

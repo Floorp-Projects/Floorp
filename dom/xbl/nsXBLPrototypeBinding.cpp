@@ -1686,14 +1686,14 @@ nsXBLPrototypeBinding::EnsureResources()
 }
 
 void
-nsXBLPrototypeBinding::AppendStyleSheet(nsCSSStyleSheet* aSheet)
+nsXBLPrototypeBinding::AppendStyleSheet(CSSStyleSheet* aSheet)
 {
   EnsureResources();
   mResources->AppendStyleSheet(aSheet);
 }
 
 void
-nsXBLPrototypeBinding::RemoveStyleSheet(nsCSSStyleSheet* aSheet)
+nsXBLPrototypeBinding::RemoveStyleSheet(CSSStyleSheet* aSheet)
 {
   if (!mResources) {
     MOZ_ASSERT(false, "Trying to remove a sheet that does not exist.");
@@ -1703,13 +1703,13 @@ nsXBLPrototypeBinding::RemoveStyleSheet(nsCSSStyleSheet* aSheet)
   mResources->RemoveStyleSheet(aSheet);
 } 
 void
-nsXBLPrototypeBinding::InsertStyleSheetAt(size_t aIndex, nsCSSStyleSheet* aSheet)
+nsXBLPrototypeBinding::InsertStyleSheetAt(size_t aIndex, CSSStyleSheet* aSheet)
 {
   EnsureResources();
   mResources->InsertStyleSheetAt(aIndex, aSheet);
 }
 
-nsCSSStyleSheet*
+CSSStyleSheet*
 nsXBLPrototypeBinding::StyleSheetAt(size_t aIndex) const
 {
   MOZ_ASSERT(mResources);
@@ -1730,7 +1730,7 @@ nsXBLPrototypeBinding::HasStyleSheets() const
 
 void
 nsXBLPrototypeBinding::AppendStyleSheetsTo(
-                                      nsTArray<nsCSSStyleSheet*>& aResult) const
+                                      nsTArray<CSSStyleSheet*>& aResult) const
 {
   if (mResources) {
     mResources->AppendStyleSheetsTo(aResult);

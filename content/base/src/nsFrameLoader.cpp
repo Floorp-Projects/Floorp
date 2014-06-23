@@ -2069,14 +2069,23 @@ nsFrameLoader::TryRemoteBrowser()
     return false;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> parentAsItem(parentWin->GetDocShell());
-  if (!parentAsItem) {
+  nsCOMPtr<nsIDocShell> parentDocShell = parentWin->GetDocShell();
+  if (!parentDocShell) {
     return false;
+  }
+
+  TabParent* openingTab = static_cast<TabParent*>(parentDocShell->GetOpener());
+  ContentParent* openerContentParent = nullptr;
+
+  if (openingTab &&
+      openingTab->Manager() &&
+      openingTab->Manager()->IsContentParent()) {
+    openerContentParent = openingTab->Manager()->AsContentParent();
   }
 
   // <iframe mozbrowser> gets to skip these checks.
   if (!OwnerIsBrowserOrAppFrame()) {
-    if (parentAsItem->ItemType() != nsIDocShellTreeItem::typeChrome) {
+    if (parentDocShell->ItemType() != nsIDocShellTreeItem::typeChrome) {
       return false;
     }
 
@@ -2096,7 +2105,7 @@ nsFrameLoader::TryRemoteBrowser()
 
   uint32_t chromeFlags = 0;
   nsCOMPtr<nsIDocShellTreeOwner> parentOwner;
-  if (NS_FAILED(parentAsItem->GetTreeOwner(getter_AddRefs(parentOwner))) ||
+  if (NS_FAILED(parentDocShell->GetTreeOwner(getter_AddRefs(parentOwner))) ||
       !parentOwner) {
     return false;
   }
@@ -2133,11 +2142,11 @@ nsFrameLoader::TryRemoteBrowser()
   NS_ENSURE_TRUE(rv, false);
 
   nsCOMPtr<Element> ownerElement = mOwnerContent;
-  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement);
+  mRemoteBrowser = ContentParent::CreateBrowserOrApp(context, ownerElement, openerContentParent);
   if (mRemoteBrowser) {
     mChildID = mRemoteBrowser->Manager()->ChildID();
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
-    parentAsItem->GetRootTreeItem(getter_AddRefs(rootItem));
+    parentDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
     nsCOMPtr<nsIDOMWindow> rootWin = rootItem->GetWindow();
     nsCOMPtr<nsIDOMChromeWindow> rootChromeWin = do_QueryInterface(rootWin);
 
@@ -2155,6 +2164,7 @@ nsFrameLoader::TryRemoteBrowser()
                                    eCaseMatters)) {
       unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
     }
+    parentDocShell->SetOpenedRemote(mRemoteBrowser);
   }
   return true;
 }

@@ -9,6 +9,10 @@ UNIFIED_SOURCES += [
     'nsWindowWatcher.cpp',
 ]
 
+EXPORTS += [
+    'nsWindowWatcher.h',
+]
+
 if CONFIG['MOZ_XUL']:
     UNIFIED_SOURCES += [
         'nsDialogParamBlock.cpp',

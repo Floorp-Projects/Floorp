@@ -9,6 +9,7 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'amIAddonManager.idl',
+    'amIAddonPathService.idl',
     'amIWebInstaller.idl',
     'amIWebInstallListener.idl',
 ]
@@ -45,3 +46,15 @@ if CONFIG['MOZ_EM_DEBUG']:
     DEFINES['MOZ_EM_DEBUG'] = 1
 
 JAR_MANIFESTS += ['jar.mn']
+
+EXPORTS.mozilla += [
+    'AddonPathService.h',
+]
+
+UNIFIED_SOURCES += [
+    'AddonPathService.cpp'
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xulapp_s'

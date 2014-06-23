@@ -1868,11 +1868,6 @@ CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
                     "Require a valid builtin style constant");
   NS_ABORT_IF_FALSE(!gBuiltinStyleTable[aStyle].IsDependentStyle(),
                     "Cannot get dependent builtin style");
-  NS_ASSERTION(aStyle != NS_STYLE_LIST_STYLE_LOWER_ROMAN &&
-               aStyle != NS_STYLE_LIST_STYLE_UPPER_ROMAN &&
-               aStyle != NS_STYLE_LIST_STYLE_LOWER_ALPHA &&
-               aStyle != NS_STYLE_LIST_STYLE_UPPER_ALPHA,
-               "lower/upper-roman/alpha should be custom counter style");
   return &gBuiltinStyleTable[aStyle];
 }
 

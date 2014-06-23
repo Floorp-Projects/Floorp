@@ -1091,10 +1091,11 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::ScopeCoordinateNameCache scopeCoordinateNameCache;
     js::NewObjectCache  newObjectCache;
     js::NativeIterCache nativeIterCache;
-    js::SourceDataCache sourceDataCache;
+    js::UncompressedSourceCache uncompressedSourceCache;
     js::EvalCache       evalCache;
     js::LazyScriptCache lazyScriptCache;
 
+    js::CompressedSourceSet compressedSourceSet;
     js::DateTimeInfo    dateTimeInfo;
 
     // Pool of maps used during parse/emit. This may be modified by threads

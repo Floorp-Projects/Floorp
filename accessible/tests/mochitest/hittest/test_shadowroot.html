@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ShadowRoot hit tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../layout.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      var componentAcc = getAccessible('component1');
+      testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
+                       componentAcc.firstChild);
+
+      componentAcc = getAccessible('component2');
+      testChildAtPoint(componentAcc, 1, 1, componentAcc.firstChild,
+                       componentAcc.firstChild);
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+
+  <a target="_blank"
+     title="Test getChildAtPoint works for shadow DOM content"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=1027315">
+    Mozilla Bug 1027315
+  </a><br/>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div role="group" class="components" id="component1" style="display: inline-block;">
+  <!--
+    <div role="button" id="component-child"
+         style="width: 100px; height: 100px; background-color: pink;">
+    </div>
+  -->
+  </div>
+  <div role="group" class="components"  id="component2" style="display: inline-block;">
+  <!--
+    <button>Hello world</button>
+  -->
+  </div>
+  <script>
+    // This routine adds the comment children of each 'component' to its
+    // shadow root.
+    var components = document.querySelectorAll('.components');
+    for (var i = 0; i < components.length; i++) {
+      var component = components[i];
+      var shadow = component.createShadowRoot();
+      for (var child = component.firstChild; child; child = child.nextSibling) {
+        if (child.nodeType === 8)
+          shadow.innerHTML = child.data;
+      }
+    }
+  </script>
+
+</body>
+</html>

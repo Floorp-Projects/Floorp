@@ -18,6 +18,9 @@ class nsMediaList;
 class nsString;
 
 namespace mozilla {
+
+class CSSStyleSheet;
+
 namespace css {
 
 class ImportRule MOZ_FINAL : public Rule,
@@ -47,7 +50,7 @@ public:
   virtual int32_t GetType() const;
   virtual already_AddRefed<Rule> Clone() const;
 
-  void SetSheet(nsCSSStyleSheet*);
+  void SetSheet(CSSStyleSheet*);
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -60,7 +63,7 @@ public:
 private:
   nsString  mURLSpec;
   nsRefPtr<nsMediaList> mMedia;
-  nsRefPtr<nsCSSStyleSheet> mChildSheet;
+  nsRefPtr<CSSStyleSheet> mChildSheet;
 };
 
 } // namespace css

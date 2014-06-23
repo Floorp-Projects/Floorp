@@ -8,6 +8,7 @@
 #define vm_Debugger_h
 
 #include "mozilla/LinkedList.h"
+#include "mozilla/Range.h"
 
 #include "jsclist.h"
 #include "jscntxt.h"
@@ -762,7 +763,7 @@ Debugger::onNewGlobalObject(JSContext *cx, Handle<GlobalObject *> global)
 
 extern bool
 EvaluateInEnv(JSContext *cx, Handle<Env*> env, HandleValue thisv, AbstractFramePtr frame,
-              ConstTwoByteChars chars, unsigned length, const char *filename, unsigned lineno,
+              mozilla::Range<const jschar> chars, const char *filename, unsigned lineno,
               MutableHandleValue rval);
 
 }

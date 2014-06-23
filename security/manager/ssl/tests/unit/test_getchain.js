@@ -70,8 +70,7 @@ function check_getchain(ee_cert, ssl_ca, email_ca){
   check_matching_issuer_and_getchain(ee_cert.issuer.serialNumber, ee_cert);
 }
 
-function run_test_in_mode(useMozillaPKIX) {
-  Services.prefs.setBoolPref("security.use_mozillapkix_verification", useMozillaPKIX);
+function run_test() {
   clearOCSPCache();
   clearSessionCache();
 
@@ -87,9 +86,4 @@ function run_test_in_mode(useMozillaPKIX) {
   check_getchain(ee_cert, ca[1], ca[2]);
   // Swap ca certs to deal alternate trust settings.
   check_getchain(ee_cert, ca[2], ca[1]);
-}
-
-function run_test() {
-  run_test_in_mode(true);
-  run_test_in_mode(false);
 }

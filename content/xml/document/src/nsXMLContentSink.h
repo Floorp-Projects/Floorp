@@ -83,7 +83,8 @@ public:
   NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument) MOZ_OVERRIDE;
 
   // nsICSSLoaderObserver
-  NS_IMETHOD StyleSheetLoaded(nsCSSStyleSheet* aSheet, bool aWasAlternate,
+  NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
+                              bool aWasAlternate,
                               nsresult aStatus) MOZ_OVERRIDE;
   static bool ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,

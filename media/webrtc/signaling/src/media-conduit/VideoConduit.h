@@ -221,31 +221,8 @@ public:
     return 0;
   }
 
-  WebrtcVideoConduit():
-                      mOtherDirection(nullptr),
-                      mShutDown(false),
-                      mVideoEngine(nullptr),
-                      mTransport(nullptr),
-                      mRenderer(nullptr),
-                      mPtrExtCapture(nullptr),
-                      mEngineTransmitting(false),
-                      mEngineReceiving(false),
-                      mChannel(-1),
-                      mCapId(-1),
-                      mCurSendCodecConfig(nullptr),
-                      mSendingWidth(0),
-                      mSendingHeight(0),
-                      mReceivingWidth(640),
-                      mReceivingHeight(480),
-                      mVideoLatencyTestEnable(false),
-                      mVideoLatencyAvg(0),
-                      mMinBitrate(200),
-                      mStartBitrate(300),
-                      mMaxBitrate(2000)
-  {
-  }
-
-  virtual ~WebrtcVideoConduit() ;
+  WebrtcVideoConduit();
+  virtual ~WebrtcVideoConduit();
 
   MediaConduitErrorCode Init(WebrtcVideoConduit *other);
 

@@ -7036,15 +7036,32 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       list->SetListStyleType(typeIdent, mPresContext);
       break;
     }
-    case eCSSUnit_Enumerated:
+    case eCSSUnit_Enumerated: {
       // For compatibility with html attribute map.
       // This branch should never be called for value from CSS.
-      list->SetListStyleType(
-          NS_ConvertASCIItoUTF16(
-              nsCSSProps::ValueToKeyword(
-                  typeValue->GetIntValue(), nsCSSProps::kListStyleKTable)),
-          mPresContext);
+      int32_t intValue = typeValue->GetIntValue();
+      nsAutoString name;
+      switch (intValue) {
+        case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+          name.AssignLiteral(MOZ_UTF16("lower-roman"));
+          break;
+        case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
+          name.AssignLiteral(MOZ_UTF16("upper-roman"));
+          break;
+        case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
+          name.AssignLiteral(MOZ_UTF16("lower-alpha"));
+          break;
+        case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+          name.AssignLiteral(MOZ_UTF16("upper-alpha"));
+          break;
+        default:
+          CopyASCIItoUTF16(nsCSSProps::ValueToKeyword(
+                  intValue, nsCSSProps::kListStyleKTable), name);
+          break;
+      }
+      list->SetListStyleType(name, mPresContext);
       break;
+    }
     case eCSSUnit_Null:
       break;
     default:

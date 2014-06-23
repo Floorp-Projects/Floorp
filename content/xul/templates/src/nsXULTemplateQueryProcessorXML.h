@@ -17,11 +17,11 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathEvaluator.h"
-#include "nsIDOMXPathResult.h"
 #include "nsXMLBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIXMLHttpRequest.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/XPathResult.h"
 
 class nsXULTemplateQueryProcessorXML;
 
@@ -91,7 +91,7 @@ private:
     nsRefPtr<nsXMLBindingSet> mBindingSet;
 
     // set of results contained in this enumerator
-    nsCOMPtr<nsIDOMXPathResult> mResults;
+    nsRefPtr<mozilla::dom::XPathResult> mResults;
 
     // current position within the list of results
     uint32_t mPosition;
@@ -105,7 +105,7 @@ public:
     NS_DECL_NSISIMPLEENUMERATOR
 
     nsXULTemplateResultSetXML(nsXMLQuery* aQuery,
-                              nsIDOMXPathResult* aResults,
+                              mozilla::dom::XPathResult* aResults,
                               nsXMLBindingSet* aBindingSet)
         : mQuery(aQuery),
           mBindingSet(aBindingSet),

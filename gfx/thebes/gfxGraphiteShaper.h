@@ -47,6 +47,7 @@ protected:
     };
 
     CallbackData mCallbackData;
+    bool mFallbackToSmallCaps; // special fallback for the petite-caps case
 
     // Convert HTML 'lang' (BCP47) to Graphite language code
     static uint32_t GetGraphiteTagForLang(const nsCString& aLang);

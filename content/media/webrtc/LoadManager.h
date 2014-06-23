@@ -54,8 +54,8 @@ private:
 
     nsRefPtr<LoadMonitor> mLoadMonitor;
 
-    // This protexts access to the mObservers list, the current state, pretty much all
-    // the other members (below)
+    // This protects access to the mObservers list, the current state, and
+    // pretty much all the other members (below).
     Mutex mLock;
     nsTArray<webrtc::CPULoadStateObserver*> mObservers;
     webrtc::CPULoadState mCurrentState;

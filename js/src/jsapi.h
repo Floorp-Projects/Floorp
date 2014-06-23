@@ -1699,13 +1699,13 @@ class JS_PUBLIC_API(JSAutoCompartment)
     ~JSAutoCompartment();
 };
 
-class JS_PUBLIC_API(JSAutoNullCompartment)
+class JS_PUBLIC_API(JSAutoNullableCompartment)
 {
     JSContext *cx_;
     JSCompartment *oldCompartment_;
   public:
-    explicit JSAutoNullCompartment(JSContext *cx);
-    ~JSAutoNullCompartment();
+    explicit JSAutoNullableCompartment(JSContext *cx, JSObject *targetOrNull);
+    ~JSAutoNullableCompartment();
 };
 
 /* NB: This API is infallible; a nullptr return value does not indicate error. */
@@ -2568,6 +2568,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       , discardSource_(false)
       , traceGlobal_(nullptr)
       , singletonsAsTemplates_(true)
+      , addonId_(nullptr)
     {
         zone_.spec = JS::FreshZone;
     }
@@ -2626,6 +2627,14 @@ class JS_PUBLIC_API(CompartmentOptions)
         return singletonsAsTemplates_;
     };
 
+    // A null add-on ID means that the compartment is not associated with an
+    // add-on.
+    JSAddonId *addonIdOrNull() const { return addonId_; }
+    CompartmentOptions &setAddonId(JSAddonId *id) {
+        addonId_ = id;
+        return *this;
+    }
+
     CompartmentOptions &setTrace(JSTraceOp op) {
         traceGlobal_ = op;
         return *this;
@@ -2650,6 +2659,8 @@ class JS_PUBLIC_API(CompartmentOptions)
     // templates, by making JSOP_OBJECT return a clone of the JSScript
     // singleton, instead of returning the value which is baked in the JSScript.
     bool singletonsAsTemplates_;
+
+    JSAddonId *addonId_;
 };
 
 JS_PUBLIC_API(CompartmentOptions &)
@@ -4323,6 +4334,22 @@ class JSAutoByteString
     JSAutoByteString(const JSAutoByteString &another);
     JSAutoByteString &operator=(const JSAutoByteString &another);
 };
+
+namespace JS {
+
+extern JS_PUBLIC_API(JSAddonId *)
+NewAddonId(JSContext *cx, JS::HandleString str);
+
+extern JS_PUBLIC_API(const jschar *)
+CharsZOfAddonId(JSAddonId *id);
+
+extern JS_PUBLIC_API(JSString *)
+StringOfAddonId(JSAddonId *id);
+
+extern JS_PUBLIC_API(JSAddonId *)
+AddonIdOfObject(JSObject *obj);
+
+} // namespace JS
 
 /************************************************************************/
 /*

@@ -252,6 +252,30 @@ static void DrawVelGraph(const nsIntRect& aClipRect,
                        transform);
 }
 
+static void PrintUniformityInfo(Layer* aLayer)
+{
+
+  if(Layer::TYPE_CONTAINER != aLayer->GetType()) {
+    return;
+  }
+
+  // Don't want to print a log for smaller layers
+  if (aLayer->GetEffectiveVisibleRegion().GetBounds().width < 300 ||
+      aLayer->GetEffectiveVisibleRegion().GetBounds().height < 300) {
+    return;
+  }
+
+  FrameMetrics frameMetrics = aLayer->AsContainerLayer()->GetFrameMetrics();
+  LayerIntPoint scrollOffset = RoundedToInt(frameMetrics.GetScrollOffsetInLayerPixels());
+  const gfx::Point layerTransform = GetScrollData(aLayer);
+  gfx::Point layerScroll;
+  layerScroll.x = scrollOffset.x - layerTransform.x;
+  layerScroll.y = scrollOffset.y - layerTransform.y;
+
+  printf_stderr("UniformityInfo Layer_Move %llu %p %f, %f\n",
+    TimeStamp::Now(), aLayer, layerScroll.x, layerScroll.y);
+}
+
 // ContainerRender is shared between RefLayer and ContainerLayer
 template<class ContainerT> void
 ContainerRender(ContainerT* aContainer,
@@ -402,6 +426,10 @@ ContainerRender(ContainerT* aContainer,
 
     if (gfxPrefs::LayersScrollGraph()) {
       DrawVelGraph(clipRect, aManager, layerToRender->GetLayer());
+    }
+
+    if (gfxPrefs::UniformityInfo()) {
+      PrintUniformityInfo(layerToRender->GetLayer());
     }
 
     if (gfxPrefs::DrawLayerInfo()) {

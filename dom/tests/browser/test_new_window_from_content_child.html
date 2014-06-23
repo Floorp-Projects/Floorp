@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Test popup window opening behaviour</title>
+</head>
+<body>
+  <p><a id="winOpenDefault" href="#" onclick="return openWindow();">Open a new window via window.open with default features.</a></p>
+  <p><a id="winOpenNonDefault" href="#" onclick="return openWindow('resizable=no, toolbar=no, scrollbars=no, menubar=no, status=no, directories=no, height=100, width=500');">Open a new window via window.open with non-default features.</a></p>
+  <p><a id="targetBlank" href="about:blank" target="_blank">Open a new window via target="_blank".</a></p>
+</body>
+</html>
+
+<script>
+function openWindow(aFeatures="") {
+  window.open("about:blank", "_blank", aFeatures);
+  return false;
+}
+
+window.onbeforeunload = function(aEvent) {
+  return "We should not browse away from this document.";
+}
+
+</script>

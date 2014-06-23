@@ -47,7 +47,8 @@ SERV_FILES = 	\
 		android23.json \
 		gl.json \
 		b2g_start_script.js \
-		$(NULL)	
+		$(topsrcdir)/build/sanitizers/lsan_suppressions.txt \
+		$(NULL)
 
 ifeq ($(MOZ_BUILD_APP),mobile/android)
 SERV_FILES += \

@@ -77,7 +77,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitNewPar(MNewPar *ins);
     bool visitNewCallObjectPar(MNewCallObjectPar *ins);
     bool visitNewDenseArrayPar(MNewDenseArrayPar *ins);
-    bool visitAbortPar(MAbortPar *ins);
     bool visitInitElem(MInitElem *ins);
     bool visitInitElemGetterSetter(MInitElemGetterSetter *ins);
     bool visitMutateProto(MMutateProto *ins);
@@ -100,6 +99,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     bool visitApplyArgs(MApplyArgs *apply);
     bool visitArraySplice(MArraySplice *splice);
     bool visitBail(MBail *bail);
+    bool visitUnreachable(MUnreachable *unreachable);
     bool visitAssertFloat32(MAssertFloat32 *ins);
     bool visitGetDynamicName(MGetDynamicName *ins);
     bool visitFilterArgumentsOrEval(MFilterArgumentsOrEval *ins);

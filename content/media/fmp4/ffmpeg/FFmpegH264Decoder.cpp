@@ -33,6 +33,7 @@ FFmpegH264Decoder::FFmpegH264Decoder(
   , mImageContainer(aImageContainer)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
+  mExtraData.append(aConfig.extra_data.begin(), aConfig.extra_data.length());
 }
 
 nsresult
