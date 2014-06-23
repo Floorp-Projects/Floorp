@@ -474,28 +474,6 @@ struct CommonElementAnimationData : public PRCList
   bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
 
-  bool IsForElement() const { // rather than for a pseudo-element
-    return mElementProperty == nsGkAtoms::animationsProperty ||
-           mElementProperty == nsGkAtoms::transitionsProperty;
-  }
-
-  nsString PseudoElement()
-  {
-    if (IsForElement()) {
-      return EmptyString();
-    } else if (mElementProperty == nsGkAtoms::animationsOfBeforeProperty ||
-               mElementProperty == nsGkAtoms::transitionsOfBeforeProperty) {
-      return NS_LITERAL_STRING("::before");
-    } else {
-      return NS_LITERAL_STRING("::after");
-    }
-  }
-
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint styleHint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
-    aPresContext->PresShell()->RestyleForAnimation(mElement, styleHint);
-  }
-
   static void LogAsyncAnimationFailure(nsCString& aMessage,
                                        const nsIContent* aContent = nullptr);
 
