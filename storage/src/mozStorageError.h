@@ -23,6 +23,8 @@ public:
   Error(int aResult, const char *aMessage);
 
 private:
+  ~Error() {}
+
   int mResult;
   nsCString mMessage;
 };
