@@ -13,10 +13,85 @@ Firefox for Android is planned, but not yet fully implemented).
 
 .. _Marionette: https://developer.mozilla.org/en-US/docs/Marionette
 
-You can install this library from pypi. The package name is
-marionette_client_.
+Getting Started
+---------------
 
-.. _marionette_client: https://pypi.python.org/pypi/marionette_client
+Getting the Client
+^^^^^^^^^^^^^^^^^^
+
+We officially support a python client. The latest supported version of
+the client is available on pypi_, so you can download it via pip.
+This client should be used within a virtual environment to ensure that
+your environment is pristine:
+
+.. parsed-literal::
+
+   virtualenv venv
+   source venv/bin/activate
+   pip install marionette_client
+
+.. _pypi: https://pypi.python.org/pypi/marionette_client/
+
+Using the Client Interactively
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Once you installed the client and have Marionette running, you can fire
+up your favourite interactive python environment and start playing with
+Marionette. Let's use a typical python shell:
+
+.. parsed-literal::
+
+   python
+
+First, import Marionette:
+
+.. parsed-literal::
+   from marionette import Marionette
+
+Now create the client for this session. Assuming you're using the default
+port on a Marionette instance running locally:
+
+.. parsed-literal::
+
+   client = Marionette(host='localhost', port=2828)
+   client.start_session()
+
+This will return some id representing your session id. Now that you've
+established a connection, let's start doing interesting things:
+
+.. parsed-literal::
+
+   client.execute_script("alert('o hai there!');")
+
+You should now see this alert pop up! How exciting! Okay, let's do
+something practical. Close the dialog and try this:
+
+.. parsed-literal::
+
+   client.navigate("http://www.mozilla.org")
+
+Now you're at mozilla.org! You can even verify it using the following:
+
+.. parsed-literal::
+   client.get_url()
+
+You can even find an element and click on it. Let's say you want to get
+the first link:
+
+.. parsed-literal::
+   first_link = client.find_element("tag name", "a")
+
+first_link now holds a reference to the first link on the page. You can click it:
+
+.. parsed-literal::
+   first_link.click()
+
+Using the Client for Testing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Please visit, our `Marionette Tests`_ section for information regarding testing.
+
+.. _Marionette Tests: https://developer.mozilla.org/en/Marionette/Tests
 
 .. automodule:: marionette
 
