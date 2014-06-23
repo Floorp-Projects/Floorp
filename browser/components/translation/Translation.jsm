@@ -80,6 +80,12 @@ this.Translation = {
 
     if (trUI.shouldShowInfoBar(aBrowser.currentURI))
       trUI.showTranslationInfoBar();
+  },
+
+  openProviderAttribution: function() {
+    Cu.import("resource:///modules/RecentWindow.jsm");
+    RecentWindow.getMostRecentBrowserWindow().openUILinkIn(
+      "http://aka.ms/MicrosoftTranslatorAttribution", "tab");
   }
 };
 
@@ -306,6 +312,13 @@ let TranslationHealthReport = {
   },
 
   /**
+   * Record a denied translation offer.
+   */
+  recordDeniedTranslationOffer: function () {
+    this._withProvider(provider => provider.recordDeniedTranslationOffer());
+  },
+
+  /**
    * Retrieve the translation provider and pass it to the given function.
    *
    * @param callback
@@ -363,6 +376,7 @@ TranslationMeasurement1.prototype = Object.freeze({
     pageTranslatedCountsByLanguage: DAILY_LAST_TEXT_FIELD,
     detectedLanguageChangedBefore: DAILY_COUNTER_FIELD,
     detectedLanguageChangedAfter: DAILY_COUNTER_FIELD,
+    deniedTranslationOffer: DAILY_COUNTER_FIELD,
     detectLanguageEnabled: DAILY_LAST_NUMERIC_FIELD,
     showTranslationUI: DAILY_LAST_NUMERIC_FIELD,
   },
@@ -496,6 +510,15 @@ TranslationProvider.prototype = Object.freeze({
         } else {
           yield m.incrementDailyCounter("detectedLanguageChangedAfter");
         }
+    }.bind(this));
+  },
+
+  recordDeniedTranslationOffer: function () {
+    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
+                                TranslationMeasurement1.prototype.version);
+
+    return this._enqueueTelemetryStorageTask(function* recordTask() {
+      yield m.incrementDailyCounter("deniedTranslationOffer");
     }.bind(this));
   },
 

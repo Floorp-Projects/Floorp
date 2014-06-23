@@ -40,6 +40,7 @@ public final class HomeConfig {
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         HISTORY("history", HistoryPanel.class),
         READING_LIST("reading_list", ReadingListPanel.class),
+        RECENT_TABS("recent_tabs", RecentTabsPanel.class),
         DYNAMIC("dynamic", DynamicPanel.class);
 
         private final String mId;
@@ -1495,6 +1496,7 @@ public final class HomeConfig {
     private static final String BOOKMARKS_PANEL_ID = "7f6d419a-cd6c-4e34-b26f-f68b1b551907";
     private static final String READING_LIST_PANEL_ID = "20f4549a-64ad-4c32-93e4-1dcef792733b";
     private static final String HISTORY_PANEL_ID = "f134bf20-11f7-4867-ab8b-e8e705d7fbe8";
+    private static final String RECENT_TABS_PANEL_ID = "5c2601a5-eedc-4477-b297-ce4cef52adf8";
 
     private final HomeConfigBackend mBackend;
 
@@ -1548,6 +1550,11 @@ public final class HomeConfig {
             case READING_LIST:
                 titleId = R.string.reading_list_title;
                 id = READING_LIST_PANEL_ID;
+                break;
+
+            case RECENT_TABS:
+                titleId = R.string.recent_tabs_title;
+                id = RECENT_TABS_PANEL_ID;
                 break;
 
             case DYNAMIC:

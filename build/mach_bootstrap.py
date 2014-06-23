@@ -38,6 +38,7 @@ SEARCH_PATHS = [
     'config',
     'dom/bindings',
     'dom/bindings/parser',
+    'layout/tools/reftest',
     'other-licenses/ply',
     'xpcom/idl-parser',
     'testing',
