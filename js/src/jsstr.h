@@ -306,6 +306,9 @@ str_replace(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 str_fromCharCode(JSContext *cx, unsigned argc, Value *vp);
 
+extern bool
+str_fromCharCode_one_arg(JSContext *cx, HandleValue code, MutableHandleValue rval);
+
 } /* namespace js */
 
 extern bool

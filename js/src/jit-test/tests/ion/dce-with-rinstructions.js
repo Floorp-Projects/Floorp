@@ -331,6 +331,22 @@ function rconcat_number(i) {
     return i;
 }
 
+var uceFault_from_char_code = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code'));
+function rfrom_char_code(i) {
+    var x = String.fromCharCode(i);
+    if (uceFault_from_char_code(i) || uceFault_from_char_code(i))
+        assertEq(x, "c");
+    return i;
+}
+
+var uceFault_from_char_code_non_ascii = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code_non_ascii'));
+function rfrom_char_code_non_ascii(i) {
+    var x = String.fromCharCode(i * 100);
+    if (uceFault_from_char_code_non_ascii(i) || uceFault_from_char_code_non_ascii(i))
+        assertEq(x, "\u26AC");
+    return i;
+}
+
 var uceFault_pow_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_pow_number'));
 function rpow_number(i) {
     var x = Math.pow(i, 3.14159);
@@ -404,6 +420,8 @@ for (i = 0; i < 100; i++) {
     rfloor_object(i);
     rround_number(i);
     rround_double(i);
+    rfrom_char_code(i);
+    rfrom_char_code_non_ascii(i);
     rpow_number(i);
     rpow_object(i);
     rpowhalf_number(i);
