@@ -20,7 +20,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsWebShellWindow.h"
 
-#include "nsCRT.h"
 #include "prprf.h"
 
 #include "nsWidgetInitData.h"
