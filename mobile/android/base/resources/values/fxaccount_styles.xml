@@ -16,7 +16,7 @@
     <style name="FxAccountMiddle">
         <item name="android:background">@android:color/white</item>
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
         <item name="android:paddingTop">30dp</item>
@@ -27,7 +27,7 @@
 
     <style name="FxAccountSpacer">
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">0dp</item>
         <item name="android:layout_weight">1</item>
     </style>
@@ -39,7 +39,7 @@
 
     <style name="FxAccountTextItem" parent="@android:style/TextAppearance.Medium">
         <item name="android:textColor">@color/fxaccount_textColor</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center_horizontal</item>
         <item name="android:textSize">16sp</item>
@@ -57,7 +57,7 @@
         <item name="android:textColor">@drawable/fxaccount_button_color</item>
         <item name="android:textSize">24sp</item>
         <item name="android:padding">20dp</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">10dp</item>
     </style>
@@ -81,7 +81,7 @@
         <item name="android:focusable">true</item>
         <item name="android:textColor">@color/fxaccount_linkified_textColor</item>
         <item name="android:textColorLink">@color/fxaccount_linkified_textColorLink</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:gravity">center</item>
     </style>
@@ -95,7 +95,7 @@
     </style>
 
     <style name="FxAccountErrorItem">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_marginBottom">10dp</item>
         <item name="android:layout_marginTop">10dp</item>
         <item name="android:layout_height">wrap_content</item>
@@ -118,13 +118,13 @@
 
     <style name="FxAccountButtonLayout">
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:background">@drawable/fxaccount_button_background</item>
     </style>
 
     <style name="FxAccountCheckBox">
-        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_width">fill_parent</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginBottom">10dp</item>
         <item name="android:textColor">@drawable/fxaccount_checkbox_textcolor</item>

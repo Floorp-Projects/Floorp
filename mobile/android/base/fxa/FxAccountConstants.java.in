@@ -15,6 +15,7 @@ public class FxAccountConstants {
   public static final String DEFAULT_AUTH_SERVER_ENDPOINT = "https://api.accounts.firefox.com/v1";
   public static final String DEFAULT_TOKEN_SERVER_ENDPOINT = "https://token.services.mozilla.com/1.0/sync/1.5";
 
+  public static final String STAGE_AUTH_SERVER_ENDPOINT = "https://api-accounts.stage.mozaws.net/v1";
   public static final String STAGE_TOKEN_SERVER_ENDPOINT = "https://token.stage.mozaws.net/1.0/sync/1.5";
 
   // For extra debugging.  Not final so it can be changed from Fennec, or from
