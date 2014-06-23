@@ -66,7 +66,7 @@ Requirement::toString() const
     cursor += n;
 
     if (pos() != CodePosition::MIN) {
-        n = JS_snprintf(cursor, end - cursor, "@%u", pos().pos());
+        n = JS_snprintf(cursor, end - cursor, "@%u", pos().bits());
         if (n < 0)
             return "???";
         cursor += n;
@@ -129,7 +129,7 @@ LiveInterval::Range::toString() const
     char *cursor = buf;
     char *end = cursor + sizeof(buf);
 
-    int n = JS_snprintf(cursor, end - cursor, "[%u,%u)", from.pos(), to.pos());
+    int n = JS_snprintf(cursor, end - cursor, "[%u,%u)", from.bits(), to.bits());
     if (n < 0)
         return " ???";
     cursor += n;
@@ -1082,7 +1082,7 @@ LiveInterval::toString() const
 
     for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
         n = JS_snprintf(cursor, end - cursor, " %s@%u",
-                        usePos->use->toString(), usePos->pos.pos());
+                        usePos->use->toString(), usePos->pos.bits());
         if (n < 0) return "???";
         cursor += n;
     }

@@ -377,8 +377,8 @@ AllocationIntegrityState::dump()
             CodePosition output(block->getPhi(block->numPhis() - 1)->id(), CodePosition::OUTPUT);
 
             fprintf(stderr, "[%u,%u Phi] [def %s] ",
-                    input.pos(),
-                    output.pos(),
+                    input.bits(),
+                    output.bits(),
                     phi->getDef(0)->toString());
             for (size_t j = 0; j < phi->numOperands(); j++)
                 fprintf(stderr, " [use %s]", info.inputs[j].toString());
@@ -394,7 +394,7 @@ AllocationIntegrityState::dump()
 
             fprintf(stderr, "[");
             if (input != CodePosition::MIN)
-                fprintf(stderr, "%u,%u ", input.pos(), output.pos());
+                fprintf(stderr, "%u,%u ", input.bits(), output.bits());
             fprintf(stderr, "%s]", ins->opName());
 
             if (ins->isMoveGroup()) {
@@ -532,8 +532,8 @@ RegisterAllocator::dumpInstructions()
             LPhi *phi = block->getPhi(i);
 
             fprintf(stderr, "[%u,%u Phi] [def %s]",
-                    inputOf(phi).pos(),
-                    outputOf(phi).pos(),
+                    inputOf(phi).bits(),
+                    outputOf(phi).bits(),
                     phi->getDef(0)->toString());
             for (size_t j = 0; j < phi->numOperands(); j++)
                 fprintf(stderr, " [use %s]", phi->getOperand(j)->toString());
@@ -545,7 +545,7 @@ RegisterAllocator::dumpInstructions()
 
             fprintf(stderr, "[");
             if (ins->id() != 0)
-                fprintf(stderr, "%u,%u ", inputOf(ins).pos(), outputOf(ins).pos());
+                fprintf(stderr, "%u,%u ", inputOf(ins).bits(), outputOf(ins).bits());
             fprintf(stderr, "%s]", ins->opName());
 
             if (ins->isMoveGroup()) {

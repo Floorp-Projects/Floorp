@@ -170,7 +170,7 @@ class CodePosition
         return bits_ >> INSTRUCTION_SHIFT;
     }
 
-    uint32_t pos() const {
+    uint32_t bits() const {
         return bits_;
     }
 

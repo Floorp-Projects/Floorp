@@ -677,7 +677,7 @@ BacktrackingAllocator::setIntervalRequirement(LiveInterval *interval)
 
             if (IonSpewEnabled(IonSpew_RegAlloc)) {
                 IonSpew(IonSpew_RegAlloc, "  Requirement %s, due to use at %u",
-                        required.name(), iter->pos.pos());
+                        required.name(), iter->pos.bits());
             }
 
             // If there are multiple fixed registers which the interval is
@@ -1579,7 +1579,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, Live
     }
 
     // Can't trim non-register uses off the end by splitting.
-    if (!lastRegisterFrom.pos()) {
+    if (!lastRegisterFrom.bits()) {
         IonSpew(IonSpew_RegAlloc, "  interval has no register uses");
         return true;
     }
@@ -1589,7 +1589,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveInterval *interval, Live
     }
 
     IonSpew(IonSpew_RegAlloc, "  split after last register use at %u",
-            lastRegisterTo.pos());
+            lastRegisterTo.bits());
 
     SplitPositions splitPositions;
     if (!splitPositions.append(lastRegisterTo))
@@ -1724,7 +1724,7 @@ BacktrackingAllocator::splitAt(LiveInterval *interval, const SplitPositions &spl
             newIntervals.back()->addUseAtEnd(new(alloc()) UsePosition(iter->use, iter->pos));
             splitIter.advancePast(iter->pos);
         } else if (isRegisterUse(iter->use, ins)) {
-            if (lastRegisterUse.pos() == 0 ||
+            if (lastRegisterUse.bits() == 0 ||
                 splitIter.isBeyondNextSplit(iter->pos))
             {
                 // Place this register use into a different interval from the
