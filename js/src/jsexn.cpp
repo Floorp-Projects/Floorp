@@ -583,7 +583,7 @@ js_InitExceptionClasses(JSContext *cx, HandleObject obj)
         return nullptr;
 
     /* |Error.prototype| alone has method properties. */
-    if (!DefinePropertiesAndBrand(cx, errorProto, nullptr, exception_methods))
+    if (!DefinePropertiesAndFunctions(cx, errorProto, nullptr, exception_methods))
         return nullptr;
 
     /* Define all remaining *Error constructors. */

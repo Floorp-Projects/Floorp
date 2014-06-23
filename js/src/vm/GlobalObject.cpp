@@ -360,11 +360,9 @@ js::LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor_, JSObject *proto_
 }
 
 bool
-js::DefinePropertiesAndBrand(JSContext *cx, JSObject *obj_,
-                             const JSPropertySpec *ps, const JSFunctionSpec *fs)
+js::DefinePropertiesAndFunctions(JSContext *cx, HandleObject obj,
+                                 const JSPropertySpec *ps, const JSFunctionSpec *fs)
 {
-    RootedObject obj(cx, obj_);
-
     if (ps && !JS_DefineProperties(cx, obj, ps))
         return false;
     if (fs && !JS_DefineFunctions(cx, obj, fs))
