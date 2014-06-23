@@ -3825,9 +3825,10 @@ gfxFont::Measure(gfxTextRun *aTextRun,
     double direction = aTextRun->GetDirection();
     bool needsGlyphExtents = NeedsGlyphExtents(this, aTextRun);
     gfxGlyphExtents *extents =
-        (aBoundingBoxType == LOOSE_INK_EXTENTS &&
+        ((aBoundingBoxType == LOOSE_INK_EXTENTS &&
             !needsGlyphExtents &&
-            !aTextRun->HasDetailedGlyphs()) ? nullptr
+            !aTextRun->HasDetailedGlyphs()) ||
+         (MOZ_UNLIKELY(GetStyle()->size == 0))) ? nullptr
         : GetOrCreateGlyphExtents(aTextRun->GetAppUnitsPerDevUnit());
     double x = 0;
     if (aSpacing) {
@@ -7844,6 +7845,10 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
     for (i = 0; i < runCount; ++i) {
         const GlyphRun& run = mGlyphRuns[i];
         gfxFont *font = run.mFont;
+        if (MOZ_UNLIKELY(font->GetStyle()->size == 0)) {
+            continue;
+        }
+
         uint32_t start = run.mCharacterOffset;
         uint32_t end = i + 1 < runCount ?
             mGlyphRuns[i + 1].mCharacterOffset : GetLength();
