@@ -201,13 +201,53 @@ struct SortComparatorIds
 
     bool operator()(jsid a, jsid b, bool *lessOrEqualp)
     {
-        /* Pick an arbitrary total order on jsids that is stable across executions. */
-        RootedString astr(cx, IdToString(cx, a));
-	if (!astr)
-	    return false;
-        RootedString bstr(cx, IdToString(cx, b));
-        if (!bstr)
-            return false;
+        // Pick an arbitrary order on jsids that is as stable as possible
+        // across executions.
+        if (a == b) {
+            *lessOrEqualp = true;
+            return true;
+        }
+
+        size_t ta = JSID_BITS(a) & JSID_TYPE_MASK;
+        size_t tb = JSID_BITS(b) & JSID_TYPE_MASK;
+        if (ta != tb) {
+            *lessOrEqualp = (ta <= tb);
+            return true;
+        }
+
+        if (JSID_IS_INT(a)) {
+            *lessOrEqualp = (JSID_TO_INT(a) <= JSID_TO_INT(b));
+            return true;
+        }
+
+        RootedString astr(cx), bstr(cx);
+        if (JSID_IS_SYMBOL(a)) {
+            MOZ_ASSERT(JSID_IS_SYMBOL(b));
+            JS::SymbolCode ca = JSID_TO_SYMBOL(a)->code();
+            JS::SymbolCode cb = JSID_TO_SYMBOL(b)->code();
+            if (ca != cb) {
+                *lessOrEqualp = uint32_t(ca) <= uint32_t(cb);
+                return true;
+            }
+            JS_ASSERT(ca == JS::SymbolCode::InSymbolRegistry || ca == JS::SymbolCode::Unique);
+            astr = JSID_TO_SYMBOL(a)->description();
+            bstr = JSID_TO_SYMBOL(b)->description();
+            if (!astr || !bstr) {
+                *lessOrEqualp = !astr;
+                return true;
+            }
+
+            // Fall through to string comparison on the descriptions. The sort
+            // order is nondeterministic if two different unique symbols have
+            // the same description.
+        } else {
+            astr = IdToString(cx, a);
+            if (!astr)
+                return false;
+            bstr = IdToString(cx, b);
+            if (!bstr)
+                return false;
+        }
 
         int32_t result;
         if (!CompareStrings(cx, astr, bstr, &result))
