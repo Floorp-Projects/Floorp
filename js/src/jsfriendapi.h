@@ -2056,10 +2056,10 @@ IdToValue(jsid id)
 {
     if (JSID_IS_STRING(id))
         return JS::StringValue(JSID_TO_STRING(id));
-    if (MOZ_LIKELY(JSID_IS_INT(id)))
+    if (JSID_IS_INT(id))
         return JS::Int32Value(JSID_TO_INT(id));
-    if (MOZ_LIKELY(JSID_IS_OBJECT(id)))
-        return JS::ObjectValue(*JSID_TO_OBJECT(id));
+    if (JSID_IS_SYMBOL(id))
+        return JS::SymbolValue(JSID_TO_SYMBOL(id));
     JS_ASSERT(JSID_IS_VOID(id));
     return JS::UndefinedValue();
 }

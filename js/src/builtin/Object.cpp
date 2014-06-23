@@ -831,37 +831,43 @@ obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, Value *vp)
     return GetOwnPropertyDescriptor(cx, obj, id, args.rval());
 }
 
+// ES6 draft rev25 (2014/05/22) 19.1.2.14 Object.keys(O)
 static bool
 obj_keys(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+
+    // steps 1-2
     RootedObject obj(cx);
     if (!GetFirstArgumentAsObject(cx, args, "Object.keys", &obj))
         return false;
 
+    // Steps 3-10. Since JSITER_SYMBOLS and JSITER_HIDDEN are not passed,
+    // GetPropertyNames performs the type check in step 10.c. and the
+    // [[Enumerable]] check specified in step 10.c.iii.
     AutoIdVector props(cx);
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
         return false;
 
-    AutoValueVector vals(cx);
-    if (!vals.reserve(props.length()))
+    AutoValueVector namelist(cx);
+    if (!namelist.reserve(props.length()))
         return false;
     for (size_t i = 0, len = props.length(); i < len; i++) {
         jsid id = props[i];
+        JSString *str;
         if (JSID_IS_STRING(id)) {
-            vals.infallibleAppend(StringValue(JSID_TO_STRING(id)));
-        } else if (JSID_IS_INT(id)) {
-            JSString *str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
+            str = JSID_TO_STRING(id);
+        } else {
+            str = Int32ToString<CanGC>(cx, JSID_TO_INT(id));
             if (!str)
                 return false;
-            vals.infallibleAppend(StringValue(str));
-        } else {
-            JS_ASSERT(JSID_IS_OBJECT(id));
         }
+        namelist.infallibleAppend(StringValue(str));
     }
 
+    // step 11
     JS_ASSERT(props.length() <= UINT32_MAX);
-    JSObject *aobj = NewDenseCopiedArray(cx, uint32_t(vals.length()), vals.begin());
+    JSObject *aobj = NewDenseCopiedArray(cx, uint32_t(namelist.length()), namelist.begin());
     if (!aobj)
         return false;
 
@@ -909,7 +915,7 @@ obj_getOwnPropertyNames(JSContext *cx, unsigned argc, Value *vp)
          } else if (JSID_IS_ATOM(id)) {
              vals[i].setString(JSID_TO_STRING(id));
          } else {
-             vals[i].setObject(*JSID_TO_OBJECT(id));
+             vals[i].setSymbol(JSID_TO_SYMBOL(id));
          }
     }
 
