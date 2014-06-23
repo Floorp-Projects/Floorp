@@ -2235,13 +2235,13 @@ darwin*)
     USE_PTHREADS=1
     ;;
 *)
-    MOZ_CHECK_PTHREADS(pthreads,
+    AC_CHECK_LIB(pthreads, pthread_create,
         USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads",
-        MOZ_CHECK_PTHREADS(pthread,
+        AC_CHECK_LIB(pthread, pthread_create,
             USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread",
-            MOZ_CHECK_PTHREADS(c_r,
+            AC_CHECK_LIB(c_r, pthread_create,
                 USE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r",
-                MOZ_CHECK_PTHREADS(c,
+                AC_CHECK_LIB(c, pthread_create,
                     USE_PTHREADS=1
                 )
             )
@@ -3593,48 +3593,6 @@ AC_SUBST(PROFILE_USE_LDFLAGS)
 AC_LANG_CPLUSPLUS
 
 dnl ========================================================
-dnl Autoconf test for gcc 2.7.2.x (and maybe others?) so that we don't
-dnl provide non-const forms of the operator== for comparing nsCOMPtrs to
-dnl raw pointers in nsCOMPtr.h.  (VC++ has the same bug.)
-dnl ========================================================
-_SAVE_CXXFLAGS=$CXXFLAGS
-CXXFLAGS="$CXXFLAGS ${_WARNINGS_CXXFLAGS}"
-AC_CACHE_CHECK(for correct overload resolution with const and templates,
-    ac_nscap_nonconst_opeq_bug,
-    [AC_TRY_COMPILE([
-                      template <class T>
-                      class Pointer
-                        {
-                        public:
-                          T* myPtr;
-                        };
-
-                      template <class T, class U>
-                      int operator==(const Pointer<T>& rhs, U* lhs)
-                        {
-                          return rhs.myPtr == lhs;
-                        }
-
-                      template <class T, class U>
-                      int operator==(const Pointer<T>& rhs, const U* lhs)
-                        {
-                          return rhs.myPtr == lhs;
-                        }
-                    ],
-                    [
-                      Pointer<int> foo;
-                      const int* bar;
-                      return foo == bar;
-                    ],
-                    ac_nscap_nonconst_opeq_bug="no",
-                    ac_nscap_nonconst_opeq_bug="yes")])
-CXXFLAGS="$_SAVE_CXXFLAGS"
-
-if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
-    AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
-fi
-
-dnl ========================================================
 dnl Check for tm_zone, tm_gmtoff in struct tm
 dnl ========================================================
 AC_CACHE_CHECK(for tm_zone tm_gmtoff in struct tm,
@@ -3675,7 +3633,7 @@ else
     echo '#include <stdio.h>' > dummy-hello.c
     changequote(,)
     dnl This output is localized, split at the first double space or colon and space.
-    _CL_PREFIX_REGEX="^\([^:]*:.*[ :] \)\(.*stdio.h\)$"
+    _CL_PREFIX_REGEX="^\([^:]*:.*[ :] \)\(.*\\\stdio.h\)$"
     CL_INCLUDES_PREFIX=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\1/p'`
     _CL_STDIO_PATH=`${CC} -showIncludes -c -Fonul dummy-hello.c 2>&1 | sed -ne 's/'"$_CL_PREFIX_REGEX"'/\2/p'`
     changequote([,])

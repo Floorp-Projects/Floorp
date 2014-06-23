@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsXPathResult.h"
+#include "XPathResult.h"
 #include "txExprResult.h"
 #include "txNodeSet.h"
 #include "nsError.h"
@@ -15,157 +15,92 @@
 #include "nsDOMString.h"
 #include "txXPathTreeWalker.h"
 #include "nsCycleCollectionParticipant.h"
+#include "mozilla/dom/XPathResultBinding.h"
 
-using namespace mozilla::dom;
+namespace mozilla {
+namespace dom {
 
-nsXPathResult::nsXPathResult() : mDocument(nullptr),
-                                 mCurrentPos(0),
-                                 mResultType(ANY_TYPE),
-                                 mInvalidIteratorState(true),
-                                 mBooleanResult(false),
-                                 mNumberResult(0)
+XPathResult::XPathResult(nsINode* aParent)
+    : mParent(aParent),
+      mDocument(nullptr),
+      mCurrentPos(0),
+      mResultType(ANY_TYPE),
+      mInvalidIteratorState(true),
+      mBooleanResult(false),
+      mNumberResult(0)
 {
+    SetIsDOMBinding();
 }
 
-nsXPathResult::nsXPathResult(const nsXPathResult &aResult)
-    : mResult(aResult.mResult),
+XPathResult::XPathResult(const XPathResult &aResult)
+    : mParent(aResult.mParent),
+      mResult(aResult.mResult),
       mResultNodes(aResult.mResultNodes),
       mDocument(aResult.mDocument),
+      mContextNode(aResult.mContextNode),
       mCurrentPos(0),
       mResultType(aResult.mResultType),
-      mContextNode(aResult.mContextNode),
       mInvalidIteratorState(aResult.mInvalidIteratorState)
 {
+    SetIsDOMBinding();
     if (mDocument) {
         mDocument->AddMutationObserver(this);
     }
 }
 
-nsXPathResult::~nsXPathResult()
+XPathResult::~XPathResult()
 {
     RemoveObserver();
 }
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXPathResult)
+NS_IMPL_CYCLE_COLLECTION_CLASS(XPathResult)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsXPathResult)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(XPathResult)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(XPathResult)
+    NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+    NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
     {
         tmp->RemoveObserver();
     }
     NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocument)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXPathResult)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(XPathResult)
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
+    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocument)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResultNodes)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXPathResult)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXPathResult)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(XPathResult)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(XPathResult)
 
-DOMCI_DATA(XPathResult, nsXPathResult)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXPathResult)
-    NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPathResult)
+    NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
     NS_INTERFACE_MAP_ENTRY(nsIMutationObserver)
     NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
-    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
-    NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(XPathResult)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPathResult)
 NS_INTERFACE_MAP_END
 
+JSObject*
+XPathResult::WrapObject(JSContext* aCx)
+{
+    return XPathResultBinding::Wrap(aCx, this);
+}
+
 void
-nsXPathResult::RemoveObserver()
+XPathResult::RemoveObserver()
 {
     if (mDocument) {
         mDocument->RemoveMutationObserver(this);
     }
 }
 
-NS_IMETHODIMP
-nsXPathResult::GetResultType(uint16_t *aResultType)
-{
-    *aResultType = mResultType;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetNumberValue(double *aNumberValue)
-{
-    if (mResultType != NUMBER_TYPE) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    *aNumberValue = mNumberResult;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetStringValue(nsAString &aStringValue)
-{
-    if (mResultType != STRING_TYPE) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    aStringValue = mStringResult;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetBooleanValue(bool *aBooleanValue)
-{
-    if (mResultType != BOOLEAN_TYPE) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    *aBooleanValue = mBooleanResult;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetSingleNodeValue(nsIDOMNode **aSingleNodeValue)
-{
-    if (!isNode()) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    if (mResultNodes.Count() > 0) {
-        NS_ADDREF(*aSingleNodeValue = mResultNodes[0]);
-    }
-    else {
-        *aSingleNodeValue = nullptr;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetInvalidIteratorState(bool *aInvalidIteratorState)
-{
-    *aInvalidIteratorState = isIterator() && mInvalidIteratorState;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::GetSnapshotLength(uint32_t *aSnapshotLength)
-{
-    if (!isSnapshot()) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    *aSnapshotLength = (uint32_t)mResultNodes.Count();
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::IterateNext(nsIDOMNode **aResult)
+nsINode*
+XPathResult::IterateNext(ErrorResult& aRv)
 {
     if (!isIterator()) {
-        return NS_ERROR_DOM_TYPE_ERR;
+        aRv.Throw(NS_ERROR_DOM_TYPE_ERR);
+        return nullptr;
     }
 
     if (mDocument) {
@@ -173,33 +108,15 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
     }
 
     if (mInvalidIteratorState) {
-        return NS_ERROR_DOM_INVALID_STATE_ERR;
+        aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+        return nullptr;
     }
 
-    if (mCurrentPos < (uint32_t)mResultNodes.Count()) {
-        NS_ADDREF(*aResult = mResultNodes[mCurrentPos++]);
-    }
-    else {
-        *aResult = nullptr;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPathResult::SnapshotItem(uint32_t aIndex, nsIDOMNode **aResult)
-{
-    if (!isSnapshot()) {
-        return NS_ERROR_DOM_TYPE_ERR;
-    }
-
-    NS_IF_ADDREF(*aResult = mResultNodes.SafeObjectAt(aIndex));
-
-    return NS_OK;
+    return mResultNodes.SafeObjectAt(mCurrentPos++);
 }
 
 void
-nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
+XPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 {
     nsCOMPtr<nsIMutationObserver> kungFuDeathGrip(this);
     // Set to null to avoid unregistring unnecessarily
@@ -209,54 +126,54 @@ nsXPathResult::NodeWillBeDestroyed(const nsINode* aNode)
 }
 
 void
-nsXPathResult::CharacterDataChanged(nsIDocument* aDocument,
-                                    nsIContent *aContent,
-                                    CharacterDataChangeInfo* aInfo)
+XPathResult::CharacterDataChanged(nsIDocument* aDocument,
+                                  nsIContent *aContent,
+                                  CharacterDataChangeInfo* aInfo)
 {
     Invalidate(aContent);
 }
 
 void
-nsXPathResult::AttributeChanged(nsIDocument* aDocument,
-                                Element* aElement,
-                                int32_t aNameSpaceID,
-                                nsIAtom* aAttribute,
-                                int32_t aModType)
+XPathResult::AttributeChanged(nsIDocument* aDocument,
+                              Element* aElement,
+                              int32_t aNameSpaceID,
+                              nsIAtom* aAttribute,
+                              int32_t aModType)
 {
     Invalidate(aElement);
 }
 
 void
-nsXPathResult::ContentAppended(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aFirstNewContent,
-                               int32_t aNewIndexInContainer)
+XPathResult::ContentAppended(nsIDocument* aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aFirstNewContent,
+                             int32_t aNewIndexInContainer)
 {
     Invalidate(aContainer);
 }
 
 void
-nsXPathResult::ContentInserted(nsIDocument* aDocument,
-                               nsIContent* aContainer,
-                               nsIContent* aChild,
-                               int32_t aIndexInContainer)
+XPathResult::ContentInserted(nsIDocument* aDocument,
+                             nsIContent* aContainer,
+                             nsIContent* aChild,
+                             int32_t aIndexInContainer)
 {
     Invalidate(aContainer);
 }
 
 void
-nsXPathResult::ContentRemoved(nsIDocument* aDocument,
-                              nsIContent* aContainer,
-                              nsIContent* aChild,
-                              int32_t aIndexInContainer,
-                              nsIContent* aPreviousSibling)
+XPathResult::ContentRemoved(nsIDocument* aDocument,
+                            nsIContent* aContainer,
+                            nsIContent* aChild,
+                            int32_t aIndexInContainer,
+                            nsIContent* aPreviousSibling)
 {
     Invalidate(aContainer);
 }
 
 nsresult
-nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
-                             nsINode* aContextNode)
+XPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
+                           nsINode* aContextNode)
 {
     MOZ_ASSERT(aExprResult);
 
@@ -305,13 +222,10 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
 
     if (aExprResult->getResultType() == txAExprResult::NODESET) {
         txNodeSet *nodeSet = static_cast<txNodeSet*>(aExprResult);
-        nsCOMPtr<nsIDOMNode> node;
         int32_t i, count = nodeSet->size();
         for (i = 0; i < count; ++i) {
-            txXPathNativeNode::getNode(nodeSet->get(i), getter_AddRefs(node));
-            if (node) {
-                mResultNodes.AppendObject(node);
-            }
+            nsINode* node = txXPathNativeNode::getNode(nodeSet->get(i));
+            mResultNodes.AppendObject(node);
         }
 
         if (count > 0) {
@@ -328,15 +242,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
     if (mResultNodes.Count() > 0) {
         // If we support the document() function in DOM-XPath we need to
         // observe all documents that we have resultnodes in.
-        nsCOMPtr<nsIDOMDocument> document;
-        mResultNodes[0]->GetOwnerDocument(getter_AddRefs(document));
-        if (document) {
-            mDocument = do_QueryInterface(document);
-        }
-        else {
-            mDocument = do_QueryInterface(mResultNodes[0]);
-        }
-
+        mDocument = mResultNodes[0]->OwnerDoc();
         NS_ASSERTION(mDocument, "We need a document!");
         if (mDocument) {
             mDocument->AddMutationObserver(this);
@@ -347,7 +253,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, uint16_t aResultType,
 }
 
 void
-nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
+XPathResult::Invalidate(const nsIContent* aChangeRoot)
 {
     nsCOMPtr<nsINode> contextNode = do_QueryReferent(mContextNode);
     if (contextNode && aChangeRoot && aChangeRoot->GetBindingParent()) {
@@ -381,7 +287,7 @@ nsXPathResult::Invalidate(const nsIContent* aChangeRoot)
 }
 
 nsresult
-nsXPathResult::GetExprResult(txAExprResult** aExprResult)
+XPathResult::GetExprResult(txAExprResult** aExprResult)
 {
     if (isIterator() && mInvalidIteratorState) {
         return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -418,7 +324,7 @@ nsXPathResult::GetExprResult(txAExprResult** aExprResult)
 }
 
 nsresult
-nsXPathResult::Clone(nsIXPathResult **aResult)
+XPathResult::Clone(nsIXPathResult **aResult)
 {
     *aResult = nullptr;
 
@@ -426,12 +332,10 @@ nsXPathResult::Clone(nsIXPathResult **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
     }
 
-    nsCOMPtr<nsIXPathResult> result = new nsXPathResult(*this);
-    if (!result) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    result.swap(*aResult);
+    NS_ADDREF(*aResult = new XPathResult(*this));
 
     return NS_OK;
 }
+
+} // namespace dom
+} // namespace mozilla

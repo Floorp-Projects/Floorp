@@ -2,73 +2,121 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = "head.js";
 
-SpecialPowers.addPermission("mobileconnection", true, document);
-
-// Permission changes can't change existing Navigator.prototype
-// objects, so grab our objects from a new Navigator
-let ifr = document.createElement("iframe");
-let connection;
-ifr.onload = function() {
-  connection = ifr.contentWindow.navigator.mozMobileConnections[0];
-
-  ok(connection instanceof ifr.contentWindow.MozMobileConnection,
-     "connection is instanceof " + connection.constructor);
-
-  nextTest();
-};
-document.body.appendChild(ifr);
-
-let caseId = 0;
-let options = [
-  buildOption(5, true, '0000', 0),  // invalid program.
-
-  // test null.
-  buildOption(null, true, '0000', 0),
-  buildOption(0, null, '0000', 0),
-  buildOption(0, true, null, 0),
-  buildOption(0, true, '0000', null),
-
-  // test undefined.
-  {'enabled': true, 'password': '0000', 'serviceClass': 0},
-  {'program': 0, 'password': '0000', 'serviceClass': 0},
-  {'program': 0, 'enabled': true, 'serviceClass': 0},
-  {'program': 0, 'enabled': true, 'password': '0000'},
+const TEST_DATA = [
+  // Test passing invalid program.
+  {
+    options: {
+      "program": 5, /* Invalid program */
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      "program": null,
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      /* Undefined program */
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  },
+  // Test passing invalid enabled.
+  {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": null,
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      /* Undefined enabled */
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  },
+  // Test passing invalid password.
+  {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": null,
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      /* Undefined password */
+      "serviceClass": 0
+    },
+    expectedError: "InvalidParameter"
+  },
+  // Test passing invalid serviceClass.
+  {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": null
+    },
+    expectedError: "InvalidParameter"
+  }, {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "0000",
+      /* Undefined serviceClass */
+    },
+    expectedError: "InvalidParameter"
+  },
+  // TODO: Bug 1027546 - [B2G][Emulator] Support call barring
+  // Currently emulator doesn't support call barring, so we expect to get a
+  // 'RequestNotSupported' error here.
+  {
+    options: {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    },
+    expectedError: "RequestNotSupported"
+  }
 ];
 
-function buildOption(program, enabled, password, serviceClass) {
-  return {
-    'program': program,
-    'enabled': enabled,
-    'password': password,
-    'serviceClass': serviceClass
-  };
+function testSetCallBarringOption(aOptions, aExpectedError) {
+  log("Test setting call barring to " + JSON.stringify(aOptions));
+
+  return setCallBarringOption(aOptions)
+    .then(function resolve() {
+      ok(false, "changeCallBarringPassword success");
+    }, function reject(aError) {
+      is(aError.name, aExpectedError, "failed to changeCallBarringPassword");
+    });
 }
 
-function testSetCallBarringOptionError(option) {
-  let request = connection.setCallBarringOption(option);
-  request.onsuccess = function() {
-    ok(false,
-       'should not fire onsuccess for invaild call barring option: '
-       + JSON.stringify(option));
-  };
-  request.onerror = function(event) {
-    is(event.target.error.name, 'InvalidParameter', JSON.stringify(option));
-    nextTest();
-  };
-}
-
-function nextTest() {
-  if (caseId >= options.length) {
-    cleanUp();
-  } else {
-    let option = options[caseId++];
-    log('test for ' + JSON.stringify(option));
-    testSetCallBarringOptionError(option);
+// Start tests
+startTestCommon(function() {
+  let promise = Promise.resolve();
+  for (let i = 0; i < TEST_DATA.length; i++) {
+    let data = TEST_DATA[i];
+    promise = promise.then(() => testSetCallBarringOption(data.options,
+                                                          data.expectedError));
   }
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("mobileconnection", document);
-  finish();
-}
+  return promise;
+});

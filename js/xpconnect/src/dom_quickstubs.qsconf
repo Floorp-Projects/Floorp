@@ -43,14 +43,6 @@ members = [
     # dom/interfaces/xpath
     'nsIDOMXPathExpression.evaluate',
     'nsIDOMXPathNSResolver.lookupNamespaceURI',
-    'nsIDOMXPathResult.snapshotItem',
-    'nsIDOMXPathResult.iterateNext',
-    'nsIDOMXPathResult.snapshotLength',
-    'nsIDOMXPathResult.resultType',
-    'nsIDOMXPathResult.numberValue',
-    'nsIDOMXPathResult.stringValue',
-    'nsIDOMXPathResult.booleanValue',
-    'nsIDOMXPathResult.singleNodeValue',
     'nsIDOMNSXPathExpression.evaluateWithContext',
 
     # layout/xul/base/public

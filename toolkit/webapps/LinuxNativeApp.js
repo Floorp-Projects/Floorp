@@ -263,9 +263,12 @@ NativeApp.prototype = {
                  getService(Ci.nsIINIParserFactory).
                  createINIParser(webappINIfile).
                  QueryInterface(Ci.nsIINIParserWriter);
-    writer.setString("Webapp", "Name", this.appName);
+    writer.setString("Webapp", "Name", this.appLocalizedName);
     writer.setString("Webapp", "Profile", this.uniqueName);
-    writer.setString("Webapp", "UninstallMsg", webappsBundle.formatStringFromName("uninstall.notification", [this.appName], 1));
+    writer.setString("Webapp", "UninstallMsg",
+                     webappsBundle.formatStringFromName("uninstall.notification",
+                                                        [this.appLocalizedName],
+                                                        1));
     writer.setString("WebappRT", "InstallDir", this.runtimeFolder);
     writer.writeFile();
   },
@@ -285,7 +288,7 @@ NativeApp.prototype = {
                  getService(Ci.nsIINIParserFactory).
                  createINIParser(desktopINIfile).
                  QueryInterface(Ci.nsIINIParserWriter);
-    writer.setString("Desktop Entry", "Name", this.appName);
+    writer.setString("Desktop Entry", "Name", this.appLocalizedName);
     writer.setString("Desktop Entry", "Comment", this.shortDescription);
     writer.setString("Desktop Entry", "Exec", '"' + webapprtPath + '"');
     writer.setString("Desktop Entry", "Icon", OS.Path.join(aInstallDir,

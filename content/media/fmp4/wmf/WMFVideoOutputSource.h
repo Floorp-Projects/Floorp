@@ -20,12 +20,15 @@ class DXVA2Manager;
 
 class WMFVideoOutputSource : public WMFOutputSource {
 public:
-  WMFVideoOutputSource(mozilla::layers::LayersBackend aLayersBackend,
+  WMFVideoOutputSource(const mp4_demuxer::VideoDecoderConfig& aConfig,
+                       mozilla::layers::LayersBackend aLayersBackend,
                        mozilla::layers::ImageContainer* aImageContainer,
                        bool aDXVAEnabled);
   ~WMFVideoOutputSource();
 
   virtual TemporaryRef<MFTDecoder> Init() MOZ_OVERRIDE;
+
+  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
 
   virtual HRESULT Output(int64_t aStreamOffset,
                          nsAutoPtr<MediaData>& aOutput) MOZ_OVERRIDE;
@@ -50,6 +53,8 @@ private:
   uint32_t mVideoWidth;
   uint32_t mVideoHeight;
   nsIntRect mPictureRegion;
+
+  const mp4_demuxer::VideoDecoderConfig& mConfig;
 
   RefPtr<MFTDecoder> mDecoder;
   RefPtr<layers::ImageContainer> mImageContainer;

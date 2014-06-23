@@ -351,7 +351,8 @@ struct RuntimeSizes
     macro(_, _, temporary) \
     macro(_, _, interpreterStack) \
     macro(_, _, mathCache) \
-    macro(_, _, sourceDataCache) \
+    macro(_, _, uncompressedSourceCache) \
+    macro(_, _, compressedSourceSet) \
     macro(_, _, scriptData) \
 
     RuntimeSizes()

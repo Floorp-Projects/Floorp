@@ -22,7 +22,6 @@
 #include "sechash.h"
 #include "secpkcs7.h"
 #include "prerror.h"
-#include "ocsp.h"
 
 namespace mozilla {
 
@@ -83,9 +82,6 @@ MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTName,
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTCertNicknames,
                                           CERTCertNicknames,
                                           CERT_FreeNicknames)
-MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTOCSPCertID,
-                                          CERTOCSPCertID,
-                                          CERT_DestroyOCSPCertID)
 MOZ_TYPE_SPECIFIC_SCOPED_POINTER_TEMPLATE(ScopedCERTSubjectPublicKeyInfo,
                                           CERTSubjectPublicKeyInfo,
                                           SECKEY_DestroySubjectPublicKeyInfo)

@@ -51,7 +51,7 @@ exclude_automatic_type_include = [
 xpidl_to_native = [
     ['nsIDOMDocument', 'nsIDocument', 'nsIDocument'],
     ['nsIDOMElement', 'mozilla::dom::Element', 'mozilla::dom::Element'],
-    ['nsIDOMCSSStyleSheet', 'nsCSSStyleSheet', 'nsIStyleSheet'],
+    ['nsIDOMCSSStyleSheet', 'mozilla::CSSStyleSheet', 'nsIStyleSheet'],
     ['nsIDOMWindow', 'nsGlobalWindow', 'nsIDOMEventTarget']
   ]
 

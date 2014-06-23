@@ -111,6 +111,9 @@ extern bool
 js_math_sqrt(JSContext *cx, unsigned argc, js::Value *vp);
 
 extern bool
+js_math_pow_handle(JSContext *cx, js::HandleValue base, js::HandleValue power, js::MutableHandleValue result);
+
+extern bool
 js_math_pow(JSContext *cx, unsigned argc, js::Value *vp);
 
 namespace js {
@@ -269,10 +272,16 @@ extern bool
 math_clz32(JSContext *cx, unsigned argc, Value *vp);
 
 extern bool
+math_floor_handle(JSContext *cx, HandleValue v, MutableHandleValue r);
+
+extern bool
 math_floor(JSContext *cx, unsigned argc, Value *vp);
 
 extern double
 math_floor_impl(double x);
+
+extern bool
+math_round_handle(JSContext *cx, HandleValue arg, MutableHandleValue res);
 
 extern bool
 math_round(JSContext *cx, unsigned argc, Value *vp);

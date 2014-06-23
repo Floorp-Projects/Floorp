@@ -137,7 +137,6 @@ function evalXPathInDocumentFragment(aContextNode, aPath) {
   // Apply our remaining xpath to the found node.
   var expr = aContextNode.ownerDocument.createExpression(realPath, null);
   var result = expr.evaluate(targetNode, UNORDERED_TYPE, null);
-  do_check_true(result instanceof C_i.nsIDOMXPathResult);
   return result.singleNodeValue;
 }
 

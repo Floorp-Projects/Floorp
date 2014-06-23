@@ -2487,7 +2487,7 @@ test -n "$target_alias" &&
 
 MOD_MAJOR_VERSION=4
 MOD_MINOR_VERSION=10
-MOD_PATCH_VERSION=6
+MOD_PATCH_VERSION=7
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
 USE_PTHREADS=
@@ -2576,18 +2576,19 @@ fi
   test -n "$CC" && break
 done
 
-    if test "$CC" = "cl"; then
-        echo 'main() { return 0; }' > dummy.c
-        ${CC} -o dummy dummy.c >/dev/null 2>&1
-        if test $? = 0; then
-            _WIN32_MSVC=1
-            CXX=$CC
-        else
-            { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $(CC) test failed.  Using normal feature tests" >&5
-$as_echo "$as_me: WARNING: $(CC) test failed.  Using normal feature tests" >&2;}
-        fi
-        rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
+    cat > conftest.c <<EOF
+#ifdef _MSC_VER
+COMPILER IS MSVC
+#endif
+EOF
+    read dummy <<EOF
+$($CC -E conftest.c 2>/dev/null | grep COMPILER)
+EOF
+    if test -n "$dummy"; then
+        _WIN32_MSVC=1
+        CXX=$CC
     fi
+    rm -f conftest.c
     ;;
 *-mks*)
     _WIN32_MSVC=1
@@ -8037,121 +8038,177 @@ fi
 ;;
 esac
 
-
-
 case "$target_os" in
 darwin*)
     _HAVE_PTHREADS=1
     ;;
 *)
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthreads" >&5
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthreads" >&5
 $as_echo_n "checking for pthread_create in -lpthreads... " >&6; }
-echo "
-    #include <pthread.h>
-    void *foo(void *v) { return v; }
-    int main() {
-        pthread_t t;
-        if (!pthread_create(&t, 0, &foo, 0)) {
-            pthread_join(t, 0);
-        }
-        return 0;
-    }" > dummy.c ;
-    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS" 1>&5;
-    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthreads $LDFLAGS $LIBS 2>&5;
-    _res=$? ;
-    rm -f dummy.c dummy${ac_exeext} ;
-    if test "$_res" = "0"; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads"
-    else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+if ${ac_cv_lib_pthreads_pthread_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpthreads  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pthread_create ();
+int
+main ()
+{
+return pthread_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pthreads_pthread_create=yes
+else
+  ac_cv_lib_pthreads_pthread_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthreads_pthread_create" >&5
+$as_echo "$ac_cv_lib_pthreads_pthread_create" >&6; }
+if test "x$ac_cv_lib_pthreads_pthread_create" = xyes; then :
+  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthreads"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lpthread" >&5
 $as_echo_n "checking for pthread_create in -lpthread... " >&6; }
-echo "
-    #include <pthread.h>
-    void *foo(void *v) { return v; }
-    int main() {
-        pthread_t t;
-        if (!pthread_create(&t, 0, &foo, 0)) {
-            pthread_join(t, 0);
-        }
-        return 0;
-    }" > dummy.c ;
-    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS" 1>&5;
-    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lpthread $LDFLAGS $LIBS 2>&5;
-    _res=$? ;
-    rm -f dummy.c dummy${ac_exeext} ;
-    if test "$_res" = "0"; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
-    else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+if ${ac_cv_lib_pthread_pthread_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lpthread  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lc_r" >&5
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pthread_create ();
+int
+main ()
+{
+return pthread_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_pthread_pthread_create=yes
+else
+  ac_cv_lib_pthread_pthread_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_pthread_create" >&5
+$as_echo "$ac_cv_lib_pthread_pthread_create" >&6; }
+if test "x$ac_cv_lib_pthread_pthread_create" = xyes; then :
+  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lpthread"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lc_r" >&5
 $as_echo_n "checking for pthread_create in -lc_r... " >&6; }
-echo "
-    #include <pthread.h>
-    void *foo(void *v) { return v; }
-    int main() {
-        pthread_t t;
-        if (!pthread_create(&t, 0, &foo, 0)) {
-            pthread_join(t, 0);
-        }
-        return 0;
-    }" > dummy.c ;
-    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS" 1>&5;
-    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc_r $LDFLAGS $LIBS 2>&5;
-    _res=$? ;
-    rm -f dummy.c dummy${ac_exeext} ;
-    if test "$_res" = "0"; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-        _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
-    else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+if ${ac_cv_lib_c_r_pthread_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lc_r  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lc" >&5
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pthread_create ();
+int
+main ()
+{
+return pthread_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_c_r_pthread_create=yes
+else
+  ac_cv_lib_c_r_pthread_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_c_r_pthread_create" >&5
+$as_echo "$ac_cv_lib_c_r_pthread_create" >&6; }
+if test "x$ac_cv_lib_c_r_pthread_create" = xyes; then :
+  _HAVE_PTHREADS=1 _PTHREAD_LDFLAGS="-lc_r"
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pthread_create in -lc" >&5
 $as_echo_n "checking for pthread_create in -lc... " >&6; }
-echo "
-    #include <pthread.h>
-    void *foo(void *v) { return v; }
-    int main() {
-        pthread_t t;
-        if (!pthread_create(&t, 0, &foo, 0)) {
-            pthread_join(t, 0);
-        }
-        return 0;
-    }" > dummy.c ;
-    echo "${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS" 1>&5;
-    ${CC-cc} -o dummy${ac_exeext} dummy.c $CFLAGS $CPPFLAGS -lc $LDFLAGS $LIBS 2>&5;
-    _res=$? ;
-    rm -f dummy.c dummy${ac_exeext} ;
-    if test "$_res" = "0"; then
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-$as_echo "yes" >&6; }
-        _HAVE_PTHREADS=1
+if ${ac_cv_lib_c_pthread_create+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lc  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-    else
-        { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
-$as_echo "no" >&6; }
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char pthread_create ();
+int
+main ()
+{
+return pthread_create ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_c_pthread_create=yes
+else
+  ac_cv_lib_c_pthread_create=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_c_pthread_create" >&5
+$as_echo "$ac_cv_lib_c_pthread_create" >&6; }
+if test "x$ac_cv_lib_c_pthread_create" = xyes; then :
+  _HAVE_PTHREADS=1
 
-    fi
+fi
 
 
-    fi
+fi
 
 
-    fi
+fi
 
 
-    fi
+fi
 
     ;;
 esac

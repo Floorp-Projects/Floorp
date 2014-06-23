@@ -220,9 +220,6 @@ public:
 
   static void initTable();
   static SEC_HttpClientFcn sNSSInterfaceTable;
-
-  void registerHttpClient();
-  void unregisterHttpClient();
 };
 
 #endif // _NSNSSCALLBACKS_H_

@@ -4,7 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import sys, os, sha, json, re
+import sys
+import os
+import sha
+import json
+import re
+import errno
 from argparse import ArgumentParser
 
 def getFileHashAndSize(filename):
@@ -51,15 +56,20 @@ def getUrlProperties(filename):
     url_re = re.compile(r'''^(https?://.*?\.(?:tar\.bz2|dmg|zip|apk|rpm|mar|tar\.gz))$''')
     properties = {}
 
-    with open(filename) as f:
-        for line in f:
-            m = url_re.match(line)
-            if m:
-                m = m.group(1)
-                for prop, condition in property_conditions:
-                    if condition(m):
-                        properties.update({prop: m})
-                        break
+    try:
+        with open(filename) as f:
+            for line in f:
+                m = url_re.match(line)
+                if m:
+                    m = m.group(1)
+                    for prop, condition in property_conditions:
+                        if condition(m):
+                            properties.update({prop: m})
+                            break
+    except IOError as e:
+        if e.errno != errno.ENOENT:
+            raise
+        properties = {prop: 'UNKNOWN' for prop, condition in property_conditions}
     return properties
 
 if __name__ == '__main__':
