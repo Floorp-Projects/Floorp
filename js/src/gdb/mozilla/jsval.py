@@ -161,6 +161,7 @@ class jsvalTypeCache(object):
         self.BOOLEAN   = d['JSVAL_TYPE_BOOLEAN']
         self.MAGIC     = d['JSVAL_TYPE_MAGIC']
         self.STRING    = d['JSVAL_TYPE_STRING']
+        self.SYMBOL    = d['JSVAL_TYPE_SYMBOL']
         self.NULL      = d['JSVAL_TYPE_NULL']
         self.OBJECT    = d['JSVAL_TYPE_OBJECT']
 
@@ -203,6 +204,8 @@ class jsval_layout(object):
                 return '$jsmagic(%d)' % (value,)
         elif tag == self.jtc.STRING:
             value = self.box.as_address().cast(self.cache.JSString_ptr_t)
+        elif tag == self.jtc.SYMBOL:
+            value = self.box.as_address().cast(self.cache.JSSymbol_ptr_t)
         elif tag == self.jtc.NULL:
             return 'JSVAL_NULL'
         elif tag == self.jtc.OBJECT:
