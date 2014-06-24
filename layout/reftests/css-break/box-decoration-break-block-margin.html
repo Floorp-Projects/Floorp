@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for box-decoration-break:clone, block margin</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1025669">
+  <link rel="help" href="http://dev.w3.org/csswg/css-break/#break-decoration">
+  <link rel="match" href="box-decoration-break-block-margin-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+    html,body {
+      color:black; background-color:white; font-size:16px; padding:10px; margin:0;
+    }
+
+    .inner {
+      box-decoration-break: clone;
+      border: 5px dashed blue;
+      margin: 7px 3px 5px 1px;
+      height: 78px;
+      width: 40px;
+      background: lime;
+      background-clip: content-box;
+    }
+
+    .columns {
+      -moz-columns: 3;
+      width: 250px;
+      height: 50px;
+      background: grey;
+      margin-top: 2px;
+    }
+
+    .unbalanced {
+      -moz-column-fill: auto;
+    }
+
+    .inner.p { height:87px; }
+    .inner.p2 { height:84px; }
+
+    .p3, .p4, .p5, .p6 { border-style:none; }
+    .inner div { height:16px;  }
+    .inner.p3 div { margin: 3px; }
+    .inner.p4 div { margin: 11px 3px 5px 1px; }
+    .inner.p5 div { box-decoration-break: clone; margin: 3px; }
+    .inner.p6 div { box-decoration-break: clone; margin: 11px 3px 5px 1px; }
+  </style>
+</head>
+<body>
+
+<div class="columns"><div class="inner"></div></div>
+<div class="columns unbalanced"><div class="inner"></div></div>
+<div class="columns"><div class="p inner"></div></div>
+<div class="columns unbalanced"><div class="p2 inner"></div></div>
+
+<!-- margin collapsing with innermost DIV -->
+<div class="columns unbalanced"><div class="p3 inner"><div></div></div></div>
+<div class="columns unbalanced"><div class="p4 inner"><div></div></div></div>
+<div class="columns unbalanced"><div class="p5 inner"><div></div></div></div>
+<div class="columns unbalanced"><div class="p6 inner"><div></div></div></div>
+
+</body>
+</html>
