@@ -5,7 +5,7 @@ code, and optionally help with indentation.
 
 # Upgrade
 
-Currently used version is 4.0.3. To upgrade, download a new version of
+Currently used version is 4.2.0. To upgrade, download a new version of
 CodeMirror from the project's page [1] and replace all JavaScript and
 CSS files inside the codemirror directory [2].
 
@@ -46,29 +46,36 @@ in the LICENSE file:
 
  * codemirror.css
  * codemirror.js
- * comment.js
+ * comment/comment.js
+ * comment/continue-comment.js
  * activeline.js
  * dialog/dialog.css
  * dialog/dialog.js
- * keymap/emacs.js
- * keymap/sublime.js
- * keymap/vim.js
+ * edit/closebrackets.js
+ * edit/closetag.js
+ * edit/continuelist.js
+ * edit/matchbrackets.js
+ * edit/matchtags.js
+ * edit/trailingspace.js
  * fold/foldcode.js
  * fold/brace-fold.js
  * fold/comment-fold.js
  * fold/xml-fold.js
  * fold/foldgutter.js
- * xml.js
- * css.js
- * javascript.js
- * clike.js
- * htmlmixed.js
- * matchbrackets.js
- * closebrackets.js
- * trailingspace.js
+ * hint/show-hint.js
+ * keymap/emacs.js
+ * keymap/sublime.js
+ * keymap/vim.js
+ * mode/xml.js
+ * mode/css.js
+ * mode/javascript.js
+ * mode/clike.js
+ * mode/htmlmixed.js
  * search/match-highlighter.js
  * search/search.js
  * search/searchcursor.js
+ * tern/tern.js
+ * tern/tern.css
  * test/codemirror.html
  * test/cm_comment_test.js
  * test/cm_doc_test.js

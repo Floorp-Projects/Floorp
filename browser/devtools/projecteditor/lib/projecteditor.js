@@ -171,7 +171,7 @@ var ProjectEditor = Class({
     on(this, this.projectTree, "selection", this._onTreeSelected);
     on(this, this.projectTree, "resource-removed", this._onTreeResourceRemoved);
 
-    let sourcesBox = this.document.querySelector("#sources");
+    let sourcesBox = this.document.querySelector("#sources > vbox");
     sourcesBox.appendChild(this.projectTree.elt);
   },
 

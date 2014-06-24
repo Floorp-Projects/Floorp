@@ -24,6 +24,14 @@ const gEncoder = new TextEncoder();
  * A Project keeps track of the opened folders using LocalStore
  * objects.  Resources are generally requested from the project,
  * even though the Store is actually keeping track of them.
+ *
+ *
+ * This object emits the following events:
+ *   - "refresh-complete": After all stores have been refreshed from disk.
+ *   - "store-added": When a store has been added to the project.
+ *   - "store-removed": When a store has been removed from the project.
+ *   - "resource-added": When a resource has been added to one of the stores.
+ *   - "resource-removed": When a resource has been removed from one of the stores.
  */
 var Project = Class({
   extends: EventTarget,
@@ -88,6 +96,7 @@ var Project = Class({
       for (let [path, store] of this.localStores) {
         yield store.refresh();
       }
+      emit(this, "refresh-complete");
     }.bind(this));
   },
 

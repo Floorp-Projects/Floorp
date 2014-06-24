@@ -44,7 +44,7 @@
       <command id="cmd_showAddons" oncommand="Cmds.showAddons()"/>
       <command id="cmd_showTroubleShooting" oncommand="Cmds.showTroubleShooting()"/>
       <command id="cmd_play" oncommand="Cmds.play()"/>
-      <command id="cmd_stop" oncommand="Cmds.stop()"/>
+      <command id="cmd_stop" oncommand="Cmds.stop()" label="&projectMenu_stop_label;"/>
       <command id="cmd_toggleToolbox" oncommand="Cmds.toggleToolbox()"/>
     </commandset>
   </commandset>
@@ -58,7 +58,7 @@
         <menuitem command="cmd_showProjectPanel" key="key_showProjectPanel" label="&projectMenu_selectApp_label;" accesskey="&projectMenu_selectApp_accessley;"/>
         <menuseparator/>
         <menuitem command="cmd_play" key="key_play" label="&projectMenu_play_label;" accesskey="&projectMenu_play_accesskey;"/>
-        <menuitem command="cmd_stop" key="key_stop" label="&projectMenu_stop_label;" accesskey="&projectMenu_stop_accesskey;"/>
+        <menuitem command="cmd_stop" accesskey="&projectMenu_stop_accesskey;"/>
         <menuitem command="cmd_toggleToolbox" key="key_toggleToolbox" label="&projectMenu_debug_label;" accesskey="&projectMenu_debug_accesskey;"/>
         <menuseparator/>
         <menuitem command="cmd_removeProject" accesskey="&projectMenu_remove_accesskey;"/>
@@ -88,7 +88,6 @@
     <key key="&key_quit;" id="key_quit" command="cmd_quit" modifiers="accel"/>
     <key key="&key_showProjectPanel;" id="key_showProjectPanel" command="cmd_showProjectPanel" modifiers="accel"/>
     <key key="&key_play;" id="key_play" command="cmd_play" modifiers="accel"/>
-    <key key="&key_stop;" id="key_stop" command="cmd_stop" modifiers="accel"/>
     <key key="&key_toggleEditor;" id="key_toggleEditor" command="cmd_toggleEditor" modifiers="accel"/>
     <key keycode="&key_toggleToolbox;" id="key_toggleToolbox" command="cmd_toggleToolbox"/>
   </keyset>

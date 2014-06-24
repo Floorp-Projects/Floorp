@@ -50,6 +50,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'DrawTargetD2D.cpp',
         'PathD2D.cpp',
         'ScaledFontDWrite.cpp',
+        'ScaledFontWin.cpp',
         'SourceSurfaceD2D.cpp',
         'SourceSurfaceD2DTarget.cpp',
     ]
@@ -63,10 +64,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
             'SourceSurfaceD2D1.cpp'
         ]
         DEFINES['USE_D2D1_1'] = True
-    if CONFIG['MOZ_ENABLE_SKIA']:
-        SOURCES += [
-            'ScaledFontWin.cpp',
-        ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [

@@ -41,7 +41,7 @@ function runTests()
     method: "display",
     code: error1,
     result: error1 + openComment +
-            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:1" + closeComment,
+            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
     label: "error display output"
   },
   {
@@ -78,7 +78,7 @@ function runTests()
     method: "run",
     code: error1,
     result: error1 + openComment +
-            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:1" + closeComment,
+            "Exception: Ouch!\n@" + scratchpad.uniqueName + ":1:7" + closeComment,
     label: "error run output"
   },
   {
