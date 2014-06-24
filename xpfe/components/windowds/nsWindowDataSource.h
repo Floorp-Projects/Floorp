@@ -27,7 +27,6 @@ class nsWindowDataSource : public nsIRDFDataSource,
 {
  public:
     nsWindowDataSource() { }
-    virtual ~nsWindowDataSource();
 
     nsresult Init();
 
@@ -38,6 +37,9 @@ class nsWindowDataSource : public nsIRDFDataSource,
     NS_DECL_NSIWINDOWMEDIATORLISTENER
     NS_DECL_NSIWINDOWDATASOURCE
     NS_DECL_NSIRDFDATASOURCE
+
+ protected:
+    virtual ~nsWindowDataSource();
 
  private:
 
