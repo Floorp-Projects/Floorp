@@ -1591,6 +1591,7 @@ public:
 
 class MediaStreamGraphShutdownObserver MOZ_FINAL : public nsIObserver
 {
+  ~MediaStreamGraphShutdownObserver() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

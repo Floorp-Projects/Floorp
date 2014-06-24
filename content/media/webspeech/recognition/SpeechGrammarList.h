@@ -29,7 +29,6 @@ class SpeechGrammarList MOZ_FINAL : public nsISupports,
 {
 public:
   SpeechGrammarList(nsISupports* aParent);
-  ~SpeechGrammarList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechGrammarList)
@@ -52,6 +51,8 @@ public:
   already_AddRefed<SpeechGrammar> IndexedGetter(uint32_t aIndex, bool& aPresent, ErrorResult& aRv);
 
 private:
+  ~SpeechGrammarList();
+
   nsCOMPtr<nsISupports> mParent;
 };
 
