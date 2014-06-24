@@ -107,8 +107,8 @@ var WebrtcUI = {
           allowedDevices.AppendElement(audioDevices[audioId]);
 
         let videoId = 0;
-        if (inputs && inputs.videoDevice != undefined)
-          videoId = inputs.videoDevice;
+        if (inputs && inputs.videoSource != undefined)
+          videoId = inputs.videoSource;
         if (videoDevices[videoId])
           allowedDevices.AppendElement(videoDevices[videoId]);
 
@@ -198,6 +198,7 @@ var WebrtcUI = {
       // Only show the No Video option if there are also Audio devices to choose from
       if (audioDevices.length > 0)
         extraItems = [ Strings.browser.GetStringFromName("getUserMedia.videoSource.none") ];
+      // videoSource is both the string used for l10n lookup and the object that will be returned
       this._addDevicesToOptions(videoDevices, "videoSource", options, extraItems);
     }
 
