@@ -71,6 +71,8 @@ add_task(function* setup() {
     Services.prefs.clearUserPref("browser.translation.ui.show");
   });
 
+  // Make sure there are some initial metrics in place when the test starts.
+  yield translate("<h1>Hallo Welt!</h1>", "de", "en");
   yield MetricsChecker.updateMetrics();
 });
 
