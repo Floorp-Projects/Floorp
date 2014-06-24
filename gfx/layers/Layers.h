@@ -54,6 +54,7 @@ extern uint8_t gLayerManagerLayerBuilder;
 namespace mozilla {
 
 class FrameLayerBuilder;
+class StyleAnimationValue;
 class WebGLContext;
 
 namespace gl {
@@ -686,8 +687,8 @@ private:
 typedef InfallibleTArray<Animation> AnimationArray;
 
 struct AnimData {
-  InfallibleTArray<nsStyleAnimation::Value> mStartValues;
-  InfallibleTArray<nsStyleAnimation::Value> mEndValues;
+  InfallibleTArray<mozilla::StyleAnimationValue> mStartValues;
+  InfallibleTArray<mozilla::StyleAnimationValue> mEndValues;
   InfallibleTArray<nsAutoPtr<mozilla::css::ComputedTimingFunction> > mFunctions;
 };
 

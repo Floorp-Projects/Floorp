@@ -392,7 +392,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   // whether they are resolved relative to other animations:  I assume
   // that they're not, since that would prevent us from caching a lot of
   // data that we'd really like to cache (in particular, the
-  // nsStyleAnimation::Value values in AnimationPropertySegment).
+  // StyleAnimationValue values in AnimationPropertySegment).
   nsStyleContext *result = mCache.GetWeak(aKeyframe);
   if (!result) {
     nsCOMArray<nsIStyleRule> rules;
@@ -602,14 +602,14 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
                                  mozilla::css::Declaration* aFromDeclaration,
                                  float aToKey, nsStyleContext* aToContext)
 {
-  nsStyleAnimation::Value fromValue, toValue, dummyValue;
+  StyleAnimationValue fromValue, toValue, dummyValue;
   if (!ExtractComputedValueForTransition(aProperty, aFromContext, fromValue) ||
       !ExtractComputedValueForTransition(aProperty, aToContext, toValue) ||
       // Check that we can interpolate between these values
       // (If this is ever a performance problem, we could add a
       // CanInterpolate method, but it seems fine for now.)
-      !nsStyleAnimation::Interpolate(aProperty, fromValue, toValue,
-                                    0.5, dummyValue)) {
+      !StyleAnimationValue::Interpolate(aProperty, fromValue, toValue,
+                                        0.5, dummyValue)) {
     return false;
   }
 

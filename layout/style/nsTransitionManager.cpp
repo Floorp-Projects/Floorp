@@ -302,7 +302,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     ElementAnimationPtrArray& animations = et->mAnimations;
     uint32_t i = animations.Length();
     NS_ABORT_IF_FALSE(i != 0, "empty transitions list?");
-    nsStyleAnimation::Value currentValue;
+    StyleAnimationValue currentValue;
     do {
       --i;
       ElementAnimation* animation = animations[i];
@@ -405,7 +405,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
 
   nsRefPtr<ElementPropertyTransition> pt = new ElementPropertyTransition();
 
-  nsStyleAnimation::Value startValue, endValue, dummyValue;
+  StyleAnimationValue startValue, endValue, dummyValue;
   bool haveValues =
     ExtractComputedValueForTransition(aProperty, aOldStyleContext,
                                       startValue) &&
@@ -420,8 +420,8 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
     // Check that we can interpolate between these values
     // (If this is ever a performance problem, we could add a
     // CanInterpolate method, but it seems fine for now.)
-    nsStyleAnimation::Interpolate(aProperty, startValue, endValue,
-                                  0.5, dummyValue);
+    StyleAnimationValue::Interpolate(aProperty, startValue, endValue,
+                                     0.5, dummyValue);
 
   bool haveCurrentTransition = false;
   size_t currentIndex = nsTArray<ElementPropertyTransition>::NoIndex;
