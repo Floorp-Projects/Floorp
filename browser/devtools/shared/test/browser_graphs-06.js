@@ -38,11 +38,40 @@ function testGraph(graph) {
   is(graph.getSelection().end, graph._regions[0].end,
     "The first region is now selected (2).");
 
+  let min = map(graph.getSelection().start, 0, graph.width, 112, 4180);
+  let max = map(graph.getSelection().end, 0, graph.width, 112, 4180);
+  is(graph.getMappedSelection().min, min,
+    "The mapped selection's min value is correct (1).");
+  is(graph.getMappedSelection().max, max,
+    "The mapped selection's max value is correct (2).");
+
   click(graph, (graph._regions[1].start + graph._regions[1].end) / 2);
   is(graph.getSelection().start, graph._regions[1].start,
     "The second region is now selected (1).");
   is(graph.getSelection().end, graph._regions[1].end,
     "The second region is now selected (2).");
+
+  min = map(graph.getSelection().start, 0, graph.width, 112, 4180);
+  max = map(graph.getSelection().end, 0, graph.width, 112, 4180);
+  is(graph.getMappedSelection().min, min,
+    "The mapped selection's min value is correct (3).");
+  is(graph.getMappedSelection().max, max,
+    "The mapped selection's max value is correct (4).");
+
+  graph.setSelection({ start: graph.width, end: 0 });
+  min = map(0, 0, graph.width, 112, 4180);
+  max = map(graph.width, 0, graph.width, 112, 4180);
+  is(graph.getMappedSelection().min, min,
+    "The mapped selection's min value is correct (5).");
+  is(graph.getMappedSelection().max, max,
+    "The mapped selection's max value is correct (6).");
+}
+
+/**
+ * Maps a value from one range to another.
+ */
+function map(value, istart, istop, ostart, ostop) {
+  return ostart + (ostop - ostart) * ((value - istart) / (istop - istart));
 }
 
 // EventUtils just doesn't work!

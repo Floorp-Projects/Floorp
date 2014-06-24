@@ -503,6 +503,9 @@
                   <menuitem id="menu_devAppMgr"
                             observes="devtoolsMenuBroadcaster_DevAppMgr"
                             accesskey="&devAppMgrMenu.accesskey;"/>
+                  <menuitem id="menu_webide"
+                            observes="devtoolsMenuBroadcaster_webide"
+                            accesskey="&webide.accesskey;"/>
                   <menuitem id="menu_browserToolbox"
                             observes="devtoolsMenuBroadcaster_BrowserToolbox"
                             accesskey="&browserToolboxMenu.accesskey;"/>

@@ -664,13 +664,13 @@ let settingsToObserve = {
     defaultValue: false
   },
   'devtools.eventlooplag.threshold': 100,
+  'dom.mozApps.use_reviewer_certs': false,
   'layers.draw-borders': false,
   'layers.draw-tile-borders': false,
   'layers.dump': false,
   'layers.enable-tiles': true,
   'layers.simple-tiles': false,
   'privacy.donottrackheader.enabled': false,
-  'ril.cellbroadcast.disabled': false,
   'ril.radio.disabled': false,
   'ril.mms.requestReadReport.enabled': {
     prefName: 'dom.mms.requestReadReport',
