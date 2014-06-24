@@ -4418,19 +4418,7 @@ template <AllowGC allowGC>
 JSFlatString *
 js::NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
 {
-    size_t n = js_strlen(s);
-    if (JSFatInlineString::twoByteLengthFits(n))
-        return NewFatInlineString<allowGC>(cx, Range<const jschar>(s, n));
-
-    size_t m = (n + 1) * sizeof(jschar);
-    jschar *news = (jschar *) cx->malloc_(m);
-    if (!news)
-        return nullptr;
-    js_memcpy(news, s, m);
-    JSFlatString *str = NewString<allowGC>(cx, news, n);
-    if (!str)
-        js_free(news);
-    return str;
+    return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
 }
 
 template JSFlatString *
