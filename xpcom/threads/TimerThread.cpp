@@ -235,9 +235,8 @@ NS_IMETHODIMP TimerThread::Run()
           // must be racing with us, blocked in gThread->RemoveTimer waiting
           // for TimerThread::mMonitor, under nsTimerImpl::Release.
 
-          nsRefPtr<nsTimerImpl> timerRef(timer);
+          NS_ADDREF(timer);
           RemoveTimerInternal(timer);
-          timer = nullptr;
 
           {
             // We release mMonitor around the Fire call to avoid deadlock.
@@ -247,21 +246,16 @@ NS_IMETHODIMP TimerThread::Run()
             if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
               PR_LOG(GetTimerLog(), PR_LOG_DEBUG,
                      ("Timer thread woke up %fms from when it was supposed to\n",
-                      fabs((now - timerRef->mTimeout).ToMilliseconds())));
+                      fabs((now - timer->mTimeout).ToMilliseconds())));
             }
 #endif
 
             // We are going to let the call to PostTimerEvent here handle the
             // release of the timer so that we don't end up releasing the timer
             // on the TimerThread instead of on the thread it targets.
-            timerRef = nsTimerImpl::PostTimerEvent(timerRef.forget());
-
-            if (timerRef) {
-              // We got our reference back due to an error.
-              // Unhook the nsRefPtr, and release manually so we can get the
-              // refcount.
-              nsrefcnt rc = timerRef.forget().get()->Release();
-              (void)rc;
+            if (NS_FAILED(timer->PostTimerEvent())) {
+              nsrefcnt rc;
+              NS_RELEASE2(timer, rc);
 
               // The nsITimer interface requires that its users keep a reference
               // to the timers they use while those timers are initialized but
@@ -276,6 +270,7 @@ NS_IMETHODIMP TimerThread::Run()
               // preventing this situation from occurring.
               MOZ_ASSERT(rc != 0, "destroyed timer off its target thread!");
             }
+            timer = nullptr;
           }
 
           if (mShutdown)
