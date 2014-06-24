@@ -9,6 +9,7 @@ XPIDL_SOURCES += [
     'nsIMobileConnectionInfo.idl',
     'nsIMobileConnectionProvider.idl',
     'nsIMobileNetworkInfo.idl',
+    'nsINeighboringCellInfo.idl',
 ]
 
 XPIDL_MODULE = 'dom_mobileconnection'
