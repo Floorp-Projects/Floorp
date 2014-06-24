@@ -76,6 +76,7 @@ this.ContentSearch = {
       this.target = event.detail;
     };
     msg.target.addEventListener("SwapDocShells", msg, true);
+    msg.originalTarget = msg.target;
 
     this._eventQueue.push({
       type: "Message",
@@ -115,7 +116,7 @@ this.ContentSearch = {
     if (methodName in this) {
       yield this._initService();
       yield this[methodName](msg, msg.data.data);
-      msg.target.removeEventListener("SwapDocShells", msg, true);
+      msg.originalTarget.removeEventListener("SwapDocShells", msg, true);
     }
   }),
 
