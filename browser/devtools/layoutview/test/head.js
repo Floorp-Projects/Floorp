@@ -216,6 +216,28 @@ function waitForUpdate(inspector) {
   return inspector.once("layoutview-updated");
 }
 
+function getHighlighter() {
+  return gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
+}
+
+function getBoxModelRoot() {
+  let highlighter = getHighlighter();
+  return highlighter.querySelector(".box-model-root");
+}
+
+function getGuideStatus(location) {
+  let root = getBoxModelRoot();
+  let guide = root.querySelector(".box-model-guide-" + location);
+
+  return {
+    visible: !guide.hasAttribute("hidden"),
+    x1: guide.getAttribute("x1"),
+    y1: guide.getAttribute("y1"),
+    x2: guide.getAttribute("x2"),
+    y2: guide.getAttribute("y2")
+  };
+}
+
 /**
  * The addTest/runTests function couple provides a simple way to define
  * subsequent test cases in a test file. Example:
