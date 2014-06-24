@@ -11,6 +11,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
+"use strict";
+
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -137,12 +139,10 @@ this.LoginManagerStorage_json.prototype = {
     addLogin : function (login) {
         this._store.ensureDataReady();
 
-        let encUsername, encPassword;
-
         // Throws if there are bogus values.
         LoginHelper.checkLoginValues(login);
 
-        [encUsername, encPassword, encType] = this._encryptLogin(login);
+        let [encUsername, encPassword, encType] = this._encryptLogin(login);
 
         // Clone the login, so we don't modify the caller's object.
         let loginClone = login.clone();
