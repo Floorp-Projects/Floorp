@@ -8,12 +8,12 @@
 interface nsIURI;
 interface nsILoginInfo;
 interface nsIAutoCompleteResult;
+interface nsIFormAutoCompleteObserver;
 interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
-[scriptable, uuid(f5f2a39a-dffe-4eb9-ad28-340afd53b1a3)]
-
+[scriptable, uuid(f441b0a3-6588-455e-baa8-2e2dbba84655)]
 interface nsILoginManager : nsISupports {
     /**
      * This promise is resolved when initialization is complete, and is rejected
@@ -210,9 +210,10 @@ interface nsILoginManager : nsISupports {
      *       which calls it directly. This isn't really ideal, it should
      *       probably be callback registered through the FFC.
      */
-    nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
-                                    in nsIAutoCompleteResult aPreviousResult,
-                                    in nsIDOMHTMLInputElement aElement);
+    void autoCompleteSearchAsync(in AString aSearchString,
+                                 in nsIAutoCompleteResult aPreviousResult,
+                                 in nsIDOMHTMLInputElement aElement,
+                                 in nsIFormAutoCompleteObserver aListener);
 
     /**
      * Fill a form with login information if we have it. This method will fill
