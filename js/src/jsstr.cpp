@@ -893,8 +893,6 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 #if EXPOSE_INTL_API
-static const size_t SB_LENGTH = 32;
-
 /* ES6 20140210 draft 21.1.3.12. */
 static bool
 str_normalize(JSContext *cx, unsigned argc, Value *vp)
@@ -933,17 +931,21 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Step 8.
-    Rooted<JSFlatString*> flatStr(cx, str->ensureFlat(cx));
-    if (!flatStr)
+    AutoStableStringChars stableChars(cx);
+    if (!str->ensureFlat(cx) || !stableChars.initTwoByte(cx, str))
         return false;
-    const UChar *srcChars = JSCharToUChar(flatStr->chars());
-    int32_t srcLen = SafeCast<int32_t>(flatStr->length());
-    StringBuffer chars(cx);
-    if (!chars.resize(SB_LENGTH))
+
+    static const size_t INLINE_CAPACITY = 32;
+
+    const UChar *srcChars = JSCharToUChar(stableChars.twoByteRange().start().get());
+    int32_t srcLen = SafeCast<int32_t>(str->length());
+    Vector<jschar, INLINE_CAPACITY> chars(cx);
+    if (!chars.resize(INLINE_CAPACITY))
         return false;
+
     UErrorCode status = U_ZERO_ERROR;
     int32_t size = unorm_normalize(srcChars, srcLen, form, 0,
-                                   JSCharToUChar(chars.rawTwoByteBegin()), SB_LENGTH,
+                                   JSCharToUChar(chars.begin()), INLINE_CAPACITY,
                                    &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
@@ -953,16 +955,14 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         int32_t finalSize =
 #endif
         unorm_normalize(srcChars, srcLen, form, 0,
-                        JSCharToUChar(chars.rawTwoByteBegin()), size,
+                        JSCharToUChar(chars.begin()), size,
                         &status);
         MOZ_ASSERT(size == finalSize || U_FAILURE(status), "unorm_normalize behaved inconsistently");
     }
     if (U_FAILURE(status))
         return false;
-    // Trim any unused characters.
-    if (!chars.resize(size))
-        return false;
-    RootedString ns(cx, chars.finishString());
+
+    JSString *ns = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!ns)
         return false;
 
@@ -3665,8 +3665,7 @@ SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher
                 if (!matches[i + 1].isUndefined()) {
                     JSSubString parsub;
                     res->getParen(i + 1, &parsub);
-                    sub = js_NewStringCopyN<CanGC>(cx, parsub.base->chars() + parsub.offset,
-                                                   parsub.length);
+                    sub = js_NewDependentString(cx, parsub.base, parsub.offset, parsub.length);
                     if (!sub || !splits.append(StringValue(sub)))
                         return nullptr;
                 } else {
