@@ -189,6 +189,14 @@ LoginStore.prototype = {
           }
         }
 
+        // In some rare cases it's possible for logins to have been added to
+        // our database between the call to OS.File.read and when we've been
+        // notified that there was a problem with it. In that case, leave the
+        // synchronously-added data alone. See bug 1029128, comment 4.
+        if (this.dataReady) {
+          return;
+        }
+
         // In any case, initialize a new object to host the data.
         this.data = {
           nextId: 1,
