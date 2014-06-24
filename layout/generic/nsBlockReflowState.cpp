@@ -47,13 +47,16 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
           IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
   mBorderPadding = mReflowState.ComputedPhysicalBorderPadding();
-  mBorderPadding.ApplySkipSides(aFrame->GetSkipSides(&aReflowState));
+  int skipSides = aFrame->GetSkipSides(&aReflowState);
+  mBorderPadding.ApplySkipSides(skipSides);
   mContainerWidth = aReflowState.ComputedWidth() + mBorderPadding.LeftRight();
 
-  if (aTopMarginRoot || 0 != mBorderPadding.top) {
+  if ((aTopMarginRoot && !(skipSides & (1 << NS_SIDE_TOP))) ||
+      0 != mBorderPadding.top) {
     SetFlag(BRS_ISTOPMARGINROOT, true);
   }
-  if (aBottomMarginRoot || 0 != mBorderPadding.bottom) {
+  if ((aBottomMarginRoot && !(skipSides & (1 << NS_SIDE_BOTTOM))) ||
+      0 != mBorderPadding.bottom) {
     SetFlag(BRS_ISBOTTOMMARGINROOT, true);
   }
   if (GetFlag(BRS_ISTOPMARGINROOT)) {
@@ -160,6 +163,19 @@ nsBlockReflowState::ComputeReplacedBlockOffsetsForFloats(nsIFrame* aFrame,
   aRightResult = rightOffset;
 }
 
+static nscoord
+GetBottomMarginClone(nsIFrame* aFrame,
+                     nsRenderingContext* aRenderingContext,
+                     const nsRect& aContentArea)
+{
+  if (aFrame->StyleBorder()->mBoxDecorationBreak ==
+        NS_STYLE_BOX_DECORATION_BREAK_CLONE) {
+    nsCSSOffsetState os(aFrame, aRenderingContext, aContentArea.width);
+    return os.ComputedPhysicalMargin().bottom;
+  }
+  return 0;
+}
+
 // Compute the amount of available space for reflowing a block frame
 // at the current Y coordinate. This method assumes that
 // GetAvailableSpace has already been called.
@@ -177,7 +193,8 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
   aResult.y = mY;
   aResult.height = GetFlag(BRS_UNCONSTRAINEDHEIGHT)
     ? NS_UNCONSTRAINEDSIZE
-    : mReflowState.AvailableHeight() - mY;
+    : mReflowState.AvailableHeight() - mY
+      - GetBottomMarginClone(aFrame, mReflowState.rendContext, mContentArea);
   // mY might be greater than mBottomEdge if the block's top margin pushes
   // it off the page/column. Negative available height can confuse other code
   // and is nonsense in principle.
