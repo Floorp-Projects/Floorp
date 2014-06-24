@@ -118,7 +118,7 @@ function startTest() {
   SimpleTest.finish();
 }
 
-window.onload = startTest;
+window.addEventListener("runTests", startTest);
 
 SimpleTest.waitForExplicitFinish();
 

@@ -9,7 +9,7 @@
 <body>
 Login Manager test: simple form with autofillForms disabled and notifying observers
 <script>
-commonInit();
+commonInit(true);
 SimpleTest.waitForExplicitFinish();
 
 const Cc = SpecialPowers.Cc;
@@ -31,9 +31,16 @@ var TestObserver = {
       this.receivedNotificationFoundForm = true;
       this.dataFoundForm = data;
       // Now fill the form
-      pwmgr.fillForm(subject);
+      pwmgr.fillForm(subject)
+           .then(window.startTest)
+           .then(null, function(e) { alert(e); });
     } else if (topic == "passwordmgr-found-logins") {
       info("got passwordmgr-found-logins");
+
+      // We only care about the first notification (the second comes from our
+      // own call to pwmgr.fillForm.
+      if (this.receivedNotificationFoundLogins)
+        return;
       this.receivedNotificationFoundLogins = true;
       this.dataFoundLogins = subject.QueryInterface(Ci.nsIPropertyBag2);
     }
@@ -64,7 +71,7 @@ SpecialPowers.addObserver(TestObserver, "passwordmgr-found-logins", false);
 <script class="testbody" type="text/javascript">
 
 /** Test for Login Manager: simple form with autofillForms disabled and notifying observers **/
-function startTest(){
+function startTest() {
   // Test that found-form observer is notified & got correct data
   is(TestObserver.receivedNotificationFoundForm, true, "Checking found-form observer was notified");
   is(TestObserver.dataFoundForm, "noAutofillForms", "Checking found-form observer got correct data");
@@ -94,7 +101,7 @@ function startTest(){
   SimpleTest.finish();
 }
 
-window.onload = startTest;
+
 </script>
 </pre>
 </body>

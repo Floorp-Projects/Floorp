@@ -28,9 +28,10 @@ function submitForm() {
   setTimeout(function(){ form.submit(); }, 100);
 }
 
-window.onload = startAutocomplete;
 var form      = document.getElementById("form");
 var userField = document.getElementById("user");
+
+window.addEventListener('message', () => { startAutocomplete(); });
 
 </script>
 </body>

@@ -681,6 +681,11 @@ nsFormFillController::PerformInputListAutoComplete(nsIAutoCompleteResult* aPrevi
     }
   } else {
     result = aPreviousResult;
+
+    // If this is a password manager input mLastSearchResult will be a JS
+    // object (wrapped in an XPConnect reflector), so we need to take care not
+    // to hold onto it for too long.
+    mLastSearchResult = nullptr;
   }
 
   if (mLastListener) {
