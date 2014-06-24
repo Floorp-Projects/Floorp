@@ -27,7 +27,6 @@ public:
     myDNSListener(const char *host, int32_t index)
         : mHost(host)
         , mIndex(index) {}
-    virtual ~myDNSListener() {}
 
     NS_IMETHOD OnLookupComplete(nsICancelable *request,
                                 nsIDNSRecord  *rec,
@@ -53,9 +52,12 @@ public:
     }
 
 private:
+    virtual ~myDNSListener() {}
+
     nsCString mHost;
     int32_t   mIndex;
 };
+
 
 NS_IMPL_ISUPPORTS(myDNSListener, nsIDNSListener)
 

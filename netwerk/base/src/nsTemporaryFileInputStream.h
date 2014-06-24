@@ -41,12 +41,12 @@ public:
 
   nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos);
 
-  virtual ~nsTemporaryFileInputStream() { }
-
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIINPUTSTREAM
 
 private:
+  virtual ~nsTemporaryFileInputStream() { }
+
   nsRefPtr<FileDescOwner> mFileDescOwner;
   uint64_t mStartPos;
   uint64_t mEndPos;

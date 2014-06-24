@@ -12,13 +12,14 @@
 class nsFileProtocolHandler : public nsIFileProtocolHandler
                             , public nsSupportsWeakReference
 {
+    virtual ~nsFileProtocolHandler() {}
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIFILEPROTOCOLHANDLER
 
     nsFileProtocolHandler();
-    virtual ~nsFileProtocolHandler() {}
 
     nsresult Init();
 };

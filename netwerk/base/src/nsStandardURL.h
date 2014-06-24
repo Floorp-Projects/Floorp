@@ -43,6 +43,9 @@ class nsStandardURL : public nsIFileURL
                     , public nsISizeOf
                     , public nsIIPCSerializableURI
 {
+protected:
+    virtual ~nsStandardURL();
+
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
@@ -59,7 +62,6 @@ public:
     virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     nsStandardURL(bool aSupportsFileURL = false);
-    virtual ~nsStandardURL();
 
     static void InitGlobalObjects();
     static void ShutdownGlobalObjects();
@@ -93,6 +95,8 @@ public: /* internal -- HPUX compiler can't handle this being private */
     //
     class nsPrefObserver MOZ_FINAL : public nsIObserver
     {
+        ~nsPrefObserver() {}
+
     public:
         NS_DECL_ISUPPORTS
         NS_DECL_NSIOBSERVER

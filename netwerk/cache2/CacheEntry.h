@@ -351,12 +351,12 @@ class CacheEntryHandle : public nsICacheEntry
 {
 public:
   CacheEntryHandle(CacheEntry* aEntry);
-  virtual ~CacheEntryHandle();
   CacheEntry* Entry() const { return mEntry; }
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_FORWARD_NSICACHEENTRY(mEntry->)
 private:
+  virtual ~CacheEntryHandle();
   nsRefPtr<CacheEntry> mEntry;
 };
 

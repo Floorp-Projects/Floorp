@@ -33,7 +33,6 @@ public:
     friend class nsCacheService;
 
     nsCacheEntryDescriptor(nsCacheEntry * entry, nsCacheAccessMode  mode);
-    virtual ~nsCacheEntryDescriptor();
     
     /**
      * utility method to attempt changing data size of associated entry
@@ -66,6 +65,8 @@ public:
     }
 
 private:
+    virtual ~nsCacheEntryDescriptor();
+
      /*************************************************************************
       * input stream wrapper class -
       *
@@ -93,12 +94,13 @@ private:
          {
              NS_ADDREF(mDescriptor);
          }
+
+     private:
          virtual ~nsInputStreamWrapper()
          {
              NS_IF_RELEASE(mDescriptor);
          }
 
-     private:
          nsresult LazyInit();
          nsresult EnsureInit();
          nsresult Read_Locked(char *buf, uint32_t count, uint32_t *countRead);
@@ -126,13 +128,13 @@ private:
           , mStreamEnded(false)
          {
          }
+         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result);
+         NS_IMETHOD Close();
+     private:
          virtual ~nsDecompressInputStreamWrapper()
          {
              Close();
          }
-         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result);
-         NS_IMETHOD Close();
-     private:
          nsresult InitZstream();
          nsresult EndZstream();
      };
@@ -165,6 +167,8 @@ private:
          {
              NS_ADDREF(mDescriptor); // owning ref
          }
+
+     private:
          virtual ~nsOutputStreamWrapper()
          {
              Close();
@@ -173,7 +177,6 @@ private:
              NS_ASSERTION(!mDescriptor, "Bad state");
          }
 
-     private:
          nsresult LazyInit();
          nsresult EnsureInit();
          nsresult OnWrite(uint32_t count);
@@ -206,13 +209,13 @@ private:
           , mUncompressedCount(0)
          {
          }
+         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result);
+         NS_IMETHOD Close();
+     private:
          virtual ~nsCompressOutputStreamWrapper()
          { 
              Close();
          }
-         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result);
-         NS_IMETHOD Close();
-     private:
          nsresult InitZstream();
          nsresult WriteBuffer();
      };
