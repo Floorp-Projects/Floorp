@@ -227,6 +227,70 @@ let gTestSuite = (function() {
   }
 
   /**
+   * Forget the given network.
+   *
+   * Resolve when we successfully forget the given network; reject when any error
+   * occurs.
+   *
+   * Fulfill params: (none)
+   * Reject params: (none)
+   *
+   * @param aNetwork
+   *        An object of MozWifiNetwork.
+   *
+   * @return A deferred promise.
+   */
+  function forgetNetwork(aNetwork) {
+    let request = wifiManager.forget(aNetwork);
+    return wrapDomRequestAsPromise(request)
+      .then(event => event.target.result);
+  }
+
+  /**
+   * Forget all known networks.
+   *
+   * Resolve when we successfully forget all the known network;
+   * reject when any error occurs.
+   *
+   * Fulfill params: (none)
+   * Reject params: (none)
+   *
+   * @return A deferred promise.
+   */
+  function forgetAllKnownNetworks() {
+
+    function createForgetNetworkChain(aNetworks) {
+      let chain = Promise.resolve();
+
+      aNetworks.forEach(function (aNetwork) {
+        chain = chain.then(() => forgetNetwork(aNetwork));
+      });
+
+      return chain;
+    }
+
+    return getKnownNetworks()
+      .then(networks => createForgetNetworkChain(networks));
+  }
+
+  /**
+   * Get all known networks.
+   *
+   * Resolve when we get all the known networks; reject when any error
+   * occurs.
+   *
+   * Fulfill params: An array of MozWifiNetwork
+   * Reject params: (none)
+   *
+   * @return A deferred promise.
+   */
+  function getKnownNetworks() {
+    let request = wifiManager.getKnownNetworks();
+    return wrapDomRequestAsPromise(request)
+      .then(event => event.target.result);
+  }
+
+  /**
    * Issue a request to scan all wifi available networks.
    *
    * Resolve when we get the scan result; reject when any error
@@ -288,6 +352,85 @@ let gTestSuite = (function() {
         }
         throw 'Unexpected scan result!';
       });
+  }
+
+  /**
+   * Test wifi association.
+   *
+   * Associate with the given network object which is obtained by
+   * MozWifiManager.getNetworks() (i.e. MozWifiNetwork).
+   * Resolve when the 'connected' status change event is received.
+   * Note that we might see other events like 'connecting'
+   * before 'connected'. So we need to call |waitForWifiManagerEventOnce|
+   * again whenever non 'connected' event is seen. Never reject.
+   *
+   * Fulfill params: (none)
+   *
+   * @param aNetwork
+   *        An object of MozWifiNetwork.
+   *
+   * @return A deferred promise.
+   */
+  function testAssociate(aNetwork) {
+    setPasswordIfNeeded(aNetwork);
+
+    let promises = [];
+
+    // Register the event listerner to wait for 'connected' event first
+    // to avoid racing issue.
+    promises.push(waitForConnected(aNetwork));
+
+    // Then we do the association.
+    let request = wifiManager.associate(aNetwork);
+    promises.push(wrapDomRequestAsPromise(request));
+
+    return Promise.all(promises);
+  }
+
+  function waitForConnected(aExpectedNetwork) {
+    return waitForWifiManagerEventOnce('statuschange')
+      .then(function onstatuschange(event) {
+        log("event.status: " + event.status);
+        log("event.network.ssid: " + (event.network ? event.network.ssid : ''));
+
+        if ("connected" === event.status &&
+            event.network.ssid === aExpectedNetwork.ssid) {
+          return; // Got expected 'connected' event from aNetwork.ssid.
+        }
+
+        log('Not expected "connected" statuschange event. Wait again!');
+        return waitForConnected(aExpectedNetwork);
+      });
+  }
+
+  /**
+   * Set the password for associating the given network if needed.
+   *
+   * Set the password by looking up HOSTAPD_CONFIG_LIST. This function
+   * will also set |keyManagement| properly.
+   *
+   * @param aNetwork
+   *        The MozWifiNetwork object.
+   */
+  function setPasswordIfNeeded(aNetwork) {
+    let i = getFirstIndexBySsid(aNetwork.ssid, HOSTAPD_CONFIG_LIST);
+    if (-1 === i) {
+      log('unknown ssid: ' + aNetwork.ssid);
+      return; // Unknown network. Assume insecure.
+    }
+
+    if (!aNetwork.security.length) {
+      return; // No need to set password.
+    }
+
+    let security = aNetwork.security[0];
+    if (/PSK$/.test(security)) {
+      aNetwork.psk = HOSTAPD_CONFIG_LIST[i].wpa_passphrase;
+      aNetwork.keyManagement = 'WPA-PSK';
+    } else if (/WEP$/.test(security)) {
+      aNetwork.wep = HOSTAPD_CONFIG_LIST[i].wpa_passphrase;
+      aNetwork.keyManagement = 'WEP';
+    }
   }
 
   /**
@@ -632,7 +775,9 @@ let gTestSuite = (function() {
    */
   function cleanUp() {
     waitFor(function() {
-      return ensureWifiEnabled(wifiOrigEnabled)
+      return ensureWifiEnabled(true)
+        .then(forgetAllKnownNetworks)
+        .then(() => ensureWifiEnabled(wifiOrigEnabled))
         .then(finish);
     }, function() {
       return pendingEmulatorShellCount === 0;
@@ -678,6 +823,12 @@ let gTestSuite = (function() {
   suite.verifyNumOfProcesses = verifyNumOfProcesses;
   suite.testWifiScanWithRetry = testWifiScanWithRetry;
   suite.getFirstIndexBySsid = getFirstIndexBySsid;
+  suite.testAssociate = testAssociate;
+  suite.getKnownNetworks = getKnownNetworks;
+  suite.requestWifiScan = requestWifiScan;
+  suite.waitForConnected = waitForConnected;
+  suite.forgetNetwork = forgetNetwork;
+  suite.waitForTimeout = waitForTimeout;
 
   /**
    * Common test routine.

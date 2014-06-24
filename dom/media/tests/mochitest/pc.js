@@ -349,6 +349,15 @@ MediaElementChecker.prototype = {
 };
 
 /**
+ * Only calls info() if SimpleTest.info() is available
+ */
+function safeInfo(message) {
+  if (typeof(info) === "function") {
+    info(message);
+  }
+}
+
+/**
  * Query function for determining if any IP address is available for
  * generating SDP.
  *
@@ -374,16 +383,16 @@ function isNetworkReady() {
         var ip = ips.value[j];
         // skip IPv6 address until bug 797262 is implemented
         if (ip.indexOf(":") < 0) {
-          info("Network interface is ready with address: " + ip);
+          safeInfo("Network interface is ready with address: " + ip);
           return true;
         }
       }
     }
     // ip address is not available
-    info("Network interface is not ready, required additional network setup");
+    safeInfo("Network interface is not ready, required additional network setup");
     return false;
   }
-  info("Network setup is not required");
+  safeInfo("Network setup is not required");
   return true;
 }
 

@@ -203,6 +203,10 @@ class AsmJSModule
             JS_ASSERT(!ionCodeOffset_);
             ionCodeOffset_ = off;
         }
+        void updateOffsets(jit::MacroAssembler &masm) {
+            interpCodeOffset_ = masm.actualOffset(interpCodeOffset_);
+            ionCodeOffset_ = masm.actualOffset(ionCodeOffset_);
+        }
 
         size_t serializedSize() const;
         uint8_t *serialize(uint8_t *cursor) const;
@@ -276,6 +280,10 @@ class AsmJSModule
             JS_ASSERT(pod.codeOffset_ == UINT32_MAX);
             pod.codeOffset_ = off;
         }
+        void updateCodeOffset(jit::MacroAssembler &masm) {
+            pod.codeOffset_ = masm.actualOffset(pod.codeOffset_);
+        }
+
 
         PropertyName *name() const {
             return name_;
@@ -748,7 +756,6 @@ class AsmJSModule
     // compiling entries/exits) to record the extent of compiled function code.
     void finishFunctionBodies(size_t functionBytes) {
         JS_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
-        JS_ASSERT(functionBytes % AsmJSPageSize == 0);
         pod.functionBytes_ = functionBytes;
         JS_ASSERT(isFinishedWithFunctionBodies());
     }
