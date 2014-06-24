@@ -1,11 +1,11 @@
 {
     "talos.zip": {
-        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.b4907f0b27d3.zip",
+        "url": "http://talos-bundles.pvt.build.mozilla.org/zips/talos.3a6a28b96228.zip",
         "path": ""
     },
     "global": {
         "talos_repo": "https://hg.mozilla.org/build/talos",
-        "talos_revision": "35ba19c5f0e1"
+        "talos_revision": "3a6a28b96228"
     },
     "suites": {
         "chromez": {
@@ -24,11 +24,14 @@
         "other": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
-        "other_nolinux64": {
+        "other_nol64": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore"]
         },
-        "other_linux64": {
+        "other_l64": {
             "tests": ["a11yr", "ts_paint", "tpaint", "sessionrestore", "sessionrestore_no_auto_restore", "media_tests"]
+        },
+        "g1": {
+            "tests": ["tp5o_scroll"]
         },
         "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "cart"]
