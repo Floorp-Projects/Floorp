@@ -98,7 +98,7 @@ function copyCursor(cur) {
 
 function forEach(arr, func) {
   for (var i = 0; i < arr.length; i++) {
-    func(arr[i]);
+    func(arr[i], i, arr);
   }
 }
 
@@ -258,7 +258,7 @@ testJumplist('jumplist_gg', ['g', 'g', '<C-o>'], [5,2], [5,2]);
 testJumplist('jumplist_%', ['%', '<C-o>'], [1,5], [1,5]);
 testJumplist('jumplist_{', ['{', '<C-o>'], [1,5], [1,5]);
 testJumplist('jumplist_}', ['}', '<C-o>'], [1,5], [1,5]);
-testJumplist('jumplist_\'', ['m', 'a', 'h', '\'', 'a', 'h', '<C-i>'], [1,5], [1,5]);
+testJumplist('jumplist_\'', ['m', 'a', 'h', '\'', 'a', 'h', '<C-i>'], [1,0], [1,5]);
 testJumplist('jumplist_`', ['m', 'a', 'h', '`', 'a', 'h', '<C-i>'], [1,5], [1,5]);
 testJumplist('jumplist_*_cachedCursor', ['*', '<C-o>'], [1,3], [1,3]);
 testJumplist('jumplist_#_cachedCursor', ['#', '<C-o>'], [1,3], [1,3]);
@@ -1015,6 +1015,7 @@ testEdit('daW_end_punct', 'foo \tbAr.', /A/, 'daW', 'foo');
 //    Open and close on same line
 testEdit('di(_open_spc', 'foo (bAr) baz', /\(/, 'di(', 'foo () baz');
 testEdit('di)_open_spc', 'foo (bAr) baz', /\(/, 'di)', 'foo () baz');
+testEdit('dib_open_spc', 'foo (bAr) baz', /\(/, 'dib', 'foo () baz');
 testEdit('da(_open_spc', 'foo (bAr) baz', /\(/, 'da(', 'foo  baz');
 testEdit('da)_open_spc', 'foo (bAr) baz', /\(/, 'da)', 'foo  baz');
 
@@ -1028,11 +1029,26 @@ testEdit('di)_close_spc', 'foo (bAr) baz', /\)/, 'di)', 'foo () baz');
 testEdit('da(_close_spc', 'foo (bAr) baz', /\)/, 'da(', 'foo  baz');
 testEdit('da)_close_spc', 'foo (bAr) baz', /\)/, 'da)', 'foo  baz');
 
+//  delete around and inner b.
+testEdit('dab_on_(_should_delete_around_()block', 'o( in(abc) )', /\(a/, 'dab', 'o( in )');
+
+//  delete around and inner B.
+testEdit('daB_on_{_should_delete_around_{}block', 'o{ in{abc} }', /{a/, 'daB', 'o{ in }');
+testEdit('diB_on_{_should_delete_inner_{}block', 'o{ in{abc} }', /{a/, 'diB', 'o{ in{} }');
+
+testEdit('da{_on_{_should_delete_inner_block', 'o{ in{abc} }', /{a/, 'da{', 'o{ in }');
+testEdit('di[_on_(_should_not_delete', 'foo (bAr) baz', /\(/, 'di[', 'foo (bAr) baz');
+testEdit('di[_on_)_should_not_delete', 'foo (bAr) baz', /\)/, 'di[', 'foo (bAr) baz');
+testEdit('da[_on_(_should_not_delete', 'foo (bAr) baz', /\(/, 'da[', 'foo (bAr) baz');
+testEdit('da[_on_)_should_not_delete', 'foo (bAr) baz', /\)/, 'da[', 'foo (bAr) baz');
+testMotion('di(_outside_should_stay', ['d', 'i', '('], { line: 0, ch: 0}, { line: 0, ch: 0});
+
 //  Open and close on different lines, equally indented
 testEdit('di{_middle_spc', 'a{\n\tbar\n}b', /r/, 'di{', 'a{}b');
 testEdit('di}_middle_spc', 'a{\n\tbar\n}b', /r/, 'di}', 'a{}b');
 testEdit('da{_middle_spc', 'a{\n\tbar\n}b', /r/, 'da{', 'ab');
 testEdit('da}_middle_spc', 'a{\n\tbar\n}b', /r/, 'da}', 'ab');
+testEdit('daB_middle_spc', 'a{\n\tbar\n}b', /r/, 'daB', 'ab');
 
 // open and close on diff lines, open indented less than close
 testEdit('di{_middle_spc', 'a{\n\tbar\n\t}b', /r/, 'di{', 'a{}b');
@@ -1125,6 +1141,13 @@ testVim('a_eol', function(cm, vim, helpers) {
   helpers.assertCursorAt(0, lines[0].length);
   eq('vim-insert', cm.getOption('keyMap'));
 });
+testVim('a_endOfSelectedArea', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('v', 'j', 'l');
+  helpers.doKeys('A');
+  helpers.assertCursorAt(1, 2);
+  eq('vim-insert', cm.getOption('keyMap'));
+}, {value: 'foo\nbar'});
 testVim('i', function(cm, vim, helpers) {
   cm.setCursor(0, 1);
   helpers.doKeys('i');
@@ -1236,6 +1259,31 @@ testVim('p_lastline', function(cm, vim, helpers) {
   eq('___\n  a\nd\n  a\nd', cm.getValue());
   helpers.assertCursorAt(1, 2);
 }, { value: '___' });
+testVim(']p_first_indent_is_smaller', function(cm, vim, helpers) {
+  helpers.getRegisterController().pushText('"', 'yank', '  abc\n    def\n', true);
+  helpers.doKeys(']', 'p');
+  eq('  ___\n  abc\n    def', cm.getValue());
+}, { value: '  ___' });
+testVim(']p_first_indent_is_larger', function(cm, vim, helpers) {
+  helpers.getRegisterController().pushText('"', 'yank', '    abc\n  def\n', true);
+  helpers.doKeys(']', 'p');
+  eq('  ___\n  abc\ndef', cm.getValue());
+}, { value: '  ___' });
+testVim(']p_with_tab_indents', function(cm, vim, helpers) {
+  helpers.getRegisterController().pushText('"', 'yank', '\t\tabc\n\t\t\tdef\n', true);
+  helpers.doKeys(']', 'p');
+  eq('\t___\n\tabc\n\t\tdef', cm.getValue());
+}, { value: '\t___', indentWithTabs: true});
+testVim(']p_with_spaces_translated_to_tabs', function(cm, vim, helpers) {
+  helpers.getRegisterController().pushText('"', 'yank', '  abc\n    def\n', true);
+  helpers.doKeys(']', 'p');
+  eq('\t___\n\tabc\n\t\tdef', cm.getValue());
+}, { value: '\t___', indentWithTabs: true, tabSize: 2 });
+testVim('[p', function(cm, vim, helpers) {
+  helpers.getRegisterController().pushText('"', 'yank', '  abc\n    def\n', true);
+  helpers.doKeys('[', 'p');
+  eq('  abc\n    def\n  ___', cm.getValue());
+}, { value: '  ___' });
 testVim('P', function(cm, vim, helpers) {
   cm.setCursor(0, 1);
   helpers.getRegisterController().pushText('"', 'yank', 'abc\ndef', false);
@@ -1270,11 +1318,13 @@ testVim('mark', function(cm, vim, helpers) {
   cm.setCursor(2, 2);
   helpers.doKeys('m', 't');
   cm.setCursor(0, 0);
-  helpers.doKeys('\'', 't');
-  helpers.assertCursorAt(2, 2);
-  cm.setCursor(0, 0);
   helpers.doKeys('`', 't');
   helpers.assertCursorAt(2, 2);
+  cm.setCursor(2, 0);
+  cm.replaceRange('   h', cm.getCursor());
+  cm.setCursor(0, 0);
+  helpers.doKeys('\'', 't');
+  helpers.assertCursorAt(2, 3);
 });
 testVim('jumpToMark_next', function(cm, vim, helpers) {
   cm.setCursor(2, 2);
@@ -1524,13 +1574,13 @@ testVim('visual_line', function(cm, vim, helpers) {
   eq(' 4\n 5', cm.getValue());
 }, { value: ' 1\n 2\n 3\n 4\n 5' });
 testVim('visual_marks', function(cm, vim, helpers) {
-  helpers.doKeys('l', 'v', 'l', 'l', 'v');
+  helpers.doKeys('l', 'v', 'l', 'l', 'j', 'j', 'v');
   // Test visual mode marks
-  cm.setCursor(0, 0);
+  cm.setCursor(2, 1);
   helpers.doKeys('\'', '<');
   helpers.assertCursorAt(0, 1);
   helpers.doKeys('\'', '>');
-  helpers.assertCursorAt(0, 3);
+  helpers.assertCursorAt(2, 0);
 });
 testVim('visual_join', function(cm, vim, helpers) {
   helpers.doKeys('l', 'V', 'l', 'j', 'j', 'J');
@@ -1577,7 +1627,50 @@ testVim('o_visual', function(cm,vim,helpers) {
   helpers.doKeys('d');
   eq('p',cm.getValue());
 }, { value: 'abcd\nefgh\nijkl\nmnop'});
+testVim('uppercase/lowercase_visual', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('v', 'l', 'l');
+  helpers.doKeys('U');
+  helpers.assertCursorAt(0, 0);
+  helpers.doKeys('v', 'l', 'l');
+  helpers.doKeys('u');
+  helpers.assertCursorAt(0, 0);
+  helpers.doKeys('l', 'l', 'l', '.');
+  helpers.assertCursorAt(0, 3);
+  cm.setCursor(0, 0);
+  helpers.doKeys('q', 'a', 'v', 'j', 'U', 'q');
+  helpers.assertCursorAt(0, 0);
+  helpers.doKeys('j', '@', 'a');
+  helpers.assertCursorAt(1, 0);
+  cm.setCursor(3, 0);
+  helpers.doKeys('V', 'U', 'j', '.');
+  eq('ABCDEF\nGHIJKL\nMnopq\nSHORT LINE\nLONG LINE OF TEXT', cm.getValue());
+}, { value: 'abcdef\nghijkl\nmnopq\nshort line\nlong line of text'});
+testVim('visual_paste', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('v', 'l', 'l', 'y', 'j', 'v', 'l', 'p');
+  helpers.assertCursorAt(1, 4);
+  eq('this is a\nunthi test for visual paste', cm.getValue());
+  cm.setCursor(0, 0);
+  // in case of pasting whole line
+  helpers.doKeys('y', 'y');
+  cm.setCursor(1, 6);
+  helpers.doKeys('v', 'l', 'l', 'l', 'p');
+  helpers.assertCursorAt(2, 0);
+  eq('this is a\nunthi \nthis is a\n for visual paste', cm.getValue());
+}, { value: 'this is a\nunit test for visual paste'});
 
+// This checks the contents of the register used to paste the text
+testVim('v_paste_from_register', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('"', 'a', 'y', 'w');
+  cm.setCursor(1, 0);
+  helpers.doKeys('v', 'p');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/a\s+register/.test(text));
+  });
+}, { value: 'register contents\nare not erased'});
 testVim('S_normal', function(cm, vim, helpers) {
   cm.setCursor(0, 1);
   helpers.doKeys('j', 'S');
@@ -1750,6 +1843,22 @@ testVim('#', function(cm, vim, helpers) {
   helpers.doKeys('#');
   helpers.assertCursorAt(1, 8);
 }, { value: '    :=  match nomatch match \nnomatch Match' });
+testVim('g*', function(cm, vim, helpers) {
+  cm.setCursor(0, 8);
+  helpers.doKeys('g', '*');
+  helpers.assertCursorAt(0, 18);
+  cm.setCursor(0, 8);
+  helpers.doKeys('3', 'g', '*');
+  helpers.assertCursorAt(1, 8);
+}, { value: 'matches match alsoMatch\nmatchme matching' });
+testVim('g#', function(cm, vim, helpers) {
+  cm.setCursor(0, 8);
+  helpers.doKeys('g', '#');
+  helpers.assertCursorAt(0, 0);
+  cm.setCursor(0, 8);
+  helpers.doKeys('3', 'g', '#');
+  helpers.assertCursorAt(1, 0);
+}, { value: 'matches match alsoMatch\nmatchme matching' });
 testVim('macro_insert', function(cm, vim, helpers) {
   cm.setCursor(0, 0);
   helpers.doKeys('q', 'a', '0', 'i');
@@ -1769,6 +1878,46 @@ testVim('macro_space', function(cm, vim, helpers) {
   helpers.doKeys('@', 'a');
   helpers.assertCursorAt(0, 8);
 }, { value: 'one line of text.'});
+testVim('macro_t_search', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('q', 'a', 't', 'e', 'q');
+  helpers.assertCursorAt(0, 1);
+  helpers.doKeys('l', '@', 'a');
+  helpers.assertCursorAt(0, 6);
+  helpers.doKeys('l', ';');
+  helpers.assertCursorAt(0, 12);
+}, { value: 'one line of text.'});
+testVim('macro_f_search', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('q', 'b', 'f', 'e', 'q');
+  helpers.assertCursorAt(0, 2);
+  helpers.doKeys('@', 'b');
+  helpers.assertCursorAt(0, 7);
+  helpers.doKeys(';');
+  helpers.assertCursorAt(0, 13);
+}, { value: 'one line of text.'});
+testVim('macro_slash_search', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('q', 'c');
+  cm.openDialog = helpers.fakeOpenDialog('e');
+  helpers.doKeys('/', 'q');
+  helpers.assertCursorAt(0, 2);
+  helpers.doKeys('@', 'c');
+  helpers.assertCursorAt(0, 7);
+  helpers.doKeys('n');
+  helpers.assertCursorAt(0, 13);
+}, { value: 'one line of text.'});
+testVim('macro_multislash_search', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('q', 'd');
+  cm.openDialog = helpers.fakeOpenDialog('e');
+  helpers.doKeys('/');
+  cm.openDialog = helpers.fakeOpenDialog('t');
+  helpers.doKeys('/', 'q');
+  helpers.assertCursorAt(0, 12);
+  helpers.doKeys('@', 'd');
+  helpers.assertCursorAt(0, 15);
+}, { value: 'one line of text to rule them all.'});
 testVim('macro_parens', function(cm, vim, helpers) {
   cm.setCursor(0, 0);
   helpers.doKeys('q', 'z', 'i');
@@ -1827,6 +1976,50 @@ testVim('yank_register', function(cm, vim, helpers) {
   });
   helpers.doKeys(':');
 }, { value: 'foo\nbar'});
+testVim('yank_append_line_to_line_register', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('"', 'a', 'y', 'y');
+  helpers.doKeys('j', '"', 'A', 'y', 'y');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/a\s+foo\nbar/.test(text));
+    is(/"\s+foo\nbar/.test(text));
+  });
+  helpers.doKeys(':');
+}, { value: 'foo\nbar'});
+testVim('yank_append_word_to_word_register', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('"', 'a', 'y', 'w');
+  helpers.doKeys('j', '"', 'A', 'y', 'w');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/a\s+foobar/.test(text));
+    is(/"\s+foobar/.test(text));
+  });
+  helpers.doKeys(':');
+}, { value: 'foo\nbar'});
+testVim('yank_append_line_to_word_register', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('"', 'a', 'y', 'w');
+  helpers.doKeys('j', '"', 'A', 'y', 'y');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/a\s+foo\nbar/.test(text));
+    is(/"\s+foo\nbar/.test(text));
+  });
+  helpers.doKeys(':');
+}, { value: 'foo\nbar'});
+testVim('yank_append_word_to_line_register', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('"', 'a', 'y', 'y');
+  helpers.doKeys('j', '"', 'A', 'y', 'w');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/a\s+foo\nbar/.test(text));
+    is(/"\s+foo\nbar/.test(text));
+  });
+  helpers.doKeys(':');
+}, { value: 'foo\nbar'});
 testVim('macro_register', function(cm, vim, helpers) {
   cm.setCursor(0, 0);
   helpers.doKeys('q', 'a', 'i');
@@ -1844,6 +2037,25 @@ testVim('macro_register', function(cm, vim, helpers) {
   });
   helpers.doKeys(':');
 }, { value: ''});
+testVim('._register', function(cm,vim,helpers) {
+  cm.setCursor(0,0);
+  helpers.doKeys('i');
+  cm.replaceRange('foo',cm.getCursor());
+  helpers.doInsertModeKeys('Esc');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/\.\s+foo/.test(text));
+  });
+  helpers.doKeys(':');
+}, {value: ''});
+testVim(':_register', function(cm,vim,helpers) {
+  helpers.doEx('bar');
+  cm.openDialog = helpers.fakeOpenDialog('registers');
+  cm.openNotification = helpers.fakeOpenNotification(function(text) {
+    is(/:\s+bar/.test(text));
+  });
+  helpers.doKeys(':');
+}, {value: ''});
 testVim('.', function(cm, vim, helpers) {
   cm.setCursor(0, 0);
   helpers.doKeys('2', 'd', 'w');
@@ -1947,6 +2159,14 @@ testVim('._delete_repeat', function(cm, vim, helpers) {
   eq('zzce', cm.getValue());
   helpers.assertCursorAt(0, 1);
 }, { value: 'zzabcde'});
+testVim('._visual_>', function(cm, vim, helpers) {
+  cm.setCursor(0, 0);
+  helpers.doKeys('V', 'j', '>');
+  cm.setCursor(2, 0)
+  helpers.doKeys('.');
+  eq('  1\n  2\n  3\n  4', cm.getValue());
+  helpers.assertCursorAt(2, 2);
+}, { value: '1\n2\n3\n4'});
 testVim('f;', function(cm, vim, helpers) {
   cm.setCursor(0, 0);
   helpers.doKeys('f', 'x');
@@ -2155,7 +2375,8 @@ testVim('HML', function(cm, vim, helpers) {
   return upper + lower;
 })()});
 
-var zVals = ['zb','zz','zt','z-','z.','z<CR>'].map(function(e, idx){
+var zVals = [];
+forEach(['zb','zz','zt','z-','z.','z<CR>'], function(e, idx){
   var lineNum = 250;
   var lines = 35;
   testVim(e, function(cm, vim, helpers) {
@@ -2496,6 +2717,13 @@ testVim('ex_substitute_javascript', function(cm, vim, helpers) {
   helpers.doEx('s/\\(\\d+\\)/$$ $\' $` $& \\1/')
   eq('a $$ $\' $` $& 0 b', cm.getValue());
 }, { value: 'a 0 b' });
+testVim('ex_substitute_empty_arguments', function(cm,vim,helpers) {
+  cm.setCursor(0, 0);
+  helpers.doEx('s/a/b');
+  cm.setCursor(1, 0);
+  helpers.doEx('s');
+  eq('b b\nb b', cm.getValue());
+}, {value: 'a a\na a'});
 
 // More complex substitute tests that test both pcre and nopcre options.
 function testSubstitute(name, options) {
@@ -2857,3 +3085,5 @@ testVim('beforeSelectionChange', function(cm, vim, helpers) {
   cm.setCursor(0, 100);
   eqPos(cm.getCursor('head'), cm.getCursor('anchor'));
 }, { value: 'abc' });
+
+

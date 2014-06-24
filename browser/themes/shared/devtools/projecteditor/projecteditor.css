@@ -39,6 +39,10 @@
   background: rgb(237, 237, 237);
 }
 
+#sources {
+  overflow: auto;
+}
+
 .sources-tree {
   overflow:auto;
   overflow-x: hidden;

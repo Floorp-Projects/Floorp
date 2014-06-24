@@ -186,6 +186,9 @@ var TextEditor = Class({
       resource.load(),
       this.appended
     ]).then(([resourceContents])=> {
+      if (!this.editor) {
+        return;
+      }
       this.editor.setText(resourceContents);
       this.editor.setClean();
       this.emit("load");

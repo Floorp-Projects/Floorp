@@ -574,7 +574,7 @@ MozInputContext.prototype = {
         contextId: self._contextId,
         requestId: resolverId,
         text: text,
-        cursor: cursor || text.length,
+        cursor: (typeof cursor !== 'undefined') ? cursor : text.length,
         clauses: clauses || null
       });
     });

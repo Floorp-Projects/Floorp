@@ -28,13 +28,13 @@ namespace = "comment_";
     cm.uncomment(Pos(0, 0), Pos(2, 1));
   }, simpleProg, simpleProg);
 
-  // test("fallbackToBlock", "css", function(cm) {
-  //   cm.lineComment(Pos(0, 0), Pos(2, 1));
-  // }, "html {\n  border: none;\n}", "/* html {\n  border: none;\n} */");
+  test("fallbackToBlock", "css", function(cm) {
+    cm.lineComment(Pos(0, 0), Pos(2, 1));
+  }, "html {\n  border: none;\n}", "/* html {\n  border: none;\n} */");
 
-  // test("fallbackToLine", "ruby", function(cm) {
-  //   cm.blockComment(Pos(0, 0), Pos(1));
-  // }, "def blah()\n  return hah\n", "# def blah()\n#   return hah\n");
+  test("fallbackToLine", "ruby", function(cm) {
+    cm.blockComment(Pos(0, 0), Pos(1));
+  }, "def blah()\n  return hah\n", "# def blah()\n#   return hah\n");
 
   test("commentRange", "javascript", function(cm) {
     cm.blockComment(Pos(1, 2), Pos(1, 13), {fullLines: false});

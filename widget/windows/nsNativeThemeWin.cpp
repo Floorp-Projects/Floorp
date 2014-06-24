@@ -2523,7 +2523,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
       aWidgetType == NS_THEME_WINDOW_FRAME_BOTTOM ||
       aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE ||
       aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE ||
-      aWidgetType == NS_THEME_WINDOW_BUTTON_MINIMIZE ||
+      aWidgetType == NS_THEME_WINDOW_BUTTON_MAXIMIZE ||
       aWidgetType == NS_THEME_WINDOW_BUTTON_RESTORE) {
     *aShouldRepaint = true;
     return NS_OK;

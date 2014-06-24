@@ -98,6 +98,7 @@
     <command id="Tools:DevToolbar" oncommand="DeveloperToolbar.toggle();" disabled="true" hidden="true"/>
     <command id="Tools:DevToolbarFocus" oncommand="DeveloperToolbar.focusToggle();" disabled="true"/>
     <command id="Tools:DevAppMgr" oncommand="gDevToolsBrowser.openAppManager(gBrowser);" disabled="true" hidden="true"/>
+    <command id="Tools:WebIDE" oncommand="gDevToolsBrowser.openWebIDE();" disabled="true" hidden="true"/>
     <command id="Tools:BrowserToolbox" oncommand="BrowserToolboxProcess.init();" disabled="true" hidden="true"/>
     <command id="Tools:BrowserConsole" oncommand="HUDService.toggleBrowserConsole();"/>
     <command id="Tools:Scratchpad" oncommand="Scratchpad.openScratchpad();"/>
@@ -198,6 +199,9 @@
     <broadcaster id="devtoolsMenuBroadcaster_DevAppMgr"
                  label="&devAppMgrMenu.label;"
                  command="Tools:DevAppMgr"/>
+    <broadcaster id="devtoolsMenuBroadcaster_webide"
+                 label="&webide.label;"
+                 command="Tools:WebIDE"/>
     <broadcaster id="devtoolsMenuBroadcaster_BrowserToolbox"
                  label="&browserToolboxMenu.label;"
                  command="Tools:BrowserToolbox"/>
