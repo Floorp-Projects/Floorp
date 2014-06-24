@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body onload="f()">
+  <div></div>
+  <style>
+    div { color: blue; }
+  </style>
+  <script>
+    function f() {
+      // This should not leak.
+      var div = document.querySelector("div");
+      var shadow = div.createShadowRoot();
+      shadow.innerHTML = '<div><style scoped>p { color: green; }</style>';
+    }
+  </script>
+</body>
