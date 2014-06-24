@@ -43,9 +43,10 @@ bool GfxInfoBase::mDriverInfoObserverInitialized;
 // Observes for shutdown so that the child GfxDriverInfo list is freed.
 class ShutdownObserver : public nsIObserver
 {
+  virtual ~ShutdownObserver() {}
+
 public:
   ShutdownObserver() {}
-  virtual ~ShutdownObserver() {}
 
   NS_DECL_ISUPPORTS
 

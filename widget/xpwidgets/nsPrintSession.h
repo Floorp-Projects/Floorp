@@ -17,12 +17,13 @@
 class nsPrintSession : public nsIPrintSession,
                        public nsSupportsWeakReference
 {
+  virtual ~nsPrintSession();
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPRINTSESSION
 
   nsPrintSession();
-  virtual ~nsPrintSession();
   
   virtual nsresult Init();
 };
