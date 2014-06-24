@@ -1623,6 +1623,10 @@ CssRuleView.prototype = {
     let seenPseudoElement = false;
     let seenNormalElement = false;
 
+    if (!this._elementStyle.rules) {
+      return;
+    }
+
     for (let rule of this._elementStyle.rules) {
       if (rule.domRule.system) {
         continue;
