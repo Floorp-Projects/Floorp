@@ -108,10 +108,9 @@ class nsTimerEvent : public nsRunnable {
 public:
   NS_IMETHOD Run();
 
-  nsTimerEvent()
-    : mTimer()
-    , mGeneration(0)
-  {
+  nsTimerEvent(nsTimerImpl *timer, int32_t generation)
+    : mTimer(dont_AddRef(timer)), mGeneration(generation) {
+    // timer is already addref'd for us
     MOZ_COUNT_CTOR(nsTimerEvent);
 
     MOZ_ASSERT(gThread->IsOnTimerThread(),
@@ -136,18 +135,8 @@ public:
     DeleteAllocatorIfNeeded();
   }
 
-  already_AddRefed<nsTimerImpl> ForgetTimer()
-  {
-    return mTimer.forget();
-  }
-
-  void SetTimer(already_AddRefed<nsTimerImpl> aTimer)
-  {
-    mTimer = aTimer;
-    mGeneration = mTimer->GetGeneration();
-  }
-
 private:
+  nsTimerEvent(); // Not implemented
   ~nsTimerEvent() {
     MOZ_COUNT_DTOR(nsTimerEvent);
 
@@ -652,27 +641,23 @@ NS_IMETHODIMP nsTimerEvent::Run()
   return NS_OK;
 }
 
-already_AddRefed<nsTimerImpl> nsTimerImpl::PostTimerEvent(already_AddRefed<nsTimerImpl> aTimerRef)
+nsresult nsTimerImpl::PostTimerEvent()
 {
-  nsRefPtr<nsTimerImpl> timer(aTimerRef);
-  if (!timer->mEventTarget) {
+  if (!mEventTarget) {
     NS_ERROR("Attempt to post timer event to NULL event target");
-    return timer.forget();
+    return NS_ERROR_NOT_INITIALIZED;
   }
 
   // XXX we may want to reuse this nsTimerEvent in the case of repeating timers.
 
-  // Since TimerThread addref'd 'timer' for us, we don't need to addref here.
-  // We will release either in ~nsTimerEvent(), or pass the reference back to
-  // the caller. We need to copy the generation number from this timer into the
-  // event, so we can avoid firing a timer that was re-initialized after being
-  // canceled.
+  // Since TimerThread addref'd 'this' for us, we don't need to addref here.
+  // We will release in destroyMyEvent.  We need to copy the generation number
+  // from this timer into the event, so we can avoid firing a timer that was
+  // re-initialized after being canceled.
 
-  // Note: We override operator new for this class, and the override is
-  // fallible!
-  nsRefPtr<nsTimerEvent> event = new nsTimerEvent;
+  nsRefPtr<nsTimerEvent> event = new nsTimerEvent(this, mGeneration);
   if (!event)
-    return timer.forget();
+    return NS_ERROR_OUT_OF_MEMORY;
 
 #ifdef DEBUG_TIMERS
   if (PR_LOG_TEST(GetTimerLog(), PR_LOG_DEBUG)) {
@@ -682,29 +667,21 @@ already_AddRefed<nsTimerImpl> nsTimerImpl::PostTimerEvent(already_AddRefed<nsTim
 
   // If this is a repeating precise timer, we need to calculate the time for
   // the next timer to fire before we make the callback.
-  if (timer->IsRepeatingPrecisely()) {
-    timer->SetDelayInternal(timer->mDelay);
+  if (IsRepeatingPrecisely()) {
+    SetDelayInternal(mDelay);
 
     // But only re-arm REPEATING_PRECISE timers.
-    if (gThread && timer->mType == TYPE_REPEATING_PRECISE) {
-      nsresult rv = gThread->AddTimer(timer);
+    if (gThread && mType == TYPE_REPEATING_PRECISE) {
+      nsresult rv = gThread->AddTimer(this);
       if (NS_FAILED(rv))
-        return timer.forget();
+        return rv;
     }
   }
 
-  nsIEventTarget* target = timer->mEventTarget;
-  event->SetTimer(timer.forget());
-
-  nsresult rv = target->Dispatch(event, NS_DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    timer = event->ForgetTimer();
-    if (gThread)
-      gThread->RemoveTimer(timer);
-    }
-    return timer.forget();
-
-  return nullptr;
+  nsresult rv = mEventTarget->Dispatch(event, NS_DISPATCH_NORMAL);
+  if (NS_FAILED(rv) && gThread)
+    gThread->RemoveTimer(this);
+  return rv;
 }
 
 void nsTimerImpl::SetDelayInternal(uint32_t aDelay)
