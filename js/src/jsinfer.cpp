@@ -4535,10 +4535,8 @@ TypeScript::printTypes(JSContext *cx, HandleScript script) const
     fprintf(stderr, " #%u %s:%d ", script->id(), script->filename(), (int) script->lineno());
 
     if (script->functionNonDelazifying()) {
-        if (js::PropertyName *name = script->functionNonDelazifying()->name()) {
-            const jschar *chars = name->getChars(nullptr);
-            JSString::dumpChars(chars, name->length());
-        }
+        if (js::PropertyName *name = script->functionNonDelazifying()->name())
+            name->dumpCharsNoNewline();
     }
 
     fprintf(stderr, "\n    this:");
