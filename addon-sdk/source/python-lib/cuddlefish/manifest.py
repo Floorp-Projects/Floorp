@@ -278,9 +278,6 @@ class ManifestBuilder:
             if me.packageName != "addon-sdk" or bundle_sdk_modules:
                 yield me.js_filename
 
-    def get_all_test_modules(self):
-        return self.test_modules
-
     def get_harness_options_manifest(self, bundle_sdk_modules):
         manifest = {}
         for me in self.get_module_entries():

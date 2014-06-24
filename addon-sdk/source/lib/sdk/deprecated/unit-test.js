@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 module.metadata = {
@@ -9,12 +8,13 @@ module.metadata = {
 };
 
 const memory = require('./memory');
-var timer = require("../timers");
+const timer = require("../timers");
 var cfxArgs = require("@test/options");
 const { getTabs, getURI } = require("../tabs/utils");
 const { windows, isBrowser } = require("../window/utils");
+const { defer } = require("../core/promise");
 
-exports.findAndRunTests = function findAndRunTests(options) {
+const findAndRunTests = function findAndRunTests(options) {
   var TestFinder = require("./unit-test-finder").TestFinder;
   var finder = new TestFinder({
     filter: options.filter,
@@ -22,15 +22,17 @@ exports.findAndRunTests = function findAndRunTests(options) {
     testOutOfProcess: options.testOutOfProcess
   });
   var runner = new TestRunner({fs: options.fs});
-  finder.findTests(
-    function (tests) {
-      runner.startMany({tests: tests,
-                        stopOnError: options.stopOnError,
-                        onDone: options.onDone});
+  finder.findTests().then(tests => {
+    runner.startMany({
+      tests: tests,
+      stopOnError: options.stopOnError,
+      onDone: options.onDone
     });
+  });
 };
+exports.findAndRunTests = findAndRunTests;
 
-var TestRunner = exports.TestRunner = function TestRunner(options) {
+const TestRunner = function TestRunner(options) {
   if (options) {
     this.fs = options.fs;
   }
@@ -40,6 +42,7 @@ var TestRunner = exports.TestRunner = function TestRunner(options) {
   this.failed = 0;
   this.testRunSummary = [];
   this.expectFailNesting = 0;
+  this.done = TestRunner.prototype.done.bind(this);
 };
 
 TestRunner.prototype = {
@@ -252,9 +255,9 @@ TestRunner.prototype = {
   assertArray: function(a, message) {
     this.assertStrictEqual('[object Array]', Object.prototype.toString.apply(a), message);
   },
-  
+
   assertNumber: function(a, message) {
-    this.assertStrictEqual('[object Number]', Object.prototype.toString.apply(a), message);                
+    this.assertStrictEqual('[object Number]', Object.prototype.toString.apply(a), message);
   },
 
   done: function done() {
@@ -321,36 +324,37 @@ TestRunner.prototype = {
       }
     }
   },
-  
+
   // Set of assertion functions to wait for an assertion to become true
   // These functions take the same arguments as the TestRunner.assert* methods.
   waitUntil: function waitUntil() {
     return this._waitUntil(this.assert, arguments);
   },
-  
+
   waitUntilNotEqual: function waitUntilNotEqual() {
     return this._waitUntil(this.assertNotEqual, arguments);
   },
-  
+
   waitUntilEqual: function waitUntilEqual() {
     return this._waitUntil(this.assertEqual, arguments);
   },
-  
+
   waitUntilMatches: function waitUntilMatches() {
     return this._waitUntil(this.assertMatches, arguments);
   },
-  
+
   /**
    * Internal function that waits for an assertion to become true.
    * @param {Function} assertionMethod
-   *    Reference to a TestRunner assertion method like test.assert, 
+   *    Reference to a TestRunner assertion method like test.assert,
    *    test.assertEqual, ...
    * @param {Array} args
-   *    List of arguments to give to the previous assertion method. 
+   *    List of arguments to give to the previous assertion method.
    *    All functions in this list are going to be called to retrieve current
    *    assertion values.
    */
   _waitUntil: function waitUntil(assertionMethod, args) {
+    let { promise, resolve } = defer();
     let count = 0;
     let maxCount = this.DEFAULT_PAUSE_TIMEOUT / this.PAUSE_DELAY;
 
@@ -358,9 +362,7 @@ TestRunner.prototype = {
     if (!this.waitTimeout)
       this.waitUntilDone(this.DEFAULT_PAUSE_TIMEOUT);
 
-    let callback = null;
     let finished = false;
-    
     let test = this;
 
     // capture a traceback before we go async.
@@ -380,9 +382,8 @@ TestRunner.prototype = {
         pass: function (msg) {
           test.pass(msg);
           test.waitUntilCallback = null;
-          if (callback && !stopIt)
-            callback();
-          finished = true;
+          if (!stopIt)
+            resolve();
         },
         fail: function (msg) {
           // If we are called on test timeout, we stop the loop
@@ -398,8 +399,8 @@ TestRunner.prototype = {
           timeout = timer.setTimeout(loop, test.PAUSE_DELAY);
         }
       };
-      
-      // Automatically call args closures in order to build arguments for 
+
+      // Automatically call args closures in order to build arguments for
       // assertion function
       let appliedArgs = [];
       for (let i = 0, l = args.length; i < l; i++) {
@@ -411,33 +412,21 @@ TestRunner.prototype = {
           catch(e) {
             test.fail("Exception when calling asynchronous assertion: " + e +
                       "\n" + e.stack);
-            finished = true;
-            return;
+            return resolve();
           }
         }
         appliedArgs.push(a);
       }
-      
+
       // Finally call assertion function with current assertion values
       assertionMethod.apply(mock, appliedArgs);
     }
     loop();
     this.waitUntilCallback = loop;
-    
-    // Return an object with `then` method, to offer a way to execute 
-    // some code when the assertion passed or failed
-    return {
-      then: function (c) {
-        callback = c;
-        
-        // In case of immediate positive result, we need to execute callback
-        // immediately here:
-        if (finished)
-          callback();
-      }
-    };
+
+    return promise;
   },
-  
+
   waitUntilDone: function waitUntilDone(ms) {
     if (ms === undefined)
       ms = this.DEFAULT_PAUSE_TIMEOUT;
@@ -514,3 +503,4 @@ TestRunner.prototype = {
       this.done();
   }
 };
+exports.TestRunner = TestRunner;
