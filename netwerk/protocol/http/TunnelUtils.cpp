@@ -261,8 +261,9 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
     return NS_ERROR_FAILURE;
   }
 
-  // this will call through to FilterRead to get data from the higher
+  // this will call through to FilterInput to get data from the higher
   // level connection before removing the local TLS layer
+  mFilterReadCode = NS_OK;
   int32_t bytesRead = PR_Read(mFD, aData, aCount);
   if (bytesRead == -1) {
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
@@ -271,6 +272,13 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
     return NS_ERROR_FAILURE;
   }
   *outCountRead = bytesRead;
+
+  if (NS_SUCCEEDED(mFilterReadCode) && !bytesRead) {
+    LOG(("TLSFilterTransaction::OnWriteSegment %p "
+         "Second layer of TLS stripping results in STREAM_CLOSED\n", this));
+    mFilterReadCode = NS_BASE_STREAM_CLOSED;
+  }
+
   LOG(("TLSFilterTransaction::OnWriteSegment %p rv=%x didread=%d "
         "2 layers of ssl stripped to plaintext\n", this, mFilterReadCode, bytesRead));
   return mFilterReadCode;
@@ -286,7 +294,7 @@ TLSFilterTransaction::FilterInput(char *aBuf, int32_t aAmount)
   uint32_t outCountRead = 0;
   mFilterReadCode = mSegmentWriter->OnWriteSegment(aBuf, aAmount, &outCountRead);
   if (NS_SUCCEEDED(mFilterReadCode) && outCountRead) {
-    LOG(("TLSFilterTransaction::FilterRead rv=%x read=%d input from net "
+    LOG(("TLSFilterTransaction::FilterInput rv=%x read=%d input from net "
          "1 layer stripped, 1 still on\n", mFilterReadCode, outCountRead));
     if (mReadSegmentBlocked) {
       mNudgeCounter = 0;
@@ -338,6 +346,10 @@ TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
 
   mSegmentWriter = aWriter;
   nsresult rv = mTransaction->WriteSegments(this, aCount, outCountWritten);
+  if (NS_SUCCEEDED(rv) && NS_FAILED(mFilterReadCode) && !(*outCountWritten)) {
+    // nsPipe turns failures into silent OK.. undo that!
+    rv = mFilterReadCode;
+  }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%x %d\n",
        this, rv, *outCountWritten));
   return rv;
