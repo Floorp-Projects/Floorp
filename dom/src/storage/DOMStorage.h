@@ -41,7 +41,6 @@ class DOMStorage MOZ_FINAL : public nsIDOMStorage
              const nsAString& aDocumentURI,
              nsIPrincipal* aPrincipal,
              bool aIsPrivate);
-  ~DOMStorage();
 
   // The method checks whether the caller can use a storage.
   // CanUseStorage is called before any DOM initiated operation
@@ -56,6 +55,8 @@ class DOMStorage MOZ_FINAL : public nsIDOMStorage
   bool IsSessionOnly() const { return mIsSessionOnly; }
 
 private:
+  ~DOMStorage();
+
   friend class DOMStorageManager;
   friend class DOMStorageCache;
 

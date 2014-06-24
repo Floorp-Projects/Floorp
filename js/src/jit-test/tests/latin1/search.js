@@ -42,8 +42,10 @@ function testSearchRope() {
 
     // Latin1 + Latin1
     s1 = "foobarbaz0123456789".repeat(10);
+    s1.indexOf("333"); // flatten
+    s1 = toLatin1(s1);
     var ropeLatin1 = s1 + toLatin1("abcdef\u00AA");
-    assertEq(isLatin1(ropeLatin1), false);
+    assertEq(isLatin1(ropeLatin1), true);
     assertEq(ropeLatin1.search(abc), 190);
 
     // Latin1 + TwoByte

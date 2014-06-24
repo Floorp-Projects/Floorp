@@ -26,7 +26,6 @@ class nsStringBundleService : public nsIStringBundleService,
 {
 public:
   nsStringBundleService();
-  virtual ~nsStringBundleService();
 
   nsresult Init();
 
@@ -35,6 +34,8 @@ public:
   NS_DECL_NSIOBSERVER
 
 private:
+  virtual ~nsStringBundleService();
+
   nsresult getStringBundle(const char *aUrl, nsIStringBundle** aResult);
   nsresult FormatWithBundle(nsIStringBundle* bundle, nsresult aStatus,
                             uint32_t argCount, char16_t** argArray,

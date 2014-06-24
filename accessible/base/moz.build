@@ -1,0 +1,92 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'AccEvent.h',
+    'nsAccessibilityService.h'
+]
+
+EXPORTS.mozilla.a11y += [
+    'AccTypes.h',
+    'DocManager.h',
+    'FocusManager.h',
+    'Platform.h',
+    'RelationType.h',
+    'Role.h',
+    'SelectionManager.h',
+    'States.h',
+]
+
+if CONFIG['MOZ_DEBUG']:
+    EXPORTS.mozilla.a11y += [
+        'Logging.h',
+    ]
+
+UNIFIED_SOURCES += [
+    'AccCollector.cpp',
+    'AccEvent.cpp',
+    'AccGroupInfo.cpp',
+    'AccIterator.cpp',
+    'ARIAMap.cpp',
+    'ARIAStateMap.cpp',
+    'Asserts.cpp',
+    'DocManager.cpp',
+    'EventQueue.cpp',
+    'Filters.cpp',
+    'FocusManager.cpp',
+    'NotificationController.cpp',
+    'nsAccessibilityService.cpp',
+    'nsAccessiblePivot.cpp',
+    'nsAccUtils.cpp',
+    'nsCoreUtils.cpp',
+    'nsEventShell.cpp',
+    'nsTextEquivUtils.cpp',
+    'SelectionManager.cpp',
+    'StyleInfo.cpp',
+    'TextAttrs.cpp',
+    'TextRange.cpp',
+    'TextUpdater.cpp',
+    'TreeWalker.cpp',
+]
+
+if CONFIG['A11Y_LOG']:
+    UNIFIED_SOURCES += [
+        'Logging.cpp',
+    ]
+
+LOCAL_INCLUDES += [
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/dom/xbl',
+    '/ipc/chromium/src',
+    '/layout/generic',
+    '/layout/style',
+    '/layout/svg',
+    '/layout/xul',
+    '/layout/xul/tree/',
+]
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    LOCAL_INCLUDES += [
+        '/accessible/atk',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '/accessible/mac',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/accessible/other',
+    ]
+
+FINAL_LIBRARY = 'xul'

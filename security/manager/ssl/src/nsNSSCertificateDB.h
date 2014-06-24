@@ -27,7 +27,6 @@ public:
   NS_DECL_NSIX509CERTDB2
 
   nsNSSCertificateDB(); 
-  virtual ~nsNSSCertificateDB();
 
   // Use this function to generate a default nickname for a user
   // certificate that is to be imported onto a token.
@@ -39,6 +38,9 @@ public:
   static nsresult 
   ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx,
                      const nsNSSShutDownPreventionLock &proofOfLock);
+
+protected:
+  virtual ~nsNSSCertificateDB();
 
 private:
 

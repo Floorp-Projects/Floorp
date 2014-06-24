@@ -21,9 +21,11 @@ class nsIStreamListener;
 
 class nsContentDLF : public nsIDocumentLoaderFactory
 {
+protected:
+  virtual ~nsContentDLF();
+
 public:
   nsContentDLF();
-  virtual ~nsContentDLF();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOCUMENTLOADERFACTORY

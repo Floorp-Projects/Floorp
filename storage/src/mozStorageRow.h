@@ -34,6 +34,8 @@ public:
   nsresult initialize(sqlite3_stmt *aStatement);
 
 private:
+  ~Row() {}
+
   /**
    * The number of columns in this tuple.
    */

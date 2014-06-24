@@ -20,6 +20,7 @@
 #include "vm/Runtime.h"
 #include "vm/Shape.h"
 #include "vm/String.h"
+#include "vm/Symbol.h"
 #include "vm/WrapperObject.h"
 
 using mozilla::DebugOnly;
@@ -399,6 +400,10 @@ StatsCellCallback(JSRuntime *rt, void *data, void *thing, JSGCTraceKind traceKin
         }
         break;
       }
+
+      case JSTRACE_SYMBOL:
+        zStats->symbolsGCHeap += thingSize;
+        break;
 
       case JSTRACE_SHAPE: {
         Shape *shape = static_cast<Shape *>(thing);

@@ -153,10 +153,10 @@ static const uint32_t CodeAlignment = 4;
 static const bool StackKeptAligned = true;
 
 // As an invariant across architectures, within asm.js code:
-//    $sp % StackAlignment = (AsmJSSizeOfRetAddr + masm.framePushed) % StackAlignment
+//    $sp % StackAlignment = (AsmJSFrameSize + masm.framePushed) % StackAlignment
 // To achieve this on MIPS, the first instruction of the asm.js prologue pushes
 // ra without incrementing masm.framePushed.
-static const uint32_t AsmJSSizeOfRetAddr = sizeof(void*);
+static const uint32_t AsmJSFrameSize = sizeof(void*);
 
 static const Scale ScalePointer = TimesFour;
 

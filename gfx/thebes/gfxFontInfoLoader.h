@@ -195,10 +195,10 @@ protected:
             : mLoader(aLoader)
         { }
 
+    protected:
         virtual ~ShutdownObserver()
         { }
 
-    protected:
         gfxFontInfoLoader *mLoader;
     };
 

@@ -526,10 +526,11 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand &value,
     bool mightBeInt32 = valueMIR->mightBeType(MIRType_Int32);
     bool mightBeObject = valueMIR->mightBeType(MIRType_Object);
     bool mightBeString = valueMIR->mightBeType(MIRType_String);
+    bool mightBeSymbol = valueMIR->mightBeType(MIRType_Symbol);
     bool mightBeDouble = valueMIR->mightBeType(MIRType_Double);
     int tagCount = int(mightBeUndefined) + int(mightBeNull) +
         int(mightBeBoolean) + int(mightBeInt32) + int(mightBeObject) +
-        int(mightBeString) + int(mightBeDouble);
+        int(mightBeString) + int(mightBeSymbol) + int(mightBeDouble);
 
     MOZ_ASSERT_IF(!valueMIR->emptyResultTypeSet(), tagCount > 0);
 
@@ -616,6 +617,15 @@ CodeGenerator::testValueTruthyKernel(const ValueOperand &value,
             masm.jump(ifTruthy);
         // Else just fall through to truthiness.
         masm.bind(&notString);
+        --tagCount;
+    }
+
+    if (mightBeSymbol) {
+        // All symbols are truthy.
+        MOZ_ASSERT(tagCount != 0);
+        if (tagCount != 1)
+            masm.branchTestSymbol(Assembler::Equal, tag, ifTruthy);
+        // Else fall through to ifTruthy.
         --tagCount;
     }
 
@@ -943,6 +953,10 @@ CodeGenerator::visitValueToString(LValueToString *lir)
         if (!bailoutFrom(&bail, lir->snapshot()))
             return false;
     }
+
+    // Symbol
+    if (lir->mir()->input()->mightBeType(MIRType_Symbol))
+        masm.branchTestSymbol(Assembler::Equal, tag, ool->entry());
 
 #ifdef DEBUG
     masm.assumeUnreachable("Unexpected type for MValueToString.");
@@ -3209,7 +3223,9 @@ CodeGenerator::emitObjectOrStringResultChecks(LInstruction *lir, MDefinition *mi
         masm.passABIArg(output);
         masm.callWithABINoProfiling(mir->type() == MIRType_Object
                                     ? JS_FUNC_TO_DATA_PTR(void *, AssertValidObjectPtr)
-                                    : JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr));
+                                    : mir->type() == MIRType_String
+                                      ? JS_FUNC_TO_DATA_PTR(void *, AssertValidStringPtr)
+                                      : JS_FUNC_TO_DATA_PTR(void *, AssertValidSymbolPtr));
         restoreVolatile();
     }
 
@@ -3290,6 +3306,7 @@ CodeGenerator::emitDebugResultChecks(LInstruction *ins)
     switch (mir->type()) {
       case MIRType_Object:
       case MIRType_String:
+      case MIRType_Symbol:
         return emitObjectOrStringResultChecks(ins, mir);
       case MIRType_Value:
         return emitValueResultChecks(ins, mir);
@@ -7654,7 +7671,19 @@ CodeGenerator::visitTypeOfV(LTypeOfV *lir)
     masm.jump(&done);
     masm.bind(&notBoolean);
 
+    Label notString;
+    masm.branchTestString(Assembler::NotEqual, tag, &notString);
     masm.movePtr(ImmGCPtr(names.string), output);
+    masm.jump(&done);
+    masm.bind(&notString);
+
+#ifdef DEBUG
+    Label isSymbol;
+    masm.branchTestSymbol(Assembler::Equal, tag, &isSymbol);
+    masm.assumeUnreachable("Unexpected type for TypeOfV");
+    masm.bind(&isSymbol);
+#endif
+    masm.movePtr(ImmGCPtr(names.symbol), output);
 
     masm.bind(&done);
     if (ool)
@@ -8513,7 +8542,7 @@ CodeGenerator::visitAsmJSCall(LAsmJSCall *ins)
     if (mir->spIncrement())
         masm.freeStack(mir->spIncrement());
 
-    JS_ASSERT((AsmJSSizeOfRetAddr + masm.framePushed()) % StackAlignment == 0);
+    JS_ASSERT((AsmJSFrameSize + masm.framePushed()) % StackAlignment == 0);
 
 #ifdef DEBUG
     Label ok;

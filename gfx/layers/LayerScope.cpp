@@ -80,6 +80,7 @@ public:
         : mState(NoHandshake)
     { }
 
+private:
     virtual ~LayerScopeWebSocketHandler()
     {
         if (mTransport) {
@@ -87,6 +88,7 @@ public:
         }
     }
 
+public:
     void OpenStream(nsISocketTransport* aTransport) {
         MOZ_ASSERT(aTransport);
 
@@ -550,12 +552,13 @@ CheckSender()
 
 class DebugListener : public nsIServerSocketListener
 {
+    virtual ~DebugListener() { }
+
 public:
 
     NS_DECL_THREADSAFE_ISUPPORTS
 
     DebugListener() { }
-    virtual ~DebugListener() { }
 
     /* nsIServerSocketListener */
 
@@ -582,16 +585,16 @@ NS_IMPL_ISUPPORTS(DebugListener, nsIServerSocketListener);
 
 class DebugDataSender : public nsIRunnable
 {
+    virtual ~DebugDataSender() {
+        Cleanup();
+    }
+
 public:
 
     NS_DECL_THREADSAFE_ISUPPORTS
 
     DebugDataSender() {
         mList = new LinkedList<DebugGLData>();
-    }
-
-    virtual ~DebugDataSender() {
-        Cleanup();
     }
 
     void Append(DebugGLData *d) {

@@ -211,6 +211,8 @@ class imgLoader : public imgILoader,
                   public nsSupportsWeakReference,
                   public nsIObserver
 {
+  virtual ~imgLoader();
+
 public:
   typedef mozilla::image::ImageURL ImageURL;
   typedef nsRefPtrHashtable<nsCStringHashKey, imgCacheEntry> imgCacheTable;
@@ -225,7 +227,6 @@ public:
   static imgLoader* PBSingleton();
 
   imgLoader();
-  virtual ~imgLoader();
 
   nsresult Init();
 
@@ -399,7 +400,6 @@ class ProxyListener : public nsIStreamListener
 {
 public:
   ProxyListener(nsIStreamListener *dest);
-  virtual ~ProxyListener();
 
   /* additional members */
   NS_DECL_ISUPPORTS
@@ -408,6 +408,8 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
 
 private:
+  virtual ~ProxyListener();
+
   nsCOMPtr<nsIStreamListener> mDestListener;
 };
 
@@ -455,7 +457,6 @@ class imgCacheValidator : public nsIStreamListener,
 public:
   imgCacheValidator(nsProgressNotificationProxy* progress, imgLoader* loader,
                     imgRequest *request, void *aContext, bool forcePrincipalCheckForCacheEntry);
-  virtual ~imgCacheValidator();
 
   void AddProxy(imgRequestProxy *aProxy);
 
@@ -468,6 +469,8 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
 private:
+  virtual ~imgCacheValidator();
+
   nsCOMPtr<nsIStreamListener> mDestListener;
   nsRefPtr<nsProgressNotificationProxy> mProgressProxy;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;

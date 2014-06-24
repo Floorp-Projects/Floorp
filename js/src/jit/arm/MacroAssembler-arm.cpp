@@ -1976,6 +1976,12 @@ MacroAssemblerARMCompat::or32(Imm32 imm, const Address &dest)
 }
 
 void
+MacroAssemblerARMCompat::or32(Imm32 imm, Register dest)
+{
+    ma_orr(imm, dest);
+}
+
+void
 MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest);
@@ -2729,6 +2735,12 @@ MacroAssemblerARMCompat::testString(Assembler::Condition cond, const ValueOperan
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testSymbol(Assembler::Condition cond, const ValueOperand &value)
+{
+    return testSymbol(cond, value.typeReg());
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testObject(Assembler::Condition cond, const ValueOperand &value)
 {
     return testObject(cond, value.typeReg());
@@ -2770,23 +2782,34 @@ MacroAssemblerARMCompat::testBoolean(Assembler::Condition cond, Register tag)
 }
 
 Assembler::Condition
-MacroAssemblerARMCompat::testNull(Assembler::Condition cond, Register tag) {
+MacroAssemblerARMCompat::testNull(Assembler::Condition cond, Register tag)
+{
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(tag, ImmTag(JSVAL_TAG_NULL));
     return cond;
 }
 
 Assembler::Condition
-MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, Register tag) {
+MacroAssemblerARMCompat::testUndefined(Assembler::Condition cond, Register tag)
+{
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(tag, ImmTag(JSVAL_TAG_UNDEFINED));
     return cond;
 }
 
 Assembler::Condition
-MacroAssemblerARMCompat::testString(Assembler::Condition cond, Register tag) {
+MacroAssemblerARMCompat::testString(Assembler::Condition cond, Register tag)
+{
     JS_ASSERT(cond == Equal || cond == NotEqual);
     ma_cmp(tag, ImmTag(JSVAL_TAG_STRING));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testSymbol(Assembler::Condition cond, Register tag)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    ma_cmp(tag, ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
 }
 
@@ -2882,6 +2905,14 @@ MacroAssemblerARMCompat::testString(Condition cond, const Address &address)
 }
 
 Assembler::Condition
+MacroAssemblerARMCompat::testSymbol(Condition cond, const Address &address)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(address, ScratchRegister);
+    return testSymbol(cond, ScratchRegister);
+}
+
+Assembler::Condition
 MacroAssemblerARMCompat::testObject(Condition cond, const Address &address)
 {
     JS_ASSERT(cond == Equal || cond == NotEqual);
@@ -2947,6 +2978,15 @@ MacroAssemblerARMCompat::testString(Condition cond, const BaseIndex &src)
     JS_ASSERT(cond == Equal || cond == NotEqual);
     extractTag(src, ScratchRegister);
     ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_STRING));
+    return cond;
+}
+
+Assembler::Condition
+MacroAssemblerARMCompat::testSymbol(Condition cond, const BaseIndex &src)
+{
+    JS_ASSERT(cond == Equal || cond == NotEqual);
+    extractTag(src, ScratchRegister);
+    ma_cmp(ScratchRegister, ImmTag(JSVAL_TAG_SYMBOL));
     return cond;
 }
 
@@ -3045,25 +3085,14 @@ MacroAssemblerARMCompat::branchTestValue(Condition cond, const Address &valaddr,
 
 // unboxing code
 void
-MacroAssemblerARMCompat::unboxInt32(const ValueOperand &operand, Register dest)
+MacroAssemblerARMCompat::unboxNonDouble(const ValueOperand &operand, Register dest)
 {
-    ma_mov(operand.payloadReg(), dest);
+    if (operand.payloadReg() != dest)
+        ma_mov(operand.payloadReg(), dest);
 }
 
 void
-MacroAssemblerARMCompat::unboxInt32(const Address &src, Register dest)
-{
-    ma_ldr(payloadOf(src), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxBoolean(const ValueOperand &operand, Register dest)
-{
-    ma_mov(operand.payloadReg(), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxBoolean(const Address &src, Register dest)
+MacroAssemblerARMCompat::unboxNonDouble(const Address &src, Register dest)
 {
     ma_ldr(payloadOf(src), dest);
 }
@@ -3080,30 +3109,6 @@ void
 MacroAssemblerARMCompat::unboxDouble(const Address &src, FloatRegister dest)
 {
     ma_vldr(Operand(src), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxString(const ValueOperand &operand, Register dest)
-{
-    ma_mov(operand.payloadReg(), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxString(const Address &src, Register dest)
-{
-    ma_ldr(payloadOf(src), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxObject(const ValueOperand &src, Register dest)
-{
-    ma_mov(src.payloadReg(), dest);
-}
-
-void
-MacroAssemblerARMCompat::unboxObject(const Address &src, Register dest)
-{
-    ma_ldr(payloadOf(src), dest);
 }
 
 void
@@ -3873,7 +3878,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
     if (useHardFpABI())
         *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
 #endif
-    uint32_t alignmentAtPrologue = callFromAsmJS ? AsmJSSizeOfRetAddr : 0;
+    uint32_t alignmentAtPrologue = callFromAsmJS ? AsmJSFrameSize : 0;
 
     if (!dynamicAlignment_) {
         *stackAdjust += ComputeByteAlignment(framePushed_ + *stackAdjust + alignmentAtPrologue,

@@ -989,11 +989,14 @@ ArrayJoinKernel(JSContext *cx, SeparatorOp sepOp, HandleObject obj, uint32_t len
             } else if (elem.isBoolean()) {
                 if (!BooleanToStringBuffer(elem.toBoolean(), sb))
                     return false;
-            } else if (elem.isObject()) {
+            } else if (elem.isObject() || elem.isSymbol()) {
                 /*
                  * Object stringifying could modify the initialized length or make
                  * the array sparse. Delegate it to a separate loop to keep this
                  * one tight.
+                 *
+                 * Symbol stringifying is a TypeError, so into the slow path
+                 * with those as well.
                  */
                 break;
             } else {
@@ -1481,9 +1484,10 @@ CompareLexicographicInt32(const Value &a, const Value &b, bool *lessOrEqualp)
     return true;
 }
 
+template <typename Char1, typename Char2>
 static inline bool
-CompareSubStringValues(JSContext *cx, const jschar *s1, size_t l1,
-                       const jschar *s2, size_t l2, bool *lessOrEqualp)
+CompareSubStringValues(JSContext *cx, const Char1 *s1, size_t len1, const Char2 *s2, size_t len2,
+                       bool *lessOrEqualp)
 {
     if (!CheckForInterrupt(cx))
         return false;
@@ -1491,7 +1495,7 @@ CompareSubStringValues(JSContext *cx, const jschar *s1, size_t l1,
     if (!s1 || !s2)
         return false;
 
-    int32_t result = CompareChars(s1, l1, s2, l2);
+    int32_t result = CompareChars(s1, len1, s2, len2);
     *lessOrEqualp = (result <= 0);
     return true;
 }
@@ -1531,10 +1535,17 @@ struct SortComparatorStringifiedElements
       : cx(cx), sb(sb) {}
 
     bool operator()(const StringifiedElement &a, const StringifiedElement &b, bool *lessOrEqualp) {
-        return CompareSubStringValues(cx, sb.rawTwoByteBegin() + a.charsBegin,
-                                      a.charsEnd - a.charsBegin,
-                                      sb.rawTwoByteBegin() + b.charsBegin,
-                                      b.charsEnd - b.charsBegin,
+        size_t lenA = a.charsEnd - a.charsBegin;
+        size_t lenB = b.charsEnd - b.charsBegin;
+
+        if (sb.isUnderlyingBufferLatin1()) {
+            return CompareSubStringValues(cx, sb.rawLatin1Begin() + a.charsBegin, lenA,
+                                          sb.rawLatin1Begin() + b.charsBegin, lenB,
+                                          lessOrEqualp);
+        }
+
+        return CompareSubStringValues(cx, sb.rawTwoByteBegin() + a.charsBegin, lenA,
+                                      sb.rawTwoByteBegin() + b.charsBegin, lenB,
                                       lessOrEqualp);
     }
 };

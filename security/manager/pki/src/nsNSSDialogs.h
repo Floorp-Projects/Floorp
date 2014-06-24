@@ -41,11 +41,11 @@ public:
   NS_DECL_NSIDOMCRYPTODIALOGS
   NS_DECL_NSIGENERATINGKEYPAIRINFODIALOGS
   nsNSSDialogs();
-  virtual ~nsNSSDialogs();
 
   nsresult Init();
 
 protected:
+  virtual ~nsNSSDialogs();
   nsCOMPtr<nsIStringBundle> mPIPStringBundle;
 };
 

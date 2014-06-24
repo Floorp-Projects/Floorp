@@ -1,7 +1,6 @@
-var s = "Foo123";
-assertEq(isLatin1(s), false);
+assertEq(isLatin1("Foo123\u1200"), false);
 
-s = toLatin1(s);
+s = toLatin1("Foo123");
 assertEq(isLatin1(s), true);
 
 function testEq(s) {

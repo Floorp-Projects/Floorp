@@ -49,6 +49,9 @@ public:
                         int64_t aStartTime,
                         int64_t aEndTime,
                         int64_t aCurrentTime) MOZ_OVERRIDE;
+
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
 private:
 
   // Destroys all decoder resources.

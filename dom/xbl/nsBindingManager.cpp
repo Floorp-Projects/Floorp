@@ -639,7 +639,8 @@ nsBindingManager::GetBindingImplementation(nsIContent* aContent, REFNSIID aIID,
       // If we're using an XBL scope, we need to use the Xray view to the bound
       // content in order to view the full array of methods defined in the
       // binding, some of which may not be exposed on the prototype of
-      // untrusted content.
+      // untrusted content. We don't need to consider add-on scopes here
+      // because they're chrome-only and no Xrays are involved.
       //
       // If there's no separate XBL scope, or if the reflector itself lives in
       // the XBL scope, we'll end up with the global of the reflector, and this

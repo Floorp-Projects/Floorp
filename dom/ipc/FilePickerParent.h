@@ -46,7 +46,6 @@ class FilePickerParent : public PFilePickerParent
     FilePickerShownCallback(FilePickerParent* aFilePickerParent)
       : mFilePickerParent(aFilePickerParent)
     { }
-    virtual ~FilePickerShownCallback() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIFILEPICKERSHOWNCALLBACK
@@ -54,6 +53,7 @@ class FilePickerParent : public PFilePickerParent
     void Destroy();
 
   private:
+    virtual ~FilePickerShownCallback() {}
     FilePickerParent* mFilePickerParent;
   };
 

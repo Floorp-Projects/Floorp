@@ -47,7 +47,6 @@ class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
 public:
   
   nsSecureBrowserUIImpl();
-  virtual ~nsSecureBrowserUIImpl();
   
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -61,6 +60,8 @@ public:
                                  nsIArray* invalidElements) { return NS_OK; }
   
 protected:
+  virtual ~nsSecureBrowserUIImpl();
+
   mozilla::ReentrantMonitor mReentrantMonitor;
   
   nsWeakPtr mWindow;

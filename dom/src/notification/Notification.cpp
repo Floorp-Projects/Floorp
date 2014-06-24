@@ -160,13 +160,13 @@ public:
       mPermission(NotificationPermission::Default),
       mCallback(aCallback) {}
 
-  virtual ~NotificationPermissionRequest() {}
-
   bool Recv__delete__(const bool& aAllow,
                       const InfallibleTArray<PermissionChoice>& choices);
   void IPDLRelease() { Release(); }
 
 protected:
+  virtual ~NotificationPermissionRequest() {}
+
   nsresult CallCallback();
   nsresult DispatchCallback();
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -184,9 +184,9 @@ public:
   NotificationObserver(Notification* aNotification)
     : mNotification(aNotification) {}
 
+protected:
   virtual ~NotificationObserver() {}
 
-protected:
   nsRefPtr<Notification> mNotification;
 };
 
@@ -204,9 +204,9 @@ public:
   NotificationTask(Notification* aNotification, NotificationAction aAction)
     : mNotification(aNotification), mAction(aAction) {}
 
+protected:
   virtual ~NotificationTask() {}
 
-protected:
   nsRefPtr<Notification> mNotification;
   NotificationAction mAction;
 };

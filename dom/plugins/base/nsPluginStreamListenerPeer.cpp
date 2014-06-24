@@ -39,7 +39,6 @@ class nsPluginByteRangeStreamListener
 {
 public:
   nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr);
-  virtual ~nsPluginByteRangeStreamListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -47,6 +46,8 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
 private:
+  virtual ~nsPluginByteRangeStreamListener();
+
   nsCOMPtr<nsIStreamListener> mStreamConverter;
   nsWeakPtr mWeakPtrPluginStreamListenerPeer;
   bool mRemoveMagicNumber;
@@ -1201,7 +1202,6 @@ public:
   }
 
   ChannelRedirectProxyCallback() {}
-  virtual ~ChannelRedirectProxyCallback() {}
 
   NS_DECL_ISUPPORTS
 
@@ -1216,6 +1216,8 @@ public:
   }
 
 private:
+  virtual ~ChannelRedirectProxyCallback() {}
+
   nsWeakPtr mWeakListener;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mParent;
   nsCOMPtr<nsIChannel> mOldChannel;

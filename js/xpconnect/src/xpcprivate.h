@@ -294,8 +294,6 @@ public:
     // Called by module code on dll shutdown.
     static void ReleaseXPConnectSingleton();
 
-    virtual ~nsXPConnect();
-
     bool IsShuttingDown() const {return mShuttingDown;}
 
     nsresult GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info);
@@ -318,6 +316,8 @@ public:
     static void CheckForDebugMode(JSRuntime *rt);
 
 protected:
+    virtual ~nsXPConnect();
+
     nsXPConnect();
 
 private:
@@ -2278,13 +2278,13 @@ public:
                                               const nsAString& aName,
                                               nsIVariant** aResult);
 
-    virtual ~nsXPCWrappedJSClass();
-
     static nsresult CheckForException(XPCCallContext & ccx,
                                       const char * aPropertyName,
                                       const char * anInterfaceName,
                                       bool aForceReport);
 private:
+    virtual ~nsXPCWrappedJSClass();
+
     nsXPCWrappedJSClass();   // not implemented
     nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
                         nsIInterfaceInfo* aInfo);
@@ -2447,12 +2447,12 @@ public:
 public:
     static XPCJSObjectHolder* newHolder(JSObject* obj);
 
-    virtual ~XPCJSObjectHolder();
-
     void TraceJS(JSTracer *trc);
     static void GetTraceName(JSTracer* trc, char *buf, size_t bufsize);
 
 private:
+    virtual ~XPCJSObjectHolder();
+
     XPCJSObjectHolder(JSObject* obj);
     XPCJSObjectHolder(); // not implemented
 
@@ -2474,9 +2474,10 @@ public:
   NS_DECL_NSIPROPERTY
 
   xpcProperty(const char16_t* aName, uint32_t aNameLen, nsIVariant* aValue);
-  virtual ~xpcProperty() {}
 
 private:
+    virtual ~xpcProperty() {}
+
     nsString             mName;
     nsCOMPtr<nsIVariant> mValue;
 };
@@ -2675,7 +2676,6 @@ public:
 
     nsJSID();
     virtual ~nsJSID();
-protected:
 
     void Reset();
     const nsID& GetInvalidIID() const;
@@ -2686,6 +2686,14 @@ protected:
     char*   mNumber;
     char*   mName;
 };
+
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsJSID>
+{
+  static const bool value = true;
+};
+}
 
 // nsJSIID
 
@@ -2706,9 +2714,10 @@ public:
 
     nsJSIID(nsIInterfaceInfo* aInfo);
     nsJSIID(); // not implemented
-    virtual ~nsJSIID();
 
 private:
+    virtual ~nsJSIID();
+
     nsCOMPtr<nsIInterfaceInfo> mInfo;
 };
 
@@ -2729,9 +2738,10 @@ public:
     static already_AddRefed<nsJSCID> NewID(const char* str);
 
     nsJSCID();
-    virtual ~nsJSCID();
 
 private:
+    virtual ~nsJSCID();
+
     void ResolveName();
 
 private:
@@ -2822,11 +2832,12 @@ public:
 
 public:
     void SystemIsBeingShutDown() { ClearMembers(); }
-    virtual ~nsXPCComponentsBase();
 
     XPCWrappedNativeScope *GetScope() { return mScope; }
 
 protected:
+    virtual ~nsXPCComponentsBase();
+
     nsXPCComponentsBase(XPCWrappedNativeScope* aScope);
     virtual void ClearMembers();
 
@@ -2904,8 +2915,6 @@ class nsScriptError : public nsIScriptError {
 public:
     nsScriptError();
 
-    virtual ~nsScriptError();
-
   // TODO - do something reasonable on getting null from these babies.
 
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -2913,6 +2922,8 @@ public:
     NS_DECL_NSISCRIPTERROR
 
 private:
+    virtual ~nsScriptError();
+
     nsString mMessage;
     nsString mSourceName;
     uint32_t mLineNumber;
@@ -3404,6 +3415,24 @@ public:
     JS::RootedId defineAs;
 };
 
+class MOZ_STACK_CLASS StackScopedCloneOptions : public OptionsBase {
+public:
+    StackScopedCloneOptions(JSContext *cx = xpc_GetSafeJSContext(),
+                            JSObject* options = nullptr)
+        : OptionsBase(cx, options)
+        , wrapReflectors(false)
+        , cloneFunctions(false)
+    { }
+
+    virtual bool Parse() {
+        return ParseBoolean("wrapReflectors", &wrapReflectors) &&
+               ParseBoolean("cloneFunctions", &cloneFunctions);
+    };
+
+    bool wrapReflectors;
+    bool cloneFunctions;
+};
+
 JSObject *
 CreateGlobalObject(JSContext *cx, const JSClass *clasp, nsIPrincipal *principal,
                    JS::CompartmentOptions& aOptions);
@@ -3471,6 +3500,9 @@ ExportFunction(JSContext *cx, JS::HandleValue vscope, JS::HandleValue vfunction,
 bool
 CloneInto(JSContext *cx, JS::HandleValue vobj, JS::HandleValue vscope,
           JS::HandleValue voptions, JS::MutableHandleValue rval);
+
+bool
+StackScopedClone(JSContext *cx, StackScopedCloneOptions &options, JS::MutableHandleValue val);
 
 } /* namespace xpc */
 

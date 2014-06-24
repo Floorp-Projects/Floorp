@@ -1408,6 +1408,8 @@ pref("network.predictor.preserve", 80); // percentage of predictor data to keep 
 
 // Allow insecure NTLMv1 when needed.
 pref("network.negotiate-auth.allow-insecure-ntlm-v1", false);
+// Allow insecure NTLMv1 for HTTPS protected sites by default.
+pref("network.negotiate-auth.allow-insecure-ntlm-v1-https", true);
 
 // This list controls which URIs can use the negotiate-auth protocol.  This
 // list should be limited to the servers you know you'll need to login to.
@@ -3714,8 +3716,9 @@ pref("webgl.msaa-force", false);
 pref("webgl.prefer-16bpp", false);
 pref("webgl.default-no-alpha", false);
 pref("webgl.force-layers-readback", false);
-pref("webgl.lose-context-on-heap-minimize", false);
+pref("webgl.lose-context-on-memory-preasure", false);
 pref("webgl.can-lose-context-in-foreground", true);
+pref("webgl.restore-context-when-visible", true);
 pref("webgl.max-warnings-per-context", 32);
 pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);

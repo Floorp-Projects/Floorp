@@ -19,9 +19,9 @@ public:
 
   nsDBusHandlerApp() { }
 
+protected:
   virtual ~nsDBusHandlerApp() { }
 
-protected:
   nsString mName;
   nsString mDetailedDescription;
   nsCString mService;

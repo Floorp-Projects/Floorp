@@ -21,7 +21,7 @@ LAllocation *
 StupidAllocator::stackLocation(uint32_t vreg)
 {
     LDefinition *def = virtualRegisters[vreg];
-    if (def->policy() == LDefinition::PRESET && def->output()->isArgument())
+    if (def->policy() == LDefinition::FIXED && def->output()->isArgument())
         return def->output();
 
     return new(alloc()) LStackSlot(DefaultStackSlot(vreg));
@@ -282,7 +282,7 @@ StupidAllocator::syncForBlockEnd(LBlock *block, LInstruction *ins)
     MBasicBlock *successor = block->mir()->successorWithPhis();
     if (successor) {
         uint32_t position = block->mir()->positionInPhiSuccessor();
-        LBlock *lirsuccessor = graph.getBlock(successor->id());
+        LBlock *lirsuccessor = successor->lir();
         for (size_t i = 0; i < lirsuccessor->numPhis(); i++) {
             LPhi *phi = lirsuccessor->getPhi(i);
 
@@ -393,20 +393,20 @@ StupidAllocator::allocateForDefinition(LInstruction *ins, LDefinition *def)
     uint32_t vreg = def->virtualRegister();
 
     CodePosition from;
-    if ((def->output()->isRegister() && def->policy() == LDefinition::PRESET) ||
+    if ((def->output()->isRegister() && def->policy() == LDefinition::FIXED) ||
         def->policy() == LDefinition::MUST_REUSE_INPUT)
     {
         // Result will be in a specific register, spill any vreg held in
         // that register before the instruction.
         RegisterIndex index =
-            registerIndex(def->policy() == LDefinition::PRESET
+            registerIndex(def->policy() == LDefinition::FIXED
                           ? def->output()->toRegister()
                           : ins->getOperand(def->getReusedInput())->toRegister());
         evictRegister(ins, index);
         registers[index].set(vreg, ins, true);
         registers[index].type = virtualRegisters[vreg]->type();
         def->setOutput(LAllocation(registers[index].reg));
-    } else if (def->policy() == LDefinition::PRESET) {
+    } else if (def->policy() == LDefinition::FIXED) {
         // The result must be a stack location.
         def->setOutput(*stackLocation(vreg));
     } else {

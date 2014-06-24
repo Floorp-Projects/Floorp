@@ -19,8 +19,6 @@
 <script class="testbody" type="application/javascript">
 <![CDATA[
 
-SimpleTest.expectAssertions(2);
-
 SimpleTest.waitForExplicitFinish();
 window.open("window_composition_text_querycontent.xul", "_blank", 
             "chrome,width=600,height=600");

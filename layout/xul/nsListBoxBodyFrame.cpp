@@ -66,11 +66,13 @@ using namespace mozilla::dom;
 
 class nsListScrollSmoother : public nsITimerCallback
 {
+private:
+  virtual ~nsListScrollSmoother();
+
 public:
   NS_DECL_ISUPPORTS
 
   nsListScrollSmoother(nsListBoxBodyFrame* aOuter);
-  virtual ~nsListScrollSmoother();
 
   // nsITimerCallback
   NS_DECL_NSITIMERCALLBACK

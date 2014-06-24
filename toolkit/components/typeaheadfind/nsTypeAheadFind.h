@@ -30,7 +30,6 @@ class nsTypeAheadFind : public nsITypeAheadFind,
 {
 public:
   nsTypeAheadFind();
-  virtual ~nsTypeAheadFind();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSITYPEAHEADFIND
@@ -39,6 +38,8 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTypeAheadFind, nsITypeAheadFind)
 
 protected:
+  virtual ~nsTypeAheadFind();
+
   nsresult PrefsReset();
 
   void SaveFind();

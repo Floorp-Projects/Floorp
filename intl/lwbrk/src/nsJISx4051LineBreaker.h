@@ -12,9 +12,11 @@ class nsJISx4051LineBreaker : public nsILineBreaker
 {
   NS_DECL_ISUPPORTS
 
+private:
+  virtual ~nsJISx4051LineBreaker();
+
 public:
   nsJISx4051LineBreaker();
-  virtual ~nsJISx4051LineBreaker();
 
   int32_t Next( const char16_t* aText, uint32_t aLen, uint32_t aPos);
 

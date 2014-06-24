@@ -123,6 +123,14 @@ private:
   } mValue;
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsROCSSPrimitiveValue>
+{
+  static const bool value = true;
+};
+}
+
 inline nsROCSSPrimitiveValue *mozilla::dom::CSSValue::AsPrimitiveValue()
 {
   return CssValueType() == nsIDOMCSSValue::CSS_PRIMITIVE_VALUE ?

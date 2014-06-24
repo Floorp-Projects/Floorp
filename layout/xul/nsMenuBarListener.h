@@ -25,9 +25,6 @@ public:
   /** default constructor
    */
   nsMenuBarListener(nsMenuBarFrame* aMenuBar);
-  /** default destructor
-   */
-  virtual ~nsMenuBarListener();
 
   static void InitializeStatics();
    
@@ -46,6 +43,10 @@ public:
   static bool IsAccessKeyPressed(nsIDOMKeyEvent* event);
 
 protected:
+  /** default destructor
+   */
+  virtual ~nsMenuBarListener();
+
   static void InitAccessKey();
 
   static mozilla::Modifiers GetModifiersForAccessKey(nsIDOMKeyEvent* event);

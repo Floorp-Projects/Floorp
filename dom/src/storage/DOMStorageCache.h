@@ -32,8 +32,6 @@ public:
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(void) Release(void);
 
-  virtual ~DOMStorageCacheBridge() {}
-
   // The scope (origin) in the database usage format (reversed)
   virtual const nsCString& Scope() const = 0;
 
@@ -56,6 +54,8 @@ public:
   virtual void LoadWait() = 0;
 
 protected:
+  virtual ~DOMStorageCacheBridge() {}
+
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
 };

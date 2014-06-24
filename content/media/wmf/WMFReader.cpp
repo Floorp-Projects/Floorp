@@ -541,14 +541,6 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
     ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
     mDecoder->SetMediaEndTime(duration);
   }
-  // We can seek if we get a duration *and* the reader reports that it's
-  // seekable.
-  bool canSeek = false;
-  if (FAILED(hr) ||
-      FAILED(GetSourceReaderCanSeek(mSourceReader, canSeek)) ||
-      !canSeek) {
-    mDecoder->SetMediaSeekable(false);
-  }
 
   *aInfo = mInfo;
   *aTags = nullptr;
@@ -556,6 +548,22 @@ WMFReader::ReadMetadata(MediaInfo* aInfo,
   // http://blogs.msdn.com/b/mf/archive/2010/01/12/mfmediapropdump.aspx
 
   return NS_OK;
+}
+
+bool
+WMFReader::IsMediaSeekable()
+{
+  // Get the duration
+  int64_t duration = 0;
+  HRESULT hr = GetSourceReaderDuration(mSourceReader, duration);
+  // We can seek if we get a duration *and* the reader reports that it's
+  // seekable.
+  bool canSeek = false;
+  if (FAILED(hr) || FAILED(GetSourceReaderCanSeek(mSourceReader, canSeek)) ||
+      !canSeek) {
+    return false;
+  }
+  return true;
 }
 
 bool

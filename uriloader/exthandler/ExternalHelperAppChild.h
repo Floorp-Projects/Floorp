@@ -25,7 +25,6 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
 
     ExternalHelperAppChild();
-    virtual ~ExternalHelperAppChild();
 
     // Give the listener a real nsExternalAppHandler to complete processing on
     // the child.
@@ -33,6 +32,7 @@ public:
 
     virtual bool RecvCancel(const nsresult& aStatus) MOZ_OVERRIDE;
 private:
+    virtual ~ExternalHelperAppChild();
     nsresult DivertToParent(nsIDivertableChannel *divertable, nsIRequest *request);
 
     nsRefPtr<nsExternalAppHandler> mHandler;

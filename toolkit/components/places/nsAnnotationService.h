@@ -31,6 +31,8 @@ public:
                   nsIVariant* aAnnotationValue);
 
 private:
+  ~AnnotatedResult();
+
   const nsCString mGUID;
   nsCOMPtr<nsIURI> mURI;
   const int64_t mItemId;

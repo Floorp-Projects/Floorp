@@ -77,13 +77,14 @@ protected:
     MouseListener(nsFileControlFrame* aFrame)
      : mFrame(aFrame)
     {}
-    virtual ~MouseListener() {}
 
     void ForgetFrame() {
       mFrame = nullptr;
     }
 
   protected:
+    virtual ~MouseListener() {}
+
     nsFileControlFrame* mFrame;
   };
 

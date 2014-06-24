@@ -88,8 +88,6 @@ public:
 
   Key(nsIGlobalObject* aWindow);
 
-  ~Key();
-
   nsIGlobalObject* GetParentObject() const
   {
     return mGlobal;
@@ -156,6 +154,8 @@ public:
   bool ReadStructuredClone(JSStructuredCloneReader* aReader);
 
 private:
+  ~Key();
+
   nsRefPtr<nsIGlobalObject> mGlobal;
   uint32_t mAttributes; // see above
   nsRefPtr<KeyAlgorithm> mAlgorithm;

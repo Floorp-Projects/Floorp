@@ -126,6 +126,7 @@ public:
     mDocument->AddObserver(this);
   }
 
+private:
   ~SVGParseCompleteListener()
   {
     if (mDocument) {
@@ -136,6 +137,7 @@ public:
     }
   }
 
+public:
   void EndLoad(nsIDocument* aDocument) MOZ_OVERRIDE
   {
     MOZ_ASSERT(aDocument == mDocument, "Got EndLoad for wrong document?");
@@ -180,6 +182,7 @@ public:
     mDocument->AddEventListener(NS_LITERAL_STRING("SVGError"), this, true, false);
   }
 
+private:
   ~SVGLoadEventListener()
   {
     if (mDocument) {
@@ -190,6 +193,7 @@ public:
     }
   }
 
+public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
   {
     MOZ_ASSERT(mDocument, "Need an SVG document. Received multiple events?");

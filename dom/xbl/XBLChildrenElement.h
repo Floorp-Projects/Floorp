@@ -153,11 +153,6 @@ public:
     SetIsDOMBinding();
   }
 
-  virtual ~nsAnonymousContentList()
-  {
-    MOZ_COUNT_DTOR(nsAnonymousContentList);
-  }
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(nsAnonymousContentList)
   // nsIDOMNodeList interface
@@ -175,6 +170,11 @@ public:
   }
 
 private:
+  virtual ~nsAnonymousContentList()
+  {
+    MOZ_COUNT_DTOR(nsAnonymousContentList);
+  }
+
   nsCOMPtr<nsIContent> mParent;
 };
 

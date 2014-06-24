@@ -23,3 +23,15 @@ var ff = function() { return 10; };
 ff.toSource = function() { return "((11))"; }
 Object.defineProperty(o, "prop", {get: ff, set: ff, enumerable: true});
 assertEq(o.toSource(), "({prop:((11)), prop:((11))})");
+
+// XDR
+load(libdir + 'bytecode-cache.js');
+
+// Latin1 string constant
+toLatin1("string123");
+test = "'string123';";
+evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });
+
+// TwoByte string constant
+test = "'string\u1234';";
+evalWithCache(test, { assertEqBytecode: true, assertEqResult : true });

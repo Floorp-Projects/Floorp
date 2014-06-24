@@ -112,7 +112,7 @@ LBlock::New(TempAllocator &alloc, MBasicBlock *from)
 }
 
 uint32_t
-LBlock::firstId()
+LBlock::firstId() const
 {
     if (phis_.length()) {
         return phis_[0].id();
@@ -125,7 +125,7 @@ LBlock::firstId()
     return 0;
 }
 uint32_t
-LBlock::lastId()
+LBlock::lastId() const
 {
     LInstruction *last = *instructions_.rbegin();
     JS_ASSERT(last->id());
@@ -334,6 +334,7 @@ LInstruction::printName(FILE *fp)
     printName(fp, op());
 }
 
+#ifdef DEBUG
 static const char * const TypeChars[] =
 {
     "g",            // GENERAL
@@ -351,22 +352,33 @@ static const char * const TypeChars[] =
 };
 
 static void
-PrintDefinition(FILE *fp, const LDefinition &def)
+PrintDefinition(char *buf, size_t size, const LDefinition &def)
 {
-    fprintf(fp, "[%s", TypeChars[def.type()]);
+    char *cursor = buf;
+    char *end = buf + size;
+
     if (def.virtualRegister())
-        fprintf(fp, ":%d", def.virtualRegister());
-    if (def.policy() == LDefinition::PRESET) {
-        fprintf(fp, " (%s)", def.output()->toString());
-    } else if (def.policy() == LDefinition::MUST_REUSE_INPUT) {
-        fprintf(fp, " (!)");
-    } else if (def.policy() == LDefinition::PASSTHROUGH) {
-        fprintf(fp, " (-)");
-    }
-    fprintf(fp, "]");
+        cursor += JS_snprintf(cursor, end - cursor, "v%u", def.virtualRegister());
+
+    cursor += JS_snprintf(cursor, end - cursor, "<%s>", TypeChars[def.type()]);
+
+    if (def.policy() == LDefinition::FIXED)
+        cursor += JS_snprintf(cursor, end - cursor, ":%s", def.output()->toString());
+    else if (def.policy() == LDefinition::MUST_REUSE_INPUT)
+        cursor += JS_snprintf(cursor, end - cursor, ":tied(%u)", def.getReusedInput());
+    else if (def.policy() == LDefinition::PASSTHROUGH)
+        cursor += JS_snprintf(cursor, end - cursor, ":-");
 }
 
-#ifdef DEBUG
+const char *
+LDefinition::toString() const
+{
+    // Not reentrant!
+    static char buf[40];
+    PrintDefinition(buf, sizeof(buf), *this);
+    return buf;
+}
+
 static void
 PrintUse(char *buf, size_t size, const LUse *use)
 {
@@ -406,10 +418,10 @@ LAllocation::toString() const
       case LAllocation::CONSTANT_INDEX:
         return "c";
       case LAllocation::GPR:
-        JS_snprintf(buf, sizeof(buf), "=%s", toGeneralReg()->reg().name());
+        JS_snprintf(buf, sizeof(buf), "%s", toGeneralReg()->reg().name());
         return buf;
       case LAllocation::FPU:
-        JS_snprintf(buf, sizeof(buf), "=%s", toFloatReg()->reg().name());
+        JS_snprintf(buf, sizeof(buf), "%s", toFloatReg()->reg().name());
         return buf;
       case LAllocation::STACK_SLOT:
         JS_snprintf(buf, sizeof(buf), "stack:%d", toStackSlot()->slot());
@@ -428,6 +440,12 @@ LAllocation::toString() const
 
 void
 LAllocation::dump() const
+{
+    fprintf(stderr, "%s\n", toString());
+}
+
+void
+LDefinition::dump() const
 {
     fprintf(stderr, "%s\n", toString());
 }
@@ -465,7 +483,7 @@ LInstruction::dump(FILE *fp)
     if (numDefs() != 0) {
         fprintf(fp, "{");
         for (size_t i = 0; i < numDefs(); i++) {
-            PrintDefinition(fp, *getDef(i));
+            fprintf(fp, "%s", getDef(i)->toString());
             if (i != numDefs() - 1)
                 fprintf(fp, ", ");
         }
@@ -478,7 +496,7 @@ LInstruction::dump(FILE *fp)
     if (numTemps()) {
         fprintf(fp, " t=(");
         for (size_t i = 0; i < numTemps(); i++) {
-            PrintDefinition(fp, *getTemp(i));
+            fprintf(fp, "%s", getTemp(i)->toString());
             if (i != numTemps() - 1)
                 fprintf(fp, ", ");
         }
@@ -555,9 +573,9 @@ LMoveGroup::printOperands(FILE *fp)
     for (size_t i = 0; i < numMoves(); i++) {
         const LMove &move = getMove(i);
         // Use two printfs, as LAllocation::toString is not reentrant.
-        fprintf(fp, "[%s", move.from()->toString());
+        fprintf(fp, " [%s", move.from()->toString());
         fprintf(fp, " -> %s]", move.to()->toString());
         if (i != numMoves() - 1)
-            fprintf(fp, ", ");
+            fprintf(fp, ",");
     }
 }
