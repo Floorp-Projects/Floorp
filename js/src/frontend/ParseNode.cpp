@@ -601,7 +601,7 @@ NullaryNode::dump()
       }
 
       case PNK_STRING:
-        JSString::dumpChars(pn_atom->chars(), pn_atom->length());
+        pn_atom->dumpCharsNoNewline();
         break;
 
       default:
@@ -685,6 +685,24 @@ ListNode::dump(int indent)
     fprintf(stderr, "])");
 }
 
+template <typename CharT>
+static void
+DumpName(const CharT *s, size_t len)
+{
+    if (len == 0)
+        fprintf(stderr, "#<zero-length name>");
+
+    for (size_t i = 0; i < len; i++) {
+        jschar c = s[i];
+        if (c > 32 && c < 127)
+            fputc(c, stderr);
+        else if (c <= 255)
+            fprintf(stderr, "\\x%02x", unsigned(c));
+        else
+            fprintf(stderr, "\\u%04x", unsigned(c));
+    }
+}
+
 void
 NameNode::dump(int indent)
 {
@@ -695,18 +713,11 @@ NameNode::dump(int indent)
         if (!pn_atom) {
             fprintf(stderr, "#<null name>");
         } else {
-            const jschar *s = pn_atom->chars();
-            size_t len = pn_atom->length();
-            if (len == 0)
-                fprintf(stderr, "#<zero-length name>");
-            for (size_t i = 0; i < len; i++) {
-                if (s[i] > 32 && s[i] < 127)
-                    fputc(s[i], stderr);
-                else if (s[i] <= 255)
-                    fprintf(stderr, "\\x%02x", (unsigned int) s[i]);
-                else
-                    fprintf(stderr, "\\u%04x", (unsigned int) s[i]);
-            }
+            JS::AutoCheckCannotGC nogc;
+            if (pn_atom->hasLatin1Chars())
+                DumpName(pn_atom->latin1Chars(nogc), pn_atom->length());
+            else
+                DumpName(pn_atom->twoByteChars(nogc), pn_atom->length());
         }
 
         if (isKind(PNK_DOT)) {

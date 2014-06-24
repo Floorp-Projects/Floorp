@@ -163,9 +163,17 @@ WriteIndent(JSContext *cx, StringifyContext *scx, uint32_t limit)
     if (!scx->gap.empty()) {
         if (!scx->sb.append('\n'))
             return false;
-        for (uint32_t i = 0; i < limit; i++) {
-            if (!scx->sb.append(scx->gap.rawTwoByteBegin(), scx->gap.rawTwoByteEnd()))
-                return false;
+
+        if (scx->gap.isUnderlyingBufferLatin1()) {
+            for (uint32_t i = 0; i < limit; i++) {
+                if (!scx->sb.append(scx->gap.rawLatin1Begin(), scx->gap.rawLatin1End()))
+                    return false;
+            }
+        } else {
+            for (uint32_t i = 0; i < limit; i++) {
+                if (!scx->sb.append(scx->gap.rawTwoByteBegin(), scx->gap.rawTwoByteEnd()))
+                    return false;
+            }
         }
     }
 
