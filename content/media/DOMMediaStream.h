@@ -287,6 +287,7 @@ class DOMAudioNodeMediaStream : public DOMMediaStream
   typedef dom::AudioNode AudioNode;
 public:
   DOMAudioNodeMediaStream(AudioNode* aNode);
+  ~DOMAudioNodeMediaStream();
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
