@@ -88,21 +88,8 @@ GB is likely entering the point of diminishing returns.
 
 This cause impacts both clobber and incremental builds.
 
-You are building with pymake
-============================
-
-Pymake is slower than GNU make. One reason is Python is generally slower
-than C. The build system maintainers are consistently looking at
-optimizing pymake. However, it is death by a thousand cuts.
-
-This cause impacts both clobber and incremental builds.
-
 You are building on Windows
 ===========================
-
-Builds on Windows are slow for a few reasons. First, Windows builds use
-pymake, not GNU make (because of compatibility issues with GNU make).
-But, there are other sources of slowness.
 
 New processes on Windows are about a magnitude slower to spawn than on
 UNIX-y systems such as Linux. This is because Windows has optimized new
