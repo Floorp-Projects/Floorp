@@ -943,6 +943,12 @@ NS_IMETHODIMP _OldStorage::AsyncOpenURI(nsIURI *aURI,
   return NS_OK;
 }
 
+NS_IMETHODIMP _OldStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension,
+                                   bool *aResult)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 NS_IMETHODIMP _OldStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,
                                         nsICacheEntryDoomCallback* aCallback)
 {

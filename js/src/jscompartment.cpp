@@ -279,10 +279,10 @@ CopyStringPure(JSContext *cx, JSString *str)
         /* Only use AutoStableStringChars if the NoGC allocation fails. */
         if (str->hasLatin1Chars()) {
             JS::AutoCheckCannotGC nogc;
-            copy = js_NewStringCopyN<NoGC>(cx, str->asLinear().latin1Chars(nogc), len);
+            copy = NewStringCopyN<NoGC>(cx, str->asLinear().latin1Chars(nogc), len);
         } else {
             JS::AutoCheckCannotGC nogc;
-            copy = js_NewStringCopyN<NoGC>(cx, str->asLinear().twoByteChars(nogc), len);
+            copy = NewStringCopyN<NoGC>(cx, str->asLinear().twoByteChars(nogc), len);
         }
         if (copy)
             return copy;
@@ -292,8 +292,8 @@ CopyStringPure(JSContext *cx, JSString *str)
             return nullptr;
 
         return chars.isLatin1()
-               ? js_NewStringCopyN<CanGC>(cx, chars.latin1Range().start().get(), len)
-               : js_NewStringCopyN<CanGC>(cx, chars.twoByteRange().start().get(), len);
+               ? NewStringCopyN<CanGC>(cx, chars.latin1Range().start().get(), len)
+               : NewStringCopyN<CanGC>(cx, chars.twoByteRange().start().get(), len);
     }
 
     if (str->hasLatin1Chars()) {
@@ -301,14 +301,14 @@ CopyStringPure(JSContext *cx, JSString *str)
         if (!str->asRope().copyLatin1CharsZ(cx, copiedChars))
             return nullptr;
 
-        return js_NewString<CanGC>(cx, copiedChars.forget(), len);
+        return NewString<CanGC>(cx, copiedChars.forget(), len);
     }
 
     ScopedJSFreePtr<jschar> copiedChars;
     if (!str->asRope().copyTwoByteCharsZ(cx, copiedChars))
         return nullptr;
 
-    return js_NewString<CanGC>(cx, copiedChars.forget(), len);
+    return NewString<CanGC>(cx, copiedChars.forget(), len);
 }
 
 bool
