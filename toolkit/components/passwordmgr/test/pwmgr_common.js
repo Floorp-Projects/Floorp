@@ -128,7 +128,10 @@ function doKey(aKey, modifier) {
 }
 
 // Init with a common login
-function commonInit() {
+// If selfFilling is true or non-undefined, fires an event at the page so that
+// the test can start checking filled-in values. Tests that check observer
+// notifications might be confused by this.
+function commonInit(selfFilling) {
     var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"].
                 getService(SpecialPowers.Ci.nsILoginManager);
     ok(pwmgr != null, "Access LoginManager");
@@ -159,6 +162,41 @@ function commonInit() {
     is(logins.length, 1, "Checking for successful init login");
     disabledHosts = pwmgr.getAllDisabledHosts();
     is(disabledHosts.length, 0, "Checking for no disabled hosts");
+
+    if (selfFilling)
+        return;
+
+    // We provide a general mechanism for our tests to know when they can
+    // safely run: we add a final form that we know will be filled in, wait
+    // for the login manager to tell us that it's filled in and then continue
+    // with the rest of the tests.
+    window.addEventListener("DOMContentLoaded", (event) => {
+        var form = document.createElement('form');
+        form.id = 'observerforcer';
+        var username = document.createElement('input');
+        username.name = 'testuser';
+        form.appendChild(username);
+        var password = document.createElement('input');
+        password.name = 'testpass';
+        password.type = 'password';
+        form.appendChild(password);
+
+        var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+            var bag = subject.QueryInterface(SpecialPowers.Ci.nsIPropertyBag2);
+            var username = bag.get("usernameField");
+            if (!username || username.form.id !== 'observerforcer')
+                return;
+            SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
+            form.parentNode.removeChild(form);
+            SimpleTest.executeSoon(() => {
+                var event = new Event("runTests");
+                window.dispatchEvent(event);
+            });
+        });
+        SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
+
+        document.body.appendChild(form);
+    });
 }
 
 const masterPassword = "omgsecret!";

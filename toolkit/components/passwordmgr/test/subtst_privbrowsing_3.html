@@ -19,8 +19,8 @@ function submitForm() {
   form.submit();
 }
 
-window.onload = submitForm;
 var form      = document.getElementById("form");
+window.addEventListener('message', () => { submitForm(); });
 
 </script>
 </body>
