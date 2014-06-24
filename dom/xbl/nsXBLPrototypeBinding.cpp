@@ -155,10 +155,15 @@ nsXBLPrototypeBinding::Traverse(nsCycleCollectionTraversalCallback &cb) const
 }
 
 void
-nsXBLPrototypeBinding::UnlinkJSObjects()
+nsXBLPrototypeBinding::Unlink()
 {
-  if (mImplementation)
+  if (mImplementation) {
     mImplementation->UnlinkJSObjects();
+  }
+
+  if (mResources) {
+    mResources->Unlink();
+  }
 }
 
 void
