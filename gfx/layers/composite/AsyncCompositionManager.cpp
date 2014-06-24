@@ -30,7 +30,7 @@
 #include "nsPoint.h"                    // for nsPoint
 #include "nsRect.h"                     // for nsIntRect
 #include "nsRegion.h"                   // for nsIntRegion
-#include "nsStyleAnimation.h"           // for nsStyleAnimation::Value, etc
+#include "nsStyleAnimation.h"           // for StyleAnimationValue, etc
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsTArrayForwardDeclare.h"     // for InfallibleTArray
 #if defined(MOZ_WIDGET_ANDROID)
@@ -354,14 +354,15 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
 }
 
 static void
-SampleValue(float aPortion, Animation& aAnimation, nsStyleAnimation::Value& aStart,
-            nsStyleAnimation::Value& aEnd, Animatable* aValue)
+SampleValue(float aPortion, Animation& aAnimation, StyleAnimationValue& aStart,
+            StyleAnimationValue& aEnd, Animatable* aValue)
 {
-  nsStyleAnimation::Value interpolatedValue;
+  StyleAnimationValue interpolatedValue;
   NS_ASSERTION(aStart.GetUnit() == aEnd.GetUnit() ||
-               aStart.GetUnit() == nsStyleAnimation::eUnit_None ||
-               aEnd.GetUnit() == nsStyleAnimation::eUnit_None, "Must have same unit");
-  nsStyleAnimation::Interpolate(aAnimation.property(), aStart, aEnd,
+               aStart.GetUnit() == StyleAnimationValue::eUnit_None ||
+               aEnd.GetUnit() == StyleAnimationValue::eUnit_None,
+               "Must have same unit");
+  StyleAnimationValue::Interpolate(aAnimation.property(), aStart, aEnd,
                                 aPortion, interpolatedValue);
   if (aAnimation.property() == eCSSProperty_opacity) {
     *aValue = interpolatedValue.GetFloatValue();

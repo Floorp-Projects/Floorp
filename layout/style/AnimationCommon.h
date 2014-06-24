@@ -27,6 +27,9 @@ struct ElementPropertyTransition;
 
 
 namespace mozilla {
+
+class StyleAnimationValue;
+
 namespace css {
 
 bool IsGeometricProperty(nsCSSProperty aProperty);
@@ -66,7 +69,7 @@ public:
   static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
                   nsStyleContext* aStyleContext,
-                  nsStyleAnimation::Value& aComputedValue);
+                  mozilla::StyleAnimationValue& aComputedValue);
 protected:
   virtual ~CommonAnimationManager();
 
@@ -160,7 +163,7 @@ class_::UpdateAllThrottledStylesInternal()                                     \
 }
 
 /**
- * A style rule that maps property-nsStyleAnimation::Value pairs.
+ * A style rule that maps property-StyleAnimationValue pairs.
  */
 class AnimValuesStyleRule MOZ_FINAL : public nsIStyleRule
 {
@@ -174,14 +177,15 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
 #endif
 
-  void AddValue(nsCSSProperty aProperty, nsStyleAnimation::Value &aStartValue)
+  void AddValue(nsCSSProperty aProperty,
+                mozilla::StyleAnimationValue &aStartValue)
   {
     PropertyValuePair v = { aProperty, aStartValue };
     mPropertyValuePairs.AppendElement(v);
   }
 
   // Caller must fill in returned value.
-  nsStyleAnimation::Value* AddEmptyValue(nsCSSProperty aProperty)
+  mozilla::StyleAnimationValue* AddEmptyValue(nsCSSProperty aProperty)
   {
     PropertyValuePair *p = mPropertyValuePairs.AppendElement();
     p->mProperty = aProperty;
@@ -190,7 +194,7 @@ public:
 
   struct PropertyValuePair {
     nsCSSProperty mProperty;
-    nsStyleAnimation::Value mValue;
+    mozilla::StyleAnimationValue mValue;
   };
 
 private:
@@ -221,7 +225,7 @@ private:
 struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
-  nsStyleAnimation::Value mFromValue, mToValue;
+  mozilla::StyleAnimationValue mFromValue, mToValue;
   mozilla::css::ComputedTimingFunction mTimingFunction;
 };
 

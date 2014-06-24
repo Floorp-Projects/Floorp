@@ -218,7 +218,7 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
  */
 enum nsStyleAnimType {
   // requires a custom implementation in
-  // nsStyleAnimation::ExtractComputedValue
+  // StyleAnimationValue::ExtractComputedValue
   eStyleAnimType_Custom,
 
   // nsStyleCoord with animatable values
