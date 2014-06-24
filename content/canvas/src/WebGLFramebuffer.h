@@ -114,6 +114,8 @@ public:
                               GLint level);
 
 private:
+    void DetachAttachment(WebGLFramebuffer::Attachment& attachment);
+    void DetachAllAttachments();
     const WebGLRectangleObject& GetAnyRectObject() const;
     Attachment* GetAttachmentOrNull(GLenum attachment);
 
