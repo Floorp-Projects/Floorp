@@ -50,11 +50,11 @@ MtransportTestUtils *test_utils;
 
 bool stream_added = false;
 
-static int kDefaultTimeout = 7000;
+static unsigned int kDefaultTimeout = 7000;
 
 const std::string kDefaultStunServerAddress((char *)"23.21.150.121");
 const std::string kDefaultStunServerHostname(
-    (char *)"ec2-23-21-150-121.compute-1.amazonaws.com");
+    (char *)"stun.services.mozilla.com");
 const std::string kBogusStunServerHostname(
     (char *)"stun-server-nonexistent.invalid");
 const uint16_t kDefaultStunServerPort=3478;
@@ -832,16 +832,16 @@ class IceGatherTest : public ::testing::Test {
     peer_->AddStream(1);
   }
 
-  void Gather(bool wait = true) {
+  void Gather(unsigned int waitTime = kDefaultTimeout) {
      peer_->Gather();
 
-    if (wait) {
-      WaitForGather();
+    if (waitTime) {
+      WaitForGather(waitTime);
     }
   }
 
-  void WaitForGather() {
-    ASSERT_TRUE_WAIT(peer_->gathering_complete(), kDefaultTimeout);
+  void WaitForGather(unsigned int waitTime = kDefaultTimeout) {
+    ASSERT_TRUE_WAIT(peer_->gathering_complete(), waitTime);
   }
 
   void UseFakeStunServerWithResponse(const std::string& fake_addr,
@@ -893,18 +893,18 @@ class IceConnectTest : public ::testing::Test {
     initted_ = true;
   }
 
-  bool Gather(bool wait) {
+  bool Gather(unsigned int waitTime = kDefaultTimeout) {
     Init(false);
     p1_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
     p2_->SetStunServer(g_stun_server_address, kDefaultStunServerPort);
     p1_->Gather();
     p2_->Gather();
 
-    if (wait) {
-      EXPECT_TRUE_WAIT(p1_->gathering_complete(), kDefaultTimeout);
+    if (waitTime) {
+      EXPECT_TRUE_WAIT(p1_->gathering_complete(), waitTime);
       if (!p1_->gathering_complete())
         return false;
-      EXPECT_TRUE_WAIT(p2_->gathering_complete(), kDefaultTimeout);
+      EXPECT_TRUE_WAIT(p2_->gathering_complete(), waitTime);
       if (!p2_->gathering_complete())
         return false;
     }
@@ -1217,26 +1217,26 @@ TEST_F(IceGatherTest, VerifyTestStunServer) {
 
 TEST_F(IceGatherTest, TestStunServerReturnsWildcardAddr) {
   UseFakeStunServerWithResponse("0.0.0.0", 3333);
-  Gather();
+  Gather(kDefaultTimeout * 3);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 0.0.0.0 "));
 }
 
 TEST_F(IceGatherTest, TestStunServerReturnsPort0) {
   UseFakeStunServerWithResponse("192.0.2.133", 0);
-  Gather();
+  Gather(kDefaultTimeout * 3);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.2.133 0 "));
 }
 
 TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddr) {
   UseFakeStunServerWithResponse("127.0.0.133", 3333);
-  Gather();
+  Gather(kDefaultTimeout * 3);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 127.0.0.133 "));
 }
 
 TEST_F(IceGatherTest, TestStunServerTrickle) {
   UseFakeStunServerWithResponse("192.0.2.1", 3333);
   TestStunServer::GetInstance()->SetActive(false);
-  Gather(false);
+  Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "192.0.2.1"));
   TestStunServer::GetInstance()->SetActive(true);
   WaitForGather();
@@ -1245,31 +1245,31 @@ TEST_F(IceGatherTest, TestStunServerTrickle) {
 
 TEST_F(IceConnectTest, TestGather) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
 }
 
 TEST_F(IceConnectTest, TestGatherAutoPrioritize) {
   Init(false);
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
 }
 
 
 TEST_F(IceConnectTest, TestConnect) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
 TEST_F(IceConnectTest, TestConnectTwoComponents) {
   AddStream("first", 2);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
 TEST_F(IceConnectTest, TestConnectTwoComponentsDisableSecond) {
   AddStream("first", 2);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   p1_->DisableComponent(0, 2);
   p2_->DisableComponent(0, 2);
   Connect();
@@ -1278,7 +1278,7 @@ TEST_F(IceConnectTest, TestConnectTwoComponentsDisableSecond) {
 
 TEST_F(IceConnectTest, TestConnectP2ThenP1) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectP2();
   PR_Sleep(1000);
   ConnectP1();
@@ -1287,7 +1287,7 @@ TEST_F(IceConnectTest, TestConnectP2ThenP1) {
 
 TEST_F(IceConnectTest, TestConnectP2ThenP1Trickle) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectP2();
   PR_Sleep(1000);
   ConnectP1(TRICKLE_SIMULATE);
@@ -1298,7 +1298,7 @@ TEST_F(IceConnectTest, TestConnectP2ThenP1Trickle) {
 TEST_F(IceConnectTest, TestConnectP2ThenP1TrickleTwoComponents) {
   AddStream("first", 1);
   AddStream("second", 2);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectP2();
   PR_Sleep(1000);
   ConnectP1(TRICKLE_SIMULATE);
@@ -1313,13 +1313,13 @@ TEST_F(IceConnectTest, TestConnectP2ThenP1TrickleTwoComponents) {
 TEST_F(IceConnectTest, TestConnectAutoPrioritize) {
   Init(false);
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
 TEST_F(IceConnectTest, TestConnectTrickleOneStreamOneComponent) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectTrickle();
   SimulateTrickle(0);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
@@ -1329,7 +1329,7 @@ TEST_F(IceConnectTest, TestConnectTrickleOneStreamOneComponent) {
 TEST_F(IceConnectTest, TestConnectTrickleTwoStreamsOneComponent) {
   AddStream("first", 1);
   AddStream("second", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectTrickle();
   SimulateTrickle(0);
   SimulateTrickle(1);
@@ -1340,7 +1340,7 @@ TEST_F(IceConnectTest, TestConnectTrickleTwoStreamsOneComponent) {
 TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
   AddStream("first", 1);
   AddStream("second", 1);
-  ASSERT_TRUE(Gather(false));
+  ASSERT_TRUE(Gather(0));
   ConnectTrickle(TRICKLE_REAL);
   ASSERT_TRUE_WAIT(p1_->ice_complete(), kDefaultTimeout);
   ASSERT_TRUE_WAIT(p2_->ice_complete(), kDefaultTimeout);
@@ -1349,7 +1349,7 @@ TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
 
 TEST_F(IceConnectTest, TestSendReceive) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
   SendReceive();
 }
@@ -1361,7 +1361,7 @@ TEST_F(IceConnectTest, TestConnectTurn) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
@@ -1414,7 +1414,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelay) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectTrickle();
   RealisticTrickleDelay(p1_->ControlTrickle(0));
   RealisticTrickleDelay(p2_->ControlTrickle(0));
@@ -1430,7 +1430,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithNormalTrickleDelayOneSided) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectTrickle();
   RealisticTrickleDelay(p1_->ControlTrickle(0));
   p2_->SimulateTrickle(0);
@@ -1447,7 +1447,7 @@ TEST_F(IceConnectTest, TestConnectTurnWithLargeTrickleDelay) {
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
   SetCandidateFilter(SabotageHostCandidateAndDropReflexive);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectTrickle();
   // Trickle host candidates immediately, but delay relay candidates
   DelayRelayCandidates(p1_->ControlTrickle(0), 3700);
@@ -1464,7 +1464,7 @@ TEST_F(IceConnectTest, TestConnectTurnTcp) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password, kNrIceTransportTcp);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 }
 
@@ -1475,7 +1475,7 @@ TEST_F(IceConnectTest, TestConnectTurnOnly) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsRelayCandidate);
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                    NrIceCandidate::Type::ICE_RELAYED);
@@ -1489,7 +1489,7 @@ TEST_F(IceConnectTest, TestConnectTurnTcpOnly) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password, kNrIceTransportTcp);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsRelayCandidate);
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                    NrIceCandidate::Type::ICE_RELAYED,
@@ -1504,7 +1504,7 @@ TEST_F(IceConnectTest, TestSendReceiveTurnOnly) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsRelayCandidate);
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                    NrIceCandidate::Type::ICE_RELAYED);
@@ -1519,7 +1519,7 @@ TEST_F(IceConnectTest, TestSendReceiveTurnTcpOnly) {
   AddStream("first", 1);
   SetTurnServer(g_turn_server, kDefaultStunServerPort,
                 g_turn_user, g_turn_password, kNrIceTransportTcp);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsRelayCandidate);
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
                    NrIceCandidate::Type::ICE_RELAYED,
@@ -1543,7 +1543,7 @@ TEST_F(IceConnectTest, TestSendReceiveTurnBothOnly) {
                            g_turn_server, kDefaultStunServerPort,
                            g_turn_user, password_vec, kNrIceTransportUdp));
   SetTurnServers(turn_servers);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   SetCandidateFilter(IsRelayCandidate);
   // UDP is preferred.
   SetExpectedTypes(NrIceCandidate::Type::ICE_RELAYED,
@@ -1555,13 +1555,13 @@ TEST_F(IceConnectTest, TestSendReceiveTurnBothOnly) {
 
 TEST_F(IceConnectTest, TestConnectShutdownOneSide) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   ConnectThenDelete();
 }
 
 TEST_F(IceConnectTest, TestPollCandPairsBeforeConnect) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
 
   std::vector<NrIceCandidatePair> pairs;
   nsresult res = p1_->GetCandidatePairs(0, &pairs);
@@ -1576,7 +1576,7 @@ TEST_F(IceConnectTest, TestPollCandPairsBeforeConnect) {
 
 TEST_F(IceConnectTest, TestPollCandPairsAfterConnect) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
   Connect();
 
   std::vector<NrIceCandidatePair> pairs;
@@ -1599,7 +1599,7 @@ TEST_F(IceConnectTest, TestPollCandPairsAfterConnect) {
 
 TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
 
   p1_->Connect(p2_, TRICKLE_NONE, false);
   p2_->Connect(p1_, TRICKLE_NONE, false);
@@ -1625,7 +1625,7 @@ TEST_F(IceConnectTest, TestPollCandPairsDuringConnect) {
 TEST_F(IceConnectTest, TestRLogRingBuffer) {
   RLogRingBuffer::CreateInstance();
   AddStream("first", 1);
-  ASSERT_TRUE(Gather(true));
+  ASSERT_TRUE(Gather());
 
   p1_->Connect(p2_, TRICKLE_NONE, false);
   p2_->Connect(p1_, TRICKLE_NONE, false);

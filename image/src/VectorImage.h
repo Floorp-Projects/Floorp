@@ -36,7 +36,6 @@ public:
   NS_DECL_IMGICONTAINER
 
   // (no public constructor - use ImageFactory)
-  virtual ~VectorImage();
 
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
@@ -81,6 +80,7 @@ public:
 protected:
   VectorImage(imgStatusTracker* aStatusTracker = nullptr,
               ImageURL* aURI = nullptr);
+  virtual ~VectorImage();
 
   virtual nsresult StartAnimation();
   virtual nsresult StopAnimation();

@@ -116,8 +116,8 @@ class B2GMochitest(MochitestUtilsMixin):
     def run_tests(self, options):
         """ Prepare, configure, run tests and cleanup """
 
-        self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
         manifest = self.build_profile(options)
+        self.leak_report_file = os.path.join(options.profilePath, "runtests_leaks.log")
 
         if options.debugger or not options.autorun:
             timeout = None

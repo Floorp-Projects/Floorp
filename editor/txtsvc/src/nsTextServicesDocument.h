@@ -87,15 +87,16 @@ private:
 
   nsCOMPtr<nsITextServicesFilter> mTxtSvcFilter;
 
+protected:
+  /** The default destructor.
+   */
+  virtual ~nsTextServicesDocument();
+
 public:
 
   /** The default constructor.
    */
   nsTextServicesDocument();
-
-  /** The default destructor.
-   */
-  virtual ~nsTextServicesDocument();
 
   /** To be called at module init
    */

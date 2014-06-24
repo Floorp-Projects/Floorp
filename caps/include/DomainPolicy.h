@@ -19,9 +19,10 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMAINPOLICY
     DomainPolicy();
-    virtual ~DomainPolicy();
 
 private:
+    virtual ~DomainPolicy();
+
     nsCOMPtr<nsIDomainSet> mBlacklist;
     nsCOMPtr<nsIDomainSet> mSuperBlacklist;
     nsCOMPtr<nsIDomainSet> mWhitelist;
@@ -35,9 +36,9 @@ public:
     NS_DECL_NSIDOMAINSET
 
     DomainSet() {}
-    virtual ~DomainSet() {}
 
 protected:
+    virtual ~DomainSet() {}
     nsTHashtable<nsURIHashKey> mHashTable;
 };
 

@@ -21,10 +21,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSITIMESERVICE
 
-  virtual ~TimeService() {};
   static already_AddRefed<TimeService> GetInstance();
 
 private:
+  virtual ~TimeService() {};
+
   static StaticRefPtr<TimeService> sSingleton;
 };
 

@@ -93,6 +93,8 @@ private:
     bool mCheckedForXML;
 
 protected:
+    ~txStylesheetSink() {}
+
     // This exists solely to suppress a warning from nsDerivedSafe
     txStylesheetSink();
 };

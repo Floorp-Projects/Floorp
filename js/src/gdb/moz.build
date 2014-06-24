@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'tests/test-jsid.cpp',
     'tests/test-JSObject.cpp',
     'tests/test-JSString.cpp',
+    'tests/test-JSSymbol.cpp',
     'tests/test-jsval.cpp',
     'tests/test-prettyprinters.cpp',
     'tests/test-Root.cpp',

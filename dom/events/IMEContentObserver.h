@@ -73,6 +73,8 @@ public:
                                nsIContent** aRoot) const;
 
 private:
+  ~IMEContentObserver() {}
+
   void NotifyContentAdded(nsINode* aContainer, int32_t aStart, int32_t aEnd);
   void ObserveEditableNode();
 

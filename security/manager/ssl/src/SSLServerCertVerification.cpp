@@ -549,7 +549,6 @@ CreateCertErrorRunnable(CertVerifier& certVerifier,
                         PRErrorCode defaultErrorCodeToReport,
                         TransportSecurityInfo* infoObject,
                         CERTCertificate* cert,
-                        const SECItem* stapledOCSPResponse,
                         const void* fdForLogging,
                         uint32_t providerFlags,
                         PRTime now)
@@ -903,8 +902,8 @@ SSLServerCertVerificationJob::Run()
     if (error != 0) {
       RefPtr<CertErrorRunnable> runnable(
           CreateCertErrorRunnable(*mCertVerifier, error, mInfoObject,
-                                  mCert.get(), mStapledOCSPResponse,
-                                  mFdForLogging, mProviderFlags, mTime));
+                                  mCert.get(), mFdForLogging, mProviderFlags,
+                                  mTime));
       if (!runnable) {
         // CreateCertErrorRunnable set a new error code
         error = PR_GetError();
@@ -1048,7 +1047,6 @@ AuthCertificateHook(void* arg, PRFileDesc* fd, PRBool checkSig, PRBool isServer)
   if (error != 0) {
     RefPtr<CertErrorRunnable> runnable(
         CreateCertErrorRunnable(*certVerifier, error, socketInfo, serverCert,
-                                stapledOCSPResponse,
                                 static_cast<const void*>(fd), providerFlags,
                                 now));
     if (!runnable) {

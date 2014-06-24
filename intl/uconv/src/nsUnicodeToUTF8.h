@@ -30,6 +30,8 @@
  */
 class nsUnicodeToUTF8 MOZ_FINAL : public nsIUnicodeEncoder
 {
+  ~nsUnicodeToUTF8() {}
+
   NS_DECL_ISUPPORTS
 
 public:

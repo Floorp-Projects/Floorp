@@ -1553,8 +1553,9 @@ WebGLContext::InitAndValidateGL()
 
     mMinCapability = Preferences::GetBool("webgl.min_capability_mode", false);
     mDisableExtensions = Preferences::GetBool("webgl.disable-extensions", false);
-    mLoseContextOnHeapMinimize = Preferences::GetBool("webgl.lose-context-on-heap-minimize", false);
+    mLoseContextOnMemoryPressure = Preferences::GetBool("webgl.lose-context-on-memory-preasure", false);
     mCanLoseContextInForeground = Preferences::GetBool("webgl.can-lose-context-in-foreground", true);
+    mRestoreWhenVisible = Preferences::GetBool("webgl.restore-context-when-visible", true);
 
     if (MinCapabilityMode()) {
       mDisableFragHighP = true;
@@ -1778,19 +1779,13 @@ WebGLContext::InitAndValidateGL()
         VertexAttrib4f(index, 0, 0, 0, 1);
     }
 
-    mMemoryPressureObserver
-        = new WebGLMemoryPressureObserver(this);
-    nsCOMPtr<nsIObserverService> observerService
-        = mozilla::services::GetObserverService();
-    if (observerService) {
-        observerService->AddObserver(mMemoryPressureObserver,
-                                     "memory-pressure",
-                                     false);
-    }
-
     mDefaultVertexArray = WebGLVertexArray::Create(this);
     mDefaultVertexArray->mAttribs.SetLength(mGLMaxVertexAttribs);
     mBoundVertexArray = mDefaultVertexArray;
+
+    if (mLoseContextOnMemoryPressure) {
+        mContextObserver->RegisterMemoryPressureEvent();
+    }
 
     return true;
 }

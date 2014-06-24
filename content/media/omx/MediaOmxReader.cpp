@@ -161,9 +161,6 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
     mDecoder->SetMediaDuration(durationUs);
   }
 
-  // Check the MediaExtract flag if the source is seekable.
-  mDecoder->SetMediaSeekable(mExtractor->flags() & MediaExtractor::CAN_SEEK);
-
   if (mOmxDecoder->HasVideo()) {
     int32_t displayWidth, displayHeight, width, height;
     mOmxDecoder->GetVideoParameters(&displayWidth, &displayHeight,
@@ -202,6 +199,13 @@ nsresult MediaOmxReader::ReadMetadata(MediaInfo* aInfo,
  *aInfo = mInfo;
 
   return NS_OK;
+}
+
+bool
+MediaOmxReader::IsMediaSeekable()
+{
+  // Check the MediaExtract flag if the source is seekable.
+  return (mExtractor->flags() & MediaExtractor::CAN_SEEK);
 }
 
 bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,

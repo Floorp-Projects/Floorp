@@ -66,6 +66,9 @@ using namespace js::gc;
 using namespace js::types;
 using namespace js::unicode;
 
+using JS::Symbol;
+using JS::SymbolCode;
+
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
@@ -890,8 +893,6 @@ str_localeCompare(JSContext *cx, unsigned argc, Value *vp)
 #endif
 
 #if EXPOSE_INTL_API
-static const size_t SB_LENGTH = 32;
-
 /* ES6 20140210 draft 21.1.3.12. */
 static bool
 str_normalize(JSContext *cx, unsigned argc, Value *vp)
@@ -930,17 +931,21 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
     }
 
     // Step 8.
-    Rooted<JSFlatString*> flatStr(cx, str->ensureFlat(cx));
-    if (!flatStr)
+    AutoStableStringChars stableChars(cx);
+    if (!str->ensureFlat(cx) || !stableChars.initTwoByte(cx, str))
         return false;
-    const UChar *srcChars = JSCharToUChar(flatStr->chars());
-    int32_t srcLen = SafeCast<int32_t>(flatStr->length());
-    StringBuffer chars(cx);
-    if (!chars.resize(SB_LENGTH))
+
+    static const size_t INLINE_CAPACITY = 32;
+
+    const UChar *srcChars = JSCharToUChar(stableChars.twoByteRange().start().get());
+    int32_t srcLen = SafeCast<int32_t>(str->length());
+    Vector<jschar, INLINE_CAPACITY> chars(cx);
+    if (!chars.resize(INLINE_CAPACITY))
         return false;
+
     UErrorCode status = U_ZERO_ERROR;
     int32_t size = unorm_normalize(srcChars, srcLen, form, 0,
-                                   JSCharToUChar(chars.rawTwoByteBegin()), SB_LENGTH,
+                                   JSCharToUChar(chars.begin()), INLINE_CAPACITY,
                                    &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
@@ -950,16 +955,14 @@ str_normalize(JSContext *cx, unsigned argc, Value *vp)
         int32_t finalSize =
 #endif
         unorm_normalize(srcChars, srcLen, form, 0,
-                        JSCharToUChar(chars.rawTwoByteBegin()), size,
+                        JSCharToUChar(chars.begin()), size,
                         &status);
         MOZ_ASSERT(size == finalSize || U_FAILURE(status), "unorm_normalize behaved inconsistently");
     }
     if (U_FAILURE(status))
         return false;
-    // Trim any unused characters.
-    if (!chars.resize(size))
-        return false;
-    RootedString ns(cx, chars.finishString());
+
+    JSString *ns = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!ns)
         return false;
 
@@ -3662,8 +3665,7 @@ SplitHelper(JSContext *cx, HandleLinearString str, uint32_t limit, const Matcher
                 if (!matches[i + 1].isUndefined()) {
                     JSSubString parsub;
                     res->getParen(i + 1, &parsub);
-                    sub = js_NewStringCopyN<CanGC>(cx, parsub.base->chars() + parsub.offset,
-                                                   parsub.length);
+                    sub = js_NewDependentString(cx, parsub.base, parsub.offset, parsub.length);
                     if (!sub || !splits.append(StringValue(sub)))
                         return nullptr;
                 } else {
@@ -4253,8 +4255,8 @@ js_InitStringClass(JSContext *cx, HandleObject obj)
     if (!LinkConstructorAndPrototype(cx, ctor, proto))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, proto, nullptr, string_methods) ||
-        !DefinePropertiesAndBrand(cx, ctor, nullptr, string_static_methods))
+    if (!DefinePropertiesAndFunctions(cx, proto, nullptr, string_methods) ||
+        !DefinePropertiesAndFunctions(cx, ctor, nullptr, string_static_methods))
     {
         return nullptr;
     }
@@ -4494,7 +4496,14 @@ js::ToStringSlow(ExclusiveContext *cx, typename MaybeRooted<Value, allowGC>::Han
         str = js_BooleanToString(cx, v.toBoolean());
     } else if (v.isNull()) {
         str = cx->names().null;
+    } else if (v.isSymbol()) {
+        if (cx->shouldBeJSContext() && allowGC) {
+            JS_ReportErrorNumber(cx->asJSContext(), js_GetErrorMessage, nullptr,
+                                 JSMSG_SYMBOL_TO_STRING);
+        }
+        return nullptr;
     } else {
+        MOZ_ASSERT(v.isUndefined());
         str = cx->names().undefined;
     }
     return str;
@@ -4512,6 +4521,30 @@ js::ToStringSlow(JSContext *cx, HandleValue v)
     return ToStringSlow<CanGC>(cx, v);
 }
 
+static JSString *
+SymbolToSource(JSContext *cx, Symbol *symbol)
+{
+    RootedString desc(cx, symbol->description());
+    SymbolCode code = symbol->code();
+    if (code != SymbolCode::InSymbolRegistry && code != SymbolCode::UniqueSymbol) {
+        // Well-known symbol.
+        MOZ_ASSERT(uint32_t(code) < JS::WellKnownSymbolLimit);
+        return desc;
+    }
+
+    StringBuffer buf(cx);
+    if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(") : !buf.append("Symbol("))
+        return nullptr;
+    if (desc) {
+        desc = StringToSource(cx, desc);
+        if (!desc || !buf.append(desc))
+            return nullptr;
+    }
+    if (!buf.append(')'))
+        return nullptr;
+    return buf.finishString();
+}
+
 JSString *
 js::ValueToSource(JSContext *cx, HandleValue v)
 {
@@ -4522,6 +4555,8 @@ js::ValueToSource(JSContext *cx, HandleValue v)
         return cx->names().void0;
     if (v.isString())
         return StringToSource(cx, v.toString());
+    if (v.isSymbol())
+        return SymbolToSource(cx, v.toSymbol());
     if (v.isPrimitive()) {
         /* Special case to preserve negative zero, _contra_ toString. */
         if (v.isDouble() && IsNegativeZero(v.toDouble())) {

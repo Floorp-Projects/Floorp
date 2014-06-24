@@ -33,6 +33,8 @@ public:
             const VisitsArray& aVisits);
 
 private:
+  ~PlaceInfo() {}
+
   const int64_t mId;
   const nsCString mGUID;
   nsCOMPtr<nsIURI> mURI;

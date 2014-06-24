@@ -28,8 +28,6 @@ public:
                     uint64_t aLimit,
                     uint32_t aFlags);
 
-  virtual ~FileStreamWrapper();
-
   enum {
     NOTIFY_PROGRESS = 1 << 0,
     NOTIFY_CLOSE = 1 << 1,
@@ -37,6 +35,8 @@ public:
   };
 
 protected:
+  virtual ~FileStreamWrapper();
+
   nsCOMPtr<nsISupports> mFileStream;
   nsRefPtr<FileHelper> mFileHelper;
   uint64_t mOffset;

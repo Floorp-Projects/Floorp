@@ -109,6 +109,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   PrivateBrowsingObserver(SharedSSLState* aOwner) : mOwner(aOwner) {}
+protected:
   virtual ~PrivateBrowsingObserver() {}
 private:
   SharedSSLState* mOwner;

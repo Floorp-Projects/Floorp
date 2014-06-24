@@ -29,7 +29,6 @@ public:
     {
         SetWrapper(global);
     }
-    virtual ~SandboxPrivate() { }
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SandboxPrivate,
@@ -49,7 +48,10 @@ public:
     {
         ClearWrapper();
     }
+
 private:
+    virtual ~SandboxPrivate() { }
+
     nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 

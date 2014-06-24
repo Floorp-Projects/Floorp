@@ -45,6 +45,11 @@ class WorkerNavigator MOZ_FINAL : public nsWrapperCache
     SetIsDOMBinding();
   }
 
+  ~WorkerNavigator()
+  {
+    MOZ_COUNT_DTOR(WorkerNavigator);
+  }
+
 public:
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WorkerNavigator)
@@ -58,11 +63,6 @@ public:
 
   nsISupports* GetParentObject() const {
     return nullptr;
-  }
-
-  ~WorkerNavigator()
-  {
-    MOZ_COUNT_DTOR(WorkerNavigator);
   }
 
   void GetAppCodeName(nsString& aAppCodeName) const

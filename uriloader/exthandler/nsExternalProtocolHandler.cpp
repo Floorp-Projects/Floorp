@@ -38,11 +38,12 @@ public:
     NS_DECL_NSIREQUEST
 
     nsExtProtocolChannel();
-    virtual ~nsExtProtocolChannel();
 
     nsresult SetURI(nsIURI*);
 
 private:
+    virtual ~nsExtProtocolChannel();
+
     nsresult OpenURL();
     void Finish(nsresult aResult);
     

@@ -339,6 +339,12 @@ class GlobalObject : public JSObject
         return &global->getPrototype(JSProto_String).toObject();
     }
 
+    static JSObject *getOrCreateSymbolPrototype(JSContext *cx, Handle<GlobalObject*> global) {
+        if (!ensureConstructor(cx, global, JSProto_Symbol))
+            return nullptr;
+        return &global->getPrototype(JSProto_Symbol).toObject();
+    }
+
     static JSObject *getOrCreateRegExpPrototype(JSContext *cx, Handle<GlobalObject*> global) {
         if (!ensureConstructor(cx, global, JSProto_RegExp))
             return nullptr;
@@ -770,12 +776,12 @@ extern bool
 LinkConstructorAndPrototype(JSContext *cx, JSObject *ctor, JSObject *proto);
 
 /*
- * Define properties, then functions, on the object, then brand for tracing
- * benefits.
+ * Define properties and/or functions on any object. Either ps or fs, or both,
+ * may be null.
  */
 extern bool
-DefinePropertiesAndBrand(JSContext *cx, JSObject *obj,
-                         const JSPropertySpec *ps, const JSFunctionSpec *fs);
+DefinePropertiesAndFunctions(JSContext *cx, HandleObject obj,
+                             const JSPropertySpec *ps, const JSFunctionSpec *fs);
 
 typedef HashSet<GlobalObject *, DefaultHasher<GlobalObject *>, SystemAllocPolicy> GlobalObjectSet;
 

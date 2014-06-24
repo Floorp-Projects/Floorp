@@ -34,7 +34,6 @@ public:
   NS_DECL_ISUPPORTS
 
   DataStoreDB(const nsAString& aManifestURL, const nsAString& aName);
-  ~DataStoreDB();
 
   nsresult Open(IDBTransactionMode aMode, const Sequence<nsString>& aDb,
                 DataStoreDBCallback* aCallback);
@@ -47,6 +46,8 @@ public:
   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
 
 private:
+  ~DataStoreDB();
+
   nsresult CreateFactoryIfNeeded();
 
   nsresult UpgradeSchema();

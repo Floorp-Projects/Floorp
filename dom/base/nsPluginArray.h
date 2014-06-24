@@ -30,8 +30,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPluginArray(nsPIDOMWindow* aWindow);
-  virtual ~nsPluginArray();
-
   nsPIDOMWindow* GetParentObject() const;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 
@@ -57,6 +55,8 @@ public:
   void GetSupportedNames(unsigned, nsTArray<nsString>& aRetval);
 
 private:
+  virtual ~nsPluginArray();
+
   bool AllowPlugins() const;
   void EnsurePlugins();
 
@@ -109,6 +109,8 @@ public:
   nsTArray<nsRefPtr<nsMimeType> >& MimeTypes();
 
 protected:
+  ~nsPluginElement() {}
+
   void EnsurePluginMimeTypes();
 
   nsCOMPtr<nsPIDOMWindow> mWindow;

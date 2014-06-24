@@ -54,8 +54,6 @@ public:
 
   virtual void SetMediaSeekable(bool aMediaSeekable) MOZ_OVERRIDE;
 
-  virtual void SetTransportSeekable(bool aTransportSeekable) MOZ_OVERRIDE;
-
   virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_OVERRIDE;
   virtual layers::ImageContainer* GetImageContainer() MOZ_OVERRIDE;
 

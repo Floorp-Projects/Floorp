@@ -28,7 +28,6 @@ class nsBoxObject : public nsPIBoxObject
 
 public:
   nsBoxObject();
-  virtual ~nsBoxObject();
 
   // nsPIBoxObject
   virtual nsresult Init(nsIContent* aContent) MOZ_OVERRIDE;
@@ -46,6 +45,7 @@ public:
                                      nsIDOMElement** aResult);
 
 protected:
+  virtual ~nsBoxObject();
 
   nsAutoPtr<nsInterfaceHashtable<nsStringHashKey,nsISupports> > mPropertyTable; //[OWNER]
 

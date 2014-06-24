@@ -53,9 +53,9 @@ public:
 
   BindingParams(mozIStorageBindingParamsArray *aOwningArray,
                 Statement *aOwningStatement);
+protected:
   virtual ~BindingParams() {}
 
-protected:
   BindingParams(mozIStorageBindingParamsArray *aOwningArray);
   nsCOMArray<nsIVariant> mParameters;
   bool mLocked;

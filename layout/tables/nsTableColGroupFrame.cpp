@@ -338,10 +338,10 @@ nsTableColGroupFrame::GetLogicalSkipSides(const nsHTMLReflowState* aReflowState)
 
   int skip = 0;
   if (nullptr != GetPrevInFlow()) {
-    skip |= 1 << LOGICAL_SIDE_B_START;
+    skip |= LOGICAL_SIDE_B_START;
   }
   if (nullptr != GetNextInFlow()) {
-    skip |= 1 << LOGICAL_SIDE_B_END;
+    skip |= LOGICAL_SIDE_B_END;
   }
   return skip;
 }

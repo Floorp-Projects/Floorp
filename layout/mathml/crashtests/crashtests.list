@@ -62,3 +62,4 @@ load 947557-1.html
 test-pref(layout.css.sticky.enabled,true) load 973322-1.xhtml
 load 848725-1.html
 load 848725-2.html
+load 1028521-1.xhtml

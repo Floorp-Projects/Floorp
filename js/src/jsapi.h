@@ -12,6 +12,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/RangedPtr.h"
+#include "mozilla/TypedEnum.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -1077,6 +1078,8 @@ ToBoolean(HandleValue v)
         double d = v.toDouble();
         return !mozilla::IsNaN(d) && d != 0;
     }
+    if (v.isSymbol())
+        return true;
 
     /* The slow path handles strings and objects. */
     return js::ToBooleanSlow(v);
@@ -1644,9 +1647,6 @@ JS_WrapObject(JSContext *cx, JS::MutableHandleObject objp);
 
 extern JS_PUBLIC_API(bool)
 JS_WrapValue(JSContext *cx, JS::MutableHandleValue vp);
-
-extern JS_PUBLIC_API(bool)
-JS_WrapId(JSContext *cx, JS::MutableHandleId idp);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_TransplantObject(JSContext *cx, JS::HandleObject origobj, JS::HandleObject target);
@@ -4350,6 +4350,71 @@ extern JS_PUBLIC_API(JSAddonId *)
 AddonIdOfObject(JSObject *obj);
 
 } // namespace JS
+
+/************************************************************************/
+/*
+ * Symbols
+ */
+
+namespace JS {
+
+/*
+ * Create a new Symbol with the given description. This function never returns
+ * a Symbol that is in the Runtime-wide symbol registry.
+ *
+ * If description is null, the new Symbol's [[Description]] attribute is
+ * undefined.
+ */
+JS_PUBLIC_API(Symbol *)
+NewSymbol(JSContext *cx, HandleString description);
+
+/*
+ * Symbol.for as specified in ES6.
+ *
+ * Get a Symbol with the description 'key' from the Runtime-wide symbol registry.
+ * If there is not already a Symbol with that description in the registry, a new
+ * Symbol is created and registered. 'key' must not be null.
+ */
+JS_PUBLIC_API(Symbol *)
+GetSymbolFor(JSContext *cx, HandleString key);
+
+/*
+ * Get the [[Description]] attribute of the given symbol.
+ *
+ * This function is infallible. If it returns null, that means the symbol's
+ * [[Description]] is undefined.
+ */
+JS_PUBLIC_API(JSString *)
+GetSymbolDescription(HandleSymbol symbol);
+
+/* Well-known symbols. */
+MOZ_BEGIN_ENUM_CLASS(SymbolCode, uint32_t)
+    iterator,                       // well-known Symbol.iterator
+    InSymbolRegistry = 0xfffffffe,  // created by Symbol.for() or JS::GetSymbolFor()
+    UniqueSymbol = 0xffffffff       // created by Symbol() or JS::NewSymbol()
+MOZ_END_ENUM_CLASS(SymbolCode)
+
+/* For use in loops that iterate over the well-known symbols. */
+const size_t WellKnownSymbolLimit = 1;
+
+/*
+ * Return the SymbolCode telling what sort of symbol `symbol` is.
+ *
+ * A symbol's SymbolCode never changes once it is created.
+ */
+JS_PUBLIC_API(SymbolCode)
+GetSymbolCode(Handle<Symbol*> symbol);
+
+/*
+ * Get one of the well-known symbols defined by ES6. A single set of well-known
+ * symbols is shared by all compartments in a JSRuntime.
+ *
+ * `which` must be in the range [0, WellKnownSymbolLimit).
+ */
+JS_PUBLIC_API(Symbol *)
+GetWellKnownSymbol(JSContext *cx, SymbolCode which);
+
+} /* namespace JS */
 
 /************************************************************************/
 /*

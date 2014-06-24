@@ -34,11 +34,11 @@ public:
 
   nsDeviceSensors();
 
-  virtual ~nsDeviceSensors();
-
   void Notify(const mozilla::hal::SensorData& aSensorData);
 
 private:
+  virtual ~nsDeviceSensors();
+
   // sensor -> window listener
   nsTArray<nsTArray<nsIDOMWindow*>* > mWindowListeners;
 

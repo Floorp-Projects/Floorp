@@ -3,7 +3,7 @@ function run_test() {
   var epsb = new Cu.Sandbox(["http://example.com", "http://example.org"], { wantExportHelpers: true });
   var subsb = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
   var subsb2 = new Cu.Sandbox("http://example.com", { wantGlobalProperties: ["XMLHttpRequest"] });
-  var xorigsb = new Cu.Sandbox("http://test.com");
+  var xorigsb = new Cu.Sandbox("http://test.com", { wantGlobalProperties: ["XMLHttpRequest"] });
 
   epsb.subsb = subsb;
   epsb.xorigsb = xorigsb;
@@ -49,6 +49,15 @@ function run_test() {
     tobecloned = { cloned: "cloned" };
     imported(42,tobecloned, native, mixed);
   }.toSource() + ")()", subsb);
+
+  // Invoking an exported function with cross-origin arguments should throw.
+  subsb.xoNative = Cu.evalInSandbox('new XMLHttpRequest()', xorigsb);
+  try {
+    Cu.evalInSandbox('imported({val: xoNative})', subsb);
+    do_check_true(false);
+  } catch (e) {
+    do_check_true(/denied|insecure/.test(e));
+  }
 
   // Apply should work but the |this| argument should not be
   // possible to be changed.

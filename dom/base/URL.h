@@ -32,6 +32,8 @@ class URLProxy;
 
 class URL MOZ_FINAL : public URLSearchParamsObserver
 {
+  ~URL() {}
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(URL)
