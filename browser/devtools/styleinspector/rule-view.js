@@ -1692,14 +1692,23 @@ function RuleEditor(aRuleView, aRule) {
   this.doc = this.ruleView.doc;
   this.rule = aRule;
   this.isEditable = !aRule.isSystem;
+  // Flag that blocks updates of the selector and properties when it is
+  // being edited
+  this.isEditing = false;
 
   this._onNewProperty = this._onNewProperty.bind(this);
   this._newPropertyDestroy = this._newPropertyDestroy.bind(this);
+  this._onSelectorDone = this._onSelectorDone.bind(this);
 
   this._create();
 }
 
 RuleEditor.prototype = {
+  get isSelectorEditable() {
+    let toolbox = this.ruleView.inspector.toolbox;
+    return toolbox.target.client.traits.selectorEditable;
+  },
+
   _create: function() {
     this.element = this.doc.createElementNS(HTML_NS, "div");
     this.element.className = "ruleview-rule theme-separator";
@@ -1741,9 +1750,29 @@ RuleEditor.prototype = {
 
     let header = createChild(code, "div", {});
 
-    this.selectorText = createChild(header, "span", {
+    this.selectorContainer = createChild(header, "span", {
+      class: "ruleview-selectorcontainer"
+    });
+
+    this.selectorText = createChild(this.selectorContainer, "span", {
       class: "ruleview-selector theme-fg-color3"
     });
+
+    if (this.isEditable && this.rule.domRule.type !== ELEMENT_STYLE &&
+        this.isSelectorEditable) {
+      this.selectorContainer.addEventListener("click", aEvent => {
+        // Clicks within the selector shouldn't propagate any further.
+        aEvent.stopPropagation();
+      }, false);
+
+      editableField({
+        element: this.selectorText,
+        done: this._onSelectorDone,
+        stopOnShiftTab: true,
+        stopOnTab: true,
+        stopOnReturn: true
+      });
+    }
 
     this.openBrace = createChild(header, "span", {
       class: "ruleview-ruleopen",
@@ -2019,6 +2048,36 @@ RuleEditor.prototype = {
     if (this.multipleAddedProperties && this.multipleAddedProperties.length) {
       this.addProperties(this.multipleAddedProperties);
     }
+  },
+
+  /**
+   * Called when the selector's inplace editor is closed.
+   * Ignores the change if the user pressed escape, otherwise
+   * commits it.
+   *
+   * @param {string} aValue
+   *        The value contained in the editor.
+   * @param {boolean} aCommit
+   *        True if the change should be applied.
+   */
+  _onSelectorDone: function(aValue, aCommit) {
+    if (!aCommit || this.isEditing || aValue === "" ||
+        aValue === this.rule.selectorText) {
+      return;
+    }
+
+    this.isEditing = true;
+
+    this.rule.domRule.modifySelector(aValue).then(isModified => {
+      this.isEditing = false;
+
+      if (isModified) {
+        this.ruleView.refreshPanel();
+      }
+    }).then(null, err => {
+      this.isEditing = false;
+      promiseWarn(err);
+    });
   }
 };
 
@@ -2423,7 +2482,7 @@ TextPropertyEditor.prototype = {
    *        True if the change should be applied.
    */
   _onNameDone: function(aValue, aCommit) {
-    if (aCommit) {
+    if (aCommit && !this.ruleEditor.isEditing) {
       // Unlike the value editor, if a name is empty the entire property
       // should always be removed.
       if (aValue.trim() === "") {
@@ -2472,7 +2531,7 @@ TextPropertyEditor.prototype = {
    *        True if the change should be applied.
    */
    _onValueDone: function(aValue, aCommit) {
-    if (!aCommit) {
+    if (!aCommit && !this.ruleEditor.isEditing) {
        // A new property should be removed when escape is pressed.
        if (this.removeOnRevert) {
          this.remove();
@@ -2568,8 +2627,9 @@ TextPropertyEditor.prototype = {
    * @param {string} aValue The value to set the current property to.
    */
   _previewValue: function(aValue) {
-    // Since function call is throttled, we need to make sure we are still editing
-    if (!this.editing) {
+    // Since function call is throttled, we need to make sure we are still
+    // editing, and any selector modifications have been completed
+    if (!this.editing || this.ruleEditor.isEditing) {
       return;
     }
 

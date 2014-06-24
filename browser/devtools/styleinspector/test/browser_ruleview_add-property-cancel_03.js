@@ -31,7 +31,7 @@ function* testCancelNew(inspector, ruleView) {
   // Start at the beginning: start to add a rule to the element's style
   // declaration, but leave it empty.
 
-  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
+  let elementRuleEditor = getRuleViewRuleEditor(ruleView, 0);
   let editor = yield focusEditableField(elementRuleEditor.closeBrace);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor,
@@ -50,7 +50,7 @@ function* testCancelNewOnEscape(inspector, ruleView) {
   // Start at the beginning: start to add a rule to the element's style
   // declaration, add some text, then press escape.
 
-  let elementRuleEditor = ruleView.element.children[0]._ruleEditor;
+  let elementRuleEditor = getRuleViewRuleEditor(ruleView, 0);
   let editor = yield focusEditableField(elementRuleEditor.closeBrace);
 
   is(inplaceEditor(elementRuleEditor.newPropSpan), editor, "Next focused editor should be the new property editor.");

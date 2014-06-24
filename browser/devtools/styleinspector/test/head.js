@@ -596,6 +596,16 @@ function getRuleViewLinkByIndex(view, index) {
 }
 
 /**
+ * Get the rule editor from the rule-view given its index
+ * @param {CssRuleView} view The instance of the rule-view panel
+ * @param {Number} index The index of the link to get
+ * @return {DOMNode} The rule editor if any at this index
+ */
+function getRuleViewRuleEditor(view, index) {
+  return view.element.children[index]._ruleEditor;
+}
+
+/**
  * Click on a rule-view's close brace to focus a new property name editor
  * @param {RuleEditor} ruleEditor An instance of RuleEditor that will receive
  * the new property
