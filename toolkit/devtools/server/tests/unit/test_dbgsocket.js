@@ -79,7 +79,10 @@ function test_socket_shutdown()
 
     onClosed: function(aStatus) {
       do_print("test_socket_shutdown onClosed called at " + new Date().toTimeString());
-      do_check_eq(aStatus, Cr.NS_ERROR_CONNECTION_REFUSED);
+      // The connection should be refused here, but on slow or overloaded
+      // machines it may just time out.
+      let expected = [ Cr.NS_ERROR_CONNECTION_REFUSED, Cr.NS_ERROR_NET_TIMEOUT ];
+      do_check_neq(expected.indexOf(aStatus), -1);
       run_next_test();
     }
   };
