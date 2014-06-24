@@ -237,7 +237,7 @@ public:
                 bool aFirstBinding = false);
 
   void Traverse(nsCycleCollectionTraversalCallback &cb) const;
-  void UnlinkJSObjects();
+  void Unlink();
   void Trace(const TraceCallbacks& aCallbacks, void *aClosure) const;
 
 // Internal member functions.
