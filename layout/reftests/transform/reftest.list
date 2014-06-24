@@ -6,9 +6,9 @@
 == compound-1a.html compound-1-ref.html
 != compound-1a.html compound-1-fail.html
 == dynamic-inherit-1.html dynamic-inherit-1-ref.html
-random-if(B2G&&browserIsRemote) == dynamic-addremove-1a.html dynamic-addremove-1-ref.html
-random-if(B2G&&browserIsRemote) == dynamic-addremove-1b.html dynamic-addremove-1-ref.html
-random-if(B2G&&browserIsRemote) == dynamic-addremove-1c.html dynamic-addremove-1-ref.html
+== dynamic-addremove-1a.html dynamic-addremove-1-ref.html
+== dynamic-addremove-1b.html dynamic-addremove-1-ref.html
+== dynamic-addremove-1c.html dynamic-addremove-1-ref.html
 # translatex should act like position: relative
 skip-if(B2G) == translatex-1a.html translatex-1-ref.html # bug 773482
 skip-if(B2G) == translatex-1b.html translatex-1-ref.html
@@ -115,7 +115,7 @@ skip-if(B2G) == stresstest-1.html stresstest-1-ref.html # bug 773482
 # Bugs
 == 601894-1.html 601894-ref.html
 == 601894-2.html 601894-ref.html
-random-if(B2G&&browserIsRemote) == 830299-1.html 830299-1-ref.html
+== 830299-1.html 830299-1-ref.html
 # Bug 722777
 == table-1a.html table-1-ref.html
 == table-1b.html table-1-ref.html

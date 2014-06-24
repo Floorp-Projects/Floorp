@@ -9,9 +9,9 @@ fuzzy-if(cocoaWidget,1,32) fuzzy-if(winWidget,1,1) == paced-1.svg paced-1-ref.sv
 == rotate-angle-3.svg rotate-angle-ref.svg
 == rotate-angle-4.svg rotate-angle-ref.svg
 == rotate-angle-5.svg rotate-angle-ref.svg
-fuzzy(12,27) random-if(B2G&&browserIsRemote) == scale-1.svg scale-1-ref.svg  # bug 981004
+fuzzy(12,27) == scale-1.svg scale-1-ref.svg  # bug 981004
 == set-transform-1.svg lime.svg
 fuzzy-if(winWidget,1,3) == skew-1.svg skew-1-ref.svg # bug 983671
-random-if(B2G&&browserIsRemote) == translate-clipPath-1.svg lime.svg
-fails-if(OSX==10.6) random-if(B2G&&browserIsRemote) == translate-gradient-1.svg lime.svg
-random-if(B2G&&browserIsRemote) == translate-pattern-1.svg lime.svg
+== translate-clipPath-1.svg lime.svg
+fails-if(OSX==10.6) == translate-gradient-1.svg lime.svg
+== translate-pattern-1.svg lime.svg
