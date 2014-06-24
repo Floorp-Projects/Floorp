@@ -32,7 +32,8 @@ let MetricsChecker = {
     this._metrics = {
       pageCount: day.get("pageTranslatedCount") || 0,
       charCount: day.get("charactersTranslatedCount") || 0,
-      deniedOffers: day.get("deniedTranslationOffer") || 0
+      deniedOffers: day.get("deniedTranslationOffer") || 0,
+      showOriginal: day.get("showOriginalContent") || 0
     };
     this._metricsTime = metricsTime;
   }),
@@ -100,6 +101,15 @@ add_task(function* test_deny_translation_metric() {
   let tab =
     yield translate("<h1>Hallo Welt!</h1>", "de", "en", false);
   yield MetricsChecker.checkAdditions({ deniedOffers: 0 });
+  gBrowser.removeTab(tab);
+});
+
+add_task(function* test_show_original() {
+  let tab = 
+    yield translate("<h1>Hallo Welt!</h1><h1>Bratwurst!</h1>", "de", "en", false);
+  yield MetricsChecker.checkAdditions({ pageCount: 1, showOriginal: 0 });
+  getInfobarElement(tab.linkedBrowser, "showOriginal").doCommand();
+  yield MetricsChecker.checkAdditions({ pageCount: 0, showOriginal: 1 });
   gBrowser.removeTab(tab);
 });
 
