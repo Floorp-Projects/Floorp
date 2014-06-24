@@ -2315,14 +2315,6 @@ public:
    *       passed in, indicating that it should be used to determine if sides
    *       should be skipped during reflow.
    */
-#define LOGICAL_SIDE_B_START 1
-#define LOGICAL_SIDE_I_START 2
-#define LOGICAL_SIDE_B_END   4
-#define LOGICAL_SIDE_I_END   8
-#define LOGICAL_SIDES_I_BOTH (LOGICAL_SIDE_I_START | LOGICAL_SIDE_I_END)
-#define LOGICAL_SIDES_B_BOTH (LOGICAL_SIDE_B_START | LOGICAL_SIDE_B_END)
-#define LOGICAL_SIDES_ALL (LOGICAL_SIDE_I_START | LOGICAL_SIDE_I_END | \
-                           LOGICAL_SIDE_B_START | LOGICAL_SIDE_B_END)
   int GetSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const;
   virtual int
   GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const {
