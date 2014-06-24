@@ -1556,6 +1556,9 @@ detectedLanguageChangedBefore
 detectedLanguageChangedAfter
     Integer count of the number of times the user manually adjusted the detected
     language after having first translated the page.
+targetLanguageChanged
+    Integer count of the number of times the user manually adjusted the target
+    language.
 deniedTranslationOffer
     Integer count of the number of times the user opted-out offered
     page translation, either by the Not Now button or by the notification's
@@ -1600,6 +1603,7 @@ Example
       "charactersTranslatedCount": "1126",
       "detectedLanguageChangedBefore": 1,
       "detectedLanguageChangedAfter": 2,
+      "targetLanguageChanged": 0,
       "deniedTranslationOffer": 3,
       "showOriginalContent": 2,
       "translationOpportunityCountsByLanguage": {
