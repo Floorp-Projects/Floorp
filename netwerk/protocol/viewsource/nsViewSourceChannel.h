@@ -53,6 +53,8 @@ public:
                                     nsIURI* aBaseURI);
 
 protected:
+    ~nsViewSourceChannel() {}
+
     nsCOMPtr<nsIChannel>        mChannel;
     nsCOMPtr<nsIHttpChannel>    mHttpChannel;
     nsCOMPtr<nsIHttpChannelInternal>    mHttpChannelInternal;

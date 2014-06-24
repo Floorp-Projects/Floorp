@@ -76,8 +76,6 @@ class nsCookie : public nsICookie2
                              bool              aIsSecure,
                              bool              aIsHttpOnly);
 
-    virtual ~nsCookie() {}
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     // fast (inline, non-xpcom) getters
@@ -103,6 +101,8 @@ class nsCookie : public nsICookie2
     inline void SetCreationTime(int64_t aTime)    { mCreationTime = aTime; }
 
   protected:
+    virtual ~nsCookie() {}
+
     // member variables
     // we use char* ptrs to store the strings in a contiguous block,
     // so we save on the overhead of using nsCStrings. However, we

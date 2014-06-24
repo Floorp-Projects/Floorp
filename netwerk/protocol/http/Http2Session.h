@@ -32,6 +32,8 @@ class Http2Session MOZ_FINAL : public ASpdySession
   , public nsAHttpSegmentReader
   , public nsAHttpSegmentWriter
 {
+  ~Http2Session();
+
 public:
   NS_DECL_ISUPPORTS
     NS_DECL_NSAHTTPTRANSACTION
@@ -39,8 +41,7 @@ public:
     NS_DECL_NSAHTTPSEGMENTREADER
     NS_DECL_NSAHTTPSEGMENTWRITER
 
-   Http2Session(nsISocketTransport *);
-  ~Http2Session();
+  Http2Session(nsISocketTransport *);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
                  bool, nsIInterfaceRequestor *);

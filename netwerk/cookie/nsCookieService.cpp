@@ -389,8 +389,10 @@ public:
  ******************************************************************************/
 class InsertCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
-protected:
+private:
   virtual const char *GetOpType() { return "INSERT"; }
+
+  ~InsertCookieDBListener() {}
 
 public:
   NS_DECL_ISUPPORTS
@@ -423,8 +425,10 @@ NS_IMPL_ISUPPORTS(InsertCookieDBListener, mozIStorageStatementCallback)
  ******************************************************************************/
 class UpdateCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
-protected:
+private:
   virtual const char *GetOpType() { return "UPDATE"; }
+
+  ~UpdateCookieDBListener() {}
 
 public:
   NS_DECL_ISUPPORTS
@@ -449,8 +453,10 @@ NS_IMPL_ISUPPORTS(UpdateCookieDBListener, mozIStorageStatementCallback)
  ******************************************************************************/
 class RemoveCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
-protected:
+private:
   virtual const char *GetOpType() { return "REMOVE"; }
+
+  ~RemoveCookieDBListener() {}
 
 public:
   NS_DECL_ISUPPORTS
@@ -475,9 +481,11 @@ NS_IMPL_ISUPPORTS(RemoveCookieDBListener, mozIStorageStatementCallback)
  ******************************************************************************/
 class ReadCookieDBListener MOZ_FINAL : public DBListenerErrorHandler
 {
-protected:
+private:
   virtual const char *GetOpType() { return "READ"; }
   bool mCanceled;
+
+  ~ReadCookieDBListener() {}
 
 public:
   NS_DECL_ISUPPORTS
@@ -555,6 +563,8 @@ NS_IMPL_ISUPPORTS(ReadCookieDBListener, mozIStorageStatementCallback)
  ******************************************************************************/
 class CloseCookieDBListener MOZ_FINAL :  public mozIStorageCompletionCallback
 {
+  ~CloseCookieDBListener() {}
+
 public:
   CloseCookieDBListener(DBState* dbState) : mDBState(dbState) { }
   nsRefPtr<DBState> mDBState;
@@ -572,6 +582,9 @@ NS_IMPL_ISUPPORTS(CloseCookieDBListener, mozIStorageCompletionCallback)
 namespace {
 
 class AppClearDataObserver MOZ_FINAL : public nsIObserver {
+
+  ~AppClearDataObserver() {}
+
 public:
   NS_DECL_ISUPPORTS
 

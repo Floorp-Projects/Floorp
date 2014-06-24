@@ -27,6 +27,10 @@ nsApplicationCacheService::nsApplicationCacheService()
     mCacheService = nsCacheService::GlobalInstance();
 }
 
+nsApplicationCacheService::~nsApplicationCacheService()
+{
+}
+
 NS_IMETHODIMP
 nsApplicationCacheService::BuildGroupID(nsIURI *aManifestURL,
                                         nsILoadContextInfo *aLoadContextInfo,
@@ -225,6 +229,9 @@ public:
 
         return cacheService->DiscardByAppId(appId, browserOnly);
     }
+
+private:
+    ~AppCacheClearDataObserver() {}
 };
 
 NS_IMPL_ISUPPORTS(AppCacheClearDataObserver, nsIObserver)

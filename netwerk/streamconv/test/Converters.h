@@ -19,13 +19,13 @@
 extern const nsCID kTestConverterCID;
 
 class TestConverter : public nsIStreamConverter {
+    virtual ~TestConverter() {}
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     TestConverter();
-    virtual ~TestConverter() {}
 
     // nsIStreamConverter methods
     NS_IMETHOD Convert(nsIInputStream *aFromStream, const char *aFromType, 

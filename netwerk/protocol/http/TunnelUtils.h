@@ -100,6 +100,7 @@ class TLSFilterTransaction MOZ_FINAL
   , public nsAHttpSegmentWriter
   , public nsITimerCallback
 {
+  ~TLSFilterTransaction();
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSAHTTPTRANSACTION
@@ -111,7 +112,6 @@ public:
                        const char *tlsHost, int32_t tlsPort,
                        nsAHttpSegmentReader *reader,
                        nsAHttpSegmentWriter *writer);
-  ~TLSFilterTransaction();
 
   const nsAHttpTransaction *Transaction() const { return mTransaction.get(); }
   nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment);

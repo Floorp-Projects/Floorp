@@ -66,7 +66,6 @@ public:
 
   // These methods are main thread only
   Tickler();
-  ~Tickler();
   void Cancel();
   nsresult Init();
   void SetIPV4Address(uint32_t address);
@@ -77,6 +76,8 @@ public:
   void Tickle();
 
 private:
+  ~Tickler();
+
   friend class TicklerTimer;
   Mutex mLock;
   nsCOMPtr<nsIThread> mThread;
@@ -110,11 +111,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(Tickler, NS_TICKLER_IID)
 
 class Tickler MOZ_FINAL : public nsISupports
 {
+  ~Tickler() { }
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   Tickler() { }
-  ~Tickler() { }
   nsresult Init() { return NS_ERROR_NOT_IMPLEMENTED; }
   void Cancel() { }
   void SetIPV4Address(uint32_t) { };

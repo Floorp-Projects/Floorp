@@ -31,11 +31,12 @@
 class nsDiskCacheDeviceDeactivateEntryEvent;
 
 class nsDiskCacheBinding : public nsISupports, public PRCList {
+    virtual ~nsDiskCacheBinding();
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     nsDiskCacheBinding(nsCacheEntry* entry, nsDiskCacheRecord * record);
-    virtual ~nsDiskCacheBinding();
 
     nsresult EnsureStreamIO();
     bool     IsActive() { return mCacheEntry != nullptr;}

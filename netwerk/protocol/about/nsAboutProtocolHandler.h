@@ -22,6 +22,8 @@ public:
 
     // nsAboutProtocolHandler methods:
     nsAboutProtocolHandler() {}
+
+private:
     virtual ~nsAboutProtocolHandler() {}
 };
 

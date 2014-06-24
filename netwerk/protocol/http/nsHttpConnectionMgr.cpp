@@ -342,9 +342,10 @@ nsHttpConnectionMgr::DoShiftReloadConnectionCleanup(nsHttpConnectionInfo *aCI)
 
 class SpeculativeConnectArgs
 {
+    virtual ~SpeculativeConnectArgs() {}
+
 public:
     SpeculativeConnectArgs() { mOverridesOK = false; }
-    virtual ~SpeculativeConnectArgs() {}
 
     // Added manually so we can use nsRefPtr without inheriting from
     // nsISupports
