@@ -54,7 +54,7 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 #endif // DEBUG
 
   nsMargin bp = aReflowState.ComputedPhysicalBorderPadding();
-  ApplySkipSides(bp);
+  bp.ApplySkipSides(GetSkipSides());
   nscoord contentHeight = GetEffectiveComputedBSize(aReflowState);
   if (contentHeight == NS_AUTOHEIGHT) {
     contentHeight = 0;
