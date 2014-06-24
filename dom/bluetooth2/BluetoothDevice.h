@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "BluetoothCommon.h"
-#include "BluetoothPropertyContainer.h"
 #include "nsString.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -22,7 +21,6 @@ class BluetoothSocket;
 
 class BluetoothDevice : public DOMEventTargetHelper
                       , public BluetoothSignalObserver
-                      , public BluetoothPropertyContainer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -31,8 +29,7 @@ public:
                                                          DOMEventTargetHelper)
 
   static already_AddRefed<BluetoothDevice>
-  Create(nsPIDOMWindow* aOwner, const nsAString& aAdapterPath,
-         const BluetoothValue& aValue);
+  Create(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
 
   void Notify(const BluetoothSignal& aParam);
 
@@ -77,7 +74,7 @@ public:
     return static_cast<EventTarget*>(this);
   }
 
-  void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
+  void SetPropertyByValue(const BluetoothNamedValue& aValue);
 
   void Unroot();
 
@@ -92,15 +89,13 @@ public:
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
 private:
-  BluetoothDevice(nsPIDOMWindow* aOwner, const nsAString& aAdapterPath,
-                  const BluetoothValue& aValue);
+  BluetoothDevice(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);
   ~BluetoothDevice();
   void Root();
 
   JS::Heap<JSObject*> mJsUuids;
   JS::Heap<JSObject*> mJsServices;
 
-  nsString mAdapterPath;
   nsString mAddress;
   nsString mName;
   nsString mIcon;
