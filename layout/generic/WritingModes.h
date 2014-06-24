@@ -36,6 +36,15 @@
 #define CHECK_WRITING_MODE(param) \
    NS_ASSERTION(param == mWritingMode, "writing-mode mismatch")
 
+#define LOGICAL_SIDE_B_START 1
+#define LOGICAL_SIDE_I_START 2
+#define LOGICAL_SIDE_B_END   4
+#define LOGICAL_SIDE_I_END   8
+#define LOGICAL_SIDES_I_BOTH (LOGICAL_SIDE_I_START | LOGICAL_SIDE_I_END)
+#define LOGICAL_SIDES_B_BOTH (LOGICAL_SIDE_B_START | LOGICAL_SIDE_B_END)
+#define LOGICAL_SIDES_ALL (LOGICAL_SIDE_I_START | LOGICAL_SIDE_I_END | \
+                           LOGICAL_SIDE_B_START | LOGICAL_SIDE_B_END)
+
 /**
  * mozilla::WritingMode is an immutable class representing a
  * writing mode.
@@ -831,6 +840,22 @@ public:
     CHECK_WRITING_MODE(aFromMode);
     return aToMode == aFromMode ?
       *this : LogicalMargin(aToMode, GetPhysicalMargin(aFromMode));
+  }
+
+  void ApplySkipSides(int aSkipSides)
+  {
+    if (aSkipSides & LOGICAL_SIDE_B_START) {
+      BStart() = 0;
+    }
+    if (aSkipSides & LOGICAL_SIDE_B_END) {
+      BEnd() = 0;
+    }
+    if (aSkipSides & LOGICAL_SIDE_I_START) {
+      IStart() = 0;
+    }
+    if (aSkipSides & LOGICAL_SIDE_I_END) {
+      IEnd() = 0;
+    }
   }
 
   bool IsEmpty() const
