@@ -849,7 +849,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   if (aDesiredSize.BlockStartAscent() == nsHTMLReflowMetrics::ASK_FOR_BASELINE) {
     // This will be suitable for inline frames, which are wrapped in a block.
     nscoord ascent;
-    WritingMode wm = aReflowState.GetWritingMode();
+    WritingMode wm = aDesiredSize.GetWritingMode();
     if (!nsLayoutUtils::GetLastLineBaseline(wm, aChildFrame, &ascent)) {
       // We don't expect any other block children so just place the frame on
       // the baseline instead of going through DidReflow() and
