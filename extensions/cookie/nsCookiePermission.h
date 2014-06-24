@@ -26,13 +26,14 @@ public:
     , mCookiesLifetimePolicy(0) // ACCEPT_NORMALLY
     , mCookiesAlwaysAcceptSession(false)
     {}
-  virtual ~nsCookiePermission() {}
 
   bool Init();
   void PrefChanged(nsIPrefBranch *, const char *);
 
 private:
-   bool EnsureInitialized() { return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init(); };
+  virtual ~nsCookiePermission() {}
+
+  bool EnsureInitialized() { return (mPermMgr != nullptr && mThirdPartyUtil != nullptr) || Init(); };
 
   nsCOMPtr<nsIPermissionManager> mPermMgr;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;

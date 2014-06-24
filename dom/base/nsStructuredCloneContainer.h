@@ -25,12 +25,13 @@ class nsStructuredCloneContainer MOZ_FINAL : public nsIStructuredCloneContainer
 {
   public:
     nsStructuredCloneContainer();
-    ~nsStructuredCloneContainer();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTRUCTUREDCLONECONTAINER
 
   private:
+    ~nsStructuredCloneContainer();
+
     uint64_t* mData;
 
     // This needs to be size_t rather than a PR-type so it matches the JS API.

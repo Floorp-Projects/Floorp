@@ -25,9 +25,9 @@ public:
   NS_DECL_NSILAYOUTREGRESSIONTESTER
 
   nsRegressionTester();
-  virtual ~nsRegressionTester();
 
 protected:
+  virtual ~nsRegressionTester();
   nsresult    GetDocShellFromWindow(nsIDOMWindow* inWindow, nsIDocShell** outShell);
 };
 

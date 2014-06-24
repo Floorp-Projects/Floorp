@@ -572,7 +572,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void appendCallSite(const CallSiteDesc &desc) {
         // Add an extra sizeof(void*) to include the return address that was
         // pushed by the call instruction (see CallSite::stackDepth).
-        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + AsmJSFrameSize));
     }
 
     void call(const CallSiteDesc &desc, const Register reg) {
@@ -746,6 +746,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNull(Condition cond, const ValueOperand &value);
     Condition testUndefined(Condition cond, const ValueOperand &value);
     Condition testString(Condition cond, const ValueOperand &value);
+    Condition testSymbol(Condition cond, const ValueOperand &value);
     Condition testObject(Condition cond, const ValueOperand &value);
     Condition testNumber(Condition cond, const ValueOperand &value);
     Condition testMagic(Condition cond, const ValueOperand &value);
@@ -758,6 +759,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNull(Condition cond, Register tag);
     Condition testUndefined(Condition cond, Register tag);
     Condition testString(Condition cond, Register tag);
+    Condition testSymbol(Condition cond, Register tag);
     Condition testObject(Condition cond, Register tag);
     Condition testDouble(Condition cond, Register tag);
     Condition testNumber(Condition cond, Register tag);
@@ -772,6 +774,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNull(Condition cond, const Address &address);
     Condition testUndefined(Condition cond, const Address &address);
     Condition testString(Condition cond, const Address &address);
+    Condition testSymbol(Condition cond, const Address &address);
     Condition testObject(Condition cond, const Address &address);
     Condition testNumber(Condition cond, const Address &address);
 
@@ -779,6 +782,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     Condition testNull(Condition cond, const BaseIndex &src);
     Condition testBoolean(Condition cond, const BaseIndex &src);
     Condition testString(Condition cond, const BaseIndex &src);
+    Condition testSymbol(Condition cond, const BaseIndex &src);
     Condition testInt32(Condition cond, const BaseIndex &src);
     Condition testObject(Condition cond, const BaseIndex &src);
     Condition testDouble(Condition cond, const BaseIndex &src);
@@ -801,16 +805,20 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
                          Label *label);
 
     // unboxing code
-    void unboxInt32(const ValueOperand &operand, Register dest);
-    void unboxInt32(const Address &src, Register dest);
-    void unboxBoolean(const ValueOperand &operand, Register dest);
-    void unboxBoolean(const Address &src, Register dest);
-    void unboxDouble(const ValueOperand &operand, FloatRegister dest);
+    void unboxNonDouble(const ValueOperand &operand, Register dest);
+    void unboxNonDouble(const Address &src, Register dest);
+    void unboxInt32(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxInt32(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxBoolean(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxBoolean(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxString(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxString(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxSymbol(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxSymbol(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxObject(const ValueOperand &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxObject(const Address &src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxDouble(const ValueOperand &src, FloatRegister dest);
     void unboxDouble(const Address &src, FloatRegister dest);
-    void unboxString(const ValueOperand &operand, Register dest);
-    void unboxString(const Address &src, Register dest);
-    void unboxObject(const ValueOperand &src, Register dest);
-    void unboxObject(const Address &src, Register dest);
     void unboxValue(const ValueOperand &src, AnyRegister dest);
     void unboxPrivate(const ValueOperand &src, Register dest);
 
@@ -933,6 +941,11 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     template<typename T>
     void branchTestString(Condition cond, const T & t, Label *label) {
         Condition c = testString(cond, t);
+        ma_b(label, c);
+    }
+    template<typename T>
+    void branchTestSymbol(Condition cond, const T & t, Label *label) {
+        Condition c = testSymbol(cond, t);
         ma_b(label, c);
     }
     template<typename T>
@@ -1298,6 +1311,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void and32(Imm32 imm, Register dest);
     void and32(Imm32 imm, const Address &dest);
     void and32(const Address &src, Register dest);
+    void or32(Imm32 imm, Register dest);
     void or32(Imm32 imm, const Address &dest);
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);

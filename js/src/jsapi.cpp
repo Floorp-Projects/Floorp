@@ -47,6 +47,7 @@
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
+#include "builtin/SymbolObject.h"
 #ifdef ENABLE_BINARYDATA
 #include "builtin/SIMD.h"
 #include "builtin/TypedObject.h"
@@ -76,6 +77,7 @@
 #include "vm/SharedArrayObject.h"
 #include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
+#include "vm/Symbol.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WeakMapObject.h"
 #include "vm/WrapperObject.h"
@@ -1065,19 +1067,6 @@ JS_WrapValue(JSContext *cx, MutableHandleValue vp)
     CHECK_REQUEST(cx);
     JS::ExposeValueToActiveJS(vp);
     return cx->compartment()->wrap(cx, vp);
-}
-
-JS_PUBLIC_API(bool)
-JS_WrapId(JSContext *cx, JS::MutableHandleId idp)
-{
-  AssertHeapIsIdle(cx);
-  CHECK_REQUEST(cx);
-  jsid id = idp.get();
-  if (JSID_IS_STRING(id))
-      JS::ExposeGCThingToActiveJS(JSID_TO_STRING(id), JSTRACE_STRING);
-  else if (JSID_IS_OBJECT(id))
-      JS::ExposeGCThingToActiveJS(JSID_TO_OBJECT(id), JSTRACE_OBJECT);
-  return cx->compartment()->wrapId(cx, idp.address());
 }
 
 /*
@@ -5614,6 +5603,45 @@ JS_EncodeStringToBuffer(JSContext *cx, JSString *str, char *buffer, size_t lengt
         return size_t(-1);
     JS_ASSERT(writtenLength == length); // C strings are NOT encoded.
     return necessaryLength;
+}
+
+JS_PUBLIC_API(JS::Symbol *)
+JS::NewSymbol(JSContext *cx, HandleString description)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    if (description)
+        assertSameCompartment(cx, description);
+
+    return Symbol::new_(cx, SymbolCode::UniqueSymbol, description);
+}
+
+JS_PUBLIC_API(JS::Symbol *)
+JS::GetSymbolFor(JSContext *cx, HandleString key)
+{
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+    assertSameCompartment(cx, key);
+
+    return Symbol::for_(cx, key);
+}
+
+JS_PUBLIC_API(JSString *)
+JS::GetSymbolDescription(HandleSymbol symbol)
+{
+    return symbol->description();
+}
+
+JS_PUBLIC_API(JS::SymbolCode)
+JS::GetSymbolCode(Handle<Symbol*> symbol)
+{
+    return symbol->code();
+}
+
+JS_PUBLIC_API(JS::Symbol *)
+JS::GetWellKnownSymbol(JSContext *cx, JS::SymbolCode which)
+{
+    return cx->runtime()->wellKnownSymbols->get(uint32_t(which));
 }
 
 JS_PUBLIC_API(bool)

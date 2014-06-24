@@ -400,6 +400,7 @@ struct RuntimeSizes
 struct ZoneStats
 {
 #define FOR_EACH_SIZE(macro) \
+    macro(Other,   IsLiveGCThing,  symbolsGCHeap) \
     macro(Other,   NotLiveGCThing, gcHeapArenaAdmin) \
     macro(Other,   NotLiveGCThing, unusedGCThings) \
     macro(Other,   IsLiveGCThing,  lazyScriptsGCHeap) \

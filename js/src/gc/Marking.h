@@ -23,6 +23,7 @@ class DebugScopeObject;
 class GCMarker;
 class GlobalObject;
 class LazyScript;
+class SavedFrame;
 class ScopeObject;
 class Shape;
 class UnownedBaseShape;
@@ -111,6 +112,7 @@ DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
+DeclMarker(Object, SavedFrame)
 DeclMarker(Object, ScopeObject)
 DeclMarker(Script, JSScript)
 DeclMarker(LazyScript, LazyScript)
@@ -120,12 +122,16 @@ DeclMarker(String, JSString)
 DeclMarker(String, JSFlatString)
 DeclMarker(String, JSLinearString)
 DeclMarker(String, PropertyName)
+DeclMarker(Symbol, JS::Symbol)
 DeclMarker(TypeObject, types::TypeObject)
 
 #undef DeclMarker
 
 void
 MarkPermanentAtom(JSTracer *trc, JSAtom *atom, const char *name);
+
+void
+MarkWellKnownSymbol(JSTracer *trc, JS::Symbol *sym);
 
 /* Return true if the pointer is nullptr, or if it is a tagged pointer to
  * nullptr.
@@ -388,7 +394,10 @@ TraceKind(const Value &v)
     JS_ASSERT(v.isMarkable());
     if (v.isObject())
         return JSTRACE_OBJECT;
-    return JSTRACE_STRING;
+    if (v.isString())
+        return JSTRACE_STRING;
+    JS_ASSERT(v.isSymbol());
+    return JSTRACE_SYMBOL;
 }
 
 inline JSGCTraceKind

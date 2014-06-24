@@ -205,6 +205,7 @@ public:
   }
 
 private:
+  ~IdentityCryptoService() { }
   IdentityCryptoService(const KeyPair &) MOZ_DELETE;
   void operator=(const IdentityCryptoService &) MOZ_DELETE;
 };

@@ -174,6 +174,7 @@ class TypeCache(object):
         self.void_ptr_t = self.void_t.pointer()
         try:
             self.JSString_ptr_t = gdb.lookup_type('JSString').pointer()
+            self.JSSymbol_ptr_t = gdb.lookup_type('JS::Symbol').pointer()
             self.JSObject_ptr_t = gdb.lookup_type('JSObject').pointer()
         except gdb.error:
             raise NotSpiderMonkeyObjfileError

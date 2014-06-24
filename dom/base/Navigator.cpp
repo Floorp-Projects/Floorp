@@ -689,16 +689,16 @@ public:
                                       false /* wants untrusted */);
   }
 
-  virtual ~VibrateWindowListener()
-  {
-  }
-
   void RemoveListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
 private:
+  virtual ~VibrateWindowListener()
+  {
+  }
+
   nsWeakPtr mWindow;
   nsWeakPtr mDocument;
 };
@@ -1056,6 +1056,8 @@ Navigator::GetGeolocation(ErrorResult& aRv)
 
 class BeaconStreamListener MOZ_FINAL : public nsIStreamListener
 {
+    ~BeaconStreamListener() {}
+
   public:
     BeaconStreamListener() {}
 
@@ -1250,7 +1252,7 @@ Navigator::SendBeacon(const nsAString& aUrl,
         return false;
       }
 
-      ArrayBufferView& view = aData.Value().GetAsArrayBufferView();
+      const ArrayBufferView& view = aData.Value().GetAsArrayBufferView();
       view.ComputeLengthAndData();
       rv = strStream->SetData(reinterpret_cast<char*>(view.Data()),
                               view.Length());

@@ -49,11 +49,6 @@ public:
      */
     txMozillaXSLTProcessor();
 
-    /**
-     * Default destructor for txMozillaXSLTProcessor
-     */
-    ~txMozillaXSLTProcessor();
-
     // nsISupports interface
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(txMozillaXSLTProcessor,
@@ -112,6 +107,11 @@ public:
     static void Shutdown();
 
 private:
+    /**
+     * Default destructor for txMozillaXSLTProcessor
+     */
+    ~txMozillaXSLTProcessor();
+
     nsresult DoTransform();
     void notifyError();
     nsresult ensureStylesheet();

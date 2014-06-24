@@ -35,7 +35,6 @@ private:
 public:
 
     nsProtectedAuthThread();
-    virtual ~nsProtectedAuthThread();
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIPROTECTEDAUTHTHREAD
@@ -49,6 +48,9 @@ public:
     void Join(void);
 
     void Run(void);
+
+protected:
+    virtual ~nsProtectedAuthThread();
 };
 
 #endif // NSPROTECTEDAUTHTHREAD_H_

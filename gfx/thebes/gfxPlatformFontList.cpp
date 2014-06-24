@@ -101,6 +101,7 @@ static const char* kObservedPrefs[] = {
 };
 
 class gfxFontListPrefObserver MOZ_FINAL : public nsIObserver {
+    ~gfxFontListPrefObserver() {}
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

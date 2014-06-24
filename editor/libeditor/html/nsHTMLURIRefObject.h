@@ -39,6 +39,14 @@ protected:
   uint32_t mAttributeCnt;
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsHTMLURIRefObject>
+{
+  static const bool value = true;
+};
+}
+
 nsresult NS_NewHTMLURIRefObject(nsIURIRefObject** aResult, nsIDOMNode* aNode);
 
 #endif /* nsHTMLURIRefObject_h__ */

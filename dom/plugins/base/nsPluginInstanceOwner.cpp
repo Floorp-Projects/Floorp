@@ -14,6 +14,8 @@ using mozilla::DefaultXDisplay;
 #endif
 
 #include "nsPluginInstanceOwner.h"
+
+#include "gfxUtils.h"
 #include "nsIRunnable.h"
 #include "nsContentUtils.h"
 #include "nsRect.h"
@@ -93,9 +95,10 @@ using namespace mozilla::layers;
 // same class
 class nsPluginDOMContextMenuListener : public nsIDOMEventListener
 {
+  virtual ~nsPluginDOMContextMenuListener();
+
 public:
   nsPluginDOMContextMenuListener(nsIContent* aContent);
-  virtual ~nsPluginDOMContextMenuListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
@@ -2436,9 +2439,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   }
 
   // Clears buffer.  I think this is needed.
-  nsRefPtr<gfxContext> ctx = new gfxContext(pluginSurface);
-  ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
-  ctx->Paint();
+  gfxUtils::ClearThebesSurface(pluginSurface);
   
   ANPEvent event;
   event.inSize = sizeof(ANPEvent);

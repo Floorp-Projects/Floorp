@@ -40,6 +40,8 @@ public:
   NS_DECL_NSISECRETDECODERRINGCONFIG
 
   nsSecretDecoderRing();
+
+protected:
   virtual ~nsSecretDecoderRing();
 
 private:

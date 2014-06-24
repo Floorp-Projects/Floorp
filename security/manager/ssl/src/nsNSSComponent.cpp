@@ -33,7 +33,6 @@
 #include "nsIDOMSmartCardEvent.h"
 #include "nsSmartCardMonitor.h"
 #include "nsIDOMCryptoLegacy.h"
-#include "nsIPrincipal.h"
 #else
 #include "nsIDOMCrypto.h"
 #endif
@@ -44,7 +43,6 @@
 #include "nsIProperties.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsCertificatePrincipal.h"
 #include "nsIBufEntropyCollector.h"
 #include "nsITokenPasswordDialogs.h"
 #include "nsServiceManagerUtils.h"
@@ -57,7 +55,6 @@
 #include "ssl.h"
 #include "sslproto.h"
 #include "secmod.h"
-#include "secmime.h"
 #include "secerr.h"
 #include "sslerr.h"
 
@@ -88,10 +85,11 @@ extern char* pk11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg);
 class nsTokenEventRunnable : public nsIRunnable {
 public:
   nsTokenEventRunnable(const nsAString& aType, const nsAString& aTokenName);
-  virtual ~nsTokenEventRunnable();
 
   NS_IMETHOD Run ();
   NS_DECL_THREADSAFE_ISUPPORTS
+protected:
+  virtual ~nsTokenEventRunnable();
 private:
   nsString mType;
   nsString mTokenName;
@@ -898,9 +896,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  virtual ~CipherSuiteChangeObserver() {}
   static nsresult StartObserve();
   static nsresult StopObserve();
+
+protected:
+  virtual ~CipherSuiteChangeObserver() {}
 
 private:
   static StaticRefPtr<CipherSuiteChangeObserver> sObserver;
@@ -1354,140 +1354,10 @@ nsNSSComponent::Init()
 
 // nsISupports Implementation for the class
 NS_IMPL_ISUPPORTS(nsNSSComponent,
-                  nsISignatureVerifier,
                   nsIEntropyCollector,
                   nsINSSComponent,
                   nsIObserver,
                   nsISupportsWeakReference)
-
-
-// Callback functions for decoder. For now, use empty/default functions.
-static void
-ContentCallback(void* arg, const char* buf, unsigned long len)
-{
-}
-
-static PK11SymKey*
-GetDecryptKeyCallback(void* arg, SECAlgorithmID* algid)
-{
-  return nullptr;
-}
-
-static PRBool
-DecryptionAllowedCallback(SECAlgorithmID* algid, PK11SymKey* bulkkey)
-{
-  return SECMIME_DecryptionAllowed(algid, bulkkey);
-}
-
-static void*
-GetPasswordKeyCallback(void* arg, void* handle)
-{
-  return nullptr;
-}
-
-NS_IMETHODIMP
-nsNSSComponent::VerifySignature(const char* aRSABuf, uint32_t aRSABufLen,
-                                const char* aPlaintext, uint32_t aPlaintextLen,
-                                int32_t* aErrorCode,
-                                nsICertificatePrincipal** aPrincipal)
-{
-  if (!aPrincipal || !aErrorCode) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aErrorCode = 0;
-  *aPrincipal = nullptr;
-
-  nsNSSShutDownPreventionLock locker;
-  ScopedSEC_PKCS7ContentInfo p7_info;
-  unsigned char hash[SHA1_LENGTH];
-
-  SECItem item;
-  item.type = siEncodedCertBuffer;
-  item.data = (unsigned char*)aRSABuf;
-  item.len = aRSABufLen;
-  p7_info = SEC_PKCS7DecodeItem(&item,
-                                ContentCallback, nullptr,
-                                GetPasswordKeyCallback, nullptr,
-                                GetDecryptKeyCallback, nullptr,
-                                DecryptionAllowedCallback);
-
-  if (!p7_info) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Make sure we call SEC_PKCS7DestroyContentInfo after this point;
-  // otherwise we leak data in p7_info
-
-  //-- If a plaintext was provided, hash it.
-  SECItem digest;
-  digest.data = nullptr;
-  digest.len = 0;
-
-  if (aPlaintext) {
-    HASHContext* hash_ctxt;
-    uint32_t hashLen = 0;
-
-    hash_ctxt = HASH_Create(HASH_AlgSHA1);
-    HASH_Begin(hash_ctxt);
-    HASH_Update(hash_ctxt,(const unsigned char*)aPlaintext, aPlaintextLen);
-    HASH_End(hash_ctxt, hash, &hashLen, SHA1_LENGTH);
-    HASH_Destroy(hash_ctxt);
-
-    digest.data = hash;
-    digest.len = SHA1_LENGTH;
-  }
-
-  //-- Verify signature
-  bool rv = SEC_PKCS7VerifyDetachedSignature(p7_info, certUsageObjectSigner,
-                                               &digest, HASH_AlgSHA1, false);
-  if (!rv) {
-    *aErrorCode = PR_GetError();
-  }
-
-  // Get the signing cert //
-  CERTCertificate* cert = p7_info->content.signedData->signerInfos[0]->cert;
-  nsresult rv2 = NS_OK;
-  if (cert) {
-    // Use |do { } while (0);| as a "more C++-ish" thing than goto;
-    // this way we don't have to worry about goto across variable
-    // declarations.  We have no loops in this code, so it's OK.
-    do {
-      nsCOMPtr<nsIX509Cert> pCert = nsNSSCertificate::Create(cert);
-      if (!pCert) {
-        rv2 = NS_ERROR_OUT_OF_MEMORY;
-        break;
-      }
-
-      //-- Create a certificate principal with id and organization data
-      nsAutoString fingerprint;
-      rv2 = pCert->GetSha1Fingerprint(fingerprint);
-      if (NS_FAILED(rv2)) {
-        break;
-      }
-      nsAutoString orgName;
-      rv2 = pCert->GetOrganization(orgName);
-      if (NS_FAILED(rv2)) {
-        break;
-      }
-      nsAutoString subjectName;
-      rv2 = pCert->GetSubjectName(subjectName);
-      if (NS_FAILED(rv2)) {
-        break;
-      }
-
-      nsCOMPtr<nsICertificatePrincipal> certPrincipal =
-        new nsCertificatePrincipal(NS_ConvertUTF16toUTF8(fingerprint),
-                                   NS_ConvertUTF16toUTF8(subjectName),
-                                   NS_ConvertUTF16toUTF8(orgName),
-                                   pCert);
-
-      certPrincipal.swap(*aPrincipal);
-    } while (0);
-  }
-
-  return rv2;
-}
 
 NS_IMETHODIMP
 nsNSSComponent::RandomUpdate(void* entropy, int32_t bufLen)

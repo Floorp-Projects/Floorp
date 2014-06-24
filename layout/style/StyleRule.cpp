@@ -982,9 +982,11 @@ class DOMCSSStyleRule;
 
 class DOMCSSDeclarationImpl : public nsDOMCSSDeclaration
 {
+protected:
+  virtual ~DOMCSSDeclarationImpl(void);
+
 public:
   DOMCSSDeclarationImpl(css::StyleRule *aRule);
-  virtual ~DOMCSSDeclarationImpl(void);
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) MOZ_OVERRIDE;
   void DropReference(void);
@@ -1026,7 +1028,6 @@ class DOMCSSStyleRule : public nsICSSStyleRuleDOMWrapper
 {
 public:
   DOMCSSStyleRule(StyleRule *aRule);
-  virtual ~DOMCSSStyleRule();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMCSSStyleRule)
@@ -1041,6 +1042,8 @@ public:
   friend class ::DOMCSSDeclarationImpl;
 
 protected:
+  virtual ~DOMCSSStyleRule();
+
   DOMCSSDeclarationImpl mDOMDeclaration;
 
   StyleRule* Rule() {

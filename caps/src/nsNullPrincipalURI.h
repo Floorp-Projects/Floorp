@@ -37,6 +37,8 @@ public:
   nsNullPrincipalURI(const nsCString &aSpec);
 
 private:
+  ~nsNullPrincipalURI() {}
+
   nsCString mScheme;
   nsCString mPath;
 };

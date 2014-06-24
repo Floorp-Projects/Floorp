@@ -18,6 +18,7 @@ class FinalizationWitnessService MOZ_FINAL : public nsIFinalizationWitnessServic
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFINALIZATIONWITNESSSERVICE
  private:
+  ~FinalizationWitnessService() {}
   void operator=(const FinalizationWitnessService* other) MOZ_DELETE;
 };
 

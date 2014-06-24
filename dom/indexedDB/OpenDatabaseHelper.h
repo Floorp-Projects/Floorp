@@ -34,6 +34,8 @@ class OpenDatabaseHelper : public HelperBase
   typedef mozilla::dom::quota::PersistenceType PersistenceType;
   typedef mozilla::dom::quota::StoragePrivilege StoragePrivilege;
 
+  ~OpenDatabaseHelper() {}
+
 public:
   OpenDatabaseHelper(IDBOpenDBRequest* aRequest,
                      const nsAString& aName,

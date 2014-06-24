@@ -1399,12 +1399,12 @@ JSStructuredCloneReader::startRead(Value *vp)
         JSString *str = readString(nchars);
         if (!str)
             return false;
-        JSFlatString *flat = str->ensureFlat(context());
-        if (!flat)
+
+        RootedAtom atom(context(), AtomizeString(context(), str));
+        if (!atom)
             return false;
 
-        RegExpObject *reobj = RegExpObject::createNoStatics(context(), flat->chars(),
-                                                            flat->length(), flags, nullptr,
+        RegExpObject *reobj = RegExpObject::createNoStatics(context(), atom, flags, nullptr,
                                                             context()->tempLifoAlloc());
         if (!reobj)
             return false;

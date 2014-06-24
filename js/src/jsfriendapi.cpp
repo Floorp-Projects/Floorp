@@ -24,6 +24,7 @@
 #include "vm/WrapperObject.h"
 
 #include "jsobjinlines.h"
+#include "jsscriptinlines.h"
 
 #include "vm/ScopeObject-inl.h"
 
@@ -262,12 +263,6 @@ JS_FRIEND_API(bool)
 JS_WrapPropertyDescriptor(JSContext *cx, JS::MutableHandle<js::PropertyDescriptor> desc)
 {
     return cx->compartment()->wrap(cx, desc);
-}
-
-JS_FRIEND_API(bool)
-JS_WrapAutoIdVector(JSContext *cx, js::AutoIdVector &props)
-{
-    return cx->compartment()->wrap(cx, props);
 }
 
 JS_FRIEND_API(void)
@@ -980,6 +975,8 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
         JSObject::writeBarrierPre(static_cast<JSObject*>(cell));
     else if (kind == JSTRACE_STRING)
         JSString::writeBarrierPre(static_cast<JSString*>(cell));
+    else if (kind == JSTRACE_SYMBOL)
+        JS::Symbol::writeBarrierPre(static_cast<JS::Symbol*>(cell));
     else if (kind == JSTRACE_SCRIPT)
         JSScript::writeBarrierPre(static_cast<JSScript*>(cell));
     else if (kind == JSTRACE_LAZY_SCRIPT)

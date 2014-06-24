@@ -103,7 +103,6 @@
     macro(int16, int16, "int16") \
     macro(int32, int32, "int32") \
     macro(isExtensible, isExtensible, "isExtensible") \
-    macro(iterator, iterator, "iterator") \
     macro(iteratorIntrinsic, iteratorIntrinsic, "__iterator__") \
     macro(join, join, "join") \
     macro(keys, keys, "keys") \
@@ -209,6 +208,19 @@
     macro(string, string, "string") \
     macro(number, number, "number") \
     macro(boolean, boolean, "boolean") \
-    macro(null, null, "null")
+    macro(null, null, "null") \
+    macro(symbol, symbol, "symbol") \
+    /* Well-known atom names must be continuous and ordered, matching \
+     * enum JS::SymbolCode in jsapi.h. */ \
+    macro(iterator, iterator, "iterator") \
+    /* Same goes for the descriptions of the well-known symbols. */ \
+    macro(Symbol_create, Symbol_create, "Symbol.create") \
+    macro(Symbol_hasInstance, Symbol_hasInstance, "Symbol.hasInstance") \
+    macro(Symbol_isConcatSpreadable, Symbol_isConcatSpreadable, "Symbol.isConcatSpreadable") \
+    macro(Symbol_isRegExp, Symbol_isRegExp, "Symbol.isRegExp") \
+    macro(Symbol_iterator, Symbol_iterator, "Symbol.iterator") \
+    macro(Symbol_toPrimitive, Symbol_toPrimitive, "Symbol.toPrimitive") \
+    macro(Symbol_toStringTag, Symbol_toStringTag, "Symbol.toStringTag") \
+    macro(Symbol_unscopables, Symbol_unscopables, "Symbol.unscopables")
 
 #endif /* vm_CommonPropertyNames_h */

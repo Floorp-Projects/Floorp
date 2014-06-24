@@ -12,7 +12,6 @@
 #include "mozilla/dom/BluetoothAdapter2Binding.h"
 #include "mozilla/dom/Promise.h"
 #include "BluetoothCommon.h"
-#include "BluetoothPropertyContainer.h"
 #include "nsCOMPtr.h"
 
 namespace mozilla {
@@ -32,7 +31,6 @@ class BluetoothValue;
 
 class BluetoothAdapter : public DOMEventTargetHelper
                        , public BluetoothSignalObserver
-                       , public BluetoothPropertyContainer
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -46,7 +44,7 @@ public:
   void Notify(const BluetoothSignal& aParam);
 
   void Unroot();
-  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
+  void SetPropertyByValue(const BluetoothNamedValue& aValue);
 
   virtual void DisconnectFromOwner() MOZ_OVERRIDE;
 
@@ -95,13 +93,9 @@ public:
   void GetUuids(JSContext* aContext, JS::MutableHandle<JS::Value> aUuids,
                 ErrorResult& aRv);
 
-  already_AddRefed<mozilla::dom::DOMRequest>
-    SetName(const nsAString& aName, ErrorResult& aRv);
-
-  already_AddRefed<DOMRequest>
+  already_AddRefed<Promise> SetName(const nsAString& aName, ErrorResult& aRv);
+  already_AddRefed<Promise>
     SetDiscoverable(bool aDiscoverable, ErrorResult& aRv);
-  already_AddRefed<DOMRequest>
-    SetDiscoverableTimeout(uint32_t aTimeout, ErrorResult& aRv);
   already_AddRefed<DOMRequest> StartDiscovery(ErrorResult& aRv);
   already_AddRefed<DOMRequest> StopDiscovery(ErrorResult& aRv);
 
@@ -124,9 +118,9 @@ public:
     SetAuthorization(const nsAString& aDeviceAddress, bool aAllow,
                      ErrorResult& aRv);
 
-  already_AddRefed<Promise> EnableDisable(bool aEnable);
-  already_AddRefed<Promise> Enable();
-  already_AddRefed<Promise> Disable();
+  already_AddRefed<Promise> EnableDisable(bool aEnable, ErrorResult& aRv);
+  already_AddRefed<Promise> Enable(ErrorResult& aRv);
+  already_AddRefed<Promise> Disable(ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
     Connect(BluetoothDevice& aDevice,

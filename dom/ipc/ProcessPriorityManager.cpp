@@ -230,9 +230,9 @@ class ParticularProcessPriorityManager MOZ_FINAL
   , public nsITimerCallback
   , public nsSupportsWeakReference
 {
+  ~ParticularProcessPriorityManager();
 public:
   ParticularProcessPriorityManager(ContentParent* aContentParent);
-  ~ParticularProcessPriorityManager();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

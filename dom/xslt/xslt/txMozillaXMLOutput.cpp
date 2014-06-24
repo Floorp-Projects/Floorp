@@ -950,6 +950,10 @@ txTransformNotifier::txTransformNotifier()
 {
 }
 
+txTransformNotifier::~txTransformNotifier()
+{
+}
+
 NS_IMPL_ISUPPORTS(txTransformNotifier,
                   nsIScriptLoaderObserver,
                   nsICSSLoaderObserver)

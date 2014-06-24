@@ -151,6 +151,8 @@ public:
   };
 
 private:
+  ~UrlClassifierDBServiceWorkerProxy() {}
+
   nsCOMPtr<nsIUrlClassifierDBServiceWorker> mTarget;
 };
 
@@ -184,6 +186,8 @@ public:
   };
 
 private:
+  ~UrlClassifierLookupCallbackProxy() {}
+
   nsMainThreadPtrHandle<nsIUrlClassifierLookupCallback> mTarget;
 };
 
@@ -214,6 +218,8 @@ public:
   };
 
 private:
+  ~UrlClassifierCallbackProxy() {}
+
   nsMainThreadPtrHandle<nsIUrlClassifierCallback> mTarget;
 };
 
@@ -297,6 +303,8 @@ public:
   };
 
 private:
+  ~UrlClassifierUpdateObserverProxy() {}
+
   nsMainThreadPtrHandle<nsIUrlClassifierUpdateObserver> mTarget;
 };
 

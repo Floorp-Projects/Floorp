@@ -820,10 +820,12 @@ IsObjectInContextCompartment(JSObject *obj, const JSContext *cx);
  * XDR_BYTECODE_VERSION.
  */
 #define JSITER_ENUMERATE  0x1   /* for-in compatible hidden default iterator */
-#define JSITER_FOREACH    0x2   /* return [key, value] pair rather than key */
-#define JSITER_KEYVALUE   0x4   /* destructuring for-in wants [key, value] */
+#define JSITER_FOREACH    0x2   /* get obj[key] for each property */
+#define JSITER_KEYVALUE   0x4   /* obsolete destructuring for-in wants [key, value] */
 #define JSITER_OWNONLY    0x8   /* iterate over obj's own properties only */
 #define JSITER_HIDDEN     0x10  /* also enumerate non-enumerable properties */
+#define JSITER_SYMBOLS    0x20  /* also include symbol property keys */
+#define JSITER_SYMBOLSONLY 0x40 /* exclude string property keys */
 
 JS_FRIEND_API(bool)
 RunningWithTrustedPrincipals(JSContext *cx);
@@ -2056,10 +2058,10 @@ IdToValue(jsid id)
 {
     if (JSID_IS_STRING(id))
         return JS::StringValue(JSID_TO_STRING(id));
-    if (MOZ_LIKELY(JSID_IS_INT(id)))
+    if (JSID_IS_INT(id))
         return JS::Int32Value(JSID_TO_INT(id));
-    if (MOZ_LIKELY(JSID_IS_OBJECT(id)))
-        return JS::ObjectValue(*JSID_TO_OBJECT(id));
+    if (JSID_IS_SYMBOL(id))
+        return JS::SymbolValue(JSID_TO_SYMBOL(id));
     JS_ASSERT(JSID_IS_VOID(id));
     return JS::UndefinedValue();
 }

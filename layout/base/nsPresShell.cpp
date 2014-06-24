@@ -3737,6 +3737,8 @@ public:
   }
 
 private:
+  ~PaintTimerCallBack() {}
+
   PresShell* mShell;
 };
 

@@ -61,9 +61,10 @@ public:
   NS_DECL_NSIRECENTBADCERTS
 
   nsRecentBadCerts();
-  ~nsRecentBadCerts();
 
 protected:
+    ~nsRecentBadCerts();
+
     mozilla::ReentrantMonitor monitor;
 
     enum {const_recently_seen_list_size = 5};

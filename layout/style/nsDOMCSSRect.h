@@ -24,7 +24,6 @@ public:
                nsROCSSPrimitiveValue* aRight,
                nsROCSSPrimitiveValue* aBottom,
                nsROCSSPrimitiveValue* aLeft);
-  virtual ~nsDOMCSSRect(void);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMRECT
@@ -40,6 +39,9 @@ public:
 
   virtual JSObject* WrapObject(JSContext* cx)
     MOZ_OVERRIDE MOZ_FINAL;
+
+protected:
+  virtual ~nsDOMCSSRect(void);
 
 private:
   nsRefPtr<nsROCSSPrimitiveValue> mTop;

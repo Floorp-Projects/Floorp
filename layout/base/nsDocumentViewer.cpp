@@ -180,11 +180,11 @@ public:
                        {
                        }
 
-  virtual              ~nsDocViewerSelectionListener() {}
-
   nsresult             Init(nsDocumentViewer *aDocViewer);
 
 protected:
+
+  virtual              ~nsDocViewerSelectionListener() {}
 
   nsDocumentViewer*  mDocViewer;
   bool                 mGotSelectionState;
@@ -201,14 +201,16 @@ public:
   /** default constructor
    */
   nsDocViewerFocusListener();
-  /** default destructor
-   */
-  virtual ~nsDocViewerFocusListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
   nsresult             Init(nsDocumentViewer *aDocViewer);
+
+protected:
+  /** default destructor
+   */
+  virtual ~nsDocViewerFocusListener();
 
 private:
     nsDocumentViewer*  mDocViewer;

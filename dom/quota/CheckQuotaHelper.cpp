@@ -58,6 +58,10 @@ CheckQuotaHelper::CheckQuotaHelper(nsPIDOMWindow* aWindow,
   mMutex.AssertCurrentThreadOwns();
 }
 
+CheckQuotaHelper::~CheckQuotaHelper()
+{
+}
+
 bool
 CheckQuotaHelper::PromptAndReturnQuotaIsDisabled()
 {

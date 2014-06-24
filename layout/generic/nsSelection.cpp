@@ -147,12 +147,6 @@ public:
   {
   }
 
-  virtual ~nsAutoScrollTimer()
-  {
-   if (mTimer)
-       mTimer->Cancel();
-  }
-
   // aPoint is relative to aPresContext's root frame
   nsresult Start(nsPresContext *aPresContext, nsPoint &aPoint)
   {
@@ -222,6 +216,15 @@ public:
     }
     return NS_OK;
   }
+
+protected:
+  virtual ~nsAutoScrollTimer()
+  {
+   if (mTimer) {
+     mTimer->Cancel();
+   }
+  }
+
 private:
   nsFrameSelection *mFrameSelection;
   Selection* mSelection;
@@ -3147,8 +3150,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Selection)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(Selection)
-
-DOMCI_DATA(Selection, Selection)
 
 // QueryInterface implementation for Selection
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Selection)

@@ -32,11 +32,11 @@ class nsAutoConfig : public nsIAutoConfig,
         NS_DECL_NSITIMERCALLBACK
 
         nsAutoConfig();
-        virtual ~nsAutoConfig();
         nsresult Init();
   
     protected:
   
+        virtual ~nsAutoConfig();
         nsresult downloadAutoConfig();
         nsresult readOfflineFile();
         nsresult evaluateLocalFile(nsIFile *file);

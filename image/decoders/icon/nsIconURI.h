@@ -28,9 +28,9 @@ public:
 
   // nsMozIconURI
   nsMozIconURI();
-  virtual ~nsMozIconURI();
 
 protected:
+  virtual ~nsMozIconURI();
   nsCOMPtr<nsIURL> mIconURL; // a URL that we want the icon for
   uint32_t mSize; // the # of pixels in a row that we want for this image. Typically 16, 32, 128, etc.
   nsCString mContentType; // optional field explicitly specifying the content type

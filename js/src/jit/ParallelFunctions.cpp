@@ -308,8 +308,24 @@ CompareStringsPar(ForkJoinContext *cx, JSString *left, JSString *right, int32_t 
     if (!leftInspector.ensureChars(cx, nogc) || !rightInspector.ensureChars(cx, nogc))
         return false;
 
-    *res = CompareChars(leftInspector.twoByteChars(), left->length(),
-                        rightInspector.twoByteChars(), right->length());
+    if (leftInspector.hasLatin1Chars()) {
+        if (rightInspector.hasLatin1Chars()) {
+            *res = CompareChars(leftInspector.latin1Chars(), left->length(),
+                                rightInspector.latin1Chars(), right->length());
+        } else {
+            *res = CompareChars(leftInspector.latin1Chars(), left->length(),
+                                rightInspector.twoByteChars(), right->length());
+        }
+    } else {
+        if (rightInspector.hasLatin1Chars()) {
+            *res = CompareChars(leftInspector.twoByteChars(), left->length(),
+                                rightInspector.latin1Chars(), right->length());
+        } else {
+            *res = CompareChars(leftInspector.twoByteChars(), left->length(),
+                                rightInspector.twoByteChars(), right->length());
+        }
+    }
+
     return true;
 }
 

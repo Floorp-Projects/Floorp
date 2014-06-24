@@ -17,6 +17,8 @@ public:
 
   nsX509CertValidity();
   nsX509CertValidity(CERTCertificate *cert);
+
+protected:
   virtual ~nsX509CertValidity();
   /* additional members */
 
