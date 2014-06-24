@@ -22,7 +22,6 @@ tgts =\
   $(NULL)
 
 export MAKE
-export .PYMAKE
 
 ##------------------_##
 ##---]  TARGETS  [---##
