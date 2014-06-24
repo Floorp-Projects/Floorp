@@ -117,11 +117,9 @@ public:
   IMPL_EVENT_HANDLER(groupchange)
 
   static already_AddRefed<TelephonyCall>
-  Create(Telephony* aTelephony, uint32_t aServiceId,
-         const nsAString& aNumber, uint16_t aNumberPresentation,
-         const nsAString& aName, uint16_t aNamePresentation,
-         uint16_t aCallState, uint32_t aCallIndex,
-         bool aEmergency = false, bool aIsConference = false,
+  Create(Telephony* aTelephony, TelephonyCallId* aId,
+         uint32_t aServiceId, uint32_t aCallIndex, uint16_t aCallState,
+         bool aEmergency = false, bool aConference = false,
          bool aSwitchable = true, bool aMergeable = true);
 
   void

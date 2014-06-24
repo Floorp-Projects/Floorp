@@ -18,30 +18,26 @@ using mozilla::ErrorResult;
 
 // static
 already_AddRefed<TelephonyCall>
-TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
-                      const nsAString& aNumber, uint16_t aNumberPresentation,
-                      const nsAString& aName, uint16_t aNamePresentation,
-                      uint16_t aCallState, uint32_t aCallIndex, bool aEmergency,
-                      bool aIsConference, bool aSwitchable, bool aMergeable)
+TelephonyCall::Create(Telephony* aTelephony, TelephonyCallId* aId,
+                      uint32_t aServiceId, uint32_t aCallIndex,
+                      uint16_t aCallState, bool aEmergency, bool aConference,
+                      bool aSwitchable, bool aMergeable)
 {
-  NS_ASSERTION(aTelephony, "Null pointer!");
-  NS_ASSERTION(!aNumber.IsEmpty(), "Empty number!");
+  NS_ASSERTION(aTelephony, "Null aTelephony pointer!");
+  NS_ASSERTION(aId, "Null aId pointer!");
   NS_ASSERTION(aCallIndex >= 1, "Invalid call index!");
 
   nsRefPtr<TelephonyCall> call = new TelephonyCall(aTelephony->GetOwner());
-  nsRefPtr<TelephonyCallId> id = new TelephonyCallId(aTelephony->GetOwner(),
-                                                     aNumber, aNumberPresentation,
-                                                     aName, aNamePresentation);
 
   call->mTelephony = aTelephony;
+  call->mId = aId;
   call->mServiceId = aServiceId;
   call->mCallIndex = aCallIndex;
-  call->mError = nullptr;
   call->mEmergency = aEmergency;
-  call->mGroup = aIsConference ? aTelephony->ConferenceGroup() : nullptr;
+  call->mGroup = aConference ? aTelephony->ConferenceGroup() : nullptr;
   call->mSwitchable = aSwitchable;
   call->mMergeable = aMergeable;
-  call->mId = id;
+  call->mError = nullptr;
 
   call->ChangeStateInternal(aCallState, false);
 
@@ -50,7 +46,6 @@ TelephonyCall::Create(Telephony* aTelephony, uint32_t aServiceId,
 
 TelephonyCall::TelephonyCall(nsPIDOMWindow* aOwner)
   : DOMEventTargetHelper(aOwner),
-    mCallState(nsITelephonyService::CALL_STATE_UNKNOWN),
     mLive(false)
 {
 }
