@@ -16,11 +16,11 @@ public:
 
   nsApplicationCache();
 
-  virtual ~nsApplicationCache();
-
   void MarkInvalid();
 
 private:
+  virtual ~nsApplicationCache();
+
   nsRefPtr<nsOfflineCacheDevice> mDevice;
   nsCString mGroup;
   nsCString mClientID;

@@ -21,12 +21,13 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsStreamLoader();
-  ~nsStreamLoader();
 
   static nsresult
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+  ~nsStreamLoader();
+
   static NS_METHOD WriteSegmentFun(nsIInputStream *, void *, const char *,
                                    uint32_t, uint32_t, uint32_t *);
 

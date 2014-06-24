@@ -482,10 +482,11 @@ namespace { // anon
 
 class MetaDataVisitorWrapper : public nsICacheMetaDataVisitor
 {
+  virtual ~MetaDataVisitorWrapper() {}
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEMETADATAVISITOR
   MetaDataVisitorWrapper(nsICacheEntryMetaDataVisitor* cb) : mCB(cb) {}
-  virtual ~MetaDataVisitorWrapper() {}
   nsCOMPtr<nsICacheEntryMetaDataVisitor> mCB;
 };
 

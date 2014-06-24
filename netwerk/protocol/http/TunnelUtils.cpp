@@ -768,9 +768,9 @@ public:
     : mWrapped(aWrapped)
   {};
 
+private:
   virtual ~SocketTransportShim() {};
 
-private:
   nsCOMPtr<nsISocketTransport> mWrapped;
 };
 
@@ -790,9 +790,9 @@ public:
     mWeakTrans = do_GetWeakReference(aTrans);
   }
 
+private:
   virtual ~OutputStreamShim() {};
 
-private:
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIOutputStreamCallback *mCallback;
   nsresult mStatus;
@@ -814,9 +814,9 @@ public:
     mWeakTrans = do_GetWeakReference(aTrans);
   }
 
+private:
   virtual ~InputStreamShim() {};
 
-private:
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIInputStreamCallback *mCallback;
   nsresult mStatus;

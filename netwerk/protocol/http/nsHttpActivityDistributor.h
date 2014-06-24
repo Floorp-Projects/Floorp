@@ -21,9 +21,10 @@ public:
     NS_DECL_NSIHTTPACTIVITYDISTRIBUTOR
 
     nsHttpActivityDistributor();
-    virtual ~nsHttpActivityDistributor();
 
 protected:
+    virtual ~nsHttpActivityDistributor();
+
     ObserverArray mObservers;
     Mutex mLock;
 };

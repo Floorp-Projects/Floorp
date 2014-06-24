@@ -22,7 +22,6 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
 {
  public:
   WebSocketChannelChild(bool aSecure);
-  ~WebSocketChannelChild();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSITHREADRETARGETABLEREQUEST
@@ -42,6 +41,8 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void ReleaseIPDLReference();
 
  private:
+  ~WebSocketChannelChild();
+
   bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions) MOZ_OVERRIDE;
   bool RecvOnStop(const nsresult& aStatusCode) MOZ_OVERRIDE;
   bool RecvOnMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;

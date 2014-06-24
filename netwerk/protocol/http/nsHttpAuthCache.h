@@ -240,11 +240,11 @@ private:
     static PLHashAllocOps gHashAllocOps;
 
     class AppDataClearObserver : public nsIObserver {
+      virtual ~AppDataClearObserver() {}
     public:
       NS_DECL_ISUPPORTS
       NS_DECL_NSIOBSERVER
       AppDataClearObserver(nsHttpAuthCache* aOwner) : mOwner(aOwner) {}
-      virtual ~AppDataClearObserver() {}
       nsHttpAuthCache* mOwner;
     };
 

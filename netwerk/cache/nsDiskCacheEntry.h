@@ -86,12 +86,12 @@ public:
         , mDiskEntry(diskEntry)
     {
     }
-
-    virtual ~nsDiskCacheEntryInfo() {}
     
     const char* Key() { return mDiskEntry->Key(); }
     
 private:
+    virtual ~nsDiskCacheEntryInfo() {}
+
     const char *        mDeviceID;
     nsDiskCacheEntry *  mDiskEntry;
 };

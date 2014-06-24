@@ -15,12 +15,13 @@
 
 class nsWifiAccessPoint MOZ_FINAL : public nsIWifiAccessPoint
 {
+  ~nsWifiAccessPoint();
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWIFIACCESSPOINT
 
   nsWifiAccessPoint();
-  ~nsWifiAccessPoint();
 
   char mMac[18];
   int  mSignal;
