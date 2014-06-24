@@ -3443,6 +3443,95 @@ function runMaxLengthTest()
       !checkSelection(1 + 0, "", kDesc, "#3-4")) {
     return;
   }
+
+  // The input element whose content length is already maxlength and
+  // the carest is at start of the content.
+  input.value = "X";
+  input.selectionStart = input.selectionEnd = 0;
+
+  // start composition
+  synthesizeComposition({ type: "compositionstart" });
+
+  // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u9B54" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u9B54",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u9B54X", kDesc, "#4-1") ||
+      !checkSelection(1, "", kDesc, "#4-1")) {
+    return;
+  }
+
+  // commit the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u9B54" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u9B54",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  // The input text must be discarded. Then, the caret position shouldn't be
+  // updated from its position at compositionstart.
+  if (!checkContent("X", kDesc, "#4-2") ||
+      !checkSelection(0, "", kDesc, "#4-2")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u9B54" });
+
+  // start composition
+  synthesizeComposition({ type: "compositionstart" });
+
+  // input characters
+  synthesizeComposition({ type: "compositionupdate", data: "\u9B54\u6CD5" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u9B54\u6CD5",
+        "clauses":
+        [
+          { "length": 2, "attr": COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u9B54\u6CD5X", kDesc, "#5-1") ||
+      !checkSelection(2, "", kDesc, "#5-1")) {
+    return;
+  }
+
+  // commit the composition string
+  synthesizeComposition({ type: "compositionupdate", data: "\u9B54\u6CD5" });
+  synthesizeText(
+    { "composition":
+      { "string": "\u9B54\u6CD5",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("X", kDesc, "#5-2") ||
+      !checkSelection(0, "", kDesc, "#5-2")) {
+    return;
+  }
+
+  synthesizeComposition({ type: "compositionend", data: "\u9B54\u6CD5" });
 }
 
 function runTest()

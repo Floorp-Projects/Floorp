@@ -224,6 +224,17 @@ IMETextTxn::SetSelectionForRanges()
   // Set caret position and selection of IME composition with TextRangeArray.
   bool setCaret = false;
   uint32_t countOfRanges = mRanges ? mRanges->Length() : 0;
+#ifdef DEBUG
+  // When this sets selection (caret) offset to out of the content of
+  // the editor, let's crash the process only on debug build.  That makes such
+  // bugs detectable with automated tests.
+  uint32_t maxOffset = UINT32_MAX;
+  mElement->GetLength(&maxOffset);
+#endif
+  // The mStringToInsert may be truncated if maxlength attribute value doesn't
+  // allow to input all text of this composition. So, we can get actual length
+  // of the inserted string from it.
+  uint32_t insertedLength = mStringToInsert.Length();
   for (uint32_t i = 0; i < countOfRanges; ++i) {
     const TextRange& textRange = mRanges->ElementAt(i);
 
@@ -232,9 +243,11 @@ IMETextTxn::SetSelectionForRanges()
     if (textRange.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
       NS_ASSERTION(!setCaret, "The ranges already has caret position");
       NS_ASSERTION(!textRange.Length(), "nsEditor doesn't support wide caret");
-      // NOTE: If the caret position is larger than max length of the editor
-      //       content, this may fail.
-      rv = selection->Collapse(mElement, mOffset + textRange.mStartOffset);
+      int32_t caretOffset = static_cast<int32_t>(
+        mOffset + std::min(textRange.mStartOffset, insertedLength));
+      MOZ_ASSERT(caretOffset >= 0 &&
+                 static_cast<uint32_t>(caretOffset) <= maxOffset);
+      rv = selection->Collapse(mElement, caretOffset);
       setCaret = setCaret || NS_SUCCEEDED(rv);
       NS_ASSERTION(setCaret, "Failed to collapse normal selection");
       continue;
@@ -247,8 +260,16 @@ IMETextTxn::SetSelectionForRanges()
     }
 
     nsRefPtr<nsRange> clauseRange;
-    rv = nsRange::CreateRange(mElement, mOffset + textRange.mStartOffset,
-                              mElement, mOffset + textRange.mEndOffset,
+    int32_t startOffset = static_cast<int32_t>(
+      mOffset + std::min(textRange.mStartOffset, insertedLength));
+    MOZ_ASSERT(startOffset >= 0 &&
+               static_cast<uint32_t>(startOffset) <= maxOffset);
+    int32_t endOffset = static_cast<int32_t>(
+      mOffset + std::min(textRange.mEndOffset, insertedLength));
+    MOZ_ASSERT(endOffset >= startOffset &&
+               static_cast<uint32_t>(endOffset) <= maxOffset);
+    rv = nsRange::CreateRange(mElement, startOffset,
+                              mElement, endOffset,
                               getter_AddRefs(clauseRange));
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to create a DOM range for a clause of composition");
@@ -288,7 +309,10 @@ IMETextTxn::SetSelectionForRanges()
   // If the ranges doesn't include explicit caret position, let's set the
   // caret to the end of composition string.
   if (!setCaret) {
-    rv = selection->Collapse(mElement, mOffset + mStringToInsert.Length());
+    int32_t caretOffset = static_cast<int32_t>(mOffset + insertedLength);
+    MOZ_ASSERT(caretOffset >= 0 &&
+               static_cast<uint32_t>(caretOffset) <= maxOffset);
+    rv = selection->Collapse(mElement, caretOffset);
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Failed to set caret at the end of composition string");
   }
