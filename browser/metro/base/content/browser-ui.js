@@ -7,6 +7,9 @@
 Cu.import("resource://gre/modules/devtools/dbg-server.jsm")
 Cu.import("resource://gre/modules/WindowsPrefSync.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
+                                  "resource://gre/modules/LoginManagerParent.jsm");
+
 /**
  * Constants
  */
@@ -167,6 +170,7 @@ var BrowserUI = {
         DialogUI.init();
         FormHelperUI.init();
         FindHelperUI.init();
+        LoginManagerParent.init();
 #ifdef NIGHTLY_BUILD
         PdfJs.init();
 #endif
