@@ -503,8 +503,10 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 	$(NSINSTALL) $(topsrcdir)/testing/android_cppunittest_manifest.txt $(PKG_STAGE)/cppunittests
 endif
+ifeq ($(MOZ_DISABLE_STARTUPCACHE),)
 	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.js $(PKG_STAGE)/cppunittests
 	$(NSINSTALL) $(topsrcdir)/startupcache/test/TestStartupCacheTelemetry.manifest $(PKG_STAGE)/cppunittests
+endif
 ifdef STRIP_CPP_TESTS
 	$(OBJCOPY) $(or $(STRIP_FLAGS),--strip-unneeded) $(DIST)/bin/jsapi-tests$(BIN_SUFFIX) $(PKG_STAGE)/cppunittests/jsapi-tests$(BIN_SUFFIX)
 else

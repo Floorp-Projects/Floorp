@@ -1548,6 +1548,19 @@ testCM("atomicMarker", function(cm) {
   eq(cm.getValue().length, 53, "del chunk");
 });
 
+testCM("selectionBias", function(cm) {
+  cm.markText(Pos(0, 1), Pos(0, 3), {atomic: true});
+  cm.setCursor(Pos(0, 2));
+  eqPos(cm.getCursor(), Pos(0, 3));
+  cm.setCursor(Pos(0, 2));
+  eqPos(cm.getCursor(), Pos(0, 1));
+  cm.setCursor(Pos(0, 2), null, {bias: -1});
+  eqPos(cm.getCursor(), Pos(0, 1));
+  cm.setCursor(Pos(0, 4));
+  cm.setCursor(Pos(0, 2), null, {bias: 1});
+  eqPos(cm.getCursor(), Pos(0, 3), "A");
+}, {value: "12345"});
+
 testCM("readOnlyMarker", function(cm) {
   function mark(ll, cl, lr, cr, at) {
     return cm.markText(Pos(ll, cl), Pos(lr, cr),
@@ -1776,6 +1789,20 @@ testCM("lineStyleFromMode", function(cm) {
   is(/^\s*cm-span\s*$/.test(spanElts[0].className));
 }, {value: "line1: [br] [br]\nline2: (par) (par)\nline3: <tag> <tag>"});
 
+testCM("lineStyleFromBlankLine", function(cm) {
+  CodeMirror.defineMode("lineStyleFromBlankLine_mode", function() {
+    return {token: function(stream) { stream.skipToEnd(); return "comment"; },
+            blankLine: function() { return "line-blank"; }};
+  });
+  cm.setOption("mode", "lineStyleFromBlankLine_mode");
+  var blankElts = byClassName(cm.getWrapperElement(), "blank");
+  eq(blankElts.length, 1);
+  eq(blankElts[0].nodeName, "PRE");
+  cm.replaceRange("x", Pos(1, 0));
+  blankElts = byClassName(cm.getWrapperElement(), "blank");
+  eq(blankElts.length, 0);
+}, {value: "foo\n\nbar"});
+
 CodeMirror.registerHelper("xxx", "a", "A");
 CodeMirror.registerHelper("xxx", "b", "B");
 CodeMirror.defineMode("yyy", function() {
@@ -1876,3 +1903,16 @@ testCM("alwaysMergeSelEventWithChangeOrigin", function(cm) {
   cm.undoSelection();
   eq(cm.getValue(), "Va");
 }, {value: "a"});
+
+testCM("getTokenTypeAt", function(cm) {
+  eq(cm.getTokenTypeAt(Pos(0, 0)), "number");
+  eq(cm.getTokenTypeAt(Pos(0, 6)), "string");
+  cm.addOverlay({
+    token: function(stream) {
+      if (stream.match("foo")) return "foo";
+      else stream.next();
+    }
+  });
+  eq(byClassName(cm.getWrapperElement(), "cm-foo").length, 1);
+  eq(cm.getTokenTypeAt(Pos(0, 6)), "string");
+}, {value: "1 + 'foo'", mode: "javascript"});
