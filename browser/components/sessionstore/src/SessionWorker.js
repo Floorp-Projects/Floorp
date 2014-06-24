@@ -53,6 +53,39 @@ self.onmessage = function (msg) {
   });
 };
 
+// The various possible states
+
+/**
+ * We just started (we haven't written anything to disk yet) from
+ * `Paths.clean`. The backup directory may not exist.
+ */
+const STATE_CLEAN = "clean";
+/**
+ * We know that `Paths.recovery` is good, either because we just read
+ * it (we haven't written anything to disk yet) or because have
+ * already written once to `Paths.recovery` during this session.
+ * `Paths.clean` is absent or invalid. The backup directory exists.
+ */
+const STATE_RECOVERY = "recovery";
+/**
+ * We just started from `Paths.recoverBackupy` (we haven't written
+ * anything to disk yet). Both `Paths.clean` and `Paths.recovery` are
+ * absent or invalid. The backup directory exists.
+ */
+const STATE_RECOVERY_BACKUP = "recoveryBackup";
+/**
+ * We just started from `Paths.upgradeBackup` (we haven't written
+ * anything to disk yet). Both `Paths.clean`, `Paths.recovery` and
+ * `Paths.recoveryBackup` are absent or invalid. The backup directory
+ * exists.
+ */
+const STATE_UPGRADE_BACKUP = "upgradeBackup";
+/**
+ * We just started without a valid session store file (we haven't
+ * written anything to disk yet). The backup directory may not exist.
+ */
+const STATE_EMPTY = "empty";
+
 let Agent = {
   // Boolean that tells whether we already made a
   // call to write(). We will only attempt to move
@@ -60,49 +93,154 @@ let Agent = {
   // first write.
   hasWrittenState: false,
 
-  // The path to sessionstore.js
-  path: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js"),
-
-  // The path to sessionstore.bak
-  backupPath: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak"),
+  // Path to the files used by the SessionWorker
+  Paths: null,
 
   /**
-   * NO-OP to start the worker.
+   * The current state of the worker, as one of the following strings:
+   * - "permanent", once the first write has been completed;
+   * - "empty", before the first write has been completed,
+   *   if we have started without any sessionstore;
+   * - one of "clean", "recovery", "recoveryBackup", "cleanBackup",
+   *   "upgradeBackup", before the first write has been completed, if
+   *   we have started by loading the corresponding file.
    */
-  init: function () {
+  state: null,
+
+  /**
+   * Initialize (or reinitialize) the worker
+   *
+   * @param {string} origin Which of sessionstore.js or its backups
+   *   was used. One of the `STATE_*` constants defined above.
+   * @param {object} paths The paths at which to find the various files.
+   */
+  init: function (origin, paths) {
+    if (!(origin in paths || origin == STATE_EMPTY)) {
+      throw new TypeError("Invalid origin: " + origin);
+    }
+    this.state = origin;
+    this.Paths = paths;
+    this.upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
     return {result: true};
   },
 
   /**
    * Write the session to disk.
+   * Write the session to disk, performing any necessary backup
+   * along the way.
+   *
+   * @param {string} stateString The state to write to disk.
+   * @param {object} options
+   *  - performShutdownCleanup If |true|, we should
+   *    perform shutdown-time cleanup to ensure that private data
+   *    is not left lying around;
+   *  - isFinalWrite If |true|, write to Paths.clean instead of
+   *    Paths.recovery
    */
-  write: function (stateString) {
+  write: function (stateString, options = {}) {
     let exn;
     let telemetry = {};
 
-    if (!this.hasWrittenState) {
-      try {
-        let startMs = Date.now();
-        File.move(this.path, this.backupPath);
-        telemetry.FX_SESSION_RESTORE_BACKUP_FILE_MS = Date.now() - startMs;
-      } catch (ex if isNoSuchFileEx(ex)) {
-        // Ignore exceptions about non-existent files.
-      } catch (ex) {
-        // Throw the exception after we wrote the state to disk
-        // so that the backup can't interfere with the actual write.
-        exn = ex;
+    let data = Encoder.encode(stateString);
+    let startWriteMs, stopWriteMs;
+
+    try {
+
+      if (this.state == STATE_CLEAN || this.state == STATE_EMPTY) {
+        // The backups directory may not exist yet. In all other cases,
+        // we have either already read from or already written to this
+        // directory, so we are satisfied that it exists.
+        File.makeDir(this.Paths.backups);
       }
 
-      this.hasWrittenState = true;
+      if (this.state == STATE_CLEAN) {
+        // Move $Path.clean out of the way, to avoid any ambiguity as
+        // to which file is more recent.
+        File.move(this.Paths.clean, this.Paths.cleanBackup);
+      }
+
+      startWriteMs = Date.now();
+
+      if (options.isFinalWrite) {
+        // We are shutting down. At this stage, we know that
+        // $Paths.clean is either absent or corrupted. If it was
+        // originally present and valid, it has been moved to
+        // $Paths.cleanBackup a long time ago. We can therefore write
+        // with the guarantees that we erase no important data.
+        File.writeAtomic(this.Paths.clean, data, {
+          tmpPath: this.Paths.clean + ".tmp"
+        });
+      } else if (this.state == STATE_RECOVERY) {
+        // At this stage, either $Paths.recovery was written >= 15
+        // seconds ago during this session or we have just started
+        // from $Paths.recovery left from the previous session. Either
+        // way, $Paths.recovery is good. We can move $Path.backup to
+        // $Path.recoveryBackup without erasing a good file with a bad
+        // file.
+        File.writeAtomic(this.Paths.recovery, data, {
+          tmpPath: this.Paths.recovery + ".tmp",
+          backupTo: this.Paths.recoveryBackup
+        });
+      } else {
+        // In other cases, either $Path.recovery is not necessary, or
+        // it doesn't exist or it has been corrupted. Regardless,
+        // don't backup $Path.recovery.
+        File.writeAtomic(this.Paths.recovery, data, {
+          tmpPath: this.Paths.recovery + ".tmp"
+        });
+      }
+
+      stopWriteMs = Date.now();
+
+    } catch (ex) {
+      // Don't throw immediately
+      exn = exn || ex;
     }
 
-    let ret = this._write(stateString, telemetry);
+    // If necessary, perform an upgrade backup
+    let upgradeBackupComplete = false;
+    if (this.upgradeBackupNeeded
+      && (this.state == STATE_CLEAN || this.state == STATE_UPGRADE_BACKUP)) {
+      try {
+        // If we loaded from `clean`, the file has since then been renamed to `cleanBackup`.
+        let path = this.state == STATE_CLEAN ? this.Paths.cleanBackup : this.Paths.upgradeBackup;
+        File.copy(path, this.Paths.nextUpgradeBackup);
+        this.upgradeBackupNeeded = false;
+        upgradeBackupComplete = true;
+      } catch (ex) {
+        // Don't throw immediately
+        exn = exn || ex;
+      }
+    }
+
+    if (options.performShutdownCleanup && !exn) {
+
+      // During shutdown, if auto-restore is disabled, we need to
+      // remove possibly sensitive data that has been stored purely
+      // for crash recovery. Note that this slightly decreases our
+      // ability to recover from OS-level/hardware-level issue.
+
+      // If an exception was raised, we assume that we still need
+      // these files.
+      File.remove(this.Paths.recoveryBackup);
+      File.remove(this.Paths.recovery);
+    }
+
+    this.state = STATE_RECOVERY;
 
     if (exn) {
       throw exn;
     }
 
-    return ret;
+    return {
+      result: {
+        upgradeBackup: upgradeBackupComplete
+      },
+      telemetry: {
+        FX_SESSION_RESTORE_WRITE_FILE_MS: stopWriteMs - startWriteMs,
+        FX_SESSION_RESTORE_FILE_SIZE_BYTES: data.byteLength,
+      }
+    };
   },
 
   /**
@@ -116,65 +254,78 @@ let Agent = {
   },
 
   /**
-   * Write a stateString to disk
-   */
-  _write: function (stateString, telemetry = {}) {
-    let bytes = Encoder.encode(stateString);
-    let startMs = Date.now();
-    let result = File.writeAtomic(this.path, bytes, {tmpPath: this.path + ".tmp"});
-    telemetry.FX_SESSION_RESTORE_WRITE_FILE_MS = Date.now() - startMs;
-    telemetry.FX_SESSION_RESTORE_FILE_SIZE_BYTES = bytes.byteLength;
-    return {result: result, telemetry: telemetry};
-  },
-
-  /**
-   * Creates a copy of sessionstore.js.
-   */
-  createBackupCopy: function (ext) {
-    try {
-      return {result: File.copy(this.path, this.backupPath + ext)};
-    } catch (ex if isNoSuchFileEx(ex)) {
-      // Ignore exceptions about non-existent files.
-      return {result: true};
-    }
-  },
-
-  /**
-   * Removes a backup copy.
-   */
-  removeBackupCopy: function (ext) {
-    try {
-      return {result: File.remove(this.backupPath + ext)};
-    } catch (ex if isNoSuchFileEx(ex)) {
-      // Ignore exceptions about non-existent files.
-      return {result: true};
-    }
-  },
-
-  /**
    * Wipes all files holding session data from disk.
    */
   wipe: function () {
-    let exn;
 
-    // Erase session state file
+    // Don't stop immediately in case of error.
+    let exn = null;
+
+    // Erase main session state file
     try {
-      File.remove(this.path);
-    } catch (ex if isNoSuchFileEx(ex)) {
-      // Ignore exceptions about non-existent files.
+      File.remove(this.Paths.clean);
     } catch (ex) {
       // Don't stop immediately.
-      exn = ex;
+      exn = exn || ex;
     }
 
-    // Erase any backup, any file named "sessionstore.bak[-buildID]".
-    let iter = new File.DirectoryIterator(OS.Constants.Path.profileDir);
-    for (let entry in iter) {
-      if (!entry.isDir && entry.path.startsWith(this.backupPath)) {
+    // Wipe the Session Restore directory
+    try {
+      this._wipeFromDir(this.Paths.backups, null);
+    } catch (ex) {
+      exn = exn || ex;
+    }
+
+    try {
+      File.removeDir(this.Paths.backups);
+    } catch (ex) {
+      exn = exn || ex;
+    }
+
+    // Wipe legacy Ression Restore files from the profile directory
+    try {
+      this._wipeFromDir(OS.Constants.Path.profileDir, "sessionstore.bak");
+    } catch (ex) {
+      exn = exn || ex;
+    }
+
+
+    this.state = STATE_EMPTY;
+    if (exn) {
+      throw exn;
+    }
+
+    return { result: true };
+  },
+
+  /**
+   * Wipe a number of files from a directory.
+   *
+   * @param {string} path The directory.
+   * @param {string|null} prefix If provided, only remove files whose
+   * name starts with a specific prefix.
+   */
+  _wipeFromDir: function(path, prefix) {
+    // Sanity check
+    if (typeof prefix == "undefined" || prefix == "") {
+      throw new TypeError();
+    }
+
+    let exn = null;
+
+    let iterator = new File.DirectoryIterator(path);
+    if (!iterator.exists()) {
+      return;
+    }
+    for (let entry in iterator) {
+      if (entry.isDir) {
+        continue;
+      }
+      if (!prefix || entry.name.startsWith(prefix)) {
         try {
           File.remove(entry.path);
         } catch (ex) {
-          // Don't stop immediately.
+          // Don't stop immediately
           exn = exn || ex;
         }
       }
@@ -183,9 +334,7 @@ let Agent = {
     if (exn) {
       throw exn;
     }
-
-    return {result: true};
-  }
+  },
 };
 
 function isNoSuchFileEx(aReason) {

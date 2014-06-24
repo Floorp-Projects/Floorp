@@ -1,2 +1,2 @@
-component {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6} AutofillController.js
-contract @mozilla.org/autofill-controller;1 {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6}
+component {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6} FormAutofillContentService.js
+contract @mozilla.org/formautofill/content-service;1 {ed9c2c3c-3f86-4ae5-8e31-10f71b0f19e6}
