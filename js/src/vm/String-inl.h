@@ -151,7 +151,7 @@ JSRope::new_(js::ThreadSafeContext *cx,
 {
     if (!validateLength(cx, length))
         return nullptr;
-    JSRope *str = (JSRope *) js_NewGCString<allowGC>(cx);
+    JSRope *str = (JSRope *)js::NewGCString<allowGC>(cx);
     if (!str)
         return nullptr;
     str->init(cx, left, right, length);
@@ -212,7 +212,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
         return js::NewFatInlineString<jschar>(cx, base, start, length);
     }
 
-    JSDependentString *str = (JSDependentString *)js_NewGCString<js::NoGC>(cx);
+    JSDependentString *str = (JSDependentString *)js::NewGCString<js::NoGC>(cx);
     if (str) {
         str->init(cx, baseArg, start, length);
         return str;
@@ -220,7 +220,7 @@ JSDependentString::new_(js::ExclusiveContext *cx, JSLinearString *baseArg, size_
 
     js::RootedLinearString base(cx, baseArg);
 
-    str = (JSDependentString *)js_NewGCString<js::CanGC>(cx);
+    str = (JSDependentString *)js::NewGCString<js::CanGC>(cx);
     if (!str)
         return nullptr;
     str->init(cx, base, start, length);
@@ -259,7 +259,7 @@ JSFlatString::new_(js::ThreadSafeContext *cx, const CharT *chars, size_t length)
     if (!validateLength(cx, length))
         return nullptr;
 
-    JSFlatString *str = (JSFlatString *)js_NewGCString<allowGC>(cx);
+    JSFlatString *str = (JSFlatString *)js::NewGCString<allowGC>(cx);
     if (!str)
         return nullptr;
 
@@ -286,7 +286,7 @@ template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSInlineString *
 JSInlineString::new_(js::ThreadSafeContext *cx)
 {
-    return (JSInlineString *)js_NewGCString<allowGC>(cx);
+    return (JSInlineString *)js::NewGCString<allowGC>(cx);
 }
 
 MOZ_ALWAYS_INLINE jschar *
@@ -357,7 +357,7 @@ template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSFatInlineString *
 JSFatInlineString::new_(js::ThreadSafeContext *cx)
 {
-    return js_NewGCFatInlineString<allowGC>(cx);
+    return js::NewGCFatInlineString<allowGC>(cx);
 }
 
 MOZ_ALWAYS_INLINE void
@@ -379,7 +379,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length,
 
     if (!validateLength(cx, length))
         return nullptr;
-    JSExternalString *str = js_NewGCExternalString(cx);
+    JSExternalString *str = js::NewGCExternalString(cx);
     if (!str)
         return nullptr;
     str->init(chars, length, fin);
@@ -397,7 +397,7 @@ js::StaticStrings::getUnitStringForElement(JSContext *cx, JSString *str, size_t 
         return nullptr;
     if (c < UNIT_STATIC_LIMIT)
         return getUnit(c);
-    return js_NewDependentString(cx, str, index, 1);
+    return NewDependentString(cx, str, index, 1);
 }
 
 inline JSAtom *
