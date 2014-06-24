@@ -110,6 +110,7 @@ pref("mozilla.widget.disable-native-theme", true);
 pref("layout.reflow.synthMouseMove", false);
 pref("layers.enable-tiles", true);
 pref("layers.low-precision-buffer", true);
+pref("layers.low-precision-opacity", "0.5");
 /*
    Cross Process Mutex is not supported on Mac OS X so progressive
    paint cannot be enabled for B2G on Mac OS X desktop
@@ -909,9 +910,6 @@ pref("gfx.canvas.max-size-for-skia-gl", -1);
 
 // enable fence with readpixels for SurfaceStream
 pref("gfx.gralloc.fence-with-readpixels", true);
-
-// Cell Broadcast API
-pref("ril.cellbroadcast.disabled", false);
 
 // The url of the page used to display network error details.
 pref("b2g.neterror.url", "app://system.gaiamobile.org/net_error.html");
