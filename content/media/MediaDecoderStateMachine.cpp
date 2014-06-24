@@ -202,8 +202,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioRequestPending(false),
   mVideoRequestPending(false),
   mAudioCaptured(false),
-  mTransportSeekable(true),
-  mMediaSeekable(true),
   mPositionChangeQueued(false),
   mAudioCompleted(false),
   mGotDurationFromMetaData(false),
@@ -1602,23 +1600,6 @@ void MediaDecoderStateMachine::SetFragmentEndTime(int64_t aEndTime)
   mFragmentEndTime = aEndTime < 0 ? aEndTime : aEndTime + mStartTime;
 }
 
-void MediaDecoderStateMachine::SetTransportSeekable(bool aTransportSeekable)
-{
-  NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
-      "Should be on main thread or the decoder thread.");
-  AssertCurrentThreadInMonitor();
-
-  mTransportSeekable = aTransportSeekable;
-}
-
-void MediaDecoderStateMachine::SetMediaSeekable(bool aMediaSeekable)
-{
-  NS_ASSERTION(NS_IsMainThread() || OnDecodeThread(),
-      "Should be on main thread or the decoder thread.");
-
-  mMediaSeekable = aMediaSeekable;
-}
-
 bool MediaDecoderStateMachine::IsDormantNeeded()
 {
   return mReader->IsDormantNeeded();
@@ -1775,7 +1756,8 @@ void MediaDecoderStateMachine::Seek(const SeekTarget& aTarget)
 
   // We need to be able to seek both at a transport level and at a media level
   // to seek.
-  if (!mMediaSeekable) {
+  if (!mDecoder->IsMediaSeekable()) {
+    NS_WARNING("Seek() function should not be called on a non-seekable state machine");
     return;
   }
   // MediaDecoder::mPlayState should be SEEKING while we seek, and
@@ -2186,13 +2168,19 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
     res = mReader->ReadMetadata(&info, getter_Transfers(mMetadataTags));
   }
+
   if (NS_SUCCEEDED(res)) {
     if (mState == DECODER_STATE_DECODING_METADATA &&
         mReader->IsWaitingMediaResources()) {
       // change state to DECODER_STATE_WAIT_FOR_RESOURCES
       StartWaitForResources();
+      // affect values only if ReadMetadata succeeds
       return NS_OK;
     }
+  }
+
+  if (NS_SUCCEEDED(res)) {
+    mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
   }
 
   mInfo = info;
@@ -2266,13 +2254,16 @@ MediaDecoderStateMachine::FinishDecodeMetadata()
 
   NS_ASSERTION(mStartTime != -1, "Must have start time");
   MOZ_ASSERT((!HasVideo() && !HasAudio()) ||
-              !(mMediaSeekable && mTransportSeekable) || mEndTime != -1,
-              "Active seekable media should have end time");
-  MOZ_ASSERT(!(mMediaSeekable && mTransportSeekable) ||
-             GetDuration() != -1, "Seekable media should have duration");
+               !(mDecoder->IsMediaSeekable() && mDecoder->IsTransportSeekable()) ||
+               mEndTime != -1,
+             "Active seekable media should have end time");
+  MOZ_ASSERT(!(mDecoder->IsMediaSeekable() && mDecoder->IsTransportSeekable()) ||
+               GetDuration() != -1,
+             "Seekable media should have duration");
   DECODER_LOG(PR_LOG_DEBUG, "Media goes from %lld to %lld (duration %lld) "
-              "transportSeekable=%d, mediaSeekable=%d",
-              mStartTime, mEndTime, GetDuration(), mTransportSeekable, mMediaSeekable);
+                            "transportSeekable=%d, mediaSeekable=%d",
+              mStartTime, mEndTime, GetDuration(),
+              mDecoder->IsTransportSeekable(), mDecoder->IsMediaSeekable());
 
   if (HasAudio() && !HasVideo()) {
     // We're playing audio only. We don't need to worry about slow video

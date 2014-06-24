@@ -53,7 +53,7 @@ CodeGeneratorARM::generateAsmJSPrologue(Label *stackOverflowLabel)
 {
     JS_ASSERT(gen->compilingAsmJS());
 
-    // See comment in Assembler-arm.h about AsmJSSizeOfRetAddr.
+    // See comment in Assembler-arm.h about AsmJSFrameSize.
     masm.push(lr);
 
     // The asm.js over-recursed handler wants to be able to assume that SP

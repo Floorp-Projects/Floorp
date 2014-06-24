@@ -135,6 +135,8 @@ public:
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
   virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset);
 
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
 protected:
   // Value passed to NextPacket to determine if we are reading a video or an
   // audio packet.

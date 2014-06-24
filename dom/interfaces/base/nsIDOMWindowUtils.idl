@@ -1385,10 +1385,10 @@ interface nsIDOMWindowUtils : nsISupports {
   void setAsyncScrollOffset(in nsIDOMNode aNode, in int32_t aX, in int32_t aY);
 
   /**
-   * Method for testing nsStyleAnimation::ComputeDistance.
+   * Method for testing StyleAnimationValue::ComputeDistance.
    *
    * Returns the distance between the two values as reported by
-   * nsStyleAnimation::ComputeDistance for the given element and
+   * StyleAnimationValue::ComputeDistance for the given element and
    * property.
    */
   double computeAnimationDistance(in nsIDOMElement element,

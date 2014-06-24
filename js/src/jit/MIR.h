@@ -2480,6 +2480,7 @@ class MCompare
         // Null      compared to Boolean
         // Double    compared to Boolean
         // String    compared to Boolean
+        // Symbol    compared to Boolean
         // Object    compared to Boolean
         // Value     compared to Boolean
         Compare_Boolean,
@@ -2703,6 +2704,7 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
                   type == MIRType_Int32   ||
                   type == MIRType_Double  ||
                   type == MIRType_String  ||
+                  type == MIRType_Symbol  ||
                   type == MIRType_Object);
 
         setResultType(type);
@@ -2733,6 +2735,9 @@ class MUnbox : public MUnaryInstruction, public BoxInputsPolicy
             break;
           case MIRType_String:
             kind = Bailout_NonStringInput;
+            break;
+          case MIRType_Symbol:
+            kind = Bailout_NonSymbolInput;
             break;
           case MIRType_Object:
             kind = Bailout_NonObjectInput;

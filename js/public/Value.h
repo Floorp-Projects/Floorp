@@ -76,8 +76,9 @@ JS_ENUM_HEADER(JSValueType, uint8_t)
     JSVAL_TYPE_BOOLEAN             = 0x03,
     JSVAL_TYPE_MAGIC               = 0x04,
     JSVAL_TYPE_STRING              = 0x05,
-    JSVAL_TYPE_NULL                = 0x06,
-    JSVAL_TYPE_OBJECT              = 0x07,
+    JSVAL_TYPE_SYMBOL              = 0x06,
+    JSVAL_TYPE_NULL                = 0x07,
+    JSVAL_TYPE_OBJECT              = 0x08,
 
     /* These never appear in a jsval; they are only provided as an out-of-band value. */
     JSVAL_TYPE_UNKNOWN             = 0x20,
@@ -95,6 +96,7 @@ JS_ENUM_HEADER(JSValueTag, uint32_t)
     JSVAL_TAG_INT32                = JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32,
     JSVAL_TAG_UNDEFINED            = JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED,
     JSVAL_TAG_STRING               = JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING,
+    JSVAL_TAG_SYMBOL               = JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL,
     JSVAL_TAG_BOOLEAN              = JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN,
     JSVAL_TAG_MAGIC                = JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC,
     JSVAL_TAG_NULL                 = JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL,
@@ -112,6 +114,7 @@ JS_ENUM_HEADER(JSValueTag, uint32_t)
     JSVAL_TAG_INT32                = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32,
     JSVAL_TAG_UNDEFINED            = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED,
     JSVAL_TAG_STRING               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_STRING,
+    JSVAL_TAG_SYMBOL               = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL,
     JSVAL_TAG_BOOLEAN              = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN,
     JSVAL_TAG_MAGIC                = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC,
     JSVAL_TAG_NULL                 = JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL,
@@ -126,6 +129,7 @@ JS_ENUM_HEADER(JSValueShiftedTag, uint64_t)
     JSVAL_SHIFTED_TAG_INT32        = (((uint64_t)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_UNDEFINED    = (((uint64_t)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_STRING       = (((uint64_t)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT),
+    JSVAL_SHIFTED_TAG_SYMBOL       = (((uint64_t)JSVAL_TAG_SYMBOL)     << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_BOOLEAN      = (((uint64_t)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_MAGIC        = (((uint64_t)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT),
     JSVAL_SHIFTED_TAG_NULL         = (((uint64_t)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT),
@@ -145,8 +149,9 @@ typedef uint8_t JSValueType;
 #define JSVAL_TYPE_BOOLEAN           ((uint8_t)0x03)
 #define JSVAL_TYPE_MAGIC             ((uint8_t)0x04)
 #define JSVAL_TYPE_STRING            ((uint8_t)0x05)
-#define JSVAL_TYPE_NULL              ((uint8_t)0x06)
-#define JSVAL_TYPE_OBJECT            ((uint8_t)0x07)
+#define JSVAL_TYPE_SYMBOL            ((uint8_t)0x06)
+#define JSVAL_TYPE_NULL              ((uint8_t)0x07)
+#define JSVAL_TYPE_OBJECT            ((uint8_t)0x08)
 #define JSVAL_TYPE_UNKNOWN           ((uint8_t)0x20)
 
 #if defined(JS_NUNBOX32)
@@ -156,6 +161,7 @@ typedef uint32_t JSValueTag;
 #define JSVAL_TAG_INT32              ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_INT32))
 #define JSVAL_TAG_UNDEFINED          ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_UNDEFINED))
 #define JSVAL_TAG_STRING             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_STRING))
+#define JSVAL_TAG_SYMBOL             ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_SYMBOL))
 #define JSVAL_TAG_BOOLEAN            ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_BOOLEAN))
 #define JSVAL_TAG_MAGIC              ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_MAGIC))
 #define JSVAL_TAG_NULL               ((uint32_t)(JSVAL_TAG_CLEAR | JSVAL_TYPE_NULL))
@@ -168,6 +174,7 @@ typedef uint32_t JSValueTag;
 #define JSVAL_TAG_INT32              (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_INT32)
 #define JSVAL_TAG_UNDEFINED          (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_UNDEFINED)
 #define JSVAL_TAG_STRING             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_STRING)
+#define JSVAL_TAG_SYMBOL             (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_SYMBOL)
 #define JSVAL_TAG_BOOLEAN            (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_BOOLEAN)
 #define JSVAL_TAG_MAGIC              (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_MAGIC)
 #define JSVAL_TAG_NULL               (uint32_t)(JSVAL_TAG_MAX_DOUBLE | JSVAL_TYPE_NULL)
@@ -178,6 +185,7 @@ typedef uint64_t JSValueShiftedTag;
 #define JSVAL_SHIFTED_TAG_INT32      (((uint64_t)JSVAL_TAG_INT32)      << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_UNDEFINED  (((uint64_t)JSVAL_TAG_UNDEFINED)  << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_STRING     (((uint64_t)JSVAL_TAG_STRING)     << JSVAL_TAG_SHIFT)
+#define JSVAL_SHIFTED_TAG_SYMBOL     (((uint64_t)JSVAL_TAG_SYMBOL)     << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_BOOLEAN    (((uint64_t)JSVAL_TAG_BOOLEAN)    << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_MAGIC      (((uint64_t)JSVAL_TAG_MAGIC)      << JSVAL_TAG_SHIFT)
 #define JSVAL_SHIFTED_TAG_NULL       (((uint64_t)JSVAL_TAG_NULL)       << JSVAL_TAG_SHIFT)
@@ -185,11 +193,6 @@ typedef uint64_t JSValueShiftedTag;
 
 #endif  /* JS_PUNBOX64 */
 #endif  /* !defined(__SUNPRO_CC) && !defined(__xlC__) */
-
-#define JSVAL_LOWER_INCL_TYPE_OF_OBJ_OR_NULL_SET        JSVAL_TYPE_NULL
-#define JSVAL_UPPER_EXCL_TYPE_OF_PRIMITIVE_SET          JSVAL_TYPE_OBJECT
-#define JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET             JSVAL_TYPE_INT32
-#define JSVAL_LOWER_INCL_TYPE_OF_PTR_PAYLOAD_SET        JSVAL_TYPE_MAGIC
 
 #if defined(JS_NUNBOX32)
 
@@ -254,6 +257,7 @@ typedef union jsval_layout
             uint32_t       u32;
             uint32_t       boo;     // Don't use |bool| -- it must be four bytes.
             JSString       *str;
+            JS::Symbol     *sym;
             JSObject       *obj;
             js::gc::Cell   *cell;
             void           *ptr;
@@ -473,6 +477,28 @@ JSVAL_TO_STRING_IMPL(jsval_layout l)
 }
 
 static inline bool
+JSVAL_IS_SYMBOL_IMPL(jsval_layout l)
+{
+    return l.s.tag == JSVAL_TAG_SYMBOL;
+}
+
+static inline jsval_layout
+SYMBOL_TO_JSVAL_IMPL(JS::Symbol *sym)
+{
+    jsval_layout l;
+    MOZ_ASSERT(uintptr_t(sym) > 0x1000);
+    l.s.tag = JSVAL_TAG_SYMBOL;
+    l.s.payload.sym = sym;
+    return l;
+}
+
+static inline JS::Symbol *
+JSVAL_TO_SYMBOL_IMPL(jsval_layout l)
+{
+    return l.s.payload.sym;
+}
+
+static inline bool
 JSVAL_IS_BOOLEAN_IMPL(jsval_layout l)
 {
     return l.s.tag == JSVAL_TAG_BOOLEAN;
@@ -570,16 +596,16 @@ JSVAL_TO_GCTHING_IMPL(jsval_layout l)
     return l.s.payload.cell;
 }
 
-static inline bool
-JSVAL_IS_TRACEABLE_IMPL(jsval_layout l)
-{
-    return l.s.tag == JSVAL_TAG_STRING || l.s.tag == JSVAL_TAG_OBJECT;
-}
-
 static inline uint32_t
 JSVAL_TRACE_KIND_IMPL(jsval_layout l)
 {
-    return (uint32_t)(bool)JSVAL_IS_STRING_IMPL(l);
+    static_assert((JSVAL_TAG_STRING & 0x03) == JSTRACE_STRING,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_SYMBOL & 0x03) == JSTRACE_SYMBOL,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_OBJECT & 0x03) == JSTRACE_OBJECT,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    return l.s.tag & 0x03;
 }
 
 static inline bool
@@ -704,6 +730,29 @@ JSVAL_TO_STRING_IMPL(jsval_layout l)
 }
 
 static inline bool
+JSVAL_IS_SYMBOL_IMPL(jsval_layout l)
+{
+    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_SYMBOL;
+}
+
+static inline jsval_layout
+SYMBOL_TO_JSVAL_IMPL(JS::Symbol *sym)
+{
+    jsval_layout l;
+    uint64_t symBits = (uint64_t)sym;
+    MOZ_ASSERT(uintptr_t(sym) > 0x1000);
+    MOZ_ASSERT((symBits >> JSVAL_TAG_SHIFT) == 0);
+    l.asBits = symBits | JSVAL_SHIFTED_TAG_SYMBOL;
+    return l;
+}
+
+static inline JS::Symbol *
+JSVAL_TO_SYMBOL_IMPL(jsval_layout l)
+{
+    return (JS::Symbol *)(l.asBits & JSVAL_PAYLOAD_MASK);
+}
+
+static inline bool
 JSVAL_IS_BOOLEAN_IMPL(jsval_layout l)
 {
     return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) == JSVAL_TAG_BOOLEAN;
@@ -788,16 +837,16 @@ JSVAL_TO_GCTHING_IMPL(jsval_layout l)
     return reinterpret_cast<js::gc::Cell *>(ptrBits);
 }
 
-static inline bool
-JSVAL_IS_TRACEABLE_IMPL(jsval_layout l)
-{
-    return JSVAL_IS_GCTHING_IMPL(l) && !JSVAL_IS_NULL_IMPL(l);
-}
-
 static inline uint32_t
 JSVAL_TRACE_KIND_IMPL(jsval_layout l)
 {
-    return (uint32_t)(bool)!(JSVAL_IS_OBJECT_IMPL(l));
+    static_assert((JSVAL_TAG_STRING & 0x03) == JSTRACE_STRING,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_SYMBOL & 0x03) == JSTRACE_SYMBOL,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    static_assert((JSVAL_TAG_OBJECT & 0x03) == JSTRACE_OBJECT,
+                  "Value type tags must correspond with JSGCTraceKinds.");
+    return (uint32_t)(l.asBits >> JSVAL_TAG_SHIFT) & 0x03;
 }
 
 static inline jsval_layout
@@ -864,6 +913,12 @@ JSVAL_EXTRACT_NON_DOUBLE_TYPE_IMPL(jsval_layout l)
 
 #endif  /* JS_PUNBOX64 */
 
+static inline bool
+JSVAL_IS_TRACEABLE_IMPL(jsval_layout l)
+{
+    return JSVAL_IS_GCTHING_IMPL(l) && !JSVAL_IS_NULL_IMPL(l);
+}
+
 static inline jsval_layout JSVAL_TO_IMPL(JS::Value v);
 static inline JS_VALUE_CONSTEXPR JS::Value IMPL_TO_JSVAL(jsval_layout l);
 
@@ -904,7 +959,7 @@ CanonicalizeNaN(double d)
  *
  * - JS::Value has setX() and isX() members for X in
  *
- *     { Int32, Double, String, Boolean, Undefined, Null, Object, Magic }
+ *     { Int32, Double, String, Symbol, Boolean, Undefined, Null, Object, Magic }
  *
  *   JS::Value also contains toX() for each of the non-singleton types.
  *
@@ -976,6 +1031,11 @@ class Value
     void setString(JSString *str) {
         MOZ_ASSERT(!IsPoisonedPtr(str));
         data = STRING_TO_JSVAL_IMPL(str);
+    }
+
+    void setSymbol(JS::Symbol *sym) {
+        MOZ_ASSERT(!IsPoisonedPtr(sym));
+        data = SYMBOL_TO_JSVAL_IMPL(sym);
     }
 
     void setObject(JSObject &obj) {
@@ -1061,6 +1121,10 @@ class Value
 
     bool isString() const {
         return JSVAL_IS_STRING_IMPL(data);
+    }
+
+    bool isSymbol() const {
+        return JSVAL_IS_SYMBOL_IMPL(data);
     }
 
     bool isObject() const {
@@ -1151,6 +1215,11 @@ class Value
     JSString *toString() const {
         MOZ_ASSERT(isString());
         return JSVAL_TO_STRING_IMPL(data);
+    }
+
+    JS::Symbol *toSymbol() const {
+        MOZ_ASSERT(isSymbol());
+        return JSVAL_TO_SYMBOL_IMPL(data);
     }
 
     JSObject &toObject() const {
@@ -1274,6 +1343,8 @@ IsPoisonedValue(const Value &v)
 {
     if (v.isString())
         return IsPoisonedPtr(v.toString());
+    if (v.isSymbol())
+        return IsPoisonedPtr(v.toSymbol());
     if (v.isObject())
         return IsPoisonedPtr(&v.toObject());
     return false;
@@ -1355,6 +1426,14 @@ StringValue(JSString *str)
 {
     Value v;
     v.setString(str);
+    return v;
+}
+
+static inline Value
+SymbolValue(JS::Symbol *sym)
+{
+    Value v;
+    v.setSymbol(sym);
     return v;
 }
 
@@ -1599,6 +1678,7 @@ class ValueOperations
     bool isInt32() const { return value()->isInt32(); }
     bool isDouble() const { return value()->isDouble(); }
     bool isString() const { return value()->isString(); }
+    bool isSymbol() const { return value()->isSymbol(); }
     bool isObject() const { return value()->isObject(); }
     bool isMagic() const { return value()->isMagic(); }
     bool isMagic(JSWhyMagic why) const { return value()->isMagic(why); }
@@ -1614,6 +1694,7 @@ class ValueOperations
     int32_t toInt32() const { return value()->toInt32(); }
     double toDouble() const { return value()->toDouble(); }
     JSString *toString() const { return value()->toString(); }
+    JS::Symbol *toSymbol() const { return value()->toSymbol(); }
     JSObject &toObject() const { return value()->toObject(); }
     JSObject *toObjectOrNull() const { return value()->toObjectOrNull(); }
     void *toGCThing() const { return value()->toGCThing(); }
@@ -1648,6 +1729,7 @@ class MutableValueOperations : public ValueOperations<Outer>
     bool setNumber(uint32_t ui) { return value()->setNumber(ui); }
     bool setNumber(double d) { return value()->setNumber(d); }
     void setString(JSString *str) { this->value()->setString(str); }
+    void setSymbol(JS::Symbol *sym) { this->value()->setSymbol(sym); }
     void setObject(JSObject &obj) { this->value()->setObject(obj); }
     void setObjectOrNull(JSObject *arg) { this->value()->setObjectOrNull(arg); }
 };
@@ -1678,6 +1760,7 @@ class HeapBase<JS::Value> : public ValueOperations<JS::Heap<JS::Value> >
     void setBoolean(bool b) { setBarriered(JS::BooleanValue(b)); }
     void setMagic(JSWhyMagic why) { setBarriered(JS::MagicValue(why)); }
     void setString(JSString *str) { setBarriered(JS::StringValue(str)); }
+    void setSymbol(JS::Symbol *sym) { setBarriered(JS::SymbolValue(sym)); }
     void setObject(JSObject &obj) { setBarriered(JS::ObjectValue(obj)); }
 
     bool setNumber(uint32_t ui) {

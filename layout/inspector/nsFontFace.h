@@ -21,7 +21,6 @@ public:
   nsFontFace(gfxFontEntry*      aFontEntry,
              gfxFontGroup*      aFontGroup,
              uint8_t            aMatchInfo);
-  virtual ~nsFontFace();
 
   gfxFontEntry* GetFontEntry() const { return mFontEntry.get(); }
 
@@ -30,6 +29,8 @@ public:
   }
 
 protected:
+  virtual ~nsFontFace();
+
   nsRefPtr<gfxFontEntry> mFontEntry;
   nsRefPtr<gfxFontGroup> mFontGroup;
   uint8_t mMatchType;

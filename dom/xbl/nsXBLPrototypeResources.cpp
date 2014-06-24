@@ -117,10 +117,20 @@ nsXBLPrototypeResources::Write(nsIObjectOutputStream* aStream)
 }
 
 void
-nsXBLPrototypeResources::Traverse(nsCycleCollectionTraversalCallback &cb) const
+nsXBLPrototypeResources::Traverse(nsCycleCollectionTraversalCallback &cb)
 {
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "proto mResources mLoader");
   cb.NoteXPCOMChild(mLoader);
+
+  CycleCollectionNoteChild(cb, mRuleProcessor.get(), "mRuleProcessor");
+  ImplCycleCollectionTraverse(cb, mStyleSheetList, "mStyleSheetList");
+}
+
+void
+nsXBLPrototypeResources::Unlink()
+{
+  mStyleSheetList.Clear();
+  mRuleProcessor = nullptr;
 }
 
 void
@@ -146,8 +156,7 @@ nsXBLPrototypeResources::AppendStyleSheet(CSSStyleSheet* aSheet)
 void
 nsXBLPrototypeResources::RemoveStyleSheet(CSSStyleSheet* aSheet)
 {
-  DebugOnly<bool> found = mStyleSheetList.RemoveElement(aSheet);
-  MOZ_ASSERT(found, "Trying to remove a sheet that does not exist.");
+  mStyleSheetList.RemoveElement(aSheet);
 }
 
 void

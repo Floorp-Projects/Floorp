@@ -158,6 +158,13 @@ nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
+bool
+WaveReader::IsMediaSeekable()
+{
+  // not used
+  return true;
+}
+
 template <typename T> T UnsignedByteToAudioSample(uint8_t aValue);
 template <typename T> T SignedShortToAudioSample(int16_t aValue);
 

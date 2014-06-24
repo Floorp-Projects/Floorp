@@ -26,9 +26,10 @@ public:
 
   nsLocalHandlerApp(const nsAString & aName, nsIFile *aExecutable) 
     : mName(aName), mExecutable(aExecutable) { }
-  virtual ~nsLocalHandlerApp() { }
 
 protected:
+  virtual ~nsLocalHandlerApp() { }
+
   nsString mName;
   nsString mDetailedDescription;
   nsTArray<nsString> mParameters;

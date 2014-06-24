@@ -209,17 +209,6 @@ public:
   // be called with the decode monitor held.
   void ClearPositionChangeFlag();
 
-  // Called from the main thread or the decoder thread to set whether the media
-  // resource can seek into unbuffered ranges. The decoder monitor must be
-  // obtained before calling this.
-  void SetTransportSeekable(bool aSeekable);
-
-  // Called from the main thread or the decoder thread to set whether the media
-  // can seek to random location. This is not true for chained ogg and WebM
-  // media without index. The decoder monitor must be obtained before calling
-  // this.
-  void SetMediaSeekable(bool aSeekable);
-
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if
   // there is no such event currently queued.
@@ -288,16 +277,6 @@ public:
   int64_t GetEndMediaTime() const {
     AssertCurrentThreadInMonitor();
     return mEndTime;
-  }
-
-  bool IsTransportSeekable() {
-    AssertCurrentThreadInMonitor();
-    return mTransportSeekable;
-  }
-
-  bool IsMediaSeekable() {
-    AssertCurrentThreadInMonitor();
-    return mMediaSeekable;
   }
 
   // Returns the shared state machine thread.
@@ -907,14 +886,6 @@ protected:
   // streams). When this is true, mStopAudioThread is always true and
   // the audio thread will never start again after it has stopped.
   bool mAudioCaptured;
-
-  // True if the media resource can be seeked on a transport level. Accessed
-  // from the state machine and main threads. Synchronised via decoder monitor.
-  bool mTransportSeekable;
-
-  // True if the media can be seeked. Accessed from the state machine and main
-  // threads. Synchronised via decoder monitor.
-  bool mMediaSeekable;
 
   // True if an event to notify about a change in the playback
   // position has been queued, but not yet run. It is set to false when

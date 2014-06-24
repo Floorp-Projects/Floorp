@@ -25,7 +25,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(mozSpellChecker)
 
   mozSpellChecker();
-  virtual ~mozSpellChecker();
 
   nsresult Init();
 
@@ -46,6 +45,8 @@ public:
   NS_IMETHOD CheckCurrentDictionary();
 
 protected:
+  virtual ~mozSpellChecker();
+
   nsCOMPtr<mozISpellI18NUtil> mConverter;
   nsCOMPtr<nsITextServicesDocument> mTsDoc;
   nsCOMPtr<mozIPersonalDictionary> mPersonalDictionary;

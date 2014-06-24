@@ -19,7 +19,7 @@
 
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
-#include "nsStyleAnimation.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "GeckoProfiler.h"
 
 #ifdef DEBUG
@@ -746,19 +746,20 @@ NS_NewStyleContext(nsStyleContext* aParentContext,
 static inline void
 ExtractAnimationValue(nsCSSProperty aProperty,
                       nsStyleContext* aStyleContext,
-                      nsStyleAnimation::Value& aResult)
+                      StyleAnimationValue& aResult)
 {
   DebugOnly<bool> success =
-    nsStyleAnimation::ExtractComputedValue(aProperty, aStyleContext, aResult);
+    StyleAnimationValue::ExtractComputedValue(aProperty, aStyleContext,
+                                              aResult);
   NS_ABORT_IF_FALSE(success,
-                    "aProperty must be extractable by nsStyleAnimation");
+                    "aProperty must be extractable by StyleAnimationValue");
 }
 
 static nscolor
 ExtractColor(nsCSSProperty aProperty,
              nsStyleContext *aStyleContext)
 {
-  nsStyleAnimation::Value val;
+  StyleAnimationValue val;
   ExtractAnimationValue(aProperty, aStyleContext, val);
   return val.GetColorValue();
 }
@@ -767,9 +768,9 @@ static nscolor
 ExtractColorLenient(nsCSSProperty aProperty,
                     nsStyleContext *aStyleContext)
 {
-  nsStyleAnimation::Value val;
+  StyleAnimationValue val;
   ExtractAnimationValue(aProperty, aStyleContext, val);
-  if (val.GetUnit() == nsStyleAnimation::eUnit_Color) {
+  if (val.GetUnit() == StyleAnimationValue::eUnit_Color) {
     return val.GetColorValue();
   }
   return NS_RGBA(0, 0, 0, 0);

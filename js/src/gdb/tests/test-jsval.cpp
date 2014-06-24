@@ -2,24 +2,27 @@
 #include "jsapi.h"
 
 FRAGMENT(jsval, simple) {
-  JS::Rooted<jsval> fortytwo(cx, INT_TO_JSVAL(42));
-  JS::Rooted<jsval> negone(cx, INT_TO_JSVAL(-1));
-  JS::Rooted<jsval> undefined(cx, JSVAL_VOID);
-  JS::Rooted<jsval> null(cx, JSVAL_NULL);
-  JS::Rooted<jsval> js_true(cx, JSVAL_TRUE);
-  JS::Rooted<jsval> js_false(cx, JSVAL_FALSE);
-  JS::Rooted<jsval> elements_hole(cx, js::MagicValue(JS_ELEMENTS_HOLE));
+  using namespace JS;
 
-  JS::Rooted<jsval> empty_string(cx);
+  RootedValue fortytwo(cx, Int32Value(42));
+  RootedValue negone(cx, Int32Value(-1));
+  RootedValue undefined(cx, UndefinedValue());
+  RootedValue null(cx, NullValue());
+  RootedValue js_true(cx, BooleanValue(true));
+  RootedValue js_false(cx, BooleanValue(false));
+  RootedValue elements_hole(cx, js::MagicValue(JS_ELEMENTS_HOLE));
+
+  RootedValue empty_string(cx);
   empty_string.setString(JS_NewStringCopyZ(cx, ""));
-  JS::Rooted<jsval> friendly_string(cx);
-  friendly_string.setString(JS_NewStringCopyZ(cx, "Hello!"));
+  RootedString hello(cx, JS_NewStringCopyZ(cx, "Hello!"));
+  RootedValue friendly_string(cx, StringValue(hello));
+  RootedValue symbol(cx, SymbolValue(GetSymbolFor(cx, hello)));
 
-  JS::Rooted<jsval> global(cx);
-  global.setObject(*JS::CurrentGlobalOrNull(cx));
+  RootedValue global(cx);
+  global.setObject(*CurrentGlobalOrNull(cx));
 
   // Some interesting value that floating-point won't munge.
-  JS::Rooted<jsval> onehundredthirtysevenonehundredtwentyeighths(cx, DOUBLE_TO_JSVAL(137.0 / 128.0));
+  RootedValue onehundredthirtysevenonehundredtwentyeighths(cx, DOUBLE_TO_JSVAL(137.0 / 128.0));
 
   breakpoint();
 
@@ -32,5 +35,6 @@ FRAGMENT(jsval, simple) {
   (void) elements_hole;
   (void) empty_string;
   (void) friendly_string;
+  (void) symbol;
   (void) global;
 }

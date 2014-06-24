@@ -33,7 +33,7 @@ struct ElementPropertyTransition : public mozilla::ElementAnimation
   // mProperties[0].mSegments[0].mFromValue, except when this transition
   // started as the reversal of another in-progress transition.
   // Needed so we can handle two reverses in a row.
-  nsStyleAnimation::Value mStartForReversingTest;
+  mozilla::StyleAnimationValue mStartForReversingTest;
   // Likewise, the portion (in value space) of the "full" reversed
   // transition that we're actually covering.  For example, if a :hover
   // effect has a transition that moves the element 10px to the right

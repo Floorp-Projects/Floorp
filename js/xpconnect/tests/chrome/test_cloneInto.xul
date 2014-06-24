@@ -31,6 +31,17 @@
     'Float64Array',
   ];
 
+  function checkThrows(f, msg, rgxp) {
+    try {
+      f();
+      ok(false, "Should have thrown: " + msg);
+    } catch (e) {
+      ok(true, "Threw correctly - " + msg + " - " + e);
+      if (rgxp)
+        ok(rgxp.test(e), "Should throw correct exception: " + e);
+    }
+  }
+
   function getType(a) {
     if (a === null || a === undefined)
       return 'null';
@@ -111,6 +122,7 @@
   // The second sandbox is for testing the exportHelper version of the cloneInto
   var sandbox2 = new Cu.Sandbox("http://example.com", sandboxOptions);
   sandbox.sandbox2 = sandbox2;
+  sandbox2.sandbox = sandbox;
 
   function cloneAndTest(test) {
     var output = sandbox.test = Cu.cloneInto(test, sandbox);
@@ -145,21 +157,34 @@
     cloneAndTest(tests[i]);
   }
 
-  try {
-    var output = Cu.cloneInto({ a: function() {} }, sandbox);
-    ok(false, 'Function should not be cloned by default');
-  } catch(e) {
-    ok(true, 'Function should not be cloned by default');
-  }
+  checkThrows(function() { Cu.cloneInto({ a: function() {} }, sandbox); },
+              'Function should not be cloned by default');
 
-  try {
-    sandbox2.sandbox = sandbox;
-    Cu.evalInSandbox('cloneInto({}, sandbox)', sandbox2);
-    ok(false, 'CloneInto should only work on less privileged target scopes.');
-  } catch(e) {
-    ok(/denied|insecure/.test(e),
-       'CloneInto should only work on less privileged target scopes.');
-  }
+  checkThrows(function() { Cu.cloneInto({ a: document }, sandbox); },
+              'Reflectors should not be wrapped by default');
+
+  var withReflectors = Cu.cloneInto({ doc: document, win: window }, sandbox,
+                                    { wrapReflectors: true });
+  is(Cu.unwaiveXrays(Cu.waiveXrays(withReflectors).doc), document, "Document passes");
+  is(Cu.unwaiveXrays(Cu.waiveXrays(withReflectors).win), window, "Window passes");
+
+
+  checkThrows(function() { Cu.evalInSandbox('cloneInto({}, sandbox)', sandbox2); },
+              'CloneInto should only work on less privileged target scopes.',
+              /denied|insecure/);
+
+  var cloneTarget = new Cu.Sandbox('http://example.com');
+  var sameOriginSB = new Cu.Sandbox('http://example.com', { wantGlobalProperties: ['XMLHttpRequest'] });
+  var crossOriginSB = new Cu.Sandbox('http://example.net', { wantGlobalProperties: ['XMLHttpRequest'] });
+  sandbox2.cloneTarget = cloneTarget;
+  sandbox2.soXHR = Cu.evalInSandbox('new XMLHttpRequest()', sameOriginSB);
+  sandbox2.xoXHR = Cu.evalInSandbox('new XMLHttpRequest()', crossOriginSB);
+  sandbox2.chromeDoc = document;
+  Cu.evalInSandbox('function tryToClone(x) { return cloneInto({val: x}, cloneTarget, { wrapReflectors: true }).val; }', sandbox2);
+  is(Cu.evalInSandbox('tryToClone(soXHR)', sandbox2), sandbox2.soXHR, 'Same-origin wrapReflectors works');
+  checkThrows(function() { Cu.evalInSandbox('tryToClone(chromeDoc)', sandbox2); },
+              'wrapReflectors may not wrap cross-origin reflectors', /denied|insecure/);
+
 
   var test = { a: function() { return 42; } };
   cloneAndTestWithFunctions(test);

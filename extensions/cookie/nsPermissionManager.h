@@ -167,7 +167,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsPermissionManager();
-  virtual ~nsPermissionManager();
   static nsIPermissionManager* GetXPCOMSingleton();
   nsresult Init();
 
@@ -207,6 +206,8 @@ public:
   static void AppClearDataObserverInit();
 
 private:
+  virtual ~nsPermissionManager();
+
   int32_t GetTypeIndex(const char *aTypeString,
                        bool        aAdd);
 

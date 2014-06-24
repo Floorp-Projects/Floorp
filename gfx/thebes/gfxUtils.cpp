@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxUtils.h"
+
+#include "cairo.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
@@ -991,6 +993,21 @@ gfxUtils::ConvertYCbCrToRGB(const PlanarYCbCrData& aData,
                                aStride,
                                yuvtype);
   }
+}
+
+/* static */ void gfxUtils::ClearThebesSurface(gfxASurface* aSurface)
+{
+  if (aSurface->CairoStatus()) {
+    return;
+  }
+  cairo_surface_t* surf = aSurface->CairoSurface();
+  if (cairo_surface_status(surf)) {
+    return;
+  }
+  cairo_t* ctx = cairo_create(surf);
+  cairo_set_operator(ctx, CAIRO_OPERATOR_CLEAR);
+  cairo_paint_with_alpha(ctx, 1.0);
+  cairo_destroy(ctx);
 }
 
 /* static */ TemporaryRef<DataSourceSurface>

@@ -78,6 +78,8 @@ public:
   virtual nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime, int64_t aCurrentTime);
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime);
 
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
 private:
   // This monitor should be taken when reading or writing to mIsChained.
   ReentrantMonitor mMonitor;

@@ -69,6 +69,8 @@ public:
                          uint32_t aLength,
                          int64_t aOffset) MOZ_OVERRIDE;
 
+  bool IsMediaSeekable() MOZ_OVERRIDE;
+
 private:
 
   // Notifies the filter graph that playback is complete. aStatus is

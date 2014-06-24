@@ -151,6 +151,8 @@ inline EventListenerFlags AllEventsAtSystemGroupCapture()
 
 class EventListenerManager MOZ_FINAL
 {
+  ~EventListenerManager();
+
 public:
   struct Listener
   {
@@ -210,7 +212,6 @@ public:
   };
 
   EventListenerManager(dom::EventTarget* aTarget);
-  virtual ~EventListenerManager();
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EventListenerManager)
 

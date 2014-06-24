@@ -39,6 +39,7 @@
 #include "vm/MallocProvider.h"
 #include "vm/SPSProfiler.h"
 #include "vm/Stack.h"
+#include "vm/Symbol.h"
 #include "vm/ThreadPool.h"
 
 #ifdef _MSC_VER
@@ -412,6 +413,26 @@ struct JSAtomState
 };
 
 namespace js {
+
+/*
+ * Storage for well-known symbols. It's a separate struct from the Runtime so
+ * that it can be shared across multiple runtimes. As in JSAtomState, each
+ * field is a smart pointer that's immutable once initialized.
+ * `rt->wellKnownSymbols.iterator` is convertible to Handle<Symbol*>.
+ *
+ * Well-known symbols are never GC'd. The description() of each well-known
+ * symbol is a permanent atom.
+ */
+struct WellKnownSymbols
+{
+    js::ImmutableSymbolPtr iterator;
+
+    ImmutableSymbolPtr &get(size_t i) {
+        MOZ_ASSERT(i < JS::WellKnownSymbolLimit);
+        ImmutableSymbolPtr *symbols = reinterpret_cast<ImmutableSymbolPtr *>(this);
+        return symbols[i];
+    }
+};
 
 #define NAME_OFFSET(name)       offsetof(JSAtomState, name)
 
@@ -1154,14 +1175,21 @@ struct JSRuntime : public JS::shadow::Runtime,
 
   private:
     // Set of all atoms other than those in permanentAtoms and staticStrings.
-    // This may be modified by threads with an ExclusiveContext and requires
-    // a lock.
+    // Reading or writing this set requires the calling thread to have an
+    // ExclusiveContext and hold a lock. Use AutoLockForExclusiveAccess.
     js::AtomSet *atoms_;
 
-    // Compartment and associated zone containing all atoms in the runtime,
-    // as well as runtime wide IonCode stubs. The contents of this compartment
-    // may be modified by threads with an ExclusiveContext and requires a lock.
+    // Compartment and associated zone containing all atoms in the runtime, as
+    // well as runtime wide IonCode stubs. Modifying the contents of this
+    // compartment requires the calling thread to have an ExclusiveContext and
+    // hold a lock. Use AutoLockForExclusiveAccess.
     JSCompartment *atomsCompartment_;
+
+    // Set of all live symbols produced by Symbol.for(). All such symbols are
+    // allocated in the atomsCompartment. Reading or writing the symbol
+    // registry requires the calling thread to have an ExclusiveContext and
+    // hold a lock. Use AutoLockForExclusiveAccess.
+    js::SymbolRegistry symbolRegistry_;
 
   public:
     bool initializeAtoms(JSContext *cx);
@@ -1187,6 +1215,11 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     bool activeGCInAtomsZone();
 
+    js::SymbolRegistry &symbolRegistry() {
+        JS_ASSERT(currentThreadHasExclusiveAccess());
+        return symbolRegistry_;
+    }
+
     // Permanent atoms are fixed during initialization of the runtime and are
     // not modified or collected until the runtime is destroyed. These may be
     // shared with another, longer living runtime through |parentRuntime| and
@@ -1202,6 +1235,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::AtomSet *permanentAtoms;
 
     bool transformToPermanentAtoms();
+
+    // Cached well-known symbols (ES6 rev 24 6.1.5.1). Like permanent atoms,
+    // these are shared with the parentRuntime, if any.
+    js::WellKnownSymbols *wellKnownSymbols;
 
     const JSWrapObjectCallbacks            *wrapObjectCallbacks;
     js::PreserveWrapperCallback            preserveWrapperCallback;

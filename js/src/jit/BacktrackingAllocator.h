@@ -89,7 +89,7 @@ class BacktrackingVirtualRegister : public VirtualRegister
         canonicalSpillExclude_ = pos;
     }
     bool hasCanonicalSpillExclude() const {
-        return canonicalSpillExclude_.pos() != 0;
+        return canonicalSpillExclude_.bits() != 0;
     }
     CodePosition canonicalSpillExclude() const {
         JS_ASSERT(hasCanonicalSpillExclude());
@@ -104,9 +104,32 @@ class BacktrackingVirtualRegister : public VirtualRegister
     }
 };
 
+class SplitPositionsIterator;
+
 // A sequence of code positions, for tellings BacktrackingAllocator::splitAt
 // where to split.
-typedef js::Vector<CodePosition, 4, SystemAllocPolicy> SplitPositionVector;
+class SplitPositions {
+    friend class SplitPositionsIterator;
+
+    js::Vector<CodePosition, 4, SystemAllocPolicy> positions_;
+
+  public:
+    bool append(CodePosition pos);
+    bool empty() const;
+};
+
+// An iterator over the positions in a SplitPositions object.
+class SplitPositionsIterator {
+    const SplitPositions &splitPositions_;
+    const CodePosition *current_;
+
+  public:
+    explicit SplitPositionsIterator(const SplitPositions &splitPositions);
+
+    void advancePast(CodePosition pos);
+    bool isBeyondNextSplit(CodePosition pos) const;
+    bool isEndBeyondNextSplit(CodePosition pos) const;
+};
 
 class BacktrackingAllocator
   : private LiveRangeAllocator<BacktrackingVirtualRegister, /* forLSRA = */ false>
@@ -151,9 +174,9 @@ class BacktrackingAllocator
 
         static int compare(const AllocatedRange &v0, const AllocatedRange &v1) {
             // LiveInterval::Range includes 'from' but excludes 'to'.
-            if (v0.range->to.pos() <= v1.range->from.pos())
+            if (v0.range->to <= v1.range->from)
                 return -1;
-            if (v0.range->from.pos() >= v1.range->to.pos())
+            if (v0.range->from >= v1.range->to)
                 return 1;
             return 0;
         }
@@ -219,7 +242,7 @@ class BacktrackingAllocator
     bool populateSafepoints();
 
     void dumpRegisterGroups();
-    void dumpLiveness();
+    void dumpFixedRanges();
     void dumpAllocations();
 
     struct PrintLiveIntervalRange;
@@ -238,8 +261,7 @@ class BacktrackingAllocator
 
     bool chooseIntervalSplit(LiveInterval *interval, LiveInterval *conflict);
 
-    bool splitAt(LiveInterval *interval,
-                 const SplitPositionVector &splitPositions);
+    bool splitAt(LiveInterval *interval, const SplitPositions &splitPositions);
     bool trySplitAcrossHotcode(LiveInterval *interval, bool *success);
     bool trySplitAfterLastRegisterUse(LiveInterval *interval, LiveInterval *conflict, bool *success);
     bool splitAtAllRegisterUses(LiveInterval *interval);

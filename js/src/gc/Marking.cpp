@@ -15,6 +15,7 @@
 #include "vm/ArgumentsObject.h"
 #include "vm/ScopeObject.h"
 #include "vm/Shape.h"
+#include "vm/Symbol.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jscompartmentinlines.h"
@@ -25,6 +26,7 @@
 # include "gc/Nursery-inl.h"
 #endif
 #include "vm/String-inl.h"
+#include "vm/Symbol-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -78,7 +80,10 @@ static inline void
 PushMarkStack(GCMarker *gcmarker, Shape *thing);
 
 static inline void
-PushMarkStack(GCMarker *gcmarker, JSString *thing);
+PushMarkStack(GCMarker *gcmarker, JSString *str);
+
+static inline void
+PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym);
 
 static inline void
 PushMarkStack(GCMarker *gcmarker, types::TypeObject *thing);
@@ -87,6 +92,7 @@ namespace js {
 namespace gc {
 
 static void MarkChildren(JSTracer *trc, JSString *str);
+static void MarkChildren(JSTracer *trc, JS::Symbol *sym);
 static void MarkChildren(JSTracer *trc, JSScript *script);
 static void MarkChildren(JSTracer *trc, LazyScript *lazy);
 static void MarkChildren(JSTracer *trc, Shape *shape);
@@ -145,6 +151,7 @@ template <> bool ThingIsPermanentAtom<JSFlatString>(JSFlatString *str) { return 
 template <> bool ThingIsPermanentAtom<JSLinearString>(JSLinearString *str) { return str->isPermanentAtom(); }
 template <> bool ThingIsPermanentAtom<JSAtom>(JSAtom *atom) { return atom->isPermanent(); }
 template <> bool ThingIsPermanentAtom<PropertyName>(PropertyName *name) { return name->isPermanent(); }
+template <> bool ThingIsPermanentAtom<JS::Symbol>(JS::Symbol *sym) { return sym->isWellKnownSymbol(); }
 
 template<typename T>
 static inline void
@@ -324,6 +331,30 @@ MarkPermanentAtom(JSTracer *trc, JSAtom *atom, const char *name)
         void *thing = atom;
         trc->callback(trc, &thing, JSTRACE_STRING);
         JS_ASSERT(thing == atom);
+        trc->unsetTracingLocation();
+    }
+
+    trc->clearTracingDetails();
+}
+
+void
+MarkWellKnownSymbol(JSTracer *trc, JS::Symbol *sym)
+{
+    if (!sym)
+        return;
+
+    trc->setTracingName("wellKnownSymbols");
+
+    MOZ_ASSERT(sym->isWellKnownSymbol());
+    CheckMarkedThing(trc, &sym);
+    if (!trc->callback) {
+        // Permanent atoms are marked before well-known symbols.
+        MOZ_ASSERT(sym->description()->isMarked());
+        sym->markIfUnmarked();
+    } else {
+        void *thing = sym;
+        trc->callback(trc, &thing, JSTRACE_SYMBOL);
+        MOZ_ASSERT(thing == sym);
         trc->unsetTracingLocation();
     }
 
@@ -560,6 +591,7 @@ DeclMarkerImpl(Object, GlobalObject)
 DeclMarkerImpl(Object, JSObject)
 DeclMarkerImpl(Object, JSFunction)
 DeclMarkerImpl(Object, ObjectImpl)
+DeclMarkerImpl(Object, SavedFrame)
 DeclMarkerImpl(Object, ScopeObject)
 DeclMarkerImpl(Script, JSScript)
 DeclMarkerImpl(LazyScript, LazyScript)
@@ -569,6 +601,7 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
+DeclMarkerImpl(Symbol, JS::Symbol)
 DeclMarkerImpl(TypeObject, js::types::TypeObject)
 
 } /* namespace gc */
@@ -589,6 +622,9 @@ gc::MarkKind(JSTracer *trc, void **thingp, JSGCTraceKind kind)
         break;
       case JSTRACE_STRING:
         MarkInternal(trc, reinterpret_cast<JSString **>(thingp));
+        break;
+      case JSTRACE_SYMBOL:
+        MarkInternal(trc, reinterpret_cast<JS::Symbol **>(thingp));
         break;
       case JSTRACE_SCRIPT:
         MarkInternal(trc, reinterpret_cast<JSScript **>(thingp));
@@ -644,11 +680,11 @@ MarkIdInternal(JSTracer *trc, jsid *id)
         trc->setTracingLocation((void *)id);
         MarkInternal(trc, &str);
         *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
-    } else if (MOZ_UNLIKELY(JSID_IS_OBJECT(*id))) {
-        JSObject *obj = JSID_TO_OBJECT(*id);
+    } else if (JSID_IS_SYMBOL(*id)) {
+        JS::Symbol *sym = JSID_TO_SYMBOL(*id);
         trc->setTracingLocation((void *)id);
-        MarkInternal(trc, &obj);
-        *id = OBJECT_TO_JSID(obj);
+        MarkInternal(trc, &sym);
+        *id = SYMBOL_TO_JSID(sym);
     } else {
         /* Unset realLocation manually if we do not call MarkInternal. */
         trc->unsetTracingLocation();
@@ -708,6 +744,8 @@ MarkValueInternal(JSTracer *trc, Value *v)
         MarkKind(trc, &thing, v->gcKind());
         if (v->isString())
             v->setString((JSString *)thing);
+        else if (v->isSymbol())
+            v->setSymbol((JS::Symbol *)thing);
         else
             v->setObjectOrNull((JSObject *)thing);
     } else {
@@ -929,6 +967,10 @@ gc::IsCellAboutToBeFinalized(Cell **thingp)
     JS_ASSERT((thing)->zone()->isGCMarking() ||                         \
               (rt)->isAtomsZone((thing)->zone()));
 
+// Symbols can also be in the atoms zone.
+#define JS_COMPARTMENT_ASSERT_SYM(rt, sym)                              \
+    JS_COMPARTMENT_ASSERT_STR(rt, sym)
+
 static void
 PushMarkStack(GCMarker *gcmarker, ObjectImpl *thing)
 {
@@ -1053,8 +1095,8 @@ ScanShape(GCMarker *gcmarker, Shape *shape)
     const BarrieredBase<jsid> &id = shape->propidRef();
     if (JSID_IS_STRING(id))
         PushMarkStack(gcmarker, JSID_TO_STRING(id));
-    else if (MOZ_UNLIKELY(JSID_IS_OBJECT(id)))
-        PushMarkStack(gcmarker, JSID_TO_OBJECT(id));
+    else if (JSID_IS_SYMBOL(id))
+        PushMarkStack(gcmarker, JSID_TO_SYMBOL(id));
 
     shape = shape->previous();
     if (shape && shape->markIfUnmarked(gcmarker->getMarkColor()))
@@ -1199,6 +1241,27 @@ PushMarkStack(GCMarker *gcmarker, JSString *str)
         ScanString(gcmarker, str);
 }
 
+static inline void
+ScanSymbol(GCMarker *gcmarker, JS::Symbol *sym)
+{
+    if (JSString *desc = sym->description())
+        PushMarkStack(gcmarker, desc);
+}
+
+static inline void
+PushMarkStack(GCMarker *gcmarker, JS::Symbol *sym)
+{
+    // Well-known symbols might not be associated with this runtime.
+    if (sym->isWellKnownSymbol())
+        return;
+
+    JS_COMPARTMENT_ASSERT_SYM(gcmarker->runtime(), sym);
+    JS_ASSERT(!IsInsideNursery(sym));
+
+    if (sym->markIfUnmarked())
+        ScanSymbol(gcmarker, sym);
+}
+
 void
 gc::MarkChildren(JSTracer *trc, JSObject *obj)
 {
@@ -1212,6 +1275,12 @@ gc::MarkChildren(JSTracer *trc, JSString *str)
         str->markBase(trc);
     else if (str->isRope())
         str->asRope().markChildren(trc);
+}
+
+static void
+gc::MarkChildren(JSTracer *trc, JS::Symbol *sym)
+{
+    sym->markChildren(trc);
 }
 
 static void
@@ -1373,6 +1442,10 @@ gc::PushArena(GCMarker *gcmarker, ArenaHeader *aheader)
 
       case JSTRACE_STRING:
         PushArenaTyped<JSString>(gcmarker, aheader);
+        break;
+
+      case JSTRACE_SYMBOL:
+        PushArenaTyped<JS::Symbol>(gcmarker, aheader);
         break;
 
       case JSTRACE_SCRIPT:
@@ -1584,6 +1657,14 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
                 obj = obj2;
                 goto scan_obj;
             }
+        } else if (v.isSymbol()) {
+            JS::Symbol *sym = v.toSymbol();
+            if (!sym->isWellKnownSymbol()) {
+                JS_COMPARTMENT_ASSERT_SYM(runtime(), sym);
+                MOZ_ASSERT(runtime()->isAtomsZone(sym->zone()) || sym->zone() == obj->zone());
+                if (sym->markIfUnmarked())
+                    ScanSymbol(this, sym);
+            }
         }
     }
     return;
@@ -1703,6 +1784,10 @@ js::TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
 
       case JSTRACE_STRING:
         MarkChildren(trc, static_cast<JSString *>(thing));
+        break;
+
+      case JSTRACE_SYMBOL:
+        MarkChildren(trc, static_cast<JS::Symbol *>(thing));
         break;
 
       case JSTRACE_SCRIPT:

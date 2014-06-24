@@ -71,6 +71,8 @@ protected:
     void Finish(nsIRunnable* aFinishRunnable);
 
   private:
+    ~TransactionQueue() {}
+
     mozilla::Monitor mMonitor;
     IDBTransaction* mTransaction;
     nsAutoTArray<nsCOMPtr<nsIRunnable>, 10> mQueue;

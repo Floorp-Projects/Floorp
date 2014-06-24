@@ -755,11 +755,13 @@ public:
     mozilla::HoldJSObjects(this);
   }
 
+private:
   ~CountdownHolder()
   {
     mozilla::DropJSObjects(this);
   }
 
+public:
   void SetValue(uint32_t index, const JS::Handle<JS::Value> aValue)
   {
     MOZ_ASSERT(mCountdown > 0);
@@ -833,10 +835,6 @@ public:
     MOZ_ASSERT(aHolder);
   }
 
-  ~AllResolveHandler()
-  {
-  }
-
   void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
   {
@@ -851,6 +849,10 @@ public:
   }
 
 private:
+  ~AllResolveHandler()
+  {
+  }
+
   nsRefPtr<CountdownHolder> mCountdownHolder;
   uint32_t mIndex;
 };

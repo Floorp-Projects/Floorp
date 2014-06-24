@@ -221,6 +221,7 @@ public:
 
   PlacesEvent(const char* aTopic);
 protected:
+  ~PlacesEvent() {}
   void Notify();
 
   const char* const mTopic;

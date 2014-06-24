@@ -97,6 +97,7 @@ RemoveChildFromList(const nsAString& aKey, nsAutoPtr<ProcessLockTable>& aTable,
 }
 
 class ClearHashtableOnShutdown MOZ_FINAL : public nsIObserver {
+  ~ClearHashtableOnShutdown() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -116,6 +117,7 @@ ClearHashtableOnShutdown::Observe(nsISupports* aSubject, const char* aTopic, con
 }
 
 class CleanupOnContentShutdown MOZ_FINAL : public nsIObserver {
+  ~CleanupOnContentShutdown() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

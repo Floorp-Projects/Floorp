@@ -75,6 +75,8 @@ public:
   Touch* IdentifiedTouch(int32_t aIdentifier) const;
 
 protected:
+  ~TouchList() {}
+
   nsCOMPtr<nsISupports> mParent;
   nsTArray<nsRefPtr<Touch> > mPoints;
 };

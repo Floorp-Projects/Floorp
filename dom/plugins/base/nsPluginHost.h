@@ -44,9 +44,9 @@ class nsIStreamListener;
 
 class nsInvalidPluginTag : public nsISupports
 {
+  virtual ~nsInvalidPluginTag();
 public:
   nsInvalidPluginTag(const char* aFullPath, int64_t aLastModifiedTime = 0);
-  virtual ~nsInvalidPluginTag();
   
   NS_DECL_ISUPPORTS
   
@@ -63,9 +63,9 @@ class nsPluginHost : public nsIPluginHost,
                      public nsITimerCallback,
                      public nsSupportsWeakReference
 {
+  virtual ~nsPluginHost();
 public:
   nsPluginHost();
-  virtual ~nsPluginHost();
 
   static already_AddRefed<nsPluginHost> GetInst();
 

@@ -22,6 +22,51 @@ using mozilla::HashString;
 
 namespace js {
 
+struct SavedFrame::Lookup {
+    Lookup(JSAtom *source, size_t line, size_t column, JSAtom *functionDisplayName,
+           SavedFrame *parent, JSPrincipals *principals)
+        : source(source),
+          line(line),
+          column(column),
+          functionDisplayName(functionDisplayName),
+          parent(parent),
+          principals(principals)
+    {
+        JS_ASSERT(source);
+    }
+
+    JSAtom       *source;
+    size_t       line;
+    size_t       column;
+    JSAtom       *functionDisplayName;
+    SavedFrame   *parent;
+    JSPrincipals *principals;
+};
+
+class SavedFrame::AutoLookupRooter : public JS::CustomAutoRooter
+{
+  public:
+    AutoLookupRooter(JSContext *cx, JSAtom *source, size_t line, size_t column,
+                     JSAtom *functionDisplayName, SavedFrame *parent, JSPrincipals *principals)
+      : JS::CustomAutoRooter(cx),
+        value(source, line, column, functionDisplayName, parent, principals) {}
+
+    operator const SavedFrame::Lookup&() const { return value; }
+
+  private:
+    virtual void trace(JSTracer *trc) {
+        gc::MarkStringUnbarriered(trc, &value.source, "SavedFrame::Lookup::source");
+        if (value.functionDisplayName) {
+            gc::MarkStringUnbarriered(trc, &value.functionDisplayName,
+                                      "SavedFrame::Lookup::functionDisplayName");
+        }
+        if (value.parent)
+            gc::MarkObjectUnbarriered(trc, &value.parent, "SavedFrame::Lookup::parent");
+    }
+
+    SavedFrame::Lookup value;
+};
+
 /* static */ HashNumber
 SavedFrame::HashPolicy::hash(const Lookup &lookup)
 {
@@ -155,7 +200,7 @@ SavedFrame::getPrincipals()
 }
 
 void
-SavedFrame::initFromLookup(Lookup &lookup)
+SavedFrame::initFromLookup(const Lookup &lookup)
 {
     JS_ASSERT(lookup.source);
     JS_ASSERT(getReservedSlot(JSSLOT_SOURCE).isUndefined());
@@ -247,7 +292,7 @@ SavedFrame::checkThis(JSContext *cx, CallArgs &args, const char *fnName)
 //   - Rooted<SavedFrame *> frame (will be non-null)
 #define THIS_SAVEDFRAME(cx, argc, vp, fnName, args, frame)         \
     CallArgs args = CallArgsFromVp(argc, vp);                      \
-    Rooted<SavedFrame *> frame(cx, checkThis(cx, args, fnName));   \
+    RootedSavedFrame frame(cx, checkThis(cx, args, fnName));   \
     if (!frame)                                                    \
         return false
 
@@ -361,7 +406,7 @@ SavedStacks::init()
 }
 
 bool
-SavedStacks::saveCurrentStack(JSContext *cx, MutableHandle<SavedFrame*> frame)
+SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame)
 {
     JS_ASSERT(initialized());
     JS_ASSERT(&cx->compartment()->savedStacks() == this);
@@ -389,12 +434,11 @@ SavedStacks::sweep(JSRuntime *rt)
                 }
 
                 if (obj != temp || parentMoved) {
-                    Rooted<SavedFrame*> parent(rt, frame->getParent());
                     e.rekeyFront(SavedFrame::Lookup(frame->getSource(),
                                                     frame->getLine(),
                                                     frame->getColumn(),
                                                     frame->getFunctionDisplayName(),
-                                                    parent,
+                                                    frame->getParent(),
                                                     frame->getPrincipals()),
                                  ReadBarriered<SavedFrame *>(frame));
                 }
@@ -429,7 +473,7 @@ SavedStacks::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 bool
-SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<SavedFrame*> frame)
+SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame)
 {
     if (iter.done()) {
         frame.set(nullptr);
@@ -445,7 +489,7 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
     JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
 
     ScriptFrameIter thisFrame(iter);
-    Rooted<SavedFrame*> parentFrame(cx);
+    RootedSavedFrame parentFrame(cx);
     if (!insertFrames(cx, ++iter, &parentFrame))
         return false;
 
@@ -454,25 +498,26 @@ SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandle<Sa
         return false;
 
     JSFunction *callee = thisFrame.maybeCallee();
-    SavedFrame::Lookup lookup(location.source,
-                              location.line,
-                              location.column,
-                              callee ? callee->displayAtom() : nullptr,
-                              parentFrame,
-                              thisFrame.compartment()->principals);
+    SavedFrame::AutoLookupRooter lookup(cx,
+                                        location.source,
+                                        location.line,
+                                        location.column,
+                                        callee ? callee->displayAtom() : nullptr,
+                                        parentFrame,
+                                        thisFrame.compartment()->principals);
 
     frame.set(getOrCreateSavedFrame(cx, lookup));
     return frame.get() != nullptr;
 }
 
 SavedFrame *
-SavedStacks::getOrCreateSavedFrame(JSContext *cx, SavedFrame::Lookup &lookup)
+SavedStacks::getOrCreateSavedFrame(JSContext *cx, const SavedFrame::Lookup &lookup)
 {
     SavedFrame::Set::AddPtr p = frames.lookupForAdd(lookup);
     if (p)
         return *p;
 
-    Rooted<SavedFrame *> frame(cx, createFrameFromLookup(cx, lookup));
+    RootedSavedFrame frame(cx, createFrameFromLookup(cx, lookup));
     if (!frame)
         return nullptr;
 
@@ -508,7 +553,7 @@ SavedStacks::getOrCreateSavedFramePrototype(JSContext *cx)
 }
 
 SavedFrame *
-SavedStacks::createFrameFromLookup(JSContext *cx, SavedFrame::Lookup &lookup)
+SavedStacks::createFrameFromLookup(JSContext *cx, const SavedFrame::Lookup &lookup)
 {
     RootedObject proto(cx, getOrCreateSavedFramePrototype(cx));
     if (!proto)
@@ -578,7 +623,7 @@ SavedStacks::getLocation(JSContext *cx, JSScript *script, jsbytecode *pc,
 bool
 SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata)
 {
-    Rooted<SavedFrame *> frame(cx);
+    RootedSavedFrame frame(cx);
     if (!cx->compartment()->savedStacks().saveCurrentStack(cx, &frame))
         return false;
     *pmetadata = frame;

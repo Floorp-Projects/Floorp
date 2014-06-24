@@ -57,7 +57,6 @@ public:
   };
 
   explicit SelectionCarets(nsIPresShell *aPresShell);
-  virtual ~SelectionCarets();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISELECTIONLISTENER
@@ -92,6 +91,8 @@ public:
   }
 
 private:
+  virtual ~SelectionCarets();
+
   SelectionCarets() MOZ_DELETE;
 
   /**

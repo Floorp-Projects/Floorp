@@ -19,12 +19,13 @@ namespace dom {
  */
 class PromiseNativeHandler : public nsISupports
 {
+protected:
+  virtual ~PromiseNativeHandler()
+  { }
+
 public:
   // NS_IMPL_ISUPPORTS0 in Promise.cpp.
   NS_DECL_ISUPPORTS
-
-  virtual ~PromiseNativeHandler()
-  { }
 
   virtual void
   ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;

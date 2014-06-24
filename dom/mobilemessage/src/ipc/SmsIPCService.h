@@ -33,6 +33,8 @@ public:
   SmsIPCService();
 
 private:
+  ~SmsIPCService() {}
+
   uint32_t mMmsDefaultServiceId;
   uint32_t mSmsDefaultServiceId;
 };

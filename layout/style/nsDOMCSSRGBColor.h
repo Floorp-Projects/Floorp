@@ -23,8 +23,6 @@ public:
                    nsROCSSPrimitiveValue* aAlpha,
                    bool aHasAlpha);
 
-  virtual ~nsDOMCSSRGBColor(void);
-
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsDOMCSSRGBColor)
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsDOMCSSRGBColor)
@@ -58,6 +56,8 @@ public:
     MOZ_OVERRIDE MOZ_FINAL;
 
 private:
+  virtual ~nsDOMCSSRGBColor(void);
+
   nsRefPtr<nsROCSSPrimitiveValue> mRed;
   nsRefPtr<nsROCSSPrimitiveValue> mGreen;
   nsRefPtr<nsROCSSPrimitiveValue> mBlue;

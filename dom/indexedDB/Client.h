@@ -77,6 +77,8 @@ public:
   ShutdownTransactionService() MOZ_OVERRIDE;
 
 private:
+  ~Client() {}
+
   nsresult
   GetDirectory(PersistenceType aPersistenceType, const nsACString& aOrigin,
                nsIFile** aDirectory);

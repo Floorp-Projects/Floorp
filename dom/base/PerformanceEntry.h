@@ -16,9 +16,11 @@ namespace dom {
 class PerformanceEntry : public nsISupports,
                          public nsWrapperCache
 {
+protected:
+  virtual ~PerformanceEntry();
+
 public:
   PerformanceEntry(nsPerformance* aPerformance);
-  virtual ~PerformanceEntry();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(PerformanceEntry)

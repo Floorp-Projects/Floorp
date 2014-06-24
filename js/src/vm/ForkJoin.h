@@ -326,6 +326,7 @@ enum ParallelBailoutCause {
 namespace jit {
 class BailoutStack;
 class JitFrameIterator;
+class IonBailoutIterator;
 class RematerializedFrame;
 }
 

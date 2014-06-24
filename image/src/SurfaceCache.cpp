@@ -223,6 +223,7 @@ public:
       os->AddObserver(mMemoryPressureObserver, "memory-pressure", false);
   }
 
+private:
   virtual ~SurfaceCacheImpl()
   {
     nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
@@ -232,6 +233,7 @@ public:
     UnregisterWeakMemoryReporter(this);
   }
 
+public:
   void InitMemoryReporter() {
     RegisterWeakMemoryReporter(this);
   }
@@ -417,8 +419,6 @@ private:
   {
     NS_DECL_ISUPPORTS
 
-    virtual ~MemoryPressureObserver() { }
-
     NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*)
     {
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
@@ -426,6 +426,9 @@ private:
       }
       return NS_OK;
     }
+
+  private:
+    virtual ~MemoryPressureObserver() { }
   };
 
 

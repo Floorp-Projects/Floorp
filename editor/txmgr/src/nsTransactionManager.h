@@ -34,15 +34,15 @@ private:
   nsTransactionStack     mRedoStack;
   nsCOMArray<nsITransactionListener> mListeners;
 
+  /** The default destructor.
+   */
+  virtual ~nsTransactionManager();
+
 public:
 
   /** The default constructor.
    */
   nsTransactionManager(int32_t aMaxTransactionCount=-1);
-
-  /** The default destructor.
-   */
-  virtual ~nsTransactionManager();
 
   /* Macro for AddRef(), Release(), and QueryInterface() */
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

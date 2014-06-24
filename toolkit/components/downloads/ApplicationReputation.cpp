@@ -84,7 +84,6 @@ public:
   // Constructor and destructor.
   PendingLookup(nsIApplicationReputationQuery* aQuery,
                 nsIApplicationReputationCallback* aCallback);
-  ~PendingLookup();
 
   // Start the lookup. The lookup may have 2 parts: local and remote. In the
   // local lookup, PendingDBLookups are created to query the local allow and
@@ -94,6 +93,8 @@ public:
   nsresult StartLookup();
 
 private:
+  ~PendingLookup();
+
   friend class PendingDBLookup;
 
   // Telemetry states.
@@ -210,13 +211,15 @@ public:
 
   // Constructor and destructor
   PendingDBLookup(PendingLookup* aPendingLookup);
-  ~PendingDBLookup();
 
   // Look up the given URI in the safebrowsing DBs, optionally on both the allow
   // list and the blocklist. If there is a match, call
   // PendingLookup::OnComplete. Otherwise, call PendingLookup::LookupNext.
   nsresult LookupSpec(const nsACString& aSpec, bool aAllowlistOnly);
+
 private:
+  ~PendingDBLookup();
+
   // The download appeared on the allowlist, blocklist, or no list (and thus
   // could trigger a remote query.
   enum LIST_TYPES {
