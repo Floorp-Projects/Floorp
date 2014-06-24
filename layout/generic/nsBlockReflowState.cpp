@@ -47,7 +47,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
           IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
   mBorderPadding = mReflowState.ComputedPhysicalBorderPadding();
-  aFrame->ApplySkipSides(mBorderPadding, &aReflowState);
+  mBorderPadding.ApplySkipSides(aFrame->GetSkipSides(&aReflowState));
   mContainerWidth = aReflowState.ComputedWidth() + mBorderPadding.LeftRight();
 
   if (aTopMarginRoot || 0 != mBorderPadding.top) {

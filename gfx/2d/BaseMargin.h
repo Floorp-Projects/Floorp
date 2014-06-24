@@ -45,6 +45,22 @@ struct BaseMargin {
     return *(&top + T(aSide));
   }
 
+  void ApplySkipSides(int aSkipSides)
+  {
+    if (aSkipSides & (1 << mozilla::css::eSideTop)) {
+      top = 0;
+    }
+    if (aSkipSides & (1 << mozilla::css::eSideRight)) {
+      right = 0;
+    }
+    if (aSkipSides & (1 << mozilla::css::eSideBottom)) {
+      bottom = 0;
+    }
+    if (aSkipSides & (1 << mozilla::css::eSideLeft)) {
+      left = 0;
+    }
+  }
+
   // Overloaded operators. Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator
   bool operator==(const Sub& aMargin) const {
