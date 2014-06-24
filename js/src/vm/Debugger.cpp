@@ -3081,9 +3081,9 @@ DebuggerScript_getUrl(JSContext *cx, unsigned argc, Value *vp)
     if (script->filename()) {
         JSString *str;
         if (script->scriptSource()->introducerFilename())
-            str = js_NewStringCopyZ<CanGC>(cx, script->scriptSource()->introducerFilename());
+            str = NewStringCopyZ<CanGC>(cx, script->scriptSource()->introducerFilename());
         else
-            str = js_NewStringCopyZ<CanGC>(cx, script->filename());
+            str = NewStringCopyZ<CanGC>(cx, script->filename());
         if (!str)
             return false;
         args.rval().setString(str);
@@ -4042,7 +4042,7 @@ DebuggerSource_getText(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     JSString *str = hasSourceData ? ss->substring(cx, 0, ss->length())
-                                  : js_NewStringCopyZ<CanGC>(cx, "[no source]");
+                                  : NewStringCopyZ<CanGC>(cx, "[no source]");
     if (!str)
         return false;
 
@@ -4057,7 +4057,7 @@ DebuggerSource_getUrl(JSContext *cx, unsigned argc, Value *vp)
 
     ScriptSource *ss = sourceObject->source();
     if (ss->filename()) {
-        JSString *str = js_NewStringCopyZ<CanGC>(cx, ss->filename());
+        JSString *str = NewStringCopyZ<CanGC>(cx, ss->filename());
         if (!str)
             return false;
         args.rval().setString(str);
@@ -4150,7 +4150,7 @@ DebuggerSource_getIntroductionType(JSContext *cx, unsigned argc, Value *vp)
 
     ScriptSource *ss = sourceObject->source();
     if (ss->hasIntroductionType()) {
-        JSString *str = js_NewStringCopyZ<CanGC>(cx, ss->introductionType());
+        JSString *str = NewStringCopyZ<CanGC>(cx, ss->introductionType());
         if (!str)
             return false;
         args.rval().setString(str);

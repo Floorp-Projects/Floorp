@@ -347,7 +347,7 @@ AtomizeAndtake(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehav
     AutoLockForExclusiveAccess lock(cx);
 
     /*
-     * If a GC occurs at js_NewStringCopy then |p| will still have the correct
+     * If a GC occurs at NewStringCopy then |p| will still have the correct
      * hash, allowing us to avoid rehashing it. Even though the hash is
      * unchanged, we need to re-lookup the table position because a last-ditch
      * GC will potentially free some table entries.
@@ -363,7 +363,7 @@ AtomizeAndtake(ExclusiveContext *cx, jschar *tbchars, size_t length, InternBehav
 
     AutoCompartment ac(cx, cx->atomsCompartment());
 
-    JSFlatString *flat = js_NewString<NoGC>(cx, tbchars, length);
+    JSFlatString *flat = NewString<NoGC>(cx, tbchars, length);
     if (!flat) {
         js_free(tbchars);
         js_ReportOutOfMemory(cx);
@@ -407,7 +407,7 @@ AtomizeAndCopyChars(ExclusiveContext *cx, const CharT *tbchars, size_t length, I
 
     AutoCompartment ac(cx, cx->atomsCompartment());
 
-    JSFlatString *flat = js_NewStringCopyN<NoGC>(cx, tbchars, length);
+    JSFlatString *flat = NewStringCopyN<NoGC>(cx, tbchars, length);
     if (!flat) {
         // Grudgingly forgo last-ditch GC. The alternative would be to release
         // the lock, manually GC here, and retry from the top. If you fix this,
