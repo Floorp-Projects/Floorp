@@ -589,53 +589,62 @@ bool
 js::XDRAtom(XDRState<mode> *xdr, MutableHandleAtom atomp)
 {
     if (mode == XDR_ENCODE) {
-        uint32_t nchars = atomp->length();
-        if (!xdr->codeUint32(&nchars))
+        static_assert(JSString::MAX_LENGTH <= INT32_MAX, "String length must fit in 31 bits");
+        uint32_t length = atomp->length();
+        uint32_t lengthAndEncoding = (length << 1) | uint32_t(atomp->hasLatin1Chars());
+        if (!xdr->codeUint32(&lengthAndEncoding))
             return false;
 
-        jschar *chars = const_cast<jschar *>(atomp->getChars(xdr->cx()));
-        if (!chars)
-            return false;
-
-        return xdr->codeChars(chars, nchars);
+        JS::AutoCheckCannotGC nogc;
+        return atomp->hasLatin1Chars()
+               ? xdr->codeChars(atomp->latin1Chars(nogc), length)
+               : xdr->codeChars(const_cast<jschar*>(atomp->twoByteChars(nogc)), length);
     }
 
     /* Avoid JSString allocation for already existing atoms. See bug 321985. */
-    uint32_t nchars;
-    if (!xdr->codeUint32(&nchars))
+    uint32_t lengthAndEncoding;
+    if (!xdr->codeUint32(&lengthAndEncoding))
         return false;
+
+    uint32_t length = lengthAndEncoding >> 1;
+    bool latin1 = lengthAndEncoding & 0x1;
 
     JSContext *cx = xdr->cx();
     JSAtom *atom;
-#if IS_LITTLE_ENDIAN
-    /* Directly access the little endian chars in the XDR buffer. */
-    const jschar *chars = reinterpret_cast<const jschar *>(xdr->buf.read(nchars * sizeof(jschar)));
-    atom = AtomizeChars(cx, chars, nchars);
-#else
-    /*
-     * We must copy chars to a temporary buffer to convert between little and
-     * big endian data.
-     */
-    jschar *chars;
-    jschar stackChars[256];
-    if (nchars <= ArrayLength(stackChars)) {
-        chars = stackChars;
+    if (latin1) {
+        const Latin1Char *chars = reinterpret_cast<const Latin1Char *>(xdr->buf.read(length));
+        atom = AtomizeChars(cx, chars, length);
     } else {
+#if IS_LITTLE_ENDIAN
+        /* Directly access the little endian chars in the XDR buffer. */
+        const jschar *chars = reinterpret_cast<const jschar *>(xdr->buf.read(length * sizeof(jschar)));
+        atom = AtomizeChars(cx, chars, length);
+#else
         /*
-         * This is very uncommon. Don't use the tempLifoAlloc arena for this as
-         * most allocations here will be bigger than tempLifoAlloc's default
-         * chunk size.
+         * We must copy chars to a temporary buffer to convert between little and
+         * big endian data.
          */
-        chars = cx->runtime()->pod_malloc<jschar>(nchars);
-        if (!chars)
-            return false;
-    }
+        jschar *chars;
+        jschar stackChars[256];
+        if (length <= ArrayLength(stackChars)) {
+            chars = stackChars;
+        } else {
+            /*
+             * This is very uncommon. Don't use the tempLifoAlloc arena for this as
+             * most allocations here will be bigger than tempLifoAlloc's default
+             * chunk size.
+             */
+            chars = cx->runtime()->pod_malloc<jschar>(length);
+            if (!chars)
+                return false;
+        }
 
-    JS_ALWAYS_TRUE(xdr->codeChars(chars, nchars));
-    atom = AtomizeChars(cx, chars, nchars);
-    if (chars != stackChars)
-        js_free(chars);
+        JS_ALWAYS_TRUE(xdr->codeChars(chars, length));
+        atom = AtomizeChars(cx, chars, length);
+        if (chars != stackChars)
+            js_free(chars);
 #endif /* !IS_LITTLE_ENDIAN */
+    }
 
     if (!atom)
         return false;
