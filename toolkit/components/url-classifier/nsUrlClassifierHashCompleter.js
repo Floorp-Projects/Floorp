@@ -378,7 +378,7 @@ HashCompleterRequest.prototype = {
     }
   },
   notifyFailure: function HCR_notifyFailure(aStatus) {
-    for (let i = 0; i < this._requests; i++) {
+    for (let i = 0; i < this._requests.length; i++) {
       let request = this._requests[i];
       request.callback.completionFinished(aStatus);
     }

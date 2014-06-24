@@ -25,7 +25,9 @@ test(foo, 1);
 
 //234567890123456789
 test(function(f) { return f.bar; }, 19);
-test(function(f) { return f(); }, 19);
+//        1         2
+//2345678901234567890123456
+test(function(f) { return f(); }, 26);
 /* Cover negative colspan case using for(;;) loop with error in update part. */
 test(function(){
         //0         1         2         3         4
@@ -41,9 +43,9 @@ test(function() { var tmp = null;  tmp.foo; }, 35)
 
 /* Just a generic 'throw'. */
 test(function() {
-//234567890123
+//234567890123456789
     foo({}); throw new Error('a');
-}, 13);
+}, 19);
 
 /* Be sure to report the right statement */
 test(function() {

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=923010
         }, { "mandatory": { "BOGUS": 5 } } )
       ok(false, "That call to createAnswer should have thrown");
     } catch (e) {
-      is(e.lineNumber, 20, "Exception should have been on line 20");
+      is(e.lineNumber, 16, "Exception should have been on line 16");
       is(e.message,
          "createAnswer passed invalid constraints - unknown mandatory constraint: BOGUS",
          "Should have the exception we expect");

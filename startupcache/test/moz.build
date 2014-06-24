@@ -8,3 +8,7 @@ CPP_UNIT_TESTS += [
     'TestStartupCache.cpp',
 ]
 
+EXTRA_COMPONENTS += [
+    'TestStartupCacheTelemetry.js',
+    'TestStartupCacheTelemetry.manifest',
+]

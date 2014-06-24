@@ -161,12 +161,12 @@ AtomHasher::match(const AtomStateEntry &entry, const Lookup &lookup)
         const Latin1Char *keyChars = key->latin1Chars(lookup.nogc);
         if (lookup.isLatin1)
             return mozilla::PodEqual(keyChars, lookup.latin1Chars, lookup.length);
-        return EqualCharsLatin1TwoByte(keyChars, lookup.twoByteChars, lookup.length);
+        return EqualChars(keyChars, lookup.twoByteChars, lookup.length);
     }
 
     const jschar *keyChars = key->twoByteChars(lookup.nogc);
     if (lookup.isLatin1)
-        return EqualCharsLatin1TwoByte(lookup.latin1Chars, keyChars, lookup.length);
+        return EqualChars(lookup.latin1Chars, keyChars, lookup.length);
     return mozilla::PodEqual(keyChars, lookup.twoByteChars, lookup.length);
 }
 
