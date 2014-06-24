@@ -41,7 +41,6 @@
 #include "mozilla/dom/PFileDescriptorSetParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h"
-#include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/bluetooth/PBluetoothParent.h"
 #include "mozilla/dom/PFMRadioParent.h"
@@ -84,7 +83,6 @@
 #include "nsIClipboard.h"
 #include "nsICycleCollectorListener.h"
 #include "nsIDOMGeoGeolocation.h"
-#include "mozilla/dom/WakeLock.h"
 #include "nsIDOMWindow.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIGfxInfo.h"
@@ -185,7 +183,6 @@ using base::KillProcess;
 using namespace mozilla::dom::bluetooth;
 using namespace mozilla::dom::devicestorage;
 using namespace mozilla::dom::indexedDB;
-using namespace mozilla::dom::power;
 using namespace mozilla::dom::mobilemessage;
 using namespace mozilla::dom::telephony;
 using namespace mozilla::hal;
@@ -839,6 +836,95 @@ ContentParent::AnswerBridgeToChildProcess(const uint64_t& id)
     }
 }
 
+namespace {
+
+class SystemMessageHandledListener MOZ_FINAL
+    : public nsITimerCallback
+    , public LinkedListElement<SystemMessageHandledListener>
+{
+public:
+    NS_DECL_ISUPPORTS
+
+    SystemMessageHandledListener() {}
+
+    static void OnSystemMessageHandled()
+    {
+        if (!sListeners) {
+            return;
+        }
+
+        SystemMessageHandledListener* listener = sListeners->popFirst();
+        if (!listener) {
+            return;
+        }
+
+        // Careful: ShutDown() may delete |this|.
+        listener->ShutDown();
+    }
+
+    void Init(ContentParent* aContentParent)
+    {
+        MOZ_ASSERT(!mContentParent);
+        MOZ_ASSERT(!mTimer);
+
+        // mTimer keeps a strong reference to |this|.  When this object's
+        // destructor runs, it will remove itself from the LinkedList.
+
+        if (!sListeners) {
+            sListeners = new LinkedList<SystemMessageHandledListener>();
+            ClearOnShutdown(&sListeners);
+        }
+        sListeners->insertBack(this);
+
+        mContentParent = aContentParent;
+
+        mTimer = do_CreateInstance("@mozilla.org/timer;1");
+
+        uint32_t timeoutSec =
+            Preferences::GetInt("dom.ipc.systemMessageCPULockTimeoutSec", 30);
+        mTimer->InitWithCallback(this, timeoutSec * 1000,
+                                 nsITimer::TYPE_ONE_SHOT);
+    }
+
+    NS_IMETHOD Notify(nsITimer* aTimer)
+    {
+        // Careful: ShutDown() may delete |this|.
+        ShutDown();
+        return NS_OK;
+    }
+
+private:
+    ~SystemMessageHandledListener() {}
+
+    static StaticAutoPtr<LinkedList<SystemMessageHandledListener> > sListeners;
+
+    void ShutDown()
+    {
+        ProcessPriorityManager::ResetProcessPriority(mContentParent, false);
+
+        nsRefPtr<SystemMessageHandledListener> kungFuDeathGrip = this;
+
+        if (mContentParent) {
+            mContentParent = nullptr;
+        }
+        if (mTimer) {
+            mTimer->Cancel();
+            mTimer = nullptr;
+        }
+    }
+
+    nsRefPtr<ContentParent> mContentParent;
+    nsCOMPtr<nsITimer> mTimer;
+};
+
+StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
+    SystemMessageHandledListener::sListeners;
+
+NS_IMPL_ISUPPORTS(SystemMessageHandledListener,
+                  nsITimerCallback)
+
+} // anonymous namespace
+
 /*static*/ TabParent*
 ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
@@ -1043,7 +1129,20 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
         return nullptr;
     }
 
-    p->MaybeTakeCPUWakeLock(aFrameElement);
+    // Request a higher priority above BACKGROUND if the child process is
+    // "critical" and probably has system messages coming soon. (A CPU wake lock
+    // may already be controlled by the B2G process in SystemMessageInternal.js
+    // for message handling.) This privilege is revoked once the message is
+    // delivered, or the grace period is up, whichever comes first.
+    nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(aFrameElement);
+    if (browserFrame && browserFrame->GetIsExpectingSystemMessage()) {
+      ProcessPriorityManager::ResetProcessPriority(p, true);
+
+      // This object's Init() function keeps it alive.
+      nsRefPtr<SystemMessageHandledListener> listener =
+          new SystemMessageHandledListener();
+      listener->Init(p);
+    }
 
     return static_cast<TabParent*>(browser);
 }
@@ -1105,117 +1204,6 @@ ContentParent::Init()
 
     DebugOnly<FileUpdateDispatcher*> observer = FileUpdateDispatcher::GetSingleton();
     NS_ASSERTION(observer, "FileUpdateDispatcher is null");
-}
-
-namespace {
-
-class SystemMessageHandledListener MOZ_FINAL
-    : public nsITimerCallback
-    , public LinkedListElement<SystemMessageHandledListener>
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    SystemMessageHandledListener() {}
-
-    static void OnSystemMessageHandled()
-    {
-        if (!sListeners) {
-            return;
-        }
-
-        SystemMessageHandledListener* listener = sListeners->popFirst();
-        if (!listener) {
-            return;
-        }
-
-        // Careful: ShutDown() may delete |this|.
-        listener->ShutDown();
-    }
-
-    void Init(WakeLock* aWakeLock)
-    {
-        MOZ_ASSERT(!mWakeLock);
-        MOZ_ASSERT(!mTimer);
-
-        // mTimer keeps a strong reference to |this|.  When this object's
-        // destructor runs, it will remove itself from the LinkedList.
-
-        if (!sListeners) {
-            sListeners = new LinkedList<SystemMessageHandledListener>();
-            ClearOnShutdown(&sListeners);
-        }
-        sListeners->insertBack(this);
-
-        mWakeLock = aWakeLock;
-
-        mTimer = do_CreateInstance("@mozilla.org/timer;1");
-
-        uint32_t timeoutSec =
-            Preferences::GetInt("dom.ipc.systemMessageCPULockTimeoutSec", 30);
-        mTimer->InitWithCallback(this, timeoutSec * 1000,
-                                 nsITimer::TYPE_ONE_SHOT);
-    }
-
-    NS_IMETHOD Notify(nsITimer* aTimer)
-    {
-        // Careful: ShutDown() may delete |this|.
-        ShutDown();
-        return NS_OK;
-    }
-
-private:
-    ~SystemMessageHandledListener() {}
-
-    static StaticAutoPtr<LinkedList<SystemMessageHandledListener> > sListeners;
-
-    void ShutDown()
-    {
-        nsRefPtr<SystemMessageHandledListener> kungFuDeathGrip = this;
-
-        ErrorResult rv;
-        mWakeLock->Unlock(rv);
-
-        if (mTimer) {
-            mTimer->Cancel();
-            mTimer = nullptr;
-        }
-    }
-
-    nsRefPtr<WakeLock> mWakeLock;
-    nsCOMPtr<nsITimer> mTimer;
-};
-
-StaticAutoPtr<LinkedList<SystemMessageHandledListener> >
-    SystemMessageHandledListener::sListeners;
-
-NS_IMPL_ISUPPORTS(SystemMessageHandledListener,
-                  nsITimerCallback)
-
-} // anonymous namespace
-
-void
-ContentParent::MaybeTakeCPUWakeLock(Element* aFrameElement)
-{
-    // Take the CPU wake lock on behalf of this processs if it's expecting a
-    // system message.  We'll release the CPU lock once the message is
-    // delivered, or after some period of time, which ever comes first.
-
-    nsCOMPtr<nsIMozBrowserFrame> browserFrame =
-        do_QueryInterface(aFrameElement);
-    if (!browserFrame ||
-        !browserFrame->GetIsExpectingSystemMessage()) {
-        return;
-    }
-
-    nsRefPtr<PowerManagerService> pms = PowerManagerService::GetInstance();
-    nsRefPtr<WakeLock> lock =
-        pms->NewWakeLockOnBehalfOfProcess(NS_LITERAL_STRING("cpu"), this);
-
-    // This object's Init() function keeps it alive.
-    nsRefPtr<SystemMessageHandledListener> listener =
-        new SystemMessageHandledListener();
-    listener->Init(lock);
 }
 
 bool
