@@ -8,7 +8,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
  * Code below is vtt.js the JS WebVTT implementation.
  * Current source code can be found at http://github.com/mozilla/vtt.js
  *
- * Code taken from commit 65ae2daaf6ec7e710f591214893bb03d8b7a94b5
+ * Code taken from commit f5a1a60775a615cd9670d6cdaedddf2c6f25fae3
  */
 /**
  * Copyright 2013 vtt.js Contributors
@@ -29,7 +29,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
 (function(global) {
 
-  _objCreate = Object.create || (function() {
+  var _objCreate = Object.create || (function() {
     function F() {}
     return function(o) {
       if (arguments.length !== 1) {
@@ -165,11 +165,14 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   }
 
   function parseCue(input, cue, regionList) {
+    // Remember the original input if we need to throw an error.
+    var oInput = input;
     // 4.1 WebVTT timestamp
     function consumeTimeStamp() {
       var ts = parseTimeStamp(input);
       if (ts === null) {
-        throw new ParsingError(ParsingError.Errors.BadTimeStamp);
+        throw new ParsingError(ParsingError.Errors.BadTimeStamp,
+                              "Malformed timestamp: " + oInput);
       }
       // Remove time stamp from input.
       input = input.replace(/^[^\sa-zA-Z-]+/, "");
@@ -254,7 +257,8 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     skipWhitespace();
     if (input.substr(0, 3) !== "-->") {     // (3) next characters must match "-->"
       throw new ParsingError(ParsingError.Errors.BadTimeStamp,
-                             "Malformed time stamp (time stamps must be separated by '-->').");
+                             "Malformed time stamp (time stamps must be separated by '-->'): " +
+                             oInput);
     }
     input = input.substr(3);
     skipWhitespace();
@@ -1304,13 +1308,18 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           self.state = "HEADER";
         }
 
+        var alreadyCollectedLine = false;
         while (self.buffer) {
           // We can't parse a line until we have the full line.
           if (!/\r\n|\n/.test(self.buffer)) {
             return this;
           }
 
-          line = collectNextLine();
+          if (!alreadyCollectedLine) {
+            line = collectNextLine();
+          } else {
+            alreadyCollectedLine = false;
+          }
 
           switch (self.state) {
           case "HEADER":
@@ -1361,8 +1370,12 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
             self.state = "CUETEXT";
             continue;
           case "CUETEXT":
-            // 41-53 - Collect the cue text, create a cue, and add it to the output.
-            if (!line) {
+            var hasSubstring = line.indexOf("-->") !== -1;
+            // 34 - If we have an empty line then report the cue.
+            // 35 - If we have the special substring '-->' then report the cue,
+            // but do not collect the line as we need to process the current
+            // one as a new cue.
+            if (!line || hasSubstring && (alreadyCollectedLine = true)) {
               // We are done parsing self cue.
               self.oncue && self.oncue(self.cue);
               self.cue = null;
