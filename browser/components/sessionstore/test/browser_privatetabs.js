@@ -34,10 +34,8 @@ add_task(function() {
     SyncHandlers.get(tab2.linkedBrowser).flush();
 
     info("Checking out state");
-    yield SessionSaver.run();
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
-    let data = yield OS.File.read(path);
-    let state = new TextDecoder().decode(data);
+    let state = yield promiseRecoveryFileContents();
+
     info("State: " + state);
     // Ensure that sessionstore.js only knows about the public tab
     ok(state.indexOf(URL_PUBLIC) != -1, "State contains public tab");
