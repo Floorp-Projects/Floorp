@@ -663,10 +663,13 @@ BluetoothAdapter::SetPairingConfirmation(const nsAString& aDeviceAddress,
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::EnableDisable(bool aEnable)
+BluetoothAdapter::EnableDisable(bool aEnable, ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE(global, nullptr);
+  if(!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
 
   nsRefPtr<Promise> promise = new Promise(global);
 
@@ -716,15 +719,15 @@ BluetoothAdapter::EnableDisable(bool aEnable)
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::Enable()
+BluetoothAdapter::Enable(ErrorResult& aRv)
 {
-  return EnableDisable(true);
+  return EnableDisable(true, aRv);
 }
 
 already_AddRefed<Promise>
-BluetoothAdapter::Disable()
+BluetoothAdapter::Disable(ErrorResult& aRv)
 {
-  return EnableDisable(false);
+  return EnableDisable(false, aRv);
 }
 
 BluetoothAdapterAttribute

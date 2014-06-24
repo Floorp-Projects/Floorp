@@ -124,9 +124,9 @@ public:
     SetAuthorization(const nsAString& aDeviceAddress, bool aAllow,
                      ErrorResult& aRv);
 
-  already_AddRefed<Promise> EnableDisable(bool aEnable);
-  already_AddRefed<Promise> Enable();
-  already_AddRefed<Promise> Disable();
+  already_AddRefed<Promise> EnableDisable(bool aEnable, ErrorResult& aRv);
+  already_AddRefed<Promise> Enable(ErrorResult& aRv);
+  already_AddRefed<Promise> Disable(ErrorResult& aRv);
 
   already_AddRefed<DOMRequest>
     Connect(BluetoothDevice& aDevice,

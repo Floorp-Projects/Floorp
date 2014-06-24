@@ -117,8 +117,10 @@ interface BluetoothAdapter : EventTarget {
    * enabled/disabled.
    */
   // Promise<void>
+  [Throws]
   Promise enable();
   // Promise<void>
+  [Throws]
   Promise disable();
 
   /**
