@@ -8,6 +8,7 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/StyleAnimationValue.h"
 
 #include "nsPresContext.h"
 #include "nsRuleProcessorData.h"
@@ -15,7 +16,6 @@
 #include "nsStyleChangeList.h"
 #include "nsCSSRules.h"
 #include "RestyleManager.h"
-#include "nsStyleAnimation.h"
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
 #include "nsIDocument.h"

@@ -12,7 +12,7 @@
 #include "nsPresContext.h"
 #include "nsRuleNode.h"
 #include "nsCSSKeywords.h"
-#include "nsStyleAnimation.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "gfxMatrix.h"
 
 using namespace mozilla;
