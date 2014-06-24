@@ -64,8 +64,8 @@
   <deck id="main-deck" flex="1">
     <vbox flex="1" id="source-deckitem">
       <hbox id="sources-body" flex="1">
-        <vbox width="250">
-          <vbox id="sources" flex="1">
+        <vbox width="250" id="sources">
+          <vbox flex="1">
           </vbox>
           <toolbar id="project-toolbar" class="devtools-toolbar" hidden="true"></toolbar>
         </vbox>
