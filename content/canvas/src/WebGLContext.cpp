@@ -155,8 +155,9 @@ WebGLObserver::UnregisterMemoryPressureEvent()
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
 
-    MOZ_ASSERT(observerService);
-
+    // Do not assert on observerService here. This might be triggered by
+    // the cycle collector at a late enough time, that XPCOM services are
+    // no longer available. See bug 1029504.
     if (observerService) {
         observerService->RemoveObserver(this, "memory-pressure");
     }
