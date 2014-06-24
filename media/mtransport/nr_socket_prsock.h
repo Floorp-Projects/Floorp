@@ -130,10 +130,6 @@ class NrSocket : public NrSocketBase,
                  public nsASocketHandler {
 public:
   NrSocket() : fd_(nullptr) {}
-  virtual ~NrSocket() {
-    if (fd_)
-      PR_Close(fd_);
-  }
 
   // Implement nsASocket
   virtual void OnSocketReady(PRFileDesc *fd, int16_t outflags);
@@ -165,6 +161,11 @@ public:
   virtual int read(void* buf, size_t maxlen, size_t *len);
 
 private:
+  virtual ~NrSocket() {
+    if (fd_)
+      PR_Close(fd_);
+  }
+
   DISALLOW_COPY_ASSIGN(NrSocket);
 
   PRFileDesc *fd_;
@@ -202,7 +203,6 @@ public:
   NS_DECL_NSIUDPSOCKETINTERNAL
 
   NrSocketIpc(const nsCOMPtr<nsIEventTarget> &main_thread);
-  virtual ~NrSocketIpc() {};
 
   // Implementations of the NrSocketBase APIs
   virtual int create(nr_transport_addr *addr);
@@ -218,6 +218,8 @@ public:
   virtual int read(void* buf, size_t maxlen, size_t *len);
 
 private:
+  virtual ~NrSocketIpc() {};
+
   DISALLOW_COPY_ASSIGN(NrSocketIpc);
 
   // Main thread executors of the NrSocketBase APIs
