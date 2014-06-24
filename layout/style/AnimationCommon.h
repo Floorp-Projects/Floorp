@@ -436,6 +436,9 @@ struct CommonElementAnimationData : public PRCList
     mElement->DeleteProperty(mElementProperty);
   }
 
+  static void PropertyDtor(void *aObject, nsIAtom *aPropertyName,
+                           void *aPropertyValue, void *aData);
+
   // This updates mNeedsRefreshes so the caller may need to check
   // for changes to values (for example, nsAnimationManager provides
   // CheckNeedsRefresh to register or unregister from observing the refresh
