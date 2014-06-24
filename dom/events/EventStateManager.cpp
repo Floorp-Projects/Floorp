@@ -5071,7 +5071,7 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   if (IsInTransaction()) {
     // If wheel event type is changed, reset the values.
     if (mHandlingDeltaMode != aEvent->deltaMode ||
-        mIsNoLineOrPageDeltaDevice != aEvent->mIsNoLineOrPageDelta) {
+        mHandlingPixelOnlyDevice != aEvent->isPixelOnlyDevice) {
       Reset();
     } else {
       // If the delta direction is changed, we should reset only the
@@ -5086,12 +5086,13 @@ EventStateManager::DeltaAccumulator::InitLineOrPageDelta(
   }
 
   mHandlingDeltaMode = aEvent->deltaMode;
-  mIsNoLineOrPageDeltaDevice = aEvent->mIsNoLineOrPageDelta;
+  mHandlingPixelOnlyDevice = aEvent->isPixelOnlyDevice;
 
-  // If it's handling neither a device that does not provide line or page deltas
-  // nor delta values multiplied by prefs, we must not modify lineOrPageDelta
+  // If it's handling neither pixel scroll mode for pixel only device nor
+  // delta values multiplied by prefs, we must not modify lineOrPageDelta
   // values.
-  if (!mIsNoLineOrPageDeltaDevice &&
+  if (!(mHandlingDeltaMode == nsIDOMWheelEvent::DOM_DELTA_PIXEL &&
+        mHandlingPixelOnlyDevice) &&
       !EventStateManager::WheelPrefs::GetInstance()->
         NeedToComputeLineOrPageDelta(aEvent)) {
     // Set the delta values to mX and mY.  They would be used when above block
@@ -5152,7 +5153,7 @@ EventStateManager::DeltaAccumulator::Reset()
   mX = mY = 0.0;
   mPendingScrollAmountX = mPendingScrollAmountY = 0.0;
   mHandlingDeltaMode = UINT32_MAX;
-  mIsNoLineOrPageDeltaDevice = false;
+  mHandlingPixelOnlyDevice = false;
 }
 
 nsIntPoint
