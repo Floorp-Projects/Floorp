@@ -27,5 +27,8 @@ startTest(function() {
     .then(() => testEmergencyLabel("911", true))
     .then(() => testEmergencyLabel("0912345678", false))
     .then(() => testEmergencyLabel("777", false))
+    .then(null, () => {
+      ok(false, 'promise rejects during test.');
+    })
     .then(finish);
 });
