@@ -729,6 +729,19 @@ CommonElementAnimationData::LogAsyncAnimationFailure(nsCString& aMessage,
   printf_stderr(aMessage.get());
 }
 
+/*static*/ void
+CommonElementAnimationData::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
+                                         void *aPropertyValue, void *aData)
+{
+  CommonElementAnimationData* data =
+    static_cast<CommonElementAnimationData*>(aPropertyValue);
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(!data->mCalledPropertyDtor, "can't call dtor twice");
+  data->mCalledPropertyDtor = true;
+#endif
+  delete data;
+}
+
 void
 CommonElementAnimationData::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                                                EnsureStyleRuleFlags aFlags)
