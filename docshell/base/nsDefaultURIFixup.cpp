@@ -23,12 +23,18 @@
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 
+// Used to check if external protocol schemes are usable
+#include "nsCExternalHandlerService.h"
+#include "nsIExternalProtocolService.h"
+
 using namespace mozilla;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsDefaultURIFixup, nsIURIFixup)
 
+static bool sInitializedPrefCaches = false;
 static bool sFixTypos = true;
+static bool sFixupKeywords = true;
 
 nsDefaultURIFixup::nsDefaultURIFixup()
 {
@@ -203,12 +209,19 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
 #endif
     }
 
-    // Check if we want to fix up common scheme typos.
-    rv = Preferences::AddBoolVarCache(&sFixTypos,
-                                      "browser.fixup.typo.scheme",
-                                      sFixTypos);
-    MOZ_ASSERT(NS_SUCCEEDED(rv),
-              "Failed to observe \"browser.fixup.typo.scheme\"");
+    if (!sInitializedPrefCaches) {
+      // Check if we want to fix up common scheme typos.
+      rv = Preferences::AddBoolVarCache(&sFixTypos,
+                                        "browser.fixup.typo.scheme",
+                                        sFixTypos);
+      MOZ_ASSERT(NS_SUCCEEDED(rv),
+                "Failed to observe \"browser.fixup.typo.scheme\"");
+
+      rv = Preferences::AddBoolVarCache(&sFixupKeywords, "keyword.enabled",
+                                        sFixupKeywords);
+      MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"keyword.enabled\"");
+      sInitializedPrefCaches = true;
+    }
 
     // Fix up common scheme typos.
     if (sFixTypos && (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
@@ -262,6 +275,27 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
             return rv;
         }
     }
+
+    if (*aURI && ourHandler == extHandler && sFixupKeywords &&
+        (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
+        nsCOMPtr<nsIExternalProtocolService> extProtService =
+            do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+        if (extProtService) {
+            bool handlerExists = false;
+            rv = extProtService->ExternalProtocolHandlerExists(scheme.get(), &handlerExists);
+            if (NS_FAILED(rv)) {
+                return rv;
+            }
+            // This basically means we're dealing with a theoretically valid
+            // URI... but we have no idea how to load it. (e.g. "christmas:humbug")
+            // It's more likely the user wants to search, and so we
+            // chuck this over to their preferred search provider instead:
+            if (!handlerExists) {
+                NS_RELEASE(*aURI);
+                KeywordToURI(uriString, aPostData, aURI);
+            }
+        }
+    }
     
     if (*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
@@ -271,16 +305,10 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
 
     // See if it is a keyword
     // Test whether keywords need to be fixed up
-    bool fixupKeywords = false;
-    if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
-        nsresult rv = Preferences::GetBool("keyword.enabled", &fixupKeywords);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-        if (fixupKeywords)
-        {
-            KeywordURIFixup(uriString, aPostData, aURI);
-            if(*aURI)
-                return NS_OK;
-        }
+    if (sFixupKeywords && (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP)) {
+        KeywordURIFixup(uriString, aPostData, aURI);
+        if(*aURI)
+            return NS_OK;
     }
 
     // Prune duff protocol schemes
@@ -337,7 +365,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
 
     // If we still haven't been able to construct a valid URI, try to force a
     // keyword match.  This catches search strings with '.' or ':' in them.
-    if (!*aURI && fixupKeywords)
+    if (!*aURI && sFixupKeywords)
     {
         KeywordToURI(aStringURI, aPostData, aURI);
         if(*aURI)
@@ -397,21 +425,21 @@ NS_IMETHODIMP nsDefaultURIFixup::KeywordToURI(const nsACString& aKeyword,
         searchSvc->GetDefaultEngine(getter_AddRefs(defaultEngine));
         if (defaultEngine) {
             nsCOMPtr<nsISearchSubmission> submission;
+            nsAutoString responseType;
             // We allow default search plugins to specify alternate
             // parameters that are specific to keyword searches.
             NS_NAMED_LITERAL_STRING(mozKeywordSearch, "application/x-moz-keywordsearch");
             bool supportsResponseType = false;
             defaultEngine->SupportsResponseType(mozKeywordSearch, &supportsResponseType);
-            if (supportsResponseType)
-              defaultEngine->GetSubmission(NS_ConvertUTF8toUTF16(keyword),
-                                           mozKeywordSearch,
-                                           NS_LITERAL_STRING("keyword"),
-                                           getter_AddRefs(submission));
-            else
-              defaultEngine->GetSubmission(NS_ConvertUTF8toUTF16(keyword),
-                                           EmptyString(),
-                                           NS_LITERAL_STRING("keyword"),
-                                           getter_AddRefs(submission));
+            if (supportsResponseType) {
+                responseType.Assign(mozKeywordSearch);
+            }
+
+            defaultEngine->GetSubmission(NS_ConvertUTF8toUTF16(keyword),
+                                         responseType,
+                                         NS_LITERAL_STRING("keyword"),
+                                         getter_AddRefs(submission));
+
             if (submission) {
                 nsCOMPtr<nsIInputStream> postData;
                 submission->GetPostData(getter_AddRefs(postData));
