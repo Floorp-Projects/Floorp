@@ -560,7 +560,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
-        if (hasMOVWT())
+        if (HasMOVWT())
             rs = L_MOVWT;
         else
             rs = L_LDR;
@@ -606,7 +606,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
-        if (hasMOVWT())
+        if (HasMOVWT())
             rs = L_MOVWT;
         else
             rs = L_LDR;
@@ -681,7 +681,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
 
     static size_t ToggledCallSize() {
-        if (hasMOVWT())
+        if (HasMOVWT())
             // Size of a movw, movt, nop/blx instruction.
             return 12;
         // Size of a ldr, nop/blx instruction
@@ -696,7 +696,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
         CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
-        ma_movPatchable(Imm32(imm.value), dest, Always, hasMOVWT() ? L_MOVWT : L_LDR);
+        ma_movPatchable(Imm32(imm.value), dest, Always, HasMOVWT() ? L_MOVWT : L_LDR);
         return label;
     }
     CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
