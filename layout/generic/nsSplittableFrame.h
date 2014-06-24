@@ -94,7 +94,6 @@ protected:
 
   /**
    * @see nsIFrame::GetLogicalSkipSides()
-   * @see nsIFrame::ApplyLogicalSkipSides()
    */
   virtual int GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
 
