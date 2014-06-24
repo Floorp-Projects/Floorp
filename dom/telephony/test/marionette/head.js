@@ -16,10 +16,10 @@ let emulator = (function() {
 
   // Overwritten it so people could not call this function directly.
   runEmulatorCmd = function() {
-    throw "Use emulator.runWithCallback(cmd, callback) instead of runEmulatorCmd";
+    throw "Use emulator.runCmdWithCallback(cmd, callback) instead of runEmulatorCmd";
   };
 
-  function run(cmd) {
+  function runCmd(cmd) {
     let deferred = Promise.defer();
 
     pendingCmdCount++;
@@ -36,8 +36,8 @@ let emulator = (function() {
     return deferred.promise;
   }
 
-  function runWithCallback(cmd, callback) {
-    run(cmd).then(result => {
+  function runCmdWithCallback(cmd, callback) {
+    runCmd(cmd).then(result => {
       if (callback && typeof callback === "function") {
         callback(result);
       }
@@ -60,8 +60,8 @@ let emulator = (function() {
   }
 
   return {
-    run: run,
-    runWithCallback: runWithCallback,
+    runCmd: runCmd,
+    runCmdWithCallback: runCmdWithCallback,
     waitFinish: waitFinish
   };
 }());
@@ -123,7 +123,7 @@ let emulator = (function() {
 
     return Promise.all(hangUpPromises)
       .then(() => {
-        return emulator.run("gsm clear");
+        return emulator.runCmd("gsm clear").then(waitForNoCall);
       })
       .then(waitForNoCall);
   }
@@ -361,7 +361,7 @@ let emulator = (function() {
    * @return A deferred promise.
    */
   function checkEmulatorCallList(expectedCallList) {
-    return emulator.run("gsm list").then(result => {
+    return emulator.runCmd("gsm list").then(result => {
       log("Call list is now: " + result);
       for (let i = 0; i < expectedCallList.length; ++i) {
         is(result[i], expectedCallList[i], "emulator calllist");
@@ -611,7 +611,7 @@ let emulator = (function() {
     numberPresentation = numberPresentation || "";
     name = name || "";
     namePresentation = namePresentation || "";
-    emulator.run("gsm call " + number + "," + numberPresentation + "," + name +
+    emulator.runCmd("gsm call " + number + "," + numberPresentation + "," + name +
                  "," + namePresentation);
     return deferred.promise;
   }
@@ -634,7 +634,7 @@ let emulator = (function() {
       checkEventCallState(event, call, "connected");
       deferred.resolve(call);
     };
-    emulator.run("gsm accept " + call.id.number);
+    emulator.runCmd("gsm accept " + call.id.number);
 
     return deferred.promise;
   }
@@ -657,7 +657,7 @@ let emulator = (function() {
       checkEventCallState(event, call, "disconnected");
       deferred.resolve(call);
     };
-    emulator.run("gsm cancel " + call.id.number);
+    emulator.runCmd("gsm cancel " + call.id.number);
 
     return deferred.promise;
   }
