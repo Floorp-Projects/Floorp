@@ -124,6 +124,16 @@ TranslationUI.prototype = {
       return;
     }
 
+    if (this.state == Translation.STATE_OFFER) {
+      if (this.detectedLanguage != aFrom)
+        TranslationHealthReport.recordDetectedLanguageChange(true);
+    } else {
+      if (this.translatedFrom != aFrom)
+        TranslationHealthReport.recordDetectedLanguageChange(false);
+      if (this.translatedTo != aTo)
+        TranslationHealthReport.recordTargetLanguageChange();
+    }
+
     this.state = Translation.STATE_TRANSLATING;
     this.translatedFrom = aFrom;
     this.translatedTo = aTo;
@@ -303,7 +313,7 @@ let TranslationHealthReport = {
 
   /**
    * Record a change of the detected language in the health report. This should
-   * only be called when actually executing a translation not every time the
+   * only be called when actually executing a translation, not every time the
    * user changes in the language in the UI.
    *
    * @param beforeFirstTranslation
@@ -313,8 +323,17 @@ let TranslationHealthReport = {
    *        the user has manually adjusted the detected language false should
    *        be passed.
    */
-  recordLanguageChange: function (beforeFirstTranslation) {
-    this._withProvider(provider => provider.recordLanguageChange(beforeFirstTranslation));
+  recordDetectedLanguageChange: function (beforeFirstTranslation) {
+    this._withProvider(provider => provider.recordDetectedLanguageChange(beforeFirstTranslation));
+  },
+
+  /**
+   * Record a change of the target language in the health report. This should
+   * only be called when actually executing a translation, not every time the
+   * user changes in the language in the UI.
+   */
+  recordTargetLanguageChange: function () {
+    this._withProvider(provider => provider.recordTargetLanguageChange());
   },
 
   /**
@@ -389,6 +408,7 @@ TranslationMeasurement1.prototype = Object.freeze({
     pageTranslatedCountsByLanguage: DAILY_LAST_TEXT_FIELD,
     detectedLanguageChangedBefore: DAILY_COUNTER_FIELD,
     detectedLanguageChangedAfter: DAILY_COUNTER_FIELD,
+    targetLanguageChanged: DAILY_COUNTER_FIELD,
     deniedTranslationOffer: DAILY_COUNTER_FIELD,
     showOriginalContent: DAILY_COUNTER_FIELD,
     detectLanguageEnabled: DAILY_LAST_NUMERIC_FIELD,
@@ -514,7 +534,7 @@ TranslationProvider.prototype = Object.freeze({
     }.bind(this));
   },
 
-  recordLanguageChange: function (beforeFirstTranslation) {
+  recordDetectedLanguageChange: function (beforeFirstTranslation) {
     let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
                                 TranslationMeasurement1.prototype.version);
 
@@ -524,6 +544,15 @@ TranslationProvider.prototype = Object.freeze({
         } else {
           yield m.incrementDailyCounter("detectedLanguageChangedAfter");
         }
+    }.bind(this));
+  },
+
+  recordTargetLanguageChange: function () {
+    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
+                                TranslationMeasurement1.prototype.version);
+
+    return this._enqueueTelemetryStorageTask(function* recordTask() {
+      yield m.incrementDailyCounter("targetLanguageChanged");
     }.bind(this));
   },
 
