@@ -36,17 +36,20 @@ AlarmDB.prototype = {
     this.initDBHelper(ALARMDB_NAME, ALARMDB_VERSION, [ALARMSTORE_NAME]);
   },
 
-  upgradeSchema: function upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
+  upgradeSchema: function upgradeSchema(aTransaction, aDb,
+                                        aOldVersion, aNewVersion) {
     debug("upgradeSchema()");
 
-    let objectStore = aDb.createObjectStore(ALARMSTORE_NAME, { keyPath: "id", autoIncrement: true });
+    let objStore =
+      aDb.createObjectStore(ALARMSTORE_NAME,
+                            { keyPath: "id", autoIncrement: true });
 
-    objectStore.createIndex("date",           "date",           { unique: false });
-    objectStore.createIndex("ignoreTimezone", "ignoreTimezone", { unique: false });
-    objectStore.createIndex("timezoneOffset", "timezoneOffset", { unique: false });
-    objectStore.createIndex("data",           "data",           { unique: false });
-    objectStore.createIndex("pageURL",        "pageURL",        { unique: false });
-    objectStore.createIndex("manifestURL",    "manifestURL",    { unique: false });
+    objStore.createIndex("date",           "date",           { unique: false });
+    objStore.createIndex("ignoreTimezone", "ignoreTimezone", { unique: false });
+    objStore.createIndex("timezoneOffset", "timezoneOffset", { unique: false });
+    objStore.createIndex("data",           "data",           { unique: false });
+    objStore.createIndex("pageURL",        "pageURL",        { unique: false });
+    objStore.createIndex("manifestURL",    "manifestURL",    { unique: false });
 
     debug("Created object stores and indexes");
   },
@@ -62,19 +65,13 @@ AlarmDB.prototype = {
   add: function add(aAlarm, aSuccessCb, aErrorCb) {
     debug("add()");
 
-    this.newTxn(
-      "readwrite",
-      ALARMSTORE_NAME,
-      function txnCb(aTxn, aStore) {
-        debug("Going to add " + JSON.stringify(aAlarm));
-        aStore.put(aAlarm).onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
-          debug("Request successful. New record ID: " + aTxn.result);
-        };
-      },
-      aSuccessCb,
-      aErrorCb
-    );
+    this.newTxn("readwrite", ALARMSTORE_NAME, function txnCb(aTxn, aStore) {
+      debug("Going to add " + JSON.stringify(aAlarm));
+      aStore.put(aAlarm).onsuccess = function setTxnResult(aEvent) {
+        aTxn.result = aEvent.target.result;
+        debug("Request successful. New record ID: " + aTxn.result);
+      };
+    }, aSuccessCb, aErrorCb);
   },
 
   /**
@@ -92,33 +89,27 @@ AlarmDB.prototype = {
   remove: function remove(aId, aManifestURL, aSuccessCb, aErrorCb) {
     debug("remove()");
 
-    this.newTxn(
-      "readwrite",
-      ALARMSTORE_NAME,
-      function txnCb(aTxn, aStore) {
-        debug("Going to remove " + aId);
+    this.newTxn("readwrite", ALARMSTORE_NAME, function txnCb(aTxn, aStore) {
+      debug("Going to remove " + aId);
 
-        // Look up the existing record and compare the manifestURL
-        // to see if the alarm to be removed belongs to this app.
-        aStore.get(aId).onsuccess = function doRemove(aEvent) {
-          let alarm = aEvent.target.result;
+      // Look up the existing record and compare the manifestURL
+      // to see if the alarm to be removed belongs to this app.
+      aStore.get(aId).onsuccess = function doRemove(aEvent) {
+        let alarm = aEvent.target.result;
 
-          if (!alarm) {
-            debug("Alarm doesn't exist. No need to remove it.");
-            return;
-          }
+        if (!alarm) {
+          debug("Alarm doesn't exist. No need to remove it.");
+          return;
+        }
 
-          if (aManifestURL && aManifestURL != alarm.manifestURL) {
-            debug("Cannot remove the alarm added by other apps.");
-            return;
-          }
+        if (aManifestURL && aManifestURL != alarm.manifestURL) {
+          debug("Cannot remove the alarm added by other apps.");
+          return;
+        }
 
-          aStore.delete(aId);
-        };
-      },
-      aSuccessCb,
-      aErrorCb
-    );
+        aStore.delete(aId);
+      };
+    }, aSuccessCb, aErrorCb);
   },
 
   /**
@@ -134,22 +125,16 @@ AlarmDB.prototype = {
   getAll: function getAll(aManifestURL, aSuccessCb, aErrorCb) {
     debug("getAll()");
 
-    this.newTxn(
-      "readonly",
-      ALARMSTORE_NAME,
-      function txnCb(aTxn, aStore) {
-        if (!aTxn.result) {
-          aTxn.result = [];
-        }
+    this.newTxn("readonly", ALARMSTORE_NAME, function txnCb(aTxn, aStore) {
+      if (!aTxn.result) {
+        aTxn.result = [];
+      }
 
-        let index = aStore.index("manifestURL");
-        index.mozGetAll(aManifestURL).onsuccess = function setTxnResult(aEvent) {
-          aTxn.result = aEvent.target.result;
-          debug("Request successful. Record count: " + aTxn.result.length);
-        };
-      },
-      aSuccessCb,
-      aErrorCb
-    );
+      let index = aStore.index("manifestURL");
+      index.mozGetAll(aManifestURL).onsuccess = function setTxnResult(aEvent) {
+        aTxn.result = aEvent.target.result;
+        debug("Request successful. Record count: " + aTxn.result.length);
+      };
+    }, aSuccessCb, aErrorCb);
   }
 };

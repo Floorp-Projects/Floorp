@@ -10,29 +10,6 @@ function run_test() {
 /**
  * Helper function.
  */
-function newUint8Worker() {
-  let worker = newWorker();
-  let index = 0; // index for read
-  let buf = [];
-  let context = worker.ContextPool._contexts[0];
-
-  context.Buf.writeUint8 = function(value) {
-    buf.push(value);
-  };
-
-  context.Buf.readUint8 = function() {
-    return buf[index++];
-  };
-
-  context.Buf.seekIncoming = function(offset) {
-    index += offset;
-  };
-
-  worker.debug = do_print;
-
-  return worker;
-}
-
 function newUint8SupportOutgoingIndexWorker() {
   let worker = newWorker();
   let index = 4;          // index for read
