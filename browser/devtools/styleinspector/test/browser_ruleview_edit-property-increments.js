@@ -34,7 +34,7 @@ function createDocument() {
 function* testMarginIncrements(view) {
   info("Testing keyboard increments on the margin property");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let marginPropEditor = idRuleEditor.rule.textProps[0].editor;
 
   yield runIncrementTest(marginPropEditor, view, {
@@ -52,7 +52,7 @@ function* testMarginIncrements(view) {
 function* testVariousUnitIncrements(view) {
   info("Testing keyboard increments on values with various units");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
 
   yield runIncrementTest(paddingPropEditor, view, {
@@ -71,7 +71,7 @@ function* testVariousUnitIncrements(view) {
 function* testHexIncrements(view) {
   info("Testing keyboard increments with hex colors");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let hexColorPropEditor = idRuleEditor.rule.textProps[2].editor;
 
   yield runIncrementTest(hexColorPropEditor, view, {
@@ -87,7 +87,7 @@ function* testHexIncrements(view) {
 function* testRgbIncrements(view) {
   info("Testing keyboard increments with rgb colors");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let rgbColorPropEditor = idRuleEditor.rule.textProps[3].editor;
 
   yield runIncrementTest(rgbColorPropEditor, view, {
@@ -103,7 +103,7 @@ function* testRgbIncrements(view) {
 function* testShorthandIncrements(view) {
   info("Testing keyboard increments within shorthand values");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let paddingPropEditor = idRuleEditor.rule.textProps[1].editor;
 
   yield runIncrementTest(paddingPropEditor, view, {
@@ -119,7 +119,7 @@ function* testShorthandIncrements(view) {
 function* testOddCases(view) {
   info("Testing some more odd cases");
 
-  let idRuleEditor = view.element.children[0]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 0);
   let marginPropEditor = idRuleEditor.rule.textProps[0].editor;
 
   yield runIncrementTest(marginPropEditor, view, {

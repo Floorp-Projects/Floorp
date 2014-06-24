@@ -40,7 +40,7 @@ let test = asyncTest(function*() {
 function* testEditProperty(view, name, value) {
   info("Test editing existing property name/value fields");
 
-  let idRuleEditor = view.element.children[1]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing an existing property name in the rule-view");

@@ -595,6 +595,18 @@ var StyleRuleActor = protocol.ActorClass({
   // to which this rule belongs.
   get marshallPool() this.pageStyle,
 
+  getDocument: function(sheet) {
+    let document;
+
+    if (sheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
+      document = sheet.ownerNode;
+    } else {
+      document = sheet.ownerNode.ownerDocument;
+    }
+
+    return document;
+  },
+
   toString: function() "[StyleRuleActor for " + this.rawRule + "]",
 
   form: function(detail) {
@@ -677,11 +689,7 @@ var StyleRuleActor = protocol.ActorClass({
         parentStyleSheet = parentStyleSheet.ownerRule.parentStyleSheet;
       }
 
-      if (parentStyleSheet.ownerNode instanceof Ci.nsIDOMHTMLDocument) {
-        document = parentStyleSheet.ownerNode;
-      } else {
-        document = parentStyleSheet.ownerNode.ownerDocument;
-      }
+      document = this.getDocument(parentStyleSheet);
     }
 
     let tempElement = document.createElement("div");
@@ -700,7 +708,63 @@ var StyleRuleActor = protocol.ActorClass({
   }, {
     request: { modifications: Arg(0, "array:json") },
     response: { rule: RetVal("domstylerule") }
-  })
+  }),
+
+  /**
+   * Removes the current rule and inserts a new rule with the new selector
+   * into the parent style sheet.
+   * @param string value
+   *        The new selector value
+   * @returns boolean
+   *        Returns a boolean if the selector in the stylesheet was modified,
+   *        and false otherwise
+   */
+  modifySelector: method(function(value) {
+    if (this.type === ELEMENT_STYLE) {
+      return false;
+    }
+
+    let rule = this.rawRule;
+    let parentStyleSheet = rule.parentStyleSheet;
+    let document = this.getDocument(parentStyleSheet);
+    // Extract the selector, and pseudo elements and classes
+    let [selector, pseudoProp] = value.split(/(:{1,2}.+$)/);
+    let selectorElement;
+
+    try {
+      selectorElement = document.querySelector(selector);
+    } catch (e) {
+      return false;
+    }
+
+    // Check if the selector is valid and not the same as the original
+    // selector
+    if (selectorElement && rule.selectorText !== value) {
+      let cssRules = parentStyleSheet.cssRules;
+
+      // Delete the currently selected rule
+      let i = 0;
+      for (let cssRule of cssRules) {
+        if (rule === cssRule) {
+          parentStyleSheet.deleteRule(i);
+          break;
+        }
+
+        i++;
+      }
+
+      // Inserts the new style rule into the current style sheet
+      let ruleText = rule.cssText.slice(rule.selectorText.length).trim();
+      parentStyleSheet.insertRule(value + " " + ruleText, i);
+
+      return true;
+    } else {
+      return false;
+    }
+  }, {
+    request: { selector: Arg(0, "string") },
+    response: { isModified: RetVal("boolean") },
+  }),
 });
 
 /**
