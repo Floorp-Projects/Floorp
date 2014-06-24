@@ -1628,6 +1628,7 @@ Example
       "detectLanguageEnabled": 1,
       "showTranslationUI": 1,
       "translationOpportunityCount": 134,
+      "missedTranslationOpportunityCount": 32,
       "pageTranslatedCount": 6,
       "charactersTranslatedCount": "1126",
       "detectedLanguageChangedBefore": 1,
@@ -1638,6 +1639,11 @@ Example
       "translationOpportunityCountsByLanguage": {
         "fr": 100,
         "es": 34
+      },
+      "missedTranslationOpportunityCountsByLanguage": {
+        "it": 20,
+        "nl": 10,
+        "fi": 2
       },
       "pageTranslatedCountsByLanguage": {
         "fr": {
