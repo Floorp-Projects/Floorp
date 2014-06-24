@@ -33,7 +33,6 @@ class nsStyleSheetService MOZ_FINAL
 {
  public:
   nsStyleSheetService();
-  ~nsStyleSheetService();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTYLESHEETSERVICE
@@ -51,6 +50,7 @@ class nsStyleSheetService MOZ_FINAL
   static nsStyleSheetService *gInstance;
 
  private:
+  ~nsStyleSheetService();
 
   void RegisterFromEnumerator(nsICategoryManager  *aManager,
                                           const char          *aCategory,

@@ -127,6 +127,8 @@ TiledContentClient::UseTiledLayerBuffer(TiledBufferType aType)
 }
 
 SharedFrameMetricsHelper::SharedFrameMetricsHelper()
+  : mLastProgressiveUpdateWasLowPrecision(false)
+  , mProgressiveUpdateWasInDanger(false)
 {
   MOZ_COUNT_CTOR(SharedFrameMetricsHelper);
 }
@@ -185,6 +187,17 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
 
   aViewTransform = ComputeViewTransform(contentMetrics, compositorMetrics);
 
+  // Reset the checkerboard risk flag when switching to low precision
+  // rendering.
+  if (aLowPrecision && !mLastProgressiveUpdateWasLowPrecision) {
+    // Skip low precision rendering until we're at risk of checkerboarding.
+    if (!mProgressiveUpdateWasInDanger) {
+      return true;
+    }
+    mProgressiveUpdateWasInDanger = false;
+  }
+  mLastProgressiveUpdateWasLowPrecision = aLowPrecision;
+
   // Always abort updates if the resolution has changed. There's no use
   // in drawing at the incorrect resolution.
   if (!FuzzyEquals(compositorMetrics.GetZoom().scale, contentMetrics.GetZoom().scale)) {
@@ -204,20 +217,23 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     return false;
   }
 
-  bool scrollUpdatePending = contentMetrics.GetScrollOffsetUpdated() &&
-      contentMetrics.GetScrollGeneration() != compositorMetrics.GetScrollGeneration();
-  // If scrollUpdatePending is true, then that means the content-side
-  // metrics has a new scroll offset that is going to be forced into the
-  // compositor but it hasn't gotten there yet.
-  // Even though right now comparing the metrics might indicate we're
-  // about to checkerboard (and that's true), the checkerboarding will
-  // disappear as soon as the new scroll offset update is processed
-  // on the compositor side. To avoid leaving things in a low-precision
-  // paint, we need to detect and handle this case (bug 1026756).
-  if (!aLowPrecision && !scrollUpdatePending && AboutToCheckerboard(contentMetrics, compositorMetrics)) {
-    TILING_PRLOG_OBJ(("TILING: Checkerboard abort content %s\n", tmpstr.get()), contentMetrics);
-    TILING_PRLOG_OBJ(("TILING: Checkerboard abort compositor %s\n", tmpstr.get()), compositorMetrics);
-    return true;
+  // When not a low precision pass and the page is in danger of checker boarding
+  // abort update.
+  if (!aLowPrecision && !mProgressiveUpdateWasInDanger) {
+    bool scrollUpdatePending = contentMetrics.GetScrollOffsetUpdated() &&
+        contentMetrics.GetScrollGeneration() != compositorMetrics.GetScrollGeneration();
+    // If scrollUpdatePending is true, then that means the content-side
+    // metrics has a new scroll offset that is going to be forced into the
+    // compositor but it hasn't gotten there yet.
+    // Even though right now comparing the metrics might indicate we're
+    // about to checkerboard (and that's true), the checkerboarding will
+    // disappear as soon as the new scroll offset update is processed
+    // on the compositor side. To avoid leaving things in a low-precision
+    // paint, we need to detect and handle this case (bug 1026756).
+    if (!scrollUpdatePending && AboutToCheckerboard(contentMetrics, compositorMetrics)) {
+      mProgressiveUpdateWasInDanger = true;
+      return true;
+    }
   }
 
   // Abort drawing stale low-precision content if there's a more recent
@@ -233,13 +249,29 @@ bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                                               const FrameMetrics& aCompositorMetrics)
 {
-  CSSRect painted =
-        (aContentMetrics.mCriticalDisplayPort.IsEmpty() ? aContentMetrics.mDisplayPort : aContentMetrics.mCriticalDisplayPort)
-        + aContentMetrics.GetScrollOffset();
-  // Inflate painted by some small epsilon to deal with rounding
-  // error. We should replace this with a FuzzyContains function.
-  painted.Inflate(0.01f);
-  CSSRect showing = CSSRect(aCompositorMetrics.GetScrollOffset(), aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
+  // The size of the painted area is originally computed in layer pixels in layout, but then
+  // converted to app units and then back to CSS pixels before being put in the FrameMetrics.
+  // This process can introduce some rounding error, so we inflate the rect by one app unit
+  // to account for that.
+  CSSRect painted = (aContentMetrics.mCriticalDisplayPort.IsEmpty()
+                      ? aContentMetrics.mDisplayPort
+                      : aContentMetrics.mCriticalDisplayPort)
+                    + aContentMetrics.GetScrollOffset();
+  painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
+
+  // Inflate the rect by the danger zone. See the description of the danger zone prefs
+  // in AsyncPanZoomController.cpp for an explanation of this.
+  CSSRect showing = CSSRect(aCompositorMetrics.GetScrollOffset(),
+                            aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
+  showing.Inflate(LayerSize(gfxPrefs::APZDangerZoneX(), gfxPrefs::APZDangerZoneY())
+                  / aCompositorMetrics.LayersPixelsPerCSSPixel());
+
+  // Clamp both rects to the scrollable rect, because having either of those
+  // exceed the scrollable rect doesn't make sense, and could lead to false
+  // positives.
+  painted = painted.Intersect(aContentMetrics.mScrollableRect);
+  showing = showing.Intersect(aContentMetrics.mScrollableRect);
+
   return !painted.Contains(showing);
 }
 

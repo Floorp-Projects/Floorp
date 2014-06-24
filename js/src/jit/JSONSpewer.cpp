@@ -423,8 +423,8 @@ JSONSpewer::spewIntervals(LinearScanAllocator *regalloc)
 
                         for (size_t j = 0; j < live->numRanges(); j++) {
                             beginObject();
-                            integerProperty("start", live->getRange(j)->from.pos());
-                            integerProperty("end", live->getRange(j)->to.pos());
+                            integerProperty("start", live->getRange(j)->from.bits());
+                            integerProperty("end", live->getRange(j)->to.bits());
                             endObject();
                         }
 

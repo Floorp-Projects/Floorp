@@ -419,7 +419,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void appendCallSite(const CallSiteDesc &desc) {
         // Add an extra sizeof(void*) to include the return address that was
         // pushed by the call instruction (see CallSite::stackDepth).
-        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + sizeof(void*)));
+        enoughMemory_ &= append(CallSite(desc, currentOffset(), framePushed_ + AsmJSFrameSize));
     }
 
     void call(const CallSiteDesc &desc, const Register reg) {
@@ -690,6 +690,10 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchTestString(Condition cond, const ValueOperand &value, Label *label);
     void branchTestString(Condition cond, Register tag, Label *label);
     void branchTestString(Condition cond, const BaseIndex &src, Label *label);
+
+    void branchTestSymbol(Condition cond, const ValueOperand &value, Label *label);
+    void branchTestSymbol(Condition cond, const Register &tag, Label *label);
+    void branchTestSymbol(Condition cond, const BaseIndex &src, Label *label);
 
     void branchTestUndefined(Condition cond, const ValueOperand &value, Label *label);
     void branchTestUndefined(Condition cond, Register tag, Label *label);

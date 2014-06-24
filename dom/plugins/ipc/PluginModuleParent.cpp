@@ -1759,6 +1759,7 @@ public:
     {}
 
 private:
+    ~PluginProfilerObserver() {}
     PluginModuleParent* mPmp;
 };
 

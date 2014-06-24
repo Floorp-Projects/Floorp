@@ -159,11 +159,14 @@ public:
    *  after the construction of the editor class.
    */
   nsEditor();
+
+protected:
   /** The default destructor. This should suffice. Should this be pure virtual 
    *  for someone to derive from the nsEditor later? I don't believe so.
    */
   virtual ~nsEditor();
 
+public:
 //Interfaces for addref and release and queryinterface
 //NOTE: Use   NS_DECL_ISUPPORTS_INHERITED in any class inherited from nsEditor
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

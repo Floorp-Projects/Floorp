@@ -71,6 +71,7 @@ enum JSType {
     JSTYPE_NUMBER,              /* number */
     JSTYPE_BOOLEAN,             /* boolean */
     JSTYPE_NULL,                /* null */
+    JSTYPE_SYMBOL,              /* symbol */
     JSTYPE_LIMIT
 };
 
@@ -104,6 +105,7 @@ enum JSIterateOp {
 enum JSGCTraceKind {
     JSTRACE_OBJECT,
     JSTRACE_STRING,
+    JSTRACE_SYMBOL,
     JSTRACE_SCRIPT,
 
     /*
@@ -343,6 +345,7 @@ enum ThingRootKind
     THING_ROOT_BASE_SHAPE,
     THING_ROOT_TYPE_OBJECT,
     THING_ROOT_STRING,
+    THING_ROOT_SYMBOL,
     THING_ROOT_JIT_CODE,
     THING_ROOT_SCRIPT,
     THING_ROOT_LAZY_SCRIPT,
@@ -386,6 +389,7 @@ template <> struct RootKind<JSObject *> : SpecificRootKind<JSObject *, THING_ROO
 template <> struct RootKind<JSFlatString *> : SpecificRootKind<JSFlatString *, THING_ROOT_STRING> {};
 template <> struct RootKind<JSFunction *> : SpecificRootKind<JSFunction *, THING_ROOT_OBJECT> {};
 template <> struct RootKind<JSString *> : SpecificRootKind<JSString *, THING_ROOT_STRING> {};
+template <> struct RootKind<JS::Symbol *> : SpecificRootKind<JS::Symbol *, THING_ROOT_SYMBOL> {};
 template <> struct RootKind<JSScript *> : SpecificRootKind<JSScript *, THING_ROOT_SCRIPT> {};
 template <> struct RootKind<jsid> : SpecificRootKind<jsid, THING_ROOT_ID> {};
 template <> struct RootKind<JS::Value> : SpecificRootKind<JS::Value, THING_ROOT_VALUE> {};

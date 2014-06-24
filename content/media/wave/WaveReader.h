@@ -48,6 +48,8 @@ public:
     return true;
   }
 
+  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+
 private:
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
   bool LoadRIFFChunk();

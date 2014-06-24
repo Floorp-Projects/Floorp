@@ -46,13 +46,10 @@ NS_IMPL_ADDREF_INHERITED(BluetoothDevice, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(BluetoothDevice, DOMEventTargetHelper)
 
 BluetoothDevice::BluetoothDevice(nsPIDOMWindow* aWindow,
-                                 const nsAString& aAdapterPath,
                                  const BluetoothValue& aValue)
   : DOMEventTargetHelper(aWindow)
-  , BluetoothPropertyContainer(BluetoothObjectType::TYPE_DEVICE)
   , mJsUuids(nullptr)
   , mJsServices(nullptr)
-  , mAdapterPath(aAdapterPath)
   , mIsRooted(false)
 {
   MOZ_ASSERT(aWindow);
@@ -115,9 +112,6 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   const BluetoothValue& value = aValue.value();
   if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
-  } else if (name.EqualsLiteral("Path")) {
-    MOZ_ASSERT(value.get_nsString().Length() > 0);
-    mPath = value.get_nsString();
   } else if (name.EqualsLiteral("Address")) {
     mAddress = value.get_nsString();
   } else if (name.EqualsLiteral("Class")) {
@@ -171,14 +165,12 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
 // static
 already_AddRefed<BluetoothDevice>
 BluetoothDevice::Create(nsPIDOMWindow* aWindow,
-                        const nsAString& aAdapterPath,
                         const BluetoothValue& aValue)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
 
-  nsRefPtr<BluetoothDevice> device =
-    new BluetoothDevice(aWindow, aAdapterPath, aValue);
+  nsRefPtr<BluetoothDevice> device = new BluetoothDevice(aWindow, aValue);
   return device.forget();
 }
 

@@ -34,6 +34,8 @@ public:
   NS_DECL_NSIXPCSCRIPTABLE
 
 protected:
+  virtual ~AsyncStatementParams() {}
+
   AsyncStatement *mStatement;
 
   friend class AsyncStatement;

@@ -40,6 +40,8 @@ public:
   void SetFrame(nsSVGImageFrame *frame) { mFrame = frame; }
 
 private:
+  ~nsSVGImageListener() {}
+
   nsSVGImageFrame *mFrame;
 };
 

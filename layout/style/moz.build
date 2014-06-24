@@ -45,7 +45,6 @@ EXPORTS += [
     'nsRuleNode.h',
     'nsRuleProcessorData.h',
     'nsRuleWalker.h',
-    'nsStyleAnimation.h',
     'nsStyleConsts.h',
     'nsStyleContext.h',
     'nsStyleCoord.h',
@@ -62,6 +61,7 @@ EXPORTS.mozilla += [
     'CSSVariableDeclarations.h',
     'CSSVariableResolver.h',
     'CSSVariableValues.h',
+    'StyleAnimationValue.h',
 ]
 
 EXPORTS.mozilla.dom += [
@@ -122,7 +122,6 @@ UNIFIED_SOURCES += [
     'nsROCSSPrimitiveValue.cpp',
     'nsRuleData.cpp',
     'nsRuleNode.cpp',
-    'nsStyleAnimation.cpp',
     'nsStyleContext.cpp',
     'nsStyleCoord.cpp',
     'nsStyleSet.cpp',
@@ -130,6 +129,7 @@ UNIFIED_SOURCES += [
     'nsStyleTransformMatrix.cpp',
     'nsStyleUtil.cpp',
     'nsTransitionManager.cpp',
+    'StyleAnimationValue.cpp',
     'StyleRule.cpp',
 ]
 

@@ -863,7 +863,7 @@ StructMetaTypeDescr::create(JSContext *cx,
 {
     // Obtain names of fields, which are the own properties of `fields`
     AutoIdVector ids(cx);
-    if (!GetPropertyNames(cx, fields, JSITER_OWNONLY, &ids))
+    if (!GetPropertyNames(cx, fields, JSITER_OWNONLY | JSITER_SYMBOLS, &ids))
         return nullptr;
 
     // Iterate through each field. Collect values for the various
@@ -1316,12 +1316,12 @@ DefineMetaTypeDescr(JSContext *cx,
     ctor = global->createConstructor(cx, T::construct, className, constructorLength);
     if (!ctor ||
         !LinkConstructorAndPrototype(cx, ctor, proto) ||
-        !DefinePropertiesAndBrand(cx, proto,
-                                  T::typeObjectProperties,
-                                  T::typeObjectMethods) ||
-        !DefinePropertiesAndBrand(cx, protoProto,
-                                  T::typedObjectProperties,
-                                  T::typedObjectMethods))
+        !DefinePropertiesAndFunctions(cx, proto,
+                                      T::typeObjectProperties,
+                                      T::typeObjectMethods) ||
+        !DefinePropertiesAndFunctions(cx, protoProto,
+                                      T::typedObjectProperties,
+                                      T::typedObjectMethods))
     {
         return nullptr;
     }

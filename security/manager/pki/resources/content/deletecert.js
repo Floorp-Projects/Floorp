@@ -60,16 +60,17 @@ function setWindowName()
   var confirReference = document.getElementById('confirm');
   var impactReference = document.getElementById('impact');
   document.title = title;
-  
+
   setText("confirm",confirm);
 
   var box=document.getElementById("certlist");
-  var text;
   for(var x=0;x<numberOfCerts;x++)
   {
-    text = document.createElement("text");
-    text.setAttribute("value", gParams.GetString(x+1));
-    box.appendChild(text);
+    var listItem = document.createElement("richlistitem");
+    var label = document.createElement("label");
+    label.setAttribute("value", gParams.GetString(x + 1));
+    listItem.appendChild(label);
+    box.appendChild(listItem);
   }
 
   setText("impact",impact);

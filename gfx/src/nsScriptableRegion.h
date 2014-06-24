@@ -22,6 +22,7 @@ public:
 	NS_DECL_NSISCRIPTABLEREGION
 
 private:
+        ~nsScriptableRegion() {}
 	nsIntRegion mRegion;
 };
 

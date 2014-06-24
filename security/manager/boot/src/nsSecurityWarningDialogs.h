@@ -19,11 +19,12 @@ public:
   NS_DECL_NSISECURITYWARNINGDIALOGS
 
   nsSecurityWarningDialogs();
-  virtual ~nsSecurityWarningDialogs();
 
   nsresult Init();
 
 protected:
+  virtual ~nsSecurityWarningDialogs();
+
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const char16_t *messageName,
                    const char16_t *showAgainName,

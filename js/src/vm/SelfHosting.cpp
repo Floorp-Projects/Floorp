@@ -150,12 +150,9 @@ intrinsic_AssertionFailed(JSContext *cx, unsigned argc, Value *vp)
         // try to dump the informative string
         JSString *str = ToString<CanGC>(cx, args[0]);
         if (str) {
-            const jschar *chars = str->getChars(cx);
-            if (chars) {
-                fprintf(stderr, "Self-hosted JavaScript assertion info: ");
-                JSString::dumpChars(chars, str->length());
-                fputc('\n', stderr);
-            }
+            fprintf(stderr, "Self-hosted JavaScript assertion info: ");
+            str->dumpCharsNoNewline();
+            fputc('\n', stderr);
         }
     }
 #endif
@@ -292,7 +289,12 @@ intrinsic_ParallelSpew(ThreadSafeContext *cx, unsigned argc, Value *vp)
     if (!inspector.ensureChars(cx, nogc))
         return false;
 
-    ScopedJSFreePtr<char> bytes(JS::CharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str());
+    ScopedJSFreePtr<char> bytes;
+    if (inspector.hasLatin1Chars())
+        bytes = JS::CharsToNewUTF8CharsZ(cx, inspector.latin1Range()).c_str();
+    else
+        bytes = JS::CharsToNewUTF8CharsZ(cx, inspector.twoByteRange()).c_str();
+
     parallel::Spew(parallel::SpewOps, bytes);
 
     args.rval().setUndefined();

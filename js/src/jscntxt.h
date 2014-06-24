@@ -387,6 +387,9 @@ class ExclusiveContext : public ThreadSafeContext
     JSCompartment *atomsCompartment() {
         return runtime_->atomsCompartment();
     }
+    SymbolRegistry &symbolRegistry() {
+        return runtime_->symbolRegistry();
+    }
     ScriptDataTable &scriptDataTable() {
         return runtime_->scriptDataTable();
     }

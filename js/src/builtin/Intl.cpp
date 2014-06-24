@@ -11,6 +11,8 @@
 
 #include "builtin/Intl.h"
 
+#include "mozilla/Range.h"
+
 #include <string.h>
 
 #include "jsapi.h"
@@ -43,6 +45,7 @@ using namespace js;
 
 using mozilla::IsFinite;
 using mozilla::IsNegativeZero;
+using mozilla::Range;
 
 #if ENABLE_INTL_API
 using icu::Locale;
@@ -534,10 +537,8 @@ class ScopedICUObject
     }
 };
 
-// As a small optimization (not important for correctness), this is the inline
-// capacity of a StringBuffer.
-static const size_t INITIAL_STRING_BUFFER_SIZE = 32;
-
+// The inline capacity we use for the jschar Vectors.
+static const size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
 /******************** Collator ********************/
 
@@ -954,19 +955,20 @@ intl_CompareStrings(JSContext *cx, UCollator *coll, HandleString str1, HandleStr
         return true;
     }
 
-    size_t length1 = str1->length();
-    const jschar *chars1 = str1->getChars(cx);
-    if (!chars1)
-        return false;
-    size_t length2 = str2->length();
-    const jschar *chars2 = str2->getChars(cx);
-    if (!chars2)
+    AutoStableStringChars stableChars1(cx);
+    if (!stableChars1.initTwoByte(cx, str1))
         return false;
 
-    UCollationResult uresult = ucol_strcoll(coll, JSCharToUChar(chars1),
-                                            length1, JSCharToUChar(chars2),
-                                            length2);
+    AutoStableStringChars stableChars2(cx);
+    if (!stableChars2.initTwoByte(cx, str2))
+        return false;
 
+    Range<const jschar> chars1 = stableChars1.twoByteRange();
+    Range<const jschar> chars2 = stableChars2.twoByteRange();
+
+    UCollationResult uresult = ucol_strcoll(coll,
+                                            JSCharToUChar(chars1.start().get()), chars1.length(),
+                                            JSCharToUChar(chars2.start().get()), chars2.length());
     int32_t res;
     switch (uresult) {
         case UCOL_LESS: res = -1; break;
@@ -1291,6 +1293,7 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
 
     // Sprinkle appropriate rooting flavor over things the GC might care about.
     RootedString currency(cx);
+    AutoStableStringChars stableChars(cx);
 
     // We don't need to look at numberingSystem - it can only be set via
     // the Unicode locale extension and is therefore already set on locale.
@@ -1306,8 +1309,10 @@ NewUNumberFormat(JSContext *cx, HandleObject numberFormat)
             return nullptr;
         currency = value.toString();
         MOZ_ASSERT(currency->length() == 3, "IsWellFormedCurrencyCode permits only length-3 strings");
-        // uCurrency remains owned by currency.
-        uCurrency = JSCharToUChar(JS_GetStringCharsZ(cx, currency));
+        if (!currency->ensureFlat(cx) || !stableChars.initTwoByte(cx, currency))
+            return nullptr;
+        // uCurrency remains owned by stableChars.
+        uCurrency = JSCharToUChar(stableChars.twoByteRange().start().get());
         if (!uCurrency)
             return nullptr;
 
@@ -1410,29 +1415,24 @@ intl_FormatNumber(JSContext *cx, UNumberFormat *nf, double x, MutableHandleValue
     if (IsNegativeZero(x))
         x = 0.0;
 
-    StringBuffer chars(cx);
-    if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
+    Vector<jschar, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = unum_formatDouble(nf, x, JSCharToUChar(chars.rawTwoByteBegin()),
-                                 INITIAL_STRING_BUFFER_SIZE, nullptr, &status);
+    int size = unum_formatDouble(nf, x, JSCharToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                                 nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        unum_formatDouble(nf, x, JSCharToUChar(chars.rawTwoByteBegin()),
-                          size, nullptr, &status);
+        unum_formatDouble(nf, x, JSCharToUChar(chars.begin()), size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
 
-    // Trim any unused characters.
-    if (!chars.resize(size))
-        return false;
-
-    RootedString str(cx, chars.finishString());
+    JSString *str = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
 
@@ -1778,11 +1778,17 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
     JSAutoByteString locale(cx, args[0].toString());
     if (!locale)
         return false;
-    RootedString jsskeleton(cx, args[1].toString());
-    const jschar *skeleton = JS_GetStringCharsZ(cx, jsskeleton);
-    if (!skeleton)
+
+    JSFlatString *skeletonFlat = args[1].toString()->ensureFlat(cx);
+    if (!skeletonFlat)
         return false;
-    uint32_t skeletonLen = u_strlen(JSCharToUChar(skeleton));
+
+    AutoStableStringChars stableChars(cx);
+    if (!stableChars.initTwoByte(cx, skeletonFlat))
+        return false;
+
+    Range<const jschar> skeletonChars = stableChars.twoByteRange();
+    uint32_t skeletonLen = u_strlen(JSCharToUChar(skeletonChars.start().get()));
 
     UErrorCode status = U_ZERO_ERROR;
     UDateTimePatternGenerator *gen = udatpg_open(icuLocale(locale.ptr()), &status);
@@ -1792,7 +1798,7 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
     }
     ScopedICUObject<UDateTimePatternGenerator> toClose(gen, udatpg_close);
 
-    int32_t size = udatpg_getBestPattern(gen, JSCharToUChar(skeleton),
+    int32_t size = udatpg_getBestPattern(gen, JSCharToUChar(skeletonChars.start().get()),
                                          skeletonLen, nullptr, 0, &status);
     if (U_FAILURE(status) && status != U_BUFFER_OVERFLOW_ERROR) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
@@ -1803,7 +1809,7 @@ js::intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp)
         return false;
     pattern[size] = '\0';
     status = U_ZERO_ERROR;
-    udatpg_getBestPattern(gen, JSCharToUChar(skeleton),
+    udatpg_getBestPattern(gen, JSCharToUChar(skeletonChars.start().get()),
                           skeletonLen, pattern, size, &status);
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
@@ -1851,11 +1857,16 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
     bool hasP;
     if (!JSObject::hasProperty(cx, internals, id, &hasP))
         return nullptr;
+
+    AutoStableStringChars timeZoneChars(cx);
     if (hasP) {
         if (!JSObject::getProperty(cx, internals, internals, cx->names().timeZone, &value))
             return nullptr;
         if (!value.isUndefined()) {
-            uTimeZone = JSCharToUChar(JS_GetStringCharsZ(cx, value.toString()));
+            JSFlatString *flat = value.toString()->ensureFlat(cx);
+            if (!flat || !timeZoneChars.initTwoByte(cx, flat))
+                return nullptr;
+            uTimeZone = JSCharToUChar(timeZoneChars.twoByteRange().start().get());
             if (!uTimeZone)
                 return nullptr;
             uTimeZoneLength = u_strlen(uTimeZone);
@@ -1863,7 +1874,13 @@ NewUDateFormat(JSContext *cx, HandleObject dateTimeFormat)
     }
     if (!JSObject::getProperty(cx, internals, internals, cx->names().pattern, &value))
         return nullptr;
-    uPattern = JSCharToUChar(JS_GetStringCharsZ(cx, value.toString()));
+
+    AutoStableStringChars patternChars(cx);
+    JSFlatString *flat = value.toString()->ensureFlat(cx);
+    if (!flat || !patternChars.initTwoByte(cx, flat))
+        return nullptr;
+
+    uPattern = JSCharToUChar(patternChars.twoByteRange().start().get());
     if (!uPattern)
         return nullptr;
     uPatternLength = u_strlen(uPattern);
@@ -1898,28 +1915,24 @@ intl_FormatDateTime(JSContext *cx, UDateFormat *df, double x, MutableHandleValue
         return false;
     }
 
-    StringBuffer chars(cx);
-    if (!chars.resize(INITIAL_STRING_BUFFER_SIZE))
+    Vector<jschar, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
         return false;
     UErrorCode status = U_ZERO_ERROR;
-    int size = udat_format(df, x, JSCharToUChar(chars.rawTwoByteBegin()), INITIAL_STRING_BUFFER_SIZE,
+    int size = udat_format(df, x, JSCharToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
                            nullptr, &status);
     if (status == U_BUFFER_OVERFLOW_ERROR) {
         if (!chars.resize(size))
             return false;
         status = U_ZERO_ERROR;
-        udat_format(df, x, JSCharToUChar(chars.rawTwoByteBegin()), size, nullptr, &status);
+        udat_format(df, x, JSCharToUChar(chars.begin()), size, nullptr, &status);
     }
     if (U_FAILURE(status)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
         return false;
     }
 
-    // Trim any unused characters.
-    if (!chars.resize(size))
-        return false;
-
-    RootedString str(cx, chars.finishString());
+    JSString *str = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
 

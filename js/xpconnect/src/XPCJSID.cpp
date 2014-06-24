@@ -204,6 +204,7 @@ nsJSID::NewID(const nsID& id)
 
 class SharedScriptableHelperForJSIID MOZ_FINAL : public nsIXPCScriptable
 {
+    ~SharedScriptableHelperForJSIID() {}
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE

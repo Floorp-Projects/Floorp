@@ -24,9 +24,10 @@ public:
   NS_DECL_INIDOMUTILS
 
   inDOMUtils();
-  virtual ~inDOMUtils();
 
 private:
+  virtual ~inDOMUtils();
+
   // aStyleContext must be released by the caller once he's done with aRuleNode.
   static nsresult GetRuleNodeForElement(mozilla::dom::Element* aElement,
                                         nsIAtom* aPseudo,

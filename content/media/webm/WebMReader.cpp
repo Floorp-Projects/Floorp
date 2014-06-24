@@ -464,14 +464,17 @@ nsresult WebMReader::ReadMetadata(MediaInfo* aInfo,
     }
   }
 
-  // We can't seek in buffered regions if we have no cues.
-  mDecoder->SetMediaSeekable(nestegg_has_cues(mContext) == 1);
-
   *aInfo = mInfo;
 
   *aTags = nullptr;
 
   return NS_OK;
+}
+
+bool
+WebMReader::IsMediaSeekable()
+{
+  return mContext && nestegg_has_cues(mContext);
 }
 
 #ifdef MOZ_OPUS

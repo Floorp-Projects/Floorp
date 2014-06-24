@@ -23,10 +23,13 @@
 // deriving from nsISupports will throw ambiguous base class errors.
 class nsDownloadProxy : public nsITransfer
 {
+protected:
+
+  virtual ~nsDownloadProxy() { }
+
 public:
 
   nsDownloadProxy() { }
-  virtual ~nsDownloadProxy() { }
 
   NS_DECL_ISUPPORTS
 

@@ -101,6 +101,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
 protected:
+  ~nsElementDeletionObserver() {}
   nsINode* mNativeAnonNode;
   nsINode* mObservedNode;
 };

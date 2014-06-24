@@ -54,7 +54,6 @@ public:
   nsCSSRuleProcessor(const sheet_array_type& aSheets,
                      uint8_t aSheetType,
                      mozilla::dom::Element* aScopeElement);
-  virtual ~nsCSSRuleProcessor();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(nsCSSRuleProcessor)
@@ -174,6 +173,9 @@ public:
     mozilla::EventStates mStates;
     nsCSSSelector* mSelector;
   };
+
+protected:
+  virtual ~nsCSSRuleProcessor();
 
 private:
   static bool CascadeSheet(mozilla::CSSStyleSheet* aSheet,

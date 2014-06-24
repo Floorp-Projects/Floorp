@@ -38,6 +38,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
+#include "builtin/SymbolObject.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/Marking.h"
 #include "jit/AsmJSModule.h"
@@ -243,6 +244,8 @@ js::InformalValueTypeName(const Value &v)
         return v.toObject().getClass()->name;
     if (v.isString())
         return "string";
+    if (v.isSymbol())
+        return "symbol";
     if (v.isNumber())
         return "number";
     if (v.isBoolean())
@@ -1113,7 +1116,7 @@ bool
 js::ReadPropertyDescriptors(JSContext *cx, HandleObject props, bool checkAccessors,
                             AutoIdVector *ids, AutoPropDescVector *descs)
 {
-    if (!GetPropertyNames(cx, props, JSITER_OWNONLY, ids))
+    if (!GetPropertyNames(cx, props, JSITER_OWNONLY | JSITER_SYMBOLS, ids))
         return false;
 
     RootedId id(cx);
@@ -1212,7 +1215,7 @@ JSObject::sealOrFreeze(JSContext *cx, HandleObject obj, ImmutabilityType it)
         return false;
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
         return false;
 
     /* preventExtensions must sparsify dense objects, so we can assign to holes without checks. */
@@ -1318,7 +1321,7 @@ JSObject::isSealedOrFrozen(JSContext *cx, HandleObject obj, ImmutabilityType it,
     }
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY, &props))
+    if (!GetPropertyNames(cx, obj, JSITER_HIDDEN | JSITER_OWNONLY | JSITER_SYMBOLS, &props))
         return false;
 
     RootedId id(cx);
@@ -1844,8 +1847,6 @@ JS_CopyPropertyFrom(JSContext *cx, HandleId id, HandleObject target,
     RootedId wrappedId(cx, id);
     if (!cx->compartment()->wrap(cx, &desc))
         return false;
-    if (!cx->compartment()->wrapId(cx, wrappedId.address()))
-        return false;
 
     bool ignored;
     return DefineOwnProperty(cx, target, wrappedId, desc, &ignored);
@@ -1857,7 +1858,7 @@ JS_CopyPropertiesFrom(JSContext *cx, HandleObject target, HandleObject obj)
     JSAutoCompartment ac(cx, obj);
 
     AutoIdVector props(cx);
-    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &props))
+    if (!GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props))
         return false;
 
     for (size_t i = 0; i < props.length(); ++i) {
@@ -2685,8 +2686,8 @@ DefineConstructorAndPrototype(JSContext *cx, HandleObject obj, JSProtoKey key, H
             goto bad;
     }
 
-    if (!DefinePropertiesAndBrand(cx, proto, ps, fs) ||
-        (ctor != proto && !DefinePropertiesAndBrand(cx, ctor, static_ps, static_fs)))
+    if (!DefinePropertiesAndFunctions(cx, proto, ps, fs) ||
+        (ctor != proto && !DefinePropertiesAndFunctions(cx, ctor, static_ps, static_fs)))
     {
         goto bad;
     }
@@ -5642,12 +5643,13 @@ js::PrimitiveToObject(JSContext *cx, const Value &v)
     }
     if (v.isNumber())
         return NumberObject::create(cx, v.toNumber());
-
-    JS_ASSERT(v.isBoolean());
-    return BooleanObject::create(cx, v.toBoolean());
+    if (v.isBoolean())
+        return BooleanObject::create(cx, v.toBoolean());
+    JS_ASSERT(v.isSymbol());
+    return SymbolObject::create(cx, v.toSymbol());
 }
 
-/* Callers must handle the already-object case . */
+/* Callers must handle the already-object case. */
 JSObject *
 js::ToObjectSlow(JSContext *cx, HandleValue val, bool reportScanStack)
 {

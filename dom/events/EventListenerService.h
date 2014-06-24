@@ -35,13 +35,13 @@ public:
   {
   }
 
-  virtual ~EventListenerInfo() {}
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(EventListenerInfo)
   NS_DECL_NSIEVENTLISTENERINFO
 
 protected:
+  virtual ~EventListenerInfo() {}
+
   bool GetJSVal(JSContext* aCx,
                 Maybe<JSAutoCompartment>& aAc,
                 JS::MutableHandle<JS::Value> aJSVal);
@@ -56,6 +56,7 @@ protected:
 
 class EventListenerService MOZ_FINAL : public nsIEventListenerService
 {
+  ~EventListenerService() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIEVENTLISTENERSERVICE

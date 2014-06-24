@@ -924,7 +924,8 @@ GetOrCreateMapEntryForPrototype(JSContext *cx, JS::Handle<JSObject*> proto)
                                                      : "__XBLClassObjectMap__";
 
   // Now, enter the XBL scope, since that's where we need to operate, and wrap
-  // the proto accordingly.
+  // the proto accordingly. We hang the map off of the content XBL scope for
+  // content, and the Window for chrome (whether add-ons are involved or not).
   JS::Rooted<JSObject*> scope(cx, xpc::GetXBLScopeOrGlobal(cx, proto));
   JS::Rooted<JSObject*> wrappedProto(cx, proto);
   JSAutoCompartment ac(cx, scope);
@@ -980,6 +981,8 @@ nsXBLBinding::DoInitJSClass(JSContext *cx,
   // but we need to make sure never to assume that the the reflector and
   // prototype are same-compartment with the bound document.
   JS::Rooted<JSObject*> global(cx, js::GetGlobalForObjectCrossCompartment(obj));
+
+  // We never store class objects in add-on scopes.
   JS::Rooted<JSObject*> xblScope(cx, xpc::GetXBLScopeOrGlobal(cx, global));
 
   JS::Rooted<JSObject*> parent_proto(cx);
@@ -1117,8 +1120,12 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
   // never get here. But on the off-chance that someone adds new callsites to
   // LookupMember, we do a release-mode assertion as belt-and-braces.
   // We do a release-mode assertion here to be extra safe.
+  //
+  // This code is only called for content XBL, so we don't have to worry about
+  // add-on scopes here.
   JS::Rooted<JSObject*> boundScope(aCx,
     js::GetGlobalForObjectCrossCompartment(mBoundElement->GetWrapper()));
+  MOZ_RELEASE_ASSERT(!xpc::IsInAddonScope(boundScope));
   MOZ_RELEASE_ASSERT(!xpc::IsInContentXBLScope(boundScope));
   JS::Rooted<JSObject*> xblScope(aCx, xpc::GetXBLScope(aCx, boundScope));
   NS_ENSURE_TRUE(xblScope, false);
@@ -1128,9 +1135,7 @@ nsXBLBinding::LookupMember(JSContext* aCx, JS::Handle<jsid> aId,
   {
     JSAutoCompartment ac(aCx, xblScope);
     JS::Rooted<jsid> id(aCx, aId);
-    if (!JS_WrapId(aCx, &id) ||
-        !LookupMemberInternal(aCx, name, id, aDesc, xblScope))
-    {
+    if (!LookupMemberInternal(aCx, name, id, aDesc, xblScope)) {
       return false;
     }
   }

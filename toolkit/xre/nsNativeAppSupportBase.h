@@ -17,10 +17,12 @@
 class nsNativeAppSupportBase : public nsINativeAppSupport {
 public:
     nsNativeAppSupportBase();
-    virtual ~nsNativeAppSupportBase();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSINATIVEAPPSUPPORT
+
+protected:
+    virtual ~nsNativeAppSupportBase();
 };
 
 #endif

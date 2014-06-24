@@ -38,7 +38,6 @@ class nsJSContext : public nsIScriptContext
 {
 public:
   nsJSContext(bool aGCOnDestruction, nsIScriptGlobalObject* aGlobalObject);
-  virtual ~nsJSContext();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsJSContext,
@@ -134,6 +133,8 @@ public:
     return global ? mGlobalObjectRef.get() : nullptr;
   }
 protected:
+  virtual ~nsJSContext();
+
   // Helper to convert xpcom datatypes to jsvals.
   nsresult ConvertSupportsTojsvals(nsISupports *aArgs,
                                    JS::Handle<JSObject*> aScope,

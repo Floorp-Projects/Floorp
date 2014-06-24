@@ -17,7 +17,6 @@ class nsDOMWindowList : public nsIDOMWindowCollection
 {
 public:
   nsDOMWindowList(nsIDocShell *aDocShell);
-  virtual ~nsDOMWindowList();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMWINDOWCOLLECTION
@@ -38,6 +37,8 @@ public:
   }
 
 protected:
+  virtual ~nsDOMWindowList();
+
   // Note: this function may flush and cause mDocShellNode to become null.
   void EnsureFresh();
 

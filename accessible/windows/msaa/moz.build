@@ -1,0 +1,61 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'IUnknownImpl.h',
+]
+
+EXPORTS.mozilla.a11y += [
+    'AccessibleWrap.h',
+    'Compatibility.h',
+    'HyperTextAccessibleWrap.h',
+]
+
+UNIFIED_SOURCES += [
+    'AccessibleWrap.cpp',
+    'ApplicationAccessibleWrap.cpp',
+    'ARIAGridAccessibleWrap.cpp',
+    'Compatibility.cpp',
+    'DocAccessibleWrap.cpp',
+    'EnumVariant.cpp',
+    'HTMLTableAccessibleWrap.cpp',
+    'HTMLWin32ObjectAccessible.cpp',
+    'HyperTextAccessibleWrap.cpp',
+    'ImageAccessibleWrap.cpp',
+    'IUnknownImpl.cpp',
+    'nsWinUtils.cpp',
+    'Platform.cpp',
+    'RootAccessibleWrap.cpp',
+    'TextLeafAccessibleWrap.cpp',
+]
+
+# This file cannot be built in unified mode because it includes ISimpleDOMNode_i.c.
+SOURCES += [
+    'ServiceProvider.cpp',
+]
+
+if CONFIG['MOZ_XUL']:
+    UNIFIED_SOURCES += [
+        'XULListboxAccessibleWrap.cpp',
+        'XULMenuAccessibleWrap.cpp',
+        'XULTreeGridAccessibleWrap.cpp',
+    ]
+
+LOCAL_INCLUDES += [
+    '/accessible/base',
+    '/accessible/generic',
+    '/accessible/html',
+    '/accessible/windows/ia2',
+    '/accessible/windows/sdn',
+    '/accessible/windows/uia',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/content/base/src',
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

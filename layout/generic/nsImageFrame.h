@@ -41,9 +41,11 @@ namespace layers {
 
 class nsImageListener : public imgINotificationObserver
 {
+protected:
+  virtual ~nsImageListener();
+
 public:
   nsImageListener(nsImageFrame *aFrame);
-  virtual ~nsImageListener();
 
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
@@ -331,6 +333,8 @@ private:
     }
 
   private:
+    ~IconLoad() {}
+
     void GetPrefs();
     nsTObserverArray<nsImageFrame*> mIconObservers;
 

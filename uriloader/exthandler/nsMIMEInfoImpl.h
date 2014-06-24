@@ -70,7 +70,6 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     nsMIMEInfoBase(const char *aMIMEType = "");
     nsMIMEInfoBase(const nsACString& aMIMEType);
     nsMIMEInfoBase(const nsACString& aType, HandlerClass aClass);
-    virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
 
     void SetMIMEType(const nsACString & aMIMEType) { mSchemeOrType = aMIMEType; }
 
@@ -92,6 +91,8 @@ class nsMIMEInfoBase : public nsIMIMEInfo {
     bool HasExtensions() const { return mExtensions.Length() != 0; }
 
   protected:
+    virtual ~nsMIMEInfoBase();        // must be virtual, as the the base class's Release should call the subclass's destructor
+
     /**
      * Launch the default application for the given file.
      * For even more control over the launching, override launchWithFile.

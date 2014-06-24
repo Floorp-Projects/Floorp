@@ -831,13 +831,18 @@ class MOZ_STACK_CLASS ModuleCompiler
         {}
 
         PropertyName *name() const { return name_; }
-
         bool defined() const { return defined_; }
-        void finish(uint32_t start, uint32_t end) {
+
+        void define(ModuleCompiler &m, ParseNode *fn) {
             JS_ASSERT(!defined_);
             defined_ = true;
-            srcOffset_ = start;
-            endOffset_ = end;
+
+            // The begin/end char range is relative to the beginning of the module.
+            // hence the assertions.
+            JS_ASSERT(fn->pn_pos.begin > m.moduleStart());
+            JS_ASSERT(fn->pn_pos.begin <= fn->pn_pos.end);
+            srcOffset_ = fn->pn_pos.begin - m.moduleStart();
+            endOffset_ = fn->pn_pos.end - m.moduleStart();
         }
 
         uint32_t srcOffset() const { JS_ASSERT(defined_); return srcOffset_; }
@@ -1036,8 +1041,8 @@ class MOZ_STACK_CLASS ModuleCompiler
     FuncPtrTableVector             funcPtrTables_;
     ExitMap                        exits_;
     MathNameMap                    standardLibraryMathNames_;
-    Label                          stackOverflowLabel_;
-    Label                          interruptLabel_;
+    NonAssertingLabel              stackOverflowLabel_;
+    NonAssertingLabel              interruptLabel_;
 
     char *                         errorString_;
     uint32_t                       errorOffset_;
@@ -1096,12 +1101,6 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
         if (errorOverRecursed_)
             js_ReportOverRecursed(cx_);
-
-        // Avoid spurious Label assertions on compilation failure.
-        if (!stackOverflowLabel_.bound())
-            stackOverflowLabel_.bind(0);
-        if (!interruptLabel_.bound())
-            interruptLabel_.bind(0);
     }
 
     bool init() {
@@ -1426,33 +1425,54 @@ class MOZ_STACK_CLASS ModuleCompiler
         return moduleLifo_;
     }
 
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    bool addProfiledFunction(const Func &func, unsigned endCodeOffset) {
-        unsigned lineno = 0U, columnIndex = 0U;
-        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcOffset(), &lineno, &columnIndex);
-        unsigned startCodeOffset = func.code()->offset();
-        return module_->addProfiledFunction(func.name(), startCodeOffset, endCodeOffset,
-                                            lineno, columnIndex);
-    }
-#endif
-
-#ifdef JS_ION_PERF
-    bool addPerfProfiledBlocks(AsmJSPerfSpewer &perfSpewer, const Func &func, unsigned endCodeOffset) {
-        unsigned startCodeOffset = func.code()->offset();
-        perfSpewer.noteBlocksOffsets();
-        unsigned endInlineCodeOffset = perfSpewer.endInlineCode.offset();
-        return module_->addPerfProfiledBlocks(func.name(), startCodeOffset, endInlineCodeOffset,
-                                              endCodeOffset, perfSpewer.basicBlocks());
-    }
-#endif
-
-    bool addFunctionCounts(IonScriptCounts *counts) {
-        return module_->addFunctionCounts(counts);
-    }
-
     void startFunctionBodies() {
         module_->startFunctionBodies();
     }
+
+    void startGeneratingFunction(Func &func, MIRGenerator &mir) {
+        // A single MacroAssembler is reused for all function compilations so
+        // that there is a single linear code segment for each module. To avoid
+        // spiking memory, a LifoAllocScope in the caller frees all MIR/LIR
+        // after each function is compiled. This method is responsible for cleaning
+        // out any dangling pointers that the MacroAssembler may have kept.
+        masm_.resetForNewCodeGenerator(mir.alloc());
+        masm_.align(CodeAlignment);
+        masm_.bind(func.code());
+    }
+
+    bool finishGeneratingFunction(Func &func, MIRGenerator &mir, CodeGenerator &codegen) {
+        JS_ASSERT(func.defined() && func.code()->bound());
+
+        jit::IonScriptCounts *counts = codegen.extractScriptCounts();
+        if (counts && !module_->addFunctionCounts(counts)) {
+            js_delete(counts);
+            return false;
+        }
+
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+        unsigned line = 0, column = 0;
+        tokenStream().srcCoords.lineNumAndColumnIndex(func.srcOffset(), &line, &column);
+        unsigned startCodeOffset = func.code()->offset();
+        unsigned endCodeOffset = masm_.currentOffset();
+        if (!module_->addProfiledFunction(func.name(), startCodeOffset, endCodeOffset, line, column))
+            return false;
+# ifdef JS_ION_PERF
+        if (PerfBlockEnabled()) {
+            // Per-block profiling info uses significantly more memory so only
+            // store this information if it is actively requested.
+            mir.perfSpewer().noteBlocksOffsets();
+            unsigned endInlineCodeOffset = mir.perfSpewer().endInlineCode.offset();
+            if (!module_->addPerfProfiledBlocks(func.name(), startCodeOffset, endInlineCodeOffset,
+                                                endCodeOffset, mir.perfSpewer().basicBlocks()))
+            {
+                return false;
+            }
+        }
+# endif
+#endif
+        return true;
+    }
+
     void finishFunctionBodies() {
         JS_ASSERT(!finishedFunctionBodies_);
         masm_.align(AsmJSPageSize);
@@ -5332,16 +5352,7 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     if (func->defined())
         return m.failName(fn, "function '%s' already defined", FunctionName(fn));
 
-    uint32_t funcBegin = fn->pn_pos.begin;
-    uint32_t funcEnd = fn->pn_pos.end;
-    // The begin/end char range is relative to the beginning of the module,
-    // hence the assertions.
-    JS_ASSERT(funcBegin > m.moduleStart());
-    JS_ASSERT(funcEnd > m.moduleStart());
-    funcBegin -= m.moduleStart();
-    funcEnd -= m.moduleStart();
-    func->finish(funcBegin, funcEnd);
-
+    func->define(m, fn);
     func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
     m.parser().release(mark);
@@ -5363,45 +5374,14 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
 {
     int64_t before = PRMJ_Now();
 
-    // A single MacroAssembler is reused for all function compilations so
-    // that there is a single linear code segment for each module. To avoid
-    // spiking memory, a LifoAllocScope in the caller frees all MIR/LIR
-    // after each function is compiled. This method is responsible for cleaning
-    // out any dangling pointers that the MacroAssembler may have kept.
-    m.masm().resetForNewCodeGenerator(mir.alloc());
-
-    m.masm().bind(func.code());
+    m.startGeneratingFunction(func, mir);
 
     ScopedJSDeletePtr<CodeGenerator> codegen(js_new<CodeGenerator>(&mir, &lir, &m.masm()));
     if (!codegen || !codegen->generateAsmJS(&m.stackOverflowLabel()))
         return m.fail(nullptr, "internal codegen failure (probably out of memory)");
 
-    jit::IonScriptCounts *counts = codegen->extractScriptCounts();
-    if (counts && !m.addFunctionCounts(counts)) {
-        js_delete(counts);
+    if (!m.finishGeneratingFunction(func, mir, *codegen))
         return false;
-    }
-
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    // Profiling might not be active now, but it may be activated later (perhaps
-    // after the module has been cached and reloaded from the cache). Function
-    // profiling info isn't huge, so store it always (in --enable-profiling
-    // builds, which is only Nightly builds, but default).
-    if (!m.addProfiledFunction(func, m.masm().currentOffset()))
-        return false;
-#endif
-
-#ifdef JS_ION_PERF
-    // Per-block profiling info uses significantly more memory so only store
-    // this information if it is actively requested.
-    if (PerfBlockEnabled()) {
-        if (!m.addPerfProfiledBlocks(mir.perfSpewer(), func, m.masm().currentOffset()))
-            return false;
-    }
-#endif
-
-    // Align internal function headers.
-    m.masm().align(CodeAlignment);
 
     func.accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
     if (!m.maybeReportCompileTime(func))
@@ -5410,7 +5390,7 @@ GenerateCode(ModuleCompiler &m, ModuleCompiler::Func &func, MIRGenerator &mir, L
     // Unlike regular IonMonkey which links and generates a new JitCode for
     // every function, we accumulate all the functions in the module in a
     // single MacroAssembler and link at end. Linking asm.js doesn't require a
-    // CodeGenerator so we can destroy it now.
+    // CodeGenerator so we can destroy it now (via ScopedJSDeletePtr).
     return true;
 }
 
@@ -5874,24 +5854,6 @@ CheckModuleReturn(ModuleCompiler &m)
     return true;
 }
 
-// All registers except the stack pointer.
-static const RegisterSet AllRegsExceptSP =
-    RegisterSet(GeneralRegisterSet(Registers::AllMask &
-                                   ~(uint32_t(1) << Registers::StackPointer)),
-                FloatRegisterSet(FloatRegisters::AllMask));
-#if defined(JS_CODEGEN_ARM)
-// The ARM system ABI also includes d15 in the non volatile float registers.
-// Also exclude lr (a.k.a. r14) as we preserve it manually)
-static const RegisterSet NonVolatileRegs =
-    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
-                                   ~(uint32_t(1) << Registers::lr)),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
-#else
-static const RegisterSet NonVolatileRegs =
-    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
-                FloatRegisterSet(FloatRegisters::NonVolatileMask));
-#endif
-
 static void
 LoadAsmJSActivationIntoRegister(MacroAssembler &masm, Register reg)
 {
@@ -5910,7 +5872,7 @@ LoadJSContextFromActivation(MacroAssembler &masm, Register activation, Register 
 static void
 AssertStackAlignment(MacroAssembler &masm)
 {
-    JS_ASSERT((AsmJSSizeOfRetAddr + masm.framePushed()) % StackAlignment == 0);
+    JS_ASSERT((AsmJSFrameSize + masm.framePushed()) % StackAlignment == 0);
 #ifdef DEBUG
     Label ok;
     JS_ASSERT(IsPowerOfTwo(StackAlignment));
@@ -5935,7 +5897,7 @@ StackDecrementForCall(MacroAssembler &masm, unsigned bytesToPush)
 {
     // Include extra padding so that, after pushing the bytesToPush,
     // the stack is aligned for a call instruction.
-    unsigned alreadyPushed = AsmJSSizeOfRetAddr + masm.framePushed();
+    unsigned alreadyPushed = AsmJSFrameSize + masm.framePushed();
     return AlignBytes(alreadyPushed + bytesToPush, StackAlignment) - alreadyPushed;
 }
 
@@ -5945,6 +5907,19 @@ StackDecrementForCall(MacroAssembler &masm, const VectorT &argTypes, unsigned ex
 {
     return StackDecrementForCall(masm, StackArgBytes(argTypes) + extraBytes);
 }
+
+#if defined(JS_CODEGEN_ARM)
+// The ARM system ABI also includes d15 in the non volatile float registers.
+// Also exclude lr (a.k.a. r14) as we preserve it manually)
+static const RegisterSet NonVolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask &
+                                   ~(uint32_t(1) << Registers::lr)),
+                FloatRegisterSet(FloatRegisters::NonVolatileMask | (1 << FloatRegisters::d15)));
+#else
+static const RegisterSet NonVolatileRegs =
+    RegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
+                FloatRegisterSet(FloatRegisters::NonVolatileMask));
+#endif
 
 #if defined(JS_CODEGEN_MIPS)
 // Mips is using one more double slot due to stack alignment for double values.
@@ -5980,7 +5955,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // PushRegsInMask(NonVolatileRegs).
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif // JS_CODEGEN_ARM
@@ -6017,7 +5992,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     Register argv = ABIArgGenerator::NonArgReturnVolatileReg0;
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
 #if defined(JS_CODEGEN_X86)
-    masm.loadPtr(Address(StackPointer, AsmJSSizeOfRetAddr + masm.framePushed()), argv);
+    masm.loadPtr(Address(StackPointer, AsmJSFrameSize + masm.framePushed()), argv);
 #else
     masm.movePtr(IntArgReg0, argv);
 #endif
@@ -6239,7 +6214,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     m.setInterpExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif
@@ -6264,7 +6239,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     masm.reserveStack(stackDec);
 
     // Fill the argument array.
-    unsigned offsetToCallerStackArgs = AsmJSSizeOfRetAddr + masm.framePushed();
+    unsigned offsetToCallerStackArgs = AsmJSFrameSize + masm.framePushed();
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
@@ -6413,7 +6388,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     m.setIonExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSSizeOfRetAddr comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_X64)
     masm.Push(HeapReg);
 #elif defined(JS_CODEGEN_ARM)
@@ -6492,7 +6467,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = masm.framePushed() + AsmJSSizeOfRetAddr;
+    unsigned offsetToCallerStackArgs = masm.framePushed() + AsmJSFrameSize;
     FillArgumentArray(m, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
     argOffset += exit.sig().args().length() * sizeof(Value);
     JS_ASSERT(argOffset == offsetToArgs + argBytes);
@@ -6699,6 +6674,11 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.jump(throwLabel);
     return !masm.oom();
 }
+
+static const RegisterSet AllRegsExceptSP =
+    RegisterSet(GeneralRegisterSet(Registers::AllMask &
+                                   ~(uint32_t(1) << Registers::StackPointer)),
+                FloatRegisterSet(FloatRegisters::AllMask));
 
 // The operation-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*

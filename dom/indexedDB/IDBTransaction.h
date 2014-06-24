@@ -329,7 +329,6 @@ public:
                const nsTArray<nsRefPtr<IDBObjectStore> >& mUpdatedObjectStores);
   CommitHelper(IDBTransaction* aTransaction,
                nsresult aAbortCode);
-  ~CommitHelper();
 
   template<class T>
   bool AddDoomedObject(nsCOMPtr<T>& aCOMPtr)
@@ -345,6 +344,8 @@ public:
   }
 
 private:
+  ~CommitHelper();
+
   // Writes new autoincrement counts to database
   nsresult WriteAutoIncrementCounts();
 
@@ -366,15 +367,15 @@ private:
 
 class UpdateRefcountFunction MOZ_FINAL : public mozIStorageFunction
 {
+  ~UpdateRefcountFunction()
+  { }
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_MOZISTORAGEFUNCTION
 
   UpdateRefcountFunction(FileManager* aFileManager)
   : mFileManager(aFileManager), mInSavepoint(false)
-  { }
-
-  ~UpdateRefcountFunction()
   { }
 
   void StartSavepoint()

@@ -23,7 +23,7 @@
 
   'name' entries *must* use only lowercase characters.
 
-  ** Break these invarient and bad things will happen. **    
+  ** Break these invarient and bad things will happen. **
 
 
  ******/
@@ -148,6 +148,7 @@ GFX_COLOR(pink, NS_RGB(255, 192, 203))
 GFX_COLOR(plum, NS_RGB(221, 160, 221))
 GFX_COLOR(powderblue, NS_RGB(176, 224, 230))
 GFX_COLOR(purple, NS_RGB(128,   0, 128))
+GFX_COLOR(rebeccapurple, NS_RGB(102, 51, 153))
 GFX_COLOR(red, NS_RGB(255,   0,   0))
 GFX_COLOR(rosybrown, NS_RGB(188, 143, 143))
 GFX_COLOR(royalblue, NS_RGB( 65, 105, 225))

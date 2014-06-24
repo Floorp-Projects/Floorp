@@ -379,8 +379,10 @@ public:
   void PassCastableObjectNullableSequence(const Nullable< Sequence< OwningNonNull<TestInterface> > >&);
   void PassNullableCastableObjectNullableSequence(const Nullable< Sequence< nsRefPtr<TestInterface> > >&);
   void PassOptionalSequence(const Optional<Sequence<int32_t> >&);
+  void PassOptionalSequenceWithDefaultValue(const Sequence<int32_t> &);
   void PassOptionalNullableSequence(const Optional<Nullable<Sequence<int32_t> > >&);
   void PassOptionalNullableSequenceWithDefaultValue(const Nullable< Sequence<int32_t> >&);
+  void PassOptionalNullableSequenceWithDefaultValue2(const Nullable< Sequence<int32_t> >&);
   void PassOptionalObjectSequence(const Optional<Sequence<OwningNonNull<TestInterface> > >&);
   void PassExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
   void PassNullableExternalInterfaceSequence(const Sequence<nsRefPtr<TestExternalInterface> >&);
@@ -571,6 +573,14 @@ public:
   void PassUnion12(const EventInitOrLong& arg);
   void PassUnion13(JSContext*, const ObjectOrLongOrNull& arg);
   void PassUnion14(JSContext*, const ObjectOrLongOrNull& arg);
+  void PassUnion15(const LongSequenceOrLong&);
+  void PassUnion16(const Optional<LongSequenceOrLong>&);
+  void PassUnion17(const LongSequenceOrNullOrLong&);
+  void PassUnion18(JSContext*, const ObjectSequenceOrLong&);
+  void PassUnion19(JSContext*, const Optional<ObjectSequenceOrLong>&);
+  void PassUnion20(JSContext*, const ObjectSequenceOrLong&);
+  void PassUnion21(const LongMozMapOrLong&);
+  void PassUnion22(JSContext*, const ObjectMozMapOrLong&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
 #endif

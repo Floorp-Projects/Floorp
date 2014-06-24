@@ -16,11 +16,14 @@ public:
   NS_DECL_NSIAUTHMODULE
 
   nsNTLMAuthModule() {}
-  virtual ~nsNTLMAuthModule();
 
   nsresult InitTest();
 
   static void SetSendLM(bool sendLM);
+
+protected:
+  virtual ~nsNTLMAuthModule();
+
 private:
   nsString mDomain;
   nsString mUsername;
