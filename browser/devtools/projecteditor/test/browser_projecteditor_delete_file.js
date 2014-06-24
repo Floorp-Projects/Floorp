@@ -25,15 +25,6 @@ let test = asyncTest(function*() {
     return defer.promise;
   }
 
-  function onPopupHide(contextMenu) {
-    let defer = promise.defer();
-    contextMenu.addEventListener("popuphidden", function popuphidden() {
-      contextMenu.removeEventListener("popuphidden", popuphidden);
-      defer.resolve();
-    });
-    return defer.promise;
-  }
-
   function openContextMenuOn(node) {
     EventUtils.synthesizeMouseAtCenter(
       node,
@@ -55,9 +46,13 @@ let test = asyncTest(function*() {
       is (deleteCommand.getAttribute("hidden"), "", "Delete command is visible");
       is (deleteCommand.getAttribute("disabled"), "", "Delete command is enabled");
 
-      onPopupHide(popup).then(() => {
-        ok (true, "Popup has been hidden, waiting for project refresh");
-        projecteditor.project.refresh().then(() => {
+      function onConfirmShown(aSubject) {
+        info("confirm dialog observed as expected");
+        Services.obs.removeObserver(onConfirmShown, "common-dialog-loaded");
+        Services.obs.removeObserver(onConfirmShown, "tabmodal-dialog-loaded");
+
+        projecteditor.project.on("refresh-complete", function refreshComplete() {
+          projecteditor.project.off("refresh-complete", refreshComplete);
           OS.File.stat(resource.path).then(() => {
             ok (false, "The file was not deleted");
             defer.resolve();
@@ -66,7 +61,13 @@ let test = asyncTest(function*() {
             defer.resolve();
           });
         });
-      });
+
+        // Click the 'OK' button
+        aSubject.Dialog.ui.button0.click();
+      }
+
+      Services.obs.addObserver(onConfirmShown, "common-dialog-loaded", false);
+      Services.obs.addObserver(onConfirmShown, "tabmodal-dialog-loaded", false);
 
       deleteCommand.click();
       popup.hidePopup();
@@ -76,5 +77,4 @@ let test = asyncTest(function*() {
 
     return defer.promise;
   }
-
 });
