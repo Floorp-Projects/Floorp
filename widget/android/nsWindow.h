@@ -16,8 +16,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TextRange.h"
 
-class gfxASurface;
-
 struct ANPEvent;
 
 namespace mozilla {
@@ -168,8 +166,6 @@ public:
 protected:
     void BringToFront();
     nsWindow *FindTopLevel();
-    bool DrawTo(gfxASurface *targetSurface);
-    bool DrawTo(gfxASurface *targetSurface, const nsIntRect &aRect);
     bool IsTopLevel();
     void RemoveIMEComposition();
     void PostFlushIMEChanges();

@@ -2,7 +2,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY windowTitle "Firefox App Manager">
+<!ENTITY windowTitle "Firefox WebIDE">
 
 <!ENTITY projectMenu_label "Project">
 <!ENTITY projectMenu_accesskey "P">
@@ -46,13 +46,11 @@
 
 <!-- We try to repicate Firefox' bindings: -->
 <!-- quit app -->
-<!ENTITY key_quit "Q">
+<!ENTITY key_quit "W">
 <!-- open menu -->
 <!ENTITY key_showProjectPanel "O">
 <!-- reload app -->
 <!ENTITY key_play "R">
-<!-- close app -->
-<!ENTITY key_stop "W">
 <!-- show toolbox -->
 <!ENTITY key_toggleToolbox "VK_F12">
 <!-- toggle sidebar -->

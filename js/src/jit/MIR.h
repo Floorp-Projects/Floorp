@@ -4207,6 +4207,10 @@ class MPowHalf
         return AliasSet::None();
     }
     void collectRangeInfoPreTrunc();
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
+    }
 };
 
 // Inline implementation of Math.random().
@@ -4825,6 +4829,11 @@ class MFromCharCode
     }
     bool congruentTo(const MDefinition *ins) const {
         return congruentIfOperandsEqual(ins);
+    }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const;
+    bool canRecoverOnBailout() const {
+        return true;
     }
 };
 
