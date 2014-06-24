@@ -111,6 +111,8 @@ public:
   already_AddRefed<SVGMatrix> SkewY(float angle, ErrorResult& rv);
 
 private:
+  ~SVGMatrix() {}
+
   void SetMatrix(const gfxMatrix& aMatrix) {
     if (mTransform) {
       mTransform->SetMatrix(aMatrix);

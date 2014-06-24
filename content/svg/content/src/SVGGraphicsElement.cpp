@@ -26,5 +26,9 @@ SVGGraphicsElement::SVGGraphicsElement(already_AddRefed<mozilla::dom::NodeInfo>&
 {
 }
 
+SVGGraphicsElement::~SVGGraphicsElement()
+{
+}
+
 } // namespace dom
 } // namespace mozilla
