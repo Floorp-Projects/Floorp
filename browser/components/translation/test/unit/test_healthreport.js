@@ -173,13 +173,16 @@ add_task(function* test_record_translation() {
   yield provider.init(storage);
   let now = new Date();
 
-  // Record a language change before translation.
-  yield provider.recordLanguageChange(true);
+  // Record a change to the source language changes before translation.
+  yield provider.recordDetectedLanguageChange(true);
 
-  // Record two language changes after translation.
-  yield provider.recordLanguageChange(false);
-  yield provider.recordLanguageChange(false);
+  // Record two changes to the source language changes after translation.
+  yield provider.recordDetectedLanguageChange(false);
+  yield provider.recordDetectedLanguageChange(false);
 
+  // Record two changes to the target language.
+  yield provider.recordTargetLanguageChange();
+  yield provider.recordTargetLanguageChange();
 
   let m = provider.getMeasurement("translation", 1);
   let values = yield m.getValues();
@@ -189,8 +192,11 @@ add_task(function* test_record_translation() {
 
   Assert.ok(day.has("detectedLanguageChangedBefore"));
   Assert.equal(day.get("detectedLanguageChangedBefore"), 1);
+
   Assert.ok(day.has("detectedLanguageChangedAfter"));
   Assert.equal(day.get("detectedLanguageChangedAfter"), 2);
+  Assert.ok(day.has("targetLanguageChanged"));
+  Assert.equal(day.get("targetLanguageChanged"), 2);
 
   yield provider.shutdown();
   yield storage.close();
@@ -276,9 +282,9 @@ add_task(function* test_healthreporter_json() {
     yield reporter._providerManager.registerProvider(provider);
 
     yield provider.recordTranslationOpportunity("fr", now);
-    yield provider.recordLanguageChange(true);
+    yield provider.recordDetectedLanguageChange(true);
     yield provider.recordTranslation("fr", "en", 1000, now);
-    yield provider.recordLanguageChange(false);
+    yield provider.recordDetectedLanguageChange(false);
 
     yield provider.recordTranslationOpportunity("es", now);
     yield provider.recordTranslation("es", "en", 1000, now);
@@ -342,9 +348,9 @@ add_task(function* test_healthreporter_json2() {
     yield reporter._providerManager.registerProvider(provider);
 
     yield provider.recordTranslationOpportunity("fr", now);
-    yield provider.recordLanguageChange(true);
+    yield provider.recordDetectedLanguageChange(true);
     yield provider.recordTranslation("fr", "en", 1000, now);
-    yield provider.recordLanguageChange(false);
+    yield provider.recordDetectedLanguageChange(false);
 
     yield provider.recordTranslationOpportunity("es", now);
     yield provider.recordTranslation("es", "en", 1000, now);
