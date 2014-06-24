@@ -276,6 +276,22 @@ for (var nameIndex = minStream; nameIndex <= maxStream; nameIndex++) {
     for (var body of functionBodies)
         processBody(functionName, body);
 
+    // GCC generates multiple constructors and destructors ("in-charge" and
+    // "not-in-charge") to handle virtual base classes. They are normally
+    // identical, and it appears that GCC does some magic to alias them to the
+    // same thing. But this aliasing is not visible to the analysis. So we'll
+    // add a dummy call edge from "foo" -> "foo *INTERNAL* ", since only "foo"
+    // will show up as called but only "foo *INTERNAL* " will be emitted in the
+    // case where the constructors are identical.
+    //
+    // This is slightly conservative in the case where they are *not*
+    // identical, but that should be rare enough that we don't care.
+    var markerPos = functionName.indexOf(internalMarker);
+    if (markerPos > 0) {
+        var inChargeXTor = functionName.substr(0, markerPos) + functionName.substr(markerPos + internalMarker.length);
+        print("D " + memo(inChargeXTor) + " " + memo(functionName));
+    }
+
     xdb.free_string(name);
     xdb.free_string(data);
 }
