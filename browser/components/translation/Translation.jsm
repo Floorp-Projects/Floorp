@@ -255,11 +255,6 @@ TranslationUI.prototype = {
         }
         break;
     }
-  },
-
-  infobarClosed: function() {
-    if (this.state == Translation.STATE_OFFER)
-      TranslationHealthReport.recordDeniedTranslationOffer();
   }
 };
 
