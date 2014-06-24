@@ -23,7 +23,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
  public:
   WebSocketChannelChild(bool aSecure);
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADRETARGETABLEREQUEST
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
@@ -59,6 +59,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void AsyncOpenFailed();  
 
   void DispatchToTargetThread(ChannelEvent *aChannelEvent);
+  bool IsOnTargetThread();
 
   nsRefPtr<ChannelEventQueue> mEventQ;
   bool mIPCOpen;
