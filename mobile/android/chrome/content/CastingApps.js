@@ -25,6 +25,14 @@ var fireflyTarget = {
   }
 };
 
+var mediaPlayerTarget = {
+  target: "media:router",
+  factory: function(aService) {
+    Cu.import("resource://gre/modules/MediaPlayerApp.jsm");
+    return new MediaPlayerApp(aService);
+  }
+};
+
 var CastingApps = {
   _castMenuId: -1,
 
@@ -36,6 +44,7 @@ var CastingApps = {
     // Register targets
     SimpleServiceDiscovery.registerTarget(rokuTarget);
     SimpleServiceDiscovery.registerTarget(fireflyTarget);
+    SimpleServiceDiscovery.registerTarget(mediaPlayerTarget);
 
     // Search for devices continuously every 120 seconds
     SimpleServiceDiscovery.search(120 * 1000);
