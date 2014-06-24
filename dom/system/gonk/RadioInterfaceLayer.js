@@ -1641,9 +1641,7 @@ WorkerMessenger.prototype = {
           libcutils.property_get("ro.moz.ril.send_stk_profile_dl", "false") == "true",
         dataRegistrationOnDemand: RILQUIRKS_DATA_REGISTRATION_ON_DEMAND,
         subscriptionControl: RILQUIRKS_SUBSCRIPTION_CONTROL
-      },
-      rilEmergencyNumbers: libcutils.property_get("ril.ecclist") ||
-                           libcutils.property_get("ro.ril.ecclist")
+      }
     };
 
     this.send(null, "setInitialOptions", options);
