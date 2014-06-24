@@ -25,8 +25,6 @@
 <!ENTITY  generalEncoding       "Encoding:">
 <!ENTITY  generalMetaName       "Name">
 <!ENTITY  generalMetaContent    "Content">
-<!ENTITY  generalSecurityDetails   "Details">
-<!ENTITY  generalSecurityDetails.accesskey "D">
 
 <!ENTITY  mediaTab              "Media">
 <!ENTITY  mediaTab.accesskey    "M">
@@ -65,7 +63,6 @@
 
 <!ENTITY  securityTab           "Security">
 <!ENTITY  securityTab.accesskey "S">
-<!ENTITY  securityHeader        "Security information for this page">
 <!ENTITY  securityView.certView "View Certificate">
 <!ENTITY  securityView.accesskey "V">
 <!ENTITY  securityView.unknown   "Unknown">
