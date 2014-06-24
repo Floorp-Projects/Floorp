@@ -57,9 +57,9 @@ function runTest() {
 }
 
 addEventListener('testready', function() {
-  // We don't want this wake lock to time out during the test; if it did, then
-  // we might see BACKGROUND priority instead of BACKGROUND_PERCEIVABLE.  So
-  // set the timeout to a large value.
+  // We don't want the grace period of priority privilege to time out during the
+  // test; should it really happen, we would see BACKGROUND priority instead of
+  // BACKGROUND_PERCEIVABLE.  So set the timeout to a large value.
   SpecialPowers.pushPrefEnv(
     {set: [["dom.ipc.systemMessageCPULockTimeoutSec", 99999]]},
     runTest);
