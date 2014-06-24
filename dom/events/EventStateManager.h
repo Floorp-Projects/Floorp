@@ -702,7 +702,7 @@ protected:
   private:
     DeltaAccumulator() :
       mX(0.0), mY(0.0), mPendingScrollAmountX(0.0), mPendingScrollAmountY(0.0),
-      mHandlingDeltaMode(UINT32_MAX), mHandlingPixelOnlyDevice(false)
+      mHandlingDeltaMode(UINT32_MAX), mIsNoLineOrPageDeltaDevice(false)
     {
     }
 
@@ -718,7 +718,7 @@ protected:
     TimeStamp mLastTime;
 
     uint32_t mHandlingDeltaMode;
-    bool mHandlingPixelOnlyDevice;
+    bool mIsNoLineOrPageDeltaDevice;
 
     static DeltaAccumulator* sInstance;
   };
