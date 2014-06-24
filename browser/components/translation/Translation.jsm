@@ -184,6 +184,7 @@ TranslationUI.prototype = {
     this.originalShown = true;
     this.showURLBarIcon();
     this.browser.messageManager.sendAsyncMessage("Translation:ShowOriginal");
+    TranslationHealthReport.recordShowOriginalContent();
   },
 
   showTranslatedContent: function() {
@@ -324,6 +325,13 @@ let TranslationHealthReport = {
   },
 
   /**
+   * Record a "Show Original" command use.
+   */
+  recordShowOriginalContent: function () {
+    this._withProvider(provider => provider.recordShowOriginalContent());
+  },
+
+  /**
    * Retrieve the translation provider and pass it to the given function.
    *
    * @param callback
@@ -382,6 +390,7 @@ TranslationMeasurement1.prototype = Object.freeze({
     detectedLanguageChangedBefore: DAILY_COUNTER_FIELD,
     detectedLanguageChangedAfter: DAILY_COUNTER_FIELD,
     deniedTranslationOffer: DAILY_COUNTER_FIELD,
+    showOriginalContent: DAILY_COUNTER_FIELD,
     detectLanguageEnabled: DAILY_LAST_NUMERIC_FIELD,
     showTranslationUI: DAILY_LAST_NUMERIC_FIELD,
   },
@@ -524,6 +533,15 @@ TranslationProvider.prototype = Object.freeze({
 
     return this._enqueueTelemetryStorageTask(function* recordTask() {
       yield m.incrementDailyCounter("deniedTranslationOffer");
+    }.bind(this));
+  },
+
+  recordShowOriginalContent: function () {
+    let m = this.getMeasurement(TranslationMeasurement1.prototype.name,
+                                TranslationMeasurement1.prototype.version);
+
+    return this._enqueueTelemetryStorageTask(function* recordTask() {
+      yield m.incrementDailyCounter("showOriginalContent");
     }.bind(this));
   },
 

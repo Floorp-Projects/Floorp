@@ -196,14 +196,14 @@ add_task(function* test_record_translation() {
   yield storage.close();
 });
 
-add_task(function* test_denied_translation_offer() {
+function* test_simple_counter(aProviderFuncName, aCounterName) {
   let storage = yield Metrics.Storage("translation");
   let provider = new TranslationProvider();
   yield provider.init(storage);
   let now = new Date();
 
-  yield provider.recordDeniedTranslationOffer();
-  yield provider.recordDeniedTranslationOffer();
+  yield provider[aProviderFuncName]();
+  yield provider[aProviderFuncName]();
 
   let m = provider.getMeasurement("translation", 1);
   let values = yield m.getValues();
@@ -211,11 +211,19 @@ add_task(function* test_denied_translation_offer() {
   Assert.ok(values.days.hasDay(now));
   let day = values.days.getDay(now);
 
-  Assert.ok(day.has("deniedTranslationOffer"));
-  Assert.equal(day.get("deniedTranslationOffer"), 2);
+  Assert.ok(day.has(aCounterName));
+  Assert.equal(day.get(aCounterName), 2);
 
   yield provider.shutdown();
   yield storage.close();
+}
+
+add_task(function* test_denied_translation_offer() {
+  yield test_simple_counter("recordDeniedTranslationOffer", "deniedTranslationOffer");
+});
+
+add_task(function* test_show_original() {
+  yield test_simple_counter("recordShowOriginalContent", "showOriginalContent");  
 });
 
 add_task(function* test_collect_daily() {
@@ -277,6 +285,8 @@ add_task(function* test_healthreporter_json() {
 
     yield provider.recordDeniedTranslationOffer();
 
+    yield provider.recordShowOriginalContent();
+
     yield reporter.collectMeasurements();
     let payload = yield reporter.getJSONPayload(true);
     let today = reporter._formatDate(now);
@@ -312,6 +322,9 @@ add_task(function* test_healthreporter_json() {
     
     Assert.ok("deniedTranslationOffer" in translations);
     Assert.equal(translations["deniedTranslationOffer"], 1);
+
+    Assert.ok("showOriginalContent" in translations);
+    Assert.equal(translations["showOriginalContent"], 1);
   } finally {
     reporter._shutdown();
   }
@@ -338,6 +351,8 @@ add_task(function* test_healthreporter_json2() {
 
     yield provider.recordDeniedTranslationOffer();
 
+    yield provider.recordShowOriginalContent();
+
     yield reporter.collectMeasurements();
     let payload = yield reporter.getJSONPayload(true);
     let today = reporter._formatDate(now);
@@ -357,6 +372,7 @@ add_task(function* test_healthreporter_json2() {
     Assert.ok(!("detectedLanguageChangedBefore" in translations));
     Assert.ok(!("detectedLanguageChangedAfter" in translations));
     Assert.ok(!("deniedTranslationOffer" in translations));
+    Assert.ok(!("showOriginalContent" in translations));
   } finally {
     reporter._shutdown();
   }
