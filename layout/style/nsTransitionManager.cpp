@@ -67,21 +67,6 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
          .GetValue(computedTiming.mTimeFraction);
 }
 
-static void
-ElementTransitionsPropertyDtor(void           *aObject,
-                               nsIAtom        *aPropertyName,
-                               void           *aPropertyValue,
-                               void           *aData)
-{
-  CommonElementAnimationData* et =
-    static_cast<CommonElementAnimationData*>(aPropertyValue);
-#ifdef DEBUG
-  NS_ABORT_IF_FALSE(!et->mCalledPropertyDtor, "can't call dtor twice");
-  et->mCalledPropertyDtor = true;
-#endif
-  delete et;
-}
-
 /*****************************************************************************
  * nsTransitionManager                                                       *
  *****************************************************************************/
@@ -632,8 +617,9 @@ nsTransitionManager::GetElementTransitions(dom::Element *aElement,
     // FIXME: Consider arena-allocating?
     et = new CommonElementAnimationData(aElement, propName, this,
       mPresContext->RefreshDriver()->MostRecentRefresh());
-    nsresult rv = aElement->SetProperty(propName, et,
-                                        ElementTransitionsPropertyDtor, false);
+    nsresult rv =
+      aElement->SetProperty(propName, et,
+                            &CommonElementAnimationData::PropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete et;

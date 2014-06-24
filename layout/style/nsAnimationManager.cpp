@@ -24,21 +24,6 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
-static void
-ElementAnimationsPropertyDtor(void           *aObject,
-                              nsIAtom        *aPropertyName,
-                              void           *aPropertyValue,
-                              void           *aData)
-{
-  CommonElementAnimationData *ea =
-    static_cast<CommonElementAnimationData*>(aPropertyValue);
-#ifdef DEBUG
-  NS_ABORT_IF_FALSE(!ea->mCalledPropertyDtor, "can't call dtor twice");
-  ea->mCalledPropertyDtor = true;
-#endif
-  delete ea;
-}
-
 void
 nsAnimationManager::UpdateStyleAndEvents(CommonElementAnimationData* aEA,
                                          TimeStamp aRefreshTime,
@@ -150,8 +135,9 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
     // FIXME: Consider arena-allocating?
     ea = new CommonElementAnimationData(aElement, propName, this,
            mPresContext->RefreshDriver()->MostRecentRefresh());
-    nsresult rv = aElement->SetProperty(propName, ea,
-                                        ElementAnimationsPropertyDtor, false);
+    nsresult rv =
+      aElement->SetProperty(propName, ea,
+                            &CommonElementAnimationData::PropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete ea;
