@@ -6,4 +6,5 @@ conformance/misc/object-deletion-behaviour.html
 conformance/misc/type-conversion-test.html
 conformance/programs/get-active-test.html
 conformance/textures/texture-npot.html
+conformance/textures/texture-size.html
 conformance/textures/texture-size-cube-maps.html
