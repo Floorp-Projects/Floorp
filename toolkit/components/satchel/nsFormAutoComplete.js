@@ -438,7 +438,7 @@ FormAutoCompleteResult.prototype = {
     searchString : null,
     errorDescription : "",
     get defaultIndex() {
-        if (this.entries.length == 0)
+        if (entries.length == 0)
             return -1;
         else
             return 0;
