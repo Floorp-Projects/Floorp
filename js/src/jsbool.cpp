@@ -152,7 +152,7 @@ js_InitBooleanClass(JSContext *cx, HandleObject obj)
     if (!LinkConstructorAndPrototype(cx, ctor, booleanProto))
         return nullptr;
 
-    if (!DefinePropertiesAndBrand(cx, booleanProto, nullptr, boolean_methods))
+    if (!DefinePropertiesAndFunctions(cx, booleanProto, nullptr, boolean_methods))
         return nullptr;
 
     Handle<PropertyName*> valueOfName = cx->names().valueOf;

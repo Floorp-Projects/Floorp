@@ -26,9 +26,9 @@ public:
                uint32_t aExpireType,
                int64_t aExpireTime);
 
+protected:
   virtual ~nsPermission() {};
 
-protected:
   nsCString mHost;
   nsCString mType;
   uint32_t  mCapability;

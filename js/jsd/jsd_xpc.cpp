@@ -3330,11 +3330,12 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(jsdService, jsdService::GetService)
  */
 class jsdASObserver MOZ_FINAL : public nsIObserver
 {
+    ~jsdASObserver () {}
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOBSERVER
 
-    jsdASObserver () {}    
+    jsdASObserver () {}
 };
 
 NS_IMPL_ISUPPORTS(jsdASObserver, nsIObserver)

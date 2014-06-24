@@ -23,7 +23,6 @@ using namespace mozilla::layers;
 class nsLayoutDebugger : public nsILayoutDebugger {
 public:
   nsLayoutDebugger();
-  virtual ~nsLayoutDebugger();
 
   NS_DECL_ISUPPORTS
 
@@ -44,6 +43,8 @@ public:
   NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
                           int32_t* aSizeInBytesResult) MOZ_OVERRIDE;
 
+protected:
+  virtual ~nsLayoutDebugger();
 };
 
 nsresult

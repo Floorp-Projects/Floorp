@@ -37,6 +37,53 @@ Requirement::priority() const
     }
 }
 
+const char *
+Requirement::toString() const
+{
+#ifdef DEBUG
+    // Not reentrant!
+    static char buf[1000];
+
+    char *cursor = buf;
+    char *end = cursor + sizeof(buf);
+
+    int n;
+    switch (kind()) {
+      case NONE:
+        return "none";
+      case REGISTER:
+        n = JS_snprintf(cursor, end - cursor, "r");
+        break;
+      case FIXED:
+        n = JS_snprintf(cursor, end - cursor, "%s", allocation().toString());
+        break;
+      case MUST_REUSE_INPUT:
+        n = JS_snprintf(cursor, end - cursor, "v%u", virtualRegister());
+        break;
+    }
+    if (n < 0)
+        return "???";
+    cursor += n;
+
+    if (pos() != CodePosition::MIN) {
+        n = JS_snprintf(cursor, end - cursor, "@%u", pos().bits());
+        if (n < 0)
+            return "???";
+        cursor += n;
+    }
+
+    return buf;
+#else
+    return " ???";
+#endif
+}
+
+void
+Requirement::dump() const
+{
+    fprintf(stderr, "%s\n", toString());
+}
+
 bool
 LiveInterval::Range::contains(const Range *other) const
 {
@@ -70,6 +117,33 @@ LiveInterval::Range::intersect(const Range *other, Range *pre, Range *inside, Ra
 
     if (innerFrom != innerTo)
         *inside = Range(innerFrom, innerTo);
+}
+
+const char *
+LiveInterval::Range::toString() const
+{
+#ifdef DEBUG
+    // Not reentrant!
+    static char buf[1000];
+
+    char *cursor = buf;
+    char *end = cursor + sizeof(buf);
+
+    int n = JS_snprintf(cursor, end - cursor, "[%u,%u)", from.bits(), to.bits());
+    if (n < 0)
+        return " ???";
+    cursor += n;
+
+    return buf;
+#else
+    return " ???";
+#endif
+}
+
+void
+LiveInterval::Range::dump() const
+{
+    fprintf(stderr, "%s\n", toString());
 }
 
 bool
@@ -348,10 +422,11 @@ LiveInterval::firstIncompatibleUse(LAllocation alloc)
 LiveInterval *
 VirtualRegister::intervalFor(CodePosition pos)
 {
+    // Intervals are sorted in ascending order by their start position.
     for (LiveInterval **i = intervals_.begin(); i != intervals_.end(); i++) {
         if ((*i)->covers(pos))
             return *i;
-        if (pos < (*i)->end())
+        if (pos < (*i)->start())
             break;
     }
     return nullptr;
@@ -367,6 +442,8 @@ VirtualRegister::getFirstInterval()
 // Instantiate LiveRangeAllocator for each template instance.
 template bool LiveRangeAllocator<LinearScanVirtualRegister, true>::buildLivenessInfo();
 template bool LiveRangeAllocator<BacktrackingVirtualRegister, false>::buildLivenessInfo();
+template void LiveRangeAllocator<LinearScanVirtualRegister, true>::dumpVregs();
+template void LiveRangeAllocator<BacktrackingVirtualRegister, false>::dumpVregs();
 
 #ifdef DEBUG
 static inline bool
@@ -506,6 +583,8 @@ template <typename VREG, bool forLSRA>
 bool
 LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
 {
+    IonSpew(IonSpew_RegAlloc, "Beginning liveness analysis");
+
     if (!init())
         return false;
 
@@ -548,8 +627,8 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         // Variables are assumed alive for the entire block, a define shortens
         // the interval to the point of definition.
         for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
-            if (!vregs[*liveRegId].getInterval(0)->addRangeAtHead(inputOf(block->firstId()),
-                                                                  outputOf(block->lastId()).next()))
+            if (!vregs[*liveRegId].getInterval(0)->addRangeAtHead(entryOf(block),
+                                                                  exitOf(block).next()))
             {
                 return false;
             }
@@ -567,7 +646,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     } else {
                         bool found = false;
                         for (size_t i = 0; i < ins->numDefs(); i++) {
-                            if (ins->getDef(i)->isPreset() &&
+                            if (ins->getDef(i)->isFixed() &&
                                 *ins->getDef(i)->output() == LAllocation(*iter)) {
                                 found = true;
                                 break;
@@ -584,7 +663,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     LDefinition *def = ins->getDef(i);
 
                     CodePosition from;
-                    if (def->policy() == LDefinition::PRESET && def->output()->isRegister() && forLSRA) {
+                    if (def->policy() == LDefinition::FIXED && def->output()->isRegister() && forLSRA) {
                         // The fixed range covers the current instruction so the
                         // interval for the virtual register starts at the next
                         // instruction. If the next instruction has a fixed use,
@@ -632,7 +711,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     continue;
 
                 if (forLSRA) {
-                    if (temp->policy() == LDefinition::PRESET) {
+                    if (temp->policy() == LDefinition::FIXED) {
                         if (ins->isCall())
                             continue;
                         AnyRegister reg = temp->output()->toRegister();
@@ -655,7 +734,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                     // and clobbered register in the instruction, so watch for
                     // this and shorten the temp to cover only the output.
                     CodePosition from = inputOf(*ins);
-                    if (temp->policy() == LDefinition::PRESET) {
+                    if (temp->policy() == LDefinition::FIXED) {
                         AnyRegister reg = temp->output()->toRegister();
                         for (LInstruction::InputIterator alloc(**ins); alloc.more(); alloc.next()) {
                             if (alloc->isUse()) {
@@ -740,14 +819,14 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                             LAllocation reg(AnyRegister::FromCode(use->registerCode()));
                             for (size_t i = 0; i < ins->numDefs(); i++) {
                                 LDefinition *def = ins->getDef(i);
-                                if (def->policy() == LDefinition::PRESET && *def->output() == reg)
+                                if (def->policy() == LDefinition::FIXED && *def->output() == reg)
                                     to = inputOf(*ins);
                             }
                         }
                     }
 
                     LiveInterval *interval = vregs[use].getInterval(0);
-                    if (!interval->addRangeAtHead(inputOf(block->firstId()), forLSRA ? to : to.next()))
+                    if (!interval->addRangeAtHead(entryOf(block), forLSRA ? to : to.next()))
                         return false;
                     interval->addUse(new(alloc()) UsePosition(use, to));
 
@@ -766,7 +845,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
             } else {
                 // This is a dead phi, so add a dummy range over all phis. This
                 // can go away if we have an earlier dead code elimination pass.
-                if (!vregs[def].getInterval(0)->addRangeAtHead(inputOf(block->firstId()),
+                if (!vregs[def].getInterval(0)->addRangeAtHead(entryOf(block),
                                                                outputOf(block->firstId())))
                 {
                     return false;
@@ -786,8 +865,8 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                 JS_ASSERT(loopBlock->id() >= mblock->id());
 
                 // Add an interval for this entire loop block
-                CodePosition from = inputOf(loopBlock->lir()->firstId());
-                CodePosition to = outputOf(loopBlock->lir()->lastId()).next();
+                CodePosition from = entryOf(loopBlock->lir());
+                CodePosition to = exitOf(loopBlock->lir()).next();
 
                 for (BitSet::Iterator liveRegId(*live); liveRegId; liveRegId++) {
                     if (!vregs[*liveRegId].getInterval(0)->addRange(from, to))
@@ -852,7 +931,38 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         }
     }
 
+    IonSpew(IonSpew_RegAlloc, "Liveness analysis complete");
+
+    if (IonSpewEnabled(IonSpew_RegAlloc)) {
+        dumpInstructions();
+
+        fprintf(stderr, "Live ranges by virtual register:\n");
+        dumpVregs();
+    }
+
     return true;
+}
+
+template <typename VREG, bool forLSRA>
+void
+LiveRangeAllocator<VREG, forLSRA>::dumpVregs()
+{
+#ifdef DEBUG
+    // Virtual register number 0 is unused.
+    JS_ASSERT(vregs[0u].numIntervals() == 0);
+    for (uint32_t i = 1; i < graph.numVirtualRegisters(); i++) {
+        fprintf(stderr, "  ");
+        VirtualRegister &vreg = vregs[i];
+        for (size_t j = 0; j < vreg.numIntervals(); j++) {
+            if (j)
+                fprintf(stderr, " / ");
+            fprintf(stderr, "%s", vreg.getInterval(j)->toString());
+        }
+        fprintf(stderr, "\n");
+    }
+
+    fprintf(stderr, "\n");
+#endif
 }
 
 #ifdef DEBUG
@@ -877,18 +987,17 @@ const char *
 LiveInterval::rangesToString() const
 {
 #ifdef DEBUG
-    if (!numRanges())
-        return " empty";
-
     // Not reentrant!
-    static char buf[1000];
+    static char buf[2000];
 
     char *cursor = buf;
     char *end = cursor + sizeof(buf);
 
-    for (size_t i = 0; i < numRanges(); i++) {
+    int n;
+
+    for (size_t i = ranges_.length() - 1; i < ranges_.length(); i--) {
         const LiveInterval::Range *range = getRange(i);
-        int n = JS_snprintf(cursor, end - cursor, " [%u,%u>", range->from.pos(), range->to.pos());
+        n = JS_snprintf(cursor, end - cursor, " %s", range->toString());
         if (n < 0)
             return " ???";
         cursor += n;
@@ -900,11 +1009,94 @@ LiveInterval::rangesToString() const
 #endif
 }
 
-void
-LiveInterval::dump()
+static bool
+IsHintInteresting(const Requirement &requirement, const Requirement &hint)
 {
-    if (hasVreg())
-        fprintf(stderr, "v%u: ", vreg());
-    fprintf(stderr, "index=%u allocation=%s %s\n",
-            index(), getAllocation()->toString(), rangesToString());
+    if (hint.kind() == Requirement::NONE)
+        return false;
+
+    if (hint.kind() != Requirement::FIXED && hint.kind() != Requirement::REGISTER)
+        return true;
+
+    Requirement merge = requirement;
+    if (!merge.mergeRequirement(hint))
+        return true;
+
+    return merge.kind() != requirement.kind();
+}
+
+const char *
+LiveInterval::toString() const
+{
+#ifdef DEBUG
+    // Not reentrant!
+    static char buf[2000];
+
+    char *cursor = buf;
+    char *end = cursor + sizeof(buf);
+
+    int n;
+
+    if (hasVreg()) {
+        n = JS_snprintf(cursor, end - cursor, "v%u", vreg());
+        if (n < 0) return "???";
+        cursor += n;
+    }
+
+    n = JS_snprintf(cursor, end - cursor, "[%u]", index());
+    if (n < 0) return "???";
+    cursor += n;
+
+    if (requirement_.kind() != Requirement::NONE || hint_.kind() != Requirement::NONE) {
+        n = JS_snprintf(cursor, end - cursor, " req(");
+        if (n < 0) return "???";
+        cursor += n;
+
+        bool printHint = IsHintInteresting(requirement_, hint_);
+
+        if (requirement_.kind() != Requirement::NONE) {
+            n = JS_snprintf(cursor, end - cursor, "%s%s",
+                            requirement_.toString(),
+                            printHint ? "," : "");
+            if (n < 0) return "???";
+            cursor += n;
+        }
+        if (printHint) {
+            n = JS_snprintf(cursor, end - cursor, "%s?", hint_.toString());
+            if (n < 0) return "???";
+            cursor += n;
+        }
+
+        n = JS_snprintf(cursor, end - cursor, ")");
+        if (n < 0) return "???";
+        cursor += n;
+    }
+
+    if (alloc_.kind() != LAllocation::USE) {
+        n = JS_snprintf(cursor, end - cursor, " has(%s)", alloc_.toString());
+        if (n < 0) return "???";
+        cursor += n;
+    }
+
+    n = JS_snprintf(cursor, end - cursor, "%s", rangesToString());
+    if (n < 0) return "???";
+    cursor += n;
+
+    for (UsePositionIterator usePos(usesBegin()); usePos != usesEnd(); usePos++) {
+        n = JS_snprintf(cursor, end - cursor, " %s@%u",
+                        usePos->use->toString(), usePos->pos.bits());
+        if (n < 0) return "???";
+        cursor += n;
+    }
+
+    return buf;
+#else
+    return "???";
+#endif
+}
+
+void
+LiveInterval::dump() const
+{
+    fprintf(stderr, "%s\n", toString());
 }

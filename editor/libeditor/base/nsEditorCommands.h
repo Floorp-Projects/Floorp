@@ -19,15 +19,15 @@ class nsISupports;
 class nsBaseEditorCommand : public nsIControllerCommand
 {
 public:
-
-              nsBaseEditorCommand();
-  virtual     ~nsBaseEditorCommand() {}
+  nsBaseEditorCommand();
     
   NS_DECL_ISUPPORTS
     
   NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) = 0;
   NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) = 0;
-  
+
+protected:
+  virtual ~nsBaseEditorCommand() {}
 };
 
 

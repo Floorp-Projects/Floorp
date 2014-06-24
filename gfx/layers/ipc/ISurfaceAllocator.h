@@ -182,6 +182,8 @@ protected:
 
 class GfxMemoryImageReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~GfxMemoryImageReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
 

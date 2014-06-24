@@ -623,6 +623,14 @@ private:
 #endif
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsComputedDOMStyle>
+{
+  static const bool value = true;
+};
+}
+
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(mozilla::dom::Element* aElement,
                        const nsAString& aPseudoElt,

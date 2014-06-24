@@ -65,7 +65,6 @@ public:
   NS_DECL_NSIOBSERVER
 
   nsExternalHelperAppService();
-  virtual ~nsExternalHelperAppService();
 
   /**
    * Initializes internal state. Will be called automatically when
@@ -113,6 +112,8 @@ public:
                                                        bool *aExists) = 0;
 
 protected:
+  virtual ~nsExternalHelperAppService();
+
   /**
    * Searches the "extra" array of MIMEInfo objects for an object
    * with a specific type. If found, it will modify the passed-in
@@ -226,14 +227,14 @@ public:
                        const nsAString& aFilename,
                        uint32_t aReason, bool aForceSave);
 
-  ~nsExternalAppHandler();
-
   /**
    * Clean up after the request was diverted to the parent process.
    */
   void DidDivertRequest(nsIRequest *request);
 
 protected:
+  ~nsExternalAppHandler();
+
   nsCOMPtr<nsIFile> mTempFile;
   nsCOMPtr<nsIURI> mSourceUrl;
   nsString mTempFileExtension;

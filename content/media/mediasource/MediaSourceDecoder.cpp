@@ -143,6 +143,8 @@ public:
     return mInfo.HasAudio();
   }
 
+  bool IsMediaSeekable() { return true; }
+
   nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) MOZ_OVERRIDE;
   nsresult Seek(int64_t aTime, int64_t aStartTime, int64_t aEndTime,
                 int64_t aCurrentTime) MOZ_OVERRIDE;
@@ -513,9 +515,6 @@ MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered, int64_t aStartTime)
 nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
-  mDecoder->SetMediaSeekable(true);
-  mDecoder->SetTransportSeekable(false);
-
   MSE_DEBUG("%p: MSR::ReadMetadata pending=%u", this, mPendingDecoders.Length());
 
   InitializePendingDecoders();

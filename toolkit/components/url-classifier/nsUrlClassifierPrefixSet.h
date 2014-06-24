@@ -26,7 +26,6 @@ class nsUrlClassifierPrefixSet
 {
 public:
   nsUrlClassifierPrefixSet();
-  virtual ~nsUrlClassifierPrefixSet();
 
   NS_IMETHOD Init(const nsACString& aName);
   NS_IMETHOD SetPrefixes(const uint32_t* aArray, uint32_t aLength);
@@ -43,6 +42,8 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
 protected:
+  virtual ~nsUrlClassifierPrefixSet();
+
   static const uint32_t DELTAS_LIMIT = 100;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;

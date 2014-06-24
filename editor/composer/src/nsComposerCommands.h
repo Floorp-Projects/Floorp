@@ -27,14 +27,16 @@ class nsString;
 // instance).
 class nsBaseComposerCommand : public nsIControllerCommand
 {
+protected:
+  virtual ~nsBaseComposerCommand() {}
+
 public:
 
-              nsBaseComposerCommand();
-  virtual     ~nsBaseComposerCommand() {}
-    
+  nsBaseComposerCommand();
+
   // nsISupports
   NS_DECL_ISUPPORTS
-    
+
   // nsIControllerCommand. Declared longhand so we can make them pure virtual
   NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) = 0;
   NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) = 0;
@@ -54,13 +56,13 @@ class nsBaseStateUpdatingCommand : public nsBaseComposerCommand
 {
 public:
   nsBaseStateUpdatingCommand(nsIAtom* aTagName);
-  virtual ~nsBaseStateUpdatingCommand();
-    
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSICONTROLLERCOMMAND
 
 protected:
+  virtual ~nsBaseStateUpdatingCommand();
 
   // get the current state (on or off) for this style or block format
   virtual nsresult  GetCurrentState(nsIEditor* aEditor, nsICommandParams* aParams) = 0;
@@ -94,13 +96,13 @@ class nsInsertTagCommand : public nsBaseComposerCommand
 {
 public:
   explicit nsInsertTagCommand(nsIAtom* aTagName);
-  virtual     ~nsInsertTagCommand();
     
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSICONTROLLERCOMMAND
 
 protected:
+  virtual ~nsInsertTagCommand();
 
   nsIAtom* mTagName;
 };
@@ -139,13 +141,13 @@ class nsMultiStateCommand : public nsBaseComposerCommand
 {
 public:
   
-                   nsMultiStateCommand();
-  virtual          ~nsMultiStateCommand();
+  nsMultiStateCommand();
   
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSICONTROLLERCOMMAND
 
 protected:
+  virtual ~nsMultiStateCommand();
 
   virtual nsresult GetCurrentState(nsIEditor *aEditor, nsICommandParams* aParams) =0;
   virtual nsresult SetState(nsIEditor *aEditor, nsString& newState) = 0;

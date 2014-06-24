@@ -239,6 +239,9 @@ BaseProxyHandler::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
     for (size_t j = 0, len = props.length(); j < len; j++) {
         JS_ASSERT(i <= j);
         id = props[j];
+        if (JSID_IS_SYMBOL(id))
+            continue;
+
         AutoWaivePolicy policy(cx, proxy, id, BaseProxyHandler::GET);
         if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
             return false;
@@ -419,7 +422,7 @@ DirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject proxy,
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     RootedObject target(cx, proxy->as<ProxyObject>().target());
-    return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN, &props);
+    return GetPropertyNames(cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
 }
 
 bool
@@ -650,11 +653,8 @@ Trap(JSContext *cx, HandleObject handler, HandleValue fval, unsigned argc, Value
 static bool
 Trap1(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, MutableHandleValue rval)
 {
-    rval.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *str = ToString<CanGC>(cx, rval);
-    if (!str)
+    if (!IdToStringOrSymbol(cx, id, rval))
         return false;
-    rval.setString(str);
     return Trap(cx, handler, fval, 1, rval.address(), rval);
 }
 
@@ -663,11 +663,8 @@ Trap2(JSContext *cx, HandleObject handler, HandleValue fval, HandleId id, Value 
       MutableHandleValue rval)
 {
     RootedValue v(cx, v_);
-    rval.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *str = ToString<CanGC>(cx, rval);
-    if (!str)
+    if (!IdToStringOrSymbol(cx, id, rval))
         return false;
-    rval.setString(str);
     JS::AutoValueArray<2> argv(cx);
     argv[0].set(rval);
     argv[1].set(v);
@@ -939,14 +936,12 @@ ScriptedIndirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObjec
                                   HandleId id, MutableHandleValue vp)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedValue idv(cx, IdToValue(id));
-    JSString *str = ToString<CanGC>(cx, idv);
-    if (!str)
+    RootedValue idv(cx);
+    if (!IdToStringOrSymbol(cx, id, &idv))
         return false;
-    RootedValue value(cx, StringValue(str));
     JS::AutoValueArray<2> argv(cx);
     argv[0].setObjectOrNull(receiver);
-    argv[1].set(value);
+    argv[1].set(idv);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().get, &fval))
         return false;
@@ -960,21 +955,19 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
                                   HandleId id, bool strict, MutableHandleValue vp)
 {
     RootedObject handler(cx, GetIndirectProxyHandlerObject(proxy));
-    RootedValue idv(cx, IdToValue(id));
-    JSString *str = ToString<CanGC>(cx, idv);
-    if (!str)
+    RootedValue idv(cx);
+    if (!IdToStringOrSymbol(cx, id, &idv))
         return false;
-    RootedValue value(cx, StringValue(str));
     JS::AutoValueArray<3> argv(cx);
     argv[0].setObjectOrNull(receiver);
-    argv[1].set(value);
+    argv[1].set(idv);
     argv[2].set(vp);
     RootedValue fval(cx);
     if (!GetDerivedTrap(cx, handler, cx->names().set, &fval))
         return false;
     if (!IsCallable(fval))
         return BaseProxyHandler::set(cx, proxy, receiver, id, strict, vp);
-    return Trap(cx, handler, fval, 3, argv.begin(), &value);
+    return Trap(cx, handler, fval, 3, argv.begin(), &idv);
 }
 
 bool
@@ -1065,7 +1058,8 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
                                           MutableHandle<PropertyDescriptor> desc) MOZ_OVERRIDE;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                                 MutableHandle<PropertyDescriptor> desc) MOZ_OVERRIDE;
-    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props);
+    virtual bool getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
+        MOZ_OVERRIDE;
     virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) MOZ_OVERRIDE;
     virtual bool enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props) MOZ_OVERRIDE;
 
@@ -1235,17 +1229,6 @@ HasOwn(JSContext *cx, HandleObject obj, HandleId id, bool *bp)
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &desc))
         return false;
     *bp = (desc.object() == obj);
-    return true;
-}
-
-static bool
-IdToExposableValue(JSContext *cx, HandleId id, MutableHandleValue value)
-{
-    value.set(IdToValue(id)); // Re-use out-param to avoid Rooted overhead.
-    JSString *name = ToString<CanGC>(cx, value);
-    if (!name)
-        return false;
-    value.set(StringValue(name));
     return true;
 }
 
@@ -1469,7 +1452,7 @@ ScriptedDirectProxyHandler::getOwnPropertyDescriptor(JSContext *cx, HandleObject
 
     // step 8-9
     RootedValue propKey(cx);
-    if (!IdToExposableValue(cx, id, &propKey))
+    if (!IdToStringOrSymbol(cx, id, &propKey))
         return false;
 
     Value argv[] = {
@@ -1592,7 +1575,7 @@ ScriptedDirectProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, Ha
 
     // step 10, 12
     RootedValue propKey(cx);
-    if (!IdToExposableValue(cx, id, &propKey))
+    if (!IdToStringOrSymbol(cx, id, &propKey))
         return false;
 
     Value argv[] = {
@@ -1687,7 +1670,8 @@ ScriptedDirectProxyHandler::getOwnPropertyNames(JSContext *cx, HandleObject prox
 
     // Here we add a bunch of extra sanity checks. It is unclear if they will also appear in
     // the spec. See step 10-11
-    return ArrayToIdVector(cx, proxy, target, trapResult, props, JSITER_OWNONLY | JSITER_HIDDEN,
+    return ArrayToIdVector(cx, proxy, target, trapResult, props,
+                           JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
                            cx->names().getOwnPropertyNames);
 }
 
@@ -1714,7 +1698,7 @@ ScriptedDirectProxyHandler::delete_(JSContext *cx, HandleObject proxy, HandleId 
 
     // step 8
     RootedValue value(cx);
-    if (!IdToExposableValue(cx, id, &value))
+    if (!IdToStringOrSymbol(cx, id, &value))
         return false;
     Value argv[] = {
         ObjectValue(*target),
@@ -1812,7 +1796,7 @@ ScriptedDirectProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, 
 
     // step 5
     RootedValue value(cx);
-    if (!IdToExposableValue(cx, id, &value))
+    if (!IdToStringOrSymbol(cx, id, &value))
         return false;
     Value argv[] = {
         ObjectOrNullValue(target),
@@ -1874,7 +1858,7 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 5
     RootedValue value(cx);
-    if (!IdToExposableValue(cx, id, &value))
+    if (!IdToStringOrSymbol(cx, id, &value))
         return false;
     Value argv[] = {
         ObjectOrNullValue(target),
@@ -1937,7 +1921,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 5
     RootedValue value(cx);
-    if (!IdToExposableValue(cx, id, &value))
+    if (!IdToStringOrSymbol(cx, id, &value))
         return false;
     Value argv[] = {
         ObjectOrNullValue(target),

@@ -181,12 +181,14 @@ MarkUnbarriered(JSTracer *trc, T **thingp, const char *name);
 void
 MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name);
 
-// These two declarations are also present in gc/Marking.h, via the DeclMarker
+// These three declarations are also present in gc/Marking.h, via the DeclMarker
 // macro.  Not great, but hard to avoid.
 void
 MarkObjectUnbarriered(JSTracer *trc, JSObject **obj, const char *name);
 void
 MarkStringUnbarriered(JSTracer *trc, JSString **str, const char *name);
+void
+MarkSymbolUnbarriered(JSTracer *trc, JS::Symbol **sym, const char *name);
 
 // Note that some subclasses (e.g. ObjectImpl) specialize some of these
 // methods.
@@ -270,6 +272,13 @@ ShadowZoneOfStringFromAnyThread(JSString *str)
 {
     return JS::shadow::Zone::asShadowZone(
         reinterpret_cast<const js::gc::Cell *>(str)->tenuredZoneFromAnyThread());
+}
+
+static inline JS::shadow::Zone *
+ShadowZoneOfSymbolFromAnyThread(JS::Symbol *sym)
+{
+    return JS::shadow::Zone::asShadowZone(
+        reinterpret_cast<const js::gc::Cell *>(sym)->tenuredZoneFromAnyThread());
 }
 
 MOZ_ALWAYS_INLINE JS::Zone *
@@ -384,23 +393,23 @@ struct InternalGCMethods<Value>
 template <>
 struct InternalGCMethods<jsid>
 {
-    static bool isMarkable(jsid id) { return JSID_IS_OBJECT(id) || JSID_IS_STRING(id); }
+    static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
     static void preBarrier(jsid id) {
 #ifdef JSGC_INCREMENTAL
-        if (JSID_IS_OBJECT(id)) {
-            JSObject *obj = JSID_TO_OBJECT(id);
-            JS::shadow::Zone *shadowZone = ShadowZoneOfObjectFromAnyThread(obj);
-            if (shadowZone->needsBarrier()) {
-                js::gc::MarkObjectUnbarriered(shadowZone->barrierTracer(), &obj, "write barrier");
-                JS_ASSERT(obj == JSID_TO_OBJECT(id));
-            }
-        } else if (JSID_IS_STRING(id)) {
+        if (JSID_IS_STRING(id)) {
             JSString *str = JSID_TO_STRING(id);
             JS::shadow::Zone *shadowZone = ShadowZoneOfStringFromAnyThread(str);
             if (shadowZone->needsBarrier()) {
                 js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &str, "write barrier");
                 JS_ASSERT(str == JSID_TO_STRING(id));
+            }
+        } else if (JSID_IS_SYMBOL(id)) {
+            JS::Symbol *sym = JSID_TO_SYMBOL(id);
+            JS::shadow::Zone *shadowZone = ShadowZoneOfSymbolFromAnyThread(sym);
+            if (shadowZone->needsBarrier()) {
+                js::gc::MarkSymbolUnbarriered(shadowZone->barrierTracer(), &sym, "write barrier");
+                JS_ASSERT(sym == JSID_TO_SYMBOL(id));
             }
         }
 #endif
@@ -601,6 +610,8 @@ class ImmutableTenuredPtr
         JS_ASSERT(ptr->isTenured());
         value = ptr;
     }
+
+    const T * address() { return &value; }
 };
 
 /*
@@ -819,6 +830,7 @@ typedef RelocatablePtr<jsid> RelocatableId;
 typedef HeapPtr<jsid> HeapId;
 
 typedef ImmutableTenuredPtr<PropertyName*> ImmutablePropertyNamePtr;
+typedef ImmutableTenuredPtr<JS::Symbol*> ImmutableSymbolPtr;
 
 typedef ReadBarriered<DebugScopeObject*> ReadBarrieredDebugScopeObject;
 typedef ReadBarriered<GlobalObject*> ReadBarrieredGlobalObject;

@@ -46,6 +46,8 @@ public:
   const ThreadData& GetData() const { return mData; }
 
 private:
+  ~MobileMessageThread() {}
+
   // Don't try to use the default constructor.
   MobileMessageThread() MOZ_DELETE;
 

@@ -1284,9 +1284,9 @@ public:
   NS_DECL_NSIFACTORY
 
   nsSingletonFactory(nsISupports* aSingleton);
-  ~nsSingletonFactory() { }
 
 private:
+  ~nsSingletonFactory() { }
   nsCOMPtr<nsISupports> mSingleton;
 };
 

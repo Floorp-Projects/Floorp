@@ -26,12 +26,13 @@ class nsXBLWindowKeyHandler : public nsIDOMEventListener
 {
 public:
   nsXBLWindowKeyHandler(nsIDOMElement* aElement, mozilla::dom::EventTarget* aTarget);
-  virtual ~nsXBLWindowKeyHandler();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
+  virtual ~nsXBLWindowKeyHandler();
+
   nsresult WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType);
 
   // walk the handlers, looking for one to handle the event

@@ -1,0 +1,55 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS.mozilla.a11y += [
+    'Accessible.h',
+    'DocAccessible.h',
+    'HyperTextAccessible.h',
+]
+
+UNIFIED_SOURCES += [
+    'Accessible.cpp',
+    'ApplicationAccessible.cpp',
+    'ARIAGridAccessible.cpp',
+    'BaseAccessibles.cpp',
+    'DocAccessible.cpp',
+    'FormControlAccessible.cpp',
+    'HyperTextAccessible.cpp',
+    'ImageAccessible.cpp',
+    'OuterDocAccessible.cpp',
+    'RootAccessible.cpp',
+    'TableCellAccessible.cpp',
+    'TextLeafAccessible.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/accessible/base',
+    '/accessible/html',
+    '/accessible/xpcom',
+    '/accessible/xul',
+    '/layout/generic',
+    '/layout/xul',
+]
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    LOCAL_INCLUDES += [
+        '/accessible/atk',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    LOCAL_INCLUDES += [
+        '/accessible/windows/ia2',
+        '/accessible/windows/msaa',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    LOCAL_INCLUDES += [
+        '/accessible/mac',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/accessible/other',
+    ]
+
+FINAL_LIBRARY = 'xul'

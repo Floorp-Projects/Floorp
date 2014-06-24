@@ -181,8 +181,6 @@ public:
   JSEventHandler(nsISupports* aTarget, nsIAtom* aType,
                  const TypedEventHandler& aTypedHandler);
 
-  virtual ~JSEventHandler();
-
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   // nsIDOMEventListener interface
@@ -255,6 +253,8 @@ public:
   bool IsBlackForCC();
 
 protected:
+  virtual ~JSEventHandler();
+
   nsISupports* mTarget;
   nsCOMPtr<nsIAtom> mEventName;
   TypedEventHandler mTypedHandler;

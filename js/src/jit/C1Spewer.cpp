@@ -123,11 +123,11 @@ C1Spewer::spewIntervals(FILE *fp, LinearScanAllocator *regalloc, LInstruction *i
                 fprintf(fp, "%s", live->getAllocation()->toString());
                 fprintf(fp, "\" %d -1", id);
                 for (size_t j = 0; j < live->numRanges(); j++) {
-                    fprintf(fp, " [%d, %d[", live->getRange(j)->from.pos(),
-                            live->getRange(j)->to.pos());
+                    fprintf(fp, " [%u, %u[", live->getRange(j)->from.bits(),
+                            live->getRange(j)->to.bits());
                 }
                 for (UsePositionIterator usePos(live->usesBegin()); usePos != live->usesEnd(); usePos++)
-                    fprintf(fp, " %d M", usePos->pos.pos());
+                    fprintf(fp, " %u M", usePos->pos.bits());
                 fprintf(fp, " \"\"\n");
             }
         }

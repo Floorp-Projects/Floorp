@@ -100,6 +100,7 @@ using JS::RootedId;
 using JS::RootedObject;
 using JS::RootedScript;
 using JS::RootedString;
+using JS::RootedSymbol;
 using JS::RootedValue;
 
 using JS::PersistentRooted;
@@ -108,6 +109,7 @@ using JS::PersistentRootedId;
 using JS::PersistentRootedObject;
 using JS::PersistentRootedScript;
 using JS::PersistentRootedString;
+using JS::PersistentRootedSymbol;
 using JS::PersistentRootedValue;
 
 using JS::Handle;
@@ -116,6 +118,7 @@ using JS::HandleId;
 using JS::HandleObject;
 using JS::HandleScript;
 using JS::HandleString;
+using JS::HandleSymbol;
 using JS::HandleValue;
 
 using JS::MutableHandle;
@@ -124,6 +127,7 @@ using JS::MutableHandleId;
 using JS::MutableHandleObject;
 using JS::MutableHandleScript;
 using JS::MutableHandleString;
+using JS::MutableHandleSymbol;
 using JS::MutableHandleValue;
 
 using JS::NullHandleValue;

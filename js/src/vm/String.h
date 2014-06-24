@@ -487,7 +487,11 @@ class JSString : public js::gc::BarrieredCell<JSString>
 
 #ifdef DEBUG
     void dump();
-    static void dumpChars(const jschar *s, size_t len);
+    void dumpCharsNoNewline(FILE *fp=stderr);
+
+    template <typename CharT>
+    static void dumpChars(const CharT *s, size_t len, FILE *fp=stderr);
+
     bool equals(const char *s);
 #endif
 
@@ -1161,6 +1165,8 @@ class StaticStrings
     /* May not return atom, returns null on (reported) failure. */
     inline JSLinearString *getUnitStringForElement(JSContext *cx, JSString *str, size_t index);
 
+    template <typename CharT>
+    static bool isStatic(const CharT *chars, size_t len);
     static bool isStatic(JSAtom *atom);
 
     /* Return null if no static atom exists for the given (chars, length). */

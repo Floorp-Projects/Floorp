@@ -28,6 +28,8 @@ class XPathResult;
  */
 class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator
 {
+    ~XPathEvaluator();
+
 public:
     XPathEvaluator(nsIDocument* aDocument = nullptr);
 

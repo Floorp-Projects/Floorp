@@ -50,9 +50,10 @@ public nsSupportsWeakReference,
 public nsIInterfaceRequestor,
 public nsIChannelEventSink
 {
+  virtual ~nsPluginStreamListenerPeer();
+
 public:
   nsPluginStreamListenerPeer();
-  virtual ~nsPluginStreamListenerPeer();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROGRESSEVENTSINK

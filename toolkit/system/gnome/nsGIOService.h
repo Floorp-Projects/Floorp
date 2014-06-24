@@ -13,6 +13,8 @@
 
 class nsGIOService MOZ_FINAL : public nsIGIOService
 {
+  ~nsGIOService() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIGIOSERVICE

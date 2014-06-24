@@ -114,7 +114,6 @@ class Navigator : public nsIDOMNavigator
 {
 public:
   Navigator(nsPIDOMWindow *aInnerWindow);
-  virtual ~Navigator();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(Navigator,
@@ -303,6 +302,8 @@ public:
   virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
 
 private:
+  virtual ~Navigator();
+
   bool CheckPermission(const char* type);
   static bool CheckPermission(nsPIDOMWindow* aWindow, const char* aType);
   // GetWindowFromGlobal returns the inner window for this global, if

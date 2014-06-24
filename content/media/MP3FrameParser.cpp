@@ -302,12 +302,6 @@ FindNumVBRFrames(const nsAutoCString& aFrame)
 // we're not parsing an MP3 stream.
 static const uint32_t MAX_SKIPPED_BYTES = 4096;
 
-// The number of audio samples per MP3 frame. This is constant over all MP3
-// streams. With this constant, the stream's sample rate, and an estimated
-// number of frames in the stream, we can estimate the stream's duration
-// fairly accurately.
-static const uint32_t SAMPLES_PER_FRAME = 1152;
-
 enum {
   MP3_HEADER_LENGTH   = 4,
 };

@@ -252,8 +252,10 @@ interface TestJSImplInterface {
   void passCastableObjectNullableSequence(sequence<TestJSImplInterface>? arg);
   void passNullableCastableObjectNullableSequence(sequence<TestJSImplInterface?>? arg);
   void passOptionalSequence(optional sequence<long> arg);
+  void passOptionalSequenceWithDefaultValue(optional sequence<long> arg = []);
   void passOptionalNullableSequence(optional sequence<long>? arg);
   void passOptionalNullableSequenceWithDefaultValue(optional sequence<long>? arg = null);
+  void passOptionalNullableSequenceWithDefaultValue2(optional sequence<long>? arg = []);
   void passOptionalObjectSequence(optional sequence<TestJSImplInterface> arg);
   void passExternalInterfaceSequence(sequence<TestExternalInterface> arg);
   void passNullableExternalInterfaceSequence(sequence<TestExternalInterface?> arg);
@@ -434,6 +436,14 @@ interface TestJSImplInterface {
   void passUnion12(optional (EventInit or long) arg = 5);
   void passUnion13(optional (object or long?) arg = null);
   void passUnion14(optional (object or long?) arg = 5);
+  void passUnion15((sequence<long> or long) arg);
+  void passUnion16(optional (sequence<long> or long) arg);
+  void passUnion17(optional (sequence<long>? or long) arg = 5);
+  void passUnion18((sequence<object> or long) arg);
+  void passUnion19(optional (sequence<object> or long) arg);
+  void passUnion20(optional (sequence<object> or long) arg = []);
+  void passUnion21((MozMap<long> or long) arg);
+  void passUnion22((MozMap<object> or long) arg);
   void passUnionWithCallback((EventHandler or long) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);

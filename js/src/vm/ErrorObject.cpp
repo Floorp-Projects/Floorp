@@ -140,7 +140,10 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
         message = cx->runtime()->emptyString;
     if (!message->ensureFlat(cx))
         return nullptr;
-    report.ucmessage = message->asFlat().chars();
+    AutoStableStringChars chars(cx);
+    if (!chars.initTwoByte(cx, message))
+        return nullptr;
+    report.ucmessage = chars.twoByteRange().start().get();
 
     // Cache and return.
     JSErrorReport *copy = CopyErrorReport(cx, &report);

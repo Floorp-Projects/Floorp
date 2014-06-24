@@ -17,6 +17,8 @@
  */
 class nsXPathNSResolver MOZ_FINAL : public nsIDOMXPathNSResolver
 {
+    ~nsXPathNSResolver() {}
+
 public:
     nsXPathNSResolver(nsIDOMNode* aNode);
 
