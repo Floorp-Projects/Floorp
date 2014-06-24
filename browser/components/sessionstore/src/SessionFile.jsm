@@ -45,6 +45,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
+XPCOMUtils.defineLazyServiceGetter(this, "sessionStartup",
+  "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
+XPCOMUtils.defineLazyModuleGetter(this, "SessionWorker",
+  "resource:///modules/sessionstore/SessionWorker.jsm");
+
+const PREF_UPGRADE_BACKUP = "browser.sessionstore.upgradeBackup.latestBuildID";
 
 this.SessionFile = {
   /**
@@ -76,42 +82,116 @@ this.SessionFile = {
     return SessionFileInternal.gatherTelemetry(aData);
   },
   /**
-   * Create a backup copy, asynchronously.
-   * This is designed to perform backup on upgrade.
-   */
-  createBackupCopy: function (ext) {
-    return SessionFileInternal.createBackupCopy(ext);
-  },
-  /**
-   * Remove a backup copy, asynchronously.
-   * This is designed to clean up a backup on upgrade.
-   */
-  removeBackupCopy: function (ext) {
-    return SessionFileInternal.removeBackupCopy(ext);
-  },
-  /**
    * Wipe the contents of the session file, asynchronously.
    */
   wipe: function () {
-    SessionFileInternal.wipe();
+    return SessionFileInternal.wipe();
+  },
+
+  /**
+   * Return the paths to the files used to store, backup, etc.
+   * the state of the file.
+   */
+  get Paths() {
+    return SessionFileInternal.Paths;
   }
 };
 
 Object.freeze(SessionFile);
 
-/**
- * Utilities for dealing with promises and Task.jsm
- */
-let SessionFileInternal = {
-  /**
-   * The path to sessionstore.js
-   */
-  path: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js"),
+let Path = OS.Path;
+let profileDir = OS.Constants.Path.profileDir;
 
-  /**
-   * The path to sessionstore.bak
-   */
-  backupPath: OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak"),
+let SessionFileInternal = {
+  Paths: Object.freeze({
+    // The path to the latest version of sessionstore written during a clean
+    // shutdown. After startup, it is renamed `cleanBackup`.
+    clean: Path.join(profileDir, "sessionstore.js"),
+
+    // The path at which we store the previous version of `clean`. Updated
+    // whenever we successfully load from `clean`.
+    cleanBackup: Path.join(profileDir, "sessionstore-backups", "previous.js"),
+
+    // The directory containing all sessionstore backups.
+    backups: Path.join(profileDir, "sessionstore-backups"),
+
+    // The path to the latest version of the sessionstore written
+    // during runtime. Generally, this file contains more
+    // privacy-sensitive information than |clean|, and this file is
+    // therefore removed during clean shutdown. This file is designed to protect
+    // against crashes / sudden shutdown.
+    recovery: Path.join(profileDir, "sessionstore-backups", "recovery.js"),
+
+    // The path to the previous version of the sessionstore written
+    // during runtime (e.g. 15 seconds before recovery). In case of a
+    // clean shutdown, this file is removed.  Generally, this file
+    // contains more privacy-sensitive information than |clean|, and
+    // this file is therefore removed during clean shutdown.  This
+    // file is designed to protect against crashes that are nasty
+    // enough to corrupt |recovery|.
+    recoveryBackup: Path.join(profileDir, "sessionstore-backups", "recovery.bak"),
+
+    // The path to a backup created during an upgrade of Firefox.
+    // Having this backup protects the user essentially from bugs in
+    // Firefox or add-ons, especially for users of Nightly. This file
+    // does not contain any information more sensitive than |clean|.
+    upgradeBackupPrefix: Path.join(profileDir, "sessionstore-backups", "upgrade.js-"),
+
+    // The path to the backup of the version of the session store used
+    // during the latest upgrade of Firefox. During load/recovery,
+    // this file should be used if both |path|, |backupPath| and
+    // |latestStartPath| are absent/incorrect.  May be "" if no
+    // upgrade backup has ever been performed. This file does not
+    // contain any information more sensitive than |clean|.
+    get upgradeBackup() {
+      let latestBackupID = SessionFileInternal.latestUpgradeBackupID;
+      if (!latestBackupID) {
+        return "";
+      }
+      return this.upgradeBackupPrefix + latestBackupID;
+    },
+
+    // The path to a backup created during an upgrade of Firefox.
+    // Having this backup protects the user essentially from bugs in
+    // Firefox, especially for users of Nightly.
+    get nextUpgradeBackup() {
+      return this.upgradeBackupPrefix + Services.appinfo.platformBuildID;
+    },
+
+    /**
+     * The order in which to search for a valid sessionstore file.
+     */
+    get loadOrder() {
+      // If `clean` exists and has been written without corruption during
+      // the latest shutdown, we need to use it.
+      //
+      // Otherwise, `recovery` and `recoveryBackup` represent the most
+      // recent state of the session store.
+      //
+      // Finally, if nothing works, fall back to the last known state
+      // that can be loaded (`cleanBackup`) or, if available, to the
+      // backup performed during the latest upgrade.
+      let order = ["clean",
+                   "recovery",
+                   "recoveryBackup",
+                   "cleanBackup"];
+      if (SessionFileInternal.latestUpgradeBackupID) {
+        // We have an upgradeBackup
+        order.push("upgradeBackup");
+      }
+      return order;
+    },
+  }),
+
+  // The ID of the latest version of Gecko for which we have an upgrade backup
+  // or |undefined| if no upgrade backup was ever written.
+  get latestUpgradeBackupID() {
+    try {
+      return Services.prefs.getCharPref(PREF_UPGRADE_BACKUP);
+    } catch (ex) {
+      return undefined;
+    }
+  },
 
   /**
    * The promise returned by the latest call to |write|.
@@ -125,32 +205,57 @@ let SessionFileInternal = {
    */
   _isClosed: false,
 
-  read: function () {
-    // We must initialize the worker during startup so it will be ready to
-    // perform the final write. If shutdown happens soon after startup and
-    // the worker has not started yet we may not write.
-    // See Bug 964531.
-    SessionWorker.post("init");
-
-    return Task.spawn(function*() {
-      for (let filename of [this.path, this.backupPath]) {
-        try {
-          let startMs = Date.now();
-
-          let data = yield OS.File.read(filename, { encoding: "utf-8" });
-
-          Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS")
-                   .add(Date.now() - startMs);
-
-          return data;
-        } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
-          // Ignore exceptions about non-existent files.
+  read: Task.async(function* () {
+    let result;
+    // Attempt to load by order of priority from the various backups
+    for (let key of this.Paths.loadOrder) {
+      let corrupted = false;
+      let exists = true;
+      try {
+        let path = this.Paths[key];
+        let startMs = Date.now();
+        let source = yield OS.File.read(path, { encoding: "utf-8" });
+        let parsed = JSON.parse(source);
+        result = {
+          origin: key,
+          source: source,
+          parsed: parsed
+        };
+        Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
+          add(false);
+        Telemetry.getHistogramById("FX_SESSION_RESTORE_READ_FILE_MS").
+          add(Date.now() - startMs);
+        break;
+      } catch (ex if ex instanceof OS.File.Error && ex.becauseNoSuchFile) {
+        exists = false;
+      } catch (ex if ex instanceof SyntaxError) {
+        // File is corrupted, try next file
+        corrupted = true;
+      } finally {
+        if (exists) {
+          Telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").
+            add(corrupted);
         }
       }
+    }
+    if (!result) {
+      // If everything fails, start with an empty session.
+      result = {
+        origin: "empty",
+        source: "",
+        parsed: null
+      };
+    }
 
-      return "";
-    }.bind(this));
-  },
+    // Initialize the worker to let it handle backups and also
+    // as a workaround for bug 964531.
+    SessionWorker.post("init", [
+      result.origin,
+      this.Paths,
+    ]);
+
+    return result;
+  }),
 
   gatherTelemetry: function(aStateString) {
     return Task.spawn(function() {
@@ -173,20 +278,32 @@ let SessionFileInternal = {
       isFinalWrite = this._isClosed = true;
     }
 
-    return this._latestWrite = Task.spawn(function task() {
+    return this._latestWrite = Task.spawn(function* task() {
       TelemetryStopwatch.start("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
 
       try {
-        let promise = SessionWorker.post("write", [aData]);
+        let performShutdownCleanup = isFinalWrite &&
+          !sessionStartup.isAutomaticRestoreEnabled();
+        let options = {
+          isFinalWrite: isFinalWrite,
+          performShutdownCleanup: performShutdownCleanup
+        };
+        let promise = SessionWorker.post("write", [aData, options]);
         // At this point, we measure how long we stop the main thread
         TelemetryStopwatch.finish("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
 
         // Now wait for the result and record how long the write took
         let msg = yield promise;
         this._recordTelemetry(msg.telemetry);
+
+        if (msg.ok && msg.ok.upgradeBackup) {
+          // We have just completed a backup-on-upgrade, store the information
+          // in preferences.
+          Services.prefs.setCharPref(PREF_UPGRADE_BACKUP, Services.appinfo.platformBuildID);
+        }
       } catch (ex) {
         TelemetryStopwatch.cancel("FX_SESSION_RESTORE_WRITE_FILE_LONGEST_OP_MS", refObj);
-        console.error("Could not write session state file ", this.path, ex);
+        console.error("Could not write session state file ", ex, ex.stack);
       }
 
       if (isFinalWrite) {
@@ -195,16 +312,8 @@ let SessionFileInternal = {
     }.bind(this));
   },
 
-  createBackupCopy: function (ext) {
-    return SessionWorker.post("createBackupCopy", [ext]);
-  },
-
-  removeBackupCopy: function (ext) {
-    return SessionWorker.post("removeBackupCopy", [ext]);
-  },
-
   wipe: function () {
-    SessionWorker.post("wipe");
+    return SessionWorker.post("wipe");
   },
 
   _recordTelemetry: function(telemetry) {
@@ -223,31 +332,6 @@ let SessionFileInternal = {
     }
   }
 };
-
-// Interface to a dedicated thread handling I/O
-let SessionWorker = (function () {
-  let worker = new PromiseWorker("resource:///modules/sessionstore/SessionWorker.js",
-    OS.Shared.LOG.bind("SessionWorker"));
-  return {
-    post: function post(...args) {
-      let promise = worker.post.apply(worker, args);
-      return promise.then(
-        null,
-        function onError(error) {
-          // Decode any serialized error
-          if (error instanceof PromiseWorker.WorkerError) {
-            throw OS.File.Error.fromMsg(error.data);
-          }
-          // Extract something meaningful from ErrorEvent
-          if (error instanceof ErrorEvent) {
-            throw new Error(error.message, error.filename, error.lineno);
-          }
-          throw error;
-        }
-      );
-    }
-  };
-})();
 
 // Ensure that we can write sessionstore.js cleanly before the profile
 // becomes unaccessible.
