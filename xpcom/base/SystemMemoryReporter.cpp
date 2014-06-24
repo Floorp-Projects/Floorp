@@ -102,12 +102,12 @@ IsNumeric(const char* aStr)
 static bool
 IsAnonymous(const nsACString& aName)
 {
-  // Recent kernels (e.g. 3.5) have multiple [stack:nnnn] entries, where |nnnn|
-  // is a thread ID.  However, [stack:nnnn] entries count both stack memory
-  // *and* anonymous memory because the kernel only knows about the start of
-  // each thread stack, not its end.  So we treat such entries as anonymous
-  // memory instead of stack.  This is consistent with older kernels that don't
-  // even show [stack:nnnn] entries.
+  // Recent kernels have multiple [stack:nnnn] entries, where |nnnn| is a
+  // thread ID.  However, the entire virtual memory area containing a thread's
+  // stack pointer is considered the stack for that thread, even if it was
+  // merged with an adjacent area containing non-stack data.  So we treat them
+  // as regular anonymous memory.  However, see below about tagged anonymous
+  // memory.
   return aName.IsEmpty() ||
          StringBeginsWith(aName, NS_LITERAL_CSTRING("[stack:"));
 }
@@ -319,6 +319,37 @@ private:
     return NS_OK;
   }
 
+  // Obtain the name of a thread, omitting any numeric suffix added by a
+  // thread pool library (as in, e.g., "Binder_2" or "mozStorage #1").
+  // The empty string is returned on error.
+  //
+  // Note: if this is ever needed on kernels older than 2.6.33 (early 2010),
+  // it will have to parse /proc/<pid>/status instead, because
+  // /proc/<pid>/comm didn't exist before then.
+  void GetThreadName(pid_t aTid, nsACString& aName)
+  {
+    aName.Truncate();
+    if (aTid <= 0) {
+      return;
+    }
+    char buf[16]; // 15 chars max + '\n'
+    nsPrintfCString path("/proc/%d/comm", aTid);
+    FILE* fp = fopen(path.get(), "r");
+    if (!fp) {
+      // The fopen could also fail if the thread exited before we got here.
+      return;
+    }
+    size_t len = fread(buf, 1, sizeof(buf), fp);
+    fclose(fp);
+    // No need to strip the '\n', since isspace() includes it.
+    while (len > 0 &&
+           (isspace(buf[len - 1]) || isdigit(buf[len - 1]) ||
+            buf[len - 1] == '#' || buf[len - 1] == '_')) {
+      --len;
+    }
+    aName.Assign(buf, len);
+  }
+
   nsresult ParseMappings(FILE* aFile,
                          const nsACString& aProcessName,
                          nsIHandleReportCallback* aHandleReport,
@@ -398,7 +429,7 @@ private:
         *aTotalPss += pss;
       }
 
-      // Now that we've seen the PSS, we're done wit hthis entry.
+      // Now that we've seen the PSS, we're done with this entry.
       path.SetIsVoid(true);
     }
     return NS_OK;
@@ -430,11 +461,37 @@ private:
         "This corresponds to '[heap]' in /proc/<pid>/smaps.");
       aTag = aName;
     } else if (absPath.EqualsLiteral("[stack]")) {
-      aName.AppendLiteral("main-thread-stack");
-      aDesc.AppendLiteral(
+      aName.AppendLiteral("stack/main-thread");
+      aDesc.AppendPrintf(
         "The stack size of the process's main thread.  This corresponds to "
         "'[stack]' in /proc/<pid>/smaps.");
       aTag = aName;
+    } else if (MozTaggedMemoryIsSupported() &&
+               StringBeginsWith(absPath, NS_LITERAL_CSTRING("[stack:"))) {
+      // If tagged memory is supported, we can be reasonably sure that
+      // the virtual memory area containing the stack hasn't been
+      // merged with unrelated heap memory.  (This prevents the
+      // "[stack:" entries from reaching the IsAnonymous case below.)
+      pid_t tid = atoi(absPath.get() + 7);
+      nsAutoCString threadName, escapedThreadName;
+      GetThreadName(tid, threadName);
+      if (threadName.IsEmpty()) {
+        threadName.AssignLiteral("<unknown>");
+      }
+      escapedThreadName.Assign(threadName);
+      escapedThreadName.StripChars("()");
+      escapedThreadName.ReplaceChar('/', '\\');
+
+      aName.AppendLiteral("stack/non-main-thread");
+      aName.AppendLiteral("/name(");
+      aName.Append(escapedThreadName);
+      aName.Append(')');
+      aTag = aName;
+      aName.AppendPrintf("/thread(%d)", tid);
+
+      aDesc.AppendPrintf("The stack size of a non-main thread named '%s' with "
+                         "thread ID %d.  This corresponds to '[stack:%d]' "
+                         "in /proc/%d/smaps.", threadName.get(), tid, tid);
     } else if (absPath.EqualsLiteral("[vdso]")) {
       aName.AppendLiteral("vdso");
       aDesc.AppendLiteral(
