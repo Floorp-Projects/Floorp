@@ -43,8 +43,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mConsumedHeight(aConsumedHeight)
 {
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
-  SetFlag(BRS_ISOVERFLOWCONTAINER,
-          IS_TRUE_OVERFLOW_CONTAINER(aFrame));
+  SetFlag(BRS_ISOVERFLOWCONTAINER, IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
   mBorderPadding = mReflowState.ComputedPhysicalBorderPadding();
   int skipSides = aFrame->GetSkipSides(&aReflowState);
@@ -54,13 +53,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   if ((aTopMarginRoot && !(skipSides & (1 << NS_SIDE_TOP))) ||
       0 != mBorderPadding.top) {
     SetFlag(BRS_ISTOPMARGINROOT, true);
+    SetFlag(BRS_APPLYTOPMARGIN, true);
   }
   if ((aBottomMarginRoot && !(skipSides & (1 << NS_SIDE_BOTTOM))) ||
       0 != mBorderPadding.bottom) {
     SetFlag(BRS_ISBOTTOMMARGINROOT, true);
-  }
-  if (GetFlag(BRS_ISTOPMARGINROOT)) {
-    SetFlag(BRS_APPLYTOPMARGIN, true);
   }
   if (aBlockNeedsFloatManager) {
     SetFlag(BRS_FLOAT_MGR, true);
