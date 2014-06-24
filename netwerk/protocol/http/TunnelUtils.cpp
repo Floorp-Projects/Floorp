@@ -914,6 +914,13 @@ SpdyConnectTransaction::Flush(uint32_t count, uint32_t *countRead)
   if (!(*countRead)) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
+
+  if (mOutputDataUsed != mOutputDataOffset) {
+    LOG(("SpdyConnectTransaction::Flush %p Incomplete %d\n",
+         this, mOutputDataUsed - mOutputDataOffset));
+    mSession->TransactionHasDataToWrite(this);
+  }
+
   return NS_OK;
 }
 
