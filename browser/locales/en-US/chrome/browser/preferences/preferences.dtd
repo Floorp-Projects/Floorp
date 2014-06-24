@@ -4,6 +4,8 @@
 
 
 <!ENTITY  prefWindow.titleWin     "Options">
+<!ENTITY  prefWindow.title        "Preferences">
+<!-- LOCALIZATION NOTE (prefWindow.titleGNOME): This is not used for in-content preferences -->
 <!ENTITY  prefWindow.titleGNOME   "&brandShortName; Preferences">
 <!-- When making changes to prefWindow.styleWin test both Windows Classic and
      Luna since widget heights are different based on the OS theme -->
