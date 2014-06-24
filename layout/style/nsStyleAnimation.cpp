@@ -45,23 +45,23 @@ using namespace mozilla;
  *          eUnit_Null if that's not possible.
  */
 static
-nsStyleAnimation::Unit
+StyleAnimationValue::Unit
 GetCommonUnit(nsCSSProperty aProperty,
-              nsStyleAnimation::Unit aFirstUnit,
-              nsStyleAnimation::Unit aSecondUnit)
+              StyleAnimationValue::Unit aFirstUnit,
+              StyleAnimationValue::Unit aSecondUnit)
 {
   if (aFirstUnit != aSecondUnit) {
     if (nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_STORES_CALC) &&
-        (aFirstUnit == nsStyleAnimation::eUnit_Coord ||
-         aFirstUnit == nsStyleAnimation::eUnit_Percent ||
-         aFirstUnit == nsStyleAnimation::eUnit_Calc) &&
-        (aSecondUnit == nsStyleAnimation::eUnit_Coord ||
-         aSecondUnit == nsStyleAnimation::eUnit_Percent ||
-         aSecondUnit == nsStyleAnimation::eUnit_Calc)) {
+        (aFirstUnit == StyleAnimationValue::eUnit_Coord ||
+         aFirstUnit == StyleAnimationValue::eUnit_Percent ||
+         aFirstUnit == StyleAnimationValue::eUnit_Calc) &&
+        (aSecondUnit == StyleAnimationValue::eUnit_Coord ||
+         aSecondUnit == StyleAnimationValue::eUnit_Percent ||
+         aSecondUnit == StyleAnimationValue::eUnit_Calc)) {
       // We can use calc() as the common unit.
-      return nsStyleAnimation::eUnit_Calc;
+      return StyleAnimationValue::eUnit_Calc;
     }
-    return nsStyleAnimation::eUnit_Null;
+    return StyleAnimationValue::eUnit_Null;
   }
   return aFirstUnit;
 }
@@ -316,23 +316,23 @@ ExtractCalcValueInternal(const nsCSSValue& aValue)
 
 // Requires a canonical calc() value that we generated.
 static PixelCalcValue
-ExtractCalcValue(const nsStyleAnimation::Value& aValue)
+ExtractCalcValue(const StyleAnimationValue& aValue)
 {
   PixelCalcValue result;
-  if (aValue.GetUnit() == nsStyleAnimation::eUnit_Coord) {
+  if (aValue.GetUnit() == StyleAnimationValue::eUnit_Coord) {
     result.mLength =
       nsPresContext::AppUnitsToFloatCSSPixels(aValue.GetCoordValue());
     result.mPercent = 0.0f;
     result.mHasPercent = false;
     return result;
   }
-  if (aValue.GetUnit() == nsStyleAnimation::eUnit_Percent) {
+  if (aValue.GetUnit() == StyleAnimationValue::eUnit_Percent) {
     result.mLength = 0.0f;
     result.mPercent = aValue.GetPercentValue();
     result.mHasPercent = true;
     return result;
   }
-  NS_ABORT_IF_FALSE(aValue.GetUnit() == nsStyleAnimation::eUnit_Calc,
+  NS_ABORT_IF_FALSE(aValue.GetUnit() == StyleAnimationValue::eUnit_Calc,
                     "unexpected unit");
   nsCSSValue *val = aValue.GetCSSValueValue();
   return ExtractCalcValueInternal(*val);
@@ -403,10 +403,10 @@ GetURIAsUtf16StringBuffer(nsIURI* aUri)
 // -------------
 
 bool
-nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
-                                  const Value& aStartValue,
-                                  const Value& aEndValue,
-                                  double& aDistance)
+StyleAnimationValue::ComputeDistance(nsCSSProperty aProperty,
+                                     const StyleAnimationValue& aStartValue,
+                                     const StyleAnimationValue& aEndValue,
+                                     double& aDistance)
 {
   Unit commonUnit =
     GetCommonUnit(aProperty, aStartValue.GetUnit(), aEndValue.GetUnit());
@@ -664,7 +664,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
       // particularly useful for paced animation.
 
       // Call AddWeighted to make us lists of the same length.
-      Value normValue1, normValue2;
+      StyleAnimationValue normValue1, normValue2;
       if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
                        normValue1) ||
           !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
@@ -707,7 +707,7 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
     }
     case eUnit_Shadow: {
       // Call AddWeighted to make us lists of the same length.
-      Value normValue1, normValue2;
+      StyleAnimationValue normValue1, normValue2;
       if (!AddWeighted(aProperty, 1.0, aStartValue, 0.0, aEndValue,
                        normValue1) ||
           !AddWeighted(aProperty, 0.0, aStartValue, 1.0, aEndValue,
@@ -752,18 +752,18 @@ nsStyleAnimation::ComputeDistance(nsCSSProperty aProperty,
 #endif
 
         if (color1.GetUnit() != eCSSUnit_Null) {
-          nsStyleAnimation::Value color1Value
-            (color1.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
-          nsStyleAnimation::Value color2Value
-            (color2.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
+          StyleAnimationValue color1Value
+            (color1.GetColorValue(), StyleAnimationValue::ColorConstructor);
+          StyleAnimationValue color2Value
+            (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
           double colorDistance;
 
         #ifdef DEBUG
           bool ok =
         #endif
-            nsStyleAnimation::ComputeDistance(eCSSProperty_color,
-                                              color1Value, color2Value,
-                                              colorDistance);
+            StyleAnimationValue::ComputeDistance(eCSSProperty_color,
+                                                 color1Value, color2Value,
+                                                 colorDistance);
           NS_ABORT_IF_FALSE(ok, "should not fail");
           squareDistance += colorDistance * colorDistance;
         }
@@ -1121,16 +1121,18 @@ AddShadowItems(double aCoeff1, const nsCSSValue &aValue1,
   }
 
   if (color1.GetUnit() != eCSSUnit_Null) {
-    nsStyleAnimation::Value color1Value
-      (color1.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
-    nsStyleAnimation::Value color2Value
-      (color2.GetColorValue(), nsStyleAnimation::Value::ColorConstructor);
-    nsStyleAnimation::Value resultColorValue;
+    StyleAnimationValue color1Value
+      (color1.GetColorValue(), StyleAnimationValue::ColorConstructor);
+    StyleAnimationValue color2Value
+      (color2.GetColorValue(), StyleAnimationValue::ColorConstructor);
+    StyleAnimationValue resultColorValue;
   #ifdef DEBUG
     bool ok =
   #endif
-      nsStyleAnimation::AddWeighted(eCSSProperty_color, aCoeff1, color1Value,
-                                    aCoeff2, color2Value, resultColorValue);
+      StyleAnimationValue::AddWeighted(eCSSProperty_color,
+                                       aCoeff1, color1Value,
+                                       aCoeff2, color2Value,
+                                       resultColorValue);
     NS_ABORT_IF_FALSE(ok, "should not fail");
     resultArray->Item(4).SetColorValue(resultColorValue.GetColorValue());
   }
@@ -1193,8 +1195,8 @@ AddTransformScale(double aCoeff1, const nsCSSValue &aValue1,
 }
 
 /* static */ already_AddRefed<nsCSSValue::Array>
-nsStyleAnimation::AppendTransformFunction(nsCSSKeyword aTransformFunction,
-                                          nsCSSValueList**& aListTail)
+StyleAnimationValue::AppendTransformFunction(nsCSSKeyword aTransformFunction,
+                                             nsCSSValueList**& aListTail)
 {
   nsRefPtr<nsCSSValue::Array> arr = AppendFunction(aTransformFunction);
   nsCSSValueList *item = new nsCSSValueList;
@@ -1498,9 +1500,9 @@ T InterpolateNumerically(const T& aOne, const T& aTwo, double aCoeff)
 
 
 /* static */ gfx3DMatrix
-nsStyleAnimation::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
-                                             const gfx3DMatrix &aMatrix2,
-                                             double aProgress)
+StyleAnimationValue::InterpolateTransformMatrix(const gfx3DMatrix &aMatrix1,
+                                                const gfx3DMatrix &aMatrix2,
+                                                double aProgress)
 {
   // Decompose both matrices
 
@@ -1580,7 +1582,9 @@ AddDifferentTransformLists(double aCoeff1, const nsCSSValueList* aList1,
   nsCSSValueList **resultTail = getter_Transfers(result);
 
   nsRefPtr<nsCSSValue::Array> arr;
-  arr = nsStyleAnimation::AppendTransformFunction(eCSSKeyword_interpolatematrix, resultTail);
+  arr =
+    StyleAnimationValue::AppendTransformFunction(eCSSKeyword_interpolatematrix,
+                                                 resultTail);
 
   // FIXME: We should change the other transform code to also only
   // take a single progress value, as having values that don't
@@ -1741,7 +1745,7 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
         tfunc != eCSSKeyword_interpolatematrix &&
         tfunc != eCSSKeyword_rotate3d &&
         tfunc != eCSSKeyword_perspective) {
-      arr = nsStyleAnimation::AppendTransformFunction(tfunc, resultTail);
+      arr = StyleAnimationValue::AppendTransformFunction(tfunc, resultTail);
     }
 
     switch (tfunc) {
@@ -1852,10 +1856,12 @@ AddTransformLists(double aCoeff1, const nsCSSValueList* aList1,
 }
 
 bool
-nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
-                              double aCoeff1, const Value& aValue1,
-                              double aCoeff2, const Value& aValue2,
-                              Value& aResultValue)
+StyleAnimationValue::AddWeighted(nsCSSProperty aProperty,
+                                 double aCoeff1,
+                                 const StyleAnimationValue& aValue1,
+                                 double aCoeff2,
+                                 const StyleAnimationValue& aValue2,
+                                 StyleAnimationValue& aResultValue)
 {
   Unit commonUnit =
     GetCommonUnit(aProperty, aValue1.GetUnit(), aValue2.GetUnit());
@@ -2473,12 +2479,12 @@ LookupStyleContext(dom::Element* aElement)
 }
 
 bool
-nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
-                               dom::Element* aTargetElement,
-                               const nsAString& aSpecifiedValue,
-                               bool aUseSVGMode,
-                               Value& aComputedValue,
-                               bool* aIsContextSensitive)
+StyleAnimationValue::ComputeValue(nsCSSProperty aProperty,
+                                  dom::Element* aTargetElement,
+                                  const nsAString& aSpecifiedValue,
+                                  bool aUseSVGMode,
+                                  StyleAnimationValue& aComputedValue,
+                                  bool* aIsContextSensitive)
 {
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
@@ -2560,9 +2566,9 @@ nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
 }
 
 bool
-nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
-                                 const Value& aComputedValue,
-                                 nsCSSValue& aSpecifiedValue)
+StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
+                                    const StyleAnimationValue& aComputedValue,
+                                    nsCSSValue& aSpecifiedValue)
 {
   switch (aComputedValue.GetUnit()) {
     case eUnit_Normal:
@@ -2653,9 +2659,9 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
 }
 
 bool
-nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
-                                 const Value& aComputedValue,
-                                 nsAString& aSpecifiedValue)
+StyleAnimationValue::UncomputeValue(nsCSSProperty aProperty,
+                                    const StyleAnimationValue& aComputedValue,
+                                    nsAString& aSpecifiedValue)
 {
   aSpecifiedValue.Truncate(); // Clear outparam, if it's not already empty
 
@@ -2664,7 +2670,7 @@ nsStyleAnimation::UncomputeValue(nsCSSProperty aProperty,
     return true;
   }
   nsCSSValue val;
-  if (!nsStyleAnimation::UncomputeValue(aProperty, aComputedValue, val)) {
+  if (!StyleAnimationValue::UncomputeValue(aProperty, aComputedValue, val)) {
     return false;
   }
 
@@ -2686,7 +2692,8 @@ StyleDataAtOffset(void* aStyleStruct, ptrdiff_t aOffset)
 
 static void
 ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
-                   mozilla::css::Side aSide, nsStyleAnimation::Value& aComputedValue)
+                   mozilla::css::Side aSide,
+                   StyleAnimationValue& aComputedValue)
 {
   nscolor color;
   bool foreground;
@@ -2700,7 +2707,7 @@ ExtractBorderColor(nsStyleContext* aStyleContext, const void* aStyleBorder,
 }
 
 static bool
-StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
+StyleCoordToValue(const nsStyleCoord& aCoord, StyleAnimationValue& aValue)
 {
   switch (aCoord.GetUnit()) {
     case eStyleUnit_Normal:
@@ -2723,17 +2730,17 @@ StyleCoordToValue(const nsStyleCoord& aCoord, nsStyleAnimation::Value& aValue)
       break;
     case eStyleUnit_Enumerated:
       aValue.SetIntValue(aCoord.GetIntValue(),
-                         nsStyleAnimation::eUnit_Enumerated);
+                         StyleAnimationValue::eUnit_Enumerated);
       break;
     case eStyleUnit_Integer:
       aValue.SetIntValue(aCoord.GetIntValue(),
-                         nsStyleAnimation::eUnit_Integer);
+                         StyleAnimationValue::eUnit_Integer);
       break;
     case eStyleUnit_Calc: {
       nsAutoPtr<nsCSSValue> val(new nsCSSValue);
       SetCalcValue(aCoord.GetCalcValue(), *val);
       aValue.SetAndAdoptCSSValueValue(val.forget(),
-                                      nsStyleAnimation::eUnit_Calc);
+                                      StyleAnimationValue::eUnit_Calc);
       break;
     }
     default:
@@ -2820,9 +2827,9 @@ SubstitutePixelValues(nsStyleContext* aStyleContext,
 }
 
 bool
-nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
-                                       nsStyleContext* aStyleContext,
-                                       Value& aComputedValue)
+StyleAnimationValue::ExtractComputedValue(nsCSSProperty aProperty,
+                                          nsStyleContext* aStyleContext,
+                                          StyleAnimationValue& aComputedValue)
 {
   NS_ABORT_IF_FALSE(0 <= aProperty &&
                     aProperty < eCSSProperty_COUNT_no_shorthands,
@@ -3461,42 +3468,43 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
   return false;
 }
 
-nsStyleAnimation::Value::Value(int32_t aInt, Unit aUnit,
-                               IntegerConstructorType)
+StyleAnimationValue::StyleAnimationValue(int32_t aInt, Unit aUnit,
+                                         IntegerConstructorType)
 {
   NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
   mUnit = aUnit;
   mValue.mInt = aInt;
 }
 
-nsStyleAnimation::Value::Value(nscoord aLength, CoordConstructorType)
+StyleAnimationValue::StyleAnimationValue(nscoord aLength, CoordConstructorType)
 {
   mUnit = eUnit_Coord;
   mValue.mCoord = aLength;
 }
 
-nsStyleAnimation::Value::Value(float aPercent, PercentConstructorType)
+StyleAnimationValue::StyleAnimationValue(float aPercent,
+                                         PercentConstructorType)
 {
   mUnit = eUnit_Percent;
   mValue.mFloat = aPercent;
   MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
-nsStyleAnimation::Value::Value(float aFloat, FloatConstructorType)
+StyleAnimationValue::StyleAnimationValue(float aFloat, FloatConstructorType)
 {
   mUnit = eUnit_Float;
   mValue.mFloat = aFloat;
   MOZ_ASSERT(!mozilla::IsNaN(mValue.mFloat));
 }
 
-nsStyleAnimation::Value::Value(nscolor aColor, ColorConstructorType)
+StyleAnimationValue::StyleAnimationValue(nscolor aColor, ColorConstructorType)
 {
   mUnit = eUnit_Color;
   mValue.mColor = aColor;
 }
 
-nsStyleAnimation::Value&
-nsStyleAnimation::Value::operator=(const Value& aOther)
+StyleAnimationValue&
+StyleAnimationValue::operator=(const StyleAnimationValue& aOther)
 {
   FreeValue();
 
@@ -3592,28 +3600,28 @@ nsStyleAnimation::Value::operator=(const Value& aOther)
 }
 
 void
-nsStyleAnimation::Value::SetNormalValue()
+StyleAnimationValue::SetNormalValue()
 {
   FreeValue();
   mUnit = eUnit_Normal;
 }
 
 void
-nsStyleAnimation::Value::SetAutoValue()
+StyleAnimationValue::SetAutoValue()
 {
   FreeValue();
   mUnit = eUnit_Auto;
 }
 
 void
-nsStyleAnimation::Value::SetNoneValue()
+StyleAnimationValue::SetNoneValue()
 {
   FreeValue();
   mUnit = eUnit_None;
 }
 
 void
-nsStyleAnimation::Value::SetIntValue(int32_t aInt, Unit aUnit)
+StyleAnimationValue::SetIntValue(int32_t aInt, Unit aUnit)
 {
   NS_ASSERTION(IsIntUnit(aUnit), "unit must be of integer type");
   FreeValue();
@@ -3622,7 +3630,7 @@ nsStyleAnimation::Value::SetIntValue(int32_t aInt, Unit aUnit)
 }
 
 void
-nsStyleAnimation::Value::SetCoordValue(nscoord aLength)
+StyleAnimationValue::SetCoordValue(nscoord aLength)
 {
   FreeValue();
   mUnit = eUnit_Coord;
@@ -3630,7 +3638,7 @@ nsStyleAnimation::Value::SetCoordValue(nscoord aLength)
 }
 
 void
-nsStyleAnimation::Value::SetPercentValue(float aPercent)
+StyleAnimationValue::SetPercentValue(float aPercent)
 {
   FreeValue();
   mUnit = eUnit_Percent;
@@ -3639,7 +3647,7 @@ nsStyleAnimation::Value::SetPercentValue(float aPercent)
 }
 
 void
-nsStyleAnimation::Value::SetFloatValue(float aFloat)
+StyleAnimationValue::SetFloatValue(float aFloat)
 {
   FreeValue();
   mUnit = eUnit_Float;
@@ -3648,7 +3656,7 @@ nsStyleAnimation::Value::SetFloatValue(float aFloat)
 }
 
 void
-nsStyleAnimation::Value::SetColorValue(nscolor aColor)
+StyleAnimationValue::SetColorValue(nscolor aColor)
 {
   FreeValue();
   mUnit = eUnit_Color;
@@ -3656,7 +3664,7 @@ nsStyleAnimation::Value::SetColorValue(nscolor aColor)
 }
 
 void
-nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
+StyleAnimationValue::SetUnparsedStringValue(const nsString& aString)
 {
   FreeValue();
   mUnit = eUnit_UnparsedString;
@@ -3664,8 +3672,8 @@ nsStyleAnimation::Value::SetUnparsedStringValue(const nsString& aString)
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSValueValue(nsCSSValue *aValue,
-                                                  Unit aUnit)
+StyleAnimationValue::SetAndAdoptCSSValueValue(nsCSSValue *aValue,
+                                              Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueUnit(aUnit), "bad unit");
@@ -3675,8 +3683,8 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueValue(nsCSSValue *aValue,
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
-                           nsCSSValuePair *aValuePair, Unit aUnit)
+StyleAnimationValue::SetAndAdoptCSSValuePairValue(nsCSSValuePair *aValuePair,
+                                                  Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValuePairUnit(aUnit), "bad unit");
@@ -3686,8 +3694,8 @@ nsStyleAnimation::Value::SetAndAdoptCSSValuePairValue(
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSValueTripletValue(
-                           nsCSSValueTriplet *aValueTriplet, Unit aUnit)
+StyleAnimationValue::SetAndAdoptCSSValueTripletValue(
+                       nsCSSValueTriplet *aValueTriplet, Unit aUnit)
 {
     FreeValue();
     NS_ABORT_IF_FALSE(IsCSSValueTripletUnit(aUnit), "bad unit");
@@ -3697,7 +3705,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueTripletValue(
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
+StyleAnimationValue::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSRectUnit(aUnit), "bad unit");
@@ -3707,8 +3715,8 @@ nsStyleAnimation::Value::SetAndAdoptCSSRectValue(nsCSSRect *aRect, Unit aUnit)
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
-                           nsCSSValueList *aValueList, Unit aUnit)
+StyleAnimationValue::SetAndAdoptCSSValueListValue(nsCSSValueList *aValueList,
+                                                  Unit aUnit)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(IsCSSValueListUnit(aUnit), "bad unit");
@@ -3720,7 +3728,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValueListValue(
 }
 
 void
-nsStyleAnimation::Value::SetTransformValue(nsCSSValueSharedList* aList)
+StyleAnimationValue::SetTransformValue(nsCSSValueSharedList* aList)
 {
   FreeValue();
   mUnit = eUnit_Transform;
@@ -3729,8 +3737,8 @@ nsStyleAnimation::Value::SetTransformValue(nsCSSValueSharedList* aList)
 }
 
 void
-nsStyleAnimation::Value::SetAndAdoptCSSValuePairListValue(
-                           nsCSSValuePairList *aValuePairList)
+StyleAnimationValue::SetAndAdoptCSSValuePairListValue(
+                       nsCSSValuePairList *aValuePairList)
 {
   FreeValue();
   NS_ABORT_IF_FALSE(aValuePairList, "may not be null");
@@ -3739,7 +3747,7 @@ nsStyleAnimation::Value::SetAndAdoptCSSValuePairListValue(
 }
 
 void
-nsStyleAnimation::Value::FreeValue()
+StyleAnimationValue::FreeValue()
 {
   if (IsCSSValueUnit(mUnit)) {
     delete mValue.mCSSValue;
@@ -3762,7 +3770,7 @@ nsStyleAnimation::Value::FreeValue()
 }
 
 bool
-nsStyleAnimation::Value::operator==(const Value& aOther) const
+StyleAnimationValue::operator==(const StyleAnimationValue& aOther) const
 {
   if (mUnit != aOther.mUnit) {
     return false;
