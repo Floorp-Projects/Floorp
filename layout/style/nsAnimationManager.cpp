@@ -24,22 +24,14 @@
 using namespace mozilla;
 using namespace mozilla::css;
 
-ElementAnimations::ElementAnimations(mozilla::dom::Element *aElement,
-                                     nsIAtom *aElementProperty,
-                                     nsAnimationManager *aAnimationManager,
-                                     TimeStamp aNow)
-  : CommonElementAnimationData(aElement, aElementProperty,
-                               aAnimationManager, aNow)
-{
-}
-
 static void
 ElementAnimationsPropertyDtor(void           *aObject,
                               nsIAtom        *aPropertyName,
                               void           *aPropertyValue,
                               void           *aData)
 {
-  ElementAnimations *ea = static_cast<ElementAnimations*>(aPropertyValue);
+  CommonElementAnimationData *ea =
+    static_cast<CommonElementAnimationData*>(aPropertyValue);
 #ifdef DEBUG
   NS_ABORT_IF_FALSE(!ea->mCalledPropertyDtor, "can't call dtor twice");
   ea->mCalledPropertyDtor = true;
@@ -48,7 +40,7 @@ ElementAnimationsPropertyDtor(void           *aObject,
 }
 
 void
-nsAnimationManager::UpdateStyleAndEvents(ElementAnimations* aEA,
+nsAnimationManager::UpdateStyleAndEvents(CommonElementAnimationData* aEA,
                                          TimeStamp aRefreshTime,
                                          EnsureStyleRuleFlags aFlags)
 {
@@ -58,7 +50,7 @@ nsAnimationManager::UpdateStyleAndEvents(ElementAnimations* aEA,
 }
 
 void
-nsAnimationManager::GetEventsAt(ElementAnimations* aEA,
+nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
                                 TimeStamp aRefreshTime,
                                 EventArray& aEventsToDispatch)
 {
@@ -129,7 +121,7 @@ nsAnimationManager::GetEventsAt(ElementAnimations* aEA,
   }
 }
 
-ElementAnimations*
+CommonElementAnimationData*
 nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                                          nsCSSPseudoElements::Type aPseudoType,
                                          bool aCreateIfNeeded)
@@ -152,11 +144,11 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                  "other than :before or :after");
     return nullptr;
   }
-  ElementAnimations *ea = static_cast<ElementAnimations*>(
-                             aElement->GetProperty(propName));
+  CommonElementAnimationData *ea = static_cast<CommonElementAnimationData*>(
+                                   aElement->GetProperty(propName));
   if (!ea && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    ea = new ElementAnimations(aElement, propName, this,
+    ea = new CommonElementAnimationData(aElement, propName, this,
            mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv = aElement->SetProperty(propName, ea,
                                         ElementAnimationsPropertyDtor, false);
@@ -251,7 +243,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // style change, but also not in an animation restyle.
 
     const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-    ElementAnimations *ea =
+    CommonElementAnimationData *ea =
       GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
     if (!ea &&
         disp->mAnimationNameCount == 1 &&
@@ -668,7 +660,7 @@ nsAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  ElementAnimations *ea =
+  CommonElementAnimationData *ea =
     GetElementAnimations(aElement, aPseudoType, false);
   if (!ea) {
     return nullptr;
@@ -716,8 +708,9 @@ void
 nsAnimationManager::AddElementData(CommonElementAnimationData* aData)
 {
   if (!mObservingRefreshDriver) {
-    NS_ASSERTION(static_cast<ElementAnimations*>(aData)->mNeedsRefreshes,
-                 "Added data which doesn't need refreshing?");
+    NS_ASSERTION(
+      static_cast<CommonElementAnimationData*>(aData)->mNeedsRefreshes,
+      "Added data which doesn't need refreshing?");
     // We need to observe the refresh driver.
     mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
     mObservingRefreshDriver = true;
@@ -731,7 +724,7 @@ nsAnimationManager::CheckNeedsRefresh()
 {
   for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
        l = PR_NEXT_LINK(l)) {
-    if (static_cast<ElementAnimations*>(l)->mNeedsRefreshes) {
+    if (static_cast<CommonElementAnimationData*>(l)->mNeedsRefreshes) {
       if (!mObservingRefreshDriver) {
         mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
         mObservingRefreshDriver = true;
@@ -755,7 +748,8 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   bool didThrottle = false;
   for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
        l = PR_NEXT_LINK(l)) {
-    ElementAnimations *ea = static_cast<ElementAnimations*>(l);
+    CommonElementAnimationData *ea =
+      static_cast<CommonElementAnimationData*>(l);
     bool canThrottleTick = aFlags == Can_Throttle &&
       ea->CanPerformOnCompositorThread(
         CommonElementAnimationData::CanAnimateFlags(0)) &&
@@ -808,7 +802,7 @@ nsAnimationManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
 
   nsRefPtr<nsStyleContext> newStyle;
 
-  ElementAnimations* ea;
+  CommonElementAnimationData* ea;
   if (element &&
       (ea = GetElementAnimations(element,
                                  nsCSSPseudoElements::ePseudo_NotPseudoElement,

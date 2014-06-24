@@ -48,19 +48,6 @@ struct AnimationEventInfo {
 
 typedef InfallibleTArray<AnimationEventInfo> EventArray;
 
-/**
- * Data about all of the animations running on an element.
- */
-struct ElementAnimations MOZ_FINAL
-  : public mozilla::css::CommonElementAnimationData
-{
-  typedef mozilla::TimeStamp TimeStamp;
-  typedef mozilla::TimeDuration TimeDuration;
-
-  ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
-                    nsAnimationManager *aAnimationManager, TimeStamp aNow);
-};
-
 class nsAnimationManager MOZ_FINAL
   : public mozilla::css::CommonAnimationManager
 {
@@ -89,10 +76,10 @@ public:
     return false;
   }
 
-  void UpdateStyleAndEvents(ElementAnimations* aEA,
+  void UpdateStyleAndEvents(mozilla::css::CommonElementAnimationData* aEA,
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
-  void GetEventsAt(ElementAnimations* aEA,
+  void GetEventsAt(mozilla::css::CommonElementAnimationData* aEA,
                    TimeStamp aRefreshTime,
                    EventArray &aEventsToDispatch);
 
@@ -141,9 +128,10 @@ public:
     }
   }
 
-  ElementAnimations* GetElementAnimations(mozilla::dom::Element *aElement,
-                                          nsCSSPseudoElements::Type aPseudoType,
-                                          bool aCreateIfNeeded);
+  mozilla::css::CommonElementAnimationData*
+  GetElementAnimations(mozilla::dom::Element *aElement,
+                       nsCSSPseudoElements::Type aPseudoType,
+                       bool aCreateIfNeeded);
 
   // Updates styles on throttled animations. See note on nsTransitionManager
   void UpdateAllThrottledStyles();
