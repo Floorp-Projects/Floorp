@@ -135,7 +135,7 @@ JSONParser<CharT>::readString()
             current++;
             JSFlatString *str = (ST == JSONParser::PropertyName)
                                 ? AtomizeChars(cx, start.get(), length)
-                                : js_NewStringCopyN<CanGC>(cx, start.get(), length);
+                                : NewStringCopyN<CanGC>(cx, start.get(), length);
             if (!str)
                 return token(OOM);
             return stringToken(str);

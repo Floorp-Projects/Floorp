@@ -292,6 +292,14 @@ function test_http2_push4() {
   chan.asyncOpen(listener, chan);
 }
 
+// this is a basic test where the server sends a simple document with 2 header
+// blocks. bug 1027364
+function test_http2_doubleheader() {
+  var chan = makeChan("https://localhost:6944/doubleheader");
+  var listener = new Http2CheckListener();
+  chan.asyncOpen(listener, null);
+}
+
 // Make sure we handle GETs that cover more than 2 frames properly
 function test_http2_big() {
   var chan = makeChan("https://localhost:6944/big");
@@ -338,6 +346,7 @@ var tests = [ test_http2_post_big
             , test_http2_push2
             , test_http2_push3
             , test_http2_push4
+            , test_http2_doubleheader
             , test_http2_xhr
             , test_http2_header
             , test_http2_cookie_crumbling

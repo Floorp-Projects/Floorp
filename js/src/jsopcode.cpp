@@ -1380,7 +1380,7 @@ js_QuoteString(ExclusiveContext *cx, JSString *str, jschar quote)
     char *bytes = QuoteString(&sprinter, str, quote);
     if (!bytes)
         return nullptr;
-    return js_NewStringCopyZ<CanGC>(cx, bytes);
+    return NewStringCopyZ<CanGC>(cx, bytes);
 }
 
 /************************************************************************/
