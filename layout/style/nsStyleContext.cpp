@@ -19,7 +19,7 @@
 
 #include "nsRuleNode.h"
 #include "nsStyleContext.h"
-#include "nsStyleAnimation.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "GeckoProfiler.h"
 
 #ifdef DEBUG

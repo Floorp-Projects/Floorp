@@ -7,12 +7,12 @@
 
 #include "nsSMILCSSValueType.h"
 #include "nsString.h"
-#include "nsStyleAnimation.h"
 #include "nsSMILParserUtils.h"
 #include "nsSMILValue.h"
 #include "nsCSSValue.h"
 #include "nsColor.h"
 #include "nsPresContext.h"
+#include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/Element.h"
 #include "nsDebug.h"
 #include "nsStyleUtil.h"
