@@ -55,6 +55,8 @@ public:
   void GetArray(nsTArray<nsRefPtr<TextTrackCue> >& aCues);
 
 private:
+  ~TextTrackCueList();
+
   nsCOMPtr<nsISupports> mParent;
 
   // A sorted list of TextTrackCues sorted by earliest start time. If the start

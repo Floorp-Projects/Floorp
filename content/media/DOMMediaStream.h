@@ -56,7 +56,6 @@ public:
   typedef uint8_t TrackTypeHints;
 
   DOMMediaStream();
-  virtual ~DOMMediaStream();
 
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMMediaStream)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -209,6 +208,8 @@ public:
   }
 
 protected:
+  virtual ~DOMMediaStream();
+
   void Destroy();
   void InitSourceStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);
   void InitTrackUnionStream(nsIDOMWindow* aWindow, TrackTypeHints aHintContents);

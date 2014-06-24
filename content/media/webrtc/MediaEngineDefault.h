@@ -36,7 +36,6 @@ class MediaEngineDefaultVideoSource : public nsITimerCallback,
 {
 public:
   MediaEngineDefaultVideoSource();
-  ~MediaEngineDefaultVideoSource();
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
@@ -65,6 +64,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
 protected:
+  ~MediaEngineDefaultVideoSource();
+
   friend class MediaEngineDefault;
 
   TrackID mTrackID;
@@ -90,7 +91,6 @@ class MediaEngineDefaultAudioSource : public nsITimerCallback,
 {
 public:
   MediaEngineDefaultAudioSource();
-  ~MediaEngineDefaultAudioSource();
 
   virtual void GetName(nsAString&);
   virtual void GetUUID(nsAString&);
@@ -119,6 +119,8 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
 protected:
+  ~MediaEngineDefaultAudioSource();
+
   TrackID mTrackID;
   nsCOMPtr<nsITimer> mTimer;
 
