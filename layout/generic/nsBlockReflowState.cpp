@@ -46,8 +46,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 {
   WritingMode wm = aReflowState.GetWritingMode();
   SetFlag(BRS_ISFIRSTINFLOW, aFrame->GetPrevInFlow() == nullptr);
-  SetFlag(BRS_ISOVERFLOWCONTAINER,
-          IS_TRUE_OVERFLOW_CONTAINER(aFrame));
+  SetFlag(BRS_ISOVERFLOWCONTAINER, IS_TRUE_OVERFLOW_CONTAINER(aFrame));
 
   int logicalSkipSides = aFrame->GetLogicalSkipSides(&aReflowState);
   mBorderPadding.ApplySkipSides(logicalSkipSides);
@@ -58,13 +57,11 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   if ((aBStartMarginRoot && !(logicalSkipSides & LOGICAL_SIDE_B_START)) ||
       0 != mBorderPadding.BStart(wm)) {
     SetFlag(BRS_ISBSTARTMARGINROOT, true);
+    SetFlag(BRS_APPLYBSTARTMARGIN, true);
   }
   if ((aBEndMarginRoot && !(logicalSkipSides & LOGICAL_SIDE_B_END)) ||
       0 != mBorderPadding.BEnd(wm)) {
     SetFlag(BRS_ISBENDMARGINROOT, true);
-  }
-  if (GetFlag(BRS_ISBSTARTMARGINROOT)) {
-    SetFlag(BRS_APPLYBSTARTMARGIN, true);
   }
   if (aBlockNeedsFloatManager) {
     SetFlag(BRS_FLOAT_MGR, true);
