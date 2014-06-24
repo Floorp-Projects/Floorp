@@ -79,6 +79,60 @@ function newWorker(custom_ns) {
 }
 
 /**
+ * Create a buffered RIL worker.
+ *
+ * @return A worker object that stores sending octets in a internal buffer.
+ */
+function newUint8Worker() {
+  let worker = newWorker();
+  let index = 0; // index for read
+  let buf = [];
+
+  let context = worker.ContextPool._contexts[0];
+  context.Buf.writeUint8 = function(value) {
+    buf.push(value);
+  };
+
+  context.Buf.readUint8 = function() {
+    return buf[index++];
+  };
+
+  context.Buf.seekIncoming = function(offset) {
+    index += offset;
+  };
+
+  context.Buf.getReadAvailable = function() {
+    return buf.length - index;
+  };
+
+  worker.debug = do_print;
+
+  return worker;
+}
+
+/**
+ * Create a worker that keeps posted chrome message.
+ */
+function newInterceptWorker() {
+  let postedMessage;
+  let worker = newWorker({
+    postRILMessage: function(data) {
+    },
+    postMessage: function(message) {
+      postedMessage = message;
+    }
+  });
+  return {
+    get postedMessage() {
+      return postedMessage;
+    },
+    get worker() {
+      return worker;
+    }
+  };
+}
+
+/**
  * Create a parcel suitable for postRILMessage().
  *
  * @param fakeParcelSize

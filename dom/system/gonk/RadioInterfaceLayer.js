@@ -71,6 +71,7 @@ const kSysMsgListenerReadyObserverTopic  = "system-message-listener-ready";
 const kSysClockChangeObserverTopic       = "system-clock-change";
 const kScreenStateChangedTopic           = "screen-state-changed";
 
+const kSettingsCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kSettingsCellBroadcastSearchList = "ril.cellbroadcast.searchlist";
 const kSettingsClockAutoUpdateEnabled = "time.clock.automatic-update.enabled";
 const kSettingsClockAutoUpdateAvailable = "time.clock.automatic-update.available";
@@ -79,7 +80,6 @@ const kSettingsTimezoneAutoUpdateAvailable = "time.timezone.automatic-update.ava
 
 const NS_PREFBRANCH_PREFCHANGE_TOPIC_ID = "nsPref:changed";
 
-const kPrefCellBroadcastDisabled = "ril.cellbroadcast.disabled";
 const kPrefRilNumRadioInterfaces = "ril.numRadioInterfaces";
 const kPrefRilDebuggingEnabled = "ril.debugging.enabled";
 
@@ -1591,7 +1591,6 @@ WorkerMessenger.prototype = {
   init: function() {
     let options = {
       debug: DEBUG,
-      cellBroadcastDisabled: false,
       quirks: {
         callstateExtraUint32:
           libcutils.property_get("ro.moz.ril.callstate_extra_int", "false") === "true",
@@ -1613,11 +1612,6 @@ WorkerMessenger.prototype = {
       rilEmergencyNumbers: libcutils.property_get("ril.ecclist") ||
                            libcutils.property_get("ro.ril.ecclist")
     };
-
-    try {
-      options.cellBroadcastDisabled =
-        Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
-    } catch(e) {}
 
     this.send(null, "setInitialOptions", options);
   },
@@ -1815,8 +1809,30 @@ function RadioInterface(aClientId, aWorkerMessenger) {
   // Set "time.timezone.automatic-update.available" to false when starting up.
   this.setTimezoneAutoUpdateAvailable(false);
 
-  // Read the Cell Broadcast Search List setting, string of integers or integer
-  // ranges separated by comma, to set listening channels.
+  /**
+  * Read the settings of the toggle of Cellbroadcast Service:
+  *
+  * Simple Format: Boolean
+  *   true if CBS is disabled. The value is applied to all RadioInterfaces.
+  * Enhanced Format: Array of Boolean
+  *   Each element represents the toggle of CBS per RadioInterface.
+  */
+  lock.get(kSettingsCellBroadcastDisabled, this);
+
+  /**
+   * Read the Cell Broadcast Search List setting to set listening channels:
+   *
+   * Simple Format:
+   *   String of integers or integer ranges separated by comma.
+   *   For example, "1, 2, 4-6"
+   * Enhanced Format:
+   *   Array of Objects with search lists specified in gsm/cdma network.
+   *   For example, [{'gsm' : "1, 2, 4-6", 'cdma' : "1, 50, 99"},
+   *                 {'cdma' : "3, 6, 8-9"}]
+   *   This provides the possibility to
+   *   1. set gsm/cdma search list individually for CDMA+LTE device.
+   *   2. set search list per RadioInterface.
+   */
   lock.get(kSettingsCellBroadcastSearchList, this);
 
   Services.obs.addObserver(this, kMozSettingsChangedObserverTopic, false);
@@ -1825,7 +1841,6 @@ function RadioInterface(aClientId, aWorkerMessenger) {
 
   Services.obs.addObserver(this, kNetworkConnStateChangedTopic, false);
   Services.obs.addObserver(this, kNetworkActiveChangedTopic, false);
-  Services.prefs.addObserver(kPrefCellBroadcastDisabled, this, false);
 
   this.portAddressedSmsApps = {};
   this.portAddressedSmsApps[WAP.WDP_PORT_PUSH] = this.handleSmsWdpPortPush.bind(this);
@@ -2493,11 +2508,18 @@ RadioInterface.prototype = {
     }).bind(this));
   },
 
-  setCellBroadcastSearchList: function(newSearchList) {
-    if ((newSearchList == this._cellBroadcastSearchList) ||
-          (newSearchList && this._cellBroadcastSearchList &&
-            newSearchList.gsm == this._cellBroadcastSearchList.gsm &&
-            newSearchList.cdma == this._cellBroadcastSearchList.cdma)) {
+  setCellBroadcastSearchList: function(settings) {
+    let newSearchList =
+      Array.isArray(settings) ? settings[this.clientId] : settings;
+    let oldSearchList =
+      Array.isArray(this._cellBroadcastSearchList) ?
+        this._cellBroadcastSearchList[this.clientId] :
+        this._cellBroadcastSearchList;
+
+    if ((newSearchList == oldSearchList) ||
+          (newSearchList && oldSearchList &&
+            newSearchList.gsm == oldSearchList.gsm &&
+            newSearchList.cdma == oldSearchList.cdma)) {
       return;
     }
 
@@ -2509,7 +2531,7 @@ RadioInterface.prototype = {
         lock.set(kSettingsCellBroadcastSearchList,
                  this._cellBroadcastSearchList, null);
       } else {
-        this._cellBroadcastSearchList = response.searchList;
+        this._cellBroadcastSearchList = settings;
       }
 
       return false;
@@ -3304,16 +3326,6 @@ RadioInterface.prototype = {
         let setting = JSON.parse(data);
         this.handleSettingsChange(setting.key, setting.value, setting.message);
         break;
-      case NS_PREFBRANCH_PREFCHANGE_TOPIC_ID:
-        if (data === kPrefCellBroadcastDisabled) {
-          let value = false;
-          try {
-            value = Services.prefs.getBoolPref(kPrefCellBroadcastDisabled);
-          } catch(e) {}
-          this.workerMessenger.send("setCellBroadcastDisabled",
-                                    { disabled: value });
-        }
-        break;
       case kSysClockChangeObserverTopic:
         let offset = parseInt(data, 10);
         if (this._lastNitzMessage) {
@@ -3475,9 +3487,19 @@ RadioInterface.prototype = {
           this.debug("'" + kSettingsCellBroadcastSearchList +
             "' is now " + JSON.stringify(aResult));
         }
-        // TODO: Set searchlist for Multi-SIM. See Bug 921326.
-        let result = Array.isArray(aResult) ? aResult[0] : aResult;
-        this.setCellBroadcastSearchList(result);
+
+        this.setCellBroadcastSearchList(aResult);
+        break;
+      case kSettingsCellBroadcastDisabled:
+        if (DEBUG) {
+          this.debug("'" + kSettingsCellBroadcastDisabled +
+            "' is now " + JSON.stringify(aResult));
+        }
+
+        let setCbsDisabled =
+          Array.isArray(aResult) ? aResult[this.clientId] : aResult;
+        this.workerMessenger.send("setCellBroadcastDisabled",
+                                  { disabled: setCbsDisabled });
         break;
     }
   },
