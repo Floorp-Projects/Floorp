@@ -20,7 +20,6 @@ class nsFilePicker : public nsBaseFilePicker
 {
 public:
   nsFilePicker();
-  virtual ~nsFilePicker();
 
   NS_DECL_ISUPPORTS
 
@@ -45,6 +44,7 @@ public:
   static void Shutdown();
 
 protected:
+  virtual ~nsFilePicker();
 
   void ReadValuesFromFileChooser(GtkWidget *file_chooser);
 

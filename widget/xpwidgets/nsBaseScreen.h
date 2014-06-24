@@ -15,8 +15,7 @@ class nsBaseScreen : public nsIScreen
 {
 public:
   nsBaseScreen();
-  virtual ~nsBaseScreen();
-  
+
   NS_DECL_ISUPPORTS
 
   // nsIScreen interface
@@ -45,6 +44,8 @@ public:
   NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor);
 
 protected:
+  virtual ~nsBaseScreen();
+
   /**
    * Manually set the current level of brightness locking. This is called after
    * we determine, based on the current active locks, what the strongest
