@@ -14,9 +14,17 @@ let emulator = (function() {
   let pendingCmdCount = 0;
   let originalRunEmulatorCmd = runEmulatorCmd;
 
+  let pendingShellCount = 0;
+  let originalRunEmulatorShell = runEmulatorShell;
+
   // Overwritten it so people could not call this function directly.
   runEmulatorCmd = function() {
     throw "Use emulator.runCmdWithCallback(cmd, callback) instead of runEmulatorCmd";
+  };
+
+  // Overwritten it so people could not call this function directly.
+  runEmulatorShell = function() {
+    throw "Use emulator.runShellCmd(cmd, callback) instead of runEmulatorShell";
   };
 
   function runCmd(cmd) {
@@ -47,13 +55,28 @@ let emulator = (function() {
   /**
    * @return Promise
    */
+  function runShellCmd(aCommands) {
+    let deferred = Promise.defer();
+
+    ++pendingShellCount;
+    originalRunEmulatorShell(aCommands, function(aResult) {
+      --pendingShellCount;
+      deferred.resolve(aResult);
+    });
+
+    return deferred.promise;
+  }
+
+  /**
+   * @return Promise
+   */
   function waitFinish() {
     let deferred = Promise.defer();
 
     waitFor(function() {
       deferred.resolve();
     }, function() {
-      return pendingCmdCount === 0;
+      return pendingCmdCount === 0 && pendingShellCount === 0;
     });
 
     return deferred.promise;
@@ -62,6 +85,7 @@ let emulator = (function() {
   return {
     runCmd: runCmd,
     runCmdWithCallback: runCmdWithCallback,
+    runShellCmd: runShellCmd,
     waitFinish: waitFinish
   };
 }());
