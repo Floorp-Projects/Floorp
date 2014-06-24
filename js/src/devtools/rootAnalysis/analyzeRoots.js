@@ -240,7 +240,7 @@ function edgeCanGC(edge)
         var variable = callee.Variable;
         assert(variable.Kind == "Func");
         var callee = mangled(variable.Name[0]);
-        if (callee in gcFunctions)
+        if ((callee in gcFunctions) || ((callee + internalMarker) in gcFunctions))
             return "'" + variable.Name[0] + "'";
         return null;
     }
