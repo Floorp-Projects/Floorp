@@ -10,18 +10,6 @@
 Login Manager test: (placeholder)
 <p id="display"></p>
 
-<div id="content" style="display: none">
-  <form id="form1" onsubmit="return checkSubmit(1)" action="http://newuser.com">
-    <input  type="text"     name="uname">
-    <input  type="password" name="pword">
-    <input  type="password" name="qword">
-
-    <button type="submit">Submit</button>
-    <button type="reset"> Reset </button>
-  </form>
-
-</div>
-
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -118,11 +106,23 @@ var pwmgr = Cc_pwmgr.getService(Ci_pwmgr);
 ok(pwmgr != null, "pwmgr getService()");
 
 
-window.onload = startTest;
+window.addEventListener("runTests", startTest);
 
 SimpleTest.waitForExplicitFinish();
 </script>
 </pre>
+<div id="content" style="display: none">
+  <form id="form1" onsubmit="return checkSubmit(1)" action="http://newuser.com">
+    <input  type="text"     name="uname">
+    <input  type="password" name="pword">
+    <input  type="password" name="qword">
+
+    <button type="submit">Submit</button>
+    <button type="reset"> Reset </button>
+  </form>
+
+</div>
+
 </body>
 </html>
 

@@ -1,8 +1,12 @@
+/* vim: set ts=4 sts=4 sw=4 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-this.EXPORTED_SYMBOLS = ["LoginManagerContent"];
+"use strict";
+
+this.EXPORTED_SYMBOLS = [ "LoginManagerContent",
+                          "UserAutoCompleteResult" ];
 
 const Ci = Components.interfaces;
 const Cr = Components.results;
@@ -12,6 +16,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/Promise.jsm");
 
 // These mirror signon.* prefs.
 var gEnabled, gDebug, gAutofillForms, gStoreWhenAutocompleteOff;
@@ -62,7 +67,7 @@ var observer = {
         try {
             LoginManagerContent._onFormSubmit(formElement);
         } catch (e) {
-            log("Caught error in onFormSubmit:", e);
+            log("Caught error in onFormSubmit(", e.lineNumber, "):", e.message);
         }
 
         return true; // Always return true, or form submit will be canceled.
@@ -83,6 +88,15 @@ prefBranch.addObserver("", observer.onPrefChange, false);
 observer.onPrefChange(); // read initial values
 
 
+function messageManagerFromWindow(win) {
+    return win.QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIWebNavigation)
+              .QueryInterface(Ci.nsIDocShell)
+              .QueryInterface(Ci.nsIInterfaceRequestor)
+              .getInterface(Ci.nsIContentFrameMessageManager)
+}
+
+// This object maps to the "child" process (even in the single-process case).
 var LoginManagerContent = {
 
     __formFillService : null, // FormFillController, for username autocompleting
@@ -92,6 +106,125 @@ var LoginManagerContent = {
                             Cc["@mozilla.org/satchel/form-fill-controller;1"].
                             getService(Ci.nsIFormFillController);
         return this.__formFillService;
+    },
+
+    _getRandomId: function() {
+        return Cc["@mozilla.org/uuid-generator;1"]
+                 .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
+    },
+
+    _messages: [ "RemoteLogins:loginsFound",
+                 "RemoteLogins:loginsAutoCompleted" ],
+
+    // Map from form login requests to information about that request.
+    _requests: new Map(),
+
+    // Number of outstanding requests to each manager.
+    _managers: new Map(),
+
+    _takeRequest: function(msg) {
+        let data = msg.data;
+        let request = this._requests.get(data.requestId);
+
+        this._requests.delete(data.requestId);
+
+        let count = this._managers.get(msg.target);
+        if (--count === 0) {
+            this._managers.delete(msg.target);
+
+            for (let message of this._messages)
+                msg.target.removeMessageListener(message, this);
+        } else {
+            this._managers.set(msg.target, count);
+        }
+
+        return request;
+    },
+
+    _sendRequest: function(messageManager, requestData,
+                           name, messageData) {
+        let count;
+        if (!(count = this._managers.get(messageManager))) {
+            this._managers.set(messageManager, 1);
+
+            for (let message of this._messages)
+                messageManager.addMessageListener(message, this);
+        } else {
+            this._managers.set(messageManager, ++count);
+        }
+
+        let requestId = this._getRandomId();
+        messageData.requestId = requestId;
+
+        messageManager.sendAsyncMessage(name, messageData);
+
+        let deferred = Promise.defer();
+        requestData.promise = deferred;
+        this._requests.set(requestId, requestData);
+        return deferred.promise;
+    },
+
+    receiveMessage: function (msg) {
+        let request = this._takeRequest(msg);
+        switch (msg.name) {
+            case "RemoteLogins:loginsFound": {
+                request.promise.resolve({ form: request.form,
+                                          loginsFound: msg.data.logins });
+                break;
+            }
+
+            case "RemoteLogins:loginsAutoCompleted": {
+                request.promise.resolve(msg.data.logins);
+                break;
+            }
+        }
+    },
+
+    _asyncFindLogins: function(form, options) {
+      let doc = form.ownerDocument;
+      let win = doc.defaultView;
+
+      let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+      let actionOrigin = LoginUtils._getActionOrigin(form);
+
+      let messageManager = messageManagerFromWindow(win);
+
+      // XXX Weak??
+      let requestData = { form: form };
+      let messageData = { formOrigin: formOrigin,
+                          actionOrigin: actionOrigin,
+                          options: options };
+
+      return this._sendRequest(messageManager, requestData,
+                               "RemoteLogins:findLogins",
+                               messageData);
+    },
+
+    _autoCompleteSearchAsync: function(aSearchString, aPreviousResult,
+                                       aElement, aRect) {
+        let doc = aElement.ownerDocument;
+        let form = aElement.form;
+        let win = doc.defaultView;
+
+        let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+        let actionOrigin = LoginUtils._getActionOrigin(form);
+
+        let messageManager = messageManagerFromWindow(win);
+
+        let remote = (Services.appinfo.processType ===
+                      Services.appinfo.PROCESS_TYPE_CONTENT);
+
+        let requestData = {};
+        let messageData = { formOrigin: formOrigin,
+                            actionOrigin: actionOrigin,
+                            searchString: aSearchString,
+                            previousResult: aPreviousResult,
+                            rect: aRect,
+                            remote: remote };
+
+        return this._sendRequest(messageManager, requestData,
+                                 "RemoteLogins:autoCompleteLogins",
+                                 messageData);
     },
 
     /*
@@ -107,51 +240,18 @@ var LoginManagerContent = {
           return;
 
       let form = event.target;
-      let doc = form.ownerDocument;
-
-      log("onFormPassword for", doc.documentURI);
-
-      // If there are no logins for this site, bail out now.
-      let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
-      if (!Services.logins.countLogins(formOrigin, "", null))
-          return;
-
-      // If we're currently displaying a master password prompt, defer
-      // processing this form until the user handles the prompt.
-      if (Services.logins.uiBusy) {
-        log("deferring onFormPassword for", doc.documentURI);
-        let self = this;
-        let observer = {
-            QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-            observe: function (subject, topic, data) {
-                log("Got deferred onFormPassword notification:", topic);
-                // Only run observer once.
-                Services.obs.removeObserver(this, "passwordmgr-crypto-login");
-                Services.obs.removeObserver(this, "passwordmgr-crypto-loginCanceled");
-                if (topic == "passwordmgr-crypto-loginCanceled")
-                    return;
-                self.onFormPassword(event);
-            },
-            handleEvent : function (event) {
-                // Not expected to be called
-            }
-        };
-        // Trickyness follows: We want an observer, but don't want it to
-        // cause leaks. So add the observer with a weak reference, and use
-        // a dummy event listener (a strong reference) to keep it alive
-        // until the form is destroyed.
-        Services.obs.addObserver(observer, "passwordmgr-crypto-login", true);
-        Services.obs.addObserver(observer, "passwordmgr-crypto-loginCanceled", true);
-        form.addEventListener("mozCleverClosureHack", observer);
-        return;
-      }
-
-      let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
-
-      this._fillForm(form, autofillForm, false, false, false, null);
+      log("onFormPassword for", form.ownerDocument.documentURI);
+      this._asyncFindLogins(form, { showMasterPassword: true })
+          .then(this.loginsFound.bind(this))
+          .then(null, Cu.reportError);
     },
 
+    loginsFound: function({ form, loginsFound }) {
+        let doc = form.ownerDocument;
+        let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isWindowPrivate(doc.defaultView);
+
+        this._fillForm(form, autofillForm, false, false, false, loginsFound);
+    },
 
     /*
      * onUsernameInput
@@ -191,12 +291,11 @@ var LoginManagerContent = {
         var [usernameField, passwordField, ignored] =
             this._getFormFields(acForm, false);
         if (usernameField == acInputField && passwordField) {
-            // If the user has a master password but itsn't logged in, bail
-            // out now to prevent annoying prompts.
-            if (!Services.logins.isLoggedIn)
-                return;
-
-            this._fillForm(acForm, true, true, true, true, null);
+            this._asyncFindLogins(acForm, { showMasterPassword: false })
+                .then(({ form, loginsFound }) => {
+                    this._fillForm(form, true, true, true, true, loginsFound);
+                })
+                .then(null, Cu.reportError);
         } else {
             // Ignore the event, it's for some input we don't care about.
         }
@@ -379,15 +478,6 @@ var LoginManagerContent = {
      * our stored password.
      */
     _onFormSubmit : function (form) {
-
-        // For E10S this will need to move.
-        function getPrompter(aWindow) {
-            var prompterSvc = Cc["@mozilla.org/login-manager/prompter;1"].
-                              createInstance(Ci.nsILoginManagerPrompter);
-            prompterSvc.init(aWindow);
-            return prompterSvc;
-        }
-
         var doc = form.ownerDocument;
         var win = doc.defaultView;
 
@@ -417,11 +507,6 @@ var LoginManagerContent = {
         }
 
         var formSubmitURL = LoginUtils._getActionOrigin(form)
-        if (!Services.logins.getLoginSavingEnabled(hostname)) {
-            log("(form submission ignored -- saving is disabled for:", hostname, ")");
-            return;
-        }
-
 
         // Get the appropriate fields from the form.
         var [usernameField, newPasswordField, oldPasswordField] =
@@ -429,7 +514,7 @@ var LoginManagerContent = {
 
         // Need at least 1 valid password field to do anything.
         if (newPasswordField == null)
-                return;
+            return;
 
         // Check for autocomplete=off attribute. We don't use it to prevent
         // autofilling (for existing logins), but won't save logins when it's
@@ -444,102 +529,26 @@ var LoginManagerContent = {
                 return;
         }
 
+        // Don't try to send DOM nodes over IPC.
+        let mockUsername = usernameField ?
+                             { name: usernameField.name,
+                               value: usernameField.value } :
+                             null;
+        let mockPassword = { name: newPasswordField.name,
+                             value: newPasswordField.value };
+        let mockOldPassword = oldPasswordField ?
+                                { name: oldPasswordField.name,
+                                  value: oldPasswordField.value } :
+                                null;
 
-        var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                        createInstance(Ci.nsILoginInfo);
-        formLogin.init(hostname, formSubmitURL, null,
-                    (usernameField ? usernameField.value : ""),
-                    newPasswordField.value,
-                    (usernameField ? usernameField.name  : ""),
-                    newPasswordField.name);
-
-        // If we didn't find a username field, but seem to be changing a
-        // password, allow the user to select from a list of applicable
-        // logins to update the password for.
-        if (!usernameField && oldPasswordField) {
-
-            var logins = Services.logins.findLogins({}, hostname, formSubmitURL, null);
-
-            if (logins.length == 0) {
-                // Could prompt to save this as a new password-only login.
-                // This seems uncommon, and might be wrong, so ignore.
-                log("(no logins for this host -- pwchange ignored)");
-                return;
-            }
-
-            var prompter = getPrompter(win);
-
-            if (logins.length == 1) {
-                var oldLogin = logins[0];
-                formLogin.username      = oldLogin.username;
-                formLogin.usernameField = oldLogin.usernameField;
-
-                prompter.promptToChangePassword(oldLogin, formLogin);
-            } else {
-                prompter.promptToChangePasswordWithUsernames(
-                                    logins, logins.length, formLogin);
-            }
-
-            return;
-        }
-
-
-        // Look for an existing login that matches the form login.
-        var existingLogin = null;
-        var logins = Services.logins.findLogins({}, hostname, formSubmitURL, null);
-
-        for (var i = 0; i < logins.length; i++) {
-            var same, login = logins[i];
-
-            // If one login has a username but the other doesn't, ignore
-            // the username when comparing and only match if they have the
-            // same password. Otherwise, compare the logins and match even
-            // if the passwords differ.
-            if (!login.username && formLogin.username) {
-                var restoreMe = formLogin.username;
-                formLogin.username = "";
-                same = formLogin.matches(login, false);
-                formLogin.username = restoreMe;
-            } else if (!formLogin.username && login.username) {
-                formLogin.username = login.username;
-                same = formLogin.matches(login, false);
-                formLogin.username = ""; // we know it's always blank.
-            } else {
-                same = formLogin.matches(login, true);
-            }
-
-            if (same) {
-                existingLogin = login;
-                break;
-            }
-        }
-
-        if (existingLogin) {
-            log("Found an existing login matching this form submission");
-
-            // Change password if needed.
-            if (existingLogin.password != formLogin.password) {
-                log("...passwords differ, prompting to change.");
-                prompter = getPrompter(win);
-                prompter.promptToChangePassword(existingLogin, formLogin);
-            } else {
-                // Update the lastUsed timestamp.
-                var propBag = Cc["@mozilla.org/hash-property-bag;1"].
-                              createInstance(Ci.nsIWritablePropertyBag);
-                propBag.setProperty("timeLastUsed", Date.now());
-                propBag.setProperty("timesUsedIncrement", 1);
-                Services.logins.modifyLogin(existingLogin, propBag);
-            }
-
-            return;
-        }
-
-
-        // Prompt user to save login (via dialog or notification bar)
-        prompter = getPrompter(win);
-        prompter.promptToSavePassword(formLogin);
+        let messageManager = messageManagerFromWindow(win);
+        messageManager.sendAsyncMessage("RemoteLogins:onFormSubmit",
+                                        { hostname: hostname,
+                                          formSubmitURL: formSubmitURL,
+                                          usernameField: mockUsername,
+                                          newPasswordField: mockPassword,
+                                          oldPasswordField: mockOldPassword });
     },
-
 
     /*
      * _fillform
@@ -576,17 +585,6 @@ var LoginManagerContent = {
             return [false, foundLogins];
         }
 
-        // Need to get a list of logins if we weren't given them
-        if (foundLogins == null) {
-            var formOrigin =
-                LoginUtils._getPasswordOrigin(form.ownerDocument.documentURI);
-            var actionOrigin = LoginUtils._getActionOrigin(form);
-            foundLogins = Services.logins.findLogins({}, formOrigin, actionOrigin, null);
-            log("found", foundLogins.length, "matching logins.");
-        } else {
-            log("reusing logins from last form.");
-        }
-
         // Discard logins which have username/password values that don't
         // fit into the fields (as specified by the maxlength attribute).
         // The user couldn't enter these values anyway, and it helps
@@ -600,6 +598,15 @@ var LoginManagerContent = {
         if (passwordField.maxLength >= 0)
             maxPasswordLen = passwordField.maxLength;
 
+        foundLogins = foundLogins.map(login => {
+            var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                            createInstance(Ci.nsILoginInfo);
+            formLogin.init(login.hostname, login.formSubmitURL,
+                           login.httpRealm, login.username,
+                           login.password, login.usernameField,
+                           login.passwordField);
+            return formLogin;
+        });
         var logins = foundLogins.filter(function (l) {
                 var fit = (l.username.length <= maxUsernameLen &&
                            l.password.length <= maxPasswordLen);
@@ -792,10 +799,7 @@ var LoginManagerContent = {
 
 };
 
-
-
-
-LoginUtils = {
+var LoginUtils = {
     /*
      * _getPasswordOrigin
      *
@@ -840,4 +844,94 @@ LoginUtils = {
         return this._getPasswordOrigin(uriString, true);
     },
 
+};
+
+// nsIAutoCompleteResult implementation
+function UserAutoCompleteResult (aSearchString, matchingLogins) {
+    function loginSort(a,b) {
+        var userA = a.username.toLowerCase();
+        var userB = b.username.toLowerCase();
+
+        if (userA < userB)
+            return -1;
+
+        if (userB > userA)
+            return  1;
+
+        return 0;
+    };
+
+    this.searchString = aSearchString;
+    this.logins = matchingLogins.sort(loginSort);
+    this.matchCount = matchingLogins.length;
+
+    if (this.matchCount > 0) {
+        this.searchResult = Ci.nsIAutoCompleteResult.RESULT_SUCCESS;
+        this.defaultIndex = 0;
+    }
+}
+
+UserAutoCompleteResult.prototype = {
+    QueryInterface : XPCOMUtils.generateQI([Ci.nsIAutoCompleteResult,
+                                            Ci.nsISupportsWeakReference]),
+
+    // private
+    logins : null,
+
+    // Allow autoCompleteSearch to get at the JS object so it can
+    // modify some readonly properties for internal use.
+    get wrappedJSObject() {
+        return this;
+    },
+
+    // Interfaces from idl...
+    searchString : null,
+    searchResult : Ci.nsIAutoCompleteResult.RESULT_NOMATCH,
+    defaultIndex : -1,
+    errorDescription : "",
+    matchCount : 0,
+
+    getValueAt : function (index) {
+        if (index < 0 || index >= this.logins.length)
+            throw "Index out of range.";
+
+        return this.logins[index].username;
+    },
+
+    getLabelAt: function(index) {
+        return this.getValueAt(index);
+    },
+
+    getCommentAt : function (index) {
+        return "";
+    },
+
+    getStyleAt : function (index) {
+        return "";
+    },
+
+    getImageAt : function (index) {
+        return "";
+    },
+
+    getFinalCompleteValueAt : function (index) {
+        return this.getValueAt(index);
+    },
+
+    removeValueAt : function (index, removeFromDB) {
+        if (index < 0 || index >= this.logins.length)
+            throw "Index out of range.";
+
+        var [removedLogin] = this.logins.splice(index, 1);
+
+        this.matchCount--;
+        if (this.defaultIndex > this.logins.length)
+            this.defaultIndex--;
+
+        if (removeFromDB) {
+            var pwmgr = Cc["@mozilla.org/login-manager;1"].
+                        getService(Ci.nsILoginManager);
+            pwmgr.removeLogin(removedLogin);
+        }
+    }
 };
