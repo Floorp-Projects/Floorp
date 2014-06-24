@@ -28,6 +28,7 @@ using namespace mozilla;
 /* Implementation file */
 NS_IMPL_ISUPPORTS(nsDefaultURIFixup, nsIURIFixup)
 
+static bool sInitializedPrefCaches = false;
 static bool sFixTypos = true;
 
 nsDefaultURIFixup::nsDefaultURIFixup()
@@ -203,12 +204,15 @@ nsDefaultURIFixup::CreateFixupURI(const nsACString& aStringURI, uint32_t aFixupF
 #endif
     }
 
-    // Check if we want to fix up common scheme typos.
-    rv = Preferences::AddBoolVarCache(&sFixTypos,
-                                      "browser.fixup.typo.scheme",
-                                      sFixTypos);
-    MOZ_ASSERT(NS_SUCCEEDED(rv),
-              "Failed to observe \"browser.fixup.typo.scheme\"");
+    if (!sInitializedPrefCaches) {
+      // Check if we want to fix up common scheme typos.
+      rv = Preferences::AddBoolVarCache(&sFixTypos,
+                                        "browser.fixup.typo.scheme",
+                                        sFixTypos);
+      MOZ_ASSERT(NS_SUCCEEDED(rv),
+                "Failed to observe \"browser.fixup.typo.scheme\"");
+      sInitializedPrefCaches = true;
+    }
 
     // Fix up common scheme typos.
     if (sFixTypos && (aFixupFlags & FIXUP_FLAG_FIX_SCHEME_TYPOS)) {
