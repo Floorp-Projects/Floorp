@@ -28,6 +28,9 @@ public:
 
     // nsWrapperCache
     virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+
+private:
+    virtual bool ValidateAttribPointerType(bool integerMode, GLenum type, GLsizei* alignment, const char* info) MOZ_OVERRIDE;
 };
 
 } // namespace mozilla
