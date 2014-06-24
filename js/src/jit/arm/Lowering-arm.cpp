@@ -283,7 +283,7 @@ LIRGeneratorARM::lowerDivI(MDiv *div)
         }
     }
 
-    if (hasIDIV()) {
+    if (HasIDIV()) {
         LDivI *lir = new(alloc()) LDivI(useRegister(div->lhs()), useRegister(div->rhs()), temp());
         if (div->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
@@ -328,7 +328,7 @@ LIRGeneratorARM::lowerModI(MMod *mod)
         }
     }
 
-    if (hasIDIV()) {
+    if (HasIDIV()) {
         LModI *lir = new(alloc()) LModI(useRegister(mod->lhs()), useRegister(mod->rhs()), temp());
         if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
             return false;
@@ -425,7 +425,7 @@ LIRGeneratorARM::lowerUDiv(MDiv *div)
     MDefinition *lhs = div->getOperand(0);
     MDefinition *rhs = div->getOperand(1);
 
-    if (hasIDIV()) {
+    if (HasIDIV()) {
         LUDiv *lir = new(alloc()) LUDiv;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));
@@ -447,7 +447,7 @@ LIRGeneratorARM::lowerUMod(MMod *mod)
     MDefinition *lhs = mod->getOperand(0);
     MDefinition *rhs = mod->getOperand(1);
 
-    if (hasIDIV()) {
+    if (HasIDIV()) {
         LUMod *lir = new(alloc()) LUMod;
         lir->setOperand(0, useRegister(lhs));
         lir->setOperand(1, useRegister(rhs));

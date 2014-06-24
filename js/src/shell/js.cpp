@@ -6098,6 +6098,11 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
 
 #endif // JS_ION
 
+#if defined(JS_CODEGEN_ARM)
+    if (const char *str = op.getStringOption("arm-hwcap"))
+        jit::ParseARMHwCapFlags(str);
+#endif
+
 #if defined(JS_ARM_SIMULATOR)
     if (op.getBoolOption("arm-sim-icache-checks"))
         jit::Simulator::ICacheCheckingEnabled = true;
@@ -6317,6 +6322,10 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
+#if defined(JS_CODEGEN_ARM)
+        || !op.addStringOption('\0', "arm-hwcap", "[features]",
+                               "Specify ARM code generation features, or 'help' to list all features.")
+#endif
 #if defined(JS_ARM_SIMULATOR)
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
                              "simulator.")
