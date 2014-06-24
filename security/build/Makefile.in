@@ -333,22 +333,12 @@ EXTRA_DSO_LDOPTS += $(DEPTH)/db/sqlite3/src/$(LIB_PREFIX)mozsqlite3.$(LIB_SUFFIX
 # Add all static libraries for nss, smime, ssl and nssutil
 SHARED_LIBRARY_LIBS = $(addprefix ../,$(NSS_STATIC_LIBS))
 
-nss_def_files := $(addprefix $(srcdir)/../, \
-  nss/lib/util/nssutil.def \
-  nss/lib/nss/nss.def \
-  nss/lib/ssl/ssl.def \
-  nss/lib/smime/smime.def \
-)
-
-# Try to guard against NSS renaming things out from underneath us.
-ifneq ($(nss_def_files),$(wildcard $(nss_def_files)))
-$(error Need to update list of NSS def files)
-endif
+nss_def_file := $(srcdir)/nss.def
 
 ifeq (WINNT,$(OS_TARGET))
 # Create a .def file based on the various .def files for nss, smime, ssl and
 # nssutil.
-nss3.def: $(nss_def_files) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
+nss3.def: $(nss_def_file) $(DEPTH)/db/sqlite3/src/sqlite-processed.def
 	echo LIBRARY nss3$(DLL_SUFFIX) > $@.tmp
 	echo EXPORTS >> $@.tmp
 	grep -v -h -e ^LIBRARY -e ^EXPORTS -e ^\; $^ >> $@.tmp
@@ -358,11 +348,10 @@ ifdef GCC_USE_GNU_LD
 sqlite_def_file := $(topsrcdir)/db/sqlite3/src/sqlite.def
 nspr_def_file := $(srcdir)/nspr-dummy.def
 
-nss3.def: $(nss_def_files) $(sqlite_def_file) $(nspr_def_file)
+nss3.def: $(nss_def_file) $(sqlite_def_file) $(nspr_def_file)
 	@$(call py_action,convert_def_file, \
 	  $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) -o $@ \
-	  $(addprefix --nss-file=,$(nss_def_files)) \
-	  $(sqlite_def_file) $(nspr_def_file))
+	  $(nss_def_file) $(sqlite_def_file) $(nspr_def_file))
 
 GARBAGE += \
   nss3.def \
