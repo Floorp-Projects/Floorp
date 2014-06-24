@@ -59,8 +59,6 @@ struct ElementAnimations MOZ_FINAL
 
   ElementAnimations(mozilla::dom::Element *aElement, nsIAtom *aElementProperty,
                     nsAnimationManager *aAnimationManager, TimeStamp aNow);
-
-  void GetEventsAt(TimeStamp aRefreshTime, EventArray &aEventsToDispatch);
 };
 
 class nsAnimationManager MOZ_FINAL
@@ -94,6 +92,9 @@ public:
   void UpdateStyleAndEvents(ElementAnimations* aEA,
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
+  void GetEventsAt(ElementAnimations* aEA,
+                   TimeStamp aRefreshTime,
+                   EventArray &aEventsToDispatch);
 
   // nsIStyleRuleProcessor (parts)
   virtual void RulesMatching(ElementRuleProcessorData* aData) MOZ_OVERRIDE;

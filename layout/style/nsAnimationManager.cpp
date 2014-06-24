@@ -48,11 +48,22 @@ ElementAnimationsPropertyDtor(void           *aObject,
 }
 
 void
-ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
-                               EventArray& aEventsToDispatch)
+nsAnimationManager::UpdateStyleAndEvents(ElementAnimations* aEA,
+                                         TimeStamp aRefreshTime,
+                                         EnsureStyleRuleFlags aFlags)
 {
-  for (uint32_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    ElementAnimation* anim = mAnimations[animIdx];
+  aEA->EnsureStyleRuleFor(aRefreshTime, aFlags);
+  GetEventsAt(aEA, aRefreshTime, mPendingEvents);
+  CheckNeedsRefresh();
+}
+
+void
+nsAnimationManager::GetEventsAt(ElementAnimations* aEA,
+                                TimeStamp aRefreshTime,
+                                EventArray& aEventsToDispatch)
+{
+  for (uint32_t animIdx = aEA->mAnimations.Length(); animIdx-- != 0; ) {
+    ElementAnimation* anim = aEA->mAnimations[animIdx];
 
     TimeDuration localTime = anim->GetLocalTimeAt(aRefreshTime);
     ComputedTiming computedTiming =
@@ -82,8 +93,8 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
             computedTiming.mCurrentIteration;
           TimeDuration elapsedTime =
             std::max(iterationStart, anim->InitialAdvance());
-          AnimationEventInfo ei(mElement, anim->mName, message,
-                                elapsedTime, PseudoElement());
+          AnimationEventInfo ei(aEA->mElement, anim->mName, message,
+                                elapsedTime, aEA->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
         break;
@@ -101,16 +112,16 @@ ElementAnimations::GetEventsAt(TimeStamp aRefreshTime,
           anim->mLastNotification = 0;
           TimeDuration elapsedTime =
             std::min(anim->InitialAdvance(), activeDuration);
-          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_START,
-                                elapsedTime, PseudoElement());
+          AnimationEventInfo ei(aEA->mElement, anim->mName, NS_ANIMATION_START,
+                                elapsedTime, aEA->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
         // Dispatch 'animationend' when needed.
         if (anim->mLastNotification !=
             ElementAnimation::LAST_NOTIFICATION_END) {
           anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
-          AnimationEventInfo ei(mElement, anim->mName, NS_ANIMATION_END,
-                                activeDuration, PseudoElement());
+          AnimationEventInfo ei(aEA->mElement, anim->mName, NS_ANIMATION_END,
+                                activeDuration, aEA->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
         break;
@@ -162,16 +173,6 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
   }
 
   return ea;
-}
-
-void
-nsAnimationManager::UpdateStyleAndEvents(ElementAnimations* aEA,
-                                         TimeStamp aRefreshTime,
-                                         EnsureStyleRuleFlags aFlags)
-{
-  aEA->EnsureStyleRuleFor(aRefreshTime, aFlags);
-  aEA->GetEventsAt(aRefreshTime, mPendingEvents);
-  CheckNeedsRefresh();
 }
 
 /* virtual */ void
