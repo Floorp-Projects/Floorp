@@ -267,11 +267,11 @@ include pagination/reftest.list
 # <style scoped>
 include scoped-style/reftest.list
 
-# scrolling
+# scrolling 
 include scrolling/reftest.list
 
 # selection
-include selection/reftest.list
+skip-if(B2G&&browserIsRemote) include selection/reftest.list
 
 # sticky positioning
 include position-sticky/reftest.list
