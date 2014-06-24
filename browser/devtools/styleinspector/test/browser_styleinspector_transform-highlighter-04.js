@@ -42,7 +42,7 @@ let test = asyncTest(function*() {
   ok(!hs.promises[TYPE], "And no highlighter is being initialized either");
 
   info("Disabling the applied property");
-  let classRuleEditor = rView.element.children[1]._ruleEditor;
+  let classRuleEditor = getRuleViewRuleEditor(rView, 1);
   let propEditor = classRuleEditor.rule.textProps[0].editor;
   propEditor.enable.click();
   yield classRuleEditor.rule._applyingModifications;

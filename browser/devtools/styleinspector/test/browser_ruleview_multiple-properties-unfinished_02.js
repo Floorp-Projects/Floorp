@@ -17,7 +17,7 @@ let test = asyncTest(function*() {
   newElement.textContent = "Test Element";
   content.document.body.appendChild(newElement);
   yield selectNode(newElement, inspector);
-  let ruleEditor = view.element.children[0]._ruleEditor;
+  let ruleEditor = getRuleViewRuleEditor(view, 0);
 
   yield testCreateNewMultiPartialUnfinished(inspector, ruleEditor, view);
 });

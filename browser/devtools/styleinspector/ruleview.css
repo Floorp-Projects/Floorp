@@ -19,7 +19,8 @@
   pointer-events: none;
 }
 
-.ruleview-namecontainer {
+.ruleview-namecontainer,
+.ruleview-selectorcontainer {
   cursor: text;
 }
 

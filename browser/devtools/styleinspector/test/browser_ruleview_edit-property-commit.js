@@ -56,14 +56,14 @@ function createDocument() {
 }
 
 function* runTestData(view, {value, commitKey, modifiers, expected}) {
-  let idRuleEditor = view.element.children[1]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(view, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the inplace editor field");
   let editor = yield focusEditableField(propEditor.valueSpan);
   is(inplaceEditor(propEditor.valueSpan), editor, "Focused editor should be the value span.");
 
-  info("Entering test data " + value)
+  info("Entering test data " + value);
   for (let ch of value) {
     EventUtils.sendChar(ch, view.doc.defaultView);
   }

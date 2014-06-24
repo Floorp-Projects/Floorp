@@ -29,7 +29,7 @@ let test = asyncTest(function*() {
 });
 
 function* testEditProperty(inspector, ruleView) {
-  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   let editor = yield focusEditableField(propEditor.nameSpan);
@@ -77,7 +77,7 @@ function* testEditProperty(inspector, ruleView) {
 }
 
 function* testDisableProperty(inspector, ruleView) {
-  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Disabling a property");

@@ -40,7 +40,7 @@ let test = asyncTest(function*() {
 
 
 function* testLivePreviewData(data, ruleView, testElement) {
-  let idRuleEditor = ruleView.element.children[1]._ruleEditor;
+  let idRuleEditor = getRuleViewRuleEditor(ruleView, 1);
   let propEditor = idRuleEditor.rule.textProps[0].editor;
 
   info("Focusing the property value inplace-editor");
