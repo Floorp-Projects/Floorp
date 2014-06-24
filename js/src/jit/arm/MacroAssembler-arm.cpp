@@ -1976,6 +1976,12 @@ MacroAssemblerARMCompat::or32(Imm32 imm, const Address &dest)
 }
 
 void
+MacroAssemblerARMCompat::or32(Imm32 imm, Register dest)
+{
+    ma_orr(imm, dest);
+}
+
+void
 MacroAssemblerARMCompat::xorPtr(Imm32 imm, Register dest)
 {
     ma_eor(imm, dest);
