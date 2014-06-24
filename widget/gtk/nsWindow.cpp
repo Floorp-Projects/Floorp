@@ -398,7 +398,11 @@ nsWindow::ReleaseGlobals()
 {
   for (uint32_t i = 0; i < ArrayLength(gCursorCache); ++i) {
     if (gCursorCache[i]) {
+#if (MOZ_WIDGET_GTK == 3)
+      g_object_unref(gCursorCache[i]);
+#else
       gdk_cursor_unref(gCursorCache[i]);
+#endif
       gCursorCache[i] = nullptr;
     }
   }
@@ -1580,7 +1584,11 @@ nsWindow::SetCursor(imgIContainer* aCursor,
             gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(mContainer)), cursor);
             rv = NS_OK;
         }
+#if (MOZ_WIDGET_GTK == 3)
+        g_object_unref(cursor);
+#else
         gdk_cursor_unref(cursor);
+#endif
     }
 
     return rv;
@@ -4571,7 +4579,11 @@ nsWindow::SetNonXEmbedPluginFocus()
                    RevertToNone,
                    CurrentTime);
     gdk_flush();
+#if (MOZ_WIDGET_GTK == 3)
+    gdk_error_trap_pop_ignored();
+#else
     gdk_error_trap_pop();
+#endif
     gPluginFocusWindow = this;
     gdk_window_add_filter(nullptr, plugin_client_message_filter, this);
 
@@ -4612,7 +4624,11 @@ nsWindow::LoseNonXEmbedPluginFocus()
                        RevertToParent,
                        CurrentTime);
         gdk_flush();
+#if (MOZ_WIDGET_GTK == 3)
+        gdk_error_trap_pop_ignored();
+#else
         gdk_error_trap_pop();
+#endif
     }
     gPluginFocusWindow = nullptr;
     mOldFocusWindow = 0;
@@ -6084,27 +6100,27 @@ nsWindow::GetThebesSurface(cairo_t *cr)
     }
     if (!usingShm)
 #  endif  // MOZ_HAVE_SHMIMAGE
-
+    {
 #if (MOZ_WIDGET_GTK == 3)
 #if MOZ_TREE_CAIRO
 #error "cairo-gtk3 target must be built with --enable-system-cairo"
 #else    
-    if (cr) {
-        cairo_surface_t *surf = cairo_get_target(cr);
-        if (cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
-          NS_NOTREACHED("Missing cairo target?");
-          return nullptr;
-        }
-        mThebesSurface = gfxASurface::Wrap(surf);
-    } else
+        if (cr) {
+            cairo_surface_t *surf = cairo_get_target(cr);
+            if (cairo_surface_status(surf) != CAIRO_STATUS_SUCCESS) {
+              NS_NOTREACHED("Missing cairo target?");
+              return nullptr;
+            }
+            mThebesSurface = gfxASurface::Wrap(surf);
+        } else
 #endif
 #endif // (MOZ_WIDGET_GTK == 3)
-        mThebesSurface = new gfxXlibSurface
-            (GDK_WINDOW_XDISPLAY(mGdkWindow),
-             gdk_x11_window_get_xid(mGdkWindow),
-             visual,
-             size);
-
+            mThebesSurface = new gfxXlibSurface
+                (GDK_WINDOW_XDISPLAY(mGdkWindow),
+                 gdk_x11_window_get_xid(mGdkWindow),
+                 visual,
+                 size);
+    }
 #endif // MOZ_X11
 
     // if the surface creation is reporting an error, then

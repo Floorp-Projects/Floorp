@@ -341,5 +341,9 @@ socket_unrealize_cb(GtkWidget *widget, gpointer data)
   if (children) XFree(children);
 
   mozilla::FinishX(display);
+#if (MOZ_WIDGET_GTK == 3)
+  gdk_error_trap_pop_ignored();
+#else
   gdk_error_trap_pop();
+#endif
 }
