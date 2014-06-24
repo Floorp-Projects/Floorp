@@ -12,9 +12,10 @@
 
 class nsStunUDPSocketFilterHandler : public nsIUDPSocketFilterHandler {
 public:
-  virtual ~nsStunUDPSocketFilterHandler() {}
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUDPSOCKETFILTERHANDLER
+private:
+  virtual ~nsStunUDPSocketFilterHandler() {}
 };
 
 
