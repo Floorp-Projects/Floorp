@@ -954,28 +954,30 @@ chatbox:-moz-full-screen-ancestor > .chat-titlebar {
   opacity: 1.0;
 }
 
-#BMB_bookmarksPopup[animate="cancel"] {
-  transform: none;
-}
-
-#BMB_bookmarksPopup[arrowposition="after_start"]:-moz-locale-dir(ltr),
-#BMB_bookmarksPopup[arrowposition="after_end"]:-moz-locale-dir(rtl) {
+#BMB_bookmarksPopup[arrowposition="after_start"] {
   transform-origin: 20px top;
 }
 
-#BMB_bookmarksPopup[arrowposition="after_end"]:-moz-locale-dir(ltr),
-#BMB_bookmarksPopup[arrowposition="after_start"]:-moz-locale-dir(rtl) {
+#BMB_bookmarksPopup[arrowposition="after_end"] {
   transform-origin: calc(100% - 20px) top;
 }
 
-#BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(ltr),
-#BMB_bookmarksPopup[arrowposition="before_end"]:-moz-locale-dir(rtl) {
+#BMB_bookmarksPopup[arrowposition="before_start"] {
   transform-origin: 20px bottom;
 }
 
-#BMB_bookmarksPopup[arrowposition="before_end"]:-moz-locale-dir(ltr),
-#BMB_bookmarksPopup[arrowposition="before_start"]:-moz-locale-dir(rtl) {
+#BMB_bookmarksPopup[arrowposition="before_end"] {
   transform-origin: calc(100% - 20px) bottom;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_start"][animate="cancel"],
+#BMB_bookmarksPopup[arrowposition="before_end"][animate="cancel"] {
+  transform: none;
+}
+
+#BMB_bookmarksPopup[arrowposition="after_end"][animate="cancel"],
+#BMB_bookmarksPopup[arrowposition="before_start"][animate="cancel"] {
+  transform: none;
 }
 
 %endif
