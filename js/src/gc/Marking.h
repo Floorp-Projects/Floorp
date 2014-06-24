@@ -23,6 +23,7 @@ class DebugScopeObject;
 class GCMarker;
 class GlobalObject;
 class LazyScript;
+class SavedFrame;
 class ScopeObject;
 class Shape;
 class UnownedBaseShape;
@@ -111,6 +112,7 @@ DeclMarker(Object, DebugScopeObject)
 DeclMarker(Object, GlobalObject)
 DeclMarker(Object, JSObject)
 DeclMarker(Object, JSFunction)
+DeclMarker(Object, SavedFrame)
 DeclMarker(Object, ScopeObject)
 DeclMarker(Script, JSScript)
 DeclMarker(LazyScript, LazyScript)
