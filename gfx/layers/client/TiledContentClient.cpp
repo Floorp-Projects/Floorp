@@ -249,13 +249,29 @@ bool
 SharedFrameMetricsHelper::AboutToCheckerboard(const FrameMetrics& aContentMetrics,
                                               const FrameMetrics& aCompositorMetrics)
 {
-  CSSRect painted =
-        (aContentMetrics.mCriticalDisplayPort.IsEmpty() ? aContentMetrics.mDisplayPort : aContentMetrics.mCriticalDisplayPort)
-        + aContentMetrics.GetScrollOffset();
-  // Inflate painted by some small epsilon to deal with rounding
-  // error. We should replace this with a FuzzyContains function.
-  painted.Inflate(0.01f);
-  CSSRect showing = CSSRect(aCompositorMetrics.GetScrollOffset(), aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
+  // The size of the painted area is originally computed in layer pixels in layout, but then
+  // converted to app units and then back to CSS pixels before being put in the FrameMetrics.
+  // This process can introduce some rounding error, so we inflate the rect by one app unit
+  // to account for that.
+  CSSRect painted = (aContentMetrics.mCriticalDisplayPort.IsEmpty()
+                      ? aContentMetrics.mDisplayPort
+                      : aContentMetrics.mCriticalDisplayPort)
+                    + aContentMetrics.GetScrollOffset();
+  painted.Inflate(CSSMargin::FromAppUnits(nsMargin(1, 1, 1, 1)));
+
+  // Inflate the rect by the danger zone. See the description of the danger zone prefs
+  // in AsyncPanZoomController.cpp for an explanation of this.
+  CSSRect showing = CSSRect(aCompositorMetrics.GetScrollOffset(),
+                            aCompositorMetrics.CalculateBoundedCompositedSizeInCssPixels());
+  showing.Inflate(LayerSize(gfxPrefs::APZDangerZoneX(), gfxPrefs::APZDangerZoneY())
+                  / aCompositorMetrics.LayersPixelsPerCSSPixel());
+
+  // Clamp both rects to the scrollable rect, because having either of those
+  // exceed the scrollable rect doesn't make sense, and could lead to false
+  // positives.
+  painted = painted.Intersect(aContentMetrics.mScrollableRect);
+  showing = showing.Intersect(aContentMetrics.mScrollableRect);
+
   return !painted.Contains(showing);
 }
 
