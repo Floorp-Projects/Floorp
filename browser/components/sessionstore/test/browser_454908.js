@@ -13,7 +13,7 @@ const PASS = "pwd-" + Math.random();
 /**
  * Bug 454908 - Don't save/restore values of password fields.
  */
-add_task(function test_dont_save_passwords() {
+add_task(function* test_dont_save_passwords() {
   // Make sure we do save form data.
   Services.prefs.clearUserPref("browser.sessionstore.privacy_level");
 
@@ -40,13 +40,12 @@ add_task(function test_dont_save_passwords() {
   is(passwd, "", "password wasn't saved/restored");
 
   // Write to disk and read our file.
-  yield SessionSaver.run();
-  let path = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
-  let data = yield OS.File.read(path);
-  let state = new TextDecoder().decode(data);
+  yield forceSaveState();
+  yield promiseForEachSessionRestoreFile((state, key) =>
+    // Ensure that we have not saved our password.
+    ok(!state.contains(PASS), "password has not been written to file " + key)
+  );
 
-  // Ensure that sessionstore.js doesn't contain our password.
-  is(state.indexOf(PASS), -1, "password has not been written to disk");
 
   // Cleanup.
   gBrowser.removeTab(tab);
