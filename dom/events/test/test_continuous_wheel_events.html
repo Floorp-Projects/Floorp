@@ -108,7 +108,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (16.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -125,7 +125,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (16.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -142,7 +142,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (16.0 - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -160,7 +160,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (16.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -177,7 +177,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (16.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -194,7 +194,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (16.0 - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -212,7 +212,7 @@ function testContinuousTrustedEvents()
     { description: "Simple z-direction wheel event by pixels (16.0 - 1)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 0.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -230,7 +230,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -247,7 +247,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -264,7 +264,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pixels (-16.0 - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -16.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -282,7 +282,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (-16.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -299,7 +299,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (-16.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -316,7 +316,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pixels (-16.0 - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -16.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -334,7 +334,7 @@ function testContinuousTrustedEvents()
     { description: "Simple z-direction wheel event by pixels (-16.0 - -1)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 0.0, deltaZ: -16.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -353,7 +353,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (5.3 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -370,7 +370,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -387,7 +387,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -404,7 +404,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -421,7 +421,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -439,7 +439,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -456,7 +456,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -473,7 +473,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -491,7 +491,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -508,7 +508,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -525,7 +525,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -544,7 +544,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -561,7 +561,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -578,7 +578,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (5.3 - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -596,7 +596,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -613,7 +613,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -630,7 +630,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (5.3 - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -648,7 +648,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -665,7 +665,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -682,7 +682,7 @@ function testContinuousTrustedEvents()
     { description: "Horizontal wheel event by pixels (-5.3 - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -700,7 +700,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -717,7 +717,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -734,7 +734,7 @@ function testContinuousTrustedEvents()
     { description: "Vertical wheel event by pixels (-5.3 - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -753,7 +753,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-right wheel event by pixels (5.3/5.2 - 1/1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -770,7 +770,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-right wheel event by pixels (5.3/5.2 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -787,7 +787,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-right wheel event by pixels (5.3/5.2 - 0/0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 5.2, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -805,7 +805,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-left wheel event by pixels (-5.3/5.3 - -1/1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -822,7 +822,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-left wheel event by pixels (-5.3/5.3 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -839,7 +839,7 @@ function testContinuousTrustedEvents()
     { description: "To bottom-left wheel event by pixels (-5.3/5.3 - 0/0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -857,7 +857,7 @@ function testContinuousTrustedEvents()
     { description: "To top-left wheel event by pixels (-5.2/-5.3 - -1/-1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -874,7 +874,7 @@ function testContinuousTrustedEvents()
     { description: "To top-left wheel event by pixels (-5.2/-5.3 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -891,7 +891,7 @@ function testContinuousTrustedEvents()
     { description: "To top-left wheel event by pixels (-5.2/-5.3 - 0/0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.2, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -909,7 +909,7 @@ function testContinuousTrustedEvents()
     { description: "To top-right wheel event by pixels (5.3/-5.3 - 1/-1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -926,7 +926,7 @@ function testContinuousTrustedEvents()
     { description: "To top-right wheel event by pixels (5.3/-5.3 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -947,7 +947,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -964,7 +964,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -981,7 +981,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -998,7 +998,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1015,7 +1015,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1032,7 +1032,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1049,7 +1049,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 0) #4",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 1.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1066,7 +1066,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (5.3 - 1) #5",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: 5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1084,7 +1084,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1101,7 +1101,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1118,7 +1118,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's horizontal wheel event by pixels (-5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1136,7 +1136,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1153,7 +1153,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1170,7 +1170,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1187,7 +1187,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - 0) #4",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -1.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1204,7 +1204,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's Vertical wheel event by pixels (-5.3 - -1) #5",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 0.0, deltaY: -5.3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1224,7 +1224,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1241,7 +1241,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1258,7 +1258,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's bottom-left wheel event by pixels (-5.3/4.9 - 0/0) #4",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1276,7 +1276,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's bottom-right wheel event by pixels (5.3/4.9 - 0/0) #5",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 5.3, deltaY: 1.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1294,7 +1294,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1311,7 +1311,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1328,7 +1328,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's bottom-left wheel event by pixels (-5.3/4.9 - 0/0) #4",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: 4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1346,7 +1346,7 @@ function testContinuousTrustedEvents()
     { description: "Pixel only device's top-left wheel event by pixels (-5.3/-4.9 - 0/0) #5",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -5.3, deltaY: -4.9, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: true,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: true,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1365,7 +1365,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by lines (1.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1382,7 +1382,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by lines (1.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1400,7 +1400,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by lines (-1.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1417,7 +1417,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by lines (-1.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1435,7 +1435,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by lines (-1.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1452,7 +1452,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by lines (-1.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1470,7 +1470,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by lines (1.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1487,7 +1487,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by lines (1.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1506,7 +1506,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1523,7 +1523,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1540,7 +1540,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (0.333... - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1558,7 +1558,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (-0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1575,7 +1575,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (-0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1592,7 +1592,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by lines (-0.333... - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1610,7 +1610,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1627,7 +1627,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1644,7 +1644,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (0.333... - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1662,7 +1662,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (-0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1679,7 +1679,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (-0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1696,7 +1696,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by lines (-0.333... - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1715,7 +1715,7 @@ function testContinuousTrustedEvents()
     { description: "Oblique wheel event by lines (-1.0/2.0 - -1/2)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1733,7 +1733,7 @@ function testContinuousTrustedEvents()
     { description: "Oblique wheel event by lines (1.0/-2.0 - 1/-2)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1751,7 +1751,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 0/0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1768,7 +1768,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 1/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1785,7 +1785,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by lines (0.5/0.333.../-0.8 - 0/1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1804,7 +1804,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pages (1.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1821,7 +1821,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pages (1.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1839,7 +1839,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pages (-1.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1856,7 +1856,7 @@ function testContinuousTrustedEvents()
     { description: "Simple horizontal wheel event by pages (-1.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1874,7 +1874,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pages (-1.0 - -1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1891,7 +1891,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pages (-1.0 - -1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1909,7 +1909,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pages (1.0 - 1) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1926,7 +1926,7 @@ function testContinuousTrustedEvents()
     { description: "Simple vertical wheel event by pages (1.0 - 1) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: 1.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1945,7 +1945,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1962,7 +1962,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1979,7 +1979,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (0.333... - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -1997,7 +1997,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (-0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2014,7 +2014,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (-0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2031,7 +2031,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution horizontal wheel event by pages (-0.333... - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0 / 3, deltaY: 0.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2049,7 +2049,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2066,7 +2066,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2083,7 +2083,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (0.333... - 1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: 1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2101,7 +2101,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (-0.333... - 0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2118,7 +2118,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (-0.333... - 0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2135,7 +2135,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution vertical wheel event by pages (-0.333... - -1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.0, deltaY: -1.0 / 3, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: -1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2154,7 +2154,7 @@ function testContinuousTrustedEvents()
     { description: "Oblique wheel event by pages (-1.0/2.0 - -1/2)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -1.0, deltaY: 2.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -1, lineOrPageDeltaY: 2, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2172,7 +2172,7 @@ function testContinuousTrustedEvents()
     { description: "Oblique wheel event by pages (1.0/-2.0 - 1/-2)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: -2.0, deltaZ: 0.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: -2, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2190,7 +2190,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 0/0) #1",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2207,7 +2207,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 1/0) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 0, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2224,7 +2224,7 @@ function testContinuousTrustedEvents()
     { description: "High resolution oblique wheel event by pages (0.5/0.333.../-0.8 - 0/1) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.5, deltaY: 1.0 / 3, deltaZ: -0.8, isMomentum: false,
-               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 0, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2243,7 +2243,7 @@ function testContinuousTrustedEvents()
     { description: "preventDefault() shouldn't prevent other legacy events (pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2260,7 +2260,7 @@ function testContinuousTrustedEvents()
     { description: "preventDefault() shouldn't prevent other legacy events (line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2277,7 +2277,7 @@ function testContinuousTrustedEvents()
     { description: "preventDefault() shouldn't prevent other legacy events (page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2296,7 +2296,7 @@ function testContinuousTrustedEvents()
     { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2313,7 +2313,7 @@ function testContinuousTrustedEvents()
     { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2330,7 +2330,7 @@ function testContinuousTrustedEvents()
     { description: "If wheel event is consumed by preventDefault(), legacy events are not necessary (page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2349,7 +2349,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (shift, pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2366,7 +2366,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (shift, line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2383,7 +2383,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (shift, page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2401,7 +2401,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (ctrl, pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
       wheel: {
@@ -2418,7 +2418,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (ctrl, line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
       wheel: {
@@ -2435,7 +2435,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (ctrl, page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: true, altKey: false, metaKey: false },
       wheel: {
@@ -2453,7 +2453,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (alt, pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
       wheel: {
@@ -2470,7 +2470,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (alt, line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
       wheel: {
@@ -2487,7 +2487,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (alt, page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: true, metaKey: false },
       wheel: {
@@ -2505,7 +2505,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (meta, pixel)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: true },
       wheel: {
@@ -2522,7 +2522,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (meta, line)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: true },
       wheel: {
@@ -2539,7 +2539,7 @@ function testContinuousTrustedEvents()
     { description: "modifier key tests (meta, page)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2558,7 +2558,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (pixel, not momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2575,7 +2575,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (pixel, momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: 16.0, deltaY: 16.0, deltaZ: 16.0, isMomentum: true,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2592,7 +2592,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (line, not momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2609,7 +2609,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (line, momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2626,7 +2626,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (page, not momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: false,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2643,7 +2643,7 @@ function testContinuousTrustedEvents()
     { description: "Momentum scroll should cause legacy events (page, momentum)",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 1.0, deltaY: 1.0, deltaZ: 1.0, isMomentum: true,
-               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 1, lineOrPageDeltaY: 1, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2666,7 +2666,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: gHorizontalLine / 4, deltaY: gLineHeight / 8, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2683,7 +2683,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (pixel) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: gHorizontalLine / 4 + 1, deltaY: gLineHeight / 8 + 1, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2700,7 +2700,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (pixel) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: gHorizontalLine / 4 + 1, deltaY: gLineHeight / 8 + 1, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2726,7 +2726,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -gHorizontalLine / 4, deltaY: -gLineHeight / 8, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2743,7 +2743,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -(gHorizontalLine / 4 + 1), deltaY: -(gLineHeight / 8 + 1), deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2760,7 +2760,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (pixel, negative, shift) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PIXEL,
                deltaX: -(gHorizontalLine / 4 + 1), deltaY: -(gLineHeight / 8 + 1), deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: true, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2786,7 +2786,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2803,7 +2803,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (line) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2820,7 +2820,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (line) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2846,7 +2846,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2863,7 +2863,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2880,7 +2880,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (line, negative) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_LINE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2906,7 +2906,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2923,7 +2923,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (page) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.3, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2940,7 +2940,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (page) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: 0.4, deltaY: 0.4, deltaZ: 0,
-               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: 3, lineOrPageDeltaY: 5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2966,7 +2966,7 @@ function testContinuousTrustedEvents()
       },
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -2983,7 +2983,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #2",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -0.3, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
@@ -3000,7 +3000,7 @@ function testContinuousTrustedEvents()
     { description: "lineOrPageDelta should be recomputed by ESM (page, negative) #3",
       event: { deltaMode: WheelEvent.DOM_DELTA_PAGE,
                deltaX: -0.4, deltaY: -0.4, deltaZ: 0,
-               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isPixelOnlyDevice: false,
+               lineOrPageDeltaX: -3, lineOrPageDeltaY: -5, isNoLineOrPageDelta: false,
                isCustomizedByPrefs: false,
                shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
       wheel: {
