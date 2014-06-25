@@ -27,6 +27,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 function FormHandler(aForm, aWindow) {
   this.form = aForm;
   this.window = aWindow;
+
+  this.fieldDetails = [];
 }
 
 FormHandler.prototype = {
@@ -41,6 +43,21 @@ FormHandler.prototype = {
   window: null,
 
   /**
+   * Array of collected data about relevant form fields.  Each item is an object
+   * storing the identifying details of the field and a reference to the
+   * originally associated element from the form.
+   *
+   * The "section", "addressType", "contactType", and "fieldName" values are
+   * used to identify the exact field when the serializable data is received
+   * from the requestAutocomplete user interface.  There cannot be multiple
+   * fields which have the same exact combination of these values.
+   *
+   * A direct reference to the associated element cannot be sent to the user
+   * interface because processing may be done in the parent process.
+   */
+  fieldDetails: null,
+
+  /**
    * Handles requestAutocomplete and generates the DOM events when finished.
    */
   handleRequestAutocomplete: Task.async(function* () {
@@ -49,14 +66,7 @@ FormHandler.prototype = {
     // string indicates that an unexpected exception occurred.
     let reason = "";
     try {
-      let data = this.collectFormElements();
-
-      let ui = yield FormAutofill.integration.createRequestAutocompleteUI(data);
-      let result = yield ui.show();
-
-      // At present, we only have cancellation and success cases, since we
-      // don't do any validation or precondition check.
-      reason = result.canceled ? "cancel" : "success";
+      reason = yield this.promiseRequestAutocomplete();
     } catch (ex) {
       Cu.reportError(ex);
     }
@@ -72,10 +82,39 @@ FormHandler.prototype = {
   }),
 
   /**
-   * Collects information from the form about fields that can be autofilled, and
-   * returns an object that can be used to build RequestAutocompleteUI.
+   * Handles requestAutocomplete and returns the outcome when finished.
+   *
+   * @return {Promise}
+   * @resolves The "reason" value indicating the outcome of the
+   *           requestAutocomplete operation, including "success" if the
+   *           operation completed successfully.
    */
-  collectFormElements: function () {
+  promiseRequestAutocomplete: Task.async(function* () {
+    let data = this.collectFormFields();
+    if (!data) {
+      return "disabled";
+    }
+
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(data);
+    let result = yield ui.show();
+    if (result.canceled) {
+      return "cancel";
+    }
+
+    this.autofillFormFields(result);
+
+    return "success";
+  }),
+
+  /**
+   * Returns information from the form about fields that can be autofilled, and
+   * populates the fieldDetails array on this object accordingly.
+   *
+   * @returns Serializable data structure that can be sent to the user
+   *          interface, or null if the operation failed because the constraints
+   *          on the allowed fields were not honored.
+   */
+  collectFormFields: function () {
     let autofillData = {
       sections: [],
     };
@@ -91,6 +130,22 @@ FormHandler.prototype = {
       if (!info.fieldName || ["on", "off"].indexOf(info.fieldName) != -1) {
         continue;
       }
+
+      // Store the association between the field metadata and the element.
+      if (this.fieldDetails.some(f => f.section == info.section &&
+                                      f.addressType == info.addressType &&
+                                      f.contactType == info.contactType &&
+                                      f.fieldName == info.fieldName)) {
+        // A field with the same identifier already exists.
+        return null;
+      }
+      this.fieldDetails.push({
+        section: info.section,
+        addressType: info.addressType,
+        contactType: info.contactType,
+        fieldName: info.fieldName,
+        element: element,
+      });
 
       // The first level is the custom section.
       let section = autofillData.sections
@@ -123,6 +178,38 @@ FormHandler.prototype = {
     }
 
     return autofillData;
+  },
+
+  /**
+   * Processes form fields that can be autofilled, and populates them with the
+   * data provided by RequestAutocompleteUI.
+   *
+   * @param aAutofillResult
+   *        Data returned by the user interface.
+   *        {
+   *          fields: [
+   *            section: Value originally provided to the user interface.
+   *            addressType: Value originally provided to the user interface.
+   *            contactType: Value originally provided to the user interface.
+   *            fieldName: Value originally provided to the user interface.
+   *            value: String with which the field should be updated.
+   *          ],
+   *        }
+   */
+  autofillFormFields: function (aAutofillResult) {
+    for (let field of aAutofillResult.fields) {
+      // Get the field details, if it was processed by the user interface.
+      let fieldDetail = this.fieldDetails
+                            .find(f => f.section == field.section &&
+                                       f.addressType == field.addressType &&
+                                       f.contactType == field.contactType &&
+                                       f.fieldName == field.fieldName);
+      if (!fieldDetail) {
+        continue;
+      }
+
+      fieldDetail.element.value = field.value;
+    }
   },
 
   /**

@@ -20,10 +20,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 
 const RequestAutocompleteDialog = {
   resolveFn: null,
+  autofillData: null,
 
   onLoad: function () {
     Task.spawn(function* () {
-      this.resolveFn = window.arguments[0].wrappedJSObject.resolveFn;
+      let args = window.arguments[0].wrappedJSObject;
+      this.resolveFn = args.resolveFn;
+      this.autofillData = args.autofillData;
 
       window.sizeToContent();
 
@@ -33,8 +36,46 @@ const RequestAutocompleteDialog = {
   },
 
   onAccept: function () {
+    // TODO: Replace with autofill storage module (bug 1018304).
+    const dummyDB = {
+      "": {
+        "name": "Mozzy La",
+        "street-address": "331 E Evelyn Ave",
+        "address-level2": "Mountain View",
+        "address-level1": "CA",
+        "country": "US",
+        "postal-code": "94041",
+        "email": "email@example.org",
+      }
+    };
+
+    let result = { fields: [] };
+    for (let section of this.autofillData.sections) {
+      for (let addressSection of section.addressSections) {
+        let addressType = addressSection.addressType;
+        if (!(addressType in dummyDB)) {
+          continue;
+        }
+
+        for (let field of addressSection.fields) {
+          let fieldName = field.fieldName;
+          if (!(fieldName in dummyDB[addressType])) {
+            continue;
+          }
+
+          result.fields.push({
+            section: section.name,
+            addressType: addressType,
+            contactType: field.contactType,
+            fieldName: field.fieldName,
+            value: dummyDB[addressType][fieldName],
+          });
+        }
+      }
+    }
+
     window.close();
-    this.resolveFn({ email: "email@example.org" });
+    this.resolveFn(result);
   },
 
   onCancel: function () {
