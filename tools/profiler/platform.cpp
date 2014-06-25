@@ -38,8 +38,8 @@ mozilla::ThreadLocal<void *> tlsStackTop;
 // it as the flag itself.
 bool stack_key_initialized;
 
-TimeStamp   sLastTracerEvent; // is raced on
-TimeStamp   sStartTime;
+mozilla::TimeStamp   sLastTracerEvent; // is raced on
+mozilla::TimeStamp   sStartTime;
 int         sFrameNumber = 0;
 int         sLastFrameNumber = 0;
 int         sInitCount = 0; // Each init must have a matched shutdown.
@@ -844,7 +844,7 @@ bool mozilla_sampler_is_active()
   return sIsProfiling;
 }
 
-void mozilla_sampler_responsiveness(const TimeStamp& aTime)
+void mozilla_sampler_responsiveness(const mozilla::TimeStamp& aTime)
 {
   sCurrentEventGeneration++;
 
@@ -921,18 +921,18 @@ void mozilla_sampler_sleep_end() {
     stack->setSleeping(0);
 }
 
-double mozilla_sampler_time(const TimeStamp& aTime)
+double mozilla_sampler_time(const mozilla::TimeStamp& aTime)
 {
   if (!mozilla_sampler_is_active()) {
     return 0.0;
   }
-  TimeDuration delta = aTime - sStartTime;
+  mozilla::TimeDuration delta = aTime - sStartTime;
   return delta.ToMilliseconds();
 }
 
 double mozilla_sampler_time()
 {
-  return mozilla_sampler_time(TimeStamp::Now());
+  return mozilla_sampler_time(mozilla::TimeStamp::Now());
 }
 
 ProfilerBacktrace* mozilla_sampler_get_backtrace()
@@ -1000,7 +1000,7 @@ void mozilla_sampler_add_marker(const char *aMarker, ProfilerMarkerPayload *aPay
   if (!stack) {
     return;
   }
-  TimeDuration delta = TimeStamp::Now() - sStartTime;
+  mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
   stack->addMarker(aMarker, payload.forget(), static_cast<float>(delta.ToMilliseconds()));
 }
 
