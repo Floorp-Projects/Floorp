@@ -473,7 +473,7 @@ public:
     }
 
 private:
-    IDWriteFontFace *mFontFace;
+    nsRefPtr<IDWriteFontFace> mFontFace;
     void            *mContext;
 };
 
