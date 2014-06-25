@@ -161,6 +161,36 @@ class FloatRegisters {
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
+struct FloatRegister {
+    typedef FloatRegisters Codes;
+    typedef Codes::Code Code;
+
+    Code code_;
+
+    static FloatRegister FromCode(uint32_t i) {
+        JS_ASSERT(i < FloatRegisters::Total);
+        FloatRegister r = { (FloatRegisters::Code)i };
+        return r;
+    }
+    Code code() const {
+        JS_ASSERT((uint32_t)code_ < FloatRegisters::Total);
+        return code_;
+    }
+    const char *name() const {
+        return FloatRegisters::GetName(code());
+    }
+    bool volatile_() const {
+        return !!((1 << code()) & FloatRegisters::VolatileMask);
+    }
+    bool operator !=(FloatRegister other) const {
+        return other.code_ != code_;
+    }
+    bool operator ==(FloatRegister other) const {
+        return other.code_ == code_;
+    }
+    bool aliases(FloatRegister const &other) const;
+};
+
 } // namespace jit
 } // namespace js
 

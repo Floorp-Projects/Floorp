@@ -226,6 +226,174 @@ class FloatRegisters
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
+class VFPRegister
+{
+  public:
+    // What type of data is being stored in this register?
+    // UInt / Int are specifically for vcvt, where we need
+    // to know how the data is supposed to be converted.
+    enum RegType {
+        Single = 0x0,
+        Double = 0x1,
+        UInt   = 0x2,
+        Int    = 0x3
+    };
+
+    typedef FloatRegisters Codes;
+    typedef Codes::Code Code;
+
+  protected:
+    RegType kind : 2;
+    // ARM doesn't have more than 32 registers...
+    // don't take more bits than we'll need.
+    // Presently, I don't have plans to address the upper
+    // and lower halves of the double registers seprately, so
+    // 5 bits should suffice.  If I do decide to address them seprately
+    // (vmov, I'm looking at you), I will likely specify it as a separate
+    // field.
+  public:
+    Code code_ : 5;
+  protected:
+    bool _isInvalid : 1;
+    bool _isMissing : 1;
+
+  public:
+    MOZ_CONSTEXPR VFPRegister(uint32_t r, RegType k)
+      : kind(k), code_ (Code(r)), _isInvalid(false), _isMissing(false)
+    { }
+    MOZ_CONSTEXPR VFPRegister()
+      : kind(Double), code_(Code(0)), _isInvalid(true), _isMissing(false)
+    { }
+
+    MOZ_CONSTEXPR VFPRegister(RegType k, uint32_t id, bool invalid, bool missing) :
+        kind(k), code_(Code(id)), _isInvalid(invalid), _isMissing(missing) {
+    }
+
+    explicit MOZ_CONSTEXPR VFPRegister(Code id)
+      : kind(Double), code_(id), _isInvalid(false), _isMissing(false)
+    { }
+    bool operator==(const VFPRegister &other) const {
+        JS_ASSERT(!isInvalid());
+        JS_ASSERT(!other.isInvalid());
+        return kind == other.kind && code_ == other.code_;
+    }
+    bool isDouble() const { return kind == Double; }
+    bool isSingle() const { return kind == Single; }
+    bool isFloat() const { return (kind == Double) || (kind == Single); }
+    bool isInt() const { return (kind == UInt) || (kind == Int); }
+    bool isSInt() const { return kind == Int; }
+    bool isUInt() const { return kind == UInt; }
+    bool equiv(VFPRegister other) const { return other.kind == kind; }
+    size_t size() const { return (kind == Double) ? 8 : 4; }
+    bool isInvalid() const;
+    bool isMissing() const;
+
+    VFPRegister doubleOverlay(unsigned int which = 0) const;
+    VFPRegister singleOverlay(unsigned int which = 0) const;
+    VFPRegister sintOverlay(unsigned int which = 0) const;
+    VFPRegister uintOverlay(unsigned int which = 0) const;
+
+    struct VFPRegIndexSplit;
+    VFPRegIndexSplit encode();
+
+    // for serializing values
+    struct VFPRegIndexSplit {
+        const uint32_t block : 4;
+        const uint32_t bit : 1;
+
+      private:
+        friend VFPRegIndexSplit js::jit::VFPRegister::encode();
+
+        VFPRegIndexSplit(uint32_t block_, uint32_t bit_)
+          : block(block_), bit(bit_)
+        {
+            JS_ASSERT(block == block_);
+            JS_ASSERT(bit == bit_);
+        }
+    };
+
+    Code code() const {
+        JS_ASSERT(!_isInvalid && !_isMissing);
+        // this should only be used in areas where we only have doubles
+        // and singles.
+        JS_ASSERT(isFloat());
+        return Code(code_);
+    }
+    uint32_t id() const {
+        return code_;
+    }
+    static VFPRegister FromCode(uint32_t i) {
+        uint32_t code = i & 31;
+        uint32_t kind = i >> 5;
+        return VFPRegister(code, Double);
+    }
+    bool volatile_() const {
+        if (isDouble())
+            return !!((1 << (code_ >> 1)) & FloatRegisters::VolatileMask);
+        return !!((1 << code_) & FloatRegisters::VolatileMask);
+    }
+    const char *name() const {
+        return FloatRegisters::GetName(code_);
+    }
+    bool operator != (const VFPRegister &other) const {
+        return other.kind != kind || code_ != other.code_;
+    }
+    bool aliases(const VFPRegister &other) {
+        if (kind == other.kind)
+            return code_ == other.code_;
+        return doubleOverlay() == other.doubleOverlay();
+    }
+    static const int NumAliasedDoubles = 16;
+    uint32_t numAliased() const {
+        if (isDouble()) {
+            if (code_ < NumAliasedDoubles)
+                return 3;
+            return 1;
+        }
+        return 2;
+    }
+    VFPRegister aliased(uint32_t a) {
+        if (a == 0)
+            return *this;
+        if (isDouble()) {
+            JS_ASSERT(code_ < NumAliasedDoubles);
+            JS_ASSERT(a <= 2);
+            return singleOverlay(a - 1);
+        }
+        JS_ASSERT(a == 1);
+        return doubleOverlay(a - 1);
+    }
+    uint32_t numAlignedAliased() const {
+        if (isDouble()) {
+            if (code_ < NumAliasedDoubles)
+                return 2;
+            return 1;
+        }
+        // s1 has 0 other aligned aliases
+        // s0 has 1 other aligned aliases
+        return 2 - (code_ & 1);
+    }
+    VFPRegister alignedAliased(uint32_t a) {
+        if (a == 0)
+            return *this;
+        if (isDouble()) {
+            JS_ASSERT(code_ < NumAliasedDoubles);
+            JS_ASSERT(a <= 1);
+            return singleOverlay(a - 1);
+        }
+        JS_ASSERT(a == 1);
+        JS_ASSERT((code_ & 1) == 0);
+        return doubleOverlay(a - 1);
+    }
+    static Code FromName(const char *name) {
+        return FloatRegisters::FromName(name);
+    }
+};
+
+// The only floating point register set that we work with
+// are the VFP Registers
+typedef VFPRegister FloatRegister;
+
 uint32_t GetARMFlags();
 bool HasMOVWT();
 bool HasVFPv3();
