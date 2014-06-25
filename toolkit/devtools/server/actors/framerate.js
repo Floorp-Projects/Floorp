@@ -121,11 +121,13 @@ let FramerateFront = exports.FramerateFront = protocol.FrontClass(FramerateActor
    *        the elapsed time on each refresh driver tick.
    * @param number interval
    *        The maximum amount of time to wait between calculations.
+   * @param number clamp
+   *        The maximum allowed framerate value.
    * @return array
    *         A collection of { delta, value } objects representing the
    *         framerate value at every delta time.
    */
-  plotFPS: function(ticks, interval = 100) {
+  plotFPS: function(ticks, interval = 100, clamp = 60) {
     let timeline = [];
     let totalTicks = ticks.length;
 
@@ -149,7 +151,7 @@ let FramerateFront = exports.FramerateFront = protocol.FrontClass(FramerateActor
         continue;
       }
 
-      let framerate = 1000 / (elapsedTime / frameCount);
+      let framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
       timeline.push({ delta: prevTime, value: framerate });
       timeline.push({ delta: currTime, value: framerate });
 
