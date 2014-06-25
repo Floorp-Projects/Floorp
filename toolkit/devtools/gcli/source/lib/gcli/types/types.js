@@ -1140,13 +1140,8 @@ Types.prototype.createType = function(typeSpec) {
   // Copy the properties of typeSpec onto the new type
   util.copyProperties(typeSpec, newType);
 
-  // Delegate and Array types need special powers to create types. Injecting
-  // ourselves at this point seems nasty, but better than the alternative of
-  // forcing all children of delegate types to require the full types API, and
-  // not know where to get it from
-  if (newType.name === 'delegate' || newType.name === 'array') {
-    newType.types = this;
-  }
+  // Several types need special powers to create child types
+  newType.types = this;
 
   if (typeof NewTypeCtor !== 'function') {
     if (typeof newType.constructor === 'function') {
