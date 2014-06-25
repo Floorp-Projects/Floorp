@@ -172,7 +172,7 @@ public:
     JSObject* ensureHolder(JSContext *cx, HandleObject wrapper);
     virtual JSObject* createHolder(JSContext *cx, JSObject *wrapper) = 0;
 
-    JSObject* getExpandoChain(JSObject *obj) {
+    JSObject* getExpandoChain(HandleObject obj) {
       return GetObjectScope(obj)->GetExpandoChain(obj);
     }
 
