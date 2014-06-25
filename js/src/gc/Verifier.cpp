@@ -22,7 +22,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace mozilla;
 
 #ifdef JS_GC_ZEAL
 
