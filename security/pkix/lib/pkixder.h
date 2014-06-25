@@ -655,6 +655,74 @@ OptionalVersion(Input& input, /*out*/ Version& version)
   return Success;
 }
 
+template <typename ExtensionHandler>
+inline Result
+OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
+{
+  if (!input.Peek(tag)) {
+    return Success;
+  }
+
+  Input extensions;
+  {
+    Input tagged;
+    if (ExpectTagAndGetValue(input, tag, tagged) != Success) {
+      return Failure;
+    }
+    if (ExpectTagAndGetValue(tagged, SEQUENCE, extensions) != Success) {
+      return Failure;
+    }
+    if (End(tagged) != Success) {
+      return Failure;
+    }
+  }
+
+  // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
+  //
+  // TODO(bug 997994): According to the specification, there should never be
+  // an empty sequence of extensions but we've found OCSP responses that have
+  // that (see bug 991898).
+  while (!extensions.AtEnd()) {
+    Input extension;
+    if (ExpectTagAndGetValue(extensions, SEQUENCE, extension)
+          != Success) {
+      return Failure;
+    }
+
+    // Extension  ::=  SEQUENCE  {
+    //      extnID      OBJECT IDENTIFIER,
+    //      critical    BOOLEAN DEFAULT FALSE,
+    //      extnValue   OCTET STRING
+    //      }
+    Input extnID;
+    if (ExpectTagAndGetValue(extension, OIDTag, extnID) != Success) {
+      return Failure;
+    }
+    bool critical;
+    if (OptionalBoolean(extension, false, critical) != Success) {
+      return Failure;
+    }
+    SECItem extnValue;
+    if (ExpectTagAndGetValue(extension, OCTET_STRING, extnValue)
+          != Success) {
+      return Failure;
+    }
+    if (End(extension) != Success) {
+      return Failure;
+    }
+
+    bool understood = false;
+    if (extensionHandler(extnID, extnValue, understood) != Success) {
+      return Failure;
+    }
+    if (critical && !understood) {
+      return Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+    }
+  }
+
+  return Success;
+}
+
 // Parses a SEQUENCE into tbs and then parses an AlgorithmIdentifier followed
 // by a BIT STRING into signedData. This handles the commonality between
 // parsing the signed/signature fields of certificates and OCSP responses. In
