@@ -1,4 +1,4 @@
-// -*- coding: utf-8 -*-
+// -*- coding: utf-8; indent-tabs-mode: nil -*-
 // vim: et:ts=4:sw=4:sts=4:ft=javascript
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1

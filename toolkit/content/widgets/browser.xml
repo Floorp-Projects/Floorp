@@ -297,8 +297,18 @@
                 readonly="true"/>
 
       <property name="messageManager"
-                onget="return this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner).frameLoader.messageManager;"
-                readonly="true"/>
+                readonly="true">
+        <getter>
+          <![CDATA[
+            var owner = this.QueryInterface(Components.interfaces.nsIFrameLoaderOwner);
+            if (!owner.frameLoader) {
+              return null;
+            }
+            return owner.frameLoader.messageManager;
+          ]]>
+        </getter>
+
+      </property>
 
       <field name="_webNavigation">null</field>
 

@@ -282,7 +282,7 @@ CopyStringPure(JSContext *cx, JSString *str)
             copy = NewStringCopyN<NoGC>(cx, str->asLinear().latin1Chars(nogc), len);
         } else {
             JS::AutoCheckCannotGC nogc;
-            copy = NewStringCopyN<NoGC>(cx, str->asLinear().twoByteChars(nogc), len);
+            copy = NewStringCopyNDontDeflate<NoGC>(cx, str->asLinear().twoByteChars(nogc), len);
         }
         if (copy)
             return copy;
@@ -293,7 +293,7 @@ CopyStringPure(JSContext *cx, JSString *str)
 
         return chars.isLatin1()
                ? NewStringCopyN<CanGC>(cx, chars.latin1Range().start().get(), len)
-               : NewStringCopyN<CanGC>(cx, chars.twoByteRange().start().get(), len);
+               : NewStringCopyNDontDeflate<CanGC>(cx, chars.twoByteRange().start().get(), len);
     }
 
     if (str->hasLatin1Chars()) {

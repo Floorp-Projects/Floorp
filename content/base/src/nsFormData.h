@@ -31,6 +31,8 @@ class nsFormData : public nsIDOMFormData,
                    public nsFormSubmission,
                    public nsWrapperCache
 {
+  ~nsFormData() {}
+
 public:
   nsFormData(nsISupports* aOwner = nullptr);
 

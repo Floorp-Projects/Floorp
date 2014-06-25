@@ -181,9 +181,16 @@ WebappsRegistry.prototype = {
 
   checkInstalled: function(aManifestURL) {
     let manifestURL = Services.io.newURI(aManifestURL, null, this._window.document.baseURIObject);
-    this._window.document.nodePrincipal.checkMayLoad(manifestURL, true, false);
 
     let request = this.createRequest();
+
+    try {
+      this._window.document.nodePrincipal.checkMayLoad(manifestURL, true,
+                                                       false);
+    } catch (ex) {
+      Services.DOMRequest.fireErrorAsync(request, "CROSS_ORIGIN_CHECK_NOT_ALLOWED");
+      return request;
+    }
 
     this.addMessageListeners("Webapps:CheckInstalled:Return:OK");
     cpmm.sendAsyncMessage("Webapps:CheckInstalled", { origin: this._getOrigin(this._window.location.href),

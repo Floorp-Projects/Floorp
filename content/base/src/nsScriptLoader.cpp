@@ -69,6 +69,11 @@ using namespace mozilla::dom;
 //////////////////////////////////////////////////////////////
 
 class nsScriptLoadRequest MOZ_FINAL : public nsISupports {
+  ~nsScriptLoadRequest()
+  {
+    js_free(mScriptTextBuf);
+  }
+
 public:
   nsScriptLoadRequest(nsIScriptElement* aElement,
                       uint32_t aVersion,
@@ -83,11 +88,6 @@ public:
       mLineNo(1),
       mCORSMode(aCORSMode)
   {
-  }
-
-  ~nsScriptLoadRequest()
-  {
-    js_free(mScriptTextBuf);
   }
 
   NS_DECL_THREADSAFE_ISUPPORTS

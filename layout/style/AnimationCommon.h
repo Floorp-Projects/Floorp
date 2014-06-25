@@ -263,6 +263,11 @@ struct AnimationTiming
 /**
  * Stores the results of calculating the timing properties of an animation
  * at a given sample time.
+ *
+ * The members of a default-constructed object of this type are not meaningful.
+ * Rather, this object is intended to be used as the return value of
+ * ElementAnimation::GetComputedTimingAt which ensures all members are set
+ * correctly.
  */
 struct ComputedTiming
 {
@@ -272,6 +277,10 @@ struct ComputedTiming
   { }
 
   static const double kNullTimeFraction;
+
+  // The total duration of the animation including all iterations.
+  // Will equal TimeDuration::Forever() if the animation repeats indefinitely.
+  TimeDuration mActiveDuration;
 
   // Will be kNullTimeFraction if the animation is neither animating nor
   // filling at the sampled time.
@@ -345,20 +354,6 @@ public:
     return (IsPaused() ? mPauseStart : aTime) - mStartTime;
   }
 
-  // Return the duration of the active interval for the given timing parameters.
-  static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming) {
-    if (aTiming.mIterationCount == mozilla::PositiveInfinity<float>()) {
-      // An animation that repeats forever has an infinite active duration
-      // unless its iteration duration is zero, in which case it has a zero
-      // active duration.
-      const TimeDuration zeroDuration;
-      return aTiming.mIterationDuration == zeroDuration
-             ? zeroDuration
-             : mozilla::TimeDuration::Forever();
-    }
-    return aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount);
-  }
-
   // Return the duration from the start the active interval to the point where
   // the animation begins playback. This is zero unless the animation has
   // a negative delay in which case it is the absolute value of the delay.
@@ -375,6 +370,9 @@ public:
   // run (because it is not currently active and is not filling at this time).
   static ComputedTiming GetComputedTimingAt(TimeDuration aLocalTime,
                                             const AnimationTiming& aTiming);
+
+  // Return the duration of the active interval for the given timing parameters.
+  static mozilla::TimeDuration ActiveDuration(const AnimationTiming& aTiming);
 
   nsString mName; // empty string for 'none'
   AnimationTiming mTiming;
