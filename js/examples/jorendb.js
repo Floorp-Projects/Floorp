@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- indent-tabs-mode: nil; js-indent-level: 4 -*-
  * vim: set ts=8 sw=4 et tw=78:
  *
  * jorendb - A toy command-line debugger for shell-js programs.

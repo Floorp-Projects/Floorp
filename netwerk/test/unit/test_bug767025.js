@@ -1,4 +1,4 @@
-/* -*- Mode: Javasript; indent-tabs-mode: nil; js-indent-level: 2 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 
 Cu.import("resource://testing-common/httpd.js");
 
