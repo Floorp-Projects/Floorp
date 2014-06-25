@@ -15,8 +15,8 @@ The expected console messages in the constants CSP_VIOLATION_MSG and CSP_REPORT_
 */
 
 const TEST_VIOLATION = "http://example.com/browser/browser/devtools/webconsole/test/test_bug_1010953_cspro.html";
-const CSP_VIOLATION_MSG = 'Content Security Policy: The page\'s settings blocked the loading of a resource at http://some.example.com/test.png ("img-src http://example.com:80").';
-const CSP_REPORT_MSG = 'Content Security Policy: The page\'s settings observed the loading of a resource at http://some.example.com/test_bug_1010953_cspro.js ("script-src http://example.com:80"). A CSP report is being sent.';
+const CSP_VIOLATION_MSG = 'Content Security Policy: The page\'s settings blocked the loading of a resource at http://some.example.com/test.png ("img-src http://example.com").';
+const CSP_REPORT_MSG = 'Content Security Policy: The page\'s settings observed the loading of a resource at http://some.example.com/test_bug_1010953_cspro.js ("script-src http://example.com"). A CSP report is being sent.';
 
 
 let hud = undefined;
