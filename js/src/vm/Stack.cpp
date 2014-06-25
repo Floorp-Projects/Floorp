@@ -16,6 +16,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
 #endif
+#include "js/GCAPI.h"
 #include "vm/Opcodes.h"
 
 #include "jit/JitFrameIterator-inl.h"
@@ -31,7 +32,7 @@ using mozilla::PodCopy;
 
 void
 InterpreterFrame::initExecuteFrame(JSContext *cx, JSScript *script, AbstractFramePtr evalInFramePrev,
-                             const Value &thisv, JSObject &scopeChain, ExecuteType type)
+                                   const Value &thisv, JSObject &scopeChain, ExecuteType type)
 {
     /*
      * See encoding of ExecuteType. When GLOBAL isn't set, we are executing a
@@ -667,6 +668,8 @@ FrameIter::FrameIter(JSContext *cx, SavedOption savedOption)
   , ionInlineFrames_(cx, (js::jit::JitFrameIterator*) nullptr)
 #endif
 {
+    // settleOnActivation can only GC if principals are given.
+    JS::AutoAssertNoGC nogc;
     settleOnActivation();
 }
 

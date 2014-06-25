@@ -1414,7 +1414,7 @@ FunctionConstructor(JSContext *cx, unsigned argc, Value *vp, GeneratorKind gener
     bool isStarGenerator = generatorKind == StarGenerator;
     JS_ASSERT(generatorKind != LegacyGenerator);
 
-    JSScript *maybeScript = nullptr;
+    RootedScript maybeScript(cx);
     const char *filename;
     unsigned lineno;
     JSPrincipals *originPrincipals;
