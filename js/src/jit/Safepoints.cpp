@@ -57,6 +57,33 @@ ReadRegisterMask(CompactBufferReader &stream)
     return stream.readUnsigned();
 }
 
+static void
+WriteFloatRegisterMask(CompactBufferWriter &stream, uint64_t bits)
+{
+    if (sizeof(FloatRegisters::SetType) == 1) {
+        stream.writeByte(bits);
+    } else if (sizeof(FloatRegisters::SetType) == 4) {
+        stream.writeUnsigned(bits);
+    } else {
+        JS_ASSERT(sizeof(FloatRegisters::SetType) == 8);
+        stream.writeUnsigned(bits & 0xffffffff);
+        stream.writeUnsigned(bits >> 32);
+    }
+}
+
+static int64_t
+ReadFloatRegisterMask(CompactBufferReader &stream)
+{
+    if (sizeof(FloatRegisters::SetType) == 1)
+        return stream.readByte();
+    if (sizeof(FloatRegisters::SetType) <= 4)
+        return stream.readUnsigned();
+    JS_ASSERT(sizeof(FloatRegisters::SetType) == 8);
+    uint64_t ret = stream.readUnsigned();
+    ret |= uint64_t(stream.readUnsigned()) << 32;
+    return ret;
+}
+
 void
 SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 {
@@ -81,7 +108,7 @@ SafepointWriter::writeGcRegs(LSafepoint *safepoint)
     JS_ASSERT((valueRegs.bits() & ~spilledGpr.bits()) == 0);
     JS_ASSERT((gc.bits() & ~spilledGpr.bits()) == 0);
 
-    WriteRegisterMask(stream_, spilledFloat.bits());
+    WriteFloatRegisterMask(stream_, spilledFloat.bits());
 
 #ifdef DEBUG
     if (IonSpewEnabled(IonSpew_Safepoints)) {
@@ -362,8 +389,7 @@ SafepointReader::SafepointReader(IonScript *script, const SafepointIndex *si)
         valueSpills_ = GeneralRegisterSet(ReadRegisterMask(stream_));
 #endif
     }
-
-    allFloatSpills_ = FloatRegisterSet(ReadRegisterMask(stream_));
+    allFloatSpills_ = FloatRegisterSet(ReadFloatRegisterMask(stream_));
 
     advanceFromGcRegs();
 }
