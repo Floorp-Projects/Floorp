@@ -128,7 +128,6 @@ gbjar.sources += [
     'animation/Rotate3DAnimation.java',
     'animation/ViewHelper.java',
     'ANRReporter.java',
-    'App.java',
     'AppNotificationClient.java',
     'Assert.java',
     'BaseGeckoInterface.java',
