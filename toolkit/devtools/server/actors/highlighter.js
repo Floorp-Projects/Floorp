@@ -502,6 +502,12 @@ function BoxModelHighlighter(tabActor) {
   this._initMarkup();
   EventEmitter.decorate(this);
 
+  /**
+   * Optionally customize each region's fill color by adding an entry to the
+   * regionFill property: `highlighter.regionFill.margin = "red";
+   */
+  this.regionFill = {};
+
   this._currentNode = null;
 }
 
@@ -774,6 +780,13 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
           this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
 
         let boxNode = this._boxModelNodes[boxType];
+
+        if (this.regionFill[boxType]) {
+          boxNode.setAttribute("style", "fill:" + this.regionFill[boxType]);
+        } else {
+          boxNode.removeAttribute("style");
+        }
+
         if (!this.options.showOnly || this.options.showOnly === boxType) {
           boxNode.setAttribute("points",
                                p1.x + "," + p1.y + " " +
