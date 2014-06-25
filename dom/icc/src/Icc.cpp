@@ -49,7 +49,7 @@ nsresult
 Icc::NotifyStkEvent(const nsAString& aName, const nsAString& aMessage)
 {
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReportingUsingWin(GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.InitWithLegacyErrorReporting(GetOwner()))) {
     return NS_ERROR_UNEXPECTED;
   }
   JSContext* cx = jsapi.cx();

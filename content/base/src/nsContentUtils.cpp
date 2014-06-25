@@ -6323,7 +6323,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(aDocument->GetWindow()))) {
+  if (NS_WARN_IF(!jsapi.Init(aDocument->GetWindow()))) {
     return true;
   }
   JSContext* cx = jsapi.cx();

@@ -95,7 +95,7 @@ public:
     }
 
     AutoJSAPI jsapi;
-    if (!jsapi.InitUsingWin(mAdapterPtr->GetOwner())) {
+    if (!jsapi.Init(mAdapterPtr->GetOwner())) {
       BT_WARNING("Failed to initialise AutoJSAPI!");
       SetError(NS_LITERAL_STRING("BluetoothAutoJSAPIInitError"));
       return false;
@@ -254,7 +254,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mUuids = value.get_ArrayOfnsString();
 
     AutoJSAPI jsapi;
-    if (!jsapi.InitUsingWin(GetOwner())) {
+    if (!jsapi.Init(GetOwner())) {
       BT_WARNING("Failed to initialise AutoJSAPI!");
       return;
     }
@@ -270,7 +270,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
     mDeviceAddresses = value.get_ArrayOfnsString();
 
     AutoJSAPI jsapi;
-    if (!jsapi.InitUsingWin(GetOwner())) {
+    if (!jsapi.Init(GetOwner())) {
       BT_WARNING("Failed to initialise AutoJSAPI!");
       return;
     }
