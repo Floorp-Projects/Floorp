@@ -6217,10 +6217,14 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // See AsmJSFrameSize comment in Assembler-*.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
-#endif
-#if defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_MIPS)
     masm.push(ra);
 #endif
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
 
     MIRType typeArray[] = { MIRType_Pointer,   // cx
                             MIRType_Pointer,   // exitDatum
@@ -6240,16 +6244,11 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = AsmJSFrameSize + masm.framePushed();
-    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
+    Register scratch = ABIArgGenerator::NonArgReturnVolatileReg1;
     FillArgumentArray(m, exit.sig().args(), offsetToArgv, offsetToCallerStackArgs, scratch);
 
     // Prepare the arguments for the call to InvokeFromAsmJS_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg1;
-    LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     // argument 0: cx
     if (i->kind() == ABIArg::GPR) {
@@ -6290,16 +6289,16 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     AssertStackAlignment(masm);
     switch (exit.sig().retType().which()) {
       case RetType::Void:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_Ignore));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case RetType::Signed:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToInt32), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToInt32));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
       case RetType::Double:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
@@ -6311,6 +6310,11 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     // Note: the caller is IonMonkey code which means there are no non-volatile
     // registers to restore.
     masm.freeStack(stackDec);
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     masm.ret();
 }
 
@@ -6334,9 +6338,6 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     Register scratch = ABIArgGenerator::NonArgReturnVolatileReg0;
     Register activation = ABIArgGenerator::NonArgReturnVolatileReg1;
     LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     // Store real arguments
     ABIArgMIRTypeIter i(callArgTypes);
@@ -6365,12 +6366,12 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
     AssertStackAlignment(masm);
     switch (retType.which()) {
       case RetType::Signed:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToInt32));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(Address(StackPointer, offsetToArgv), ReturnReg);
         break;
       case RetType::Double:
-        masm.callExit(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber), i.stackBytesConsumedSoFar());
+        masm.call(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber));
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnDoubleReg);
         break;
@@ -6389,18 +6390,21 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     masm.setFramePushed(0);
 
     // See AsmJSFrameSize comment in Assembler-*.h.
-#if defined(JS_CODEGEN_X64)
-    masm.Push(HeapReg);
-#elif defined(JS_CODEGEN_ARM)
+#if defined(JS_CODEGEN_ARM)
     masm.push(lr);
-
-    // The GlobalReg (r10) and HeapReg (r11) also need to be restored before
-    // returning to asm.js code.
-    // The NANReg also needs to be restored, but is a constant and is reloaded before
-    // returning to asm.js code.
-    masm.PushRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #elif defined(JS_CODEGEN_MIPS)
     masm.push(ra);
+#endif
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
+
+    // Ion does not preserve nonvolatile registers, so we have to preserve them.
+#if defined(JS_CODEGEN_X64)
+    masm.Push(HeapReg);
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.PushRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #endif
 
@@ -6498,19 +6502,6 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         Register reg2 = AsmJSIonExitRegE2;
         Register reg3 = AsmJSIonExitRegE3;
 
-        LoadAsmJSActivationIntoRegister(masm, reg0);
-
-        // Record sp in the AsmJSActivation for stack-walking.
-#if defined(JS_CODEGEN_MIPS)
-        // Add a flag to indicate to AsmJSFrameIterator that we are calling
-        // into Ion, since the offset from SP to the return address is
-        // different when calling Ion vs. the native ABI.
-        masm.ma_or(reg1, StackPointer, Imm32(0x1));
-        masm.storePtr(reg1, Address(reg0, AsmJSActivation::offsetOfExitSP()));
-#else
-        masm.storePtr(StackPointer, Address(reg0, AsmJSActivation::offsetOfExitSP()));
-#endif
-
         // The following is inlined:
         //   JSContext *cx = activation->cx();
         //   Activation *act = cx->mainThread().activation();
@@ -6524,6 +6515,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
         size_t offsetOfJitTop = offsetof(JSRuntime, mainThread) + offsetof(PerThreadData, jitTop);
         size_t offsetOfJitJSContext = offsetof(JSRuntime, mainThread) +
                                       offsetof(PerThreadData, jitJSContext);
+        LoadAsmJSActivationIntoRegister(masm, reg0);
         masm.loadPtr(Address(reg0, AsmJSActivation::offsetOfContext()), reg3);
         masm.loadPtr(Address(reg3, JSContext::offsetOfRuntime()), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
@@ -6595,13 +6587,19 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
 
     masm.bind(&done);
     masm.freeStack(stackDec);
+
+    // Restore non-volatile registers saved in the prologue.
 #if defined(JS_CODEGEN_X64)
     masm.Pop(HeapReg);
-#endif
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     masm.loadConstantDouble(GenericNaN(), NANReg);
     masm.PopRegsInMask(GeneralRegisterSet((1<<GlobalReg.code()) | (1<<HeapReg.code())));
 #endif
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     masm.ret();
     JS_ASSERT(masm.framePushed() == 0);
 
@@ -6642,17 +6640,19 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     masm.align(CodeAlignment);
     masm.bind(&m.stackOverflowLabel());
 
+    // The stack-overflow is checked before bumping the stack.
+    masm.setFramePushed(0);
+
+    // Store the frame pointer in AsmJSActivation::exitFP for stack unwinding.
+    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitFP()));
+
     MIRTypeVector argTypes(m.cx());
     argTypes.infallibleAppend(MIRType_Pointer); // cx
 
     unsigned stackDec = StackDecrementForCall(masm, argTypes, MaybeRetAddr);
     masm.reserveStack(stackDec);
-
-    Register activation = ABIArgGenerator::NonArgReturnVolatileReg0;
-    LoadAsmJSActivationIntoRegister(masm, activation);
-
-    // Record sp in the AsmJSActivation for stack-walking.
-    masm.storePtr(StackPointer, Address(activation, AsmJSActivation::offsetOfExitSP()));
 
     ABIArgMIRTypeIter i(argTypes);
 
@@ -6668,7 +6668,11 @@ GenerateStackOverflowExit(ModuleCompiler &m, Label *throwLabel)
     JS_ASSERT(i.done());
 
     AssertStackAlignment(masm);
-    masm.callExit(AsmJSImmPtr(AsmJSImm_ReportOverRecursed), i.stackBytesConsumedSoFar());
+    masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
+
+    // Clear exitFP before the frame is destroyed.
+    LoadAsmJSActivationIntoRegister(masm, activation);
+    masm.storePtr(ImmWord(0), Address(activation, AsmJSActivation::offsetOfExitFP()));
 
     // Don't worry about restoring the stack; throwLabel will pop everything.
     masm.jump(throwLabel);

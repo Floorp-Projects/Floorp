@@ -301,9 +301,6 @@ class MacroAssemblerMIPS : public Assembler
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callIonHalfPush(const Register reg);
 
-    // calls reg, storing the return address into sp[stackArgBytes]
-    void ma_callAndStoreRet(const Register reg, uint32_t stackArgBytes);
-
     void ma_call(ImmPtr dest);
 
     void ma_jump(ImmPtr dest);
@@ -433,11 +430,6 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void call(const CallSiteDesc &desc, AsmJSImmPtr imm) {
         call(imm);
         appendCallSite(desc);
-    }
-    void callExit(AsmJSImmPtr imm, uint32_t stackArgBytes) {
-        movePtr(imm, CallReg);
-        ma_callAndStoreRet(CallReg, stackArgBytes);
-        appendCallSite(CallSiteDesc::Exit());
     }
     void callIonFromAsmJS(const Register reg) {
         ma_callIonNoPush(reg);

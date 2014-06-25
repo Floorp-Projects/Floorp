@@ -109,9 +109,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         call(target);
         appendCallSite(desc);
     }
-    void callExit(AsmJSImmPtr target, uint32_t stackArgBytes) {
-        call(CallSiteDesc::Exit(), target);
-    }
 
     // Refers to the upper 32 bits of a 64-bit Value operand.
     // On x86_64, the upper 32 bits do not necessarily only contain the type.
