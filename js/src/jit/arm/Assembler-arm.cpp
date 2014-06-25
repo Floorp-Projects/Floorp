@@ -786,7 +786,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
     while (reader.more()) {
         size_t offset = reader.readUnsigned();
         InstructionIterator iter((Instruction*)(buffer+offset));
-        void *ptr = const_cast<uint32_t *>(js::jit::Assembler::getPtr32Target(&iter));
+        void *ptr = const_cast<uint32_t *>(Assembler::getPtr32Target(&iter));
         // No barrier needed since these are constants.
         gc::MarkGCThingUnbarriered(trc, reinterpret_cast<void **>(&ptr), "ion-masm-ptr");
     }
@@ -794,7 +794,7 @@ TraceDataRelocations(JSTracer *trc, uint8_t *buffer, CompactBufferReader &reader
 }
 static void
 TraceDataRelocations(JSTracer *trc, ARMBuffer *buffer,
-                     js::Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
+                     Vector<BufferOffset, 0, SystemAllocPolicy> *locs)
 {
     for (unsigned int idx = 0; idx < locs->length(); idx++) {
         BufferOffset bo = (*locs)[idx];

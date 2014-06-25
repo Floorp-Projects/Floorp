@@ -34,7 +34,10 @@
 
 using namespace js;
 using namespace gc;
-using namespace mozilla;
+
+using mozilla::ArrayLength;
+using mozilla::PodCopy;
+using mozilla::PodZero;
 
 //#define PROFILE_NURSERY
 

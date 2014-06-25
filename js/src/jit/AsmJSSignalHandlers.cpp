@@ -11,7 +11,6 @@
 
 using namespace js;
 using namespace js::jit;
-using namespace mozilla;
 
 using JS::GenericNaN;
 
