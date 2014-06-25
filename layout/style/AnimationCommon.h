@@ -263,6 +263,11 @@ struct AnimationTiming
 /**
  * Stores the results of calculating the timing properties of an animation
  * at a given sample time.
+ *
+ * The members of a default-constructed object of this type are not meaningful.
+ * Rather, this object is intended to be used as the return value of
+ * ElementAnimation::GetComputedTimingAt which ensures all members are set
+ * correctly.
  */
 struct ComputedTiming
 {
