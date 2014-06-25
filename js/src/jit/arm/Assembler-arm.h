@@ -92,8 +92,10 @@ static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = r2;
 static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg(FloatRegisters::d0);
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg(FloatRegisters::d15);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg(FloatRegisters::d0);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg(FloatRegisters::d0);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg(FloatRegisters::d15);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg(FloatRegisters::d15);
 
 static MOZ_CONSTEXPR_VAR FloatRegister NANReg(FloatRegisters::d14);
 

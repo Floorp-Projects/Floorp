@@ -72,8 +72,10 @@ static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = JSReturnReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = rax;
 static MOZ_CONSTEXPR_VAR Register ScratchReg = r11;
 static MOZ_CONSTEXPR_VAR Register HeapReg = r15;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = xmm0;
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = xmm15;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg = xmm15;
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg = xmm0;
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg = xmm15;
 
 // Avoid rbp, which is the FramePointer, which is unavailable in some modes.
 static MOZ_CONSTEXPR_VAR Register ArgumentsRectifierReg = r8;

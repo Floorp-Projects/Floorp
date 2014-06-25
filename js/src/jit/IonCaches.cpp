@@ -3573,12 +3573,12 @@ StoreDenseElement(MacroAssembler &masm, ConstantOrRegister value, Register eleme
     masm.bind(&convert);
     if (reg.hasValue()) {
         masm.branchTestInt32(Assembler::NotEqual, reg.valueReg(), &storeValue);
-        masm.int32ValueToDouble(reg.valueReg(), ScratchFloatReg);
-        masm.storeDouble(ScratchFloatReg, target);
+        masm.int32ValueToDouble(reg.valueReg(), ScratchDoubleReg);
+        masm.storeDouble(ScratchDoubleReg, target);
     } else {
         JS_ASSERT(reg.type() == MIRType_Int32);
-        masm.convertInt32ToDouble(reg.typedReg().gpr(), ScratchFloatReg);
-        masm.storeDouble(ScratchFloatReg, target);
+        masm.convertInt32ToDouble(reg.typedReg().gpr(), ScratchDoubleReg);
+        masm.storeDouble(ScratchDoubleReg, target);
     }
 
     masm.bind(&done);

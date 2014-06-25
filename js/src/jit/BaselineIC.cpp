@@ -2892,7 +2892,7 @@ ICBinaryArith_Double::Compiler::generateStubCode(MacroAssembler &masm)
         masm.passABIArg(FloatReg0, MoveOp::DOUBLE);
         masm.passABIArg(FloatReg1, MoveOp::DOUBLE);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, NumberMod), MoveOp::DOUBLE);
-        JS_ASSERT(ReturnFloatReg == FloatReg0);
+        JS_ASSERT(ReturnDoubleReg == FloatReg0);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unexpected op");
@@ -5503,8 +5503,8 @@ ICSetElem_TypedArray::Compiler::generateStubCode(MacroAssembler &masm)
         if (LIRGenerator::allowFloat32Optimizations() &&
             type_ == ScalarTypeDescr::TYPE_FLOAT32)
         {
-            masm.convertDoubleToFloat32(FloatReg0, ScratchFloatReg);
-            masm.storeToTypedFloatArray(type_, ScratchFloatReg, dest);
+            masm.convertDoubleToFloat32(FloatReg0, ScratchFloat32Reg);
+            masm.storeToTypedFloatArray(type_, ScratchFloat32Reg, dest);
         } else {
             masm.storeToTypedFloatArray(type_, FloatReg0, dest);
         }
