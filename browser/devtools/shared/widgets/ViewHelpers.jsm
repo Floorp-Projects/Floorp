@@ -365,11 +365,21 @@ ViewHelpers.L10N.prototype = {
     if (aNumber == (aNumber | 0)) {
       return aNumber;
     }
+    if (isNaN(aNumber) || aNumber == null) {
+      return "0";
+    }
     // Remove {n} trailing decimals. Can't use toFixed(n) because
     // toLocaleString converts the number to a string. Also can't use
     // toLocaleString(, { maximumFractionDigits: n }) because it's not
     // implemented on OS X (bug 368838). Gross.
     let localized = aNumber.toLocaleString(); // localize
+
+    // If no grouping or decimal separators are available, bail out, because
+    // padding with zeros at the end of the string won't make sense anymore.
+    if (!localized.match(/[^\d]/)) {
+      return localized;
+    }
+
     let padded = localized + new Array(aDecimals).join("0"); // pad with zeros
     let match = padded.match("([^]*?\\d{" + aDecimals + "})\\d*$");
     return match.pop();
