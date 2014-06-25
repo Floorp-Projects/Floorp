@@ -578,7 +578,7 @@ JSRuntime::requestInterrupt(InterruptMode mode)
      * handlers to halt running code.
      */
     if (!SignalBasedTriggersDisabled()) {
-        RequestInterruptForAsmJSCode(this);
+        RequestInterruptForAsmJSCode(this, mode);
         jit::RequestInterruptForIonCode(this, mode);
     }
 #endif
