@@ -1525,6 +1525,16 @@ MacroAssemblerMIPSCompat::callIon(Register callee)
         ma_callIon(callee);
     }
 }
+void
+MacroAssemblerMIPSCompat::callIonFromAsmJS(Register callee)
+{
+    ma_callIonNoPush(reg);
+
+    // The Ion ABI has the callee pop the return address off the stack.
+    // The asm.js caller assumes that the call leaves sp unchanged, so bump
+    // the stack.
+    subPtr(Imm32(sizeof(void*)), StackPointer);
+}
 
 void
 MacroAssemblerMIPSCompat::reserveStack(uint32_t amount)

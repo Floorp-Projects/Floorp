@@ -16,7 +16,6 @@
 #include "jsprf.h"
 #include "prmjtime.h"
 
-#include "assembler/assembler/MacroAssembler.h"
 #include "frontend/Parser.h"
 #include "jit/AsmJSLink.h"
 #include "jit/AsmJSModule.h"
@@ -1409,9 +1408,6 @@ class MOZ_STACK_CLASS ModuleCompiler
             return false;
         return exits_.add(p, Move(exitDescriptor), *exitIndex);
     }
-    bool addFunctionName(PropertyName *name, uint32_t *index) {
-        return module_->addFunctionName(name, index);
-    }
 
     // Note a constraint on the minimum size of the heap.  The heap size is
     // constrained when linking to be at least the maximum of all such constraints.
@@ -1442,6 +1438,11 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     bool finishGeneratingFunction(Func &func, MIRGenerator &mir, CodeGenerator &codegen) {
         JS_ASSERT(func.defined() && func.code()->bound());
+
+        uint32_t beginOffset = func.code()->offset();
+        uint32_t endOffset = masm_.currentOffset();
+        if (!module_->addFunctionCodeRange(func.name(), beginOffset, endOffset))
+            return false;
 
         jit::IonScriptCounts *counts = codegen.extractScriptCounts();
         if (counts && !module_->addFunctionCounts(counts)) {
@@ -1480,14 +1481,18 @@ class MOZ_STACK_CLASS ModuleCompiler
         module_->finishFunctionBodies(masm_.currentOffset());
     }
 
+    void startGeneratingEntry(unsigned exportIndex) {
+        module_->exportedFunction(exportIndex).initCodeOffset(masm_.currentOffset());
+    }
+    bool finishGeneratingEntry(unsigned exportIndex) {
+        return module_->addEntryCodeRange(exportIndex, masm_.currentOffset());
+    }
+
     void setInterpExitOffset(unsigned exitIndex) {
         module_->exit(exitIndex).initInterpOffset(masm_.currentOffset());
     }
     void setIonExitOffset(unsigned exitIndex) {
         module_->exit(exitIndex).initIonOffset(masm_.currentOffset());
-    }
-    void setEntryOffset(unsigned exportIndex) {
-        module_->exportedFunction(exportIndex).initCodeOffset(masm_.currentOffset());
     }
 
     void buildCompilationTimeReport(bool storedInCache, ScopedJSFreePtr<char> *out) {
@@ -1808,7 +1813,6 @@ class FunctionCompiler
     ModuleCompiler &       m_;
     LifoAlloc &            lifo_;
     ParseNode *            fn_;
-    uint32_t               functionNameIndex_;
 
     LocalMap               locals_;
     VarInitializerVector   varInitializers_;
@@ -1829,15 +1833,11 @@ class FunctionCompiler
     LabeledBlockMap        labeledBreaks_;
     LabeledBlockMap        labeledContinues_;
 
-    static const uint32_t NO_FUNCTION_NAME_INDEX = UINT32_MAX;
-    JS_STATIC_ASSERT(NO_FUNCTION_NAME_INDEX > CallSiteDesc::FUNCTION_NAME_INDEX_MAX);
-
   public:
     FunctionCompiler(ModuleCompiler &m, ParseNode *fn, LifoAlloc &lifo)
       : m_(m),
         lifo_(lifo),
         fn_(fn),
-        functionNameIndex_(NO_FUNCTION_NAME_INDEX),
         locals_(m.cx()),
         varInitializers_(m.cx()),
         alloc_(nullptr),
@@ -2279,12 +2279,7 @@ class FunctionCompiler
         uint32_t line, column;
         m_.tokenStream().srcCoords.lineNumAndColumnIndex(call.node_->pn_pos.begin, &line, &column);
 
-        if (functionNameIndex_ == NO_FUNCTION_NAME_INDEX) {
-            if (!m_.addFunctionName(FunctionName(fn_), &functionNameIndex_))
-                return false;
-        }
-
-        CallSiteDesc desc(line, column, functionNameIndex_);
+        CallSiteDesc desc(line, column);
         MAsmJSCall *ins = MAsmJSCall::New(alloc(), desc, callee, call.regArgs_, returnType,
                                           call.spIncrement_);
         if (!ins)
@@ -5955,7 +5950,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
     // PushRegsInMask(NonVolatileRegs).
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #endif // JS_CODEGEN_ARM
@@ -6030,7 +6025,7 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
 
     // Call into the real function.
     AssertStackAlignment(masm);
-    masm.call(CallSiteDesc::Entry(), func.code());
+    masm.call(func.code());
 
     // Pop the stack and recover the original 'argv' argument passed to the
     // trampoline (which was pushed on the stack).
@@ -6214,7 +6209,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
     m.setInterpExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #elif defined(JS_CODEGEN_MIPS)
@@ -6389,7 +6384,7 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
     m.setIonExitOffset(exitIndex);
     masm.setFramePushed(0);
 
-    // See AsmJSFrameSize comment in Assembler-*.h.
+    // See AsmJSFrameSize comment in Assembler-shared.h.
 #if defined(JS_CODEGEN_ARM)
     masm.push(lr);
 #elif defined(JS_CODEGEN_MIPS)
@@ -6871,10 +6866,10 @@ static bool
 GenerateStubs(ModuleCompiler &m)
 {
     for (unsigned i = 0; i < m.module().numExportedFunctions(); i++) {
-        m.setEntryOffset(i);
+        m.startGeneratingEntry(i);
         if (!GenerateEntry(m, m.module().exportedFunction(i)))
             return false;
-        if (m.masm().oom())
+        if (m.masm().oom() || !m.finishGeneratingEntry(i))
             return false;
     }
 
