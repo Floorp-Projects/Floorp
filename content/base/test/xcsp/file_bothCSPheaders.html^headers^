@@ -1,2 +1,0 @@
-X-Content-Security-Policy: default-src 'none' ; img-src http://example.org
-Content-Security-Policy: default-src 'self'
