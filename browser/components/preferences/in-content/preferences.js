@@ -21,6 +21,8 @@ addEventListener("DOMContentLoaded", function onLoad() {
 
 function init_all() {
   document.documentElement.instantApply = true;
+
+  gSubDialog.init();
   gMainPane.init();
   gPrivacyPane.init();
   gAdvancedPane.init();
@@ -28,6 +30,7 @@ function init_all() {
   gContentPane.init();
   gSyncPane.init();
   gSecurityPane.init();
+
   var initFinished = new CustomEvent("Initialized", {
   'bubbles': true,
   'cancelable': true

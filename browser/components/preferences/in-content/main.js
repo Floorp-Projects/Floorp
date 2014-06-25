@@ -111,8 +111,14 @@ var gMainPane = {
   setHomePageToBookmark: function ()
   {
     var rv = { urls: null, names: null };
-    openDialog("chrome://browser/content/preferences/selectBookmark.xul",
-               "Select Bookmark", "resizable=yes, modal=yes", rv);
+    var dialog = gSubDialog.open("chrome://browser/content/preferences/selectBookmark.xul",
+                                 "resizable=yes, modal=yes", rv,
+                                 this._setHomePageToBookmarkClosed.bind(this, rv));
+  },
+
+  _setHomePageToBookmarkClosed: function(rv, aEvent) {
+    if (aEvent.detail.button != "accept")
+      return;
     if (rv.urls && rv.names) {
       var homePage = document.getElementById("browser.startup.homepage");
 

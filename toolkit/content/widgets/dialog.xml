@@ -357,8 +357,14 @@
           if (!button.disabled) {
             var noCancel = this._fireButtonEvent(aDlgType);
             if (noCancel) {
-              if (aDlgType == "accept" || aDlgType == "cancel")
+              if (aDlgType == "accept" || aDlgType == "cancel") {
+                var closingEvent = new CustomEvent("dialogclosing", {
+                  bubbles: true,
+                  detail: { button: aDlgType },
+                });
+                this.dispatchEvent(closingEvent);
                 window.close();
+              }
             }
             return noCancel;
           }
