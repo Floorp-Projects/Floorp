@@ -1124,6 +1124,8 @@ class StaticStrings
 
     JSAtom *length2StaticTable[NUM_SMALL_CHARS * NUM_SMALL_CHARS];
 
+    bool initialized_;
+
   public:
     /* We keep these public for the JITs. */
     static const size_t UNIT_STATIC_LIMIT   = 256U;
@@ -1135,7 +1137,9 @@ class StaticStrings
     StaticStrings() {
         mozilla::PodZero(this);
     }
-
+    bool initialized() const {
+        return initialized_;
+    }
     bool init(JSContext *cx);
     void trace(JSTracer *trc);
 

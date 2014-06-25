@@ -718,6 +718,8 @@ StaticStrings::init(JSContext *cx)
     AutoLockForExclusiveAccess lock(cx);
     AutoCompartment ac(cx, cx->runtime()->atomsCompartment());
 
+    MOZ_ASSERT(!initialized_);
+
     for (uint32_t i = 0; i < UNIT_STATIC_LIMIT; i++) {
         jschar buffer[] = { jschar(i), '\0' };
         JSFlatString *s = NewStringCopyN<NoGC>(cx, buffer, 1);
@@ -753,6 +755,7 @@ StaticStrings::init(JSContext *cx)
         }
     }
 
+    initialized_ = true;
     return true;
 }
 
