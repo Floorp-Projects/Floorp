@@ -105,9 +105,7 @@ SignedData(Input& input, /*out*/ Input& tbs, /*out*/ CERTSignedData& signedData)
     return Failure;
   }
 
-  if (Nested(input, SEQUENCE,
-             bind(AlgorithmIdentifier, _1, ref(signedData.signatureAlgorithm)))
-        != Success) {
+  if (AlgorithmIdentifier(input, signedData.signatureAlgorithm) != Success) {
     return Failure;
   }
 

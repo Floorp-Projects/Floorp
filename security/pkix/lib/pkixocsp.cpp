@@ -684,9 +684,7 @@ CertID(der::Input& input, const Context& context, /*out*/ bool& match)
   match = false;
 
   SECAlgorithmID hashAlgorithm;
-  if (der::Nested(input, der::SEQUENCE,
-                  bind(der::AlgorithmIdentifier, _1, ref(hashAlgorithm)))
-         != der::Success) {
+  if (der::AlgorithmIdentifier(input, hashAlgorithm) != der::Success) {
     return der::Failure;
   }
 
