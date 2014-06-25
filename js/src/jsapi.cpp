@@ -4552,22 +4552,19 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     return !!script;
 }
 
-JSScript *
+bool
 JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-            const jschar *chars, size_t length)
+            const jschar *chars, size_t length, MutableHandleScript script)
 {
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    RootedScript script(cx);
-    if (!Compile(cx, obj, options, srcBuf, &script))
-        return nullptr;
-    return script;
+    return Compile(cx, obj, options, srcBuf, script);
 }
 
-JSScript *
+bool
 JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
-            const char *bytes, size_t length)
+            const char *bytes, size_t length, MutableHandleScript script)
 {
-    jschar *chars;
+    mozilla::ScopedFreePtr<jschar> chars;
     if (options.utf8)
         chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
@@ -4575,31 +4572,30 @@ JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optio
     if (!chars)
         return nullptr;
 
-    JSScript *script = Compile(cx, obj, options, chars, length);
-    js_free(chars);
-    return script;
+    return Compile(cx, obj, options, chars, length, script);
 }
 
-JSScript *
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options, FILE *fp)
+bool
+JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options, FILE *fp,
+            MutableHandleScript script)
 {
     FileContents buffer(cx);
     if (!ReadCompleteFile(cx, fp, buffer))
         return nullptr;
 
-    JSScript *script = Compile(cx, obj, options, buffer.begin(), buffer.length());
-    return script;
+    return Compile(cx, obj, options, buffer.begin(), buffer.length(), script);
 }
 
-JSScript *
-JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg, const char *filename)
+bool
+JS::Compile(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &optionsArg, const char *filename,
+            MutableHandleScript script)
 {
     AutoFile file;
     if (!file.open(cx, filename))
         return nullptr;
     CompileOptions options(cx, optionsArg);
     options.setFileAndLine(filename, 1);
-    return Compile(cx, obj, options, file.fp());
+    return Compile(cx, obj, options, file.fp(), script);
 }
 
 JS_PUBLIC_API(bool)
@@ -4653,18 +4649,18 @@ JS::FinishOffThreadScript(JSContext *maybecx, JSRuntime *rt, void *token)
 #endif
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(bool)
 JS_CompileScript(JSContext *cx, JS::HandleObject obj, const char *ascii,
-                 size_t length, const JS::CompileOptions &options)
+                 size_t length, const JS::CompileOptions &options, MutableHandleScript script)
 {
-    return Compile(cx, obj, options, ascii, length);
+    return Compile(cx, obj, options, ascii, length, script);
 }
 
-JS_PUBLIC_API(JSScript *)
+JS_PUBLIC_API(bool)
 JS_CompileUCScript(JSContext *cx, JS::HandleObject obj, const jschar *chars,
-                   size_t length, const JS::CompileOptions &options)
+                   size_t length, const JS::CompileOptions &options, MutableHandleScript script)
 {
-    return Compile(cx, obj, options, chars, length);
+    return Compile(cx, obj, options, chars, length, script);
 }
 
 JS_PUBLIC_API(bool)
@@ -4755,24 +4751,21 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     return true;
 }
 
-JS_PUBLIC_API(JSFunction *)
+JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const jschar *chars, size_t length)
+                    const jschar *chars, size_t length, MutableHandleFunction fun)
 {
-    RootedFunction fun(cx);
     SourceBufferHolder srcBuf(chars, length, SourceBufferHolder::NoOwnership);
-    if (!JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, &fun))
-        return nullptr;
-    return fun;
+    return JS::CompileFunction(cx, obj, options, name, nargs, argnames, srcBuf, fun);
 }
 
-JS_PUBLIC_API(JSFunction *)
+JS_PUBLIC_API(bool)
 JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOptions &options,
                     const char *name, unsigned nargs, const char *const *argnames,
-                    const char *bytes, size_t length)
+                    const char *bytes, size_t length, MutableHandleFunction fun)
 {
-    jschar *chars;
+    mozilla::ScopedFreePtr<jschar> chars;
     if (options.utf8)
         chars = UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get();
     else
@@ -4780,27 +4773,25 @@ JS::CompileFunction(JSContext *cx, HandleObject obj, const ReadOnlyCompileOption
     if (!chars)
         return nullptr;
 
-    JSFunction *fun = CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
-    js_free(chars);
-    return fun;
+    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length, fun);
 }
 
-JS_PUBLIC_API(JSFunction *)
+JS_PUBLIC_API(bool)
 JS_CompileUCFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                      unsigned nargs, const char *const *argnames,
                      const jschar *chars, size_t length,
-                     const CompileOptions &options)
+                     const CompileOptions &options, MutableHandleFunction fun)
 {
-    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length);
+    return CompileFunction(cx, obj, options, name, nargs, argnames, chars, length, fun);
 }
 
-JS_PUBLIC_API(JSFunction *)
+JS_PUBLIC_API(bool)
 JS_CompileFunction(JSContext *cx, JS::HandleObject obj, const char *name,
                    unsigned nargs, const char *const *argnames,
                    const char *ascii, size_t length,
-                   const JS::CompileOptions &options)
+                   const JS::CompileOptions &options, MutableHandleFunction fun)
 {
-    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length);
+    return CompileFunction(cx, obj, options, name, nargs, argnames, ascii, length, fun);
 }
 
 JS_PUBLIC_API(JSString *)
