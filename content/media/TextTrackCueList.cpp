@@ -38,6 +38,9 @@ TextTrackCueList::TextTrackCueList(nsISupports* aParent) : mParent(aParent)
   SetIsDOMBinding();
 }
 
+TextTrackCueList::~TextTrackCueList()
+{}
+
 JSObject*
 TextTrackCueList::WrapObject(JSContext* aCx)
 {

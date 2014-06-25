@@ -92,6 +92,7 @@ function newExpr(callee, args) Pattern({ type: "NewExpression", callee: callee, 
 function callExpr(callee, args) Pattern({ type: "CallExpression", callee: callee, arguments: args })
 function arrExpr(elts) Pattern({ type: "ArrayExpression", elements: elts })
 function objExpr(elts) Pattern({ type: "ObjectExpression", properties: elts })
+function templateLit(elts) Pattern({ type: "TemplateLiteral", elements: elts })
 function compExpr(body, blocks, filter) Pattern({ type: "ComprehensionExpression", body: body, blocks: blocks, filter: filter })
 function genExpr(body, blocks, filter) Pattern({ type: "GeneratorExpression", body: body, blocks: blocks, filter: filter })
 function graphExpr(idx, body) Pattern({ type: "GraphExpression", index: idx, expression: body })
@@ -404,6 +405,10 @@ var hasTemplateStrings = false;  try { eval("``"); hasTemplateStrings = true; } 
 if (hasTemplateStrings == true) {
     assertStringExpr("`hey there`", literal("hey there"));
     assertStringExpr("`hey\nthere`", literal("hey\nthere"));
+    assertExpr("`hey${\"there\"}`", templateLit([lit("hey"), lit("there"), lit("")]));
+    assertExpr("`hey${\"there\"}mine`", templateLit([lit("hey"), lit("there"), lit("mine")]));
+    assertExpr("`hey${a == 5}mine`", templateLit([lit("hey"), binExpr("==", ident("a"), lit(5)), lit("mine")]));
+    assertExpr("`hey${`there${\"how\"}`}mine`", templateLit([lit("hey"), templateLit([lit("there"), lit("how"), lit("")]), lit("mine")]));
 }
 assertStringExpr("\"hey there\"", literal("hey there"));
 
@@ -1123,6 +1128,14 @@ return {
     },
     thisExpression: function() {
         return ["ThisExpr", {}];
+    },
+    templateLiteral: function(elts) {
+        for (var i = 0; i < elts.length; i++) {
+            if (!elts[i])
+                elts[i] = ["Empty"];
+        }
+        elts.unshift("TemplateLit", {});
+        return elts;
     },
 
     graphExpression: reject,

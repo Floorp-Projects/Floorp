@@ -30,7 +30,6 @@ public:
   NS_DECL_ISUPPORTS
 
   SVGTests();
-  virtual ~SVGTests() {}
 
   friend class mozilla::DOMSVGStringList;
   typedef mozilla::SVGStringList SVGStringList;
@@ -94,6 +93,9 @@ public:
   already_AddRefed<DOMSVGStringList> RequiredExtensions();
   already_AddRefed<DOMSVGStringList> SystemLanguage();
   bool HasExtension(const nsAString& aExtension);
+
+protected:
+  virtual ~SVGTests() {}
 
 private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };

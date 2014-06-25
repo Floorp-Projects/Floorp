@@ -33,13 +33,14 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   HttpChannelParentListener(HttpChannelParent* aInitialChannel);
-  virtual ~HttpChannelParentListener();
 
   // For channel diversion from child to parent.
   nsresult DivertTo(nsIStreamListener *aListener);
   nsresult SuspendForDiversion();
 
 private:
+  virtual ~HttpChannelParentListener();
+
   // Private partner function to SuspendForDiversion.
   nsresult ResumeForDiversion();
 

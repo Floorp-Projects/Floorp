@@ -114,6 +114,15 @@ function handleRequest(req, res) {
     }
   }
 
+  else if (u.pathname === "/doubleheader") {
+    res.setHeader('Content-Type', 'text/html');
+    res.writeHead(200);
+    res.write(content);
+    res.writeHead(200);
+    res.end();
+    return;
+  }
+
   else if (u.pathname === "/cookie_crumbling") {
     res.setHeader("X-Received-Header-Pairs", JSON.stringify(decompressedPairs));
   }

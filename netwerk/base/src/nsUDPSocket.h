@@ -33,10 +33,9 @@ public:
 
   nsUDPSocket();
 
-  // This must be public to support older compilers (xlC_r on AIX)
+private:
   virtual ~nsUDPSocket();
 
-private:
   void OnMsgClose();
   void OnMsgAttach();
 
@@ -99,9 +98,10 @@ public:
   nsUDPOutputStream(nsUDPSocket* aSocket,
                     PRFileDesc* aFD,
                     PRNetAddr& aPrClientAddr);
-  virtual ~nsUDPOutputStream();
 
 private:
+  virtual ~nsUDPOutputStream();
+
   nsRefPtr<nsUDPSocket>       mSocket;
   PRFileDesc                  *mFD;
   PRNetAddr                   mPrClientAddr;

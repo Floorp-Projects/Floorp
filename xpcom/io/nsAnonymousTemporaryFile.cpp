@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
+#include "mozilla/dom/ContentChild.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -11,6 +12,8 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "prio.h"
+#include "private/pprio.h"
 
 #ifdef XP_WIN
 #include "nsIObserver.h"
@@ -23,9 +26,9 @@
 #include "nsITimer.h"
 #include "nsCRT.h"
 
-using namespace mozilla;
 #endif
 
+using namespace mozilla;
 
 // We store the temp files in the system temp dir.
 //
@@ -84,8 +87,18 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   if (NS_WARN_IF(!aOutFileDesc)) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsresult rv;
 
+  if (dom::ContentChild* child = dom::ContentChild::GetSingleton()) {
+    ipc::FileDescriptor fd;
+    DebugOnly<bool> succeeded = child->SendOpenAnonymousTemporaryFile(&fd);
+    // The child process should already have been terminated if the
+    // IPC had failed.
+    MOZ_ASSERT(succeeded);
+    *aOutFileDesc = PR_ImportFile(PROsfd(fd.PlatformHandle()));
+    return NS_OK;
+  }
+
+  nsresult rv;
   nsCOMPtr<nsIFile> tmpFile;
   rv = GetTempDir(getter_AddRefs(tmpFile));
   if (NS_WARN_IF(NS_FAILED(rv))) {

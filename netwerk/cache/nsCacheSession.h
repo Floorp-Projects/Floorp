@@ -16,12 +16,13 @@
 
 class nsCacheSession : public nsICacheSession
 {
+    virtual ~nsCacheSession();
+
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSICACHESESSION
     
     nsCacheSession(const char * clientID, nsCacheStoragePolicy storagePolicy, bool streamBased);
-    virtual ~nsCacheSession();
     
     nsCString *           ClientID()      { return &mClientID; }
 

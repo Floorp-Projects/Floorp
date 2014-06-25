@@ -1,0 +1,23 @@
+diff --git a/intl/icu/source/common/umutex.cpp b/intl/icu/source/common/umutex.cpp
+index 8f55208..281c370 100644
+--- a/intl/icu/source/common/umutex.cpp
++++ b/intl/icu/source/common/umutex.cpp
+@@ -64,17 +64,17 @@ static UMutex   globalMutex = U_MUTEX_INITIALIZER;
+ //   the caller needs to call the Init function.
+ //
+ 
+ U_NAMESPACE_BEGIN
+ 
+ U_COMMON_API UBool U_EXPORT2 umtx_initImplPreInit(UInitOnce &uio) {
+     for (;;) {
+         int32_t previousState = InterlockedCompareExchange(
+-#if (U_PLATFORM == U_PF_MINGW) || (U_PLATFORM == U_PF_CYGWIN)
++#if (U_PLATFORM == U_PF_MINGW) || (U_PLATFORM == U_PF_CYGWIN) || defined(__clang__)
+            (LONG volatile *) // this is the type given in the API doc for this function.
+ #endif
+             &uio.fState,  //  Destination
+             1,            //  Exchange Value
+             0);           //  Compare value
+ 
+         if (previousState == 0) {
+             return true;   // Caller will next call the init function.

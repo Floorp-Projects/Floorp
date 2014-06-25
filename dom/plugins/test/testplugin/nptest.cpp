@@ -2247,6 +2247,7 @@ compareVariants(NPP instance, const NPVariant* var1, const NPVariant* var2)
             NPN_ReleaseVariantValue(&resultVariant);
           }
         }
+        NPN_MemFree(identifiers);
         break;
       }
     default:

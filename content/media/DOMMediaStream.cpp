@@ -420,6 +420,10 @@ DOMAudioNodeMediaStream::DOMAudioNodeMediaStream(AudioNode* aNode)
 {
 }
 
+DOMAudioNodeMediaStream::~DOMAudioNodeMediaStream()
+{
+}
+
 already_AddRefed<DOMAudioNodeMediaStream>
 DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
                                                 AudioNode* aNode,
