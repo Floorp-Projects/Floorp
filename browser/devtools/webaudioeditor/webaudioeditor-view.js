@@ -54,6 +54,7 @@ let WebAudioGraphView = {
     this._onThemeChange = this._onThemeChange.bind(this);
     this._onNodeSelect = this._onNodeSelect.bind(this);
     this._onStartContext = this._onStartContext.bind(this);
+    this._onDestroyNode = this._onDestroyNode.bind(this);
 
     this.draw = debounce(this.draw.bind(this), GRAPH_DEBOUNCE_TIMER);
     $('#graph-target').addEventListener('click', this._onGraphNodeClick, false);
@@ -61,6 +62,7 @@ let WebAudioGraphView = {
     window.on(EVENTS.THEME_CHANGE, this._onThemeChange);
     window.on(EVENTS.UI_INSPECTOR_NODE_SET, this._onNodeSelect);
     window.on(EVENTS.START_CONTEXT, this._onStartContext);
+    window.on(EVENTS.DESTROY_NODE, this._onDestroyNode);
   },
 
   /**
@@ -74,6 +76,7 @@ let WebAudioGraphView = {
     window.off(EVENTS.THEME_CHANGE, this._onThemeChange);
     window.off(EVENTS.UI_INSPECTOR_NODE_SET, this._onNodeSelect);
     window.off(EVENTS.START_CONTEXT, this._onStartContext);
+    window.off(EVENTS.DESTROY_NODE, this._onDestroyNode);
   },
 
   /**
@@ -232,6 +235,13 @@ let WebAudioGraphView = {
     this.draw();
   },
 
+  /**
+   * Called when a node gets GC'd -- redraws the graph.
+   */
+  _onDestroyNode: function () {
+    this.draw();
+  },
+
   _onNodeSelect: function (eventName, id) {
     this.focusNode(id);
   },
@@ -289,12 +299,14 @@ let WebAudioInspectorView = {
     this._onEval = this._onEval.bind(this);
     this._onNodeSelect = this._onNodeSelect.bind(this);
     this._onTogglePaneClick = this._onTogglePaneClick.bind(this);
+    this._onDestroyNode = this._onDestroyNode.bind(this);
 
     this._inspectorPaneToggleButton.addEventListener("mousedown", this._onTogglePaneClick, false);
     this._propsView = new VariablesView($("#properties-tabpanel-content"), GENERIC_VARIABLES_VIEW_SETTINGS);
     this._propsView.eval = this._onEval;
 
     window.on(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
+    window.on(EVENTS.DESTROY_NODE, this._onDestroyNode);
   },
 
   /**
@@ -303,6 +315,7 @@ let WebAudioInspectorView = {
   destroy: function () {
     this._inspectorPaneToggleButton.removeEventListener("mousedown", this._onTogglePaneClick);
     window.off(EVENTS.UI_SELECT_NODE, this._onNodeSelect);
+    window.off(EVENTS.DESTROY_NODE, this._onDestroyNode);
 
     this._inspectorPane = null;
     this._inspectorPaneToggleButton = null;
@@ -508,12 +521,14 @@ let WebAudioInspectorView = {
   },
 
   /**
-   * Called when `DESTROY_NODE` is fired to remove the node from props view.
-   * TODO bug 994263, dependent on node GC events
+   * Called when `DESTROY_NODE` is fired to remove the node from props view if
+   * it's currently selected.
    */
-  removeNode: Task.async(function* (viewNode) {
-
-  })
+  _onDestroyNode: function (_, id) {
+    if (this._currentNode && this._currentNode.id === id) {
+      this.setCurrentAudioNode(null);
+    }
+  }
 };
 
 /**

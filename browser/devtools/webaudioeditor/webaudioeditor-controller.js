@@ -156,6 +156,7 @@ let WebAudioEditorController = {
     gFront.on("connect-node", this._onConnectNode);
     gFront.on("disconnect-node", this._onDisconnectNode);
     gFront.on("change-param", this._onChangeParam);
+    gFront.on("destroy-node", this._onDestroyNode);
 
     // Hook into theme change so we can change
     // the graph's marker styling, since we can't do this
@@ -166,6 +167,7 @@ let WebAudioEditorController = {
     window.on(EVENTS.CREATE_NODE, this._onUpdatedContext);
     window.on(EVENTS.CONNECT_NODE, this._onUpdatedContext);
     window.on(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
+    window.on(EVENTS.DESTROY_NODE, this._onUpdatedContext);
   },
 
   /**
@@ -180,9 +182,11 @@ let WebAudioEditorController = {
     gFront.off("connect-node", this._onConnectNode);
     gFront.off("disconnect-node", this._onDisconnectNode);
     gFront.off("change-param", this._onChangeParam);
+    gFront.off("destroy-node", this._onDestroyNode);
     window.off(EVENTS.CREATE_NODE, this._onUpdatedContext);
     window.off(EVENTS.CONNECT_NODE, this._onUpdatedContext);
     window.off(EVENTS.DISCONNECT_NODE, this._onUpdatedContext);
+    window.off(EVENTS.DESTROY_NODE, this._onUpdatedContext);
     gDevTools.off("pref-changed", this._onThemeChange);
   },
 
@@ -263,6 +267,20 @@ let WebAudioEditorController = {
     AudioNodes.push(node);
     window.emit(EVENTS.CREATE_NODE, node.id);
   }),
+
+  /**
+   * Called on `destroy-node` when an AudioNode is GC'd. Removes
+   * from the AudioNode array and fires an event indicating the removal.
+   */
+  _onDestroyNode: function (nodeActor) {
+    for (let i = 0; i < AudioNodes.length; i++) {
+      if (equalActors(AudioNodes[i].actor, nodeActor)) {
+        AudioNodes.splice(i, 1);
+        window.emit(EVENTS.DESTROY_NODE, nodeActor.actorID);
+        break;
+      }
+    }
+  },
 
   /**
    * Called when a node is connected to another node.

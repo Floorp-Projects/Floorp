@@ -1,12 +1,12 @@
 {
   "sync_account": {
-    "username": "",
-    "password": "",
-    "passphrase": ""
+    "username": "__SYNC_ACCOUNT_USERNAME__",
+    "password": "__SYNC_ACCOUNT_PASSWORD__",
+    "passphrase": "__SYNC_ACCOUNT_PASSPHRASE__"
   },
   "fx_account": {
-    "username": "",
-    "password": ""
+    "username": "__FX_ACCOUNT_USERNAME__",
+    "password": "__FX_ACCOUNT_PASSWORD__"
   },
   "email": {
     "username": "crossweave@mozilla.com",
