@@ -9,7 +9,7 @@
 #include "mozilla/gfx/2D.h"
 #include "SVGGraphicsElement.h"
 
-struct gfxMatrix;
+class gfxMatrix;
 
 struct nsSVGMark {
   enum Type {
