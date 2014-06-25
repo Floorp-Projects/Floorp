@@ -9,9 +9,7 @@ include $(topsrcdir)/config/rules.mk
 
 # Bug 1028035: Linking xul-gtest.dll takes too long, so we disable GTest on
 # Windows PGO builds.
-# Bug 1029469: fix_stack_using_bpsyms.py doesn't know how to deal with the
-# second xul.pdb file that linking xul-gtest.dll creates.
-ifeq (WINNT,$(OS_ARCH))
+ifeq (1_WINNT,$(MOZ_PGO)_$(OS_ARCH))
 SKIP_GTEST_DURING_MAKE_CHECK ?= 1
 endif
 
