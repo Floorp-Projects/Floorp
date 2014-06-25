@@ -127,7 +127,7 @@ public:
     // AudioDestinationNode::FireOfflineCompletionEvent.
 
     AutoJSAPI jsapi;
-    if (NS_WARN_IF(!jsapi.InitUsingWin(aNode->GetOwner()))) {
+    if (NS_WARN_IF(!jsapi.Init(aNode->GetOwner()))) {
       return;
     }
     JSContext* cx = jsapi.cx();
