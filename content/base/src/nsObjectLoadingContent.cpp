@@ -1159,6 +1159,7 @@ public:
   {}
 
 protected:
+  ~ObjectInterfaceRequestorShim() {}
   nsCOMPtr<nsIObjectLoadingContent> mContent;
 };
 
@@ -3517,6 +3518,10 @@ nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
     nsObjectLoadingContent* aContent)
   : mContext(scriptContext)
   , mContent(aContent)
+{
+}
+
+nsObjectLoadingContent::SetupProtoChainRunner::~SetupProtoChainRunner()
 {
 }
 

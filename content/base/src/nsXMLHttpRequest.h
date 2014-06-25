@@ -612,9 +612,10 @@ protected:
     NS_DECL_NSIHTTPHEADERVISITOR
     nsHeaderVisitor(nsXMLHttpRequest* aXMLHttpRequest, nsIHttpChannel* aHttpChannel)
       : mXHR(aXMLHttpRequest), mHttpChannel(aHttpChannel) {}
-    virtual ~nsHeaderVisitor() {}
     const nsACString &Headers() { return mHeaders; }
   private:
+    virtual ~nsHeaderVisitor() {}
+
     nsCString mHeaders;
     nsXMLHttpRequest* mXHR;
     nsCOMPtr<nsIHttpChannel> mHttpChannel;
@@ -794,12 +795,14 @@ class nsXMLHttpRequestXPCOMifier MOZ_FINAL : public nsIStreamListener,
   {
   }
 
+private:
   ~nsXMLHttpRequestXPCOMifier() {
     if (mXHR) {
       mXHR->mXPCOMifier = nullptr;
     }
   }
 
+public:
   NS_FORWARD_NSISTREAMLISTENER(mXHR->)
   NS_FORWARD_NSIREQUESTOBSERVER(mXHR->)
   NS_FORWARD_NSICHANNELEVENTSINK(mXHR->)
@@ -827,8 +830,9 @@ public:
   }
   nsXHRParseEndListener(nsIXMLHttpRequest* aXHR)
     : mXHR(do_GetWeakReference(aXHR)) {}
-  virtual ~nsXHRParseEndListener() {}
 private:
+  virtual ~nsXHRParseEndListener() {}
+
   nsWeakPtr mXHR;
 };
 

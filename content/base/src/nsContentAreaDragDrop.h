@@ -68,11 +68,11 @@ public:
 // ensures that the image data is only created when an image drop is allowed.
 class nsContentAreaDragDropDataProvider : public nsIFlavorDataProvider
 {
+  virtual ~nsContentAreaDragDropDataProvider() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFLAVORDATAPROVIDER
-
-  virtual ~nsContentAreaDragDropDataProvider() {}
 
   nsresult SaveURIToFile(nsAString& inSourceURIString,
                          nsIFile* inDestFile, bool isPrivate);
