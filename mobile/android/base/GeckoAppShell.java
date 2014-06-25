@@ -858,7 +858,7 @@ public class GeckoAppShell
             shortcutIntent = getWebappIntent(aURI, aUniqueURI, aTitle, aIcon);
         } else {
             shortcutIntent = new Intent();
-            shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
+            shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
             shortcutIntent.setData(Uri.parse(aURI));
             shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                         AppConstants.BROWSER_INTENT_CLASS_NAME);
@@ -897,7 +897,7 @@ public class GeckoAppShell
                         return;
                 } else {
                     shortcutIntent = new Intent();
-                    shortcutIntent.setAction(GeckoApp.ACTION_BOOKMARK);
+                    shortcutIntent.setAction(GeckoApp.ACTION_HOMESCREEN_SHORTCUT);
                     shortcutIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME,
                                                 AppConstants.BROWSER_INTENT_CLASS_NAME);
                     shortcutIntent.setData(Uri.parse(aURI));
