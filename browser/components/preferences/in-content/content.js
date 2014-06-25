@@ -61,8 +61,8 @@ var gContentPane = {
     params.windowTitle = bundlePreferences.getString("popuppermissionstitle");
     params.introText = bundlePreferences.getString("popuppermissionstext");
 
-    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
-                    "resizable=yes", params);
+    openDialog("chrome://browser/content/preferences/permissions.xul", 
+               "Browser:Permissions", "resizable=yes", params);
   },
 
   // FONTS
@@ -163,7 +163,8 @@ var gContentPane = {
    */
   configureColors: function ()
   {
-    gSubDialog.open("chrome://browser/content/preferences/colors.xul");
+    openDialog("chrome://browser/content/preferences/colors.xul", 
+               "Browser:ColorPreferences", null);  
   },
 
   // LANGUAGES
@@ -173,7 +174,8 @@ var gContentPane = {
    */
   showLanguages: function ()
   {
-    gSubDialog.open("chrome://browser/content/preferences/languages.xul");
+    openDialog("chrome://browser/content/preferences/languages.xul", 
+               "Browser:LanguagePreferences", null);
   },
 
   /**
