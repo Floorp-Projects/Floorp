@@ -868,6 +868,8 @@ AutoStableStringChars::initTwoByte(JSContext *cx, JSString *s)
     return true;
 }
 
+bool js::EnableLatin1Strings = false;
+
 #ifdef DEBUG
 void
 JSAtom::dump()
