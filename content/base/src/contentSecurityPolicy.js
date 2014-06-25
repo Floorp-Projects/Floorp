@@ -24,11 +24,6 @@ const Cu = Components.utils;
 
 const CSP_VIOLATION_TOPIC = "csp-on-violate-policy";
 
-// Needed to support CSP 1.0 spec and our original CSP implementation - should
-// be removed when our original implementation is deprecated.
-const CSP_TYPE_XMLHTTPREQUEST_SPEC_COMPLIANT = "csp_type_xmlhttprequest_spec_compliant";
-const CSP_TYPE_WEBSOCKET_SPEC_COMPLIANT = "csp_type_websocket_spec_compliant";
-
 const WARN_FLAG = Ci.nsIScriptError.warningFlag;
 const ERROR_FLAG = Ci.nsIScriptError.ERROR_FLAG;
 
@@ -71,14 +66,13 @@ function ContentSecurityPolicy() {
 {
   let cp = Ci.nsIContentPolicy;
   let csp = ContentSecurityPolicy;
-  let cspr_sd_old = CSPRep.SRC_DIRECTIVES_OLD;
-  let cspr_sd_new = CSPRep.SRC_DIRECTIVES_NEW;
+  let cspr_sd = CSPRep.SRC_DIRECTIVES;
 
   csp._MAPPINGS=[];
 
   /* default, catch-all case */
   // This is the same in old and new CSP so use the new mapping.
-  csp._MAPPINGS[cp.TYPE_OTHER]             =  cspr_sd_new.DEFAULT_SRC;
+  csp._MAPPINGS[cp.TYPE_OTHER]             =  cspr_sd.DEFAULT_SRC;
 
   /* self */
   csp._MAPPINGS[cp.TYPE_DOCUMENT]          =  null;
@@ -87,44 +81,26 @@ function ContentSecurityPolicy() {
   csp._MAPPINGS[cp.TYPE_REFRESH]           =  null;
 
   /* categorized content types */
-  // These are the same in old and new CSP's so just use the new mappings.
-  csp._MAPPINGS[cp.TYPE_SCRIPT]            = cspr_sd_new.SCRIPT_SRC;
-  csp._MAPPINGS[cp.TYPE_IMAGE]             = cspr_sd_new.IMG_SRC;
-  csp._MAPPINGS[cp.TYPE_STYLESHEET]        = cspr_sd_new.STYLE_SRC;
-  csp._MAPPINGS[cp.TYPE_OBJECT]            = cspr_sd_new.OBJECT_SRC;
-  csp._MAPPINGS[cp.TYPE_OBJECT_SUBREQUEST] = cspr_sd_new.OBJECT_SRC;
-  csp._MAPPINGS[cp.TYPE_SUBDOCUMENT]       = cspr_sd_new.FRAME_SRC;
-  csp._MAPPINGS[cp.TYPE_MEDIA]             = cspr_sd_new.MEDIA_SRC;
-  csp._MAPPINGS[cp.TYPE_FONT]              = cspr_sd_new.FONT_SRC;
-  csp._MAPPINGS[cp.TYPE_XSLT]              = cspr_sd_new.SCRIPT_SRC;
-  csp._MAPPINGS[cp.TYPE_BEACON]            = cspr_sd_new.CONNECT_SRC;
-
-  /* Our original CSP implementation's mappings for XHR and websocket
-   * These should be changed to be = cspr_sd.CONNECT_SRC when we remove
-   * the original implementation - NOTE: order in this array is important !!!
-   */
-  csp._MAPPINGS[cp.TYPE_XMLHTTPREQUEST]    = cspr_sd_old.XHR_SRC;
-  csp._MAPPINGS[cp.TYPE_WEBSOCKET]         = cspr_sd_old.XHR_SRC;
+  csp._MAPPINGS[cp.TYPE_SCRIPT]            = cspr_sd.SCRIPT_SRC;
+  csp._MAPPINGS[cp.TYPE_IMAGE]             = cspr_sd.IMG_SRC;
+  csp._MAPPINGS[cp.TYPE_STYLESHEET]        = cspr_sd.STYLE_SRC;
+  csp._MAPPINGS[cp.TYPE_OBJECT]            = cspr_sd.OBJECT_SRC;
+  csp._MAPPINGS[cp.TYPE_OBJECT_SUBREQUEST] = cspr_sd.OBJECT_SRC;
+  csp._MAPPINGS[cp.TYPE_SUBDOCUMENT]       = cspr_sd.FRAME_SRC;
+  csp._MAPPINGS[cp.TYPE_MEDIA]             = cspr_sd.MEDIA_SRC;
+  csp._MAPPINGS[cp.TYPE_FONT]              = cspr_sd.FONT_SRC;
+  csp._MAPPINGS[cp.TYPE_XSLT]              = cspr_sd.SCRIPT_SRC;
+  csp._MAPPINGS[cp.TYPE_BEACON]            = cspr_sd.CONNECT_SRC;
+  csp._MAPPINGS[cp.TYPE_XMLHTTPREQUEST]    = cspr_sd.CONNECT_SRC;
+  csp._MAPPINGS[cp.TYPE_WEBSOCKET]         = cspr_sd.CONNECT_SRC;
 
   /* CSP cannot block CSP reports */
   csp._MAPPINGS[cp.TYPE_CSP_REPORT]        = null;
 
   /* These must go through the catch-all */
-  csp._MAPPINGS[cp.TYPE_XBL]               = cspr_sd_new.DEFAULT_SRC;
-  csp._MAPPINGS[cp.TYPE_PING]              = cspr_sd_new.DEFAULT_SRC;
-  csp._MAPPINGS[cp.TYPE_DTD]               = cspr_sd_new.DEFAULT_SRC;
-
-  /* CSP 1.0 spec compliant mappings for XHR and websocket */
-  // The directive name for XHR, websocket, and EventSource is different
-  // in the 1.0 spec than in our original implementation, these mappings
-  // address this. These won't be needed when we deprecate our original
-  // implementation.
-  csp._MAPPINGS[CSP_TYPE_XMLHTTPREQUEST_SPEC_COMPLIANT]    = cspr_sd_new.CONNECT_SRC;
-  csp._MAPPINGS[CSP_TYPE_WEBSOCKET_SPEC_COMPLIANT]         = cspr_sd_new.CONNECT_SRC;
-  // TODO : EventSource will be here and also will use connect-src
-  // after we fix Bug 802872 - CSP should restrict EventSource using the connect-src
-  // directive. For background see Bug 667490 - EventSource should use the same
-  // nsIContentPolicy type as XHR (which is fixed)
+  csp._MAPPINGS[cp.TYPE_XBL]               = cspr_sd.DEFAULT_SRC;
+  csp._MAPPINGS[cp.TYPE_PING]              = cspr_sd.DEFAULT_SRC;
+  csp._MAPPINGS[cp.TYPE_DTD]               = cspr_sd.DEFAULT_SRC;
 }
 
 ContentSecurityPolicy.prototype = {
@@ -157,7 +133,7 @@ ContentSecurityPolicy.prototype = {
 
   _buildViolatedDirectiveString:
   function(aDirectiveName, aPolicy) {
-    var SD = CSPRep.SRC_DIRECTIVES_NEW;
+    var SD = CSPRep.SRC_DIRECTIVES;
     var cspContext = (SD[aDirectiveName] in aPolicy._directives) ? SD[aDirectiveName] : SD.DEFAULT_SRC;
     var directive = aPolicy._directives[cspContext];
     return cspContext + ' ' + directive.toString();
@@ -410,8 +386,7 @@ ContentSecurityPolicy.prototype = {
    */
   appendPolicy:
   function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aSpecCompliant) {
-    return this._appendPolicyInternal(aPolicy, selfURI, aReportOnly,
-                                      aSpecCompliant, true);
+    return this._appendPolicyInternal(aPolicy, selfURI, aReportOnly, true);
   },
 
   /**
@@ -420,12 +395,10 @@ ContentSecurityPolicy.prototype = {
    * @returns the count of policies.
    */
   _appendPolicyInternal:
-  function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aSpecCompliant,
-                            aEnforceSelfChecks) {
+  function csp_appendPolicy(aPolicy, selfURI, aReportOnly, aEnforceSelfChecks) {
 #ifndef MOZ_B2G
     CSPdebug("APPENDING POLICY: " + aPolicy);
     CSPdebug("            SELF: " + (selfURI ? selfURI.asciiSpec : " null"));
-    CSPdebug("CSP 1.0 COMPLIANT : " + aSpecCompliant);
 #endif
 
     // For nested schemes such as view-source: make sure we are taking the
@@ -446,26 +419,9 @@ ContentSecurityPolicy.prototype = {
     // Note that we pass the full URI since when it's parsed as 'self' to construct a
     // CSPSource only the scheme, host, and port are kept.
 
-    // If we want to be CSP 1.0 spec compliant, use the new parser.
-    // The old one will be deprecated in the future and will be
-    // removed at that time.
-    if (aSpecCompliant) {
-      newpolicy = CSPRep.fromStringSpecCompliant(aPolicy,
-                                                 selfURI,
-                                                 aReportOnly,
-                                                 this._weakDocRequest.get(),
-                                                 this,
-                                                 aEnforceSelfChecks);
-    } else {
-      newpolicy = CSPRep.fromString(aPolicy,
-                                    selfURI,
-                                    aReportOnly,
-                                    this._weakDocRequest.get(),
-                                    this,
-                                    aEnforceSelfChecks);
-    }
-
-    newpolicy._specCompliant = !!aSpecCompliant;
+    newpolicy = CSPRep.fromString(aPolicy, selfURI, aReportOnly,
+                                  this._weakDocRequest.get(),
+                                  this, aEnforceSelfChecks);
     newpolicy._isInitialized = true;
     this._policies.push(newpolicy);
     this._cache.clear(); // reset cache since effective policy changes
@@ -711,7 +667,7 @@ ContentSecurityPolicy.prototype = {
     // scan the discovered ancestors
     // frame-ancestors is the same in both old and new source directives,
     // so don't need to differentiate here.
-    let cspContext = CSPRep.SRC_DIRECTIVES_NEW.FRAME_ANCESTORS;
+    let cspContext = CSPRep.SRC_DIRECTIVES.FRAME_ANCESTORS;
     for (let i in ancestors) {
       let ancestor = ancestors[i];
       if (!policy.permits(ancestor, cspContext)) {
@@ -806,22 +762,11 @@ ContentSecurityPolicy.prototype = {
     for (let policyIndex=0; policyIndex < this._policies.length; policyIndex++) {
       let policy = this._policies[policyIndex];
 
+      cspContext = ContentSecurityPolicy._MAPPINGS[aContentType];
+
 #ifndef MOZ_B2G
-      CSPdebug("policy is " + (policy._specCompliant ?
-                              "1.0 compliant" : "pre-1.0"));
       CSPdebug("policy is " + (policy._reportOnlyMode ?
                               "report-only" : "blocking"));
-#endif
-
-      if (aContentType == cp.TYPE_XMLHTTPREQUEST && this._policies[policyIndex]._specCompliant) {
-        cspContext = ContentSecurityPolicy._MAPPINGS[CSP_TYPE_XMLHTTPREQUEST_SPEC_COMPLIANT];
-      } else if (aContentType == cp.TYPE_WEBSOCKET && this._policies[policyIndex]._specCompliant) {
-        cspContext = ContentSecurityPolicy._MAPPINGS[CSP_TYPE_WEBSOCKET_SPEC_COMPLIANT];
-      } else {
-        cspContext = ContentSecurityPolicy._MAPPINGS[aContentType];
-      }
-
-#ifndef MOZ_B2G
       CSPdebug("shouldLoad cspContext = " + cspContext);
 #endif
 
@@ -979,11 +924,9 @@ ContentSecurityPolicy.prototype = {
     for (let pCount = aStream.read32(); pCount > 0; pCount--) {
       let polStr        = aStream.readString();
       let reportOnly    = aStream.readBoolean();
-      let specCompliant = aStream.readBoolean();
       // don't need self info because when the policy is turned back into a
       // string, 'self' is replaced with the explicit source expression.
-      this._appendPolicyInternal(polStr, null, reportOnly, specCompliant,
-                                 false);
+      this._appendPolicyInternal(polStr, null, reportOnly, false);
     }
 
     // NOTE: the document instance that's deserializing this object (via its
@@ -1010,7 +953,6 @@ ContentSecurityPolicy.prototype = {
     for each (var policy in this._policies) {
       aStream.writeWStringZ(policy.toString());
       aStream.writeBoolean(policy._reportOnlyMode);
-      aStream.writeBoolean(policy._specCompliant);
     }
   },
 };

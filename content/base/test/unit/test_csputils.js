@@ -35,7 +35,7 @@ function do_check_in_array(arr, val, stack) {
   var text = val + " in [" + arr.join(",") + "]";
 
   for(var i in arr) {
-    dump(".......... " + i + "> " + arr[i] + "\n");
+    //dump(".......... " + i + "> " + arr[i] + "\n");
     if(arr[i] == val) {
       //succeed
       ++_passedChecks;
@@ -261,7 +261,7 @@ test(
 test(
     function test_CSPSourceList_fromString_twohost() {
       var str = "foo.bar:21 https://ras.bar";
-      var parsed = "http://foo.bar:21 https://ras.bar:443";
+      var parsed = "http://foo.bar:21 https://ras.bar";
       var sd = CSPSourceList.fromString(str, undefined, URI("http://self.com:80"));
       //"two-host list should parse"
       do_check_neq(null,sd);
@@ -321,43 +321,26 @@ test(
       do_check_false(wildcardHostSourceList.permits("http://barbaz.com"));
     });
 
-///////////////////// Test the Whole CSP rep object //////////////////////
-
+//////////////// TEST CSP REP SPEC COMPLIANT PARSER ////////////
 test(
     function test_CSPRep_fromString() {
 
-      // check default init
-      //ASSERT(!(new CSPRep())._isInitialized, "Uninitialized rep thinks it is.")
-
       var cspr;
       var cspr_allowval;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var SD = CSPRep.SRC_DIRECTIVES;
+      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.SCRIPT_SRC, SD.FONT_SRC,
+                      SD.OBJECT_SRC, SD.FRAME_SRC, SD.CONNECT_SRC];
 
-      // check default policy "allow *"
-      cspr = CSPRep.fromString("allow *", URI("http://self.com:80"));
-      // "DEFAULT_SRC directive is missing when specified in fromString"
-      do_check_has_key(cspr._directives, SD.DEFAULT_SRC);
-
-    });
-
-
-test(
-    function test_CSPRep_defaultSrc() {
-      var cspr, cspr_default_val, cspr_allow;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
-
-      // apply policy of "default-src *" (e.g. "allow *")
+      // check default policy "default-src *"
       cspr = CSPRep.fromString("default-src *", URI("http://self.com:80"));
       // "DEFAULT_SRC directive is missing when specified in fromString"
       do_check_has_key(cspr._directives, SD.DEFAULT_SRC);
 
-      // check that |allow *| and |default-src *| are parsed equivalently and
-      // result in the same set of explicit policy directives
-      cspr = CSPRep.fromString("default-src *", URI("http://self.com:80"));
-      cspr_allow = CSPRep.fromString("allow *", URI("http://self.com:80"));
-
-      do_check_equivalent(cspr._directives['default-src'],
-                          cspr_allow._directives['default-src']);
+      for(var x in DEFAULTS) {
+        // each of these should be equivalent to DEFAULT_SRC
+        //DEFAULTS[x] + " does not use default rule."
+        do_check_true(cspr.permits("http://bar.com", DEFAULTS[x]));
+      }
     });
 
 
@@ -365,11 +348,12 @@ test(
     function test_CSPRep_fromString_oneDir() {
 
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.FRAME_SRC];
+      var SD = CSPRep.SRC_DIRECTIVES;
+      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC,
+                      SD.FRAME_SRC, SD.CONNECT_SRC];
 
       // check one-directive policies
-      cspr = CSPRep.fromString("allow bar.com; script-src https://foo.com",
+      cspr = CSPRep.fromString("default-src bar.com; script-src https://foo.com",
                                URI("http://self.com"));
 
       for(var x in DEFAULTS) {
@@ -389,15 +373,18 @@ test(
     });
 
 test(
-    function test_CSPRep_fromString_twodir() {
+    function test_CSPRep_fromString_twoDir() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_SRC];
+
+      var SD = CSPRep.SRC_DIRECTIVES;
+
+      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_SRC,
+                      SD.CONNECT_SRC];
 
       // check two-directive policies
-      var polstr = "allow allow.com; "
-                  + "script-src https://foo.com; "
-                  + "img-src bar.com:*";
+      var polstr = "default-src allow.com; " +
+                   "script-src https://foo.com; " +
+                   "img-src bar.com:*";
       cspr = CSPRep.fromString(polstr, URI("http://self.com"));
 
       for(var x in DEFAULTS) {
@@ -425,123 +412,12 @@ test(
 
 test(function test_CSPRep_fromString_withself() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "https://self.com:34";
+      var SD = CSPRep.SRC_DIRECTIVES;
 
       // check one-directive policies
-      cspr = CSPRep.fromString("allow 'self'; script-src 'self' https://*:*",
-                              URI(self));
-      //"img-src does not enforce default rule, 'self'.
-      do_check_false(cspr.permits("https://foo.com:400", SD.IMG_SRC));
-      //"img-src does not allow self
-      do_check_true(cspr.permits(self, SD.IMG_SRC));
-      //"script-src is too relaxed
-      do_check_false(cspr.permits("http://evil.com", SD.SCRIPT_SRC));
-      //"script-src should allow self
-      do_check_true(cspr.permits(self, SD.SCRIPT_SRC));
-      //"script-src is too strict on host/port
-      do_check_true(cspr.permits("https://evil.com:100", SD.SCRIPT_SRC));
-     });
-
-
-//////////////// TEST CSP REP SPEC COMPLIANT PARSER ////////////
-test(
-    function test_CSPRep_fromStringSpecCompliant() {
-
-      var cspr;
-      var cspr_allowval;
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC, SD.SCRIPT_SRC, SD.FONT_SRC,
-                      SD.OBJECT_SRC, SD.FRAME_SRC, SD.CONNECT_SRC];
-
-      // check default policy "default-src *"
-      cspr = CSPRep.fromStringSpecCompliant("default-src *", URI("http://self.com:80"));
-      // "DEFAULT_SRC directive is missing when specified in
-      // fromStringSpecCompliant"
-      do_check_has_key(cspr._directives, SD.DEFAULT_SRC);
-
-      for(var x in DEFAULTS) {
-        // each of these should be equivalent to DEFAULT_SRC
-        //DEFAULTS[x] + " does not use default rule."
-        do_check_true(cspr.permits("http://bar.com", DEFAULTS[x]));
-      }
-    });
-
-
-test(
-    function test_CSPRep_fromStringSpecCompliant_oneDir() {
-
-      var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.IMG_SRC,
-                      SD.FRAME_SRC, SD.CONNECT_SRC];
-
-      // check one-directive policies
-      cspr = CSPRep.fromStringSpecCompliant("default-src bar.com; script-src https://foo.com",
-                                            URI("http://self.com"));
-
-      for(var x in DEFAULTS) {
-        //DEFAULTS[x] + " does not use default rule."
-        do_check_false(cspr.permits("http://bar.com:22", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule."
-        do_check_true(cspr.permits("http://bar.com:80", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule."
-        do_check_false(cspr.permits("https://foo.com:400", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule."
-        do_check_false(cspr.permits("https://foo.com", DEFAULTS[x]));
-      }
-      //"script-src false positive in policy.
-      do_check_false(cspr.permits("http://bar.com:22", SD.SCRIPT_SRC));
-      //"script-src false negative in policy.
-      do_check_true(cspr.permits("https://foo.com:443", SD.SCRIPT_SRC));
-    });
-
-test(
-    function test_CSPRep_fromStringSpecCompliant_twodir() {
-      var cspr;
-
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
-
-      var DEFAULTS = [SD.STYLE_SRC, SD.MEDIA_SRC, SD.FRAME_SRC,
-                      SD.CONNECT_SRC];
-
-      // check two-directive policies
-      var polstr = "default-src allow.com; " +
-                   "script-src https://foo.com; " +
-                   "img-src bar.com:*";
-      cspr = CSPRep.fromStringSpecCompliant(polstr, URI("http://self.com"));
-
-      for(var x in DEFAULTS) {
-        do_check_true(cspr.permits("http://allow.com", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule.
-        do_check_false(cspr.permits("https://foo.com:400", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule.
-        do_check_false(cspr.permits("http://bar.com:400", DEFAULTS[x]));
-        //DEFAULTS[x] + " does not use default rule.
-      }
-      //"img-src does not use default rule.
-      do_check_false(cspr.permits("http://allow.com:22", SD.IMG_SRC));
-      //"img-src does not use default rule.
-      do_check_false(cspr.permits("https://foo.com:400", SD.IMG_SRC));
-      //"img-src does not use default rule.
-      do_check_true(cspr.permits("http://bar.com:88", SD.IMG_SRC));
-
-      //"script-src does not use default rule.
-      do_check_false(cspr.permits("http://allow.com:22", SD.SCRIPT_SRC));
-      //"script-src does not use default rule.
-      do_check_true(cspr.permits("https://foo.com:443", SD.SCRIPT_SRC));
-      //"script-src does not use default rule.
-      do_check_false(cspr.permits("http://bar.com:400", SD.SCRIPT_SRC));
-    });
-
-test(function test_CSPRep_fromStringSpecCompliant_withself() {
-      var cspr;
-      var self = "https://self.com:34";
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
-
-      // check one-directive policies
-      cspr = CSPRep.fromStringSpecCompliant("default-src 'self'; script-src 'self' https://*:*",
-                                            URI(self));
+      cspr = CSPRep.fromString("default-src 'self'; script-src 'self' https://*:*",
+                               URI(self));
       //"img-src does not enforce default rule, 'self'.
       do_check_false(cspr.permits("https://foo.com:400", SD.IMG_SRC));
       //"img-src does not allow self
@@ -559,34 +435,10 @@ test(function test_CSPRep_fromStringSpecCompliant_withself() {
 // (see bug 555068)
 test(function test_FrameAncestor_defaults() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
       var self = "http://self.com:34";
+      var SD = CSPRep.SRC_DIRECTIVES;
 
-      cspr = CSPRep.fromString("allow 'none'", URI(self));
-
-      //"frame-ancestors should default to * not 'allow' value"
-      do_check_true(cspr.permits("https://foo.com:400", SD.FRAME_ANCESTORS));
-      do_check_true(cspr.permits("http://self.com:34", SD.FRAME_ANCESTORS));
-      do_check_true(cspr.permits("https://self.com:34", SD.FRAME_ANCESTORS));
-      do_check_true(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
-      do_check_true(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
-
-      cspr = CSPRep.fromString("allow 'none'; frame-ancestors 'self'", URI(self));
-
-      //"frame-ancestors should only allow self"
-      do_check_true(cspr.permits("http://self.com:34", SD.FRAME_ANCESTORS));
-      do_check_false(cspr.permits("https://foo.com:400", SD.FRAME_ANCESTORS));
-      do_check_false(cspr.permits("https://self.com:34", SD.FRAME_ANCESTORS));
-      do_check_false(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
-      do_check_false(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
-     });
-
-test(function test_FrameAncestor_defaults_specCompliant() {
-      var cspr;
-      var self = "http://self.com:34";
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
-
-      cspr = CSPRep.fromStringSpecCompliant("default-src 'none'", URI(self));
+      cspr = CSPRep.fromString("default-src 'none'", URI(self));
 
       //"frame-ancestors should default to * not 'default-src' value"
       do_check_true(cspr.permits("https://foo.com:400", SD.FRAME_ANCESTORS));
@@ -595,7 +447,7 @@ test(function test_FrameAncestor_defaults_specCompliant() {
       do_check_true(cspr.permits("http://self.com", SD.FRAME_ANCESTORS));
       do_check_true(cspr.permits("http://subd.self.com:34", SD.FRAME_ANCESTORS));
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src 'none'; frame-ancestors 'self'", URI(self));
+      cspr = CSPRep.fromString("default-src 'none'; frame-ancestors 'self'", URI(self));
 
       //"frame-ancestors should only allow self"
       do_check_true(cspr.permits("http://self.com:34", SD.FRAME_ANCESTORS));
@@ -608,10 +460,10 @@ test(function test_FrameAncestor_defaults_specCompliant() {
 
 test(function test_FrameAncestor_TLD_defaultPorts() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var SD = CSPRep.SRC_DIRECTIVES;
       var self = "http://self"; //TLD only, no .com or anything.
 
-      cspr = CSPRep.fromString("allow 'self'; frame-ancestors 'self' http://foo:80 bar:80 http://three", URI(self));
+      cspr = CSPRep.fromString("default-src 'self'; frame-ancestors 'self' http://foo:80 bar:80 http://three", URI(self));
 
       //"frame-ancestors should default to * not 'allow' value"
       do_check_true(cspr.permits("http://self", SD.FRAME_ANCESTORS));
@@ -630,7 +482,7 @@ test(function test_FrameAncestor_TLD_defaultPorts() {
 
 test(function test_FrameAncestor_ignores_userpass_bug779918() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var SD = CSPRep.SRC_DIRECTIVES;
       var self = "http://self.com/bar";
       var testPolicy = "default-src 'self'; frame-ancestors 'self'";
 
@@ -678,7 +530,7 @@ test(function test_FrameAncestor_ignores_userpass_bug779918() {
 
 test(function test_CSP_ReportURI_parsing() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
+      var SD = CSPRep.SRC_DIRECTIVES;
       var self = "http://self.com:34";
       var parsedURIs = [];
 
@@ -692,48 +544,48 @@ test(function test_CSP_ReportURI_parsing() {
       var uri_other_scheme_absolute = "https://self.com/report.py";
       var uri_other_scheme_and_host_absolute = "https://foo.com/report.py";
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_absolute, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_valid_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_valid_absolute);
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_host_absolute, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_other_host_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_other_host_absolute);
       do_check_eq(parsedURIs.length, 1); // the empty string is in there.
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_invalid_relative, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_invalid_relative, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, "");
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_relative, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_valid_relative, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, uri_valid_relative_expanded);
       do_check_eq(parsedURIs.length, 1);
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_valid_relative2, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_valid_relative2, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       dump(parsedURIs.length);
       do_check_in_array(parsedURIs, uri_valid_relative2_expanded);
       do_check_eq(parsedURIs.length, 1);
 
       // make sure cross-scheme reporting works
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_scheme_absolute, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_other_scheme_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       dump(parsedURIs.length);
       do_check_in_array(parsedURIs, uri_other_scheme_absolute);
       do_check_eq(parsedURIs.length, 1);
 
       // make sure cross-scheme, cross-host reporting works
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " + uri_other_scheme_and_host_absolute, URI(self));
+      cspr = CSPRep.fromString("default-src *; report-uri " + uri_other_scheme_and_host_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       dump(parsedURIs.length);
       do_check_in_array(parsedURIs, uri_other_scheme_and_host_absolute);
       do_check_eq(parsedURIs.length, 1);
 
       // combination!
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " +
+      cspr = CSPRep.fromString("default-src *; report-uri " +
                                uri_valid_relative2 + " " +
                                uri_valid_absolute, URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
@@ -741,7 +593,7 @@ test(function test_CSP_ReportURI_parsing() {
       do_check_in_array(parsedURIs, uri_valid_absolute);
       do_check_eq(parsedURIs.length, 2);
 
-      cspr = CSPRep.fromStringSpecCompliant("default-src *; report-uri " +
+      cspr = CSPRep.fromString("default-src *; report-uri " +
                                uri_valid_relative2 + " " +
                                uri_other_host_absolute + " " +
                                uri_valid_absolute, URI(self));
@@ -755,32 +607,22 @@ test(function test_CSP_ReportURI_parsing() {
 test(
      function test_bug634778_duplicateDirective_Detection() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_OLD;
+      var SD = CSPRep.SRC_DIRECTIVES;
       var self = "http://self.com:34";
       var firstDomain = "http://first.com";
       var secondDomain = "http://second.com";
       var thirdDomain = "http://third.com";
 
       // check for duplicate "default-src" directives
+      // Spec says first directive persists (subsequent re-statement is
+      // ignored)
       cspr = CSPRep.fromString("default-src " + self + "; default-src " +
                               firstDomain, URI(self));
       do_check_true(cspr.permits(self, SD.DEFAULT_SRC));
       do_check_false(cspr.permits(firstDomain, SD.DEFAULT_SRC));
 
-      // check for duplicate "allow" directives
-      cspr = CSPRep.fromString("allow " + self + "; allow " + firstDomain,
-                              URI(self));
-      do_check_true(cspr.permits(self, SD.DEFAULT_SRC));
-      do_check_false(cspr.permits(firstDomain, SD.DEFAULT_SRC));
-
-      // check for duplicate "allow" + "default-src" directives
-      cspr = CSPRep.fromString("allow " + self + "; default-src " + firstDomain,
-                              URI(self));
-      do_check_true(cspr.permits(self, SD.DEFAULT_SRC));
-      do_check_false(cspr.permits(firstDomain, SD.DEFAULT_SRC));
-
       // check for duplicate report-uri directives
-      cspr = CSPRep.fromString("allow *; report-uri " + self + "/report.py; report-uri "
+      cspr = CSPRep.fromString("default-src *; report-uri " + self + "/report.py; report-uri "
                               + firstDomain + "/report.py", URI(self));
       parsedURIs = cspr.getReportURIs().split(/\s+/);
       do_check_in_array(parsedURIs, self + "/report.py");
@@ -896,9 +738,7 @@ test(
 
 test(
     function test_bug764937_defaultSrcMissing() {
-      var cspObjSpecCompliant = Cc["@mozilla.org/contentsecuritypolicy;1"]
-                     .createInstance(Ci.nsIContentSecurityPolicy);
-      var cspObjOld = Cc["@mozilla.org/contentsecuritypolicy;1"]
+      var cspObj = Cc["@mozilla.org/contentsecuritypolicy;1"]
                      .createInstance(Ci.nsIContentSecurityPolicy);
       var selfURI = URI("http://self.com/");
 
@@ -908,39 +748,21 @@ test(
       };
 
       const policy = "script-src 'self'";
-      cspObjSpecCompliant.appendPolicy(policy, selfURI, false, true);
+      cspObj.appendPolicy(policy, selfURI, false, true);
 
       // Spec-Compliant policy default-src defaults to *.
       // This means all images are allowed, and only 'self'
       // script is allowed.
-      do_check_true(testPermits(cspObjSpecCompliant,
+      do_check_true(testPermits(cspObj,
                                 URI("http://bar.com/foo.png"),
                                 Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_true(testPermits(cspObjSpecCompliant,
+      do_check_true(testPermits(cspObj,
                                 URI("http://self.com/foo.png"),
                                 Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_true(testPermits(cspObjSpecCompliant,
+      do_check_true(testPermits(cspObj,
                                 URI("http://self.com/foo.js"),
                                 Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_false(testPermits(cspObjSpecCompliant,
-                                 URI("http://bar.com/foo.js"),
-                                 Ci.nsIContentPolicy.TYPE_SCRIPT));
-
-      cspObjOld.appendPolicy(policy, selfURI, false, false);
-
-      // non-Spec-Compliant policy default-src defaults to 'none'
-      // This means all images are blocked, and so are all scripts (because the
-      // policy is ignored and fails closed).
-      do_check_false(testPermits(cspObjOld,
-                                URI("http://bar.com/foo.png"),
-                                Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_false(testPermits(cspObjOld,
-                                URI("http://self.com/foo.png"),
-                                Ci.nsIContentPolicy.TYPE_IMAGE));
-      do_check_false(testPermits(cspObjOld,
-                                URI("http://self.com/foo.js"),
-                                Ci.nsIContentPolicy.TYPE_SCRIPT));
-      do_check_false(testPermits(cspObjOld,
+      do_check_false(testPermits(cspObj,
                                  URI("http://bar.com/foo.js"),
                                  Ci.nsIContentPolicy.TYPE_SCRIPT));
 
@@ -955,10 +777,10 @@ test(function test_equals_does_case_insensitive_comparison() {
       // CSPSource equals ignores case
       var upperCaseHost = "http://FOO.COM";
       var lowerCaseHost = "http://foo.com";
-      src1 = CSPSource.fromString(lowerCaseHost);
-      src2 = CSPSource.fromString(lowerCaseHost);
+      var src1 = CSPSource.fromString(lowerCaseHost);
+      var src2 = CSPSource.fromString(lowerCaseHost);
       do_check_true(src1.equals(src2))
-      src3 = CSPSource.fromString(upperCaseHost);
+      var src3 = CSPSource.fromString(upperCaseHost);
       do_check_true(src1.equals(src3))
 
       // CSPHost equals ignores case
@@ -983,7 +805,7 @@ test(function test_equals_does_case_insensitive_comparison() {
 
 test(function test_csp_permits_case_insensitive() {
       var cspr;
-      var SD = CSPRep.SRC_DIRECTIVES_NEW;
+      var SD = CSPRep.SRC_DIRECTIVES;
 
       // checks directives can be case-insensitive
       var selfHost = "http://self.com";
@@ -1042,12 +864,15 @@ function run_test() {
   httpServer.registerPathHandler("/policy", policyresponder);
 
   for(let i in tests) {
-    tests[i]();
+    add_task(tests[i]);
   }
 
-  //teardown
-  httpServer.stop(function() { });
-  do_test_finished();
+  do_register_cleanup(function () {
+    //teardown
+    httpServer.stop(function() { });
+  });
+
+  run_next_test();
 }
 
 
