@@ -112,12 +112,12 @@ let emulator = (function() {
     let hangUpPromises = [];
 
     for (let call of telephony.calls) {
-      log(".. hangUp " + call.number);
+      log(".. hangUp " + call.id.number);
       hangUpPromises.push(hangUp(call));
     }
 
     for (let call of conference.calls) {
-      log(".. hangUp " + call.number);
+      log(".. hangUp " + call.id.number);
       hangUpPromises.push(hangUp(call));
     }
 
