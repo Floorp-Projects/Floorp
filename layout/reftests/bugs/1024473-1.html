@@ -9,9 +9,8 @@ var cx = canvas.getContext("2d");
 cx.fillStyle="lime";
 cx.fillRect(0, 0, 200, 100);
 
-window.addEventListener("MozReftestInvalidate")
-setTimeout(function() {
+window.addEventListener("MozReftestInvalidate", function() {
   canvas.style.borderRadius = "40px";
   document.documentElement.removeAttribute("class");
-}, 1000);
+});
 </script>
