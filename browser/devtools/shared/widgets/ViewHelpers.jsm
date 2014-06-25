@@ -394,7 +394,8 @@ ViewHelpers.L10N.prototype = {
  *        An object containing { accessorName: [prefType, prefName] } keys.
  */
 ViewHelpers.Prefs = function(aPrefsRoot = "", aPrefsObject = {}) {
-  this.root = aPrefsRoot;
+  this._root = aPrefsRoot;
+  this._cache = new Map();
 
   for (let accessorName in aPrefsObject) {
     let [prefType, prefName] = aPrefsObject[accessorName];
@@ -411,10 +412,13 @@ ViewHelpers.Prefs.prototype = {
    * @return any
    */
   _get: function(aType, aPrefName) {
-    if (this[aPrefName] === undefined) {
-      this[aPrefName] = Services.prefs["get" + aType + "Pref"](aPrefName);
+    let cachedPref = this._cache.get(aPrefName);
+    if (cachedPref !== undefined) {
+      return cachedPref;
     }
-    return this[aPrefName];
+    let value = Services.prefs["get" + aType + "Pref"](aPrefName);
+    this._cache.set(aPrefName, value);
+    return value;
   },
 
   /**
@@ -426,7 +430,7 @@ ViewHelpers.Prefs.prototype = {
    */
   _set: function(aType, aPrefName, aValue) {
     Services.prefs["set" + aType + "Pref"](aPrefName, aValue);
-    this[aPrefName] = aValue;
+    this._cache.set(aPrefName, aValue);
   },
 
   /**
@@ -446,9 +450,16 @@ ViewHelpers.Prefs.prototype = {
     }
 
     Object.defineProperty(this, aAccessorName, {
-      get: () => aSerializer.in(this._get(aType, [this.root, aPrefName].join("."))),
-      set: (e) => this._set(aType, [this.root, aPrefName].join("."), aSerializer.out(e))
+      get: () => aSerializer.in(this._get(aType, [this._root, aPrefName].join("."))),
+      set: (e) => this._set(aType, [this._root, aPrefName].join("."), aSerializer.out(e))
     });
+  },
+
+  /**
+   * Clears all the cached preferences' values.
+   */
+  refresh: function() {
+    this._cache.clear();
   }
 };
 
