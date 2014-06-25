@@ -518,7 +518,8 @@ var SelectionHandler = {
       id: "selectall_action",
       icon: "drawable://ab_select_all",
       action: function(aElement) {
-        SelectionHandler.startSelection(aElement)
+        SelectionHandler.startSelection(aElement);
+        UITelemetry.addEvent("action.1", "actionbar", null, "select_all");
       },
       order: 5,
       selector: {
@@ -541,6 +542,7 @@ var SelectionHandler = {
 
         // copySelection closes the selection. Show a caret where we just cut the text.
         SelectionHandler.attachCaret(aElement);
+        UITelemetry.addEvent("action.1", "actionbar", null, "cut");
       },
       order: 4,
       selector: {
@@ -557,6 +559,7 @@ var SelectionHandler = {
       icon: "drawable://ab_copy",
       action: function() {
         SelectionHandler.copySelection();
+        UITelemetry.addEvent("action.1", "actionbar", null, "copy");
       },
       order: 3,
       selector: {
@@ -581,6 +584,7 @@ var SelectionHandler = {
           target.editor.paste(Ci.nsIClipboard.kGlobalClipboard);
           target.focus();
           SelectionHandler._closeSelection();
+          UITelemetry.addEvent("action.1", "actionbar", null, "paste");
         }
       },
       order: 2,
@@ -601,6 +605,7 @@ var SelectionHandler = {
       icon: "drawable://ic_menu_share",
       action: function() {
         SelectionHandler.shareSelection();
+        UITelemetry.addEvent("action.1", "actionbar", null, "share");
       },
       selector: {
         matches: function() {
@@ -618,6 +623,7 @@ var SelectionHandler = {
       action: function() {
         SelectionHandler.searchSelection();
         SelectionHandler._closeSelection();
+        UITelemetry.addEvent("action.1", "actionbar", null, "search");
       },
       order: 1,
       selector: {
@@ -633,6 +639,7 @@ var SelectionHandler = {
       icon: "drawable://phone",
       action: function() {
         SelectionHandler.callSelection();
+        UITelemetry.addEvent("action.1", "actionbar", null, "call");
       },
       order: 1,
       selector: {
