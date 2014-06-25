@@ -115,6 +115,8 @@ namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
                                                     public nsWrapperCache
 {
+  ~DOMSVGAnimatedPreserveAspectRatio();
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMSVGAnimatedPreserveAspectRatio)
 
@@ -124,7 +126,6 @@ class DOMSVGAnimatedPreserveAspectRatio MOZ_FINAL : public nsISupports,
   {
     SetIsDOMBinding();
   }
-  ~DOMSVGAnimatedPreserveAspectRatio();
 
   // WebIDL
   nsSVGElement* GetParentObject() const { return mSVGElement; }

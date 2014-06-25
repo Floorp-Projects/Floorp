@@ -1432,7 +1432,7 @@ intl_FormatNumber(JSContext *cx, UNumberFormat *nf, double x, MutableHandleValue
         return false;
     }
 
-    JSString *str = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString *str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
 
@@ -1932,7 +1932,7 @@ intl_FormatDateTime(JSContext *cx, UDateFormat *df, double x, MutableHandleValue
         return false;
     }
 
-    JSString *str = js_NewStringCopyN<CanGC>(cx, chars.begin(), size);
+    JSString *str = NewStringCopyN<CanGC>(cx, chars.begin(), size);
     if (!str)
         return false;
 

@@ -104,6 +104,26 @@ NS_IMETHODIMP CacheStorage::AsyncOpenURI(nsIURI *aURI,
   return NS_OK;
 }
 
+
+NS_IMETHODIMP CacheStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension,
+                                   bool *aResult)
+{
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG(aResult);
+
+  if (!CacheStorageService::Self())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIURI> noRefURI;
+  rv = aURI->CloneIgnoringRef(getter_AddRefs(noRefURI));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return CacheStorageService::Self()->CheckStorageEntry(
+    this, noRefURI, aIdExtension, aResult);
+}
+
 NS_IMETHODIMP CacheStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,
                                          nsICacheEntryDoomCallback* aCallback)
 {

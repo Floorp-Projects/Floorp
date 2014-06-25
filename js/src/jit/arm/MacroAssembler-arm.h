@@ -560,7 +560,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
-        if (hasMOVWT())
+        if (HasMOVWT())
             rs = L_MOVWT;
         else
             rs = L_LDR;
@@ -606,7 +606,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         RelocStyle rs;
-        if (hasMOVWT())
+        if (HasMOVWT())
             rs = L_MOVWT;
         else
             rs = L_LDR;
@@ -681,7 +681,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
 
     static size_t ToggledCallSize() {
-        if (hasMOVWT())
+        if (HasMOVWT())
             // Size of a movw, movt, nop/blx instruction.
             return 12;
         // Size of a ldr, nop/blx instruction
@@ -696,7 +696,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     CodeOffsetLabel movWithPatch(ImmWord imm, Register dest) {
         CodeOffsetLabel label = CodeOffsetLabel(currentOffset());
-        ma_movPatchable(Imm32(imm.value), dest, Always, hasMOVWT() ? L_MOVWT : L_LDR);
+        ma_movPatchable(Imm32(imm.value), dest, Always, HasMOVWT() ? L_MOVWT : L_LDR);
         return label;
     }
     CodeOffsetLabel movWithPatch(ImmPtr imm, Register dest) {
@@ -895,8 +895,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         if (lhs.getTag() == Operand::OP2) {
             branch32(cond, lhs.toReg(), rhs, label);
         } else {
-            ma_ldr(lhs, ScratchRegister);
-            branch32(cond, ScratchRegister, rhs, label);
+            // branch32 will use ScratchRegister.
+            ma_ldr(lhs, secondScratchReg_);
+            branch32(cond, secondScratchReg_, rhs, label);
         }
     }
     void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
@@ -904,8 +905,9 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         branch32(cond, ScratchRegister, rhs, label);
     }
     void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
-        load32(lhs, ScratchRegister);
-        branch32(cond, ScratchRegister, rhs, label);
+        // branch32 will use ScratchRegister.
+        load32(lhs, secondScratchReg_);
+        branch32(cond, secondScratchReg_, rhs, label);
     }
     void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
         branch32(cond, lhs, rhs, label);
@@ -1000,12 +1002,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_b(label, cond);
     }
     void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
-        ma_ldr(Operand(address.base, address.offset), ScratchRegister);
-        branchTest32(cond, ScratchRegister, imm, label);
+        // branchTest32 will use ScratchRegister.
+        load32(address, secondScratchReg_);
+        branchTest32(cond, secondScratchReg_, imm, label);
     }
     void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
-        loadPtr(address, ScratchRegister);
-        branchTest32(cond, ScratchRegister, imm, label);
+        // branchTest32 will use ScratchRegister.
+        load32(address, secondScratchReg_);
+        branchTest32(cond, secondScratchReg_, imm, label);
     }
     void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
         branchTest32(cond, lhs, rhs, label);

@@ -20,9 +20,10 @@ class nsURIChecker : public nsIURIChecker,
                      public nsIChannelEventSink,
                      public nsIInterfaceRequestor
 {
+    virtual ~nsURIChecker() {}
+
 public:
     nsURIChecker();
-    virtual ~nsURIChecker() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURICHECKER

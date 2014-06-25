@@ -35,7 +35,6 @@ public:
   NullHttpTransaction(nsHttpConnectionInfo *ci,
                       nsIInterfaceRequestor *callbacks,
                       uint32_t caps);
-  virtual ~NullHttpTransaction();
 
   // Overload of nsAHttpTransaction methods
   bool IsNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return true; }
@@ -45,8 +44,10 @@ public:
     return PR_SecondsToInterval(15);
   }
 
-private:
+protected:
+  virtual ~NullHttpTransaction();
 
+private:
   nsresult mStatus;
   uint32_t mCaps;
   // mCapsToClear holds flags that should be cleared in mCaps, e.g. unset

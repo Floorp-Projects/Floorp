@@ -109,7 +109,6 @@ class SocketHandler : public nsASocketHandler {
  public:
   SocketHandler(SocketTransportServiceTest *test) : test_(test) {
   }
-  virtual ~SocketHandler() {}
 
   void OnSocketReady(PRFileDesc *fd, int16_t outflags) {
     unsigned char buf[1600];
@@ -133,6 +132,9 @@ class SocketHandler : public nsASocketHandler {
   virtual uint64_t ByteCountReceived() { return 0; }
 
   NS_DECL_ISUPPORTS
+
+ protected:
+  virtual ~SocketHandler() {}
 
  private:
   SocketTransportServiceTest *test_;

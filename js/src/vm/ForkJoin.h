@@ -281,7 +281,7 @@ bool ForkJoin(JSContext *cx, CallArgs &args);
 //       { everything else }
 //               |
 //           Interrupt
-//           /       \
+//           /       |
 //   Unsupported   UnsupportedVM
 //           \       /
 //              None

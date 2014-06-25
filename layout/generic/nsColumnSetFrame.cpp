@@ -140,7 +140,7 @@ nsColumnSetFrame::GetAvailableContentHeight(const nsHTMLReflowState& aReflowStat
   }
 
   nsMargin bp = aReflowState.ComputedPhysicalBorderPadding();
-  ApplySkipSides(bp, &aReflowState);
+  bp.ApplySkipSides(GetSkipSides(&aReflowState));
   bp.bottom = aReflowState.ComputedPhysicalBorderPadding().bottom;
   return std::max(0, aReflowState.AvailableHeight() - bp.TopBottom());
 }
@@ -440,7 +440,7 @@ nsColumnSetFrame::ReflowChildren(nsHTMLReflowMetrics&     aDesiredSize,
 
   // get our border and padding
   nsMargin borderPadding = aReflowState.ComputedPhysicalBorderPadding();
-  ApplySkipSides(borderPadding, &aReflowState);
+  borderPadding.ApplySkipSides(GetSkipSides(&aReflowState));
   
   nsRect contentRect(0, 0, 0, 0);
   nsOverflowAreas overflowRects;
@@ -789,7 +789,7 @@ nsColumnSetFrame::FindBestBalanceHeight(const nsHTMLReflowState& aReflowState,
   bool feasible = aRunWasFeasible;
 
   nsMargin bp = aReflowState.ComputedPhysicalBorderPadding();
-  ApplySkipSides(bp);
+  bp.ApplySkipSides(GetSkipSides());
   bp.bottom = aReflowState.ComputedPhysicalBorderPadding().bottom;
 
   nscoord availableContentHeight =

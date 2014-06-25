@@ -38,9 +38,9 @@ public:
         , mHexDumpState(0)
     {}
 
+private:
     virtual ~nsAboutCacheEntry() {}
 
-private:
     nsresult GetContentStream(nsIURI *, nsIInputStream **);
     nsresult OpenCacheEntry(nsIURI *);
     nsresult OpenCacheEntry();

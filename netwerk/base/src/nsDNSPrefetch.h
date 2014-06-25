@@ -18,6 +18,8 @@ class nsIDNSService;
 
 class nsDNSPrefetch MOZ_FINAL : public nsIDNSListener
 {
+    ~nsDNSPrefetch() {}
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIDNSLISTENER

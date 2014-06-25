@@ -482,10 +482,11 @@ namespace { // anon
 
 class MetaDataVisitorWrapper : public nsICacheMetaDataVisitor
 {
+  virtual ~MetaDataVisitorWrapper() {}
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSICACHEMETADATAVISITOR
   MetaDataVisitorWrapper(nsICacheEntryMetaDataVisitor* cb) : mCB(cb) {}
-  virtual ~MetaDataVisitorWrapper() {}
   nsCOMPtr<nsICacheEntryMetaDataVisitor> mCB;
 };
 
@@ -941,6 +942,12 @@ NS_IMETHODIMP _OldStorage::AsyncOpenURI(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+NS_IMETHODIMP _OldStorage::Exists(nsIURI *aURI, const nsACString & aIdExtension,
+                                   bool *aResult)
+{
+  return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP _OldStorage::AsyncDoomURI(nsIURI *aURI, const nsACString & aIdExtension,

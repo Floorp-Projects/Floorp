@@ -52,14 +52,14 @@ class RemoteOpenFileChild MOZ_FINAL
   typedef mozilla::dom::TabChild TabChild;
   typedef mozilla::ipc::FileDescriptor FileDescriptor;
 
+  virtual ~RemoteOpenFileChild();
+
 public:
   RemoteOpenFileChild()
     : mNSPRFileDesc(nullptr)
     , mAsyncOpenCalled(false)
     , mNSPROpenCalled(false)
   {}
-
-  virtual ~RemoteOpenFileChild();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIFILE

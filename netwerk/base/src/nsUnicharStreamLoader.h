@@ -23,11 +23,12 @@ public:
   NS_DECL_NSISTREAMLISTENER
 
   nsUnicharStreamLoader() {}
-  virtual ~nsUnicharStreamLoader() {}
 
   static nsresult Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 protected:
+  virtual ~nsUnicharStreamLoader() {}
+
   nsresult DetermineCharset();
 
   /**

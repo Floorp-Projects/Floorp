@@ -68,6 +68,14 @@ private:
   nsContentTreeOwner *mAggregator;
 };
 
+namespace mozilla {
+template<>
+struct HasDangerousPublicDestructor<nsSiteWindow>
+{
+  static const bool value = true;
+};
+}
+
 //*****************************************************************************
 //***    nsContentTreeOwner: Object Management
 //*****************************************************************************

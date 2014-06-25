@@ -22,12 +22,12 @@
 class ArrayBufferInputStream : public nsIArrayBufferInputStream {
 public:
   ArrayBufferInputStream();
-  virtual ~ArrayBufferInputStream() {}
   NS_DECL_ISUPPORTS
   NS_DECL_NSIARRAYBUFFERINPUTSTREAM
   NS_DECL_NSIINPUTSTREAM
 
 private:
+  virtual ~ArrayBufferInputStream() {}
   mozilla::Maybe<JS::PersistentRooted<JS::Value> > mArrayBuffer;
   uint8_t* mBuffer; // start of actual buffer
   uint32_t mBufferLength; // length of slice

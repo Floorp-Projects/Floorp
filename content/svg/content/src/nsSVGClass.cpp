@@ -35,6 +35,9 @@ struct DOMAnimatedString MOZ_FINAL : public SVGAnimatedString
   }
 
   void GetAnimVal(nsAString& aResult) MOZ_OVERRIDE;
+
+private:
+  ~DOMAnimatedString() {}
 };
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMAnimatedString, mSVGElement)

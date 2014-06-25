@@ -31,9 +31,10 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   WyciwygChannelParent();
-  virtual ~WyciwygChannelParent();
 
 protected:
+  virtual ~WyciwygChannelParent();
+
   virtual bool RecvInit(const URIParams& uri) MOZ_OVERRIDE;
   virtual bool RecvAsyncOpen(const URIParams& original,
                              const uint32_t& loadFlags,
