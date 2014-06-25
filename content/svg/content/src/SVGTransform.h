@@ -18,7 +18,7 @@
 
 class nsSVGElement;
 
-class gfxMatrix;
+struct gfxMatrix;
 
 #define MOZ_SVG_LIST_INDEX_BIT_COUNT 31 // supports > 2 billion list items
 
