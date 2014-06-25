@@ -7067,6 +7067,43 @@ nsDocShell::EndPageLoad(nsIWebProgress * aProgress,
             return NS_OK;
         }
 
+        // Handle iframe document not loading error because source was
+        // a tracking URL. (Safebrowsing) We make a note of this iframe
+        // node by including it in a dedicated array of blocked tracking
+        // nodes under its parent document. (document of parent window of
+        // blocked document)
+        if (isTopFrame == false && aStatus == NS_ERROR_TRACKING_URI) {
+            // frameElement is our nsIContent to be annotated
+            nsCOMPtr<nsIDOMElement> frameElement;
+            nsPIDOMWindow* thisWindow = GetWindow();
+            if (!thisWindow) {
+                return NS_OK;
+            }
+
+            thisWindow->GetFrameElement(getter_AddRefs(frameElement));
+            if (!frameElement) {
+                return NS_OK;
+            }
+
+            // Parent window
+            nsCOMPtr<nsIDocShellTreeItem> parentItem;
+            GetSameTypeParent(getter_AddRefs(parentItem));
+            if (!parentItem) {
+                return NS_OK;
+            }
+
+            nsCOMPtr<nsIDocument> parentDoc;
+            parentDoc = parentItem->GetDocument();
+            if (!parentDoc) {
+                return NS_OK;
+            }
+
+            nsCOMPtr<nsIContent> cont = do_QueryInterface(frameElement);
+            parentDoc->AddBlockedTrackingNode(cont);
+
+            return NS_OK;
+        }
+
         if (sURIFixup) {
             //
             // Try and make an alternative URI from the old one
