@@ -1,4 +1,4 @@
-// -*- mode: js2; indent-tabs-mode: nil; -*-
+// -*- indent-tabs-mode: nil -*-
 
 // A RectArray<X,k> is a subclass of Array with 'width', 'height',
 // and 'payload' properties (where payload holds 'k').
