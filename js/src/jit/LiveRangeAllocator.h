@@ -494,6 +494,12 @@ class VirtualRegister
     bool isFloatReg() const {
         return def_->isFloatReg();
     }
+    bool isCompatibleReg(const AnyRegister &r) const {
+        return def_->isCompatibleReg(r);
+    }
+    bool isCompatibleVReg(const VirtualRegister &vr) const {
+        return def_->isCompatibleDef(*vr.def_);
+    }
 
     LiveInterval *intervalFor(CodePosition pos);
     LiveInterval *getFirstInterval();
