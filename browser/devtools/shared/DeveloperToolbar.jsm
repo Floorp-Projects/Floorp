@@ -107,9 +107,14 @@ let CommandUtils = {
         }
         if (command.buttonId != null) {
           button.id = command.buttonId;
+          if (command.buttonClass != null) {
+            button.className = command.buttonClass;
+          }
         }
-        if (command.buttonClass != null) {
-          button.className = command.buttonClass;
+        else {
+          button.setAttribute("text-as-image", "true");
+          button.setAttribute("label", command.name);
+          button.className = "devtools-toolbarbutton";
         }
         if (command.tooltipText != null) {
           button.setAttribute("tooltiptext", command.tooltipText);
