@@ -1026,7 +1026,7 @@
       *
       * Note: This function will remove a symlink even if it points a directory.
       */
-     File.removeDir = function(path, options) {
+     File.removeDir = function(path, options = {}) {
        let isSymLink;
        try {
          let info = File.stat(path, {unixNoFollowingLinks: true});

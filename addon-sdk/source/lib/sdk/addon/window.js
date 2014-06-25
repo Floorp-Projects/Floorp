@@ -56,8 +56,6 @@ eventTarget.addEventListener("DOMContentLoaded", function handler(event) {
   resolve();
 }, false);
 
-
-
 exports.ready = promise;
 exports.window = window;
 
