@@ -74,8 +74,8 @@ CodeGeneratorX64::visitBox(LBox *box)
     if (IsFloatingPointType(box->type())) {
         FloatRegister reg = ToFloatRegister(in);
         if (box->type() == MIRType_Float32) {
-            masm.convertFloat32ToDouble(reg, ScratchFloatReg);
-            reg = ScratchFloatReg;
+            masm.convertFloat32ToDouble(reg, ScratchDoubleReg);
+            reg = ScratchDoubleReg;
         }
         masm.movq(reg, ToRegister(result));
     } else {

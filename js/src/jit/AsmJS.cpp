@@ -6021,8 +6021,8 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
                 masm.storePtr(scratch, Address(StackPointer, iter->offsetFromArgBase()));
             } else {
                 JS_ASSERT(iter.mirType() == MIRType_Double || iter.mirType() == MIRType_Float32);
-                masm.loadDouble(src, ScratchFloatReg);
-                masm.storeDouble(ScratchFloatReg, Address(StackPointer, iter->offsetFromArgBase()));
+                masm.loadDouble(src, ScratchDoubleReg);
+                masm.storeDouble(ScratchDoubleReg, Address(StackPointer, iter->offsetFromArgBase()));
             }
             break;
         }
@@ -6045,11 +6045,11 @@ GenerateEntry(ModuleCompiler &m, const AsmJSModule::ExportedFunction &exportedFu
         masm.storeValue(JSVAL_TYPE_INT32, ReturnReg, Address(argv, 0));
         break;
       case RetType::Float:
-        masm.convertFloat32ToDouble(ReturnFloatReg, ReturnFloatReg);
-        // Fall through as ReturnFloatReg now contains a Double
+        masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
+        // Fall through as ReturnDoubleReg now contains a Double
       case RetType::Double:
-        masm.canonicalizeDouble(ReturnFloatReg);
-        masm.storeDouble(ReturnFloatReg, Address(argv, 0));
+        masm.canonicalizeDouble(ReturnDoubleReg);
+        masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
     }
 
@@ -6196,9 +6196,9 @@ FillArgumentArray(ModuleCompiler &m, const VarTypeVector &argTypes,
             } else {
                 JS_ASSERT(i.mirType() == MIRType_Double);
                 Address src(StackPointer, offsetToCallerStackArgs + i->offsetFromArgBase());
-                masm.loadDouble(src, ScratchFloatReg);
-                masm.canonicalizeDouble(ScratchFloatReg);
-                masm.storeDouble(ScratchFloatReg, dstAddr);
+                masm.loadDouble(src, ScratchDoubleReg);
+                masm.canonicalizeDouble(ScratchDoubleReg);
+                masm.storeDouble(ScratchDoubleReg, dstAddr);
             }
             break;
         }
@@ -6301,7 +6301,7 @@ GenerateFFIInterpreterExit(ModuleCompiler &m, const ModuleCompiler::ExitDescript
       case RetType::Double:
         masm.callExit(AsmJSImmPtr(AsmJSImm_InvokeFromAsmJS_ToNumber), i.stackBytesConsumedSoFar());
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-        masm.loadDouble(argv, ReturnFloatReg);
+        masm.loadDouble(argv, ReturnDoubleReg);
         break;
       case RetType::Float:
         MOZ_ASSUME_UNREACHABLE("Float32 shouldn't be returned from a FFI");
@@ -6372,7 +6372,7 @@ GenerateOOLConvert(ModuleCompiler &m, RetType retType, Label *throwLabel)
       case RetType::Double:
         masm.callExit(AsmJSImmPtr(AsmJSImm_CoerceInPlace_ToNumber), i.stackBytesConsumedSoFar());
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
-        masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnFloatReg);
+        masm.loadDouble(Address(StackPointer, offsetToArgv), ReturnDoubleReg);
         break;
       default:
         MOZ_ASSUME_UNREACHABLE("Unsupported convert type");
@@ -6582,11 +6582,11 @@ GenerateFFIIonExit(ModuleCompiler &m, const ModuleCompiler::ExitDescriptor &exit
       case RetType::Void:
         break;
       case RetType::Signed:
-        masm.convertValueToInt32(JSReturnOperand, ReturnFloatReg, ReturnReg, &oolConvert,
+        masm.convertValueToInt32(JSReturnOperand, ReturnDoubleReg, ReturnReg, &oolConvert,
                                  /* -0 check */ false);
         break;
       case RetType::Double:
-        masm.convertValueToDouble(JSReturnOperand, ReturnFloatReg, &oolConvert);
+        masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
         break;
       case RetType::Float:
         MOZ_ASSUME_UNREACHABLE("Float shouldn't be returned from a FFI");

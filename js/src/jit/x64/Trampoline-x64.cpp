@@ -697,7 +697,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
       case Type_Double:
         JS_ASSERT(cx->runtime()->jitSupportsFloatingPoint);
-        masm.loadDouble(Address(esp, 0), ReturnFloatReg);
+        masm.loadDouble(Address(esp, 0), ReturnDoubleReg);
         masm.freeStack(sizeof(double));
         break;
 

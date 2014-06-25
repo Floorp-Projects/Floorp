@@ -522,8 +522,17 @@ class VerifyOp
         masm.branchPtr(Assembler::NotEqual, dump, reg, failure_);
     }
     void operator()(FloatRegister reg, Address dump) {
-        masm.loadDouble(dump, ScratchFloatReg);
-        masm.branchDouble(Assembler::DoubleNotEqual, ScratchFloatReg, reg, failure_);
+        FloatRegister scratch;
+#ifdef JS_CODEGEN_ARM
+        if (reg.isDouble())
+            scratch = ScratchDoubleReg;
+        else
+            scratch = ScratchFloat32Reg;
+#else
+        scratch = ScratchFloat32Reg;
+#endif
+        masm.loadDouble(dump, scratch);
+        masm.branchDouble(Assembler::DoubleNotEqual, scratch, reg, failure_);
     }
 };
 
