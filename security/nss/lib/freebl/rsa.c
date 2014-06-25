@@ -1386,7 +1386,7 @@ RSA_PrivateKeyCheck(const RSAPrivateKey *key)
         !key->publicExponent.data || !key->privateExponent.data ||
         !key->exponent1.data || !key->exponent2.data ||
         !key->coefficient.data) {
-        /*call RSA_PopulatePrivateKey first, if the application wishes to
+        /* call RSA_PopulatePrivateKey first, if the application wishes to
          * recover these parameters */
         err = MP_BADARG;
         goto cleanup;
@@ -1415,9 +1415,6 @@ RSA_PrivateKeyCheck(const RSAPrivateKey *key)
 	rv = SECFailure;         \
 	goto cleanup;            \
     }
-    /*
-     * The following errors cannot be recovered from.
-     */
     /* n == p * q */
     CHECK_MPI_OK( mp_mul(&p, &q, &res) );
     VERIFY_MPI_EQUAL(&res, &n);
@@ -1435,10 +1432,6 @@ RSA_PrivateKeyCheck(const RSAPrivateKey *key)
     /* d*e == 1 mod q-1 */
     CHECK_MPI_OK( mp_mulmod(&d, &e, &qsub1, &res) );
     VERIFY_MPI_EQUAL_1(&res);
-    /*
-     * The following errors can be recovered from. However, the purpose of this
-     * function is to check consistency, so they are not.
-     */
     /* d_p == d mod p-1 */
     CHECK_MPI_OK( mp_mod(&d, &psub1, &res) );
     VERIFY_MPI_EQUAL(&res, &d_p);
