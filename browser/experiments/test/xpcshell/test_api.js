@@ -171,6 +171,14 @@ add_task(function* test_getExperiments() {
   let addons = yield getExperimentAddons();
   Assert.equal(addons.length, 0, "Precondition: No experiment add-ons are installed.");
 
+  try {
+    let b = yield experiments.getExperimentBranch();
+    Assert.ok(false, "getExperimentBranch should fail with no experiment");
+  }
+  catch (e) {
+    Assert.ok(true, "getExperimentBranch correctly threw");
+  }
+
   // Trigger update, clock set for experiment 1 to start.
 
   now = futureDate(startDate1, 5 * MS_IN_ONE_DAY);
@@ -195,6 +203,19 @@ add_task(function* test_getExperiments() {
     Assert.equal(experimentListData[1][k], list[0][k],
                  "Property " + k + " should match reference data.");
   }
+
+  let b = yield experiments.getExperimentBranch();
+  Assert.strictEqual(b, null, "getExperimentBranch should return null by default");
+
+  b = yield experiments.getExperimentBranch(EXPERIMENT1_ID);
+  Assert.strictEqual(b, null, "getExperimentsBranch should return null (with id)");
+
+  yield experiments.setExperimentBranch(EXPERIMENT1_ID, "foo");
+  b = yield experiments.getExperimentBranch();
+  Assert.strictEqual(b, "foo", "getExperimentsBranch should return the set value");
+
+  Assert.equal(observerFireCount, ++expectedObserverFireCount,
+               "Experiments observer should have been called.");
 
   Assert.equal(gTimerScheduleOffset, 10 * MS_IN_ONE_DAY,
                "Experiment re-evaluation should have been scheduled correctly.");
