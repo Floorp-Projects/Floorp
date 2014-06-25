@@ -572,15 +572,21 @@ OID(Input& input, const uint8_t (&expectedOid)[Len])
 inline Result
 AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
 {
-  if (ExpectTagAndGetValue(input, OIDTag, algorithmID.algorithm) != Success) {
+  Input value;
+  if (ExpectTagAndGetValue(input, der::SEQUENCE, value) != Success) {
+    return Failure;
+  }
+  if (ExpectTagAndGetValue(value, OIDTag, algorithmID.algorithm) != Success) {
     return Failure;
   }
   algorithmID.parameters.data = nullptr;
   algorithmID.parameters.len = 0;
-  if (input.AtEnd()) {
-    return Success;
+  if (!value.AtEnd()) {
+    if (Null(value) != Success) {
+      return Failure;
+    }
   }
-  return Null(input);
+  return End(value);
 }
 
 inline Result
