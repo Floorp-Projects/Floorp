@@ -30,12 +30,12 @@
  *           \ tx ty 1 /   \         1          /
  *
  */
-struct gfxMatrix {
+class gfxMatrix {
+public:
     double _11; double _12;
     double _21; double _22;
     double _31; double _32;
 
-public:
     /**
      * Initializes this matrix as the identity matrix.
      */
