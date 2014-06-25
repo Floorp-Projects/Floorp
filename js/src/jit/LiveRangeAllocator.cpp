@@ -647,7 +647,7 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
                         bool found = false;
                         for (size_t i = 0; i < ins->numDefs(); i++) {
                             if (ins->getDef(i)->isFixed() &&
-                                *ins->getDef(i)->output() == LAllocation(*iter)) {
+                                ins->getDef(i)->output()->aliases(LAllocation(*iter))) {
                                 found = true;
                                 break;
                             }

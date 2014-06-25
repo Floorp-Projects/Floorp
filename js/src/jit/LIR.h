@@ -195,8 +195,9 @@ class LAllocation : public TempObject
 #else
     const char *toString() const { return "???"; }
 #endif
-
+    bool aliases(const LAllocation &other) const;
     void dump() const;
+
 };
 
 class LUse : public LAllocation
@@ -481,6 +482,28 @@ class LDefinition
     Type type() const {
         return (Type)((bits_ >> TYPE_SHIFT) & TYPE_MASK);
     }
+    bool isCompatibleReg(const AnyRegister &r) const {
+        if (isFloatReg() && r.isFloat()) {
+#if defined(JS_CODEGEN_ARM) && defined(EVERYONE_KNOWS_ABOUT_ALIASING)
+            if (type() == FLOAT32)
+                return r.fpu().isSingle();
+            return r.fpu().isDouble();
+#else
+            return true;
+#endif
+        }
+        return !isFloatReg() && !r.isFloat();
+    }
+    bool isCompatibleDef(const LDefinition &other) const {
+#ifdef JS_CODEGEN_ARM
+        if (isFloatReg() && other.isFloatReg())
+            return type() == other.type();
+        return !isFloatReg() && !other.isFloatReg();
+#else
+        return isFloatReg() == other.isFloatReg();
+#endif
+    }
+
     bool isFloatReg() const {
         return type() == FLOAT32 || type() == DOUBLE;
     }

@@ -62,9 +62,9 @@ struct Register {
     uint32_t numAliased() const {
         return 1;
     }
-    Register aliased(int a) const {
-        JS_ASSERT(a == 0);
-        return *this;
+    void aliased(uint32_t aliasIdx, Register *ret) const {
+        JS_ASSERT(aliasIdx == 0);
+        *ret = *this;
     }
 };
 

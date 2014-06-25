@@ -345,23 +345,29 @@ class VFPRegister
     }
     static const int NumAliasedDoubles = 16;
     uint32_t numAliased() const {
+        return 1;
+#ifdef EVERYONE_KNOWS_ABOUT_ALIASING
         if (isDouble()) {
             if (code_ < NumAliasedDoubles)
                 return 3;
             return 1;
         }
         return 2;
+#endif
     }
-    VFPRegister aliased(uint32_t a) {
-        if (a == 0)
-            return *this;
+    void aliased(uint32_t aliasIdx, VFPRegister *ret) {
+        if (aliasIdx == 0) {
+            *ret = *this;
+            return;
+        }
         if (isDouble()) {
             JS_ASSERT(code_ < NumAliasedDoubles);
-            JS_ASSERT(a <= 2);
-            return singleOverlay(a - 1);
+            JS_ASSERT(aliasIdx <= 2);
+            *ret = singleOverlay(aliasIdx - 1);
+            return;
         }
-        JS_ASSERT(a == 1);
-        return doubleOverlay(a - 1);
+        JS_ASSERT(aliasIdx == 1);
+        *ret = doubleOverlay(aliasIdx - 1);
     }
     uint32_t numAlignedAliased() const {
         if (isDouble()) {
@@ -369,21 +375,25 @@ class VFPRegister
                 return 2;
             return 1;
         }
-        // s1 has 0 other aligned aliases
-        // s0 has 1 other aligned aliases
+        // s1 has 0 other aligned aliases, 1 total.
+        // s0 has 1 other aligned aliase, 2 total.
         return 2 - (code_ & 1);
     }
-    VFPRegister alignedAliased(uint32_t a) {
-        if (a == 0)
-            return *this;
+    void alignedAliased(uint32_t aliasIdx, VFPRegister *ret) {
+        if (aliasIdx == 0) {
+            *ret = *this;
+            return;
+        }
         if (isDouble()) {
             JS_ASSERT(code_ < NumAliasedDoubles);
-            JS_ASSERT(a <= 1);
-            return singleOverlay(a - 1);
+            JS_ASSERT(aliasIdx <= 1);
+            *ret = singleOverlay(aliasIdx - 1);
+            return;
         }
-        JS_ASSERT(a == 1);
+        JS_ASSERT(aliasIdx == 1);
         JS_ASSERT((code_ & 1) == 0);
-        return doubleOverlay(a - 1);
+        *ret = doubleOverlay(aliasIdx - 1);
+        return;
     }
     static Code FromName(const char *name) {
         return FloatRegisters::FromName(name);
