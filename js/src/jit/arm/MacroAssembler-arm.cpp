@@ -3625,19 +3625,6 @@ MacroAssemblerARM::ma_call(ImmPtr dest)
 }
 
 void
-MacroAssemblerARM::ma_callAndStoreRet(const Register r, uint32_t stackArgBytes)
-{
-    // Note: this function stores the return address to sp[0]. The caller must
-    // anticipate this by pushing additional space on the stack. The ABI does
-    // not provide space for a return address so this function may only be
-    // called if no argument are passed.
-    JS_ASSERT(stackArgBytes == 0);
-    AutoForbidPools afp(this);
-    as_dtr(IsStore, 32, Offset, pc, DTRAddr(sp, DtrOffImm(0)));
-    as_blx(r);
-}
-
-void
 MacroAssemblerARMCompat::breakpoint()
 {
     as_bkpt();
