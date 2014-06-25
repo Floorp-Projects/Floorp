@@ -247,6 +247,7 @@ if CONFIG['ENABLE_ION']:
         'irregexp/NativeRegExpMacroAssembler.cpp',
         'jit/AliasAnalysis.cpp',
         'jit/AsmJS.cpp',
+        'jit/AsmJSFrameIterator.cpp',
         'jit/AsmJSLink.cpp',
         'jit/AsmJSModule.cpp',
         'jit/AsmJSSignalHandlers.cpp',
