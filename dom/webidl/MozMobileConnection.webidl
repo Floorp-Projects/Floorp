@@ -70,39 +70,46 @@ interface MozMobileConnection : EventTarget
    * These two fields can be accessed by privileged applications with the
    * 'mobilenetwork' permission.
    */
+  [CheckPermissions="mobilenetwork"]
   readonly attribute DOMString lastKnownNetwork;
+  [CheckPermissions="mobilenetwork"]
   readonly attribute DOMString lastKnownHomeNetwork;
 
   /**
    * Information about the voice connection.
    */
+  [CheckPermissions="mobileconnection"]
   readonly attribute MozMobileConnectionInfo voice;
 
   /**
    * Information about the data connection.
    */
+  [CheckPermissions="mobileconnection"]
   readonly attribute MozMobileConnectionInfo data;
 
   /**
    * Integrated Circuit Card Identifier of the SIM this mobile connection
    * corresponds to.
    */
+  [CheckPermissions="mobileconnection"]
   readonly attribute DOMString? iccId;
 
   /**
    * The selection mode of the voice and data networks.
    */
+  [CheckPermissions="mobileconnection"]
   readonly attribute MobileNetworkSelectionMode? networkSelectionMode;
 
   /**
    * The current radio state.
    */
+  [CheckPermissions="mobileconnection"]
   readonly attribute MobileRadioState? radioState;
 
   /**
    * Array of network types that are supported by this radio.
    */
-  [Cached, Pure]
+  [Cached, Pure, CheckPermissions="mobileconnection"]
   readonly attribute sequence<MobileNetworkType> supportedNetworkTypes;
 
   /**
@@ -117,7 +124,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported', or
    * 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getNetworks();
 
   /**
@@ -134,7 +141,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest selectNetwork(MozMobileNetworkInfo network);
 
   /**
@@ -150,7 +157,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest selectNetworkAutomatically();
 
   /**
@@ -168,7 +175,7 @@ interface MozMobileConnection : EventTarget
    * 'InvalidParameter', 'ModeNotSupported', 'IllegalSIMorME', or
    * 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setPreferredNetworkType(MobilePreferredNetworkType type);
 
   /**
@@ -186,7 +193,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getPreferredNetworkType();
 
   /**
@@ -203,7 +210,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setRoamingPreference(MobileRoamingMode mode);
 
   /**
@@ -219,7 +226,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getRoamingPreference();
 
   /**
@@ -238,7 +245,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setVoicePrivacyMode(boolean enabled);
 
   /**
@@ -253,7 +260,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getVoicePrivacyMode();
 
   /**
@@ -280,7 +287,7 @@ interface MozMobileConnection : EventTarget
    * a USSD but to other RIL request its result, if one is needed, will be
    * notified via the returned DOMRequest 'success' or 'error' event.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest sendMMI(DOMString mmi);
 
   /**
@@ -296,7 +303,7 @@ interface MozMobileConnection : EventTarget
    * will be a DOMMMIError.
    * @see DOMMMIError for the detail of error.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest cancelMMI();
 
   /**
@@ -314,7 +321,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setCallForwardingOption(optional MozCallForwardingOptions options);
 
   /**
@@ -334,7 +341,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getCallForwardingOption(unsigned short reason);
 
   /**
@@ -352,7 +359,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setCallBarringOption(optional MozCallBarringOptions options);
 
   /**
@@ -374,7 +381,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getCallBarringOption(optional MozCallBarringOptions options);
 
   /**
@@ -399,7 +406,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest changeCallBarringPassword(optional MozCallBarringOptions options);
 
   /**
@@ -416,7 +423,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setCallWaitingOption(boolean enabled);
 
   /**
@@ -431,7 +438,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getCallWaitingOption();
 
   /**
@@ -449,7 +456,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'InvalidParameter', 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setCallingLineIdRestriction(unsigned short mode);
 
   /**
@@ -465,7 +472,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest getCallingLineIdRestriction();
 
   /**
@@ -479,7 +486,7 @@ interface MozMobileConnection : EventTarget
    * will be either 'RadioNotAvailable', 'RequestNotSupported',
    * 'IllegalSIMorME', or 'GenericFailure'.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest exitEmergencyCbMode();
 
   /**
@@ -500,7 +507,7 @@ interface MozMobileConnection : EventTarget
    * 'disabling'. Calling the function in above conditions will receive
    * 'InvalidStateError' error.
    */
-  [Throws]
+  [Throws, CheckPermissions="mobileconnection"]
   DOMRequest setRadioEnabled(boolean enabled);
 
   /**
