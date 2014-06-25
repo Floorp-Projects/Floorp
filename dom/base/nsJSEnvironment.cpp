@@ -2802,23 +2802,33 @@ NS_DOMReadStructuredClone(JSContext* cx,
     }
     MOZ_ASSERT(dataArray.isObject());
 
-    // Construct the ImageData.
-    nsRefPtr<ImageData> imageData = new ImageData(width, height,
-                                                  dataArray.toObject());
-    // Wrap it in a JS::Value.
-    return imageData->WrapObject(cx);
+    // Protect the result from a moving GC in ~nsRefPtr.
+    JS::Rooted<JSObject*> result(cx);
+    {
+      // Construct the ImageData.
+      nsRefPtr<ImageData> imageData = new ImageData(width, height,
+                                                    dataArray.toObject());
+      // Wrap it in a JS::Value.
+      result = imageData->WrapObject(cx);
+    }
+    return result;
   } else if (tag == SCTAG_DOM_WEBCRYPTO_KEY) {
     nsIGlobalObject *global = xpc::GetNativeForGlobal(JS::CurrentGlobalOrNull(cx));
     if (!global) {
       return nullptr;
     }
 
-    nsRefPtr<Key> key = new Key(global);
-    if (!key->ReadStructuredClone(reader)) {
-      return nullptr;
+    // Prevent the return value from being trashed by a GC during ~nsRefPtr.
+    JS::Rooted<JSObject*> result(cx);
+    {
+      nsRefPtr<Key> key = new Key(global);
+      if (!key->ReadStructuredClone(reader)) {
+        result = nullptr;
+      } else {
+        result = key->WrapObject(cx);
+      }
     }
-
-    return key->WrapObject(cx);
+    return result;
   }
 
   // Don't know what this is. Bail.
