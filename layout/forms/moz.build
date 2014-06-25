@@ -45,9 +45,9 @@ FINAL_LIBRARY = 'gklayout'
 LOCAL_INCLUDES += [
     '../../content/base/src',
     '../../content/html/content/src',
-    '../../editor/libeditor',
+    '../../editor/libeditor/base',
     '../../editor/libeditor/text',
-    '../../editor/txmgr',
+    '../../editor/txmgr/src',
     '../base',
     '../generic',
     '../xul',

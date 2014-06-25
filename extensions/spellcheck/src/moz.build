@@ -22,5 +22,5 @@ FINAL_LIBRARY = 'xul'
 LOCAL_INCLUDES += [
     '../hunspell/src',
     '/content/base/src',
-    '/editor/libeditor',
+    '/editor/libeditor/base',
 ]
