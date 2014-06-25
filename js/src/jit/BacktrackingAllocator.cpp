@@ -1303,7 +1303,7 @@ struct BacktrackingAllocator::PrintLiveIntervalRange
 {
     bool &first_;
 
-    explicit PrintLiveIntervalRange(bool first) : first_(first) {}
+    explicit PrintLiveIntervalRange(bool &first) : first_(first) {}
 
     void operator()(const AllocatedRange &item)
     {
