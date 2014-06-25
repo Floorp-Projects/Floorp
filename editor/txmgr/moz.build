@@ -4,6 +4,29 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-PARALLEL_DIRS += ['public', 'src', 'idl']
 TEST_TOOL_DIRS += ['tests']
 
+XPIDL_SOURCES += [
+    'nsITransaction.idl',
+    'nsITransactionList.idl',
+    'nsITransactionListener.idl',
+    'nsITransactionManager.idl',
+]
+
+XPIDL_MODULE = 'txmgr'
+
+EXPORTS += [
+    'nsTransactionManagerCID.h',
+]
+
+UNIFIED_SOURCES += [
+    'nsTransactionItem.cpp',
+    'nsTransactionList.cpp',
+    'nsTransactionManager.cpp',
+    'nsTransactionManagerFactory.cpp',
+    'nsTransactionStack.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
