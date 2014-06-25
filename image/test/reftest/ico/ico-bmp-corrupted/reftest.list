@@ -3,9 +3,9 @@
 # Invalid value for bits per pixel (BPP)
 == wrapper.html?invalid-bpp.ico about:blank
 # Invalid BPP values for RLE4
-random-if(B2G&&browserIsRemote) == wrapper.html?invalid-compression-RLE4.ico about:blank
+== wrapper.html?invalid-compression-RLE4.ico about:blank
 # Invalid BPP values for RLE8
-random-if(B2G&&browserIsRemote) == wrapper.html?invalid-compression-RLE8.ico about:blank
+== wrapper.html?invalid-compression-RLE8.ico about:blank
 # Invalid compression value
 == wrapper.html?invalid-compression.ico about:blank
 

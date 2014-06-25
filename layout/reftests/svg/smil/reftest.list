@@ -99,7 +99,7 @@ fails == anim-fillcolor-1.svg      anim-standard-ref.svg # bug 436296
 == anim-length-reset-01.svg lime.svg
 == anim-nonpixel-length-reset-01.svg lime.svg
 == anim-use-length-01.svg lime.svg
-random-if(B2G&&browserIsRemote) == anim-use-length-02.svg lime.svg
+== anim-use-length-02.svg lime.svg
 
 # animate some <number> attributes:
 == anim-feComponentTransfer-01.svg lime.svg
@@ -143,7 +143,7 @@ fuzzy-if(Android,4,1) == anim-svg-viewBox-01.svg lime.svg
 == anim-view-01.svg#view lime.svg
 
 # animate some preserveAspectRatio attributes
-random-if(B2G&&browserIsRemote) == anim-feImage-preserveAspectRatio-01.svg lime.svg
+== anim-feImage-preserveAspectRatio-01.svg lime.svg
 == anim-svg-preserveAspectRatio-01.svg lime.svg
 
 # animate some string attributes:
@@ -246,7 +246,7 @@ fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == anim-gradient-attr-presence-0
 == inactivate-with-active-unchanged-2.svg anim-standard-ref.svg
 
 == mapped-attr-long-url-1.svg lime.svg
-random-if(B2G&&browserIsRemote) == mapped-attr-long-url-2.svg lime.svg
+== mapped-attr-long-url-2.svg lime.svg
 
 # interaction between xml mapped attributes and their css equivalents
 == mapped-attr-vs-css-prop-1.svg lime.svg
