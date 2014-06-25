@@ -4343,6 +4343,75 @@ CopyCharsMaybeInflate(jschar *dest, const Latin1Char *src, size_t len)
     CopyAndInflateChars(dest, src, len);
 }
 
+static bool
+CanStoreCharsAsLatin1(const jschar *s, size_t length)
+{
+    for (const jschar *end = s + length; s < end; ++s) {
+        if (*s > JSString::MAX_LATIN1_CHAR)
+            return false;
+    }
+
+    return true;
+}
+
+static bool
+CanStoreCharsAsLatin1(const Latin1Char *s, size_t length)
+{
+    MOZ_CRASH("Shouldn't be called for Latin1 chars");
+}
+
+template <AllowGC allowGC>
+static MOZ_ALWAYS_INLINE JSInlineString *
+NewFatInlineStringDeflated(ThreadSafeContext *cx, Range<const jschar> chars)
+{
+    size_t len = chars.length();
+    Latin1Char *storage;
+    JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &storage);
+    if (!str)
+        return nullptr;
+
+    for (size_t i = 0; i < len; i++) {
+        MOZ_ASSERT(chars[i] <= JSString::MAX_LATIN1_CHAR);
+        storage[i] = Latin1Char(chars[i]);
+    }
+    storage[len] = '\0';
+    return str;
+}
+
+template <AllowGC allowGC>
+static JSFlatString *
+NewStringDeflated(ThreadSafeContext *cx, const jschar *s, size_t n)
+{
+    MOZ_ASSERT(EnableLatin1Strings);
+
+    if (JSFatInlineString::latin1LengthFits(n))
+        return NewFatInlineStringDeflated<allowGC>(cx, Range<const jschar>(s, n));
+
+    ScopedJSFreePtr<Latin1Char> news(cx->pod_malloc<Latin1Char>(n + 1));
+    if (!news)
+        return nullptr;
+
+    for (size_t i = 0; i < n; i++) {
+        MOZ_ASSERT(s[i] <= JSString::MAX_LATIN1_CHAR);
+        news.get()[i] = Latin1Char(s[i]);
+    }
+    news[n] = '\0';
+
+    JSFlatString *str = NewString<allowGC>(cx, news.get(), n);
+    if (!str)
+        return nullptr;
+
+    news.forget();
+    return str;
+}
+
+template <AllowGC allowGC>
+static JSFlatString *
+NewStringDeflated(ThreadSafeContext *cx, const Latin1Char *s, size_t n)
+{
+    MOZ_CRASH("Shouldn't be called for Latin1 chars");
+}
+
 namespace js {
 
 template <AllowGC allowGC, typename CharT>
@@ -4350,6 +4419,9 @@ JSFlatString *
 NewStringCopyN(ThreadSafeContext *cx, const CharT *s, size_t n)
 {
     if (EnableLatin1Strings) {
+        if (IsSame<CharT, jschar>::value && CanStoreCharsAsLatin1(s, n))
+            return NewStringDeflated<allowGC>(cx, s, n);
+
         if (JSFatInlineString::lengthFits<CharT>(n))
             return NewFatInlineString<allowGC>(cx, Range<const CharT>(s, n));
 
