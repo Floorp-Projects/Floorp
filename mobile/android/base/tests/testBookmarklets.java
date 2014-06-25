@@ -1,6 +1,7 @@
 package org.mozilla.gecko.tests;
 
 import org.mozilla.gecko.Actions;
+import org.mozilla.gecko.home.HomePager;
 
 import android.database.Cursor;
 import android.widget.ListView;
@@ -37,7 +38,7 @@ public class testBookmarklets extends AboutHomeTest {
         // Open about:home in the Bookmarks page
         openAboutHomeTab(AboutHomeTabs.BOOKMARKS);
 
-        ListView bookmarks = findListViewWithTag("bookmarks");
+        ListView bookmarks = findListViewWithTag(HomePager.LIST_TAG_BOOKMARKS);
         mAsserter.is(waitForNonEmptyListToLoad(bookmarks), true, "list is properly loaded");
 
         int width = mDriver.getGeckoWidth();
