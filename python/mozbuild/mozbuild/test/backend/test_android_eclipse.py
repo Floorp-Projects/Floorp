@@ -44,11 +44,8 @@ class TestAndroidEclipseBackend(BackendTester):
         """Ensure we generate reasonable files for main (non-library) projects."""
         self.env = self._consume('android_eclipse', AndroidEclipseBackend)
         for f in ['.classpath',
-                  '.externalToolBuilders',
                   '.project',
                   '.settings',
-                  'pre_build.xml',
-                  'post_build.xml',
                   'gen',
                   'lint.xml',
                   'project.properties']:

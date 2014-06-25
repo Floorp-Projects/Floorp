@@ -73,7 +73,9 @@ this.ContentSearch = {
     // the meantime, then we need to update msg.target.  event.detail will be
     // the docshell's new parent <xul:browser> element.
     msg.handleEvent = function (event) {
+      this.target.removeEventListener("SwapDocShells", this, true);
       this.target = event.detail;
+      this.target.addEventListener("SwapDocShells", this, true);
     };
     msg.target.addEventListener("SwapDocShells", msg, true);
 

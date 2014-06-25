@@ -402,6 +402,7 @@ gbjar.sources += [
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
     'VideoPlayer.java',
+    'Webapp.java',
     'webapp/Allocator.java',
     'webapp/ApkResources.java',
     'webapp/Dispatcher.java',
@@ -411,6 +412,7 @@ gbjar.sources += [
     'webapp/TaskKiller.java',
     'webapp/UninstallListener.java',
     'webapp/WebappImpl.java',
+    'webapp/Webapps.java',
     'widget/ActivityChooserModel.java',
     'widget/AllCapsTextView.java',
     'widget/AnimatedHeightLayout.java',
@@ -444,13 +446,6 @@ gbjar.sources += [ thirdparty_source_dir + f for f in [
     'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ] ]
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
-# All generated sources are handled specially in Makefile.in.  And
-# R.java is handled even more specially than the others!
-gbjar.generated_sources += [ android_package_dir + f for f in [
-    '/App.java',
-    '/Webapp.java',
-    '/WebApps.java',
-] ]
 gbjar.generated_sources += [
     'org/mozilla/gecko/AppConstants.java',
     'org/mozilla/gecko/SysInfo.java',
@@ -581,10 +576,9 @@ main.filtered_resources += [
 ]
 
 main.recursive_make_targets += generated_recursive_make_targets
-main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
-main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]
+main.recursive_make_targets += ['generated/' + f for f in mgjar.generated_sources]
+main.recursive_make_targets += ['generated/' + f for f in gbjar.generated_sources]
 
-main.included_projects += ['../' + generated.name, '../' + branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/assets'
 main.libs = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib'
@@ -608,8 +602,23 @@ resources.res = SRCDIR + '/resources'
 resources.included_projects += ['../' + generated.name, '../' + branding.name]
 resources.recursive_make_targets += generated_recursive_make_targets
 
+# The resources are included in the Fennec APK.
 main.included_projects += ['../' + resources.name]
-main.referenced_projects += [resources.name]
+
+omnijar = add_android_eclipse_library_project('FennecOmnijar')
+omnijar.package_name = 'org.mozilla.fennec.omnijar'
+# This is delicate.  We write into OBJDIR, and write triggers a new build of the
+# Fennec project, because the omni.ja timestamp is always updated. (The target
+# is FORCE and the installer does not track dependencies.) However, Eclipse only
+# triggers a new build (of FennecOmnijar) when something actually changes, so
+# we're not constantly rebuilding the FennecOmnijar (or Fennec) project.
+omnijar.recursive_make_targets += [TOPOBJDIR + '/dist/fennec/assets/omni.ja']
+for d in ['app', 'chrome', 'components', 'locales', 'modules', 'themes']:
+    omnijar.add_classpathentry(d, TOPSRCDIR + '/mobile/android/' + d, dstdir=d)
+
+# The omnijar is included in the Fennec APK (although it's empty,
+# having no resources, assets, or Java code).
+main.included_projects += [omnijar.name]
 
 if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
