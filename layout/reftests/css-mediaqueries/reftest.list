@@ -15,5 +15,5 @@ skip-if(B2G) == mq_print_maxheight_updown.xhtml mq_print-ref.xhtml # bug 773482
 skip-if(B2G) == mq_print_minheight_updown.xhtml mq_print-ref.xhtml # bug 773482
 skip-if(B2G) == mq_print_minwidth_updown.xhtml mq_print-ref.xhtml # bug 773482
 
-random-if(B2G&&browserIsRemote) == scoped-mq-update.html scoped-mq-update-ref.html
+== scoped-mq-update.html scoped-mq-update-ref.html
 == system-metrics-1.html system-metrics-1-ref.html

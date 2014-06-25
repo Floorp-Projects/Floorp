@@ -54,4 +54,4 @@ fails == svg-with-type.html svg-with-type-ref.html
 # XXX missing test 034 from http://biesi.damowmow.com/object/ here; would
 #     need to require Flash on the test machine to run them
 #
-random-if(B2G&&browserIsRemote) == malformed-uri.html malformed-uri-ref.html
+== malformed-uri.html malformed-uri-ref.html

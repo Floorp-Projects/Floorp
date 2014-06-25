@@ -7,5 +7,5 @@
 == tab-size-1.html            spaces-1.html
 == tab-size-0.html            spaces-0.html
 == tab-size-negative.html     tab-size-initial.html
-random-if(B2G&&browserIsRemote) == tab-size-change-1a.html     tab-size-change-1-ref.html
-random-if(B2G&&browserIsRemote) == tab-size-change-1b.html     tab-size-change-1-ref.html
+== tab-size-change-1a.html     tab-size-change-1-ref.html
+== tab-size-change-1b.html     tab-size-change-1-ref.html

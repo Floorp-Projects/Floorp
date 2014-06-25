@@ -1,10 +1,10 @@
 include horizontal/reftest.list
-skip-if(B2G&&browserIsRemote) include vertical/reftest.list
-skip-if(B2G&&browserIsRemote) include mixed/reftest.list
-skip-if(B2G&&browserIsRemote) include mixed-abspos-root/reftest.list
-skip-if(B2G&&browserIsRemote) include relative/reftest.list
+include vertical/reftest.list
+include mixed/reftest.list
+include mixed-abspos-root/reftest.list
+include relative/reftest.list
 
-random-if(B2G&&browserIsRemote) == multiple-changes.html multiple-changes-ref.html
-random-if(B2G&&browserIsRemote) == shrink-wrap.html shrink-wrap-ref.html
-random-if(B2G&&browserIsRemote) == max-width.html max-width-ref.html
-fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) random-if(B2G&&browserIsRemote) == min-width.html min-width-ref.html # Bug 761770
+== multiple-changes.html multiple-changes-ref.html
+== shrink-wrap.html shrink-wrap-ref.html
+== max-width.html max-width-ref.html
+fuzzy-if(cocoaWidget&&layersGPUAccelerated,1,2) == min-width.html min-width-ref.html # Bug 761770
