@@ -38,7 +38,7 @@
                           oncommand="document.getBindingParent(this).translate();"/>
               <xul:button class="translate-infobar-element"
                           label="&translation.notNow.button;" anonid="notNow"
-                          oncommand="document.getBindingParent(this).close();"/>
+                          oncommand="document.getBindingParent(this).closeCommand();"/>
             </xul:hbox>
 
             <!-- translating -->
@@ -122,10 +122,11 @@
 
         </xul:hbox>
         <xul:toolbarbutton ondblclick="event.stopPropagation();"
+                           anonid="closeButton"
                            class="messageCloseButton close-icon tabbable"
                            xbl:inherits="hidden=hideclose"
                            tooltiptext="&closeNotification.tooltip;"
-                           oncommand="document.getBindingParent(this).close();"/>
+                           oncommand="document.getBindingParent(this).closeCommand();"/>
       </xul:hbox>
     </content>
     <implementation>
@@ -216,6 +217,16 @@
         </body>
       </method>
 
+      <!-- To be called when the infobar should be closed per user's wish (e.g.
+           by clicking the notification's close button -->
+      <method name="closeCommand">
+        <body>
+          <![CDATA[
+            this.close();
+            this.translation.infobarClosed();
+          ]]>
+        </body>
+      </method>
       <method name="_handleButtonHiding">
         <body>
           <![CDATA[
@@ -301,7 +312,7 @@
 
             Services.prefs.setCharPref(kPrefName, val);
 
-            this.close();
+            this.closeCommand();
           ]]>
         </body>
       </method>
@@ -313,7 +324,7 @@
             let perms = Services.perms;
             perms.add(uri, "translate", perms.DENY_ACTION);
 
-            this.close();
+            this.closeCommand();
           ]]>
         </body>
       </method>

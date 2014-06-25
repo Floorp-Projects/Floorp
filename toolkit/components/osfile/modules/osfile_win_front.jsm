@@ -1031,7 +1031,7 @@
       * @throws {OS.File.Error} In case of I/O error, in particular if |path| is
       *         not a directory.
       */
-     File.removeDir = function(path, options) {
+     File.removeDir = function(path, options = {}) {
        // We can't use File.stat here because it will follow the symlink.
        let attributes = WinFile.GetFileAttributes(path);
        if (attributes == Const.INVALID_FILE_ATTRIBUTES) {

@@ -39,9 +39,11 @@ registerCleanupFunction(() => {
 
 let tmp = {};
 Cu.import("resource://gre/modules/Promise.jsm", tmp);
+Cu.import("resource://gre/modules/Task.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionStore.jsm", tmp);
 Cu.import("resource:///modules/sessionstore/SessionSaver.jsm", tmp);
-let {Promise, SessionStore, SessionSaver} = tmp;
+Cu.import("resource:///modules/sessionstore/SessionFile.jsm", tmp);
+let {Promise, Task, SessionStore, SessionSaver, SessionFile} = tmp;
 
 let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
 
@@ -282,12 +284,25 @@ function forceSaveState() {
   return SessionSaver.run();
 }
 
-function promiseSaveFileContents() {
+function promiseRecoveryFileContents() {
   let promise = forceSaveState();
   return promise.then(function() {
-    return OS.File.read(OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js"), { encoding: "utf-8" });
+    return OS.File.read(SessionFile.Paths.recovery, { encoding: "utf-8" });
   });
 }
+
+let promiseForEachSessionRestoreFile = Task.async(function*(cb) {
+  for (let key of SessionFile.Paths.loadOrder) {
+    let data = "";
+    try {
+      data = yield OS.File.read(SessionFile.Paths[key], { encoding: "utf-8" });
+    } catch (ex if ex instanceof OS.File.Error
+	     && ex.becauseNoSuchFile) {
+      // Ignore missing files
+    }
+    cb(data, key);
+  }
+});
 
 function whenBrowserLoaded(aBrowser, aCallback = next, ignoreSubFrames = true) {
   aBrowser.addEventListener("load", function onLoad(event) {

@@ -352,11 +352,15 @@ XULBasedHighlighter.prototype = {
   /**
    * Show the highlighter on a given node
    * @param {DOMNode} node
+   * @param {Object} options
+   *        Object used for passing options
    */
-  show: function(node) {
+  show: function(node, options={}) {
     if (!isNodeValid(node) || node === this.currentNode) {
       return;
     }
+
+    this.options = options;
 
     this._detachPageListeners();
     this.currentNode = node;
@@ -375,6 +379,7 @@ XULBasedHighlighter.prototype = {
     this._hide();
     this._detachPageListeners();
     this.currentNode = null;
+    this.options = null;
   },
 
   /**
@@ -631,11 +636,37 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   },
 
   /**
+   * Show the highlighter on a given node. We override this method so that the
+   * same node can be rehighlighted e.g. to highlight different regions from the
+   * layout view.
+   *
+   * @param {DOMNode} node
+   * @param {Object} options
+   *        Object used for passing options
+   */
+  show: function(node, options={}) {
+    if (!isNodeValid(node)) {
+      return;
+    }
+
+    this.options = options;
+
+    if (!this.options.region) {
+      this.options.region = "content";
+    }
+
+    this._detachPageListeners();
+    this.currentNode = node;
+    this._attachPageListeners();
+    this._show();
+  },
+
+  /**
    * Show the highlighter on a given node
    * @param {Object} options
    *        Object used for passing options
    */
-  _show: function(options={}) {
+  _show: function() {
     this._update();
     this._trackMutations();
     this.emit("ready");
@@ -664,13 +695,9 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * Update the highlighter on the current highlighted node (the one that was
    * passed as an argument to show(node)).
    * Should be called whenever node size or attributes change
-   * @param {Object} options
-   *        Object used for passing options. Valid options are:
-   *          - box: "content", "padding", "border" or "margin." This specifies
-   *            the box that the guides should outline. Default is content.
    */
-  _update: function(options={}) {
-    if (this._updateBoxModel(options)) {
+  _update: function() {
+    if (this._updateBoxModel()) {
       this._showInfobar();
       this._showBoxModel();
     } else {
@@ -720,16 +747,10 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   /**
    * Update the box model as per the current node.
    *
-   * @param {Object} options
-   *        Object used for passing options. Valid options are:
-   *          - region: "content", "padding", "border" or "margin." This specifies
-   *            the region that the guides should outline. Default is content.
    * @return {boolean}
    *         True if the current node has a box model to be highlighted
    */
-  _updateBoxModel: function(options) {
-    options.region = options.region || "content";
-
+  _updateBoxModel: function() {
     if (this._nodeNeedsHighlighting()) {
       for (let boxType in this._boxModelNodes) {
         let {p1, p2, p3, p4} =
@@ -742,7 +763,7 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
                              p3.x + "," + p3.y + " " +
                              p4.x + "," + p4.y);
 
-        if (boxType === options.region) {
+        if (boxType === this.options.region) {
           this._showGuides(p1, p2, p3, p4);
         }
       }

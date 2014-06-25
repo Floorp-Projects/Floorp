@@ -5,45 +5,36 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 
-function test() {
-  waitForExplicitFinish();
+const Paths = SessionFile.Paths;
 
-  Task.spawn(function task() {
-    try {
-      // Wait until initialization is complete
-      yield SessionStore.promiseInitialized;
+add_task(function* init() {
+  // Wait until initialization is complete
+  yield SessionStore.promiseInitialized;
+  yield SessionFile.wipe();
+});
 
-      const PREF_UPGRADE = "browser.sessionstore.upgradeBackup.latestBuildID";
-      let buildID = Services.appinfo.platformBuildID;
+add_task(function* test_upgrade_backup() {
+  const PREF_UPGRADE = "browser.sessionstore.upgradeBackup.latestBuildID";
+  let buildID = Services.appinfo.platformBuildID;
+  info("Let's check if we create an upgrade backup");
+  Services.prefs.setCharPref(PREF_UPGRADE, "");
+  let contents = JSON.stringify({"browser_upgrade_backup.js": Math.random()});
+  yield OS.File.writeAtomic(Paths.clean, contents);
+  yield SessionFile.read(); // First call to read() initializes the SessionWorker
+  yield SessionFile.write(""); // First call to write() triggers the backup
 
-      // Write state once before starting the test to
-      // ensure sessionstore.js writes won't happen in between.
-      yield forceSaveState();
+  is(Services.prefs.getCharPref(PREF_UPGRADE), buildID, "upgrade backup should be set");
 
-      // Force backup to take place with a file decided by us
-      Services.prefs.setCharPref(PREF_UPGRADE, "");
-      let contents = "browser_upgrade_backup.js";
-      let pathStore = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.js");
-      yield OS.File.writeAtomic(pathStore, contents, { tmpPath: pathStore + ".tmp" });
-      yield SessionStore._internal._performUpgradeBackup();
-      is(Services.prefs.getCharPref(PREF_UPGRADE), buildID, "upgrade backup should be set (again)");
+  is((yield OS.File.exists(Paths.upgradeBackup)), true, "upgrade backup file has been created");
 
-      let pathBackup = OS.Path.join(OS.Constants.Path.profileDir, "sessionstore.bak-" + Services.appinfo.platformBuildID);
-      is((yield OS.File.exists(pathBackup)), true, "upgrade backup file has been created");
+  let data = yield OS.File.read(Paths.upgradeBackup);
+  is(contents, (new TextDecoder()).decode(data), "upgrade backup contains the expected contents");
 
-      let data = yield OS.File.read(pathBackup);
-      is(new TextDecoder().decode(data), contents, "upgrade backup contains the expected contents");
-
-      // Ensure that we don't re-backup by accident
-      yield OS.File.writeAtomic(pathStore, "something else entirely", { tmpPath: pathStore + ".tmp" });
-      yield SessionStore._internal._performUpgradeBackup();
-      data = yield OS.File.read(pathBackup);
-      is(new TextDecoder().decode(data), contents, "upgrade backup hasn't changed");
-
-    } catch (ex) {
-      ok(false, "Uncaught error: " + ex + " at " + ex.stack);
-    } finally {
-      finish();
-    }
-  });
-}
+  info("Let's check that we don't overwrite this upgrade backup");
+  let new_contents = JSON.stringify({"something else entirely": Math.random()});
+  yield OS.File.writeAtomic(Paths.clean, new_contents);
+  yield SessionFile.read(); // Reinitialize the SessionWorker
+  yield SessionFile.write(""); // Next call to write() shouldn't trigger the backup
+  data = yield OS.File.read(Paths.upgradeBackup);
+  is(contents, (new TextDecoder()).decode(data), "upgrade backup hasn't changed");
+});

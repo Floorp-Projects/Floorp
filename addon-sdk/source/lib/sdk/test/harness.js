@@ -621,7 +621,4 @@ var runTests = exports.runTests = function runTests(options) {
   }
 };
 
-unload(function() {
-  cService.unregisterListener(consoleListener);
-});
-
+unload(_ => cService.unregisterListener(consoleListener));

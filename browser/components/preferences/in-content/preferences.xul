@@ -56,7 +56,7 @@
 #ifdef USE_WIN_TITLE_STYLE
       title="&prefWindow.titleWin;">
 #else
-      title="&prefWindow.titleGNOME;">
+      title="&prefWindow.title;">
 #endif
 
   <html:link rel="shortcut icon"
