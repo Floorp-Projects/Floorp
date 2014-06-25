@@ -1120,10 +1120,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         Push(dynStack);
         call(target);
     }
-    void call(const CallSiteDesc &desc, AsmJSImmPtr target) {
-        call(target);
-        appendCallSite(desc);
-    }
 
 #ifdef JSGC_GENERATIONAL
     void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
