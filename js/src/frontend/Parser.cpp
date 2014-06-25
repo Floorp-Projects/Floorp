@@ -3623,6 +3623,25 @@ Parser<FullParseHandler>::letDeclaration()
         } else {
             if (pc->atBodyLevel()) {
                 /*
+                 * When bug 589199 is fixed, let variables will be stored in
+                 * the slots of a new scope chain object, encountered just
+                 * before the global object in the overall chain.  This extra
+                 * object is present in the scope chain for all code in that
+                 * global, including self-hosted code.  But self-hosted code
+                 * must be usable against *any* global object, including ones
+                 * with other let variables -- variables possibly placed in
+                 * conflicting slots.  Forbid top-level let declarations to
+                 * prevent such conflicts from ever occurring.
+                 */
+                if (options().selfHostingMode &&
+                    !pc->sc->isFunctionBox() &&
+                    stmt == pc->topScopeStmt)
+                {
+                    report(ParseError, false, null(), JSMSG_SELFHOSTED_TOP_LEVEL_LET);
+                    return null();
+                }
+
+                /*
                  * ES4 specifies that let at top level and at body-block scope
                  * does not shadow var, so convert back to var.
                  */

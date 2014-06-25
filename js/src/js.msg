@@ -242,7 +242,7 @@ MSG_DEF(JSMSG_INCOMPATIBLE_METHOD,    188, 3, JSEXN_TYPEERR, "{0} {1} called on 
 MSG_DEF(JSMSG_SYMBOL_TO_PRIMITIVE,    189, 0, JSEXN_TYPEERR, "can't convert symbol object to primitive")
 MSG_DEF(JSMSG_UNUSED190,              190, 0, JSEXN_NONE, "")
 MSG_DEF(JSMSG_BAD_INDEX,              191, 0, JSEXN_RANGEERR, "invalid or out-of-range index")
-MSG_DEF(JSMSG_UNUSED192,              192, 0, JSEXN_NONE, "")
+MSG_DEF(JSMSG_SELFHOSTED_TOP_LEVEL_LET,192,0, JSEXN_SYNTAXERR, "self-hosted code cannot contain top-level 'let' declarations")
 MSG_DEF(JSMSG_BAD_FOR_EACH_LOOP,      193, 0, JSEXN_SYNTAXERR, "invalid for each loop")
 MSG_DEF(JSMSG_OBJECT_WATCH_DEPRECATED,194, 0, JSEXN_NONE, "Object.prototype.watch and unwatch are very slow, non-standard, and deprecated; use a getter/setter instead")
 MSG_DEF(JSMSG_TYPE_ERR_BAD_ARGS,      195, 0, JSEXN_TYPEERR, "invalid arguments")
