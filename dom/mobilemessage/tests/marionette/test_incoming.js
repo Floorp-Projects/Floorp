@@ -2,50 +2,41 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-
-SpecialPowers.setBoolPref("dom.sms.enabled", true);
-SpecialPowers.addPermission("sms", true, document);
+MARIONETTE_HEAD_JS = 'head.js';
 
 const SENDER = "5555552368"; // the remote number
 const RECEIVER = "15555215554"; // the emulator's number
 
-let manager = window.navigator.mozMobileMessage;
-ok(manager instanceof MozMobileMessageManager,
-   "manager is instance of " + manager.constructor);
+const SHORT_BODY = "Hello SMS world!";
+const LONG_BODY = new Array(17).join(SHORT_BODY);
+ok(LONG_BODY.length > 160, "LONG_BODY.length");
 
-let body = "Hello SMS world!";
+function checkMessage(aMessage, aBody) {
+  ok(aMessage instanceof MozSmsMessage, "Message is instanceof MozSmsMessage");
 
-let completed = false;
-runEmulatorCmd("sms send " + SENDER + " " + body, function(result) {
-  log("Sent fake SMS: " + result);
-  is(result[0], "OK", "Emulator command result");
-  completed = true;
-});
-
-manager.onreceived = function onreceived(event) {
-  log("Received an SMS!");
-
-  let message = event.message;
-  ok(message instanceof MozSmsMessage, "Message is instanceof MozSmsMessage");
-
-  ok(message.threadId, "thread id");
-  is(message.delivery, "received", "Message delivery");
-  is(message.deliveryStatus, "success", "Delivery status");
-  is(message.sender, SENDER, "Message sender");
-  is(message.receiver, RECEIVER, "Message receiver");
-  is(message.body, body, "Message body");
-  is(message.messageClass, "normal", "Message class");
-  is(message.deliveryTimestamp, 0, "deliveryTimestamp is 0");
-
-  cleanUp();
+  is(aMessage.type, "sms", "message.type");
+  ok(aMessage.id, "message.id");
+  ok(aMessage.threadId, "message.threadId");
+  ok(aMessage.iccId, "message.iccId");
+  is(aMessage.delivery, "received", "message.delivery");
+  is(aMessage.deliveryStatus, "success", "message.deliveryStatus");
+  is(aMessage.sender, SENDER, "message.sender");
+  is(aMessage.receiver, RECEIVER, "message.receiver");
+  is(aMessage.body, aBody, "message.body");
+  is(aMessage.messageClass, "normal", "message.messageClass");
+  ok(aMessage.timestamp, "message.timestamp");
+  is(aMessage.deliveryTimestamp, 0, "message.deliveryTimestamp");
+  ok(aMessage.sentTimestamp, "message.sentTimestamp");
+  is(aMessage.read, false, "message.read");
 };
 
-function cleanUp() {
-  if (!completed) {
-    window.setTimeout(cleanUp, 100);
-    return;
-  }
-
-  SpecialPowers.removePermission("sms", document);
-  finish();
+function test(aBody) {
+  return sendTextSmsToEmulatorAndWait(SENDER, aBody)
+    .then((aMessage) => checkMessage(aMessage, aBody));
 }
+
+startTestBase(function testCaseMain() {
+  return ensureMobileMessage()
+    .then(() => test(SHORT_BODY))
+    .then(() => test(LONG_BODY));
+});
