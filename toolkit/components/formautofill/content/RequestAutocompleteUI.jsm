@@ -25,7 +25,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
 /**
  * Handles the requestAutocomplete user interface.
  */
-this.RequestAutocompleteUI = function (aProperties) {
+this.RequestAutocompleteUI = function (aAutofillData) {
+  Services.console.logStringMessage("rAc UI request: " +
+                                    JSON.stringify(aAutofillData));
 }
 
 this.RequestAutocompleteUI.prototype = {

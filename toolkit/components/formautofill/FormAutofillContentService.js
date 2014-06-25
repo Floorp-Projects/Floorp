@@ -21,6 +21,124 @@ XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
+/**
+ * Handles requestAutocomplete for a DOM Form element.
+ */
+function FormHandler(aForm, aWindow) {
+  this.form = aForm;
+  this.window = aWindow;
+}
+
+FormHandler.prototype = {
+  /**
+   * DOM Form element to which this object is attached.
+   */
+  form: null,
+
+  /**
+   * nsIDOMWindow to which this object is attached.
+   */
+  window: null,
+
+  /**
+   * Handles requestAutocomplete and generates the DOM events when finished.
+   */
+  handleRequestAutocomplete: Task.async(function* () {
+    // Start processing the request asynchronously.  At the end, the "reason"
+    // variable will contain the outcome of the operation, where an empty
+    // string indicates that an unexpected exception occurred.
+    let reason = "";
+    try {
+      let data = this.collectFormElements();
+
+      let ui = yield FormAutofill.integration.createRequestAutocompleteUI(data);
+      let result = yield ui.show();
+
+      // At present, we only have cancellation and success cases, since we
+      // don't do any validation or precondition check.
+      reason = result.canceled ? "cancel" : "success";
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+
+    // The type of event depends on whether this is a success condition.
+    let event = (reason == "success")
+                ? new this.window.Event("autocomplete", { bubbles: true })
+                : new this.window.AutocompleteErrorEvent("autocompleteerror",
+                                                         { bubbles: true,
+                                                           reason: reason });
+    yield this.waitForTick();
+    this.form.dispatchEvent(event);
+  }),
+
+  /**
+   * Collects information from the form about fields that can be autofilled, and
+   * returns an object that can be used to build RequestAutocompleteUI.
+   */
+  collectFormElements: function () {
+    let autofillData = {
+      sections: [],
+    };
+
+    for (let element of this.form.elements) {
+      // Query the interface and exclude elements that cannot be autocompleted.
+      if (!(element instanceof Ci.nsIDOMHTMLInputElement)) {
+        continue;
+      }
+
+      // Exclude elements to which no autocomplete field has been assigned.
+      let info = element.getAutocompleteInfo();
+      if (!info.fieldName || ["on", "off"].indexOf(info.fieldName) != -1) {
+        continue;
+      }
+
+      // The first level is the custom section.
+      let section = autofillData.sections
+                                .find(s => s.name == info.section);
+      if (!section) {
+        section = {
+          name: info.section,
+          addressSections: [],
+        };
+        autofillData.sections.push(section);
+      }
+
+      // The second level is the address section.
+      let addressSection = section.addressSections
+                                  .find(s => s.addressType == info.addressType);
+      if (!addressSection) {
+        addressSection = {
+          addressType: info.addressType,
+          fields: [],
+        };
+        section.addressSections.push(addressSection);
+      }
+
+      // The third level contains all the fields within the section.
+      let field = {
+        fieldName: info.fieldName,
+        contactType: info.contactType,
+      };
+      addressSection.fields.push(field);
+    }
+
+    return autofillData;
+  },
+
+  /**
+   * Waits for one tick of the event loop before resolving the returned promise.
+   */
+  waitForTick: function () {
+    return new Promise(function (resolve) {
+      Services.tm.currentThread.dispatch(resolve, Ci.nsIThread.DISPATCH_NORMAL);
+    });
+  },
+};
+
+/**
+ * Implements a service used by DOM content to request Form Autofill, in
+ * particular when the requestAutocomplete method of Form objects is invoked.
+ */
 function FormAutofillContentService() {
 }
 
@@ -30,33 +148,8 @@ FormAutofillContentService.prototype = {
 
   // nsIFormAutofillContentService
   requestAutocomplete: function (aForm, aWindow) {
-    Task.spawn(function* () {
-      // Start processing the request asynchronously.  At the end, the "reason"
-      // variable will contain the outcome of the operation, where an empty
-      // string indicates that an unexpected exception occurred.
-      let reason = "";
-      try {
-        let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
-        let result = yield ui.show();
-
-        // At present, we only have cancellation and success cases, since we
-        // don't do any validation or precondition check.
-        reason = result.canceled ? "cancel" : "success";
-      } catch (ex) {
-        Cu.reportError(ex);
-      }
-
-      // The type of event depends on whether this is a success condition.
-      let event = (reason == "success")
-                  ? new aWindow.Event("autocomplete", { bubbles: true })
-                  : new aWindow.AutocompleteErrorEvent("autocompleteerror",
-                                                       { bubbles: true,
-                                                         reason: reason });
-
-      // Ensure the event is always dispatched on the next tick.
-      Services.tm.currentThread.dispatch(() => aForm.dispatchEvent(event),
-                                         Ci.nsIThread.DISPATCH_NORMAL);
-    }.bind(this)).catch(Cu.reportError);
+    new FormHandler(aForm, aWindow).handleRequestAutocomplete()
+                                   .catch(Cu.reportError);
   },
 };
 
