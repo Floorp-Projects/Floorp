@@ -130,7 +130,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     DEFINES['ANDROID_PACKAGE_NAME'] = '"%s"' % CONFIG['ANDROID_PACKAGE_NAME']
 
 if CONFIG['TARGET_XPCOM_ABI']:
-    DEFINES['TARGET_XPCOM_ABI'] = '"%s"' % CONFIG['TARGET_XPCOM_ABI']
     DEFINES['TARGET_OS_ABI'] = '"%s_%s"' % (CONFIG['OS_TARGET'],
                                             CONFIG['TARGET_XPCOM_ABI'])
 

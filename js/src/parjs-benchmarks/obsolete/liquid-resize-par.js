@@ -1,4 +1,4 @@
-// -*- mode: js2; indent-tabs-mode: nil; -*-
+// -*- indent-tabs-mode: nil -*-
 
 // Adapted from
 //

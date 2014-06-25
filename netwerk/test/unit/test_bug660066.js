@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 const SIMPLEURI_SPEC = "data:text/plain,hello world";
 const BLOBURI_SPEC = "blob:123456";

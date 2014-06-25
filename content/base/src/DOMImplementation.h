@@ -27,6 +27,10 @@ class DocumentType;
 class DOMImplementation MOZ_FINAL : public nsIDOMDOMImplementation
                                   , public nsWrapperCache
 {
+  ~DOMImplementation()
+  {
+  }
+
 public:
   DOMImplementation(nsIDocument* aOwner,
                     nsIGlobalObject* aScriptObject,
@@ -39,10 +43,6 @@ public:
   {
     MOZ_ASSERT(aOwner);
     SetIsDOMBinding();
-  }
-
-  ~DOMImplementation()
-  {
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

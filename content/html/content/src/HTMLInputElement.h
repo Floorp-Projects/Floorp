@@ -40,6 +40,9 @@ class Date;
 class DirPickerFileListBuilderTask;
 
 class UploadLastDir MOZ_FINAL : public nsIObserver, public nsSupportsWeakReference {
+
+  ~UploadLastDir() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -66,13 +69,13 @@ public:
 
   class ContentPrefCallback MOZ_FINAL : public nsIContentPrefCallback2
   {
-    public:
+    virtual ~ContentPrefCallback()
+    { }
+
+  public:
     ContentPrefCallback(nsIFilePicker* aFilePicker, nsIFilePickerShownCallback* aFpCallback)
     : mFilePicker(aFilePicker)
     , mFpCallback(aFpCallback)
-    { }
-
-    virtual ~ContentPrefCallback()
     { }
 
     NS_DECL_ISUPPORTS
@@ -1364,12 +1367,12 @@ private:
   class nsFilePickerShownCallback
     : public nsIFilePickerShownCallback
   {
-  public:
-    nsFilePickerShownCallback(HTMLInputElement* aInput,
-                              nsIFilePicker* aFilePicker);
     virtual ~nsFilePickerShownCallback()
     { }
 
+  public:
+    nsFilePickerShownCallback(HTMLInputElement* aInput,
+                              nsIFilePicker* aFilePicker);
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD Done(int16_t aResult) MOZ_OVERRIDE;

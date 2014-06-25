@@ -140,7 +140,7 @@ def precompile_cache(formatter, source_path, gre_path, app_path):
 
     # For VC12, make sure we can find the right bitness of pgort120.dll
     env = os.environ.copy()
-    if 'VS120COMNTOOLS' in env and not buildconfig.substs['HAVE_64BIT_OS']:
+    if 'VS120COMNTOOLS' in env and not buildconfig.substs['HAVE_64BIT_BUILD']:
       vc12dir = os.path.abspath(os.path.join(env['VS120COMNTOOLS'],
                                              '../../VC/bin'))
       if os.path.exists(vc12dir):

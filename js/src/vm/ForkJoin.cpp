@@ -200,7 +200,7 @@ ExecuteSequentially(JSContext *cx, HandleValue funVal, uint16_t *sliceStart,
 ThreadLocal<ForkJoinContext*> ForkJoinContext::tlsForkJoinContext;
 
 /* static */ bool
-ForkJoinContext::initialize()
+ForkJoinContext::initializeTls()
 {
     if (!tlsForkJoinContext.initialized()) {
         if (!tlsForkJoinContext.init())
@@ -1628,6 +1628,10 @@ ForkJoinShared::executePortion(PerThreadData *perThread, ThreadPoolWorker *worke
 
     Allocator *allocator = allocators_[worker->id()];
     ForkJoinContext cx(perThread, worker, allocator, this, &records_[worker->id()]);
+    if (!cx.initialize()) {
+        setAbortFlagAndRequestInterrupt(true);
+        return;
+    }
     AutoSetForkJoinContext autoContext(&cx);
 
     // ForkJoinContext already contains an AutoSuppressGCAnalysis; however, the
@@ -1835,6 +1839,15 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
     compartment_ = shared->compartment();
 
     allocator_ = allocator;
+}
+
+bool ForkJoinContext::initialize()
+{
+#ifdef JSGC_FJGENERATIONAL
+    if (!fjNursery_.initialize())
+        return false;
+#endif
+    return true;
 }
 
 bool

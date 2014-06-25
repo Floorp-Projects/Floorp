@@ -34,11 +34,16 @@
         break;
 
       case "checkInstalledWrong":
-        try {
-          navigator.mozApps.checkInstalled('http://something.org/manifest.webapp');
+        var request = navigator.mozApps.checkInstalled('http://something.org/manifest.webapp');
+        request.onsuccess = function() {
           finish(false);
-        } catch (e) {
-          finish(true);
+        }
+        request.onerror = function() {
+          if (this.error.name == "CROSS_ORIGIN_CHECK_NOT_ALLOWED") {
+            finish(true);
+          } else {
+            finish(false);
+          }
         }
         break;
 

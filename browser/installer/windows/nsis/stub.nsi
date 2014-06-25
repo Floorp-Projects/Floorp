@@ -269,7 +269,7 @@ icon "setup.ico"
 XPStyle on
 BrandingText " "
 ChangeUI all "nsisui.exe"
-!ifdef HAVE_64BIT_OS
+!ifdef HAVE_64BIT_BUILD
   InstallDir "$PROGRAMFILES64\${BrandFullName}\"
 !else
   InstallDir "$PROGRAMFILES32\${BrandFullName}\"
@@ -310,7 +310,7 @@ Function .onInit
   ; isn't supported for the stub installer.
   ${SetBrandNameVars} "$PLUGINSDIR\ignored.ini"
 
-!ifdef HAVE_64BIT_OS
+!ifdef HAVE_64BIT_BUILD
   ; Restrict x64 builds from being installed on x86 and pre Vista
   ${Unless} ${RunningX64}
   ${OrUnless} ${AtLeastWinVista}
@@ -561,7 +561,7 @@ Function SendPing
     ; completion of all phases.
     ${GetSecondsElapsed} "$EndInstallPhaseTickCount" "$EndFinishPhaseTickCount" $4
 
-!ifdef HAVE_64BIT_OS
+!ifdef HAVE_64BIT_BUILD
     StrCpy $R0 "1"
 !else
     StrCpy $R0 "0"
