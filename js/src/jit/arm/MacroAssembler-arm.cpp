@@ -142,10 +142,10 @@ MacroAssemblerARM::convertFloat32ToInt32(FloatRegister src, Register dest,
     // convert the floating point value to an integer, if it did not fit,
     //     then when we convert it *back* to  a float, it will have a
     //     different value, which we can test.
-    ma_vcvt_F32_I32(src, ScratchFloat32Reg);
+    ma_vcvt_F32_I32(src, ScratchFloat32Reg.sintOverlay());
     // move the value into the dest register.
     ma_vxfer(ScratchFloat32Reg, dest);
-    ma_vcvt_I32_F32(ScratchFloat32Reg, ScratchFloat32Reg);
+    ma_vcvt_I32_F32(ScratchFloat32Reg.sintOverlay(), ScratchFloat32Reg);
     ma_vcmp_f32(src, ScratchFloat32Reg);
     as_vmrs(pc);
     ma_b(fail, Assembler::VFP_NotEqualOrUnordered);
@@ -168,7 +168,7 @@ MacroAssemblerARM::convertFloat32ToDouble(FloatRegister src, FloatRegister dest)
 
 void
 MacroAssemblerARM::branchTruncateFloat32(FloatRegister src, Register dest, Label *fail) {
-    ma_vcvt_F32_I32(src, ScratchFloat32Reg);
+    ma_vcvt_F32_I32(src, ScratchFloat32Reg.sintOverlay());
     ma_vxfer(ScratchFloat32Reg, dest);
     ma_cmp(dest, Imm32(0x7fffffff));
     ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
@@ -176,12 +176,11 @@ MacroAssemblerARM::branchTruncateFloat32(FloatRegister src, Register dest, Label
 }
 
 void
-MacroAssemblerARM::convertInt32ToFloat32(Register src, FloatRegister dest_) {
+MacroAssemblerARM::convertInt32ToFloat32(Register src, FloatRegister dest) {
     // direct conversions aren't possible.
-    VFPRegister dest = VFPRegister(dest_).singleOverlay();
     as_vxfer(src, InvalidReg, dest.sintOverlay(),
              CoreToFloat);
-    as_vcvt(dest, dest.sintOverlay());
+    as_vcvt(dest.singleOverlay(), dest.sintOverlay());
 }
 
 void
@@ -1559,22 +1558,30 @@ MacroAssemblerARM::ma_vcmpz_f32(FloatRegister src1, Condition cc)
 void
 MacroAssemblerARM::ma_vcvt_F64_I32(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vcvt(VFPRegister(dest).sintOverlay(), VFPRegister(src), false, cc);
+    JS_ASSERT(src.isDouble());
+    JS_ASSERT(dest.isSInt());
+    as_vcvt(dest, src, false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_F64_U32(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vcvt(VFPRegister(dest).uintOverlay(), VFPRegister(src), false, cc);
+    JS_ASSERT(src.isDouble());
+    JS_ASSERT(dest.isUInt());
+    as_vcvt(dest, src, false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_I32_F64(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vcvt(VFPRegister(dest), VFPRegister(src).sintOverlay(), false, cc);
+    JS_ASSERT(src.isSInt());
+    JS_ASSERT(dest.isDouble());
+    as_vcvt(dest, src, false, cc);
 }
 void
 MacroAssemblerARM::ma_vcvt_U32_F64(FloatRegister src, FloatRegister dest, Condition cc)
 {
-    as_vcvt(VFPRegister(dest), VFPRegister(src).uintOverlay(), false, cc);
+    JS_ASSERT(src.isUInt());
+    JS_ASSERT(dest.isDouble());
+    as_vcvt(dest, src, false, cc);
 }
 
 void
@@ -3151,9 +3158,9 @@ MacroAssemblerARMCompat::int32ValueToDouble(const ValueOperand &operand, FloatRe
     // transfer the integral value to a floating point register
     VFPRegister vfpdest = VFPRegister(dest);
     as_vxfer(operand.payloadReg(), InvalidReg,
-             vfpdest.sintOverlay(), CoreToFloat);
+             ScratchFloat32Reg.sintOverlay(), CoreToFloat);
     // convert the value to a double.
-    as_vcvt(vfpdest, vfpdest.sintOverlay());
+    as_vcvt(vfpdest, ScratchFloat32Reg.sintOverlay());
 }
 
 void
@@ -4144,8 +4151,8 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
     // Since it is known to be > 0.0, explicitly convert to a larger range,
     // then a value that rounds to INT_MAX is explicitly different from an
     // argument that clamps to INT_MAX
-    ma_vcvt_F64_U32(input, ScratchDoubleReg);
-    ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
+    ma_vcvt_F64_U32(input, ScratchDoubleReg.uintOverlay());
+    ma_vxfer(ScratchDoubleReg.uintOverlay(), output);
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
     ma_b(&fin);
@@ -4161,9 +4168,9 @@ MacroAssemblerARMCompat::floor(FloatRegister input, Register output, Label *bail
     bind(&handleNeg);
     // Negative case, negate, then start dancing
     ma_vneg(input, input);
-    ma_vcvt_F64_U32(input, ScratchDoubleReg);
-    ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
-    ma_vcvt_U32_F64(ScratchDoubleReg, ScratchDoubleReg);
+    ma_vcvt_F64_U32(input, ScratchDoubleReg.uintOverlay());
+    ma_vxfer(ScratchDoubleReg.uintOverlay(), output);
+    ma_vcvt_U32_F64(ScratchDoubleReg.uintOverlay(), ScratchDoubleReg);
     compareDouble(ScratchDoubleReg, input);
     ma_add(output, Imm32(1), output, NoSetCond, NotEqual);
     // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
@@ -4196,7 +4203,7 @@ MacroAssemblerARMCompat::floorf(FloatRegister input, Register output, Label *bai
     // Since it is known to be > 0.0, explicitly convert to a larger range,
     // then a value that rounds to INT_MAX is explicitly different from an
     // argument that clamps to INT_MAX
-    ma_vcvt_F32_U32(input, ScratchFloat32Reg);
+    ma_vcvt_F32_U32(input, ScratchFloat32Reg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchFloat32Reg).uintOverlay(), output);
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
@@ -4213,9 +4220,9 @@ MacroAssemblerARMCompat::floorf(FloatRegister input, Register output, Label *bai
     bind(&handleNeg);
     // Negative case, negate, then start dancing
     ma_vneg_f32(input, input);
-    ma_vcvt_F32_U32(input, ScratchFloat32Reg);
+    ma_vcvt_F32_U32(input, ScratchFloat32Reg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchFloat32Reg).uintOverlay(), output);
-    ma_vcvt_U32_F32(ScratchFloat32Reg, ScratchFloat32Reg);
+    ma_vcvt_U32_F32(ScratchFloat32Reg.uintOverlay(), ScratchFloat32Reg);
     compareFloat(ScratchFloat32Reg, input);
     ma_add(output, Imm32(1), output, NoSetCond, NotEqual);
     // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
@@ -4389,7 +4396,7 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
     // Since it is known to be > 0.0, explicitly convert to a larger range,
     // then a value that rounds to INT_MAX is explicitly different from an
     // argument that clamps to INT_MAX
-    ma_vcvt_F64_U32(tmp, ScratchDoubleReg);
+    ma_vcvt_F64_U32(tmp, ScratchDoubleReg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
@@ -4405,13 +4412,13 @@ MacroAssemblerARMCompat::round(FloatRegister input, Register output, Label *bail
 
     bind(&handleNeg);
     // Negative case, negate, then start dancing.  This number may be positive, since we added 0.5
-    ma_vcvt_F64_U32(tmp, ScratchDoubleReg);
+    ma_vcvt_F64_U32(tmp, ScratchDoubleReg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchDoubleReg).uintOverlay(), output);
 
     // -output is now a correctly rounded value, unless the original value was exactly
     // halfway between two integers, at which point, it has been rounded away from zero, when
     // it should be rounded towards \infty.
-    ma_vcvt_U32_F64(ScratchDoubleReg, ScratchDoubleReg);
+    ma_vcvt_U32_F64(ScratchDoubleReg.uintOverlay(), ScratchDoubleReg);
     compareDouble(ScratchDoubleReg, tmp);
     ma_sub(output, Imm32(1), output, NoSetCond, Equal);
     // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
@@ -4452,29 +4459,29 @@ MacroAssemblerARMCompat::roundf(FloatRegister input, Register output, Label *bai
     // Since it is known to be > 0.0, explicitly convert to a larger range,
     // then a value that rounds to INT_MAX is explicitly different from an
     // argument that clamps to INT_MAX
-    ma_vcvt_F32_U32(tmp, ScratchFloat32Reg);
+    ma_vcvt_F32_U32(tmp, ScratchFloat32Reg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchFloat32Reg).uintOverlay(), output);
     ma_mov(output, output, SetCond);
     ma_b(bail, Signed);
     ma_b(&fin);
 
     bind(&handleZero);
-    // Move the top word of the double into the output reg, if it is non-zero,
+    // Move the whole float32 into the output reg, if it is non-zero,
     // then the original value was -0.0
-    as_vxfer(output, InvalidReg, input, FloatToCore, Always, 1);
+    as_vxfer(output, InvalidReg, input, FloatToCore, Always, 0);
     ma_cmp(output, Imm32(0));
     ma_b(bail, NonZero);
     ma_b(&fin);
 
     bind(&handleNeg);
     // Negative case, negate, then start dancing.  This number may be positive, since we added 0.5
-    ma_vcvt_F32_U32(tmp, ScratchFloat32Reg);
+    ma_vcvt_F32_U32(tmp, ScratchFloat32Reg.uintOverlay());
     ma_vxfer(VFPRegister(ScratchFloat32Reg).uintOverlay(), output);
 
     // -output is now a correctly rounded value, unless the original value was exactly
     // halfway between two integers, at which point, it has been rounded away from zero, when
     // it should be rounded towards \infty.
-    ma_vcvt_U32_F32(ScratchFloat32Reg, ScratchFloat32Reg);
+    ma_vcvt_U32_F32(ScratchFloat32Reg.uintOverlay(), ScratchFloat32Reg);
     compareFloat(ScratchFloat32Reg, tmp);
     ma_sub(output, Imm32(1), output, NoSetCond, Equal);
     // Negate the output.  Since INT_MIN < -INT_MAX, even after adding 1,
