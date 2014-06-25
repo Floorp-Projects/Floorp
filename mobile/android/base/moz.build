@@ -576,8 +576,8 @@ main.filtered_resources += [
 ]
 
 main.recursive_make_targets += generated_recursive_make_targets
-main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in mgjar.generated_sources]
-main.recursive_make_targets += [OBJDIR + '/generated/' + f for f in gbjar.generated_sources]
+main.recursive_make_targets += ['generated/' + f for f in mgjar.generated_sources]
+main.recursive_make_targets += ['generated/' + f for f in gbjar.generated_sources]
 
 main.included_projects += ['../' + generated.name, '../' + branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
