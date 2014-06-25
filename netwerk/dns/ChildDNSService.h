@@ -27,11 +27,12 @@ public:
   NS_DECL_NSIOBSERVER
 
   ChildDNSService();
-  virtual ~ChildDNSService();
 
   static ChildDNSService* GetSingleton();
 
 private:
+  virtual ~ChildDNSService();
+
   bool mFirstTime;
   bool mOffline;
   bool mDisablePrefetch;

@@ -6853,7 +6853,7 @@ _expand(void *ptr, size_t newsize)
 }
 
 size_t
-_msize(const void *ptr)
+_msize(void *ptr)
 {
 
 	return malloc_usable_size_impl(ptr);

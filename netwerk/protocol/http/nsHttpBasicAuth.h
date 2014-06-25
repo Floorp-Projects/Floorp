@@ -22,6 +22,7 @@ public:
     NS_DECL_NSIHTTPAUTHENTICATOR
 
 	nsHttpBasicAuth();
+private:
 	virtual ~nsHttpBasicAuth();
 };
 

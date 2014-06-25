@@ -14,8 +14,8 @@ public:
   NS_DECL_NSIMIMEHEADERPARAM
 
   nsMIMEHeaderParamImpl() {}
-  virtual ~nsMIMEHeaderParamImpl() {}
 private:
+  virtual ~nsMIMEHeaderParamImpl() {}
   enum ParamDecoding {
     MIME_FIELD_ENCODING = 1,
     HTTP_FIELD_ENCODING

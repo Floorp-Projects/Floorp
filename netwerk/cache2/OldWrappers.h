@@ -46,9 +46,9 @@ public:
   _OldCacheEntryWrapper(nsICacheEntryDescriptor* desc);
   _OldCacheEntryWrapper(nsICacheEntryInfo* info);
 
+private:
   virtual ~_OldCacheEntryWrapper();
 
-private:
   _OldCacheEntryWrapper() MOZ_DELETE;
   nsICacheEntryDescriptor* mOldDesc; // ref holded in mOldInfo
   nsCOMPtr<nsICacheEntryInfo> mOldInfo;

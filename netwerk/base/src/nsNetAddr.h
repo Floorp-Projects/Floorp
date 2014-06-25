@@ -13,6 +13,8 @@
 
 class nsNetAddr MOZ_FINAL : public nsINetAddr
 {
+  ~nsNetAddr() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINETADDR

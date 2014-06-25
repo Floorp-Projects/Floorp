@@ -24,11 +24,12 @@ public:
     NS_DECL_NSISEEKABLESTREAM
 
     nsBufferedStream();
-    virtual ~nsBufferedStream();
 
     nsresult Close();
 
 protected:
+    virtual ~nsBufferedStream();
+
     nsresult Init(nsISupports* stream, uint32_t bufferSize);
     NS_IMETHOD Fill() = 0;
     NS_IMETHOD Flush() = 0;

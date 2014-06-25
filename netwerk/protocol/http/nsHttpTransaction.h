@@ -28,11 +28,24 @@ class nsIEventTarget;
 class nsIInputStream;
 class nsIOutputStream;
 
-namespace mozilla { namespace net {
+namespace mozilla {
+
+namespace net {
 
 class nsHttpChunkedDecoder;
 class nsHttpRequestHead;
 class nsHttpResponseHead;
+class nsHttpTransaction;
+
+}
+
+template<>
+struct HasDangerousPublicDestructor<net::nsHttpTransaction>
+{
+  static const bool value = true;
+};
+
+namespace net {
 
 //-----------------------------------------------------------------------------
 // nsHttpTransaction represents a single HTTP transaction.  It is thread-safe,

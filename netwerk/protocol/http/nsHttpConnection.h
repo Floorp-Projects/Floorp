@@ -43,6 +43,8 @@ class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsIInterfaceRequestor
                        , public NudgeTunnelCallback
 {
+    virtual ~nsHttpConnection();
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSAHTTPSEGMENTREADER
@@ -54,7 +56,6 @@ public:
     NS_DECL_NUDGETUNNELCALLBACK
 
     nsHttpConnection();
-    virtual ~nsHttpConnection();
 
     // Initialize the connection:
     //  info        - specifies the connection parameters.

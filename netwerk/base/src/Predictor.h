@@ -49,13 +49,14 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
 
   Predictor();
-  virtual ~Predictor();
 
   nsresult Init();
   void Shutdown();
   static nsresult Create(nsISupports *outer, const nsIID& iid, void **result);
 
 private:
+  virtual ~Predictor();
+
   friend class PredictionEvent;
   friend class LearnEvent;
   friend class PredictorResetEvent;

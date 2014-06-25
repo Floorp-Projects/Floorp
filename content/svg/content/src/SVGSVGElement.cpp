@@ -70,6 +70,10 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGTranslatePoint)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+SVGSVGElement::~SVGSVGElement()
+{
+}
+
 nsISVGPoint*
 DOMSVGTranslatePoint::Clone()
 {

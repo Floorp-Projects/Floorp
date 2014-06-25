@@ -90,6 +90,8 @@ class UpvarCookie
     F(NAME) \
     F(NUMBER) \
     F(STRING) \
+    F(TEMPLATE_STRING_LIST) \
+    F(TEMPLATE_STRING) \
     F(REGEXP) \
     F(TRUE) \
     F(FALSE) \

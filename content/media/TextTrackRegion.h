@@ -148,6 +148,8 @@ public:
   }
 
 private:
+  ~TextTrackRegion() {}
+
   nsCOMPtr<nsISupports> mParent;
   double mWidth;
   long mLines;

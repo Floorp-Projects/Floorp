@@ -33,9 +33,10 @@ public:
   virtual nsresult Init();
 
   nsPrintOptions();
-  virtual ~nsPrintOptions();
 
 protected:
+  virtual ~nsPrintOptions();
+
   void ReadBitFieldPref(const char * aPrefId, int32_t anOption);
   void WriteBitFieldPref(const char * aPrefId, int32_t anOption);
   void ReadJustification(const char * aPrefId, int16_t& aJust,

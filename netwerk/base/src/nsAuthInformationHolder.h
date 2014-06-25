@@ -10,13 +10,15 @@
 #include "nsString.h"
 
 class nsAuthInformationHolder : public nsIAuthInformation {
+
+protected:
+    virtual ~nsAuthInformationHolder() {}
+
 public:
     // aAuthType must be ASCII
     nsAuthInformationHolder(uint32_t aFlags, const nsString& aRealm,
                             const nsCString& aAuthType)
         : mFlags(aFlags), mRealm(aRealm), mAuthType(aAuthType) {}
-
-    virtual ~nsAuthInformationHolder() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHINFORMATION
