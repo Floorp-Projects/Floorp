@@ -9,9 +9,7 @@ DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 main = add_android_eclipse_project('Robocop', OBJDIR + '/AndroidManifest.xml')
 main.package_name = 'org.mozilla.roboexample.test'
 main.res = SRCDIR + '/res'
-main.recursive_make_targets += [
-    OBJDIR + '/AndroidManifest.xml',
-    '../../../mobile/android/base/tests/TestConstants.java']
+main.recursive_make_targets += [OBJDIR + '/AndroidManifest.xml']
 main.extra_jars += [SRCDIR + '/robotium-solo-4.3.1.jar']
 main.assets = TOPSRCDIR + '/mobile/android/base/tests/assets'
 main.referenced_projects += ['Fennec']
@@ -20,5 +18,3 @@ main.add_classpathentry('harness', SRCDIR,
     dstdir='harness/org/mozilla/gecko')
 main.add_classpathentry('src', TOPSRCDIR + '/mobile/android/base/tests',
     dstdir='src/org/mozilla/gecko/tests')
-main.add_classpathentry('generated', TOPOBJDIR + '/mobile/android/base/tests',
-    dstdir='generated/org/mozilla/gecko/tests')
