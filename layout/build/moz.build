@@ -71,7 +71,7 @@ LOCAL_INCLUDES += [
     '/editor/libeditor/html',
     '/editor/libeditor/text',
     '/editor/txmgr',
-    '/editor/txtsvc/src',
+    '/editor/txtsvc',
     '/extensions/cookie',
     '/js/xpconnect/loader',
     '/js/xpconnect/src',
