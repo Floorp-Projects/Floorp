@@ -586,7 +586,7 @@ FrameIter::settleOnActivation()
         }
 
         if (activation->isAsmJS()) {
-            data_.asmJSFrames_ = AsmJSFrameIterator(data_.activations_->asAsmJS());
+            data_.asmJSFrames_ = AsmJSFrameIterator(*data_.activations_->asAsmJS());
 
             if (data_.asmJSFrames_.done()) {
                 ++data_.activations_;
@@ -638,7 +638,7 @@ FrameIter::Data::Data(ThreadSafeContext *cx, SavedOption savedOption,
 #ifdef JS_ION
   , jitFrames_((uint8_t *)nullptr, SequentialExecution)
   , ionInlineFrameNo_(0)
-  , asmJSFrames_(nullptr)
+  , asmJSFrames_()
 #endif
 {
 }
@@ -1683,7 +1683,7 @@ AsmJSActivation::AsmJSActivation(JSContext *cx, AsmJSModule &module)
     errorRejoinSP_(nullptr),
     profiler_(nullptr),
     resumePC_(nullptr),
-    exitSP_(nullptr)
+    exitFP_(nullptr)
 {
     if (cx->runtime()->spsProfiler.enabled()) {
         // Use a profiler string that matches jsMatch regex in
