@@ -739,7 +739,10 @@ class MachCommands(MachCommandBase):
 # they should be modified to work with all devices.
 def is_emulator(cls):
     """Emulator needs to be configured."""
-    return cls.device_name.startswith('emulator')
+    try:
+        return cls.device_name.startswith('emulator')
+    except AttributeError:
+        return False
 
 
 @CommandProvider

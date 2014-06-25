@@ -1853,7 +1853,7 @@ FindPath(JSContext *cx, unsigned argc, jsval *vp)
                                JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
 
-        RootedString edge(cx, js_NewString<CanGC>(cx, edges[i].get(), js_strlen(edges[i])));
+        RootedString edge(cx, NewString<CanGC>(cx, edges[i].get(), js_strlen(edges[i])));
         if (!edge)
             return false;
         edges[i].forget();

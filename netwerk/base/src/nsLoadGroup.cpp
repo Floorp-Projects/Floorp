@@ -1098,6 +1098,8 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
 
 class nsLoadGroupConnectionInfo MOZ_FINAL : public nsILoadGroupConnectionInfo
 {
+    ~nsLoadGroupConnectionInfo() {}
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSILOADGROUPCONNECTIONINFO

@@ -190,8 +190,7 @@ class TestCfxQuits(unittest.TestCase):
         self.assertIn("Program terminated successfully.", err)
 
     def test_cfx_test(self):
-        addon_path = os.path.join(tests_path,
-                                  "addons", "simplest-test")
+        addon_path = os.path.join(tests_path, "addons", "simplest-test")
         rc, out, err = self.run_cfx(addon_path, ["test"])
         self.assertEqual(rc, 0)
         self.assertIn("1 of 1 tests passed.", err)

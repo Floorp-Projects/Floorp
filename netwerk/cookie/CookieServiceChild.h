@@ -27,11 +27,12 @@ public:
   NS_DECL_NSIOBSERVER
 
   CookieServiceChild();
-  virtual ~CookieServiceChild();
 
   static CookieServiceChild* GetSingleton();
 
 protected:
+  virtual ~CookieServiceChild();
+
   void SerializeURIs(nsIURI *aHostURI,
                      nsIChannel *aChannel,
                      nsCString &aHostSpec,

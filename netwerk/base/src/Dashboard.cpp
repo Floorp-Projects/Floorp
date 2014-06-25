@@ -39,15 +39,16 @@ public:
         mThread = nullptr;
     }
 
-    virtual ~SocketData()
-    {
-    }
-
     uint64_t mTotalSent;
     uint64_t mTotalRecv;
     nsTArray<SocketInfo> mData;
     nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
     nsIThread *mThread;
+
+private:
+    virtual ~SocketData()
+    {
+    }
 };
 
 NS_IMPL_ISUPPORTS0(SocketData)
@@ -56,16 +57,16 @@ NS_IMPL_ISUPPORTS0(SocketData)
 class HttpData
     : public nsISupports
 {
+    virtual ~HttpData()
+    {
+    }
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     HttpData()
     {
         mThread = nullptr;
-    }
-
-    virtual ~HttpData()
-    {
     }
 
     nsTArray<HttpRetParams> mData;
@@ -79,16 +80,16 @@ NS_IMPL_ISUPPORTS0(HttpData)
 class WebSocketRequest
     : public nsISupports
 {
+    virtual ~WebSocketRequest()
+    {
+    }
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     WebSocketRequest()
     {
         mThread = nullptr;
-    }
-
-    virtual ~WebSocketRequest()
-    {
     }
 
     nsMainThreadPtrHandle<NetDashboardCallback> mCallback;
@@ -101,16 +102,16 @@ NS_IMPL_ISUPPORTS0(WebSocketRequest)
 class DnsData
     : public nsISupports
 {
+    virtual ~DnsData()
+    {
+    }
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
     DnsData()
     {
         mThread = nullptr;
-    }
-
-    virtual ~DnsData()
-    {
     }
 
     nsTArray<DNSCacheEntries> mData;
@@ -125,6 +126,13 @@ class ConnectionData
     : public nsITransportEventSink
     , public nsITimerCallback
 {
+    virtual ~ConnectionData()
+    {
+        if (mTimer) {
+            mTimer->Cancel();
+        }
+    }
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSITRANSPORTEVENTSINK
@@ -137,13 +145,6 @@ public:
     {
         mThread = nullptr;
         mDashboard = target;
-    }
-
-    virtual ~ConnectionData()
-    {
-        if (mTimer) {
-            mTimer->Cancel();
-        }
     }
 
     nsCOMPtr<nsISocketTransport> mSocket;
@@ -228,6 +229,10 @@ class LookupHelper;
 class LookupArgument
     : public nsISupports
 {
+    virtual ~LookupArgument()
+    {
+    }
+
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -235,10 +240,6 @@ public:
     {
         mRecord = aRecord;
         mHelper = aHelper;
-    }
-
-    virtual ~LookupArgument()
-    {
     }
 
     nsCOMPtr<nsIDNSRecord> mRecord;
@@ -251,18 +252,18 @@ NS_IMPL_ISUPPORTS0(LookupArgument)
 class LookupHelper
     : public nsIDNSListener
 {
-public:
-    NS_DECL_THREADSAFE_ISUPPORTS
-    NS_DECL_NSIDNSLISTENER
-
-    LookupHelper() {
-    }
-
     virtual ~LookupHelper()
     {
         if (mCancel) {
             mCancel->Cancel(NS_ERROR_ABORT);
         }
+    }
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSIDNSLISTENER
+
+    LookupHelper() {
     }
 
     nsresult ConstructAnswer(LookupArgument *aArgument);

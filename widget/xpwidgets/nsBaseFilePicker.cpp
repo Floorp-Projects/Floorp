@@ -77,9 +77,6 @@ public:
     : mIterator(iterator)
   {}
 
-  virtual ~nsBaseFilePickerEnumerator()
-  {}
-
   NS_IMETHOD
   GetNext(nsISupports** aResult)
   {
@@ -106,6 +103,10 @@ public:
   {
     return mIterator->HasMoreElements(aResult);
   }
+
+protected:
+  virtual ~nsBaseFilePickerEnumerator()
+  {}
 
 private:
   nsCOMPtr<nsISimpleEnumerator> mIterator;

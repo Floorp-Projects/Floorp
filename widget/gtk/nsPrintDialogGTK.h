@@ -22,9 +22,10 @@ typedef enum
 
 class nsPrintDialogServiceGTK : public nsIPrintDialogService
 {
+  virtual ~nsPrintDialogServiceGTK();
+
 public:
   nsPrintDialogServiceGTK();
-  virtual ~nsPrintDialogServiceGTK();
 
   NS_DECL_ISUPPORTS
 

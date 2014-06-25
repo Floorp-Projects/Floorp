@@ -9,6 +9,10 @@ this.EXPORTED_SYMBOLS = ["PrivacyLevel"];
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
+  "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 
 const PREF_NORMAL = "browser.sessionstore.privacy_level";
 const PREF_DEFERRED = "browser.sessionstore.privacy_level_deferred";
@@ -25,14 +29,6 @@ const PRIVACY_ENCRYPTED = 1;
 const PRIVACY_FULL = 2;
 
 /**
- * Returns whether we will resume the session automatically on next startup.
- */
-function willResumeAutomatically() {
-  return Services.prefs.getIntPref("browser.startup.page") == 3 ||
-         Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
-}
-
-/**
  * Determines the current privacy level as set by the user.
  *
  * @param isPinned
@@ -44,7 +40,7 @@ function getCurrentLevel(isPinned) {
 
   // If we're in the process of quitting and we're not autoresuming the session
   // then we will use the deferred privacy level for non-pinned tabs.
-  if (!isPinned && Services.startup.shuttingDown && !willResumeAutomatically()) {
+  if (!isPinned && Services.startup.shuttingDown && !gSessionStartup.isAutomaticRestoreEnabled()) {
     pref = PREF_DEFERRED;
   }
 

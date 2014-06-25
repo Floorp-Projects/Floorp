@@ -22,9 +22,8 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
 {
  public:
   WebSocketChannelChild(bool aSecure);
-  ~WebSocketChannelChild();
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITHREADRETARGETABLEREQUEST
 
   // nsIWebSocketChannel methods BaseWebSocketChannel didn't implement for us
@@ -42,6 +41,8 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void ReleaseIPDLReference();
 
  private:
+  ~WebSocketChannelChild();
+
   bool RecvOnStart(const nsCString& aProtocol, const nsCString& aExtensions) MOZ_OVERRIDE;
   bool RecvOnStop(const nsresult& aStatusCode) MOZ_OVERRIDE;
   bool RecvOnMessageAvailable(const nsCString& aMsg) MOZ_OVERRIDE;
@@ -58,6 +59,7 @@ class WebSocketChannelChild : public BaseWebSocketChannel,
   void AsyncOpenFailed();  
 
   void DispatchToTargetThread(ChannelEvent *aChannelEvent);
+  bool IsOnTargetThread();
 
   nsRefPtr<ChannelEventQueue> mEventQ;
   bool mIPCOpen;

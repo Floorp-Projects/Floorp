@@ -1168,7 +1168,7 @@ JSStructuredCloneReader::readString(uint32_t nchars)
     Chars chars(context());
     if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
         return nullptr;
-    JSString *str = js_NewString<CanGC>(context(), chars.get(), nchars);
+    JSString *str = NewString<CanGC>(context(), chars.get(), nchars);
     if (str)
         chars.forget();
     return str;

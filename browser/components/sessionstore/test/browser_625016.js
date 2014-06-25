@@ -36,7 +36,7 @@ add_task(function* new_window() {
     yield promiseWindowClosed(newWin);
     newWin = null;
 
-    let state = JSON.parse((yield promiseSaveFileContents()));
+    let state = JSON.parse((yield promiseRecoveryFileContents()));
     is(state.windows.length, 2,
       "observe1: 2 windows in data written to disk");
     is(state._closedWindows.length, 0,
@@ -60,7 +60,7 @@ add_task(function* new_tab() {
   try {
     newTab = gBrowser.addTab("about:mozilla");
 
-    let state = JSON.parse((yield promiseSaveFileContents()));
+    let state = JSON.parse((yield promiseRecoveryFileContents()));
     is(state.windows.length, 1,
       "observe2: 1 window in data being written to disk");
     is(state._closedWindows.length, 1,

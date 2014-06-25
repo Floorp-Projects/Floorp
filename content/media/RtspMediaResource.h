@@ -204,9 +204,9 @@ public:
   class Listener MOZ_FINAL : public nsIInterfaceRequestor,
                              public nsIStreamingProtocolListener
   {
+    ~Listener() {}
   public:
     Listener(RtspMediaResource* aResource) : mResource(aResource) {}
-    ~Listener() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEREQUESTOR

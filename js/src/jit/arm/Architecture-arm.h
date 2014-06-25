@@ -227,18 +227,20 @@ class FloatRegisters
 };
 
 uint32_t GetARMFlags();
-bool hasMOVWT();
-bool hasVFPv3();
-bool hasVFP();
-bool has16DP();
-bool hasIDIV();
+bool HasMOVWT();
+bool HasVFPv3();
+bool HasVFP();
+bool Has16DP();
+bool HasIDIV();
+
+bool ParseARMHwCapFlags(const char *armHwCap);
 
 // If the simulator is used then the ABI choice is dynamic.  Otherwise the ABI is static
 // and useHardFpABI is inlined so that unused branches can be optimized away.
 #if defined(JS_ARM_SIMULATOR)
-bool useHardFpABI();
+bool UseHardFpABI();
 #else
-static inline bool useHardFpABI()
+static inline bool UseHardFpABI()
 {
 #if defined(JS_CODEGEN_ARM_HARDFP)
     return true;

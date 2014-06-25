@@ -36,13 +36,13 @@ typedef uint32_t PromiseId;
 class MediaKeys MOZ_FINAL : public nsISupports,
                             public nsWrapperCache
 {
+  ~MediaKeys();
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MediaKeys)
 
   MediaKeys(nsPIDOMWindow* aParentWindow, const nsAString& aKeySystem);
-
-  ~MediaKeys();
 
   nsPIDOMWindow* GetParentObject() const;
 

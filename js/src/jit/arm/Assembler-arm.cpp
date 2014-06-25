@@ -1448,13 +1448,13 @@ Assembler::as_tst(Register src1, Operand2 op2, Condition c)
 BufferOffset
 Assembler::as_movw(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
-    JS_ASSERT(hasMOVWT());
+    JS_ASSERT(HasMOVWT());
     return writeInst(0x03000000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 BufferOffset
 Assembler::as_movt(Register dest, Imm16 imm, Condition c, Instruction *pos)
 {
-    JS_ASSERT(hasMOVWT());
+    JS_ASSERT(HasMOVWT());
     return writeInst(0x03400000 | c | imm.encode() | RD(dest), (uint32_t*)pos);
 }
 

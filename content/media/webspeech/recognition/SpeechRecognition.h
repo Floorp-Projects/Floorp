@@ -185,9 +185,9 @@ private:
       : mRecognition(aRecognition)
     {}
 
+  private:
     virtual ~GetUserMediaSuccessCallback() {}
 
-  private:
     nsRefPtr<SpeechRecognition> mRecognition;
   };
 
@@ -201,9 +201,9 @@ private:
       : mRecognition(aRecognition)
     {}
 
+  private:
     virtual ~GetUserMediaErrorCallback() {}
 
-  private:
     nsRefPtr<SpeechRecognition> mRecognition;
   };
 
