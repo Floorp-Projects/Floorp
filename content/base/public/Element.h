@@ -1192,7 +1192,6 @@ class DestinationInsertionPointList : public nsINodeList
 {
 public:
   DestinationInsertionPointList(Element* aElement);
-  virtual ~DestinationInsertionPointList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(DestinationInsertionPointList)
@@ -1207,6 +1206,8 @@ public:
   virtual uint32_t Length() const;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~DestinationInsertionPointList();
+
   nsRefPtr<Element> mParent;
   nsCOMArray<nsIContent> mDestinationPoints;
 };

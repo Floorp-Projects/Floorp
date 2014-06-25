@@ -21,7 +21,10 @@ class nsContentPolicy : public nsIContentPolicy
     NS_DECL_NSICONTENTPOLICY
 
     nsContentPolicy();
+
+ protected:
     virtual ~nsContentPolicy();
+
  private:
     //Array of policies
     nsCategoryCache<nsIContentPolicy> mPolicies;

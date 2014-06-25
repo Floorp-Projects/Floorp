@@ -21,9 +21,10 @@ public:
     NS_DECL_NSICHANNELPOLICY
 
     nsChannelPolicy();
-    virtual ~nsChannelPolicy();
 
 protected:
+    virtual ~nsChannelPolicy();
+
     /* Represents the type of content being loaded in the channel per
      * nsIContentPolicy, e.g. TYPE_IMAGE, TYPE_SCRIPT
      */
