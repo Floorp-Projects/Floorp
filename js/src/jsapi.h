@@ -5164,6 +5164,9 @@ typedef void
 extern JS_PUBLIC_API(void)
 SetOutOfMemoryCallback(JSRuntime *rt, OutOfMemoryCallback cb, void *data);
 
+extern JS_PUBLIC_API(bool)
+CaptureCurrentStack(JSContext *cx, MutableHandleObject stackp);
+
 } /* namespace JS */
 
 #endif /* jsapi_h */
