@@ -1243,7 +1243,9 @@ module.exports = {
         "!type": "+HTMLCollection",
         "!url": "https://developer.mozilla.org/en/docs/DOM/document.styleSheets",
         "!doc": "Returns a list of stylesheet objects for stylesheets explicitly linked into or embedded in a document."
-      }
+      },
+      "querySelector": "Element.prototype.querySelector",
+      "querySelectorAll": "Element.prototype.querySelectorAll"
     },
     "!url": "https://developer.mozilla.org/en/docs/DOM/document",
     "!doc": "Each web page loaded in the browser has its own document object. This object serves as an entry point to the web page's content (the DOM tree, including elements such as <body> and <table>) and provides functionality global to the document (such as obtaining the page's URL and creating new elements in the document)."
