@@ -294,6 +294,7 @@ PK11_ConfigurePKCS11
 PK11_CreateContextBySymKey
 PK11_CreateDigestContext
 PK11_CreateMergeLog
+PK11_CreatePBEV2AlgorithmID
 PK11_Decrypt
 PK11_DeleteTokenCertAndKey
 PK11_DeleteTokenPrivateKey
@@ -331,6 +332,7 @@ PK11_GetAllSlotsForCert
 PK11_GetAllTokens
 PK11_GetBestSlot
 PK11_GetBestSlotMultiple
+PK11_GetBlockSize
 PK11_GetCertFromPrivateKey
 PK11_GetDefaultArray
 PK11_GetDefaultFlags
@@ -388,6 +390,7 @@ PK11_MergeTokens
 PK11_NeedLogin
 PK11_NeedUserInit
 PK11_ParamFromIV
+PK11_PBEKeyGen
 PK11_PQG_DestroyParams
 PK11_PQG_DestroyVerify
 PK11_PQG_ParamGen
