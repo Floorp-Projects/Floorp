@@ -24,7 +24,11 @@ class AsmJSFrameIterator
     const jit::CallSite *callsite_;
     uint8_t *fp_;
 
-    void settle(uint8_t *returnAddress);
+    // Really, a const AsmJSModule::CodeRange*, but no forward declarations of
+    // nested classes, so use void* to avoid pulling in all of AsmJSModule.h.
+    const void *codeRange_;
+
+    void settle(void *returnAddress);
 
   public:
     explicit AsmJSFrameIterator() : module_(nullptr) {}
