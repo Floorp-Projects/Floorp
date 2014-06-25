@@ -4346,6 +4346,9 @@ CopyCharsMaybeInflate(jschar *dest, const Latin1Char *src, size_t len)
 static bool
 CanStoreCharsAsLatin1(const jschar *s, size_t length)
 {
+    if (!EnableLatin1Strings)
+        return false;
+
     for (const jschar *end = s + length; s < end; ++s) {
         if (*s > JSString::MAX_LATIN1_CHAR)
             return false;
@@ -4364,6 +4367,8 @@ template <AllowGC allowGC>
 static MOZ_ALWAYS_INLINE JSInlineString *
 NewFatInlineStringDeflated(ThreadSafeContext *cx, Range<const jschar> chars)
 {
+    MOZ_ASSERT(EnableLatin1Strings);
+
     size_t len = chars.length();
     Latin1Char *storage;
     JSInlineString *str = AllocateFatInlineString<allowGC>(cx, len, &storage);
@@ -4416,12 +4421,9 @@ namespace js {
 
 template <AllowGC allowGC, typename CharT>
 JSFlatString *
-NewStringCopyN(ThreadSafeContext *cx, const CharT *s, size_t n)
+NewStringCopyNDontDeflate(ThreadSafeContext *cx, const CharT *s, size_t n)
 {
     if (EnableLatin1Strings) {
-        if (IsSame<CharT, jschar>::value && CanStoreCharsAsLatin1(s, n))
-            return NewStringDeflated<allowGC>(cx, s, n);
-
         if (JSFatInlineString::lengthFits<CharT>(n))
             return NewFatInlineString<allowGC>(cx, Range<const CharT>(s, n));
 
@@ -4456,6 +4458,28 @@ NewStringCopyN(ThreadSafeContext *cx, const CharT *s, size_t n)
 
     news.forget();
     return str;
+}
+
+template JSFlatString *
+NewStringCopyNDontDeflate<CanGC>(ThreadSafeContext *cx, const jschar *s, size_t n);
+
+template JSFlatString *
+NewStringCopyNDontDeflate<NoGC>(ThreadSafeContext *cx, const jschar *s, size_t n);
+
+template JSFlatString *
+NewStringCopyNDontDeflate<CanGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
+
+template JSFlatString *
+NewStringCopyNDontDeflate<NoGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
+
+template <AllowGC allowGC, typename CharT>
+JSFlatString *
+NewStringCopyN(ThreadSafeContext *cx, const CharT *s, size_t n)
+{
+    if (IsSame<CharT, jschar>::value && CanStoreCharsAsLatin1(s, n))
+        return NewStringDeflated<allowGC>(cx, s, n);
+
+    return NewStringCopyNDontDeflate<allowGC>(cx, s, n);
 }
 
 template JSFlatString *

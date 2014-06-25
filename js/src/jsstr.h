@@ -120,6 +120,11 @@ template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString *
 NewStringCopyN(js::ThreadSafeContext *cx, const CharT *s, size_t n);
 
+/* Like NewStringCopyN, but doesn't try to deflate to Latin1. */
+template <js::AllowGC allowGC, typename CharT>
+extern JSFlatString *
+NewStringCopyNDontDeflate(js::ThreadSafeContext *cx, const CharT *s, size_t n);
+
 /* Copy a C string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC>
 extern JSFlatString *
