@@ -198,6 +198,12 @@ user_pref('toolkit.telemetry.server', 'https://%(server)s/telemetry-dummy/');
 // resolves and accepts requests, even if they all fail.
 user_pref('identity.fxaccounts.auth.uri', 'https://%(server)s/fxa-dummy/');
 
+// Ditto for all the other Firefox accounts URIs used for about:accounts et al.:
+user_pref("identity.fxaccounts.remote.signup.uri", "https://%(server)s/fxa-signup");
+user_pref("identity.fxaccounts.remote.force_auth.uri", "https://%(server)s/fxa-force-auth");
+user_pref("identity.fxaccounts.remote.signin.uri", "https://%(server)s/fxa-signin");
+user_pref("identity.fxaccounts.settings.uri", "https://%(server)s/fxa-settings");
+
 // Enable logging of APZ test data (see bug 961289).
 user_pref('apz.test.logging_enabled', true);
 
