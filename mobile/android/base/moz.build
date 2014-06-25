@@ -579,7 +579,6 @@ main.recursive_make_targets += generated_recursive_make_targets
 main.recursive_make_targets += ['generated/' + f for f in mgjar.generated_sources]
 main.recursive_make_targets += ['generated/' + f for f in gbjar.generated_sources]
 
-main.included_projects += ['../' + generated.name, '../' + branding.name]
 main.extra_jars += [CONFIG['ANDROID_COMPAT_LIB']]
 main.assets = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/assets'
 main.libs = TOPOBJDIR + '/dist/' + CONFIG['MOZ_APP_NAME'] + '/lib'
@@ -603,8 +602,8 @@ resources.res = SRCDIR + '/resources'
 resources.included_projects += ['../' + generated.name, '../' + branding.name]
 resources.recursive_make_targets += generated_recursive_make_targets
 
+# The resources are included in the Fennec APK.
 main.included_projects += ['../' + resources.name]
-main.referenced_projects += [resources.name]
 
 if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
