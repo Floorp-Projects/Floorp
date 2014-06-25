@@ -85,6 +85,19 @@ function expressionUsesVariable(exp, variable)
     return false;
 }
 
+// Detect simple |return nullptr;| statements.
+function isReturningImmobileValue(edge, variable)
+{
+    if (variable.Kind == "Return") {
+        if (edge.Exp[0].Kind == "Var" && sameVariable(edge.Exp[0].Variable, variable)) {
+            if (edge.Exp[1].Kind == "Int" && edge.Exp[1].String == "0") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // If the edge uses the given variable, return the earliest point at which the
 // use is definite. Usually, that means the source of the edge (anything that
 // reaches that source point will end up using the variable, but there may be
@@ -108,6 +121,8 @@ function edgeUsesVariable(edge, variable, body)
     switch (edge.Kind) {
 
     case "Assign":
+        if (isReturningImmobileValue(edge, variable))
+            return 0;
         if (expressionUsesVariable(edge.Exp[0], variable))
             return src;
         return expressionUsesVariable(edge.Exp[1], variable) ? src : 0;
@@ -175,7 +190,7 @@ function edgeKillsVariable(edge, variable)
     if (edge.Kind == "Assign") {
         var lhs = edge.Exp[0];
         if (lhs.Kind == "Var" && sameVariable(lhs.Variable, variable))
-            return true;
+            return !isReturningImmobileValue(edge, variable);
     }
 
     if (edge.Kind != "Call")
