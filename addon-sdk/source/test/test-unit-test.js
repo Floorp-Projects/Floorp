@@ -8,7 +8,7 @@ const { Loader } = require("sdk/test/loader");
 var setupCalled = false, teardownCalled = false;
 
 exports.setup = function() {
-    setupCalled = true;    
+    setupCalled = true;
 };
 
 exports.teardown = function() {
@@ -16,10 +16,10 @@ exports.teardown = function() {
     setupCalled = false;
 };
 
-// Important note - unit tests are run in alphabetical order.  The following 
-// unit tests for setup/teardown are order dependent, sometimes the result of 
-// one test is checked in the next test (testing for teardown does this).  When 
-// tests are cohesively a single unit, they are named <test_name> - partN where 
+// Important note - unit tests are run in alphabetical order.  The following
+// unit tests for setup/teardown are order dependent, sometimes the result of
+// one test is checked in the next test (testing for teardown does this).  When
+// tests are cohesively a single unit, they are named <test_name> - partN where
 // N is their order in the sequence.  Secondly, because these tests should be
 // run before all others, they start with an A.
 exports.testASetupTeardownSyncTestPart1 = function(test) {
@@ -34,11 +34,10 @@ exports.testASetupTeardownSyncTestPart2 = function(test) {
 
 exports.testATeardownAsyncTestPart1 = function(test) {
     teardownCalled = false;
-
-    timer.setTimeout(function() {
+    timer.setTimeout(_ => {
         test.assertEqual(false, teardownCalled, "teardown not called until done");
         test.done();
-    }, 200);
+    }, 20);
     test.waitUntilDone();
 };
 
@@ -48,7 +47,7 @@ exports.testATeardownAsyncTestPart2 = function(test) {
 
 exports.testWaitUntilInstant = function(test) {
   test.waitUntilDone();
-  
+
   test.waitUntil(function () true, "waitUntil with instant true pass")
       .then(function () test.done());
 }
@@ -56,60 +55,63 @@ exports.testWaitUntilInstant = function(test) {
 exports.testWaitUntil = function(test) {
   test.waitUntilDone();
   let succeed = false;
-  
-  test.waitUntil(function () succeed, "waitUntil pass")
-      .then(function () test.done());
-  
-  timer.setTimeout(function () {
+
+  test.waitUntil(_ => succeed, "waitUntil pass")
+      .then(test.done);
+
+  timer.setTimeout(_ => {
+    test.pass("succeed");
     succeed = true;
-  }, 200);
+  }, 20);
 }
 
 exports.testWaitUntilEqual = function(test) {
   test.waitUntilDone();
   let succeed = false;
-  
-  test.waitUntilEqual("foo", function () succeed ? "foo" : "bar", 
+
+  test.waitUntilEqual("foo", _ => succeed ? "foo" : "bar",
                       "waitUntilEqual pass")
-      .then(function () test.done());
-  
-  timer.setTimeout(function () {
+      .then(test.done);
+
+  timer.setTimeout(_ => {
+    test.pass("succeed");
     succeed = true;
-  }, 200);
+  }, 20);
 }
 
 exports.testWaitUntilNotEqual = function(test) {
   test.waitUntilDone();
   let succeed = false;
-  
-  test.waitUntilNotEqual("foo", function () succeed ? "bar" : "foo",
+
+  test.waitUntilNotEqual("foo", _ => succeed ? "bar" : "foo",
                          "waitUntilNotEqual pass")
-      .then(function () test.done());
-  
-  timer.setTimeout(function () {
+      .then(test.done);
+
+  timer.setTimeout(_ => {
+    test.pass("succeed");
     succeed = true;
-  }, 200);
+  }, 20);
 }
 
 exports.testWaitUntilMatches = function(test) {
   test.waitUntilDone();
   let succeed = false;
-  
-  test.waitUntilMatches(function () succeed ? "foo" : "bar",
+
+  test.waitUntilMatches(_ => succeed ? "foo" : "bar",
                         /foo/, "waitUntilEqual pass")
-      .then(function () test.done());
-  
-  timer.setTimeout(function () {
+      .then(test.done);
+
+  timer.setTimeout(_ => {
+    test.pass("succeed");
     succeed = true;
-  }, 200);
+  }, 20);
 }
 
 exports.testWaitUntilErrorInCallback = function(test) {
   test.waitUntilDone();
-
-  test.expectFail(function() {
-    test.waitUntil(function () {throw "oops"}, "waitUntil pass")
-        .then(function () test.done());
+  test.expectFail(_ => {
+    test.waitUntil(_ => { throw "oops"; }, "waitUntil pass")
+        .then(test.done);
   });
 }
 
@@ -195,26 +197,26 @@ exports.testAssertFunction = function(test) {
     test.assertFunction(function() {}, 'assertFunction with function');
     test.expectFail(function() {
         test.assertFunction(null, 'assertFunction with non-function');
-    });    
+    });
 };
 
 exports.testAssertUndefined = function(test) {
     test.assertUndefined(undefined, 'assertUndefined with undefined');
     test.expectFail(function() {
         test.assertUndefined(null, 'assertUndefined with null');
-    });    
+    });
     test.expectFail(function() {
         test.assertUndefined(false, 'assertUndefined with false');
-    });    
+    });
     test.expectFail(function() {
         test.assertUndefined(0, 'assertUndefined with 0');
-    });    
+    });
 };
 
 exports.testAssertNotUndefined = function(test) {
     test.expectFail(function() {
         test.assertNotUndefined(undefined, 'assertNotUndefined with undefined');
-    });    
+    });
     test.assertNotUndefined(null, 'assertNotUndefined with null');
     test.assertNotUndefined(false, 'assertNotUndefined with false');
     test.assertNotUndefined(0, 'assertNotUndefined with 0');
@@ -224,7 +226,7 @@ exports.testAssertNull = function(test) {
     test.assertNull(null, 'assertNull with null');
     test.expectFail(function() {
         test.assertNull(undefined, 'assertNull with undefined');
-    });    
+    });
     test.expectFail(function() {
         test.assertNull(false, 'assertNull with false');
     });
@@ -240,7 +242,7 @@ exports.testAssertNotNull = function(test) {
 
     test.expectFail(function() {
         test.assertNotNull(null, 'testAssertNotNull with null');
-    });    
+    });
 };
 
 exports.testAssertObject = function(test) {

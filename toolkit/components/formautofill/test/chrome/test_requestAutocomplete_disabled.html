@@ -1,0 +1,31 @@
+<!DOCTYPE HTML><html><head><meta charset="utf-8"></head><body>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+
+<form id="form">
+</form>
+
+<script type="application/javascript;version=1.7" src="head.js"></script>
+<script type="application/javascript;version=1.7">
+
+/*
+ * Tests the cases where the requestAutocomplete method returns "disabled".
+ */
+
+"use strict";
+
+/**
+ * Tests the case where the feature is disabled globally.
+ */
+add_task(function* test_disabled_globally() {
+  let promise = TestUtils.waitForEvent($("form"), "autocompleteerror");
+  $("form").requestAutocomplete();
+  let errorEvent = yield promise;
+
+  Assert.equal(errorEvent.reason, "disabled");
+});
+
+add_task(terminationTaskFn);
+
+</script>
+</body></html>
