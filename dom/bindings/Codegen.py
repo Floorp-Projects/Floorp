@@ -5891,7 +5891,7 @@ class MethodNotNewObjectError(Exception):
 # nested sequences we don't use the same variable name to iterate over
 # different sequences.
 sequenceWrapLevel = 0
-
+mapWrapLevel = 0
 
 def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
     """
@@ -5946,6 +5946,31 @@ def wrapTypeIntoCurrentCompartment(type, value, isMember=True):
         wrapCode = CGWrapper(CGIndenter(wrapElement),
                              pre=("for (uint32_t %s = 0; %s < %s.Length(); ++%s) {\n" %
                                   (index, index, value, index)),
+                             post="}\n")
+        if origType.nullable():
+            wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % origValue)
+        return wrapCode
+
+    if type.isMozMap():
+        origValue = value
+        origType = type
+        if type.nullable():
+            type = type.inner
+            value = "%s.Value()" % value
+        global mapWrapLevel
+        key = "mapName%d" % mapWrapLevel
+        mapWrapLevel += 1
+        wrapElement = wrapTypeIntoCurrentCompartment(type.inner,
+                                                     "%s.Get(%sKeys[%sIndex])" % (value, key, key))
+        mapWrapLevel -= 1
+        if not wrapElement:
+            return None
+        wrapCode = CGWrapper(CGIndenter(wrapElement),
+                             pre=("""
+                                  nsTArray<nsString> %sKeys;
+                                  %s.GetKeys(%sKeys);
+                                  for (uint32_t %sIndex = 0; %sIndex < %sKeys.Length(); ++%sIndex) {
+                                  """ % (key, value, key, key, key, key, key)),
                              post="}\n")
         if origType.nullable():
             wrapCode = CGIfWrapper(wrapCode, "!%s.IsNull()" % origValue)
@@ -6631,6 +6656,10 @@ class CGMethodCall(CGThing):
                                   distinguishingType(s).isSequence() or
                                   distinguishingType(s).isDictionary() or
                                   distinguishingType(s).isCallbackInterface()))
+
+            # Now append all the overloads that take MozMap:
+            objectSigs.extend(s for s in possibleSignatures
+                              if (distinguishingType(s).isMozMap()))
 
             # There might be more than one thing in objectSigs; we need to check
             # which ones we unwrap to.

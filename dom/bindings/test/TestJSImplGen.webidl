@@ -445,6 +445,9 @@ interface TestJSImplInterface {
   void passUnion21((MozMap<long> or long) arg);
   void passUnion22((MozMap<object> or long) arg);
   void passUnionWithCallback((EventHandler or long) arg);
+  void passUnionWithMozMap((MozMap<DOMString> or DOMString) arg);
+  void passUnionWithMozMapAndSequence((MozMap<DOMString> or sequence<DOMString>) arg);
+  void passUnionWithSequenceAndMozMap((sequence<DOMString> or MozMap<DOMString>) arg);
 #endif
   void passUnionWithNullable((object? or long) arg);
   void passNullableUnion((object or long)? arg);
