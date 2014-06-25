@@ -20,6 +20,11 @@ interface nsICacheStorageService : nsISupports
    * Get storage where entries will only remain in memory, never written
    * to the disk.
    *
+   * NOTE: Any existing disk entry for [URL|id-extension] will be doomed
+   * prior opening an entry using this memory-only storage.  Result of
+   * AsyncOpenURI will be a new and empty memory-only entry.  Using
+   * OPEN_READONLY open flag has no effect on this behavior.
+   *
    * @param aLoadContextInfo
    *    Information about the loading context, this focuses the storage JAR and
    *    respects separate storage for private browsing.
