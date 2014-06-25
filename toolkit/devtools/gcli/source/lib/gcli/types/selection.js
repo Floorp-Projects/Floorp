@@ -381,10 +381,10 @@ SelectionType.prototype._findValue = function(lookup, value) {
 };
 
 /**
- * SelectionType is designed to be inherited from, so SelectionField needs a way
- * to check if something works like a selection without using 'name'
+ * This is how we indicate to SelectionField that we have predictions that
+ * might work in a menu.
  */
-SelectionType.prototype.isSelection = true;
+SelectionType.prototype.hasPredictions = true;
 
 SelectionType.prototype.name = 'selection';
 
