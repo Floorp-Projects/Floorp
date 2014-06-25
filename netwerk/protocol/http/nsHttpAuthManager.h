@@ -20,10 +20,11 @@ public:
   NS_DECL_NSIHTTPAUTHMANAGER
 
   nsHttpAuthManager();
-  virtual ~nsHttpAuthManager();
   nsresult Init();
 
 protected:
+  virtual ~nsHttpAuthManager();
+
   nsHttpAuthCache *mAuthCache;
   nsHttpAuthCache *mPrivateAuthCache;
 };

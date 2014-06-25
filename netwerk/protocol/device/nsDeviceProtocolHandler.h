@@ -15,12 +15,13 @@
     {0xae, 0xb7, 0xda, 0x62, 0xe7, 0x27, 0x3e, 0xd5} }
 
 class nsDeviceProtocolHandler MOZ_FINAL : public nsIProtocolHandler {
+  ~nsDeviceProtocolHandler() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIPROTOCOLHANDLER
 
   nsDeviceProtocolHandler() {}
-  ~nsDeviceProtocolHandler() {}
 
   nsresult Init();
 };

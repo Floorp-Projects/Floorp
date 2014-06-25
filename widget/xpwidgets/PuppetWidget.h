@@ -312,9 +312,10 @@ public:
 
 class PuppetScreenManager MOZ_FINAL : public nsIScreenManager
 {
+    ~PuppetScreenManager();
+
 public:
     PuppetScreenManager();
-    ~PuppetScreenManager();
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSISCREENMANAGER

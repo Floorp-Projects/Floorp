@@ -35,6 +35,10 @@ TextTrackList::TextTrackList(nsPIDOMWindow* aOwnerWindow,
 {
 }
 
+TextTrackList::~TextTrackList()
+{
+}
+
 void
 TextTrackList::UpdateAndGetShowingCues(nsTArray<nsRefPtr<TextTrackCue> >& aCues)
 {

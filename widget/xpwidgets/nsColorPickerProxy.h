@@ -18,12 +18,13 @@ public:
   NS_DECL_NSICOLORPICKER
 
   nsColorPickerProxy() {}
-  ~nsColorPickerProxy() {}
 
   virtual bool RecvUpdate(const nsString& aColor) MOZ_OVERRIDE;
   virtual bool Recv__delete__(const nsString& aColor) MOZ_OVERRIDE;
 
 private:
+  ~nsColorPickerProxy() {}
+
   nsCOMPtr<nsIColorPickerShownCallback> mCallback;
   nsString mTitle;
   nsString mInitialColor;

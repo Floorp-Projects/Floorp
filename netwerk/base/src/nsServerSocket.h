@@ -29,10 +29,9 @@ public:
   virtual uint64_t ByteCountReceived() { return 0; }
   nsServerSocket();
 
-  // This must be public to support older compilers (xlC_r on AIX)
+private:
   virtual ~nsServerSocket();
 
-private:
   void OnMsgClose();
   void OnMsgAttach();
   

@@ -58,7 +58,7 @@ js::CreateRegExpMatchResult(JSContext *cx, HandleString input, const MatchPairs 
             arr->setDenseInitializedLength(i + 1);
             arr->initDenseElement(i, UndefinedValue());
         } else {
-            JSLinearString *str = js_NewDependentString(cx, input, pair.start, pair.length());
+            JSLinearString *str = NewDependentString(cx, input, pair.start, pair.length());
             if (!str)
                 return false;
             arr->setDenseInitializedLength(i + 1);

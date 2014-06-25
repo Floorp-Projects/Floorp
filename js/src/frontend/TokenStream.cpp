@@ -328,6 +328,7 @@ TokenStream::TokenStream(ExclusiveContext *cx, const ReadOnlyCompileOptions &opt
     maybeStrSpecial[unsigned('"')] = true;
 #ifdef JS_HAS_TEMPLATE_STRINGS
     maybeStrSpecial[unsigned('`')] = true;
+    maybeStrSpecial[unsigned('$')] = true;
 #endif
     maybeStrSpecial[unsigned('\'')] = true;
     maybeStrSpecial[unsigned('\\')] = true;
@@ -1051,9 +1052,6 @@ enum FirstCharKind {
     EOL,
     BasePrefix,
     Other,
-#ifdef JS_HAS_TEMPLATE_STRINGS
-    TemplateString,
-#endif
 
     LastCharKind = Other
 };
@@ -1074,7 +1072,7 @@ enum FirstCharKind {
 #define T_COLON     TOK_COLON
 #define T_BITNOT    TOK_BITNOT
 #ifdef JS_HAS_TEMPLATE_STRINGS
-#define Templat     TemplateString
+#define Templat     String
 #else
 #define Templat     Other
 #endif
@@ -1115,6 +1113,16 @@ TokenStream::getTokenInternal(Modifier modifier)
     DecimalPoint decimalPoint;
     const jschar *identStart;
     bool hadUnicodeEscape;
+
+    // Check if in the middle of a template string. Have to get this out of
+    // the way first.
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    if (MOZ_UNLIKELY(modifier == TemplateTail)) {
+        if (!getStringOrTemplateToken('`', &tp))
+            goto error;
+        goto out;
+    }
+#endif
 
   retry:
     if (MOZ_UNLIKELY(!userbuf.hasRawChars())) {
@@ -1299,133 +1307,9 @@ TokenStream::getTokenInternal(Modifier modifier)
 
     // Look for a string or a template string.
     //
-    if (c1kind == String
-#ifdef JS_HAS_TEMPLATE_STRINGS
-         || c1kind == TemplateString
-#endif
-         ) {
-        tp = newToken(-1);
-        qc = c;
-        tokenbuf.clear();
-        while (true) {
-            // We need to detect any of these chars:  " or ', \n (or its
-            // equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
-            // similar to maybeEOL[], see above.  Because we detect EOL
-            // sequences here and put them back immediately, we can use
-            // getCharIgnoreEOL().
-            c = getCharIgnoreEOL();
-            if (maybeStrSpecial[c & 0xff]) {
-                if (c == qc)
-                    break;
-                if (c == '\\') {
-                    switch (c = getChar()) {
-                      case 'b': c = '\b'; break;
-                      case 'f': c = '\f'; break;
-                      case 'n': c = '\n'; break;
-                      case 'r': c = '\r'; break;
-                      case 't': c = '\t'; break;
-                      case 'v': c = '\v'; break;
-
-                      default:
-                        if ('0' <= c && c < '8') {
-                            int32_t val = JS7_UNDEC(c);
-
-                            c = peekChar();
-                            // Strict mode code allows only \0, then a non-digit.
-                            if (val != 0 || JS7_ISDEC(c)) {
-#ifdef JS_HAS_TEMPLATE_STRINGS
-                                if (c1kind == TemplateString) {
-                                    reportError(JSMSG_DEPRECATED_OCTAL);
-                                    goto error;
-                                }
-#endif
-                                if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
-                                    goto error;
-                                flags.sawOctalEscape = true;
-                            }
-                            if ('0' <= c && c < '8') {
-                                val = 8 * val + JS7_UNDEC(c);
-                                getChar();
-                                c = peekChar();
-                                if ('0' <= c && c < '8') {
-                                    int32_t save = val;
-                                    val = 8 * val + JS7_UNDEC(c);
-                                    if (val <= 0377)
-                                        getChar();
-                                    else
-                                        val = save;
-                                }
-                            }
-
-                            c = jschar(val);
-                        } else if (c == 'u') {
-                            jschar cp[4];
-                            if (peekChars(4, cp) &&
-                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) &&
-                                JS7_ISHEX(cp[2]) && JS7_ISHEX(cp[3])) {
-                                c = (((((JS7_UNHEX(cp[0]) << 4)
-                                        + JS7_UNHEX(cp[1])) << 4)
-                                      + JS7_UNHEX(cp[2])) << 4)
-                                    + JS7_UNHEX(cp[3]);
-                                skipChars(4);
-                            } else {
-                                reportError(JSMSG_MALFORMED_ESCAPE, "Unicode");
-                                goto error;
-                            }
-                        } else if (c == 'x') {
-                            jschar cp[2];
-                            if (peekChars(2, cp) &&
-                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1])) {
-                                c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
-                                skipChars(2);
-                            } else {
-                                reportError(JSMSG_MALFORMED_ESCAPE, "hexadecimal");
-                                goto error;
-                            }
-                        } else if (c == '\n') {
-                            // ES5 7.8.4: an escaped line terminator represents
-                            // no character.
-                            continue;
-                        }
-                        break;
-                    }
-                } else if (c == EOF) {
-                    ungetCharIgnoreEOL(c);
-                    reportError(JSMSG_UNTERMINATED_STRING);
-                    goto error;
-                } else if (TokenBuf::isRawEOLChar(c)) {
-#ifdef JS_HAS_TEMPLATE_STRINGS
-                    if (c1kind == String) {
-#endif
-                        ungetCharIgnoreEOL(c);
-                        reportError(JSMSG_UNTERMINATED_STRING);
-                        goto error;
-#ifdef JS_HAS_TEMPLATE_STRINGS
-                    }
-                    if (c == '\r') {
-                        c = '\n';
-                        if (peekChar() == '\n')
-                            skipChars(1);
-                    }
-#endif
-                }
-            }
-            if (!tokenbuf.append(c))
-                goto error;
-        }
-        JSAtom *atom = atomize(cx, tokenbuf);
-        if (!atom)
+    if (c1kind == String) {
+        if (!getStringOrTemplateToken(c, &tp))
             goto error;
-#ifdef JS_HAS_TEMPLATE_STRINGS
-        if (c1kind == String) {
-#endif
-            tp->type = TOK_STRING;
-#ifdef JS_HAS_TEMPLATE_STRINGS
-        } else {
-            tp->type = TOK_TEMPLATE_STRING;
-        }
-#endif
-        tp->setAtom(atom);
         goto out;
     }
 
@@ -1759,6 +1643,143 @@ TokenStream::getTokenInternal(Modifier modifier)
     return TOK_ERROR;
 }
 
+bool TokenStream::getStringOrTemplateToken(int qc, Token **tp)
+{
+    *tp = newToken(-1);
+    int c;
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    int nc = -1;
+#endif
+    tokenbuf.clear();
+    while (true) {
+        // We need to detect any of these chars:  " or ', \n (or its
+        // equivalents), \\, EOF.  We use maybeStrSpecial[] in a manner
+        // similar to maybeEOL[], see above.  Because we detect EOL
+        // sequences here and put them back immediately, we can use
+        // getCharIgnoreEOL().
+        c = getCharIgnoreEOL();
+        if (maybeStrSpecial[c & 0xff]) {
+            if (c == qc)
+                break;
+            if (c == '\\') {
+                switch (c = getChar()) {
+                  case 'b': c = '\b'; break;
+                  case 'f': c = '\f'; break;
+                  case 'n': c = '\n'; break;
+                  case 'r': c = '\r'; break;
+                  case 't': c = '\t'; break;
+                  case 'v': c = '\v'; break;
+
+                  default:
+                    if ('0' <= c && c < '8') {
+                        int32_t val = JS7_UNDEC(c);
+
+                        c = peekChar();
+                        // Strict mode code allows only \0, then a non-digit.
+                        if (val != 0 || JS7_ISDEC(c)) {
+#ifdef JS_HAS_TEMPLATE_STRINGS
+                            if (qc == '`') {
+                                reportError(JSMSG_DEPRECATED_OCTAL);
+                                return false;
+                            }
+#endif
+                            if (!reportStrictModeError(JSMSG_DEPRECATED_OCTAL))
+                                return false;
+                            flags.sawOctalEscape = true;
+                        }
+                        if ('0' <= c && c < '8') {
+                            val = 8 * val + JS7_UNDEC(c);
+                            getChar();
+                            c = peekChar();
+                            if ('0' <= c && c < '8') {
+                                int32_t save = val;
+                                val = 8 * val + JS7_UNDEC(c);
+                                if (val <= 0377)
+                                    getChar();
+                                else
+                                    val = save;
+                            }
+                        }
+
+                        c = jschar(val);
+                    } else if (c == 'u') {
+                        jschar cp[4];
+                        if (peekChars(4, cp) &&
+                            JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1]) &&
+                            JS7_ISHEX(cp[2]) && JS7_ISHEX(cp[3])) {
+                            c = (((((JS7_UNHEX(cp[0]) << 4)
+                                    + JS7_UNHEX(cp[1])) << 4)
+                                  + JS7_UNHEX(cp[2])) << 4)
+                                + JS7_UNHEX(cp[3]);
+                            skipChars(4);
+                        } else {
+                            reportError(JSMSG_MALFORMED_ESCAPE, "Unicode");
+                            return false;
+                        }
+                    } else if (c == 'x') {
+                        jschar cp[2];
+                        if (peekChars(2, cp) &&
+                                JS7_ISHEX(cp[0]) && JS7_ISHEX(cp[1])) {
+                            c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
+                            skipChars(2);
+                        } else {
+                            reportError(JSMSG_MALFORMED_ESCAPE, "hexadecimal");
+                            return false;
+                        }
+                    } else if (c == '\n') {
+                        // ES5 7.8.4: an escaped line terminator represents
+                        // no character.
+                        continue;
+                    }
+                    break;
+                }
+            } else if (c == EOF) {
+                ungetCharIgnoreEOL(c);
+                reportError(JSMSG_UNTERMINATED_STRING);
+                return false;
+            } else if (TokenBuf::isRawEOLChar(c)) {
+#ifdef JS_HAS_TEMPLATE_STRINGS
+                if (qc != '`') {
+#endif
+                    ungetCharIgnoreEOL(c);
+                    reportError(JSMSG_UNTERMINATED_STRING);
+                    return false;
+#ifdef JS_HAS_TEMPLATE_STRINGS
+                }
+                if (c == '\r') {
+                    c = '\n';
+                    if (peekChar() == '\n')
+                        skipChars(1);
+                }
+            } else if (qc == '`' && c == '$') {
+                if ((nc = getCharIgnoreEOL()) == '{')
+                    break;
+                ungetCharIgnoreEOL(nc);
+#endif
+            }
+        }
+        if (!tokenbuf.append(c))
+            return false;
+    }
+    JSAtom *atom = atomize(cx, tokenbuf);
+    if (!atom)
+        return false;
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    if (qc != '`') {
+#endif
+        (*tp)->type = TOK_STRING;
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    } else {
+        if (c == '$' && nc == '{')
+            (*tp)->type = TOK_TEMPLATE_HEAD;
+        else
+            (*tp)->type = TOK_NO_SUBS_TEMPLATE;
+    }
+#endif
+    (*tp)->setAtom(atom);
+    return true;
+}
+
 void
 TokenStream::onError()
 {
@@ -1840,7 +1861,8 @@ TokenKindToString(TokenKind tt)
       case TOK_NUMBER:          return "TOK_NUMBER";
       case TOK_STRING:          return "TOK_STRING";
 #ifdef JS_HAS_TEMPLATE_STRINGS
-      case TOK_TEMPLATE_STRING: return "TOK_TEMPLATE_STRING";
+      case TOK_TEMPLATE_HEAD:   return "TOK_TEMPLATE_HEAD";
+      case TOK_NO_SUBS_TEMPLATE:return "TOK_NO_SUBS_TEMPLATE";
 #endif
       case TOK_REGEXP:          return "TOK_REGEXP";
       case TOK_TRUE:            return "TOK_TRUE";

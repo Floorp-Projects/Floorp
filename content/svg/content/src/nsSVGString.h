@@ -61,8 +61,6 @@ public:
       , mVal(aVal)
     {}
 
-    virtual ~DOMAnimatedString();
-
     nsSVGString* mVal; // kept alive because it belongs to content
 
     void GetBaseVal(nsAString & aResult) MOZ_OVERRIDE
@@ -81,6 +79,8 @@ public:
       mVal->GetAnimValue(aResult, mSVGElement);
     }
 
+  private:
+    virtual ~DOMAnimatedString();
   };
   struct SMILString : public nsISMILAttr
   {

@@ -2135,7 +2135,7 @@ GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
 static inline uint32_t
 GetArgStackDisp(uint32_t arg)
 {
-    JS_ASSERT(!useHardFpABI());
+    JS_ASSERT(!UseHardFpABI());
     JS_ASSERT(arg >= NumIntArgRegs);
     return (arg - NumIntArgRegs) * sizeof(intptr_t);
 }
@@ -2148,7 +2148,7 @@ GetArgStackDisp(uint32_t arg)
 static inline bool
 GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
 {
-    JS_ASSERT(useHardFpABI());
+    JS_ASSERT(UseHardFpABI());
     if (usedFloatArgs >= NumFloatArgRegs)
         return false;
     *out = FloatRegister::FromCode(usedFloatArgs);
@@ -2158,7 +2158,7 @@ GetFloatArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, FloatRegister *out)
 static inline uint32_t
 GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
-    JS_ASSERT(useHardFpABI());
+    JS_ASSERT(UseHardFpABI());
     JS_ASSERT(usedIntArgs >= NumIntArgRegs);
     uint32_t doubleSlots = Max(0, (int32_t)usedFloatArgs - (int32_t)NumFloatArgRegs);
     doubleSlots *= 2;
@@ -2169,7 +2169,7 @@ GetIntArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *paddi
 static inline uint32_t
 GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
-    JS_ASSERT(useHardFpABI());
+    JS_ASSERT(UseHardFpABI());
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs)
@@ -2181,7 +2181,7 @@ GetFloat32ArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *p
 static inline uint32_t
 GetDoubleArgStackDisp(uint32_t usedIntArgs, uint32_t usedFloatArgs, uint32_t *padding)
 {
-    JS_ASSERT(useHardFpABI());
+    JS_ASSERT(UseHardFpABI());
     JS_ASSERT(usedFloatArgs >= NumFloatArgRegs);
     uint32_t intSlots = 0;
     if (usedIntArgs > NumIntArgRegs) {

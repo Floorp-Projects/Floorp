@@ -138,6 +138,7 @@ MOZ_END_ENUM_CLASS(GLVendor)
 MOZ_BEGIN_ENUM_CLASS(GLRenderer)
     Adreno200,
     Adreno205,
+    AdrenoTM200,
     AdrenoTM205,
     AdrenoTM320,
     SGX530,

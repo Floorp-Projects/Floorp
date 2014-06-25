@@ -17,10 +17,10 @@ namespace net {
 class CacheObserver : public nsIObserver
                     , public nsSupportsWeakReference
 {
+  virtual ~CacheObserver() {}
+
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
-
-  virtual ~CacheObserver() {}
 
   static nsresult Init();
   static nsresult Shutdown();

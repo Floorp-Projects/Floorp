@@ -32,13 +32,14 @@ public:
     NS_DECL_NSIRESPROTOCOLHANDLER
 
     nsResProtocolHandler();
-    virtual ~nsResProtocolHandler();
 
     nsresult Init();
 
     void CollectSubstitutions(InfallibleTArray<ResourceMapping>& aResources);
 
 private:
+    virtual ~nsResProtocolHandler();
+
     nsresult Init(nsIFile *aOmniJar);
     nsresult AddSpecialDir(const char* aSpecialDir, const nsACString& aSubstitution);
     nsInterfaceHashtable<nsCStringHashKey,nsIURI> mSubstitutions;
