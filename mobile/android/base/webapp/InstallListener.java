@@ -16,7 +16,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -25,11 +24,19 @@ public class InstallListener extends BroadcastReceiver {
     private static String LOGTAG = "GeckoWebappInstallListener";
     private JSONObject mData = null;
     private String mManifestUrl;
+    private boolean mReceived = false;
+    private File mApkFile;
 
-    public InstallListener(String manifestUrl, JSONObject data) {
+    public InstallListener(String manifestUrl, JSONObject data, File apkFile) {
         mData = data;
+        mApkFile = apkFile;
         mManifestUrl = manifestUrl;
         assert mManifestUrl != null;
+        assert mApkFile != null && mApkFile.exists();
+    }
+
+    public boolean isReceived() {
+        return mReceived;
     }
 
     @Override
@@ -61,6 +68,15 @@ public class InstallListener extends BroadcastReceiver {
             return;
         }
 
+        // If we're here then everything is looking good and installation can continue.
+        mReceived = true;
+        context.unregisterReceiver(this);
+
+        if (mApkFile != null && mApkFile.delete()) {
+            Log.i(LOGTAG, "Downloaded APK file deleted");
+        }
+
+
         if (GeckoThread.checkLaunchState(GeckoThread.LaunchState.GeckoRunning)) {
             InstallHelper installHelper = new InstallHelper(context, apkResources, null);
             try {
@@ -76,11 +92,6 @@ public class InstallListener extends BroadcastReceiver {
                 Log.e(LOGTAG, "Couldn't install packaged app", e);
             }
         }
-
-        cleanup();
-
-        // we don't need this anymore.
-        context.unregisterReceiver(this);
     }
 
     public boolean isCorrectManifest(String manifestUrl) {
@@ -96,13 +107,4 @@ public class InstallListener extends BroadcastReceiver {
         return false;
     }
 
-    public void cleanup() {
-        String manifestUrlFilename = mManifestUrl.replaceAll("[^a-zA-Z0-9]", "");
-
-        File apkFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), manifestUrlFilename + ".apk");
-        if (apkFile.exists()) {
-            apkFile.delete();
-            Log.i(LOGTAG, "Downloaded APK file deleted");
-        }
-    }
 }

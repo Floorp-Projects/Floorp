@@ -108,6 +108,13 @@ public final class WebActivityMapper {
         public String getAction() {
             return Intent.ACTION_GET_CONTENT;
         }
+
+        @Override
+        public String getMime(JSONObject data) throws JSONException {
+            // bug 1007112 - pick action needs a mimetype to work
+            String mime = data.optString("type", null);
+            return !TextUtils.isEmpty(mime) ? mime : "*/*";
+        }
     }
 
     private static class SendMapping extends BaseMapping {
