@@ -91,52 +91,7 @@ static bool sNuwaForking = false;
 static NuwaProtoFdInfo sProtoFdInfos[NUWA_TOPLEVEL_MAX];
 static int sProtoFdInfosSize = 0;
 
-template <typename T>
-struct LibcAllocator: public std::allocator<T>
-{
-  LibcAllocator()
-  {
-    void* libcHandle = dlopen("libc.so", RTLD_LAZY);
-    mMallocImpl = reinterpret_cast<void*(*)(size_t)>(dlsym(libcHandle, "malloc"));
-    mFreeImpl = reinterpret_cast<void(*)(void*)>(dlsym(libcHandle, "free"));
-
-    if (!(mMallocImpl && mFreeImpl)) {
-      // libc should be available, or we'll deadlock in using TLSInfoList.
-      abort();
-    }
-  }
-
-  inline typename std::allocator<T>::pointer
-  allocate(typename std::allocator<T>::size_type n,
-           const void * = 0)
-  {
-    return reinterpret_cast<T *>(mMallocImpl(sizeof(T) * n));
-  }
-
-  inline void
-  deallocate(typename std::allocator<T>::pointer p,
-             typename std::allocator<T>::size_type n)
-  {
-    mFreeImpl(p);
-  }
-
-  template<typename U>
-  struct rebind
-  {
-    typedef LibcAllocator<U> other;
-  };
-private:
-  void* (*mMallocImpl)(size_t);
-  void (*mFreeImpl)(void*);
-};
-
-/**
- * TLSInfoList should use malloc() and free() in libc to avoid the deadlock that
- * jemalloc calls into __wrap_pthread_mutex_lock() and then deadlocks while
- * the same thread already acquired sThreadCountLock.
- */
-typedef std::vector<std::pair<pthread_key_t, void *>,
-                    LibcAllocator<std::pair<pthread_key_t, void *> > >
+typedef std::vector<std::pair<pthread_key_t, void *> >
 TLSInfoList;
 
 /**
