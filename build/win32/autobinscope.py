@@ -46,8 +46,7 @@ except KeyError:
 try:    
   proc = subprocess.Popen([binscope_path, "/target", binary_path,
     "/output", log_file_path, "/sympath", symbol_path,
-    "/c", "ATLVersionCheck", "/c", "ATLVulnCheck", "/c", "FunctionPointersCheck",
-    "/c", "SharedSectionCheck", "/c", "APTCACheck", "/c", "NXCheck",
+    "/c", "ATLVersionCheck", "/c", "ATLVulnCheck", "/c", "SharedSectionCheck", "/c", "APTCACheck", "/c", "NXCheck",
     "/c", "GSCheck", "/c", "GSFunctionSafeBuffersCheck", "/c", "GSFriendlyInitCheck",
     "/c", "CompilerVersionCheck", "/c", "SafeSEHCheck", "/c", "SNCheck",
     "/c", "DBCheck"], stdout=subprocess.PIPE)
