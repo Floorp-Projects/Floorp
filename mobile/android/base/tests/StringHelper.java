@@ -149,6 +149,8 @@ public class StringHelper {
     public static final String TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
 
     // Desktop default bookmarks folders
+    public static final String BOOKMARKS_UP_TO = "Up to %s";
+    public static final String BOOKMARKS_ROOT_LABEL = "Bookmarks";
     public static final String DESKTOP_FOLDER_LABEL = "Desktop Bookmarks";
     public static final String TOOLBAR_FOLDER_LABEL = "Bookmarks Toolbar";
     public static final String BOOKMARKS_MENU_FOLDER_LABEL = "Bookmarks Menu";

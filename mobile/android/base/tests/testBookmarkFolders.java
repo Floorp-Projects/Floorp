@@ -40,10 +40,10 @@ public class testBookmarkFolders extends AboutHomeTest {
         clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
 
         // Go up in the bookmark folder hierarchy
-        clickOnBookmarkFolder(StringHelper.TOOLBAR_FOLDER_LABEL);
+        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.DESKTOP_FOLDER_LABEL));
         mAsserter.ok(waitForText(StringHelper.BOOKMARKS_MENU_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the Desktop Bookmarks folder");
 
-        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.BOOKMARKS_ROOT_LABEL));
         mAsserter.ok(waitForText(StringHelper.DESKTOP_FOLDER_LABEL), "Going up in the folder hierarchy", "We are back in the main Bookmarks List View");
 
         clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
@@ -74,7 +74,7 @@ public class testBookmarkFolders extends AboutHomeTest {
         mAsserter.ok(!waitForText(contextMenuString), "Folders do not have context menus", "The context menu was not opened");
 
         // Even if no context menu is opened long clicking a folder still opens it. We need to close it.
-        clickOnBookmarkFolder(StringHelper.DESKTOP_FOLDER_LABEL);
+        clickOnBookmarkFolder(String.format(StringHelper.BOOKMARKS_UP_TO, StringHelper.BOOKMARKS_ROOT_LABEL));
     }
 
     private void clickOnBookmarkFolder(final String folderName) {
