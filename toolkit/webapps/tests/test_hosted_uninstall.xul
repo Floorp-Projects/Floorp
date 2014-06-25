@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=898647
+-->
+<window title="Mozilla Bug 898647"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="head.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=898647"
+     target="_blank">Mozilla Bug 898647</a>
+  </body>
+
+<script type="application/javascript">
+<![CDATA[
+
+/** Test for Bug 898647 **/
+
+"use strict";
+
+SimpleTest.waitForExplicitFinish();
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NativeApp.jsm");
+Cu.import("resource://gre/modules/WebappOSUtils.jsm");
+
+let manifest = {
+  name: "Sample hosted app",
+};
+
+let app = {
+  name: "Sample hosted app",
+  manifestURL: "http://example.com/sample.manifest",
+  manifest: manifest,
+  origin: "http://example.com/",
+  categories: [],
+  installOrigin: "http://example.com/",
+  receipts: [],
+  installTime: Date.now(),
+};
+
+let testAppInfo = new TestAppInfo(app);
+
+let runTest = Task.async(function*() {
+  // Get to a clean state before the test
+  yield testAppInfo.cleanup();
+
+  SimpleTest.registerCleanupFunction(() => testAppInfo.cleanup());
+
+  setDryRunPref();
+
+  let nativeApp = new NativeApp(app, manifest, app.categories);
+  ok(nativeApp, "NativeApp object created");
+
+  testAppInfo.profileDir = nativeApp.createProfile();
+  ok(testAppInfo.profileDir && testAppInfo.profileDir.exists(), "Profile directory created");
+  ok((yield OS.File.exists(testAppInfo.profilesIni)), "profiles.ini file created");
+
+  // On Mac build servers, we don't have enough privileges to write to /Applications,
+  // so we install apps in a user-owned directory.
+  if (MAC) {
+    nativeApp._rootInstallDir = OS.Path.join(OS.Constants.Path.homeDir, "Applications");
+    yield OS.File.makeDir(nativeApp._rootInstallDir, { ignoreExisting: true });
+  }
+
+  // Install application
+  info("Test installation");
+  yield nativeApp.install(manifest);
+  while (!WebappOSUtils.isLaunchable(app)) {
+    yield wait(1000);
+  }
+  ok(true, "App launchable");
+  ok((yield checkFiles(testAppInfo.installedFiles)), "Files correctly written");
+  is(WebappOSUtils.getInstallPath(app), testAppInfo.installPath, "getInstallPath == installPath");
+
+  // Uninstall application
+  info("Test uninstallation");
+  ok((yield WebappOSUtils.uninstall(app)), "Application uninstalled");
+
+  ok(testAppInfo.profileDir.exists(), "Profile directory still existent");
+
+  if (LINUX) {
+    ok((yield dirContainsOnly(testAppInfo.installPath,
+                              [
+                                testAppInfo.profileDir.path,
+                                testAppInfo.profilesIni
+                              ])),
+       "Files correctly removed");
+  } else if (WIN) {
+    ok((yield dirContainsOnly(testAppInfo.installPath, 
+                              [
+                                testAppInfo.profileDir.parent.path,
+                                testAppInfo.profilesIni,
+                                OS.Path.join(testAppInfo.installPath, "uninstall")
+                              ])),
+       "Files correctly removed");
+  } else if (MAC) {
+    ok(!(yield OS.File.exists(testAppInfo.installPath)), "Files correctly removed");
+  }
+  // On Mac, the app is moved to the trash, it is still considered launchable
+  // (because it does have a install path).
+  if (!MAC) {
+    ok(!WebappOSUtils.isLaunchable(app), "App not launchable");
+    is(WebappOSUtils.getInstallPath(app), null, "getInstallPath == null");
+  } else {
+    testAppInfo.trashDir = WebappOSUtils.getInstallPath(app);
+    ok(testAppInfo.trashDir.contains(".Trash"), "App moved to Trash");
+  }
+
+  is(WebappOSUtils.launch(app), false, "Launch fails");
+
+  // On Mac, after we've tried to launch the app, its install path becomes null
+  // We can now repeat the tests we've already done on the other platforms:
+  if (MAC) {
+    while (WebappOSUtils.isLaunchable(app)) {
+      yield wait(1000);
+    }
+    ok(true, "App not launchable");
+
+    is(WebappOSUtils.getInstallPath(app), null, "getInstallPath == null");
+  }
+
+  let exc;
+  try {
+    yield WebappOSUtils.uninstall(app);
+  } catch (e) {
+    exc = e;
+  }
+  ok(!!exc, "Re-uninstalling failed");
+
+  SimpleTest.finish();
+});
+
+runTest().catch((e) => {
+  ok(false, "Error during test: " + e);
+  SimpleTest.finish();
+});
+
+]]>
+</script>
+</window>
