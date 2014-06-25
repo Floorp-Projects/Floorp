@@ -11,9 +11,9 @@ import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.Vector;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
@@ -744,6 +744,7 @@ abstract public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.add_search_engine) {
+            // This can be selected from either the browser menu or the contextmenu, depending on the size and version (v11+) of the phone.
             Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab != null && tab.hasOpenSearch()) {
                 JSONObject args = new JSONObject();
@@ -754,6 +755,10 @@ abstract public class BrowserApp extends GeckoApp
                     return true;
                 }
                 GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("SearchEngines:Add", args.toString()));
+
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+                    Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU, "add_search_engine");
+                }
             }
             return true;
         }
