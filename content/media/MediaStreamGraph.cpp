@@ -403,7 +403,9 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     // Calculate blocked time and fire Blocked/Unblocked events
     GraphTime blockedTime = 0;
     GraphTime t = prevCurrentTime;
-    while (t < nextCurrentTime) {
+    // include |nextCurrentTime| to ensure NotifyBlockingChanged() is called
+    // before NotifyFinished() when |nextCurrentTime == stream end time|
+    while (t <= nextCurrentTime) {
       GraphTime end;
       bool blocked = stream->mBlocked.GetAt(t, &end);
       if (blocked) {
@@ -458,6 +460,8 @@ MediaStreamGraphImpl::UpdateCurrentTime()
     // out.
     if (mCurrentTime >=
           stream->StreamTimeToGraphTime(stream->GetStreamBuffer().GetAllTracksEnd()))  {
+      NS_WARN_IF_FALSE(stream->mNotifiedBlocked,
+        "Should've notified blocked=true for a fully finished stream");
       stream->mNotifiedFinished = true;
       stream->mLastPlayedVideoFrame.SetNull();
       SetStreamOrderDirty();
@@ -695,7 +699,7 @@ MediaStreamGraphImpl::RecomputeBlocking(GraphTime aEndBlockingDecisions)
                               this, MediaTimeToSeconds(mStateComputedTime),
                               MediaTimeToSeconds(aEndBlockingDecisions)));
   mStateComputedTime = aEndBlockingDecisions;
- 
+
   if (blockingDecisionsWillChange) {
     // Make sure we wake up to notify listeners about these changes.
     EnsureNextIteration();
@@ -2135,7 +2139,7 @@ MediaStream::AddListener(MediaStreamListener* aListener)
 
 void
 MediaStream::RemoveListenerImpl(MediaStreamListener* aListener)
-{ 
+{
   // wouldn't need this if we could do it in the opposite order
   nsRefPtr<MediaStreamListener> listener(aListener);
   mListeners.RemoveElement(aListener);
