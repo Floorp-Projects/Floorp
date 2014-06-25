@@ -14,10 +14,12 @@ const {method, custom, Arg, Option, RetVal} = protocol;
 
 exports.register = function(handle) {
   handle.addTabActor(FramerateActor, "framerateActor");
+  handle.addGlobalActor(FramerateActor, "framerateActor");
 };
 
 exports.unregister = function(handle) {
   handle.removeTabActor(FramerateActor);
+  handle.removeGlobalActor(FramerateActor);
 };
 
 /**
