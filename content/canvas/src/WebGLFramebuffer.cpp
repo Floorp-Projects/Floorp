@@ -542,7 +542,7 @@ WebGLFramebuffer::DetachTexture(const WebGLTexture* tex)
     size_t count = mColorAttachments.Length();
     for (size_t i = 0; i < count; i++) {
         if (mColorAttachments[i].Texture() == tex) {
-            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_TEXTURE_2D, nullptr, 0);
+            FramebufferTexture2D(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0+i, LOCAL_GL_TEXTURE_2D, nullptr, 0);
             // a texture might be attached more that once while editing the framebuffer
         }
     }
@@ -560,8 +560,8 @@ WebGLFramebuffer::DetachRenderbuffer(const WebGLRenderbuffer* rb)
 {
     size_t count = mColorAttachments.Length();
     for (size_t i = 0; i < count; i++) {
-        if (mColorAttachments[0].Renderbuffer() == rb) {
-            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0, LOCAL_GL_RENDERBUFFER, nullptr);
+        if (mColorAttachments[i].Renderbuffer() == rb) {
+            FramebufferRenderbuffer(LOCAL_GL_FRAMEBUFFER, LOCAL_GL_COLOR_ATTACHMENT0+i, LOCAL_GL_RENDERBUFFER, nullptr);
             // a renderbuffer might be attached more that once while editing the framebuffer
         }
     }
