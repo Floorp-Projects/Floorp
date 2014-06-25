@@ -14,13 +14,13 @@ class nsHTMLFormatConverter : public nsIFormatConverter
 public:
 
   nsHTMLFormatConverter();
-  virtual ~nsHTMLFormatConverter();
 
-    // nsISupports
+  // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIFORMATCONVERTER
 
 protected:
+  virtual ~nsHTMLFormatConverter();
 
   nsresult AddFlavorToList ( nsISupportsArray* inList, const char* inFlavor ) ;
 

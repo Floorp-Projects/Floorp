@@ -33,24 +33,22 @@ function runTests(findAndRunTests) {
   // are not correctly updated.
   // For ex: nsIFocusManager.getFocusedElementForWindow may throw
   // NS_ERROR_ILLEGAL_VALUE exception.
-  require("../timers").setTimeout(function () {
-    harness.runTests({
-      findAndRunTests: findAndRunTests,
-      iterations: cfxArgs.iterations || 1,
-      filter: cfxArgs.filter,
-      profileMemory: cfxArgs.profileMemory,
-      stopOnError: cfxArgs.stopOnError,
-      verbose: cfxArgs.verbose,
-      parseable: cfxArgs.parseable,
-      print: stdout.write,
-      onDone: onDone
-    });
-  }, 0);
+  require("../timers").setTimeout(_ => harness.runTests({
+    findAndRunTests: findAndRunTests,
+    iterations: cfxArgs.iterations || 1,
+    filter: cfxArgs.filter,
+    profileMemory: cfxArgs.profileMemory,
+    stopOnError: cfxArgs.stopOnError,
+    verbose: cfxArgs.verbose,
+    parseable: cfxArgs.parseable,
+    print: stdout.write,
+    onDone: onDone
+  }));
 }
 
 function printFailedTests(tests, print) {
   let iterationNumber = 0;
-  let singleIteration = tests.testRuns.length == 1;
+  let singleIteration = (tests.testRuns || []).length == 1;
   let padding = singleIteration ? "" : "  ";
 
   print("\nThe following tests failed:\n");
@@ -94,7 +92,7 @@ exports.runTestsFromModule = function runTestsFromModule(module) {
   let id = module.id;
   // Make a copy of exports as it may already be frozen by module loader
   let exports = {};
-  Object.keys(module.exports).forEach(function(key) {
+  Object.keys(module.exports).forEach(key => {
     exports[key] = module.exports[key];
   });
 
@@ -102,7 +100,7 @@ exports.runTestsFromModule = function runTestsFromModule(module) {
     // Consider that all these tests are CommonJS ones
     loader.require('../../test').run(exports);
 
-    // Reproduce what is done in unit-test-finder.findTests()
+    // Reproduce what is done in sdk/deprecated/unit-test-finder.findTests()
     let tests = [];
     for each (let name in Object.keys(exports).sort()) {
       tests.push({

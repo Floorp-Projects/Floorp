@@ -81,12 +81,12 @@ class STUNUDPSocketFilter : public nsIUDPSocketFilter {
     : white_list_(),
       pending_requests_() {}
 
-  virtual ~STUNUDPSocketFilter() {}
-
   NS_DECL_ISUPPORTS
   NS_DECL_NSIUDPSOCKETFILTER
 
  private:
+  virtual ~STUNUDPSocketFilter() {}
+
   bool filter_incoming_packet(const mozilla::net::NetAddr *remote_addr,
                               const uint8_t *data,
                               uint32_t len);

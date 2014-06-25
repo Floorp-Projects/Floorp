@@ -63,6 +63,7 @@ public:
     mPt.mY = aPt->GetY();
   }
 
+protected:
   virtual ~nsISVGPoint()
   {
     // Our mList's weak ref to us must be nulled out when we die. If GC has
@@ -73,6 +74,7 @@ public:
     }
   }
 
+public:
   /**
    * Create an unowned copy of this object. The caller is responsible for the
    * first AddRef()!

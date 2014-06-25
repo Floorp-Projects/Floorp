@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Testcase for box-decoration-break:clone, block margin</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1025669">
+  <meta charset="utf-8">
+  <style type="text/css">
+    html,body {
+      color:black; background-color:white; font-size:16px; padding:10px; margin:0;
+    }
+
+    .inner {
+      border: 5px dashed blue;
+      height: 26px;
+      width: 40px;
+      background: lime;
+      background-clip: padding-box;
+      margin: 0px 3px 15px 1px;
+      position: relative;
+      top: 7px;
+    }
+
+    .columns {
+      -moz-columns: 3;
+      width: 250px;
+      height: 50px;
+      background: grey;
+    }
+
+    .outer {
+      margin-top: 2px;
+      height: 50px;
+      width: 250px;
+      background: grey;
+    }
+
+    .unbalanced {
+      -moz-column-fill: auto;
+    }
+
+    .unbalanced .inner { height: 28px; }
+    .x .inner { height: 28px; }
+    .x.unbalanced .inner { height: 28px; }
+
+    #t2 .inner { border-style:none; height: 38px; }
+  </style>
+</head>
+<body>
+
+<div class="outer"><div class="columns"><div class="inner"></div><div class="inner"></div><div class="inner"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div class="inner"></div><div class="inner"></div><div class="inner" style="height:22px"></div></div></div>
+<div class="outer"><div class="columns x"><div class="p inner"></div><div class="inner"></div><div class="inner" style="height:31px"></div></div></div>
+<div class="outer"><div class="columns x unbalanced"><div class="p inner"></div><div class="inner"></div><div class="inner"></div></div></div>
+
+<div id="t2">
+<div class="outer"><div class="columns unbalanced"><div class="inner"></div><div class="inner"></div><div class="inner" style="height:2px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div style="height:4px"></div><div class="inner" style="height:34px"></div><div class="inner"></div><div class="inner" style="height:6px"></div></div></div>
+<div class="outer"><div class="columns unbalanced x"><div class="p inner"></div><div class="inner"></div><div class="inner" style="height:2px"></div></div></div>
+<div class="outer"><div class="columns unbalanced"><div style="height:4px"></div><div class="inner" style="height:34px"></div><div class="inner"></div><div class="inner" style="height:6px"></div></div></div>
+</div>
+
+</body>
+</html>

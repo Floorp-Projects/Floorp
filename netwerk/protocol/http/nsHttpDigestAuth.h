@@ -37,9 +37,10 @@ class nsHttpDigestAuth MOZ_FINAL : public nsIHttpAuthenticator
     NS_DECL_NSIHTTPAUTHENTICATOR
 
     nsHttpDigestAuth();
-    ~nsHttpDigestAuth();
 
   protected:
+    ~nsHttpDigestAuth();
+
     nsresult ExpandToHex(const char * digest, char * result);
 
     nsresult CalculateResponse(const char * ha1_digest,

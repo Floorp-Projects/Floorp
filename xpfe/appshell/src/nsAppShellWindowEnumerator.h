@@ -50,13 +50,14 @@ friend class nsWindowMediator;
 public:
   nsAppShellWindowEnumerator(const char16_t* aTypeString,
                              nsWindowMediator& inMediator);
-  virtual ~nsAppShellWindowEnumerator();
   NS_IMETHOD GetNext(nsISupports **retval) = 0;
   NS_IMETHOD HasMoreElements(bool *retval);
 
   NS_DECL_ISUPPORTS
 
 protected:
+
+  virtual ~nsAppShellWindowEnumerator();
 
   void AdjustInitialPosition();
   virtual nsWindowInfo *FindNext() = 0;

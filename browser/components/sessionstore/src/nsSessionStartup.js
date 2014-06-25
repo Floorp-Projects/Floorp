@@ -57,6 +57,11 @@ function debug(aMsg) {
   aMsg = ("SessionStartup: " + aMsg).replace(/\S{80}/g, "$&\n");
   Services.console.logStringMessage(aMsg);
 }
+function warning(aMsg, aException) {
+  let consoleMsg = Cc["@mozilla.org/scripterror;1"].createInstance(Ci.nsIScriptError);
+consoleMsg.init(aMsg, aException.fileName, null, aException.lineNumber, 0, Ci.nsIScriptError.warningFlag, "component javascript");
+  Services.console.logMessage(consoleMsg);
+}
 
 let gOnceInitializedDeferred = Promise.defer();
 
@@ -107,26 +112,38 @@ SessionStartup.prototype = {
   /**
    * Complete initialization once the Session File has been read
    *
-   * @param stateString
-   *        string The Session State string read from disk
+   * @param source The Session State string read from disk.
+   * @param parsed The object obtained by parsing |source| as JSON.
    */
-  _onSessionFileRead: function (stateString) {
+  _onSessionFileRead: function ({source, parsed}) {
     this._initialized = true;
 
     // Let observers modify the state before it is used
-    let supportsStateString = this._createSupportsString(stateString);
+    let supportsStateString = this._createSupportsString(source);
     Services.obs.notifyObservers(supportsStateString, "sessionstore-state-read", "");
-    stateString = supportsStateString.data;
+    let stateString = supportsStateString.data;
 
-    // No valid session found.
-    if (!stateString) {
+    if (stateString != source) {
+      // The session has been modified by an add-on, reparse.
+      try {
+        this._initialState = JSON.parse(stateString);
+      } catch (ex) {
+        // That's not very good, an add-on has rewritten the initial
+        // state to something that won't parse.
+        warning("Observer rewrote the state to something that won't parse", ex);
+      }
+    } else {
+      // No need to reparse
+      this._initialState = parsed;
+    }
+
+    if (this._initialState == null) {
+      // No valid session found.
       this._sessionType = Ci.nsISessionStartup.NO_SESSION;
       Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
       gOnceInitializedDeferred.resolve();
       return;
     }
-
-    this._initialState = this._parseStateString(stateString);
 
     let shouldResumeSessionOnce = Services.prefs.getBoolPref("browser.sessionstore.resume_session_once");
     let shouldResumeSession = shouldResumeSessionOnce ||
@@ -192,29 +209,6 @@ SessionStartup.prototype = {
       Services.obs.notifyObservers(null, "sessionstore-state-finalized", "");
       gOnceInitializedDeferred.resolve();
     });
-  },
-
-
-  /**
-   * Convert the Session State string into a state object
-   *
-   * @param stateString
-   *        string The Session State string read from disk
-   * @returns {State} a Session State object
-   */
-  _parseStateString: function (stateString) {
-    let state = null;
-    let corruptFile = false;
-
-    try {
-      state = JSON.parse(stateString);
-    } catch (ex) {
-      debug("The session file contained un-parse-able JSON: " + ex);
-      corruptFile = true;
-    }
-    Services.telemetry.getHistogramById("FX_SESSION_RESTORE_CORRUPT_FILE").add(corruptFile);
-
-    return state;
   },
 
   /**

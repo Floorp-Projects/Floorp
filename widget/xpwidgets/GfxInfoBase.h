@@ -33,7 +33,6 @@ class GfxInfoBase : public nsIGfxInfo,
 {
 public:
   GfxInfoBase();
-  virtual ~GfxInfoBase();
 
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -78,6 +77,8 @@ public:
   virtual uint32_t OperatingSystemVersion() { return 0; }
 
 protected:
+
+  virtual ~GfxInfoBase();
 
   virtual nsresult GetFeatureStatusImpl(int32_t aFeature, int32_t* aStatus,
                                         nsAString& aSuggestedDriverVersion,

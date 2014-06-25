@@ -608,9 +608,9 @@ public:
                              public nsIInterfaceRequestor,
                              public nsIChannelEventSink
   {
+    ~Listener() {}
   public:
     Listener(ChannelMediaResource* aResource) : mResource(aResource) {}
-    ~Listener() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIREQUESTOBSERVER

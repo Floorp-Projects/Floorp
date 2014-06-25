@@ -372,16 +372,10 @@ function test18a() {
   var updateLink = doc.getAnonymousElementByAttribute(plugin, "anonid", "checkForUpdatesLink");
   ok(updateLink.style.visibility != "hidden", "Test 18a, Plugin should have an update link");
 
-  var tabOpenListener = new TabOpenListener(Services.urlFormatter.formatURLPref("plugins.update.url"), false, false);
-  tabOpenListener.handleEvent = function(event) {
-    if (event.type == "TabOpen") {
-      gBrowser.tabContainer.removeEventListener("TabOpen", this, false);
-      this.tab = event.originalTarget;
-      is(event.target.label, this.url, "Test 18a, Update link should open up the plugin check page");
-      gBrowser.removeTab(this.tab);
-      test18b();
-    }
-  };
+  var pluginUpdateURL = Services.urlFormatter.formatURLPref("plugins.update.url");
+  var tabOpenListener = new TabOpenListener(pluginUpdateURL, function(tab) {
+    gBrowser.removeTab(tab);
+  }, test18b);
   EventUtils.synthesizeMouseAtCenter(updateLink, {}, gTestBrowser.contentWindow);
 }
 
