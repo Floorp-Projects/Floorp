@@ -382,7 +382,6 @@ public:
 
 private:
   nsAutoString mIconPath;
-  nsAutoCString mMimeTypeOfInputData;
   nsAutoArrayPtr<uint8_t> mBuffer;
   HMODULE sDwmDLL;
   uint32_t mBufferLength;
