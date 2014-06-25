@@ -1639,13 +1639,22 @@ lastActive
     ID of the final Telemetry Experiment that is active on a given day, if any.
 
 
+Version 2
+^^^^^^^^^
+
+Adds an additional optional property:
+
+lastActiveBranch
+    If the experiment uses branches, the branch identifier string.
+
 Example
 ^^^^^^^
 
 ::
 
     "org.mozilla.experiments.info": {
-      "_v": 1,
-      "lastActive": "some.experiment.id"
+      "_v": 2,
+      "lastActive": "some.experiment.id",
+      "lastActiveBranch": "control"
     }
 
