@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Box Model Highlighter
+Test the creation of the SVG highlighter elements in the browser
+-->
+<head>
+  <meta charset="utf-8">
+  <title>box model highlighter actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      var form = response.tabs[response.selected];
+      var front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        let walkerFront = yield front.getWalker();
+        let highlighterFront = yield front.getHighlighterByType(
+          "BoxModelHighlighter");
+
+        let gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+        let container =
+          gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
+
+        ok(container, "The highlighter container was found");
+        is(container.querySelectorAll("polygon").length, 4, "Found 4 polygons");
+        is(container.querySelectorAll("line").length, 4, "Found 4 guides");
+        ok(container.querySelector(".highlighter-nodeinfobar-container"), "Found the infobar");
+
+        yield highlighterFront.finalize();
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+}
+</script>
+</pre>
+</body>
+</html>
