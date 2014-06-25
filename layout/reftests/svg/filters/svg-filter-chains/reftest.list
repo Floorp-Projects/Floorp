@@ -3,6 +3,10 @@
 
 default-preferences pref(layout.css.filters.enabled,true)
 
+== clip-input.svg clip-input-ref.svg
+== clip-output.svg clip-output.svg
+== default-subregion.svg default-subregion-ref.svg
+== intersecting-filter-regions.svg intersecting-filter-regions-ref.svg
 == long-chain.svg simple-chain-ref.svg
 == multiple-primitives-per-filter.svg simple-chain-ref.svg
 == second-filter-uses-SourceGraphic.svg simple-chain-ref.svg
