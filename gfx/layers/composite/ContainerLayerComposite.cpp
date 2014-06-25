@@ -350,7 +350,9 @@ ContainerRender(ContainerT* aContainer,
   // with the background color by drawing a rectangle of the background color
   // over the entire composited area before drawing the container contents.
   if (AsyncPanZoomController* apzc = aContainer->GetAsyncPanZoomController()) {
-    if (apzc->IsOverscrolled()) {
+    // Make sure not to do this on a "scrollinfo" layer (one with an empty visible
+    // region) because it's just a placeholder for APZ purposes.
+    if (apzc->IsOverscrolled() && !aContainer->GetVisibleRegion().IsEmpty()) {
       gfxRGBA color = aContainer->GetBackgroundColor();
       // If the background is completely transparent, there's no point in
       // drawing anything for it. Hopefully the layers behind, if any, will
