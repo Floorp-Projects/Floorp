@@ -179,7 +179,7 @@ if CONFIG['OS_ARCH'] == 'Linux':
             ]
 
 if CONFIG['OS_ARCH'] == 'AIX':
-    if CONFIG['HAVE_64BIT_OS']:
+    if CONFIG['HAVE_64BIT_BUILD']:
         SOURCES += [
             'xptcinvoke_asm_ppc_aix64.s',
             'xptcinvoke_ppc_aix64.cpp',
@@ -276,7 +276,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['OS_TEST'].find('86') == -1:
     GENERATED_FILES = [
         'xptcstubsdef_asm.solx86',
     ]
-    if CONFIG['HAVE_64BIT_OS']:
+    if CONFIG['HAVE_64BIT_BUILD']:
         SOURCES += [
             'xptcinvoke_sparcv9_solaris.cpp',
             'xptcstubs_sparcv9_solaris.cpp',
@@ -292,7 +292,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and CONFIG['OS_TEST'].find('86') == -1:
             'xptcstubs_asm_sparc_solaris.s',
         ]
     else:
-        if CONFIG['HAVE_64BIT_OS']:
+        if CONFIG['HAVE_64BIT_BUILD']:
             SOURCES += [
                 'xptcinvoke_asm_sparcv9_solaris_SUNW.s',
                 'xptcstubs_asm_sparcv9_solaris.s',

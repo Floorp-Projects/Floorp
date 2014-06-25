@@ -25,7 +25,7 @@ public class AppConstants {
     /**
      * The name of the Java class that launches the browser.
      */
-    public static final String BROWSER_INTENT_CLASS_NAME = ANDROID_PACKAGE_NAME + ".App";
+    public static final String BROWSER_INTENT_CLASS_NAME = "org.mozilla.gecko.BrowserApp";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 
@@ -50,7 +50,7 @@ public class AppConstants {
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
     public static final String OMNIJAR_NAME = "@OMNIJAR_NAME@";
     public static final String OS_TARGET = "@OS_TARGET@";
-    public static final String TARGET_XPCOM_ABI = "@TARGET_XPCOM_ABI@";
+    public static final String TARGET_XPCOM_ABI = @TARGET_XPCOM_ABI@;
 
     public static final String USER_AGENT_BOT_LIKE = "Redirector/" + AppConstants.MOZ_APP_VERSION +
         " (Android; rv:" + AppConstants.MOZ_APP_VERSION + ")";

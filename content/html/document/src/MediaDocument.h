@@ -80,9 +80,11 @@ private:
 
 class MediaDocumentStreamListener: public nsIStreamListener
 {
+protected:
+  virtual ~MediaDocumentStreamListener();
+
 public:
   MediaDocumentStreamListener(MediaDocument *aDocument);
-  virtual ~MediaDocumentStreamListener();
   void SetStreamListener(nsIStreamListener *aListener);
 
   NS_DECL_ISUPPORTS

@@ -102,7 +102,7 @@ TimeDuration
 TimeDuration::FromMilliseconds(double aMilliseconds)
 {
   NS_ABORT_IF_FALSE(gInitialized, "calling TimeDuration too early");
-  return TimeDuration::FromTicks(int64_t((aMilliseconds * kNsPerMsd) / sNsPerTick));
+  return TimeDuration::FromTicks((aMilliseconds * kNsPerMsd) / sNsPerTick);
 }
 
 TimeDuration

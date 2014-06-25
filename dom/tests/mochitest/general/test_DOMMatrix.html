@@ -1,0 +1,714 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test DOMMatrix behavior</title>
+  <scriptsrc="/MochiKit/packed.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<script>
+function createMatrix(a, b, c, d, e, f)
+{
+  var m = new DOMMatrix();
+  m.a = a;
+  m.b = b;
+  m.c = c;
+  m.d = d;
+  m.e = e;
+  m.f = f;
+  return m;
+}
+
+function create3DMatrix(a, b, c, d, e, f)
+{
+  var m = new DOMMatrix();
+  m.a = a;
+  m.b = b;
+  m.c = c;
+  m.d = d;
+  m.e = e;
+  m.f = f;
+  m.m13 = 0;
+  return m;
+}
+
+function cmpMatrix(a, b, msg)
+{
+  if (Array.isArray(a))
+    a = new DOMMatrix(a);
+  if (Array.isArray(b))
+    b = new DOMMatrix(b);
+
+  ok(CompareDOMMatrix(a, b),
+     msg + " - got " + formatMatrix(a)
+         + ", expected " + formatMatrix(b));
+}
+
+function roughCmpMatrix(a, b, msg)
+{
+  if (Array.isArray(a))
+    a = new DOMMatrix(a);
+  if (Array.isArray(b))
+    b = new DOMMatrix(b);
+
+  ok(RoughCompareDOMMatrix(a, b),
+     msg + " - got " + formatMatrix(a)
+         + ", expected " + formatMatrix(b));
+}
+
+function formatMatrix(m)
+{
+  m = new DOMMatrix(m);
+
+  if (m.is2D)
+    return "(" + [m.a, m.b, m.c, m.d, m.e, m.f].join(', ') + ")";
+  else
+    return "(" + [m.m11, m.m12, m.m13, m.m14, 
+                  m.m21, m.m22, m.m23, m.m24,
+                  m.m31, m.m32, m.m33, m.m34,
+                  m.m41, m.m42, m.m43, m.m44,].join(', ') + ")";
+}
+
+function CompareMatrix(dm, m)
+{
+  var ma = m.toFloat32Array();
+  for (var x = 0; x < ma.length; x++) {
+    if (Math.abs(ma[x] - dm.m[x]) > 0.000001)
+      return false;
+  }
+
+  return true;
+}
+
+function CompareDOMMatrix(dm1, dm2)
+{
+  var m1 = dm1.toFloat32Array();
+  var m2 = dm2.toFloat32Array();
+
+  if (m1.length !=  m2.length)
+    return false;
+
+  for (var x = 0; x < m1.length; x++) {
+    if (Math.abs(m1[x] - m2[x]) > 0.000001)
+      return false;
+  }
+
+  return true;
+}
+
+function RoughCompareDOMMatrix(dm1, dm2)
+{
+  var m1 = dm1.toFloat32Array();
+  var m2 = dm2.toFloat32Array();
+
+  if (m1.length != m2.length)
+    return false;
+
+  const tolerance = 1 / 65535;
+  for (var x = 0; x < m1.length; x++) {
+    if (Math.abs(m1[x] - m2[x]) > tolerance)
+      return false;
+  }
+
+  return true;
+}
+
+SimpleTest.waitForExplicitFinish();
+
+function main()
+{
+  var tests = [
+      testCreateMatrix,
+      testMultiply,
+      testInverse,
+      testTranslate,
+      testScale,
+      testScaleNonUniform,
+      testRotate,
+      testRotateFromVector,
+      testFlipX,
+      testFlipY,
+      testSkewX,
+      testSkewY,
+      testMultiplyInPlace,
+      testInverseInPlace,
+      testTranslateInPlace,
+      testScaleInPlace,
+      testScaleNonUniformInPlace,
+      testRotateInPlace,
+      testRotateFromVectorInPlace,
+      testSkewXInPlace,
+      testSkewYInPlace,
+      testCreateMatrix3D,
+      testMultiply3D,
+      testInverse3D,
+      testTranslate3D,
+      testScale3D,
+      test3D,
+      testParsing
+    ];
+  for (var i = 0; i < tests.length; i++) {
+    try{
+      tests[i]();
+    } catch (e) {
+      ok(false, "uncaught exception in test " + i + ": " + e.name);
+    }
+  }
+  SimpleTest.finish();
+}
+
+function testCreateMatrix()
+{
+  var m = new DOMMatrix();
+
+  // Should be initialised to identity
+  cmpMatrix(m, [1, 0, 0, 1, 0, 0],
+            "DOMMatrix should produce identity matrix");
+
+  m = new DOMMatrix([1,2,3,4,5,6]);
+  cmpMatrix(m, [1,2,3,4,5,6],
+            "DOMMatrix should produce the same matrix");
+  ok(m.is2D, "Failed to mark matrix as 2D.");
+
+  m = new DOMMatrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+  cmpMatrix(m, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            "DOMMatrix should produce the same matrix");
+  ok(!m.is2D, "Failed to mark matrix as 3D.");
+
+  var n = new DOMMatrix(m.toFloat32Array());
+  cmpMatrix(n, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            "DOMMatrix should produce the same matrix with float32array constructor");
+  ok(!n.is2D, "Failed to mark matrix as 3D.");
+
+  var n = new DOMMatrix(m.toFloat64Array());
+  cmpMatrix(n, [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
+            "DOMMatrix should produce the same matrix with float64array constructor");
+  ok(!n.is2D, "Failed to mark matrix as 3D.");
+
+  var exn = null;
+  try {
+    m = new DOMMatrix([0]);
+  } catch (e) {
+    exn = e;
+  }
+  ok(exn, "did throw exception with bad DOMMatrix constructor with 1 parameter");
+
+  exn = null;
+  try {
+    m = new DOMMatrix([1,2,3,4,5,6,7,8,9]);
+  } catch (e) {
+    exn = e;
+  }
+  ok(exn, "did throw exception with bad DOMMatrix constructor with 9 parameters");
+
+  exn = null;
+  try {
+    m = new DOMMatrix([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]);
+  } catch (e) {
+    exn = e;
+  }
+  ok(exn, "did throw exception with bad DOMMatrix constructor with 17 parameters");
+}
+
+// DOMMatrix multiply(in DOMMatrix secondMatrix);
+function testMultiply()
+{
+  var m1 = createMatrix(1, 0, 0, 1, 50, 90);
+  var m2 = createMatrix(Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0);
+  var m3 = createMatrix(1, 0, 0, 1, 130, 160);
+  var result = m1.multiply(m2).multiply(m3);
+  roughCmpMatrix(result, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 255.060974, 111.213203],
+    "Unexpected result after multiplying matrices");
+
+  // Check orig matrices are unchanged
+  cmpMatrix(m1, [1, 0, 0, 1, 50, 90], "Matrix changed after multiplication");
+  roughCmpMatrix(m2, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0],
+                 "Matrix changed after multiplication");
+  cmpMatrix(m3, [1, 0, 0, 1, 130, 160], "Matrix changed after multiplication");
+}
+
+// DOMMatrix inverse() raises(SVGException);
+function testInverse()
+{
+  // Test inversion
+  var m = createMatrix(2, 0, 0, 4, 110, -50);
+  roughCmpMatrix(m.inverse(), [0.5, 0, 0, 0.25, -55, 12.5],
+    "Unexpected result after inverting matrix");
+
+  // Test non-invertable
+  m = createMatrix(0, 0, 1, 0, 0, 0);
+  m = m.inverse();
+  ok(isNaN(m.a), "Failed to invalidate inverted singular matrix, got " + m.a);
+  ok(!m.is2D, "Failed to mark invalidated inverted singular matrix as 3D.");
+}
+
+// DOMMatrix translate(in float x, in float y);
+function testTranslate()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.translate(100, -50), [2, 0, 0, 1, 320, 50],
+    "Unexpected result after translate");
+}
+
+// DOMMatrix scale(in float scaleFactor);
+function testScale()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.scale(0.5), [1, 0, 0, 0.5, 120, 100],
+    "Unexpected result after scale");
+}
+
+// DOMMatrix scaleNonUniform(in float scaleFactorX, in float scaleFactorY);
+function testScaleNonUniform()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.scaleNonUniform(0.5, -3), [1, 0, 0, -3, 120, 100],
+    "Unexpected result after scaleNonUniform");
+}
+
+// DOMMatrix rotate(in float angle);
+function testRotate()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.rotate(45),
+                 [2*Math.cos(Math.PI/4), Math.sin(Math.PI/4),
+                  2*-Math.sin(Math.PI/4), Math.cos(Math.PI/4),
+                  120, 100],
+                 "Unexpected result after rotate");
+}
+
+// DOMMatrix rotateFromVector(in float x, in float y) raises(SVGException);
+function testRotateFromVector()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  // Make a 150 degree angle
+  var result = m.rotateFromVector(-2, 1.1547);
+  roughCmpMatrix(result,
+                 [2*Math.cos(5*Math.PI/6), Math.sin(5*Math.PI/6),
+                  2*-Math.sin(5*Math.PI/6), Math.cos(5*Math.PI/6),
+                  120, 100],
+                 "Unexpected result after rotateFromVector");
+
+  // Test bad input (1)
+  var exn = null;
+  try {
+    m.rotateFromVector(1, 0);
+  } catch (e) {
+    exn = e;
+  }
+  ise(exn, null, "did not throw exception with zero coord for rotateFromVector");
+
+  // Test bad input (2)
+  exn = null;
+  try {
+    m.rotateFromVector(0, 1);
+  } catch (e) {
+    exn = e;
+  }
+  ise(exn, null, "did not throw exception with zero coord for rotateFromVector");
+}
+
+// DOMMatrix flipX();
+function testFlipX()
+{
+  var m = createMatrix(1, 2, 3, 4, 5, 6);
+  cmpMatrix(m.flipX(), [-1, -2, 3, 4, 5, 6], "Unexpected result after flipX");
+}
+
+// DOMMatrix flipY();
+function testFlipY()
+{
+  var m = createMatrix(1, 2, 3, 4, 5, 6);
+  cmpMatrix(m.flipY(), [1, 2, -3, -4, 5, 6], "Unexpected result after flipY");
+}
+
+// DOMMatrix skewX(in float angle);
+function testSkewX()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.skewX(30), [2, 0, 2*Math.tan(Math.PI/6), 1, 120, 100],
+                 "Unexpected result after skewX");
+}
+
+// DOMMatrix skewY(in float angle);
+function testSkewY()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.skewY(30), [2, Math.tan(Math.PI/6), 0, 1, 120, 100],
+                 "Unexpected result after skewY");
+}
+
+// DOMMatrix multiply(in DOMMatrix secondMatrix);
+function testMultiplyInPlace()
+{
+  var m1 = createMatrix(1, 0, 0, 1, 50, 90);
+  var m2 = createMatrix(Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0);
+  var m3 = createMatrix(1, 0, 0, 1, 130, 160);
+  m1.multiplySelf(m2).multiplySelf(m3);
+  roughCmpMatrix(m1, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 255.060974, 111.213203],
+    "Unexpected result after multiplying matrices");
+
+  // Check orig matrices are unchanged
+  roughCmpMatrix(m2, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0],
+                 "Matrix changed after multiplication");
+  cmpMatrix(m3, [1, 0, 0, 1, 130, 160], "Matrix changed after multiplication");
+}
+
+// DOMMatrix inverse() raises(SVGException);
+function testInverseInPlace()
+{
+  // Test inversion
+  var m = createMatrix(2, 0, 0, 4, 110, -50);
+  m.invertSelf();
+  roughCmpMatrix(m, [0.5, 0, 0, 0.25, -55, 12.5],
+    "Unexpected result after inverting matrix");
+
+  // Test non-invertable
+  m = createMatrix(0, 0, 1, 0, 0, 0);
+  m.invertSelf();
+  ok(isNaN(m.a), "Failed to invalidate inverted singular matrix, got " + m.a);
+  ok(!m.is2D, "Failed to mark invalidated inverted singular matrix as 3D.");
+}
+
+// DOMMatrix translate(in float x, in float y);
+function testTranslateInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.translateSelf(100, -50)
+  roughCmpMatrix(m, [2, 0, 0, 1, 320, 50],
+    "Unexpected result after translate");
+}
+
+// DOMMatrix scale(in float scaleFactor);
+function testScaleInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.scaleSelf(0.5);
+  roughCmpMatrix(m, [1, 0, 0, 0.5, 120, 100],
+    "Unexpected result after scale");
+}
+
+// DOMMatrix scaleNonUniform(in float scaleFactorX, in float scaleFactorY);
+function testScaleNonUniformInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.scaleNonUniformSelf(0.5, -3);
+  roughCmpMatrix(m, [1, 0, 0, -3, 120, 100],
+    "Unexpected result after scaleNonUniform");
+}
+
+// DOMMatrix rotate(in float angle);
+function testRotateInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.rotateSelf(45);
+  roughCmpMatrix(m,
+                 [2*Math.cos(Math.PI/4), Math.sin(Math.PI/4),
+                  2*-Math.sin(Math.PI/4), Math.cos(Math.PI/4),
+                  120, 100],
+                 "Unexpected result after rotate");
+}
+
+// DOMMatrix rotateFromVector(in float x, in float y) raises(SVGException);
+function testRotateFromVectorInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  // Make a 150 degree angle
+  m.rotateFromVectorSelf(-2, 1.1547);
+  roughCmpMatrix(m,
+                 [2*Math.cos(5*Math.PI/6), Math.sin(5*Math.PI/6),
+                  2*-Math.sin(5*Math.PI/6), Math.cos(5*Math.PI/6),
+                  120, 100],
+                 "Unexpected result after rotateFromVector");
+
+  // Test bad input (1)
+  try {
+    m.rotateFromVectorSelf(1, 0);
+    ok(true, "did not throw exception with zero coord for rotateFromVector");
+  } catch (e) {
+    ok(false,
+      "Got unexpected exception " + e + ", expected NotSupportedError");
+  }
+
+  // Test bad input (2)
+  try {
+    m.rotateFromVectorSelf(0, 1);
+    ok(true, "did not throw exception with zero coord for rotateFromVector");
+  } catch (e) { }
+}
+
+// DOMMatrix skewX(in float angle);
+function testSkewXInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.skewXSelf(30);
+  roughCmpMatrix(m, [2, 0, 2*Math.tan(Math.PI/6), 1, 120, 100],
+                 "Unexpected result after skewX");
+}
+
+// DOMMatrix skewY(in float angle);
+function testSkewYInPlace()
+{
+  var m = createMatrix(2, 0, 0, 1, 120, 100);
+  m.skewYSelf(30);
+  roughCmpMatrix(m, [2, Math.tan(Math.PI/6), 0, 1, 120, 100],
+                 "Unexpected result after skewY");
+}
+
+function testCreateMatrix3D()
+{
+  var m = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+
+  // Should be initialised to identity
+  cmpMatrix(m, [1, 0, 0, 1, 0, 0],
+            "DOMMatrix should produce identity matrix");
+  is(m.is2D, true, "should not produce 3d matrix");
+
+  m = new DOMMatrix([1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]);
+
+  // Should be initialised to identity
+  cmpMatrix(m, [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            "DOMMatrix should produce identity matrix");
+  ise(m.is2D, false, "should produce 3d matrix");
+}
+
+// DOMMatrix multiply(in DOMMatrix secondMatrix);
+function testMultiply3D()
+{
+  var m1 = createMatrix(1, 0, 0, 1, 50, 90);
+  var m2 = create3DMatrix(Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0);
+  var m3 = create3DMatrix(1, 0, 0, 1, 130, 160);
+  var result = m1.multiply(m2).multiply(m3);
+  ok(m1.is2D == true, "should produce 3d matrix");
+  roughCmpMatrix(result, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 255.060974, 111.213203],
+    "Unexpected result after multiplying matrices");
+
+  // Check orig matrices are unchanged
+  cmpMatrix(m1, [1, 0, 0, 1, 50, 90], "Matrix changed after multiplication");
+  roughCmpMatrix(m2, [Math.SQRT1_2, -Math.SQRT1_2, Math.SQRT1_2, Math.SQRT1_2, 0, 0],
+                 "Matrix changed after multiplication");
+  cmpMatrix(m3, [1, 0, 0, 1, 130, 160], "Matrix changed after multiplication");
+}
+
+// DOMMatrix inverse() raises(SVGException);
+function testInverse3D()
+{
+  // Test inversion
+  var m = create3DMatrix(2, 0, 0, 4, 110, -50);
+  roughCmpMatrix(m.inverse(), [0.5, 0, 0, 0.25, -55, 12.5],
+    "Unexpected result after inverting matrix");
+
+  // Test non-invertable
+  m = createMatrix(0, 0, 1, 0, 0, 0);
+  m = m.inverse();
+  ok(isNaN(m.a), "Failed to invalidate inverted singular matrix, got " + m.a);
+  ok(!m.is2D, "Failed to mark invalidated inverted singular matrix as 3D.");
+}
+
+// DOMMatrix translate(in float x, in float y);
+function testTranslate3D()
+{
+  var m = create3DMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.translate(100, -50), [2, 0, 0, 1, 320, 50],
+    "Unexpected result after translate");
+}
+
+// DOMMatrix scale(in float scaleFactor);
+function testScale3D()
+{
+  var m = create3DMatrix(2, 0, 0, 1, 120, 100);
+  roughCmpMatrix(m.scale(0.5), [1, 0, 0, 0.5, 120, 100],
+    "Unexpected result after scale");
+}
+
+function Matrix3D() {
+  this.m = new Float32Array([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ]);
+}
+
+Matrix3D.prototype = {
+  translate: function(x, y, z, result) {
+    result = result || new Matrix3D();
+    var m = result.m;
+
+    m[0] = 1;
+    m[1] = 0;
+    m[2] = 0;
+    m[3] = x;
+
+    m[4] = 0;
+    m[5] = 1;
+    m[6] = 0;
+    m[7] = y;
+
+    m[8] = 0;
+    m[9] = 0;
+    m[10] = 1;
+    m[11] = z;
+
+    m[12] = 0;
+    m[13] = 0;
+    m[14] = 0;
+    m[15] = 1;
+
+    return result;
+  },
+  inverse: function(matrix, result) {
+    result = result || new Matrix3D();
+    var m = matrix.m, r = result.m;
+
+    r[0] = m[5]*m[10]*m[15] - m[5]*m[14]*m[11] - m[6]*m[9]*m[15] + m[6]*m[13]*m[11] + m[7]*m[9]*m[14] - m[7]*m[13]*m[10];
+    r[1] = -m[1]*m[10]*m[15] + m[1]*m[14]*m[11] + m[2]*m[9]*m[15] - m[2]*m[13]*m[11] - m[3]*m[9]*m[14] + m[3]*m[13]*m[10];
+    r[2] = m[1]*m[6]*m[15] - m[1]*m[14]*m[7] - m[2]*m[5]*m[15] + m[2]*m[13]*m[7] + m[3]*m[5]*m[14] - m[3]*m[13]*m[6];
+    r[3] = -m[1]*m[6]*m[11] + m[1]*m[10]*m[7] + m[2]*m[5]*m[11] - m[2]*m[9]*m[7] - m[3]*m[5]*m[10] + m[3]*m[9]*m[6];
+
+    r[4] = -m[4]*m[10]*m[15] + m[4]*m[14]*m[11] + m[6]*m[8]*m[15] - m[6]*m[12]*m[11] - m[7]*m[8]*m[14] + m[7]*m[12]*m[10];
+    r[5] = m[0]*m[10]*m[15] - m[0]*m[14]*m[11] - m[2]*m[8]*m[15] + m[2]*m[12]*m[11] + m[3]*m[8]*m[14] - m[3]*m[12]*m[10];
+    r[6] = -m[0]*m[6]*m[15] + m[0]*m[14]*m[7] + m[2]*m[4]*m[15] - m[2]*m[12]*m[7] - m[3]*m[4]*m[14] + m[3]*m[12]*m[6];
+    r[7] = m[0]*m[6]*m[11] - m[0]*m[10]*m[7] - m[2]*m[4]*m[11] + m[2]*m[8]*m[7] + m[3]*m[4]*m[10] - m[3]*m[8]*m[6];
+
+    r[8] = m[4]*m[9]*m[15] - m[4]*m[13]*m[11] - m[5]*m[8]*m[15] + m[5]*m[12]*m[11] + m[7]*m[8]*m[13] - m[7]*m[12]*m[9];
+    r[9] = -m[0]*m[9]*m[15] + m[0]*m[13]*m[11] + m[1]*m[8]*m[15] - m[1]*m[12]*m[11] - m[3]*m[8]*m[13] + m[3]*m[12]*m[9];
+    r[10] = m[0]*m[5]*m[15] - m[0]*m[13]*m[7] - m[1]*m[4]*m[15] + m[1]*m[12]*m[7] + m[3]*m[4]*m[13] - m[3]*m[12]*m[5];
+    r[11] = -m[0]*m[5]*m[11] + m[0]*m[9]*m[7] + m[1]*m[4]*m[11] - m[1]*m[8]*m[7] - m[3]*m[4]*m[9] + m[3]*m[8]*m[5];
+
+    r[12] = -m[4]*m[9]*m[14] + m[4]*m[13]*m[10] + m[5]*m[8]*m[14] - m[5]*m[12]*m[10] - m[6]*m[8]*m[13] + m[6]*m[12]*m[9];
+    r[13] = m[0]*m[9]*m[14] - m[0]*m[13]*m[10] - m[1]*m[8]*m[14] + m[1]*m[12]*m[10] + m[2]*m[8]*m[13] - m[2]*m[12]*m[9];
+    r[14] = -m[0]*m[5]*m[14] + m[0]*m[13]*m[6] + m[1]*m[4]*m[14] - m[1]*m[12]*m[6] - m[2]*m[4]*m[13] + m[2]*m[12]*m[5];
+    r[15] = m[0]*m[5]*m[10] - m[0]*m[9]*m[6] - m[1]*m[4]*m[10] + m[1]*m[8]*m[6] + m[2]*m[4]*m[9] - m[2]*m[8]*m[5];
+
+    var det = m[0]*r[0] + m[1]*r[4] + m[2]*r[8] + m[3]*r[12];
+    for (var i = 0; i < 16; i++) r[i] /= det;
+    return result;
+  },
+  multiply: function(left, result) {
+    result = result || new Matrix3D();
+    var a = this.m, b = left.m, r = result.m;
+
+    r[0] = a[0] * b[0] + a[1] * b[4] + a[2] * b[8] + a[3] * b[12];
+    r[1] = a[0] * b[1] + a[1] * b[5] + a[2] * b[9] + a[3] * b[13];
+    r[2] = a[0] * b[2] + a[1] * b[6] + a[2] * b[10] + a[3] * b[14];
+    r[3] = a[0] * b[3] + a[1] * b[7] + a[2] * b[11] + a[3] * b[15];
+
+    r[4] = a[4] * b[0] + a[5] * b[4] + a[6] * b[8] + a[7] * b[12];
+    r[5] = a[4] * b[1] + a[5] * b[5] + a[6] * b[9] + a[7] * b[13];
+    r[6] = a[4] * b[2] + a[5] * b[6] + a[6] * b[10] + a[7] * b[14];
+    r[7] = a[4] * b[3] + a[5] * b[7] + a[6] * b[11] + a[7] * b[15];
+
+    r[8] = a[8] * b[0] + a[9] * b[4] + a[10] * b[8] + a[11] * b[12];
+    r[9] = a[8] * b[1] + a[9] * b[5] + a[10] * b[9] + a[11] * b[13];
+    r[10] = a[8] * b[2] + a[9] * b[6] + a[10] * b[10] + a[11] * b[14];
+    r[11] = a[8] * b[3] + a[9] * b[7] + a[10] * b[11] + a[11] * b[15];
+
+    r[12] = a[12] * b[0] + a[13] * b[4] + a[14] * b[8] + a[15] * b[12];
+    r[13] = a[12] * b[1] + a[13] * b[5] + a[14] * b[9] + a[15] * b[13];
+    r[14] = a[12] * b[2] + a[13] * b[6] + a[14] * b[10] + a[15] * b[14];
+    r[15] = a[12] * b[3] + a[13] * b[7] + a[14] * b[11] + a[15] * b[15];
+
+    return result;
+  },
+  scale: function(x, y, z, result) {
+    result = result || new Matrix3D();
+    var m = result.m;
+
+    m[0] = x;
+    m[1] = 0;
+    m[2] = 0;
+    m[3] = 0;
+
+    m[4] = 0;
+    m[5] = y;
+    m[6] = 0;
+    m[7] = 0;
+
+    m[8] = 0;
+    m[9] = 0;
+    m[10] = z;
+    m[11] = 0;
+
+    m[12] = 0;
+    m[13] = 0;
+    m[14] = 0;
+    m[15] = 1;
+
+    return result;
+  },
+  rotate: function(a, x, y, z, result) {
+    result = result || new Matrix3D();
+    var m = result.m;
+
+    var d = Math.sqrt(x*x + y*y + z*z);
+    a *= Math.PI / 180; x /= d; y /= d; z /= d;
+    var c = Math.cos(a), s = Math.sin(a), t = 1 - c;
+
+    m[0] = x * x * t + c;
+    m[1] = x * y * t - z * s;
+    m[2] = x * z * t + y * s;
+    m[3] = 0;
+
+    m[4] = y * x * t + z * s;
+    m[5] = y * y * t + c;
+    m[6] = y * z * t - x * s;
+    m[7] = 0;
+
+    m[8] = z * x * t - y * s;
+    m[9] = z * y * t + x * s;
+    m[10] = z * z * t + c;
+    m[11] = 0;
+
+    m[12] = 0;
+    m[13] = 0;
+    m[14] = 0;
+    m[15] = 1;
+
+    return result;
+  },
+  swap: function(result) {
+    result = result || new Matrix3D();
+    for (var x = 0; x < 16; x++)
+      result.m[x] = this.m[Math.floor(x/4) + (x%4)*4];
+
+    return result;
+  }
+};
+
+
+function test3D()
+{
+  var m = new DOMMatrix()
+  var m2 = new Matrix3D();
+
+  m.translateSelf(2,3,4).scaleNonUniformSelf(1.2, 2.3, 3.4, 0, 0, 0);
+  m2 = m2.multiply(m2.translate(2,3,4)).multiply(m2.scale(1.2, 2.3, 3.4)).swap();
+
+  ok(CompareMatrix(m2, m), "translate + scale in 3d didn't match, expected: " + formatMatrix(m2.m) + ", got: " + formatMatrix(m));
+
+  m.invertSelf();
+  m2 = new Matrix3D();
+  m2 = m2.multiply(m2.translate(2,3,4)).multiply(m2.scale(1.2, 2.3, 3.4));
+  m2 = m2.inverse(m2).swap();
+  ok(CompareMatrix(m2, m), "translate + scale in inverted 3d didn't match, expected: " + formatMatrix(m2.m) + ", got: " + formatMatrix(m));
+}
+
+function testParsing()
+{
+  var m = new DOMMatrix("translate(10, 20) scale(.5, 2) rotate(45)");
+  var m2 = new DOMMatrix();
+  m2.translateSelf(10, 20).scaleNonUniformSelf(.5,2).rotateSelf(45);
+  ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
+
+  m = new DOMMatrix();
+  m.setMatrixValue("translate(10, 20) scale(.5, 2) rotate(45)");
+  ok(CompareDOMMatrix(m2, m), "string parsing didn't match");
+}
+
+window.addEventListener("load", main, false);
+
+</script>
+</pre>
+</body>
+</html>

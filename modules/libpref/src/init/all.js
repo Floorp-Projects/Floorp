@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1888,6 +1888,9 @@ pref("layout.css.DOMPoint.enabled", true);
 
 // Is support for DOMQuad enabled?
 pref("layout.css.DOMQuad.enabled", true);
+
+// Is support for DOMMatrix enabled?
+pref("layout.css.DOMMatrix.enabled", true);
 
 // Is support for GeometryUtils.getBoxQuads enabled?
 #ifdef RELEASE_BUILD

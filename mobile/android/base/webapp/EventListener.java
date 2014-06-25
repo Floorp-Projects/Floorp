@@ -32,6 +32,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.util.Log;
 
 public class EventListener implements NativeEventListener  {
@@ -142,9 +143,9 @@ public class EventListener implements NativeEventListener  {
         final JSONObject messageData;
 
         // We get the manifest url out of javascript here so we can use it as a checksum
-        // in a minute, when a package has been installed.
-        String manifestUrl = null;
-        String filePath = null;
+        // in InstallListener when a package has been installed.
+        String manifestUrl;
+        String filePath;
 
         try {
             filePath = message.getString("filePath");
@@ -156,43 +157,48 @@ public class EventListener implements NativeEventListener  {
             return;
         }
 
-        // We will check the manifestUrl from the one in the APK.
-        // Thus, we can have a one-to-one mapping of apk to receiver.
-        final InstallListener receiver = new InstallListener(manifestUrl, messageData);
+        final File file = new File(filePath);
 
-        // Listen for packages being installed.
-        IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
-        filter.addDataScheme("package");
-        context.registerReceiver(receiver, filter);
-
-        File file = new File(filePath);
         if (!file.exists()) {
             Log.wtf(LOGTAG, "APK file doesn't exist at path " + filePath);
             callback.sendError("APK file doesn't exist at path " + filePath);
             return;
         }
 
+        // We will check the manifestUrl from the one in the APK.
+        // Thus, we can have a one-to-one mapping of apk to receiver.
+        final InstallListener receiver = new InstallListener(manifestUrl, messageData, file);
+
+        // Listen for packages being installed.
+        IntentFilter filter = new IntentFilter(Intent.ACTION_PACKAGE_ADDED);
+        filter.addDataScheme("package");
+
+        // As of API 19 we can do something like this to only trigger this receiver
+        // for a specific package name:
+        // int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+        // if (currentApiVersion >= android.os.Build.VERSION_CODES.KITKAT){ // KITKAT == 19
+        //    filter.addDataSchemeSpecificPart("com.example.someapp", PatternMatcher.PATTERN_LITERAL);
+        // }
+        // TODO: Implement package name filtering to IntentFilter.
+
+        context.registerReceiver(receiver, filter);
+
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
 
         // Now call the package installer.
         ActivityHandlerHelper.startIntentForActivity(context, intent, new ActivityResultHandler() {
+            // Invoked if the user cancels installation or presses the 'Done'
+            // button once the app has been successfully installed. It may also
+            // be called when the user presses Open and then returns to Fennec.
             @Override
             public void onActivityResult(int resultCode, Intent data) {
-                // The InstallListener will catch the case where the user pressed install.
-                // Now deal with if the user pressed cancel.
-                if (resultCode == Activity.RESULT_CANCELED) {
-                    try {
-                        context.unregisterReceiver(receiver);
-                        receiver.cleanup();
-                    } catch (java.lang.IllegalArgumentException e) {
-                        // IllegalArgumentException happens because resultCode is RESULT_CANCELED
-                        // when the user presses the Done button in the install confirmation dialog,
-                        // even though the install has been successful (and InstallListener already
-                        // unregistered the receiver).
-                        Log.e(LOGTAG, "error unregistering install receiver: ", e);
-                    }
+                if (!receiver.isReceived()) {
                     callback.sendError("APK installation cancelled by user");
+                    context.unregisterReceiver(receiver);
+                }
+                if (file.delete()) {
+                    Log.i(LOGTAG, "Downloaded APK file deleted");
                 }
             }
         });

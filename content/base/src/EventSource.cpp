@@ -518,6 +518,7 @@ public:
   }
 
 private:
+  ~AsyncVerifyRedirectCallbackFwr() {}
   nsRefPtr<EventSource> mEventSource;
 };
 

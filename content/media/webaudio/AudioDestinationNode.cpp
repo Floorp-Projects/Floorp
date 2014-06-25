@@ -174,13 +174,43 @@ private:
   float mSampleRate;
 };
 
+class InputMutedRunnable : public nsRunnable
+{
+public:
+  InputMutedRunnable(AudioNodeStream* aStream,
+                     bool aInputMuted)
+    : mStream(aStream)
+    , mInputMuted(aInputMuted)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsRefPtr<AudioNode> node = mStream->Engine()->NodeMainThread();
+
+    if (node) {
+      nsRefPtr<AudioDestinationNode> destinationNode =
+        static_cast<AudioDestinationNode*>(node.get());
+      destinationNode->InputMuted(mInputMuted);
+    }
+    return NS_OK;
+  }
+
+private:
+  nsRefPtr<AudioNodeStream> mStream;
+  bool mInputMuted;
+};
+
 class DestinationNodeEngine : public AudioNodeEngine
 {
 public:
   explicit DestinationNodeEngine(AudioDestinationNode* aNode)
     : AudioNodeEngine(aNode)
     , mVolume(1.0f)
+    , mLastInputMuted(true)
   {
+    MOZ_ASSERT(aNode);
   }
 
   virtual void ProcessBlock(AudioNodeStream* aStream,
@@ -190,6 +220,16 @@ public:
   {
     *aOutput = aInput;
     aOutput->mVolume *= mVolume;
+
+    bool newInputMuted = aInput.IsNull() || aInput.IsMuted();
+    if (newInputMuted != mLastInputMuted) {
+      mLastInputMuted = newInputMuted;
+
+      nsRefPtr<InputMutedRunnable> runnable =
+        new InputMutedRunnable(aStream, newInputMuted);
+      aStream->Graph()->
+        DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
+    }
   }
 
   virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
@@ -210,6 +250,7 @@ public:
 
 private:
   float mVolume;
+  bool mLastInputMuted;
 };
 
 static bool UseAudioChannelService()
@@ -535,12 +576,6 @@ AudioDestinationNode::CreateAudioChannelAgent()
     docshell->GetIsActive(&isActive);
     mAudioChannelAgent->SetVisibilityState(isActive);
   }
-
-  int32_t state = 0;
-  mAudioChannelAgent->StartPlaying(&state);
-  mAudioChannelAgentPlaying =
-    state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL;
-  SetCanPlay(mAudioChannelAgentPlaying);
 }
 
 void
@@ -612,6 +647,26 @@ AudioDestinationNode::SetIsOnlyNodeForContext(bool aIsOnlyNode)
   }
 }
 
+void
+AudioDestinationNode::InputMuted(bool aMuted)
+{
+  MOZ_ASSERT(Context() && !Context()->IsOffline());
+
+  if (!mAudioChannelAgent) {
+    return;
+  }
+
+  if (aMuted) {
+    mAudioChannelAgent->StopPlaying();
+    return;
+  }
+
+  int32_t state = 0;
+  mAudioChannelAgent->StartPlaying(&state);
+  mAudioChannelAgentPlaying =
+    state == AudioChannelState::AUDIO_CHANNEL_STATE_NORMAL;
+  SetCanPlay(mAudioChannelAgentPlaying);
 }
 
-}
+} // dom namespace
+} // mozilla namespace

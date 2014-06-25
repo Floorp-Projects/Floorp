@@ -28,7 +28,6 @@ class HTMLFormControlsCollection : public nsIHTMLCollection
 {
 public:
   HTMLFormControlsCollection(HTMLFormElement* aForm);
-  virtual ~HTMLFormControlsCollection();
 
   void DropFormReference();
 
@@ -83,6 +82,7 @@ public:
   using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~HTMLFormControlsCollection();
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
     return nsWrapperCache::GetWrapperPreserveColor();
