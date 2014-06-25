@@ -993,8 +993,8 @@ public:
     bool AttachComponentsObject(JSContext *aCx);
 
     // Returns the JS object reflection of the Components object.
-    JSObject*
-    GetComponentsJSObject();
+    bool
+    GetComponentsJSObject(JS::MutableHandleObject obj);
 
     JSObject*
     GetGlobalJSObject() const {
@@ -1012,7 +1012,7 @@ public:
     }
 
     JSObject*
-    GetExpandoChain(JSObject *target);
+    GetExpandoChain(JS::HandleObject target);
 
     bool
     SetExpandoChain(JSContext *cx, JS::HandleObject target, JS::HandleObject chain);
