@@ -128,6 +128,7 @@ gbjar.sources += [
     'animation/Rotate3DAnimation.java',
     'animation/ViewHelper.java',
     'ANRReporter.java',
+    'App.java',
     'AppNotificationClient.java',
     'Assert.java',
     'BaseGeckoInterface.java',
@@ -402,6 +403,7 @@ gbjar.sources += [
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
     'VideoPlayer.java',
+    'Webapp.java',
     'webapp/Allocator.java',
     'webapp/ApkResources.java',
     'webapp/Dispatcher.java',
@@ -411,6 +413,7 @@ gbjar.sources += [
     'webapp/TaskKiller.java',
     'webapp/UninstallListener.java',
     'webapp/WebappImpl.java',
+    'WebApps.java',
     'widget/ActivityChooserModel.java',
     'widget/AllCapsTextView.java',
     'widget/AnimatedHeightLayout.java',
@@ -444,13 +447,6 @@ gbjar.sources += [ thirdparty_source_dir + f for f in [
     'com/googlecode/eyesfree/braille/selfbraille/WriteData.java',
 ] ]
 android_package_dir = CONFIG['ANDROID_PACKAGE_NAME'].replace('.', '/')
-# All generated sources are handled specially in Makefile.in.  And
-# R.java is handled even more specially than the others!
-gbjar.generated_sources += [ android_package_dir + f for f in [
-    '/App.java',
-    '/Webapp.java',
-    '/WebApps.java',
-] ]
 gbjar.generated_sources += [
     'org/mozilla/gecko/AppConstants.java',
     'org/mozilla/gecko/SysInfo.java',

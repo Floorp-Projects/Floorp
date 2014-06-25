@@ -25,7 +25,7 @@ public class AppConstants {
     /**
      * The name of the Java class that launches the browser.
      */
-    public static final String BROWSER_INTENT_CLASS_NAME = ANDROID_PACKAGE_NAME + ".App";
+    public static final String BROWSER_INTENT_CLASS_NAME = "org.mozilla.gecko.App";
 
     public static final String GRE_MILESTONE = "@GRE_MILESTONE@";
 
