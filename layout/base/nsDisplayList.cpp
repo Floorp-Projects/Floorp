@@ -813,7 +813,7 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   // in the FrameMetrics so APZ knows to provide the scroll grabbing
   // behaviour.
   if (aScrollFrame && nsContentUtils::HasScrollgrab(aScrollFrame->GetContent())) {
-    metrics.mHasScrollgrab = true;
+    metrics.SetHasScrollgrab(true);
   }
 
   aRoot->SetFrameMetrics(metrics);
