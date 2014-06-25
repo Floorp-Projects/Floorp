@@ -1614,18 +1614,6 @@ MacroAssemblerARM::ma_vxfer(Register src1, Register src2, FloatRegister dest, Co
     as_vxfer(src1, src2, VFPRegister(dest), CoreToFloat, cc);
 }
 
-void
-MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest, Condition cc)
-{
-    as_vxfer(dest, InvalidReg, src, FloatToCore, cc);
-}
-
-void
-MacroAssemblerARM::ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc)
-{
-    as_vxfer(dest1, dest2, src, FloatToCore, cc);
-}
-
 BufferOffset
 MacroAssemblerARM::ma_vdtr(LoadStore ls, const Operand &addr, VFPRegister rt, Condition cc)
 {
