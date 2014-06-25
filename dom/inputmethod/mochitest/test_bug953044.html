@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=953044
+-->
+<head>
+  <title>Basic test for InputMethod API.</title>
+  <script type="application/javascript;version=1.7" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript;version=1.7" src="inputmethod_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=953044">Mozilla Bug 953044</a>
+<p id="display"></p>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+inputmethod_setup(function() {
+  runTest();
+});
+
+function runTest() {
+  // Create an app frame to recieve keyboard inputs.
+  let app = document.createElement('iframe');
+  app.src = 'file_test_app.html';
+  app.setAttribute('mozbrowser', true);
+  document.body.appendChild(app);
+
+  // Create a browser frame to load the input method app.
+  let keyboard = document.createElement('iframe');
+  keyboard.setAttribute('mozbrowser', true);
+  document.body.appendChild(keyboard);
+
+  // Bug 953044 setInputMethodActive(false) before input method app loads should
+  // always succeed.
+  let req = keyboard.setInputMethodActive(false);
+  req.onsuccess = function() {
+    ok(true, 'setInputMethodActive before loading succeeded.');
+    inputmethod_cleanup();
+  };
+
+  req.onerror = function() {
+    ok(false, 'setInputMethodActive before loading failed: ' + this.error.name);
+    inputmethod_cleanup();
+  };
+}
+
+</script>
+</pre>
+</body>
+</html>
+
