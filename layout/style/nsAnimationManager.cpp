@@ -77,8 +77,6 @@ nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
         break;
 
       case ComputedTiming::AnimationPhase_After:
-        TimeDuration activeDuration =
-          ElementAnimation::ActiveDuration(anim->mTiming);
         // If we skipped the animation interval entirely, dispatch
         // 'animationstart' first
         if (anim->mLastNotification ==
@@ -88,7 +86,7 @@ nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
           // internal consistency.)
           anim->mLastNotification = 0;
           TimeDuration elapsedTime =
-            std::min(anim->InitialAdvance(), activeDuration);
+            std::min(anim->InitialAdvance(), computedTiming.mActiveDuration);
           AnimationEventInfo ei(aEA->mElement, anim->mName, NS_ANIMATION_START,
                                 elapsedTime, aEA->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
@@ -98,7 +96,8 @@ nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
             ElementAnimation::LAST_NOTIFICATION_END) {
           anim->mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
           AnimationEventInfo ei(aEA->mElement, anim->mName, NS_ANIMATION_END,
-                                activeDuration, aEA->PseudoElement());
+                                computedTiming.mActiveDuration,
+                                aEA->PseudoElement());
           aEventsToDispatch.AppendElement(ei);
         }
         break;
