@@ -16,6 +16,7 @@
 
 <!DOCTYPE page [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % globalPreferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
 <!ENTITY % preferencesDTD SYSTEM 
   "chrome://browser/locale/preferences/preferences.dtd">
 <!ENTITY % privacyDTD SYSTEM "chrome://browser/locale/preferences/privacy.dtd">
@@ -33,6 +34,7 @@
 <!ENTITY % advancedDTD SYSTEM 
   "chrome://browser/locale/preferences/advanced.dtd">
 %brandDTD;
+%globalPreferencesDTD;
 %preferencesDTD;
 %privacyDTD;
 %tabsDTD;
@@ -66,6 +68,7 @@
           src="chrome://browser/content/utilityOverlay.js"/>
   <script type="application/javascript"
           src="chrome://browser/content/preferences/in-content/preferences.js"/>
+  <script src="chrome://browser/content/preferences/in-content/subdialogs.js"/>
 
   <stringbundle id="bundleBrand" 
                 src="chrome://branding/locale/brand.properties"/>
@@ -77,6 +80,7 @@
                   src="chrome://browser/locale/preferences/applicationManager.properties"/>
   </stringbundleset>
 
+  <stack flex="1">
   <hbox flex="1">
 
     <!-- category list -->
@@ -174,4 +178,24 @@
     </vbox>
 
   </hbox>
+
+    <vbox id="dialogOverlay" align="center" pack="center">
+      <groupbox id="dialogBox"
+                orient="vertical"
+                pack="end"
+                role="dialog"
+                aria-labelledby="dialogTitle">
+        <caption class="titlebar" flex="1" align="center">
+          <label id="dialogTitle" class="header" flex="1"></label>
+          <button id="dialogClose"
+                  class="close-icon"
+                  aria-label="&preferencesCloseButton.label;"/>
+        </caption>
+        <browser id="dialogFrame"
+                 name="dialogFrame"
+                 autoscroll="false"
+                 disablehistory="true"/>
+      </groupbox>
+    </vbox>
+  </stack>
 </page>
