@@ -7,6 +7,8 @@
 #ifndef jit_arm_Architecture_arm_h
 #define jit_arm_Architecture_arm_h
 
+#include "mozilla/MathAlgorithms.h"
+
 #include <limits.h>
 #include <stdint.h>
 
@@ -140,6 +142,11 @@ class Registers
         (1 << Registers::r1);  // used for double-size returns
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+    typedef uint32_t SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountPopulation32(x);
+    }
 };
 
 // Smallest integer type that can hold a register bitmask.
@@ -224,7 +231,11 @@ class FloatRegisters
     static const uint32_t TempMask = VolatileMask & ~NonAllocatableMask;
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+    typedef uint32_t SetType;
 };
+
+template <typename T>
+class TypedRegisterSet;
 
 class VFPRegister
 {
@@ -395,9 +406,19 @@ class VFPRegister
         *ret = doubleOverlay(aliasIdx - 1);
         return;
     }
+    typedef FloatRegisters::SetType SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountPopulation32(x);
+    }
     static Code FromName(const char *name) {
         return FloatRegisters::FromName(name);
     }
+    static TypedRegisterSet<VFPRegister> ReduceSetForPush(const TypedRegisterSet<VFPRegister> &s);
+    static uint32_t GetSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
+    uint32_t getRegisterDumpOffsetInBytes();
+
 };
 
 // The only floating point register set that we work with

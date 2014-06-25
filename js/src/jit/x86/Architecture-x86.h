@@ -36,7 +36,11 @@ static const uint32_t BAILOUT_TABLE_ENTRY_SIZE    = 5;
 class Registers {
   public:
     typedef JSC::X86Registers::RegisterID Code;
-
+    typedef uint8_t SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 1, "SetType must be 8 bits");
+        return mozilla::CountPopulation32(x);
+    }
     static const char *GetName(Code code) {
         static const char * const Names[] = { "eax", "ecx", "edx", "ebx",
                                               "esp", "ebp", "esi", "edi" };
@@ -55,6 +59,7 @@ class Registers {
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32_t Total = 8;
+    static const uint32_t TotalPhys = 8;
     static const uint32_t Allocatable = 7;
 
     static const uint32_t AllMask = (1 << Total) - 1;
@@ -106,7 +111,7 @@ typedef uint8_t PackedRegisterMask;
 class FloatRegisters {
   public:
     typedef JSC::X86Registers::XMMRegisterID Code;
-
+    typedef uint32_t SetType;
     static const char *GetName(Code code) {
         static const char * const Names[] = { "xmm0", "xmm1", "xmm2", "xmm3",
                                               "xmm4", "xmm5", "xmm6", "xmm7" };
@@ -124,10 +129,11 @@ class FloatRegisters {
     static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32_t Total = 8;
+    static const uint32_t TotalPhys = 8;
     static const uint32_t Allocatable = 7;
 
     static const uint32_t AllMask = (1 << Total) - 1;
-
+    static const uint32_t AllDoubleMask = AllMask;
     static const uint32_t VolatileMask = AllMask;
     static const uint32_t NonVolatileMask = 0;
 
@@ -139,9 +145,17 @@ class FloatRegisters {
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
 };
 
+template <typename T>
+class TypedRegisterSet;
+
 struct FloatRegister {
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::SetType SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountPopulation32(x);
+    }
 
     Code code_;
 
@@ -193,6 +207,11 @@ struct FloatRegister {
         JS_ASSERT(aliasIdx == 0);
         *ret = *this;
     }
+    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister> &s);
+    static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    uint32_t getRegisterDumpOffsetInBytes();
+
 
 };
 
