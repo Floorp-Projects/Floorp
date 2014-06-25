@@ -659,10 +659,10 @@ class ABIArgIter
     uint32_t stackBytesConsumedSoFar() const { return gen_.stackBytesConsumedSoFar(); }
 };
 
-typedef js::Vector<MIRType, 8> MIRTypeVector;
+typedef Vector<MIRType, 8> MIRTypeVector;
 typedef ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
 
-typedef js::Vector<VarType, 8, LifoAllocPolicy<Fallible> > VarTypeVector;
+typedef Vector<VarType, 8, LifoAllocPolicy<Fallible> > VarTypeVector;
 typedef ABIArgIter<VarTypeVector> ABIArgTypeIter;
 
 class Signature
@@ -749,8 +749,8 @@ enum NeedsBoundsCheck {
 
 namespace {
 
-typedef js::Vector<PropertyName*,1> LabelVector;
-typedef js::Vector<MBasicBlock*,8> BlockVector;
+typedef Vector<PropertyName*,1> LabelVector;
+typedef Vector<MBasicBlock*,8> BlockVector;
 
 // ModuleCompiler encapsulates the compilation of an entire asm.js module. Over
 // the course of an ModuleCompiler object's lifetime, many FunctionCompiler
@@ -929,7 +929,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         }
     };
 
-    typedef js::Vector<const Func*> FuncPtrVector;
+    typedef Vector<const Func*> FuncPtrVector;
 
     class FuncPtrTable
     {
@@ -959,7 +959,7 @@ class MOZ_STACK_CLASS ModuleCompiler
         const Func &elem(unsigned i) const { return *elems_[i]; }
     };
 
-    typedef js::Vector<FuncPtrTable> FuncPtrTableVector;
+    typedef Vector<FuncPtrTable> FuncPtrTableVector;
 
     class ExitDescriptor
     {
@@ -1022,9 +1022,9 @@ class MOZ_STACK_CLASS ModuleCompiler
 
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, Global*> GlobalMap;
-    typedef js::Vector<Func*> FuncVector;
-    typedef js::Vector<AsmJSGlobalAccess> GlobalAccessVector;
-    typedef js::Vector<SlowFunction> SlowFunctionVector;
+    typedef Vector<Func*> FuncVector;
+    typedef Vector<AsmJSGlobalAccess> GlobalAccessVector;
+    typedef Vector<SlowFunction> SlowFunctionVector;
 
     ExclusiveContext *             cx_;
     AsmJSParser &                  parser_;
@@ -1800,10 +1800,10 @@ class FunctionCompiler
 
   private:
     typedef HashMap<PropertyName*, Local> LocalMap;
-    typedef js::Vector<TypedValue> VarInitializerVector;
+    typedef Vector<TypedValue> VarInitializerVector;
     typedef HashMap<PropertyName*, BlockVector> LabeledBlockMap;
     typedef HashMap<ParseNode*, BlockVector> UnlabeledBlockMap;
-    typedef js::Vector<ParseNode*, 4> NodeStack;
+    typedef Vector<ParseNode*, 4> NodeStack;
 
     ModuleCompiler &       m_;
     LifoAlloc &            lifo_;
@@ -2194,7 +2194,7 @@ class FunctionCompiler
         uint32_t spIncrement_;
         Signature sig_;
         MAsmJSCall::Args regArgs_;
-        js::Vector<MAsmJSPassStackArg*> stackArgs_;
+        Vector<MAsmJSPassStackArg*> stackArgs_;
         bool childClobbers_;
 
         friend class FunctionCompiler;
@@ -5360,7 +5360,7 @@ CheckFunction(ModuleCompiler &m, LifoAlloc &lifo, MIRGenerator **mir, ModuleComp
     // Copy the cumulative minimum heap size constraint to the MIR for use in analysis.  The length
     // is also constrained to particular lengths, so firstly round up - a larger 'heap required
     // length' can help range analysis to prove that bounds checks are not needed.
-    uint32_t len = js::RoundUpToNextValidAsmJSHeapLength(m.minHeapLength());
+    uint32_t len = RoundUpToNextValidAsmJSHeapLength(m.minHeapLength());
     m.requireHeapLengthToBeAtLeast(len);
 
     *mir = f.extractMIR();
@@ -5493,11 +5493,11 @@ ParallelCompilationEnabled(ExclusiveContext *cx)
 // State of compilation as tracked and updated by the main thread.
 struct ParallelGroupState
 {
-    js::Vector<AsmJSParallelTask> &tasks;
+    Vector<AsmJSParallelTask> &tasks;
     int32_t outstandingJobs; // Good work, jobs!
     uint32_t compiledJobs;
 
-    explicit ParallelGroupState(js::Vector<AsmJSParallelTask> &tasks)
+    explicit ParallelGroupState(Vector<AsmJSParallelTask> &tasks)
       : tasks(tasks), outstandingJobs(0), compiledJobs(0)
     { }
 };
@@ -5677,7 +5677,7 @@ CheckFunctionsParallel(ModuleCompiler &m)
 
     // Allocate scoped AsmJSParallelTask objects. Each contains a unique
     // LifoAlloc that provides all necessary memory for compilation.
-    js::Vector<AsmJSParallelTask, 0> tasks(m.cx());
+    Vector<AsmJSParallelTask, 0> tasks(m.cx());
     if (!tasks.initCapacity(numParallelJobs))
         return false;
 

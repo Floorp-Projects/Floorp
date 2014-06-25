@@ -14,7 +14,6 @@
 #include "jit/IonFrames-inl.h"
 #include "vm/Stack-inl.h"
 
-using namespace mozilla;
 using namespace js;
 using namespace js::jit;
 
@@ -124,7 +123,7 @@ struct DebugModeOSREntry
     }
 };
 
-typedef js::Vector<DebugModeOSREntry> DebugModeOSREntryVector;
+typedef Vector<DebugModeOSREntry> DebugModeOSREntryVector;
 
 class UniqueScriptOSREntryIter
 {

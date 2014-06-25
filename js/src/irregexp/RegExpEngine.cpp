@@ -1479,7 +1479,7 @@ class irregexp::RegExpCompiler
   private:
     EndNode* accept_;
     int next_register_;
-    js::Vector<RegExpNode *, 4, SystemAllocPolicy> work_list_;
+    Vector<RegExpNode *, 4, SystemAllocPolicy> work_list_;
     int recursion_depth_;
     RegExpMacroAssembler* macro_assembler_;
     bool ignore_case_;
@@ -2972,7 +2972,7 @@ EmitDoubleBoundaryTest(RegExpMacroAssembler* masm,
     }
 }
 
-typedef js::Vector<int, 4, LifoAllocPolicy<Infallible> > RangeBoundaryVector;
+typedef Vector<int, 4, LifoAllocPolicy<Infallible> > RangeBoundaryVector;
 
 // even_label is for ranges[i] to ranges[i + 1] where i - start_index is even.
 // odd_label is for ranges[i] to ranges[i + 1] where i - start_index is odd.
@@ -3974,7 +3974,7 @@ class AlternativeGenerationList
 
   private:
     static const size_t kAFew = 10;
-    js::Vector<AlternativeGeneration *, 1, LifoAllocPolicy<Infallible> > alt_gens_;
+    Vector<AlternativeGeneration *, 1, LifoAllocPolicy<Infallible> > alt_gens_;
     AlternativeGeneration a_few_alt_gens_[kAFew];
 };
 
