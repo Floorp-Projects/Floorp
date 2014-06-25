@@ -311,7 +311,7 @@ EvalKernel(JSContext *cx, const CallArgs &args, EvalType evalType, AbstractFrame
         esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        JSScript *maybeScript;
+        RootedScript maybeScript(cx);
         unsigned lineno;
         const char *filename;
         JSPrincipals *originPrincipals;
@@ -387,7 +387,7 @@ js::DirectEvalStringFromIon(JSContext *cx,
     esg.lookupInEvalCache(flatStr, callerScript, pc);
 
     if (!esg.foundScript()) {
-        JSScript *maybeScript;
+        RootedScript maybeScript(cx);
         const char *filename;
         unsigned lineno;
         JSPrincipals *originPrincipals;

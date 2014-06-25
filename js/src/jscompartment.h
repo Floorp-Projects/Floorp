@@ -425,7 +425,7 @@ struct JSCompartment
     bool setDebugModeFromC(JSContext *cx, bool b,
                            js::AutoDebugModeInvalidation &invalidate);
 
-    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JSObject *handler);
+    void clearBreakpointsIn(js::FreeOp *fop, js::Debugger *dbg, JS::HandleObject handler);
     void clearTraps(js::FreeOp *fop);
 
   private:
