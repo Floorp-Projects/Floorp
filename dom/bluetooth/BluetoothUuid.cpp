@@ -51,6 +51,7 @@ BluetoothUuidHelper::GetBluetoothServiceClass(uint16_t aServiceUuid)
   BluetoothServiceClass retValue = BluetoothServiceClass::UNKNOWN;
   switch (aServiceUuid) {
     case BluetoothServiceClass::A2DP:
+    case BluetoothServiceClass::A2DP_SINK:
     case BluetoothServiceClass::HANDSFREE:
     case BluetoothServiceClass::HANDSFREE_AG:
     case BluetoothServiceClass::HEADSET:
