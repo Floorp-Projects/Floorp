@@ -139,7 +139,6 @@ loop.shared.models = (function() {
         throw new Error("Can't start session as it's not ready");
       }
       this.session = this.sdk.initSession(this.get("sessionId"));
-      this.listenTo(this.session, "sessionConnected", this._sessionConnected);
       this.listenTo(this.session, "streamCreated", this._streamCreated);
       this.listenTo(this.session, "connectionDestroyed",
                                   this._connectionDestroyed);
@@ -147,7 +146,8 @@ loop.shared.models = (function() {
                                   this._sessionDisconnected);
       this.listenTo(this.session, "networkDisconnected",
                                   this._networkDisconnected);
-      this.session.connect(this.get("apiKey"), this.get("sessionToken"));
+      this.session.connect(this.get("apiKey"), this.get("sessionToken"),
+                           this._onConnectCompletion.bind(this));
     },
 
     /**
@@ -160,14 +160,22 @@ loop.shared.models = (function() {
     },
 
     /**
-     * Session is created.
+     * Manages connection status
+     * triggers apropriate event for connection error/success
+     * http://tokbox.com/opentok/tutorials/connect-session/js/
+     * http://tokbox.com/opentok/tutorials/hello-world/js/
      * http://tokbox.com/opentok/libraries/client/js/reference/SessionConnectEvent.html
      *
-     * @param  {SessionConnectEvent} event
+     * @param {error|null} error
      */
-    _sessionConnected: function(event) {
-      this.trigger("session:connected", event);
-      this.set("ongoing", true);
+    _onConnectCompletion: function(error) {
+      if (error) {
+        this.trigger("session:connection-error", error);
+        this.endSession();
+      } else {
+        this.trigger("session:connected");
+        this.set("ongoing", true);
+      }
     },
 
     /**
