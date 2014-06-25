@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>The green box shouldn't be invalidated when the blue box starts to move.</title>
+
+<style>
+
+body {
+  margin: 0;
+}
+
+#clip {
+  border: 1px solid black;
+  margin: 50px;
+  overflow: hidden;
+  height: 200px;
+  width: 400px;
+  position: relative;
+}
+
+#animatedTransform {
+  border: 1px solid blue;
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  z-index: 1;
+  top: 50px;
+  left: 50px;
+  transition: transform ease-in-out .4s;
+}
+
+#clip:hover > #animatedTransform,
+#animatedTransform.animate {
+  transform: translateX(200px);
+}
+
+#aboveTransform {
+  position: relative;
+  margin: 50px 100px;
+  border: 1px solid lime;
+  width: 80px;
+  height: 80px;
+  z-index: 2;
+}
+
+</style>
+
+<div id="clip">
+  <div id="animatedTransform"></div>
+</div>
+
+<div id="aboveTransform" class="reftest-no-paint"></div>
+
+<script>
+
+function doTest() {
+  document.getElementById("animatedTransform").className = "animate";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
