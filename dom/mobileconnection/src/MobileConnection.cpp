@@ -605,7 +605,7 @@ MobileConnection::SetCallForwardingOption(const MozCallForwardingOptions& aOptio
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
+  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -642,7 +642,7 @@ MobileConnection::GetCallBarringOption(const MozCallBarringOptions& aOptions,
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
+  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -679,7 +679,7 @@ MobileConnection::SetCallBarringOption(const MozCallBarringOptions& aOptions,
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
+  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
@@ -716,7 +716,7 @@ MobileConnection::ChangeCallBarringPassword(const MozCallBarringOptions& aOption
   }
 
   AutoJSAPI jsapi;
-  if (!NS_WARN_IF(jsapi.InitUsingWin(GetOwner()))) {
+  if (!NS_WARN_IF(jsapi.Init(GetOwner()))) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
