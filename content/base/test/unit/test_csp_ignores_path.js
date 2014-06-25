@@ -27,7 +27,7 @@ function testValidSRCsHostSourceWithSchemeAndPath() {
   ]
 
   var obj;
-  var expected = "http://test1.example.com:80";
+  var expected = "http://test1.example.com";
   for (let i in csps) {
     var src = csps[i];
     obj = CSPSourceList.fromString(src, undefined, self);
@@ -53,7 +53,7 @@ function testValidSRCsRegularHost() {
   ]
 
   var obj;
-  var expected = "http://test1.example.com:80";
+  var expected = "http://test1.example.com";
   for (let i in csps) {
     var src = csps[i];
     obj = CSPSourceList.fromString(src, undefined, self);
@@ -77,7 +77,7 @@ function testValidSRCsWildCardHost() {
   ]
 
   var obj;
-  var expected = "http://*.example.com:80";
+  var expected = "http://*.example.com";
   for (let i in csps) {
     var src = csps[i];
     obj = CSPSourceList.fromString(src, undefined, self);
@@ -99,7 +99,7 @@ function testValidSRCsRegularPort() {
   ]
 
   var obj;
-  var expected = "http://test1.example.com:80";
+  var expected = "http://test1.example.com";
   for (let i in csps) {
     var src = csps[i];
     obj = CSPSourceList.fromString(src, undefined, self);
