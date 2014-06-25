@@ -28,6 +28,10 @@ var FullZoom = {
   // changed in the browser. See _getBrowserToken and _ignorePendingZoomAccesses.
   _browserTokenMap: new WeakMap(),
 
+  // Stores initial locations if we receive onLocationChange
+  // events before we're initialized.
+  _initialLocations: new WeakMap(),
+
   get siteSpecific() {
     return this._siteSpecificPref;
   },
@@ -60,6 +64,18 @@ var FullZoom = {
     // Listen for changes to the browser.zoom branch so we can enable/disable
     // updating background tabs and per-site saving and restoring of zoom levels.
     gPrefService.addObserver("browser.zoom.", this, true);
+
+    // If we received onLocationChange events for any of the current browsers
+    // before we were initialized we want to replay those upon initialization.
+    for (let browser of gBrowser.browsers) {
+      if (this._initialLocations.has(browser)) {
+        this.onLocationChange(...this._initialLocations.get(browser), browser);
+      }
+    }
+
+    // This should be nulled after initialization.
+    this._initialLocations.clear();
+    this._initialLocations = null;
   },
 
   destroy: function FullZoom_destroy() {
@@ -217,10 +233,18 @@ var FullZoom = {
    *        (optional) browser object displaying the document
    */
   onLocationChange: function FullZoom_onLocationChange(aURI, aIsTabSwitch, aBrowser) {
+    let browser = aBrowser || gBrowser.selectedBrowser;
+
+    // If we haven't been initialized yet but receive an onLocationChange
+    // notification then let's store and replay it upon initialization.
+    if (this._initialLocations) {
+      this._initialLocations.set(browser, [aURI, aIsTabSwitch]);
+      return;
+    }
+
     // Ignore all pending async zoom accesses in the browser.  Pending accesses
     // that started before the location change will be prevented from applying
     // to the new location.
-    let browser = aBrowser || gBrowser.selectedBrowser;
     this._ignorePendingZoomAccesses(browser);
 
     if (!aURI || (aIsTabSwitch && !this.siteSpecific)) {
