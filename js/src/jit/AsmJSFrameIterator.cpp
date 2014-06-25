@@ -12,7 +12,7 @@
 using namespace js;
 using namespace js::jit;
 
-static uint8_t *
+static void *
 ReturnAddressFromFP(uint8_t *fp)
 {
     // In asm.js code, the "frame" consists of a single word: the saved
@@ -39,25 +39,29 @@ AsmJSFrameIterator::operator++()
 }
 
 void
-AsmJSFrameIterator::settle(uint8_t *returnAddress)
+AsmJSFrameIterator::settle(void *returnAddress)
 {
-    callsite_ = module_->lookupCallSite(returnAddress);
-    JS_ASSERT(callsite_);
+    const AsmJSModule::CodeRange *codeRange = module_->lookupCodeRange(ReturnAddressFromFP(fp_));
+    JS_ASSERT(codeRange);
+    codeRange_ = codeRange;
 
-    if (callsite_->isEntry()) {
+    switch (codeRange->kind()) {
+      case AsmJSModule::CodeRange::Entry:
         fp_ = nullptr;
         JS_ASSERT(done());
         return;
+      case AsmJSModule::CodeRange::Function:
+        callsite_ = module_->lookupCallSite(returnAddress);
+        JS_ASSERT(callsite_);
+        break;
     }
-
-    JS_ASSERT(callsite_->isNormal());
 }
 
 JSAtom *
 AsmJSFrameIterator::functionDisplayAtom() const
 {
     JS_ASSERT(!done());
-    return module_->functionName(callsite_->functionNameIndex());
+    return reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_)->functionName(*module_);
 }
 
 unsigned
