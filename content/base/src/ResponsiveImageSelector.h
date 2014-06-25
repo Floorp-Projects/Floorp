@@ -20,7 +20,6 @@ class ResponsiveImageSelector : public nsISupports
 public:
   NS_DECL_ISUPPORTS
   ResponsiveImageSelector(nsIContent *aContent);
-  virtual ~ResponsiveImageSelector();
 
   // Given a srcset string, parse and replace current candidates (does not
   // replace default source)
@@ -33,6 +32,9 @@ public:
   // Get the URL for the selected best candidate
   already_AddRefed<nsIURI> GetSelectedImageURL();
   double GetSelectedImageDensity();
+
+protected:
+  virtual ~ResponsiveImageSelector();
 
 private:
   // Append a candidate unless its selector is duplicated by a higher priority

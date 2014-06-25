@@ -53,7 +53,7 @@ struct Copier
 // worthwhile on 32-bit platforms, so handle it specially.  Only do it
 // if 64-bit types aren't sufficiently aligned; the alignment
 // requirements for them vary between 32-bit platforms.
-#ifndef HAVE_64BIT_OS
+#ifndef HAVE_64BIT_BUILD
 template<typename T>
 struct Copier<T, sizeof(uint64_t), false>
 {
