@@ -1,0 +1,57 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    'nsComposerCommands.cpp',
+    'nsComposerCommandsUpdater.cpp',
+    'nsComposerController.cpp',
+    'nsComposerDocumentCommands.cpp',
+    'nsComposerRegistration.cpp',
+    'nsComposeTxtSrvFilter.cpp',
+    'nsEditingSession.cpp',
+    'nsEditorSpellCheck.cpp',
+]
+
+FAIL_ON_WARNINGS = True
+
+FINAL_LIBRARY = 'xul'
+RESOURCE_FILES += [
+    'res/EditorOverride.css',
+    'res/grabber.gif',
+    'res/table-add-column-after-active.gif',
+    'res/table-add-column-after-hover.gif',
+    'res/table-add-column-after.gif',
+    'res/table-add-column-before-active.gif',
+    'res/table-add-column-before-hover.gif',
+    'res/table-add-column-before.gif',
+    'res/table-add-row-after-active.gif',
+    'res/table-add-row-after-hover.gif',
+    'res/table-add-row-after.gif',
+    'res/table-add-row-before-active.gif',
+    'res/table-add-row-before-hover.gif',
+    'res/table-add-row-before.gif',
+    'res/table-remove-column-active.gif',
+    'res/table-remove-column-hover.gif',
+    'res/table-remove-column.gif',
+    'res/table-remove-row-active.gif',
+    'res/table-remove-row-hover.gif',
+    'res/table-remove-row.gif',
+    'res/text_caret.png',
+    'res/text_caret@1.5x.png',
+    'res/text_caret@2.25x.png',
+    'res/text_caret@2x.png',
+    'res/text_caret_tilt_left.png',
+    'res/text_caret_tilt_left@1.5x.png',
+    'res/text_caret_tilt_left@2.25x.png',
+    'res/text_caret_tilt_left@2x.png',
+    'res/text_caret_tilt_right.png',
+    'res/text_caret_tilt_right@1.5x.png',
+    'res/text_caret_tilt_right@2.25x.png',
+    'res/text_caret_tilt_right@2x.png',
+    'res/text_selection_handle.png',
+    'res/text_selection_handle@1.5.png',
+    'res/text_selection_handle@2.png',
+]
