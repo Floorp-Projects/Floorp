@@ -471,9 +471,8 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
                             jsval val)
 {
     bool valid;
-    JSString* retval;
     JSExceptionState* exceptionState;
-    JSContext* cx;
+    JSContext *cx = jsdthreadstate->context;
 
     JSD_LOCK_THREADSTATES(jsdc);
     valid = jsd_IsValidFrameInThreadState(jsdc, jsdthreadstate, jsdframe);
@@ -482,13 +481,15 @@ jsd_ValToStringInStackFrame(JSDContext* jsdc,
     if( ! valid )
         return nullptr;
 
-    cx = jsdthreadstate->context;
+    JS::RootedString retval(cx);
     MOZ_ASSERT(cx);
-
     JS::RootedValue v(cx, val);
-    exceptionState = JS_SaveExceptionState(cx);
-    retval = JS::ToString(cx, v);
-    JS_RestoreExceptionState(cx, exceptionState);
+    {
+        AutoPushJSContext cx(jsdthreadstate->context);
+        exceptionState = JS_SaveExceptionState(cx);
+        retval = JS::ToString(cx, v);
+        JS_RestoreExceptionState(cx, exceptionState);
+    }
 
     return retval;
 }
