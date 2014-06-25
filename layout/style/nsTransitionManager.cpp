@@ -768,7 +768,7 @@ nsTransitionManager::WillRefresh(mozilla::TimeStamp aTime)
 
 void
 nsTransitionManager::FlushTransitions(FlushFlags aFlags)
-{ 
+{
   if (PR_CLIST_IS_EMPTY(&mElementData)) {
     // no transitions, leave early
     return;
@@ -811,37 +811,42 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
           if (aFlags == Can_Throttle) {
             et->mAnimations.RemoveElementAt(i);
           }
-        } else if (anim->mStartTime + anim->mTiming.mDelay +
-                   anim->mTiming.mIterationDuration <= now) {
-          MOZ_ASSERT(anim->mProperties.Length() == 1,
-                     "Should have one animation property for a transition");
-          nsCSSProperty prop = anim->mProperties[0].mProperty;
-          if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
-          {
-            prop = nsCSSProps::OtherNameFor(prop);
-          }
-          events.AppendElement(
-            TransitionEventInfo(et->mElement, prop,
-                                anim->mTiming.mIterationDuration,
-                                et->PseudoElement()));
+        } else {
+          TimeDuration localTime = anim->GetLocalTimeAt(now);
+          ComputedTiming computedTiming =
+            ElementAnimation::GetComputedTimingAt(localTime, anim->mTiming);
+          if (computedTiming.mPhase == ComputedTiming::AnimationPhase_After) {
+            MOZ_ASSERT(anim->mProperties.Length() == 1,
+                       "Should have one animation property for a transition");
+            nsCSSProperty prop = anim->mProperties[0].mProperty;
+            if (nsCSSProps::PropHasFlags(prop, CSS_PROPERTY_REPORT_OTHER_NAME))
+            {
+              prop = nsCSSProps::OtherNameFor(prop);
+            }
+            events.AppendElement(
+              TransitionEventInfo(et->mElement, prop,
+                                  anim->mTiming.mIterationDuration,
+                                  et->PseudoElement()));
 
-          // Leave this transition in the list for one more refresh
-          // cycle, since we haven't yet processed its style change, and
-          // if we also have (already, or will have from processing
-          // transitionend events or other refresh driver notifications)
-          // a non-animation style change that would affect it, we need
-          // to know not to start a new transition for the transition
-          // from the almost-completed value to the final value.
-          anim->SetFinishedTransition();
-          et->UpdateAnimationGeneration(mPresContext);
-          transitionStartedOrEnded = true;
-        } else if (anim->mStartTime + anim->mTiming.mDelay <= now &&
-                   canThrottleTick &&
-                   !anim->mIsRunningOnCompositor) {
-          // Start a transition with a delay where we should start the
-          // transition proper.
-          et->UpdateAnimationGeneration(mPresContext);
-          transitionStartedOrEnded = true;
+            // Leave this transition in the list for one more refresh
+            // cycle, since we haven't yet processed its style change, and
+            // if we also have (already, or will have from processing
+            // transitionend events or other refresh driver notifications)
+            // a non-animation style change that would affect it, we need
+            // to know not to start a new transition for the transition
+            // from the almost-completed value to the final value.
+            anim->SetFinishedTransition();
+            et->UpdateAnimationGeneration(mPresContext);
+            transitionStartedOrEnded = true;
+          } else if ((computedTiming.mPhase ==
+                      ComputedTiming::AnimationPhase_Active) &&
+                     canThrottleTick &&
+                    !anim->mIsRunningOnCompositor) {
+            // Start a transition with a delay where we should start the
+            // transition proper.
+            et->UpdateAnimationGeneration(mPresContext);
+            transitionStartedOrEnded = true;
+          }
         }
       } while (i != 0);
 
