@@ -23,85 +23,85 @@ inputmethod_setup(function() {
 function appFrameScript() {
   let input = content.document.getElementById('test-input');
   input.oninput = function() {
-    dump('oninput was called in file_test_app.html.');
-    sendAsyncMessage('test:InputMethod:oninput', {});
+    sendAsyncMessage('test:InputMethod:oninput', {
+      value: input.value
+    });
   };
-
-  /*
-   * Bug 957213. Sometimes we need to refocus the input field to avoid
-   * intermittent test failure.
-   */
-  content.setInterval(function() {
-    input.focus();
-  }, 500);
 }
 
 function runTest() {
-  let timeoutId = null;
+  let app, keyboard;
 
-  // Create an app frame to recieve keyboard inputs.
-  let app = document.createElement('iframe');
-  app.src = 'file_test_app.html';
-  app.setAttribute('mozbrowser', true);
-  document.body.appendChild(app);
-  app.addEventListener('mozbrowserloadend', function() {
-    let mm = SpecialPowers.getBrowserFrameMessageManager(app);
-    mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
-    mm.addMessageListener("test:InputMethod:oninput", function() {
-      ok(true, 'Keyboard input was received.');
-      clearTimeout(timeoutId);
-      inputmethod_cleanup();
-    });
-  });
-
-  // Create a browser frame to load the input method app.
-  let keyboard = document.createElement('iframe');
-  keyboard.setAttribute('mozbrowser', true);
-  document.body.appendChild(keyboard);
-
-  // Bug 953044 setInputMethodActive(false) before input method app loads should
-  // always succeed.
-  let req = keyboard.setInputMethodActive(false);
-  req.onsuccess = function() {
-    ok(true, 'setInputMethodActive before loading succeeded.');
-  };
-
-  req.onerror = function() {
-   ok(false, 'setInputMethodActive before loading failed: ' + this.error.name);
-   clearTimeout(timeoutId);
-   inputmethod_cleanup();
-  };
+  /**
+   * So this test does the following:
+   * 1. Create a mozbrowser iframe with a text field in it, and focus the text field
+   * 2. 100ms. after loading we create new keyboard iframe, that will try to execute
+   *    replaceSurroundingText on the current active inputcontext
+   * 3. That should trigger 'input' event on the said text field
+   * 4. And if that happens we know everything is OK
+   */
 
   let path = location.pathname;
-  let imeUrl = location.protocol + '//' + location.host +
-               path.substring(0, path.lastIndexOf('/')) +
-               '/file_inputmethod.html#data';
-  SpecialPowers.pushPermissions([{
-    type: 'input',
-    allow: true,
-    context: imeUrl
-  }], function() {
-     let req = keyboard.setInputMethodActive(true);
+  let basePath = location.protocol + '//' + location.host +
+               path.substring(0, path.lastIndexOf('/'));
 
-     req.onsuccess = function() {
-       ok(true, 'setInputMethodActive succeeded.');
-     };
+  // STEP 1: Create an app frame to recieve keyboard inputs.
+  function step1() {
+    app = document.createElement('iframe');
+    app.src = basePath + '/file_test_app.html';
+    app.setAttribute('mozbrowser', true);
+    document.body.appendChild(app);
+    app.addEventListener('mozbrowserloadend', function() {
+      let mm = SpecialPowers.getBrowserFrameMessageManager(app);
+      mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
+      mm.addMessageListener("test:InputMethod:oninput", function(ev) {
+        step4(SpecialPowers.wrap(ev).json.value);
+      });
 
-     req.onerror = function() {
-       ok(false, 'setInputMethodActive failed: ' + this.error.name);
-       inputmethod_cleanup();
-     };
+      step2();
+    });
+  }
 
-     // Loads the input method app to the browser frame after a delay.
-     SpecialPowers.DOMWindowUtils.focus(app);
-     setTimeout(function() {
-       keyboard.src = imeUrl;
-       timeoutId = setTimeout(function() {
-         inputmethod_cleanup();
-         ok(false, 'Failed to generate keyboard input.');
-       }, 20000);
-     }, 100);
-  });
+  function step2() {
+    // STEP 2a: Create a browser frame to load the input method app.
+    keyboard = document.createElement('iframe');
+    keyboard.setAttribute('mozbrowser', true);
+    document.body.appendChild(keyboard);
+
+    // STEP 2b: Grant input privileges to the keyboard iframe
+    let imeUrl = basePath + '/file_inputmethod.html#data';
+
+    SpecialPowers.pushPermissions([{
+      type: 'input',
+      allow: true,
+      context: imeUrl
+    }], function() {
+      // STEP 2c: Tell Gecko to use this iframe as its keyboard app
+      let req = keyboard.setInputMethodActive(true);
+
+      req.onsuccess = function() {
+        ok(true, 'setInputMethodActive succeeded.');
+      };
+
+      req.onerror = function() {
+        ok(false, 'setInputMethodActive failed: ' + this.error.name);
+        inputmethod_cleanup();
+      };
+
+      // STEP 3: Loads the input method app to the browser frame after a delay.
+      setTimeout(function() {
+        keyboard.src = imeUrl;
+      }, 100);
+    });
+  }
+
+  function step4(val) {
+    ok(true, 'Keyboard input was received.');
+    is(val, '#dataYuan', 'Input value');
+    inputmethod_cleanup();
+  }
+
+  step1();
 }
 
 </script>
