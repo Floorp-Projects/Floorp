@@ -193,7 +193,8 @@ let FormAutofillTest = {
     // Wait for the initialization event before opening the window.
     let promiseUIWindow =
         TestUtils.waitForNotification("formautofill-window-initialized");
-    let ui = yield FormAutofill.integration.createRequestAutocompleteUI({});
+    let ui = yield FormAutofill.integration.createRequestAutocompleteUI(
+                                                         aFormAutofillData);
     let promiseResult = ui.show();
 
     // The window is the subject of the observer notification.
@@ -202,6 +203,26 @@ let FormAutofillTest = {
       promiseResult: promiseResult,
     };
   }),
+};
+
+let TestData = {
+  /**
+   * Autofill UI request for the e-mail field only.
+   */
+  get requestEmailOnly() {
+    return {
+      sections: [{
+        name: "",
+        addressSections: [{
+          addressType: "",
+          fields: [{
+            fieldName: "email",
+            contactType: "",
+          }],
+        }],
+      }],
+    };
+  },
 };
 
 /* --- Initialization and termination functions common to all tests --- */

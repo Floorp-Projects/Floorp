@@ -13,15 +13,20 @@
  */
 add_task(function* test_select_profile() {
   // Request an e-mail address.
-  let data = { "": { "": { "email": null } } };
-  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(data);
+  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(
+                                          TestData.requestEmailOnly);
 
   // Accept the dialog.
   let acceptButton = uiWindow.document.getElementById("accept");
   EventUtils.synthesizeMouseAtCenter(acceptButton, {}, uiWindow);
 
   let result = yield promiseResult;
-  Assert.equal(result.email, "email@example.org");
+  Assert.equal(result.fields.length, 1);
+  Assert.equal(result.fields[0].section, "");
+  Assert.equal(result.fields[0].addressType, "");
+  Assert.equal(result.fields[0].contactType, "");
+  Assert.equal(result.fields[0].fieldName, "email");
+  Assert.equal(result.fields[0].value, "email@example.org");
 });
 
 /**
@@ -29,8 +34,8 @@ add_task(function* test_select_profile() {
  */
 add_task(function* test_cancel() {
   // Request an e-mail address.
-  let data = { "": { "": { "email": null } } };
-  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(data);
+  let { uiWindow, promiseResult } = yield FormAutofillTest.showUI(
+                                          TestData.requestEmailOnly);
 
   // Cancel the dialog.
   let acceptButton = uiWindow.document.getElementById("cancel");
