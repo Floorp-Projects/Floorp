@@ -18,6 +18,7 @@
 #include "nsClassHashtable.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 
+class nsIRunnable;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -119,8 +120,10 @@ public:
   static void GetAudioChannelString(AudioChannel aChannel, nsAString& aString);
   static void GetDefaultAudioChannelString(nsAString& aString);
 
-protected:
   void Notify();
+
+protected:
+  void SendNotification();
 
   /**
    * Send the audio-channel-changed notification for the given process ID if
@@ -242,6 +245,8 @@ protected:
   uint64_t mPlayableHiddenContentChildID;
 
   bool mDisabled;
+
+  nsCOMPtr<nsIRunnable> mRunnable;
 
   nsCOMPtr<nsITimer> mDeferTelChannelTimer;
   bool mTimerElementHidden;
