@@ -47,7 +47,6 @@ class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
 
 public:
     nsXULTemplateBuilder();
-    virtual ~nsXULTemplateBuilder();
 
     nsresult InitGlobals();
 
@@ -334,6 +333,8 @@ public:
                                nsIRDFResource** aResource);
 
 protected:
+    virtual ~nsXULTemplateBuilder();
+
     nsCOMPtr<nsISupports> mDataSource;
     nsCOMPtr<nsIRDFDataSource> mDB;
     nsCOMPtr<nsIRDFCompositeDataSource> mCompDB;

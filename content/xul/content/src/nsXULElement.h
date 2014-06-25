@@ -115,7 +115,6 @@ public:
 
     Type                     mType;
 
-    virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsXULPrototypeDocument* aProtoDoc,
                                const nsTArray<nsRefPtr<mozilla::dom::NodeInfo>> *aNodeInfos) = 0;
@@ -145,6 +144,7 @@ public:
 protected:
     nsXULPrototypeNode(Type aType)
         : mType(aType) {}
+    virtual ~nsXULPrototypeNode() {}
 };
 
 class nsXULPrototypeElement : public nsXULPrototypeNode

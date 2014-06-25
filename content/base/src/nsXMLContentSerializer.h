@@ -29,7 +29,6 @@ class nsINode;
 class nsXMLContentSerializer : public nsIContentSerializer {
  public:
   nsXMLContentSerializer();
-  virtual ~nsXMLContentSerializer();
 
   NS_DECL_ISUPPORTS
 
@@ -68,6 +67,7 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                  nsAString& aStr) MOZ_OVERRIDE;
 
  protected:
+  virtual ~nsXMLContentSerializer();
 
   /**
    * Appends a char16_t character and increments the column position

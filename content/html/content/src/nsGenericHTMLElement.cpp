@@ -166,14 +166,14 @@ private:
 
 class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
 {
+  virtual ~nsGenericHTMLElementTearoff()
+  {
+  }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   nsGenericHTMLElementTearoff(nsGenericHTMLElement *aElement)
     : mElement(aElement)
-  {
-  }
-
-  virtual ~nsGenericHTMLElementTearoff()
   {
   }
 

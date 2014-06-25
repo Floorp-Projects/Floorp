@@ -26,7 +26,6 @@ public:
     // aIsContext is true, the popup is a context menu which opens on a
     // context menu event.
     nsXULPopupListener(mozilla::dom::Element* aElement, bool aIsContext);
-    virtual ~nsXULPopupListener(void);
 
     // nsISupports
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -34,6 +33,8 @@ public:
     NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
+    virtual ~nsXULPopupListener(void);
+
     // open the popup. aEvent is the event that triggered the popup such as
     // a mouse click and aTargetContent is the target of this event.
     virtual nsresult LaunchPopup(nsIDOMEvent* aEvent, nsIContent* aTargetContent);

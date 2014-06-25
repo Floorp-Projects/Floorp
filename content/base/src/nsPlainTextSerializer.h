@@ -34,7 +34,6 @@ class nsPlainTextSerializer : public nsIContentSerializer
 {
 public:
   nsPlainTextSerializer();
-  virtual ~nsPlainTextSerializer();
 
   NS_DECL_ISUPPORTS
 
@@ -67,6 +66,8 @@ public:
                                  nsAString& aStr) MOZ_OVERRIDE;
 
 protected:
+  virtual ~nsPlainTextSerializer();
+
   nsresult GetAttributeValue(nsIAtom* aName, nsString& aValueRet);
   void AddToLine(const char16_t* aStringToAdd, int32_t aLength);
   void EndLine(bool softlinebreak, bool aBreakBySpace = false);

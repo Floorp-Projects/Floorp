@@ -242,6 +242,8 @@ class HTMLMediaElement::MediaLoadListener MOZ_FINAL : public nsIStreamListener,
                                                       public nsIInterfaceRequestor,
                                                       public nsIObserver
 {
+  ~MediaLoadListener() {}
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER

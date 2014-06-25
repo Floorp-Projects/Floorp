@@ -28,7 +28,6 @@ class nsXULCommandDispatcher : public nsIDOMXULCommandDispatcher,
 {
 public:
     nsXULCommandDispatcher(nsIDocument* aDocument);
-    virtual ~nsXULCommandDispatcher();
 
     // nsISupports
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -40,6 +39,8 @@ public:
 
     void Disconnect();
 protected:
+    virtual ~nsXULCommandDispatcher();
+
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
     nsIContent* GetRootFocusedContentAndWindow(nsPIDOMWindow** aWindow);
