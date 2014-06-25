@@ -334,6 +334,14 @@ LInstruction::printName(FILE *fp)
     printName(fp, op());
 }
 
+bool
+LAllocation::aliases(const LAllocation &other) const
+{
+    if (isFloatReg() && other.isFloatReg())
+        return toFloatReg()->reg().aliases(other.toFloatReg()->reg());
+    return *this == other;
+}
+
 #ifdef DEBUG
 static const char * const TypeChars[] =
 {
@@ -377,14 +385,6 @@ LDefinition::toString() const
     static char buf[40];
     PrintDefinition(buf, sizeof(buf), *this);
     return buf;
-}
-
-bool
-LAllocation::aliases(const LAllocation &other) const
-{
-    if (isFloatReg() && other.isFloatReg())
-        return toFloatReg()->reg().aliases(other.toFloatReg()->reg());
-    return *this == other;
 }
 
 static void
