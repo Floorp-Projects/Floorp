@@ -45,6 +45,7 @@ protected:
 TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNoParams)
 {
   const uint8_t DER_ALGORITHM_IDENTIFIER_NO_PARAMS[] = {
+    0x30/*SEQUENCE*/, 0x06/*LENGTH*/,
     0x06, 0x04, 0xde, 0xad, 0xbe, 0xef   // OID
   };
 
@@ -79,15 +80,12 @@ TEST_F(pkixder_pki_types_tests, AlgorithmIdentifierNullParams)
   ASSERT_EQ(Success, input.Init(DER_ALGORITHM_IDENTIFIER_NULL_PARAMS,
                                 sizeof DER_ALGORITHM_IDENTIFIER_NULL_PARAMS));
 
-  Input nested;
-  ASSERT_EQ(Success, ExpectTagAndGetValue(input, SEQUENCE, nested));
-
   const uint8_t expectedAlgorithmID[] = {
     0xde, 0xad, 0xbe, 0xef
   };
 
   SECAlgorithmID algorithmID;
-  ASSERT_EQ(Success, AlgorithmIdentifier(nested, algorithmID));
+  ASSERT_EQ(Success, AlgorithmIdentifier(input, algorithmID));
 
   ASSERT_EQ(sizeof expectedAlgorithmID, algorithmID.algorithm.len);
   ASSERT_TRUE(memcmp(algorithmID.algorithm.data, expectedAlgorithmID,
