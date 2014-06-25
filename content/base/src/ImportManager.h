@@ -88,6 +88,8 @@ public:
   }
 
 private:
+  ~ImportLoader() {}
+
   // If a new referrer LinkElement was added, let's
   // see if we are already finished and if so fire
   // the right event.
@@ -129,6 +131,9 @@ private:
 class ImportManager MOZ_FINAL : public nsISupports
 {
   typedef nsRefPtrHashtable<nsURIHashKey, ImportLoader> ImportMap;
+
+  ~ImportManager() {}
+
 public:
   ImportManager() {}
 

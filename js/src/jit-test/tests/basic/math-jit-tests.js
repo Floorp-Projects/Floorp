@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 
 // Apply FUNCNAME to ARGS, and check against EXPECTED.
 // Expect a loop containing such a call to be traced.

@@ -2,21 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
+MARIONETTE_HEAD_JS = 'head.js';
 
 const SELF = "5554";
-
-SpecialPowers.setBoolPref("dom.sms.enabled", true);
-SpecialPowers.addPermission("sms", true, document);
-
-function cleanUp() {
-  SpecialPowers.removePermission("sms", document);
-  SpecialPowers.clearUserPref("dom.sms.enabled");
-  finish();
-}
-
-let manager = window.navigator.mozMobileMessage;
-ok(manager instanceof MozMobileMessageManager,
-   "manager is instance of " + manager.constructor);
 
 function randomString16() {
   return Math.random().toString(36).substr(2, 16);
@@ -26,30 +14,21 @@ function times(str, n) {
   return (new Array(n + 1)).join(str);
 }
 
-function repeat(func, array, oncomplete) {
-  (function do_call(index) {
-    let next = index < (array.length - 1) ? do_call.bind(null, index + 1) : oncomplete;
-    func.apply(null, [array[index], next]);
-  })(0);
+function test(aBody) {
+  let promises = [];
+
+  promises.push(waitForManagerEvent('received')
+    .then(function(aEvent) {
+      let message = aEvent.message;
+      is(message.body, aBody, "message.body");
+    }));
+
+  promises.push(sendSmsWithSuccess(SELF, aBody));
+
+  return Promise.all(promises);
 }
 
-function doTest(body, callback) {
-  manager.addEventListener("received", function onReceived(event) {
-    event.target.removeEventListener(event.type, arguments.callee);
-
-    let message = event.message;
-    is(message.body, body, "message.body");
-
-    window.setTimeout(callback, 0);
-  });
-
-  let request = manager.send(SELF, body);
-  request.onerror = function onerror() {
-    ok(false, "failed to send message '" + body + "' to '" + SELF + "'");
-  };
-}
-
-repeat(doTest, [
+const TEST_DATA = [
   // Random alphanumeric string of 16 characters.
   randomString16(),
   // Long long text message for multipart messages.
@@ -75,4 +54,18 @@ repeat(doTest, [
   // 2) problem in decoding strings encoded with GSM 7Bit Alphabets and
   // containing characters on extension tables.
   "\u20ac****",
-], cleanUp);
+];
+
+startTestBase(function testCaseMain() {
+  return ensureMobileMessage()
+    .then(function() {
+      let promise = Promise.resolve();
+
+      for (let i = 0; i < TEST_DATA.length; i++) {
+        let text = TEST_DATA[i];
+        promise = promise.then(() => test(text));
+      }
+
+      return promise;
+    });
+});

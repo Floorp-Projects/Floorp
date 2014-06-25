@@ -2,17 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 MARIONETTE_TIMEOUT = 60000;
-
-SpecialPowers.setBoolPref("dom.sms.enabled", true);
-SpecialPowers.setBoolPref("dom.sms.strict7BitEncoding", false);
-SpecialPowers.setBoolPref("dom.sms.requestStatusReport", true);
-SpecialPowers.addPermission("sms", true, document);
+MARIONETTE_HEAD_JS = 'head.js';
 
 const SENDER = "15555215554"; // the emulator's number
-
-let manager = window.navigator.mozMobileMessage;
-ok(manager instanceof MozMobileMessageManager,
-   "manager is instance of " + manager.constructor);
 
 const SHORT_BODY = "Hello SMS world!";
 const LONG_BODY = "Let me not to the marriage of true minds\n"
@@ -35,8 +27,10 @@ function checkMessage(message, delivery, body) {
   ok(message instanceof MozSmsMessage,
      "message is instanceof " + message.constructor);
 
+  is(message.type, "sms", "message.type");
   ok(message.id, "message.id");
   ok(message.threadId, "message.threadId");
+  ok(message.iccId, "message.iccId");
   is(message.delivery, delivery, "message.delivery");
   is(message.deliveryStatus, "pending", "message.deliveryStatus");
   is(message.sender, SENDER, "message.sender");
@@ -56,148 +50,105 @@ function checkMessage(message, delivery, body) {
   }
 }
 
-function doSendMessageAndCheckSuccess(receivers, body, callback) {
-  let options = {};
+function isReceiverMatch(aReceiver, aEvent) {
+  // Bug 838542: following check throws an exception and fails this case.
+  // ok(event instanceof MozSmsEvent,
+  //    "event is instanceof " + event.constructor)
+  ok(aEvent, "sending event is valid");
+
+  let message = aEvent.message;
+  return message.receiver === aReceiver;
+}
+
+function doSingleRequest(aRequest, aReceiver, aBody, aNow) {
+  let sendingGot = false, sentGot = false, successGot = false;
+  let sendingMessage;
+  let promises = [];
+
+  promises.push(waitForManagerEvent("sending",
+                                    isReceiverMatch.bind(null, aReceiver))
+    .then(function(aEvent) {
+      log("  onsending event for '" + aReceiver + "' received.");
+
+      sendingMessage = aEvent.message;
+      checkMessage(sendingMessage, "sending", aBody);
+      // timestamp is in seconds.
+      ok(Math.floor(sendingMessage.timestamp / 1000) >= Math.floor(aNow / 1000),
+         "sent timestamp is valid");
+
+      ok(!sendingGot, "sending event should not have been triggered");
+      ok(!sentGot, "sent event should not have been triggered");
+      ok(!successGot, "success event should not have been triggered");
+
+      sendingGot = true;
+    }));
+
+  promises.push(waitForManagerEvent("sent",
+                                    isReceiverMatch.bind(null, aReceiver))
+    .then(function(aEvent) {
+      log("  onsent event for '" + aReceiver + "' received.");
+
+      let message = aEvent.message;
+      checkMessage(message, "sent", aBody);
+      // Should be mostly identical to sendingMessage.
+      is(message.id, sendingMessage.id, "message.id");
+      is(message.receiver, sendingMessage.receiver, "message.receiver");
+      is(message.body, sendingMessage.body, "message.body");
+      is(message.timestamp, sendingMessage.timestamp, "message.timestamp");
+
+      ok(sendingGot, "sending event should have been triggered");
+      ok(!sentGot, "sent event should not have been triggered");
+      ok(successGot, "success event should have been triggered");
+
+      sentGot = true;
+    }));
+
+  promises.push(wrapDomRequestAsPromise(aRequest)
+    .then(function(aEvent) {
+      log("  onsuccess event for '" + aReceiver + "' received.");
+
+      let message = aEvent.target.result;
+      checkMessage(message, "sent", aBody);
+      // Should be mostly identical to sendingMessage.
+      is(message.id, sendingMessage.id, "message.id");
+      is(message.receiver, sendingMessage.receiver, "message.receiver");
+      is(message.body, sendingMessage.body, "message.body");
+      is(message.timestamp, sendingMessage.timestamp, "message.timestamp");
+
+      ok(sendingGot, "sending event should have been triggered");
+      ok(!sentGot, "sent event should not have been triggered");
+      ok(!successGot, "success event should not have been triggered");
+
+      successGot = true;
+    }));
+
+  return Promise.all(promises);
+}
+
+function doSendMessageAndCheckSuccess(receivers, body) {
+  log("Testing sending message(s) to receiver(s): " + JSON.stringify(receivers));
+
   let now = Date.now();
-
-  function done() {
-    let rs = Array.isArray(receivers) ? receivers : [receivers];
-    // Make sure we've send a message to each distinct receiver.
-    for (let i = 0; i < rs.length; i++) {
-      let opt = options[rs[i]];
-      if (!(opt && opt.onSentCalled && opt.onRequestSuccessCalled)) {
-        return;
-      }
-    }
-
-    manager.removeEventListener("sending", onSmsSending);
-    manager.removeEventListener("sent", onSmsSent);
-
-    log("Done!");
-    window.setTimeout(callback, 0);
-  }
-
-  function checkSentMessage(message, mark) {
-    checkMessage(message, "sent", body);
-
-    let receiver = message && message.receiver;
-    if (!receiver) {
-      ok(false, "message.receiver should be valid.");
-      return;
-    }
-
-    let opt = options[receiver];
-    if (!opt) {
-      ok(false, "onsent should be called after onsending.");
-      return;
-    }
-
-    let saved = opt.saved;
-    is(message.id, saved.id, "message.id");
-    is(message.receiver, saved.receiver, "message.receiver");
-    is(message.body, saved.body, "message.body");
-    is(message.timestamp, saved.timestamp, "message.timestamp");
-
-    opt[mark] = true;
-
-    done();
-  }
-
-  function onRequestSuccess(event) {
-    log("request.onsuccess event received.");
-
-    ok(event.target instanceof DOMRequest,
-       "event.target is instanceof " + event.target.constructor);
-    event.target.removeEventListener("success", onRequestSuccess);
-
-    checkSentMessage(event.target.result, "onRequestSuccessCalled");
-  }
-
-  function onSmsSending(event) {
-    log("onsending event received.");
-
-    // Bug 838542: following check throws an exception and fails this case.
-    // ok(event instanceof MozSmsEvent,
-    //    "event is instanceof " + event.constructor)
-    ok(event, "event is valid");
-
-    let message = event.message;
-    checkMessage(message, "sending", body);
-    // timestamp is in seconds.
-    ok(Math.floor(message.timestamp / 1000) >= Math.floor(now / 1000),
-       "sent timestamp is valid");
-
-    let receiver = message.receiver;
-    if (!receiver) {
-      return;
-    }
-
-    if (options[receiver]) {
-      ok(false, "duplicated onsending events found!");
-      return;
-    }
-
-    options[receiver] = {
-      saved: message,
-      onSentCalled: false,
-      onRequestSuccessCalled: false
-    };
-  }
-
-  function onSmsSent(event) {
-    log("onsent event received.");
-
-    // Bug 838542: following check throws an exception and fails this case.
-    // ok(event instanceof MozSmsEvent,
-    //    "event is instanceof " + event.constructor)
-    ok(event, "event is valid");
-
-    checkSentMessage(event.message, "onSentCalled");
-  }
-
-  manager.addEventListener("sending", onSmsSending);
-  manager.addEventListener("sent", onSmsSent);
 
   let result = manager.send(receivers, body);
   is(Array.isArray(result), Array.isArray(receivers),
      "send() returns an array of requests if receivers is an array");
   if (Array.isArray(receivers)) {
     is(result.length, receivers.length, "returned array length");
-  } else {
-    result = [result];
+
+    return Promise.all(result.map(function(request, index) {
+      return doSingleRequest(request, receivers[index], body, now);
+    }));
   }
 
-  for (let i = 0; i < result.length; i++) {
-    let request = result[i];
-    ok(request instanceof DOMRequest,
-       "request is instanceof " + request.constructor);
-    request.addEventListener("success", onRequestSuccess);
-  }
+  return doSingleRequest(result, receivers, body, now);
 }
 
-function testSendMessage() {
-  log("Testing sending message to one receiver:");
-  doSendMessageAndCheckSuccess("1", SHORT_BODY, testSendMultipartMessage);
-}
-
-function testSendMultipartMessage() {
-  log("Testing sending message to one receiver:");
-  doSendMessageAndCheckSuccess("1", LONG_BODY,
-                               testSendMessageToMultipleRecipients);
-}
-
-function testSendMessageToMultipleRecipients() {
-  log("Testing sending message to multiple receivers:");
-  // TODO: bug 788928 - add test cases for ondelivered event.
-  doSendMessageAndCheckSuccess(["1", "2"], SHORT_BODY, cleanUp);
-}
-
-function cleanUp() {
-  SpecialPowers.removePermission("sms", document);
-  SpecialPowers.clearUserPref("dom.sms.enabled");
-  SpecialPowers.clearUserPref("dom.sms.strict7BitEncoding");
-  SpecialPowers.clearUserPref("dom.sms.requestStatusReport");
-  finish();
-}
-
-testSendMessage();
+startTestBase(function testCaseMain() {
+  return ensureMobileMessage()
+    .then(() => pushPrefEnv({ set: [['dom.sms.strict7BitEncoding', false],
+                                    ['dom.sms.requestStatusReport', true]] }))
+    .then(() => doSendMessageAndCheckSuccess("1", SHORT_BODY))
+    .then(() => doSendMessageAndCheckSuccess("1", LONG_BODY))
+    .then(() => doSendMessageAndCheckSuccess(["1", "2"], SHORT_BODY));
+});

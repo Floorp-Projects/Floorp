@@ -398,6 +398,8 @@ class ForkJoinContext : public ThreadSafeContext
                     Allocator *allocator, ForkJoinShared *shared,
                     ParallelBailoutRecord *bailoutRecord);
 
+    bool initialize();
+
     // Get the worker id. The main thread by convention has the id of the max
     // worker thread id + 1.
     uint32_t workerId() const { return worker_->id(); }
@@ -458,7 +460,7 @@ class ForkJoinContext : public ThreadSafeContext
     static inline ForkJoinContext *current();
 
     // Initializes the thread-local state.
-    static bool initialize();
+    static bool initializeTls();
 
     // Used in inlining GetForkJoinSlice.
     static size_t offsetOfWorker() {

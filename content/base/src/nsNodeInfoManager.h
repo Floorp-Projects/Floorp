@@ -34,9 +34,11 @@ class NodeInfo;
 
 class nsNodeInfoManager MOZ_FINAL
 {
+private:
+  ~nsNodeInfoManager();
+
 public:
   nsNodeInfoManager();
-  ~nsNodeInfoManager();
 
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsNodeInfoManager)
 

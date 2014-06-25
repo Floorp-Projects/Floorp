@@ -83,7 +83,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsContentIterator)
 
   explicit nsContentIterator(bool aPre);
-  virtual ~nsContentIterator();
 
   // nsIContentIterator interface methods ------------------------------
 
@@ -106,6 +105,7 @@ public:
   virtual nsresult PositionAt(nsINode* aCurNode);
 
 protected:
+  virtual ~nsContentIterator();
 
   // Recursively get the deepest first/last child of aRoot.  This will return
   // aRoot itself if it has no children.

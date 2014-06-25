@@ -9,5 +9,5 @@ skip-if(B2G) fails-if(Android) fails-if(gtk2Widget) != rtl.html no-resize.html #
 == rtl.html rtl-dynamic-attr.html
 == rtl.html rtl-dynamic-style.html
 == rtl.html in-dynamic-rtl-doc.html
-random-if(B2G&&browserIsRemote) == setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
+== setvalue-framereconstruction-1.html setvalue-framereconstruction-ref.html
 == padding-scrollbar-placement.html padding-scrollbar-placement-ref.html

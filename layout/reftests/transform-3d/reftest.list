@@ -1,6 +1,6 @@
 == scalez-1a.html scalez-1-ref.html
-== rotatey-1a.html rotatey-1-ref.html 
-== rotatex-1a.html rotatex-1-ref.html 
+== rotatey-1a.html rotatey-1-ref.html
+== rotatex-1a.html rotatex-1-ref.html
 # Check that scaleZ(-1) rotateX(180deg) is the same as rotateY(180deg)
 == scalezrotatex-1.html scalezrotatex-1-ref.html
 # Check that the perspectve() transform function results in some visual changes
@@ -11,16 +11,16 @@
 == rotatex-perspective-1c.html rotatex-1-ref.html
 == rotatex-perspective-3a.html rotatex-perspective-3-ref.html
 == scalez-1a.html scalez-1-ref.html
-random-if(B2G&&browserIsRemote) == preserve3d-1a.html preserve3d-1-ref.html # Bug 988766
+== preserve3d-1a.html preserve3d-1-ref.html
 == preserve3d-1b.html about:blank
-== preserve3d-clipped.html about:blank 
+== preserve3d-clipped.html about:blank
 == preserve3d-2a.html preserve3d-2-ref.html
 == preserve3d-2b.html preserve3d-2-ref.html
 == preserve3d-2c.html preserve3d-2-ref.html
 == preserve3d-2d.html preserve3d-2-ref.html
 == preserve3d-3a.html preserve3d-3-ref.html
 skip-if(B2G) == preserve3d-4a.html green-rect.html
-fuzzy-if(Android&&AndroidVersion>=15,4,300) random-if(B2G&&browserIsRemote) == preserve3d-5a.html preserve3d-5-ref.html # Bug 988767
+fuzzy-if(Android&&AndroidVersion>=15,4,300) == preserve3d-5a.html preserve3d-5-ref.html
 == scale3d-z.html scalez-1-ref.html
 fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX==10.8,224,924) fuzzy-if(OSX==10.9,224,924) == scale3d-all.html scale3d-1-ref.html # subpixel AA
 fuzzy-if(winWidget,102,580) fuzzy-if(d2d,143,681) fuzzy-if(OSX==10.8,224,924) fuzzy-if(OSX==10.9,224,924) == scale3d-all-separate.html scale3d-1-ref.html # subpixel AA

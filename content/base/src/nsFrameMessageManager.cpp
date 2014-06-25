@@ -1209,6 +1209,8 @@ namespace dom {
 
 class MessageManagerReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~MessageManagerReporter() {}
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMEMORYREPORTER

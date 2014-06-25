@@ -44,7 +44,7 @@ HAVE_FREEBL_LIBS = 1
 # 32-bit HP-UX PA-RISC
 ifeq ($(OS_ARCH), HP-UX)
 ifneq ($(OS_TEST), ia64)
-ifndef HAVE_64BIT_OS
+ifndef HAVE_64BIT_BUILD
 HAVE_FREEBL_LIBS =
 HAVE_FREEBL_LIBS_32INT32 = 1
 HAVE_FREEBL_LIBS_32FPU = 1
@@ -55,7 +55,7 @@ endif
 # SunOS SPARC
 ifeq ($(OS_ARCH), SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
-ifdef HAVE_64BIT_OS
+ifdef HAVE_64BIT_BUILD
 HAVE_FREEBL_LIBS =
 HAVE_FREEBL_LIBS_64 = 1
 else
@@ -159,7 +159,7 @@ ifdef USE_N32
 # merely adds _PTH to coreconf's OBJDIR name.
 DEFAULT_GMAKE_FLAGS += USE_N32=1 USE_PTHREADS=1
 endif
-ifdef HAVE_64BIT_OS
+ifdef HAVE_64BIT_BUILD
 DEFAULT_GMAKE_FLAGS += USE_64=1
 endif
 ifeq ($(OS_ARCH),WINNT)

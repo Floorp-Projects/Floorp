@@ -135,6 +135,7 @@ struct SCOutput {
     bool writePair(uint32_t tag, uint32_t data);
     bool writeDouble(double d);
     bool writeBytes(const void *p, size_t nbytes);
+    bool writeChars(const Latin1Char *p, size_t nchars);
     bool writeChars(const jschar *p, size_t nchars);
     bool writePtr(const void *);
 
@@ -165,6 +166,7 @@ class SCInput {
     bool readPair(uint32_t *tagp, uint32_t *datap);
     bool readDouble(double *p);
     bool readBytes(void *p, size_t nbytes);
+    bool readChars(Latin1Char *p, size_t nchars);
     bool readChars(jschar *p, size_t nchars);
     bool readPtr(void **);
 
@@ -212,8 +214,11 @@ struct JSStructuredCloneReader {
 
     bool readTransferMap();
 
+    template <typename CharT>
+    JSString *readStringImpl(uint32_t nchars);
+    JSString *readString(uint32_t data);
+
     bool checkDouble(double d);
-    JSString *readString(uint32_t nchars);
     bool readTypedArray(uint32_t arrayType, uint32_t nelems, Value *vp, bool v1Read = false);
     bool readArrayBuffer(uint32_t nbytes, Value *vp);
     bool readV1ArrayBuffer(uint32_t arrayType, uint32_t nelems, Value *vp);
@@ -554,6 +559,13 @@ SCInput::readBytes(void *p, size_t nbytes)
 }
 
 bool
+SCInput::readChars(Latin1Char *p, size_t nchars)
+{
+    static_assert(sizeof(Latin1Char) == sizeof(uint8_t), "Latin1Char must fit in 1 byte");
+    return readBytes(p, nchars);
+}
+
+bool
 SCInput::readChars(jschar *p, size_t nchars)
 {
     JS_ASSERT(sizeof(jschar) == sizeof(uint16_t));
@@ -690,6 +702,13 @@ SCOutput::writeChars(const jschar *p, size_t nchars)
 }
 
 bool
+SCOutput::writeChars(const Latin1Char *p, size_t nchars)
+{
+    static_assert(sizeof(Latin1Char) == sizeof(uint8_t), "Latin1Char must fit in 1 byte");
+    return writeBytes(p, nchars);
+}
+
+bool
 SCOutput::writePtr(const void *p)
 {
     return write(reinterpret_cast<uint64_t>(p));
@@ -775,11 +794,21 @@ JSStructuredCloneWriter::reportErrorTransferable()
 bool
 JSStructuredCloneWriter::writeString(uint32_t tag, JSString *str)
 {
-    size_t length = str->length();
-    const jschar *chars = str->getChars(context());
-    if (!chars)
+    JSLinearString *linear = str->ensureLinear(context());
+    if (!linear)
         return false;
-    return out.writePair(tag, uint32_t(length)) && out.writeChars(chars, length);
+
+    static_assert(JSString::MAX_LENGTH <= INT32_MAX, "String length must fit in 31 bits");
+
+    uint32_t length = linear->length();
+    uint32_t lengthAndEncoding = length | (uint32_t(linear->hasLatin1Chars()) << 31);
+    if (!out.writePair(tag, lengthAndEncoding))
+        return false;
+
+    JS::AutoCheckCannotGC nogc;
+    return linear->hasLatin1Chars()
+           ? out.writeChars(linear->latin1Chars(nogc), length)
+           : out.writeChars(linear->twoByteChars(nogc), length);
 }
 
 bool
@@ -1134,9 +1163,10 @@ JSStructuredCloneReader::checkDouble(double d)
 
 namespace {
 
+template <typename CharT>
 class Chars {
     JSContext *cx;
-    jschar *p;
+    CharT *p;
   public:
     explicit Chars(JSContext *cx) : cx(cx), p(nullptr) {}
     ~Chars() { js_free(p); }
@@ -1144,34 +1174,43 @@ class Chars {
     bool allocate(size_t len) {
         JS_ASSERT(!p);
         // We're going to null-terminate!
-        p = cx->pod_malloc<jschar>(len + 1);
+        p = cx->pod_malloc<CharT>(len + 1);
         if (p) {
-            p[len] = jschar(0);
+            p[len] = CharT(0);
             return true;
         }
         return false;
     }
-    jschar *get() { return p; }
+    CharT *get() { return p; }
     void forget() { p = nullptr; }
 };
 
 } /* anonymous namespace */
 
+template <typename CharT>
 JSString *
-JSStructuredCloneReader::readString(uint32_t nchars)
+JSStructuredCloneReader::readStringImpl(uint32_t nchars)
 {
     if (nchars > JSString::MAX_LENGTH) {
         JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                              JSMSG_SC_BAD_SERIALIZED_DATA, "string length");
         return nullptr;
     }
-    Chars chars(context());
+    Chars<CharT> chars(context());
     if (!chars.allocate(nchars) || !in.readChars(chars.get(), nchars))
         return nullptr;
     JSString *str = NewString<CanGC>(context(), chars.get(), nchars);
     if (str)
         chars.forget();
     return str;
+}
+
+JSString *
+JSStructuredCloneReader::readString(uint32_t data)
+{
+    uint32_t nchars = data & JS_BITMASK(31);
+    bool latin1 = data & (1 << 31);
+    return latin1 ? readStringImpl<Latin1Char>(nchars) : readStringImpl<jschar>(nchars);
 }
 
 static uint32_t
@@ -1388,15 +1427,15 @@ JSStructuredCloneReader::startRead(Value *vp)
 
       case SCTAG_REGEXP_OBJECT: {
         RegExpFlag flags = RegExpFlag(data);
-        uint32_t tag2, nchars;
-        if (!in.readPair(&tag2, &nchars))
+        uint32_t tag2, stringData;
+        if (!in.readPair(&tag2, &stringData))
             return false;
         if (tag2 != SCTAG_STRING) {
             JS_ReportErrorNumber(context(), js_GetErrorMessage, nullptr,
                                  JSMSG_SC_BAD_SERIALIZED_DATA, "regexp");
             return false;
         }
-        JSString *str = readString(nchars);
+        JSString *str = readString(stringData);
         if (!str)
             return false;
 
