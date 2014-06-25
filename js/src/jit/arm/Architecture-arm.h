@@ -390,18 +390,22 @@ class VFPRegister
         // s0 has 1 other aligned aliase, 2 total.
         return 2 - (code_ & 1);
     }
+    // |   d0    |
+    // | s0 | s1 |
+    // if we've stored s0 and s1 in memory, we also want to say that d0
+    // is stored there, but it is only stored at the location where it is aligned
+    // e.g. at s0, not s1.
     void alignedAliased(uint32_t aliasIdx, VFPRegister *ret) {
         if (aliasIdx == 0) {
             *ret = *this;
             return;
         }
+        JS_ASSERT(aliasIdx == 1);
         if (isDouble()) {
             JS_ASSERT(code_ < NumAliasedDoubles);
-            JS_ASSERT(aliasIdx <= 1);
             *ret = singleOverlay(aliasIdx - 1);
             return;
         }
-        JS_ASSERT(aliasIdx == 1);
         JS_ASSERT((code_ & 1) == 0);
         *ret = doubleOverlay(aliasIdx - 1);
         return;

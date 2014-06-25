@@ -183,7 +183,7 @@ struct FloatRegister {
     bool aliases(FloatRegister other) const {
         return other.code_ == code_;
     }
-    uint32_t numAliased() {
+    uint32_t numAliased() const {
         return 1;
     }
     void aliased(uint32_t aliasIdx, FloatRegister *ret) {
@@ -191,16 +191,17 @@ struct FloatRegister {
         *ret = *this;
     }
     // This function mostly exists for the ARM backend.  It is to ensure that two
-    // floating point registers are equivalent.  e.g. S0 is not equivalent to D16.
+    // floating point registers' types are equivalent.  e.g. S0 is not equivalent
+    // to D16, since S0 holds a float32, and D16 holds a Double.
     // Since all floating point registers on x86 and x64 are equivalent, it is
     // reasonable for this function to do the same.
     bool equiv(FloatRegister other) const {
         return true;
     }
-    uint32_t size() {
+    uint32_t size() const {
         return sizeof(double);
     }
-    uint32_t numAlignedAliased() {
+    uint32_t numAlignedAliased() const {
         return 1;
     }
     void alignedAliased(uint32_t aliasIdx, FloatRegister *ret) {
