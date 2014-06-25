@@ -26,11 +26,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
  * Handles the requestAutocomplete user interface.
  */
 this.RequestAutocompleteUI = function (aAutofillData) {
-  Services.console.logStringMessage("rAc UI request: " +
-                                    JSON.stringify(aAutofillData));
+  this._autofillData = aAutofillData;
 }
 
 this.RequestAutocompleteUI.prototype = {
+  _autofillData: null,
+
   show: Task.async(function* () {
     // Create a new promise and store the function that will resolve it.  This
     // will be called by the UI once the selection has been made.
@@ -38,7 +39,10 @@ this.RequestAutocompleteUI.prototype = {
     let uiPromise = new Promise(resolve => resolveFn = resolve);
 
     // Wrap the callback function so that it survives XPCOM.
-    let args = { resolveFn: resolveFn };
+    let args = {
+      resolveFn: resolveFn,
+      autofillData: this._autofillData,
+    };
     args.wrappedJSObject = args;
 
     // Open the window providing the function to call when it closes.
