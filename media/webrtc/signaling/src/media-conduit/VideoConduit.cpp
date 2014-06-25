@@ -30,6 +30,8 @@
 #include <algorithm>
 #include <math.h>
 
+#define DEFAULT_VIDEO_MAX_FRAMERATE 30
+
 namespace mozilla {
 
 static const char* logTag ="WebrtcVideoSessionConduit";
@@ -553,6 +555,8 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   int error = 0; //webrtc engine errors
   webrtc::VideoCodec  video_codec;
   std::string payloadName;
+
+  memset(&video_codec, 0, sizeof(video_codec));
 
   //validate basic params
   if((condError = ValidateCodecConfig(codecConfig,true)) != kMediaConduitNoError)
@@ -1289,10 +1293,12 @@ WebrtcVideoConduit::CodecConfigToWebRTCCodec(const VideoCodecConfig* codecInfo,
 
   // width/height will be overridden on the first frame; they must be 'sane' for
   // SetSendCodec()
-  if (codecInfo->mMaxFrameRate > 0)
-  {
+  if (codecInfo->mMaxFrameRate > 0) {
     cinst.maxFramerate = codecInfo->mMaxFrameRate;
+  } else {
+    cinst.maxFramerate = DEFAULT_VIDEO_MAX_FRAMERATE;
   }
+
   cinst.minBitrate = mMinBitrate;
   cinst.startBitrate = mStartBitrate;
   cinst.maxBitrate = mMaxBitrate;
