@@ -38,7 +38,7 @@ class nsCCUncollectableMarker MOZ_FINAL : public nsIObserver
 
 private:
   nsCCUncollectableMarker() {}
-
+  ~nsCCUncollectableMarker() {}
 };
 
 namespace mozilla {

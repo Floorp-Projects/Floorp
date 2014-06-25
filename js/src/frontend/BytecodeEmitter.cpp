@@ -1468,8 +1468,6 @@ TryConvertFreeName(BytecodeEmitter *bce, ParseNode *pn)
     if (bce->insideEval && bce->sc->strict)
         return false;
 
-    // Beware: if you change anything here, you might also need to change
-    // js::ReportIfUndeclaredVarAssignment.
     JSOp op;
     switch (pn->getOp()) {
       case JSOP_NAME:     op = JSOP_GETGNAME; break;

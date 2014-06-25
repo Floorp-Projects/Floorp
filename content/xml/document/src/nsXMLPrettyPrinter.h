@@ -15,7 +15,6 @@ class nsXMLPrettyPrinter : public nsStubDocumentObserver
 {
 public:
     nsXMLPrettyPrinter();
-    virtual ~nsXMLPrettyPrinter();
 
     NS_DECL_ISUPPORTS
 
@@ -41,6 +40,8 @@ public:
      */
     void Unhook();
 private:
+    virtual ~nsXMLPrettyPrinter();
+
     /**
      * Signals for unhooking by setting mUnhookPending if the node changed is
      * non-anonymous content.

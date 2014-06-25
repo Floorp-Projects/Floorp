@@ -1,4 +1,4 @@
-/* -*- Mode: Javasript; indent-tab-mode: nil; js-indent-level: 2 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /*
  * This testcase performs 3 requests against the offline cache.  They
  * are

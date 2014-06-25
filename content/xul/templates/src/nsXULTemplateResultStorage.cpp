@@ -22,6 +22,10 @@ nsXULTemplateResultStorage::nsXULTemplateResultStorage(nsXULTemplateResultSetSto
     }
 }
 
+nsXULTemplateResultStorage::~nsXULTemplateResultStorage()
+{
+}
+
 NS_IMETHODIMP
 nsXULTemplateResultStorage::GetIsContainer(bool* aIsContainer)
 {

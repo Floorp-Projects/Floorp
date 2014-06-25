@@ -178,9 +178,6 @@ ForkJoinNursery::ForkJoinNursery(ForkJoinContext *cx, ForkJoinGCShared *shared, 
         newspace[i] = nullptr;
         fromspace[i] = nullptr;
     }
-    if (!hugeSlots[hugeSlotsNew].init() || !hugeSlots[hugeSlotsFrom].init())
-        CrashAtUnhandlableOOM("Cannot initialize PJS nursery");
-    initNewspace();             // This can fail to return
 }
 
 ForkJoinNursery::~ForkJoinNursery()
@@ -189,6 +186,16 @@ ForkJoinNursery::~ForkJoinNursery()
         if (newspace[i])
             shared_->freeNurseryChunk(newspace[i]);
     }
+}
+
+bool
+ForkJoinNursery::initialize()
+{
+    if (!hugeSlots[hugeSlotsNew].init() || !hugeSlots[hugeSlotsFrom].init())
+        return false;
+    if (!initNewspace())
+        return false;
+    return true;
 }
 
 void
@@ -241,7 +248,8 @@ ForkJoinNursery::pjsCollection(int op)
 
     flip();
     if (recreate) {
-        initNewspace();
+        if (!initNewspace())
+            CrashAtUnhandlableOOM("Cannot expand PJS nursery during GC");
         // newspace must be at least as large as fromSpace
         numActiveChunks_ = currentNumActiveChunks_;
     }
@@ -344,14 +352,14 @@ ForkJoinNursery::freeFromspace()
     numFromspaceChunks_ = 0;
 }
 
-void
+bool
 ForkJoinNursery::initNewspace()
 {
     JS_ASSERT(newspace[0] == nullptr);
     JS_ASSERT(numActiveChunks_ == 0);
 
     numActiveChunks_ = 1;
-    setCurrentChunk(0);
+    return setCurrentChunk(0);
 }
 
 MOZ_ALWAYS_INLINE bool
@@ -479,7 +487,7 @@ ForkJoinNursery::collectToFixedPoint(ForkJoinNurseryCollectionTracer *trc)
         traceObject(trc, static_cast<JSObject *>(p->forwardingAddress()));
 }
 
-inline void
+inline bool
 ForkJoinNursery::setCurrentChunk(int index)
 {
     JS_ASSERT((size_t)index < numActiveChunks_);
@@ -488,7 +496,7 @@ ForkJoinNursery::setCurrentChunk(int index)
     currentChunk_ = index;
     ForkJoinNurseryChunk *c = shared_->allocateNurseryChunk();
     if (!c)
-        CrashAtUnhandlableOOM("Cannot expand PJS nursery");
+        return false;
     c->trailer.runtime = shared_->runtime();
     c->trailer.location = gc::ChunkLocationBitPJSNewspace;
     c->trailer.storeBuffer = nullptr;
@@ -496,6 +504,7 @@ ForkJoinNursery::setCurrentChunk(int index)
     currentEnd_ = c->end();
     position_ = currentStart_;
     newspace[index] = c;
+    return true;
 }
 
 void *
@@ -506,7 +515,15 @@ ForkJoinNursery::allocate(size_t size)
     if (currentEnd_ - position_ < size) {
         if (currentChunk_ + 1 == numActiveChunks_)
             return nullptr;
-        setCurrentChunk(currentChunk_ + 1);
+        // Failure to allocate on growth is treated the same as exhaustion
+        // of the nursery.  If this happens during normal execution then
+        // we'll trigger a minor collection.  That collection will likely
+        // fail to obtain a block for the new tospace, and we'll go OOM
+        // immediately; that's expected and acceptable.  If we do continue
+        // to run (because some other thread or process has freed the memory)
+        // then so much the better.
+        if (!setCurrentChunk(currentChunk_ + 1))
+            return nullptr;
     }
 
     void *thing = reinterpret_cast<void *>(position_);
@@ -732,6 +749,18 @@ ForkJoinNursery::getObjectAllocKind(JSObject *obj)
     return GetBackgroundAllocKind(kind);
 }
 
+// Nursery allocation will never fail during GC - apart from true OOM - since
+// newspace is at least as large as fromspace, ergo a nullptr return from the
+// allocator means true OOM, which we catch and signal here.
+void *
+ForkJoinNursery::allocateInTospaceInfallible(size_t thingSize)
+{
+    void *p = allocate(thingSize);
+    if (!p)
+        CrashAtUnhandlableOOM("Cannot expand PJS nursery during GC");
+    return p;
+}
+
 void *
 ForkJoinNursery::allocateInTospace(gc::AllocKind thingKind)
 {
@@ -747,13 +776,8 @@ ForkJoinNursery::allocateInTospace(gc::AllocKind thingKind)
         // budget is used up.  There is a guard in
         // Chunk::allocateArena() against the latter case.
         return tenured_->arenas.allocateFromArena(evacuationZone_, thingKind);
-    } else {
-        // Nursery allocation will never fail during GC - apart from
-        // true OOM - since newspace is at least as large as
-        // fromspace; true OOM is caught and signaled within
-        // ForkJoinNursery::setCurrentChunk().
-        return allocate(thingSize);
     }
+    return allocateInTospaceInfallible(thingSize);
 }
 
 void *
@@ -761,7 +785,7 @@ ForkJoinNursery::allocateInTospace(size_t nelem, size_t elemSize)
 {
     if (isEvacuating_)
         return evacuationZone_->malloc_(nelem * elemSize);
-    return allocate(nelem * elemSize);
+    return allocateInTospaceInfallible(nelem * elemSize);
 }
 
 MOZ_ALWAYS_INLINE void

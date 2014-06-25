@@ -37,5 +37,15 @@ class WebIDLProvider(MachCommandBase):
         sys.path.insert(0, os.path.join(self.topsrcdir, 'other-licenses',
             'ply'))
 
+        # Make sure we drop our cached grammar bits in the objdir, not
+        # wherever we happen to be running from.
+        os.chdir(self.topobjdir)
+
+        # Now we're going to create the cached grammar file in the
+        # objdir.  But we're going to try loading it as a python
+        # module, so we need to make sure the objdir is in our search
+        # path.
+        sys.path.insert(0, self.topobjdir);
+
         from runtests import run_tests
         return run_tests(None, verbose=verbose)

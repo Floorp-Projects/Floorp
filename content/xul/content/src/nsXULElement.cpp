@@ -124,6 +124,8 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 class nsXULElementTearoff MOZ_FINAL : public nsIDOMElementCSSInlineStyle,
                                       public nsIFrameLoaderOwner
 {
+  ~nsXULElementTearoff() {}
+
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULElementTearoff,

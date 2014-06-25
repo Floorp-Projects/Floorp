@@ -30,12 +30,13 @@ namespace dom {
 class Attr MOZ_FINAL : public nsIAttribute,
                        public nsIDOMAttr
 {
+  virtual ~Attr() {}
+
 public:
   Attr(nsDOMAttributeMap* aAttrMap,
        already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
        const nsAString& aValue,
        bool aNsAware);
-  virtual ~Attr() {}
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 

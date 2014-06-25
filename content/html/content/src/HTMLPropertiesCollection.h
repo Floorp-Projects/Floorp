@@ -54,12 +54,13 @@ class HTMLPropertiesCollection : public nsIHTMLCollection,
   friend class PropertyStringList;
 public:
   HTMLPropertiesCollection(nsGenericHTMLElement* aRoot);
-  virtual ~HTMLPropertiesCollection();
 
   // nsWrapperCache
   using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~HTMLPropertiesCollection();
+
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
     return nsWrapperCache::GetWrapperPreserveColor();
@@ -151,7 +152,6 @@ class PropertyNodeList : public nsINodeList,
 public:
   PropertyNodeList(HTMLPropertiesCollection* aCollection,
                    nsIContent* aRoot, const nsAString& aName);
-  virtual ~PropertyNodeList();
 
   virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
@@ -190,6 +190,8 @@ public:
   void SetDirty() { mIsDirty = true; }
 
 protected:
+  virtual ~PropertyNodeList();
+
   // Make sure this list is up to date, in case the DOM has been mutated.
   void EnsureFresh();
 

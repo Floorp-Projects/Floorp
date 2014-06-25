@@ -27,11 +27,11 @@ public:
                            nsIDOMNode* aNode,
                            nsXMLBindingSet* aBindings);
 
-    ~nsXULTemplateResultXML() {}
-
     void GetNode(nsIDOMNode** aNode);
 
 protected:
+
+    ~nsXULTemplateResultXML() {}
 
     // ID used for persisting data. It is constructed using the mNode's
     // base uri plus the node's id to form 'baseuri#id'. If the node has no

@@ -71,7 +71,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     fi
     if test "$SOLARIS_SUNPRO_CC"; then
       # Always use gcc for libffi on Solaris
-      if test ! "$HAVE_64BIT_OS"; then
+      if test ! "$HAVE_64BIT_BUILD"; then
         ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m32 LD= LDFLAGS="
       else
         ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-m64 LD= LDFLAGS="
@@ -79,7 +79,7 @@ if test -z "$BUILDING_JS" -o -n "$JS_STANDALONE"; then
     fi
     if test "$AIX_IBM_XLC"; then
       # Always use gcc for libffi on IBM AIX5/AIX6
-      if test ! "$HAVE_64BIT_OS"; then
+      if test ! "$HAVE_64BIT_BUILD"; then
         ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-maix32"
       else
         ac_configure_args="$ac_configure_args CC=gcc CFLAGS=-maix64"
