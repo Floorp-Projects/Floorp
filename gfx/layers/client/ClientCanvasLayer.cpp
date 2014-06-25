@@ -149,12 +149,12 @@ ClientCanvasLayer::RenderLayer()
   PROFILER_LABEL("ClientCanvasLayer", "RenderLayer",
     js::ProfileEntry::Category::GRAPHICS);
 
-  if (!IsDirty()) {
-    return;
-  }
-
   if (GetMaskLayer()) {
     ToClientLayer(GetMaskLayer())->RenderLayer();
+  }
+
+  if (!IsDirty()) {
+    return;
   }
 
   if (!mCanvasClient) {
