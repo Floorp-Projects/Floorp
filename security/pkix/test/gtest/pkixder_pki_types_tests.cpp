@@ -169,7 +169,7 @@ TEST_F(pkixder_pki_types_tests, CertificateSerialNumberZeroLength)
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
 
-TEST_F(pkixder_pki_types_tests, OptionalVersionV1ExplicitEncodingNotAllowed)
+TEST_F(pkixder_pki_types_tests, OptionalVersionV1)
 {
   const uint8_t DER_OPTIONAL_VERSION_V1[] = {
     0xa0, 0x03,                   // context specific 0
@@ -180,9 +180,11 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV1ExplicitEncodingNotAllowed)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V1,
                                 sizeof DER_OPTIONAL_VERSION_V1));
 
-  Version version;
-  ASSERT_EQ(Failure, OptionalVersion(input, version));
-  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+  uint8_t version = 99;
+  // TODO(bug 982783): An explicit value of 1 is not allowed, because it is not
+  // the shortest possible encoding!
+  ASSERT_EQ(Success, OptionalVersion(input, version));
+  ASSERT_EQ(v1, version);
 }
 
 TEST_F(pkixder_pki_types_tests, OptionalVersionV2)
@@ -196,9 +198,9 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV2)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V2,
                                 sizeof DER_OPTIONAL_VERSION_V2));
 
-  Version version = Version::v1;
+  uint8_t version = 99;
   ASSERT_EQ(Success, OptionalVersion(input, version));
-  ASSERT_EQ(Version::v2, version);
+  ASSERT_EQ(v2, version);
 }
 
 TEST_F(pkixder_pki_types_tests, OptionalVersionV3)
@@ -212,9 +214,9 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionV3)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_V3,
                                 sizeof DER_OPTIONAL_VERSION_V3));
 
-  Version version = Version::v1;
+  uint8_t version = 99;
   ASSERT_EQ(Success, OptionalVersion(input, version));
-  ASSERT_EQ(Version::v3, version);
+  ASSERT_EQ(v3, version);
 }
 
 TEST_F(pkixder_pki_types_tests, OptionalVersionUnknown)
@@ -228,9 +230,9 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionUnknown)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_INVALID,
                                 sizeof DER_OPTIONAL_VERSION_INVALID));
 
-  Version version = Version::v1;
-  ASSERT_EQ(Failure, OptionalVersion(input, version));
-  ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
+  uint8_t version = 99;
+  ASSERT_EQ(Success, OptionalVersion(input, version));
+  ASSERT_EQ(0x42, version);
 }
 
 TEST_F(pkixder_pki_types_tests, OptionalVersionInvalidTooLong)
@@ -244,7 +246,7 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionInvalidTooLong)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_INVALID_TOO_LONG,
                                 sizeof DER_OPTIONAL_VERSION_INVALID_TOO_LONG));
 
-  Version version;
+  uint8_t version = 99;
   ASSERT_EQ(Failure, OptionalVersion(input, version));
   ASSERT_EQ(SEC_ERROR_BAD_DER, PR_GetError());
 }
@@ -259,8 +261,8 @@ TEST_F(pkixder_pki_types_tests, OptionalVersionMissing)
   ASSERT_EQ(Success, input.Init(DER_OPTIONAL_VERSION_MISSING,
                                 sizeof DER_OPTIONAL_VERSION_MISSING));
 
-  Version version = Version::v3;
+  uint8_t version = 99;
   ASSERT_EQ(Success, OptionalVersion(input, version));
-  ASSERT_EQ(Version::v1, version);
+  ASSERT_EQ(v1, version);
 }
 } // unnamed namespace
