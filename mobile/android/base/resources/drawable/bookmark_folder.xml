@@ -8,7 +8,7 @@
 
     <!-- state open -->
     <item gecko:state_open="true"
-          android:drawable="@drawable/bookmark_folder_opened"/>
+          android:drawable="@drawable/folder_up"/>
 
     <!-- state close -->
     <item android:drawable="@drawable/bookmark_folder_closed"/>

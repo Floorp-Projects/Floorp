@@ -38,12 +38,6 @@ java-tests   := \
   $(wildcard $(TESTPATH)/components/*.java) \
   $(wildcard $(TESTPATH)/helpers/*.java)
 
-# pre-process TestConstants.java.in
-PP_TARGETS         += testconstants
-testconstants-dep  := $(dir-tests)/TestConstants.java
-testconstants      := $(TESTPATH)/TestConstants.java.in
-testconstants_PATH := $(dir-tests)
-
 PP_TARGETS        += manifest
 manifest          := $(srcdir)/AndroidManifest.xml.in
 manifest_TARGET   := AndroidManifest.xml
