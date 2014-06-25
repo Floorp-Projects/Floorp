@@ -150,6 +150,7 @@ public:
   PredictorDNSListener()
   { }
 
+private:
   virtual ~PredictorDNSListener()
   { }
 };

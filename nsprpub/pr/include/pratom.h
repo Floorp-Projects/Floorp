@@ -81,10 +81,7 @@ NSPR_API(PRInt32)	PR_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #if defined(_WIN32) && !defined(_WIN32_WCE) && \
     (!defined(_MSC_VER) || (_MSC_VER >= 1310))
 
-long __cdecl _InterlockedIncrement(long volatile *Addend);
-long __cdecl _InterlockedDecrement(long volatile *Addend);
-long __cdecl _InterlockedExchange(long volatile *Target, long Value);
-long __cdecl _InterlockedExchangeAdd(long volatile *Addend, long Value);
+#include <intrin.h>
 
 #ifdef _MSC_VER
 #pragma intrinsic(_InterlockedIncrement)

@@ -23,7 +23,6 @@ public:
   // This class holds a weak pointer to MediaResource.  It's the responsibility
   // of the caller to manage the memory of the MediaResource object.
   explicit BufferDecoder(MediaResource* aResource);
-  virtual ~BufferDecoder();
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -75,6 +74,8 @@ public:
   virtual void NotifyWaitingForResourcesStatusChanged() MOZ_OVERRIDE;
 
 protected:
+  virtual ~BufferDecoder();
+
   // This monitor object is not really used to synchronize access to anything.
   // It's just there in order for us to be able to override
   // GetReentrantMonitor correctly.

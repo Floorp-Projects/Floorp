@@ -222,6 +222,24 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
             gl->fGetIntegerv(pname, &i);
             return JS::NumberValue(uint32_t(i));
         }
+        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE: {
+            GLint i = 0;
+            if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+                gl->fGetIntegerv(pname, &i);
+            } else {
+                i = LOCAL_GL_UNSIGNED_BYTE;
+            }
+            return JS::NumberValue(uint32_t(i));
+        }
+        case LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT: {
+            GLint i = 0;
+            if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+                gl->fGetIntegerv(pname, &i);
+            } else {
+                i = LOCAL_GL_RGBA;
+            }
+            return JS::NumberValue(uint32_t(i));
+        }
         // int
         case LOCAL_GL_STENCIL_CLEAR_VALUE:
         case LOCAL_GL_STENCIL_REF:

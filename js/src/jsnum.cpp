@@ -648,7 +648,7 @@ js::Int32ToString(ThreadSafeContext *cx, int32_t si)
     if (JSFlatString *str = LookupInt32ToString(cx, si))
         return str;
 
-    JSFatInlineString *str = js_NewGCFatInlineString<allowGC>(cx);
+    JSFatInlineString *str = NewGCFatInlineString<allowGC>(cx);
     if (!str)
         return nullptr;
 
@@ -883,7 +883,7 @@ num_toLocaleString_impl(JSContext *cx, CallArgs args)
         return ok;
     }
 
-    str = js_NewStringCopyN<CanGC>(cx, buf, buflen);
+    str = NewStringCopyN<CanGC>(cx, buf, buflen);
     js_free(buf);
     if (!str)
         return false;
@@ -944,7 +944,7 @@ DToStrResult(JSContext *cx, double d, JSDToStrMode mode, int precision, CallArgs
         JS_ReportOutOfMemory(cx);
         return false;
     }
-    JSString *str = js_NewStringCopyZ<CanGC>(cx, numStr);
+    JSString *str = NewStringCopyZ<CanGC>(cx, numStr);
     if (!str)
         return false;
     args.rval().setString(str);
@@ -1362,7 +1362,7 @@ js_NumberToStringWithBase(ThreadSafeContext *cx, double d, int base)
                      cbuf.dbuf && cbuf.dbuf == numStr);
     }
 
-    JSFlatString *s = js_NewStringCopyZ<allowGC>(cx, numStr);
+    JSFlatString *s = NewStringCopyZ<allowGC>(cx, numStr);
 
     if (comp)
         comp->dtoaCache.cache(base, d, s);
@@ -1429,7 +1429,7 @@ js::IndexToString(JSContext *cx, uint32_t index)
     if (JSFlatString *str = c->dtoaCache.lookup(10, index))
         return str;
 
-    JSFatInlineString *str = js_NewGCFatInlineString<CanGC>(cx);
+    JSFatInlineString *str = NewGCFatInlineString<CanGC>(cx);
     if (!str)
         return nullptr;
 

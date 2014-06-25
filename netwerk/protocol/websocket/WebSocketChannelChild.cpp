@@ -26,7 +26,6 @@ NS_IMPL_ADDREF(WebSocketChannelChild)
 NS_IMETHODIMP_(MozExternalRefCountType) WebSocketChannelChild::Release()
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");
-  NS_ASSERT_OWNINGTHREAD(WebSocketChannelChild);
   --mRefCnt;
   NS_LOG_RELEASE(this, mRefCnt, "WebSocketChannelChild");
 
@@ -476,7 +475,7 @@ NS_IMETHODIMP
 WebSocketChannelChild::SendMsg(const nsACString &aMsg)
 {
   if (!NS_IsMainThread()) {
-    MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mTargetThread);
+    MOZ_RELEASE_ASSERT(IsOnTargetThread());
     return NS_DispatchToMainThread(new MsgEvent(this, aMsg, false));
   }
   LOG(("WebSocketChannelChild::SendMsg() %p\n", this));
@@ -490,7 +489,7 @@ NS_IMETHODIMP
 WebSocketChannelChild::SendBinaryMsg(const nsACString &aMsg)
 {
   if (!NS_IsMainThread()) {
-    MOZ_RELEASE_ASSERT(NS_GetCurrentThread() == mTargetThread);
+    MOZ_RELEASE_ASSERT(IsOnTargetThread());
     return NS_DispatchToMainThread(new MsgEvent(this, aMsg, true));
   }
   LOG(("WebSocketChannelChild::SendBinaryMsg() %p\n", this));
@@ -573,6 +572,16 @@ WebSocketChannelChild::RetargetDeliveryTo(nsIEventTarget* aTargetThread)
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   return mEventQ->RetargetDeliveryTo(aTargetThread);
+}
+
+bool
+WebSocketChannelChild::IsOnTargetThread()
+{
+  MOZ_ASSERT(mTargetThread);
+  bool isOnTargetThread = false;
+  nsresult rv = mTargetThread->IsOnCurrentThread(&isOnTargetThread);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  return NS_FAILED(rv) ? false : isOnTargetThread;
 }
 
 } // namespace net

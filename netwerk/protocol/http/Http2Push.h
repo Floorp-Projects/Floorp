@@ -75,12 +75,13 @@ public:
   NS_DECL_NSAHTTPTRANSACTION
 
   Http2PushTransactionBuffer();
-  virtual ~Http2PushTransactionBuffer();
 
   nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
   void SetPushStream(Http2PushedStream *stream) { mPushStream = stream; }
 
 private:
+  virtual ~Http2PushTransactionBuffer();
+
   const static uint32_t kDefaultBufferSize = 4096;
 
   nsresult mStatus;

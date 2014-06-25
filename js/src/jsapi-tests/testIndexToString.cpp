@@ -111,7 +111,7 @@ BEGIN_TEST(testStringToPropertyName)
 template<size_t N> static JSFlatString *
 NewString(JSContext *cx, const jschar (&chars)[N])
 {
-    return js_NewStringCopyN<js::CanGC>(cx, chars, N);
+    return js::NewStringCopyN<js::CanGC>(cx, chars, N);
 }
 
 END_TEST(testStringToPropertyName)

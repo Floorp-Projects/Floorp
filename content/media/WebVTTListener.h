@@ -37,7 +37,6 @@ class WebVTTListener MOZ_FINAL : public nsIWebVTTListener,
 
 public:
   WebVTTListener(HTMLTrackElement* aElement);
-  ~WebVTTListener();
 
   /**
    * Loads the WebVTTListener. Must call this in order for the listener to be
@@ -46,6 +45,8 @@ public:
   nsresult LoadResource();
 
 private:
+  ~WebVTTListener();
+
   // List of error codes returned from the WebVTT parser that we care about.
   enum ErrorCodes {
     BadSignature = 0

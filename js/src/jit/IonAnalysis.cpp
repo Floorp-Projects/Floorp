@@ -2356,6 +2356,10 @@ ArgumentsUseCanBeLazy(JSContext *cx, JSScript *script, MInstruction *ins, size_t
         return true;
     }
 
+    // MGetArgumentsObjectArg needs to be considered as a use that allows laziness.
+    if (ins->isGetArgumentsObjectArg() && index == 0)
+        return true;
+
     // arguments.length length can read fp->numActualArgs() directly.
     if (ins->isCallGetProperty() && index == 0 && ins->toCallGetProperty()->name() == cx->names().length)
         return true;

@@ -56,6 +56,8 @@ public:
   };
 
 private:
+  ~DNSListenerProxy() {}
+
   nsMainThreadPtrHandle<nsIDNSListener> mListener;
   nsCOMPtr<nsIEventTarget> mTargetThread;
 };

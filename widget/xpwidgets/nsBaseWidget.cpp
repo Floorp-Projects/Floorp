@@ -1714,6 +1714,8 @@ static void debug_SetCachedBoolPref(const char * aPrefName,bool aValue)
 
 //////////////////////////////////////////////////////////////
 class Debug_PrefObserver MOZ_FINAL : public nsIObserver {
+    ~Debug_PrefObserver() {}
+
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER

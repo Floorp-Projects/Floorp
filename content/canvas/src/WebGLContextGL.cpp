@@ -2172,22 +2172,6 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         return ErrorInvalidOperation("readPixels: Invalid type floatness");
 
     // Check the format and type params to assure they are an acceptable pair (as per spec)
-    switch (format) {
-        case LOCAL_GL_RGBA: {
-            switch (type) {
-                case LOCAL_GL_UNSIGNED_BYTE:
-                    break;
-                case LOCAL_GL_FLOAT:
-                    break;
-                default:
-                    return ErrorInvalidOperation("readPixels: Invalid format/type pair");
-            }
-            break;
-        }
-        default:
-            return ErrorInvalidOperation("readPixels: Invalid format/type pair");
-    }
-
     MakeContextCurrent();
 
     if (mBoundFramebuffer) {
@@ -2203,6 +2187,41 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
     } else {
       ClearBackbufferIfNeeded();
     }
+
+    bool isFormatAndTypeValid = false;
+
+    // OpenGL ES 2.0 $4.3.1 - IMPLEMENTATION_COLOR_READ_{TYPE/FORMAT} is a valid
+    // combination for glReadPixels().
+    if (gl->IsSupported(gl::GLFeature::ES2_compatibility)) {
+        GLenum implType = 0;
+        GLenum implFormat = 0;
+
+        gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_TYPE,
+                         reinterpret_cast<GLint*>(&implType));
+        gl->fGetIntegerv(LOCAL_GL_IMPLEMENTATION_COLOR_READ_FORMAT,
+                         reinterpret_cast<GLint*>(&implFormat));
+
+        if (type == implType && format == implFormat) {
+            isFormatAndTypeValid = true;
+        }
+    }
+
+    switch (format) {
+        case LOCAL_GL_RGBA: {
+            switch (type) {
+                case LOCAL_GL_UNSIGNED_BYTE:
+                case LOCAL_GL_FLOAT:
+                    isFormatAndTypeValid = true;
+                    break;
+            }
+            break;
+        }
+    }
+
+    if (!isFormatAndTypeValid) {
+        return ErrorInvalidOperation("readPixels: Invalid format/type pair");
+    }
+
     // Now that the errors are out of the way, on to actually reading
 
     // If we won't be reading any pixels anyways, just skip the actual reading

@@ -48,11 +48,12 @@ public:
 
     // nsWyciwygChannel methods:
     nsWyciwygChannel();
-    virtual ~nsWyciwygChannel();
 
     nsresult Init(nsIURI *uri);
 
 protected:
+    virtual ~nsWyciwygChannel();
+
     nsresult WriteToCacheEntryInternal(const nsAString& aData);
     void SetCharsetAndSourceInternal();
     nsresult CloseCacheEntryInternal(nsresult reason);

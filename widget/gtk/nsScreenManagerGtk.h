@@ -22,7 +22,6 @@ class nsScreenManagerGtk : public nsIScreenManager
 {
 public:
   nsScreenManagerGtk ( );
-  virtual ~nsScreenManagerGtk();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREENMANAGER
@@ -35,6 +34,7 @@ public:
   nsresult Init();
 
 private:
+  virtual ~nsScreenManagerGtk();
 
   nsresult EnsureInit();
 

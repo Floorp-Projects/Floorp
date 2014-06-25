@@ -50,6 +50,8 @@ class nsBaseWidget;
 
 class WidgetShutdownObserver MOZ_FINAL : public nsIObserver
 {
+  ~WidgetShutdownObserver() {}
+
 public:
   WidgetShutdownObserver(nsBaseWidget* aWidget)
     : mWidget(aWidget)
@@ -82,9 +84,10 @@ protected:
   typedef mozilla::layers::CompositorParent CompositorParent;
   typedef mozilla::ScreenRotation ScreenRotation;
 
+  virtual ~nsBaseWidget();
+
 public:
   nsBaseWidget();
-  virtual ~nsBaseWidget();
 
   NS_DECL_ISUPPORTS
 

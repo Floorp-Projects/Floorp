@@ -19,13 +19,13 @@ class nsIIOService;
 class mozTXTToHTMLConv : public mozITXTToHTMLConv
 {
 
+  virtual ~mozTXTToHTMLConv();
 
 //////////////////////////////////////////////////////////
 public:
 //////////////////////////////////////////////////////////
 
   mozTXTToHTMLConv();
-  virtual ~mozTXTToHTMLConv();
   NS_DECL_ISUPPORTS
 
   NS_DECL_MOZITXTTOHTMLCONV

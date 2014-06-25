@@ -398,12 +398,13 @@ public:
   NS_DECL_NSIOUTPUTSTREAM
   // Constructor. Neither parameter may be null. The caller owns both.
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
-  ~DigestOutputStream();
 
   // We don't own any NSS objects here, so no need to clean up
   void virtualDestroyNSSReference() { }
 
 private:
+  ~DigestOutputStream();
+
   // Calls to write are passed to this stream.
   nsCOMPtr<nsIOutputStream> mOutputStream;
   // Digest context used to compute the hash, owned by the caller.
