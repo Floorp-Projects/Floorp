@@ -188,6 +188,50 @@ var commandsPeerConnection = [
     }
   ],
   [
+    'PC_REMOTE_CHECK_FOR_DUPLICATED_PORTS_IN_SDP',
+    function (test) {
+      var re = /a=candidate.* (UDP|TCP) [\d]+ ([\d\.]+) ([\d]+) typ host/g;
+
+      function _sdpCandidatesIntoArray(sdp) {
+        var regexArray = [];
+        var resultArray = [];
+        while ((regexArray = re.exec(sdp)) !== null) {
+          info("regexArray: " + regexArray);
+          if ((regexArray[1] === "TCP") && (regexArray[3] === "9")) {
+            // As both sides can advertise TCP active connection on port 9 lets
+            // ignore them all together
+            info("Ignoring TCP candidate on port 9");
+            continue;
+          }
+          const triple = regexArray[1] + ":" + regexArray[2] + ":" + regexArray[3];
+          info("triple: " + triple);
+          if (resultArray.indexOf(triple) !== -1) {
+            dump("SDP: " + sdp.replace(/[\r]/g, '') + "\n");
+            ok(false, "This Transport:IP:Port " + triple + " appears twice in the SDP above!");
+          }
+          resultArray.push(triple);
+        }
+        return resultArray;
+      }
+
+      const offerTriples = _sdpCandidatesIntoArray(test._local_offer.sdp);
+      info("Offer ICE host candidates: " + JSON.stringify(offerTriples));
+
+      const answerTriples = _sdpCandidatesIntoArray(test.pcRemote._last_answer.sdp);
+      info("Answer ICE host candidates: " + JSON.stringify(answerTriples));
+
+      for (var i=0; i< offerTriples.length; i++) {
+        if (answerTriples.indexOf(offerTriples[i]) !== -1) {
+          dump("SDP offer: " + test._local_offer.sdp.replace(/[\r]/g, '') + "\n");
+          dump("SDP answer: " + test.pcRemote._last_answer.sdp.replace(/[\r]/g, '') + "\n");
+          ok(false, "This IP:Port " + offerTriples[i] + " appears in SDP offer and answer!");
+        }
+      }
+
+      test.next();
+    }
+  ],
+  [
     'PC_REMOTE_SET_LOCAL_DESCRIPTION',
     function (test) {
       test.setLocalDescription(test.pcRemote, test.pcRemote._last_answer, STABLE, function () {
