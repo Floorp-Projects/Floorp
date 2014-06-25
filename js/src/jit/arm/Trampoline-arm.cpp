@@ -841,7 +841,7 @@ JitRuntime::generateVMWrapper(JSContext *cx, const VMFunction &f)
 
       case Type_Double:
         if (cx->runtime()->jitSupportsFloatingPoint)
-            masm.loadDouble(Address(sp, 0), ReturnFloatReg);
+            masm.loadDouble(Address(sp, 0), ReturnDoubleReg);
         else
             masm.assumeUnreachable("Unable to load into float reg, with no FP support.");
         masm.freeStack(sizeof(double));

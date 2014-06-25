@@ -419,8 +419,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(src.type())) {
             FloatRegister reg = src.typedReg().fpu();
             if (src.type() == MIRType_Float32) {
-                convertFloat32ToDouble(reg, ScratchFloatReg);
-                reg = ScratchFloatReg;
+                convertFloat32ToDouble(reg, ScratchDoubleReg);
+                reg = ScratchDoubleReg;
             }
             storeDouble(reg, dest);
         } else {
@@ -442,8 +442,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void storeCallFloatResult(FloatRegister reg) {
-        if (reg != ReturnFloatReg)
-            moveDouble(ReturnFloatReg, reg);
+        if (reg != ReturnDoubleReg)
+            moveDouble(ReturnDoubleReg, reg);
     }
 
     void storeCallResultValue(AnyRegister dest) {
@@ -565,8 +565,8 @@ class MacroAssembler : public MacroAssemblerSpecific
         } else if (IsFloatingPointType(v.type())) {
             FloatRegister reg = v.typedReg().fpu();
             if (v.type() == MIRType_Float32) {
-                convertFloat32ToDouble(reg, ScratchFloatReg);
-                reg = ScratchFloatReg;
+                convertFloat32ToDouble(reg, ScratchDoubleReg);
+                reg = ScratchDoubleReg;
             }
             Push(reg);
         } else {
