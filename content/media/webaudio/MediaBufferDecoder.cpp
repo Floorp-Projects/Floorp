@@ -414,7 +414,7 @@ WebAudioDecodeJob::AllocateBuffer()
   MOZ_ASSERT(NS_IsMainThread());
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(mContext->GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(mContext->GetOwner()))) {
     return false;
   }
   JSContext* cx = jsapi.cx();

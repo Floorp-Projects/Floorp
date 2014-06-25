@@ -866,7 +866,7 @@ WebSocket::CreateAndDispatchMessageEvent(const nsACString& aData,
     return NS_OK;
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
     return NS_ERROR_FAILURE;
   }
   JSContext* cx = jsapi.cx();

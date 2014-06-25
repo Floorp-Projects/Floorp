@@ -1726,7 +1726,7 @@ JS::Value StringToJsval(nsPIDOMWindow* aWindow, nsAString& aString)
   MOZ_ASSERT(aWindow);
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(aWindow))) {
+  if (NS_WARN_IF(!jsapi.Init(aWindow))) {
     return JSVAL_NULL;
   }
   JSContext* cx = jsapi.cx();

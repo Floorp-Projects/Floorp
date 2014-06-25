@@ -403,7 +403,7 @@ private:
         }
 
         AutoJSAPI jsapi;
-        if (NS_WARN_IF(!jsapi.InitUsingWin(node->GetOwner()))) {
+        if (NS_WARN_IF(!jsapi.Init(node->GetOwner()))) {
           return NS_OK;
         }
         JSContext* cx = jsapi.cx();
