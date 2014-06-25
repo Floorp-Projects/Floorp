@@ -60,7 +60,8 @@
 
 struct nsHTMLReflowState;
 class nsHTMLReflowCommand;
-class gfxMatrix;
+
+struct gfxMatrix;
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
