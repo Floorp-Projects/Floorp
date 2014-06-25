@@ -84,3 +84,19 @@ interface HTMLDocument : Document {
   void                      captureEvents();
   void                      releaseEvents();
 };
+
+partial interface HTMLDocument {
+  /*
+   * Number of nodes that have been blocked by
+   * the Safebrowsing API to prevent tracking.
+   */
+  [ChromeOnly, Pure]
+  readonly attribute long blockedTrackingNodeCount;
+
+  /*
+   * List of nodes that have been blocked by
+   * the Safebrowsing API to prevent tracking.
+   */
+  [ChromeOnly, Pure]
+  readonly attribute NodeList blockedTrackingNodes;
+};

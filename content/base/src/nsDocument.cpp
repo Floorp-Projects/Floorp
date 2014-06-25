@@ -5974,6 +5974,34 @@ nsDocument::GetElementsByTagName(const nsAString& aTagname,
   return NS_OK;
 }
 
+long
+nsDocument::BlockedTrackingNodeCount() const
+{
+  return mBlockedTrackingNodes.Length();
+}
+
+already_AddRefed<nsSimpleContentList>
+nsDocument::BlockedTrackingNodes() const
+{
+  nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(nullptr);
+
+  nsTArray<nsWeakPtr> blockedTrackingNodes;
+  blockedTrackingNodes = mBlockedTrackingNodes;
+
+  for (unsigned long i = 0; i < blockedTrackingNodes.Length(); i++) {
+    nsWeakPtr weakNode = blockedTrackingNodes[i];
+    nsCOMPtr<nsIContent> node = do_QueryReferent(weakNode);
+    // Consider only nodes to which we have managed to get strong references.
+    // Coping with nullptrs since it's expected for nodes to disappear when
+    // nobody else is referring to them.
+    if (node) {
+      list->AppendElement(node);
+    }
+  }
+
+  return list.forget();
+}
+
 already_AddRefed<nsContentList>
 nsIDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                     const nsAString& aLocalName,
