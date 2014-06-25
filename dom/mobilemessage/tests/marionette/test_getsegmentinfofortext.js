@@ -77,21 +77,8 @@ function addTest(text, segments, charsPerSegment, charsAvailableInLastSegment) {
   });
 }
 
-function addTestThrows(text) {
-  tasks.push(function() {
-    log("Testing '" + text + "' ...");
-    try {
-      let domRequest = manager.getSegmentInfoForText(text);
-
-      ok(false, "Not thrown.");
-      tasks.finish();
-    } catch (e) {
-      tasks.next();
-    }
-  });
-}
-
-addTestThrows(null);
+addTest(null, 1, PDU_MAX_USER_DATA_7BIT,
+        PDU_MAX_USER_DATA_7BIT - "null".length);
 
 // Testing "undefined".
 addTest(undefined, 1, PDU_MAX_USER_DATA_7BIT,
