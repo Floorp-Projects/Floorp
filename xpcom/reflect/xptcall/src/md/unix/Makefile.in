@@ -60,7 +60,7 @@ endif
 #
 ifeq ($(OS_ARCH),SunOS)
 ifneq (86,$(findstring 86,$(OS_TEST)))
-ifdef HAVE_64BIT_OS
+ifdef HAVE_64BIT_BUILD
 ASFLAGS		+= -xarch=v9
 endif
 endif
@@ -80,7 +80,7 @@ xptcstubs_asm_ppc_darwin.s: xptcstubs_asm_ppc_darwin.s.m4 $(DIST)/include/xptcst
 endif
 
 ifeq ($(OS_ARCH),AIX)
-ifdef HAVE_64BIT_OS
+ifdef HAVE_64BIT_BUILD
 xptcstubs_asm_ppc_aix64.s: xptcstubs_asm_ppc_aix64.s.m4 $(DIST)/include/xptcstubsdef.inc Makefile
 	m4 -DAIX_OBJMODEL=$(AIX_OBJMODEL) $(INCLUDES) -I. $< > $@
 else

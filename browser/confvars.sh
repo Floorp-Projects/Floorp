@@ -10,7 +10,7 @@ MOZ_PHOENIX=1
 
 if test "$OS_ARCH" = "WINNT"; then
   MOZ_MAINTENANCE_SERVICE=1
-  if ! test "$HAVE_64BIT_OS"; then
+  if ! test "$HAVE_64BIT_BUILD"; then
     MOZ_VERIFY_MAR_SIGNATURE=1
     if test "$MOZ_UPDATE_CHANNEL" = "nightly" -o \
             "$MOZ_UPDATE_CHANNEL" = "aurora" -o \
