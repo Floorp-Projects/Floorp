@@ -597,6 +597,7 @@ Experiments.Experiments.prototype = {
           active: experiment.enabled,
           endDate: experiment.endDate.getTime(),
           detailURL: experiment._homepageURL,
+	  branch: experiment.branch,
         });
       }
 
@@ -627,6 +628,54 @@ Experiments.Experiments.prototype = {
 
     return info;
   },
+
+  /**
+   * Experiment "branch" support. If an experiment has multiple branches, it
+   * can record the branch with the experiment system and it will
+   * automatically be included in data reporting (FHR/telemetry payloads).
+   */
+
+  /**
+   * Set the experiment branch for the specified experiment ID.
+   * @returns Promise<>
+   */
+  setExperimentBranch: Task.async(function*(id, branchstr) {
+    yield this._loadTask;
+    let e = this._experiments.get(id);
+    if (!e) {
+      throw new Error("Experiment not found");
+    }
+    e.branch = String(branchstr);
+    this._dirty = true;
+    Services.obs.notifyObservers(null, EXPERIMENTS_CHANGED_TOPIC, null);
+    yield this._run();
+  }),
+  /**
+   * Get the branch of the specified experiment. If the experiment is unknown,
+   * throws an error.
+   *
+   * @param id The ID of the experiment. Pass null for the currently running
+   *           experiment.
+   * @returns Promise<string|null>
+   * @throws Error if the specified experiment ID is unknown, or if there is no
+   *         current experiment.
+   */
+  getExperimentBranch: Task.async(function*(id=null) {
+    yield this._loadTask;
+    let e;
+    if (id) {
+      e = this._experiments.get(id);
+      if (!e) {
+        throw new Error("Experiment not found");
+      }
+    } else {
+      e = this._getActiveExperiment();
+      if (e === null) {
+	throw new Error("No active experiment");
+      }
+    }
+    return e.branch;
+  }),
 
   /**
    * Determine whether another date has the same UTC day as now().
@@ -1013,6 +1062,17 @@ Experiments.Experiments.prototype = {
     return e.id;
   },
 
+  getActiveExperimentBranch: function() {
+    if (!this._experiments) {
+      return null;
+    }
+    let e = this._getActiveExperiment();
+    if (!e) {
+      return null;
+    }
+    return e.branch;
+  },
+
   _getActiveExperiment: function () {
     let enabled = [experiment for ([,experiment] of this._experiments) if (experiment._enabled)];
 
@@ -1258,6 +1318,8 @@ Experiments.ExperimentEntry = function (policy) {
   this._lastChangedDate = null;
   // Has this experiment failed to activate before?
   this._failedStart = false;
+  // The experiment branch
+  this._branch = null;
 
   // We grab these from the addon after download.
   this._name = null;
@@ -1306,11 +1368,16 @@ Experiments.ExperimentEntry.prototype = {
     "_addonId",
     "_startDate",
     "_endDate",
+    "_branch",
   ]),
 
   DATE_KEYS: new Set([
     "_startDate",
     "_endDate",
+  ]),
+
+  UPGRADE_KEYS: new Map([
+    ["_branch", null],
   ]),
 
   ADDON_CHANGE_NONE: 0,
@@ -1342,6 +1409,14 @@ Experiments.ExperimentEntry.prototype = {
 
   get id() {
     return this._manifestData.id;
+  },
+
+  get branch() {
+    return this._branch;
+  },
+
+  set branch(v) {
+    this._branch = v;
   },
 
   get startDate() {
@@ -1376,6 +1451,12 @@ Experiments.ExperimentEntry.prototype = {
    * @return boolean Whether initialization succeeded.
    */
   initFromCacheData: function (data) {
+    for (let [key, dval] of this.UPGRADE_KEYS) {
+      if (!(key in data)) {
+        data.set(key, dval);
+      }
+    }
+
     for (let key of this.SERIALIZE_KEYS) {
       if (!(key in data) && !this.DATE_KEYS.has(key)) {
         this._log.error("initFromCacheData() - missing required key " + key);
@@ -1970,6 +2051,9 @@ let stripDateToMidnight = function (d) {
 function ExperimentsLastActiveMeasurement1() {
   Metrics.Measurement.call(this);
 }
+function ExperimentsLastActiveMeasurement2() {
+  Metrics.Measurement.call(this);
+}
 
 const FIELD_DAILY_LAST_TEXT = {type: Metrics.Storage.FIELD_DAILY_LAST_TEXT};
 
@@ -1981,6 +2065,17 @@ ExperimentsLastActiveMeasurement1.prototype = Object.freeze({
 
   fields: {
     lastActive: FIELD_DAILY_LAST_TEXT,
+  }
+});
+ExperimentsLastActiveMeasurement2.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+
+  name: "info",
+  version: 2,
+
+  fields: {
+    lastActive: FIELD_DAILY_LAST_TEXT,
+    lastActiveBranch: FIELD_DAILY_LAST_TEXT,
   }
 });
 
@@ -1997,6 +2092,7 @@ ExperimentsProvider.prototype = Object.freeze({
 
   measurementTypes: [
     ExperimentsLastActiveMeasurement1,
+    ExperimentsLastActiveMeasurement2,
   ],
 
   _OBSERVERS: [
@@ -2040,8 +2136,8 @@ ExperimentsProvider.prototype = Object.freeze({
       this._experiments = Experiments.instance();
     }
 
-    let m = this.getMeasurement(ExperimentsLastActiveMeasurement1.prototype.name,
-                                ExperimentsLastActiveMeasurement1.prototype.version);
+    let m = this.getMeasurement(ExperimentsLastActiveMeasurement2.prototype.name,
+                                ExperimentsLastActiveMeasurement2.prototype.version);
 
     return this.enqueueStorageOperation(() => {
       return Task.spawn(function* recordTask() {
@@ -2055,6 +2151,11 @@ ExperimentsProvider.prototype = Object.freeze({
         this._log.info("Recording last active experiment: " + todayActive.id);
         yield m.setDailyLastText("lastActive", todayActive.id,
                                  this._experiments._policy.now());
+        let branch = todayActive.branch;
+        if (branch) {
+          yield m.setDailyLastText("lastActiveBranch", branch,
+                                   this._experiments._policy.now());
+        }
       }.bind(this));
     });
   },
