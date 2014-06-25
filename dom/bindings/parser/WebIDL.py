@@ -1705,7 +1705,7 @@ class IDLSequenceType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface() or other.isMozMap())
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
@@ -1759,7 +1759,7 @@ class IDLMozMapType(IDLType):
             # Just forward to the union; it'll deal
             return other.isDistinguishableFrom(self)
         return (other.isPrimitive() or other.isString() or other.isEnum() or
-                other.isDate() or other.isNonCallbackInterface())
+                other.isDate() or other.isNonCallbackInterface() or other.isSequence())
 
     def _getDependentObjects(self):
         return self.inner._getDependentObjects()
