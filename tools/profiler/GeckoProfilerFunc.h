@@ -12,12 +12,8 @@
 #include <stdint.h>
 
 namespace mozilla {
-class TimeDuration;
 class TimeStamp;
 }
-
-using mozilla::TimeStamp;
-using mozilla::TimeDuration;
 
 class ProfilerBacktrace;
 class ProfilerMarkerPayload;
