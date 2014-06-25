@@ -88,7 +88,7 @@ class ProcessExecutionMixin(LoggingMixin):
             if not log_name:
                 return
 
-            self.log(log_level, log_name, {'line': line.strip()}, '{line}')
+            self.log(log_level, log_name, {'line': line.rstrip()}, '{line}')
 
         use_env = {}
         if explicit_env:
