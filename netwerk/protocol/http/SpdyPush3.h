@@ -76,12 +76,13 @@ public:
   NS_DECL_NSAHTTPTRANSACTION
 
   SpdyPush3TransactionBuffer();
-  virtual ~SpdyPush3TransactionBuffer();
 
   nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
   void SetPushStream(SpdyPushedStream3 *stream) { mPushStream = stream; }
 
 private:
+  virtual ~SpdyPush3TransactionBuffer();
+
   const static uint32_t kDefaultBufferSize = 4096;
 
   nsresult mStatus;

@@ -18,12 +18,12 @@ XPCSHELL_TESTS_MANIFESTS += [
 ]
 
 XPIDL_SOURCES += [
-    'nsIAutofillController.idl',
+    'nsIFormAutofillContentService.idl',
 ]
 
 XPIDL_MODULE = 'toolkit_formautofill'
 
 EXTRA_COMPONENTS += [
-    'AutofillController.js',
     'formautofill.manifest',
+    'FormAutofillContentService.js',
 ]

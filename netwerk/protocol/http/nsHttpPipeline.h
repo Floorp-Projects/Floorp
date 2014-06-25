@@ -27,13 +27,14 @@ public:
     NS_DECL_NSAHTTPSEGMENTREADER
 
     nsHttpPipeline();
-    virtual ~nsHttpPipeline();
 
   bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
     return true;
   }
 
 private:
+    virtual ~nsHttpPipeline();
+
     nsresult FillSendBuf();
 
     static NS_METHOD ReadFromPipe(nsIInputStream *, void *, const char *,

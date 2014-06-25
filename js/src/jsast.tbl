@@ -70,5 +70,6 @@ ASTDEF(AST_COMP_BLOCK,            "ComprehensionBlock",             "comprehensi
 ASTDEF(AST_ARRAY_PATT,            "ArrayPattern",                   "arrayPattern")
 ASTDEF(AST_OBJECT_PATT,           "ObjectPattern",                  "objectPattern")
 ASTDEF(AST_PROP_PATT,             "Property",                       "propertyPattern")
+ASTDEF(AST_TEMPLATE_LITERAL,      "TemplateLiteral",                "templateLiteral")
 
 /* AST_LIMIT = last + 1 */

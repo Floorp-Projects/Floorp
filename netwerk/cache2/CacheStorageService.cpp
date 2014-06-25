@@ -1341,6 +1341,67 @@ CacheStorageService::AddStorageEntry(nsCSubstring const& aContextKey,
   return NS_OK;
 }
 
+nsresult
+CacheStorageService::CheckStorageEntry(CacheStorage const* aStorage,
+                                       nsIURI* aURI,
+                                       const nsACString & aIdExtension,
+                                       bool* aResult)
+{
+  nsresult rv;
+
+  nsAutoCString contextKey;
+  CacheFileUtils::AppendKeyPrefix(aStorage->LoadInfo(), contextKey);
+
+  if (!aStorage->WriteToDisk()) {
+    AppendMemoryStorageID(contextKey);
+  }
+
+#ifdef PR_LOGGING
+  nsAutoCString uriSpec;
+  aURI->GetAsciiSpec(uriSpec);
+  LOG(("CacheStorageService::CheckStorageEntry [uri=%s, eid=%s, contextKey=%s]",
+    uriSpec.get(), aIdExtension.BeginReading(), contextKey.get()));
+#endif
+
+  {
+    mozilla::MutexAutoLock lock(mLock);
+
+    NS_ENSURE_FALSE(mShutdown, NS_ERROR_NOT_INITIALIZED);
+
+    nsAutoCString entryKey;
+    rv = CacheEntry::HashingKey(EmptyCString(), aIdExtension, aURI, entryKey);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    CacheEntryTable* entries;
+    if ((*aResult = sGlobalEntryTables->Get(contextKey, &entries)) &&
+        entries->GetWeak(entryKey, aResult)) {
+      LOG(("  found in hash tables"));
+      return NS_OK;
+    }
+  }
+
+  if (!aStorage->WriteToDisk()) {
+    // Memory entry, nothing more to do.
+    LOG(("  not found in hash tables"));
+    return NS_OK;
+  }
+
+  // Disk entry, not found in the hashtable, check the index.
+  nsAutoCString fileKey;
+  rv = CacheEntry::HashingKey(contextKey, aIdExtension, aURI, fileKey);
+
+  CacheIndex::EntryStatus status;
+  rv = CacheIndex::HasEntry(fileKey, &status);
+  if (NS_FAILED(rv) || status == CacheIndex::DO_NOT_KNOW) {
+    LOG(("  index doesn't know, rv=0x%08x", rv));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  *aResult = status == CacheIndex::EXISTS;
+  LOG(("  %sfound in index", *aResult ? "" : "not "));
+  return NS_OK;
+}
+
 namespace { // anon
 
 class CacheEntryDoomByKeyCallback : public CacheFileIOListener
@@ -1350,9 +1411,10 @@ public:
 
   CacheEntryDoomByKeyCallback(nsICacheEntryDoomCallback* aCallback)
     : mCallback(aCallback) { }
-  virtual ~CacheEntryDoomByKeyCallback();
 
 private:
+  virtual ~CacheEntryDoomByKeyCallback();
+
   NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) { return NS_OK; }
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf, nsresult aResult) { return NS_OK; }
   NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) { return NS_OK; }

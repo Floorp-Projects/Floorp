@@ -62,11 +62,11 @@ protected:
     nscolor sMenuText;
     nscolor sMenuHover;
     nscolor sMenuHoverText;
-    nscolor sButtonBackground;
     nscolor sButtonText;
     nscolor sButtonHoverText;
-    nscolor sButtonOuterLightBorder;
-    nscolor sButtonInnerDarkBorder;
+    nscolor sFrameBackground;
+    nscolor sFrameOuterLightBorder;
+    nscolor sFrameInnerDarkBorder;
     nscolor sOddCellBackground;
     nscolor sNativeHyperLinkText;
     nscolor sComboBoxText;

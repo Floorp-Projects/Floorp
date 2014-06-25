@@ -48,11 +48,11 @@ public:
     {
     }
 
+private:
     virtual ~nsInputStreamTransport()
     {
     }
 
-private:
     nsCOMPtr<nsIAsyncInputStream>   mPipeIn;
 
     // while the copy is active, these members may only be accessed from the
@@ -248,11 +248,11 @@ public:
     {
     }
 
+private:
     virtual ~nsOutputStreamTransport()
     {
     }
 
-private:
     nsCOMPtr<nsIAsyncOutputStream>  mPipeOut;
  
     // while the copy is active, these members may only be accessed from the

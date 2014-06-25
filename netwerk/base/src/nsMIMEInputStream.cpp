@@ -28,9 +28,10 @@ class nsMIMEInputStream : public nsIMIMEInputStream,
                           public nsISeekableStream,
                           public nsIIPCSerializableInputStream
 {
+    virtual ~nsMIMEInputStream();
+
 public:
     nsMIMEInputStream();
-    virtual ~nsMIMEInputStream();
 
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM

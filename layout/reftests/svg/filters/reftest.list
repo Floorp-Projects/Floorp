@@ -2,6 +2,9 @@
 # subregion. The fe*-2 tests test with no clipping (which stresses
 # the automatic optimal surface-size computation a bit more).
 
+# SVG filter chain tests
+include svg-filter-chains/reftest.list
+
 skip-if(B2G) == dynamic-filtered-foreignObject-01.svg pass.svg # bug 773482
 == dynamic-filter-invalidation-01.svg pass.svg
 == dynamic-filter-invalidation-02.svg pass.svg
@@ -102,8 +105,3 @@ fuzzy(2,2659) skip-if(d2d) == feSpecularLighting-1.svg feSpecularLighting-1-ref.
 == fePointLight-zoomed-page.svg fePointLight-zoomed-page-ref.svg
 
 == feTurbulence-offset.svg feTurbulence-offset-ref.svg
-
-pref(layout.css.filters.enabled,true) == multiple-svg-filters.svg multiple-svg-filters-ref.svg
-pref(layout.css.filters.enabled,true) == multiple-svg-filters-long-chain.svg multiple-svg-filters-ref.svg
-pref(layout.css.filters.enabled,true) == multiple-svg-filters-second-uses-SourceGraphic.svg multiple-svg-filters-ref.svg
-pref(layout.css.filters.enabled,true) == multiple-svg-filters-with-multiple-primitives.svg multiple-svg-filters-ref.svg

@@ -95,10 +95,12 @@ static bool CheckMessageContent(nsIUDPMessage *aMessage, uint32_t aExpectedConte
  */
 class UDPClientListener : public nsIUDPSocketListener
 {
+protected:
+  virtual ~UDPClientListener();
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
-  virtual ~UDPClientListener();
   nsresult mResult;
 };
 
@@ -154,11 +156,12 @@ UDPClientListener::OnStopListening(nsIUDPSocket*, nsresult)
  */
 class UDPServerListener : public nsIUDPSocketListener
 {
+protected:
+  virtual ~UDPServerListener();
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIUDPSOCKETLISTENER
-
-  virtual ~UDPServerListener();
 
   nsresult mResult;
 };
@@ -221,11 +224,12 @@ UDPServerListener::OnStopListening(nsIUDPSocket*, nsresult)
  */
 class MulticastTimerCallback : public nsITimerCallback
 {
+protected:
+  virtual ~MulticastTimerCallback();
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITIMERCALLBACK
-
-  virtual ~MulticastTimerCallback();
 
   nsresult mResult;
 };

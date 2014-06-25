@@ -3522,14 +3522,6 @@
     "kind": "boolean",
     "description": "Session restore: Whether the file read on startup contained parse-able JSON"
   },
-  "FX_SESSION_RESTORE_BACKUP_FILE_MS": {
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": "30000",
-    "n_buckets": 10,
-    "extended_statistics_ok": true,
-    "description": "Session restore: Time to make a backup copy of the session file (ms)"
-  },
   "FX_SESSION_RESTORE_RESTORE_WINDOW_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

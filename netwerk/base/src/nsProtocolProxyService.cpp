@@ -91,6 +91,7 @@ public:
         NS_ASSERTION(mCallback, "null callback");
     }
 
+private:
     ~nsAsyncResolveRequest()
     {
         if (!NS_IsMainThread()) {
@@ -127,6 +128,7 @@ public:
         }
     }
 
+public:
     void SetResult(nsresult status, nsIProxyInfo *pi)
     {
         mStatus = status;

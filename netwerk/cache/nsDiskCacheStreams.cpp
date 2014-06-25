@@ -42,12 +42,12 @@ public:
                             const char *          buffer,
                             uint32_t              endOfStream);
 
-    virtual ~nsDiskCacheInputStream();
-    
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
 
 private:
+    virtual ~nsDiskCacheInputStream();
+
     nsDiskCacheStreamIO *           mStreamIO;  // backpointer to parent
     PRFileDesc *                    mFD;
     const char *                    mBuffer;

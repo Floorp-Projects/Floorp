@@ -295,7 +295,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
         return;
     }
 
-    if (hasMOVWT()) {
+    if (HasMOVWT()) {
         // If the operation is a move-a-like then we can try to use movw to
         // move the bits into the destination.  Otherwise, we'll need to
         // fall back on a multi-instruction format :(
@@ -370,7 +370,7 @@ MacroAssemblerARM::ma_alu(Register src1, Imm32 imm, Register dest,
 
     // Well, damn. We can use two 16 bit mov's, then do the op
     // or we can do a single load from a pool then op.
-    if (hasMOVWT()) {
+    if (HasMOVWT()) {
         // Try to load the immediate into a scratch register
         // then use that
         as_movw(ScratchRegister, imm.value & 0xffff, c);
@@ -485,7 +485,7 @@ MacroAssemblerARM::ma_mov(ImmGCPtr ptr, Register dest)
     // before to recover the pointer, and not after.
     writeDataRelocation(ptr);
     RelocStyle rs;
-    if (hasMOVWT())
+    if (HasMOVWT())
         rs = L_MOVWT;
     else
         rs = L_LDR;
@@ -1475,7 +1475,7 @@ DoubleLowWord(const double value)
 void
 MacroAssemblerARM::ma_vimm(double value, FloatRegister dest, Condition cc)
 {
-    if (hasVFPv3()) {
+    if (HasVFPv3()) {
         if (DoubleLowWord(value) == 0) {
             if (DoubleHighWord(value) == 0) {
                 // To zero a register, load 1.0, then execute dN <- dN - dN
@@ -1506,7 +1506,7 @@ void
 MacroAssemblerARM::ma_vimm_f32(float value, FloatRegister dest, Condition cc)
 {
     VFPRegister vd = VFPRegister(dest).singleOverlay();
-    if (hasVFPv3()) {
+    if (HasVFPv3()) {
         if (Float32Word(value) == 0) {
             // To zero a register, load 1.0, then execute sN <- sN - sN
             as_vimm(vd, VFPImm::one, cc);
@@ -1753,7 +1753,7 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode *target)
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     RelocStyle rs;
-    if (hasMOVWT())
+    if (HasMOVWT())
         rs = L_MOVWT;
     else
         rs = L_LDR;
@@ -1771,7 +1771,7 @@ MacroAssemblerARMCompat::callWithExitFrame(JitCode *target, Register dynStack)
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     RelocStyle rs;
-    if (hasMOVWT())
+    if (HasMOVWT())
         rs = L_MOVWT;
     else
         rs = L_LDR;
@@ -2052,7 +2052,7 @@ void
 MacroAssemblerARMCompat::movePtr(AsmJSImmPtr imm, Register dest)
 {
     RelocStyle rs;
-    if (hasMOVWT())
+    if (HasMOVWT())
         rs = L_MOVWT;
     else
         rs = L_LDR;
@@ -2441,7 +2441,7 @@ MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
 {
     JS_ASSERT(input != ScratchFloatReg);
     ma_vimm(0.5, ScratchFloatReg);
-    if (hasVFPv3()) {
+    if (HasVFPv3()) {
         Label notSplit;
         ma_vadd(input, ScratchFloatReg, ScratchFloatReg);
         // Convert the double into an unsigned fixed point value with 24 bits of
@@ -3619,7 +3619,7 @@ void
 MacroAssemblerARM::ma_call(ImmPtr dest)
 {
     RelocStyle rs;
-    if (hasMOVWT())
+    if (HasMOVWT())
         rs = L_MOVWT;
     else
         rs = L_LDR;
@@ -3837,7 +3837,7 @@ void
 MacroAssemblerARMCompat::passABIArg(const MoveOperand &from, MoveOp::Type type)
 {
 #if defined(JS_ARM_SIMULATOR)
-    if (useHardFpABI())
+    if (UseHardFpABI())
         MacroAssemblerARMCompat::passHardFpABIArg(from, type);
     else
         MacroAssemblerARMCompat::passSoftFpABIArg(from, type);
@@ -3875,7 +3875,7 @@ MacroAssemblerARMCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJ
 
     *stackAdjust = ((usedIntSlots_ > NumIntArgRegs) ? usedIntSlots_ - NumIntArgRegs : 0) * sizeof(intptr_t);
 #if defined(JS_CODEGEN_ARM_HARDFP) || defined(JS_ARM_SIMULATOR)
-    if (useHardFpABI())
+    if (UseHardFpABI())
         *stackAdjust += 2*((usedFloatSlots_ > NumFloatArgRegs) ? usedFloatSlots_ - NumFloatArgRegs : 0) * sizeof(intptr_t);
 #endif
     uint32_t alignmentAtPrologue = callFromAsmJS ? AsmJSFrameSize : 0;
@@ -3937,13 +3937,13 @@ MacroAssemblerARMCompat::callWithABIPost(uint32_t stackAdjust, MoveOp::Type resu
 
     switch (result) {
       case MoveOp::DOUBLE:
-        if (!useHardFpABI()) {
+        if (!UseHardFpABI()) {
             // Move double from r0/r1 to ReturnFloatReg.
             as_vxfer(r0, r1, ReturnFloatReg, CoreToFloat);
             break;
         }
       case MoveOp::FLOAT32:
-        if (!useHardFpABI()) {
+        if (!UseHardFpABI()) {
             // Move float32 from r0 to ReturnFloatReg.
             as_vxfer(r0, InvalidReg, VFPRegister(d0).singleOverlay(), CoreToFloat);
             break;
@@ -4363,7 +4363,7 @@ MacroAssemblerARMCompat::toggledCall(JitCode *target, bool enabled)
     BufferOffset bo = nextOffset();
     CodeOffsetLabel offset(bo.getOffset());
     addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
-    ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, hasMOVWT() ? L_MOVWT : L_LDR);
+    ma_movPatchable(ImmPtr(target->raw()), ScratchRegister, Always, HasMOVWT() ? L_MOVWT : L_LDR);
     if (enabled)
         ma_blx(ScratchRegister);
     else
