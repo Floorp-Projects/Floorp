@@ -447,6 +447,14 @@ ComputedTiming
 ElementAnimation::GetComputedTimingAt(TimeDuration aLocalTime,
                                       const AnimationTiming& aTiming)
 {
+  // Currently we expect negative durations to be picked up during CSS
+  // parsing but when we start receiving timing parameters from other sources
+  // we will need to clamp negative durations here.
+  // For now, if we're hitting this it probably means we've overflowing
+  // integer arithmetic in mozilla::TimeStamp.
+  MOZ_ASSERT(aTiming.mIterationDuration >= TimeDuration(0),
+             "Expecting iteration duration >= 0");
+
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
