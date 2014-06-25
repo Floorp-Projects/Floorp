@@ -4507,47 +4507,7 @@ NewStringCopyN<CanGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
 template JSFlatString *
 NewStringCopyN<NoGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
 
-template <>
-JSFlatString *
-NewStringCopyN<CanGC>(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    return NewStringCopyN<CanGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
-}
-
-template <>
-JSFlatString *
-NewStringCopyN<NoGC>(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    return NewStringCopyN<NoGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
-}
-
 } /* namespace js */
-
-template <AllowGC allowGC>
-JSFlatString *
-js::NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
-}
-
-template JSFlatString *
-js::NewStringCopyZ<CanGC>(ExclusiveContext *cx, const jschar *s);
-
-template JSFlatString *
-js::NewStringCopyZ<NoGC>(ExclusiveContext *cx, const jschar *s);
-
-template <AllowGC allowGC>
-JSFlatString *
-js::NewStringCopyZ(ThreadSafeContext *cx, const char *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, strlen(s));
-}
-
-template JSFlatString *
-js::NewStringCopyZ<CanGC>(ThreadSafeContext *cx, const char *s);
-
-template JSFlatString *
-js::NewStringCopyZ<NoGC>(ThreadSafeContext *cx, const char *s);
 
 const char *
 js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, bool asSource)
