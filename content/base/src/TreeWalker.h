@@ -25,6 +25,8 @@ namespace dom {
 
 class TreeWalker MOZ_FINAL : public nsIDOMTreeWalker, public nsTraversal
 {
+    virtual ~TreeWalker();
+
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIDOMTREEWALKER
@@ -32,7 +34,6 @@ public:
     TreeWalker(nsINode *aRoot,
                uint32_t aWhatToShow,
                const NodeFilterHolder &aFilter);
-    virtual ~TreeWalker();
 
     NS_DECL_CYCLE_COLLECTION_CLASS(TreeWalker)
 

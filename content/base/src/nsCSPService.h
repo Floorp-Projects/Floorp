@@ -25,9 +25,12 @@ public:
   NS_DECL_NSICHANNELEVENTSINK
 
   CSPService();
-  virtual ~CSPService();
   static bool sCSPEnabled;
   static bool sNewBackendEnabled;
+
+protected:
+  virtual ~CSPService();
+
 private:
   // Maps origins to app status.
   nsDataHashtable<nsCStringHashKey, uint16_t> mAppStatusCache;

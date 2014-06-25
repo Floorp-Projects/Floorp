@@ -26,6 +26,8 @@ public:
 
 protected:
 
+    ~nsXULTemplateResultStorage();
+
     nsRefPtr<nsXULTemplateResultSetStorage> mResultSet;
 
     nsCOMArray<nsIVariant> mValues;

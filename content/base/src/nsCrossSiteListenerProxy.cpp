@@ -921,6 +921,8 @@ public:
   NS_DECL_NSICHANNELEVENTSINK
 
 private:
+  ~nsCORSPreflightListener() {}
+
   void AddResultToCache(nsIRequest* aRequest);
 
   nsCOMPtr<nsIChannel> mOuterChannel;

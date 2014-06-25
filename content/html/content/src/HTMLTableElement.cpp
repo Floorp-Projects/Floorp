@@ -29,7 +29,6 @@ class TableRowsCollection : public nsIHTMLCollection,
 {
 public:
   TableRowsCollection(HTMLTableElement *aParent);
-  virtual ~TableRowsCollection();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
@@ -53,6 +52,8 @@ public:
   using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~TableRowsCollection();
+
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
     return nsWrapperCache::GetWrapperPreserveColor();

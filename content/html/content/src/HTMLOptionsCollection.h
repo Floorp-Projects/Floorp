@@ -36,7 +36,6 @@ class HTMLOptionsCollection : public nsIHTMLCollection
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
 public:
   HTMLOptionsCollection(HTMLSelectElement* aSelect);
-  virtual ~HTMLOptionsCollection();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -44,6 +43,8 @@ public:
   using nsWrapperCache::GetWrapperPreserveColor;
   virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
 protected:
+  virtual ~HTMLOptionsCollection();
+
   virtual JSObject* GetWrapperPreserveColorInternal() MOZ_OVERRIDE
   {
     return nsWrapperCache::GetWrapperPreserveColor();

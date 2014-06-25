@@ -50,6 +50,8 @@ struct nsXMLBinding {
  */
 class nsXMLBindingSet MOZ_FINAL
 {
+  ~nsXMLBindingSet();
+
 public:
 
   // results hold a reference to a binding set in their
