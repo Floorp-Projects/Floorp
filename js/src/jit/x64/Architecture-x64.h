@@ -27,7 +27,11 @@ static const uint32_t ShadowStackSpace = 0;
 class Registers {
   public:
     typedef JSC::X86Registers::RegisterID Code;
-
+    typedef uint32_t SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountPopulation32(x);
+    }
     static const char *GetName(Code code) {
         static const char * const Names[] = { "rax", "rcx", "rdx", "rbx",
                                               "rsp", "rbp", "rsi", "rdi",
@@ -48,6 +52,7 @@ class Registers {
     static const Code Invalid = JSC::X86Registers::invalid_reg;
 
     static const uint32_t Total = 16;
+    static const uint32_t TotalPhys = 16;
     static const uint32_t Allocatable = 14;
 
     static const uint32_t AllMask = (1 << Total) - 1;
@@ -115,7 +120,7 @@ typedef uint16_t PackedRegisterMask;
 class FloatRegisters {
   public:
     typedef JSC::X86Registers::XMMRegisterID Code;
-
+    typedef uint32_t SetType;
     static const char *GetName(Code code) {
         static const char * const Names[] = { "xmm0",  "xmm1",  "xmm2",  "xmm3",
                                               "xmm4",  "xmm5",  "xmm6",  "xmm7",
@@ -135,10 +140,12 @@ class FloatRegisters {
     static const Code Invalid = JSC::X86Registers::invalid_xmm;
 
     static const uint32_t Total = 16;
+    static const uint32_t TotalPhys = 16;
+
     static const uint32_t Allocatable = 15;
 
     static const uint32_t AllMask = (1 << Total) - 1;
-
+    static const uint32_t AllDoubleMask = AllMask;
     static const uint32_t VolatileMask =
 #if defined(_WIN64)
         (1 << JSC::X86Registers::xmm0) |
@@ -159,11 +166,20 @@ class FloatRegisters {
         (1 << JSC::X86Registers::xmm15);    // This is ScratchFloatReg.
 
     static const uint32_t AllocatableMask = AllMask & ~NonAllocatableMask;
+
 };
+
+template <typename T>
+class TypedRegisterSet;
 
 struct FloatRegister {
     typedef FloatRegisters Codes;
     typedef Codes::Code Code;
+    typedef Codes::SetType SetType;
+    static uint32_t SetSize(SetType x) {
+        static_assert(sizeof(SetType) == 4, "SetType must be 32 bits");
+        return mozilla::CountPopulation32(x);
+    }
 
     Code code_;
 
@@ -215,6 +231,11 @@ struct FloatRegister {
         JS_ASSERT(aliasIdx == 0);
         *ret = *this;
     }
+    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister> &s);
+    static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    uint32_t getRegisterDumpOffsetInBytes();
+
 };
 
 // Arm/D32 has double registers that can NOT be treated as float32

@@ -500,6 +500,15 @@ class TypedRegisterSet
     bool operator ==(const TypedRegisterSet<T> &other) const {
         return other.bits_ == bits_;
     }
+    TypedRegisterSet<T> reduceSetForPush() const {
+        return T::ReduceSetForPush(*this);
+    }
+    uint32_t getSizeInBytes() const {
+        return T::GetSizeInBytes(*this);
+    }
+    uint32_t getPushSizeInBytes() const {
+        return T::GetPushSizeInBytes(*this);
+    }
 };
 
 typedef TypedRegisterSet<Register> GeneralRegisterSet;
