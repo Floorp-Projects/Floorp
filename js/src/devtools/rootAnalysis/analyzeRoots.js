@@ -114,7 +114,7 @@ function edgeUsesVariable(edge, variable, body)
         return 0;
 
     if (variable.Kind == "Return" && body.Index[1] == edge.Index[1] && body.BlockId.Kind == "Function")
-        return edge.Index[1]; // Last point in body uses the return value
+        return edge.Index[1]; // Last point in function body uses the return value.
 
     var src = edge.Index[0];
 
@@ -273,11 +273,11 @@ function edgeCanGC(edge)
     return indirectCallCannotGC(functionName, varName) ? null : "*" + varName;
 }
 
-function variableUseFollowsGC(suppressed, variable, worklist)
+function variableUsePrecedesGC(suppressed, variable, worklist)
 {
-    // Scan through all edges following an unrooted variable use, using an
-    // explicit worklist. A worklist contains a following edge together with a
-    // description of where one of its predecessors GC'd (if any).
+    // Scan through all edges preceding an unrooted variable use, using an
+    // explicit worklist. A worklist contains an incoming edge together with a
+    // description of where it or one of its successors GC'd (if any).
 
     while (worklist.length) {
         var entry = worklist.pop();
@@ -327,7 +327,7 @@ function variableUseFollowsGC(suppressed, variable, worklist)
 
             if (edgeKillsVariable(edge, variable)) {
                 if (entry.gcInfo)
-                    return {gcInfo:entry.gcInfo, why:entry};
+                    return {gcInfo: entry.gcInfo, why: {body:body, ppoint:source, gcInfo:entry.gcInfo, why:entry } }
                 if (!body.minimumUse || source < body.minimumUse)
                     body.minimumUse = source;
                 continue;
@@ -387,9 +387,11 @@ function variableLiveAcrossGC(suppressed, variable)
             if (usePoint && !edgeKillsVariable(edge, variable)) {
                 // Found a use, possibly after a GC.
                 var worklist = [{body:body, ppoint:usePoint, gcInfo:null, why:null}];
-                var call = variableUseFollowsGC(suppressed, variable, worklist);
-                if (call)
+                var call = variableUsePrecedesGC(suppressed, variable, worklist);
+                if (call) {
+                    call.afterGCUse = usePoint;
                     return call;
+                }
             }
         }
     }
@@ -470,6 +472,8 @@ function locationLine(text)
 
 function printEntryTrace(functionName, entry)
 {
+    var gcPoint = ('gcInfo' in entry) ? entry.gcInfo.ppoint : 0;
+
     if (!functionBodies[0].lines)
         computePrintedLines(functionName);
 
@@ -477,17 +481,24 @@ function printEntryTrace(functionName, entry)
         var ppoint = entry.ppoint;
         var lineText = findLocation(entry.body, ppoint);
 
-        var edgeText = null;
+        var edgeText = "";
         if (entry.why && entry.why.body == entry.body) {
             // If the next point in the trace is in the same block, look for an edge between them.
             var next = entry.why.ppoint;
-            for (var line of entry.body.lines) {
-                if (match = /\((\d+),(\d+),/.exec(line)) {
-                    if (match[1] == ppoint && match[2] == next)
-                        edgeText = line; // May be multiple
+
+            if (!entry.body.edgeTable) {
+                var table = {};
+                entry.body.edgeTable = table;
+                for (var line of entry.body.lines) {
+                    if (match = /\((\d+),(\d+),/.exec(line))
+                        table[match[1] + "," + match[2]] = line; // May be multiple?
                 }
             }
+
+            edgeText = entry.body.edgeTable[ppoint + "," + next];
             assert(edgeText);
+            if (ppoint == gcPoint)
+                edgeText += " [[GC call]]";
         } else {
             // Look for any outgoing edge from the chosen point.
             for (var line of entry.body.lines) {
@@ -498,9 +509,11 @@ function printEntryTrace(functionName, entry)
                     }
                 }
             }
+            if (ppoint == entry.body.Index[1] && entry.body.BlockId.Kind == "Function")
+                edgeText += " [[end of function]]";
         }
 
-        print("    " + lineText + (edgeText ? ": " + edgeText : ""));
+        print("    " + lineText + (edgeText.length ? ": " + edgeText : ""));
         entry = entry.why;
     }
 }
