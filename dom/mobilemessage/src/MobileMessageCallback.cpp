@@ -190,16 +190,13 @@ MobileMessageCallback::NotifyMessageDeleted(bool *aDeleted, uint32_t aSize)
     return NotifySuccess(val);
   }
 
-  nsresult rv;
-  nsIScriptContext* sc = mDOMRequest->GetContextForEventHandlers(&rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(sc, NS_ERROR_FAILURE);
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(mDOMRequest->GetOwner()))) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = jsapi.cx();
 
-  AutoPushJSContext cx(sc->GetNativeContext());
-  NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-
-  JS::Rooted<JSObject*> deleteArrayObj(cx,
-                                       JS_NewArrayObject(cx, aSize));
+  JS::Rooted<JSObject*> deleteArrayObj(cx, JS_NewArrayObject(cx, aSize));
   for (uint32_t i = 0; i < aSize; i++) {
     JS_SetElement(cx, deleteArrayObj, i, aDeleted[i]);
   }
