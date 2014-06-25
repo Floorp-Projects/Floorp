@@ -46,3 +46,4 @@ random-if(B2G&&browserIsRemote) == filter-userspace-offset.svg?offsetContainer=r
 != transform-floating-point-invalidation.html?reverse about:blank
 != nudge-to-integer-invalidation.html about:blank
 != nudge-to-integer-invalidation.html?reverse about:blank
+!= clipped-animated-transform-1.html about:blank
