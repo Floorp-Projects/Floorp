@@ -605,6 +605,21 @@ resources.recursive_make_targets += generated_recursive_make_targets
 # The resources are included in the Fennec APK.
 main.included_projects += ['../' + resources.name]
 
+omnijar = add_android_eclipse_library_project('FennecOmnijar')
+omnijar.package_name = 'org.mozilla.fennec.omnijar'
+# This is delicate.  We write into OBJDIR, and write triggers a new build of the
+# Fennec project, because the omni.ja timestamp is always updated. (The target
+# is FORCE and the installer does not track dependencies.) However, Eclipse only
+# triggers a new build (of FennecOmnijar) when something actually changes, so
+# we're not constantly rebuilding the FennecOmnijar (or Fennec) project.
+omnijar.recursive_make_targets += [TOPOBJDIR + '/dist/fennec/assets/omni.ja']
+for d in ['app', 'chrome', 'components', 'locales', 'modules', 'themes']:
+    omnijar.add_classpathentry(d, TOPSRCDIR + '/mobile/android/' + d, dstdir=d)
+
+# The omnijar is included in the Fennec APK (although it's empty,
+# having no resources, assets, or Java code).
+main.included_projects += [omnijar.name]
+
 if CONFIG['MOZ_CRASHREPORTER']:
     crashreporter = add_android_eclipse_library_project('FennecResourcesCrashReporter')
     crashreporter.package_name = 'org.mozilla.fennec.resources.crashreporter'
