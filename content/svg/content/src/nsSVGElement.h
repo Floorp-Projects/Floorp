@@ -64,7 +64,7 @@ class Matrix;
 
 }
 
-struct gfxMatrix;
+class gfxMatrix;
 struct nsSVGEnumMapping;
 
 typedef nsStyledElementNotElementCSSInlineStyle nsSVGElementBase;
