@@ -597,6 +597,7 @@ Experiments.Experiments.prototype = {
           active: experiment.enabled,
           endDate: experiment.endDate.getTime(),
           detailURL: experiment._homepageURL,
+	  branch: experiment.branch,
         });
       }
 
