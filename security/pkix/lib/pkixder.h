@@ -41,8 +41,7 @@
 #include "pkix/nullptr.h"
 
 #include "prerror.h"
-#include "prlog.h"
-#include "secder.h"
+#include "prtime.h"
 #include "secerr.h"
 #include "secoidt.h"
 #include "stdint.h"
@@ -73,6 +72,7 @@ enum Tag
   NULLTag = UNIVERSAL | 0x05,
   OIDTag = UNIVERSAL | 0x06,
   ENUMERATED = UNIVERSAL | 0x0a,
+  UTCTime = UNIVERSAL | 0x17,
   GENERALIZED_TIME = UNIVERSAL | 0x18,
   SEQUENCE = UNIVERSAL | CONSTRUCTED | 0x30,
 };
@@ -497,17 +497,33 @@ Enumerated(Input& input, uint8_t& value)
   return internal::IntegralValue(input, ENUMERATED | 0, value);
 }
 
+// XXX: This function should have the signature:
+//
+//    Result TimeChoice(Input& input, /*out*/ PRTime& time);
+//
+// and parse the tag (and length and value) from the input like the other
+// functions here. However, currently we get TimeChoices already partially
+// decoded by NSS, so for now we'll have this signature, where the input
+// parameter contains the value of the time choice.
+//
+// type must be either siGeneralizedTime or siUTCTime.
+//
+// Only times from 1970-01-01-00:00:00 onward are accepted, in order to
+// eliminate the chance for complications in converting times to traditional
+// time formats that start at 1970.
+Result TimeChoice(SECItemType type, Input& input, /*out*/ PRTime& time);
+
+// Only times from 1970-01-01-00:00:00 onward are accepted, in order to
+// eliminate the chance for complications in converting times to traditional
+// time formats that start at 1970.
 inline Result
 GeneralizedTime(Input& input, PRTime& time)
 {
-  SECItem encoded;
-  if (ExpectTagAndGetValue(input, GENERALIZED_TIME, encoded) != Success) {
+  Input value;
+  if (ExpectTagAndGetValue(input, GENERALIZED_TIME, value) != Success) {
     return Failure;
   }
-  if (DER_GeneralizedTimeToTime(&time, &encoded) != SECSuccess) {
-    return Failure;
-  }
-  return Success;
+  return TimeChoice(siGeneralizedTime, value, time);
 }
 
 // This parser will only parse values between 0..127. If this range is
