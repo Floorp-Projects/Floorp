@@ -54,7 +54,6 @@ exports.install = function install(xpiPath) {
       setTimeout(resolve, 0, aAddon.id);
     },
     onInstallFailed: function (aInstall) {
-      console.log("failed");
       aInstall.removeListener(listener);
       reject(aInstall.error);
     },
@@ -114,8 +113,9 @@ exports.isActive = function isActive(addonId) {
   return getAddon(addonId).then(addon => addon.isActive && !addon.appDisabled);
 };
 
-function getAddon (id) {
+const getAddon = function getAddon (id) {
   let { promise, resolve, reject } = defer();
   AddonManager.getAddonByID(id, addon => addon ? resolve(addon) : reject());
   return promise;
 }
+exports.getAddon = getAddon;
