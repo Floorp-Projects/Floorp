@@ -45,7 +45,7 @@ public class Dispatcher extends Activity {
         Intent intent = new Intent(getIntent());
 
         // Only change its destination.
-        intent.setClassName(getApplicationContext(), "org.mozilla.gecko.WebApps$WebApp" + index);
+        intent.setClassName(getApplicationContext(), "org.mozilla.gecko.webapp.Webapps$Webapp" + index);
 
         // If and only if we haven't seen this before.
         intent.putExtra("isInstalled", isInstalled);
