@@ -25,7 +25,6 @@ class nsXULContextMenuBuilder : public nsIMenuBuilder,
 {
 public:
   nsXULContextMenuBuilder();
-  virtual ~nsXULContextMenuBuilder();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsXULContextMenuBuilder,
@@ -35,6 +34,8 @@ public:
   NS_DECL_NSIXULCONTEXTMENUBUILDER
 
 protected:
+  virtual ~nsXULContextMenuBuilder();
+
   nsresult CreateElement(nsIAtom* aTag,
                          nsIDOMHTMLElement* aHTMLElement,
                          mozilla::dom::Element** aResult);

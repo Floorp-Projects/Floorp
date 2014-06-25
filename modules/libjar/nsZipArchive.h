@@ -95,12 +95,12 @@ class nsZipArchive
 {
   friend class nsZipFind;
 
+  /** destructing the object closes the archive */
+  ~nsZipArchive();
+
 public:
   /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
-
-  /** destructing the object closes the archive */
-  ~nsZipArchive();
 
   /** 
    * OpenArchive 

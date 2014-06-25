@@ -13,6 +13,8 @@
 #include "AudioChannelService.h"
 #include "AudioChannelAgent.h"
 
+#include "nsThreadUtils.h"
+
 #define TEST_ENSURE_BASE(_test, _msg)       \
   PR_BEGIN_MACRO                            \
     if (!(_test)) {                         \
@@ -24,6 +26,17 @@
   PR_END_MACRO
 
 using namespace mozilla::dom;
+
+void
+spin_events_loop_until_false(const bool* const aCondition)
+{
+  nsCOMPtr<nsIThread> thread(::do_GetCurrentThread());
+  nsresult rv = NS_OK;
+  bool processed = true;
+  while (*aCondition && NS_SUCCEEDED(rv)) {
+    rv = thread->ProcessNextEvent(true, &processed);
+  }
+}
 
 class Agent : public nsIAudioChannelAgentCallback,
               public nsSupportsWeakReference
@@ -78,17 +91,7 @@ public:
   nsresult StopPlaying()
   {
     mRegistered = false;
-    int loop = 0;
-    while (mWaitCallback) {
-      #ifdef XP_WIN
-      Sleep(1000);
-      #else
-      sleep(1);
-      #endif
-      if (loop++ == 5) {
-        TEST_ENSURE_BASE(false, "StopPlaying timeout");
-      }
-    }
+    spin_events_loop_until_false(&mWaitCallback);
     return mAgent->StopPlaying();
   }
 
@@ -112,19 +115,13 @@ public:
     return NS_OK;
   }
 
-  nsresult GetCanPlay(AudioChannelState *_ret)
+  nsresult GetCanPlay(AudioChannelState *_ret, bool aWaitCallback = false)
   {
-    int loop = 0;
-    while (mWaitCallback) {
-      #ifdef XP_WIN
-      Sleep(1000);
-      #else
-      sleep(1);
-      #endif
-      if (loop++ == 5) {
-        TEST_ENSURE_BASE(false, "GetCanPlay timeout");
-      }
+    if (aWaitCallback) {
+      mWaitCallback = true;
     }
+
+    spin_events_loop_until_false(&mWaitCallback);
     *_ret = mCanPlay;
     return NS_OK;
   }
@@ -348,7 +345,7 @@ TestFadedState()
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
     "Test4: A notification channel visible agent must be playable");
 
-    rv = contentAgent->GetCanPlay(&playable);
+  rv = contentAgent->GetCanPlay(&playable, true);
   NS_ENSURE_SUCCESS(rv, rv);
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_FADED,
     "Test4: A content channel unvisible agent must be faded because of "
@@ -375,7 +372,7 @@ TestFadedState()
   rv = notificationAgent->StopPlaying();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = contentAgent->GetCanPlay(&playable);
+  rv = contentAgent->GetCanPlay(&playable, true);
   NS_ENSURE_SUCCESS(rv, rv);
   TEST_ENSURE_BASE(playable == AUDIO_CHANNEL_STATE_NORMAL,
     "Test4: A content channel unvisible agent must be playable "

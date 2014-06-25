@@ -1590,10 +1590,10 @@ AC_TRY_COMPILE([$configure_static_assert_macros],
                result="yes", result="no")
 AC_MSG_RESULT("$result")
 if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_64BIT_OS)
-    HAVE_64BIT_OS=1
+    AC_DEFINE(HAVE_64BIT_BUILD)
+    HAVE_64BIT_BUILD=1
 fi
-AC_SUBST(HAVE_64BIT_OS)
+AC_SUBST(HAVE_64BIT_BUILD)
 AC_LANG_RESTORE
 fi # COMPILE_ENVIRONMENT
 
@@ -1830,7 +1830,7 @@ case "$target" in
 *-aix*)
     AC_DEFINE(AIX)
     if test ! "$GNU_CC"; then
-        if test ! "$HAVE_64BIT_OS"; then
+        if test ! "$HAVE_64BIT_BUILD"; then
             # Compiling with Visual Age C++ object model compat is the
             # default. To compile with object model ibm, add
             # AIX_OBJMODEL=ibm to .mozconfig.
@@ -1887,7 +1887,7 @@ case "$target" in
     MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_CFLAGS) $(DSO_LDOPTS) -o $@'
     MOZ_OPTIMIZE_FLAGS="-O3"
     # Statically disable jemalloc on 10.5 and 32-bit 10.6.  See bug 702250.
-    if test "$HAVE_64BIT_OS"; then
+    if test "$HAVE_64BIT_BUILD"; then
         MOZ_MEMORY=1
     fi
     DLL_SUFFIX=".dylib"
@@ -2231,7 +2231,7 @@ ia64*-hpux*)
 
     case "$target" in
     i*86-*)
-        if test "$HAVE_64BIT_OS"; then
+        if test "$HAVE_64BIT_BUILD"; then
             AC_MSG_ERROR([You are targeting i386 but using the 64-bit compiler.])
         fi
 
@@ -3376,6 +3376,7 @@ fi # ! SKIP_COMPILER_CHECKS
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
     TARGET_XPCOM_ABI="${CPU_ARCH}-${TARGET_COMPILER_ABI}"
+    AC_DEFINE_UNQUOTED(TARGET_XPCOM_ABI, ["${TARGET_XPCOM_ABI}"])
 fi
 
 dnl Mozilla specific options
@@ -6007,7 +6008,7 @@ if test -n "$MOZ_CRASHREPORTER"; then
   fi
 
   if test "$OS_ARCH" = "WINNT"; then
-    if test -z "$HAVE_64BIT_OS"; then
+    if test -z "$HAVE_64BIT_BUILD"; then
       MOZ_CRASHREPORTER_INJECTOR=1
       AC_DEFINE(MOZ_CRASHREPORTER_INJECTOR)
     fi
@@ -6797,6 +6798,7 @@ AC_SUBST(MOZ_OPTIMIZE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_LDFLAGS)
 AC_SUBST(MOZ_ALLOW_HEAP_EXECUTE_FLAGS)
 AC_SUBST(MOZ_OPTIMIZE_SIZE_TWEAK)
+AC_SUBST(MOZ_PGO)
 AC_SUBST(MOZ_PGO_OPTIMIZE_FLAGS)
 
 dnl ========================================================
@@ -9148,7 +9150,7 @@ if test -z "$MOZ_NATIVE_NSPR"; then
     elif test -z "$MOZ_OPTIMIZE"; then
         ac_configure_args="$ac_configure_args --disable-optimize"
     fi
-    if test -n "$HAVE_64BIT_OS"; then
+    if test -n "$HAVE_64BIT_BUILD"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
     if test -n "$USE_ARM_KUSER"; then

@@ -27,8 +27,6 @@ class nsJARInputStream MOZ_FINAL : public nsIInputStream
       memset(&mZs, 0, sizeof(z_stream));
     }
 
-    ~nsJARInputStream() { Close(); }
-
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIINPUTSTREAM
    
@@ -40,6 +38,8 @@ class nsJARInputStream MOZ_FINAL : public nsIInputStream
                            const char* aDir);
   
   private:
+    ~nsJARInputStream() { Close(); }
+
     nsRefPtr<nsZipHandle>  mFd;         // handle for reading
     uint32_t               mOutSize;    // inflated size 
     uint32_t               mInCrc;      // CRC as provided by the zipentry

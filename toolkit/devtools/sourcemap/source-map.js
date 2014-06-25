@@ -1,4 +1,4 @@
-/* -*- Mode: js; js-indent-level: 2; -*- */
+/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE or:
