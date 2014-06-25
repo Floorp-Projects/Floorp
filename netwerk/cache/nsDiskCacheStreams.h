@@ -23,8 +23,7 @@ class nsDiskCacheDevice;
 
 class nsDiskCacheStreamIO : public nsIOutputStream {
 public:
-             nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
-    virtual ~nsDiskCacheStreamIO();
+    nsDiskCacheStreamIO(nsDiskCacheBinding *   binding);
     
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIOUTPUTSTREAM
@@ -48,6 +47,8 @@ public:
     nsDiskCacheStreamIO() { NS_NOTREACHED("oops"); }
 
 private:
+    virtual ~nsDiskCacheStreamIO();
+
     nsresult    OpenCacheFile(int flags, PRFileDesc ** fd);
     nsresult    ReadCacheBlocks(uint32_t bufferSize);
     nsresult    FlushBufferToFile();

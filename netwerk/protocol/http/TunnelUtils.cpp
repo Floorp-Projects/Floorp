@@ -200,15 +200,19 @@ TLSFilterTransaction::OnReadSegment(const char *aData,
 
   uint32_t amt = 0;
   if (mEncryptedTextUsed) {
+    // If we are tunneled on spdy CommitToSegmentSize will prevent partial
+    // writes that could interfere with multiplexing. H1 is fine with
+    // partial writes.
     rv = mSegmentReader->CommitToSegmentSize(mEncryptedTextUsed, mForce);
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK) {
+      rv = mSegmentReader->OnReadSegment(mEncryptedText, mEncryptedTextUsed, &amt);
+    }
+
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
       // return OK because all the data was consumed and stored in this buffer
       Connection()->TransactionHasDataToWrite(this);
       return NS_OK;
-    }
-
-    rv = mSegmentReader->OnReadSegment(mEncryptedText, mEncryptedTextUsed, &amt);
-    if (NS_FAILED(rv)) {
+    } else if (NS_FAILED(rv)) {
       return rv;
     }
   }
@@ -220,7 +224,6 @@ TLSFilterTransaction::OnReadSegment(const char *aData,
   } else {
     memmove(mEncryptedText, mEncryptedText + amt, mEncryptedTextUsed - amt);
     mEncryptedTextUsed -= amt;
-    return NS_OK;
   }
   return NS_OK;
 }
@@ -261,8 +264,9 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
     return NS_ERROR_FAILURE;
   }
 
-  // this will call through to FilterRead to get data from the higher
+  // this will call through to FilterInput to get data from the higher
   // level connection before removing the local TLS layer
+  mFilterReadCode = NS_OK;
   int32_t bytesRead = PR_Read(mFD, aData, aCount);
   if (bytesRead == -1) {
     if (PR_GetError() == PR_WOULD_BLOCK_ERROR) {
@@ -271,6 +275,13 @@ TLSFilterTransaction::OnWriteSegment(char *aData,
     return NS_ERROR_FAILURE;
   }
   *outCountRead = bytesRead;
+
+  if (NS_SUCCEEDED(mFilterReadCode) && !bytesRead) {
+    LOG(("TLSFilterTransaction::OnWriteSegment %p "
+         "Second layer of TLS stripping results in STREAM_CLOSED\n", this));
+    mFilterReadCode = NS_BASE_STREAM_CLOSED;
+  }
+
   LOG(("TLSFilterTransaction::OnWriteSegment %p rv=%x didread=%d "
         "2 layers of ssl stripped to plaintext\n", this, mFilterReadCode, bytesRead));
   return mFilterReadCode;
@@ -286,7 +297,7 @@ TLSFilterTransaction::FilterInput(char *aBuf, int32_t aAmount)
   uint32_t outCountRead = 0;
   mFilterReadCode = mSegmentWriter->OnWriteSegment(aBuf, aAmount, &outCountRead);
   if (NS_SUCCEEDED(mFilterReadCode) && outCountRead) {
-    LOG(("TLSFilterTransaction::FilterRead rv=%x read=%d input from net "
+    LOG(("TLSFilterTransaction::FilterInput rv=%x read=%d input from net "
          "1 layer stripped, 1 still on\n", mFilterReadCode, outCountRead));
     if (mReadSegmentBlocked) {
       mNudgeCounter = 0;
@@ -338,6 +349,10 @@ TLSFilterTransaction::WriteSegments(nsAHttpSegmentWriter *aWriter,
 
   mSegmentWriter = aWriter;
   nsresult rv = mTransaction->WriteSegments(this, aCount, outCountWritten);
+  if (NS_SUCCEEDED(rv) && NS_FAILED(mFilterReadCode) && !(*outCountWritten)) {
+    // nsPipe turns failures into silent OK.. undo that!
+    rv = mFilterReadCode;
+  }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%x %d\n",
        this, rv, *outCountWritten));
   return rv;
@@ -753,9 +768,9 @@ public:
     : mWrapped(aWrapped)
   {};
 
+private:
   virtual ~SocketTransportShim() {};
 
-private:
   nsCOMPtr<nsISocketTransport> mWrapped;
 };
 
@@ -775,9 +790,9 @@ public:
     mWeakTrans = do_GetWeakReference(aTrans);
   }
 
+private:
   virtual ~OutputStreamShim() {};
 
-private:
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIOutputStreamCallback *mCallback;
   nsresult mStatus;
@@ -799,9 +814,9 @@ public:
     mWeakTrans = do_GetWeakReference(aTrans);
   }
 
+private:
   virtual ~InputStreamShim() {};
 
-private:
   nsWeakPtr mWeakTrans; // SpdyConnectTransaction *
   nsIInputStreamCallback *mCallback;
   nsresult mStatus;
@@ -902,6 +917,13 @@ SpdyConnectTransaction::Flush(uint32_t count, uint32_t *countRead)
   if (!(*countRead)) {
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
+
+  if (mOutputDataUsed != mOutputDataOffset) {
+    LOG(("SpdyConnectTransaction::Flush %p Incomplete %d\n",
+         this, mOutputDataUsed - mOutputDataOffset));
+    mSession->TransactionHasDataToWrite(this);
+  }
+
   return NS_OK;
 }
 

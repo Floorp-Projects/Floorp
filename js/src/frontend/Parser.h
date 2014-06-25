@@ -431,7 +431,13 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
   private:
     Parser *thisForCtor() { return this; }
 
+    JSAtom * stopStringCompression();
+
     Node stringLiteral();
+#ifdef JS_HAS_TEMPLATE_STRINGS
+    Node noSubstitutionTemplate();
+    Node templateLiteral();
+#endif
     inline Node newName(PropertyName *name);
 
     inline bool abortIfSyntaxParser();

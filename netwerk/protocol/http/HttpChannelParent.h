@@ -39,6 +39,8 @@ class HttpChannelParent : public PHttpChannelParent
                         , public ADivertableParentChannel
                         , public nsIAuthPromptProvider
 {
+  virtual ~HttpChannelParent();
+
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
@@ -52,7 +54,6 @@ public:
   HttpChannelParent(const PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext,
                     PBOverrideStatus aStatus);
-  virtual ~HttpChannelParent();
 
   bool Init(const HttpChannelCreationArgs& aOpenArgs);
 

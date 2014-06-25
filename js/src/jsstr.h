@@ -98,36 +98,6 @@ struct JSSubString {
 extern JSObject *
 js_InitStringClass(JSContext *cx, js::HandleObject obj);
 
-extern const char js_escape_str[];
-extern const char js_unescape_str[];
-extern const char js_uneval_str[];
-extern const char js_decodeURI_str[];
-extern const char js_encodeURI_str[];
-extern const char js_decodeURIComponent_str[];
-extern const char js_encodeURIComponent_str[];
-
-/* GC-allocate a string descriptor for the given malloc-allocated chars. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-js_NewString(js::ThreadSafeContext *cx, CharT *chars, size_t length);
-
-extern JSLinearString *
-js_NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
-
-/* Copy a counted string and GC-allocate a descriptor for it. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-js_NewStringCopyN(js::ThreadSafeContext *cx, const CharT *s, size_t n);
-
-/* Copy a C string and GC-allocate a descriptor for it. */
-template <js::AllowGC allowGC>
-extern JSFlatString *
-js_NewStringCopyZ(js::ExclusiveContext *cx, const jschar *s);
-
-template <js::AllowGC allowGC>
-extern JSFlatString *
-js_NewStringCopyZ(js::ThreadSafeContext *cx, const char *s);
-
 /*
  * Convert a value to a printable C string.
  */
@@ -136,6 +106,28 @@ js_ValueToPrintable(JSContext *cx, const js::Value &,
                     JSAutoByteString *bytes, bool asSource = false);
 
 namespace js {
+
+/* GC-allocate a string descriptor for the given malloc-allocated chars. */
+template <js::AllowGC allowGC, typename CharT>
+extern JSFlatString *
+NewString(js::ThreadSafeContext *cx, CharT *chars, size_t length);
+
+extern JSLinearString *
+NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
+
+/* Copy a counted string and GC-allocate a descriptor for it. */
+template <js::AllowGC allowGC, typename CharT>
+extern JSFlatString *
+NewStringCopyN(js::ThreadSafeContext *cx, const CharT *s, size_t n);
+
+/* Copy a C string and GC-allocate a descriptor for it. */
+template <js::AllowGC allowGC>
+extern JSFlatString *
+NewStringCopyZ(js::ExclusiveContext *cx, const jschar *s);
+
+template <js::AllowGC allowGC>
+extern JSFlatString *
+NewStringCopyZ(js::ThreadSafeContext *cx, const char *s);
 
 /*
  * Convert a non-string value to a string, returning null after reporting an

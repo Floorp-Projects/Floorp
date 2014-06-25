@@ -72,9 +72,6 @@ leak:AllocateArrayBufferContents
 # Bug 1022010 - Small leak under _render_glyph_outline. bc1
 leak:_render_glyph_outline
 
-# Bug 1022042 - compareVariants in the test plugin leaks identifiers. oth
-leak:compareVariants(_NPP*,
-
 # Bug 1022954 - ScriptSource leaks sourceMapURL_ sometimes. dt
 leak:ScriptSource::setSourceMapURL
 

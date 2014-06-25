@@ -72,6 +72,8 @@ public:
   }
 
 protected:
+  ~SVGRect() {}
+
   nsCOMPtr<nsIContent> mParent;
   float mX, mY, mWidth, mHeight;
 };
