@@ -379,6 +379,14 @@ LDefinition::toString() const
     return buf;
 }
 
+bool
+LAllocation::aliases(const LAllocation &other) const
+{
+    if (isFloatReg() && other.isFloatReg())
+        return toFloatReg()->reg().aliases(other.toFloatReg()->reg());
+    return *this == other;
+}
+
 static void
 PrintUse(char *buf, size_t size, const LUse *use)
 {
