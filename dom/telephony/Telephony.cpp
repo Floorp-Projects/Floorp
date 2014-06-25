@@ -84,8 +84,10 @@ public:
   NS_IMETHODIMP
   NotifyDialSuccess(uint32_t aCallIndex)
   {
+    nsRefPtr<TelephonyCallId> id = mTelephony->CreateCallId(mNumber);
     nsRefPtr<TelephonyCall> call =
-      mTelephony->CreateNewDialingCall(mServiceId, mNumber, aCallIndex);
+      mTelephony->CreateCall(id, mServiceId, aCallIndex,
+                             nsITelephonyService::CALL_STATE_DIALING);
 
     mPromise->MaybeResolve(call);
     return NS_OK;
@@ -240,7 +242,7 @@ Telephony::HasDialingCall()
 
 already_AddRefed<Promise>
 Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
-                        bool aIsEmergency)
+                        bool aEmergency)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (!global) {
@@ -262,7 +264,7 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
 
   nsCOMPtr<nsITelephonyCallback> callback =
     new Callback(this, promise, aServiceId, aNumber);
-  nsresult rv = mService->Dial(aServiceId, aNumber, aIsEmergency, callback);
+  nsresult rv = mService->Dial(aServiceId, aNumber, aEmergency, callback);
   if (NS_FAILED(rv)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
     return promise.forget();
@@ -271,19 +273,36 @@ Telephony::DialInternal(uint32_t aServiceId, const nsAString& aNumber,
   return promise.forget();
 }
 
-already_AddRefed<TelephonyCall>
-Telephony::CreateNewDialingCall(uint32_t aServiceId, const nsAString& aNumber,
-                                uint32_t aCallIndex)
+already_AddRefed<TelephonyCallId>
+Telephony::CreateCallId(const nsAString& aNumber, uint16_t aNumberPresentation,
+                        const nsAString& aName, uint16_t aNamePresentation)
 {
-  nsRefPtr<TelephonyCall> call =
-    TelephonyCall::Create(this, aServiceId, aNumber,
-                          nsITelephonyService::CALL_PRESENTATION_ALLOWED,
-                          EmptyString(),
-                          nsITelephonyService::CALL_PRESENTATION_ALLOWED,
-                          nsITelephonyService::CALL_STATE_DIALING, aCallIndex);
-  NS_ASSERTION(call, "This should never fail!");
+  nsRefPtr<TelephonyCallId> id =
+    new TelephonyCallId(GetOwner(), aNumber, aNumberPresentation,
+                        aName, aNamePresentation);
 
-  NS_ASSERTION(mCalls.Contains(call), "Should have auto-added new call!");
+  return id.forget();
+}
+
+already_AddRefed<TelephonyCall>
+Telephony::CreateCall(TelephonyCallId* aId, uint32_t aServiceId,
+                      uint32_t aCallIndex, uint16_t aCallState,
+                      bool aEmergency, bool aConference,
+                      bool aSwitchable, bool aMergeable)
+{
+  // We don't have to create an already ended call.
+  if (aCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
+    return nullptr;
+  }
+
+  nsRefPtr<TelephonyCall> call =
+    TelephonyCall::Create(this, aId, aServiceId, aCallIndex, aCallState,
+                          aEmergency, aConference, aSwitchable, aMergeable);
+
+  NS_ASSERTION(call, "This should never fail!");
+  NS_ASSERTION(aConference ? mGroup->CallsArray().Contains(call)
+                           : mCalls.Contains(call),
+               "Should have auto-added new call!");
 
   return call.forget();
 }
@@ -518,25 +537,13 @@ Telephony::CallStateChanged(uint32_t aServiceId, uint32_t aCallIndex,
     return NS_OK;
   }
 
-  // Do nothing since we didn't know anything about it before now and it's
-  // ended already.
-  if (aCallState == nsITelephonyService::CALL_STATE_DISCONNECTED) {
-    return NS_OK;
-  }
-
-  // Didn't find this call in mCalls or mGroup. Create a new call.
+  nsRefPtr<TelephonyCallId> id = CreateCallId(aNumber, aNumberPresentation,
+                                              aName, aNamePresentation);
   nsRefPtr<TelephonyCall> call =
-    TelephonyCall::Create(this, aServiceId, aNumber, aNumberPresentation,
-                          aName, aNamePresentation, aCallState, aCallIndex,
-                          aIsEmergency, aIsConference, aIsSwitchable,
-                          aIsMergeable);
-  NS_ASSERTION(call, "This should never fail!");
+    CreateCall(id, aServiceId, aCallIndex, aCallState,
+               aIsEmergency, aIsConference, aIsSwitchable, aIsMergeable);
 
-  NS_ASSERTION(aIsConference ? mGroup->CallsArray().Contains(call) :
-                               mCalls.Contains(call),
-               "Should have auto-added new call!");
-
-  if (aCallState == nsITelephonyService::CALL_STATE_INCOMING) {
+  if (call && aCallState == nsITelephonyService::CALL_STATE_INCOMING) {
     nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("incoming"), call);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -576,28 +583,21 @@ Telephony::EnumerateCallState(uint32_t aServiceId, uint32_t aCallIndex,
                               bool aIsEmergency, bool aIsConference,
                               bool aIsSwitchable, bool aIsMergeable)
 {
-  nsRefPtr<TelephonyCall> call;
-
   // We request calls enumeration in constructor, and the asynchronous result
   // will be sent back through the callback function EnumerateCallState().
   // However, it is likely to have call state changes, i.e. CallStateChanged()
   // being called, before the enumeration result comes back. We'd make sure
   // we don't somehow add duplicates due to the race condition.
-  call = GetCallFromEverywhere(aServiceId, aCallIndex);
+  nsRefPtr<TelephonyCall> call = GetCallFromEverywhere(aServiceId, aCallIndex);
   if (call) {
     return NS_OK;
   }
 
   // Didn't know anything about this call before now.
-  call = TelephonyCall::Create(this, aServiceId, aNumber, aNumberPresentation,
-                               aName, aNamePresentation, aCallState,
-                               aCallIndex, aIsEmergency, aIsConference,
-                               aIsSwitchable, aIsMergeable);
-  NS_ASSERTION(call, "This should never fail!");
-
-  NS_ASSERTION(aIsConference ? mGroup->CallsArray().Contains(call) :
-                               mCalls.Contains(call),
-               "Should have auto-added new call!");
+  nsRefPtr<TelephonyCallId> id = CreateCallId(aNumber, aNumberPresentation,
+                                              aName, aNamePresentation);
+  CreateCall(id, aServiceId, aCallIndex, aCallState,
+             aIsEmergency, aIsConference, aIsSwitchable, aIsMergeable);
 
   return NS_OK;
 }
