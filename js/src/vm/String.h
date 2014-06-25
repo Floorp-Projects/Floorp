@@ -519,9 +519,6 @@ class JSString : public js::gc::BarrieredCell<JSString>
     void operator=(const JSString &other) MOZ_DELETE;
 };
 
-/* Temporary flag to enable Latin1 strings (bug 998392). */
-static const bool EnableLatin1Strings = false;
-
 class JSRope : public JSString
 {
     template <typename CharT>
@@ -1001,6 +998,9 @@ class JSAtom : public JSFlatString
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
 namespace js {
+
+/* Temporary flag to enable Latin1 strings (bug 998392). */
+extern bool EnableLatin1Strings;
 
 /*
  * Thread safe RAII wrapper for inspecting the contents of JSStrings. The
