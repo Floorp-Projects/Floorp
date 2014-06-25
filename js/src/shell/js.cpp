@@ -2958,7 +2958,7 @@ EvalInWorker(JSContext *cx, unsigned argc, jsval *vp)
     jschar *chars = (jschar *) js_malloc(str->length() * sizeof(jschar));
     if (!chars)
         return false;
-    PodCopy(chars, str->chars(), str->length());
+    CopyChars(chars, *str);
 
     WorkerInput *input = js_new<WorkerInput>(cx->runtime(), chars, str->length());
     if (!input)
@@ -4525,6 +4525,11 @@ ToLatin1(JSContext *cx, unsigned argc, Value *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     if (!args.get(0).isString() || !args[0].toString()->isLinear()) {
         args.rval().setUndefined();
+        return true;
+    }
+
+    if (args[0].toString()->hasLatin1Chars()) {
+        args.rval().set(args[0]);
         return true;
     }
 
@@ -6313,6 +6318,7 @@ main(int argc, char **argv, char **envp)
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
         || !op.addBoolOption('\0', "fuzzing-safe", "Don't expose functions that aren't safe for "
                              "fuzzers to call")
+        || !op.addBoolOption('\0', "latin1-strings", "Enable Latin1 strings (default: off)")
 #ifdef DEBUG
         || !op.addBoolOption('\0', "dump-entrained-variables", "Print variables which are "
                              "unnecessarily entrained by inner functions")
@@ -6384,6 +6390,11 @@ main(int argc, char **argv, char **envp)
 #endif
 
 #endif // DEBUG
+
+    // Set this option before initializing the JSRuntime, so that Latin1 strings
+    // are used for strings allocated during initialization.
+    if (op.getBoolOption("latin1-strings"))
+        js::EnableLatin1Strings = true;
 
 #ifdef JS_THREADSAFE
     // The fake thread count must be set before initializing the Runtime,
