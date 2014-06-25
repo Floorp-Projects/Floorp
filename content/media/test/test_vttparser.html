@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>WebVTT Parser Regression Tests</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["media.webvtt.enabled", true]]},
+  function() {
+    var video = document.createElement("video");
+    video.src = "seek.webm";
+    video.preload = "auto";
+    var trackElement = document.createElement("track");
+    trackElement.src = "parser.vtt";
+    trackElement.kind = "subtitles";
+    trackElement.default = true;
+    document.getElementById("content").appendChild(video);
+    video.appendChild(trackElement);
+    video.addEventListener("loadedmetadata", function run_tests() {
+      // Re-que run_tests() at the end of the event loop until the track
+      // element has loaded its data.
+      if (trackElement.readyState == 1) {
+        setTimeout(run_tests, 0);
+        return;
+      }
+      is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+      is(trackElement.track.cues.length, 2, "Track should have two Cues.");
+      SimpleTest.finish();
+  });
+});
+
+</script>
+</pre>
+</body>
+</html>
