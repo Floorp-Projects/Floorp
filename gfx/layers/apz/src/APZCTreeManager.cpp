@@ -396,11 +396,6 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
         mInOverscrolledApzc = false;
         mApzcForInputBlock = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[0].mScreenPoint),
                                            &mInOverscrolledApzc);
-        if (multiTouchInput.mTouches.Length() == 1) {
-          // If we have one touch point, this might be the start of a pan.
-          // Prepare for possible overscroll handoff.
-          BuildOverscrollHandoffChain(mApzcForInputBlock);
-        }
         for (size_t i = 1; i < multiTouchInput.mTouches.Length(); i++) {
           nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(ScreenPoint(multiTouchInput.mTouches[i].mScreenPoint),
                                                                  &mInOverscrolledApzc);
@@ -411,6 +406,9 @@ APZCTreeManager::ReceiveInputEvent(const InputData& aEvent,
           mApzcForInputBlock = RootAPZCForLayersId(mApzcForInputBlock);
           APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", mApzcForInputBlock.get());
         }
+
+        // Prepare for possible overscroll handoff.
+        BuildOverscrollHandoffChain(mApzcForInputBlock);
 
         if (mApzcForInputBlock) {
           // Cache transformToApzc so it can be used for future events in this block.
@@ -552,11 +550,6 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
   ScreenPoint point = ScreenPoint(aEvent.touches[0]->mRefPoint.x, aEvent.touches[0]->mRefPoint.y);
   // Ignore events if any touch hits inside an overscrolled apzc.
   nsRefPtr<AsyncPanZoomController> apzc = GetTargetAPZC(point, aOutInOverscrolledApzc);
-  if (aEvent.touches.Length() == 1) {
-    // If we have one touch point, this might be the start of a pan.
-    // Prepare for possible overscroll handoff.
-    BuildOverscrollHandoffChain(apzc);
-  }
   for (size_t i = 1; i < aEvent.touches.Length(); i++) {
     point = ScreenPoint(aEvent.touches[i]->mRefPoint.x, aEvent.touches[i]->mRefPoint.y);
     nsRefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(point, aOutInOverscrolledApzc);
@@ -567,6 +560,8 @@ APZCTreeManager::GetTouchInputBlockAPZC(const WidgetTouchEvent& aEvent,
     apzc = RootAPZCForLayersId(apzc);
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
   }
+  // Prepare for possible overscroll handoff.
+  BuildOverscrollHandoffChain(apzc);
   return apzc.forget();
 }
 
