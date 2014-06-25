@@ -449,16 +449,6 @@ extern JS_FRIEND_API(bool)
 IsAtomsCompartment(JSCompartment *comp);
 
 /*
- * Check whether it is OK to assign an undeclared variable with the name
- * |propname| at the current location in script.  It is not an error if there is
- * no current script location, or if that location is not an assignment to an
- * undeclared variable.  Reports an error if one needs to be reported (and,
- * particularly, always reports when it returns false).
- */
-extern JS_FRIEND_API(bool)
-ReportIfUndeclaredVarAssignment(JSContext *cx, JS::HandleString propname);
-
-/*
  * Returns whether we're in a non-strict property set (in that we're in a
  * non-strict script and the bytecode we're on is a property set).  The return
  * value does NOT indicate any sort of exception was thrown: it's just a

@@ -59,7 +59,7 @@ os = CONFIG['OS_TARGET']
 if os == 'WINNT':
     gyp_vars.update(
         MSVS_VERSION=CONFIG['_MSVS_VERSION'],
-        MSVS_OS_BITS=64 if CONFIG['HAVE_64BIT_OS'] else 32,
+        MSVS_OS_BITS=64 if CONFIG['HAVE_64BIT_BUILD'] else 32,
     )
 elif os == 'Android':
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':

@@ -597,7 +597,7 @@
 
 ; ANGLE on Win32
 #ifdef XP_WIN32
-#ifndef HAVE_64BIT_OS
+#ifndef HAVE_64BIT_BUILD
 @BINPATH@/libEGL.dll
 @BINPATH@/libGLESv2.dll
 #endif

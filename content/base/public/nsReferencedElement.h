@@ -165,11 +165,12 @@ private:
         mRef = aRef;
       }
     }
-    virtual ~DocumentLoadNotification() {}
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
   private:
+    virtual ~DocumentLoadNotification() {}
+
     virtual void SetTo(Element* aTo) { }
 
     nsString mRef;

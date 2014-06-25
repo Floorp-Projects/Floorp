@@ -131,6 +131,8 @@ struct AudioChunk {
   }
   int ChannelCount() const { return mChannelData.Length(); }
 
+  bool IsMuted() const { return mVolume == 0.0f; }
+
   size_t SizeOfExcludingThisIfUnshared(MallocSizeOf aMallocSizeOf) const
   {
     return SizeOfExcludingThis(aMallocSizeOf, true);

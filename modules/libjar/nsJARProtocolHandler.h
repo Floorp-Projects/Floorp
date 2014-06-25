@@ -33,7 +33,6 @@ public:
 
     // nsJARProtocolHandler methods:
     nsJARProtocolHandler();
-    virtual ~nsJARProtocolHandler();
 
     static nsJARProtocolHandler *GetSingleton();
 
@@ -50,6 +49,8 @@ public:
     void RemoteOpenFileComplete(nsIHashable *aRemoteFile, nsresult aStatus);
 
 protected:
+    virtual ~nsJARProtocolHandler();
+
     nsCOMPtr<nsIZipReaderCache> mJARCache;
     nsCOMPtr<nsIMIMEService> mMimeService;
 

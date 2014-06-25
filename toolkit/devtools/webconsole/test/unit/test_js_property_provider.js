@@ -1,4 +1,4 @@
-/* -*- js2-basic-offset: 2; indent-tabs-mode: nil; -*- */
+/* -*- js-indent-level: 2; indent-tabs-mode: nil -*- */
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 

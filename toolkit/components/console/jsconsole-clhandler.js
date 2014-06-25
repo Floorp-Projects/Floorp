@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /* vim:sw=4:sr:sta:et:sts: */
 
 /* This Source Code Form is subject to the terms of the Mozilla Public

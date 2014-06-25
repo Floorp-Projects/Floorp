@@ -38,6 +38,8 @@ class nsRange MOZ_FINAL : public nsIDOMRange,
   typedef mozilla::dom::DOMRect DOMRect;
   typedef mozilla::dom::DOMRectList DOMRectList;
 
+  virtual ~nsRange();
+
 public:
   nsRange(nsINode* aNode)
     : mRoot(nullptr)
@@ -59,7 +61,6 @@ public:
     MOZ_ASSERT(aNode, "range isn't in a document!");
     mOwner = aNode->OwnerDoc();
   }
-  virtual ~nsRange();
 
   static nsresult CreateRange(nsIDOMNode* aStartParent, int32_t aStartOffset,
                               nsIDOMNode* aEndParent, int32_t aEndOffset,
