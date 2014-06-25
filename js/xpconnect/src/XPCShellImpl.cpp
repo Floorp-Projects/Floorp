@@ -340,7 +340,8 @@ Load(JSContext *cx, unsigned argc, jsval *vp)
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename.ptr(), 1);
-        JS::Rooted<JSScript*> script(cx, JS::Compile(cx, obj, options, file));
+        JS::Rooted<JSScript*> script(cx);
+        JS::Compile(cx, obj, options, file, &script);
         fclose(file);
         if (!script)
             return false;
@@ -924,8 +925,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
         JS::CompileOptions options(cx);
         options.setUTF8(true)
                .setFileAndLine(filename, 1);
-        script = JS::Compile(cx, obj, options, file);
-        if (script && !compileOnly)
+        if (JS::Compile(cx, obj, options, file, &script) && !compileOnly)
             (void)JS_ExecuteScript(cx, obj, script, &result);
         DoEndRequest(cx);
 
@@ -960,8 +960,7 @@ ProcessFile(JSContext *cx, JS::Handle<JSObject*> obj, const char *filename, FILE
         JS_ClearPendingException(cx);
         JS::CompileOptions options(cx);
         options.setFileAndLine("typein", startline);
-        script = JS_CompileScript(cx, obj, buffer, strlen(buffer), options);
-        if (script) {
+        if (JS_CompileScript(cx, obj, buffer, strlen(buffer), options, &script)) {
             JSErrorReporter older;
 
             if (!compileOnly) {

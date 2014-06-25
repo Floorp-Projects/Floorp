@@ -167,11 +167,11 @@ mozJSSubScriptLoader::ReadScript(nsIURI *uri, JSContext *cx, JSObject *targetObj
         // the lazy source loader doesn't know the encoding.
         if (!reuseGlobal) {
             options.setSourceIsLazy(true);
-            script.set(JS::Compile(cx, target_obj, options, buf.get(), len));
+            JS::Compile(cx, target_obj, options, buf.get(), len, script);
         } else {
-            function.set(JS::CompileFunction(cx, target_obj, options,
-                                             nullptr, 0, nullptr, buf.get(),
-                                             len));
+            JS::CompileFunction(cx, target_obj, options,
+                                nullptr, 0, nullptr, buf.get(),
+                                len, function);
         }
     }
 
