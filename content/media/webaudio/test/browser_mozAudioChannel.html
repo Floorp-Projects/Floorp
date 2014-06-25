@@ -2,11 +2,23 @@
 <meta charset="utf-8">
 <title>Test for mozinterruptbegin/end in AudioContext</title>
 
-mozAudioChannelTest = <span id="mozAudioChannelTest">FAIL</span>
-
 <script type="application/javascript">
 
   var ac = new AudioContext();
+
+  function createEvent(msg) {
+    var event = document.createEvent('CustomEvent');
+    event.initCustomEvent('testmozchannel', true, true, { msg: msg });
+    dispatchEvent(event);
+  }
+
+  ac.onmozinterruptbegin = function(evt) {
+    createEvent('mozinterruptbegin');
+  }
+
+  ac.addEventListener('mozinterruptend', function() {
+    createEvent('mozinterruptend');
+  }, false);
 
   var buffer = ac.createBuffer(1, 2048, ac.sampleRate);
   for (var i = 0; i < 2048; ++i) {
@@ -16,16 +28,6 @@ mozAudioChannelTest = <span id="mozAudioChannelTest">FAIL</span>
   var source = ac.createBufferSource();
   source.buffer = buffer;
   source.connect(ac.destination);
+  source.loop = true;
   source.start(0);
-
-  ac.onmozinterruptbegin = function(evt) {
-    document.getElementById("mozAudioChannelTest").innerHTML = "mozinterruptbegin";
-  }
-
-  ac.addEventListener('mozinterruptend', function() {
-    document.getElementById("mozAudioChannelTest").innerHTML = "mozinterruptend";
-  }, false);
-
-  document.getElementById("mozAudioChannelTest").innerHTML = "READY";
-
 </script>

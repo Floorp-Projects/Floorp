@@ -27,21 +27,12 @@ function whenBrowserUnloaded(aBrowser, aCallback) {
   }, true);
 }
 
-var event;
-var next = function() {}
-
-function eventListener(evt) {
-  info("Event has been received!");
-  is(evt.detail.msg, event, "AudioContext has been received the right event: " + event);
-  next();
-}
-
 function test() {
 
   waitForExplicitFinish();
 
   let testURL = "http://mochi.test:8888/browser/" +
-    "content/media/webaudio/test/browser_mozAudioChannel.html";
+    "content/media/webaudio/test/browser_mozAudioChannel_muted.html";
 
   SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", "content" ],
                                      ["media.useAudioChannelService", true ]]},
@@ -51,33 +42,27 @@ function test() {
 
       whenBrowserLoaded(tab1.linkedBrowser, function() {
         let doc = tab1.linkedBrowser.contentDocument;
-        tab1.linkedBrowser.contentWindow.addEventListener('testmozchannel', eventListener, false);
+        is(doc.getElementById("mozAudioChannelTest").textContent, "READY",
+           "Test is ready to run");
 
         SpecialPowers.pushPrefEnv({"set": [["media.defaultAudioChannel", "telephony" ]]},
           function() {
-            event = 'mozinterruptbegin';
-            next = function() {
-              info("Next is called.");
-              event = 'mozinterruptend';
-              next =  function() {
-                info("Next is called again.");
-                tab1.linkedBrowser.contentWindow.removeEventListener('testmozchannel', eventListener);
+            let tab2 = gBrowser.duplicateTab(tab1);
+            gBrowser.selectedTab = tab2;
+            whenTabRestored(tab2, function() {
+              is(doc.getElementById("mozAudioChannelTest").textContent, "READY",
+                 "AudioContext should not be muted by the second tab.");
+
+              whenBrowserUnloaded(tab2.linkedBrowser, function() {
+                is(doc.getElementById("mozAudioChannelTest").textContent, "READY",
+                   "AudioContext should not be muted by the second tab.");
                 gBrowser.removeTab(tab1);
                 finish();
-              }
-
-              info("Unloading a tab...");
-              whenBrowserUnloaded(tab2.linkedBrowser, function() { info("Tab unloaded."); });
+              });
 
               gBrowser.removeTab(tab2);
               gBrowser.selectedTab = tab1;
-            }
-
-            let tab2 = gBrowser.duplicateTab(tab1);
-            gBrowser.selectedTab = tab2;
-
-            info("Restoring the tab...");
-            whenTabRestored(tab2, function() { info("Tab restored."); });
+            });
           }
         );
       });
