@@ -30,17 +30,20 @@ function openWindowAndWaitForInit(parentWin, callback) {
   }, topic, false);
 }
 
+function closeWindow(w, cb) {
+  waitForNotification("domwindowclosed", cb);
+  w.close();
+}
+
 function closeOneWindow(cb) {
   let w = createdWindows.pop();
-  if (!w) {
+  if (!w || w.closed) {
     cb();
     return;
   }
-  waitForCondition(function() w.closed,
-                   function() {
-                    info("window closed, " + createdWindows.length + " windows left");
-                    closeOneWindow(cb);
-                    }, "window did not close");
+  closeWindow(w, function() {
+    closeOneWindow(cb);
+  });
   w.close();
 }
 
@@ -124,6 +127,51 @@ let tests = {
         }, "sidebar did not open");
       }, cbnext);
     }, cbnext);
+  },
+
+  testGlobalState: function(cbnext) {
+    setManifestPref("social.manifest.test", manifest);
+    ok(!SocialSidebar.opened, "sidebar is closed initially");
+    ok(!Services.prefs.prefHasUserValue("social.sidebar.provider"), "global state unset");
+    // mimick no session state in opener so we exercise the global state via pref
+    SessionStore.deleteWindowValue(window, "socialSidebar");
+    ok(!SessionStore.getWindowValue(window, "socialSidebar"), "window state unset");
+    SocialService.addProvider(manifest, function() {
+      openWindowAndWaitForInit(window, function(w1) {
+        w1.SocialSidebar.show();
+        waitForCondition(function() w1.SocialSidebar.opened,
+                     function() {
+          ok(Services.prefs.prefHasUserValue("social.sidebar.provider"), "global state set");
+          ok(!SocialSidebar.opened, "1. main sidebar is still closed");
+          ok(w1.SocialSidebar.opened, "1. window sidebar is open");
+          closeWindow(w1, function() {
+            // this time, the global state should cause the sidebar to be opened
+            // in the new window
+            openWindowAndWaitForInit(window, function(w1) {
+              ok(!SocialSidebar.opened, "2. main sidebar is still closed");
+              ok(w1.SocialSidebar.opened, "2. window sidebar is open");
+              w1.SocialSidebar.hide();
+              ok(!w1.SocialSidebar.opened, "2. window sidebar is closed");
+              ok(!Services.prefs.prefHasUserValue("social.sidebar.provider"), "2. global state unset");
+              // global state should now be no sidebar gets opened on new window
+              closeWindow(w1, function() {
+                ok(!Services.prefs.prefHasUserValue("social.sidebar.provider"), "3. global state unset");
+                ok(!SocialSidebar.opened, "3. main sidebar is still closed");
+                openWindowAndWaitForInit(window, function(w1) {
+                  ok(!Services.prefs.prefHasUserValue("social.sidebar.provider"), "4. global state unset");
+                  ok(!SocialSidebar.opened, "4. main sidebar is still closed");
+                  ok(!w1.SocialSidebar.opened, "4. window sidebar is closed");
+                  SocialService.removeProvider(manifest.origin, function() {
+                    Services.prefs.clearUserPref("social.manifest.test");
+                    cbnext();
+                  });
+                });
+              });
+            });
+          });
+        });        
+      });
+    });
   },
 
   // Check per window sidebar functionality, including migration from using
