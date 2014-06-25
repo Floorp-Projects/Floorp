@@ -480,11 +480,6 @@ js::Atomize(ExclusiveContext *cx, const char *bytes, size_t length, InternBehavi
     if (!JSString::validateLength(cx, length))
         return nullptr;
 
-    if (EnableLatin1Strings) {
-        const Latin1Char *chars = reinterpret_cast<const Latin1Char*>(bytes);
-        return AtomizeAndCopyChars(cx, chars, length, ib);
-    }
-
     static const unsigned ATOMIZE_BUF_MAX = 32;
     if (length < ATOMIZE_BUF_MAX) {
         /*

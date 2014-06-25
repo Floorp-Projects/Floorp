@@ -112,11 +112,6 @@ template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString *
 NewString(js::ThreadSafeContext *cx, CharT *chars, size_t length);
 
-/* Like NewString, but doesn't try to deflate to Latin1. */
-template <js::AllowGC allowGC, typename CharT>
-extern JSFlatString *
-NewStringDontDeflate(js::ThreadSafeContext *cx, CharT *chars, size_t length);
-
 extern JSLinearString *
 NewDependentString(JSContext *cx, JSString *base, size_t start, size_t length);
 
