@@ -121,7 +121,7 @@ function buildTempDirectoryStructure() {
 
   let htmlFile = FileUtils.getFile("TmpD", ["ProjectEditor", "index.html"]);
   htmlFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  writeToFile(htmlFile, [
+  writeToFileSync(htmlFile, [
     '<!DOCTYPE html>',
     '<html lang="en">',
     ' <head>',
@@ -137,14 +137,14 @@ function buildTempDirectoryStructure() {
 
   let readmeFile = FileUtils.getFile("TmpD", ["ProjectEditor", "README.md"]);
   readmeFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  writeToFile(readmeFile, [
+  writeToFileSync(readmeFile, [
     '## Readme'
     ].join("\n")
   );
 
   let licenseFile = FileUtils.getFile("TmpD", ["ProjectEditor", "LICENSE"]);
   licenseFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  writeToFile(licenseFile, [
+  writeToFileSync(licenseFile, [
    '/* This Source Code Form is subject to the terms of the Mozilla Public',
    ' * License, v. 2.0. If a copy of the MPL was not distributed with this',
    ' * file, You can obtain one at http://mozilla.org/MPL/2.0/. */'
@@ -153,7 +153,7 @@ function buildTempDirectoryStructure() {
 
   let cssFile = FileUtils.getFile("TmpD", ["ProjectEditor", "css", "styles.css"]);
   cssFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  writeToFile(cssFile, [
+  writeToFileSync(cssFile, [
     'body {',
     ' background: red;',
     '}'
@@ -189,6 +189,29 @@ function writeToFile(file, data) {
       info("ERROR WRITING TEMP FILE", status);
     }
   });
+}
+
+// This is used when setting up the test.
+// You should typically use the async version of this, writeToFile.
+// https://developer.mozilla.org/en-US/Add-ons/Code_snippets/File_I_O#More
+function writeToFileSync(file, data) {
+  // file is nsIFile, data is a string
+  var foStream = Components.classes["@mozilla.org/network/file-output-stream;1"].
+                 createInstance(Components.interfaces.nsIFileOutputStream);
+
+  // use 0x02 | 0x10 to open file for appending.
+  foStream.init(file, 0x02 | 0x08 | 0x20, 0666, 0);
+  // write, create, truncate
+  // In a c file operation, we have no need to set file mode with or operation,
+  // directly using "r" or "w" usually.
+
+  // if you are sure there will never ever be any non-ascii text in data you can
+  // also call foStream.write(data, data.length) directly
+  var converter = Components.classes["@mozilla.org/intl/converter-output-stream;1"].
+                  createInstance(Components.interfaces.nsIConverterOutputStream);
+  converter.init(foStream, "UTF-8", 0, 0);
+  converter.writeString(data);
+  converter.close(); // this closes foStream
 }
 
 function getTempFile(path) {

@@ -1,18 +1,18 @@
 == textarea-valid.html textarea-ref.html
-random-if(B2G&&browserIsRemote) == textarea-customerror.html textarea-ref.html
+== textarea-customerror.html textarea-ref.html
 skip-if(B2G) fails-if(Android) == textarea-disabled.html textarea-ref.html
 fails-if(Android||B2G) == textarea-dyn-disabled.html textarea-ref.html
-random-if(B2G&&browserIsRemote) == textarea-dyn-not-disabled.html textarea-ref.html
+== textarea-dyn-not-disabled.html textarea-ref.html
 == textarea-readonly.html textarea-ref.html
 == textarea-dyn-readonly.html textarea-ref.html
 == textarea-dyn-not-readonly-not-changed.html textarea-ref.html
-random-if(B2G&&browserIsRemote) == textarea-dyn-not-readonly-changed.html textarea-ref.html
+== textarea-dyn-not-readonly-changed.html textarea-ref.html
 == textarea-maxlength-valid.html textarea-ref.html
 == textarea-maxlength-invalid.html textarea-withtext-ref.html
 == textarea-maxlength-default-value-invalid.html textarea-withtext-ref.html
 == textarea-required-valid.html textarea-withtext-ref.html
 == textarea-required-invalid.html textarea-ref.html
-random-if(B2G&&browserIsRemote) == textarea-required-invalid-changed.html textarea-ref.html
+== textarea-required-invalid-changed.html textarea-ref.html
 == textarea-disabled-fieldset-1.html textarea-fieldset-ref.html
 == textarea-disabled-fieldset-2.html textarea-fieldset-ref.html
 == textarea-novalidate.html textarea-ref.html
