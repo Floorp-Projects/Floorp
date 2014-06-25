@@ -439,7 +439,11 @@ WebappsApplication.prototype = {
   },
 
   get downloadError() {
-    return new this._window.DOMError(this._downloadError || '');
+    // Only return DOMError when we have an error.
+    if (!this._downloadError) {
+      return null;
+    }
+    return new this._window.DOMError(this._downloadError);
   },
 
   download: function() {
@@ -593,7 +597,8 @@ WebappsApplication.prototype = {
       }
     }
 
-    if (aMsg.error) {
+    // Intentional use of 'in' so we unset the error if this is explicitly null.
+    if ('error' in aMsg) {
       this._downloadError = aMsg.error;
     }
 
@@ -648,6 +653,12 @@ WebappsApplication.prototype = {
         }
 
         msg.eventType.forEach((aEventType) => {
+          // If we are in a successful state clear any past errors.
+          if (aEventType === 'downloadapplied' ||
+              aEventType === 'downloadsuccess') {
+            this._downloadError = null;
+          }
+
           if ("_on" + aEventType in this) {
             this._fireEvent(aEventType);
           } else {
