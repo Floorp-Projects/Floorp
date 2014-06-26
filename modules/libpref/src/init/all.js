@@ -3794,8 +3794,8 @@ pref("layers.async-video.enabled",false);
 #endif
 
 #ifdef XP_WIN
-pref("layers.offmainthreadcomposition.enabled", true);
-pref("layers.async-video.enabled", true);
+pref("layers.offmainthreadcomposition.enabled", false);
+pref("layers.async-video.enabled", false);
 #endif
 
 #ifdef MOZ_X11
