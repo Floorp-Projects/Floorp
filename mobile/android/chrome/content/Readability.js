@@ -447,10 +447,12 @@ Readability.prototype = {
 
         let matchString = node.className + node.id;
         if (matchString.search(this.REGEXPS.byline) !== -1 && !this._articleByline) {
-          this._articleByline = node.textContent;
-          node.parentNode.removeChild(node);
-          purgeNode(node);
-          continue;
+          if (this._isValidByline(node.textContent)) {
+            this._articleByline = node.textContent.trim();
+            node.parentNode.removeChild(node);
+            purgeNode(node);
+            continue;
+          }
         }
 
         // Remove unlikely candidates
@@ -716,6 +718,22 @@ Readability.prototype = {
         return articleContent;
       }
     }
+  },
+
+  /**
+   * Check whether the input string could be a byline.
+   * This verifies that the input is a string, and that the length
+   * is less than 100 chars.
+   *
+   * @param possibleByline {string} - a string to check whether its a byline.
+   * @return Boolean - whether the input string is a byline.
+   */
+  _isValidByline: function(byline) {
+    if (typeof byline == 'string' || byline instanceof String) {
+      byline = byline.trim();
+      return (byline.length > 0) && (byline.length < 100);
+    }
+    return false;
   },
 
   /**

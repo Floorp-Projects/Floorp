@@ -219,7 +219,7 @@ private:
   mozilla::ReentrantMonitor mCallbackMonitor; // Monitor for camera callback handling
   // This is only modified on MainThread (AllocImpl and DeallocImpl)
   nsRefPtr<ICameraControl> mCameraControl;
-  nsRefPtr<nsIDOMFile> mLastCapture;
+  nsCOMPtr<nsIDOMFile> mLastCapture;
 
   // These are protected by mMonitor below
   int mRotation;

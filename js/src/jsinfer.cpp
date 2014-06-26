@@ -3935,7 +3935,7 @@ ExclusiveContext::getNewType(const Class *clasp, TaggedProto proto, JSFunction *
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
-    if (proto.isObject() && hasNursery() && IsInsideNursery(proto.toObject())) {
+    if (proto.isObject() && isJSContext() && IsInsideNursery(proto.toObject())) {
         asJSContext()->runtime()->gc.storeBuffer.putGeneric(
             NewTypeObjectsSetRef(&newTypeObjects, clasp, proto.toObject(), fun));
     }

@@ -17,36 +17,36 @@ namespace mozilla {
 namespace dom {
 
 class FileHandle;
+class File;
 
-class File : public nsDOMFileCC
+class FileImpl : public DOMFileImplBase
 {
+  friend class File;
+
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(File, nsDOMFileCC)
-
   // Create as a file
-  File(const nsAString& aName, const nsAString& aContentType,
-       uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle);
+  FileImpl(const nsAString& aName, const nsAString& aContentType,
+           uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle);
 
   // Create as a stored file
-  File(const nsAString& aName, const nsAString& aContentType,
-       uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle,
-       FileInfo* aFileInfo);
+  FileImpl(const nsAString& aName, const nsAString& aContentType,
+           uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle,
+           indexedDB::FileInfo* aFileInfo);
 
   // Overrides
-  NS_IMETHOD
-  GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
+  virtual nsresult GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
 
-  NS_IMETHOD
-  GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream** aStream) MOZ_OVERRIDE;
+
+  virtual void Unlink() MOZ_OVERRIDE;
+  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE;
 
 protected:
   // Create slice
-  File(const File* aOther, uint64_t aStart, uint64_t aLength,
-       const nsAString& aContentType);
+  FileImpl(const FileImpl* aOther, uint64_t aStart, uint64_t aLength,
+           const nsAString& aContentType);
 
-  virtual ~File();
+  virtual ~FileImpl();
 
   virtual already_AddRefed<nsIDOMBlob>
   CreateSlice(uint64_t aStart, uint64_t aLength,

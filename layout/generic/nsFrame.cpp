@@ -7147,17 +7147,20 @@ ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
                            new nsRect(innerRect));
   const nscoord offset = outline->mOutlineOffset;
   nsRect outerRect(innerRect);
-  bool useOutlineAuto = outlineStyle == NS_STYLE_BORDER_STYLE_AUTO;
-  if (MOZ_UNLIKELY(useOutlineAuto)) {
-    nsPresContext* presContext = aFrame->PresContext();
-    nsITheme* theme = presContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(presContext, aFrame,
-                                            NS_THEME_FOCUS_OUTLINE)) {
-      outerRect.Inflate(offset);
-      theme->GetWidgetOverflow(presContext->DeviceContext(), aFrame,
-                               NS_THEME_FOCUS_OUTLINE, &outerRect);
-    } else {
-      useOutlineAuto = false;
+  bool useOutlineAuto = false;
+  if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+    useOutlineAuto = outlineStyle == NS_STYLE_BORDER_STYLE_AUTO;
+    if (MOZ_UNLIKELY(useOutlineAuto)) {
+      nsPresContext* presContext = aFrame->PresContext();
+      nsITheme* theme = presContext->GetTheme();
+      if (theme && theme->ThemeSupportsWidget(presContext, aFrame,
+                                              NS_THEME_FOCUS_OUTLINE)) {
+        outerRect.Inflate(offset);
+        theme->GetWidgetOverflow(presContext->DeviceContext(), aFrame,
+                                 NS_THEME_FOCUS_OUTLINE, &outerRect);
+      } else {
+        useOutlineAuto = false;
+      }
     }
   }
   if (MOZ_LIKELY(!useOutlineAuto)) {

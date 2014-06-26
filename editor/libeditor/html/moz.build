@@ -32,7 +32,7 @@ LOCAL_INCLUDES += [
     '../base',
     '../text',
     '/content/base/src',
-    '/editor/txmgr/src',
+    '/editor/txmgr',
     '/layout/generic',
     '/layout/style',
     '/layout/tables',

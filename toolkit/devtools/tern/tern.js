@@ -17,13 +17,14 @@
   var plugins = Object.create(null);
   exports.registerPlugin = function(name, init) { plugins[name] = init; };
 
-  var defaultOptions = {
+  var defaultOptions = exports.defaultOptions = {
     debug: false,
     async: false,
     getFile: function(_f, c) { if (this.async) c(null, null); },
     defs: [],
     plugins: {},
-    fetchTimeout: 1000
+    fetchTimeout: 1000,
+    dependencyBudget: 20000
   };
 
   var queryTypes = {
@@ -63,15 +64,16 @@
 
   exports.defineQueryType = function(name, desc) { queryTypes[name] = desc; };
 
-  function File(name) {
+  function File(name, parent) {
     this.name = name;
+    this.parent = parent;
     this.scope = this.text = this.ast = this.lineOffsets = null;
   }
   File.prototype.asLineChar = function(pos) { return asLineChar(this, pos); };
 
   function updateText(file, text, srv) {
     file.text = text;
-    file.ast = infer.parse(text, srv.passes, {directSourceFile: file});
+    file.ast = infer.parse(text, srv.passes, {directSourceFile: file, allowReturnOutsideFunction: true});
     file.lineOffsets = null;
   }
 
@@ -83,6 +85,8 @@
 
     this.handlers = Object.create(null);
     this.files = [];
+    this.fileMap = Object.create(null);
+    this.budgets = Object.create(null);
     this.uses = 0;
     this.pending = 0;
     this.asyncError = null;
@@ -102,13 +106,16 @@
     this.reset();
   };
   Server.prototype = signal.mixin({
-    addFile: function(name, /*optional*/ text) {
-      ensureFile(this, name, text);
+    addFile: function(name, /*optional*/ text, parent) {
+      // Don't crash when sloppy plugins pass non-existent parent ids
+      if (parent && !parent in this.fileMap) parent = null;
+      ensureFile(this, name, parent, text);
     },
     delFile: function(name) {
       for (var i = 0, f; i < this.files.length; ++i) if ((f = this.files[i]).name == name) {
-        clearFile(this, f);
+        clearFile(this, f, null, true);
         this.files.splice(i--, 1);
+        delete this.fileMap[name];
         return;
       }
     },
@@ -116,6 +123,7 @@
       this.signal("reset");
       this.cx = new infer.Context(this.defs, this);
       this.uses = 0;
+      this.budgets = Object.create(null);
       for (var i = 0; i < this.files.length; ++i) {
         var file = this.files[i];
         file.scope = null;
@@ -131,18 +139,18 @@
         c(err, data);
         if (self.uses > 40) {
           self.reset();
-          analyzeAll(self, function(){});
+          analyzeAll(self, null, function(){});
         }
       });
     },
 
     findFile: function(name) {
-      return findFile(this.files, name);
+      return this.fileMap[name];
     },
 
     flush: function(c) {
       var cx = this.cx;
-      analyzeAll(this, function(err) {
+      analyzeAll(this, null, function(err) {
         if (err) return c(err);
         infer.withContext(cx, c);
       });
@@ -169,27 +177,28 @@
     if (files.length) ++srv.uses;
     for (var i = 0; i < files.length; ++i) {
       var file = files[i];
-      ensureFile(srv, file.name, file.type == "full" ? file.text : null);
+      ensureFile(srv, file.name, null, file.type == "full" ? file.text : null);
     }
 
+    var timeBudget = typeof doc.timeout == "number" ? [doc.timeout] : null;
     if (!query) {
-      analyzeAll(srv, function(){});
+      analyzeAll(srv, timeBudget, function(){});
       return;
     }
 
     var queryType = queryTypes[query.type];
     if (queryType.takesFile) {
       if (typeof query.file != "string") return c(".query.file must be a string");
-      if (!/^#/.test(query.file)) ensureFile(srv, query.file);
+      if (!/^#/.test(query.file)) ensureFile(srv, query.file, null);
     }
 
-    analyzeAll(srv, function(err) {
+    analyzeAll(srv, timeBudget, function(err) {
       if (err) return c(err);
       var file = queryType.takesFile && resolveFile(srv, files, query.file);
       if (queryType.fullFile && file.type == "part")
         return c("Can't run a " + query.type + " query on a file fragment");
 
-      infer.withContext(srv.cx, function() {
+      function run() {
         var result;
         try {
           result = queryType.run(srv, query, file);
@@ -198,7 +207,8 @@
           return c(e);
         }
         c(null, result);
-      });
+      }
+      infer.withContext(srv.cx, timeBudget ? function() { infer.withTimeout(timeBudget[0], run); } : run);
     });
   }
 
@@ -214,16 +224,21 @@
     return file;
   }
 
-  function ensureFile(srv, name, text) {
-    var known = findFile(srv.files, name);
+  function ensureFile(srv, name, parent, text) {
+    var known = srv.findFile(name);
     if (known) {
-      if (text) clearFile(srv, known, text);
+      if (text != null) clearFile(srv, known, text);
+      if (parentDepth(known.parent) > parentDepth(parent)) {
+        known.parent = parent;
+        if (known.excluded) known.excluded = null;
+      }
       return;
     }
 
-    var file = new File(name);
+    var file = new File(name, parent);
     srv.files.push(file);
-    if (text) {
+    srv.fileMap[name] = file;
+    if (text != null) {
       updateText(file, text, srv);
     } else if (srv.options.async) {
       srv.startAsyncAction();
@@ -236,14 +251,16 @@
     }
   }
 
-  function clearFile(srv, file, newText) {
+  function clearFile(srv, file, newText, purgeVars) {
     if (file.scope) {
       infer.withContext(srv.cx, function() {
         // FIXME try to batch purges into a single pass (each call needs
         // to traverse the whole graph)
         infer.purgeTypes(file.name);
-        infer.markVariablesDefinedBy(file.scope, file.name);
-        infer.purgeMarkedVariables(file.scope);
+        if (purgeVars) {
+          infer.markVariablesDefinedBy(file.scope, file.name);
+          infer.purgeMarkedVariables(file.scope);
+        }
       });
       file.scope = null;
     }
@@ -271,37 +288,48 @@
     if (done) c();
   }
 
-  function waitOnFetch(srv, c) {
+  function waitOnFetch(srv, timeBudget, c) {
     var done = function() {
       srv.off("everythingFetched", done);
       clearTimeout(timeout);
-      analyzeAll(srv, c);
+      analyzeAll(srv, timeBudget, c);
     };
     srv.on("everythingFetched", done);
     var timeout = setTimeout(done, srv.options.fetchTimeout);
   }
 
-  function analyzeAll(srv, c) {
-    if (srv.pending) return waitOnFetch(srv, c);
+  function analyzeAll(srv, timeBudget, c) {
+    if (srv.pending) return waitOnFetch(srv, timeBudget, c);
 
     var e = srv.fetchError;
     if (e) { srv.fetchError = null; return c(e); }
 
     var done = true;
-    for (var i = 0; i < srv.files.length; ++i) {
-      var file = srv.files[i];
-      if (file.text == null) done = false;
-      else if (file.scope == null) analyzeFile(srv, file);
+    // The second inner loop might add new files. The outer loop keeps
+    // repeating both inner loops until all files have been looked at.
+    for (var i = 0; i < srv.files.length;) {
+      var toAnalyze = [];
+      for (; i < srv.files.length; ++i) {
+        var file = srv.files[i];
+        if (file.text == null) done = false;
+        else if (file.scope == null && !file.excluded) toAnalyze.push(file);
+      }
+      toAnalyze.sort(function(a, b) { return parentDepth(a.parent) - parentDepth(b.parent); });
+      for (var j = 0; j < toAnalyze.length; j++) {
+        var file = toAnalyze[j];
+        if (file.parent && !chargeOnBudget(srv, file)) {
+          file.excluded = true;
+        } else if (timeBudget) {
+          var startTime = +new Date;
+          infer.withTimeout(timeBudget[0], function() { analyzeFile(srv, file); });
+          timeBudget[0] -= +new Date - startTime;
+        } else {
+          analyzeFile(srv, file);
+        }
+      }
     }
     if (done) c();
-    else waitOnFetch(srv, c);
-  }
-
-  function findFile(arr, name) {
-    for (var i = 0; i < arr.length; ++i) {
-      var file = arr[i];
-      if (file.name == name && file.type != "part") return file;
-    }
+    else waitOnFetch(srv, timeBudget, c);
   }
 
   function firstLine(str) {
@@ -335,15 +363,15 @@
 
   function resolveFile(srv, localFiles, name) {
     var isRef = name.match(/^#(\d+)$/);
-    if (!isRef) return findFile(srv.files, name);
+    if (!isRef) return srv.findFile(name);
 
     var file = localFiles[isRef[1]];
     if (!file) throw ternError("Reference to unknown file " + name);
-    if (file.type == "full") return findFile(srv.files, file.name);
+    if (file.type == "full") return srv.findFile(file.name);
 
     // This is a partial file
 
-    var realFile = file.backing = findFile(srv.files, file.name);
+    var realFile = file.backing = srv.findFile(file.name);
     var offset = file.offset;
     if (file.offsetLines) offset = {line: file.offsetLines, ch: 0};
     file.offset = offset = resolvePos(realFile, file.offsetLines == null ? file.offset : {line: file.offsetLines, ch: 0}, true);
@@ -371,7 +399,7 @@
       var scopeEnd = infer.scopeAt(realFile.ast, pos + text.length, realFile.scope);
       var scope = file.scope = scopeDepth(scopeStart) < scopeDepth(scopeEnd) ? scopeEnd : scopeStart;
       infer.markVariablesDefinedBy(scopeStart, file.name, pos, pos + file.text.length);
-      file.ast = infer.parse(file.text, srv.passes, {directSourceFile: file});
+      file.ast = infer.parse(file.text, srv.passes, {directSourceFile: file, allowReturnOutsideFunction: true});
       infer.analyze(file.ast, file.name, scope, srv.passes);
       infer.purgeMarkedVariables(scopeStart);
 
@@ -398,6 +426,45 @@
     });
     return file;
   }
+
+  // Budget management
+
+  function astSize(node) {
+    var size = 0;
+    walk.simple(node, {Expression: function() { ++size; }});
+    return size;
+  }
+
+  function parentDepth(srv, parent) {
+    var depth = 0;
+    while (parent) {
+      parent = srv.findFile(parent).parent;
+      ++depth;
+    }
+    return depth;
+  }
+
+  function budgetName(srv, file) {
+    for (;;) {
+      var parent = srv.findFile(file.parent);
+      if (!parent.parent) break;
+      file = parent;
+    }
+    return file.name;
+  }
+
+  function chargeOnBudget(srv, file) {
+    var bName = budgetName(srv, file);
+    var size = astSize(file.ast);
+    var known = srv.budgets[bName];
+    if (known == null)
+      known = srv.budgets[bName] = srv.options.dependencyBudget;
+    if (known < size) return false;
+    srv.budgets[bName] = known - size;
+    return true;
+  }
+
+  // Query helpers
 
   function isPosition(val) {
     return typeof val == "number" || typeof val == "object" &&
@@ -511,6 +578,10 @@
       node.start == start - 1 && node.end <= end + 1;
   }
 
+  var jsKeywords = ("break do instanceof typeof case else new var " +
+    "catch finally return void continue for switch while debugger " +
+    "function this with default if throw delete in try").split(" ");
+
   function findCompletions(srv, query, file) {
     if (query.end == null) throw ternError("missing .query.end field");
     var wordStart = resolvePos(file, query.end), wordEnd = wordStart, text = file.text;
@@ -552,11 +623,13 @@
     }
 
     var memberExpr = infer.findExpressionAround(file.ast, null, wordStart, file.scope, "MemberExpression");
+    var hookname;
     if (memberExpr &&
         (memberExpr.node.computed ? isStringAround(memberExpr.node.property, wordStart, wordEnd)
                                   : memberExpr.node.object.end < wordStart)) {
       var prop = memberExpr.node.property;
       prop = prop.type == "Literal" ? prop.value.slice(1) : prop.name;
+      srv.cx.completingProperty = prop;
 
       memberExpr.node = memberExpr.node.object;
       var tp = infer.expressionType(memberExpr);
@@ -567,11 +640,17 @@
       }
       if (!completions.length && word.length >= 2 && query.guess !== false)
         for (var prop in srv.cx.props) gather(prop, srv.cx.props[prop][0], 0);
+      hookname = "memberCompletion";
     } else {
       infer.forAllLocalsAt(file.ast, wordStart, file.scope, gather);
+      if (query.includeKeywords) jsKeywords.forEach(function(kw) { gather(kw, null, 0); });
+      hookname = "completion";
     }
+    if (srv.passes[hookname])
+      srv.passes[hookname].forEach(function(hook) {hook(file, wordStart, wordEnd, gather);});
 
     if (query.sort !== false) completions.sort(compareCompletions);
+    srv.cx.completingProperty = null;
 
     return {start: outputPos(query, file, wordStart),
             end: outputPos(query, file, wordEnd),
@@ -668,7 +747,7 @@
       target.start = query.lineCharPositions ? {line: Number(m[2]), ch: Number(m[3])} : Number(m[1]);
       target.end = query.lineCharPositions ? {line: Number(m[5]), ch: Number(m[6])} : Number(m[4]);
     } else {
-      var file = findFile(srv.files, span.origin);
+      var file = srv.findFile(span.origin);
       target.start = outputPos(query, file, span.node.start);
       target.end = outputPos(query, file, span.node.end);
     }
@@ -690,7 +769,7 @@
     }
 
     if (span && span.node) { // refers to a loaded file
-      var spanFile = span.node.sourceFile || findFile(srv.files, span.origin);
+      var spanFile = span.node.sourceFile || srv.findFile(span.origin);
       var start = outputPos(query, spanFile, span.node.start), end = outputPos(query, spanFile, span.node.end);
       result.start = start; result.end = end;
       result.file = span.origin;
@@ -726,17 +805,17 @@
       };
     }
 
-    if (scope.node) {
+    if (scope.originNode) {
       type = "local";
       if (checkShadowing) {
         for (var prev = scope.prev; prev; prev = prev.prev)
           if (checkShadowing in prev.props) break;
-        if (prev) infer.findRefs(scope.node, scope, checkShadowing, prev, function(node) {
+        if (prev) infer.findRefs(scope.originNode, scope, checkShadowing, prev, function(node) {
           throw ternError("Renaming `" + name + "` to `" + checkShadowing + "` would shadow the definition used at line " +
                           (asLineChar(file, node.start).line + 1));
         });
       }
-      infer.findRefs(scope.node, scope, name, scope, storeRef(file));
+      infer.findRefs(scope.originNode, scope, name, scope, storeRef(file));
     } else {
       type = "global";
       for (var i = 0; i < srv.files.length; ++i) {
@@ -810,5 +889,5 @@
     return {files: srv.files.map(function(f){return f.name;})};
   }
 
-  exports.version = "0.5.1";
+  exports.version = "0.6.2";
 });

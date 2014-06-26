@@ -20,15 +20,14 @@
   { 0x94, 0x96, 0xdf, 0x5d, 0x6f, 0xcd, 0xd7, 0x8f } }
 #define NS_DOMMULTIPARTFILE_CONTRACTID "@mozilla.org/dom/multipart-file;1"
 
-class nsDOMMultipartFile : public nsDOMFile,
-                           public nsIJSNativeInitializer
+class DOMMultipartFileImpl MOZ_FINAL : public mozilla::dom::DOMFileImplBase
 {
 public:
   // Create as a file
-  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> > aBlobs,
-                     const nsAString& aName,
-                     const nsAString& aContentType)
-    : nsDOMFile(aName, aContentType, UINT64_MAX),
+  DOMMultipartFileImpl(const nsTArray<nsCOMPtr<nsIDOMBlob>>& aBlobs,
+                       const nsAString& aName,
+                       const nsAString& aContentType)
+    : mozilla::dom::DOMFileImplBase(aName, aContentType, UINT64_MAX),
       mBlobs(aBlobs),
       mIsFromNsiFile(false)
   {
@@ -36,9 +35,9 @@ public:
   }
 
   // Create as a blob
-  nsDOMMultipartFile(nsTArray<nsCOMPtr<nsIDOMBlob> >& aBlobs,
-                     const nsAString& aContentType)
-    : nsDOMFile(aContentType, UINT64_MAX),
+  DOMMultipartFileImpl(const nsTArray<nsCOMPtr<nsIDOMBlob>>& aBlobs,
+                       const nsAString& aContentType)
+    : mozilla::dom::DOMFileImplBase(aContentType, UINT64_MAX),
       mBlobs(aBlobs),
       mIsFromNsiFile(false)
   {
@@ -46,26 +45,22 @@ public:
   }
 
   // Create as a file to be later initialized
-  nsDOMMultipartFile(const nsAString& aName)
-    : nsDOMFile(aName, EmptyString(), UINT64_MAX),
+  explicit DOMMultipartFileImpl(const nsAString& aName)
+    : mozilla::dom::DOMFileImplBase(aName, EmptyString(), UINT64_MAX),
       mIsFromNsiFile(false)
   {
   }
 
   // Create as a blob to be later initialized
-  nsDOMMultipartFile()
-    : nsDOMFile(EmptyString(), UINT64_MAX),
+  DOMMultipartFileImpl()
+    : mozilla::dom::DOMFileImplBase(EmptyString(), UINT64_MAX),
       mIsFromNsiFile(false)
   {
   }
 
-  NS_DECL_ISUPPORTS_INHERITED
-
-  // nsIJSNativeInitializer
-  NS_IMETHOD Initialize(nsISupports* aOwner,
-                        JSContext* aCx,
-                        JSObject* aObj,
-                        const JS::CallArgs& aArgs) MOZ_OVERRIDE;
+  virtual nsresult
+  Initialize(nsISupports* aOwner, JSContext* aCx, JSObject* aObj,
+             const JS::CallArgs& aArgs) MOZ_OVERRIDE;
 
   typedef nsIDOMBlob* (*UnwrapFuncPtr)(JSContext*, JSObject*);
   nsresult InitBlob(JSContext* aCx,
@@ -79,33 +74,34 @@ public:
                           uint32_t aArgc,
                           JS::Value* aArgv);
 
-  already_AddRefed<nsIDOMBlob>
-  CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType) MOZ_OVERRIDE;
+  virtual already_AddRefed<nsIDOMBlob>
+  CreateSlice(uint64_t aStart, uint64_t aLength,
+              const nsAString& aContentType) MOZ_OVERRIDE;
 
-  NS_IMETHOD GetSize(uint64_t*) MOZ_OVERRIDE;
-  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+  virtual nsresult GetSize(uint64_t* aSize) MOZ_OVERRIDE;
 
-  static nsresult
-  NewFile(const nsAString& aName, nsISupports* *aNewObject);
+  virtual nsresult GetInternalStream(nsIInputStream** aInputStream) MOZ_OVERRIDE;
+
+  static nsresult NewFile(const nsAString& aName, nsISupports** aNewObject);
 
   // DOMClassInfo constructor (for Blob([b1, "foo"], { type: "image/png" }))
-  static nsresult
-  NewBlob(nsISupports* *aNewObject);
+  static nsresult NewBlob(nsISupports* *aNewObject);
 
   // DOMClassInfo constructor (for File([b1, "foo"], { type: "image/png",
   //                                                   name: "foo.png" }))
-  inline static nsresult
-  NewFile(nsISupports* *aNewObject)
+  inline static nsresult NewFile(nsISupports** aNewObject)
   {
     // Initialization will set the filename, so we can pass in an empty string
     // for now.
     return NewFile(EmptyString(), aNewObject);
   }
 
-  virtual const nsTArray<nsCOMPtr<nsIDOMBlob> >*
-  GetSubBlobs() const MOZ_OVERRIDE { return &mBlobs; }
+  virtual const nsTArray<nsCOMPtr<nsIDOMBlob>>* GetSubBlobs() const MOZ_OVERRIDE
+  {
+    return &mBlobs;
+  }
 
-  NS_IMETHOD GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
+  virtual nsresult GetMozFullPathInternal(nsAString& aFullPath) MOZ_OVERRIDE;
 
 protected:
   nsresult ParseBlobArrayArgument(JSContext* aCx, JS::Value& aValue,
@@ -139,8 +135,8 @@ public:
   already_AddRefed<nsIDOMBlob>
   GetBlobInternal(const nsACString& aContentType)
   {
-    nsCOMPtr<nsIDOMBlob> blob =
-      new nsDOMMultipartFile(GetBlobs(), NS_ConvertASCIItoUTF16(aContentType));
+    nsCOMPtr<nsIDOMBlob> blob = new mozilla::dom::DOMFile(
+      new DOMMultipartFileImpl(GetBlobs(), NS_ConvertASCIItoUTF16(aContentType)));
     return blob.forget();
   }
 
@@ -179,7 +175,7 @@ protected:
       // and put it on the stack
 
       nsCOMPtr<nsIDOMBlob> blob =
-        new nsDOMMemoryFile(mData, mDataLen, EmptyString());
+        mozilla::dom::DOMFile::CreateMemoryFile(mData, mDataLen, EmptyString());
       mBlobs.AppendElement(blob);
       mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
       mDataLen = 0;

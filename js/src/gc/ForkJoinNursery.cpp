@@ -18,7 +18,6 @@
 #include "jit/RematerializedFrame.h"
 #include "vm/ArrayObject.h"
 #include "vm/ForkJoin.h"
-#include "vm/TypedArrayObject.h"
 
 #include "jsgcinlines.h"
 #include "gc/Nursery-inl.h"
@@ -257,7 +256,7 @@ ForkJoinNursery::pjsCollection(int op)
     forwardFromRoots(&trc);
     collectToFixedPoint(&trc);
 #ifdef JS_ION
-    jit::UpdateJitActivationsForMinorGC(TlsPerThreadData.get(), &trc);
+    jit::UpdateJitActivationsForMinorGC<ForkJoinNursery>(TlsPerThreadData.get(), &trc);
 #endif
     freeFromspace();
 
@@ -828,9 +827,6 @@ ForkJoinNursery::copyObjectToTospace(JSObject *dst, JSObject *src, AllocKind dst
     js_memcpy(dst, src, srcSize);
     movedSize += copySlotsToTospace(dst, src, dstKind);
     movedSize += copyElementsToTospace(dst, src, dstKind);
-
-    if (src->is<TypedArrayObject>())
-        dst->setPrivate(dst->fixedData(TypedArrayObject::FIXED_DATA_START));
 
     // The shape's list head may point into the old object.
     if (&src->shape_ == dst->shape_->listp) {

@@ -127,7 +127,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
         if (action != null && action.startsWith(GeckoApp.ACTION_WEBAPP_PREFIX)) {
             return "-webapp";
         }
-        if (GeckoApp.ACTION_BOOKMARK.equals(action)) {
+        if (GeckoApp.ACTION_HOMESCREEN_SHORTCUT.equals(action)) {
             return "-bookmark";
         }
         return null;

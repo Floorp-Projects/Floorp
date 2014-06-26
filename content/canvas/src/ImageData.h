@@ -23,6 +23,12 @@ namespace dom {
 
 class ImageData MOZ_FINAL : public nsISupports
 {
+  ~ImageData()
+  {
+    MOZ_COUNT_DTOR(ImageData);
+    DropData();
+  }
+
 public:
   ImageData(uint32_t aWidth, uint32_t aHeight, JSObject& aData)
     : mWidth(aWidth)
@@ -31,12 +37,6 @@ public:
   {
     MOZ_COUNT_CTOR(ImageData);
     HoldData();
-  }
-
-  ~ImageData()
-  {
-    MOZ_COUNT_DTOR(ImageData);
-    DropData();
   }
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

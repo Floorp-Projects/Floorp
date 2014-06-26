@@ -740,7 +740,8 @@ ActorFromRemoteBlob(nsIDOMBlob* aBlob)
   NS_ASSERTION(!IndexedDatabaseManager::IsMainProcess(), "Wrong process!");
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
-  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob);
+  nsRefPtr<DOMFile> blob = static_cast<DOMFile*>(aBlob);
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(blob->Impl());
   if (remoteBlob) {
     BlobChild* actor =
       static_cast<BlobChild*>(static_cast<PBlobChild*>(remoteBlob->GetPBlob()));
@@ -836,8 +837,8 @@ public:
         domBlob = aFile.mFile;
       }
       else {
-        domBlob = new nsDOMFileFile(aData.type, aData.size, nativeFile,
-                                    fileInfo);
+        domBlob = DOMFile::CreateFromFile(aData.type, aData.size, nativeFile,
+                                          fileInfo);
       }
 
       JS::Rooted<JS::Value> wrappedBlob(aCx);
@@ -861,8 +862,8 @@ public:
       NS_ASSERTION(domFile, "This should never fail!");
     }
     else {
-      domFile = new nsDOMFileFile(aData.name, aData.type, aData.size,
-                                  nativeFile, fileInfo);
+      domFile = DOMFile::CreateFromFile(aData.name, aData.type, aData.size,
+                                        nativeFile, fileInfo);
     }
 
     JS::Rooted<JS::Value> wrappedFile(aCx);
@@ -1790,7 +1791,8 @@ IDBObjectStore::ConvertBlobsToActors(
         return NS_ERROR_DOM_INDEXEDDB_UNKNOWN_ERR;
       }
 
-      nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(nativeFile, file.mFileInfo);
+      nsCOMPtr<nsIDOMBlob> blob = DOMFile::CreateFromFile(nativeFile,
+                                                          file.mFileInfo);
 
       BlobParent* actor =
         aContentParent->GetOrCreateActorForBlob(blob);

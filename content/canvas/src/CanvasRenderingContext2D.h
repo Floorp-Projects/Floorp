@@ -93,9 +93,9 @@ public:
   // passed directly and we can't drop the only ref to have a raw pointer.
   CanvasPath(nsISupports* aParent,
              TemporaryRef<gfx::PathBuilder> aPathBuilder);
-  virtual ~CanvasPath() {}
 
 private:
+  virtual ~CanvasPath() {}
 
   nsCOMPtr<nsISupports> mParent;
   static gfx::Float ToFloat(double aValue) { return gfx::Float(aValue); }
@@ -119,9 +119,10 @@ class CanvasRenderingContext2D :
 typedef HTMLImageElementOrHTMLCanvasElementOrHTMLVideoElement
   HTMLImageOrCanvasOrVideoElement;
 
+  virtual ~CanvasRenderingContext2D();
+
 public:
   CanvasRenderingContext2D();
-  virtual ~CanvasRenderingContext2D();
 
   virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
