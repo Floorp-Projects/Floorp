@@ -180,7 +180,7 @@ JSObject *newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
     JS::RootedObject object(cx);
     {
         JSAutoCompartment ac(cx, destZone);
-        object = JS_NewObject(cx, nullptr, NullPtr(), NullPtr());
+        object = JS_NewObject(cx, nullptr, JS::NullPtr(), JS::NullPtr());
         if (!object)
             return nullptr;
     }
