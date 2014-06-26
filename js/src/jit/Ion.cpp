@@ -1905,7 +1905,9 @@ IonCompile(JSContext *cx, JSScript *script,
         builderScript->ionScript()->setRecompiling();
     }
 
-    IonSpewNewFunction(graph, builderScript);
+#ifdef DEBUG
+    IonSpewFunction ionSpewFunction(graph, builderScript);
+#endif
 
     bool succeeded = builder->build();
     builder->clearForBackEnd();
@@ -1940,8 +1942,6 @@ IonCompile(JSContext *cx, JSScript *script,
     }
 
     bool success = codegen->link(cx, builder->constraints());
-
-    IonSpewEndFunction();
 
     return success ? AbortReason_NoAbort : AbortReason_Disable;
 }

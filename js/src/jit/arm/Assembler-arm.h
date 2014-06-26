@@ -85,17 +85,19 @@ class ABIArgGenerator
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = r1;
 
 static MOZ_CONSTEXPR_VAR Register InvalidReg = { Registers::invalid_reg };
-static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg = { FloatRegisters::invalid_freg };
+static MOZ_CONSTEXPR_VAR FloatRegister InvalidFloatReg(FloatRegisters::invalid_freg);
 
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = r3;
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = r2;
 static MOZ_CONSTEXPR_VAR Register StackPointer = sp;
 static MOZ_CONSTEXPR_VAR Register FramePointer = InvalidReg;
 static MOZ_CONSTEXPR_VAR Register ReturnReg = r0;
-static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloatReg = { FloatRegisters::d0 };
-static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloatReg = { FloatRegisters::d15 };
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnFloat32Reg(FloatRegisters::d0);
+static MOZ_CONSTEXPR_VAR FloatRegister ReturnDoubleReg(FloatRegisters::d0);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchFloat32Reg(FloatRegisters::d15);
+static MOZ_CONSTEXPR_VAR FloatRegister ScratchDoubleReg(FloatRegisters::d15);
 
-static MOZ_CONSTEXPR_VAR FloatRegister NANReg = { FloatRegisters::d14 };
+static MOZ_CONSTEXPR_VAR FloatRegister NANReg(FloatRegisters::d14);
 
 // Registers used in the GenerateFFIIonExit Enable Activation block.
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegCallee = r4;
@@ -113,22 +115,22 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = r1;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = r4;
 
 
-static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0};
-static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1};
-static MOZ_CONSTEXPR_VAR FloatRegister d2  = {FloatRegisters::d2};
-static MOZ_CONSTEXPR_VAR FloatRegister d3  = {FloatRegisters::d3};
-static MOZ_CONSTEXPR_VAR FloatRegister d4  = {FloatRegisters::d4};
-static MOZ_CONSTEXPR_VAR FloatRegister d5  = {FloatRegisters::d5};
-static MOZ_CONSTEXPR_VAR FloatRegister d6  = {FloatRegisters::d6};
-static MOZ_CONSTEXPR_VAR FloatRegister d7  = {FloatRegisters::d7};
-static MOZ_CONSTEXPR_VAR FloatRegister d8  = {FloatRegisters::d8};
-static MOZ_CONSTEXPR_VAR FloatRegister d9  = {FloatRegisters::d9};
-static MOZ_CONSTEXPR_VAR FloatRegister d10 = {FloatRegisters::d10};
-static MOZ_CONSTEXPR_VAR FloatRegister d11 = {FloatRegisters::d11};
-static MOZ_CONSTEXPR_VAR FloatRegister d12 = {FloatRegisters::d12};
-static MOZ_CONSTEXPR_VAR FloatRegister d13 = {FloatRegisters::d13};
-static MOZ_CONSTEXPR_VAR FloatRegister d14 = {FloatRegisters::d14};
-static MOZ_CONSTEXPR_VAR FloatRegister d15 = {FloatRegisters::d15};
+static MOZ_CONSTEXPR_VAR FloatRegister d0(FloatRegisters::d0);
+static MOZ_CONSTEXPR_VAR FloatRegister d1(FloatRegisters::d1);
+static MOZ_CONSTEXPR_VAR FloatRegister d2(FloatRegisters::d2);
+static MOZ_CONSTEXPR_VAR FloatRegister d3(FloatRegisters::d3);
+static MOZ_CONSTEXPR_VAR FloatRegister d4(FloatRegisters::d4);
+static MOZ_CONSTEXPR_VAR FloatRegister d5(FloatRegisters::d5);
+static MOZ_CONSTEXPR_VAR FloatRegister d6(FloatRegisters::d6);
+static MOZ_CONSTEXPR_VAR FloatRegister d7(FloatRegisters::d7);
+static MOZ_CONSTEXPR_VAR FloatRegister d8(FloatRegisters::d8);
+static MOZ_CONSTEXPR_VAR FloatRegister d9(FloatRegisters::d9);
+static MOZ_CONSTEXPR_VAR FloatRegister d10(FloatRegisters::d10);
+static MOZ_CONSTEXPR_VAR FloatRegister d11(FloatRegisters::d11);
+static MOZ_CONSTEXPR_VAR FloatRegister d12(FloatRegisters::d12);
+static MOZ_CONSTEXPR_VAR FloatRegister d13(FloatRegisters::d13);
+static MOZ_CONSTEXPR_VAR FloatRegister d14(FloatRegisters::d14);
+static MOZ_CONSTEXPR_VAR FloatRegister d15(FloatRegisters::d15);
 
 // For maximal awesomeness, 8 should be sufficent.
 // ldrd/strd (dual-register load/store) operate in a single cycle
@@ -169,99 +171,9 @@ uint32_t VD(VFPRegister vr);
 uint32_t VN(VFPRegister vr);
 uint32_t VM(VFPRegister vr);
 
-class VFPRegister
-{
-  public:
-    // What type of data is being stored in this register?
-    // UInt / Int are specifically for vcvt, where we need
-    // to know how the data is supposed to be converted.
-    enum RegType {
-        Double = 0x0,
-        Single = 0x1,
-        UInt   = 0x2,
-        Int    = 0x3
-    };
-
-  protected:
-    RegType kind : 2;
-    // ARM doesn't have more than 32 registers...
-    // don't take more bits than we'll need.
-    // Presently, I don't have plans to address the upper
-    // and lower halves of the double registers seprately, so
-    // 5 bits should suffice.  If I do decide to address them seprately
-    // (vmov, I'm looking at you), I will likely specify it as a separate
-    // field.
-    uint32_t _code : 5;
-    bool _isInvalid : 1;
-    bool _isMissing : 1;
-
-    VFPRegister(int  r, RegType k)
-      : kind(k), _code (r), _isInvalid(false), _isMissing(false)
-    { }
-
-  public:
-    VFPRegister()
-      : _isInvalid(true), _isMissing(false)
-    { }
-
-    VFPRegister(bool b)
-      : _isInvalid(false), _isMissing(b)
-    { }
-
-    VFPRegister(FloatRegister fr)
-      : kind(Double), _code(fr.code()), _isInvalid(false), _isMissing(false)
-    {
-        JS_ASSERT(_code == (unsigned)fr.code());
-    }
-
-    VFPRegister(FloatRegister fr, RegType k)
-      : kind(k), _code (fr.code()), _isInvalid(false), _isMissing(false)
-    {
-        JS_ASSERT(_code == (unsigned)fr.code());
-    }
-    bool isDouble() const { return kind == Double; }
-    bool isSingle() const { return kind == Single; }
-    bool isFloat() const { return (kind == Double) || (kind == Single); }
-    bool isInt() const { return (kind == UInt) || (kind == Int); }
-    bool isSInt() const { return kind == Int; }
-    bool isUInt() const { return kind == UInt; }
-    bool equiv(VFPRegister other) const { return other.kind == kind; }
-    size_t size() const { return (kind == Double) ? 8 : 4; }
-    bool isInvalid();
-    bool isMissing();
-
-    VFPRegister doubleOverlay() const;
-    VFPRegister singleOverlay() const;
-    VFPRegister sintOverlay() const;
-    VFPRegister uintOverlay() const;
-
-    struct VFPRegIndexSplit;
-    VFPRegIndexSplit encode();
-
-    // for serializing values
-    struct VFPRegIndexSplit {
-        const uint32_t block : 4;
-        const uint32_t bit : 1;
-
-      private:
-        friend VFPRegIndexSplit js::jit::VFPRegister::encode();
-
-        VFPRegIndexSplit (uint32_t block_, uint32_t bit_)
-          : block(block_), bit(bit_)
-        {
-            JS_ASSERT (block == block_);
-            JS_ASSERT(bit == bit_);
-        }
-    };
-
-    uint32_t code() const {
-        return _code;
-    }
-};
-
 // For being passed into the generic vfp instruction generator when
 // there is an instruction that only takes two registers
-extern VFPRegister NoVFPRegister;
+static MOZ_CONSTEXPR_VAR VFPRegister NoVFPRegister(VFPRegister::Double, 0, false, true);
 
 struct ImmTag : public Imm32
 {

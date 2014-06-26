@@ -76,6 +76,40 @@ if (typeof document !== 'undefined' && typeof HTMLElement !== 'undefined' &&
 }
 
 /**
+ * Array.find
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/find
+ */
+if (!Array.prototype.find) {
+  Object.defineProperty(Array.prototype, 'find', {
+    enumerable: false,
+    configurable: true,
+    writable: true,
+    value: function(predicate) {
+      if (this == null) {
+        throw new TypeError('Array.prototype.find called on null or undefined');
+      }
+      if (typeof predicate !== 'function') {
+        throw new TypeError('predicate must be a function');
+      }
+      var list = Object(this);
+      var length = list.length >>> 0;
+      var thisArg = arguments[1];
+      var value;
+
+      for (var i = 0; i < length; i++) {
+        if (i in list) {
+          value = list[i];
+          if (predicate.call(thisArg, value, i, list)) {
+            return value;
+          }
+        }
+      }
+      return undefined;
+    }
+  });
+}
+
+/**
  * String.prototype.trimLeft is non-standard, but it works in Firefox,
  * Chrome and Opera. It's easiest to create a shim here.
  */

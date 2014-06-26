@@ -833,19 +833,19 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         loadDouble(Operand(src), dest);
     }
     void unboxDouble(const ValueOperand &src, FloatRegister dest) {
-        JS_ASSERT(dest != ScratchFloatReg);
+        JS_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movd(src.payloadReg(), dest);
             pinsrd(src.typeReg(), dest);
         } else {
             movd(src.payloadReg(), dest);
-            movd(src.typeReg(), ScratchFloatReg);
-            unpcklps(ScratchFloatReg, dest);
+            movd(src.typeReg(), ScratchDoubleReg);
+            unpcklps(ScratchDoubleReg, dest);
         }
     }
     void unboxDouble(const Operand &payload, const Operand &type,
                      Register scratch, FloatRegister dest) {
-        JS_ASSERT(dest != ScratchFloatReg);
+        JS_ASSERT(dest != ScratchDoubleReg);
         if (Assembler::HasSSE41()) {
             movl(payload, scratch);
             movd(scratch, dest);
@@ -855,8 +855,8 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
             movl(payload, scratch);
             movd(scratch, dest);
             movl(type, scratch);
-            movd(scratch, ScratchFloatReg);
-            unpcklps(ScratchFloatReg, dest);
+            movd(scratch, ScratchDoubleReg);
+            unpcklps(ScratchDoubleReg, dest);
         }
     }
     void unboxValue(const ValueOperand &src, AnyRegister dest) {

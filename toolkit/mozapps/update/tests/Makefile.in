@@ -69,6 +69,7 @@ MOZ_WINCONSOLE = 1
 
 ifeq ($(OS_ARCH),WINNT)
 LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon-standalone,../common-standalone)
+OS_LIBS += $(call EXPAND_LIBNAME,wintrust shlwapi)
 else
 LIBS += $(call EXPAND_LIBNAME_PATH,updatecommon,../common)
 endif

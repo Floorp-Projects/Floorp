@@ -371,8 +371,6 @@ class MacroAssemblerARM : public Assembler
     void ma_vcvt_I32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
     void ma_vcvt_U32_F32(FloatRegister src, FloatRegister dest, Condition cc = Always);
 
-    void ma_vxfer(FloatRegister src, Register dest, Condition cc = Always);
-    void ma_vxfer(FloatRegister src, Register dest1, Register dest2, Condition cc = Always);
 
     void ma_vxfer(VFPRegister src, Register dest, Condition cc = Always);
     void ma_vxfer(VFPRegister src, Register dest1, Register dest2, Condition cc = Always);

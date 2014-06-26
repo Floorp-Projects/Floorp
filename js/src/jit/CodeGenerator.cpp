@@ -327,8 +327,14 @@ CodeGenerator::visitValueToFloat32(LValueToFloat32 *lir)
     masm.jump(&done);
 
     masm.bind(&isDouble);
+    // ARM may not have a double register available if we've allocated output as a float32.
+#ifdef JS_CODEGEN_ARM
+    masm.unboxDouble(operand, ScratchDoubleReg);
+    masm.convertDoubleToFloat32(ScratchDoubleReg, output);
+#else
     masm.unboxDouble(operand, output);
     masm.convertDoubleToFloat32(output, output);
+#endif
     masm.bind(&done);
 
     return true;
@@ -3471,7 +3477,7 @@ bool CodeGenerator::visitAtan2D(LAtan2D *lir)
     masm.passABIArg(x, MoveOp::DOUBLE);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaAtan2), MoveOp::DOUBLE);
 
-    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
     return true;
 }
 
@@ -3486,7 +3492,7 @@ bool CodeGenerator::visitHypot(LHypot *lir)
     masm.passABIArg(y, MoveOp::DOUBLE);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaHypot), MoveOp::DOUBLE);
 
-    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
     return true;
 }
 
@@ -4412,7 +4418,7 @@ CodeGenerator::visitPowI(LPowI *ins)
     masm.passABIArg(power);
 
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, js::powi), MoveOp::DOUBLE);
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
     return true;
 }
@@ -4429,7 +4435,7 @@ CodeGenerator::visitPowD(LPowD *ins)
     masm.passABIArg(power, MoveOp::DOUBLE);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, ecmaPow), MoveOp::DOUBLE);
 
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
     return true;
 }
 
@@ -4445,7 +4451,7 @@ CodeGenerator::visitRandom(LRandom *ins)
     masm.passABIArg(temp);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, math_random_no_outparam), MoveOp::DOUBLE);
 
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
     return true;
 }
 
@@ -4454,7 +4460,7 @@ CodeGenerator::visitMathFunctionD(LMathFunctionD *ins)
 {
     Register temp = ToRegister(ins->temp());
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
     const MathCache *mathCache = ins->mir()->cache();
 
@@ -4556,7 +4562,7 @@ CodeGenerator::visitMathFunctionF(LMathFunctionF *ins)
 {
     Register temp = ToRegister(ins->temp());
     FloatRegister input = ToFloatRegister(ins->input());
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloat32Reg);
 
     masm.setupUnalignedABICall(1, temp);
     masm.passABIArg(input, MoveOp::FLOAT32);
@@ -4581,7 +4587,7 @@ CodeGenerator::visitModD(LModD *ins)
     FloatRegister rhs = ToFloatRegister(ins->rhs());
     Register temp = ToRegister(ins->temp());
 
-    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnFloatReg);
+    JS_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
     masm.setupUnalignedABICall(2, temp);
     masm.passABIArg(lhs, MoveOp::DOUBLE);
@@ -7105,19 +7111,20 @@ CodeGenerator::addSetPropertyCache(LInstruction *ins, RegisterSet liveRegs, Regi
 
 bool
 CodeGenerator::addSetElementCache(LInstruction *ins, Register obj, Register unboxIndex,
-                                  Register temp, FloatRegister tempFloat, ValueOperand index,
+                                  Register temp, FloatRegister tempDouble,
+                                  FloatRegister tempFloat32, ValueOperand index,
                                   ConstantOrRegister value, bool strict, bool guardHoles,
                                   jsbytecode *profilerLeavePc)
 {
     switch (gen->info().executionMode()) {
       case SequentialExecution: {
-        SetElementIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
+          SetElementIC cache(obj, unboxIndex, temp, tempDouble, tempFloat32, index, value, strict,
                            guardHoles);
         cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
       }
       case ParallelExecution: {
-        SetElementParIC cache(obj, unboxIndex, temp, tempFloat, index, value, strict,
+          SetElementParIC cache(obj, unboxIndex, temp, tempDouble, tempFloat32, index, value, strict,
                               guardHoles);
         cache.setProfilerLeavePC(profilerLeavePc);
         return addCache(ins, allocateCache(cache));
@@ -7277,11 +7284,12 @@ CodeGenerator::visitSetElementCacheV(LSetElementCacheV *ins)
     Register obj = ToRegister(ins->object());
     Register unboxIndex = ToTempUnboxRegister(ins->tempToUnboxIndex());
     Register temp = ToRegister(ins->temp());
-    FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
+    FloatRegister tempDouble = ToFloatRegister(ins->tempDouble());
+    FloatRegister tempFloat32 = ToFloatRegister(ins->tempFloat32());
     ValueOperand index = ToValue(ins, LSetElementCacheV::Index);
     ConstantOrRegister value = TypedOrValueRegister(ToValue(ins, LSetElementCacheV::Value));
 
-    return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
+    return addSetElementCache(ins, obj, unboxIndex, temp, tempDouble, tempFloat32, index, value,
                               ins->mir()->strict(), ins->mir()->guardHoles(),
                               ins->mir()->profilerLeavePc());
 }
@@ -7292,7 +7300,8 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
     Register obj = ToRegister(ins->object());
     Register unboxIndex = ToTempUnboxRegister(ins->tempToUnboxIndex());
     Register temp = ToRegister(ins->temp());
-    FloatRegister tempFloat = ToFloatRegister(ins->tempFloat());
+    FloatRegister tempDouble = ToFloatRegister(ins->tempDouble());
+    FloatRegister tempFloat32 = ToFloatRegister(ins->tempFloat32());
     ValueOperand index = ToValue(ins, LSetElementCacheT::Index);
     ConstantOrRegister value;
     const LAllocation *tmp = ins->value();
@@ -7301,7 +7310,7 @@ CodeGenerator::visitSetElementCacheT(LSetElementCacheT *ins)
     else
         value = TypedOrValueRegister(ins->mir()->value()->type(), ToAnyRegister(tmp));
 
-    return addSetElementCache(ins, obj, unboxIndex, temp, tempFloat, index, value,
+    return addSetElementCache(ins, obj, unboxIndex, temp, tempDouble, tempFloat32, index, value,
                               ins->mir()->strict(), ins->mir()->guardHoles(),
                               ins->mir()->profilerLeavePc());
 }
@@ -8716,11 +8725,16 @@ CodeGenerator::visitAssertRangeF(LAssertRangeF *ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister temp = ToFloatRegister(ins->temp());
+    FloatRegister dest = input;
+    if (hasMultiAlias())
+        dest = ToFloatRegister(ins->armtemp());
+
     const Range *r = ins->range();
 
-    masm.convertFloat32ToDouble(input, input);
-    bool success = emitAssertRangeD(r, input, temp);
-    masm.convertDoubleToFloat32(input, input);
+    masm.convertFloat32ToDouble(input, dest);
+    bool success = emitAssertRangeD(r, dest, temp);
+    if (dest == input)
+        masm.convertDoubleToFloat32(input, input);
     return success;
 }
 

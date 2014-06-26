@@ -42,7 +42,7 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
                                          ErrorResult& aRv)
 {
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(mNode->GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(mNode->GetOwner()))) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }

@@ -199,6 +199,8 @@ static const char16_t sHTMLTagUnicodeName_p[] =
   {'p', '\0'};
 static const char16_t sHTMLTagUnicodeName_param[] =
   {'p', 'a', 'r', 'a', 'm', '\0'};
+static const char16_t sHTMLTagUnicodeName_picture[] =
+  {'p', 'i', 'c', 't', 'u', 'r', 'e', '\0'};
 static const char16_t sHTMLTagUnicodeName_plaintext[] =
   {'p', 'l', 'a', 'i', 'n', 't', 'e', 'x', 't', '\0'};
 static const char16_t sHTMLTagUnicodeName_pre[] =

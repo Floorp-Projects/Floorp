@@ -153,6 +153,13 @@ public:
                       nsMediaList* aMediaList,
                       bool aHTMLMode);
 
+  bool ParseSourceSizeList(const nsAString& aBuffer,
+                           nsIURI* aURI, // for error reporting
+                           uint32_t aLineNumber, // for error reporting
+                           InfallibleTArray< nsAutoPtr<nsMediaQuery> >& aQueries,
+                           InfallibleTArray<nsCSSValue>& aValues,
+                           bool aHTMLMode);
+
   nsresult ParseVariable(const nsAString& aVariableName,
                          const nsAString& aPropValue,
                          nsIURI* aSheetURL,
@@ -441,9 +448,17 @@ protected:
   bool ParseCharsetRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   bool ParseImportRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   bool ParseURLOrString(nsString& aURL);
-  bool GatherMedia(nsMediaList* aMedia,
-                   bool aInAtRule);
-  bool ParseMediaQuery(bool aInAtRule, nsMediaQuery **aQuery,
+  bool GatherMedia(nsMediaList* aMedia, bool aInAtRule);
+
+  enum eMediaQueryType { eMediaQueryNormal,
+                         // Parsing an at rule
+                         eMediaQueryAtRule,
+                         // Attempt to consume a single media-condition and
+                         // stop. Note that the spec defines "expression and/or
+                         // expression" as one condition but "expression,
+                         // expression" as two.
+                         eMediaQuerySingleCondition };
+  bool ParseMediaQuery(eMediaQueryType aMode, nsMediaQuery **aQuery,
                        bool *aHitStop);
   bool ParseMediaQueryExpression(nsMediaQuery* aQuery);
   void ProcessImport(const nsString& aURLSpec,
@@ -1601,6 +1616,90 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
   mHTMLMediaMode = false;
 }
 
+//  <source-size-list> = <source-size>#?
+//  <source-size> = <media-condition>? <length>
+bool
+CSSParserImpl::ParseSourceSizeList(const nsAString& aBuffer,
+                                   nsIURI* aURI, // for error reporting
+                                   uint32_t aLineNumber, // for error reporting
+                                   InfallibleTArray< nsAutoPtr<nsMediaQuery> >& aQueries,
+                                   InfallibleTArray<nsCSSValue>& aValues,
+                                   bool aHTMLMode)
+{
+  aQueries.Clear();
+  aValues.Clear();
+
+  // fake base URI since media value lists don't have URIs in them
+  nsCSSScanner scanner(aBuffer, aLineNumber);
+  css::ErrorReporter reporter(scanner, mSheet, mChildLoader, aURI);
+  InitScanner(scanner, reporter, aURI, aURI, nullptr);
+
+  // See ParseMediaList comment about HTML mode
+  mHTMLMediaMode = aHTMLMode;
+
+  bool hitError = false;
+  for (;;) {
+    nsAutoPtr<nsMediaQuery> query;
+    nsCSSValue value;
+
+    bool hitStop;
+    if (!ParseMediaQuery(eMediaQuerySingleCondition, getter_Transfers(query),
+                         &hitStop)) {
+      NS_ASSERTION(!hitStop, "should return true when hit stop");
+      hitError = true;
+      break;
+    }
+
+    if (!query) {
+      REPORT_UNEXPECTED_EOF(PEParseSourceSizeListEOF);
+      NS_ASSERTION(hitStop,
+                   "should return hitStop or an error if returning no query");
+      hitError = true;
+      break;
+    }
+
+    if (hitStop) {
+      // Empty conditions (e.g. just a bare value) should be treated as always
+      // matching (a query with no expressions fails to match, so a negated one
+      // always matches.)
+      query->SetNegated();
+    }
+
+    if (!ParseNonNegativeVariant(value, VARIANT_LPCALC, nullptr)) {
+      hitError = true;
+      break;
+    }
+
+    aQueries.AppendElement(query.forget());
+    aValues.AppendElement(value);
+
+    if (!GetToken(true)) {
+      // Expected EOF
+      break;
+    }
+
+    if (eCSSToken_Symbol != mToken.mType || mToken.mSymbol != ',') {
+      REPORT_UNEXPECTED_TOKEN(PEParseSourceSizeListNotComma);
+      hitError = true;
+      break;
+    }
+  }
+
+  if (hitError) {
+    // Per spec, a parse failure in this list invalidates it
+    // entirely. Currently, this grammar is specified standalone and not part of
+    // any larger grammar, so it doesn't make sense to try to advance the token
+    // beyond it.
+    OUTPUT_ERROR();
+  }
+
+  CLEAR_ERROR();
+  ReleaseScanner();
+  mHTMLMediaMode = false;
+
+  return !hitError;
+}
+
 bool
 CSSParserImpl::ParseColorString(const nsSubstring& aBuffer,
                                 nsIURI* aURI, // for error reporting
@@ -2733,12 +2832,15 @@ CSSParserImpl::ParseURLOrString(nsString& aURL)
 }
 
 bool
-CSSParserImpl::ParseMediaQuery(bool aInAtRule,
+CSSParserImpl::ParseMediaQuery(eMediaQueryType aQueryType,
                                nsMediaQuery **aQuery,
                                bool *aHitStop)
 {
   *aQuery = nullptr;
   *aHitStop = false;
+  bool inAtRule = aQueryType == eMediaQueryAtRule;
+  // Attempt to parse a single condition and stop
+  bool singleCondition = aQueryType == eMediaQuerySingleCondition;
 
   // "If the comma-separated list is the empty list it is assumed to
   // specify the media query 'all'."  (css3-mediaqueries, section
@@ -2746,7 +2848,7 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
   if (!GetToken(true)) {
     *aHitStop = true;
     // expected termination by EOF
-    if (!aInAtRule)
+    if (!inAtRule)
       return true;
 
     // unexpected termination by EOF
@@ -2754,7 +2856,7 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
     return true;
   }
 
-  if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+  if (eCSSToken_Symbol == mToken.mType && inAtRule &&
       (mToken.mSymbol == ';' || mToken.mSymbol == '{' || mToken.mSymbol == '}' )) {
     *aHitStop = true;
     UngetToken();
@@ -2775,6 +2877,12 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
       OUTPUT_ERROR();
       query->SetHadUnknownExpression();
     }
+  } else if (singleCondition) {
+    // Since we are only trying to consume a single condition, which precludes
+    // media types and not/only, this should be the same as reaching immediate
+    // EOF (no condition to parse)
+    *aHitStop = true;
+    return true;
   } else {
     nsCOMPtr<nsIAtom> mediaType;
     bool gotNotOrOnly = false;
@@ -2819,7 +2927,7 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
     if (!GetToken(true)) {
       *aHitStop = true;
       // expected termination by EOF
-      if (!aInAtRule)
+      if (!inAtRule)
         break;
 
       // unexpected termination by EOF
@@ -2827,21 +2935,29 @@ CSSParserImpl::ParseMediaQuery(bool aInAtRule,
       break;
     }
 
-    if (eCSSToken_Symbol == mToken.mType && aInAtRule &&
+    if (eCSSToken_Symbol == mToken.mType && inAtRule &&
         (mToken.mSymbol == ';' || mToken.mSymbol == '{' || mToken.mSymbol == '}')) {
       *aHitStop = true;
       UngetToken();
       break;
     }
-    if (eCSSToken_Symbol == mToken.mType && mToken.mSymbol == ',') {
+    if (!singleCondition &&
+        eCSSToken_Symbol == mToken.mType && mToken.mSymbol == ',') {
       // Done with the expressions for this query
       break;
     }
     if (eCSSToken_Ident != mToken.mType ||
         !mToken.mIdent.LowerCaseEqualsLiteral("and")) {
-      REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
-      UngetToken();
-      return false;
+      if (singleCondition) {
+        // We have a condition at this point -- if we're not chained to other
+        // conditions with and/or, we're done.
+        UngetToken();
+        break;
+      } else {
+        REPORT_UNEXPECTED_TOKEN(PEGatherMediaNotComma);
+        UngetToken();
+        return false;
+      }
     }
     if (!ParseMediaQueryExpression(query)) {
       OUTPUT_ERROR();
@@ -2857,11 +2973,11 @@ bool
 CSSParserImpl::GatherMedia(nsMediaList* aMedia,
                            bool aInAtRule)
 {
+  eMediaQueryType type = aInAtRule ? eMediaQueryAtRule : eMediaQueryNormal;
   for (;;) {
     nsAutoPtr<nsMediaQuery> query;
     bool hitStop;
-    if (!ParseMediaQuery(aInAtRule, getter_Transfers(query),
-                         &hitStop)) {
+    if (!ParseMediaQuery(type, getter_Transfers(query), &hitStop)) {
       NS_ASSERTION(!hitStop, "should return true when hit stop");
       OUTPUT_ERROR();
       if (query) {
@@ -14661,6 +14777,19 @@ nsCSSParser::ParseMediaList(const nsSubstring& aBuffer,
 {
   static_cast<CSSParserImpl*>(mImpl)->
     ParseMediaList(aBuffer, aURI, aLineNumber, aMediaList, aHTMLMode);
+}
+
+bool
+nsCSSParser::ParseSourceSizeList(const nsAString& aBuffer,
+                                 nsIURI* aURI,
+                                 uint32_t aLineNumber,
+                                 InfallibleTArray< nsAutoPtr<nsMediaQuery> >& aQueries,
+                                 InfallibleTArray<nsCSSValue>& aValues,
+                                 bool aHTMLMode)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseSourceSizeList(aBuffer, aURI, aLineNumber, aQueries, aValues,
+                        aHTMLMode);
 }
 
 bool
