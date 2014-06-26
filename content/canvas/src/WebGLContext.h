@@ -162,7 +162,6 @@ class WebGLContext :
 
 public:
     WebGLContext();
-    virtual ~WebGLContext();
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
@@ -882,6 +881,8 @@ private:
 // -----------------------------------------------------------------------------
 // PROTECTED
 protected:
+    virtual ~WebGLContext();
+
     void SetFakeBlackStatus(WebGLContextFakeBlackStatus x) {
         mFakeBlackStatus = x;
     }
