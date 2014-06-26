@@ -29,12 +29,11 @@ namespace mozilla {
 
 class StyleAnimationValue;
 struct ElementPropertyTransition;
+struct ElementAnimationCollection;
 
 namespace css {
 
 bool IsGeometricProperty(nsCSSProperty aProperty);
-
-struct CommonElementAnimationData;
 
 class CommonAnimationManager : public nsIStyleRuleProcessor,
                                public nsARefreshObserver {
@@ -73,15 +72,15 @@ public:
 protected:
   virtual ~CommonAnimationManager();
 
-  friend struct CommonElementAnimationData; // for ElementDataRemoved
+  friend struct mozilla::ElementAnimationCollection; // for ElementDataRemoved
 
-  virtual void AddElementData(CommonElementAnimationData* aData) = 0;
+  virtual void AddElementData(ElementAnimationCollection* aData) = 0;
   virtual void ElementDataRemoved() = 0;
   void RemoveAllElementData();
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.
-  static CommonElementAnimationData*
+  static ElementAnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
                              nsCSSProperty aProperty);
@@ -120,8 +119,8 @@ class_::UpdateAllThrottledStylesInternal()                                     \
      its descendants*/                                                         \
   PRCList *next = PR_LIST_HEAD(&mElementData);                                 \
   while (next != &mElementData) {                                              \
-    CommonElementAnimationData* ea =                                           \
-      static_cast<CommonElementAnimationData*>(next);                          \
+    ElementAnimationCollection* ea =                                           \
+      static_cast<ElementAnimationCollection*>(next);                          \
     next = PR_NEXT_LINK(next);                                                 \
                                                                                \
     if (ea->mFlushGeneration == now) {                                         \
@@ -404,12 +403,11 @@ enum EnsureStyleRuleFlags {
   EnsureStyleRule_IsNotThrottled
 };
 
-namespace css {
-
-struct CommonElementAnimationData : public PRCList
+struct ElementAnimationCollection : public PRCList
 {
-  CommonElementAnimationData(dom::Element *aElement, nsIAtom *aElementProperty,
-                             CommonAnimationManager *aManager, TimeStamp aNow)
+  ElementAnimationCollection(dom::Element *aElement, nsIAtom *aElementProperty,
+                             mozilla::css::CommonAnimationManager *aManager,
+                             TimeStamp aNow)
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
@@ -420,14 +418,14 @@ struct CommonElementAnimationData : public PRCList
     , mCalledPropertyDtor(false)
 #endif
   {
-    MOZ_COUNT_CTOR(CommonElementAnimationData);
+    MOZ_COUNT_CTOR(ElementAnimationCollection);
     PR_INIT_CLIST(this);
   }
-  ~CommonElementAnimationData()
+  ~ElementAnimationCollection()
   {
     NS_ABORT_IF_FALSE(mCalledPropertyDtor,
                       "must call destructor through element property dtor");
-    MOZ_COUNT_DTOR(CommonElementAnimationData);
+    MOZ_COUNT_DTOR(ElementAnimationCollection);
     PR_REMOVE_LINK(this);
     mManager->ElementDataRemoved();
   }
@@ -513,7 +511,7 @@ struct CommonElementAnimationData : public PRCList
   // i.e., in an atom list)
   nsIAtom *mElementProperty;
 
-  CommonAnimationManager *mManager;
+  mozilla::css::CommonAnimationManager *mManager;
 
   mozilla::ElementAnimationPtrArray mAnimations;
 
@@ -558,7 +556,6 @@ struct CommonElementAnimationData : public PRCList
 #endif
 };
 
-}
 }
 
 #endif /* !defined(mozilla_css_AnimationCommon_h) */
