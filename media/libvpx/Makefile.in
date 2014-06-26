@@ -110,6 +110,10 @@ vp8_asm_enc_offsets.asm: vp8_asm_enc_offsets.$(OBJ_SUFFIX) $(HOST_PROGRAM)
 # It was generated solely so it could be parsed by obj_int_extract.
 OBJS := $(filter-out vp8_asm_enc_offsets.$(OBJ_SUFFIX),$(OBJS))
 
+# obj_int_extract doesn't understand files produced with the -Gw optimization.
+vpx_scale_asm_offsets.$(OBJ_SUFFIX) vp8_asm_enc_offsets.$(OBJ_SUFFIX): \
+    COMPILE_CFLAGS := $(filter-out -Gw,$(COMPILE_CFLAGS))
+
 endif
 
 # Workaround a bug of Sun Studio (CR 6963410)
