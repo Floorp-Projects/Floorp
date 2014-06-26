@@ -123,12 +123,7 @@ WebrtcGmpVideoEncoder::InitEncode_g(const webrtc::VideoCodec* aCodecSettings,
   GMPVideoHost* host = nullptr;
   GMPVideoEncoder* gmp = nullptr;
 
-  nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("vp8"));
-  nsresult rv = mMPS->GetGMPVideoEncoder(&tags,
-                                         NS_LITERAL_STRING(""),
-                                         &host,
-                                         &gmp);
+  nsresult rv = mMPS->GetGMPVideoEncoderVP8(&host, &gmp);
   if (NS_FAILED(rv)) {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
@@ -463,12 +458,8 @@ WebrtcGmpVideoDecoder::InitDecode_g(const webrtc::VideoCodec* aCodecSettings,
   GMPVideoHost* host = nullptr;
   GMPVideoDecoder* gmp = nullptr;
 
-  nsTArray<nsCString> tags;
-  tags.AppendElement(NS_LITERAL_CSTRING("vp8"));
-  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoDecoder(&tags,
-                                                    NS_LITERAL_STRING(""),
-                                                    &host,
-                                                    &gmp)))) {
+  if (NS_WARN_IF(NS_FAILED(mMPS->GetGMPVideoDecoderVP8(&host, &gmp))))
+  {
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
