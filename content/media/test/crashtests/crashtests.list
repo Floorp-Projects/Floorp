@@ -72,3 +72,4 @@ skip-if(B2G) load oscillator-ended-1.html # intermittent B2G timeouts, bug 92033
 skip-if(B2G) load oscillator-ended-2.html # intermittent B2G timeouts, bug 920338
 load 1015662.html
 include ../../mediasource/test/crashtests/crashtests.list
+test-pref(media.navigator.permission.disabled,true) load 1028458.html
