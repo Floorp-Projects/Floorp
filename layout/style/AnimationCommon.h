@@ -119,11 +119,11 @@ class_::UpdateAllThrottledStylesInternal()                                     \
      its descendants*/                                                         \
   PRCList *next = PR_LIST_HEAD(&mElementData);                                 \
   while (next != &mElementData) {                                              \
-    ElementAnimationCollection* ea =                                           \
+    ElementAnimationCollection* collection =                                   \
       static_cast<ElementAnimationCollection*>(next);                          \
     next = PR_NEXT_LINK(next);                                                 \
                                                                                \
-    if (ea->mFlushGeneration == now) {                                         \
+    if (collection->mFlushGeneration == now) {                                 \
       /* this element has been ticked already */                               \
       continue;                                                                \
     }                                                                          \
@@ -131,7 +131,7 @@ class_::UpdateAllThrottledStylesInternal()                                     \
     /* element is initialised to the starting element (i.e., one we know has
        an animation) and ends up with the root-most animated ancestor,
        that is, the element where we begin updates. */                         \
-    dom::Element* element = ea->mElement;                                      \
+    dom::Element* element = collection->mElement;                              \
     /* make a list of ancestors */                                             \
     nsTArray<dom::Element*> ancestors;                                         \
     do {                                                                       \
