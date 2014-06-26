@@ -223,7 +223,7 @@ Zone::gcNumber()
 {
     // Zones in use by exclusive threads are not collected, and threads using
     // them cannot access the main runtime's gcNumber without racing.
-    return usedByExclusiveThread ? 0 : runtimeFromMainThread()->gc.number;
+    return usedByExclusiveThread ? 0 : runtimeFromMainThread()->gc.gcNumber();
 }
 
 #ifdef JS_ION

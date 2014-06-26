@@ -103,7 +103,7 @@ struct VerifyPreTracer : JSTracer
     NodeMap nodemap;
 
     VerifyPreTracer(JSRuntime *rt, JSTraceCallback callback)
-      : JSTracer(rt, callback), noggc(rt), number(rt->gc.number), count(0), root(nullptr)
+      : JSTracer(rt, callback), noggc(rt), number(rt->gc.gcNumber()), count(0), root(nullptr)
     {}
 
     ~VerifyPreTracer() {
@@ -390,7 +390,7 @@ struct VerifyPostTracer : JSTracer
     EdgeSet *edges;
 
     VerifyPostTracer(JSRuntime *rt, JSTraceCallback callback)
-      : JSTracer(rt, callback), number(rt->gc.number), count(0)
+      : JSTracer(rt, callback), number(rt->gc.gcNumber()), count(0)
     {}
 };
 

@@ -960,12 +960,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Garbase collector state has been sucessfully initialized. */
     bool                gcInitialized;
 
-    JSGCMode gcMode() const { return gc.mode; }
-    void setGCMode(JSGCMode mode) {
-        gc.mode = mode;
-        gc.marker.setGCMode(mode);
-    }
-
     bool isHeapBusy() { return gc.isHeapBusy(); }
     bool isHeapMajorCollecting() { return gc.isHeapMajorCollecting(); }
     bool isHeapMinorCollecting() { return gc.isHeapMinorCollecting(); }
