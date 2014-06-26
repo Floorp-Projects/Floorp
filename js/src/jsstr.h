@@ -326,9 +326,15 @@ js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 js_str_charAt(JSContext *cx, unsigned argc, js::Value *vp);
 
+namespace js {
+
+extern bool
+str_charCodeAt_impl(JSContext *cx, HandleString string, HandleValue index, MutableHandleValue res);
+
+} /* namespace js */
+
 extern bool
 js_str_charCodeAt(JSContext *cx, unsigned argc, js::Value *vp);
-
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 6 bytes long.  Return the number of UTF-8 bytes of data written.

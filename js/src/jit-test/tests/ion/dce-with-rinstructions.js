@@ -329,7 +329,16 @@ function rround_double(i) {
     if (uceFault_round_double(i) || uceFault_round_double(i))
         assertEq(x, 99 + (-1 >>> 0)); /* = i + 2 ^ 32 - 1 */
      return i;
- }
+}
+
+var uceFault_Char_Code_At = eval(uneval(uceFault).replace('uceFault', 'uceFault_Char_Code_At'));
+function rcharCodeAt(i) {
+    var s = "aaaaa";
+    var x = s.charCodeAt(i % 4);
+    if (uceFault_Char_Code_At(i) || uceFault_Char_Code_At(i))
+        assertEq(x, 97 );
+    return i;
+}
 
 var uceFault_from_char_code = eval(uneval(uceFault).replace('uceFault', 'uceFault_from_char_code'));
 function rfrom_char_code(i) {
@@ -420,6 +429,7 @@ for (i = 0; i < 100; i++) {
     rfloor_object(i);
     rround_number(i);
     rround_double(i);
+    rcharCodeAt(i);
     rfrom_char_code(i);
     rfrom_char_code_non_ascii(i);
     rpow_number(i);
