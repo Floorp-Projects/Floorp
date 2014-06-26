@@ -401,13 +401,34 @@ GetFrameTime() {
   return sFrameTime;
 }
 
-class FlingAnimation: public AsyncPanZoomAnimation {
+// This is a base class for animations that can deal with
+// overscroll states. In particular, it ensures that overscroll
+// states are cleared when the animation is cancelled.
+class OverscrollableAnimation: public AsyncPanZoomAnimation {
+public:
+  OverscrollableAnimation(AsyncPanZoomController& aApzc,
+                          const TimeDuration& aRepaintInterval = TimeDuration::Forever())
+    : AsyncPanZoomAnimation(aRepaintInterval)
+    , mApzc(aApzc)
+  {
+  }
+
+  virtual void Cancel() MOZ_OVERRIDE
+  {
+    mApzc.mX.ClearOverscroll();
+    mApzc.mY.ClearOverscroll();
+  }
+
+protected:
+  AsyncPanZoomController& mApzc;
+};
+
+class FlingAnimation: public OverscrollableAnimation {
 public:
   FlingAnimation(AsyncPanZoomController& aApzc,
                  bool aApplyAcceleration,
                  bool aAllowOverscroll)
-    : AsyncPanZoomAnimation(TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
-    , mApzc(aApzc)
+    : OverscrollableAnimation(aApzc, TimeDuration::FromMilliseconds(gfxPrefs::APZFlingRepaintInterval()))
     , mAllowOverscroll(aAllowOverscroll)
   {
     TimeStamp now = GetFrameTime();
@@ -556,7 +577,6 @@ private:
          + (aSupplemental * gfxPrefs::APZFlingAccelSupplementalMultiplier());
   }
 
-  AsyncPanZoomController& mApzc;
   bool mAllowOverscroll;
 };
 
@@ -619,10 +639,12 @@ private:
   CSSToScreenScale mEndZoom;
 };
 
-class OverscrollSnapBackAnimation: public AsyncPanZoomAnimation {
+class OverscrollSnapBackAnimation: public OverscrollableAnimation {
 public:
   OverscrollSnapBackAnimation(AsyncPanZoomController& aApzc)
-    : mApzc(aApzc) {}
+    : OverscrollableAnimation(aApzc)
+  {
+  }
 
   virtual bool Sample(FrameMetrics& aFrameMetrics,
                       const TimeDuration& aDelta) MOZ_OVERRIDE
@@ -632,19 +654,6 @@ public:
     bool continueY = mApzc.mY.SampleSnapBack(aDelta);
     return continueX || continueY;
   }
-
-  virtual void Cancel() MOZ_OVERRIDE
-  {
-    // If the snap-back animation is cancelled for some reason, we need to
-    // clear the overscroll, otherwise the user would be stuck in the
-    // overscrolled state (since touch blocks beginning in an overscrolled
-    // state are ignored).
-    mApzc.mX.ClearOverscroll();
-    mApzc.mY.ClearOverscroll();
-  }
-
-private:
-  AsyncPanZoomController& mApzc;
 };
 
 void
@@ -1732,6 +1741,7 @@ void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation)
 
 void AsyncPanZoomController::CancelAnimation() {
   ReentrantMonitorAutoEnter lock(mMonitor);
+  APZC_LOG("%p running CancelAnimation in state %d\n", this, mState);
   SetState(NOTHING);
   if (mAnimation) {
     mAnimation->Cancel();
