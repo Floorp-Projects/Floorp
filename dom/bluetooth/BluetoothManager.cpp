@@ -69,7 +69,7 @@ public:
       BluetoothAdapter::Create(mManagerPtr->GetOwner(), values);
 
     dom::AutoJSAPI jsapi;
-    if (!jsapi.InitUsingWin(mManagerPtr->GetOwner())) {
+    if (!jsapi.Init(mManagerPtr->GetOwner())) {
       BT_WARNING("Failed to initialise AutoJSAPI!");
       SetError(NS_LITERAL_STRING("BluetoothAutoJSAPIInitError"));
       return false;

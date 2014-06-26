@@ -184,21 +184,7 @@ TextureHostOGL::SetReleaseFence(const android::sp<android::Fence>& aReleaseFence
     return false;
   }
 
-  if (!mReleaseFence.get()) {
-    mReleaseFence = aReleaseFence;
-  } else {
-    android::sp<android::Fence> mergedFence = android::Fence::merge(
-                  android::String8::format("TextureHostOGL"),
-                  mReleaseFence, aReleaseFence);
-    if (!mergedFence.get()) {
-      // synchronization is broken, the best we can do is hope fences
-      // signal in order so the new fence will act like a union.
-      // This error handling is same as android::ConsumerBase does.
-      mReleaseFence = aReleaseFence;
-      return false;
-    }
-    mReleaseFence = mergedFence;
-  }
+  mReleaseFence = aReleaseFence;
   return true;
 }
 

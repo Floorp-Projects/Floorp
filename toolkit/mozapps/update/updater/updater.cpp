@@ -50,6 +50,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <errno.h>
+#include <algorithm>
 
 #include "updatelogging.h"
 
@@ -2668,7 +2669,7 @@ int NS_main(int argc, NS_tchar **argv)
         return 1;
       }
 
-      char16_t *cmdLine = MakeCommandLine(argc - 1, argv + 1);
+      wchar_t *cmdLine = MakeCommandLine(argc - 1, argv + 1);
       if (!cmdLine) {
         CloseHandle(elevatedFileHandle);
         return 1;
@@ -2985,7 +2986,7 @@ int NS_main(int argc, NS_tchar **argv)
       size_t callbackPrefixLength = PathCommonPrefixW(argv[callbackIndex],
                                                       installDir,
                                                       nullptr);
-      NS_tstrncpy(p, argv[callbackIndex] + max(callbackPrefixLength, commonPrefixLength), bufferLeft);
+      NS_tstrncpy(p, argv[callbackIndex] + std::max(callbackPrefixLength, commonPrefixLength), bufferLeft);
       targetPath = buffer;
     }
     if (!GetLongPathNameW(targetPath, callbackLongPath,

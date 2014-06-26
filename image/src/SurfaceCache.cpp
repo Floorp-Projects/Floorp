@@ -540,10 +540,12 @@ SurfaceCache::Discard(Image* aImageKey)
 /* static */ void
 SurfaceCache::DiscardAll()
 {
-  MOZ_ASSERT(sInstance, "Should be initialized");
   MOZ_ASSERT(NS_IsMainThread());
 
-  return sInstance->DiscardAll();
+  if (sInstance) {
+    sInstance->DiscardAll();
+  }
+  // nothing to discard
 }
 
 } // namespace image

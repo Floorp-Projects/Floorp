@@ -1443,28 +1443,27 @@ nsAttrValue::ParseSpecialIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  nsresult ec;
-  bool strict;
-  bool isPercent = false;
   nsAutoString tmp(aString);
-  int32_t originalVal = StringToInteger(aString, &strict, &ec, true, &isPercent);
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t originalVal = nsContentUtils::ParseHTMLInteger(aString, &result);
 
-  if (NS_FAILED(ec)) {
+  if (result & nsContentUtils::eParseHTMLInteger_Error) {
     return false;
   }
 
+  bool isPercent = result & nsContentUtils::eParseHTMLInteger_IsPercent;
   int32_t val = std::max(originalVal, 0);
+  bool nonStrict = val != originalVal ||
+                   (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+                   (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
 
   // % (percent)
   if (isPercent || tmp.RFindChar('%') >= 0) {
     isPercent = true;
   }
 
-  strict = strict && (originalVal == val);
-
-  SetIntValueAndType(val,
-                     isPercent ? ePercent : eInteger,
-                     strict ? nullptr : &aString);
+  SetIntValueAndType(val, isPercent ? ePercent : eInteger,
+                     nonStrict ? &aString : nullptr);
   return true;
 }
 
@@ -1476,17 +1475,20 @@ nsAttrValue::ParseIntWithBounds(const nsAString& aString,
 
   ResetIfSet();
 
-  nsresult ec;
-  bool strict;
-  int32_t originalVal = StringToInteger(aString, &strict, &ec);
-  if (NS_FAILED(ec)) {
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t originalVal = nsContentUtils::ParseHTMLInteger(aString, &result);
+  if (result & nsContentUtils::eParseHTMLInteger_Error) {
     return false;
   }
 
   int32_t val = std::max(originalVal, aMin);
   val = std::min(val, aMax);
-  strict = strict && (originalVal == val);
-  SetIntValueAndType(val, eInteger, strict ? nullptr : &aString);
+  bool nonStrict = (val != originalVal) ||
+                   (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
+                   (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+                   (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
+
+  SetIntValueAndType(val, eInteger, nonStrict ? &aString : nullptr);
 
   return true;
 }
@@ -1496,14 +1498,17 @@ nsAttrValue::ParseNonNegativeIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  nsresult ec;
-  bool strict;
-  int32_t originalVal = StringToInteger(aString, &strict, &ec);
-  if (NS_FAILED(ec) || originalVal < 0) {
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t originalVal = nsContentUtils::ParseHTMLInteger(aString, &result);
+  if ((result & nsContentUtils::eParseHTMLInteger_Error) || originalVal < 0) {
     return false;
   }
 
-  SetIntValueAndType(originalVal, eInteger, strict ? nullptr : &aString);
+  bool nonStrict = (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
+                   (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+                   (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
+
+  SetIntValueAndType(originalVal, eInteger, nonStrict ? &aString : nullptr);
 
   return true;
 }
@@ -1513,14 +1518,17 @@ nsAttrValue::ParsePositiveIntValue(const nsAString& aString)
 {
   ResetIfSet();
 
-  nsresult ec;
-  bool strict;
-  int32_t originalVal = StringToInteger(aString, &strict, &ec);
-  if (NS_FAILED(ec) || originalVal <= 0) {
+  nsContentUtils::ParseHTMLIntegerResultFlags result;
+  int32_t originalVal = nsContentUtils::ParseHTMLInteger(aString, &result);
+  if ((result & nsContentUtils::eParseHTMLInteger_Error) || originalVal <= 0) {
     return false;
   }
 
-  SetIntValueAndType(originalVal, eInteger, strict ? nullptr : &aString);
+  bool nonStrict = (result & nsContentUtils::eParseHTMLInteger_IsPercent) ||
+                   (result & nsContentUtils::eParseHTMLInteger_NonStandard) ||
+                   (result & nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput);
+
+  SetIntValueAndType(originalVal, eInteger, nonStrict ? &aString : nullptr);
 
   return true;
 }
@@ -1876,78 +1884,6 @@ nsAttrValue::GetStringBuffer(const nsAString& aValue) const
   CopyUnicodeTo(aValue, 0, data, len);
   data[len] = char16_t(0);
   return buf.forget();
-}
-
-int32_t
-nsAttrValue::StringToInteger(const nsAString& aValue, bool* aStrict,
-                             nsresult* aErrorCode,
-                             bool aCanBePercent,
-                             bool* aIsPercent) const
-{
-  *aStrict = true;
-  *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-  if (aCanBePercent) {
-    *aIsPercent = false;
-  }
-
-  nsAString::const_iterator iter, end;
-  aValue.BeginReading(iter);
-  aValue.EndReading(end);
-
-  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
-    *aStrict = false;
-    ++iter;
-  }
-
-  if (iter == end) {
-    return 0;
-  }
-
-  bool negate = false;
-  if (*iter == char16_t('-')) {
-    negate = true;
-    ++iter;
-  } else if (*iter == char16_t('+')) {
-    *aStrict = false;
-    ++iter;
-  }
-
-  int32_t value = 0;
-  int32_t pValue = 0; // Previous value, used to check integer overflow
-  while (iter != end) {
-    if (*iter >= char16_t('0') && *iter <= char16_t('9')) {
-      value = (value * 10) + (*iter - char16_t('0'));
-      ++iter;
-      // Checking for integer overflow.
-      if (pValue > value) {
-        *aStrict = false;
-        *aErrorCode = NS_ERROR_ILLEGAL_VALUE;
-        break;
-      } else {
-        pValue = value;
-        *aErrorCode = NS_OK;
-      }
-    } else if (aCanBePercent && *iter == char16_t('%')) {
-      ++iter;
-      *aIsPercent = true;
-      if (iter != end) {
-        *aStrict = false;
-        break;
-      }
-    } else {
-      *aStrict = false;
-      break;
-    }
-  }
-  if (negate) {
-    value = -value;
-    // Checking the special case of -0.
-    if (!value) {
-      *aStrict = false;
-    }
-  }
-
-  return value;
 }
 
 size_t

@@ -23,6 +23,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     RCINCLUDE = 'updater.rc'
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
+    DEFINES['NOMINMAX'] = True
     USE_STATIC_LIBS = True
 
     # Pick up nsWindowsRestart.cpp
@@ -57,6 +58,7 @@ if have_progressui == 0:
     ]
 
 DEFINES['NS_NO_XPCOM'] = True
+DISABLE_STL_WRAPPING = True
 for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
@@ -73,6 +75,8 @@ DELAYLOAD_DLLS += [
 
 if CONFIG['_MSC_VER']:
     WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    WIN32_EXE_LDFLAGS += ['-municode']
 
 if CONFIG['MOZ_UPDATE_CHANNEL'] in ('beta', 'release', 'esr'):
     DEFINES['MAR_SIGNING_RELEASE_BETA'] = '1'

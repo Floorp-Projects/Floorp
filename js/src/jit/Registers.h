@@ -56,39 +56,15 @@ struct Register {
     bool volatile_() const {
         return !!((1 << code()) & Registers::VolatileMask);
     }
-};
-
-struct FloatRegister {
-    typedef FloatRegisters Codes;
-    typedef Codes::Code Code;
-
-    Code code_;
-
-    static FloatRegister FromCode(uint32_t i) {
-        JS_ASSERT(i < FloatRegisters::Total);
-        FloatRegister r = { (FloatRegisters::Code)i };
-        return r;
-    }
-    static FloatRegister FromName(const char *name) {
-        FloatRegisters::Code code = FloatRegisters::FromName(name);
-        FloatRegister r = { code };
-        return r;
-    }
-    Code code() const {
-        JS_ASSERT((uint32_t)code_ < FloatRegisters::Total);
-        return code_;
-    }
-    const char *name() const {
-        return FloatRegisters::GetName(code());
-    }
-    bool operator ==(FloatRegister other) const {
+    bool aliases(const Register &other) const {
         return code_ == other.code_;
     }
-    bool operator !=(FloatRegister other) const {
-        return code_ != other.code_;
+    uint32_t numAliased() const {
+        return 1;
     }
-    bool volatile_() const {
-        return !!((1 << code()) & FloatRegisters::VolatileMask);
+    void aliased(uint32_t aliasIdx, Register *ret) const {
+        JS_ASSERT(aliasIdx == 0);
+        *ret = *this;
     }
 };
 

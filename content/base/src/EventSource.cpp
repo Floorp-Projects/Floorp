@@ -1238,7 +1238,7 @@ EventSource::DispatchAllMessageEvents()
   }
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
     return;
   }
   JSContext* cx = jsapi.cx();

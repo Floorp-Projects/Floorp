@@ -154,8 +154,8 @@ CodeGeneratorX86Shared::visitTestDAndBranch(LTestDAndBranch *test)
     //
     // NaN is falsey, so comparing against 0 and then using the Z flag is
     // enough to determine which branch to take.
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomisd(ToFloatRegister(opd), ScratchFloatReg);
+    masm.xorpd(ScratchDoubleReg, ScratchDoubleReg);
+    masm.ucomisd(ToFloatRegister(opd), ScratchDoubleReg);
     emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
     return true;
 }
@@ -165,8 +165,8 @@ CodeGeneratorX86Shared::visitTestFAndBranch(LTestFAndBranch *test)
 {
     const LAllocation *opd = test->input();
     // ucomiss flags are the same as doubles; see comment above
-    masm.xorps(ScratchFloatReg, ScratchFloatReg);
-    masm.ucomiss(ToFloatRegister(opd), ScratchFloatReg);
+    masm.xorps(ScratchFloat32Reg, ScratchFloat32Reg);
+    masm.ucomiss(ToFloatRegister(opd), ScratchFloat32Reg);
     emitBranch(Assembler::NotEqual, test->ifTrue(), test->ifFalse());
     return true;
 }
@@ -270,8 +270,8 @@ CodeGeneratorX86Shared::visitNotD(LNotD *ins)
     if (ins->mir()->operandIsNeverNaN())
         nanCond = Assembler::NaN_HandledByCond;
 
-    masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-    masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
+    masm.xorpd(ScratchDoubleReg, ScratchDoubleReg);
+    masm.compareDouble(Assembler::DoubleEqualOrUnordered, opd, ScratchDoubleReg);
     masm.emitSet(Assembler::Equal, ToRegister(ins->output()), nanCond);
     return true;
 }
@@ -287,8 +287,8 @@ CodeGeneratorX86Shared::visitNotF(LNotF *ins)
     if (ins->mir()->operandIsNeverNaN())
         nanCond = Assembler::NaN_HandledByCond;
 
-    masm.xorps(ScratchFloatReg, ScratchFloatReg);
-    masm.compareFloat(Assembler::DoubleEqualOrUnordered, opd, ScratchFloatReg);
+    masm.xorps(ScratchFloat32Reg, ScratchFloat32Reg);
+    masm.compareFloat(Assembler::DoubleEqualOrUnordered, opd, ScratchFloat32Reg);
     masm.emitSet(Assembler::Equal, ToRegister(ins->output()), nanCond);
     return true;
 }
@@ -523,8 +523,8 @@ CodeGeneratorX86Shared::visitAbsD(LAbsD *ins)
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Load a value which is all ones except for the sign bit.
     masm.loadConstantDouble(SpecificNaN<double>(0, FloatingPoint<double>::kSignificandBits),
-                            ScratchFloatReg);
-    masm.andpd(ScratchFloatReg, input);
+                            ScratchDoubleReg);
+    masm.andpd(ScratchDoubleReg, input);
     return true;
 }
 
@@ -535,8 +535,8 @@ CodeGeneratorX86Shared::visitAbsF(LAbsF *ins)
     JS_ASSERT(input == ToFloatRegister(ins->output()));
     // Same trick as visitAbsD above.
     masm.loadConstantFloat32(SpecificNaN<float>(0, FloatingPoint<float>::kSignificandBits),
-                             ScratchFloatReg);
-    masm.andps(ScratchFloatReg, input);
+                             ScratchFloat32Reg);
+    masm.andps(ScratchFloat32Reg, input);
     return true;
 }
 
@@ -568,16 +568,16 @@ CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 
     if (!ins->mir()->operandIsNeverNegativeInfinity()) {
         // Branch if not -Infinity.
-        masm.loadConstantDouble(NegativeInfinity<double>(), ScratchFloatReg);
+        masm.loadConstantDouble(NegativeInfinity<double>(), ScratchDoubleReg);
 
         Assembler::DoubleCondition cond = Assembler::DoubleNotEqualOrUnordered;
         if (ins->mir()->operandIsNeverNaN())
             cond = Assembler::DoubleNotEqual;
-        masm.branchDouble(cond, input, ScratchFloatReg, &sqrt);
+        masm.branchDouble(cond, input, ScratchDoubleReg, &sqrt);
 
         // Math.pow(-Infinity, 0.5) == Infinity.
         masm.xorpd(input, input);
-        masm.subsd(ScratchFloatReg, input);
+        masm.subsd(ScratchDoubleReg, input);
         masm.jump(&done);
 
         masm.bind(&sqrt);
@@ -585,8 +585,8 @@ CodeGeneratorX86Shared::visitPowHalfD(LPowHalfD *ins)
 
     if (!ins->mir()->operandIsNeverNegativeZero()) {
         // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5). Adding 0 converts any -0 to 0.
-        masm.xorpd(ScratchFloatReg, ScratchFloatReg);
-        masm.addsd(ScratchFloatReg, input);
+        masm.xorpd(ScratchDoubleReg, ScratchDoubleReg);
+        masm.addsd(ScratchDoubleReg, input);
     }
 
     masm.sqrtsd(input, input);
@@ -1560,7 +1560,7 @@ bool
 CodeGeneratorX86Shared::visitFloor(LFloor *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label bailout;
@@ -1623,7 +1623,7 @@ bool
 CodeGeneratorX86Shared::visitFloorF(LFloorF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label bailout;
@@ -1686,7 +1686,7 @@ bool
 CodeGeneratorX86Shared::visitCeil(LCeil *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label bailout, lessThanMinusOne;
@@ -1742,7 +1742,7 @@ bool
 CodeGeneratorX86Shared::visitCeilF(LCeilF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label bailout, lessThanMinusOne;
@@ -1799,7 +1799,7 @@ CodeGeneratorX86Shared::visitRound(LRound *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     FloatRegister temp = ToFloatRegister(lir->temp());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchDoubleReg;
     Register output = ToRegister(lir->output());
 
     Label negative, end, bailout;
@@ -1880,7 +1880,7 @@ CodeGeneratorX86Shared::visitRoundF(LRoundF *lir)
 {
     FloatRegister input = ToFloatRegister(lir->input());
     FloatRegister temp = ToFloatRegister(lir->temp());
-    FloatRegister scratch = ScratchFloatReg;
+    FloatRegister scratch = ScratchFloat32Reg;
     Register output = ToRegister(lir->output());
 
     Label negative, end, bailout;
