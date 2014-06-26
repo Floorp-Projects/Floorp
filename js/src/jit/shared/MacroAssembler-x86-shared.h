@@ -336,8 +336,8 @@ class MacroAssemblerX86Shared : public Assembler
         cvtsi2ss(src, dest);
     }
     Condition testDoubleTruthy(bool truthy, FloatRegister reg) {
-        zeroDouble(ScratchFloatReg);
-        ucomisd(ScratchFloatReg, reg);
+        zeroDouble(ScratchDoubleReg);
+        ucomisd(ScratchDoubleReg, reg);
         return truthy ? NonZero : Zero;
     }
     void branchTestDoubleTruthy(bool truthy, FloatRegister reg, Label *label) {
@@ -437,18 +437,18 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void negateDouble(FloatRegister reg) {
         // From MacroAssemblerX86Shared::maybeInlineDouble
-        pcmpeqw(ScratchFloatReg, ScratchFloatReg);
-        psllq(Imm32(63), ScratchFloatReg);
+        pcmpeqw(ScratchDoubleReg, ScratchDoubleReg);
+        psllq(Imm32(63), ScratchDoubleReg);
 
         // XOR the float in a float register with -0.0.
-        xorpd(ScratchFloatReg, reg); // s ^ 0x80000000000000
+        xorpd(ScratchDoubleReg, reg); // s ^ 0x80000000000000
     }
     void negateFloat(FloatRegister reg) {
-        pcmpeqw(ScratchFloatReg, ScratchFloatReg);
-        psllq(Imm32(31), ScratchFloatReg);
+        pcmpeqw(ScratchFloat32Reg, ScratchFloat32Reg);
+        psllq(Imm32(31), ScratchFloat32Reg);
 
         // XOR the float in a float register with -0.0.
-        xorps(ScratchFloatReg, reg); // s ^ 0x80000000
+        xorps(ScratchFloat32Reg, reg); // s ^ 0x80000000
     }
     void addDouble(FloatRegister src, FloatRegister dest) {
         addsd(src, dest);
@@ -536,8 +536,8 @@ class MacroAssemblerX86Shared : public Assembler
             branchNegativeZero(src, dest, fail);
 
         cvttsd2si(src, dest);
-        cvtsi2sd(dest, ScratchFloatReg);
-        ucomisd(src, ScratchFloatReg);
+        cvtsi2sd(dest, ScratchDoubleReg);
+        ucomisd(src, ScratchDoubleReg);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
 
@@ -554,8 +554,8 @@ class MacroAssemblerX86Shared : public Assembler
             branchNegativeZeroFloat32(src, dest, fail);
 
         cvttss2si(src, dest);
-        convertInt32ToFloat32(dest, ScratchFloatReg);
-        ucomiss(src, ScratchFloatReg);
+        convertInt32ToFloat32(dest, ScratchFloat32Reg);
+        ucomiss(src, ScratchFloat32Reg);
         j(Assembler::Parity, fail);
         j(Assembler::NotEqual, fail);
     }

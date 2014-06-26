@@ -112,7 +112,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to, MoveO
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
-            FloatRegister temp = ScratchFloatReg;
+            FloatRegister temp = ScratchDoubleReg;
             masm.ma_vldr(toOperand(to, true), temp);
             masm.ma_vstr(temp, cycleSlot());
         } else {
@@ -153,7 +153,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
       case MoveOp::FLOAT32:
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
-            FloatRegister temp = ScratchFloatReg;
+            FloatRegister temp = ScratchDoubleReg;
             masm.ma_vldr(cycleSlot(), temp);
             masm.ma_vstr(temp, toOperand(to, true));
         } else {
@@ -241,7 +241,7 @@ MoveEmitterARM::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory move.
         JS_ASSERT(from.isMemory());
-        FloatRegister reg = ScratchFloatReg;
+        FloatRegister reg = ScratchFloat32Reg;
         masm.ma_vldr(toOperand(from, true),
                      VFPRegister(reg).singleOverlay());
         masm.ma_vstr(VFPRegister(reg).singleOverlay(),
@@ -262,7 +262,7 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory move.
         JS_ASSERT(from.isMemory());
-        FloatRegister reg = ScratchFloatReg;
+        FloatRegister reg = ScratchDoubleReg;
         masm.ma_vldr(toOperand(from, true), reg);
         masm.ma_vstr(reg, toOperand(to, true));
     }

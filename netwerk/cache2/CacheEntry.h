@@ -67,8 +67,6 @@ public:
   nsCString const &GetStorageID() const { return mStorageID; }
   nsCString const &GetEnhanceID() const { return mEnhanceID; }
   nsIURI* GetURI() const { return mURI; }
-  // Accessible only under the CacheStorageService lock (asserts it)
-  bool IsUsingDiskLocked() const;
   // Accessible at any time
   bool IsUsingDisk() const { return mUseDisk; }
   bool SetUsingDisk(bool aUsingDisk);
@@ -265,9 +263,7 @@ private:
   nsCString mStorageID;
 
   // Whether it's allowed to persist the data to disk
-  // Synchronized by the service management lock.
-  // Hence, leave it as a standalone boolean.
-  bool mUseDisk;
+  bool const mUseDisk;
 
   // Set when entry is doomed with AsyncDoom() or DoomAlreadyRemoved().
   // Left as a standalone flag to not bother with locking (there is no need).
