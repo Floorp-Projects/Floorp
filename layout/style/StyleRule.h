@@ -374,8 +374,8 @@ private:
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
   Declaration*            mDeclaration;
-  ImportantRule*          mImportantRule; // initialized by RuleMatched
-  DOMCSSStyleRule*        mDOMRule;
+  nsRefPtr<ImportantRule> mImportantRule; // initialized by RuleMatched
+  nsRefPtr<DOMCSSStyleRule> mDOMRule;
   // Keep the same type so that MSVC packs them.
   uint32_t                mLineNumber;
   uint32_t                mColumnNumber : 31;

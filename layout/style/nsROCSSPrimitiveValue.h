@@ -77,7 +77,6 @@ public:
 
   // nsROCSSPrimitiveValue
   nsROCSSPrimitiveValue();
-  ~nsROCSSPrimitiveValue();
 
   void SetNumber(float aValue);
   void SetNumber(int32_t aValue);
@@ -108,6 +107,8 @@ public:
   virtual JSObject *WrapObject(JSContext *cx) MOZ_OVERRIDE;
 
 private:
+  ~nsROCSSPrimitiveValue();
+
   uint16_t mType;
 
   union {
@@ -122,14 +123,6 @@ private:
     nsCSSKeyword    mKeyword;
   } mValue;
 };
-
-namespace mozilla {
-template<>
-struct HasDangerousPublicDestructor<nsROCSSPrimitiveValue>
-{
-  static const bool value = true;
-};
-}
 
 inline nsROCSSPrimitiveValue *mozilla::dom::CSSValue::AsPrimitiveValue()
 {

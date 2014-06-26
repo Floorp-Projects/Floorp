@@ -469,16 +469,16 @@ class ForkJoinContext : public ThreadSafeContext
 
 #ifdef JSGC_FJGENERATIONAL
     // There is already a nursery() method in ThreadSafeContext.
-    gc::ForkJoinNursery &fjNursery() { return fjNursery_; }
+    gc::ForkJoinNursery &nursery() { return nursery_; }
 
     // Evacuate live data from the per-thread nursery into the per-thread
     // tenured area.
-    void evacuateLiveData() { fjNursery_.evacuatingGC(); }
+    void evacuateLiveData() { nursery_.evacuatingGC(); }
 
     // Used in inlining nursery allocation.  Note the nursery is a
     // member of the ForkJoinContext (a substructure), not a pointer.
     static size_t offsetOfFJNursery() {
-        return offsetof(ForkJoinContext, fjNursery_);
+        return offsetof(ForkJoinContext, nursery_);
     }
 #endif
 
@@ -492,7 +492,7 @@ class ForkJoinContext : public ThreadSafeContext
 
 #ifdef JSGC_FJGENERATIONAL
     gc::ForkJoinGCShared gcShared_;
-    gc::ForkJoinNursery fjNursery_;
+    gc::ForkJoinNursery nursery_;
 #endif
 
     ThreadPoolWorker *worker_;

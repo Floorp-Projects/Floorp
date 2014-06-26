@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Test math-variant overrides fontstyle and fontweight</title>
+    <title>Test math-variant interaction with fontstyle and fontweight</title>
   </head>
   <body>
     <math>
@@ -10,6 +10,36 @@
         <mtext mathvariant="normal" fontstyle="italic">A</mtext>
       </mrow>
     </math>
+    <p>
+    <math>
+      <mi fontstyle="normal">A</mi>
+    </math>
+    </p>
+    <p>
+    <math>
+      <mi fontstyle="normal" fontweight="bold">A</mi>
+    </math>
+    </p>
+    <p>
+    <math>
+      <mi fontweight="bold">A</mi>
+    </math>
+    </p>
+    <p>
+    <math>
+      <mi fontweight="bold" fontstyle="italic">A</mi>
+    </math>
+    </p>
+    <p>
+    <math>
+      <mi fontweight="bold" style="font-style:normal">A</mi>
+    </math>
+    </p>
+    <p>
+    <math>
+      <mi fontstyle="normal" style="font-weight:bold">A</mi>
+    </math>
+    </p>
   </body>
  </html>
 

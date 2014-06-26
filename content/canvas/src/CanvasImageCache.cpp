@@ -118,6 +118,7 @@ static ImageCache* gImageCache = nullptr;
 
 class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
 {
+  ~CanvasImageCacheShutdownObserver() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

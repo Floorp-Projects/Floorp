@@ -25,6 +25,39 @@ function* g() { yield 3; yield 4; }
 // Yield expressions.
 function* g() { (yield 3) + (yield 4); }
 
+// Yield without a RHS.
+function* g() { yield; }
+function* g() { yield }
+function* g() {
+    yield
+}
+function* g() { (yield) }
+function* g() { [yield] }
+function* g() { {yield} }
+function* g() { yield, yield }
+function* g() { yield; yield }
+function* g() { (yield) ? yield : yield }
+function* g() {
+    (yield)
+    ? yield
+    : yield
+}
+
+// If yield has a RHS, it needs to start on the same line.  The * in a
+// yield* counts as starting the RHS.
+function* g() {
+    yield *
+    foo
+}
+assertThrows("function* g() { yield\n* foo }", SyntaxError);
+assertIteratorNext(function*(){
+                       yield
+                       3
+                   }(), undefined)
+
+// A YieldExpression is not a LogicalORExpression.
+assertThrows("function* g() { yield ? yield : yield }", SyntaxError);
+
 // You can have a generator in strict mode.
 function* g() { "use strict"; yield 3; yield 4; }
 
@@ -73,9 +106,6 @@ assertSyntaxError("function* g() { yield: 1 }")
 // Yield is only a keyword in the body of the generator, not in nested
 // functions.
 function* g() { function f(yield) { yield (yield + yield (0)); } }
-
-// Yield needs a RHS.
-assertSyntaxError("function* g() { yield; }");
 
 // Yield in a generator is not an identifier.
 assertSyntaxError("function* g() { yield = 10; }");

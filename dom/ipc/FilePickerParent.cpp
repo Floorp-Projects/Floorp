@@ -149,7 +149,7 @@ FilePickerParent::Done(int16_t aResult)
       iter->GetNext(getter_AddRefs(supports));
       if (supports) {
         nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
-        nsCOMPtr<nsIDOMFile> domfile = new nsDOMFileFile(file);
+        nsCOMPtr<nsIDOMFile> domfile = DOMFile::CreateFromFile(file);
         domfiles.AppendElement(domfile);
       }
     }
@@ -157,7 +157,7 @@ FilePickerParent::Done(int16_t aResult)
     nsCOMPtr<nsIFile> file;
     mFilePicker->GetFile(getter_AddRefs(file));
     if (file) {
-      nsCOMPtr<nsIDOMFile> domfile = new nsDOMFileFile(file);
+      nsCOMPtr<nsIDOMFile> domfile = DOMFile::CreateFromFile(file);
       domfiles.AppendElement(domfile);
     }
   }

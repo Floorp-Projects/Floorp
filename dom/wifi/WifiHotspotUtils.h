@@ -38,7 +38,7 @@ private:
 #define USE_DLFUNC(name)                                                      \
   FUNC##name name = (FUNC##name) dlsym(GetSharedLibrary(), #name);            \
   if (!name) {                                                                \
-    MOZ_ASSUME_UNREACHABLE("Symbol not found in shared library : " #name);    \
+    MOZ_CRASH("Symbol not found in shared library : " #name);                 \
   }
 
 #endif // WifiHotspotUtils_h

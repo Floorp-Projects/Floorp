@@ -27,3 +27,8 @@ EXTRA_COMPONENTS += [
     'formautofill.manifest',
     'FormAutofillContentService.js',
 ]
+
+EXTRA_JS_MODULES += [
+    'FormAutofill.jsm',
+    'FormAutofillIntegration.jsm',
+]

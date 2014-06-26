@@ -80,7 +80,7 @@ public:
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
   void GetEventsAt(mozilla::css::CommonElementAnimationData* aEA,
-                   TimeStamp aRefreshTime,
+                   mozilla::TimeStamp aRefreshTime,
                    EventArray &aEventsToDispatch);
 
   // nsIStyleRuleProcessor (parts)
