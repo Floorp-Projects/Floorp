@@ -82,7 +82,9 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     static MBasicBlock *NewAsmJS(MIRGraph &graph, CompileInfo &info,
                                  MBasicBlock *pred, Kind kind);
 
-    bool dominates(const MBasicBlock *other) const;
+    bool dominates(const MBasicBlock *other) const {
+        return other->domIndex() - domIndex() < numDominated();
+    }
 
     void setId(uint32_t id) {
         id_ = id;
