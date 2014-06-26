@@ -695,10 +695,13 @@ LookupCache::GetPrefixes(nsTArray<uint32_t>* aAddPrefixes)
   uint32_t *arr;
   nsresult rv = mPrefixSet->GetPrefixes(&cnt, &arr);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (!aAddPrefixes->AppendElements(arr, cnt))
-    return NS_ERROR_FAILURE;
+  bool appendOk = aAddPrefixes->AppendElements(arr, cnt);
   nsMemory::Free(arr);
-  return NS_OK;
+  if (appendOk) {
+    return NS_OK;
+  } else {
+    return NS_ERROR_FAILURE;
+  }
 }
 
 
