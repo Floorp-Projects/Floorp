@@ -166,7 +166,7 @@ public class GeckoPreferences
             }
         });
 
-        if (Build.VERSION.SDK_INT >= 14)
+        if (Build.VERSION.SDK_INT >= 14 && getActionBar() != null)
             getActionBar().setHomeButtonEnabled(true);
 
         // If launched from notification, explicitly cancel the notification.
