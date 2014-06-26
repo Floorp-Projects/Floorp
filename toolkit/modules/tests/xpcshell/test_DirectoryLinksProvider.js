@@ -126,7 +126,7 @@ add_task(function test_DirectoryLinksProvider__prefObserver_url() {
   // tests these 2 things:
   // 1. observer trigger on pref change
   // 2. invalid source url
-  let exampleUrl = 'http://example.com/bad';
+  let exampleUrl = 'http://nosuchhost.localhost/bad';
   Services.prefs.setCharPref(provider._prefs['linksURL'], exampleUrl);
 
   do_check_eq(provider._linksURL, exampleUrl);
