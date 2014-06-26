@@ -460,11 +460,6 @@ $(addprefix export-,$(NSS_DIRS)): export-%: private_export-%
 $(addprefix private_export-,$(NSS_DIRS)): EXTRA_GMAKE_FLAGS =
 $(addprefix private_export-,$(NSS_DIRS)): private_export-%:
 
-# Work around bug #836228 in pymake
-ifdef .PYMAKE
-$(foreach p,libs export private_export,$(addprefix $(p)-,$(NSS_DIRS))): *=$(subst $(NULL) $(NULL),-,$(wordlist 2,$(words $(subst -, ,$@)),$(subst -, ,$@)))
-endif
-
 $(foreach p,libs export private_export,$(addprefix $(p)-,$(NSS_DIRS))):
 	$(DEFAULT_GMAKE_ENV) $(MAKE) -C $(NSS_SRCDIR)/security/$* $(@:-$*=) $(DEFAULT_GMAKE_FLAGS)
 

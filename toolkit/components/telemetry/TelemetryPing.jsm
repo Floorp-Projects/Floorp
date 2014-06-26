@@ -535,9 +535,11 @@ let Impl = {
     try {
       let scope = {};
       Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
-      let activeExperiment = scope.Experiments.instance().getActiveExperimentID();
+      let experiments = scope.Experiments.instance()
+      let activeExperiment = experiments.getActiveExperimentID();
       if (activeExperiment) {
         ret.activeExperiment = activeExperiment;
+	ret.activeExperimentBranch = experiments.getActiveExperimentBranch();
       }
     } catch(e) {
       // If this is not Firefox, the import will fail.

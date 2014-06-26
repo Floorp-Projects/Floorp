@@ -6,6 +6,7 @@
 const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Metrics.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 let bsp = Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 
 const DEFAULT_ENGINES = [
@@ -41,7 +42,7 @@ add_test(function test_constructor() {
   run_next_test();
 });
 
-add_task(function test_record() {
+add_task(function* test_record() {
   let storage = yield Metrics.Storage("record");
   let provider = new MockSearchesProvider();
 
@@ -104,7 +105,7 @@ add_task(function test_record() {
   yield storage.close();
 });
 
-add_task(function test_includes_other_fields() {
+add_task(function* test_includes_other_fields() {
   let storage = yield Metrics.Storage("includes_other_fields");
   let provider = new MockSearchesProvider();
 
@@ -131,6 +132,53 @@ add_task(function test_includes_other_fields() {
   let formatted = serializer.daily(data.days.getDay(now));
   do_check_true(testField in formatted);
   do_check_eq(formatted[testField], 1);
+
+  yield storage.close();
+});
+
+add_task(function* test_default_search_engine() {
+  let storage = yield Metrics.Storage("default_search_engine");
+  let provider = new SearchesProvider();
+  yield provider.init(storage);
+
+  let m = provider.getMeasurement("engines", 1);
+
+  // Ensure no collection if Telemetry not enabled.
+  Services.prefs.setBoolPref("toolkit.telemetry.enabled", false);
+
+  let now = new Date();
+  yield provider.collectDailyData();
+
+  let data = yield m.getValues();
+  Assert.equal(data.days.hasDay(now), false);
+
+  // Now enable telemetry and ensure we populate.
+  Services.prefs.setBoolPref("toolkit.telemetry.enabled", true);
+
+  yield provider.collectDailyData();
+  data = yield m.getValues();
+  Assert.ok(data.days.hasDay(now));
+
+  let day = data.days.getDay(now);
+  Assert.equal(day.size, 1);
+  Assert.ok(day.has("default"));
+
+  // test environment doesn't have a default engine.
+  Assert.equal(day.get("default"), "NONE");
+
+  Services.search.addEngineWithDetails("testdefault",
+                                       "http://localhost/icon.png",
+                                       null,
+                                       "test description",
+                                       "GET",
+                                       "http://localhost/search/%s");
+  let engine1 = Services.search.getEngineByName("testdefault");
+  Assert.ok(engine1);
+  Services.search.defaultEngine = engine1;
+
+  yield provider.collectDailyData();
+  data = yield m.getValues();
+  Assert.equal(data.days.getDay(now).get("default"), "other-testdefault");
 
   yield storage.close();
 });

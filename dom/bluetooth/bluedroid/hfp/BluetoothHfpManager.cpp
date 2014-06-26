@@ -371,23 +371,29 @@ BluetoothHfpManager::ResetCallArray()
 }
 
 void
-BluetoothHfpManager::Reset()
+BluetoothHfpManager::Cleanup()
 {
   mReceiveVgsFlag = false;
   mDialingRequestProcessed = true;
 
   mConnectionState = BTHF_CONNECTION_STATE_DISCONNECTED;
   mPrevConnectionState = BTHF_CONNECTION_STATE_DISCONNECTED;
-  mAudioState = BTHF_AUDIO_STATE_DISCONNECTED;
-
-  // Phone & Device CIND
-  ResetCallArray();
   mBattChg = 5;
   mService = 0;
   mRoam = 0;
   mSignal = 0;
 
   mController = nullptr;
+}
+
+void
+BluetoothHfpManager::Reset()
+{
+  // Phone & Device CIND
+  ResetCallArray();
+  // Clear Sco state
+  mAudioState = BTHF_AUDIO_STATE_DISCONNECTED;
+  Cleanup();
 }
 
 bool
@@ -818,7 +824,7 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
       } else {
         OnDisconnect(EmptyString());
       }
-      Reset();
+      Cleanup();
     }
   }
 }

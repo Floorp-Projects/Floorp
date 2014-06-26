@@ -15,6 +15,18 @@ namespace mozilla {
 
 using namespace dom;
 
+already_AddRefed<Touch> SingleTouchData::ToNewDOMTouch()
+{
+  NS_ABORT_IF_FALSE(NS_IsMainThread(),
+                    "Can only create dom::Touch instances on main thread");
+  nsRefPtr<Touch> touch = new Touch(mIdentifier,
+                                    nsIntPoint(mScreenPoint.x, mScreenPoint.y),
+                                    nsIntPoint(mRadius.width, mRadius.height),
+                                    mRotationAngle,
+                                    mForce);
+  return touch.forget();
+}
+
 MultiTouchInput::MultiTouchInput(const WidgetTouchEvent& aTouchEvent)
   : InputData(MULTITOUCH_INPUT, aTouchEvent.time, aTouchEvent.timeStamp,
               aTouchEvent.modifiers)
