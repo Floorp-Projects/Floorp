@@ -6,4 +6,4 @@
 == outline-overflow-block-float.html outline-overflow-block-ref.html
 == outline-overflow-inlineblock-abspos.html outline-overflow-inlineblock-ref.html
 == outline-overflow-inlineblock-float.html outline-overflow-inlineblock-ref.html
-skip-if(!gtk2Widget&&!winWidget&&!cocoaWidget) == outline-auto-001.html outline-auto-001-ref.html # only works on platforms that supports NS_THEME_FOCUS_OUTLINE
+pref(layout.css.outline-style-auto.enabled,true) skip-if(!gtk2Widget&&!winWidget&&!cocoaWidget) == outline-auto-001.html outline-auto-001-ref.html # only works on platforms that supports NS_THEME_FOCUS_OUTLINE

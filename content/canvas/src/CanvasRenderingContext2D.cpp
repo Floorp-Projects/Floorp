@@ -145,6 +145,7 @@ static int64_t gCanvasAzureMemoryUsed = 0;
 // underlying surface implementations.  See bug 655638 for details.
 class Canvas2dPixelsReporter MOZ_FINAL : public nsIMemoryReporter
 {
+  ~Canvas2dPixelsReporter() {}
 public:
   NS_DECL_ISUPPORTS
 

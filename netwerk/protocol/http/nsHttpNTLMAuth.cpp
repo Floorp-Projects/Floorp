@@ -344,7 +344,10 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
             // Use our internal NTLM implementation. Note, this is less secure,
             // see bug 520607 for details.
 
-            if (AllowGenericNTLM() || AllowGenericNTLMforHTTPS(channel)) {
+            // For now with default preference settings (i.e. allow-insecure-ntlm-v1-https = true
+            // and allow-insecure-ntlm-v1 = false) we don't allow authentication to any proxy,
+            // either http or https.  This will be fixed in a followup bug.
+            if (AllowGenericNTLM() || (!isProxyAuth && AllowGenericNTLMforHTTPS(channel))) {
                 LOG(("Trying to fall back on internal ntlm auth.\n"));
                 module = do_CreateInstance(NS_AUTH_MODULE_CONTRACTID_PREFIX "ntlm");
             }

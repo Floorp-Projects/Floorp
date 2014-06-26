@@ -13,6 +13,8 @@
 #include "gc/Nursery.h"
 
 #include "gc/Heap.h"
+#include "js/TracingAPI.h"
+#include "vm/Runtime.h"
 
 namespace js {
 namespace gc {
@@ -68,6 +70,12 @@ js::Nursery::getForwardedPointer(T **ref)
     /* This static cast from Cell* restricts T to valid (GC thing) types. */
     *ref = static_cast<T *>(overlay->forwardingAddress());
     return true;
+}
+
+inline void
+js::Nursery::forwardBufferPointer(JSTracer* trc, HeapSlot **pSlotElems)
+{
+    trc->runtime()->gc.nursery.forwardBufferPointer(pSlotElems);
 }
 
 #endif /* JSGC_GENERATIONAL */

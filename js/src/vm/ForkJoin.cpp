@@ -1724,7 +1724,7 @@ ForkJoinShared::setAbortFlagDueToInterrupt(ForkJoinContext &cx)
     // The GC Needed flag should not be set during parallel
     // execution.  Instead, one of the requestGC() or
     // requestZoneGC() methods should be invoked.
-    JS_ASSERT(!cx_->runtime()->gc.isNeeded);
+    JS_ASSERT(!cx_->runtime()->gc.isGcNeeded());
 
     if (!abort_) {
         cx.bailoutRecord->joinCause(ParallelBailoutInterrupt);
@@ -1831,7 +1831,7 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
     shared_(shared),
 #ifdef JSGC_FJGENERATIONAL
     gcShared_(shared),
-    fjNursery_(const_cast<ForkJoinContext*>(this), &this->gcShared_, allocator),
+    nursery_(const_cast<ForkJoinContext*>(this), &this->gcShared_, allocator),
 #endif
     worker_(worker),
     acquiredJSContext_(false),
@@ -1855,7 +1855,7 @@ ForkJoinContext::ForkJoinContext(PerThreadData *perThreadData, ThreadPoolWorker 
 bool ForkJoinContext::initialize()
 {
 #ifdef JSGC_FJGENERATIONAL
-    if (!fjNursery_.initialize())
+    if (!nursery_.initialize())
         return false;
 #endif
     return true;

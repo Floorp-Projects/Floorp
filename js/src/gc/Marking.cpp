@@ -205,26 +205,28 @@ CheckMarkedThing(JSTracer *trc, T **thingp)
 
     DebugOnly<JSRuntime *> rt = trc->runtime();
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && rt->gc.isManipulatingDeadZones(),
+    bool isGcMarkingTracer = IS_GC_MARKING_TRACER(trc);
+    JS_ASSERT_IF(isGcMarkingTracer && rt->gc.isManipulatingDeadZones(),
                  !thing->zone()->scheduledForDestruction);
 
     JS_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
-    JS_ASSERT_IF(thing->zone()->requireGCTracer(),
-                 IS_GC_MARKING_TRACER(trc));
+    JS_ASSERT_IF(thing->zone()->requireGCTracer(), isGcMarkingTracer);
 
     JS_ASSERT(thing->isAligned());
 
     JS_ASSERT(MapTypeToTraceKind<T>::kind == GetGCThingTraceKind(thing));
 
-    JS_ASSERT_IF(rt->gc.strictCompartmentChecking,
-                 thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
+    if (isGcMarkingTracer) {
+        GCMarker *gcMarker = static_cast<GCMarker *>(trc);
+        JS_ASSERT_IF(gcMarker->shouldCheckCompartments(),
+                     thing->zone()->isCollecting() || rt->isAtomsZone(thing->zone()));
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc) && AsGCMarker(trc)->getMarkColor() == GRAY,
-                 !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
+        JS_ASSERT_IF(gcMarker->getMarkColor() == GRAY,
+                     !thing->zone()->isGCMarkingBlack() || rt->isAtomsZone(thing->zone()));
 
-    JS_ASSERT_IF(IS_GC_MARKING_TRACER(trc),
-                 !(thing->zone()->isGCSweeping() || thing->zone()->isGCFinished()));
+        JS_ASSERT(!(thing->zone()->isGCSweeping() || thing->zone()->isGCFinished()));
+    }
 
     /*
      * Try to assert that the thing is allocated.  This is complicated by the
@@ -414,9 +416,9 @@ IsMarked(T **thingp)
     // will also be true for the ForkJoinNursery.
     if (rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(*thingp))
-            return fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(*thingp))
+            return nursery.getForwardedPointer(thingp);
     }
     else
 #endif
@@ -451,9 +453,9 @@ IsAboutToBeFinalized(T **thingp)
 #ifdef JSGC_FJGENERATIONAL
     if (rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(thing))
-            return !fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(thing))
+            return !nursery.getForwardedPointer(thingp);
     }
     else
 #endif
@@ -492,9 +494,9 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 #ifdef JSGC_FJGENERATIONAL
     if (*thingp && rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(*thingp))
-            fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(*thingp))
+            nursery.getForwardedPointer(thingp);
     }
     else
 #endif
@@ -1691,8 +1693,7 @@ GCMarker::processMarkStackTop(SliceBudget &budget)
             // Global objects all have the same trace hook. That hook is safe without barriers
             // if the gloal has no custom trace hook of it's own, or has been moved to a different
             // compartment, and so can't have one.
-            JS_ASSERT_IF(runtime()->gcMode() == JSGC_MODE_INCREMENTAL &&
-                         runtime()->gc.isIncrementalGCEnabled() &&
+            JS_ASSERT_IF(runtime()->gc.isIncrementalGCEnabled() &&
                          !(clasp->trace == JS_GlobalObjectTraceHook &&
                            (!obj->compartment()->options().getTrace() ||
                             !obj->isOwnGlobal())),
@@ -1733,16 +1734,14 @@ bool
 GCMarker::drainMarkStack(SliceBudget &budget)
 {
 #ifdef DEBUG
-    JSRuntime *rt = runtime();
-
     struct AutoCheckCompartment {
-        JSRuntime *runtime;
-        explicit AutoCheckCompartment(JSRuntime *rt) : runtime(rt) {
-            JS_ASSERT(!rt->gc.strictCompartmentChecking);
-            runtime->gc.strictCompartmentChecking = true;
+        bool &flag;
+        explicit AutoCheckCompartment(bool &comparmentCheckFlag) : flag(comparmentCheckFlag) {
+            JS_ASSERT(!flag);
+            flag = true;
         }
-        ~AutoCheckCompartment() { runtime->gc.strictCompartmentChecking = false; }
-    } acc(rt);
+        ~AutoCheckCompartment() { flag = false; }
+    } acc(strictCompartmentChecking);
 #endif
 
     if (budget.isOverBudget())
@@ -1895,7 +1894,7 @@ UnmarkGrayChildren(JSTracer *trc, void **thingp, JSGCTraceKind kind)
          * If we run out of stack, we take a more drastic measure: require that
          * we GC again before the next CC.
          */
-        trc->runtime()->gc.grayBitsValid = false;
+        trc->runtime()->gc.setGrayBitsInvalid();
         return;
     }
 

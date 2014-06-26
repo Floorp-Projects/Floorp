@@ -251,8 +251,8 @@ nsGtkIMModule::PrepareToDestroyContext(GtkIMContext *aContext)
     MozContainer* container = mOwnerWindow->GetMozContainer();
     NS_PRECONDITION(container, "The container of the window is null");
 
-    GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
 #if (MOZ_WIDGET_GTK == 2)
+    GtkIMMulticontext *multicontext = GTK_IM_MULTICONTEXT(aContext);
     GtkIMContext *slave = multicontext->slave;
 #else
     GtkIMContext *slave = nullptr; //TODO GTK3

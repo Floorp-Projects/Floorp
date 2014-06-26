@@ -859,11 +859,16 @@ VectorImage::Draw(gfxContext* aContext,
   SVGDrawingParameters params(aContext, aFilter, aUserSpaceToImageSpace, aFill,
                               aSubimage, aViewportSize, aSVGContext, animTime, aFlags);
 
-  // Check the cache.
-  nsRefPtr<gfxDrawable> drawable =
-    SurfaceCache::Lookup(ImageKey(this),
-                         SurfaceKey(params.imageRect.Size(), params.scale,
-                                    aSVGContext, animTime, aFlags));
+  // Check the cache. (The FLAG_BYPASS_SURFACE_CACHE check here is just an
+  // optimization since the flags are part of the cache key and we never put
+  // surfaces in the cache if the flags contain FLAG_BYPASS_SURFACE_CACHE.)
+  nsRefPtr<gfxDrawable> drawable;
+  if (!(aFlags & FLAG_BYPASS_SURFACE_CACHE)) {
+    drawable =
+      SurfaceCache::Lookup(ImageKey(this),
+                           SurfaceKey(params.imageRect.Size(), params.scale,
+                                      aSVGContext, animTime, aFlags));
+  }
 
   // Draw.
   if (drawable) {
@@ -890,13 +895,13 @@ VectorImage::CreateDrawableAndShow(const SVGDrawingParameters& aParams)
   nsRefPtr<gfxDrawable> svgDrawable =
     new gfxCallbackDrawable(cb, ThebesIntSize(aParams.imageRect.Size()));
 
-  // Refuse to cache animated images.
-  // XXX(seth): We may remove this restriction in bug 922893.
-  if (mHaveAnimations)
-    return Show(svgDrawable, aParams);
-
-  // If the image is too big to fit in the cache, don't go any further.
-  if (!SurfaceCache::CanHold(aParams.imageRect.Size()))
+  bool bypassCache = bool(aParams.flags & FLAG_BYPASS_SURFACE_CACHE) ||
+                     // Refuse to cache animated images:
+                     // XXX(seth): We may remove this restriction in bug 922893.
+                     mHaveAnimations ||
+                     // The image is too big to fit in the cache:
+                     !SurfaceCache::CanHold(aParams.imageRect.Size());
+  if (bypassCache)
     return Show(svgDrawable, aParams);
 
   // Try to create an offscreen surface.

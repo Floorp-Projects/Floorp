@@ -252,7 +252,7 @@ CreateFileTask::Work()
       return NS_ERROR_FAILURE;
     }
 
-    mTargetFile = new nsDOMFileFile(file);
+    mTargetFile = DOMFile::CreateFromFile(file);
     return NS_OK;
   }
 
@@ -271,7 +271,7 @@ CreateFileTask::Work()
     return NS_ERROR_DOM_FILESYSTEM_UNKNOWN_ERR;
   }
 
-  mTargetFile = new nsDOMFileFile(file);
+  mTargetFile = DOMFile::CreateFromFile(file);
   return NS_OK;
 }
 

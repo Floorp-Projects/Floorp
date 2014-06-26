@@ -33,8 +33,6 @@ nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue()
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsROCSSPrimitiveValue)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsROCSSPrimitiveValue)
 
-
-// QueryInterface implementation for nsROCSSPrimitiveValue
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsROCSSPrimitiveValue)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPrimitiveValue)

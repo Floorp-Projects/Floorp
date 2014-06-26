@@ -209,6 +209,10 @@ class GCMarker : public JSTracer
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
+#ifdef DEBUG
+    bool shouldCheckCompartments() { return strictCompartmentChecking; }
+#endif
+
     /* This is public exclusively for ScanRope. */
     MarkStack stack;
 
@@ -291,6 +295,12 @@ class GCMarker : public JSTracer
 
     /* Assert that start and stop are called with correct ordering. */
     mozilla::DebugOnly<bool> started;
+
+    /*
+     * If this is true, all marked objects must belong to a compartment being
+     * GCed. This is used to look for compartment bugs.
+     */
+    mozilla::DebugOnly<bool> strictCompartmentChecking;
 };
 
 void

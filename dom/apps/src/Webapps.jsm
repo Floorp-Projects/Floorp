@@ -1587,6 +1587,8 @@ this.DOMApplicationRegistry = {
     aApp.progress = 0;
     DOMApplicationRegistry._saveApps().then(() => {
       DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+        // Clear any previous errors.
+        error: null,
         app: {
           downloading: true,
           installState: aApp.installState,
@@ -2782,6 +2784,8 @@ this.DOMApplicationRegistry = {
       // retrying a past download.
       yield DOMApplicationRegistry._saveApps();
       DOMApplicationRegistry.broadcastMessage("Webapps:UpdateState", {
+        // Clear any previous download errors.
+        error: null,
         app: oldApp,
         manifestURL: aNewApp.manifestURL
       });
