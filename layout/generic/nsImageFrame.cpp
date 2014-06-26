@@ -216,8 +216,6 @@ nsImageFrame::DestroyFrom(nsIFrame* aDestructRoot)
   nsSplittableFrame::DestroyFrom(aDestructRoot);
 }
 
-
-
 void
 nsImageFrame::Init(nsIContent*       aContent,
                    nsContainerFrame* aParent,
@@ -604,16 +602,19 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
     return NS_OK;
   }
 
+  nsIntRect rect = mImage ? mImage->GetImageSpaceInvalidationRect(*aRect)
+                          : *aRect;
+
 #ifdef DEBUG_decode
   printf("Source rect (%d,%d,%d,%d)\n",
          aRect->x, aRect->y, aRect->width, aRect->height);
 #endif
 
-  if (aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
+  if (rect.IsEqualInterior(nsIntRect::GetMaxSizedIntRect())) {
     InvalidateFrame(nsDisplayItem::TYPE_IMAGE);
     InvalidateFrame(nsDisplayItem::TYPE_ALT_FEEDBACK);
   } else {
-    nsRect invalid = SourceRectToDest(*aRect);
+    nsRect invalid = SourceRectToDest(rect);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_IMAGE);
     InvalidateFrameWithRect(invalid, nsDisplayItem::TYPE_ALT_FEEDBACK);
   }

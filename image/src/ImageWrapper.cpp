@@ -317,5 +317,11 @@ ImageWrapper::SetAnimationStartTime(const mozilla::TimeStamp& aTime)
   mInnerImage->SetAnimationStartTime(aTime);
 }
 
+NS_IMETHODIMP_(nsIntRect)
+ImageWrapper::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+{
+  return mInnerImage->GetImageSpaceInvalidationRect(aRect);
+}
+
 } // namespace image
 } // namespace mozilla

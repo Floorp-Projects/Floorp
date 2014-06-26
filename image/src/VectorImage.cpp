@@ -570,6 +570,12 @@ VectorImage::SendInvalidationNotifications()
   }
 }
 
+NS_IMETHODIMP_(nsIntRect)
+VectorImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+{
+  return aRect;
+}
+
 //******************************************************************************
 /* readonly attribute int32_t height; */
 NS_IMETHODIMP

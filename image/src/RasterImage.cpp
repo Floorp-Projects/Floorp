@@ -1601,6 +1601,12 @@ RasterImage::SetLoopCount(int32_t aLoopCount)
   }
 }
 
+NS_IMETHODIMP_(nsIntRect)
+RasterImage::GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+{
+  return aRect;
+}
+
 nsresult
 RasterImage::AddSourceData(const char *aBuffer, uint32_t aCount)
 {
