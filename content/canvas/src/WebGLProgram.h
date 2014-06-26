@@ -33,10 +33,6 @@ class WebGLProgram MOZ_FINAL
 public:
     WebGLProgram(WebGLContext *context);
 
-    ~WebGLProgram() {
-        DeleteOnce();
-    }
-
     void Delete();
 
     void DetachShaders() {
@@ -115,6 +111,9 @@ public:
     std::map<GLint, nsCString> mActiveAttribMap;
 
 protected:
+    ~WebGLProgram() {
+        DeleteOnce();
+    }
 
     GLuint mGLName;
     bool mLinkStatus;
