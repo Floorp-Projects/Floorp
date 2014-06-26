@@ -335,7 +335,6 @@ class VFPRegister
     }
     static VFPRegister FromCode(uint32_t i) {
         uint32_t code = i & 31;
-        uint32_t kind = i >> 5;
         return VFPRegister(code, Double);
     }
     bool volatile_() const {
