@@ -81,8 +81,6 @@ TraverseRuleToBindingsMap(nsISupports* aKey, nsXMLBindingSet* aMatch, void* aCon
         static_cast<nsCycleCollectionTraversalCallback*>(aContext);
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mRuleToBindingsMap key");
     cb->NoteXPCOMChild(aKey);
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mRuleToBindingsMap value");
-    cb->NoteNativeChild(aMatch, NS_CYCLE_COLLECTION_PARTICIPANT(nsXMLBindingSet));
     return PL_DHASH_NEXT;
 }
   

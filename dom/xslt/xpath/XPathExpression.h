@@ -11,6 +11,7 @@
 #include "txResultRecycler.h"
 #include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsIWeakReferenceUtils.h"
 #include "mozilla/Attributes.h"
 
 class Expr;
@@ -30,9 +31,7 @@ public:
                     nsIDOMDocument *aDocument);
 
     // nsISupports interface
-    NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XPathExpression,
-                                             nsIDOMXPathExpression)
+    NS_DECL_ISUPPORTS
 
     // nsIDOMXPathExpression interface
     NS_DECL_NSIDOMXPATHEXPRESSION
@@ -45,7 +44,8 @@ private:
 
     nsAutoPtr<Expr> mExpression;
     nsRefPtr<txResultRecycler> mRecycler;
-    nsCOMPtr<nsIDOMDocument> mDocument;
+    nsWeakPtr mDocument;
+    bool mCheckDocument;
 };
 
 } // namespace dom
