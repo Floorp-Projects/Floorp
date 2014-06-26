@@ -13,7 +13,6 @@
 
 using mozilla::Monitor;
 using mozilla::MonitorAutoLock;
-using mozilla::TimeStamp;
 
 class CheckResponsivenessTask : public nsRunnable,
                                 public nsITimerCallback {

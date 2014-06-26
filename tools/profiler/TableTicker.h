@@ -36,7 +36,7 @@ threadSelected(ThreadInfo* aInfo, char** aThreadNameFilters, uint32_t aFeatureCo
   return false;
 }
 
-extern mozilla::TimeStamp sLastTracerEvent;
+extern TimeStamp sLastTracerEvent;
 extern int sFrameNumber;
 extern int sLastFrameNumber;
 extern unsigned int sCurrentEventGeneration;
@@ -87,7 +87,7 @@ class TableTicker: public Sampler {
       mThreadNameFilters[i] = strdup(aThreadNameFilters[i]);
     }
 
-    sStartTime = mozilla::TimeStamp::Now();
+    sStartTime = TimeStamp::Now();
 
     {
       mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
