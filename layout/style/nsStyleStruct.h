@@ -1850,9 +1850,11 @@ private:
                                       // eCSSProperty_UNKNOWN
 };
 
-struct nsAnimation {
-  nsAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
-  explicit nsAnimation(const nsAnimation& aCopy);
+namespace mozilla {
+
+struct StyleAnimation {
+  StyleAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
+  explicit StyleAnimation(const StyleAnimation& aCopy);
 
   void SetInitialValues();
 
@@ -1890,6 +1892,8 @@ private:
   uint8_t mPlayState;
   float mIterationCount; // mozilla::PositiveInfinity<float>() means infinite
 };
+
+} // namespace mozilla
 
 struct nsStyleDisplay {
   nsStyleDisplay();
@@ -1976,7 +1980,7 @@ struct nsStyleDisplay {
            mTransitionDelayCount,
            mTransitionPropertyCount;
 
-  nsAutoTArray<nsAnimation, 1> mAnimations; // [reset]
+  nsAutoTArray<mozilla::StyleAnimation, 1> mAnimations; // [reset]
   // The number of elements in mAnimations that are not from repeating
   // a list due to another property being longer.
   uint32_t mAnimationTimingFunctionCount,

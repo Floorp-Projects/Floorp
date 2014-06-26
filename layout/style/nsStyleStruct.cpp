@@ -2341,7 +2341,7 @@ void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
   mUnknownProperty = do_GetAtom(aUnknownProperty);
 }
 
-nsAnimation::nsAnimation(const nsAnimation& aCopy)
+mozilla::StyleAnimation::StyleAnimation(const mozilla::StyleAnimation& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
   , mDelay(aCopy.mDelay)
@@ -2354,7 +2354,7 @@ nsAnimation::nsAnimation(const nsAnimation& aCopy)
 }
 
 void
-nsAnimation::SetInitialValues()
+mozilla::StyleAnimation::SetInitialValues()
 {
   mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
   mDuration = 0.0;

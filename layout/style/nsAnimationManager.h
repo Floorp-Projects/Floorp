@@ -153,7 +153,8 @@ private:
                        mozilla::ElementAnimationPtrArray& aAnimations);
   bool BuildSegment(InfallibleTArray<mozilla::AnimationPropertySegment>&
                       aSegments,
-                    nsCSSProperty aProperty, const nsAnimation& aAnimation,
+                    nsCSSProperty aProperty,
+                    const mozilla::StyleAnimation& aAnimation,
                     float aFromKey, nsStyleContext* aFromContext,
                     mozilla::css::Declaration* aFromDeclaration,
                     float aToKey, nsStyleContext* aToContext);
