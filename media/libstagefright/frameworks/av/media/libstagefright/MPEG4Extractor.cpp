@@ -3253,7 +3253,7 @@ status_t MPEG4Source::read(
         return OK;
     } else {
         // Whole NAL units are returned but each fragment is prefixed by
-        // the start code (0x00 00 00 01).
+        // the NAL length, stored in four bytes.
         ssize_t num_bytes_read = 0;
         int32_t drm = 0;
         bool usesDRM = (mFormat->findInt32(kKeyIsDRM, &drm) && drm != 0);
@@ -3539,7 +3539,7 @@ status_t MPEG4Source::fragmentedRead(
     } else {
         ALOGV("whole NAL");
         // Whole NAL units are returned but each fragment is prefixed by
-        // the start code (0x00 00 00 01).
+        // the NAL unit's length, stored in four bytes.
         ssize_t num_bytes_read = 0;
         int32_t drm = 0;
         bool usesDRM = (mFormat->findInt32(kKeyIsDRM, &drm) && drm != 0);

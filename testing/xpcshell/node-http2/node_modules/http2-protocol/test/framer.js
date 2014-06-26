@@ -22,7 +22,7 @@ var test_frames = [{
   frame: {
     type: 'DATA',
     flags: { END_STREAM: false, END_SEGMENT: false, RESERVED4: false,
-             PAD_LOW: false, PAD_HIGH: false, COMPRESSED: false },
+             PADDED: false },
     stream: 10,
 
     data: new Buffer('12345678', 'hex')
@@ -34,7 +34,7 @@ var test_frames = [{
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: false, PAD_HIGH: false, PRIORITY: false },
+             PADDED: false, RESERVED5: false, PRIORITY: false },
     stream: 15,
 
     data: new Buffer('12345678', 'hex')
@@ -45,7 +45,7 @@ var test_frames = [{
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: false, PAD_HIGH: false, PRIORITY: true },
+             PADDED: false, RESERVED5: false, PRIORITY: true },
     stream: 15,
     priorityDependency: 10,
     priorityWeight: 5,
@@ -60,7 +60,7 @@ var test_frames = [{
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: false, PAD_HIGH: false, PRIORITY: true },
+             PADDED: false, RESERVED5: false, PRIORITY: true },
     stream: 15,
     priorityDependency: 10,
     priorityWeight: 5,
@@ -114,21 +114,19 @@ var test_frames = [{
       SETTINGS_HEADER_TABLE_SIZE: 0x12345678,
       SETTINGS_ENABLE_PUSH: true,
       SETTINGS_MAX_CONCURRENT_STREAMS: 0x01234567,
-      SETTINGS_INITIAL_WINDOW_SIZE:    0x89ABCDEF,
-      SETTINGS_COMPRESS_DATA: true
+      SETTINGS_INITIAL_WINDOW_SIZE:    0x89ABCDEF
     }
   },
-  buffer: new Buffer('0019' + '04' + '00' + '0000000A' +   '01' + '12345678' +
-                                                           '02' + '00000001' +
-                                                           '03' + '01234567' +
-                                                           '04' + '89ABCDEF' +
-                                                           '05' + '00000001', 'hex')
+  buffer: new Buffer('0018' + '04' + '00' + '0000000A' +   '0001' + '12345678' +
+                                                           '0002' + '00000001' +
+                                                           '0003' + '01234567' +
+                                                           '0004' + '89ABCDEF', 'hex')
 
 }, {
   frame: {
     type: 'PUSH_PROMISE',
     flags: { RESERVED1: false, RESERVED2: false, END_PUSH_PROMISE: false,
-             PAD_LOW: false, PAD_HIGH: false },
+             PADDED: false },
     stream: 15,
 
     promised_stream: 3,
@@ -169,8 +167,7 @@ var test_frames = [{
 }, {
   frame: {
     type: 'CONTINUATION',
-    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true,
-             PAD_LOW: false, PAD_HIGH: false },
+    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true },
     stream: 10,
 
     data: new Buffer('12345678', 'hex')
@@ -218,30 +215,30 @@ var padded_test_frames = [{
   frame: {
     type: 'DATA',
     flags: { END_STREAM: false, END_SEGMENT: false, RESERVED4: false,
-             PAD_LOW: true, PAD_HIGH: false, COMPRESSED: false },
+             PADDED: true },
     stream: 10,
     data: new Buffer('12345678', 'hex')
   },
-  // length + type + flags + stream + pad_low control + content + padding
+  // length + type + flags + stream + pad length + content + padding
   buffer: new Buffer('000B' + '00' + '08' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: true, PAD_HIGH: false, PRIORITY: false },
+             PADDED: true, RESERVED5: false, PRIORITY: false },
     stream: 15,
 
     data: new Buffer('12345678', 'hex')
   },
-  // length + type + flags + stream + pad_low control + data + padding
+  // length + type + flags + stream + pad length + data + padding
   buffer: new Buffer('000B' + '01' + '08' + '0000000F' + '06' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: true, PAD_HIGH: false, PRIORITY: true },
+             PADDED: true, RESERVED5: false, PRIORITY: true },
     stream: 15,
     priorityDependency: 10,
     priorityWeight: 5,
@@ -249,14 +246,14 @@ var padded_test_frames = [{
 
     data: new Buffer('12345678', 'hex')
   },
-  // length + type + flags + stream + pad_low control + priority dependency + priority weight + data + padding
+  // length + type + flags + stream + pad length + priority dependency + priority weight + data + padding
   buffer: new Buffer('0010' + '01' + '28' + '0000000F' + '06' + '0000000A' + '05' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
     type: 'HEADERS',
     flags: { END_STREAM: false, END_SEGMENT: false, END_HEADERS: false,
-             PAD_LOW: true, PAD_HIGH: false, PRIORITY: true },
+             PADDED: true, RESERVED5: false, PRIORITY: true },
     stream: 15,
     priorityDependency: 10,
     priorityWeight: 5,
@@ -264,31 +261,20 @@ var padded_test_frames = [{
 
     data: new Buffer('12345678', 'hex')
   },
-  // length + type + flags + stream + pad_low control + priority dependency + priority weight + data + padding
+  // length + type + flags + stream + pad length + priority dependency + priority weight + data + padding
   buffer: new Buffer('0010' + '01' + '28' + '0000000F' + '06' + '8000000A' + '05' + '12345678' + '000000000000', 'hex')
 
 }, {
   frame: {
-    type: 'CONTINUATION',
-    flags: { RESERVED1: false, RESERVED2: false, END_HEADERS: true,
-             PAD_LOW: true, PAD_HIGH: false },
-    stream: 10,
-
-    data: new Buffer('12345678', 'hex')
-  },
-  // length + type + flags + stream + pad_low control + data + padding
-  buffer: new Buffer('000B' + '09' + '0C' + '0000000A' + '06' + '12345678' + '000000000000', 'hex')
-}, {
-  frame: {
     type: 'PUSH_PROMISE',
     flags: { RESERVED1: false, RESERVED2: false, END_PUSH_PROMISE: false,
-             PAD_LOW: true, PAD_HIGH: false },
+             PADDED: true },
     stream: 15,
 
     promised_stream: 3,
     data: new Buffer('12345678', 'hex')
   },
-  // length + type + flags + stream + pad_low control + promised stream + data + padding
+  // length + type + flags + stream + pad length + promised stream + data + padding
   buffer: new Buffer('000F' + '05' + '08' + '0000000F' + '06' + '00000003' + '12345678' + '000000000000', 'hex')
 
 }];

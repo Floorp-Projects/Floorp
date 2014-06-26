@@ -82,9 +82,12 @@ VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
   size_t size;
   uint32_t type;
 
-  if (aMetaData->findData(kKeyAVCC, &type, &data, &size)) {
+  if (aMetaData->findData(kKeyAVCC, &type, &data, &size) && size >= 7) {
     extra_data.clear();
     extra_data.append(reinterpret_cast<const uint8_t*>(data), size);
+    // Set size of the NAL length to 4. The demuxer formats its output with
+    // this NAL length size.
+    extra_data[4] |= 3;
     annex_b = AnnexB::ConvertExtraDataToAnnexB(extra_data);
   }
 }
