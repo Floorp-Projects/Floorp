@@ -277,9 +277,10 @@ DevTools.prototype = {
       });
 
       // If we were asked for a specific tool then we need to wait for the
-      // tool to be ready, otherwise we can just wait for toolbox open
+      // tool to be ready and selected, otherwise we can just wait for the
+      // toolbox open promise.
       if (toolId != null) {
-        toolbox.once(toolId + "-ready", (event, panel) => {
+        toolbox.once(toolId + "-selected", (event, panel) => {
           this.emit("toolbox-ready", toolbox);
           deferred.resolve(toolbox);
         });
