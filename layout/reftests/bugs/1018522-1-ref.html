@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<title>Test that opacity changes on layers make the Compositor repaint the right area</title>
+
+<style>
+
+#box {
+  width: 100px;
+  height: 100px;
+  border: 10px solid black;
+  opacity: 1;
+  will-change: opacity;
+}
+
+#box.halfTransparent {
+  opacity: 0.5;
+}
+
+</style>
+
+<div id="box" class="halfTransparent"></div>

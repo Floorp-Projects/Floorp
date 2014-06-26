@@ -105,6 +105,25 @@ extern const char *
 js_ValueToPrintable(JSContext *cx, const js::Value &,
                     JSAutoByteString *bytes, bool asSource = false);
 
+extern size_t
+js_strlen(const jschar *s);
+
+extern int32_t
+js_strcmp(const jschar *lhs, const jschar *rhs);
+
+template <typename CharT>
+extern const CharT *
+js_strchr_limit(const CharT *s, jschar c, const CharT *limit);
+
+static MOZ_ALWAYS_INLINE void
+js_strncpy(jschar *dst, const jschar *src, size_t nelem)
+{
+    return mozilla::PodCopy(dst, src, nelem);
+}
+
+extern jschar *
+js_strdup(js::ThreadSafeContext *cx, const jschar *s);
+
 namespace js {
 
 /* GC-allocate a string descriptor for the given malloc-allocated chars. */
@@ -120,6 +139,13 @@ template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString *
 NewStringCopyN(js::ThreadSafeContext *cx, const CharT *s, size_t n);
 
+template <js::AllowGC allowGC>
+inline JSFlatString *
+NewStringCopyN(ThreadSafeContext *cx, const char *s, size_t n)
+{
+    return NewStringCopyN<allowGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
+}
+
 /* Like NewStringCopyN, but doesn't try to deflate to Latin1. */
 template <js::AllowGC allowGC, typename CharT>
 extern JSFlatString *
@@ -127,12 +153,18 @@ NewStringCopyNDontDeflate(js::ThreadSafeContext *cx, const CharT *s, size_t n);
 
 /* Copy a C string and GC-allocate a descriptor for it. */
 template <js::AllowGC allowGC>
-extern JSFlatString *
-NewStringCopyZ(js::ExclusiveContext *cx, const jschar *s);
+inline JSFlatString *
+NewStringCopyZ(js::ExclusiveContext *cx, const jschar *s)
+{
+    return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
+}
 
 template <js::AllowGC allowGC>
-extern JSFlatString *
-NewStringCopyZ(js::ThreadSafeContext *cx, const char *s);
+inline JSFlatString *
+NewStringCopyZ(js::ThreadSafeContext *cx, const char *s)
+{
+    return NewStringCopyN<allowGC>(cx, s, strlen(s));
+}
 
 /*
  * Convert a non-string value to a string, returning null after reporting an
@@ -223,29 +255,6 @@ StringFindPattern(JSLinearString *text, JSLinearString *pat, size_t start);
 extern bool
 StringHasRegExpMetaChars(JSLinearString *str);
 
-} /* namespace js */
-
-extern size_t
-js_strlen(const jschar *s);
-
-extern int32_t
-js_strcmp(const jschar *lhs, const jschar *rhs);
-
-template <typename CharT>
-extern const CharT *
-js_strchr_limit(const CharT *s, jschar c, const CharT *limit);
-
-static MOZ_ALWAYS_INLINE void
-js_strncpy(jschar *dst, const jschar *src, size_t nelem)
-{
-    return mozilla::PodCopy(dst, src, nelem);
-}
-
-extern jschar *
-js_strdup(js::ThreadSafeContext *cx, const jschar *s);
-
-namespace js {
-
 template <typename Char1, typename Char2>
 inline bool
 EqualChars(const Char1 *s1, const Char2 *s2, size_t len);
@@ -326,9 +335,15 @@ js_str_toString(JSContext *cx, unsigned argc, js::Value *vp);
 extern bool
 js_str_charAt(JSContext *cx, unsigned argc, js::Value *vp);
 
+namespace js {
+
+extern bool
+str_charCodeAt_impl(JSContext *cx, HandleString string, HandleValue index, MutableHandleValue res);
+
+} /* namespace js */
+
 extern bool
 js_str_charCodeAt(JSContext *cx, unsigned argc, js::Value *vp);
-
 /*
  * Convert one UCS-4 char and write it into a UTF-8 buffer, which must be at
  * least 6 bytes long.  Return the number of UTF-8 bytes of data written.

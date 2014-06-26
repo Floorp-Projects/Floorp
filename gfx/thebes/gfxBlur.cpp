@@ -5,7 +5,6 @@
 
 #include "gfxBlur.h"
 #include "gfxContext.h"
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 
 #include "mozilla/gfx/Blur.h"
@@ -70,15 +69,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
                                                             mBlur->GetStride(),
                                                             SurfaceFormat::A8);
     if (!dt) {
-        nsRefPtr<gfxImageSurface> image =
-            new gfxImageSurface(mData,
-                                gfxIntSize(size.width, size.height),
-                                mBlur->GetStride(),
-                                gfxImageFormat::A8);
-        dt = Factory::CreateDrawTargetForCairoSurface(image->CairoSurface(), size);
-        if (!dt) {
-            return nullptr;
-        }
+        return nullptr;
     }
 
     IntRect irect = mBlur->GetRect();

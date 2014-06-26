@@ -61,7 +61,7 @@ DOMMobileMessageError::GetData(OwningMozSmsMessageOrMozMmsMessage& aRetVal) cons
     return;
   }
 
-  MOZ_ASSUME_UNREACHABLE("Bad object with invalid mSms and mMms.");
+  MOZ_CRASH("Bad object with invalid mSms and mMms.");
 }
 
 JSObject*

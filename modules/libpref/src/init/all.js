@@ -1613,7 +1613,7 @@ pref("security.notification_enable_delay", 500);
 pref("security.csp.enable", true);
 pref("security.csp.debug", false);
 pref("security.csp.experimentalEnabled", false);
-pref("security.csp.newbackend.enable", false);
+pref("security.csp.newbackend.enable", true);
 
 // Mixed content blocking
 pref("security.mixed_content.block_active_content", false);
@@ -1966,6 +1966,9 @@ pref("layout.css.grid.enabled", false);
 
 // Is support for CSS box-decoration-break enabled?
 pref("layout.css.box-decoration-break.enabled", false);
+
+// Is layout of CSS outline-style:auto enabled?
+pref("layout.css.outline-style-auto.enabled", false);
 
 // pref for which side vertical scrollbars should be on
 // 0 = end-side in UI direction

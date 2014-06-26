@@ -28,20 +28,13 @@ function test()
     actual = 'after yield';
   }
 
-  expect = /TypeError: attempt to send ("before yield"|value) to newborn generator/i;
   var gen = yielder();
-  try
-  {
-    gen.send('before yield');
-  }
-  catch(ex)
-  {
-    actual = ex + '';
-  }
-  reportMatch(expect, actual, 'send(value) to newborn generator');
-
   expect = 'before yield';
+  gen.send('foo');
+  reportCompare(expect, actual, 'send(value) to newborn generator');
+
   var gen = yielder();
+  expect = 'before yield';
   gen.send(undefined);
   reportCompare(expect, actual, 'send(undefined) to newborn generator');
 

@@ -761,7 +761,7 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister &r, LiveInterval *in
 
     for (size_t i = 0; i < interval->numRanges(); i++) {
         AllocatedRange range(interval, interval->getRange(i)), existing;
-        for (int a = 0; a < r.reg.numAliased(); a++) {
+        for (size_t a = 0; a < r.reg.numAliased(); a++) {
             PhysicalRegister &rAlias = registers[r.reg.aliased(a).code()];
             if (rAlias.allocations.contains(range, &existing)) {
                 if (existing.interval->hasVreg()) {

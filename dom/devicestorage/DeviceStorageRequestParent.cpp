@@ -522,9 +522,9 @@ DeviceStorageRequestParent::PostBlobSuccessEvent::CancelableRun() {
 
   nsString fullPath;
   mFile->GetFullPath(fullPath);
-  nsCOMPtr<nsIDOMBlob> blob = new nsDOMFileFile(fullPath, mime, mLength, 
-                                                mFile->mFile,
-                                                mLastModificationDate);
+  nsCOMPtr<nsIDOMBlob> blob = new DOMFile(
+    new DOMFileImplFile(fullPath, mime, mLength, mFile->mFile,
+                        mLastModificationDate));
 
   ContentParent* cp = static_cast<ContentParent*>(mParent->Manager());
   BlobParent* actor = cp->GetOrCreateActorForBlob(blob);
