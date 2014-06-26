@@ -295,16 +295,18 @@ let CustomHighlighterActor = exports.CustomHighlighterActor = protocol.ActorClas
   /**
    * Display the highlighter on a given NodeActor.
    * @param NodeActor The node to be highlighted
+   * @param Object Options for the custom highlighter
    */
-  show: method(function(node) {
+  show: method(function(node, options) {
     if (!node || !isNodeValid(node.rawNode) || !this._highlighter) {
       return;
     }
 
-    this._highlighter.show(node.rawNode);
+    this._highlighter.show(node.rawNode, options);
   }, {
     request: {
-      node: Arg(0, "domnode")
+      node: Arg(0, "domnode"),
+      options: Arg(1, "nullable:json")
     }
   }),
 
@@ -447,9 +449,22 @@ XULBasedHighlighter.prototype = {
  * Usage example:
  *
  * let h = new BoxModelHighlighter(browser);
- * h.show(node);
+ * h.show(node, options);
  * h.hide();
  * h.destroy();
+ *
+ * Available options:
+ * - region {String}
+ *   "content", "padding", "border" or "margin"
+ *   This specifies the region that the guides should outline.
+ *   Defaults to "content"
+ * - hideGuides {Boolean}
+ *   Defaults to false
+ * - hideInfoBar {Boolean}
+ *   Defaults to false
+ * - showOnly {String}
+ *   "content", "padding", "border" or "margin"
+ *    If set, only this region will be highlighted
  *
  * Structure:
  * <stack class="highlighter-container">
@@ -486,6 +501,12 @@ function BoxModelHighlighter(tabActor) {
   this.layoutHelpers = new LayoutHelpers(this.win);
   this._initMarkup();
   EventEmitter.decorate(this);
+
+  /**
+   * Optionally customize each region's fill color by adding an entry to the
+   * regionFill property: `highlighter.regionFill.margin = "red";
+   */
+  this.regionFill = {};
 
   this._currentNode = null;
 }
@@ -663,8 +684,6 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
 
   /**
    * Show the highlighter on a given node
-   * @param {Object} options
-   *        Object used for passing options
    */
   _show: function() {
     this._update();
@@ -698,7 +717,9 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    */
   _update: function() {
     if (this._updateBoxModel()) {
-      this._showInfobar();
+      if (!this.options.hideInfoBar) {
+        this._showInfobar();
+      }
       this._showBoxModel();
     } else {
       // Nothing to highlight (0px rectangle like a <script> tag for instance)
@@ -751,20 +772,35 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    *         True if the current node has a box model to be highlighted
    */
   _updateBoxModel: function() {
+    this.options.region = this.options.region || "content";
+
     if (this._nodeNeedsHighlighting()) {
       for (let boxType in this._boxModelNodes) {
         let {p1, p2, p3, p4} =
           this.layoutHelpers.getAdjustedQuads(this.currentNode, boxType);
 
         let boxNode = this._boxModelNodes[boxType];
-        boxNode.setAttribute("points",
-                             p1.x + "," + p1.y + " " +
-                             p2.x + "," + p2.y + " " +
-                             p3.x + "," + p3.y + " " +
-                             p4.x + "," + p4.y);
 
-        if (boxType === this.options.region) {
+        if (this.regionFill[boxType]) {
+          boxNode.setAttribute("style", "fill:" + this.regionFill[boxType]);
+        } else {
+          boxNode.removeAttribute("style");
+        }
+
+        if (!this.options.showOnly || this.options.showOnly === boxType) {
+          boxNode.setAttribute("points",
+                               p1.x + "," + p1.y + " " +
+                               p2.x + "," + p2.y + " " +
+                               p3.x + "," + p3.y + " " +
+                               p4.x + "," + p4.y);
+        } else {
+          boxNode.setAttribute("points", "");
+        }
+
+        if (boxType === this.options.region && !this.options.hideGuides) {
           this._showGuides(p1, p2, p3, p4);
+        } else if (this.options.hideGuides) {
+          this._hideGuides();
         }
       }
 
@@ -776,7 +812,11 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
   },
 
   _nodeNeedsHighlighting: function() {
-    if (!this.currentNode) {
+    if (!this.currentNode ||
+        Cu.isDeadWrapper(this.currentNode) ||
+        this.currentNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+        !this.currentNode.ownerDocument ||
+        !this.currentNode.ownerDocument.defaultView) {
       return false;
     }
 
@@ -826,17 +866,13 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    * to line them up. This method finds these edges and displays a guide there.
    *
    * @param  {DOMPoint} p1
-   *                    Point 1
    * @param  {DOMPoint} p2
-   *                    Point 2
-   * @param  {DOMPoint} p3 [description]
-   *                    Point 3
-   * @param  {DOMPoint} p4 [description]
-   *                    Point 4
+   * @param  {DOMPoint} p3
+   * @param  {DOMPoint} p4
    */
   _showGuides: function(p1, p2, p3, p4) {
-    let allX = [p1.x, p2.x, p3.x, p4.x].sort();
-    let allY = [p1.y, p2.y, p3.y, p4.y].sort();
+    let allX = [p1.x, p2.x, p3.x, p4.x].sort((a, b) => a - b);
+    let allY = [p1.y, p2.y, p3.y, p4.y].sort((a, b) => a - b);
     let toShowX = [];
     let toShowY = [];
 
@@ -862,6 +898,12 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
     this._updateGuide(this._guideNodes.left, toShowX[0]);
   },
 
+  _hideGuides: function() {
+    for (let side in this._guideNodes) {
+      this._guideNodes[side].setAttribute("hidden", "true");
+    }
+  },
+
   /**
    * Move a guide to the appropriate position and display it. If no point is
    * passed then the guide is hidden.
@@ -872,32 +914,33 @@ BoxModelHighlighter.prototype = Heritage.extend(XULBasedHighlighter.prototype, {
    *         x or y co-ordinate. If this is undefined we hide the guide.
    */
   _updateGuide: function(guide, point=-1) {
-    if (point > 0) {
-      let offset = GUIDE_STROKE_WIDTH / 2;
-
-      if (guide === this._guideNodes.top || guide === this._guideNodes.left) {
-        point -= offset;
-      } else {
-        point += offset;
-      }
-
-      if (guide === this._guideNodes.top || guide === this._guideNodes.bottom) {
-        guide.setAttribute("x1", 0);
-        guide.setAttribute("y1", point);
-        guide.setAttribute("x2", "100%");
-        guide.setAttribute("y2", point);
-      } else {
-        guide.setAttribute("x1", point);
-        guide.setAttribute("y1", 0);
-        guide.setAttribute("x2", point);
-        guide.setAttribute("y2", "100%");
-      }
-      guide.removeAttribute("hidden");
-      return true;
-    } else {
+    if (point <= 0) {
       guide.setAttribute("hidden", "true");
       return false;
     }
+
+    let offset = GUIDE_STROKE_WIDTH / 2;
+
+    if (guide === this._guideNodes.top || guide === this._guideNodes.left) {
+      point -= offset;
+    } else {
+      point += offset;
+    }
+
+    if (guide === this._guideNodes.top || guide === this._guideNodes.bottom) {
+      guide.setAttribute("x1", 0);
+      guide.setAttribute("y1", point);
+      guide.setAttribute("x2", "100%");
+      guide.setAttribute("y2", point);
+    } else {
+      guide.setAttribute("x1", point);
+      guide.setAttribute("y1", 0);
+      guide.setAttribute("x2", point);
+      guide.setAttribute("y2", "100%");
+    }
+    guide.removeAttribute("hidden");
+
+    return true;
   },
 
   /**
