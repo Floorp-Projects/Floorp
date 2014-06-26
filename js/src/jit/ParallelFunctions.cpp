@@ -167,10 +167,8 @@ jit::ExtendArrayPar(ForkJoinContext *cx, JSObject *array, uint32_t length)
 {
     JSObject::EnsureDenseResult res =
         array->ensureDenseElementsPreservePackedFlag(cx, 0, length);
-    if (res != JSObject::ED_OK) {
-        fprintf(stderr, "==== NGNG\n");
+    if (res != JSObject::ED_OK)
         return nullptr;
-    }
     return array;
 }
 
