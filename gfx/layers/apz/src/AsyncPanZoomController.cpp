@@ -202,6 +202,14 @@ typedef GeckoContentController::APZStateChange APZStateChange;
  * asynchronously repaint the page.
  * Units: milliseconds
  *
+ * "apz.fling_stop_on_tap_threshold"
+ * When flinging, if the velocity is above this number, then a tap on the
+ * screen will stop the fling without dispatching a tap to content. If the
+ * velocity is below this threshold a tap will also be dispatched.
+ * Note: when modifying this pref be sure to run the APZC gtests as some of
+ * them depend on the value of this pref.
+ * Units: screen pixels per millisecond
+ *
  * "apz.fling_stopped_threshold"
  * When flinging, if the velocity goes below this number, we just stop the
  * animation completely. This is to prevent asymptotically approaching 0
@@ -801,17 +809,19 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
   ScreenIntPoint point = GetFirstTouchScreenPoint(aEvent);
 
   switch (mState) {
-    case ANIMATING_ZOOM:
-      // We just interrupted a double-tap animation, so force a redraw in case
-      // this touchstart is just a tap that doesn't end up triggering a redraw.
-      {
-        ReentrantMonitorAutoEnter lock(mMonitor);
-        RequestContentRepaint();
-        ScheduleComposite();
-        UpdateSharedCompositorFrameMetrics();
+    case FLING:
+      if (GetVelocityVector().Length() > gfxPrefs::APZFlingStopOnTapThreshold()) {
+        // This is ugly. Hopefully bug 1009733 can reorganize how events
+        // flow through APZC and change it so that events are handed to the
+        // gesture listener *after* we deal with them here. This should allow
+        // removal of this ugly code.
+        nsRefPtr<GestureEventListener> listener = GetGestureEventListener();
+        if (listener) {
+          listener->CancelSingleTouchDown();
+        }
       }
       // Fall through.
-    case FLING:
+    case ANIMATING_ZOOM:
       CancelAnimation();
       // Fall through.
     case NOTHING: {
@@ -1718,6 +1728,8 @@ void AsyncPanZoomController::CancelAnimation() {
     mAnimation = nullptr;
     // mAnimation->Cancel() may have done something that requires a repaint.
     RequestContentRepaint();
+    ScheduleComposite();
+    UpdateSharedCompositorFrameMetrics();
   }
 }
 
