@@ -128,10 +128,10 @@ describe('connection.js', function() {
           expect(headers).to.deep.equal(response_headers);
           done();
         });
-        client_stream.on('readable', function() {
-          expect(client_stream.read()).to.deep.equal(response_data);
+        client_stream.on('data', function(data) {
+          expect(data).to.deep.equal(response_data);
           done();
-        });
+        })
       });
     });
     describe('server push', function() {
@@ -162,8 +162,8 @@ describe('connection.js', function() {
           expect(headers).to.deep.equal(response_headers);
           done();
         });
-        request.on('readable', function() {
-          expect(request.read()).to.deep.equal(response_content);
+        request.on('data', function(data) {
+          expect(data).to.deep.equal(response_content);
           done();
         });
         request.on('promise', function(pushed, headers) {
@@ -172,13 +172,11 @@ describe('connection.js', function() {
             expect(headers).to.deep.equal(response_headers);
             done();
           });
-          pushed.on('readable', function() {
-            expect(pushed.read()).to.deep.equal(push_content);
+          pushed.on('data', function(data) {
+            expect(data).to.deep.equal(push_content);
             done();
           });
-          pushed.on('end', function() {
-            done();
-          });
+          pushed.on('end', done);
         });
       });
     });

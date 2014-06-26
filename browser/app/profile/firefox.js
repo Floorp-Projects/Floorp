@@ -1524,9 +1524,6 @@ pref("social.sidebar.unload_timeout_ms", 10000);
 
 pref("dom.identity.enabled", false);
 
-// Turn on the CSP 1.0 parser for Content Security Policy headers
-pref("security.csp.speccompliant", true);
-
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
