@@ -54,6 +54,8 @@ const GSMICCINFO_CID =
   Components.ID("{d90c4261-a99d-47bc-8b05-b057bb7e8f8a}");
 const CDMAICCINFO_CID =
   Components.ID("{39ba3c08-aacc-46d0-8c04-9b619c387061}");
+const NEIGHBORINGCELLINFO_CID =
+  Components.ID("{f9dfe26a-851e-4a8b-a769-cbb1baae7ded}");
 
 const NS_XPCOM_SHUTDOWN_OBSERVER_ID      = "xpcom-shutdown";
 const kNetworkInterfaceStateChangedTopic = "network-interface-state-changed";
@@ -1053,6 +1055,25 @@ CdmaIccInfo.prototype = {
 
   mdn: null,
   prlVersion: 0
+};
+
+function NeighboringCellInfo() {}
+NeighboringCellInfo.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsINeighboringCellInfo]),
+  classID:        NEIGHBORINGCELLINFO_CID,
+  classInfo:      XPCOMUtils.generateCI({
+    classID:          NEIGHBORINGCELLINFO_CID,
+    classDescription: "NeighboringCellInfo",
+    interfaces:       [Ci.nsINeighboringCellInfo]
+  }),
+
+  // nsINeighboringCellInfo
+
+  networkType: null,
+  gsmLocationAreaCode: -1,
+  gsmCellId: -1,
+  wcdmaPsc: -1,
+  signalStrength: 99
 };
 
 function DataConnectionHandler(clientId, radioInterface) {
@@ -4352,6 +4373,28 @@ RadioInterface.prototype = {
     } else {
       this.workerMessenger.send(rilMessageType, message);
     }
+  },
+
+  getNeighboringCellIds: function(callback) {
+    this.workerMessenger.send("getNeighboringCellIds",
+                              null,
+                              function(response) {
+      if (response.errorMsg) {
+        callback.notifyGetNeighboringCellIdsFailed(response.errorMsg);
+        return;
+      }
+
+      let neighboringCellIds = [];
+      let count = response.result.length;
+      for (let i = 0; i < count; i++) {
+        let srcCellInfo = response.result[i];
+        let cellInfo = new NeighboringCellInfo();
+        this.updateInfo(srcCellInfo, cellInfo);
+        neighboringCellIds.push(cellInfo);
+      }
+      callback.notifyGetNeighboringCellIds(neighboringCellIds);
+
+    }.bind(this));
   }
 };
 
