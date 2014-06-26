@@ -663,6 +663,8 @@ DebuggerClient.prototype = {
    *             @return Promise
    *                     The promise is resolved when copying completes or
    *                     rejected if any (unexpected) errors occur.
+   *                     This object also emits "progress" events for each chunk
+   *                     that is copied.  See stream-utils.js.
    */
   request: function (aRequest, aOnResponse) {
     if (!this.mainRoot) {
@@ -728,6 +730,8 @@ DebuggerClient.prototype = {
    *             @return Promise
    *                     The promise is resolved when copying completes or
    *                     rejected if any (unexpected) errors occur.
+   *                     This object also emits "progress" events for each chunk
+   *                     that is copied.  See stream-utils.js.
    *         * json-reply: The server replied with a JSON packet, which is
    *           passed as event data.
    *         * bulk-reply: The server replied with bulk data, which you can read
@@ -753,6 +757,8 @@ DebuggerClient.prototype = {
    *             @return Promise
    *                     The promise is resolved when copying completes or
    *                     rejected if any (unexpected) errors occur.
+   *                     This object also emits "progress" events for each chunk
+   *                     that is copied.  See stream-utils.js.
    */
   startBulkRequest: function(request) {
     if (!this.traits.bulk) {
@@ -932,6 +938,8 @@ DebuggerClient.prototype = {
    *          @return Promise
    *                  The promise is resolved when copying completes or rejected
    *                  if any (unexpected) errors occur.
+   *                  This object also emits "progress" events for each chunk
+   *                  that is copied.  See stream-utils.js.
    */
   onBulkPacket: function(packet) {
     let { actor, type, length } = packet;
