@@ -1443,6 +1443,7 @@ case "$target" in
                 AC_MSG_RESULT([yes])
             fi
             AC_LANG_RESTORE
+            TARGET_COMPILER_ABI="ibmc"
             CC_VERSION=`lslpp -Lcq vac.C 2>/dev/null | awk -F: '{ print $3 }'`
             CXX_VERSION=`lslpp -Lcq vacpp.cmp.core 2>/dev/null | awk -F: '{ print $3 }'`
         fi
@@ -1620,6 +1621,7 @@ ia64*-hpux*)
         MOZ_C_SUPPORTS_WARNING(-Wno-, format, ac_c_has_wno_format)
         MOZ_CXX_SUPPORTS_WARNING(-Wno-, format, ac_cxx_has_wno_format)
     else
+        TARGET_COMPILER_ABI=msvc
         HOST_CC='$(CC)'
         HOST_CXX='$(CXX)'
         HOST_LD='$(LD)'
@@ -1854,6 +1856,7 @@ ia64*-hpux*)
        AS='/usr/ccs/bin/as'
        ASFLAGS="$ASFLAGS -K PIC -L -P -D_ASM -D__STDC__=0"
        AS_DASH_C_FLAG=''
+       TARGET_COMPILER_ABI="sunc"
        CC_VERSION=`$CC -V 2>&1 | grep '^cc:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
        CXX_VERSION=`$CXX -V 2>&1 | grep '^CC:' 2>/dev/null | $AWK -F\: '{ print $2 }'`
        AC_MSG_CHECKING([for Sun C++ compiler version >= 5.9])
@@ -2498,6 +2501,8 @@ if test "$GNU_CC"; then
         ARM_ABI_PREFIX=oabi-
     fi
   fi
+
+  TARGET_COMPILER_ABI="${TARGET_COMPILER_ABI-${ARM_ABI_PREFIX}gcc3}"
 fi
 
 dnl Check to see if we can resolve ambiguity with |using|.
@@ -2653,6 +2658,11 @@ fi
 
 AC_HAVE_FUNCS(localeconv)
 fi # ! SKIP_COMPILER_CHECKS
+
+TARGET_XPCOM_ABI=
+if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
+    TARGET_XPCOM_ABI="${CPU_ARCH}-${TARGET_COMPILER_ABI}"
+fi
 
 dnl Mozilla specific options
 dnl ========================================================
@@ -3874,6 +3884,7 @@ AC_SUBST(TARGET_VENDOR)
 AC_SUBST(TARGET_OS)
 AC_SUBST(TARGET_NSPR_MDCPUCFG)
 AC_SUBST(TARGET_MD_ARCH)
+AC_SUBST(TARGET_XPCOM_ABI)
 AC_SUBST(OS_TARGET)
 AC_SUBST(OS_ARCH)
 AC_SUBST(OS_RELEASE)
