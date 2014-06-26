@@ -40,8 +40,8 @@ public:
     mozilla::ErrorResult rv;
 
     if (!mFailed) {
-      nsRefPtr<nsDOMMemoryFile> blob =
-        new nsDOMMemoryFile(mImgData, mImgSize, mType);
+      nsRefPtr<DOMFile> blob =
+        DOMFile::CreateMemoryFile(mImgData, mImgSize, mType);
 
       if (mScriptContext) {
         JSContext* jsContext = mScriptContext->GetNativeContext();

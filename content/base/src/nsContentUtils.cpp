@@ -5973,7 +5973,8 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
   nsCOMPtr<nsIDOMBlob> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);
-    blob = new nsDOMMemoryFile(blobData, blobLen, EmptyString());
+    blob = mozilla::dom::DOMFile::CreateMemoryFile(blobData, blobLen,
+                                                   EmptyString());
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }

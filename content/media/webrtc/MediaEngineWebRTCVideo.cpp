@@ -831,10 +831,9 @@ void
 MediaEngineWebRTCVideoSource::OnTakePictureComplete(uint8_t* aData, uint32_t aLength, const nsAString& aMimeType)
 {
   ReentrantMonitorAutoEnter sync(mCallbackMonitor);
-  mLastCapture =
-    static_cast<nsIDOMFile*>(new nsDOMMemoryFile(static_cast<void*>(aData),
-                                                 static_cast<uint64_t>(aLength),
-                                                 aMimeType));
+  mLastCapture = dom::DOMFile::CreateMemoryFile(static_cast<void*>(aData),
+                                                static_cast<uint64_t>(aLength),
+                                                aMimeType);
   mCallbackMonitor.Notify();
 }
 
