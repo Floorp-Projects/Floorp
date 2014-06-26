@@ -2813,11 +2813,16 @@ NS_DOMReadStructuredClone(JSContext* cx,
     }
     MOZ_ASSERT(dataArray.isObject());
 
-    // Construct the ImageData.
-    nsRefPtr<ImageData> imageData = new ImageData(width, height,
-                                                  dataArray.toObject());
-    // Wrap it in a JS::Value.
-    return imageData->WrapObject(cx);
+    // Protect the result from a moving GC in ~nsRefPtr.
+    JS::Rooted<JSObject*> result(cx);
+    {
+      // Construct the ImageData.
+      nsRefPtr<ImageData> imageData = new ImageData(width, height,
+                                                    dataArray.toObject());
+      // Wrap it in a JS::Value.
+      result = imageData->WrapObject(cx);
+    }
+    return result;
   }
 
   // Don't know what this is. Bail.

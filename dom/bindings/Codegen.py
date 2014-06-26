@@ -1588,17 +1588,19 @@ class CGConstructNavigatorObject(CGAbstractMethod):
               return nullptr;
             }
             ErrorResult rv;
-            nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
-            rv.WouldReportJSException();
-            if (rv.Failed()) {
-              ThrowMethodFailedWithDetails(aCx, rv, "${descriptorName}", "navigatorConstructor");
-              return nullptr;
-            }
             JS::Rooted<JS::Value> v(aCx);
-            if (!WrapNewBindingObject(aCx, result, &v)) {
-              //XXX Assertion disabled for now, see bug 991271.
-              MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
-              return nullptr;
+            {  // Scope to make sure |result| goes out of scope while |v| is rooted
+              nsRefPtr<mozilla::dom::${descriptorName}> result = ConstructNavigatorObjectHelper(aCx, global, rv);
+              rv.WouldReportJSException();
+              if (rv.Failed()) {
+                ThrowMethodFailedWithDetails(aCx, rv, "${descriptorName}", "navigatorConstructor");
+                return nullptr;
+              }
+              if (!WrapNewBindingObject(aCx, result, &v)) {
+                //XXX Assertion disabled for now, see bug 991271.
+                MOZ_ASSERT(true || JS_IsExceptionPending(aCx));
+                return nullptr;
+              }
             }
             return &v.toObject();
             """,
