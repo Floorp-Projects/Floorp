@@ -72,11 +72,13 @@ public:
 protected:
   virtual ~CommonAnimationManager();
 
-  friend struct mozilla::ElementAnimationCollection; // for ElementDataRemoved
+  // For ElementCollectionRemoved
+  friend struct mozilla::ElementAnimationCollection;
 
-  virtual void AddElementData(ElementAnimationCollection* aData) = 0;
-  virtual void ElementDataRemoved() = 0;
-  void RemoveAllElementData();
+  virtual void
+  AddElementCollection(ElementAnimationCollection* aCollection) = 0;
+  virtual void ElementCollectionRemoved() = 0;
+  void RemoveAllElementCollections();
 
   // When this returns a value other than nullptr, it also,
   // as a side-effect, notifies the ActiveLayerTracker.
@@ -100,7 +102,7 @@ protected:
                                      nsStyleContext* aNewStyle,
                                      nsStyleSet* aStyleSet);
 
-  PRCList mElementData;
+  PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
 };
 
@@ -117,8 +119,8 @@ class_::UpdateAllThrottledStylesInternal()                                     \
   /* update each transitioning element by finding its root-most ancestor
      with a transition, and flushing the style on that ancestor and all
      its descendants*/                                                         \
-  PRCList *next = PR_LIST_HEAD(&mElementData);                                 \
-  while (next != &mElementData) {                                              \
+  PRCList *next = PR_LIST_HEAD(&mElementCollections);                          \
+  while (next != &mElementCollections) {                                       \
     ElementAnimationCollection* collection =                                   \
       static_cast<ElementAnimationCollection*>(next);                          \
     next = PR_NEXT_LINK(next);                                                 \
@@ -427,7 +429,7 @@ struct ElementAnimationCollection : public PRCList
                       "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(ElementAnimationCollection);
     PR_REMOVE_LINK(this);
-    mManager->ElementDataRemoved();
+    mManager->ElementCollectionRemoved();
   }
 
   void Destroy()

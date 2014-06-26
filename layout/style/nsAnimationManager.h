@@ -137,12 +137,12 @@ public:
   void UpdateAllThrottledStyles();
 
 protected:
-  virtual void ElementDataRemoved() MOZ_OVERRIDE
+  virtual void ElementCollectionRemoved() MOZ_OVERRIDE
   {
     CheckNeedsRefresh();
   }
   virtual void
-  AddElementData(mozilla::ElementAnimationCollection* aData) MOZ_OVERRIDE;
+  AddElementCollection(mozilla::ElementAnimationCollection* aData) MOZ_OVERRIDE;
 
   /**
    * Check to see if we should stop or start observing the refresh driver

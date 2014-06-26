@@ -113,7 +113,7 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                                          nsCSSPseudoElements::Type aPseudoType,
                                          bool aCreateIfNeeded)
 {
-  if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementData)) {
+  if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementCollections)) {
     // Early return for the most common case.
     return nullptr;
   }
@@ -150,7 +150,7 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
       aElement->SetMayHaveAnimations();
     }
 
-    AddElementData(collection);
+    AddElementCollection(collection);
   }
 
   return collection;
@@ -657,7 +657,7 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
     // where it has been torn down; don't bother doing anything in
     // this case.  But do get rid of all our transitions so we stop
     // triggering refreshes.
-    RemoveAllElementData();
+    RemoveAllElementCollections();
     return;
   }
 
@@ -665,24 +665,26 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 }
 
 void
-nsAnimationManager::AddElementData(ElementAnimationCollection* aData)
+nsAnimationManager::AddElementCollection(
+  ElementAnimationCollection* aCollection)
 {
   if (!mObservingRefreshDriver) {
     NS_ASSERTION(
-      static_cast<ElementAnimationCollection*>(aData)->mNeedsRefreshes,
+      static_cast<ElementAnimationCollection*>(aCollection)->mNeedsRefreshes,
       "Added data which doesn't need refreshing?");
     // We need to observe the refresh driver.
     mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
     mObservingRefreshDriver = true;
   }
 
-  PR_INSERT_BEFORE(aData, &mElementData);
+  PR_INSERT_BEFORE(aCollection, &mElementCollections);
 }
 
 void
 nsAnimationManager::CheckNeedsRefresh()
 {
-  for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
+  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
+       l != &mElementCollections;
        l = PR_NEXT_LINK(l)) {
     if (static_cast<ElementAnimationCollection*>(l)->mNeedsRefreshes) {
       if (!mObservingRefreshDriver) {
@@ -706,7 +708,8 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   // the refresh driver (but leave the animations!).
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   bool didThrottle = false;
-  for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
+  for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
+       l != &mElementCollections;
        l = PR_NEXT_LINK(l)) {
     ElementAnimationCollection* collection =
       static_cast<ElementAnimationCollection*>(l);
@@ -792,7 +795,7 @@ IMPL_UPDATE_ALL_THROTTLED_STYLES_INTERNAL(nsAnimationManager,
 void
 nsAnimationManager::UpdateAllThrottledStyles()
 {
-  if (PR_CLIST_IS_EMPTY(&mElementData)) {
+  if (PR_CLIST_IS_EMPTY(&mElementCollections)) {
     // no throttled animations, leave early
     mPresContext->TickLastUpdateThrottledAnimationStyle();
     return;
