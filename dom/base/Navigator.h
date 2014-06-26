@@ -36,6 +36,7 @@ class systemMessageCallback;
 class MediaStreamConstraints;
 class WakeLock;
 class ArrayBufferViewOrBlobOrStringOrFormData;
+struct MobileIdOptions;
 }
 }
 
@@ -216,14 +217,15 @@ public:
                             ErrorResult& aRv);
   bool MozHasPendingMessage(const nsAString& aType, ErrorResult& aRv);
 #ifdef MOZ_B2G
-  already_AddRefed<Promise> GetMobileIdAssertion(ErrorResult& aRv);
+  already_AddRefed<Promise> GetMobileIdAssertion(const MobileIdOptions& options,
+                                                 ErrorResult& aRv);
 #endif
 #ifdef MOZ_B2G_RIL
   MobileConnectionArray* GetMozMobileConnections(ErrorResult& aRv);
   CellBroadcast* GetMozCellBroadcast(ErrorResult& aRv);
   Voicemail* GetMozVoicemail(ErrorResult& aRv);
   IccManager* GetMozIccManager(ErrorResult& aRv);
-#endif // MOZ_B2G_RILi
+#endif // MOZ_B2G_RIL
 #ifdef MOZ_GAMEPAD
   void GetGamepads(nsTArray<nsRefPtr<Gamepad> >& aGamepads, ErrorResult& aRv);
 #endif // MOZ_GAMEPAD
