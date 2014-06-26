@@ -714,11 +714,6 @@ protected:
   int64_t mSyncPointInMediaStream; // microseconds
   int64_t mSyncPointInDecodedStream; // microseconds
 
-  // When the playbackRate changes, and there is no audio clock, it is necessary
-  // to reset the mPlayStartTime. This is done next time the clock is queried,
-  // when this member is true. Access protected by decoder monitor.
-  bool mResetPlayStartTime;
-
   // The amount of time we've spent playing already the media. The current
   // playback position is therefore |Now() - mPlayStartTime +
   // mPlayDuration|, which must be adjusted by mStartTime if used with media
@@ -806,11 +801,6 @@ protected:
 
   // Pitch preservation for the playback rate. Synchronized via decoder monitor.
   bool mPreservesPitch;
-
-  // Position at which the last playback rate change occured, used to compute
-  // the actual position in the stream when the playback rate changes and there
-  // is no audio to be sync-ed to. Synchronized via decoder monitor.
-  int64_t mBasePosition;
 
   // Time at which we started decoding. Synchronised via decoder monitor.
   TimeStamp mDecodeStartTime;
