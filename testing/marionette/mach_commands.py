@@ -3,11 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import unicode_literals
-
 import os
-import sys
-
-from mozlog import structured
 
 from mozbuild.base import (
     MachCommandBase,
@@ -30,7 +26,7 @@ VARIANT=eng ./build.sh
 '''
 
 def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
-    address=None, binary=None, topsrcdir=None):
+    address=None, bin=None, topsrcdir=None):
     from marionette.runtests import (
         MarionetteTestRunner,
         BaseMarionetteOptions,
@@ -50,16 +46,12 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
         if emulator:
             options.emulator = emulator
     else:
-        options.binary = binary
-        path, exe = os.path.split(options.binary)
+        options.bin = bin
+        path, exe = os.path.split(options.bin)
 
     options.address = address
 
     parser.verify_usage(options, tests)
-
-    options.logger = structured.commandline.setup_logging("Marionette Unit Tests",
-                                                          options,
-                                                          {"mach": sys.stdout})
 
     runner = startTestRunner(MarionetteTestRunner, options, tests)
     if runner.failed > 0:
@@ -111,6 +103,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('tests', nargs='*', metavar='TESTS',
         help='Path to test(s) to run.')
     def run_marionette_test(self, tests, address=None, testtype=None):
-        binary = self.get_binary_path('app')
-        return run_marionette(tests, binary=binary, testtype=testtype,
+        bin = self.get_binary_path('app')
+        return run_marionette(tests, bin=bin, testtype=testtype,
             topsrcdir=self.topsrcdir, address=address)
