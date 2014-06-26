@@ -5,6 +5,8 @@
 browser.jar:
    content/browser/preferences/in-content/preferences.js
 *  content/browser/preferences/in-content/preferences.xul
+   content/browser/preferences/in-content/subdialogs.js
+
 *  content/browser/preferences/in-content/main.js
 *  content/browser/preferences/in-content/privacy.js
 *  content/browser/preferences/in-content/advanced.js

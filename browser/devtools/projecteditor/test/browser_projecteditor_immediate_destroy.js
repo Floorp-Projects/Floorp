@@ -10,8 +10,9 @@
 let test = asyncTest(function* () {
 
   info ("Testing tab closure when projecteditor is in various states");
+  let loaderUrl = "chrome://browser/content/devtools/projecteditor-test.xul";
 
-  yield addTab("chrome://browser/content/devtools/projecteditor-test.html").then(() => {
+  yield addTab(loaderUrl).then(() => {
     let iframe = content.document.getElementById("projecteditor-iframe");
     ok (iframe, "Tab has placeholder iframe for projecteditor");
 
@@ -19,7 +20,7 @@ let test = asyncTest(function* () {
     gBrowser.removeCurrentTab();
   });
 
-  yield addTab("chrome://browser/content/devtools/projecteditor-test.html").then(() => {
+  yield addTab(loaderUrl).then(() => {
     let iframe = content.document.getElementById("projecteditor-iframe");
     ok (iframe, "Tab has placeholder iframe for projecteditor");
 
@@ -30,7 +31,7 @@ let test = asyncTest(function* () {
     gBrowser.removeCurrentTab();
   });
 
-  yield addTab("chrome://browser/content/devtools/projecteditor-test.html").then(() => {
+  yield addTab(loaderUrl).then(() => {
     let iframe = content.document.getElementById("projecteditor-iframe");
     ok (iframe, "Tab has placeholder iframe for projecteditor");
 
@@ -43,7 +44,7 @@ let test = asyncTest(function* () {
     gBrowser.removeCurrentTab();
   });
 
-  yield addTab("chrome://browser/content/devtools/projecteditor-test.html").then(() => {
+  yield addTab(loaderUrl).then(() => {
     let iframe = content.document.getElementById("projecteditor-iframe");
     ok (iframe, "Tab has placeholder iframe for projecteditor");
 
@@ -52,6 +53,29 @@ let test = asyncTest(function* () {
 
     return projecteditor.load(iframe).then(() => {
       info ("Closing the tab after a load has been requested and finished");
+      gBrowser.removeCurrentTab();
+    });
+  });
+
+  yield addTab(loaderUrl).then(() => {
+    let iframe = content.document.getElementById("projecteditor-iframe");
+    ok (iframe, "Tab has placeholder iframe for projecteditor");
+
+    let projecteditor = ProjectEditor.ProjectEditor(iframe);
+    ok (projecteditor, "ProjectEditor has been initialized");
+
+    let loadedDone = promise.defer();
+    projecteditor.loaded.then(() => {
+      ok (false, "Loaded has finished after destroy() has been called");
+      loadedDone.resolve();
+    }, () => {
+      ok (true, "Loaded has been rejected after destroy() has been called");
+      loadedDone.resolve();
+    });
+
+    projecteditor.destroy();
+
+    return loadedDone.promise.then(() => {
       gBrowser.removeCurrentTab();
     });
   });

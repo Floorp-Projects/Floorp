@@ -26,6 +26,12 @@ var ItchEditor = Class({
    */
   hidesToolbar: false,
 
+  /**
+   * A boolean specifying whether the editor can be edited / saved.
+   * For instance, a 'save' doesn't make sense on an image.
+   */
+  isEditable: false,
+
   toString: function() {
     return this.label || "";
   },
@@ -35,17 +41,19 @@ var ItchEditor = Class({
   },
 
   /**
-   * Initialize the editor with a single document.  This should be called
+   * Initialize the editor with a single host.  This should be called
    * by objects extending this object with:
    * ItchEditor.prototype.initialize.apply(this, arguments)
    */
-  initialize: function(document) {
-    this.doc = document;
+  initialize: function(host) {
+    this.doc = host.document;
     this.label = "";
     this.elt = this.doc.createElement("vbox");
     this.elt.setAttribute("flex", "1");
     this.elt.editor = this;
     this.toolbar = this.doc.querySelector("#projecteditor-toolbar");
+    this.projectEditorKeyset = host.projectEditorKeyset;
+    this.projectEditorCommandset = host.projectEditorCommandset;
   },
 
   /**
@@ -103,6 +111,8 @@ exports.ItchEditor = ItchEditor;
 var TextEditor = Class({
   extends: ItchEditor,
 
+  isEditable: true,
+
   /**
    * Extra keyboard shortcuts to use with the editor.  Shortcuts defined
    * within projecteditor should be triggered when they happen in the editor, and
@@ -114,7 +124,7 @@ var TextEditor = Class({
 
     // Copy all of the registered keys into extraKeys object, to notify CodeMirror
     // that it should be ignoring these keys
-    [...this.doc.querySelectorAll("#projecteditor-keyset key")].forEach((key) => {
+    [...this.projectEditorKeyset.querySelectorAll("key")].forEach((key) => {
       let keyUpper = key.getAttribute("key").toUpperCase();
       let toolModifiers = key.getAttribute("modifiers");
       let modifiers = {
@@ -124,9 +134,10 @@ var TextEditor = Class({
 
       // On the key press, we will dispatch the event within projecteditor.
       extraKeys[Editor.accel(keyUpper, modifiers)] = () => {
-        let event = this.doc.createEvent('Event');
+        let doc = this.projectEditorCommandset.ownerDocument;
+        let event = doc.createEvent('Event');
         event.initEvent('command', true, true);
-        let command = this.doc.querySelector("#" + key.getAttribute("command"));
+        let command = this.projectEditorCommandset.querySelector("#" + key.getAttribute("command"));
         command.dispatchEvent(event);
       };
     });
@@ -227,22 +238,22 @@ var TextEditor = Class({
 /**
  * Wrapper for TextEditor using JavaScript syntax highlighting.
  */
-function JSEditor(document) {
-  return TextEditor(document, Editor.modes.js);
+function JSEditor(host) {
+  return TextEditor(host, Editor.modes.js);
 }
 
 /**
  * Wrapper for TextEditor using CSS syntax highlighting.
  */
-function CSSEditor(document) {
-  return TextEditor(document, Editor.modes.css);
+function CSSEditor(host) {
+  return TextEditor(host, Editor.modes.css);
 }
 
 /**
  * Wrapper for TextEditor using HTML syntax highlighting.
  */
-function HTMLEditor(document) {
-  return TextEditor(document, Editor.modes.html);
+function HTMLEditor(host) {
+  return TextEditor(host, Editor.modes.html);
 }
 
 /**

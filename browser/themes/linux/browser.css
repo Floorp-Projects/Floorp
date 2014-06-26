@@ -1874,18 +1874,20 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   margin-bottom: @tabToolbarNavbarOverlap@;
 }
 
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-  margin-top: -2px;
-  margin-bottom: -2px;
+#alltabs-button {
+  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs.png");
 }
 
-#alltabs-button > .toolbarbutton-menu-dropmarker {
-  margin-bottom: -2px;
+#TabsToolbar[brighttext] > #alltabs-button,
+#TabsToolbar[brighttext] > toolbarpaletteitem > #alltabs-button {
+  list-style-image: url("chrome://browser/skin/tabbrowser/alltabs-inverted.png");
 }
 
 #alltabs-button > .toolbarbutton-icon {
+  padding: 9px 6px 6px;
+}
+
+#alltabs-button > .toolbarbutton-menu-dropmarker {
   display: none;
 }
 
