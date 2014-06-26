@@ -72,7 +72,7 @@ JSObject *CreateNewObject(const int offset, const int length)
     return obj;
 }
 
-bool VerifyObject(JS::HandleObject obj, const int offset, const int length, const bool mapped)
+bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const bool mapped)
 {
     CHECK(obj);
     CHECK(JS_IsArrayBufferObject(obj));
@@ -88,7 +88,7 @@ bool VerifyObject(JS::HandleObject obj, const int offset, const int length, cons
     return true;
 }
 
-bool TestCreateObject(const int offset, const int length)
+bool TestCreateObject(uint32_t offset, uint32_t length)
 {
     JS::RootedObject obj(cx, CreateNewObject(offset, length));
     CHECK(VerifyObject(obj, offset, length, true));
