@@ -11,6 +11,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DownloadPaths",
                                   "resource://gre/modules/DownloadPaths.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FormAutofill",
+                                  "resource://gre/modules/FormAutofill.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
