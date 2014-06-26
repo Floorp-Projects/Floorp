@@ -58,7 +58,7 @@ public:
   {
   }
 
-  static mozilla::css::CommonElementAnimationData*
+  static mozilla::ElementAnimationCollection*
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
@@ -76,10 +76,10 @@ public:
     return false;
   }
 
-  void UpdateStyleAndEvents(mozilla::css::CommonElementAnimationData* aEA,
+  void UpdateStyleAndEvents(mozilla::ElementAnimationCollection* aEA,
                             mozilla::TimeStamp aRefreshTime,
                             mozilla::EnsureStyleRuleFlags aFlags);
-  void GetEventsAt(mozilla::css::CommonElementAnimationData* aEA,
+  void GetEventsAt(mozilla::ElementAnimationCollection* aEA,
                    mozilla::TimeStamp aRefreshTime,
                    EventArray &aEventsToDispatch);
 
@@ -128,7 +128,7 @@ public:
     }
   }
 
-  mozilla::css::CommonElementAnimationData*
+  mozilla::ElementAnimationCollection*
   GetElementAnimations(mozilla::dom::Element *aElement,
                        nsCSSPseudoElements::Type aPseudoType,
                        bool aCreateIfNeeded);
@@ -141,7 +141,8 @@ protected:
   {
     CheckNeedsRefresh();
   }
-  virtual void AddElementData(mozilla::css::CommonElementAnimationData* aData) MOZ_OVERRIDE;
+  virtual void
+  AddElementData(mozilla::ElementAnimationCollection* aData) MOZ_OVERRIDE;
 
   /**
    * Check to see if we should stop or start observing the refresh driver

@@ -98,7 +98,6 @@
 #endif
 
 using namespace mozilla;
-using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 using namespace mozilla::layout;
@@ -257,19 +256,19 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
 }
 
-static CommonElementAnimationData*
+static ElementAnimationCollection*
 GetAnimationsOrTransitionsForCompositor(nsIContent* aContent,
                                         nsIAtom* aAnimationProperty,
                                         nsCSSProperty aProperty)
 {
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection* animations =
+    static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
   if (animations) {
     bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
     if (propertyMatches &&
         animations->CanPerformOnCompositorThread(
-          CommonElementAnimationData::CanAnimate_AllowPartial)) {
+          ElementAnimationCollection::CanAnimate_AllowPartial)) {
       return animations;
     }
   }
@@ -289,13 +288,13 @@ nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
            aContent, nsGkAtoms::transitionsProperty, aProperty);
 }
 
-static CommonElementAnimationData*
+static ElementAnimationCollection*
 GetAnimationsOrTransitions(nsIContent* aContent,
                            nsIAtom* aAnimationProperty,
                            nsCSSProperty aProperty)
 {
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(aContent->GetProperty(
+  ElementAnimationCollection* animations =
+    static_cast<ElementAnimationCollection*>(aContent->GetProperty(
         aAnimationProperty));
   if (animations) {
     bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
@@ -328,8 +327,8 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
 
   TimeStamp now = aPresContext->RefreshDriver()->MostRecentRefresh();
 
-  CommonElementAnimationData* animations =
-    static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection* animations =
+    static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
   return (animations && animations->HasCurrentAnimationsAt(now));
 }
@@ -392,7 +391,7 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  CommonElementAnimationData* animations =
+  ElementAnimationCollection* animations =
     GetAnimationsOrTransitionsForCompositor(aContent, aAnimationProperty,
                                             eCSSProperty_transform);
   if (!animations)
