@@ -722,7 +722,7 @@ TBSCertificate(PLArenaPool* arena, long versionValue,
 
   Output output;
 
-  if (versionValue != der::v1) {
+  if (versionValue != static_cast<long>(der::Version::v1)) {
     SECItem* versionInteger(Integer(arena, versionValue));
     if (!versionInteger) {
       return nullptr;

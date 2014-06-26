@@ -5,6 +5,9 @@
   "content/canvas/test/webgl-conformance": "bug 865443 - separate suite -- mochitest-gl",
   "content/media/test": "Android 2.3 only; bug 981898",
   "content/media/webaudio/test": "Android 2.3 only; bug 981889",
-  "dom/media/tests/mochitest":"Android 2.3 only; bug 981881"
+  "docshell/test/navigation/test_reserved.html": "too slow on Android 2.3 aws only; bug 1030403",
+  "dom/media/tests/mochitest": "Android 2.3 only; bug 981881",
+  "layout/style/test/test_media_queries.html": "Android 2.3 aws only; bug 1030419",
+  "layout/style/test/test_transitions_cancel_near_end.html": "Android 2.3 aws only; bug 1030432"
   }
 }

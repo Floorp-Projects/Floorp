@@ -1,0 +1,10 @@
+Any changes to Skia should have at a minimum both a Mozilla bug tagged with the [skia-upstream]
+whiteboard tag, and also an upstream bug and review request. Any patches that do ultimately land
+in mozilla-central must be reviewed by a Skia submodule peer.
+
+See https://wiki.mozilla.org/Modules/Core#Graphics for current peers.
+
+In most cases the patch will need to have an r+ from upstream before it is eligible to land here.
+
+For information on submitting upstream, see:
+https://sites.google.com/site/skiadocs/developer-documentation/contributing-code/how-to-submit-a-patch
