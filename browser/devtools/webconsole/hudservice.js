@@ -492,8 +492,8 @@ WebConsole.prototype = {
         });
         return;
       }
-      toolbox.selectTool("webconsole");
-      this.viewSource(aSourceURL, aSourceLine);
+      toolbox.selectTool("webconsole")
+             .then(() => this.viewSource(aSourceURL, aSourceLine));
     }
 
     // If the Debugger was already open, switch to it and try to show the
