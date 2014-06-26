@@ -84,19 +84,19 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
-  ElementAnimationCollection* animations =
+  ElementAnimationCollection* collection =
     static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aElementProperty));
-  if (!animations ||
-      !animations->HasAnimationOfProperty(aProperty) ||
-      !animations->CanPerformOnCompositorThread(
+  if (!collection ||
+      !collection->HasAnimationOfProperty(aProperty) ||
+      !collection->CanPerformOnCompositorThread(
         ElementAnimationCollection::CanAnimate_AllowPartial)) {
     return nullptr;
   }
 
   // This animation can be done on the compositor.
   // Mark the frame as active, in case we are able to throttle this animation.
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(animations->mElement);
+  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(collection->mElement);
   if (frame) {
     if (aProperty == eCSSProperty_opacity) {
       ActiveLayerTracker::NotifyAnimated(frame, eCSSProperty_opacity);
@@ -105,7 +105,7 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
     }
   }
 
-  return animations;
+  return collection;
 }
 
 /*
@@ -256,31 +256,31 @@ CommonAnimationManager::UpdateThrottledStyle(dom::Element* aElement,
     curRule.mLevel = ruleNode->GetLevel();
 
     if (curRule.mLevel == nsStyleSet::eAnimationSheet) {
-      ElementAnimationCollection* ea =
+      ElementAnimationCollection* collection =
         mPresContext->AnimationManager()->GetElementAnimations(
           aElement,
           oldStyle->GetPseudoType(),
           false);
-      NS_ASSERTION(ea,
+      NS_ASSERTION(collection,
         "Rule has level eAnimationSheet without animation on manager");
 
       mPresContext->AnimationManager()->UpdateStyleAndEvents(
-        ea, mPresContext->RefreshDriver()->MostRecentRefresh(),
+        collection, mPresContext->RefreshDriver()->MostRecentRefresh(),
         EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = ea->mStyleRule;
+      curRule.mRule = collection->mStyleRule;
     } else if (curRule.mLevel == nsStyleSet::eTransitionSheet) {
-      ElementAnimationCollection* et =
+      ElementAnimationCollection* collection =
         mPresContext->TransitionManager()->GetElementTransitions(
           aElement,
           oldStyle->GetPseudoType(),
           false);
-      NS_ASSERTION(et,
+      NS_ASSERTION(collection,
         "Rule has level eTransitionSheet without transition on manager");
 
-      et->EnsureStyleRuleFor(
+      collection->EnsureStyleRuleFor(
         mPresContext->RefreshDriver()->MostRecentRefresh(),
         EnsureStyleRule_IsNotThrottled);
-      curRule.mRule = et->mStyleRule;
+      curRule.mRule = collection->mStyleRule;
     } else {
       curRule.mRule = ruleNode->GetRule();
     }
@@ -584,8 +584,8 @@ ElementAnimation::ActiveDuration(const AnimationTiming& aTiming)
 bool
 ElementAnimationCollection::CanAnimatePropertyOnCompositor(
   const dom::Element *aElement,
-                                                           nsCSSProperty aProperty,
-                                                           CanAnimateFlags aFlags)
+  nsCSSProperty aProperty,
+  CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
   if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
@@ -759,13 +759,13 @@ ElementAnimationCollection::LogAsyncAnimationFailure(nsCString& aMessage,
 ElementAnimationCollection::PropertyDtor(void *aObject, nsIAtom *aPropertyName,
                                          void *aPropertyValue, void *aData)
 {
-  ElementAnimationCollection* data =
+  ElementAnimationCollection* collection =
     static_cast<ElementAnimationCollection*>(aPropertyValue);
 #ifdef DEBUG
-  NS_ABORT_IF_FALSE(!data->mCalledPropertyDtor, "can't call dtor twice");
-  data->mCalledPropertyDtor = true;
+  NS_ABORT_IF_FALSE(!collection->mCalledPropertyDtor, "can't call dtor twice");
+  collection->mCalledPropertyDtor = true;
 #endif
-  delete data;
+  delete collection;
 }
 
 void
