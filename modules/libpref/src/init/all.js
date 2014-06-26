@@ -3930,6 +3930,9 @@ pref("dom.battery.enabled", true);
 // Image srcset
 pref("dom.image.srcset.enabled", false);
 
+// <picture> element and sizes
+pref("dom.image.picture.enabled", false);
+
 // WebSMS
 pref("dom.sms.enabled", false);
 // Enable Latin characters replacement with corresponding ones in GSM SMS

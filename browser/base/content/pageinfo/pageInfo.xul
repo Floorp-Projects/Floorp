@@ -155,16 +155,6 @@
           <treechildren id="metatreechildren" flex="1"/>
         </tree>        
       </groupbox>
-      <groupbox id="securityBox">
-        <caption id="securityBoxCaption" label="&securityHeader;"/>
-        <description id="general-security-identity" class="header"/>
-        <description id="general-security-privacy"  class="header"/>
-        <hbox id="securityDetailsButtonBox" align="right">
-          <button id="security-view-details" label="&generalSecurityDetails;"
-                  accesskey="&generalSecurityDetails.accesskey;"
-                  oncommand="onClickMore();"/>
-        </hbox>
-      </groupbox>
     </vbox>
 
     <!-- Media information -->

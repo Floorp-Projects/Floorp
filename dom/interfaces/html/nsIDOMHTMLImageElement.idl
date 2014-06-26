@@ -16,12 +16,13 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[uuid(939f4ea1-cb8d-49d0-a4e1-23bce758f4af)]
+[uuid(e83e726a-0aef-4292-938b-253fec691e2f)]
 interface nsIDOMHTMLImageElement : nsISupports
 {
            attribute DOMString        alt;
            attribute DOMString        src;
            attribute DOMString        srcset;
+           attribute DOMString        sizes;
            attribute DOMString        crossOrigin;
            attribute DOMString        useMap;
            attribute boolean          isMap;

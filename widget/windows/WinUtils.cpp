@@ -753,8 +753,6 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Decode the image from the format it was returned to us in (probably PNG)
-  nsAutoCString mimeTypeOfInputData;
-  mimeTypeOfInputData.AssignLiteral("image/vnd.microsoft.icon");
   nsCOMPtr<imgIContainer> container;
   nsCOMPtr<imgITools> imgtool = do_CreateInstance("@mozilla.org/image/tools;1");
   rv = imgtool->DecodeImageData(stream, aMimeType,
