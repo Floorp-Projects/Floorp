@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(909f5972-c74e-44dd-b72a-7ddb62aae617)]
+interface nsINeighboringCellIdsCallback : nsISupports
+{
+  /**
+   * result is an array of nsINeighboringCellInfo.
+   */
+  void notifyGetNeighboringCellIds(in jsval result);
+
+  /**
+   * Callback function with error message.
+   */
+  void notifyGetNeighboringCellIdsFailed(in DOMString error);
+};
+
+[scriptable, uuid(87dc222e-abb3-4342-95bf-626aa19fa20e)]
+interface nsINeighboringCellInfo: nsISupports
+{
+  /**
+   * Type of radio technology.
+   *
+   * Possible values: 'gsm', 'gprs', 'edge', 'umts', 'hsdpa', 'hsupa', 'hspa',
+   *                  'hspa+' or null (unknown).
+   */
+  readonly attribute DOMString networkType;
+
+  /**
+   * Mobile Location Area Code (LAC) for GSM networks.
+   *
+   * Possible ranges from 0x0000 to 0xffff.
+   * -1 if the LAC is unknown.
+   */
+  readonly attribute long gsmLocationAreaCode;
+
+  /**
+   * Mobile Cell ID for GSM networks.
+   *
+   * Possible ranges from 0x00000000 to 0xffffffff.
+   * -1 if the cell id is unknown.
+   */
+  readonly attribute long long gsmCellId;
+
+  /**
+   * Primary Scrambling Code (PSC) for WCDMA networks.
+   *
+   * Possible ranges from 0x0000 to 0x01ff.
+   * -1 if the psc is unknown.
+   */
+  readonly attribute long wcdmaPsc;
+
+  /**
+   * For GSM networks, signalStrength is the received rssi, ranging from 0 to 31.
+   * For WCDMA networks, signalStrength is the CPICH Received Signal Code Power,
+   * ranging from -120 to -25.
+   *
+   * 99 if signalStrength is unknown.
+   */
+  readonly attribute long signalStrength;
+};

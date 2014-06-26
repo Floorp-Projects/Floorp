@@ -8,6 +8,7 @@
 interface nsIDOMMozIccInfo;
 interface nsIMobileConnectionInfo;
 interface nsIMobileMessageCallback;
+interface nsINeighboringCellIdsCallback;
 
 [scriptable, uuid(6e0f45b8-410e-11e3-8c8e-b715b2cd0128)]
 interface nsIRilNetworkInterface : nsINetworkInterface
@@ -55,7 +56,7 @@ interface nsIRilSendWorkerMessageCallback : nsISupports
   boolean handleResponse(in jsval response);
 };
 
-[scriptable, uuid(181d460e-220e-4274-8ba4-43f122eb518d)]
+[scriptable, uuid(31ba65b6-05c7-4bc8-abdc-f1a219811fb4)]
 interface nsIRadioInterface : nsISupports
 {
   readonly attribute nsIRilContext rilContext;
@@ -85,6 +86,11 @@ interface nsIRadioInterface : nsISupports
               [optional] in nsIRilSendWorkerMessageCallback callback);
 
   void getSmscAddress(in nsIMobileMessageCallback request);
+
+  /**
+   * Cell Info functionality.
+   */
+  void getNeighboringCellIds(in nsINeighboringCellIdsCallback callback);
 };
 
 [scriptable, uuid(d035c32e-b491-11e3-9f9d-c716fab88bd6)]
