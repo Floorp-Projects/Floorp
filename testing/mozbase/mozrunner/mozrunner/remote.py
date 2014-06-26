@@ -166,6 +166,10 @@ class B2GRunner(RemoteRunner):
     def start(self, timeout=None, outputTimeout=None):
         self.timeout = timeout
         self.outputTimeout = outputTimeout
+
+        if not self._wait_for_net():
+            raise Exception("network not available, unable to start")
+
         self._setup_remote_profile()
         # reboot device so it starts up with the proper profile
         if not self.emulator:
@@ -288,7 +292,7 @@ class B2GRunner(RemoteRunner):
             proc.stdout.readline() # ignore first line
             line = proc.stdout.readline()
             while line != "":
-                if (re.search(r'UP\s+(?:[0-9]{1,3}\.){3}[0-9]{1,3}', line)):
+                if (re.search(r'UP\s+[1-9]\d{0,2}\.\d{1,3}\.\d{1,3}\.\d{1,3}', line)):
                     active = True
                     break
                 line = proc.stdout.readline()
