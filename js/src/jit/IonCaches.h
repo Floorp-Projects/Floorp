@@ -851,7 +851,8 @@ class SetElementIC : public RepatchIonCache
     Register object_;
     Register tempToUnboxIndex_;
     Register temp_;
-    FloatRegister tempFloat_;
+    FloatRegister tempDouble_;
+    FloatRegister tempFloat32_;
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
@@ -861,12 +862,14 @@ class SetElementIC : public RepatchIonCache
 
   public:
     SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
-                 FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
+                 FloatRegister tempDouble, FloatRegister tempFloat32,
+                 ValueOperand index, ConstantOrRegister value,
                  bool strict, bool guardHoles)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
-        tempFloat_(tempFloat),
+        tempDouble_(tempDouble),
+        tempFloat32_(tempFloat32),
         index_(index),
         value_(value),
         strict_(strict),
@@ -888,8 +891,11 @@ class SetElementIC : public RepatchIonCache
     Register temp() const {
         return temp_;
     }
-    FloatRegister tempFloat() const {
-        return tempFloat_;
+    FloatRegister tempDouble() const {
+        return tempDouble_;
+    }
+    FloatRegister tempFloat32() const {
+        return tempFloat32_;
     }
     ValueOperand index() const {
         return index_;
@@ -1247,7 +1253,8 @@ class SetElementParIC : public ParallelIonCache
     Register object_;
     Register tempToUnboxIndex_;
     Register temp_;
-    FloatRegister tempFloat_;
+    FloatRegister tempDouble_;
+    FloatRegister tempFloat32_;
     ValueOperand index_;
     ConstantOrRegister value_;
     bool strict_;
@@ -1255,12 +1262,13 @@ class SetElementParIC : public ParallelIonCache
 
   public:
     SetElementParIC(Register object, Register tempToUnboxIndex, Register temp,
-                    FloatRegister tempFloat, ValueOperand index, ConstantOrRegister value,
+                    FloatRegister tempDouble, FloatRegister tempFloat32, ValueOperand index, ConstantOrRegister value,
                     bool strict, bool guardHoles)
       : object_(object),
         tempToUnboxIndex_(tempToUnboxIndex),
         temp_(temp),
-        tempFloat_(tempFloat),
+        tempDouble_(tempDouble),
+        tempFloat32_(tempFloat32),
         index_(index),
         value_(value),
         strict_(strict),
@@ -1285,8 +1293,11 @@ class SetElementParIC : public ParallelIonCache
     Register temp() const {
         return temp_;
     }
-    FloatRegister tempFloat() const {
-        return tempFloat_;
+    FloatRegister tempDouble() const {
+        return tempDouble_;
+    }
+    FloatRegister tempFloat32() const {
+        return tempFloat32_;
     }
     ValueOperand index() const {
         return index_;

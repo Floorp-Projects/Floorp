@@ -10,36 +10,51 @@ function test() {
   helpers.addTabWithToolbar(TEST_URI, function(options) {
     return helpers.audit(options, [
       {
-        setup: 'inject',
+        setup:    'inject',
         check: {
           input:  'inject',
-          hints:  ' <library>',
           markup: 'VVVVVV',
+          hints:        ' <library>',
           status: 'ERROR'
         },
       },
       {
-        setup: 'inject j',
+        setup:    'inject j',
         check: {
           input:  'inject j',
-          hints:  'Query',
           markup: 'VVVVVVVI',
+          hints:          'Query',
           status: 'ERROR'
         },
       },
       {
-        setup: 'inject http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
+        setup: 'inject notauri',
+        check: {
+          input:  'inject notauri',
+          hints:                ' -> http://notauri/',
+          markup: 'VVVVVVVIIIIIII',
+          status: 'ERROR',
+          args: {
+            library: {
+              value: undefined,
+              status: 'INCOMPLETE'
+            }
+          }
+        }
+      },
+      {
+        setup:    'inject http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
         check: {
           input:  'inject http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
-          hints:  '',
           markup: 'VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV',
+          hints:                                                                                            '',
           status: 'VALID',
           args: {
             library: {
               value: function(library) {
-                is(library.type, 'string', 'inject type name');
-                is(library.string, 'http://example.com/browser/browser/devtools/commandline/test/browser_cmd_inject.js',
-                  'inject uri data');
+                is(library.type, 'url', 'inject type name');
+                is(library.url.origin, 'http://example.com', 'inject url hostname');
+                ok(library.url.path.indexOf('_inject.js') != -1, 'inject url path');
               },
               status: 'VALID'
             }
@@ -47,27 +62,6 @@ function test() {
         },
         exec: {
           output: [ /http:\/\/example.com\/browser\/browser\/devtools\/commandline\/test\/browser_cmd_inject.js loaded/ ]
-        }
-      },
-      {
-        setup: 'inject notauri',
-        check: {
-          input:  'inject notauri',
-          hints:  '',
-          markup: 'VVVVVVVVVVVVVV',
-          status: 'VALID',
-          args: {
-            library: {
-              value: function(library) {
-                is(library.type, 'string', 'inject type name');
-                is(library.string, 'notauri', 'inject notauri data');
-              },
-              status: 'VALID'
-            }
-          }
-        },
-        exec: {
-          output: [ /Failed to load notauri - Invalid URI/ ]
         }
       }
     ]);

@@ -19,10 +19,12 @@ const { method, Arg, Option, RetVal } = protocol;
 
 exports.register = function(handle) {
   handle.addTabActor(WebAudioActor, "webaudioActor");
+  handle.addGlobalActor(WebAudioActor, "webaudioActor");
 };
 
 exports.unregister = function(handle) {
   handle.removeTabActor(WebAudioActor);
+  handle.removeGlobalActor(WebAudioActor);
 };
 
 const AUDIO_GLOBALS = [

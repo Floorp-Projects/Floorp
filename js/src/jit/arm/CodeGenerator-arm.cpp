@@ -988,14 +988,14 @@ CodeGeneratorARM::visitPowHalfD(LPowHalfD *ins)
     Label done;
 
     // Masm.pow(-Infinity, 0.5) == Infinity.
-    masm.ma_vimm(NegativeInfinity<double>(), ScratchFloatReg);
-    masm.compareDouble(input, ScratchFloatReg);
-    masm.ma_vneg(ScratchFloatReg, output, Assembler::Equal);
+    masm.ma_vimm(NegativeInfinity<double>(), ScratchDoubleReg);
+    masm.compareDouble(input, ScratchDoubleReg);
+    masm.ma_vneg(ScratchDoubleReg, output, Assembler::Equal);
     masm.ma_b(&done, Assembler::Equal);
 
     // Math.pow(-0, 0.5) == 0 == Math.pow(0, 0.5). Adding 0 converts any -0 to 0.
-    masm.ma_vimm(0.0, ScratchFloatReg);
-    masm.ma_vadd(ScratchFloatReg, input, output);
+    masm.ma_vimm(0.0, ScratchDoubleReg);
+    masm.ma_vadd(ScratchDoubleReg, input, output);
     masm.ma_vsqrt(output, output);
 
     masm.bind(&done);
@@ -1251,8 +1251,8 @@ CodeGeneratorARM::visitRoundF(LRoundF *lir)
 void
 CodeGeneratorARM::emitRoundDouble(FloatRegister src, Register dest, Label *fail)
 {
-    masm.ma_vcvt_F64_I32(src, ScratchFloatReg);
-    masm.ma_vxfer(ScratchFloatReg, dest);
+    masm.ma_vcvt_F64_I32(src, ScratchDoubleReg);
+    masm.ma_vxfer(ScratchDoubleReg, dest);
     masm.ma_cmp(dest, Imm32(0x7fffffff));
     masm.ma_cmp(dest, Imm32(0x80000000), Assembler::NotEqual);
     masm.ma_b(fail, Assembler::Equal);
@@ -1354,8 +1354,8 @@ CodeGeneratorARM::visitBoxFloatingPoint(LBoxFloatingPoint *box)
 
     FloatRegister reg = ToFloatRegister(in);
     if (box->type() == MIRType_Float32) {
-        masm.convertFloat32ToDouble(reg, ScratchFloatReg);
-        reg = ScratchFloatReg;
+        masm.convertFloat32ToDouble(reg, ScratchFloat32Reg);
+        reg = ScratchFloat32Reg;
     }
 
     //masm.as_vxfer(ToRegister(payload), ToRegister(type),

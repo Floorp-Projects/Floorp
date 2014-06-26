@@ -878,6 +878,81 @@ nsContentUtils::InternalSerializeAutocompleteAttribute(const nsAttrValue* aAttrV
   return eAutocompleteAttrState_Invalid;
 }
 
+// Parse an integer according to HTML spec
+int32_t
+nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
+                                 ParseHTMLIntegerResultFlags *aResult)
+{
+  int result = eParseHTMLInteger_NoFlags;
+
+  nsAString::const_iterator iter, end;
+  aValue.BeginReading(iter);
+  aValue.EndReading(end);
+
+  while (iter != end && nsContentUtils::IsHTMLWhitespace(*iter)) {
+    result |= eParseHTMLInteger_NonStandard;
+    ++iter;
+  }
+
+  if (iter == end) {
+    result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
+    *aResult = (ParseHTMLIntegerResultFlags)result;
+    return 0;
+  }
+
+  bool negate = false;
+  if (*iter == char16_t('-')) {
+    negate = true;
+    ++iter;
+  } else if (*iter == char16_t('+')) {
+    result |= eParseHTMLInteger_NonStandard;
+    ++iter;
+  }
+
+  bool foundValue = false;
+  int32_t value = 0;
+  int32_t pValue = 0; // Previous value, used to check integer overflow
+  while (iter != end) {
+    if (*iter >= char16_t('0') && *iter <= char16_t('9')) {
+      value = (value * 10) + (*iter - char16_t('0'));
+      ++iter;
+      // Checking for integer overflow.
+      if (pValue > value) {
+        result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorOverflow;
+        break;
+      } else {
+        foundValue = true;
+        pValue = value;
+      }
+    } else if (*iter == char16_t('%')) {
+      ++iter;
+      result |= eParseHTMLInteger_IsPercent;
+      break;
+    } else {
+      break;
+    }
+  }
+
+  if (!foundValue) {
+    result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
+  }
+
+  if (negate) {
+    value = -value;
+    // Checking the special case of -0.
+    if (!value) {
+      result |= eParseHTMLInteger_NonStandard;
+    }
+  }
+
+  if (iter != end) {
+    result |= eParseHTMLInteger_DidNotConsumeAllInput;
+  }
+
+  *aResult = (ParseHTMLIntegerResultFlags)result;
+  return value;
+}
+
 #define SKIP_WHITESPACE(iter, end_iter, end_res)                 \
   while ((iter) != (end_iter) && nsCRT::IsAsciiSpace(*(iter))) { \
     ++(iter);                                                    \
@@ -6323,7 +6398,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(aDocument->GetWindow()))) {
+  if (NS_WARN_IF(!jsapi.Init(aDocument->GetWindow()))) {
     return true;
   }
   JSContext* cx = jsapi.cx();

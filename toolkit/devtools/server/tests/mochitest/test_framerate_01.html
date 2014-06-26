@@ -86,10 +86,10 @@ window.onload = function() {
 
       is(currFramerateStart, currFramerateEnd,
         "The start and end framerate values should be equal.");
-      isnot(currFramerateStart, prevFramerateValue,
-        "There should be different framerate values for each bucket.");
 
       is(typeof currFramerateStart, "number", "All values should be numbers.");
+      ok(currFramerateStart <= 60, "All values were correctly clamped.")
+
       prevFramerateValue = currFramerateStart;
     }
 
