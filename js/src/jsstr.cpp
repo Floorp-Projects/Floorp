@@ -3102,9 +3102,9 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
         return NewDependentString(cx, flatStr, ranges[0].start, ranges[0].length);
 
     bool isLatin1 = flatStr->hasLatin1Chars();
-    uint32_t fatInlineMaxLength = isLatin1
-                                  ? JSFatInlineString::MAX_LENGTH_LATIN1
-                                  : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+    uint32_t fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+    if (isLatin1)
+        fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_LATIN1;
 
     /* Collect substrings into a rope */
     size_t i = 0;
