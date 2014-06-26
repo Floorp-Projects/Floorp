@@ -36,7 +36,7 @@ var Shell = Class({
 
     let constructor = this._editorTypeForResource();
 
-    this.editor = constructor(this.doc, this.host);
+    this.editor = constructor(this.host);
     this.editor.shell = this;
     this.editorAppended = this.editor.appended;
 

@@ -14,11 +14,11 @@ var DeletePlugin = Class({
   shouldConfirm: true,
 
   init: function(host) {
-    this.host.addCommand({
+    this.host.addCommand(this, {
       id: "cmd-delete"
     });
     this.host.createMenuItem({
-      parent: "#directory-menu-popup",
+      parent: this.host.contextMenuPopup,
       label: getLocalizedString("projecteditor.deleteLabel"),
       command: "cmd-delete"
     });
