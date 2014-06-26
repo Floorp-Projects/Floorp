@@ -44,6 +44,7 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 log.warn("The FxAccountsManager is only functional in B2G at this time.");
 var FxAccountsManager = null;
 var ONVERIFIED_NOTIFICATION = null;
+var ONLOGIN_NOTIFICATION = null;
 var ONLOGOUT_NOTIFICATION = null;
 #endif
 
@@ -51,6 +52,7 @@ function FxAccountsService() {
   Services.obs.addObserver(this, "quit-application-granted", false);
   if (ONVERIFIED_NOTIFICATION) {
     Services.obs.addObserver(this, ONVERIFIED_NOTIFICATION, false);
+    Services.obs.addObserver(this, ONLOGIN_NOTIFICATION, false);
     Services.obs.addObserver(this, ONLOGOUT_NOTIFICATION, false);
   }
 
@@ -69,10 +71,16 @@ FxAccountsService.prototype = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case null:
-        // Paranoia against matching null ONVERIFIED or ONLOGOUT
+        // Guard against matching null ON*_NOTIFICATION
         break;
       case ONVERIFIED_NOTIFICATION:
         log.debug("Received " + ONVERIFIED_NOTIFICATION + "; firing request()s");
+        for (let [rpId,] of this._rpFlows) {
+          this.request(rpId);
+        }
+        break;
+      case ONLOGIN_NOTIFICATION:
+        log.debug("Received " + ONLOGIN_NOTIFICATION + "; doLogin()s fired");
         for (let [rpId,] of this._rpFlows) {
           this.request(rpId);
         }
@@ -87,6 +95,8 @@ FxAccountsService.prototype = {
         Services.obs.removeObserver(this, "quit-application-granted");
         if (ONVERIFIED_NOTIFICATION) {
           Services.obs.removeObserver(this, ONVERIFIED_NOTIFICATION);
+          Services.obs.removeObserver(this, ONLOGIN_NOTIFICATION);
+          Services.obs.removeObserver(this, ONLOGOUT_NOTIFICATION);
         }
         break;
     }
