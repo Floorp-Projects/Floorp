@@ -420,26 +420,5 @@ GMPParent::ReadGMPMetaData()
   return NS_OK;
 }
 
-bool
-GMPParent::CanBeSharedCrossOrigin() const
-{
-  return mOrigin.IsEmpty();
-}
-
-bool
-GMPParent::CanBeUsedFrom(const nsAString& aOrigin) const
-{
-  return (mOrigin.IsEmpty() && State() == GMPStateNotLoaded) ||
-         mOrigin.Equals(aOrigin);
-}
-
-void
-GMPParent::SetOrigin(const nsAString& aOrigin)
-{
-  MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(CanBeUsedFrom(aOrigin));
-  mOrigin = aOrigin;
-}
-
 } // namespace gmp
 } // namespace mozilla
