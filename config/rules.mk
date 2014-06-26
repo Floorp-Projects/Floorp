@@ -35,23 +35,8 @@ endif
 USE_AUTOTARGETS_MK = 1
 include $(topsrcdir)/config/makefiles/makeutils.mk
 
-# Only build with Pymake (not GNU make) on Windows.
-ifeq ($(HOST_OS_ARCH),WINNT)
-ifndef L10NBASEDIR
-ifndef .PYMAKE
-$(error Pymake is required to build on Windows. Run |./mach build| to \
-automatically use pymake or invoke pymake directly via \
-|python build/pymake/make.py|.)
-endif
-endif
-endif
-
 ifdef REBUILD_CHECK
-ifdef .PYMAKE
-REPORT_BUILD = @%rebuild_check rebuild_check $@ $^
-else
 REPORT_BUILD = $(info $(shell $(PYTHON) $(MOZILLA_DIR)/config/rebuild_check.py $@ $^))
-endif
 else
 REPORT_BUILD = $(info $(notdir $@))
 endif
@@ -66,15 +51,11 @@ endif
 # ELOG prints out failed command when building silently (gmake -s). Pymake
 # prints out failed commands anyway, so ELOG just makes things worse by
 # forcing shell invocations.
-ifndef .PYMAKE
 ifneq (,$(findstring s, $(filter-out --%, $(MAKEFLAGS))))
   ELOG := $(EXEC) sh $(BUILD_TOOLS)/print-failed-commands.sh
 else
   ELOG :=
 endif # -s
-else
-  ELOG :=
-endif # ifndef .PYMAKE
 
 _VPATH_SRCS = $(abspath $<)
 
@@ -238,7 +219,7 @@ endif
 COMPILE_CFLAGS += $(COMPILE_PDB_FLAG)
 COMPILE_CXXFLAGS += $(COMPILE_PDB_FLAG)
 
-LINK_PDBFILE = $(basename $(@F)).pdb
+LINK_PDBFILE ?= $(basename $(@F)).pdb
 ifdef MOZ_DEBUG
 CODFILE=$(basename $(@F)).cod
 endif
@@ -1142,9 +1123,7 @@ else
 endif
 
 # Cancel GNU make built-in implicit rules
-ifndef .PYMAKE
 MAKEFLAGS += -r
-endif
 
 ifneq (,$(filter WINNT,$(OS_ARCH)))
 SEP := ;

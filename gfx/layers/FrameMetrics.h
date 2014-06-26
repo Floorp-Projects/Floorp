@@ -354,10 +354,17 @@ public:
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRoot;
 
-  // Whether or not this frame is for an element marked 'scrollgrab'.
-  bool mHasScrollgrab;
-
 public:
+  void SetHasScrollgrab(bool aHasScrollgrab)
+  {
+    mHasScrollgrab = aHasScrollgrab;
+  }
+
+  bool GetHasScrollgrab() const
+  {
+    return mHasScrollgrab;
+  }
+
   void SetScrollOffset(const CSSPoint& aScrollOffset)
   {
     mScrollOffset = aScrollOffset;
@@ -459,6 +466,9 @@ public:
 private:
   // New fields from now on should be made private and old fields should
   // be refactored to be private.
+
+  // Whether or not this frame is for an element marked 'scrollgrab'.
+  bool mHasScrollgrab;
 
   // A unique ID assigned to each scrollable frame.
   ViewID mScrollId;

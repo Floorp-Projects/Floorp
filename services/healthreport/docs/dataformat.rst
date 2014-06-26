@@ -1402,6 +1402,36 @@ Example
       "google.urlbar": 7
     },
 
+org.mozilla.searches.engines
+----------------------------
+
+This measurement contains information about search engines.
+
+Version 1
+^^^^^^^^^
+
+This version debuted with Firefox 31 on desktop. It contains the
+following properties:
+
+default
+   Daily string identifier or name of the default search engine provider.
+
+   This field will only be collected if Telemetry is enabled. If
+   Telemetry is enabled and then later disabled, this field may
+   disappear from future days in the payload.
+
+   The special value ``NONE`` could occur if there is no default search
+   engine.
+
+   The special value ``UNDEFINED`` could occur if a default search
+   engine exists but its identifier could not be determined.
+
+   This field's contents are
+   ``Services.search.defaultEngine.identifier`` (if defined) or
+   ``"other-"`` + ``Services.search.defaultEngine.name`` if not.
+   In other words, search engines without an ``.identifier``
+   are prefixed with ``other-``.
+
 org.mozilla.sync.sync
 ---------------------
 
@@ -1639,13 +1669,22 @@ lastActive
     ID of the final Telemetry Experiment that is active on a given day, if any.
 
 
+Version 2
+^^^^^^^^^
+
+Adds an additional optional property:
+
+lastActiveBranch
+    If the experiment uses branches, the branch identifier string.
+
 Example
 ^^^^^^^
 
 ::
 
     "org.mozilla.experiments.info": {
-      "_v": 1,
-      "lastActive": "some.experiment.id"
+      "_v": 2,
+      "lastActive": "some.experiment.id",
+      "lastActiveBranch": "control"
     }
 

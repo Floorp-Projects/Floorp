@@ -7,42 +7,17 @@
 LIBRARY_NAME = 'xul'
 
 SOURCES += [
-    'nsStaticXULComponents.cpp',
+    'StaticXULComponentsStart.cpp',
 ]
+
+# This, combined with the fact the file is first, makes the start pointer
+# it contains first in Windows PGO builds.
+SOURCES['StaticXULComponentsStart.cpp'].no_pgo = True
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
         'nsDllMain.cpp',
     ]
-
-# component libraries
-additional_defines = (
-    'MOZ_AUTH_EXTENSION',
-    'MOZ_GIO_COMPONENT',
-    'MOZ_JSDEBUGGER',
-    'MOZ_PERMISSIONS',
-    'MOZ_PREF_EXTENSIONS',
-    'MOZ_SPELLCHECK',
-    'MOZ_UNIVERSALCHARDET',
-    'MOZ_ZIPWRITER',
-)
-
-for var in additional_defines:
-    if CONFIG[var]:
-        DEFINES[var] = True
-
-if CONFIG['MOZ_DEBUG'] and CONFIG['ENABLE_TESTS']:
-    DEFINES['ENABLE_LAYOUTDEBUG'] = True
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] not in ('android', 'gonk', 'qt',
-                                        'cocoa', 'windows') and \
-   CONFIG['MOZ_XUL']:
-    DEFINES['MOZ_FILEVIEW'] = True
-
-# Platform-specific icon channel stuff - supported mostly-everywhere
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('windows', 'mac', 'cocoa',
-                                    'gtk2', 'gtk3', 'qt', 'android'):
-    DEFINES['ICON_DECODER'] = True
 
 LOCAL_INCLUDES += [
     '/config',
@@ -57,4 +32,4 @@ if CONFIG['OS_ARCH'] == 'WINNT' and not CONFIG['GNU_CC']:
 
 FAIL_ON_WARNINGS = True
 
-DIRS += ['build', 'gtest']
+DIRS += ['StaticXULComponentsEnd', 'build', 'gtest']
