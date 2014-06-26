@@ -396,7 +396,7 @@ class MozbuildObject(ProcessExecutionMixin):
             srcdir=False, allow_parallel=True, line_handler=None,
             append_env=None, explicit_env=None, ignore_errors=False,
             ensure_exit_code=0, silent=True, print_directory=True,
-            pass_thru=False, num_jobs=0, force_pymake=False):
+            pass_thru=False, num_jobs=0):
         """Invoke make.
 
         directory -- Relative directory to look for Makefile in.
@@ -408,11 +408,10 @@ class MozbuildObject(ProcessExecutionMixin):
         silent -- If True (the default), run make in silent mode.
         print_directory -- If True (the default), have make print directories
         while doing traversal.
-        force_pymake -- If True, pymake will be used instead of GNU make.
         """
         self._ensure_objdir_exists()
 
-        args = self._make_path(force_pymake=force_pymake)
+        args = self._make_path()
 
         if directory:
             args.extend(['-C', directory.replace(os.sep, '/')])
@@ -475,44 +474,45 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return fn(**params)
 
-    def _make_path(self, force_pymake=False):
-        if self._is_windows() and not force_pymake:
-            # Use gnumake if it's available and we can verify it's a working
-            # version.
-            baseconfig = os.path.join(self.topsrcdir, 'config', 'baseconfig.mk')
-            if os.path.exists(baseconfig):
+    def _make_path(self):
+        baseconfig = os.path.join(self.topsrcdir, 'config', 'baseconfig.mk')
+
+        def validate_make(make):
+            if os.path.exists(baseconfig) and os.path.exists(make):
+                cmd = [make, '-f', baseconfig]
+                if self._is_windows():
+                    cmd.append('HOST_OS_ARCH=WINNT')
                 try:
-                    make = which.which('gnumake')
-                    subprocess.check_call([make, '-f', baseconfig, 'HOST_OS_ARCH=WINNT'],
-                        stdout=open(os.devnull, 'wb'), stderr=subprocess.STDOUT)
-                    return [make]
+                    subprocess.check_call(cmd, stdout=open(os.devnull, 'wb'),
+                        stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError:
-                    pass
-                except which.WhichError:
-                    pass
+                    return False
+                return True
+            return False
 
-            # Use mozmake if it's available.
+        possible_makes = ['gmake', 'make', 'mozmake', 'gnumake']
+
+        if 'MAKE' in os.environ:
+            make = os.environ['MAKE']
+            if os.path.isabs(make):
+                if validate_make(make):
+                    return [make]
+            else:
+                possible_makes.insert(0, make)
+
+        for test in possible_makes:
             try:
-                return [which.which('mozmake')]
-            except which.WhichError:
-                pass
-
-        if self._is_windows() or force_pymake:
-            make_py = os.path.join(self.topsrcdir, 'build', 'pymake',
-                'make.py').replace(os.sep, '/')
-
-            # We might want to consider invoking with the virtualenv's Python
-            # some day. But, there is a chicken-and-egg problem w.r.t. when the
-            # virtualenv is created.
-            return [sys.executable, make_py]
-
-        for test in ['gmake', 'make']:
-            try:
-                return [which.which(test)]
+                make = which.which(test)
             except which.WhichError:
                 continue
+            if validate_make(make):
+                return [make]
 
-        raise Exception('Could not find a suitable make implementation.')
+        if self._is_windows():
+            raise Exception('Could not find a suitable make implementation.\n'
+                'Please use MozillaBuild 1.9 or newer')
+        else:
+            raise Exception('Could not find a suitable make implementation.')
 
     def _run_command_in_srcdir(self, **args):
         return self.run_process(cwd=self.topsrcdir, **args)
