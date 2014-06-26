@@ -58,30 +58,14 @@ using namespace mozilla::dom;
  * returned by the getComputedStyle() function.
  */
 
-static nsComputedDOMStyle *sCachedComputedDOMStyle;
-
 already_AddRefed<nsComputedDOMStyle>
 NS_NewComputedDOMStyle(dom::Element* aElement, const nsAString& aPseudoElt,
                        nsIPresShell* aPresShell,
                        nsComputedDOMStyle::StyleType aStyleType)
 {
   nsRefPtr<nsComputedDOMStyle> computedStyle;
-  if (sCachedComputedDOMStyle) {
-    // There's an unused nsComputedDOMStyle cached, use it.
-    // But before we use it, re-initialize the object.
-
-    // Oh yeah baby, placement new!
-    computedStyle = new (sCachedComputedDOMStyle)
-      nsComputedDOMStyle(aElement, aPseudoElt, aPresShell, aStyleType);
-
-    sCachedComputedDOMStyle = nullptr;
-  } else {
-    // No nsComputedDOMStyle cached, create a new one.
-
-    computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell,
-                                           aStyleType);
-  }
-
+  computedStyle = new nsComputedDOMStyle(aElement, aPseudoElt, aPresShell,
+                                         aStyleType);
   return computedStyle.forget();
 }
 
@@ -277,18 +261,6 @@ nsComputedDOMStyle::~nsComputedDOMStyle()
 {
 }
 
-void
-nsComputedDOMStyle::Shutdown()
-{
-  // We want to de-allocate without calling the dtor since we
-  // already did that manually in doDestroyComputedDOMStyle(),
-  // so cast our cached object to something that doesn't know
-  // about our dtor.
-  delete reinterpret_cast<char*>(sCachedComputedDOMStyle);
-  sCachedComputedDOMStyle = nullptr;
-}
-
-
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsComputedDOMStyle, mContent)
 
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_BEGIN(nsComputedDOMStyle)
@@ -309,24 +281,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsComputedDOMStyle)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
 
-static void doDestroyComputedDOMStyle(nsComputedDOMStyle *aComputedStyle)
-{
-  if (!sCachedComputedDOMStyle) {
-    // The cache is empty, store aComputedStyle in the cache.
-
-    sCachedComputedDOMStyle = aComputedStyle;
-    sCachedComputedDOMStyle->~nsComputedDOMStyle();
-  } else {
-    // The cache is full, delete aComputedStyle
-
-    delete aComputedStyle;
-  }
-}
-
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsComputedDOMStyle)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsComputedDOMStyle,
-                                              doDestroyComputedDOMStyle(this))
-
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsComputedDOMStyle)
 
 NS_IMETHODIMP
 nsComputedDOMStyle::GetPropertyValue(const nsCSSProperty aPropID,
