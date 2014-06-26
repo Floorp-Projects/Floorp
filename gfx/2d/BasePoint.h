@@ -66,6 +66,10 @@ struct BasePoint {
     return Sub(-x, -y);
   }
 
+  T Length() const {
+    return hypot(x, y);
+  }
+
   // Round() is *not* rounding to nearest integer if the values are negative.
   // They are always rounding as floor(n + 0.5).
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
