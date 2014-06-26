@@ -200,8 +200,8 @@ class MacroAssemblerMIPS : public Assembler
 
     // fast mod, uses scratch registers, and thus needs to be in the assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
-    void ma_mod_mask(Register src, Register dest, Register hold, int32_t shift,
-                     Label *negZero = nullptr);
+    void ma_mod_mask(Register src, Register dest, Register hold, Register remain,
+                     int32_t shift, Label *negZero = nullptr);
 
     // memory
     // shortcut for when we know we're transferring 32 bits of data
