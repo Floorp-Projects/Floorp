@@ -18,50 +18,50 @@
 BEGIN_ARCHIVEREADER_NAMESPACE
 
 /**
- * ZipFile to DOMFileCC
+ * ArchiveZipFileImpl to DOMFileImpl
  */
-class ArchiveZipFile : public nsDOMFileCC
+class ArchiveZipFileImpl : public DOMFileImplBase
 {
 public:
-  ArchiveZipFile(const nsAString& aName,
-                 const nsAString& aContentType,
-                 uint64_t aLength,
-                 ZipCentral& aCentral,
-                 ArchiveReader* aReader)
-  : nsDOMFileCC(aName, aContentType, aLength),
+  ArchiveZipFileImpl(const nsAString& aName,
+                     const nsAString& aContentType,
+                     uint64_t aLength,
+                     ZipCentral& aCentral,
+                     ArchiveReader* aReader)
+  : DOMFileImplBase(aName, aContentType, aLength),
     mCentral(aCentral),
     mArchiveReader(aReader),
     mFilename(aName)
   {
     NS_ASSERTION(mArchiveReader, "must have a reader");
-    MOZ_COUNT_CTOR(ArchiveZipFile);
+    MOZ_COUNT_CTOR(ArchiveZipFileImpl);
   }
 
-  ArchiveZipFile(const nsAString& aName,
-                 const nsAString& aContentType,
-                 uint64_t aStart,
-                 uint64_t aLength,
-                 ZipCentral& aCentral,
-                 ArchiveReader* aReader)
-  : nsDOMFileCC(aContentType, aStart, aLength),
+  ArchiveZipFileImpl(const nsAString& aName,
+                     const nsAString& aContentType,
+                     uint64_t aStart,
+                     uint64_t aLength,
+                     ZipCentral& aCentral,
+                     ArchiveReader* aReader)
+  : DOMFileImplBase(aContentType, aStart, aLength),
     mCentral(aCentral),
     mArchiveReader(aReader),
     mFilename(aName)
   {
     NS_ASSERTION(mArchiveReader, "must have a reader");
-    MOZ_COUNT_CTOR(ArchiveZipFile);
+    MOZ_COUNT_CTOR(ArchiveZipFileImpl);
   }
 
-  virtual ~ArchiveZipFile()
+  virtual ~ArchiveZipFileImpl()
   {
-    MOZ_COUNT_DTOR(ArchiveZipFile);
+    MOZ_COUNT_DTOR(ArchiveZipFileImpl);
   }
 
   // Overrides:
-  NS_IMETHOD GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
 
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ArchiveZipFile, nsDOMFileCC)
+  virtual void Unlink() MOZ_OVERRIDE;
+  virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE;
 
 protected:
   virtual already_AddRefed<nsIDOMBlob> CreateSlice(uint64_t aStart,

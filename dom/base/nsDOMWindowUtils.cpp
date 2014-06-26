@@ -2784,7 +2784,8 @@ nsDOMWindowUtils::WrapDOMFile(nsIFile *aFile,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ADDREF(*aDOMFile = new nsDOMFileFile(aFile));
+  nsRefPtr<DOMFile> file = DOMFile::CreateFromFile(aFile);
+  file.forget(aDOMFile);
   return NS_OK;
 }
 
@@ -2959,21 +2960,30 @@ GetFileOrBlob(const nsAString& aName, JS::Handle<JS::Value> aBlobParts,
   nsCOMPtr<nsISupports> file;
 
   if (aName.IsVoid()) {
-    rv = nsDOMMultipartFile::NewBlob(getter_AddRefs(file));
+    rv = DOMMultipartFileImpl::NewBlob(getter_AddRefs(file));
   }
   else {
-    rv = nsDOMMultipartFile::NewFile(aName, getter_AddRefs(file));
+    rv = DOMMultipartFileImpl::NewFile(aName, getter_AddRefs(file));
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsDOMMultipartFile* domFile =
-    static_cast<nsDOMMultipartFile*>(static_cast<nsIDOMFile*>(file.get()));
+  nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(file);
+  MOZ_ASSERT(blob);
+
+  nsRefPtr<DOMFile> domFile = static_cast<DOMFile*>(blob.get());
+
+  DOMFileImpl* fileImpl = domFile->Impl();
+  MOZ_ASSERT(fileImpl);
+
+  DOMMultipartFileImpl* domFileImpl =
+    static_cast<DOMMultipartFileImpl*>(fileImpl);
 
   JS::AutoValueArray<2> args(aCx);
   args[0].set(aBlobParts);
   args[1].set(aParameters);
 
-  rv = domFile->InitBlob(aCx, aOptionalArgCount, args.begin(), GetXPConnectNative);
+  rv = domFileImpl->InitBlob(aCx, aOptionalArgCount, args.begin(),
+                             GetXPConnectNative);
   NS_ENSURE_SUCCESS(rv, rv);
 
   file.forget(aResult);

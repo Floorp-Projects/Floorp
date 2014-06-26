@@ -1874,7 +1874,9 @@ bool nsXMLHttpRequest::CreateDOMFile(nsIRequest *request)
   mChannel->GetContentType(contentType);
 
   mDOMFile =
-    new nsDOMFileFile(file, EmptyString(), NS_ConvertASCIItoUTF16(contentType));
+    DOMFile::CreateFromFile(file, EmptyString(),
+                            NS_ConvertASCIItoUTF16(contentType));
+
   mBlobSet = nullptr;
   NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
   return true;
