@@ -6,8 +6,9 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(376d3a43-a7f2-4ac0-b196-d83acb3a68cc)]
+[scriptable, uuid(2dff5d37-d39d-4a7b-9bad-c108712c8a91)]
 interface nsIMobileIdentityService : nsISupports
 {
-  nsISupports getMobileIdAssertion(in nsIDOMWindow window);
+  nsISupports getMobileIdAssertion(in nsIDOMWindow window,
+                                   in jsval options);
 };
