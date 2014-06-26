@@ -12,14 +12,6 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_CYCLE_COLLECTING_NATIVE_ADDREF(nsXMLBindingSet)
-NS_IMPL_CYCLE_COLLECTING_NATIVE_RELEASE(nsXMLBindingSet)
-
-NS_IMPL_CYCLE_COLLECTION(nsXMLBindingSet, mFirst)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXMLBindingSet, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXMLBindingSet, Release)
-
 nsXMLBindingSet::~nsXMLBindingSet()
 {}
 
