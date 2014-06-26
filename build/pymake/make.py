@@ -18,13 +18,12 @@ if __name__ == '__main__':
     import subprocess
     mozmake = os.path.join(os.path.dirname(__file__), '..', '..',
         'mozmake.exe')
-    if os.path.exists(mozmake):
-        cmd = [mozmake]
-        cmd.extend(sys.argv[1:])
-        shell = os.environ.get('SHELL')
-        if shell and not shell.lower().endswith('.exe'):
-            cmd += ['SHELL=%s.exe' % shell]
-        sys.exit(subprocess.call(cmd))
+    cmd = [mozmake]
+    cmd.extend(sys.argv[1:])
+    shell = os.environ.get('SHELL')
+    if shell and not shell.lower().endswith('.exe'):
+        cmd += ['SHELL=%s.exe' % shell]
+    sys.exit(subprocess.call(cmd))
 
   sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
   sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', 0)
