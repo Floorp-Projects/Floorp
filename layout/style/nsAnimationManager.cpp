@@ -387,7 +387,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (uint32_t animIdx = 0, animEnd = disp->mAnimationNameCount;
        animIdx != animEnd; ++animIdx) {
-    const nsAnimation& src = disp->mAnimations[animIdx];
+    const StyleAnimation& src = disp->mAnimations[animIdx];
     nsRefPtr<ElementAnimation> dest =
       *aAnimations.AppendElement(new ElementAnimation());
 
@@ -565,7 +565,7 @@ bool
 nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
                                    aSegments,
                                  nsCSSProperty aProperty,
-                                 const nsAnimation& aAnimation,
+                                 const StyleAnimation& aAnimation,
                                  float aFromKey, nsStyleContext* aFromContext,
                                  mozilla::css::Declaration* aFromDeclaration,
                                  float aToKey, nsStyleContext* aToContext)
