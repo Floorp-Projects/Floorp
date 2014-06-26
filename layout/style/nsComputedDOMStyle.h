@@ -93,8 +93,6 @@ public:
                      StyleType aStyleType);
   virtual ~nsComputedDOMStyle();
 
-  static void Shutdown();
-
   virtual nsINode *GetParentObject() MOZ_OVERRIDE
   {
     return mContent;
