@@ -24,19 +24,31 @@
   }
 
   function periodicCheck(type, checkFunc, successMessage, done) {
-    var interval = setInterval(function periodic() {
+    var num = 0;
+    var timeout;
+    function periodic() {
       if (checkFunc()) {
         ok(true, type + ' is ' + successMessage);
-        clearInterval(interval);
-        interval = null;
         done();
+      } else {
+        setupNext();
       }
-    }, 200);
+    }
+    function setupNext() {
+      // exponential backoff on the timer
+      // on a very slow system (like the b2g emulator) a long timeout is
+      // necessary, but we want to run fast if we can
+      timeout = setTimeout(periodic, 200 << num);
+      num++;
+    }
+
+    setupNext();
+
     return function cancel() {
-      if (interval) {
+      if (timeout) {
         ok(false, type + ' (' + successMessage + ')' +
            ' failed after waiting full duration');
-        clearInterval(interval);
+        clearTimeout(timeout);
         done();
       }
     };
@@ -59,16 +71,22 @@
       var silent = check(constraintApplied, isSilence(view), 'be silence for audio');
       return sampleCount > 0 && silent;
     }
+    function disconnect() {
+      source.disconnect();
+      analyser.disconnect();
+      done();
+    }
     return periodicCheck('audio', testAudio,
-                         (constraintApplied ? '' : 'not ') + 'silent', done);
+                         (constraintApplied ? '' : 'not ') + 'silent', disconnect);
   }
 
   function mkElement(type) {
-    var display = document.getElementById('display');
+    // this makes an unattached element
+    // it's not rendered to save the cycles that costs on b2g emulator
+    // and it gets droped (and GC'd) when the test is done
     var e = document.createElement(type);
     e.width = 32;
     e.height = 24;
-    display.appendChild(e);
     return e;
   }
 
