@@ -1308,7 +1308,6 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
     mSelector(aSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nullptr),
-    mDOMRule(nullptr),
     mLineNumber(0),
     mColumnNumber(0),
     mWasMatched(false)
@@ -1322,7 +1321,6 @@ StyleRule::StyleRule(const StyleRule& aCopy)
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nullptr),
     mDeclaration(new Declaration(*aCopy.mDeclaration)),
     mImportantRule(nullptr),
-    mDOMRule(nullptr),
     mLineNumber(aCopy.mLineNumber),
     mColumnNumber(aCopy.mColumnNumber),
     mWasMatched(false)
@@ -1337,14 +1335,13 @@ StyleRule::StyleRule(StyleRule& aCopy,
     mSelector(aCopy.mSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nullptr),
-    mDOMRule(aCopy.mDOMRule),
+    mDOMRule(aCopy.mDOMRule.forget()),
     mLineNumber(aCopy.mLineNumber),
     mColumnNumber(aCopy.mColumnNumber),
     mWasMatched(false)
 {
   // The DOM rule is replacing |aCopy| with |this|, so transfer
   // the reverse pointer as well (and transfer ownership).
-  aCopy.mDOMRule = nullptr;
 
   // Similarly for the selector.
   aCopy.mSelector = nullptr;
@@ -1366,7 +1363,6 @@ StyleRule::~StyleRule()
   NS_IF_RELEASE(mImportantRule);
   if (mDOMRule) {
     mDOMRule->DOMDeclaration()->DropReference();
-    NS_RELEASE(mDOMRule);
   }
 }
 
@@ -1423,7 +1419,6 @@ StyleRule::GetDOMRule()
       return nullptr;
     }
     mDOMRule = new DOMCSSStyleRule(this);
-    NS_ADDREF(mDOMRule);
   }
   return mDOMRule;
 }
