@@ -1512,6 +1512,7 @@ pref("image.mem.max_decoded_image_kb", 256000);
 #ifdef MOZ_LOOP
 pref("loop.server", "https://loop.services.mozilla.com");
 pref("loop.do_not_disturb", false);
+pref("loop.ringtone", "chrome://browser/content/loop/shared/sounds/Firefox-Long.ogg");
 #endif
 
 // serverURL to be assigned by services team
