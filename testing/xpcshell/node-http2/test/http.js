@@ -124,8 +124,8 @@ describe('http.js', function() {
 
         server.listen(1234, function() {
           http2.get('https://localhost:1234' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               server.close();
               done();
             });
@@ -140,8 +140,8 @@ describe('http.js', function() {
 
         var server = http2.createServer(options, function(request, response) {
           expect(request.url).to.equal(path);
-          request.once('readable', function() {
-            expect(request.read().toString()).to.equal(message);
+          request.once('data', function(data) {
+            expect(data.toString()).to.equal(message);
             response.end();
           });
         });
@@ -209,8 +209,8 @@ describe('http.js', function() {
             expect(response.headers[headerName]).to.equal(headerValue);
             expect(response.headers['nonexistent']).to.equal(undefined);
             expect(response.headers['date']).to.equal(undefined);
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               server.close();
               done();
             });
@@ -238,8 +238,8 @@ describe('http.js', function() {
             port: 1237,
             path: path
           }, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               server.close();
               done();
             });
@@ -260,8 +260,8 @@ describe('http.js', function() {
 
         server.listen(5678, function() {
           http2.get('https://localhost:5678' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               done();
             });
           });
@@ -280,8 +280,8 @@ describe('http.js', function() {
 
         server.listen(1236, function() {
           https.get('https://localhost:1236' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               done();
             });
           });
@@ -302,15 +302,15 @@ describe('http.js', function() {
           done = util.callNTimes(2, done);
           // 1. request
           http2.get('https://localhost:1237' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               done();
             });
           });
           // 2. request
           http2.get('https://localhost:1237' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               done();
             });
           });
@@ -330,13 +330,13 @@ describe('http.js', function() {
         server.listen(1238, function() {
           // 1. request
           http2.get('https://localhost:1238' + path, function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
 
               // 2. request
               http2.get('https://localhost:1238' + path, function(response) {
-                response.on('readable', function() {
-                  expect(response.read().toString()).to.equal(message);
+                response.on('data', function(data) {
+                  expect(data.toString()).to.equal(message);
                   done();
                 });
               });
@@ -398,8 +398,8 @@ describe('http.js', function() {
           done = util.callNTimes(5, done);
 
           request.on('response', function(response) {
-            response.on('readable', function() {
-              expect(response.read().toString()).to.equal(message);
+            response.on('data', function(data) {
+              expect(data.toString()).to.equal(message);
               done();
             });
             response.on('end', done);
@@ -408,8 +408,8 @@ describe('http.js', function() {
           request.on('push', function(promise) {
             expect(promise.url).to.be.equal(pushedPath);
             promise.on('response', function(pushStream) {
-              pushStream.on('readable', function() {
-                expect(pushStream.read().toString()).to.equal(pushedMessage);
+              pushStream.on('data', function(data) {
+                expect(data.toString()).to.equal(pushedMessage);
                 done();
               });
               pushStream.on('end', done);
