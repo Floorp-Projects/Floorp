@@ -41,7 +41,6 @@ AudioProcessingEvent::LazilyCreateBuffer(uint32_t aNumberOfChannels,
                                          ErrorResult& aRv)
 {
   AutoPushJSContext cx(mNode->Context()->GetJSContext());
-
   nsRefPtr<AudioBuffer> buffer =
     AudioBuffer::Create(mNode->Context(), aNumberOfChannels,
                         mNode->BufferSize(),
