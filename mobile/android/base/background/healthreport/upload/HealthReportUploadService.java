@@ -45,7 +45,8 @@ public class HealthReportUploadService extends BackgroundService {
 
     // Intent can be null. Bug 1025937.
     if (intent == null) {
-        Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+      Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+      return;
     }
 
     if (HealthReportConstants.UPLOAD_FEATURE_DISABLED) {
