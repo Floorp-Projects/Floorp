@@ -2347,6 +2347,31 @@ Navigator::HasFeatureDetectionSupport(JSContext* /* unused */, JSObject* aGlobal
   return CheckPermission(win, "feature-detection");
 }
 
+#ifdef MOZ_B2G
+/* static */
+bool
+Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
+{
+  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(aGlobal);
+  if (!win) {
+    return false;
+  }
+
+  nsIDocument* doc = win->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
+
+  nsIPrincipal* principal = doc->NodePrincipal();
+
+  nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+  NS_ENSURE_TRUE(permMgr, false);
+
+  uint32_t permission = nsIPermissionManager::UNKNOWN_ACTION;
+  permMgr->TestPermissionFromPrincipal(principal, "mobileid", &permission);
+  return permission != nsIPermissionManager::UNKNOWN_ACTION;
+}
+#endif
 
 /* static */
 already_AddRefed<nsPIDOMWindow>
