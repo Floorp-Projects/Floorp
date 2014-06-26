@@ -60,8 +60,10 @@ var TestObserver = {
         this.receivedNotification2 = true;
         this.data2 = data;
       }
+
       // Now fill the form
-      pwmgr.fillForm(subject);
+      pwmgr.fillForm(subject)
+           .then(startTest);
     }
   }
 };
@@ -95,8 +97,6 @@ function startTest(){
 
   SimpleTest.finish();
 }
-
-window.onload = startTest;
 </script>
 </pre>
 </body>

@@ -13,8 +13,13 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 
+template<class E> struct already_AddRefed;
+
 namespace mozilla {
 
+namespace dom {
+class Touch;
+}
 
 enum InputType
 {
@@ -108,13 +113,13 @@ public:
       mRotationAngle(aRotationAngle),
       mForce(aForce)
   {
-
-
   }
 
   SingleTouchData()
   {
   }
+
+  already_AddRefed<dom::Touch> ToNewDOMTouch();
 
   // A unique number assigned to each SingleTouchData within a MultiTouchInput so
   // that they can be easily distinguished when handling a touch start/move/end.
@@ -165,12 +170,18 @@ public:
     : InputData(MULTITOUCH_INPUT, aTime, aTimeStamp, aModifiers),
       mType(aType)
   {
-
-
   }
 
   MultiTouchInput()
   {
+  }
+
+  MultiTouchInput(const MultiTouchInput& aOther)
+    : InputData(MULTITOUCH_INPUT, aOther.mTime,
+                aOther.mTimeStamp, aOther.modifiers)
+    , mType(aOther.mType)
+  {
+    mTouches.AppendElements(aOther.mTouches);
   }
 
   MultiTouchInput(const WidgetTouchEvent& aTouchEvent);
