@@ -12,23 +12,22 @@ const { getLocalizedString } = require("projecteditor/helpers/l10n");
 var NewFile = Class({
   extends: Plugin,
 
-  init: function(host) {
-    this.host.createMenuItem({
-      parent: "#file-menu-popup",
-      label: getLocalizedString("projecteditor.newLabel"),
-      command: "cmd-new",
-      key: "key-new"
-    });
-    this.host.createMenuItem({
-      parent: "#directory-menu-popup",
-      label: getLocalizedString("projecteditor.newLabel"),
-      command: "cmd-new"
-    });
-
-    this.command = this.host.addCommand({
+  init: function() {
+    this.command = this.host.addCommand(this, {
       id: "cmd-new",
       key: getLocalizedString("projecteditor.new.commandkey"),
       modifiers: "accel"
+    });
+    this.host.createMenuItem({
+      parent: this.host.fileMenuPopup,
+      label: getLocalizedString("projecteditor.newLabel"),
+      command: "cmd-new",
+      key: "key_cmd-new"
+    });
+    this.host.createMenuItem({
+      parent: this.host.contextMenuPopup,
+      label: getLocalizedString("projecteditor.newLabel"),
+      command: "cmd-new"
     });
   },
 

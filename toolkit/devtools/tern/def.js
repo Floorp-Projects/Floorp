@@ -1,10 +1,10 @@
 // Type description parser
-
+//
 // Type description JSON files (such as ecma5.json and browser.json)
 // are used to
 //
 // A) describe types that come from native code
-
+//
 // B) to cheaply load the types for big libraries, or libraries that
 //    can't be inferred well
 
@@ -81,6 +81,10 @@
         return this.parseFnType(name, top);
       } else if (this.eat("[")) {
         var inner = this.parseType();
+        if (inner == infer.ANull && this.spec == "[b.<i>]") {
+          var b = parsePath("b");
+          console.log(b.props["<i>"].types.length);
+        }
         this.eat("]") || this.error();
         if (top && this.base) {
           infer.Arr.call(this.base, inner);
@@ -250,10 +254,10 @@
           if (!fn) {
             base = infer.ANull;
           } else if (prop == "!ret") {
-            base = fn.retval && fn.retval.getType() || infer.ANull;
+            base = fn.retval && fn.retval.getType(false) || infer.ANull;
           } else {
             var arg = fn.args && fn.args[Number(prop.slice(1))];
-            base = (arg && arg.getType()) || infer.ANull;
+            base = (arg && arg.getType(false)) || infer.ANull;
           }
         }
       } else if (base instanceof infer.Obj) {
@@ -278,7 +282,7 @@
   }
 
   function isSimpleAnnotation(spec) {
-    if (!spec["!type"] || /^fn\(/.test(spec["!type"])) return false;
+    if (!spec["!type"] || /^(fn\(|\[)/.test(spec["!type"])) return false;
     for (var prop in spec)
       if (prop != "!type" && prop != "!doc" && prop != "!url" && prop != "!span" && prop != "!data")
         return false;
@@ -304,7 +308,7 @@
       var inner = spec[name];
       if (typeof inner == "string" || isSimpleAnnotation(inner)) continue;
       var prop = base.defProp(name);
-      passOne(prop.getType(), inner, path ? path + "." + name : name).propagate(prop);
+      passOne(prop.getType(false), inner, path ? path + "." + name : name).propagate(prop);
     }
     return base;
   }
@@ -328,7 +332,7 @@
 
     for (var name in spec) if (hop(spec, name) && name.charCodeAt(0) != 33) {
       var inner = spec[name], known = base.defProp(name), innerPath = path ? path + "." + name : name;
-      var type = known.getType();
+      var type = known.getType(false);
       if (typeof inner == "string") {
         if (type) continue;
         parseType(inner, innerPath).propagate(known);
@@ -337,7 +341,7 @@
           passTwo(type, inner, innerPath);
         } else if (!type) {
           parseType(inner["!type"], innerPath, null, true).propagate(known);
-          type = known.getType();
+          type = known.getType(false);
           if (type instanceof infer.Obj) copyInfo(inner, type);
         } else continue;
         if (inner["!doc"]) known.doc = inner["!doc"];
@@ -408,12 +412,12 @@
     addType: function(tp) {
       if (tp instanceof infer.Obj && this.created++ < 5) {
         var derived = new infer.Obj(tp), spec = this.spec;
-        if (spec instanceof infer.AVal) spec = spec.getType();
+        if (spec instanceof infer.AVal) spec = spec.getType(false);
         if (spec instanceof infer.Obj) for (var prop in spec.props) {
           var cur = spec.props[prop].types[0];
           var p = derived.defProp(prop);
           if (cur && cur instanceof infer.Obj && cur.props.value) {
-            var vtp = cur.props.value.getType();
+            var vtp = cur.props.value.getType(false);
             if (vtp) p.addType(vtp);
           }
         }
