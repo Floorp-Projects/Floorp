@@ -160,6 +160,8 @@ browser.jar:
   skin/classic/browser/social/chat-icons.png          (social/chat-icons.png)
   skin/classic/browser/social/gear_default.png        (../shared/social/gear_default.png)
   skin/classic/browser/social/gear_clicked.png        (../shared/social/gear_clicked.png)
+  skin/classic/browser/tabbrowser/alltabs.png         (tabbrowser/alltabs.png)
+  skin/classic/browser/tabbrowser/alltabs-inverted.png (tabbrowser/alltabs-inverted.png)
   skin/classic/browser/tabbrowser/connecting.png      (tabbrowser/connecting.png)
   skin/classic/browser/tabbrowser/loading.png         (tabbrowser/loading.png)
   skin/classic/browser/tabbrowser/tab-active-middle.png     (tabbrowser/tab-active-middle.png)
