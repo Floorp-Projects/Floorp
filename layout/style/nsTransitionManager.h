@@ -16,8 +16,11 @@
 class nsStyleContext;
 class nsPresContext;
 class nsCSSPropertySet;
-struct nsTransition;
 struct ElementDependentRuleProcessorData;
+
+namespace mozilla {
+struct StyleTransition;
+}
 
 /*****************************************************************************
  * Per-Element data                                                          *
@@ -156,7 +159,7 @@ protected:
 
 private:
   void ConsiderStartingTransition(nsCSSProperty aProperty,
-                                  const nsTransition& aTransition,
+                                  const mozilla::StyleTransition& aTransition,
                                   mozilla::dom::Element* aElement,
                                   CommonElementAnimationData*& aElementTransitions,
                                   nsStyleContext* aOldStyleContext,
