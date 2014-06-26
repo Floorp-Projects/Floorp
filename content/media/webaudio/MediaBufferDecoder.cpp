@@ -405,7 +405,6 @@ WebAudioDecodeJob::AllocateBuffer()
   if (!cx) {
     return false;
   }
-
   // Now create the AudioBuffer
   ErrorResult rv;
   mOutput = AudioBuffer::Create(mContext, mChannelBuffers.Length(),

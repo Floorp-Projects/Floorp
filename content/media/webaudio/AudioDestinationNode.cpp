@@ -126,6 +126,7 @@ public:
 
     AutoPushJSContext cx(context->GetJSContext());
     if (!cx) {
+
       return;
     }
     JSAutoRequest ar(cx);

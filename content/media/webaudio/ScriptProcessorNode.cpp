@@ -405,6 +405,7 @@ private:
         AutoPushJSContext cx(node->Context()->GetJSContext());
         if (cx) {
 
+
           // Create the input buffer
           nsRefPtr<AudioBuffer> inputBuffer;
           if (!mNullInput) {
