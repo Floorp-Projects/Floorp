@@ -261,15 +261,15 @@ GetAnimationsOrTransitionsForCompositor(nsIContent* aContent,
                                         nsIAtom* aAnimationProperty,
                                         nsCSSProperty aProperty)
 {
-  ElementAnimationCollection* animations =
+  ElementAnimationCollection* collection =
     static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
-  if (animations) {
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+  if (collection) {
+    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
     if (propertyMatches &&
-        animations->CanPerformOnCompositorThread(
+        collection->CanPerformOnCompositorThread(
           ElementAnimationCollection::CanAnimate_AllowPartial)) {
-      return animations;
+      return collection;
     }
   }
 
@@ -293,13 +293,13 @@ GetAnimationsOrTransitions(nsIContent* aContent,
                            nsIAtom* aAnimationProperty,
                            nsCSSProperty aProperty)
 {
-  ElementAnimationCollection* animations =
+  ElementAnimationCollection* collection =
     static_cast<ElementAnimationCollection*>(aContent->GetProperty(
         aAnimationProperty));
-  if (animations) {
-    bool propertyMatches = animations->HasAnimationOfProperty(aProperty);
+  if (collection) {
+    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
     if (propertyMatches) {
-      return animations;
+      return collection;
     }
   }
   return nullptr;
@@ -327,10 +327,10 @@ nsLayoutUtils::HasCurrentAnimations(nsIContent* aContent,
 
   TimeStamp now = aPresContext->RefreshDriver()->MostRecentRefresh();
 
-  ElementAnimationCollection* animations =
+  ElementAnimationCollection* collection =
     static_cast<ElementAnimationCollection*>(
       aContent->GetProperty(aAnimationProperty));
-  return (animations && animations->HasCurrentAnimationsAt(now));
+  return (collection && collection->HasCurrentAnimationsAt(now));
 }
 
 static gfxSize
@@ -391,14 +391,14 @@ GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  ElementAnimationCollection* animations =
+  ElementAnimationCollection* collection =
     GetAnimationsOrTransitionsForCompositor(aContent, aAnimationProperty,
                                             eCSSProperty_transform);
-  if (!animations)
+  if (!collection)
     return;
 
-  for (uint32_t animIdx = animations->mAnimations.Length(); animIdx-- != 0; ) {
-    mozilla::ElementAnimation* anim = animations->mAnimations[animIdx];
+  for (uint32_t animIdx = collection->mAnimations.Length(); animIdx-- != 0; ) {
+    mozilla::ElementAnimation* anim = collection->mAnimations[animIdx];
     if (anim->IsFinishedTransition()) {
       continue;
     }
