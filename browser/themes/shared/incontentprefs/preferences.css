@@ -5,9 +5,14 @@
 %endif
 @namespace html "http://www.w3.org/1999/xhtml";
 
+#dialogBox,
+dialog,
+prefwindow,
+.windowDialog,
 page {
   -moz-appearance: none;
   background-color: white;
+  color: #424E5A;
 }
 
 * {
@@ -37,7 +42,6 @@ prefpane {
   font: message-box;
   font-size: 1.25rem;
   line-height: 22px;
-  color: #424E5A;
 }
 
 prefpane > .content-box {
@@ -70,7 +74,6 @@ tabpanels {
   -moz-appearance: none;
   font-size: 1.25rem;
   line-height: 22px;
-  color: #424E5A;
   border: none;
   padding: 0;
   background-color: transparent;
@@ -184,6 +187,7 @@ button[type="menu"] > .button-box > .button-menu-dropmarker {
   background-image: none;
 }
 
+.close-icon > .button-box,
 .help-button > .button-box {
   padding-top: 0;
   padding-bottom: 0;
@@ -832,3 +836,41 @@ description > html|a {
 .indent {
   -moz-margin-start: 33px;
 }
+
+/**
+ * Sub-dialog
+ */
+
+#dialogOverlay {
+  background-color: rgba(0,0,0,0.5);
+  visibility: hidden;
+}
+
+#dialogBox {
+  border: 1px solid #666;
+  display: -moz-box;
+}
+
+.close-icon {
+  background-color: transparent !important;
+  border: none;
+  box-shadow: none;
+  height: 18px;
+  padding: 0;
+  min-width: 18px;
+}
+
+#dialogBox > .groupbox-body {
+  -moz-appearance: none;
+  padding: 0;
+}
+
+#dialogFrame {
+  /* Default dialog dimensions */
+  height: 30em;
+  width: 30em;
+}
+
+/**
+ * End sub-dialog
+ */
