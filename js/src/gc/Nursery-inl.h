@@ -12,8 +12,8 @@
 
 #include "gc/Nursery.h"
 
-#include "js/TracingAPI.h"
 #include "gc/Heap.h"
+#include "js/TracingAPI.h"
 #include "vm/Runtime.h"
 
 namespace js {
