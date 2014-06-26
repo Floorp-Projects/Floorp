@@ -620,8 +620,8 @@ MacroAssemblerMIPS::ma_div_branch_overflow(Register rd, Register rs, Imm32 imm, 
 }
 
 void
-MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int32_t shift,
-                                Label *negZero)
+MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, Register remain,
+                                int32_t shift, Label *negZero)
 {
     // MATH:
     // We wish to compute x % (1<<y) - 1 for a known constant, y.
@@ -641,34 +641,32 @@ MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int3
     Label head, negative, sumSigned, done;
 
     // hold holds -1 if the value was negative, 1 otherwise.
-    // ScratchRegister holds the remaining bits that have not been processed
-    // lr serves as a temporary location to store extracted bits into as well
-    // as holding the trial subtraction as a temp value dest is the
-    // accumulator (and holds the final result)
+    // remain holds the remaining bits that have not been processed
+    // SecondScratchReg serves as a temporary location to store extracted bits
+    // into as well as holding the trial subtraction as a temp value dest is
+    // the accumulator (and holds the final result)
 
-    // move the whole value into the scratch register, setting the codition
-    // codes so we can muck with them later.
-    ma_move(ScratchRegister, src);
+    // move the whole value into the remain.
+    ma_move(remain, src);
     // Zero out the dest.
-    ma_subu(dest, dest, dest);
+    ma_li(dest, Imm32(0));
     // Set the hold appropriately.
-    ma_b(ScratchRegister, ScratchRegister, &negative, Signed, ShortJump);
+    ma_b(remain, remain, &negative, Signed, ShortJump);
     ma_li(hold, Imm32(1));
     ma_b(&head, ShortJump);
 
     bind(&negative);
     ma_li(hold, Imm32(-1));
-    ma_negu(ScratchRegister, ScratchRegister);
+    ma_negu(remain, remain);
 
     // Begin the main loop.
     bind(&head);
 
-    // Extract the bottom bits into lr.
-    ma_and(SecondScratchReg, ScratchRegister, Imm32(mask));
+    // Extract the bottom bits into SecondScratchReg.
+    ma_and(SecondScratchReg, remain, Imm32(mask));
     // Add those bits to the accumulator.
     as_addu(dest, dest, SecondScratchReg);
-    // Do a trial subtraction, this is the same operation as cmp, but we
-    // store the dest
+    // Do a trial subtraction
     ma_subu(SecondScratchReg, dest, Imm32(mask));
     // If (sum - C) > 0, store sum - C back into sum, thus performing a
     // modulus.
@@ -676,9 +674,9 @@ MacroAssemblerMIPS::ma_mod_mask(Register src, Register dest, Register hold, int3
     ma_move(dest, SecondScratchReg);
     bind(&sumSigned);
     // Get rid of the bits that we extracted before.
-    as_srl(ScratchRegister, ScratchRegister, shift);
+    as_srl(remain, remain, shift);
     // If the shift produced zero, finish, otherwise, continue in the loop.
-    ma_b(ScratchRegister, ScratchRegister, &head, NonZero, ShortJump);
+    ma_b(remain, remain, &head, NonZero, ShortJump);
     // Check the hold to see if we need to negate the result.
     ma_b(hold, hold, &done, NotSigned, ShortJump);
 
