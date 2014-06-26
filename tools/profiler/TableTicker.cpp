@@ -114,7 +114,7 @@ void TableTicker::StreamMetaJSCustomObject(JSStreamWriter& b)
     b.NameValue("jank", mJankOnly);
     b.NameValue("processType", XRE_GetProcessType());
 
-    mozilla::TimeDuration delta = mozilla::TimeStamp::Now() - sStartTime;
+    TimeDuration delta = TimeStamp::Now() - sStartTime;
     b.NameValue("startTime", static_cast<double>(PR_Now()/1000.0 - delta.ToMilliseconds()));
 
     nsresult res;
@@ -636,7 +636,7 @@ void TableTicker::InplaceTick(TickSample* sample)
       recordSample = false;
       // only record the events when we have a we haven't seen a tracer event for 100ms
       if (!sLastTracerEvent.IsNull()) {
-        mozilla::TimeDuration delta = sample->timestamp - sLastTracerEvent;
+        TimeDuration delta = sample->timestamp - sLastTracerEvent;
         if (delta.ToMilliseconds() > 100.0) {
             recordSample = true;
         }
@@ -658,12 +658,12 @@ void TableTicker::InplaceTick(TickSample* sample)
     currThreadProfile.flush();
 
   if (sample && currThreadProfile.GetThreadResponsiveness()->HasData()) {
-    mozilla::TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
+    TimeDuration delta = currThreadProfile.GetThreadResponsiveness()->GetUnresponsiveDuration(sample->timestamp);
     currThreadProfile.addTag(ProfileEntry('r', static_cast<float>(delta.ToMilliseconds())));
   }
 
   if (sample) {
-    mozilla::TimeDuration delta = sample->timestamp - sStartTime;
+    TimeDuration delta = sample->timestamp - sStartTime;
     currThreadProfile.addTag(ProfileEntry('t', static_cast<float>(delta.ToMilliseconds())));
   }
 
