@@ -199,9 +199,9 @@ GeneratePermissionName(nsAString& aPermission,
                        const nsAString& aName,
                        const nsAString& aManifestURL)
 {
-  aPermission.AssignASCII("indexedDB-chrome-");
+  aPermission.AssignLiteral("indexedDB-chrome-");
   aPermission.Append(aName);
-  aPermission.AppendASCII("|");
+  aPermission.Append('|');
   aPermission.Append(aManifestURL);
 }
 
@@ -252,7 +252,7 @@ ResetPermission(uint32_t aAppId, const nsAString& aOriginURL,
   {
     nsCString permission;
     permission.Append(basePermission);
-    permission.AppendASCII("-write");
+    permission.AppendLiteral("-write");
 
     uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
     rv = pm->TestExactPermissionFromPrincipal(principal, permission.get(),
@@ -279,7 +279,7 @@ ResetPermission(uint32_t aAppId, const nsAString& aOriginURL,
   {
     nsCString permission;
     permission.Append(basePermission);
-    permission.AppendASCII("-read");
+    permission.AppendLiteral("-read");
 
     uint32_t perm = nsIPermissionManager::UNKNOWN_ACTION;
     rv = pm->TestExactPermissionFromPrincipal(principal, permission.get(),
@@ -616,9 +616,9 @@ public:
       new RevisionAddedEnableStoreCallback(mAppId, mName, mManifestURL);
 
     // If the revision doesn't exist, let's create it.
-    nsRefPtr<DataStoreRevision> mRevision = new DataStoreRevision();
-    return mRevision->AddRevision(cx, store, 0, DataStoreRevision::RevisionVoid,
-                                  callback);
+    nsRefPtr<DataStoreRevision> revision = new DataStoreRevision();
+    return revision->AddRevision(cx, store, 0, DataStoreRevision::RevisionVoid,
+                                 callback);
   }
 
 private:
