@@ -1715,7 +1715,7 @@ private:
   nsRefPtr<mozilla::dom::ImportManager> mImportManager;
 
 #ifdef DEBUG
-protected:
+public:
   bool mWillReparent;
 #endif
 };

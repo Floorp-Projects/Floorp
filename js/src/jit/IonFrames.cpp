@@ -1899,11 +1899,11 @@ InlineFrameIterator::computeScopeChain(Value scopeChainValue) const
     if (scopeChainValue.isObject())
         return &scopeChainValue.toObject();
 
-    if (isFunctionFrame()) {
-        // Heavyweight functions should always have a scope chain.
-        MOZ_ASSERT(!callee()->isHeavyweight());
+    // Note we can hit this case even for heavyweight functions, in case we
+    // are walking the frame during the function prologue, before the scope
+    // chain has been initialized.
+    if (isFunctionFrame())
         return callee()->environment();
-    }
 
     // Ion does not handle scripts that are not compile-and-go.
     MOZ_ASSERT(!script()->isForEval());

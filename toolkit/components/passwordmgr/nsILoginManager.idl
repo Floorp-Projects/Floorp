@@ -8,12 +8,12 @@
 interface nsIURI;
 interface nsILoginInfo;
 interface nsIAutoCompleteResult;
+interface nsIFormAutoCompleteObserver;
 interface nsIDOMHTMLInputElement;
 interface nsIDOMHTMLFormElement;
 interface nsIPropertyBag;
 
-[scriptable, uuid(f5f2a39a-dffe-4eb9-ad28-340afd53b1a3)]
-
+[scriptable, uuid(f0c5ca21-db71-4b32-993e-ab63054cc6f5)]
 interface nsILoginManager : nsISupports {
     /**
      * This promise is resolved when initialization is complete, and is rejected
@@ -210,9 +210,10 @@ interface nsILoginManager : nsISupports {
      *       which calls it directly. This isn't really ideal, it should
      *       probably be callback registered through the FFC.
      */
-    nsIAutoCompleteResult autoCompleteSearch(in AString aSearchString,
-                                    in nsIAutoCompleteResult aPreviousResult,
-                                    in nsIDOMHTMLInputElement aElement);
+    void autoCompleteSearchAsync(in AString aSearchString,
+                                 in nsIAutoCompleteResult aPreviousResult,
+                                 in nsIDOMHTMLInputElement aElement,
+                                 in nsIFormAutoCompleteObserver aListener);
 
     /**
      * Fill a form with login information if we have it. This method will fill
@@ -220,9 +221,9 @@ interface nsILoginManager : nsISupports {
      *
      * @param aForm
      *        The form to fill
-     * @return Success of attempt fill form
+     * @return Promise that is resolved with whether or not the form was filled.
      */
-    boolean fillForm(in nsIDOMHTMLFormElement aForm);
+    jsval fillForm(in nsIDOMHTMLFormElement aForm);
 
     /**
      * Search for logins in the login manager. An array is always returned;

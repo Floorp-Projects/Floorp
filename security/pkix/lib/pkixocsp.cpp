@@ -179,7 +179,9 @@ static inline der::Result ResponseData(
                               /*const*/ SECItem* certs, size_t numCerts);
 static inline der::Result SingleResponse(der::Input& input,
                                           Context& context);
-static inline der::Result CheckExtensionsForCriticality(der::Input&);
+static der::Result ExtensionNotUnderstood(der::Input& extnID,
+                                          const SECItem& extnValue,
+                                          /*out*/ bool& understood);
 static inline der::Result CertID(der::Input& input,
                                   const Context& context,
                                   /*out*/ bool& match);
@@ -486,11 +488,11 @@ ResponseData(der::Input& input, Context& context,
              const CERTSignedData& signedResponseData,
              /*const*/ SECItem* certs, size_t numCerts)
 {
-  uint8_t version;
+  der::Version version;
   if (der::OptionalVersion(input, version) != der::Success) {
     return der::Failure;
   }
-  if (version != der::v1) {
+  if (version != der::Version::v1) {
     // TODO: more specific error code for bad version?
     return der::Fail(SEC_ERROR_BAD_DER);
   }
@@ -531,14 +533,9 @@ ResponseData(der::Input& input, Context& context,
     return der::Failure;
   }
 
-  if (!input.AtEnd()) {
-    if (der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
-                    CheckExtensionsForCriticality) != der::Success) {
-      return der::Failure;
-    }
-  }
-
-  return der::Success;
+  return der::OptionalExtensions(input,
+                                 der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+                                 ExtensionNotUnderstood);
 }
 
 // SingleResponse ::= SEQUENCE {
@@ -656,11 +653,11 @@ SingleResponse(der::Input& input, Context& context)
     context.expired = true;
   }
 
-  if (!input.AtEnd()) {
-    if (der::Nested(input, der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
-                    CheckExtensionsForCriticality) != der::Success) {
-      return der::Failure;
-    }
+  if (der::OptionalExtensions(input,
+                              der::CONTEXT_SPECIFIC | der::CONSTRUCTED | 1,
+                              ExtensionNotUnderstood)
+        != der::Success) {
+    return der::Failure;
   }
 
   if (context.thisUpdate) {
@@ -684,9 +681,7 @@ CertID(der::Input& input, const Context& context, /*out*/ bool& match)
   match = false;
 
   SECAlgorithmID hashAlgorithm;
-  if (der::Nested(input, der::SEQUENCE,
-                  bind(der::AlgorithmIdentifier, _1, ref(hashAlgorithm)))
-         != der::Success) {
+  if (der::AlgorithmIdentifier(input, hashAlgorithm) != der::Success) {
     return der::Failure;
   }
 
@@ -838,39 +833,12 @@ KeyHash(const SECItem& subjectPublicKeyInfo, /*out*/ uint8_t* hashBuf,
   return Success;
 }
 
-// Extension  ::=  SEQUENCE  {
-//      extnID      OBJECT IDENTIFIER,
-//      critical    BOOLEAN DEFAULT FALSE,
-//      extnValue   OCTET STRING
-//      }
-static der::Result
-CheckExtensionForCriticality(der::Input& input)
+der::Result
+ExtensionNotUnderstood(der::Input& /*extnID*/, const SECItem& /*extnValue*/,
+                       /*out*/ bool& understood)
 {
-  // TODO: maybe we should check the syntax of the OID value
-  if (ExpectTagAndSkipValue(input, der::OIDTag) != der::Success) {
-    return der::Failure;
-  }
-
-  // The only valid explicit encoding of the value is TRUE, so don't even
-  // bother parsing it, since we're going to fail either way.
-  if (input.Peek(der::BOOLEAN)) {
-    return der::Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
-  }
-
-  input.SkipToEnd();
-
+  understood = false;
   return der::Success;
-}
-
-// Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
-static der::Result
-CheckExtensionsForCriticality(der::Input& input)
-{
-  // TODO(bug 997994): some responders include an empty SEQUENCE OF
-  // Extension, which is invalid (der::MayBeEmpty should really be
-  // der::MustNotBeEmpty).
-  return der::NestedOf(input, der::SEQUENCE, der::SEQUENCE,
-                       der::EmptyAllowed::Yes, CheckExtensionForCriticality);
 }
 
 //   1. The certificate identified in a received response corresponds to

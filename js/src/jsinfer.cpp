@@ -4437,28 +4437,17 @@ TypeZone::sweep(FreeOp *fop, bool releaseTypes, bool *oom)
                 types::TypeScript::Sweep(fop, script, oom);
 
                 if (releaseTypes) {
-                    if (script->hasParallelIonScript()) {
-#ifdef JS_ION
-                        // It's possible that we preserved the parallel
-                        // IonScript. The heuristic for their preservation is
-                        // independent of general JIT code preservation.
-                        MOZ_ASSERT(jit::ShouldPreserveParallelJITCode(rt, script));
-                        script->parallelIonScript()->recompileInfoRef().shouldSweep(*this);
-#else
-                        MOZ_CRASH();
-#endif
-                    } else {
-                        script->types->destroy();
-                        script->types = nullptr;
+                    script->types->destroy();
+                    script->types = nullptr;
 
-                        /*
-                         * Freeze constraints on stack type sets need to be
-                         * regenerated the next time the script is analyzed.
-                         */
-                        script->clearHasFreezeConstraints();
-                    }
+                    /*
+                     * Freeze constraints on stack type sets need to be
+                     * regenerated the next time the script is analyzed.
+                     */
+                    script->clearHasFreezeConstraints();
 
                     JS_ASSERT(!script->hasIonScript());
+                    JS_ASSERT(!script->hasParallelIonScript());
                 } else {
                     /* Update the recompile indexes in any IonScripts still on the script. */
                     if (script->hasIonScript())
