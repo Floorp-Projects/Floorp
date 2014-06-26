@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1022869
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1022869</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <iframe src="data:text/html,<html><body>"></iframe>
+  <script type="application/javascript">
+
+  var f = document.getElementsByTagName("iframe")[0];
+
+  SimpleTest.waitForExplicitFinish();
+
+  /** Test for Bug 1022869 **/
+  function startTest() {
+    var div = f.contentDocument.createElement("div");
+    div.innerHTML = "<template>x";
+    is(div.firstChild.content.ownerDocument.parentNode, null, "Should be able to access property on document.");
+    f.contentDocument.open();
+    is(div.firstChild.content.ownerDocument.parentNode, null, "Should be able to access property on document after document.open().");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="startTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1022869">Mozilla Bug 1022869</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
