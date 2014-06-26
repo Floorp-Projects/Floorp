@@ -51,12 +51,10 @@ private:
     nsRefPtr<txResultRecycler> mRecycler;
 };
 
-NS_IMPL_CYCLE_COLLECTION(XPathExpression, mDocument)
+NS_IMPL_ADDREF(XPathExpression)
+NS_IMPL_RELEASE(XPathExpression)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(XPathExpression)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(XPathExpression)
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(XPathExpression)
+NS_INTERFACE_MAP_BEGIN(XPathExpression)
   NS_INTERFACE_MAP_ENTRY(nsIDOMXPathExpression)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSXPathExpression)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathExpression)
@@ -68,7 +66,8 @@ XPathExpression::XPathExpression(nsAutoPtr<Expr>&& aExpression,
                                  nsIDOMDocument *aDocument)
     : mExpression(Move(aExpression)),
       mRecycler(aRecycler),
-      mDocument(aDocument)
+      mDocument(do_GetWeakReference(aDocument)),
+      mCheckDocument(aDocument != nullptr)
 {
 }
 
@@ -98,12 +97,15 @@ XPathExpression::EvaluateWithContext(nsIDOMNode *aContextNode,
     if (!nsContentUtils::CanCallerAccess(aContextNode))
         return NS_ERROR_DOM_SECURITY_ERR;
 
-    if (mDocument && mDocument != aContextNode) {
-        nsCOMPtr<nsIDOMDocument> contextDocument;
-        aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
+    if (mCheckDocument) {
+        nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocument);
+        if (!doc || doc != aContextNode) {
+            nsCOMPtr<nsIDOMDocument> contextDocument;
+            aContextNode->GetOwnerDocument(getter_AddRefs(contextDocument));
 
-        if (mDocument != contextDocument) {
-            return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+            if (doc != contextDocument) {
+                return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+            }
         }
     }
 

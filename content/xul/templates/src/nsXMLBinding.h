@@ -8,7 +8,6 @@
 
 #include "nsAutoPtr.h"
 #include "nsIAtom.h"
-#include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
 
 class nsINode;
@@ -45,28 +44,6 @@ struct nsXMLBinding {
   }
 };
 
-inline void
-ImplCycleCollectionUnlink(nsXMLBinding* aBinding)
-{
-  while (aBinding) {
-    aBinding->mExpr = nullptr;
-    aBinding = aBinding->mNext;
-  }
-}
-
-inline void
-ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsXMLBinding* aBinding,
-                            const char* aName,
-                            uint32_t aFlags = 0)
-{
-  while (aBinding) {
-    CycleCollectionNoteChild(aCallback, aBinding->mExpr.get(),
-                             "nsXMLBinding::mExpr", aFlags);
-    aBinding = aBinding->mNext;
-  }
-}
-
 /**
  * a collection of <binding> descriptors. This object is refcounted by
  * nsXMLBindingValues objects and the query processor.
@@ -76,20 +53,10 @@ class nsXMLBindingSet MOZ_FINAL
   ~nsXMLBindingSet();
 
 public:
-
-  // results hold a reference to a binding set in their
-  // nsXMLBindingValues fields
-  nsCycleCollectingAutoRefCnt mRefCnt;
-
   // pointer to the first binding in a linked list
   nsAutoPtr<nsXMLBinding> mFirst;
 
-public:
-
-  NS_METHOD_(MozExternalRefCountType) AddRef();
-  NS_METHOD_(MozExternalRefCountType) Release();
-  NS_DECL_OWNINGTHREAD
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsXMLBindingSet)
+  NS_INLINE_DECL_REFCOUNTING(nsXMLBindingSet);
 
   /**
    * Add a binding to the set
@@ -105,6 +72,9 @@ public:
    */
   int32_t
   LookupTargetIndex(nsIAtom* aTargetVariable, nsXMLBinding** aBinding);
+
+private:
+  ~nsXMLBindingSet() {};
 };
 
 /**
