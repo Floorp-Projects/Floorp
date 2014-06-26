@@ -322,7 +322,9 @@ LIRGeneratorMIPS::lowerModI(MMod *mod)
             return define(lir, mod);
         } else if (shift < 31 && (1 << (shift + 1)) - 1 == rhs) {
             LModMaskI *lir = new(alloc()) LModMaskI(useRegister(mod->lhs()),
-                                           temp(LDefinition::GENERAL), shift + 1);
+                                                    temp(LDefinition::GENERAL),
+                                                    temp(LDefinition::GENERAL),
+                                                    shift + 1);
             if (mod->fallible() && !assignSnapshot(lir, Bailout_DoubleOutput))
                 return false;
             return define(lir, mod);
