@@ -5189,7 +5189,7 @@ nsComputedDOMStyle::DoGetTransitionDelay()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* delay = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(delay);
     delay->SetTime((float)transition->GetDelay() / (float)PR_MSEC_PER_SEC);
@@ -5209,7 +5209,7 @@ nsComputedDOMStyle::DoGetTransitionDuration()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* duration = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(duration);
 
@@ -5230,7 +5230,7 @@ nsComputedDOMStyle::DoGetTransitionProperty()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* property = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(property);
     nsCSSProperty cssprop = transition->GetProperty();

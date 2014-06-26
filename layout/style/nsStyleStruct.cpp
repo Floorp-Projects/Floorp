@@ -2314,7 +2314,7 @@ void nsTimingFunction::AssignFromKeyword(int32_t aTimingFunctionType)
   mFunc.mY2 = timingFunctionValues[aTimingFunctionType][3];
 }
 
-nsTransition::nsTransition(const nsTransition& aCopy)
+mozilla::StyleTransition::StyleTransition(const StyleTransition& aCopy)
   : mTimingFunction(aCopy.mTimingFunction)
   , mDuration(aCopy.mDuration)
   , mDelay(aCopy.mDelay)
@@ -2323,7 +2323,8 @@ nsTransition::nsTransition(const nsTransition& aCopy)
 {
 }
 
-void nsTransition::SetInitialValues()
+void
+mozilla::StyleTransition::SetInitialValues()
 {
   mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
   mDuration = 0.0;
@@ -2331,7 +2332,8 @@ void nsTransition::SetInitialValues()
   mProperty = eCSSPropertyExtra_all_properties;
 }
 
-void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
+void
+mozilla::StyleTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
 {
   NS_ASSERTION(nsCSSProps::LookupProperty(aUnknownProperty,
                                           nsCSSProps::eEnabledForAllContent) ==
