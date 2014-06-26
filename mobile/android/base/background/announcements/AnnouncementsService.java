@@ -120,7 +120,8 @@ public class AnnouncementsService extends BackgroundService implements Announcem
 
     // Intent can be null. Bug 1025937.
     if (intent == null) {
-        Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+      Logger.debug(LOG_TAG, "Short-circuiting on null intent.");
+      return;
     }
 
     Logger.debug(LOG_TAG, "Running AnnouncementsService.");
