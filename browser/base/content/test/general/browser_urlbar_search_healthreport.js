@@ -53,6 +53,15 @@ add_task(function* test_healthreport_search_recording() {
 
   yield docLoadPromise;
 
+  function waitForNextTick() {
+    let deferred = Promise.defer();
+    executeSoon(function () {
+      deferred.resolve();
+    });
+    return deferred.promise;
+  }
+  yield waitForNextTick();
+
   data = yield m.getValues();
   ok(data.days.hasDay(now), "We have a search measurement for today.");
   let day = data.days.getDay(now);
