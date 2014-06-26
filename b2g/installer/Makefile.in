@@ -97,6 +97,8 @@ GARBAGE += $(MOZ_PKG_MANIFEST)
 endif
 
 ifdef FXOS_SIMULATOR
+export MAKE
+
 .PHONY: simulator
 simulator: make-package
 	@echo 'Building simulator addon...'

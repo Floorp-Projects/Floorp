@@ -144,7 +144,8 @@ Tilt.prototype = {
     }
 
     this.lastInstanceId = id;
-    this.emit("change", this.chromeWindow.gBrowser.selectedTab);
+    // E10S: We should be using target here. See bug 1028234
+    this.emit("change", { tab: this.chromeWindow.gBrowser.selectedTab });
     Services.obs.notifyObservers(contentWindow, TILT_NOTIFICATIONS.INITIALIZING, null);
   },
 
@@ -201,7 +202,8 @@ Tilt.prototype = {
 
     this._isDestroying = false;
     this.chromeWindow.gBrowser.selectedBrowser.focus();
-    this.emit("change", this.chromeWindow.gBrowser.selectedTab);
+    // E10S: We should be using target here. See bug 1028234
+    this.emit("change", { tab: this.chromeWindow.gBrowser.selectedTab });
     Services.obs.notifyObservers(contentWindow, TILT_NOTIFICATIONS.DESTROYED, null);
   },
 

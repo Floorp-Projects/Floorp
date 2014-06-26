@@ -39,7 +39,7 @@ exports.items = [
 
     getSpec: function(commandName, paramName) {
       return {
-        name: 'remote',
+        name: 'delegate',
         param: paramName
       };
     },
@@ -141,6 +141,10 @@ exports.items = [
   {
     item: 'type',
     name: 'blank',
+
+    getSpec: function(commandName, paramName) {
+      return 'blank';
+    },
 
     stringify: function(value, context) {
       return '';
