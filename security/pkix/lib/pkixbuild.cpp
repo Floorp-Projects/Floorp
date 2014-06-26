@@ -406,13 +406,4 @@ BuildCertChain(TrustDomain& trustDomain,
   return SECSuccess;
 }
 
-PLArenaPool*
-BackCert::GetArena()
-{
-  if (!arena) {
-    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-  }
-  return arena.get();
-}
-
 } } // namespace mozilla::pkix
