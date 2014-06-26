@@ -92,7 +92,7 @@ var steps = [
     ok(true, "Calling addAlarm()");
 
     req = navigator.mozNetworkStats
-                   .addAlarm(new window.MozNetworkStatsInterface(wifi), 1000000);
+                   .addAlarm(new window.MozNetworkStatsInterface(wifi), 100000000);
 
     req.onsuccess = function () {
       ok(true, "Succeeded to add alarm. AlarmId: " + req.result);
