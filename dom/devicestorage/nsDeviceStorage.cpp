@@ -1640,21 +1640,27 @@ InterfaceToJsval(nsPIDOMWindow* aWindow,
                  nsISupports* aObject,
                  const nsIID* aIID)
 {
-  AutoJSContext cx;
   nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
   if (!sgo) {
-    return JSVAL_NULL;
+    return JS::NullValue();
   }
 
-  JS::Rooted<JSObject*> scopeObj(cx, sgo->GetGlobalJSObject());
-  NS_ENSURE_TRUE(scopeObj, JSVAL_NULL);
-  JSAutoCompartment ac(cx, scopeObj);
+  JSObject *unrootedScopeObj = sgo->GetGlobalJSObject();
+  NS_ENSURE_TRUE(unrootedScopeObj, JS::NullValue());
+  JSRuntime *runtime = JS_GetObjectRuntime(unrootedScopeObj);
+  JS::Rooted<JS::Value> someJsVal(runtime);
+  nsresult rv;
 
+  { // Protect someJsVal from moving GC in ~JSAutoCompartment
+    AutoJSContext cx;
 
-  JS::Rooted<JS::Value> someJsVal(cx);
-  nsresult rv = nsContentUtils::WrapNative(cx, aObject, aIID, &someJsVal);
+    JS::Rooted<JSObject*> scopeObj(cx, unrootedScopeObj);
+    JSAutoCompartment ac(cx, scopeObj);
+
+    rv = nsContentUtils::WrapNative(cx, aObject, aIID, &someJsVal);
+  }
   if (NS_FAILED(rv)) {
-    return JSVAL_NULL;
+    return JS::NullValue();
   }
 
   return someJsVal;
