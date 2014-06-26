@@ -1,7 +1,7 @@
 node-http2
 ==========
 
-An HTTP/2 ([draft-ietf-httpbis-http2-12](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12))
+An HTTP/2 ([draft-ietf-httpbis-http2-13](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13))
 client and server implementation for node.js.
 
 Installation
@@ -114,12 +114,12 @@ point to understand the code.
 ### Test coverage ###
 
 To generate a code coverage report, run `npm test --coverage` (which runs very slowly, be patient).
-Code coverage summary as of version 2.4.0:
+Code coverage summary as of version 2.5.3:
 ```
-Statements   : 93.19% ( 397/426 )
-Branches     : 79.88% ( 131/164 )
-Functions    : 93.75% ( 60/64 )
-Lines        : 93.19% ( 397/426 )
+Statements   : 92.64% ( 403/435 )
+Branches     : 79.41% ( 135/170 )
+Functions    : 92.31% ( 60/65 )
+Lines        : 92.64% ( 403/435 )
 ```
 
 There's a hosted version of the detailed (line-by-line) coverage report

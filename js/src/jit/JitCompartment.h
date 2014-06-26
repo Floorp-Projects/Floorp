@@ -467,6 +467,7 @@ class JitCompartment
     }
 
     bool notifyOfActiveParallelEntryScript(JSContext *cx, HandleScript script);
+    bool hasRecentParallelActivity() const;
 
     void toggleBaselineStubBarriers(bool enabled);
 
@@ -497,14 +498,6 @@ class JitCompartment
 void InvalidateAll(FreeOp *fop, JS::Zone *zone);
 template <ExecutionMode mode>
 void FinishInvalidation(FreeOp *fop, JSScript *script);
-
-inline bool
-ShouldPreserveParallelJITCode(JSRuntime *rt, JSScript *script, bool increase = false)
-{
-    IonScript *parallelIon = script->parallelIonScript();
-    uint32_t age = increase ? parallelIon->increaseParallelAge() : parallelIon->parallelAge();
-    return age < jit::IonScript::MAX_PARALLEL_AGE && !rt->gc.shouldCleanUpEverything;
-}
 
 // On windows systems, really large frames need to be incrementally touched.
 // The following constant defines the minimum increment of the touch.

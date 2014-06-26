@@ -139,7 +139,7 @@ Deserializer.prototype._transform = function _transform(chunk, encoding, done) {
         }
       } else {
         this._log.error('Unknown type incoming frame');
-        this.emit('error', 'PROTOCOL_ERROR');
+        // Ignore it other than logging
       }
       this._next(COMMON_HEADER_SIZE);
     }
@@ -148,7 +148,7 @@ Deserializer.prototype._transform = function _transform(chunk, encoding, done) {
   done();
 };
 
-// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-4.1)
+// [Frame Header](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-4.1)
 // --------------------------------------------------------------
 //
 // HTTP/2.0 frames share a common base format consisting of an 8-byte header followed by 0 to 65535
@@ -239,6 +239,10 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
   var length = buffer.readUInt16BE(0);
 
   frame.type = frameTypes[buffer.readUInt8(2)];
+  if (!frame.type) {
+    // We are required to ignore unknown frame types
+    return length;
+  }
 
   frame.flags = {};
   var flagByte = buffer.readUInt8(3);
@@ -262,7 +266,7 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 // * `typeSpecificAttributes`: a register of frame specific frame object attributes (used by
 //   logging code and also serves as documentation for frame objects)
 
-// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.1)
+// [DATA Frames](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.1)
 // ------------------------------------------------------------
 //
 // DATA frames (type=0x0) convey arbitrary, variable-length sequences of octets associated with a
@@ -277,18 +281,12 @@ Deserializer.commonHeader = function readCommonHeader(buffer, frame) {
 //   Bit 2 being set indicates that this frame is the last for the current segment. Intermediaries
 //   MUST NOT coalesce frames across a segment boundary and MUST preserve segment boundaries when
 //   forwarding frames.
-// * PAD_LOW (0x08):
-//   Bit 4 being set indicates that the Pad Low field is present.
-// * PAD_HIGH (0x10):
-//   Bit 5 being set indicates that the Pad High field is present. This bit MUST NOT be set unless
-//   the PAD_LOW flag is also set. Endpoints that receive a frame with PAD_HIGH set and PAD_LOW
-//   cleared MUST treat this as a connection error of type PROTOCOL_ERROR.
-// * COMPRESSED (0x20):
-//   Bit 6 being set indicates that the data in the frame has been compressed with GZIP compression.
+// * PADDED (0x08):
+//   Bit 4 being set indicates that the Pad Length field is present.
 
 frameTypes[0x0] = 'DATA';
 
-frameFlags.DATA = ['END_STREAM', 'END_SEGMENT', 'RESERVED4', 'PAD_LOW', 'PAD_HIGH', 'COMPRESSED'];
+frameFlags.DATA = ['END_STREAM', 'END_SEGMENT', 'RESERVED4', 'PADDED'];
 
 typeSpecificAttributes.DATA = ['data'];
 
@@ -299,19 +297,9 @@ Serializer.DATA = function writeData(frame, buffers) {
 Deserializer.DATA = function readData(buffer, frame) {
   var dataOffset = 0;
   var paddingLength = 0;
-  if (frame.flags.PAD_LOW) {
-    if (frame.flags.PAD_HIGH) {
-      paddingLength = (buffer.readUInt8(dataOffset) & 0xff) * 256;
-      dataOffset += 1;
-    }
-    paddingLength += (buffer.readUInt8(dataOffset) & 0xff);
-    dataOffset += 1;
-  } else if (frame.flags.PAD_HIGH) {
-    return 'DATA frame got PAD_HIGH without PAD_LOW';
-  }
-
-  if (frame.flags.COMPRESSED) {
-    return 'DATA frame received COMPRESSED data (unsupported)';
+  if (frame.flags.PADDED) {
+    paddingLength = (buffer.readUInt8(dataOffset) & 0xff);
+    dataOffset = 1;
   }
 
   if (paddingLength) {
@@ -321,7 +309,7 @@ Deserializer.DATA = function readData(buffer, frame) {
   }
 };
 
-// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.2)
+// [HEADERS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.2)
 // --------------------------------------------------------------
 //
 // The HEADERS frame (type=0x1) allows the sender to create a stream.
@@ -338,23 +326,22 @@ Deserializer.DATA = function readData(buffer, frame) {
 // * END_HEADERS (0x4):
 //   The END_HEADERS bit indicates that this frame contains the entire payload necessary to provide
 //   a complete set of headers.
-// * PAD_LOW (0x08):
-//   Bit 5 being set indicates that the Pad Low field is present.
-// * PAD_HIGH (0x10):
-//   Bit 6 being set indicates that the Pad High field is present. This bit MUST NOT be set unless
-//   the PAD_LOW flag is also set. Endpoints that receive a frame with PAD_HIGH set and PAD_LOW
-//   cleared MUST treat this as a connection error of type PROTOCOL_ERROR.
+// * PADDED (0x08):
+//   Bit 4 being set indicates that the Pad Length field is present.
+// * PRIORITY (0x20):
+//   Bit 6 being set indicates that the Exlusive Flag (E), Stream Dependency, and Weight fields are
+//   present.
 
 frameTypes[0x1] = 'HEADERS';
 
-frameFlags.HEADERS = ['END_STREAM', 'END_SEGMENT', 'END_HEADERS', 'PAD_LOW', 'PAD_HIGH', 'PRIORITY'];
+frameFlags.HEADERS = ['END_STREAM', 'END_SEGMENT', 'END_HEADERS', 'PADDED', 'RESERVED5', 'PRIORITY'];
 
 typeSpecificAttributes.HEADERS = ['priorityDependency', 'priorityWeight', 'exclusiveDependency', 'headers', 'data'];
 
 //      0                   1                   2                   3
 //      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//     | Pad High? (8) |  Pad Low? (8) |
+//     |Pad Length? (8)|
 //     +-+-------------+---------------+-------------------------------+
 //     |E|                 Stream Dependency? (31)                     |
 //     +-+-------------+-----------------------------------------------+
@@ -385,15 +372,9 @@ Serializer.HEADERS = function writeHeadersPriority(frame, buffers) {
 Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   var dataOffset = 0;
   var paddingLength = 0;
-  if (frame.flags.PAD_LOW) {
-    if (frame.flags.PAD_HIGH) {
-      paddingLength = (buffer.readUInt8(dataOffset) & 0xff) * 256;
-      dataOffset += 1;
-    }
-    paddingLength += (buffer.readUInt8(dataOffset) & 0xff);
-    dataOffset += 1;
-  } else if (frame.flags.PAD_HIGH) {
-    return 'HEADERS frame got PAD_HIGH without PAD_LOW';
+  if (frame.flags.PADDED) {
+    paddingLength = (buffer.readUInt8(dataOffset) & 0xff);
+    dataOffset = 1;
   }
 
   if (frame.flags.PRIORITY) {
@@ -414,7 +395,7 @@ Deserializer.HEADERS = function readHeadersPriority(buffer, frame) {
   }
 };
 
-// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.3)
+// [PRIORITY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.3)
 // -------------------------------------------------------
 //
 // The PRIORITY frame (type=0x2) specifies the sender-advised priority of a stream.
@@ -459,7 +440,7 @@ Deserializer.PRIORITY = function readPriority(buffer, frame) {
   frame.priorityWeight = buffer.readUInt8(4);
 };
 
-// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.4)
+// [RST_STREAM](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.4)
 // -----------------------------------------------------------
 //
 // The RST_STREAM frame (type=0x3) allows for abnormal termination of a stream.
@@ -491,9 +472,13 @@ Serializer.RST_STREAM = function writeRstStream(frame, buffers) {
 
 Deserializer.RST_STREAM = function readRstStream(buffer, frame) {
   frame.error = errorCodes[buffer.readUInt32BE(0)];
+  if (!frame.error) {
+    // Unknown error codes are considered equivalent to INTERNAL_ERROR
+    frame.error = 'INTERNAL_ERROR';
+  }
 };
 
-// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.5)
+// [SETTINGS](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.5)
 // -------------------------------------------------------
 //
 // The SETTINGS frame (type=0x4) conveys configuration parameters that affect how endpoints
@@ -510,16 +495,16 @@ frameFlags.SETTINGS = ['ACK'];
 
 typeSpecificAttributes.SETTINGS = ['settings'];
 
-// The payload of a SETTINGS frame consists of zero or more settings. Each setting consists of an
-// 8-bit identifier, and an unsigned 32-bit value.
+// The payload of a SETTINGS frame consists of zero or more settings. Each setting consists of a
+// 16-bit identifier, and an unsigned 32-bit value.
 //
 //      0                   1                   2                   3
 //      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//     |  Identifier(8)  |                  Value (32)                 |
+//     |         Identifier(16)          |        Value (32)           |
 //     +-----------------+---------------------------------------------+
-//     ...Value          |
-//     +-----------------+
+//     ...Value                          |
+//     +---------------------------------+
 //
 // Each setting in a SETTINGS frame replaces the existing value for that setting.  Settings are
 // processed in the order in which they appear, and a receiver of a SETTINGS frame does not need to
@@ -539,10 +524,10 @@ Serializer.SETTINGS = function writeSettings(frame, buffers) {
   });
   assert(settingsLeft.length === 0, 'Unknown settings: ' + settingsLeft.join(', '));
 
-  var buffer = new Buffer(settings.length * 5);
+  var buffer = new Buffer(settings.length * 6);
   for (var i = 0; i < settings.length; i++) {
-    buffer.writeUInt8(settings[i].id & 0xff, i*5);
-    buffer.writeUInt32BE(settings[i].value, i*5 + 1);
+    buffer.writeUInt16BE(settings[i].id & 0xffff, i*6);
+    buffer.writeUInt32BE(settings[i].value, i*6 + 2);
   }
 
   buffers.push(buffer);
@@ -550,7 +535,7 @@ Serializer.SETTINGS = function writeSettings(frame, buffers) {
 
 Deserializer.SETTINGS = function readSettings(buffer, frame, role) {
   frame.settings = {};
-  
+
   // Receipt of a SETTINGS frame with the ACK flag set and a length
   // field value other than 0 MUST be treated as a connection error
   // (Section 5.4.1) of type FRAME_SIZE_ERROR.
@@ -558,21 +543,18 @@ Deserializer.SETTINGS = function readSettings(buffer, frame, role) {
     return 'FRAME_SIZE_ERROR';
   }
 
-  if (buffer.length % 5 !== 0) {
+  if (buffer.length % 6 !== 0) {
     return 'PROTOCOL_ERROR';
   }
-  for (var i = 0; i < buffer.length / 5; i++) {
-    var id = buffer.readUInt8(i*5) & 0xff;
+  for (var i = 0; i < buffer.length / 6; i++) {
+    var id = buffer.readUInt16BE(i*6) & 0xffff;
     var setting = definedSettings[id];
     if (setting) {
       if (role == 'CLIENT' && setting.name == 'SETTINGS_ENABLE_PUSH') {
         return 'SETTINGS frame on client got SETTINGS_ENABLE_PUSH';
       }
-      var value = buffer.readUInt32BE(i*5 + 1);
+      var value = buffer.readUInt32BE(i*6 + 2);
       frame.settings[setting.name] = setting.flag ? Boolean(value & 0x1) : value;
-    } else {
-      /* Unknown setting, protocol error */
-      return 'SETTINGS frame got unknown setting type';
     }
   }
 };
@@ -599,13 +581,7 @@ definedSettings[3] = { name: 'SETTINGS_MAX_CONCURRENT_STREAMS', flag: false };
 //   indicates the sender's initial stream window size (in bytes) for new streams.
 definedSettings[4] = { name: 'SETTINGS_INITIAL_WINDOW_SIZE', flag: false };
 
-// * SETTINGS_COMPRESS_DATA (5):
-//   this setting is used to enable GZip compression of DATA frames. A value of 1 indicates that
-//   DATA frames MAY be compressed. A value of 0 indicates that compression is not permitted.
-//   The initial value is 0.
-definedSettings[5] = { name: 'SETTINGS_COMPRESS_DATA', flag: true };
-
-// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.6)
+// [PUSH_PROMISE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.6)
 // ---------------------------------------------------------------
 //
 // The PUSH_PROMISE frame (type=0x5) is used to notify the peer endpoint in advance of streams the
@@ -619,16 +595,20 @@ definedSettings[5] = { name: 'SETTINGS_COMPRESS_DATA', flag: true };
 
 frameTypes[0x5] = 'PUSH_PROMISE';
 
-frameFlags.PUSH_PROMISE = ['RESERVED1', 'RESERVED2', 'END_PUSH_PROMISE', 'PAD_LOW', 'PAD_HIGH'];
+frameFlags.PUSH_PROMISE = ['RESERVED1', 'RESERVED2', 'END_PUSH_PROMISE', 'PADDED'];
 
 typeSpecificAttributes.PUSH_PROMISE = ['promised_stream', 'headers', 'data'];
 
 //      0                   1                   2                   3
 //      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 //     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//     |Pad Length? (8)|
+//     +-+-------------+-----------------------------------------------+
 //     |X|                Promised-Stream-ID (31)                      |
 //     +-+-------------------------------------------------------------+
-//     |                    Header Block (*)                         ...
+//     |                 Header Block Fragment (*)                   ...
+//     +---------------------------------------------------------------+
+//     |                         Padding (*)                         ...
 //     +---------------------------------------------------------------+
 //
 // The PUSH_PROMISE frame includes the unsigned 31-bit identifier of
@@ -649,15 +629,9 @@ Serializer.PUSH_PROMISE = function writePushPromise(frame, buffers) {
 Deserializer.PUSH_PROMISE = function readPushPromise(buffer, frame) {
   var dataOffset = 0;
   var paddingLength = 0;
-  if (frame.flags.PAD_LOW) {
-    if (frame.flags.PAD_HIGH) {
-      paddingLength = (buffer.readUInt8(dataOffset) & 0xff) * 256;
-      dataOffset += 1;
-    }
-    paddingLength += (buffer.readUInt8(dataOffset) & 0xff);
-    dataOffset += 1;
-  } else if (frame.flags.PAD_HIGH) {
-    return 'PUSH_PROMISE frame got PAD_HIGH without PAD_LOW';
+  if (frame.flags.PADDED) {
+    paddingLength = (buffer.readUInt8(dataOffset) & 0xff);
+    dataOffset = 1;
   }
   frame.promised_stream = buffer.readUInt32BE(dataOffset) & 0x7fffffff;
   dataOffset += 4;
@@ -668,7 +642,7 @@ Deserializer.PUSH_PROMISE = function readPushPromise(buffer, frame) {
   }
 };
 
-// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.7)
+// [PING](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.7)
 // -----------------------------------------------
 //
 // The PING frame (type=0x6) is a mechanism for measuring a minimal round-trip time from the
@@ -698,7 +672,7 @@ Deserializer.PING = function readPing(buffer, frame) {
   frame.data = buffer;
 };
 
-// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.8)
+// [GOAWAY](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.8)
 // ---------------------------------------------------
 //
 // The GOAWAY frame (type=0x7) informs the remote peer to stop creating streams on this connection.
@@ -743,9 +717,13 @@ Serializer.GOAWAY = function writeGoaway(frame, buffers) {
 Deserializer.GOAWAY = function readGoaway(buffer, frame) {
   frame.last_stream = buffer.readUInt32BE(0) & 0x7fffffff;
   frame.error = errorCodes[buffer.readUInt32BE(4)];
+  if (!frame.error) {
+    // Unknown error types are to be considered equivalent to INTERNAL ERROR
+    frame.error = 'INTERNAL_ERROR';
+  }
 };
 
-// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.9)
+// [WINDOW_UPDATE](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.9)
 // -----------------------------------------------------------------
 //
 // The WINDOW_UPDATE frame (type=0x8) is used to implement flow control.
@@ -780,7 +758,7 @@ Deserializer.WINDOW_UPDATE = function readWindowUpdate(buffer, frame) {
   frame.window_size = buffer.readUInt32BE(0) & 0x7fffffff;
 };
 
-// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.10)
+// [CONTINUATION](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.10)
 // ------------------------------------------------------------
 //
 // The CONTINUATION frame (type=0x9) is used to continue a sequence of header block fragments.
@@ -790,16 +768,10 @@ Deserializer.WINDOW_UPDATE = function readWindowUpdate(buffer, frame) {
 // * END_HEADERS (0x4):
 //   The END_HEADERS bit indicates that this frame ends the sequence of header block fragments
 //   necessary to provide a complete set of headers.
-// * PAD_LOW (0x08):
-//   Bit 5 being set indicates that the Pad Low field is present.
-// * PAD_HIGH (0x10):
-//   Bit 6 being set indicates that the Pad High field is present. This bit MUST NOT be set unless
-//   the PAD_LOW flag is also set. Endpoints that receive a frame with PAD_HIGH set and PAD_LOW
-//   cleared MUST treat this as a connection error of type PROTOCOL_ERROR.
 
 frameTypes[0x9] = 'CONTINUATION';
 
-frameFlags.CONTINUATION = ['RESERVED1', 'RESERVED2', 'END_HEADERS', 'PAD_LOW', 'PAD_HIGH'];
+frameFlags.CONTINUATION = ['RESERVED1', 'RESERVED2', 'END_HEADERS'];
 
 typeSpecificAttributes.CONTINUATION = ['headers', 'data'];
 
@@ -808,26 +780,10 @@ Serializer.CONTINUATION = function writeContinuation(frame, buffers) {
 };
 
 Deserializer.CONTINUATION = function readContinuation(buffer, frame) {
-  var dataOffset = 0;
-  var paddingLength = 0;
-  if (frame.flags.PAD_LOW) {
-    if (frame.flags.PAD_HIGH) {
-      paddingLength = (buffer.readUInt8(dataOffset) & 0xff) * 256;
-      dataOffset += 1;
-    }
-    paddingLength += (buffer.readUInt8(dataOffset) & 0xff);
-    dataOffset += 1;
-  } else if (frame.flags.PAD_HIGH) {
-    return 'CONTINUATION frame got PAD_HIGH without PAD_LOW';
-  }
-  if (paddingLength) {
-    frame.data = buffer.slice(dataOffset, -1 * paddingLength);
-  } else {
-    frame.data = buffer.slice(dataOffset);
-  }
+  frame.data = buffer;
 };
 
-// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.11)
+// [ALTSVC](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.11)
 // ------------------------------------------------------------
 //
 // The ALTSVC frame (type=0xA) advertises the availability of an alternative service to the client.
@@ -916,7 +872,7 @@ Deserializer.ALTSVC = function readAltSvc(buffer, frame) {
   frame.origin = buffer.toString('ascii', 9 + pidLength + hostLength);
 };
 
-// [BLOCKED](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-6.12)
+// [BLOCKED](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-6.12)
 // ------------------------------------------------------------
 //
 // The BLOCKED frame (type=0xB) indicates that the sender is unable to send data
@@ -936,7 +892,7 @@ Serializer.BLOCKED = function writeBlocked(frame, buffers) {
 Deserializer.BLOCKED = function readBlocked(buffer, frame) {
 };
 
-// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-12#section-7)
+// [Error Codes](http://tools.ietf.org/html/draft-ietf-httpbis-http2-13#section-7)
 // ------------------------------------------------------------
 
 var errorCodes = [

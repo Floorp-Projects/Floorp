@@ -66,7 +66,7 @@ InitializeStaticHeaders()
     AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("404"));
     AddStaticElement(NS_LITERAL_CSTRING(":status"), NS_LITERAL_CSTRING("500"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-charset"));
-    AddStaticElement(NS_LITERAL_CSTRING("accept-encoding"));
+    AddStaticElement(NS_LITERAL_CSTRING("accept-encoding"), NS_LITERAL_CSTRING("gzip, deflate"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-language"));
     AddStaticElement(NS_LITERAL_CSTRING("accept-ranges"));
     AddStaticElement(NS_LITERAL_CSTRING("accept"));

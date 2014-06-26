@@ -916,9 +916,9 @@ Range::abs(TempAllocator &alloc, const Range *op)
     int32_t l = op->lower_;
     int32_t u = op->upper_;
 
-    return new(alloc) Range(Max(Max(int32_t(0), l), u == INT32_MIN ? int32_t(INT32_MAX) : -u),
+    return new(alloc) Range(Max(Max(int32_t(0), l), u == INT32_MIN ? INT32_MAX : -u),
                             true,
-                            Max(Max(int32_t(0), u), l == INT32_MIN ? int32_t(INT32_MAX) : -l),
+                            Max(Max(int32_t(0), u), l == INT32_MIN ? INT32_MAX : -l),
                             op->hasInt32Bounds() && l != INT32_MIN,
                             op->canHaveFractionalPart_,
                             op->max_exponent_);
