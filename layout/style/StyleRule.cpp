@@ -1307,7 +1307,6 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
   : Rule(),
     mSelector(aSelector),
     mDeclaration(aDeclaration),
-    mImportantRule(nullptr),
     mLineNumber(0),
     mColumnNumber(0),
     mWasMatched(false)
@@ -1320,7 +1319,6 @@ StyleRule::StyleRule(const StyleRule& aCopy)
   : Rule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nullptr),
     mDeclaration(new Declaration(*aCopy.mDeclaration)),
-    mImportantRule(nullptr),
     mLineNumber(aCopy.mLineNumber),
     mColumnNumber(aCopy.mColumnNumber),
     mWasMatched(false)
@@ -1334,7 +1332,6 @@ StyleRule::StyleRule(StyleRule& aCopy,
   : Rule(aCopy),
     mSelector(aCopy.mSelector),
     mDeclaration(aDeclaration),
-    mImportantRule(nullptr),
     mDOMRule(aCopy.mDOMRule.forget()),
     mLineNumber(aCopy.mLineNumber),
     mColumnNumber(aCopy.mColumnNumber),
@@ -1360,7 +1357,6 @@ StyleRule::~StyleRule()
 {
   delete mSelector;
   delete mDeclaration;
-  NS_IF_RELEASE(mImportantRule);
   if (mDOMRule) {
     mDOMRule->DOMDeclaration()->DropReference();
   }
@@ -1390,7 +1386,7 @@ StyleRule::RuleMatched()
     mWasMatched = true;
     mDeclaration->SetImmutable();
     if (mDeclaration->HasImportantData()) {
-      NS_ADDREF(mImportantRule = new ImportantRule(mDeclaration));
+      mImportantRule = new ImportantRule(mDeclaration);
     }
   }
 }
