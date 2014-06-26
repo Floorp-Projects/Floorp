@@ -7,7 +7,6 @@ scrollbar {
   background-image: none;
   border: 0px solid transparent;
   z-index: 2147483647;
-  -moz-box-align: start;
   padding: 2px;
 }
 
@@ -21,6 +20,10 @@ scrollbar[orient="horizontal"] {
   margin-top: -8px;
   min-height: 8px;
   max-height: 8px;
+}
+
+slider {
+  -moz-appearance: none !important;
 }
 
 thumb {
