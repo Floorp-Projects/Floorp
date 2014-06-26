@@ -1589,7 +1589,8 @@ Navigator::GetMozTelephony(ErrorResult& aRv)
 
 #ifdef MOZ_B2G
 already_AddRefed<Promise>
-Navigator::GetMobileIdAssertion(ErrorResult& aRv)
+Navigator::GetMobileIdAssertion(const MobileIdOptions& aOptions,
+                                ErrorResult& aRv)
 {
   if (!mWindow || !mWindow->GetDocShell()) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -1603,8 +1604,22 @@ Navigator::GetMobileIdAssertion(ErrorResult& aRv)
     return nullptr;
   }
 
+  JSContext *cx = nsContentUtils::GetCurrentJSContext();
+  if (!cx) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  JS::Rooted<JS::Value> optionsValue(cx);
+  if (!ToJSValue(cx, aOptions, &optionsValue)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
   nsCOMPtr<nsISupports> promise;
-  aRv = service->GetMobileIdAssertion(mWindow, getter_AddRefs(promise));
+  aRv = service->GetMobileIdAssertion(mWindow,
+                                      optionsValue,
+                                      getter_AddRefs(promise));
 
   nsRefPtr<Promise> p = static_cast<Promise*>(promise.get());
   return p.forget();
