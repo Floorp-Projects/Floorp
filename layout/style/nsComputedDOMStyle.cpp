@@ -1917,7 +1917,7 @@ nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
                                        const nsStyleSides& aCropRect,
                                        nsString& aString)
 {
-  nsDOMCSSValueList* valueList = GetROCSSValueList(true);
+  nsRefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
 
   // <uri>
   nsROCSSPrimitiveValue *valURI = new nsROCSSPrimitiveValue;
@@ -1933,7 +1933,6 @@ nsComputedDOMStyle::GetImageRectString(nsIURI* aURI,
 
   nsAutoString argumentString;
   valueList->GetCssText(argumentString);
-  delete valueList;
 
   aString = NS_LITERAL_STRING("-moz-image-rect(") +
             argumentString +
@@ -4149,10 +4148,7 @@ nsComputedDOMStyle::DoGetTop()
 nsDOMCSSValueList*
 nsComputedDOMStyle::GetROCSSValueList(bool aCommaDelimited)
 {
-  nsDOMCSSValueList *valueList = new nsDOMCSSValueList(aCommaDelimited, true);
-  NS_ASSERTION(valueList != 0, "ran out of memory");
-
-  return valueList;
+  return new nsDOMCSSValueList(aCommaDelimited, true);
 }
 
 CSSValue*
