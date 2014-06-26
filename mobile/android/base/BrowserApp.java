@@ -11,6 +11,7 @@ import java.net.URLEncoder;
 import java.util.EnumSet;
 import java.util.Vector;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
