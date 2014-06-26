@@ -107,9 +107,14 @@ let CommandUtils = {
         }
         if (command.buttonId != null) {
           button.id = command.buttonId;
+          if (command.buttonClass != null) {
+            button.className = command.buttonClass;
+          }
         }
-        if (command.buttonClass != null) {
-          button.className = command.buttonClass;
+        else {
+          button.setAttribute("text-as-image", "true");
+          button.setAttribute("label", command.name);
+          button.className = "devtools-toolbarbutton";
         }
         if (command.tooltipText != null) {
           button.setAttribute("tooltiptext", command.tooltipText);
@@ -125,18 +130,42 @@ let CommandUtils = {
         // Allow the command button to be toggleable
         if (command.state) {
           button.setAttribute("autocheck", false);
-          let onChange = (event, eventTab) => {
-            if (eventTab == target.tab) {
-              if (command.state.isChecked(target)) {
-                button.setAttribute("checked", true);
+
+          /**
+           * The onChange event should be called with an event object that
+           * contains a target property which specifies which target the event
+           * applies to. For legacy reasons the event object can also contain
+           * a tab property.
+           */
+          let onChange = (eventName, ev) => {
+            if (ev.target == target || ev.tab == target.tab) {
+
+              let updateChecked = (checked) => {
+                if (checked) {
+                  button.setAttribute("checked", true);
+                }
+                else if (button.hasAttribute("checked")) {
+                  button.removeAttribute("checked");
+                }
+              };
+
+              // isChecked would normally be synchronous. An annoying quirk
+              // of the 'csscoverage toggle' command forces us to accept a
+              // promise here, but doing Promise.resolve(reply).then(...) here
+              // makes this async for everyone, which breaks some tests so we
+              // treat non-promise replies separately to keep then synchronous.
+              let reply = command.state.isChecked(target);
+              if (typeof reply.then == "function") {
+                reply.then(updateChecked, console.error);
               }
-              else if (button.hasAttribute("checked")) {
-                button.removeAttribute("checked");
+              else {
+                updateChecked(reply);
               }
             }
           };
+
           command.state.onChange(target, onChange);
-          onChange(null, target.tab);
+          onChange("", { target: target });
           document.defaultView.addEventListener("unload", () => {
             command.state.offChange(target, onChange);
           }, false);

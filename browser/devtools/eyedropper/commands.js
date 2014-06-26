@@ -41,10 +41,10 @@ exports.items = [{
     let dropper = EyedropperManager.createInstance(chromeWindow);
     dropper.open();
 
-    eventEmitter.emit("changed", target.tab);
+    eventEmitter.emit("changed", { target: target });
 
     dropper.once("destroy", () => {
-      eventEmitter.emit("changed", target.tab);
+      eventEmitter.emit("changed", { target: target });
     });
   }
 }];

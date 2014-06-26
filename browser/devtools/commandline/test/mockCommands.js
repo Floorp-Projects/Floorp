@@ -24,6 +24,7 @@
 
 
 var Promise = require('gcli/util/promise').Promise;
+var converters = require('gcli/converters/converters');
 var mockCommands = {};
 
 // We use an alias for exports here because this module is used in Firefox
@@ -40,6 +41,9 @@ mockCommands.setup = function(requisition) {
     else if (item.item === 'type') {
       requisition.types.addType(item);
     }
+    else if (item.item === 'converter') {
+      converters.addConverter(item);
+    }
     else {
       console.error('Ignoring item ', item);
     }
@@ -53,6 +57,9 @@ mockCommands.shutdown = function(requisition) {
     }
     else if (item.item === 'type') {
       requisition.types.removeType(item);
+    }
+    else if (item.item === 'converter') {
+      converters.removeConverter(item);
     }
     else {
       console.error('Ignoring item ', item);
@@ -70,6 +77,25 @@ function createExec(name) {
 }
 
 mockCommands.items = [
+  {
+    item: 'converter',
+    from: 'json',
+    to: 'string',
+    exec: function(json, context) {
+      return JSON.stringify(json, null, '  ');
+    }
+  },
+  {
+    item: 'converter',
+    from: 'json',
+    to: 'view',
+    exec: function(json, context) {
+      var html = JSON.stringify(json, null, '&#160;').replace(/\n/g, '<br/>');
+      return {
+        html: '<pre>' + html + '</pre>'
+      };
+    }
+  },
   {
     item: 'type',
     name: 'optionType',
@@ -669,6 +695,75 @@ mockCommands.items = [
     ],
     exec: function(args, context) {
       return 'Test completed';
+    }
+  },
+  {
+    item: 'command',
+    name: 'urlc',
+    params: [
+      {
+        name: 'url',
+        type: 'url'
+      }
+    ],
+    returnType: 'json',
+    exec: function(args, context) {
+      return args;
+    }
+  },
+  {
+    item: 'command',
+    name: 'unionc1',
+    params: [
+      {
+        name: 'first',
+        type: {
+          name: 'union',
+          alternatives: [
+            {
+              name: 'selection',
+              lookup: [
+                { name: 'one', value: 1 },
+                { name: 'two', value: 2 },
+              ]
+            },
+            'number',
+            { name: 'string' }
+          ]
+        }
+      }
+    ],
+    returnType: 'json',
+    exec: function(args, context) {
+      return args;
+    }
+  },
+  {
+    item: 'command',
+    name: 'unionc2',
+    params: [
+      {
+        name: 'first',
+        type: {
+          name: 'union',
+          alternatives: [
+            {
+              name: 'selection',
+              lookup: [
+                { name: 'one', value: 1 },
+                { name: 'two', value: 2 },
+              ]
+            },
+            {
+              name: 'url'
+            }
+          ]
+        }
+      }
+    ],
+    returnType: 'json',
+    exec: function(args, context) {
+      return args;
     }
   }
 ];
