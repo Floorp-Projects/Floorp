@@ -39,6 +39,7 @@ svg|line.box-model-guide-bottom,
 svg|line.box-model-guide-left {
   stroke: #08C;
   stroke-dasharray: 5 3;
+  shape-rendering: crispEdges;
 }
 
 /* Highlighter - Node Infobar */

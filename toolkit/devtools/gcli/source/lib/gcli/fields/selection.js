@@ -49,7 +49,7 @@ SelectionField.claim = function(type, context) {
   if (context == null) {
     return Field.NO_MATCH;
   }
-  return type.getType(context).isSelection ? Field.MATCH : Field.NO_MATCH;
+  return type.getType(context).hasPredictions ? Field.DEFAULT : Field.NO_MATCH;
 };
 
 SelectionField.prototype.destroy = function() {

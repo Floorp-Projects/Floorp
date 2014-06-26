@@ -16,7 +16,7 @@ gDevTools.on("toolbox-ready", (e, toolbox) => {
   }
 
   let fireChangeForTab = () => {
-    eventEmitter.emit("changed", toolbox.target.tab);
+    eventEmitter.emit("changed", { target: toolbox.target });
   };
 
   toolbox.on("split-console", fireChangeForTab);
@@ -38,7 +38,7 @@ exports.items = [
     state: {
       isChecked: function(target) {
         let toolbox = gDevTools.getToolbox(target);
-        return toolbox && toolbox.splitConsole;
+        return !!(toolbox && toolbox.splitConsole);
       },
       onChange: function(target, changeHandler) {
         eventEmitter.on("changed", changeHandler);
