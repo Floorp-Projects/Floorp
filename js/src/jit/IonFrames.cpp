@@ -1337,7 +1337,7 @@ GetPcScript(JSContext *cx, JSScript **scriptRes, jsbytecode **pcRes)
     if (MOZ_UNLIKELY(rt->ionPcScriptCache == nullptr)) {
         rt->ionPcScriptCache = (PcScriptCache *)js_malloc(sizeof(struct PcScriptCache));
         if (rt->ionPcScriptCache)
-            rt->ionPcScriptCache->clear(rt->gc.number);
+            rt->ionPcScriptCache->clear(rt->gc.gcNumber());
     }
 
     // Attempt to lookup address in cache.

@@ -333,7 +333,7 @@ class MinorCollectionTracer : public JSTracer
         savedRuntimeNeedBarrier(rt->needsBarrier()),
         disableStrictProxyChecking(rt)
     {
-        rt->gc.number++;
+        rt->gc.incGcNumber();
 
         /*
          * We disable the runtime needsBarrier() check so that pre-barriers do

@@ -1430,10 +1430,10 @@ NewObject(ExclusiveContext *cx, types::TypeObject *type_, JSObject *parent, gc::
         if (!cx->shouldBeJSContext())
             return nullptr;
         JSRuntime *rt = cx->asJSContext()->runtime();
-        rt->gc.disableIncrementalGC();
+        rt->gc.disallowIncrementalGC();
 
 #ifdef DEBUG
-        if (rt->gcMode() == JSGC_MODE_INCREMENTAL) {
+        if (rt->gc.gcMode() == JSGC_MODE_INCREMENTAL) {
             fprintf(stderr,
                     "The class %s has a trace hook but does not declare the\n"
                     "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
