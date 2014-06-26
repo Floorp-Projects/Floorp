@@ -320,14 +320,8 @@ let MobileIdentityManager = {
   },
 
   /*********************************************************
-   * Permissions helpers
+   * Permissions helper
    ********************************************************/
-
-  hasPermission: function(aPrincipal) {
-    let permission = permissionManager.testPermissionFromPrincipal(aPrincipal,
-                                                                   MOBILEID_PERM);
-    return permission == Ci.nsIPermissionManager.ALLOW_ACTION;
-  },
 
   addPermission: function(aPrincipal) {
     permissionManager.addFromPrincipal(aPrincipal, MOBILEID_PERM,
@@ -757,8 +751,14 @@ let MobileIdentityManager = {
         // If we've just prompted the user in the previous step, the permission
         // is already granted and stored so we just progress the credentials.
         if (creds) {
-          if (this.hasPermission(principal)) {
+          let permission = permissionManager.testPermissionFromPrincipal(
+            principal,
+            MOBILEID_PERM
+          );
+          if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
             return creds;
+          } else if (permission == Ci.nsIPermissionManager.DENY_ACTION) {
+            return Promise.reject(ERROR_PERMISSION_DENIED);
           }
           return this.promptAndVerify(principal, manifestURL, creds);
         }
