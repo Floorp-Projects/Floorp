@@ -29,34 +29,34 @@ var test_integers = [{
 
 var test_strings = [{
   string: 'www.foo.com',
-  buffer: new Buffer('89e7cf9bfc1ad7d4db7f', 'hex')
+  buffer: new Buffer('89f1e3c2f29ceb90f4ff', 'hex')
 }, {
   string: 'éáűőúöüó€',
   buffer: new Buffer('13c3a9c3a1c5b1c591c3bac3b6c3bcc3b3e282ac', 'hex')
 }];
 
 test_huffman_request = {
-  'GET': 'd5df47',
-  'http': 'adcebf',
-  '/': '3f',
-  'www.foo.com': 'e7cf9bfc1ad7d4db7f',
-  'https': 'adcebf1f',
-  'www.bar.com': 'e7cf9bfbd383ea6dbf',
-  'no-cache': 'b9b9949556bf',
-  '/custom-path.css': '3ab8e2e6db9af4bab7d58e3f',
-  'custom-key': '571c5cdb737b2faf',
-  'custom-value': '571c5cdb73724d9c57'
+  'GET': 'c5837f',
+  'http': '9d29af',
+  '/': '63',
+  'www.foo.com': 'f1e3c2f29ceb90f4ff',
+  'https': '9d29ad1f',
+  'www.bar.com': 'f1e3c2f18ec5c87a7f',
+  'no-cache': 'a8eb10649cbf',
+  '/custom-path.css': '6096a127a56ac699d72211',
+  'custom-key': '25a849e95ba97d7f',
+  'custom-value': '25a849e95bb8e8b4bf'
 };
 
 test_huffman_response = {
-  '302': '4017',
-  'private': 'bf06724b97',
-  'Mon, 21 OCt 2013 20:13:21 GMT': 'd6dbb29884de3dce3100a0c4130a262136ad747f',
-  ': https://www.bar.com': '98d5b9d7e331cfcf9f37f7a707d4db7f',
-  '200': '200f',
-  'Mon, 21 OCt 2013 20:13:22 GMT': 'd6dbb29884de3dce3100a0c4130a262236ad747f',
-  'https://www.bar.com': 'adcebf198e7e7cf9bfbd383ea6db',
-  'gzip': 'abdd97ff',
+  '302': '6402',
+  'private': 'aec3771a4b',
+  'Mon, 21 OCt 2013 20:13:21 GMT': 'd07abe941054d5792a0801654102e059b820a98b46ff',
+  ': https://www.bar.com': 'b8a4e94d68b8c31e3c785e31d8b90f4f',
+  '200': '1001',
+  'Mon, 21 OCt 2013 20:13:22 GMT': 'd07abe941054d5792a0801654102e059b821298b46ff',
+  'https://www.bar.com': '9d29ad171863c78f0bc63b1721e9',
+  'gzip': '9bd9ab',
   'foo=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\
 AAAAAAAAAAAAAAAAAAAAAAAAAALASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKHQWOEIUAL\
 QWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKH\
@@ -64,7 +64,7 @@ QWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEO\
 IUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOP\
 IUAXQWEOIUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234ZZZZZZZZZZ\
 ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ1234 m\
-ax-age=3600; version=1': 'e0d6cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cff5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff624880d6a7a664d4b9d1100761b92f0c58dba71',
+ax-age=3600; version=1': '94e7821861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861873c3bafe5cd8f666bbfbf9ab672c1ab5e4e10fe6ce583564e10fe67cb9b1ece5ab064e10e7d9cb06ac9c21fccfb307087f33e7cd961dd7f672c1ab86487f34844cb59e1dd7f2e6c7b335dfdfcd5b3960d5af27087f3672c1ab27087f33e5cd8f672d583270873ece583564e10fe67d983843f99f3e6cb0eebfb3960d5c3243f9a42265acf0eebf97363d99aefefe6ad9cb06ad793843f9b3960d593843f99f2e6c7b396ac1938439f672c1ab27087f33ecc1c21fccf9f3658775fd9cb06ae1921fcd21132d678775fcb9b1eccd77f7f356ce58356bc9c21fcd9cb06ac9c21fccf97363d9cb560c9c21cfb3960d593843f99f660e10fe67cf9b2c3bafece583570c90fe6908996bf7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f42265a5291f9587316065c003ed4ee5b1063d5007f',
   'foo=ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ\
 ZZZZZZZZZZZZZZZZZZZZZZZZZZLASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKHQWOEIUAL\
 QWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEOIUAXLJKH\
@@ -72,7 +72,7 @@ QWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOPIUAXQWEO\
 IUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234LASDJKHQKBZXOQWEOP\
 IUAXQWEOIUAXLJKHQWOEIUALQWEOIUAXLQEUAXLLKJASDQWEOUIAXN1234AAAAAAAAAA\
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1234 m\
-ax-age=3600; version=1': 'e0d6cffbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7fbfdfeff7f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c12441f5cfb747cfe9f2fb7d3b7f7e9e3f6fcf7f8f97879e7f4fb7e7bfc7c3cf3fa7d7e7f4f97dbf3e3dfe1e79febf6fcf7f8f879e7f4fafdbbfcf3fa7d7ebf4f9e7dba3edf9eff1f3f0cfe9b049107d73edd1f3fa7cbedf4edfdfa78fdbf3dfe3e5e1e79fd3edf9eff1f0f3cfe9f5f9fd3e5f6fcf8f7f879e7fafdbf3dfe3e1e79fd3ebf6eff3cfe9f5fafd3e79f6e8fb7e7bfc7cfc33fa6c124419f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7cf9f3e7ce24880d6a7a664d4b9d1100761b92f0c58dba71'
+ax-age=3600; version=1': '94e783f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f7f73c3bafe5cd8f666bbfbf9ab672c1ab5e4e10fe6ce583564e10fe67cb9b1ece5ab064e10e7d9cb06ac9c21fccfb307087f33e7cd961dd7f672c1ab86487f34844cb59e1dd7f2e6c7b335dfdfcd5b3960d5af27087f3672c1ab27087f33e5cd8f672d583270873ece583564e10fe67d983843f99f3e6cb0eebfb3960d5c3243f9a42265acf0eebf97363d99aefefe6ad9cb06ad793843f9b3960d593843f99f2e6c7b396ac1938439f672c1ab27087f33ecc1c21fccf9f3658775fd9cb06ae1921fcd21132d678775fcb9b1eccd77f7f356ce58356bc9c21fcd9cb06ac9c21fccf97363d9cb560c9c21cfb3960d593843f99f660e10fe67cf9b2c3bafece583570c90fe6908996a1861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861861842265a5291f9587316065c003ed4ee5b1063d5007f'
 };
 
 var test_headers = [{
@@ -98,7 +98,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('47' + '83ADCEBF', 'hex')
+  buffer: new Buffer('47' + '839d29af', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -122,7 +122,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('44' + '89E7CF9BFC1AD7D4DB7F', 'hex')
+  buffer: new Buffer('44' + '89f1e3c2f29ceb90f4ff', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -134,7 +134,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('43' + '84ADCEBF1F', 'hex')
+  buffer: new Buffer('43' + '849d29ad1f', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -146,7 +146,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('42' + '89E7CF9BFBD383EA6DBF', 'hex')
+  buffer: new Buffer('42' + '89f1e3c2f18ec5c87a7f', 'hex')
 }, {
   // literal w/index, name index
   header: {
@@ -158,7 +158,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('5e' + '86B9B9949556BF', 'hex')
+  buffer: new Buffer('5e' + '86a8eb10649cbf', 'hex')
 }, {
   // indexed
   header: {
@@ -194,7 +194,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('45' + '8C3AB8E2E6DB9AF4BAB7D58E3F', 'hex')
+  buffer: new Buffer('45' + '8b6096a127a56ac699d72211', 'hex')
 }, {
   // literal w/index, new name & value
   header: {
@@ -206,7 +206,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('40' + '88571C5CDB737B2FAF' + '89571C5CDB73724D9C57', 'hex')
+  buffer: new Buffer('40' + '8825a849e95ba97d7f' + '8925a849e95bb8e8b4bf', 'hex')
 }, {
   // indexed
   header: {
@@ -242,7 +242,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('07' + '86E75A5CBE4BC3', 'hex')
+  buffer: new Buffer('07' + '86f138d25ee5b3', 'hex')
 }, {
   // Literal w/o index, new name & value
   header: {
@@ -254,7 +254,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('00' + '03666F6F' + '03626172', 'hex')
+  buffer: new Buffer('00' + '8294e7' + '03626172', 'hex')
 }, {
   // Literal never indexed, name index
   header: {
@@ -266,7 +266,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('17' + '86E75A5CBE4BC3', 'hex')
+  buffer: new Buffer('17' + '86f138d25ee5b3', 'hex')
 }, {
   // Literal never indexed, new name & value
   header: {
@@ -278,7 +278,7 @@ var test_headers = [{
     clearReferenceSet: false,
     newMaxSize: 0
   },
-  buffer: new Buffer('10' + '03666F6F' + '03626172', 'hex')
+  buffer: new Buffer('10' + '8294e7' + '03626172', 'hex')
 }, {
   header: {
     name: -1,

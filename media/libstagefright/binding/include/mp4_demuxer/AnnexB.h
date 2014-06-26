@@ -16,6 +16,7 @@ class AnnexB
 {
 public:
   // Convert a sample from NAL unit syntax to Annex B.
+  // Assumes size of NAL length field is 4 bytes.
   static void ConvertSample(MP4Sample* aSample,
                             const mozilla::Vector<uint8_t>& annexB);
 

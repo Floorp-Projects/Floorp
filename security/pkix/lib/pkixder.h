@@ -572,15 +572,21 @@ OID(Input& input, const uint8_t (&expectedOid)[Len])
 inline Result
 AlgorithmIdentifier(Input& input, SECAlgorithmID& algorithmID)
 {
-  if (ExpectTagAndGetValue(input, OIDTag, algorithmID.algorithm) != Success) {
+  Input value;
+  if (ExpectTagAndGetValue(input, der::SEQUENCE, value) != Success) {
+    return Failure;
+  }
+  if (ExpectTagAndGetValue(value, OIDTag, algorithmID.algorithm) != Success) {
     return Failure;
   }
   algorithmID.parameters.data = nullptr;
   algorithmID.parameters.len = 0;
-  if (input.AtEnd()) {
-    return Success;
+  if (!value.AtEnd()) {
+    if (Null(value) != Success) {
+      return Failure;
+    }
   }
-  return Null(input);
+  return End(value);
 }
 
 inline Result
@@ -622,31 +628,104 @@ CertificateSerialNumber(Input& input, /*out*/ SECItem& value)
 
 // x.509 and OCSP both use this same version numbering scheme, though OCSP
 // only supports v1.
-enum Version { v1 = 0, v2 = 1, v3 = 2 };
+MOZILLA_PKIX_ENUM_CLASS Version { v1 = 0, v2 = 1, v3 = 2 };
 
 // X.509 Certificate and OCSP ResponseData both use this
 // "[0] EXPLICIT Version DEFAULT <defaultVersion>" construct, but with
 // different default versions.
 inline Result
-OptionalVersion(Input& input, /*out*/ uint8_t& version)
+OptionalVersion(Input& input, /*out*/ Version& version)
 {
-  const uint8_t tag = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
-  if (!input.Peek(tag)) {
-    version = v1;
+  static const uint8_t TAG = CONTEXT_SPECIFIC | CONSTRUCTED | 0;
+  if (!input.Peek(TAG)) {
+    version = Version::v1;
     return Success;
   }
-  if (ExpectTagAndLength(input, tag, 3) != Success) {
+  Input value;
+  if (ExpectTagAndGetValue(input, TAG, value) != Success) {
     return Failure;
   }
-  if (ExpectTagAndLength(input, INTEGER, 1) != Success) {
+  uint8_t integerValue;
+  if (Integer(value, integerValue) != Success) {
     return Failure;
   }
-  if (input.Read(version) != Success) {
+  if (End(value) != Success) {
     return Failure;
   }
-  if (version & 0x80) { // negative
-    return Fail(SEC_ERROR_BAD_DER);
+  switch (integerValue) {
+    case static_cast<uint8_t>(Version::v3): version = Version::v3; break;
+    case static_cast<uint8_t>(Version::v2): version = Version::v2; break;
+    default:
+      return Fail(SEC_ERROR_BAD_DER);
   }
+  return Success;
+}
+
+template <typename ExtensionHandler>
+inline Result
+OptionalExtensions(Input& input, uint8_t tag, ExtensionHandler extensionHandler)
+{
+  if (!input.Peek(tag)) {
+    return Success;
+  }
+
+  Input extensions;
+  {
+    Input tagged;
+    if (ExpectTagAndGetValue(input, tag, tagged) != Success) {
+      return Failure;
+    }
+    if (ExpectTagAndGetValue(tagged, SEQUENCE, extensions) != Success) {
+      return Failure;
+    }
+    if (End(tagged) != Success) {
+      return Failure;
+    }
+  }
+
+  // Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension
+  //
+  // TODO(bug 997994): According to the specification, there should never be
+  // an empty sequence of extensions but we've found OCSP responses that have
+  // that (see bug 991898).
+  while (!extensions.AtEnd()) {
+    Input extension;
+    if (ExpectTagAndGetValue(extensions, SEQUENCE, extension)
+          != Success) {
+      return Failure;
+    }
+
+    // Extension  ::=  SEQUENCE  {
+    //      extnID      OBJECT IDENTIFIER,
+    //      critical    BOOLEAN DEFAULT FALSE,
+    //      extnValue   OCTET STRING
+    //      }
+    Input extnID;
+    if (ExpectTagAndGetValue(extension, OIDTag, extnID) != Success) {
+      return Failure;
+    }
+    bool critical;
+    if (OptionalBoolean(extension, false, critical) != Success) {
+      return Failure;
+    }
+    SECItem extnValue;
+    if (ExpectTagAndGetValue(extension, OCTET_STRING, extnValue)
+          != Success) {
+      return Failure;
+    }
+    if (End(extension) != Success) {
+      return Failure;
+    }
+
+    bool understood = false;
+    if (extensionHandler(extnID, extnValue, understood) != Success) {
+      return Failure;
+    }
+    if (critical && !understood) {
+      return Fail(SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION);
+    }
+  }
+
   return Success;
 }
 
