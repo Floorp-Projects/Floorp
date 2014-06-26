@@ -191,23 +191,16 @@ GeckoMediaPluginService::GetThread(nsIThread** aThread)
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
-                                            const nsAString& aOrigin,
-                                            GMPVideoHost** aOutVideoHost,
-                                            GMPVideoDecoder** aGMPVD)
+GeckoMediaPluginService::GetGMPVideoDecoderVP8(GMPVideoHost** aOutVideoHost, GMPVideoDecoder** aGMPVD)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aOutVideoHost);
-  NS_ENSURE_ARG(aGMPVD);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
-                                               NS_LITERAL_CSTRING("decode-video"),
-                                               *aTags);
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(NS_LITERAL_CSTRING("decode-video"),
+                                               NS_LITERAL_CSTRING("vp8"));
   if (!gmp) {
     return NS_ERROR_FAILURE;
   }
@@ -225,23 +218,16 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
-                                            const nsAString& aOrigin,
-                                            GMPVideoHost** aOutVideoHost,
-                                            GMPVideoEncoder** aGMPVE)
+GeckoMediaPluginService::GetGMPVideoEncoderVP8(GMPVideoHost** aOutVideoHost, GMPVideoEncoder** aGMPVE)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  NS_ENSURE_ARG(aTags && aTags->Length() > 0);
-  NS_ENSURE_ARG(aOutVideoHost);
-  NS_ENSURE_ARG(aGMPVE);
 
   if (mShuttingDownOnGMPThread) {
     return NS_ERROR_FAILURE;
   }
 
-  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aOrigin,
-                                               NS_LITERAL_CSTRING("encode-video"),
-                                               *aTags);
+  nsRefPtr<GMPParent> gmp = SelectPluginForAPI(NS_LITERAL_CSTRING("encode-video"),
+                                               NS_LITERAL_CSTRING("vp8"));
   if (!gmp) {
     return NS_ERROR_FAILURE;
   }
@@ -273,50 +259,30 @@ GeckoMediaPluginService::UnloadPlugins()
 }
 
 GMPParent*
-GeckoMediaPluginService::SelectPluginForAPI(const nsAString& aOrigin,
-                                            const nsCString& aAPI,
-                                            const nsTArray<nsCString>& aTags)
+GeckoMediaPluginService::SelectPluginForAPI(const nsCString& aAPI,
+                                            const nsCString& aTag)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
-  GMPParent* gmp = SelectPluginFromListForAPI(aOrigin, aAPI, aTags);
+  GMPParent* gmp = SelectPluginFromListForAPI(aAPI, aTag);
   if (gmp) {
     return gmp;
   }
 
   RefreshPluginList();
 
-  return SelectPluginFromListForAPI(aOrigin, aAPI, aTags);
+  return SelectPluginFromListForAPI(aAPI, aTag);
 }
 
 GMPParent*
-GeckoMediaPluginService::SelectPluginFromListForAPI(const nsAString& aOrigin,
-                                                    const nsCString& aAPI,
-                                                    const nsTArray<nsCString>& aTags)
+GeckoMediaPluginService::SelectPluginFromListForAPI(const nsCString& aAPI,
+                                                    const nsCString& aTag)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   for (uint32_t i = 0; i < mPlugins.Length(); i++) {
     GMPParent* gmp = mPlugins[i];
-    bool supportsAllTags = true;
-    for (uint32_t t = 0; t < aTags.Length(); t++) {
-      const nsCString& tag = aTags[t];
-      if (!gmp->SupportsAPI(aAPI, tag)) {
-        supportsAllTags = false;
-        break;
-      }
-    }
-    if (!supportsAllTags) {
-      continue;
-    }
-    if (aOrigin.IsEmpty()) {
-      if (gmp->CanBeSharedCrossOrigin()) {
-        return gmp;
-      }
-    } else if (gmp->CanBeUsedFrom(aOrigin)) {
-      if (!aOrigin.IsEmpty()) {
-        gmp->SetOrigin(aOrigin);
-      }
+    if (gmp->SupportsAPI(aAPI, aTag)) {
       return gmp;
     }
   }
