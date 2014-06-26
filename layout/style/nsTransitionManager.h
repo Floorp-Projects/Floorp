@@ -26,6 +26,8 @@ struct StyleTransition;
  * Per-Element data                                                          *
  *****************************************************************************/
 
+namespace mozilla {
+
 struct ElementPropertyTransition : public mozilla::ElementAnimation
 {
   virtual ElementPropertyTransition* AsTransition() { return this; }
@@ -53,6 +55,8 @@ struct ElementPropertyTransition : public mozilla::ElementAnimation
   // has time units, the output has value units.)
   double ValuePortionFor(mozilla::TimeStamp aRefreshTime) const;
 };
+
+} // namespace mozilla
 
 class nsTransitionManager MOZ_FINAL
   : public mozilla::css::CommonAnimationManager
