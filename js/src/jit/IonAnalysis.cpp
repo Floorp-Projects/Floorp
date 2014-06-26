@@ -1192,7 +1192,9 @@ jit::BuildDominatorTree(MIRGraph &graph)
 {
     ComputeImmediateDominators(graph);
 
-    // Traversing through the graph in post-order means that every use
+    Vector<MBasicBlock *, 4, IonAllocPolicy> worklist(graph.alloc());
+
+    // Traversing through the graph in post-order means that every non-phi use
     // of a definition is visited before the def itself. Since a def
     // dominates its uses, by the time we reach a particular
     // block, we have processed all of its dominated children, so
@@ -1205,8 +1207,13 @@ jit::BuildDominatorTree(MIRGraph &graph)
         child->addNumDominated(1);
 
         // If the block only self-dominates, it has no definite parent.
-        if (child == parent)
+        // Add it to the worklist as a root for pre-order traversal.
+        // This includes all roots. Order does not matter.
+        if (child == parent) {
+            if (!worklist.append(child))
+                return false;
             continue;
+        }
 
         if (!parent->addImmediatelyDominatedBlock(child))
             return false;
@@ -1220,24 +1227,9 @@ jit::BuildDominatorTree(MIRGraph &graph)
     if (!graph.osrBlock())
         JS_ASSERT(graph.entryBlock()->numDominated() == graph.numBlocks());
 #endif
-    // Now, iterate through the dominator tree and annotate every
-    // block with its index in the pre-order traversal of the
-    // dominator tree.
-    Vector<MBasicBlock *, 1, IonAllocPolicy> worklist(graph.alloc());
-
-    // The index of the current block in the CFG traversal.
+    // Now, iterate through the dominator tree in pre-order and annotate every
+    // block with its index in the traversal.
     size_t index = 0;
-
-    // Add all self-dominating blocks to the worklist.
-    // This includes all roots. Order does not matter.
-    for (MBasicBlockIterator i(graph.begin()); i != graph.end(); i++) {
-        MBasicBlock *block = *i;
-        if (block->immediateDominator() == block) {
-            if (!worklist.append(block))
-                return false;
-        }
-    }
-    // Starting from each self-dominating block, traverse the CFG in pre-order.
     while (!worklist.empty()) {
         MBasicBlock *block = worklist.popCopy();
         block->setDomIndex(index);
@@ -1433,6 +1425,13 @@ static void
 AssertDominatorTree(MIRGraph &graph)
 {
     // Check dominators.
+
+    JS_ASSERT(graph.entryBlock()->immediateDominator() == graph.entryBlock());
+    if (MBasicBlock *osrBlock = graph.osrBlock())
+        JS_ASSERT(osrBlock->immediateDominator() == osrBlock);
+    else
+        JS_ASSERT(graph.entryBlock()->numDominated() == graph.numBlocks());
+
     size_t i = graph.numBlocks();
     size_t totalNumDominated = 0;
     for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
