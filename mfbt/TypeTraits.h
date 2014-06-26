@@ -417,25 +417,29 @@ namespace detail {
 
 template<typename T,
          bool = IsFloatingPoint<T>::value,
+         bool = IsIntegral<T>::value,
          typename NoCV = typename RemoveCV<T>::Type>
 struct IsSignedHelper;
 
+// Floating point is signed.
 template<typename T, typename NoCV>
-struct IsSignedHelper<T, true, NoCV> : TrueType {};
+struct IsSignedHelper<T, true, false, NoCV> : TrueType {};
 
+// Integral is conditionally signed.
 template<typename T, typename NoCV>
-struct IsSignedHelper<T, false, NoCV>
-  : IntegralConstant<bool, IsArithmetic<T>::value && NoCV(-1) < NoCV(1)>
+struct IsSignedHelper<T, false, true, NoCV>
+  : IntegralConstant<bool, bool(NoCV(-1) < NoCV(1))>
 {};
+
+// Non-floating point, non-integral is not signed.
+template<typename T, typename NoCV>
+struct IsSignedHelper<T, false, false, NoCV> : FalseType {};
 
 } // namespace detail
 
 /**
  * IsSigned determines whether a type is a signed arithmetic type.  |char| is
  * considered a signed type if it has the same representation as |signed char|.
- *
- * Don't use this if the type might be user-defined!  You might or might not get
- * a compile error, depending.
  *
  * mozilla::IsSigned<int>::value is true;
  * mozilla::IsSigned<const unsigned int>::value is false;
@@ -449,26 +453,29 @@ namespace detail {
 
 template<typename T,
          bool = IsFloatingPoint<T>::value,
+         bool = IsIntegral<T>::value,
          typename NoCV = typename RemoveCV<T>::Type>
 struct IsUnsignedHelper;
 
+// Floating point is not unsigned.
 template<typename T, typename NoCV>
-struct IsUnsignedHelper<T, true, NoCV> : FalseType {};
+struct IsUnsignedHelper<T, true, false, NoCV> : FalseType {};
 
+// Integral is conditionally unsigned.
 template<typename T, typename NoCV>
-struct IsUnsignedHelper<T, false, NoCV>
+struct IsUnsignedHelper<T, false, true, NoCV>
   : IntegralConstant<bool,
-                     IsArithmetic<T>::value &&
-                     (IsSame<NoCV, bool>::value || NoCV(1) < NoCV(-1))>
+                     (IsSame<NoCV, bool>::value || bool(NoCV(1) < NoCV(-1)))>
 {};
+
+// Non-floating point, non-integral is not unsigned.
+template<typename T, typename NoCV>
+struct IsUnsignedHelper<T, false, false, NoCV> : FalseType {};
 
 } // namespace detail
 
 /**
  * IsUnsigned determines whether a type is an unsigned arithmetic type.
- *
- * Don't use this if the type might be user-defined!  You might or might not get
- * a compile error, depending.
  *
  * mozilla::IsUnsigned<int>::value is false;
  * mozilla::IsUnsigned<const unsigned int>::value is true;
