@@ -16,6 +16,8 @@ namespace dom {
 
 class EncodingCompleteEvent : public nsRunnable
 {
+  virtual ~EncodingCompleteEvent() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -30,7 +32,6 @@ public:
     , mCallback(&aCallback)
     , mFailed(false)
   {}
-  virtual ~EncodingCompleteEvent() {}
 
   NS_IMETHOD Run()
   {
@@ -89,6 +90,8 @@ NS_IMPL_ISUPPORTS(EncodingCompleteEvent, nsIRunnable);
 
 class EncodingRunnable : public nsRunnable
 {
+  virtual ~EncodingRunnable() {}
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
@@ -109,7 +112,6 @@ public:
     , mSize(aSize)
     , mUsingCustomOptions(aUsingCustomOptions)
   {}
-  virtual ~EncodingRunnable() {}
 
   nsresult ProcessImageData(uint64_t* aImgSize, void** aImgData)
   {

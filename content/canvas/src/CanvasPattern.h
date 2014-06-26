@@ -24,6 +24,7 @@ class SVGMatrix;
 
 class CanvasPattern MOZ_FINAL : public nsWrapperCache
 {
+  ~CanvasPattern() {}
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CanvasPattern)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(CanvasPattern)

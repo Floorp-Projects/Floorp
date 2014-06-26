@@ -35,10 +35,6 @@ class WebGLShader MOZ_FINAL
 public:
     WebGLShader(WebGLContext *context, GLenum stype);
 
-    ~WebGLShader() {
-        DeleteOnce();
-    }
-
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
     GLuint GLName() { return mGLName; }
@@ -84,6 +80,9 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLShader)
 
 protected:
+    ~WebGLShader() {
+        DeleteOnce();
+    }
 
     GLuint mGLName;
     GLenum mType;
