@@ -211,7 +211,6 @@ class PeerConnectionImpl MOZ_FINAL : public nsISupports,
 
 public:
   PeerConnectionImpl(const mozilla::dom::GlobalObject* aGlobal = nullptr);
-  virtual ~PeerConnectionImpl();
 
   enum Error {
     kNoError                          = 0,
@@ -566,6 +565,7 @@ public:
 #endif
 
 private:
+  virtual ~PeerConnectionImpl();
   PeerConnectionImpl(const PeerConnectionImpl&rhs);
   PeerConnectionImpl& operator=(PeerConnectionImpl);
   NS_IMETHODIMP Initialize(PeerConnectionObserver& aObserver,

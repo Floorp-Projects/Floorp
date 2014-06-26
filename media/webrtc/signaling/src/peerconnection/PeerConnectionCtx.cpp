@@ -131,14 +131,6 @@ public:
       (void) rv;
     }
 
-  virtual ~PeerConnectionCtxShutdown()
-    {
-      nsCOMPtr<nsIObserverService> observerService =
-        services::GetObserverService();
-      if (observerService)
-        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
-
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
                         const char16_t* aData) {
     if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
@@ -160,6 +152,15 @@ public:
     }
     return NS_OK;
   }
+
+private:
+  virtual ~PeerConnectionCtxShutdown()
+    {
+      nsCOMPtr<nsIObserverService> observerService =
+        services::GetObserverService();
+      if (observerService)
+        observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+    }
 };
 
 NS_IMPL_ISUPPORTS(PeerConnectionCtxShutdown, nsIObserver);
