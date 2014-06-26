@@ -62,8 +62,8 @@ BEGIN_TEST(testResolveRecursion)
 
 JS::Heap<JSObject *> obj1;
 JS::Heap<JSObject *> obj2;
-unsigned resolveEntryCount;
-unsigned resolveExitCount;
+int resolveEntryCount;
+int resolveExitCount;
 
 struct AutoIncrCounters {
 

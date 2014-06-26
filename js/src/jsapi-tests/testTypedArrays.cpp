@@ -72,8 +72,8 @@ TestPlainTypedArray(JSContext *cx)
     RootedObject dummy(cx, JS_GetParent(proto));
     CHECK(!JS_IsTypedArrayObject(dummy));
 
-    CHECK_EQUAL(JS_GetTypedArrayLength(array), 7);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0);
+    CHECK_EQUAL(JS_GetTypedArrayLength(array), 7u);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(array), sizeof(Element) * 7);
 
     Element *data;
@@ -107,7 +107,7 @@ TestArrayFromBuffer(JSContext *cx)
 
     RootedObject array(cx, CreateWithBuffer(cx, buffer, 0, -1));
     CHECK_EQUAL(JS_GetTypedArrayLength(array), elts);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(array), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(array), nbytes);
     CHECK_EQUAL(JS_GetArrayBufferViewBuffer(cx, array), (JSObject*) buffer);
 
@@ -116,12 +116,12 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK(bufdata = JS_GetStableArrayBufferData(cx, buffer));
     CHECK_EQUAL((void*) data, (void*) bufdata);
 
-    CHECK_EQUAL(*bufdata, 1);
-    CHECK_EQUAL(*reinterpret_cast<uint8_t*>(data), 1);
+    CHECK_EQUAL(*bufdata, 1u);
+    CHECK_EQUAL(*reinterpret_cast<uint8_t*>(data), 1u);
 
     RootedObject shortArray(cx, CreateWithBuffer(cx, buffer, 0, elts / 2));
     CHECK_EQUAL(JS_GetTypedArrayLength(shortArray), elts / 2);
-    CHECK_EQUAL(JS_GetTypedArrayByteOffset(shortArray), 0);
+    CHECK_EQUAL(JS_GetTypedArrayByteOffset(shortArray), 0u);
     CHECK_EQUAL(JS_GetTypedArrayByteLength(shortArray), nbytes / 2);
 
     RootedObject ofsArray(cx, CreateWithBuffer(cx, buffer, nbytes / 2, -1));
