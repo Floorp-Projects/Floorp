@@ -6795,3 +6795,18 @@ MaybeSetupTransactionIdAllocator(layers::LayerManager* aManager, nsView* aView)
 
 }
 }
+
+/* static */ bool
+nsLayoutUtils::IsOutlineStyleAutoEnabled()
+{
+  static bool sOutlineStyleAutoEnabled;
+  static bool sOutlineStyleAutoPrefCached = false;
+
+  if (!sOutlineStyleAutoPrefCached) {
+    sOutlineStyleAutoPrefCached = true;
+    Preferences::AddBoolVarCache(&sOutlineStyleAutoEnabled,
+                                 "layout.css.outline-style-auto.enabled",
+                                 false);
+  }
+  return sOutlineStyleAutoEnabled;
+}
