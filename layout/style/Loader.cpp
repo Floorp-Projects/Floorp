@@ -151,7 +151,7 @@ public:
 
   // Hold a ref to the CSSLoader so we can call back to it to let it
   // know the load finished
-  Loader*                    mLoader; // strong ref
+  nsRefPtr<Loader>           mLoader;
 
   // Title needed to pull datas out of the pending datas table when
   // the preferred title is changed
@@ -337,7 +337,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLoaderPrincipal(aLoaderPrincipal)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
 }
 
 SheetLoadData::SheetLoadData(Loader* aLoader,
@@ -367,7 +366,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLoaderPrincipal(aLoaderPrincipal)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
   if (mParentData) {
     NS_ADDREF(mParentData);
     mSyncLoad = mParentData->mSyncLoad;
@@ -412,7 +410,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mCharsetHint(aCharset)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
 
   NS_POSTCONDITION(!mUseSystemPrincipal || mSyncLoad,
                    "Shouldn't use system principal for async loads");
@@ -420,7 +417,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
 
 SheetLoadData::~SheetLoadData()
 {
-  NS_RELEASE(mLoader);
   NS_IF_RELEASE(mParentData);
   NS_IF_RELEASE(mNext);
 }
