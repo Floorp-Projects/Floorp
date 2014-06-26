@@ -197,18 +197,7 @@ Zone::discardJitCode(FreeOp *fop)
         for (ZoneCellIterUnderGC i(this, FINALIZE_SCRIPT); !i.done(); i.next()) {
             JSScript *script = i.get<JSScript>();
             jit::FinishInvalidation<SequentialExecution>(fop, script);
-
-            // Preserve JIT code that have been recently used in
-            // parallel. Note that we mark their baseline scripts as active as
-            // well to preserve them.
-            if (script->hasParallelIonScript()) {
-                if (jit::ShouldPreserveParallelJITCode(runtimeFromMainThread(), script)) {
-                    script->parallelIonScript()->purgeCaches();
-                    script->baselineScript()->setActive();
-                } else {
-                    jit::FinishInvalidation<ParallelExecution>(fop, script);
-                }
-            }
+            jit::FinishInvalidation<ParallelExecution>(fop, script);
 
             /*
              * Discard baseline script if it's not marked as active. Note that
