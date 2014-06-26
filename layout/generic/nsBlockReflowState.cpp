@@ -1010,10 +1010,10 @@ nsBlockReflowState::ClearFloats(nscoord aBCoord, uint8_t aBreakType,
         nsBlockFrame::WidthToClearPastFloats(*this, floatAvailableSpace.mRect,
                                              aReplacedBlock);
       if (std::max(floatAvailableSpace.mRect.x - ContentIStart(),
-                 replacedWidth.marginLeft) +
+                   replacedWidth.marginLeft) +
             replacedWidth.borderBoxWidth +
-          std::max(ContentIEnd() - floatAvailableSpace.mRect.XMost(),
-                   replacedWidth.marginRight) <=
+            std::max(ContentIEnd() - floatAvailableSpace.mRect.XMost(),
+                     replacedWidth.marginRight) <=
           ContentISize()) {
         break;
       }
