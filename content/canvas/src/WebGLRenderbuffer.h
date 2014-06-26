@@ -26,10 +26,6 @@ class WebGLRenderbuffer MOZ_FINAL
 public:
     WebGLRenderbuffer(WebGLContext *context);
 
-    ~WebGLRenderbuffer() {
-        DeleteOnce();
-    }
-
     void Delete();
 
     bool HasEverBeenBound() { return mHasEverBeenBound; }
@@ -67,6 +63,10 @@ public:
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLRenderbuffer)
 
 protected:
+    ~WebGLRenderbuffer() {
+        DeleteOnce();
+    }
+
     GLuint mPrimaryRB;
     GLuint mSecondaryRB;
     GLenum mInternalFormat;

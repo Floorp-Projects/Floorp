@@ -2573,14 +2573,24 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       ThebesLayerData* data = GetTopThebesLayerData();
       if (data) {
         // Prerendered transform items can be updated without layer building
-        // (async animations or an empty transaction), so we treat all other
-        // content as being above this so that the transformed layer can correctly
-        // move behind other content.
+        // (async animations or an empty transaction), so we need to put items
+        // that the transform item can potentially move under into a layer
+        // above this item.
         if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
             nsDisplayTransform::ShouldPrerenderTransformedContent(mBuilder,
                                                                   item->Frame(),
                                                                   false)) {
-          data->SetAllDrawingAbove();
+          if (!itemClip.HasClip()) {
+            // The transform item can move anywhere, treat all other content
+            // as being above this item.
+            data->SetAllDrawingAbove();
+          } else {
+            // The transform can't escape from the clip rect, and the clip
+            // rect can't change without new layer building. Treat all content
+            // that intersects the clip rect as being above this item.
+            data->AddVisibleAboveRegion(clipRect);
+            data->AddDrawAboveRegion(clipRect);
+          }
         } else {
           data->AddVisibleAboveRegion(itemVisibleRect);
 

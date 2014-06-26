@@ -14,7 +14,7 @@ var AppProjectEditor = Class({
 
   hidesToolbar: true,
 
-  initialize: function(document, host) {
+  initialize: function(host) {
     ItchEditor.prototype.initialize.apply(this, arguments);
     this.appended = promise.resolve();
     this.host = host;

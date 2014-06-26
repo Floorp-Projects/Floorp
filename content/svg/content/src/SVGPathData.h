@@ -23,7 +23,6 @@
 class gfxContext;
 class nsSVGPathDataParser; // IWYU pragma: keep
 
-struct gfxMatrix;
 struct nsSVGMark;
 
 namespace mozilla {

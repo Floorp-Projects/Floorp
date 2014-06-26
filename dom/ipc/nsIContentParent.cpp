@@ -158,7 +158,9 @@ nsIContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
 
   // If the blob represents a remote blob for this ContentParent then we can
   // simply pass its actor back here.
-  if (nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(aBlob)) {
+  const auto* domFile = static_cast<DOMFile*>(aBlob);
+  nsCOMPtr<nsIRemoteBlob> remoteBlob = do_QueryInterface(domFile->Impl());
+  if (remoteBlob) {
     if (BlobParent* actor = static_cast<BlobParent*>(
           static_cast<PBlobParent*>(remoteBlob->GetPBlob()))) {
       MOZ_ASSERT(actor);
@@ -177,9 +179,9 @@ nsIContentParent::GetOrCreateActorForBlob(nsIDOMBlob* aBlob)
   }
 
   // XXX This is only safe so long as all blob implementations in our tree
-  //     inherit nsDOMFileBase. If that ever changes then this will need to grow
+  //     inherit DOMFileImplBase. If that ever changes then this will need to grow
   //     a real interface or something.
-  const auto* blob = static_cast<nsDOMFileBase*>(aBlob);
+  const auto* blob = static_cast<DOMFileImplBase*>(domFile->Impl());
 
   ChildBlobConstructorParams params;
 

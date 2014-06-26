@@ -45,7 +45,7 @@ TelephonyCallId::GetPresentationStr(uint16_t aPresentation) const
     case nsITelephonyService::CALL_PRESENTATION_PAYPHONE:
       return CallIdPresentation::Payphone;
     default:
-      MOZ_ASSUME_UNREACHABLE("Bad presentation!");
+      MOZ_CRASH("Bad presentation!");
   }
 }
 

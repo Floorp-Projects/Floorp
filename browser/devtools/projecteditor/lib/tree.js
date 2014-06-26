@@ -106,7 +106,7 @@ var ResourceContainer = Class({
    */
   openContextMenu: function(ev) {
     ev.preventDefault();
-    let popup = this.tree.doc.getElementById("directory-menu-popup");
+    let popup = this.tree.options.contextMenuPopup;
     popup.openPopupAtScreen(ev.screenX, ev.screenY, true);
   },
 
@@ -208,13 +208,14 @@ var TreeView = Class({
   /**
    * @param Document document
    * @param Object options
+   *               - contextMenuPopup: a <menupopup> element
    *               - resourceFormatter: a function(Resource, DOMNode)
    *                 that renders the resource into the view
    *               - resourceVisible: a function(Resource) -> Boolean
    *                 that determines if the resource should show up.
    */
-  initialize: function(document, options) {
-    this.doc = document;
+  initialize: function(doc, options) {
+    this.doc = doc;
     this.options = merge({
       resourceFormatter: function(resource, elt) {
         elt.textContent = resource.toString();
@@ -223,14 +224,14 @@ var TreeView = Class({
     this.models = new Set();
     this.roots = new Set();
     this._containers = new Map();
-    this.elt = document.createElementNS(HTML_NS, "div");
+    this.elt = this.doc.createElementNS(HTML_NS, "div");
     this.elt.tree = this;
     this.elt.className = "sources-tree";
     this.elt.setAttribute("with-arrows", "true");
     this.elt.setAttribute("theme", "dark");
     this.elt.setAttribute("flex", "1");
 
-    this.children = document.createElementNS(HTML_NS, "ul");
+    this.children = this.doc.createElementNS(HTML_NS, "ul");
     this.elt.appendChild(this.children);
 
     this.resourceChildrenChanged = this.resourceChildrenChanged.bind(this);

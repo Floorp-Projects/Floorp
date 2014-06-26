@@ -59,7 +59,7 @@ ThreadSafeContext::isThreadLocal(T thing) const
 
 #ifdef JSGC_FJGENERATIONAL
     ForkJoinContext *cx = static_cast<ForkJoinContext*>(const_cast<ThreadSafeContext*>(this));
-    if (cx->fjNursery().isInsideNewspace(thing))
+    if (cx->nursery().isInsideNewspace(thing))
         return true;
 #endif
 
@@ -481,10 +481,8 @@ typedef CompartmentsIterT<GCZoneGroupIter> GCCompartmentGroupIter;
  */
 template <AllowGC allowGC>
 inline JSObject *
-TryNewNurseryObject(ThreadSafeContext *cxArg, size_t thingSize, size_t nDynamicSlots)
+TryNewNurseryObject(JSContext *cx, size_t thingSize, size_t nDynamicSlots)
 {
-    JSContext *cx = cxArg->asJSContext();
-
     JS_ASSERT(!IsAtomsCompartment(cx->compartment()));
     JSRuntime *rt = cx->runtime();
     Nursery &nursery = rt->gc.nursery;
@@ -508,9 +506,9 @@ TryNewNurseryObject(ThreadSafeContext *cxArg, size_t thingSize, size_t nDynamicS
 #ifdef JSGC_FJGENERATIONAL
 template <AllowGC allowGC>
 inline JSObject *
-TryNewFJNurseryObject(ForkJoinContext *cx, size_t thingSize, size_t nDynamicSlots)
+TryNewNurseryObject(ForkJoinContext *cx, size_t thingSize, size_t nDynamicSlots)
 {
-    ForkJoinNursery &nursery = cx->fjNursery();
+    ForkJoinNursery &nursery = cx->nursery();
     bool tooLarge = false;
     JSObject *obj = nursery.allocateObject(thingSize, nDynamicSlots, tooLarge);
     if (obj)
@@ -615,18 +613,19 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
-    if (cx->hasNursery() && ShouldNurseryAllocate(cx->nursery(), kind, heap)) {
-        JSObject *obj = TryNewNurseryObject<allowGC>(cx, thingSize, nDynamicSlots);
+    if (cx->isJSContext() &&
+        ShouldNurseryAllocate(cx->asJSContext()->nursery(), kind, heap)) {
+        JSObject *obj = TryNewNurseryObject<allowGC>(cx->asJSContext(), thingSize, nDynamicSlots);
         if (obj)
             return obj;
     }
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext() &&
-        ShouldFJNurseryAllocate(cx->asForkJoinContext()->fjNursery(), kind, heap))
+        ShouldFJNurseryAllocate(cx->asForkJoinContext()->nursery(), kind, heap))
     {
         JSObject *obj =
-            TryNewFJNurseryObject<allowGC>(cx->asForkJoinContext(), thingSize, nDynamicSlots);
+            TryNewNurseryObject<allowGC>(cx->asForkJoinContext(), thingSize, nDynamicSlots);
         if (obj)
             return obj;
     }

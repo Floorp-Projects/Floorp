@@ -799,7 +799,6 @@
                        tooltiptext="&loopCallButton.tooltip;"
                        oncommand="LoopUI.openCallPanel(event);"
                        cui-areatype="toolbar"
-                       overflows="false"
                        >
         </toolbarbutton>
 #endif

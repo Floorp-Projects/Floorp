@@ -1009,40 +1009,53 @@ js_str_charAt(JSContext *cx, unsigned argc, Value *vp)
 }
 
 bool
+js::str_charCodeAt_impl(JSContext *cx, HandleString string, HandleValue index, MutableHandleValue res)
+{
+    RootedString str(cx);
+    size_t i;
+    if (index.isInt32()) {
+        i = index.toInt32();
+        if (i >= string->length())
+            goto out_of_range;
+    } else {
+        double d = 0.0;
+        if (!ToInteger(cx, index, &d))
+            return false;
+        // check whether d is negative as size_t is unsigned
+        if (d < 0 || string->length() <= d )
+            goto out_of_range;
+        i = size_t(d);
+    }
+    jschar c;
+    if (!string->getChar(cx, i , &c))
+        return false;
+    res.setInt32(c);
+    return true;
+
+out_of_range:
+    res.setNaN();
+    return true;
+}
+
+bool
 js_str_charCodeAt(JSContext *cx, unsigned argc, Value *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-
     RootedString str(cx);
-    size_t i;
-    if (args.thisv().isString() && args.length() != 0 && args[0].isInt32()) {
+    RootedValue index(cx);
+    if (args.thisv().isString()) {
         str = args.thisv().toString();
-        i = size_t(args[0].toInt32());
-        if (i >= str->length())
-            goto out_of_range;
     } else {
         str = ThisToStringForStringProto(cx, args);
         if (!str)
             return false;
-
-        double d = 0.0;
-        if (args.length() > 0 && !ToInteger(cx, args[0], &d))
-            return false;
-
-        if (d < 0 || str->length() <= d)
-            goto out_of_range;
-        i = size_t(d);
     }
+    if (args.length() != 0)
+        index = args[0];
+    else
+        index.setInt32(0);
 
-    jschar c;
-    if (!str->getChar(cx, i, &c))
-        return false;
-    args.rval().setInt32(c);
-    return true;
-
-out_of_range:
-    args.rval().setNaN();
-    return true;
+    return js::str_charCodeAt_impl(cx, str, index, args.rval());
 }
 
 /*
@@ -3102,9 +3115,9 @@ AppendSubstrings(JSContext *cx, Handle<JSFlatString*> flatStr,
         return NewDependentString(cx, flatStr, ranges[0].start, ranges[0].length);
 
     bool isLatin1 = flatStr->hasLatin1Chars();
-    uint32_t fatInlineMaxLength = isLatin1
-                                  ? JSFatInlineString::MAX_LENGTH_LATIN1
-                                  : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+    uint32_t fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+    if (isLatin1)
+        fatInlineMaxLength = JSFatInlineString::MAX_LENGTH_LATIN1;
 
     /* Collect substrings into a rope */
     size_t i = 0;
@@ -4494,47 +4507,7 @@ NewStringCopyN<CanGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
 template JSFlatString *
 NewStringCopyN<NoGC>(ThreadSafeContext *cx, const Latin1Char *s, size_t n);
 
-template <>
-JSFlatString *
-NewStringCopyN<CanGC>(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    return NewStringCopyN<CanGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
-}
-
-template <>
-JSFlatString *
-NewStringCopyN<NoGC>(ThreadSafeContext *cx, const char *s, size_t n)
-{
-    return NewStringCopyN<NoGC>(cx, reinterpret_cast<const Latin1Char *>(s), n);
-}
-
 } /* namespace js */
-
-template <AllowGC allowGC>
-JSFlatString *
-js::NewStringCopyZ(ExclusiveContext *cx, const jschar *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, js_strlen(s));
-}
-
-template JSFlatString *
-js::NewStringCopyZ<CanGC>(ExclusiveContext *cx, const jschar *s);
-
-template JSFlatString *
-js::NewStringCopyZ<NoGC>(ExclusiveContext *cx, const jschar *s);
-
-template <AllowGC allowGC>
-JSFlatString *
-js::NewStringCopyZ(ThreadSafeContext *cx, const char *s)
-{
-    return NewStringCopyN<allowGC>(cx, s, strlen(s));
-}
-
-template JSFlatString *
-js::NewStringCopyZ<CanGC>(ThreadSafeContext *cx, const char *s);
-
-template JSFlatString *
-js::NewStringCopyZ<NoGC>(ThreadSafeContext *cx, const char *s);
 
 const char *
 js_ValueToPrintable(JSContext *cx, const Value &vArg, JSAutoByteString *bytes, bool asSource)

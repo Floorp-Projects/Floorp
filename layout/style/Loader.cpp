@@ -151,7 +151,7 @@ public:
 
   // Hold a ref to the CSSLoader so we can call back to it to let it
   // know the load finished
-  Loader*                    mLoader; // strong ref
+  nsRefPtr<Loader>           mLoader;
 
   // Title needed to pull datas out of the pending datas table when
   // the preferred title is changed
@@ -174,7 +174,7 @@ public:
 
   // Load data for the sheet that @import-ed us if we were @import-ed
   // during the parse
-  SheetLoadData*             mParentData;  // strong ref
+  nsRefPtr<SheetLoadData>    mParentData;
 
   // Number of sheets we @import-ed that are still loading
   uint32_t                   mPendingChildren;
@@ -321,7 +321,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLineNumber(1),
     mSheet(aSheet),
     mNext(nullptr),
-    mParentData(nullptr),
     mPendingChildren(0),
     mSyncLoad(false),
     mIsNonDocumentSheet(false),
@@ -337,7 +336,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLoaderPrincipal(aLoaderPrincipal)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
 }
 
 SheetLoadData::SheetLoadData(Loader* aLoader,
@@ -367,9 +365,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLoaderPrincipal(aLoaderPrincipal)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
   if (mParentData) {
-    NS_ADDREF(mParentData);
     mSyncLoad = mParentData->mSyncLoad;
     mIsNonDocumentSheet = mParentData->mIsNonDocumentSheet;
     mAllowUnsafeRules = mParentData->mAllowUnsafeRules;
@@ -395,7 +391,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mLineNumber(1),
     mSheet(aSheet),
     mNext(nullptr),
-    mParentData(nullptr),
     mPendingChildren(0),
     mSyncLoad(aSyncLoad),
     mIsNonDocumentSheet(true),
@@ -412,7 +407,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
     mCharsetHint(aCharset)
 {
   NS_PRECONDITION(mLoader, "Must have a loader!");
-  NS_ADDREF(mLoader);
 
   NS_POSTCONDITION(!mUseSystemPrincipal || mSyncLoad,
                    "Shouldn't use system principal for async loads");
@@ -420,8 +414,6 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
 
 SheetLoadData::~SheetLoadData()
 {
-  NS_RELEASE(mLoader);
-  NS_IF_RELEASE(mParentData);
   NS_IF_RELEASE(mNext);
 }
 

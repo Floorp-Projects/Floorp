@@ -2729,7 +2729,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
     ProxyObject *proxy = &obj->as<ProxyObject>();
 
 #ifdef DEBUG
-    if (!trc->runtime()->gc.disableStrictProxyCheckingCount && proxy->is<WrapperObject>()) {
+    if (trc->runtime()->gc.isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {
         JSObject *referent = &proxy->private_().toObject();
         if (referent->compartment() != proxy->compartment()) {
             /*

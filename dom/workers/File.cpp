@@ -6,7 +6,7 @@
 
 #include "File.h"
 
-#include "nsIDOMFile.h"
+#include "nsDOMFile.h"
 #include "nsDOMBlobBuilder.h"
 #include "nsError.h"
 
@@ -85,8 +85,10 @@ private:
   {
     JS::CallArgs args = CallArgsFromVp(aArgc, aVp);
 
-    nsRefPtr<nsDOMMultipartFile> file = new nsDOMMultipartFile();
-    nsresult rv = file->InitBlob(aCx, args.length(), args.array(), Unwrap);
+    nsRefPtr<DOMMultipartFileImpl> fileImpl = new DOMMultipartFileImpl();
+    nsRefPtr<mozilla::dom::DOMFile> file = new mozilla::dom::DOMFile(fileImpl);
+
+    nsresult rv = fileImpl->InitBlob(aCx, args.length(), args.array(), Unwrap);
     if (NS_FAILED(rv)) {
       return Throw(aCx, rv);
     }

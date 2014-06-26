@@ -2296,7 +2296,7 @@ SourceMediaStream::ResampleAudioToGraphSampleRate(TrackData* aTrackData, MediaSe
 #endif
     }
   }
-  segment->ResampleChunks(aTrackData->mResampler);
+  segment->ResampleChunks(aTrackData->mResampler, aTrackData->mInputRate, GraphImpl()->AudioSampleRate());
 }
 
 bool

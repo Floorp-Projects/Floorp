@@ -51,6 +51,7 @@
 #include "prprf.h"
 #include "nsNodeUtils.h"
 #include "nsJSUtils.h"
+#include "nsCycleCollector.h"
 
 // Nasty hack.  Maybe we could move some of the classinfo utility methods
 // (e.g. WrapNative) over to nsContentUtils?
@@ -73,7 +74,7 @@ XBLFinalize(JSFreeOp *fop, JSObject *obj)
 {
   nsXBLDocumentInfo* docInfo =
     static_cast<nsXBLDocumentInfo*>(::JS_GetPrivate(obj));
-  nsContentUtils::DeferredFinalize(docInfo);
+  cyclecollector::DeferredFinalize(docInfo);
 }
 
 static bool

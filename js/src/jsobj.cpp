@@ -1430,10 +1430,10 @@ NewObject(ExclusiveContext *cx, types::TypeObject *type_, JSObject *parent, gc::
         if (!cx->shouldBeJSContext())
             return nullptr;
         JSRuntime *rt = cx->asJSContext()->runtime();
-        rt->gc.disableIncrementalGC();
+        rt->gc.disallowIncrementalGC();
 
 #ifdef DEBUG
-        if (rt->gcMode() == JSGC_MODE_INCREMENTAL) {
+        if (rt->gc.gcMode() == JSGC_MODE_INCREMENTAL) {
             fprintf(stderr,
                     "The class %s has a trace hook but does not declare the\n"
                     "JSCLASS_IMPLEMENTS_BARRIERS flag. Please ensure that it correctly\n"
@@ -2836,7 +2836,7 @@ AllocateSlots(ThreadSafeContext *cx, JSObject *obj, uint32_t nslots)
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().allocateSlots(obj, nslots);
+        return cx->asForkJoinContext()->nursery().allocateSlots(obj, nslots);
 #endif
     return cx->pod_malloc<HeapSlot>(nslots);
 }
@@ -2858,8 +2858,8 @@ ReallocateSlots(ThreadSafeContext *cx, JSObject *obj, HeapSlot *oldSlots,
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
-        return cx->asForkJoinContext()->fjNursery().reallocateSlots(obj, oldSlots,
-                                                                    oldCount, newCount);
+        return cx->asForkJoinContext()->nursery().reallocateSlots(obj, oldSlots,
+                                                                  oldCount, newCount);
     }
 #endif
     return (HeapSlot *)cx->realloc_(oldSlots, oldCount * sizeof(HeapSlot),
@@ -2938,7 +2938,7 @@ FreeSlots(ThreadSafeContext *cx, HeapSlot *slots)
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().freeSlots(slots);
+        return cx->asForkJoinContext()->nursery().freeSlots(slots);
 #endif
     js_free(slots);
 }
@@ -3166,7 +3166,7 @@ AllocateElements(ThreadSafeContext *cx, JSObject *obj, uint32_t nelems)
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->fjNursery().allocateElements(obj, nelems);
+        return cx->asForkJoinContext()->nursery().allocateElements(obj, nelems);
 #endif
 
     return static_cast<js::ObjectElements *>(cx->malloc_(nelems * sizeof(HeapValue)));
@@ -3187,8 +3187,8 @@ ReallocateElements(ThreadSafeContext *cx, JSObject *obj, ObjectElements *oldHead
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext()) {
-        return cx->asForkJoinContext()->fjNursery().reallocateElements(obj, oldHeader,
-                                                                       oldCount, newCount);
+        return cx->asForkJoinContext()->nursery().reallocateElements(obj, oldHeader,
+                                                                     oldCount, newCount);
     }
 #endif
 
