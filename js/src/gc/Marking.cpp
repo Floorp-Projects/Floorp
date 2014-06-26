@@ -414,9 +414,9 @@ IsMarked(T **thingp)
     // will also be true for the ForkJoinNursery.
     if (rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(*thingp))
-            return fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(*thingp))
+            return nursery.getForwardedPointer(thingp);
     }
     else
 #endif
@@ -451,9 +451,9 @@ IsAboutToBeFinalized(T **thingp)
 #ifdef JSGC_FJGENERATIONAL
     if (rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(thing))
-            return !fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(thing))
+            return !nursery.getForwardedPointer(thingp);
     }
     else
 #endif
@@ -492,9 +492,9 @@ UpdateIfRelocated(JSRuntime *rt, T **thingp)
 #ifdef JSGC_FJGENERATIONAL
     if (*thingp && rt->isFJMinorCollecting()) {
         ForkJoinContext *ctx = ForkJoinContext::current();
-        ForkJoinNursery &fjNursery = ctx->fjNursery();
-        if (fjNursery.isInsideFromspace(*thingp))
-            fjNursery.getForwardedPointer(thingp);
+        ForkJoinNursery &nursery = ctx->nursery();
+        if (nursery.isInsideFromspace(*thingp))
+            nursery.getForwardedPointer(thingp);
     }
     else
 #endif

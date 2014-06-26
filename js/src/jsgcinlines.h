@@ -59,7 +59,7 @@ ThreadSafeContext::isThreadLocal(T thing) const
 
 #ifdef JSGC_FJGENERATIONAL
     ForkJoinContext *cx = static_cast<ForkJoinContext*>(const_cast<ThreadSafeContext*>(this));
-    if (cx->fjNursery().isInsideNewspace(thing))
+    if (cx->nursery().isInsideNewspace(thing))
         return true;
 #endif
 
@@ -510,7 +510,7 @@ template <AllowGC allowGC>
 inline JSObject *
 TryNewFJNurseryObject(ForkJoinContext *cx, size_t thingSize, size_t nDynamicSlots)
 {
-    ForkJoinNursery &nursery = cx->fjNursery();
+    ForkJoinNursery &nursery = cx->nursery();
     bool tooLarge = false;
     JSObject *obj = nursery.allocateObject(thingSize, nDynamicSlots, tooLarge);
     if (obj)
@@ -615,7 +615,8 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
         return nullptr;
 
 #ifdef JSGC_GENERATIONAL
-    if (cx->hasNursery() && ShouldNurseryAllocate(cx->nursery(), kind, heap)) {
+    if (cx->isJSContext() &&
+        ShouldNurseryAllocate(cx->asJSContext()->nursery(), kind, heap)) {
         JSObject *obj = TryNewNurseryObject<allowGC>(cx, thingSize, nDynamicSlots);
         if (obj)
             return obj;
@@ -623,7 +624,7 @@ AllocateObject(ThreadSafeContext *cx, AllocKind kind, size_t nDynamicSlots, Init
 #endif
 #ifdef JSGC_FJGENERATIONAL
     if (cx->isForkJoinContext() &&
-        ShouldFJNurseryAllocate(cx->asForkJoinContext()->fjNursery(), kind, heap))
+        ShouldFJNurseryAllocate(cx->asForkJoinContext()->nursery(), kind, heap))
     {
         JSObject *obj =
             TryNewFJNurseryObject<allowGC>(cx->asForkJoinContext(), thingSize, nDynamicSlots);
