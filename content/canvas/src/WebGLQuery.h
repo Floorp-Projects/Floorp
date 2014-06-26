@@ -25,14 +25,9 @@ class WebGLQuery MOZ_FINAL
 public:
 
     // -------------------------------------------------------------------------
-    // CONSTRUCTOR & DESTRUCTOR
+    // CONSTRUCTOR
 
     WebGLQuery(WebGLContext *context);
-
-    ~WebGLQuery() {
-        DeleteOnce();
-    };
-
 
     // -------------------------------------------------------------------------
     // MEMBER FUNCTIONS
@@ -67,6 +62,9 @@ public:
 // -----------------------------------------------------------------------------
 // PRIVATE
 private:
+    ~WebGLQuery() {
+        DeleteOnce();
+    };
 
     // -------------------------------------------------------------------------
     // MEMBERS

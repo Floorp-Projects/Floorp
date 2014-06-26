@@ -154,6 +154,13 @@ interface imgIContainer : nsISupports
    * caller knows they want a SourceSurface of type DATA.
    */
   const long FLAG_WANT_DATA_SURFACE = 0x20;
+  /**
+   * Forces drawing to happen rather than taking cached rendering from the
+   * surface cache. This is used when we are printing, for example, where we
+   * want the vector commands from VectorImages to end up in the PDF output
+   * rather than a cached rendering at screen resolution.
+   */
+  const long FLAG_BYPASS_SURFACE_CACHE = 0x40;
 
   /**
     * Constants for specifying various "special" frames.

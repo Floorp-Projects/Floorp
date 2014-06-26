@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1011748
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1011748</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1011748 **/
+  "use strict";
+  
+  var observer = {
+    observe: function (aSubject, aTopic, aData) {
+      try {
+        var channel = aSubject.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
+        channel.getResponseHeader("Location");
+      } catch (e) {
+        return;
+      }
+      statusTexts.push(xhr.statusText);
+    }
+  };
+  
+  var statusTexts = [];
+  SpecialPowers.addObserver(observer, "http-on-examine-response", false);
+  SimpleTest.waitForExplicitFinish();
+  var xhr = new XMLHttpRequest();
+  xhr.addEventListener("load", function() {
+    statusTexts.push(this.statusText);
+    SpecialPowers.removeObserver(observer, "http-on-examine-response");
+    is(statusTexts[0], "", "Empty statusText value for HTTP 302");
+    is(statusTexts[1], "OK", "OK statusText value for the redirect."); 
+    SimpleTest.finish();
+  });
+  xhr.open("GET", "file_bug1011748_redirect.sjs", true);
+  xhr.send();
+  
+
+
+
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1011748">Mozilla Bug 1011748</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

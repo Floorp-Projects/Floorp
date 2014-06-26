@@ -4828,13 +4828,37 @@ Parser<ParseHandler>::yieldExpression()
 
         pc->lastYieldOffset = begin;
 
-        ParseNodeKind kind = tokenStream.matchToken(TOK_MUL) ? PNK_YIELD_STAR : PNK_YIELD;
-
-        // ES6 generators require a value.
-        Node exprNode = assignExpr();
-        if (!exprNode)
+        Node exprNode;
+        ParseNodeKind kind = PNK_YIELD;
+        switch (tokenStream.peekTokenSameLine(TokenStream::Operand)) {
+          case TOK_ERROR:
             return null();
-
+          // TOK_EOL is special; it implements the [no LineTerminator here]
+          // quirk in the grammar.
+          case TOK_EOL:
+          // The rest of these make up the complete set of tokens that can
+          // appear after any of the places where AssignmentExpression is used
+          // throughout the grammar.  Conveniently, none of them can also be the
+          // start an expression.
+          case TOK_EOF:
+          case TOK_SEMI:
+          case TOK_RC:
+          case TOK_RB:
+          case TOK_RP:
+          case TOK_COLON:
+          case TOK_COMMA:
+            // No value.
+            exprNode = null();
+            break;
+          case TOK_MUL:
+            kind = PNK_YIELD_STAR;
+            tokenStream.consumeKnownToken(TOK_MUL);
+            // Fall through.
+          default:
+            exprNode = assignExpr();
+            if (!exprNode)
+                return null();
+        }
         return handler.newUnary(kind, JSOP_NOP, begin, exprNode);
       }
 
@@ -4885,11 +4909,6 @@ Parser<ParseHandler>::yieldExpression()
           case TOK_COMMA:
             // No value.
             exprNode = null();
-            // ES6 does not permit yield without an operand.  We should
-            // encourage users of yield expressions of this kind to pass an
-            // operand, to bring users closer to standard syntax.
-            if (!reportWithOffset(ParseWarning, false, pos().begin, JSMSG_YIELD_WITHOUT_OPERAND))
-                return null();
             break;
           default:
             exprNode = assignExpr();

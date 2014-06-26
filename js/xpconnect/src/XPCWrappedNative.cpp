@@ -631,7 +631,7 @@ XPCWrappedNative::Destroy()
     if (mIdentity) {
         XPCJSRuntime* rt = GetRuntime();
         if (rt && rt->GetDoingFinalization()) {
-            nsContentUtils::DeferredFinalize(mIdentity);
+            cyclecollector::DeferredFinalize(mIdentity);
             mIdentity = nullptr;
         } else {
             NS_RELEASE(mIdentity);
@@ -959,7 +959,7 @@ XPCWrappedNative::FlatJSObjectFinalized()
 #endif
                 XPCJSRuntime* rt = GetRuntime();
                 if (rt) {
-                    nsContentUtils::DeferredFinalize(obj);
+                    cyclecollector::DeferredFinalize(obj);
                 } else {
                     obj->Release();
                 }

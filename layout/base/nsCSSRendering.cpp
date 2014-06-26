@@ -814,20 +814,22 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
   gfxCornerSizes outlineRadii;
   ComputePixelRadii(twipsRadii, twipsPerPixel, &outlineRadii);
 
-  if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
-    nsITheme* theme = aPresContext->GetTheme();
-    if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
-                                            NS_THEME_FOCUS_OUTLINE)) {
-      theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
-                                  NS_THEME_FOCUS_OUTLINE, innerRect,
-                                  aDirtyRect);
-      return;
-    } else if (width == 0) {
-      return; // empty outline
+  if (nsLayoutUtils::IsOutlineStyleAutoEnabled()) {
+    if (outlineStyle == NS_STYLE_BORDER_STYLE_AUTO) {
+      nsITheme* theme = aPresContext->GetTheme();
+      if (theme && theme->ThemeSupportsWidget(aPresContext, aForFrame,
+                                              NS_THEME_FOCUS_OUTLINE)) {
+        theme->DrawWidgetBackground(&aRenderingContext, aForFrame,
+                                    NS_THEME_FOCUS_OUTLINE, innerRect,
+                                    aDirtyRect);
+        return;
+      } else if (width == 0) {
+        return; // empty outline
+      }
+      // http://dev.w3.org/csswg/css-ui/#outline
+      // "User agents may treat 'auto' as 'solid'."
+      outlineStyle = NS_STYLE_BORDER_STYLE_SOLID;
     }
-    // http://dev.w3.org/csswg/css-ui/#outline
-    // "User agents may treat 'auto' as 'solid'."
-    outlineStyle = NS_STYLE_BORDER_STYLE_SOLID;
   }
 
   uint8_t outlineStyles[4] = { outlineStyle, outlineStyle,
