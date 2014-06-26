@@ -26,8 +26,6 @@
 }
 
 #projecteditor-menubar {
-  /* XXX: Hide menu bar until we have option to add menu items
-     to an existing one. */
   display: none;
 }
 

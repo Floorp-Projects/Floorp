@@ -9,6 +9,8 @@
   %webideDTD;
 ]>
 
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
 
@@ -23,6 +25,7 @@
         width="640" height="480"
         persist="screenX screenY width height">
 
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
   <script type="application/javascript" src="webide.js"></script>
   <script type="application/javascript" src="cli.js"></script>
 

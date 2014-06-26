@@ -10,7 +10,7 @@ browser.jar:
     content/browser/devtools/projecteditor.xul                               (projecteditor/chrome/content/projecteditor.xul)
     content/browser/devtools/readdir.js                                (projecteditor/lib/helpers/readdir.js)
     content/browser/devtools/projecteditor-loader.xul                        (projecteditor/chrome/content/projecteditor-loader.xul)
-    content/browser/devtools/projecteditor-test.html                         (projecteditor/chrome/content/projecteditor-test.html)
+    content/browser/devtools/projecteditor-test.xul                          (projecteditor/chrome/content/projecteditor-test.xul)
     content/browser/devtools/projecteditor-loader.js                         (projecteditor/chrome/content/projecteditor-loader.js)
     content/browser/devtools/netmonitor.xul                            (netmonitor/netmonitor.xul)
     content/browser/devtools/netmonitor.css                            (netmonitor/netmonitor.css)
