@@ -164,6 +164,7 @@ try {
 
 /** Test for Login Manager: multiple login autocomplete. **/
 
+var tester;
 
 var uname = $_(1, "uname");
 var pword = $_(1, "pword");
@@ -199,9 +200,6 @@ function hitEventLoop(func, times) {
   }
 }
 
-var gNextTestWillOpenPopup = true;
-var gLastTest = 704;
-
 function addPopupListener(eventName, func, capture) {
   autocompletePopup.addEventListener(eventName, func, capture);
 }
@@ -213,559 +211,567 @@ function removePopupListener(eventName, func, capture) {
 /*
  * Main section of test...
  *
- * This is a bit hacky, because the events are either being sent or
- * processes asynchronously, so we need to interrupt our flow with lots of
- * setTimeout() calls. The case statements are executed in order, one per
- * timeout.
+ * This test is, to a first approximation, event driven. Each time we need to
+ * wait for an event, runTest sets an event listener (or timeout for a couple
+ * of rare cases) and yields. The event listener then resumes the generator by
+ * calling its |next| method.
  */
-function runTest(testNum) {
+function* runTest() {
+  var testNum = 1;
   ok(true, "Starting test #" + testNum);
 
-  if (gNextTestWillOpenPopup) {
-    addPopupListener("popupshown", function() {
-      removePopupListener("popupshown", arguments.callee, false);
+  function waitForPopup() {
+    addPopupListener("popupshown", function popupshown() {
+      removePopupListener("popupshown", popupshown, false);
 
-      if (testNum != gLastTest) {
-        window.setTimeout(runTest, 0, testNum + 1);
-      }
+      window.setTimeout(tester.next.bind(tester), 0);
     }, false);
-  } else {
-    var unexpectedPopup = function() {
-      removePopupListener("popupshown", arguments.callee, false);
+  }
 
-      ok(false, "Test " + testNum + " should not show a popup");
+  function runNextTest(expectPopup) {
+    var save = testNum++;
+    if (expectPopup === "expect popup")
+      return waitForPopup();
+
+    var unexpectedPopup = function() {
+      removePopupListener("popupshown", unexpectedPopup, false);
+      ok(false, "Test " + save + " should not show a popup");
     };
     addPopupListener("popupshown", unexpectedPopup, false);
-    if (testNum == gLastTest) {
+
+    hitEventLoop(function() {
       removePopupListener("popupshown", unexpectedPopup, false);
-    } else {
-      hitEventLoop(function() {
-        removePopupListener("popupshown", unexpectedPopup, false);
-        runTest(testNum + 1);
-      }, 100);
-    }
+      tester.next();
+    }, 100);
   }
 
-  switch(testNum) {
-    case 1:
-        // Make sure initial form is empty.
-        checkACForm("", "");
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 2:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        checkACForm("tempuser1", "temppass1");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 3:
-        // Check second entry
-        doKey("down");
-        doKey("down");
-        doKey("return"); // not "enter"!
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 4:
-        // Check third entry
-        doKey("down");
-        doKey("down");
-        doKey("down");
-        doKey("return");
-        checkACForm("testuser3", "testpass3");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 5:
-        // Check fourth entry
-        doKey("down");
-        doKey("down");
-        doKey("down");
-        doKey("down");
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 6:
-        // Check first entry (wraparound)
-        doKey("down");
-        doKey("down");
-        doKey("down");
-        doKey("down");
-        doKey("down"); // deselects
-        doKey("down");
-        doKey("return");
-        checkACForm("tempuser1", "temppass1");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 7:
-        // Check the last entry via arrow-up
-        doKey("up");
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 8:
-        // Check the last entry via arrow-up
-        doKey("down"); // select first entry
-        doKey("up");   // selects nothing!
-        doKey("up");   // select last entry
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 9:
-        // Check the last entry via arrow-up (wraparound)
-        doKey("down");
-        doKey("up"); // deselects
-        doKey("up"); // last entry
-        doKey("up");
-        doKey("up");
-        doKey("up"); // first entry
-        doKey("up"); // deselects
-        doKey("up"); // last entry
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 10:
-        // Set first entry w/o triggering autocomplete
-        doKey("down");
-        doKey("right");
-        checkACForm("tempuser1", ""); // empty password
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 11:
-        // Set first entry w/o triggering autocomplete
-        doKey("down");
-        doKey("left");
-        checkACForm("tempuser1", ""); // empty password
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 12:
-        // Check first entry (page up)
-        doKey("down");
-        doKey("down");
-        doKey("page_up");
-        doKey("return");
-        checkACForm("tempuser1", "temppass1");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 13:
-        // Check last entry (page down)
-        doKey("down");
-        doKey("page_down");
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-        restoreForm();
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 14:
-        // Send a fake (untrusted) event.
-        checkACForm("", "");
-        uname.value = "zzzuser4";
-        sendFakeAutocompleteEvent(uname);
-        checkACForm("zzzuser4", "");
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 15:
-        //checkACForm("zzzuser4", "");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        testNum = 49;
-        break;
-
-    // XXX tried sending character "t" before/during dropdown to test
-    // filtering, but had no luck. Seemed like the character was getting lost.
-    // Setting uname.value didn't seem to work either. This works with a human
-    // driver, so I'm not sure what's up.
-
-
-    case 50:
-        // Delete the first entry (of 4), "tempuser1"
-        doKey("down");
-        var numLogins;
-        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
-        is(numLogins, 5, "Correct number of logins before deleting one");
-
-        // On OS X, shift-backspace and shift-delete work, just delete does not.
-        // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
-        doKey("delete", shiftModifier);
-
-        checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
-        is(numLogins, 4, "Correct number of logins after deleting one");
-        doKey("return");
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 51:
-        // Check the new first entry (of 3)
-        doKey("down");
-        doKey("return");
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 52:
-        // Delete the second entry (of 3), "testuser3"
-        doKey("down");
-        doKey("down");
-        doKey("delete", shiftModifier);
-        checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
-        is(numLogins, 3, "Correct number of logins after deleting one");
-        doKey("return");
-        checkACForm("zzzuser4", "zzzpass4");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 53:
-        // Check the new second entry (of 2)
-        doKey("down");
-        doKey("return");
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 54:
-        // Delete the last entry (of 2), "zzzuser4"
-        doKey("down");
-        doKey("down");
-        doKey("delete", shiftModifier);
-        checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
-        is(numLogins, 2, "Correct number of logins after deleting one");
-        doKey("return");
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        break;
-
-    case 55:
-        // Check the new second entry (of 2)
-        doKey("down");
-        doKey("return");
-        checkACForm("testuser2", "testpass2");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 56:
-        // Delete the only remaining entry, "testuser2"
-        doKey("down");
-        doKey("delete", shiftModifier);
-        //doKey("return");
-        checkACForm("", "");
-        numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
-        is(numLogins, 1, "Correct number of logins after deleting one");
-        pwmgr.removeLogin(login0); // remove the login that's not shown in the list.
-        testNum = 99;
-        gNextTestWillOpenPopup = true;
-        break;
-
-
-    /* Tests for single-user forms with autocomplete=off */
-
-    case 100:
-        // Turn our attention to form2
-        uname = $_(2, "uname");
-        pword = $_(2, "pword");
-        checkACForm("", "");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 101:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        checkACForm("singleuser5", "singlepass5");
-        restoreForm(); // clear field, so reloading test doesn't fail
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 102:
-        // Turn our attention to form3
-        uname = $_(3, "uname");
-        pword = $_(3, "pword");
-        checkACForm("", "");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 103:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        checkACForm("singleuser5", "singlepass5");
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 104:
-        // Turn our attention to form4
-        uname = $_(4, "uname");
-        pword = $_(4, "pword");
-        checkACForm("", "");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 105:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        checkACForm("singleuser5", "singlepass5");
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 106:
-        // Turn our attention to form5
-        uname = $_(5, "uname");
-        pword = $_(5, "pword");
-        checkACForm("", "");
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 107:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        checkACForm("singleuser5", "singlepass5");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 108:
-        // Turn our attention to form6
-        // (this is a control, w/o autocomplete=off, to ensure the login
-        // that was being suppressed would have been filled in otherwise)
-        uname = $_(6, "uname");
-        pword = $_(6, "pword");
-        checkACForm("singleuser5", "singlepass5");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 109:
-        // Test that the password field remains filled in after changing
-        // the username.
-        uname.focus();
-        doKey("right");
-        sendChar("X");
-        // Trigger the 'blur' event on uname
-        pword.focus();
-        checkACForm("sXingleuser5", "singlepass5");
-
-        pwmgr.removeLogin(login5);
-        testNum = 499;
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 500:
-        // Turn our attention to form7
-        uname = $_(7, "uname");
-        pword = $_(7, "pword");
-        checkACForm("", "");
-
-        // Insert a new username field into the form. We'll then make sure
-        // that invoking the autocomplete doesn't try to fill the form.
-        var newField = document.createElement("input");
-        newField.setAttribute("type", "text");
-        newField.setAttribute("name", "uname2");
-        pword.parentNode.insertBefore(newField, pword);
-        is($_(7, "uname2").value, "", "Verifying empty uname2");;
-
-        // Delete login6B. It was created just to prevent filling in a login
-        // automatically, removing it makes it more likely that we'll catch a
-        // future regression with form filling here.
-        pwmgr.removeLogin(login6B);
-
-        // Trigger autocomplete popup
-        restoreForm();
-        doKey("down");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 501:
-        // Check first entry
-        doKey("down");
-        checkACForm("", ""); // value shouldn't update
-        doKey("return"); // not "enter"!
-        // The form changes, so we expect the old username field to get the
-        // selected autocomplete value, but neither the new username field nor
-        // the password field should have any values filled in.
-        checkACForm("form7user1", "");
-        is($_(7, "uname2").value, "", "Verifying empty uname2");;
-        restoreForm(); // clear field, so reloading test doesn't fail
-
-        pwmgr.removeLogin(login6A);
-        testNum = 599;
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 600:
-        // Turn our attention to form8
-        uname = $_(8, "uname");
-        pword = $_(8, "pword");
-        checkACForm("form8user", "form8pass");
-        restoreForm();
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 601:
-        checkACForm("", "");
-        // Focus the previous form to trigger a blur.
-        $_(7, "uname").focus();
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 602:
-        checkACForm("", "");
-        restoreForm();
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 603:
-        checkACForm("", "");
-        pwmgr.removeLogin(login7);
-
-        testNum = 699;
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 700:
-        // Turn our attention to form9 to test the dropdown - bug 497541
-        uname = $_(9, "uname");
-        pword = $_(9, "pword");
-        uname.focus();
-        sendString("form9userAB");
-        gNextTestWillOpenPopup = true;
-        break;
-
-    case 701:
-        checkACForm("form9userAB", "");
-        uname.focus();
-        doKey("left");
-        sendChar("A");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 702:
-        // check dropdown is updated after inserting "A"
-        checkACForm("form9userAAB", "");
-        checkMenuEntries(["form9userAAB"]);
-        doKey("down");
-        doKey("return");
-        checkACForm("form9userAAB", "form9pass");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 703:
-        pwmgr.addLogin(login8C);
-        uname.focus();
-        sendChar("z");
-        gNextTestWillOpenPopup = false;
-        break;
-
-    case 704:
-        // check that empty results are cached - bug 496466
-        checkMenuEntries([]);
-
-        SimpleTest.finish();
-        return;
-
-    default:
-        ok(false, "Unexpected invocation of test #" + testNum);
-        SimpleTest.finish();
-        return;
+  // We use this function when we're trying to prove that something doesn't
+  // happen, but where if it did it would do so asynchronously. It isn't
+  // perfect, but it's better than nothing.
+  function spinEventLoop() {
+    setTimeout(function() { tester.next(); }, 0);
   }
+
+  function waitForCompletion() {
+    var observer = SpecialPowers.wrapCallback(function(subject, topic, data) {
+      SpecialPowers.removeObserver(observer, "passwordmgr-found-logins");
+      tester.next();
+    });
+    SpecialPowers.addObserver(observer, "passwordmgr-found-logins", false);
+  }
+
+  /* test 1 */
+  // Make sure initial form is empty.
+  checkACForm("", "");
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 2 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("tempuser1", "temppass1");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 3 */
+  // Check second entry
+  doKey("down");
+  doKey("down");
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 4 */
+  // Check third entry
+  doKey("down");
+  doKey("down");
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser3", "testpass3");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 5 */
+  // Check fourth entry
+  doKey("down");
+  doKey("down");
+  doKey("down");
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 6 */
+  // Check first entry (wraparound)
+  doKey("down");
+  doKey("down");
+  doKey("down");
+  doKey("down");
+  doKey("down"); // deselects
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("tempuser1", "temppass1");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 7 */
+  // Check the last entry via arrow-up
+  doKey("up");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 8 */
+  // Check the last entry via arrow-up
+  doKey("down"); // select first entry
+  doKey("up");   // selects nothing!
+  doKey("up");   // select last entry
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 9 */
+  // Check the last entry via arrow-up (wraparound)
+  doKey("down");
+  doKey("up"); // deselects
+  doKey("up"); // last entry
+  doKey("up");
+  doKey("up");
+  doKey("up"); // first entry
+  doKey("up"); // deselects
+  doKey("up"); // last entry
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 10 */
+  // Set first entry w/o triggering autocomplete
+  doKey("down");
+  doKey("right");
+  yield spinEventLoop();
+  checkACForm("tempuser1", ""); // empty password
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 11 */
+  // Set first entry w/o triggering autocomplete
+  doKey("down");
+  doKey("left");
+  checkACForm("tempuser1", ""); // empty password
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 12 */
+  // Check first entry (page up)
+  doKey("down");
+  doKey("down");
+  doKey("page_up");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("tempuser1", "temppass1");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 13 */
+  // Check last entry (page down)
+  doKey("down");
+  doKey("page_down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+  restoreForm();
+  yield runNextTest();
+
+  /* test 14 */
+  // Send a fake (untrusted) event.
+  checkACForm("", "");
+  uname.value = "zzzuser4";
+  sendFakeAutocompleteEvent(uname);
+  yield spinEventLoop();
+  checkACForm("zzzuser4", "");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  testNum = 49;
+  yield runNextTest("expect popup");
+
+  // XXX tried sending character "t" before/during dropdown to test
+  // filtering, but had no luck. Seemed like the character was getting lost.
+  // Setting uname.value didn't seem to work either. This works with a human
+  // driver, so I'm not sure what's up.
+
+
+  /* test 50 */
+  // Delete the first entry (of 4), "tempuser1"
+  doKey("down");
+  var numLogins;
+  numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 5, "Correct number of logins before deleting one");
+
+  // On OS X, shift-backspace and shift-delete work, just delete does not.
+  // On Win/Linux, shift-backspace does not work, delete and shift-delete do.
+  doKey("delete", shiftModifier);
+
+  checkACForm("", "");
+  numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 4, "Correct number of logins after deleting one");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 51 */
+  // Check the new first entry (of 3)
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 52 */
+  // Delete the second entry (of 3), "testuser3"
+  doKey("down");
+  doKey("down");
+  doKey("delete", shiftModifier);
+  checkACForm("", "");
+  numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 3, "Correct number of logins after deleting one");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("zzzuser4", "zzzpass4");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 53 */
+  // Check the new second entry (of 2)
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 54 */
+  // Delete the last entry (of 2), "zzzuser4"
+  doKey("down");
+  doKey("down");
+  doKey("delete", shiftModifier);
+  checkACForm("", "");
+  numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 2, "Correct number of logins after deleting one");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 55 */
+  // Check the new second entry (of 2)
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("testuser2", "testpass2");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 56 */
+  // Delete the only remaining entry, "testuser2"
+  doKey("down");
+  doKey("delete", shiftModifier);
+  //doKey("return");
+  checkACForm("", "");
+  numLogins = pwmgr.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
+  is(numLogins, 1, "Correct number of logins after deleting one");
+  pwmgr.removeLogin(login0); // remove the login that's not shown in the list.
+  testNum = 99;
+  yield runNextTest();
+
+
+  /* Tests for single-user forms with autocomplete=off */
+
+  /* test 100 */
+  // Turn our attention to form2
+  uname = $_(2, "uname");
+  pword = $_(2, "pword");
+  checkACForm("", "");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 101 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("singleuser5", "singlepass5");
+  restoreForm(); // clear field, so reloading test doesn't fail
+  yield runNextTest();
+
+  /* test 102 */
+  // Turn our attention to form3
+  uname = $_(3, "uname");
+  pword = $_(3, "pword");
+  checkACForm("", "");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 103 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("singleuser5", "singlepass5");
+  yield runNextTest();
+
+  /* test 104 */
+  // Turn our attention to form4
+  uname = $_(4, "uname");
+  pword = $_(4, "pword");
+  checkACForm("", "");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 105 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("singleuser5", "singlepass5");
+  yield runNextTest();
+
+  /* test 106 */
+  // Turn our attention to form5
+  uname = $_(5, "uname");
+  pword = $_(5, "pword");
+  checkACForm("", "");
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 107 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("singleuser5", "singlepass5");
+  yield runNextTest();
+
+  /* test 108 */
+  // Turn our attention to form6
+  // (this is a control, w/o autocomplete=off, to ensure the login
+  // that was being suppressed would have been filled in otherwise)
+  uname = $_(6, "uname");
+  pword = $_(6, "pword");
+  checkACForm("singleuser5", "singlepass5");
+  yield runNextTest();
+
+  /* test 109 */
+  // Test that the password field remains filled in after changing
+  // the username.
+  uname.focus();
+  doKey("right");
+  sendChar("X");
+  // Trigger the 'blur' event on uname
+  pword.focus();
+  yield spinEventLoop();
+  checkACForm("sXingleuser5", "singlepass5");
+
+  pwmgr.removeLogin(login5);
+  testNum = 499;
+  yield runNextTest();
+
+  /* test 500 */
+  // Turn our attention to form7
+  uname = $_(7, "uname");
+  pword = $_(7, "pword");
+  checkACForm("", "");
+
+  // Insert a new username field into the form. We'll then make sure
+  // that invoking the autocomplete doesn't try to fill the form.
+  var newField = document.createElement("input");
+  newField.setAttribute("type", "text");
+  newField.setAttribute("name", "uname2");
+  pword.parentNode.insertBefore(newField, pword);
+  is($_(7, "uname2").value, "", "Verifying empty uname2");;
+
+  // Delete login6B. It was created just to prevent filling in a login
+  // automatically, removing it makes it more likely that we'll catch a
+  // future regression with form filling here.
+  pwmgr.removeLogin(login6B);
+
+  // Trigger autocomplete popup
+  restoreForm();
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  /* test 501 */
+  // Check first entry
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  // The form changes, so we expect the old username field to get the
+  // selected autocomplete value, but neither the new username field nor
+  // the password field should have any values filled in.
+  yield spinEventLoop();
+  checkACForm("form7user1", "");
+  is($_(7, "uname2").value, "", "Verifying empty uname2");;
+  restoreForm(); // clear field, so reloading test doesn't fail
+
+  pwmgr.removeLogin(login6A);
+  testNum = 599;
+  yield runNextTest();
+
+  /* test 600 */
+  // Turn our attention to form8
+  uname = $_(8, "uname");
+  pword = $_(8, "pword");
+  checkACForm("form8user", "form8pass");
+  restoreForm();
+  yield runNextTest();
+
+  /* test 601 */
+  checkACForm("", "");
+  // Focus the previous form to trigger a blur.
+  $_(7, "uname").focus();
+  yield runNextTest();
+
+  /* test 602 */
+  checkACForm("", "");
+  restoreForm();
+  yield runNextTest();
+
+  /* test 603 */
+  checkACForm("", "");
+  pwmgr.removeLogin(login7);
+
+  testNum = 699;
+  yield runNextTest();
+
+  /* test 700 */
+  // Turn our attention to form9 to test the dropdown - bug 497541
+  uname = $_(9, "uname");
+  pword = $_(9, "pword");
+  uname.focus();
+  sendString("form9userAB");
+  yield runNextTest("expect popup");
+
+  /* test 701 */
+  checkACForm("form9userAB", "");
+  uname.focus();
+  doKey("left");
+  sendChar("A");
+  yield runNextTest("expect popup");
+
+  /* test 702 */
+  // check dropdown is updated after inserting "A"
+  checkACForm("form9userAAB", "");
+  checkMenuEntries(["form9userAAB"]);
+  doKey("down");
+  doKey("return");
+  yield waitForCompletion();
+  checkACForm("form9userAAB", "form9pass");
+  yield runNextTest();
+
+  /* test 703 */
+  // Note that this addLogin call will only be seen by the autocomplete
+  // attempt for the sendChar if we do not successfully cache the
+  // autocomplete results.
+  pwmgr.addLogin(login8C);
+  uname.focus();
+  sendChar("z");
+  yield runNextTest();
+
+  /* test 704 */
+  // check that empty results are cached - bug 496466
+  checkMenuEntries([]);
+
+  SimpleTest.finish();
+  return;
 }
 
 
@@ -804,10 +810,11 @@ function startTest() {
     // shouldn't assume ID is consistent across products
     autocompletePopup = chromeWin.document.getElementById("PopupAutoComplete");
     ok(autocompletePopup, "Got autocomplete popup");
-    runTest(1);
+    tester = runTest();
+    tester.next();
 }
 
-window.onload = startTest;
+window.addEventListener("runTests", startTest);
 </script>
 </pre>
 </body>

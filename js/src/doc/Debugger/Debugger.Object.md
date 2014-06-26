@@ -181,34 +181,6 @@ from its prototype:
     wrapper's global, not the wrapped object's global. The result refers to
     the global directly, not via a wrapper.
 
-`hostAnnotations`
-:   A JavaScript object providing further metadata about the referent, or
-    `null` if none is available. The metadata object is in the same
-    compartment as this `Debugger.Object` instance. The same metadata
-    object is returned each time for a given `Debugger.Object` instance.
-
-    A typical JavaScript embedding provides "host objects" to expose
-    application-specific functionality to scripts. The `hostAnnotations`
-    accessor consults the embedding for additional information about the
-    referent that might be of interest to the debugger. The returned
-    object's properties' meanings are up to the embedding. For example, a
-    web browser might provide host annotations for global objects to
-    distinguish top-level windows, iframes, and internal JavaScript scopes.
-
-    By convention, host annotation objects have a string-valued `"type"`
-    property that, taken together with the object's class, indicate what
-    sort of thing the referent is. The host annotation object's other
-    properties provide further details, as appropriate for the type. For
-    example, in Firefox, a metadata object for a JavaScript Module's global
-    object might look like this:
-
-    ```language-js
-    { "type":"jsm", "uri":"resource:://gre/modules/XPCOMUtils.jsm" }
-    ```
-
-    Firefox provides [DebuggerHostAnnotationsForFirefox annotations] for its
-    host objects.
-
 
 
 ## Function Properties of the Debugger.Object prototype

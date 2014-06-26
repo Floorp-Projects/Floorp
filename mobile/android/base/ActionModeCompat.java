@@ -5,6 +5,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.widget.GeckoPopupMenu;
+import org.mozilla.gecko.menu.GeckoMenuItem;
 
 import android.view.Gravity;
 import android.view.Menu;
@@ -99,7 +100,7 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
     /* GeckoPopupMenu.onMenuItemLongClickListener */
     @Override
     public boolean onMenuItemLongClick(MenuItem item) {
-        showTooltip(item);
+        showTooltip((GeckoMenuItem) item);
         return true;
     }
 
@@ -109,7 +110,7 @@ class ActionModeCompat implements GeckoPopupMenu.OnMenuItemClickListener,
         mPresenter.endActionModeCompat();
     }
 
-    private void showTooltip(MenuItem item) {
+    private void showTooltip(GeckoMenuItem item) {
         // Computes the tooltip toast screen position (shown when long-tapping the menu item) with regards to the
         // menu item's position (i.e below the item and slightly to the left)
         int[] location = new int[2];

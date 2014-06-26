@@ -194,16 +194,6 @@ endif
 CONFIG_TOOLS	= $(MOZ_BUILD_ROOT)/config
 AUTOCONF_TOOLS	= $(topsrcdir)/build/autoconf
 
-# Disable MOZ_PSEUDO_DERECURSE when it contains no-pymake and we're running
-# pymake. This can be removed when no-pymake is removed from the default in
-# build/autoconf/compiler-opts.m4.
-ifdef .PYMAKE
-comma = ,
-ifneq (,$(filter no-pymake,$(subst $(comma), ,$(MOZ_PSEUDO_DERECURSE))))
-MOZ_PSEUDO_DERECURSE :=
-endif
-endif
-
 # Disable MOZ_PSEUDO_DERECURSE on PGO builds until it's fixed.
 ifneq (,$(MOZ_PROFILE_USE)$(MOZ_PROFILE_GENERATE))
 MOZ_PSEUDO_DERECURSE :=
@@ -237,10 +227,6 @@ CXX := $(CXX_WRAPPER) $(CXX)
 MKDIR ?= mkdir
 SLEEP ?= sleep
 TOUCH ?= touch
-
-ifdef .PYMAKE
-PYCOMMANDPATH += $(PYTHON_SITE_PACKAGES)
-endif
 
 PYTHON_PATH = $(PYTHON) $(topsrcdir)/config/pythonpath.py
 
@@ -720,9 +706,6 @@ endif # NSINSTALL_BIN
 
 ifeq (,$(CROSS_COMPILE)$(filter-out WINNT, $(OS_ARCH)))
 INSTALL = $(NSINSTALL) -t
-ifdef .PYMAKE
-install_cmd = $(NSINSTALL_NATIVECMD) -t $(1)
-endif # .PYMAKE
 
 else
 
@@ -839,6 +822,7 @@ endif
 define CHECK_BINARY
 $(call CHECK_STDCXX,$(1))
 $(call CHECK_TEXTREL,$(1))
+$(call LOCAL_CHECKS,$(1))
 endef
 
 # autoconf.mk sets OBJ_SUFFIX to an error to avoid use before including
