@@ -10,19 +10,9 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
-// In varying quantities:
-// ASSERTION: Should be on state machine or decode thread.:
-//            'OnStateMachineThread() || OnDecodeThread()',
-//            file MediaDecoderStateMachine.cpp, line 559
-// ASSERTION: Clock should go forwards if the playback rate is > 0.:
-//            'mCurrentFrameTime <= clock_time || mPlaybackRate <= 0',
-//            file MediaDecoderStateMachine.cpp, line 2379
-// This test is currently disabled on Android debug for wildly-varying numbers of the above.
-SimpleTest.expectAssertions(3, 9);
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(4, 5);
-}
-
+// Run one test at a time for this test case is time-sensitive and B2G
+// emulator could be very slow.
+PARALLEL_TESTS = 1;
 let manager = new MediaTestManager;
 
 function rangeCheck(lhs, rhs, threshold) {
@@ -85,14 +75,20 @@ function onpaused(e) {
 function afterNullPlaybackRate(e) {
   var t = e.target;
 
-  t.testedForNull = true;
-
-  if (t.gotEnded) {
+  // skip if we have received 'ended' event or 'ended' event is pending.
+  if (t.gotEnded || t.ended) {
     return;
   }
+
+  t.testedForNull = true;
+
   // The currentTime won't be perfectly equal because of the latency
   // compensation. We expect no more that 300ms difference.
   let THRESHOLD = 0.3;
+  // More tolerance on B2G for it is slow
+  if (SpecialPowers.Services.appinfo.name == "B2G") {
+    THRESHOLD = 0.7;
+  }
   ok(rangeCheck(t.currentTime, t.oldCurrentTime, THRESHOLD), "Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
   ok(!t.paused, "The element should not be in paused state.");
   t.removeEventListener("paused", onpaused);
@@ -104,17 +100,11 @@ function afterNullPlaybackRate(e) {
 }
 
 function onended(e) {
-  var t = e.target,
-      playtime = (Date.now() - t.timestamp - t.bufferingTime) / 1000,
-      mediaTime = t.duration - t.oldCurrentTime;
-
-  if (!(t.testedForSlowdown && t.testedForNull)) {
-    t.gotEnded = true;
-    t.skippedFastPart = true;
-  }
+  var t = e.target;
+  t.gotEnded = true;
 
   t.bufferingTime = 0;
-  // We got "ended" too early, skip these tests.
+  // If we got "ended" too early, skip these tests.
   if (t.testedForSlowdown && t.testedForNull) {
     is(t.playbackRate, FAST_RATE, "The playback rate should still be "+FAST_RATE+".");
     ok(!t.muted, "The audio should be muted when playing at high speed, but should not appear as such.");
@@ -131,9 +121,7 @@ function onratechange(e) {
 }
 
 function finish_test(element) {
-  if (element.parentNode)
-    element.parentNode.removeChild(element);
-  element.src="";
+  removeNodeAndSource(element);
   manager.finished(element.token);
 }
 
