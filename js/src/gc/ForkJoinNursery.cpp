@@ -257,7 +257,7 @@ ForkJoinNursery::pjsCollection(int op)
     forwardFromRoots(&trc);
     collectToFixedPoint(&trc);
 #ifdef JS_ION
-    jit::UpdateJitActivationsForMinorGC(TlsPerThreadData.get(), &trc);
+    jit::UpdateJitActivationsForMinorGC<ForkJoinNursery>(TlsPerThreadData.get(), &trc);
 #endif
     freeFromspace();
 

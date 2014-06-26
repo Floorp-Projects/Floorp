@@ -833,7 +833,7 @@ js::Nursery::collect(JSRuntime *rt, JS::gcreason::Reason reason, TypeObjectList 
     // Update any slot or element pointers whose destination has been tenured.
     TIME_START(updateJitActivations);
 #ifdef JS_ION
-    js::jit::UpdateJitActivationsForMinorGC(rt, &trc);
+    js::jit::UpdateJitActivationsForMinorGC<Nursery>(&rt->mainThread, &trc);
 #endif
     TIME_END(updateJitActivations);
 

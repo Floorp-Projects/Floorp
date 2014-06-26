@@ -70,6 +70,12 @@ js::Nursery::getForwardedPointer(T **ref)
     return true;
 }
 
+inline void
+js::Nursery::forwardBufferPointer(JSTracer* trc, HeapSlot **pSlotElems)
+{
+    trc->runtime()->gc.nursery.forwardBufferPointer(pSlotElems);
+}
+
 #endif /* JSGC_GENERATIONAL */
 
 #endif /* gc_Nursery_inl_h */
