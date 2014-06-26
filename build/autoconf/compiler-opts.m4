@@ -185,9 +185,7 @@ dnl A high level macro for selecting compiler options.
 AC_DEFUN([MOZ_COMPILER_OPTS],
 [
   if test "${MOZ_PSEUDO_DERECURSE-unset}" = unset; then
-    dnl Don't enable on pymake, because of bug 918652. Bug 912979 is an annoyance
-    dnl with pymake, too.
-    MOZ_PSEUDO_DERECURSE=no-pymake
+    MOZ_PSEUDO_DERECURSE=1
   fi
 
   MOZ_DEBUGGING_OPTS
@@ -246,6 +244,13 @@ if test "$GNU_CC" -a -n "$MOZ_FORCE_GOLD"; then
         fi
     fi
 fi
+if test "$GNU_CC"; then
+    if $CC $LDFLAGS -Wl,--version 2>&1 | grep -q "GNU ld"; then
+        LD_IS_BFD=1
+    fi
+fi
+
+AC_SUBST([LD_IS_BFD])
 
 if test "$GNU_CC"; then
     if test -z "$DEVELOPER_OPTIONS"; then
