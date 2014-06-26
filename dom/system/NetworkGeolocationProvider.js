@@ -466,7 +466,7 @@ WifiGeoPositionProvider.prototype = {
 
     // From here on, do a network geolocation request //
     let url = Services.urlFormatter.formatURLPref("geo.wifi.uri");
-    LOG("Sending request: " + url + "\n");
+    LOG("Sending request");
 
     let xhr = Components.classes["@mozilla.org/xmlextras/xmlhttprequest;1"]
                         .createInstance(Ci.nsIXMLHttpRequest);
