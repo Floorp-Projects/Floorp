@@ -565,7 +565,7 @@ ArmDebugger::getValue(const char *desc, int32_t *value)
 bool
 ArmDebugger::getVFPDoubleValue(const char *desc, double *value)
 {
-    FloatRegister reg = FloatRegister::FromName(desc);
+    FloatRegister reg(FloatRegister::FromName(desc));
     if (reg != InvalidFloatReg) {
         *value = sim_->get_double_from_d_register(reg.code());
         return true;

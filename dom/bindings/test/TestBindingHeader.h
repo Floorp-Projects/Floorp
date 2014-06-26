@@ -161,6 +161,11 @@ public:
                                         const Optional<JS::Handle<JSObject*> >&,
                                         ErrorResult&);
 
+  static
+  already_AddRefed<TestInterface> Test3(const GlobalObject&,
+                                        const LongOrAnyMozMap&,
+                                        ErrorResult&);
+
   // Integer types
   int8_t ReadonlyByte();
   int8_t WritableByte();
@@ -583,6 +588,9 @@ public:
   void PassUnion22(JSContext*, const ObjectMozMapOrLong&);
   void PassUnionWithCallback(const EventHandlerNonNullOrNullOrLong& arg);
   void PassUnionWithByteString(const ByteStringOrLong&);
+  void PassUnionWithMozMap(const StringMozMapOrString&);
+  void PassUnionWithMozMapAndSequence(const StringMozMapOrStringSequence&);
+  void PassUnionWithSequenceAndMozMap(const StringSequenceOrStringMozMap&);
 #endif
   void PassNullableUnion(JSContext*, const Nullable<ObjectOrLong>&);
   void PassOptionalUnion(JSContext*, const Optional<ObjectOrLong>&);
@@ -735,6 +743,10 @@ public:
   void Overload15(const Optional<NonNull<TestInterface> >&);
   void Overload16(int32_t);
   void Overload16(const Optional<TestInterface*>&);
+  void Overload17(const Sequence<int32_t>&);
+  void Overload17(const MozMap<int32_t>&);
+  void Overload18(const MozMap<nsString>&);
+  void Overload18(const Sequence<nsString>&);
 
   // Variadic handling
   void PassVariadicThirdArg(const nsAString&, int32_t,

@@ -176,8 +176,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
             EmitReturnFromIC(masm);
 
             masm.bind(&toUint);
-            masm.convertUInt32ToDouble(ExtractTemp0, ScratchFloatReg);
-            masm.boxDouble(ScratchFloatReg, R0);
+            masm.convertUInt32ToDouble(ExtractTemp0, ScratchDoubleReg);
+            masm.boxDouble(ScratchDoubleReg, R0);
         } else {
             masm.j(Assembler::Signed, &revertRegister);
             masm.boxValue(JSVAL_TYPE_INT32, ExtractTemp0, R0.valueReg());

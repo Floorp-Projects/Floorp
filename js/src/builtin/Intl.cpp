@@ -418,6 +418,16 @@ IntlInitialize(JSContext *cx, HandleObject obj, Handle<PropertyName*> initialize
     return Invoke(cx, args);
 }
 
+static bool
+CreateDefaultOptions(JSContext *cx, MutableHandleValue defaultOptions)
+{
+    RootedObject options(cx, NewObjectWithGivenProto(cx, &JSObject::class_, nullptr, cx->global()));
+    if (!options)
+        return false;
+    defaultOptions.setObject(*options);
+    return true;
+}
+
 // CountAvailable and GetAvailable describe the signatures used for ICU API
 // to determine available locales for various functionality.
 typedef int32_t
@@ -701,12 +711,13 @@ InitCollatorClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> global
         return nullptr;
     }
 
-    // 10.2.1 and 10.3
-    if (!IntlInitialize(cx, proto, cx->names().InitializeCollator, UndefinedHandleValue,
-                        UndefinedHandleValue))
-    {
+    RootedValue options(cx);
+    if (!CreateDefaultOptions(cx, &options))
         return nullptr;
-    }
+
+    // 10.2.1 and 10.3
+    if (!IntlInitialize(cx, proto, cx->names().InitializeCollator, UndefinedHandleValue, options))
+        return nullptr;
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -1191,12 +1202,13 @@ InitNumberFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> gl
         return nullptr;
     }
 
-    // 11.2.1 and 11.3
-    if (!IntlInitialize(cx, proto, cx->names().InitializeNumberFormat, UndefinedHandleValue,
-                        UndefinedHandleValue))
-    {
+    RootedValue options(cx);
+    if (!CreateDefaultOptions(cx, &options))
         return nullptr;
-    }
+
+    // 11.2.1 and 11.3
+    if (!IntlInitialize(cx, proto, cx->names().InitializeNumberFormat, UndefinedHandleValue, options))
+        return nullptr;
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));
@@ -1646,12 +1658,13 @@ InitDateTimeFormatClass(JSContext *cx, HandleObject Intl, Handle<GlobalObject*> 
         return nullptr;
     }
 
-    // 12.2.1 and 12.3
-    if (!IntlInitialize(cx, proto, cx->names().InitializeDateTimeFormat, UndefinedHandleValue,
-                        UndefinedHandleValue))
-    {
+    RootedValue options(cx);
+    if (!CreateDefaultOptions(cx, &options))
         return nullptr;
-    }
+
+    // 12.2.1 and 12.3
+    if (!IntlInitialize(cx, proto, cx->names().InitializeDateTimeFormat, UndefinedHandleValue, options))
+        return nullptr;
 
     // 8.1
     RootedValue ctorValue(cx, ObjectValue(*ctor));

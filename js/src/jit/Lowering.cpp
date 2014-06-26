@@ -1216,7 +1216,7 @@ LIRGenerator::visitRound(MRound *ins)
         return define(lir, ins);
     }
 
-    LRoundF *lir = new (alloc()) LRoundF(useRegister(ins->num()), tempDouble());
+    LRoundF *lir = new (alloc()) LRoundF(useRegister(ins->num()), tempFloat32());
     if (!assignSnapshot(lir, Bailout_Round))
         return false;
     return define(lir, ins);
@@ -3085,10 +3085,11 @@ LIRGenerator::visitAssertRange(MAssertRange *ins)
         lir = new(alloc()) LAssertRangeD(useRegister(input), tempDouble());
         break;
 
-      case MIRType_Float32:
-        lir = new(alloc()) LAssertRangeF(useRegister(input), tempFloat32());
+      case MIRType_Float32: {
+        LDefinition armtemp = hasMultiAlias() ? tempFloat32() : LDefinition::BogusTemp();
+        lir = new(alloc()) LAssertRangeF(useRegister(input), tempFloat32(), armtemp);
         break;
-
+      }
       case MIRType_Value:
         lir = new(alloc()) LAssertRangeV(tempToUnbox(), tempDouble(), tempDouble());
         if (!useBox(lir, LAssertRangeV::Input, input))
@@ -3195,17 +3196,20 @@ LIRGenerator::visitSetElementCache(MSetElementCache *ins)
     // |useRegister| below.
     LInstruction *lir;
     if (ins->value()->type() == MIRType_Value) {
+        LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
         lir = new(alloc()) LSetElementCacheV(useByteOpRegister(ins->object()), tempToUnbox(),
-                                             temp(), tempDouble());
+                                             temp(), tempDouble(), tempF32);
 
         if (!useBox(lir, LSetElementCacheV::Index, ins->index()))
             return false;
         if (!useBox(lir, LSetElementCacheV::Value, ins->value()))
             return false;
     } else {
+        LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
         lir = new(alloc()) LSetElementCacheT(useByteOpRegister(ins->object()),
                                              useRegisterOrConstant(ins->value()),
-                                             tempToUnbox(), temp(), tempDouble());
+                                             tempToUnbox(), temp(), tempDouble(),
+                                             tempF32);
 
         if (!useBox(lir, LSetElementCacheT::Index, ins->index()))
             return false;
@@ -3479,8 +3483,10 @@ LIRGenerator::visitAsmJSReturn(MAsmJSReturn *ins)
 {
     MDefinition *rval = ins->getOperand(0);
     LAsmJSReturn *lir = new(alloc()) LAsmJSReturn;
-    if (IsFloatingPointType(rval->type()))
-        lir->setOperand(0, useFixed(rval, ReturnFloatReg));
+    if (rval->type() == MIRType_Float32)
+        lir->setOperand(0, useFixed(rval, ReturnFloat32Reg));
+    else if (rval->type() == MIRType_Double)
+        lir->setOperand(0, useFixed(rval, ReturnDoubleReg));
     else if (rval->type() == MIRType_Int32)
         lir->setOperand(0, useFixed(rval, ReturnReg));
     else
