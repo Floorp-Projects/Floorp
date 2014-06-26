@@ -17,6 +17,7 @@
 #include "mozilla/dom/BlobEvent.h"
 #include "nsIPrincipal.h"
 #include "nsMimeTypes.h"
+#include "nsProxyRelease.h"
 
 #include "mozilla/dom/AudioStreamTrack.h"
 #include "mozilla/dom/VideoStreamTrack.h"
@@ -149,8 +150,18 @@ class MediaRecorder::Session: public nsIObserver
   class ExtractRunnable : public nsRunnable
   {
   public:
-    ExtractRunnable(Session *aSession)
+    ExtractRunnable(already_AddRefed<Session>&& aSession)
       : mSession(aSession) {}
+
+    ~ExtractRunnable()
+    {
+      if (mSession) {
+        NS_WARNING("~ExtractRunnable something wrong the mSession should null");
+        nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+        NS_WARN_IF_FALSE(mainThread, "Couldn't get the main thread!");
+        NS_ProxyRelease(mainThread, mSession);
+      }
+    }
 
     NS_IMETHODIMP Run()
     {
@@ -159,12 +170,18 @@ class MediaRecorder::Session: public nsIObserver
       LOG(PR_LOG_DEBUG, ("Session.ExtractRunnable shutdown = %d", mSession->mEncoder->IsShutdown()));
       if (!mSession->mEncoder->IsShutdown()) {
         mSession->Extract(false);
-        NS_DispatchToCurrentThread(new ExtractRunnable(mSession));
+        nsRefPtr<nsIRunnable> event = new ExtractRunnable(mSession.forget());
+        if (NS_FAILED(NS_DispatchToCurrentThread(event))) {
+          NS_WARNING("Failed to dispatch ExtractRunnable to encoder thread");
+        }
       } else {
         // Flush out remaining encoded data.
         mSession->Extract(true);
         // Destroy this Session object in main thread.
-        NS_DispatchToMainThread(new DestroyRunnable(already_AddRefed<Session>(mSession)));
+        if (NS_FAILED(NS_DispatchToMainThread(
+                        new DestroyRunnable(mSession.forget())))) {
+          MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
+        }
       }
       return NS_OK;
     }
@@ -229,7 +246,10 @@ class MediaRecorder::Session: public nsIObserver
         ErrorResult result;
         mSession->mStopIssued = true;
         recorder->Stop(result);
-        NS_DispatchToMainThread(new DestroyRunnable(mSession.forget()));
+        if (NS_FAILED(NS_DispatchToMainThread(
+                        new DestroyRunnable(mSession.forget())))) {
+          MOZ_ASSERT(false, "NS_DispatchToMainThread failed");
+        }
         return NS_OK;
       }
 
@@ -261,7 +281,6 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    AddRef();
     mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
     mLastBlobTimeStamp = TimeStamp::Now();
   }
@@ -360,8 +379,11 @@ private:
       pushBlob = true;
     }
     if (pushBlob || aForceFlush) {
-      NS_DispatchToMainThread(new PushBlobRunnable(this));
-      mLastBlobTimeStamp = TimeStamp::Now();
+      if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
+        MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
+      } else {
+        mLastBlobTimeStamp = TimeStamp::Now();
+      }
     }
   }
 
@@ -432,7 +454,10 @@ private:
     // shutdown notification and stop Read Thread.
     nsContentUtils::RegisterShutdownObserver(this);
 
-    mReadThread->Dispatch(new ExtractRunnable(this), NS_DISPATCH_NORMAL);
+    nsRefPtr<nsIRunnable> event = new ExtractRunnable(this);
+    if (NS_FAILED(mReadThread->Dispatch(event, NS_DISPATCH_NORMAL))) {
+      NS_WARNING("Failed to dispatch ExtractRunnable at beginning");
+    }
   }
   // application should get blob and onstop event
   void DoSessionEndTask(nsresult rv)
@@ -443,9 +468,13 @@ private:
     }
 
     CleanupStreams();
+    if (NS_FAILED(NS_DispatchToMainThread(new PushBlobRunnable(this)))) {
+      MOZ_ASSERT(false, "NS_DispatchToMainThread PushBlobRunnable failed");
+    }
     // Destroy this session object in main thread.
-    NS_DispatchToMainThread(new PushBlobRunnable(this));
-    NS_DispatchToMainThread(new DestroyRunnable(already_AddRefed<Session>(this)));
+    if (NS_FAILED(NS_DispatchToMainThread(new DestroyRunnable(this)))) {
+      MOZ_ASSERT(false, "NS_DispatchToMainThread DestroyRunnable failed");
+    }
   }
   void CleanupStreams()
   {
@@ -608,10 +637,17 @@ MediaRecorder::Start(const Optional<int32_t>& aTimeSlice, ErrorResult& aResult)
   }
 
   mState = RecordingState::Recording;
-  // Start a session
-
+  // Start a session.
+  // Add session's reference here and pass to ExtractRunnable since the
+  // MediaRecorder doesn't hold any reference to Session. Also
+  // the DoSessionEndTask need this reference for DestroyRunnable.
+  // Note that the reference count is not balance here due to the
+  // DestroyRunnable will destroyed the last reference.
+  nsRefPtr<Session> session = new Session(this, timeSlice);
+  Session* rawPtr;
+  session.forget(&rawPtr);
   mSessions.AppendElement();
-  mSessions.LastElement() = new Session(this, timeSlice);
+  mSessions.LastElement() = rawPtr;
   mSessions.LastElement()->Start();
 }
 
@@ -691,9 +727,11 @@ MediaRecorder::RequestData(ErrorResult& aResult)
     return;
   }
   MOZ_ASSERT(mSessions.Length() > 0);
-  NS_DispatchToMainThread(
-    new CreateAndDispatchBlobEventRunnable(mSessions.LastElement()->GetEncodedData(),
-                                           this));
+  if (NS_FAILED(NS_DispatchToMainThread(
+                  new CreateAndDispatchBlobEventRunnable(
+                    mSessions.LastElement()->GetEncodedData(), this)))) {
+    MOZ_ASSERT(false, "NS_DispatchToMainThread CreateAndDispatchBlobEventRunnable failed");
+  }
 }
 
 JSObject*
