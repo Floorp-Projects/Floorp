@@ -6,6 +6,8 @@
 
 #include "jit/AsmJSSignalHandlers.h"
 
+#include "mozilla/DebugOnly.h"
+
 #include "assembler/assembler/MacroAssembler.h"
 #include "jit/AsmJSModule.h"
 #include "vm/Runtime.h"
@@ -14,6 +16,7 @@ using namespace js;
 using namespace js::jit;
 
 using JS::GenericNaN;
+using mozilla::DebugOnly;
 
 #if defined(XP_WIN)
 # define XMM_sig(p,i) ((p)->Xmm##i)
