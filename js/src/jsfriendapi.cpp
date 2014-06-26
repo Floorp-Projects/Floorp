@@ -962,6 +962,9 @@ JS::IncrementalReferenceBarrier(void *ptr, JSGCTraceKind kind)
     if (!ptr)
         return;
 
+    if (kind == JSTRACE_STRING && StringIsPermanentAtom(static_cast<JSString *>(ptr)))
+        return;
+
     gc::Cell *cell = static_cast<gc::Cell *>(ptr);
     Zone *zone = kind == JSTRACE_OBJECT
                  ? static_cast<JSObject *>(cell)->zone()
