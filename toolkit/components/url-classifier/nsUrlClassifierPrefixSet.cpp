@@ -155,6 +155,7 @@ nsUrlClassifierPrefixSet::GetPrefixes(uint32_t* aCount,
     uint32_t end = (i == (prefixIdxLength - 1)) ? mDeltas.Length()
                                                 : mIndexStarts[i + 1];
     if (end > mDeltas.Length() || (start > end)) {
+      nsMemory::Free(prefixArray);
       return NS_ERROR_FILE_CORRUPTED;
     }
 
