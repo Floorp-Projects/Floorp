@@ -296,11 +296,12 @@ TEST_F(pkix_cert_extensions, UnknownCriticalCEExtension)
 TEST_F(pkix_cert_extensions, KnownCriticalCEExtension)
 {
   static const uint8_t criticalCEExtensionBytes[] = {
-    0x30, 0x0a, // SEQUENCE (length = 10)
+    0x30, 0x0d, // SEQUENCE (length = 13)
       0x06, 0x03, // OID (length = 3)
         0x55, 0x1d, 0x36, // 2.5.29.54 (id-ce-inhibitAnyPolicy)
       0x01, 0x01, 0xff, // BOOLEAN (length = 1) TRUE
-      0x04, 0x00 // OCTET STRING (length = 0)
+      0x04, 0x03, // OCTET STRING (length = 3)
+        0x02, 0x01, 0x00, // INTEGER (length = 1, value = 0)
   };
   static const SECItem criticalCEExtension = {
     siBuffer,
