@@ -25,7 +25,7 @@ using namespace mozilla;
 using namespace mozilla::css;
 
 void
-nsAnimationManager::UpdateStyleAndEvents(CommonElementAnimationData* aEA,
+nsAnimationManager::UpdateStyleAndEvents(ElementAnimationCollection* aEA,
                                          TimeStamp aRefreshTime,
                                          EnsureStyleRuleFlags aFlags)
 {
@@ -35,7 +35,7 @@ nsAnimationManager::UpdateStyleAndEvents(CommonElementAnimationData* aEA,
 }
 
 void
-nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
+nsAnimationManager::GetEventsAt(ElementAnimationCollection* aEA,
                                 TimeStamp aRefreshTime,
                                 EventArray& aEventsToDispatch)
 {
@@ -105,7 +105,7 @@ nsAnimationManager::GetEventsAt(CommonElementAnimationData* aEA,
   }
 }
 
-CommonElementAnimationData*
+ElementAnimationCollection*
 nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                                          nsCSSPseudoElements::Type aPseudoType,
                                          bool aCreateIfNeeded)
@@ -128,15 +128,15 @@ nsAnimationManager::GetElementAnimations(dom::Element *aElement,
                  "other than :before or :after");
     return nullptr;
   }
-  CommonElementAnimationData *ea = static_cast<CommonElementAnimationData*>(
+  ElementAnimationCollection *ea = static_cast<ElementAnimationCollection*>(
                                    aElement->GetProperty(propName));
   if (!ea && aCreateIfNeeded) {
     // FIXME: Consider arena-allocating?
-    ea = new CommonElementAnimationData(aElement, propName, this,
+    ea = new ElementAnimationCollection(aElement, propName, this,
            mPresContext->RefreshDriver()->MostRecentRefresh());
     nsresult rv =
       aElement->SetProperty(propName, ea,
-                            &CommonElementAnimationData::PropertyDtor, false);
+                            &ElementAnimationCollection::PropertyDtor, false);
     if (NS_FAILED(rv)) {
       NS_WARNING("SetProperty failed");
       delete ea;
@@ -228,7 +228,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     // style change, but also not in an animation restyle.
 
     const nsStyleDisplay *disp = aStyleContext->StyleDisplay();
-    CommonElementAnimationData *ea =
+    ElementAnimationCollection *ea =
       GetElementAnimations(aElement, aStyleContext->GetPseudoType(), false);
     if (!ea &&
         disp->mAnimationNameCount == 1 &&
@@ -614,7 +614,7 @@ nsAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  CommonElementAnimationData *ea =
+  ElementAnimationCollection *ea =
     GetElementAnimations(aElement, aPseudoType, false);
   if (!ea) {
     return nullptr;
@@ -659,11 +659,11 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 }
 
 void
-nsAnimationManager::AddElementData(CommonElementAnimationData* aData)
+nsAnimationManager::AddElementData(ElementAnimationCollection* aData)
 {
   if (!mObservingRefreshDriver) {
     NS_ASSERTION(
-      static_cast<CommonElementAnimationData*>(aData)->mNeedsRefreshes,
+      static_cast<ElementAnimationCollection*>(aData)->mNeedsRefreshes,
       "Added data which doesn't need refreshing?");
     // We need to observe the refresh driver.
     mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
@@ -678,7 +678,7 @@ nsAnimationManager::CheckNeedsRefresh()
 {
   for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
        l = PR_NEXT_LINK(l)) {
-    if (static_cast<CommonElementAnimationData*>(l)->mNeedsRefreshes) {
+    if (static_cast<ElementAnimationCollection*>(l)->mNeedsRefreshes) {
       if (!mObservingRefreshDriver) {
         mPresContext->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
         mObservingRefreshDriver = true;
@@ -702,11 +702,11 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   bool didThrottle = false;
   for (PRCList *l = PR_LIST_HEAD(&mElementData); l != &mElementData;
        l = PR_NEXT_LINK(l)) {
-    CommonElementAnimationData *ea =
-      static_cast<CommonElementAnimationData*>(l);
+    ElementAnimationCollection *ea =
+      static_cast<ElementAnimationCollection*>(l);
     bool canThrottleTick = aFlags == Can_Throttle &&
       ea->CanPerformOnCompositorThread(
-        CommonElementAnimationData::CanAnimateFlags(0)) &&
+        ElementAnimationCollection::CanAnimateFlags(0)) &&
       ea->CanThrottleAnimation(now);
 
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
@@ -756,7 +756,7 @@ nsAnimationManager::UpdateThrottledStylesForSubtree(nsIContent* aContent,
 
   nsRefPtr<nsStyleContext> newStyle;
 
-  CommonElementAnimationData* ea;
+  ElementAnimationCollection* ea;
   if (element &&
       (ea = GetElementAnimations(element,
                                  nsCSSPseudoElements::ePseudo_NotPseudoElement,
