@@ -434,9 +434,7 @@ class MozbuildObject(ProcessExecutionMixin):
             args.append('-s')
 
         # Print entering/leaving directory messages. Some consumers look at
-        # these to measure progress. Ideally, we'd do everything with pymake
-        # and use hooks in its API. Unfortunately, it doesn't provide that
-        # feature... yet.
+        # these to measure progress.
         if print_directory:
             args.append('-w')
 
