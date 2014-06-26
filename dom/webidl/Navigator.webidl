@@ -154,7 +154,10 @@ callback interface MozIdleObserver {
 #ifdef MOZ_B2G
 [NoInterfaceObject]
 interface NavigatorMobileId {
-    [Throws, NewObject]
+    // Ideally we would use [CheckPermissions] here, but the "mobileid"
+    // permission is set to PROMPT_ACTION and [CheckPermissions] only checks
+    // for ALLOW_ACTION.
+    [Throws, NewObject, Func="Navigator::HasMobileIdSupport"]
     Promise getMobileIdAssertion();
 };
 Navigator implements NavigatorMobileId;
