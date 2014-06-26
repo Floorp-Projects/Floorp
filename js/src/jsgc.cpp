@@ -2975,6 +2975,11 @@ GCRuntime::shouldPreserveJITCode(JSCompartment *comp, int64_t currentTime)
     if (comp->lastAnimationTime + PRMJ_USEC_PER_SEC >= currentTime)
         return true;
 
+#ifdef JS_ION
+    if (comp->jitCompartment() && comp->jitCompartment()->hasRecentParallelActivity())
+        return true;
+#endif
+
     return false;
 }
 
