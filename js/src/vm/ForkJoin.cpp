@@ -1853,7 +1853,7 @@ bool ForkJoinContext::initialize()
 bool
 ForkJoinContext::isMainThread() const
 {
-    return perThreadData == &shared_->runtime()->mainThread;
+    return worker_->isMainThread();
 }
 
 JSRuntime *
