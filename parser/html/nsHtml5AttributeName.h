@@ -211,6 +211,7 @@ class nsHtml5AttributeName
     static nsHtml5AttributeName* ATTR_STYLE;
     static nsHtml5AttributeName* ATTR_RULES;
     static nsHtml5AttributeName* ATTR_STEMH;
+    static nsHtml5AttributeName* ATTR_SIZES;
     static nsHtml5AttributeName* ATTR_STEMV;
     static nsHtml5AttributeName* ATTR_START;
     static nsHtml5AttributeName* ATTR_XMLNS;

@@ -68,7 +68,7 @@ function runTestAudioPre() {
 function runTestAudio(aAudio) {
   info("User agent (help diagnose bug #943556): " + navigator.userAgent);
   var isAndroid = navigator.userAgent.contains("Android");
-  var expectedHeight = isAndroid ? 123 : 28;
+  var expectedHeight = isAndroid ? 103 : 28;
   var condition = function () {
     var boundingRect = aAudio.getBoundingClientRect();
     return boundingRect.height == expectedHeight;

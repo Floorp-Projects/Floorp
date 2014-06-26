@@ -1,0 +1,260 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Box Model Highlighter
+Test available configuration options of the highlighter
+-->
+<head>
+  <meta charset="utf-8">
+  <title>box model highlighter actor test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    #test-element {
+      width: 100px;
+      height: 100px;
+      padding: 10px;
+      margin: 5px;
+      border: 20px solid red;
+      background: yellow;
+    }
+  </style>
+</head>
+<body style="margin">
+<div id="test-element"></div>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+
+window.onload = function() {
+  var Cu = Components.utils;
+  var Cc = Components.classes;
+  var Ci = Components.interfaces;
+
+  Cu.import("resource://gre/modules/Services.jsm");
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-client.jsm");
+  Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
+  Cu.import("resource://gre/modules/Task.jsm");
+  const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+
+  SimpleTest.waitForExplicitFinish();
+
+  var {InspectorFront} = devtools.require("devtools/server/actors/inspector");
+
+  DebuggerServer.init(() => true);
+  DebuggerServer.addBrowserActors();
+
+  var client = new DebuggerClient(DebuggerServer.connectPipe());
+  client.connect(() => {
+    client.listTabs(response => {
+      var form = response.tabs[response.selected];
+      var front = InspectorFront(client, form);
+
+      Task.spawn(function*() {
+        let walkerFront = yield front.getWalker();
+        let highlighterFront = yield front.getHighlighterByType(
+          "BoxModelHighlighter");
+
+        let gBrowser = Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
+        let container =
+          gBrowser.selectedBrowser.parentNode.querySelector(".highlighter-container");
+
+        yield guidesAndInforBarShownByDefault(highlighterFront, walkerFront, container);
+        yield allRegionsAreShownByDefault(highlighterFront, walkerFront, container);
+        yield guidesCanBeHidden(highlighterFront, walkerFront, container);
+        yield infobarCanBeHidden(highlighterFront, walkerFront, container);
+        yield onlyOneRegionCanBeShown(highlighterFront, walkerFront, container);
+        yield guidesCanBeDrawnOnAGivenRegion(highlighterFront, walkerFront, container);
+
+        yield highlighterFront.finalize();
+      }).then(null, ok.bind(null, false)).then(() => {
+        client.close(() => {
+          DebuggerServer.destroy();
+          SimpleTest.finish();
+        });
+      });
+    });
+  });
+
+  function getTestNode(walkerFront) {
+    let rawNode = document.getElementById("test-element");
+    return walkerFront.frontForRawNode(rawNode);
+  }
+
+  function* guidesAndInforBarShownByDefault(highlighterFront, walkerFront, container) {
+    info("Checking that by default, guides and infobar are shown");
+
+    let node = getTestNode(walkerFront);
+
+    let infobar = container.querySelector(".highlighter-nodeinfobar-positioner");
+    let svg = container.querySelector("svg");
+    let lines = svg.querySelectorAll("line");
+
+    info("Showing the highlighter, with no options");
+    yield highlighterFront.show(node);
+
+    ok(!infobar.hasAttribute("hidden"), "Infobar shown");
+    ok(!svg.hasAttribute("hidden"), "SVG markup shown");
+    for (let line of lines) {
+      ok(!line.hasAttribute("hidden"), "Guide shown");
+    }
+
+    yield highlighterFront.hide();
+  }
+
+  function* allRegionsAreShownByDefault(highlighterFront, walkerFront, container) {
+    info("Checking that by default, all regions are shown");
+
+    let node = getTestNode(walkerFront);
+
+    info("Showing the highlighter, with no options");
+    yield highlighterFront.show(node);
+
+    let content = container.querySelector(".box-model-content");
+    let padding = container.querySelector(".box-model-padding");
+    let border = container.querySelector(".box-model-border");
+    let margin = container.querySelector(".box-model-margin");
+
+    ok(content.getAttribute("points"), "The points of the content region are set");
+    ok(padding.getAttribute("points"), "The points of the padding region are set");
+    ok(border.getAttribute("points"), "The points of the border region are set");
+    ok(margin.getAttribute("points"), "The points of the margin region are set");
+
+    yield highlighterFront.hide();
+  }
+
+  function* guidesCanBeHidden(highlighterFront, walkerFront, container) {
+    info("Checking that guides can be hidden");
+
+    let node = getTestNode(walkerFront);
+
+    let svg = container.querySelector("svg");
+    let lines = svg.querySelectorAll("line");
+
+    info("Showing the highlighter, with the hideGuides option");
+    yield highlighterFront.show(node, {
+      hideGuides: true
+    });
+
+    for (let line of lines) {
+      ok(line.hasAttribute("hidden"), "Guide hidden");
+    }
+
+    yield highlighterFront.hide();
+  }
+
+  function* infobarCanBeHidden(highlighterFront, walkerFront, container) {
+    info("Checking that the infobar can be hidden");
+
+    let node = getTestNode(walkerFront);
+
+    let svg = container.querySelector("svg");
+    let lines = svg.querySelectorAll("line");
+
+    info("Showing the highlighter, with the hideInfoBar option");
+    yield highlighterFront.show(node, {
+      hideInfoBar: true
+    });
+
+    let infobar = container.querySelector(".highlighter-nodeinfobar-positioner");
+    ok(infobar.hasAttribute("hidden"), "Infobar hidden");
+
+    yield highlighterFront.hide();
+  }
+
+  function* onlyOneRegionCanBeShown(highlighterFront, walkerFront, container) {
+    info("Checking that it's possible to select which region to show");
+
+    let node = getTestNode(walkerFront);
+
+    let svg = container.querySelector("svg");
+    let lines = svg.querySelectorAll("line");
+
+    let content = container.querySelector(".box-model-content");
+    let padding = container.querySelector(".box-model-padding");
+    let border = container.querySelector(".box-model-border");
+    let margin = container.querySelector(".box-model-margin");
+
+    info("Showing the highlighter, with the showOnly option set to content");
+    yield highlighterFront.show(node, {
+      showOnly: "content"
+    });
+
+    ok(content.getAttribute("points"), "The points of the content region are set");
+    ok(!padding.getAttribute("points"), "The points of the padding region are not set");
+    ok(!border.getAttribute("points"), "The points of the border region are not set");
+    ok(!margin.getAttribute("points"), "The points of the margin region are not set");
+
+    info("Hiding the highlighter and showing it again with the showOnly option " +
+      "set to margin");
+    yield highlighterFront.hide();
+    yield highlighterFront.show(node, {
+      showOnly: "margin"
+    });
+
+    ok(!content.getAttribute("points"), "The points of the content region are not set");
+    ok(!padding.getAttribute("points"), "The points of the padding region are not set");
+    ok(!border.getAttribute("points"), "The points of the border region are not set");
+    ok(margin.getAttribute("points"), "The points of the margin region are set");
+
+    yield highlighterFront.hide();
+  }
+
+  function* guidesCanBeDrawnOnAGivenRegion(highlighterFront, walkerFront, container) {
+    info("Checking that it's possible to choose which region the guides surround");
+
+    let node = getTestNode(walkerFront);
+
+    info("Showing the highlighter, with the region option set to padding");
+    yield highlighterFront.show(node, {
+      region: "padding"
+    });
+
+    info("Getting the guides and padding region element to compare coordinates");
+    let guideTop = container.querySelector(".box-model-guide-top");
+    let guideRight = container.querySelector(".box-model-guide-right");
+    let guideBottom = container.querySelector(".box-model-guide-bottom");
+    let guideLeft = container.querySelector(".box-model-guide-left");
+
+    let padding = container.querySelector(".box-model-padding");
+    let points = padding.getAttribute("points").split(" ").map(xy => xy.split(","));
+
+    is(Math.ceil(guideTop.getAttribute("y1")), points[0][1],
+      "Top guide's y1 is correct");
+    is(Math.floor(guideBottom.getAttribute("y1")), points[2][1],
+      "Bottom guide's y1 is correct");
+    is(Math.floor(guideRight.getAttribute("x1")), points[1][0],
+      "Right guide's x1 is correct");
+    is(Math.ceil(guideLeft.getAttribute("x1")), points[3][0],
+      "Left guide's x1 is correct");
+
+    info("Hiding the highlighter and showing it again with the margin region");
+    yield highlighterFront.hide();
+    yield highlighterFront.show(node, {
+      region: "margin"
+    });
+
+    let margin = container.querySelector(".box-model-margin");
+    let points = margin.getAttribute("points").split(" ").map(xy => xy.split(","));
+
+    is(Math.ceil(guideTop.getAttribute("y1")), points[0][1],
+      "Top guide's y1 is correct");
+    is(Math.floor(guideBottom.getAttribute("y1")), points[2][1],
+      "Bottom guide's y1 is correct");
+    is(Math.floor(guideRight.getAttribute("x1")), points[1][0],
+      "Right guide's x1 is correct");
+    is(Math.ceil(guideLeft.getAttribute("x1")), points[3][0],
+      "Left guide's x1 is correct");
+
+    yield highlighterFront.hide();
+  }
+
+}
+</script>
+</pre>
+</body>
+</html>

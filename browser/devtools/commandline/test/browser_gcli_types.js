@@ -77,7 +77,7 @@ function forEachType(options, typeSpec, callback) {
       return;
     }
     else if (name === 'union') {
-      typeSpec.types = [{ name: "string" }];
+      typeSpec.alternatives = [{ name: 'string' }];
     }
 
     var type = types.createType(typeSpec);
@@ -89,7 +89,7 @@ function forEachType(options, typeSpec, callback) {
       delete typeSpec.data;
       delete typeSpec.delegateType;
       delete typeSpec.subtype;
-      delete typeSpec.types;
+      delete typeSpec.alternatives;
 
       return value;
     });
@@ -132,5 +132,22 @@ exports.testNullDefault = function(options) {
     return Promise.resolve(reply).then(function(str) {
       assert.is(str, '', 'stringify(null) for ' + type.name);
     });
+  });
+};
+
+exports.testGetSpec = function(options) {
+  return forEachType(options, {}, function(type) {
+    if (type.name === 'param') {
+      return;
+    }
+
+    var spec = type.getSpec('cmd', 'param');
+    assert.ok(spec != null, 'non null spec for ' + type.name);
+
+    var str = JSON.stringify(spec);
+    assert.ok(str != null, 'serializable spec for ' + type.name);
+
+    var example = options.requisition.types.createType(spec);
+    assert.ok(example != null, 'creatable spec for ' + type.name);
   });
 };

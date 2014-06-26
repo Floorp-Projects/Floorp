@@ -10,6 +10,9 @@
 #include "nsIContent.h"
 #include "nsString.h"
 
+class nsMediaQuery;
+class nsCSSValue;
+
 namespace mozilla {
 namespace dom {
 
@@ -17,6 +20,7 @@ class ResponsiveImageCandidate;
 
 class ResponsiveImageSelector : public nsISupports
 {
+  friend class ResponsiveImageCandidate;
 public:
   NS_DECL_ISUPPORTS
   ResponsiveImageSelector(nsIContent *aContent);
@@ -25,9 +29,17 @@ public:
   // replace default source)
   bool SetCandidatesFromSourceSet(const nsAString & aSrcSet);
 
+  // Fill the source sizes from a valid sizes descriptor. Returns false if
+  // descriptor is invalid.
+  bool SetSizesFromDescriptor(const nsAString & aSizesDescriptor);
+
   // Set the default source, treated as the least-precedence 1.0 density source.
   nsresult SetDefaultSource(const nsAString & aSpec);
   void SetDefaultSource(nsIURI *aURL);
+
+  uint32_t NumCandidates(bool aIncludeDefault = true);
+
+  nsIContent *Content() { return mContent; }
 
   // Get the URL for the selected best candidate
   already_AddRefed<nsIURI> GetSelectedImageURL();
@@ -48,11 +60,21 @@ private:
   // Get index of best candidate
   int GetBestCandidateIndex();
 
+  // Compute a density from a Candidate width. Returns false if sizes were not
+  // specified for this selector.
+  //
+  // aContext is the presContext to use for current viewport sizing, null will
+  // use the associated content's context.
+  bool ComputeFinalWidthForCurrentViewport(int32_t *aWidth);
+
   nsCOMPtr<nsIContent> mContent;
   // If this array contains an eCandidateType_Default, it should be the last
   // element, such that the Setters can preserve/replace it respectively.
   nsTArray<ResponsiveImageCandidate> mCandidates;
   int mBestCandidateIndex;
+
+  nsTArray< nsAutoPtr<nsMediaQuery> > mSizeQueries;
+  nsTArray<nsCSSValue> mSizeValues;
 };
 
 class ResponsiveImageCandidate {
@@ -68,6 +90,7 @@ public:
 
   // Set this candidate as a by-density candidate with specified density.
   void SetParameterAsDensity(double aDensity);
+  void SetParameterAsComputedWidth(int32_t aWidth);
 
   // Fill from a valid candidate descriptor. Returns false descriptor is
   // invalid.
@@ -77,7 +100,15 @@ public:
   bool HasSameParameter(const ResponsiveImageCandidate & aOther) const;
 
   already_AddRefed<nsIURI> URL() const;
-  double Density() const;
+
+  // Compute and return the density relative to a selector.
+  double Density(ResponsiveImageSelector *aSelector) const;
+  // If the width is already known. Useful when iterating over candidates to
+  // avoid having each call re-compute the width.
+  double Density(int32_t aMatchingWidth) const;
+
+  // If this selector is computed from the selector's matching width.
+  bool IsComputedFromWidth() const;
 
   enum eCandidateType {
     eCandidateType_Invalid,
@@ -85,6 +116,7 @@ public:
     // Treated as 1.0 density, but a separate type so we can update the
     // responsive candidates and default separately
     eCandidateType_Default,
+    eCandidateType_ComputedFromWidth
   };
 
   eCandidateType Type() const { return mType; }
@@ -95,6 +127,7 @@ private:
   eCandidateType mType;
   union {
     double mDensity;
+    int32_t mWidth;
   } mValue;
 };
 

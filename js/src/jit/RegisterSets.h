@@ -66,6 +66,41 @@ struct AnyRegister {
     bool volatile_() const {
         return isFloat() ? fpu().volatile_() : gpr().volatile_();
     }
+    AnyRegister aliased(uint32_t aliasIdx) const {
+        AnyRegister ret;
+        if (isFloat()) {
+            FloatRegister fret;
+            fpu().aliased(aliasIdx, &fret);
+            ret = AnyRegister(fret);
+        } else {
+            Register gret;
+            gpr().aliased(aliasIdx, &gret);
+            ret = AnyRegister(gret);
+        }
+        JS_ASSERT_IF(aliasIdx == 0, ret == *this);
+        return ret;
+    }
+    uint32_t numAliased() const {
+        if (isFloat())
+            return fpu().numAliased();
+        return gpr().numAliased();
+    }
+    bool aliases(const AnyRegister &other) const {
+        if (isFloat() && other.isFloat())
+            return fpu().aliases(other.fpu());
+        if (!isFloat() && !other.isFloat())
+            return gpr().aliases(other.gpr());
+        return false;
+    }
+    // do the two registers hold the same type of data (e.g. both float32, both gpr)
+    bool isCompatibleReg (const AnyRegister other) const {
+        if (isFloat() && other.isFloat())
+            return fpu().equiv(other.fpu());
+        if (!isFloat() && !other.isFloat())
+            return true;
+        return false;
+    }
+
 };
 
 // Registers to hold a boxed value. Uses one register on 64 bit
@@ -464,6 +499,15 @@ class TypedRegisterSet
     }
     bool operator ==(const TypedRegisterSet<T> &other) const {
         return other.bits_ == bits_;
+    }
+    TypedRegisterSet<T> reduceSetForPush() const {
+        return T::ReduceSetForPush(*this);
+    }
+    uint32_t getSizeInBytes() const {
+        return T::GetSizeInBytes(*this);
+    }
+    uint32_t getPushSizeInBytes() const {
+        return T::GetPushSizeInBytes(*this);
     }
 };
 
