@@ -16,10 +16,12 @@
  * @status UNDER_DEVELOPMENT
  */
 
-[uuid(7adbaf06-572d-4c99-bd59-ac673ddcca93)]
+[uuid(1deb68f8-2ed6-4a41-b8c8-e0f86510f799)]
 interface nsIDOMHTMLSourceElement : nsISupports
 {
            attribute DOMString src;
            attribute DOMString type;
+           attribute DOMString srcset;
+           attribute DOMString sizes;
            attribute DOMString media;
 };

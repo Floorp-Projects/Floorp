@@ -215,6 +215,7 @@ class LIRGeneratorShared : public MInstructionVisitorWithDefaults
     static bool allowInlineForkJoinGetSlice() {
         return false;
     }
+
 };
 
 } // namespace jit

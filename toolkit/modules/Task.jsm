@@ -98,6 +98,31 @@ Cu.import("resource://gre/modules/Promise.jsm");
 const ERRORS_TO_REPORT = ["EvalError", "RangeError", "ReferenceError", "TypeError"];
 
 /**
+ * The Task currently being executed
+ */
+let gCurrentTask = null;
+
+/**
+ * If `true`, capture stacks whenever entering a Task and rewrite the
+ * stack any exception thrown through a Task.
+ */
+let gMaintainStack = false;
+
+
+/**
+ * Iterate through the lines of a string.
+ *
+ * @return Iterator<string>
+ */
+function* linesOf(string) {
+  let reLine = /([^\r\n])+/g;
+  let match;
+  while ((match = reLine.exec(string))) {
+    yield [match[0], match.index];
+  }
+};
+
+/**
  * Detect whether a value is a generator.
  *
  * @param aValue
@@ -241,7 +266,7 @@ function createAsyncFunction(aTask) {
  * that is fulfilled when the task terminates.
  */
 function TaskImpl(iterator) {
-  if (Task.Debugging.maintainStack) {
+  if (gMaintainStack) {
     this._stack = (new Error()).stack;
   }
   this.deferred = Promise.defer();
@@ -280,37 +305,64 @@ TaskImpl.prototype = {
    *        Resolution result or rejection exception, if any.
    */
   _run: function TaskImpl_run(aSendResolved, aSendValue) {
-    if (this._isStarGenerator) {
-      try {
-        let result = aSendResolved ? this._iterator.next(aSendValue)
-                                   : this._iterator.throw(aSendValue);
 
-        if (result.done) {
-          // The generator function returned.
-          this.deferred.resolve(result.value);
-        } else {
-          // The generator function yielded.
-          this._handleResultValue(result.value);
+    try {
+      gCurrentTask = this;
+
+      if (this._isStarGenerator) {
+        try {
+          let result = aSendResolved ? this._iterator.next(aSendValue)
+                                     : this._iterator.throw(aSendValue);
+
+          if (result.done) {
+            // The generator function returned.
+            this.deferred.resolve(result.value);
+          } else {
+            // The generator function yielded.
+            this._handleResultValue(result.value);
+          }
+        } catch (ex) {
+          // The generator function failed with an uncaught exception.
+          this._handleException(ex);
         }
-      } catch (ex) {
-        // The generator function failed with an uncaught exception.
-        this._handleException(ex);
+      } else {
+        try {
+          let yielded = aSendResolved ? this._iterator.send(aSendValue)
+                                      : this._iterator.throw(aSendValue);
+          this._handleResultValue(yielded);
+        } catch (ex if ex instanceof Task.Result) {
+          // The generator function threw the special exception that allows it to
+          // return a specific value on resolution.
+          this.deferred.resolve(ex.value);
+        } catch (ex if ex instanceof StopIteration) {
+          // The generator function terminated with no specific result.
+          this.deferred.resolve(undefined);
+        } catch (ex) {
+          // The generator function failed with an uncaught exception.
+          this._handleException(ex);
+        }
       }
-    } else {
-      try {
-        let yielded = aSendResolved ? this._iterator.send(aSendValue)
-                                    : this._iterator.throw(aSendValue);
-        this._handleResultValue(yielded);
-      } catch (ex if ex instanceof Task.Result) {
-        // The generator function threw the special exception that allows it to
-        // return a specific value on resolution.
-        this.deferred.resolve(ex.value);
-      } catch (ex if ex instanceof StopIteration) {
-        // The generator function terminated with no specific result.
-        this.deferred.resolve();
-      } catch (ex) {
-        // The generator function failed with an uncaught exception.
-        this._handleException(ex);
+    } finally {
+      //
+      // At this stage, the Task may have finished executing, or have
+      // walked through a `yield` or passed control to a sub-Task.
+      // Regardless, if we still own `gCurrentTask`, reset it. If we
+      // have not finished execution of this Task, re-entering `_run`
+      // will set `gCurrentTask` to `this` as needed.
+      //
+      // We just need to be careful here in case we hit the following
+      // pattern:
+      //
+      //   Task.spawn(foo);
+      //   Task.spawn(bar);
+      //
+      // Here, `foo` and `bar` may be interleaved, so when we finish
+      // executing `foo`, `gCurrentTask` may actually either `foo` or
+      // `bar`. If `gCurrentTask` has already been set to `bar`, leave
+      // it be and it will be reset to `null` once `bar` is complete.
+      //
+      if (gCurrentTask == this) {
+        gCurrentTask = null;
       }
     }
   },
@@ -349,43 +401,23 @@ TaskImpl.prototype = {
    *        The uncaught exception to handle.
    */
   _handleException: function TaskImpl_handleException(aException) {
+
+    gCurrentTask = this;
+
     if (aException && typeof aException == "object" && "stack" in aException) {
 
       let stack = aException.stack;
 
-      if (Task.Debugging.maintainStack &&
+      if (gMaintainStack &&
           aException._capturedTaskStack != this._stack &&
           typeof stack == "string") {
 
         // Rewrite the stack for more readability.
 
         let bottomStack = this._stack;
-        let topStack = aException.stack;
+        let topStack = stack;
 
-        // Cut `topStack` at the first line that contains Task.jsm, keep the head.
-        let reLine = /([^\r\n])+/g;
-        let match;
-        let lines = [];
-        while ((match = reLine.exec(topStack))) {
-          let line = match[0];
-          if (line.indexOf("/Task.jsm:") != -1) {
-            break;
-          }
-          lines.push(line);
-        }
-
-        // Cut `bottomStack` at the last line of the first block that contains Task.jsm
-        reLine = /([^\r\n])+/g;
-        while ((match = reLine.exec(bottomStack))) {
-          let line = match[0];
-          if (line.indexOf("/Task.jsm:") == -1) {
-            let tail = bottomStack.substring(match.index);
-            lines.push(tail);
-            break;
-          }
-        }
-
-        stack = lines.join("\n");
+        stack = Task.Debugging.generateReadableStack(stack);
 
         aException.stack = stack;
 
@@ -414,9 +446,74 @@ TaskImpl.prototype = {
     }
 
     this.deferred.reject(aException);
+  },
+
+  get callerStack() {
+    // Cut `this._stack` at the last line of the first block that
+    // contains Task.jsm, keep the tail.
+    for (let [line, index] of linesOf(this._stack || "")) {
+      if (line.indexOf("/Task.jsm:") == -1) {
+        return this._stack.substring(index);
+      }
+    }
+    return "";
   }
 };
 
+
 Task.Debugging = {
-  maintainStack: false
+
+  /**
+   * Control stack rewriting.
+   *
+   * If `true`, any exception thrown from a Task will be rewritten to
+   * provide a human-readable stack trace. Otherwise, stack traces will
+   * be left unchanged.
+   *
+   * There is a (small but existing) runtime cost associated to stack
+   * rewriting, so you should probably not activate this in production
+   * code.
+   *
+   * @type {bool}
+   */
+  get maintainStack() {
+    return gMaintainStack;
+  },
+  set maintainStack(x) {
+    if (!x) {
+      gCurrentTask = null;
+    }
+    return gMaintainStack = x;
+  },
+
+  /**
+   * Generate a human-readable stack for an error raised in
+   * a Task.
+   *
+   * @param {string} topStack The stack provided by the error.
+   * @param {string=} prefix Optionally, a prefix for each line.
+   */
+  generateReadableStack: function(topStack, prefix = "") {
+    if (!gCurrentTask) {
+      return topStack;
+    }
+
+    // Cut `topStack` at the first line that contains Task.jsm, keep the head.
+    let lines = [];
+    for (let [line] of linesOf(topStack)) {
+      if (line.indexOf("/Task.jsm:") != -1) {
+        break;
+      }
+      lines.push(prefix + line);
+    }
+    if (!prefix) {
+      lines.push(gCurrentTask.callerStack);
+    } else {
+      for (let [line] of linesOf(gCurrentTask.callerStack)) {
+        lines.push(prefix + line);
+      }
+    }
+
+    return lines.join("\n");
+  }
 };

@@ -361,6 +361,7 @@ class nsHtml5ElementName
     static nsHtml5ElementName* ELT_NOEMBED;
     static nsHtml5ElementName* ELT_POLYGON;
     static nsHtml5ElementName* ELT_PATTERN;
+    static nsHtml5ElementName* ELT_PICTURE;
     static nsHtml5ElementName* ELT_PRODUCT;
     static nsHtml5ElementName* ELT_SETDIFF;
     static nsHtml5ElementName* ELT_SECTION;

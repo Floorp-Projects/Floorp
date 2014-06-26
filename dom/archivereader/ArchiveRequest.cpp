@@ -132,7 +132,7 @@ ArchiveRequest::ReaderReady(nsTArray<nsCOMPtr<nsIDOMFile> >& aFileList,
   nsresult rv;
 
   AutoJSAPI jsapi;
-  if (NS_WARN_IF(!jsapi.InitUsingWin(GetOwner()))) {
+  if (NS_WARN_IF(!jsapi.Init(GetOwner()))) {
     return NS_ERROR_UNEXPECTED;
   }
   JSContext* cx = jsapi.cx();

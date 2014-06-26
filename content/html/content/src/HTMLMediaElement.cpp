@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/HTMLMediaElementBinding.h"
+#include "mozilla/dom/HTMLSourceElement.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
@@ -72,8 +73,6 @@
 
 #include "AudioChannelService.h"
 
-#include "nsCSSParser.h"
-#include "nsIMediaList.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/WakeLock.h"
 
@@ -904,17 +903,13 @@ void HTMLMediaElement::LoadFromSourceChildren()
     //       Key System that the user agent knows it cannot use with type,
     //       then end the synchronous section[...]" (Bug 1016707)
     nsAutoString media;
-    if (child->GetAttr(kNameSpaceID_None, nsGkAtoms::media, media) && !media.IsEmpty()) {
-      nsCSSParser cssParser;
-      nsRefPtr<nsMediaList> mediaList(new nsMediaList());
-      cssParser.ParseMediaList(media, nullptr, 0, mediaList, false);
-      nsIPresShell* presShell = OwnerDoc()->GetShell();
-      if (presShell && !mediaList->Matches(presShell->GetPresContext(), nullptr)) {
-        DispatchAsyncSourceError(child);
-        const char16_t* params[] = { media.get(), src.get() };
-        ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
-        continue;
-      }
+    HTMLSourceElement *childSrc = HTMLSourceElement::FromContent(child);
+    MOZ_ASSERT(childSrc, "Expect child to be HTMLSourceElement");
+    if (childSrc && !childSrc->MatchesCurrentMedia()) {
+      DispatchAsyncSourceError(child);
+      const char16_t* params[] = { media.get(), src.get() };
+      ReportLoadError("MediaLoadSourceMediaNotMatched", params, ArrayLength(params));
+      continue;
     }
     LOG(PR_LOG_DEBUG, ("%p Trying load from <source>=%s type=%s media=%s", this,
       NS_ConvertUTF16toUTF8(src).get(), NS_ConvertUTF16toUTF8(type).get(),
