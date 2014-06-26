@@ -50,7 +50,7 @@ namespace css {
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
 {
-  PR_INIT_CLIST(&mElementData);
+  PR_INIT_CLIST(&mElementCollections);
 }
 
 CommonAnimationManager::~CommonAnimationManager()
@@ -62,17 +62,18 @@ void
 CommonAnimationManager::Disconnect()
 {
   // Content nodes might outlive the transition or animation manager.
-  RemoveAllElementData();
+  RemoveAllElementCollections();
 
   mPresContext = nullptr;
 }
 
 void
-CommonAnimationManager::RemoveAllElementData()
+CommonAnimationManager::RemoveAllElementCollections()
 {
-  while (!PR_CLIST_IS_EMPTY(&mElementData)) {
-    ElementAnimationCollection *head =
-      static_cast<ElementAnimationCollection*>(PR_LIST_HEAD(&mElementData));
+  while (!PR_CLIST_IS_EMPTY(&mElementCollections)) {
+    ElementAnimationCollection* head =
+      static_cast<ElementAnimationCollection*>(
+        PR_LIST_HEAD(&mElementCollections));
     head->Destroy();
   }
 }
@@ -149,7 +150,7 @@ CommonAnimationManager::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
   // Measurement of the following members may be added later if DMD finds it is
   // worthwhile:
-  // - mElementData
+  // - mElementCollections
   //
   // The following members are not measured
   // - mPresContext, because it's non-owning
