@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+<?xml-stylesheet href="chrome://global/skin/global.css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"></script>
+
+  <commandset id="mainCommandSet">
+    <commandset id="editMenuCommands"/>
+  </commandset>
+  <menubar></menubar>
+  <iframe id='projecteditor-iframe' flex="1"></iframe>
+</window>

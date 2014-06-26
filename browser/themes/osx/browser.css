@@ -161,8 +161,11 @@ toolbarseparator {
   padding: 4px;
 }
 
-#PersonalToolbar:not([collapsed=true]) {
+#PersonalToolbar {
   padding: 0 4px 4px;
+}
+
+#PersonalToolbar:not([collapsed=true]) {
   /* 4px padding ^  plus 19px personal-bookmarks (see below) */
   min-height: 23px;
 }

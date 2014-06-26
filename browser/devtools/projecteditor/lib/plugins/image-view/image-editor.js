@@ -12,7 +12,7 @@ const { ItchEditor } = require("projecteditor/editors");
 var ImageEditor = Class({
   extends: ItchEditor,
 
-  initialize: function(document) {
+  initialize: function() {
     ItchEditor.prototype.initialize.apply(this, arguments);
     this.label = "image";
     this.appended = promise.resolve();
