@@ -297,7 +297,7 @@ endif
 ifdef MOZ_PSEUDO_DERECURSE
 # Interdependencies for parallel export.
 js/xpconnect/src/export: dom/bindings/export xpcom/xpidl/export
-accessible/src/xpcom/export: xpcom/xpidl/export
+accessible/xpcom/export: xpcom/xpidl/export
 ifdef ENABLE_CLANG_PLUGIN
 js/src/export config/export: build/clang-plugin/export
 endif
