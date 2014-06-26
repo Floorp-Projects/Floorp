@@ -993,7 +993,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         LAllocation *alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
-            for (int a = 0; a < reg.numAliased(); a++) {
+            for (size_t a = 0; a < reg.numAliased(); a++) {
                 IonSpew(IonSpew_RegAlloc, "   Register %s not free", reg.aliased(a).name());
                 freeUntilPos[reg.aliased(a).code()] = CodePosition::MIN;
             }
@@ -1004,7 +1004,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
             CodePosition pos = current->intersect(*i);
-            for (int a = 0; a < reg.numAliased(); a++) {
+            for (size_t a = 0; a < reg.numAliased(); a++) {
                 if (pos != CodePosition::MIN && pos < freeUntilPos[reg.aliased(a).code()]) {
                     freeUntilPos[reg.aliased(a).code()] = pos;
                     IonSpew(IonSpew_RegAlloc, "   Register %s free until %u", reg.aliased(a).name(), pos.bits());
@@ -1017,7 +1017,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     if (fixedPos != CodePosition::MIN) {
         for (IntervalIterator i(fixed.begin()); i != fixed.end(); i++) {
             AnyRegister reg = i->getAllocation()->toRegister();
-            for (int a = 0; a < reg.numAliased(); a++) {
+            for (size_t a = 0; a < reg.numAliased(); a++) {
                 AnyRegister areg = reg.aliased(a);
                 if (freeUntilPos[areg.code()] != CodePosition::MIN) {
                     CodePosition pos = current->intersect(*i);
@@ -1039,7 +1039,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         if (alloc->isRegister(needFloat)) {
             AnyRegister prevReg = alloc->toRegister();
             bool useit = true;
-            for (int a = 0; a < prevReg.numAliased(); a++) {
+            for (size_t a = 0; a < prevReg.numAliased(); a++) {
                 AnyRegister aprevReg = prevReg.aliased(a);
                 if (freeUntilPos[aprevReg.code()] == CodePosition::MIN) {
                     useit = false;
@@ -1056,7 +1056,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     if (hint->kind() == Requirement::FIXED && hint->allocation().isRegister()) {
         AnyRegister hintReg = hint->allocation().toRegister();
         bool useit = true;
-        for (int a = 0; a < hintReg.numAliased(); a++) {
+        for (size_t a = 0; a < hintReg.numAliased(); a++) {
             if (freeUntilPos[hintReg.aliased(a).code()] <= hint->pos()) {
                 useit = false;
                 break;
@@ -1070,7 +1070,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         if (other && other->getAllocation()->isRegister()) {
             AnyRegister hintReg = other->getAllocation()->toRegister();
             bool useit = true;
-            for (int a = 0; a < hintReg.numAliased(); a++) {
+            for (size_t a = 0; a < hintReg.numAliased(); a++) {
                 if (freeUntilPos[hintReg.aliased(a).code()] <= hint->pos()) {
                     useit = false;
                     break;
@@ -1121,7 +1121,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         LAllocation *alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister fullreg = alloc->toRegister();
-            for (int a = 0; a < fullreg.numAliased(); a++) {
+            for (size_t a = 0; a < fullreg.numAliased(); a++) {
                 AnyRegister reg = fullreg.aliased(a);
                 if (i->start() == current->start()) {
                     nextUsePos[reg.code()] = CodePosition::MIN;
@@ -1139,7 +1139,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
             CodePosition pos = i->nextUsePosAfter(current->start());
-            for (int a = 0; a < reg.numAliased(); a++) {
+            for (size_t a = 0; a < reg.numAliased(); a++) {
                 if (pos < nextUsePos[reg.aliased(a).code()]) {
                     nextUsePos[reg.aliased(a).code()] = pos;
                     IonSpew(IonSpew_RegAlloc, "   Register %s next used %u", reg.aliased(a).name(), pos.bits());
@@ -1152,7 +1152,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     if (fixedPos != CodePosition::MIN) {
         for (IntervalIterator i(fixed.begin()); i != fixed.end(); i++) {
             AnyRegister fullreg = i->getAllocation()->toRegister();
-            for (int a = 0; a < fullreg.numAliased(); a++) {
+            for (size_t a = 0; a < fullreg.numAliased(); a++) {
                 AnyRegister reg = fullreg.aliased(a);
                 if (nextUsePos[reg.code()] != CodePosition::MIN) {
                     CodePosition pos = i->intersect(current);
