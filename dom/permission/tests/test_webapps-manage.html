@@ -16,24 +16,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815105
 <pre id="test">
 <script type="application/javascript;version=1.8" src="file_framework.js"></script>
 <script type="application/javascript;version=1.8">
-function verifier(success, failure) {
-  try {
-    var req = window.navigator.mozApps.mgmt.getAll();
-    req.onsuccess = function() {
-      success("Got mgmt");
-    }
-    req.onerror = function() {
-      failure("Got error");
-    }
-  } catch (e) {
-    failure("Got exception " + e);
-  }
-}
-
 var gData = [
   {
     perm: ["webapps-manage"],
-    verifier: verifier.toSource(),
+    obj: "mozApps.mgmt",
+    idl: "mozIDOMApplicationMgmt",
   }
 ]
 </script>
