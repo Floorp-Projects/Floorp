@@ -182,7 +182,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mInRunningStateMachine(false),
   mSyncPointInMediaStream(-1),
   mSyncPointInDecodedStream(-1),
-  mResetPlayStartTime(false),
   mPlayDuration(0),
   mStartTime(-1),
   mEndTime(-1),
@@ -195,7 +194,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mVolume(1.0),
   mPlaybackRate(1.0),
   mPreservesPitch(true),
-  mBasePosition(0),
   mAmpleVideoFrames(2),
   mLowAudioThresholdUsecs(LOW_AUDIO_USECS),
   mAmpleAudioThresholdUsecs(AMPLE_AUDIO_USECS),
@@ -564,8 +562,6 @@ bool
 MediaDecoderStateMachine::NeedToDecodeVideo()
 {
   AssertCurrentThreadInMonitor();
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
   return IsVideoDecoding() &&
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
           (!mMinimizePreroll && !HaveEnoughDecodedVideo()));
@@ -634,8 +630,6 @@ bool
 MediaDecoderStateMachine::NeedToDecodeAudio()
 {
   AssertCurrentThreadInMonitor();
-  NS_ASSERTION(OnStateMachineThread() || OnDecodeThread(),
-               "Should be on state machine or decode thread.");
   return IsAudioDecoding() &&
          ((mState == DECODER_STATE_SEEKING && mDecodeToSeekTarget) ||
           (!mMinimizePreroll &&
@@ -1403,7 +1397,7 @@ void MediaDecoderStateMachine::StopPlayback()
   mDecoder->NotifyPlaybackStopped();
 
   if (IsPlaying()) {
-    mPlayDuration = GetClock();
+    mPlayDuration = GetClock() - mStartTime;
     mPlayStartTime = TimeStamp();
   }
   // Notify the audio thread, so that it notices that we've stopped playing,
@@ -2333,12 +2327,6 @@ void MediaDecoderStateMachine::DecodeSeek()
     UpdatePlaybackPositionInternal(seekTime);
   }
 
-  // Update mBasePosition only after StopPlayback() which will call GetClock()
-  // which will call GetVideoStreamPosition() which will read mBasePosition.
-  // If we update mBasePosition too early in Seek(), |pos -= mBasePosition|
-  // will be wrong and assertion will fail in GetVideoStreamPosition().
-  mBasePosition = seekTime - mStartTime;
-
   // SeekingStarted will do a UpdateReadyStateForData which will
   // inform the element and its users that we have no frames
   // to display
@@ -2809,16 +2797,11 @@ int64_t MediaDecoderStateMachine::GetVideoStreamPosition()
     return mPlayDuration + mStartTime;
   }
 
-  // The playbackRate has been just been changed, reset the playstartTime.
-  if (mResetPlayStartTime) {
-    mPlayStartTime = TimeStamp::Now();
-    mResetPlayStartTime = false;
-  }
-
-  int64_t pos = DurationToUsecs(TimeStamp::Now() - mPlayStartTime) + mPlayDuration;
-  pos -= mBasePosition;
-  NS_ASSERTION(pos >= 0, "Video stream position should be positive.");
-  return mBasePosition + pos * mPlaybackRate + mStartTime;
+  // Time elapsed since we started playing.
+  int64_t delta = DurationToUsecs(TimeStamp::Now() - mPlayStartTime);
+  // Take playback rate into account.
+  delta *= mPlaybackRate;
+  return mStartTime + mPlayDuration + delta;
 }
 
 int64_t MediaDecoderStateMachine::GetClock()
@@ -2903,7 +2886,7 @@ void MediaDecoderStateMachine::AdvanceFrame()
     // Current frame has already been presented, wait until it's time to
     // present the next frame.
     if (frame && !currentFrame) {
-      int64_t now = IsPlaying() ? clock_time : mPlayDuration;
+      int64_t now = IsPlaying() ? clock_time : mStartTime + mPlayDuration;
 
       remainingTime = frame->mTime - now;
     }
@@ -3352,16 +3335,13 @@ void MediaDecoderStateMachine::SetPlaybackRate(double aPlaybackRate)
     return;
   }
 
-  // Get position of the last time we changed the rate.
-  if (!HasAudio()) {
-    // mBasePosition is a position in the video stream, not an absolute time.
-    if (mState == DECODER_STATE_SEEKING) {
-      mBasePosition = mCurrentSeekTarget.mTime - mStartTime;
-    } else {
-      mBasePosition = GetVideoStreamPosition();
-    }
-    mPlayDuration = mBasePosition;
-    mResetPlayStartTime = true;
+  // AudioStream will handle playback rate change when we have audio.
+  // Do nothing while we are not playing. Change in playback rate will
+  // take effect next time we start playing again.
+  if (!HasAudio() && IsPlaying()) {
+    // Remember how much time we've spent in playing the media
+    // for playback rate will change from now on.
+    mPlayDuration = GetVideoStreamPosition() - mStartTime;
     mPlayStartTime = TimeStamp::Now();
   }
 
