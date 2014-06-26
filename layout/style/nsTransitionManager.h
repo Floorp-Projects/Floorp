@@ -158,9 +158,9 @@ public:
     bool aCreateIfNeeded);
 
 protected:
-  virtual void ElementDataRemoved() MOZ_OVERRIDE;
+  virtual void ElementCollectionRemoved() MOZ_OVERRIDE;
   virtual void
-  AddElementData(ElementAnimationCollection* aData) MOZ_OVERRIDE;
+  AddElementCollection(ElementAnimationCollection* aCollection) MOZ_OVERRIDE;
 
 private:
   void
