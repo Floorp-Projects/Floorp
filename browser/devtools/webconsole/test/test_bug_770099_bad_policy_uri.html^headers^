@@ -1,2 +1,0 @@
-X-Content-Security-Policy: policy-uri http://example.com/some_policy
-Content-type: text/html; charset=utf-8

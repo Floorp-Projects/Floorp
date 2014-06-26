@@ -10,18 +10,6 @@
 <pre id="test">
 <script class="testbody" type='application/javascript;version=1.8'>
 
-// In varying quantities:
-// ASSERTION: Clock should go forwards if the playback rate is > 0.:
-//            'mCurrentFrameTime <= clock_time || mPlaybackRate <= 0',
-//            file MediaDecoderStateMachine.cpp, line 2379
-if (navigator.platform.startsWith("Win")) {
-  SimpleTest.expectAssertions(1, 6);
-} else if (navigator.platform.startsWith("Mac")) {
-  SimpleTest.expectAssertions(2, 7);
-} else if (navigator.platform.startsWith("Linux arm")) {
-  SimpleTest.expectAssertions(3, 11);
-}
-
 let manager = new MediaTestManager;
 
 function ontimeupdate(e) {
@@ -46,9 +34,7 @@ function onpaused(e) {
 
 function finish_test(element) {
   dump(element.token + " finish_test.\n");
-  if (element.parentNode)
-    element.parentNode.removeChild(element);
-  element.src="";
+  removeNodeAndSource(element);
   manager.finished(element.token);
 }
 
@@ -59,6 +45,7 @@ function startTest(test, token) {
   element.token = token;
   element.controls = true;
   element.playbackRate = 0.5;
+  element.preload = "metadata";
   element.addEventListener("timeupdate", ontimeupdate);
   element.addEventListener("pause", onpaused);
   element.addEventListener("loadedmetadata", function() {
