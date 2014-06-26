@@ -295,6 +295,10 @@ public:
 
   static bool HasFeatureDetectionSupport(JSContext* aCx, JSObject* aGlobal);
 
+#ifdef MOZ_B2G
+  static bool HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal);
+#endif
+
   nsPIDOMWindow* GetParentObject() const
   {
     return GetWindow();
