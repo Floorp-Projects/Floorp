@@ -299,9 +299,15 @@ fi
 # created, we check for modutil to know whether the build
 # is complete. If a new file is created after that, the 
 # following test for modutil should check for that instead.
+# Exception: when building softoken only, shlibsign is the
+# last file created.
+if [ ${NSS_BUILD_SOFTOKEN_ONLY} -eq "1" ]; then
+  LAST_FILE_BUILT=shlibsign
+else
+  LAST_FILE_BUILT=modutil
+fi
 
-if [ ! -f ${DIST}/${OBJDIR}/bin/modutil -a  \
-     ! -f ${DIST}/${OBJDIR}/bin/modutil.exe ]; then
+if [ ! -f ${DIST}/${OBJDIR}/bin/${LAST_FILE_BUILT}${PROG_SUFFIX} ]; then
     echo "Build Incomplete. Aborting test." >> ${LOGFILE}
     html_head "Testing Initialization"
     Exit "Checking for build"

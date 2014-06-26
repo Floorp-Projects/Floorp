@@ -227,16 +227,16 @@ MoveEmitterX86::breakCycle(const MoveOperand &to, MoveOp::Type type)
     switch (type) {
       case MoveOp::FLOAT32:
         if (to.isMemory()) {
-            masm.loadFloat32(toAddress(to), ScratchFloatReg);
-            masm.storeFloat32(ScratchFloatReg, cycleSlot());
+            masm.loadFloat32(toAddress(to), ScratchFloat32Reg);
+            masm.storeFloat32(ScratchFloat32Reg, cycleSlot());
         } else {
             masm.storeFloat32(to.floatReg(), cycleSlot());
         }
         break;
       case MoveOp::DOUBLE:
         if (to.isMemory()) {
-            masm.loadDouble(toAddress(to), ScratchFloatReg);
-            masm.storeDouble(ScratchFloatReg, cycleSlot());
+            masm.loadDouble(toAddress(to), ScratchDoubleReg);
+            masm.storeDouble(ScratchDoubleReg, cycleSlot());
         } else {
             masm.storeDouble(to.floatReg(), cycleSlot());
         }
@@ -274,8 +274,8 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(float));
         if (to.isMemory()) {
-            masm.loadFloat32(cycleSlot(), ScratchFloatReg);
-            masm.storeFloat32(ScratchFloatReg, toAddress(to));
+            masm.loadFloat32(cycleSlot(), ScratchFloat32Reg);
+            masm.storeFloat32(ScratchFloat32Reg, toAddress(to));
         } else {
             masm.loadFloat32(cycleSlot(), to.floatReg());
         }
@@ -284,8 +284,8 @@ MoveEmitterX86::completeCycle(const MoveOperand &to, MoveOp::Type type)
         JS_ASSERT(pushedAtCycle_ != -1);
         JS_ASSERT(pushedAtCycle_ - pushedAtStart_ >= sizeof(double));
         if (to.isMemory()) {
-            masm.loadDouble(cycleSlot(), ScratchFloatReg);
-            masm.storeDouble(ScratchFloatReg, toAddress(to));
+            masm.loadDouble(cycleSlot(), ScratchDoubleReg);
+            masm.storeDouble(ScratchDoubleReg, toAddress(to));
         } else {
             masm.loadDouble(cycleSlot(), to.floatReg());
         }
@@ -388,8 +388,8 @@ MoveEmitterX86::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory move.
         JS_ASSERT(from.isMemory());
-        masm.loadFloat32(toAddress(from), ScratchFloatReg);
-        masm.storeFloat32(ScratchFloatReg, toAddress(to));
+        masm.loadFloat32(toAddress(from), ScratchFloat32Reg);
+        masm.storeFloat32(ScratchFloat32Reg, toAddress(to));
     }
 }
 
@@ -406,8 +406,8 @@ MoveEmitterX86::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
     } else {
         // Memory to memory move.
         JS_ASSERT(from.isMemory());
-        masm.loadDouble(toAddress(from), ScratchFloatReg);
-        masm.storeDouble(ScratchFloatReg, toAddress(to));
+        masm.loadDouble(toAddress(from), ScratchDoubleReg);
+        masm.storeDouble(ScratchDoubleReg, toAddress(to));
     }
 }
 

@@ -294,21 +294,39 @@ AutoJSAPI::InitWithLegacyErrorReporting(nsIGlobalObject* aGlobalObject)
 }
 
 bool
-AutoJSAPI::InitUsingWin(nsPIDOMWindow* aWindow, JSContext* aCx)
+AutoJSAPI::Init(nsPIDOMWindow* aWindow, JSContext* aCx)
 {
   return Init(static_cast<nsGlobalWindow*>(aWindow), aCx);
 }
 
 bool
-AutoJSAPI::InitUsingWin(nsPIDOMWindow* aWindow)
+AutoJSAPI::Init(nsPIDOMWindow* aWindow)
 {
   return Init(static_cast<nsGlobalWindow*>(aWindow));
 }
 
 bool
-AutoJSAPI::InitWithLegacyErrorReportingUsingWin(nsPIDOMWindow* aWindow)
+AutoJSAPI::Init(nsGlobalWindow* aWindow, JSContext* aCx)
+{
+  return Init(static_cast<nsIGlobalObject*>(aWindow), aCx);
+}
+
+bool
+AutoJSAPI::Init(nsGlobalWindow* aWindow)
+{
+  return Init(static_cast<nsIGlobalObject*>(aWindow));
+}
+
+bool
+AutoJSAPI::InitWithLegacyErrorReporting(nsPIDOMWindow* aWindow)
 {
   return InitWithLegacyErrorReporting(static_cast<nsGlobalWindow*>(aWindow));
+}
+
+bool
+AutoJSAPI::InitWithLegacyErrorReporting(nsGlobalWindow* aWindow)
+{
+  return InitWithLegacyErrorReporting(static_cast<nsIGlobalObject*>(aWindow));
 }
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
