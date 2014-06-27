@@ -84,7 +84,7 @@ ArchiveZipItem::File(ArchiveReader* aArchiveReader)
     return nullptr;
   }
 
-  return new DOMFileCC(
+  return new DOMFile(
     new ArchiveZipFileImpl(filename,
                            NS_ConvertUTF8toUTF16(GetType()),
                            StrToInt32(mCentralStruct.orglen),

@@ -106,7 +106,7 @@ already_AddRefed<nsIDOMFile>
 MutableFile::CreateFileObject(FileHandle* aFileHandle, uint32_t aFileSize)
 {
   nsCOMPtr<nsIDOMFile> file =
-    new DOMFileCC(new FileImpl(mName, mType, aFileSize, mFile, aFileHandle));
+    new DOMFile(new FileImpl(mName, mType, aFileSize, mFile, aFileHandle));
 
   return file.forget();
 }
