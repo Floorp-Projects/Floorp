@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include "assembler/assembler/AssemblerBufferWithConstantPool.h"
 #include "jit/arm/Architecture-arm.h"
 #include "jit/CompactBuffer.h"
 #include "jit/IonCode.h"
