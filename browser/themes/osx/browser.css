@@ -3626,7 +3626,6 @@ notification[value="translation"] {
 }
 
 button.translate-infobar-element {
-  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)) repeat scroll 0% 0% padding-box transparent;
   color: #333333;
   border: 1px solid;
   border-color: rgba(23, 51, 78, 0.15) rgba(23, 51, 78, 0.17) rgba(23, 51, 78, 0.2);
@@ -3650,7 +3649,6 @@ label.translate-infobar-element {
 }
 
 button.translate-infobar-element:hover {
-  background: #f0f0f0;
   box-shadow: 0 1px 0 hsla(0,0%,100%,.1) inset,  0 0 0 1px hsla(0,0%,100%,.05) inset,  0 1px 0 hsla(210,54%,20%,.01),  0 0 4px hsla(206,100%,20%,.1);
 }
 
@@ -3669,6 +3667,14 @@ button.translate-infobar-element[anonid="translate"] {
 
 button.translate-infobar-element[anonid="translate"]:hover {
   background-image: linear-gradient(#66bdff, #0d9eff);
+}
+
+button.translate-infobar-element[anonid="notNow"] {
+  background: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.1)) repeat scroll 0% 0% padding-box transparent;
+}
+
+button.translate-infobar-element[anonid="notNow"]:hover {
+  background: #f0f0f0;
 }
 
 button.translate-infobar-element.options-menu-button {
