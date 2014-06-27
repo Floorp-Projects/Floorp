@@ -24,6 +24,9 @@ this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
  * @param {nsIDOMWindow} targetWindow The content window to attach the API.
  */
 function injectLoopAPI(targetWindow) {
+  let ringer;
+  let ringerStopper;
+
   let api = {
     /**
      * Sets and gets the "do not disturb" mode activation flag.
@@ -149,6 +152,50 @@ function injectLoopAPI(targetWindow) {
       value: function(prefName) {
         return MozLoopService.getLoopCharPref(prefName);
       }
+    },
+
+    /**
+     * Starts alerting the user about an incoming call
+     */
+    startAlerting: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function() {
+        let chromeWindow = getChromeWindow(targetWindow);
+        chromeWindow.getAttention();
+        ringer = new chromeWindow.Audio();
+        ringer.src = Services.prefs.getCharPref("loop.ringtone");
+        ringer.loop = true;
+        ringer.load();
+        ringer.play();
+        targetWindow.document.addEventListener("visibilitychange",
+          ringerStopper = function(event) {
+            if (event.currentTarget.hidden) {
+              api.stopAlerting.value();
+            }
+          });
+      }
+    },
+
+    /**
+     * Stops alerting the user about an incoming call
+     */
+    stopAlerting: {
+      enumerable: true,
+      configurable: true,
+      writable: true,
+      value: function() {
+        if (ringerStopper) {
+          targetWindow.document.removeEventListener("visibilitychange",
+                                                    ringerStopper);
+          ringerStopper = null;
+        }
+        if (ringer) {
+          ringer.pause();
+          ringer = null;
+        }
+      }
     }
   };
 
@@ -167,4 +214,13 @@ function injectLoopAPI(targetWindow) {
 
   // Handle window.close correctly on the panel and chatbox.
   hookWindowCloseForPanelClose(targetWindow);
+}
+
+function getChromeWindow(contentWin) {
+  return contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIWebNavigation)
+                   .QueryInterface(Ci.nsIDocShellTreeItem)
+                   .rootTreeItem
+                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindow);
 }

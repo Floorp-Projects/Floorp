@@ -19,11 +19,12 @@
 // nsAString
 
 uint32_t
-nsAString::BeginReading(const char_type **begin, const char_type **end) const
+nsAString::BeginReading(const char_type** aBegin, const char_type** aEnd) const
 {
-  uint32_t len = NS_StringGetData(*this, begin);
-  if (end)
-    *end = *begin + len;
+  uint32_t len = NS_StringGetData(*this, aBegin);
+  if (aEnd) {
+    *aEnd = *aBegin + len;
+  }
 
   return len;
 }
@@ -31,7 +32,7 @@ nsAString::BeginReading(const char_type **begin, const char_type **end) const
 const nsAString::char_type*
 nsAString::BeginReading() const
 {
-  const char_type *data;
+  const char_type* data;
   NS_StringGetData(*this, &data);
   return data;
 }
@@ -39,17 +40,18 @@ nsAString::BeginReading() const
 const nsAString::char_type*
 nsAString::EndReading() const
 {
-  const char_type *data;
+  const char_type* data;
   uint32_t len = NS_StringGetData(*this, &data);
   return data + len;
 }
 
 uint32_t
-nsAString::BeginWriting(char_type **begin, char_type **end, uint32_t newSize)
+nsAString::BeginWriting(char_type** aBegin, char_type** aEnd, uint32_t aNewSize)
 {
-  uint32_t len = NS_StringGetMutableData(*this, newSize, begin);
-  if (end)
-    *end = *begin + len;
+  uint32_t len = NS_StringGetMutableData(*this, aNewSize, aBegin);
+  if (aEnd) {
+    *aEnd = *aBegin + len;
+  }
 
   return len;
 }
@@ -57,7 +59,7 @@ nsAString::BeginWriting(char_type **begin, char_type **end, uint32_t newSize)
 nsAString::char_type*
 nsAString::BeginWriting(uint32_t aLen)
 {
-  char_type *data;
+  char_type* data;
   NS_StringGetMutableData(*this, aLen, &data);
   return data;
 }
@@ -65,7 +67,7 @@ nsAString::BeginWriting(uint32_t aLen)
 nsAString::char_type*
 nsAString::EndWriting()
 {
-  char_type *data;
+  char_type* data;
   uint32_t len = NS_StringGetMutableData(*this, UINT32_MAX, &data);
   return data + len;
 }
@@ -73,58 +75,66 @@ nsAString::EndWriting()
 bool
 nsAString::SetLength(uint32_t aLen)
 {
-  char_type *data;
+  char_type* data;
   NS_StringGetMutableData(*this, aLen, &data);
   return data != nullptr;
 }
 
 void
-nsAString::AssignLiteral(const char *aStr)
+nsAString::AssignLiteral(const char* aStr)
 {
   uint32_t len = strlen(aStr);
-  char16_t *buf = BeginWriting(len);
-  if (!buf)
+  char16_t* buf = BeginWriting(len);
+  if (!buf) {
     return;
+  }
 
-  for (; *aStr; ++aStr, ++buf)
+  for (; *aStr; ++aStr, ++buf) {
     *buf = *aStr;
+  }
 }
 
 void
-nsAString::AppendLiteral(const char *aASCIIStr)
+nsAString::AppendLiteral(const char* aASCIIStr)
 {
   uint32_t appendLen = strlen(aASCIIStr);
 
   uint32_t thisLen = Length();
-  char16_t *begin, *end;
+  char16_t* begin;
+  char16_t* end;
   BeginWriting(&begin, &end, appendLen + thisLen);
-  if (!begin)
+  if (!begin) {
     return;
+  }
 
-  for (begin += thisLen; begin < end; ++begin, ++aASCIIStr)
+  for (begin += thisLen; begin < end; ++begin, ++aASCIIStr) {
     *begin = *aASCIIStr;
+  }
 }
 
 void
-nsAString::StripChars(const char *aSet)
+nsAString::StripChars(const char* aSet)
 {
   nsString copy(*this);
 
-  const char_type *source, *sourceEnd;
+  const char_type* source;
+  const char_type* sourceEnd;
   copy.BeginReading(&source, &sourceEnd);
 
-  char_type *dest;
+  char_type* dest;
   BeginWriting(&dest);
-  if (!dest)
+  if (!dest) {
     return;
+  }
 
-  char_type *curDest = dest;
+  char_type* curDest = dest;
 
   for (; source < sourceEnd; ++source) {
-    const char *test;
+    const char* test;
     for (test = aSet; *test; ++test) {
-      if (*source == char_type(*test))
+      if (*source == char_type(*test)) {
         break;
+      }
     }
 
     if (!*test) {
@@ -138,23 +148,26 @@ nsAString::StripChars(const char *aSet)
 }
 
 void
-nsAString::Trim(const char *aSet, bool aLeading, bool aTrailing)
+nsAString::Trim(const char* aSet, bool aLeading, bool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
 
-  const char16_t *start, *end;
+  const char16_t* start;
+  const char16_t* end;
   uint32_t cutLen;
 
   if (aLeading) {
     BeginReading(&start, &end);
     for (cutLen = 0; start < end; ++start, ++cutLen) {
-      const char *test;
+      const char* test;
       for (test = aSet; *test; ++test) {
-        if (*test == *start)
+        if (*test == *start) {
           break;
+        }
       }
-      if (!*test)
+      if (!*test) {
         break;
+      }
     }
     if (cutLen) {
       NS_StringCutData(*this, 0, cutLen);
@@ -164,13 +177,15 @@ nsAString::Trim(const char *aSet, bool aLeading, bool aTrailing)
     uint32_t len = BeginReading(&start, &end);
     --end;
     for (cutLen = 0; end >= start; --end, ++cutLen) {
-      const char *test;
+      const char* test;
       for (test = aSet; *test; ++test) {
-        if (*test == *end)
+        if (*test == *end) {
           break;
+        }
       }
-      if (!*test)
+      if (!*test) {
         break;
+      }
     }
     if (cutLen) {
       NS_StringCutData(*this, len - cutLen, cutLen);
@@ -179,91 +194,98 @@ nsAString::Trim(const char *aSet, bool aLeading, bool aTrailing)
 }
 
 int32_t
-nsAString::DefaultComparator(const char_type *a, const char_type *b,
-                             uint32_t len)
+nsAString::DefaultComparator(const char_type* aStrA, const char_type* aStrB,
+                             uint32_t aLen)
 {
-  for (const char_type *end = a + len; a < end; ++a, ++b) {
-    if (*a == *b)
+  for (const char_type* end = aStrA + aLen; aStrA < end; ++aStrA, ++aStrB) {
+    if (*aStrA == *aStrB) {
       continue;
+    }
 
-    return *a < *b ? -1 : 1;
+    return *aStrA < *aStrB ? -1 : 1;
   }
 
   return 0;
 }
 
 int32_t
-nsAString::Compare(const char_type *other, ComparatorFunc c) const
+nsAString::Compare(const char_type* aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
+  const char_type* cself;
   uint32_t selflen = NS_StringGetData(*this, &cself);
-  uint32_t otherlen = NS_strlen(other);
+  uint32_t otherlen = NS_strlen(aOther);
   uint32_t comparelen = selflen <= otherlen ? selflen : otherlen;
 
-  int32_t result = c(cself, other, comparelen);
+  int32_t result = aComparator(cself, aOther, comparelen);
   if (result == 0) {
-    if (selflen < otherlen)
+    if (selflen < otherlen) {
       return -1;
-    else if (selflen > otherlen)
+    } else if (selflen > otherlen) {
       return 1;
+    }
   }
   return result;
 }
 
 int32_t
-nsAString::Compare(const self_type &other, ComparatorFunc c) const
+nsAString::Compare(const self_type& aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself, *cother;
+  const char_type* cself;
+  const char_type* cother;
   uint32_t selflen = NS_StringGetData(*this, &cself);
-  uint32_t otherlen = NS_StringGetData(other, &cother);
+  uint32_t otherlen = NS_StringGetData(aOther, &cother);
   uint32_t comparelen = selflen <= otherlen ? selflen : otherlen;
 
-  int32_t result = c(cself, cother, comparelen);
+  int32_t result = aComparator(cself, cother, comparelen);
   if (result == 0) {
-    if (selflen < otherlen)
+    if (selflen < otherlen) {
       return -1;
-    else if (selflen > otherlen)
+    } else if (selflen > otherlen) {
       return 1;
+    }
   }
   return result;
 }
 
 bool
-nsAString::Equals(const char_type *other, ComparatorFunc c) const
+nsAString::Equals(const char_type* aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
+  const char_type* cself;
   uint32_t selflen = NS_StringGetData(*this, &cself);
-  uint32_t otherlen = NS_strlen(other);
+  uint32_t otherlen = NS_strlen(aOther);
 
-  if (selflen != otherlen)
+  if (selflen != otherlen) {
     return false;
+  }
 
-  return c(cself, other, selflen) == 0;
+  return aComparator(cself, aOther, selflen) == 0;
 }
 
 bool
-nsAString::Equals(const self_type &other, ComparatorFunc c) const
+nsAString::Equals(const self_type& aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
-  const char_type *cother;
+  const char_type* cself;
+  const char_type* cother;
   uint32_t selflen = NS_StringGetData(*this, &cself);
-  uint32_t otherlen = NS_StringGetData(other, &cother);
+  uint32_t otherlen = NS_StringGetData(aOther, &cother);
 
-  if (selflen != otherlen)
+  if (selflen != otherlen) {
     return false;
+  }
 
-  return c(cself, cother, selflen) == 0;
+  return aComparator(cself, cother, selflen) == 0;
 }
 
 bool
-nsAString::EqualsLiteral(const char *aASCIIString) const
+nsAString::EqualsLiteral(const char* aASCIIString) const
 {
-  const char16_t *begin, *end;
+  const char16_t* begin;
+  const char16_t* end;
   BeginReading(&begin, &end);
 
   for (; begin < end; ++begin, ++aASCIIString) {
     if (!*aASCIIString || !NS_IsAscii(*begin) ||
-        (char) *begin != *aASCIIString) {
+        (char)*begin != *aASCIIString) {
       return false;
     }
   }
@@ -272,14 +294,15 @@ nsAString::EqualsLiteral(const char *aASCIIString) const
 }
 
 bool
-nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
+nsAString::LowerCaseEqualsLiteral(const char* aASCIIString) const
 {
-  const char16_t *begin, *end;
+  const char16_t* begin;
+  const char16_t* end;
   BeginReading(&begin, &end);
 
   for (; begin < end; ++begin, ++aASCIIString) {
     if (!*aASCIIString || !NS_IsAscii(*begin) ||
-        NS_ToLower((char) *begin) != *aASCIIString) {
+        NS_ToLower((char)*begin) != *aASCIIString) {
       return false;
     }
   }
@@ -289,79 +312,90 @@ nsAString::LowerCaseEqualsLiteral(const char *aASCIIString) const
 
 int32_t
 nsAString::Find(const self_type& aStr, uint32_t aOffset,
-                ComparatorFunc c) const
+                ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
-  if (aOffset > selflen)
+  if (aOffset > selflen) {
     return -1;
+  }
 
-  const char_type *other;
+  const char_type* other;
   uint32_t otherlen = aStr.BeginReading(&other);
 
-  if (otherlen > selflen - aOffset)
+  if (otherlen > selflen - aOffset) {
     return -1;
+  }
 
   // We want to stop searching otherlen characters before the end of the string
   end -= otherlen;
 
-  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
-    if (!c(cur, other, otherlen))
+  for (const char_type* cur = begin + aOffset; cur <= end; ++cur) {
+    if (!aComparator(cur, other, otherlen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
 
-static bool ns_strnmatch(const char16_t *aStr, const char* aSubstring,
-                           uint32_t aLen)
+static bool
+ns_strnmatch(const char16_t* aStr, const char* aSubstring, uint32_t aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
-    if (!NS_IsAscii(*aStr))
+    if (!NS_IsAscii(*aStr)) {
       return false;
+    }
 
-    if ((char) *aStr != *aSubstring)
+    if ((char)*aStr != *aSubstring) {
       return false;
+    }
   }
 
   return true;
 }
 
-static bool ns_strnimatch(const char16_t *aStr, const char* aSubstring,
-                            uint32_t aLen)
+static bool
+ns_strnimatch(const char16_t* aStr, const char* aSubstring, uint32_t aLen)
 {
   for (; aLen; ++aStr, ++aSubstring, --aLen) {
-    if (!NS_IsAscii(*aStr))
+    if (!NS_IsAscii(*aStr)) {
       return false;
+    }
 
-    if (NS_ToLower((char) *aStr) != NS_ToLower(*aSubstring))
+    if (NS_ToLower((char)*aStr) != NS_ToLower(*aSubstring)) {
       return false;
+    }
   }
 
   return true;
 }
 
 int32_t
-nsAString::Find(const char *aStr, uint32_t aOffset, bool aIgnoreCase) const
+nsAString::Find(const char* aStr, uint32_t aOffset, bool aIgnoreCase) const
 {
   bool (*match)(const char16_t*, const char*, uint32_t) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
-  if (aOffset > selflen)
+  if (aOffset > selflen) {
     return -1;
+  }
 
   uint32_t otherlen = strlen(aStr);
 
-  if (otherlen > selflen - aOffset)
+  if (otherlen > selflen - aOffset) {
     return -1;
+  }
 
   // We want to stop searching otherlen characters before the end of the string
   end -= otherlen;
 
-  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
+  for (const char_type* cur = begin + aOffset; cur <= end; ++cur) {
     if (match(cur, aStr, otherlen)) {
       return cur - begin;
     }
@@ -370,48 +404,56 @@ nsAString::Find(const char *aStr, uint32_t aOffset, bool aIgnoreCase) const
 }
 
 int32_t
-nsAString::RFind(const self_type& aStr, int32_t aOffset, ComparatorFunc c) const
+nsAString::RFind(const self_type& aStr, int32_t aOffset,
+                 ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
-  const char_type *other;
+  const char_type* other;
   uint32_t otherlen = aStr.BeginReading(&other);
 
-  if (selflen < otherlen)
+  if (selflen < otherlen) {
     return -1;
+  }
 
-  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen))
+  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen)) {
     end -= otherlen;
-  else
+  } else {
     end = begin + aOffset;
+  }
 
-  for (const char_type *cur = end; cur >= begin; --cur) {
-    if (!c(cur, other, otherlen))
+  for (const char_type* cur = end; cur >= begin; --cur) {
+    if (!aComparator(cur, other, otherlen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
 
 int32_t
-nsAString::RFind(const char *aStr, int32_t aOffset, bool aIgnoreCase) const
+nsAString::RFind(const char* aStr, int32_t aOffset, bool aIgnoreCase) const
 {
   bool (*match)(const char16_t*, const char*, uint32_t) =
     aIgnoreCase ? ns_strnimatch : ns_strnmatch;
 
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
   uint32_t otherlen = strlen(aStr);
-  
-  if (selflen < otherlen)
+
+  if (selflen < otherlen) {
     return -1;
+  }
 
-  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen))
+  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen)) {
     end -= otherlen;
-  else
+  } else {
     end = begin + aOffset;
+  }
 
-  for (const char_type *cur = end; cur >= begin; --cur) {
+  for (const char_type* cur = end; cur >= begin; --cur) {
     if (match(cur, aStr, otherlen)) {
       return cur - begin;
     }
@@ -422,16 +464,19 @@ nsAString::RFind(const char *aStr, int32_t aOffset, bool aIgnoreCase) const
 int32_t
 nsAString::FindChar(char_type aChar, uint32_t aOffset) const
 {
-  const char_type *start, *end;
+  const char_type* start;
+  const char_type* end;
   uint32_t len = BeginReading(&start, &end);
-  if (aOffset > len)
+  if (aOffset > len) {
     return -1;
+  }
 
-  const char_type *cur;
+  const char_type* cur;
 
   for (cur = start + aOffset; cur < end; ++cur) {
-    if (*cur == aChar)
+    if (*cur == aChar) {
       return cur - start;
+    }
   }
 
   return -1;
@@ -440,14 +485,16 @@ nsAString::FindChar(char_type aChar, uint32_t aOffset) const
 int32_t
 nsAString::RFindChar(char_type aChar) const
 {
-  const char16_t *start, *end;
+  const char16_t* start;
+  const char16_t* end;
   BeginReading(&start, &end);
 
   do {
     --end;
 
-    if (*end == aChar)
+    if (*end == aChar) {
       return end - start;
+    }
 
   } while (end >= start);
 
@@ -457,23 +504,23 @@ nsAString::RFindChar(char_type aChar) const
 void
 nsAString::AppendInt(int aInt, int32_t aRadix)
 {
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 8:
-    fmt = "%o";
-    break;
+    case 8:
+      fmt = "%o";
+      break;
 
-  case 10:
-    fmt = "%d";
-    break;
+    case 10:
+      fmt = "%d";
+      break;
 
-  case 16:
-    fmt = "%x";
-    break;
+    case 16:
+      fmt = "%x";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix");
-    fmt = "";
+    default:
+      NS_ERROR("Unrecognized radix");
+      fmt = "";
   };
 
   char buf[20];
@@ -487,61 +534,63 @@ nsAString::AppendInt(int aInt, int32_t aRadix)
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 int32_t
-nsAString::ToInteger(nsresult *aErrorCode, uint32_t aRadix) const
+nsAString::ToInteger(nsresult* aErrorCode, uint32_t aRadix) const
 {
   NS_ConvertUTF16toUTF8 narrow(*this);
 
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 10:
-    fmt = "%i";
-    break;
+    case 10:
+      fmt = "%i";
+      break;
 
-  case 16:
-    fmt = "%x";
-    break;
+    case 16:
+      fmt = "%x";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix!");
-    *aErrorCode = NS_ERROR_INVALID_ARG;
-    return 0;
+    default:
+      NS_ERROR("Unrecognized radix!");
+      *aErrorCode = NS_ERROR_INVALID_ARG;
+      return 0;
   }
 
   int32_t result = 0;
-  if (PR_sscanf(narrow.get(), fmt, &result) == 1)
+  if (PR_sscanf(narrow.get(), fmt, &result) == 1) {
     *aErrorCode = NS_OK;
-  else
+  } else {
     *aErrorCode = NS_ERROR_FAILURE;
+  }
 
   return result;
 }
 
 int64_t
-nsAString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
+nsAString::ToInteger64(nsresult* aErrorCode, uint32_t aRadix) const
 {
   NS_ConvertUTF16toUTF8 narrow(*this);
 
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 10:
-    fmt = "%lli";
-    break;
+    case 10:
+      fmt = "%lli";
+      break;
 
-  case 16:
-    fmt = "%llx";
-    break;
+    case 16:
+      fmt = "%llx";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix!");
-    *aErrorCode = NS_ERROR_INVALID_ARG;
-    return 0;
+    default:
+      NS_ERROR("Unrecognized radix!");
+      *aErrorCode = NS_ERROR_INVALID_ARG;
+      return 0;
   }
 
   int64_t result = 0;
-  if (PR_sscanf(narrow.get(), fmt, &result) == 1)
+  if (PR_sscanf(narrow.get(), fmt, &result) == 1) {
     *aErrorCode = NS_OK;
-  else
+  } else {
     *aErrorCode = NS_ERROR_FAILURE;
+  }
 
   return result;
 }
@@ -550,11 +599,12 @@ nsAString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
 // nsACString
 
 uint32_t
-nsACString::BeginReading(const char_type **begin, const char_type **end) const
+nsACString::BeginReading(const char_type** aBegin, const char_type** aEnd) const
 {
-  uint32_t len = NS_CStringGetData(*this, begin);
-  if (end)
-    *end = *begin + len;
+  uint32_t len = NS_CStringGetData(*this, aBegin);
+  if (aEnd) {
+    *aEnd = *aBegin + len;
+  }
 
   return len;
 }
@@ -562,7 +612,7 @@ nsACString::BeginReading(const char_type **begin, const char_type **end) const
 const nsACString::char_type*
 nsACString::BeginReading() const
 {
-  const char_type *data;
+  const char_type* data;
   NS_CStringGetData(*this, &data);
   return data;
 }
@@ -570,17 +620,19 @@ nsACString::BeginReading() const
 const nsACString::char_type*
 nsACString::EndReading() const
 {
-  const char_type *data;
+  const char_type* data;
   uint32_t len = NS_CStringGetData(*this, &data);
   return data + len;
 }
 
 uint32_t
-nsACString::BeginWriting(char_type **begin, char_type **end, uint32_t newSize)
+nsACString::BeginWriting(char_type** aBegin, char_type** aEnd,
+                         uint32_t aNewSize)
 {
-  uint32_t len = NS_CStringGetMutableData(*this, newSize, begin);
-  if (end)
-    *end = *begin + len;
+  uint32_t len = NS_CStringGetMutableData(*this, aNewSize, aBegin);
+  if (aEnd) {
+    *aEnd = *aBegin + len;
+  }
 
   return len;
 }
@@ -588,7 +640,7 @@ nsACString::BeginWriting(char_type **begin, char_type **end, uint32_t newSize)
 nsACString::char_type*
 nsACString::BeginWriting(uint32_t aLen)
 {
-  char_type *data;
+  char_type* data;
   NS_CStringGetMutableData(*this, aLen, &data);
   return data;
 }
@@ -596,7 +648,7 @@ nsACString::BeginWriting(uint32_t aLen)
 nsACString::char_type*
 nsACString::EndWriting()
 {
-  char_type *data;
+  char_type* data;
   uint32_t len = NS_CStringGetMutableData(*this, UINT32_MAX, &data);
   return data + len;
 }
@@ -604,31 +656,34 @@ nsACString::EndWriting()
 bool
 nsACString::SetLength(uint32_t aLen)
 {
-  char_type *data;
+  char_type* data;
   NS_CStringGetMutableData(*this, aLen, &data);
   return data != nullptr;
 }
 
 void
-nsACString::StripChars(const char *aSet)
+nsACString::StripChars(const char* aSet)
 {
   nsCString copy(*this);
 
-  const char_type *source, *sourceEnd;
+  const char_type* source;
+  const char_type* sourceEnd;
   copy.BeginReading(&source, &sourceEnd);
 
-  char_type *dest;
+  char_type* dest;
   BeginWriting(&dest);
-  if (!dest)
+  if (!dest) {
     return;
+  }
 
-  char_type *curDest = dest;
+  char_type* curDest = dest;
 
   for (; source < sourceEnd; ++source) {
-    const char *test;
+    const char* test;
     for (test = aSet; *test; ++test) {
-      if (*source == char_type(*test))
+      if (*source == char_type(*test)) {
         break;
+      }
     }
 
     if (!*test) {
@@ -642,23 +697,26 @@ nsACString::StripChars(const char *aSet)
 }
 
 void
-nsACString::Trim(const char *aSet, bool aLeading, bool aTrailing)
+nsACString::Trim(const char* aSet, bool aLeading, bool aTrailing)
 {
   NS_ASSERTION(aLeading || aTrailing, "Ineffective Trim");
 
-  const char *start, *end;
+  const char* start;
+  const char* end;
   uint32_t cutLen;
 
   if (aLeading) {
     BeginReading(&start, &end);
     for (cutLen = 0; start < end; ++start, ++cutLen) {
-      const char *test;
+      const char* test;
       for (test = aSet; *test; ++test) {
-        if (*test == *start)
+        if (*test == *start) {
           break;
+        }
       }
-      if (!*test)
+      if (!*test) {
         break;
+      }
     }
     if (cutLen) {
       NS_CStringCutData(*this, 0, cutLen);
@@ -668,13 +726,15 @@ nsACString::Trim(const char *aSet, bool aLeading, bool aTrailing)
     uint32_t len = BeginReading(&start, &end);
     --end;
     for (cutLen = 0; end >= start; --end, ++cutLen) {
-      const char *test;
+      const char* test;
       for (test = aSet; *test; ++test) {
-        if (*test == *end)
+        if (*test == *end) {
           break;
+        }
       }
-      if (!*test)
+      if (!*test) {
         break;
+      }
     }
     if (cutLen) {
       NS_CStringCutData(*this, len - cutLen, cutLen);
@@ -683,111 +743,122 @@ nsACString::Trim(const char *aSet, bool aLeading, bool aTrailing)
 }
 
 int32_t
-nsACString::DefaultComparator(const char_type *a, const char_type *b,
-                              uint32_t len)
+nsACString::DefaultComparator(const char_type* aStrA, const char_type* aStrB,
+                              uint32_t aLen)
 {
-  return memcmp(a, b, len);
+  return memcmp(aStrA, aStrB, aLen);
 }
 
 int32_t
-nsACString::Compare(const char_type *other, ComparatorFunc c) const
+nsACString::Compare(const char_type* aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
+  const char_type* cself;
   uint32_t selflen = NS_CStringGetData(*this, &cself);
-  uint32_t otherlen = strlen(other);
+  uint32_t otherlen = strlen(aOther);
   uint32_t comparelen = selflen <= otherlen ? selflen : otherlen;
 
-  int32_t result = c(cself, other, comparelen);
+  int32_t result = aComparator(cself, aOther, comparelen);
   if (result == 0) {
-    if (selflen < otherlen)
+    if (selflen < otherlen) {
       return -1;
-    else if (selflen > otherlen)
+    } else if (selflen > otherlen) {
       return 1;
+    }
   }
   return result;
 }
 
 int32_t
-nsACString::Compare(const self_type &other, ComparatorFunc c) const
+nsACString::Compare(const self_type& aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself, *cother;
+  const char_type* cself;
+  const char_type* cother;
   uint32_t selflen = NS_CStringGetData(*this, &cself);
-  uint32_t otherlen = NS_CStringGetData(other, &cother);
+  uint32_t otherlen = NS_CStringGetData(aOther, &cother);
   uint32_t comparelen = selflen <= otherlen ? selflen : otherlen;
 
-  int32_t result = c(cself, cother, comparelen);
+  int32_t result = aComparator(cself, cother, comparelen);
   if (result == 0) {
-    if (selflen < otherlen)
+    if (selflen < otherlen) {
       return -1;
-    else if (selflen > otherlen)
+    } else if (selflen > otherlen) {
       return 1;
+    }
   }
   return result;
 }
 
 bool
-nsACString::Equals(const char_type *other, ComparatorFunc c) const
+nsACString::Equals(const char_type* aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
+  const char_type* cself;
   uint32_t selflen = NS_CStringGetData(*this, &cself);
-  uint32_t otherlen = strlen(other);
+  uint32_t otherlen = strlen(aOther);
 
-  if (selflen != otherlen)
+  if (selflen != otherlen) {
     return false;
+  }
 
-  return c(cself, other, selflen) == 0;
+  return aComparator(cself, aOther, selflen) == 0;
 }
 
 bool
-nsACString::Equals(const self_type &other, ComparatorFunc c) const
+nsACString::Equals(const self_type& aOther, ComparatorFunc aComparator) const
 {
-  const char_type *cself;
-  const char_type *cother;
+  const char_type* cself;
+  const char_type* cother;
   uint32_t selflen = NS_CStringGetData(*this, &cself);
-  uint32_t otherlen = NS_CStringGetData(other, &cother);
+  uint32_t otherlen = NS_CStringGetData(aOther, &cother);
 
-  if (selflen != otherlen)
+  if (selflen != otherlen) {
     return false;
+  }
 
-  return c(cself, cother, selflen) == 0;
+  return aComparator(cself, cother, selflen) == 0;
 }
 
 int32_t
 nsACString::Find(const self_type& aStr, uint32_t aOffset,
-                 ComparatorFunc c) const
+                 ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
-  if (aOffset > selflen)
+  if (aOffset > selflen) {
     return -1;
+  }
 
-  const char_type *other;
+  const char_type* other;
   uint32_t otherlen = aStr.BeginReading(&other);
 
-  if (otherlen > selflen - aOffset)
+  if (otherlen > selflen - aOffset) {
     return -1;
+  }
 
   // We want to stop searching otherlen characters before the end of the string
   end -= otherlen;
 
-  for (const char_type *cur = begin + aOffset; cur <= end; ++cur) {
-    if (!c(cur, other, otherlen))
+  for (const char_type* cur = begin + aOffset; cur <= end; ++cur) {
+    if (!aComparator(cur, other, otherlen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
 
 int32_t
-nsACString::Find(const char_type *aStr, ComparatorFunc c) const
+nsACString::Find(const char_type* aStr, ComparatorFunc aComparator) const
 {
-  return Find(aStr, strlen(aStr), c);
+  return Find(aStr, strlen(aStr), aComparator);
 }
 
 int32_t
-nsACString::Find(const char_type *aStr, uint32_t aLen, ComparatorFunc c) const
+nsACString::Find(const char_type* aStr, uint32_t aLen,
+                 ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
   if (aLen == 0) {
@@ -795,53 +866,62 @@ nsACString::Find(const char_type *aStr, uint32_t aLen, ComparatorFunc c) const
     return -1;
   }
 
-   if (aLen > selflen)
+  if (aLen > selflen) {
     return -1;
+  }
 
   // We want to stop searching otherlen characters before the end of the string
   end -= aLen;
 
-  for (const char_type *cur = begin; cur <= end; ++cur) {
-    if (!c(cur, aStr, aLen))
+  for (const char_type* cur = begin; cur <= end; ++cur) {
+    if (!aComparator(cur, aStr, aLen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
 
-int32_t 
-nsACString::RFind(const self_type& aStr, int32_t aOffset, ComparatorFunc c) const
+int32_t
+nsACString::RFind(const self_type& aStr, int32_t aOffset,
+                  ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
-  const char_type *other;
+  const char_type* other;
   uint32_t otherlen = aStr.BeginReading(&other);
 
-  if (selflen < otherlen)
+  if (selflen < otherlen) {
     return -1;
+  }
 
-  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen))
+  if (aOffset < 0 || uint32_t(aOffset) > (selflen - otherlen)) {
     end -= otherlen;
-  else
+  } else {
     end = begin + aOffset;
+  }
 
-  for (const char_type *cur = end; cur >= begin; --cur) {
-    if (!c(cur, other, otherlen))
+  for (const char_type* cur = end; cur >= begin; --cur) {
+    if (!aComparator(cur, other, otherlen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
 
-int32_t 
-nsACString::RFind(const char_type *aStr, ComparatorFunc c) const
+int32_t
+nsACString::RFind(const char_type* aStr, ComparatorFunc aComparator) const
 {
-  return RFind(aStr, strlen(aStr), c);
+  return RFind(aStr, strlen(aStr), aComparator);
 }
 
-int32_t 
-nsACString::RFind(const char_type *aStr, int32_t aLen, ComparatorFunc c) const
+int32_t
+nsACString::RFind(const char_type* aStr, int32_t aLen,
+                  ComparatorFunc aComparator) const
 {
-  const char_type *begin, *end;
+  const char_type* begin;
+  const char_type* end;
   uint32_t selflen = BeginReading(&begin, &end);
 
   if (aLen <= 0) {
@@ -849,15 +929,17 @@ nsACString::RFind(const char_type *aStr, int32_t aLen, ComparatorFunc c) const
     return -1;
   }
 
-  if (uint32_t(aLen) > selflen)
+  if (uint32_t(aLen) > selflen) {
     return -1;
+  }
 
   // We want to start searching otherlen characters before the end of the string
   end -= aLen;
 
-  for (const char_type *cur = end; cur >= begin; --cur) {
-    if (!c(cur, aStr, aLen))
+  for (const char_type* cur = end; cur >= begin; --cur) {
+    if (!aComparator(cur, aStr, aLen)) {
       return cur - begin;
+    }
   }
   return -1;
 }
@@ -865,16 +947,19 @@ nsACString::RFind(const char_type *aStr, int32_t aLen, ComparatorFunc c) const
 int32_t
 nsACString::FindChar(char_type aChar, uint32_t aOffset) const
 {
-  const char_type *start, *end;
+  const char_type* start;
+  const char_type* end;
   uint32_t len = BeginReading(&start, &end);
-  if (aOffset > len)
+  if (aOffset > len) {
     return -1;
+  }
 
-  const char_type *cur;
+  const char_type* cur;
 
   for (cur = start + aOffset; cur < end; ++cur) {
-    if (*cur == aChar)
+    if (*cur == aChar) {
       return cur - start;
+    }
   }
 
   return -1;
@@ -883,12 +968,14 @@ nsACString::FindChar(char_type aChar, uint32_t aOffset) const
 int32_t
 nsACString::RFindChar(char_type aChar) const
 {
-  const char *start, *end;
+  const char* start;
+  const char* end;
   BeginReading(&start, &end);
 
   for (; end >= start; --end) {
-    if (*end == aChar)
+    if (*end == aChar) {
       return end - start;
+    }
   }
 
   return -1;
@@ -897,23 +984,23 @@ nsACString::RFindChar(char_type aChar) const
 void
 nsACString::AppendInt(int aInt, int32_t aRadix)
 {
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 8:
-    fmt = "%o";
-    break;
+    case 8:
+      fmt = "%o";
+      break;
 
-  case 10:
-    fmt = "%d";
-    break;
+    case 10:
+      fmt = "%d";
+      break;
 
-  case 16:
-    fmt = "%x";
-    break;
+    case 16:
+      fmt = "%x";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix");
-    fmt = "";
+    default:
+      NS_ERROR("Unrecognized radix");
+      fmt = "";
   };
 
   char buf[20];
@@ -925,57 +1012,59 @@ nsACString::AppendInt(int aInt, int32_t aRadix)
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 int32_t
-nsACString::ToInteger(nsresult *aErrorCode, uint32_t aRadix) const
+nsACString::ToInteger(nsresult* aErrorCode, uint32_t aRadix) const
 {
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 10:
-    fmt = "%i";
-    break;
+    case 10:
+      fmt = "%i";
+      break;
 
-  case 16:
-    fmt = "%x";
-    break;
+    case 16:
+      fmt = "%x";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix!");
-    *aErrorCode = NS_ERROR_INVALID_ARG;
-    return 0;
+    default:
+      NS_ERROR("Unrecognized radix!");
+      *aErrorCode = NS_ERROR_INVALID_ARG;
+      return 0;
   }
 
   int32_t result = 0;
-  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1)
+  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1) {
     *aErrorCode = NS_OK;
-  else
+  } else {
     *aErrorCode = NS_ERROR_FAILURE;
+  }
 
   return result;
 }
 
 int64_t
-nsACString::ToInteger64(nsresult *aErrorCode, uint32_t aRadix) const
+nsACString::ToInteger64(nsresult* aErrorCode, uint32_t aRadix) const
 {
-  const char *fmt;
+  const char* fmt;
   switch (aRadix) {
-  case 10:
-    fmt = "%lli";
-    break;
+    case 10:
+      fmt = "%lli";
+      break;
 
-  case 16:
-    fmt = "%llx";
-    break;
+    case 16:
+      fmt = "%llx";
+      break;
 
-  default:
-    NS_ERROR("Unrecognized radix!");
-    *aErrorCode = NS_ERROR_INVALID_ARG;
-    return 0;
+    default:
+      NS_ERROR("Unrecognized radix!");
+      *aErrorCode = NS_ERROR_INVALID_ARG;
+      return 0;
   }
 
   int64_t result = 0;
-  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1)
+  if (PR_sscanf(nsCString(*this).get(), fmt, &result) == 1) {
     *aErrorCode = NS_OK;
-  else
+  } else {
     *aErrorCode = NS_ERROR_FAILURE;
+  }
 
   return result;
 }
@@ -989,8 +1078,9 @@ nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
   const char16_t* data;
   uint32_t len = NS_StringGetData(aStr, &data);
 
-  if (aStartPos > len)
+  if (aStartPos > len) {
     aStartPos = len;
+  }
 
   NS_StringContainerInit2(*this, data + aStartPos, len - aStartPos,
                           NS_STRING_CONTAINER_INIT_DEPEND |
@@ -1004,11 +1094,13 @@ nsDependentSubstring::nsDependentSubstring(const abstract_string_type& aStr,
   const char16_t* data;
   uint32_t len = NS_StringGetData(aStr, &data);
 
-  if (aStartPos > len)
+  if (aStartPos > len) {
     aStartPos = len;
+  }
 
-  if (aStartPos + aLength > len)
+  if (aStartPos + aLength > len) {
     aLength = len - aStartPos;
+  }
 
   NS_StringContainerInit2(*this, data + aStartPos, aLength,
                           NS_STRING_CONTAINER_INIT_DEPEND |
@@ -1021,8 +1113,9 @@ nsDependentCSubstring::nsDependentCSubstring(const abstract_string_type& aStr,
   const char* data;
   uint32_t len = NS_CStringGetData(aStr, &data);
 
-  if (aStartPos > len)
+  if (aStartPos > len) {
     aStartPos = len;
+  }
 
   NS_CStringContainerInit2(*this, data + aStartPos, len - aStartPos,
                            NS_CSTRING_CONTAINER_INIT_DEPEND |
@@ -1036,11 +1129,13 @@ nsDependentCSubstring::nsDependentCSubstring(const abstract_string_type& aStr,
   const char* data;
   uint32_t len = NS_CStringGetData(aStr, &data);
 
-  if (aStartPos > len)
+  if (aStartPos > len) {
     aStartPos = len;
+  }
 
-  if (aStartPos + aLength > len)
+  if (aStartPos + aLength > len) {
     aLength = len - aStartPos;
+  }
 
   NS_CStringContainerInit2(*this, data + aStartPos, aLength,
                            NS_CSTRING_CONTAINER_INIT_DEPEND |
@@ -1060,22 +1155,24 @@ ToNewUTF8String(const nsAString& aSource)
 void
 CompressWhitespace(nsAString& aString)
 {
-  char16_t *start;
+  char16_t* start;
   uint32_t len = NS_StringGetMutableData(aString, UINT32_MAX, &start);
-  char16_t *end = start + len;
-  char16_t *from = start, *to = start;
+  char16_t* end = start + len;
+  char16_t* from = start, *to = start;
 
   // Skip any leading whitespace
-  while (from < end && NS_IsAsciiWhitespace(*from))
+  while (from < end && NS_IsAsciiWhitespace(*from)) {
     from++;
+  }
 
   while (from < end) {
     char16_t theChar = *from++;
 
     if (NS_IsAsciiWhitespace(theChar)) {
-      // We found a whitespace char, so skip over any more 
-      while (from < end && NS_IsAsciiWhitespace(*from))
-        from++;  
+      // We found a whitespace char, so skip over any more
+      while (from < end && NS_IsAsciiWhitespace(*from)) {
+        from++;
+      }
 
       // Turn all whitespace into spaces
       theChar = ' ';
@@ -1085,8 +1182,9 @@ CompressWhitespace(nsAString& aString)
   }
 
   // Drop any trailing space
-  if (to > start && to[-1] == ' ')
+  if (to > start && to[-1] == ' ') {
     to--;
+  }
 
   // Re-terminate the string
   *to = '\0';
@@ -1098,7 +1196,8 @@ CompressWhitespace(nsAString& aString)
 uint32_t
 ToLowerCase(nsACString& aStr)
 {
-  char *begin, *end;
+  char* begin;
+  char* end;
   uint32_t len = aStr.BeginWriting(&begin, &end);
 
   for (; begin < end; ++begin) {
@@ -1111,7 +1210,8 @@ ToLowerCase(nsACString& aStr)
 uint32_t
 ToUpperCase(nsACString& aStr)
 {
-  char *begin, *end;
+  char* begin;
+  char* end;
   uint32_t len = aStr.BeginWriting(&begin, &end);
 
   for (; begin < end; ++begin) {
@@ -1124,10 +1224,11 @@ ToUpperCase(nsACString& aStr)
 uint32_t
 ToLowerCase(const nsACString& aSrc, nsACString& aDest)
 {
-  const char *begin,  *end;
+  const char* begin;
+  const char* end;
   uint32_t len = aSrc.BeginReading(&begin, &end);
 
-  char *dest;
+  char* dest;
   NS_CStringGetMutableData(aDest, len, &dest);
 
   for (; begin < end; ++begin, ++dest) {
@@ -1140,10 +1241,11 @@ ToLowerCase(const nsACString& aSrc, nsACString& aDest)
 uint32_t
 ToUpperCase(const nsACString& aSrc, nsACString& aDest)
 {
-  const char *begin,  *end;
+  const char* begin;
+  const char* end;
   uint32_t len = aSrc.BeginReading(&begin, &end);
 
-  char *dest;
+  char* dest;
   NS_CStringGetMutableData(aDest, len, &dest);
 
   for (; begin < end; ++begin, ++dest) {
@@ -1154,15 +1256,16 @@ ToUpperCase(const nsACString& aSrc, nsACString& aDest)
 }
 
 int32_t
-CaseInsensitiveCompare(const char *a, const char *b,
-                       uint32_t len)
+CaseInsensitiveCompare(const char* aStrA, const char* aStrB,
+                       uint32_t aLen)
 {
-  for (const char *aend = a + len; a < aend; ++a, ++b) {
-    char la = NS_ToLower(*a);
-    char lb = NS_ToLower(*b);
+  for (const char* aend = aStrA + aLen; aStrA < aend; ++aStrA, ++aStrB) {
+    char la = NS_ToLower(*aStrA);
+    char lb = NS_ToLower(*aStrB);
 
-    if (la == lb)
+    if (la == lb) {
       continue;
+    }
 
     return la < lb ? -1 : 1;
   }
@@ -1171,7 +1274,7 @@ CaseInsensitiveCompare(const char *a, const char *b,
 }
 
 bool
-ParseString(const nsACString& aSource, char aDelimiter, 
+ParseString(const nsACString& aSource, char aDelimiter,
             nsTArray<nsCString>& aArray)
 {
   int32_t start = 0;
@@ -1192,11 +1295,13 @@ ParseString(const nsACString& aSource, char aDelimiter,
       }
     }
 
-    if (delimiter == end)
+    if (delimiter == end) {
       break;
+    }
     start = ++delimiter;
-    if (start == end)
+    if (start == end) {
       break;
+    }
   }
 
   return true;

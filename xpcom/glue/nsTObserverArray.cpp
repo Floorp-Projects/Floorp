@@ -7,10 +7,9 @@
 
 void
 nsTObserverArray_base::AdjustIterators(index_type aModPos,
-                                       diff_type  aAdjustment)
+                                       diff_type aAdjustment)
 {
-  NS_PRECONDITION(aAdjustment == -1 || aAdjustment == 1,
-                  "invalid adjustment");
+  NS_PRECONDITION(aAdjustment == -1 || aAdjustment == 1, "invalid adjustment");
   Iterator_base* iter = mIterators;
   while (iter) {
     if (iter->mPosition > aModPos) {

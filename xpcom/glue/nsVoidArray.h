@@ -13,40 +13,37 @@
 #include <stdint.h>
 
 // Comparator callback function for sorting array values.
-typedef int (* nsVoidArrayComparatorFunc)
-            (const void* aElement1, const void* aElement2, void* aData);
+typedef int (*nsVoidArrayComparatorFunc)(const void* aElement1,
+                                         const void* aElement2, void* aData);
 
 // Enumerator callback function. Return false to stop
-typedef bool (* nsVoidArrayEnumFunc)(void* aElement, void *aData);
-typedef bool (* nsVoidArrayEnumFuncConst)(const void* aElement, void *aData);
+typedef bool (*nsVoidArrayEnumFunc)(void* aElement, void* aData);
+typedef bool (*nsVoidArrayEnumFuncConst)(const void* aElement, void* aData);
 
 // SizeOfExcludingThis callback function.
-typedef size_t (* nsVoidArraySizeOfElementIncludingThisFunc)(const void* aElement,
-                                                             mozilla::MallocSizeOf aMallocSizeOf,
-                                                             void *aData);
+typedef size_t (*nsVoidArraySizeOfElementIncludingThisFunc)(
+  const void* aElement, mozilla::MallocSizeOf aMallocSizeOf, void* aData);
 
 /// A basic zero-based array of void*'s that manages its own memory
-class NS_COM_GLUE nsVoidArray {
+class NS_COM_GLUE nsVoidArray
+{
 public:
   nsVoidArray();
   nsVoidArray(int32_t aCount);  // initial count of aCount elements set to nullptr
   ~nsVoidArray();
 
-  nsVoidArray& operator=(const nsVoidArray& other);
+  nsVoidArray& operator=(const nsVoidArray& aOther);
 
-  inline int32_t Count() const {
-    return mImpl ? mImpl->mCount : 0;
-  }
+  inline int32_t Count() const { return mImpl ? mImpl->mCount : 0; }
   // If the array grows, the newly created entries will all be null
   bool SetCount(int32_t aNewCount);
   // returns the max number that can be held without allocating
-  inline int32_t GetArraySize() const {
-    return mImpl ? mImpl->mSize : 0;
-  }
+  inline int32_t GetArraySize() const { return mImpl ? mImpl->mSize : 0; }
 
   void* FastElementAt(int32_t aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::FastElementAt: index out of range");
+    NS_ASSERTION(aIndex >= 0 && aIndex < Count(),
+                 "nsVoidArray::FastElementAt: index out of range");
     return mImpl->mArray[aIndex];
   }
 
@@ -55,15 +52,15 @@ public:
   // crashing for backwards compatibility.  See bug 96108.
   void* ElementAt(int32_t aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsVoidArray::ElementAt: index out of range");
+    NS_ASSERTION(aIndex >= 0 && aIndex < Count(),
+                 "nsVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
 
   // bounds-checked version
   void* SafeElementAt(int32_t aIndex) const
   {
-    if (uint32_t(aIndex) >= uint32_t(Count())) // handles aIndex < 0 too
-    {
+    if (uint32_t(aIndex) >= uint32_t(Count())) { // handles aIndex < 0 too
       return nullptr;
     }
     // The bounds check ensures mImpl is non-null.
@@ -75,26 +72,31 @@ public:
   int32_t IndexOf(void* aPossibleElement) const;
 
   bool InsertElementAt(void* aElement, int32_t aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, int32_t aIndex);
+  bool InsertElementsAt(const nsVoidArray& aOther, int32_t aIndex);
 
   bool ReplaceElementAt(void* aElement, int32_t aIndex);
 
   // useful for doing LRU arrays, sorting, etc
   bool MoveElement(int32_t aFrom, int32_t aTo);
 
-  bool AppendElement(void* aElement) {
+  bool AppendElement(void* aElement)
+  {
     return InsertElementAt(aElement, Count());
   }
 
-  bool AppendElements(nsVoidArray& aElements) {
+  bool AppendElements(nsVoidArray& aElements)
+  {
     return InsertElementsAt(aElements, Count());
   }
 
   bool RemoveElement(void* aElement);
   void RemoveElementsAt(int32_t aIndex, int32_t aCount);
-  void RemoveElementAt(int32_t aIndex) { return RemoveElementsAt(aIndex,1); }
+  void RemoveElementAt(int32_t aIndex)
+  {
+    return RemoveElementsAt(aIndex, 1);
+  }
 
-  void   Clear();
+  void Clear();
 
   bool SizeTo(int32_t aMin);
   // Subtly different - Compact() tries to be smart about whether we
@@ -111,13 +113,14 @@ public:
   // |aSizeOfElementIncludingThis| is non-nullptr, measures the size of things
   // pointed to by elements.
   size_t SizeOfExcludingThis(
-           nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
-           mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
+    nsVoidArraySizeOfElementIncludingThisFunc aSizeOfElementIncludingThis,
+    mozilla::MallocSizeOf aMallocSizeOf, void* aData = nullptr) const;
 
 protected:
   bool GrowArrayBy(int32_t aGrowBy);
 
-  struct Impl {
+  struct Impl
+  {
     /**
      * The actual array size.
      */
@@ -142,11 +145,11 @@ protected:
 #endif
 
   // bit twiddlers
-  void SetArray(Impl *newImpl, int32_t aSize, int32_t aCount);
+  void SetArray(Impl* aNewImpl, int32_t aSize, int32_t aCount);
 
 private:
   /// Copy constructors are not allowed
-  nsVoidArray(const nsVoidArray& other);
+  nsVoidArray(const nsVoidArray& aOther);
 };
 
 //===================================================================
@@ -178,7 +181,7 @@ class NS_COM_GLUE nsSmallVoidArray : private nsVoidArray
 public:
   ~nsSmallVoidArray();
 
-  nsSmallVoidArray& operator=(nsSmallVoidArray& other);
+  nsSmallVoidArray& operator=(nsSmallVoidArray& aOther);
   void* operator[](int32_t aIndex) const { return ElementAt(aIndex); }
 
   int32_t GetArraySize() const;
@@ -190,24 +193,26 @@ public:
   // crashing for backwards compatibility.  See bug 96108.
   void* ElementAt(int32_t aIndex) const
   {
-    NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::ElementAt: index out of range");
+    NS_ASSERTION(aIndex >= 0 && aIndex < Count(),
+                 "nsSmallVoidArray::ElementAt: index out of range");
     return SafeElementAt(aIndex);
   }
-  void* SafeElementAt(int32_t aIndex) const {
+  void* SafeElementAt(int32_t aIndex) const
+  {
     // let compiler inline; it may be able to remove these checks
-    if (uint32_t(aIndex) >= uint32_t(Count())) // handles aIndex < 0 too
-    {
+    if (uint32_t(aIndex) >= uint32_t(Count())) { // handles aIndex < 0 too
       return nullptr;
     }
     return FastElementAt(aIndex);
   }
   int32_t IndexOf(void* aPossibleElement) const;
   bool InsertElementAt(void* aElement, int32_t aIndex);
-  bool InsertElementsAt(const nsVoidArray &other, int32_t aIndex);
+  bool InsertElementsAt(const nsVoidArray& aOther, int32_t aIndex);
   bool ReplaceElementAt(void* aElement, int32_t aIndex);
   bool MoveElement(int32_t aFrom, int32_t aTo);
   bool AppendElement(void* aElement);
-  bool AppendElements(nsVoidArray& aElements) {
+  bool AppendElements(nsVoidArray& aElements)
+  {
     return InsertElementsAt(aElements, Count());
   }
   bool RemoveElement(void* aElement);
@@ -231,14 +236,12 @@ private:
   void* GetSingle() const
   {
     NS_ASSERTION(HasSingle(), "wrong type");
-    return reinterpret_cast<void*>
-                           (reinterpret_cast<intptr_t>(mImpl) & ~0x1);
+    return reinterpret_cast<void*>(reinterpret_cast<intptr_t>(mImpl) & ~0x1);
   }
-  void SetSingle(void *aChild)
+  void SetSingle(void* aChild)
   {
     NS_ASSERTION(HasSingle() || !mImpl, "overwriting array");
-    mImpl = reinterpret_cast<Impl*>
-                            (reinterpret_cast<intptr_t>(aChild) | 0x1);
+    mImpl = reinterpret_cast<Impl*>(reinterpret_cast<intptr_t>(aChild) | 0x1);
   }
   bool IsEmpty() const
   {

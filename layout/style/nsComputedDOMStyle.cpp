@@ -5189,7 +5189,7 @@ nsComputedDOMStyle::DoGetTransitionDelay()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* delay = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(delay);
     delay->SetTime((float)transition->GetDelay() / (float)PR_MSEC_PER_SEC);
@@ -5209,7 +5209,7 @@ nsComputedDOMStyle::DoGetTransitionDuration()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* duration = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(duration);
 
@@ -5230,7 +5230,7 @@ nsComputedDOMStyle::DoGetTransitionProperty()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
+    const StyleTransition *transition = &display->mTransitions[i];
     nsROCSSPrimitiveValue* property = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(property);
     nsCSSProperty cssprop = transition->GetProperty();
@@ -5314,7 +5314,7 @@ nsComputedDOMStyle::DoGetAnimationName()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* property = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(property);
 
@@ -5342,7 +5342,7 @@ nsComputedDOMStyle::DoGetAnimationDelay()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* delay = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(delay);
     delay->SetTime((float)animation->GetDelay() / (float)PR_MSEC_PER_SEC);
@@ -5362,7 +5362,7 @@ nsComputedDOMStyle::DoGetAnimationDuration()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* duration = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(duration);
 
@@ -5401,7 +5401,7 @@ nsComputedDOMStyle::DoGetAnimationDirection()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* direction = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(direction);
     direction->SetIdent(
@@ -5423,7 +5423,7 @@ nsComputedDOMStyle::DoGetAnimationFillMode()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* fillMode = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(fillMode);
     fillMode->SetIdent(
@@ -5445,7 +5445,7 @@ nsComputedDOMStyle::DoGetAnimationIterationCount()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* iterationCount = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(iterationCount);
 
@@ -5479,7 +5479,7 @@ nsComputedDOMStyle::DoGetAnimationPlayState()
                     "first item must be explicit");
   uint32_t i = 0;
   do {
-    const nsAnimation *animation = &display->mAnimations[i];
+    const StyleAnimation *animation = &display->mAnimations[i];
     nsROCSSPrimitiveValue* playState = new nsROCSSPrimitiveValue;
     valueList->AppendCSSValue(playState);
     playState->SetIdent(

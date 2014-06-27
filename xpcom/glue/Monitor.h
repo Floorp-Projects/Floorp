@@ -25,55 +25,42 @@ namespace mozilla {
 class NS_COM_GLUE Monitor
 {
 public:
-    Monitor(const char* aName) :
-        mMutex(aName),
-        mCondVar(mMutex, "[Monitor.mCondVar]")
-    {}
+  Monitor(const char* aName)
+    : mMutex(aName)
+    , mCondVar(mMutex, "[Monitor.mCondVar]")
+  {
+  }
 
-    ~Monitor() {}
+  ~Monitor() {}
 
-    void Lock()
-    {
-        mMutex.Lock();
-    }
+  void Lock() { mMutex.Lock(); }
+  void Unlock() { mMutex.Unlock(); }
 
-    void Unlock()
-    {
-        mMutex.Unlock();
-    }
+  nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT)
+  {
+    return mCondVar.Wait(aInterval);
+  }
 
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
-    {
-        return mCondVar.Wait(interval);
-    }
+  nsresult Notify() { return mCondVar.Notify(); }
+  nsresult NotifyAll() { return mCondVar.NotifyAll(); }
 
-    nsresult Notify()
-    {
-        return mCondVar.Notify();
-    }
+  void AssertCurrentThreadOwns() const
+  {
+    mMutex.AssertCurrentThreadOwns();
+  }
 
-    nsresult NotifyAll()
-    {
-        return mCondVar.NotifyAll();
-    }
-
-    void AssertCurrentThreadOwns() const
-    {
-        mMutex.AssertCurrentThreadOwns();
-    }
-
-    void AssertNotCurrentThreadOwns() const
-    {
-        mMutex.AssertNotCurrentThreadOwns();
-    }
+  void AssertNotCurrentThreadOwns() const
+  {
+    mMutex.AssertNotCurrentThreadOwns();
+  }
 
 private:
-    Monitor();
-    Monitor(const Monitor&);
-    Monitor& operator =(const Monitor&);
+  Monitor();
+  Monitor(const Monitor&);
+  Monitor& operator=(const Monitor&);
 
-    Mutex mMutex;
-    CondVar mCondVar;
+  Mutex mMutex;
+  CondVar mCondVar;
 };
 
 /**
@@ -86,40 +73,33 @@ private:
 class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoLock
 {
 public:
-    MonitorAutoLock(Monitor& aMonitor) :
-        mMonitor(&aMonitor)
-    {
-        mMonitor->Lock();
-    }
-    
-    ~MonitorAutoLock()
-    {
-        mMonitor->Unlock();
-    }
- 
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
-    {
-       return mMonitor->Wait(interval);
-    }
+  MonitorAutoLock(Monitor& aMonitor)
+    : mMonitor(&aMonitor)
+  {
+    mMonitor->Lock();
+  }
 
-    nsresult Notify()
-    {
-        return mMonitor->Notify();
-    }
+  ~MonitorAutoLock()
+  {
+    mMonitor->Unlock();
+  }
 
-    nsresult NotifyAll()
-    {
-        return mMonitor->NotifyAll();
-    }
+  nsresult Wait(PRIntervalTime aInterval = PR_INTERVAL_NO_TIMEOUT)
+  {
+    return mMonitor->Wait(aInterval);
+  }
+
+  nsresult Notify() { return mMonitor->Notify(); }
+  nsresult NotifyAll() { return mMonitor->NotifyAll(); }
 
 private:
-    MonitorAutoLock();
-    MonitorAutoLock(const MonitorAutoLock&);
-    MonitorAutoLock& operator =(const MonitorAutoLock&);
-    static void* operator new(size_t) CPP_THROW_NEW;
-    static void operator delete(void*);
+  MonitorAutoLock();
+  MonitorAutoLock(const MonitorAutoLock&);
+  MonitorAutoLock& operator=(const MonitorAutoLock&);
+  static void* operator new(size_t) CPP_THROW_NEW;
+  static void operator delete(void*);
 
-    Monitor* mMonitor;
+  Monitor* mMonitor;
 };
 
 /**
@@ -132,25 +112,25 @@ private:
 class NS_COM_GLUE MOZ_STACK_CLASS MonitorAutoUnlock
 {
 public:
-    MonitorAutoUnlock(Monitor& aMonitor) :
-        mMonitor(&aMonitor)
-    {
-        mMonitor->Unlock();
-    }
-    
-    ~MonitorAutoUnlock()
-    {
-        mMonitor->Lock();
-    }
- 
-private:
-    MonitorAutoUnlock();
-    MonitorAutoUnlock(const MonitorAutoUnlock&);
-    MonitorAutoUnlock& operator =(const MonitorAutoUnlock&);
-    static void* operator new(size_t) CPP_THROW_NEW;
-    static void operator delete(void*);
+  MonitorAutoUnlock(Monitor& aMonitor)
+    : mMonitor(&aMonitor)
+  {
+    mMonitor->Unlock();
+  }
 
-    Monitor* mMonitor;
+  ~MonitorAutoUnlock()
+  {
+    mMonitor->Lock();
+  }
+
+private:
+  MonitorAutoUnlock();
+  MonitorAutoUnlock(const MonitorAutoUnlock&);
+  MonitorAutoUnlock& operator=(const MonitorAutoUnlock&);
+  static void* operator new(size_t) CPP_THROW_NEW;
+  static void operator delete(void*);
+
+  Monitor* mMonitor;
 };
 
 } // namespace mozilla
