@@ -81,7 +81,7 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
         return mFlags;
     }
 
-    explicit Wrapper(unsigned flags, bool hasPrototype = false);
+    explicit Wrapper(unsigned flags, bool hasPrototype = false, bool hasSecurityPolicy = false);
 
     virtual ~Wrapper();
 
@@ -103,7 +103,8 @@ WrapperOptions::proto() const
 class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
 {
   public:
-    explicit CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false);
+    explicit CrossCompartmentWrapper(unsigned flags, bool hasPrototype = false,
+                                     bool hasSecurityPolicy = false);
 
     virtual ~CrossCompartmentWrapper();
 
@@ -167,7 +168,7 @@ template <class Base>
 class JS_FRIEND_API(SecurityWrapper) : public Base
 {
   public:
-    explicit SecurityWrapper(unsigned flags);
+    explicit SecurityWrapper(unsigned flags, bool hasPrototype = false);
 
     virtual bool isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) MOZ_OVERRIDE;
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper) MOZ_OVERRIDE;
