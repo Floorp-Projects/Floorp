@@ -110,6 +110,12 @@ union MobileMessageCursorData
   ThreadData;
 };
 
+struct DeletedMessageInfoData
+{
+  int32_t[] deletedMessageIds;
+  uint64_t[] deletedThreadIds;
+};
+
 }
 }
 }
