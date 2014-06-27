@@ -1,0 +1,39 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for bug 998474</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="boom();">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+function boom()
+{
+  var worker = new SharedWorker("bug998474_worker.js");
+
+  setTimeout(function() {
+    port = worker.port;
+    port.postMessage("");
+
+    setTimeout(function() {
+      port.start();
+      ok(true, "Still alive!");
+      SimpleTest.finish();
+    }, 150);
+  }, 150);
+}
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
