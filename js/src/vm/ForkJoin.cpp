@@ -318,8 +318,6 @@ class ForkJoinOperation
     TrafficLight recoverFromBailout(ExecutionStatus *status);
     TrafficLight fatalError(ExecutionStatus *status);
     bool isInitialScript(HandleScript script);
-    void getBailoutScriptAndPc(MutableHandleScript bailoutScript, jsbytecode **bailoutPc,
-                               ParallelBailoutCause *bailoutCause);
     bool reportBailoutWarnings();
     bool invalidateBailedOutScripts();
     ExecutionStatus sequentialExecution(bool disqualified);
@@ -615,8 +613,8 @@ ForkJoinOperation::apply()
     //       - Re-enqueue main script and any uncompiled scripts that were called
     // - Too many bailouts: Fallback to sequential
 
-    JS_ASSERT_IF(!jit::IsBaselineEnabled(cx_), !jit::IsIonEnabled(cx_));
-    if (!jit::IsBaselineEnabled(cx_) || !jit::IsIonEnabled(cx_))
+    JS_ASSERT_IF(!IsBaselineEnabled(cx_), !IsIonEnabled(cx_));
+    if (!IsBaselineEnabled(cx_) || !IsIonEnabled(cx_))
         return sequentialExecution(true);
 
     SpewBeginOp(cx_, "ForkJoinOperation");
@@ -796,7 +794,7 @@ ForkJoinOperation::compileForParallelExecution(ExecutionStatus *status)
             if (!script->hasParallelIonScript()) {
                 // Script has not yet been compiled. Attempt to compile it.
                 SpewBeginCompile(script);
-                MethodStatus mstatus = jit::CanEnterInParallel(cx_, script);
+                MethodStatus mstatus = CanEnterInParallel(cx_, script);
                 SpewEndCompile(mstatus);
 
                 switch (mstatus) {
@@ -1042,41 +1040,100 @@ BailoutExplanation(ParallelBailoutCause cause)
 {
     switch (cause) {
       case ParallelBailoutNone:
-        return "no particular reason";
+        return "no bailout";
+      case ParallelBailoutInterrupt:
+        return "interrupted";
+      case ParallelBailoutExecution:
+        return "";
       case ParallelBailoutCompilationSkipped:
         return "compilation failed (method skipped)";
       case ParallelBailoutCompilationFailure:
         return "compilation failed";
-      case ParallelBailoutInterrupt:
-        return "interrupted";
-      case ParallelBailoutFailedIC:
-        return "failed to attach stub to IC";
-      case ParallelBailoutHeapBusy:
-        return "heap busy flag set during interrupt";
       case ParallelBailoutMainScriptNotPresent:
-        return "main script not present";
-      case ParallelBailoutCalledToUncompiledScript:
-        return "called to uncompiled script";
-      case ParallelBailoutIllegalWrite:
-        return "illegal write";
-      case ParallelBailoutAccessToIntrinsic:
-        return "access to intrinsic";
+        return "main script JIT code was collected";
       case ParallelBailoutOverRecursed:
-        return "over recursed";
+        return "stack limit exceeded";
       case ParallelBailoutOutOfMemory:
         return "out of memory";
-      case ParallelBailoutUnsupported:
-        return "unsupported";
-      case ParallelBailoutUnsupportedVM:
-        return "unsupported operation in VM call";
-      case ParallelBailoutUnsupportedStringComparison:
-        return "unsupported string comparison";
       case ParallelBailoutRequestedGC:
-        return "requested GC";
+        return "requested GC of common heap";
       case ParallelBailoutRequestedZoneGC:
-        return "requested zone GC";
+        return "requested zone GC of common heap";
       default:
-        return "no known reason";
+        MOZ_ASSUME_UNREACHABLE("Invalid ParallelBailoutCause");
+    }
+}
+
+static const char *
+IonBailoutKindExplanation(ParallelBailoutCause cause, BailoutKind kind)
+{
+    if (cause != ParallelBailoutExecution)
+        return "";
+
+    switch (kind) {
+      // Normal bailouts.
+      case Bailout_Inevitable:
+        return "inevitable";
+      case Bailout_DuringVMCall:
+        return "on vm reentry";
+      case Bailout_NonJSFunctionCallee:
+        return "non-scripted callee";
+      case Bailout_DynamicNameNotFound:
+        return "dynamic name not found";
+      case Bailout_StringArgumentsEval:
+        return "string contains 'arguments' or 'eval'";
+      case Bailout_Overflow:
+      case Bailout_OverflowInvalidate:
+        return "integer overflow";
+      case Bailout_Round:
+        return "unhandled input to rounding function";
+      case Bailout_NonPrimitiveInput:
+        return "trying to convert non-primitive input to number or string";
+      case Bailout_PrecisionLoss:
+        return "precision loss when converting to int32";
+      case Bailout_TypeBarrierO:
+        return "tripped type barrier: unexpected object";
+      case Bailout_TypeBarrierV:
+        return "tripped type barrier: unexpected value";
+      case Bailout_MonitorTypes:
+        return "wrote value of unexpected type to property";
+      case Bailout_Hole:
+        return "saw unexpected array hole";
+      case Bailout_NegativeIndex:
+        return "negative array index";
+      case Bailout_ObjectIdentityOrTypeGuard:
+        return "saw unexpected object type barrier";
+      case Bailout_NonInt32Input:
+        return "can't unbox: expected int32";
+      case Bailout_NonNumericInput:
+        return "can't unbox: expected number";
+      case Bailout_NonBooleanInput:
+        return "can't unbox: expected boolean";
+      case Bailout_NonObjectInput:
+        return "can't unbox: expected object";
+      case Bailout_NonStringInput:
+      case Bailout_NonStringInputInvalidate:
+        return "can't unbox: expected string";
+      case Bailout_GuardThreadExclusive:
+        return "tried to write to non-thread local value";
+      case Bailout_ParallelUnsafe:
+        return "unsafe";
+      case Bailout_InitialState:
+        return "during function prologue";
+      case Bailout_DoubleOutput:
+        return "integer arithmetic overflowed to double";
+      case Bailout_ArgumentCheck:
+        return "unexpected argument type";
+      case Bailout_BoundsCheck:
+        return "out of bounds element access";
+      case Bailout_Neutered:
+        return "neutered typed object access";
+      case Bailout_ShapeGuard:
+        return "saw unexpected shape";
+      case Bailout_IonExceptionDebugMode:
+        // Fallthrough. This case cannot occur in parallel execution.
+      default:
+        MOZ_ASSUME_UNREACHABLE("Invalid BailoutKind");
     }
 }
 
@@ -1084,29 +1141,6 @@ bool
 ForkJoinOperation::isInitialScript(HandleScript script)
 {
     return fun_->is<JSFunction>() && (fun_->as<JSFunction>().nonLazyScript() == script);
-}
-
-void
-ForkJoinOperation::getBailoutScriptAndPc(MutableHandleScript bailoutScript, jsbytecode **bailoutPc,
-                                         ParallelBailoutCause *bailoutCause)
-{
-    for (uint32_t i = 0; i < bailoutRecords_.length(); i++) {
-        switch (bailoutRecords_[i].cause) {
-          case ParallelBailoutNone:
-          case ParallelBailoutInterrupt:
-            continue;
-          default:
-            break;
-        }
-
-        if (bailoutRecords_[i].hasFrames()) {
-            RematerializedFrame *frame = bailoutRecords_[i].frames()[0];
-            bailoutScript.set(frame->script());
-            *bailoutPc = frame->pc();
-            *bailoutCause = bailoutRecords_[i].cause;
-            return;
-        }
-    }
 }
 
 static const char *
@@ -1135,24 +1169,30 @@ ForkJoinOperation::reportBailoutWarnings()
     }
 
     for (uint32_t threadId = 0; threadId < bailoutRecords_.length(); threadId++) {
-        ParallelBailoutCause cause = bailoutRecords_[threadId].cause;
+        ParallelBailoutRecord &record = bailoutRecords_[threadId];
+        ParallelBailoutCause cause = record.cause;
+        BailoutKind ionBailoutKind = record.ionBailoutKind;
         if (cause == ParallelBailoutNone)
             continue;
 
-        if (bailoutRecords_[threadId].hasFrames()) {
-            Vector<RematerializedFrame *> &frames = bailoutRecords_[threadId].frames();
+        if (record.hasFrames()) {
+            Vector<RematerializedFrame *> &frames = record.frames();
 
             if (!SpewEnabled(SpewBailouts)) {
                 RematerializedFrame *frame = frames[0];
                 RootedScript bailoutScript(cx_, frame->script());
                 SpewBailout(bailouts, bailoutScript, frame->pc(), cause);
-                JS_ReportWarning(cx_, "Bailed out of parallel operation: %s at %s:%u",
-                                 BailoutExplanation(cause), bailoutScript->filename(),
+                JS_ReportWarning(cx_, "Bailed out of parallel operation: %s%s at %s:%u",
+                                 BailoutExplanation(cause),
+                                 IonBailoutKindExplanation(cause, ionBailoutKind),
+                                 bailoutScript->filename(),
                                  PCToLineNumber(bailoutScript, frame->pc()));
                 return true;
             }
 
-            sp.printf("\n  in thread %d due to %s", threadId, BailoutExplanation(cause));
+            sp.printf("\n  in thread %u: %s%s",
+                      threadId, BailoutExplanation(cause),
+                      IonBailoutKindExplanation(cause, ionBailoutKind));
 
             for (uint32_t frameIndex = 0; frameIndex < frames.length(); frameIndex++) {
                 RematerializedFrame *frame = frames[frameIndex];
@@ -1235,10 +1275,6 @@ ForkJoinOperation::invalidateBailedOutScripts()
           // An interrupt is not the fault of the script, so don't
           // invalidate it.
           case ParallelBailoutInterrupt:
-            continue;
-
-          // An illegal write will not be made legal by invalidation.
-          case ParallelBailoutIllegalWrite:
             continue;
 
           // For other cases, consider invalidation.
@@ -2354,10 +2390,10 @@ js::InExclusiveParallelSection()
 bool
 js::ParallelTestsShouldPass(JSContext *cx)
 {
-    return jit::IsIonEnabled(cx) &&
-           jit::IsBaselineEnabled(cx) &&
-           !jit::js_JitOptions.eagerCompilation &&
-           jit::js_JitOptions.baselineUsesBeforeCompile != 0 &&
+    return IsIonEnabled(cx) &&
+           IsBaselineEnabled(cx) &&
+           !js_JitOptions.eagerCompilation &&
+           js_JitOptions.baselineUsesBeforeCompile != 0 &&
            cx->runtime()->gcZeal() == 0;
 }
 
