@@ -48,7 +48,7 @@ interface nsIRunnable;
 interface nsICompositionStringSynthesizer;
 interface nsITranslationNodeList;
 
-[scriptable, uuid(75b7674b-3e6e-4fac-931b-8fd3c4e4e8d2)]
+[scriptable, uuid(6f10cbf8-bd4e-4c56-8a5a-35641efcf286)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1437,24 +1437,6 @@ interface nsIDOMWindowUtils : nsISupports {
    * clears the painted flags if they have.
    */
   boolean checkAndClearPaintedState(in nsIDOMElement aElement);
-
-  /**
-   * Internal file constructor intended for testing of File objects.
-   * Example of constructor usage:
-   *   getFile("myfile.txt", [b1, "foo"], { type: "text/plain" })
-   */
-  [optional_argc, implicit_jscontext]
-  nsIDOMFile getFile(in DOMString aName, [optional] in jsval aBlobParts,
-                     [optional] in jsval aParameters);
-
-  /**
-   * Internal blob constructor intended for testing of Blob objects.
-   * Example of constructor usage:
-   *   getBlob([b1, "foo"], { type: "text/plain" })
-   */
-  [optional_argc, implicit_jscontext]
-  nsIDOMBlob getBlob([optional] in jsval aBlobParts,
-                     [optional] in jsval aParameters);
 
   /**
    * Get internal id of the stored blob, file or file handle.
