@@ -37,14 +37,6 @@ MediaEngineTabVideoSource::MediaEngineTabVideoSource()
 nsresult
 MediaEngineTabVideoSource::StartRunnable::Run()
 {
-  nsCOMPtr<nsIDOMWindow> win;
-  nsresult rv = mVideoSource->mTabSource->GetTabToStream(getter_AddRefs(win));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!win)
-    return NS_OK;
-
-  mVideoSource->mWindow = win;
-
   mVideoSource->Draw();
   nsCOMPtr<nsPIDOMWindow> privateDOMWindow = do_QueryInterface(mVideoSource->mWindow);
   if (privateDOMWindow) {
@@ -102,6 +94,13 @@ MediaEngineTabVideoSource::InitRunnable::Run()
   mVideoSource->mTabSource = do_GetService(NS_TABSOURCESERVICE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIDOMWindow> win;
+  rv = mVideoSource->mTabSource->GetTabToStream(getter_AddRefs(win));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!win)
+    return NS_OK;
+
+  mVideoSource->mWindow = win;
   nsCOMPtr<nsIRunnable> start(new StartRunnable(mVideoSource));
   start->Run();
   return NS_OK;
