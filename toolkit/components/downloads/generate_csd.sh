@@ -2,7 +2,9 @@
 # A script to generate toolkit/components/downloads/csd.pb.{cc,h} for use in
 # nsIApplicationReputationQuery. This script assumes you have downloaded and
 # installed the protocol buffer compiler.
-
+# As of June 26 2014, csd.proto contains many protobufs that are currently
+# unused by ApplicationReputation. You may want to strip csd.proto of these
+# before running the protocol compiler on it.
 if [ -n $PROTOC_PATH ]; then
   PROTOC_PATH=/usr/local/bin/protoc
 fi
