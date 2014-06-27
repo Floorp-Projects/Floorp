@@ -393,14 +393,17 @@ SavedStacks::init()
 
     return frames.init();
 }
+
 bool
 SavedStacks::saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame)
 {
     JS_ASSERT(initialized());
     JS_ASSERT(&cx->compartment()->savedStacks() == this);
-    FrameIter iter(cx);
+
+    ScriptFrameIter iter(cx);
     return insertFrames(cx, iter, frame);
 }
+
 void
 SavedStacks::sweep(JSRuntime *rt)
 {
@@ -459,7 +462,7 @@ SavedStacks::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
 }
 
 bool
-SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame)
+SavedStacks::insertFrames(JSContext *cx, ScriptFrameIter &iter, MutableHandleSavedFrame frame)
 {
     if (iter.done()) {
         frame.set(nullptr);
@@ -474,43 +477,26 @@ SavedStacks::insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFram
     // in js/src/jit-test/tests/saved-stacks/bug-1006876-too-much-recursion.js).
     JS_CHECK_RECURSION_DONT_REPORT(cx, return false);
 
-
-    JSPrincipals* principals = iter.compartment()->principals;
-    RootedAtom name(cx, iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr);
-
-    // When we have a |JSScript| for this frame, use |getLocation| to get a
-    // potentially memoized location result and copy it into |location|. When we
-    // do not have a |JSScript| for this frame (asm.js frames), we take a slow
-    // path that doesn't employ memoization, and update |location|'s slots
-    // directly.
-    LocationValue location;+    if (iter.hasScript()) {
-        JSScript *script = iter.script();
-        jsbytecode *pc = iter.pc();
-        if (!getLocation(cx, script, pc, &location))
-            return false;
-    } else {
-        const char *filename = iter.scriptFilename();
-        if (!filename)
-            filename = "";
-        location.source.set(Atomize(cx, filename, strlen(filename)));
-        if (!location.source)
-            return false;
-        uint32_t column;
-        location.line = iter.computeLine(&column);
-        location.column = column;
-    }
-
+    RootedScript script(cx, iter.script());
+    jsbytecode *pc = iter.pc();
+    RootedFunction callee(cx, iter.maybeCallee());
+    // script and callee should keep compartment alive.
+    JSCompartment *compartment = iter.compartment();
     RootedSavedFrame parentFrame(cx);
     if (!insertFrames(cx, ++iter, &parentFrame))
+        return false;
+
+    LocationValue location;
+    if (!getLocation(cx, script, pc, &location))
         return false;
 
     SavedFrame::AutoLookupRooter lookup(cx,
                                         location.source,
                                         location.line,
                                         location.column,
-                                        name,
+                                        callee ? callee->displayAtom() : nullptr,
                                         parentFrame,
-                                        principals);
+                                        compartment->principals);
 
     frame.set(getOrCreateSavedFrame(cx, lookup));
     return frame.get() != nullptr;
