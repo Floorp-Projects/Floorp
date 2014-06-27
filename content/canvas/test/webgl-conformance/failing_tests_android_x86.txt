@@ -1,10 +1,5 @@
-# Failures for our x86 emulator test environment.
+# Failures for our android x86 and arm emulator test environments.
 
 conformance/extensions/oes-texture-float.html
-conformance/misc/error-reporting.html
-conformance/misc/object-deletion-behaviour.html
-conformance/misc/type-conversion-test.html
 conformance/programs/get-active-test.html
 conformance/textures/texture-npot.html
-conformance/textures/texture-size.html
-conformance/textures/texture-size-cube-maps.html
