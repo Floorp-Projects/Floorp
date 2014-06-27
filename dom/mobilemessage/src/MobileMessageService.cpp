@@ -7,6 +7,7 @@
 #include "MobileMessageThread.h"
 #include "MobileMessageService.h"
 #include "SmsSegmentInfo.h"
+#include "DeletedMessageInfo.h"
 
 namespace mozilla {
 namespace dom {
@@ -132,6 +133,20 @@ MobileMessageService::CreateThread(uint64_t aId,
                                      aLastMessageType,
                                      aCx,
                                      aThread);
+}
+
+NS_IMETHODIMP
+MobileMessageService::CreateDeletedMessageInfo(int32_t* aMessageIds,
+                                               uint32_t aMsgCount,
+                                               uint64_t* aThreadIds,
+                                               uint32_t  aThreadCount,
+                                               nsIDeletedMessageInfo** aDeletedInfo)
+{
+  return DeletedMessageInfo::Create(aMessageIds,
+                                    aMsgCount,
+                                    aThreadIds,
+                                    aThreadCount,
+                                    aDeletedInfo);
 }
 
 } // namespace mobilemessage
