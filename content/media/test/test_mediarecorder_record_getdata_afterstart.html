@@ -1,0 +1,79 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 951008 Test MediaRecorder Record has start event</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+
+  var element = document.createElement('audio');
+  var hasonstart = false;
+  var hasondataavailable = false;
+  var mMediaRecorder;
+
+  element.token = token;
+  manager.started(token);
+  element.src = test.name;
+  element.test = test;
+  element.stream = element.mozCaptureStream();
+
+  mMediaRecorder = new MediaRecorder(element.stream);
+  mMediaRecorder.onwarning = function() {
+    ok(false, 'onwarning unexpectedly fired');
+  };
+
+  mMediaRecorder.onerror = function() {
+    ok(false, 'onerror unexpectedly fired');
+  };
+
+  mMediaRecorder.onstart = function() {
+    info('onstart fired successfully');
+    hasonstart = true;
+    // On audio only case, we produce audio/ogg as mimeType.
+    is('audio/ogg', mMediaRecorder.mimeType, "check the record mimetype return " + mMediaRecorder.mimeType);
+    mMediaRecorder.requestData();
+  };
+
+  mMediaRecorder.onstop = function() {
+    info('onstop fired successfully');
+    ok (hasondataavailable, "should have ondataavailable before onstop");
+    is(mMediaRecorder.state, 'inactive', 'check recording status is inactive');
+    SimpleTest.finish();
+  };
+
+  mMediaRecorder.ondataavailable = function (e) {
+    info('ondataavailable fired successfully');
+    if (mMediaRecorder.state == 'recording') {
+      hasondataavailable = true;
+      ok(hasonstart, "should has onstart event first");
+      ok(e.data.size > 0, 'check blob has data');
+      mMediaRecorder.stop();
+    }
+  };
+
+  // Start recording once metadata are parsed.
+  element.onloadedmetadata = function() {
+    element.oncanplaythrough = null;
+    mMediaRecorder.start(0);
+    is(mMediaRecorder.state, 'recording', 'Media recorder should be recording');
+    is(mMediaRecorder.stream, element.stream,
+       'Media recorder stream = element stream at the start of recording');
+    };
+
+  element.play();
+}
+
+manager.runTests(gMediaRecorderTests, startTest);
+
+</script>
+</pre>
+</body>
+</html>

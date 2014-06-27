@@ -25,6 +25,8 @@ interface MediaRecorder : EventTarget {
 
   attribute EventHandler onerror;
 
+  attribute EventHandler onstart;
+
   attribute EventHandler onstop;
 
   attribute EventHandler onwarning;
