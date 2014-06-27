@@ -58,9 +58,6 @@ if CONFIG['MOZ_PERMISSIONS']:
 
 add_tier_dir('platform', 'rdf')
 
-if CONFIG['MOZ_JSDEBUGGER']:
-    add_tier_dir('platform', 'js/jsd')
-
 if CONFIG['MOZ_WEBRTC']:
     add_tier_dir('platform', [
         'media/webrtc',
