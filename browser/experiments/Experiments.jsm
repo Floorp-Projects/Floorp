@@ -1453,7 +1453,7 @@ Experiments.ExperimentEntry.prototype = {
   initFromCacheData: function (data) {
     for (let [key, dval] of this.UPGRADE_KEYS) {
       if (!(key in data)) {
-        data.set(key, dval);
+        data[key] = dval;
       }
     }
 
