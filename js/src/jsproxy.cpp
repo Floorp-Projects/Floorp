@@ -79,10 +79,10 @@ js::assertEnteredPolicy(JSContext *cx, JSObject *proxy, jsid id,
 }
 #endif
 
-BaseProxyHandler::BaseProxyHandler(const void *family)
+BaseProxyHandler::BaseProxyHandler(const void *family, bool hasPrototype, bool hasSecurityPolicy)
   : mFamily(family),
-    mHasPrototype(false),
-    mHasSecurityPolicy(false)
+    mHasPrototype(hasPrototype),
+    mHasSecurityPolicy(hasSecurityPolicy)
 {
 }
 
@@ -538,8 +538,9 @@ DirectProxyHandler::weakmapKeyDelegate(JSObject *proxy)
     return UncheckedUnwrap(proxy);
 }
 
-DirectProxyHandler::DirectProxyHandler(const void *family)
-  : BaseProxyHandler(family)
+DirectProxyHandler::DirectProxyHandler(const void *family, bool hasPrototype,
+                                       bool hasSecurityPolicy)
+  : BaseProxyHandler(family, hasPrototype, hasSecurityPolicy)
 {
 }
 
