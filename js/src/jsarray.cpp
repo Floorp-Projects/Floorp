@@ -753,6 +753,11 @@ js::WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
         return true;
     }
 
+    // Error in strict mode code or warn with strict option.
+    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
+    if (cx->isForkJoinContext())
+        return cx->asForkJoinContext()->reportError(flags);
+
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
     uint32_t length = arr->length();
     if (index < length) {
@@ -766,11 +771,6 @@ js::WouldDefinePastNonwritableLength(ThreadSafeContext *cx,
     }
 
     *definesPast = true;
-
-    // Error in strict mode code or warn with strict option.
-    unsigned flags = strict ? JSREPORT_ERROR : (JSREPORT_STRICT | JSREPORT_WARNING);
-    if (cx->isForkJoinContext())
-        return cx->asForkJoinContext()->reportError(ParallelBailoutUnsupportedVM, flags);
 
     if (!cx->isJSContext())
         return true;
