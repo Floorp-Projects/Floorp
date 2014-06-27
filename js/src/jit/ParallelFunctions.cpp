@@ -531,7 +531,9 @@ jit::BailoutPar(BailoutStack *sp, uint8_t **entryFramePointer)
 
     JitActivationIterator jitActivations(cx->perThreadData);
     IonBailoutIterator frameIter(jitActivations, sp);
-    cx->bailoutRecord->joinCause(ParallelBailoutUnsupported);
+    SnapshotIterator snapIter(frameIter);
+
+    cx->bailoutRecord->setIonBailoutKind(snapIter.bailoutKind());
     cx->bailoutRecord->rematerializeFrames(cx, frameIter);
 
     MOZ_ASSERT(frameIter.done());
