@@ -28,13 +28,13 @@ GenericModule::GetClassObject(nsIComponentManager* aCompMgr,
       nsCOMPtr<nsIFactory> f;
       if (e->getFactoryProc) {
         f = e->getFactoryProc(*mData, *e);
-      }
-      else {
+      } else {
         NS_ASSERTION(e->constructorProc, "No constructor proc?");
         f = new GenericFactory(e->constructorProc);
       }
-      if (!f)
+      if (!f) {
         return NS_ERROR_FAILURE;
+      }
 
       return f->QueryInterface(aIID, aResult);
     }
@@ -50,20 +50,25 @@ GenericModule::RegisterSelf(nsIComponentManager* aCompMgr,
                             const char* aType)
 {
   nsCOMPtr<nsIComponentRegistrar> r = do_QueryInterface(aCompMgr);
-  for (const Module::CIDEntry* e = mData->mCIDs; e->cid; ++e)
-    r->RegisterFactoryLocation(*e->cid, "", nullptr, aLocation, aLoaderStr, aType);
+  for (const Module::CIDEntry* e = mData->mCIDs; e->cid; ++e) {
+    r->RegisterFactoryLocation(*e->cid, "", nullptr, aLocation,
+                               aLoaderStr, aType);
+  }
 
   for (const Module::ContractIDEntry* e = mData->mContractIDs;
        e && e->contractid;
-       ++e)
-    r->RegisterFactoryLocation(*e->cid, "", e->contractid, aLocation, aLoaderStr, aType);
+       ++e) {
+    r->RegisterFactoryLocation(*e->cid, "", e->contractid, aLocation,
+                               aLoaderStr, aType);
+  }
 
   nsCOMPtr<nsICategoryManager> catman;
   for (const Module::CategoryEntry* e = mData->mCategoryEntries;
        e && e->category;
        ++e) {
-    if (!catman)
+    if (!catman) {
       catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+    }
 
     nsAutoCString r;
     catman->AddCategoryEntry(e->category, e->entry, e->value, true, true,

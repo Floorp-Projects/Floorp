@@ -14,44 +14,44 @@
 #endif
 
 void
-nsScriptObjectTracer::NoteJSChild(void *aScriptThing, const char *name,
-                                  void *aClosure)
+nsScriptObjectTracer::NoteJSChild(void* aScriptThing, const char* aName,
+                                  void* aClosure)
 {
-  nsCycleCollectionTraversalCallback *cb =
+  nsCycleCollectionTraversalCallback* cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, name);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, aName);
   cb->NoteJSChild(aScriptThing);
 }
 
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Root(void *p)
+nsXPCOMCycleCollectionParticipant::Root(void* aPtr)
 {
-    nsISupports *s = static_cast<nsISupports*>(p);
-    NS_ADDREF(s);
+  nsISupports* s = static_cast<nsISupports*>(aPtr);
+  NS_ADDREF(s);
 }
 
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Unroot(void *p)
+nsXPCOMCycleCollectionParticipant::Unroot(void* aPtr)
 {
-    nsISupports *s = static_cast<nsISupports*>(p);
-    NS_RELEASE(s);
+  nsISupports* s = static_cast<nsISupports*>(aPtr);
+  NS_RELEASE(s);
 }
 
 // We define a default trace function because some participants don't need
 // to trace anything, so it is okay for them not to define one.
 NS_IMETHODIMP_(void)
-nsXPCOMCycleCollectionParticipant::Trace(void *p, const TraceCallbacks &cb,
-                                         void *closure)
+nsXPCOMCycleCollectionParticipant::Trace(void* aPtr, const TraceCallbacks& aCb,
+                                         void* aClosure)
 {
 }
 
 bool
-nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports *s)
+nsXPCOMCycleCollectionParticipant::CheckForRightISupports(nsISupports* aSupports)
 {
-    nsISupports* foo;
-    s->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
-                      reinterpret_cast<void**>(&foo));
-    return s == foo;
+  nsISupports* foo;
+  aSupports->QueryInterface(NS_GET_IID(nsCycleCollectionISupports),
+                            reinterpret_cast<void**>(&foo));
+  return aSupports == foo;
 }
 
 void
@@ -67,48 +67,55 @@ CycleCollectionNoteEdgeNameImpl(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<JS::Value>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  if (p->isMarkable()) {
-    mCallback(p->toGCThing(), name, closure);
+  if (aPtr->isMarkable()) {
+    mCallback(aPtr->toGCThing(), aName, aClosure);
   }
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<jsid>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<jsid>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  void *thing = JSID_TO_GCTHING(*p);
+  void* thing = JSID_TO_GCTHING(*aPtr);
   if (thing) {
-    mCallback(thing, name, closure);
+    mCallback(thing, aName, aClosure);
   }
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<JSObject*>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  mCallback(*p, name, closure);
+  mCallback(*aPtr, aName, aClosure);
 }
 
 void
-TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  mCallback(*p, name, closure);
+  mCallback(*aPtr, aName, aClosure);
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  mCallback(*p, name, closure);
+  mCallback(*aPtr, aName, aClosure);
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<JSString*>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSString*>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  mCallback(*p, name, closure);
+  mCallback(*aPtr, aName, aClosure);
 }
 
 void
-TraceCallbackFunc::Trace(JS::Heap<JSScript*>* p, const char* name, void* closure) const
+TraceCallbackFunc::Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
+                         void* aClosure) const
 {
-  mCallback(p->get(), name, closure);
+  mCallback(aPtr->get(), aName, aClosure);
 }

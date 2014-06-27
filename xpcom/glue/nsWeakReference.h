@@ -21,44 +21,36 @@ class nsWeakReference;
 #define IMETHOD_VISIBILITY NS_COM_GLUE
 
 class NS_COM_GLUE nsSupportsWeakReference : public nsISupportsWeakReference
-  {
-    public:
-      nsSupportsWeakReference()
-          : mProxy(0)
-        {
-          // nothing else to do here
-        }
+{
+public:
+  nsSupportsWeakReference() : mProxy(0) {}
 
-      NS_DECL_NSISUPPORTSWEAKREFERENCE
+  NS_DECL_NSISUPPORTSWEAKREFERENCE
 
-    protected:
-      inline ~nsSupportsWeakReference();
+protected:
+  inline ~nsSupportsWeakReference();
 
-    private:
-      friend class nsWeakReference;
+private:
+  friend class nsWeakReference;
 
-      void
-      NoticeProxyDestruction()
-          // ...called (only) by an |nsWeakReference| from _its_ dtor.
-        {
-          mProxy = 0;
-        }
+  // Called (only) by an |nsWeakReference| from _its_ dtor.
+  void NoticeProxyDestruction() { mProxy = 0; }
 
-      nsWeakReference* mProxy;
+  nsWeakReference* mProxy;
 
-		protected:
+protected:
 
-			void ClearWeakReferences();
-			bool HasWeakReferences() const {return mProxy != 0;}
-  };
+  void ClearWeakReferences();
+  bool HasWeakReferences() const { return mProxy != 0; }
+};
 
 #undef  IMETHOD_VISIBILITY
 #define IMETHOD_VISIBILITY
 
 inline
 nsSupportsWeakReference::~nsSupportsWeakReference()
-  {
-  	ClearWeakReferences();
-  }
+{
+  ClearWeakReferences();
+}
 
 #endif

@@ -17,31 +17,35 @@
 NS_COM_GLUE nsresult
 nsMemory::HeapMinimize(bool aImmediate)
 {
-    nsCOMPtr<nsIMemory> mem;
-    nsresult rv = NS_GetMemoryManager(getter_AddRefs(mem));
-    if (NS_WARN_IF(NS_FAILED(rv)))
-        return rv;
+  nsCOMPtr<nsIMemory> mem;
+  nsresult rv = NS_GetMemoryManager(getter_AddRefs(mem));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
-    return mem->HeapMinimize(aImmediate);
+  return mem->HeapMinimize(aImmediate);
 }
 
 NS_COM_GLUE void*
-nsMemory::Clone(const void* ptr, size_t size)
+nsMemory::Clone(const void* aPtr, size_t aSize)
 {
-    void* newPtr = NS_Alloc(size);
-    if (newPtr)
-        memcpy(newPtr, ptr, size);
-    return newPtr;
+  void* newPtr = NS_Alloc(aSize);
+  if (newPtr) {
+    memcpy(newPtr, aPtr, aSize);
+  }
+  return newPtr;
 }
 
 NS_COM_GLUE nsIMemory*
 nsMemory::GetGlobalMemoryService()
 {
-    nsIMemory* mem;
-    nsresult rv = NS_GetMemoryManager(&mem);
-    if (NS_FAILED(rv)) return nullptr;
-   
-    return mem;
+  nsIMemory* mem;
+  nsresult rv = NS_GetMemoryManager(&mem);
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  return mem;
 }
 
 //----------------------------------------------------------------------

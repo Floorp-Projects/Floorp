@@ -22,7 +22,7 @@ static const int32_t kMaxGrowArrayBy = 1024;
  * This is the threshold (in bytes) of the mImpl struct, past which
  * we'll force the array to grow geometrically
  */
-static const int32_t kLinearThreshold = 24 * sizeof(void *);
+static const int32_t kLinearThreshold = 24 * sizeof(void*);
 
 /**
  * Compute the number of bytes requires for the mImpl struct that will
@@ -39,11 +39,11 @@ static const int32_t kLinearThreshold = 24 * sizeof(void *);
 #if DEBUG_VOIDARRAY
 #define MAXVOID 10
 
-class VoidStats {
+class VoidStats
+{
 public:
   VoidStats();
   ~VoidStats();
-
 };
 
 static int sizesUsed; // number of the elements of the arrays used
@@ -53,7 +53,7 @@ static int AllocedOfSize[MAXVOID]; // number of this allocation size (each size 
 static int MaxAuto[MAXVOID];      // AutoArrays that maxed out at this size
 static int GrowInPlace[MAXVOID];  // arrays this size that grew in-place via realloc
 
-// these are per-allocation  
+// these are per-allocation
 static int MaxElements[2000];     // # of arrays that maxed out at each size.
 
 // statistics macros
@@ -85,8 +85,7 @@ VoidStats::VoidStats()
 VoidStats::~VoidStats()
 {
   int i;
-  for (i = 0; i < sizesUsed; i++)
-  {
+  for (i = 0; i < sizesUsed; ++i) {
     printf("Size %d:\n",sizesAlloced[i]);
     printf("\tNumber of VoidArrays this size (max):     %d\n",NumberOfSize[i]-MaxAuto[i]);
     printf("\tNumber of AutoVoidArrays this size (max): %d\n",MaxAuto[i]);
@@ -94,10 +93,10 @@ VoidStats::~VoidStats()
     printf("\tNumber of GrowsInPlace this size (total): %d\n",GrowInPlace[i]);
   }
   printf("Max Size of VoidArray:\n");
-  for (i = 0; i < (int)(sizeof(MaxElements)/sizeof(MaxElements[0])); i++)
-  {
-    if (MaxElements[i])
-      printf("\t%d: %d\n",i,MaxElements[i]);
+  for (i = 0; i < (int)(sizeof(MaxElements) / sizeof(MaxElements[0])); ++i) {
+    if (MaxElements[i]) {
+      printf("\t%d: %d\n", i, MaxElements[i]);
+    }
   }
 }
 
@@ -106,11 +105,11 @@ VoidStats gVoidStats;
 #endif
 
 void
-nsVoidArray::SetArray(Impl *newImpl, int32_t aSize, int32_t aCount)
+nsVoidArray::SetArray(Impl* aNewImpl, int32_t aSize, int32_t aCount)
 {
   // old mImpl has been realloced and so we don't free/delete it
-  NS_PRECONDITION(newImpl, "can't set size");
-  mImpl = newImpl;
+  NS_PRECONDITION(aNewImpl, "can't set size");
+  mImpl = aNewImpl;
   mImpl->mCount = aCount;
   mImpl->mSize = aSize;
 }
@@ -118,52 +117,51 @@ nsVoidArray::SetArray(Impl *newImpl, int32_t aSize, int32_t aCount)
 // This does all allocation/reallocation of the array.
 // It also will compact down to N - good for things that might grow a lot
 // at times,  but usually are smaller, like JS deferred GC releases.
-bool nsVoidArray::SizeTo(int32_t aSize)
+bool
+nsVoidArray::SizeTo(int32_t aSize)
 {
   uint32_t oldsize = GetArraySize();
 
-  if (aSize == (int32_t) oldsize)
+  if (aSize == (int32_t)oldsize) {
     return true; // no change
+  }
 
-  if (aSize <= 0)
-  {
+  if (aSize <= 0) {
     // free the array if allocated
-    if (mImpl)
-    {
-      free(reinterpret_cast<char *>(mImpl));
+    if (mImpl) {
+      free(reinterpret_cast<char*>(mImpl));
       mImpl = nullptr;
     }
     return true;
   }
 
-  if (mImpl)
-  {
+  if (mImpl) {
     // We currently own an array impl. Resize it appropriately.
-    if (aSize < mImpl->mCount)
-    {
+    if (aSize < mImpl->mCount) {
       // XXX Note: we could also just resize to mCount
       return true;  // can't make it that small, ignore request
     }
 
-    char* bytes = (char *) realloc(mImpl,SIZEOF_IMPL(aSize));
+    char* bytes = (char*)realloc(mImpl, SIZEOF_IMPL(aSize));
     Impl* newImpl = reinterpret_cast<Impl*>(bytes);
-    if (!newImpl)
+    if (!newImpl) {
       return false;
+    }
 
 #if DEBUG_VOIDARRAY
-    if (mImpl == newImpl)
-      ADD_TO_STATS(GrowInPlace,oldsize);
-    ADD_TO_STATS(AllocedOfSize,SIZEOF_IMPL(aSize));
-    if (aSize > mMaxSize)
-    {
-      ADD_TO_STATS(NumberOfSize,SIZEOF_IMPL(aSize));
-      if (oldsize)
-        SUB_FROM_STATS(NumberOfSize,oldsize);
+    if (mImpl == newImpl) {
+      ADD_TO_STATS(GrowInPlace, oldsize);
+    }
+    ADD_TO_STATS(AllocedOfSize, SIZEOF_IMPL(aSize));
+    if (aSize > mMaxSize) {
+      ADD_TO_STATS(NumberOfSize, SIZEOF_IMPL(aSize));
+      if (oldsize) {
+        SUB_FROM_STATS(NumberOfSize, oldsize);
+      }
       mMaxSize = aSize;
-      if (mIsAuto)
-      {
-        ADD_TO_STATS(MaxAuto,SIZEOF_IMPL(aSize));
-        SUB_FROM_STATS(MaxAuto,oldsize);
+      if (mIsAuto) {
+        ADD_TO_STATS(MaxAuto, SIZEOF_IMPL(aSize));
+        SUB_FROM_STATS(MaxAuto, oldsize);
       }
     }
 #endif
@@ -171,40 +169,40 @@ bool nsVoidArray::SizeTo(int32_t aSize)
     return true;
   }
 
-  if ((uint32_t) aSize < oldsize) {
+  if ((uint32_t)aSize < oldsize) {
     // No point in allocating if it won't free the current Impl anyway.
     return true;
   }
 
   // just allocate an array
   // allocate the exact size requested
-  char* bytes = (char *) malloc(SIZEOF_IMPL(aSize));
+  char* bytes = (char*)malloc(SIZEOF_IMPL(aSize));
   Impl* newImpl = reinterpret_cast<Impl*>(bytes);
-  if (!newImpl)
+  if (!newImpl) {
     return false;
+  }
 
 #if DEBUG_VOIDARRAY
-  ADD_TO_STATS(AllocedOfSize,SIZEOF_IMPL(aSize));
-  if (aSize > mMaxSize)
-  {
-    ADD_TO_STATS(NumberOfSize,SIZEOF_IMPL(aSize));
-    if (oldsize && !mImpl)
-      SUB_FROM_STATS(NumberOfSize,oldsize);
+  ADD_TO_STATS(AllocedOfSize, SIZEOF_IMPL(aSize));
+  if (aSize > mMaxSize) {
+    ADD_TO_STATS(NumberOfSize, SIZEOF_IMPL(aSize));
+    if (oldsize && !mImpl) {
+      SUB_FROM_STATS(NumberOfSize, oldsize);
+    }
     mMaxSize = aSize;
   }
 #endif
-  if (mImpl)
-  {
+  if (mImpl) {
 #if DEBUG_VOIDARRAY
-    ADD_TO_STATS(MaxAuto,SIZEOF_IMPL(aSize));
-    SUB_FROM_STATS(MaxAuto,0);
-    SUB_FROM_STATS(NumberOfSize,0);
+    ADD_TO_STATS(MaxAuto, SIZEOF_IMPL(aSize));
+    SUB_FROM_STATS(MaxAuto, 0);
+    SUB_FROM_STATS(NumberOfSize, 0);
     mIsAuto = true;
 #endif
     // We must be growing an nsAutoVoidArray - copy since we didn't
     // realloc.
     memcpy(newImpl->mArray, mImpl->mArray,
-                  mImpl->mCount * sizeof(mImpl->mArray[0]));
+           mImpl->mCount * sizeof(mImpl->mArray[0]));
   }
 
   SetArray(newImpl, aSize, mImpl ? mImpl->mCount : 0);
@@ -212,38 +210,37 @@ bool nsVoidArray::SizeTo(int32_t aSize)
   return true;
 }
 
-bool nsVoidArray::GrowArrayBy(int32_t aGrowBy)
+bool
+nsVoidArray::GrowArrayBy(int32_t aGrowBy)
 {
   // We have to grow the array. Grow by kMinGrowArrayBy slots if we're
   // smaller than kLinearThreshold bytes, or a power of two if we're
   // larger.  This is much more efficient with most memory allocators,
   // especially if it's very large, or of the allocator is binned.
-  if (aGrowBy < kMinGrowArrayBy)
+  if (aGrowBy < kMinGrowArrayBy) {
     aGrowBy = kMinGrowArrayBy;
+  }
 
   uint32_t newCapacity = GetArraySize() + aGrowBy;  // Minimum increase
   uint32_t newSize = SIZEOF_IMPL(newCapacity);
 
-  if (newSize >= (uint32_t) kLinearThreshold)
-  {
+  if (newSize >= (uint32_t)kLinearThreshold) {
     // newCount includes enough space for at least kMinGrowArrayBy new
     // slots. Select the next power-of-two size in bytes above or
     // equal to that.
     // Also, limit the increase in size to about a VM page or two.
-    if (GetArraySize() >= kMaxGrowArrayBy)
-    {
-      newCapacity = GetArraySize() + XPCOM_MAX(kMaxGrowArrayBy,aGrowBy);
+    if (GetArraySize() >= kMaxGrowArrayBy) {
+      newCapacity = GetArraySize() + XPCOM_MAX(kMaxGrowArrayBy, aGrowBy);
       newSize = SIZEOF_IMPL(newCapacity);
-    }
-    else
-    {
+    } else {
       newSize = mozilla::CeilingLog2(newSize);
       newCapacity = CAPACITYOF_IMPL(1u << newSize);
     }
   }
   // frees old mImpl IF this succeeds
-  if (!SizeTo(newCapacity))
+  if (!SizeTo(newCapacity)) {
     return false;
+  }
 
   return true;
 }
@@ -256,7 +253,7 @@ nsVoidArray::nsVoidArray()
   mMaxCount = 0;
   mMaxSize = 0;
   mIsAuto = false;
-  ADD_TO_STATS(NumberOfSize,0);
+  ADD_TO_STATS(NumberOfSize, 0);
   MaxElements[0]++;
 #endif
 }
@@ -274,44 +271,40 @@ nsVoidArray::nsVoidArray(int32_t aCount)
   SizeTo(aCount);
 }
 
-nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
+nsVoidArray&
+nsVoidArray::operator=(const nsVoidArray& aOther)
 {
-  int32_t otherCount = other.Count();
+  int32_t otherCount = aOther.Count();
   int32_t maxCount = GetArraySize();
-  if (otherCount)
-  {
-    if (otherCount > maxCount)
-    {
+  if (otherCount) {
+    if (otherCount > maxCount) {
       // frees old mImpl IF this succeeds
-      if (!GrowArrayBy(otherCount-maxCount))
+      if (!GrowArrayBy(otherCount - maxCount)) {
         return *this;      // XXX The allocation failed - don't do anything
+      }
 
-      memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+      memcpy(mImpl->mArray, aOther.mImpl->mArray,
+             otherCount * sizeof(mImpl->mArray[0]));
       mImpl->mCount = otherCount;
-    }
-    else
-    {
+    } else {
       // the old array can hold the new array
-      memcpy(mImpl->mArray, other.mImpl->mArray, otherCount * sizeof(mImpl->mArray[0]));
+      memcpy(mImpl->mArray, aOther.mImpl->mArray,
+             otherCount * sizeof(mImpl->mArray[0]));
       mImpl->mCount = otherCount;
       // if it shrank a lot, compact it anyways
-      if ((otherCount*2) < maxCount && maxCount > 100)
-      {
+      if ((otherCount * 2) < maxCount && maxCount > 100) {
         Compact();  // shrank by at least 50 entries
       }
     }
 #if DEBUG_VOIDARRAY
-     if (mImpl->mCount > mMaxCount &&
-         mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-     {
-       MaxElements[mImpl->mCount]++;
-       MaxElements[mMaxCount]--;
-       mMaxCount = mImpl->mCount;
-     }
+    if (mImpl->mCount > mMaxCount &&
+        mImpl->mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
+      MaxElements[mImpl->mCount]++;
+      MaxElements[mMaxCount]--;
+      mMaxCount = mImpl->mCount;
+    }
 #endif
-  }
-  else
-  {
+  } else {
     // Why do we drop the buffer here when we don't in Clear()?
     SizeTo(0);
   }
@@ -322,34 +315,35 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
 nsVoidArray::~nsVoidArray()
 {
   MOZ_COUNT_DTOR(nsVoidArray);
-  if (mImpl)
+  if (mImpl) {
     free(reinterpret_cast<char*>(mImpl));
+  }
 }
 
-bool nsVoidArray::SetCount(int32_t aNewCount)
+bool
+nsVoidArray::SetCount(int32_t aNewCount)
 {
-  NS_ASSERTION(aNewCount >= 0,"SetCount(negative index)");
-  if (aNewCount < 0)
+  NS_ASSERTION(aNewCount >= 0, "SetCount(negative index)");
+  if (aNewCount < 0) {
     return false;
+  }
 
-  if (aNewCount == 0)
-  {
+  if (aNewCount == 0) {
     Clear();
     return true;
   }
 
-  if (uint32_t(aNewCount) > uint32_t(GetArraySize()))
-  {
+  if (uint32_t(aNewCount) > uint32_t(GetArraySize())) {
     int32_t oldCount = Count();
     int32_t growDelta = aNewCount - oldCount;
 
     // frees old mImpl IF this succeeds
-    if (!GrowArrayBy(growDelta))
+    if (!GrowArrayBy(growDelta)) {
       return false;
+    }
   }
 
-  if (aNewCount > mImpl->mCount)
-  {
+  if (aNewCount > mImpl->mCount) {
     // Make sure that new entries added to the array by this
     // SetCount are cleared to 0.  Some users of this assume that.
     // This code means we don't have to memset when we allocate an array.
@@ -361,8 +355,7 @@ bool nsVoidArray::SetCount(int32_t aNewCount)
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-  {
+      mImpl->mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
     mMaxCount = mImpl->mCount;
@@ -372,16 +365,14 @@ bool nsVoidArray::SetCount(int32_t aNewCount)
   return true;
 }
 
-int32_t nsVoidArray::IndexOf(void* aPossibleElement) const
+int32_t
+nsVoidArray::IndexOf(void* aPossibleElement) const
 {
-  if (mImpl)
-  {
+  if (mImpl) {
     void** ap = mImpl->mArray;
     void** end = ap + mImpl->mCount;
-    while (ap < end)
-    {
-      if (*ap == aPossibleElement)
-      {
+    while (ap < end) {
+      if (*ap == aPossibleElement) {
         return ap - mImpl->mArray;
       }
       ap++;
@@ -390,28 +381,27 @@ int32_t nsVoidArray::IndexOf(void* aPossibleElement) const
   return -1;
 }
 
-bool nsVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
+bool
+nsVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
 {
   int32_t oldCount = Count();
-  NS_ASSERTION(aIndex >= 0,"InsertElementAt(negative index)");
-  if (uint32_t(aIndex) > uint32_t(oldCount))
-  {
+  NS_ASSERTION(aIndex >= 0, "InsertElementAt(negative index)");
+  if (uint32_t(aIndex) > uint32_t(oldCount)) {
     // An invalid index causes the insertion to fail
     // Invalid indexes are ones that add more than one entry to the
     // array (i.e., they can append).
     return false;
   }
 
-  if (oldCount >= GetArraySize())
-  {
-    if (!GrowArrayBy(1))
+  if (oldCount >= GetArraySize()) {
+    if (!GrowArrayBy(1)) {
       return false;
+    }
   }
   // else the array is already large enough
 
   int32_t slide = oldCount - aIndex;
-  if (0 != slide)
-  {
+  if (0 != slide) {
     // Slide data over to make room for the insertion
     memmove(mImpl->mArray + aIndex + 1, mImpl->mArray + aIndex,
             slide * sizeof(mImpl->mArray[0]));
@@ -422,8 +412,7 @@ bool nsVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-  {
+      mImpl->mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
     mMaxCount = mImpl->mCount;
@@ -433,46 +422,43 @@ bool nsVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
   return true;
 }
 
-bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, int32_t aIndex)
+bool
+nsVoidArray::InsertElementsAt(const nsVoidArray& aOther, int32_t aIndex)
 {
   int32_t oldCount = Count();
-  int32_t otherCount = other.Count();
+  int32_t otherCount = aOther.Count();
 
-  NS_ASSERTION(aIndex >= 0,"InsertElementsAt(negative index)");
-  if (uint32_t(aIndex) > uint32_t(oldCount))
-  {
+  NS_ASSERTION(aIndex >= 0, "InsertElementsAt(negative index)");
+  if (uint32_t(aIndex) > uint32_t(oldCount)) {
     // An invalid index causes the insertion to fail
     // Invalid indexes are ones that are more than one entry past the end of
     // the array (i.e., they can append).
     return false;
   }
 
-  if (oldCount + otherCount > GetArraySize())
-  {
-    if (!GrowArrayBy(otherCount))
-      return false;;
+  if (oldCount + otherCount > GetArraySize()) {
+    if (!GrowArrayBy(otherCount)) {
+      return false;
+    }
   }
   // else the array is already large enough
 
   int32_t slide = oldCount - aIndex;
-  if (0 != slide)
-  {
+  if (slide != 0) {
     // Slide data over to make room for the insertion
     memmove(mImpl->mArray + aIndex + otherCount, mImpl->mArray + aIndex,
             slide * sizeof(mImpl->mArray[0]));
   }
 
-  for (int32_t i = 0; i < otherCount; i++)
-  {
+  for (int32_t i = 0; i < otherCount; ++i) {
     // copy all the elements (destroys aIndex)
-    mImpl->mArray[aIndex++] = other.mImpl->mArray[i];
+    mImpl->mArray[aIndex++] = aOther.mImpl->mArray[i];
     mImpl->mCount++;
   }
 
 #if DEBUG_VOIDARRAY
   if (mImpl->mCount > mMaxCount &&
-      mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-  {
+      mImpl->mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
     MaxElements[mImpl->mCount]++;
     MaxElements[mMaxCount]--;
     mMaxCount = mImpl->mCount;
@@ -482,50 +468,49 @@ bool nsVoidArray::InsertElementsAt(const nsVoidArray& other, int32_t aIndex)
   return true;
 }
 
-bool nsVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
+bool
+nsVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
 {
-  NS_ASSERTION(aIndex >= 0,"ReplaceElementAt(negative index)");
-  if (aIndex < 0)
+  NS_ASSERTION(aIndex >= 0, "ReplaceElementAt(negative index)");
+  if (aIndex < 0) {
     return false;
+  }
 
   // Unlike InsertElementAt, ReplaceElementAt can implicitly add more
   // than just the one element to the array.
-  if (uint32_t(aIndex) >= uint32_t(GetArraySize()))
-  {
+  if (uint32_t(aIndex) >= uint32_t(GetArraySize())) {
     int32_t oldCount = Count();
     int32_t requestedCount = aIndex + 1;
     int32_t growDelta = requestedCount - oldCount;
 
     // frees old mImpl IF this succeeds
-    if (!GrowArrayBy(growDelta))
+    if (!GrowArrayBy(growDelta)) {
       return false;
+    }
   }
 
   mImpl->mArray[aIndex] = aElement;
-  if (aIndex >= mImpl->mCount)
-  {
+  if (aIndex >= mImpl->mCount) {
     // Make sure that any entries implicitly added to the array by this
     // ReplaceElementAt are cleared to 0.  Some users of this assume that.
     // This code means we don't have to memset when we allocate an array.
-    if (aIndex > mImpl->mCount) // note: not >=
-    {
+    if (aIndex > mImpl->mCount) { // note: not >=
       // For example, if mCount is 2, and we do a ReplaceElementAt for
       // element[5], then we need to set three entries ([2], [3], and [4])
       // to 0.
       memset(&mImpl->mArray[mImpl->mCount], 0,
              (aIndex - mImpl->mCount) * sizeof(mImpl->mArray[0]));
     }
-    
-     mImpl->mCount = aIndex + 1;
+
+    mImpl->mCount = aIndex + 1;
 
 #if DEBUG_VOIDARRAY
-     if (mImpl->mCount > mMaxCount &&
-         mImpl->mCount < (int32_t)(sizeof(MaxElements)/sizeof(MaxElements[0])))
-     {
-       MaxElements[mImpl->mCount]++;
-       MaxElements[mMaxCount]--;
-       mMaxCount = mImpl->mCount;
-     }
+    if (mImpl->mCount > mMaxCount &&
+        mImpl->mCount < (int32_t)(sizeof(MaxElements) / sizeof(MaxElements[0]))) {
+      MaxElements[mImpl->mCount]++;
+      MaxElements[mMaxCount]--;
+      mMaxCount = mImpl->mCount;
+    }
 #endif
   }
 
@@ -533,55 +518,53 @@ bool nsVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
 }
 
 // useful for doing LRU arrays
-bool nsVoidArray::MoveElement(int32_t aFrom, int32_t aTo)
+bool
+nsVoidArray::MoveElement(int32_t aFrom, int32_t aTo)
 {
-  void *tempElement;
+  void* tempElement;
 
-  if (aTo == aFrom)
+  if (aTo == aFrom) {
     return true;
+  }
 
-  NS_ASSERTION(aTo >= 0 && aFrom >= 0,"MoveElement(negative index)");
-  if (aTo >= Count() || aFrom >= Count())
-  {
+  NS_ASSERTION(aTo >= 0 && aFrom >= 0, "MoveElement(negative index)");
+  if (aTo >= Count() || aFrom >= Count()) {
     // can't extend the array when moving an element.  Also catches mImpl = null
     return false;
   }
   tempElement = mImpl->mArray[aFrom];
 
-  if (aTo < aFrom)
-  {
+  if (aTo < aFrom) {
     // Moving one element closer to the head; the elements inbetween move down
     memmove(mImpl->mArray + aTo + 1, mImpl->mArray + aTo,
-            (aFrom-aTo) * sizeof(mImpl->mArray[0]));
+            (aFrom - aTo) * sizeof(mImpl->mArray[0]));
     mImpl->mArray[aTo] = tempElement;
-  }
-  else // already handled aFrom == aTo
-  {
+  } else { // already handled aFrom == aTo
     // Moving one element closer to the tail; the elements inbetween move up
     memmove(mImpl->mArray + aFrom, mImpl->mArray + aFrom + 1,
-            (aTo-aFrom) * sizeof(mImpl->mArray[0]));
+            (aTo - aFrom) * sizeof(mImpl->mArray[0]));
     mImpl->mArray[aTo] = tempElement;
   }
 
   return true;
 }
 
-void nsVoidArray::RemoveElementsAt(int32_t aIndex, int32_t aCount)
+void
+nsVoidArray::RemoveElementsAt(int32_t aIndex, int32_t aCount)
 {
   int32_t oldCount = Count();
-  NS_ASSERTION(aIndex >= 0,"RemoveElementsAt(negative index)");
-  if (uint32_t(aIndex) >= uint32_t(oldCount))
-  {
+  NS_ASSERTION(aIndex >= 0, "RemoveElementsAt(negative index)");
+  if (uint32_t(aIndex) >= uint32_t(oldCount)) {
     return;
   }
   // Limit to available entries starting at aIndex
-  if (aCount + aIndex > oldCount)
+  if (aCount + aIndex > oldCount) {
     aCount = oldCount - aIndex;
+  }
 
   // We don't need to move any elements if we're removing the
   // last element in the array
-  if (aIndex < (oldCount - aCount))
-  {
+  if (aIndex < (oldCount - aCount)) {
     memmove(mImpl->mArray + aIndex, mImpl->mArray + aIndex + aCount,
             (oldCount - (aIndex + aCount)) * sizeof(mImpl->mArray[0]));
   }
@@ -590,11 +573,11 @@ void nsVoidArray::RemoveElementsAt(int32_t aIndex, int32_t aCount)
   return;
 }
 
-bool nsVoidArray::RemoveElement(void* aElement)
+bool
+nsVoidArray::RemoveElement(void* aElement)
 {
   int32_t theIndex = IndexOf(aElement);
-  if (theIndex != -1)
-  {
+  if (theIndex != -1) {
     RemoveElementAt(theIndex);
     return true;
   }
@@ -602,23 +585,22 @@ bool nsVoidArray::RemoveElement(void* aElement)
   return false;
 }
 
-void nsVoidArray::Clear()
+void
+nsVoidArray::Clear()
 {
-  if (mImpl)
-  {
+  if (mImpl) {
     mImpl->mCount = 0;
   }
 }
 
-void nsVoidArray::Compact()
+void
+nsVoidArray::Compact()
 {
-  if (mImpl)
-  {
+  if (mImpl) {
     // XXX NOTE: this is quite inefficient in many cases if we're only
     // compacting by a little, but some callers care more about memory use.
     int32_t count = Count();
-    if (GetArraySize() > count)
-    {
+    if (GetArraySize() > count) {
       SizeTo(Count());
     }
   }
@@ -626,7 +608,8 @@ void nsVoidArray::Compact()
 
 // Needed because we want to pass the pointer to the item in the array
 // to the comparator function, not a pointer to the pointer in the array.
-struct VoidArrayComparatorContext {
+struct VoidArrayComparatorContext
+{
   nsVoidArrayComparatorFunc mComparatorFunc;
   void* mData;
 };
@@ -637,20 +620,21 @@ VoidArrayComparator(const void* aElement1, const void* aElement2, void* aData)
   VoidArrayComparatorContext* ctx = static_cast<VoidArrayComparatorContext*>(aData);
   return (*ctx->mComparatorFunc)(*static_cast<void* const*>(aElement1),
                                  *static_cast<void* const*>(aElement2),
-                                  ctx->mData);
+                                 ctx->mData);
 }
 
-void nsVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
+void
+nsVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
 {
-  if (mImpl && mImpl->mCount > 1)
-  {
+  if (mImpl && mImpl->mCount > 1) {
     VoidArrayComparatorContext ctx = {aFunc, aData};
     NS_QuickSort(mImpl->mArray, mImpl->mCount, sizeof(mImpl->mArray[0]),
                  VoidArrayComparator, &ctx);
   }
 }
 
-bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
+bool
+nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   int32_t index = -1;
   bool    running = true;
@@ -663,8 +647,9 @@ bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   return running;
 }
 
-bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFuncConst aFunc,
-                                    void* aData) const
+bool
+nsVoidArray::EnumerateForwards(nsVoidArrayEnumFuncConst aFunc,
+                               void* aData) const
 {
   int32_t index = -1;
   bool    running = true;
@@ -677,15 +662,14 @@ bool nsVoidArray::EnumerateForwards(nsVoidArrayEnumFuncConst aFunc,
   return running;
 }
 
-bool nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
+bool
+nsVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
 {
   bool    running = true;
 
-  if (mImpl)
-  {
+  if (mImpl) {
     int32_t index = Count();
-    while (running && (0 <= --index))
-    {
+    while (running && (--index >= 0)) {
       running = (*aFunc)(mImpl->mArray[index], aData);
     }
   }
@@ -697,13 +681,13 @@ struct SizeOfElementIncludingThisData
   size_t mSize;
   nsVoidArraySizeOfElementIncludingThisFunc mSizeOfElementIncludingThis;
   mozilla::MallocSizeOf mMallocSizeOf;
-  void *mData;      // the arg passed by the user
+  void* mData;  // the arg passed by the user
 };
 
 static bool
-SizeOfElementIncludingThisEnumerator(const void *aElement, void *aData)
+SizeOfElementIncludingThisEnumerator(const void* aElement, void* aData)
 {
-  SizeOfElementIncludingThisData *d = (SizeOfElementIncludingThisData *)aData;
+  SizeOfElementIncludingThisData* d = (SizeOfElementIncludingThisData*)aData;
   d->mSize += d->mSizeOfElementIncludingThis(aElement, d->mMallocSizeOf, d->mData);
   return true;
 }
@@ -719,9 +703,9 @@ nsVoidArray::SizeOfExcludingThis(
     n += aMallocSizeOf(mImpl);
   }
   // Measure things pointed to by the elements.
-  if (aSizeOfElementIncludingThis) { 
+  if (aSizeOfElementIncludingThis) {
     SizeOfElementIncludingThisData data2 =
-      { 0, aSizeOfElementIncludingThis, aMallocSizeOf, aData };
+    { 0, aSizeOfElementIncludingThis, aMallocSizeOf, aData };
     EnumerateForwards(SizeOfElementIncludingThisEnumerator, &data2);
     n += data2.mSize;
   }
@@ -734,31 +718,30 @@ nsVoidArray::SizeOfExcludingThis(
 // structures or objects.
 nsSmallVoidArray::~nsSmallVoidArray()
 {
-  if (HasSingle())
-  {
+  if (HasSingle()) {
     // Have to null out mImpl before the nsVoidArray dtor runs.
     mImpl = nullptr;
   }
 }
 
-nsSmallVoidArray& 
-nsSmallVoidArray::operator=(nsSmallVoidArray& other)
+nsSmallVoidArray&
+nsSmallVoidArray::operator=(nsSmallVoidArray& aOther)
 {
-  int32_t count = other.Count();
+  int32_t count = aOther.Count();
   switch (count) {
     case 0:
       Clear();
       break;
     case 1:
       Clear();
-      AppendElement(other.ElementAt(0));
+      AppendElement(aOther.ElementAt(0));
       break;
     default:
       if (GetArraySize() >= count || SizeTo(count)) {
-        *AsArray() = *other.AsArray();
+        *AsArray() = *aOther.AsArray();
       }
   }
-    
+
   return *this;
 }
 
@@ -785,7 +768,8 @@ nsSmallVoidArray::Count() const
 void*
 nsSmallVoidArray::FastElementAt(int32_t aIndex) const
 {
-  NS_ASSERTION(0 <= aIndex && aIndex < Count(), "nsSmallVoidArray::FastElementAt: index out of range");
+  NS_ASSERTION(aIndex >= 0 && aIndex < Count(),
+               "nsSmallVoidArray::FastElementAt: index out of range");
 
   if (HasSingle()) {
     return GetSingle();
@@ -823,10 +807,11 @@ nsSmallVoidArray::InsertElementAt(void* aElement, int32_t aIndex)
   return AsArray()->InsertElementAt(aElement, aIndex);
 }
 
-bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, int32_t aIndex)
+bool
+nsSmallVoidArray::InsertElementsAt(const nsVoidArray& aOther, int32_t aIndex)
 {
-#ifdef DEBUG  
-  for (int i = 0; i < aOther.Count(); i++) {
+#ifdef DEBUG
+  for (int i = 0; i < aOther.Count(); ++i) {
     NS_ASSERTION(!(NS_PTR_TO_INT32(aOther.ElementAt(i)) & 0x1),
                  "Attempt to add element with 0x1 bit set to nsSmallVoidArray");
   }
@@ -834,7 +819,7 @@ bool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &aOther, int32_t aInde
 
   if (aIndex == 0 && IsEmpty() && aOther.Count() == 1) {
     SetSingle(aOther.FastElementAt(0));
-    
+
     return true;
   }
 
@@ -853,7 +838,7 @@ nsSmallVoidArray::ReplaceElementAt(void* aElement, int32_t aIndex)
 
   if (aIndex == 0 && (IsEmpty() || HasSingle())) {
     SetSingle(aElement);
-    
+
     return true;
   }
 
@@ -872,7 +857,7 @@ nsSmallVoidArray::AppendElement(void* aElement)
 
   if (IsEmpty()) {
     SetSingle(aElement);
-    
+
     return true;
   }
 
@@ -891,7 +876,7 @@ nsSmallVoidArray::RemoveElement(void* aElement)
       mImpl = nullptr;
       return true;
     }
-    
+
     return false;
   }
 
@@ -905,7 +890,7 @@ nsSmallVoidArray::RemoveElementAt(int32_t aIndex)
     if (aIndex == 0) {
       mImpl = nullptr;
     }
-    
+
     return;
   }
 
@@ -933,8 +918,7 @@ nsSmallVoidArray::Clear()
 {
   if (HasSingle()) {
     mImpl = nullptr;
-  }
-  else {
+  } else {
     AsArray()->Clear();
   }
 }
@@ -981,7 +965,7 @@ void
 nsSmallVoidArray::Sort(nsVoidArrayComparatorFunc aFunc, void* aData)
 {
   if (!HasSingle()) {
-    AsArray()->Sort(aFunc,aData);
+    AsArray()->Sort(aFunc, aData);
   }
 }
 
@@ -991,7 +975,7 @@ nsSmallVoidArray::EnumerateForwards(nsVoidArrayEnumFunc aFunc, void* aData)
   if (HasSingle()) {
     return (*aFunc)(GetSingle(), aData);
   }
-  return AsArray()->EnumerateForwards(aFunc,aData);
+  return AsArray()->EnumerateForwards(aFunc, aData);
 }
 
 bool
@@ -1000,7 +984,7 @@ nsSmallVoidArray::EnumerateBackwards(nsVoidArrayEnumFunc aFunc, void* aData)
   if (HasSingle()) {
     return (*aFunc)(GetSingle(), aData);
   }
-  return AsArray()->EnumerateBackwards(aFunc,aData);
+  return AsArray()->EnumerateBackwards(aFunc, aData);
 }
 
 bool

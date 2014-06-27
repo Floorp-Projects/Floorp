@@ -22,24 +22,24 @@
 
 class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver
 {
-  public:
-    nsCategoryObserver(const char* aCategory);
-    ~nsCategoryObserver();
+public:
+  nsCategoryObserver(const char* aCategory);
+  ~nsCategoryObserver();
 
-    void ListenerDied();
-    nsInterfaceHashtable<nsCStringHashKey, nsISupports>& GetHash()
-    {
-      return mHash;
-    }
+  void ListenerDied();
+  nsInterfaceHashtable<nsCStringHashKey, nsISupports>& GetHash()
+  {
+    return mHash;
+  }
 
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
-  private:
-    void RemoveObservers();
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+private:
+  void RemoveObservers();
 
-    nsInterfaceHashtable<nsCStringHashKey, nsISupports> mHash;
-    nsCString mCategory;
-    bool mObserversRemoved;
+  nsInterfaceHashtable<nsCStringHashKey, nsISupports> mHash;
+  nsCString mCategory;
+  bool mObserversRemoved;
 };
 
 /**
@@ -52,43 +52,47 @@ class NS_COM_GLUE nsCategoryObserver MOZ_FINAL : public nsIObserver
 template<class T>
 class nsCategoryCache MOZ_FINAL
 {
-  public:
-    explicit nsCategoryCache(const char* aCategory)
-      : mCategoryName(aCategory)
-    {
+public:
+  explicit nsCategoryCache(const char* aCategory)
+    : mCategoryName(aCategory)
+  {
+  }
+  ~nsCategoryCache()
+  {
+    if (mObserver) {
+      mObserver->ListenerDied();
     }
-    ~nsCategoryCache() {
-      if (mObserver)
-	mObserver->ListenerDied();
-    }
+  }
 
-    void GetEntries(nsCOMArray<T>& result) {
-      // Lazy initialization, so that services in this category can't
-      // cause reentrant getService (bug 386376)
-      if (!mObserver)
-        mObserver = new nsCategoryObserver(mCategoryName.get());
-
-      mObserver->GetHash().EnumerateRead(EntriesToArray, &result);
-    }
-
-  private:
-    // Not to be implemented
-    nsCategoryCache(const nsCategoryCache<T>&);
-
-    static PLDHashOperator EntriesToArray(const nsACString& key,
-					  nsISupports* entry, void* arg)
-    {
-      nsCOMArray<T>& entries = *static_cast<nsCOMArray<T>*>(arg);
-
-      nsCOMPtr<T> service = do_QueryInterface(entry);
-      if (service) {
-	entries.AppendObject(service);
-      }
-      return PL_DHASH_NEXT;
+  void GetEntries(nsCOMArray<T>& aResult)
+  {
+    // Lazy initialization, so that services in this category can't
+    // cause reentrant getService (bug 386376)
+    if (!mObserver) {
+      mObserver = new nsCategoryObserver(mCategoryName.get());
     }
 
-    nsCString mCategoryName;
-    nsRefPtr<nsCategoryObserver> mObserver;
+    mObserver->GetHash().EnumerateRead(EntriesToArray, &aResult);
+  }
+
+private:
+  // Not to be implemented
+  nsCategoryCache(const nsCategoryCache<T>&);
+
+  static PLDHashOperator EntriesToArray(const nsACString& aKey,
+                                        nsISupports* aEntry, void* aArg)
+  {
+    nsCOMArray<T>& entries = *static_cast<nsCOMArray<T>*>(aArg);
+
+    nsCOMPtr<T> service = do_QueryInterface(aEntry);
+    if (service) {
+      entries.AppendObject(service);
+    }
+    return PL_DHASH_NEXT;
+  }
+
+  nsCString mCategoryName;
+  nsRefPtr<nsCategoryObserver> mObserver;
 
 };
 
