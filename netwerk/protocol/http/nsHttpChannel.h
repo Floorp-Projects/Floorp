@@ -103,7 +103,6 @@ public:
     NS_IMETHOD Cancel(nsresult status);
     NS_IMETHOD Suspend();
     NS_IMETHOD Resume();
-    NS_IMETHOD IsPending(bool *aIsPending);
     // nsIChannel
     NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
@@ -188,8 +187,6 @@ public: /* internal necko use only */
       nsHttpChannel* mChannel;
       uint32_t mKeep : 2;
     };
-
-    void ForcePending(bool aForcePending);
 
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
@@ -422,9 +419,6 @@ protected:
 
 private: // cache telemetry
     bool mDidReval;
-
-private:
-    bool mForcePending;
 };
 
 } } // namespace mozilla::net

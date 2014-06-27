@@ -85,6 +85,8 @@ ChannelListener.prototype = {
         if (!(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
           do_throw("Could not get contentLength");
       }
+      if (!request.isPending())
+        do_throw("request reports itself as not pending from onStartRequest!");
       if (this._contentLen == -1 && !(this._flags & (CL_EXPECT_FAILURE | CL_ALLOW_UNKNOWN_CL)))
         do_throw("Content length is unknown in onStartRequest!");
 
