@@ -175,22 +175,6 @@ public:
 
     virtual const nsIntSize GetSize() const;
 
-    /**
-     * Debug functions to encode the current image as a PNG and export it.
-     */
-
-    /**
-     * Writes a binary PNG file.
-     */
-    void WriteAsPNG(const char* aFile);
-
-    /**
-     * Copy a PNG encoded Data URL to the clipboard.
-     */
-    void CopyAsDataURL();
-
-    void WriteAsPNG_internal(FILE* aFile, bool aBinary);
-
     void SetOpaqueRect(const gfxRect& aRect);
 
     const gfxRect& GetOpaqueRect() {
