@@ -6035,6 +6035,12 @@ SetRuntimeOptions(JSRuntime *rt, const OptionParser &op)
 
 #endif // JS_ION
 
+#if defined(JS_CODEGEN_ARM)
+    int32_t fill = op.getIntOption("arm-asm-nop-fill");
+    if (fill >= 0)
+        jit::Assembler::NopFill = fill;
+#endif
+
 #if defined(JS_ARM_SIMULATOR)
     if (op.getBoolOption("arm-sim-icache-checks"))
         jit::Simulator::ICacheCheckingEnabled = true;
@@ -6255,6 +6261,10 @@ main(int argc, char **argv, char **envp)
 #endif
         || !op.addIntOption('\0', "available-memory", "SIZE",
                             "Select GC settings based on available memory (MB)", 0)
+#if defined(JS_CODEGEN_ARM)
+        || !op.addIntOption('\0', "arm-asm-nop-fill", "SIZE",
+                            "Insert the given number of NOP instructions at all possible pool locations.", 0)
+#endif
 #if defined(JS_ARM_SIMULATOR)
         || !op.addBoolOption('\0', "arm-sim-icache-checks", "Enable icache flush checks in the ARM "
                              "simulator.")
