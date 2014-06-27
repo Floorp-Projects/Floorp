@@ -1,0 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIVariant;
+
+[scriptable, builtinclass, uuid(174139d8-00e1-11e4-818a-f38357d90920)]
+interface nsIDeletedMessageInfo : nsISupports
+{
+   /* Array of messages ids in long if available. */
+   readonly attribute nsIVariant deletedMessageIds;
+
+   /* Array of thread ids in unsigned long long. if available */
+   readonly attribute nsIVariant deletedThreadIds;
+};
