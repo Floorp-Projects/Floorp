@@ -7840,7 +7840,22 @@ PostMessageReadStructuredClone(JSContext* cx,
                                uint32_t data,
                                void* closure)
 {
-  if (tag == SCTAG_DOM_BLOB || tag == SCTAG_DOM_FILELIST) {
+  if (tag == SCTAG_DOM_BLOB) {
+    NS_ASSERTION(!data, "Data should be empty");
+
+    // What we get back from the reader is a DOMFileImpl.
+    // From that we create a new DOMFile.
+    nsISupports* supports;
+    if (JS_ReadBytes(reader, &supports, sizeof(supports))) {
+      nsCOMPtr<nsIDOMBlob> file = new DOMFile(static_cast<DOMFileImpl*>(supports));
+      JS::Rooted<JS::Value> val(cx);
+      if (NS_SUCCEEDED(nsContentUtils::WrapNative(cx, file, &val))) {
+        return val.toObjectOrNull();
+      }
+    }
+  }
+
+  if (tag == SCTAG_DOM_FILELIST) {
     NS_ASSERTION(!data, "Data should be empty");
 
     nsISupports* supports;
@@ -7879,8 +7894,11 @@ PostMessageWriteStructuredClone(JSContext* cx,
     nsISupports* supports = wrappedNative->Native();
 
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(supports);
-    if (blob && scInfo->subsumes)
+    if (blob && scInfo->subsumes) {
       scTag = SCTAG_DOM_BLOB;
+      DOMFile* file = static_cast<DOMFile*>(blob.get());
+      supports = file->Impl();
+    }
 
     nsCOMPtr<nsIDOMFileList> list = do_QueryInterface(supports);
     if (list && scInfo->subsumes)

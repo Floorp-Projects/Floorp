@@ -24,6 +24,8 @@ class FileImpl : public DOMFileImplBase
   friend class File;
 
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   // Create as a file
   FileImpl(const nsAString& aName, const nsAString& aContentType,
            uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle);
@@ -40,6 +42,11 @@ public:
 
   virtual void Unlink() MOZ_OVERRIDE;
   virtual void Traverse(nsCycleCollectionTraversalCallback &aCb) MOZ_OVERRIDE;
+
+  virtual bool IsCCed() const MOZ_OVERRIDE
+  {
+    return true;
+  }
 
 protected:
   // Create slice

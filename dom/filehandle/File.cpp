@@ -15,6 +15,8 @@ namespace dom {
 
 using indexedDB::IndexedDatabaseManager;
 
+NS_IMPL_ISUPPORTS_INHERITED0(FileImpl, DOMFileImpl)
+
 // Create as a file
 FileImpl::FileImpl(const nsAString& aName, const nsAString& aContentType,
                    uint64_t aLength, nsIFile* aFile, FileHandle* aFileHandle)
@@ -99,7 +101,7 @@ FileImpl::CreateSlice(uint64_t aStart, uint64_t aLength,
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 
   nsCOMPtr<nsIDOMBlob> t =
-    new DOMFileCC(new FileImpl(this, aStart, aLength, aContentType));
+    new DOMFile(new FileImpl(this, aStart, aLength, aContentType));
 
   return t.forget();
 }
