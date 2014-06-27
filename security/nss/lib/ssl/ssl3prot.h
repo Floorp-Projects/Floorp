@@ -17,25 +17,25 @@ typedef PRUint16 SSL3ProtocolVersion;
 typedef PRUint16 ssl3CipherSuite;
 /* The cipher suites are defined in sslproto.h */
 
-#define MAX_CERT_TYPES			10
-#define MAX_COMPRESSION_METHODS		10
-#define MAX_MAC_LENGTH			64
-#define MAX_PADDING_LENGTH		64
-#define MAX_KEY_LENGTH			64
-#define EXPORT_KEY_LENGTH		 5
-#define SSL3_RANDOM_LENGTH		32
+#define MAX_CERT_TYPES                  10
+#define MAX_COMPRESSION_METHODS         10
+#define MAX_MAC_LENGTH                  64
+#define MAX_PADDING_LENGTH              64
+#define MAX_KEY_LENGTH                  64
+#define EXPORT_KEY_LENGTH                5
+#define SSL3_RANDOM_LENGTH              32
 
-#define SSL3_RECORD_HEADER_LENGTH	 5
+#define SSL3_RECORD_HEADER_LENGTH        5
 
 /* SSL3_RECORD_HEADER_LENGTH + epoch/sequence_number */
 #define DTLS_RECORD_HEADER_LENGTH       13
 
-#define MAX_FRAGMENT_LENGTH		16384
-     
+#define MAX_FRAGMENT_LENGTH          16384
+
 typedef enum {
-    content_change_cipher_spec = 20, 
+    content_change_cipher_spec = 20,
     content_alert              = 21,
-    content_handshake          = 22, 
+    content_handshake          = 22,
     content_application_data   = 23
 } SSL3ContentType;
 
@@ -77,11 +77,11 @@ typedef enum {
     close_notify            = 0,
     unexpected_message      = 10,
     bad_record_mac          = 20,
-    decryption_failed_RESERVED = 21,	/* do not send; see RFC 5246 */
-    record_overflow         = 22,	/* TLS only */
+    decryption_failed_RESERVED = 21,    /* do not send; see RFC 5246 */
+    record_overflow         = 22,       /* TLS only */
     decompression_failure   = 30,
     handshake_failure       = 40,
-    no_certificate          = 41,	/* SSL3 only, NOT TLS */
+    no_certificate          = 41,       /* SSL3 only, NOT TLS */
     bad_certificate         = 42,
     unsupported_certificate = 43,
     certificate_revoked     = 44,
@@ -106,7 +106,8 @@ typedef enum {
     certificate_unobtainable        = 111,
     unrecognized_name               = 112,
     bad_certificate_status_response = 113,
-    bad_certificate_hash_value      = 114
+    bad_certificate_hash_value      = 114,
+    no_application_protocol         = 120
 
 } SSL3AlertDescription;
 
@@ -116,44 +117,44 @@ typedef struct {
 } SSL3Alert;
 
 typedef enum {
-    hello_request	= 0, 
-    client_hello	= 1, 
-    server_hello	= 2,
+    hello_request       = 0,
+    client_hello        = 1,
+    server_hello        = 2,
     hello_verify_request = 3,
-    new_session_ticket	= 4,
-    certificate 	= 11, 
+    new_session_ticket  = 4,
+    certificate         = 11,
     server_key_exchange = 12,
-    certificate_request	= 13, 
-    server_hello_done	= 14,
-    certificate_verify	= 15, 
-    client_key_exchange	= 16, 
-    finished		= 20,
+    certificate_request = 13,
+    server_hello_done   = 14,
+    certificate_verify  = 15,
+    client_key_exchange = 16,
+    finished            = 20,
     certificate_status  = 22,
-    next_proto		= 67
+    next_proto          = 67
 } SSL3HandshakeType;
 
 typedef struct {
     PRUint8 empty;
 } SSL3HelloRequest;
-     
+
 typedef struct {
     SSL3Opaque rand[SSL3_RANDOM_LENGTH];
 } SSL3Random;
-     
+
 typedef struct {
     SSL3Opaque id[32];
     PRUint8 length;
 } SSL3SessionID;
-     
+
 typedef struct {
     SSL3ProtocolVersion   client_version;
     SSL3Random            random;
     SSL3SessionID         session_id;
     SECItem               cipher_suites;
-    PRUint8                 cm_count;
+    PRUint8               cm_count;
     SSLCompressionMethod  compression_methods[MAX_COMPRESSION_METHODS];
 } SSL3ClientHello;
-     
+
 typedef struct  {
     SSL3ProtocolVersion   server_version;
     SSL3Random            random;
@@ -161,29 +162,29 @@ typedef struct  {
     ssl3CipherSuite       cipher_suite;
     SSLCompressionMethod  compression_method;
 } SSL3ServerHello;
-     
+
 typedef struct {
     SECItem list;
 } SSL3Certificate;
 
 /* SSL3SignType moved to ssl.h */
 
-/* The SSL key exchange method used */     
+/* The SSL key exchange method used */
 typedef enum {
-    kea_null, 
-    kea_rsa, 
+    kea_null,
+    kea_rsa,
     kea_rsa_export,
     kea_rsa_export_1024,
-    kea_dh_dss, 
-    kea_dh_dss_export, 
-    kea_dh_rsa, 
+    kea_dh_dss,
+    kea_dh_dss_export,
+    kea_dh_rsa,
     kea_dh_rsa_export,
-    kea_dhe_dss, 
-    kea_dhe_dss_export, 
-    kea_dhe_rsa, 
+    kea_dhe_dss,
+    kea_dhe_dss_export,
+    kea_dhe_rsa,
     kea_dhe_rsa_export,
-    kea_dh_anon, 
-    kea_dh_anon_export, 
+    kea_dh_anon,
+    kea_dh_anon_export,
     kea_rsa_fips,
     kea_ecdh_ecdsa,
     kea_ecdhe_ecdsa,
@@ -191,7 +192,7 @@ typedef enum {
     kea_ecdhe_rsa,
     kea_ecdh_anon
 } SSL3KeyExchangeAlgorithm;
-     
+
 typedef struct {
     SECItem modulus;
     SECItem exponent;
@@ -205,8 +206,8 @@ typedef struct {
 
 typedef struct {
     union {
-	SSL3ServerDHParams dh;
-	SSL3ServerRSAParams rsa;
+        SSL3ServerDHParams dh;
+        SSL3ServerRSAParams rsa;
     } u;
 } SSL3ServerParams;
 
@@ -250,56 +251,56 @@ typedef struct {
     unsigned int len;
     SECOidTag hashAlg;
     union {
-	PRUint8 raw[64];
-	SSL3HashesIndividually s;
+        PRUint8 raw[64];
+        SSL3HashesIndividually s;
     } u;
 } SSL3Hashes;
 
 typedef struct {
     union {
-	SSL3Opaque anonymous;
-	SSL3Hashes certified;
+        SSL3Opaque anonymous;
+        SSL3Hashes certified;
     } u;
 } SSL3ServerKeyExchange;
-     
+
 typedef enum {
-    ct_RSA_sign 	=  1, 
-    ct_DSS_sign 	=  2, 
-    ct_RSA_fixed_DH 	=  3,
-    ct_DSS_fixed_DH 	=  4, 
-    ct_RSA_ephemeral_DH =  5, 
+    ct_RSA_sign         =  1,
+    ct_DSS_sign         =  2,
+    ct_RSA_fixed_DH     =  3,
+    ct_DSS_fixed_DH     =  4,
+    ct_RSA_ephemeral_DH =  5,
     ct_DSS_ephemeral_DH =  6,
-    ct_ECDSA_sign	=  64, 
-    ct_RSA_fixed_ECDH	=  65, 
-    ct_ECDSA_fixed_ECDH	=  66 
+    ct_ECDSA_sign       =  64,
+    ct_RSA_fixed_ECDH   =  65,
+    ct_ECDSA_fixed_ECDH =  66
 
 } SSL3ClientCertificateType;
-     
+
 typedef SECItem *SSL3DistinquishedName;
 
 typedef struct {
     SSL3Opaque client_version[2];
     SSL3Opaque random[46];
 } SSL3RSAPreMasterSecret;
-     
+
 typedef SECItem SSL3EncryptedPreMasterSecret;
 
 
 typedef SSL3Opaque SSL3MasterSecret[48];
 
 typedef enum { implicit, explicit } SSL3PublicValueEncoding;
-     
+
 typedef struct {
     union {
-	SSL3Opaque implicit;
-	SECItem    explicit;
+        SSL3Opaque implicit;
+        SECItem    explicit;
     } dh_public;
 } SSL3ClientDiffieHellmanPublic;
-     
+
 typedef struct {
     union {
-	SSL3EncryptedPreMasterSecret  rsa;
-	SSL3ClientDiffieHellmanPublic diffie_helman;
+        SSL3EncryptedPreMasterSecret  rsa;
+        SSL3ClientDiffieHellmanPublic diffie_helman;
     } exchange_keys;
 } SSL3ClientKeyExchange;
 
@@ -312,7 +313,7 @@ typedef enum {
     sender_server = 0x53525652
 } SSL3Sender;
 
-typedef SSL3HashesIndividually SSL3Finished;   
+typedef SSL3HashesIndividually SSL3Finished;
 
 typedef struct {
     SSL3Opaque verify_data[12];
@@ -320,7 +321,7 @@ typedef struct {
 
 /*
  * TLS extension related data structures and constants.
- */ 
+ */
 
 /* SessionTicket extension related data structures. */
 
@@ -339,7 +340,7 @@ typedef enum {
 typedef struct {
     ClientAuthenticationType client_auth_type;
     union {
-	SSL3Opaque *certificate_list;
+        SSL3Opaque *certificate_list;
     } identity;
 } ClientIdentity;
 
@@ -355,7 +356,7 @@ typedef struct {
     unsigned char *mac;
 } EncryptedSessionTicket;
 
-#define TLS_EX_SESS_TICKET_MAC_LENGTH       32
+#define TLS_EX_SESS_TICKET_MAC_LENGTH 32
 
 #define TLS_STE_NO_SERVER_NAME        -1
 
