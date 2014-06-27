@@ -301,7 +301,7 @@ class nsCSPDirective {
     inline void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs)
       { mSrcs = aSrcs; }
 
-    bool directiveNameEqualsContentType(nsContentPolicyType aContentType) const;
+    bool restrictsContentType(nsContentPolicyType aContentType) const;
 
     inline bool isDefaultDirective() const
      { return mDirective == CSP_DEFAULT_SRC; }
