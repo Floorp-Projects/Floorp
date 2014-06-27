@@ -552,6 +552,10 @@ SocialShare = {
 
   update: function() {
     let shareButton = this.shareButton;
+    if (!shareButton)
+      return;
+    // if we got here, the button is in the window somewhere, update it's hidden
+    // state based on available providers.
     shareButton.hidden = !SocialUI.enabled ||
                          [p for (p of Social.providers) if (p.shareURL)].length == 0;
     let disabled = shareButton.hidden || !this.canSharePage(gBrowser.currentURI);
