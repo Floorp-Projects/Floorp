@@ -72,7 +72,7 @@ bool
 ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
                                            HandleObject wrapper,
                                            HandleId id,
-                                           JS::MutableHandle<JSPropertyDescriptor> desc)
+                                           JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET | SET);
     // First, try a lookup on the base wrapper if permitted.
@@ -103,7 +103,7 @@ ChromeObjectWrapper::getPropertyDescriptor(JSContext *cx,
 
 bool
 ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
-                         HandleId id, bool *bp)
+                         HandleId id, bool *bp) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET);
     // Try the lookup on the base wrapper if permitted.
@@ -132,7 +132,7 @@ ChromeObjectWrapper::has(JSContext *cx, HandleObject wrapper,
 bool
 ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
                          HandleObject receiver, HandleId id,
-                         MutableHandleValue vp)
+                         MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, wrapper, id, GET);
     vp.setUndefined();
@@ -167,7 +167,7 @@ ChromeObjectWrapper::get(JSContext *cx, HandleObject wrapper,
 // contacts. This isn't really ideal, but make it work for now.
 bool
 ChromeObjectWrapper::objectClassIs(HandleObject obj, js::ESClassValue classValue,
-                                   JSContext *cx)
+                                   JSContext *cx) const
 {
   return CrossCompartmentWrapper::objectClassIs(obj, classValue, cx);
 }
@@ -178,7 +178,7 @@ ChromeObjectWrapper::objectClassIs(HandleObject obj, js::ESClassValue classValue
 // whole proto remapping thing for COWs is going to be phased out anyway.
 bool
 ChromeObjectWrapper::enter(JSContext *cx, HandleObject wrapper,
-                           HandleId id, js::Wrapper::Action act, bool *bp)
+                           HandleId id, js::Wrapper::Action act, bool *bp) const
 {
     if (AllowedByBase(cx, wrapper, id, act))
         return true;
