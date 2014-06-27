@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef MEDIAENGINETABVIDEOSOURCE_H_
+#define MEDIAENGINETABVIDEOSOURCE_H_
+
 #include "nsIDOMEventListener.h"
 #include "MediaEngine.h"
 #include "ImageContainer.h"
@@ -67,3 +70,5 @@ private:
     nsCOMPtr<nsITabSource> mTabSource;
   };
 }
+
+#endif /* MEDIAENGINETABVIDEOSOURCE_H_ */
