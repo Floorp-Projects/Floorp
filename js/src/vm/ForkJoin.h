@@ -17,7 +17,6 @@
 #include "gc/GCInternals.h"
 
 #include "jit/Ion.h"
-#include "jit/IonTypes.h"
 
 #ifdef DEBUG
   #define FORKJOIN_SPEW
@@ -282,39 +281,44 @@ bool ForkJoin(JSContext *cx, CallArgs &args);
 //       { everything else }
 //               |
 //           Interrupt
-//               |
-//           Execution
-//               |
+//           /       |
+//   Unsupported   UnsupportedVM
+//           \       /
 //              None
 //
 enum ParallelBailoutCause {
     ParallelBailoutNone = 0,
 
-    // Bailed out of JIT code during execution. The specific reason is found
-    // in the ionBailoutKind field in ParallelBailoutRecord below.
-    ParallelBailoutExecution,
+    ParallelBailoutUnsupported,
+    ParallelBailoutUnsupportedVM,
 
     // The periodic interrupt failed, which can mean that either
-    // another thread canceled, the user interrupted us, etc.
+    // another thread canceled, the user interrupted us, etc
     ParallelBailoutInterrupt,
 
-    // Compiler returned Method_Skipped.
+    // Compiler returned Method_Skipped
     ParallelBailoutCompilationSkipped,
 
-    // Compiler returned Method_CantCompile.
+    // Compiler returned Method_CantCompile
     ParallelBailoutCompilationFailure,
 
-    // The main script was GCed before we could start executing.
+    // Propagating a failure, i.e., another thread requested the computation
+    // be aborted.
+    ParallelBailoutPropagate,
+
+    // An IC update failed
+    ParallelBailoutFailedIC,
+
+    // Heap busy flag was set during interrupt
+    ParallelBailoutHeapBusy,
+
     ParallelBailoutMainScriptNotPresent,
-
-    // Went over the stack limit.
+    ParallelBailoutCalledToUncompiledScript,
+    ParallelBailoutIllegalWrite,
+    ParallelBailoutAccessToIntrinsic,
     ParallelBailoutOverRecursed,
-
-    // True memory exhaustion. See js_ReportOutOfMemory.
     ParallelBailoutOutOfMemory,
-
-    // GC was requested on the tenured heap, which we cannot comply with in
-    // parallel.
+    ParallelBailoutUnsupportedStringComparison,
     ParallelBailoutRequestedGC,
     ParallelBailoutRequestedZoneGC
 };
@@ -332,18 +336,11 @@ struct ParallelBailoutRecord
     // Captured Ion frames at the point of bailout. Stored younger-to-older,
     // i.e., the 0th frame is the youngest frame.
     Vector<jit::RematerializedFrame *> *frames_;
-
-    // The reason for unsuccessful parallel execution.
     ParallelBailoutCause cause;
-
-    // The more specific bailout reason if cause above is
-    // ParallelBailoutExecution.
-    jit::BailoutKind ionBailoutKind;
 
     ParallelBailoutRecord()
       : frames_(nullptr),
-        cause(ParallelBailoutNone),
-        ionBailoutKind(jit::Bailout_Inevitable)
+        cause(ParallelBailoutNone)
     { }
 
     ~ParallelBailoutRecord();
@@ -361,11 +358,6 @@ struct ParallelBailoutRecord
         {
             this->cause = cause;
         }
-    }
-
-    void setIonBailoutKind(jit::BailoutKind kind) {
-        joinCause(ParallelBailoutExecution);
-        ionBailoutKind = kind;
     }
 
     void rematerializeFrames(ForkJoinContext *cx, jit::JitFrameIterator &frameIter);
@@ -435,9 +427,9 @@ class ForkJoinContext : public ThreadSafeContext
 
     // Reports an unsupported operation, returning false if we are reporting
     // an error. Otherwise drop the warning on the floor.
-    bool reportError(unsigned report) {
+    bool reportError(ParallelBailoutCause cause, unsigned report) {
         if (report & JSREPORT_ERROR)
-            return setPendingAbortFatal(ParallelBailoutExecution);
+            return setPendingAbortFatal(cause);
         return true;
     }
 
