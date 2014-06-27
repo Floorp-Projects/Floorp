@@ -4,6 +4,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIDeletedMessageInfo;
 interface nsIDOMMozSmsMessage;
 interface nsIDOMMozMmsMessage;
 interface nsIDOMMozMobileMessageThread;
@@ -14,7 +15,7 @@ interface nsIDOMMozSmsSegmentInfo;
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(17fce9e4-af56-11e3-83d9-b71055e95493)]
+[scriptable, builtinclass, uuid(afb83948-003a-11e4-899b-bb8a8d45e7f0)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
@@ -61,4 +62,10 @@ interface nsIMobileMessageService : nsISupports
                                             in DOMString          body,
                                             in unsigned long long unreadCount,
                                             in DOMString          aLastMessageType);
+
+  nsIDeletedMessageInfo createDeletedMessageInfo(
+    [array, size_is(msgCount)] in long messageIds,
+    in uint32_t msgCount,
+    [array, size_is(threadCount)] in unsigned long long threadIds,
+    in uint32_t threadCount);
 };
