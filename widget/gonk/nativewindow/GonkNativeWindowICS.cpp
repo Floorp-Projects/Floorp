@@ -37,24 +37,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-class nsProxyReleaseTask : public CancelableTask
-{
-public:
-    nsProxyReleaseTask(TextureClient* aClient)
-        : mTextureClient(aClient) {
-    }
-
-    virtual void Run() MOZ_OVERRIDE
-    {
-        mTextureClient = nullptr;
-    }
-
-    virtual void Cancel() MOZ_OVERRIDE {}
-
-private:
-    mozilla::RefPtr<TextureClient> mTextureClient;
-};
-
 GonkNativeWindow::GonkNativeWindow() :
     mAbandoned(false),
     mDefaultWidth(1),
@@ -89,7 +71,7 @@ void GonkNativeWindow::freeAllBuffersLocked()
             if (mSlots[i].mTextureClient) {
               mSlots[i].mTextureClient->ClearRecycleCallback();
               // release TextureClient in ImageBridge thread
-              nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[i].mTextureClient);
+              TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
               mSlots[i].mTextureClient = NULL;
               ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
             }
@@ -111,7 +93,7 @@ void GonkNativeWindow::clearRenderingStateBuffersLocked()
                 if (mSlots[i].mTextureClient) {
                   mSlots[i].mTextureClient->ClearRecycleCallback();
                   // release TextureClient in ImageBridge thread
-                  nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[i].mTextureClient);
+                  TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
                   mSlots[i].mTextureClient = NULL;
                   ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
                 }
@@ -327,7 +309,7 @@ status_t GonkNativeWindow::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             if (mSlots[buf].mTextureClient) {
                 mSlots[buf].mTextureClient->ClearRecycleCallback();
                 // release TextureClient in ImageBridge thread
-                nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[buf].mTextureClient);
+                TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[buf].mTextureClient);
                 mSlots[buf].mTextureClient = NULL;
                 ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
             }

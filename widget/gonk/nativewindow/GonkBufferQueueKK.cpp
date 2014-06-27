@@ -61,22 +61,6 @@ static const char* scalingModeName(int scalingMode) {
     }
 }
 
-class nsProxyReleaseTask : public Task
-{
-public:
-    nsProxyReleaseTask(TextureClient* aClient)
-        : mTextureClient(aClient) {
-    }
-
-    virtual void Run() MOZ_OVERRIDE
-    {
-        mTextureClient = nullptr;
-    }
-
-private:
-    mozilla::RefPtr<TextureClient> mTextureClient;
-};
-
 GonkBufferQueue::GonkBufferQueue(bool allowSynchronousMode,
         const sp<IGraphicBufferAlloc>& allocator) :
     mDefaultWidth(1),
@@ -444,7 +428,7 @@ status_t GonkBufferQueue::dequeueBuffer(int *outBuf, sp<Fence>* outFence, bool a
             if (mSlots[buf].mTextureClient) {
               mSlots[buf].mTextureClient->ClearRecycleCallback();
               // release TextureClient in ImageBridge thread
-              nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[buf].mTextureClient);
+              TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[buf].mTextureClient);
               mSlots[buf].mTextureClient = NULL;
               ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
             }
@@ -875,7 +859,7 @@ void GonkBufferQueue::freeAllBuffersLocked()
         if (mSlots[i].mTextureClient) {
           mSlots[i].mTextureClient->ClearRecycleCallback();
           // release TextureClient in ImageBridge thread
-          nsProxyReleaseTask* task = new nsProxyReleaseTask(mSlots[i].mTextureClient);
+          TextureClientReleaseTask* task = new TextureClientReleaseTask(mSlots[i].mTextureClient);
           mSlots[i].mTextureClient = NULL;
           ImageBridgeChild::GetSingleton()->GetMessageLoop()->PostTask(FROM_HERE, task);
         }
