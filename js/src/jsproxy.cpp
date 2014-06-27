@@ -2114,7 +2114,7 @@ Proxy::getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                              MutableHandle<PropertyDescriptor> desc)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     desc.object().set(nullptr); // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2145,7 +2145,7 @@ Proxy::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     desc.object().set(nullptr); // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2170,7 +2170,7 @@ Proxy::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
                       MutableHandle<PropertyDescriptor> desc)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2181,7 +2181,7 @@ bool
 Proxy::getOwnPropertyNames(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2192,7 +2192,7 @@ bool
 Proxy::delete_(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     *bp = true; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
     if (!policy.allowed())
@@ -2224,7 +2224,7 @@ bool
 Proxy::enumerate(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2242,7 +2242,7 @@ bool
 Proxy::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     *bp = false; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2263,7 +2263,7 @@ bool
 Proxy::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     *bp = false; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2276,7 +2276,7 @@ Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     vp.setUndefined(); // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2317,7 +2317,7 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
            MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, id, BaseProxyHandler::SET, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2354,7 +2354,7 @@ bool
 Proxy::keys(JSContext *cx, HandleObject proxy, AutoIdVector &props)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::ENUMERATE, true);
     if (!policy.allowed())
         return policy.returnValue();
@@ -2365,7 +2365,7 @@ bool
 Proxy::iterate(JSContext *cx, HandleObject proxy, unsigned flags, MutableHandleValue vp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     vp.setUndefined(); // default result if we refuse to perform this action
     if (!handler->hasPrototype()) {
         AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
@@ -2400,7 +2400,7 @@ bool
 Proxy::preventExtensions(JSContext *cx, HandleObject proxy)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     return handler->preventExtensions(cx, proxy);
 }
 
@@ -2408,7 +2408,7 @@ bool
 Proxy::call(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
 
     // Because vp[0] is JS_CALLEE on the way in and JS_RVAL on the way out, we
     // can only set our default value once we're sure that we're not calling the
@@ -2427,7 +2427,7 @@ bool
 Proxy::construct(JSContext *cx, HandleObject proxy, const CallArgs &args)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
 
     // Because vp[0] is JS_CALLEE on the way in and JS_RVAL on the way out, we
     // can only set our default value once we're sure that we're not calling the
@@ -2457,7 +2457,7 @@ bool
 Proxy::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v, bool *bp)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     *bp = false; // default result if we refuse to perform this action
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET, true);
     if (!policy.allowed())
@@ -2481,7 +2481,7 @@ Proxy::className(JSContext *cx, HandleObject proxy)
     if (!JS_CHECK_STACK_SIZE(GetNativeStackLimit(cx), &stackDummy))
         return "too much recursion";
 
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
@@ -2495,7 +2495,7 @@ JSString *
 Proxy::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent)
 {
     JS_CHECK_RECURSION(cx, return nullptr);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE,
                            BaseProxyHandler::GET, /* mayThrow = */ false);
     // Do the safe thing if the policy rejects.
@@ -2555,7 +2555,7 @@ Proxy::slice(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
              HandleObject result)
 {
     JS_CHECK_RECURSION(cx, return false);
-    BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
+    const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
     AutoEnterPolicy policy(cx, handler, proxy, JSID_VOIDHANDLE, BaseProxyHandler::GET,
                            /* mayThrow = */ true);
     if (!policy.allowed()) {

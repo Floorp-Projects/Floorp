@@ -1598,7 +1598,7 @@ XrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, Hand
                 bool strict, MutableHandleValue vp)
 {
     // Skip our Base if it isn't already BaseProxyHandler.
-    js::BaseProxyHandler *handler = js::GetProxyHandler(wrapper);
+    const js::BaseProxyHandler *handler = js::GetProxyHandler(wrapper);
     return handler->js::BaseProxyHandler::set(cx, wrapper, receiver, id, strict, vp);
 }
 
@@ -1891,7 +1891,7 @@ DOMXrayTraits::set(JSContext *cx, HandleObject wrapper, HandleObject receiver, H
     MOZ_ASSERT(xpc::WrapperFactory::IsXrayWrapper(wrapper));
     RootedObject obj(cx, getTargetObject(wrapper));
     if (IsDOMProxy(obj)) {
-        DOMProxyHandler* handler = GetDOMProxyHandler(obj);
+        const DOMProxyHandler* handler = GetDOMProxyHandler(obj);
 
         bool done;
         if (!handler->setCustom(cx, obj, id, vp, &done))
@@ -2031,7 +2031,7 @@ HasNativeProperty(JSContext *cx, HandleObject wrapper, HandleId id, bool *hasPro
     NS_ENSURE_TRUE(holder, false);
     *hasProp = false;
     Rooted<JSPropertyDescriptor> desc(cx);
-    Wrapper *handler = Wrapper::wrapperHandler(wrapper);
+    const Wrapper *handler = Wrapper::wrapperHandler(wrapper);
 
     // Try resolveOwnProperty.
     Maybe<ResolvingId> resolvingId;
