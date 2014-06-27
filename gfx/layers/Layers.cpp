@@ -14,7 +14,6 @@
 #include "LayerSorter.h"                // for SortLayersBy3DZOrder
 #include "LayersLogging.h"              // for AppendToString
 #include "ReadbackLayer.h"              // for ReadbackLayer
-#include "gfxImageSurface.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxUtils.h"                   // for gfxUtils, etc
 #include "gfx2DGlue.h"
@@ -1232,18 +1231,13 @@ void WriteSnapshotLinkToDumpFile(T* aObj, std::stringstream& aStream)
 template <typename T>
 void WriteSnapshotToDumpFile_internal(T* aObj, DataSourceSurface* aSurf)
 {
-  nsRefPtr<gfxImageSurface> deprecatedSurf =
-    new gfxImageSurface(aSurf->GetData(),
-                        ThebesIntSize(aSurf->GetSize()),
-                        aSurf->Stride(),
-                        SurfaceFormatToImageFormat(aSurf->GetFormat()));
   nsCString string(aObj->Name());
   string.Append('-');
   string.AppendInt((uint64_t)aObj);
   if (gfxUtils::sDumpPaintFile) {
     fprintf_stderr(gfxUtils::sDumpPaintFile, "array[\"%s\"]=\"", string.BeginReading());
   }
-  deprecatedSurf->DumpAsDataURL(gfxUtils::sDumpPaintFile);
+  gfxUtils::DumpAsDataURI(aSurf, gfxUtils::sDumpPaintFile);
   if (gfxUtils::sDumpPaintFile) {
     fprintf_stderr(gfxUtils::sDumpPaintFile, "\";");
   }

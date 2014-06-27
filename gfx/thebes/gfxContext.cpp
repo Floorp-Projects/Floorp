@@ -16,6 +16,7 @@
 
 #include "gfxColor.h"
 #include "gfxMatrix.h"
+#include "gfxUtils.h"
 #include "gfxASurface.h"
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
@@ -1968,12 +1969,11 @@ gfxContext::WriteAsPNG(const char* aFile)
 
 void 
 gfxContext::DumpAsDataURL()
-{ 
-  nsRefPtr<gfxASurface> surf = CurrentSurface();
-  if (surf) {
-    surf->DumpAsDataURL();
+{
+  if (mDT) {
+    gfxUtils::DumpAsDataURI(mDT);
   } else {
-    NS_WARNING("No surface found!");
+    NS_WARNING("No DrawTarget found!");
   }
 }
 
