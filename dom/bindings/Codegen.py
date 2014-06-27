@@ -10189,11 +10189,11 @@ class CGDOMJSProxyHandler_slice(ClassMethod):
 
 class CGDOMJSProxyHandler_getInstance(ClassMethod):
     def __init__(self):
-        ClassMethod.__init__(self, "getInstance", "DOMProxyHandler*", [], static=True)
+        ClassMethod.__init__(self, "getInstance", "const DOMProxyHandler*", [], static=True)
 
     def getBody(self):
         return dedent("""
-            static DOMProxyHandler instance;
+            static const DOMProxyHandler instance;
             return &instance;
             """)
 

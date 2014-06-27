@@ -68,10 +68,10 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
     virtual bool defaultValue(JSContext *cx, HandleObject obj, JSType hint,
                               MutableHandleValue vp) MOZ_OVERRIDE;
 
-    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, Wrapper *handler,
+    static JSObject *New(JSContext *cx, JSObject *obj, JSObject *parent, const Wrapper *handler,
                          const WrapperOptions *options = nullptr);
 
-    static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, Wrapper *handler);
+    static JSObject *Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler);
 
     static Wrapper *wrapperHandler(JSObject *wrapper);
 
@@ -87,8 +87,8 @@ class JS_FRIEND_API(Wrapper) : public DirectProxyHandler
 
     virtual bool finalizeInBackground(Value priv) MOZ_OVERRIDE;
 
-    static Wrapper singleton;
-    static Wrapper singletonWithPrototype;
+    static const Wrapper singleton;
+    static const Wrapper singletonWithPrototype;
 
     static JSObject *defaultProto;
 };
@@ -151,8 +151,8 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool setPrototypeOf(JSContext *cx, HandleObject proxy, HandleObject proto,
                                 bool *bp) MOZ_OVERRIDE;
 
-    static CrossCompartmentWrapper singleton;
-    static CrossCompartmentWrapper singletonWithPrototype;
+    static const CrossCompartmentWrapper singleton;
+    static const CrossCompartmentWrapper singletonWithPrototype;
 };
 
 /*
@@ -241,7 +241,7 @@ class JS_FRIEND_API(DeadObjectProxy) : public BaseProxyHandler
     virtual bool getPrototypeOf(JSContext *cx, HandleObject proxy,
                                 MutableHandleObject protop) MOZ_OVERRIDE;
 
-    static DeadObjectProxy singleton;
+    static const DeadObjectProxy singleton;
 };
 
 extern JSObject *

@@ -664,7 +664,7 @@ public:
                        unsigned flags,
                        JS::MutableHandle<JS::Value> vp) MOZ_OVERRIDE;
 
-  static nsOuterWindowProxy singleton;
+  static const nsOuterWindowProxy singleton;
 
 protected:
   nsGlobalWindow* GetWindow(JSObject *proxy)
@@ -1019,7 +1019,7 @@ nsOuterWindowProxy::unwatch(JSContext *cx, JS::Handle<JSObject*> proxy,
   return js::UnwatchGuts(cx, proxy, id);
 }
 
-nsOuterWindowProxy
+const nsOuterWindowProxy
 nsOuterWindowProxy::singleton;
 
 class nsChromeOuterWindowProxy : public nsOuterWindowProxy
@@ -1029,7 +1029,7 @@ public:
 
   virtual const char *className(JSContext *cx, JS::Handle<JSObject*> wrapper) MOZ_OVERRIDE;
 
-  static nsChromeOuterWindowProxy singleton;
+  static const nsChromeOuterWindowProxy singleton;
 };
 
 const char *
@@ -1041,7 +1041,7 @@ nsChromeOuterWindowProxy::className(JSContext *cx,
     return "ChromeWindow";
 }
 
-nsChromeOuterWindowProxy
+const nsChromeOuterWindowProxy
 nsChromeOuterWindowProxy::singleton;
 
 static JSObject*

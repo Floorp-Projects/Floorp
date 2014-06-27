@@ -2575,7 +2575,8 @@ bool
 XrayWrapper<Base, Traits>::call(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::CALL);
-    return Traits::call(cx, wrapper, args, Base::singleton);
+    // Hard cast the singleton since SecurityWrapper doesn't have one.
+    return Traits::call(cx, wrapper, args, (js::Wrapper&)Base::singleton);
 }
 
 template <typename Base, typename Traits>
@@ -2583,7 +2584,8 @@ bool
 XrayWrapper<Base, Traits>::construct(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args)
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::CALL);
-    return Traits::construct(cx, wrapper, args, Base::singleton);
+    // Hard cast the singleton since SecurityWrapper doesn't have one.
+    return Traits::construct(cx, wrapper, args, (js::Wrapper&)Base::singleton);
 }
 
 template <typename Base, typename Traits>
@@ -2663,27 +2665,27 @@ XrayWrapper<Base, Traits>::setPrototypeOf(JSContext *cx, JS::HandleObject wrappe
  */
 
 template<>
-PermissiveXrayXPCWN PermissiveXrayXPCWN::singleton(0);
+const PermissiveXrayXPCWN PermissiveXrayXPCWN::singleton(0);
 template class PermissiveXrayXPCWN;
 
 template<>
-SecurityXrayXPCWN SecurityXrayXPCWN::singleton(0);
+const SecurityXrayXPCWN SecurityXrayXPCWN::singleton(0);
 template class SecurityXrayXPCWN;
 
 template<>
-PermissiveXrayDOM PermissiveXrayDOM::singleton(0);
+const PermissiveXrayDOM PermissiveXrayDOM::singleton(0);
 template class PermissiveXrayDOM;
 
 template<>
-SecurityXrayDOM SecurityXrayDOM::singleton(0);
+const SecurityXrayDOM SecurityXrayDOM::singleton(0);
 template class SecurityXrayDOM;
 
 template<>
-PermissiveXrayJS PermissiveXrayJS::singleton(0);
+const PermissiveXrayJS PermissiveXrayJS::singleton(0);
 template class PermissiveXrayJS;
 
 template<>
-SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
+const SCSecurityXrayXPCWN SCSecurityXrayXPCWN::singleton(0);
 template class SCSecurityXrayXPCWN;
 
 static nsQueryInterface

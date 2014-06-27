@@ -769,7 +769,7 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) MOZ_OVERRIDE;
     virtual bool isScripted() MOZ_OVERRIDE { return true; }
 
-    static ScriptedIndirectProxyHandler singleton;
+    static const ScriptedIndirectProxyHandler singleton;
 };
 
 /*
@@ -1043,7 +1043,7 @@ ScriptedIndirectProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, un
     return fun_toStringHelper(cx, obj, indent);
 }
 
-ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
+const ScriptedIndirectProxyHandler ScriptedIndirectProxyHandler::singleton;
 
 /* Derived class for all scripted direct proxy handlers. */
 class ScriptedDirectProxyHandler : public DirectProxyHandler {
@@ -1089,7 +1089,7 @@ class ScriptedDirectProxyHandler : public DirectProxyHandler {
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) MOZ_OVERRIDE;
     virtual bool isScripted() MOZ_OVERRIDE { return true; }
 
-    static ScriptedDirectProxyHandler singleton;
+    static const ScriptedDirectProxyHandler singleton;
 };
 
 // This variable exists solely to provide a unique address for use as an identifier.
@@ -2091,7 +2091,7 @@ ScriptedDirectProxyHandler::construct(JSContext *cx, HandleObject proxy, const C
     return true;
 }
 
-ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
+const ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
 
 #define INVOKE_ON_PROTOTYPE(cx, handler, proxy, protoCall)                   \
     JS_BEGIN_MACRO                                                           \
@@ -2847,7 +2847,7 @@ const Class* const js::CallableProxyClassPtr = &ProxyObject::callableClass_;
 const Class* const js::UncallableProxyClassPtr = &ProxyObject::uncallableClass_;
 
 JS_FRIEND_API(JSObject *)
-js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
+js::NewProxyObject(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, JSObject *proto_,
                    JSObject *parent_, const ProxyOptions &options)
 {
     return ProxyObject::New(cx, handler, priv, TaggedProto(proto_), parent_,
@@ -2855,7 +2855,7 @@ js::NewProxyObject(JSContext *cx, BaseProxyHandler *handler, HandleValue priv, J
 }
 
 void
-ProxyObject::renew(JSContext *cx, BaseProxyHandler *handler, Value priv)
+ProxyObject::renew(JSContext *cx, const BaseProxyHandler *handler, Value priv)
 {
     JS_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     JS_ASSERT(getParent() == cx->global());
@@ -2863,7 +2863,7 @@ ProxyObject::renew(JSContext *cx, BaseProxyHandler *handler, Value priv)
     JS_ASSERT(!getClass()->ext.innerObject);
     JS_ASSERT(getTaggedProto().isLazy());
 
-    setSlot(HANDLER_SLOT, PrivateValue(handler));
+    setHandler(handler);
     setCrossCompartmentSlot(PRIVATE_SLOT, priv);
     setSlot(EXTRA_SLOT + 0, UndefinedValue());
     setSlot(EXTRA_SLOT + 1, UndefinedValue());
