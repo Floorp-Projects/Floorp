@@ -13,6 +13,7 @@
 <textbox id="autocomplete"
          type="autocomplete"
          completedefaultindex="true"
+
          onsearchcomplete="searchComplete();"
          autocompletesearch="simple"/>
 
@@ -143,6 +144,13 @@ const tests = [
     result: "Result",
     start: 6, end: 6
   },
+  { desc: "TAB key should confirm suggestion when forcecomplete is set",
+    key: "VK_TAB",
+    removeSelection: false,
+    forceComplete: true,
+    result: "Result",
+    start: 6, end: 6
+  },
 ];
 
 function nextTest() {
@@ -180,6 +188,8 @@ function searchComplete() {
   var autocomplete = $("autocomplete");
   is(autocomplete.value, "result",
      "Test '" + currentTest.desc + "': autocomplete.value should equal 'result'");
+
+  autocomplete.setAttribute("forcecomplete", currentTest.forceComplete ? true : false);
 
   if (autocomplete.selectionStart == 2) {  // Finished inserting "re" string.
     if (currentTest.removeSelection) {
