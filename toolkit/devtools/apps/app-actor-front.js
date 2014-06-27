@@ -5,6 +5,7 @@ const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
 const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm");
 const {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 // XXX: bug 912476 make this module a real protocol.js front
 // by converting webapps actor to protocol.js
@@ -17,6 +18,9 @@ const PR_TRUNCATE = 0x20;
 const CHUNK_SIZE = 10000;
 
 const appTargets = new Map();
+
+const AppActorFront = exports;
+EventEmitter.decorate(AppActorFront);
 
 function addDirToZip(writer, dir, basePath) {
   let files = dir.directoryEntries;
@@ -102,15 +106,34 @@ function uploadPackageJSON(client, webappsActor, packageFile) {
     openFile(res.actor);
   });
 
+  let fileSize;
+  let bytesRead = 0;
+
+  function emitProgress() {
+    emitInstallProgress({
+      bytesSent: bytesRead,
+      totalBytes: fileSize
+    });
+  }
+
   function openFile(actor) {
+    let openedFile;
     OS.File.open(packageFile.path)
-      .then(function (file) {
-        uploadChunk(actor, file);
+      .then(file => {
+        openedFile = file;
+        return openedFile.stat();
+      })
+      .then(fileInfo => {
+        fileSize = fileInfo.size;
+        emitProgress();
+        uploadChunk(actor, openedFile);
       });
   }
   function uploadChunk(actor, file) {
     file.read(CHUNK_SIZE)
         .then(function (bytes) {
+          bytesRead += bytes.length;
+          emitProgress();
           // To work around the fact that JSON.stringify translates the typed
           // array to object, we are encoding the typed array here into a string
           let chunk = String.fromCharCode.apply(null, bytes);
@@ -168,7 +191,11 @@ function uploadPackageBulk(client, webappsActor, packageFile) {
 
     request.on("bulk-send-ready", ({copyFrom}) => {
       NetUtil.asyncFetch(packageFile, function(inputStream) {
-        copyFrom(inputStream).then(() => {
+        let copying = copyFrom(inputStream);
+        copying.on("progress", (e, progress) => {
+          emitInstallProgress(progress);
+        });
+        copying.then(() => {
           console.log("Bulk upload done");
           inputStream.close();
           deferred.resolve(actor);
@@ -235,6 +262,16 @@ function installPackaged(client, webappsActor, packagePath, appId) {
   return deferred.promise;
 }
 exports.installPackaged = installPackaged;
+
+/**
+ * Emits numerous events as packaged app installation proceeds.
+ * The progress object contains:
+ *  * bytesSent:  The number of bytes sent so far
+ *  * totalBytes: The total number of bytes to send
+ */
+function emitInstallProgress(progress) {
+  AppActorFront.emit("install-progress", progress);
+}
 
 function installHosted(client, webappsActor, appId, metadata, manifest) {
   let deferred = promise.defer();

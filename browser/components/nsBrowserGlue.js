@@ -93,9 +93,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "BrowserUITelemetry",
 XPCOMUtils.defineLazyModuleGetter(this, "AsyncShutdown",
                                   "resource://gre/modules/AsyncShutdown.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
-                                  "resource://gre/modules/LoginManagerParent.jsm");
-
 #ifdef NIGHTLY_BUILD
 XPCOMUtils.defineLazyModuleGetter(this, "SignInToWebsiteUX",
                                   "resource:///modules/SignInToWebsite.jsm");
@@ -509,8 +506,6 @@ BrowserGlue.prototype = {
       ContentClick.init();
       RemotePrompt.init();
     }
-
-    LoginManagerParent.init();
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
   },

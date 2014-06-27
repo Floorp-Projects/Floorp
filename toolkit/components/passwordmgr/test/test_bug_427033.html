@@ -10,10 +10,6 @@
 Login Manager test: form with JS submit action
 <script>
 SimpleTest.waitForExplicitFinish();
-
-// Note: Call this first so it doesn't override our login.
-commonInit();
-
 var pwmgr = SpecialPowers.Cc["@mozilla.org/login-manager;1"]
                          .getService(SpecialPowers.Ci.nsILoginManager);
 var jslogin = SpecialPowers.Cc["@mozilla.org/login-manager/loginInfo;1"]
@@ -31,8 +27,7 @@ function startTest() {
     SimpleTest.finish();
 }
 
-// XXX
-window.addEventListener("runTests", startTest);
+window.onload = startTest;
 </script>
 
 <p id="display"></p>

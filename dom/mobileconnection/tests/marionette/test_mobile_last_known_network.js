@@ -8,6 +8,6 @@ MARIONETTE_HEAD_JS = "head.js";
 startTestCommon(function() {
   // The emulator's hard coded operatoer's mcc and mnc codes.
   is(mobileConnection.lastKnownNetwork, "310-260");
-  // The emulator's hard coded icc's mcc and mnc codes.
-  is(mobileConnection.lastKnownHomeNetwork, "310-260");
+  // The emulator's hard coded icc's mcc, mnc codes and spn.
+  is(mobileConnection.lastKnownHomeNetwork, "310-260-Android");
 });

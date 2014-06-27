@@ -187,6 +187,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-permissions,
 #runtime-screenshot,
 .runtime-panel-item-usb,
+.runtime-panel-item-wifi,
 .runtime-panel-item-custom,
 .runtime-panel-item-simulator {
   list-style-image: url("icons.png");
@@ -195,6 +196,7 @@ panel > .panel-arrowcontainer > .panel-arrowcontent {
 #runtime-screenshot             { -moz-image-region: rect(200px, 640px, 240px, 600px) }
 #runtime-permissions            { -moz-image-region: rect(100px, 840px, 140px, 800px) }
 .runtime-panel-item-usb         { -moz-image-region: rect(100px, 640px, 140px, 600px) }
+.runtime-panel-item-wifi        { -moz-image-region: rect(100px, 640px, 140px, 600px) }
 .runtime-panel-item-custom      { -moz-image-region: rect(100px, 640px, 140px, 600px) }
 .runtime-panel-item-simulator   { -moz-image-region: rect(100px, 740px, 140px, 700px) }
 
