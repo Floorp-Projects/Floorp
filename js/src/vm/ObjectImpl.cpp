@@ -25,7 +25,6 @@ PropDesc::PropDesc()
 void
 PropDesc::setUndefined()
 {
-    descObj_ = nullptr;
     value_ = UndefinedValue();
     get_ = UndefinedValue();
     set_ = UndefinedValue();
@@ -302,8 +301,6 @@ js::ObjectImpl::markChildren(JSTracer *trc)
 void
 PropDesc::trace(JSTracer *trc)
 {
-    if (descObj_)
-        gc::MarkObjectRoot(trc, &descObj_, "PropDesc descriptor object");
     gc::MarkValueRoot(trc, &value_, "PropDesc value");
     gc::MarkValueRoot(trc, &get_, "PropDesc get");
     gc::MarkValueRoot(trc, &set_, "PropDesc set");

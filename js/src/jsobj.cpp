@@ -269,9 +269,10 @@ js::NewPropertyDescriptorObject(JSContext *cx, Handle<PropertyDescriptor> desc,
     Rooted<PropDesc> d(cx);
 
     d.initFromPropertyDescriptor(desc);
-    if (!d.makeObject(cx))
+    RootedObject descObj(cx);
+    if (!d.makeObject(cx, &descObj))
         return false;
-    vp.set(d.descriptorValue());
+    vp.setObject(*descObj);
     return true;
 }
 
@@ -284,7 +285,6 @@ PropDesc::initFromPropertyDescriptor(Handle<PropertyDescriptor> desc)
         return;
 
     isUndefined_ = false;
-    descObj_ = nullptr;
     attrs = uint8_t(desc.attributes());
     JS_ASSERT_IF(attrs & JSPROP_READONLY, !(attrs & (JSPROP_GETTER | JSPROP_SETTER)));
     if (desc.hasGetterOrSetterObject()) {
@@ -328,11 +328,11 @@ PropDesc::populatePropertyDescriptor(HandleObject obj, MutableHandle<PropertyDes
 }
 
 bool
-PropDesc::makeObject(JSContext *cx)
+PropDesc::makeObject(JSContext *cx, MutableHandleObject obj)
 {
     MOZ_ASSERT(!isUndefined());
 
-    RootedObject obj(cx, NewBuiltinClassInstance(cx, &JSObject::class_));
+    obj.set(NewBuiltinClassInstance(cx, &JSObject::class_));
     if (!obj)
         return false;
 
@@ -356,7 +356,6 @@ PropDesc::makeObject(JSContext *cx)
         return false;
     }
 
-    descObj_ = obj;
     return true;
 }
 
@@ -465,9 +464,6 @@ PropDesc::initialize(JSContext *cx, const Value &origval, bool checkAccessors)
         return false;
     }
     RootedObject desc(cx, &v.toObject());
-
-    /* Make a copy of the descriptor. We might need it later. */
-    descObj_ = desc;
 
     isUndefined_ = false;
 
