@@ -31,6 +31,18 @@
 #include "blapi.h"
 #endif
 
+#ifdef ANDROID_STUB_H
+#include <android/log.h>
+#define androidLog(...) __android_log_print(ANDROID_LOG_VERBOSE, "GeckoNSS", __VA_ARGS__)
+#else
+#ifdef _MSC_VER
+#define androidLog(...)
+#else
+#define androidLog(...) ((void) 0)
+#endif
+#endif
+
+
 #include <stdio.h>
 #ifdef NSS_ENABLE_ZLIB
 #include "zlib.h"
@@ -9689,10 +9701,16 @@ ssl3_SendCertificateStatus(sslSocket *ss)
 static void
 ssl3_CleanupPeerCerts(sslSocket *ss)
 {
+#ifndef _MSC_VER
+    androidLog("Top of ssl3_CleanupPeerCerts ss=%p", ss);
+#endif
     PLArenaPool * arena = ss->ssl3.peerCertArena;
     ssl3CertNode *certs = (ssl3CertNode *)ss->ssl3.peerCertChain;
 
     for (; certs; certs = certs->next) {
+#ifndef _MSC_VER
+        androidLog("ssl3_CleanupPeerCerts certs->cert=%p", certs->cert);
+#endif
 	CERT_DestroyCertificate(certs->cert);
     }
     if (arena) PORT_FreeArena(arena, PR_FALSE);
@@ -9777,6 +9795,8 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 
     SSL_TRC(3, ("%d: SSL3[%d]: handle certificate handshake",
 		SSL_GETPID(), ss->fd));
+    androidLog("Top of ssl3_HandleCertificate ss=%p fd=%d", ss, ss->fd);
+
     PORT_Assert( ss->opt.noLocks || ssl_HaveRecvBufLock(ss) );
     PORT_Assert( ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss) );
 
@@ -9890,6 +9910,9 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	}
 
 	c->next = NULL;
+
+        androidLog("ssl3_HandleCertificate ss=%p fd=%d lastcert=%p c=%p c->next=%p c->cert=%p", ss, ss->fd, lastCert, c, c->next, c->cert);
+
 	if (lastCert) {
 	    lastCert->next = c;
 	} else {
@@ -9909,11 +9932,13 @@ ssl3_HandleCertificate(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
     } else {
        rv = ssl3_AuthCertificate(ss); /* sets ss->ssl3.hs.ws */
     }
+    androidLog("ssl3_HandleCertificate returning ss=%p fd=%d rv=%d peercertChain=%p", ss, ss->fd, rv, ss->ssl3.peerCertChain);
 
     return rv;
 
 ambiguous_err:
     errCode = PORT_GetError();
+    androidLog("ssl3_HandleCertificate amb_err ss=%p fd=%d error=%d", ss, ss->fd, errCode);
     switch (errCode) {
     case PR_OUT_OF_MEMORY_ERROR:
     case SEC_ERROR_BAD_DATABASE:
@@ -9928,12 +9953,15 @@ ambiguous_err:
     goto loser;
 
 decode_loser:
+    androidLog("ssl3_HandleCertificate decode_loser ss=%p fd=%d", ss, ss->fd);
     desc = isTLS ? decode_error : bad_certificate;
 
 alert_loser:
+    androidLog("ssl3_HandleCertificate alert_loser ss=%p fd=%d", ss, ss->fd);
     (void)SSL3_SendAlert(ss, alert_fatal, desc);
 
 loser:
+    androidLog("ssl3_HandleCertificate loser ss=%p fd=%d peercertChain=%p", ss, ss->fd, ss->ssl3.peerCertChain);
     (void)ssl_MapLowLevelError(errCode);
     return SECFailure;
 }
