@@ -2087,7 +2087,7 @@ nsTreeBodyFrame::GetTwistyRect(int32_t aRowIndex,
   if (useTheme) {
     nsIntSize minTwistySizePx(0,0);
     bool canOverride = true;
-    theme->GetMinimumWidgetSize(&aRenderingContext, this, twistyDisplayData->mAppearance,
+    theme->GetMinimumWidgetSize(aPresContext, this, twistyDisplayData->mAppearance,
                                 &minTwistySizePx, &canOverride);
 
     // GMWS() returns size in pixels, we need to convert it back to app units
