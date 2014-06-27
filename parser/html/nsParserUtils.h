@@ -13,6 +13,7 @@
 class nsParserUtils MOZ_FINAL : public nsIScriptableUnescapeHTML,
                                 public nsIParserUtils
 {
+  ~nsParserUtils() {}
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCRIPTABLEUNESCAPEHTML
