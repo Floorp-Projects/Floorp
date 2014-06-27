@@ -45,6 +45,8 @@ conformance/limits/gl-min-textures.html
 conformance/misc/error-reporting.html
 conformance/misc/object-deletion-behaviour.html
 conformance/misc/type-conversion-test.html
+conformance/reading/read-pixels-test.html
+conformance/renderbuffers/framebuffer-object-attachment.html
 conformance/textures/tex-image-and-sub-image-2d-with-video.html
 conformance/textures/tex-image-with-format-and-type.html
 conformance/textures/texture-mips.html
